@@ -15,6 +15,7 @@ custom-skills/
 
 # Environment and local secrets
 .env
+!.env
 .env.*
 !.env.example
 .direnv/
