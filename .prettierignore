@@ -1,0 +1,15 @@
+node_modules
+dist
+coverage
+test-results
+playwright-report
+pnpm-lock.yaml
+agentdesk.sqlite
+agentdesk.sqlite-shm
+agentdesk.sqlite-wal
+logs
+.agentdesk
+.agentdesk-worktrees
+tools/playwright-mcp
+tools/ppt_team_agent
+docs/reports/Sample_Slides

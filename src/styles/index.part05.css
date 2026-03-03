@@ -1,0 +1,27 @@
+[data-theme="light"] .chat-header::after {
+  background: linear-gradient(90deg, transparent, rgba(37, 99, 235, 0.2), transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ─── Settings toggle switch improvements ─── */
+.toggle-switch {
+  transition: background-color 0.2s ease;
+}
+.toggle-switch-knob {
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ─── Task card hover enhancement ─── */
+[data-theme="light"] .task-card-hover:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
