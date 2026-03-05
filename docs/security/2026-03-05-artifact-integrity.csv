@@ -1,0 +1,4 @@
+﻿baseline_id,artifact_path,sha256,size_bytes,last_write_time,source_commit,verification_status
+ART-001,C:\PythonProjects\AgentDesk\.agentdesk-worktrees\488b9ff8\docs\reports\2026-03-05-analysis-based-deck.pptx,368C9E13C3F4DB26C9835CB7FE591B552A3108198C40CDE36E98ECF70F40E8D8,148200,2026-03-05 10:45:06,627b790,LOCKED
+ART-002,C:\PythonProjects\AgentDesk\.agentdesk-worktrees\488b9ff8\docs\reports\build-2026-03-05-analysis-ppt.mjs,82E70AC8B6CC3A34F9A72E98D44A87C0E1ECF93C9D8645A6662737FD2CAEA5C5,10150,2026-03-05 10:44:48,627b790,LOCKED
+ART-003,C:\PythonProjects\AgentDesk\.agentdesk-worktrees\2a9d8197\docs\reports\AgentDesk-Analysis-Report.pptx,C3AA0702E6C817C6EE292F9A857A2BA91E7088BFBA98CAA0E4F8FA951B7A9720,431721,2026-03-05 10:57:44,56d73f6,LOCKED
