@@ -177,6 +177,75 @@ export function registerModelRoutes(ctx: RuntimeContext): void {
     return { slug, displayName: slug };
   }
 
+  const CURSOR_MODELS_FALLBACK: CliModelInfoServer[] = [
+    { slug: "auto", displayName: "Auto" },
+    { slug: "claude-4-opus-thinking", displayName: "Claude 4 Opus Thinking" },
+    { slug: "claude-4-sonnet-thinking", displayName: "Claude 4 Sonnet Thinking" },
+    { slug: "claude-4-opus", displayName: "Claude 4 Opus" },
+    { slug: "claude-4-sonnet", displayName: "Claude 4 Sonnet" },
+    { slug: "claude-4-haiku", displayName: "Claude 4 Haiku" },
+    { slug: "o3", displayName: "OpenAI o3" },
+    { slug: "o4-mini", displayName: "OpenAI o4-mini" },
+    { slug: "gpt-4o", displayName: "GPT-4o" },
+    { slug: "gpt-4.1", displayName: "GPT-4.1" },
+    { slug: "gemini-2.5-pro", displayName: "Gemini 2.5 Pro" },
+    { slug: "gemini-2.5-flash", displayName: "Gemini 2.5 Flash" },
+  ];
+
+  function parseAgentModelsOutput(output: string): CliModelInfoServer[] {
+    const lines = output.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+    const seen = new Set<string>();
+    const models: CliModelInfoServer[] = [];
+    for (const line of lines) {
+      const slug = line.split(/\s+/)[0]?.trim();
+      if (slug && /^[a-z0-9._-]+$/i.test(slug) && !seen.has(slug)) {
+        seen.add(slug);
+        models.push({ slug, displayName: slug });
+      }
+    }
+    return models;
+  }
+
+  function ensureAutoInCursorModels(list: CliModelInfoServer[]): CliModelInfoServer[] {
+    if (list.some((m) => m.slug === "auto")) return list;
+    return [{ slug: "auto", displayName: "Auto" }, ...list];
+  }
+
+  async function fetchCursorModels(execWithTimeout: (cmd: string, args: string[], ms: number) => Promise<string>): Promise<CliModelInfoServer[]> {
+    const apiKey = process.env.CURSOR_API_KEY?.trim();
+    if (apiKey) {
+      try {
+        const res = await fetch("https://api.cursor.com/v0/models", {
+          headers: { Authorization: `Bearer ${apiKey}` },
+          signal: AbortSignal.timeout(6_000),
+        });
+        if (res.ok) {
+          const data = (await res.json()) as { models?: string[] };
+          const arr = data.models;
+          if (Array.isArray(arr) && arr.length > 0) {
+            const models = arr.map((slug) => ({ slug, displayName: slug }));
+            return ensureAutoInCursorModels(models);
+          }
+        }
+      } catch {
+        /* fall through to CLI */
+      }
+    }
+    try {
+      let output = "";
+      try {
+        output = await execWithTimeout("agent", ["models"], 5_000);
+      } catch {
+        output = await execWithTimeout("agent", ["--list-models"], 5_000).catch(() => "");
+      }
+      const parsed = parseAgentModelsOutput(output || "");
+      if (parsed.length > 0) return ensureAutoInCursorModels(parsed);
+    } catch {
+      /* ignore */
+    }
+    return CURSOR_MODELS_FALLBACK;
+  }
+
   function readModelCache(cacheKey: string): any | null {
     try {
       const row = db.prepare("SELECT value FROM settings WHERE key = ?").get(cacheKey) as any;
@@ -200,17 +269,28 @@ export function registerModelRoutes(ctx: RuntimeContext): void {
   app.get("/api/cli-models", async (req, res) => {
     const refresh = req.query.refresh === "true";
 
+    const ensureCursorInModels = async (data: Record<string, CliModelInfoServer[]>): Promise<Record<string, CliModelInfoServer[]>> => {
+      if (data.cursor && Array.isArray(data.cursor) && data.cursor.length > 0) {
+        return { ...data, cursor: ensureAutoInCursorModels(data.cursor) };
+      }
+      const cursorModels = await fetchCursorModels(execWithTimeout);
+      return { ...data, cursor: cursorModels };
+    };
+
     if (!refresh) {
       if (cachedCliModels) {
-        return res.json({ models: cachedCliModels.data });
+        const models = await ensureCursorInModels(cachedCliModels.data);
+        return res.json({ models });
       }
       const dbCached = readModelCache("cli_models_cache");
       if (dbCached) {
-        cachedCliModels = { data: dbCached, loadedAt: Date.now() };
-        return res.json({ models: dbCached });
+        const models = await ensureCursorInModels(dbCached);
+        cachedCliModels = { data: models, loadedAt: Date.now() };
+        return res.json({ models });
       }
     }
 
+    const cursorModels = await fetchCursorModels(execWithTimeout);
     const models: Record<string, CliModelInfoServer[]> = {
       claude: [
         "opus",
@@ -223,6 +303,7 @@ export function registerModelRoutes(ctx: RuntimeContext): void {
       ].map(toModelInfo),
       gemini: fetchGeminiModels(),
       opencode: [],
+      cursor: cursorModels,
     };
 
     const codexModels = readCodexModelsCache();

@@ -73,6 +73,42 @@ export function createExecutionStartTaskTools(deps: CreateExecutionStartTaskTool
     startProgressTimer,
   } = deps;
 
+  function buildOutputLanguageGuidance(
+    taskLang: string,
+    _pickL: typeof pickL,
+    _l: typeof l,
+  ): string {
+    const rules: Record<string, string> = {
+      ko: [
+        "[Output Language & Quality Rules]",
+        "- 모든 산출물(PPT, 문서, 영상 자막, 보고서)은 반드시 한글로 작성하세요.",
+        "- 슬라이드 제목, 본문, 설명 텍스트 모두 한글이어야 합니다. 영문 전용 고유명사(브랜드명, 기술명)만 예외입니다.",
+        "- PPT 슬라이드의 HTML에 폰트가 깨지지 않도록 Pretendard 또는 Noto Sans KR 폰트를 사용하세요.",
+        "- 최종 산출물 생성 후 반드시 검증하세요: 파일 존재 여부, 파일 크기, 내용이 깨지지 않았는지 확인.",
+        "- PPT 생성 시 html2pptx 변환 후 에러가 없는지 확인하고, 에러 발생 시 HTML을 수정하여 재생성하세요.",
+      ].join("\n"),
+      en: [
+        "[Output Language & Quality Rules]",
+        "- All deliverables (PPT, docs, video subtitles, reports) must be written in English.",
+        "- Verify final artifacts after generation: check file existence, file size, and content integrity.",
+        "- When generating PPT via html2pptx, verify no conversion errors. Fix HTML and regenerate if errors occur.",
+      ].join("\n"),
+      ja: [
+        "[Output Language & Quality Rules]",
+        "- すべての成果物（PPT、ドキュメント、動画字幕、レポート）は日本語で作成してください。",
+        "- 最終成果物生成後、必ず検証してください：ファイルの存在、サイズ、内容の整合性を確認。",
+        "- html2pptxでPPT生成時、変換エラーがないか確認し、エラー発生時はHTMLを修正して再生成してください。",
+      ].join("\n"),
+      zh: [
+        "[Output Language & Quality Rules]",
+        "- 所有交付物（PPT、文档、视频字幕、报告）必须用中文撰写。",
+        "- 生成最终产物后必须验证：检查文件是否存在、文件大小、内容是否完整。",
+        "- 通过html2pptx生成PPT时，确认无转换错误。如有错误，修复HTML后重新生成。",
+      ].join("\n"),
+    };
+    return rules[taskLang] || rules.en;
+  }
+
   function startTaskExecutionForAgent(taskId: string, execAgent: any, deptId: string | null, deptName: string): void {
     const execName = execAgent.name_ko || execAgent.name;
     const t = nowMs();
@@ -229,6 +265,7 @@ export function createExecutionStartTaskTools(deps: CreateExecutionStartTaskTool
         `[Task] ${taskData.title}`,
         taskData.description ? `\n${taskData.description}` : "",
         workflowPackGuidance ? `\n[Workflow Pack Execution Rules]\n${workflowPackGuidance}` : "",
+        buildOutputLanguageGuidance(taskLang, pickL, l),
         continuationCtx,
         conversationCtx,
         `\n---`,

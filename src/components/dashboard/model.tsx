@@ -28,6 +28,7 @@ export function useNow(localeTag: string, t: TFunction) {
   });
 
   const hour = now.getHours();
+  /** 시간대별 라벨 (오전/오후/저녁). 실제 점검 기능 없음, 대시보드에서 현재 구간 표시용. */
   const briefing =
     hour < 12
       ? t({ ko: "오전 브리핑", en: "Morning Briefing", ja: "午前ブリーフィング", zh: "上午简报" })
@@ -144,22 +145,20 @@ export function XpBar({ xp, maxXp, color }: { xp: number; maxXp: number; color: 
 export function RankBadge({ xp, size = "md" }: { xp: number; size?: "sm" | "md" | "lg" }) {
   const tier = getRankTier(xp);
   const sizeClasses = {
-    sm: "px-1.5 py-0.5 text-[8px] gap-0.5",
-    md: "px-2 py-0.5 text-[10px] gap-1",
-    lg: "px-3 py-1 text-xs gap-1",
+    sm: "px-1.5 py-0.5 text-[8px]",
+    md: "px-2 py-0.5 text-[10px]",
+    lg: "px-2.5 py-1 text-xs",
   };
   return (
     <span
-      className={`inline-flex items-center rounded-md font-black uppercase tracking-wider ${sizeClasses[size]}`}
+      className={`inline-flex items-center rounded font-semibold uppercase tracking-wider ${sizeClasses[size]}`}
       style={{
-        background: tier.glow,
+        backgroundColor: `${tier.color}18`,
         color: tier.color,
-        border: `1px solid ${tier.color}50`,
-        boxShadow: `0 0 8px ${tier.glow}`,
-        textShadow: `0 0 6px ${tier.glow}`,
+        border: `1px solid ${tier.color}40`,
       }}
     >
-      {tier.icon} {tier.name}
+      {tier.name}
     </span>
   );
 }

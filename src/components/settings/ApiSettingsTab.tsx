@@ -35,18 +35,23 @@ export default function ApiSettingsTab({ t, localeTag, apiState }: ApiSettingsTa
 
   return (
     <>
-      <section className="space-y-4 rounded-xl border border-slate-700/50 bg-slate-800/60 p-4 sm:p-5">
+      <section
+        className="space-y-4 rounded-xl border p-4 sm:p-5"
+        style={{ background: "var(--th-bg-surface)", borderColor: "var(--th-border)" }}
+      >
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-slate-300 uppercase tracking-wider">
-            {t({ ko: "API 프로바이더", en: "API Providers", ja: "API プロバイダー", zh: "API 提供商" })}
+          <h3 className="text-sm font-semibold" style={{ color: "var(--th-text-heading)" }}>
+            {t({ ko: "API 프로바이더", en: "API providers", ja: "API プロバイダー", zh: "API 提供商" })}
           </h3>
           <div className="flex items-center gap-2">
             <button
+              type="button"
               onClick={() => void loadApiProviders()}
               disabled={apiProvidersLoading}
-              className="text-xs text-blue-400 hover:text-blue-300 transition-colors disabled:opacity-50"
+              className="text-xs font-medium transition-colors disabled:opacity-50"
+              style={{ color: "var(--th-text-secondary)" }}
             >
-              🔄 {t({ ko: "새로고침", en: "Refresh", ja: "更新", zh: "刷新" })}
+              {t({ ko: "새로고침", en: "Refresh", ja: "更新", zh: "刷新" })}
             </button>
             {!apiAddMode && (
               <button
@@ -63,7 +68,7 @@ export default function ApiSettingsTab({ t, localeTag, apiState }: ApiSettingsTa
           </div>
         </div>
 
-        <p className="text-xs text-slate-500">
+        <p className="text-xs" style={{ color: "var(--th-text-muted)" }}>
           {t({
             ko: "로컬 모델(Ollama 등), 프론티어 모델(OpenAI, Anthropic 등), 기타 서비스의 API를 등록하여 언어모델에 접근합니다.",
             en: "Register APIs for local models (Ollama, etc.), frontier models (OpenAI, Anthropic, etc.), and other services.",

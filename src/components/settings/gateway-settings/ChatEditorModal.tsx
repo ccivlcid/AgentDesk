@@ -1,6 +1,7 @@
-import type { Dispatch, SetStateAction } from "react";
+import { useMemo, type Dispatch, type SetStateAction } from "react";
 import AgentSelect from "../../AgentSelect";
-import type { Agent, MessengerChannelType, MessengerChannelsConfig, WorkflowPackKey } from "../../../types";
+import type { Agent, MessengerChannelType, MessengerChannelsConfig, OfficePackProfiles, WorkflowPackKey } from "../../../types";
+import { resolvePackAgentViews } from "../../../app/office-pack-display";
 import type { ChannelSettingsTabProps } from "../types";
 import { CHANNEL_META, channelTargetHint, isWorkflowPackKey } from "./constants";
 import type { ChatEditorState } from "./state";
@@ -21,6 +22,7 @@ type ChatEditorModalProps = {
   channelsConfig: MessengerChannelsConfig;
   agents: Agent[];
   agentsLoading: boolean;
+  officePackProfiles?: OfficePackProfiles;
   workflowPackOptions: WorkflowPackOption[];
   workflowPacksLoading: boolean;
   editorError: string | null;
@@ -44,6 +46,7 @@ export default function ChatEditorModal({
   channelsConfig,
   agents,
   agentsLoading,
+  officePackProfiles,
   workflowPackOptions,
   workflowPacksLoading,
   editorError,
@@ -53,6 +56,24 @@ export default function ChatEditorModal({
 }: ChatEditorModalProps) {
   const discordSelectedChannel =
     editor.channel === "discord" ? discordChannels.find((entry) => entry.id === editor.targetId.trim()) : null;
+
+  const displayAgents = useMemo(() => {
+    const packKey = editor.workflowPackKey || "development";
+    if (packKey === "development") {
+      // development: show only non-seed agents (original dev agents)
+      return agents.filter((a) => !a.workflow_pack_key || a.workflow_pack_key === "development");
+    }
+    const profileAgents = officePackProfiles?.[packKey]?.agents;
+    if (profileAgents?.length) {
+      return resolvePackAgentViews({ packKey, globalAgents: agents, packAgents: profileAgents }).scopedAgents;
+    }
+    // Fallback: filter DB agents by workflow_pack_key
+    const packDbAgents = agents.filter((a) => a.workflow_pack_key === packKey);
+    if (packDbAgents.length > 0) {
+      return packDbAgents;
+    }
+    return agents;
+  }, [agents, editor.workflowPackKey, officePackProfiles]);
 
   return (
     <div className="fixed inset-0 z-[2200] flex items-center justify-center px-4">
@@ -243,24 +264,6 @@ export default function ChatEditorModal({
 
         <div>
           <label className="block text-xs text-slate-400 mb-1">
-            {t({ ko: "대화 Agent", en: "Conversation Agent", ja: "担当Agent", zh: "对话 Agent" })}
-          </label>
-          <AgentSelect
-            agents={agents}
-            value={editor.agentId}
-            onChange={(agentId) => setEditor((prev) => ({ ...prev, agentId: agentId || "" }))}
-            placeholder={t({
-              ko: "대화 Agent 선택",
-              en: "Select Agent",
-              ja: "担当エージェント選択",
-              zh: "选择对话 Agent",
-            })}
-            className={agentsLoading ? "pointer-events-none opacity-60" : ""}
-          />
-        </div>
-
-        <div>
-          <label className="block text-xs text-slate-400 mb-1">
             {t({ ko: "워크플로우 팩", en: "Workflow Pack", ja: "ワークフローパック", zh: "工作流包" })}
           </label>
           <select
@@ -290,6 +293,24 @@ export default function ChatEditorModal({
               })}
             </div>
           )}
+        </div>
+
+        <div>
+          <label className="block text-xs text-slate-400 mb-1">
+            {t({ ko: "대화 Agent", en: "Conversation Agent", ja: "担当Agent", zh: "对话 Agent" })}
+          </label>
+          <AgentSelect
+            agents={displayAgents}
+            value={editor.agentId}
+            onChange={(agentId) => setEditor((prev) => ({ ...prev, agentId: agentId || "" }))}
+            placeholder={t({
+              ko: "대화 Agent 선택",
+              en: "Select Agent",
+              ja: "担当エージェント選択",
+              zh: "选择对话 Agent",
+            })}
+            className={agentsLoading ? "pointer-events-none opacity-60" : ""}
+          />
         </div>
 
         {editor.channel === "telegram" && (

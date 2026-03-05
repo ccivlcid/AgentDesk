@@ -14,6 +14,13 @@ import { registerOAuthRoutes } from "./ops/oauth/routes.ts";
 import { registerSkillRoutes } from "./ops/skills/routes.ts";
 import { registerApiDocsRoutes } from "./ops/api-docs.ts";
 import { registerWorkflowPackRoutes } from "./ops/workflow-packs.ts";
+import { registerAgentRulesRoutes } from "./ops/agent-rules.ts";
+import { registerMemoryRoutes } from "./ops/memory.ts";
+import { registerHookRoutes } from "./ops/hooks.ts";
+import { registerRuleLearningRoutes } from "./ops/rule-learning/routes.ts";
+import { registerMemoryLearningRoutes } from "./ops/memory-learning/routes.ts";
+import { registerHookLearningRoutes } from "./ops/hooks-learning/routes.ts";
+import { registerChatUploadRoutes } from "./ops/chat-upload.ts";
 
 export function registerRoutesPartC(ctx: RuntimeContext): RouteOpsExports {
   const __ctx: RuntimeContext = ctx;
@@ -233,6 +240,18 @@ export function registerRoutesPartC(ctx: RuntimeContext): RouteOpsExports {
   });
 
   registerTaskReportRoutes(__ctx);
+
+  // rule-learning 경로(/api/agent-rules/history, available, learn)를 agent-rules/:id 보다 먼저 등록해야 함
+  registerRuleLearningRoutes(__ctx);
+  registerAgentRulesRoutes({ app, db, nowMs });
+  // memory-learning 경로(/api/memory/history, available, learn)를 /api/memory/:id 보다 먼저 등록해야 함
+  registerMemoryLearningRoutes(__ctx);
+  registerMemoryRoutes({ app, db, nowMs });
+  // hooks-learning 경로(/api/hooks/history, available, learn)를 /api/hooks/:id 보다 먼저 등록해야 함
+  registerHookLearningRoutes(__ctx);
+  registerHookRoutes({ app, db, nowMs });
+
+  registerChatUploadRoutes(__ctx);
 
   return {
     prettyStreamJson,

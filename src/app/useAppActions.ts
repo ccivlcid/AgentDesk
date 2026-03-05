@@ -25,6 +25,7 @@ interface UseAppActionsParams {
   scheduleLiveSync: (delayMs?: number) => void;
   setSettings: Dispatch<SetStateAction<CompanySettings>>;
   setAgents: Dispatch<SetStateAction<Agent[]>>;
+  setLibraryAgents: Dispatch<SetStateAction<Agent[]>>;
   setDepartments: Dispatch<SetStateAction<Department[]>>;
   setTasks: Dispatch<SetStateAction<Task[]>>;
   setStats: Dispatch<SetStateAction<CompanyStats | null>>;
@@ -45,6 +46,7 @@ export function useAppActions({
   scheduleLiveSync,
   setSettings,
   setAgents,
+  setLibraryAgents,
   setDepartments,
   setTasks,
   setStats,
@@ -442,9 +444,10 @@ export function useAppActions({
     const activePack = normalizeOfficeWorkflowPack(settings.officeWorkflowPack ?? "development");
     const includeSeedAgents = activePack !== "development";
     api.getAgents({ includeSeed: includeSeedAgents }).then(setAgents).catch(console.error);
+    api.getAgents({ includeSeed: true }).then(setLibraryAgents).catch(console.error);
     api.getDepartments({ workflowPackKey: activePack }).then(setDepartments).catch(console.error);
     api.getTasks().then(setTasks).catch(console.error);
-  }, [setAgents, setDepartments, setTasks, settings.officeWorkflowPack]);
+  }, [setAgents, setLibraryAgents, setDepartments, setTasks, settings.officeWorkflowPack]);
 
   const handleRefreshCli = useCallback(async () => {
     const status = await api.getCliStatus(true);

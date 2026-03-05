@@ -62,6 +62,8 @@ export interface CliToolDef {
   name: string;
   authHint: string;
   checkAuth: () => boolean;
+  /** When set, used instead of checkAuth (e.g. Cursor CLI: run `agent status` to detect browser login). */
+  checkAuthAsync?: () => Promise<boolean>;
   versionArgs?: string[];
   getVersion?: () => string | null;
 }

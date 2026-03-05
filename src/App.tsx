@@ -60,6 +60,7 @@ export default function App() {
   const [view, setView] = useState<View>("office");
   const [departments, setDepartments] = useState<Department[]>([]);
   const [agents, setAgents] = useState<Agent[]>([]);
+  const [libraryAgents, setLibraryAgents] = useState<Agent[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [stats, setStats] = useState<CompanyStats | null>(null);
@@ -231,13 +232,15 @@ export default function App() {
     api
       .saveSettingsPatch(patchPayload)
       .then(async () => {
-        const [nextDepartments, nextAgents, nextSettingsRaw] = await Promise.all([
+        const [nextDepartments, nextAgents, nextLibraryAgents, nextSettingsRaw] = await Promise.all([
           api.getDepartments({ workflowPackKey: packKey }),
           api.getAgents({ includeSeed: packKey !== "development" }),
+          api.getAgents({ includeSeed: true }),
           api.getSettings(),
         ]);
         setDepartments(nextDepartments);
         setAgents(nextAgents);
+        setLibraryAgents(nextLibraryAgents);
         setSettings(mergeSettingsWithDefaults(nextSettingsRaw));
         const clearNotice = () => {
           if (officePackBootstrapReqRef.current !== reqId) return;
@@ -284,6 +287,7 @@ export default function App() {
     hasLocalRoomThemesRef,
     setDepartments,
     setAgents,
+    setLibraryAgents,
     setTasks,
     setStats,
     setSettings,
@@ -334,6 +338,7 @@ export default function App() {
     scheduleLiveSync,
     setSettings,
     setAgents,
+    setLibraryAgents,
     setDepartments,
     setTasks,
     setStats,
@@ -389,6 +394,8 @@ export default function App() {
     );
   }
 
+  const agentsForLibraries = libraryAgents.length > 0 ? libraryAgents : agents;
+
   return (
     <AppMainLayout
       connected={connected}
@@ -396,6 +403,7 @@ export default function App() {
       setView={setView}
       departments={departments}
       agents={agents}
+      libraryAgents={agentsForLibraries}
       stats={stats}
       tasks={tasks}
       subtasks={subtasks}
@@ -500,7 +508,7 @@ export default function App() {
         }}
         onAssignTaskFromAgentDetail={() => {
           setSelectedAgent(null);
-          setView("tasks");
+          setView("tasks-board");
         }}
         onOpenTerminalFromAgentDetail={(taskId) => {
           setSelectedAgent(null);
@@ -512,8 +520,12 @@ export default function App() {
             .then(async (nextSettingsRaw) => {
               const nextSettings = mergeSettingsWithDefaults(nextSettingsRaw);
               const activePack = nextSettings.officeWorkflowPack ?? "development";
-              const nextAgents = await api.getAgents({ includeSeed: activePack !== "development" });
+              const [nextAgents, nextLibraryAgents] = await Promise.all([
+                api.getAgents({ includeSeed: activePack !== "development" }),
+                api.getAgents({ includeSeed: true }),
+              ]);
               setAgents(nextAgents);
+              setLibraryAgents(nextLibraryAgents);
               setSettings(nextSettings);
 
               if (!selectedAgent) return;

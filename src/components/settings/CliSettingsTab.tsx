@@ -13,15 +13,20 @@ export default function CliSettingsTab({
 }: CliSettingsTabProps) {
   return (
     <section
-      className="rounded-xl p-5 sm:p-6 space-y-5"
-      style={{ background: "var(--th-card-bg)", border: "1px solid var(--th-card-border)" }}
+      className="rounded-xl border p-5 sm:p-6 space-y-5"
+      style={{ background: "var(--th-bg-surface)", borderColor: "var(--th-border)" }}
     >
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold uppercase tracking-wider" style={{ color: "var(--th-text-primary)" }}>
-          {t({ ko: "CLI 도구 상태", en: "CLI Tool Status", ja: "CLI ツール状態", zh: "CLI 工具状态" })}
+        <h3 className="text-sm font-semibold" style={{ color: "var(--th-text-heading)" }}>
+          {t({ ko: "CLI 도구 상태", en: "CLI tool status", ja: "CLI ツール状態", zh: "CLI 工具状态" })}
         </h3>
-        <button onClick={onRefresh} className="text-xs text-blue-400 hover:text-blue-300 transition-colors">
-          🔄 {t({ ko: "새로고침", en: "Refresh", ja: "更新", zh: "刷新" })}
+        <button
+          type="button"
+          onClick={onRefresh}
+          className="text-xs font-medium transition-colors hover:opacity-80"
+          style={{ color: "var(--th-text-secondary)" }}
+        >
+          {t({ ko: "새로고침", en: "Refresh", ja: "更新", zh: "刷新" })}
         </button>
       </div>
 
@@ -32,6 +37,7 @@ export default function CliSettingsTab({
             .map(([provider, status]) => {
               const info = CLI_INFO[provider];
               const isReady = status.installed && status.authenticated;
+              const showModelSection = isReady || (provider === "cursor" && status.installed);
               const hasSubModel = provider === "claude" || provider === "codex";
               const modelList = cliModels?.[provider] ?? [];
               const currentModel = form.providerModelConfig?.[provider]?.model || "";
@@ -43,9 +49,13 @@ export default function CliSettingsTab({
               const defaultReasoning = selectedModel?.defaultReasoningLevel || "";
 
               return (
-                <div key={provider} className="bg-slate-700/30 rounded-lg p-3 space-y-2">
+                <div
+                  key={provider}
+                  className="rounded-lg border p-3 space-y-2"
+                  style={{ background: "var(--th-bg-primary)", borderColor: "var(--th-border)" }}
+                >
                   <div className="flex items-center gap-3">
-                    <span className="text-lg">{info?.icon ?? "?"}</span>
+                    <span className="text-lg flex-shrink-0">{info?.icon ?? "?"}</span>
                     <div className="flex-1">
                       <div className="text-sm text-white">{info?.label ?? provider}</div>
                       <div className="text-xs text-slate-500">
@@ -84,7 +94,7 @@ export default function CliSettingsTab({
                     </div>
                   </div>
 
-                  {isReady && (
+                  {showModelSection && (
                     <div className="space-y-1.5 pl-0 sm:pl-8">
                       <div className="flex min-w-0 flex-col items-stretch gap-1.5 sm:flex-row sm:items-center sm:gap-2">
                         <span className="w-auto shrink-0 text-xs text-slate-400 sm:w-20">

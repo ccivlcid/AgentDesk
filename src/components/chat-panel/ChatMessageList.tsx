@@ -1,8 +1,72 @@
 import type { RefObject } from "react";
-import type { Agent, Message } from "../../types";
+import type { Agent, Message, MessageAttachment } from "../../types";
 import type { DecisionOption } from "../chat/decision-request";
 import AgentAvatar from "../AgentAvatar";
 import MessageContent from "../MessageContent";
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return bytes + " B";
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+  return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+}
+
+function getAttachmentIcon(fileName: string): string {
+  const ext = fileName.split(".").pop()?.toLowerCase() ?? "";
+  if (["png", "jpg", "gif"].includes(ext)) return "\uD83D\uDDBC\uFE0F";
+  if (["pdf"].includes(ext)) return "\uD83D\uDCC4";
+  if (["docx", "doc"].includes(ext)) return "\uD83D\uDCC3";
+  if (["xlsx", "xls", "csv"].includes(ext)) return "\uD83D\uDCCA";
+  if (["pptx", "ppt"].includes(ext)) return "\uD83D\uDCCA";
+  if (["mp4"].includes(ext)) return "\uD83C\uDFA5";
+  if (["zip"].includes(ext)) return "\uD83D\uDCE6";
+  if (["json"].includes(ext)) return "\uD83D\uDD27";
+  if (["md", "txt"].includes(ext)) return "\uD83D\uDCDD";
+  return "\uD83D\uDCCE";
+}
+
+function isImageFile(fileName: string): boolean {
+  const ext = fileName.split(".").pop()?.toLowerCase() ?? "";
+  return ["png", "jpg", "gif"].includes(ext);
+}
+
+function AttachmentChips({ attachments }: { attachments: MessageAttachment[] }) {
+  if (!attachments || attachments.length === 0) return null;
+  return (
+    <div className="mt-1.5 flex flex-wrap gap-1.5">
+      {attachments.map((att) => {
+        const downloadUrl = `/api/chat/uploads/${att.id}/${encodeURIComponent(att.fileName)}`;
+        return (
+          <div key={att.id}>
+            {isImageFile(att.fileName) && (
+              <a href={downloadUrl} target="_blank" rel="noopener noreferrer" className="block mb-1">
+                <img
+                  src={downloadUrl}
+                  alt={att.fileName}
+                  className="max-h-32 max-w-[200px] rounded-lg border border-gray-600 object-cover"
+                  loading="lazy"
+                />
+              </a>
+            )}
+            <a
+              href={downloadUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-gray-600 bg-gray-800/60 px-2 py-1 text-xs text-gray-300 transition-colors hover:border-gray-500 hover:bg-gray-700/80"
+            >
+              <span>{getAttachmentIcon(att.fileName)}</span>
+              <span className="max-w-[140px] truncate">{att.fileName}</span>
+              <span className="text-gray-500">({formatFileSize(att.size)})</span>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3 text-gray-500">
+                <path d="M10.75 2.75a.75.75 0 00-1.5 0v8.614L6.295 8.235a.75.75 0 10-1.09 1.03l4.25 4.5a.75.75 0 001.09 0l4.25-4.5a.75.75 0 00-1.09-1.03l-2.955 3.129V2.75z" />
+                <path d="M3.5 12.75a.75.75 0 00-1.5 0v2.5A2.75 2.75 0 004.75 18h10.5A2.75 2.75 0 0018 15.25v-2.5a.75.75 0 00-1.5 0v2.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25v-2.5z" />
+              </svg>
+            </a>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 type Tr = (ko: string, en: string, ja?: string, zh?: string) => string;
 
@@ -150,6 +214,7 @@ export default function ChatMessageList({
                     <span className="px-1 text-xs text-gray-500">{senderName}</span>
                     <div className="announcement-reply-bubble rounded-2xl rounded-bl-sm border border-yellow-500/20 bg-gray-700/70 px-4 py-2.5 text-sm text-gray-100 shadow-md">
                       <MessageContent content={msg.content} />
+                      {msg.attachments && <AttachmentChips attachments={msg.attachments} />}
                     </div>
                     {decisionRequest && (
                       <div className="rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-2 py-2">
@@ -206,6 +271,7 @@ export default function ChatMessageList({
                     }`}
                   >
                     <MessageContent content={msg.content} />
+                    {msg.attachments && <AttachmentChips attachments={msg.attachments} />}
                   </div>
                   <span className="text-xs text-gray-600">{formatTime(msg.created_at, locale)}</span>
                 </div>
@@ -218,6 +284,7 @@ export default function ChatMessageList({
                   <span className="px-1 text-xs text-gray-500">{tr("CEO", "CEO")}</span>
                   <div className="max-w-[80%] rounded-2xl rounded-br-sm bg-blue-600 px-4 py-2.5 text-sm text-white shadow-md">
                     <MessageContent content={msg.content} />
+                    {msg.attachments && <AttachmentChips attachments={msg.attachments} />}
                   </div>
                   <span className="px-1 text-xs text-gray-600">{formatTime(msg.created_at, locale)}</span>
                 </div>
@@ -231,6 +298,7 @@ export default function ChatMessageList({
                   <span className="px-1 text-xs text-gray-500">{senderName}</span>
                   <div className="rounded-2xl rounded-bl-sm bg-gray-700 px-4 py-2.5 text-sm text-gray-100 shadow-md">
                     <MessageContent content={msg.content} />
+                    {msg.attachments && <AttachmentChips attachments={msg.attachments} />}
                   </div>
                   {decisionRequest && (
                     <div className="rounded-xl border border-indigo-500/30 bg-indigo-500/10 px-2 py-2">

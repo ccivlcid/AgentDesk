@@ -214,8 +214,33 @@ export function createUsageCliTools(deps: CreateUsageCliToolsDeps) {
     },
     {
       name: "agent",
-      authHint: "Set env: CURSOR_API_KEY",
+      authHint: "Run: agent login (or set CURSOR_API_KEY for CI)",
       checkAuth: () => !!process.env.CURSOR_API_KEY,
+      checkAuthAsync: async () => {
+        if (process.env.CURSOR_API_KEY) return true;
+        try {
+          const timeout = process.platform === "win32" ? 6000 : 4500;
+          const { stdout, stderr, code } = await execWithCapture("agent", ["status"], timeout);
+          const out = `${stdout}\n${stderr}`.toLowerCase();
+          if (out.includes("not authenticated") || out.includes("not logged in")) return false;
+          if (code === 0) return true;
+          if (
+            out.includes("authenticated") ||
+            out.includes("account") ||
+            out.includes("logged in") ||
+            out.includes("cursor.com") ||
+            out.includes("logged in as") ||
+            out.includes("user:") ||
+            out.includes("email:")
+          )
+            return true;
+          const cursorConfig = path.join(os.homedir(), ".cursor", "cli-config.json");
+          if (fileExistsNonEmpty(cursorConfig) && jsonHasKey(cursorConfig, "auth")) return true;
+          return false;
+        } catch {
+          return false;
+        }
+      },
     },
   ];
 
@@ -234,27 +259,69 @@ export function createUsageCliTools(deps: CreateUsageCliToolsDeps) {
     });
   }
 
+  /** Run command and capture stdout, stderr, and exit code (does not reject on non-zero exit). */
+  function execWithCapture(
+    cmd: string,
+    args: string[],
+    timeoutMs: number,
+  ): Promise<{ stdout: string; stderr: string; code: number }> {
+    return new Promise((resolve) => {
+      const opts: any = { timeout: timeoutMs };
+      if (process.platform === "win32") opts.shell = true;
+      const child = execFile(cmd, args, opts, (err, stdout, stderr) => {
+        const raw = err && (err as NodeJS.ErrnoException).code;
+        const code = typeof raw === "number" ? raw : err ? 1 : 0;
+        resolve({
+          stdout: String(stdout ?? "").trim(),
+          stderr: String(stderr ?? "").trim(),
+          code,
+        });
+      });
+      child.unref?.();
+    });
+  }
+
   async function detectCliTool(tool: CliToolDef): Promise<CliToolStatus> {
     const whichCmd = process.platform === "win32" ? "where" : "which";
     try {
-      await execWithTimeout(whichCmd, [tool.name], 3000);
+      await execWithTimeout(whichCmd, [tool.name], 1500);
     } catch {
       return { installed: false, version: null, authenticated: false, authHint: tool.authHint };
     }
 
+    const hasAsyncAuth = Boolean(tool.checkAuthAsync);
     let version: string | null = null;
-    if (tool.getVersion) {
+    let authPromise: Promise<boolean> | null = null;
+    if (hasAsyncAuth) authPromise = tool.checkAuthAsync!();
+
+    if (tool.name === "agent") {
+      try {
+        const timeout = process.platform === "win32" ? 5000 : 3500;
+        const { stdout, stderr } = await execWithCapture("agent", ["--version"], timeout);
+        const combined = [stdout, stderr].filter(Boolean).join("\n").trim();
+        if (combined) {
+          const firstLine = combined.split(/\r?\n/)[0].trim();
+          if (firstLine) version = firstLine;
+          if (!version || !/\d+\.\d+/.test(version)) {
+            const verMatch = combined.match(/\b(\d+\.\d+(?:\.\d+)?)\b/);
+            if (verMatch) version = verMatch[1];
+          }
+        }
+      } catch {
+        /* ignore */
+      }
+    } else if (tool.getVersion) {
       version = tool.getVersion();
     } else {
       try {
-        version = await execWithTimeout(tool.name, tool.versionArgs ?? ["--version"], 3000);
+        version = await execWithTimeout(tool.name, tool.versionArgs ?? ["--version"], 2000);
         if (version.includes("\n")) version = version.split("\n")[0].trim();
       } catch {
         /* binary found but --version failed */
       }
     }
 
-    const authenticated = tool.checkAuth();
+    const authenticated = authPromise ? await authPromise : tool.checkAuth();
     return { installed: true, version, authenticated, authHint: tool.authHint };
   }
 

@@ -31,6 +31,7 @@ export default function AgentSelect({
   className = "",
 }: AgentSelectProps) {
   const [open, setOpen] = useState(false);
+  const [dropUp, setDropUp] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const spriteMap = useSpriteMap(agents);
   const { t, locale } = useI18n();
@@ -73,6 +74,13 @@ export default function AgentSelect({
     return () => document.removeEventListener("mousedown", handleClick);
   }, []);
 
+  useEffect(() => {
+    if (!open || !ref.current) return;
+    const rect = ref.current.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+    setDropUp(spaceBelow < 200);
+  }, [open]);
+
   return (
     <div ref={ref} className={`relative ${className}`}>
       {/* Trigger */}
@@ -106,7 +114,7 @@ export default function AgentSelect({
 
       {/* Dropdown */}
       {open && (
-        <div className="absolute z-50 mt-1 w-full max-h-48 overflow-y-auto rounded-lg border border-slate-600 bg-slate-800 shadow-xl">
+        <div className={`absolute z-50 w-full max-h-48 overflow-y-auto rounded-lg border border-slate-600 bg-slate-800 shadow-xl ${dropUp ? "bottom-full mb-1" : "mt-1"}`}>
           {/* None option */}
           <button
             type="button"

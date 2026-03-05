@@ -1,13 +1,89 @@
 import { useCallback, useMemo, useState } from "react";
+import {
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  useDroppable,
+  type DragStartEvent,
+  type DragEndEvent,
+  type DragOverEvent,
+} from "@dnd-kit/core";
+import { useDraggable } from "@dnd-kit/core";
 import { bulkHideTasks } from "../api";
 import { useI18n } from "../i18n";
-import type { Agent, Department, SubTask, Task, WorkflowPackKey } from "../types";
+import type { Agent, Department, SubTask, Task, TaskStatus, WorkflowPackKey } from "../types";
 import ProjectManagerModal from "./ProjectManagerModal";
 import BulkHideModal from "./taskboard/BulkHideModal";
 import CreateTaskModal from "./taskboard/CreateTaskModal";
 import FilterBar from "./taskboard/FilterBar";
 import TaskCard from "./taskboard/TaskCard";
 import { COLUMNS, isHideableStatus, taskStatusLabel, type HideableStatus } from "./taskboard/constants";
+
+const COLLAPSED_CARD_IDS_KEY = "agentdesk_taskboard_collapsed_ids";
+
+function loadCollapsedCardIds(): Set<string> {
+  if (typeof window === "undefined") return new Set();
+  try {
+    const raw = window.localStorage.getItem(COLLAPSED_CARD_IDS_KEY);
+    if (!raw) return new Set();
+    const arr = JSON.parse(raw) as unknown;
+    return Array.isArray(arr) ? new Set(arr.filter((id): id is string => typeof id === "string")) : new Set();
+  } catch {
+    return new Set();
+  }
+}
+
+function saveCollapsedCardIds(ids: Set<string>): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(COLLAPSED_CARD_IDS_KEY, JSON.stringify([...ids]));
+  } catch {
+    // ignore quota / private mode
+  }
+}
+
+/* ── Draggable task wrapper ───────────────────────────────────────── */
+function DraggableTaskCard({
+  task,
+  children,
+}: {
+  task: Task;
+  children: React.ReactNode;
+}) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: task.id,
+    data: { task },
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      {...listeners}
+      {...attributes}
+      className={`cursor-grab active:cursor-grabbing touch-none ${isDragging ? "opacity-30" : ""}`}
+    >
+      {children}
+    </div>
+  );
+}
+
+/* ── Droppable column wrapper ─────────────────────────────────────── */
+function DroppableColumn({
+  status,
+  children,
+}: {
+  status: string;
+  children: (isOver: boolean) => React.ReactNode;
+}) {
+  const { setNodeRef, isOver } = useDroppable({ id: `column-${status}`, data: { status } });
+  return (
+    <div ref={setNodeRef} className="flex flex-1 flex-col">
+      {children(isOver)}
+    </div>
+  );
+}
 
 interface TaskBoardProps {
   tasks: Task[];
@@ -65,6 +141,14 @@ export function TaskBoard({
   const [filterType, setFilterType] = useState("");
   const [search, setSearch] = useState("");
   const [showAllTasks, setShowAllTasks] = useState(false);
+  const [collapsedColumns, setCollapsedColumns] = useState<Set<string>>(new Set());
+  const [collapsedCardIds, setCollapsedCardIds] = useState<Set<string>>(() => loadCollapsedCardIds());
+  const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
+  const [overColumnStatus, setOverColumnStatus] = useState<string | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+  );
 
   const hiddenTaskIds = useMemo(
     () => new Set(tasks.filter((task) => task.hidden === 1).map((task) => task.id)),
@@ -121,6 +205,57 @@ export function TaskBoard({
     return grouped;
   }, [subtasks]);
 
+  const toggleColumn = useCallback((status: string) => {
+    setCollapsedColumns((prev) => {
+      const next = new Set(prev);
+      if (next.has(status)) next.delete(status);
+      else next.add(status);
+      return next;
+    });
+  }, []);
+
+  const toggleCardCollapsed = useCallback((taskId: string) => {
+    setCollapsedCardIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(taskId)) next.delete(taskId);
+      else next.add(taskId);
+      saveCollapsedCardIds(next);
+      return next;
+    });
+  }, []);
+
+  const handleDragStart = useCallback((event: DragStartEvent) => {
+    setActiveTaskId(String(event.active.id));
+  }, []);
+
+  const handleDragOver = useCallback((event: DragOverEvent) => {
+    const overData = event.over?.data?.current as { status?: string } | undefined;
+    setOverColumnStatus(overData?.status ?? null);
+  }, []);
+
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      setActiveTaskId(null);
+      setOverColumnStatus(null);
+      const overData = event.over?.data?.current as { status?: string } | undefined;
+      const targetStatus = overData?.status;
+      if (!targetStatus) return;
+      const taskId = String(event.active.id);
+      const task = tasks.find((t) => t.id === taskId);
+      if (task && task.status !== targetStatus) {
+        onUpdateTask(taskId, { status: targetStatus as TaskStatus });
+      }
+    },
+    [tasks, onUpdateTask],
+  );
+
+  const handleDragCancel = useCallback(() => {
+    setActiveTaskId(null);
+    setOverColumnStatus(null);
+  }, []);
+
+  const activeTask = activeTaskId ? tasks.find((t) => t.id === activeTaskId) ?? null : null;
+
   const activeFilterCount = [filterDept, filterAgent, filterType, search].filter(Boolean).length;
   const hiddenTaskCount = useMemo(() => {
     let count = 0;
@@ -131,43 +266,56 @@ export function TaskBoard({
   }, [tasks, hiddenTaskIds]);
 
   return (
-    <div className="taskboard-shell flex h-full flex-col gap-4 bg-slate-950 p-3 sm:p-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <h1 className="text-xl font-bold text-white">
-          {t({ ko: "업무 보드", en: "Task Board", ja: "タスクボード", zh: "任务看板" })}
-        </h1>
-        <span className="rounded-full bg-slate-800 px-2.5 py-0.5 text-xs text-slate-400">
-          {t({ ko: "총", en: "Total", ja: "合計", zh: "总计" })} {filteredTasks.length}
-          {t({ ko: "개", en: "", ja: "件", zh: "项" })}
-          {activeFilterCount > 0 &&
-            ` (${t({ ko: "필터", en: "filters", ja: "フィルター", zh: "筛选器" })} ${activeFilterCount}${t({
-              ko: "개 적용",
-              en: " applied",
-              ja: "件適用",
-              zh: "个已应用",
-            })})`}
-        </span>
-        <div className="ml-auto flex items-center gap-2">
-          {activeFilterCount > 0 && (
-            <button
-              onClick={() => {
-                setFilterDept("");
-                setFilterAgent("");
-                setFilterType("");
-                setSearch("");
-              }}
-              className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs text-slate-400 transition hover:bg-slate-800 hover:text-white"
-            >
-              {t({ ko: "필터 초기화", en: "Reset Filters", ja: "フィルターをリセット", zh: "重置筛选" })}
-            </button>
-          )}
+    <div className="taskboard-shell flex h-full flex-col gap-4 p-3 sm:p-4">
+      <div>
+        <div className="flex flex-wrap items-center gap-3">
+          <h1 className="text-lg font-semibold tracking-tight" style={{ color: "var(--th-text-heading)" }}>
+            {t({ ko: "업무 보드", en: "Task Board", ja: "タスクボード", zh: "任务看板" })}
+          </h1>
+          <span
+            className="rounded-full px-2.5 py-0.5 text-xs font-medium"
+            style={{ background: "var(--th-bg-surface)", color: "var(--th-text-muted)" }}
+          >
+            {t({ ko: "총", en: "Total", ja: "合計", zh: "总计" })} {filteredTasks.length}
+            {t({ ko: "개", en: "", ja: "件", zh: "项" })}
+            {activeFilterCount > 0 &&
+              ` · ${t({ ko: "필터", en: "filters", ja: "フィルター", zh: "筛选" })} ${activeFilterCount}`}
+          </span>
+        </div>
+        <p className="mt-0.5 text-sm" style={{ color: "var(--th-text-muted)" }}>
+          {t({
+            ko: "상태별로 업무를 드래그하여 관리합니다.",
+            en: "Drag and manage tasks by status.",
+            ja: "ステータスごとにタスクをドラッグして管理します。",
+            zh: "按状态拖拽管理任务。",
+          })}
+        </p>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2">
+        {activeFilterCount > 0 && (
           <button
-            onClick={() => setShowAllTasks((prev) => !prev)}
-            className={`rounded-lg border px-3 py-1.5 text-xs transition ${
-              showAllTasks
-                ? "border-cyan-600 bg-cyan-900/40 text-cyan-100 hover:bg-cyan-900/60"
-                : "border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white"
-            }`}
+            type="button"
+            onClick={() => {
+              setFilterDept("");
+              setFilterAgent("");
+              setFilterType("");
+              setSearch("");
+            }}
+            className="rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors hover:opacity-90"
+            style={{ borderColor: "var(--th-border)", color: "var(--th-text-secondary)", background: "var(--th-bg-surface)" }}
+          >
+            {t({ ko: "필터 초기화", en: "Reset filters", ja: "フィルターリセット", zh: "重置筛选" })}
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={() => setShowAllTasks((prev) => !prev)}
+          className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
+            showAllTasks
+              ? "border-blue-500/50 bg-blue-500/15 text-blue-600 [.dark_theme_*]:text-blue-400"
+              : "border-[var(--th-border)] bg-[var(--th-bg-surface)] text-[var(--th-text-secondary)] hover:bg-[var(--th-bg-surface-hover)]"
+          }`}
             title={
               showAllTasks
                 ? t({
@@ -184,20 +332,26 @@ export function TaskBoard({
                   })
             }
           >
-            <span className={showAllTasks ? "text-slate-400" : "text-emerald-200"}>
+            <span className={showAllTasks ? "opacity-60" : ""} style={{ color: "var(--th-text-secondary)" }}>
               {t({ ko: "진행중", en: "Active", ja: "進行中", zh: "进行中" })}
             </span>
-            <span className="mx-1 text-slate-500">/</span>
-            <span className={showAllTasks ? "text-cyan-100" : "text-slate-500"}>
+            <span className="mx-1 opacity-50" style={{ color: "var(--th-text-muted)" }}>/</span>
+            <span className={showAllTasks ? "" : "opacity-60"} style={{ color: "var(--th-text-secondary)" }}>
               {t({ ko: "모두보기", en: "All", ja: "すべて", zh: "全部" })}
             </span>
-            <span className="ml-1 rounded-full bg-slate-800 px-1.5 py-0.5 text-[10px] text-slate-300">
+            <span
+              className="ml-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium"
+              style={{ background: "var(--th-bg-surface)", color: "var(--th-text-muted)" }}
+            >
               {hiddenTaskCount}
             </span>
           </button>
+        <div className="ml-auto flex items-center gap-2">
           <button
+            type="button"
             onClick={() => setShowBulkHideModal(true)}
-            className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs text-slate-300 transition hover:bg-slate-800 hover:text-white"
+            className="rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors hover:opacity-90"
+            style={{ borderColor: "var(--th-border)", color: "var(--th-text-secondary)", background: "var(--th-bg-surface)" }}
             title={t({
               ko: "완료/보류/취소 상태 업무 숨기기",
               en: "Hide done/pending/cancelled tasks",
@@ -205,19 +359,23 @@ export function TaskBoard({
               zh: "隐藏完成/待处理/已取消任务",
             })}
           >
-            🙈 {t({ ko: "숨김", en: "Hide", ja: "非表示", zh: "隐藏" })}
+            {t({ ko: "숨김 관리", en: "Hide", ja: "非表示", zh: "隐藏" })}
           </button>
           <button
+            type="button"
             onClick={() => setShowProjectManager(true)}
-            className="taskboard-project-manage-btn rounded-lg border px-3 py-1.5 text-xs font-semibold transition"
+            className="rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors hover:opacity-90"
+            style={{ borderColor: "var(--th-border)", color: "var(--th-text-heading)", background: "var(--th-bg-surface)" }}
           >
-            🗂 {t({ ko: "프로젝트 관리", en: "Project Manager", ja: "プロジェクト管理", zh: "项目管理" })}
+            {t({ ko: "프로젝트", en: "Projects", ja: "プロジェクト", zh: "项目" })}
           </button>
           <button
+            type="button"
             onClick={() => setShowCreate(true)}
-            className="rounded-lg bg-blue-600 px-4 py-1.5 text-sm font-semibold text-white shadow transition hover:bg-blue-500 active:scale-95"
+            className="rounded-lg px-4 py-1.5 text-sm font-semibold transition-colors hover:opacity-90"
+            style={{ background: "var(--th-accent, #2563eb)", color: "var(--th-text-heading)" }}
           >
-            + {t({ ko: "새 업무", en: "New Task", ja: "新規タスク", zh: "新建任务" })}
+            + {t({ ko: "새 업무", en: "New task", ja: "新規タスク", zh: "新建任务" })}
           </button>
         </div>
       </div>
@@ -235,61 +393,150 @@ export function TaskBoard({
         onSearch={setSearch}
       />
 
-      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto pb-2 sm:flex-row sm:overflow-x-auto sm:overflow-y-hidden">
-        {COLUMNS.map((column) => {
-          const columnTasks = tasksByStatus[column.status] ?? [];
-          return (
-            <div
-              key={column.status}
-              className={`taskboard-column flex w-full flex-col rounded-xl border sm:w-72 sm:flex-shrink-0 ${column.borderColor} bg-slate-900`}
-            >
-              <div className={`flex items-center justify-between rounded-t-xl ${column.headerBg} px-3.5 py-2.5`}>
-                <div className="flex items-center gap-2">
+      <DndContext
+        sensors={sensors}
+        onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
+        onDragEnd={handleDragEnd}
+        onDragCancel={handleDragCancel}
+      >
+        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto pb-2 sm:flex-row sm:overflow-x-auto sm:overflow-y-hidden">
+          {COLUMNS.map((column) => {
+            const columnTasks = tasksByStatus[column.status] ?? [];
+            const isCollapsed = collapsedColumns.has(column.status);
+            const isDragOver = overColumnStatus === column.status;
+            return (
+              <div
+                key={column.status}
+                className={`taskboard-column flex flex-col rounded-xl border transition-all duration-200 ${
+                  isCollapsed ? "w-full sm:w-14 sm:flex-shrink-0" : "w-full sm:w-72 sm:flex-shrink-0"
+                } ${column.borderColor} ${isDragOver ? "ring-2 ring-blue-400/50" : ""}`}
+                style={{
+                  background: isDragOver ? "var(--th-bg-surface-hover)" : "var(--th-bg-surface)",
+                  borderColor: isDragOver ? "var(--th-border)" : undefined,
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => toggleColumn(column.status)}
+                  className={`flex items-center gap-2 rounded-t-xl px-3.5 py-2.5 w-full text-left transition-opacity hover:opacity-90 ${column.headerBg}`}
+                >
                   <span className={`h-2 w-2 flex-shrink-0 rounded-full ${column.dotColor}`} />
-                  <span className="text-sm font-semibold text-white">
-                    {column.icon} {taskStatusLabel(column.status, t)}
+                  {!isCollapsed && (
+                    <span className="flex-1 text-sm font-semibold" style={{ color: "var(--th-text-heading)" }}>
+                      {taskStatusLabel(column.status, t)}
+                    </span>
+                  )}
+                  <span
+                    className="rounded-full bg-black/25 px-2 py-0.5 text-xs font-semibold"
+                    style={{ color: "var(--th-text-heading)" }}
+                  >
+                    {columnTasks.length}
                   </span>
-                </div>
-                <span className="rounded-full bg-black/30 px-2 py-0.5 text-xs font-bold text-white/80">
-                  {columnTasks.length}
-                </span>
-              </div>
+                  <span className="text-[10px]" style={{ color: "var(--th-text-muted)" }}>{isCollapsed ? "▸" : "▾"}</span>
+                </button>
 
-              <div className="flex flex-col gap-2.5 p-2.5 sm:flex-1 sm:overflow-y-auto">
-                {columnTasks.length === 0 ? (
-                  <div className="flex min-h-24 items-center justify-center py-8 text-xs text-slate-600 sm:flex-1">
-                    {t({ ko: "업무 없음", en: "No tasks", ja: "タスクなし", zh: "暂无任务" })}
-                  </div>
+                {isCollapsed ? (
+                  /* Collapsed body — vertical label, click to expand */
+                  <DroppableColumn status={column.status}>
+                    {() => (
+                      <button
+                        type="button"
+                        onClick={() => toggleColumn(column.status)}
+                        className="flex flex-1 items-center justify-center py-4 sm:py-0"
+                      >
+                        <span
+                          className="text-sm sm:[writing-mode:vertical-lr] sm:rotate-180 font-medium tracking-wider select-none"
+                          style={{ color: "var(--th-text-muted)" }}
+                        >
+                          {taskStatusLabel(column.status, t)}
+                        </span>
+                      </button>
+                    )}
+                  </DroppableColumn>
                 ) : (
-                  columnTasks.map((task) => (
-                    <TaskCard
-                      key={task.id}
-                      task={task}
-                      agents={agents}
-                      departments={departments}
-                      taskSubtasks={subtasksByTask[task.id] ?? []}
-                      isHiddenTask={hiddenTaskIds.has(task.id)}
-                      onUpdateTask={onUpdateTask}
-                      onDeleteTask={onDeleteTask}
-                      onAssignTask={onAssignTask}
-                      onRunTask={onRunTask}
-                      onStopTask={onStopTask}
-                      onPauseTask={onPauseTask}
-                      onResumeTask={onResumeTask}
-                      onOpenTerminal={onOpenTerminal}
-                      onOpenMeetingMinutes={onOpenMeetingMinutes}
-                      onMergeTask={onMergeTask}
-                      onDiscardTask={onDiscardTask}
-                      onHideTask={hideTask}
-                      onUnhideTask={unhideTask}
-                    />
-                  ))
+                  /* Expanded body — droppable zone with cards */
+                  <DroppableColumn status={column.status}>
+                    {(isOver) => (
+                      <div className="flex flex-col gap-2.5 p-2.5 sm:flex-1 sm:overflow-y-auto">
+                        {columnTasks.length === 0 ? (
+                          <div
+                            className="flex min-h-24 items-center justify-center rounded-lg border border-dashed py-8 text-xs sm:flex-1 transition-colors"
+                            style={{
+                              borderColor: isOver ? "var(--th-accent, #2563eb)" : "var(--th-border)",
+                              background: isOver ? "var(--th-bg-surface-hover)" : "transparent",
+                              color: isOver ? "var(--th-text-secondary)" : "var(--th-text-muted)",
+                            }}
+                          >
+                            {isOver
+                              ? t({ ko: "여기에 놓기", en: "Drop here", ja: "ここにドロップ", zh: "放在这里" })
+                              : t({ ko: "업무 없음", en: "No tasks", ja: "タスクなし", zh: "暂无任务" })}
+                          </div>
+                        ) : (
+                          columnTasks.map((task) => (
+                            <DraggableTaskCard key={task.id} task={task}>
+                              <TaskCard
+                                task={task}
+                                agents={agents}
+                                departments={departments}
+                                taskSubtasks={subtasksByTask[task.id] ?? []}
+                                isHiddenTask={hiddenTaskIds.has(task.id)}
+                                cardCollapsed={collapsedCardIds.has(task.id)}
+                                onToggleCardCollapsed={toggleCardCollapsed}
+                                onUpdateTask={onUpdateTask}
+                                onDeleteTask={onDeleteTask}
+                                onAssignTask={onAssignTask}
+                                onRunTask={onRunTask}
+                                onStopTask={onStopTask}
+                                onPauseTask={onPauseTask}
+                                onResumeTask={onResumeTask}
+                                onOpenTerminal={onOpenTerminal}
+                                onOpenMeetingMinutes={onOpenMeetingMinutes}
+                                onMergeTask={onMergeTask}
+                                onDiscardTask={onDiscardTask}
+                                onHideTask={hideTask}
+                                onUnhideTask={unhideTask}
+                              />
+                            </DraggableTaskCard>
+                          ))
+                        )}
+                      </div>
+                    )}
+                  </DroppableColumn>
                 )}
               </div>
+            );
+          })}
+        </div>
+
+        {/* Drag overlay — floating card that follows the cursor */}
+        <DragOverlay dropAnimation={{ duration: 200, easing: "ease" }}>
+          {activeTask ? (
+            <div className="w-72 rotate-2 scale-105 opacity-90">
+              <TaskCard
+                task={activeTask}
+                agents={agents}
+                departments={departments}
+                taskSubtasks={subtasksByTask[activeTask.id] ?? []}
+                isHiddenTask={hiddenTaskIds.has(activeTask.id)}
+                onUpdateTask={onUpdateTask}
+                onDeleteTask={onDeleteTask}
+                onAssignTask={onAssignTask}
+                onRunTask={onRunTask}
+                onStopTask={onStopTask}
+                onPauseTask={onPauseTask}
+                onResumeTask={onResumeTask}
+                onOpenTerminal={onOpenTerminal}
+                onOpenMeetingMinutes={onOpenMeetingMinutes}
+                onMergeTask={onMergeTask}
+                onDiscardTask={onDiscardTask}
+                onHideTask={hideTask}
+                onUnhideTask={unhideTask}
+              />
             </div>
-          );
-        })}
-      </div>
+          ) : null}
+        </DragOverlay>
+      </DndContext>
 
       {showCreate && (
         <CreateTaskModal

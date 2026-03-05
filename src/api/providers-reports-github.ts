@@ -288,6 +288,61 @@ export async function archiveTaskReport(taskId: string): Promise<{
   return request(`/api/task-reports/${taskId}/archive`, { method: "POST" });
 }
 
+// ── Deliverables ─────────────────────────────────────────────────────────────
+export interface DeliverableItem {
+  id: string;
+  title: string;
+  description: string | null;
+  department_id: string | null;
+  assigned_agent_id: string | null;
+  status: string;
+  project_id?: string | null;
+  project_path: string | null;
+  result: string | null;
+  source_task_id?: string | null;
+  created_at: number;
+  completed_at: number | null;
+  started_at: number | null;
+  output_format?: string | null;
+  workflow_pack_key?: string | null;
+  agent_name: string;
+  agent_name_ko: string;
+  agent_role: string;
+  agent_avatar: string;
+  dept_name: string;
+  dept_name_ko: string;
+  project_name?: string;
+}
+
+export async function getDeliverables(): Promise<DeliverableItem[]> {
+  const j = await request<{ ok: boolean; deliverables: DeliverableItem[] }>("/api/deliverables");
+  return j.deliverables;
+}
+
+// ── Task Artifacts ───────────────────────────────────────────────────────────
+export interface TaskArtifact {
+  id: string;
+  title: string;
+  relativePath: string;
+  mime: string;
+  size: number;
+  updatedAt: number;
+  type: "binary" | "text" | "video" | "image";
+}
+
+export async function getTaskArtifacts(taskId: string): Promise<TaskArtifact[]> {
+  const j = await request<{ ok: boolean; artifacts: TaskArtifact[] }>(
+    `/api/task-reports/${taskId}/artifacts`,
+  );
+  return j.artifacts;
+}
+
+export function getTaskArtifactDownloadUrl(taskId: string, relativePath: string, inline = false): string {
+  const params = new URLSearchParams({ path: relativePath });
+  if (inline) params.set("inline", "1");
+  return `/api/task-reports/${taskId}/artifacts/download?${params.toString()}`;
+}
+
 // ---------- GitHub Import ----------
 
 export interface GitHubRepo {

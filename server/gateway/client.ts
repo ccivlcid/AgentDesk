@@ -1,5 +1,7 @@
 import { execFile } from "node:child_process";
 import { randomUUID } from "node:crypto";
+import fs from "node:fs";
+import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { promisify } from "node:util";
 
@@ -400,6 +402,30 @@ async function sendTelegramMessage(token: string, chatId: string, text: string):
   const payload = (await r.json().catch(() => null)) as { ok?: boolean; description?: string } | null;
   if (!r.ok || payload?.ok === false) {
     throw new Error(payload?.description || `telegram send failed (${r.status})`);
+  }
+}
+
+async function sendTelegramDocument(
+  token: string,
+  chatId: string,
+  filePath: string,
+  caption?: string,
+): Promise<void> {
+  const fileName = path.basename(filePath);
+  const fileStream = fs.readFileSync(filePath);
+  const formData = new FormData();
+  formData.append("chat_id", chatId);
+  formData.append("document", new Blob([fileStream]), fileName);
+  if (caption) formData.append("caption", caption);
+
+  const r = await fetch(`https://api.telegram.org/bot${token}/sendDocument`, {
+    method: "POST",
+    body: formData,
+  });
+
+  const payload = (await r.json().catch(() => null)) as { ok?: boolean; description?: string } | null;
+  if (!r.ok || payload?.ok === false) {
+    throw new Error(payload?.description || `telegram sendDocument failed (${r.status})`);
   }
 }
 
@@ -982,6 +1008,54 @@ export function notifyTaskStatus(taskId: string, title: string, status: string, 
     text: `${emoji} [${label}] ${title}`,
     debounceMs: 5_000,
   });
+}
+
+/** Send deliverable files to all enabled messenger sessions (CEO-level, non-agent) */
+export async function sendDeliverableFiles(
+  taskTitle: string,
+  filePaths: Array<{ absolutePath: string; fileName: string }>,
+  lang?: string,
+): Promise<void> {
+  const config = loadMessengerConfig();
+  const resolvedLang = normalizeGatewayLang(lang, taskTitle);
+  const captionPrefix: Record<string, string> = {
+    ko: "최종 결과물",
+    en: "Deliverable",
+    ja: "成果物",
+    zh: "交付物",
+  };
+  const prefix = captionPrefix[resolvedLang] || captionPrefix.en;
+
+  for (const channel of NATIVE_MESSENGER_CHANNELS) {
+    const channelConfig = config[channel];
+    if (!channelConfig) continue;
+    const channelToken = channelConfig.token;
+
+    for (const session of channelConfig.sessions) {
+      if (!session.enabled) continue;
+      if (session.agentId) continue; // skip agent sessions, only send to CEO
+      const token = normalizeText(session.token) || channelToken;
+      if (channel !== "imessage" && !token) continue;
+
+      for (const file of filePaths) {
+        try {
+          if (!fs.existsSync(file.absolutePath)) continue;
+          const caption = `📎 [${prefix}] ${taskTitle}\n${file.fileName}`;
+
+          if (channel === "telegram") {
+            await sendTelegramDocument(token, session.targetId, file.absolutePath, caption);
+          } else {
+            // For non-Telegram channels, send a text notification with file info
+            const sizeBytes = fs.statSync(file.absolutePath).size;
+            const sizeMB = (sizeBytes / (1024 * 1024)).toFixed(1);
+            await sendByChannel(channel, token, session.targetId, `${caption} (${sizeMB} MB)`);
+          }
+        } catch (err) {
+          console.warn(`[AgentDesk] deliverable file send failed (${channel}/${file.fileName}): ${String(err)}`);
+        }
+      }
+    }
+  }
 }
 
 export async function gatewayHttpInvoke(_req: {

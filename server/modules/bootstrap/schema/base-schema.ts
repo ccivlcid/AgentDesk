@@ -374,5 +374,141 @@ CREATE TABLE IF NOT EXISTS api_providers (
   created_at INTEGER DEFAULT (unixepoch()*1000),
   updated_at INTEGER DEFAULT (unixepoch()*1000)
 );
+
+CREATE TABLE IF NOT EXISTS agent_rules (
+  id TEXT PRIMARY KEY,
+  title TEXT NOT NULL,
+  title_ko TEXT NOT NULL DEFAULT '',
+  title_ja TEXT NOT NULL DEFAULT '',
+  title_zh TEXT NOT NULL DEFAULT '',
+  description TEXT NOT NULL DEFAULT '',
+  rule_content TEXT NOT NULL,
+  category TEXT NOT NULL DEFAULT 'general'
+    CHECK(category IN ('coding','communication','quality','execution','security','workflow','general')),
+  scope_type TEXT NOT NULL DEFAULT 'global'
+    CHECK(scope_type IN ('global','department','agent','workflow_pack')),
+  scope_id TEXT,
+  priority INTEGER NOT NULL DEFAULT 50,
+  enabled INTEGER NOT NULL DEFAULT 1,
+  created_at INTEGER DEFAULT (unixepoch()*1000),
+  updated_at INTEGER DEFAULT (unixepoch()*1000)
+);
+
+CREATE INDEX IF NOT EXISTS idx_agent_rules_scope ON agent_rules(scope_type, scope_id);
+CREATE INDEX IF NOT EXISTS idx_agent_rules_category ON agent_rules(category);
+CREATE INDEX IF NOT EXISTS idx_agent_rules_enabled ON agent_rules(enabled, priority DESC);
+
+CREATE TABLE IF NOT EXISTS rule_learning_history (
+  id TEXT PRIMARY KEY,
+  job_id TEXT NOT NULL,
+  provider TEXT NOT NULL CHECK(provider IN ('claude','codex','gemini','opencode','copilot','antigravity','cursor','api')),
+  rule_id TEXT NOT NULL,
+  rule_label TEXT NOT NULL,
+  status TEXT NOT NULL CHECK(status IN ('queued','running','succeeded','failed')),
+  command TEXT NOT NULL DEFAULT '',
+  error TEXT,
+  run_started_at INTEGER,
+  run_completed_at INTEGER,
+  created_at INTEGER DEFAULT (unixepoch()*1000),
+  updated_at INTEGER DEFAULT (unixepoch()*1000),
+  UNIQUE(job_id, provider)
+);
+
+CREATE INDEX IF NOT EXISTS idx_rule_learning_history_provider_status_updated
+  ON rule_learning_history(provider, status, updated_at DESC);
+CREATE INDEX IF NOT EXISTS idx_rule_learning_history_rule_lookup
+  ON rule_learning_history(provider, rule_id, updated_at DESC);
+
+CREATE TABLE IF NOT EXISTS memory_entries (
+  id TEXT PRIMARY KEY,
+  title TEXT NOT NULL,
+  title_ko TEXT NOT NULL DEFAULT '',
+  title_ja TEXT NOT NULL DEFAULT '',
+  title_zh TEXT NOT NULL DEFAULT '',
+  description TEXT NOT NULL DEFAULT '',
+  content TEXT NOT NULL,
+  category TEXT NOT NULL DEFAULT 'context'
+    CHECK(category IN ('context','preference','convention','knowledge','instruction','reference')),
+  scope_type TEXT NOT NULL DEFAULT 'global'
+    CHECK(scope_type IN ('global','department','agent','workflow_pack')),
+  scope_id TEXT,
+  priority INTEGER NOT NULL DEFAULT 50,
+  enabled INTEGER NOT NULL DEFAULT 1,
+  created_at INTEGER DEFAULT (unixepoch()*1000),
+  updated_at INTEGER DEFAULT (unixepoch()*1000)
+);
+
+CREATE INDEX IF NOT EXISTS idx_memory_entries_scope ON memory_entries(scope_type, scope_id);
+CREATE INDEX IF NOT EXISTS idx_memory_entries_category ON memory_entries(category);
+CREATE INDEX IF NOT EXISTS idx_memory_entries_enabled ON memory_entries(enabled, priority DESC);
+
+CREATE TABLE IF NOT EXISTS hook_entries (
+  id TEXT PRIMARY KEY,
+  title TEXT NOT NULL,
+  title_ko TEXT NOT NULL DEFAULT '',
+  title_ja TEXT NOT NULL DEFAULT '',
+  title_zh TEXT NOT NULL DEFAULT '',
+  description TEXT NOT NULL DEFAULT '',
+  command TEXT NOT NULL,
+  event_type TEXT NOT NULL DEFAULT 'pre-task'
+    CHECK(event_type IN ('pre-task','post-task','on-error','on-complete','on-status-change','on-start')),
+  working_directory TEXT NOT NULL DEFAULT '',
+  timeout_ms INTEGER NOT NULL DEFAULT 30000,
+  scope_type TEXT NOT NULL DEFAULT 'global'
+    CHECK(scope_type IN ('global','department','agent','workflow_pack')),
+  scope_id TEXT,
+  priority INTEGER NOT NULL DEFAULT 50,
+  enabled INTEGER NOT NULL DEFAULT 1,
+  execution_count INTEGER NOT NULL DEFAULT 0,
+  last_executed_at INTEGER,
+  created_at INTEGER DEFAULT (unixepoch()*1000),
+  updated_at INTEGER DEFAULT (unixepoch()*1000)
+);
+
+CREATE INDEX IF NOT EXISTS idx_hook_entries_scope ON hook_entries(scope_type, scope_id);
+CREATE INDEX IF NOT EXISTS idx_hook_entries_event_type ON hook_entries(event_type);
+CREATE INDEX IF NOT EXISTS idx_hook_entries_enabled ON hook_entries(enabled, priority DESC);
+
+CREATE TABLE IF NOT EXISTS memory_learning_history (
+  id TEXT PRIMARY KEY,
+  job_id TEXT NOT NULL,
+  provider TEXT NOT NULL CHECK(provider IN ('claude','codex','gemini','opencode','copilot','antigravity','cursor','api')),
+  memory_id TEXT NOT NULL,
+  memory_label TEXT NOT NULL,
+  status TEXT NOT NULL CHECK(status IN ('queued','running','succeeded','failed')),
+  command TEXT NOT NULL DEFAULT '',
+  error TEXT,
+  run_started_at INTEGER,
+  run_completed_at INTEGER,
+  created_at INTEGER DEFAULT (unixepoch()*1000),
+  updated_at INTEGER DEFAULT (unixepoch()*1000),
+  UNIQUE(job_id, provider)
+);
+
+CREATE INDEX IF NOT EXISTS idx_memory_learning_history_provider_status_updated
+  ON memory_learning_history(provider, status, updated_at DESC);
+CREATE INDEX IF NOT EXISTS idx_memory_learning_history_memory_lookup
+  ON memory_learning_history(provider, memory_id, updated_at DESC);
+
+CREATE TABLE IF NOT EXISTS hook_learning_history (
+  id TEXT PRIMARY KEY,
+  job_id TEXT NOT NULL,
+  provider TEXT NOT NULL CHECK(provider IN ('claude','codex','gemini','opencode','copilot','antigravity','cursor','api')),
+  hook_id TEXT NOT NULL,
+  hook_label TEXT NOT NULL,
+  status TEXT NOT NULL CHECK(status IN ('queued','running','succeeded','failed')),
+  command TEXT NOT NULL DEFAULT '',
+  error TEXT,
+  run_started_at INTEGER,
+  run_completed_at INTEGER,
+  created_at INTEGER DEFAULT (unixepoch()*1000),
+  updated_at INTEGER DEFAULT (unixepoch()*1000),
+  UNIQUE(job_id, provider)
+);
+
+CREATE INDEX IF NOT EXISTS idx_hook_learning_history_provider_status_updated
+  ON hook_learning_history(provider, status, updated_at DESC);
+CREATE INDEX IF NOT EXISTS idx_hook_learning_history_hook_lookup
+  ON hook_learning_history(provider, hook_id, updated_at DESC);
 `);
 }

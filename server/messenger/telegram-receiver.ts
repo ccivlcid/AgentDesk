@@ -322,8 +322,13 @@ async function forwardTelegramUpdate(params: {
     return "skipped";
   }
 
-  const text = normalizeText(message.text) || normalizeText(message.caption);
+  let text = normalizeText(message.text) || normalizeText(message.caption);
   if (!text) {
+    return "skipped";
+  }
+  // Server returns 400 empty_content when directive body is only "$" or "$" + whitespace
+  const raw = text.trimStart();
+  if (raw.startsWith("$") && !raw.slice(1).trim()) {
     return "skipped";
   }
 

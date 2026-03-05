@@ -484,43 +484,60 @@ export default function AgentManager({
 
   return (
     <div className="mx-auto max-w-4xl space-y-4 sm:space-y-5">
-      <div className="flex items-center justify-end gap-2">
-        <button
-          onClick={openCreateDept}
-          className="px-3 py-2 rounded-lg text-sm font-medium transition-all hover:opacity-90 active:opacity-80 shadow-sm"
-          style={{ background: "#7c3aed", color: "#ffffff", boxShadow: "0 1px 3px rgba(124,58,237,0.3)" }}
-        >
-          + {tr("부서 추가", "Add Dept")}
-        </button>
-        <button
-          onClick={openCreate}
-          className="px-4 py-2 rounded-lg text-sm font-medium transition-all bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white shadow-sm shadow-blue-600/20"
-        >
-          + {tr("신규 채용", "Hire Agent")}
-        </button>
+      <div>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h1 className="text-lg font-semibold tracking-tight" style={{ color: "var(--th-text-heading)" }}>
+            {tr("직원관리", "Agents")}
+          </h1>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={openCreateDept}
+              className="rounded-lg border px-3 py-2 text-sm font-medium transition-colors hover:opacity-90"
+              style={{
+                borderColor: "var(--th-border)",
+                color: "var(--th-text-heading)",
+                background: "var(--th-bg-surface)",
+              }}
+            >
+              + {tr("부서 추가", "Add Dept")}
+            </button>
+            <button
+              type="button"
+              onClick={openCreate}
+              className="rounded-lg px-4 py-2 text-sm font-semibold transition-colors hover:opacity-90"
+              style={{ background: "var(--th-accent, #2563eb)", color: "var(--th-text-heading)" }}
+            >
+              + {tr("신규 채용", "Hire Agent")}
+            </button>
+          </div>
+        </div>
+        <p className="mt-0.5 text-sm" style={{ color: "var(--th-text-muted)" }}>
+          {tr("직원과 부서를 등록·편집하고, CLI 제공자를 지정합니다.", "Register and edit agents and departments, assign CLI providers.")}
+        </p>
       </div>
 
       <div
         className="flex gap-1 p-1 rounded-xl"
-        style={{ background: "var(--th-card-bg)", border: "1px solid var(--th-card-border)" }}
+        style={{ background: "var(--th-bg-surface)", border: "1px solid var(--th-border)" }}
       >
         {[
-          {
-            key: "agents" as const,
-            label: tr("직원관리", "Agents"),
-            icon: <StackedSpriteIcon sprites={randomIconSprites.tab} />,
-          },
-          { key: "departments" as const, label: tr("부서관리", "Departments"), icon: "🏢" },
+          { key: "agents" as const, label: tr("직원", "Agents"), icon: <StackedSpriteIcon sprites={randomIconSprites.tab} /> },
+          { key: "departments" as const, label: tr("부서", "Departments"), icon: null },
         ].map((tab) => (
           <button
             key={tab.key}
+            type="button"
             onClick={() => setSubTab(tab.key)}
-            className={`flex-1 flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-              subTab === tab.key ? "bg-blue-600 text-white shadow-sm" : "hover:bg-white/5"
+            className={`flex-1 flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              subTab === tab.key ? "" : "hover:opacity-80"
             }`}
-            style={subTab !== tab.key ? { color: "var(--th-text-muted)" } : undefined}
+            style={{
+              color: subTab === tab.key ? "var(--th-text-heading)" : "var(--th-text-muted)",
+              background: subTab === tab.key ? "var(--th-bg-surface-hover)" : "transparent",
+            }}
           >
-            <span>{tab.icon}</span>
+            {tab.icon}
             {tab.label}
           </button>
         ))}

@@ -47,10 +47,10 @@ export default function GeneralSettingsTab({ t, form, setForm, saved, onSave }: 
   return (
     <>
       <section
-        className="rounded-xl p-5 sm:p-6 space-y-5"
-        style={{ background: "var(--th-card-bg)", border: "1px solid var(--th-card-border)" }}
+        className="rounded-xl border p-5 sm:p-6 space-y-5"
+        style={{ background: "var(--th-bg-surface)", borderColor: "var(--th-border)" }}
       >
-        <h3 className="text-sm font-semibold uppercase tracking-wider" style={{ color: "var(--th-text-primary)" }}>
+        <h3 className="text-sm font-semibold" style={{ color: "var(--th-text-heading)" }}>
           {t({ ko: "회사 정보", en: "Company", ja: "会社情報", zh: "公司信息" })}
         </h3>
 
@@ -188,13 +188,14 @@ export default function GeneralSettingsTab({ t, form, setForm, saved, onSave }: 
 
       <div className="flex justify-end gap-3">
         {saved && (
-          <span className="text-green-400 text-sm self-center">
-            ✅ {t({ ko: "저장 완료", en: "Saved", ja: "保存完了", zh: "已保存" })}
+          <span className="text-sm self-center" style={{ color: "var(--th-text-muted)" }}>
+            {t({ ko: "저장 완료", en: "Saved", ja: "保存完了", zh: "已保存" })}
           </span>
         )}
         <button
+          type="button"
           onClick={onSave}
-          className="px-8 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-xl transition-all shadow-lg shadow-blue-600/20 hover:shadow-blue-500/30"
+          className="rounded-lg border-0 bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-700"
         >
           {t({ ko: "저장", en: "Save", ja: "保存", zh: "保存" })}
         </button>

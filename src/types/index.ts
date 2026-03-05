@@ -45,6 +45,7 @@ export interface Agent {
   personality: string | null;
   status: AgentStatus;
   current_task_id: string | null;
+  workflow_pack_key?: string | null;
   stats_tasks_done: number;
   stats_xp: number;
   created_at: number;
@@ -191,6 +192,14 @@ export type SenderType = "ceo" | "agent" | "system";
 export type ReceiverType = "agent" | "department" | "all";
 export type MessageType = "chat" | "task_assign" | "announcement" | "directive" | "report" | "status_update";
 
+export interface MessageAttachment {
+  id: string;
+  fileName: string;
+  size: number;
+  mime: string;
+  relativePath: string;
+}
+
 export interface Message {
   id: string;
   sender_type: SenderType;
@@ -203,6 +212,7 @@ export interface Message {
   content: string;
   message_type: MessageType;
   task_id: string | null;
+  attachments?: MessageAttachment[];
   created_at: number;
 }
 
@@ -379,6 +389,76 @@ export interface CompanySettings {
   messengerChannels?: MessengerChannelsConfig;
   officePackProfiles?: OfficePackProfiles;
   officePackHydratedPacks?: string[];
+}
+
+// Agent Rules
+export type AgentRuleCategory = "coding" | "communication" | "quality" | "execution" | "security" | "workflow" | "general";
+export type AgentRuleScopeType = "global" | "department" | "agent" | "workflow_pack";
+
+export interface AgentRule {
+  id: string;
+  title: string;
+  title_ko: string;
+  title_ja: string;
+  title_zh: string;
+  description: string;
+  rule_content: string;
+  category: AgentRuleCategory;
+  scope_type: AgentRuleScopeType;
+  scope_id: string | null;
+  scope_label?: string | null;
+  priority: number;
+  enabled: boolean;
+  created_at: number;
+  updated_at: number;
+}
+
+// Memory
+export type MemoryCategory = "context" | "preference" | "convention" | "knowledge" | "instruction" | "reference";
+export type MemoryScopeType = "global" | "department" | "agent" | "workflow_pack";
+
+export interface MemoryEntry {
+  id: string;
+  title: string;
+  title_ko: string;
+  title_ja: string;
+  title_zh: string;
+  description: string;
+  content: string;
+  category: MemoryCategory;
+  scope_type: MemoryScopeType;
+  scope_id: string | null;
+  scope_label?: string | null;
+  priority: number;
+  enabled: boolean;
+  created_at: number;
+  updated_at: number;
+}
+
+// Hooks
+export type HookEventType = "pre-task" | "post-task" | "on-error" | "on-complete" | "on-status-change" | "on-start";
+export type HookScopeType = "global" | "department" | "agent" | "workflow_pack";
+
+export interface HookEntry {
+  id: string;
+  title: string;
+  title_ko: string;
+  title_ja: string;
+  title_zh: string;
+  description: string;
+  command: string;
+  event_type: HookEventType;
+  working_directory: string;
+  timeout_ms: number;
+  scope_type: HookScopeType;
+  scope_id: string | null;
+  scope_label?: string | null;
+  priority: number;
+  enabled: boolean;
+  execution_count: number;
+  last_executed_at: number | null;
+  created_at: number;
+  updated_at: number;
 }
 
 export const DEFAULT_SETTINGS: CompanySettings = {

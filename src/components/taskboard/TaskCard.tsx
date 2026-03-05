@@ -20,6 +20,10 @@ interface TaskCardProps {
   departments: Department[];
   taskSubtasks: SubTask[];
   isHiddenTask?: boolean;
+  /** 접기 상태(제목만 보이기). 부모에서 넘기면 localStorage와 연동되어 페이지 이동 후에도 유지됨 */
+  cardCollapsed?: boolean;
+  /** 접기 토글. task.id를 인자로 호출 */
+  onToggleCardCollapsed?: (taskId: string) => void;
   onUpdateTask: (id: string, data: Partial<Task>) => void;
   onDeleteTask: (id: string) => void;
   onAssignTask: (taskId: string, agentId: string) => void;
@@ -48,6 +52,8 @@ export default function TaskCard({
   departments,
   taskSubtasks,
   isHiddenTask,
+  cardCollapsed: cardCollapsedProp,
+  onToggleCardCollapsed,
   onUpdateTask,
   onDeleteTask,
   onAssignTask,
@@ -65,6 +71,16 @@ export default function TaskCard({
   void onMergeTask;
   void onDiscardTask;
   const { t, locale: localeTag, language: locale } = useI18n();
+  const [cardCollapsedLocal, setCardCollapsedLocal] = useState(false);
+  const cardCollapsed = cardCollapsedProp ?? cardCollapsedLocal;
+  const setCardCollapsed = (value: boolean | ((prev: boolean) => boolean)) => {
+    if (onToggleCardCollapsed) {
+      const next = typeof value === "function" ? value(cardCollapsed) : value;
+      if (next !== cardCollapsed) onToggleCardCollapsed(task.id);
+    } else {
+      setCardCollapsedLocal(typeof value === "function" ? value(cardCollapsedLocal) : value);
+    }
+  };
   const [expanded, setExpanded] = useState(false);
   const [showDiff, setShowDiff] = useState(false);
   const [showSubtasks, setShowSubtasks] = useState(false);
@@ -88,19 +104,40 @@ export default function TaskCard({
 
   return (
     <div
-      className={`group rounded-xl border p-3.5 shadow-sm transition hover:shadow-md ${
-        isHiddenTask
-          ? "border-cyan-700/80 bg-slate-800/80 hover:border-cyan-600"
-          : "border-slate-700 bg-slate-800 hover:border-slate-600"
-      }`}
+      className={`group rounded-xl border shadow-sm transition hover:shadow-md ${cardCollapsed ? "p-2" : "p-3.5"}`}
+      style={{
+        borderColor: isHiddenTask ? "var(--th-border)" : "var(--th-border)",
+        background: "var(--th-bg-surface)",
+      }}
     >
-      <div className="mb-2 flex items-start justify-between gap-2">
-        <button
-          onClick={() => setExpanded((v) => !v)}
-          className="flex-1 text-left text-sm font-semibold leading-snug text-white"
-        >
-          {task.title}
-        </button>
+      {/* 제목 행 — 접기 아이콘 클릭: 카드 접기/펼치기, 제목 클릭(펼침 시): 설명 2줄↔전체 */}
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex min-w-0 flex-1 items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setCardCollapsed((v) => !v)}
+            className="shrink-0 rounded p-0.5 text-xs transition-colors hover:opacity-80"
+            style={{ color: "var(--th-text-muted)" }}
+            aria-expanded={!cardCollapsed}
+            title={cardCollapsed ? t({ ko: "펼치기", en: "Expand", ja: "展開", zh: "展开" }) : t({ ko: "접기", en: "Collapse", ja: "折りたたむ", zh: "收起" })}
+          >
+            {cardCollapsed ? "▸" : "▾"}
+          </button>
+          {cardCollapsed ? (
+            <span className="min-w-0 truncate text-sm font-semibold leading-snug" style={{ color: "var(--th-text-heading)" }}>
+              {task.title}
+            </span>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setExpanded((v) => !v)}
+              className="min-w-0 flex-1 text-left text-sm font-semibold leading-snug"
+              style={{ color: "var(--th-text-heading)" }}
+            >
+              {task.title}
+            </button>
+          )}
+        </div>
         <span
           className="flex-shrink-0 text-base"
           title={`${t({ ko: "우선순위", en: "Priority", ja: "優先度", zh: "优先级" })}: ${priorityLabel(task.priority, t)}`}
@@ -109,8 +146,10 @@ export default function TaskCard({
         </span>
       </div>
 
+      {!cardCollapsed && (
+        <>
       {task.description && (
-        <p className={`mb-2 text-xs leading-relaxed text-slate-400 ${expanded ? "" : "line-clamp-2"}`}>
+        <p className={`mb-2 text-xs leading-relaxed ${expanded ? "" : "line-clamp-2"}`} style={{ color: "var(--th-text-muted)" }}>
           {task.description}
         </p>
       )}
@@ -118,13 +157,19 @@ export default function TaskCard({
       <div className="mb-3 flex flex-wrap items-center gap-1.5">
         <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${typeBadge.color}`}>{typeBadge.label}</span>
         {isHiddenTask && (
-          <span className="rounded-full bg-cyan-900/60 px-2 py-0.5 text-xs text-cyan-200">
-            🙈 {t({ ko: "숨김", en: "Hidden", ja: "非表示", zh: "隐藏" })}
+          <span
+            className="rounded-full px-2 py-0.5 text-xs font-medium"
+            style={{ background: "var(--th-bg-surface-hover)", color: "var(--th-text-muted)" }}
+          >
+            {t({ ko: "숨김", en: "Hidden", ja: "非表示", zh: "隐藏" })}
           </span>
         )}
         {department && (
-          <span className="rounded-full bg-slate-700 px-2 py-0.5 text-xs text-slate-300">
-            {department.icon} {locale === "ko" ? department.name_ko : department.name}
+          <span
+            className="rounded-full px-2 py-0.5 text-xs font-medium"
+            style={{ background: "var(--th-bg-surface-hover)", color: "var(--th-text-secondary)" }}
+          >
+            {locale === "ko" ? department.name_ko : department.name}
           </span>
         )}
       </div>
@@ -133,7 +178,12 @@ export default function TaskCard({
         <select
           value={task.status}
           onChange={(event) => onUpdateTask(task.id, { status: event.target.value as TaskStatus })}
-          className="w-full rounded-lg border border-slate-600 bg-slate-700 px-2 py-1 text-xs text-white outline-none transition focus:border-blue-500"
+          className="w-full rounded-lg border px-2 py-1 text-xs outline-none transition focus:ring-1"
+          style={{
+            borderColor: "var(--th-border)",
+            background: "var(--th-bg-surface)",
+            color: "var(--th-text-primary)",
+          }}
         >
           {STATUS_OPTIONS.map((status) => (
             <option key={status} value={status}>
@@ -148,17 +198,17 @@ export default function TaskCard({
           {assignedAgent && assignedLabel ? (
             <>
               <AgentAvatar agent={assignedAgent} agents={agents} size={20} />
-              <span className="text-xs text-slate-300">{assignedLabel}</span>
+              <span className="text-xs" style={{ color: "var(--th-text-secondary)" }}>{assignedLabel}</span>
             </>
           ) : assignedLabel ? (
-            <span className="text-xs text-slate-300">{assignedLabel}</span>
+            <span className="text-xs" style={{ color: "var(--th-text-secondary)" }}>{assignedLabel}</span>
           ) : (
-            <span className="text-xs text-slate-500">
+            <span className="text-xs" style={{ color: "var(--th-text-muted)" }}>
               {t({ ko: "미배정", en: "Unassigned", ja: "未割り当て", zh: "未分配" })}
             </span>
           )}
         </div>
-        <span className="text-xs text-slate-500">{timeAgo(task.created_at, localeTag)}</span>
+        <span className="text-xs" style={{ color: "var(--th-text-muted)" }}>{timeAgo(task.created_at, localeTag)}</span>
       </div>
 
       <div
@@ -205,16 +255,22 @@ export default function TaskCard({
             onClick={() => setShowSubtasks((v) => !v)}
             className="mb-1.5 flex w-full items-center gap-2 text-left"
           >
-            <div className="flex-1 h-1.5 bg-slate-700 rounded-full overflow-hidden">
+            <div
+              className="flex-1 h-1.5 rounded-full overflow-hidden"
+              style={{ background: "var(--th-border)" }}
+            >
               <div
-                className="h-full bg-gradient-to-r from-green-500 to-emerald-400 rounded-full transition-all"
-                style={{ width: `${Math.round(((task.subtask_done ?? 0) / (task.subtask_total ?? 1)) * 100)}%` }}
+                className="h-full rounded-full transition-all"
+                style={{
+                  width: `${Math.round(((task.subtask_done ?? 0) / (task.subtask_total ?? 1)) * 100)}%`,
+                  background: "var(--th-accent, #2563eb)",
+                }}
               />
             </div>
-            <span className="text-xs text-slate-400 whitespace-nowrap">
+            <span className="text-xs whitespace-nowrap" style={{ color: "var(--th-text-muted)" }}>
               {task.subtask_done ?? 0}/{task.subtask_total ?? 0}
             </span>
-            <span className="text-xs text-slate-500">{showSubtasks ? "▲" : "▼"}</span>
+            <span className="text-xs" style={{ color: "var(--th-text-muted)" }}>{showSubtasks ? "▲" : "▼"}</span>
           </button>
           {showSubtasks && taskSubtasks.length > 0 && (
             <div className="space-y-1 pl-1">
@@ -226,7 +282,8 @@ export default function TaskCard({
                   <div key={subtask.id} className="flex items-center gap-1.5 text-xs">
                     <span>{SUBTASK_STATUS_ICON[subtask.status] || "\u23F3"}</span>
                     <span
-                      className={`flex-1 truncate ${subtask.status === "done" ? "line-through text-slate-500" : "text-slate-300"}`}
+                      className={`flex-1 truncate ${subtask.status === "done" ? "line-through" : ""}`}
+                      style={{ color: subtask.status === "done" ? "var(--th-text-muted)" : "var(--th-text-secondary)" }}
                     >
                       {subtask.title}
                     </span>
@@ -377,18 +434,20 @@ export default function TaskCard({
               ja: "完了/保留/キャンセルのタスクを非表示",
               zh: "隐藏已完成/待处理/已取消任务",
             })}
-            className="flex items-center justify-center gap-1 rounded-lg bg-slate-700 px-2 py-1.5 text-xs text-slate-300 transition hover:bg-slate-600 hover:text-white"
+            className="flex items-center justify-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium transition-opacity hover:opacity-90"
+            style={{ background: "var(--th-bg-surface-hover)", color: "var(--th-text-secondary)" }}
           >
-            🙈 {t({ ko: "숨김", en: "Hide", ja: "非表示", zh: "隐藏" })}
+            {t({ ko: "숨김", en: "Hide", ja: "非表示", zh: "隐藏" })}
           </button>
         )}
         {canHideTask && !!isHiddenTask && onUnhideTask && (
           <button
             onClick={() => onUnhideTask(task.id)}
             title={t({ ko: "숨긴 작업 복원", en: "Restore hidden task", ja: "非表示タスクを復元", zh: "恢复隐藏任务" })}
-            className="flex items-center justify-center gap-1 rounded-lg bg-blue-800 px-2 py-1.5 text-xs text-blue-200 transition hover:bg-blue-700 hover:text-white"
+            className="flex items-center justify-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium transition-opacity hover:opacity-90"
+            style={{ background: "var(--th-accent, #2563eb)", color: "white" }}
           >
-            👁 {t({ ko: "복원", en: "Restore", ja: "復元", zh: "恢复" })}
+            {t({ ko: "복원", en: "Restore", ja: "復元", zh: "恢复" })}
           </button>
         )}
         {canDelete && (
@@ -413,6 +472,8 @@ export default function TaskCard({
           </button>
         )}
       </div>
+        </>
+      )}
 
       {showDiff && <DiffModal taskId={task.id} onClose={() => setShowDiff(false)} />}
     </div>

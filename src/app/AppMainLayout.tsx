@@ -3,8 +3,12 @@ import Sidebar from "../components/Sidebar";
 import OfficeView from "../components/OfficeView";
 import Dashboard from "../components/Dashboard";
 import TaskBoard from "../components/TaskBoard";
+import Deliverables from "../components/deliverables/Deliverables";
 import AgentManager from "../components/AgentManager";
 import SkillsLibrary from "../components/SkillsLibrary";
+import AgentRulesLibrary from "../components/AgentRulesLibrary";
+import MemoryLibrary from "../components/MemoryLibrary";
+import HooksLibrary from "../components/HooksLibrary";
 import SettingsPanel from "../components/SettingsPanel";
 import { I18nProvider } from "../i18n";
 import type {
@@ -69,6 +73,8 @@ interface AppMainLayoutProps {
   setView: (view: View) => void;
   departments: Department[];
   agents: Agent[];
+  /** 도서관(에이전트룰/메모리/훅)용 전체 에이전트(시드 포함). 오피스팩 변경 시 학습된 에이전트 표시가 바뀌지 않도록 함. */
+  libraryAgents: Agent[];
   stats: CompanyStats | null;
   tasks: Task[];
   subtasks: SubTask[];
@@ -140,6 +146,7 @@ export default function AppMainLayout({
   setView,
   departments,
   agents,
+  libraryAgents,
   stats,
   tasks,
   subtasks,
@@ -388,14 +395,14 @@ export default function AppMainLayout({
             theme={theme}
             mobileHeaderMenuOpen={mobileHeaderMenuOpen}
             onOpenMobileNav={() => setMobileNavOpen(true)}
-            onOpenTasks={() => setView("tasks")}
+            onOpenTasks={() => setView("tasks-board")}
             onOpenDecisionInbox={onOpenDecisionInbox}
             onOpenAgentStatus={onOpenAgentStatus}
             onOpenReportHistory={onOpenReportHistory}
             onOpenAnnouncement={onOpenAnnouncement}
             onOpenRoomManager={onOpenRoomManager}
             officePackControl={
-              view === "office" || view === "agents" || view === "tasks"
+              view === "office" || view === "agents" || view === "tasks" || view === "tasks-board" || view === "tasks-deliverables"
                 ? {
                     label: officePackLabel,
                     value: officePackKey,
@@ -496,11 +503,11 @@ export default function AppMainLayout({
                 agents={agents}
                 tasks={tasks}
                 companyName={settings.companyName}
-                onPrimaryCtaClick={() => setView("tasks")}
+                onPrimaryCtaClick={() => setView("tasks-board")}
               />
             )}
 
-            {view === "tasks" && (
+            {(view === "tasks" || view === "tasks-board") && (
               <TaskBoard
                 tasks={tasksForActivePack}
                 agents={displayAgents}
@@ -517,6 +524,10 @@ export default function AppMainLayout({
                 onOpenTerminal={onOpenTerminal}
                 onOpenMeetingMinutes={onOpenMeetingMinutes}
               />
+            )}
+
+            {view === "tasks-deliverables" && (
+              <Deliverables agents={displayAgents} />
             )}
 
             {view === "agents" && (
@@ -542,27 +553,15 @@ export default function AppMainLayout({
             {view === "skills" && <SkillsLibrary agents={agents} />}
 
             {view === "agent-rules" && (
-              <div className="flex flex-col items-center justify-center py-20 gap-4">
-                <div className="text-4xl">🛡️</div>
-                <h2 className="text-lg font-semibold" style={{ color: "var(--th-text-heading)" }}>
-                  {uiLanguage === "ko"
-                    ? "에이전트 룰"
-                    : uiLanguage === "ja"
-                      ? "エージェントルール"
-                      : uiLanguage === "zh"
-                        ? "代理规则"
-                        : "Agent Rules"}
-                </h2>
-                <p className="text-sm" style={{ color: "var(--th-text-muted)" }}>
-                  {uiLanguage === "ko"
-                    ? "에이전트 행동 규칙을 관리하는 기능이 준비 중입니다."
-                    : uiLanguage === "ja"
-                      ? "エージェント動作ルール管理機能は準備中です。"
-                      : uiLanguage === "zh"
-                        ? "代理行为规则管理功能即将推出。"
-                        : "Agent behavior rules management is coming soon."}
-                </p>
-              </div>
+              <AgentRulesLibrary agents={libraryAgents} departments={departments} />
+            )}
+
+            {view === "memory" && (
+              <MemoryLibrary agents={libraryAgents} departments={departments} />
+            )}
+
+            {view === "hooks" && (
+              <HooksLibrary agents={libraryAgents} departments={departments} />
             )}
 
             {view === "settings" && (

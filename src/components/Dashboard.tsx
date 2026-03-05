@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState, useCallback } from "react";
 import type { Agent, CompanyStats, Task } from "../types";
 import { localeName, useI18n } from "../i18n";
 import {
@@ -9,7 +9,10 @@ import {
   type RankedAgent,
 } from "./dashboard/HeroSections";
 import { DashboardDeptAndSquad, DashboardMissionLog, type DepartmentPerformance } from "./dashboard/OpsSections";
+import { CollapsibleSection } from "./dashboard/CollapsibleSection";
 import { DEPT_COLORS, useNow } from "./dashboard/model";
+
+type SectionKey = "overview" | "metrics" | "ranking" | "dept" | "mission";
 
 interface DashboardProps {
   stats: CompanyStats | null;
@@ -19,9 +22,21 @@ interface DashboardProps {
   onPrimaryCtaClick: () => void;
 }
 
+const defaultSectionsOpen: Record<SectionKey, boolean> = {
+  overview: true,
+  metrics: true,
+  ranking: true,
+  dept: true,
+  mission: true,
+};
+
 export default function Dashboard({ stats, agents, tasks, companyName, onPrimaryCtaClick }: DashboardProps) {
   const { t, language, locale: localeTag } = useI18n();
   const { date, time, briefing } = useNow(localeTag, t);
+  const [sectionOpen, setSectionOpen] = useState<Record<SectionKey, boolean>>(defaultSectionsOpen);
+  const toggleSection = useCallback((key: SectionKey) => {
+    setSectionOpen((prev) => ({ ...prev, [key]: !prev[key] }));
+  }, []);
   const agentMap = useMemo(() => new Map(agents.map((agent) => [agent.id, agent])), [agents]);
   const numberFormatter = useMemo(() => new Intl.NumberFormat(localeTag), [localeTag]);
 
@@ -169,58 +184,112 @@ export default function Dashboard({ stats, agents, tasks, companyName, onPrimary
     },
   ];
 
+  const sectionTitles = {
+    overview: t({ ko: "요약", en: "Overview", ja: "概要", zh: "概览" }),
+    metrics: t({ ko: "핵심 지표", en: "Key metrics", ja: "主要指標", zh: "关键指标" }),
+    ranking: t({ ko: "에이전트 순위", en: "Agent ranking", ja: "エージェント順位", zh: "代理排名" }),
+    dept: t({ ko: "부서 성과 · 스쿼드", en: "Department & squad", ja: "部署・スクワッド", zh: "部门与小队" }),
+    mission: t({ ko: "최근 활동", en: "Recent activity", ja: "最近の活動", zh: "最近活动" }),
+  };
+
   return (
     <section className="relative isolate space-y-4" style={{ color: "var(--th-text-primary)" }}>
-      <div className="pointer-events-none absolute -left-40 -top-32 h-96 w-96 rounded-full bg-violet-600/10 blur-[100px] animate-drift-slow" />
-      <div className="pointer-events-none absolute -right-32 top-20 h-80 w-80 rounded-full bg-cyan-500/10 blur-[100px] animate-drift-slow-rev" />
-      <div className="pointer-events-none absolute left-1/3 bottom-32 h-72 w-72 rounded-full bg-amber-500/[0.05] blur-[80px]" />
+      <CollapsibleSection
+        id="overview"
+        title={sectionTitles.overview}
+        open={sectionOpen.overview}
+        onToggle={() => toggleSection("overview")}
+      >
+        <DashboardHeroHeader
+          companyName={companyName}
+          time={time}
+          date={date}
+          briefing={briefing}
+          reviewQueue={reviewQueue}
+          numberFormatter={numberFormatter}
+          primaryCtaEyebrow={primaryCtaEyebrow}
+          primaryCtaDescription={primaryCtaDescription}
+          primaryCtaLabel={primaryCtaLabel}
+          onPrimaryCtaClick={onPrimaryCtaClick}
+          t={t}
+        />
+      </CollapsibleSection>
 
-      <DashboardHeroHeader
-        companyName={companyName}
-        time={time}
-        date={date}
-        briefing={briefing}
-        reviewQueue={reviewQueue}
-        numberFormatter={numberFormatter}
-        primaryCtaEyebrow={primaryCtaEyebrow}
-        primaryCtaDescription={primaryCtaDescription}
-        primaryCtaLabel={primaryCtaLabel}
-        onPrimaryCtaClick={onPrimaryCtaClick}
-        t={t}
-      />
+      <CollapsibleSection
+        id="metrics"
+        title={sectionTitles.metrics}
+        open={sectionOpen.metrics}
+        onToggle={() => toggleSection("metrics")}
+      >
+        <DashboardHudStats hudStats={hudStats} numberFormatter={numberFormatter} />
+      </CollapsibleSection>
 
-      <DashboardHudStats hudStats={hudStats} numberFormatter={numberFormatter} />
+      <CollapsibleSection
+        id="ranking"
+        title={sectionTitles.ranking}
+        subtitle={t({ ko: "XP 기준", en: "By XP", ja: "XP 基準", zh: "按 XP" })}
+        right={
+          topAgents.length > 0 ? (
+            <span className="rounded border border-[var(--th-border)] bg-[var(--th-bg-primary)] px-2 py-0.5 text-[10px] font-medium text-[var(--th-text-muted)]">
+              Top {topAgents.length}
+            </span>
+          ) : undefined
+        }
+        open={sectionOpen.ranking}
+        onToggle={() => toggleSection("ranking")}
+      >
+        <DashboardRankingBoard
+          topAgents={topAgents}
+          podiumOrder={podiumOrder}
+          agentMap={agentMap}
+          agents={agents}
+          maxXp={maxXp}
+          numberFormatter={numberFormatter}
+          t={t}
+          embedded
+        />
+      </CollapsibleSection>
 
-      <DashboardRankingBoard
-        topAgents={topAgents}
-        podiumOrder={podiumOrder}
-        agentMap={agentMap}
-        agents={agents}
-        maxXp={maxXp}
-        numberFormatter={numberFormatter}
-        t={t}
-      />
+      <CollapsibleSection
+        id="dept"
+        title={sectionTitles.dept}
+        open={sectionOpen.dept}
+        onToggle={() => toggleSection("dept")}
+      >
+        <DashboardDeptAndSquad
+          deptData={deptData}
+          workingAgents={workingAgents}
+          idleAgentsList={idleAgentsList}
+          agents={agents}
+          language={language}
+          numberFormatter={numberFormatter}
+          t={t}
+        />
+      </CollapsibleSection>
 
-      <DashboardDeptAndSquad
-        deptData={deptData}
-        workingAgents={workingAgents}
-        idleAgentsList={idleAgentsList}
-        agents={agents}
-        language={language}
-        numberFormatter={numberFormatter}
-        t={t}
-      />
-
-      <DashboardMissionLog
-        recentTasks={recentTasks}
-        agentMap={agentMap}
-        agents={agents}
-        language={language}
-        localeTag={localeTag}
-        idleAgents={idleAgents}
-        numberFormatter={numberFormatter}
-        t={t}
-      />
+      <CollapsibleSection
+        id="mission"
+        title={sectionTitles.mission}
+        right={
+          <span className="rounded border border-[var(--th-border)] bg-[var(--th-bg-primary)] px-2 py-0.5 text-[10px] font-medium text-[var(--th-text-muted)]">
+            {t({ ko: "유휴", en: "Idle", ja: "待機", zh: "空闲" })} {numberFormatter.format(idleAgents)}
+          </span>
+        }
+        open={sectionOpen.mission}
+        onToggle={() => toggleSection("mission")}
+      >
+        <DashboardMissionLog
+          recentTasks={recentTasks}
+          agentMap={agentMap}
+          agents={agents}
+          language={language}
+          localeTag={localeTag}
+          idleAgents={idleAgents}
+          numberFormatter={numberFormatter}
+          t={t}
+          embedded
+        />
+      </CollapsibleSection>
     </section>
   );
 }

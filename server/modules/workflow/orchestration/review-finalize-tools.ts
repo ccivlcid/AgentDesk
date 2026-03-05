@@ -1,5 +1,7 @@
+import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
+import { sendDeliverableFiles } from "../../../gateway/client.ts";
 import {
   discoverVideoArtifact,
   resolveVideoArtifactRelativeCandidates,
@@ -516,6 +518,50 @@ export function createReviewFinalizeTools(deps: CreateReviewFinalizeToolsDeps) {
       );
     }
 
+    /** After merge, capture the list of deliverable files this task produced via git diff */
+    function recordMergedArtifacts(projectPath: string, tid: string): void {
+      const ARTIFACT_EXTS = new Set([
+        ".pdf", ".ppt", ".pptx", ".doc", ".docx", ".xls", ".xlsx",
+        ".mp4", ".mp3", ".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp",
+        ".html", ".htm", ".md", ".txt", ".csv", ".json", ".zip",
+      ]);
+      const ARTIFACT_MIME: Record<string, string> = {
+        ".pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+        ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        ".pdf": "application/pdf", ".mp4": "video/mp4", ".mp3": "audio/mpeg",
+        ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
+        ".gif": "image/gif", ".svg": "image/svg+xml", ".webp": "image/webp",
+        ".html": "text/html", ".htm": "text/html", ".md": "text/markdown",
+        ".txt": "text/plain", ".csv": "text/csv", ".json": "application/json",
+        ".zip": "application/zip",
+      };
+      try {
+        // Get files changed by the most recent merge commit (HEAD)
+        const raw = execFileSync("git", ["diff-tree", "-m", "--no-commit-id", "-r", "--name-only", "HEAD"], {
+          cwd: projectPath, stdio: "pipe", timeout: 10000,
+        }).toString().trim();
+        if (!raw) return;
+        const files = raw.split("\n").filter(Boolean);
+        const insert = db.prepare(
+          "INSERT OR IGNORE INTO task_artifacts (task_id, file_path, file_name, size, mime, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+        );
+        const now = nowMs();
+        for (const relFile of files) {
+          const ext = path.extname(relFile).toLowerCase();
+          if (!ARTIFACT_EXTS.has(ext)) continue;
+          const absFile = path.join(projectPath, relFile);
+          let size = 0;
+          try { size = fs.statSync(absFile).size; } catch { /* skip */ }
+          if (size === 0) continue;
+          const mime = ARTIFACT_MIME[ext] || "application/octet-stream";
+          insert.run(tid, relFile.replace(/\\/g, "/"), path.basename(relFile), size, mime, now);
+        }
+      } catch {
+        // git not available or not a merge commit — skip
+      }
+    }
+
     const finalizeApprovedReview = () => {
       const t = nowMs();
       const latestTask = db.prepare("SELECT status, department_id FROM tasks WHERE id = ?").get(taskId) as
@@ -541,8 +587,20 @@ export function createReviewFinalizeTools(deps: CreateReviewFinalizeToolsDeps) {
 
         if (mergeResult.success) {
           appendTaskLog(taskId, "system", `Git merge completed: ${mergeResult.message}`);
+          // Record merged files as task artifacts before cleanup
+          try {
+            recordMergedArtifacts(wtInfo.projectPath, taskId);
+          } catch (artifactErr) {
+            appendTaskLog(taskId, "system", `Failed to record artifacts: ${artifactErr}`);
+          }
           cleanupWorktree(wtInfo.projectPath, taskId);
           appendTaskLog(taskId, "system", "Worktree cleaned up after successful merge");
+          // Backfill project_path if it was null — merged files now live in wtInfo.projectPath
+          if (!currentTask.project_path && wtInfo.projectPath) {
+            db.prepare("UPDATE tasks SET project_path = ? WHERE id = ? AND (project_path IS NULL OR TRIM(project_path) = '')").run(
+              wtInfo.projectPath, taskId,
+            );
+          }
           mergeNote = githubRepo
             ? pickL(
                 l(
@@ -614,6 +672,29 @@ export function createReviewFinalizeTools(deps: CreateReviewFinalizeToolsDeps) {
       const updatedTask = db.prepare("SELECT * FROM tasks WHERE id = ?").get(taskId);
       broadcast("task_update", updatedTask);
       notifyTaskStatus(taskId, taskTitle, "done", lang);
+
+      // Send deliverable files to messenger
+      try {
+        const DELIVERABLE_EXTS = new Set([
+          ".pdf", ".ppt", ".pptx", ".doc", ".docx", ".xls", ".xlsx", ".mp4", ".mp3", ".zip",
+        ]);
+        const artifactRows = db
+          .prepare("SELECT file_path, file_name FROM task_artifacts WHERE task_id = ?")
+          .all(taskId) as Array<{ file_path: string; file_name: string }>;
+        const projectPath = (currentTask as any).project_path || process.cwd();
+        const deliverableFiles = artifactRows
+          .filter((a) => DELIVERABLE_EXTS.has(path.extname(a.file_name).toLowerCase()))
+          .map((a) => ({
+            absolutePath: path.resolve(projectPath, a.file_path),
+            fileName: a.file_name,
+          }))
+          .filter((f) => fs.existsSync(f.absolutePath));
+        if (deliverableFiles.length > 0) {
+          void sendDeliverableFiles(taskTitle, deliverableFiles, lang).catch((err) => {
+            appendTaskLog(taskId, "system", `Messenger file delivery failed: ${err}`);
+          });
+        }
+      } catch { /* best effort */ }
 
       refreshCliUsageData()
         .then((usage: unknown) => broadcast("cli_usage_update", usage))

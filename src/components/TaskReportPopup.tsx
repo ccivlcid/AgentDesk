@@ -1,7 +1,7 @@
 import { useMemo, useState, useEffect } from "react";
 import type { Agent, Department } from "../types";
-import type { TaskReportDetail, TaskReportDocument, TaskReportTeamSection } from "../api";
-import { archiveTaskReport, getTaskReportDetail } from "../api";
+import type { TaskReportDetail, TaskReportDocument, TaskReportTeamSection, TaskArtifact } from "../api";
+import { archiveTaskReport, getTaskReportDetail, getTaskArtifacts, getTaskArtifactDownloadUrl } from "../api";
 import type { UiLanguage } from "../i18n";
 import { pickLang } from "../i18n";
 import AgentAvatar from "./AgentAvatar";
@@ -79,11 +79,23 @@ export default function TaskReportPopup({ report, agents, departments, uiLanguag
     }
   };
 
+  const [artifacts, setArtifacts] = useState<TaskArtifact[] | null>(null);
+
   useEffect(() => {
     setActiveTab("planning");
     setExpandedDocs({});
     setDocumentPages({});
-  }, [currentReport.task.id, currentReport.requested_task_id, teamReports.length]);
+    setArtifacts(null);
+    // Fetch artifacts if project_path exists
+    const taskId = currentReport.project?.root_task_id || currentReport.task.id;
+    if (currentReport.task.project_path || currentReport.project?.project_path) {
+      getTaskArtifacts(taskId)
+        .then(setArtifacts)
+        .catch(() => setArtifacts([]));
+    } else {
+      setArtifacts([]);
+    }
+  }, [currentReport.task.id, currentReport.requested_task_id, teamReports.length, currentReport.task.project_path, currentReport.project?.project_path, currentReport.project?.root_task_id]);
 
   const taskAgent = agents.find((a) => a.id === currentReport.task.assigned_agent_id);
   const departmentById = useMemo(() => {
@@ -319,6 +331,110 @@ export default function TaskReportPopup({ report, agents, departments, uiLanguag
     );
   };
 
+  const ARTIFACT_ICONS: Record<string, string> = {
+    ".pptx": "\uD83D\uDCCA", ".ppt": "\uD83D\uDCCA",
+    ".xlsx": "\uD83D\uDCC8", ".xls": "\uD83D\uDCC8",
+    ".docx": "\uD83D\uDCC4", ".doc": "\uD83D\uDCC4",
+    ".pdf": "\uD83D\uDCD5",
+    ".mp4": "\uD83C\uDFAC", ".mp3": "\uD83C\uDFB5",
+    ".html": "\uD83C\uDF10", ".htm": "\uD83C\uDF10",
+    ".md": "\uD83D\uDCDD", ".txt": "\uD83D\uDCDD", ".json": "\uD83D\uDCDD", ".csv": "\uD83D\uDCDD",
+    ".png": "\uD83D\uDDBC\uFE0F", ".jpg": "\uD83D\uDDBC\uFE0F", ".jpeg": "\uD83D\uDDBC\uFE0F",
+    ".gif": "\uD83D\uDDBC\uFE0F", ".svg": "\uD83D\uDDBC\uFE0F", ".webp": "\uD83D\uDDBC\uFE0F",
+    ".zip": "\uD83D\uDCE6",
+  };
+
+  const getArtifactIcon = (fileName: string) => {
+    const ext = fileName.slice(fileName.lastIndexOf(".")).toLowerCase();
+    return ARTIFACT_ICONS[ext] || "\uD83D\uDCC1";
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  const renderArtifacts = () => {
+    const taskId = rootTaskId;
+    if (artifacts === null) {
+      return (
+        <div className="flex items-center justify-center py-8 text-sm text-slate-500 animate-pulse">
+          {t({ ko: "산출물 로딩중...", en: "Loading artifacts...", ja: "成果物を読み込み中...", zh: "加载产出物..." })}
+        </div>
+      );
+    }
+    if (artifacts.length === 0) {
+      return (
+        <div className="flex flex-col items-center justify-center py-8 text-slate-500">
+          <span className="mb-2 text-3xl opacity-40">&#x1F4E6;</span>
+          <p className="text-sm">
+            {t({ ko: "산출물 파일이 없습니다", en: "No artifact files found", ja: "成果物ファイルはありません", zh: "没有产出文件" })}
+          </p>
+        </div>
+      );
+    }
+    const totalSize = artifacts.reduce((s, a) => s + a.size, 0);
+    return (
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
+            {t({ ko: "산출물 파일", en: "Artifact Files", ja: "成果物ファイル", zh: "产出文件" })}
+          </p>
+          <span className="text-[11px] text-slate-500">
+            {artifacts.length} {t({ ko: "파일", en: "files", ja: "ファイル", zh: "文件" })} ({formatFileSize(totalSize)})
+          </span>
+        </div>
+        <div className="rounded-lg border border-slate-700/50 bg-slate-800/50 divide-y divide-slate-700/40">
+          {artifacts.map((art) => {
+            const isText = art.type === "text" && art.mime !== "text/html";
+            const isHtml = art.mime === "text/html";
+            const downloadUrl = getTaskArtifactDownloadUrl(taskId, art.relativePath);
+            const previewUrl = getTaskArtifactDownloadUrl(taskId, art.relativePath, true);
+            return (
+              <div key={art.id} className="flex items-center gap-3 px-3 py-2.5 hover:bg-slate-700/30 transition">
+                <span className="text-lg shrink-0">{getArtifactIcon(art.title)}</span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-medium text-slate-200 truncate" title={art.relativePath}>{art.title}</p>
+                  <p className="text-[10px] text-slate-500">{formatFileSize(art.size)} · {art.relativePath}</p>
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  {isText && (
+                    <a
+                      href={previewUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="rounded-md border border-slate-600 bg-slate-700/50 px-2 py-0.5 text-[10px] text-slate-300 hover:bg-slate-600/50 transition"
+                    >
+                      {t({ ko: "보기", en: "View", ja: "表示", zh: "查看" })}
+                    </a>
+                  )}
+                  {isHtml && (
+                    <a
+                      href={previewUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="rounded-md border border-cyan-500/40 bg-cyan-500/10 px-2 py-0.5 text-[10px] text-cyan-300 hover:bg-cyan-500/20 transition"
+                    >
+                      {t({ ko: "미리보기", en: "Preview", ja: "プレビュー", zh: "预览" })}
+                    </a>
+                  )}
+                  <a
+                    href={downloadUrl}
+                    download
+                    className="rounded-md border border-slate-600 bg-slate-700/50 px-2 py-0.5 text-[10px] text-slate-300 hover:bg-slate-600/50 transition"
+                  >
+                    {t({ ko: "다운로드", en: "Download", ja: "DL", zh: "下载" })}
+                  </a>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
       <div
@@ -383,6 +499,19 @@ export default function TaskReportPopup({ report, agents, departments, uiLanguag
             >
               {t({ ko: "기획팀장 취합본", en: "Planning Summary", ja: "企画サマリー", zh: "规划汇总" })}
             </button>
+            <button
+              onClick={() => setActiveTab("artifacts")}
+              className={`rounded-lg px-3 py-1.5 text-xs ${
+                activeTab === "artifacts"
+                  ? "bg-violet-600 text-white"
+                  : "bg-slate-800 text-slate-300 hover:bg-slate-700"
+              }`}
+            >
+              {t({ ko: "산출물", en: "Artifacts", ja: "成果物", zh: "产出物" })}
+              {artifacts && artifacts.length > 0 && (
+                <span className="ml-1 rounded-full bg-violet-500/30 px-1.5 text-[10px]">{artifacts.length}</span>
+              )}
+            </button>
             {teamReports.map((team) => {
               const label =
                 uiLanguage === "ko"
@@ -406,6 +535,8 @@ export default function TaskReportPopup({ report, agents, departments, uiLanguag
         <div className="max-h-[68vh] overflow-y-auto px-6 py-4">
           {activeTab === "planning" ? (
             renderPlanningSummary()
+          ) : activeTab === "artifacts" ? (
+            renderArtifacts()
           ) : selectedTeam ? (
             renderTeamReport(selectedTeam)
           ) : (

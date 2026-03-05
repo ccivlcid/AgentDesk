@@ -127,12 +127,38 @@ export function applyTaskSchemaMigrations(db: DbLike): void {
     /* already exists */
   }
 
+  // Task artifacts: records files produced by each task (captured at merge time)
+  try {
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS task_artifacts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        task_id TEXT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+        file_path TEXT NOT NULL,
+        file_name TEXT NOT NULL,
+        size INTEGER NOT NULL DEFAULT 0,
+        mime TEXT NOT NULL DEFAULT 'application/octet-stream',
+        created_at INTEGER DEFAULT (unixepoch()*1000)
+      )
+    `);
+    db.exec("CREATE INDEX IF NOT EXISTS idx_task_artifacts_task ON task_artifacts(task_id)");
+    db.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_task_artifacts_unique ON task_artifacts(task_id, file_path)");
+  } catch {
+    /* already exists */
+  }
+
   ensureOfficePackScopedDepartmentSchema(db);
 
   migrateMessagesDirectiveType(db);
   migrateLegacyTasksStatusSchema(db);
   repairLegacyTaskForeignKeys(db);
   ensureMessagesIdempotencySchema(db);
+
+  // Chat file attachments: JSON array of {id, fileName, size, mime, relativePath}
+  try {
+    db.exec("ALTER TABLE messages ADD COLUMN attachments TEXT");
+  } catch {
+    /* already exists */
+  }
 }
 
 function safeJsonParse(raw: string): unknown {

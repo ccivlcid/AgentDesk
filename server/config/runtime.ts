@@ -3,7 +3,19 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-export const SERVER_DIRNAME = path.dirname(fileURLToPath(import.meta.url));
+// When packaged (e.g. Electron CJS bundle), set AGENTDESK_SERVER_DIR to the bundle directory.
+const _serverDirEnv = process.env.AGENTDESK_SERVER_DIR?.trim();
+function resolveServerDirname(): string {
+  if (_serverDirEnv) return path.resolve(_serverDirEnv);
+  try {
+    const u = (typeof import.meta !== "undefined" && import.meta.url) || "";
+    if (u) return path.dirname(fileURLToPath(u));
+  } catch {
+    /* CJS bundle may have empty import.meta.url */
+  }
+  return process.cwd();
+}
+export const SERVER_DIRNAME = resolveServerDirname();
 
 // ---------------------------------------------------------------------------
 // .env loader (no dotenv dependency)
@@ -32,6 +44,7 @@ try {
 // Constants
 // ---------------------------------------------------------------------------
 export const PKG_VERSION: string = (() => {
+  if (process.env.AGENTDESK_VERSION?.trim()) return process.env.AGENTDESK_VERSION.trim();
   try {
     return (
       JSON.parse(fs.readFileSync(path.resolve(SERVER_DIRNAME, "..", "..", "package.json"), "utf8")).version ?? "1.0.0"
@@ -79,8 +92,12 @@ export const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS ?? "")
 
 // ---------------------------------------------------------------------------
 // Production static file serving
+// When packaged (e.g. Electron), set AGENTDESK_DIST_DIR to the actual dist path.
 // ---------------------------------------------------------------------------
-export const DIST_DIR = path.resolve(SERVER_DIRNAME, "..", "..", "dist");
+const distDirEnv = process.env.AGENTDESK_DIST_DIR?.trim();
+export const DIST_DIR = distDirEnv
+  ? path.resolve(distDirEnv)
+  : path.resolve(SERVER_DIRNAME, "..", "..", "dist");
 export const IS_PRODUCTION = !process.env.VITE_DEV && fs.existsSync(path.join(DIST_DIR, "index.html"));
 
 // ---------------------------------------------------------------------------

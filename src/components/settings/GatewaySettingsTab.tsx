@@ -10,6 +10,7 @@ import {
 } from "../../types";
 import type { ChannelSettingsTabProps } from "./types";
 import ChatEditorModal from "./gateway-settings/ChatEditorModal";
+import ChannelGuideModal from "./gateway-settings/ChannelGuideModal";
 import { CHANNEL_META, isWorkflowPackKey } from "./gateway-settings/constants";
 import {
   type ChatRow,
@@ -46,6 +47,7 @@ export default function GatewaySettingsTab({ t, form, setForm, persistSettings }
   const [workflowPacks, setWorkflowPacks] = useState<Awaited<ReturnType<typeof api.getWorkflowPacks>>["packs"]>([]);
   const spriteMap = useSpriteMap(agents);
 
+  const [guideOpen, setGuideOpen] = useState(false);
   const [editor, setEditor] = useState(() => createEditorState(channelsConfig));
   const [editorError, setEditorError] = useState<string | null>(null);
   const [discordChannelsLoading, setDiscordChannelsLoading] = useState(false);
@@ -396,7 +398,7 @@ export default function GatewaySettingsTab({ t, form, setForm, persistSettings }
   const loadAgents = async () => {
     setAgentsLoading(true);
     try {
-      const rows = await api.getAgents();
+      const rows = await api.getAgents({ includeSeed: true });
       setAgents(rows);
     } catch {
       setAgents([]);
@@ -484,15 +486,18 @@ export default function GatewaySettingsTab({ t, form, setForm, persistSettings }
   const selectedChatTransportReady = selectedChat ? CHANNEL_META[selectedChat.channel].transportReady : false;
 
   return (
-    <section className="space-y-4 rounded-xl border border-slate-700/50 bg-slate-800/60 p-4 sm:p-5">
+    <section
+      className="space-y-4 rounded-xl border p-4 sm:p-5"
+      style={{ background: "var(--th-bg-surface)", borderColor: "var(--th-border)" }}
+    >
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-slate-300 uppercase tracking-wider">
-          {t({ ko: "채널 메시지 설정", en: "Channel Messaging", ja: "チャネルメッセージ設定", zh: "频道消息设置" })}
+        <h3 className="text-sm font-semibold" style={{ color: "var(--th-text-heading)" }}>
+          {t({ ko: "채널 메시지 설정", en: "Channel messaging", ja: "チャネルメッセージ設定", zh: "频道消息设置" })}
         </h3>
         {saved && <span className={`text-xs ${saved.ok ? "text-emerald-400" : "text-red-400"}`}>{saved.msg}</span>}
       </div>
 
-      <p className="text-xs text-slate-400">
+      <p className="text-xs" style={{ color: "var(--th-text-muted)" }}>
         {t({
           ko: "이 탭에서 메신저 채널을 직접 설정할 수 있습니다. '새 채팅 추가'로 메신저/토큰/대상 ID/대화 Agent를 등록하세요.",
           en: "You can configure messenger channels directly in this tab. Use 'Add Chat' to register messenger/token/target ID/conversation agent.",
@@ -506,12 +511,27 @@ export default function GatewaySettingsTab({ t, form, setForm, persistSettings }
           <div className="text-sm font-semibold text-slate-200">
             {t({ ko: "채팅 세션", en: "Chat Sessions", ja: "チャットセッション", zh: "聊天会话" })}
           </div>
-          <button
-            onClick={openCreateModal}
-            className="text-xs px-3 py-1 rounded-md bg-emerald-600/30 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-600/40"
-          >
-            + {t({ ko: "새 채팅 추가", en: "Add Chat", ja: "チャット追加", zh: "新增聊天" })}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setGuideOpen(true)}
+              className="flex items-center justify-center w-7 h-7 rounded-md text-slate-400 border border-slate-600/60 hover:text-slate-200 hover:bg-slate-800/60 transition-colors"
+              title={t({ ko: "설정 가이드", en: "Setup Guide", ja: "設定ガイド", zh: "设置指南" })}
+              aria-label={t({ ko: "설정 가이드", en: "Setup Guide", ja: "設定ガイド", zh: "设置指南" })}
+            >
+              <svg className="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <circle cx="12" cy="12" r="10" />
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                <path d="M12 17h.01" />
+              </svg>
+            </button>
+            <button
+              onClick={openCreateModal}
+              className="text-xs px-3 py-1 rounded-md bg-emerald-600/30 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-600/40"
+            >
+              + {t({ ko: "새 채팅 추가", en: "Add Chat", ja: "チャット追加", zh: "新增聊天" })}
+            </button>
+          </div>
         </div>
 
         {chatRows.length === 0 ? (
@@ -777,6 +797,7 @@ export default function GatewaySettingsTab({ t, form, setForm, persistSettings }
           channelsConfig={channelsConfig}
           agents={agents}
           agentsLoading={agentsLoading}
+          officePackProfiles={form.officePackProfiles}
           workflowPackOptions={workflowPackOptions}
           workflowPacksLoading={workflowPacksLoading}
           editorError={editorError}
@@ -785,6 +806,7 @@ export default function GatewaySettingsTab({ t, form, setForm, persistSettings }
           discordChannelsError={discordChannelsError}
         />
       )}
+      {guideOpen && <ChannelGuideModal t={t} onClose={() => setGuideOpen(false)} />}
     </section>
   );
 }

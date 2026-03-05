@@ -388,3 +388,29 @@ export async function getCliModels(refresh = false): Promise<Record<string, CliM
   const j = await request<{ models: Record<string, CliModelInfo[]> }>(`/api/cli-models${qs}`);
   return j.models;
 }
+
+// Chat Attachments
+export interface ChatAttachment {
+  id: string;
+  fileName: string;
+  size: number;
+  mime: string;
+  relativePath: string;
+}
+
+export async function uploadChatFiles(files: File[]): Promise<ChatAttachment[]> {
+  const formData = new FormData();
+  for (const file of files) {
+    formData.append("files", file);
+  }
+  const res = await fetch("/api/chat/upload", {
+    method: "POST",
+    credentials: "same-origin",
+    body: formData,
+  });
+  if (!res.ok) {
+    throw new Error(`Upload failed: ${res.status}`);
+  }
+  const j = await res.json();
+  return j.attachments ?? [];
+}

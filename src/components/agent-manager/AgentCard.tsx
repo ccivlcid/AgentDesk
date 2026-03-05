@@ -40,14 +40,14 @@ export default function AgentCard({
     <div
       onClick={onEdit}
       className="group rounded-xl p-4 cursor-pointer transition-all hover:scale-[1.01] hover:shadow-lg hover:shadow-black/10"
-      style={{ background: "var(--th-card-bg)", border: "1px solid var(--th-card-border)" }}
+      style={{ background: "var(--th-bg-surface)", border: "1px solid var(--th-border)" }}
     >
       <div className="flex items-start gap-3">
         <div className="relative shrink-0">
           <AgentAvatar agent={agent} spriteMap={spriteMap} size={44} rounded="xl" />
           <div
             className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 ${STATUS_DOT[agent.status] ?? STATUS_DOT.idle}`}
-            style={{ borderColor: "var(--th-card-bg)" }}
+            style={{ borderColor: "var(--th-bg-surface)" }}
           />
         </div>
         <div className="flex-1 min-w-0">
@@ -72,7 +72,7 @@ export default function AgentCard({
                 className="text-[10px] px-1.5 py-0.5 rounded-md"
                 style={{ background: "var(--th-bg-surface)", color: "var(--th-text-muted)" }}
               >
-                {dept.icon} {localeName(locale, dept)}
+                {localeName(locale, dept)}
               </span>
             )}
           </div>
@@ -81,7 +81,7 @@ export default function AgentCard({
 
       <div
         className="flex items-center justify-between mt-3 pt-2.5"
-        style={{ borderTop: "1px solid var(--th-card-border)" }}
+        style={{ borderTop: "1px solid var(--th-border)" }}
       >
         <div className="flex items-center gap-2">
           <span

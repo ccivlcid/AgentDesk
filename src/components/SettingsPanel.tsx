@@ -393,10 +393,20 @@ export default function SettingsPanel({
   );
 
   return (
-    <div className="mx-auto max-w-2xl space-y-4 sm:space-y-6">
-      <h2 className="text-xl font-bold flex items-center gap-2" style={{ color: "var(--th-text-heading)" }}>
-        ⚙️ {t({ ko: "설정", en: "Settings", ja: "設定", zh: "设置" })}
-      </h2>
+    <div className="mx-auto max-w-2xl space-y-5 sm:space-y-6">
+      <div>
+        <h2 className="text-lg font-semibold tracking-tight" style={{ color: "var(--th-text-heading)" }}>
+          {t({ ko: "설정", en: "Settings", ja: "設定", zh: "设置" })}
+        </h2>
+        <p className="mt-0.5 text-sm" style={{ color: "var(--th-text-muted)" }}>
+          {t({
+            ko: "회사 정보, CLI·OAuth·API·채널 연동을 관리합니다.",
+            en: "Manage company info, CLI, OAuth, API, and channel integrations.",
+            ja: "会社情報、CLI・OAuth・API・チャネル連携を管理します。",
+            zh: "管理公司信息、CLI、OAuth、API 及频道集成。",
+          })}
+        </p>
+      </div>
 
       <SettingsTabNav tab={tab} setTab={setTab} t={t} />
 

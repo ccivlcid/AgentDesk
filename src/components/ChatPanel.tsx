@@ -3,6 +3,8 @@ import type { Agent, Message, Project } from "../types";
 import { buildSpriteMap } from "./AgentAvatar";
 import { useI18n } from "../i18n";
 import { createProject, getProjects } from "../api";
+import { uploadChatFiles } from "../api/messaging-runtime-oauth";
+import type { ChatAttachment } from "../api/messaging-runtime-oauth";
 import { parseDecisionRequest } from "./chat/decision-request";
 import type { DecisionOption } from "./chat/decision-request";
 import ChatComposer from "./chat-panel/ChatComposer";
@@ -61,6 +63,7 @@ export function ChatPanel({
   onClose,
 }: ChatPanelProps) {
   const [input, setInput] = useState("");
+  const [attachments, setAttachments] = useState<File[]>([]);
   const [mode, setMode] = useState<ChatMode>(selectedAgent ? "task" : "announcement");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -314,29 +317,61 @@ export function ChatPanel({
     setNewProjectGoal(action.kind === "directive" ? action.content : "");
   };
 
-  const handleSend = () => {
+  const formatAttachmentPrefix = (uploaded: ChatAttachment[]): string => {
+    if (uploaded.length === 0) return "";
+    return uploaded
+      .map((a) => {
+        const sizeStr =
+          a.size < 1024
+            ? a.size + "B"
+            : a.size < 1024 * 1024
+              ? (a.size / 1024).toFixed(1) + "KB"
+              : (a.size / (1024 * 1024)).toFixed(1) + "MB";
+        return `[\u{1F4CE} ${a.fileName} (${sizeStr})]`;
+      })
+      .join(" ") + "\n";
+  };
+
+  const handleSend = async () => {
     const trimmed = input.trim();
-    if (!trimmed) return;
+    if (!trimmed && attachments.length === 0) return;
+
+    // Upload attachments first if any
+    let uploaded: ChatAttachment[] = [];
+    if (attachments.length > 0) {
+      try {
+        uploaded = await uploadChatFiles(attachments);
+      } catch (err) {
+        console.error("File upload failed:", err);
+        // Continue sending the message without attachments
+      }
+      setAttachments([]);
+    }
+
+    const attachmentPrefix = formatAttachmentPrefix(uploaded);
+    const contentWithAttachments = attachmentPrefix + trimmed;
+
+    if (!contentWithAttachments.trim()) return;
 
     let action: PendingSendAction;
     if (trimmed.startsWith("$")) {
       const directiveContent = trimmed.slice(1).trim();
-      if (!directiveContent) return;
-      action = { kind: "directive", content: directiveContent };
+      if (!directiveContent && uploaded.length === 0) return;
+      action = { kind: "directive", content: attachmentPrefix + (directiveContent || "") };
     } else if (mode === "announcement") {
-      action = { kind: "announcement", content: trimmed };
+      action = { kind: "announcement", content: contentWithAttachments };
     } else if (mode === "task" && selectedAgent) {
-      action = { kind: "task", content: trimmed, receiverId: selectedAgent.id };
+      action = { kind: "task", content: contentWithAttachments, receiverId: selectedAgent.id };
     } else if (mode === "report" && selectedAgent) {
       action = {
         kind: "report",
-        content: `[${tr("보고 요청", "Report Request", "レポート依頼", "报告请求")}] ${trimmed}`,
+        content: `[${tr("보고 요청", "Report Request", "レポート依頼", "报告请求")}] ${contentWithAttachments}`,
         receiverId: selectedAgent.id,
       };
     } else if (selectedAgent) {
-      action = { kind: "chat", content: trimmed, receiverId: selectedAgent.id };
+      action = { kind: "chat", content: contentWithAttachments, receiverId: selectedAgent.id };
     } else {
-      action = { kind: "broadcast", content: trimmed };
+      action = { kind: "broadcast", content: contentWithAttachments };
     }
 
     const requiresProject = action.kind === "directive" || action.kind === "task" || action.kind === "report";
@@ -354,7 +389,7 @@ export function ChatPanel({
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
       e.preventDefault();
-      handleSend();
+      void handleSend();
     }
   };
 
@@ -485,9 +520,11 @@ export function ChatPanel({
         tr={tr}
         getAgentName={getAgentName}
         textareaRef={textareaRef}
+        attachments={attachments}
+        onAttachmentsChange={setAttachments}
         onModeChange={setMode}
         onInputChange={setInput}
-        onSend={handleSend}
+        onSend={() => void handleSend()}
         onKeyDown={handleKeyDown}
       />
     </div>

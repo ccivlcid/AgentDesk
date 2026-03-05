@@ -59,7 +59,7 @@ export default defineConfig({
   server: {
     allowedHosts: [".ts.net"],
     watch: {
-      ignored: ["**/.agentdesk-worktrees/**"],
+      ignored: ["**/.agentdesk-worktrees/**", "**/slides/**", "**/docs/reports/**"],
     },
     proxy: {
       "/api": {
@@ -77,6 +77,7 @@ export default defineConfig({
     outDir: "dist",
     chunkSizeWarningLimit: 550,
     rollupOptions: {
+      input: ["index.html"],
       output: {
         manualChunks,
       },

@@ -49,13 +49,21 @@ export default function OAuthSettingsTab({
   onStartDeviceCodeFlow,
 }: OAuthSettingsTabProps) {
   return (
-    <section className="space-y-4 rounded-xl border border-slate-700/50 bg-slate-800/60 p-4 sm:p-5">
+    <section
+      className="space-y-4 rounded-xl border p-4 sm:p-5"
+      style={{ background: "var(--th-bg-surface)", borderColor: "var(--th-border)" }}
+    >
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-slate-300 uppercase tracking-wider">
-          {t({ ko: "OAuth 인증 현황", en: "OAuth Status", ja: "OAuth 認証状態", zh: "OAuth 认证状态" })}
+        <h3 className="text-sm font-semibold" style={{ color: "var(--th-text-heading)" }}>
+          {t({ ko: "OAuth 인증 현황", en: "OAuth status", ja: "OAuth 認証状態", zh: "OAuth 认证状态" })}
         </h3>
-        <button onClick={onRefresh} className="text-xs text-blue-400 hover:text-blue-300 transition-colors">
-          🔄 {t({ ko: "새로고침", en: "Refresh", ja: "更新", zh: "刷新" })}
+        <button
+          type="button"
+          onClick={onRefresh}
+          className="text-xs font-medium transition-colors hover:opacity-80"
+          style={{ color: "var(--th-text-secondary)" }}
+        >
+          {t({ ko: "새로고침", en: "Refresh", ja: "更新", zh: "刷新" })}
         </button>
       </div>
 

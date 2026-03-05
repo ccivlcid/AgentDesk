@@ -49,22 +49,28 @@ export default function DepartmentsTab({
       {deptOrderDirty && (
         <div
           className="flex items-center gap-3 px-4 py-3 rounded-xl"
-          style={{ background: "rgba(59,130,246,0.1)", border: "1px solid rgba(59,130,246,0.3)" }}
+          style={{
+            background: "var(--th-bg-surface)",
+            border: "1px solid var(--th-border)",
+          }}
         >
           <span className="text-sm" style={{ color: "var(--th-text-primary)" }}>
             {tr("순번이 변경되었습니다.", "Order has been changed.")}
           </span>
           <button
+            type="button"
             onClick={onSaveOrder}
             disabled={reorderSaving}
-            className="ml-auto px-4 py-1.5 rounded-lg text-sm font-medium bg-blue-600 hover:bg-blue-500 text-white disabled:opacity-50 transition-all"
+            className="ml-auto rounded-lg px-4 py-1.5 text-sm font-medium transition-opacity hover:opacity-90 disabled:opacity-50"
+            style={{ background: "var(--th-accent, #2563eb)", color: "var(--th-text-heading)" }}
           >
             {reorderSaving ? tr("저장 중...", "Saving...") : tr("순번 저장", "Save Order")}
           </button>
           <button
+            type="button"
             onClick={onCancelOrder}
-            className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all hover:bg-white/5"
-            style={{ color: "var(--th-text-muted)" }}
+            className="rounded-lg px-3 py-1.5 text-sm font-medium transition-opacity hover:opacity-90"
+            style={{ color: "var(--th-text-muted)", background: "var(--th-bg-surface-hover)" }}
           >
             {tr("취소", "Cancel")}
           </button>
@@ -87,28 +93,36 @@ export default function DepartmentsTab({
               onDrop={(e) => onDrop(dept.id, e)}
               onDragEnd={onDragEnd}
               className={`relative flex items-center gap-3 px-4 py-3 rounded-xl transition-all hover:shadow-md group ${isDragging ? "opacity-60" : ""}`}
-              style={{ background: "var(--th-card-bg)", border: "1px solid var(--th-card-border)" }}
+              style={{ background: "var(--th-bg-surface)", border: "1px solid var(--th-border)" }}
             >
               {showDropBefore && (
-                <div className="pointer-events-none absolute left-2 right-2 top-0 h-0.5 rounded bg-blue-400" />
+                <div
+                  className="pointer-events-none absolute left-2 right-2 top-0 h-0.5 rounded"
+                  style={{ background: "var(--th-accent, #2563eb)" }}
+                />
               )}
               {showDropAfter && (
-                <div className="pointer-events-none absolute left-2 right-2 bottom-0 h-0.5 rounded bg-blue-400" />
+                <div
+                  className="pointer-events-none absolute left-2 right-2 bottom-0 h-0.5 rounded"
+                  style={{ background: "var(--th-accent, #2563eb)" }}
+                />
               )}
 
               <div className="flex flex-col gap-0.5">
                 <button
+                  type="button"
                   onClick={() => onMoveDept(index, -1)}
                   disabled={index === 0}
-                  className="w-6 h-5 flex items-center justify-center rounded text-xs transition-all hover:bg-white/10 disabled:opacity-20"
+                  className="w-6 h-5 flex items-center justify-center rounded text-xs transition-colors hover:opacity-80 disabled:opacity-20"
                   style={{ color: "var(--th-text-muted)" }}
                 >
                   ▲
                 </button>
                 <button
+                  type="button"
                   onClick={() => onMoveDept(index, 1)}
                   disabled={index === deptOrder.length - 1}
-                  className="w-6 h-5 flex items-center justify-center rounded text-xs transition-all hover:bg-white/10 disabled:opacity-20"
+                  className="w-6 h-5 flex items-center justify-center rounded text-xs transition-colors hover:opacity-80 disabled:opacity-20"
                   style={{ color: "var(--th-text-muted)" }}
                 >
                   ▼
@@ -121,8 +135,6 @@ export default function DepartmentsTab({
               >
                 {index + 1}
               </div>
-
-              <span className="text-2xl">{dept.icon}</span>
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
@@ -144,14 +156,15 @@ export default function DepartmentsTab({
                 )}
               </div>
 
-              <code className="text-[10px] px-2 py-0.5 rounded opacity-50" style={{ background: "var(--th-input-bg)" }}>
+              <code className="text-[10px] px-2 py-0.5 rounded opacity-50" style={{ background: "var(--th-bg-surface-hover)" }}>
                 {dept.id}
               </code>
 
               <button
+                type="button"
                 onClick={() => onEditDept(dept)}
-                className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all opacity-0 group-hover:opacity-100 hover:bg-white/10"
-                style={{ color: "var(--th-text-muted)" }}
+                className="px-3 py-1.5 rounded-lg text-xs font-medium transition-opacity opacity-0 group-hover:opacity-100 hover:opacity-90"
+                style={{ color: "var(--th-text-muted)", background: "var(--th-bg-surface-hover)" }}
               >
                 {tr("편집", "Edit")}
               </button>
@@ -161,8 +174,7 @@ export default function DepartmentsTab({
       </div>
 
       {deptOrder.length === 0 && (
-        <div className="text-center py-16" style={{ color: "var(--th-text-muted)" }}>
-          <div className="text-3xl mb-2">🏢</div>
+        <div className="text-center py-16 text-sm" style={{ color: "var(--th-text-muted)" }}>
           {tr("등록된 부서가 없습니다.", "No departments found.")}
         </div>
       )}

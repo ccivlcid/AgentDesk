@@ -28,6 +28,7 @@ type UseAppBootstrapDataParams = {
   hasLocalRoomThemesRef: MutableRefObject<boolean>;
   setDepartments: Dispatch<SetStateAction<Department[]>>;
   setAgents: Dispatch<SetStateAction<Agent[]>>;
+  setLibraryAgents: Dispatch<SetStateAction<Agent[]>>;
   setTasks: Dispatch<SetStateAction<Task[]>>;
   setStats: Dispatch<SetStateAction<CompanyStats | null>>;
   setSettings: Dispatch<SetStateAction<CompanySettings>>;
@@ -43,6 +44,7 @@ export function useAppBootstrapData({
   hasLocalRoomThemesRef,
   setDepartments,
   setAgents,
+  setLibraryAgents,
   setTasks,
   setStats,
   setSettings,
@@ -59,9 +61,10 @@ export function useAppBootstrapData({
       const sett = await api.getSettings();
       const activePackKey = normalizeOfficeWorkflowPack(sett.officeWorkflowPack ?? "development");
       const includeSeedAgents = activePackKey !== "development";
-      const [depts, ags, tks, sts, subs, presence, decisionItems] = await Promise.all([
+      const [depts, ags, libraryAgs, tks, sts, subs, presence, decisionItems] = await Promise.all([
         api.getDepartments({ workflowPackKey: activePackKey }),
         api.getAgents({ includeSeed: includeSeedAgents }),
+        api.getAgents({ includeSeed: true }),
         api.getTasks(),
         api.getStats(),
         api.getActiveSubtasks(),
@@ -70,6 +73,7 @@ export function useAppBootstrapData({
       ]);
       setDepartments(depts);
       setAgents(ags);
+      setLibraryAgents(libraryAgs);
       setTasks(tks);
       setStats(sts);
       const mergedSettings = mergeSettingsWithDefaults(sett);
@@ -122,6 +126,7 @@ export function useAppBootstrapData({
     hasLocalRoomThemesRef,
     initialRoomThemes.themes,
     setAgents,
+    setLibraryAgents,
     setCustomRoomThemes,
     setDecisionInboxItems,
     setDepartments,

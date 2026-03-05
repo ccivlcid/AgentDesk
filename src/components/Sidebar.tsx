@@ -23,14 +23,19 @@ const NAV_STRUCTURE: NavEntry[] = [
   {
     kind: "group",
     id: "library",
-    children: [{ view: "skills" }, { view: "agent-rules" }],
+    children: [{ view: "skills" }, { view: "agent-rules" }, { view: "memory" }, { view: "hooks" }],
   },
   { kind: "item", view: "dashboard" },
-  { kind: "item", view: "tasks" },
+  {
+    kind: "group",
+    id: "tasks",
+    children: [{ view: "tasks-board" }, { view: "tasks-deliverables" }],
+  },
   { kind: "item", view: "settings" },
 ];
 
-const LIBRARY_CHILDREN: View[] = ["skills", "agent-rules"];
+const LIBRARY_CHILDREN: View[] = ["skills", "agent-rules", "memory", "hooks"];
+const TASKS_CHILDREN: View[] = ["tasks-board", "tasks-deliverables"];
 
 const NAV_ICONS: Partial<Record<View | "library", React.ReactNode>> = {
   office: (
@@ -67,6 +72,20 @@ const NAV_ICONS: Partial<Record<View | "library", React.ReactNode>> = {
       <path d="M7.5 10l1.5 1.5L12.5 8" />
     </svg>
   ),
+  memory: (
+    <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="4" width="14" height="12" rx="2" />
+      <path d="M3 8h14" />
+      <path d="M7 12h4" />
+    </svg>
+  ),
+  hooks: (
+    <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M10 2v4M10 14v4M4 10H2M18 10h-2" />
+      <circle cx="10" cy="10" r="4" />
+      <path d="M6.5 6.5l-1-1M14.5 14.5l-1-1M6.5 13.5l-1 1M14.5 5.5l-1 1" />
+    </svg>
+  ),
   dashboard: (
     <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <rect x="2" y="2" width="7" height="8" rx="1" />
@@ -83,6 +102,20 @@ const NAV_ICONS: Partial<Record<View | "library", React.ReactNode>> = {
       <path d="M7.5 13h5" />
     </svg>
   ),
+  "tasks-board": (
+    <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="3" width="5" height="14" rx="1" />
+      <rect x="8" y="3" width="5" height="10" rx="1" />
+      <rect x="14" y="3" width="5" height="7" rx="1" />
+    </svg>
+  ),
+  "tasks-deliverables": (
+    <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 4a2 2 0 012-2h5l5 5v9a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" />
+      <path d="M11 2v5h5" />
+      <path d="M8 12l2 2 3-3" />
+    </svg>
+  ),
   settings: (
     <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="10" cy="10" r="2.5" />
@@ -95,6 +128,7 @@ export default function Sidebar({ currentView, onChangeView, departments, agents
   const [collapsed, setCollapsed] = useState(false);
   const [deptOpen, setDeptOpen] = useState(true);
   const [libraryOpen, setLibraryOpen] = useState(() => LIBRARY_CHILDREN.includes(currentView as View));
+  const [tasksOpen, setTasksOpen] = useState(() => TASKS_CHILDREN.includes(currentView as View));
   const { t, locale } = useI18n();
   const workingCount = agents.filter((a) => a.status === "working").length;
   const totalAgents = agents.length;
@@ -107,12 +141,17 @@ export default function Sidebar({ currentView, onChangeView, departments, agents
     library: tr("도서관", "Library", "ライブラリ", "图书馆"),
     skills: tr("스킬스", "Skills", "スキル", "技能"),
     "agent-rules": tr("에이전트 룰", "Agent Rules", "エージェントルール", "代理规则"),
+    memory: tr("메모리", "Memory", "メモリ", "记忆"),
+    hooks: tr("훅", "Hooks", "フック", "钩子"),
     dashboard: tr("대시보드", "Dashboard", "ダッシュボード", "仪表盘"),
     tasks: tr("업무 관리", "Tasks", "タスク管理", "任务管理"),
+    "tasks-board": tr("업무 보드", "Task Board", "タスクボード", "任务看板"),
+    "tasks-deliverables": tr("결과물", "Deliverables", "成果物", "交付物"),
     settings: tr("설정", "Settings", "設定", "设置"),
   };
 
   const isLibraryActive = LIBRARY_CHILDREN.includes(currentView as View);
+  const isTasksActive = TASKS_CHILDREN.includes(currentView as View);
 
   const renderNavItem = (view: View) => (
     <button
@@ -146,13 +185,11 @@ export default function Sidebar({ currentView, onChangeView, departments, agents
       <div className="sidebar-brand">
         <div className="sidebar-brand-inner">
           <div className="sidebar-brand-avatar">
-            <img
-              src="/sprites/ceo-lobster.png"
-              alt={tr("CEO", "CEO")}
-              className="w-8 h-8 object-contain"
-              style={{ imageRendering: "pixelated" }}
-            />
-            <span className="sidebar-brand-crown">👑</span>
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-blue-400">
+              <rect x="4" y="14" width="24" height="12" rx="1.5" />
+              <path d="M8 14V8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v6" />
+              <path d="M12 22v2M20 22v2M16 20v4" />
+            </svg>
           </div>
           {!collapsed && (
             <div className="overflow-hidden">
@@ -169,7 +206,12 @@ export default function Sidebar({ currentView, onChangeView, departments, agents
           if (entry.kind === "item") {
             return renderNavItem(entry.view);
           }
-          /* Group: library */
+          /* Group: library / tasks */
+          const isGroupActive = entry.id === "library" ? isLibraryActive : isTasksActive;
+          const isGroupOpen = entry.id === "library" ? libraryOpen : tasksOpen;
+          const toggleGroup = entry.id === "library"
+            ? () => setLibraryOpen(!libraryOpen)
+            : () => setTasksOpen(!tasksOpen);
           return (
             <div key={entry.id} className="sidebar-nav-group">
               <button
@@ -177,11 +219,11 @@ export default function Sidebar({ currentView, onChangeView, departments, agents
                   if (collapsed) {
                     onChangeView(entry.children[0].view);
                   } else {
-                    setLibraryOpen(!libraryOpen);
+                    toggleGroup();
                   }
                 }}
                 title={collapsed ? navLabels[entry.id] : undefined}
-                className={`sidebar-nav-item ${isLibraryActive ? "active" : ""}`}
+                className={`sidebar-nav-item ${isGroupActive ? "active" : ""}`}
               >
                 <span className="sidebar-nav-icon">{NAV_ICONS[entry.id as keyof typeof NAV_ICONS]}</span>
                 {!collapsed && (
@@ -196,14 +238,14 @@ export default function Sidebar({ currentView, onChangeView, departments, agents
                       strokeWidth="2"
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      className={`sidebar-group-chevron ${libraryOpen ? "open" : ""}`}
+                      className={`sidebar-group-chevron ${isGroupOpen ? "open" : ""}`}
                     >
                       <path d="M6 8l4 4 4-4" />
                     </svg>
                   </>
                 )}
               </button>
-              {!collapsed && libraryOpen && (
+              {!collapsed && isGroupOpen && (
                 <div className="sidebar-sub-list">
                   {entry.children.map((child) => renderSubItem(child.view))}
                 </div>

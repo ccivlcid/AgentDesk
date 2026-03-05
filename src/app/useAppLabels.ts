@@ -55,11 +55,19 @@ export function useAppLabels({
           zh: "仪表盘",
         })}`;
       case "tasks":
+      case "tasks-board":
         return `📋 ${pickLang(uiLanguage, {
-          ko: "업무 관리",
-          en: "Tasks",
-          ja: "タスク管理",
-          zh: "任务管理",
+          ko: "업무 보드",
+          en: "Task Board",
+          ja: "タスクボード",
+          zh: "任务看板",
+        })}`;
+      case "tasks-deliverables":
+        return `📦 ${pickLang(uiLanguage, {
+          ko: "결과물",
+          en: "Deliverables",
+          ja: "成果物",
+          zh: "交付物",
         })}`;
       case "agents":
         return `${pickLang(uiLanguage, {
@@ -81,6 +89,20 @@ export function useAppLabels({
           en: "Agent Rules",
           ja: "エージェントルール",
           zh: "代理规则",
+        })}`;
+      case "memory":
+        return `🧠 ${pickLang(uiLanguage, {
+          ko: "메모리",
+          en: "Memory",
+          ja: "メモリ",
+          zh: "记忆",
+        })}`;
+      case "hooks":
+        return `🔗 ${pickLang(uiLanguage, {
+          ko: "훅",
+          en: "Hooks",
+          ja: "フック",
+          zh: "钩子",
         })}`;
       case "settings":
         return `⚙️ ${pickLang(uiLanguage, {
