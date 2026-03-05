@@ -1,0 +1,14 @@
+﻿log_id,checked_at,path,principal,permission,assessment
+RBAC-001,2026-03-05 11:15,C:\PythonProjects\AgentDesk\.agentdesk-worktrees\df297811\docs\reports,CodexSandboxUsers,M,ALLOW
+RBAC-002,2026-03-05 11:15,C:\PythonProjects\AgentDesk\.agentdesk-worktrees\df297811\docs\reports,S-1-5-21-2401752293-1183800560-1018407171-2860617529,M,ALLOW
+RBAC-003,2026-03-05 11:15,C:\PythonProjects\AgentDesk\.agentdesk-worktrees\df297811\docs\reports,BUILTIN\Administrators,F,ALLOW
+RBAC-004,2026-03-05 11:15,C:\PythonProjects\AgentDesk\.agentdesk-worktrees\df297811\docs\reports,NT AUTHORITY\SYSTEM,F,ALLOW
+RBAC-005,2026-03-05 11:15,C:\PythonProjects\AgentDesk\.agentdesk-worktrees\df297811\docs\reports,BUILTIN\Users,RX,ALLOW
+RBAC-006,2026-03-05 11:15,C:\PythonProjects\AgentDesk\.agentdesk-worktrees\df297811\docs\reports,NT AUTHORITY\Authenticated Users,M,ALLOW
+RBAC-007,2026-03-05 11:15,C:\PythonProjects\AgentDesk\.agentdesk-worktrees\488b9ff8\docs\reports,CodexSandboxUsers,M,ALLOW
+RBAC-008,2026-03-05 11:15,C:\PythonProjects\AgentDesk\.agentdesk-worktrees\488b9ff8\docs\reports,S-1-5-21-2401752293-1183800560-1018407171-2860617529,M,ALLOW
+RBAC-009,2026-03-05 11:15,C:\PythonProjects\AgentDesk\.agentdesk-worktrees\488b9ff8\docs\reports,BUILTIN\Administrators,F,ALLOW
+RBAC-010,2026-03-05 11:15,C:\PythonProjects\AgentDesk\.agentdesk-worktrees\488b9ff8\docs\reports,NT AUTHORITY\SYSTEM,F,ALLOW
+RBAC-011,2026-03-05 11:15,C:\PythonProjects\AgentDesk\.agentdesk-worktrees\488b9ff8\docs\reports,BUILTIN\Users,RX,ALLOW
+RBAC-012,2026-03-05 11:15,C:\PythonProjects\AgentDesk\.agentdesk-worktrees\488b9ff8\docs\reports,NT AUTHORITY\Authenticated Users,M,ALLOW
+RBAC-013,2026-03-05 11:15,C:\PythonProjects\AgentDesk\.agentdesk-worktrees\df297811\docs\reports,ACL_CHANGE_EVENTS,0,NO_CHANGE
