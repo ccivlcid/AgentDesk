@@ -1,0 +1,9 @@
+﻿slide_no,slide_title,claim_summary,source_id,source_description,collected_at,source_version,proof_location,verification_result,notes
+1,분석 자료 기반 PPT 제작안,"보완 포인트 5건→서브태스크 11건, 4단계 게이트",S1,"Task Session Brief: PROJECT MEMO + 전체 서브태스크 현황",2026-03-05,"round1-brief@2026-03-05T01:42",user_message_project_memo,PASS,"5개 보완포인트(크롤링/문서디자인/팩트체크/인프라보안/운영), 서브태스크 11건 확인"
+2,목차,라운드 실행 범위 5개 섹션,S2,"PPT 생성 스크립트 제목/목차 정의",2026-03-05,"build-script@2026-03-05",C:\PythonProjects\AgentDesk\.agentdesk-worktrees\488b9ff8\docs\reports\build-2026-03-05-analysis-ppt.mjs:148,PASS,"목차 항목은 문서 구조 정보로 수치 주장 없음"
+3,라운드 1 핵심 진단,"승인 보류 없음, 병목은 증빙 누락/자료확정 타이밍",S1,"Task Session Brief: 팀별 Planned Kickoff 메모",2026-03-05,"round1-brief@2026-03-05T01:42",user_message_project_memo,PASS,"팀 메모 원문(승인 보류 없이 즉시 진행 가능)과 일치"
+4,부서별 보완 포인트,"5개 부서 요구사항(데이터/템플릿/QA/SHA-256+RBAC/SLA)",S1,"Task Session Brief: 부서별 발언",2026-03-05,"round1-brief@2026-03-05T01:42",user_message_project_memo,PASS,"각 부서 항목 모두 원문에 존재"
+5,서브태스크 11건 실행 계획,"팀별 실행 항목 및 In Progress",S1,"Task Session Brief: 전체 서브태스크 현황",2026-03-05,"round1-brief@2026-03-05T01:42",user_message_subtask_table,PASS,"11개 체크리스트 기준과 일치"
+6,품질·보안·운영 게이트,"데이터 확정→시각화 반영→팩트체크→보안검증",S1,"Task Session Brief: 운영팀 게이트 정의",2026-03-05,"round1-brief@2026-03-05T01:42",user_message_operations_note,PASS,"4단계 게이트 순서 일치"
+7,리스크와 대응,"최신성/불일치/무결성·권한 리스크 3건",S1,"Task Session Brief + 팩트체크/보안팀 메모",2026-03-05,"round1-brief@2026-03-05T01:42",user_message_factcheck_security_notes,PASS,"리스크-대응 매핑 논리 일치"
+8,즉시 실행 요청사항,"승인 3항목 + 배포 가능 결론",S2,"PPT 생성 스크립트 최종 결론 슬라이드",2026-03-05,"build-script@2026-03-05",C:\PythonProjects\AgentDesk\.agentdesk-worktrees\488b9ff8\docs\reports\build-2026-03-05-analysis-ppt.mjs:331,PASS,"실행 요청 3개 항목과 결론 문구 확인"
