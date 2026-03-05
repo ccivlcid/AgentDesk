@@ -103,6 +103,36 @@ app.whenReady().then(() => {
   process.env.AGENTDESK_VERSION = app.getVersion();
   process.env.HOST = HOST;
 
+  // Load .env from exe directory (portable) or app root so OAUTH_ENCRYPTION_SECRET etc. are available
+  const exeDir = app.isPackaged ? path.dirname(app.getPath("exe")) : path.resolve(appPath);
+  const envCandidates = [
+    path.join(exeDir, ".env"),
+    path.join(appPath, ".env"),
+  ];
+  for (const envPath of envCandidates) {
+    if (fs.existsSync(envPath)) {
+      try {
+        const lines = fs.readFileSync(envPath, "utf8").split(/\r?\n/);
+        for (const line of lines) {
+          const t = line.trim();
+          if (!t || t.startsWith("#")) continue;
+          const eq = t.indexOf("=");
+          if (eq === -1) continue;
+          const key = t.slice(0, eq).trim();
+          let val = t.slice(eq + 1).trim();
+          if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+            val = val.slice(1, -1);
+          }
+          if (!(key in process.env)) process.env[key] = val;
+        }
+        log(`Loaded .env from ${envPath}`);
+      } catch (e) {
+        log(`Failed to read .env at ${envPath}: ${e && e.message}`, "WARN");
+      }
+      break;
+    }
+  }
+
   // asarUnpack된 node_modules(sharp) + asar 내 node_modules(sharp 의존성 detect-libc 등)를 require 경로에 추가
   if (app.isPackaged) {
     const unpackedNodeModules = path.join(process.resourcesPath, "app.asar.unpacked", "node_modules");

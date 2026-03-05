@@ -49,7 +49,7 @@ export default function GitSection({ taskId, sectionOpen, onToggleSection }: Git
       setActionMsg(
         result.ok
           ? t({ ko: "병합 완료", en: "Merged successfully", ja: "マージ完了", zh: "合并成功" })
-          : result.error || "Merge failed",
+          : result.message || "Merge failed",
       );
     } catch (e) {
       setActionMsg(String(e));
@@ -75,7 +75,7 @@ export default function GitSection({ taskId, sectionOpen, onToggleSection }: Git
       setActionMsg(
         result.ok
           ? t({ ko: "폐기 완료", en: "Discarded", ja: "破棄完了", zh: "已丢弃" })
-          : result.error || "Discard failed",
+          : result.message || "Discard failed",
       );
     } catch (e) {
       setActionMsg(String(e));

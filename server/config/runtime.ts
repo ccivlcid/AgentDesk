@@ -20,7 +20,13 @@ export const SERVER_DIRNAME = resolveServerDirname();
 // ---------------------------------------------------------------------------
 // .env loader (no dotenv dependency)
 // ---------------------------------------------------------------------------
-const envFilePath = path.resolve(SERVER_DIRNAME, "..", "..", ".env");
+// Try multiple candidate paths so .env is found both in dev and packaged exe.
+const envCandidates = [
+  path.resolve(SERVER_DIRNAME, "..", "..", ".env"),       // dev: server/config/../../.env
+  path.resolve(SERVER_DIRNAME, "..", ".env"),              // packaged: dist-server/../.env (app root)
+  path.resolve(process.cwd(), ".env"),                    // cwd fallback (exe directory)
+];
+const envFilePath = envCandidates.find((p) => { try { return fs.existsSync(p); } catch { return false; } }) ?? envCandidates[0];
 try {
   if (fs.existsSync(envFilePath)) {
     const envContent = fs.readFileSync(envFilePath, "utf8");
@@ -30,7 +36,11 @@ try {
       const eqIdx = trimmed.indexOf("=");
       if (eqIdx === -1) continue;
       const key = trimmed.slice(0, eqIdx).trim();
-      const value = trimmed.slice(eqIdx + 1).trim();
+      let value = trimmed.slice(eqIdx + 1).trim();
+      // Strip surrounding quotes (single or double)
+      if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+        value = value.slice(1, -1);
+      }
       if (!(key in process.env)) {
         process.env[key] = value;
       }

@@ -51,7 +51,7 @@ interface AgentAvatarProps {
   spriteMap?: Map<string, number>;
   size?: number;
   className?: string;
-  rounded?: "full" | "xl" | "2xl";
+  rounded?: "full" | "lg" | "xl" | "2xl";
   imageFit?: "cover" | "contain";
   imagePosition?: CSSProperties["objectPosition"];
 }
@@ -70,7 +70,8 @@ export default function AgentAvatar({
   const map = spriteMap ?? (agents ? buildSpriteMap(agents) : new Map());
   const spriteNum = resolveSpriteNum(agent, map);
 
-  const roundedClass = rounded === "full" ? "rounded-full" : rounded === "xl" ? "rounded-xl" : "rounded-2xl";
+  const roundedClass =
+    rounded === "full" ? "rounded-full" : rounded === "lg" ? "rounded-lg" : rounded === "xl" ? "rounded-xl" : "rounded-2xl";
 
   if (spriteNum) {
     return (
