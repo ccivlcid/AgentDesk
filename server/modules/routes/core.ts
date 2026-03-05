@@ -33,6 +33,8 @@ import { registerDepartmentRoutes } from "./core/departments.ts";
 import { registerGitHubRoutes } from "./core/github-routes.ts";
 import { registerProjectRoutes } from "./core/projects.ts";
 import { registerTaskCrudRoutes } from "./core/tasks/crud.ts";
+import { registerTaskTemplateRoutes } from "./core/task-templates.ts";
+import { registerTaskDependencyRoutes } from "./core/task-dependencies.ts";
 import { registerTaskExecutionRoutes } from "./core/tasks/execution.ts";
 import { registerTaskSubtaskRoutes } from "./core/tasks/subtasks.ts";
 import { registerUpdateAutoRoutes } from "./core/update-auto/register.ts";
@@ -376,6 +378,12 @@ export function registerRoutesPartA(ctx: RuntimeContext): Record<string, never> 
     killPidTree,
     logsDir,
   });
+
+  // ---------------------------------------------------------------------------
+  // Task Templates
+  // ---------------------------------------------------------------------------
+  registerTaskTemplateRoutes({ app, db, nowMs });
+  registerTaskDependencyRoutes({ app, db, nowMs });
 
   // ---------------------------------------------------------------------------
   // SubTask endpoints

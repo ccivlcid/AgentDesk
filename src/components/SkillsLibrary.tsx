@@ -133,6 +133,9 @@ export default function SkillsLibrary({ agents }: SkillsLibraryProps) {
         onStartLearning={() => {
           void vm.handleStartLearning();
         }}
+        squadAgentIds={vm.squadAgentIds}
+        onAddAgent={vm.addAgentToSquad}
+        onRemoveAgent={vm.removeAgentFromSquad}
       />
 
       <CustomSkillSection

@@ -13,6 +13,7 @@ import type { Lang } from "../../../types/lang.ts";
 import type { DelegationOptions } from "./project-resolution.ts";
 import { normalizeAgentReply, shouldPreserveStructuredFallback } from "./direct-chat-intent-utils.ts";
 import type { AgentRow, DirectChatDeps } from "./direct-chat-types.ts";
+import { buildCharacterPersonaBlock } from "../../workflow/core/character-persona.ts";
 
 type DirectReplyRuntimeDeps = Pick<
   DirectChatDeps,
@@ -135,16 +136,15 @@ export function createDirectReplyRuntime(deps: DirectReplyRuntimeDeps) {
     scenario: string,
     fallback: string,
   ): Promise<string> {
-    const personality = (agent.personality || "").trim();
-    if (!personality) return fallback;
+    const personaBlock = buildCharacterPersonaBlock(agent.personality);
+    if (!personaBlock) return fallback;
 
     if (shouldPreserveStructuredFallback(fallback)) {
       const prompt = [
         "[Auto Reply - In Character Intro]",
         `You are ${agent.name}.`,
         localeInstructionForDirect(lang),
-        "[Character Persona - Highest Priority]",
-        personality,
+        personaBlock,
         "Scenario:",
         scenario,
         "Output rules:",
@@ -177,8 +177,7 @@ export function createDirectReplyRuntime(deps: DirectReplyRuntimeDeps) {
       "[Auto Reply - In Character]",
       `You are ${agent.name}.`,
       localeInstructionForDirect(lang),
-      "[Character Persona - Highest Priority]",
-      personality,
+      personaBlock,
       "Scenario:",
       scenario,
       "Output rules:",

@@ -1,5 +1,8 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Agent, Department, TaskType, WorkflowPackKey } from "../../types";
+import type { WorkflowPackConfig } from "../../api/workflow-skills-subtasks";
+import { getWorkflowPacks } from "../../api/workflow-skills-subtasks";
+import { getTaskTemplates, createTaskTemplate, deleteTaskTemplate, type TaskTemplate } from "../../api/task-templates";
 import { useI18n } from "../../i18n";
 import { type CreateTaskDraft, type FormFeedback } from "./constants";
 import type { CreateTaskModalOverlaysProps } from "./create-modal/overlay-types";
@@ -23,15 +26,19 @@ interface CreateModalProps {
     project_path?: string;
     assigned_agent_id?: string;
     workflow_pack_key?: WorkflowPackKey;
+    workflow_meta_json?: string;
   }) => void;
   onAssign: (taskId: string, agentId: string) => void;
+  activeWorkflowPackKey?: WorkflowPackKey;
 }
 
-function CreateModal({ agents, departments, onClose, onCreate, onAssign }: CreateModalProps) {
+function CreateModal({ agents, departments, onClose, onCreate, onAssign, activeWorkflowPackKey }: CreateModalProps) {
   void onAssign;
   const { t, language: locale, locale: localeTag } = useI18n();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [packConfig, setPackConfig] = useState<WorkflowPackConfig | null>(null);
+  const [packMeta, setPackMeta] = useState<Record<string, string>>({});
   const [departmentId, setDepartmentId] = useState("");
   const [taskType, setTaskType] = useState<TaskType>("general");
   const [priority, setPriority] = useState(3);
@@ -39,6 +46,65 @@ function CreateModal({ agents, departments, onClose, onCreate, onAssign }: Creat
   const [submitBusy, setSubmitBusy] = useState(false);
   const [submitWithoutProjectPromptOpen, setSubmitWithoutProjectPromptOpen] = useState(false);
   const [formFeedback, setFormFeedback] = useState<FormFeedback | null>(null);
+  const [templates, setTemplates] = useState<TaskTemplate[]>([]);
+
+  useEffect(() => {
+    getTaskTemplates().then(setTemplates).catch(() => {});
+  }, []);
+
+  const handleLoadTemplate = useCallback(
+    (templateId: string) => {
+      const tpl = templates.find((t) => t.id === templateId);
+      if (!tpl) return;
+      setTitle(tpl.title);
+      setDescription(tpl.description);
+      setDepartmentId(tpl.department_id ?? "");
+      setTaskType((tpl.task_type as TaskType) || "general");
+      setPriority(tpl.priority);
+      if (tpl.workflow_meta_json) {
+        try {
+          setPackMeta(JSON.parse(tpl.workflow_meta_json));
+        } catch { /* ignore */ }
+      }
+    },
+    [templates],
+  );
+
+  const handleSaveTemplate = useCallback(
+    async (templateName: string) => {
+      const nonEmptyMeta = Object.fromEntries(Object.entries(packMeta).filter(([, v]) => v.trim()));
+      const tpl = await createTaskTemplate({
+        name: templateName,
+        title,
+        description,
+        department_id: departmentId || null,
+        task_type: taskType,
+        priority,
+        workflow_pack_key: activeWorkflowPackKey ?? null,
+        workflow_meta_json: Object.keys(nonEmptyMeta).length > 0 ? JSON.stringify(nonEmptyMeta) : null,
+      });
+      setTemplates((prev) => [tpl, ...prev]);
+    },
+    [title, description, departmentId, taskType, priority, packMeta, activeWorkflowPackKey],
+  );
+
+  const handleDeleteTemplate = useCallback(async (templateId: string) => {
+    await deleteTaskTemplate(templateId);
+    setTemplates((prev) => prev.filter((t) => t.id !== templateId));
+  }, []);
+
+  useEffect(() => {
+    if (!activeWorkflowPackKey || activeWorkflowPackKey === "development") {
+      setPackConfig(null);
+      return;
+    }
+    getWorkflowPacks()
+      .then((res) => {
+        const found = res.packs.find((p) => p.key === activeWorkflowPackKey);
+        setPackConfig(found ?? null);
+      })
+      .catch(() => setPackConfig(null));
+  }, [activeWorkflowPackKey]);
 
   const filteredAgents = useMemo(
     () => (departmentId ? agents.filter((agent) => agent.department_id === departmentId) : agents),
@@ -106,6 +172,17 @@ function CreateModal({ agents, departments, onClose, onCreate, onAssign }: Creat
     onClose,
   });
 
+  const wrappedOnCreate: typeof onCreate = useCallback(
+    (input) => {
+      const nonEmptyMeta = Object.fromEntries(Object.entries(packMeta).filter(([, v]) => v.trim()));
+      if (Object.keys(nonEmptyMeta).length > 0) {
+        return onCreate({ ...input, workflow_meta_json: JSON.stringify(nonEmptyMeta) });
+      }
+      return onCreate(input);
+    },
+    [onCreate, packMeta],
+  );
+
   async function submitTask(options?: { allowCreateMissingPath?: boolean; allowWithoutProject?: boolean }) {
     await submitTaskWithProjectHandling(
       {
@@ -125,7 +202,7 @@ function CreateModal({ agents, departments, onClose, onCreate, onAssign }: Creat
         t,
         unsupportedPathApiMessage,
         resolvePathHelperErrorMessage,
-        onCreate,
+        onCreate: wrappedOnCreate,
         onClose,
         selectProject: projectPicker.selectProject,
         setFormFeedback,
@@ -298,6 +375,16 @@ function CreateModal({ agents, departments, onClose, onCreate, onAssign }: Creat
       }}
       onPriorityChange={handlePriorityChange}
       onAssignAgentChange={handleAssignAgentChange}
+      packConfig={packConfig}
+      packMeta={packMeta}
+      onPackMetaChange={(key, value) => {
+        setPackMeta((prev) => ({ ...prev, [key]: value }));
+        setFormFeedback(null);
+      }}
+      templates={templates}
+      onLoadTemplate={handleLoadTemplate}
+      onSaveTemplate={handleSaveTemplate}
+      onDeleteTemplate={handleDeleteTemplate}
     />
   );
 }

@@ -160,8 +160,45 @@ export async function createAgent(data: {
   return j.agent;
 }
 
+export async function generatePersona(data: {
+  name: string;
+  role: string;
+  department_id: string | null;
+  lang: string;
+}): Promise<string> {
+  const j = (await post("/api/agents/generate-persona", data)) as { ok: boolean; personality: string };
+  return j.personality;
+}
+
 export async function deleteAgent(id: string): Promise<void> {
   await del(`/api/agents/${id}`);
+}
+
+export interface AgentPerformanceData {
+  ok: boolean;
+  agent_id: string;
+  stats: {
+    tasks_total: number;
+    tasks_done: number;
+    tasks_failed: number;
+    success_rate: number;
+    avg_duration_ms: number | null;
+    xp: number;
+  };
+  recent_tasks: Array<{
+    id: string;
+    title: string;
+    status: string;
+    started_at: number | null;
+    completed_at: number | null;
+    department_id: string | null;
+    workflow_pack_key: string | null;
+  }>;
+  by_pack: Array<{ pack: string; cnt: number; done_cnt: number }>;
+}
+
+export async function getAgentPerformance(id: string): Promise<AgentPerformanceData> {
+  return request<AgentPerformanceData>(`/api/agents/${id}/performance`);
 }
 
 export async function processSprite(imageBase64: string): Promise<{

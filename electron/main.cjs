@@ -133,18 +133,32 @@ app.whenReady().then(() => {
     }
   }
 
-  // asarUnpack된 node_modules(sharp) + asar 내 node_modules(sharp 의존성 detect-libc 등)를 require 경로에 추가
+  // asarUnpack된 node_modules(sharp, detect-libc 등)를 require 경로에 추가
   if (app.isPackaged) {
     const unpackedNodeModules = path.join(process.resourcesPath, "app.asar.unpacked", "node_modules");
     const asarNodeModules = path.join(appPath, "node_modules");
+
+    // NODE_PATH를 먼저 설정해서 하위 require()도 unpacked 모듈을 찾을 수 있게 함
+    const extraPaths = [unpackedNodeModules, asarNodeModules].filter((p) => fs.existsSync(p));
+    if (extraPaths.length > 0) {
+      const sep = process.platform === "win32" ? ";" : ":";
+      process.env.NODE_PATH = extraPaths.join(sep) + (process.env.NODE_PATH ? sep + process.env.NODE_PATH : "");
+      require("module").Module._initPaths();
+    }
+
+    // module.paths에도 추가 (현재 모듈 기준)
     if (fs.existsSync(unpackedNodeModules)) module.paths.unshift(unpackedNodeModules);
     if (fs.existsSync(asarNodeModules)) module.paths.unshift(asarNodeModules);
+
+    // sharp pre-load
     const sharpPath = path.join(unpackedNodeModules, "sharp");
     if (fs.existsSync(sharpPath)) {
       try {
         require(sharpPath);
+        log("Sharp pre-loaded successfully");
       } catch (e) {
         log(`Pre-load sharp failed: ${e && e.message}`, "ERROR");
+        if (e && e.stack) log(e.stack, "ERROR");
       }
     }
   }

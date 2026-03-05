@@ -23,6 +23,7 @@ import {
 } from "../../oauth/helpers.ts";
 import { notifyTaskStatus } from "../../gateway/client.ts";
 import { createWsHub } from "../../ws/hub.ts";
+import { createNotificationHelper } from "../routes/ops/notifications.ts";
 
 import { initializeWorkflowMeetingTools } from "./orchestration/meetings.ts";
 import { createExecutionStartTaskTools } from "./orchestration/execution-start-task.ts";
@@ -241,8 +242,9 @@ export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrat
   const sendAgentMessage = (...args: any[]) => __ctx.sendAgentMessage(...args);
 
   // ---------------------------------------------------------------------------
-  // Helpers: progress timers, CEO notifications
+  // Helpers: notifications, progress timers, CEO notifications
   // ---------------------------------------------------------------------------
+  const { insertNotification } = createNotificationHelper({ db, nowMs, broadcast });
 
   // Track progress report timers so we can cancel them when tasks finish
   const progressTimers = new Map<string, ReturnType<typeof setInterval>>();
@@ -606,6 +608,7 @@ export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrat
     getDeptName,
     randomDelay,
     notifyCeo,
+    insertNotification,
   });
 
   // ---------------------------------------------------------------------------
@@ -652,6 +655,7 @@ export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrat
     prettyStreamJson,
     getWorktreeDiffSummary,
     hasVisibleDiffSummary,
+    insertNotification,
   });
 
   function handleTaskRunComplete(taskId: string, exitCode: number): void {
@@ -692,6 +696,7 @@ export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrat
     subtaskDelegationCallbacks,
     startReviewConsensusMeeting,
     processSubtaskDelegations,
+    insertNotification,
   });
 
   function reconcileDelegatedSubtasksAfterRun(taskId: string, exitCode: number): void {

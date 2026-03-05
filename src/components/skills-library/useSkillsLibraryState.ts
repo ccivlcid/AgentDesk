@@ -48,6 +48,7 @@ export function useSkillsLibraryState({ agents, localeTag, t }: { agents: Agent[
   const [unlearnEffects, setUnlearnEffects] = useState<Partial<Record<SkillLearnProvider, UnlearnEffect>>>({});
   const [historyRefreshToken, setHistoryRefreshToken] = useState(0);
   const [learnedRows, setLearnedRows] = useState<LearnedSkillEntry[]>([]);
+  const [squadAgentIds, setSquadAgentIds] = useState<string[]>([]);
   const unlearnEffectTimersRef = useRef<Partial<Record<SkillLearnProvider, number>>>({});
 
   const representatives = useMemo(
@@ -264,6 +265,7 @@ export function useSkillsLibraryState({ agents, localeTag, t }: { agents: Agent[
       setUnlearnError(null);
       setUnlearningProviders([]);
       setUnlearnEffects({});
+      setSquadAgentIds([]);
     },
     [defaultSelectedProviders, learnedProvidersBySkill],
   );
@@ -277,6 +279,7 @@ export function useSkillsLibraryState({ agents, localeTag, t }: { agents: Agent[
     setUnlearnError(null);
     setUnlearningProviders([]);
     setUnlearnEffects({});
+    setSquadAgentIds([]);
   }, []);
 
   useEffect(() => {
@@ -364,6 +367,22 @@ export function useSkillsLibraryState({ agents, localeTag, t }: { agents: Agent[
     [learnInProgress, learningSkill, triggerUnlearnEffect, unlearningProviders],
   );
 
+  const addAgentToSquad = useCallback(
+    (agentId: string) => {
+      setSquadAgentIds((prev) => (prev.includes(agentId) ? prev : [...prev, agentId]));
+      const agent = agents.find((a) => a.id === agentId);
+      if (agent?.cli_provider) {
+        const provider = agent.cli_provider as SkillLearnProvider;
+        setSelectedProviders((prev) => (prev.includes(provider) ? prev : [...prev, provider]));
+      }
+    },
+    [agents],
+  );
+
+  const removeAgentFromSquad = useCallback((agentId: string) => {
+    setSquadAgentIds((prev) => prev.filter((id) => id !== agentId));
+  }, []);
+
   const handleCopy = useCallback((skill: CategorizedSkill) => {
     const cmd = `npx skills add ${skill.repo}`;
     navigator.clipboard.writeText(cmd).then(() => {
@@ -436,5 +455,8 @@ export function useSkillsLibraryState({ agents, localeTag, t }: { agents: Agent[
     handleStartLearning,
     handleUnlearnProvider,
     handleCopy,
+    squadAgentIds,
+    addAgentToSquad,
+    removeAgentFromSquad,
   };
 }

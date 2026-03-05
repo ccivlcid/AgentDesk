@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -11,9 +11,9 @@ import {
   type DragOverEvent,
 } from "@dnd-kit/core";
 import { useDraggable } from "@dnd-kit/core";
-import { bulkHideTasks } from "../api";
+import { bulkHideTasks, getProjects } from "../api";
 import { useI18n } from "../i18n";
-import type { Agent, Department, SubTask, Task, TaskStatus, WorkflowPackKey } from "../types";
+import type { Agent, Department, Project, SubTask, Task, TaskStatus, WorkflowPackKey } from "../types";
 import ProjectManagerModal from "./ProjectManagerModal";
 import BulkHideModal from "./taskboard/BulkHideModal";
 import CreateTaskModal from "./taskboard/CreateTaskModal";
@@ -112,6 +112,7 @@ interface TaskBoardProps {
   onOpenMeetingMinutes?: (taskId: string) => void;
   onMergeTask?: (id: string) => void;
   onDiscardTask?: (id: string) => void;
+  activeWorkflowPackKey?: WorkflowPackKey;
 }
 
 export function TaskBoard({
@@ -131,6 +132,7 @@ export function TaskBoard({
   onOpenMeetingMinutes,
   onMergeTask,
   onDiscardTask,
+  activeWorkflowPackKey,
 }: TaskBoardProps) {
   const { t } = useI18n();
   const [showCreate, setShowCreate] = useState(false);
@@ -139,7 +141,15 @@ export function TaskBoard({
   const [filterDept, setFilterDept] = useState("");
   const [filterAgent, setFilterAgent] = useState("");
   const [filterType, setFilterType] = useState("");
+  const [filterProject, setFilterProject] = useState("");
   const [search, setSearch] = useState("");
+  const [projects, setProjects] = useState<Pick<Project, "id" | "name">[]>([]);
+
+  useEffect(() => {
+    getProjects({ page_size: 200 })
+      .then((res) => setProjects(res.projects.map((p) => ({ id: p.id, name: p.name }))))
+      .catch(() => {});
+  }, []);
   const [showAllTasks, setShowAllTasks] = useState(false);
   const [collapsedColumns, setCollapsedColumns] = useState<Set<string>>(new Set());
   const [collapsedCardIds, setCollapsedCardIds] = useState<Set<string>>(() => loadCollapsedCardIds());
@@ -179,12 +189,13 @@ export function TaskBoard({
       if (filterDept && task.department_id !== filterDept) return false;
       if (filterAgent && task.assigned_agent_id !== filterAgent) return false;
       if (filterType && task.task_type !== filterType) return false;
+      if (filterProject && task.project_id !== filterProject) return false;
       if (search && !task.title.toLowerCase().includes(search.toLowerCase())) return false;
       const isHidden = hiddenTaskIds.has(task.id);
       if (!showAllTasks && isHidden) return false;
       return true;
     });
-  }, [tasks, filterDept, filterAgent, filterType, search, hiddenTaskIds, showAllTasks]);
+  }, [tasks, filterDept, filterAgent, filterType, filterProject, search, hiddenTaskIds, showAllTasks]);
 
   const tasksByStatus = useMemo(() => {
     const grouped: Record<string, Task[]> = {};
@@ -256,7 +267,7 @@ export function TaskBoard({
 
   const activeTask = activeTaskId ? tasks.find((t) => t.id === activeTaskId) ?? null : null;
 
-  const activeFilterCount = [filterDept, filterAgent, filterType, search].filter(Boolean).length;
+  const activeFilterCount = [filterDept, filterAgent, filterType, filterProject, search].filter(Boolean).length;
   const hiddenTaskCount = useMemo(() => {
     let count = 0;
     for (const task of tasks) {
@@ -300,6 +311,7 @@ export function TaskBoard({
               setFilterDept("");
               setFilterAgent("");
               setFilterType("");
+              setFilterProject("");
               setSearch("");
             }}
             className="rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors hover:opacity-90"
@@ -383,13 +395,16 @@ export function TaskBoard({
       <FilterBar
         agents={agents}
         departments={departments}
+        projects={projects}
         filterDept={filterDept}
         filterAgent={filterAgent}
         filterType={filterType}
+        filterProject={filterProject}
         search={search}
         onFilterDept={setFilterDept}
         onFilterAgent={setFilterAgent}
         onFilterType={setFilterType}
+        onFilterProject={setFilterProject}
         onSearch={setSearch}
       />
 
@@ -545,6 +560,7 @@ export function TaskBoard({
           onClose={() => setShowCreate(false)}
           onCreate={onCreateTask}
           onAssign={onAssignTask}
+          activeWorkflowPackKey={activeWorkflowPackKey}
         />
       )}
 

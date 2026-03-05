@@ -9,6 +9,8 @@ import {
   consumeInterruptPrompts,
   loadPendingInterruptPrompts,
 } from "../core/interrupt-injection-tools.ts";
+import { buildCharacterPersonaBlock } from "../core/character-persona.ts";
+import { buildPptExecutionGuidance } from "../core/ppt-execution-guidance.ts";
 
 type CreateExecutionStartTaskToolsDeps = {
   nowMs: RuntimeContext["nowMs"];
@@ -204,7 +206,12 @@ export function createExecutionStartTaskTools(deps: CreateExecutionStartTaskTool
       return;
     }
     const agentCwd = worktreePath;
-    appendTaskLog(taskId, "system", `Git worktree created: ${worktreePath} (branch: agentdesk/${taskId.slice(0, 8)})`);
+    const isDirectMode = worktreePath === projPath;
+    if (isDirectMode) {
+      appendTaskLog(taskId, "system", `Running in direct mode (no git isolation): ${worktreePath}`);
+    } else {
+      appendTaskLog(taskId, "system", `Git worktree created: ${worktreePath} (branch: agentdesk/${taskId.slice(0, 8)})`);
+    }
     const logFilePath = path.join(logsDir, `${taskId}.log`);
     const roleLabels: Record<string, string> = {
       team_leader: "Team Leader",
@@ -266,11 +273,12 @@ export function createExecutionStartTaskTools(deps: CreateExecutionStartTaskTool
         taskData.description ? `\n${taskData.description}` : "",
         workflowPackGuidance ? `\n[Workflow Pack Execution Rules]\n${workflowPackGuidance}` : "",
         buildOutputLanguageGuidance(taskLang, pickL, l),
+        buildPptExecutionGuidance(taskData.title, taskData.description, taskLang),
         continuationCtx,
         conversationCtx,
         `\n---`,
         `Agent: ${execAgent.name} (${roleLabel}, ${deptName})`,
-        execAgent.personality ? `Personality: ${execAgent.personality}` : "",
+        buildCharacterPersonaBlock(execAgent.personality),
         deptConstraint,
         deptPromptBlock,
         `NOTE: You are working in an isolated Git worktree branch (agentdesk/${taskId.slice(0, 8)}). Commit your changes normally.`,

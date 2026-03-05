@@ -22,6 +22,7 @@ export function registerAgentCrudRoutes(ctx: RuntimeContext): void {
     meetingPhaseByAgent,
     meetingTaskIdByAgent,
     meetingReviewDecisionByAgent,
+    runAgentOneShot,
   } = ctx;
   const hasAgentWorkflowPackColumn = (() => {
     try {
@@ -288,6 +289,98 @@ export function registerAgentCrudRoutes(ctx: RuntimeContext): void {
       .all(id);
 
     res.json({ agent, recent_tasks: recentTasks });
+  });
+
+  // ── Generate persona via AI ──
+  app.post("/api/agents/generate-persona", async (req, res) => {
+    try {
+      const body = (req.body ?? {}) as Record<string, unknown>;
+      const name = typeof body.name === "string" ? body.name.trim() : "";
+      const role = typeof body.role === "string" ? body.role : "senior";
+      const departmentId = typeof body.department_id === "string" ? body.department_id : null;
+      const lang = typeof body.lang === "string" ? body.lang : "ko";
+      if (!name) return res.status(400).json({ error: "name_required" });
+
+      const deptRow = departmentId
+        ? (db.prepare("SELECT name, name_ko FROM departments WHERE id = ?").get(departmentId) as
+            | { name: string; name_ko: string }
+            | undefined)
+        : null;
+      const deptName = deptRow ? (lang === "ko" ? deptRow.name_ko || deptRow.name : deptRow.name) : "";
+      const roleLabel =
+        lang === "ko"
+          ? { team_leader: "팀 리더", senior: "시니어", junior: "주니어", intern: "인턴" }[role] || role
+          : { team_leader: "team leader", senior: "senior", junior: "junior", intern: "intern" }[role] || role;
+
+      const prompt =
+        lang === "ko"
+          ? [
+              `[페르소나 생성 요청]`,
+              `다음 인물의 AI 캐릭터 페르소나 프롬프트를 한국어로 작성하세요.`,
+              `이름: ${name}`,
+              `역할: ${roleLabel}`,
+              deptName ? `부서: ${deptName}` : "",
+              ``,
+              `작성 규칙:`,
+              `- "나는 ${name}, ..."로 시작하는 1인칭 자기소개 형식`,
+              `- 이 인물이 실존/역사 인물이면 그 특징을 반영, 가상 이름이면 이름에서 느껴지는 이미지로 창작`,
+              `- 반드시 포함할 항목: (1) 전문성과 사고방식 (2) 특유의 말투나 입버릇 (3) 업무 스타일 (4) 독특한 습관이나 비유 표현`,
+              `- 전체 4-6문장, 150-250자 내외`,
+              `- JSON이나 마크다운 없이 순수 텍스트만 출력`,
+            ]
+              .filter(Boolean)
+              .join("\n")
+          : [
+              `[Persona Generation Request]`,
+              `Write an AI character persona prompt for the following person in English.`,
+              `Name: ${name}`,
+              `Role: ${roleLabel}`,
+              deptName ? `Department: ${deptName}` : "",
+              ``,
+              `Rules:`,
+              `- Start with "I am ${name}, ..." in first-person`,
+              `- If this is a real/historical figure, reflect their known traits; if fictional, create based on the name's impression`,
+              `- Must include: (1) expertise and thinking style (2) distinctive speech patterns or catchphrases (3) work style (4) unique habits or metaphors`,
+              `- 4-6 sentences total, around 150-250 words`,
+              `- Output plain text only, no JSON or markdown`,
+            ]
+              .filter(Boolean)
+              .join("\n");
+
+      // Use a lightweight agent stub for one-shot
+      const stubAgent = {
+        id: "persona-gen",
+        name: "System",
+        name_ko: "시스템",
+        role: "senior" as const,
+        personality: null,
+        status: "idle",
+        department_id: null,
+        current_task_id: null,
+        avatar_emoji: "🤖",
+        cli_provider: "claude",
+        oauth_account_id: null,
+        api_provider_id: null,
+        api_model: null,
+        cli_model: null,
+        cli_reasoning_level: null,
+      };
+
+      const result = await runAgentOneShot(stubAgent, prompt, {
+        projectPath: process.cwd(),
+        noTools: true,
+        timeoutMs: 30_000,
+      });
+
+      const text = (result?.text || "").trim();
+      if (!text) {
+        return res.status(500).json({ error: "generation_failed", message: "AI returned empty response" });
+      }
+      res.json({ ok: true, personality: text });
+    } catch (err) {
+      console.error("[generate-persona] error:", err);
+      res.status(500).json({ error: "generation_failed", message: String(err) });
+    }
   });
 
   app.post("/api/agents", (req, res) => {
@@ -718,5 +811,76 @@ export function registerAgentCrudRoutes(ctx: RuntimeContext): void {
     const updated = db.prepare("SELECT * FROM agents WHERE id = ?").get(id);
     broadcast("agent_status", updated);
     res.json({ ok: true, agent: updated });
+  });
+
+  // ---------------------------------------------------------------------------
+  // Agent Performance Summary
+  // ---------------------------------------------------------------------------
+  app.get("/api/agents/:id/performance", (req, res) => {
+    const { id } = req.params;
+    const agent = db.prepare("SELECT id, name, stats_tasks_done, stats_xp FROM agents WHERE id = ?").get(id) as
+      | { id: string; name: string; stats_tasks_done: number; stats_xp: number }
+      | undefined;
+    if (!agent) return res.status(404).json({ error: "agent_not_found" });
+
+    const taskStats = db
+      .prepare(
+        `
+        SELECT
+          COUNT(*) AS total,
+          SUM(CASE WHEN status = 'done' THEN 1 ELSE 0 END) AS done,
+          SUM(CASE WHEN status = 'inbox' AND result IS NOT NULL THEN 1 ELSE 0 END) AS failed,
+          AVG(CASE WHEN status = 'done' AND started_at > 0 AND completed_at > started_at
+                   THEN completed_at - started_at END) AS avg_duration_ms
+        FROM tasks WHERE assigned_agent_id = ?
+      `,
+      )
+      .get(id) as { total: number; done: number; failed: number; avg_duration_ms: number | null };
+
+    const recentTasks = db
+      .prepare(
+        `
+        SELECT id, title, status, started_at, completed_at, department_id, workflow_pack_key
+        FROM tasks
+        WHERE assigned_agent_id = ?
+        ORDER BY COALESCE(completed_at, started_at, created_at) DESC
+        LIMIT 20
+      `,
+      )
+      .all(id) as Array<{
+      id: string;
+      title: string;
+      status: string;
+      started_at: number | null;
+      completed_at: number | null;
+      department_id: string | null;
+      workflow_pack_key: string | null;
+    }>;
+
+    const byPack = db
+      .prepare(
+        `
+        SELECT workflow_pack_key AS pack, COUNT(*) AS cnt,
+               SUM(CASE WHEN status = 'done' THEN 1 ELSE 0 END) AS done_cnt
+        FROM tasks WHERE assigned_agent_id = ? AND workflow_pack_key IS NOT NULL
+        GROUP BY workflow_pack_key ORDER BY cnt DESC
+      `,
+      )
+      .all(id) as Array<{ pack: string; cnt: number; done_cnt: number }>;
+
+    res.json({
+      ok: true,
+      agent_id: id,
+      stats: {
+        tasks_total: taskStats.total,
+        tasks_done: taskStats.done,
+        tasks_failed: taskStats.failed,
+        success_rate: taskStats.total > 0 ? Math.round((taskStats.done / taskStats.total) * 100) : 0,
+        avg_duration_ms: taskStats.avg_duration_ms ? Math.round(taskStats.avg_duration_ms) : null,
+        xp: agent.stats_xp,
+      },
+      recent_tasks: recentTasks,
+      by_pack: byPack,
+    });
   });
 }

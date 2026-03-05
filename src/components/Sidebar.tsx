@@ -31,6 +31,7 @@ const NAV_STRUCTURE: NavEntry[] = [
     id: "tasks",
     children: [{ view: "tasks-board" }, { view: "tasks-deliverables" }],
   },
+  { kind: "item", view: "game-room" },
   { kind: "item", view: "settings" },
 ];
 
@@ -116,6 +117,14 @@ const NAV_ICONS: Partial<Record<View | "library", React.ReactNode>> = {
       <path d="M8 12l2 2 3-3" />
     </svg>
   ),
+  "game-room": (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 14v-1.5a2.5 2.5 0 012.5-2.5h9a2.5 2.5 0 012.5 2.5V14" />
+      <path d="M4 14h12v2a1 1 0 01-1 1H5a1 1 0 01-1-1v-2z" />
+      <path d="M6 10v1M14 10v1" />
+      <path d="M8 6l1.5 4h1L12 6" />
+    </svg>
+  ),
   settings: (
     <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="10" cy="10" r="2.5" />
@@ -147,6 +156,7 @@ export default function Sidebar({ currentView, onChangeView, departments, agents
     tasks: tr("업무 관리", "Tasks", "タスク管理", "任务管理"),
     "tasks-board": tr("업무 보드", "Task Board", "タスクボード", "任务看板"),
     "tasks-deliverables": tr("결과물", "Deliverables", "成果物", "交付物"),
+    "game-room": tr("휴게실", "Lounge", "休憩室", "休息室"),
     settings: tr("설정", "Settings", "設定", "设置"),
   };
 

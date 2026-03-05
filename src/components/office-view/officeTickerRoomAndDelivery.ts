@@ -30,7 +30,7 @@ export function updateBreakRoomAndDeliveryAnimations(
   for (const { sprite, baseX, baseY } of breakAnimItemsRef.current) {
     const seed = hashStr((sprite as any)._name || `${baseX}`);
     sprite.position.x = baseX + Math.sin(tick * 0.02 + seed) * 1.5;
-    sprite.position.y = baseY + Math.sin(tick * 0.03) * 0.8;
+    sprite.position.y = baseY + Math.sin(tick * 0.03 + seed) * 0.8;
   }
 
   const steamContainer = breakSteamParticlesRef.current;

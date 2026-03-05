@@ -1058,6 +1058,22 @@ export async function sendDeliverableFiles(
   }
 }
 
+export function notifyDecisionInbox(count: number, lang?: string): void {
+  if (count <= 0) return;
+  const resolvedLang = normalizeGatewayLang(lang, "");
+  const label: Record<string, string> = {
+    ko: `\u{1F4EC} 의사결정 ${count}건이 대기 중입니다.`,
+    en: `\u{1F4EC} ${count} decision(s) awaiting your review.`,
+    ja: `\u{1F4EC} ${count}件の意思決定が待機中です。`,
+    zh: `\u{1F4EC} ${count}项决策等待您审批。`,
+  };
+  queueWake({
+    key: `decision-inbox:${count}`,
+    text: label[resolvedLang] || label.en,
+    debounceMs: 30_000,
+  });
+}
+
 export async function gatewayHttpInvoke(_req: {
   tool: string;
   action?: string;

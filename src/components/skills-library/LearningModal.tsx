@@ -1,3 +1,4 @@
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { SkillHistoryProvider, SkillLearnProvider } from "../../api";
 import type { Agent } from "../../types";
 import AgentAvatar from "../AgentAvatar";
@@ -34,10 +35,13 @@ interface LearningModalProps {
   unlearnError: string | null;
   learnSubmitting: boolean;
   defaultSelectedProviders: SkillLearnProvider[];
+  squadAgentIds: string[];
   onClose: () => void;
   onToggleProvider: (provider: SkillLearnProvider) => void;
   onUnlearnProvider: (provider: SkillLearnProvider) => void;
   onStartLearning: () => void;
+  onAddAgent: (agentId: string) => void;
+  onRemoveAgent: (agentId: string) => void;
 }
 
 export default function LearningModal({
@@ -57,11 +61,55 @@ export default function LearningModal({
   unlearnError,
   learnSubmitting,
   defaultSelectedProviders,
+  squadAgentIds,
   onClose,
   onToggleProvider,
   onUnlearnProvider,
   onStartLearning,
+  onAddAgent,
+  onRemoveAgent,
 }: LearningModalProps) {
+  const [showAgentPicker, setShowAgentPicker] = useState(false);
+  const [agentSearch, setAgentSearch] = useState("");
+  const pickerRef = useRef<HTMLDivElement>(null);
+
+  const representativeAgentIds = useMemo(
+    () => new Set(representatives.map((r) => r.agent?.id).filter(Boolean) as string[]),
+    [representatives],
+  );
+
+  const availableAgents = useMemo(() => {
+    const excludeIds = new Set([...representativeAgentIds, ...squadAgentIds]);
+    let list = agents.filter((a) => !excludeIds.has(a.id));
+    if (agentSearch.trim()) {
+      const q = agentSearch.toLowerCase();
+      list = list.filter(
+        (a) =>
+          a.name.toLowerCase().includes(q) ||
+          (a.name_ko && a.name_ko.toLowerCase().includes(q)) ||
+          (a.cli_provider && a.cli_provider.toLowerCase().includes(q)),
+      );
+    }
+    return list;
+  }, [agents, representativeAgentIds, squadAgentIds, agentSearch]);
+
+  const squadAgents = useMemo(
+    () => squadAgentIds.map((id) => agents.find((a) => a.id === id)).filter(Boolean) as Agent[],
+    [agents, squadAgentIds],
+  );
+
+  useEffect(() => {
+    if (!showAgentPicker) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) {
+        setShowAgentPicker(false);
+        setAgentSearch("");
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [showAgentPicker]);
+
   if (!learningSkill) return null;
 
   return (
@@ -242,6 +290,145 @@ export default function LearningModal({
                 </div>
               );
             })}
+          </div>
+
+          {squadAgents.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {squadAgents.map((agent) => {
+                const agentProvider = agent.cli_provider as SkillLearnProvider | undefined;
+                const isProviderSelected = agentProvider ? selectedProviders.includes(agentProvider) : false;
+                const isAnimating = learnInProgress && isProviderSelected;
+                const displayName = preferKoreanName
+                  ? agent.name_ko || agent.name
+                  : agent.name || agent.name_ko;
+
+                return (
+                  <div
+                    key={`squad-${agent.id}`}
+                    className={`relative overflow-hidden rounded-xl border p-3 text-left transition-all ${
+                      isProviderSelected
+                        ? "border-emerald-500/50 bg-emerald-500/10"
+                        : "border-slate-700/70 bg-slate-800/60"
+                    }`}
+                  >
+                    {isAnimating && (
+                      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+                        {Array.from({ length: 6 }).map((_, idx) => (
+                          <span
+                            key={`squad-${agent.id}-book-${idx}`}
+                            className="learn-book-drop"
+                            style={{ left: `${8 + idx * 15}%`, animationDelay: `${idx * 0.15}s` }}
+                          >
+                            {idx % 2 === 0 ? "📘" : "📙"}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="relative z-10 flex items-center gap-3">
+                      <div className={`relative ${isAnimating ? "learn-avatar-reading" : ""}`}>
+                        <AgentAvatar agent={agent} agents={agents} size={50} rounded="xl" />
+                        {isAnimating && <span className="learn-reading-book">📖</span>}
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <div className="text-[11px] text-slate-400">
+                          {agentProvider ? providerLabel(agentProvider) : "—"}
+                        </div>
+                        <div className="text-sm font-medium text-white truncate">{displayName}</div>
+                        <div className="text-[11px] text-slate-500">{roleLabel(agent.role, t)}</div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => onRemoveAgent(agent.id)}
+                        disabled={learnInProgress}
+                        className={`shrink-0 rounded-md border px-1.5 py-0.5 text-[10px] transition-all ${
+                          learnInProgress
+                            ? "cursor-not-allowed border-slate-700 text-slate-600"
+                            : "border-slate-600 text-slate-400 hover:border-rose-500/40 hover:text-rose-300 hover:bg-rose-500/10"
+                        }`}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          <div className="relative" ref={pickerRef}>
+            <button
+              type="button"
+              onClick={() => {
+                if (!learnInProgress) {
+                  setShowAgentPicker((prev) => !prev);
+                  setAgentSearch("");
+                }
+              }}
+              disabled={learnInProgress}
+              className={`w-full rounded-xl border border-dashed p-2.5 text-xs transition-all ${
+                learnInProgress
+                  ? "cursor-not-allowed border-slate-700 text-slate-600"
+                  : "border-slate-600 text-slate-400 hover:border-slate-400 hover:text-slate-200 hover:bg-slate-800/40"
+              }`}
+            >
+              + {t({ ko: "에이전트 추가", en: "Add Agent", ja: "エージェント追加", zh: "添加代理" })}
+            </button>
+
+            {showAgentPicker && (
+              <div className="absolute left-0 right-0 top-full z-20 mt-1 max-h-52 overflow-hidden rounded-xl border border-slate-600 bg-slate-900 shadow-xl">
+                <div className="border-b border-slate-700/60 px-3 py-2">
+                  <input
+                    type="text"
+                    value={agentSearch}
+                    onChange={(e) => setAgentSearch(e.target.value)}
+                    placeholder={t({ ko: "검색...", en: "Search...", ja: "検索...", zh: "搜索..." })}
+                    className="w-full bg-transparent text-xs text-white placeholder-slate-500 outline-none"
+                    autoFocus
+                  />
+                </div>
+                <div className="max-h-40 overflow-y-auto">
+                  {availableAgents.length === 0 ? (
+                    <div className="px-3 py-3 text-center text-[11px] text-slate-500">
+                      {t({
+                        ko: "추가 가능한 에이전트가 없습니다",
+                        en: "No agents available",
+                        ja: "追加できるエージェントがありません",
+                        zh: "没有可添加的代理",
+                      })}
+                    </div>
+                  ) : (
+                    availableAgents.map((agent) => {
+                      const displayName = preferKoreanName
+                        ? agent.name_ko || agent.name
+                        : agent.name || agent.name_ko;
+                      return (
+                        <button
+                          key={agent.id}
+                          type="button"
+                          onClick={() => {
+                            onAddAgent(agent.id);
+                            setShowAgentPicker(false);
+                            setAgentSearch("");
+                          }}
+                          className="flex w-full items-center gap-2.5 px-3 py-2 text-left transition-colors hover:bg-slate-800"
+                        >
+                          <AgentAvatar agent={agent} agents={agents} size={28} rounded="lg" />
+                          <div className="min-w-0 flex-1">
+                            <div className="text-xs font-medium text-white truncate">{displayName}</div>
+                            <div className="text-[10px] text-slate-500">
+                              {agent.cli_provider ? providerLabel(agent.cli_provider as SkillLearnProvider) : "—"} · {roleLabel(agent.role, t)}
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="rounded-xl border border-slate-700/70 bg-slate-800/55 p-3">

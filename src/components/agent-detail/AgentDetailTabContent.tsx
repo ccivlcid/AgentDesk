@@ -1,9 +1,10 @@
 import { localeName, type UiLanguage } from "../../i18n";
 import type { Agent, Department, SubAgent, SubTask, Task } from "../../types";
 import { getSubAgentSpriteNum, SUBTASK_STATUS_ICON, taskStatusLabel, taskTypeLabel, type TFunction } from "./constants";
+import AgentPerformancePanel from "./AgentPerformancePanel";
 
 interface AgentDetailTabContentProps {
-  tab: "info" | "tasks" | "alba";
+  tab: "info" | "tasks" | "alba" | "performance";
   t: TFunction;
   language: UiLanguage;
   agent: Agent;
@@ -198,6 +199,10 @@ export default function AgentDetailTabContent({
     );
   }
 
+  if (tab === "performance") {
+    return <AgentPerformancePanel agentId={agent.id} t={t} />;
+  }
+
   return (
     <div className="space-y-2">
       {agentSubAgents.length === 0 ? (
@@ -242,7 +247,7 @@ export default function AgentDetailTabContent({
               <div className="text-xs text-slate-500 mt-0.5">
                 {subAgent.status === "working"
                   ? `🔨 ${t({ ko: "작업중...", en: "Working...", ja: "作業中...", zh: "工作中..." })}`
-                  : `✅ ${t({ ko: "완료", en: "Done", ja: "完了", zh: "完成" })}`}
+                  : `✅ ${t({ ko: "완료", en: "Done", ja: "完了", zh: "완成" })}`}
               </div>
             </div>
             {subAgent.status === "working" && (

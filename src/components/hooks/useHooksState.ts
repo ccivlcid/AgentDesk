@@ -61,6 +61,7 @@ export function useHooksState({ agents, departments, t }: UseHooksStateOptions) 
   const [unlearnEffects, setUnlearnEffects] = useState<Partial<Record<HookLearnProvider, UnlearnEffect>>>({});
   const [historyRefreshToken, setHistoryRefreshToken] = useState(0);
   const [learnedRows, setLearnedRows] = useState<LearnedHookEntry[]>([]);
+  const [squadAgentIds, setSquadAgentIds] = useState<string[]>([]);
   const unlearnEffectTimersRef = useRef<Partial<Record<HookLearnProvider, number>>>({});
 
   // ── Load hooks ────────────────────────────────────────────────────
@@ -280,6 +281,7 @@ export function useHooksState({ agents, departments, t }: UseHooksStateOptions) 
         (p) => !alreadyLearned.includes(p),
       );
       setSelectedProviders(preSelected);
+      setSquadAgentIds([]);
     },
     [defaultSelectedProviders, learnedProvidersByHook],
   );
@@ -294,6 +296,7 @@ export function useHooksState({ agents, departments, t }: UseHooksStateOptions) 
     setSelectedProviders([]);
     setUnlearningProviders([]);
     setUnlearnEffects({});
+    setSquadAgentIds([]);
   }, [learnInProgress]);
 
   const toggleProvider = useCallback(
@@ -317,12 +320,33 @@ export function useHooksState({ agents, departments, t }: UseHooksStateOptions) 
     return () => window.clearInterval(timer);
   }, [learnJob]);
 
-  // Bump history on job completion
+  // Optimistic update: immediately reflect learned rows on success before server refetch
   useEffect(() => {
-    if (learnJob && (learnJob.status === "succeeded" || learnJob.status === "failed")) {
+    if (!learnJob || learnJob.status !== "succeeded") return;
+    const { hookId, hookTitle, providers, completedAt } = learnJob;
+    const learnedAt = completedAt ?? Date.now();
+    setLearnedRows((prev) => {
+      const seen = new Set(prev.map((r) => `${r.hook_id}:${r.provider}`));
+      const added: LearnedHookEntry[] = [];
+      for (const provider of providers) {
+        if (seen.has(`${hookId}:${provider}`)) continue;
+        seen.add(`${hookId}:${provider}`);
+        added.push({ provider, hook_id: hookId, hook_label: hookTitle, learned_at: learnedAt });
+      }
+      if (added.length === 0) return prev;
+      return [...added, ...prev].sort((a, b) => b.learned_at - a.learned_at);
+    });
+  }, [learnJob?.id, learnJob?.status, learnJob?.hookId, learnJob?.hookTitle, learnJob?.providers, learnJob?.completedAt]);
+
+  // Bump history on job completion (immediate + delayed to ensure server storage is reflected)
+  useEffect(() => {
+    if (!learnJob || (learnJob.status !== "succeeded" && learnJob.status !== "failed")) return;
+    setHistoryRefreshToken((t) => t + 1);
+    const id = window.setTimeout(() => {
       setHistoryRefreshToken((t) => t + 1);
-    }
-  }, [learnJob?.status]);
+    }, 1200);
+    return () => window.clearTimeout(id);
+  }, [learnJob?.id, learnJob?.status]);
 
   // ── Start learning ────────────────────────────────────────────────
   const handleStartLearning = useCallback(async () => {
@@ -383,6 +407,22 @@ export function useHooksState({ agents, departments, t }: UseHooksStateOptions) 
 
   const bumpHistoryRefreshToken = useCallback(() => {
     setHistoryRefreshToken((t) => t + 1);
+  }, []);
+
+  const addAgentToSquad = useCallback(
+    (agentId: string) => {
+      setSquadAgentIds((prev) => (prev.includes(agentId) ? prev : [...prev, agentId]));
+      const agent = agents.find((a) => a.id === agentId);
+      if (agent?.cli_provider) {
+        const provider = agent.cli_provider as HookLearnProvider;
+        setSelectedProviders((prev) => (prev.includes(provider) ? prev : [...prev, provider]));
+      }
+    },
+    [agents],
+  );
+
+  const removeAgentFromSquad = useCallback((agentId: string) => {
+    setSquadAgentIds((prev) => prev.filter((id) => id !== agentId));
   }, []);
 
   // Cleanup timers
@@ -454,5 +494,8 @@ export function useHooksState({ agents, departments, t }: UseHooksStateOptions) 
     handleStartLearning,
     handleUnlearnProvider,
     bumpHistoryRefreshToken,
+    squadAgentIds,
+    addAgentToSquad,
+    removeAgentFromSquad,
   };
 }

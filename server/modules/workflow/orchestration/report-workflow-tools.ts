@@ -36,6 +36,7 @@ export function createReportWorkflowTools(deps: CreateReportWorkflowToolsDeps) {
     getDeptName,
     randomDelay,
     notifyCeo,
+    insertNotification,
   } = deps;
 
   function pickDesignCheckpointAgent(): any | null {
@@ -162,6 +163,13 @@ export function createReportWorkflowTools(deps: CreateReportWorkflowToolsDeps) {
     const updatedTask = db.prepare("SELECT * FROM tasks WHERE id = ?").get(task.id);
     broadcast("task_update", updatedTask);
     notifyTaskStatus(task.id, task.title, "done", lang);
+    insertNotification({
+      type: "task_complete",
+      title: task.title,
+      body: note,
+      task_id: task.id,
+      agent_id: task.assigned_agent_id,
+    });
 
     refreshCliUsageData()
       .then((usage: unknown) => broadcast("cli_usage_update", usage))

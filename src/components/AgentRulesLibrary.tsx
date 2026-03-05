@@ -144,6 +144,9 @@ export default function AgentRulesLibrary({ agents, departments }: AgentRulesLib
         unlearnError={vm.unlearnError}
         learnSubmitting={vm.learnSubmitting}
         defaultSelectedProviders={vm.defaultSelectedProviders}
+        squadAgentIds={vm.squadAgentIds}
+        onAddAgent={vm.addAgentToSquad}
+        onRemoveAgent={vm.removeAgentFromSquad}
         onClose={vm.closeLearningModal}
         onToggleProvider={vm.toggleProvider}
         onUnlearnProvider={vm.handleUnlearnProvider}

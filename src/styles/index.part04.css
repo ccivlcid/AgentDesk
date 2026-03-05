@@ -1124,3 +1124,464 @@
   height: 1px;
   background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.3), transparent);
 }
+
+/* ─── Lounge (휴게실) styles ─── */
+.lounge-view {
+  min-height: 0;
+}
+
+.lounge-layout {
+  max-width: 36rem;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 1.5rem 0.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.lounge-header {
+  text-align: center;
+  padding: 1.75rem 1rem;
+  background: linear-gradient(145deg, rgba(30, 41, 59, 0.6), rgba(15, 23, 42, 0.5));
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 1.25rem;
+  backdrop-filter: blur(10px);
+}
+
+.lounge-header-icon {
+  width: 3rem;
+  height: 3rem;
+  margin: 0 auto 0.75rem;
+  color: rgba(245, 158, 11, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lounge-header-icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.lounge-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--th-text-primary, #f1f5f9);
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.lounge-subtitle {
+  font-size: 0.875rem;
+  color: var(--th-text-muted, #94a3b8);
+  margin: 0.5rem 0 0;
+  line-height: 1.4;
+}
+
+.lounge-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.lounge-section-title {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--th-text-secondary, #cbd5e1);
+  letter-spacing: 0.02em;
+  margin: 0;
+}
+
+/* 함께할 상대 섹션 */
+.lounge-partner-section {
+  padding: 1.25rem 1rem;
+  background: rgba(15, 23, 42, 0.4);
+  border: 1px solid rgba(71, 85, 105, 0.25);
+  border-radius: 1rem;
+  backdrop-filter: blur(8px);
+}
+
+.lounge-partner-header {
+  margin-bottom: 1rem;
+}
+
+.lounge-partner-header .lounge-section-title {
+  margin-bottom: 0.25rem;
+}
+
+.lounge-partner-desc {
+  font-size: 0.75rem;
+  color: var(--th-text-muted, #94a3b8);
+  line-height: 1.4;
+  margin: 0;
+}
+
+.lounge-partner-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  gap: 0.5rem;
+}
+
+.lounge-partner-empty-icon {
+  font-size: 2rem;
+  opacity: 0.7;
+}
+
+.lounge-partner-empty-text {
+  font-size: 0.8125rem;
+  color: var(--th-text-muted, #64748b);
+  margin: 0;
+}
+
+.lounge-agent-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.75rem;
+}
+
+@media (min-width: 480px) {
+  .lounge-agent-grid {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  }
+}
+
+.lounge-agent-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  border-radius: 0.875rem;
+  border: 1px solid rgba(71, 85, 105, 0.4);
+  background: rgba(30, 41, 59, 0.5);
+  color: var(--th-text-secondary, #cbd5e1);
+  text-align: left;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+  cursor: pointer;
+  min-width: 0;
+}
+
+.lounge-agent-card:hover:not(.lounge-agent-card--busy) {
+  border-color: rgba(148, 163, 184, 0.35);
+  background: rgba(51, 65, 85, 0.45);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+}
+
+.lounge-agent-card--selected {
+  border-color: rgba(245, 158, 11, 0.55);
+  background: rgba(245, 158, 11, 0.1);
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.25);
+}
+
+.lounge-agent-card--selected .lounge-agent-name {
+  color: #fcd34d;
+}
+
+.lounge-agent-card--selected .lounge-agent-avatar {
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.5);
+}
+
+.lounge-agent-card--busy {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.lounge-agent-avatar {
+  flex-shrink: 0;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  line-height: 1;
+  background: rgba(51, 65, 85, 0.6);
+  border: 1px solid rgba(71, 85, 105, 0.4);
+  transition: box-shadow 0.2s ease;
+}
+
+.lounge-agent-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.lounge-agent-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--th-text-primary, #f1f5f9);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lounge-agent-dept {
+  font-size: 0.6875rem;
+  color: var(--th-text-muted, #94a3b8);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: 0.01em;
+}
+
+.lounge-agent-badge {
+  flex-shrink: 0;
+  font-size: 0.625rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.2rem 0.4rem;
+  border-radius: 0.25rem;
+  background: rgba(245, 158, 11, 0.2);
+  color: rgba(251, 191, 36, 0.95);
+}
+
+.lounge-agent-check {
+  flex-shrink: 0;
+  width: 1.25rem;
+  height: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(245, 158, 11, 0.95);
+}
+
+/* 휴식 활동 섹션 */
+.lounge-activity-section {
+  padding: 1.25rem 1rem;
+  background: rgba(15, 23, 42, 0.4);
+  border: 1px solid rgba(71, 85, 105, 0.25);
+  border-radius: 1rem;
+  backdrop-filter: blur(8px);
+}
+
+.lounge-activity-header {
+  margin-bottom: 1rem;
+}
+
+.lounge-activity-header .lounge-section-title {
+  margin-bottom: 0.25rem;
+}
+
+.lounge-activity-desc {
+  font-size: 0.75rem;
+  color: var(--th-text-muted, #94a3b8);
+  line-height: 1.4;
+  margin: 0;
+}
+
+.lounge-game-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.875rem;
+}
+
+@media (min-width: 640px) {
+  .lounge-game-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+  }
+}
+
+.lounge-game-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.25rem 0.875rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(71, 85, 105, 0.4);
+  background: rgba(30, 41, 59, 0.45);
+  text-align: center;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+  cursor: pointer;
+  min-width: 0;
+}
+
+.lounge-game-card:hover:not(.lounge-game-card--disabled) {
+  border-color: rgba(245, 158, 11, 0.4);
+  background: rgba(30, 41, 59, 0.6);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  transform: translateY(-2px);
+}
+
+.lounge-game-card:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.5);
+}
+
+.lounge-game-card--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.lounge-game-icon-wrap {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(51, 65, 85, 0.5);
+  border: 1px solid rgba(71, 85, 105, 0.35);
+  margin-bottom: 0.75rem;
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.lounge-game-card:hover:not(.lounge-game-card--disabled) .lounge-game-icon-wrap {
+  background: rgba(71, 85, 105, 0.5);
+  border-color: rgba(245, 158, 11, 0.25);
+  box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.15);
+}
+
+.lounge-game-icon {
+  font-size: 1.75rem;
+  line-height: 1;
+}
+
+.lounge-game-name {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--th-text-primary, #f1f5f9);
+  line-height: 1.3;
+  margin-bottom: 0.25rem;
+}
+
+.lounge-game-desc {
+  font-size: 0.6875rem;
+  color: var(--th-text-muted, #94a3b8);
+  line-height: 1.3;
+  letter-spacing: 0.01em;
+}
+
+.lounge-activity-hint {
+  font-size: 0.75rem;
+  color: var(--th-text-muted, #64748b);
+  text-align: center;
+  margin: 1rem 0 0;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(71, 85, 105, 0.2);
+}
+
+[data-theme="light"] .lounge-header {
+  background: linear-gradient(145deg, rgba(248, 250, 252, 0.9), rgba(241, 245, 249, 0.8));
+  border-color: rgba(226, 232, 240, 0.8);
+}
+
+[data-theme="light"] .lounge-header-icon {
+  color: #b45309;
+}
+
+[data-theme="light"] .lounge-title {
+  color: #0f172a;
+}
+
+[data-theme="light"] .lounge-subtitle {
+  color: #64748b;
+}
+
+[data-theme="light"] .lounge-partner-section {
+  background: rgba(248, 250, 252, 0.85);
+  border-color: rgba(226, 232, 240, 0.9);
+}
+
+[data-theme="light"] .lounge-partner-desc {
+  color: #64748b;
+}
+
+[data-theme="light"] .lounge-agent-card {
+  border-color: rgba(226, 232, 240, 0.9);
+  background: rgba(255, 255, 255, 0.7);
+  color: #334155;
+}
+
+[data-theme="light"] .lounge-agent-card:hover:not(.lounge-agent-card--busy) {
+  background: rgba(241, 245, 249, 0.9);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .lounge-agent-card--selected {
+  border-color: rgba(245, 158, 11, 0.5);
+  background: rgba(254, 243, 199, 0.5);
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
+}
+
+[data-theme="light"] .lounge-agent-card--selected .lounge-agent-name {
+  color: #b45309;
+}
+
+[data-theme="light"] .lounge-agent-avatar {
+  background: rgba(241, 245, 249, 0.9);
+  border-color: rgba(226, 232, 240, 0.9);
+}
+
+[data-theme="light"] .lounge-agent-name {
+  color: #0f172a;
+}
+
+[data-theme="light"] .lounge-agent-dept {
+  color: #64748b;
+}
+
+[data-theme="light"] .lounge-agent-badge {
+  background: rgba(254, 243, 199, 0.8);
+  color: #b45309;
+}
+
+[data-theme="light"] .lounge-activity-section {
+  background: rgba(248, 250, 252, 0.85);
+  border-color: rgba(226, 232, 240, 0.9);
+}
+
+[data-theme="light"] .lounge-activity-desc {
+  color: #64748b;
+}
+
+[data-theme="light"] .lounge-game-card {
+  border-color: rgba(226, 232, 240, 0.9);
+  background: rgba(255, 255, 255, 0.6);
+}
+
+[data-theme="light"] .lounge-game-card:hover:not(.lounge-game-card--disabled) {
+  border-color: rgba(245, 158, 11, 0.4);
+  background: rgba(254, 243, 199, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .lounge-game-icon-wrap {
+  background: rgba(241, 245, 249, 0.9);
+  border-color: rgba(226, 232, 240, 0.8);
+}
+
+[data-theme="light"] .lounge-game-card:hover:not(.lounge-game-card--disabled) .lounge-game-icon-wrap {
+  background: rgba(254, 243, 199, 0.4);
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+[data-theme="light"] .lounge-game-name {
+  color: #0f172a;
+}
+
+[data-theme="light"] .lounge-game-desc,
+[data-theme="light"] .lounge-activity-hint {
+  color: #64748b;
+}
+
+[data-theme="light"] .lounge-activity-hint {
+  border-top-color: rgba(226, 232, 240, 0.8);
+}

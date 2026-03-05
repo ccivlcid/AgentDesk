@@ -105,6 +105,7 @@ export function buildFinalLayers({
       toX: target.x,
       toY: target.y + DESK_H,
       progress: 0,
+      agentId: task.assigned_agent_id,
     });
   }
 

@@ -3,29 +3,40 @@ import { useI18n } from "../../i18n";
 import AgentSelect from "../AgentSelect";
 import { TASK_TYPE_OPTIONS, taskTypeLabel } from "./constants";
 
+interface ProjectOption {
+  id: string;
+  name: string;
+}
+
 interface FilterBarProps {
   agents: Agent[];
   departments: Department[];
+  projects: ProjectOption[];
   filterDept: string;
   filterAgent: string;
   filterType: string;
+  filterProject: string;
   search: string;
   onFilterDept: (value: string) => void;
   onFilterAgent: (value: string) => void;
   onFilterType: (value: string) => void;
+  onFilterProject: (value: string) => void;
   onSearch: (value: string) => void;
 }
 
 export default function FilterBar({
   agents,
   departments,
+  projects,
   filterDept,
   filterAgent,
   filterType,
+  filterProject,
   search,
   onFilterDept,
   onFilterAgent,
   onFilterType,
+  onFilterProject,
   onSearch,
 }: FilterBarProps) {
   const { t, language: locale } = useI18n();
@@ -92,6 +103,26 @@ export default function FilterBar({
           </option>
         ))}
       </select>
+
+      {projects.length > 0 && (
+        <select
+          value={filterProject}
+          onChange={(event) => onFilterProject(event.target.value)}
+          className="rounded-lg border px-3 py-1.5 text-sm outline-none transition focus:ring-1"
+          style={{
+            borderColor: "var(--th-border)",
+            background: "var(--th-bg-surface)",
+            color: "var(--th-text-secondary)",
+          }}
+        >
+          <option value="">{t({ ko: "전체 프로젝트", en: "All Projects", ja: "全プロジェクト", zh: "全部项目" })}</option>
+          {projects.map((project) => (
+            <option key={project.id} value={project.id}>
+              {project.name}
+            </option>
+          ))}
+        </select>
+      )}
     </div>
   );
 }

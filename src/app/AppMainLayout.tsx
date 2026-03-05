@@ -1,4 +1,5 @@
 import { useCallback, useMemo, type ReactNode } from "react";
+import NotificationCenter from "../components/NotificationCenter";
 import Sidebar from "../components/Sidebar";
 import OfficeView from "../components/OfficeView";
 import Dashboard from "../components/Dashboard";
@@ -10,6 +11,7 @@ import AgentRulesLibrary from "../components/AgentRulesLibrary";
 import MemoryLibrary from "../components/MemoryLibrary";
 import HooksLibrary from "../components/HooksLibrary";
 import SettingsPanel from "../components/SettingsPanel";
+import GameRoom from "../components/GameRoom";
 import { I18nProvider } from "../i18n";
 import type {
   Agent,
@@ -24,6 +26,7 @@ import type {
   SubTask,
   Task,
   WorkflowPackKey,
+  WSEventType,
 } from "../types";
 import type { UpdateStatus } from "../api";
 import type { OAuthCallbackResult, RoomThemeMap, View } from "./types";
@@ -69,6 +72,7 @@ interface AppMainLayoutLabels {
 
 interface AppMainLayoutProps {
   connected: boolean;
+  on: (event: WSEventType, handler: (payload: unknown) => void) => () => void;
   view: View;
   setView: (view: View) => void;
   departments: Department[];
@@ -113,6 +117,7 @@ interface AppMainLayoutProps {
     project_path?: string;
     assigned_agent_id?: string;
     workflow_pack_key?: WorkflowPackKey;
+    workflow_meta_json?: string;
   }) => Promise<void>;
   onUpdateTask: (id: string, data: Partial<Task>) => Promise<void>;
   onDeleteTask: (id: string) => Promise<void>;
@@ -142,6 +147,7 @@ interface AppMainLayoutProps {
 
 export default function AppMainLayout({
   connected,
+  on,
   view,
   setView,
   departments,
@@ -392,6 +398,14 @@ export default function AppMainLayout({
             reportLabel={labels.reportLabel}
             announcementLabel={labels.announcementLabel}
             roomManagerLabel={labels.roomManagerLabel}
+            notificationSlot={
+              <NotificationCenter
+                on={on}
+                onNavigateTask={(taskId) => {
+                  setView("tasks-board");
+                }}
+              />
+            }
             theme={theme}
             mobileHeaderMenuOpen={mobileHeaderMenuOpen}
             onOpenMobileNav={() => setMobileNavOpen(true)}
@@ -523,6 +537,7 @@ export default function AppMainLayout({
                 onResumeTask={onResumeTask}
                 onOpenTerminal={onOpenTerminal}
                 onOpenMeetingMinutes={onOpenMeetingMinutes}
+                activeWorkflowPackKey={officePackKey}
               />
             )}
 
@@ -563,6 +578,8 @@ export default function AppMainLayout({
             {view === "hooks" && (
               <HooksLibrary agents={libraryAgents} departments={departments} />
             )}
+
+            {view === "game-room" && <GameRoom agents={agents} />}
 
             {view === "settings" && (
               <SettingsPanel

@@ -16,6 +16,13 @@ import {
   TARGET_CHAR_H,
   destroyNode,
   emitSubCloneFireworkBurst,
+  AGENT_BREATHE_SPEED,
+  AGENT_BREATHE_Y_AMP,
+  AGENT_WORK_FRAME_SPEED,
+  AGENT_WORK_BOB_SPEED,
+  AGENT_WORK_BOB_Y_AMP,
+  AGENT_TASK_BOUNCE_DURATION,
+  AGENT_TASK_BOUNCE_HEIGHT,
 } from "./model";
 import { applyWallClockTime, blendColor } from "./drawing-core";
 import { DEPT_THEME, DEFAULT_BREAK_THEME, DEFAULT_CEO_THEME } from "./themes-locale";
@@ -32,6 +39,10 @@ interface AgentAnimItem {
   deskG?: Graphics;
   bedG?: Graphics;
   blanketG?: Graphics;
+  phase: number;
+  animated?: AnimatedSprite;
+  frameCount: number;
+  bounceUntilTick: number;
 }
 
 interface SubCloneAnimItem {
@@ -205,8 +216,8 @@ export function runOfficeTickerStep(ctx: OfficeTickerContext): void {
     }
   }
 
-  for (const { sprite, status, baseX, baseY, particles, agentId, cliProvider, deskG, bedG, blanketG } of ctx
-    .animItemsRef.current) {
+  for (const item of ctx.animItemsRef.current) {
+    const { sprite, status, baseX, baseY, particles, agentId, cliProvider, deskG, bedG, blanketG, phase, animated, frameCount } = item;
     if (agentId) {
       const meetingNow = Date.now();
       const inMeetingPresence = (ctx.dataRef.current.meetingPresence ?? []).some((row) => {
@@ -220,6 +231,48 @@ export function runOfficeTickerStep(ctx: OfficeTickerContext): void {
 
     sprite.position.x = baseX;
     sprite.position.y = baseY;
+
+    // ===== CHARACTER ANIMATION BLOCK =====
+    const cliUsageForAnim = cliProvider ? ctx.cliUsageRef.current?.[cliProvider] : undefined;
+    const maxUtilForAnim = cliUsageForAnim?.windows?.reduce((max: number, w: { utilization: number }) => Math.max(max, w.utilization), 0) ?? 0;
+    const isInBed = maxUtilForAnim >= 1.0;
+
+    if (!isInBed) {
+      const wave = tick * AGENT_BREATHE_SPEED + phase;
+
+      // Breathing Y-axis bob (all visible agents)
+      sprite.position.y = baseY + Math.sin(wave) * AGENT_BREATHE_Y_AMP;
+
+      if (status === "working") {
+        // Frame cycling (D-1 ↔ D-2 ↔ D-3)
+        if (animated && frameCount > 1) {
+          const workWave = tick * AGENT_WORK_FRAME_SPEED + phase;
+          const frameFloat = (Math.sin(workWave * 2.8) + 1) * 0.5 * frameCount;
+          const frame = Math.min(frameCount - 1, Math.floor(frameFloat));
+          animated.gotoAndStop(frame);
+        }
+        // Typing bob (Y-axis only)
+        const typingWave = tick * AGENT_WORK_BOB_SPEED + phase;
+        sprite.position.y += Math.sin(typingWave) * AGENT_WORK_BOB_Y_AMP;
+      }
+
+      // Task reception bounce
+      if (item.bounceUntilTick > 0 && tick <= item.bounceUntilTick) {
+        const bounceProgress = 1 - (item.bounceUntilTick - tick) / AGENT_TASK_BOUNCE_DURATION;
+        sprite.position.y -= Math.sin(bounceProgress * Math.PI) * AGENT_TASK_BOUNCE_HEIGHT;
+      }
+    }
+
+    // Bounce trigger: detect arriving delivery for this agent
+    if (agentId && item.bounceUntilTick <= tick) {
+      for (const d of ctx.deliveriesRef.current) {
+        if (d.agentId === agentId && d.progress > 0.85 && d.progress < 1 && !d.holdAtSeat) {
+          item.bounceUntilTick = tick + AGENT_TASK_BOUNCE_DURATION;
+          break;
+        }
+      }
+    }
+    // ===== END CHARACTER ANIMATION BLOCK =====
 
     if (status === "working") {
       if (tick % 10 === 0) {

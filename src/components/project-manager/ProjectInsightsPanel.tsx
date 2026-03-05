@@ -1,7 +1,136 @@
+import { useMemo } from "react";
 import type { ProjectDecisionEventItem, ProjectReportHistoryItem, ProjectTaskHistoryItem } from "../../api";
 import type { Project } from "../../types";
 import type { GroupedProjectTaskCard, ProjectI18nTranslate } from "./types";
 import { fmtTime } from "./utils";
+
+const STATUS_DONE = new Set(["done", "completed", "complete"]);
+const STATUS_IN_PROGRESS = new Set(["in_progress", "running", "working"]);
+const STATUS_REVIEW = new Set(["review", "reviewing"]);
+const STATUS_FAILED = new Set(["failed", "error", "cancelled"]);
+const STATUS_PAUSED = new Set(["paused"]);
+
+function classifyStatus(status: string): "done" | "in_progress" | "review" | "failed" | "paused" | "planned" {
+  const s = status.toLowerCase();
+  if (STATUS_DONE.has(s)) return "done";
+  if (STATUS_IN_PROGRESS.has(s)) return "in_progress";
+  if (STATUS_REVIEW.has(s)) return "review";
+  if (STATUS_FAILED.has(s)) return "failed";
+  if (STATUS_PAUSED.has(s)) return "paused";
+  return "planned";
+}
+
+interface ProjectProgressSectionProps {
+  t: ProjectI18nTranslate;
+  groupedTaskCards: GroupedProjectTaskCard[];
+}
+
+function ProjectProgressSection({ t, groupedTaskCards }: ProjectProgressSectionProps) {
+  const stats = useMemo(() => {
+    const allTasks: ProjectTaskHistoryItem[] = [];
+    for (const group of groupedTaskCards) {
+      allTasks.push(group.root);
+      allTasks.push(...group.children);
+    }
+
+    const counts: Record<string, number> = { done: 0, in_progress: 0, review: 0, failed: 0, paused: 0, planned: 0 };
+    const agentMap: Map<string, { name: string; done: number; total: number }> = new Map();
+
+    for (const task of allTasks) {
+      const cls = classifyStatus(task.status);
+      counts[cls] = (counts[cls] ?? 0) + 1;
+
+      if (task.assigned_agent_id && (task.assigned_agent_name || task.assigned_agent_name_ko)) {
+        const agentName = task.assigned_agent_name_ko || task.assigned_agent_name;
+        const existing = agentMap.get(task.assigned_agent_id);
+        if (!existing) {
+          agentMap.set(task.assigned_agent_id, { name: agentName, done: cls === "done" ? 1 : 0, total: 1 });
+        } else {
+          existing.total += 1;
+          if (cls === "done") existing.done += 1;
+        }
+      }
+    }
+
+    const total = allTasks.length;
+    const donePct = total > 0 ? Math.round((counts.done / total) * 100) : 0;
+    const topAgents = [...agentMap.values()].sort((a, b) => b.done - a.done || b.total - a.total).slice(0, 4);
+
+    return { counts, total, donePct, topAgents };
+  }, [groupedTaskCards]);
+
+  if (stats.total === 0) return null;
+
+  const statusItems = [
+    { key: "done", label: t({ ko: "완료", en: "Done", ja: "完了", zh: "完成" }), color: "bg-emerald-500", textColor: "text-emerald-400" },
+    { key: "in_progress", label: t({ ko: "진행중", en: "In Progress", ja: "進行中", zh: "进行中" }), color: "bg-blue-500", textColor: "text-blue-400" },
+    { key: "review", label: t({ ko: "리뷰", en: "Review", ja: "レビュー", zh: "审查" }), color: "bg-amber-400", textColor: "text-amber-400" },
+    { key: "paused", label: t({ ko: "일시정지", en: "Paused", ja: "一時停止", zh: "暂停" }), color: "bg-yellow-500", textColor: "text-yellow-400" },
+    { key: "planned", label: t({ ko: "예정", en: "Planned", ja: "予定", zh: "计划" }), color: "bg-slate-500", textColor: "text-slate-400" },
+    { key: "failed", label: t({ ko: "실패", en: "Failed", ja: "失敗", zh: "失败" }), color: "bg-red-500", textColor: "text-red-400" },
+  ].filter((item) => (stats.counts[item.key] ?? 0) > 0);
+
+  return (
+    <div className="min-w-0 rounded-xl border border-slate-700 bg-slate-800/40 p-4">
+      <h4 className="mb-3 text-sm font-semibold text-white">
+        {t({ ko: "프로젝트 진행률", en: "Project Progress", ja: "プロジェクト進捗", zh: "项目进度" })}
+      </h4>
+
+      {/* Progress bar */}
+      <div className="mb-1 flex items-center justify-between text-xs">
+        <span className="text-slate-400">
+          {stats.counts.done}/{stats.total} {t({ ko: "태스크 완료", en: "tasks done", ja: "タスク完了", zh: "任务完成" })}
+        </span>
+        <span className={`font-semibold ${stats.donePct >= 80 ? "text-emerald-400" : stats.donePct >= 40 ? "text-amber-400" : "text-slate-300"}`}>
+          {stats.donePct}%
+        </span>
+      </div>
+      <div className="mb-4 h-2.5 w-full overflow-hidden rounded-full bg-slate-700/60">
+        <div
+          className={`h-full rounded-full transition-all duration-700 ${stats.donePct >= 80 ? "bg-emerald-500" : stats.donePct >= 40 ? "bg-amber-400" : "bg-blue-500"}`}
+          style={{ width: `${stats.donePct}%` }}
+        />
+      </div>
+
+      {/* Status breakdown */}
+      <div className="mb-4 flex flex-wrap gap-2">
+        {statusItems.map((item) => (
+          <div key={item.key} className="flex items-center gap-1.5 rounded-full bg-slate-900/60 px-2 py-1">
+            <span className={`h-2 w-2 rounded-full ${item.color}`} />
+            <span className={`text-[11px] font-medium ${item.textColor}`}>{stats.counts[item.key]}</span>
+            <span className="text-[11px] text-slate-500">{item.label}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Agent contribution */}
+      {stats.topAgents.length > 0 && (
+        <div>
+          <p className="mb-2 text-[11px] font-medium text-slate-400">
+            {t({ ko: "에이전트 기여도", en: "Agent Contribution", ja: "エージェント貢献度", zh: "代理贡献度" })}
+          </p>
+          <div className="space-y-1.5">
+            {stats.topAgents.map((agent) => {
+              const agentPct = agent.total > 0 ? Math.round((agent.done / agent.total) * 100) : 0;
+              return (
+                <div key={agent.name} className="flex items-center gap-2">
+                  <span className="w-24 truncate text-[11px] text-slate-300">{agent.name}</span>
+                  <div className="flex-1 overflow-hidden rounded-full bg-slate-700/60" style={{ height: 6 }}>
+                    <div
+                      className="h-full rounded-full bg-cyan-500/70"
+                      style={{ width: `${agentPct}%` }}
+                    />
+                  </div>
+                  <span className="w-8 text-right text-[11px] text-slate-400">{agent.done}/{agent.total}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 interface ProjectInsightsPanelProps {
   t: ProjectI18nTranslate;
@@ -79,6 +208,10 @@ export default function ProjectInsightsPanel({
           </div>
         )}
       </div>
+
+      {selectedProject && !loadingDetail && !isCreating && groupedTaskCards.length > 0 && (
+        <ProjectProgressSection t={t} groupedTaskCards={groupedTaskCards} />
+      )}
 
       <div className="min-w-0 rounded-xl border border-slate-700 bg-slate-800/40 p-4">
         <h4 className="text-sm font-semibold text-white">

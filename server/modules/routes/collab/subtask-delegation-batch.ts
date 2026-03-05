@@ -462,11 +462,16 @@ export function createSubtaskDelegationBatch(deps: BatchDeps) {
             return;
           }
           const agentCwd = worktreePath;
-          appendTaskLog(
-            delegatedTaskId,
-            "system",
-            `Git worktree created: ${worktreePath} (branch: agentdesk/${delegatedTaskId.slice(0, 8)})`,
-          );
+          const isDirectMode = worktreePath === projPath;
+          if (isDirectMode) {
+            appendTaskLog(delegatedTaskId, "system", `Running in direct mode (no git isolation): ${worktreePath}`);
+          } else {
+            appendTaskLog(
+              delegatedTaskId,
+              "system",
+              `Git worktree created: ${worktreePath} (branch: agentdesk/${delegatedTaskId.slice(0, 8)})`,
+            );
+          }
           const logFilePath = path.join(logsDir, `${delegatedTaskId}.log`);
           ensureVideoPreprodRemotionBestPracticesSkill({
             db: db as any,

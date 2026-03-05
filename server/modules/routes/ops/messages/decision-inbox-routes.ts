@@ -1,4 +1,5 @@
 import type { RuntimeContext } from "../../../../types/runtime-context.ts";
+import { notifyDecisionInbox } from "../../../../gateway/client.ts";
 import type { AgentRow } from "../../shared/types.ts";
 import type { DecisionInboxRouteItem } from "./decision-inbox/types.ts";
 import {
@@ -171,6 +172,8 @@ export function registerDecisionInboxRoutes(ctx: RuntimeContext): DecisionInboxR
     return { started: true, reason: "started" };
   }
 
+  let lastWakeItemCount = 0;
+
   function getDecisionInboxItems(): DecisionInboxRouteItem[] {
     const items = [
       ...buildProjectReviewDecisionItems(),
@@ -178,6 +181,15 @@ export function registerDecisionInboxRoutes(ctx: RuntimeContext): DecisionInboxR
       ...buildTimeoutResumeDecisionItems(),
     ];
     items.sort((a, b) => b.created_at - a.created_at);
+
+    const readyCount = items.filter((item) => item.options.length > 0).length;
+    if (readyCount > 0 && readyCount !== lastWakeItemCount) {
+      lastWakeItemCount = readyCount;
+      notifyDecisionInbox(readyCount, getPreferredLanguage());
+    } else if (readyCount === 0) {
+      lastWakeItemCount = 0;
+    }
+
     return items;
   }
 

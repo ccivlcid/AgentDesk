@@ -31,6 +31,10 @@ export interface AnimItem {
   deskG?: Graphics;
   bedG?: Graphics;
   blanketG?: Graphics;
+  phase: number;
+  animated?: AnimatedSprite;
+  frameCount: number;
+  bounceUntilTick: number;
 }
 
 export interface BreakAnimItem {

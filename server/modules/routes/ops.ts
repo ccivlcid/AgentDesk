@@ -21,6 +21,8 @@ import { registerRuleLearningRoutes } from "./ops/rule-learning/routes.ts";
 import { registerMemoryLearningRoutes } from "./ops/memory-learning/routes.ts";
 import { registerHookLearningRoutes } from "./ops/hooks-learning/routes.ts";
 import { registerChatUploadRoutes } from "./ops/chat-upload.ts";
+import { registerNotificationRoutes } from "./ops/notifications.ts";
+import { registerBackupRoutes } from "./ops/backup.ts";
 
 export function registerRoutesPartC(ctx: RuntimeContext): RouteOpsExports {
   const __ctx: RuntimeContext = ctx;
@@ -252,6 +254,8 @@ export function registerRoutesPartC(ctx: RuntimeContext): RouteOpsExports {
   registerHookRoutes({ app, db, nowMs });
 
   registerChatUploadRoutes(__ctx);
+  registerNotificationRoutes(__ctx);
+  registerBackupRoutes(__ctx);
 
   return {
     prettyStreamJson,

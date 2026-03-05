@@ -296,6 +296,7 @@ export type WSEventType =
   | "ceo_office_call"
   | "chat_stream"
   | "task_report"
+  | "notification"
   | "connected";
 
 export interface WSEvent {

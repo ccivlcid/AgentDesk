@@ -137,10 +137,16 @@ pnpm exec electron-builder --win
 - **코드 서명 오류(winCodeSign 7z)**  
   `package.json`의 `win.signAndEditExecutable: false`로 서명 비활성화됨. 서명이 필요하면 Windows 개발자 모드(심볼릭 링크 허용) 또는 서명 인증서 설정 후 해당 옵션을 켜면 됨.
 
-- **Electron 로컬 실행**  
+- **Electron 로컬 실행**
   `pnpm exec electron .` 전에 Electron 바이너리 설치가 필요함. 스크립트 실행이 막혀 있다면:
   ```bash
   pnpm approve-builds   # electron 선택
   pnpm install
   pnpm exec electron .
   ```
+
+- **sharp "Cannot find module 'detect-libc'"**
+  `asarUnpack`에 `detect-libc`, `@img`, `semver` 등 sharp 의존 모듈이 포함되어야 함. `electron/main.cjs`에서 `NODE_PATH`를 unpacked 경로로 설정 후 `Module._initPaths()` 호출.
+
+- **Git 미설치 사용자 (worktree 생성 실패)**
+  Git이 설치되지 않은 PC에서는 **direct mode**로 자동 전환됨. Agent가 프로젝트 디렉토리에서 직접 작업하며, worktree 격리·병합·롤백 기능은 비활성화됨. Git을 설치하면 worktree 기반 격리가 자동 활성화됨.

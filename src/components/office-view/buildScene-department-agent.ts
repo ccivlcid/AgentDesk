@@ -68,6 +68,7 @@ export function renderDeskAgentAndSubClones({
     if (textures[key]) frames.push(textures[key]);
   }
 
+  let animSpriteRef: AnimatedSprite | undefined;
   if (frames.length > 0) {
     const animSprite = new AnimatedSprite(frames);
     animSprite.anchor.set(0.5, 1);
@@ -79,6 +80,7 @@ export function renderDeskAgentAndSubClones({
       animSprite.tint = 0x888899;
     }
     charContainer.addChild(animSprite);
+    animSpriteRef = animSprite;
   } else {
     const fallback = new Text({ text: agent.avatar_emoji || "🤖", style: new TextStyle({ fontSize: 24 }) });
     fallback.anchor.set(0.5, 1);
@@ -129,6 +131,10 @@ export function renderDeskAgentAndSubClones({
     deskG,
     bedG,
     blanketG,
+    phase: (hashStr(agent.id) % 360) / 57.2958,
+    animated: animSpriteRef,
+    frameCount: frames.length,
+    bounceUntilTick: 0,
   });
 
   const activeTask = tasks.find((task) => task.assigned_agent_id === agent.id && task.status === "in_progress");

@@ -1,5 +1,5 @@
-import type { ReactNode } from "react";
-import type { CliUsageEntry, CliUsageWindow } from "../../api";
+import { type ReactNode, useCallback, useEffect, useState } from "react";
+import { type CliUsageEntry, type CliUsageWindow, type CostAlertConfig, getCostAlerts, saveCostAlerts } from "../../api";
 import type { UiLanguage } from "../../i18n";
 import type { CliStatusMap } from "../../types";
 import { formatReset } from "./drawing-furniture-b";
@@ -99,6 +99,32 @@ export default function CliUsagePanel({
     const status = cliStatus?.[cli.key as keyof CliStatusMap];
     return status?.installed && status?.authenticated;
   });
+
+  const [alertConfig, setAlertConfig] = useState<CostAlertConfig>({});
+  const [alertExpanded, setAlertExpanded] = useState(false);
+  const [alertSaving, setAlertSaving] = useState(false);
+
+  useEffect(() => {
+    getCostAlerts().then(setAlertConfig).catch(() => {});
+  }, []);
+
+  const handleAlertChange = useCallback(
+    (provider: string, field: "alertThreshold" | "enabled", value: number | boolean) => {
+      setAlertConfig((prev) => ({
+        ...prev,
+        [provider]: { ...prev[provider], alertThreshold: prev[provider]?.alertThreshold ?? 80, enabled: prev[provider]?.enabled ?? false, [field]: value },
+      }));
+    },
+    [],
+  );
+
+  const handleSaveAlerts = useCallback(async () => {
+    setAlertSaving(true);
+    try {
+      await saveCostAlerts(alertConfig);
+    } catch { /* ignore */ }
+    setAlertSaving(false);
+  }, [alertConfig]);
 
   if (connectedClis.length === 0) return null;
 
@@ -230,6 +256,71 @@ export default function CliUsagePanel({
               </div>
             );
           })}
+        </div>
+
+        {/* Cost Alert Settings */}
+        <div className="mt-3 border-t border-slate-700/40 pt-3">
+          <button
+            onClick={() => setAlertExpanded((v) => !v)}
+            className="flex w-full items-center justify-between text-[11px] text-slate-400 hover:text-slate-300 transition-colors"
+          >
+            <span className="flex items-center gap-1.5">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+              </svg>
+              {t(LOCALE_TEXT.cliUsageTitle).includes("사용량") ? "비용 알림 설정" : "Cost Alerts"}
+            </span>
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              className={`transition-transform ${alertExpanded ? "rotate-180" : ""}`}
+            >
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </button>
+
+          {alertExpanded && (
+            <div className="mt-2 space-y-2">
+              {connectedClis.map((cli) => {
+                const conf = alertConfig[cli.key] ?? { alertThreshold: 80, enabled: false };
+                return (
+                  <div key={cli.key} className="flex items-center gap-2 text-[11px]">
+                    <label className="flex items-center gap-1.5 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={conf.enabled}
+                        onChange={(e) => handleAlertChange(cli.key, "enabled", e.target.checked)}
+                        className="h-3 w-3 rounded"
+                      />
+                      <span className={`${cli.color} font-medium`}>{cli.name}</span>
+                    </label>
+                    <span className="text-slate-500">@</span>
+                    <input
+                      type="number"
+                      min={10}
+                      max={100}
+                      value={conf.alertThreshold}
+                      onChange={(e) => handleAlertChange(cli.key, "alertThreshold", Number(e.target.value))}
+                      className="w-12 rounded bg-slate-800 px-1.5 py-0.5 text-center text-[11px] text-slate-300 border border-slate-700/60"
+                    />
+                    <span className="text-slate-500">%</span>
+                  </div>
+                );
+              })}
+              <button
+                onClick={handleSaveAlerts}
+                disabled={alertSaving}
+                className="mt-1 rounded-md bg-cyan-600/30 px-3 py-1 text-[11px] text-cyan-300 hover:bg-cyan-600/50 transition-colors disabled:opacity-50"
+              >
+                {alertSaving ? "..." : t(LOCALE_TEXT.cliUsageTitle).includes("사용량") ? "저장" : "Save"}
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

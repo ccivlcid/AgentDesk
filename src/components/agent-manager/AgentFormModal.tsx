@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { Department } from "../../types";
 import { localeName, useI18n } from "../../i18n";
 import * as api from "../../api";
@@ -46,6 +46,25 @@ export default function AgentFormModal({
   const [spriteNum, setSpriteNum] = useState(form.sprite_number ?? 0);
   const [registering, setRegistering] = useState(false);
   const [registered, setRegistered] = useState(false);
+  const [generatingPersona, setGeneratingPersona] = useState(false);
+
+  const handleGeneratePersona = useCallback(async () => {
+    if (!form.name.trim() || generatingPersona) return;
+    setGeneratingPersona(true);
+    try {
+      const personality = await api.generatePersona({
+        name: form.name.trim(),
+        role: form.role,
+        department_id: form.department_id || null,
+        lang: isKo ? "ko" : "en",
+      });
+      if (personality) setForm({ ...form, personality });
+    } catch (err) {
+      console.error("Persona generation failed:", err);
+    } finally {
+      setGeneratingPersona(false);
+    }
+  }, [form, isKo, generatingPersona, setForm]);
 
   // ESC 키로 닫기
   useEffect(() => {
@@ -307,17 +326,45 @@ export default function AgentFormModal({
             </div>
             {/* 성격/프롬프트 */}
             <div>
-              <label className="block text-xs mb-1.5 font-medium" style={{ color: "var(--th-text-secondary)" }}>
-                {tr("성격 / 역할 프롬프트", "Personality / Prompt")}
-              </label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-medium" style={{ color: "var(--th-text-secondary)" }}>
+                  {tr("캐릭터 페르소나", "Character Persona")}
+                </label>
+                {form.name && (
+                  <button
+                    type="button"
+                    disabled={generatingPersona || !form.name.trim()}
+                    className="text-[10px] px-2 py-0.5 rounded-md transition-colors hover:opacity-80 disabled:opacity-50"
+                    style={{
+                      background: "var(--th-accent, #3b82f6)",
+                      color: "#fff",
+                    }}
+                    onClick={handleGeneratePersona}
+                  >
+                    {generatingPersona
+                      ? tr("생성 중...", "Generating...")
+                      : form.personality
+                        ? tr("AI 재생성", "AI Regenerate")
+                        : tr("AI 자동생성", "AI Generate")}
+                  </button>
+                )}
+              </div>
               <textarea
                 value={form.personality}
                 onChange={(e) => setForm({ ...form, personality: e.target.value })}
-                rows={3}
-                placeholder={tr("전문 분야나 성격 설명...", "Expertise or personality...")}
+                rows={5}
+                placeholder={isKo
+                  ? "예: 나는 제갈량, 천하삼분지계의 전략가다. 항상 세 수 앞을 내다보고, '상중하 세 가지 전략'을 제시하는 것이 습관이다. 고사성어와 역사적 비유로 논점을 풀어내고, 은유적이지만 결론은 명쾌하다..."
+                  : "e.g. I am Ada Lovelace, the world's first programmer. I approach problems by grasping the underlying structure first. I speak with Victorian formality, combining technical rigor with poetic expression..."}
                 className={`${inputCls} resize-none`}
                 style={inputStyle}
               />
+              <p className="text-[10px] mt-1" style={{ color: "var(--th-text-muted)" }}>
+                {tr(
+                  "말투, 사고방식, 입버릇, 습관 등을 구체적으로 작성하면 AI가 그 인물처럼 행동합니다.",
+                  "Define speech patterns, thinking style, catchphrases, and habits for the AI to embody this character.",
+                )}
+              </p>
             </div>
           </div>
         </div>

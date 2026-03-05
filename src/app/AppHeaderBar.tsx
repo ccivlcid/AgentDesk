@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { WorkflowPackKey } from "../types";
 import type { View } from "./types";
 
@@ -27,6 +28,7 @@ interface AppHeaderBarProps {
     options: OfficePackOption[];
     onChange: (packKey: WorkflowPackKey) => void;
   } | null;
+  notificationSlot?: ReactNode;
   theme: "light" | "dark";
   mobileHeaderMenuOpen: boolean;
   onOpenMobileNav: () => void;
@@ -54,6 +56,7 @@ export default function AppHeaderBar({
   announcementLabel,
   roomManagerLabel,
   officePackControl,
+  notificationSlot,
   theme,
   mobileHeaderMenuOpen,
   onOpenMobileNav,
@@ -166,6 +169,7 @@ export default function AppHeaderBar({
         <button onClick={onOpenRoomManager} className="header-action-btn header-action-btn-secondary mobile-hidden">
           {roomManagerLabel}
         </button>
+        {notificationSlot}
         <button
           onClick={onToggleTheme}
           className="theme-toggle-btn"

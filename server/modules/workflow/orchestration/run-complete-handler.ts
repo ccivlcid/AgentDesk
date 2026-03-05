@@ -51,6 +51,7 @@ export function createRunCompleteHandler(deps: CreateRunCompleteHandlerDeps) {
     prettyStreamJson,
     getWorktreeDiffSummary,
     hasVisibleDiffSummary,
+    insertNotification,
   } = deps;
 
   function handleTaskRunComplete(taskId: string, exitCode: number): void {
@@ -735,6 +736,13 @@ export function createRunCompleteHandler(deps: CreateRunCompleteHandlerDeps) {
           ),
           taskId,
         );
+        insertNotification({
+          type: "task_error",
+          title: task.title,
+          body: `Exit code: ${finalExitCode}`,
+          task_id: taskId,
+          agent_id: task.assigned_agent_id,
+        });
       }
 
       // Even on failure, trigger next cross-dept cooperation so the queue doesn't stall

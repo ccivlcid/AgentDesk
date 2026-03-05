@@ -83,6 +83,10 @@ export default function OfficeView({
       deskG?: Graphics;
       bedG?: Graphics;
       blanketG?: Graphics;
+      phase: number;
+      animated?: AnimatedSprite;
+      frameCount: number;
+      bounceUntilTick: number;
     }>
   >([]);
   const roomRectsRef = useRef<RoomRect[]>([]);

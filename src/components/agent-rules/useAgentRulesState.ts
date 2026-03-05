@@ -64,6 +64,7 @@ export function useAgentRulesState({ agents, departments, t }: UseAgentRulesStat
   const [unlearnEffects, setUnlearnEffects] = useState<Partial<Record<RuleLearnProvider, UnlearnEffect>>>({});
   const [historyRefreshToken, setHistoryRefreshToken] = useState(0);
   const [learnedRows, setLearnedRows] = useState<LearnedRuleEntry[]>([]);
+  const [squadAgentIds, setSquadAgentIds] = useState<string[]>([]);
   const unlearnEffectTimersRef = useRef<Partial<Record<RuleLearnProvider, number>>>({});
 
   // ── Load rules ──────────────────────────────────────────────────
@@ -310,6 +311,7 @@ export function useAgentRulesState({ agents, departments, t }: UseAgentRulesStat
       setLearnSubmitting(false);
       setUnlearningProviders([]);
       setUnlearnEffects({});
+      setSquadAgentIds([]);
       // Pre-select only providers NOT yet learned
       const alreadyLearned = learnedProvidersByRule.get(rule.id) ?? [];
       const preSelected = defaultSelectedProviders.filter(
@@ -331,6 +333,7 @@ export function useAgentRulesState({ agents, departments, t }: UseAgentRulesStat
     setSelectedProviders([]);
     setUnlearningProviders([]);
     setUnlearnEffects({});
+    setSquadAgentIds([]);
   }, [learnJob?.status]);
 
   const toggleProvider = useCallback(
@@ -460,6 +463,22 @@ export function useAgentRulesState({ agents, departments, t }: UseAgentRulesStat
     };
   }, []);
 
+  const addAgentToSquad = useCallback(
+    (agentId: string) => {
+      setSquadAgentIds((prev) => (prev.includes(agentId) ? prev : [...prev, agentId]));
+      const agent = agents.find((a) => a.id === agentId);
+      if (agent?.cli_provider) {
+        const provider = agent.cli_provider as RuleLearnProvider;
+        setSelectedProviders((prev) => (prev.includes(provider) ? prev : [...prev, provider]));
+      }
+    },
+    [agents],
+  );
+
+  const removeAgentFromSquad = useCallback((agentId: string) => {
+    setSquadAgentIds((prev) => prev.filter((id) => id !== agentId));
+  }, []);
+
   return {
     // Data
     rules,
@@ -524,5 +543,8 @@ export function useAgentRulesState({ agents, departments, t }: UseAgentRulesStat
     handleUnlearnProvider,
     bumpHistoryRefreshToken,
     optimisticRuleHistoryRows,
+    squadAgentIds,
+    addAgentToSquad,
+    removeAgentFromSquad,
   };
 }

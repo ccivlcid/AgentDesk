@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo, type ReactNode } from "react";
 import type { Agent, Task, MeetingMinute } from "../types";
 import * as api from "../api";
 import type { TerminalProgressHint, TerminalProgressHintsPayload } from "../api";
@@ -12,6 +12,23 @@ import {
   type TaskLogEntry,
   type TerminalPanelProps,
 } from "./terminal-panel/model";
+
+function highlightSearchMatches(text: string, search: string): ReactNode {
+  if (!search) return text;
+  const escaped = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const regex = new RegExp(`(${escaped})`, "gi");
+  const parts = text.split(regex);
+  if (parts.length <= 1) return text;
+  return parts.map((part, i) =>
+    regex.test(part) ? (
+      <mark key={i} className="bg-yellow-400/40 text-yellow-200 rounded-sm px-[1px]">
+        {part}
+      </mark>
+    ) : (
+      part
+    ),
+  );
+}
 
 export default function TerminalPanel({
   taskId,
@@ -28,6 +45,10 @@ export default function TerminalPanel({
   const [logPath, setLogPath] = useState("");
   const [follow, setFollow] = useState(true);
   const [activeTab, setActiveTab] = useState<"terminal" | "minutes">(initialTab);
+  const [logSearch, setLogSearch] = useState("");
+  const [logKindFilter, setLogKindFilter] = useState<"all" | "system" | "error">("all");
+  const [showSearchBar, setShowSearchBar] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [interventionOpen, setInterventionOpen] = useState(false);
   const [interventionPrompt, setInterventionPrompt] = useState("");
   const [interventionBusy, setInterventionBusy] = useState(false);
@@ -403,6 +424,46 @@ export default function TerminalPanel({
     );
   };
 
+  const filteredTaskLogs = useMemo(() => {
+    if (logKindFilter === "all") return taskLogs;
+    return taskLogs.filter((log) => log.kind === logKindFilter);
+  }, [taskLogs, logKindFilter]);
+
+  const searchMatchCount = useMemo(() => {
+    if (!logSearch) return 0;
+    const needle = logSearch.toLowerCase();
+    let count = 0;
+    if (text) {
+      const lines = text.split("\n");
+      for (const line of lines) {
+        if (line.toLowerCase().includes(needle)) count++;
+      }
+    }
+    return count;
+  }, [text, logSearch]);
+
+  useEffect(() => {
+    if (showSearchBar) {
+      setTimeout(() => searchInputRef.current?.focus(), 40);
+    }
+  }, [showSearchBar]);
+
+  const handleCopyLog = useCallback(() => {
+    const content = text || "";
+    navigator.clipboard.writeText(content).catch(() => {});
+  }, [text]);
+
+  const handleDownloadLog = useCallback(() => {
+    const content = text || "";
+    const blob = new Blob([content], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `terminal-${taskId}.log`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [text, taskId]);
+
   const shouldShowProgressHints = activeTab === "terminal" && Boolean(progressHints && progressHints.hints.length > 0);
 
   const latestHint =
@@ -495,6 +556,61 @@ export default function TerminalPanel({
                 : tr("난입", "Interrupt", "割込", "中断")}
             </button>
           )}
+          {/* Search toggle */}
+          <button
+            onClick={() => setShowSearchBar((prev) => !prev)}
+            className={`px-2 py-1 text-[10px] rounded border transition ${
+              showSearchBar ? "bg-cyan-500/20 text-cyan-300 border-cyan-500/40" : ""
+            }`}
+            style={
+              !showSearchBar
+                ? {
+                    background: "var(--th-bg-surface)",
+                    color: "var(--th-text-secondary)",
+                    borderColor: "var(--th-border)",
+                  }
+                : undefined
+            }
+            title={tr("검색", "Search", "検索", "搜索")}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="11" cy="11" r="8" />
+              <path d="M21 21l-4.35-4.35" />
+            </svg>
+          </button>
+          {/* Copy log */}
+          <button
+            onClick={handleCopyLog}
+            className="px-2 py-1 text-[10px] rounded border transition"
+            style={{
+              background: "var(--th-bg-surface)",
+              color: "var(--th-text-secondary)",
+              borderColor: "var(--th-border)",
+            }}
+            title={tr("복사", "Copy log", "コピー", "复制")}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect x="9" y="9" width="13" height="13" rx="2" />
+              <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+            </svg>
+          </button>
+          {/* Download log */}
+          <button
+            onClick={handleDownloadLog}
+            className="px-2 py-1 text-[10px] rounded border transition"
+            style={{
+              background: "var(--th-bg-surface)",
+              color: "var(--th-text-secondary)",
+              borderColor: "var(--th-border)",
+            }}
+            title={tr("다운로드", "Download log", "ダウンロード", "下载")}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+          </button>
           {/* Follow toggle */}
           <button
             onClick={() => setFollow((f) => !f)}
@@ -648,10 +764,57 @@ export default function TerminalPanel({
         </div>
       )}
 
+      {/* Search bar */}
+      {activeTab === "terminal" && showSearchBar && (
+        <div
+          className="flex items-center gap-2 border-b px-4 py-2"
+          style={{ borderColor: "var(--th-border)" }}
+        >
+          <input
+            ref={searchInputRef}
+            type="text"
+            value={logSearch}
+            onChange={(event) => setLogSearch(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Escape") {
+                setShowSearchBar(false);
+                setLogSearch("");
+              }
+            }}
+            placeholder={tr("로그 검색...", "Search logs...", "ログ検索...", "搜索日志...")}
+            className="flex-1 rounded-md border px-2 py-1 text-xs font-mono outline-none focus:ring-1 focus:ring-cyan-500/50"
+            style={{
+              borderColor: "var(--th-border)",
+              background: "var(--th-bg-surface)",
+              color: "var(--th-text-primary)",
+            }}
+          />
+          {logSearch && (
+            <span className="text-[10px] whitespace-nowrap" style={{ color: "var(--th-text-muted)" }}>
+              {searchMatchCount} {tr("줄 일치", "lines", "行一致", "行匹配")}
+            </span>
+          )}
+          <select
+            value={logKindFilter}
+            onChange={(event) => setLogKindFilter(event.target.value as "all" | "system" | "error")}
+            className="rounded-md border px-1.5 py-1 text-[10px] outline-none"
+            style={{
+              borderColor: "var(--th-border)",
+              background: "var(--th-bg-surface)",
+              color: "var(--th-text-secondary)",
+            }}
+          >
+            <option value="all">{tr("전체", "All", "全て", "全部")}</option>
+            <option value="system">{tr("시스템", "System", "システム", "系统")}</option>
+            <option value="error">{tr("에러", "Error", "エラー", "错误")}</option>
+          </select>
+        </div>
+      )}
+
       {/* Task log markers (system events) */}
-      {activeTab === "terminal" && taskLogs.length > 0 && (
+      {activeTab === "terminal" && filteredTaskLogs.length > 0 && (
         <div className="terminal-panel-strip max-h-24 space-y-0.5 overflow-y-auto border-b px-4 py-2">
-          {taskLogs.map((log) => {
+          {filteredTaskLogs.map((log) => {
             const kindColor =
               log.kind === "error" ? "text-red-400" : log.kind === "system" ? "text-cyan-400" : "text-slate-500";
             const time = taskLogTimeFormatter.format(new Date(log.created_at));
@@ -694,7 +857,7 @@ export default function TerminalPanel({
               ref={preRef}
               className="text-[12px] leading-relaxed font-mono whitespace-pre-wrap break-words terminal-output-text"
             >
-              {text}
+              {logSearch ? highlightSearchMatches(text, logSearch) : text}
             </pre>
           )}
         </div>

@@ -13,6 +13,7 @@ type CreateTaskHandler = (input: {
   project_path?: string;
   assigned_agent_id?: string;
   workflow_pack_key?: WorkflowPackKey;
+  workflow_meta_json?: string;
 }) => void | Promise<void>;
 
 type ResolvePathHelperErrorMessage = (error: unknown, fallback: Record<Locale, string>) => string;

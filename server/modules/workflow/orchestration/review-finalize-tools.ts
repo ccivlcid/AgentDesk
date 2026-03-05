@@ -48,6 +48,7 @@ export function createReviewFinalizeTools(deps: CreateReviewFinalizeToolsDeps) {
     subtaskDelegationCallbacks,
     startReviewConsensusMeeting,
     processSubtaskDelegations,
+    insertNotification,
   } = deps;
 
   function reconcileDelegatedSubtasksAfterRun(taskId: string, exitCode: number): void {
@@ -672,6 +673,11 @@ export function createReviewFinalizeTools(deps: CreateReviewFinalizeToolsDeps) {
       const updatedTask = db.prepare("SELECT * FROM tasks WHERE id = ?").get(taskId);
       broadcast("task_update", updatedTask);
       notifyTaskStatus(taskId, taskTitle, "done", lang);
+      insertNotification({
+        type: "task_complete",
+        title: taskTitle,
+        task_id: taskId,
+      });
 
       // Send deliverable files to messenger
       try {

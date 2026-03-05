@@ -111,13 +111,20 @@ export function initializeCollabCoordination(ctx: RuntimeContext): any {
       }
     };
 
-    // 1. Explicit absolute path in message
+    // 1a. Explicit absolute path in message (Unix)
     const absMatch = message.match(/(?:^|\s)(\/[\w./-]+)/);
     if (absMatch) {
       const p = absMatch[1];
-      // Check if it's a real directory
       if (isDirectorySafe(p)) return p;
-      // Check parent directory
+      const parent = path.dirname(p);
+      if (isDirectorySafe(parent)) return parent;
+    }
+
+    // 1b. Explicit absolute path in message (Windows: C:\path\to\project)
+    const winAbsMatch = message.match(/(?:^|\s)([A-Za-z]:[\\\/][\w.\\/ -]+)/);
+    if (winAbsMatch) {
+      const p = winAbsMatch[1].replace(/[\\/]+$/, ""); // trim trailing slashes
+      if (isDirectorySafe(p)) return p;
       const parent = path.dirname(p);
       if (isDirectorySafe(parent)) return parent;
     }
@@ -152,7 +159,8 @@ export function initializeCollabCoordination(ctx: RuntimeContext): any {
    * 1) task.project_id -> projects.project_path
    * 2) task.project_path
    * 3) detect from description/title
-   * 4) process.cwd()
+   * 4) latest known project path from DB
+   * 5) process.cwd() (unless it's a packaged app dir)
    */
   function resolveProjectPath(task: {
     project_id?: string | null;
@@ -186,7 +194,13 @@ export function initializeCollabCoordination(ctx: RuntimeContext): any {
     }
 
     const detected = detectProjectPath(task.description || "") || detectProjectPath(task.title || "");
-    return detected || process.cwd();
+    if (detected) return detected;
+
+    // Try latest known project path from previous tasks
+    const latestKnown = getLatestKnownProjectPath();
+    if (latestKnown) return latestKnown;
+
+    return process.cwd();
   }
 
   function getLatestKnownProjectPath(): string | null {

@@ -1,4 +1,5 @@
 import { execFileSync } from "node:child_process";
+import { randomUUID } from "node:crypto";
 import type { RuntimeContext } from "../../../types/runtime-context.ts";
 import type { CliUsageEntry } from "../shared/types.ts";
 
@@ -202,11 +203,89 @@ export function registerWorktreeAndUsageRoutes(ctx: RuntimeContext): {
     try {
       const usage = await refreshCliUsageData();
       broadcast("cli_usage_update", usage);
+      checkCostAlerts(usage);
       res.json({ ok: true, usage });
     } catch (e) {
       res.status(500).json({ ok: false, error: String(e) });
     }
   });
+
+  // ---------------------------------------------------------------------------
+  // Cost Alert Thresholds
+  // ---------------------------------------------------------------------------
+
+  interface CostAlertConfig {
+    [provider: string]: { alertThreshold: number; enabled: boolean };
+  }
+
+  function readCostAlertConfig(): CostAlertConfig {
+    const row = db.prepare("SELECT value FROM settings WHERE key = 'cost_alert_config'").get() as
+      | { value: string }
+      | undefined;
+    if (!row) return {};
+    try {
+      return JSON.parse(row.value);
+    } catch {
+      return {};
+    }
+  }
+
+  function writeCostAlertConfig(config: CostAlertConfig): void {
+    const json = JSON.stringify(config);
+    db.prepare(
+      "INSERT INTO settings (key, value) VALUES ('cost_alert_config', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+    ).run(json);
+  }
+
+  app.get("/api/cost-alerts", (_req, res) => {
+    res.json({ ok: true, config: readCostAlertConfig() });
+  });
+
+  app.put("/api/cost-alerts", (req, res) => {
+    const body = req.body as CostAlertConfig;
+    writeCostAlertConfig(body);
+    res.json({ ok: true, config: body });
+  });
+
+  // Track which alerts we've already sent (per provider per window label) to avoid spam
+  const sentAlerts = new Set<string>();
+
+  function checkCostAlerts(usage: Record<string, CliUsageEntry>): void {
+    const config = readCostAlertConfig();
+    const now = nowMs();
+
+    for (const [provider, entry] of Object.entries(usage)) {
+      if (entry.error || !entry.windows?.length) continue;
+      const alertConfig = config[provider];
+      if (!alertConfig?.enabled) continue;
+      const threshold = alertConfig.alertThreshold;
+      if (!threshold || threshold <= 0) continue;
+
+      for (const win of entry.windows) {
+        const utilization = (win as any).utilization as number | undefined;
+        if (utilization == null) continue;
+        const pct = Math.round(utilization * 100);
+        if (pct < threshold) continue;
+
+        const alertKey = `${provider}:${(win as any).label ?? "default"}`;
+        if (sentAlerts.has(alertKey)) continue;
+        sentAlerts.add(alertKey);
+        // Reset alert key after 1 hour so it can fire again
+        setTimeout(() => sentAlerts.delete(alertKey), 60 * 60 * 1000);
+
+        // Create notification
+        const id = randomUUID();
+        const title = `${provider.charAt(0).toUpperCase() + provider.slice(1)} usage alert: ${pct}%`;
+        const body = `${(win as any).label ?? provider} utilization is at ${pct}%, exceeding the ${threshold}% threshold.`;
+
+        db.prepare(
+          "INSERT INTO notifications (id, type, title, body, read, created_at) VALUES (?, ?, ?, ?, 0, ?)",
+        ).run(id, "cost_alert", title, body, now);
+
+        broadcast("notification", { id, type: "cost_alert", title, body, read: 0, created_at: now });
+      }
+    }
+  }
 
   return { refreshCliUsageData };
 }

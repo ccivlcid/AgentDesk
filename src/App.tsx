@@ -399,6 +399,7 @@ export default function App() {
   return (
     <AppMainLayout
       connected={connected}
+      on={on}
       view={view}
       setView={setView}
       departments={departments}

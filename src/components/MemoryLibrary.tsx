@@ -135,10 +135,13 @@ export default function MemoryLibrary({ agents, departments }: MemoryLibraryProp
         unlearnError={vm.unlearnError}
         learnSubmitting={vm.learnSubmitting}
         defaultSelectedProviders={vm.defaultSelectedProviders}
+        squadAgentIds={vm.squadAgentIds}
         onClose={vm.closeLearningModal}
         onToggleProvider={vm.toggleProvider}
         onUnlearnProvider={vm.handleUnlearnProvider}
         onStartLearning={vm.handleStartLearning}
+        onAddAgent={vm.addAgentToSquad}
+        onRemoveAgent={vm.removeAgentFromSquad}
       />
 
       <div className="text-center text-xs text-slate-600 py-4">

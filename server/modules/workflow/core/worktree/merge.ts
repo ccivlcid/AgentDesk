@@ -34,6 +34,15 @@ export function createWorktreeMergeTools(deps: CreateWorktreeMergeToolsDeps) {
   ): { success: boolean; message: string; conflicts?: string[] } {
     const info = taskWorktrees.get(taskId);
     if (!info) return { success: false, message: "No worktree found for this task" };
+
+    // Direct mode: changes are already in the project directory, no merge needed
+    if (info.directMode) {
+      return {
+        success: true,
+        message: "Direct mode — changes already in project directory (no merge needed).",
+      };
+    }
+
     const taskRow = db.prepare("SELECT title, description FROM tasks WHERE id = ?").get(taskId) as
       | {
           title: string;
@@ -208,6 +217,15 @@ export function createWorktreeMergeTools(deps: CreateWorktreeMergeToolsDeps) {
   ): { success: boolean; message: string; conflicts?: string[]; prUrl?: string } {
     const info = taskWorktrees.get(taskId);
     if (!info) return { success: false, message: "No worktree found for this task" };
+
+    // Direct mode: no branch to merge or push
+    if (info.directMode) {
+      return {
+        success: false,
+        message: "Direct mode (no git) — cannot create PR. Install git and retry.",
+      };
+    }
+
     const taskRow = db.prepare("SELECT title FROM tasks WHERE id = ?").get(taskId) as { title: string } | undefined;
     const taskTitle = taskRow?.title ?? taskId.slice(0, 8);
 
@@ -384,6 +402,9 @@ export function createWorktreeMergeTools(deps: CreateWorktreeMergeToolsDeps) {
     const info = taskWorktrees.get(taskId);
     if (!info) return "";
 
+    // Direct mode: no git diff available
+    if (info.directMode) return DIFF_SUMMARY_NONE;
+
     try {
       const currentBranch = execFileSync("git", ["rev-parse", "--abbrev-ref", "HEAD"], {
         cwd: projectPath,
@@ -414,6 +435,17 @@ export function createWorktreeMergeTools(deps: CreateWorktreeMergeToolsDeps) {
   function rollbackTaskWorktree(taskId: string, reason: string): boolean {
     const info = taskWorktrees.get(taskId);
     if (!info) return false;
+
+    // Direct mode: cannot rollback changes already in project dir
+    if (info.directMode) {
+      appendTaskLog(
+        taskId,
+        "system",
+        `Rollback(${reason}) skipped — direct mode, changes are already in the project directory.`,
+      );
+      cleanupWorktree(info.projectPath, taskId);
+      return true;
+    }
 
     const diffSummary = getWorktreeDiffSummary(info.projectPath, taskId);
     if (hasVisibleDiffSummary(diffSummary)) {

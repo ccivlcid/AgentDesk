@@ -510,5 +510,42 @@ CREATE INDEX IF NOT EXISTS idx_hook_learning_history_provider_status_updated
   ON hook_learning_history(provider, status, updated_at DESC);
 CREATE INDEX IF NOT EXISTS idx_hook_learning_history_hook_lookup
   ON hook_learning_history(provider, hook_id, updated_at DESC);
+
+CREATE TABLE IF NOT EXISTS notifications (
+  id TEXT PRIMARY KEY,
+  type TEXT NOT NULL CHECK(type IN ('task_complete','task_error','decision_created','agent_error','system')),
+  title TEXT NOT NULL,
+  body TEXT,
+  task_id TEXT REFERENCES tasks(id) ON DELETE CASCADE,
+  agent_id TEXT REFERENCES agents(id) ON DELETE SET NULL,
+  read INTEGER NOT NULL DEFAULT 0,
+  created_at INTEGER DEFAULT (unixepoch()*1000)
+);
+
+CREATE INDEX IF NOT EXISTS idx_notifications_unread ON notifications(read, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_notifications_created ON notifications(created_at DESC);
+
+CREATE TABLE IF NOT EXISTS task_templates (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  title TEXT NOT NULL DEFAULT '',
+  description TEXT NOT NULL DEFAULT '',
+  department_id TEXT,
+  task_type TEXT NOT NULL DEFAULT 'general',
+  priority INTEGER NOT NULL DEFAULT 3,
+  workflow_pack_key TEXT,
+  workflow_meta_json TEXT,
+  created_at INTEGER DEFAULT (unixepoch()*1000),
+  updated_at INTEGER DEFAULT (unixepoch()*1000)
+);
+
+CREATE TABLE IF NOT EXISTS task_dependencies (
+  task_id TEXT NOT NULL,
+  depends_on_task_id TEXT NOT NULL,
+  created_at INTEGER DEFAULT (unixepoch()*1000),
+  PRIMARY KEY (task_id, depends_on_task_id)
+);
+CREATE INDEX IF NOT EXISTS idx_task_deps_task ON task_dependencies(task_id);
+CREATE INDEX IF NOT EXISTS idx_task_deps_dep ON task_dependencies(depends_on_task_id);
 `);
 }

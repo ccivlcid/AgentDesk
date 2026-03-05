@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { Agent, Department, SubTask, Task, TaskStatus } from "../../types";
 import { useI18n } from "../../i18n";
 import AgentAvatar from "../AgentAvatar";
@@ -13,6 +13,7 @@ import {
   taskStatusLabel,
   timeAgo,
 } from "./constants";
+import { addTaskDependency, getTaskDependencies, removeTaskDependency, type TaskDependencyItem } from "../../api/task-dependencies";
 
 interface TaskCardProps {
   task: Task;
@@ -85,6 +86,21 @@ export default function TaskCard({
   const [showDiff, setShowDiff] = useState(false);
   const [showSubtasks, setShowSubtasks] = useState(false);
   const [agentWarning, setAgentWarning] = useState(false);
+  const [showDeps, setShowDeps] = useState(false);
+  const [depPredecessors, setDepPredecessors] = useState<TaskDependencyItem[]>([]);
+  const [depInput, setDepInput] = useState("");
+  const [depError, setDepError] = useState<string | null>(null);
+
+  const loadDeps = useCallback(async () => {
+    try {
+      const data = await getTaskDependencies(task.id);
+      setDepPredecessors(data.predecessors);
+    } catch { /* ignore */ }
+  }, [task.id]);
+
+  useEffect(() => {
+    if (showDeps) void loadDeps();
+  }, [showDeps, loadDeps]);
 
   const assignedAgent = task.assigned_agent ?? agents.find((agent) => agent.id === task.assigned_agent_id);
   const fallbackAssignedName =
@@ -476,6 +492,80 @@ export default function TaskCard({
       )}
 
       {showDiff && <DiffModal taskId={task.id} onClose={() => setShowDiff(false)} />}
+
+      {/* Dependencies section — shown when expanded */}
+      {!cardCollapsed && (
+        <div className="mt-2 border-t pt-2" style={{ borderColor: "var(--th-border)" }}>
+          <button
+            type="button"
+            onClick={() => setShowDeps((v) => !v)}
+            className="flex items-center gap-1.5 text-[11px] transition-colors"
+            style={{ color: "var(--th-text-muted)" }}
+          >
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
+            {t({ ko: "선행 태스크", en: "Dependencies", ja: "依存関係", zh: "依赖关系" })}
+            {depPredecessors.length > 0 && (
+              <span className="rounded-full bg-amber-500/20 px-1.5 text-[10px] text-amber-400">{depPredecessors.length}</span>
+            )}
+            <span className="ml-0.5">{showDeps ? "▲" : "▼"}</span>
+          </button>
+
+          {showDeps && (
+            <div className="mt-2 space-y-1.5">
+              {depPredecessors.length === 0 && (
+                <p className="text-[11px]" style={{ color: "var(--th-text-muted)" }}>
+                  {t({ ko: "선행 태스크 없음", en: "No dependencies", ja: "依存なし", zh: "无依赖" })}
+                </p>
+              )}
+              {depPredecessors.map((dep) => (
+                <div key={dep.id} className="flex items-center justify-between gap-2 rounded-lg border px-2 py-1" style={{ borderColor: "var(--th-border)", background: "var(--th-bg-primary)" }}>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[11px] font-medium" style={{ color: "var(--th-text-primary)" }}>{dep.title}</p>
+                    <p className="text-[10px]" style={{ color: "var(--th-text-muted)" }}>{dep.status}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      await removeTaskDependency(task.id, dep.id);
+                      await loadDeps();
+                    }}
+                    className="shrink-0 rounded p-0.5 text-[10px] text-red-400 hover:text-red-300"
+                  >✕</button>
+                </div>
+              ))}
+              <div className="flex gap-1.5">
+                <input
+                  type="text"
+                  value={depInput}
+                  onChange={(e) => { setDepInput(e.target.value); setDepError(null); }}
+                  placeholder={t({ ko: "태스크 ID 입력", en: "Enter task ID", ja: "タスクIDを入力", zh: "输入任务ID" })}
+                  className="flex-1 rounded border px-2 py-1 text-[11px] outline-none"
+                  style={{ borderColor: "var(--th-border)", background: "var(--th-bg-primary)", color: "var(--th-text-primary)" }}
+                />
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const id = depInput.trim();
+                    if (!id) return;
+                    const result = await addTaskDependency(task.id, id);
+                    if (result.ok) {
+                      setDepInput("");
+                      await loadDeps();
+                    } else {
+                      setDepError(result.error ?? "Error");
+                    }
+                  }}
+                  className="rounded border px-2 py-1 text-[11px] transition-colors hover:opacity-80"
+                  style={{ borderColor: "var(--th-border)", background: "var(--th-bg-surface)", color: "var(--th-text-secondary)" }}
+                >+</button>
+              </div>
+              {depError && <p className="text-[10px] text-red-400">{depError}</p>}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

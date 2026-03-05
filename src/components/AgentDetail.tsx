@@ -56,7 +56,7 @@ export default function AgentDetail({
   onAgentUpdated,
 }: AgentDetailProps) {
   const { t, language } = useI18n();
-  const [tab, setTab] = useState<"info" | "tasks" | "alba">("info");
+  const [tab, setTab] = useState<"info" | "tasks" | "alba" | "performance">("info");
   const [editingCli, setEditingCli] = useState(false);
   const [selectedCli, setSelectedCli] = useState(agent.cli_provider);
   const [selectedOAuthAccountId, setSelectedOAuthAccountId] = useState(agent.oauth_account_id ?? "");
@@ -725,6 +725,10 @@ export default function AgentDetail({
             {
               key: "alba",
               label: `${t({ ko: "알바생", en: "Sub-agents", ja: "サブエージェント", zh: "子代理" })} (${agentSubAgents.length})`,
+            },
+            {
+              key: "performance",
+              label: t({ ko: "성과", en: "Performance", ja: "実績", zh: "绩效" }),
             },
           ].map((tabItem) => (
             <button

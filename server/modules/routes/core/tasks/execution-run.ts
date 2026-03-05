@@ -6,6 +6,8 @@ import { resolveConstrainedAgentScopeForTask, selectAutoAssignableAgentForTask }
 import { buildWorkflowPackExecutionGuidance } from "../../../workflow/packs/execution-guidance.ts";
 import { resolveVideoArtifactSpecForTask } from "../../../workflow/packs/video-artifact.ts";
 import { ensureVideoPreprodRemotionBestPracticesSkill } from "../../../workflow/core/video-skill-bootstrap.ts";
+import { buildCharacterPersonaBlock } from "../../../workflow/core/character-persona.ts";
+import { buildPptExecutionGuidance } from "../../../workflow/core/ppt-execution-guidance.ts";
 import {
   buildInterruptPromptBlock,
   consumeInterruptPrompts,
@@ -316,7 +318,12 @@ export function registerTaskRunRoute(deps: TaskRunRouteDeps): void {
     }
     const agentCwd = worktreePath;
 
-    appendTaskLog(id, "system", `Git worktree created: ${worktreePath} (branch: agentdesk/${id.slice(0, 8)})`);
+    const isDirectMode = worktreePath === projectPath;
+    if (isDirectMode) {
+      appendTaskLog(id, "system", `Running in direct mode (no git isolation): ${worktreePath}`);
+    } else {
+      appendTaskLog(id, "system", `Git worktree created: ${worktreePath} (branch: agentdesk/${id.slice(0, 8)})`);
+    }
 
     const projectContext = generateProjectContext(projectPath);
     const recentChanges = getRecentChanges(projectPath, id);
@@ -468,11 +475,12 @@ Whenever you complete a subtask, report it in this format:
         `[Task] ${task.title}`,
         task.description ? `\n${task.description}` : "",
         workflowPackGuidance ? `\n[Workflow Pack Execution Rules]\n${workflowPackGuidance}` : "",
+        buildPptExecutionGuidance(task.title, task.description, taskLang),
         continuationCtx,
         conversationCtx,
         `\n---`,
         `Agent: ${agent.name} (${roleLabel}, ${agent.department_name || "Unassigned"})`,
-        agent.personality ? `Personality: ${agent.personality}` : "",
+        buildCharacterPersonaBlock(agent.personality),
         deptConstraint,
         departmentPromptBlock,
         `NOTE: You are working in an isolated Git worktree branch (agentdesk/${id.slice(0, 8)}). Commit your changes normally.`,

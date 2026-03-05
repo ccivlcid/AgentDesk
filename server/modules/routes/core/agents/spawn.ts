@@ -4,6 +4,8 @@ import type { RuntimeContext } from "../../../../types/runtime-context.ts";
 import { buildWorkflowPackExecutionGuidance } from "../../../workflow/packs/execution-guidance.ts";
 import { resolveVideoArtifactSpecForTask } from "../../../workflow/packs/video-artifact.ts";
 import { ensureVideoPreprodRemotionBestPracticesSkill } from "../../../workflow/core/video-skill-bootstrap.ts";
+import { buildCharacterPersonaBlock } from "../../../workflow/core/character-persona.ts";
+import { buildPptExecutionGuidance } from "../../../workflow/core/ppt-execution-guidance.ts";
 
 export function registerAgentSpawnRoute(ctx: RuntimeContext): void {
   const {
@@ -171,7 +173,12 @@ export function registerAgentSpawnRoute(ctx: RuntimeContext): void {
       });
     }
     const agentCwd = worktreePath;
-    appendTaskLog(taskId, "system", `Git worktree created: ${worktreePath} (branch: agentdesk/${taskId.slice(0, 8)})`);
+    const isDirectMode = worktreePath === projectPath;
+    if (isDirectMode) {
+      appendTaskLog(taskId, "system", `Running in direct mode (no git isolation): ${worktreePath}`);
+    } else {
+      appendTaskLog(taskId, "system", `Git worktree created: ${worktreePath} (branch: agentdesk/${taskId.slice(0, 8)})`);
+    }
     if (provider === "claude") {
       ensureClaudeMd(projectPath, worktreePath);
     }
@@ -206,9 +213,10 @@ export function registerAgentSpawnRoute(ctx: RuntimeContext): void {
         `[Task] ${task.title}`,
         task.description ? `\n${task.description}` : "",
         workflowPackGuidance ? `\n[Workflow Pack Execution Rules]\n${workflowPackGuidance}` : "",
+        buildPptExecutionGuidance(task.title, task.description, taskLang),
         `NOTE: You are working in an isolated Git worktree branch (agentdesk/${taskId.slice(0, 8)}). Commit your changes normally.`,
         `Agent: ${agent.name} (${roleLabel}, ${agent.department_name || "Unassigned"})`,
-        agent.personality ? `Personality: ${agent.personality}` : "",
+        buildCharacterPersonaBlock(agent.personality),
         deptConstraint,
         departmentPromptBlock,
         pickL(
