@@ -1,0 +1,82 @@
+<!doctype html>
+<html>
+  <head>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body {
+        width: 720pt; height: 405pt;
+        font-family: "Pretendard", -apple-system, BlinkMacSystemFont, sans-serif;
+        background: #ffffff;
+        padding: 36pt 48pt;
+        display: flex; flex-direction: column;
+      }
+    </style>
+  </head>
+  <body>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14pt">
+      <div style="display: flex; align-items: center; gap: 12pt">
+        <div style="display: inline-block; padding: 4pt 10pt; background: #c0392b; border-radius: 4pt">
+          <p style="font-size: 8pt; font-weight: 600; color: #ffffff">05</p>
+        </div>
+        <h2 style="font-size: 22pt; font-weight: 600; color: #1a1a1a">Security &amp; Data Architecture</h2>
+      </div>
+      <p style="font-size: 10pt; color: #999999">09</p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 14pt; flex: 1">
+      <div style="background: #f5f5f0; border-radius: 10pt; padding: 16pt; border-top: 3pt solid #10b981; display: flex; flex-direction: column">
+        <p style="font-size: 11pt; font-weight: 600; color: #10b981; margin-bottom: 10pt">Data Sovereignty</p>
+        <div style="background: #ffffff; border-radius: 6pt; padding: 8pt; margin-bottom: 6pt">
+          <p style="font-size: 9pt; font-weight: 500; color: #1a1a1a">100% Local-first</p>
+          <p style="font-size: 8pt; color: #888888">All data stored in local SQLite</p>
+        </div>
+        <div style="background: #ffffff; border-radius: 6pt; padding: 8pt; margin-bottom: 6pt">
+          <p style="font-size: 9pt; font-weight: 500; color: #1a1a1a">Zero Cloud Dependency</p>
+          <p style="font-size: 8pt; color: #888888">No external server required</p>
+        </div>
+        <div style="background: #ffffff; border-radius: 6pt; padding: 8pt">
+          <p style="font-size: 9pt; font-weight: 500; color: #1a1a1a">127.0.0.1 Binding</p>
+          <p style="font-size: 8pt; color: #888888">Minimal network exposure</p>
+        </div>
+      </div>
+
+      <div style="background: #f5f5f0; border-radius: 10pt; padding: 16pt; border-top: 3pt solid #6366f1; display: flex; flex-direction: column">
+        <p style="font-size: 11pt; font-weight: 600; color: #6366f1; margin-bottom: 10pt">Credential Protection</p>
+        <div style="background: #ffffff; border-radius: 6pt; padding: 8pt; margin-bottom: 6pt">
+          <p style="font-size: 9pt; font-weight: 500; color: #1a1a1a">AES-256-GCM</p>
+          <p style="font-size: 8pt; color: #888888">OAuth tokens &amp; API keys encrypted</p>
+        </div>
+        <div style="background: #ffffff; border-radius: 6pt; padding: 8pt; margin-bottom: 6pt">
+          <p style="font-size: 9pt; font-weight: 500; color: #1a1a1a">Master Key</p>
+          <p style="font-size: 8pt; color: #888888">32-byte hex OAUTH_ENCRYPTION_SECRET</p>
+        </div>
+        <div style="background: #ffffff; border-radius: 6pt; padding: 8pt">
+          <p style="font-size: 9pt; font-weight: 500; color: #1a1a1a">sessionStorage Only</p>
+          <p style="font-size: 8pt; color: #888888">No secrets in browser build</p>
+        </div>
+      </div>
+
+      <div style="background: #f5f5f0; border-radius: 10pt; padding: 16pt; border-top: 3pt solid #f59e0b; display: flex; flex-direction: column">
+        <p style="font-size: 11pt; font-weight: 600; color: #f59e0b; margin-bottom: 10pt">Audit &amp; Integrity</p>
+        <div style="background: #ffffff; border-radius: 6pt; padding: 8pt; margin-bottom: 6pt">
+          <p style="font-size: 9pt; font-weight: 500; color: #1a1a1a">NDJSON Audit Chain</p>
+          <p style="font-size: 8pt; color: #888888">SHA256 hash-linked log entries</p>
+        </div>
+        <div style="background: #ffffff; border-radius: 6pt; padding: 8pt; margin-bottom: 6pt">
+          <p style="font-size: 9pt; font-weight: 500; color: #1a1a1a">Idempotency Tracking</p>
+          <p style="font-size: 8pt; color: #888888">Duplicate message prevention</p>
+        </div>
+        <div style="background: #ffffff; border-radius: 6pt; padding: 8pt">
+          <p style="font-size: 9pt; font-weight: 500; color: #1a1a1a">IP/UA Logging</p>
+          <p style="font-size: 8pt; color: #888888">Access history recording</p>
+        </div>
+      </div>
+    </div>
+
+    <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 8pt; border-top: 1px solid #eeeeee">
+      <p style="font-size: 9pt; color: #999999">AgentDesk Analysis Report</p>
+      <p style="font-size: 9pt; color: #999999">March 2026</p>
+    </div>
+  </body>
+</html>
