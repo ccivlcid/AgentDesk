@@ -1,0 +1,5 @@
+﻿gate_order,gate_name,owner_department,sla_hours,status,start_at,end_at,lead_time_minutes,sla_breached,blocker,escalated_at,notes
+1,데이터 확정,조사전략실/크롤링,4,passed,2026-03-05T09:00:00+09:00,2026-03-05T11:20:00+09:00,140,false,,,round1 범위 확정 완료
+2,시각화 반영,문서디자인팀,6,passed,2026-03-05T11:25:00+09:00,2026-03-05T14:40:00+09:00,195,false,,,문서디자인팀 산출물 반영 완료
+3,팩트체크,팩트체크팀,3,passed,2026-03-05T14:45:00+09:00,2026-03-05T16:10:00+09:00,85,false,,,근거 매핑표/QA 로그 제출 완료
+4,보안검증,인프라보안팀,2,blocked,2026-03-05T16:15:00+09:00,,0,false,인프라보안팀 협업 태스크 blocked,2026-03-05T17:15:00+09:00,운영팀 1시간 규칙에 따라 에스컬레이션 수행
