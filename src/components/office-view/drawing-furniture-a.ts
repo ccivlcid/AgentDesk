@@ -334,4 +334,81 @@ function drawWhiteboard(parent: Container, x: number, y: number) {
   parent.addChild(g);
 }
 
-export { drawDesk, drawChair, drawPlant, drawWhiteboard };
+/** Draw a wall poster (motivational/tech style) */
+function drawPoster(parent: Container, x: number, y: number, accent: number) {
+  const g = new Graphics();
+  g.roundRect(x, y, 22, 16, 1).fill(blendColor(accent, 0x222222, 0.4));
+  g.rect(x + 1, y + 1, 20, 14).fill(blendColor(accent, 0x000000, 0.6));
+  // Star/emblem
+  g.star(x + 11, y + 7, 5, 4, 2, 0).fill({ color: accent, alpha: 0.7 });
+  // Text lines
+  g.rect(x + 4, y + 12, 14, 1).fill({ color: 0xffffff, alpha: 0.3 });
+  g.rect(x + 6, y + 14, 10, 0.5).fill({ color: 0xffffff, alpha: 0.2 });
+  parent.addChild(g);
+  return g;
+}
+
+/** Draw a full-area carpet under agents */
+function drawCarpet(parent: Container, cx: number, cy: number, w: number, h: number, color: number) {
+  const g = new Graphics();
+  g.roundRect(cx - w / 2, cy - h / 2, w, h, 2).fill({ color, alpha: 0.2 });
+  // Cross-hatch pattern
+  for (let i = 0; i < w; i += 8) {
+    g.rect(cx - w / 2 + i, cy - h / 2, 0.5, h).fill({ color, alpha: 0.08 });
+  }
+  for (let j = 0; j < h; j += 8) {
+    g.rect(cx - w / 2, cy - h / 2 + j, w, 0.5).fill({ color, alpha: 0.08 });
+  }
+  parent.addChild(g);
+  return g;
+}
+
+/** Draw a small desk lamp */
+function drawDeskLamp(parent: Container, x: number, y: number) {
+  const g = new Graphics();
+  // Base
+  g.ellipse(x, y + 2, 4, 1.5).fill(0x444455);
+  // Arm
+  g.rect(x - 0.5, y - 8, 1, 10).fill(0x555566);
+  // Shade
+  g.moveTo(x - 5, y - 8).lineTo(x + 5, y - 8).lineTo(x + 3, y - 12).lineTo(x - 3, y - 12).fill(0x888899);
+  // Glow
+  g.ellipse(x, y - 4, 6, 4).fill({ color: 0xfff8dd, alpha: 0.15 });
+  parent.addChild(g);
+  return g;
+}
+
+/** Draw a coffee mug on desk */
+function drawDeskMug(parent: Container, x: number, y: number) {
+  const g = new Graphics();
+  // Mug body
+  g.roundRect(x - 3, y - 5, 6, 6, 1).fill(0xeeeeee);
+  g.roundRect(x - 2.5, y - 4.5, 5, 5, 1).fill(0xdddddd);
+  // Handle
+  g.moveTo(x + 3, y - 3).quadraticCurveTo(x + 6, y - 1.5, x + 3, y).stroke({ width: 1, color: 0xcccccc });
+  // Coffee inside
+  g.ellipse(x, y - 4.5, 2.5, 1).fill(0x6b4226);
+  // Steam
+  g.moveTo(x - 1, y - 6).quadraticCurveTo(x - 2, y - 8, x, y - 9).stroke({ width: 0.4, color: 0xcccccc, alpha: 0.4 });
+  g.moveTo(x + 1, y - 6.5).quadraticCurveTo(x + 2, y - 8.5, x, y - 10).stroke({ width: 0.3, color: 0xcccccc, alpha: 0.3 });
+  parent.addChild(g);
+  return g;
+}
+
+/** Draw a small figurine on desk */
+function drawDeskFigurine(parent: Container, x: number, y: number, accent: number) {
+  const g = new Graphics();
+  // Base
+  g.roundRect(x - 3, y, 6, 2, 0.5).fill(0x555555);
+  // Body
+  g.roundRect(x - 2, y - 6, 4, 6, 1).fill(blendColor(accent, 0x888888, 0.5));
+  // Head
+  g.circle(x, y - 8, 2.5).fill(blendColor(accent, 0xffffff, 0.3));
+  // Eyes
+  g.circle(x - 1, y - 8.5, 0.4).fill(0x222222);
+  g.circle(x + 1, y - 8.5, 0.4).fill(0x222222);
+  parent.addChild(g);
+  return g;
+}
+
+export { drawDesk, drawChair, drawPlant, drawWhiteboard, drawPoster, drawCarpet, drawDeskLamp, drawDeskMug, drawDeskFigurine };

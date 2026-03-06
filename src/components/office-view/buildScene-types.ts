@@ -4,6 +4,9 @@ import type { Agent, Department, SubAgent, Task } from "../../types";
 import type { ThemeMode } from "../../ThemeContext";
 import type { Delivery, RoomRect, SubCloneBurstParticle, WallClockVisual } from "./model";
 import type { SupportedLocale } from "./themes-locale";
+import type { SeasonalParticleState, SeasonKey } from "./seasonal-particles";
+import type { CeoCustomization } from "./ceo-customization";
+import type { RoomDecoration } from "./room-decoration";
 
 export interface DataSnapshot {
   departments: Department[];
@@ -78,6 +81,8 @@ export interface BuildOfficeSceneContext {
   ceoPosRef: MutableRefObject<{ x: number; y: number }>;
   ceoSpriteRef: MutableRefObject<Container | null>;
   crownRef: MutableRefObject<Text | null>;
+  ceoCustomizationRef: MutableRefObject<CeoCustomization>;
+  ceoTrailParticlesRef: MutableRefObject<Container | null>;
   highlightRef: MutableRefObject<Graphics | null>;
   ceoOfficeRectRef: MutableRefObject<{ x: number; y: number; w: number; h: number } | null>;
   breakRoomRectRef: MutableRefObject<{ x: number; y: number; w: number; h: number } | null>;
@@ -89,5 +94,8 @@ export interface BuildOfficeSceneContext {
   breakBubblesRef: MutableRefObject<Container[]>;
   wallClocksRef: MutableRefObject<WallClockVisual[]>;
   wallClockSecondRef: MutableRefObject<number>;
+  roomDecorationsRef: MutableRefObject<Record<string, RoomDecoration>>;
+  seasonalParticleRef: MutableRefObject<SeasonalParticleState | null>;
+  seasonKeyRef: MutableRefObject<SeasonKey>;
   setSceneRevision: Dispatch<SetStateAction<number>>;
 }

@@ -263,11 +263,144 @@ interface OfficeCustomization {
 
 ## 6. Implementation Priority (Recommended)
 
-| Priority | Feature | Effort | Impact | Notes |
-|----------|---------|--------|--------|-------|
-| 1 | Office Theme Presets | Low | High | 기존 인프라 활용, 즉시 효과 |
-| 2 | Seasonal Decorations | Low-Med | High | 파티클로 생동감 대폭 증가 |
-| 3 | CEO Avatar Customization | Low-Med | Medium | 개인화 재미 요소 |
-| 4 | Dept Room Decoration | Medium | High | 부서별 개성 표현 |
-| 5 | Furniture Catalog | Med-High | Medium | 콘텐츠 확장 |
-| 6 | Room Layout Editor | High | Medium | 장기 목표 |
+| Priority | Feature | Effort | Impact | Status | Notes |
+|----------|---------|--------|--------|--------|-------|
+| 1 | Office Theme Presets | Low | High | **DONE** | Phase 1 완료 (2026-03-06) |
+| 2 | Seasonal Decorations | Low-Med | High | **DONE** | 파티클 시스템 완료 (2026-03-06) |
+| 3 | CEO Avatar Customization | Low-Med | Medium | **DONE** | CEO 커스터마이즈 완료 (2026-03-06) |
+| 4 | Dept Room Decoration | Medium | High | **DONE** | 부서별 방 꾸미기 완료 (2026-03-06) |
+| 5 | Style Theme System | Med-High | High | TODO | 픽셀/업무용/사이버 등 비주얼 스타일 |
+| 6 | Furniture Catalog | Med-High | Medium | TODO | 콘텐츠 확장 |
+| 7 | Room Layout Editor | High | Medium | TODO | 장기 목표 |
+
+---
+
+## 7. Progress Tracker
+
+### 7.1 Completed
+
+#### Office Theme Presets (Priority 1) - 2026-03-06
+- [x] 빌트인 테마 프리셋 8종 정의 (`theme-presets.ts`)
+  - classic_warm, modern_minimal, startup_neon, nature_green, cozy_cafe, cyberpunk, sakura, ocean_breeze
+- [x] 내 테마 localStorage CRUD (`user-theme-storage.ts`)
+  - save/load/update/delete + active preset 추적 + max 20개 제한
+- [x] `OfficeRoomManager.tsx` 전면 개편
+  - 테마 프리셋 섹션 (빌트인 2열 그리드 + 내 테마 리스트)
+  - DeptCard 접기/펼치기 (기본 접힌 상태)
+  - 내 테마 저장 모달 / 덮어쓰기 / 이름변경 / 삭제
+  - `react-colorful` HexColorPicker 적용 (기존 `<input type="color">` 대체)
+  - CEO Office / Break Room 포함 (기존 prop에서 전달)
+- [x] `DeptTheme` → `RoomTheme` (공식 타입) 통일
+- [x] 라이브러리 설치: `react-colorful` 5.6.1, `colord` 2.9.3
+- [x] Vite build + TypeScript 타입체크 통과
+
+**관련 파일:**
+```
+src/components/office-theme/theme-presets.ts      (NEW ~130줄)
+src/components/office-theme/user-theme-storage.ts  (NEW ~90줄)
+src/components/OfficeRoomManager.tsx               (REWRITE 377→~490줄)
+```
+
+**상세 설계 문서:** `docs/office-theme-manager-design.md`
+
+#### Seasonal Decorations (Priority 2) - 2026-03-06
+- [x] `seasonal-particles.ts` 파티클 시스템 구현 (~230줄)
+  - 4계절: spring (벚꽃/leaf), summer (반짝/diamond), autumn (낙엽/leaf), winter (눈/flake)
+  - MAX_PARTICLES=60, SPAWN_RATE=0.3/tick
+  - `createSeasonalParticleState`, `updateSeasonalParticles`, `destroySeasonalParticles`
+- [x] `buildScene.ts`에 파티클 레이어 생성 (buildBreakRoom ↔ buildFinalLayers 사이)
+- [x] `officeTicker.ts`에 `updateSeasonalParticles()` 호출 추가
+- [x] `OfficeView.tsx`에 `seasonalParticleRef`, `seasonKeyRef` ref 추가 + 이벤트 리스너
+- [x] `OfficeRoomManager.tsx`에 계절 장식 선택 UI (auto/봄/여름/가을/겨울/없음)
+- [x] localStorage 저장 + `CustomEvent` 기반 OfficeView 실시간 반영
+- [x] `detectSeason()` (Date 기반 자동), `loadSeasonPreference()`, `saveSeasonPreference()`
+- [x] Vite build + TypeScript 타입체크 통과
+
+**관련 파일:**
+```
+src/components/office-view/seasonal-particles.ts   (NEW ~230줄)
+src/components/office-view/buildScene.ts            (MODIFIED)
+src/components/office-view/buildScene-types.ts      (MODIFIED)
+src/components/office-view/officeTicker.ts           (MODIFIED)
+src/components/OfficeView.tsx                        (MODIFIED)
+src/components/OfficeRoomManager.tsx                 (MODIFIED - 계절 UI 추가)
+```
+
+#### CEO Avatar Customization (Priority 3) - 2026-03-06
+- [x] `ceo-customization.ts` CEO 커스터마이즈 시스템 구현 (~95줄)
+  - Headwear: crown/tophat/cap/halo/horns/ribbon/none (7종)
+  - Outfit tint: 스프라이트 tint 적용 (0xffffff = 기본)
+  - Title: 이름표 텍스트 커스터마이즈 (최대 12자)
+  - Trail effect: sparkle/stars/hearts/fire/none (5종)
+- [x] `buildScene-final-layers.ts` CEO 스프라이트에 커스터마이즈 적용
+  - headwear emoji 동적 변경, outfit tint, 동적 이름표 크기
+- [x] `officeTicker.ts` CEO 이동 시 trail 파티클 생성 + 업데이트
+- [x] `OfficeRoomManager.tsx` CEO 커스터마이즈 UI 섹션 추가
+  - 모자/장식 선택, 의상 색상 피커, 칭호 입력, 이동 이펙트 선택
+- [x] CustomEvent 기반 실시간 반영 (`agentdesk_ceo_change`)
+- [x] localStorage 저장 (`agentdesk_ceo_customization`)
+- [x] Vite build + TypeScript 타입체크 통과
+
+**관련 파일:**
+```
+src/components/office-view/ceo-customization.ts     (NEW ~95줄)
+src/components/office-view/buildScene-final-layers.ts (MODIFIED)
+src/components/office-view/buildScene-types.ts       (MODIFIED)
+src/components/office-view/buildScene.ts             (MODIFIED)
+src/components/office-view/officeTicker.ts            (MODIFIED)
+src/components/OfficeView.tsx                         (MODIFIED)
+src/components/OfficeRoomManager.tsx                  (MODIFIED - CEO UI 추가)
+```
+
+#### Department Room Decoration (Priority 4) - 2026-03-06
+- [x] `room-decoration.ts` 방 꾸미기 시스템 구현 (~130줄)
+  - `RoomDecoration` 인터페이스: wallDecor, plantType, floorDecor, deskAccessory, lighting
+  - 옵션: 벽장식 4종, 화분 5종, 바닥 3종, 책상소품 5종, 조명 4종
+  - localStorage 저장 + CustomEvent 실시간 반영
+- [x] `drawing-furniture-a.ts`에 새 drawing 함수 5개 추가
+  - `drawPoster`, `drawCarpet`, `drawDeskLamp`, `drawDeskMug`, `drawDeskFigurine`
+- [x] `buildScene-departments.ts` `drawCeilingAndDecor` 리팩토링
+  - `RoomDecoration` 기반 조건부 렌더링 (벽장식/화분/바닥/조명)
+  - 에이전트 슬롯별 책상 소품 배치
+- [x] `OfficeRoomManager.tsx` 방 꾸미기 UI 섹션 추가
+  - 부서별 접기/펼치기, 5개 카테고리 선택 버튼, 초기화
+- [x] Vite build + TypeScript 타입체크 통과
+
+**관련 파일:**
+```
+src/components/office-view/room-decoration.ts        (NEW ~130줄)
+src/components/office-view/drawing-furniture-a.ts     (MODIFIED - 5함수 추가)
+src/components/office-view/buildScene-departments.ts  (MODIFIED)
+src/components/office-view/buildScene-types.ts        (MODIFIED)
+src/components/office-view/buildScene.ts              (MODIFIED)
+src/components/OfficeView.tsx                          (MODIFIED)
+src/components/OfficeRoomManager.tsx                   (MODIFIED - 방꾸미기 UI)
+```
+
+### 7.2 Next Up — 작업 순서
+
+#### Step 5: Style Theme System (Priority 5)
+비주얼 스타일 (픽셀/업무용/사이버 등)
+
+- [ ] `FurnitureDrawer` 인터페이스 정의 (15개 함수, `DisplayObject` 반환)
+- [ ] 기존 코드를 `default` drawer로 래핑
+- [ ] buildScene 리팩토링 — `drawer.drawXxx()` 패턴 (~25개소)
+- [ ] `pixel` drawer 구현 (Graphics 기반, ~470줄)
+- [ ] SVG 에셋 디렉토리 구성 (`public/assets/themes/`)
+- [ ] `business` drawer 구현 (SVG 기반, SVG 15개 + ~180줄)
+- [ ] `cyber` drawer 구현 (SVG + `@pixi/filter-glow`)
+- [ ] 프리셋에 `style` 필드 추가 + 스타일 필터 탭 UI
+
+**주의:** 캐릭터(CEO/Agent)는 모든 스타일에서 현재 픽셀 유지
+**상세 설계:** `docs/office-theme-manager-design.md` Section 10
+
+#### Step 6: Furniture Catalog (Priority 6)
+- [ ] `FurnitureItem` 타입 + 카탈로그 데이터
+- [ ] 카탈로그 UI 컴포넌트 (그리드형)
+- [ ] 새 가구 drawing 함수 추가
+- [ ] 배치 데이터 저장/로드
+
+#### Step 7: Room Layout Editor (Priority 7) — 장기 목표
+- [ ] 그리드 에디터 UI + 드래그 앤 드롭
+- [ ] 기존 하드코딩 좌표 → 데이터 기반 배치 리팩토링
+- [ ] Undo/Redo + 레이아웃 프리셋 저장

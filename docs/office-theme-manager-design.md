@@ -939,19 +939,20 @@ UI에서는 **스타일 필터 탭** + **색상 프리셋 그리드**로 표시:
 
 ## 11. Implementation Steps
 
-### Phase 1: Color Theme System (현재 구현 대상)
+### Phase 1: Color Theme System — COMPLETED (2026-03-06)
 
-1. **`theme-presets.ts`** 생성 — 8종 빌트인 색상 프리셋 상수 + 타입
-2. **`user-theme-storage.ts`** 생성 — 내 테마 localStorage CRUD 유틸
-3. **`OfficeRoomManager.tsx`** 수정:
-   - a. 프리셋 섹션 UI (빌트인 그리드 + 내 테마 리스트)
-   - b. DeptCard 접기/펼치기 추가
-   - c. CEO Office / Break Room 카드 추가
+1. [x] **`theme-presets.ts`** 생성 — 8종 빌트인 색상 프리셋 상수 + 타입
+2. [x] **`user-theme-storage.ts`** 생성 — 내 테마 localStorage CRUD 유틸
+3. [x] **`OfficeRoomManager.tsx`** 전면 개편:
+   - a. 프리셋 섹션 UI (빌트인 2열 그리드 + 내 테마 리스트)
+   - b. DeptCard 접기/펼치기 (기본 접힌 상태)
+   - c. CEO Office / Break Room 포함 (기존 prop에서 전달)
    - d. "현재 설정 저장" 모달
-   - e. 내 테마 수정/이름변경/삭제
-   - f. 프리셋 적용 로직 (`applyPreset`)
-4. **테스트** — 프리셋 적용 → 부서 수정 → 저장 → 로드 → 삭제 시나리오
-5. **빌드 확인** — Vite build 통과
+   - e. 내 테마 덮어쓰기/이름변경/삭제
+   - f. 프리셋 적용 로직 (`applyPreset`) + activePresetKey 동기화
+   - g. `react-colorful` HexColorPicker 적용
+4. [x] **라이브러리 설치** — `react-colorful` 5.6.1, `colord` 2.9.3
+5. [x] **빌드 확인** — Vite build + TypeScript `tsc --noEmit` 통과
 
 ### Phase 2: Style Theme System (향후 확장)
 

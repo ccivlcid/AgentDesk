@@ -27,6 +27,10 @@ import {
 import { applyWallClockTime, blendColor } from "./drawing-core";
 import { DEPT_THEME, DEFAULT_BREAK_THEME, DEFAULT_CEO_THEME } from "./themes-locale";
 import { updateBreakRoomAndDeliveryAnimations } from "./officeTickerRoomAndDelivery";
+import type { SeasonalParticleState } from "./seasonal-particles";
+import { updateSeasonalParticles } from "./seasonal-particles";
+import type { CeoCustomization } from "./ceo-customization";
+import { getTrailColors } from "./ceo-customization";
 
 interface AgentAnimItem {
   sprite: Container;
@@ -93,6 +97,9 @@ export interface OfficeTickerContext {
   officeWRef: MutableRefObject<number>;
   totalHRef: MutableRefObject<number>;
   dataRef: MutableRefObject<OfficeTickerData>;
+  seasonalParticleRef: MutableRefObject<SeasonalParticleState | null>;
+  ceoCustomizationRef: MutableRefObject<CeoCustomization>;
+  ceoTrailParticlesRef: MutableRefObject<Container | null>;
   followCeoInView: () => void;
 }
 
@@ -121,6 +128,32 @@ export function runOfficeTickerStep(ctx: OfficeTickerContext): void {
       ctx.ceoPosRef.current.y = Math.max(18, Math.min(ctx.totalHRef.current - 28, ctx.ceoPosRef.current.y + dy));
       ceo.position.set(ctx.ceoPosRef.current.x, ctx.ceoPosRef.current.y);
       ctx.followCeoInView();
+
+      // CEO trail particles on movement
+      const trailEffect = ctx.ceoCustomizationRef.current.trailEffect;
+      if (trailEffect !== "none" && tick % 3 === 0) {
+        const trailLayer = ctx.ceoTrailParticlesRef.current;
+        if (trailLayer) {
+          const colors = getTrailColors(trailEffect);
+          const color = colors[Math.floor(Math.random() * colors.length)] ?? 0xffffff;
+          const p = new Graphics();
+          if (trailEffect === "hearts") {
+            p.circle(-1.5, -1, 1.5).fill({ color, alpha: 0.8 });
+            p.circle(1.5, -1, 1.5).fill({ color, alpha: 0.8 });
+            p.moveTo(-3, -0.5).lineTo(0, 3).lineTo(3, -0.5).fill({ color, alpha: 0.7 });
+          } else if (trailEffect === "fire") {
+            p.ellipse(0, 0, 2, 3).fill({ color, alpha: 0.75 });
+          } else {
+            p.star(0, 0, trailEffect === "stars" ? 5 : 4, 2.5, 1, 0).fill({ color, alpha: 0.8 });
+          }
+          p.position.set(
+            ctx.ceoPosRef.current.x + (Math.random() - 0.5) * 16,
+            ctx.ceoPosRef.current.y + 8 + Math.random() * 8,
+          );
+          (p as any)._life = 0;
+          trailLayer.addChild(p);
+        }
+      }
     }
 
     const crown = ctx.crownRef.current;
@@ -501,4 +534,25 @@ export function runOfficeTickerStep(ctx: OfficeTickerContext): void {
     },
     tick,
   );
+
+  // CEO trail particle cleanup
+  const trailLayer = ctx.ceoTrailParticlesRef.current;
+  if (trailLayer) {
+    for (let i = trailLayer.children.length - 1; i >= 0; i--) {
+      const p = trailLayer.children[i] as any;
+      p._life++;
+      p.position.y -= 0.5;
+      p.alpha = Math.max(0, 0.8 - p._life * 0.04);
+      p.scale.set(Math.max(0.1, 1 - p._life * 0.03));
+      if (p._life > 25) {
+        trailLayer.removeChild(p);
+        p.destroy();
+      }
+    }
+  }
+
+  // Seasonal particle animation
+  if (ctx.seasonalParticleRef.current) {
+    updateSeasonalParticles(ctx.seasonalParticleRef.current, tick);
+  }
 }

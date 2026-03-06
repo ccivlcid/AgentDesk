@@ -17,6 +17,7 @@ import { buildCeoAndHallway } from "./buildScene-ceo-hallway";
 import { buildDepartmentRooms } from "./buildScene-departments";
 import { buildBreakRoom } from "./buildScene-break-room";
 import { buildFinalLayers } from "./buildScene-final-layers";
+import { createSeasonalParticleState, destroySeasonalParticles } from "./seasonal-particles";
 
 export function buildOfficeScene(context: BuildOfficeSceneContext): void {
   const {
@@ -41,6 +42,8 @@ export function buildOfficeScene(context: BuildOfficeSceneContext): void {
     ceoPosRef,
     ceoSpriteRef,
     crownRef,
+    ceoCustomizationRef,
+    ceoTrailParticlesRef,
     highlightRef,
     ceoOfficeRectRef,
     breakRoomRectRef,
@@ -52,6 +55,9 @@ export function buildOfficeScene(context: BuildOfficeSceneContext): void {
     breakBubblesRef,
     wallClocksRef,
     wallClockSecondRef,
+    roomDecorationsRef,
+    seasonalParticleRef,
+    seasonKeyRef,
     setSceneRevision,
   } = context;
 
@@ -189,6 +195,7 @@ export function buildOfficeScene(context: BuildOfficeSceneContext): void {
     subCloneAnimItemsRef,
     subCloneBurstParticlesRef,
     wallClocksRef,
+    roomDecorations: roomDecorationsRef.current,
     removedSubBurstsByParent,
     addedWorkingSubIds,
     nextSubSnapshot,
@@ -214,6 +221,16 @@ export function buildOfficeScene(context: BuildOfficeSceneContext): void {
     agentPosRef,
   });
 
+  // Seasonal particle layer (between rooms and final overlay layers)
+  if (seasonalParticleRef.current) {
+    destroySeasonalParticles(seasonalParticleRef.current);
+    seasonalParticleRef.current = null;
+  }
+  const seasonKey = seasonKeyRef.current;
+  if (seasonKey !== "none") {
+    seasonalParticleRef.current = createSeasonalParticleState(app.stage, seasonKey, OFFICE_W, totalH);
+  }
+
   buildFinalLayers({
     app,
     textures,
@@ -225,6 +242,8 @@ export function buildOfficeScene(context: BuildOfficeSceneContext): void {
     highlightRef,
     ceoSpriteRef,
     crownRef,
+    ceoCustomizationRef,
+    ceoTrailParticlesRef,
     prevAssignRef,
     setSceneRevision,
   });

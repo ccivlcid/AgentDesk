@@ -32,6 +32,10 @@ import {
 } from "./office-view/useOfficeDeliveryEffects";
 import { useOfficePixiRuntime } from "./office-view/useOfficePixiRuntime";
 import { buildOfficeScene } from "./office-view/buildScene";
+import type { SeasonalParticleState, SeasonKey } from "./office-view/seasonal-particles";
+import { loadSeasonPreference, resolveSeasonKey } from "./office-view/seasonal-particles";
+import { type CeoCustomization, loadCeoCustomization } from "./office-view/ceo-customization";
+import { type RoomDecoration, loadRoomDecorations } from "./office-view/room-decoration";
 
 export default function OfficeView({
   departments,
@@ -81,6 +85,8 @@ export default function OfficeView({
   const ceoPosRef = useRef({ x: 180, y: 60 });
   const ceoSpriteRef = useRef<Container | null>(null);
   const crownRef = useRef<Text | null>(null);
+  const ceoCustomizationRef = useRef<CeoCustomization>(loadCeoCustomization());
+  const ceoTrailParticlesRef = useRef<Container | null>(null);
   const highlightRef = useRef<Graphics | null>(null);
   const animItemsRef = useRef<
     Array<{
@@ -140,6 +146,9 @@ export default function OfficeView({
   const breakBubblesRef = useRef<Container[]>([]);
   const wallClocksRef = useRef<WallClockVisual[]>([]);
   const wallClockSecondRef = useRef(-1);
+  const roomDecorationsRef = useRef<Record<string, RoomDecoration>>(loadRoomDecorations());
+  const seasonalParticleRef = useRef<SeasonalParticleState | null>(null);
+  const seasonKeyRef = useRef<SeasonKey>(resolveSeasonKey(loadSeasonPreference()));
   const localeRef = useRef<SupportedLocale>(language);
   localeRef.current = language;
   const themeHighlightTargetIdRef = useRef<string | null>(themeHighlightTargetId ?? null);
@@ -293,6 +302,8 @@ export default function OfficeView({
       ceoPosRef,
       ceoSpriteRef,
       crownRef,
+      ceoCustomizationRef,
+      ceoTrailParticlesRef,
       highlightRef,
       ceoOfficeRectRef,
       breakRoomRectRef,
@@ -304,9 +315,43 @@ export default function OfficeView({
       breakBubblesRef,
       wallClocksRef,
       wallClockSecondRef,
+      roomDecorationsRef,
+      seasonalParticleRef,
+      seasonKeyRef,
       setSceneRevision,
     });
   }, []);
+
+  // Listen for season preference changes from OfficeRoomManager
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const pref = (e as CustomEvent).detail as string;
+      seasonKeyRef.current = resolveSeasonKey(pref as any);
+      if (initDoneRef.current && appRef.current) buildScene();
+    };
+    window.addEventListener("agentdesk_season_change", handler);
+    return () => window.removeEventListener("agentdesk_season_change", handler);
+  }, [buildScene]);
+
+  // Listen for CEO customization changes from OfficeRoomManager
+  useEffect(() => {
+    const handler = (e: Event) => {
+      ceoCustomizationRef.current = (e as CustomEvent).detail as CeoCustomization;
+      if (initDoneRef.current && appRef.current) buildScene();
+    };
+    window.addEventListener("agentdesk_ceo_change", handler);
+    return () => window.removeEventListener("agentdesk_ceo_change", handler);
+  }, [buildScene]);
+
+  // Listen for room decoration changes from OfficeRoomManager
+  useEffect(() => {
+    const handler = (e: Event) => {
+      roomDecorationsRef.current = (e as CustomEvent).detail as Record<string, RoomDecoration>;
+      if (initDoneRef.current && appRef.current) buildScene();
+    };
+    window.addEventListener("agentdesk_room_decor_change", handler);
+    return () => window.removeEventListener("agentdesk_room_decor_change", handler);
+  }, [buildScene]);
 
   const tickerContext = useMemo(
     () => ({
@@ -333,6 +378,9 @@ export default function OfficeView({
       officeWRef,
       totalHRef,
       dataRef,
+      seasonalParticleRef,
+      ceoCustomizationRef,
+      ceoTrailParticlesRef,
       followCeoInView,
     }),
     [followCeoInView, cliUsageRef],

@@ -30,9 +30,10 @@ import {
   drawWallClock,
   drawWindow,
 } from "./drawing-core";
-import { drawChair, drawDesk, drawPlant, drawWhiteboard } from "./drawing-furniture-a";
+import { drawChair, drawDesk, drawPlant, drawWhiteboard, drawPoster, drawCarpet, drawDeskLamp, drawDeskMug, drawDeskFigurine } from "./drawing-furniture-a";
 import { drawBookshelf } from "./drawing-furniture-b";
 import { renderDeskAgentAndSubClones } from "./buildScene-department-agent";
+import { type RoomDecoration, getRoomDecoration, getLightingTint } from "./room-decoration";
 
 interface BuildDepartmentRoomsParams {
   app: Application;
@@ -59,6 +60,7 @@ interface BuildDepartmentRoomsParams {
   subCloneAnimItemsRef: MutableRefObject<SubCloneAnimItem[]>;
   subCloneBurstParticlesRef: MutableRefObject<SubCloneBurstParticle[]>;
   wallClocksRef: MutableRefObject<WallClockVisual[]>;
+  roomDecorations: Record<string, RoomDecoration>;
   removedSubBurstsByParent: Map<string, Array<{ x: number; y: number }>>;
   addedWorkingSubIds: Set<string>;
   nextSubSnapshot: Map<string, { parentAgentId: string; x: number; y: number }>;
@@ -89,6 +91,7 @@ export function buildDepartmentRooms({
   subCloneAnimItemsRef,
   subCloneBurstParticlesRef,
   wallClocksRef,
+  roomDecorations,
   removedSubBurstsByParent,
   addedWorkingSubIds,
   nextSubSnapshot,
@@ -139,17 +142,29 @@ export function buildDepartmentRooms({
     signTxt.position.set(rx + roomW / 2, ry + 5);
     room.addChild(signTxt);
 
-    drawCeilingAndDecor(room, rx, ry, roomW, roomH, theme, deptIdx, wallClocksRef);
+    const decor = getRoomDecoration(roomDecorations, dept.id);
+    drawCeilingAndDecor(room, rx, ry, roomW, roomH, theme, deptIdx, wallClocksRef, decor);
 
     if (deptAgents.length > 0) {
-      drawRug(
-        room,
-        rx + roomW / 2,
-        ry + 38 + (Math.min(agentRows, 2) * SLOT_H) / 2,
-        roomW - 40,
-        Math.min(agentRows, 2) * SLOT_H - 10,
-        theme.accent,
-      );
+      if (decor.floorDecor === "rug") {
+        drawRug(
+          room,
+          rx + roomW / 2,
+          ry + 38 + (Math.min(agentRows, 2) * SLOT_H) / 2,
+          roomW - 40,
+          Math.min(agentRows, 2) * SLOT_H - 10,
+          theme.accent,
+        );
+      } else if (decor.floorDecor === "carpet") {
+        drawCarpet(
+          room,
+          rx + roomW / 2,
+          ry + 38 + (Math.min(agentRows, 2) * SLOT_H) / 2,
+          roomW - 40,
+          Math.min(agentRows, 2) * SLOT_H - 10,
+          theme.accent,
+        );
+      }
     }
 
     if (deptAgents.length === 0) {
@@ -211,6 +226,15 @@ export function buildDepartmentRooms({
           nextSubSnapshot,
           themeAccent: theme.accent,
         });
+
+        // Desk accessory
+        if (decor.deskAccessory !== "default" && decor.deskAccessory !== "none") {
+          const accessoryX = ax + DESK_W / 2 - 6;
+          const accessoryY = deskY - 2;
+          if (decor.deskAccessory === "lamp") drawDeskLamp(room, accessoryX, accessoryY);
+          else if (decor.deskAccessory === "mug") drawDeskMug(room, accessoryX, accessoryY);
+          else if (decor.deskAccessory === "figurine") drawDeskFigurine(room, accessoryX, accessoryY, theme.accent);
+        }
       }
     });
 
@@ -227,8 +251,16 @@ function drawCeilingAndDecor(
   theme: { accent: number; wall: number },
   deptIdx: number,
   wallClocksRef: MutableRefObject<WallClockVisual[]>,
+  decor: RoomDecoration,
 ): void {
   drawCeilingLight(room, rx + roomW / 2, ry + 14, theme.accent);
+
+  // Lighting mood overlay
+  const lighting = getLightingTint(decor.lighting);
+  if (lighting.glowAlpha > 0) {
+    drawAmbientGlow(room, rx + roomW / 2, ry + roomH / 2, roomW * 0.5, lighting.glowColor, lighting.glowAlpha);
+  }
+
   drawAmbientGlow(room, rx + roomW / 2, ry + roomH / 2, roomW * 0.4, theme.accent, 0.04);
   drawBunting(
     room,
@@ -240,7 +272,15 @@ function drawCeilingAndDecor(
     0.52,
   );
 
-  drawWhiteboard(room, rx + roomW - 48, ry + 18);
+  // Wall decoration
+  if (decor.wallDecor === "whiteboard") {
+    drawWhiteboard(room, rx + roomW - 48, ry + 18);
+  } else if (decor.wallDecor === "poster") {
+    drawPoster(room, rx + roomW - 40, ry + 18, theme.accent);
+  } else if (decor.wallDecor === "picture") {
+    drawPictureFrame(room, rx + roomW - 40, ry + 20);
+  }
+
   drawBookshelf(room, rx + 6, ry + 18);
   wallClocksRef.current.push(drawWallClock(room, rx + roomW - 16, ry + 12));
   drawWindow(room, rx + roomW / 2 - 12, ry + 16);
@@ -248,12 +288,17 @@ function drawCeilingAndDecor(
     drawWindow(room, rx + roomW / 2 - 40, ry + 16, 20, 16);
     drawWindow(room, rx + roomW / 2 + 20, ry + 16, 20, 16);
   }
-  if (roomW > 200) {
+  if (roomW > 200 && decor.wallDecor !== "picture") {
     drawPictureFrame(room, rx + 40, ry + 20);
   }
 
-  drawPlant(room, rx + 8, ry + roomH - 14, deptIdx);
-  drawPlant(room, rx + roomW - 12, ry + roomH - 14, deptIdx + 1);
+  // Plants
+  if (decor.plantType !== "none") {
+    const plantVariant = decor.plantType === "tall" ? 3 : decor.plantType === "cactus" ? 1 : decor.plantType === "flower" ? 2 : deptIdx;
+    drawPlant(room, rx + 8, ry + roomH - 14, plantVariant);
+    drawPlant(room, rx + roomW - 12, ry + roomH - 14, plantVariant + 1);
+  }
+
   drawTrashCan(room, rx + roomW - 14, ry + roomH - 26);
 }
 
