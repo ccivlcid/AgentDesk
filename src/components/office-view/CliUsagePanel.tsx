@@ -3,6 +3,7 @@ import { type CliUsageEntry, type CliUsageWindow, type CostAlertConfig, getCostA
 import { type AgentUsageSummary, getAgentUsageSummary } from "../../api/agent-usage";
 import type { UiLanguage } from "../../i18n";
 import type { CliStatusMap } from "../../types";
+import { CliCursorLogo } from "../settings/Logos";
 import { formatReset } from "./drawing-furniture-b";
 import { LOCALE_TEXT } from "./themes-locale";
 import UsageTrendChart from "./UsageTrendChart";
@@ -72,6 +73,13 @@ const CLI_DISPLAY: Array<{ key: string; name: string; icon: ReactNode; color: st
     icon: <GeminiLogo />,
     color: "text-blue-300",
     bgColor: "bg-blue-500/15 border-blue-400/30",
+  },
+  {
+    key: "cursor",
+    name: "Cursor AI",
+    icon: <CliCursorLogo />,
+    color: "text-slate-300",
+    bgColor: "bg-slate-500/15 border-slate-400/30",
   },
   {
     key: "copilot",
@@ -224,10 +232,14 @@ export default function CliUsagePanel({
                 </div>
 
                 {usage?.error === "unauthenticated" && (
-                  <p className="text-[11px] text-slate-500 italic">{t(LOCALE_TEXT.cliNotSignedIn)}</p>
+                  <p className="text-[11px] text-slate-500 italic">
+                    {cli.key === "cursor" ? t(LOCALE_TEXT.cliNoUsageDisplay) : t(LOCALE_TEXT.cliNotSignedIn)}
+                  </p>
                 )}
                 {usage?.error === "not_implemented" && (
-                  <p className="text-[11px] text-slate-500 italic">{t(LOCALE_TEXT.cliNoApi)}</p>
+                  <p className="text-[11px] text-slate-500 italic">
+                    {cli.key === "cursor" ? t(LOCALE_TEXT.cliNoUsageDisplay) : t(LOCALE_TEXT.cliNoApi)}
+                  </p>
                 )}
                 {usage?.error && usage.error !== "unauthenticated" && usage.error !== "not_implemented" && (
                   <p className="text-[11px] text-slate-500 italic">{t(LOCALE_TEXT.cliUnavailable)}</p>

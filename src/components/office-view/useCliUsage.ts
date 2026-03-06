@@ -10,7 +10,8 @@ interface UseCliUsageResult {
   handleRefreshUsage: () => void;
 }
 
-export function useCliUsage(tasks: Task[]): UseCliUsageResult {
+/** currentView: CLI 사용량 화면에 들어올 때마다 cli-status 재조회하기 위해 사용 */
+export function useCliUsage(tasks: Task[], currentView?: string): UseCliUsageResult {
   const [cliStatus, setCliStatus] = useState<CliStatusMap | null>(null);
   const [cliUsage, setCliUsage] = useState<Record<string, CliUsageEntry> | null>(null);
   const cliUsageRef = useRef<Record<string, CliUsageEntry> | null>(null);
@@ -30,6 +31,15 @@ export function useCliUsage(tasks: Task[]): UseCliUsageResult {
       .catch(() => {});
   }, []);
 
+  // CLI 사용량 탭에 들어올 때마다 서버에서 최신 cli-status 재조회 (실제 연동 상태 반영)
+  useEffect(() => {
+    if (currentView === "cli-usage") {
+      getCliStatus(true)
+        .then(setCliStatus)
+        .catch(() => {});
+    }
+  }, [currentView]);
+
   useEffect(() => {
     const doneCount = tasks.filter((task) => task.status === "done").length;
     if (doneCountRef.current > 0 && doneCount > doneCountRef.current) {
@@ -45,8 +55,9 @@ export function useCliUsage(tasks: Task[]): UseCliUsageResult {
   const handleRefreshUsage = useCallback(() => {
     if (refreshing) return;
     setRefreshing(true);
-    refreshCliUsage()
-      .then((response) => {
+    Promise.all([getCliStatus(true), refreshCliUsage()])
+      .then(([status, response]) => {
+        setCliStatus(status);
         if (response.ok) setCliUsage(response.usage);
       })
       .catch(() => {})

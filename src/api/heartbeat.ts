@@ -100,16 +100,33 @@ export async function getHeartbeatLogs(
 export async function deleteHeartbeatLog(id: number): Promise<void> {
   const res = await fetch(`${BASE}/api/heartbeat/logs/record/${id}`, { method: "DELETE" });
   if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    throw new Error((data as { error?: string })?.error ?? "delete_failed");
+    const text = await res.text();
+    const data = (() => {
+      try {
+        return JSON.parse(text) as { error?: string };
+      } catch {
+        return {};
+      }
+    })();
+    // 404 + log_not_found: 이미 삭제됨 → 성공으로 처리 (idempotent)
+    if (res.status === 404 && data?.error === "log_not_found") return;
+    const msg =
+      res.status === 404 && !data?.error
+        ? "API 경로를 찾을 수 없습니다 (404). 서버를 재시작한 뒤 다시 시도하세요."
+        : data?.error ?? "delete_failed";
+    throw new Error(msg);
   }
 }
 
 export async function deleteAllHeartbeatLogs(): Promise<{ deleted: number }> {
   const res = await fetch(`${BASE}/api/heartbeat/logs`, { method: "DELETE" });
   if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    throw new Error((data as { error?: string })?.error ?? "delete_failed");
+    const data = await res.json().catch(() => ({})) as { error?: string };
+    const msg =
+      res.status === 404
+        ? "API 경로를 찾을 수 없습니다 (404). 서버가 실행 중인지, 프록시 설정을 확인하세요."
+        : data?.error ?? "delete_failed";
+    throw new Error(msg);
   }
   const data = await res.json();
   return { deleted: (data as { deleted?: number })?.deleted ?? 0 };

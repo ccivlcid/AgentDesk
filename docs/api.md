@@ -74,6 +74,11 @@ Runtime behavior highlights:
 - Per-channel setup requirements differ (e.g., WhatsApp Cloud API token + phone number id, Google Chat webhook URL or `key|token`, Signal RPC base URL, macOS iMessage runtime).
 - New project creation path in direct-chat escalation is restricted by `PROJECT_PATH_ALLOWED_ROOTS`.
 
+**Direct chat / 메신저 접두사**
+
+- `$` — 전사 공지(CEO Directive). Inbox 웹훅 등으로 `$`로 시작하는 메시지는 기획팀 소집·팀장 회의·태스크 배정 등 전사 지시 흐름으로 처리된다.
+- `!` — 일반 채팅 중 “업무”로 명시. 에이전트에게 보내는 메시지가 `!`로 시작하면 접두사는 제거한 뒤 업무(태스크 플로우)로 판단하며, 필요 시 프로젝트 선택을 요청한다. 예: `!네이버 금융 확인해줘` → 업무로 처리, `네이버 금융 확인해줘` → 정보 요청으로 일반 답변.
+
 ## Core Endpoint Groups
 
 ### Messenger (Built-in Channels)

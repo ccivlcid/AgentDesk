@@ -430,7 +430,16 @@ export function createDirectChatHandlers(deps: DirectChatDeps) {
     }
 
     let taskMessage = ceoMessage;
-    let useTaskFlow = shouldTreatDirectChatAsTask(ceoMessage, messageType);
+    let useTaskFlow = false;
+    // ! 접두사: 일반 채팅에서도 업무로 판단 (전사 공지는 $)
+    const exclamationMatch = ceoMessage.match(/^\s*!\s*(.*)/s);
+    if (exclamationMatch && exclamationMatch[1].trim()) {
+      useTaskFlow = true;
+      taskMessage = exclamationMatch[1].trim();
+    }
+    if (!useTaskFlow) {
+      useTaskFlow = shouldTreatDirectChatAsTask(ceoMessage, messageType);
+    }
     if (!useTaskFlow) {
       const recentRows = db
         .prepare(
@@ -489,6 +498,7 @@ export function createDirectChatHandlers(deps: DirectChatDeps) {
     console.log(
       `[scheduleAgentReply] useTaskFlow=${useTaskFlow}, messageType=${messageType}, msg="${ceoMessage.slice(0, 50)}", taskMsg="${taskMessage.slice(0, 50)}"`,
     );
+    // 프로젝트 선택 요청: 태스크 실행(코드/업무 맥락)이 있을 때만 수행. 정보성 요청(확인해줘, 알려줘 등)은 direct-chat-intent-utils에서 태스크로 보지 않음.
     if (useTaskFlow) {
       if (
         !hasProjectBinding(

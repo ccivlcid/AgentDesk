@@ -7,6 +7,13 @@ export function shouldTreatDirectChatAsTask(ceoMessage: string, messageType: str
 
   if (/^\s*(task|todo|업무|지시|작업|할일)\s*[:-]/i.test(text)) return true;
 
+  // 정보성 요청(확인·알려줘·검색 등)이면서 프로젝트/업무 맥락이 없으면 태스크로 보지 않음 → 프로젝트를 묻지 않음
+  const infoOnlyVerbs =
+    /(확인해|확인해줘|알려줘|알려주세요|검색해|검색해줘|찾아줘|찾아와줘|알려\s*줘|look\s*up|check\s*out|tell\s*me)/i;
+  const projectOrTaskContext =
+    /(소스코드|코드|repo|repository|프로젝트|모듈|파일|이슈|버그|취약점|리팩터|리팩토링|구현|수정|fix|implement|refactor|업무|작업|task|build|test|검토|리뷰|평가|분석|보고서)/i;
+  if (infoOnlyVerbs.test(text) && !projectOrTaskContext.test(text)) return false;
+
   const taskKeywords =
     /(테스트|검증|확인해|진행해|수정해|구현해|반영해|처리해|해줘|부탁|검토|검수|리뷰|평가|분석|보고서|작성해|파악|업무|작업|요청|fix|implement|refactor|test|verify|check|review|audit|analyze|analysis|report|run|apply|update|debug|investigate|対応|確認|修正|実装|レビュー|監査|分析|报告|评估|测试|检查|修复|处理|审查|审核)/i;
   if (taskKeywords.test(text)) return true;

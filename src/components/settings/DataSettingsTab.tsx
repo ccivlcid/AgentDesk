@@ -6,6 +6,27 @@ interface DataSettingsTabProps {
   t: TFunction;
 }
 
+const IconBackup = () => (
+  <svg className="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+    <polyline points="7 10 12 15 17 10" />
+    <line x1="12" y1="15" x2="12" y2="3" />
+  </svg>
+);
+const IconRestore = () => (
+  <svg className="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+    <path d="M3 3v5h5" />
+  </svg>
+);
+const IconExport = () => (
+  <svg className="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+    <polyline points="17 8 12 3 7 8" />
+    <line x1="12" y1="3" x2="12" y2="15" />
+  </svg>
+);
+
 export default function DataSettingsTab({ t }: DataSettingsTabProps) {
   const [backupBusy, setBackupBusy] = useState(false);
   const [restoreBusy, setRestoreBusy] = useState(false);
@@ -117,31 +138,49 @@ export default function DataSettingsTab({ t }: DataSettingsTabProps) {
     }
   }, [t]);
 
-  const sectionStyle = {
-    borderColor: "var(--th-border)",
-    background: "var(--th-bg-surface)",
-  };
+  const triggerFileInput = () => fileRef.current?.click();
 
   return (
-    <div className="space-y-5">
-      {/* Backup Section */}
-      <div className="rounded-xl border p-5" style={sectionStyle}>
-        <h3 className="mb-1 text-sm font-semibold" style={{ color: "var(--th-text-heading)" }}>
-          {t({ ko: "데이터베이스 백업", en: "Database Backup", ja: "データベースバックアップ", zh: "数据库备份" })}
-        </h3>
-        <p className="mb-4 text-xs" style={{ color: "var(--th-text-muted)" }}>
+    <div className="data-settings-tab space-y-6">
+      {/* Page intro */}
+      <div className="rounded-xl border p-4" style={{ borderColor: "var(--th-border)", background: "var(--th-bg-surface)" }}>
+        <h2 className="mb-1 text-base font-semibold tracking-tight" style={{ color: "var(--th-text-heading)" }}>
+          {t({ ko: "데이터 관리", en: "Data Management", ja: "データ管理", zh: "数据管理" })}
+        </h2>
+        <p className="text-sm" style={{ color: "var(--th-text-muted)" }}>
           {t({
-            ko: "전체 SQLite 데이터베이스를 파일로 다운로드합니다.",
-            en: "Download the entire SQLite database as a file.",
-            ja: "SQLiteデータベース全体をファイルとしてダウンロードします。",
-            zh: "将整个SQLite数据库下载为文件。",
+            ko: "데이터베이스 백업·복원과 태스크 내보내기를 한 곳에서 할 수 있습니다.",
+            en: "Backup, restore the database, and export tasks from one place.",
+            ja: "データベースのバックアップ・復元とタスクのエクスポートを一括で行えます。",
+            zh: "在此备份/恢复数据库并导出任务。",
           })}
         </p>
+      </div>
+
+      {/* Backup */}
+      <div className="rounded-xl border p-5 transition-colors" style={{ borderColor: "var(--th-border)", background: "var(--th-bg-surface)" }}>
+        <div className="mb-3 flex items-center gap-3">
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl" style={{ background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}>
+            <IconBackup />
+          </span>
+          <div>
+            <h3 className="text-sm font-semibold" style={{ color: "var(--th-text-heading)" }}>
+              {t({ ko: "데이터베이스 백업", en: "Database Backup", ja: "データベースバックアップ", zh: "数据库备份" })}
+            </h3>
+            <p className="text-xs" style={{ color: "var(--th-text-muted)" }}>
+              {t({
+                ko: "전체 SQLite 데이터베이스를 파일로 다운로드합니다.",
+                en: "Download the entire SQLite database as a file.",
+                ja: "SQLiteデータベース全体をファイルとしてダウンロードします。",
+                zh: "将整个SQLite数据库下载为文件。",
+              })}
+            </p>
+          </div>
+        </div>
         <button
           onClick={handleBackup}
           disabled={backupBusy}
-          className="rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors disabled:opacity-50"
-          style={{ background: "var(--th-accent, #3b82f6)" }}
+          className="data-settings-btn data-settings-btn-primary rounded-lg px-4 py-2.5 text-sm font-medium transition disabled:opacity-50"
         >
           {backupBusy
             ? t({ ko: "다운로드 중...", en: "Downloading...", ja: "ダウンロード中...", zh: "下载中..." })
@@ -149,32 +188,46 @@ export default function DataSettingsTab({ t }: DataSettingsTabProps) {
         </button>
       </div>
 
-      {/* Restore Section */}
-      <div className="rounded-xl border p-5" style={sectionStyle}>
-        <h3 className="mb-1 text-sm font-semibold" style={{ color: "var(--th-text-heading)" }}>
-          {t({ ko: "데이터베이스 복원", en: "Database Restore", ja: "データベース復元", zh: "数据库恢复" })}
-        </h3>
-        <p className="mb-4 text-xs" style={{ color: "var(--th-text-muted)" }}>
-          {t({
-            ko: "이전에 백업한 SQLite 파일을 업로드하여 복원합니다. 복원 후 서버 재시작이 필요합니다.",
-            en: "Upload a previously backed-up SQLite file to restore. Server restart required after restore.",
-            ja: "以前バックアップしたSQLiteファイルをアップロードして復元します。復元後にサーバーの再起動が必要です。",
-            zh: "上传之前备份的SQLite文件进行恢复。恢复后需要重启服务器。",
-          })}
-        </p>
-        <div className="flex items-center gap-3">
+      {/* Restore */}
+      <div className="rounded-xl border p-5 transition-colors" style={{ borderColor: "var(--th-border)", background: "var(--th-bg-surface)" }}>
+        <div className="mb-3 flex items-center gap-3">
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl" style={{ background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}>
+            <IconRestore />
+          </span>
+          <div>
+            <h3 className="text-sm font-semibold" style={{ color: "var(--th-text-heading)" }}>
+              {t({ ko: "데이터베이스 복원", en: "Database Restore", ja: "データベース復元", zh: "数据库恢复" })}
+            </h3>
+            <p className="text-xs" style={{ color: "var(--th-text-muted)" }}>
+              {t({
+                ko: "이전에 백업한 SQLite 파일을 업로드하여 복원합니다. 복원 후 서버 재시작이 필요합니다.",
+                en: "Upload a previously backed-up SQLite file to restore. Server restart required after restore.",
+                ja: "以前バックアップしたSQLiteファイルをアップロードして復元します。復元後にサーバーの再起動が必要です。",
+                zh: "上传之前备份的SQLite文件进行恢复。恢复后需要重启服务器。",
+              })}
+            </p>
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
           <input
             ref={fileRef}
             type="file"
             accept=".sqlite,.db"
-            className="text-sm"
-            style={{ color: "var(--th-text-secondary)" }}
+            className="hidden"
+            aria-hidden
           />
+          <button
+            type="button"
+            onClick={triggerFileInput}
+            disabled={restoreBusy}
+            className="data-settings-btn data-settings-btn-secondary rounded-lg border px-4 py-2.5 text-sm font-medium transition disabled:opacity-50"
+          >
+            {t({ ko: "파일 선택", en: "Choose File", ja: "ファイルを選択", zh: "选择文件" })}
+          </button>
           <button
             onClick={handleRestore}
             disabled={restoreBusy}
-            className="rounded-lg px-4 py-2 text-sm font-medium text-white transition-colors disabled:opacity-50"
-            style={{ background: "#ef4444" }}
+            className="data-settings-btn data-settings-btn-danger rounded-lg px-4 py-2.5 text-sm font-medium transition disabled:opacity-50"
           >
             {restoreBusy
               ? t({ ko: "복원 중...", en: "Restoring...", ja: "復元中...", zh: "恢复中..." })
@@ -183,41 +236,38 @@ export default function DataSettingsTab({ t }: DataSettingsTabProps) {
         </div>
       </div>
 
-      {/* Export Section */}
-      <div className="rounded-xl border p-5" style={sectionStyle}>
-        <h3 className="mb-1 text-sm font-semibold" style={{ color: "var(--th-text-heading)" }}>
-          {t({ ko: "태스크 데이터 내보내기", en: "Export Tasks", ja: "タスクデータのエクスポート", zh: "导出任务数据" })}
-        </h3>
-        <p className="mb-4 text-xs" style={{ color: "var(--th-text-muted)" }}>
-          {t({
-            ko: "모든 태스크를 CSV 또는 JSON 형식으로 내보냅니다.",
-            en: "Export all tasks in CSV or JSON format.",
-            ja: "すべてのタスクをCSVまたはJSON形式でエクスポートします。",
-            zh: "将所有任务导出为CSV或JSON格式。",
-          })}
-        </p>
-        <div className="flex gap-3">
+      {/* Export */}
+      <div className="rounded-xl border p-5 transition-colors" style={{ borderColor: "var(--th-border)", background: "var(--th-bg-surface)" }}>
+        <div className="mb-3 flex items-center gap-3">
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl" style={{ background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}>
+            <IconExport />
+          </span>
+          <div>
+            <h3 className="text-sm font-semibold" style={{ color: "var(--th-text-heading)" }}>
+              {t({ ko: "태스크 데이터 내보내기", en: "Export Tasks", ja: "タスクデータのエクスポート", zh: "导出任务数据" })}
+            </h3>
+            <p className="text-xs" style={{ color: "var(--th-text-muted)" }}>
+              {t({
+                ko: "모든 태스크를 CSV 또는 JSON 형식으로 내보냅니다.",
+                en: "Export all tasks in CSV or JSON format.",
+                ja: "すべてのタスクをCSVまたはJSON形式でエクスポートします。",
+                zh: "将所有任务导出为CSV或JSON格式。",
+              })}
+            </p>
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-3">
           <button
             onClick={handleExportCsv}
             disabled={exportBusy}
-            className="rounded-lg border px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50"
-            style={{
-              borderColor: "var(--th-border)",
-              color: "var(--th-text-primary)",
-              background: "var(--th-bg-primary)",
-            }}
+            className="data-settings-btn data-settings-btn-secondary rounded-lg border px-4 py-2.5 text-sm font-medium transition disabled:opacity-50"
           >
             {t({ ko: "CSV 내보내기", en: "Export CSV", ja: "CSVエクスポート", zh: "导出CSV" })}
           </button>
           <button
             onClick={handleExportJson}
             disabled={exportBusy}
-            className="rounded-lg border px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50"
-            style={{
-              borderColor: "var(--th-border)",
-              color: "var(--th-text-primary)",
-              background: "var(--th-bg-primary)",
-            }}
+            className="data-settings-btn data-settings-btn-secondary rounded-lg border px-4 py-2.5 text-sm font-medium transition disabled:opacity-50"
           >
             {t({ ko: "JSON 내보내기", en: "Export JSON", ja: "JSONエクスポート", zh: "导出JSON" })}
           </button>
@@ -227,11 +277,12 @@ export default function DataSettingsTab({ t }: DataSettingsTabProps) {
       {/* Feedback */}
       {feedback && (
         <div
-          className={`rounded-lg px-4 py-3 text-sm ${
+          role="alert"
+          className={`data-settings-feedback rounded-xl border px-4 py-3 text-sm ${
             feedback.type === "success"
-              ? "border-green-500/30 bg-green-500/10 text-green-400"
+              ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
               : "border-red-500/30 bg-red-500/10 text-red-400"
-          } border`}
+          }`}
         >
           {feedback.message}
         </div>

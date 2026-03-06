@@ -8,6 +8,7 @@ import {
   getHeartbeatConfigs,
   getHeartbeatLogs,
   updateHeartbeatConfig,
+  deleteHeartbeatConfig,
   triggerHeartbeat,
   deleteHeartbeatLog,
   deleteAllHeartbeatLogs,
@@ -117,6 +118,7 @@ export default function HeartbeatPanel({ language, agents = [], standalone = fal
   }>({ enabled: false, interval_minutes: 30, check_items: [...ALL_CHECKS] });
   const [saving, setSaving] = useState(false);
   const [triggering, setTriggering] = useState<string | null>(null);
+  const [removingAgentId, setRemovingAgentId] = useState<string | null>(null);
   /** 직원 추가 셀렉트 값(팩 변경 시 초기화되도록 controlled) */
   const [addAgentId, setAddAgentId] = useState("");
   const [adding, setAdding] = useState(false);
@@ -421,14 +423,14 @@ export default function HeartbeatPanel({ language, agents = [], standalone = fal
                       >
                         {cfg.enabled ? (isKo ? "ON" : "ON") : "OFF"}
                       </span>
-                      {cfg.enabled && (
+                      {!!cfg.enabled && (
                         <span className="shrink-0 text-[11px] text-slate-500">
                           {cfg.interval_minutes} min
                         </span>
                       )}
                     </div>
                     <div className="flex shrink-0 items-center gap-1.5">
-                      {cfg.enabled && (
+                      {!!cfg.enabled && (
                         <button
                           type="button"
                           onClick={() => handleTrigger(cfg.agent_id)}
@@ -448,6 +450,26 @@ export default function HeartbeatPanel({ language, agents = [], standalone = fal
                         className="rounded-lg bg-slate-700/50 px-2.5 py-1.5 text-[11px] font-medium text-slate-300 transition-colors hover:bg-slate-700/70 hover:text-slate-200"
                       >
                         {isKo ? "설정" : "Edit"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (!window.confirm(isKo ? "이 직원을 살펴보기 대상에서 제거할까요?" : "Remove this staff from the watch list?")) return;
+                          setRemovingAgentId(cfg.agent_id);
+                          deleteHeartbeatConfig(cfg.agent_id)
+                            .then(() => refresh())
+                            .catch((err: unknown) => {
+                              console.error(err);
+                              const msg = err instanceof Error ? err.message : String(err);
+                              window.alert(isKo ? `제거 실패: ${msg}` : `Remove failed: ${msg}`);
+                            })
+                            .finally(() => setRemovingAgentId(null));
+                        }}
+                        disabled={removingAgentId === cfg.agent_id}
+                        className="rounded-lg bg-red-500/10 px-2.5 py-1.5 text-[11px] font-medium text-red-400 transition-colors hover:bg-red-500/20 disabled:opacity-50"
+                        title={isKo ? "살펴보기에서 제거" : "Remove from watch list"}
+                      >
+                        {removingAgentId === cfg.agent_id ? "…" : isKo ? "제거" : "Remove"}
                       </button>
                     </div>
                   </div>
@@ -549,7 +571,11 @@ export default function HeartbeatPanel({ language, agents = [], standalone = fal
                         setDeletingAllLogs(true);
                         deleteAllHeartbeatLogs()
                           .then(() => refresh())
-                          .catch(console.error)
+                          .catch((err: unknown) => {
+                            console.error(err);
+                            const msg = err instanceof Error ? err.message : String(err);
+                            window.alert(isKo ? `전체 삭제 실패: ${msg}` : `Delete all failed: ${msg}`);
+                          })
                           .finally(() => setDeletingAllLogs(false));
                       }}
                       disabled={deletingAllLogs}
@@ -600,8 +626,11 @@ export default function HeartbeatPanel({ language, agents = [], standalone = fal
                             </svg>
                           </button>
                           <StatusIcon />
-                          <span className="shrink-0 text-base leading-none">{log.agent_avatar}</span>
-                          <span className="min-w-0 flex-1 truncate text-slate-300">
+                          <span className="shrink-0 text-base leading-none">{log.agent_avatar ?? "👤"}</span>
+                          <span className="shrink-0 text-slate-300">
+                            {(isKo && log.agent_name_ko) ? log.agent_name_ko : log.agent_name ?? log.agent_id}
+                          </span>
+                          <span className="min-w-0 flex-1 truncate text-slate-400">
                             {log.status === "ok"
                               ? (isKo ? "정상" : "Normal")
                               : findings.length > 0
@@ -619,7 +648,11 @@ export default function HeartbeatPanel({ language, agents = [], standalone = fal
                               setDeletingLogId(log.id);
                               deleteHeartbeatLog(log.id)
                                 .then(() => refresh())
-                                .catch(console.error)
+                                .catch((err: unknown) => {
+                                  console.error(err);
+                                  const msg = err instanceof Error ? err.message : String(err);
+                                  window.alert(isKo ? `로그 삭제 실패: ${msg}` : `Delete failed: ${msg}`);
+                                })
                                 .finally(() => setDeletingLogId(null));
                             }}
                             disabled={isDeleting}

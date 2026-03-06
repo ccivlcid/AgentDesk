@@ -64,6 +64,30 @@ export function registerAgentUsageRoutes(ctx: RuntimeContext): {
     res.json({ ok: true, usage: rows });
   });
 
+  // GET /api/agent-usage/trends/daily — global daily usage trends (must be before /:agentId)
+  app.get("/api/agent-usage/trends/daily", (_req, res) => {
+    const days = Math.min(Number(_req.query.days) || 30, 90);
+    const sinceMs = nowMs() - days * 86_400_000;
+
+    const daily = db
+      .prepare(
+        `SELECT
+           CAST((u.created_at / 86400000) AS INTEGER) AS day_epoch,
+           u.provider,
+           COUNT(*) AS run_count,
+           SUM(u.ended_at - u.started_at) AS total_duration_ms,
+           SUM(u.log_bytes) AS total_log_bytes,
+           SUM(CASE WHEN u.exit_code = 0 THEN 1 ELSE 0 END) AS success_count
+         FROM agent_usage_logs u
+         WHERE u.created_at >= ?
+         GROUP BY day_epoch, u.provider
+         ORDER BY day_epoch ASC`,
+      )
+      .all(sinceMs);
+
+    res.json({ ok: true, daily });
+  });
+
   // Get usage log for a specific agent
   app.get("/api/agent-usage/:agentId", (req, res) => {
     const agentId = String(req.params.agentId);
@@ -96,30 +120,6 @@ export function registerAgentUsageRoutes(ctx: RuntimeContext): {
       .all(agentId);
 
     res.json({ ok: true, logs: rows, daily });
-  });
-
-  // GET /api/agent-usage/trends/daily — global daily usage trends (last 30 days)
-  app.get("/api/agent-usage/trends/daily", (_req, res) => {
-    const days = Math.min(Number(_req.query.days) || 30, 90);
-    const sinceMs = nowMs() - days * 86_400_000;
-
-    const daily = db
-      .prepare(
-        `SELECT
-           CAST((u.created_at / 86400000) AS INTEGER) AS day_epoch,
-           u.provider,
-           COUNT(*) AS run_count,
-           SUM(u.ended_at - u.started_at) AS total_duration_ms,
-           SUM(u.log_bytes) AS total_log_bytes,
-           SUM(CASE WHEN u.exit_code = 0 THEN 1 ELSE 0 END) AS success_count
-         FROM agent_usage_logs u
-         WHERE u.created_at >= ?
-         GROUP BY day_epoch, u.provider
-         ORDER BY day_epoch ASC`,
-      )
-      .all(sinceMs);
-
-    res.json({ ok: true, daily });
   });
 
   return { recordAgentUsage };

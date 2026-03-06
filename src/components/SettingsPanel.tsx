@@ -32,6 +32,7 @@ export default function SettingsPanel({
   onRefreshCli,
   oauthResult,
   onOauthResultClear,
+  managerAgents,
 }: SettingsPanelProps) {
   const [form, setForm] = useState<LocalSettings>(settings as LocalSettings);
   const { t, locale: localeTag } = useI18n(form.language);

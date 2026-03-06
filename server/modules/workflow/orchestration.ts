@@ -735,9 +735,23 @@ export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrat
     db,
     nowMs,
     broadcast,
-    insertNotification,
+    insertNotification: (params: { type: string; title: string; message: string; metadata_json?: string }) => {
+      insertNotification({
+        type: params.type as Parameters<typeof insertNotification>[0]["type"],
+        title: params.title,
+        body: params.message,
+      });
+    },
     startTaskExecutionForAgent: (agentId: string, taskId: string) => {
-      startTaskExecutionForAgent(agentId, taskId);
+      const task = db.prepare("SELECT * FROM tasks WHERE id = ?").get(taskId) as { department_id?: string | null } | undefined;
+      const agent = db.prepare("SELECT * FROM agents WHERE id = ?").get(agentId);
+      if (!task || !agent) return;
+      const deptId = task.department_id ?? null;
+      const deptRow = deptId
+        ? (db.prepare("SELECT name FROM departments WHERE id = ?").get(deptId) as { name: string } | undefined)
+        : null;
+      const deptName = deptRow?.name ?? "";
+      startTaskExecutionForAgent(taskId, agent, deptId, deptName);
     },
   });
 

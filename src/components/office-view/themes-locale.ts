@@ -207,6 +207,12 @@ const LOCALE_TEXT = {
     ja: "使用量APIなし",
     zh: "无用量 API",
   },
+  cliNoUsageDisplay: {
+    ko: "사용량 표시 없음",
+    en: "No usage display",
+    ja: "使用量表示なし",
+    zh: "无用量显示",
+  },
   cliUnavailable: {
     ko: "사용 불가",
     en: "unavailable",

@@ -2,10 +2,14 @@ import type { RuntimeContext, RouteCollabExports, RouteOpsExports } from "../typ
 import { registerRoutesPartA } from "./routes/core.ts";
 import { registerRoutesPartB } from "./routes/collab.ts";
 import { registerRoutesPartC } from "./routes/ops.ts";
+import { registerHeartbeatDeleteRoutesEarly } from "./routes/ops/heartbeat.ts";
 import { ROUTE_RUNTIME_HELPER_KEYS } from "./runtime-helper-keys.ts";
 
 export function registerApiRoutes(ctx: RuntimeContext): RouteCollabExports & RouteOpsExports {
   const runtime: RuntimeContext = ctx;
+
+  // heartbeat DELETE는 다른 라우트보다 먼저 등록 (404 방지)
+  registerHeartbeatDeleteRoutesEarly(runtime);
 
   Object.assign(runtime, registerRoutesPartB(runtime));
   Object.assign(runtime, registerRoutesPartA(runtime));

@@ -373,7 +373,7 @@ export default function AppMainLayout({
 
   const tasksForActivePack = useMemo(() => filterTasksByOfficePack(tasks, officePackKey), [tasks, officePackKey]);
   const { cliStatus: cliStatusFromUsage, cliUsage, cliUsageRef, refreshing: cliUsageRefreshing, handleRefreshUsage } =
-    useCliUsage(tasks);
+    useCliUsage(tasks, view);
   const handleCreateTaskForActivePack = useCallback(
     async (input: TaskCreateInput) => {
       await onCreateTask(applyOfficePackToTaskInput(input, officePackKey));
@@ -550,7 +550,7 @@ export default function AppMainLayout({
             {view === "cli-usage" && (
               <div className="mx-auto max-w-4xl px-4 py-6">
                 <CliUsagePage
-                  cliStatus={cliStatusFromUsage}
+                  cliStatus={cliStatus ?? cliStatusFromUsage}
                   cliUsage={cliUsage}
                   language={labels.uiLanguage as "ko" | "en" | "ja" | "zh"}
                   refreshing={cliUsageRefreshing}

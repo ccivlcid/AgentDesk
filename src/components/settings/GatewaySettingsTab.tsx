@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as api from "../../api";
 import AgentAvatar, { useSpriteMap } from "../AgentAvatar";
+import { listOfficePackOptions } from "../../app/office-workflow-pack";
 import {
   MESSENGER_CHANNELS,
   WORKFLOW_PACK_KEYS,
@@ -100,21 +101,23 @@ export default function GatewaySettingsTab({
   }, [agents]);
 
   const workflowPackOptions = useMemo(() => {
+    const locale = (form.language || "ko") as "ko" | "en" | "ja" | "zh";
+    const officeOptions = listOfficePackOptions(locale);
     const map = new Map<WorkflowPackKey, { key: WorkflowPackKey; name: string; enabled: boolean }>();
-    for (const key of WORKFLOW_PACK_KEYS) {
-      map.set(key, { key, name: defaultWorkflowPackLabel(t, key), enabled: true });
+    for (const opt of officeOptions) {
+      map.set(opt.key, { key: opt.key, name: opt.label, enabled: true });
     }
     for (const pack of workflowPacks) {
       if (!isWorkflowPackKey(pack.key)) continue;
       const existing = map.get(pack.key);
       map.set(pack.key, {
         key: pack.key,
-        name: typeof pack.name === "string" && pack.name.trim() ? pack.name.trim() : (existing?.name ?? pack.key),
+        name: existing?.name ?? defaultWorkflowPackLabel(t, pack.key),
         enabled: pack.enabled !== false,
       });
     }
     return Array.from(map.values());
-  }, [workflowPacks, t]);
+  }, [workflowPacks, form.language, t]);
 
   const workflowPackNameByKey = useMemo(() => {
     const map = new Map<WorkflowPackKey, string>();
@@ -511,6 +514,14 @@ export default function GatewaySettingsTab({
           zh: "可在此标签页直接配置消息渠道。通过“新增聊天”注册消息渠道/令牌/目标ID/对话 Agent。",
         })}
       </p>
+      <p className="text-xs" style={{ color: "var(--th-text-muted)" }}>
+        {t({
+          ko: "$로 시작하면 전사 공지, !로 시작하면 업무(태스크)로 처리되고, 일반 메시지는 선택된 Agent에게 1:1 대화로 전달됩니다.",
+          en: "Messages starting with $ are company-wide directives; with ! they are treated as work (task); normal messages are delivered as 1:1 chat to the selected agent.",
+          ja: "$ で始めると全社通知、! で始めると業務（タスク）、通常メッセージは選択した Agent に 1:1 で届きます。",
+          zh: "以 $ 开头为全员公告，以 ! 开头按工作（任务）处理，普通消息会以 1:1 对话形式发给所选 Agent。",
+        })}
+      </p>
 
       <div className="rounded-lg border border-slate-700/60 bg-slate-900/40 p-3 space-y-3">
         <div className="flex items-center justify-between">
@@ -633,10 +644,10 @@ export default function GatewaySettingsTab({
 
         <div className="text-[11px] text-slate-500">
           {t({
-            ko: "$로 시작하면 전사공지, 일반 메시지는 선택된 Agent에게 1:1 대화로 전달됩니다.",
-            en: "Messages starting with $ become company directives; normal messages go 1:1 to the selected agent.",
-            ja: "$ で始まると全社通知、通常メッセージは選択 Agent との 1:1 会話になります。",
-            zh: "以 $ 开头为公司指令，普通消息会进入所选 Agent 的 1:1 对话。",
+            ko: "$ 전사 공지, ! 업무(태스크), 일반 메시지는 선택된 Agent 1:1 대화.",
+            en: "$ company directive, ! work (task), normal messages go 1:1 to the selected agent.",
+            ja: "$ 全社通知、! 業務（タスク）、通常は選択 Agent に 1:1。",
+            zh: "$ 全员公告，! 工作（任务），普通消息为所选 Agent 1:1 对话。",
           })}
         </div>
       </div>
@@ -801,8 +812,8 @@ export default function GatewaySettingsTab({
           closeEditorModal={closeEditorModal}
           handleSaveEditor={handleSaveEditor}
           channelsConfig={channelsConfig}
-          agents={managerAgents ?? agents}
-          agentsAreCurrentPackOnly={!!managerAgents}
+          agents={agents}
+          agentsAreCurrentPackOnly={false}
           agentsLoading={agentsLoading}
           officePackProfiles={form.officePackProfiles}
           workflowPackOptions={workflowPackOptions}

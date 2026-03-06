@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, type ReactNode } from "react";
 import type { NotificationItem } from "../api/notifications";
 import {
   fetchNotifications,
@@ -24,29 +24,87 @@ function timeAgo(ts: number): string {
   return `${Math.floor(diff / 86_400_000)}d ago`;
 }
 
-const TYPE_ICON: Record<string, string> = {
-  task_complete: "✅",
-  task_error: "❌",
-  decision_created: "📬",
-  agent_error: "⚠️",
-  system: "ℹ️",
+const iconSize = 16;
+const iconClass = "shrink-0";
+
+const IconBell = () => (
+  <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={iconClass}>
+    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+    <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+  </svg>
+);
+const IconBellOff = () => (
+  <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={iconClass}>
+    <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+    <path d="M18.63 13A17.69 17.69 0 0 0 18 8a6 6 0 0 0-9-5.63" />
+    <path d="M6 18H6.01" />
+    <path d="M3 3l18 18" />
+  </svg>
+);
+const IconCheck = () => (
+  <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={iconClass}>
+    <path d="M20 6 9 17l-5-5" />
+  </svg>
+);
+const IconX = () => (
+  <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={iconClass}>
+    <path d="M18 6 6 18M6 6l12 12" />
+  </svg>
+);
+const IconInbox = () => (
+  <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={iconClass}>
+    <path d="M22 12h-6l-2 3h-4l-2-3H2" />
+  </svg>
+);
+const IconAlert = () => (
+  <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={iconClass}>
+    <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+    <path d="M12 9v4M12 17h.01" />
+  </svg>
+);
+const IconInfo = () => (
+  <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={iconClass}>
+    <circle cx="12" cy="12" r="10" />
+    <path d="M12 16v-4M12 8h.01" />
+  </svg>
+);
+const IconPin = () => (
+  <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={iconClass}>
+    <path d="m12 17-4 4V3l4 4 4-4v18l-4-4z" />
+  </svg>
+);
+
+const TYPE_ICONS: Record<string, ReactNode> = {
+  task_complete: <IconCheck />,
+  task_error: <IconX />,
+  decision_created: <IconInbox />,
+  agent_error: <IconAlert />,
+  system: <IconInfo />,
 };
 
-const TYPE_FILTERS: Array<{ key: NotifType; label: string }> = [
-  { key: "all", label: "All" },
-  { key: "task_complete", label: "✅" },
-  { key: "task_error", label: "❌" },
-  { key: "decision_created", label: "📬" },
-  { key: "agent_error", label: "⚠️" },
-  { key: "system", label: "ℹ️" },
+const TYPE_FILTERS: Array<{ key: NotifType; label: string; icon: ReactNode | null }> = [
+  { key: "all", label: "All", icon: null },
+  { key: "task_complete", label: "Done", icon: <IconCheck /> },
+  { key: "task_error", label: "Error", icon: <IconX /> },
+  { key: "decision_created", label: "Decision", icon: <IconInbox /> },
+  { key: "agent_error", label: "Alert", icon: <IconAlert /> },
+  { key: "system", label: "Info", icon: <IconInfo /> },
 ];
+
+const TYPE_LABEL: Record<string, string> = {
+  task_complete: "Task",
+  task_error: "Error",
+  decision_created: "Decision",
+  agent_error: "Alert",
+  system: "Info",
+};
 
 function showBrowserNotification(n: NotificationItem): void {
   if (typeof Notification === "undefined") return;
   if (Notification.permission !== "granted") return;
-  const icon = TYPE_ICON[n.type] ?? "📌";
+  const prefix = TYPE_LABEL[n.type] ?? "Notification";
   try {
-    const notif = new Notification(`${icon} ${n.title}`, {
+    const notif = new Notification(`${prefix}: ${n.title}`, {
       body: n.body ?? undefined,
       tag: n.id,
       silent: false,
@@ -132,18 +190,23 @@ export default function NotificationCenter({ on, onNavigateTask }: Props) {
   const filteredItems = typeFilter === "all" ? items : items.filter((i) => i.type === typeFilter);
 
   return (
-    <div className="relative" ref={panelRef}>
+    <div className="relative inline-flex" ref={panelRef}>
       <button
+        type="button"
         onClick={() => setOpen((v) => !v)}
-        className="header-action-btn header-action-btn-secondary"
+        className="header-action-btn header-action-btn-secondary relative inline-flex h-9 min-w-[2.25rem] items-center justify-center rounded-xl px-2 sm:px-2.5"
+        style={{
+          border: "1px solid var(--th-border)",
+          background: "var(--th-bg-surface)",
+          color: "var(--th-text-secondary)",
+        }}
         aria-label="Notifications"
       >
-        <span className="sm:hidden">🔔</span>
-        <span className="hidden sm:inline">🔔</span>
+        <IconBell />
         {unreadCount > 0 && (
           <span
-            className="absolute -top-1 -right-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[10px] font-bold leading-none text-white"
-            style={{ background: "var(--th-accent, #ef4444)" }}
+            className="absolute -top-0.5 -right-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[10px] font-bold leading-none text-white"
+            style={{ background: "var(--th-danger, #ef4444)" }}
           >
             {unreadCount > 99 ? "99+" : unreadCount}
           </span>
@@ -151,14 +214,14 @@ export default function NotificationCenter({ on, onNavigateTask }: Props) {
       </button>
       {open && (
         <div
-          className="absolute right-0 top-full z-50 mt-2 w-[340px] max-h-[420px] overflow-hidden rounded-xl shadow-xl"
+          className="absolute right-0 top-full z-50 mt-2 w-[340px] max-h-[420px] overflow-hidden rounded-xl shadow-xl backdrop-blur-xl"
           style={{
             border: "1px solid var(--th-border)",
             background: "var(--th-bg-surface)",
           }}
         >
           <div
-            className="flex items-center justify-between px-4 py-2.5"
+            className="flex items-center justify-between gap-3 px-4 py-3"
             style={{ borderBottom: "1px solid var(--th-border)" }}
           >
             <span className="text-sm font-semibold" style={{ color: "var(--th-text-heading)" }}>
@@ -167,6 +230,7 @@ export default function NotificationCenter({ on, onNavigateTask }: Props) {
             <div className="flex items-center gap-2">
               {typeof Notification !== "undefined" && (
                 <button
+                  type="button"
                   onClick={() => {
                     if (Notification.permission === "granted") {
                       setPushEnabled((v) => !v);
@@ -176,20 +240,23 @@ export default function NotificationCenter({ on, onNavigateTask }: Props) {
                       });
                     }
                   }}
-                  className="text-xs px-1.5 py-0.5 rounded transition"
+                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg transition"
                   style={{
-                    background: pushEnabled ? "rgba(34,197,94,0.15)" : "rgba(148,163,184,0.15)",
-                    color: pushEnabled ? "#22c55e" : "var(--th-text-muted)",
+                    background: pushEnabled ? "var(--th-success, #22c55e)" : "var(--th-bg-elevated)",
+                    color: pushEnabled ? "#fff" : "var(--th-text-muted)",
+                    border: "1px solid var(--th-border)",
                   }}
                   title={pushEnabled ? "Browser push ON" : "Browser push OFF"}
+                  aria-label={pushEnabled ? "Disable browser notifications" : "Enable browser notifications"}
                 >
-                  {pushEnabled ? "🔔" : "🔕"}
+                  {pushEnabled ? <IconBell /> : <IconBellOff />}
                 </button>
               )}
               {unreadCount > 0 && (
                 <button
+                  type="button"
                   onClick={handleMarkAllRead}
-                  className="text-xs hover:underline"
+                  className="text-xs font-medium rounded-lg px-2 py-1 transition"
                   style={{ color: "var(--th-text-link, var(--th-accent, #3b82f6))" }}
                 >
                   Mark all read
@@ -199,45 +266,52 @@ export default function NotificationCenter({ on, onNavigateTask }: Props) {
           </div>
           {/* Type filter */}
           <div
-            className="flex items-center gap-1 px-3 py-1.5 overflow-x-auto"
+            className="flex items-center gap-1.5 px-3 py-2 overflow-x-auto"
             style={{ borderBottom: "1px solid var(--th-border)" }}
           >
-            {TYPE_FILTERS.map((f) => (
-              <button
-                key={f.key}
-                onClick={() => setTypeFilter(f.key)}
-                className="px-2 py-0.5 text-[11px] rounded-full transition whitespace-nowrap"
-                style={{
-                  background: typeFilter === f.key
-                    ? "var(--th-accent, #3b82f6)"
-                    : "rgba(148,163,184,0.1)",
-                  color: typeFilter === f.key ? "#fff" : "var(--th-text-secondary)",
-                }}
-              >
-                {f.label}
-              </button>
-            ))}
+            {TYPE_FILTERS.map((f) => {
+              const active = typeFilter === f.key;
+              return (
+                <button
+                  key={f.key}
+                  type="button"
+                  onClick={() => setTypeFilter(f.key)}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium rounded-lg transition whitespace-nowrap"
+                  style={{
+                    background: active ? "var(--th-accent, #3b82f6)" : "var(--th-bg-elevated)",
+                    color: active ? "#fff" : "var(--th-text-secondary)",
+                    border: active ? "none" : "1px solid var(--th-border)",
+                  }}
+                >
+                  {f.icon}
+                  {f.label}
+                </button>
+              );
+            })}
           </div>
           <div className="overflow-y-auto" style={{ maxHeight: 330 }}>
             {filteredItems.length === 0 && (
-              <div className="px-4 py-8 text-center text-sm" style={{ color: "var(--th-text-muted)" }}>
+              <div className="px-4 py-10 text-center text-sm" style={{ color: "var(--th-text-muted)" }}>
                 No notifications
               </div>
             )}
             {filteredItems.map((item) => (
               <button
                 key={item.id}
+                type="button"
                 onClick={() => handleItemClick(item)}
-                className="flex w-full items-start gap-2.5 px-4 py-2.5 text-left transition hover:opacity-80"
+                className="flex w-full items-start gap-3 px-4 py-3 text-left transition"
                 style={{
                   borderBottom: "1px solid var(--th-border)",
-                  background: item.read ? "transparent" : "var(--th-bg-elevated, rgba(59,130,246,0.06))",
+                  background: item.read ? "transparent" : "var(--th-bg-elevated)",
+                  color: "var(--th-text-primary)",
                 }}
               >
-                <span className="mt-0.5 flex-shrink-0 text-base">{TYPE_ICON[item.type] ?? "📌"}</span>
+                <span className="mt-0.5 flex-shrink-0" style={{ color: "var(--th-text-secondary)" }}>
+                  {TYPE_ICONS[item.type] ?? <IconPin />}
+                </span>
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-1.5">
-                    {item.agent_avatar && <span className="text-sm">{item.agent_avatar}</span>}
+                  <div className="flex items-center gap-2">
                     <span
                       className="truncate text-sm font-medium"
                       style={{ color: item.read ? "var(--th-text-secondary)" : "var(--th-text-primary)" }}
@@ -247,19 +321,19 @@ export default function NotificationCenter({ on, onNavigateTask }: Props) {
                   </div>
                   {item.body && (
                     <p
-                      className="mt-0.5 truncate text-xs"
+                      className="mt-0.5 line-clamp-2 text-xs"
                       style={{ color: "var(--th-text-muted)" }}
                     >
                       {item.body}
                     </p>
                   )}
-                  <span className="mt-0.5 text-[10px]" style={{ color: "var(--th-text-muted)" }}>
+                  <span className="mt-1 inline-block text-[10px]" style={{ color: "var(--th-text-muted)" }}>
                     {timeAgo(item.created_at)}
                   </span>
                 </div>
                 {!item.read && (
                   <span
-                    className="mt-2 h-2 w-2 flex-shrink-0 rounded-full"
+                    className="mt-2.5 h-2 w-2 flex-shrink-0 rounded-full"
                     style={{ background: "var(--th-accent, #3b82f6)" }}
                   />
                 )}

@@ -628,6 +628,105 @@
   }
 }
 
+/* ─── Sleek header redesign ─── */
+.header-sleek {
+  box-shadow: 0 1px 0 var(--th-border);
+}
+.header-sleek-title {
+  letter-spacing: -0.02em;
+}
+.header-sleek-pack {
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+.header-sleek-pack:hover {
+  border-color: var(--th-border-strong) !important;
+}
+.header-sleek-pack select {
+  cursor: pointer;
+}
+.header-sleek-tabs {
+  gap: 0;
+}
+.header-sleek-tabs .header-tab-item {
+  padding: 0.35rem 0.65rem;
+  font-size: 0.8125rem;
+  border: none;
+  min-height: 32px;
+}
+.header-sleek-tabs .header-action-btn-primary.header-tab-item {
+  box-shadow: none;
+}
+.header-sleek-tabs .header-action-btn-secondary.header-tab-item {
+  background: transparent;
+  border: none;
+}
+.header-sleek-tabs .header-action-btn-secondary.header-tab-item:hover {
+  background: var(--th-bg-surface-hover);
+  transform: none;
+  box-shadow: none;
+}
+.header-sleek-tabs .header-action-btn:active {
+  transform: none;
+}
+.header-sleek-right .header-action-btn {
+  padding: 0.35rem 0.6rem;
+  font-size: 0.8125rem;
+}
+.header-sleek-icon-btn {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  border-radius: 0.5rem;
+}
+.header-sleek-status {
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+@media (max-width: 639px) {
+  .header-sleek-tabs .header-tab-item {
+    padding: 0.3rem 0.5rem;
+    font-size: 0.75rem;
+  }
+}
+
+/* ─── Data settings tab ─── */
+.data-settings-tab .data-settings-btn {
+  cursor: pointer;
+  transition: opacity 0.2s ease, transform 0.05s ease;
+}
+.data-settings-tab .data-settings-btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+.data-settings-btn-primary {
+  background: var(--th-accent, #3b82f6) !important;
+  color: #fff !important;
+  border: none !important;
+}
+.data-settings-btn-primary:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+.data-settings-btn-secondary {
+  border: 1px solid var(--th-border) !important;
+  color: var(--th-text-primary) !important;
+  background: var(--th-bg-primary) !important;
+}
+.data-settings-btn-secondary:hover:not(:disabled) {
+  border-color: var(--th-border-strong) !important;
+  background: var(--th-bg-surface-hover) !important;
+}
+.data-settings-btn-danger {
+  background: #dc2626 !important;
+  color: #fff !important;
+  border: none !important;
+}
+.data-settings-btn-danger:hover:not(:disabled) {
+  background: #b91c1c !important;
+  filter: brightness(1.05);
+}
+.data-settings-feedback {
+  transition: opacity 0.2s ease;
+}
+
 /* ─── Sidebar redesign ─── */
 
 /* Shell */

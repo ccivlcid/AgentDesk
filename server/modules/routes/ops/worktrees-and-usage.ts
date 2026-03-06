@@ -152,7 +152,7 @@ export function registerWorktreeAndUsageRoutes(ctx: RuntimeContext): {
   }
 
   async function refreshCliUsageData(): Promise<Record<string, CliUsageEntry>> {
-    const providers = ["claude", "codex", "gemini", "copilot", "antigravity"];
+    const providers = ["claude", "codex", "gemini", "cursor", "copilot", "antigravity"];
     const usage: Record<string, CliUsageEntry> = {};
 
     const fetchMap: Record<string, () => Promise<CliUsageEntry>> = {
@@ -162,7 +162,7 @@ export function registerWorktreeAndUsageRoutes(ctx: RuntimeContext): {
     };
 
     const fetches = providers.map(async (p) => {
-      const tool = CLI_TOOLS.find((t) => t.name === p);
+      const tool = CLI_TOOLS.find((t) => t.name === p || (p === "cursor" && t.name === "agent"));
       if (!tool) {
         usage[p] = { windows: [], error: "not_implemented" };
         return;

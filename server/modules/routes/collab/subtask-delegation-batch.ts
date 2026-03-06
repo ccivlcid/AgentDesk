@@ -216,7 +216,7 @@ export function createSubtaskDelegationBatch(deps: BatchDeps) {
       return;
     }
 
-    const originLeader = findTeamLeader(parentTask.department_id, projectCandidateAgentIds);
+    const originLeader = findTeamLeader(parentTask.department_id ?? null, projectCandidateAgentIds);
     const crossSub = manualScoped
       ? findBestSubordinate(targetDeptId, crossLeader.id, projectCandidateAgentIds)
       : findBestSubordinate(targetDeptId, crossLeader.id);

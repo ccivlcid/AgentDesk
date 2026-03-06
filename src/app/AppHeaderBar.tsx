@@ -72,11 +72,11 @@ export default function AppHeaderBar({
 }: AppHeaderBarProps) {
   return (
     <header
-      className="sticky top-0 z-30 flex min-h-[52px] items-center gap-2 px-3 py-2 backdrop-blur-md sm:px-4 sm:py-2.5 lg:px-5"
+      className="header-sleek sticky top-0 z-30 flex min-h-[56px] items-center gap-3 px-3 py-2 backdrop-blur-xl sm:px-4 sm:py-2.5 lg:px-6"
       style={{ borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-header)" }}
     >
-      {/* Left: nav, title, office pack — can shrink */}
-      <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
+      {/* Left: nav, title, office pack */}
+      <div className="header-sleek-left flex min-w-0 flex-1 items-center gap-3 overflow-hidden">
         <button
           onClick={onOpenMobileNav}
           className="inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl transition lg:hidden"
@@ -113,11 +113,11 @@ export default function AppHeaderBar({
               />
             </span>
           )}
-          <span className="truncate text-base font-semibold tracking-tight sm:text-lg">{viewTitle}</span>
+          <span className="header-sleek-title truncate text-base font-semibold tracking-tight sm:text-lg">{viewTitle}</span>
         </h1>
         {officePackControl && (
           <label
-            className="header-pack-selector flex flex-shrink-0 items-center gap-1.5 rounded-xl border px-2 py-1.5 sm:gap-2 sm:px-2.5"
+            className="header-sleek-pack header-pack-selector flex flex-shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1.5 sm:gap-2 sm:px-3"
             style={{ borderColor: "var(--th-border)", background: "var(--th-bg-surface)" }}
           >
             <span
@@ -142,11 +142,11 @@ export default function AppHeaderBar({
           </label>
         )}
       </div>
-      {/* Right: actions — fixed width, no wrap; overflow goes into "more" menu below lg */}
-      <div className="flex flex-shrink-0 items-center gap-1.5 sm:gap-2">
+      {/* Center: primary tabs (업무, 의사결정, 에이전트) */}
+      <div className="header-sleek-tabs flex flex-shrink-0 items-center rounded-xl p-0.5" style={{ background: "var(--th-bg-surface)", border: "1px solid var(--th-border)" }}>
         <button
           onClick={onOpenTasks}
-          className="header-action-btn header-action-btn-primary"
+          className="header-action-btn header-action-btn-primary header-tab-item rounded-lg"
           aria-label={tasksPrimaryLabel}
         >
           <span className="sm:hidden">📋</span>
@@ -155,7 +155,7 @@ export default function AppHeaderBar({
         <button
           onClick={onOpenDecisionInbox}
           disabled={decisionInboxLoading}
-          className={`header-action-btn header-action-btn-secondary disabled:cursor-wait disabled:opacity-60${
+          className={`header-action-btn header-action-btn-secondary header-tab-item rounded-lg disabled:cursor-wait disabled:opacity-60${
             decisionInboxCount > 0 ? " decision-has-pending" : ""
           }`}
           aria-label={decisionLabel}
@@ -166,26 +166,30 @@ export default function AppHeaderBar({
           </span>
           {decisionInboxCount > 0 && <span className="header-decision-badge">{decisionInboxCount}</span>}
         </button>
-        <button onClick={onOpenAgentStatus} className="header-action-btn header-action-btn-secondary header-desktop-only">
+        <button onClick={onOpenAgentStatus} className="header-action-btn header-action-btn-secondary header-tab-item header-desktop-only rounded-lg">
           <span className="lg:hidden">&#x1F6E0;</span>
           <span className="hidden lg:inline">&#x1F6E0; {agentStatusLabel}</span>
         </button>
-        <button onClick={onOpenReportHistory} className="header-action-btn header-action-btn-secondary header-desktop-only">
+      </div>
+      {/* Right: utils, notification, theme, status */}
+      <div className="header-sleek-right flex flex-shrink-0 items-center gap-2">
+        <button onClick={onOpenReportHistory} className="header-action-btn header-action-btn-secondary header-desktop-only" title={reportLabel}>
           <span className="lg:hidden">📋</span>
           <span className="hidden lg:inline">{reportLabel}</span>
         </button>
-        <button onClick={onOpenAnnouncement} className="header-action-btn header-action-btn-secondary">
+        <button onClick={onOpenAnnouncement} className="header-action-btn header-action-btn-secondary" title={announcementLabel}>
           <span className="sm:hidden">📢</span>
           <span className="hidden sm:inline">{announcementLabel}</span>
         </button>
-        <button onClick={onOpenRoomManager} className="header-action-btn header-action-btn-secondary header-desktop-only">
+        <button onClick={onOpenRoomManager} className="header-action-btn header-action-btn-secondary header-desktop-only" title={roomManagerLabel}>
           <span className="lg:hidden">🏢</span>
           <span className="hidden lg:inline">{roomManagerLabel}</span>
         </button>
+        <span className="header-sleek-divider hidden h-5 w-px sm:block" style={{ background: "var(--th-border)" }} />
         {notificationSlot}
         <button
           onClick={onToggleTheme}
-          className="theme-toggle-btn"
+          className="theme-toggle-btn header-sleek-icon-btn"
           aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
           title={theme === "dark" ? "라이트 모드" : "다크 모드"}
         >
@@ -325,8 +329,8 @@ export default function AppHeaderBar({
             </>
           )}
         </div>
-        <div className="flex items-center gap-2 text-xs" style={{ color: "var(--th-text-muted)" }}>
-          <div className={`w-2 h-2 rounded-full ${connected ? "bg-green-500" : "bg-red-500"}`} />
+        <div className="header-sleek-status flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-medium" style={{ background: "var(--th-bg-surface)", color: "var(--th-text-muted)", border: "1px solid var(--th-border)" }}>
+          <div className={`h-1.5 w-1.5 rounded-full ${connected ? "bg-emerald-500" : "bg-red-400"}`} />
           <span className="hidden sm:inline">{connected ? "Live" : "Offline"}</span>
         </div>
       </div>

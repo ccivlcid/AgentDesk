@@ -41,106 +41,106 @@ export function useAppLabels({
   const viewTitle = (() => {
     switch (view) {
       case "office":
-        return `🏢 ${pickLang(uiLanguage, {
+        return pickLang(uiLanguage, {
           ko: "오피스",
           en: "Office",
           ja: "オフィス",
           zh: "办公室",
-        })}`;
+        });
       case "dashboard":
-        return `📊 ${pickLang(uiLanguage, {
+        return pickLang(uiLanguage, {
           ko: "대시보드",
           en: "Dashboard",
           ja: "ダッシュボード",
           zh: "仪表盘",
-        })}`;
+        });
       case "cli-usage":
-        return `📈 ${pickLang(uiLanguage, {
+        return pickLang(uiLanguage, {
           ko: "CLI 사용량",
           en: "CLI Usage",
           ja: "CLI使用量",
           zh: "CLI 使用量",
-        })}`;
+        });
       case "tasks":
       case "tasks-board":
-        return `📋 ${pickLang(uiLanguage, {
+        return pickLang(uiLanguage, {
           ko: "업무 보드",
           en: "Task Board",
           ja: "タスクボード",
           zh: "任务看板",
-        })}`;
+        });
       case "tasks-deliverables":
-        return `📦 ${pickLang(uiLanguage, {
+        return pickLang(uiLanguage, {
           ko: "결과물",
           en: "Deliverables",
           ja: "成果物",
           zh: "交付物",
-        })}`;
+        });
       case "agents":
-        return `${pickLang(uiLanguage, {
+        return pickLang(uiLanguage, {
           ko: "직원관리",
           en: "Agents",
           ja: "社員管理",
           zh: "员工管理",
-        })}`;
+        });
       case "heartbeat":
-        return `❤️ ${pickLang(uiLanguage, {
+        return pickLang(uiLanguage, {
           ko: "직원 살펴보기",
           en: "Heartbeat",
           ja: "社員の様子",
           zh: "员工动态",
-        })}`;
+        });
       case "skills":
-        return `⭐ ${pickLang(uiLanguage, {
+        return pickLang(uiLanguage, {
           ko: "스킬스",
           en: "Skills",
           ja: "スキル",
           zh: "技能",
-        })}`;
+        });
       case "agent-rules":
-        return `🛡️ ${pickLang(uiLanguage, {
+        return pickLang(uiLanguage, {
           ko: "에이전트 룰",
           en: "Agent Rules",
           ja: "エージェントルール",
           zh: "代理规则",
-        })}`;
+        });
       case "memory":
-        return `🧠 ${pickLang(uiLanguage, {
+        return pickLang(uiLanguage, {
           ko: "메모리",
           en: "Memory",
           ja: "メモリ",
           zh: "记忆",
-        })}`;
+        });
       case "hooks":
-        return `🔗 ${pickLang(uiLanguage, {
+        return pickLang(uiLanguage, {
           ko: "훅",
           en: "Hooks",
           ja: "フック",
           zh: "钩子",
-        })}`;
+        });
       case "settings":
-        return `⚙️ ${pickLang(uiLanguage, {
+        return pickLang(uiLanguage, {
           ko: "설정",
           en: "Settings",
           ja: "設定",
           zh: "设置",
-        })}`;
+        });
       default:
         return "";
     }
   })();
-  const announcementLabel = `📢 ${pickLang(uiLanguage, {
+  const announcementLabel = pickLang(uiLanguage, {
     ko: "전사 공지",
     en: "Announcement",
     ja: "全社告知",
     zh: "全员公告",
-  })}`;
-  const roomManagerLabel = `🏢 ${pickLang(uiLanguage, {
+  });
+  const roomManagerLabel = pickLang(uiLanguage, {
     ko: "사무실 관리",
     en: "Office Manager",
     ja: "オフィス管理",
     zh: "办公室管理",
-  })}`;
+  });
   const roomManagerDepartments = useMemo(
     () => [
       {
@@ -165,12 +165,12 @@ export function useAppLabels({
     ],
     [departments, uiLanguage],
   );
-  const reportLabel = `📋 ${pickLang(uiLanguage, {
+  const reportLabel = pickLang(uiLanguage, {
     ko: "보고서",
     en: "Reports",
     ja: "レポート",
     zh: "报告",
-  })}`;
+  });
   const tasksPrimaryLabel = pickLang(uiLanguage, {
     ko: "업무",
     en: "Tasks",

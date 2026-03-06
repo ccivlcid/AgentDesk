@@ -2,6 +2,26 @@ import type { RuntimeContext } from "../../../types/runtime-context.ts";
 import { ALL_CHECK_ITEMS } from "../../workflow/orchestration/heartbeat.ts";
 import type { HeartbeatCheckItem } from "../../workflow/orchestration/heartbeat.ts";
 
+/** 앱에 가장 먼저 등록해 404를 방지하려면 routes.ts에서 PartB 전에 호출 */
+export function registerHeartbeatDeleteRoutesEarly(ctx: RuntimeContext): void {
+  const { app, db } = ctx;
+  app.delete("/api/heartbeat/logs", (_req, res) => {
+    const result = db.prepare("DELETE FROM heartbeat_logs").run();
+    res.json({ ok: true, deleted: result.changes });
+  });
+  app.delete("/api/heartbeat/logs/record/:id", (req, res) => {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id < 1) {
+      return res.status(400).json({ ok: false, error: "invalid_id" });
+    }
+    const result = db.prepare("DELETE FROM heartbeat_logs WHERE id = ?").run(id);
+    if (result.changes === 0) {
+      return res.status(404).json({ ok: false, error: "log_not_found" });
+    }
+    res.json({ ok: true, deleted: id });
+  });
+}
+
 export function registerHeartbeatRoutes(ctx: RuntimeContext): void {
   const { app, db, nowMs } = ctx;
 
@@ -132,29 +152,6 @@ export function registerHeartbeatRoutes(ctx: RuntimeContext): void {
 
     const rows = db.prepare(query).all(...params);
     res.json({ ok: true, logs: rows });
-  });
-
-  // -----------------------------------------------------------------------
-  // DELETE /api/heartbeat/logs — delete all heartbeat logs
-  // -----------------------------------------------------------------------
-  app.delete("/api/heartbeat/logs", (_req, res) => {
-    const result = db.prepare("DELETE FROM heartbeat_logs").run();
-    res.json({ ok: true, deleted: result.changes });
-  });
-
-  // -----------------------------------------------------------------------
-  // DELETE /api/heartbeat/logs/record/:id — delete a single log (path avoids conflict with GET .../logs/:agentId)
-  // -----------------------------------------------------------------------
-  app.delete("/api/heartbeat/logs/record/:id", (req, res) => {
-    const id = Number(req.params.id);
-    if (!Number.isInteger(id) || id < 1) {
-      return res.status(400).json({ ok: false, error: "invalid_id" });
-    }
-    const result = db.prepare("DELETE FROM heartbeat_logs WHERE id = ?").run(id);
-    if (result.changes === 0) {
-      return res.status(404).json({ ok: false, error: "log_not_found" });
-    }
-    res.json({ ok: true, deleted: id });
   });
 
   // -----------------------------------------------------------------------

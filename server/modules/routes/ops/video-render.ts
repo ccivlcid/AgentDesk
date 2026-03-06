@@ -29,9 +29,12 @@ export function registerVideoRenderRoutes({ app, broadcast, appendTaskLog }: Vid
     });
   });
 
+  const idParam = (p: string | string[] | undefined): string =>
+    typeof p === "string" ? p : Array.isArray(p) ? p[0] ?? "" : "";
+
   // Get a specific render job
   app.get("/api/video-render/jobs/:id", (req: Request, res: Response) => {
-    const job = getVideoRenderJob(req.params.id);
+    const job = getVideoRenderJob(idParam(req.params.id));
     if (!job) return res.status(404).json({ ok: false, error: "job_not_found" });
     return res.json({ ok: true, job });
   });
@@ -100,7 +103,7 @@ export function registerVideoRenderRoutes({ app, broadcast, appendTaskLog }: Vid
 
   // Start a queued render job
   app.post("/api/video-render/jobs/:id/start", (req: Request, res: Response) => {
-    const job = startVideoRenderJob(req.params.id, {
+    const job = startVideoRenderJob(idParam(req.params.id), {
       onProgress: (j) => {
         broadcast("video_render_progress", {
           jobId: j.id,
@@ -135,9 +138,10 @@ export function registerVideoRenderRoutes({ app, broadcast, appendTaskLog }: Vid
 
   // Cancel a running render job
   app.post("/api/video-render/jobs/:id/cancel", (req: Request, res: Response) => {
-    const success = cancelVideoRenderJob(req.params.id);
+    const id = idParam(req.params.id);
+    const success = cancelVideoRenderJob(id);
     if (!success) return res.status(400).json({ ok: false, error: "job_not_running" });
-    const job = getVideoRenderJob(req.params.id);
+    const job = getVideoRenderJob(id);
     if (job) {
       appendTaskLog(job.taskId, "system", `Video render cancelled: ${job.id}`);
     }
