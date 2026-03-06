@@ -7,6 +7,7 @@ import type { SupportedLocale } from "./themes-locale";
 import type { SeasonalParticleState, SeasonKey } from "./seasonal-particles";
 import type { CeoCustomization } from "./ceo-customization";
 import type { RoomDecoration } from "./room-decoration";
+import type { StyleKey } from "./drawing-styles";
 
 export interface DataSnapshot {
   departments: Department[];
@@ -95,6 +96,7 @@ export interface BuildOfficeSceneContext {
   wallClocksRef: MutableRefObject<WallClockVisual[]>;
   wallClockSecondRef: MutableRefObject<number>;
   roomDecorationsRef: MutableRefObject<Record<string, RoomDecoration>>;
+  styleKeyRef: MutableRefObject<StyleKey>;
   seasonalParticleRef: MutableRefObject<SeasonalParticleState | null>;
   seasonKeyRef: MutableRefObject<SeasonKey>;
   setSceneRevision: Dispatch<SetStateAction<number>>;

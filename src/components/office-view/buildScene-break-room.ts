@@ -10,20 +10,15 @@ import {
   contrastTextColor,
   drawAmbientGlow,
   drawBunting,
-  drawCeilingLight,
-  drawPictureFrame,
   drawRoomAtmosphere,
-  drawRug,
   drawTiledFloor,
-  drawTrashCan,
-  drawWallClock,
   hashStr,
 } from "./drawing-core";
-import { drawPlant } from "./drawing-furniture-a";
-import { drawCoffeeMachine, drawCoffeeTable, drawHighTable, drawSofa, drawVendingMachine } from "./drawing-furniture-b";
+import type { FurnitureDrawer } from "./drawing-styles";
 
 interface BuildBreakRoomParams {
   app: Application;
+  drawer: FurnitureDrawer;
   textures: Record<string, Texture>;
   agents: Agent[];
   spriteMap: Map<string, number>;
@@ -43,6 +38,7 @@ interface BuildBreakRoomParams {
 
 export function buildBreakRoom({
   app,
+  drawer,
   textures,
   agents,
   spriteMap,
@@ -81,8 +77,8 @@ export function buildBreakRoom({
   breakRoom.addChild(brBorder);
 
   drawAmbientGlow(breakRoom, brx + brw / 2, bry + brh / 2, brw * 0.3, breakTheme.accent, 0.05);
-  drawCeilingLight(breakRoom, brx + brw / 3, bry + 6, breakTheme.accent);
-  drawCeilingLight(breakRoom, brx + (brw * 2) / 3, bry + 6, breakTheme.accent);
+  drawer.drawCeilingLight(breakRoom, brx + brw / 3, bry + 6, breakTheme.accent);
+  drawer.drawCeilingLight(breakRoom, brx + (brw * 2) / 3, bry + 6, breakTheme.accent);
   drawBunting(
     breakRoom,
     brx + 14,
@@ -94,20 +90,20 @@ export function buildBreakRoom({
   );
 
   const furnitureBaseX = brx + 16;
-  drawCoffeeMachine(breakRoom, furnitureBaseX, bry + 20);
-  drawPlant(breakRoom, furnitureBaseX + 30, bry + 38, 1);
-  drawSofa(breakRoom, furnitureBaseX + 50, bry + 56, 0xc89da6);
-  drawCoffeeTable(breakRoom, furnitureBaseX + 140, bry + 58);
+  drawer.drawCoffeeMachine(breakRoom, furnitureBaseX, bry + 20);
+  drawer.drawPlant(breakRoom, furnitureBaseX + 30, bry + 38, 1);
+  drawer.drawSofa(breakRoom, furnitureBaseX + 50, bry + 56, 0xc89da6);
+  drawer.drawCoffeeTable(breakRoom, furnitureBaseX + 140, bry + 58);
 
   const furnitureRightX = brx + brw - 16;
-  drawVendingMachine(breakRoom, furnitureRightX - 26, bry + 20);
-  drawPlant(breakRoom, furnitureRightX - 36, bry + 38, 2);
-  drawSofa(breakRoom, furnitureRightX - 120, bry + 56, 0x91bcae);
-  drawHighTable(breakRoom, furnitureRightX - 170, bry + 24);
+  drawer.drawVendingMachine(breakRoom, furnitureRightX - 26, bry + 20);
+  drawer.drawPlant(breakRoom, furnitureRightX - 36, bry + 38, 2);
+  drawer.drawSofa(breakRoom, furnitureRightX - 120, bry + 56, 0x91bcae);
+  drawer.drawHighTable(breakRoom, furnitureRightX - 170, bry + 24);
 
-  drawPictureFrame(breakRoom, brx + brw / 2 - 8, bry + 14);
-  wallClocksRef.current.push(drawWallClock(breakRoom, brx + brw / 2 + 30, bry + 18));
-  drawTrashCan(breakRoom, furnitureBaseX + 24, bry + brh - 14);
+  drawer.drawPictureFrame(breakRoom, brx + brw / 2 - 8, bry + 14);
+  wallClocksRef.current.push(drawer.drawWallClock(breakRoom, brx + brw / 2 + 30, bry + 18));
+  drawer.drawTrashCan(breakRoom, furnitureBaseX + 24, bry + brh - 14);
 
   const brSignW = 84;
   const brSignBg = new Graphics();
@@ -129,7 +125,7 @@ export function buildBreakRoom({
   brSignTxt.position.set(brx + brw / 2, bry + 5);
   breakRoom.addChild(brSignTxt);
 
-  drawRug(breakRoom, brx + brw / 2, bry + brh / 2 + 10, brw * 0.5, brh * 0.45, breakTheme.accent);
+  drawer.drawRug(breakRoom, brx + brw / 2, bry + brh / 2 + 10, brw * 0.5, brh * 0.45, breakTheme.accent);
 
   const steamContainer = new Container();
   breakRoom.addChild(steamContainer);

@@ -21,22 +21,17 @@ import {
   contrastTextColor,
   drawAmbientGlow,
   drawBunting,
-  drawCeilingLight,
-  drawPictureFrame,
-  drawRug,
   drawRoomAtmosphere,
   drawTiledFloor,
-  drawTrashCan,
-  drawWallClock,
-  drawWindow,
 } from "./drawing-core";
-import { drawChair, drawDesk, drawPlant, drawWhiteboard, drawPoster, drawCarpet, drawDeskLamp, drawDeskMug, drawDeskFigurine } from "./drawing-furniture-a";
-import { drawBookshelf } from "./drawing-furniture-b";
+import { drawPoster, drawCarpet, drawDeskLamp, drawDeskMug, drawDeskFigurine } from "./drawing-furniture-a";
 import { renderDeskAgentAndSubClones } from "./buildScene-department-agent";
 import { type RoomDecoration, getRoomDecoration, getLightingTint } from "./room-decoration";
+import type { FurnitureDrawer } from "./drawing-styles";
 
 interface BuildDepartmentRoomsParams {
   app: Application;
+  drawer: FurnitureDrawer;
   textures: Record<string, Texture>;
   departments: Department[];
   agents: Agent[];
@@ -68,6 +63,7 @@ interface BuildDepartmentRoomsParams {
 
 export function buildDepartmentRooms({
   app,
+  drawer,
   textures,
   departments,
   agents,
@@ -143,11 +139,11 @@ export function buildDepartmentRooms({
     room.addChild(signTxt);
 
     const decor = getRoomDecoration(roomDecorations, dept.id);
-    drawCeilingAndDecor(room, rx, ry, roomW, roomH, theme, deptIdx, wallClocksRef, decor);
+    drawCeilingAndDecor(room, rx, ry, roomW, roomH, theme, deptIdx, wallClocksRef, decor, drawer);
 
     if (deptAgents.length > 0) {
       if (decor.floorDecor === "rug") {
-        drawRug(
+        drawer.drawRug(
           room,
           rx + roomW / 2,
           ry + 38 + (Math.min(agentRows, 2) * SLOT_H) / 2,
@@ -193,7 +189,7 @@ export function buildDepartmentRooms({
       agentPosRef.current.set(agent.id, { x: ax, y: deskY });
 
       renderAgentHeader(room, ax, nameY, agent, theme.accent, unread, activeLocale);
-      drawChair(room, ax, charFeetY - TARGET_CHAR_H * 0.18, theme.accent);
+      drawer.drawChair(room, ax, charFeetY - TARGET_CHAR_H * 0.18, theme.accent);
 
       const removedBursts = removedSubBurstsByParent.get(agent.id);
       if (removedBursts && removedBursts.length > 0) {
@@ -204,10 +200,11 @@ export function buildDepartmentRooms({
       }
 
       if (isBreak) {
-        drawBreakAwayTag(room, ax, deskY, charFeetY, activeLocale, theme.accent);
+        drawBreakAwayTag(room, ax, deskY, charFeetY, activeLocale, theme.accent, drawer);
       } else {
         renderDeskAgentAndSubClones({
           room,
+          drawer,
           textures,
           spriteMap,
           agent,
@@ -252,8 +249,9 @@ function drawCeilingAndDecor(
   deptIdx: number,
   wallClocksRef: MutableRefObject<WallClockVisual[]>,
   decor: RoomDecoration,
+  drawer: FurnitureDrawer,
 ): void {
-  drawCeilingLight(room, rx + roomW / 2, ry + 14, theme.accent);
+  drawer.drawCeilingLight(room, rx + roomW / 2, ry + 14, theme.accent);
 
   // Lighting mood overlay
   const lighting = getLightingTint(decor.lighting);
@@ -274,32 +272,32 @@ function drawCeilingAndDecor(
 
   // Wall decoration
   if (decor.wallDecor === "whiteboard") {
-    drawWhiteboard(room, rx + roomW - 48, ry + 18);
+    drawer.drawWhiteboard(room, rx + roomW - 48, ry + 18);
   } else if (decor.wallDecor === "poster") {
     drawPoster(room, rx + roomW - 40, ry + 18, theme.accent);
   } else if (decor.wallDecor === "picture") {
-    drawPictureFrame(room, rx + roomW - 40, ry + 20);
+    drawer.drawPictureFrame(room, rx + roomW - 40, ry + 20);
   }
 
-  drawBookshelf(room, rx + 6, ry + 18);
-  wallClocksRef.current.push(drawWallClock(room, rx + roomW - 16, ry + 12));
-  drawWindow(room, rx + roomW / 2 - 12, ry + 16);
+  drawer.drawBookshelf(room, rx + 6, ry + 18);
+  wallClocksRef.current.push(drawer.drawWallClock(room, rx + roomW - 16, ry + 12));
+  drawer.drawWindow(room, rx + roomW / 2 - 12, ry + 16);
   if (roomW > 240) {
-    drawWindow(room, rx + roomW / 2 - 40, ry + 16, 20, 16);
-    drawWindow(room, rx + roomW / 2 + 20, ry + 16, 20, 16);
+    drawer.drawWindow(room, rx + roomW / 2 - 40, ry + 16, 20, 16);
+    drawer.drawWindow(room, rx + roomW / 2 + 20, ry + 16, 20, 16);
   }
   if (roomW > 200 && decor.wallDecor !== "picture") {
-    drawPictureFrame(room, rx + 40, ry + 20);
+    drawer.drawPictureFrame(room, rx + 40, ry + 20);
   }
 
   // Plants
   if (decor.plantType !== "none") {
     const plantVariant = decor.plantType === "tall" ? 3 : decor.plantType === "cactus" ? 1 : decor.plantType === "flower" ? 2 : deptIdx;
-    drawPlant(room, rx + 8, ry + roomH - 14, plantVariant);
-    drawPlant(room, rx + roomW - 12, ry + roomH - 14, plantVariant + 1);
+    drawer.drawPlant(room, rx + 8, ry + roomH - 14, plantVariant);
+    drawer.drawPlant(room, rx + roomW - 12, ry + roomH - 14, plantVariant + 1);
   }
 
-  drawTrashCan(room, rx + roomW - 14, ry + roomH - 26);
+  drawer.drawTrashCan(room, rx + roomW - 14, ry + roomH - 26);
 }
 
 function renderAgentHeader(
@@ -375,8 +373,9 @@ function drawBreakAwayTag(
   charFeetY: number,
   activeLocale: SupportedLocale,
   accent: number,
+  drawer: FurnitureDrawer,
 ): void {
-  drawDesk(room, ax - DESK_W / 2, deskY, false);
+  drawer.drawDesk(room, ax - DESK_W / 2, deskY, false);
   const awayTagY = charFeetY - TARGET_CHAR_H / 2;
   const awayTagBgColor = blendColor(accent, 0x101826, 0.78);
   const awayTag = new Text({

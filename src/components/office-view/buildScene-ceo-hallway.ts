@@ -9,17 +9,15 @@ import {
   drawAmbientGlow,
   drawBandGradient,
   drawBunting,
-  drawPictureFrame,
   drawRoomAtmosphere,
   drawTiledFloor,
-  drawWallClock,
-  drawWaterCooler,
 } from "./drawing-core";
-import { drawChair, drawPlant } from "./drawing-furniture-a";
 import { formatPeopleCount, formatTaskCount } from "./drawing-furniture-b";
+import type { FurnitureDrawer } from "./drawing-styles";
 
 interface BuildCeoAndHallwayParams {
   app: Application;
+  drawer: FurnitureDrawer;
   OFFICE_W: number;
   totalH: number;
   breakRoomY: number;
@@ -38,6 +36,7 @@ interface BuildCeoAndHallwayParams {
 
 export function buildCeoAndHallway({
   app,
+  drawer,
   OFFICE_W,
   totalH,
   breakRoomY,
@@ -137,7 +136,7 @@ export function buildCeoAndHallway({
   ceoPlateText.anchor.set(0.5, 0.5);
   ceoPlateText.position.set(cdx + 32, cdy + 27.5);
   ceoLayer.addChild(ceoPlateText);
-  drawChair(ceoLayer, cdx + 32, cdy + 46, 0xd4a860);
+  drawer.drawChair(ceoLayer, cdx + 32, cdy + 46, 0xd4a860);
 
   const mtW = 220;
   const mtH = 28;
@@ -162,8 +161,8 @@ export function buildCeoAndHallway({
 
   const meetingSeatX = [mtX + 40, mtX + 110, mtX + 180];
   for (const sx of meetingSeatX) {
-    drawChair(ceoLayer, sx, mtY - 4, 0xc4a070);
-    drawChair(ceoLayer, sx, mtY + mtH + 10, 0xc4a070);
+    drawer.drawChair(ceoLayer, sx, mtY - 4, 0xc4a070);
+    drawer.drawChair(ceoLayer, sx, mtY + mtH + 10, 0xc4a070);
   }
 
   const meetingLabel = new Text({
@@ -205,8 +204,8 @@ export function buildCeoAndHallway({
     }
   }
 
-  drawPictureFrame(ceoLayer, 14, 14);
-  wallClocksRef.current.push(drawWallClock(ceoLayer, OFFICE_W - 30, 18));
+  drawer.drawPictureFrame(ceoLayer, 14, 14);
+  wallClocksRef.current.push(drawer.drawWallClock(ceoLayer, OFFICE_W - 30, 18));
 
   const workingCount = agents.filter((agent) => agent.status === "working").length;
   const doneCount = tasks.filter((task) => task.status === "done").length;
@@ -291,9 +290,9 @@ export function buildCeoAndHallway({
   }
 
   drawAmbientGlow(ceoLayer, OFFICE_W / 2, CEO_ZONE_H / 2, OFFICE_W * 0.35, ceoTheme.accent, 0.08);
-  drawPlant(ceoLayer, 18, 62, 0);
-  drawPlant(ceoLayer, OFFICE_W - 22, 62, 2);
-  drawWaterCooler(ceoLayer, 28, 30);
+  drawer.drawPlant(ceoLayer, 18, 62, 0);
+  drawer.drawPlant(ceoLayer, OFFICE_W - 22, 62, 2);
+  drawer.drawWaterCooler(ceoLayer, 28, 30);
 
   ceoLayer.addChild(ceoLabelBg);
   ceoLayer.addChild(ceoLabel);
@@ -339,6 +338,6 @@ export function buildCeoAndHallway({
     .fill({ color: hallGlow, alpha: isDark ? 0.06 : 0.08 });
 
   app.stage.addChild(hallG);
-  drawPlant(app.stage as Container, 30, hallY + HALLWAY_H - 6, 2);
-  drawPlant(app.stage as Container, OFFICE_W - 30, hallY + HALLWAY_H - 6, 1);
+  drawer.drawPlant(app.stage as Container, 30, hallY + HALLWAY_H - 6, 2);
+  drawer.drawPlant(app.stage as Container, OFFICE_W - 30, hallY + HALLWAY_H - 6, 1);
 }

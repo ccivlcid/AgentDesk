@@ -269,7 +269,7 @@ interface OfficeCustomization {
 | 2 | Seasonal Decorations | Low-Med | High | **DONE** | 파티클 시스템 완료 (2026-03-06) |
 | 3 | CEO Avatar Customization | Low-Med | Medium | **DONE** | CEO 커스터마이즈 완료 (2026-03-06) |
 | 4 | Dept Room Decoration | Medium | High | **DONE** | 부서별 방 꾸미기 완료 (2026-03-06) |
-| 5 | Style Theme System | Med-High | High | TODO | 픽셀/업무용/사이버 등 비주얼 스타일 |
+| 5 | Style Theme System | Med-High | High | **DONE** | FurnitureDrawer 인터페이스 + default/pixel 스타일 (2026-03-06) |
 | 6 | Furniture Catalog | Med-High | Medium | TODO | 콘텐츠 확장 |
 | 7 | Room Layout Editor | High | Medium | TODO | 장기 목표 |
 
@@ -379,20 +379,21 @@ src/components/OfficeRoomManager.tsx                   (MODIFIED - 방꾸미기 
 
 ### 7.2 Next Up — 작업 순서
 
-#### Step 5: Style Theme System (Priority 5)
+#### Step 5: Style Theme System (Priority 5) — **DONE** (2026-03-06)
 비주얼 스타일 (픽셀/업무용/사이버 등)
 
-- [ ] `FurnitureDrawer` 인터페이스 정의 (15개 함수, `DisplayObject` 반환)
-- [ ] 기존 코드를 `default` drawer로 래핑
-- [ ] buildScene 리팩토링 — `drawer.drawXxx()` 패턴 (~25개소)
-- [ ] `pixel` drawer 구현 (Graphics 기반, ~470줄)
-- [ ] SVG 에셋 디렉토리 구성 (`public/assets/themes/`)
-- [ ] `business` drawer 구현 (SVG 기반, SVG 15개 + ~180줄)
-- [ ] `cyber` drawer 구현 (SVG + `@pixi/filter-glow`)
-- [ ] 프리셋에 `style` 필드 추가 + 스타일 필터 탭 UI
+- [x] `FurnitureDrawer` 인터페이스 정의 (17개 함수)
+- [x] 기존 코드를 `default` drawer로 래핑 (`drawing-styles/default-drawer.ts`)
+- [x] buildScene 리팩토링 — `drawer.drawXxx()` 패턴 (departments, ceo-hallway, break-room, department-agent)
+- [x] `pixel` drawer 구현 (`drawing-styles/pixel-drawer.ts`, 270줄)
+- [x] 스타일 선택 UI (OfficeRoomManager에 Drawing Style 섹션)
+- [x] CustomEvent 기반 반응형 스타일 전환
+- [ ] SVG 에셋 디렉토리 구성 (`public/assets/themes/`) — 향후
+- [ ] `business` drawer 구현 — 향후
+- [ ] `cyber` drawer 구현 — 향후
 
+**파일:** `drawing-styles/index.ts`, `drawing-styles/default-drawer.ts`, `drawing-styles/pixel-drawer.ts`
 **주의:** 캐릭터(CEO/Agent)는 모든 스타일에서 현재 픽셀 유지
-**상세 설계:** `docs/office-theme-manager-design.md` Section 10
 
 #### Step 6: Furniture Catalog (Priority 6)
 - [ ] `FurnitureItem` 타입 + 카탈로그 데이터

@@ -36,6 +36,12 @@ import {
   DESK_ACCESSORY_OPTIONS,
   LIGHTING_OPTIONS,
 } from "./office-view/room-decoration";
+import {
+  type StyleKey,
+  STYLE_OPTIONS,
+  loadStylePreference,
+  saveStylePreference,
+} from "./office-view/drawing-styles";
 
 /* ================================================================== */
 /*  Types                                                               */
@@ -110,6 +116,7 @@ const L = {
   floorDecor: { ko: "바닥", en: "Floor", ja: "床", zh: "地板" },
   deskAccessory: { ko: "책상 소품", en: "Desk Items", ja: "デスク小物", zh: "桌面物品" },
   lightingMood: { ko: "조명", en: "Lighting", ja: "照明", zh: "灯光" },
+  styleTheme: { ko: "그리기 스타일", en: "Drawing Style", ja: "描画スタイル", zh: "绘制风格" },
 };
 
 /* ================================================================== */
@@ -356,6 +363,7 @@ export default function OfficeRoomManager({ departments, customThemes, onThemeCh
   const [renameValue, setRenameValue] = useState("");
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
   const [seasonPref, setSeasonPref] = useState<SeasonKey | "auto">(() => loadSeasonPreference());
+  const [styleKey, setStyleKey] = useState<StyleKey>(() => loadStylePreference());
   const [roomDecorations, setRoomDecorations] = useState<Record<string, RoomDecoration>>(() => loadRoomDecorations());
   const [expandedDecorDept, setExpandedDecorDept] = useState<string | null>(null);
   const [ceoConfig, setCeoConfig] = useState<CeoCustomization>(() => loadCeoCustomization());
@@ -696,6 +704,26 @@ export default function OfficeRoomManager({ departments, customThemes, onThemeCh
               </div>
             </div>
           )}
+
+          {/* ────────────── DRAWING STYLE ────────────── */}
+          <section className="space-y-2">
+            <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{L.styleTheme[language]}</h3>
+            <div className="flex flex-wrap gap-1.5">
+              {STYLE_OPTIONS.map((opt) => {
+                const active = styleKey === opt.key;
+                return (
+                  <button
+                    key={opt.key}
+                    onClick={() => { setStyleKey(opt.key); saveStylePreference(opt.key); }}
+                    className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${active ? "bg-blue-600 text-white" : "bg-slate-700 text-slate-300 hover:bg-slate-600"}`}
+                    title={opt.description[language]}
+                  >
+                    {opt.label[language]}
+                  </button>
+                );
+              })}
+            </div>
+          </section>
 
           {/* ────────────── SEASONAL DECOR ────────────── */}
           <section className="space-y-2">

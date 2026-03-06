@@ -34,6 +34,7 @@ import { useOfficePixiRuntime } from "./office-view/useOfficePixiRuntime";
 import { buildOfficeScene } from "./office-view/buildScene";
 import type { SeasonalParticleState, SeasonKey } from "./office-view/seasonal-particles";
 import { loadSeasonPreference, resolveSeasonKey } from "./office-view/seasonal-particles";
+import { type StyleKey, loadStylePreference } from "./office-view/drawing-styles";
 import { type CeoCustomization, loadCeoCustomization } from "./office-view/ceo-customization";
 import { type RoomDecoration, loadRoomDecorations } from "./office-view/room-decoration";
 
@@ -147,6 +148,7 @@ export default function OfficeView({
   const wallClocksRef = useRef<WallClockVisual[]>([]);
   const wallClockSecondRef = useRef(-1);
   const roomDecorationsRef = useRef<Record<string, RoomDecoration>>(loadRoomDecorations());
+  const styleKeyRef = useRef<StyleKey>(loadStylePreference());
   const seasonalParticleRef = useRef<SeasonalParticleState | null>(null);
   const seasonKeyRef = useRef<SeasonKey>(resolveSeasonKey(loadSeasonPreference()));
   const localeRef = useRef<SupportedLocale>(language);
@@ -316,6 +318,7 @@ export default function OfficeView({
       wallClocksRef,
       wallClockSecondRef,
       roomDecorationsRef,
+      styleKeyRef,
       seasonalParticleRef,
       seasonKeyRef,
       setSceneRevision,
@@ -351,6 +354,16 @@ export default function OfficeView({
     };
     window.addEventListener("agentdesk_room_decor_change", handler);
     return () => window.removeEventListener("agentdesk_room_decor_change", handler);
+  }, [buildScene]);
+
+  // Listen for style theme changes from OfficeRoomManager
+  useEffect(() => {
+    const handler = (e: Event) => {
+      styleKeyRef.current = (e as CustomEvent).detail as StyleKey;
+      if (initDoneRef.current && appRef.current) buildScene();
+    };
+    window.addEventListener("agentdesk_style_change", handler);
+    return () => window.removeEventListener("agentdesk_style_change", handler);
   }, [buildScene]);
 
   const tickerContext = useMemo(

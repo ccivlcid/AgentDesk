@@ -12,10 +12,11 @@ import {
   emitSubCloneSmokeBurst,
 } from "./model";
 import { hashStr } from "./drawing-core";
-import { drawDesk } from "./drawing-furniture-a";
+import type { FurnitureDrawer } from "./drawing-styles";
 
 interface RenderDeskAgentAndSubClonesParams {
   room: Container;
+  drawer: FurnitureDrawer;
   textures: Record<string, Texture>;
   spriteMap: Map<string, number>;
   agent: Agent;
@@ -37,6 +38,7 @@ interface RenderDeskAgentAndSubClonesParams {
 
 export function renderDeskAgentAndSubClones({
   room,
+  drawer,
   textures,
   spriteMap,
   agent,
@@ -88,7 +90,7 @@ export function renderDeskAgentAndSubClones({
   }
   room.addChild(charContainer);
 
-  const deskG = drawDesk(room, ax - DESK_W / 2, deskY, isWorking);
+  const deskG = drawer.drawDesk(room, ax - DESK_W / 2, deskY, isWorking);
 
   const bedW = TARGET_CHAR_H + 20;
   const bedH = 36;

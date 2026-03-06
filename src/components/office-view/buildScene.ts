@@ -18,6 +18,7 @@ import { buildDepartmentRooms } from "./buildScene-departments";
 import { buildBreakRoom } from "./buildScene-break-room";
 import { buildFinalLayers } from "./buildScene-final-layers";
 import { createSeasonalParticleState, destroySeasonalParticles } from "./seasonal-particles";
+import { getDrawer } from "./drawing-styles";
 
 export function buildOfficeScene(context: BuildOfficeSceneContext): void {
   const {
@@ -56,6 +57,7 @@ export function buildOfficeScene(context: BuildOfficeSceneContext): void {
     wallClocksRef,
     wallClockSecondRef,
     roomDecorationsRef,
+    styleKeyRef,
     seasonalParticleRef,
     seasonKeyRef,
     setSceneRevision,
@@ -127,6 +129,7 @@ export function buildOfficeScene(context: BuildOfficeSceneContext): void {
   const spriteMap = buildSpriteMap(agents);
   spriteMapRef.current = spriteMap;
 
+  const drawer = getDrawer(styleKeyRef.current);
   const OFFICE_W = officeWRef.current;
   const deptCount = departments.length || 1;
   const baseRoomW = COLS_PER_ROW * SLOT_W + ROOM_PAD * 2;
@@ -154,6 +157,7 @@ export function buildOfficeScene(context: BuildOfficeSceneContext): void {
 
   buildCeoAndHallway({
     app,
+    drawer,
     OFFICE_W,
     totalH,
     breakRoomY,
@@ -172,6 +176,7 @@ export function buildOfficeScene(context: BuildOfficeSceneContext): void {
 
   buildDepartmentRooms({
     app,
+    drawer,
     textures,
     departments,
     agents,
@@ -204,6 +209,7 @@ export function buildOfficeScene(context: BuildOfficeSceneContext): void {
 
   buildBreakRoom({
     app,
+    drawer,
     textures,
     agents,
     spriteMap,

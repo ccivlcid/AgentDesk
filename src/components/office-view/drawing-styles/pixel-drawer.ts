@@ -38,6 +38,7 @@ export const pixelDrawer: FurnitureDrawer = {
       pxRect(g, dx + 13, dy + 5, 14, 2, 0x555566);
     }
     parent.addChild(g);
+    return g;
   },
 
   drawChair(parent, cx, cy, color) {
