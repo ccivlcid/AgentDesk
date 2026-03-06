@@ -8,6 +8,7 @@ import type { SeasonalParticleState, SeasonKey } from "./seasonal-particles";
 import type { CeoCustomization } from "./ceo-customization";
 import type { RoomDecoration } from "./room-decoration";
 import type { StyleKey } from "./drawing-styles";
+import type { FurnitureLayout } from "./furniture-catalog";
 
 export interface DataSnapshot {
   departments: Department[];
@@ -96,6 +97,7 @@ export interface BuildOfficeSceneContext {
   wallClocksRef: MutableRefObject<WallClockVisual[]>;
   wallClockSecondRef: MutableRefObject<number>;
   roomDecorationsRef: MutableRefObject<Record<string, RoomDecoration>>;
+  furnitureLayoutsRef: MutableRefObject<FurnitureLayout>;
   styleKeyRef: MutableRefObject<StyleKey>;
   seasonalParticleRef: MutableRefObject<SeasonalParticleState | null>;
   seasonKeyRef: MutableRefObject<SeasonKey>;

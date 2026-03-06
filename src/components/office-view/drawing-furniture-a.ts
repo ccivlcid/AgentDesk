@@ -411,4 +411,238 @@ function drawDeskFigurine(parent: Container, x: number, y: number, accent: numbe
   return g;
 }
 
-export { drawDesk, drawChair, drawPlant, drawWhiteboard, drawPoster, drawCarpet, drawDeskLamp, drawDeskMug, drawDeskFigurine };
+/* ── Catalog furniture items ── */
+
+/** Small desk aquarium with fish */
+function drawAquarium(parent: Container, x: number, y: number) {
+  const g = new Graphics();
+  // Tank body
+  g.roundRect(x - 10, y - 12, 20, 14, 2).fill({ color: 0x87ceeb, alpha: 0.4 });
+  g.roundRect(x - 10, y - 12, 20, 14, 2).stroke({ width: 1.2, color: 0x5a9ec2, alpha: 0.8 });
+  // Water
+  g.roundRect(x - 9, y - 10, 18, 10, 1).fill({ color: 0x4db8e6, alpha: 0.25 });
+  // Fish 1
+  g.ellipse(x - 3, y - 6, 2.5, 1.5).fill(0xff6b35);
+  g.moveTo(x - 5.5, y - 6).lineTo(x - 7, y - 8).lineTo(x - 7, y - 4).closePath().fill(0xff6b35);
+  g.circle(x - 1.5, y - 6.5, 0.4).fill(0x111111);
+  // Fish 2
+  g.ellipse(x + 4, y - 4, 2, 1.2).fill(0x3498db);
+  g.moveTo(x + 2, y - 4).lineTo(x + 0.5, y - 5.5).lineTo(x + 0.5, y - 2.5).closePath().fill(0x3498db);
+  g.circle(x + 5.5, y - 4.5, 0.3).fill(0x111111);
+  // Pebbles
+  g.circle(x - 5, y + 0.5, 1.2).fill(0xb8a88a);
+  g.circle(x - 2, y + 1, 1).fill(0xa0907a);
+  g.circle(x + 3, y + 0.5, 1.3).fill(0xc8b89a);
+  // Bubbles
+  g.circle(x + 1, y - 9, 0.8).fill({ color: 0xffffff, alpha: 0.5 });
+  g.circle(x + 2.5, y - 11, 0.5).fill({ color: 0xffffff, alpha: 0.4 });
+  // Stand
+  g.rect(x - 8, y + 2, 16, 2).fill(0x6a5a4a);
+  parent.addChild(g);
+  return g;
+}
+
+/** Spinning globe on a stand */
+function drawGlobe(parent: Container, x: number, y: number) {
+  const g = new Graphics();
+  // Stand
+  g.rect(x - 1, y - 2, 2, 4).fill(0x888888);
+  g.rect(x - 4, y + 2, 8, 2).fill(0x777777);
+  // Globe sphere
+  g.circle(x, y - 8, 6).fill(0x4a90d9);
+  g.circle(x, y - 8, 6).stroke({ width: 0.8, color: 0x888888 });
+  // Continents (simple shapes)
+  g.ellipse(x - 2, y - 9, 2.5, 3).fill({ color: 0x5cb85c, alpha: 0.7 });
+  g.ellipse(x + 3, y - 7, 1.8, 2).fill({ color: 0x5cb85c, alpha: 0.7 });
+  // Axis ring
+  g.circle(x, y - 8, 6.5).stroke({ width: 0.4, color: 0xaaaaaa, alpha: 0.5 });
+  parent.addChild(g);
+  return g;
+}
+
+/** Neon LED sign on wall */
+function drawLedSign(parent: Container, x: number, y: number) {
+  const g = new Graphics();
+  // Background plate
+  g.roundRect(x - 14, y - 2, 28, 12, 2).fill({ color: 0x1a1a2e, alpha: 0.9 });
+  g.roundRect(x - 14, y - 2, 28, 12, 2).stroke({ width: 0.8, color: 0x333355 });
+  // Glow effect
+  g.roundRect(x - 12, y, 24, 8, 1).fill({ color: 0x00ffcc, alpha: 0.15 });
+  // "OPEN" text simulation using simple shapes
+  // O
+  g.circle(x - 8, y + 4, 2.5).stroke({ width: 1.2, color: 0x00ffcc, alpha: 0.9 });
+  // P
+  g.rect(x - 3.5, y + 1.5, 1.2, 5).fill({ color: 0xff6ec7, alpha: 0.9 });
+  g.roundRect(x - 3.5, y + 1.5, 4, 2.5, 1).stroke({ width: 1, color: 0xff6ec7, alpha: 0.9 });
+  // E
+  g.rect(x + 2, y + 1.5, 1.2, 5).fill({ color: 0x00ffcc, alpha: 0.9 });
+  g.rect(x + 2, y + 1.5, 3.5, 1).fill({ color: 0x00ffcc, alpha: 0.9 });
+  g.rect(x + 2, y + 3.5, 2.5, 1).fill({ color: 0x00ffcc, alpha: 0.9 });
+  g.rect(x + 2, y + 5.5, 3.5, 1).fill({ color: 0x00ffcc, alpha: 0.9 });
+  // N
+  g.rect(x + 7, y + 1.5, 1.2, 5).fill({ color: 0xff6ec7, alpha: 0.9 });
+  g.rect(x + 10.5, y + 1.5, 1.2, 5).fill({ color: 0xff6ec7, alpha: 0.9 });
+  parent.addChild(g);
+  return g;
+}
+
+/** Gold trophy */
+function drawTrophy(parent: Container, x: number, y: number) {
+  const g = new Graphics();
+  // Base
+  g.roundRect(x - 5, y, 10, 3, 1).fill(0x8b6914);
+  g.roundRect(x - 3, y - 2, 6, 2, 0.5).fill(0xa07818);
+  // Stem
+  g.rect(x - 1.5, y - 6, 3, 4).fill(0xc49a1a);
+  // Cup
+  g.roundRect(x - 6, y - 14, 12, 8, 2).fill(0xffd700);
+  g.roundRect(x - 6, y - 14, 12, 8, 2).stroke({ width: 0.6, color: 0xb8860b });
+  // Handles
+  g.arc(x - 6, y - 10, 3, Math.PI * 0.5, Math.PI * 1.5).stroke({ width: 1.2, color: 0xffd700 });
+  g.arc(x + 6, y - 10, 3, -Math.PI * 0.5, Math.PI * 0.5).stroke({ width: 1.2, color: 0xffd700 });
+  // Star
+  g.star(x, y - 11, 5, 2.5, 1.2).fill(0xfffacd);
+  parent.addChild(g);
+  return g;
+}
+
+/** Mini desk fan */
+function drawFan(parent: Container, x: number, y: number) {
+  const g = new Graphics();
+  // Base
+  g.roundRect(x - 5, y, 10, 3, 1).fill(0xdddddd);
+  // Neck
+  g.rect(x - 1, y - 4, 2, 4).fill(0xcccccc);
+  // Guard circle
+  g.circle(x, y - 9, 6).stroke({ width: 0.8, color: 0xaaaaaa });
+  // Blades (3)
+  for (let i = 0; i < 3; i++) {
+    const angle = (Math.PI * 2 * i) / 3;
+    const bx = x + Math.cos(angle) * 4;
+    const by = y - 9 + Math.sin(angle) * 4;
+    g.ellipse(bx, by, 2, 4).fill({ color: 0x88bbdd, alpha: 0.6 });
+  }
+  // Center hub
+  g.circle(x, y - 9, 1.5).fill(0x555555);
+  parent.addChild(g);
+  return g;
+}
+
+/** Air purifier */
+function drawAirPurifier(parent: Container, x: number, y: number) {
+  const g = new Graphics();
+  // Body
+  g.roundRect(x - 6, y - 16, 12, 18, 3).fill(0xf0f0f0);
+  g.roundRect(x - 6, y - 16, 12, 18, 3).stroke({ width: 0.8, color: 0xdddddd });
+  // Vent lines
+  for (let i = 0; i < 4; i++) {
+    g.rect(x - 4, y - 13 + i * 3, 8, 0.8).fill({ color: 0xcccccc, alpha: 0.6 });
+  }
+  // Indicator LED
+  g.circle(x, y - 1, 1.2).fill(0x00cc66);
+  // Air flow dots
+  g.circle(x - 2, y - 18, 0.6).fill({ color: 0x88ccff, alpha: 0.4 });
+  g.circle(x + 1, y - 19, 0.5).fill({ color: 0x88ccff, alpha: 0.3 });
+  g.circle(x + 3, y - 17.5, 0.4).fill({ color: 0x88ccff, alpha: 0.35 });
+  parent.addChild(g);
+  return g;
+}
+
+/** Mini arcade machine */
+function drawArcade(parent: Container, x: number, y: number) {
+  const g = new Graphics();
+  // Cabinet body
+  g.roundRect(x - 8, y - 20, 16, 22, 2).fill(0x2c2c54);
+  g.roundRect(x - 8, y - 20, 16, 22, 2).stroke({ width: 1, color: 0x1a1a3e });
+  // Screen
+  g.roundRect(x - 6, y - 18, 12, 9, 1).fill(0x111122);
+  // Screen content (simple game display)
+  g.rect(x - 4, y - 16, 2, 2).fill(0x00ff00);
+  g.rect(x + 2, y - 14, 2, 2).fill(0xff4444);
+  g.rect(x - 1, y - 12, 1, 1).fill(0xffff00);
+  // Controls
+  g.circle(x - 3, y - 6, 2).fill(0xff3333);
+  g.circle(x + 3, y - 6, 2).fill(0x3333ff);
+  // Joystick
+  g.circle(x, y - 3, 1.5).fill(0x444444);
+  g.rect(x - 0.5, y - 5, 1, 2).fill(0x666666);
+  // Top marquee
+  g.roundRect(x - 7, y - 21, 14, 3, 1).fill(0xff6b6b);
+  parent.addChild(g);
+  return g;
+}
+
+/** Bean bag chair */
+function drawBeanBag(parent: Container, x: number, y: number) {
+  const g = new Graphics();
+  // Shadow
+  g.ellipse(x, y + 1, 8, 3).fill({ color: 0x000000, alpha: 0.1 });
+  // Body (blob shape)
+  g.ellipse(x, y - 4, 7, 6).fill(0xc49a6c);
+  g.ellipse(x, y - 4, 7, 6).stroke({ width: 0.6, color: 0xa07848 });
+  // Top indent
+  g.ellipse(x, y - 7, 4, 2).fill(blendColor(0xc49a6c, 0x000000, 0.1));
+  // Stitch line
+  g.arc(x, y - 3, 5, Math.PI * 0.1, Math.PI * 0.9).stroke({ width: 0.5, color: 0xa07848, alpha: 0.5 });
+  parent.addChild(g);
+  return g;
+}
+
+/** Standing desk (taller desk) */
+function drawStandingDesk(parent: Container, x: number, y: number) {
+  const g = new Graphics();
+  // Legs (taller than normal)
+  g.rect(x - 10, y - 2, 2, 14).fill(0x888888);
+  g.rect(x + 8, y - 2, 2, 14).fill(0x888888);
+  // Cross bar
+  g.rect(x - 8, y + 6, 16, 1.5).fill(0x777777);
+  // Desktop surface
+  g.roundRect(x - 12, y - 4, 24, 3, 1).fill(0xd4c4a8);
+  g.roundRect(x - 12, y - 4, 24, 3, 1).stroke({ width: 0.6, color: 0xb0a088 });
+  // Monitor
+  g.roundRect(x - 6, y - 12, 12, 8, 1).fill(0x222233);
+  g.roundRect(x - 6, y - 12, 12, 8, 1).stroke({ width: 0.5, color: 0x444455 });
+  g.roundRect(x - 5, y - 11, 10, 6, 0.5).fill(0x3a4a6a);
+  // Monitor stand
+  g.rect(x - 1, y - 4, 2, 1).fill(0x555555);
+  parent.addChild(g);
+  return g;
+}
+
+/** Wall projector */
+function drawProjector(parent: Container, x: number, y: number) {
+  const g = new Graphics();
+  // Ceiling mount
+  g.rect(x - 2, y - 2, 4, 4).fill(0x888888);
+  // Body
+  g.roundRect(x - 8, y + 2, 16, 8, 2).fill(0xeeeeee);
+  g.roundRect(x - 8, y + 2, 16, 8, 2).stroke({ width: 0.6, color: 0xcccccc });
+  // Lens
+  g.circle(x, y + 6, 3).fill(0x222222);
+  g.circle(x, y + 6, 2).fill({ color: 0x4488cc, alpha: 0.6 });
+  // Light beam (subtle)
+  g.moveTo(x - 3, y + 9).lineTo(x + 3, y + 9).lineTo(x + 12, y + 20).lineTo(x - 12, y + 20).closePath().fill({ color: 0xffffff, alpha: 0.04 });
+  // Status LED
+  g.circle(x + 6, y + 4, 0.8).fill(0x00cc66);
+  parent.addChild(g);
+  return g;
+}
+
+/** Draw a catalog furniture item by its ID */
+function drawCatalogItem(parent: Container, x: number, y: number, itemId: string) {
+  switch (itemId) {
+    case "aquarium": return drawAquarium(parent, x, y);
+    case "globe": return drawGlobe(parent, x, y);
+    case "led_sign": return drawLedSign(parent, x, y);
+    case "trophy": return drawTrophy(parent, x, y);
+    case "fan": return drawFan(parent, x, y);
+    case "air_purifier": return drawAirPurifier(parent, x, y);
+    case "arcade": return drawArcade(parent, x, y);
+    case "bean_bag": return drawBeanBag(parent, x, y);
+    case "standing_desk": return drawStandingDesk(parent, x, y);
+    case "projector": return drawProjector(parent, x, y);
+    default: return null;
+  }
+}
+
+export { drawDesk, drawChair, drawPlant, drawWhiteboard, drawPoster, drawCarpet, drawDeskLamp, drawDeskMug, drawDeskFigurine, drawCatalogItem };

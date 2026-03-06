@@ -42,6 +42,20 @@ import {
   loadStylePreference,
   saveStylePreference,
 } from "./office-view/drawing-styles";
+import {
+  type FurnitureLayout,
+  type FurniturePlacement,
+  CATALOG_ITEMS,
+  FURNITURE_CATEGORIES,
+  type FurnitureCategory,
+  loadFurnitureLayouts,
+  saveFurnitureLayouts,
+  getRoomFurniture,
+  addFurnitureToRoom,
+  removeFurnitureFromRoom,
+  getItemDef,
+} from "./office-view/furniture-catalog";
+import RoomLayoutEditor from "./office-view/RoomLayoutEditor";
 
 /* ================================================================== */
 /*  Types                                                               */
@@ -116,7 +130,13 @@ const L = {
   floorDecor: { ko: "바닥", en: "Floor", ja: "床", zh: "地板" },
   deskAccessory: { ko: "책상 소품", en: "Desk Items", ja: "デスク小物", zh: "桌面物品" },
   lightingMood: { ko: "조명", en: "Lighting", ja: "照明", zh: "灯光" },
-  styleTheme: { ko: "그리기 스타일", en: "Drawing Style", ja: "描画スタイル", zh: "绘制风格" },
+  styleTheme: { ko: "\uADF8\uB9AC\uAE30 \uC2A4\uD0C0\uC77C", en: "Drawing Style", ja: "\u63CF\u753B\u30B9\u30BF\u30A4\u30EB", zh: "\u7ED8\u5236\u98CE\u683C" },
+  furnitureCatalog: { ko: "\uAC00\uAD6C \uCE74\uD0C8\uB85C\uADF8", en: "Furniture Catalog", ja: "\u5BB6\u5177\u30AB\u30BF\u30ED\u30B0", zh: "\u5BB6\u5177\u76EE\u5F55" },
+  addFurniture: { ko: "\uCD94\uAC00", en: "Add", ja: "\u8FFD\u52A0", zh: "\u6DFB\u52A0" },
+  removeFurniture: { ko: "\uC81C\uAC70", en: "Remove", ja: "\u524A\u9664", zh: "\u79FB\u9664" },
+  placedItems: { ko: "\uBC30\uCE58\uB41C \uAC00\uAD6C", en: "Placed Items", ja: "\u914D\u7F6E\u6E08\u307F", zh: "\u5DF2\u653E\u7F6E" },
+  emptyRoom: { ko: "\uBC30\uCE58\uB41C \uAC00\uAD6C\uAC00 \uC5C6\uC2B5\uB2C8\uB2E4", en: "No furniture placed", ja: "\u5BB6\u5177\u306A\u3057", zh: "\u65E0\u5BB6\u5177" },
+  maxReachedItem: { ko: "\uCD5C\uB300 \uAC1C\uC218 \uB3C4\uB2EC", en: "Max reached", ja: "\u4E0A\u9650\u9054\u6210", zh: "\u5DF2\u8FBE\u4E0A\u9650" },
 };
 
 /* ================================================================== */
@@ -369,6 +389,9 @@ export default function OfficeRoomManager({ departments, customThemes, onThemeCh
   const [ceoConfig, setCeoConfig] = useState<CeoCustomization>(() => loadCeoCustomization());
   const [showCeoColorPicker, setShowCeoColorPicker] = useState(false);
   const ceoColorPickerRef = useRef<HTMLDivElement>(null);
+  const [furnitureLayouts, setFurnitureLayouts] = useState<FurnitureLayout>(() => loadFurnitureLayouts());
+  const [expandedFurnitureDept, setExpandedFurnitureDept] = useState<string | null>(null);
+  const [furnitureCategoryFilter, setFurnitureCategoryFilter] = useState<FurnitureCategory | "all">("all");
 
   useEffect(() => {
     if (!showCeoColorPicker) return;
@@ -959,6 +982,139 @@ export default function OfficeRoomManager({ departments, customThemes, onThemeCh
                           }}
                           className="text-[10px] text-slate-500 hover:text-slate-300 px-2 py-0.5 border border-slate-600 rounded"
                         >{L.reset[language]}</button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+
+          {/* ────────────── FURNITURE CATALOG ────────────── */}
+          <section className="space-y-2">
+            <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{L.furnitureCatalog[language]}</h3>
+            <div className="space-y-1">
+              {[...departments.filter((d) => d.id !== "ceoOffice" && d.id !== "breakRoom"),
+                ...departments.filter((d) => d.id === "breakRoom"),
+              ].map((dept) => {
+                const roomType = dept.id === "breakRoom" ? "breakRoom" as const : dept.id === "ceoOffice" ? "ceoOffice" as const : "department" as const;
+                const placed = getRoomFurniture(furnitureLayouts, dept.id);
+                const isExpanded = expandedFurnitureDept === dept.id;
+                const addItem = (itemId: string) => {
+                  const result = addFurnitureToRoom(furnitureLayouts, dept.id, itemId, placed.length);
+                  if (result) {
+                    setFurnitureLayouts(result);
+                    saveFurnitureLayouts(result);
+                  }
+                };
+                const removeItem = (idx: number) => {
+                  const result = removeFurnitureFromRoom(furnitureLayouts, dept.id, idx);
+                  setFurnitureLayouts(result);
+                  saveFurnitureLayouts(result);
+                };
+                return (
+                  <div key={dept.id} className="border border-slate-700/50 rounded-lg overflow-hidden">
+                    <button
+                      onClick={() => setExpandedFurnitureDept(isExpanded ? null : dept.id)}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-slate-800/60 transition-colors"
+                    >
+                      <svg className={`w-3 h-3 text-slate-400 shrink-0 transition-transform ${isExpanded ? "rotate-90" : ""}`} viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2l4 4-4 4" /></svg>
+                      <span className="text-xs text-slate-200 flex-1 truncate">{dept.name}</span>
+                      {placed.length > 0 && <span className="text-[10px] text-slate-500">{placed.length}</span>}
+                    </button>
+                    {isExpanded && (
+                      <div className="px-3 pb-3 space-y-2.5">
+                        {/* Placed items */}
+                        {placed.length > 0 ? (
+                          <div className="space-y-1">
+                            <span className="text-[11px] text-slate-500">{L.placedItems[language]}</span>
+                            <div className="flex flex-wrap gap-1">
+                              {placed.map((p, idx) => {
+                                const def = getItemDef(p.itemId);
+                                if (!def) return null;
+                                return (
+                                  <div key={idx} className="flex items-center gap-1 px-2 py-1 rounded bg-slate-700/60 border border-slate-600 text-[11px]">
+                                    <span>{def.emoji}</span>
+                                    <span className="text-slate-300">{def.label[language]}</span>
+                                    <button onClick={() => removeItem(idx)} className="text-red-400 hover:text-red-300 ml-1" title={L.removeFurniture[language]}>
+                                      <svg viewBox="0 0 12 12" fill="currentColor" className="w-3 h-3"><path d="M3.5 3.5l5 5M8.5 3.5l-5 5" stroke="currentColor" strokeWidth="1.5" fill="none" /></svg>
+                                    </button>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-[11px] text-slate-600 italic">{L.emptyRoom[language]}</span>
+                        )}
+                        {/* Layout editor for positioned items */}
+                        {placed.length > 0 && (
+                          <RoomLayoutEditor
+                            roomId={dept.id}
+                            roomW={dept.id === "breakRoom" ? 340 : 316}
+                            roomH={dept.id === "breakRoom" ? 110 : 170}
+                            layouts={furnitureLayouts}
+                            onLayoutChange={setFurnitureLayouts}
+                            language={language}
+                          />
+                        )}
+                        {/* Category filter */}
+                        <div className="flex flex-wrap gap-1">
+                          <button
+                            onClick={() => setFurnitureCategoryFilter("all")}
+                            className={`px-2 py-0.5 rounded text-[10px] border transition-all ${furnitureCategoryFilter === "all" ? "border-blue-400 bg-blue-500/10 text-blue-300" : "border-slate-700 text-slate-500 hover:text-slate-300"}`}
+                          >All</button>
+                          {(Object.entries(FURNITURE_CATEGORIES) as [FurnitureCategory, (typeof FURNITURE_CATEGORIES)[FurnitureCategory]][]).map(([key, cat]) => (
+                            <button
+                              key={key}
+                              onClick={() => setFurnitureCategoryFilter(key)}
+                              className={`px-2 py-0.5 rounded text-[10px] border transition-all ${furnitureCategoryFilter === key ? "border-blue-400 bg-blue-500/10 text-blue-300" : "border-slate-700 text-slate-500 hover:text-slate-300"}`}
+                            >
+                              <span className="mr-0.5">{cat.emoji}</span>{cat.label[language]}
+                            </button>
+                          ))}
+                        </div>
+                        {/* Available items grid */}
+                        <div className="grid grid-cols-2 gap-1.5">
+                          {CATALOG_ITEMS
+                            .filter((item) => item.allowedRooms.includes(roomType))
+                            .filter((item) => furnitureCategoryFilter === "all" || item.category === furnitureCategoryFilter)
+                            .map((item) => {
+                              const currentCount = placed.filter((p) => p.itemId === item.id).length;
+                              const maxed = currentCount >= item.maxPerRoom;
+                              return (
+                                <button
+                                  key={item.id}
+                                  onClick={() => !maxed && addItem(item.id)}
+                                  disabled={maxed}
+                                  className={`flex items-center gap-1.5 px-2 py-1.5 rounded-md border text-left text-[11px] transition-all ${
+                                    maxed
+                                      ? "border-slate-700/30 bg-slate-800/30 text-slate-600 cursor-not-allowed"
+                                      : "border-slate-600 bg-slate-800/60 text-slate-300 hover:border-blue-400 hover:bg-blue-500/10"
+                                  }`}
+                                  title={item.description[language]}
+                                >
+                                  <span className="text-sm">{item.emoji}</span>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="truncate">{item.label[language]}</div>
+                                    {maxed && <div className="text-[9px] text-slate-600">{L.maxReachedItem[language]}</div>}
+                                  </div>
+                                </button>
+                              );
+                            })}
+                        </div>
+                        {/* Reset */}
+                        {placed.length > 0 && (
+                          <button
+                            onClick={() => {
+                              const next = { ...furnitureLayouts };
+                              delete next[dept.id];
+                              setFurnitureLayouts(next);
+                              saveFurnitureLayouts(next);
+                            }}
+                            className="text-[10px] text-slate-500 hover:text-slate-300 px-2 py-0.5 border border-slate-600 rounded"
+                          >{L.reset[language]}</button>
+                        )}
                       </div>
                     )}
                   </div>

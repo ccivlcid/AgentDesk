@@ -270,8 +270,8 @@ interface OfficeCustomization {
 | 3 | CEO Avatar Customization | Low-Med | Medium | **DONE** | CEO 커스터마이즈 완료 (2026-03-06) |
 | 4 | Dept Room Decoration | Medium | High | **DONE** | 부서별 방 꾸미기 완료 (2026-03-06) |
 | 5 | Style Theme System | Med-High | High | **DONE** | FurnitureDrawer 인터페이스 + default/pixel 스타일 (2026-03-06) |
-| 6 | Furniture Catalog | Med-High | Medium | TODO | 콘텐츠 확장 |
-| 7 | Room Layout Editor | High | Medium | TODO | 장기 목표 |
+| 6 | Furniture Catalog | Med-High | Medium | **DONE** | 카탈로그 10종 + UI (2026-03-06) |
+| 7 | Room Layout Editor | High | Medium | **DONE** | 드래그&드롭 에디터 + Undo/Redo (2026-03-06) |
 
 ---
 
@@ -395,13 +395,43 @@ src/components/OfficeRoomManager.tsx                   (MODIFIED - 방꾸미기 
 **파일:** `drawing-styles/index.ts`, `drawing-styles/default-drawer.ts`, `drawing-styles/pixel-drawer.ts`
 **주의:** 캐릭터(CEO/Agent)는 모든 스타일에서 현재 픽셀 유지
 
-#### Step 6: Furniture Catalog (Priority 6)
-- [ ] `FurnitureItem` 타입 + 카탈로그 데이터
-- [ ] 카탈로그 UI 컴포넌트 (그리드형)
-- [ ] 새 가구 drawing 함수 추가
-- [ ] 배치 데이터 저장/로드
+#### Step 6: Furniture Catalog (Priority 6) — **DONE** (2026-03-06)
+- [x] `FurnitureItem` 타입 + 카탈로그 데이터 정의 (`furniture-catalog.ts`)
+- [x] 카탈로그 UI 컴포넌트 (카테고리 필터 + 2열 그리드, OfficeRoomManager 내)
+- [x] 새 가구 drawing 함수 10개 추가 (aquarium, globe, led_sign, trophy, fan, air_purifier, arcade, bean_bag, standing_desk, projector)
+- [x] 배치 데이터 localStorage 저장/로드 + CustomEvent 실시간 반영
+- [x] 부서별 방 + 휴게실 배치 지원
+- [x] 아이템별 maxPerRoom 제한
 
-#### Step 7: Room Layout Editor (Priority 7) — 장기 목표
-- [ ] 그리드 에디터 UI + 드래그 앤 드롭
-- [ ] 기존 하드코딩 좌표 → 데이터 기반 배치 리팩토링
-- [ ] Undo/Redo + 레이아웃 프리셋 저장
+**관련 파일:**
+```
+src/components/office-view/furniture-catalog.ts    (NEW ~170줄)
+src/components/office-view/drawing-furniture-a.ts   (MODIFIED - 10함수 추가)
+src/components/office-view/buildScene-departments.ts (MODIFIED - 카탈로그 렌더링)
+src/components/office-view/buildScene-break-room.ts  (MODIFIED - 휴게실 카탈로그)
+src/components/office-view/buildScene-types.ts       (MODIFIED - furnitureLayoutsRef)
+src/components/office-view/buildScene.ts             (MODIFIED - layouts 전달)
+src/components/OfficeView.tsx                         (MODIFIED - ref + 이벤트 리스너)
+src/components/OfficeRoomManager.tsx                  (MODIFIED - 카탈로그 UI)
+```
+
+#### Step 7: Room Layout Editor (Priority 7) — **DONE** (2026-03-06)
+- [x] `FurniturePlacement`에 x, y 좌표 필드 추가 (기존 slot 호환 유지)
+- [x] `RoomLayoutEditor.tsx` 드래그 앤 드롭 에디터 컴포넌트
+  - 미니맵 기반 배치 에디터 (그리드 스냅 10px)
+  - 마우스 드래그로 가구 이동, 클릭 선택
+  - Undo/Redo (Ctrl+Z / Ctrl+Shift+Z, 최대 30 히스토리)
+  - Delete/Backspace 키로 선택 아이템 삭제
+  - Agent Area 안내 표시
+- [x] `buildScene-departments.ts` / `buildScene-break-room.ts`에서 x,y 좌표 기반 렌더링
+- [x] `furniture-catalog.ts`에 `updateFurniturePlacement()`, `snapToGrid()`, `gridW/gridH` 추가
+- [x] OfficeRoomManager에 에디터 통합 (가구 배치 시 자동 표시)
+
+**관련 파일:**
+```
+src/components/office-view/RoomLayoutEditor.tsx     (NEW ~220줄)
+src/components/office-view/furniture-catalog.ts      (MODIFIED - x,y, gridW/gridH, updatePlacement)
+src/components/office-view/buildScene-departments.ts (MODIFIED - 좌표 기반 렌더링)
+src/components/office-view/buildScene-break-room.ts  (MODIFIED - 좌표 기반 렌더링)
+src/components/OfficeRoomManager.tsx                  (MODIFIED - 에디터 통합)
+```

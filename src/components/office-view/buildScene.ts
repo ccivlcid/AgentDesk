@@ -57,6 +57,7 @@ export function buildOfficeScene(context: BuildOfficeSceneContext): void {
     wallClocksRef,
     wallClockSecondRef,
     roomDecorationsRef,
+    furnitureLayoutsRef,
     styleKeyRef,
     seasonalParticleRef,
     seasonKeyRef,
@@ -201,6 +202,7 @@ export function buildOfficeScene(context: BuildOfficeSceneContext): void {
     subCloneBurstParticlesRef,
     wallClocksRef,
     roomDecorations: roomDecorationsRef.current,
+    furnitureLayouts: furnitureLayoutsRef.current,
     removedSubBurstsByParent,
     addedWorkingSubIds,
     nextSubSnapshot,
@@ -225,6 +227,7 @@ export function buildOfficeScene(context: BuildOfficeSceneContext): void {
     breakRoomRectRef,
     wallClocksRef,
     agentPosRef,
+    furnitureLayouts: furnitureLayoutsRef.current,
   });
 
   // Seasonal particle layer (between rooms and final overlay layers)

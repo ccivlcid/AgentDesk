@@ -37,6 +37,7 @@ import { loadSeasonPreference, resolveSeasonKey } from "./office-view/seasonal-p
 import { type StyleKey, loadStylePreference } from "./office-view/drawing-styles";
 import { type CeoCustomization, loadCeoCustomization } from "./office-view/ceo-customization";
 import { type RoomDecoration, loadRoomDecorations } from "./office-view/room-decoration";
+import { type FurnitureLayout, loadFurnitureLayouts } from "./office-view/furniture-catalog";
 
 export default function OfficeView({
   departments,
@@ -148,6 +149,7 @@ export default function OfficeView({
   const wallClocksRef = useRef<WallClockVisual[]>([]);
   const wallClockSecondRef = useRef(-1);
   const roomDecorationsRef = useRef<Record<string, RoomDecoration>>(loadRoomDecorations());
+  const furnitureLayoutsRef = useRef<FurnitureLayout>(loadFurnitureLayouts());
   const styleKeyRef = useRef<StyleKey>(loadStylePreference());
   const seasonalParticleRef = useRef<SeasonalParticleState | null>(null);
   const seasonKeyRef = useRef<SeasonKey>(resolveSeasonKey(loadSeasonPreference()));
@@ -318,6 +320,7 @@ export default function OfficeView({
       wallClocksRef,
       wallClockSecondRef,
       roomDecorationsRef,
+      furnitureLayoutsRef,
       styleKeyRef,
       seasonalParticleRef,
       seasonKeyRef,
@@ -364,6 +367,16 @@ export default function OfficeView({
     };
     window.addEventListener("agentdesk_style_change", handler);
     return () => window.removeEventListener("agentdesk_style_change", handler);
+  }, [buildScene]);
+
+  // Listen for furniture catalog changes from OfficeRoomManager
+  useEffect(() => {
+    const handler = (e: Event) => {
+      furnitureLayoutsRef.current = (e as CustomEvent).detail as FurnitureLayout;
+      if (initDoneRef.current && appRef.current) buildScene();
+    };
+    window.addEventListener("agentdesk_furniture_change", handler);
+    return () => window.removeEventListener("agentdesk_furniture_change", handler);
   }, [buildScene]);
 
   const tickerContext = useMemo(

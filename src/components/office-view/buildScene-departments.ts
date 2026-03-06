@@ -24,10 +24,11 @@ import {
   drawRoomAtmosphere,
   drawTiledFloor,
 } from "./drawing-core";
-import { drawPoster, drawCarpet, drawDeskLamp, drawDeskMug, drawDeskFigurine } from "./drawing-furniture-a";
+import { drawPoster, drawCarpet, drawDeskLamp, drawDeskMug, drawDeskFigurine, drawCatalogItem } from "./drawing-furniture-a";
 import { renderDeskAgentAndSubClones } from "./buildScene-department-agent";
 import { type RoomDecoration, getRoomDecoration, getLightingTint } from "./room-decoration";
 import type { FurnitureDrawer } from "./drawing-styles";
+import { type FurnitureLayout, type FurniturePlacement, getRoomFurniture } from "./furniture-catalog";
 
 interface BuildDepartmentRoomsParams {
   app: Application;
@@ -56,6 +57,7 @@ interface BuildDepartmentRoomsParams {
   subCloneBurstParticlesRef: MutableRefObject<SubCloneBurstParticle[]>;
   wallClocksRef: MutableRefObject<WallClockVisual[]>;
   roomDecorations: Record<string, RoomDecoration>;
+  furnitureLayouts: FurnitureLayout;
   removedSubBurstsByParent: Map<string, Array<{ x: number; y: number }>>;
   addedWorkingSubIds: Set<string>;
   nextSubSnapshot: Map<string, { parentAgentId: string; x: number; y: number }>;
@@ -88,6 +90,7 @@ export function buildDepartmentRooms({
   subCloneBurstParticlesRef,
   wallClocksRef,
   roomDecorations,
+  furnitureLayouts,
   removedSubBurstsByParent,
   addedWorkingSubIds,
   nextSubSnapshot,
@@ -161,6 +164,17 @@ export function buildDepartmentRooms({
           theme.accent,
         );
       }
+    }
+
+    // Catalog furniture placements
+    const catalogItems = getRoomFurniture(furnitureLayouts, dept.id);
+    if (catalogItems.length > 0) {
+      const slotCount = Math.max(3, catalogItems.length);
+      catalogItems.forEach((placement, idx) => {
+        const slotX = placement.x !== undefined ? rx + placement.x : rx + 20 + (idx % slotCount) * 28;
+        const slotY = placement.y !== undefined ? ry + placement.y : ry + roomH - 18;
+        drawCatalogItem(room, slotX, slotY, placement.itemId);
+      });
     }
 
     if (deptAgents.length === 0) {

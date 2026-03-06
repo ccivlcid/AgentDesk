@@ -15,6 +15,8 @@ import {
   hashStr,
 } from "./drawing-core";
 import type { FurnitureDrawer } from "./drawing-styles";
+import { type FurnitureLayout, getRoomFurniture } from "./furniture-catalog";
+import { drawCatalogItem } from "./drawing-furniture-a";
 
 interface BuildBreakRoomParams {
   app: Application;
@@ -34,6 +36,7 @@ interface BuildBreakRoomParams {
   breakRoomRectRef: MutableRefObject<{ x: number; y: number; w: number; h: number } | null>;
   wallClocksRef: MutableRefObject<WallClockVisual[]>;
   agentPosRef: MutableRefObject<Map<string, { x: number; y: number }>>;
+  furnitureLayouts: FurnitureLayout;
 }
 
 export function buildBreakRoom({
@@ -54,6 +57,7 @@ export function buildBreakRoom({
   breakRoomRectRef,
   wallClocksRef,
   agentPosRef,
+  furnitureLayouts,
 }: BuildBreakRoomParams): void {
   const breakAgents = agents.filter((agent) => agent.status === "break");
   breakAnimItemsRef.current = [];
@@ -104,6 +108,14 @@ export function buildBreakRoom({
   drawer.drawPictureFrame(breakRoom, brx + brw / 2 - 8, bry + 14);
   wallClocksRef.current.push(drawer.drawWallClock(breakRoom, brx + brw / 2 + 30, bry + 18));
   drawer.drawTrashCan(breakRoom, furnitureBaseX + 24, bry + brh - 14);
+
+  // Catalog furniture placements
+  const breakCatalog = getRoomFurniture(furnitureLayouts, "breakRoom");
+  breakCatalog.forEach((placement, idx) => {
+    const slotX = placement.x !== undefined ? brx + placement.x : brx + brw / 2 - 40 + idx * 30;
+    const slotY = placement.y !== undefined ? bry + placement.y : bry + brh - 18;
+    drawCatalogItem(breakRoom, slotX, slotY, placement.itemId);
+  });
 
   const brSignW = 84;
   const brSignBg = new Graphics();
