@@ -144,5 +144,10 @@ export function useCustomSkillsState({
     toggleCustomProvider,
     handleCustomSkillSubmit,
     handleDeleteCustomSkill,
+    refreshCustomSkills: useCallback(() => {
+      getCustomSkills()
+        .then(setCustomSkills)
+        .catch(() => {});
+    }, []),
   };
 }

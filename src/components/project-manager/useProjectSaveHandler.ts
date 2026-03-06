@@ -1,6 +1,6 @@
 import { useCallback, type Dispatch, type SetStateAction } from "react";
 import { checkProjectPath, createProject, isApiRequestError, updateProject } from "../../api";
-import type { AssignmentMode } from "../../types";
+import type { AssignmentMode, WorkflowPackKey } from "../../types";
 import type { ManualAssignmentWarning, ProjectI18nTranslate } from "./types";
 import type { ProjectManagerPathTools } from "./useProjectManagerPathTools";
 
@@ -9,6 +9,7 @@ interface UseProjectSaveHandlerParams {
   saving: boolean;
   setSaving: Dispatch<SetStateAction<boolean>>;
   assignmentMode: AssignmentMode;
+  defaultPackKey: WorkflowPackKey;
   getManualAssignmentWarning: () => ManualAssignmentWarning["reason"] | null;
   setManualAssignmentWarning: Dispatch<SetStateAction<ManualAssignmentWarning | null>>;
   projectPath: string;
@@ -31,6 +32,7 @@ export function useProjectSaveHandler({
   saving,
   setSaving,
   assignmentMode,
+  defaultPackKey,
   getManualAssignmentWarning,
   setManualAssignmentWarning,
   projectPath,
@@ -117,6 +119,7 @@ export function useProjectSaveHandler({
             name: name.trim(),
             project_path: savePath,
             core_goal: coreGoal.trim(),
+            default_pack_key: defaultPackKey,
             create_path_if_missing: createPathIfMissing,
             assignment_mode: assignmentMode,
             agent_ids: assignmentMode === "manual" ? Array.from(selectedAgentIds) : [],
@@ -127,6 +130,7 @@ export function useProjectSaveHandler({
             name: name.trim(),
             project_path: savePath,
             core_goal: coreGoal.trim(),
+            default_pack_key: defaultPackKey,
             create_path_if_missing: createPathIfMissing,
             assignment_mode: assignmentMode,
             agent_ids: assignmentMode === "manual" ? Array.from(selectedAgentIds) : [],
@@ -201,6 +205,7 @@ export function useProjectSaveHandler({
       assignmentMode,
       canSave,
       coreGoal,
+      defaultPackKey,
       editingProjectId,
       getManualAssignmentWarning,
       loadProjects,

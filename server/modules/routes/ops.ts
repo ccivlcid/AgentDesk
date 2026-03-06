@@ -23,6 +23,9 @@ import { registerHookLearningRoutes } from "./ops/hooks-learning/routes.ts";
 import { registerChatUploadRoutes } from "./ops/chat-upload.ts";
 import { registerNotificationRoutes } from "./ops/notifications.ts";
 import { registerBackupRoutes } from "./ops/backup.ts";
+import { registerAgentUsageRoutes } from "./ops/agent-usage.ts";
+import { registerHeartbeatRoutes } from "./ops/heartbeat.ts";
+import { registerScheduledTaskRoutes } from "./ops/scheduled-tasks.ts";
 
 export function registerRoutesPartC(ctx: RuntimeContext): RouteOpsExports {
   const __ctx: RuntimeContext = ctx;
@@ -224,7 +227,7 @@ export function registerRoutesPartC(ctx: RuntimeContext): RouteOpsExports {
   const { normalizeSkillLearnProviders } = registerSkillRoutes(__ctx);
   registerCustomSkillRoutes(__ctx, { normalizeSkillLearnProviders });
 
-  const { refreshCliUsageData } = registerWorktreeAndUsageRoutes(__ctx);
+  const { refreshCliUsageData, checkCostBlockExecution } = registerWorktreeAndUsageRoutes(__ctx);
 
   // ---------------------------------------------------------------------------
   // API Providers (direct API key-based LLM access)
@@ -256,9 +259,14 @@ export function registerRoutesPartC(ctx: RuntimeContext): RouteOpsExports {
   registerChatUploadRoutes(__ctx);
   registerNotificationRoutes(__ctx);
   registerBackupRoutes(__ctx);
+  registerHeartbeatRoutes(__ctx);
+  registerScheduledTaskRoutes({ app, db, nowMs });
+  const { recordAgentUsage } = registerAgentUsageRoutes(__ctx);
 
   return {
     prettyStreamJson,
     refreshCliUsageData,
+    recordAgentUsage,
+    checkCostBlockExecution,
   };
 }

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { CliModelInfo, CliStatusMap, CompanySettings } from "../types";
+import type { Agent, CliModelInfo, CliStatusMap, CompanySettings } from "../types";
 import * as api from "../api";
 import type { DeviceCodeStart, OAuthConnectProvider, OAuthStatus } from "../api";
 import type { OAuthCallbackResult } from "../App";
@@ -21,6 +21,8 @@ interface SettingsPanelProps {
   onRefreshCli: () => void;
   oauthResult?: OAuthCallbackResult | null;
   onOauthResultClear?: () => void;
+  /** 현재 오피스 팩 직원 (메신저 채팅 대화 직원 선택용) */
+  managerAgents?: Agent[];
 }
 
 export default function SettingsPanel({
@@ -464,7 +466,13 @@ export default function SettingsPanel({
       {tab === "api" && <ApiSettingsTab t={t} localeTag={localeTag} apiState={apiState} />}
 
       {tab === "gateway" && (
-        <GatewaySettingsTab t={t} form={form} setForm={setForm} persistSettings={persistSettings} />
+        <GatewaySettingsTab
+          t={t}
+          form={form}
+          setForm={setForm}
+          persistSettings={persistSettings}
+          managerAgents={managerAgents}
+        />
       )}
 
       {tab === "data" && <DataSettingsTab t={t} />}

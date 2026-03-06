@@ -1,6 +1,7 @@
 import { useCallback, useRef } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import * as api from "../api";
+import { isApiRequestError } from "../api/core";
 import { buildDecisionInboxItems } from "../components/chat/decision-inbox";
 import type { DecisionInboxItem } from "../components/chat/decision-inbox";
 import { LANGUAGE_USER_SET_STORAGE_KEY, normalizeLanguage, pickLang } from "../i18n";
@@ -193,7 +194,12 @@ export function useAppActions({
         await api.runTask(id);
         await refreshTasksAndAgents();
       } catch (error) {
-        console.error("Run task failed:", error);
+        if (isApiRequestError(error) && error.code === "cost_limit_exceeded") {
+          const details = error.details as { message?: string } | null;
+          alert(details?.message || "Execution blocked: cost limit exceeded. Adjust cost alert settings.");
+        } else {
+          console.error("Run task failed:", error);
+        }
       }
     },
     [refreshTasksAndAgents],

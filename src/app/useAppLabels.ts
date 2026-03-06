@@ -54,6 +54,13 @@ export function useAppLabels({
           ja: "ダッシュボード",
           zh: "仪表盘",
         })}`;
+      case "cli-usage":
+        return `📈 ${pickLang(uiLanguage, {
+          ko: "CLI 사용량",
+          en: "CLI Usage",
+          ja: "CLI使用量",
+          zh: "CLI 使用量",
+        })}`;
       case "tasks":
       case "tasks-board":
         return `📋 ${pickLang(uiLanguage, {
@@ -75,6 +82,13 @@ export function useAppLabels({
           en: "Agents",
           ja: "社員管理",
           zh: "员工管理",
+        })}`;
+      case "heartbeat":
+        return `❤️ ${pickLang(uiLanguage, {
+          ko: "직원 살펴보기",
+          en: "Heartbeat",
+          ja: "社員の様子",
+          zh: "员工动态",
         })}`;
       case "skills":
         return `⭐ ${pickLang(uiLanguage, {

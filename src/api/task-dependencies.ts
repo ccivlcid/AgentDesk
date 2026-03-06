@@ -38,3 +38,13 @@ export async function removeTaskDependency(taskId: string, depId: string): Promi
   );
   return res.json();
 }
+
+export interface DependencyBlockedResponse {
+  blocked: boolean;
+  incomplete_predecessors: Array<{ id: string; title: string; status: string }>;
+}
+
+export async function checkDependencyBlocked(taskId: string): Promise<DependencyBlockedResponse> {
+  const res = await fetch(`${BASE}/api/tasks/${encodeURIComponent(taskId)}/dependencies/blocked`);
+  return res.json();
+}

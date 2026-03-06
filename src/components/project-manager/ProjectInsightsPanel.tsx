@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import type { ProjectDecisionEventItem, ProjectReportHistoryItem, ProjectTaskHistoryItem } from "../../api";
 import type { Project } from "../../types";
+import BurndownChart from "./BurndownChart";
 import type { GroupedProjectTaskCard, ProjectI18nTranslate } from "./types";
 import { fmtTime } from "./utils";
 
@@ -52,11 +53,28 @@ function ProjectProgressSection({ t, groupedTaskCards }: ProjectProgressSectionP
       }
     }
 
+    const deptMap: Map<string, { name: string; done: number; total: number }> = new Map();
+    for (const task of allTasks) {
+      const cls = classifyStatus(task.status);
+      const deptId = task.department_id;
+      const deptName = task.department_name_ko || task.department_name;
+      if (deptId && deptName) {
+        const existing = deptMap.get(deptId);
+        if (!existing) {
+          deptMap.set(deptId, { name: deptName, done: cls === "done" ? 1 : 0, total: 1 });
+        } else {
+          existing.total += 1;
+          if (cls === "done") existing.done += 1;
+        }
+      }
+    }
+
     const total = allTasks.length;
     const donePct = total > 0 ? Math.round((counts.done / total) * 100) : 0;
     const topAgents = [...agentMap.values()].sort((a, b) => b.done - a.done || b.total - a.total).slice(0, 4);
+    const topDepts = [...deptMap.values()].sort((a, b) => b.total - a.total || b.done - a.done).slice(0, 6);
 
-    return { counts, total, donePct, topAgents };
+    return { counts, total, donePct, topAgents, topDepts };
   }, [groupedTaskCards]);
 
   if (stats.total === 0) return null;
@@ -122,6 +140,32 @@ function ProjectProgressSection({ t, groupedTaskCards }: ProjectProgressSectionP
                     />
                   </div>
                   <span className="w-8 text-right text-[11px] text-slate-400">{agent.done}/{agent.total}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Department contribution */}
+      {stats.topDepts.length > 0 && (
+        <div>
+          <p className="mb-2 text-[11px] font-medium text-slate-400">
+            {t({ ko: "부서별 기여도", en: "Department Contribution", ja: "部署別貢献度", zh: "部门贡献度" })}
+          </p>
+          <div className="space-y-1.5">
+            {stats.topDepts.map((dept) => {
+              const deptPct = dept.total > 0 ? Math.round((dept.done / dept.total) * 100) : 0;
+              return (
+                <div key={dept.name} className="flex items-center gap-2">
+                  <span className="w-24 truncate text-[11px] text-slate-300">{dept.name}</span>
+                  <div className="flex-1 overflow-hidden rounded-full bg-slate-700/60" style={{ height: 6 }}>
+                    <div
+                      className="h-full rounded-full bg-violet-500/70"
+                      style={{ width: `${deptPct}%` }}
+                    />
+                  </div>
+                  <span className="w-8 text-right text-[11px] text-slate-400">{dept.done}/{dept.total}</span>
                 </div>
               );
             })}
@@ -211,6 +255,15 @@ export default function ProjectInsightsPanel({
 
       {selectedProject && !loadingDetail && !isCreating && groupedTaskCards.length > 0 && (
         <ProjectProgressSection t={t} groupedTaskCards={groupedTaskCards} />
+      )}
+
+      {selectedProject && !loadingDetail && !isCreating && groupedTaskCards.length > 0 && (
+        <div className="min-w-0 rounded-xl border border-slate-700 bg-slate-800/40 p-4">
+          <h4 className="mb-2 text-sm font-semibold text-white">
+            {t({ ko: "번다운 차트", en: "Burndown Chart", ja: "バーンダウンチャート", zh: "燃尽图" })}
+          </h4>
+          <BurndownChart projectId={selectedProject.id} t={t} />
+        </div>
       )}
 
       <div className="min-w-0 rounded-xl border border-slate-700 bg-slate-800/40 p-4">

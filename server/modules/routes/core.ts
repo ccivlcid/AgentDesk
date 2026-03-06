@@ -438,6 +438,7 @@ export function registerRoutesPartA(ctx: RuntimeContext): Record<string, never> 
     spawnCliAgent,
     handleTaskRunComplete,
     buildAvailableSkillsPromptBlock,
+    checkCostBlockExecution: (...args: any[]) => (ctx as any).checkCostBlockExecution?.(...args),
     stopProgressTimer,
     rollbackTaskWorktree,
     clearTaskWorkflowState,

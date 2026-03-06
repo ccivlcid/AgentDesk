@@ -126,7 +126,7 @@ export function registerAgentSpawnRoute(ctx: RuntimeContext): void {
     if (!agent) return res.status(404).json({ error: "not_found" });
 
     const provider = agent.cli_provider || "claude";
-    if (!["claude", "codex", "gemini", "opencode", "copilot", "antigravity", "cursor", "api"].includes(provider)) {
+    if (!["claude", "codex", "gemini", "opencode", "copilot", "antigravity", "cursor", "api", "ollama"].includes(provider)) {
       return res.status(400).json({ error: "unsupported_provider", provider });
     }
 
@@ -243,7 +243,7 @@ export function registerAgentSpawnRoute(ctx: RuntimeContext): void {
         ? agent.cli_reasoning_level || spawnModelConfig[provider]?.reasoningLevel || undefined
         : spawnModelConfig[provider]?.reasoningLevel || undefined;
 
-    if (provider === "api") {
+    if (provider === "api" || provider === "ollama") {
       const controller = new AbortController();
       const fakePid = getNextHttpAgentPid();
       db.prepare("UPDATE agents SET status = 'working' WHERE id = ?").run(id);
@@ -256,10 +256,24 @@ export function registerAgentSpawnRoute(ctx: RuntimeContext): void {
       broadcast("agent_status", updatedAgent);
       broadcast("task_update", db.prepare("SELECT * FROM tasks WHERE id = ?").get(taskId));
       notifyTaskStatus(taskId, task.title, "in_progress", taskLang);
+
+      // For ollama: auto-resolve provider ID and model if not explicitly set
+      let apiProviderId = agent.api_provider_id;
+      let apiModel = agent.api_model;
+      if (provider === "ollama" && !apiProviderId) {
+        const ollamaProvider = db.prepare(
+          "SELECT id FROM api_providers WHERE type = 'ollama' AND enabled = 1 LIMIT 1",
+        ).get() as { id: string } | undefined;
+        if (ollamaProvider) apiProviderId = ollamaProvider.id;
+      }
+      if (provider === "ollama" && !apiModel) {
+        apiModel = agent.cli_model || "llama3.1";
+      }
+
       launchApiProviderAgent(
         taskId,
-        agent.api_provider_id ?? null,
-        agent.api_model ?? null,
+        apiProviderId ?? null,
+        apiModel ?? null,
         prompt,
         agentCwd,
         logPath,

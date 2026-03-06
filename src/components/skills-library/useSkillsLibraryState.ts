@@ -446,6 +446,7 @@ export function useSkillsLibraryState({ agents, localeTag, t }: { agents: Agent[
     toggleCustomProvider: customState.toggleCustomProvider,
     handleCustomSkillSubmit: customState.handleCustomSkillSubmit,
     handleDeleteCustomSkill: customState.handleDeleteCustomSkill,
+    refreshCustomSkills: customState.refreshCustomSkills,
     handleCardMouseEnter,
     handleCardMouseLeave,
     loadSkills,

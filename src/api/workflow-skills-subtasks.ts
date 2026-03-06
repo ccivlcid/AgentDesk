@@ -235,6 +235,22 @@ export async function deleteCustomSkill(skillName: string): Promise<{ ok: boolea
   return del(`/api/skills/custom/${encodeURIComponent(skillName)}`) as Promise<{ ok: boolean }>;
 }
 
+export interface SkillPackage {
+  format: string;
+  skillName: string;
+  providers: string[];
+  content: string;
+  exportedAt: number;
+}
+
+export async function exportCustomSkill(skillName: string): Promise<{ ok: boolean; package: SkillPackage }> {
+  return request<{ ok: boolean; package: SkillPackage }>(`/api/skills/custom/${encodeURIComponent(skillName)}/export`);
+}
+
+export async function importCustomSkill(pkg: SkillPackage): Promise<{ ok: boolean; skillName: string }> {
+  return post("/api/skills/custom/import", { package: pkg }) as Promise<{ ok: boolean; skillName: string }>;
+}
+
 export interface WorkflowPackConfig {
   key: WorkflowPackKey;
   name: string;

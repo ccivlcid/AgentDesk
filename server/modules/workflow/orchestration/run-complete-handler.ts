@@ -6,6 +6,7 @@ import {
   resolveVideoArtifactSpecForTask,
 } from "../packs/video-artifact.ts";
 import { evaluateRemotionOnlyGateFromLogFiles } from "../packs/video-render-engine-gate.ts";
+import { extractAndSaveTaskLearnings } from "./autonomous-memory.ts";
 
 type CreateRunCompleteHandlerDeps = Record<string, any>;
 
@@ -52,6 +53,7 @@ export function createRunCompleteHandler(deps: CreateRunCompleteHandlerDeps) {
     getWorktreeDiffSummary,
     hasVisibleDiffSummary,
     insertNotification,
+    recordAgentUsage,
   } = deps;
 
   function handleTaskRunComplete(taskId: string, exitCode: number): void {
@@ -255,8 +257,91 @@ export function createRunCompleteHandler(deps: CreateRunCompleteHandlerDeps) {
       }
     }
 
+    // Generic QA gate check for non-video packs
+    if (finalExitCode === 0 && task?.workflow_pack_key && task.workflow_pack_key !== "video_preprod") {
+      try {
+        const packRow = db.prepare("SELECT qa_rules_json FROM workflow_packs WHERE key = ?").get(task.workflow_pack_key) as
+          | { qa_rules_json: string }
+          | undefined;
+        if (packRow?.qa_rules_json) {
+          const qaRules = JSON.parse(packRow.qa_rules_json);
+          // Check required sections in output (report, web_research_report, asset_management packs)
+          if (qaRules.requireSections && qaRules.failOnMissingSections && result) {
+            const sections = qaRules.requireSections as string[];
+            const missingSection = sections.find((s: string) => {
+              const pattern = new RegExp(`(^|\\n)\\s*#{1,3}\\s*${s.replace(/_/g, "[_ ]")}`, "i");
+              return !pattern.test(result);
+            });
+            if (missingSection) {
+              appendTaskLog(taskId, "system",
+                `QA gate warning: required section '${missingSection}' not found in output. Task marked for review attention.`);
+            }
+          }
+          // Check citations for web_research_report
+          if (qaRules.failWithoutCitations && result) {
+            const hasLinks = /https?:\/\/[^\s)]+/.test(result);
+            if (!hasLinks) {
+              appendTaskLog(taskId, "system",
+                `QA gate warning: no citations/links found in web research output. Review will require citation verification.`);
+            }
+          }
+          // Check test evidence for development pack
+          if (qaRules.requireTestEvidence && result) {
+            const hasTestEvidence = /(?:test|spec|passing|passed|PASS|✓|✔|ok\s+\d+)/i.test(result);
+            if (!hasTestEvidence) {
+              appendTaskLog(taskId, "system",
+                `QA gate warning: no test evidence found in output. Review will check for test coverage.`);
+            }
+          }
+        }
+      } catch { /* ignore QA gate parse errors */ }
+    }
+
     const logKind = finalExitCode === 0 ? "completed" : "failed";
     appendTaskLog(taskId, "system", `RUN ${logKind} (exit code: ${finalExitCode})`);
+
+    // Record agent usage log
+    if (task?.assigned_agent_id && typeof recordAgentUsage === "function") {
+      try {
+        const startedAt = (
+          db.prepare("SELECT started_at FROM tasks WHERE id = ?").get(taskId) as { started_at: number } | undefined
+        )?.started_at;
+        let logBytes = 0;
+        try {
+          if (fs.existsSync(logPath)) logBytes = fs.statSync(logPath).size;
+        } catch { /* ignore */ }
+        const agentRow = db.prepare("SELECT cli_provider FROM agents WHERE id = ?").get(task.assigned_agent_id) as
+          | { cli_provider: string | null }
+          | undefined;
+        recordAgentUsage({
+          agentId: task.assigned_agent_id,
+          taskId,
+          provider: agentRow?.cli_provider || "unknown",
+          startedAt: startedAt || t,
+          endedAt: t,
+          exitCode: finalExitCode,
+          logBytes,
+        });
+      } catch { /* ignore usage recording failure */ }
+    }
+
+    // Extract learnings and save to memory (autonomous memory protocol)
+    if (task) {
+      try {
+        extractAndSaveTaskLearnings(
+          { db, nowMs, logsDir, appendTaskLog },
+          {
+            taskId,
+            taskTitle: task.title,
+            agentId: task.assigned_agent_id,
+            departmentId: task.department_id,
+            workflowPackKey: task.workflow_pack_key,
+            exitCode: finalExitCode,
+            result,
+          },
+        );
+      } catch { /* ignore memory extraction failure */ }
+    }
 
     if (result) {
       db.prepare("UPDATE tasks SET result = ? WHERE id = ?").run(result, taskId);

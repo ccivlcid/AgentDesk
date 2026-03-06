@@ -114,6 +114,11 @@ export default function ProjectSidebar({
               >
                 <p className="flex items-center gap-1.5 truncate text-sm font-medium text-white">
                   {project.name}
+                  {typeof project.task_count === "number" && project.task_count > 0 && (
+                    <span className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-slate-700 px-1.5 text-[10px] font-semibold text-slate-300">
+                      {project.task_count}
+                    </span>
+                  )}
                   {project.github_repo && (
                     <svg
                       className="inline-block h-3.5 w-3.5 shrink-0 text-slate-400"

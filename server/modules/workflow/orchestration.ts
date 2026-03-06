@@ -34,6 +34,9 @@ import { createReviewFinalizeTools } from "./orchestration/review-finalize-tools
 import { createRunCompleteHandler } from "./orchestration/run-complete-handler.ts";
 import { createReportWorkflowTools } from "./orchestration/report-workflow-tools.ts";
 import { createSessionReviewTools } from "./orchestration/session-review-tools.ts";
+import { startAgentAnomalyMonitor } from "./orchestration/agent-anomaly-monitor.ts";
+import { startHeartbeatEngine } from "./orchestration/heartbeat.ts";
+import { startTaskScheduler } from "./orchestration/task-scheduler.ts";
 import {
   extractReportDesignParentTaskId,
   extractReportPathByLabel,
@@ -710,6 +713,33 @@ export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrat
   ): void {
     reviewFinalizeTools.finishReview(taskId, taskTitle, options);
   }
+
+  // Start agent anomaly monitor (orphaned agents, consecutive failures)
+  startAgentAnomalyMonitor({ db, nowMs, activeProcesses, broadcast, insertNotification });
+
+  // Start heartbeat engine (proactive agent status checks)
+  const heartbeatEngine = startHeartbeatEngine({
+    db,
+    nowMs,
+    activeProcesses,
+    broadcast,
+    insertNotification,
+    notifyCeo,
+  });
+
+  // Expose triggerHeartbeat on ctx for API route access
+  (__ctx as any).triggerHeartbeat = heartbeatEngine.triggerAgent;
+
+  // Start task scheduler (cron-based repeated task creation)
+  startTaskScheduler({
+    db,
+    nowMs,
+    broadcast,
+    insertNotification,
+    startTaskExecutionForAgent: (agentId: string, taskId: string) => {
+      startTaskExecutionForAgent(agentId, taskId);
+    },
+  });
 
   return {
     crossDeptNextCallbacks,

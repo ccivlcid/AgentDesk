@@ -5,6 +5,7 @@ import type { CliUsageEntry } from "../shared/types.ts";
 
 export function registerWorktreeAndUsageRoutes(ctx: RuntimeContext): {
   refreshCliUsageData: () => Promise<Record<string, CliUsageEntry>>;
+  checkCostBlockExecution: () => { blocked: boolean; provider?: string; pct?: number; threshold?: number };
 } {
   const {
     app,
@@ -287,5 +288,41 @@ export function registerWorktreeAndUsageRoutes(ctx: RuntimeContext): {
     }
   }
 
-  return { refreshCliUsageData };
+  /**
+   * Check if any provider exceeds a "block execution" threshold.
+   * Block threshold = alertThreshold + 15% (capped at 100%).
+   * Returns the blocking provider name if exceeded, null otherwise.
+   */
+  function checkCostBlockExecution(): { blocked: boolean; provider?: string; pct?: number; threshold?: number } {
+    const config = readCostAlertConfig();
+    const usage = readCliUsageFromDb();
+
+    for (const [provider, entry] of Object.entries(usage)) {
+      if (entry.error || !entry.windows?.length) continue;
+      const alertConfig = config[provider];
+      if (!alertConfig?.enabled) continue;
+      const alertThreshold = alertConfig.alertThreshold;
+      if (!alertThreshold || alertThreshold <= 0) continue;
+
+      // Block threshold is alert + 15, capped at 100
+      const blockThreshold = Math.min(alertThreshold + 15, 100);
+
+      for (const win of entry.windows) {
+        const utilization = (win as any).utilization as number | undefined;
+        if (utilization == null) continue;
+        const pct = Math.round(utilization * 100);
+        if (pct >= blockThreshold) {
+          return { blocked: true, provider, pct, threshold: blockThreshold };
+        }
+      }
+    }
+
+    return { blocked: false };
+  }
+
+  app.get("/api/cost-block-check", (_req, res) => {
+    res.json({ ok: true, ...checkCostBlockExecution() });
+  });
+
+  return { refreshCliUsageData, checkCostBlockExecution };
 }

@@ -72,13 +72,14 @@ export default function AppHeaderBar({
 }: AppHeaderBarProps) {
   return (
     <header
-      className="sticky top-0 z-30 flex items-center justify-between px-3 py-2 backdrop-blur-sm sm:px-4 sm:py-3 lg:px-6"
+      className="sticky top-0 z-30 flex min-h-[52px] items-center gap-2 px-3 py-2 backdrop-blur-md sm:px-4 sm:py-2.5 lg:px-5"
       style={{ borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-header)" }}
     >
-      <div className="flex min-w-0 items-center gap-2">
+      {/* Left: nav, title, office pack — can shrink */}
+      <div className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden">
         <button
           onClick={onOpenMobileNav}
-          className="inline-flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg transition lg:hidden"
+          className="inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl transition lg:hidden"
           style={{
             border: "1px solid var(--th-border)",
             background: "var(--th-bg-surface)",
@@ -86,43 +87,51 @@ export default function AppHeaderBar({
           }}
           aria-label="Open navigation"
         >
-          ☰
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6" />
+            <line x1="3" y1="12" x2="21" y2="12" />
+            <line x1="3" y1="18" x2="21" y2="18" />
+          </svg>
         </button>
         <h1
-          className="truncate text-base font-bold sm:text-lg flex items-center gap-2"
+          className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden"
           style={{ color: "var(--th-text-heading)" }}
         >
           {currentView === "agents" && (
-            <span className="relative inline-flex items-center" style={{ width: 30, height: 22 }}>
+            <span className="relative hidden shrink-0 sm:inline-flex" style={{ width: 28, height: 20 }}>
               <img
                 src="/sprites/8-D-1.png"
                 alt=""
-                className="absolute left-0 top-0 w-5 h-5 rounded-full object-cover"
+                className="absolute left-0 top-0 h-5 w-5 rounded-full object-cover"
                 style={{ imageRendering: "pixelated", opacity: 0.85 }}
               />
               <img
                 src="/sprites/3-D-1.png"
                 alt=""
-                className="absolute left-2.5 top-0.5 w-5 h-5 rounded-full object-cover"
+                className="absolute left-3 top-0.5 h-5 w-5 rounded-full object-cover"
                 style={{ imageRendering: "pixelated", zIndex: 1 }}
               />
             </span>
           )}
-          <span className="truncate">{viewTitle}</span>
+          <span className="truncate text-base font-semibold tracking-tight sm:text-lg">{viewTitle}</span>
         </h1>
         {officePackControl && (
           <label
-            className="hidden xl:flex items-center gap-2 rounded-lg px-2 py-1"
-            style={{ border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}
+            className="header-pack-selector flex flex-shrink-0 items-center gap-1.5 rounded-xl border px-2 py-1.5 sm:gap-2 sm:px-2.5"
+            style={{ borderColor: "var(--th-border)", background: "var(--th-bg-surface)" }}
           >
-            <span className="text-[10px] uppercase tracking-wider" style={{ color: "var(--th-text-muted)" }}>
+            <span
+              className="hidden shrink-0 text-[10px] font-medium uppercase tracking-wider md:inline"
+              style={{ color: "var(--th-text-muted)" }}
+            >
               {officePackControl.label}
             </span>
             <select
               value={officePackControl.value}
               onChange={(e) => officePackControl.onChange(e.target.value as WorkflowPackKey)}
-              className="min-w-[170px] bg-transparent text-xs font-medium focus:outline-none"
+              className="min-w-0 max-w-[120px] bg-transparent text-[11px] font-medium focus:outline-none sm:max-w-[140px] sm:text-xs lg:max-w-[160px]"
               style={{ color: "var(--th-text-primary)" }}
+              title={officePackControl.options.find((o) => o.key === officePackControl.value)?.label}
             >
               {officePackControl.options.map((option) => (
                 <option key={option.key} value={option.key}>
@@ -133,7 +142,8 @@ export default function AppHeaderBar({
           </label>
         )}
       </div>
-      <div className="flex items-center gap-2 sm:gap-3">
+      {/* Right: actions — fixed width, no wrap; overflow goes into "more" menu below lg */}
+      <div className="flex flex-shrink-0 items-center gap-1.5 sm:gap-2">
         <button
           onClick={onOpenTasks}
           className="header-action-btn header-action-btn-primary"
@@ -156,18 +166,21 @@ export default function AppHeaderBar({
           </span>
           {decisionInboxCount > 0 && <span className="header-decision-badge">{decisionInboxCount}</span>}
         </button>
-        <button onClick={onOpenAgentStatus} className="header-action-btn header-action-btn-secondary mobile-hidden">
-          &#x1F6E0; {agentStatusLabel}
+        <button onClick={onOpenAgentStatus} className="header-action-btn header-action-btn-secondary header-desktop-only">
+          <span className="lg:hidden">&#x1F6E0;</span>
+          <span className="hidden lg:inline">&#x1F6E0; {agentStatusLabel}</span>
         </button>
-        <button onClick={onOpenReportHistory} className="header-action-btn header-action-btn-secondary mobile-hidden">
-          {reportLabel}
+        <button onClick={onOpenReportHistory} className="header-action-btn header-action-btn-secondary header-desktop-only">
+          <span className="lg:hidden">📋</span>
+          <span className="hidden lg:inline">{reportLabel}</span>
         </button>
         <button onClick={onOpenAnnouncement} className="header-action-btn header-action-btn-secondary">
           <span className="sm:hidden">📢</span>
           <span className="hidden sm:inline">{announcementLabel}</span>
         </button>
-        <button onClick={onOpenRoomManager} className="header-action-btn header-action-btn-secondary mobile-hidden">
-          {roomManagerLabel}
+        <button onClick={onOpenRoomManager} className="header-action-btn header-action-btn-secondary header-desktop-only">
+          <span className="lg:hidden">🏢</span>
+          <span className="hidden lg:inline">{roomManagerLabel}</span>
         </button>
         {notificationSlot}
         <button

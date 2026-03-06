@@ -145,6 +145,7 @@ export default function SkillsLibrary({ agents }: SkillsLibraryProps) {
         onDeleteSkill={(skillName) => {
           void vm.handleDeleteCustomSkill(skillName);
         }}
+        onRefresh={vm.refreshCustomSkills}
       />
 
       <ClassroomOverlay

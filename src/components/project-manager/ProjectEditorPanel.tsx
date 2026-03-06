@@ -1,6 +1,6 @@
 import type { Dispatch, SetStateAction } from "react";
 import { isApiRequestError, pickProjectPathNative, type ProjectDetailResponse } from "../../api";
-import type { Agent, AssignmentMode, Department, Project } from "../../types";
+import { WORKFLOW_PACK_KEYS, type Agent, type AssignmentMode, type Department, type Project, type WorkflowPackKey } from "../../types";
 import type {
   FormFeedback,
   ManualAssignmentWarning,
@@ -44,6 +44,8 @@ interface ProjectEditorPanelProps {
   resolvePathHelperErrorMessage: (err: unknown, fallback: { ko: string; en: string; ja: string; zh: string }) => string;
   formFeedback: FormFeedback | null;
   setFormFeedback: Dispatch<SetStateAction<FormFeedback | null>>;
+  defaultPackKey: WorkflowPackKey;
+  setDefaultPackKey: Dispatch<SetStateAction<WorkflowPackKey>>;
   assignmentMode: AssignmentMode;
   setAssignmentMode: Dispatch<SetStateAction<AssignmentMode>>;
   setManualAssignmentWarning: Dispatch<SetStateAction<ManualAssignmentWarning | null>>;
@@ -59,6 +61,19 @@ interface ProjectEditorPanelProps {
   onCancelEdit: () => void;
   onStartEditSelected: () => void;
   onDelete: () => void;
+}
+
+function packLabel(t: ProjectI18nTranslate, key: WorkflowPackKey): string {
+  const labels: Record<WorkflowPackKey, { ko: string; en: string; ja: string; zh: string }> = {
+    development: { ko: "개발", en: "Development", ja: "開発", zh: "开发" },
+    novel: { ko: "소설", en: "Novel", ja: "小説", zh: "小说" },
+    report: { ko: "보고서", en: "Report", ja: "レポート", zh: "报告" },
+    video_preprod: { ko: "영상기획", en: "Video Preprod", ja: "映像企画", zh: "视频策划" },
+    web_research_report: { ko: "웹서치+리포트", en: "Web Research", ja: "Web調査", zh: "网页调研" },
+    roleplay: { ko: "롤플레이", en: "Roleplay", ja: "ロールプレイ", zh: "角色扮演" },
+    asset_management: { ko: "자산운용", en: "Asset Management", ja: "資産運用", zh: "资产管理" },
+  };
+  return t(labels[key] ?? { ko: key, en: key, ja: key, zh: key });
 }
 
 export default function ProjectEditorPanel({
@@ -95,6 +110,8 @@ export default function ProjectEditorPanel({
   resolvePathHelperErrorMessage,
   formFeedback,
   setFormFeedback,
+  defaultPackKey,
+  setDefaultPackKey,
   assignmentMode,
   setAssignmentMode,
   setManualAssignmentWarning,
@@ -307,6 +324,30 @@ export default function ProjectEditorPanel({
           disabled={!isCreating && !editingProjectId}
           className="mt-1 w-full resize-none rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white outline-none focus:border-blue-500"
         />
+      </label>
+
+      <label className="block text-xs text-slate-400">
+        {t({ ko: "기본 워크플로우 팩", en: "Default Workflow Pack", ja: "デフォルトワークフローパック", zh: "默认工作流包" })}
+        <select
+          value={defaultPackKey}
+          onChange={(e) => setDefaultPackKey(e.target.value as WorkflowPackKey)}
+          disabled={!isCreating && !editingProjectId}
+          className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white outline-none focus:border-blue-500"
+        >
+          {WORKFLOW_PACK_KEYS.map((key) => (
+            <option key={key} value={key}>
+              {packLabel(t, key)}
+            </option>
+          ))}
+        </select>
+        <span className="mt-1 block text-[10px] text-slate-500">
+          {t({
+            ko: "이 프로젝트에서 생성되는 태스크의 기본 팩을 설정합니다",
+            en: "Sets the default pack for tasks created in this project",
+            ja: "このプロジェクトで作成されるタスクのデフォルトパックを設定します",
+            zh: "设置在此项目中创建的任务的默认工作流包",
+          })}
+        </span>
       </label>
 
       <ManualAssignmentSelector

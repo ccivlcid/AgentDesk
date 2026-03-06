@@ -9,6 +9,8 @@ import type { WSEventType } from "../types";
 
 type SocketOn = (event: WSEventType, handler: (payload: unknown) => void) => () => void;
 
+type NotifType = NotificationItem["type"] | "all";
+
 interface Props {
   on: SocketOn;
   onNavigateTask?: (taskId: string) => void;
@@ -30,10 +32,42 @@ const TYPE_ICON: Record<string, string> = {
   system: "ℹ️",
 };
 
+const TYPE_FILTERS: Array<{ key: NotifType; label: string }> = [
+  { key: "all", label: "All" },
+  { key: "task_complete", label: "✅" },
+  { key: "task_error", label: "❌" },
+  { key: "decision_created", label: "📬" },
+  { key: "agent_error", label: "⚠️" },
+  { key: "system", label: "ℹ️" },
+];
+
+function showBrowserNotification(n: NotificationItem): void {
+  if (typeof Notification === "undefined") return;
+  if (Notification.permission !== "granted") return;
+  const icon = TYPE_ICON[n.type] ?? "📌";
+  try {
+    const notif = new Notification(`${icon} ${n.title}`, {
+      body: n.body ?? undefined,
+      tag: n.id,
+      silent: false,
+    });
+    notif.onclick = () => {
+      window.focus();
+      notif.close();
+    };
+  } catch {
+    // Notification constructor may fail in some contexts
+  }
+}
+
 export default function NotificationCenter({ on, onNavigateTask }: Props) {
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [typeFilter, setTypeFilter] = useState<NotifType>("all");
+  const [pushEnabled, setPushEnabled] = useState(() =>
+    typeof Notification !== "undefined" && Notification.permission === "granted",
+  );
   const panelRef = useRef<HTMLDivElement>(null);
 
   const load = useCallback(() => {
@@ -57,8 +91,11 @@ export default function NotificationCenter({ on, onNavigateTask }: Props) {
         return [n, ...prev].slice(0, 50);
       });
       setUnreadCount((c) => c + 1);
+      if (pushEnabled && !document.hasFocus()) {
+        showBrowserNotification(n);
+      }
     });
-  }, [on]);
+  }, [on, pushEnabled]);
 
   useEffect(() => {
     if (!open) return;
@@ -91,6 +128,8 @@ export default function NotificationCenter({ on, onNavigateTask }: Props) {
       setOpen(false);
     }
   };
+
+  const filteredItems = typeFilter === "all" ? items : items.filter((i) => i.type === typeFilter);
 
   return (
     <div className="relative" ref={panelRef}>
@@ -125,23 +164,67 @@ export default function NotificationCenter({ on, onNavigateTask }: Props) {
             <span className="text-sm font-semibold" style={{ color: "var(--th-text-heading)" }}>
               Notifications
             </span>
-            {unreadCount > 0 && (
-              <button
-                onClick={handleMarkAllRead}
-                className="text-xs hover:underline"
-                style={{ color: "var(--th-text-link, var(--th-accent, #3b82f6))" }}
-              >
-                Mark all read
-              </button>
-            )}
+            <div className="flex items-center gap-2">
+              {typeof Notification !== "undefined" && (
+                <button
+                  onClick={() => {
+                    if (Notification.permission === "granted") {
+                      setPushEnabled((v) => !v);
+                    } else if (Notification.permission !== "denied") {
+                      Notification.requestPermission().then((perm) => {
+                        setPushEnabled(perm === "granted");
+                      });
+                    }
+                  }}
+                  className="text-xs px-1.5 py-0.5 rounded transition"
+                  style={{
+                    background: pushEnabled ? "rgba(34,197,94,0.15)" : "rgba(148,163,184,0.15)",
+                    color: pushEnabled ? "#22c55e" : "var(--th-text-muted)",
+                  }}
+                  title={pushEnabled ? "Browser push ON" : "Browser push OFF"}
+                >
+                  {pushEnabled ? "🔔" : "🔕"}
+                </button>
+              )}
+              {unreadCount > 0 && (
+                <button
+                  onClick={handleMarkAllRead}
+                  className="text-xs hover:underline"
+                  style={{ color: "var(--th-text-link, var(--th-accent, #3b82f6))" }}
+                >
+                  Mark all read
+                </button>
+              )}
+            </div>
           </div>
-          <div className="overflow-y-auto" style={{ maxHeight: 360 }}>
-            {items.length === 0 && (
+          {/* Type filter */}
+          <div
+            className="flex items-center gap-1 px-3 py-1.5 overflow-x-auto"
+            style={{ borderBottom: "1px solid var(--th-border)" }}
+          >
+            {TYPE_FILTERS.map((f) => (
+              <button
+                key={f.key}
+                onClick={() => setTypeFilter(f.key)}
+                className="px-2 py-0.5 text-[11px] rounded-full transition whitespace-nowrap"
+                style={{
+                  background: typeFilter === f.key
+                    ? "var(--th-accent, #3b82f6)"
+                    : "rgba(148,163,184,0.1)",
+                  color: typeFilter === f.key ? "#fff" : "var(--th-text-secondary)",
+                }}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+          <div className="overflow-y-auto" style={{ maxHeight: 330 }}>
+            {filteredItems.length === 0 && (
               <div className="px-4 py-8 text-center text-sm" style={{ color: "var(--th-text-muted)" }}>
                 No notifications
               </div>
             )}
-            {items.map((item) => (
+            {filteredItems.map((item) => (
               <button
                 key={item.id}
                 onClick={() => handleItemClick(item)}

@@ -9,6 +9,8 @@ import type {
   CrossDeptDelivery,
   CeoOfficeCall,
 } from "../../types";
+import type { CliStatusMap } from "../../types";
+import type { CliUsageEntry } from "../../api";
 
 interface OfficeViewProps {
   departments: Department[];
@@ -27,6 +29,12 @@ interface OfficeViewProps {
   themeHighlightTargetId?: string | null;
   onSelectAgent: (agent: Agent) => void;
   onSelectDepartment: (dept: Department) => void;
+  /** CLI 사용량(오피스 티커용). 전달 시 패널은 별도 메뉴에서 표시 */
+  cliStatus?: CliStatusMap | null;
+  cliUsage?: Record<string, CliUsageEntry> | null;
+  cliUsageRef?: { current: Record<string, CliUsageEntry> | null };
+  cliUsageRefreshing?: boolean;
+  onRefreshCliUsage?: () => void;
 }
 
 interface Delivery {

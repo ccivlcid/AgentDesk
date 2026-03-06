@@ -44,7 +44,7 @@ CREATE TABLE IF NOT EXISTS agents (
   workflow_pack_key TEXT NOT NULL DEFAULT 'development',
   role TEXT NOT NULL CHECK(role IN ('team_leader','senior','junior','intern')),
   acts_as_planning_leader INTEGER NOT NULL DEFAULT 0 CHECK(acts_as_planning_leader IN (0,1)),
-  cli_provider TEXT CHECK(cli_provider IN ('claude','codex','gemini','opencode','copilot','antigravity','cursor','api')),
+  cli_provider TEXT CHECK(cli_provider IN ('claude','codex','gemini','opencode','copilot','antigravity','cursor','api','ollama')),
   oauth_account_id TEXT,
   api_provider_id TEXT,
   api_model TEXT,
@@ -320,7 +320,7 @@ CREATE TABLE IF NOT EXISTS review_round_decision_states (
 CREATE TABLE IF NOT EXISTS skill_learning_history (
   id TEXT PRIMARY KEY,
   job_id TEXT NOT NULL,
-  provider TEXT NOT NULL CHECK(provider IN ('claude','codex','gemini','opencode','copilot','antigravity','api')),
+  provider TEXT NOT NULL CHECK(provider IN ('claude','codex','gemini','opencode','copilot','antigravity','cursor','api','ollama')),
   repo TEXT NOT NULL,
   skill_id TEXT NOT NULL,
   skill_label TEXT NOT NULL,
@@ -401,7 +401,7 @@ CREATE INDEX IF NOT EXISTS idx_agent_rules_enabled ON agent_rules(enabled, prior
 CREATE TABLE IF NOT EXISTS rule_learning_history (
   id TEXT PRIMARY KEY,
   job_id TEXT NOT NULL,
-  provider TEXT NOT NULL CHECK(provider IN ('claude','codex','gemini','opencode','copilot','antigravity','cursor','api')),
+  provider TEXT NOT NULL CHECK(provider IN ('claude','codex','gemini','opencode','copilot','antigravity','cursor','api','ollama')),
   rule_id TEXT NOT NULL,
   rule_label TEXT NOT NULL,
   status TEXT NOT NULL CHECK(status IN ('queued','running','succeeded','failed')),
@@ -472,7 +472,7 @@ CREATE INDEX IF NOT EXISTS idx_hook_entries_enabled ON hook_entries(enabled, pri
 CREATE TABLE IF NOT EXISTS memory_learning_history (
   id TEXT PRIMARY KEY,
   job_id TEXT NOT NULL,
-  provider TEXT NOT NULL CHECK(provider IN ('claude','codex','gemini','opencode','copilot','antigravity','cursor','api')),
+  provider TEXT NOT NULL CHECK(provider IN ('claude','codex','gemini','opencode','copilot','antigravity','cursor','api','ollama')),
   memory_id TEXT NOT NULL,
   memory_label TEXT NOT NULL,
   status TEXT NOT NULL CHECK(status IN ('queued','running','succeeded','failed')),
@@ -493,7 +493,7 @@ CREATE INDEX IF NOT EXISTS idx_memory_learning_history_memory_lookup
 CREATE TABLE IF NOT EXISTS hook_learning_history (
   id TEXT PRIMARY KEY,
   job_id TEXT NOT NULL,
-  provider TEXT NOT NULL CHECK(provider IN ('claude','codex','gemini','opencode','copilot','antigravity','cursor','api')),
+  provider TEXT NOT NULL CHECK(provider IN ('claude','codex','gemini','opencode','copilot','antigravity','cursor','api','ollama')),
   hook_id TEXT NOT NULL,
   hook_label TEXT NOT NULL,
   status TEXT NOT NULL CHECK(status IN ('queued','running','succeeded','failed')),
@@ -513,7 +513,7 @@ CREATE INDEX IF NOT EXISTS idx_hook_learning_history_hook_lookup
 
 CREATE TABLE IF NOT EXISTS notifications (
   id TEXT PRIMARY KEY,
-  type TEXT NOT NULL CHECK(type IN ('task_complete','task_error','decision_created','agent_error','system')),
+  type TEXT NOT NULL CHECK(type IN ('task_complete','task_error','decision_created','agent_error','system','cost_alert','agent_anomaly','heartbeat')),
   title TEXT NOT NULL,
   body TEXT,
   task_id TEXT REFERENCES tasks(id) ON DELETE CASCADE,
@@ -547,5 +547,58 @@ CREATE TABLE IF NOT EXISTS task_dependencies (
 );
 CREATE INDEX IF NOT EXISTS idx_task_deps_task ON task_dependencies(task_id);
 CREATE INDEX IF NOT EXISTS idx_task_deps_dep ON task_dependencies(depends_on_task_id);
+
+CREATE TABLE IF NOT EXISTS agent_usage_logs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  agent_id TEXT NOT NULL REFERENCES agents(id) ON DELETE CASCADE,
+  task_id TEXT REFERENCES tasks(id) ON DELETE SET NULL,
+  provider TEXT NOT NULL,
+  started_at INTEGER NOT NULL,
+  ended_at INTEGER NOT NULL,
+  exit_code INTEGER,
+  log_bytes INTEGER NOT NULL DEFAULT 0,
+  created_at INTEGER DEFAULT (unixepoch()*1000)
+);
+CREATE INDEX IF NOT EXISTS idx_agent_usage_logs_agent ON agent_usage_logs(agent_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_agent_usage_logs_provider ON agent_usage_logs(provider, created_at DESC);
+
+CREATE TABLE IF NOT EXISTS heartbeat_configs (
+  agent_id TEXT PRIMARY KEY REFERENCES agents(id) ON DELETE CASCADE,
+  enabled INTEGER NOT NULL DEFAULT 0,
+  interval_minutes INTEGER NOT NULL DEFAULT 30,
+  check_items_json TEXT NOT NULL DEFAULT '["stale_tasks","blocked_tasks","consecutive_failures","pending_decisions"]',
+  created_at INTEGER DEFAULT (unixepoch()*1000),
+  updated_at INTEGER DEFAULT (unixepoch()*1000)
+);
+
+CREATE TABLE IF NOT EXISTS heartbeat_logs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  agent_id TEXT NOT NULL REFERENCES agents(id) ON DELETE CASCADE,
+  project_id TEXT REFERENCES projects(id) ON DELETE SET NULL,
+  status TEXT NOT NULL CHECK(status IN ('ok','alert','error')),
+  summary TEXT,
+  findings_json TEXT,
+  created_at INTEGER DEFAULT (unixepoch()*1000)
+);
+CREATE INDEX IF NOT EXISTS idx_heartbeat_logs_agent ON heartbeat_logs(agent_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_heartbeat_logs_status ON heartbeat_logs(status, created_at DESC);
+
+CREATE TABLE IF NOT EXISTS scheduled_tasks (
+  id TEXT PRIMARY KEY,
+  template_id TEXT REFERENCES task_templates(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  cron_expression TEXT NOT NULL,
+  timezone TEXT NOT NULL DEFAULT 'UTC',
+  enabled INTEGER NOT NULL DEFAULT 1,
+  auto_run INTEGER NOT NULL DEFAULT 0,
+  assigned_agent_id TEXT REFERENCES agents(id) ON DELETE SET NULL,
+  project_id TEXT REFERENCES projects(id) ON DELETE SET NULL,
+  last_run_at INTEGER,
+  next_run_at INTEGER,
+  run_count INTEGER NOT NULL DEFAULT 0,
+  created_at INTEGER DEFAULT (unixepoch()*1000),
+  updated_at INTEGER DEFAULT (unixepoch()*1000)
+);
+CREATE INDEX IF NOT EXISTS idx_scheduled_tasks_next ON scheduled_tasks(enabled, next_run_at);
 `);
 }

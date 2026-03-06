@@ -19,24 +19,30 @@ type NavEntry =
 
 const NAV_STRUCTURE: NavEntry[] = [
   { kind: "item", view: "office" },
-  { kind: "item", view: "agents" },
+  {
+    kind: "group",
+    id: "agents",
+    children: [{ view: "agents" }, { view: "heartbeat" }],
+  },
   {
     kind: "group",
     id: "library",
     children: [{ view: "skills" }, { view: "agent-rules" }, { view: "memory" }, { view: "hooks" }],
   },
   { kind: "item", view: "dashboard" },
+  { kind: "item", view: "cli-usage" },
   {
     kind: "group",
     id: "tasks",
-    children: [{ view: "tasks-board" }, { view: "tasks-deliverables" }],
+    children: [{ view: "tasks-board" }, { view: "tasks-deliverables" }, { view: "tasks-scheduled" }],
   },
   { kind: "item", view: "game-room" },
   { kind: "item", view: "settings" },
 ];
 
+const AGENTS_CHILDREN: View[] = ["agents", "heartbeat"];
 const LIBRARY_CHILDREN: View[] = ["skills", "agent-rules", "memory", "hooks"];
-const TASKS_CHILDREN: View[] = ["tasks-board", "tasks-deliverables"];
+const TASKS_CHILDREN: View[] = ["tasks-board", "tasks-deliverables", "tasks-scheduled"];
 
 const NAV_ICONS: Partial<Record<View | "library", React.ReactNode>> = {
   office: (
@@ -54,6 +60,11 @@ const NAV_ICONS: Partial<Record<View | "library", React.ReactNode>> = {
       <path d="M2 17v-1.5A3.5 3.5 0 015.5 12h3A3.5 3.5 0 0112 15.5V17" />
       <circle cx="14" cy="7" r="2" />
       <path d="M14 12.5a3 3 0 013 3V17" />
+    </svg>
+  ),
+  heartbeat: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
     </svg>
   ),
   library: (
@@ -95,6 +106,12 @@ const NAV_ICONS: Partial<Record<View | "library", React.ReactNode>> = {
       <rect x="11" y="9" width="7" height="9" rx="1" />
     </svg>
   ),
+  "cli-usage": (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 17v-4M7 17v-8M11 17V9M15 17v-6" />
+      <path d="M2 18h16" />
+    </svg>
+  ),
   tasks: (
     <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <rect x="4" y="2" width="12" height="16" rx="1.5" />
@@ -117,6 +134,13 @@ const NAV_ICONS: Partial<Record<View | "library", React.ReactNode>> = {
       <path d="M8 12l2 2 3-3" />
     </svg>
   ),
+  "tasks-scheduled": (
+    <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="10" cy="10" r="7" />
+      <path d="M10 6v4l2.5 2.5" />
+      <path d="M16 4l1.5-1.5M4 4L2.5 2.5" />
+    </svg>
+  ),
   "game-room": (
     <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <path d="M3 14v-1.5a2.5 2.5 0 012.5-2.5h9a2.5 2.5 0 012.5 2.5V14" />
@@ -136,6 +160,7 @@ const NAV_ICONS: Partial<Record<View | "library", React.ReactNode>> = {
 export default function Sidebar({ currentView, onChangeView, departments, agents, settings, connected }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [deptOpen, setDeptOpen] = useState(true);
+  const [agentsOpen, setAgentsOpen] = useState(() => AGENTS_CHILDREN.includes(currentView as View));
   const [libraryOpen, setLibraryOpen] = useState(() => LIBRARY_CHILDREN.includes(currentView as View));
   const [tasksOpen, setTasksOpen] = useState(() => TASKS_CHILDREN.includes(currentView as View));
   const { t, locale } = useI18n();
@@ -147,21 +172,31 @@ export default function Sidebar({ currentView, onChangeView, departments, agents
   const navLabels: Record<string, string> = {
     office: tr("오피스", "Office", "オフィス", "办公室"),
     agents: tr("직원관리", "Agents", "社員管理", "员工管理"),
+    heartbeat: tr("직원 살펴보기", "Heartbeat", "社員の様子", "员工动态"),
     library: tr("도서관", "Library", "ライブラリ", "图书馆"),
     skills: tr("스킬스", "Skills", "スキル", "技能"),
     "agent-rules": tr("에이전트 룰", "Agent Rules", "エージェントルール", "代理规则"),
     memory: tr("메모리", "Memory", "メモリ", "记忆"),
     hooks: tr("훅", "Hooks", "フック", "钩子"),
     dashboard: tr("대시보드", "Dashboard", "ダッシュボード", "仪表盘"),
+    "cli-usage": tr("CLI 사용량", "CLI Usage", "CLI使用量", "CLI 使用量"),
     tasks: tr("업무 관리", "Tasks", "タスク管理", "任务管理"),
     "tasks-board": tr("업무 보드", "Task Board", "タスクボード", "任务看板"),
     "tasks-deliverables": tr("결과물", "Deliverables", "成果物", "交付物"),
+    "tasks-scheduled": tr("스케줄러", "Scheduler", "スケジューラ", "调度器"),
     "game-room": tr("휴게실", "Lounge", "休憩室", "休息室"),
     settings: tr("설정", "Settings", "設定", "设置"),
   };
 
+  const isAgentsActive = AGENTS_CHILDREN.includes(currentView as View);
   const isLibraryActive = LIBRARY_CHILDREN.includes(currentView as View);
   const isTasksActive = TASKS_CHILDREN.includes(currentView as View);
+
+  /** 직원관리 그룹 내 서브 메뉴 라벨 (직원·부서 / Heartbeat) */
+  const agentsGroupSubLabels: Record<string, string> = {
+    agents: tr("직원·부서", "Agents & Depts", "社員・部署", "员工与部门"),
+    heartbeat: navLabels["heartbeat"] ?? "",
+  };
 
   const renderNavItem = (view: View) => (
     <button
@@ -172,20 +207,25 @@ export default function Sidebar({ currentView, onChangeView, departments, agents
     >
       <span className="sidebar-nav-icon">{NAV_ICONS[view]}</span>
       {!collapsed && <span className="sidebar-nav-label">{navLabels[view]}</span>}
-      {view === "agents" && workingCount > 0 && (
+      {view === "agents" && !isAgentsActive && workingCount > 0 && (
         <span className="sidebar-nav-badge">{workingCount}</span>
       )}
     </button>
   );
 
-  const renderSubItem = (view: View) => (
+  const renderSubItem = (view: View, parentId?: string) => (
     <button
       key={view}
       onClick={() => onChangeView(view)}
       className={`sidebar-sub-item ${currentView === view ? "active" : ""}`}
     >
       <span className="sidebar-sub-icon">{NAV_ICONS[view]}</span>
-      <span className="sidebar-nav-label">{navLabels[view]}</span>
+      <span className="sidebar-nav-label">
+        {parentId === "agents" ? (agentsGroupSubLabels[view] ?? navLabels[view]) : navLabels[view]}
+      </span>
+      {view === "agents" && parentId === "agents" && workingCount > 0 && (
+        <span className="sidebar-nav-badge">{workingCount}</span>
+      )}
     </button>
   );
 
@@ -216,12 +256,25 @@ export default function Sidebar({ currentView, onChangeView, departments, agents
           if (entry.kind === "item") {
             return renderNavItem(entry.view);
           }
-          /* Group: library / tasks */
-          const isGroupActive = entry.id === "library" ? isLibraryActive : isTasksActive;
-          const isGroupOpen = entry.id === "library" ? libraryOpen : tasksOpen;
-          const toggleGroup = entry.id === "library"
-            ? () => setLibraryOpen(!libraryOpen)
-            : () => setTasksOpen(!tasksOpen);
+          /* Group: agents / library / tasks */
+          const isGroupActive =
+            entry.id === "agents"
+              ? isAgentsActive
+              : entry.id === "library"
+                ? isLibraryActive
+                : isTasksActive;
+          const isGroupOpen =
+            entry.id === "agents"
+              ? agentsOpen
+              : entry.id === "library"
+                ? libraryOpen
+                : tasksOpen;
+          const toggleGroup =
+            entry.id === "agents"
+              ? () => setAgentsOpen(!agentsOpen)
+              : entry.id === "library"
+                ? () => setLibraryOpen(!libraryOpen)
+                : () => setTasksOpen(!tasksOpen);
           return (
             <div key={entry.id} className="sidebar-nav-group">
               <button
@@ -239,6 +292,9 @@ export default function Sidebar({ currentView, onChangeView, departments, agents
                 {!collapsed && (
                   <>
                     <span className="sidebar-nav-label">{navLabels[entry.id]}</span>
+                    {entry.id === "agents" && workingCount > 0 && (
+                      <span className="sidebar-nav-badge">{workingCount}</span>
+                    )}
                     <svg
                       width="12"
                       height="12"
@@ -257,7 +313,7 @@ export default function Sidebar({ currentView, onChangeView, departments, agents
               </button>
               {!collapsed && isGroupOpen && (
                 <div className="sidebar-sub-list">
-                  {entry.children.map((child) => renderSubItem(child.view))}
+                  {entry.children.map((child) => renderSubItem(child.view, entry.id))}
                 </div>
               )}
             </div>

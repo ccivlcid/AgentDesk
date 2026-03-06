@@ -231,6 +231,18 @@ const LOCALE_TEXT = {
     ja: "データなし",
     zh: "无数据",
   },
+  cliNoDataHint: {
+    ko: "사용률 정보가 비어 있습니다. 프로바이더 API가 변경되었거나 아직 집계되지 않았을 수 있습니다. 위 '새로고침'을 눌러 다시 조회해 보세요.",
+    en: "No usage windows returned. The provider API may have changed or data is not yet available. Try the Refresh button above.",
+    ja: "使用率情報が空です。プロバイダAPIの変更や未集計の可能性があります。上の「更新」で再取得してください。",
+    zh: "使用量窗口为空。可能是提供商 API 变更或尚未统计。请点击上方「刷新」重试。",
+  },
+  cliNoConnectedEmpty: {
+    ko: "연결된 CLI가 없습니다. 설정 > CLI에서 CLI를 설치·연동하면 여기서 사용량을 볼 수 있습니다.",
+    en: "No CLI connected. Install and connect a CLI in Settings > CLI to see usage here.",
+    ja: "接続されたCLIがありません。設定＞CLIでCLIをインストール・連携すると、ここで使用量を確認できます。",
+    zh: "暂无已连接的 CLI。在 设置 > CLI 中安装并连接 CLI 后，可在此查看使用量。",
+  },
   soon: {
     ko: "곧",
     en: "soon",

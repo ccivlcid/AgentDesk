@@ -340,6 +340,8 @@ export interface RouteCollabExports {
 export interface RouteOpsExports {
   prettyStreamJson: (...args: any[]) => any;
   refreshCliUsageData: (...args: any[]) => any;
+  recordAgentUsage: (...args: any[]) => any;
+  checkCostBlockExecution: (...args: any[]) => any;
 }
 
 // ---------------------------------------------------------------------------

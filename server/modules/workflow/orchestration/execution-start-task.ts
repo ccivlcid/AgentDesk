@@ -11,6 +11,7 @@ import {
 } from "../core/interrupt-injection-tools.ts";
 import { buildCharacterPersonaBlock } from "../core/character-persona.ts";
 import { buildPptExecutionGuidance } from "../core/ppt-execution-guidance.ts";
+import { buildMemoryPromptBlock } from "./autonomous-memory.ts";
 
 type CreateExecutionStartTaskToolsDeps = {
   nowMs: RuntimeContext["nowMs"];
@@ -112,6 +113,35 @@ export function createExecutionStartTaskTools(deps: CreateExecutionStartTaskTool
   }
 
   function startTaskExecutionForAgent(taskId: string, execAgent: any, deptId: string | null, deptName: string): void {
+    // Dependency blocking: check if all predecessor tasks are completed
+    const incompletePredecessors = db
+      .prepare(
+        `SELECT t.id, t.title, t.status FROM task_dependencies td
+         JOIN tasks t ON t.id = td.depends_on_task_id
+         WHERE td.task_id = ? AND t.status NOT IN ('done', 'cancelled')`,
+      )
+      .all(taskId) as Array<{ id: string; title: string; status: string }>;
+
+    if (incompletePredecessors.length > 0) {
+      const titles = incompletePredecessors.map((p) => `"${p.title}" (${p.status})`).join(", ");
+      appendTaskLog(taskId, "system", `BLOCKED: predecessor tasks not completed — ${titles}`);
+      const lang = resolveLang(incompletePredecessors[0].title);
+      notifyCeo(
+        pickL(
+          l(
+            [`선행 태스크가 완료되지 않아 실행이 차단되었습니다: ${titles}`],
+            [`Execution blocked — predecessor tasks not done: ${titles}`],
+            [`前提タスクが未完了のため実行がブロックされました: ${titles}`],
+            [`前置任务未完成，执行已阻止: ${titles}`],
+          ),
+          lang,
+        ),
+        taskId,
+      );
+      broadcast("task_update", db.prepare("SELECT * FROM tasks WHERE id = ?").get(taskId));
+      return;
+    }
+
     const execName = execAgent.name_ko || execAgent.name;
     const t = nowMs();
     db.prepare(
@@ -124,7 +154,7 @@ export function createExecutionStartTaskTools(deps: CreateExecutionStartTaskTool
     broadcast("agent_status", db.prepare("SELECT * FROM agents WHERE id = ?").get(execAgent.id));
 
     const provider = execAgent.cli_provider || "claude";
-    if (!["claude", "codex", "gemini", "opencode", "copilot", "antigravity", "api"].includes(provider)) return;
+    if (!["claude", "codex", "gemini", "opencode", "copilot", "antigravity", "api", "ollama"].includes(provider)) return;
     const executionSession = ensureTaskExecutionSession(taskId, execAgent.id, provider);
     const pendingInterruptPrompts = loadPendingInterruptPrompts(db as any, taskId, executionSession.sessionId);
     const interruptPromptBlock = buildInterruptPromptBlock(pendingInterruptPrompts);
@@ -263,6 +293,17 @@ export function createExecutionStartTaskTools(deps: CreateExecutionStartTaskTool
       taskLang,
     );
     const availableSkillsPromptBlock = buildAvailableSkillsPromptBlock(provider);
+    const memoryBlock = buildMemoryPromptBlock(
+      { db },
+      {
+        agentId: execAgent.id,
+        departmentId: deptId ?? taskData.department_id ?? null,
+        workflowPackKey: taskData.workflow_pack_key,
+        taskTitle: taskData.title,
+        taskDescription: taskData.description,
+      },
+      taskLang,
+    );
     const spawnPrompt = buildTaskExecutionPrompt(
       [
         availableSkillsPromptBlock,
@@ -283,6 +324,7 @@ export function createExecutionStartTaskTools(deps: CreateExecutionStartTaskTool
         deptPromptBlock,
         `NOTE: You are working in an isolated Git worktree branch (agentdesk/${taskId.slice(0, 8)}). Commit your changes normally.`,
         interruptPromptBlock,
+        memoryBlock,
         continuationInstruction,
         runInstruction,
       ],
@@ -305,13 +347,27 @@ export function createExecutionStartTaskTools(deps: CreateExecutionStartTaskTool
     }
 
     appendTaskLog(taskId, "system", `RUN start (agent=${execAgent.name}, provider=${provider})`);
-    if (provider === "api") {
+    if (provider === "api" || provider === "ollama") {
       const controller = new AbortController();
       const fakePid = getNextHttpAgentPid();
+
+      // For ollama: auto-resolve provider ID and model if not explicitly set
+      let apiProviderId = execAgent.api_provider_id;
+      let apiModel = execAgent.api_model;
+      if (provider === "ollama" && !apiProviderId) {
+        const ollamaProvider = db.prepare(
+          "SELECT id FROM api_providers WHERE type = 'ollama' AND enabled = 1 LIMIT 1",
+        ).get() as { id: string } | undefined;
+        if (ollamaProvider) apiProviderId = ollamaProvider.id;
+      }
+      if (provider === "ollama" && !apiModel) {
+        apiModel = execAgent.cli_model || "llama3.1";
+      }
+
       launchApiProviderAgent(
         taskId,
-        execAgent.api_provider_id ?? null,
-        execAgent.api_model ?? null,
+        apiProviderId ?? null,
+        apiModel ?? null,
         spawnPrompt,
         agentCwd,
         logFilePath,

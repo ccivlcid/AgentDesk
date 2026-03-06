@@ -2,17 +2,21 @@ import { useCallback, useMemo, type ReactNode } from "react";
 import NotificationCenter from "../components/NotificationCenter";
 import Sidebar from "../components/Sidebar";
 import OfficeView from "../components/OfficeView";
+import CliUsagePanel from "../components/office-view/CliUsagePanel";
+import { useCliUsage } from "../components/office-view/useCliUsage";
 import Dashboard from "../components/Dashboard";
 import TaskBoard from "../components/TaskBoard";
 import Deliverables from "../components/deliverables/Deliverables";
 import AgentManager from "../components/AgentManager";
+import HeartbeatPanel from "../components/office-view/HeartbeatPanel";
+import ScheduledTasksPanel from "../components/scheduled-tasks/ScheduledTasksPanel";
 import SkillsLibrary from "../components/SkillsLibrary";
 import AgentRulesLibrary from "../components/AgentRulesLibrary";
 import MemoryLibrary from "../components/MemoryLibrary";
 import HooksLibrary from "../components/HooksLibrary";
 import SettingsPanel from "../components/SettingsPanel";
 import GameRoom from "../components/GameRoom";
-import { I18nProvider } from "../i18n";
+import { I18nProvider, useI18n } from "../i18n";
 import type {
   Agent,
   CeoOfficeCall,
@@ -41,6 +45,35 @@ import {
 } from "./office-workflow-pack";
 import { resolvePackAgentViews, resolvePackDepartmentsForDisplay } from "./office-pack-display";
 import { applyOfficePackToTaskInput, filterTasksByOfficePack, type TaskCreateInput } from "./task-workflow-pack";
+import type { UiLanguage } from "../i18n";
+import type { CliUsageEntry } from "../api";
+
+/** CLI 사용량 전용 페이지: useI18n으로 t를 주입해 CliUsagePanel 렌더 */
+function CliUsagePage({
+  cliStatus,
+  cliUsage,
+  language,
+  refreshing,
+  onRefreshUsage,
+}: {
+  cliStatus: CliStatusMap | null;
+  cliUsage: Record<string, CliUsageEntry> | null;
+  language: UiLanguage;
+  refreshing: boolean;
+  onRefreshUsage: () => void;
+}) {
+  const { t } = useI18n();
+  return (
+    <CliUsagePanel
+      cliStatus={cliStatus}
+      cliUsage={cliUsage}
+      language={language}
+      refreshing={refreshing}
+      onRefreshUsage={onRefreshUsage}
+      t={t}
+    />
+  );
+}
 
 interface AppMainLayoutLabels {
   uiLanguage: string;
@@ -339,6 +372,8 @@ export default function AppMainLayout({
   }, [customRoomThemes, displayDepartments, generatedOfficePresentation, officePackKey, officeScopedAgents]);
 
   const tasksForActivePack = useMemo(() => filterTasksByOfficePack(tasks, officePackKey), [tasks, officePackKey]);
+  const { cliStatus: cliStatusFromUsage, cliUsage, cliUsageRef, refreshing: cliUsageRefreshing, handleRefreshUsage } =
+    useCliUsage(tasks);
   const handleCreateTaskForActivePack = useCallback(
     async (input: TaskCreateInput) => {
       await onCreateTask(applyOfficePackToTaskInput(input, officePackKey));
@@ -415,16 +450,12 @@ export default function AppMainLayout({
             onOpenReportHistory={onOpenReportHistory}
             onOpenAnnouncement={onOpenAnnouncement}
             onOpenRoomManager={onOpenRoomManager}
-            officePackControl={
-              view === "office" || view === "agents" || view === "tasks" || view === "tasks-board" || view === "tasks-deliverables"
-                ? {
-                    label: officePackLabel,
-                    value: officePackKey,
-                    options: officePackOptions,
-                    onChange: onChangeOfficeWorkflowPack,
-                  }
-                : null
-            }
+            officePackControl={{
+              label: officePackLabel,
+              value: officePackKey,
+              options: officePackOptions,
+              onChange: onChangeOfficeWorkflowPack,
+            }}
             onToggleTheme={toggleTheme}
             onToggleMobileHeaderMenu={() => setMobileHeaderMenuOpen(!mobileHeaderMenuOpen)}
             onCloseMobileHeaderMenu={() => setMobileHeaderMenuOpen(false)}
@@ -508,13 +539,30 @@ export default function AppMainLayout({
                 themeHighlightTargetId={activeRoomThemeTargetId}
                 onSelectAgent={onSelectAgent}
                 onSelectDepartment={onSelectDepartment}
+                cliStatus={cliStatusFromUsage}
+                cliUsage={cliUsage}
+                cliUsageRef={cliUsageRef}
+                cliUsageRefreshing={cliUsageRefreshing}
+                onRefreshCliUsage={handleRefreshUsage}
               />
+            )}
+
+            {view === "cli-usage" && (
+              <div className="mx-auto max-w-4xl px-4 py-6">
+                <CliUsagePage
+                  cliStatus={cliStatusFromUsage}
+                  cliUsage={cliUsage}
+                  language={labels.uiLanguage as "ko" | "en" | "ja" | "zh"}
+                  refreshing={cliUsageRefreshing}
+                  onRefreshUsage={handleRefreshUsage}
+                />
+              </div>
             )}
 
             {view === "dashboard" && (
               <Dashboard
                 stats={stats}
-                agents={agents}
+                agents={displayAgents}
                 tasks={tasks}
                 companyName={settings.companyName}
                 onPrimaryCtaClick={() => setView("tasks-board")}
@@ -545,6 +593,10 @@ export default function AppMainLayout({
               <Deliverables agents={displayAgents} />
             )}
 
+            {view === "tasks-scheduled" && (
+              <ScheduledTasksPanel agents={displayAgents} />
+            )}
+
             {view === "agents" && (
               <AgentManager
                 agents={managerAgents}
@@ -565,21 +617,34 @@ export default function AppMainLayout({
               />
             )}
 
-            {view === "skills" && <SkillsLibrary agents={agents} />}
+            {view === "heartbeat" && (
+              <HeartbeatPanel
+                language={labels.uiLanguage as "ko" | "en" | "ja" | "zh"}
+                agents={managerAgents.map((a) => ({
+                  id: a.id,
+                  name: a.name,
+                  name_ko: a.name_ko ?? undefined,
+                  avatar_emoji: a.avatar_emoji ?? undefined,
+                }))}
+                standalone
+              />
+            )}
+
+            {view === "skills" && <SkillsLibrary agents={managerAgents} />}
 
             {view === "agent-rules" && (
-              <AgentRulesLibrary agents={libraryAgents} departments={departments} />
+              <AgentRulesLibrary agents={managerAgents} departments={managerDepartments} />
             )}
 
             {view === "memory" && (
-              <MemoryLibrary agents={libraryAgents} departments={departments} />
+              <MemoryLibrary agents={managerAgents} departments={managerDepartments} />
             )}
 
             {view === "hooks" && (
-              <HooksLibrary agents={libraryAgents} departments={departments} />
+              <HooksLibrary agents={managerAgents} departments={managerDepartments} />
             )}
 
-            {view === "game-room" && <GameRoom agents={agents} />}
+            {view === "game-room" && <GameRoom agents={displayAgents} />}
 
             {view === "settings" && (
               <SettingsPanel
@@ -593,6 +658,7 @@ export default function AppMainLayout({
                 }}
                 oauthResult={oauthResult}
                 onOauthResultClear={onOauthResultClear}
+                managerAgents={managerAgents}
               />
             )}
           </div>

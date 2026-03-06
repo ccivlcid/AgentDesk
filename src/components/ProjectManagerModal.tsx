@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { Agent, AssignmentMode, Department, Project } from "../types";
+import type { Agent, AssignmentMode, Department, Project, WorkflowPackKey } from "../types";
 import {
   deleteProject,
   getProjectDetail,
@@ -56,6 +56,7 @@ export default function ProjectManagerModal({ agents, departments = [], onClose 
   const [saving, setSaving] = useState(false);
   const [reportDetail, setReportDetail] = useState<TaskReportDetail | null>(null);
 
+  const [defaultPackKey, setDefaultPackKey] = useState<WorkflowPackKey>("development");
   const [assignmentMode, setAssignmentMode] = useState<AssignmentMode>("auto");
   const [selectedAgentIds, setSelectedAgentIds] = useState<Set<string>>(new Set());
   const [agentFilterDept, setAgentFilterDept] = useState<string>("all");
@@ -119,6 +120,7 @@ export default function ProjectManagerModal({ agents, departments = [], onClose 
           setProjectPath(res.project.project_path);
           setCoreGoal(res.project.core_goal);
           setAssignmentMode(res.project.assignment_mode || "auto");
+          setDefaultPackKey(res.project.default_pack_key || "development");
           setSelectedAgentIds(new Set(res.project.assigned_agent_ids || []));
         }
       })
@@ -204,6 +206,7 @@ export default function ProjectManagerModal({ agents, departments = [], onClose 
     setName("");
     setProjectPath("");
     setCoreGoal("");
+    setDefaultPackKey("development");
     setAssignmentMode("auto");
     setSelectedAgentIds(new Set());
     setManualAssignmentWarning(null);
@@ -217,6 +220,7 @@ export default function ProjectManagerModal({ agents, departments = [], onClose 
     setName(viewedProject.name);
     setProjectPath(viewedProject.project_path);
     setCoreGoal(viewedProject.core_goal);
+    setDefaultPackKey(viewedProject.default_pack_key || "development");
     setAssignmentMode(viewedProject.assignment_mode || "auto");
     setSelectedAgentIds(new Set(viewedProject.assigned_agent_ids || []));
     setManualAssignmentWarning(null);
@@ -228,6 +232,7 @@ export default function ProjectManagerModal({ agents, departments = [], onClose 
     saving,
     setSaving,
     assignmentMode,
+    defaultPackKey,
     getManualAssignmentWarning,
     setManualAssignmentWarning,
     projectPath,
@@ -401,6 +406,8 @@ export default function ProjectManagerModal({ agents, departments = [], onClose 
                   resolvePathHelperErrorMessage={pathTools.resolvePathHelperErrorMessage}
                   formFeedback={pathTools.formFeedback}
                   setFormFeedback={pathTools.setFormFeedback}
+                  defaultPackKey={defaultPackKey}
+                  setDefaultPackKey={setDefaultPackKey}
                   assignmentMode={assignmentMode}
                   setAssignmentMode={setAssignmentMode}
                   setManualAssignmentWarning={setManualAssignmentWarning}
@@ -423,6 +430,7 @@ export default function ProjectManagerModal({ agents, departments = [], onClose 
                       setName(viewedProject.name);
                       setProjectPath(viewedProject.project_path);
                       setCoreGoal(viewedProject.core_goal);
+                      setDefaultPackKey(viewedProject.default_pack_key || "development");
                     }
                   }}
                   onStartEditSelected={startEditSelected}

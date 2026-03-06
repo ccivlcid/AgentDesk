@@ -17,17 +17,162 @@ function normalizePackKey(raw: string | null | undefined): WorkflowPackKey {
   return DEFAULT_WORKFLOW_PACK_KEY;
 }
 
+/**
+ * Build generic QA gate guidance for non-video packs based on qaRules stored in DB.
+ */
+function buildGenericQaGateGuidance(
+  packKey: WorkflowPackKey,
+  lang: SupportedLang,
+  qaRules: Record<string, unknown>,
+): string {
+  if (!qaRules || Object.keys(qaRules).length === 0) return "";
+
+  const lines: string[] = ["[QA Gate Requirements]"];
+
+  // development pack
+  if (qaRules.requireTestEvidence) {
+    lines.push(
+      lang === "ko"
+        ? "- 테스트 증거(통과 로그, 실행 결과)를 결과에 포함해야 합니다. 테스트 없이 완료하지 마세요."
+        : lang === "ja"
+          ? "- テスト証拠（通過ログ、実行結果）を結果に含めてください。テストなしで完了しないでください。"
+          : lang === "zh"
+            ? "- 必须在结果中包含测试证据（通过日志、执行结果）。不要在没有测试的情况下完成。"
+            : "- Include test evidence (pass logs, execution results) in the output. Do not complete without tests.",
+    );
+  }
+  if (qaRules.requireRiskNotes) {
+    lines.push(
+      lang === "ko"
+        ? "- 변경에 따른 위험 요소/주의사항을 결과 보고서에 명시하세요."
+        : lang === "ja"
+          ? "- 変更に伴うリスク/注意事項を結果レポートに記載してください。"
+          : lang === "zh"
+            ? "- 请在结果报告中标注变更带来的风险/注意事项。"
+            : "- Document risk notes and caveats for the changes in the result report.",
+    );
+  }
+
+  // report pack
+  if (qaRules.requireSections && Array.isArray(qaRules.requireSections)) {
+    const sectionList = (qaRules.requireSections as string[]).join(", ");
+    lines.push(
+      lang === "ko"
+        ? `- 다음 섹션을 반드시 포함하세요: ${sectionList}`
+        : lang === "ja"
+          ? `- 以下のセクションを必ず含めてください: ${sectionList}`
+          : lang === "zh"
+            ? `- 必须包含以下部分: ${sectionList}`
+            : `- Must include the following sections: ${sectionList}`,
+    );
+  }
+  if (qaRules.failOnMissingSections) {
+    lines.push(
+      lang === "ko"
+        ? "- 필수 섹션이 누락되면 QA 게이트 실패로 처리됩니다."
+        : lang === "ja"
+          ? "- 必須セクションが欠如している場合、QAゲート失敗として処理されます。"
+          : lang === "zh"
+            ? "- 缺少必需部分将被视为QA门禁失败。"
+            : "- Missing required sections will be treated as a QA gate failure.",
+    );
+  }
+
+  // web_research_report pack
+  if (qaRules.failWithoutCitations) {
+    lines.push(
+      lang === "ko"
+        ? "- 인용/출처 없이 작성하면 QA 게이트 실패입니다. 모든 주장에 출처를 인라인 링크로 표시하세요."
+        : lang === "ja"
+          ? "- 引用/出典なしの記述はQAゲート失敗です。すべての主張にインラインリンクで出典を表示してください。"
+          : lang === "zh"
+            ? "- 没有引用/出处的内容将导致QA门禁失败。所有论点必须附带内联链接出处。"
+            : "- Writing without citations is a QA gate failure. Include inline link citations for all claims.",
+    );
+  }
+
+  // novel pack
+  if (qaRules.checkToneConsistency) {
+    lines.push(
+      lang === "ko"
+        ? "- 전체 톤앤매너 일관성을 유지하세요. 장면 전환 시에도 톤이 급변하지 않아야 합니다."
+        : "- Maintain consistent tone throughout. Tone should not shift abruptly across scenes.",
+    );
+  }
+  if (qaRules.checkCharacterDrift) {
+    lines.push(
+      lang === "ko"
+        ? "- 캐릭터 일관성을 유지하세요. 성격, 말투, 행동 패턴이 이전 장면과 모순되면 안 됩니다."
+        : "- Maintain character consistency. Personality, speech patterns, and behavior must not contradict earlier scenes.",
+    );
+  }
+
+  // asset_management pack
+  if (qaRules.requireRiskAssessment) {
+    lines.push(
+      lang === "ko"
+        ? "- 리스크 평가 섹션을 반드시 포함하세요."
+        : "- A risk assessment section is required.",
+    );
+  }
+  if (qaRules.requireComplianceCheck) {
+    lines.push(
+      lang === "ko"
+        ? "- 컴플라이언스(규정 준수) 검토 결과를 포함하세요."
+        : "- Include compliance check results.",
+    );
+  }
+  if (qaRules.requirePerformanceMetrics) {
+    lines.push(
+      lang === "ko"
+        ? "- 성과 지표(벤치마크 대비 수익률, 샤프 비율 등)를 포함하세요."
+        : "- Include performance metrics (returns vs benchmark, Sharpe ratio, etc.).",
+    );
+  }
+
+  // roleplay pack
+  if (qaRules.keepCharacterVoice) {
+    lines.push(
+      lang === "ko"
+        ? "- 캐릭터 보이스를 끝까지 유지하세요. 메타적(OOC) 발언을 섞지 마세요."
+        : "- Stay in character voice throughout. Do not break character or mix in OOC comments.",
+    );
+  }
+  if (qaRules.enforceSafetyPolicy) {
+    lines.push(
+      lang === "ko"
+        ? "- 안전 정책을 준수하세요. 유해하거나 부적절한 콘텐츠 생성은 금지됩니다."
+        : "- Enforce safety policy. Do not generate harmful or inappropriate content.",
+    );
+  }
+
+  return lines.length > 1 ? lines.join("\n") : "";
+}
+
 export function buildWorkflowPackExecutionGuidance(
   packKeyRaw: string | null | undefined,
   langRaw: string | null | undefined,
   options?: {
     videoArtifactRelativePath?: string | null;
+    qaRulesJson?: string | null;
   },
 ): string {
   const packKey = normalizePackKey(packKeyRaw);
-  if (packKey !== "video_preprod") return "";
-
   const lang = normalizeLang(langRaw);
+
+  // For non-video packs, build generic QA gate guidance from qaRules
+  if (packKey !== "video_preprod") {
+    if (options?.qaRulesJson) {
+      try {
+        const qaRules = JSON.parse(options.qaRulesJson);
+        return buildGenericQaGateGuidance(packKey, lang, qaRules);
+      } catch {
+        return "";
+      }
+    }
+    return "";
+  }
+
   const artifactPath = String(options?.videoArtifactRelativePath ?? "").trim() || "video_output/final.mp4";
   const ruleLines: Record<SupportedLang, string[]> = {
     ko: [

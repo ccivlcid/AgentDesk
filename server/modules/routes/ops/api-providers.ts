@@ -315,4 +315,53 @@ export function registerApiProviderRoutes({ app, db, nowMs }: RegisterApiProvide
   app.get("/api/api-providers/presets", (_req, res) => {
     res.json({ ok: true, presets: API_PROVIDER_PRESETS });
   });
+
+  // Ollama auto-detection: check if Ollama is running locally and list available models
+  app.get("/api/ollama/status", async (_req, res) => {
+    const ollamaUrl = "http://localhost:11434";
+    try {
+      const resp = await fetch(`${ollamaUrl}/api/tags`, { signal: AbortSignal.timeout(5_000) });
+      if (!resp.ok) return res.json({ ok: true, available: false, error: `status ${resp.status}` });
+
+      const data = (await resp.json()) as { models?: Array<{ name: string; size: number; modified_at: string }> };
+      const models = (data.models ?? []).map((m) => ({
+        name: m.name,
+        size: m.size,
+        modified_at: m.modified_at,
+      }));
+      res.json({ ok: true, available: true, models, model_count: models.length });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      res.json({ ok: true, available: false, error: message });
+    }
+  });
+
+  // Auto-create Ollama API provider entry if it doesn't exist
+  app.post("/api/ollama/setup", async (_req, res) => {
+    const existing = db.prepare("SELECT id FROM api_providers WHERE type = 'ollama' LIMIT 1").get() as
+      | { id: string }
+      | undefined;
+    if (existing) {
+      return res.json({ ok: true, id: existing.id, message: "already_exists" });
+    }
+
+    // Check if Ollama is available
+    try {
+      const resp = await fetch("http://localhost:11434/api/tags", { signal: AbortSignal.timeout(5_000) });
+      if (!resp.ok) return res.status(502).json({ ok: false, error: "ollama_not_responding" });
+
+      const data = (await resp.json()) as { models?: Array<{ name: string }> };
+      const models = (data.models ?? []).map((m) => m.name).sort();
+
+      const id = randomUUID();
+      const now = nowMs();
+      db.prepare(
+        "INSERT INTO api_providers (id, name, type, base_url, api_key_enc, enabled, models_cache, models_cached_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+      ).run(id, "Ollama (Local)", "ollama", "http://localhost:11434/v1", null, 1, JSON.stringify(models), now, now, now);
+      res.json({ ok: true, id, models, model_count: models.length });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      res.status(502).json({ ok: false, error: message });
+    }
+  });
 }

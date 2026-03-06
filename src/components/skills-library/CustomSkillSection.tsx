@@ -1,4 +1,5 @@
-import type { CustomSkillEntry, SkillLearnProvider } from "../../api";
+import { useRef } from "react";
+import { exportCustomSkill, importCustomSkill, type CustomSkillEntry, type SkillLearnProvider, type SkillPackage } from "../../api";
 import { providerLabel, type TFunction } from "./model";
 
 interface CustomSkillSectionProps {
@@ -6,9 +7,49 @@ interface CustomSkillSectionProps {
   customSkills: CustomSkillEntry[];
   localeTag: string;
   onDeleteSkill: (skillName: string) => void;
+  onRefresh: () => void;
 }
 
-export default function CustomSkillSection({ t, customSkills, localeTag, onDeleteSkill }: CustomSkillSectionProps) {
+function downloadJson(data: unknown, filename: string): void {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export default function CustomSkillSection({ t, customSkills, localeTag, onDeleteSkill, onRefresh }: CustomSkillSectionProps) {
+  const importInputRef = useRef<HTMLInputElement>(null);
+
+  const handleExport = async (skillName: string) => {
+    try {
+      const res = await exportCustomSkill(skillName);
+      if (res.ok && res.package) {
+        downloadJson(res.package, `skill-${skillName}.json`);
+      }
+    } catch (err) {
+      console.error("Failed to export skill:", err);
+    }
+  };
+
+  const handleImportFile = async (file: File) => {
+    try {
+      const text = await file.text();
+      const pkg = JSON.parse(text) as SkillPackage;
+      if (!pkg.skillName || !pkg.content) {
+        alert("Invalid skill package file");
+        return;
+      }
+      await importCustomSkill(pkg);
+      onRefresh();
+    } catch (err) {
+      console.error("Failed to import skill:", err);
+      alert("Failed to import skill package");
+    }
+  };
+
   if (customSkills.length === 0) return null;
 
   return (
@@ -18,6 +59,25 @@ export default function CustomSkillSection({ t, customSkills, localeTag, onDelet
           <span>✏️</span>
           {t({ ko: "커스텀 스킬", en: "Custom Skills", ja: "カスタムスキル", zh: "自定义技能" })}
           <span className="text-[11px] text-slate-500 font-normal">({customSkills.length})</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <input
+            ref={importInputRef}
+            type="file"
+            accept=".json"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) void handleImportFile(file);
+              e.target.value = "";
+            }}
+          />
+          <button
+            onClick={() => importInputRef.current?.click()}
+            className="text-[10px] px-2 py-0.5 rounded border border-violet-500/30 text-violet-300 bg-violet-500/10 hover:bg-violet-500/20 transition-all"
+          >
+            {t({ ko: "가져오기", en: "Import", ja: "インポート", zh: "导入" })}
+          </button>
         </div>
       </div>
 
@@ -35,12 +95,21 @@ export default function CustomSkillSection({ t, customSkills, localeTag, onDelet
                 {new Date(skill.createdAt).toLocaleDateString(localeTag)}
               </div>
             </div>
-            <button
-              onClick={() => onDeleteSkill(skill.skillName)}
-              className="shrink-0 ml-2 text-[10px] px-2 py-0.5 rounded border border-rose-500/30 text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 transition-all"
-            >
-              {t({ ko: "삭제", en: "Delete", ja: "削除", zh: "删除" })}
-            </button>
+            <div className="flex items-center gap-1 shrink-0 ml-2">
+              <button
+                onClick={() => void handleExport(skill.skillName)}
+                className="text-[10px] px-2 py-0.5 rounded border border-sky-500/30 text-sky-300 bg-sky-500/10 hover:bg-sky-500/20 transition-all"
+                title={t({ ko: "내보내기", en: "Export", ja: "エクスポート", zh: "导出" })}
+              >
+                {t({ ko: "내보내기", en: "Export", ja: "Export", zh: "导出" })}
+              </button>
+              <button
+                onClick={() => onDeleteSkill(skill.skillName)}
+                className="text-[10px] px-2 py-0.5 rounded border border-rose-500/30 text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 transition-all"
+              >
+                {t({ ko: "삭제", en: "Delete", ja: "削除", zh: "删除" })}
+              </button>
+            </div>
           </div>
         ))}
       </div>

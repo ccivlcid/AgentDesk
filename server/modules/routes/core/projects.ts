@@ -431,10 +431,14 @@ export function registerProjectRoutes({
     SELECT t.id, t.title, t.status, t.task_type, t.priority, t.created_at, t.updated_at, t.completed_at,
            t.source_task_id,
            t.assigned_agent_id,
+           t.department_id,
            COALESCE(a.name, '') AS assigned_agent_name,
-           COALESCE(a.name_ko, '') AS assigned_agent_name_ko
+           COALESCE(a.name_ko, '') AS assigned_agent_name_ko,
+           COALESCE(d.name, '') AS department_name,
+           COALESCE(d.name_ko, '') AS department_name_ko
     FROM tasks t
     LEFT JOIN agents a ON a.id = t.assigned_agent_id
+    LEFT JOIN departments d ON d.id = t.department_id
     WHERE t.project_id = ?
     ORDER BY t.created_at DESC
     LIMIT 300
@@ -502,5 +506,63 @@ export function registerProjectRoutes({
       reports,
       decision_events: decisionEvents,
     });
+  });
+
+  // GET /api/projects/:id/burndown — daily task creation/completion for burndown chart
+  app.get("/api/projects/:id/burndown", (req, res) => {
+    const id = String(req.params.id);
+    const project = db.prepare("SELECT id FROM projects WHERE id = ?").get(id);
+    if (!project) return res.status(404).json({ error: "not_found" });
+
+    // Get all tasks for the project with relevant timestamps
+    const rows = db
+      .prepare(
+        `SELECT created_at, completed_at, status FROM tasks WHERE project_id = ? ORDER BY created_at ASC`,
+      )
+      .all(id) as { created_at: number; completed_at: number | null; status: string }[];
+
+    if (rows.length === 0) {
+      return res.json({ ok: true, burndown: [] });
+    }
+
+    // Group by day
+    const dayMs = 86_400_000;
+    const firstDay = Math.floor(rows[0].created_at / dayMs) * dayMs;
+    const lastDay = Math.floor(Date.now() / dayMs) * dayMs;
+    const dayMap = new Map<number, { created: number; completed: number }>();
+
+    for (let d = firstDay; d <= lastDay; d += dayMs) {
+      dayMap.set(d, { created: 0, completed: 0 });
+    }
+
+    for (const row of rows) {
+      const createdDay = Math.floor(row.created_at / dayMs) * dayMs;
+      const entry = dayMap.get(createdDay);
+      if (entry) entry.created++;
+
+      if (row.completed_at) {
+        const completedDay = Math.floor(row.completed_at / dayMs) * dayMs;
+        const cEntry = dayMap.get(completedDay);
+        if (cEntry) cEntry.completed++;
+      }
+    }
+
+    // Build cumulative data
+    let totalCreated = 0;
+    let totalCompleted = 0;
+    const burndown: { date: number; total: number; done: number; remaining: number }[] = [];
+
+    for (const [date, { created, completed }] of [...dayMap.entries()].sort((a, b) => a[0] - b[0])) {
+      totalCreated += created;
+      totalCompleted += completed;
+      burndown.push({
+        date,
+        total: totalCreated,
+        done: totalCompleted,
+        remaining: totalCreated - totalCompleted,
+      });
+    }
+
+    res.json({ ok: true, burndown });
   });
 }

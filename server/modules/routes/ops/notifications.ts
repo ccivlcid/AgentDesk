@@ -65,7 +65,7 @@ export function createNotificationHelper(ctx: { db: any; nowMs: () => number; br
   const { db, nowMs, broadcast } = ctx;
 
   function insertNotification(params: {
-    type: "task_complete" | "task_error" | "decision_created" | "agent_error" | "system";
+    type: "task_complete" | "task_error" | "decision_created" | "agent_error" | "system" | "cost_alert" | "agent_anomaly" | "heartbeat";
     title: string;
     body?: string | null;
     task_id?: string | null;

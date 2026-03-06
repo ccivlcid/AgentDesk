@@ -18,6 +18,7 @@ import ProjectManagerModal from "./ProjectManagerModal";
 import BulkHideModal from "./taskboard/BulkHideModal";
 import CreateTaskModal from "./taskboard/CreateTaskModal";
 import FilterBar from "./taskboard/FilterBar";
+import GanttChart from "./taskboard/GanttChart";
 import TaskCard from "./taskboard/TaskCard";
 import { COLUMNS, isHideableStatus, taskStatusLabel, type HideableStatus } from "./taskboard/constants";
 
@@ -135,6 +136,7 @@ export function TaskBoard({
   activeWorkflowPackKey,
 }: TaskBoardProps) {
   const { t } = useI18n();
+  const [viewMode, setViewMode] = useState<"board" | "gantt">("board");
   const [showCreate, setShowCreate] = useState(false);
   const [showProjectManager, setShowProjectManager] = useState(false);
   const [showBulkHideModal, setShowBulkHideModal] = useState(false);
@@ -359,6 +361,26 @@ export function TaskBoard({
             </span>
           </button>
         <div className="ml-auto flex items-center gap-2">
+          <div className="flex items-center bg-[var(--th-bg-surface)] border border-[var(--th-border)] rounded-lg p-0.5">
+            <button
+              type="button"
+              onClick={() => setViewMode("board")}
+              className={`px-2.5 py-1 text-xs rounded-md transition-colors ${
+                viewMode === "board" ? "bg-sky-600 text-white" : "text-[var(--th-text-secondary)] hover:text-[var(--th-text-heading)]"
+              }`}
+            >
+              {t({ ko: "보드", en: "Board", ja: "ボード", zh: "看板" })}
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("gantt")}
+              className={`px-2.5 py-1 text-xs rounded-md transition-colors ${
+                viewMode === "gantt" ? "bg-sky-600 text-white" : "text-[var(--th-text-secondary)] hover:text-[var(--th-text-heading)]"
+              }`}
+            >
+              {t({ ko: "간트", en: "Gantt", ja: "ガント", zh: "甘特" })}
+            </button>
+          </div>
           <button
             type="button"
             onClick={() => setShowBulkHideModal(true)}
@@ -408,6 +430,11 @@ export function TaskBoard({
         onSearch={setSearch}
       />
 
+      {viewMode === "gantt" ? (
+        <div className="flex-1 overflow-auto pb-2">
+          <GanttChart tasks={filteredTasks} agents={agents} departments={departments} />
+        </div>
+      ) : (
       <DndContext
         sensors={sensors}
         onDragStart={handleDragStart}
@@ -552,6 +579,7 @@ export function TaskBoard({
           ) : null}
         </DragOverlay>
       </DndContext>
+      )}
 
       {showCreate && (
         <CreateTaskModal

@@ -106,4 +106,22 @@ export function registerTaskDependencyRoutes({ app, db, nowMs }: TaskDepsRouteDe
 
     res.json({ ok: true });
   });
+
+  // GET /api/tasks/:id/dependencies/blocked — check if execution is blocked by incomplete predecessors
+  app.get("/api/tasks/:id/dependencies/blocked", (req: Request, res: Response) => {
+    const taskId = req.params.id as string;
+
+    const incomplete = db
+      .prepare(
+        `SELECT t.id, t.title, t.status FROM task_dependencies td
+         JOIN tasks t ON t.id = td.depends_on_task_id
+         WHERE td.task_id = ? AND t.status NOT IN ('done', 'cancelled')`,
+      )
+      .all(taskId) as Array<{ id: string; title: string; status: string }>;
+
+    res.json({
+      blocked: incomplete.length > 0,
+      incomplete_predecessors: incomplete,
+    });
+  });
 }

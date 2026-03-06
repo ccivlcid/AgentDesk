@@ -21,6 +21,8 @@ type ChatEditorModalProps = {
   handleSaveEditor: () => void;
   channelsConfig: MessengerChannelsConfig;
   agents: Agent[];
+  /** true면 agents가 이미 현재 오피스 팩 직원만 넘어온 것이므로 필터 생략 */
+  agentsAreCurrentPackOnly?: boolean;
   agentsLoading: boolean;
   officePackProfiles?: OfficePackProfiles;
   workflowPackOptions: WorkflowPackOption[];
@@ -45,6 +47,7 @@ export default function ChatEditorModal({
   handleSaveEditor,
   channelsConfig,
   agents,
+  agentsAreCurrentPackOnly = false,
   agentsLoading,
   officePackProfiles,
   workflowPackOptions,
@@ -58,22 +61,19 @@ export default function ChatEditorModal({
     editor.channel === "discord" ? discordChannels.find((entry) => entry.id === editor.targetId.trim()) : null;
 
   const displayAgents = useMemo(() => {
+    if (agentsAreCurrentPackOnly) return agents;
     const packKey = editor.workflowPackKey || "development";
     if (packKey === "development") {
-      // development: show only non-seed agents (original dev agents)
       return agents.filter((a) => !a.workflow_pack_key || a.workflow_pack_key === "development");
     }
     const profileAgents = officePackProfiles?.[packKey]?.agents;
     if (profileAgents?.length) {
       return resolvePackAgentViews({ packKey, globalAgents: agents, packAgents: profileAgents }).scopedAgents;
     }
-    // Fallback: filter DB agents by workflow_pack_key
     const packDbAgents = agents.filter((a) => a.workflow_pack_key === packKey);
-    if (packDbAgents.length > 0) {
-      return packDbAgents;
-    }
+    if (packDbAgents.length > 0) return packDbAgents;
     return agents;
-  }, [agents, editor.workflowPackKey, officePackProfiles]);
+  }, [agents, agentsAreCurrentPackOnly, editor.workflowPackKey, officePackProfiles]);
 
   return (
     <div className="fixed inset-0 z-[2200] flex items-center justify-center px-4">

@@ -21,7 +21,13 @@ import {
   resolveChannelsConfig,
 } from "./gateway-settings/state";
 
-export default function GatewaySettingsTab({ t, form, setForm, persistSettings }: ChannelSettingsTabProps) {
+export default function GatewaySettingsTab({
+  t,
+  form,
+  setForm,
+  persistSettings,
+  managerAgents,
+}: ChannelSettingsTabProps) {
   const channelsConfig = resolveChannelsConfig(form.messengerChannels);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState<{ ok: boolean; msg: string } | null>(null);
@@ -795,7 +801,8 @@ export default function GatewaySettingsTab({ t, form, setForm, persistSettings }
           closeEditorModal={closeEditorModal}
           handleSaveEditor={handleSaveEditor}
           channelsConfig={channelsConfig}
-          agents={agents}
+          agents={managerAgents ?? agents}
+          agentsAreCurrentPackOnly={!!managerAgents}
           agentsLoading={agentsLoading}
           officePackProfiles={form.officePackProfiles}
           workflowPackOptions={workflowPackOptions}

@@ -359,6 +359,9 @@ export interface ProjectTaskHistoryItem {
   assigned_agent_id: string | null;
   assigned_agent_name: string;
   assigned_agent_name_ko: string;
+  department_id?: string | null;
+  department_name?: string;
+  department_name_ko?: string;
 }
 
 export interface ProjectReportHistoryItem {

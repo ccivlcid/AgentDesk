@@ -10,7 +10,6 @@ import {
 } from "pixi.js";
 import { useI18n } from "../i18n";
 import { useTheme, type ThemeMode } from "../ThemeContext";
-import CliUsagePanel from "./office-view/CliUsagePanel";
 import VirtualPadOverlay from "./office-view/VirtualPadOverlay";
 import {
   type OfficeViewProps,
@@ -51,6 +50,11 @@ export default function OfficeView({
   themeHighlightTargetId,
   onSelectAgent,
   onSelectDepartment,
+  cliStatus: cliStatusProp,
+  cliUsage: cliUsageProp,
+  cliUsageRef: cliUsageRefProp,
+  cliUsageRefreshing: cliUsageRefreshingProp,
+  onRefreshCliUsage: onRefreshCliUsageProp,
 }: OfficeViewProps) {
   const { language, t } = useI18n();
   const { theme: currentTheme } = useTheme();
@@ -63,6 +67,13 @@ export default function OfficeView({
   const initIdRef = useRef(0);
   const initDoneRef = useRef(false);
   const [sceneRevision, setSceneRevision] = useState(0);
+
+  const cliUsageFromHook = useCliUsage(tasks);
+  const cliStatus = cliStatusProp ?? cliUsageFromHook.cliStatus;
+  const cliUsage = cliUsageProp ?? cliUsageFromHook.cliUsage;
+  const cliUsageRef = cliUsageRefProp ?? cliUsageFromHook.cliUsageRef;
+  const cliUsageRefreshing = cliUsageRefreshingProp ?? cliUsageFromHook.refreshing;
+  const onRefreshCliUsage = onRefreshCliUsageProp ?? cliUsageFromHook.handleRefreshUsage;
 
   // Animation state refs
   const tickRef = useRef(0);
@@ -297,8 +308,6 @@ export default function OfficeView({
     });
   }, []);
 
-  const { cliStatus, cliUsage, cliUsageRef, refreshing, handleRefreshUsage } = useCliUsage(tasks);
-
   const tickerContext = useMemo(
     () => ({
       tickRef,
@@ -411,15 +420,6 @@ export default function OfficeView({
           onSetMoveDirectionPressed={setMoveDirectionPressed}
         />
       </div>
-
-      <CliUsagePanel
-        cliStatus={cliStatus}
-        cliUsage={cliUsage}
-        language={language}
-        refreshing={refreshing}
-        onRefreshUsage={handleRefreshUsage}
-        t={t}
-      />
     </div>
   );
 }

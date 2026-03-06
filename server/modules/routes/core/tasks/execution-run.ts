@@ -48,7 +48,9 @@ export type TaskRunRouteDeps = Pick<
   | "spawnCliAgent"
   | "handleTaskRunComplete"
   | "buildAvailableSkillsPromptBlock"
->;
+> & {
+  checkCostBlockExecution?: (...args: any[]) => any;
+};
 
 export function registerTaskRunRoute(deps: TaskRunRouteDeps): void {
   const {
@@ -84,6 +86,7 @@ export function registerTaskRunRoute(deps: TaskRunRouteDeps): void {
     spawnCliAgent,
     handleTaskRunComplete,
     buildAvailableSkillsPromptBlock,
+    checkCostBlockExecution,
   } = deps;
 
   app.post("/api/tasks/:id/run", (req, res) => {
@@ -103,6 +106,25 @@ export function registerTaskRunRoute(deps: TaskRunRouteDeps): void {
       | undefined;
     if (!task) return res.status(404).json({ error: "not_found" });
     const taskLang = resolveLang(task.description ?? task.title);
+
+    // Cost block check: prevent execution if provider usage exceeds threshold
+    if (typeof checkCostBlockExecution === "function") {
+      const costCheck = checkCostBlockExecution();
+      if (costCheck.blocked) {
+        appendTaskLog(
+          id,
+          "system",
+          `Execution blocked: ${costCheck.provider} usage at ${costCheck.pct}% (block threshold: ${costCheck.threshold}%)`,
+        );
+        return res.status(429).json({
+          error: "cost_limit_exceeded",
+          message: `Execution blocked: ${costCheck.provider} usage is at ${costCheck.pct}%, exceeding the ${costCheck.threshold}% block threshold. Reduce usage or adjust cost alert settings.`,
+          provider: costCheck.provider,
+          utilization: costCheck.pct,
+          threshold: costCheck.threshold,
+        });
+      }
+    }
 
     if (activeProcesses.has(id)) {
       const staleChild = activeProcesses.get(id);
@@ -458,8 +480,17 @@ Whenever you complete a subtask, report it in this format:
             workflow_pack_key: task.workflow_pack_key,
           })
         : null;
+    // Load QA rules from DB for the pack
+    let qaRulesJson: string | null = null;
+    if (task.workflow_pack_key) {
+      const packRow = db.prepare("SELECT qa_rules_json FROM workflow_packs WHERE key = ?").get(task.workflow_pack_key) as
+        | { qa_rules_json: string }
+        | undefined;
+      if (packRow) qaRulesJson = packRow.qa_rules_json;
+    }
     const workflowPackGuidance = buildWorkflowPackExecutionGuidance(task.workflow_pack_key, taskLang, {
       videoArtifactRelativePath: videoArtifactSpec?.relativePath,
+      qaRulesJson,
     });
 
     const prompt = buildTaskExecutionPrompt(

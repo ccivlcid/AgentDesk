@@ -175,6 +175,112 @@ export function registerCustomSkillRoutes(
     }
   });
 
+  // Export a custom skill as a portable JSON package
+  app.get("/api/skills/custom/:skillName/export", (req, res) => {
+    try {
+      const parsedSkillName = parseCustomSkillName(req.params.skillName);
+      if (!parsedSkillName) {
+        return res.status(400).json({ error: "invalid skillName" });
+      }
+      const customSkillsDir = path.join(logsDir, "..", "custom-skills");
+      const resolvedSkill = resolveCustomSkillDirectory(customSkillsDir, parsedSkillName.canonicalName);
+      if (!resolvedSkill) {
+        return res.status(404).json({ error: "skill_not_found" });
+      }
+      const metaPath = path.join(resolvedSkill.dirPath, "meta.json");
+      const skillFilePath = path.join(resolvedSkill.dirPath, "skills.md");
+      if (!fs.existsSync(metaPath) || !fs.existsSync(skillFilePath)) {
+        return res.status(404).json({ error: "skill_files_missing" });
+      }
+      const meta = JSON.parse(fs.readFileSync(metaPath, "utf-8"));
+      const content = fs.readFileSync(skillFilePath, "utf-8");
+      res.json({
+        ok: true,
+        package: {
+          format: "agentdesk-skill-v1",
+          skillName: meta.skillName ?? parsedSkillName.inputName,
+          providers: meta.providers ?? [],
+          content,
+          exportedAt: Date.now(),
+        },
+      });
+    } catch (err) {
+      console.error("[skills/custom:export]", err);
+      res.status(500).json({ ok: false, error: "Failed to export skill" });
+    }
+  });
+
+  // Import a custom skill from a portable JSON package
+  app.post("/api/skills/custom/import", (req, res) => {
+    try {
+      const pkg = req.body?.package;
+      if (!pkg || typeof pkg !== "object") {
+        return res.status(400).json({ error: "package object required" });
+      }
+      const skillName = String(pkg.skillName ?? "").trim();
+      const parsedSkillName = parseCustomSkillName(skillName);
+      if (!parsedSkillName) {
+        return res.status(400).json({ error: "invalid or missing skillName in package" });
+      }
+      const content = String(pkg.content ?? "").trim();
+      if (!content) {
+        return res.status(400).json({ error: "missing content in package" });
+      }
+      if (content.length > 512_000) {
+        return res.status(400).json({ error: "content too large (max 512KB)" });
+      }
+      const providers: string[] = Array.isArray(pkg.providers) ? pkg.providers : [];
+
+      const customSkillsDir = path.join(logsDir, "..", "custom-skills");
+      const skillDir = path.join(customSkillsDir, parsedSkillName.canonicalName);
+      fs.mkdirSync(skillDir, { recursive: true });
+
+      fs.writeFileSync(path.join(skillDir, "skills.md"), content, "utf-8");
+      const meta = {
+        skillName: parsedSkillName.inputName,
+        canonicalSkillName: parsedSkillName.canonicalName,
+        providers,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        contentLength: content.length,
+        importedAt: Date.now(),
+      };
+      fs.writeFileSync(path.join(skillDir, "meta.json"), JSON.stringify(meta, null, 2), "utf-8");
+
+      // Record learning history for each provider
+      const jobId = randomUUID();
+      for (const provider of providers) {
+        const histId = randomUUID();
+        const now = Date.now();
+        try {
+          db.prepare(
+            `INSERT INTO skill_learning_history
+              (id, job_id, provider, repo, skill_id, skill_label, status, command, error, run_started_at, run_completed_at, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, 'succeeded', ?, NULL, ?, ?, ?, ?)`,
+          ).run(
+            histId, jobId, provider,
+            `custom/${parsedSkillName.canonicalName}`,
+            parsedSkillName.canonicalName, parsedSkillName.inputName,
+            `custom-skill import: ${parsedSkillName.inputName}`,
+            now, now, now, now,
+          );
+        } catch (dbErr) {
+          console.warn(`[skills/custom:import] failed to record history for ${provider}: ${String(dbErr)}`);
+        }
+      }
+
+      res.json({
+        ok: true,
+        skillName: parsedSkillName.inputName,
+        canonicalSkillName: parsedSkillName.canonicalName,
+        providers,
+      });
+    } catch (err) {
+      console.error("[skills/custom:import]", err);
+      res.status(500).json({ ok: false, error: "Failed to import skill" });
+    }
+  });
+
   app.delete("/api/skills/custom/:skillName", (req, res) => {
     try {
       const parsedSkillName = parseCustomSkillName(req.params.skillName);
