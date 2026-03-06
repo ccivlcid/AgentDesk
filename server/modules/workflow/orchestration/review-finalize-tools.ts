@@ -10,6 +10,7 @@ import {
 import { evaluateRemotionOnlyGateFromLogFiles } from "../packs/video-render-engine-gate.ts";
 import { readYoloModeEnabled } from "../../routes/ops/messages/decision-inbox/yolo-mode.ts";
 import { reconcileVideoRenderDelegationState } from "./video-render-delegation-state.ts";
+import type { CountRow } from "../../routes/shared/types.ts";
 
 type CreateReviewFinalizeToolsDeps = Record<string, any>;
 
@@ -91,7 +92,7 @@ export function createReviewFinalizeTools(deps: CreateReviewFinalizeToolsDeps) {
         if (!parent) continue;
         const remaining = db
           .prepare("SELECT COUNT(*) AS cnt FROM subtasks WHERE task_id = ? AND status NOT IN ('done', 'cancelled')")
-          .get(parentTaskId) as { cnt: number } | undefined;
+          .get(parentTaskId) as CountRow | undefined;
         if ((remaining?.cnt ?? 0) === 0 && parent.status === "review") {
           appendTaskLog(
             parentTaskId,
@@ -228,7 +229,7 @@ export function createReviewFinalizeTools(deps: CreateReviewFinalizeToolsDeps) {
     let remainingSubtaskCount = (
       db
         .prepare("SELECT COUNT(*) as cnt FROM subtasks WHERE task_id = ? AND status NOT IN ('done', 'cancelled')")
-        .get(taskId) as { cnt: number }
+        .get(taskId) as CountRow
     ).cnt;
     if (remainingSubtaskCount > 0) {
       // Check if only VIDEO_FINAL_RENDER subtask(s) remain — trigger delegation instead of blocking forever
@@ -250,7 +251,7 @@ export function createReviewFinalizeTools(deps: CreateReviewFinalizeToolsDeps) {
           remainingSubtaskCount = (
             db
               .prepare("SELECT COUNT(*) as cnt FROM subtasks WHERE task_id = ? AND status NOT IN ('done', 'cancelled')")
-              .get(taskId) as { cnt: number }
+              .get(taskId) as CountRow
           ).cnt;
           pendingRender = db
             .prepare(

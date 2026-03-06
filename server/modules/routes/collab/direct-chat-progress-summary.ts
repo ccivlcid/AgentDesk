@@ -3,6 +3,7 @@ import type { Lang } from "../../../types/lang.ts";
 import type { DelegationOptions } from "./project-resolution.ts";
 import { resolveProjectBindingFromText } from "./direct-chat-project-binding.ts";
 import type { AgentRow, DirectChatDeps, ProjectProgressTarget, ProjectProgressTaskRow } from "./direct-chat-types.ts";
+import type { ProjectPathRow } from "../shared/types.ts";
 
 type BuildProjectProgressDeps = Pick<
   DirectChatDeps,
@@ -70,7 +71,7 @@ function resolveProjectProgressTargetBySessionRoute(
         LIMIT 1
       `,
     )
-    .get(routeLine) as { project_id: string | null; project_path: string | null } | undefined;
+    .get(routeLine) as ProjectPathRow | undefined;
   const activeTarget = resolveProjectProgressTargetFromBinding(deps, activeRow?.project_id, activeRow?.project_path);
   if (activeTarget) return activeTarget;
 
@@ -91,7 +92,7 @@ function resolveProjectProgressTargetBySessionRoute(
         LIMIT 1
       `,
     )
-    .get(routeLine) as { project_id: string | null; project_path: string | null } | undefined;
+    .get(routeLine) as ProjectPathRow | undefined;
   return resolveProjectProgressTargetFromBinding(deps, latestRow?.project_id, latestRow?.project_path);
 }
 
@@ -114,7 +115,7 @@ function resolveProjectProgressTargetByAgentRecent(
         LIMIT 1
       `,
     )
-    .get(agent.id, agent.department_id) as { project_id: string | null; project_path: string | null } | undefined;
+    .get(agent.id, agent.department_id) as ProjectPathRow | undefined;
   const activeTarget = resolveProjectProgressTargetFromBinding(deps, activeRow?.project_id, activeRow?.project_path);
   if (activeTarget) return activeTarget;
 
@@ -132,7 +133,7 @@ function resolveProjectProgressTargetByAgentRecent(
         LIMIT 1
       `,
     )
-    .get(agent.id, agent.department_id) as { project_id: string | null; project_path: string | null } | undefined;
+    .get(agent.id, agent.department_id) as ProjectPathRow | undefined;
   return resolveProjectProgressTargetFromBinding(deps, latestRow?.project_id, latestRow?.project_path);
 }
 
@@ -180,7 +181,7 @@ function resolveProjectProgressTarget(
   if (agent.current_task_id) {
     const currentTaskBinding = deps.db
       .prepare("SELECT project_id, project_path FROM tasks WHERE id = ? LIMIT 1")
-      .get(agent.current_task_id) as { project_id: string | null; project_path: string | null } | undefined;
+      .get(agent.current_task_id) as ProjectPathRow | undefined;
     const currentTaskTarget = resolveProjectProgressTargetFromBinding(
       deps,
       currentTaskBinding?.project_id,

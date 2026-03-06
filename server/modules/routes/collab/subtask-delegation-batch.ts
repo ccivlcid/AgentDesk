@@ -9,6 +9,7 @@ import { resolveConstrainedAgentScopeForTask } from "../core/tasks/execution-run
 import type { AgentRow } from "./direct-chat.ts";
 import type { L10n } from "./language-policy.ts";
 import type { SubtaskRow } from "./subtask-summary.ts";
+import type { ParentTaskRow } from "../shared/types.ts";
 import {
   buildCrossLeaderAckMessage,
   buildDelegatedDescription,
@@ -19,16 +20,6 @@ import {
   buildWorktreeCeoNote,
   teamLeadFallbackLabel,
 } from "./subtask-delegation-batch-messages.ts";
-
-type ParentTaskRow = {
-  id: string;
-  title: string;
-  description: string | null;
-  project_id: string | null;
-  project_path: string | null;
-  department_id: string | null;
-  workflow_pack_key?: string | null;
-};
 
 interface BatchDeps {
   db: any;

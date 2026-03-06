@@ -94,3 +94,58 @@ export interface CliUsageEntry {
   error?: string | null;
   [key: string]: unknown;
 }
+
+// ── Common DB row lookup types ──────────────────────────────────────
+
+/** Minimal ID lookup result */
+export type IdRow = { id: string };
+
+/** Count aggregate result */
+export type CountRow = { cnt: number };
+
+/** Settings table value lookup */
+export type SettingValueRow = { value: string };
+
+/** Project path lookup (commonly used for task→project resolution) */
+export type ProjectPathRow = {
+  project_id: string | null;
+  project_path: string | null;
+};
+
+/** Task row with fields commonly needed in delegation/orchestration */
+export interface TaskBaseRow {
+  id: string;
+  title: string;
+  description: string | null;
+  status: string;
+  task_type: string | null;
+  priority: number;
+  assigned_agent_id: string | null;
+  department_id: string | null;
+  project_id: string | null;
+  project_path: string | null;
+  workflow_pack_key: string | null;
+  source_task_id: string | null;
+}
+
+/** Minimal task fields for parent task lookups (subtask delegation) */
+export interface ParentTaskRow {
+  id: string;
+  title: string;
+  description: string | null;
+  project_id: string | null;
+  project_path: string | null;
+  department_id?: string | null;
+  workflow_pack_key?: string | null;
+}
+
+/** Department row lookup */
+export interface DepartmentRow {
+  id: string;
+  name: string;
+  name_ko: string;
+  icon: string;
+  color: string;
+  description: string | null;
+  prompt: string | null;
+}

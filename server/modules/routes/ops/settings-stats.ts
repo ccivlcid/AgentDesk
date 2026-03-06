@@ -4,6 +4,7 @@ import {
   encryptMessengerChannelsForStorage,
 } from "../../../messenger/token-crypto.ts";
 import { syncOfficePackAgentsForPack } from "../collab/office-pack-agent-hydration.ts";
+import type { CountRow, SettingValueRow } from "../shared/types.ts";
 
 const MESSENGER_SETTINGS_KEY = "messengerChannels";
 const OFFICE_PACK_PROFILES_KEY = "officePackProfiles";
@@ -168,45 +169,33 @@ export function registerOpsSettingsStatsRoutes(ctx: RuntimeContext): void {
   });
 
   app.get("/api/stats", (_req, res) => {
-    const totalTasks = (db.prepare("SELECT COUNT(*) as cnt FROM tasks").get() as { cnt: number }).cnt;
-    const doneTasks = (db.prepare("SELECT COUNT(*) as cnt FROM tasks WHERE status = 'done'").get() as { cnt: number })
+    const totalTasks = (db.prepare("SELECT COUNT(*) as cnt FROM tasks").get() as CountRow).cnt;
+    const doneTasks = (db.prepare("SELECT COUNT(*) as cnt FROM tasks WHERE status = 'done'").get() as CountRow)
       .cnt;
     const inProgressTasks = (
-      db.prepare("SELECT COUNT(*) as cnt FROM tasks WHERE status = 'in_progress'").get() as { cnt: number }
+      db.prepare("SELECT COUNT(*) as cnt FROM tasks WHERE status = 'in_progress'").get() as CountRow
     ).cnt;
-    const inboxTasks = (db.prepare("SELECT COUNT(*) as cnt FROM tasks WHERE status = 'inbox'").get() as { cnt: number })
+    const inboxTasks = (db.prepare("SELECT COUNT(*) as cnt FROM tasks WHERE status = 'inbox'").get() as CountRow)
       .cnt;
     const plannedTasks = (
-      db.prepare("SELECT COUNT(*) as cnt FROM tasks WHERE status = 'planned'").get() as {
-        cnt: number;
-      }
+      db.prepare("SELECT COUNT(*) as cnt FROM tasks WHERE status = 'planned'").get() as CountRow
     ).cnt;
     const reviewTasks = (
-      db.prepare("SELECT COUNT(*) as cnt FROM tasks WHERE status = 'review'").get() as {
-        cnt: number;
-      }
+      db.prepare("SELECT COUNT(*) as cnt FROM tasks WHERE status = 'review'").get() as CountRow
     ).cnt;
     const cancelledTasks = (
-      db.prepare("SELECT COUNT(*) as cnt FROM tasks WHERE status = 'cancelled'").get() as {
-        cnt: number;
-      }
+      db.prepare("SELECT COUNT(*) as cnt FROM tasks WHERE status = 'cancelled'").get() as CountRow
     ).cnt;
     const collaboratingTasks = (
-      db.prepare("SELECT COUNT(*) as cnt FROM tasks WHERE status = 'collaborating'").get() as {
-        cnt: number;
-      }
+      db.prepare("SELECT COUNT(*) as cnt FROM tasks WHERE status = 'collaborating'").get() as CountRow
     ).cnt;
 
-    const totalAgents = (db.prepare("SELECT COUNT(*) as cnt FROM agents").get() as { cnt: number }).cnt;
+    const totalAgents = (db.prepare("SELECT COUNT(*) as cnt FROM agents").get() as CountRow).cnt;
     const workingAgents = (
-      db.prepare("SELECT COUNT(*) as cnt FROM agents WHERE status = 'working'").get() as {
-        cnt: number;
-      }
+      db.prepare("SELECT COUNT(*) as cnt FROM agents WHERE status = 'working'").get() as CountRow
     ).cnt;
     const idleAgents = (
-      db.prepare("SELECT COUNT(*) as cnt FROM agents WHERE status = 'idle'").get() as {
-        cnt: number;
-      }
+      db.prepare("SELECT COUNT(*) as cnt FROM agents WHERE status = 'idle'").get() as CountRow
     ).cnt;
 
     const completionRate = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;

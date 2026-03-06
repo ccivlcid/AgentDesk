@@ -5,14 +5,7 @@ import { buildDocumentGenerationGuidance } from "../../workflow/core/document-ge
 import type { AgentRow } from "./direct-chat.ts";
 import type { L10n } from "./language-policy.ts";
 import type { SubtaskRow } from "./subtask-summary.ts";
-
-type ParentTaskRow = {
-  id: string;
-  title: string;
-  description: string | null;
-  project_id: string | null;
-  project_path: string | null;
-};
+import type { ParentTaskRow } from "../shared/types.ts";
 
 interface PromptDeps {
   db: any;

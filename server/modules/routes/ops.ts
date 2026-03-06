@@ -26,6 +26,7 @@ import { registerBackupRoutes } from "./ops/backup.ts";
 import { registerAgentUsageRoutes } from "./ops/agent-usage.ts";
 import { registerHeartbeatRoutes } from "./ops/heartbeat.ts";
 import { registerScheduledTaskRoutes } from "./ops/scheduled-tasks.ts";
+import { registerVideoRenderRoutes } from "./ops/video-render.ts";
 
 export function registerRoutesPartC(ctx: RuntimeContext): RouteOpsExports {
   const __ctx: RuntimeContext = ctx;
@@ -261,6 +262,7 @@ export function registerRoutesPartC(ctx: RuntimeContext): RouteOpsExports {
   registerBackupRoutes(__ctx);
   registerHeartbeatRoutes(__ctx);
   registerScheduledTaskRoutes({ app, db, nowMs });
+  registerVideoRenderRoutes({ app, broadcast, appendTaskLog });
   const { recordAgentUsage } = registerAgentUsageRoutes(__ctx);
 
   return {
