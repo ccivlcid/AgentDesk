@@ -344,10 +344,10 @@ export function createDirectChatHandlers(deps: DirectChatDeps) {
           });
           const askNewPath = pickL(
             l(
-              ["신규 프로젝트 절대경로를 보내주세요. 예: /Users/classys/Projects/agentdesk-redesign"],
-              ["Send the new project's absolute path. Example: /Users/classys/Projects/agentdesk-redesign"],
-              ["新規プロジェクトの絶対パスを送ってください。例: /Users/classys/Projects/agentdesk-redesign"],
-              ["请发送新项目绝对路径。例如：/Users/classys/Projects/agentdesk-redesign"],
+              ["신규 프로젝트 절대경로를 보내주세요. 예: /Users/classys/Projects/agentdesk-redesign 또는 C:\\Users"],
+              ["Send the new project's absolute path. Example: /Users/classys/Projects/agentdesk-redesign or C:\\Users"],
+              ["新規プロジェクトの絶対パスを送ってください。例: /Users/classys/Projects/agentdesk-redesign または C:\\Users"],
+              ["请发送新项目绝对路径。例如：/Users/classys/Projects/agentdesk-redesign 或 C:\\Users"],
             ),
             lang,
           );
@@ -367,10 +367,10 @@ export function createDirectChatHandlers(deps: DirectChatDeps) {
           if (!providedPath) {
             const askPathAgain = pickL(
               l(
-                ["절대경로 형식으로 다시 보내주세요. 예: /Users/classys/Projects/agentdesk-redesign"],
-                ["Please send it again as an absolute path. Example: /Users/classys/Projects/agentdesk-redesign"],
-                ["絶対パス形式で再送してください。例: /Users/classys/Projects/agentdesk-redesign"],
-                ["请用绝对路径格式重新发送。例如：/Users/classys/Projects/agentdesk-redesign"],
+                ["절대경로 형식으로 다시 보내주세요. 예: /Users/... 또는 C:\\프로젝트폴더"],
+                ["Please send it again as an absolute path. Example: /Users/... or C:\\project-folder"],
+                ["絶対パス形式で再送してください。例: /Users/... または C:\\プロジェクト"],
+                ["请用绝对路径格式重新发送。例如：/Users/... 或 C:\\项目目录"],
               ),
               lang,
             );
@@ -396,6 +396,9 @@ export function createDirectChatHandlers(deps: DirectChatDeps) {
             providedPath,
           );
           if (!binding) {
+            console.warn(
+              `[direct-chat] project create failed (see [project-binding] above). path="${providedPath}", name="${pendingBinding.newProjectName ?? ""}"`,
+            );
             const askPathFail = pickL(
               l(
                 ["프로젝트 생성에 실패했습니다. 신규 프로젝트 절대경로를 다시 보내주세요."],

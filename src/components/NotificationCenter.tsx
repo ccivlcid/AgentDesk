@@ -187,7 +187,9 @@ export default function NotificationCenter({ on, onNavigateTask }: Props) {
     }
   };
 
-  const filteredItems = typeFilter === "all" ? items : items.filter((i) => i.type === typeFilter);
+  const [hideRead, setHideRead] = useState(true);
+  const filteredItems = (typeFilter === "all" ? items : items.filter((i) => i.type === typeFilter))
+    .filter((i) => !hideRead || !i.read);
 
   return (
     <div className="relative inline-flex" ref={panelRef}>
@@ -252,6 +254,19 @@ export default function NotificationCenter({ on, onNavigateTask }: Props) {
                   {pushEnabled ? <IconBell /> : <IconBellOff />}
                 </button>
               )}
+              <button
+                type="button"
+                onClick={() => setHideRead((v) => !v)}
+                className="inline-flex h-8 items-center justify-center rounded-lg px-2 text-[11px] font-medium transition"
+                style={{
+                  background: hideRead ? "var(--th-accent, #3b82f6)" : "var(--th-bg-elevated)",
+                  color: hideRead ? "#fff" : "var(--th-text-muted)",
+                  border: hideRead ? "none" : "1px solid var(--th-border)",
+                }}
+                title={hideRead ? "Show all notifications" : "Hide read notifications"}
+              >
+                {hideRead ? "Unread" : "All"}
+              </button>
               {unreadCount > 0 && (
                 <button
                   type="button"

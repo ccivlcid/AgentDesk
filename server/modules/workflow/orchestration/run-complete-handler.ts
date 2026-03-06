@@ -110,7 +110,8 @@ export function createRunCompleteHandler(deps: CreateRunCompleteHandlerDeps) {
     try {
       if (fs.existsSync(logPath)) {
         const raw = fs.readFileSync(logPath, "utf8");
-        result = raw.slice(-2000);
+        const pretty = prettyStreamJson(raw);
+        result = pretty ? pretty.slice(-2000) : raw.slice(-2000);
       }
     } catch {
       /* ignore */

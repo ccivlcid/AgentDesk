@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 
-import { DEFAULT_DB_PATH, LEGACY_DB_PATH } from "../config/runtime.ts";
+import { DEFAULT_DB_PATH, LEGACY_DB_PATH, WRITABLE_DATA_DIR } from "../config/runtime.ts";
 
 export function readNonNegativeIntEnv(name: string, fallback: number): number {
   const raw = process.env[name];
@@ -71,6 +71,11 @@ export function initializeDatabaseRuntime(): {
   }
 
   const dbPath = process.env.DB_PATH ?? DEFAULT_DB_PATH;
+  try {
+    fs.mkdirSync(path.dirname(dbPath), { recursive: true });
+  } catch {
+    // ignore
+  }
   const db = new DatabaseSync(dbPath);
   db.exec("PRAGMA journal_mode = WAL");
   db.exec(`PRAGMA busy_timeout = ${SQLITE_BUSY_TIMEOUT_MS}`);
@@ -96,6 +101,7 @@ export function initializeDatabaseRuntime(): {
   );
   console.log(`[AgentDesk] Subtask delegation sweep: interval=${SUBTASK_DELEGATION_SWEEP_MS}ms`);
 
+  // 로그는 exe/실행 위치(cwd)에 쌓이도록, DB만 AppData 등 쓰기 전용 대비 경로 사용
   const logsDir = process.env.LOGS_DIR ?? path.join(process.cwd(), "logs");
   try {
     fs.mkdirSync(logsDir, { recursive: true });

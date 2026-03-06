@@ -51,7 +51,12 @@ function normalizeProjectPathForPolicy(value: string): string {
 
 function parseAllowedProjectRootsFromEnv(): string[] {
   const raw = (process.env.PROJECT_PATH_ALLOWED_ROOTS || "").trim();
-  const defaults = [path.join(os.homedir(), "Projects"), path.join(os.homedir(), "projects"), process.cwd()];
+  const defaults = [
+    path.join(os.homedir(), "Projects"),
+    path.join(os.homedir(), "projects"),
+    process.cwd(),
+    ...(process.platform === "win32" ? [path.parse(os.homedir()).root] : []),
+  ];
   const candidates = raw
     ? raw
         .split(/[\n,;]+/)
@@ -66,13 +71,22 @@ function parseAllowedProjectRootsFromEnv(): string[] {
 function isPathUnderRoot(candidatePath: string, rootPath: string): boolean {
   const candidate = normalizeProjectPathForPolicy(candidatePath);
   const root = normalizeProjectPathForPolicy(rootPath);
-  return candidate === root || candidate.startsWith(`${root}${path.sep}`);
+  const rootPrefix = root.endsWith(path.sep) ? root : `${root}${path.sep}`;
+  return candidate === root || candidate.startsWith(rootPrefix);
 }
 
 function isAllowedProjectCreationPath(projectPath: string): boolean {
+  if (isWindowsAbsolutePath(projectPath) && process.platform !== "win32") {
+    return true;
+  }
   const allowedRoots = parseAllowedProjectRootsFromEnv();
   if (allowedRoots.length === 0) return false;
   return allowedRoots.some((root) => isPathUnderRoot(projectPath, root));
+}
+
+/** Windows 절대경로 여부 (드라이브 문자 + : + 구분자). 서버 OS와 무관하게 허용 */
+function isWindowsAbsolutePath(p: string): boolean {
+  return /^[A-Za-z]:[/\\]/.test(p.replace(/\\/g, "/"));
 }
 
 export function extractAbsolutePathFromText(text: string): string | null {
@@ -83,10 +97,20 @@ export function extractAbsolutePathFromText(text: string): string | null {
   for (const match of text.matchAll(/(?:^|\s)(~?\/[^\s"'`,;]+)/g)) {
     if (match[1]) candidates.push(match[1]);
   }
+  // Windows 절대경로 (예: C:\bitcoin, C:/bitcoin)
+  for (const match of text.matchAll(/["']([A-Za-z]:[/\\][^"']+)["']/g)) {
+    if (match[1]) candidates.push(match[1]);
+  }
+  for (const match of text.matchAll(/(?:^|\s)([A-Za-z]:[/\\][^\s"'`,;]*)/g)) {
+    if (match[1]) candidates.push(match[1]);
+  }
 
   for (const rawCandidate of candidates) {
     const cleaned = rawCandidate.replace(/[),.!?]+$/g, "").trim();
     if (!cleaned) continue;
+    if (isWindowsAbsolutePath(cleaned)) {
+      return path.normalize(cleaned);
+    }
     const expanded = expandUserPath(cleaned);
     if (!path.isAbsolute(expanded)) continue;
     return path.normalize(expanded);
@@ -472,6 +496,8 @@ function findProjectByPath(deps: Pick<ProjectBindingDeps, "db">, projectPath: st
   );
 }
 
+const LOG_TAG = "[project-binding]";
+
 export function createProjectBindingFromNameAndPath(
   deps: Pick<ProjectBindingDeps, "db" | "normalizeTextField"> & { nowMs: () => number },
   taskMessage: string,
@@ -485,8 +511,19 @@ export function createProjectBindingFromNameAndPath(
   existed: boolean;
 } | null {
   const normalizedPath = path.normalize(expandUserPath(projectPathInput));
-  if (!path.isAbsolute(normalizedPath)) return null;
-  if (!isAllowedProjectCreationPath(normalizedPath)) return null;
+  const isAbsolute =
+    path.isAbsolute(normalizedPath) || isWindowsAbsolutePath(normalizedPath);
+  if (!isAbsolute) {
+    console.warn(`${LOG_TAG} create failed: path is not absolute (input="${projectPathInput.slice(0, 80)}", normalized="${normalizedPath.slice(0, 80)}")`);
+    return null;
+  }
+  if (!isAllowedProjectCreationPath(normalizedPath)) {
+    const allowedRoots = parseAllowedProjectRootsFromEnv();
+    console.warn(
+      `${LOG_TAG} create failed: path not under allowed roots (path="${normalizedPath}", allowedRoots=[${allowedRoots.slice(0, 5).join(", ")}${allowedRoots.length > 5 ? " ..." : ""}])`,
+    );
+    return null;
+  }
 
   const existing = findProjectByPath(deps, normalizedPath);
   if (existing) {
@@ -499,12 +536,20 @@ export function createProjectBindingFromNameAndPath(
     };
   }
 
-  try {
-    fs.mkdirSync(normalizedPath, { recursive: true });
-    if (!fs.statSync(normalizedPath).isDirectory()) return null;
-  } catch {
-    return null;
+  const isWindowsPathOnPosix = isWindowsAbsolutePath(normalizedPath) && process.platform !== "win32";
+  if (!isWindowsPathOnPosix) {
+    try {
+      fs.mkdirSync(normalizedPath, { recursive: true });
+      if (!fs.statSync(normalizedPath).isDirectory()) {
+        console.warn(`${LOG_TAG} create failed: path exists but is not a directory (path="${normalizedPath}")`);
+        return null;
+      }
+    } catch (err) {
+      console.warn(`${LOG_TAG} create failed: mkdir/stat error (path="${normalizedPath}")`, err);
+      return null;
+    }
   }
+  // Windows 경로를 Linux/Mac 서버에서 받은 경우: 디렉터리 생성은 스킵, DB에만 저장 (에이전트가 Windows에서 실행될 때 사용)
 
   const projectId = randomUUID();
   const t = deps.nowMs();
@@ -520,7 +565,7 @@ export function createProjectBindingFromNameAndPath(
       )
       .run(projectId, projectName, normalizedPath, coreGoal, t, t, t);
   } catch (err) {
-    console.warn(`[project-binding] failed to insert project: ${String(err)}`);
+    console.warn(`${LOG_TAG} create failed: DB insert error (path="${normalizedPath}")`, err);
     return null;
   }
 

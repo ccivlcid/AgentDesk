@@ -1,4 +1,6 @@
+import fs from "node:fs";
 import path from "node:path";
+import { sendDeliverableFiles } from "../../../gateway/client.ts";
 import { resolveWorkflowPackKeyForTask } from "../packs/task-pack-resolver.ts";
 
 type CreateReportWorkflowToolsDeps = Record<string, any>;
@@ -38,6 +40,55 @@ export function createReportWorkflowTools(deps: CreateReportWorkflowToolsDeps) {
     notifyCeo,
     insertNotification,
   } = deps;
+
+  /** Scan a project directory for deliverable files and record them in task_artifacts */
+  function scanAndRecordArtifacts(projectPath: string, tid: string): void {
+    const ARTIFACT_EXTS = new Set([
+      ".pdf", ".ppt", ".pptx", ".doc", ".docx", ".xls", ".xlsx",
+      ".mp4", ".mp3", ".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp",
+      ".html", ".htm", ".md", ".txt", ".csv", ".json", ".zip",
+    ]);
+    const ARTIFACT_MIME: Record<string, string> = {
+      ".pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+      ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      ".pdf": "application/pdf", ".mp4": "video/mp4", ".mp3": "audio/mpeg",
+      ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
+      ".gif": "image/gif", ".svg": "image/svg+xml", ".webp": "image/webp",
+      ".html": "text/html", ".htm": "text/html", ".md": "text/markdown",
+      ".txt": "text/plain", ".csv": "text/csv", ".json": "application/json",
+      ".zip": "application/zip",
+    };
+    const SKIP_DIRS = new Set(["node_modules", ".git", "__pycache__", ".venv", "venv", "dist", ".next"]);
+    try {
+      if (!fs.existsSync(projectPath)) return;
+      const insert = db.prepare(
+        "INSERT OR IGNORE INTO task_artifacts (task_id, file_path, file_name, size, mime, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+      );
+      const now = nowMs();
+      const scanDir = (dir: string, depth: number) => {
+        if (depth > 3) return;
+        let entries: fs.Dirent[];
+        try { entries = fs.readdirSync(dir, { withFileTypes: true }); } catch { return; }
+        for (const entry of entries) {
+          if (entry.isDirectory()) {
+            if (!SKIP_DIRS.has(entry.name)) scanDir(path.join(dir, entry.name), depth + 1);
+            continue;
+          }
+          const ext = path.extname(entry.name).toLowerCase();
+          if (!ARTIFACT_EXTS.has(ext)) continue;
+          const absPath = path.join(dir, entry.name);
+          let size = 0;
+          try { size = fs.statSync(absPath).size; } catch { continue; }
+          if (size === 0) continue;
+          const relPath = path.relative(projectPath, absPath).replace(/\\/g, "/");
+          const mime = ARTIFACT_MIME[ext] || "application/octet-stream";
+          insert.run(tid, relPath, entry.name, size, mime, now);
+        }
+      };
+      scanDir(projectPath, 0);
+    } catch { /* ignore */ }
+  }
 
   function pickDesignCheckpointAgent(): any | null {
     const candidates = db
@@ -170,6 +221,41 @@ export function createReportWorkflowTools(deps: CreateReportWorkflowToolsDeps) {
       task_id: task.id,
       agent_id: task.assigned_agent_id,
     });
+
+    // Scan project directory for artifacts (direct mode / no git fallback)
+    try {
+      const taskRow = db.prepare("SELECT project_path FROM tasks WHERE id = ?").get(task.id) as { project_path: string | null } | undefined;
+      const projectPath = taskRow?.project_path || process.cwd();
+      const existingArtifacts = (db.prepare("SELECT COUNT(*) as cnt FROM task_artifacts WHERE task_id = ?").get(task.id) as { cnt: number }).cnt;
+      if (existingArtifacts === 0 && projectPath && fs.existsSync(projectPath)) {
+        scanAndRecordArtifacts(projectPath, task.id);
+        appendTaskLog(task.id, "system", `Scanned project directory for artifacts (${projectPath})`);
+      }
+    } catch { /* best effort */ }
+
+    // Send deliverable files to messenger
+    try {
+      const DELIVERABLE_EXTS = new Set([
+        ".pdf", ".ppt", ".pptx", ".doc", ".docx", ".xls", ".xlsx", ".mp4", ".mp3", ".zip",
+      ]);
+      const taskRow2 = db.prepare("SELECT project_path FROM tasks WHERE id = ?").get(task.id) as { project_path: string | null } | undefined;
+      const projectPath2 = taskRow2?.project_path || process.cwd();
+      const artifactRows = db
+        .prepare("SELECT file_path, file_name FROM task_artifacts WHERE task_id = ?")
+        .all(task.id) as Array<{ file_path: string; file_name: string }>;
+      const deliverableFiles = artifactRows
+        .filter((a) => DELIVERABLE_EXTS.has(path.extname(a.file_name).toLowerCase()))
+        .map((a) => ({
+          absolutePath: path.resolve(projectPath2, a.file_path),
+          fileName: a.file_name,
+        }))
+        .filter((f) => fs.existsSync(f.absolutePath));
+      if (deliverableFiles.length > 0) {
+        void sendDeliverableFiles(task.title, deliverableFiles, lang).catch((err) => {
+          appendTaskLog(task.id, "system", `Messenger file delivery failed: ${err}`);
+        });
+      }
+    } catch { /* best effort */ }
 
     refreshCliUsageData()
       .then((usage: unknown) => broadcast("cli_usage_update", usage))

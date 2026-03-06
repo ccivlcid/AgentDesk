@@ -1,5 +1,6 @@
 import { randomBytes } from "node:crypto";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -16,6 +17,11 @@ function resolveServerDirname(): string {
   return process.cwd();
 }
 export const SERVER_DIRNAME = resolveServerDirname();
+
+// App root: dev → project root, packaged exe → appPath (where slides/, dist/ etc. live)
+export const APP_ROOT = _serverDirEnv
+  ? path.resolve(_serverDirEnv, "..")        // packaged: dist-server/.. = appPath
+  : path.resolve(SERVER_DIRNAME, "..", ".."); // dev: server/config/../.. = project root
 
 // ---------------------------------------------------------------------------
 // .env loader (no dotenv dependency)
@@ -111,7 +117,24 @@ export const DIST_DIR = distDirEnv
 export const IS_PRODUCTION = !process.env.VITE_DEV && fs.existsSync(path.join(DIST_DIR, "index.html"));
 
 // ---------------------------------------------------------------------------
-// Database defaults
+// Database defaults (exe 실행 시 Program Files 등 읽기 전용 디렉터리면 AppData 사용)
 // ---------------------------------------------------------------------------
-export const DEFAULT_DB_PATH = path.join(process.cwd(), "agentdesk.sqlite");
-export const LEGACY_DB_PATH = path.join(process.cwd(), "agentdesk.sqlite");
+function getWritableDataDir(): string {
+  const cwd = process.cwd();
+  if (process.platform === "win32") {
+    const upper = cwd.toUpperCase().replace(/\//g, "\\");
+    const useAppData =
+      upper.includes("WIN-UNPACKED") ||
+      upper.includes("APP.ASAR") ||
+      upper.includes("PROGRAM FILES") ||
+      upper.includes("PROGRAM FILES (X86)");
+    if (useAppData) {
+      const appData = process.env.APPDATA || path.join(os.homedir(), "AppData", "Roaming");
+      return path.join(appData, "AgentDesk");
+    }
+  }
+  return cwd;
+}
+export const WRITABLE_DATA_DIR = getWritableDataDir();
+export const DEFAULT_DB_PATH = path.join(WRITABLE_DATA_DIR, "agentdesk.sqlite");
+export const LEGACY_DB_PATH = path.join(WRITABLE_DATA_DIR, "agentdesk.sqlite");

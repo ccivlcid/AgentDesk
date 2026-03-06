@@ -153,6 +153,7 @@ export function applyTaskSchemaMigrations(db: DbLike): void {
   repairLegacyTaskForeignKeys(db);
   ensureMessagesIdempotencySchema(db);
   seedPipelineGates(db);
+  migrateCodeReviewGateToAuto(db);
 
   // Chat file attachments: JSON array of {id, fileName, size, mime, relativePath}
   try {
@@ -339,7 +340,7 @@ function seedPipelineGates(db: DbLike): void {
     // [pack_key, gate_key, label, label_ko, order, type, check_expr, sla_min]
     ["development", "test_evidence", "Test Evidence", "테스트 증거", 1, "auto", "test|spec|passing|passed|PASS|✓", 60],
     ["development", "security_scan", "Security Scan", "보안 스캔", 2, "auto", null, 30],
-    ["development", "code_review", "Code Review", "코드 리뷰", 3, "manual", null, 120],
+    ["development", "code_review", "Code Review", "코드 리뷰", 3, "auto", null, 120],
     ["report", "data_confirmation", "Data Confirmation", "데이터 확정", 1, "auto", null, 30],
     ["report", "fact_check", "Fact Check", "팩트체크", 2, "auto", "http|https|출처|source|reference", 60],
     ["report", "final_review", "Final Review", "최종 검토", 3, "manual", null, 120],
@@ -358,6 +359,12 @@ function seedPipelineGates(db: DbLike): void {
   for (const g of gates) {
     insert.run(...g);
   }
+}
+
+function migrateCodeReviewGateToAuto(db: DbLike): void {
+  db.prepare(
+    "UPDATE pipeline_gates SET gate_type = 'auto' WHERE workflow_pack_key = 'development' AND gate_key = 'code_review' AND gate_type = 'manual'",
+  ).run();
 }
 
 function migrateMessagesDirectiveType(db: DbLike): void {

@@ -1,4 +1,5 @@
 import path from "node:path";
+import { APP_ROOT } from "../../../config/runtime.ts";
 
 const PPT_KEYWORDS = /ppt|pptx|powerpoint|프레젠테이션|발표\s*자료|슬라이드\s*제작|slide\s*deck|presentation/i;
 const EXCEL_KEYWORDS = /xlsx|excel|스프레드시트|spreadsheet|엑셀|통계\s*표|데이터\s*표|시트\s*작성/i;
@@ -28,9 +29,9 @@ export function buildDocumentGenerationGuidance(
 // ── PPT ──
 
 function buildPptBlock(lang: string): string {
-  const converterPath = path.resolve(process.cwd(), "slides", "html2pptx.cjs")
+  const converterPath = path.resolve(APP_ROOT, "slides", "html2pptx.cjs")
     .replace(/\\/g, "/");
-  const templatePath = path.resolve(process.cwd(), "slides", "generate-pptx.mjs")
+  const templatePath = path.resolve(APP_ROOT, "slides", "generate-pptx.mjs")
     .replace(/\\/g, "/");
 
   if (lang.startsWith("ko")) {

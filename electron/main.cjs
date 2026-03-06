@@ -38,6 +38,29 @@ function log(message, level = "INFO") {
   }
 }
 
+function pipeServerOutputToLog() {
+  if (!logStream || !logStream.writable) return;
+  const ts = () => new Date().toISOString();
+  function tee(stream, prefix) {
+    const orig = stream.write.bind(stream);
+    stream.write = function (chunk, encoding, cb) {
+      try {
+        const c = typeof chunk === "string" ? chunk : (chunk && chunk.toString ? chunk.toString() : String(chunk));
+        if (c && logStream && logStream.writable) {
+          c.split(/\r?\n/).filter(Boolean).forEach((line) => {
+            logStream.write(`[${ts()}] [${prefix}] ${line}\n`);
+          });
+        }
+      } catch (e) {
+        /* ignore */
+      }
+      return orig(chunk, encoding, cb);
+    };
+  }
+  tee(process.stdout, "SERVER");
+  tee(process.stderr, "SERVER");
+}
+
 function initLog() {
   const logDir = ensureLogDir();
   if (!logDir) return;
@@ -45,6 +68,7 @@ function initLog() {
   try {
     logStream = fs.createWriteStream(logPath, { flags: "a" });
     log(`AgentDesk starting (version ${app.getVersion()})`);
+    pipeServerOutputToLog();
   } catch (e) {
     console.error("[AgentDesk] Could not open log file:", e);
   }

@@ -80,7 +80,7 @@ export function createDirectTaskFlow(deps: TaskFlowDeps) {
       .prepare(
         `
     INSERT INTO tasks (id, title, description, department_id, assigned_agent_id, project_id, status, priority, task_type, workflow_pack_key, project_path, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, 'planned', 1, 'general', ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, 'planned', 5, 'general', ?, ?, ?, ?)
   `,
       )
       .run(

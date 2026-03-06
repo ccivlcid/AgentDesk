@@ -152,6 +152,7 @@
       "dist/**",
       "dist-server/**",
       "electron/**",
+      "slides/**",
       "node_modules/**"
     ],
     "win": {

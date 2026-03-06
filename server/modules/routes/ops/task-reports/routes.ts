@@ -2,6 +2,7 @@ import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import type { RuntimeContext } from "../../../../types/runtime-context.ts";
+import { prettyStreamJson } from "../terminal/pretty-stream-json.ts";
 import { createTaskReportHelpers } from "./helpers.ts";
 
 export function registerTaskReportRoutes(ctx: RuntimeContext): void {
@@ -361,26 +362,35 @@ export function registerTaskReportRoutes(ctx: RuntimeContext): void {
     const text = typeof raw === "string" ? raw.trim() : "";
     if (!text) return "";
     let result: string;
-    // If it doesn't look like CLI JSON streaming output, clean paths and return
-    if (!text.includes('"type"') || !text.includes('"item"')) {
+    // Detect CLI JSON streaming output (session_id/uuid = Claude Code metadata, or "type"+"item" = Codex)
+    const looksLikeStreamJson = (text.includes('"type"') && text.includes('"item"')) ||
+      (text.includes('"session_id"') && text.includes('"uuid"')) ||
+      (text.includes('"type"') && text.includes('"result"'));
+    if (!looksLikeStreamJson) {
       result = cleanWorktreePaths(text);
     } else {
-      // Try to extract agent_message text from streaming JSON lines
-      const messages: string[] = [];
-      for (const line of text.split("\n")) {
-        const trimmed = line.trim();
-        if (!trimmed) continue;
-        try {
-          const obj = JSON.parse(trimmed);
-          if (obj?.item?.type === "agent_message" && obj.item.text) {
-            messages.push(obj.item.text);
+      // Use prettyStreamJson for comprehensive parsing of all CLI output formats
+      const pretty = prettyStreamJson(text);
+      if (pretty) {
+        result = cleanWorktreePaths(pretty);
+      } else {
+        // Fallback: try legacy agent_message extraction
+        const messages: string[] = [];
+        for (const line of text.split("\n")) {
+          const trimmed = line.trim();
+          if (!trimmed) continue;
+          try {
+            const obj = JSON.parse(trimmed);
+            if (obj?.item?.type === "agent_message" && obj.item.text) {
+              messages.push(obj.item.text);
+            }
+          } catch {
+            // Not JSON — might be a partial line or plain text
           }
-        } catch {
-          // Not JSON — might be a partial line or plain text
         }
+        result = messages.length > 0 ? messages.join("\n\n") : text;
+        result = cleanWorktreePaths(result);
       }
-      result = messages.length > 0 ? messages.join("\n\n") : text;
-      result = cleanWorktreePaths(result);
     }
     // Replace stale filenames with actual artifact names
     if (taskId) {
@@ -560,6 +570,10 @@ export function registerTaskReportRoutes(ctx: RuntimeContext): void {
       LEFT JOIN projects p ON p.id = t.project_id
       WHERE t.status IN ('done', 'review')
         AND (t.source_task_id IS NULL OR TRIM(t.source_task_id) = '')
+        AND (
+          (t.result IS NOT NULL AND TRIM(t.result) != '')
+          OR EXISTS (SELECT 1 FROM task_artifacts ta WHERE ta.task_id = t.id)
+        )
       ORDER BY t.completed_at DESC, t.updated_at DESC
       LIMIT 100
     `,
