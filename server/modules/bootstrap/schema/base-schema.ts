@@ -334,6 +334,35 @@ CREATE TABLE IF NOT EXISTS skill_learning_history (
   UNIQUE(job_id, provider)
 );
 
+CREATE TABLE IF NOT EXISTS pipeline_gates (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  workflow_pack_key TEXT NOT NULL,
+  gate_key TEXT NOT NULL,
+  gate_label TEXT NOT NULL,
+  gate_label_ko TEXT NOT NULL DEFAULT '',
+  gate_order INTEGER NOT NULL DEFAULT 0,
+  gate_type TEXT NOT NULL DEFAULT 'auto' CHECK(gate_type IN ('auto','manual')),
+  check_expression TEXT,
+  sla_minutes INTEGER,
+  enabled INTEGER NOT NULL DEFAULT 1,
+  created_at INTEGER DEFAULT (unixepoch()*1000),
+  UNIQUE(workflow_pack_key, gate_key)
+);
+
+CREATE TABLE IF NOT EXISTS task_gate_results (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  task_id TEXT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+  gate_id INTEGER NOT NULL REFERENCES pipeline_gates(id) ON DELETE CASCADE,
+  status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','passed','failed','skipped')),
+  evaluated_at INTEGER,
+  evaluated_by TEXT,
+  note TEXT,
+  created_at INTEGER DEFAULT (unixepoch()*1000),
+  UNIQUE(task_id, gate_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_task_gate_results_task ON task_gate_results(task_id, gate_id);
+
 CREATE INDEX IF NOT EXISTS idx_subtasks_task ON subtasks(task_id);
 CREATE INDEX IF NOT EXISTS idx_task_report_archives_root ON task_report_archives(root_task_id, updated_at DESC);
 CREATE INDEX IF NOT EXISTS idx_project_review_decision_states_updated

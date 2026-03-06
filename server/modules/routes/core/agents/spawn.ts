@@ -5,7 +5,7 @@ import { buildWorkflowPackExecutionGuidance } from "../../../workflow/packs/exec
 import { resolveVideoArtifactSpecForTask } from "../../../workflow/packs/video-artifact.ts";
 import { ensureVideoPreprodRemotionBestPracticesSkill } from "../../../workflow/core/video-skill-bootstrap.ts";
 import { buildCharacterPersonaBlock } from "../../../workflow/core/character-persona.ts";
-import { buildPptExecutionGuidance } from "../../../workflow/core/ppt-execution-guidance.ts";
+import { buildDocumentGenerationGuidance } from "../../../workflow/core/document-generation-guidance.ts";
 
 export function registerAgentSpawnRoute(ctx: RuntimeContext): void {
   const {
@@ -213,7 +213,7 @@ export function registerAgentSpawnRoute(ctx: RuntimeContext): void {
         `[Task] ${task.title}`,
         task.description ? `\n${task.description}` : "",
         workflowPackGuidance ? `\n[Workflow Pack Execution Rules]\n${workflowPackGuidance}` : "",
-        buildPptExecutionGuidance(task.title, task.description, taskLang),
+        buildDocumentGenerationGuidance(task.title, task.description, taskLang),
         `NOTE: You are working in an isolated Git worktree branch (agentdesk/${taskId.slice(0, 8)}). Commit your changes normally.`,
         `Agent: ${agent.name} (${roleLabel}, ${agent.department_name || "Unassigned"})`,
         buildCharacterPersonaBlock(agent.personality),

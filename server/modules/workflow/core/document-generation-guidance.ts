@@ -9,7 +9,7 @@ const WORD_KEYWORDS = /docx|워드\s*(문서|파일)|word\s*(doc|file)|한글\s*
  * Detects whether a task involves office document creation and returns
  * conversion pipeline guidance for the agent.
  */
-export function buildPptExecutionGuidance(
+export function buildDocumentGenerationGuidance(
   taskTitle: string,
   taskDescription: string | null,
   lang: string,

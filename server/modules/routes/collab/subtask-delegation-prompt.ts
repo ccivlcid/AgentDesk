@@ -1,7 +1,7 @@
 import type { Lang } from "../../../types/lang.ts";
 import { getDepartmentPromptForPack } from "../../workflow/packs/department-scope.ts";
 import { buildCharacterPersonaBlock } from "../../workflow/core/character-persona.ts";
-import { buildPptExecutionGuidance } from "../../workflow/core/ppt-execution-guidance.ts";
+import { buildDocumentGenerationGuidance } from "../../workflow/core/document-generation-guidance.ts";
 import type { AgentRow } from "./direct-chat.ts";
 import type { L10n } from "./language-policy.ts";
 import type { SubtaskRow } from "./subtask-summary.ts";
@@ -288,7 +288,7 @@ export function createSubtaskDelegationPromptBuilder(deps: PromptDeps) {
         buildCharacterPersonaBlock(execAgent.personality),
         deptConstraint,
         deptPromptBlock,
-        buildPptExecutionGuidance(parentTask.title, parentTask.description, lang),
+        buildDocumentGenerationGuidance(parentTask.title, parentTask.description, lang),
         videoRuntimeRuleBlock,
         ``,
         finalInstruction,

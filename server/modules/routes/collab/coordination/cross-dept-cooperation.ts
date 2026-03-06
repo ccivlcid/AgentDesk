@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import type { Lang } from "../../../../types/lang.ts";
 import { getDepartmentPromptForPack } from "../../../workflow/packs/department-scope.ts";
 import { buildCharacterPersonaBlock } from "../../../workflow/core/character-persona.ts";
-import { buildPptExecutionGuidance } from "../../../workflow/core/ppt-execution-guidance.ts";
+import { buildDocumentGenerationGuidance } from "../../../workflow/core/document-generation-guidance.ts";
 import { resolveWorkflowPackKeyForTask } from "../../../workflow/packs/task-pack-resolver.ts";
 import { resolveConstrainedAgentScopeForTask } from "../../core/tasks/execution-run-auto-assign.ts";
 import type { AgentRow } from "./types.ts";
@@ -541,7 +541,7 @@ export function createCrossDeptCooperationTools(deps: CrossDeptCooperationDeps) 
               buildCharacterPersonaBlock(execAgent.personality),
               deptConstraint,
               deptPromptBlock,
-              buildPptExecutionGuidance(crossTaskData.title, crossTaskData.description, taskLang),
+              buildDocumentGenerationGuidance(crossTaskData.title, crossTaskData.description, taskLang),
               pickL(
                 l(
                   ["위 작업을 충분히 완수하세요. 필요 시 위 대화 맥락을 참고하세요."],

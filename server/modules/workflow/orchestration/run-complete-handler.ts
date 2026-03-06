@@ -7,6 +7,7 @@ import {
 } from "../packs/video-artifact.ts";
 import { evaluateRemotionOnlyGateFromLogFiles } from "../packs/video-render-engine-gate.ts";
 import { extractAndSaveTaskLearnings } from "./autonomous-memory.ts";
+import { evaluateAutoGates } from "../../routes/core/pipeline-gates.ts";
 
 type CreateRunCompleteHandlerDeps = Record<string, any>;
 
@@ -295,6 +296,20 @@ export function createRunCompleteHandler(deps: CreateRunCompleteHandlerDeps) {
           }
         }
       } catch { /* ignore QA gate parse errors */ }
+    }
+
+    // Pipeline gate evaluation (auto-gates)
+    if (finalExitCode === 0 && task?.workflow_pack_key) {
+      try {
+        const gateResults = evaluateAutoGates(db, taskId, task.workflow_pack_key, result, nowMs());
+        const failed = gateResults.filter((g) => g.status === "failed");
+        if (failed.length > 0) {
+          const failedNames = failed.map((g) => `${g.gate_key}: ${g.note}`).join("; ");
+          appendTaskLog(taskId, "system", `Pipeline gate(s) failed: ${failedNames}`);
+        } else if (gateResults.length > 0) {
+          appendTaskLog(taskId, "system", `Pipeline auto-gates passed (${gateResults.length} gates evaluated)`);
+        }
+      } catch { /* ignore gate evaluation errors */ }
     }
 
     const logKind = finalExitCode === 0 ? "completed" : "failed";

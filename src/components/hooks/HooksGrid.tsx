@@ -161,15 +161,30 @@ export default function HooksGrid({
                 <div className="flex flex-col gap-1">
                   <button
                     onClick={() => onOpenLearningModal(hook)}
-                    className="px-2 py-1 text-[10px] bg-emerald-600/20 text-emerald-300 border border-emerald-500/30 rounded-md hover:bg-emerald-600/30 transition-all"
-                    title={t({
-                      ko: "CLI \uB300\uD45C\uC790\uC5D0\uAC8C \uD6C5 \uD559\uC2B5\uC2DC\uD0A4\uAE30",
-                      en: "Teach this hook to selected CLI leaders",
-                      ja: "\u9078\u629E\u3057\u305FCLI\u4EE3\u8868\u306B\u3053\u306E\u30D5\u30C3\u30AF\u3092\u5B66\u7FD2\u3055\u305B\u308B",
-                      zh: "\u8BA9\u6240\u9009 CLI \u4EE3\u8868\u5B66\u4E60\u6B64\u94A9\u5B50",
-                    })}
+                    className={`px-2 py-1 text-[10px] rounded-md border transition-all ${
+                      learnedProviders.length > 0
+                        ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/40 cursor-pointer hover:bg-emerald-500/25"
+                        : "bg-emerald-600/20 text-emerald-300 border-emerald-500/30 hover:bg-emerald-600/30"
+                    }`}
+                    title={
+                      learnedProviders.length > 0
+                        ? t({
+                            ko: "학습 완료 · 클릭 시 학습 모달",
+                            en: "Learned · Click to open learning modal",
+                            ja: "学習済み · クリックで学習モーダル",
+                            zh: "已学习 · 点击打开学习弹窗",
+                          })
+                        : t({
+                            ko: "CLI 대표자에게 훅 학습시키기",
+                            en: "Teach this hook to selected CLI leaders",
+                            ja: "選択したCLI代表にこのフックを学習させる",
+                            zh: "让所选 CLI 代表学习此钩子",
+                          })
+                    }
                   >
-                    {t({ ko: "\uD559\uC2B5", en: "Learn", ja: "\u5B66\u7FD2", zh: "\u5B66\u4E60" })}
+                    {learnedProviders.length > 0
+                      ? t({ ko: "학습됨", en: "Learned", ja: "学習済み", zh: "已学习" })
+                      : t({ ko: "학습", en: "Learn", ja: "学習", zh: "学习" })}
                   </button>
                 </div>
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">

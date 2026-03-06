@@ -118,15 +118,30 @@ export default function SkillsGrid({
                   <div className="flex flex-col gap-1">
                     <button
                       onClick={() => onOpenLearningModal(skill)}
-                      className="px-2 py-1 text-[10px] bg-emerald-600/20 text-emerald-300 border border-emerald-500/30 rounded-md hover:bg-emerald-600/30 transition-all"
-                      title={t({
-                        ko: "CLI 대표자에게 스킬 학습시키기",
-                        en: "Teach this skill to selected CLI leaders",
-                        ja: "選択したCLI代表にこのスキルを学習させる",
-                        zh: "让所选 CLI 代表学习此技能",
-                      })}
+                      className={`px-2 py-1 text-[10px] rounded-md border transition-all ${
+                        learnedProviders.length > 0
+                          ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/40 cursor-pointer hover:bg-emerald-500/25"
+                          : "bg-emerald-600/20 text-emerald-300 border-emerald-500/30 hover:bg-emerald-600/30"
+                      }`}
+                      title={
+                        learnedProviders.length > 0
+                          ? t({
+                              ko: "학습 완료 · 클릭 시 학습 모달",
+                              en: "Learned · Click to open learning modal",
+                              ja: "学習済み · クリックで学習モーダル",
+                              zh: "已学习 · 点击打开学习弹窗",
+                            })
+                          : t({
+                              ko: "CLI 대표자에게 스킬 학습시키기",
+                              en: "Teach this skill to selected CLI leaders",
+                              ja: "選択したCLI代表にこのスキルを学習させる",
+                              zh: "让所选 CLI 代表学习此技能",
+                            })
+                      }
                     >
-                      {t({ ko: "학습", en: "Learn", ja: "学習", zh: "学习" })}
+                      {learnedProviders.length > 0
+                        ? t({ ko: "학습됨", en: "Learned", ja: "学習済み", zh: "已学习" })
+                        : t({ ko: "학습", en: "Learn", ja: "学習", zh: "学习" })}
                     </button>
                     <button
                       onClick={() => onCopy(skill)}

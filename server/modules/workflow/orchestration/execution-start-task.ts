@@ -10,7 +10,7 @@ import {
   loadPendingInterruptPrompts,
 } from "../core/interrupt-injection-tools.ts";
 import { buildCharacterPersonaBlock } from "../core/character-persona.ts";
-import { buildPptExecutionGuidance } from "../core/ppt-execution-guidance.ts";
+import { buildDocumentGenerationGuidance } from "../core/document-generation-guidance.ts";
 import { buildMemoryPromptBlock } from "./autonomous-memory.ts";
 
 type CreateExecutionStartTaskToolsDeps = {
@@ -314,7 +314,7 @@ export function createExecutionStartTaskTools(deps: CreateExecutionStartTaskTool
         taskData.description ? `\n${taskData.description}` : "",
         workflowPackGuidance ? `\n[Workflow Pack Execution Rules]\n${workflowPackGuidance}` : "",
         buildOutputLanguageGuidance(taskLang, pickL, l),
-        buildPptExecutionGuidance(taskData.title, taskData.description, taskLang),
+        buildDocumentGenerationGuidance(taskData.title, taskData.description, taskLang),
         continuationCtx,
         conversationCtx,
         `\n---`,

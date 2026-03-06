@@ -7,7 +7,7 @@ import { buildWorkflowPackExecutionGuidance } from "../../../workflow/packs/exec
 import { resolveVideoArtifactSpecForTask } from "../../../workflow/packs/video-artifact.ts";
 import { ensureVideoPreprodRemotionBestPracticesSkill } from "../../../workflow/core/video-skill-bootstrap.ts";
 import { buildCharacterPersonaBlock } from "../../../workflow/core/character-persona.ts";
-import { buildPptExecutionGuidance } from "../../../workflow/core/ppt-execution-guidance.ts";
+import { buildDocumentGenerationGuidance } from "../../../workflow/core/document-generation-guidance.ts";
 import {
   buildInterruptPromptBlock,
   consumeInterruptPrompts,
@@ -506,7 +506,7 @@ Whenever you complete a subtask, report it in this format:
         `[Task] ${task.title}`,
         task.description ? `\n${task.description}` : "",
         workflowPackGuidance ? `\n[Workflow Pack Execution Rules]\n${workflowPackGuidance}` : "",
-        buildPptExecutionGuidance(task.title, task.description, taskLang),
+        buildDocumentGenerationGuidance(task.title, task.description, taskLang),
         continuationCtx,
         conversationCtx,
         `\n---`,

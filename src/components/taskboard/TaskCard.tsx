@@ -14,6 +14,7 @@ import {
   timeAgo,
 } from "./constants";
 import { addTaskDependency, getTaskDependencies, removeTaskDependency, type TaskDependencyItem } from "../../api/task-dependencies";
+import { getTaskGates, evaluateTaskGate, type TaskGateResult } from "../../api/pipeline-gates";
 
 interface TaskCardProps {
   task: Task;
@@ -90,6 +91,8 @@ export default function TaskCard({
   const [depPredecessors, setDepPredecessors] = useState<TaskDependencyItem[]>([]);
   const [depInput, setDepInput] = useState("");
   const [depError, setDepError] = useState<string | null>(null);
+  const [showGates, setShowGates] = useState(false);
+  const [gateResults, setGateResults] = useState<TaskGateResult[]>([]);
 
   const loadDeps = useCallback(async () => {
     try {
@@ -101,6 +104,17 @@ export default function TaskCard({
   useEffect(() => {
     if (showDeps) void loadDeps();
   }, [showDeps, loadDeps]);
+
+  const loadGates = useCallback(async () => {
+    try {
+      const data = await getTaskGates(task.id);
+      setGateResults(data.gates);
+    } catch { /* ignore */ }
+  }, [task.id]);
+
+  useEffect(() => {
+    if (showGates) void loadGates();
+  }, [showGates, loadGates]);
 
   const assignedAgent = task.assigned_agent ?? agents.find((agent) => agent.id === task.assigned_agent_id);
   const fallbackAssignedName =
@@ -564,6 +578,103 @@ export default function TaskCard({
               {depError && <p className="text-[10px] text-red-400">{depError}</p>}
             </div>
           )}
+
+          {/* Pipeline Gates section */}
+          <div className="mt-2 border-t pt-2" style={{ borderColor: "var(--th-border)" }}>
+            <button
+              type="button"
+              onClick={() => setShowGates((v) => !v)}
+              className="flex items-center gap-1.5 text-[11px] transition-colors"
+              style={{ color: "var(--th-text-muted)" }}
+            >
+              <span>🔒</span>
+              {t({ ko: "파이프라인 게이트", en: "Pipeline Gates", ja: "パイプラインゲート", zh: "管道门" })}
+              {gateResults.length > 0 && (() => {
+                const passed = gateResults.filter((g) => g.status === "passed" || g.status === "skipped").length;
+                const failed = gateResults.filter((g) => g.status === "failed").length;
+                return (
+                  <span className={`rounded-full px-1.5 text-[10px] ${
+                    failed > 0 ? "bg-red-500/20 text-red-400" :
+                    passed === gateResults.length ? "bg-emerald-500/20 text-emerald-400" :
+                    "bg-amber-500/20 text-amber-400"
+                  }`}>
+                    {passed}/{gateResults.length}
+                  </span>
+                );
+              })()}
+              <span className="ml-0.5">{showGates ? "▲" : "▼"}</span>
+            </button>
+
+            {showGates && (
+              <div className="mt-2 space-y-1">
+                {gateResults.length === 0 && (
+                  <p className="text-[11px]" style={{ color: "var(--th-text-muted)" }}>
+                    {t({ ko: "게이트 없음", en: "No gates configured", ja: "ゲートなし", zh: "无门控" })}
+                  </p>
+                )}
+                {gateResults.map((gate) => {
+                  const statusIcon = gate.status === "passed" ? "✅" :
+                    gate.status === "failed" ? "❌" :
+                    gate.status === "skipped" ? "⏭️" : "⏳";
+                  const isManual = gate.gate_type === "manual";
+                  const isPending = gate.status === "pending";
+                  return (
+                    <div
+                      key={gate.gate_id}
+                      className="flex items-center justify-between gap-2 rounded-lg border px-2 py-1"
+                      style={{ borderColor: "var(--th-border)", background: "var(--th-bg-primary)" }}
+                    >
+                      <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                        <span className="text-xs">{statusIcon}</span>
+                        <span className="truncate text-[11px]" style={{ color: "var(--th-text-primary)" }}>
+                          {locale === "ko" && gate.gate_label_ko ? gate.gate_label_ko : gate.gate_label}
+                        </span>
+                        {isManual && (
+                          <span className="rounded bg-blue-500/15 px-1 text-[9px] text-blue-400">
+                            {t({ ko: "수동", en: "Manual", ja: "手動", zh: "手动" })}
+                          </span>
+                        )}
+                        {gate.sla_minutes && (
+                          <span className="text-[9px]" style={{ color: "var(--th-text-muted)" }}>
+                            SLA {gate.sla_minutes}m
+                          </span>
+                        )}
+                      </div>
+                      {isManual && isPending && (
+                        <div className="flex gap-1 shrink-0">
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              await evaluateTaskGate(task.id, gate.gate_id, { status: "passed" });
+                              await loadGates();
+                            }}
+                            className="rounded px-1.5 py-0.5 text-[10px] bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30"
+                          >
+                            {t({ ko: "승인", en: "Pass", ja: "承認", zh: "通过" })}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              await evaluateTaskGate(task.id, gate.gate_id, { status: "failed" });
+                              await loadGates();
+                            }}
+                            className="rounded px-1.5 py-0.5 text-[10px] bg-red-500/20 text-red-400 hover:bg-red-500/30"
+                          >
+                            {t({ ko: "반려", en: "Fail", ja: "却下", zh: "拒绝" })}
+                          </button>
+                        </div>
+                      )}
+                      {gate.note && (
+                        <span className="truncate text-[9px]" style={{ color: "var(--th-text-muted)" }} title={gate.note}>
+                          {gate.note.slice(0, 30)}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>
