@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+  <!-- Clock body -->
+  <circle cx="8" cy="8" r="7.2" fill="#f8f8fa" stroke="#c0c4cc" stroke-width="0.5"/>
+  <!-- Hour markers -->
+  <line x1="8" y1="1.5" x2="8" y2="2.5" stroke="#404858" stroke-width="0.6" stroke-linecap="round"/>
+  <line x1="14.5" y1="8" x2="13.5" y2="8" stroke="#404858" stroke-width="0.6" stroke-linecap="round"/>
+  <line x1="8" y1="14.5" x2="8" y2="13.5" stroke="#404858" stroke-width="0.6" stroke-linecap="round"/>
+  <line x1="1.5" y1="8" x2="2.5" y2="8" stroke="#404858" stroke-width="0.6" stroke-linecap="round"/>
+  <!-- Minor hour markers -->
+  <circle cx="11.5" cy="4.2" r="0.3" fill="#8890a0"/>
+  <circle cx="11.5" cy="11.8" r="0.3" fill="#8890a0"/>
+  <circle cx="4.5" cy="4.2" r="0.3" fill="#8890a0"/>
+  <circle cx="4.5" cy="11.8" r="0.3" fill="#8890a0"/>
+  <circle cx="12.1" cy="5.9" r="0.3" fill="#8890a0"/>
+  <circle cx="3.9" cy="5.9" r="0.3" fill="#8890a0"/>
+  <circle cx="12.1" cy="10.1" r="0.3" fill="#8890a0"/>
+  <circle cx="3.9" cy="10.1" r="0.3" fill="#8890a0"/>
+  <!-- Center dot (no hands - drawn by code) -->
+  <circle cx="8" cy="8" r="0.6" fill="#404858"/>
+</svg>

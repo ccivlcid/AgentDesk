@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 26 20">
+  <defs>
+    <filter id="glow"><feGaussianBlur stdDeviation="1.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect x="1" y="1" width="24" height="18" rx="0.5" fill="#0a0e14"/>
+  <rect x="1" y="1" width="24" height="18" rx="0.5" fill="none" stroke="#00ddff" stroke-width="0.6" filter="url(#glow)"/>
+  <circle cx="6" cy="4" r="0.4" fill="#ffdd00" opacity="0.8"/>
+  <circle cx="18" cy="3" r="0.3" fill="#00ddff" opacity="0.6"/>
+  <circle cx="22" cy="5" r="0.3" fill="#ff44aa" opacity="0.5"/>
+  <circle cx="10" cy="3" r="0.3" fill="#44ff88" opacity="0.5"/>
+  <rect x="4" y="11" width="3" height="7" fill="#2a3040"/>
+  <rect x="5" y="13" width="1" height="1" fill="#ffdd00" opacity="0.6"/>
+  <rect x="9" y="9" width="4" height="9" fill="#2a3040"/>
+  <rect x="10" y="10" width="1" height="1" fill="#00ddff" opacity="0.5"/>
+  <rect x="11" y="12" width="1" height="1" fill="#ffdd00" opacity="0.5"/>
+  <rect x="15" y="12" width="3" height="6" fill="#2a3040"/>
+  <rect x="16" y="14" width="1" height="1" fill="#ff44aa" opacity="0.5"/>
+  <rect x="20" y="10" width="3" height="8" fill="#2a3040"/>
+  <rect x="21" y="11" width="1" height="1" fill="#44ff88" opacity="0.5"/>
+  <rect x="21" y="14" width="1" height="1" fill="#ffdd00" opacity="0.4"/>
+</svg>

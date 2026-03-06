@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 36">
+  <!-- Desktop surface -->
+  <rect x="2" y="8" width="44" height="4" rx="1" fill="#f0f2f5" stroke="#c0c4cc" stroke-width="0.5"/>
+  <!-- Surface top highlight -->
+  <rect x="3" y="8.5" width="42" height="1.5" rx="0.5" fill="#f8f8fa" opacity="0.6"/>
+  <!-- Keyboard area -->
+  <rect x="14" y="9" width="16" height="2" rx="0.5" fill="#e8eaee" stroke="#c0c4cc" stroke-width="0.3"/>
+  <!-- Front left leg -->
+  <rect x="5" y="12" width="1.2" height="22" rx="0.3" fill="#c0c4cc"/>
+  <!-- Front right leg -->
+  <rect x="41.8" y="12" width="1.2" height="22" rx="0.3" fill="#c0c4cc"/>
+  <!-- Back left leg -->
+  <rect x="5" y="12" width="1.2" height="20" rx="0.3" fill="#8890a0"/>
+  <!-- Back right leg -->
+  <rect x="41.8" y="12" width="1.2" height="20" rx="0.3" fill="#8890a0"/>
+  <!-- Leg crossbar -->
+  <rect x="5" y="28" width="38" height="0.8" rx="0.3" fill="#c0c4cc" opacity="0.5"/>
+  <!-- Chrome accents on legs -->
+  <line x1="5.6" y1="12" x2="5.6" y2="34" stroke="#dce0e6" stroke-width="0.3" opacity="0.7"/>
+  <line x1="42.4" y1="12" x2="42.4" y2="34" stroke="#dce0e6" stroke-width="0.3" opacity="0.7"/>
+</svg>

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 22">
+  <!-- Table top -->
+  <ellipse cx="12" cy="3" rx="11" ry="2.5" fill="#f0f2f5" stroke="#c0c4cc" stroke-width="0.5"/>
+  <!-- Table top surface highlight -->
+  <ellipse cx="10" cy="2.5" rx="6" ry="1.2" fill="#f8f8fa" opacity="0.5"/>
+  <!-- Chrome pedestal -->
+  <rect x="10.5" y="5" width="3" height="12" rx="0.5" fill="#c0c4cc"/>
+  <!-- Pedestal highlight -->
+  <line x1="12" y1="5" x2="12" y2="17" stroke="#dce0e6" stroke-width="0.6" opacity="0.6"/>
+  <!-- Base -->
+  <ellipse cx="12" cy="19" rx="8" ry="2" fill="#c0c4cc"/>
+  <!-- Base highlight -->
+  <ellipse cx="11" cy="18.5" rx="4" ry="0.8" fill="#dce0e6" opacity="0.4"/>
+</svg>

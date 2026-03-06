@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 26 20">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#7ab8e0"/>
+      <stop offset="60%" stop-color="#a8d4f0"/>
+      <stop offset="100%" stop-color="#d0e8f8"/>
+    </linearGradient>
+  </defs>
+  <!-- Window opening -->
+  <rect x="0.5" y="0.5" width="25" height="19" rx="0.5" fill="url(#sky)"/>
+  <!-- Cloud -->
+  <ellipse cx="8" cy="6" rx="4" ry="1.5" fill="white" opacity="0.7"/>
+  <ellipse cx="18" cy="4" rx="3" ry="1" fill="white" opacity="0.5"/>
+  <!-- Distant buildings -->
+  <rect x="2" y="14" width="3" height="5" fill="#c0c4cc" opacity="0.3"/>
+  <rect x="6" y="12" width="2.5" height="7" fill="#c0c4cc" opacity="0.25"/>
+  <rect x="16" y="13" width="4" height="6" fill="#c0c4cc" opacity="0.2"/>
+  <rect x="21" y="15" width="3" height="4" fill="#c0c4cc" opacity="0.25"/>
+  <!-- Thin frame lines -->
+  <rect x="0.5" y="0.5" width="25" height="19" rx="0.5" fill="none" stroke="#c0c4cc" stroke-width="0.6"/>
+  <!-- Center divider -->
+  <line x1="13" y1="0.5" x2="13" y2="19.5" stroke="#c0c4cc" stroke-width="0.4"/>
+</svg>

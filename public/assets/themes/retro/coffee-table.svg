@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 14">
+  <!-- Oval wood top with angled splayed legs -->
+  <ellipse cx="10" cy="4" rx="9" ry="3" fill="#8b5e3c" stroke="#5c3a20" stroke-width="1.2"/>
+  <ellipse cx="10" cy="4" rx="6" ry="1.8" fill="#9b6e4c" opacity="0.4"/>
+  <!-- Splayed legs -->
+  <line x1="5" y1="6" x2="2" y2="13" stroke="#5c3a20" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="15" y1="6" x2="18" y2="13" stroke="#5c3a20" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="8" y1="6.5" x2="6" y2="13" stroke="#5c3a20" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="12" y1="6.5" x2="14" y2="13" stroke="#5c3a20" stroke-width="1.5" stroke-linecap="round"/>
+</svg>

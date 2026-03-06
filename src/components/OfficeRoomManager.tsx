@@ -9,6 +9,8 @@ import {
   deleteUserThemePreset,
   getActivePresetKey,
   setActivePresetKey as persistActivePreset,
+  exportUserThemesJson,
+  importUserThemesJson,
   MAX_PRESETS,
   type UserThemePreset,
 } from "./office-theme/user-theme-storage";
@@ -137,6 +139,16 @@ const L = {
   placedItems: { ko: "\uBC30\uCE58\uB41C \uAC00\uAD6C", en: "Placed Items", ja: "\u914D\u7F6E\u6E08\u307F", zh: "\u5DF2\u653E\u7F6E" },
   emptyRoom: { ko: "\uBC30\uCE58\uB41C \uAC00\uAD6C\uAC00 \uC5C6\uC2B5\uB2C8\uB2E4", en: "No furniture placed", ja: "\u5BB6\u5177\u306A\u3057", zh: "\u65E0\u5BB6\u5177" },
   maxReachedItem: { ko: "\uCD5C\uB300 \uAC1C\uC218 \uB3C4\uB2EC", en: "Max reached", ja: "\u4E0A\u9650\u9054\u6210", zh: "\u5DF2\u8FBE\u4E0A\u9650" },
+  exportThemes: { ko: "내보내기", en: "Export", ja: "書き出す", zh: "导出" },
+  importThemes: { ko: "가져오기", en: "Import", ja: "インポート", zh: "导入" },
+  importPlaceholder: { ko: "JSON을 붙여넣으세요", en: "Paste JSON here", ja: "JSONを貼り付けてください", zh: "请粘贴JSON" },
+  importSuccess: { ko: "{n}개 가져옴", en: "{n} imported", ja: "{n}件インポート済み", zh: "已导入 {n} 个" },
+  importSkipped: { ko: "{n}개 건너뜀", en: "{n} skipped", ja: "{n}件スキップ", zh: "跳过 {n} 个" },
+  importError: { ko: "JSON 형식 오류", en: "Invalid JSON format", ja: "JSON形式エラー", zh: "JSON格式错误" },
+  compareThemes: { ko: "변경 비교", en: "Compare", ja: "変更比較", zh: "对比" },
+  compareBefore: { ko: "이전", en: "Before", ja: "変更前", zh: "之前" },
+  compareAfter: { ko: "현재", en: "After", ja: "現在", zh: "现在" },
+  compareNoChange: { ko: "변경사항 없음", en: "No changes", ja: "変更なし", zh: "无变化" },
 };
 
 /* ================================================================== */
@@ -392,6 +404,11 @@ export default function OfficeRoomManager({ departments, customThemes, onThemeCh
   const [furnitureLayouts, setFurnitureLayouts] = useState<FurnitureLayout>(() => loadFurnitureLayouts());
   const [expandedFurnitureDept, setExpandedFurnitureDept] = useState<string | null>(null);
   const [furnitureCategoryFilter, setFurnitureCategoryFilter] = useState<FurnitureCategory | "all">("all");
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importText, setImportText] = useState("");
+  const [importResult, setImportResult] = useState<{ imported: number; skipped: number; error?: boolean } | null>(null);
+  const [showCompare, setShowCompare] = useState(false);
+  const initialSnapshotRef = useRef<Record<string, RoomTheme>>(customThemes);
 
   useEffect(() => {
     if (!showCeoColorPicker) return;
@@ -513,6 +530,29 @@ export default function OfficeRoomManager({ departments, customThemes, onThemeCh
     setRenameValue("");
   }
 
+  function handleExportThemes() {
+    const json = exportUserThemesJson();
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "agentdesk-my-themes.json";
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function handleImportThemes() {
+    if (!importText.trim()) return;
+    try {
+      const result = importUserThemesJson(importText);
+      setUserPresets(loadUserThemePresets());
+      setImportResult(result);
+      setImportText("");
+    } catch {
+      setImportResult({ imported: 0, skipped: 0, error: true });
+    }
+  }
+
   /* ── all dept+room list for rendering ── */
   const allRooms = departments;
 
@@ -536,7 +576,52 @@ export default function OfficeRoomManager({ departments, customThemes, onThemeCh
 
           {/* ────────────── THEME PRESETS SECTION ────────────── */}
           <section className="space-y-3">
-            <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{L.themePresets[language]}</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{L.themePresets[language]}</h3>
+              <button
+                onClick={() => setShowCompare((v) => !v)}
+                className={`text-[11px] px-2 py-0.5 rounded border transition-all ${
+                  showCompare
+                    ? "border-amber-400/60 bg-amber-500/10 text-amber-300"
+                    : "border-slate-700 text-slate-500 hover:text-slate-300 hover:border-slate-500"
+                }`}
+              >
+                {L.compareThemes[language]}
+              </button>
+            </div>
+
+            {/* ── Compare panel ── */}
+            {showCompare && (
+              <div className="bg-slate-800/60 border border-amber-500/20 rounded-lg p-3 space-y-1.5">
+                <div className="flex justify-between text-[10px] text-slate-500 mb-2">
+                  <span>{L.compareBefore[language]}</span>
+                  <span>{L.compareAfter[language]}</span>
+                </div>
+                {allRooms.map((room) => {
+                  const beforeTheme = initialSnapshotRef.current[room.id];
+                  const afterState = deptStates[room.id];
+                  const afterAccent = afterState?.accent ?? 0x5a9fd4;
+                  const beforeAccent = beforeTheme?.accent ?? afterAccent;
+                  const changed = beforeAccent !== afterAccent;
+                  return (
+                    <div key={room.id} className="flex items-center gap-2">
+                      <span className="text-[10px] text-slate-500 w-16 truncate shrink-0">{room.name}</span>
+                      <div className="flex-1 flex items-center gap-1">
+                        <div className="h-3 flex-1 rounded" style={{ backgroundColor: numToHex(beforeAccent) }} />
+                        <svg className={`w-3 h-3 shrink-0 ${changed ? "text-amber-400" : "text-slate-700"}`} viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 0 1 .02-1.06L11.168 10 7.23 6.29a.75.75 0 1 1 1.04-1.08l4.5 4.25a.75.75 0 0 1 0 1.08l-4.5 4.25a.75.75 0 0 1-1.06-.02z" clipRule="evenodd" />
+                        </svg>
+                        <div className={`h-3 flex-1 rounded ${changed ? "ring-1 ring-amber-400/50" : ""}`} style={{ backgroundColor: numToHex(afterAccent) }} />
+                      </div>
+                      {changed && <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />}
+                    </div>
+                  );
+                })}
+                {allRooms.every((room) => (initialSnapshotRef.current[room.id]?.accent ?? 0) === (deptStates[room.id]?.accent ?? 0)) && (
+                  <p className="text-[11px] text-slate-600 text-center italic pt-1">{L.compareNoChange[language]}</p>
+                )}
+              </div>
+            )}
 
             {/* Builtin themes grid */}
             <div>
@@ -691,6 +776,30 @@ export default function OfficeRoomManager({ departments, customThemes, onThemeCh
                 <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor"><path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" /></svg>
                 {userPresets.length >= MAX_PRESETS ? L.maxReached[language] : L.saveCurrent[language]}
               </button>
+
+              {/* Export / Import row */}
+              <div className="mt-1.5 flex gap-1.5">
+                <button
+                  onClick={handleExportThemes}
+                  disabled={userPresets.length === 0}
+                  title={L.exportThemes[language]}
+                  className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-md border border-slate-700 text-[11px] text-slate-500 hover:text-slate-200 hover:border-slate-500 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  <svg className="w-3 h-3" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M10 3a1 1 0 0 1 1 1v8.586l2.293-2.293a1 1 0 1 1 1.414 1.414l-4 4a1 1 0 0 1-1.414 0l-4-4a1 1 0 1 1 1.414-1.414L9 12.586V4a1 1 0 0 1 1-1ZM3 17a1 1 0 1 0 0 2h14a1 1 0 1 0 0-2H3Z" />
+                  </svg>
+                  {L.exportThemes[language]}
+                </button>
+                <button
+                  onClick={() => { setShowImportModal(true); setImportResult(null); setImportText(""); }}
+                  className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-md border border-slate-700 text-[11px] text-slate-500 hover:text-slate-200 hover:border-slate-500 transition-colors"
+                >
+                  <svg className="w-3 h-3" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M10 17a1 1 0 0 1-1-1V7.414L6.707 9.707a1 1 0 1 1-1.414-1.414l4-4a1 1 0 0 1 1.414 0l4 4a1 1 0 1 1-1.414 1.414L11 7.414V16a1 1 0 0 1-1 1ZM3 17a1 1 0 1 0 0 2h14a1 1 0 1 0 0-2H3Z" />
+                  </svg>
+                  {L.importThemes[language]}
+                </button>
+              </div>
             </div>
           </section>
 
@@ -723,6 +832,43 @@ export default function OfficeRoomManager({ departments, customThemes, onThemeCh
                 </button>
                 <button onClick={handleSaveTheme} disabled={!saveName.trim()} className="flex-1 py-1.5 rounded-md text-xs font-medium bg-blue-600 text-white hover:bg-blue-500 transition-colors disabled:opacity-40">
                   {L.save[language]}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* ────────────── IMPORT MODAL ────────────── */}
+          {showImportModal && (
+            <div className="bg-slate-800 border border-slate-600 rounded-lg p-4 space-y-3">
+              <h4 className="text-sm font-semibold text-slate-100">{L.importThemes[language]}</h4>
+              <textarea
+                autoFocus
+                value={importText}
+                onChange={(e) => setImportText(e.target.value)}
+                placeholder={L.importPlaceholder[language]}
+                rows={5}
+                className="w-full text-xs bg-slate-700 border border-slate-500 rounded-md px-3 py-2 text-slate-200 outline-none focus:border-blue-400 placeholder-slate-600 font-mono resize-none"
+              />
+              {importResult && (
+                <div className={`text-xs px-2.5 py-1.5 rounded ${importResult.error ? "bg-red-500/10 text-red-400" : "bg-emerald-500/10 text-emerald-400"}`}>
+                  {importResult.error
+                    ? L.importError[language]
+                    : `${L.importSuccess[language].replace("{n}", String(importResult.imported))}${importResult.skipped > 0 ? `, ${L.importSkipped[language].replace("{n}", String(importResult.skipped))}` : ""}`}
+                </div>
+              )}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => { setShowImportModal(false); setImportText(""); setImportResult(null); }}
+                  className="flex-1 py-1.5 rounded-md text-xs font-medium bg-slate-700 text-slate-300 hover:bg-slate-600 transition-colors"
+                >
+                  {L.cancel[language]}
+                </button>
+                <button
+                  onClick={handleImportThemes}
+                  disabled={!importText.trim()}
+                  className="flex-1 py-1.5 rounded-md text-xs font-medium bg-blue-600 text-white hover:bg-blue-500 transition-colors disabled:opacity-40"
+                >
+                  {L.importThemes[language]}
                 </button>
               </div>
             </div>

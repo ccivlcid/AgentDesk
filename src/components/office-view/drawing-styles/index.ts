@@ -2,17 +2,17 @@
 /*  FurnitureDrawer interface + Style Registry                         */
 /* ================================================================== */
 
-import type { Container, Graphics } from "pixi.js";
+import type { Container } from "pixi.js";
 import type { WallClockVisual } from "../model";
 
-export type StyleKey = "default" | "pixel";
+export type StyleKey = "default" | "pixel" | "business" | "retro" | "cyber";
 
 export interface FurnitureDrawer {
   /** Optional async init for asset preloading (SVG styles) */
   init?(): Promise<void>;
 
   // ── Furniture ──
-  drawDesk(parent: Container, x: number, y: number, working: boolean): Graphics;
+  drawDesk(parent: Container, x: number, y: number, working: boolean): Container;
   drawChair(parent: Container, x: number, y: number, color: number): void;
   drawBookshelf(parent: Container, x: number, y: number): void;
   drawWhiteboard(parent: Container, x: number, y: number): void;
@@ -37,10 +37,16 @@ export interface FurnitureDrawer {
 
 import { defaultDrawer } from "./default-drawer";
 import { pixelDrawer } from "./pixel-drawer";
+import { businessDrawer } from "./business-drawer";
+import { retroDrawer } from "./retro-drawer";
+import { cyberDrawer } from "./cyber-drawer";
 
 export const STYLE_REGISTRY: Record<StyleKey, FurnitureDrawer> = {
   default: defaultDrawer,
   pixel: pixelDrawer,
+  business: businessDrawer,
+  retro: retroDrawer,
+  cyber: cyberDrawer,
 };
 
 export function getDrawer(key: string): FurnitureDrawer {
@@ -58,13 +64,28 @@ export interface StyleOption {
 export const STYLE_OPTIONS: StyleOption[] = [
   {
     key: "default",
-    label: { ko: "\uAE30\uBCF8", en: "Default", ja: "\u30C7\u30D5\u30A9\u30EB\u30C8", zh: "\u9ED8\u8BA4" },
-    description: { ko: "\uB530\uB73B\uD55C \uC6B0\uB4DC\uD1A4 \uC0AC\uBB34\uC2E4", en: "Warm wood-tone office", ja: "\u6E29\u304B\u3044\u30A6\u30C3\u30C9\u30C8\u30FC\u30F3", zh: "\u6E29\u6696\u6728\u8D28\u529E\u516C\u5BA4" },
+    label: { ko: "기본", en: "Default", ja: "デフォルト", zh: "默认" },
+    description: { ko: "따뜻한 우드톤 사무실", en: "Warm wood-tone office", ja: "温かいウッドトーン", zh: "温暖木质办公室" },
   },
   {
     key: "pixel",
-    label: { ko: "\uD53D\uC140", en: "Pixel", ja: "\u30D4\u30AF\u30BB\u30EB", zh: "\u50CF\u7D20" },
-    description: { ko: "8\uBE44\uD2B8 \uB808\uD2B8\uB85C \uB3C4\uD2B8\uD48D", en: "8-bit retro dot style", ja: "8\u30D3\u30C3\u30C8\u30EC\u30C8\u30ED", zh: "8\u4F4D\u50CF\u7D20\u98CE" },
+    label: { ko: "픽셀", en: "Pixel", ja: "ピクセル", zh: "像素" },
+    description: { ko: "8비트 레트로 도트풍", en: "8-bit retro dot style", ja: "8ビットレトロ", zh: "8位像素风" },
+  },
+  {
+    key: "business",
+    label: { ko: "비즈니스", en: "Business", ja: "ビジネス", zh: "商务" },
+    description: { ko: "모던 미니멀 오피스", en: "Modern minimal office", ja: "モダンミニマル", zh: "现代简约办公室" },
+  },
+  {
+    key: "retro",
+    label: { ko: "레트로", en: "Retro", ja: "レトロ", zh: "复古" },
+    description: { ko: "70년대 빈티지 스타일", en: "70s vintage style", ja: "70年代ヴィンテージ", zh: "70年代复古风" },
+  },
+  {
+    key: "cyber",
+    label: { ko: "사이버", en: "Cyber", ja: "サイバー", zh: "赛博" },
+    description: { ko: "네온 글로우 미래풍", en: "Neon glow futuristic", ja: "ネオングロー未来風", zh: "霓虹未来风" },
   },
 ];
 
@@ -72,10 +93,12 @@ export const STYLE_OPTIONS: StyleOption[] = [
 
 const STORAGE_KEY = "agentdesk_style_theme";
 
+const VALID_STYLES: readonly string[] = ["default", "pixel", "business", "retro", "cyber"];
+
 export function loadStylePreference(): StyleKey {
   try {
     const val = localStorage.getItem(STORAGE_KEY);
-    if (val === "default" || val === "pixel") return val;
+    if (val && VALID_STYLES.includes(val)) return val as StyleKey;
   } catch {}
   return "default";
 }

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 14">
+  <!-- Wire mesh waste basket, brown -->
+  <path d="M1.5 2 L0.5 13 Q0.5 13.5 1 13.5 L11 13.5 Q11.5 13.5 11.5 13 L10.5 2 Z" fill="none" stroke="#8b5e3c" stroke-width="1.5"/>
+  <!-- Rim -->
+  <ellipse cx="6" cy="2" rx="4.5" ry="1.5" fill="none" stroke="#8b5e3c" stroke-width="1.5"/>
+  <ellipse cx="6" cy="2" rx="4.5" ry="1.5" fill="#5c3a20" opacity="0.3"/>
+  <!-- Wire mesh pattern -->
+  <line x1="3" y1="2.5" x2="2" y2="13" stroke="#8b5e3c" stroke-width="0.5"/>
+  <line x1="6" y1="3.5" x2="6" y2="13.5" stroke="#8b5e3c" stroke-width="0.5"/>
+  <line x1="9" y1="2.5" x2="10" y2="13" stroke="#8b5e3c" stroke-width="0.5"/>
+  <!-- Horizontal wires -->
+  <line x1="1.2" y1="5.5" x2="10.8" y2="5.5" stroke="#8b5e3c" stroke-width="0.4"/>
+  <line x1="0.9" y1="8.5" x2="11.1" y2="8.5" stroke="#8b5e3c" stroke-width="0.4"/>
+  <line x1="0.7" y1="11.5" x2="11.3" y2="11.5" stroke="#8b5e3c" stroke-width="0.4"/>
+</svg>

@@ -34,7 +34,7 @@ import { useOfficePixiRuntime } from "./office-view/useOfficePixiRuntime";
 import { buildOfficeScene } from "./office-view/buildScene";
 import type { SeasonalParticleState, SeasonKey } from "./office-view/seasonal-particles";
 import { loadSeasonPreference, resolveSeasonKey } from "./office-view/seasonal-particles";
-import { type StyleKey, loadStylePreference } from "./office-view/drawing-styles";
+import { type StyleKey, loadStylePreference, getDrawer } from "./office-view/drawing-styles";
 import { type CeoCustomization, loadCeoCustomization } from "./office-view/ceo-customization";
 import { type RoomDecoration, loadRoomDecorations } from "./office-view/room-decoration";
 import { type FurnitureLayout, loadFurnitureLayouts } from "./office-view/furniture-catalog";
@@ -362,8 +362,15 @@ export default function OfficeView({
   // Listen for style theme changes from OfficeRoomManager
   useEffect(() => {
     const handler = (e: Event) => {
-      styleKeyRef.current = (e as CustomEvent).detail as StyleKey;
-      if (initDoneRef.current && appRef.current) buildScene();
+      const key = (e as CustomEvent).detail as StyleKey;
+      styleKeyRef.current = key;
+      if (!initDoneRef.current || !appRef.current) return;
+      const drawer = getDrawer(key);
+      if (drawer.init) {
+        void drawer.init().then(() => buildScene());
+      } else {
+        buildScene();
+      }
     };
     window.addEventListener("agentdesk_style_change", handler);
     return () => window.removeEventListener("agentdesk_style_change", handler);

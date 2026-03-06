@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+  <!-- Sunburst wall clock face with rays (no hands) -->
+  <!-- Sunburst rays -->
+  <line x1="12" y1="0" x2="12" y2="3" stroke="#d4a020" stroke-width="1.5"/>
+  <line x1="12" y1="21" x2="12" y2="24" stroke="#d4a020" stroke-width="1.5"/>
+  <line x1="0" y1="12" x2="3" y2="12" stroke="#d4a020" stroke-width="1.5"/>
+  <line x1="21" y1="12" x2="24" y2="12" stroke="#d4a020" stroke-width="1.5"/>
+  <line x1="3.5" y1="3.5" x2="5.5" y2="5.5" stroke="#d4a020" stroke-width="1.2"/>
+  <line x1="18.5" y1="5.5" x2="20.5" y2="3.5" stroke="#d4a020" stroke-width="1.2"/>
+  <line x1="3.5" y1="20.5" x2="5.5" y2="18.5" stroke="#d4a020" stroke-width="1.2"/>
+  <line x1="18.5" y1="18.5" x2="20.5" y2="20.5" stroke="#d4a020" stroke-width="1.2"/>
+  <!-- Short rays -->
+  <line x1="7.5" y1="1.5" x2="8.5" y2="4" stroke="#d4a020" stroke-width="0.8"/>
+  <line x1="16.5" y1="1.5" x2="15.5" y2="4" stroke="#d4a020" stroke-width="0.8"/>
+  <line x1="1.5" y1="7.5" x2="4" y2="8.5" stroke="#d4a020" stroke-width="0.8"/>
+  <line x1="22.5" y1="7.5" x2="20" y2="8.5" stroke="#d4a020" stroke-width="0.8"/>
+  <!-- Clock face -->
+  <circle cx="12" cy="12" r="8" fill="#f5e8d0" stroke="#8b5e3c" stroke-width="1.5"/>
+  <circle cx="12" cy="12" r="7" fill="#fffbe8" stroke="#5c3a20" stroke-width="0.5"/>
+  <!-- Hour markers -->
+  <circle cx="12" cy="5.5" r="0.6" fill="#5c3a20"/>
+  <circle cx="18.5" cy="12" r="0.6" fill="#5c3a20"/>
+  <circle cx="12" cy="18.5" r="0.6" fill="#5c3a20"/>
+  <circle cx="5.5" cy="12" r="0.6" fill="#5c3a20"/>
+  <!-- Center dot -->
+  <circle cx="12" cy="12" r="0.8" fill="#c06020"/>
+</svg>

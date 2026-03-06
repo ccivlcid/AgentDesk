@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 14">
+  <!-- Thick ornate dark wood frame with geometric sunset scene -->
+  <rect x="0.5" y="0.5" width="17" height="13" rx="0.5" fill="#5c3a20" stroke="#3d2510" stroke-width="1.5"/>
+  <rect x="1.5" y="1.5" width="15" height="11" rx="0.3" fill="#8b5e3c" stroke="#5c3a20" stroke-width="0.5"/>
+  <!-- Inner frame -->
+  <rect x="3" y="3" width="12" height="8" fill="#e87830"/>
+  <!-- Sunset scene - geometric -->
+  <!-- Sky gradient bands -->
+  <rect x="3" y="3" width="12" height="2" fill="#e87830"/>
+  <rect x="3" y="5" width="12" height="2" fill="#d4a020"/>
+  <rect x="3" y="7" width="12" height="1.5" fill="#c06020"/>
+  <!-- Sun -->
+  <circle cx="9" cy="6" r="2" fill="#d4a020"/>
+  <line x1="3" y1="6" x2="15" y2="6" stroke="#e87830" stroke-width="0.3"/>
+  <line x1="3" y1="5.3" x2="15" y2="5.3" stroke="#c06020" stroke-width="0.3"/>
+  <!-- Ground/horizon -->
+  <rect x="3" y="8.5" width="12" height="2.5" fill="#5c3a20"/>
+  <line x1="3" y1="8.5" x2="15" y2="8.5" stroke="#3d2510" stroke-width="0.5"/>
+  <!-- Corner ornaments -->
+  <rect x="1" y="1" width="1.5" height="1.5" fill="#d4a020" opacity="0.5"/>
+  <rect x="15.5" y="1" width="1.5" height="1.5" fill="#d4a020" opacity="0.5"/>
+  <rect x="1" y="11.5" width="1.5" height="1.5" fill="#d4a020" opacity="0.5"/>
+  <rect x="15.5" y="11.5" width="1.5" height="1.5" fill="#d4a020" opacity="0.5"/>
+</svg>

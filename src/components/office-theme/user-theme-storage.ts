@@ -88,3 +88,45 @@ export function setActivePresetKey(key: string | null): void {
 }
 
 export { MAX_PRESETS };
+
+/* ================================================================== */
+/*  Export / Import                                                      */
+/* ================================================================== */
+
+export function exportUserThemesJson(): string {
+  return JSON.stringify(readPresets(), null, 2);
+}
+
+export function importUserThemesJson(json: string): { imported: number; skipped: number } {
+  let incoming: unknown;
+  try {
+    incoming = JSON.parse(json);
+  } catch {
+    throw new Error("Invalid JSON");
+  }
+  if (!Array.isArray(incoming)) throw new Error("Expected JSON array");
+
+  const list = readPresets();
+  let imported = 0;
+  let skipped = 0;
+
+  for (const item of incoming) {
+    if (list.length >= MAX_PRESETS) { skipped++; continue; }
+    if (!item || typeof item !== "object") { skipped++; continue; }
+    const t = item as Record<string, unknown>;
+    if (typeof t.name !== "string" || !t.name) { skipped++; continue; }
+    if (!t.themes || typeof t.themes !== "object") { skipped++; continue; }
+    if (typeof t.id === "string" && list.some((p) => p.id === t.id)) { skipped++; continue; }
+    list.push({
+      id: typeof t.id === "string" ? t.id : crypto.randomUUID(),
+      name: String(t.name).slice(0, 30),
+      themes: t.themes as Record<string, RoomTheme>,
+      createdAt: typeof t.createdAt === "number" ? t.createdAt : Date.now(),
+      updatedAt: Date.now(),
+    });
+    imported++;
+  }
+
+  writePresets(list);
+  return { imported, skipped };
+}

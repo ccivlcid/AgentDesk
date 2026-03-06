@@ -33,7 +33,7 @@ export interface AnimItem {
   particles: Container;
   agentId?: string;
   cliProvider?: string;
-  deskG?: Graphics;
+  deskG?: Container;
   bedG?: Graphics;
   blanketG?: Graphics;
   phase: number;

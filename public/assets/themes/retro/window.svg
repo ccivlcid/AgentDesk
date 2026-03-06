@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 22">
+  <!-- 4-pane wooden frame window with curtain rod and mustard tassels -->
+  <!-- Curtain rod -->
+  <line x1="1" y1="1.5" x2="27" y2="1.5" stroke="#5c3a20" stroke-width="1.5" stroke-linecap="round"/>
+  <circle cx="1.5" cy="1.5" r="1" fill="#d4a020"/>
+  <circle cx="26.5" cy="1.5" r="1" fill="#d4a020"/>
+  <!-- Curtain tassels -->
+  <path d="M2 2.5 L2 8 Q3 7 4 8 L4 2.5" fill="#d4a020" opacity="0.7"/>
+  <path d="M24 2.5 L24 8 Q25 7 26 8 L26 2.5" fill="#d4a020" opacity="0.7"/>
+  <!-- Window frame -->
+  <rect x="4" y="3" width="20" height="18" rx="0.5" fill="#87ceeb" stroke="#5c3a20" stroke-width="2"/>
+  <!-- Cross dividers -->
+  <line x1="14" y1="3" x2="14" y2="21" stroke="#5c3a20" stroke-width="1.5"/>
+  <line x1="4" y1="12" x2="24" y2="12" stroke="#5c3a20" stroke-width="1.5"/>
+  <!-- Sky tint -->
+  <rect x="5" y="4" width="8.5" height="7.5" fill="#87ceeb" opacity="0.5"/>
+  <rect x="14.5" y="4" width="9" height="7.5" fill="#87ceeb" opacity="0.5"/>
+  <rect x="5" y="12.5" width="8.5" height="8" fill="#a0d8ef" opacity="0.5"/>
+  <rect x="14.5" y="12.5" width="9" height="8" fill="#a0d8ef" opacity="0.5"/>
+</svg>

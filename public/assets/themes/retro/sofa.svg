@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 28">
+  <!-- Big puffy sofa with tufting pattern and wooden legs -->
+  <!-- Back -->
+  <rect x="3" y="2" width="34" height="12" rx="3" fill="#c06020" stroke="#8b5e3c" stroke-width="1.5"/>
+  <!-- Tufting on back -->
+  <circle cx="11" cy="6" r="0.6" fill="#d4a020"/>
+  <circle cx="20" cy="6" r="0.6" fill="#d4a020"/>
+  <circle cx="29" cy="6" r="0.6" fill="#d4a020"/>
+  <circle cx="11" cy="11" r="0.6" fill="#d4a020"/>
+  <circle cx="20" cy="11" r="0.6" fill="#d4a020"/>
+  <circle cx="29" cy="11" r="0.6" fill="#d4a020"/>
+  <!-- Arms -->
+  <rect x="1" y="6" width="5" height="14" rx="2" fill="#e87830" stroke="#8b5e3c" stroke-width="1.2"/>
+  <rect x="34" y="6" width="5" height="14" rx="2" fill="#e87830" stroke="#8b5e3c" stroke-width="1.2"/>
+  <!-- Seat cushions -->
+  <rect x="5" y="14" width="14" height="7" rx="2" fill="#e87830" stroke="#8b5e3c" stroke-width="1"/>
+  <rect x="21" y="14" width="14" height="7" rx="2" fill="#e87830" stroke="#8b5e3c" stroke-width="1"/>
+  <!-- Tufting on seat -->
+  <circle cx="12" cy="17.5" r="0.5" fill="#d4a020"/>
+  <circle cx="28" cy="17.5" r="0.5" fill="#d4a020"/>
+  <!-- Wooden legs -->
+  <rect x="5" y="21" width="3" height="6" rx="0.5" fill="#5c3a20" stroke="#3d2510" stroke-width="0.8"/>
+  <rect x="15" y="21" width="3" height="6" rx="0.5" fill="#5c3a20" stroke="#3d2510" stroke-width="0.8"/>
+  <rect x="22" y="21" width="3" height="6" rx="0.5" fill="#5c3a20" stroke="#3d2510" stroke-width="0.8"/>
+  <rect x="32" y="21" width="3" height="6" rx="0.5" fill="#5c3a20" stroke="#3d2510" stroke-width="0.8"/>
+</svg>

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 28">
+  <!-- Boxy retro cooler, cream with orange stripe, hot/cold taps -->
+  <!-- Water jug on top -->
+  <ellipse cx="6" cy="3" rx="3.5" ry="2" fill="#a0d8ef" opacity="0.6" stroke="#408888" stroke-width="0.5"/>
+  <rect x="4" y="3" width="4" height="5" rx="0.5" fill="#a0d8ef" opacity="0.5" stroke="#408888" stroke-width="0.5"/>
+  <!-- Main body -->
+  <rect x="1" y="7" width="10" height="14" rx="1" fill="#f5e8d0" stroke="#8b5e3c" stroke-width="1.5"/>
+  <!-- Orange stripe -->
+  <rect x="1" y="11" width="10" height="2.5" fill="#e87830"/>
+  <!-- Taps -->
+  <rect x="2.5" y="15" width="2.5" height="1.5" rx="0.3" fill="#e87830" stroke="#c06020" stroke-width="0.5"/>
+  <text x="3.7" y="16.2" font-size="1.5" fill="#fff" text-anchor="middle" font-family="sans-serif">H</text>
+  <rect x="7" y="15" width="2.5" height="1.5" rx="0.3" fill="#408888" stroke="#306666" stroke-width="0.5"/>
+  <text x="8.2" y="16.2" font-size="1.5" fill="#fff" text-anchor="middle" font-family="sans-serif">C</text>
+  <!-- Drip tray -->
+  <rect x="2" y="18" width="8" height="1" rx="0.3" fill="#8b5e3c" stroke="#5c3a20" stroke-width="0.3"/>
+  <!-- Legs/base -->
+  <rect x="1" y="21" width="10" height="2" rx="0.5" fill="#8b5e3c" stroke="#5c3a20" stroke-width="0.8"/>
+  <rect x="2" y="23" width="2" height="4.5" rx="0.3" fill="#5c3a20" stroke="#3d2510" stroke-width="0.5"/>
+  <rect x="8" y="23" width="2" height="4.5" rx="0.3" fill="#5c3a20" stroke="#3d2510" stroke-width="0.5"/>
+</svg>

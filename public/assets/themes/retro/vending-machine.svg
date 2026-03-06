@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 22 32">
+  <!-- Retro orange vending machine with mustard sign -->
+  <rect x="1" y="1" width="20" height="30" rx="1.5" fill="#e87830" stroke="#c06020" stroke-width="1.5"/>
+  <!-- Mustard sign -->
+  <rect x="3" y="2.5" width="16" height="5" rx="1" fill="#d4a020" stroke="#8b5e3c" stroke-width="0.8"/>
+  <text x="11" y="6.5" text-anchor="middle" font-size="3" fill="#5c3a20" font-family="sans-serif" font-weight="bold">DRINKS</text>
+  <!-- Display window -->
+  <rect x="3" y="9" width="16" height="10" rx="0.5" fill="#5c3a20" stroke="#3d2510" stroke-width="0.8"/>
+  <!-- Bottles/cans -->
+  <rect x="4.5" y="10" width="3" height="4" rx="0.5" fill="#408888"/>
+  <rect x="8" y="10" width="3" height="4" rx="0.5" fill="#d4a020"/>
+  <rect x="11.5" y="10" width="3" height="4" rx="0.5" fill="#c06020"/>
+  <rect x="15" y="10" width="3" height="4" rx="0.5" fill="#7a8a40"/>
+  <rect x="4.5" y="15" width="3" height="3.5" rx="0.5" fill="#d4a020"/>
+  <rect x="8" y="15" width="3" height="3.5" rx="0.5" fill="#408888"/>
+  <rect x="11.5" y="15" width="3" height="3.5" rx="0.5" fill="#7a8a40"/>
+  <rect x="15" y="15" width="3" height="3.5" rx="0.5" fill="#c06020"/>
+  <!-- Controls -->
+  <rect x="3" y="20.5" width="10" height="3" rx="0.5" fill="#f5e8d0" stroke="#8b5e3c" stroke-width="0.5"/>
+  <circle cx="16" cy="22" r="1.5" fill="#d4a020" stroke="#8b5e3c" stroke-width="0.5"/>
+  <!-- Dispenser slot -->
+  <rect x="5" y="25" width="12" height="4" rx="1" fill="#3d2510" stroke="#5c3a20" stroke-width="0.5"/>
+</svg>

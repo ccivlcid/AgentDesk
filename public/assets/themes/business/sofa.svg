@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 24">
+  <!-- Sofa back -->
+  <rect x="2" y="3" width="36" height="10" rx="2" fill="#8890a0"/>
+  <!-- Sofa back highlight -->
+  <rect x="3" y="4" width="34" height="4" rx="1.5" fill="#9098a8" opacity="0.5"/>
+  <!-- Seat cushion -->
+  <rect x="4" y="12" width="32" height="6" rx="1.5" fill="#9098a8"/>
+  <!-- Cushion divider -->
+  <line x1="20" y1="12.5" x2="20" y2="17.5" stroke="#788090" stroke-width="0.5" opacity="0.5"/>
+  <!-- Armrest left -->
+  <rect x="0.5" y="5" width="4" height="13" rx="1.5" fill="#8890a0"/>
+  <!-- Armrest right -->
+  <rect x="35.5" y="5" width="4" height="13" rx="1.5" fill="#8890a0"/>
+  <!-- Seat highlight -->
+  <rect x="5" y="13" width="30" height="2" rx="1" fill="#98a0b0" opacity="0.4"/>
+  <!-- Metal legs -->
+  <rect x="5" y="18" width="1" height="4.5" rx="0.3" fill="#c0c4cc"/>
+  <rect x="34" y="18" width="1" height="4.5" rx="0.3" fill="#c0c4cc"/>
+  <rect x="14" y="18" width="1" height="4.5" rx="0.3" fill="#c0c4cc"/>
+  <rect x="25" y="18" width="1" height="4.5" rx="0.3" fill="#c0c4cc"/>
+  <!-- Leg chrome highlights -->
+  <line x1="5.5" y1="18" x2="5.5" y2="22.5" stroke="#dce0e6" stroke-width="0.2"/>
+  <line x1="34.5" y1="18" x2="34.5" y2="22.5" stroke="#dce0e6" stroke-width="0.2"/>
+</svg>

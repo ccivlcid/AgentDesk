@@ -151,7 +151,7 @@ interface OfficeThemePreset {
     wall: number;
     accent: number;
   };
-  // Phase 2에서 추가: style: string; → Section 10.7 참조
+  style?: string; // "default" | "pixel" | "business" | "retro" | "cyber" → Section 10 참조
 }
 ```
 
@@ -505,7 +505,7 @@ const themeLabels = {
 
 ---
 
-## 10. Style Theme (Visual Style) Expansion
+## 10. Style Theme (Visual Style) — COMPLETED (2026-03-06)
 
 ### 10.1 Concept
 
@@ -515,19 +515,22 @@ const themeLabels = {
                    색상 (Color)
               Classic  Modern  Neon  Sakura ...
            ┌─────────────────────────────────┐
-  픽셀     │  Pixel + Classic               │  가구/인물이 도트풍
+  픽셀     │  Pixel + Classic               │  가구가 도트풍
  스타일    │  Pixel + Neon                  │
            ├─────────────────────────────────┤
-  업무용   │  Business + Classic             │  깔끔하고 단순한 가구
+  비즈니스  │  Business + Classic             │  깔끔하고 단순한 SVG 가구
  스타일    │  Business + Modern              │
            ├─────────────────────────────────┤
-  아기자기  │  Cute + Sakura                  │  둥글고 귀여운 가구
- 스타일    │  Cute + Nature                  │
+  레트로   │  Retro + Classic                │  70년대 빈티지 SVG 가구
+ 스타일    │  Retro + Nature                 │
+           ├─────────────────────────────────┤
+  사이버   │  Cyber + Neon                   │  네온 글로우 SVG 가구
+ 스타일    │  Cyber + Cyberpunk              │
            └─────────────────────────────────┘
 ```
 
 - **Color Theme**: 기존 RoomTheme 기반 — floor/wall/accent 색상 팔레트
-- **Style Theme**: 가구/소품/캐릭터의 **시각적 스타일(visual style)** 변경
+- **Style Theme**: 가구/소품의 **시각적 스타일(visual style)** 변경 (캐릭터는 항상 픽셀)
 
 ### 10.1.1 핵심 구분: 캐릭터 vs 가구/환경의 렌더링 분리
 
@@ -563,27 +566,24 @@ const themeLabels = {
 ┌────────────────────────────────────────────────────────────┐
 │                    렌더링 방식 구분                          │
 ├───────────┬──────────────────┬─────────────────────────────┤
-│ 방식       │ 적합한 스타일     │ 특징                        │
+│ 방식       │ 스타일            │ 특징                        │
 ├───────────┼──────────────────┼─────────────────────────────┤
-│ Graphics  │ pixel (현재)     │ rect/roundRect 프리미티브     │
-│ 프리미티브 │ default (현재)   │ 코드로 직접 그림, 에셋 불필요  │
+│ Graphics  │ default          │ roundRect 프리미티브           │
+│ 프리미티브 │ pixel            │ rect only, 에셋 불필요        │
 ├───────────┼──────────────────┼─────────────────────────────┤
 │ SVG →     │ business         │ 벡터 SVG 파일 → Texture 로드  │
-│ Sprite    │ cute             │ 깔끔한 곡선, 그라데이션 가능   │
-│           │ retro            │ 에셋 파일 필요 (assets/themes/)│
-├───────────┼──────────────────┼─────────────────────────────┤
-│ SVG +     │ cyber/futuristic │ SVG 에셋 + PixiJS Filter     │
-│ Filter    │                  │ 글로우, 네온, 홀로그램 이펙트   │
+│ Sprite    │ retro            │ 깔끔한 곡선, 그라데이션 가능   │
+│           │ cyber            │ SVG 내부에 glow filter 포함   │
 └───────────┴──────────────────┴─────────────────────────────┘
 ```
 
 **요약:**
 - **캐릭터 (CEO/Agent)** → 모든 스타일에서 **현재 Graphics(픽셀) 코드 유지** (변경 없음)
-- **pixel / default 가구** → 현재처럼 `Graphics` 코드로 그림 (에셋 불필요)
-- **business / cute / retro 가구** → SVG 에셋 파일을 PixiJS `Sprite`로 로드 (벡터, 고품질)
-- **cyber / futuristic 가구** → SVG 에셋 + `@pixi/filter-glow` 등 PixiJS 필터로 네온/글로우 이펙트
+- **default / pixel 가구** → `Graphics` 코드로 그림 (에셋 불필요)
+- **business / retro / cyber 가구** → SVG 에셋 파일을 PixiJS `Sprite`로 로드 (벡터, 고품질)
+- **cyber 글로우 효과** → SVG 파일 내부에 `<filter>` 태그로 glow 정의 (`@pixi/filter-glow` 불필요)
 
-### 10.2 Style Theme Examples
+### 10.2 Style Theme — 5종 (구현 완료)
 
 > 아래는 **가구/소품/환경**의 스타일. 캐릭터(CEO/Agent)는 모든 스타일에서 현재 픽셀 유지.
 
@@ -591,69 +591,61 @@ const themeLabels = {
 |-----------|-----------|---------------|-----------------|--------|
 | `default` | 기본 | **Graphics** (현재 코드) | 따뜻한 우드톤, 나무결, 그림자 다층 | 픽셀 |
 | `pixel` | 픽셀 | **Graphics** (rect only) | rect만, 그림자 최소, 2px 단위, 8bit | 픽셀 |
-| `business` | 업무용 | **SVG → Sprite** | 모던/미니멀, 매끈한 곡선, 장식 최소 | 픽셀 |
-| `cute` | 아기자기 | **SVG → Sprite** | 둥근 파스텔 가구, 하트/별 장식 | 픽셀 |
-| `retro` | 레트로 | **SVG → Sprite** | 브라운/오렌지 70년대풍, 카펫 | 픽셀 |
-| `cyber` | 사이버 | **SVG + Glow Filter** | 메탈릭, 네온 글로우, 홀로그램 | 픽셀 |
+| `business` | 비즈니스 | **SVG → Sprite** | 모던/미니멀, 화이트/스틸/크롬 | 픽셀 |
+| `retro` | 레트로 | **SVG → Sprite** | 브라운/오렌지 70년대풍, CRT 모니터 | 픽셀 |
+| `cyber` | 사이버 | **SVG → Sprite** | 다크메탈 + 시안/마젠타 네온 글로우 | 픽셀 |
 
-### 10.3 Architecture: Drawing Style Abstraction
+> `cute` (아기자기) 스타일은 제거됨.
 
-**현재 (하드코딩):**
+### 10.3 Architecture: Drawing Style Abstraction (구현 완료)
+
 ```typescript
-// drawing-furniture-a.ts
-function drawDesk(parent, dx, dy, working) {
-  // 우드톤 책상이 하드코딩
-  g.roundRect(dx, dy, DESK_W, DESK_H, 3).fill(0xbe9860);
-  g.roundRect(dx+1, dy+1, DESK_W-2, DESK_H-2, 2).fill(0xd4b478);
-  // ... 나무결, 그림자, 키보드, 종이 등 상세 디테일
-}
-```
+// drawing-styles/index.ts — 실제 구현
+export type StyleKey = "default" | "pixel" | "business" | "retro" | "cyber";
 
-**확장 후 (스타일별 분기):**
-```typescript
-// drawing-styles/index.ts
-interface FurnitureDrawer {
-  /** 에셋 기반 스타일은 init에서 SVG/PNG 프리로드 */
+export interface FurnitureDrawer {
   init?(): Promise<void>;
-
-  // 반환 타입: DisplayObject (Graphics 또는 Sprite 모두 가능)
-  // ── 가구 ──
-  drawDesk(parent: Container, x: number, y: number, working: boolean): DisplayObject;
-  drawChair(parent: Container, x: number, y: number, color: number): DisplayObject;
-  drawMonitor(parent: Container, x: number, y: number, dual: boolean): DisplayObject;
+  // ── 가구 (17개 함수) ──
+  drawDesk(parent: Container, x: number, y: number, working: boolean): Container;
+  drawChair(parent: Container, x: number, y: number, color: number): void;
   drawBookshelf(parent: Container, x: number, y: number): void;
   drawWhiteboard(parent: Container, x: number, y: number): void;
-  // ── 소품/장식 ──
   drawPlant(parent: Container, x: number, y: number, variant: number): void;
   drawSofa(parent: Container, x: number, y: number, color: number): void;
   drawCoffeeMachine(parent: Container, x: number, y: number): void;
   drawVendingMachine(parent: Container, x: number, y: number): void;
   drawHighTable(parent: Container, x: number, y: number): void;
-  // ── 건축/환경 ──
-  drawWindow(parent: Container, x: number, y: number, w?: number, h?: number): DisplayObject;
+  drawCoffeeTable(parent: Container, x: number, y: number): void;
+  drawWindow(parent: Container, x: number, y: number, w?: number, h?: number): void;
   drawWallClock(parent: Container, x: number, y: number): WallClockVisual;
   drawPictureFrame(parent: Container, x: number, y: number): void;
-  drawCeilingLight(parent: Container, x: number, y: number): void;
-  drawRug(parent: Container, x: number, y: number, w: number, h: number, color: number): void;
-
+  drawCeilingLight(parent: Container, x: number, y: number, color: number): void;
+  drawRug(parent: Container, cx: number, cy: number, w: number, h: number, color: number): void;
+  drawTrashCan(parent: Container, x: number, y: number): void;
+  drawWaterCooler(parent: Container, x: number, y: number): void;
   // ⚠️ CEO/Agent 캐릭터는 FurnitureDrawer에 포함하지 않음
-  // 캐릭터는 모든 스타일에서 현재 Graphics(픽셀) 방식 유지
-  // → buildScene-ceo-hallway.ts, buildScene-department-agent.ts에서 직접 그림
 }
 
-const STYLE_REGISTRY: Record<string, FurnitureDrawer> = {
+export const STYLE_REGISTRY: Record<StyleKey, FurnitureDrawer> = {
   default:  defaultDrawer,    // Graphics 프리미티브 (현재 코드)
   pixel:    pixelDrawer,      // Graphics rect only (도트풍)
   business: businessDrawer,   // SVG → Sprite (모던/미니멀)
-  cute:     cuteDrawer,       // SVG → Sprite (파스텔/둥근)
-  cyber:    cyberDrawer,      // SVG + Glow Filter (네온)
+  retro:    retroDrawer,      // SVG → Sprite (70s 빈티지)
+  cyber:    cyberDrawer,      // SVG → Sprite (네온 글로우)
 };
 
-// buildScene에서 사용
-const drawer = STYLE_REGISTRY[activeStyle] ?? STYLE_REGISTRY.default;
-if (drawer.init) await drawer.init(); // SVG 에셋 프리로드
-drawer.drawDesk(room, ax, deskY, isWorking);
+// OfficeView.tsx 스타일 변경 핸들러에서:
+const drawer = getDrawer(key);
+if (drawer.init) {
+  void drawer.init().then(() => buildScene()); // SVG 비동기 프리로드 후 씬 리빌드
+} else {
+  buildScene(); // Graphics 기반은 동기
+}
 ```
+
+> **중요:** `buildOfficeScene`은 반드시 **동기**로 유지. SVG `init()`은 OfficeView의 스타일 변경
+> 이벤트 핸들러에서 호출하고, `.then(() => buildScene())`으로 완료 후 씬을 리빌드한다.
+> `buildScene` 내에서 `await`를 쓰면 ticker가 빈 stage에 접근하여 전체가 깨진다.
 
 ### 10.4 Pixel Style Example — drawDesk (Graphics 방식)
 
@@ -691,94 +683,81 @@ function drawDesk(parent: Container, dx: number, dy: number, working: boolean): 
 }
 ```
 
-### 10.5 Business Style Example — drawDesk (SVG Sprite 방식)
+### 10.5 SVG Drawer — 공통 팩토리 패턴 (구현 완료)
 
-업무용 스타일은 **SVG 에셋**을 `Assets.load()`로 프리로드한 뒤 `Sprite`로 배치.
-Graphics 프리미티브로는 표현하기 어려운 매끈한 곡선, 그라데이션, 고품질 디테일 구현.
-
-```typescript
-// drawing-styles/business.ts — SVG 에셋 기반
-import { Assets, Sprite, Container, type DisplayObject, type Texture } from "pixi.js";
-
-class BusinessDrawer implements FurnitureDrawer {
-  private textures: Record<string, Texture> = {};
-
-  /** 스타일 전환 시 1회 호출 — SVG 에셋 프리로드 */
-  async init() {
-    const manifest = {
-      desk:     "assets/themes/business/desk.svg",
-      chair:    "assets/themes/business/chair.svg",
-      monitor:  "assets/themes/business/monitor.svg",
-      plant:    "assets/themes/business/plant.svg",
-      bookshelf:"assets/themes/business/bookshelf.svg",
-      sofa:     "assets/themes/business/sofa.svg",
-      coffee:   "assets/themes/business/coffee-machine.svg",
-      window:   "assets/themes/business/window.svg",
-    };
-    for (const [key, path] of Object.entries(manifest)) {
-      this.textures[key] = await Assets.load(path);
-    }
-  }
-
-  drawDesk(parent: Container, dx: number, dy: number, working: boolean): DisplayObject {
-    const sprite = new Sprite(this.textures.desk);
-    sprite.position.set(dx, dy);
-    sprite.width = DESK_W;
-    sprite.height = DESK_H;
-    parent.addChild(sprite);
-
-    // 모니터는 working 상태에 따라 별도 sprite
-    if (working) {
-      const mon = new Sprite(this.textures.monitor);
-      mon.position.set(dx + DESK_W/2 - 10, dy - 14);
-      mon.width = 20;
-      mon.height = 14;
-      parent.addChild(mon);
-    }
-    return sprite;
-  }
-
-  // ... 나머지 가구도 동일 패턴
-}
-```
-
-### 10.5.1 Cyber Style Example — SVG + Glow Filter
-
-사이버 스타일은 SVG 에셋 + PixiJS 필터(`GlowFilter`)로 네온/글로우 이펙트 추가.
+SVG 기반 스타일(business, retro, cyber)은 `svg-drawer-base.ts`의 `createSvgDrawer()` 팩토리로 생성.
+스타일당 18개 SVG를 `Assets.load()`로 프리로드한 뒤 `Sprite`로 배치.
 
 ```typescript
-// drawing-styles/cyber.ts — SVG + Filter 기반
-import { GlowFilter } from "@pixi/filter-glow";
+// drawing-styles/svg-drawer-base.ts — 실제 구현
+export function createSvgDrawer(
+  basePath: string,                    // "/assets/themes/business"
+  clockHands: ClockHandColors,         // { hour, minute, second } 시계 바늘 색상
+  opts?: { monitorX, monitorY, monitorW, monitorH, deskSpriteH, clockRadius, rugAlpha },
+): FurnitureDrawer {
+  const textures: Record<string, Texture> = {};
+  let loadPromise: Promise<void> | null = null;
+  let loaded = false;
 
-class CyberDrawer implements FurnitureDrawer {
-  private textures: Record<string, Texture> = {};
-
-  async init() {
-    // 사이버 전용 SVG 에셋 (메탈릭/네온 라인)
-    this.textures.desk = await Assets.load("assets/themes/cyber/desk.svg");
-    // ...
+  function doLoad(): Promise<void> {
+    if (loaded) return Promise.resolve();
+    if (loadPromise) return loadPromise;  // 중복 로드 방지
+    loadPromise = Promise.all(
+      SVG_KEYS.map(async (key) => {
+        textures[key] = await Assets.load(`${basePath}/${FILE_MAP[key]}`);
+      }),
+    ).then(() => { loaded = true; });
+    return loadPromise;
   }
 
-  drawDesk(parent: Container, dx: number, dy: number, working: boolean): DisplayObject {
-    const sprite = new Sprite(this.textures.desk);
-    sprite.position.set(dx, dy);
-    sprite.width = DESK_W;
-    sprite.height = DESK_H;
-
-    // 네온 글로우 이펙트
-    if (working) {
-      sprite.filters = [new GlowFilter({
-        distance: 8,
-        outerStrength: 2,
-        color: 0x00ffff,  // 시안 네온
-      })];
-    }
-
-    parent.addChild(sprite);
-    return sprite;
-  }
+  return {
+    init: doLoad,
+    drawDesk(parent, dx, dy, working) {
+      const c = new Container();
+      // Sprite(desk) + Sprite(monitorOn/Off) → Container 반환
+      c.position.set(dx, dy);
+      parent.addChild(c);
+      return c;
+    },
+    drawWallClock(parent, x, y) {
+      // 하이브리드: Sprite(clockFace) + Graphics(hour/minute/second hands)
+      // → 시계 바늘은 실시간 회전 애니메이션 필요하므로 Graphics 유지
+    },
+    drawRug(parent, cx, cy, w, h, color) {
+      // 항상 Graphics — 가변 크기/색상
+    },
+    // ... 14개 더
+  };
 }
+
+// 각 스타일 drawer — 1줄씩:
+// business-drawer.ts
+export const businessDrawer = createSvgDrawer("/assets/themes/business",
+  { hour: 0x404858, minute: 0x8890a0, second: 0xcc3333 });
+
+// retro-drawer.ts
+export const retroDrawer = createSvgDrawer("/assets/themes/retro",
+  { hour: 0x5c3a20, minute: 0x8b5e3c, second: 0xe87830 });
+
+// cyber-drawer.ts — 글로우는 SVG 내부 <filter> 태그로 처리
+export const cyberDrawer = createSvgDrawer("/assets/themes/cyber",
+  { hour: 0x00ddff, minute: 0xff44aa, second: 0x44ff88 });
 ```
+
+### 10.5.1 SVG 에셋 구성 (스타일당 18개)
+
+```
+public/assets/themes/{business|retro|cyber}/
+  desk.svg, monitor-on.svg, monitor-off.svg, chair.svg,
+  bookshelf.svg, whiteboard.svg, plant.svg, sofa.svg,
+  coffee-machine.svg, vending-machine.svg, high-table.svg,
+  coffee-table.svg, window.svg, clock-face.svg,
+  picture-frame.svg, ceiling-light.svg, trash-can.svg, water-cooler.svg
+```
+
+- **business**: 화이트/스틸/크롬 모던 미니멀
+- **retro**: 브라운/오렌지/머스타드 70s 빈티지, CRT 모니터
+- **cyber**: 다크 메탈 + 시안/마젠타 네온, SVG `<filter>` 글로우 이펙트
 
 ### 10.5.2 SVG 스타일에서 Color Theme 적용 방식 (Tinting)
 
@@ -849,90 +828,49 @@ monitorGlow.alpha = working ? 0.8 : 0.3;                      // working state
 - SVG 스타일의 애니메이션은 **컨테이너 단위** (position, scale, alpha, rotation)로 제한
 - 세밀한 애니메이션이 필요하면 SVG를 파츠별 분리 (desk-top.svg, desk-legs.svg) 고려
 
-### 10.6 Implementation Effort & Strategy
+### 10.6 Implementation Summary (완료)
 
-**Phase 1 (현재 계획): Color Theme Only**
-- 색상 프리셋 8종 + 사용자 커스텀 저장
-- 가구 스타일은 현재 `default` 고정
-- 기존 drawing 함수 변경 없음
+**실제 구현 결과:**
 
-**Phase 2: Style Theme 추가**
-- `FurnitureDrawer` 인터페이스 정의
-- 현재 drawing-furniture-*.ts를 `default` drawer로 래핑
-- buildScene 호출부에서 `drawer.drawXxx()` 패턴으로 전환
-- `pixel` drawer (Graphics 기반) 첫 번째 추가
-- `business` drawer (SVG 기반) 두 번째 추가
+| Style | Rendering | Code | Assets |
+|-------|-----------|------|--------|
+| **default** | Graphics roundRect | default-drawer.ts (기존 래핑) | 없음 |
+| **pixel** | Graphics rect only | pixel-drawer.ts (~270줄) | 없음 |
+| **business** | SVG → Sprite | business-drawer.ts (~10줄, 팩토리) | 18 SVGs |
+| **retro** | SVG → Sprite | retro-drawer.ts (~10줄, 팩토리) | 18 SVGs |
+| **cyber** | SVG → Sprite | cyber-drawer.ts (~10줄, 팩토리) | 18 SVGs |
 
-**필요 작업량 — 렌더링 방식별 (가구/소품만, 캐릭터 제외):**
+**공통 SVG 팩토리:** `svg-drawer-base.ts` (~260줄) — 3개 SVG 스타일이 공유
 
-| Style Type | Rendering | Code | Assets | Total Effort |
-|------------|-----------|------|--------|-------------|
-| **pixel** | Graphics rect() | ~470줄 코드 | 없음 | 코드만 |
-| **business** | SVG → Sprite | ~180줄 코드 | SVG 15개 파일 | 코드 + SVG 제작 |
-| **cute** | SVG → Sprite | ~180줄 코드 | SVG 15개 파일 | 코드 + SVG 제작 |
-| **cyber** | SVG + Filter | ~220줄 코드 | SVG 15개 + Filter 설정 | 코드 + SVG + Filter |
-
-**Graphics 스타일 (pixel) — 코드 작업량:**
-
-| Component | Functions | Est. Lines |
-|-----------|-----------|------------|
-| Desk + Monitor + Chair | 3 | ~120 |
-| Plant + Bookshelf + Whiteboard | 3 | ~80 |
-| Sofa + Coffee Machine + Vending + High Table | 4 | ~150 |
-| Window + Clock + Picture Frame + Rug + Light | 5 | ~120 |
-| **Total** | **15** | **~470** |
-
-> 캐릭터(CEO/Agent)는 제외 — 모든 스타일에서 현재 픽셀 Graphics 유지
-
-**SVG 스타일 (business/cute/cyber) — 에셋 작업량:**
-
-| Asset Category | Files | Description |
-|---------------|-------|-------------|
-| 가구 SVG | 8개 | desk, chair, monitor, bookshelf, whiteboard, sofa, coffee machine, vending machine |
-| 소품 SVG | 5개 | plant, high table, picture frame, rug pattern, ceiling light |
-| 건축 SVG | 2개 | window, wall clock |
-| **Total per style** | **15개 SVG** | 각 ~50x50~100x120 px 크기 |
-
-> **캐릭터 SVG 없음** — CEO/Agent는 모든 스타일에서 현재 픽셀 Graphics 유지
-> **SVG 에셋 제작**: 디자이너 또는 SVG 에디터(Figma, Inkscape)로 제작.
-> 파일 위치: `public/assets/themes/{style_key}/` 디렉토리
-
-**Refactoring Impact (1회성):**
-- `FurnitureDrawer` 인터페이스 정의 — 35줄 (init + 15개 가구/소품 함수)
-- 반환 타입 `Graphics` → `DisplayObject`로 변경 (Sprite 호환)
-- 기존 가구/소품 함수를 default drawer로 래핑 — drawing-furniture-*.ts, drawing-core.ts
-- buildScene-*.ts에서 가구/소품 direct call → `drawer.drawXxx()` — 약 25개소 수정
-- **캐릭터 렌더링 코드는 변경하지 않음** — buildScene-ceo-hallway.ts, buildScene-department-agent.ts 유지
+**주요 변경 사항:**
+- `FurnitureDrawer` 인터페이스: 17개 함수 (init + drawDesk~drawWaterCooler)
+- `drawDesk` 반환 타입: `Graphics` → `Container` (Sprite 호환)
+- `buildScene-*.ts`에서 가구 direct call → `drawer.drawXxx()` 패턴
 - `BuildOfficeSceneContext`에 `drawer: FurnitureDrawer` 필드 추가
-- 스타일 전환 시 `drawer.init()` 비동기 호출 + 로딩 표시
+- 캐릭터 렌더링 코드는 변경 없음 (항상 픽셀)
 
-### 10.7 Theme Preset with Style (Phase 2 타입 확장)
+### 10.7 Theme Preset with Style (구현 완료)
 
-Phase 1의 `OfficeThemePreset` (Section 3.2)에 `style` 필드를 추가:
+`OfficeThemePreset`에 `style?` 필드가 추가됨:
 
 ```typescript
-// Phase 2에서 기존 OfficeThemePreset 확장 — Section 3.2 타입에 style 추가
-interface OfficeThemePreset {
+// theme-presets.ts — 실제 구현
+export interface OfficeThemePreset {
   key: string;
   name: { ko: string; en: string; ja: string; zh: string };
   description: { ko: string; en: string; ja: string; zh: string };
-  style: string;                       // NEW: "default" | "pixel" | "business" | "cute" | ...
-  themes: Record<string, RoomTheme>;   // color palette (Phase 1과 동일)
+  style?: string;                     // "default" | "pixel" | "business" | "retro" | "cyber"
+  themes: Record<string, RoomTheme>;
   preview: { primary: number; secondary: number; wall: number; accent: number };
 }
 ```
 
-UI에서는 **스타일 필터 탭** + **색상 프리셋 그리드**로 표시:
+UI에서는 **스타일 선택 버튼** + **색상 프리셋 그리드**로 표시:
 
 ```
-┌─ 스타일 ─────────────────────────┐
-│ [기본] [픽셀] [업무용] [아기자기]  │   탭/필터
-├──────────────────────────────────┤
-│                                  │
-│  Classic   Modern   Nature       │   선택된 스타일 내 색상 프리셋
-│  Cafe      Cyber    Sakura       │
-│                                  │
-└──────────────────────────────────┘
+┌─ 비주얼 스타일 ──────────────────────────────┐
+│ [기본] [픽셀] [비즈니스] [레트로] [사이버]      │  5종 선택 버튼
+└──────────────────────────────────────────────┘
 ```
 
 ---
@@ -954,18 +892,22 @@ UI에서는 **스타일 필터 탭** + **색상 프리셋 그리드**로 표시:
 4. [x] **라이브러리 설치** — `react-colorful` 5.6.1, `colord` 2.9.3
 5. [x] **빌드 확인** — Vite build + TypeScript `tsc --noEmit` 통과
 
-### Phase 2: Style Theme System (향후 확장)
+### Phase 2: Style Theme System — COMPLETED (2026-03-06)
 
-1. **`FurnitureDrawer` 인터페이스** 정의 — 17개 함수 시그니처, 반환 `DisplayObject`, `init?()` 포함
-2. **기존 코드를 `default` drawer로 래핑** — drawing-furniture-*.ts 변경 없이 re-export
-3. **buildScene 리팩토링** — direct call → `drawer.drawXxx()` 패턴 전환 (~30개소)
-4. **`pixel` drawer 구현** (Graphics 기반) — 에셋 불필요, ~530줄 코드
-5. **SVG 에셋 디렉토리 구성** — `public/assets/themes/{style}/` 구조
-6. **`business` drawer 구현** (SVG 기반) — SVG 17개 제작 + ~200줄 로더 코드
-7. **`cyber` drawer 구현** (SVG + Filter) — `@pixi/filter-glow` 설치, SVG + 글로우 이펙트
-8. **프리셋에 `style` 필드 추가** — 스타일 필터 탭 UI
-9. **스타일 전환 시 로딩 UX** — SVG 프리로드 + 프로그레스 표시
-10. 이후 `cute`, `retro` 등 점진적 추가
+1. [x] **`FurnitureDrawer` 인터페이스** 정의 — 17개 함수 시그니처, `drawDesk` 반환 `Container`, `init?()` 포함
+2. [x] **기존 코드를 `default` drawer로 래핑** — `default-drawer.ts`
+3. [x] **buildScene 리팩토링** — direct call → `drawer.drawXxx()` 패턴 전환
+4. [x] **`pixel` drawer 구현** (Graphics 기반) — `pixel-drawer.ts` (~270줄)
+5. [x] **SVG 에셋 디렉토리 구성** — `public/assets/themes/{business|retro|cyber}/` (스타일당 18개 SVG)
+6. [x] **`svg-drawer-base.ts` 공통 팩토리** — SVG 프리로드 + Sprite 배치 + 하이브리드 시계 (~260줄)
+7. [x] **`business` drawer 구현** (SVG 기반) — 모던 미니멀, 화이트/스틸/크롬
+8. [x] **`retro` drawer 구현** (SVG 기반) — 70s 빈티지, 브라운/오렌지/머스타드, CRT 모니터
+9. [x] **`cyber` drawer 구현** (SVG 기반) — 네온 글로우 (SVG 내부 `<filter>` 태그, `@pixi/filter-glow` 불필요)
+10. [x] **프리셋에 `style?` 필드 추가** — 스타일 선택 버튼 UI (5종)
+11. [x] **스타일 전환 시 SVG 프리로드** — `drawer.init().then(() => buildScene())`
+12. [x] **`deskG` 타입 변경** — `Graphics` → `Container` (buildScene-types.ts + officeTicker.ts)
+
+> `cute` (아기자기) 스타일은 제거됨. `@pixi/filter-glow`는 불필요 (SVG 내부 filter 사용).
 
 ---
 
@@ -989,13 +931,11 @@ UI에서는 **스타일 필터 탭** + **색상 프리셋 그리드**로 표시:
 |---------|------|---------|-------|
 | **colord** | 1.7KB gzip | 색상 조작 유틸 | HSL/RGB/HEX 변환, lighten/darken/saturate/desaturate 등. 의존성 zero, 플러그인 확장 가능. `deriveTheme()` 등 accent→floor/wall 파생 로직을 직관적으로 작성 가능. 없어도 기존 `blendColor()` + 비트 연산으로 대체 가능하나, 코드 가독성·유지보수성 향상. |
 
-#### Phase 2에서 추가 필요 (Style Theme 구현 시)
-| Library | Size | Purpose | Notes |
-|---------|------|---------|-------|
-| **@pixi/filter-glow** | ~3KB | 네온 글로우 이펙트 | cyber/futuristic 스타일의 네온 라인, 발광 효과. PixiJS v8 필터 플러그인. |
-
-> **SVG 에셋**: 라이브러리가 아닌 디자인 파일. 스타일당 17개 SVG (`desk.svg`, `chair.svg` 등).
-> PixiJS `Assets.load()` (내장)으로 로드 → `Sprite`로 렌더링. 별도 SVG 라이브러리 불필요.
+#### Phase 2 — 추가 라이브러리 없음
+| 항목 | 설명 |
+|------|------|
+| **`@pixi/filter-glow`** | **불필요** — cyber 스타일의 글로우 효과는 SVG 파일 내부 `<filter>` 태그로 구현 |
+| **SVG 에셋** | 라이브러리가 아닌 디자인 파일. 스타일당 18개 SVG (`desk.svg`, `monitor-on.svg` 등). PixiJS `Assets.load()` (내장)으로 로드 → `Sprite`로 렌더링. 별도 SVG 라이브러리 불필요. |
 
 #### 대안 (채택하지 않은 이유)
 | Library | Size | Why Not |
@@ -1055,12 +995,8 @@ g.setStrokeStyle({ width: 1, color: 0x000000, pixelLine: true });
 # Phase 1: Color Theme (색상 프리셋 + 커스텀 저장)
 npm install react-colorful colord
 
-# Phase 2: Style Theme (SVG 에셋 기반 스타일 + 글로우 필터)
-npm install @pixi/filter-glow
-
-# 또는 pnpm
-pnpm add react-colorful colord
-pnpm add @pixi/filter-glow  # Phase 2
+# Phase 2: Style Theme — 추가 설치 없음
+# SVG 에셋은 public/assets/themes/ 에 배치, PixiJS Assets.load()로 로드
 ```
 
 ### 12.5 react-colorful 사용 예시

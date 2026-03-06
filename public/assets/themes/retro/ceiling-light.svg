@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 14">
+  <!-- Retro hanging lamp with trapezoidal mustard lampshade -->
+  <!-- Cord -->
+  <line x1="10" y1="0" x2="10" y2="3" stroke="#5c3a20" stroke-width="1"/>
+  <!-- Mounting cap -->
+  <rect x="8" y="0" width="4" height="1.5" rx="0.5" fill="#8b5e3c" stroke="#5c3a20" stroke-width="0.5"/>
+  <!-- Lampshade - trapezoid -->
+  <polygon points="6,4 14,4 17,13 3,13" fill="#d4a020" stroke="#8b5e3c" stroke-width="1.5"/>
+  <!-- Shade band -->
+  <line x1="6.5" y1="5.5" x2="13.5" y2="5.5" stroke="#c06020" stroke-width="0.8"/>
+  <line x1="4" y1="11" x2="16" y2="11" stroke="#c06020" stroke-width="0.8"/>
+  <!-- Bulb glow hint -->
+  <ellipse cx="10" cy="10" rx="4" ry="2" fill="#f5e8d0" opacity="0.3"/>
+  <!-- Bottom rim -->
+  <line x1="3" y1="13" x2="17" y2="13" stroke="#8b5e3c" stroke-width="1.5"/>
+</svg>

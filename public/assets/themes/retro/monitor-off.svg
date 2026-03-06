@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 22">
+  <!-- Retro CRT monitor, dark green screen (off) -->
+  <rect x="1" y="1" width="28" height="17" rx="2" fill="#f5e8d0" stroke="#8b5e3c" stroke-width="1.5"/>
+  <rect x="3" y="3" width="21" height="13" rx="1" fill="#0a2a0a" stroke="#5c3a20" stroke-width="1"/>
+  <rect x="4" y="4" width="19" height="11" fill="#0d1a0d"/>
+  <ellipse cx="13.5" cy="9.5" rx="6" ry="3" fill="#112211" opacity="0.5"/>
+  <circle cx="26.5" cy="14" r="1.2" fill="#8b5e3c" stroke="#5c3a20" stroke-width="0.5"/>
+  <circle cx="26.5" cy="10" r="0.6" fill="#5c3a20"/>
+  <rect x="10" y="18" width="10" height="2" rx="0.5" fill="#8b5e3c" stroke="#5c3a20" stroke-width="0.5"/>
+  <rect x="7" y="20" width="16" height="1.5" rx="0.5" fill="#5c3a20"/>
+</svg>

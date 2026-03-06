@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 22">
+  <!-- Ceramic pot -->
+  <path d="M4 14 L3.5 20 Q3.5 21 5 21 L11 21 Q12.5 21 12.5 20 L12 14 Z" fill="#f0f2f5" stroke="#c0c4cc" stroke-width="0.5"/>
+  <!-- Pot rim -->
+  <rect x="3.5" y="13.5" width="9" height="1.2" rx="0.4" fill="#e8eaee" stroke="#c0c4cc" stroke-width="0.3"/>
+  <!-- Soil -->
+  <ellipse cx="8" cy="14" rx="4" ry="0.8" fill="#8890a0" opacity="0.4"/>
+  <!-- Main stem -->
+  <line x1="8" y1="14" x2="8" y2="6" stroke="#5a8a5a" stroke-width="0.8"/>
+  <!-- Leaves -->
+  <ellipse cx="5.5" cy="8" rx="3" ry="1.5" fill="#6aaa6a" transform="rotate(-30 5.5 8)"/>
+  <ellipse cx="10.5" cy="7" rx="3" ry="1.5" fill="#5a9a5a" transform="rotate(25 10.5 7)"/>
+  <ellipse cx="7" cy="4.5" rx="2.5" ry="1.3" fill="#6aaa6a" transform="rotate(-15 7 4.5)"/>
+  <ellipse cx="10" cy="3.5" rx="2.5" ry="1.2" fill="#5a9a5a" transform="rotate(20 10 3.5)"/>
+  <!-- Leaf veins -->
+  <line x1="4" y1="8" x2="7" y2="7.5" stroke="#4a8a4a" stroke-width="0.2" opacity="0.5"/>
+  <line x1="9" y1="7" x2="12" y2="6.5" stroke="#4a8a4a" stroke-width="0.2" opacity="0.5"/>
+</svg>

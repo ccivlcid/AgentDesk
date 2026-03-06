@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 14 22">
+  <!-- Machine body -->
+  <rect x="2" y="2" width="10" height="18" rx="1" fill="#404858"/>
+  <!-- Top section -->
+  <rect x="2.5" y="2.5" width="9" height="4" rx="0.5" fill="#363a44"/>
+  <!-- Water tank -->
+  <rect x="3" y="3" width="3.5" height="3" rx="0.3" fill="#4a7fc7" opacity="0.3"/>
+  <!-- Display panel -->
+  <rect x="3.5" y="8" width="7" height="2" rx="0.3" fill="#1a2a44"/>
+  <!-- LED indicator -->
+  <circle cx="7" cy="9" r="0.5" fill="#4a7fc7"/>
+  <!-- Buttons -->
+  <circle cx="5" cy="12" r="0.7" fill="#8890a0"/>
+  <circle cx="7" cy="12" r="0.7" fill="#8890a0"/>
+  <circle cx="9" cy="12" r="0.7" fill="#8890a0"/>
+  <!-- Dispenser area -->
+  <rect x="4" y="14" width="6" height="4" rx="0.3" fill="#2a2e38"/>
+  <!-- Drip tray -->
+  <rect x="3" y="18" width="8" height="1" rx="0.3" fill="#c0c4cc"/>
+  <!-- Nozzle -->
+  <rect x="5.5" y="14" width="3" height="1.5" rx="0.3" fill="#8890a0"/>
+  <!-- Base -->
+  <rect x="1.5" y="20" width="11" height="1" rx="0.3" fill="#363a44"/>
+</svg>

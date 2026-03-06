@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 14">
+  <!-- Table top -->
+  <ellipse cx="10" cy="4" rx="9" ry="3" fill="#f0f2f5" stroke="#c0c4cc" stroke-width="0.5"/>
+  <!-- Surface highlight -->
+  <ellipse cx="8.5" cy="3.5" rx="5" ry="1.5" fill="#f8f8fa" opacity="0.5"/>
+  <!-- Chrome leg -->
+  <rect x="9" y="6.5" width="2" height="5" rx="0.4" fill="#c0c4cc"/>
+  <!-- Leg highlight -->
+  <line x1="10" y1="7" x2="10" y2="11.5" stroke="#dce0e6" stroke-width="0.4" opacity="0.6"/>
+  <!-- Base plate -->
+  <ellipse cx="10" cy="12.5" rx="5" ry="1.2" fill="#c0c4cc"/>
+</svg>

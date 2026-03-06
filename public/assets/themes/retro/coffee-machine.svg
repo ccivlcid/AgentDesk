@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 14 22">
+  <!-- Vintage boxy coffee machine with gauge, orange stripe, cream color -->
+  <rect x="1" y="3" width="12" height="16" rx="1" fill="#f5e8d0" stroke="#8b5e3c" stroke-width="1.5"/>
+  <rect x="1" y="8" width="12" height="2.5" fill="#e87830"/>
+  <!-- Top cap -->
+  <rect x="2" y="1" width="10" height="3" rx="1" fill="#8b5e3c" stroke="#5c3a20" stroke-width="0.8"/>
+  <!-- Gauge -->
+  <circle cx="7" cy="6" r="2" fill="#f5e8d0" stroke="#5c3a20" stroke-width="0.8"/>
+  <circle cx="7" cy="6" r="1.5" fill="#fffbe8" stroke="#8b5e3c" stroke-width="0.3"/>
+  <line x1="7" y1="6" x2="8" y2="5" stroke="#c06020" stroke-width="0.5"/>
+  <circle cx="7" cy="6" r="0.3" fill="#5c3a20"/>
+  <!-- Dispenser area -->
+  <rect x="3" y="12" width="8" height="5" rx="0.5" fill="#5c3a20"/>
+  <rect x="4" y="13" width="6" height="3" rx="0.3" fill="#3d2510"/>
+  <!-- Spout -->
+  <rect x="6" y="13" width="2" height="1" fill="#8b5e3c"/>
+  <!-- Base -->
+  <rect x="1" y="19" width="12" height="2" rx="0.5" fill="#8b5e3c" stroke="#5c3a20" stroke-width="0.8"/>
+  <!-- Buttons -->
+  <circle cx="5" cy="11.5" r="0.6" fill="#e87830" stroke="#c06020" stroke-width="0.3"/>
+  <circle cx="9" cy="11.5" r="0.6" fill="#7a8a40" stroke="#5c3a20" stroke-width="0.3"/>
+</svg>

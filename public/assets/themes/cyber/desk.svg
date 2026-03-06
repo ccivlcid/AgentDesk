@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 36">
+  <defs>
+    <filter id="glow"><feGaussianBlur stdDeviation="1.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect x="2" y="10" width="44" height="4" rx="1" fill="#1a1e28"/>
+  <rect x="3" y="10" width="42" height="1" fill="#00ddff" opacity="0.3" filter="url(#glow)"/>
+  <line x1="4" y1="10" x2="4" y2="11" stroke="#00ddff" stroke-width="0.5"/>
+  <line x1="44" y1="10" x2="44" y2="11" stroke="#00ddff" stroke-width="0.5"/>
+  <rect x="2" y="10" width="44" height="4" rx="1" fill="none" stroke="#00ddff" stroke-width="0.6" filter="url(#glow)"/>
+  <line x1="10" y1="12" x2="38" y2="12" stroke="#8844ff" stroke-width="0.3" opacity="0.5"/>
+  <rect x="6" y="14" width="2" height="18" fill="#2a3040"/>
+  <rect x="40" y="14" width="2" height="18" fill="#2a3040"/>
+  <line x1="7" y1="14" x2="7" y2="32" stroke="#00ddff" stroke-width="0.4" opacity="0.6" filter="url(#glow)"/>
+  <line x1="41" y1="14" x2="41" y2="32" stroke="#00ddff" stroke-width="0.4" opacity="0.6" filter="url(#glow)"/>
+  <rect x="5" y="32" width="4" height="1" rx="0.5" fill="#2a3040"/>
+  <rect x="39" y="32" width="4" height="1" rx="0.5" fill="#2a3040"/>
+</svg>

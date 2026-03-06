@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 12">
+  <defs>
+    <filter id="glow"><feGaussianBlur stdDeviation="1.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect x="1" y="1" width="14" height="10" rx="0.5" fill="#0a0e14"/>
+  <rect x="1" y="1" width="14" height="10" rx="0.5" fill="none" stroke="#ff44aa" stroke-width="0.6" filter="url(#glow)"/>
+  <polygon points="4,8 6,4 8,6 10,3 13,8" fill="none" stroke="#00ddff" stroke-width="0.5" opacity="0.6" filter="url(#glow)"/>
+  <circle cx="5" cy="4" r="1" fill="#8844ff" opacity="0.4" filter="url(#glow)"/>
+  <line x1="3" y1="9" x2="13" y2="9" stroke="#ff44aa" stroke-width="0.3" opacity="0.3"/>
+  <rect x="7" y="3" width="5" height="3" fill="#00ddff" opacity="0.08"/>
+</svg>

@@ -8,6 +8,7 @@ export interface OfficeThemePreset {
   key: string;
   name: { ko: string; en: string; ja: string; zh: string };
   description: { ko: string; en: string; ja: string; zh: string };
+  style?: string; // "default" | "pixel" | "business" | "cute" | "retro" | "cyber"
   themes: Record<string, RoomTheme>;
   preview: { primary: number; secondary: number; wall: number; accent: number };
 }

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 14">
+  <!-- Can body -->
+  <path d="M1.5 3 L2 13 Q2 13.5 3 13.5 L7 13.5 Q8 13.5 8 13 L8.5 3 Z" fill="#c0c4cc"/>
+  <!-- Body highlight -->
+  <path d="M2 3.5 L2.3 12.5 L4.5 12.5 L4.5 3.5 Z" fill="#dce0e6" opacity="0.3"/>
+  <!-- Rim -->
+  <rect x="1" y="2.5" width="8" height="1" rx="0.4" fill="#8890a0"/>
+  <!-- Lid handle -->
+  <rect x="3.5" y="1.5" width="3" height="1.2" rx="0.5" fill="#8890a0"/>
+  <!-- Vertical detail lines -->
+  <line x1="4" y1="4" x2="4" y2="13" stroke="#b0b4bc" stroke-width="0.3" opacity="0.5"/>
+  <line x1="6" y1="4" x2="6" y2="13" stroke="#b0b4bc" stroke-width="0.3" opacity="0.5"/>
+</svg>
