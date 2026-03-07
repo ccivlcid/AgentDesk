@@ -40,6 +40,7 @@ import { registerPipelineGateRoutes } from "./core/pipeline-gates.ts";
 import { registerTaskExecutionRoutes } from "./core/tasks/execution.ts";
 import { registerTaskSubtaskRoutes } from "./core/tasks/subtasks.ts";
 import { registerUpdateAutoRoutes } from "./core/update-auto/register.ts";
+import { registerOfficePackRoutes } from "./core/office-packs.ts";
 import type { AgentRow, MeetingMinuteEntryRow, MeetingMinutesRow, MeetingReviewDecision } from "./shared/types.ts";
 import { getDiscordReceiverStatus } from "../../messenger/discord-receiver.ts";
 
@@ -230,6 +231,7 @@ export function registerRoutesPartA(ctx: RuntimeContext): Record<string, never> 
   // ===========================================================================
 
   registerUpdateAutoRoutes(__ctx);
+  registerOfficePackRoutes(__ctx);
 
   // ---------------------------------------------------------------------------
   // Direct messenger channels

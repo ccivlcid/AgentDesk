@@ -11,6 +11,7 @@ import GeneralSettingsTab from "./settings/GeneralSettingsTab";
 import OAuthSettingsTab from "./settings/OAuthSettingsTab";
 import DataSettingsTab from "./settings/DataSettingsTab";
 import WebhookSettingsTab from "./settings/WebhookSettingsTab";
+import OfficePacksTab from "./settings/OfficePacksTab";
 import SettingsTabNav from "./settings/SettingsTabNav";
 import type { AccountDraftMap, AccountDraftPatch, LocalSettings, SettingsTab } from "./settings/types";
 import { useApiProvidersState } from "./settings/useApiProvidersState";
@@ -479,6 +480,7 @@ export default function SettingsPanel({
 
       {tab === "data" && <DataSettingsTab t={t} />}
       {tab === "webhooks" && <WebhookSettingsTab />}
+      {tab === "office_packs" && <OfficePacksTab />}
     </div>
   );
 }

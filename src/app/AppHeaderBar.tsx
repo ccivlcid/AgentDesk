@@ -1,13 +1,13 @@
 import type { ReactNode } from "react";
-import type { WorkflowPackKey } from "../types";
 import type { View } from "./types";
 
 type OfficePackOption = {
-  key: WorkflowPackKey;
+  key: string;
   label: string;
   summary: string;
   slug: string;
   accent: number;
+  isCustom?: boolean;
 };
 
 interface AppHeaderBarProps {
@@ -25,9 +25,9 @@ interface AppHeaderBarProps {
   roomManagerLabel: string;
   officePackControl?: {
     label: string;
-    value: WorkflowPackKey;
+    value: string;
     options: OfficePackOption[];
-    onChange: (packKey: WorkflowPackKey) => void;
+    onChange: (packKey: string) => void;
   } | null;
   notificationSlot?: ReactNode;
   theme: "light" | "dark";
@@ -133,7 +133,7 @@ export default function AppHeaderBar({
             </span>
             <select
               value={officePackControl.value}
-              onChange={(e) => officePackControl.onChange(e.target.value as WorkflowPackKey)}
+              onChange={(e) => officePackControl.onChange(e.target.value)}
               className="min-w-0 max-w-[120px] bg-transparent text-[11px] font-medium focus:outline-none sm:max-w-[140px] sm:text-xs lg:max-w-[160px]"
               style={{ color: "var(--th-text-primary)" }}
               title={officePackControl.options.find((o) => o.key === officePackControl.value)?.label}
@@ -278,7 +278,7 @@ export default function AppHeaderBar({
                       id="mobile-office-pack-selector"
                       value={officePackControl.value}
                       onChange={(e) => {
-                        officePackControl.onChange(e.target.value as WorkflowPackKey);
+                        officePackControl.onChange(e.target.value);
                         onCloseMobileHeaderMenu();
                       }}
                       className="w-full px-2 py-1.5 text-xs focus:outline-none"

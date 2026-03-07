@@ -164,8 +164,8 @@ interface AppMainLayoutProps {
   onOpenTerminal: (taskId: string) => void;
   onOpenMeetingMinutes: (taskId: string) => void;
   onAgentsChange: () => void;
-  activeOfficeWorkflowPack: WorkflowPackKey;
-  onChangeOfficeWorkflowPack: (packKey: WorkflowPackKey) => void;
+  activeOfficeWorkflowPack: string;
+  onChangeOfficeWorkflowPack: (packKey: string) => void;
   onSaveSettings: (settings: CompanySettings) => Promise<void>;
   onRefreshCli: () => Promise<void>;
   onOauthResultClear: () => void;
@@ -247,7 +247,10 @@ export default function AppMainLayout({
   const uiLanguage =
     labels.uiLanguage === "ko" || labels.uiLanguage === "ja" || labels.uiLanguage === "zh" ? labels.uiLanguage : "en";
   const officePackKey = normalizeOfficeWorkflowPack(activeOfficeWorkflowPack);
-  const officePackOptions = useMemo(() => listOfficePackOptions(uiLanguage), [uiLanguage]);
+  const officePackOptions = useMemo(
+    () => listOfficePackOptions(uiLanguage, settings.customOfficePacks, settings.hiddenBuiltinPackKeys),
+    [uiLanguage, settings.customOfficePacks, settings.hiddenBuiltinPackKeys],
+  );
   const officePackLabel =
     labels.uiLanguage === "ko"
       ? "오피스 팩"

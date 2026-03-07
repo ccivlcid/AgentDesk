@@ -864,9 +864,9 @@ const PACK_PRESETS: Record<WorkflowPackKey, PackPreset> = {
   },
 };
 
-export function normalizeOfficeWorkflowPack(value: unknown): WorkflowPackKey {
-  if (typeof value !== "string") return "development";
-  return value in PACK_PRESETS ? (value as WorkflowPackKey) : "development";
+export function normalizeOfficeWorkflowPack(value: unknown): string {
+  if (typeof value !== "string" || !value.trim()) return "development";
+  return value;
 }
 
 function pickText(locale: UiLanguageLike, text: Localized): string {
@@ -1041,8 +1041,8 @@ export function getOfficePackRoomThemes(packKey: WorkflowPackKey): Record<string
   return preset.roomThemes;
 }
 
-export function listOfficePackOptions(locale: UiLanguageLike): Array<{
-  key: WorkflowPackKey;
+export function getBuiltinPackList(locale: UiLanguageLike): Array<{
+  key: string;
   label: string;
   summary: string;
   slug: string;
@@ -1055,6 +1055,41 @@ export function listOfficePackOptions(locale: UiLanguageLike): Array<{
     slug: PACK_PRESETS[key].slug,
     accent: PACK_PRESETS[key].roomThemes.ceoOffice?.accent ?? 0x5a9fd4,
   }));
+}
+
+export function listOfficePackOptions(
+  locale: UiLanguageLike,
+  customPacks?: Array<{ key: string; name: string; name_ko: string; icon: string; color: string; description: string }>,
+  hiddenBuiltinKeys?: string[],
+): Array<{
+  key: string;
+  label: string;
+  summary: string;
+  slug: string;
+  accent: number;
+  isCustom?: boolean;
+}> {
+  const hiddenSet = new Set(hiddenBuiltinKeys ?? []);
+  const builtins = (Object.keys(PACK_PRESETS) as WorkflowPackKey[])
+    .filter((key) => !hiddenSet.has(key))
+    .map((key) => ({
+      key,
+      label: pickText(locale, PACK_PRESETS[key].label),
+      summary: pickText(locale, PACK_PRESETS[key].summary),
+      slug: PACK_PRESETS[key].slug,
+      accent: PACK_PRESETS[key].roomThemes.ceoOffice?.accent ?? 0x5a9fd4,
+      isCustom: false as const,
+    }));
+  if (!customPacks?.length) return builtins;
+  const customs = customPacks.map((cp) => ({
+    key: cp.key,
+    label: locale === "ko" ? (cp.name_ko || cp.name) : cp.name,
+    summary: cp.description,
+    slug: cp.key,
+    accent: 0x6366f1,
+    isCustom: true as const,
+  }));
+  return [...builtins, ...customs];
 }
 
 export function buildOfficePackPresentation(params: {

@@ -373,7 +373,17 @@ export interface OfficePackProfile {
   updated_at: number;
 }
 
-export type OfficePackProfiles = Partial<Record<WorkflowPackKey, OfficePackProfile>>;
+export type OfficePackProfiles = Partial<Record<string, OfficePackProfile>>;
+
+export interface CustomOfficePack {
+  key: string;
+  name: string;
+  name_ko: string;
+  icon: string;
+  color: string;
+  description: string;
+  created_at: number;
+}
 
 export interface CompanySettings {
   companyName: string;
@@ -386,12 +396,14 @@ export interface CompanySettings {
   theme: "dark" | "light";
   language: UiLanguage;
   defaultProvider: CliProvider;
-  officeWorkflowPack?: WorkflowPackKey;
+  officeWorkflowPack?: string;
   providerModelConfig?: Record<string, ProviderModelConfig>;
   roomThemes?: Record<string, RoomTheme>;
   messengerChannels?: MessengerChannelsConfig;
   officePackProfiles?: OfficePackProfiles;
   officePackHydratedPacks?: string[];
+  customOfficePacks?: CustomOfficePack[];
+  hiddenBuiltinPackKeys?: string[];
 }
 
 // Agent Rules

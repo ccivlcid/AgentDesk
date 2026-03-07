@@ -923,6 +923,120 @@ interface CeoCustomization {
 
 ---
 
+## Phase 19 — PixiJS → Phaser 3 마이그레이션
+
+**설계 문서**: `docs/phaser-migration.md`
+
+**범위**: 오피스 뷰 전체 (30개 파일, ~9,000줄) PixiJS 완전 제거 → Phaser 3 전환
+
+**핵심 이득**:
+- Overview Mode: CSS hack → `Camera.zoomTo()` 네이티브
+- 미니맵: 별도 HTML canvas → Phaser 두 번째 Camera
+- 엘리베이터/방문자: 수동 상태머신 → Tweens.chain으로 대폭 단순화
+- 팩 씬 전환: ref 교체 → `SceneManager.switch()` (Pack Identity 연동)
+
+**마이그레이션 순서** (Bottom-Up):
+
+| Phase | 대상 | 상태 |
+|---|---|---|
+| M-1 | 패키지 교체 (`pnpm remove pixi.js && pnpm add phaser`) | TODO |
+| M-2 | 기반 타입/상수 (`model.ts`, `buildScene-types.ts`, `themes-locale.ts`) | TODO |
+| M-3 | 드로잉 원시 함수 (`drawing-core.ts`, `drawing-furniture-*.ts`) | TODO |
+| M-4 | 개별 드로잉 모듈 (`drawFloor/Roof/Basement/Elevator/Penthouse...`) | TODO |
+| M-5 | 씬 빌더 (`buildScene*.ts` → `OfficeSceneDev.create()`) | TODO |
+| M-6 | 애니메이션 시스템 (`officeTicker`, `elevatorTick`, `visitorTick`, 파티클) | TODO |
+| M-7 | React 래퍼 (`useOfficePixiRuntime` → `useOfficePhaserRuntime`) | TODO |
+| M-8 | Drawing Styles (`drawing-styles/` 폴더) | TODO |
+| M-9 | 검증 및 QA | TODO |
+
+**유지 파일** (수정 없음): `OfficeAgentPanel`, `OfficeDeptPanel`, `CliUsagePanel`, `HeartbeatPanel`, `RoomLayoutEditor`, `OfficeQuickChat`, 상수/데이터 파일
+
+---
+
+## Phase 18 — Pack Identity System
+
+**설계 문서**: `docs/pack-identity-system.md`
+
+**핵심 개념**: 팩 전환 = 다른 소프트웨어에 들어온 느낌. 색깔이 아니라 공간 메타포 + UI 언어 + 인터페이스 형태 자체가 바뀜.
+
+**3축 변화**:
+1. **공간 메타포** — 팩별 전혀 다른 캔버스 렌더러 (뉴스룸 수평 레이아웃, 스튜디오 탑뷰, 던전 단면도, 트레이딩 플로어 등)
+2. **UI 언어** — Task→Quest, Agent→Adventurer, Done→Cleared 등 산업별 단어 교체
+3. **인터페이스 형태** — 팩별 태스크 카드 디자인 + 오피스 뷰 HUD 오버레이
+
+### Phase 18-A — Vocabulary Layer
+
+| 항목 | 파일 | 상태 |
+|---|---|---|
+| PACK_VOCAB 맵 (7팩 × 10단어) | `src/pack-identity/vocabulary.ts` | TODO |
+| usePackVocab() 훅 | `src/pack-identity/vocabulary.ts` | TODO |
+| TaskBoard 어휘 적용 | `src/components/TaskBoard.tsx` | TODO |
+| Dashboard 어휘 적용 | `src/components/Dashboard.tsx` | TODO |
+| OfficeView 패널 어휘 적용 | `src/components/office-view/OfficeDeptPanel.tsx` 등 | TODO |
+
+### Phase 18-B — HUD Overlay
+
+| 항목 | 파일 | 상태 |
+|---|---|---|
+| ReportHud (마감 카운트다운) | `src/components/hud/ReportHud.tsx` | TODO |
+| VideoHud (ON-AIR 라이트) | `src/components/hud/VideoHud.tsx` | TODO |
+| RpgHud (파티/퀘스트) | `src/components/hud/RpgHud.tsx` | TODO |
+| AssetHud (P&L 실시간) | `src/components/hud/AssetHud.tsx` | TODO |
+| PackHud 진입점 | `src/components/hud/PackHud.tsx` | TODO |
+| OfficeView PackHud 연결 | `src/components/OfficeView.tsx` | TODO |
+
+### Phase 18-C — Task Card Forms
+
+| 항목 | 파일 | 상태 |
+|---|---|---|
+| TaskCardRpg (퀘스트 스크롤) | `src/components/taskboard/TaskCardRpg.tsx` | TODO |
+| TaskCardAsset (거래 티켓) | `src/components/taskboard/TaskCardAsset.tsx` | TODO |
+| TaskCardReport (신문 기사) | `src/components/taskboard/TaskCardReport.tsx` | TODO |
+| TaskCardVideo (클래퍼보드) | `src/components/taskboard/TaskCardVideo.tsx` | TODO |
+| TaskCardNovel (양피지 두루마리) | `src/components/taskboard/TaskCardNovel.tsx` | TODO |
+| TaskBoard 카드 분기 | `src/components/TaskBoard.tsx` | TODO |
+
+### Phase 18-E — Office View Navigation (전체 보기 & 미니맵)
+
+> 팩 무관 공통 기능. 개발 오피스 포함 모든 팩에 적용.
+
+**전체 보기 (Overview Mode)**:
+- 툴바 버튼 → CSS `transform: scale(fitScale)` on canvas (PixiJS 변경 없음)
+- `fitScale = min(wrapW/officeW, wrapH/totalH) * 0.95`
+- 전체 보기 중 `wrap.overflow = hidden`, 스크롤 잠금
+- 층 클릭 내비게이션 시 자동 해제
+
+**미니맵 (OfficeMinimap)**:
+- HTML 2D canvas (별도 PixiJS 인스턴스 아님) — `72px × max200px`
+- 층별 department.color 블록 렌더링
+- amber 반투명 뷰포트 인디케이터
+- 클릭/드래그 → `wrap.scrollTo()` 연동
+
+| 항목 | 파일 | 상태 |
+|---|---|---|
+| `overviewMode` 상태 + fitScale 계산 | `OfficeView.tsx` | TODO |
+| 캔버스 CSS scale + overflow 전환 | `OfficeView.tsx` | TODO |
+| 툴바 OVERVIEW 토글 버튼 | `OfficeView.tsx` | TODO |
+| `OfficeMinimap.tsx` 신규 컴포넌트 | `office-view/OfficeMinimap.tsx` | TODO |
+| 2D canvas 층별 색상 블록 렌더링 | `OfficeMinimap.tsx` | TODO |
+| 뷰포트 인디케이터 + 스크롤 연동 | `OfficeMinimap.tsx` | TODO |
+| OfficeView 마운트 + 전체 보기 시 숨김 | `OfficeView.tsx` | TODO |
+
+---
+
+### Phase 18-D — Canvas Renderers
+
+| 항목 | 파일 | 상태 |
+|---|---|---|
+| 트레이딩 플로어 탑뷰 | `src/components/office-view/buildScene-asset.ts` | TODO |
+| 스튜디오 탑뷰 | `src/components/office-view/buildScene-video.ts` | TODO |
+| 뉴스룸 수평 레이아웃 | `src/components/office-view/buildScene-report.ts` | TODO |
+| 던전/성 단면도 | `src/components/office-view/buildScene-rpg.ts` | TODO |
+| 산장 단면도 | `src/components/office-view/buildScene-novel.ts` | TODO |
+| OfficeView 렌더러 분기 | `src/components/OfficeView.tsx` | TODO |
+
+---
+
 ## Notes
 
 - Commits are handled by the user. Claude focuses only on development.

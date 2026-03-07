@@ -18,6 +18,7 @@ import type {
   RoomTheme,
   WorkflowPackKey,
 } from "./types";
+import { WORKFLOW_PACK_KEYS } from "./types";
 import type { TaskReportDetail } from "./api";
 import * as api from "./api";
 import { detectBrowserLanguage, normalizeLanguage } from "./i18n";
@@ -203,12 +204,13 @@ export default function App() {
     };
   };
 
-  const handleOfficeWorkflowPackChange = (packKey: WorkflowPackKey) => {
+  const handleOfficeWorkflowPackChange = (packKey: string) => {
     const previousPack = settings.officeWorkflowPack ?? "development";
     const previousProfiles = settings.officePackProfiles;
     const currentHydratedSet = readHydratedPackSet(settings);
+    const isBuiltinPack = WORKFLOW_PACK_KEYS.includes(packKey as WorkflowPackKey);
     const shouldShowBootstrap = packKey !== "development" && !currentHydratedSet.has(packKey);
-    const seedProfile = shouldShowBootstrap ? maybeBuildSeedProfileForPack(packKey, settings) : null;
+    const seedProfile = shouldShowBootstrap && isBuiltinPack ? maybeBuildSeedProfileForPack(packKey as WorkflowPackKey, settings) : null;
     const nextOfficePackProfiles = seedProfile
       ? {
           ...(settings.officePackProfiles ?? {}),
@@ -220,8 +222,8 @@ export default function App() {
       patchPayload.officePackProfiles = nextOfficePackProfiles;
     }
     const reqId = ++officePackBootstrapReqRef.current;
-    if (shouldShowBootstrap) {
-      setOfficePackBootstrappingLabel(getPackLabelByLanguage(packKey, settings.language));
+    if (shouldShowBootstrap && isBuiltinPack) {
+      setOfficePackBootstrappingLabel(getPackLabelByLanguage(packKey as WorkflowPackKey, settings.language));
     } else {
       setOfficePackBootstrappingLabel(null);
     }
