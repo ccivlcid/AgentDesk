@@ -346,7 +346,7 @@ export default function MemoryHistoryPanel({
                     <span className="skill-history-time" style={{ color: "var(--th-text-muted)" }}>{memoryRelativeTime(eventAt)}</span>
                   </div>
                 </div>
-                {row.error && <div className="mt-1 break-words text-[10px] text-rose-300">{row.error}</div>}
+                {row.error && <div className="mt-1 break-words text-[10px]" style={{ color: "rgb(253,164,175)" }}>{row.error}</div>}
               </div>
             );
           })}
@@ -413,11 +413,10 @@ export default function MemoryHistoryPanel({
                       type="button"
                       onClick={() => void handleUnlearn(row)}
                       disabled={isUnlearning}
-                      className={`skill-unlearn-btn border px-1.5 py-0.5 text-[10px] transition-all ${
-                        isUnlearning
-                          ? "cursor-not-allowed border-[var(--th-border)] text-[#475569]"
-                          : "border-rose-500/35 bg-rose-500/10 text-rose-300 hover:bg-rose-500/20"
-                      }`}
+                      className="skill-unlearn-btn px-1.5 py-0.5 text-[10px] transition-all"
+                      style={isUnlearning
+                        ? { borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-muted)", cursor: "not-allowed" }
+                        : { borderRadius: "2px", border: "1px solid rgba(244,63,94,0.35)", background: "rgba(244,63,94,0.1)", color: "rgb(253,164,175)" }}
                     >
                       {isUnlearning
                         ? t({ ko: "\uCDE8\uC18C\uC911...", en: "Unlearning...", ja: "\u53D6\u6D88\u4E2D...", zh: "\u53D6\u6D88\u4E2D..." })
@@ -441,7 +440,7 @@ export default function MemoryHistoryPanel({
               <span className="unlearn-hammer-swing-center">🔨</span>
               <span className="unlearn-hit-text-center">Bonk!</span>
             </div>
-            <div className="skill-history-center-label mt-2 text-center text-xs font-medium text-rose-100">
+            <div className="skill-history-center-label mt-2 text-center text-xs font-medium" style={{ color: "rgb(255,228,230)" }}>
               {memoryProviderLabel(centerBonk.provider)}
             </div>
           </div>

@@ -111,11 +111,11 @@ export default function BurndownChart({ projectId, t }: Props) {
           {tr(t, "전체", "Total")}
         </span>
         <span className="flex items-center gap-1">
-          <span className="w-3 h-0.5 bg-emerald-400 rounded" />
+          <span className="w-3 h-0.5" style={{ background: "rgb(52,211,153)", borderRadius: "1px" }} />
           {tr(t, "완료", "Done")}
         </span>
         <span className="flex items-center gap-1">
-          <span className="w-3 h-0.5 bg-amber-400 rounded" />
+          <span className="w-3 h-0.5" style={{ background: "rgb(251,191,36)", borderRadius: "1px" }} />
           {tr(t, "잔여", "Remaining")}
         </span>
       </div>
@@ -176,8 +176,8 @@ export default function BurndownChart({ projectId, t }: Props) {
       {chartData.lastPoint && (
         <div className="flex gap-4 text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>
           <span>{tr(t, "전체", "Total")}: {chartData.lastPoint.total}</span>
-          <span className="text-emerald-400">{tr(t, "완료", "Done")}: {chartData.lastPoint.done}</span>
-          <span className="text-amber-400">{tr(t, "잔여", "Rem")}: {chartData.lastPoint.remaining}</span>
+          <span style={{ color: "rgb(52,211,153)" }}>{tr(t, "완료", "Done")}: {chartData.lastPoint.done}</span>
+          <span style={{ color: "rgb(251,191,36)" }}>{tr(t, "잔여", "Rem")}: {chartData.lastPoint.remaining}</span>
         </div>
       )}
     </div>

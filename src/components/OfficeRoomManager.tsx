@@ -1,4 +1,19 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, type ReactNode } from "react";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { PERSONA_CATALOG } from "../data/personas";
 import { HexColorPicker } from "react-colorful";
 import type { RoomTheme } from "../types";
@@ -244,6 +259,61 @@ function PreviewBar({ colors, className = "" }: { colors: { primary: number; sec
 }
 
 /* ================================================================== */
+/*  Dept floor order persistence                                        */
+/* ================================================================== */
+
+const DEPT_FLOOR_ORDER_KEY = "agentdesk_dept_floor_order";
+
+function loadDeptFloorOrder(): string[] {
+  try {
+    const raw = localStorage.getItem(DEPT_FLOOR_ORDER_KEY);
+    return raw ? (JSON.parse(raw) as string[]) : [];
+  } catch { return []; }
+}
+
+function saveDeptFloorOrder(ids: string[]): void {
+  localStorage.setItem(DEPT_FLOOR_ORDER_KEY, JSON.stringify(ids));
+  window.dispatchEvent(new CustomEvent("agentdesk_dept_floor_order_change", { detail: ids }));
+}
+
+/* ================================================================== */
+/*  SortableDeptRow                                                     */
+/* ================================================================== */
+
+function SortableDeptRow({ id, children }: { id: string; children: ReactNode }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+  return (
+    <div ref={setNodeRef} style={style} className="flex items-center gap-1">
+      <span
+        {...attributes}
+        {...listeners}
+        title="Drag to reorder floor"
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          cursor: "grab",
+          color: "var(--th-text-muted)",
+          fontSize: "13px",
+          padding: "0 4px",
+          flexShrink: 0,
+          opacity: 0.45,
+          touchAction: "none",
+          userSelect: "none",
+        }}
+      >
+        ⠿
+      </span>
+      <div className="flex-1 min-w-0">{children}</div>
+    </div>
+  );
+}
+
+/* ================================================================== */
 /*  DeptCard (collapsible)                                              */
 /* ================================================================== */
 
@@ -382,6 +452,28 @@ function DeptCard({ deptId, deptName, state, language, expanded, onToggle, onAct
 /* ================================================================== */
 
 export default function OfficeRoomManager({ departments, customThemes, onThemeChange, onActiveDeptChange, onClose, language }: OfficeRoomManagerProps) {
+  /* ── dept floor order (drag-and-drop) ── */
+  const [deptFloorOrder, setDeptFloorOrder] = useState<string[]>(() => {
+    const saved = loadDeptFloorOrder();
+    if (saved.length) return saved;
+    return departments.filter((d) => d.id !== "ceoOffice" && d.id !== "breakRoom").map((d) => d.id);
+  });
+
+  const dndSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
+
+  const handleDeptDragEnd = useCallback((event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      setDeptFloorOrder((prev) => {
+        const oldIdx = prev.indexOf(active.id as string);
+        const newIdx = prev.indexOf(over.id as string);
+        const next = arrayMove(prev, oldIdx, newIdx);
+        saveDeptFloorOrder(next);
+        return next;
+      });
+    }
+  }, []);
+
   /* ── dept state ── */
   // departments already includes ceoOffice + breakRoom (from useAppLabels)
   const allRoomIds = departments.map((d) => d.id);
@@ -417,6 +509,8 @@ export default function OfficeRoomManager({ departments, customThemes, onThemeCh
   const [importResult, setImportResult] = useState<{ imported: number; skipped: number; error?: boolean } | null>(null);
   const [showCompare, setShowCompare] = useState(false);
   const initialSnapshotRef = useRef<Record<string, RoomTheme>>(customThemes);
+  const [activeTab, setActiveTab] = useState<"theme" | "ceo" | "decor" | "season">("theme");
+  const scrollBodyRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!showCeoColorPicker) return;
@@ -579,11 +673,38 @@ export default function OfficeRoomManager({ departments, customThemes, onThemeCh
           </button>
         </div>
 
+        {/* ── Tab Nav ── */}
+        <div className="flex shrink-0" style={{ borderBottom: "1px solid var(--th-border)" }}>
+          {([ ["theme", "🎨", { ko: "테마", en: "Theme", ja: "テーマ", zh: "主题" }],
+              ["ceo",   "🤖", { ko: "CEO", en: "CEO", ja: "CEO", zh: "CEO" }],
+              ["decor", "🛋", { ko: "가구", en: "Decor", ja: "内装", zh: "装饰" }],
+              ["season","❄️", { ko: "시즌", en: "Season", ja: "シーズン", zh: "季节" }],
+          ] as const).map(([key, icon, label]) => {
+            const active = activeTab === key;
+            return (
+              <button
+                key={key}
+                onClick={() => {
+                  setActiveTab(key);
+                  setTimeout(() => { scrollBodyRef.current?.scrollTo({ top: 0 }); }, 0);
+                }}
+                className="flex-1 flex flex-col items-center gap-0.5 py-2.5 text-[11px] font-mono transition-colors"
+                style={active
+                  ? { borderBottom: "2px solid var(--th-accent)", color: "var(--th-accent)", marginBottom: "-1px", background: "transparent" }
+                  : { borderBottom: "2px solid transparent", color: "var(--th-text-muted)", marginBottom: "-1px", background: "transparent" }}
+              >
+                <span className="text-sm leading-none">{icon}</span>
+                <span>{label[language]}</span>
+              </button>
+            );
+          })}
+        </div>
+
         {/* ── Scrollable content ── */}
-        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
+        <div ref={scrollBodyRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
 
           {/* ────────────── THEME PRESETS SECTION ────────────── */}
-          <section className="space-y-3">
+          {activeTab === "theme" && <section className="space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-semibold font-mono uppercase tracking-wider" style={{ color: "var(--th-text-muted)" }}>{L.themePresets[language]}</h3>
               <button
@@ -823,10 +944,10 @@ export default function OfficeRoomManager({ departments, customThemes, onThemeCh
                 </button>
               </div>
             </div>
-          </section>
+          </section>}
 
           {/* ────────────── SAVE MODAL ────────────── */}
-          {showSaveModal && (
+          {activeTab === "theme" && showSaveModal && (
             <div className="p-4 space-y-3" style={{ borderRadius: "2px", border: "1px solid var(--th-border-strong)", background: "var(--th-bg-elevated)" }}>
               <h4 className="text-sm font-semibold font-mono" style={{ color: "var(--th-text-heading)" }}>{L.saveCurrent[language]}</h4>
               <div>
@@ -863,7 +984,7 @@ export default function OfficeRoomManager({ departments, customThemes, onThemeCh
           )}
 
           {/* ────────────── IMPORT MODAL ────────────── */}
-          {showImportModal && (
+          {activeTab === "theme" && showImportModal && (
             <div className="p-4 space-y-3" style={{ borderRadius: "2px", border: "1px solid var(--th-border-strong)", background: "var(--th-bg-elevated)" }}>
               <h4 className="text-sm font-semibold font-mono" style={{ color: "var(--th-text-heading)" }}>{L.importThemes[language]}</h4>
               <textarea
@@ -906,7 +1027,7 @@ export default function OfficeRoomManager({ departments, customThemes, onThemeCh
           )}
 
           {/* ────────────── DRAWING STYLE ────────────── */}
-          <section className="space-y-2">
+          {activeTab === "season" && <section className="space-y-2">
             <h3 className="text-xs font-semibold font-mono uppercase tracking-wider" style={{ color: "var(--th-text-muted)" }}>{L.styleTheme[language]}</h3>
             <div className="flex flex-wrap gap-1.5">
               {STYLE_OPTIONS.map((opt) => {
@@ -926,10 +1047,10 @@ export default function OfficeRoomManager({ departments, customThemes, onThemeCh
                 );
               })}
             </div>
-          </section>
+          </section>}
 
           {/* ────────────── SEASONAL DECOR ────────────── */}
-          <section className="space-y-2">
+          {activeTab === "season" && <section className="space-y-2">
             <h3 className="text-xs font-semibold font-mono uppercase tracking-wider" style={{ color: "var(--th-text-muted)" }}>{L.seasonDecor[language]}</h3>
             <div className="flex flex-wrap gap-1.5">
               {([
@@ -958,10 +1079,10 @@ export default function OfficeRoomManager({ departments, customThemes, onThemeCh
                 );
               })}
             </div>
-          </section>
+          </section>}
 
           {/* ────────────── CEO CUSTOMIZE ────────────── */}
-          <section className="space-y-3">
+          {activeTab === "ceo" && <section className="space-y-3">
             <h3 className="text-xs font-semibold font-mono uppercase tracking-wider" style={{ color: "var(--th-text-muted)" }}>{L.ceoCustomize[language]}</h3>
 
             {/* Headwear */}
@@ -1184,10 +1305,10 @@ export default function OfficeRoomManager({ departments, customThemes, onThemeCh
                 })}
               </div>
             </div>
-          </section>
+          </section>}
 
           {/* ────────────── ROOM DECOR ────────────── */}
-          <section className="space-y-2">
+          {activeTab === "decor" && <section className="space-y-2">
             <h3 className="text-xs font-semibold font-mono uppercase tracking-wider" style={{ color: "var(--th-text-muted)" }}>{L.roomDecor[language]}</h3>
             <div className="space-y-1">
               {departments.filter((d) => d.id !== "ceoOffice" && d.id !== "breakRoom").map((dept) => {
@@ -1296,10 +1417,10 @@ export default function OfficeRoomManager({ departments, customThemes, onThemeCh
                 );
               })}
             </div>
-          </section>
+          </section>}
 
           {/* ────────────── FURNITURE CATALOG ────────────── */}
-          <section className="space-y-2">
+          {activeTab === "decor" && <section className="space-y-2">
             <h3 className="text-xs font-semibold font-mono uppercase tracking-wider" style={{ color: "var(--th-text-muted)" }}>{L.furnitureCatalog[language]}</h3>
             <div className="space-y-1">
               {[...departments.filter((d) => d.id !== "ceoOffice" && d.id !== "breakRoom"),
@@ -1436,32 +1557,64 @@ export default function OfficeRoomManager({ departments, customThemes, onThemeCh
                 );
               })}
             </div>
-          </section>
+          </section>}
 
           {/* ────────────── PER-DEPT CUSTOMIZE ────────────── */}
-          <section className="space-y-2">
-            <h3 className="text-xs font-semibold font-mono uppercase tracking-wider" style={{ color: "var(--th-text-muted)" }}>{L.deptCustomize[language]}</h3>
-            <div className="space-y-1.5">
-              {allRooms.map((room) => {
-                const state = deptStates[room.id] ?? { accent: 0x5a9fd4, tone: DEFAULT_TONE };
-                return (
-                  <DeptCard
-                    key={room.id}
-                    deptId={room.id}
-                    deptName={room.name}
-                    state={state}
-                    language={language}
-                    expanded={expandedDept === room.id}
-                    onToggle={() => setExpandedDept(expandedDept === room.id ? null : room.id)}
-                    onActivate={() => activateDept(room.id)}
-                    onAccentChange={(accent) => updateDept(room.id, { accent })}
-                    onToneChange={(tone) => updateDept(room.id, { tone })}
-                    onReset={() => resetDept(room.id)}
-                  />
-                );
-              })}
+          {activeTab === "theme" && <section className="space-y-2">
+            <div className="flex items-center gap-2">
+              <h3 className="text-xs font-semibold font-mono uppercase tracking-wider" style={{ color: "var(--th-text-muted)" }}>{L.deptCustomize[language]}</h3>
+              <span className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)", opacity: 0.6 }}>⠿ drag to reorder floors</span>
             </div>
-          </section>
+            {/* Dept floors (sortable) */}
+            <DndContext sensors={dndSensors} collisionDetection={closestCenter} onDragEnd={handleDeptDragEnd}>
+              <SortableContext items={deptFloorOrder} strategy={verticalListSortingStrategy}>
+                <div className="space-y-1.5">
+                  {deptFloorOrder.map((deptId) => {
+                    const room = allRooms.find((r) => r.id === deptId);
+                    if (!room) return null;
+                    const state = deptStates[room.id] ?? { accent: 0x5a9fd4, tone: DEFAULT_TONE };
+                    return (
+                      <SortableDeptRow key={room.id} id={room.id}>
+                        <DeptCard
+                          deptId={room.id}
+                          deptName={room.name}
+                          state={state}
+                          language={language}
+                          expanded={expandedDept === room.id}
+                          onToggle={() => setExpandedDept(expandedDept === room.id ? null : room.id)}
+                          onActivate={() => activateDept(room.id)}
+                          onAccentChange={(accent) => updateDept(room.id, { accent })}
+                          onToneChange={(tone) => updateDept(room.id, { tone })}
+                          onReset={() => resetDept(room.id)}
+                        />
+                      </SortableDeptRow>
+                    );
+                  })}
+                  {/* Non-sortable special rooms (ceoOffice / breakRoom) */}
+                  {allRooms
+                    .filter((r) => r.id === "ceoOffice" || r.id === "breakRoom")
+                    .map((room) => {
+                      const state = deptStates[room.id] ?? { accent: 0x5a9fd4, tone: DEFAULT_TONE };
+                      return (
+                        <DeptCard
+                          key={room.id}
+                          deptId={room.id}
+                          deptName={room.name}
+                          state={state}
+                          language={language}
+                          expanded={expandedDept === room.id}
+                          onToggle={() => setExpandedDept(expandedDept === room.id ? null : room.id)}
+                          onActivate={() => activateDept(room.id)}
+                          onAccentChange={(accent) => updateDept(room.id, { accent })}
+                          onToneChange={(tone) => updateDept(room.id, { tone })}
+                          onReset={() => resetDept(room.id)}
+                        />
+                      );
+                    })}
+                </div>
+              </SortableContext>
+            </DndContext>
+          </section>}
         </div>
 
         {/* ── Footer ── */}

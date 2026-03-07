@@ -66,6 +66,9 @@ export interface VisitorAgent {
   agentId:         string;
   chatBubble:      Container | null;
   phraseIdx:       number;
+  /** Special visit event type — affects bubble content/color */
+  eventType:       "normal" | "gift" | "collab";
+  giftShown:       boolean;
 }
 
 export interface VisitorTickState {
@@ -194,11 +197,11 @@ function buildVisitorSprite(
 
 // ── Chat bubble ───────────────────────────────────────────────────────────────
 
-function makeChatBubble(phrase: string): Container {
+function makeChatBubble(phrase: string, accentColor = 0xf59e0b, textColor = 0x22cc88): Container {
   const c     = new Container();
   const bText = new Text({
     text:  phrase,
-    style: new TextStyle({ fontSize: 6, fill: 0x22cc88, fontFamily: "monospace" }),
+    style: new TextStyle({ fontSize: 6, fill: textColor, fontFamily: "monospace" }),
   });
   bText.anchor.set(0.5, 1);
   const bw  = Math.min(bText.width + 10, 80);
@@ -207,11 +210,9 @@ function makeChatBubble(phrase: string): Container {
 
   const bg = new Graphics();
   bg.rect(-bw / 2, top, bw, bh).fill({ color: 0x04080e, alpha: 0.94 });
-  bg.rect(-bw / 2, top, bw, bh).stroke({ width: 0.8, color: 0xf59e0b, alpha: 0.75 });
-  // Amber left bar
-  bg.rect(-bw / 2, top, 2, bh).fill({ color: 0xf59e0b, alpha: 0.7 });
-  // Tail
-  bg.rect(-1, top + bh, 2, 4).fill({ color: 0xf59e0b, alpha: 0.7 });
+  bg.rect(-bw / 2, top, bw, bh).stroke({ width: 0.8, color: accentColor, alpha: 0.75 });
+  bg.rect(-bw / 2, top, 2, bh).fill({ color: accentColor, alpha: 0.7 });
+  bg.rect(-1, top + bh, 2, 4).fill({ color: accentColor, alpha: 0.7 });
 
   bText.position.set(1, top + bh - 2);
   c.addChild(bg);
@@ -265,6 +266,10 @@ export function spawnVisitor(
   const destLabel = destFloor === 0 ? "CEO" : `F${destFloor}`;
   const spriteNum = spriteMap?.get(agent.id) ?? (hashStr(agent.id) % 13) + 1;
 
+  // Determine event type at spawn
+  const rng = Math.random();
+  const eventType: VisitorAgent["eventType"] = rng < 0.05 ? "gift" : rng < 0.20 ? "collab" : "normal";
+
   const [container, animSprite] = buildVisitorSprite(shortName, destLabel, spriteNum, textures ?? {});
   container.position.set(pos.x, pos.y);
   container.alpha       = 1;
@@ -292,6 +297,8 @@ export function spawnVisitor(
     agentId:          agent.id,
     chatBubble:       null,
     phraseIdx:        Math.floor(Math.random() * state.phrasePool.length),
+    eventType,
+    giftShown:        false,
   });
 }
 
@@ -370,20 +377,51 @@ export function updateVisitorAgents(
 
       case "at_dest": {
         v.waitTick++;
-        if (v.waitTick === 24 || (v.waitTick > 24 && v.waitTick % 90 === 0)) {
+
+        // First bubble (waitTick===24): collab visitors greet with 🤝
+        const isFirstBubble = v.waitTick === 24;
+        const isPeriodicBubble = v.waitTick > 24 && v.waitTick % 90 === 0;
+
+        if (isFirstBubble || isPeriodicBubble) {
           if (v.chatBubble && !v.chatBubble.destroyed) {
             v.container.removeChild(v.chatBubble);
             v.chatBubble.destroy({ children: true });
           }
-          v.phraseIdx = (v.phraseIdx + 1) % state.phrasePool.length;
-          const bubble = makeChatBubble(state.phrasePool[v.phraseIdx] ?? "Hi!");
-          // Position above name tag
+
+          let phrase: string;
+          let accentColor = 0xf59e0b;
+          let textColor = 0x22cc88;
+
+          if (isFirstBubble && v.eventType === "collab") {
+            phrase = "🤝 Collab?";
+            accentColor = 0x60a5fa;
+            textColor = 0x93c5fd;
+          } else {
+            v.phraseIdx = (v.phraseIdx + 1) % state.phrasePool.length;
+            phrase = state.phrasePool[v.phraseIdx] ?? "Hi!";
+          }
+
+          const bubble = makeChatBubble(phrase, accentColor, textColor);
           bubble.position.set(0, -(TARGET_CHAR_H + 28));
           v.container.addChild(bubble);
           v.chatBubble = bubble;
         }
+
+        // Gift event: show 🎁 bubble ~60 ticks before departure
+        const remaining = VISIT_TICKS - v.waitTick;
+        if (v.eventType === "gift" && !v.giftShown && remaining === 70) {
+          v.giftShown = true;
+          if (v.chatBubble && !v.chatBubble.destroyed) {
+            v.container.removeChild(v.chatBubble);
+            v.chatBubble.destroy({ children: true });
+          }
+          const giftBubble = makeChatBubble("🎁 Gift!", 0x34d399, 0x6ee7b7);
+          giftBubble.position.set(0, -(TARGET_CHAR_H + 28));
+          v.container.addChild(giftBubble);
+          v.chatBubble = giftBubble;
+        }
+
         if (v.chatBubble && !v.chatBubble.destroyed) {
-          const remaining = VISIT_TICKS - v.waitTick;
           if (remaining < 60) v.chatBubble.alpha = remaining / 60;
         }
         if (v.waitTick >= VISIT_TICKS) {

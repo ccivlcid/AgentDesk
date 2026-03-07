@@ -181,9 +181,29 @@ export default function OfficeView({
   const themeHighlightTargetIdRef = useRef<string | null>(themeHighlightTargetId ?? null);
   themeHighlightTargetIdRef.current = themeHighlightTargetId ?? null;
 
+  // Dept floor order (persisted via OfficeRoomManager drag-and-drop)
+  const [deptFloorOrder, setDeptFloorOrder] = useState<string[]>(() => {
+    try {
+      const raw = localStorage.getItem("agentdesk_dept_floor_order");
+      return raw ? (JSON.parse(raw) as string[]) : [];
+    } catch { return []; }
+  });
+
+  const sortedDepartments = useMemo(() => {
+    if (!deptFloorOrder.length) return departments;
+    return [...departments].sort((a, b) => {
+      const ai = deptFloorOrder.indexOf(a.id);
+      const bi = deptFloorOrder.indexOf(b.id);
+      if (ai === -1 && bi === -1) return 0;
+      if (ai === -1) return 1;
+      if (bi === -1) return -1;
+      return ai - bi;
+    });
+  }, [departments, deptFloorOrder]);
+
   // Latest data via refs (avoids stale closures)
-  const dataRef = useRef({ departments, agents, tasks, subAgents, unreadAgentIds, meetingPresence, customDeptThemes });
-  dataRef.current = { departments, agents, tasks, subAgents, unreadAgentIds, meetingPresence, customDeptThemes };
+  const dataRef = useRef({ departments: sortedDepartments, agents, tasks, subAgents, unreadAgentIds, meetingPresence, customDeptThemes });
+  dataRef.current = { departments: sortedDepartments, agents, tasks, subAgents, unreadAgentIds, meetingPresence, customDeptThemes };
   // Wrap canvas callbacks: update right panel state AND call parent
   const handleCanvasSelectAgent = useCallback((agent: import("../types").Agent) => {
     setSelectedAgent(agent);
@@ -479,6 +499,22 @@ export default function OfficeView({
     return () => window.removeEventListener("agentdesk_furniture_change", handler);
   }, [buildScene]);
 
+  // Listen for dept floor order changes from OfficeRoomManager
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const order = (e as CustomEvent).detail as string[];
+      setDeptFloorOrder(order);
+    };
+    window.addEventListener("agentdesk_dept_floor_order_change", handler);
+    return () => window.removeEventListener("agentdesk_dept_floor_order_change", handler);
+  }, []);
+
+  // Rebuild canvas when dept order changes
+  useEffect(() => {
+    if (initDoneRef.current && appRef.current) buildScene();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deptFloorOrder]);
+
   const tickerContext = useMemo(
     () => ({
       tickRef,
@@ -630,6 +666,18 @@ export default function OfficeView({
   }, [tasks]);
 
   // Poll visitor state every 1s for FM ticker + CEO incoming alert + dept visitor badges
+  const [announcementBanner, setAnnouncementBanner] = useState<{ text: string; sender: string } | null>(null);
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<{ text: string; sender: string }>).detail;
+      setAnnouncementBanner(detail);
+      const t = setTimeout(() => setAnnouncementBanner(null), 4500);
+      return () => clearTimeout(t);
+    };
+    window.addEventListener("agentdesk_office_announcement", handler);
+    return () => window.removeEventListener("agentdesk_office_announcement", handler);
+  }, []);
+
   const [visitorCount, setVisitorCount] = useState(0);
   const [ceoIncomingCount, setCeoIncomingCount] = useState(0);
   const [visitorsByDeptId, setVisitorsByDeptId] = useState<Record<string, number>>({});
@@ -797,6 +845,40 @@ export default function OfficeView({
             onInteract={triggerDepartmentInteract}
             onSetMoveDirectionPressed={setMoveDirectionPressed}
           />
+
+          {/* ── Global Announcement Banner ── */}
+          {announcementBanner && (
+            <motion.div
+              key={announcementBanner.text + announcementBanner.sender}
+              initial={{ y: -60, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: -60, opacity: 0 }}
+              transition={{ duration: 0.25, ease: "linear" }}
+              className="pointer-events-none"
+              style={{
+                position: "absolute",
+                top: 8,
+                left: "50%",
+                transform: "translateX(-50%)",
+                zIndex: 80,
+                minWidth: 280,
+                maxWidth: "90%",
+                background: "rgba(0,0,0,0.88)",
+                border: "1px solid rgba(245,158,11,0.6)",
+                borderRadius: "2px",
+                padding: "8px 14px",
+              }}
+            >
+              <div className="flex items-center gap-2">
+                <span style={{ color: "var(--th-accent)", fontSize: 9, fontFamily: "monospace", letterSpacing: 1 }}>◉ BROADCAST</span>
+                <span style={{ color: "rgba(245,158,11,0.4)", fontSize: 9 }}>|</span>
+                <span style={{ color: "var(--th-text-primary)", fontSize: 10, fontFamily: "monospace", flex: 1 }}>{announcementBanner.text}</span>
+              </div>
+              <div style={{ color: "rgba(245,158,11,0.55)", fontSize: 8, fontFamily: "monospace", textAlign: "right", marginTop: 2 }}>
+                — {announcementBanner.sender}
+              </div>
+            </motion.div>
+          )}
           {/* Task completion burst particles */}
           {completionBursts.map((burst) => (
             <div

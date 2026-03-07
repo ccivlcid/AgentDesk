@@ -1,7 +1,7 @@
 # AgentDesk — Development Progress
 
 > **Rule**: This document is updated every time work is completed or a phase transitions.
-> Last updated: 2026-03-07 (AI 인사이트 위젯 DashboardInsights, Slack/Discord 웹훅 연동 — DB/API/Settings UI/자동 트리거 완료)
+> Last updated: 2026-03-07 (Phase 17-A: OfficeRoomManager 탭 리팩터 완료 — 4탭 UI (테마/CEO/가구/시즌) 인플레이스 구현)
 
 ---
 
@@ -621,7 +621,7 @@ Phase 5 (Office Tower) — largest visual overhaul, last
 | 기능 | 설명 | Priority |
 |---|---|---|
 | 에이전트 클릭 → 즉석 채팅 팝업 | 캔버스에서 에이전트 클릭 시 미니 채팅창 | ✅ DONE |
-| 층별 부서 드래그&드롭 재배치 | OfficeRoomManager 연동 | MED |
+| 층별 부서 드래그&드롭 재배치 | OfficeRoomManager 연동 | ✅ DONE |
 | 실시간 태스크 완료 이펙트 | 태스크 완료 시 캔버스에 파티클 이펙트 | ✅ DONE |
 | 엘리베이터 승하차 애니메이션 정교화 | 에이전트 캐릭터가 실제로 탑승/하차하는 스프라이트 | LOW |
 | 방문자 에이전트 랜덤 이벤트 | 방문자가 선물 전달, 회의 요청 등 랜덤 이벤트 트리거 | LOW |
@@ -640,7 +640,7 @@ Phase 5 (Office Tower) — largest visual overhaul, last
 
 | 기능 | 설명 | Priority |
 |---|---|---|
-| 위젯 드래그&드롭 레이아웃 | 사용자가 대시보드 위젯 배치 커스터마이즈 | MED |
+| 위젯 드래그&드롭 레이아웃 | 사용자가 대시보드 위젯 배치 커스터마이즈 | ✅ DONE |
 | "AI 인사이트" 위젯 | 에이전트 성과 분석 요약 (자동 생성) | ✅ DONE |
 | 알림 센터 | 태스크 완료/오류/임박 마감 실시간 알림 | ✅ DONE |
 | 일정 달력 위젯 | 태스크 마감일 달력 뷰 | ✅ DONE |
@@ -703,7 +703,7 @@ Phase 5 (Office Tower) — largest visual overhaul, last
 |---|---|---|
 | 컴포넌트 lazy loading | 라이브러리 탭 (Rules/Memory/Hooks/Skills) lazy import | ✅ DONE |
 | OfficeView WebWorker | PixiJS 틱 루프를 WebWorker로 분리 (메인 스레드 보호) | MED |
-| 가상 스크롤 | 태스크 리스트, 메시지 리스트 virtualizer 도입 | MED |
+| 가상 스크롤 | 채팅 메시지 리스트 virtualizer (@tanstack/react-virtual) | ✅ DONE |
 | SSE → WebSocket 마이그레이션 | 실시간 이벤트를 WebSocket으로 전환 (더 낮은 오버헤드) | LOW |
 
 ---
@@ -891,6 +891,24 @@ interface CeoCustomization {
 **개선 방향:**
 - 탭 구조로 변경: `[ 방 테마 ]  [ CEO 커스텀 ]  [ 시즌/스타일 ]`
 - CEO 커스텀 탭에 16-2-A~D 항목 통합
+
+---
+
+## Phase 17 — Office Pack 확장
+
+설계 문서: `docs/office-pack-phase17.md`
+
+| ID | 기능 | 우선순위 | 상태 |
+|---|---|---|---|
+| 17-A | OfficeRoomManager 4탭 리팩터 (테마/CEO/가구/시즌) | HIGH | ✅ DONE |
+| 17-E | 회의실 에이전트 참석자 시각화 | HIGH | ✅ DONE |
+| 17-C | 에이전트 무드/감정 시각화 | MED | ✅ DONE |
+| 17-D | 층 HUD 스탯 스트립 | MED | ✅ DONE |
+| 17-F | 오피스 글로벌 공지 배너 | MED | ✅ DONE |
+| 17-G | 방문자 이벤트 강화 | MED | ✅ DONE |
+| 17-B | CEO 책상 스타일 3종 | LOW | 미구현 |
+| 17-H | 오피스 미니맵 | LOW | 미구현 |
+| 17-I | CEO KPI 목표치 | LOW | 미구현 |
 
 ---
 

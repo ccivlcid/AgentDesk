@@ -423,9 +423,9 @@ export default function ScheduledTasksPanel({ agents = [] }: Props) {
                         style={{ borderRadius: "2px", border: cronValid ? "1px solid var(--th-border)" : "1px solid rgba(244,63,94,0.5)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }} />
                       <div className="absolute right-3 top-1/2 -translate-y-1/2">
                         {cronValid ? (
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-emerald-400"><polyline points="20 6 9 17 4 12" /></svg>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ color: "rgb(52,211,153)" }}><polyline points="20 6 9 17 4 12" /></svg>
                         ) : formCron.trim() ? (
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-red-400"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ color: "rgb(248,113,113)" }}><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
                         ) : null}
                       </div>
                     </div>

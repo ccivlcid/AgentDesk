@@ -1,5 +1,20 @@
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, type ReactNode } from "react";
 import { motion } from "framer-motion";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import type { Agent, CompanyStats, Task } from "../types";
 import { localeName, useI18n } from "../i18n";
 import {
@@ -15,6 +30,61 @@ import { DEPT_COLORS, useNow } from "./dashboard/model";
 import ProviderHealthPanel from "./dashboard/ProviderHealthPanel";
 import { DashboardCalendar } from "./dashboard/CalendarWidget";
 import { DashboardInsights } from "./dashboard/InsightsWidget";
+
+const SECTION_ORDER_KEY = "agentdesk_dashboard_order";
+const DEFAULT_SECTION_ORDER: SectionKey[] = ["overview", "metrics", "insights", "ranking", "personas", "dept", "mission", "today", "calendar", "providers"];
+
+function loadSectionOrder(): SectionKey[] {
+  try {
+    const raw = localStorage.getItem(SECTION_ORDER_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw) as unknown[];
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed as SectionKey[];
+    }
+  } catch { /* ignore */ }
+  return DEFAULT_SECTION_ORDER;
+}
+
+interface SortableWrapperProps {
+  id: string;
+  children: (dragHandle: ReactNode) => ReactNode;
+}
+
+function SortableWrapper({ id, children }: SortableWrapperProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  const dragHandle = (
+    <div
+      {...attributes}
+      {...listeners}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        padding: "0 8px",
+        cursor: "grab",
+        color: "var(--th-text-muted)",
+        fontSize: "14px",
+        flexShrink: 0,
+        opacity: 0.5,
+        touchAction: "none",
+      }}
+      title="Drag to reorder"
+    >
+      ⠿
+    </div>
+  );
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      {children(dragHandle)}
+    </div>
+  );
+}
 
 type SectionKey = "overview" | "metrics" | "ranking" | "personas" | "dept" | "mission" | "providers" | "today" | "calendar" | "insights";
 
@@ -43,8 +113,24 @@ export default function Dashboard({ stats, agents, tasks, companyName, onPrimary
   const { t, language, locale: localeTag } = useI18n();
   const { date, time, briefing } = useNow(localeTag, t);
   const [sectionOpen, setSectionOpen] = useState<Record<SectionKey, boolean>>(defaultSectionsOpen);
+  const [sectionOrder, setSectionOrder] = useState<SectionKey[]>(loadSectionOrder);
   const toggleSection = useCallback((key: SectionKey) => {
     setSectionOpen((prev) => ({ ...prev, [key]: !prev[key] }));
+  }, []);
+
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
+
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      setSectionOrder((prev) => {
+        const oldIndex = prev.indexOf(active.id as SectionKey);
+        const newIndex = prev.indexOf(over.id as SectionKey);
+        const next = arrayMove(prev, oldIndex, newIndex);
+        localStorage.setItem(SECTION_ORDER_KEY, JSON.stringify(next));
+        return next;
+      });
+    }
   }, []);
   const agentMap = useMemo(() => new Map(agents.map((agent) => [agent.id, agent])), [agents]);
   const numberFormatter = useMemo(() => new Intl.NumberFormat(localeTag), [localeTag]);
@@ -208,6 +294,71 @@ export default function Dashboard({ stats, agents, tasks, companyName, onPrimary
     insights: t({ ko: "AI 인사이트", en: "AI insights", ja: "AIインサイト", zh: "AI洞察" }),
   };
 
+  const renderSectionContent = useCallback((key: SectionKey, dragHandle: ReactNode) => {
+    switch (key) {
+      case "overview":
+        return (
+          <CollapsibleSection id="overview" title={sectionTitles.overview} open={sectionOpen.overview} onToggle={() => toggleSection("overview")} dragHandle={dragHandle}>
+            <DashboardHeroHeader companyName={companyName} time={time} date={date} briefing={briefing} reviewQueue={reviewQueue} numberFormatter={numberFormatter} primaryCtaEyebrow={primaryCtaEyebrow} primaryCtaDescription={primaryCtaDescription} primaryCtaLabel={primaryCtaLabel} onPrimaryCtaClick={onPrimaryCtaClick} t={t} />
+          </CollapsibleSection>
+        );
+      case "metrics":
+        return (
+          <CollapsibleSection id="metrics" title={sectionTitles.metrics} open={sectionOpen.metrics} onToggle={() => toggleSection("metrics")} dragHandle={dragHandle}>
+            <DashboardHudStats hudStats={hudStats} numberFormatter={numberFormatter} />
+          </CollapsibleSection>
+        );
+      case "insights":
+        return (
+          <CollapsibleSection id="insights" title={sectionTitles.insights} open={sectionOpen.insights} onToggle={() => toggleSection("insights")} dragHandle={dragHandle}>
+            <DashboardInsights tasks={tasks} agents={agents} language={language} t={t} />
+          </CollapsibleSection>
+        );
+      case "ranking":
+        return (
+          <CollapsibleSection id="ranking" title={sectionTitles.ranking} subtitle={t({ ko: "XP 기준", en: "By XP", ja: "XP 基準", zh: "按 XP" })} right={topAgents.length > 0 ? (<span className="px-2 py-0.5 font-mono text-[10px] font-medium" style={{ border: "1px solid var(--th-border)", borderRadius: "2px", background: "var(--th-bg-primary)", color: "var(--th-text-muted)" }}>Top {topAgents.length}</span>) : undefined} open={sectionOpen.ranking} onToggle={() => toggleSection("ranking")} dragHandle={dragHandle}>
+            <DashboardRankingBoard topAgents={topAgents} podiumOrder={podiumOrder} agentMap={agentMap} agents={agents} maxXp={maxXp} numberFormatter={numberFormatter} t={t} embedded />
+          </CollapsibleSection>
+        );
+      case "personas":
+        return (
+          <CollapsibleSection id="personas" title={sectionTitles.personas} subtitle={t({ ko: "페르소나 지정 에이전트", en: "Persona-assigned agents", ja: "ペルソナ割り当てエージェント", zh: "角色分配代理" })} right={agentsWithPersona.length > 0 ? (<span className="px-2 py-0.5 font-mono text-[10px] font-medium" style={{ border: "1px solid var(--th-border)", borderRadius: "2px", background: "var(--th-bg-primary)", color: "var(--th-text-muted)" }}>{agentsWithPersona.length}</span>) : undefined} open={sectionOpen.personas} onToggle={() => toggleSection("personas")} dragHandle={dragHandle}>
+            <DashboardActivePersonas agents={agents} language={language} t={t} />
+          </CollapsibleSection>
+        );
+      case "dept":
+        return (
+          <CollapsibleSection id="dept" title={sectionTitles.dept} open={sectionOpen.dept} onToggle={() => toggleSection("dept")} dragHandle={dragHandle}>
+            <DashboardDeptAndSquad deptData={deptData} workingAgents={workingAgents} idleAgentsList={idleAgentsList} agents={agents} language={language} numberFormatter={numberFormatter} t={t} />
+          </CollapsibleSection>
+        );
+      case "mission":
+        return (
+          <CollapsibleSection id="mission" title={sectionTitles.mission} right={<span className="rounded border border-[var(--th-border)] bg-[var(--th-bg-primary)] px-2 py-0.5 text-[10px] font-medium text-[var(--th-text-muted)]">{t({ ko: "유휴", en: "Idle", ja: "待機", zh: "空闲" })} {numberFormatter.format(idleAgents)}</span>} open={sectionOpen.mission} onToggle={() => toggleSection("mission")} dragHandle={dragHandle}>
+            <DashboardMissionLog recentTasks={recentTasks} agentMap={agentMap} agents={agents} language={language} localeTag={localeTag} idleAgents={idleAgents} numberFormatter={numberFormatter} t={t} embedded />
+          </CollapsibleSection>
+        );
+      case "today":
+        return (
+          <CollapsibleSection id="today" title={sectionTitles.today} open={sectionOpen.today} onToggle={() => toggleSection("today")} dragHandle={dragHandle}>
+            <DashboardTodaySummary agents={agents} tasks={tasks} language={language} t={t} />
+          </CollapsibleSection>
+        );
+      case "calendar":
+        return (
+          <CollapsibleSection id="calendar" title={sectionTitles.calendar} open={sectionOpen.calendar} onToggle={() => toggleSection("calendar")} dragHandle={dragHandle}>
+            <DashboardCalendar tasks={tasks} t={t} />
+          </CollapsibleSection>
+        );
+      case "providers":
+        return (
+          <CollapsibleSection id="providers" title={sectionTitles.providers} open={sectionOpen.providers} onToggle={() => toggleSection("providers")} dragHandle={dragHandle}>
+            <ProviderHealthPanel />
+          </CollapsibleSection>
+        );
+    }
+  }, [sectionTitles, sectionOpen, toggleSection, companyName, time, date, briefing, reviewQueue, numberFormatter, primaryCtaEyebrow, primaryCtaDescription, primaryCtaLabel, onPrimaryCtaClick, t, hudStats, tasks, agents, language, topAgents, podiumOrder, agentMap, maxXp, agentsWithPersona, deptData, workingAgents, idleAgentsList, idleAgents, localeTag, recentTasks]);
+
   return (
     <motion.section
       className="relative isolate space-y-4"
@@ -216,155 +367,17 @@ export default function Dashboard({ stats, agents, tasks, companyName, onPrimary
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.14, ease: "linear" }}
     >
-      <CollapsibleSection
-        id="overview"
-        title={sectionTitles.overview}
-        open={sectionOpen.overview}
-        onToggle={() => toggleSection("overview")}
-      >
-        <DashboardHeroHeader
-          companyName={companyName}
-          time={time}
-          date={date}
-          briefing={briefing}
-          reviewQueue={reviewQueue}
-          numberFormatter={numberFormatter}
-          primaryCtaEyebrow={primaryCtaEyebrow}
-          primaryCtaDescription={primaryCtaDescription}
-          primaryCtaLabel={primaryCtaLabel}
-          onPrimaryCtaClick={onPrimaryCtaClick}
-          t={t}
-        />
-      </CollapsibleSection>
-
-      <CollapsibleSection
-        id="metrics"
-        title={sectionTitles.metrics}
-        open={sectionOpen.metrics}
-        onToggle={() => toggleSection("metrics")}
-      >
-        <DashboardHudStats hudStats={hudStats} numberFormatter={numberFormatter} />
-      </CollapsibleSection>
-
-      <CollapsibleSection
-        id="insights"
-        title={sectionTitles.insights}
-        open={sectionOpen.insights}
-        onToggle={() => toggleSection("insights")}
-      >
-        <DashboardInsights tasks={tasks} agents={agents} language={language} t={t} />
-      </CollapsibleSection>
-
-      <CollapsibleSection
-        id="ranking"
-        title={sectionTitles.ranking}
-        subtitle={t({ ko: "XP 기준", en: "By XP", ja: "XP 基準", zh: "按 XP" })}
-        right={
-          topAgents.length > 0 ? (
-            <span className="px-2 py-0.5 font-mono text-[10px] font-medium" style={{ border: "1px solid var(--th-border)", borderRadius: "2px", background: "var(--th-bg-primary)", color: "var(--th-text-muted)" }}>
-              Top {topAgents.length}
-            </span>
-          ) : undefined
-        }
-        open={sectionOpen.ranking}
-        onToggle={() => toggleSection("ranking")}
-      >
-        <DashboardRankingBoard
-          topAgents={topAgents}
-          podiumOrder={podiumOrder}
-          agentMap={agentMap}
-          agents={agents}
-          maxXp={maxXp}
-          numberFormatter={numberFormatter}
-          t={t}
-          embedded
-        />
-      </CollapsibleSection>
-
-      <CollapsibleSection
-        id="personas"
-        title={sectionTitles.personas}
-        subtitle={t({ ko: "페르소나 지정 에이전트", en: "Persona-assigned agents", ja: "ペルソナ割り当てエージェント", zh: "角色分配代理" })}
-        right={
-          agentsWithPersona.length > 0 ? (
-            <span className="px-2 py-0.5 font-mono text-[10px] font-medium" style={{ border: "1px solid var(--th-border)", borderRadius: "2px", background: "var(--th-bg-primary)", color: "var(--th-text-muted)" }}>
-              {agentsWithPersona.length}
-            </span>
-          ) : undefined
-        }
-        open={sectionOpen.personas}
-        onToggle={() => toggleSection("personas")}
-      >
-        <DashboardActivePersonas agents={agents} language={language} t={t} />
-      </CollapsibleSection>
-
-      <CollapsibleSection
-        id="dept"
-        title={sectionTitles.dept}
-        open={sectionOpen.dept}
-        onToggle={() => toggleSection("dept")}
-      >
-        <DashboardDeptAndSquad
-          deptData={deptData}
-          workingAgents={workingAgents}
-          idleAgentsList={idleAgentsList}
-          agents={agents}
-          language={language}
-          numberFormatter={numberFormatter}
-          t={t}
-        />
-      </CollapsibleSection>
-
-      <CollapsibleSection
-        id="mission"
-        title={sectionTitles.mission}
-        right={
-          <span className="rounded border border-[var(--th-border)] bg-[var(--th-bg-primary)] px-2 py-0.5 text-[10px] font-medium text-[var(--th-text-muted)]">
-            {t({ ko: "유휴", en: "Idle", ja: "待機", zh: "空闲" })} {numberFormatter.format(idleAgents)}
-          </span>
-        }
-        open={sectionOpen.mission}
-        onToggle={() => toggleSection("mission")}
-      >
-        <DashboardMissionLog
-          recentTasks={recentTasks}
-          agentMap={agentMap}
-          agents={agents}
-          language={language}
-          localeTag={localeTag}
-          idleAgents={idleAgents}
-          numberFormatter={numberFormatter}
-          t={t}
-          embedded
-        />
-      </CollapsibleSection>
-
-      <CollapsibleSection
-        id="today"
-        title={sectionTitles.today}
-        open={sectionOpen.today}
-        onToggle={() => toggleSection("today")}
-      >
-        <DashboardTodaySummary agents={agents} tasks={tasks} language={language} t={t} />
-      </CollapsibleSection>
-
-      <CollapsibleSection
-        id="calendar"
-        title={sectionTitles.calendar}
-        open={sectionOpen.calendar}
-        onToggle={() => toggleSection("calendar")}
-      >
-        <DashboardCalendar tasks={tasks} t={t} />
-      </CollapsibleSection>
-
-      <CollapsibleSection
-        id="providers"
-        title={sectionTitles.providers}
-        open={sectionOpen.providers}
-        onToggle={() => toggleSection("providers")}
-      >
-        <ProviderHealthPanel />
-      </CollapsibleSection>
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <SortableContext items={sectionOrder} strategy={verticalListSortingStrategy}>
+          <div className="space-y-4">
+            {sectionOrder.map((key) => (
+              <SortableWrapper key={key} id={key}>
+                {(dragHandle) => renderSectionContent(key, dragHandle) ?? null}
+              </SortableWrapper>
+            ))}
+          </div>
+        </SortableContext>
+      </DndContext>
     </motion.section>
   );
 }

@@ -57,6 +57,7 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@remotion/cli": "^4.0.429",
+    "@tanstack/react-virtual": "^3.13.21",
     "colord": "^2.9.3",
     "cors": "^2.8.6",
     "express": "^5.2.1",

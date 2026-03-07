@@ -1,4 +1,6 @@
+import { useRef, useEffect, useCallback } from "react";
 import type { RefObject } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import type { Agent, Message, MessageAttachment } from "../../types";
 import type { DecisionOption } from "../chat/decision-request";
 import AgentAvatar from "../AgentAvatar";
@@ -171,8 +173,194 @@ export default function ChatMessageList({
     streamingMessage && selectedAgent && streamingMessage.agent_id === selectedAgent.id,
   );
 
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const prevCountRef = useRef(visibleMessages.length);
+
+  const virtualizer = useVirtualizer({
+    count: visibleMessages.length,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: () => 80,
+    overscan: 5,
+  });
+
+  // Auto-scroll to bottom when new messages arrive or streaming starts
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const isAtBottom = el.scrollHeight - el.scrollTop <= el.clientHeight + 120;
+    const hasNewMessages = visibleMessages.length > prevCountRef.current;
+    prevCountRef.current = visibleMessages.length;
+    if (isAtBottom || hasNewMessages) {
+      if (visibleMessages.length > 0) {
+        virtualizer.scrollToIndex(visibleMessages.length - 1, { align: "end" });
+      }
+    }
+    // Dispatch office banner event for new announcement messages from user/CEO
+    if (hasNewMessages) {
+      const lastMsg = visibleMessages[visibleMessages.length - 1];
+      if (lastMsg && lastMsg.message_type === "announcement" && (lastMsg.sender_type === "user" || lastMsg.sender_type === "ceo")) {
+        window.dispatchEvent(new CustomEvent("agentdesk_office_announcement", {
+          detail: { text: lastMsg.content?.slice(0, 120) ?? "", sender: "CEO" },
+        }));
+      }
+    }
+  }, [visibleMessages.length, virtualizer]);
+
+  // Scroll to bottom during streaming
+  useEffect(() => {
+    if (isStreamingForAgent && scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [isStreamingForAgent, streamingMessage?.content]);
+
+  const renderMessage = useCallback((msg: Message) => {
+    const isCeo = msg.sender_type === "ceo";
+    const isDirective = msg.message_type === "directive";
+    const isSystem = msg.sender_type === "system" || msg.message_type === "announcement" || isDirective;
+
+    const senderAgent =
+      msg.sender_agent ?? agents.find((agent) => agent.id === msg.sender_id) ?? buildFallbackSenderAgent(msg);
+    const senderNameFromPayload = normalizeMessageSenderName(msg);
+    const senderName = isCeo
+      ? tr("CEO", "CEO")
+      : isSystem
+        ? tr("시스템", "System", "システム", "系统")
+        : getAgentName(senderAgent) || senderNameFromPayload || tr("알 수 없음", "Unknown", "不明", "未知");
+    const decisionRequest = decisionRequestByMessage.get(msg.id);
+    const isPinned = pinnedIds?.has(msg.id);
+
+    if (msg.sender_type === "agent" && msg.receiver_type === "all") {
+      return (
+        <div className="group flex items-end gap-2">
+          <AgentAvatar agent={senderAgent} spriteMap={spriteMap} size={28} />
+          <div className="flex max-w-[75%] flex-col gap-1">
+            <span className="px-1 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>{senderName}</span>
+            <div className="announcement-reply-bubble border border-yellow-500/20 px-4 py-2.5 text-sm" style={{ borderRadius: "2px", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)" }}>
+              <MessageContent content={msg.content} />
+              {msg.attachments && <AttachmentChips attachments={msg.attachments} />}
+            </div>
+            {decisionRequest && renderDecisionRequest(msg, decisionRequest)}
+            <div className="flex items-center gap-1">
+              <span className="px-1 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>{formatTime(msg.created_at, locale)}</span>
+              {onPinToggle && renderPinButton(msg.id, isPinned)}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (isSystem || msg.receiver_type === "all") {
+      return (
+        <div className="flex flex-col items-center gap-1">
+          {isDirective && (
+            <span className="border px-2 py-0.5 text-xs font-bold font-mono" style={{ borderRadius: "2px", borderColor: "rgba(244,63,94,0.35)", background: "rgba(244,63,94,0.1)", color: "rgb(253,164,175)" }}>
+              {tr("업무지시", "Directive", "業務指示", "业务指示")}
+            </span>
+          )}
+          <div
+            className={`max-w-[85%] px-4 py-2.5 text-center text-sm shadow-sm ${
+              isDirective
+                ? "border border-red-500/30 bg-red-500/15 text-red-300"
+                : "announcement-message-bubble border border-yellow-500/30 bg-yellow-500/15 text-yellow-300"
+            }`}
+            style={{ borderRadius: "2px" }}
+          >
+            <MessageContent content={msg.content} />
+            {msg.attachments && <AttachmentChips attachments={msg.attachments} />}
+          </div>
+          <span className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>{formatTime(msg.created_at, locale)}</span>
+        </div>
+      );
+    }
+
+    if (isCeo) {
+      return (
+        <div className="group flex flex-col items-end gap-1">
+          <span className="px-1 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>{tr("CEO", "CEO")}</span>
+          <div className="max-w-[80%] px-4 py-2.5 text-sm text-black" style={{ borderRadius: "2px", background: "var(--th-accent)" }}>
+            <MessageContent content={msg.content} />
+            {msg.attachments && <AttachmentChips attachments={msg.attachments} />}
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="px-1 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>{formatTime(msg.created_at, locale)}</span>
+            {onPinToggle && renderPinButton(msg.id, isPinned)}
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="group flex items-end gap-2">
+        <AgentAvatar agent={senderAgent} spriteMap={spriteMap} size={28} />
+        <div className="flex max-w-[75%] flex-col gap-1">
+          <span className="px-1 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>{senderName}</span>
+          <div className="px-4 py-2.5 text-sm" style={{ borderRadius: "2px", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)" }}>
+            <MessageContent content={msg.content} />
+            {msg.attachments && <AttachmentChips attachments={msg.attachments} />}
+          </div>
+          {decisionRequest && renderDecisionRequest(msg, decisionRequest)}
+          <div className="flex items-center gap-1">
+            <span className="px-1 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>{formatTime(msg.created_at, locale)}</span>
+            {onPinToggle && renderPinButton(msg.id, isPinned)}
+          </div>
+        </div>
+      </div>
+    );
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [agents, spriteMap, locale, tr, getAgentName, decisionRequestByMessage, decisionReplyKey, onDecisionOptionReply, onDecisionManualDraft, onPinToggle, pinnedIds]);
+
+  function renderDecisionRequest(msg: Message, decisionRequest: { options: DecisionOption[] }) {
+    return (
+      <div className="px-2 py-2" style={{ borderRadius: "2px", border: "1px solid rgba(251,191,36,0.3)", background: "rgba(251,191,36,0.05)" }}>
+        <p className="text-[11px] font-medium font-mono" style={{ color: "var(--th-accent)" }}>
+          {tr("의사결정 요청", "Decision request", "意思決定リクエスト", "决策请求")}
+        </p>
+        <div className="mt-1.5 space-y-1">
+          {decisionRequest.options.map((option) => {
+            const key = `${msg.id}:${option.number}`;
+            const isBusy = decisionReplyKey === key;
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => onDecisionOptionReply(msg, option)}
+                disabled={isBusy}
+                className="decision-inline-option w-full px-2 py-1.5 text-left text-[11px] font-mono transition disabled:opacity-60"
+                style={{ borderRadius: "2px" }}
+              >
+                {isBusy ? tr("전송 중...", "Sending...", "送信中...", "发送中...") : `${option.number}. ${option.label}`}
+              </button>
+            );
+          })}
+        </div>
+        <button
+          type="button"
+          onClick={() => onDecisionManualDraft(decisionRequest.options[0])}
+          className="mt-2 text-[11px] font-mono underline underline-offset-2"
+          style={{ color: "var(--th-accent)" }}
+        >
+          {tr("직접 답변 작성", "Write custom reply", "カスタム返信を作成", "编写自定义回复")}
+        </button>
+      </div>
+    );
+  }
+
+  function renderPinButton(msgId: string, isPinned: boolean | undefined) {
+    return (
+      <button
+        type="button"
+        onClick={() => onPinToggle!(msgId)}
+        className={`h-5 w-5 flex items-center justify-center transition-opacity ${isPinned ? "opacity-100" : "opacity-0 group-hover:opacity-60 hover:!opacity-100"}`}
+        title={isPinned ? tr("고정 해제", "Unpin", "ピン解除", "取消固定") : tr("고정", "Pin", "ピン留め", "固定")}
+        style={{ color: isPinned ? "var(--th-accent)" : "var(--th-text-muted)" }}
+      >
+        📌
+      </button>
+    );
+  }
+
   return (
-    <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4">
+    <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
       {visibleMessages.length === 0 ? (
         <div className="flex h-full flex-col items-center justify-center gap-4 text-center">
           {searchQuery?.trim() ? (
@@ -215,197 +403,23 @@ export default function ChatMessageList({
         </div>
       ) : (
         <>
-          {visibleMessages.map((msg) => {
-            const isCeo = msg.sender_type === "ceo";
-            const isDirective = msg.message_type === "directive";
-            const isSystem = msg.sender_type === "system" || msg.message_type === "announcement" || isDirective;
-
-            const senderAgent =
-              msg.sender_agent ?? agents.find((agent) => agent.id === msg.sender_id) ?? buildFallbackSenderAgent(msg);
-            const senderNameFromPayload = normalizeMessageSenderName(msg);
-            const senderName = isCeo
-              ? tr("CEO", "CEO")
-              : isSystem
-                ? tr("시스템", "System", "システム", "系统")
-                : getAgentName(senderAgent) || senderNameFromPayload || tr("알 수 없음", "Unknown", "不明", "未知");
-            const decisionRequest = decisionRequestByMessage.get(msg.id);
-
-            const isPinned = pinnedIds?.has(msg.id);
-
-            if (msg.sender_type === "agent" && msg.receiver_type === "all") {
+          {/* Virtual list */}
+          <div style={{ height: `${virtualizer.getTotalSize()}px`, position: "relative" }}>
+            {virtualizer.getVirtualItems().map((vItem) => {
+              const msg = visibleMessages[vItem.index];
               return (
-                <div key={msg.id} className="group flex items-end gap-2">
-                  <AgentAvatar agent={senderAgent} spriteMap={spriteMap} size={28} />
-                  <div className="flex max-w-[75%] flex-col gap-1">
-                    <span className="px-1 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>{senderName}</span>
-                    <div className="announcement-reply-bubble border border-yellow-500/20 px-4 py-2.5 text-sm" style={{ borderRadius: "2px", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)" }}>
-                      <MessageContent content={msg.content} />
-                      {msg.attachments && <AttachmentChips attachments={msg.attachments} />}
-                    </div>
-                    {decisionRequest && (
-                      <div className="px-2 py-2" style={{ borderRadius: "2px", border: "1px solid rgba(251,191,36,0.3)", background: "rgba(251,191,36,0.05)" }}>
-                        <p className="text-[11px] font-medium font-mono" style={{ color: "var(--th-accent)" }}>
-                          {tr("의사결정 요청", "Decision request", "意思決定リクエスト", "决策请求")}
-                        </p>
-                        <div className="mt-1.5 space-y-1">
-                          {decisionRequest.options.map((option) => {
-                            const key = `${msg.id}:${option.number}`;
-                            const isBusy = decisionReplyKey === key;
-                            return (
-                              <button
-                                key={key}
-                                type="button"
-                                onClick={() => onDecisionOptionReply(msg, option)}
-                                disabled={isBusy}
-                                className="decision-inline-option w-full px-2 py-1.5 text-left text-[11px] font-mono transition disabled:opacity-60"
-                                style={{ borderRadius: "2px" }}
-                              >
-                                {isBusy
-                                  ? tr("전송 중...", "Sending...", "送信中...", "发送中...")
-                                  : `${option.number}. ${option.label}`}
-                              </button>
-                            );
-                          })}
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => onDecisionManualDraft(decisionRequest.options[0])}
-                          className="mt-2 text-[11px] font-mono underline underline-offset-2"
-                          style={{ color: "var(--th-accent)" }}
-                        >
-                          {tr("직접 답변 작성", "Write custom reply", "カスタム返信を作成", "编写自定义回复")}
-                        </button>
-                      </div>
-                    )}
-                    <div className="flex items-center gap-1">
-                      <span className="px-1 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>{formatTime(msg.created_at, locale)}</span>
-                      {onPinToggle && (
-                        <button
-                          type="button"
-                          onClick={() => onPinToggle(msg.id)}
-                          className={`h-5 w-5 flex items-center justify-center transition-opacity ${isPinned ? "opacity-100" : "opacity-0 group-hover:opacity-60 hover:!opacity-100"}`}
-                          title={isPinned ? tr("고정 해제", "Unpin", "ピン解除", "取消固定") : tr("고정", "Pin", "ピン留め", "固定")}
-                          style={{ color: isPinned ? "var(--th-accent)" : "var(--th-text-muted)" }}
-                        >
-                          📌
-                        </button>
-                      )}
-                    </div>
-                  </div>
+                <div
+                  key={vItem.key}
+                  data-index={vItem.index}
+                  ref={virtualizer.measureElement}
+                  style={{ position: "absolute", top: 0, left: 0, width: "100%", transform: `translateY(${vItem.start}px)`, paddingBottom: "12px" }}
+                >
+                  {renderMessage(msg)}
                 </div>
               );
-            }
+            })}
+          </div>
 
-            if (isSystem || msg.receiver_type === "all") {
-              return (
-                <div key={msg.id} className="flex flex-col items-center gap-1">
-                  {isDirective && (
-                    <span className="border px-2 py-0.5 text-xs font-bold font-mono" style={{ borderRadius: "2px", borderColor: "rgba(244,63,94,0.35)", background: "rgba(244,63,94,0.1)", color: "rgb(253,164,175)" }}>
-                      {tr("업무지시", "Directive", "業務指示", "业务指示")}
-                    </span>
-                  )}
-                  <div
-                    className={`max-w-[85%] px-4 py-2.5 text-center text-sm shadow-sm ${
-                      isDirective
-                        ? "border border-red-500/30 bg-red-500/15 text-red-300"
-                        : "announcement-message-bubble border border-yellow-500/30 bg-yellow-500/15 text-yellow-300"
-                    }`}
-                    style={{ borderRadius: "2px" }}
-                  >
-                    <MessageContent content={msg.content} />
-                    {msg.attachments && <AttachmentChips attachments={msg.attachments} />}
-                  </div>
-                  <span className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>{formatTime(msg.created_at, locale)}</span>
-                </div>
-              );
-            }
-
-            if (isCeo) {
-              return (
-                <div key={msg.id} className="group flex flex-col items-end gap-1">
-                  <span className="px-1 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>{tr("CEO", "CEO")}</span>
-                  <div className="max-w-[80%] px-4 py-2.5 text-sm text-black" style={{ borderRadius: "2px", background: "var(--th-accent)" }}>
-                    <MessageContent content={msg.content} />
-                    {msg.attachments && <AttachmentChips attachments={msg.attachments} />}
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <span className="px-1 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>{formatTime(msg.created_at, locale)}</span>
-                    {onPinToggle && (
-                      <button
-                        type="button"
-                        onClick={() => onPinToggle(msg.id)}
-                        className={`h-5 w-5 flex items-center justify-center transition-opacity ${isPinned ? "opacity-100" : "opacity-0 group-hover:opacity-60 hover:!opacity-100"}`}
-                        style={{ color: isPinned ? "var(--th-accent)" : "var(--th-text-muted)" }}
-                      >
-                        📌
-                      </button>
-                    )}
-                  </div>
-                </div>
-              );
-            }
-
-            return (
-              <div key={msg.id} className="group flex items-end gap-2">
-                <AgentAvatar agent={senderAgent} spriteMap={spriteMap} size={28} />
-                <div className="flex max-w-[75%] flex-col gap-1">
-                  <span className="px-1 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>{senderName}</span>
-                  <div className="px-4 py-2.5 text-sm" style={{ borderRadius: "2px", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)" }}>
-                    <MessageContent content={msg.content} />
-                    {msg.attachments && <AttachmentChips attachments={msg.attachments} />}
-                  </div>
-                  {decisionRequest && (
-                    <div className="px-2 py-2" style={{ borderRadius: "2px", border: "1px solid rgba(251,191,36,0.3)", background: "rgba(251,191,36,0.05)" }}>
-                      <p className="text-[11px] font-medium font-mono" style={{ color: "var(--th-accent)" }}>
-                        {tr("의사결정 요청", "Decision request", "意思決定リクエスト", "决策请求")}
-                      </p>
-                      <div className="mt-1.5 space-y-1">
-                        {decisionRequest.options.map((option) => {
-                          const key = `${msg.id}:${option.number}`;
-                          const isBusy = decisionReplyKey === key;
-                          return (
-                            <button
-                              key={key}
-                              type="button"
-                              onClick={() => onDecisionOptionReply(msg, option)}
-                              disabled={isBusy}
-                              className="decision-inline-option w-full px-2 py-1.5 text-left text-[11px] font-mono transition disabled:opacity-60"
-                              style={{ borderRadius: "2px" }}
-                            >
-                              {isBusy
-                                ? tr("전송 중...", "Sending...", "送信中...", "发送中...")
-                                : `${option.number}. ${option.label}`}
-                            </button>
-                          );
-                        })}
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => onDecisionManualDraft(decisionRequest.options[0])}
-                        className="mt-2 text-[11px] font-mono underline underline-offset-2"
-                        style={{ color: "var(--th-accent)" }}
-                      >
-                        {tr("직접 답변 작성", "Write custom reply", "カスタム返信を作成", "编写自定义回复")}
-                      </button>
-                    </div>
-                  )}
-                  <div className="flex items-center gap-1">
-                    <span className="px-1 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>{formatTime(msg.created_at, locale)}</span>
-                    {onPinToggle && (
-                      <button
-                        type="button"
-                        onClick={() => onPinToggle(msg.id)}
-                        className={`h-5 w-5 flex items-center justify-center transition-opacity ${isPinned ? "opacity-100" : "opacity-0 group-hover:opacity-60 hover:!opacity-100"}`}
-                        style={{ color: isPinned ? "var(--th-accent)" : "var(--th-text-muted)" }}
-                      >
-                        📌
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            );
-          })}
 
           {isStreamingForAgent && streamingMessage?.content && (
             <div className="flex items-end gap-2">

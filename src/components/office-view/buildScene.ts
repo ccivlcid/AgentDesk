@@ -215,6 +215,8 @@ export function buildOfficeScene(context: BuildOfficeSceneContext): void {
     activeLocale,
     activeMeetingTaskId: activeMeetingTaskIdRef.current,
     onOpenActiveMeetingMinutes: meetingMinutesOpenRef.current,
+    meetingPresence: dataRef.current.meetingPresence,
+    agents,
   });
 
   // ── 3. Department floors (top → bottom) ──────────────────────

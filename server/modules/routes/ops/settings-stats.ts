@@ -79,12 +79,13 @@ export function registerOpsSettingsStatsRoutes(ctx: RuntimeContext): void {
     ).run(OFFICE_PACK_HYDRATED_PACKS_KEY, serialized);
   };
 
-  const maybeHydratePackOnFirstSelection = (selectedPackRaw: unknown, profilesOverride?: unknown): void => {
+  const maybeHydratePackOnFirstSelection = (selectedPackRaw: unknown, profilesOverride?: unknown, resync = false): void => {
     const selectedPack = normalizePackKey(selectedPackRaw);
     if (!selectedPack || selectedPack === "development") return;
 
     const hydratedPacks = readHydratedPackSet();
-    if (hydratedPacks.has(selectedPack)) return;
+    // Skip if already hydrated — unless caller requests a forced re-sync (e.g. on settings PUT)
+    if (!resync && hydratedPacks.has(selectedPack)) return;
 
     const profilesValue =
       profilesOverride ??
@@ -97,8 +98,10 @@ export function registerOpsSettingsStatsRoutes(ctx: RuntimeContext): void {
 
     const result = syncOfficePackAgentsForPack(db, profilesValue, selectedPack, nowMs);
     if (result.departmentsSynced > 0 || result.agentsSynced > 0) {
-      hydratedPacks.add(selectedPack);
-      saveHydratedPackSet(hydratedPacks);
+      if (!hydratedPacks.has(selectedPack)) {
+        hydratedPacks.add(selectedPack);
+        saveHydratedPackSet(hydratedPacks);
+      }
     }
   };
 
@@ -158,7 +161,8 @@ export function registerOpsSettingsStatsRoutes(ctx: RuntimeContext): void {
         upsert.run(key, typeof value === "string" ? value : JSON.stringify(value));
       }
       if (selectedOfficePackInPayload !== undefined) {
-        maybeHydratePackOnFirstSelection(selectedOfficePackInPayload, officePackProfilesInPayload);
+        // resync=true: always re-sync profile→DB so settings-path edits are not lost after hydration
+        maybeHydratePackOnFirstSelection(selectedOfficePackInPayload, officePackProfilesInPayload, true);
       }
     } catch (err: any) {
       const detail = err?.message || String(err);

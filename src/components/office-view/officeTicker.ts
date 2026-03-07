@@ -63,6 +63,8 @@ interface AgentAnimItem {
   animated?: AnimatedSprite;
   frameCount: number;
   bounceUntilTick: number;
+  moodIcon?: Text;
+  idleTicks: number;
 }
 
 interface SubCloneAnimItem {
@@ -286,7 +288,7 @@ export function runOfficeTickerStep(ctx: OfficeTickerContext): void {
   }
 
   for (const item of ctx.animItemsRef.current) {
-    const { sprite, status, baseX, baseY, particles, agentId, cliProvider, deskG, bedG, blanketG, phase, animated, frameCount } = item;
+    const { sprite, status, baseX, baseY, particles, agentId, cliProvider, deskG, bedG, blanketG, phase, animated, frameCount, moodIcon } = item;
     if (agentId) {
       const meetingNow = Date.now();
       const inMeetingPresence = (ctx.dataRef.current.meetingPresence ?? []).some((row) => {
@@ -300,6 +302,24 @@ export function runOfficeTickerStep(ctx: OfficeTickerContext): void {
 
     sprite.position.x = baseX;
     sprite.position.y = baseY;
+
+    // ── Mood icon update ──────────────────────────────────────────
+    if (moodIcon && !moodIcon.destroyed) {
+      if (status === "working") {
+        item.idleTicks = 0;
+        const blink = tick % 40 < 20;
+        moodIcon.text = "💻";
+        moodIcon.visible = blink;
+      } else {
+        item.idleTicks += 1;
+        if (item.idleTicks > 90) {
+          moodIcon.text = "💤";
+          moodIcon.visible = true;
+        } else {
+          moodIcon.visible = false;
+        }
+      }
+    }
 
     // ===== CHARACTER ANIMATION BLOCK =====
     const cliUsageForAnim = cliProvider ? ctx.cliUsageRef.current?.[cliProvider] : undefined;

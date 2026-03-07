@@ -406,6 +406,86 @@ export default function AgentManager({
     [clearDeptDragState, draggingDeptId, getDropPosition, moveDeptByDrag],
   );
 
+  const handleDbBackedDepartmentSave = useCallback(
+    async (input: {
+      mode: "create" | "update";
+      id: string;
+      payload: {
+        name: string;
+        name_ko: string;
+        name_ja: string | null;
+        name_zh: string | null;
+        icon: string;
+        color: string;
+        description: string | null;
+        prompt: string | null;
+        sort_order: number;
+      };
+    }) => {
+      if (!useDbBackedPack) return;
+      if (input.mode === "update") {
+        await api.updateDepartment(input.id, {
+          name: input.payload.name,
+          name_ko: input.payload.name_ko,
+          name_ja: input.payload.name_ja,
+          name_zh: input.payload.name_zh,
+          icon: input.payload.icon,
+          color: input.payload.color,
+          description: input.payload.description,
+          prompt: input.payload.prompt,
+          workflow_pack_key: officePackKey,
+        });
+        const nextDepartments = departments.map((d) =>
+          d.id === input.id
+            ? {
+                ...d,
+                name: input.payload.name,
+                name_ko: input.payload.name_ko,
+                name_ja: input.payload.name_ja,
+                name_zh: input.payload.name_zh,
+                icon: input.payload.icon,
+                color: input.payload.color,
+                description: input.payload.description,
+                prompt: input.payload.prompt,
+              }
+            : d,
+        );
+        await persistIsolatedProfile(nextDepartments, agents);
+      } else {
+        const created = await api.createDepartment({
+          id: input.id,
+          name: input.payload.name,
+          name_ko: input.payload.name_ko,
+          name_ja: input.payload.name_ja ?? undefined,
+          name_zh: input.payload.name_zh ?? undefined,
+          icon: input.payload.icon,
+          color: input.payload.color,
+          description: input.payload.description ?? undefined,
+          prompt: input.payload.prompt ?? undefined,
+          workflow_pack_key: officePackKey,
+        });
+        await persistIsolatedProfile([...departments, created], agents);
+      }
+    },
+    [agents, departments, officePackKey, persistIsolatedProfile, useDbBackedPack],
+  );
+
+  const handleDbBackedDepartmentDelete = useCallback(
+    async (departmentId: string) => {
+      if (!useDbBackedPack) return;
+      await api.deleteDepartment(departmentId, { workflowPackKey: officePackKey });
+      const nextDepartments = departments
+        .filter((d) => d.id !== departmentId)
+        .sort((a, b) => a.sort_order - b.sort_order)
+        .map((d, i) => ({ ...d, sort_order: i + 1 }));
+      const nextAgents = agents.map((a) =>
+        a.department_id === departmentId ? { ...a, department_id: null } : a,
+      );
+      await persistIsolatedProfile(nextDepartments, nextAgents);
+    },
+    [agents, departments, officePackKey, persistIsolatedProfile, useDbBackedPack],
+  );
+
   const handleIsolatedDepartmentSave = useCallback(
     async (input: {
       mode: "create" | "update";
@@ -621,8 +701,20 @@ export default function AgentManager({
           onSave={() => {
             if (!isIsolatedPack || useDbBackedPack) onAgentsChange();
           }}
-          onSaveDepartment={isIsolatedPack && !useDbBackedPack ? handleIsolatedDepartmentSave : undefined}
-          onDeleteDepartment={isIsolatedPack && !useDbBackedPack ? handleIsolatedDepartmentDelete : undefined}
+          onSaveDepartment={
+            isIsolatedPack
+              ? useDbBackedPack
+                ? handleDbBackedDepartmentSave
+                : handleIsolatedDepartmentSave
+              : undefined
+          }
+          onDeleteDepartment={
+            isIsolatedPack
+              ? useDbBackedPack
+                ? handleDbBackedDepartmentDelete
+                : handleIsolatedDepartmentDelete
+              : undefined
+          }
           onClose={closeDeptModal}
         />
       )}

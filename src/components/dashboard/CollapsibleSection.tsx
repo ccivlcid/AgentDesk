@@ -8,6 +8,7 @@ interface CollapsibleSectionProps {
   children: ReactNode;
   subtitle?: string;
   right?: ReactNode;
+  dragHandle?: ReactNode;
 }
 
 export function CollapsibleSection({
@@ -18,6 +19,7 @@ export function CollapsibleSection({
   children,
   subtitle,
   right,
+  dragHandle,
 }: CollapsibleSectionProps) {
   return (
     <div
@@ -29,15 +31,16 @@ export function CollapsibleSection({
       }}
     >
       {/* FM2024 panel header: amber left border */}
+      <div className="flex items-stretch" style={{ borderLeft: "3px solid var(--th-accent, #f59e0b)" }}>
+        {dragHandle}
       <button
         type="button"
         id={`dashboard-section-${id}`}
         aria-expanded={open}
         aria-controls={`dashboard-section-${id}-content`}
         onClick={onToggle}
-        className="flex w-full items-center justify-between gap-3 px-4 py-2.5 text-left"
+        className="flex flex-1 items-center justify-between gap-3 px-4 py-2.5 text-left"
         style={{
-          borderLeft: "3px solid var(--th-accent, #f59e0b)",
           transition: "background 0.1s linear",
         }}
       >
@@ -75,6 +78,7 @@ export function CollapsibleSection({
         </div>
         {right != null && <div className="flex-shrink-0">{right}</div>}
       </button>
+      </div>
 
       <div
         id={`dashboard-section-${id}-content`}

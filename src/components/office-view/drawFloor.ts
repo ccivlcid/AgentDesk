@@ -35,6 +35,47 @@ import type { FurnitureLayout } from "./furniture-catalog";
 // Tower rooms fit exactly 3 agents (COLS_PER_ROW × 1 row)
 const MAX_AGENTS_PER_FLOOR = COLS_PER_ROW;
 
+function drawFloorStatStrip(
+  floor: Container,
+  rx: number,
+  ry: number,
+  rw: number,
+  rh: number,
+  deptAgents: Agent[],
+  tasks: Task[],
+  accent: number,
+): void {
+  const STRIP_W = 18;
+  const sx = rx + rw - STRIP_W;
+
+  const deptTaskIds = new Set(deptAgents.map((a) => a.id));
+  const deptTasks = tasks.filter((t) => t.assigned_agent_id && deptTaskIds.has(t.assigned_agent_id));
+  const totalTasks = deptTasks.length;
+  const doneTasks = deptTasks.filter((t) => t.status === "done").length;
+  const activeAgents = deptAgents.filter((a) => a.status === "working").length;
+  const clearRate = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
+
+  const stripBg = new Graphics();
+  stripBg.rect(sx, ry + 1, STRIP_W - 1, rh - 2).fill({ color: 0x000000, alpha: 0.35 });
+  stripBg.rect(sx, ry + 1, 1, rh - 2).fill({ color: accent, alpha: 0.4 });
+  floor.addChild(stripBg);
+
+  const stats = [
+    `T:${totalTasks}`,
+    `D:${doneTasks}`,
+    `${clearRate}%`,
+    `A:${activeAgents}`,
+  ];
+  const rowH = Math.floor((rh - 4) / stats.length);
+  const txtStyle = new TextStyle({ fontSize: 5, fill: accent, fontFamily: "monospace", align: "left" });
+  stats.forEach((line, i) => {
+    const t = new Text({ text: line, style: txtStyle });
+    t.anchor.set(0, 0.5);
+    t.position.set(sx + 2, ry + 4 + rowH * i + rowH / 2);
+    floor.addChild(t);
+  });
+}
+
 interface DrawFloorParams {
   stage: Container;
   drawer: FurnitureDrawer;
@@ -317,6 +358,9 @@ export function drawFloor({
     overflowTxt.position.set(rx + rw - 4, ry + rh - 4);
     floor.addChild(overflowTxt);
   }
+
+  // ── Floor HUD stat strip (right wall) ─────────────────────────
+  drawFloorStatStrip(floor, rx, ry, rw, rh, deptAgents, tasks, theme.accent);
 
   stage.addChild(floor);
 

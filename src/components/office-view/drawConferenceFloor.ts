@@ -6,8 +6,12 @@ import {
   drawAmbientGlow,
   drawRoomAtmosphere,
   drawTiledFloor,
+  hashStr,
 } from "./drawing-core";
 import type { FurnitureDrawer } from "./drawing-styles";
+import type { Agent } from "../../types";
+
+const ATTENDEE_COLORS = [0x60a5fa, 0x34d399, 0xfbbf24, 0xf87171, 0xa78bfa, 0x38bdf8];
 
 const CONF_THEME = {
   floor1: 0x1a1a2e,
@@ -24,6 +28,8 @@ interface DrawConferenceFloorParams {
   activeLocale: SupportedLocale;
   activeMeetingTaskId: string | null;
   onOpenActiveMeetingMinutes?: ((taskId: string) => void) | null;
+  meetingPresence?: Array<{ agent_id: string; until: number }>;
+  agents?: Agent[];
 }
 
 export function drawConferenceFloor({
@@ -34,6 +40,8 @@ export function drawConferenceFloor({
   activeLocale,
   activeMeetingTaskId,
   onOpenActiveMeetingMinutes,
+  meetingPresence,
+  agents,
 }: DrawConferenceFloorParams): void {
   const cx = WALL_W;
   const cw = FLOOR_W - ELEVATOR_W - WALL_W * 2;
@@ -164,6 +172,58 @@ export function drawConferenceFloor({
     if (i < nChairsBot) {
       drawer.drawChair(layer, sx, tableY + tableH + 12, chairColor);
     }
+  }
+
+  // ── Meeting attendees ─────────────────────────────────────────
+  if (isMeeting && agents && meetingPresence && meetingPresence.length > 0) {
+    const attendeeIds = meetingPresence.map((mp) => mp.agent_id);
+    const totalSeats = (nChairsTop + nChairsBot);
+
+    for (let seatIdx = 0; seatIdx < Math.min(totalSeats, 8); seatIdx++) {
+      const agentId = attendeeIds[seatIdx];
+      if (!agentId) continue;
+      const agent = agents.find((a) => a.id === agentId);
+      if (!agent) continue;
+
+      const isTop = seatIdx < nChairsTop;
+      const localIdx = isTop ? seatIdx : seatIdx - nChairsTop;
+      const totalInRow = isTop ? nChairsTop : nChairsBot;
+      const sx = tableX + (tableW / (totalInRow + 1)) * (localIdx + 1);
+      const chairCenterY = isTop ? tableY - 2 : tableY + tableH + 12;
+
+      const color = ATTENDEE_COLORS[hashStr(agent.id) % ATTENDEE_COLORS.length];
+      const bodyColor = blendColor(color, 0x000000, 0.2);
+      const figureG = new Graphics();
+
+      if (isTop) {
+        // Seated above table — body above chair, head above body
+        const headY = chairCenterY - 17;
+        figureG.rect(sx - 4, headY + 5, 8, 7).fill({ color: bodyColor, alpha: 0.85 });
+        figureG.circle(sx, headY, 5).fill({ color, alpha: 0.92 });
+        figureG.circle(sx - 1.5, headY - 0.5, 0.9).fill({ color: 0x000000, alpha: 0.55 });
+        figureG.circle(sx + 1.5, headY - 0.5, 0.9).fill({ color: 0x000000, alpha: 0.55 });
+        layer.addChild(figureG);
+        const lbl = new Text({ text: (agent.name ?? "?").slice(0, 5), style: new TextStyle({ fontSize: 5, fill: 0xffffff, fontFamily: "monospace", align: "center" }) });
+        lbl.anchor.set(0.5, 1);
+        lbl.position.set(sx, headY - 7);
+        layer.addChild(lbl);
+      } else {
+        // Seated below table — body below chair, head below body
+        const headY = chairCenterY + 19;
+        figureG.rect(sx - 4, headY - 12, 8, 7).fill({ color: bodyColor, alpha: 0.85 });
+        figureG.circle(sx, headY, 5).fill({ color, alpha: 0.92 });
+        figureG.circle(sx - 1.5, headY - 0.5, 0.9).fill({ color: 0x000000, alpha: 0.55 });
+        figureG.circle(sx + 1.5, headY - 0.5, 0.9).fill({ color: 0x000000, alpha: 0.55 });
+        layer.addChild(figureG);
+        const lbl = new Text({ text: (agent.name ?? "?").slice(0, 5), style: new TextStyle({ fontSize: 5, fill: 0xffffff, fontFamily: "monospace", align: "center" }) });
+        lbl.anchor.set(0.5, 0);
+        lbl.position.set(sx, headY + 7);
+        layer.addChild(lbl);
+      }
+    }
+
+    // Extra amber glow on table while meeting is live
+    drawAmbientGlow(layer, tableX + tableW / 2, tableY + tableH / 2, tableW * 0.38, CONF_THEME.accent, 0.10);
   }
 
   // Plants on corners

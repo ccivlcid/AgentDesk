@@ -44,6 +44,8 @@ export interface AnimItem {
   frameCount: number;
   bounceUntilTick: number;
   personaGlow?: Graphics;
+  moodIcon?: Text;
+  idleTicks: number;
 }
 
 export interface BreakAnimItem {

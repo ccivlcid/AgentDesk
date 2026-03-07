@@ -133,6 +133,13 @@ export function renderDeskAgentAndSubClones({
     room.addChildAt(personaGlow, 0);
   }
 
+  // Mood icon — visible above agent head, updated each ticker tick
+  const moodIcon = new Text({ text: "", style: new TextStyle({ fontSize: 10 }) });
+  moodIcon.anchor.set(0.5, 1);
+  moodIcon.position.set(0, -TARGET_CHAR_H - 4);
+  moodIcon.visible = false;
+  charContainer.addChild(moodIcon);
+
   const particles = new Container();
   room.addChild(particles);
   animItemsRef.current.push({
@@ -151,6 +158,8 @@ export function renderDeskAgentAndSubClones({
     frameCount: frames.length,
     bounceUntilTick: 0,
     personaGlow,
+    moodIcon,
+    idleTicks: 0,
   });
 
   const activeTask = tasks.find((task) => task.assigned_agent_id === agent.id && task.status === "in_progress");

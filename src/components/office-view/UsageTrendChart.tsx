@@ -106,11 +106,10 @@ export default function UsageTrendChart({ language }: Props) {
             <button
               key={d}
               onClick={() => setDays(d)}
-              className={`px-2.5 py-1 text-[11px] font-mono transition-colors ${
-                days === d
-                  ? "bg-cyan-500/30 text-cyan-300 border border-cyan-500/40"
-                  : "border border-[var(--th-border)] bg-[var(--th-bg-elevated)] text-[var(--th-text-muted)] hover:border-[var(--th-text-muted)] hover:text-[var(--th-text-secondary)]"
-              }`}
+              className="px-2.5 py-1 text-[11px] font-mono transition-colors"
+              style={days === d
+                ? { borderRadius: "2px", border: "1px solid rgba(6,182,212,0.4)", background: "rgba(6,182,212,0.3)", color: "rgb(103,232,249)" }
+                : { borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-muted)" }}
             >
               {d}{tr("일", "d")}
             </button>
@@ -123,8 +122,8 @@ export default function UsageTrendChart({ language }: Props) {
         {chartData.providers.map((p) => (
           <span key={p} className="flex items-center gap-1">
             <span
-              className="w-2.5 h-2.5 rounded-sm"
-              style={{ backgroundColor: PROVIDER_COLORS[p] ?? "#64748b" }}
+              className="w-2.5 h-2.5"
+              style={{ backgroundColor: PROVIDER_COLORS[p] ?? "#64748b", borderRadius: "1px" }}
             />
             {p}
           </span>
