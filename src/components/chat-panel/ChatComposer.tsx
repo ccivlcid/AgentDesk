@@ -119,15 +119,14 @@ export default function ChatComposer({
 
   return (
     <>
-      <div className="flex flex-shrink-0 gap-2 border-t border-gray-700/50 px-4 pb-1 pt-3">
+      <div className="flex flex-shrink-0 gap-2 px-4 pb-1 pt-3" style={{ borderTop: "1px solid var(--th-border)" }}>
         <button
           onClick={() => onModeChange(mode === "task" ? "chat" : "task")}
           disabled={!selectedAgent}
-          className={`flex flex-1 items-center justify-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium transition-colors ${
-            mode === "task"
-              ? "bg-blue-600 text-white"
-              : "bg-gray-700 text-gray-300 hover:bg-gray-600 disabled:cursor-not-allowed disabled:opacity-40"
-          }`}
+          className="flex flex-1 items-center justify-center gap-1 px-2 py-1.5 text-xs font-medium font-mono transition disabled:cursor-not-allowed disabled:opacity-40"
+          style={mode === "task"
+            ? { borderRadius: "2px", border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.15)", color: "var(--th-accent)" }
+            : { borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
         >
           <span>📋</span>
           <span>{tr("업무 지시", "Task", "タスク指示", "任务指示")}</span>
@@ -135,9 +134,10 @@ export default function ChatComposer({
 
         <button
           onClick={() => onModeChange(mode === "announcement" ? "chat" : "announcement")}
-          className={`flex flex-1 items-center justify-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium transition-colors ${
-            mode === "announcement" ? "bg-yellow-500 text-gray-900" : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-          }`}
+          className="flex flex-1 items-center justify-center gap-1 px-2 py-1.5 text-xs font-medium font-mono transition"
+          style={mode === "announcement"
+            ? { borderRadius: "2px", border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.15)", color: "var(--th-accent)" }
+            : { borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
         >
           <span>📢</span>
           <span>{tr("전사 공지", "Announcement", "全体告知", "全员公告")}</span>
@@ -146,11 +146,10 @@ export default function ChatComposer({
         <button
           onClick={() => onModeChange(mode === "report" ? "chat" : "report")}
           disabled={!selectedAgent}
-          className={`flex flex-1 items-center justify-center gap-1 rounded-lg px-2 py-1.5 text-xs font-medium transition-colors ${
-            mode === "report"
-              ? "bg-emerald-600 text-white"
-              : "bg-gray-700 text-gray-300 hover:bg-gray-600 disabled:cursor-not-allowed disabled:opacity-40"
-          }`}
+          className="flex flex-1 items-center justify-center gap-1 px-2 py-1.5 text-xs font-medium font-mono transition disabled:cursor-not-allowed disabled:opacity-40"
+          style={mode === "report"
+            ? { borderRadius: "2px", border: "1px solid rgba(52,211,153,0.5)", background: "rgba(52,211,153,0.15)", color: "rgb(167,243,208)" }
+            : { borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
         >
           <span>📊</span>
           <span>{tr("보고 요청", "Report", "レポート依頼", "报告请求")}</span>
@@ -165,14 +164,16 @@ export default function ChatComposer({
           {attachments.map((file, idx) => (
             <div
               key={`${file.name}-${file.size}-${idx}`}
-              className="flex items-center gap-1.5 rounded-lg border border-gray-600 bg-gray-700/80 px-2 py-1 text-xs text-gray-300"
+              className="flex items-center gap-1.5 px-2 py-1 text-xs font-mono"
+              style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
             >
               <span>{getFileIcon(file.name)}</span>
               <span className="max-w-[120px] truncate">{file.name}</span>
-              <span className="text-gray-500">({formatFileSize(file.size)})</span>
+              <span style={{ color: "var(--th-text-muted)" }}>({formatFileSize(file.size)})</span>
               <button
                 onClick={() => removeFile(idx)}
-                className="ml-0.5 text-gray-400 hover:text-red-400 transition-colors"
+                className="ml-0.5 transition"
+                style={{ color: "var(--th-text-muted)" }}
                 aria-label={tr("제거", "Remove", "削除", "移除")}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
@@ -199,22 +200,24 @@ export default function ChatComposer({
           onDragLeave={handleDragLeave}
           onDragOver={handleDragOver}
           onDrop={handleDrop}
-          className={`flex items-end gap-2 rounded-2xl border bg-gray-800 transition-colors ${
-            isDirectiveMode
-              ? "border-red-500/50 focus-within:border-red-400"
-              : isAnnouncementMode
-                ? "border-yellow-500/50 focus-within:border-yellow-400"
-                : mode === "task"
-                  ? "border-blue-500/50 focus-within:border-blue-400"
-                  : mode === "report"
-                    ? "border-emerald-500/50 focus-within:border-emerald-400"
-                    : "border-gray-600 focus-within:border-blue-500"
-          }`}
+          className="flex items-end gap-2 transition"
+          style={{
+            borderRadius: "2px",
+            background: "var(--th-input-bg)",
+            border: `1px solid ${
+              isDirectiveMode ? "rgba(244,63,94,0.5)"
+                : isAnnouncementMode ? "rgba(251,191,36,0.5)"
+                : mode === "task" ? "rgba(251,191,36,0.5)"
+                : mode === "report" ? "rgba(52,211,153,0.5)"
+                : "var(--th-border)"
+            }`,
+          }}
         >
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={attachments.length >= MAX_FILES}
-            className="mb-2 ml-2 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl text-gray-400 transition-colors hover:bg-gray-700 hover:text-gray-200 disabled:cursor-not-allowed disabled:opacity-40"
+            className="mb-2 ml-2 flex h-9 w-9 flex-shrink-0 items-center justify-center transition disabled:cursor-not-allowed disabled:opacity-40"
+            style={{ borderRadius: "2px", color: "var(--th-text-muted)" }}
             aria-label={tr("파일 첨부", "Attach files", "ファイル添付", "附加文件")}
             title={tr(
               `파일 첨부 (최대 ${MAX_FILES}개, 각 10MB)`,
@@ -269,8 +272,8 @@ export default function ChatComposer({
                         )
             }
             rows={1}
-            className="min-h-[44px] max-h-32 flex-1 resize-none overflow-y-auto bg-transparent px-4 py-3 text-sm leading-relaxed text-gray-100 placeholder-gray-500 focus:outline-none"
-            style={{ scrollbarWidth: "none" }}
+            className="min-h-[44px] max-h-32 flex-1 resize-none overflow-y-auto bg-transparent px-4 py-3 text-sm leading-relaxed focus:outline-none font-mono"
+            style={{ color: "var(--th-text-primary)", scrollbarWidth: "none" }}
             onInput={(e) => {
               const el = e.currentTarget;
               el.style.height = "auto";
@@ -280,19 +283,19 @@ export default function ChatComposer({
           <button
             onClick={onSend}
             disabled={!input.trim() && attachments.length === 0}
-            className={`mb-2 mr-2 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl transition-all ${
+            className="mb-2 mr-2 flex h-9 w-9 flex-shrink-0 items-center justify-center transition"
+            style={
               input.trim() || attachments.length > 0
-                ? isDirectiveMode
-                  ? "bg-red-600 text-white hover:bg-red-500"
-                  : isAnnouncementMode
-                    ? "bg-yellow-500 text-gray-900 hover:bg-yellow-400"
-                    : mode === "task"
-                      ? "bg-blue-600 text-white hover:bg-blue-500"
-                      : mode === "report"
-                        ? "bg-emerald-600 text-white hover:bg-emerald-500"
-                        : "bg-blue-600 text-white hover:bg-blue-500"
-                : "cursor-not-allowed bg-gray-700 text-gray-600"
-            }`}
+                ? {
+                    borderRadius: "2px",
+                    background: isDirectiveMode ? "rgba(244,63,94,0.8)"
+                      : isAnnouncementMode || mode === "task" ? "var(--th-accent)"
+                      : mode === "report" ? "rgb(52,211,153)"
+                      : "var(--th-accent)",
+                    color: "#000",
+                  }
+                : { borderRadius: "2px", background: "var(--th-bg-elevated)", color: "var(--th-text-muted)", cursor: "not-allowed" }
+            }
             aria-label={tr("전송", "Send", "送信", "发送")}
           >
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
@@ -300,7 +303,7 @@ export default function ChatComposer({
             </svg>
           </button>
         </div>
-        <p className="mt-1.5 px-1 text-xs text-gray-600">
+        <p className="mt-1.5 px-1 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
           {tr(
             "Enter로 전송, Shift+Enter로 줄바꿈",
             "Press Enter to send, Shift+Enter for a new line",

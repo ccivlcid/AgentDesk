@@ -129,7 +129,7 @@ export default function GanttChart({ tasks, agents, departments }: Props) {
 
   if (chartTasks.length === 0) {
     return (
-      <div className="text-center py-16 text-slate-500">
+      <div className="text-center py-16 font-mono" style={{ color: "var(--th-text-muted)" }}>
         <p>{tr("표시할 태스크가 없습니다", "No tasks to display")}</p>
       </div>
     );
@@ -139,16 +139,15 @@ export default function GanttChart({ tasks, agents, departments }: Props) {
     <div className="space-y-4">
       {/* Controls */}
       <div className="flex items-center gap-3 flex-wrap">
-        <div className="flex items-center gap-1 bg-slate-800/50 rounded-lg p-0.5">
+        <div className="flex items-center gap-1 p-0.5" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
           {(["day", "week", "month"] as ZoomLevel[]).map((z) => (
             <button
               key={z}
               onClick={() => setZoom(z)}
-              className={`px-3 py-1 text-xs rounded-md transition-colors ${
-                zoom === z
-                  ? "bg-sky-600 text-white"
-                  : "text-slate-400 hover:text-white"
-              }`}
+              className="px-3 py-1 text-xs font-mono transition"
+              style={zoom === z
+                ? { borderRadius: "2px", background: "rgba(251,191,36,0.15)", border: "1px solid rgba(251,191,36,0.5)", color: "var(--th-accent)" }
+                : { borderRadius: "2px", background: "transparent", border: "1px solid transparent", color: "var(--th-text-muted)" }}
             >
               {z === "day" ? tr("일", "Day") : z === "week" ? tr("주", "Week") : tr("월", "Month")}
             </button>
@@ -158,7 +157,8 @@ export default function GanttChart({ tasks, agents, departments }: Props) {
         <select
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value)}
-          className="bg-slate-800/50 border border-slate-700/50 rounded-lg px-2 py-1 text-xs text-slate-300"
+          className="px-2 py-1 text-xs font-mono outline-none"
+          style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
         >
           <option value="all">{tr("전체 상태", "All Status")}</option>
           {Object.entries(STATUS_LABELS).map(([k, v]) => (
@@ -172,7 +172,8 @@ export default function GanttChart({ tasks, agents, departments }: Props) {
           <select
             value={filterDept}
             onChange={(e) => setFilterDept(e.target.value)}
-            className="bg-slate-800/50 border border-slate-700/50 rounded-lg px-2 py-1 text-xs text-slate-300"
+            className="px-2 py-1 text-xs font-mono outline-none"
+            style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
           >
             <option value="all">{tr("전체 부서", "All Depts")}</option>
             {departments.map((d) => (
@@ -183,7 +184,7 @@ export default function GanttChart({ tasks, agents, departments }: Props) {
           </select>
         )}
 
-        <span className="text-xs text-slate-500">
+        <span className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
           {chartTasks.length} {tr("건", "tasks")}
         </span>
       </div>
@@ -199,13 +200,13 @@ export default function GanttChart({ tasks, agents, departments }: Props) {
       </div>
 
       {/* Chart */}
-      <div className="border border-slate-700/50 rounded-xl overflow-hidden bg-slate-900/30">
+      <div className="overflow-hidden" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-primary)" }}>
         <div className="flex">
           {/* Left: Task names */}
-          <div className="shrink-0 w-52 border-r border-slate-700/50 bg-slate-800/30">
+          <div className="shrink-0 w-52" style={{ borderRight: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
             {/* Header placeholder */}
-            <div className="h-8 border-b border-slate-700/50 px-2 flex items-center">
-              <span className="text-[10px] text-slate-500 font-semibold">
+            <div className="h-8 px-2 flex items-center" style={{ borderBottom: "1px solid var(--th-border)" }}>
+              <span className="text-[10px] font-semibold font-mono" style={{ color: "var(--th-text-muted)" }}>
                 {tr("태스크", "Task")}
               </span>
             </div>
@@ -215,11 +216,12 @@ export default function GanttChart({ tasks, agents, departments }: Props) {
               return (
                 <div
                   key={task.id}
-                  className="h-7 border-b border-slate-800/50 px-2 flex items-center gap-1 hover:bg-slate-800/30"
+                  className="h-7 px-2 flex items-center gap-1 hover:bg-slate-800/30 transition"
+                  style={{ borderBottom: "1px solid var(--th-border)" }}
                   title={task.title}
                 >
                   {agent && <span className="text-xs">{agent.avatar_emoji}</span>}
-                  <span className="text-[11px] text-slate-300 truncate flex-1">
+                  <span className="text-[11px] font-mono truncate flex-1" style={{ color: "var(--th-text-secondary)" }}>
                     {task.title}
                   </span>
                 </div>
@@ -231,14 +233,17 @@ export default function GanttChart({ tasks, agents, departments }: Props) {
           <div className="flex-1 overflow-x-auto">
             <div style={{ minWidth: totalWidth }}>
               {/* Time header */}
-              <div className="h-8 border-b border-slate-700/50 flex">
+              <div className="h-8 flex" style={{ borderBottom: "1px solid var(--th-border)" }}>
                 {headers.map((h, i) => (
                   <div
                     key={i}
-                    className={`shrink-0 border-r border-slate-800/30 flex items-center justify-center text-[10px] ${
-                      h.isWeekend ? "bg-slate-800/40 text-slate-500" : "text-slate-400"
-                    }`}
-                    style={{ width: h.width }}
+                    className="shrink-0 flex items-center justify-center text-[10px] font-mono"
+                    style={{
+                      width: h.width,
+                      borderRight: "1px solid var(--th-border)",
+                      background: h.isWeekend ? "var(--th-bg-elevated)" : "transparent",
+                      color: h.isWeekend ? "var(--th-text-muted)" : "var(--th-text-secondary)",
+                    }}
                   >
                     {h.label}
                   </div>
@@ -255,7 +260,8 @@ export default function GanttChart({ tasks, agents, departments }: Props) {
                 return (
                   <div
                     key={task.id}
-                    className="h-7 border-b border-slate-800/50 relative"
+                    className="h-7 relative"
+                    style={{ borderBottom: "1px solid var(--th-border)" }}
                   >
                     {/* Today marker */}
                     <div
@@ -266,8 +272,8 @@ export default function GanttChart({ tasks, agents, departments }: Props) {
                     />
                     {/* Bar */}
                     <div
-                      className={`absolute top-1 h-5 rounded-md ${statusColor} cursor-default transition-all hover:brightness-110`}
-                      style={{ left, width }}
+                      className={`absolute top-1 h-5 ${statusColor} cursor-default transition-all hover:brightness-110`}
+                      style={{ borderRadius: "2px", left, width }}
                       title={`${task.title}\n${formatDateFull(startTs)} → ${task.completed_at ? formatDateFull(endTs) : tr("진행중", "ongoing")}\n${locale === "ko" ? STATUS_LABELS[task.status]?.ko : STATUS_LABELS[task.status]?.en}`}
                     >
                       {width > 60 && (
@@ -285,7 +291,7 @@ export default function GanttChart({ tasks, agents, departments }: Props) {
       </div>
 
       {/* Summary */}
-      <div className="flex gap-4 text-xs text-slate-500">
+      <div className="flex gap-4 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
         <span>
           {tr("기간", "Period")}: {formatDate(timeRange.start)} — {formatDate(timeRange.end)} ({timeRange.days}{tr("일", "d")})
         </span>

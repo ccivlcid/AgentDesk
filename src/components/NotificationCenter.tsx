@@ -196,7 +196,7 @@ export default function NotificationCenter({ on, onNavigateTask }: Props) {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="header-action-btn header-action-btn-secondary relative inline-flex h-9 min-w-[2.25rem] items-center justify-center rounded-xl px-2 sm:px-2.5"
+        className="header-action-btn header-action-btn-secondary relative inline-flex h-9 min-w-[2.25rem] items-center justify-center px-2 sm:px-2.5"
         style={{
           border: "1px solid var(--th-border)",
           background: "var(--th-bg-surface)",
@@ -216,11 +216,8 @@ export default function NotificationCenter({ on, onNavigateTask }: Props) {
       </button>
       {open && (
         <div
-          className="absolute right-0 top-full z-50 mt-2 w-[340px] max-h-[420px] overflow-hidden rounded-xl shadow-xl backdrop-blur-xl"
-          style={{
-            border: "1px solid var(--th-border)",
-            background: "var(--th-bg-surface)",
-          }}
+          className="absolute right-0 top-full z-50 mt-2 w-[340px] max-h-[420px] overflow-hidden shadow-xl backdrop-blur-xl"
+          style={{ borderRadius: "4px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}
         >
           <div
             className="flex items-center justify-between gap-3 px-4 py-3"
@@ -242,12 +239,8 @@ export default function NotificationCenter({ on, onNavigateTask }: Props) {
                       });
                     }
                   }}
-                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg transition"
-                  style={{
-                    background: pushEnabled ? "var(--th-success, #22c55e)" : "var(--th-bg-elevated)",
-                    color: pushEnabled ? "#fff" : "var(--th-text-muted)",
-                    border: "1px solid var(--th-border)",
-                  }}
+                  className="inline-flex h-8 w-8 items-center justify-center transition"
+                  style={{ borderRadius: "2px", background: pushEnabled ? "var(--th-success, #22c55e)" : "var(--th-bg-elevated)", color: pushEnabled ? "#fff" : "var(--th-text-muted)", border: "1px solid var(--th-border)" }}
                   title={pushEnabled ? "Browser push ON" : "Browser push OFF"}
                   aria-label={pushEnabled ? "Disable browser notifications" : "Enable browser notifications"}
                 >
@@ -257,12 +250,8 @@ export default function NotificationCenter({ on, onNavigateTask }: Props) {
               <button
                 type="button"
                 onClick={() => setHideRead((v) => !v)}
-                className="inline-flex h-8 items-center justify-center rounded-lg px-2 text-[11px] font-medium transition"
-                style={{
-                  background: hideRead ? "var(--th-accent, #3b82f6)" : "var(--th-bg-elevated)",
-                  color: hideRead ? "#fff" : "var(--th-text-muted)",
-                  border: hideRead ? "none" : "1px solid var(--th-border)",
-                }}
+                className="inline-flex h-8 items-center justify-center px-2 text-[11px] font-medium transition"
+                style={{ borderRadius: "2px", background: hideRead ? "var(--th-accent, #3b82f6)" : "var(--th-bg-elevated)", color: hideRead ? "#fff" : "var(--th-text-muted)", border: hideRead ? "none" : "1px solid var(--th-border)" }}
                 title={hideRead ? "Show all notifications" : "Hide read notifications"}
               >
                 {hideRead ? "Unread" : "All"}
@@ -271,8 +260,8 @@ export default function NotificationCenter({ on, onNavigateTask }: Props) {
                 <button
                   type="button"
                   onClick={handleMarkAllRead}
-                  className="text-xs font-medium rounded-lg px-2 py-1 transition"
-                  style={{ color: "var(--th-text-link, var(--th-accent, #3b82f6))" }}
+                  className="text-xs font-medium px-2 py-1 transition"
+                  style={{ borderRadius: "2px", color: "var(--th-text-link, var(--th-accent, #3b82f6))" }}
                 >
                   Mark all read
                 </button>
@@ -291,12 +280,8 @@ export default function NotificationCenter({ on, onNavigateTask }: Props) {
                   key={f.key}
                   type="button"
                   onClick={() => setTypeFilter(f.key)}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium rounded-lg transition whitespace-nowrap"
-                  style={{
-                    background: active ? "var(--th-accent, #3b82f6)" : "var(--th-bg-elevated)",
-                    color: active ? "#fff" : "var(--th-text-secondary)",
-                    border: active ? "none" : "1px solid var(--th-border)",
-                  }}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium transition whitespace-nowrap"
+                  style={{ borderRadius: "2px", background: active ? "var(--th-accent, #3b82f6)" : "var(--th-bg-elevated)", color: active ? "#fff" : "var(--th-text-secondary)", border: active ? "none" : "1px solid var(--th-border)" }}
                 >
                   {f.icon}
                   {f.label}

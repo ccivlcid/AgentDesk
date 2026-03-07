@@ -50,7 +50,7 @@ export default function OAuthSettingsTab({
 }: OAuthSettingsTabProps) {
   return (
     <section
-      className="space-y-4 rounded-xl border p-4 sm:p-5"
+      className="space-y-4 p-4 sm:p-5"
       style={{ background: "var(--th-bg-surface)", borderColor: "var(--th-border)" }}
     >
       <div className="flex items-center justify-between">
@@ -69,11 +69,10 @@ export default function OAuthSettingsTab({
 
       {oauthResult && (
         <div
-          className={`flex items-center justify-between px-3 py-2 rounded-lg text-sm ${
-            oauthResult.error
-              ? "bg-red-500/10 text-red-400 border border-red-500/20"
-              : "bg-green-500/10 text-green-400 border border-green-500/20"
-          }`}
+          className="flex items-center justify-between px-3 py-2 text-sm font-mono"
+          style={oauthResult.error
+            ? { borderRadius: "2px", background: "rgba(244,63,94,0.08)", border: "1px solid rgba(244,63,94,0.35)", color: "rgb(253,164,175)" }
+            : { borderRadius: "2px", background: "rgba(52,211,153,0.1)", border: "1px solid rgba(52,211,153,0.3)", color: "rgb(167,243,208)" }}
         >
           <span>
             {oauthResult.error
@@ -88,11 +87,10 @@ export default function OAuthSettingsTab({
 
       {oauthStatus && (
         <div
-          className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs ${
-            oauthStatus.storageReady
-              ? "bg-green-500/10 text-green-400 border border-green-500/20"
-              : "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20"
-          }`}
+          className="flex items-center gap-2 px-3 py-2 text-xs font-mono"
+          style={oauthStatus.storageReady
+            ? { borderRadius: "2px", background: "rgba(52,211,153,0.1)", border: "1px solid rgba(52,211,153,0.3)", color: "rgb(167,243,208)" }
+            : { borderRadius: "2px", background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.3)", color: "var(--th-accent)" }}
         >
           <span>{oauthStatus.storageReady ? "🔒" : "⚠️"}</span>
           <span>
@@ -114,7 +112,7 @@ export default function OAuthSettingsTab({
       )}
 
       {oauthLoading ? (
-        <div className="text-center py-8 text-slate-500 text-sm">
+        <div className="text-center py-8 text-sm font-mono" style={{ color: "var(--th-text-muted)" }}>
           {t({ ko: "로딩 중...", en: "Loading...", ja: "読み込み中...", zh: "加载中..." })}
         </div>
       ) : oauthStatus ? (

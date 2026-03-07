@@ -217,7 +217,7 @@ function initDeptState(deptId: string, customThemes: Record<string, RoomTheme>):
 function ColorSwatch({ theme, size = "md" }: { theme: RoomTheme; size?: "sm" | "md" }) {
   const h = size === "sm" ? "h-3" : "h-5";
   return (
-    <div className={`flex ${h} rounded overflow-hidden border border-slate-600`}>
+    <div className={`flex ${h} overflow-hidden`} style={{ borderRadius: "2px", border: "1px solid var(--th-border)" }}>
       <div className="flex-1" style={{ backgroundColor: numToHex(theme.floor1) }} />
       <div className="flex-1" style={{ backgroundColor: numToHex(theme.floor2) }} />
       <div className="flex-1" style={{ backgroundColor: numToHex(theme.wall) }} />
@@ -228,7 +228,7 @@ function ColorSwatch({ theme, size = "md" }: { theme: RoomTheme; size?: "sm" | "
 
 function PreviewBar({ colors, className = "" }: { colors: { primary: number; secondary: number; wall: number; accent: number }; className?: string }) {
   return (
-    <div className={`flex h-4 rounded overflow-hidden ${className}`}>
+    <div className={`flex h-4 overflow-hidden ${className}`} style={{ borderRadius: "2px" }}>
       <div className="flex-1" style={{ backgroundColor: numToHex(colors.primary) }} />
       <div className="flex-1" style={{ backgroundColor: numToHex(colors.secondary) }} />
       <div className="flex-1" style={{ backgroundColor: numToHex(colors.wall) }} />
@@ -274,33 +274,35 @@ function DeptCard({ deptId, deptName, state, language, expanded, onToggle, onAct
     return (
       <button
         onClick={() => { onToggle(); onActivate(); }}
-        className="w-full flex items-center gap-3 px-3 py-2.5 bg-slate-800/60 border border-slate-700/50 rounded-lg hover:bg-slate-700/60 transition-colors text-left"
+        className="w-full flex items-center gap-3 px-3 py-2.5 transition-colors text-left"
+        style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}
       >
-        <svg className="w-3 h-3 text-slate-400 shrink-0" viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2l4 4-4 4" /></svg>
-        <span className="text-sm text-slate-200 flex-1 truncate">{deptName}</span>
+        <svg className="w-3 h-3 shrink-0" style={{ color: "var(--th-text-muted)" }} viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2l4 4-4 4" /></svg>
+        <span className="text-sm flex-1 truncate font-mono" style={{ color: "var(--th-text-heading)" }}>{deptName}</span>
         <div className="flex gap-0.5">
           {[theme.floor1, theme.floor2, theme.wall, theme.accent].map((c, i) => (
-            <div key={i} className="w-3.5 h-3.5 rounded-sm" style={{ backgroundColor: numToHex(c) }} />
+            <div key={i} className="w-3.5 h-3.5" style={{ backgroundColor: numToHex(c), borderRadius: "2px" }} />
           ))}
         </div>
-        <span className="text-[10px] font-mono text-slate-500">{numToHex(state.accent)}</span>
+        <span className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>{numToHex(state.accent)}</span>
       </button>
     );
   }
 
   /* Expanded */
   return (
-    <div className="bg-slate-800 border border-slate-600 rounded-lg overflow-hidden">
+    <div className="overflow-hidden" style={{ borderRadius: "2px", border: "1px solid var(--th-border-strong)", background: "var(--th-bg-elevated)" }}>
       {/* Header */}
       <button
         onClick={onToggle}
-        className="w-full flex items-center gap-2 px-3 py-2.5 hover:bg-slate-700/40 transition-colors text-left"
+        className="w-full flex items-center gap-2 px-3 py-2.5 transition-colors text-left"
       >
-        <svg className="w-3 h-3 text-slate-300 shrink-0" viewBox="0 0 12 12" fill="currentColor"><path d="M2 4.5l4 4 4-4" /></svg>
-        <span className="text-sm font-semibold text-slate-100 flex-1">{deptName}</span>
+        <svg className="w-3 h-3 shrink-0" style={{ color: "var(--th-text-secondary)" }} viewBox="0 0 12 12" fill="currentColor"><path d="M2 4.5l4 4 4-4" /></svg>
+        <span className="text-sm font-semibold flex-1 font-mono" style={{ color: "var(--th-text-heading)" }}>{deptName}</span>
         <button
           onClick={(e) => { e.stopPropagation(); onActivate(); onReset(); }}
-          className="text-xs text-slate-400 hover:text-slate-200 px-2 py-0.5 rounded border border-slate-600 hover:border-slate-400 transition-colors"
+          className="text-xs px-2 py-0.5 transition-colors font-mono"
+          style={{ borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-muted)" }}
         >
           {L.reset[language]}
         </button>
@@ -312,15 +314,15 @@ function DeptCard({ deptId, deptName, state, language, expanded, onToggle, onAct
 
         {/* Tone presets */}
         <div className="space-y-1">
-          <span className="text-xs text-slate-400">{L.presets[language]}</span>
+          <span className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>{L.presets[language]}</span>
           <div className="flex gap-1.5 flex-wrap">
             {presets.map((p) => (
               <button
                 key={p.tone}
                 onClick={() => { onActivate(); onToneChange(p.tone); }}
                 title={`Tone ${p.tone}`}
-                className="w-5 h-5 rounded-full border-2 transition-transform hover:scale-110"
-                style={{ backgroundColor: numToHex(p.swatch), borderColor: Math.abs(state.tone - p.tone) <= 2 ? "#fff" : "transparent" }}
+                className="w-5 h-5 border-2 transition-transform hover:scale-110"
+                style={{ borderRadius: "50%", backgroundColor: numToHex(p.swatch), borderColor: Math.abs(state.tone - p.tone) <= 2 ? "#fff" : "transparent" }}
               />
             ))}
           </div>
@@ -329,13 +331,13 @@ function DeptCard({ deptId, deptName, state, language, expanded, onToggle, onAct
         {/* Accent color */}
         <div className="space-y-2">
           <div className="flex items-center gap-3">
-            <label className="text-xs text-slate-400 w-16 shrink-0">{L.accent[language]}</label>
+            <label className="text-xs font-mono w-16 shrink-0" style={{ color: "var(--th-text-muted)" }}>{L.accent[language]}</label>
             <button
               onClick={() => { setShowPicker(!showPicker); onActivate(); }}
-              className="w-8 h-8 rounded border-2 border-slate-500 hover:border-slate-300 transition-colors cursor-pointer"
-              style={{ backgroundColor: numToHex(state.accent) }}
+              className="w-8 h-8 border-2 transition-colors cursor-pointer"
+              style={{ borderRadius: "2px", borderColor: "var(--th-border-strong)", backgroundColor: numToHex(state.accent) }}
             />
-            <span className="text-xs text-slate-500 font-mono">{numToHex(state.accent)}</span>
+            <span className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>{numToHex(state.accent)}</span>
           </div>
           {showPicker && (
             <div ref={pickerRef} className="pt-1">
@@ -351,17 +353,17 @@ function DeptCard({ deptId, deptName, state, language, expanded, onToggle, onAct
         {/* Tone slider */}
         <div className="space-y-1">
           <div className="flex items-center justify-between">
-            <label className="text-xs text-slate-400">{L.tone[language]}</label>
-            <span className="text-xs text-slate-500">{state.tone}</span>
+            <label className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>{L.tone[language]}</label>
+            <span className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>{state.tone}</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-[10px] text-slate-500">Light</span>
+            <span className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>Light</span>
             <input
               type="range" min={0} max={100} value={state.tone}
               onChange={(e) => { onActivate(); onToneChange(Number(e.target.value)); }}
-              className="flex-1 accent-slate-400 h-1.5 cursor-pointer"
+              className="flex-1 h-1.5 cursor-pointer"
             />
-            <span className="text-[10px] text-slate-500">Dark</span>
+            <span className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>Dark</span>
           </div>
         </div>
       </div>
@@ -562,11 +564,11 @@ export default function OfficeRoomManager({ departments, customThemes, onThemeCh
       style={{ backdropFilter: "blur(2px)", WebkitBackdropFilter: "blur(2px)", backgroundColor: "rgba(0,0,0,0.5)" }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="w-full md:max-w-md bg-slate-900 flex flex-col h-full shadow-2xl border-l border-slate-700">
+      <div className="w-full md:max-w-md flex flex-col h-full shadow-2xl" style={{ background: "var(--th-bg-primary)", borderLeft: "1px solid var(--th-border)" }}>
         {/* ── Header ── */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-700 shrink-0">
-          <h2 className="text-base font-semibold text-slate-100">{L.title[language]}</h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-100 transition-colors w-8 h-8 flex items-center justify-center rounded hover:bg-slate-700" aria-label="close">
+        <div className="flex items-center justify-between px-5 py-4 shrink-0" style={{ borderBottom: "1px solid var(--th-border)" }}>
+          <h2 className="text-base font-semibold font-mono" style={{ color: "var(--th-text-heading)" }}>{L.title[language]}</h2>
+          <button onClick={onClose} className="transition-colors w-8 h-8 flex items-center justify-center" style={{ borderRadius: "2px", color: "var(--th-text-muted)" }} aria-label="close">
             <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5"><path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" /></svg>
           </button>
         </div>
@@ -577,14 +579,13 @@ export default function OfficeRoomManager({ departments, customThemes, onThemeCh
           {/* ────────────── THEME PRESETS SECTION ────────────── */}
           <section className="space-y-3">
             <div className="flex items-center justify-between">
-              <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{L.themePresets[language]}</h3>
+              <h3 className="text-xs font-semibold font-mono uppercase tracking-wider" style={{ color: "var(--th-text-muted)" }}>{L.themePresets[language]}</h3>
               <button
                 onClick={() => setShowCompare((v) => !v)}
-                className={`text-[11px] px-2 py-0.5 rounded border transition-all ${
-                  showCompare
-                    ? "border-amber-400/60 bg-amber-500/10 text-amber-300"
-                    : "border-slate-700 text-slate-500 hover:text-slate-300 hover:border-slate-500"
-                }`}
+                className="text-[11px] px-2 py-0.5 transition-all font-mono"
+                style={showCompare
+                  ? { borderRadius: "2px", border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.1)", color: "var(--th-accent)" }
+                  : { borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-muted)" }}
               >
                 {L.compareThemes[language]}
               </button>
@@ -592,8 +593,8 @@ export default function OfficeRoomManager({ departments, customThemes, onThemeCh
 
             {/* ── Compare panel ── */}
             {showCompare && (
-              <div className="bg-slate-800/60 border border-amber-500/20 rounded-lg p-3 space-y-1.5">
-                <div className="flex justify-between text-[10px] text-slate-500 mb-2">
+              <div className="p-3 space-y-1.5" style={{ borderRadius: "2px", border: "1px solid rgba(251,191,36,0.2)", background: "var(--th-bg-elevated)" }}>
+                <div className="flex justify-between text-[10px] font-mono mb-2" style={{ color: "var(--th-text-muted)" }}>
                   <span>{L.compareBefore[language]}</span>
                   <span>{L.compareAfter[language]}</span>
                 </div>
@@ -605,27 +606,27 @@ export default function OfficeRoomManager({ departments, customThemes, onThemeCh
                   const changed = beforeAccent !== afterAccent;
                   return (
                     <div key={room.id} className="flex items-center gap-2">
-                      <span className="text-[10px] text-slate-500 w-16 truncate shrink-0">{room.name}</span>
+                      <span className="text-[10px] font-mono w-16 truncate shrink-0" style={{ color: "var(--th-text-muted)" }}>{room.name}</span>
                       <div className="flex-1 flex items-center gap-1">
-                        <div className="h-3 flex-1 rounded" style={{ backgroundColor: numToHex(beforeAccent) }} />
-                        <svg className={`w-3 h-3 shrink-0 ${changed ? "text-amber-400" : "text-slate-700"}`} viewBox="0 0 20 20" fill="currentColor">
+                        <div className="h-3 flex-1" style={{ borderRadius: "2px", backgroundColor: numToHex(beforeAccent) }} />
+                        <svg className="w-3 h-3 shrink-0" style={{ color: changed ? "var(--th-accent)" : "var(--th-border)" }} viewBox="0 0 20 20" fill="currentColor">
                           <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 0 1 .02-1.06L11.168 10 7.23 6.29a.75.75 0 1 1 1.04-1.08l4.5 4.25a.75.75 0 0 1 0 1.08l-4.5 4.25a.75.75 0 0 1-1.06-.02z" clipRule="evenodd" />
                         </svg>
-                        <div className={`h-3 flex-1 rounded ${changed ? "ring-1 ring-amber-400/50" : ""}`} style={{ backgroundColor: numToHex(afterAccent) }} />
+                        <div className="h-3 flex-1" style={{ borderRadius: "2px", backgroundColor: numToHex(afterAccent), outline: changed ? "1px solid rgba(251,191,36,0.5)" : "none" }} />
                       </div>
-                      {changed && <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />}
+                      {changed && <span className="w-1.5 h-1.5 shrink-0" style={{ borderRadius: "50%", background: "var(--th-accent)" }} />}
                     </div>
                   );
                 })}
                 {allRooms.every((room) => (initialSnapshotRef.current[room.id]?.accent ?? 0) === (deptStates[room.id]?.accent ?? 0)) && (
-                  <p className="text-[11px] text-slate-600 text-center italic pt-1">{L.compareNoChange[language]}</p>
+                  <p className="text-[11px] text-center italic pt-1 font-mono" style={{ color: "var(--th-text-muted)" }}>{L.compareNoChange[language]}</p>
                 )}
               </div>
             )}
 
             {/* Builtin themes grid */}
             <div>
-              <p className="text-[11px] text-slate-500 mb-2">{L.builtinThemes[language]}</p>
+              <p className="text-[11px] font-mono mb-2" style={{ color: "var(--th-text-muted)" }}>{L.builtinThemes[language]}</p>
               <div className="grid grid-cols-2 gap-2">
                 {BUILTIN_THEME_PRESETS.map((preset) => {
                   const active = activePresetKey === preset.key;
@@ -633,20 +634,21 @@ export default function OfficeRoomManager({ departments, customThemes, onThemeCh
                     <button
                       key={preset.key}
                       onClick={() => applyPreset(preset)}
-                      className={`relative p-2.5 rounded-lg border text-left transition-all hover:border-slate-400 ${
-                        active ? "border-blue-400 bg-blue-500/10 ring-1 ring-blue-400/30" : "border-slate-700 bg-slate-800/60 hover:bg-slate-700/60"
-                      }`}
+                      className="relative p-2.5 text-left transition-all"
+                      style={active
+                        ? { borderRadius: "2px", border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.08)" }
+                        : { borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}
                     >
-                      <PreviewBar colors={preset.preview} className="mb-1.5 border border-slate-600/50 rounded" />
+                      <div className="mb-1.5" style={{ border: "1px solid var(--th-border)", borderRadius: "2px", overflow: "hidden" }}><PreviewBar colors={preset.preview} /></div>
                       <div className="flex items-center gap-1.5">
-                        <span className="text-xs font-medium text-slate-200 truncate">{preset.name[language]}</span>
+                        <span className="text-xs font-mono truncate" style={{ color: "var(--th-text-heading)" }}>{preset.name[language]}</span>
                         {active && (
-                          <svg className="w-3.5 h-3.5 text-blue-400 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                          <svg className="w-3.5 h-3.5 shrink-0" style={{ color: "var(--th-accent)" }} viewBox="0 0 20 20" fill="currentColor">
                             <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" />
                           </svg>
                         )}
                       </div>
-                      <p className="text-[10px] text-slate-500 truncate mt-0.5">{preset.description[language]}</p>
+                      <p className="text-[10px] font-mono truncate mt-0.5" style={{ color: "var(--th-text-muted)" }}>{preset.description[language]}</p>
                     </button>
                   );
                 })}
@@ -654,13 +656,13 @@ export default function OfficeRoomManager({ departments, customThemes, onThemeCh
             </div>
 
             {/* Divider */}
-            <div className="border-t border-slate-700/50" />
+            <div style={{ borderTop: "1px solid var(--th-border)" }} />
 
             {/* User themes */}
             <div>
-              <p className="text-[11px] text-slate-500 mb-2">{L.myThemes[language]}</p>
+              <p className="text-[11px] font-mono mb-2" style={{ color: "var(--th-text-muted)" }}>{L.myThemes[language]}</p>
               {userPresets.length === 0 ? (
-                <p className="text-xs text-slate-600 italic py-2 text-center">{L.noUserThemes[language]}</p>
+                <p className="text-xs italic py-2 text-center font-mono" style={{ color: "var(--th-text-muted)" }}>{L.noUserThemes[language]}</p>
               ) : (
                 <div className="space-y-1.5">
                   {userPresets.map((up) => {
@@ -668,13 +670,14 @@ export default function OfficeRoomManager({ departments, customThemes, onThemeCh
                     const isEditing = editingPresetId === up.id;
                     const firstTheme = Object.values(up.themes)[0];
                     return (
-                      <div key={up.id} className={`flex items-center gap-2 px-2.5 py-2 rounded-lg border transition-all ${
-                        active ? "border-blue-400/50 bg-blue-500/5" : "border-slate-700/50 bg-slate-800/40"
-                      }`}>
+                      <div key={up.id} className="flex items-center gap-2 px-2.5 py-2 transition-all"
+                        style={active
+                          ? { borderRadius: "2px", border: "1px solid rgba(251,191,36,0.4)", background: "rgba(251,191,36,0.06)" }
+                          : { borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
                         {/* Mini swatch */}
                         <div className="flex gap-0.5 shrink-0">
                           {firstTheme && [firstTheme.floor1, firstTheme.floor2, firstTheme.wall, firstTheme.accent].map((c, i) => (
-                            <div key={i} className="w-3 h-3 rounded-sm" style={{ backgroundColor: numToHex(c) }} />
+                            <div key={i} className="w-3 h-3" style={{ borderRadius: "2px", backgroundColor: numToHex(c) }} />
                           ))}
                         </div>
 
@@ -683,28 +686,31 @@ export default function OfficeRoomManager({ departments, customThemes, onThemeCh
                           <form onSubmit={(e) => { e.preventDefault(); handleRename(up.id); }} className="flex-1 flex gap-1">
                             <input
                               autoFocus value={renameValue} onChange={(e) => setRenameValue(e.target.value)}
-                              className="flex-1 text-xs bg-slate-700 border border-slate-500 rounded px-2 py-0.5 text-slate-200 outline-none focus:border-blue-400"
+                              className="flex-1 text-xs px-2 py-0.5 outline-none font-mono"
+                              style={{ borderRadius: "2px", border: "1px solid var(--th-border-strong)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
                             />
-                            <button type="submit" className="text-xs text-blue-400 hover:text-blue-300">OK</button>
-                            <button type="button" onClick={() => setRenamingId(null)} className="text-xs text-slate-500 hover:text-slate-300">X</button>
+                            <button type="submit" className="text-xs font-mono" style={{ color: "var(--th-accent)" }}>OK</button>
+                            <button type="button" onClick={() => setRenamingId(null)} className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>X</button>
                           </form>
                         ) : (
-                          <span className="text-xs text-slate-200 flex-1 truncate">{up.name}</span>
+                          <span className="text-xs font-mono flex-1 truncate" style={{ color: "var(--th-text-secondary)" }}>{up.name}</span>
                         )}
 
                         {/* Actions */}
                         {renamingId !== up.id && (
                           <>
                             {isEditing ? (
-                              <button onClick={() => handleOverwriteSave(up.id)} className="text-[10px] text-emerald-400 hover:text-emerald-300 px-1.5 py-0.5 rounded border border-emerald-500/40 hover:border-emerald-400">
+                              <button onClick={() => handleOverwriteSave(up.id)} className="text-[10px] px-1.5 py-0.5 font-mono transition"
+                                style={{ borderRadius: "2px", border: "1px solid rgba(52,211,153,0.4)", color: "rgb(167,243,208)" }}>
                                 {L.overwrite[language]}
                               </button>
                             ) : !active ? (
-                              <button onClick={() => applyPreset(up)} className="text-[10px] text-blue-400 hover:text-blue-300 px-1.5 py-0.5 rounded border border-blue-500/40 hover:border-blue-400">
+                              <button onClick={() => applyPreset(up)} className="text-[10px] px-1.5 py-0.5 font-mono transition"
+                                style={{ borderRadius: "2px", border: "1px solid rgba(251,191,36,0.4)", color: "var(--th-accent)" }}>
                                 {L.apply[language]}
                               </button>
                             ) : (
-                              <span className="text-[10px] text-blue-400 px-1">
+                              <span className="text-[10px] px-1" style={{ color: "var(--th-accent)" }}>
                                 <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
                                   <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 0 1 .143 1.052l-8 10.5a.75.75 0 0 1-1.127.075l-4.5-4.5a.75.75 0 0 1 1.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 0 1 1.05-.143Z" clipRule="evenodd" />
                                 </svg>
@@ -715,31 +721,36 @@ export default function OfficeRoomManager({ departments, customThemes, onThemeCh
                             <div className="relative">
                               <button
                                 onClick={() => setMenuOpenId(menuOpenId === up.id ? null : up.id)}
-                                className="text-slate-500 hover:text-slate-300 p-0.5 rounded hover:bg-slate-700"
+                                className="p-0.5 transition"
+                                style={{ borderRadius: "2px", color: "var(--th-text-muted)" }}
                               >
                                 <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
                                   <path d="M10 3a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Zm0 5.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3Zm1.5 7a1.5 1.5 0 1 0-3 0 1.5 1.5 0 0 0 3 0Z" />
                                 </svg>
                               </button>
                               {menuOpenId === up.id && (
-                                <div className="absolute right-0 top-6 z-10 bg-slate-700 border border-slate-600 rounded-lg shadow-xl py-1 min-w-[100px]">
+                                <div className="absolute right-0 top-6 z-10 shadow-xl py-1 min-w-[100px]"
+                                  style={{ borderRadius: "2px", border: "1px solid var(--th-border-strong)", background: "var(--th-bg-elevated)" }}>
                                   {active && (
                                     <button
                                       onClick={() => { setEditingPresetId(up.id); setMenuOpenId(null); }}
-                                      className="w-full text-left text-xs px-3 py-1.5 hover:bg-slate-600 text-slate-200"
+                                      className="w-full text-left text-xs px-3 py-1.5 font-mono transition"
+                                      style={{ color: "var(--th-text-secondary)" }}
                                     >
                                       {L.overwrite[language]}
                                     </button>
                                   )}
                                   <button
                                     onClick={() => { setRenamingId(up.id); setRenameValue(up.name); setMenuOpenId(null); }}
-                                    className="w-full text-left text-xs px-3 py-1.5 hover:bg-slate-600 text-slate-200"
+                                    className="w-full text-left text-xs px-3 py-1.5 font-mono transition"
+                                    style={{ color: "var(--th-text-secondary)" }}
                                   >
                                     {L.rename[language]}
                                   </button>
                                   <button
                                     onClick={() => { setDeletingId(up.id); setMenuOpenId(null); }}
-                                    className="w-full text-left text-xs px-3 py-1.5 hover:bg-slate-600 text-red-400"
+                                    className="w-full text-left text-xs px-3 py-1.5 font-mono transition"
+                                    style={{ color: "rgb(253,164,175)" }}
                                   >
                                     {L.delete[language]}
                                   </button>
@@ -756,12 +767,14 @@ export default function OfficeRoomManager({ departments, customThemes, onThemeCh
 
               {/* Delete confirmation */}
               {deletingId && (
-                <div className="mt-2 flex items-center gap-2 px-2.5 py-2 bg-red-500/10 border border-red-500/30 rounded-lg">
-                  <span className="text-xs text-red-300 flex-1">{L.confirmDelete[language]}</span>
-                  <button onClick={() => handleDeleteTheme(deletingId)} className="text-xs text-red-400 hover:text-red-300 px-2 py-0.5 border border-red-500/50 rounded">
+                <div className="mt-2 flex items-center gap-2 px-2.5 py-2" style={{ borderRadius: "2px", border: "1px solid rgba(244,63,94,0.35)", background: "rgba(244,63,94,0.08)" }}>
+                  <span className="text-xs font-mono flex-1" style={{ color: "rgb(253,164,175)" }}>{L.confirmDelete[language]}</span>
+                  <button onClick={() => handleDeleteTheme(deletingId)} className="text-xs px-2 py-0.5 font-mono transition"
+                    style={{ borderRadius: "2px", border: "1px solid rgba(244,63,94,0.5)", color: "rgb(253,164,175)" }}>
                     {L.delete[language]}
                   </button>
-                  <button onClick={() => setDeletingId(null)} className="text-xs text-slate-400 hover:text-slate-300 px-2 py-0.5 border border-slate-600 rounded">
+                  <button onClick={() => setDeletingId(null)} className="text-xs px-2 py-0.5 font-mono transition"
+                    style={{ borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-muted)" }}>
                     {L.cancel[language]}
                   </button>
                 </div>
@@ -771,7 +784,8 @@ export default function OfficeRoomManager({ departments, customThemes, onThemeCh
               <button
                 onClick={() => { setShowSaveModal(true); setSaveName(""); }}
                 disabled={userPresets.length >= MAX_PRESETS}
-                className="mt-2 w-full flex items-center justify-center gap-1.5 py-2 rounded-lg border border-dashed border-slate-600 text-xs text-slate-400 hover:text-slate-200 hover:border-slate-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                className="mt-2 w-full flex items-center justify-center gap-1.5 py-2 text-xs font-mono transition disabled:opacity-40 disabled:cursor-not-allowed"
+                style={{ borderRadius: "2px", border: "1px dashed var(--th-border-strong)", color: "var(--th-text-muted)" }}
               >
                 <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor"><path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" /></svg>
                 {userPresets.length >= MAX_PRESETS ? L.maxReached[language] : L.saveCurrent[language]}
@@ -783,7 +797,8 @@ export default function OfficeRoomManager({ departments, customThemes, onThemeCh
                   onClick={handleExportThemes}
                   disabled={userPresets.length === 0}
                   title={L.exportThemes[language]}
-                  className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-md border border-slate-700 text-[11px] text-slate-500 hover:text-slate-200 hover:border-slate-500 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="flex-1 flex items-center justify-center gap-1 py-1.5 text-[11px] font-mono transition disabled:opacity-30 disabled:cursor-not-allowed"
+                  style={{ borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-muted)" }}
                 >
                   <svg className="w-3 h-3" viewBox="0 0 20 20" fill="currentColor">
                     <path d="M10 3a1 1 0 0 1 1 1v8.586l2.293-2.293a1 1 0 1 1 1.414 1.414l-4 4a1 1 0 0 1-1.414 0l-4-4a1 1 0 1 1 1.414-1.414L9 12.586V4a1 1 0 0 1 1-1ZM3 17a1 1 0 1 0 0 2h14a1 1 0 1 0 0-2H3Z" />
@@ -792,7 +807,8 @@ export default function OfficeRoomManager({ departments, customThemes, onThemeCh
                 </button>
                 <button
                   onClick={() => { setShowImportModal(true); setImportResult(null); setImportText(""); }}
-                  className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-md border border-slate-700 text-[11px] text-slate-500 hover:text-slate-200 hover:border-slate-500 transition-colors"
+                  className="flex-1 flex items-center justify-center gap-1 py-1.5 text-[11px] font-mono transition"
+                  style={{ borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-muted)" }}
                 >
                   <svg className="w-3 h-3" viewBox="0 0 20 20" fill="currentColor">
                     <path d="M10 17a1 1 0 0 1-1-1V7.414L6.707 9.707a1 1 0 1 1-1.414-1.414l4-4a1 1 0 0 1 1.414 0l4 4a1 1 0 1 1-1.414 1.414L11 7.414V16a1 1 0 0 1-1 1ZM3 17a1 1 0 1 0 0 2h14a1 1 0 1 0 0-2H3Z" />
@@ -805,32 +821,35 @@ export default function OfficeRoomManager({ departments, customThemes, onThemeCh
 
           {/* ────────────── SAVE MODAL ────────────── */}
           {showSaveModal && (
-            <div className="bg-slate-800 border border-slate-600 rounded-lg p-4 space-y-3">
-              <h4 className="text-sm font-semibold text-slate-100">{L.saveCurrent[language]}</h4>
+            <div className="p-4 space-y-3" style={{ borderRadius: "2px", border: "1px solid var(--th-border-strong)", background: "var(--th-bg-elevated)" }}>
+              <h4 className="text-sm font-semibold font-mono" style={{ color: "var(--th-text-heading)" }}>{L.saveCurrent[language]}</h4>
               <div>
-                <label className="text-xs text-slate-400 block mb-1">{L.themeName[language]}</label>
+                <label className="text-xs font-mono block mb-1" style={{ color: "var(--th-text-muted)" }}>{L.themeName[language]}</label>
                 <input
                   autoFocus value={saveName} onChange={(e) => setSaveName(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleSaveTheme()}
                   placeholder="My Theme"
-                  className="w-full text-sm bg-slate-700 border border-slate-500 rounded-md px-3 py-1.5 text-slate-200 outline-none focus:border-blue-400 placeholder-slate-600"
+                  className="w-full text-sm px-3 py-1.5 outline-none font-mono"
+                  style={{ borderRadius: "2px", border: "1px solid var(--th-border-strong)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
                 />
               </div>
               <div>
-                <label className="text-xs text-slate-400 block mb-1">{L.preview[language]}</label>
-                <div className="flex gap-0.5">
+                <label className="text-xs font-mono block mb-1" style={{ color: "var(--th-text-muted)" }}>{L.preview[language]}</label>
+                <div className="flex gap-0.5" style={{ borderRadius: "2px", overflow: "hidden" }}>
                   {allRoomIds.map((id) => {
                     const s = deptStates[id];
                     if (!s) return null;
-                    return <div key={id} className="flex-1 h-4 first:rounded-l last:rounded-r" style={{ backgroundColor: numToHex(s.accent) }} />;
+                    return <div key={id} className="flex-1 h-4" style={{ backgroundColor: numToHex(s.accent) }} />;
                   })}
                 </div>
               </div>
               <div className="flex gap-2 pt-1">
-                <button onClick={() => setShowSaveModal(false)} className="flex-1 py-1.5 rounded-md text-xs font-medium bg-slate-700 text-slate-300 hover:bg-slate-600 transition-colors">
+                <button onClick={() => setShowSaveModal(false)} className="flex-1 py-1.5 text-xs font-mono transition"
+                  style={{ borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}>
                   {L.cancel[language]}
                 </button>
-                <button onClick={handleSaveTheme} disabled={!saveName.trim()} className="flex-1 py-1.5 rounded-md text-xs font-medium bg-blue-600 text-white hover:bg-blue-500 transition-colors disabled:opacity-40">
+                <button onClick={handleSaveTheme} disabled={!saveName.trim()} className="flex-1 py-1.5 text-xs font-mono transition disabled:opacity-40"
+                  style={{ borderRadius: "2px", border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.15)", color: "var(--th-accent)" }}>
                   {L.save[language]}
                 </button>
               </div>
@@ -839,18 +858,22 @@ export default function OfficeRoomManager({ departments, customThemes, onThemeCh
 
           {/* ────────────── IMPORT MODAL ────────────── */}
           {showImportModal && (
-            <div className="bg-slate-800 border border-slate-600 rounded-lg p-4 space-y-3">
-              <h4 className="text-sm font-semibold text-slate-100">{L.importThemes[language]}</h4>
+            <div className="p-4 space-y-3" style={{ borderRadius: "2px", border: "1px solid var(--th-border-strong)", background: "var(--th-bg-elevated)" }}>
+              <h4 className="text-sm font-semibold font-mono" style={{ color: "var(--th-text-heading)" }}>{L.importThemes[language]}</h4>
               <textarea
                 autoFocus
                 value={importText}
                 onChange={(e) => setImportText(e.target.value)}
                 placeholder={L.importPlaceholder[language]}
                 rows={5}
-                className="w-full text-xs bg-slate-700 border border-slate-500 rounded-md px-3 py-2 text-slate-200 outline-none focus:border-blue-400 placeholder-slate-600 font-mono resize-none"
+                className="w-full text-xs px-3 py-2 outline-none font-mono resize-none"
+                style={{ borderRadius: "2px", border: "1px solid var(--th-border-strong)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
               />
               {importResult && (
-                <div className={`text-xs px-2.5 py-1.5 rounded ${importResult.error ? "bg-red-500/10 text-red-400" : "bg-emerald-500/10 text-emerald-400"}`}>
+                <div className="text-xs px-2.5 py-1.5 font-mono"
+                  style={importResult.error
+                    ? { borderRadius: "2px", border: "1px solid rgba(244,63,94,0.35)", background: "rgba(244,63,94,0.08)", color: "rgb(253,164,175)" }
+                    : { borderRadius: "2px", border: "1px solid rgba(52,211,153,0.35)", background: "rgba(52,211,153,0.08)", color: "rgb(167,243,208)" }}>
                   {importResult.error
                     ? L.importError[language]
                     : `${L.importSuccess[language].replace("{n}", String(importResult.imported))}${importResult.skipped > 0 ? `, ${L.importSkipped[language].replace("{n}", String(importResult.skipped))}` : ""}`}
@@ -859,14 +882,16 @@ export default function OfficeRoomManager({ departments, customThemes, onThemeCh
               <div className="flex gap-2">
                 <button
                   onClick={() => { setShowImportModal(false); setImportText(""); setImportResult(null); }}
-                  className="flex-1 py-1.5 rounded-md text-xs font-medium bg-slate-700 text-slate-300 hover:bg-slate-600 transition-colors"
+                  className="flex-1 py-1.5 text-xs font-mono transition"
+                  style={{ borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
                 >
                   {L.cancel[language]}
                 </button>
                 <button
                   onClick={handleImportThemes}
                   disabled={!importText.trim()}
-                  className="flex-1 py-1.5 rounded-md text-xs font-medium bg-blue-600 text-white hover:bg-blue-500 transition-colors disabled:opacity-40"
+                  className="flex-1 py-1.5 text-xs font-mono transition disabled:opacity-40"
+                  style={{ borderRadius: "2px", border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.15)", color: "var(--th-accent)" }}
                 >
                   {L.importThemes[language]}
                 </button>
@@ -876,7 +901,7 @@ export default function OfficeRoomManager({ departments, customThemes, onThemeCh
 
           {/* ────────────── DRAWING STYLE ────────────── */}
           <section className="space-y-2">
-            <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{L.styleTheme[language]}</h3>
+            <h3 className="text-xs font-semibold font-mono uppercase tracking-wider" style={{ color: "var(--th-text-muted)" }}>{L.styleTheme[language]}</h3>
             <div className="flex flex-wrap gap-1.5">
               {STYLE_OPTIONS.map((opt) => {
                 const active = styleKey === opt.key;
@@ -884,7 +909,10 @@ export default function OfficeRoomManager({ departments, customThemes, onThemeCh
                   <button
                     key={opt.key}
                     onClick={() => { setStyleKey(opt.key); saveStylePreference(opt.key); }}
-                    className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${active ? "bg-blue-600 text-white" : "bg-slate-700 text-slate-300 hover:bg-slate-600"}`}
+                    className="px-3 py-1.5 text-xs font-mono transition"
+                    style={active
+                      ? { borderRadius: "2px", border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.15)", color: "var(--th-accent)" }
+                      : { borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
                     title={opt.description[language]}
                   >
                     {opt.label[language]}
@@ -896,7 +924,7 @@ export default function OfficeRoomManager({ departments, customThemes, onThemeCh
 
           {/* ────────────── SEASONAL DECOR ────────────── */}
           <section className="space-y-2">
-            <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{L.seasonDecor[language]}</h3>
+            <h3 className="text-xs font-semibold font-mono uppercase tracking-wider" style={{ color: "var(--th-text-muted)" }}>{L.seasonDecor[language]}</h3>
             <div className="flex flex-wrap gap-1.5">
               {([
                 ["auto", L.seasonAuto, "🔄"],
@@ -914,11 +942,10 @@ export default function OfficeRoomManager({ departments, customThemes, onThemeCh
                       setSeasonPref(key);
                       saveSeasonPreference(key);
                     }}
-                    className={`px-3 py-1.5 rounded-lg border text-xs transition-all ${
-                      active
-                        ? "border-blue-400 bg-blue-500/10 text-blue-300"
-                        : "border-slate-700 bg-slate-800/60 text-slate-400 hover:text-slate-200 hover:border-slate-500"
-                    }`}
+                    className="px-3 py-1.5 text-xs font-mono transition"
+                    style={active
+                      ? { borderRadius: "2px", border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.1)", color: "var(--th-accent)" }
+                      : { borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface)", color: "var(--th-text-muted)" }}
                   >
                     <span className="mr-1">{icon}</span>{label[language]}
                   </button>
@@ -929,11 +956,11 @@ export default function OfficeRoomManager({ departments, customThemes, onThemeCh
 
           {/* ────────────── CEO CUSTOMIZE ────────────── */}
           <section className="space-y-3">
-            <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{L.ceoCustomize[language]}</h3>
+            <h3 className="text-xs font-semibold font-mono uppercase tracking-wider" style={{ color: "var(--th-text-muted)" }}>{L.ceoCustomize[language]}</h3>
 
             {/* Headwear */}
             <div className="space-y-1.5">
-              <span className="text-xs text-slate-500">{L.headwear[language]}</span>
+              <span className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>{L.headwear[language]}</span>
               <div className="flex flex-wrap gap-1.5">
                 {HEADWEAR_OPTIONS.map((opt) => {
                   const active = ceoConfig.headwear === opt.key;
@@ -945,11 +972,10 @@ export default function OfficeRoomManager({ departments, customThemes, onThemeCh
                         setCeoConfig(next);
                         saveCeoCustomization(next);
                       }}
-                      className={`px-2.5 py-1.5 rounded-lg border text-xs transition-all ${
-                        active
-                          ? "border-blue-400 bg-blue-500/10 text-blue-300"
-                          : "border-slate-700 bg-slate-800/60 text-slate-400 hover:text-slate-200 hover:border-slate-500"
-                      }`}
+                      className="px-2.5 py-1.5 text-xs font-mono transition"
+                      style={active
+                        ? { borderRadius: "2px", border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.1)", color: "var(--th-accent)" }
+                        : { borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface)", color: "var(--th-text-muted)" }}
                     >
                       <span className="mr-1">{opt.emoji}</span>{opt.label[language]}
                     </button>
@@ -960,14 +986,14 @@ export default function OfficeRoomManager({ departments, customThemes, onThemeCh
 
             {/* Outfit color */}
             <div className="space-y-1.5">
-              <span className="text-xs text-slate-500">{L.outfitColor[language]}</span>
+              <span className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>{L.outfitColor[language]}</span>
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => setShowCeoColorPicker(!showCeoColorPicker)}
-                  className="w-8 h-8 rounded border-2 border-slate-500 hover:border-slate-300 transition-colors cursor-pointer"
-                  style={{ backgroundColor: numToHex(ceoConfig.outfitTint) }}
+                  className="w-8 h-8 border-2 transition cursor-pointer"
+                  style={{ borderRadius: "2px", borderColor: "var(--th-border-strong)", backgroundColor: numToHex(ceoConfig.outfitTint) }}
                 />
-                <span className="text-xs text-slate-500 font-mono">{numToHex(ceoConfig.outfitTint)}</span>
+                <span className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>{numToHex(ceoConfig.outfitTint)}</span>
                 {ceoConfig.outfitTint !== 0xffffff && (
                   <button
                     onClick={() => {
@@ -975,7 +1001,8 @@ export default function OfficeRoomManager({ departments, customThemes, onThemeCh
                       setCeoConfig(next);
                       saveCeoCustomization(next);
                     }}
-                    className="text-[10px] text-slate-500 hover:text-slate-300 px-1.5 py-0.5 border border-slate-600 rounded"
+                    className="text-[10px] px-1.5 py-0.5 font-mono transition"
+                    style={{ borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-muted)" }}
                   >
                     {L.reset[language]}
                   </button>
@@ -998,7 +1025,7 @@ export default function OfficeRoomManager({ departments, customThemes, onThemeCh
 
             {/* Title */}
             <div className="space-y-1.5">
-              <span className="text-xs text-slate-500">{L.ceoTitle[language]}</span>
+              <span className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>{L.ceoTitle[language]}</span>
               <input
                 value={ceoConfig.title}
                 onChange={(e) => {
@@ -1008,13 +1035,14 @@ export default function OfficeRoomManager({ departments, customThemes, onThemeCh
                 }}
                 placeholder="CEO"
                 maxLength={12}
-                className="w-full text-sm bg-slate-800 border border-slate-600 rounded-md px-3 py-1.5 text-slate-200 outline-none focus:border-blue-400 placeholder-slate-600"
+                className="w-full text-sm px-3 py-1.5 outline-none font-mono"
+                style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
               />
             </div>
 
             {/* Trail effect */}
             <div className="space-y-1.5">
-              <span className="text-xs text-slate-500">{L.trailEffect[language]}</span>
+              <span className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>{L.trailEffect[language]}</span>
               <div className="flex flex-wrap gap-1.5">
                 {TRAIL_OPTIONS.map((opt) => {
                   const active = ceoConfig.trailEffect === opt.key;
@@ -1026,11 +1054,10 @@ export default function OfficeRoomManager({ departments, customThemes, onThemeCh
                         setCeoConfig(next);
                         saveCeoCustomization(next);
                       }}
-                      className={`px-2.5 py-1.5 rounded-lg border text-xs transition-all ${
-                        active
-                          ? "border-blue-400 bg-blue-500/10 text-blue-300"
-                          : "border-slate-700 bg-slate-800/60 text-slate-400 hover:text-slate-200 hover:border-slate-500"
-                      }`}
+                      className="px-2.5 py-1.5 text-xs font-mono transition"
+                      style={active
+                        ? { borderRadius: "2px", border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.1)", color: "var(--th-accent)" }
+                        : { borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface)", color: "var(--th-text-muted)" }}
                     >
                       <span className="mr-1">{opt.emoji}</span>{opt.label[language]}
                     </button>
@@ -1042,7 +1069,7 @@ export default function OfficeRoomManager({ departments, customThemes, onThemeCh
 
           {/* ────────────── ROOM DECOR ────────────── */}
           <section className="space-y-2">
-            <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{L.roomDecor[language]}</h3>
+            <h3 className="text-xs font-semibold font-mono uppercase tracking-wider" style={{ color: "var(--th-text-muted)" }}>{L.roomDecor[language]}</h3>
             <div className="space-y-1">
               {departments.filter((d) => d.id !== "ceoOffice" && d.id !== "breakRoom").map((dept) => {
                 const decor = getRoomDecoration(roomDecorations, dept.id);
@@ -1053,67 +1080,82 @@ export default function OfficeRoomManager({ departments, customThemes, onThemeCh
                   saveRoomDecorations(next);
                 };
                 return (
-                  <div key={dept.id} className="border border-slate-700/50 rounded-lg overflow-hidden">
+                  <div key={dept.id} className="overflow-hidden" style={{ borderRadius: "2px", border: "1px solid var(--th-border)" }}>
                     <button
                       onClick={() => setExpandedDecorDept(isExpanded ? null : dept.id)}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-slate-800/60 transition-colors"
+                      className="w-full flex items-center gap-2 px-3 py-2 text-left transition"
                     >
-                      <svg className={`w-3 h-3 text-slate-400 shrink-0 transition-transform ${isExpanded ? "rotate-90" : ""}`} viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2l4 4-4 4" /></svg>
-                      <span className="text-xs text-slate-200 flex-1 truncate">{dept.name}</span>
+                      <svg className={`w-3 h-3 shrink-0 transition-transform ${isExpanded ? "rotate-90" : ""}`} style={{ color: "var(--th-text-muted)" }} viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2l4 4-4 4" /></svg>
+                      <span className="text-xs font-mono flex-1 truncate" style={{ color: "var(--th-text-secondary)" }}>{dept.name}</span>
                     </button>
                     {isExpanded && (
                       <div className="px-3 pb-3 space-y-2.5">
                         {/* Wall decor */}
                         <div className="space-y-1">
-                          <span className="text-[11px] text-slate-500">{L.wallDecor[language]}</span>
+                          <span className="text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>{L.wallDecor[language]}</span>
                           <div className="flex flex-wrap gap-1">
                             {WALL_DECOR_OPTIONS.map((opt) => (
                               <button key={opt.key} onClick={() => updateDecor({ wallDecor: opt.key })}
-                                className={`px-2 py-1 rounded text-[11px] border transition-all ${decor.wallDecor === opt.key ? "border-blue-400 bg-blue-500/10 text-blue-300" : "border-slate-700 text-slate-400 hover:text-slate-200"}`}
+                                className="px-2 py-1 text-[11px] font-mono transition"
+                style={decor.wallDecor === opt.key
+                  ? { borderRadius: "2px", border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.1)", color: "var(--th-accent)" }
+                  : { borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-muted)" }}
                               ><span className="mr-0.5">{opt.emoji}</span>{opt.label[language]}</button>
                             ))}
                           </div>
                         </div>
                         {/* Plants */}
                         <div className="space-y-1">
-                          <span className="text-[11px] text-slate-500">{L.plantType[language]}</span>
+                          <span className="text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>{L.plantType[language]}</span>
                           <div className="flex flex-wrap gap-1">
                             {PLANT_OPTIONS.map((opt) => (
                               <button key={opt.key} onClick={() => updateDecor({ plantType: opt.key })}
-                                className={`px-2 py-1 rounded text-[11px] border transition-all ${decor.plantType === opt.key ? "border-blue-400 bg-blue-500/10 text-blue-300" : "border-slate-700 text-slate-400 hover:text-slate-200"}`}
+                                className="px-2 py-1 text-[11px] font-mono transition"
+                style={decor.plantType === opt.key
+                  ? { borderRadius: "2px", border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.1)", color: "var(--th-accent)" }
+                  : { borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-muted)" }}
                               ><span className="mr-0.5">{opt.emoji}</span>{opt.label[language]}</button>
                             ))}
                           </div>
                         </div>
                         {/* Floor */}
                         <div className="space-y-1">
-                          <span className="text-[11px] text-slate-500">{L.floorDecor[language]}</span>
+                          <span className="text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>{L.floorDecor[language]}</span>
                           <div className="flex flex-wrap gap-1">
                             {FLOOR_DECOR_OPTIONS.map((opt) => (
                               <button key={opt.key} onClick={() => updateDecor({ floorDecor: opt.key })}
-                                className={`px-2 py-1 rounded text-[11px] border transition-all ${decor.floorDecor === opt.key ? "border-blue-400 bg-blue-500/10 text-blue-300" : "border-slate-700 text-slate-400 hover:text-slate-200"}`}
+                                className="px-2 py-1 text-[11px] font-mono transition"
+                style={decor.floorDecor === opt.key
+                  ? { borderRadius: "2px", border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.1)", color: "var(--th-accent)" }
+                  : { borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-muted)" }}
                               ><span className="mr-0.5">{opt.emoji}</span>{opt.label[language]}</button>
                             ))}
                           </div>
                         </div>
                         {/* Desk accessory */}
                         <div className="space-y-1">
-                          <span className="text-[11px] text-slate-500">{L.deskAccessory[language]}</span>
+                          <span className="text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>{L.deskAccessory[language]}</span>
                           <div className="flex flex-wrap gap-1">
                             {DESK_ACCESSORY_OPTIONS.map((opt) => (
                               <button key={opt.key} onClick={() => updateDecor({ deskAccessory: opt.key })}
-                                className={`px-2 py-1 rounded text-[11px] border transition-all ${decor.deskAccessory === opt.key ? "border-blue-400 bg-blue-500/10 text-blue-300" : "border-slate-700 text-slate-400 hover:text-slate-200"}`}
+                                className="px-2 py-1 text-[11px] font-mono transition"
+                style={decor.deskAccessory === opt.key
+                  ? { borderRadius: "2px", border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.1)", color: "var(--th-accent)" }
+                  : { borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-muted)" }}
                               ><span className="mr-0.5">{opt.emoji}</span>{opt.label[language]}</button>
                             ))}
                           </div>
                         </div>
                         {/* Lighting */}
                         <div className="space-y-1">
-                          <span className="text-[11px] text-slate-500">{L.lightingMood[language]}</span>
+                          <span className="text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>{L.lightingMood[language]}</span>
                           <div className="flex flex-wrap gap-1">
                             {LIGHTING_OPTIONS.map((opt) => (
                               <button key={opt.key} onClick={() => updateDecor({ lighting: opt.key })}
-                                className={`px-2 py-1 rounded text-[11px] border transition-all ${decor.lighting === opt.key ? "border-blue-400 bg-blue-500/10 text-blue-300" : "border-slate-700 text-slate-400 hover:text-slate-200"}`}
+                                className="px-2 py-1 text-[11px] font-mono transition"
+                style={decor.lighting === opt.key
+                  ? { borderRadius: "2px", border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.1)", color: "var(--th-accent)" }
+                  : { borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-muted)" }}
                               ><span className="mr-0.5">{opt.emoji}</span>{opt.label[language]}</button>
                             ))}
                           </div>
@@ -1126,7 +1168,8 @@ export default function OfficeRoomManager({ departments, customThemes, onThemeCh
                             setRoomDecorations(next);
                             saveRoomDecorations(next);
                           }}
-                          className="text-[10px] text-slate-500 hover:text-slate-300 px-2 py-0.5 border border-slate-600 rounded"
+                          className="text-[10px] px-2 py-0.5 font-mono transition"
+                          style={{ borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-muted)" }}
                         >{L.reset[language]}</button>
                       </div>
                     )}
@@ -1138,7 +1181,7 @@ export default function OfficeRoomManager({ departments, customThemes, onThemeCh
 
           {/* ────────────── FURNITURE CATALOG ────────────── */}
           <section className="space-y-2">
-            <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{L.furnitureCatalog[language]}</h3>
+            <h3 className="text-xs font-semibold font-mono uppercase tracking-wider" style={{ color: "var(--th-text-muted)" }}>{L.furnitureCatalog[language]}</h3>
             <div className="space-y-1">
               {[...departments.filter((d) => d.id !== "ceoOffice" && d.id !== "breakRoom"),
                 ...departments.filter((d) => d.id === "breakRoom"),
@@ -1159,30 +1202,31 @@ export default function OfficeRoomManager({ departments, customThemes, onThemeCh
                   saveFurnitureLayouts(result);
                 };
                 return (
-                  <div key={dept.id} className="border border-slate-700/50 rounded-lg overflow-hidden">
+                  <div key={dept.id} className="overflow-hidden" style={{ borderRadius: "2px", border: "1px solid var(--th-border)" }}>
                     <button
                       onClick={() => setExpandedFurnitureDept(isExpanded ? null : dept.id)}
-                      className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-slate-800/60 transition-colors"
+                      className="w-full flex items-center gap-2 px-3 py-2 text-left transition"
                     >
-                      <svg className={`w-3 h-3 text-slate-400 shrink-0 transition-transform ${isExpanded ? "rotate-90" : ""}`} viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2l4 4-4 4" /></svg>
-                      <span className="text-xs text-slate-200 flex-1 truncate">{dept.name}</span>
-                      {placed.length > 0 && <span className="text-[10px] text-slate-500">{placed.length}</span>}
+                      <svg className={`w-3 h-3 shrink-0 transition-transform ${isExpanded ? "rotate-90" : ""}`} style={{ color: "var(--th-text-muted)" }} viewBox="0 0 12 12" fill="currentColor"><path d="M4.5 2l4 4-4 4" /></svg>
+                      <span className="text-xs font-mono flex-1 truncate" style={{ color: "var(--th-text-secondary)" }}>{dept.name}</span>
+                      {placed.length > 0 && <span className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>{placed.length}</span>}
                     </button>
                     {isExpanded && (
                       <div className="px-3 pb-3 space-y-2.5">
                         {/* Placed items */}
                         {placed.length > 0 ? (
                           <div className="space-y-1">
-                            <span className="text-[11px] text-slate-500">{L.placedItems[language]}</span>
+                            <span className="text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>{L.placedItems[language]}</span>
                             <div className="flex flex-wrap gap-1">
                               {placed.map((p, idx) => {
                                 const def = getItemDef(p.itemId);
                                 if (!def) return null;
                                 return (
-                                  <div key={idx} className="flex items-center gap-1 px-2 py-1 rounded bg-slate-700/60 border border-slate-600 text-[11px]">
+                                  <div key={idx} className="flex items-center gap-1 px-2 py-1 text-[11px] font-mono"
+                                    style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
                                     <span>{def.emoji}</span>
-                                    <span className="text-slate-300">{def.label[language]}</span>
-                                    <button onClick={() => removeItem(idx)} className="text-red-400 hover:text-red-300 ml-1" title={L.removeFurniture[language]}>
+                                    <span style={{ color: "var(--th-text-secondary)" }}>{def.label[language]}</span>
+                                    <button onClick={() => removeItem(idx)} className="ml-1 transition" style={{ color: "rgb(253,164,175)" }} title={L.removeFurniture[language]}>
                                       <svg viewBox="0 0 12 12" fill="currentColor" className="w-3 h-3"><path d="M3.5 3.5l5 5M8.5 3.5l-5 5" stroke="currentColor" strokeWidth="1.5" fill="none" /></svg>
                                     </button>
                                   </div>
@@ -1191,7 +1235,7 @@ export default function OfficeRoomManager({ departments, customThemes, onThemeCh
                             </div>
                           </div>
                         ) : (
-                          <span className="text-[11px] text-slate-600 italic">{L.emptyRoom[language]}</span>
+                          <span className="text-[11px] italic font-mono" style={{ color: "var(--th-text-muted)" }}>{L.emptyRoom[language]}</span>
                         )}
                         {/* Layout editor for positioned items */}
                         {placed.length > 0 && (
@@ -1208,13 +1252,19 @@ export default function OfficeRoomManager({ departments, customThemes, onThemeCh
                         <div className="flex flex-wrap gap-1">
                           <button
                             onClick={() => setFurnitureCategoryFilter("all")}
-                            className={`px-2 py-0.5 rounded text-[10px] border transition-all ${furnitureCategoryFilter === "all" ? "border-blue-400 bg-blue-500/10 text-blue-300" : "border-slate-700 text-slate-500 hover:text-slate-300"}`}
+                            className="px-2 py-0.5 text-[10px] font-mono transition"
+                            style={furnitureCategoryFilter === "all"
+                              ? { borderRadius: "2px", border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.1)", color: "var(--th-accent)" }
+                              : { borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-muted)" }}
                           >All</button>
                           {(Object.entries(FURNITURE_CATEGORIES) as [FurnitureCategory, (typeof FURNITURE_CATEGORIES)[FurnitureCategory]][]).map(([key, cat]) => (
                             <button
                               key={key}
                               onClick={() => setFurnitureCategoryFilter(key)}
-                              className={`px-2 py-0.5 rounded text-[10px] border transition-all ${furnitureCategoryFilter === key ? "border-blue-400 bg-blue-500/10 text-blue-300" : "border-slate-700 text-slate-500 hover:text-slate-300"}`}
+                              className="px-2 py-0.5 text-[10px] font-mono transition"
+                              style={furnitureCategoryFilter === key
+                                ? { borderRadius: "2px", border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.1)", color: "var(--th-accent)" }
+                                : { borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-muted)" }}
                             >
                               <span className="mr-0.5">{cat.emoji}</span>{cat.label[language]}
                             </button>
@@ -1233,17 +1283,16 @@ export default function OfficeRoomManager({ departments, customThemes, onThemeCh
                                   key={item.id}
                                   onClick={() => !maxed && addItem(item.id)}
                                   disabled={maxed}
-                                  className={`flex items-center gap-1.5 px-2 py-1.5 rounded-md border text-left text-[11px] transition-all ${
-                                    maxed
-                                      ? "border-slate-700/30 bg-slate-800/30 text-slate-600 cursor-not-allowed"
-                                      : "border-slate-600 bg-slate-800/60 text-slate-300 hover:border-blue-400 hover:bg-blue-500/10"
-                                  }`}
+                                  className="flex items-center gap-1.5 px-2 py-1.5 text-left text-[11px] font-mono transition"
+                                  style={maxed
+                                    ? { borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-primary)", color: "var(--th-text-muted)", cursor: "not-allowed", opacity: 0.5 }
+                                    : { borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface)", color: "var(--th-text-secondary)" }}
                                   title={item.description[language]}
                                 >
                                   <span className="text-sm">{item.emoji}</span>
                                   <div className="flex-1 min-w-0">
                                     <div className="truncate">{item.label[language]}</div>
-                                    {maxed && <div className="text-[9px] text-slate-600">{L.maxReachedItem[language]}</div>}
+                                    {maxed && <div className="text-[9px] font-mono" style={{ color: "var(--th-text-muted)" }}>{L.maxReachedItem[language]}</div>}
                                   </div>
                                 </button>
                               );
@@ -1258,7 +1307,8 @@ export default function OfficeRoomManager({ departments, customThemes, onThemeCh
                               setFurnitureLayouts(next);
                               saveFurnitureLayouts(next);
                             }}
-                            className="text-[10px] text-slate-500 hover:text-slate-300 px-2 py-0.5 border border-slate-600 rounded"
+                            className="text-[10px] px-2 py-0.5 font-mono transition"
+                            style={{ borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-muted)" }}
                           >{L.reset[language]}</button>
                         )}
                       </div>
@@ -1271,7 +1321,7 @@ export default function OfficeRoomManager({ departments, customThemes, onThemeCh
 
           {/* ────────────── PER-DEPT CUSTOMIZE ────────────── */}
           <section className="space-y-2">
-            <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">{L.deptCustomize[language]}</h3>
+            <h3 className="text-xs font-semibold font-mono uppercase tracking-wider" style={{ color: "var(--th-text-muted)" }}>{L.deptCustomize[language]}</h3>
             <div className="space-y-1.5">
               {allRooms.map((room) => {
                 const state = deptStates[room.id] ?? { accent: 0x5a9fd4, tone: DEFAULT_TONE };
@@ -1296,11 +1346,13 @@ export default function OfficeRoomManager({ departments, customThemes, onThemeCh
         </div>
 
         {/* ── Footer ── */}
-        <div className="px-4 py-3 border-t border-slate-700 shrink-0 flex gap-2">
-          <button onClick={resetAll} className="flex-1 py-2 rounded-md text-sm font-medium bg-slate-700 text-slate-200 hover:bg-slate-600 transition-colors">
+        <div className="px-4 py-3 shrink-0 flex gap-2" style={{ borderTop: "1px solid var(--th-border)" }}>
+          <button onClick={resetAll} className="flex-1 py-2 text-sm font-mono transition"
+            style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}>
             {L.resetAll[language]}
           </button>
-          <button onClick={onClose} className="flex-1 py-2 rounded-md text-sm font-medium bg-slate-600 text-slate-100 hover:bg-slate-500 transition-colors">
+          <button onClick={onClose} className="flex-1 py-2 text-sm font-mono transition"
+            style={{ borderRadius: "2px", border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.15)", color: "var(--th-accent)" }}>
             {L.close[language]}
           </button>
         </div>

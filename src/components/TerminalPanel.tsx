@@ -486,7 +486,7 @@ export default function TerminalPanel({
               <h3 className="text-sm font-bold truncate" style={{ color: "var(--th-text-heading)" }}>
                 {task?.title ?? taskId}
               </h3>
-              <span className={`text-[10px] px-1.5 py-0.5 rounded border ${badge.color} flex-shrink-0`}>
+              <span className={`text-[10px] px-1.5 py-0.5 border font-mono flex-shrink-0 ${badge.color}`} style={{ borderRadius: "2px" }}>
                 {badgeLabel}
               </span>
             </div>
@@ -496,8 +496,8 @@ export default function TerminalPanel({
               </div>
             )}
             <div
-              className="mt-1 inline-flex rounded-md border overflow-hidden w-fit"
-              style={{ borderColor: "var(--th-border)" }}
+              className="mt-1 inline-flex overflow-hidden w-fit"
+              style={{ borderRadius: "2px", border: "1px solid var(--th-border)" }}
             >
               <button
                 onClick={() => setActiveTab("terminal")}
@@ -537,18 +537,10 @@ export default function TerminalPanel({
                 setInterventionError(null);
                 setInterventionMessage(null);
               }}
-              className={`px-2 py-1 text-[10px] rounded border transition ${
-                interventionOpen ? "bg-rose-500/20 text-rose-300 border-rose-500/40" : ""
-              }`}
-              style={
-                !interventionOpen
-                  ? {
-                      background: "var(--th-bg-surface)",
-                      color: "var(--th-text-secondary)",
-                      borderColor: "var(--th-border)",
-                    }
-                  : undefined
-              }
+              className="px-2 py-1 text-[10px] font-mono border transition"
+              style={interventionOpen
+                ? { borderRadius: "2px", background: "rgba(244,63,94,0.15)", color: "rgb(253,164,175)", borderColor: "rgba(244,63,94,0.4)" }
+                : { borderRadius: "2px", background: "var(--th-bg-surface)", color: "var(--th-text-secondary)", borderColor: "var(--th-border)" }}
               title={tr("난입 패널", "Interrupt panel", "割り込みパネル", "中断面板")}
             >
               {task?.status === "pending"
@@ -559,18 +551,10 @@ export default function TerminalPanel({
           {/* Search toggle */}
           <button
             onClick={() => setShowSearchBar((prev) => !prev)}
-            className={`px-2 py-1 text-[10px] rounded border transition ${
-              showSearchBar ? "bg-cyan-500/20 text-cyan-300 border-cyan-500/40" : ""
-            }`}
-            style={
-              !showSearchBar
-                ? {
-                    background: "var(--th-bg-surface)",
-                    color: "var(--th-text-secondary)",
-                    borderColor: "var(--th-border)",
-                  }
-                : undefined
-            }
+            className="px-2 py-1 text-[10px] font-mono border transition"
+            style={showSearchBar
+              ? { borderRadius: "2px", background: "rgba(251,191,36,0.15)", color: "var(--th-accent)", borderColor: "rgba(251,191,36,0.4)" }
+              : { borderRadius: "2px", background: "var(--th-bg-surface)", color: "var(--th-text-secondary)", borderColor: "var(--th-border)" }}
             title={tr("검색", "Search", "検索", "搜索")}
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -581,12 +565,8 @@ export default function TerminalPanel({
           {/* Copy log */}
           <button
             onClick={handleCopyLog}
-            className="px-2 py-1 text-[10px] rounded border transition"
-            style={{
-              background: "var(--th-bg-surface)",
-              color: "var(--th-text-secondary)",
-              borderColor: "var(--th-border)",
-            }}
+            className="px-2 py-1 text-[10px] font-mono border transition"
+            style={{ borderRadius: "2px", background: "var(--th-bg-surface)", color: "var(--th-text-secondary)", borderColor: "var(--th-border)" }}
             title={tr("복사", "Copy log", "コピー", "复制")}
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -597,12 +577,8 @@ export default function TerminalPanel({
           {/* Download log */}
           <button
             onClick={handleDownloadLog}
-            className="px-2 py-1 text-[10px] rounded border transition"
-            style={{
-              background: "var(--th-bg-surface)",
-              color: "var(--th-text-secondary)",
-              borderColor: "var(--th-border)",
-            }}
+            className="px-2 py-1 text-[10px] font-mono border transition"
+            style={{ borderRadius: "2px", background: "var(--th-bg-surface)", color: "var(--th-text-secondary)", borderColor: "var(--th-border)" }}
             title={tr("다운로드", "Download log", "ダウンロード", "下载")}
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -614,18 +590,10 @@ export default function TerminalPanel({
           {/* Follow toggle */}
           <button
             onClick={() => setFollow((f) => !f)}
-            className={`px-2 py-1 text-[10px] rounded border transition ${
-              follow ? "bg-green-500/20 text-green-400 border-green-500/40" : ""
-            }`}
-            style={
-              !follow
-                ? {
-                    background: "var(--th-bg-surface)",
-                    color: "var(--th-text-secondary)",
-                    borderColor: "var(--th-border)",
-                  }
-                : undefined
-            }
+            className="px-2 py-1 text-[10px] font-mono border transition"
+            style={follow
+              ? { borderRadius: "2px", background: "rgba(52,211,153,0.15)", color: "rgb(167,243,208)", borderColor: "rgba(52,211,153,0.4)" }
+              : { borderRadius: "2px", background: "var(--th-bg-surface)", color: "var(--th-text-secondary)", borderColor: "var(--th-border)" }}
             title={
               follow
                 ? tr("자동 스크롤 ON", "Auto-scroll ON", "自動スクロール ON", "自动滚动 ON")
@@ -637,8 +605,8 @@ export default function TerminalPanel({
           {/* Scroll to bottom */}
           <button
             onClick={scrollToBottom}
-            className="p-1.5 rounded transition"
-            style={{ color: "var(--th-text-secondary)" }}
+            className="p-1.5 transition"
+            style={{ borderRadius: "2px", color: "var(--th-text-secondary)" }}
             title={tr("맨 아래로", "Scroll to bottom", "一番下へ", "滚动到底部")}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -646,7 +614,7 @@ export default function TerminalPanel({
             </svg>
           </button>
           {/* Close */}
-          <button onClick={onClose} className="p-1.5 rounded transition" style={{ color: "var(--th-text-secondary)" }}>
+          <button onClick={onClose} className="p-1.5 transition" style={{ borderRadius: "2px", color: "var(--th-text-secondary)" }}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M18 6L6 18M6 6l12 12" />
             </svg>
@@ -686,12 +654,8 @@ export default function TerminalPanel({
             }}
             rows={3}
             disabled={interventionBusy}
-            className="w-full rounded-md border px-2 py-1.5 text-xs font-mono resize-y focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
-            style={{
-              borderColor: "var(--th-border)",
-              background: "var(--th-bg-surface)",
-              color: "var(--th-text-primary)",
-            }}
+            className="w-full border px-2 py-1.5 text-xs font-mono resize-y focus:outline-none"
+            style={{ borderRadius: "2px", borderColor: "var(--th-border)", background: "var(--th-bg-surface)", color: "var(--th-text-primary)" }}
             placeholder={tr(
               "예) 방금 방식 대신 테스트를 먼저 실행하고 실패 원인을 정리해.",
               "e.g. Run tests first, then summarize failures before continuing.",
@@ -710,8 +674,8 @@ export default function TerminalPanel({
               <button
                 onClick={() => void handlePauseOnly()}
                 disabled={interventionBusy}
-                className="rounded-md px-2.5 py-1.5 text-[11px] border transition disabled:opacity-50"
-                style={{ borderColor: "var(--th-border)", color: "var(--th-text-secondary)" }}
+                className="px-2.5 py-1.5 text-[11px] font-mono border transition disabled:opacity-50"
+                style={{ borderRadius: "2px", borderColor: "var(--th-border)", color: "var(--th-text-secondary)" }}
               >
                 {interventionBusy
                   ? tr("처리 중...", "Processing...", "処理中...", "处理中...")
@@ -721,13 +685,8 @@ export default function TerminalPanel({
             <button
               onClick={() => void handleInjectAndResume()}
               disabled={interventionBusy || !interventionPrompt.trim() || !canAttemptInterrupt}
-              className="rounded-md px-2.5 py-1.5 text-[11px] border transition disabled:opacity-70 disabled:cursor-not-allowed"
-              style={{
-                borderColor: "var(--th-danger-border)",
-                background: "var(--th-danger-bg)",
-                color: "var(--th-danger-text)",
-                fontWeight: 600,
-              }}
+              className="px-2.5 py-1.5 text-[11px] font-mono border transition disabled:opacity-70 disabled:cursor-not-allowed"
+              style={{ borderRadius: "2px", borderColor: "var(--th-danger-border)", background: "var(--th-danger-bg)", color: "var(--th-danger-text)", fontWeight: 600 }}
             >
               {interventionBusy
                 ? tr("실행 중...", "Running...", "実行中...", "执行中...")
@@ -737,8 +696,8 @@ export default function TerminalPanel({
               <button
                 onClick={() => void handleResumeOnly()}
                 disabled={interventionBusy}
-                className="rounded-md px-2.5 py-1.5 text-[11px] border transition disabled:opacity-50"
-                style={{ borderColor: "var(--th-border)", color: "var(--th-text-secondary)" }}
+                className="px-2.5 py-1.5 text-[11px] font-mono border transition disabled:opacity-50"
+                style={{ borderRadius: "2px", borderColor: "var(--th-border)", color: "var(--th-text-secondary)" }}
               >
                 {tr("재개만", "Resume only", "再開のみ", "仅恢复")}
               </button>
@@ -782,12 +741,8 @@ export default function TerminalPanel({
               }
             }}
             placeholder={tr("로그 검색...", "Search logs...", "ログ検索...", "搜索日志...")}
-            className="flex-1 rounded-md border px-2 py-1 text-xs font-mono outline-none focus:ring-1 focus:ring-cyan-500/50"
-            style={{
-              borderColor: "var(--th-border)",
-              background: "var(--th-bg-surface)",
-              color: "var(--th-text-primary)",
-            }}
+            className="flex-1 border px-2 py-1 text-xs font-mono outline-none"
+            style={{ borderRadius: "2px", borderColor: "var(--th-border)", background: "var(--th-bg-surface)", color: "var(--th-text-primary)" }}
           />
           {logSearch && (
             <span className="text-[10px] whitespace-nowrap" style={{ color: "var(--th-text-muted)" }}>
@@ -797,12 +752,8 @@ export default function TerminalPanel({
           <select
             value={logKindFilter}
             onChange={(event) => setLogKindFilter(event.target.value as "all" | "system" | "error")}
-            className="rounded-md border px-1.5 py-1 text-[10px] outline-none"
-            style={{
-              borderColor: "var(--th-border)",
-              background: "var(--th-bg-surface)",
-              color: "var(--th-text-secondary)",
-            }}
+            className="border px-1.5 py-1 text-[10px] font-mono outline-none"
+            style={{ borderRadius: "2px", borderColor: "var(--th-border)", background: "var(--th-bg-surface)", color: "var(--th-text-secondary)" }}
           >
             <option value="all">{tr("전체", "All", "全て", "全部")}</option>
             <option value="system">{tr("시스템", "System", "システム", "系统")}</option>
@@ -815,11 +766,11 @@ export default function TerminalPanel({
       {activeTab === "terminal" && filteredTaskLogs.length > 0 && (
         <div className="terminal-panel-strip max-h-24 space-y-0.5 overflow-y-auto border-b px-4 py-2">
           {filteredTaskLogs.map((log) => {
-            const kindColor =
-              log.kind === "error" ? "text-red-400" : log.kind === "system" ? "text-cyan-400" : "text-slate-500";
+            const kindStyle =
+              log.kind === "error" ? { color: "rgb(253,164,175)" } : log.kind === "system" ? { color: "var(--th-accent)" } : { color: "var(--th-text-muted)" };
             const time = taskLogTimeFormatter.format(new Date(log.created_at));
             return (
-              <div key={log.id} className={`text-[10px] font-mono ${kindColor}`}>
+              <div key={log.id} className="text-[10px] font-mono" style={kindStyle}>
                 [{time}] {log.message}
               </div>
             );
@@ -874,22 +825,22 @@ export default function TerminalPanel({
             meetingMinutes.map((meeting) => (
               <div
                 key={meeting.id}
-                className="rounded-xl border p-3"
-                style={{ borderColor: "var(--th-border)", background: "var(--th-card-bg)" }}
+                className="border p-3"
+                style={{ borderRadius: "2px", borderColor: "var(--th-border)", background: "var(--th-bg-elevated)" }}
               >
                 <div className="mb-2 flex flex-wrap items-center gap-2">
-                  <span className="rounded bg-cyan-900/50 px-2 py-0.5 text-[10px] text-cyan-200">
+                  <span className="px-2 py-0.5 text-[10px] font-mono" style={{ borderRadius: "2px", background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.3)", color: "var(--th-accent)" }}>
                     {meetingTypeLabel(meeting.meeting_type)}
                   </span>
                   <span
-                    className="rounded px-2 py-0.5 text-[10px]"
-                    style={{ background: "var(--th-bg-surface)", color: "var(--th-text-primary)" }}
+                    className="px-2 py-0.5 text-[10px] font-mono"
+                    style={{ borderRadius: "2px", background: "var(--th-bg-primary)", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)" }}
                   >
                     {tr("라운드", "Round", "ラウンド", "轮次")} {meeting.round}
                   </span>
                   <span
-                    className="rounded px-2 py-0.5 text-[10px]"
-                    style={{ background: "var(--th-bg-surface)", color: "var(--th-text-primary)" }}
+                    className="px-2 py-0.5 text-[10px] font-mono"
+                    style={{ borderRadius: "2px", background: "var(--th-bg-primary)", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)" }}
                   >
                     {meetingStatusLabel(meeting.status)}
                   </span>
@@ -901,15 +852,15 @@ export default function TerminalPanel({
                   {meeting.entries.map((entry) => (
                     <div
                       key={entry.id}
-                      className="rounded-md border px-2 py-1.5"
-                      style={{ borderColor: "var(--th-border)", background: "var(--th-panel-bg)" }}
+                      className="border px-2 py-1.5"
+                      style={{ borderRadius: "2px", borderColor: "var(--th-border)", background: "var(--th-bg-primary)" }}
                     >
                       <div
                         className="mb-0.5 flex items-center gap-2 text-[10px]"
                         style={{ color: "var(--th-text-secondary)" }}
                       >
                         <span>#{entry.seq}</span>
-                        <span className="text-cyan-300">{entry.speaker_name}</span>
+                        <span style={{ color: "var(--th-accent)" }}>{entry.speaker_name}</span>
                         {entry.department_name && <span>{entry.department_name}</span>}
                         {entry.role_label && <span>· {entry.role_label}</span>}
                       </div>
@@ -959,16 +910,15 @@ export default function TerminalPanel({
             {progressHints.hints.slice(-4).map((hint, idx) => (
               <div
                 key={`${hint.tool}-${hint.phase}-${idx}`}
-                className={`text-[10px] italic break-words ${
-                  hint.phase === "error" ? "text-rose-300/75" : "text-slate-400/85"
-                }`}
+                className="text-[10px] italic break-words"
+                style={{ color: hint.phase === "error" ? "rgb(253,164,175)" : "var(--th-text-muted)" }}
               >
                 {hintLineLabel(hint)}
               </div>
             ))}
           </div>
           {progressHints.ok_items.length > 0 && (
-            <div className="mt-1 text-[10px] text-emerald-300/80 break-words">
+            <div className="mt-1 text-[10px] break-words" style={{ color: "rgb(167,243,208)" }}>
               {`✓ ${progressHints.ok_items.map((item) => compactHintText(item, 44)).join(" · ")}`}
             </div>
           )}
@@ -987,7 +937,7 @@ export default function TerminalPanel({
         <span>
           {task?.status === "in_progress" && (
             <span className="inline-flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+              <span className="w-1.5 h-1.5 animate-pulse" style={{ borderRadius: "50%", background: "var(--th-accent)" }} />
               {activeTab === "terminal"
                 ? tr("실시간", "Live", "ライブ", "实时")
                 : tr("회의록", "Minutes", "会議録", "会议纪要")}

@@ -30,9 +30,9 @@ export default function GitHubOAuthAppConfig({ t }: { t: TFunction }) {
   };
 
   return (
-    <div className="space-y-2 rounded-xl border border-slate-700/50 bg-slate-800/40 p-4">
+    <div className="space-y-2 p-4" style={{ borderRadius: "4px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
       <div className="flex items-center gap-2">
-        <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+        <h4 className="text-xs font-semibold font-mono uppercase tracking-wider" style={{ color: "var(--th-text-muted)" }}>
           {t({
             ko: "GitHub OAuth App (Private 리포 접근)",
             en: "GitHub OAuth App (Private repo access)",
@@ -41,12 +41,12 @@ export default function GitHubOAuthAppConfig({ t }: { t: TFunction }) {
           })}
         </h4>
         {ghClientIdSaved && (
-          <span className="text-[10px] text-green-400">
+          <span className="text-[10px] font-mono" style={{ color: "rgb(167,243,208)" }}>
             {t({ ko: "저장됨", en: "Saved", ja: "保存済み", zh: "已保存" })}
           </span>
         )}
       </div>
-      <p className="text-[11px] text-slate-500 leading-relaxed">
+      <p className="text-[11px] font-mono leading-relaxed" style={{ color: "var(--th-text-muted)" }}>
         {t({
           ko: "기본 GitHub 연결은 Copilot OAuth를 사용하여 Private 리포 접근이 제한됩니다. 자체 OAuth App을 등록하면 모든 리포에 접근 가능합니다.",
           en: "Default GitHub uses Copilot OAuth which limits private repo access. Register your own OAuth App for full access.",
@@ -54,8 +54,8 @@ export default function GitHubOAuthAppConfig({ t }: { t: TFunction }) {
           zh: "默认 GitHub 使用 Copilot OAuth，限制私有仓库访问。注册自己的 OAuth App 可获取完整访问权限。",
         })}
       </p>
-      <details className="text-[11px] text-slate-500">
-        <summary className="cursor-pointer text-blue-400 hover:text-blue-300">
+      <details className="text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>
+        <summary className="cursor-pointer font-mono" style={{ color: "var(--th-accent)" }}>
           {t({
             ko: "OAuth App 만들기 가이드",
             en: "How to create OAuth App",
@@ -63,7 +63,7 @@ export default function GitHubOAuthAppConfig({ t }: { t: TFunction }) {
             zh: "如何创建 OAuth App",
           })}
         </summary>
-        <ol className="mt-2 ml-4 list-decimal space-y-1 text-slate-400">
+        <ol className="mt-2 ml-4 list-decimal space-y-1 font-mono" style={{ color: "var(--th-text-secondary)" }}>
           <li>GitHub → Settings → Developer settings → OAuth Apps → New OAuth App</li>
           <li>
             {t({
@@ -103,11 +103,11 @@ export default function GitHubOAuthAppConfig({ t }: { t: TFunction }) {
             onKeyDown={(e) => {
               if (e.key === "Enter") saveClientId();
             }}
-            className="flex-1 rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 text-xs text-white outline-none focus:border-blue-500 font-mono"
+            className="flex-1 px-3 py-1.5 text-xs font-mono outline-none" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
           />
           <button
             onClick={saveClientId}
-            className="shrink-0 rounded-lg bg-blue-600 px-3 py-1.5 text-[11px] font-medium text-white hover:bg-blue-500"
+            className="shrink-0 px-3 py-1.5 text-[11px] font-mono font-medium transition" style={{ borderRadius: "2px", background: "var(--th-accent)", color: "#000" }}
           >
             {t({ ko: "저장", en: "Save", ja: "保存", zh: "保存" })}
           </button>

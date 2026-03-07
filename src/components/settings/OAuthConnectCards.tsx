@@ -12,7 +12,7 @@ export default function OAuthConnectCards({
 }: OAuthConnectCardProps) {
   return (
     <div className="space-y-3">
-      <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+      <div className="text-xs font-semibold font-mono uppercase tracking-wider" style={{ color: "var(--th-text-muted)" }}>
         {t({
           ko: "OAuth 계정 추가",
           en: "Add OAuth Account",
@@ -32,22 +32,30 @@ export default function OAuthConnectCards({
           return (
             <div
               key={id}
-              className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all ${
-                isConnected
-                  ? "bg-green-500/5 border-green-500/30"
+              className="flex flex-col items-center gap-2 p-4 transition-all"
+              style={{
+                borderRadius: "2px",
+                border: isConnected
+                  ? "1px solid rgba(52,211,153,0.35)"
                   : isDetectedOnly
-                    ? "bg-amber-500/5 border-amber-500/30"
+                    ? "1px solid rgba(251,191,36,0.35)"
                     : storageOk
-                      ? "bg-slate-700/30 border-slate-600/50 hover:border-blue-400/50 hover:bg-slate-700/50"
-                      : "bg-slate-800/30 border-slate-700/30 opacity-50"
-              }`}
+                      ? "1px solid var(--th-border)"
+                      : "1px solid var(--th-border)",
+                background: isConnected
+                  ? "rgba(52,211,153,0.05)"
+                  : isDetectedOnly
+                    ? "rgba(251,191,36,0.05)"
+                    : "var(--th-bg-elevated)",
+                opacity: storageOk ? 1 : 0.5,
+              }}
             >
               <Logo className="w-8 h-8" />
-              <span className="text-sm font-medium text-white">{label}</span>
-              <span className="text-[10px] text-slate-400 text-center leading-tight">{description}</span>
+              <span className="text-sm font-medium font-mono" style={{ color: "var(--th-text-primary)" }}>{label}</span>
+              <span className="text-[10px] font-mono text-center leading-tight" style={{ color: "var(--th-text-muted)" }}>{description}</span>
 
               {!storageOk ? (
-                <span className="text-[10px] px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-500">
+                <span className="text-[10px] font-mono px-2 py-0.5" style={{ borderRadius: "2px", background: "rgba(251,191,36,0.15)", color: "var(--th-accent)" }}>
                   {t({
                     ko: "암호화 키 필요",
                     en: "Encryption key required",
@@ -58,11 +66,11 @@ export default function OAuthConnectCards({
               ) : (
                 <>
                   {isConnected ? (
-                    <span className="text-[11px] px-2.5 py-1 rounded-lg bg-green-500/20 text-green-400 font-medium">
+                    <span className="text-[11px] px-2.5 py-1 font-mono font-medium" style={{ borderRadius: "2px", background: "rgba(52,211,153,0.15)", color: "rgb(167,243,208)", border: "1px solid rgba(52,211,153,0.4)" }}>
                       {t({ ko: "실행 가능", en: "Runnable", ja: "実行可能", zh: "可执行" })}
                     </span>
                   ) : isDetectedOnly ? (
-                    <span className="text-[11px] px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-300 font-medium">
+                    <span className="text-[11px] px-2.5 py-1 font-mono font-medium" style={{ borderRadius: "2px", background: "rgba(251,191,36,0.15)", color: "var(--th-accent)", border: "1px solid rgba(251,191,36,0.4)" }}>
                       {t({ ko: "감지됨", en: "Detected", ja: "検出済み", zh: "已检测" })}
                     </span>
                   ) : null}
@@ -70,10 +78,10 @@ export default function OAuthConnectCards({
                   {isGitHub ? (
                     deviceCode && deviceStatus === "polling" ? (
                       <div className="flex flex-col items-center gap-1.5">
-                        <div className="text-xs text-slate-300 font-mono bg-slate-700/60 px-3 py-1.5 rounded-lg tracking-widest select-all">
+                        <div className="text-xs font-mono px-3 py-1.5 tracking-widest select-all" style={{ borderRadius: "2px", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)", border: "1px solid var(--th-border)" }}>
                           {deviceCode.userCode}
                         </div>
-                        <span className="text-[10px] text-blue-400 animate-pulse">
+                        <span className="text-[10px] font-mono animate-pulse" style={{ color: "var(--th-accent)" }}>
                           {t({
                             ko: "코드 입력 대기 중...",
                             en: "Waiting for code...",
@@ -85,7 +93,7 @@ export default function OAuthConnectCards({
                     ) : (
                       <button
                         onClick={() => void onStartDeviceCodeFlow()}
-                        className="text-[11px] px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-medium transition-colors"
+                        className="text-[11px] px-3 py-1 font-mono font-medium transition" style={{ borderRadius: "2px", background: "var(--th-accent)", color: "#000" }}
                       >
                         {isConnected || isDetectedOnly
                           ? t({ ko: "계정 추가", en: "Add Account", ja: "アカウント追加", zh: "添加账号" })
@@ -111,10 +119,10 @@ export default function OAuthConnectCards({
 
       {deviceStatus === "complete" && (
         <div className="space-y-1.5">
-          <div className="text-xs text-green-400 bg-green-500/10 border border-green-500/20 px-3 py-2 rounded-lg">
+          <div className="text-xs font-mono px-3 py-2" style={{ borderRadius: "2px", background: "rgba(52,211,153,0.1)", border: "1px solid rgba(52,211,153,0.3)", color: "rgb(167,243,208)" }}>
             {t({ ko: "GitHub 연결 완료!", en: "GitHub connected!", ja: "GitHub 接続完了!", zh: "GitHub 已连接!" })}
           </div>
-          <div className="text-[11px] text-slate-400 bg-slate-800/60 border border-slate-700/50 px-3 py-2 rounded-lg">
+          <div className="text-[11px] font-mono px-3 py-2" style={{ borderRadius: "2px", background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)" }}>
             {t({
               ko: "Copilot 구독이 있으면 AI 모델을 사용할 수 있고, 없어도 프로젝트 관리의 GitHub 리포 가져오기 기능은 정상 작동합니다.",
               en: "With a Copilot subscription you can use AI models. Without it, GitHub repo import in Project Manager still works.",
@@ -126,7 +134,7 @@ export default function OAuthConnectCards({
       )}
 
       {deviceError && (
-        <div className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 px-3 py-2 rounded-lg">
+        <div className="text-xs font-mono px-3 py-2" style={{ borderRadius: "2px", background: "rgba(244,63,94,0.08)", border: "1px solid rgba(244,63,94,0.35)", color: "rgb(253,164,175)" }}>
           {deviceError}
         </div>
       )}

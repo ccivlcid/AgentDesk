@@ -277,21 +277,21 @@ export default function ChannelGuideModal({ t, onClose }: GuideModalProps) {
 
   const modal = (
     <div
-      className="skills-learn-modal fixed inset-0 z-[2300] flex items-center justify-center bg-slate-950/75 backdrop-blur-sm p-4"
+      className="skills-learn-modal fixed inset-0 z-[2300] flex items-center justify-center p-4" style={{ background: "var(--th-modal-overlay)" }}
       onClick={onClose}
       role="dialog"
       aria-modal="true"
       aria-labelledby="channel-guide-title"
     >
       <div
-        className="skills-learn-modal-card relative w-full max-w-2xl min-w-0 max-h-[90vh] flex flex-col rounded-2xl border border-slate-700/60 bg-slate-900/95 shadow-2xl overflow-hidden"
+        className="skills-learn-modal-card relative w-full max-w-2xl min-w-0 max-h-[90vh] flex flex-col overflow-hidden" style={{ borderRadius: "4px", border: "1px solid var(--th-border-strong)", background: "var(--th-bg-surface)" }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex-shrink-0 px-6 pt-5 pb-4 border-b border-slate-800/80">
+        <div className="flex-shrink-0 px-6 pt-5 pb-4" style={{ borderBottom: "1px solid var(--th-border)" }}>
           <div className="flex items-center justify-between">
             <div>
-              <h3 id="channel-guide-title" className="text-base font-semibold text-white tracking-tight">
+              <h3 id="channel-guide-title" className="text-base font-semibold font-mono tracking-tight" style={{ color: "var(--th-text-heading)" }}>
                 {t({
                   ko: "메신저 연동 가이드",
                   en: "Messenger Setup Guide",
@@ -299,7 +299,7 @@ export default function ChannelGuideModal({ t, onClose }: GuideModalProps) {
                   zh: "消息渠道设置指南",
                 })}
               </h3>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <p className="text-xs font-mono mt-0.5" style={{ color: "var(--th-text-muted)" }}>
                 {t({
                   ko: "각 메신저별 설정 방법을 안내합니다",
                   en: "Step-by-step setup instructions for each messenger",
@@ -310,7 +310,7 @@ export default function ChannelGuideModal({ t, onClose }: GuideModalProps) {
             </div>
             <button
               onClick={onClose}
-              className="w-7 h-7 flex items-center justify-center rounded-full text-slate-500 hover:text-slate-300 hover:bg-slate-800 transition-colors"
+              className="w-7 h-7 flex items-center justify-center transition" style={{ borderRadius: "2px", color: "var(--th-text-muted)" }}
             >
               <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M4 4l8 8M12 4l-8 8" />
@@ -325,11 +325,10 @@ export default function ChannelGuideModal({ t, onClose }: GuideModalProps) {
                 key={g.channel}
                 type="button"
                 onClick={() => setActiveChannel(g.channel)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-t-lg text-xs font-medium whitespace-nowrap transition-all border ${
-                  activeChannel === g.channel
-                    ? "bg-slate-700 text-white border-slate-600 border-b-slate-900/95 -mb-px z-10"
-                    : "bg-transparent text-slate-500 border-transparent hover:text-slate-300 hover:bg-slate-800/50"
-                }`}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono font-medium whitespace-nowrap transition"
+                style={activeChannel === g.channel
+                  ? { borderRadius: "2px 2px 0 0", background: "var(--th-bg-elevated)", color: "var(--th-accent)", borderBottom: "2px solid var(--th-accent)" }
+                  : { color: "var(--th-text-muted)" }}
               >
                 <span className="text-sm">{g.icon}</span>
                 <span className="capitalize">{g.channel === "googlechat" ? "Google Chat" : g.channel === "imessage" ? "iMessage" : g.channel}</span>
@@ -342,17 +341,17 @@ export default function ChannelGuideModal({ t, onClose }: GuideModalProps) {
         <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-6 py-5">
           {/* Field Reference */}
           <div className="grid grid-cols-2 gap-3 mb-5">
-            <div className="rounded-xl bg-slate-800/50 border border-slate-700/40 p-3">
-              <div className="text-[10px] uppercase tracking-wider text-slate-400 mb-1">
+            <div className="p-3" style={{ borderRadius: "2px", background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)" }}>
+              <div className="text-[10px] uppercase tracking-wider font-mono mb-1" style={{ color: "var(--th-text-muted)" }}>
                 {t({ ko: "토큰", en: "Token", ja: "トークン", zh: "令牌" })}
               </div>
-              <div className="text-xs text-slate-200 font-medium">{active.tokenLabel}</div>
+              <div className="text-xs font-mono font-medium" style={{ color: "var(--th-text-primary)" }}>{active.tokenLabel}</div>
             </div>
-            <div className="rounded-xl bg-slate-800/50 border border-slate-700/40 p-3">
-              <div className="text-[10px] uppercase tracking-wider text-slate-400 mb-1">
+            <div className="p-3" style={{ borderRadius: "2px", background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)" }}>
+              <div className="text-[10px] uppercase tracking-wider font-mono mb-1" style={{ color: "var(--th-text-muted)" }}>
                 {t({ ko: "채널/대상 ID", en: "Channel/Target ID", ja: "チャンネル/対象ID", zh: "频道/目标ID" })}
               </div>
-              <div className="text-xs text-slate-200 font-medium">{active.targetLabel}</div>
+              <div className="text-xs font-mono font-medium" style={{ color: "var(--th-text-primary)" }}>{active.targetLabel}</div>
             </div>
           </div>
 
@@ -363,8 +362,7 @@ export default function ChannelGuideModal({ t, onClose }: GuideModalProps) {
                 {/* Timeline */}
                 <div className="flex flex-col items-center">
                   <div
-                    className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0"
-                    style={{ backgroundColor: active.color + "CC" }}
+                    className="w-6 h-6 flex items-center justify-center text-[10px] font-mono font-bold flex-shrink-0" style={{ borderRadius: "50%", color: "#000", backgroundColor: active.color + "CC" }}
                   >
                     {i + 1}
                   </div>
@@ -373,7 +371,7 @@ export default function ChannelGuideModal({ t, onClose }: GuideModalProps) {
                   )}
                 </div>
                 {/* Text */}
-                <div className={`text-sm text-slate-200 leading-relaxed ${i < active.steps.length - 1 ? "pb-4" : "pb-1"}`}>
+                <div className={`text-sm font-mono leading-relaxed ${i < active.steps.length - 1 ? "pb-4" : "pb-1"}`} style={{ color: "var(--th-text-primary)" }}>
                   {step}
                 </div>
               </div>
@@ -390,10 +388,10 @@ export default function ChannelGuideModal({ t, onClose }: GuideModalProps) {
         </div>
 
         {/* Footer */}
-        <div className="flex-shrink-0 px-6 py-3 border-t border-slate-800/80 flex justify-end">
+        <div className="flex-shrink-0 px-6 py-3 flex justify-end" style={{ borderTop: "1px solid var(--th-border)" }}>
           <button
             onClick={onClose}
-            className="px-4 py-1.5 text-xs rounded-lg bg-slate-800 text-slate-300 border border-slate-700/60 hover:bg-slate-700 transition-colors"
+            className="px-4 py-1.5 text-xs font-mono transition" style={{ borderRadius: "2px", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)", border: "1px solid var(--th-border)" }}
           >
             {t({ ko: "닫기", en: "Close", ja: "閉じる", zh: "关闭" })}
           </button>
