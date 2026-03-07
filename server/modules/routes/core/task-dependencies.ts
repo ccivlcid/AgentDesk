@@ -107,6 +107,14 @@ export function registerTaskDependencyRoutes({ app, db, nowMs }: TaskDepsRouteDe
     res.json({ ok: true });
   });
 
+  // GET /api/task-dependencies/all — all edges in one call (for graph view)
+  app.get("/api/task-dependencies/all", (_req: Request, res: Response) => {
+    const edges = db
+      .prepare("SELECT task_id, depends_on_task_id FROM task_dependencies ORDER BY created_at ASC")
+      .all() as Array<{ task_id: string; depends_on_task_id: string }>;
+    res.json({ ok: true, edges });
+  });
+
   // GET /api/tasks/:id/dependencies/blocked — check if execution is blocked by incomplete predecessors
   app.get("/api/tasks/:id/dependencies/blocked", (req: Request, res: Response) => {
     const taskId = req.params.id as string;

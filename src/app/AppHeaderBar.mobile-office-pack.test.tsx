@@ -30,6 +30,8 @@ function createBaseProps(): ComponentProps<typeof AppHeaderBar> {
     onToggleTheme: vi.fn(),
     onToggleMobileHeaderMenu: vi.fn(),
     onCloseMobileHeaderMenu: vi.fn(),
+    groupChatLabel: "Group Chat",
+    onOpenGroupChat: vi.fn(),
   };
 }
 

@@ -21,8 +21,8 @@ export default function HooksLibrary({ agents, departments }: HooksLibraryProps)
     return (
       <div className="flex items-center justify-center py-24">
         <div className="text-center">
-          <div className="animate-spin w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4" />
-          <div className="text-slate-400 text-sm">
+          <div className="animate-spin w-8 h-8 border-2 border-t-transparent mx-auto mb-4" style={{ borderRadius: "50%", borderColor: "var(--th-accent)", borderTopColor: "transparent" }} />
+          <div className="text-sm font-mono" style={{ color: "var(--th-text-muted)" }}>
             {t({
               ko: "\uD6C5 \uB85C\uB529\uC911...",
               en: "Loading hooks...",
@@ -40,7 +40,7 @@ export default function HooksLibrary({ agents, departments }: HooksLibraryProps)
       <div className="flex items-center justify-center py-24">
         <div className="text-center">
           <div className="text-4xl mb-3">{"\u26A0\uFE0F"}</div>
-          <div className="text-slate-400 text-sm">
+          <div className="text-sm font-mono" style={{ color: "var(--th-text-muted)" }}>
             {t({
               ko: "\uD6C5 \uB370\uC774\uD130\uB97C \uBD88\uB7EC\uC62C \uC218 \uC5C6\uC2B5\uB2C8\uB2E4",
               en: "Unable to load hooks data",
@@ -48,10 +48,11 @@ export default function HooksLibrary({ agents, departments }: HooksLibraryProps)
               zh: "\u65E0\u6CD5\u52A0\u8F7D\u94A9\u5B50\u6570\u636E",
             })}
           </div>
-          <div className="text-slate-500 text-xs mt-1">{vm.error}</div>
+          <div className="text-xs font-mono mt-1" style={{ color: "var(--th-text-muted)" }}>{vm.error}</div>
           <button
             onClick={vm.loadHooks}
-            className="mt-4 px-4 py-2 text-sm bg-blue-600/20 text-blue-400 border border-blue-500/30 rounded-lg hover:bg-blue-600/30 transition-all"
+            className="mt-4 px-4 py-2 text-sm font-mono transition-all"
+            style={{ borderRadius: "2px", background: "rgba(251,191,36,0.1)", color: "var(--th-accent)", border: "1px solid rgba(251,191,36,0.35)" }}
           >
             {t({ ko: "\uB2E4\uC2DC \uC2DC\uB3C4", en: "Retry", ja: "\u518D\u8A66\u884C", zh: "\u91CD\u8BD5" })}
           </button>
@@ -144,7 +145,7 @@ export default function HooksLibrary({ agents, departments }: HooksLibraryProps)
         onRemoveAgent={vm.removeAgentFromSquad}
       />
 
-      <div className="text-center text-xs text-slate-600 py-4">
+      <div className="text-center text-xs font-mono py-4" style={{ color: "var(--th-text-muted)" }}>
         {t({
           ko: "\uD6C5\uC740 \uC5D0\uC774\uC804\uD2B8 \uD0DC\uC2A4\uD06C \uB77C\uC774\uD504\uC0AC\uC774\uD074\uC758 \uD2B9\uC815 \uC2DC\uC810\uC5D0 \uC258 \uBA85\uB839\uC744 \uC2E4\uD589\uD569\uB2C8\uB2E4",
           en: "Hooks execute shell commands at specific points in the agent task lifecycle",

@@ -75,8 +75,8 @@ const TAB_ITEMS: Array<{
 export default function SettingsTabNav({ tab, setTab, t }: SettingsTabNavProps) {
   return (
     <div
-      className="flex flex-wrap gap-1 rounded-xl border p-1"
-      style={{ borderColor: "var(--th-border)", background: "var(--th-bg-primary)" }}
+      className="flex flex-wrap gap-1 p-1"
+      style={{ borderRadius: "4px", borderColor: "var(--th-border)", background: "var(--th-bg-primary)" }}
     >
       {TAB_ITEMS.map((item) => {
         const isActive = tab === item.key;
@@ -85,14 +85,14 @@ export default function SettingsTabNav({ tab, setTab, t }: SettingsTabNavProps) 
             key={item.key}
             type="button"
             onClick={() => setTab(item.key)}
-            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+            className={`flex items-center gap-2 px-3 py-2 text-sm font-medium font-mono transition-colors ${
               isActive
                 ? "bg-[var(--th-bg-surface)] text-[var(--th-text-primary)] shadow-sm"
                 : "text-[var(--th-text-muted)] hover:text-[var(--th-text-secondary)] hover:bg-[var(--th-bg-surface-hover)]"
             }`}
-            style={isActive ? { border: "1px solid var(--th-border)" } : undefined}
+            style={{ borderRadius: "2px", ...(isActive ? { border: "1px solid var(--th-border)" } : {}) }}
           >
-            <item.Icon className={isActive ? "text-blue-500" : "opacity-70"} />
+            <item.Icon className={isActive ? "text-amber-400" : "opacity-70"} />
             <span>{item.label(t)}</span>
           </button>
         );

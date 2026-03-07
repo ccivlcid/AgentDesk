@@ -87,22 +87,24 @@ export default function AgentSelect({
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className={`w-full flex items-center gap-2 px-2 ${padY} rounded-lg border border-slate-600 bg-slate-700 ${textSize} text-slate-300 outline-none transition hover:border-slate-500 focus:border-blue-500`}
+        className={`w-full flex items-center gap-2 px-2 ${padY} ${textSize} font-mono outline-none transition`}
+        style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
       >
         {selected ? (
           <>
             <AgentAvatar agent={selected} spriteMap={spriteMap} size={avatarSize} />
             <span className="truncate">{getAgentName(selected)}</span>
-            <span className="text-slate-500 text-[10px]">({getRoleLabel(selected.role)})</span>
+            <span className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>({getRoleLabel(selected.role)})</span>
             {getDepartmentLabel(selected) && (
-              <span className="text-slate-500 text-[10px]">· {getDepartmentLabel(selected)}</span>
+              <span className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>· {getDepartmentLabel(selected)}</span>
             )}
           </>
         ) : (
-          <span className="text-slate-500">{effectivePlaceholder}</span>
+          <span className="font-mono" style={{ color: "var(--th-text-muted)" }}>{effectivePlaceholder}</span>
         )}
         <svg
-          className="ml-auto w-3 h-3 text-slate-500 flex-shrink-0"
+          className="ml-auto w-3 h-3 flex-shrink-0"
+          style={{ color: "var(--th-text-muted)" }}
           viewBox="0 0 12 12"
           fill="none"
           stroke="currentColor"
@@ -114,7 +116,7 @@ export default function AgentSelect({
 
       {/* Dropdown */}
       {open && (
-        <div className={`absolute z-50 w-full max-h-48 overflow-y-auto rounded-lg border border-slate-600 bg-slate-800 shadow-xl ${dropUp ? "bottom-full mb-1" : "mt-1"}`}>
+        <div className={`absolute z-50 w-full max-h-48 overflow-y-auto ${dropUp ? "bottom-full mb-1" : "mt-1"}`} style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
           {/* None option */}
           <button
             type="button"
@@ -122,7 +124,8 @@ export default function AgentSelect({
               onChange("");
               setOpen(false);
             }}
-            className={`w-full flex items-center gap-2 px-2 ${padY} ${textSize} text-slate-500 hover:bg-slate-700 transition-colors`}
+            className={`w-full flex items-center gap-2 px-2 ${padY} ${textSize} font-mono hover:bg-[var(--th-bg-surface-hover)] transition`}
+            style={{ color: "var(--th-text-muted)" }}
           >
             {effectivePlaceholder}
           </button>
@@ -135,16 +138,17 @@ export default function AgentSelect({
                 onChange(a.id);
                 setOpen(false);
               }}
-              className={`w-full flex items-center gap-2 px-2 ${padY} ${textSize} transition-colors ${
-                a.id === value ? "bg-blue-600/20 text-blue-300" : "text-slate-300 hover:bg-slate-700"
-              }`}
+              className={`w-full flex items-center gap-2 px-2 ${padY} ${textSize} font-mono transition hover:bg-[var(--th-bg-surface-hover)]`}
+              style={a.id === value
+                ? { background: "rgba(251,191,36,0.1)", color: "var(--th-accent)" }
+                : { color: "var(--th-text-primary)" }}
             >
               <AgentAvatar agent={a} spriteMap={spriteMap} size={avatarSize} />
               <span className="truncate">{getAgentName(a)}</span>
-              <span className="text-slate-500 text-[10px]">({getRoleLabel(a.role)})</span>
-              {getDepartmentLabel(a) && <span className="text-slate-500 text-[10px]">· {getDepartmentLabel(a)}</span>}
+              <span className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>({getRoleLabel(a.role)})</span>
+              {getDepartmentLabel(a) && <span className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>· {getDepartmentLabel(a)}</span>}
               {a.status === "working" && (
-                <span className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-400 flex-shrink-0" />
+                <span className="ml-auto w-1.5 h-1.5 flex-shrink-0" style={{ borderRadius: "50%", background: "var(--th-accent)" }} />
               )}
             </button>
           ))}

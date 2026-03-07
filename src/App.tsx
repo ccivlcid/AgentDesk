@@ -84,6 +84,7 @@ export default function App() {
   const [taskReport, setTaskReport] = useState<TaskReportDetail | null>(null);
   const [showReportHistory, setShowReportHistory] = useState(false);
   const [showAgentStatus, setShowAgentStatus] = useState(false);
+  const [showGroupChat, setShowGroupChat] = useState(false);
   const [showRoomManager, setShowRoomManager] = useState(false);
   const [showDecisionInbox, setShowDecisionInbox] = useState(false);
   const [decisionInboxLoading, setDecisionInboxLoading] = useState(false);
@@ -463,6 +464,7 @@ export default function App() {
       onOpenAgentStatus={() => setShowAgentStatus(true)}
       onOpenReportHistory={() => setShowReportHistory(true)}
       onOpenAnnouncement={actions.handleOpenAnnouncement}
+      onOpenGroupChat={() => setShowGroupChat(true)}
       onOpenRoomManager={() => setShowRoomManager(true)}
       onDismissAutoUpdateNotice={actions.handleDismissAutoUpdateNotice}
       onDismissUpdate={() => {
@@ -554,6 +556,8 @@ export default function App() {
         onCloseReportHistory={() => setShowReportHistory(false)}
         showAgentStatus={showAgentStatus}
         onCloseAgentStatus={() => setShowAgentStatus(false)}
+        showGroupChat={showGroupChat}
+        onCloseGroupChat={() => setShowGroupChat(false)}
         showRoomManager={showRoomManager}
         roomManagerDepartments={labels.roomManagerDepartments}
         customRoomThemes={customRoomThemes}

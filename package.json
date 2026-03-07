@@ -60,6 +60,7 @@
     "colord": "^2.9.3",
     "cors": "^2.8.6",
     "express": "^5.2.1",
+    "framer-motion": "^12.35.0",
     "lucide-react": "^0.511.0",
     "pixi.js": "^8.6.6",
     "pptxgenjs": "^3.12.0",

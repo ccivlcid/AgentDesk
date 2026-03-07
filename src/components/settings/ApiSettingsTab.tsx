@@ -36,8 +36,8 @@ export default function ApiSettingsTab({ t, localeTag, apiState }: ApiSettingsTa
   return (
     <>
       <section
-        className="space-y-4 rounded-xl border p-4 sm:p-5"
-        style={{ background: "var(--th-bg-surface)", borderColor: "var(--th-border)" }}
+        className="space-y-4 p-4 sm:p-5"
+        style={{ borderRadius: "4px", background: "var(--th-bg-surface)", borderColor: "var(--th-border)" }}
       >
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold" style={{ color: "var(--th-text-heading)" }}>
@@ -60,7 +60,8 @@ export default function ApiSettingsTab({ t, localeTag, apiState }: ApiSettingsTa
                   setApiEditingId(null);
                   setApiForm(DEFAULT_API_FORM);
                 }}
-                className="text-xs px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-medium transition-colors"
+                className="text-xs px-3 py-1 font-medium font-mono transition-colors"
+                style={{ borderRadius: "2px", background: "var(--th-accent)", color: "#000" }}
               >
                 + {t({ ko: "추가", en: "Add", ja: "追加", zh: "添加" })}
               </button>
@@ -78,8 +79,8 @@ export default function ApiSettingsTab({ t, localeTag, apiState }: ApiSettingsTa
         </p>
 
         {apiAddMode && (
-          <div className="space-y-3 border border-blue-500/30 rounded-lg p-4 bg-slate-900/50">
-            <h4 className="text-xs font-semibold text-blue-400 uppercase">
+          <div className="space-y-3 p-4" style={{ borderRadius: "2px", border: "1px solid var(--th-border-strong)", background: "var(--th-bg-elevated)" }}>
+            <h4 className="text-xs font-semibold font-mono uppercase tracking-wider" style={{ color: "var(--th-accent)" }}>
               {apiEditingId
                 ? t({ ko: "프로바이더 수정", en: "Edit Provider", ja: "プロバイダー編集", zh: "编辑提供商" })
                 : t({
@@ -91,7 +92,7 @@ export default function ApiSettingsTab({ t, localeTag, apiState }: ApiSettingsTa
             </h4>
 
             <div>
-              <label className="block text-xs text-slate-400 mb-1">
+              <label className="block text-xs font-mono mb-1" style={{ color: "var(--th-text-muted)" }}>
                 {t({ ko: "유형", en: "Type", ja: "タイプ", zh: "类型" })}
               </label>
               <div className="flex flex-wrap gap-1.5">
@@ -111,11 +112,13 @@ export default function ApiSettingsTab({ t, localeTag, apiState }: ApiSettingsTa
                         name: prev.name || preset.label,
                       }));
                     }}
-                    className={`px-2.5 py-1 text-[11px] rounded-md border transition-colors ${
-                      apiForm.type === key
-                        ? "bg-blue-600/30 border-blue-500/50 text-blue-300"
-                        : "bg-slate-700/30 border-slate-600/30 text-slate-400 hover:text-slate-200 hover:border-slate-500/50"
-                    }`}
+                    className="px-2.5 py-1 text-[11px] font-mono transition-colors"
+                    style={{
+                      borderRadius: "2px",
+                      border: apiForm.type === key ? "1px solid var(--th-accent)" : "1px solid var(--th-border)",
+                      background: apiForm.type === key ? "rgba(245,158,11,0.1)" : "var(--th-bg-elevated)",
+                      color: apiForm.type === key ? "var(--th-accent)" : "var(--th-text-muted)",
+                    }}
                   >
                     {preset.label}
                   </button>
@@ -124,7 +127,7 @@ export default function ApiSettingsTab({ t, localeTag, apiState }: ApiSettingsTa
             </div>
 
             <div>
-              <label className="block text-xs text-slate-400 mb-1">
+              <label className="block text-xs font-mono mb-1" style={{ color: "var(--th-text-muted)" }}>
                 {t({ ko: "이름", en: "Name", ja: "名前", zh: "名称" })}
               </label>
               <input
@@ -132,26 +135,28 @@ export default function ApiSettingsTab({ t, localeTag, apiState }: ApiSettingsTa
                 value={apiForm.name}
                 onChange={(e) => setApiForm((prev) => ({ ...prev, name: e.target.value }))}
                 placeholder={t({ ko: "예: My OpenAI", en: "e.g. My OpenAI", ja: "例: My OpenAI", zh: "如: My OpenAI" })}
-                className="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500"
+                className="w-full px-3 py-2 text-sm focus:outline-none"
+                style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
               />
             </div>
 
             <div>
-              <label className="block text-xs text-slate-400 mb-1">Base URL</label>
+              <label className="block text-xs font-mono mb-1" style={{ color: "var(--th-text-muted)" }}>Base URL</label>
               <input
                 type="text"
                 value={apiForm.base_url}
                 onChange={(e) => setApiForm((prev) => ({ ...prev, base_url: e.target.value }))}
                 placeholder="https://api.openai.com/v1"
-                className="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-lg text-white text-sm font-mono focus:outline-none focus:border-blue-500"
+                className="w-full px-3 py-2 text-sm font-mono focus:outline-none"
+                style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
               />
             </div>
 
             <div>
-              <label className="block text-xs text-slate-400 mb-1">
+              <label className="block text-xs font-mono mb-1" style={{ color: "var(--th-text-muted)" }}>
                 API Key{" "}
                 {apiForm.type === "ollama" && (
-                  <span className="text-slate-600">
+                  <span style={{ color: "var(--th-text-muted)" }}>
                     (
                     {t({
                       ko: "로컬은 보통 불필요",
@@ -177,7 +182,8 @@ export default function ApiSettingsTab({ t, localeTag, apiState }: ApiSettingsTa
                       })
                     : "sk-..."
                 }
-                className="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-lg text-white text-sm font-mono focus:outline-none focus:border-blue-500"
+                className="w-full px-3 py-2 text-sm font-mono focus:outline-none"
+                style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
               />
             </div>
 
@@ -185,7 +191,8 @@ export default function ApiSettingsTab({ t, localeTag, apiState }: ApiSettingsTa
               <button
                 onClick={() => void handleApiProviderSave()}
                 disabled={apiSaving || !apiForm.name.trim() || !apiForm.base_url.trim()}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 text-xs font-medium font-mono uppercase tracking-wider transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ borderRadius: "2px", background: "var(--th-accent)", color: "#000" }}
               >
                 {apiSaving
                   ? t({ ko: "저장 중...", en: "Saving...", ja: "保存中...", zh: "保存中..." })
@@ -199,7 +206,8 @@ export default function ApiSettingsTab({ t, localeTag, apiState }: ApiSettingsTa
                   setApiEditingId(null);
                   setApiForm(DEFAULT_API_FORM);
                 }}
-                className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs font-medium rounded-lg transition-colors"
+                className="px-4 py-2 text-xs font-medium font-mono transition-colors"
+                style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "transparent", color: "var(--th-text-secondary)" }}
               >
                 {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}
               </button>
@@ -208,11 +216,11 @@ export default function ApiSettingsTab({ t, localeTag, apiState }: ApiSettingsTa
         )}
 
         {apiProvidersLoading ? (
-          <div className="text-xs text-slate-500 animate-pulse py-4 text-center">
+          <div className="text-xs font-mono animate-pulse py-4 text-center" style={{ color: "var(--th-text-muted)" }}>
             {t({ ko: "로딩 중...", en: "Loading...", ja: "読み込み中...", zh: "加载中..." })}
           </div>
         ) : apiProviders.length === 0 && !apiAddMode ? (
-          <div className="text-xs text-slate-500 py-6 text-center">
+          <div className="text-xs font-mono py-6 text-center" style={{ color: "var(--th-text-muted)" }}>
             {t({
               ko: "등록된 API 프로바이더가 없습니다. 위의 + 추가 버튼으로 시작하세요.",
               en: "No API providers registered. Click + Add above to get started.",
@@ -228,21 +236,22 @@ export default function ApiSettingsTab({ t, localeTag, apiState }: ApiSettingsTa
               return (
                 <div
                   key={provider.id}
-                  className={`rounded-lg border p-3 transition-colors ${
-                    provider.enabled
-                      ? "border-slate-600/50 bg-slate-800/40"
-                      : "border-slate-700/30 bg-slate-900/30 opacity-60"
-                  }`}
+                  className="p-3 transition-colors"
+                  style={{
+                    borderRadius: "2px",
+                    border: "1px solid var(--th-border)",
+                    background: provider.enabled ? "var(--th-bg-elevated)" : "var(--th-bg-primary)",
+                    opacity: provider.enabled ? 1 : 0.6,
+                  }}
                 >
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2 min-w-0">
                       <span
-                        className={`inline-block w-2 h-2 rounded-full flex-shrink-0 ${
-                          provider.enabled ? "bg-emerald-400" : "bg-slate-600"
-                        }`}
+                        className="inline-block w-2 h-2 flex-shrink-0"
+                        style={{ borderRadius: "1px", background: provider.enabled ? "#34d399" : "var(--th-text-muted)" }}
                       />
-                      <span className="text-sm font-medium text-white truncate">{provider.name}</span>
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-700/50 text-slate-400 uppercase flex-shrink-0">
+                      <span className="text-sm font-medium font-mono truncate" style={{ color: "var(--th-text-primary)" }}>{provider.name}</span>
+                      <span className="text-[10px] px-1.5 py-0.5 font-mono uppercase flex-shrink-0" style={{ borderRadius: "2px", background: "var(--th-bg-surface-hover)", color: "var(--th-text-muted)" }}>
                         {provider.type}
                       </span>
                       {provider.has_api_key && <span className="text-[10px] text-emerald-400 flex-shrink-0">🔑</span>}
@@ -251,24 +260,28 @@ export default function ApiSettingsTab({ t, localeTag, apiState }: ApiSettingsTa
                       <button
                         onClick={() => void handleApiProviderTest(provider.id)}
                         disabled={apiTesting === provider.id}
-                        className="text-[10px] px-2 py-1 rounded bg-cyan-600/20 text-cyan-400 border border-cyan-500/30 hover:bg-cyan-600/30 transition-colors disabled:opacity-50"
+                        className="text-[10px] px-2 py-1 font-mono text-cyan-400 transition-colors disabled:opacity-50"
+                        style={{ borderRadius: "2px", background: "rgba(6,182,212,0.15)", border: "1px solid rgba(6,182,212,0.3)" }}
                         title={t({ ko: "연결 테스트", en: "Test Connection", ja: "接続テスト", zh: "测试连接" })}
                       >
                         {apiTesting === provider.id ? "..." : t({ ko: "테스트", en: "Test", ja: "テスト", zh: "测试" })}
                       </button>
                       <button
                         onClick={() => handleApiEditStart(provider)}
-                        className="text-[10px] px-2 py-1 rounded bg-slate-600/30 text-slate-400 border border-slate-500/30 hover:bg-slate-600/50 hover:text-slate-200 transition-colors"
+                        className="text-[10px] px-2 py-1 font-mono transition-colors"
+                        style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
                       >
                         {t({ ko: "수정", en: "Edit", ja: "編集", zh: "编辑" })}
                       </button>
                       <button
                         onClick={() => void handleApiProviderToggle(provider.id, provider.enabled)}
-                        className={`text-[10px] px-2 py-1 rounded border transition-colors ${
-                          provider.enabled
-                            ? "bg-amber-600/20 text-amber-400 border-amber-500/30 hover:bg-amber-600/30"
-                            : "bg-emerald-600/20 text-emerald-400 border-emerald-500/30 hover:bg-emerald-600/30"
-                        }`}
+                        className="text-[10px] px-2 py-1 font-mono transition-colors"
+                        style={{
+                          borderRadius: "2px",
+                          background: provider.enabled ? "rgba(245,158,11,0.12)" : "rgba(16,185,129,0.12)",
+                          border: provider.enabled ? "1px solid rgba(245,158,11,0.3)" : "1px solid rgba(16,185,129,0.3)",
+                          color: provider.enabled ? "#fbbf24" : "#34d399",
+                        }}
                       >
                         {provider.enabled
                           ? t({ ko: "비활성화", en: "Disable", ja: "無効化", zh: "禁用" })
@@ -276,22 +289,25 @@ export default function ApiSettingsTab({ t, localeTag, apiState }: ApiSettingsTa
                       </button>
                       <button
                         onClick={() => void handleApiProviderDelete(provider.id)}
-                        className="text-[10px] px-2 py-1 rounded bg-red-600/20 text-red-400 border border-red-500/30 hover:bg-red-600/30 transition-colors"
+                        className="text-[10px] px-2 py-1 font-mono text-red-400 transition-colors"
+                        style={{ borderRadius: "2px", background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.3)" }}
                       >
                         {t({ ko: "삭제", en: "Delete", ja: "削除", zh: "删除" })}
                       </button>
                     </div>
                   </div>
 
-                  <div className="mt-1.5 text-[11px] font-mono text-slate-500 truncate">{provider.base_url}</div>
+                  <div className="mt-1.5 text-[11px] font-mono truncate" style={{ color: "var(--th-text-muted)" }}>{provider.base_url}</div>
 
                   {testResult && (
                     <div
-                      className={`mt-2 text-[11px] px-2.5 py-1.5 rounded ${
-                        testResult.ok
-                          ? "bg-green-500/10 text-green-400 border border-green-500/20"
-                          : "bg-red-500/10 text-red-400 border border-red-500/20"
-                      }`}
+                      className="mt-2 text-[11px] font-mono px-2.5 py-1.5"
+                      style={{
+                        borderRadius: "2px",
+                        background: testResult.ok ? "rgba(34,197,94,0.08)" : "rgba(239,68,68,0.08)",
+                        border: testResult.ok ? "1px solid rgba(34,197,94,0.2)" : "1px solid rgba(239,68,68,0.2)",
+                        color: testResult.ok ? "#4ade80" : "#f87171",
+                      }}
                     >
                       {testResult.ok ? "✓ " : "✗ "}
                       {testResult.msg}
@@ -302,13 +318,14 @@ export default function ApiSettingsTab({ t, localeTag, apiState }: ApiSettingsTa
                     <div className="mt-2">
                       <button
                         onClick={() => setApiModelsExpanded((prev) => ({ ...prev, [provider.id]: !prev[provider.id] }))}
-                        className="text-[11px] text-slate-400 hover:text-slate-200 transition-colors"
+                        className="text-[11px] font-mono transition-colors"
+                        style={{ color: "var(--th-text-muted)" }}
                       >
                         {isExpanded ? "▼" : "▶"}{" "}
                         {t({ ko: "모델 목록", en: "Models", ja: "モデル一覧", zh: "模型列表" })} (
                         {provider.models_cache.length})
                         {provider.models_cached_at && (
-                          <span className="text-slate-600 ml-1">
+                          <span className="ml-1" style={{ color: "var(--th-text-muted)" }}>
                             ·{" "}
                             {new Date(provider.models_cached_at).toLocaleString(localeTag, {
                               hour: "2-digit",
@@ -318,16 +335,18 @@ export default function ApiSettingsTab({ t, localeTag, apiState }: ApiSettingsTa
                         )}
                       </button>
                       {isExpanded && (
-                        <div className="mt-1.5 max-h-48 overflow-y-auto rounded border border-slate-700/30 bg-slate-900/40 p-2">
+                        <div className="mt-1.5 max-h-48 overflow-y-auto p-2" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-primary)" }}>
                           {provider.models_cache.map((model) => (
                             <div
                               key={model}
-                              className="flex items-center justify-between text-[11px] font-mono text-slate-400 py-0.5 group/model hover:bg-slate-700/30 rounded px-1 -mx-1"
+                              className="flex items-center justify-between text-[11px] font-mono py-0.5 group/model px-1 -mx-1"
+                              style={{ color: "var(--th-text-muted)" }}
                             >
                               <span className="truncate">{model}</span>
                               <button
                                 onClick={() => void handleApiModelAssign(provider.id, model)}
-                                className="text-[9px] px-1.5 py-0.5 bg-blue-600/60 hover:bg-blue-500 text-blue-200 rounded opacity-0 group-hover/model:opacity-100 transition-opacity whitespace-nowrap ml-2"
+                                className="text-[9px] px-1.5 py-0.5 font-mono text-amber-900 opacity-0 group-hover/model:opacity-100 transition-opacity whitespace-nowrap ml-2"
+                                style={{ borderRadius: "2px", background: "var(--th-accent)" }}
                                 title={t({
                                   ko: "에이전트에 배정",
                                   en: "Assign to agent",

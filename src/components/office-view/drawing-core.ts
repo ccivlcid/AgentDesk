@@ -119,24 +119,36 @@ function drawRoomAtmosphere(
 /* ================================================================== */
 
 function drawTiledFloor(g: Graphics, x: number, y: number, w: number, h: number, c1: number, c2: number) {
-  for (let ty = 0; ty < h; ty += TILE) {
-    for (let tx = 0; tx < w; tx += TILE) {
-      const isEven = ((tx / TILE + ty / TILE) & 1) === 0;
-      g.rect(x + tx, y + ty, TILE, TILE).fill(isEven ? c1 : c2);
-      // Top-left highlight (warm light)
-      g.moveTo(x + tx, y + ty)
-        .lineTo(x + tx + TILE, y + ty)
-        .stroke({ width: 0.3, color: 0xffffff, alpha: 0.15 });
-      g.moveTo(x + tx, y + ty)
-        .lineTo(x + tx, y + ty + TILE)
-        .stroke({ width: 0.3, color: 0xffffff, alpha: 0.1 });
-      // Bottom-right shadow (warm dark)
-      g.moveTo(x + tx, y + ty + TILE)
-        .lineTo(x + tx + TILE, y + ty + TILE)
-        .stroke({ width: 0.3, color: 0x8a7a60, alpha: 0.1 });
-      g.moveTo(x + tx + TILE, y + ty)
-        .lineTo(x + tx + TILE, y + ty + TILE)
-        .stroke({ width: 0.3, color: 0x8a7a60, alpha: 0.08 });
+  // Terminal PCB grid — solid base + scan lines + grid + dot intersections
+  g.rect(x, y, w, h).fill(c1);
+
+  // Horizontal scan lines every 4px (CRT phosphor effect)
+  for (let ty = 2; ty < h; ty += 4) {
+    g.rect(x, y + ty, w, 1).fill({ color: c2, alpha: 0.04 });
+  }
+
+  // PCB grid lines at every TILE
+  for (let ty = 0; ty <= h; ty += TILE) {
+    g.moveTo(x, y + ty).lineTo(x + w, y + ty).stroke({ width: 0.5, color: c2, alpha: 0.2 });
+  }
+  for (let tx = 0; tx <= w; tx += TILE) {
+    g.moveTo(x + tx, y).lineTo(x + tx, y + h).stroke({ width: 0.5, color: c2, alpha: 0.2 });
+  }
+
+  // Solder dot at every grid intersection
+  for (let ty = 0; ty <= h; ty += TILE) {
+    for (let tx = 0; tx <= w; tx += TILE) {
+      g.circle(x + tx, y + ty, 0.9).fill({ color: c2, alpha: 0.4 });
+    }
+  }
+
+  // Accent circuit traces — sparse short horizontal runs at half-TILE offset
+  for (let ty = TILE / 2; ty < h; ty += TILE * 2) {
+    for (let tx = TILE / 2; tx + TILE < w; tx += TILE * 3) {
+      g.rect(x + tx, y + ty - 0.5, TILE, 1).fill({ color: c2, alpha: 0.12 });
+      // End cap dots
+      g.circle(x + tx, y + ty, 1).fill({ color: c2, alpha: 0.18 });
+      g.circle(x + tx + TILE, y + ty, 1).fill({ color: c2, alpha: 0.18 });
     }
   }
 }
@@ -161,70 +173,33 @@ function drawAmbientGlow(
   return g;
 }
 
-/** Draw a small window on the wall with warm sunlight filter and curtains */
+/** Draw a terminal data monitor on the wall */
 function drawWindow(parent: Container, x: number, y: number, w: number = 24, h: number = 18) {
   const g = new Graphics();
-  // Outer frame shadow
-  g.roundRect(x + 1.5, y + 1.5, w, h, 2).fill({ color: 0x000000, alpha: 0.12 });
-  // Frame (warmer wood-tone)
-  g.roundRect(x, y, w, h, 2).fill(0x8a7a68);
-  g.roundRect(x, y, w, h, 2).stroke({ width: 0.5, color: 0xa09080, alpha: 0.4 });
-  // Glass panes (warm sky gradient tones)
-  const pw = (w - 5) / 2,
-    ph = (h - 5) / 2;
-  g.rect(x + 2, y + 2, pw, ph).fill(0x8abcdd);
-  g.rect(x + pw + 3, y + 2, pw, ph).fill(0x9accee);
-  g.rect(x + 2, y + ph + 3, pw, ph).fill(0x9accee);
-  g.rect(x + pw + 3, y + ph + 3, pw, ph).fill(0x8abcdd);
-  // Cloud silhouettes (more puffy)
-  g.circle(x + 6, y + 5, 1.5).fill({ color: 0xffffff, alpha: 0.2 });
-  g.circle(x + 8, y + 5.5, 2.2).fill({ color: 0xffffff, alpha: 0.18 });
-  g.circle(x + 10, y + 5.8, 1.8).fill({ color: 0xffffff, alpha: 0.16 });
-  g.circle(x + w - 7, y + h - 7, 1.5).fill({ color: 0xffffff, alpha: 0.14 });
-  g.circle(x + w - 9, y + h - 6.5, 1.8).fill({ color: 0xffffff, alpha: 0.12 });
-  // Warm sunlight overlay on glass
-  g.rect(x + 2, y + 2, w - 4, h - 4).fill({ color: 0xffe8a0, alpha: 0.1 });
-  // Grid bars (wooden mullions)
-  g.rect(x + w / 2 - 0.6, y + 2, 1.2, h - 4).fill({ color: 0x7a6a58, alpha: 0.4 });
-  g.rect(x + 2, y + h / 2 - 0.5, w - 4, 1).fill({ color: 0x7a6a58, alpha: 0.35 });
-  // Reflection highlight (brighter, diagonal)
-  g.moveTo(x + 3, y + 3)
-    .lineTo(x + 8, y + 3)
-    .lineTo(x + 3, y + 6.5)
-    .fill({ color: 0xffffff, alpha: 0.28 });
-  g.rect(x + pw + 4, y + 3, 3, 2).fill({ color: 0xffffff, alpha: 0.12 });
-  // Mini curtains (soft dusty rose)
-  g.moveTo(x + 1, y + 1)
-    .quadraticCurveTo(x + 3, y + h * 0.4, x + 1, y + h - 2)
-    .stroke({ width: 1.5, color: 0xd8b0b8, alpha: 0.35 });
-  g.moveTo(x + w - 1, y + 1)
-    .quadraticCurveTo(x + w - 3, y + h * 0.4, x + w - 1, y + h - 2)
-    .stroke({ width: 1.5, color: 0xd8b0b8, alpha: 0.35 });
-  // Curtain top valance
-  g.roundRect(x, y, w, 2, 1).fill({ color: 0xd8b0b8, alpha: 0.25 });
-  // Sill (warmer wood) with tiny plant
-  g.rect(x - 2, y + h, w + 4, 3).fill(0x8a7a68);
-  g.rect(x - 2, y + h, w + 4, 1.2).fill({ color: 0xa09080, alpha: 0.3 });
-  // Tiny windowsill plant
-  g.circle(x + w / 2, y + h - 1, 2).fill(0x7cb898);
-  g.circle(x + w / 2 - 1, y + h - 2, 1.5).fill(0x92c8aa);
-  g.roundRect(x + w / 2 - 1.5, y + h, 3, 2, 0.5).fill(0xd88060);
-  // Sunlight beam cast below window (warm ambient glow on floor)
-  g.moveTo(x, y + h + 3)
-    .lineTo(x + w, y + h + 3)
-    .lineTo(x + w + 8, y + h + 22)
-    .lineTo(x - 8, y + h + 22)
-    .fill({ color: 0xffeebb, alpha: 0.05 });
-  g.moveTo(x + 2, y + h + 5)
-    .lineTo(x + w - 2, y + h + 5)
-    .lineTo(x + w + 4, y + h + 16)
-    .lineTo(x - 4, y + h + 16)
-    .fill({ color: 0xffeebb, alpha: 0.03 });
-  // Warm sunlight streaming through window
-  g.rect(x + 1, y + h + 3, w - 2, 12).fill({ color: 0xfff4d0, alpha: 0.05 });
+  // Outer bezel (dark metal)
+  g.rect(x, y, w, h).fill(0x1a1e2a);
+  g.rect(x, y, w, h).stroke({ width: 0.8, color: 0x3a4058, alpha: 0.8 });
+  // Screen area
+  g.rect(x + 2, y + 2, w - 4, h - 5).fill(0x050810);
+  // Scan lines on screen
+  for (let sl = 0; sl < h - 6; sl += 2) {
+    g.rect(x + 2, y + 2 + sl, w - 4, 1).fill({ color: 0x2244aa, alpha: 0.18 });
+  }
+  // Data bar rows
+  g.rect(x + 3, y + 4, (w - 6) * 0.7, 1).fill({ color: 0x44aaff, alpha: 0.6 });
+  g.rect(x + 3, y + 7, (w - 6) * 0.4, 1).fill({ color: 0x22cc88, alpha: 0.5 });
+  g.rect(x + 3, y + 10, (w - 6) * 0.85, 1).fill({ color: 0x44aaff, alpha: 0.35 });
+  g.rect(x + 3, y + 13, (w - 6) * 0.55, 1).fill({ color: 0x22cc88, alpha: 0.45 });
+  // Status LED
+  g.circle(x + w - 3, y + h - 2, 1.2).fill({ color: 0x22cc44, alpha: 0.9 });
+  // Bottom bezel
+  g.rect(x + 2, y + h - 3, w - 4, 2).fill(0x12161f);
+  // Reflection
+  g.moveTo(x + 3, y + 3).lineTo(x + 7, y + 3).lineTo(x + 3, y + 6).fill({ color: 0xffffff, alpha: 0.06 });
   parent.addChild(g);
   return g;
 }
+
 
 /** Draw a small wall clock with shadow and detail */
 function drawWallClock(parent: Container, x: number, y: number) {
@@ -232,38 +207,37 @@ function drawWallClock(parent: Container, x: number, y: number) {
   clock.position.set(x, y);
 
   const g = new Graphics();
-  // Shadow behind clock
-  g.circle(1, 1, 8).fill({ color: 0x000000, alpha: 0.12 });
-  // Outer ring (frame)
-  g.circle(0, 0, 8).fill(0xdddddd);
-  g.circle(0, 0, 8).stroke({ width: 1.8, color: 0x555555 });
-  // Inner face
-  g.circle(0, 0, 6.5).fill(0xfcfcf8);
-  // Hour marks (thicker at 12/3/6/9)
+  // Dark bezel (terminal style)
+  g.circle(0, 0, 8).fill(0x0c0c14);
+  g.circle(0, 0, 8).stroke({ width: 1.2, color: 0x2a3050, alpha: 0.9 });
+  // Dark face with subtle green phosphor tint
+  g.circle(0, 0, 6.5).fill(0x060c10);
+  // Hour marks — amber cardinal, dim green minor
   for (let i = 0; i < 12; i++) {
     const angle = (i * Math.PI * 2) / 12 - Math.PI / 2;
     const r = 5.2;
     const isCardinal = i % 3 === 0;
-    g.circle(Math.cos(angle) * r, Math.sin(angle) * r, isCardinal ? 0.6 : 0.35).fill(0x333333);
+    g.circle(Math.cos(angle) * r, Math.sin(angle) * r, isCardinal ? 0.7 : 0.3)
+      .fill(isCardinal ? 0xf59e0b : 0x22cc44);
   }
   clock.addChild(g);
 
   const hourHand = new Graphics();
-  hourHand.moveTo(0, 0).lineTo(0, -3.5).stroke({ width: 1, color: 0x222222 });
+  hourHand.moveTo(0, 0).lineTo(0, -3.5).stroke({ width: 1.1, color: 0xf59e0b });
   clock.addChild(hourHand);
 
   const minuteHand = new Graphics();
-  minuteHand.moveTo(0, 0).lineTo(0, -5.2).stroke({ width: 0.7, color: 0x444444 });
+  minuteHand.moveTo(0, 0).lineTo(0, -5.2).stroke({ width: 0.7, color: 0x22cc44 });
   clock.addChild(minuteHand);
 
   const secondHand = new Graphics();
-  secondHand.moveTo(0, 1.6).lineTo(0, -5.8).stroke({ width: 0.35, color: 0xcc3333 });
+  secondHand.moveTo(0, 1.6).lineTo(0, -5.8).stroke({ width: 0.35, color: 0xef4444 });
   clock.addChild(secondHand);
 
   // Center dot
   const center = new Graphics();
-  center.circle(0, 0, 1).fill(0xcc3333);
-  center.circle(0, 0, 0.5).fill(0xff5555);
+  center.circle(0, 0, 1).fill(0xf59e0b);
+  center.circle(0, 0, 0.4).fill(0xffd060);
   clock.addChild(center);
 
   const visual: WallClockVisual = { hourHand, minuteHand, secondHand };
@@ -282,26 +256,45 @@ function applyWallClockTime(clock: WallClockVisual, now: Date): void {
   clock.secondHand.rotation = (secondValue / 60) * Math.PI * 2;
 }
 
-/** Draw a small picture frame on the wall */
+/** Draw a pixel terminal schematic — replaces cozy picture frame */
 function drawPictureFrame(parent: Container, x: number, y: number) {
   const g = new Graphics();
-  g.roundRect(x, y, 16, 12, 1).fill(0x8b6914);
-  g.rect(x + 1.5, y + 1.5, 13, 9).fill(0x445577);
-  // Tiny landscape
-  g.rect(x + 1.5, y + 7, 13, 3.5).fill(0x448844);
-  g.circle(x + 11, y + 4, 1.5).fill(0xffdd44);
+  // Sharp dark frame
+  g.rect(x, y, 16, 12).fill(0x080c18);
+  g.rect(x, y, 16, 12).stroke({ width: 0.8, color: 0x3a4a6a, alpha: 0.8 });
+  // Amber left accent
+  g.rect(x, y, 1.5, 12).fill({ color: 0xf59e0b, alpha: 0.7 });
+  // Circuit schematic lines
+  g.moveTo(x + 3, y + 3).lineTo(x + 8, y + 3).stroke({ width: 0.5, color: 0x4488cc, alpha: 0.7 });
+  g.moveTo(x + 8, y + 3).lineTo(x + 8, y + 7).stroke({ width: 0.5, color: 0x4488cc, alpha: 0.7 });
+  g.moveTo(x + 8, y + 7).lineTo(x + 13, y + 7).stroke({ width: 0.5, color: 0x22cc88, alpha: 0.6 });
+  g.moveTo(x + 3, y + 7).lineTo(x + 6, y + 7).stroke({ width: 0.5, color: 0x22cc88, alpha: 0.5 });
+  // Node dots
+  g.circle(x + 3, y + 3, 0.8).fill({ color: 0x4488cc, alpha: 0.9 });
+  g.circle(x + 8, y + 3, 0.8).fill({ color: 0x4488cc, alpha: 0.9 });
+  g.circle(x + 8, y + 7, 0.8).fill({ color: 0x22cc88, alpha: 0.9 });
+  g.circle(x + 13, y + 7, 0.8).fill({ color: 0x22cc88, alpha: 0.9 });
   parent.addChild(g);
   return g;
 }
 
-/** Draw a small rug/carpet under desk area */
+/** Draw a data-flow grid zone (replaces rug) */
 function drawRug(parent: Container, cx: number, cy: number, w: number, h: number, color: number) {
   const g = new Graphics();
-  g.roundRect(cx - w / 2, cy - h / 2, w, h, 3).fill({ color, alpha: 0.3 });
-  // Border pattern
-  g.roundRect(cx - w / 2 + 2, cy - h / 2 + 2, w - 4, h - 4, 2).stroke({ width: 0.8, color, alpha: 0.2 });
-  // Inner pattern
-  g.roundRect(cx - w / 2 + 5, cy - h / 2 + 5, w - 10, h - 10, 1).stroke({ width: 0.4, color: 0xffffff, alpha: 0.06 });
+  // Very subtle tinted area (barely visible, like a zone indicator)
+  g.rect(cx - w / 2, cy - h / 2, w, h).fill({ color, alpha: 0.06 });
+  // Sharp border
+  g.rect(cx - w / 2, cy - h / 2, w, h).stroke({ width: 0.5, color, alpha: 0.18 });
+  // Corner markers (4 corners) — circuit pad style
+  const corners = [
+    [cx - w / 2, cy - h / 2],
+    [cx + w / 2 - 4, cy - h / 2],
+    [cx - w / 2, cy + h / 2 - 4],
+    [cx + w / 2 - 4, cy + h / 2 - 4],
+  ] as const;
+  for (const [cx2, cy2] of corners) {
+    g.rect(cx2, cy2, 4, 4).fill({ color, alpha: 0.3 });
+  }
   parent.addChild(g);
   return g;
 }
@@ -324,30 +317,34 @@ function drawCeilingLight(parent: Container, x: number, y: number, color: number
   return g;
 }
 
-/** Draw a trash can */
+/** Draw a trash can — server discard bin style */
 function drawTrashCan(parent: Container, x: number, y: number) {
   const g = new Graphics();
-  // Can body (trapezoid-ish)
-  g.roundRect(x - 4, y, 8, 10, 1).fill(0x777788);
-  g.roundRect(x - 4.5, y - 1, 9, 2, 1).fill(0x888899);
-  // Paper sticking out
-  g.roundRect(x - 2, y - 3, 4, 3, 0.5).fill(0xeeeeee);
+  g.rect(x - 4, y, 8, 10).fill(0x1a1e2a);
+  g.rect(x - 4, y, 8, 10).stroke({ width: 0.5, color: 0x3a4058, alpha: 0.7 });
+  g.rect(x - 4.5, y - 1.5, 9, 2).fill(0x252a3a);
+  // Status lines (horizontal stripes)
+  g.rect(x - 3, y + 3, 6, 1).fill({ color: 0xef4444, alpha: 0.4 });
+  g.rect(x - 3, y + 6, 6, 1).fill({ color: 0xef4444, alpha: 0.25 });
   parent.addChild(g);
   return g;
 }
 
-/** Draw a water cooler */
+/** Draw a water cooler — server coolant unit style */
 function drawWaterCooler(parent: Container, x: number, y: number) {
   const g = new Graphics();
-  // Base
-  g.roundRect(x - 5, y + 10, 10, 14, 1).fill(0xdddddd);
-  // Water bottle
-  g.roundRect(x - 4, y, 8, 12, 3).fill(0x88ccff);
-  g.roundRect(x - 4, y, 8, 12, 3).stroke({ width: 0.5, color: 0x66aadd });
-  // Water level
-  g.rect(x - 3, y + 3, 6, 8).fill({ color: 0x44aaff, alpha: 0.4 });
-  // Tap
-  g.rect(x + 3, y + 16, 3, 2).fill(0x999999);
+  // Base unit
+  g.rect(x - 5, y + 10, 10, 14).fill(0x1a1e2a);
+  g.rect(x - 5, y + 10, 10, 14).stroke({ width: 0.5, color: 0x3a4058, alpha: 0.6 });
+  // Coolant tank (dark blue tint)
+  g.rect(x - 4, y, 8, 12).fill(0x0a1828);
+  g.rect(x - 4, y, 8, 12).stroke({ width: 0.5, color: 0x2255aa, alpha: 0.6 });
+  // Coolant level indicator
+  g.rect(x - 3, y + 4, 6, 7).fill({ color: 0x2266dd, alpha: 0.35 });
+  // Status LED
+  g.circle(x + 2, y + 18, 1).fill({ color: 0x22cc44, alpha: 0.9 });
+  // Output valve
+  g.rect(x + 3, y + 16, 3, 2).fill(0x303a50);
   parent.addChild(g);
   return g;
 }

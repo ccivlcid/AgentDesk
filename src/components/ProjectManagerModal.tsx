@@ -64,6 +64,20 @@ export default function ProjectManagerModal({ agents, departments = [], onClose 
 
   const spriteMap = useSpriteMap(agents);
 
+  /** 직원 선택 목록: 선택된 기본 워크플로우 팩(오피스팩)에 소속된 에이전트만 표시 */
+  const agentsInCurrentPack = useMemo(() => {
+    if (defaultPackKey === "development") {
+      return agents.filter((a) => !a.workflow_pack_key || a.workflow_pack_key === "development");
+    }
+    return agents.filter((a) => a.workflow_pack_key === defaultPackKey);
+  }, [agents, defaultPackKey]);
+
+  /** 해당 팩에 직원이 한 명이라도 있는 부서만 직원 필터 드롭다운에 표시 */
+  const departmentsInCurrentPack = useMemo(() => {
+    const deptIds = new Set(agentsInCurrentPack.map((a) => a.department_id).filter(Boolean));
+    return departments.filter((d) => deptIds.has(d.id));
+  }, [departments, agentsInCurrentPack]);
+
   const viewedProject = detail?.project ?? null;
   const selectedProject = isCreating ? null : viewedProject;
   const canSave = !!name.trim() && !!projectPath.trim() && !!coreGoal.trim();
@@ -303,10 +317,10 @@ export default function ProjectManagerModal({ agents, departments = [], onClose 
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="flex h-[86vh] w-[min(1180px,95vw)] flex-col overflow-hidden rounded-2xl border border-slate-700 bg-slate-900 shadow-2xl md:flex-row">
+      <div className="flex h-[86vh] w-[min(1180px,95vw)] flex-col overflow-hidden md:flex-row" style={{ border: "1px solid var(--th-border)", borderRadius: "4px", background: "var(--th-bg-surface)" }}>
         <div
           className={`w-full md:w-[330px] ${selectedProjectId || isCreating || githubImportMode ? "hidden md:block" : "block"}`}
         >
@@ -339,7 +353,7 @@ export default function ProjectManagerModal({ agents, departments = [], onClose 
         <section
           className={`flex min-w-0 flex-1 flex-col overflow-hidden ${!selectedProjectId && !isCreating && !githubImportMode ? "hidden md:flex" : "flex"}`}
         >
-          <div className="flex items-center gap-2 border-b border-slate-700 px-3 py-2 md:hidden">
+          <div className="flex items-center gap-2 px-3 py-2 md:hidden" style={{ borderBottom: "1px solid var(--th-border)" }}>
             <button
               type="button"
               onClick={() => {
@@ -348,7 +362,8 @@ export default function ProjectManagerModal({ agents, departments = [], onClose 
                 setEditingProjectId(null);
                 setGithubImportMode(false);
               }}
-              className="rounded-md px-2 py-1 text-xs text-slate-300 hover:bg-slate-800 hover:text-white"
+              className="px-2 py-1 text-xs font-mono transition"
+              style={{ borderRadius: "2px", color: "var(--th-text-secondary)", background: "transparent" }}
             >
               ← {t({ ko: "목록", en: "List", ja: "一覧", zh: "列表" })}
             </button>
@@ -367,8 +382,8 @@ export default function ProjectManagerModal({ agents, departments = [], onClose 
             />
           ) : (
             <>
-              <div className="border-b border-slate-700 px-5 py-3">
-                <h3 className="text-sm font-semibold text-white">{formTitle}</h3>
+              <div className="px-5 py-3" style={{ borderBottom: "1px solid var(--th-border)", borderLeft: "3px solid var(--th-accent)" }}>
+                <h3 className="text-xs font-bold uppercase tracking-widest" style={{ color: "var(--th-text-heading)", fontFamily: "var(--th-font-mono)" }}>{formTitle}</h3>
               </div>
 
               <div className="grid min-w-0 flex-1 grid-cols-1 gap-4 overflow-y-auto overflow-x-hidden p-5 xl:grid-cols-[minmax(0,360px)_minmax(0,1fr)]">
@@ -416,8 +431,8 @@ export default function ProjectManagerModal({ agents, departments = [], onClose 
                   setSelectedAgentIds={setSelectedAgentIds}
                   agentFilterDept={agentFilterDept}
                   setAgentFilterDept={setAgentFilterDept}
-                  agents={agents}
-                  departments={departments}
+                  agents={agentsInCurrentPack}
+                  departments={departmentsInCurrentPack}
                   spriteMap={spriteMap}
                   onSave={() => {
                     void handleSave();

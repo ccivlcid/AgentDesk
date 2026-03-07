@@ -1,6 +1,13 @@
+import { motion } from "framer-motion";
 import AgentAvatar from "../AgentAvatar";
 import type { Agent } from "../../types";
 import { getRankTier, RankBadge, XpBar, type TFunction } from "./model";
+
+const statContainer = { show: { transition: { staggerChildren: 0.06 } } };
+const statItem = {
+  hidden: { opacity: 0, y: 8 },
+  show:   { opacity: 1, y: 0, transition: { duration: 0.1, ease: "linear" as const } },
+};
 
 export interface HudStat {
   id: string;
@@ -47,19 +54,28 @@ export function DashboardHeroHeader({
   t,
 }: DashboardHeroHeaderProps) {
   return (
-    <div className="dashboard-panel relative overflow-hidden rounded-xl border border-[var(--th-border)] bg-[var(--th-bg-surface)] p-6 shadow-sm">
+    <div
+      className="dashboard-panel relative overflow-hidden"
+      style={{ border: "1px solid var(--th-border)", borderRadius: "4px", background: "var(--th-bg-surface)", padding: "1.25rem 1.5rem" }}
+    >
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="space-y-1">
           <div className="flex items-center gap-3">
-            <h1 className="text-xl font-semibold tracking-tight text-[var(--th-text-heading)] sm:text-2xl">
+            <h1
+              className="text-xl font-semibold sm:text-2xl"
+              style={{ color: "var(--th-text-heading)", fontFamily: "var(--th-font-display)", letterSpacing: "-0.02em" }}
+            >
               {companyName}
             </h1>
-            <span className="flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-emerald-600 [.dark_theme_*]:text-emerald-400">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 [.dark_theme_*]:bg-emerald-400" />
+            <span
+              className="flex items-center gap-1.5 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider"
+              style={{ border: "1px solid rgba(34,197,94,0.35)", borderRadius: "2px", background: "rgba(34,197,94,0.08)", color: "#22c55e" }}
+            >
+              <span className="h-1.5 w-1.5 bg-emerald-500" style={{ borderRadius: "1px" }} />
               {t({ ko: "실시간", en: "Live", ja: "ライブ", zh: "实时" })}
             </span>
           </div>
-          <p className="text-sm text-[var(--th-text-muted)]">
+          <p className="text-sm" style={{ color: "var(--th-text-muted)" }}>
             {t({
               ko: "에이전트가 실시간으로 작업을 수행 중입니다.",
               en: "Agents are executing work in real time.",
@@ -70,15 +86,22 @@ export function DashboardHeroHeader({
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 rounded-lg border border-[var(--th-border)] bg-[var(--th-bg-primary)] px-3 py-2">
-            <span className="font-mono text-lg font-medium text-[var(--th-text-primary)]">{time}</span>
+          <div
+            className="flex items-center gap-2 px-3 py-2"
+            style={{ border: "1px solid var(--th-border)", borderRadius: "2px", background: "var(--th-bg-primary)" }}
+          >
+            <span className="font-mono text-lg font-medium" style={{ color: "var(--th-text-primary)" }}>{time}</span>
           </div>
           <div className="hidden flex-col gap-1 sm:flex">
-            <span className="rounded border border-[var(--th-border)] bg-[var(--th-bg-primary)] px-2 py-0.5 text-[10px] text-[var(--th-text-muted)]">
+            <span
+              className="px-2 py-0.5 font-mono text-[10px]"
+              style={{ border: "1px solid var(--th-border)", borderRadius: "2px", background: "var(--th-bg-primary)", color: "var(--th-text-muted)" }}
+            >
               {date}
             </span>
             <span
-              className="rounded border border-blue-500/20 bg-blue-500/5 px-2 py-0.5 text-[10px] text-blue-600 [.dark_theme_*]:text-blue-400"
+              className="px-2 py-0.5 font-mono text-[10px]"
+              style={{ border: "1px solid rgba(245,158,11,0.25)", borderRadius: "2px", background: "rgba(245,158,11,0.06)", color: "#f59e0b" }}
               title={t({
                 ko: "현재 시간대 표시 (오전 브리핑 / 오후 운영 점검 / 저녁 마감 점검)",
                 en: "Current time-of-day label (Morning / Afternoon / Evening)",
@@ -90,7 +113,10 @@ export function DashboardHeroHeader({
             </span>
           </div>
           {reviewQueue > 0 && (
-            <span className="flex items-center gap-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-xs font-medium text-amber-700 [.dark_theme_*]:text-amber-400">
+            <span
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium font-mono"
+              style={{ border: "1px solid rgba(245,158,11,0.35)", borderRadius: "2px", background: "rgba(245,158,11,0.1)", color: "#f59e0b" }}
+            >
               {t({ ko: "검토 대기", en: "In review", ja: "レビュー待ち", zh: "待审核" })} {numberFormatter.format(reviewQueue)}
               {t({ ko: "건", en: "", ja: "件", zh: "项" })}
             </span>
@@ -98,21 +124,34 @@ export function DashboardHeroHeader({
         </div>
       </div>
 
-      <div className="relative mt-5 rounded-lg border border-[var(--th-border)] bg-[var(--th-bg-primary)] p-4">
+      <div
+        className="relative mt-5 p-4"
+        style={{ border: "1px solid var(--th-border)", borderRadius: "2px", background: "var(--th-bg-primary)", borderLeft: "3px solid var(--th-accent, #f59e0b)" }}
+      >
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
-            <p className="text-[10px] font-medium uppercase tracking-wider text-[var(--th-text-muted)]">
+            <p
+              className="text-[10px] font-medium uppercase tracking-wider font-mono"
+              style={{ color: "var(--th-text-accent)" }}
+            >
               {primaryCtaEyebrow}
             </p>
-            <p className="mt-1 text-sm text-[var(--th-text-primary)]">{primaryCtaDescription}</p>
+            <p className="mt-1 text-sm" style={{ color: "var(--th-text-primary)" }}>{primaryCtaDescription}</p>
           </div>
           <button
             type="button"
             onClick={onPrimaryCtaClick}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-lg border-0 bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-700 active:bg-blue-800 sm:w-auto sm:min-w-[180px]"
+            className="inline-flex w-full items-center justify-center gap-2 px-5 py-2.5 text-sm font-medium font-mono sm:w-auto sm:min-w-[180px]"
+            style={{
+              border: "1px solid rgba(245,158,11,0.5)",
+              borderRadius: "2px",
+              background: "rgba(245,158,11,0.12)",
+              color: "#f59e0b",
+              transition: "background 0.1s linear, border-color 0.1s linear",
+            }}
           >
             {primaryCtaLabel}
-            <span className="text-white/80" aria-hidden="true">→</span>
+            <span aria-hidden="true">→</span>
           </button>
         </div>
       </div>
@@ -127,31 +166,67 @@ interface DashboardHudStatsProps {
 
 export function DashboardHudStats({ hudStats, numberFormatter }: DashboardHudStatsProps) {
   return (
-    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+    <motion.div
+      className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"
+      variants={statContainer}
+      initial="hidden"
+      animate="show"
+    >
       {hudStats.map((stat) => (
-        <div
+        <motion.div
           key={stat.id}
-          className="dashboard-panel relative overflow-hidden rounded-xl border border-[var(--th-border)] bg-[var(--th-bg-surface)] p-4 shadow-sm transition-shadow hover:shadow-md"
+          variants={statItem}
+          className="dashboard-panel relative overflow-hidden"
+          style={{
+            border: "1px solid var(--th-border)",
+            borderLeft: `3px solid ${stat.color}`,
+            borderRadius: "4px",
+            background: "var(--th-bg-surface)",
+            padding: "0.875rem 1rem",
+            transition: "border-color 0.1s linear",
+          }}
         >
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-[10px] font-medium uppercase tracking-wider text-[var(--th-text-muted)]">
+              <p
+                className="font-mono text-[10px] font-medium uppercase tracking-widest"
+                style={{ color: "var(--th-text-muted)" }}
+              >
                 {stat.label}
               </p>
-              <p className="mt-1 text-2xl font-semibold tracking-tight text-[var(--th-text-primary)]">
+              <p
+                className="mt-1 tabular-nums font-bold"
+                style={{ color: "var(--th-text-heading)", fontFamily: "var(--th-font-mono)", fontSize: "1.625rem", lineHeight: 1.2 }}
+              >
                 {typeof stat.value === "number" ? numberFormatter.format(stat.value) : stat.value}
               </p>
-              <p className="mt-0.5 text-xs text-[var(--th-text-muted)]">{stat.sub}</p>
+              <p className="mt-0.5 font-mono text-[10px]" style={{ color: "var(--th-text-muted)" }}>{stat.sub}</p>
             </div>
             <span
-              className="h-9 w-9 flex-shrink-0 rounded-lg"
-              style={{ backgroundColor: `${stat.color}18`, borderLeft: `3px solid ${stat.color}` }}
+              className="flex-shrink-0"
+              style={{
+                backgroundColor: `${stat.color}15`,
+                border: `1px solid ${stat.color}30`,
+                borderRadius: "2px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "2.25rem",
+                height: "2.25rem",
+                fontFamily: "var(--th-font-mono)",
+                fontSize: "0.6rem",
+                fontWeight: 700,
+                letterSpacing: "0.05em",
+                color: stat.color,
+              }}
               aria-hidden
-            />
+            >
+              {stat.icon}
+            </span>
           </div>
-        </div>
+        </motion.div>
       ))}
-    </div>
+    </motion.div>
   );
 }
 
@@ -178,23 +253,10 @@ export function DashboardRankingBoard({
   embedded,
 }: DashboardRankingBoardProps) {
   const content = topAgents.length === 0 ? (
-        <div className="flex min-h-[160px] flex-col items-center justify-center gap-2 text-sm text-[var(--th-text-muted)]">
-          <p>
-            {t({
-              ko: "등록된 에이전트가 없습니다.",
-              en: "No agents registered.",
-              ja: "登録されたエージェントがいません。",
-              zh: "暂无已注册代理。",
-            })}
-          </p>
-          <p className="text-xs">
-            {t({
-              ko: "에이전트를 추가한 뒤 작업을 시작하세요.",
-              en: "Add agents and start tasks.",
-              ja: "エージェントを追加してタスクを開始しましょう。",
-              zh: "添加代理并开始任务。",
-            })}
-          </p>
+        <div className="terminal-empty-state min-h-[160px] flex flex-col items-center justify-center">
+          <p className="terminal-empty-state-cmd">$ ls agents/ --sort=activity</p>
+          <p className="terminal-empty-state-result">(empty)</p>
+          <p className="terminal-empty-state-hint">{t({ ko: "에이전트를 추가한 뒤 작업을 시작하세요.", en: "Add agents and start tasks.", ja: "エージェントを追加してタスクを開始しましょう。", zh: "添加代理并开始任务。" })}</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -212,19 +274,19 @@ export function DashboardRankingBoard({
                   <div key={agent.id} className="flex flex-col items-center gap-2">
                     <span className="text-xs font-medium text-[var(--th-text-muted)]">#{rank}</span>
                     <div
-                      className="overflow-hidden rounded-xl border border-[var(--th-border)] bg-[var(--th-bg-primary)]"
-                      style={{ borderColor: `${tier.color}40` }}
+                      className="overflow-hidden border border-[var(--th-border)] bg-[var(--th-bg-primary)]"
+                      style={{ borderColor: `${tier.color}40`, borderRadius: "2px" }}
                     >
                       <AgentAvatar agent={agentMap.get(agent.id)} agents={agents} size={avatarSize} rounded="xl" />
                     </div>
                     <span className="max-w-[72px] truncate text-center text-xs font-medium text-[var(--th-text-primary)]">
                       {agent.name}
                     </span>
-                    <span className="font-mono text-[10px] font-medium" style={{ color: tier.color }}>
+                    <span className="font-mono text-[10px] font-medium uppercase tracking-wider" style={{ color: tier.color }}>
                       {numberFormatter.format(agent.xp)} XP
                     </span>
                     <div
-                      className={`${podiumH} flex w-16 items-center justify-center rounded-t-md sm:w-20`}
+                      className={`${podiumH} flex w-16 items-center justify-center sm:w-20`}
                       style={{
                         background: `linear-gradient(to top, ${tier.color}15, ${tier.color}08)`,
                         border: `1px solid ${tier.color}30`,
@@ -249,14 +311,14 @@ export function DashboardRankingBoard({
                 return (
                   <div
                     key={agent.id}
-                    className="flex items-center gap-3 rounded-lg border border-[var(--th-border)] bg-[var(--th-bg-primary)] p-3 transition-colors hover:bg-[var(--th-bg-surface-hover)]"
-                    style={{ borderLeftWidth: "3px", borderLeftColor: `${tier.color}50` }}
+                    className="flex items-center gap-3 border border-[var(--th-border)] bg-[var(--th-bg-primary)] p-3 transition-colors hover:bg-[var(--th-bg-surface-hover)]"
+                    style={{ borderRadius: "2px", borderLeftWidth: "3px", borderLeftColor: `${tier.color}50` }}
                   >
                     <span className="w-6 text-center font-mono text-xs font-medium text-[var(--th-text-muted)]">
                       #{rank}
                     </span>
-                    <div className="flex-shrink-0 overflow-hidden rounded-lg border border-[var(--th-border)]">
-                      <AgentAvatar agent={agentMap.get(agent.id)} agents={agents} size={32} rounded="lg" />
+                    <div className="flex-shrink-0 overflow-hidden border border-[var(--th-border)]" style={{ borderRadius: "2px" }}>
+                      <AgentAvatar agent={agentMap.get(agent.id)} agents={agents} size={32} rounded="sm" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium text-[var(--th-text-primary)]">{agent.name}</p>
@@ -284,10 +346,10 @@ export function DashboardRankingBoard({
             const tier = getRankTier(agent.xp);
             return (
               <div
-                className="flex items-center gap-4 rounded-lg border border-[var(--th-border)] p-4"
-                style={{ backgroundColor: `${tier.color}08`, borderColor: `${tier.color}30` }}
+                className="flex items-center gap-4 border border-[var(--th-border)] p-4"
+                style={{ backgroundColor: `${tier.color}08`, borderColor: `${tier.color}30`, borderRadius: "2px" }}
               >
-                <div className="overflow-hidden rounded-xl border border-[var(--th-border)]">
+                <div className="overflow-hidden border border-[var(--th-border)]" style={{ borderRadius: "2px" }}>
                   <AgentAvatar agent={agentMap.get(agent.id)} agents={agents} size={48} rounded="xl" />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -313,18 +375,18 @@ export function DashboardRankingBoard({
   }
 
   return (
-    <div className="dashboard-panel relative overflow-hidden rounded-xl border border-[var(--th-border)] bg-[var(--th-bg-surface)] p-5 shadow-sm">
+    <div className="dashboard-panel relative overflow-hidden border border-[var(--th-border)] bg-[var(--th-bg-surface)] p-5" style={{ borderRadius: "4px" }}>
       <div className="mb-5 flex items-center justify-between">
         <div>
-          <h2 className="text-base font-semibold text-[var(--th-text-heading)]">
+          <h2 className="text-xs font-bold uppercase tracking-widest" style={{ color: "var(--th-text-heading)", fontFamily: "var(--th-font-mono)" }}>
             {t({ ko: "에이전트 순위", en: "Agent ranking", ja: "エージェント順位", zh: "代理排名" })}
           </h2>
-          <p className="mt-0.5 text-xs text-[var(--th-text-muted)]">
+          <p className="mt-0.5 font-mono text-[10px]" style={{ color: "var(--th-text-muted)" }}>
             {t({ ko: "XP 기준", en: "By XP", ja: "XP 基準", zh: "按 XP" })}
           </p>
         </div>
         {topAgents.length > 0 && (
-          <span className="rounded border border-[var(--th-border)] bg-[var(--th-bg-primary)] px-2 py-0.5 text-[10px] font-medium text-[var(--th-text-muted)]">
+          <span className="border border-[var(--th-border)] bg-[var(--th-bg-primary)] px-2 py-0.5 font-mono text-[10px] font-medium text-[var(--th-text-muted)]" style={{ borderRadius: "2px" }}>
             Top {topAgents.length}
           </span>
         )}

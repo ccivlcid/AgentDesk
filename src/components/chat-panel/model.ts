@@ -26,9 +26,9 @@ export type PendingSendAction =
 
 export const STATUS_COLORS: Record<string, string> = {
   idle: "bg-green-400",
-  working: "bg-blue-400",
+  working: "bg-[#60a5fa]",
   break: "bg-yellow-400",
-  offline: "bg-gray-500",
+  offline: "bg-[#64748b]",
 };
 
 export const STATUS_LABELS: Record<string, LangText> = {

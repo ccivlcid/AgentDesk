@@ -75,8 +75,8 @@ export function getRankTier(xp: number) {
 }
 
 export const STATUS_LABELS: Record<string, { color: string; dot: string }> = {
-  inbox: { color: "bg-slate-500/20 text-slate-200 border-slate-400/30", dot: "bg-slate-400" },
-  planned: { color: "bg-blue-500/20 text-blue-100 border-blue-400/30", dot: "bg-blue-400" },
+  inbox: { color: "bg-[rgba(100,116,139,0.2)] text-[#e2e8f0] border-[rgba(148,163,184,0.3)]", dot: "bg-[#94a3b8]" },
+  planned: { color: "bg-[rgba(59,130,246,0.2)] text-[#dbeafe] border-[rgba(96,165,250,0.3)]", dot: "bg-[#60a5fa]" },
   in_progress: { color: "bg-amber-500/20 text-amber-100 border-amber-400/30", dot: "bg-amber-400" },
   review: { color: "bg-violet-500/20 text-violet-100 border-violet-400/30", dot: "bg-violet-400" },
   done: { color: "bg-emerald-500/20 text-emerald-100 border-emerald-400/30", dot: "bg-emerald-400" },
@@ -85,8 +85,8 @@ export const STATUS_LABELS: Record<string, { color: string; dot: string }> = {
 };
 
 export const STATUS_LEFT_BORDER: Record<string, string> = {
-  inbox: "border-l-slate-400",
-  planned: "border-l-blue-400",
+  inbox: "border-l-[#94a3b8]",
+  planned: "border-l-[#60a5fa]",
   in_progress: "border-l-amber-400",
   review: "border-l-violet-400",
   done: "border-l-emerald-400",
@@ -116,7 +116,7 @@ export function taskStatusLabel(status: string, t: TFunction) {
 }
 
 export const DEPT_COLORS = [
-  { bar: "from-blue-500 to-cyan-400", badge: "bg-blue-500/20 text-blue-200 border-blue-400/30" },
+  { bar: "from-[#3b82f6] to-[#22d3ee]", badge: "bg-[rgba(59,130,246,0.2)] text-[#bfdbfe] border-[rgba(96,165,250,0.3)]" },
   { bar: "from-violet-500 to-fuchsia-400", badge: "bg-violet-500/20 text-violet-200 border-violet-400/30" },
   { bar: "from-emerald-500 to-teal-400", badge: "bg-emerald-500/20 text-emerald-200 border-emerald-400/30" },
   { bar: "from-amber-500 to-orange-400", badge: "bg-amber-500/20 text-amber-100 border-amber-400/30" },
@@ -129,13 +129,13 @@ export const DEPT_COLORS = [
 export function XpBar({ xp, maxXp, color }: { xp: number; maxXp: number; color: string }) {
   const pct = maxXp > 0 ? Math.min(100, Math.round((xp / maxXp) * 100)) : 0;
   return (
-    <div className="relative h-2.5 w-full overflow-hidden rounded-full border border-white/[0.08] bg-white/[0.04]">
+    <div className="relative h-2 w-full overflow-hidden border border-white/[0.08] bg-white/[0.04]" style={{ borderRadius: "1px" }}>
       <div
-        className="xp-bar-fill h-full rounded-full transition-all duration-1000 ease-out"
+        className="xp-bar-fill h-full transition-all duration-1000 ease-out"
         style={{
           width: `${pct}%`,
+          borderRadius: "1px",
           background: `linear-gradient(90deg, ${color}88, ${color})`,
-          boxShadow: `0 0 8px ${color}60`,
         }}
       />
     </div>

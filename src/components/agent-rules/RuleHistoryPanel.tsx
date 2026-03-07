@@ -195,29 +195,34 @@ export default function RuleHistoryPanel({
 
   return (
     <div
-      className={`skill-history-panel flex h-full min-h-[360px] flex-col rounded-xl border border-slate-700/60 bg-slate-900/60 ${className}`}
+      className={`skill-history-panel flex h-full min-h-[360px] flex-col ${className}`}
+      style={{ borderRadius: "4px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}
     >
-      <div className="flex items-center justify-between gap-2 border-b border-slate-700/60 px-3 py-2.5">
+      <div className="flex items-center justify-between gap-2 px-3 py-2.5" style={{ borderBottom: "1px solid var(--th-border)" }}>
         <div className="flex items-center gap-1">
           <button
             type="button"
             onClick={() => setTab("history")}
-            className={`rounded-md px-2 py-1 text-[11px] font-medium transition-all ${
-              tab === "history"
-                ? "bg-slate-700 text-white"
-                : "text-slate-400 hover:bg-slate-800/80 hover:text-slate-200"
-            }`}
+            className="px-2 py-1 text-[11px] font-mono transition-all"
+            style={{
+              borderRadius: "2px",
+              border: `1px solid ${tab === "history" ? "var(--th-border-strong)" : "transparent"}`,
+              background: tab === "history" ? "var(--th-bg-surface)" : "transparent",
+              color: tab === "history" ? "var(--th-text-primary)" : "var(--th-text-muted)",
+            }}
           >
             {t({ ko: "학습 이력", en: "Learning History", ja: "学習履歴", zh: "学习记录" })}
           </button>
           <button
             type="button"
             onClick={() => setTab("available")}
-            className={`rounded-md px-2 py-1 text-[11px] font-medium transition-all ${
-              tab === "available"
-                ? "bg-slate-700 text-white"
-                : "text-slate-400 hover:bg-slate-800/80 hover:text-slate-200"
-            }`}
+            className="px-2 py-1 text-[11px] font-mono transition-all"
+            style={{
+              borderRadius: "2px",
+              border: `1px solid ${tab === "available" ? "var(--th-border-strong)" : "transparent"}`,
+              background: tab === "available" ? "var(--th-bg-surface)" : "transparent",
+              color: tab === "available" ? "var(--th-text-primary)" : "var(--th-text-muted)",
+            }}
           >
             {t({ ko: "사용 가능한 룰", en: "Available Rules", ja: "利用可能なルール", zh: "可用规则" })}
           </button>
@@ -225,7 +230,8 @@ export default function RuleHistoryPanel({
         <button
           type="button"
           onClick={() => void load()}
-          className="rounded-md border border-slate-600 px-2 py-1 text-[11px] text-slate-300 transition-all hover:bg-slate-800"
+          className="px-2 py-1 text-[11px] font-mono transition-all"
+          style={{ borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
         >
           {t({ ko: "새로고침", en: "Refresh", ja: "更新", zh: "刷新" })}
         </button>
@@ -235,11 +241,13 @@ export default function RuleHistoryPanel({
         <button
           type="button"
           onClick={() => setProviderFilter("all")}
-          className={`rounded-md border px-2 py-1 text-[10px] transition-all ${
-            providerFilter === "all"
-              ? "border-blue-500/50 bg-blue-600/20 text-blue-300"
-              : "border-slate-700 text-slate-400 hover:bg-slate-800/80 hover:text-slate-200"
-          }`}
+          className="px-2 py-1 text-[10px] font-mono transition-all"
+          style={{
+            borderRadius: "2px",
+            border: `1px solid ${providerFilter === "all" ? "rgba(251,191,36,0.5)" : "var(--th-border)"}`,
+            background: providerFilter === "all" ? "rgba(251,191,36,0.1)" : "transparent",
+            color: providerFilter === "all" ? "var(--th-accent)" : "var(--th-text-muted)",
+          }}
         >
           All
         </button>
@@ -248,11 +256,13 @@ export default function RuleHistoryPanel({
             key={provider}
             type="button"
             onClick={() => setProviderFilter(provider)}
-            className={`rounded-md border px-2 py-1 text-[10px] transition-all ${
-              providerFilter === provider
-                ? "border-blue-500/50 bg-blue-600/20 text-blue-300"
-                : "border-slate-700 text-slate-400 hover:bg-slate-800/80 hover:text-slate-200"
-            }`}
+            className="px-2 py-1 text-[10px] font-mono transition-all"
+            style={{
+              borderRadius: "2px",
+              border: `1px solid ${providerFilter === provider ? "rgba(251,191,36,0.5)" : "var(--th-border)"}`,
+              background: providerFilter === provider ? "rgba(251,191,36,0.1)" : "transparent",
+              color: providerFilter === provider ? "var(--th-accent)" : "var(--th-text-muted)",
+            }}
           >
             {ruleProviderLabel(provider)}
           </button>
@@ -261,24 +271,24 @@ export default function RuleHistoryPanel({
 
       <div className="min-h-0 flex-1 space-y-2 overflow-y-auto px-3 pb-3">
         {loading && historyRows.length === 0 && availableRows.length === 0 && (
-          <div className="rounded-lg border border-slate-700 bg-slate-800/40 px-3 py-6 text-center text-xs text-slate-400">
+          <div className="px-3 py-6 text-center text-xs font-mono" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-muted)" }}>
             {t({ ko: "메모리 기록 로딩중...", en: "Loading memory records...", ja: "メモリ記録を読み込み中...", zh: "正在加载记忆记录..." })}
           </div>
         )}
 
         {error && (
-          <div className="rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-[11px] text-rose-200">
+          <div className="px-3 py-2 text-[11px] text-rose-200" style={{ borderRadius: "2px", border: "1px solid rgba(244,63,94,0.3)", background: "rgba(244,63,94,0.1)" }}>
             {error}
           </div>
         )}
         {unlearnError && (
-          <div className="rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-[11px] text-rose-200">
+          <div className="px-3 py-2 text-[11px] text-rose-200" style={{ borderRadius: "2px", border: "1px solid rgba(244,63,94,0.3)", background: "rgba(244,63,94,0.1)" }}>
             {unlearnError}
           </div>
         )}
 
         {tab === "history" && displayHistoryRows.length === 0 && !loading && !error && (
-          <div className="rounded-lg border border-slate-700 bg-slate-800/40 px-3 py-6 text-center text-xs text-slate-400">
+          <div className="px-3 py-6 text-center text-xs font-mono" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-muted)" }}>
             {t({ ko: "학습 이력이 없습니다", en: "No learning history yet.", ja: "学習履歴がありません", zh: "暂无学习记录" })}
           </div>
         )}
@@ -295,21 +305,23 @@ export default function RuleHistoryPanel({
             return (
               <div
                 key={row.id}
-                className="skill-history-card rounded-lg border border-slate-700/70 bg-slate-800/50 p-2.5"
+                className="skill-history-card p-2.5"
+                style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <div className="truncate text-xs font-semibold text-slate-100">{label}</div>
-                    <div className="mt-0.5 truncate text-[10px] text-slate-500">{row.rule_id}</div>
+                    <div className="truncate text-xs font-semibold font-mono" style={{ color: "var(--th-text-heading)" }}>{label}</div>
+                    <div className="mt-0.5 truncate text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>{row.rule_id}</div>
                   </div>
-                  <span className={`rounded-full border px-1.5 py-0.5 text-[10px] ${ruleStatusClass(row.status)}`}>
+                  <span className={`px-1.5 py-0.5 text-[10px] font-mono ${ruleStatusClass(row.status)}`} style={{ borderRadius: "2px" }}>
                     {ruleStatusLabel(row.status)}
                   </span>
                 </div>
-                <div className="skill-history-meta mt-2 flex items-center justify-between gap-2 text-[10px] text-slate-400">
+                <div className="skill-history-meta mt-2 flex items-center justify-between gap-2 text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
                   <div className="flex min-w-0 items-center gap-2">
                     <div
-                      className={`relative h-5 w-5 overflow-hidden rounded-md bg-slate-800/80 ${unlearnEffect ? "unlearn-avatar-hit" : ""}`}
+                      className={`relative h-5 w-5 overflow-hidden ${unlearnEffect ? "unlearn-avatar-hit" : ""}`}
+                      style={{ borderRadius: "2px", background: "var(--th-bg-primary)" }}
                     >
                       <AgentAvatar agent={agent ?? undefined} agents={agents} size={20} rounded="xl" />
                       {unlearnEffect === "pot" && <span className="unlearn-pot-drop-sm">🪴</span>}
@@ -327,18 +339,20 @@ export default function RuleHistoryPanel({
                         type="button"
                         onClick={() => void handleUnlearn(row)}
                         disabled={isUnlearning}
-                        className={`skill-unlearn-btn rounded-md border px-1.5 py-0.5 text-[10px] transition-all ${
-                          isUnlearning
-                            ? "cursor-not-allowed border-slate-700 text-slate-600"
-                            : "border-rose-500/35 bg-rose-500/10 text-rose-300 hover:bg-rose-500/20"
-                        }`}
+                        className={`skill-unlearn-btn px-1.5 py-0.5 text-[10px] font-mono transition-all ${isUnlearning ? "cursor-not-allowed" : ""}`}
+                        style={{
+                          borderRadius: "2px",
+                          border: `1px solid ${isUnlearning ? "rgba(51,65,85,1)" : "rgba(244,63,94,0.35)"}`,
+                          color: isUnlearning ? "var(--th-text-muted)" : "rgb(253,164,175)",
+                          background: isUnlearning ? "transparent" : "rgba(244,63,94,0.1)",
+                        }}
                       >
                         {isUnlearning
                           ? t({ ko: "취소중...", en: "Unlearning...", ja: "取消中...", zh: "取消中..." })
                           : t({ ko: "학습 취소", en: "Unlearn", ja: "学習取消", zh: "取消学习" })}
                       </button>
                     )}
-                    <span className="skill-history-time text-slate-500">{ruleRelativeTime(eventAt)}</span>
+                    <span className="skill-history-time" style={{ color: "var(--th-text-muted)" }}>{ruleRelativeTime(eventAt)}</span>
                   </div>
                 </div>
                 {row.error && <div className="mt-1 break-words text-[10px] text-rose-300">{row.error}</div>}
@@ -351,7 +365,8 @@ export default function RuleHistoryPanel({
             <button
               type="button"
               onClick={() => setHistoryExpanded((prev) => !prev)}
-              className="rounded-md border border-slate-600 px-2.5 py-1 text-[11px] text-slate-300 transition-all hover:bg-slate-800 hover:text-white"
+              className="px-2.5 py-1 text-[11px] font-mono transition-all"
+              style={{ borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
             >
               {historyExpanded
                 ? t({ ko: "접기", en: "Show less", ja: "折りたたむ", zh: "收起" })
@@ -366,7 +381,7 @@ export default function RuleHistoryPanel({
         )}
 
         {tab === "available" && availableRows.length === 0 && !loading && !error && (
-          <div className="rounded-lg border border-slate-700 bg-slate-800/40 px-3 py-6 text-center text-xs text-slate-400">
+          <div className="px-3 py-6 text-center text-xs font-mono" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-muted)" }}>
             {t({ ko: "사용 가능한 룰이 없습니다", en: "No available rules.", ja: "利用可能なルールがありません", zh: "暂无可用规则" })}
           </div>
         )}
@@ -381,14 +396,16 @@ export default function RuleHistoryPanel({
             return (
               <div
                 key={`${row.provider}-${row.rule_id}`}
-                className="skill-history-card rounded-lg border border-slate-700/70 bg-slate-800/50 p-2.5"
+                className="skill-history-card p-2.5"
+                style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}
               >
-                <div className="truncate text-xs font-semibold text-slate-100">{label}</div>
-                <div className="mt-0.5 truncate text-[10px] text-slate-500">{row.rule_id}</div>
-                <div className="skill-history-meta mt-2 flex items-center justify-between gap-2 text-[10px] text-slate-400">
+                <div className="truncate text-xs font-semibold font-mono" style={{ color: "var(--th-text-heading)" }}>{label}</div>
+                <div className="mt-0.5 truncate text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>{row.rule_id}</div>
+                <div className="skill-history-meta mt-2 flex items-center justify-between gap-2 text-[10px] font-mono" style={{ color: "var(--th-text-secondary)" }}>
                   <div className="flex min-w-0 items-center gap-2">
                     <div
-                      className={`relative h-5 w-5 overflow-hidden rounded-md bg-slate-800/80 ${unlearnEffect ? "unlearn-avatar-hit" : ""}`}
+                      className={`relative h-5 w-5 overflow-hidden ${unlearnEffect ? "unlearn-avatar-hit" : ""}`}
+                      style={{ borderRadius: "2px", background: "var(--th-bg-primary)" }}
                     >
                       <AgentAvatar agent={agent ?? undefined} agents={agents} size={20} rounded="xl" />
                       {unlearnEffect === "pot" && <span className="unlearn-pot-drop-sm">🪴</span>}
@@ -405,17 +422,16 @@ export default function RuleHistoryPanel({
                       type="button"
                       onClick={() => void handleUnlearn(row)}
                       disabled={isUnlearning}
-                      className={`skill-unlearn-btn rounded-md border px-1.5 py-0.5 text-[10px] transition-all ${
-                        isUnlearning
-                          ? "cursor-not-allowed border-slate-700 text-slate-600"
-                          : "border-rose-500/35 bg-rose-500/10 text-rose-300 hover:bg-rose-500/20"
-                      }`}
+                      className="skill-unlearn-btn px-1.5 py-0.5 text-[10px] font-mono transition-all"
+                      style={isUnlearning
+                        ? { borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-muted)", background: "transparent", cursor: "not-allowed" }
+                        : { borderRadius: "2px", border: "1px solid rgba(244,63,94,0.35)", color: "rgb(253,164,175)", background: "rgba(244,63,94,0.1)" }}
                     >
                       {isUnlearning
                         ? t({ ko: "취소중...", en: "Unlearning...", ja: "取消中...", zh: "取消中..." })
                         : t({ ko: "학습 취소", en: "Unlearn", ja: "学습取消", zh: "取消学习" })}
                     </button>
-                    <span className="skill-history-time text-slate-500">{ruleRelativeTime(row.learned_at)}</span>
+                    <span className="skill-history-time font-mono" style={{ color: "var(--th-text-muted)" }}>{ruleRelativeTime(row.learned_at)}</span>
                   </div>
                 </div>
               </div>
@@ -425,7 +441,7 @@ export default function RuleHistoryPanel({
 
       {centerBonk && (
         <div className="pointer-events-none fixed inset-0 z-[120] flex items-center justify-center">
-          <div className="skill-history-center-card unlearn-center-card rounded-2xl border border-rose-400/30 bg-slate-900/90 px-6 py-4 shadow-2xl shadow-black/50 backdrop-blur-sm">
+          <div className="skill-history-center-card unlearn-center-card px-6 py-4" style={{ borderRadius: "4px", border: "1px solid rgba(251,113,133,0.3)", background: "var(--th-terminal-bg)" }}>
             <div className="relative mx-auto h-20 w-20 overflow-visible">
               <div className="unlearn-avatar-hit">
                 <AgentAvatar agent={centerBonk.agent ?? undefined} agents={agents} size={80} rounded="xl" />
@@ -433,7 +449,7 @@ export default function RuleHistoryPanel({
               <span className="unlearn-hammer-swing-center">🔨</span>
               <span className="unlearn-hit-text-center">Bonk!</span>
             </div>
-            <div className="skill-history-center-label mt-2 text-center text-xs font-medium text-rose-100">
+            <div className="skill-history-center-label mt-2 text-center text-xs font-medium font-mono" style={{ color: "rgb(254,205,211)" }}>
               {ruleProviderLabel(centerBonk.provider)}
             </div>
           </div>

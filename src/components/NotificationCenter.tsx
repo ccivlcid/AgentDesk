@@ -216,7 +216,7 @@ export default function NotificationCenter({ on, onNavigateTask }: Props) {
       </button>
       {open && (
         <div
-          className="absolute right-0 top-full z-50 mt-2 w-[340px] max-h-[420px] overflow-hidden shadow-xl backdrop-blur-xl"
+          className="absolute right-0 top-full z-50 mt-2 w-[340px] max-h-[420px] overflow-hidden"
           style={{ borderRadius: "4px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}
         >
           <div

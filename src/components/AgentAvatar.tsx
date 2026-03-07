@@ -51,7 +51,7 @@ interface AgentAvatarProps {
   spriteMap?: Map<string, number>;
   size?: number;
   className?: string;
-  rounded?: "full" | "lg" | "xl" | "2xl";
+  rounded?: "sm" | "full" | "lg" | "xl" | "2xl";
   imageFit?: "cover" | "contain";
   imagePosition?: CSSProperties["objectPosition"];
 }
@@ -71,12 +71,20 @@ export default function AgentAvatar({
   const spriteNum = resolveSpriteNum(agent, map);
 
   const roundedClass =
-    rounded === "full" ? "rounded-full" : rounded === "lg" ? "rounded-lg" : rounded === "xl" ? "rounded-xl" : "rounded-2xl";
+    rounded === "sm"
+      ? "rounded-sm"
+      : rounded === "full"
+        ? "rounded-full"
+        : rounded === "lg"
+          ? "rounded-[4px]"
+          : rounded === "xl"
+            ? "rounded-[8px]"
+            : "rounded-[12px]";
 
   if (spriteNum) {
     return (
       <div
-        className={`${roundedClass} overflow-hidden bg-gray-700 flex-shrink-0 ${className}`}
+        className={`${roundedClass} overflow-hidden bg-[var(--th-bg-elevated)] flex-shrink-0 ${className}`}
         style={{ width: size, height: size }}
       >
         <img
@@ -90,7 +98,7 @@ export default function AgentAvatar({
   }
   return (
     <div
-      className={`${roundedClass} bg-gray-700 flex items-center justify-center flex-shrink-0 ${className}`}
+      className={`${roundedClass} bg-[var(--th-bg-elevated)] flex items-center justify-center flex-shrink-0 ${className}`}
       style={{ width: size, height: size, fontSize: size * 0.6 }}
     >
       {agent?.avatar_emoji ?? "🤖"}

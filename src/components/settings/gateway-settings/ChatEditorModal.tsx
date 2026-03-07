@@ -77,17 +77,18 @@ export default function ChatEditorModal({
 
   return (
     <div className="fixed inset-0 z-[2200] flex items-center justify-center px-4">
-      <button className="absolute inset-0 bg-slate-950/70" onClick={closeEditorModal} aria-label="close modal" />
-      <div className="relative w-full max-w-lg rounded-xl border border-slate-700 bg-slate-900 p-4 shadow-2xl space-y-3">
+      <button className="absolute inset-0" style={{ background: "rgba(0,0,0,0.7)" }} onClick={closeEditorModal} aria-label="close modal" />
+      <div className="relative w-full max-w-lg p-4 shadow-2xl space-y-3" style={{ borderRadius: "4px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
         <div className="flex items-center justify-between">
-          <h4 className="text-sm font-semibold text-slate-100">
+          <h4 className="text-sm font-semibold font-mono" style={{ color: "var(--th-text-heading)" }}>
             {editor.mode === "create"
               ? t({ ko: "새 채팅 추가", en: "Add Chat", ja: "チャット追加", zh: "新增聊天" })
               : t({ ko: "채팅 편집", en: "Edit Chat", ja: "チャット編集", zh: "编辑聊天" })}
           </h4>
           <button
             onClick={closeEditorModal}
-            className="px-2 py-1 text-xs rounded border border-slate-600 text-slate-300 hover:bg-slate-800"
+            className="px-2 py-1 text-xs font-mono transition-colors"
+            style={{ borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
           >
             {t({ ko: "닫기", en: "Close", ja: "閉じる", zh: "关闭" })}
           </button>
@@ -95,7 +96,7 @@ export default function ChatEditorModal({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs text-slate-400 mb-1">
+            <label className="block text-xs mb-1 font-mono" style={{ color: "var(--th-text-muted)" }}>
               {t({ ko: "메신저", en: "Messenger", ja: "メッセンジャー", zh: "消息渠道" })}
             </label>
             <select
@@ -109,7 +110,8 @@ export default function ChatEditorModal({
                   receiveEnabled: channelsConfig[nextChannel].receiveEnabled !== false,
                 }));
               }}
-              className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500"
+              className="w-full px-3 py-2 text-sm focus:outline-none"
+              style={{ borderRadius: "2px", background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)" }}
             >
               {MESSENGER_CHANNELS.map((channel) => (
                 <option key={channel} value={channel}>
@@ -120,15 +122,15 @@ export default function ChatEditorModal({
           </div>
 
           <div>
-            <label className="block text-xs text-slate-400 mb-1">
+            <label className="block text-xs mb-1 font-mono" style={{ color: "var(--th-text-muted)" }}>
               {t({ ko: "활성 여부", en: "Enabled", ja: "有効", zh: "启用" })}
             </label>
-            <label className="inline-flex items-center gap-2 text-xs text-slate-300 h-[38px]">
+            <label className="inline-flex items-center gap-2 text-xs h-[38px] font-mono" style={{ color: "var(--th-text-secondary)" }}>
               <input
                 type="checkbox"
                 checked={editor.enabled}
                 onChange={(e) => setEditor((prev) => ({ ...prev, enabled: e.target.checked }))}
-                className="accent-blue-500"
+                style={{ accentColor: "var(--th-accent)" }}
               />
               {editor.enabled
                 ? t({ ko: "활성", en: "Enabled", ja: "有効", zh: "启用" })
@@ -138,7 +140,7 @@ export default function ChatEditorModal({
         </div>
 
         <div>
-          <label className="block text-xs text-slate-400 mb-1">
+          <label className="block text-xs mb-1 font-mono" style={{ color: "var(--th-text-muted)" }}>
             {t({ ko: "토큰", en: "Token", ja: "トークン", zh: "令牌" })}
           </label>
           <input
@@ -151,13 +153,14 @@ export default function ChatEditorModal({
               ja: `${CHANNEL_META[editor.channel].label} トークンを入力`,
               zh: `输入 ${CHANNEL_META[editor.channel].label} 令牌`,
             })}
-            className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500"
+            className="w-full px-3 py-2 text-sm focus:outline-none"
+            style={{ borderRadius: "2px", background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)" }}
           />
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs text-slate-400 mb-1">
+            <label className="block text-xs mb-1 font-mono" style={{ color: "var(--th-text-muted)" }}>
               {t({ ko: "채팅 이름", en: "Chat Name", ja: "チャット名", zh: "聊天名称" })}
             </label>
             <input
@@ -169,12 +172,13 @@ export default function ChatEditorModal({
                 ja: "例: デザイン通知",
                 zh: "例如：设计组通知",
               })}
-              className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500"
+              className="w-full px-3 py-2 text-sm focus:outline-none"
+              style={{ borderRadius: "2px", background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)" }}
             />
           </div>
 
           <div>
-            <label className="block text-xs text-slate-400 mb-1">
+            <label className="block text-xs mb-1 font-mono" style={{ color: "var(--th-text-muted)" }}>
               {t({ ko: "채널/대상 ID", en: "Channel/Target ID", ja: "チャンネル/対象 ID", zh: "频道/目标 ID" })}
             </label>
             {editor.channel === "discord" && discordChannels.length > 0 && (
@@ -191,7 +195,8 @@ export default function ChatEditorModal({
                     };
                   });
                 }}
-                className="mb-2 w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white text-xs focus:outline-none focus:border-blue-500"
+                className="mb-2 w-full px-3 py-2 text-xs focus:outline-none"
+                style={{ borderRadius: "2px", background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)" }}
               >
                 <option value="">
                   {t({
@@ -225,12 +230,13 @@ export default function ChatEditorModal({
                 });
               }}
               placeholder={channelTargetHint(editor.channel)}
-              className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white text-sm font-mono focus:outline-none focus:border-blue-500"
+              className="w-full px-3 py-2 text-sm font-mono focus:outline-none"
+              style={{ borderRadius: "2px", background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)" }}
             />
             {editor.channel === "discord" && (
               <div className="mt-1 space-y-1">
                 {discordChannelsLoading && (
-                  <div className="text-[11px] text-blue-300">
+                  <div className="text-[11px] font-mono" style={{ color: "var(--th-accent)" }}>
                     {t({
                       ko: "Discord 채널 목록 조회 중...",
                       en: "Loading Discord channels...",
@@ -240,7 +246,7 @@ export default function ChatEditorModal({
                   </div>
                 )}
                 {!discordChannelsLoading && !discordChannelsError && editor.token.trim() && (
-                  <div className="text-[11px] text-slate-500">
+                  <div className="text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>
                     {discordChannels.length > 0
                       ? t({
                           ko: `${discordChannels.length}개 채널을 자동으로 불러왔습니다.`,
@@ -263,7 +269,7 @@ export default function ChatEditorModal({
         </div>
 
         <div>
-          <label className="block text-xs text-slate-400 mb-1">
+          <label className="block text-xs mb-1 font-mono" style={{ color: "var(--th-text-muted)" }}>
             {t({ ko: "워크플로우 팩", en: "Workflow Pack", ja: "ワークフローパック", zh: "工作流包" })}
           </label>
           <select
@@ -274,7 +280,8 @@ export default function ChatEditorModal({
                 workflowPackKey: isWorkflowPackKey(e.target.value) ? e.target.value : "development",
               }))
             }
-            className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500"
+            className="w-full px-3 py-2 text-sm focus:outline-none"
+            style={{ borderRadius: "2px", background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)" }}
           >
             {workflowPackOptions.map((pack) => (
               <option key={pack.key} value={pack.key} disabled={!pack.enabled && pack.key !== editor.workflowPackKey}>
@@ -284,7 +291,7 @@ export default function ChatEditorModal({
             ))}
           </select>
           {workflowPacksLoading && (
-            <div className="mt-1 text-[11px] text-slate-500">
+            <div className="mt-1 text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>
               {t({
                 ko: "팩 목록 불러오는 중...",
                 en: "Loading packs...",
@@ -296,7 +303,7 @@ export default function ChatEditorModal({
         </div>
 
         <div>
-          <label className="block text-xs text-slate-400 mb-1">
+          <label className="block text-xs mb-1 font-mono" style={{ color: "var(--th-text-muted)" }}>
             {t({ ko: "대화 Agent", en: "Conversation Agent", ja: "担当Agent", zh: "对话 Agent" })}
           </label>
           <AgentSelect
@@ -314,12 +321,12 @@ export default function ChatEditorModal({
         </div>
 
         {editor.channel === "telegram" && (
-          <label className="flex items-center gap-2 text-xs text-slate-300">
+          <label className="flex items-center gap-2 text-xs font-mono" style={{ color: "var(--th-text-secondary)" }}>
             <input
               type="checkbox"
               checked={editor.receiveEnabled}
               onChange={(e) => setEditor((prev) => ({ ...prev, receiveEnabled: e.target.checked }))}
-              className="accent-blue-500"
+              style={{ accentColor: "var(--th-accent)" }}
             />
             {t({
               ko: "텔레그램 직접 수신 활성화",
@@ -335,13 +342,15 @@ export default function ChatEditorModal({
         <div className="flex justify-end gap-2 pt-1">
           <button
             onClick={closeEditorModal}
-            className="px-3 py-1.5 text-xs rounded border border-slate-600 text-slate-300 hover:bg-slate-800"
+            className="px-3 py-1.5 text-xs font-mono transition-colors"
+            style={{ borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
           >
             {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}
           </button>
           <button
             onClick={handleSaveEditor}
-            className="px-3 py-1.5 text-xs rounded bg-blue-600 text-white hover:bg-blue-500"
+            className="px-3 py-1.5 text-xs font-mono uppercase tracking-wide transition-colors"
+            style={{ borderRadius: "2px", background: "var(--th-accent)", color: "#000" }}
           >
             {t({ ko: "확인", en: "Confirm", ja: "確認", zh: "确认" })}
           </button>

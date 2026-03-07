@@ -13,15 +13,172 @@
   }
 }
 
-/* ─── Settings toggle switch improvements ─── */
+/* ─── Settings toggle switch ─── */
 .toggle-switch {
-  transition: background-color 0.2s ease;
+  transition: background-color 0.1s linear;
 }
 .toggle-switch-knob {
-  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.1s linear;
 }
 
-/* ─── Task card hover enhancement ─── */
+/* ─── Task card hover: terminal style ─── */
+.task-card-hover {
+  transition: border-color 0.1s linear, background 0.1s linear;
+}
+.task-card-hover:hover {
+  border-color: var(--th-border-strong) !important;
+}
 [data-theme="light"] .task-card-hover:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  box-shadow: none;
+  border-color: var(--th-border-strong) !important;
+}
+
+/* ─── Retro Terminal: Global transition speed ─────────────────────
+   Overrides slow ease-in-out curves to fast linear (terminal response).
+   Applies to interactive elements only — not layout or paint animations. */
+button,
+a,
+input,
+select,
+textarea,
+[role="button"],
+[role="tab"],
+[role="menuitem"] {
+  transition-timing-function: linear !important;
+  transition-duration: 100ms !important;
+}
+
+/* Preserve intentionally slow animations (e.g. progress bars, pixi) */
+.transition-slow { transition-timing-function: ease-out !important; transition-duration: 300ms !important; }
+
+/* ─── Flat shadow overrides (terminal aesthetic, no elevation) ─── */
+.shadow-sm, .shadow, .shadow-md, .shadow-lg, .shadow-xl, .shadow-2xl {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5) !important;
+}
+[data-theme="light"] .shadow-sm, [data-theme="light"] .shadow,
+[data-theme="light"] .shadow-md, [data-theme="light"] .shadow-lg,
+[data-theme="light"] .shadow-xl, [data-theme="light"] .shadow-2xl {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12) !important;
+}
+/* Remove backdrop-blur on modals/panels (flat terminal aesthetic) */
+.backdrop-blur-sm, .backdrop-blur { backdrop-filter: none !important; }
+.backdrop-blur-md, .backdrop-blur-lg, .backdrop-blur-xl { backdrop-filter: none !important; }
+
+/* ─── Retro Terminal: border-radius flattening ──────────────────
+   Reduce large radius values to pixel-sharp terminal aesthetic.
+   rounded-full (circles) and small radii are preserved. */
+.rounded-3xl { border-radius: 6px !important; }
+.rounded-2xl { border-radius: 4px !important; }
+.rounded-xl  { border-radius: 4px !important; }
+/* rounded-lg stays at Tailwind default (8px → acceptable) */
+
+/* ─── Retro Terminal: flatten glassmorphism bg globally ──────────
+   Semi-transparent slate backgrounds → solid CSS var surfaces.
+   This handles the remaining ~77 files without per-file edits.
+   Tailwind encodes "/" as "\/" in the selector. */
+
+/* Solid slate backgrounds (modals, panels, inputs) */
+.bg-slate-950 { background-color: var(--th-bg-primary) !important; }
+.bg-slate-900 { background-color: var(--th-bg-elevated) !important; }
+.bg-slate-800 { background-color: var(--th-bg-surface) !important; }
+.bg-slate-700 { background-color: var(--th-bg-surface-hover) !important; }
+.bg-slate-600 { background-color: var(--th-bg-surface-hover) !important; }
+
+/* Solid slate borders */
+.border-slate-700 { border-color: var(--th-border) !important; }
+.border-slate-600 { border-color: var(--th-border-strong) !important; }
+.border-slate-500 { border-color: var(--th-border-strong) !important; }
+
+/* text-white → FM heading color (softer than pure white) */
+.text-white { color: var(--th-text-heading) !important; }
+.text-slate-100 { color: var(--th-text-primary) !important; }
+
+/* ─── gray-* overrides (chat panel, some legacy components) ─── */
+.bg-gray-900 { background-color: var(--th-bg-elevated) !important; }
+.bg-gray-800 { background-color: var(--th-bg-surface) !important; }
+.bg-gray-700 { background-color: var(--th-bg-surface-hover) !important; }
+.bg-gray-600 { background-color: var(--th-bg-surface-hover) !important; }
+.bg-gray-700\/80 { background-color: var(--th-bg-surface-hover) !important; }
+.border-gray-700 { border-color: var(--th-border) !important; }
+.border-gray-700\/50 { border-color: var(--th-border) !important; }
+.border-gray-600 { border-color: var(--th-border-strong) !important; }
+.text-gray-100 { color: var(--th-text-primary) !important; }
+.text-gray-200 { color: var(--th-text-primary) !important; }
+.text-gray-300 { color: var(--th-text-secondary) !important; }
+.text-gray-400 { color: var(--th-text-muted) !important; }
+.text-gray-500 { color: var(--th-text-muted) !important; }
+.text-gray-600 { color: var(--th-text-muted) !important; }
+.hover\:bg-gray-700:hover { background-color: var(--th-bg-surface-hover) !important; }
+.hover\:bg-gray-600:hover { background-color: var(--th-bg-surface-hover) !important; }
+.bg-gray-700\/80 { background-color: var(--th-bg-surface-hover) !important; }
+.bg-gray-800\/60 { background-color: var(--th-bg-surface) !important; }
+.border-gray-700\/50 { border-color: var(--th-border) !important; }
+.border-gray-500 { border-color: var(--th-border-strong) !important; }
+.placeholder-gray-500::placeholder { color: var(--th-text-muted) !important; }
+
+.bg-slate-700\/30 { background-color: var(--th-bg-surface) !important; }
+.bg-slate-700\/40 { background-color: var(--th-bg-surface) !important; }
+.bg-slate-800\/40 { background-color: var(--th-bg-surface) !important; }
+.bg-slate-800\/50 { background-color: var(--th-bg-surface) !important; }
+.bg-slate-800\/60 { background-color: var(--th-bg-surface) !important; }
+.bg-slate-800\/70 { background-color: var(--th-bg-surface) !important; }
+.bg-slate-800\/80 { background-color: var(--th-bg-surface) !important; }
+.bg-slate-900\/60 { background-color: var(--th-bg-elevated) !important; }
+.bg-slate-900\/70 { background-color: var(--th-bg-elevated) !important; }
+.bg-slate-900\/80 { background-color: var(--th-bg-elevated) !important; }
+.bg-slate-900\/95 { background-color: var(--th-bg-elevated) !important; }
+.bg-slate-950\/75 { background-color: var(--th-modal-overlay) !important; }
+
+/* Glassmorphism border overrides → solid terminal borders */
+.border-slate-700\/40 { border-color: var(--th-border) !important; }
+.border-slate-700\/50 { border-color: var(--th-border) !important; }
+.border-slate-700\/60 { border-color: var(--th-border-strong) !important; }
+.border-slate-600\/50 { border-color: var(--th-border) !important; }
+.border-slate-600\/30 { border-color: var(--th-border) !important; }
+
+/* Text color overrides for remaining slate references */
+.text-slate-200 { color: var(--th-text-primary) !important; }
+.text-slate-300 { color: var(--th-text-secondary) !important; }
+.text-slate-400 { color: var(--th-text-muted) !important; }
+.text-slate-500 { color: var(--th-text-muted) !important; }
+.text-slate-600 { color: var(--th-text-muted) !important; }
+
+/* ─── Primary CTA: blue → amber (FM2024 accent color) ──────────────────
+   bg-blue-600/500/700 used in save/submit/confirm buttons → amber.
+   Hover variants follow. text-white on amber → text-black for contrast.
+   NOTE: blue is intentionally preserved for informational badges/links. */
+.bg-blue-600 { background-color: var(--th-accent) !important; color: #000 !important; }
+.bg-blue-500 { background-color: var(--th-accent) !important; color: #000 !important; }
+.bg-blue-700 { background-color: var(--th-accent) !important; color: #000 !important; }
+.hover\:bg-blue-500:hover { background-color: #fbbf24 !important; }
+.hover\:bg-blue-600:hover { background-color: #fbbf24 !important; }
+.hover\:bg-blue-700:hover { background-color: #fbbf24 !important; }
+.border-blue-600 { border-color: var(--th-accent) !important; }
+.border-blue-500 { border-color: var(--th-accent) !important; }
+.focus\:border-blue-500:focus { border-color: var(--th-accent) !important; }
+.focus-within\:border-blue-500:focus-within { border-color: var(--th-accent) !important; }
+.ring-blue-500 { --tw-ring-color: var(--th-accent) !important; }
+.focus\:ring-blue-500:focus { --tw-ring-color: var(--th-accent) !important; }
+/* Preserve text-blue-* for informational/link contexts */
+
+/* Input/select bg for remaining slate-900/60 inputs */
+input.bg-slate-900\/60,
+select.bg-slate-900\/60,
+textarea.bg-slate-900\/60 {
+  background-color: var(--th-input-bg) !important;
+  border-color: var(--th-border) !important;
+  color: var(--th-text-primary) !important;
+}
+
+/* ─── Task completion burst particles ─── */
+@keyframes task-burst-ray {
+  0%   { transform: rotate(var(--rot, 0deg)) translateY(0px); opacity: 1; }
+  60%  { opacity: 0.8; }
+  100% { transform: rotate(var(--rot, 0deg)) translateY(-22px); opacity: 0; }
+}
+@keyframes task-burst-label {
+  0%   { opacity: 0; transform: translateY(0px); }
+  15%  { opacity: 1; }
+  70%  { opacity: 1; transform: translateY(-14px); }
+  100% { opacity: 0; transform: translateY(-20px); }
 }

@@ -19,19 +19,23 @@ interface PrioritySectionProps {
 export function PrioritySection({ priority, t, onPriorityChange }: PrioritySectionProps) {
   return (
     <div>
-      <label className="mb-2 block text-sm font-medium text-slate-300">
+      <label className="mb-2 block text-xs font-medium font-mono" style={{ color: "var(--th-text-secondary)" }}>
         {t({ ko: "우선순위", en: "Priority", ja: "優先度", zh: "优先级" })}: {priorityIcon(priority)}{" "}
         {priorityLabel(priority, t)} ({priority}/5)
       </label>
-      <div className="flex gap-2">
+      <div className="flex gap-1.5">
         {[1, 2, 3, 4, 5].map((star) => (
           <button
             key={star}
             type="button"
             onClick={() => onPriorityChange(star)}
-            className={`flex-1 rounded-lg py-2 text-lg transition ${
-              star <= priority ? "bg-amber-600 text-white shadow-md" : "bg-slate-800 text-slate-500 hover:bg-slate-700"
-            }`}
+            className="flex-1 py-2 text-base transition hover:opacity-80"
+            style={{
+              borderRadius: "2px",
+              background: star <= priority ? "rgba(245,158,11,0.85)" : "var(--th-bg-primary)",
+              color: star <= priority ? "#000" : "var(--th-text-muted)",
+              border: `1px solid ${star <= priority ? "rgba(245,158,11,0.6)" : "var(--th-border)"}`,
+            }}
           >
             ★
           </button>
@@ -60,7 +64,7 @@ export function AssigneeSection({
 }: AssigneeSectionProps) {
   return (
     <div>
-      <label className="mb-1 block text-sm font-medium text-slate-300">
+      <label className="mb-1 block text-xs font-medium font-mono" style={{ color: "var(--th-text-secondary)" }}>
         {t({ ko: "담당 에이전트", en: "Assignee", ja: "担当エージェント", zh: "负责人" })}
       </label>
       <AgentSelect
@@ -77,7 +81,7 @@ export function AssigneeSection({
         size="md"
       />
       {departmentId && agents.length === 0 && (
-        <p className="mt-1 text-xs text-slate-500">
+        <p className="mt-1 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
           {t({
             ko: "해당 부서에 에이전트가 없습니다.",
             en: "No agents are available in this department.",
@@ -157,7 +161,7 @@ export function ProjectSection({
 }: ProjectSectionProps) {
   return (
     <div>
-      <label className="mb-1 block text-sm font-medium text-slate-300">
+      <label className="mb-1 block text-xs font-medium font-mono" style={{ color: "var(--th-text-secondary)" }}>
         {t({ ko: "프로젝트명", en: "Project Name", ja: "プロジェクト名", zh: "项目名" })}
       </label>
       <div className="relative" ref={projectPickerRef}>
@@ -174,12 +178,14 @@ export function ProjectSection({
               ja: "プロジェクト名またはパスを入力",
               zh: "输入项目名称或路径",
             })}
-            className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-white placeholder-slate-500 outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            className="w-full border outline-none transition"
+            style={{ borderRadius: "2px", borderColor: "var(--th-border)", background: "var(--th-input-bg, var(--th-bg-primary))", color: "var(--th-text-primary)", fontFamily: "var(--th-font-mono)", fontSize: "0.8125rem", padding: "0.4rem 0.625rem" }}
           />
           <button
             type="button"
             onClick={onToggleProjectDropdown}
-            className="rounded-lg border border-slate-700 bg-slate-800 px-2.5 py-2 text-xs text-slate-300 transition hover:bg-slate-700 hover:text-white"
+            className="border px-2.5 py-2 text-xs font-mono transition hover:opacity-80"
+            style={{ borderRadius: "2px", borderColor: "var(--th-border)", background: "var(--th-bg-primary)", color: "var(--th-text-secondary)" }}
             title={t({
               ko: "프로젝트 목록 토글",
               en: "Toggle project list",
@@ -192,14 +198,15 @@ export function ProjectSection({
         </div>
 
         {projectDropdownOpen && (
-          <div className="absolute z-20 mt-1 max-h-52 w-full overflow-y-auto rounded-lg border border-slate-700 bg-slate-900 shadow-xl">
+          <div className="absolute z-20 mt-1 max-h-52 w-full overflow-y-auto border" style={{ borderRadius: "2px", borderColor: "var(--th-border)", background: "var(--th-bg-surface)" }}>
             <button
               type="button"
               onMouseDown={(event) => {
                 event.preventDefault();
                 onSelectProject(null);
               }}
-              className="w-full border-b border-slate-800 px-3 py-2 text-left text-sm text-slate-300 transition hover:bg-slate-800"
+              className="w-full px-3 py-2 text-left text-xs font-mono transition hover:opacity-80"
+              style={{ borderBottom: "1px solid var(--th-border)", color: "var(--th-text-secondary)" }}
             >
               {t({
                 ko: "-- 프로젝트 미지정 --",
@@ -209,7 +216,7 @@ export function ProjectSection({
               })}
             </button>
             {projectsLoading ? (
-              <div className="px-3 py-2 text-sm text-slate-400">
+              <div className="px-3 py-2 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
                 {t({
                   ko: "프로젝트 불러오는 중...",
                   en: "Loading projects...",
@@ -218,7 +225,7 @@ export function ProjectSection({
                 })}
               </div>
             ) : filteredProjects.length === 0 ? (
-              <div className="flex items-center justify-between gap-2 px-3 py-2 text-sm text-slate-300">
+              <div className="flex items-center justify-between gap-2 px-3 py-2 text-xs font-mono" style={{ color: "var(--th-text-secondary)" }}>
                 <p className="pr-2">
                   {t({
                     ko: "신규 프로젝트로 생성할까요?",
@@ -233,7 +240,8 @@ export function ProjectSection({
                     event.preventDefault();
                     onEnableCreateNewProject();
                   }}
-                  className="ml-auto shrink-0 rounded-md border border-emerald-500 bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-emerald-500"
+                  className="ml-auto shrink-0 border px-3 py-1.5 text-xs font-semibold font-mono transition hover:opacity-80"
+                  style={{ borderRadius: "2px", borderColor: "rgba(34,197,94,0.4)", background: "rgba(34,197,94,0.12)", color: "#22c55e" }}
                 >
                   {t({ ko: "예", en: "Yes", ja: "はい", zh: "是" })}
                 </button>
@@ -248,16 +256,17 @@ export function ProjectSection({
                     onSelectProject(project);
                   }}
                   onMouseEnter={() => onProjectHover(project.id)}
-                  className={`w-full px-3 py-2 text-left transition hover:bg-slate-800 ${
-                    projectActiveIndex >= 0 && filteredProjects[projectActiveIndex]?.id === project.id
-                      ? "bg-slate-700/90"
+                  className="w-full px-3 py-2 text-left transition hover:opacity-80"
+                  style={{
+                    background: projectActiveIndex >= 0 && filteredProjects[projectActiveIndex]?.id === project.id
+                      ? "var(--th-bg-surface-hover)"
                       : selectedProject?.id === project.id
-                        ? "bg-slate-800/80"
-                        : ""
-                  }`}
+                        ? "var(--th-bg-surface)"
+                        : "transparent",
+                  }}
                 >
-                  <div className="truncate text-sm text-slate-100">{project.name}</div>
-                  <div className="truncate text-[11px] text-slate-400">{project.project_path}</div>
+                  <div className="truncate text-xs font-mono" style={{ color: "var(--th-text-primary)" }}>{project.name}</div>
+                  <div className="truncate text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>{project.project_path}</div>
                 </button>
               ))
             )}
@@ -265,11 +274,11 @@ export function ProjectSection({
         )}
       </div>
 
-      {selectedProject && <p className="mt-1 break-all text-xs text-slate-400">{selectedProject.project_path}</p>}
+      {selectedProject && <p className="mt-1 break-all text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>{selectedProject.project_path}</p>}
 
       {createNewProjectMode && !selectedProject && (
         <div className="mt-2 space-y-2">
-          <label className="block text-xs text-slate-400">
+          <label className="block text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
             {t({
               ko: "신규 프로젝트 경로",
               en: "New project path",
@@ -282,14 +291,16 @@ export function ProjectSection({
             value={newProjectPath}
             onChange={(event) => onNewProjectPathChange(event.target.value)}
             placeholder="/absolute/path/to/project"
-            className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-white placeholder-slate-500 outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            className="w-full border outline-none transition"
+            style={{ borderRadius: "2px", borderColor: "var(--th-border)", background: "var(--th-input-bg, var(--th-bg-primary))", color: "var(--th-text-primary)", fontFamily: "var(--th-font-mono)", fontSize: "0.8125rem", padding: "0.4rem 0.625rem" }}
           />
           <div className="flex justify-end gap-2">
             <button
               type="button"
               disabled={pathApiUnsupported}
               onClick={onOpenManualPathBrowser}
-              className="rounded-md border border-slate-600 px-2.5 py-1 text-xs font-semibold text-slate-200 transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
+              className="border px-2.5 py-1 text-xs font-semibold font-mono transition hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-40"
+              style={{ borderRadius: "2px", borderColor: "var(--th-border)", color: "var(--th-text-secondary)", background: "var(--th-bg-primary)" }}
             >
               {t({
                 ko: "앱 내 폴더 탐색",
@@ -302,7 +313,8 @@ export function ProjectSection({
               type="button"
               disabled={pathApiUnsupported}
               onClick={onTogglePathSuggestions}
-              className="rounded-md border border-slate-600 px-2.5 py-1 text-xs font-semibold text-slate-200 transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
+              className="border px-2.5 py-1 text-xs font-semibold font-mono transition hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-40"
+              style={{ borderRadius: "2px", borderColor: "var(--th-border)", color: "var(--th-text-secondary)", background: "var(--th-bg-primary)" }}
             >
               {pathSuggestionsOpen
                 ? t({
@@ -317,7 +329,8 @@ export function ProjectSection({
               type="button"
               disabled={nativePathPicking}
               onClick={onPickNativePath}
-              className="rounded-md border border-slate-600 px-2.5 py-1 text-xs font-semibold text-slate-200 transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
+              className="border px-2.5 py-1 text-xs font-semibold font-mono transition hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-40"
+              style={{ borderRadius: "2px", borderColor: "var(--th-border)", color: "var(--th-text-secondary)", background: "var(--th-bg-primary)" }}
             >
               {nativePathPicking
                 ? t({
@@ -342,9 +355,9 @@ export function ProjectSection({
             </button>
           </div>
           {pathSuggestionsOpen && (
-            <div className="max-h-40 overflow-y-auto rounded-lg border border-slate-700 bg-slate-800/70">
+            <div className="max-h-40 overflow-y-auto border" style={{ borderRadius: "2px", borderColor: "var(--th-border)", background: "var(--th-bg-primary)" }}>
               {pathSuggestionsLoading ? (
-                <p className="px-3 py-2 text-xs text-slate-400">
+                <p className="px-3 py-2 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
                   {t({
                     ko: "경로 후보를 불러오는 중...",
                     en: "Loading path suggestions...",
@@ -353,7 +366,7 @@ export function ProjectSection({
                   })}
                 </p>
               ) : pathSuggestions.length === 0 ? (
-                <p className="px-3 py-2 text-xs text-slate-400">
+                <p className="px-3 py-2 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
                   {t({
                     ko: "추천 경로가 없습니다. 직접 입력해주세요.",
                     en: "No suggested path. Enter one manually.",
@@ -367,7 +380,8 @@ export function ProjectSection({
                     key={candidate}
                     type="button"
                     onClick={() => onSelectPathSuggestion(candidate)}
-                    className="w-full px-3 py-2 text-left text-xs text-slate-200 transition hover:bg-slate-700/70"
+                    className="w-full px-3 py-2 text-left text-xs font-mono transition hover:opacity-80"
+                    style={{ color: "var(--th-text-secondary)" }}
                   >
                     {candidate}
                   </button>
@@ -385,7 +399,7 @@ export function ProjectSection({
               })}
             </p>
           )}
-          <p className="text-xs text-slate-500">
+          <p className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
             {t({
               ko: "설명 항목 내용이 신규 프로젝트의 핵심 목표(core_goal)로 저장됩니다.",
               en: "Description will be saved as the new project core goal.",
@@ -397,7 +411,7 @@ export function ProjectSection({
       )}
 
       {!projectsLoading && projects.length === 0 && (
-        <p className="mt-1 text-xs text-slate-500">
+        <p className="mt-1 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
           {t({
             ko: "등록된 프로젝트가 없습니다. 프로젝트 관리에서 먼저 생성해주세요.",
             en: "No registered project. Create one first in Project Manager.",

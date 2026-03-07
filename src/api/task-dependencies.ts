@@ -44,6 +44,16 @@ export interface DependencyBlockedResponse {
   incomplete_predecessors: Array<{ id: string; title: string; status: string }>;
 }
 
+export interface AllTaskDependenciesResponse {
+  ok: boolean;
+  edges: Array<{ task_id: string; depends_on_task_id: string }>;
+}
+
+export async function getAllTaskDependencies(): Promise<AllTaskDependenciesResponse> {
+  const res = await fetch(`${BASE}/api/task-dependencies/all`);
+  return res.json();
+}
+
 export async function checkDependencyBlocked(taskId: string): Promise<DependencyBlockedResponse> {
   const res = await fetch(`${BASE}/api/tasks/${encodeURIComponent(taskId)}/dependencies/blocked`);
   return res.json();

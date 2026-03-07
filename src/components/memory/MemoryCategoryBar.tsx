@@ -20,37 +20,32 @@ export default function MemoryCategoryBar({
   return (
     <>
       <div className="flex flex-wrap gap-2">
-        {ALL_CATEGORIES.map((category) => (
-          <button
-            key={category}
-            onClick={() => onSelectCategory(category)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
-              selectedCategory === category
-                ? "bg-blue-600/20 text-blue-400 border-blue-500/40"
-                : "bg-slate-800/40 text-slate-400 border-slate-700/50 hover:bg-slate-700/40 hover:text-slate-300"
-            }`}
-          >
-            {CATEGORY_ICONS[category]} {categoryLabel(category, t)}
-            <span className="ml-1 text-slate-500">{categoryCounts[category] || 0}</span>
-          </button>
-        ))}
+        {ALL_CATEGORIES.map((category) => {
+          const isActive = selectedCategory === category;
+          return (
+            <button
+              key={category}
+              onClick={() => onSelectCategory(category)}
+              className="px-3 py-1.5 text-xs font-medium font-mono border transition-all"
+              style={{
+                borderRadius: "2px",
+                background: isActive ? "rgba(251,191,36,0.1)" : "var(--th-bg-elevated)",
+                borderColor: isActive ? "rgba(251,191,36,0.5)" : "var(--th-border)",
+                color: isActive ? "var(--th-accent)" : "var(--th-text-secondary)",
+              }}
+            >
+              {CATEGORY_ICONS[category]} {categoryLabel(category, t)}
+              <span className="ml-1" style={{ color: "var(--th-text-muted)" }}>{categoryCounts[category] || 0}</span>
+            </button>
+          );
+        })}
       </div>
 
-      <div className="text-xs text-slate-500 px-1">
+      <div className="text-xs px-1 font-mono" style={{ color: "var(--th-text-muted)" }}>
         {filteredLength}
-        {t({
-          ko: "\uAC1C \uBA54\uBAA8\uB9AC \uD45C\uC2DC\uC911",
-          en: " entries shown",
-          ja: "\u4EF6\u306E\u30E1\u30E2\u30EA\u3092\u8868\u793A\u4E2D",
-          zh: " \u6761\u6761\u76EE\u5DF2\u663E\u793A",
-        })}
+        {t({ ko: "개 메모리 표시중", en: " entries shown", ja: "件のメモリを表示中", zh: " 条条目已显示" })}
         {search &&
-          ` \u00B7 "${search}" ${t({
-            ko: "\uAC80\uC0C9 \uACB0\uACFC",
-            en: "search results",
-            ja: "\u691C\u7D22\u7D50\u679C",
-            zh: "\u641C\u7D22\u7ED3\u679C",
-          })}`}
+          ` · "${search}" ${t({ ko: "검색 결과", en: "search results", ja: "検索結果", zh: "搜索结果" })}`}
       </div>
     </>
   );

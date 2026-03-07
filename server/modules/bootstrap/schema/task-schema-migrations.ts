@@ -4,6 +4,13 @@ import { DEFAULT_WORKFLOW_PACK_KEY, WORKFLOW_PACK_KEYS, isWorkflowPackKey } from
 type DbLike = Pick<DatabaseSync, "exec" | "prepare">;
 
 export function applyTaskSchemaMigrations(db: DbLike): void {
+  // Agent persona_id column
+  try {
+    db.exec("ALTER TABLE agents ADD COLUMN persona_id TEXT");
+  } catch {
+    /* already exists */
+  }
+
   // Subtask cross-department delegation columns
   try {
     db.exec("ALTER TABLE subtasks ADD COLUMN target_department_id TEXT");

@@ -186,29 +186,34 @@ export default function HookHistoryPanel({
 
   return (
     <div
-      className={`skill-history-panel flex h-full min-h-[360px] flex-col rounded-xl border border-slate-700/60 bg-slate-900/60 ${className}`}
+      className={`skill-history-panel flex h-full min-h-[360px] flex-col ${className}`}
+      style={{ borderRadius: "4px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}
     >
-      <div className="flex items-center justify-between gap-2 border-b border-slate-700/60 px-3 py-2.5">
+      <div className="flex items-center justify-between gap-2 px-3 py-2.5" style={{ borderBottom: "1px solid var(--th-border)" }}>
         <div className="flex items-center gap-1">
           <button
             type="button"
             onClick={() => setTab("history")}
-            className={`rounded-md px-2 py-1 text-[11px] font-medium transition-all ${
-              tab === "history"
-                ? "bg-slate-700 text-white"
-                : "text-slate-400 hover:bg-slate-800/80 hover:text-slate-200"
-            }`}
+            className="px-2 py-1 text-[11px] font-mono transition-all"
+            style={{
+              borderRadius: "2px",
+              border: `1px solid ${tab === "history" ? "var(--th-border-strong)" : "transparent"}`,
+              background: tab === "history" ? "var(--th-bg-surface)" : "transparent",
+              color: tab === "history" ? "var(--th-text-primary)" : "var(--th-text-muted)",
+            }}
           >
             {t({ ko: "\uD559\uC2B5 \uC774\uB825", en: "Learning History", ja: "\u5B66\u7FD2\u5C65\u6B74", zh: "\u5B66\u4E60\u8BB0\u5F55" })}
           </button>
           <button
             type="button"
             onClick={() => setTab("available")}
-            className={`rounded-md px-2 py-1 text-[11px] font-medium transition-all ${
-              tab === "available"
-                ? "bg-slate-700 text-white"
-                : "text-slate-400 hover:bg-slate-800/80 hover:text-slate-200"
-            }`}
+            className="px-2 py-1 text-[11px] font-mono transition-all"
+            style={{
+              borderRadius: "2px",
+              border: `1px solid ${tab === "available" ? "var(--th-border-strong)" : "transparent"}`,
+              background: tab === "available" ? "var(--th-bg-surface)" : "transparent",
+              color: tab === "available" ? "var(--th-text-primary)" : "var(--th-text-muted)",
+            }}
           >
             {t({ ko: "\uC0AC\uC6A9 \uAC00\uB2A5\uD55C \uD6C5", en: "Available Hooks", ja: "\u5229\u7528\u53EF\u80FD\u306A\u30D5\u30C3\u30AF", zh: "\u53EF\u7528\u94A9\u5B50" })}
           </button>
@@ -216,7 +221,8 @@ export default function HookHistoryPanel({
         <button
           type="button"
           onClick={() => void load()}
-          className="rounded-md border border-slate-600 px-2 py-1 text-[11px] text-slate-300 transition-all hover:bg-slate-800"
+          className="px-2 py-1 text-[11px] font-mono transition-all"
+          style={{ borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
         >
           {t({ ko: "\uC0C8\uB85C\uACE0\uCE68", en: "Refresh", ja: "\u66F4\u65B0", zh: "\u5237\u65B0" })}
         </button>
@@ -226,11 +232,13 @@ export default function HookHistoryPanel({
         <button
           type="button"
           onClick={() => setProviderFilter("all")}
-          className={`rounded-md border px-2 py-1 text-[10px] transition-all ${
-            providerFilter === "all"
-              ? "border-blue-500/50 bg-blue-600/20 text-blue-300"
-              : "border-slate-700 text-slate-400 hover:bg-slate-800/80 hover:text-slate-200"
-          }`}
+          className="px-2 py-1 text-[10px] font-mono transition-all"
+          style={{
+            borderRadius: "2px",
+            border: `1px solid ${providerFilter === "all" ? "rgba(251,191,36,0.5)" : "var(--th-border)"}`,
+            background: providerFilter === "all" ? "rgba(251,191,36,0.1)" : "transparent",
+            color: providerFilter === "all" ? "var(--th-accent)" : "var(--th-text-muted)",
+          }}
         >
           All
         </button>
@@ -239,11 +247,13 @@ export default function HookHistoryPanel({
             key={provider}
             type="button"
             onClick={() => setProviderFilter(provider)}
-            className={`rounded-md border px-2 py-1 text-[10px] transition-all ${
-              providerFilter === provider
-                ? "border-blue-500/50 bg-blue-600/20 text-blue-300"
-                : "border-slate-700 text-slate-400 hover:bg-slate-800/80 hover:text-slate-200"
-            }`}
+            className="px-2 py-1 text-[10px] font-mono transition-all"
+            style={{
+              borderRadius: "2px",
+              border: `1px solid ${providerFilter === provider ? "rgba(251,191,36,0.5)" : "var(--th-border)"}`,
+              background: providerFilter === provider ? "rgba(251,191,36,0.1)" : "transparent",
+              color: providerFilter === provider ? "var(--th-accent)" : "var(--th-text-muted)",
+            }}
           >
             {hookProviderLabel(provider)}
           </button>
@@ -252,24 +262,24 @@ export default function HookHistoryPanel({
 
       <div className="min-h-0 flex-1 space-y-2 overflow-y-auto px-3 pb-3">
         {loading && historyRows.length === 0 && availableRows.length === 0 && (
-          <div className="rounded-lg border border-slate-700 bg-slate-800/40 px-3 py-6 text-center text-xs text-slate-400">
+          <div className="px-3 py-6 text-center text-xs font-mono" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-muted)" }}>
             {t({ ko: "\uBA54\uBAA8\uB9AC \uAE30\uB85D \uB85C\uB529\uC911...", en: "Loading memory records...", ja: "\u30E1\u30E2\u30EA\u8A18\u9332\u3092\u8AAD\u307F\u8FBC\u307F\u4E2D...", zh: "\u6B63\u5728\u52A0\u8F7D\u8BB0\u5FC6\u8BB0\u5F55..." })}
           </div>
         )}
 
         {error && (
-          <div className="rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-[11px] text-rose-200">
+          <div className="px-3 py-2 text-[11px] text-rose-200" style={{ borderRadius: "2px", border: "1px solid rgba(244,63,94,0.3)", background: "rgba(244,63,94,0.1)" }}>
             {error}
           </div>
         )}
         {unlearnError && (
-          <div className="rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-[11px] text-rose-200">
+          <div className="px-3 py-2 text-[11px] text-rose-200" style={{ borderRadius: "2px", border: "1px solid rgba(244,63,94,0.3)", background: "rgba(244,63,94,0.1)" }}>
             {unlearnError}
           </div>
         )}
 
         {tab === "history" && historyRows.length === 0 && !loading && !error && (
-          <div className="rounded-lg border border-slate-700 bg-slate-800/40 px-3 py-6 text-center text-xs text-slate-400">
+          <div className="px-3 py-6 text-center text-xs font-mono" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-muted)" }}>
             {t({ ko: "\uD559\uC2B5 \uC774\uB825\uC774 \uC5C6\uC2B5\uB2C8\uB2E4", en: "No learning history yet.", ja: "\u5B66\u7FD2\u5C65\u6B74\u304C\u3042\u308A\u307E\u305B\u3093", zh: "\u6682\u65E0\u5B66\u4E60\u8BB0\u5F55" })}
           </div>
         )}
@@ -286,21 +296,23 @@ export default function HookHistoryPanel({
             return (
               <div
                 key={row.id}
-                className="skill-history-card rounded-lg border border-slate-700/70 bg-slate-800/50 p-2.5"
+                className="skill-history-card p-2.5"
+                style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <div className="truncate text-xs font-semibold text-slate-100">{label}</div>
-                    <div className="mt-0.5 truncate text-[10px] text-slate-500">{row.hook_id}</div>
+                    <div className="truncate text-xs font-semibold font-mono" style={{ color: "var(--th-text-heading)" }}>{label}</div>
+                    <div className="mt-0.5 truncate text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>{row.hook_id}</div>
                   </div>
-                  <span className={`rounded-full border px-1.5 py-0.5 text-[10px] ${hookStatusClass(row.status)}`}>
+                  <span className={`px-1.5 py-0.5 text-[10px] font-mono ${hookStatusClass(row.status)}`} style={{ borderRadius: "2px" }}>
                     {hookStatusLabel(row.status)}
                   </span>
                 </div>
-                <div className="skill-history-meta mt-2 flex items-center justify-between gap-2 text-[10px] text-slate-400">
+                <div className="skill-history-meta mt-2 flex items-center justify-between gap-2 text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
                   <div className="flex min-w-0 items-center gap-2">
                     <div
-                      className={`relative h-5 w-5 overflow-hidden rounded-md bg-slate-800/80 ${unlearnEffect ? "unlearn-avatar-hit" : ""}`}
+                      className={`relative h-5 w-5 overflow-hidden ${unlearnEffect ? "unlearn-avatar-hit" : ""}`}
+                      style={{ borderRadius: "2px", background: "var(--th-bg-primary)" }}
                     >
                       <AgentAvatar agent={agent ?? undefined} agents={agents} size={20} rounded="xl" />
                       {unlearnEffect === "pot" && <span className="unlearn-pot-drop-sm">🪴</span>}
@@ -318,18 +330,20 @@ export default function HookHistoryPanel({
                         type="button"
                         onClick={() => void handleUnlearn(row)}
                         disabled={isUnlearning}
-                        className={`skill-unlearn-btn rounded-md border px-1.5 py-0.5 text-[10px] transition-all ${
-                          isUnlearning
-                            ? "cursor-not-allowed border-slate-700 text-slate-600"
-                            : "border-rose-500/35 bg-rose-500/10 text-rose-300 hover:bg-rose-500/20"
-                        }`}
+                        className={`skill-unlearn-btn px-1.5 py-0.5 text-[10px] font-mono transition-all ${isUnlearning ? "cursor-not-allowed" : ""}`}
+                        style={{
+                          borderRadius: "2px",
+                          border: `1px solid ${isUnlearning ? "rgba(51,65,85,1)" : "rgba(244,63,94,0.35)"}`,
+                          color: isUnlearning ? "var(--th-text-muted)" : "rgb(253,164,175)",
+                          background: isUnlearning ? "transparent" : "rgba(244,63,94,0.1)",
+                        }}
                       >
                         {isUnlearning
                           ? t({ ko: "\uCDE8\uC18C\uC911...", en: "Unlearning...", ja: "\u53D6\u6D88\u4E2D...", zh: "\u53D6\u6D88\u4E2D..." })
                           : t({ ko: "\uD559\uC2B5 \uCDE8\uC18C", en: "Unlearn", ja: "\u5B66\u7FD2\u53D6\u6D88", zh: "\u53D6\u6D88\u5B66\u4E60" })}
                       </button>
                     )}
-                    <span className="skill-history-time text-slate-500">{hookRelativeTime(eventAt)}</span>
+                    <span className="skill-history-time" style={{ color: "var(--th-text-muted)" }}>{hookRelativeTime(eventAt)}</span>
                   </div>
                 </div>
                 {row.error && <div className="mt-1 break-words text-[10px] text-rose-300">{row.error}</div>}
@@ -342,7 +356,8 @@ export default function HookHistoryPanel({
             <button
               type="button"
               onClick={() => setHistoryExpanded((prev) => !prev)}
-              className="rounded-md border border-slate-600 px-2.5 py-1 text-[11px] text-slate-300 transition-all hover:bg-slate-800 hover:text-white"
+              className="px-2.5 py-1 text-[11px] font-mono transition-all"
+              style={{ borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
             >
               {historyExpanded
                 ? t({ ko: "\uC811\uAE30", en: "Show less", ja: "\u6298\u308A\u305F\u305F\u3080", zh: "\u6536\u8D77" })
@@ -357,7 +372,7 @@ export default function HookHistoryPanel({
         )}
 
         {tab === "available" && availableRows.length === 0 && !loading && !error && (
-          <div className="rounded-lg border border-slate-700 bg-slate-800/40 px-3 py-6 text-center text-xs text-slate-400">
+          <div className="px-3 py-6 text-center text-xs font-mono" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-muted)" }}>
             {t({ ko: "\uC0AC\uC6A9 \uAC00\uB2A5\uD55C \uD6C5\uC774 \uC5C6\uC2B5\uB2C8\uB2E4", en: "No available hooks.", ja: "\u5229\u7528\u53EF\u80FD\u306A\u30D5\u30C3\u30AF\u304C\u3042\u308A\u307E\u305B\u3093", zh: "\u6682\u65E0\u53EF\u7528\u94A9\u5B50" })}
           </div>
         )}
@@ -372,14 +387,16 @@ export default function HookHistoryPanel({
             return (
               <div
                 key={`${row.provider}-${row.hook_id}`}
-                className="skill-history-card rounded-lg border border-slate-700/70 bg-slate-800/50 p-2.5"
+                className="skill-history-card p-2.5"
+                style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}
               >
-                <div className="truncate text-xs font-semibold text-slate-100">{label}</div>
-                <div className="mt-0.5 truncate text-[10px] text-slate-500">{row.hook_id}</div>
-                <div className="skill-history-meta mt-2 flex items-center justify-between gap-2 text-[10px] text-slate-400">
+                <div className="truncate text-xs font-semibold font-mono" style={{ color: "var(--th-text-heading)" }}>{label}</div>
+                <div className="mt-0.5 truncate text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>{row.hook_id}</div>
+                <div className="skill-history-meta mt-2 flex items-center justify-between gap-2 text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
                   <div className="flex min-w-0 items-center gap-2">
                     <div
-                      className={`relative h-5 w-5 overflow-hidden rounded-md bg-slate-800/80 ${unlearnEffect ? "unlearn-avatar-hit" : ""}`}
+                      className={`relative h-5 w-5 overflow-hidden ${unlearnEffect ? "unlearn-avatar-hit" : ""}`}
+                      style={{ borderRadius: "2px", background: "var(--th-bg-primary)" }}
                     >
                       <AgentAvatar agent={agent ?? undefined} agents={agents} size={20} rounded="xl" />
                       {unlearnEffect === "pot" && <span className="unlearn-pot-drop-sm">🪴</span>}
@@ -396,17 +413,19 @@ export default function HookHistoryPanel({
                       type="button"
                       onClick={() => void handleUnlearn(row)}
                       disabled={isUnlearning}
-                      className={`skill-unlearn-btn rounded-md border px-1.5 py-0.5 text-[10px] transition-all ${
-                        isUnlearning
-                          ? "cursor-not-allowed border-slate-700 text-slate-600"
-                          : "border-rose-500/35 bg-rose-500/10 text-rose-300 hover:bg-rose-500/20"
-                      }`}
+                      className={`skill-unlearn-btn px-1.5 py-0.5 text-[10px] font-mono transition-all ${isUnlearning ? "cursor-not-allowed" : ""}`}
+                      style={{
+                        borderRadius: "2px",
+                        border: `1px solid ${isUnlearning ? "rgba(51,65,85,1)" : "rgba(244,63,94,0.35)"}`,
+                        color: isUnlearning ? "var(--th-text-muted)" : "rgb(253,164,175)",
+                        background: isUnlearning ? "transparent" : "rgba(244,63,94,0.1)",
+                      }}
                     >
                       {isUnlearning
                         ? t({ ko: "\uCDE8\uC18C\uC911...", en: "Unlearning...", ja: "\u53D6\u6D88\u4E2D...", zh: "\u53D6\u6D88\u4E2D..." })
                         : t({ ko: "\uD559\uC2B5 \uCDE8\uC18C", en: "Unlearn", ja: "\u5B66\u7FD2\u53D6\u6D88", zh: "\u53D6\u6D88\u5B66\u4E60" })}
                     </button>
-                    <span className="skill-history-time text-slate-500">{hookRelativeTime(row.learned_at)}</span>
+                    <span className="skill-history-time" style={{ color: "var(--th-text-muted)" }}>{hookRelativeTime(row.learned_at)}</span>
                   </div>
                 </div>
               </div>
@@ -416,7 +435,7 @@ export default function HookHistoryPanel({
 
       {centerBonk && (
         <div className="pointer-events-none fixed inset-0 z-[120] flex items-center justify-center">
-          <div className="skill-history-center-card unlearn-center-card rounded-2xl border border-rose-400/30 bg-slate-900/90 px-6 py-4 shadow-2xl shadow-black/50 backdrop-blur-sm">
+          <div className="skill-history-center-card unlearn-center-card px-6 py-4" style={{ borderRadius: "4px", border: "1px solid rgba(251,113,133,0.3)", background: "var(--th-terminal-bg)" }}>
             <div className="relative mx-auto h-20 w-20 overflow-visible">
               <div className="unlearn-avatar-hit">
                 <AgentAvatar agent={centerBonk.agent ?? undefined} agents={agents} size={80} rounded="xl" />

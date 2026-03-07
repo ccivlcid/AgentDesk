@@ -48,15 +48,16 @@ export default function EmojiPicker({
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className={`${btnSize} rounded-lg border flex items-center justify-center transition-all hover:scale-105 hover:shadow-md`}
-        style={{ background: "var(--th-input-bg)", borderColor: "var(--th-input-border)" }}
+        className={`${btnSize} border flex items-center justify-center transition-all hover:scale-105 hover:shadow-md`}
+        style={{ borderRadius: "4px", background: "var(--th-input-bg)", borderColor: "var(--th-input-border)" }}
       >
         {value || "❓"}
       </button>
       {open && (
         <div
-          className="absolute z-[60] top-full mt-1 left-0 rounded-xl shadow-2xl p-3 w-72 max-h-[60vh] overflow-y-auto overscroll-contain"
+          className="absolute z-[60] top-full mt-1 left-0 shadow-2xl p-3 w-72 max-h-[60vh] overflow-y-auto overscroll-contain"
           style={{
+            borderRadius: "8px",
             background: "var(--th-card-bg)",
             border: "1px solid var(--th-card-border)",
             backdropFilter: "blur(20px)",
@@ -79,8 +80,8 @@ export default function EmojiPicker({
                       onChange(emoji);
                       setOpen(false);
                     }}
-                    className={`w-8 h-8 rounded-lg text-base flex items-center justify-center transition-all hover:scale-125 hover:bg-[var(--th-bg-surface-hover)] ${
-                      value === emoji ? "ring-2 ring-blue-400 bg-blue-500/15" : ""
+                    className={`w-8 h-8 text-base flex items-center justify-center transition-all hover:scale-125 hover:bg-[var(--th-bg-surface-hover)] ${
+                      value === emoji ? "ring-2 ring-[var(--th-accent)] bg-[rgba(251,191,36,0.15)]" : ""
                     }`}
                   >
                     {emoji}

@@ -1,4 +1,9 @@
 import { useEffect, useRef, useCallback, useState, useMemo } from "react";
+import { motion } from "framer-motion";
+import OfficeDeptPanel from "./office-view/OfficeDeptPanel";
+import { ROOF_H, PENTHOUSE_H, CONFERENCE_FLOOR_H, FLOOR_TOTAL_H, BASEMENT_H } from "./office-view/model";
+import OfficeAgentPanel from "./office-view/OfficeAgentPanel";
+import OfficeQuickChat from "./office-view/OfficeQuickChat";
 import {
   type Application,
   type Container,
@@ -38,6 +43,8 @@ import { type StyleKey, loadStylePreference, getDrawer } from "./office-view/dra
 import { type CeoCustomization, loadCeoCustomization } from "./office-view/ceo-customization";
 import { type RoomDecoration, loadRoomDecorations } from "./office-view/room-decoration";
 import { type FurnitureLayout, loadFurnitureLayouts } from "./office-view/furniture-catalog";
+import { type VisitorTickState, createVisitorTickState } from "./office-view/visitorTick";
+import type { ExteriorWindowVisual } from "./office-view/drawExteriorWalls";
 
 export default function OfficeView({
   departments,
@@ -61,6 +68,7 @@ export default function OfficeView({
   cliUsageRef: cliUsageRefProp,
   cliUsageRefreshing: cliUsageRefreshingProp,
   onRefreshCliUsage: onRefreshCliUsageProp,
+  onOpenRoomManager,
 }: OfficeViewProps) {
   const { language, t } = useI18n();
   const { theme: currentTheme } = useTheme();
@@ -152,7 +160,22 @@ export default function OfficeView({
   const furnitureLayoutsRef = useRef<FurnitureLayout>(loadFurnitureLayouts());
   const styleKeyRef = useRef<StyleKey>(loadStylePreference());
   const seasonalParticleRef = useRef<SeasonalParticleState | null>(null);
+  const [currentSeasonKey, setCurrentSeasonKey] = useState<SeasonKey>(() => resolveSeasonKey(loadSeasonPreference()));
   const seasonKeyRef = useRef<SeasonKey>(resolveSeasonKey(loadSeasonPreference()));
+  const elevatorCarRef = useRef<Container | null>(null);
+  const elevatorFloorDisplayRef = useRef<Text | null>(null);
+  const elevatorDoorRef = useRef<import("pixi.js").Graphics | null>(null);
+  const elevatorStateRef = useRef({ floorIndex: 0, targetFloorIndex: 0, carY: 0, idleTicks: 0, doorProgress: 0, doorPhase: "closed" as const });
+  const elevatorNFloorsRef = useRef(0);
+  const exteriorWindowsRef = useRef<ExteriorWindowVisual[]>([]);
+  const antennaLedRef = useRef<import("pixi.js").Graphics | null>(null);
+  const visitorLayerRef = useRef<Container | null>(null);
+  const visitorTickRef = useRef<VisitorTickState | null>(createVisitorTickState());
+  const elevatorFloorLedsRef = useRef<import("pixi.js").Graphics[]>([]);
+  const floorGlowsRef = useRef<import("pixi.js").Graphics[]>([]);
+  const floorSelectBoxesRef = useRef<import("pixi.js").Graphics[]>([]);
+  const selectedFloorIdxRef = useRef<number>(0);
+  const ceoVisitorAlertRef = useRef<Text | null>(null);
   const localeRef = useRef<SupportedLocale>(language);
   localeRef.current = language;
   const themeHighlightTargetIdRef = useRef<string | null>(themeHighlightTargetId ?? null);
@@ -161,13 +184,67 @@ export default function OfficeView({
   // Latest data via refs (avoids stale closures)
   const dataRef = useRef({ departments, agents, tasks, subAgents, unreadAgentIds, meetingPresence, customDeptThemes });
   dataRef.current = { departments, agents, tasks, subAgents, unreadAgentIds, meetingPresence, customDeptThemes };
-  const cbRef = useRef({ onSelectAgent, onSelectDepartment });
-  cbRef.current = { onSelectAgent, onSelectDepartment };
+  // Wrap canvas callbacks: update right panel state AND call parent
+  const handleCanvasSelectAgent = useCallback((agent: import("../types").Agent) => {
+    setSelectedAgent(agent);
+    setSelectedDept(null);
+    setQuickChatAgent(agent);
+  }, []);
+  const handleCanvasSelectDept = useCallback((dept: import("../types").Department) => {
+    setSelectedDept(dept);
+    setSelectedAgent(null);
+    // Send elevator to the clicked department's floor
+    const deptIdx = dataRef.current.departments.findIndex((d) => d.id === dept.id);
+    if (deptIdx >= 0) {
+      elevatorStateRef.current.targetFloorIndex = deptIdx + 1;
+      elevatorStateRef.current.idleTicks = 0;
+      // Light up the amber selection box on the dept floor in the canvas
+      selectedFloorIdxRef.current = deptIdx + 1;
+      // Scroll canvas to center on the dept floor
+      const canvas = containerRef.current?.querySelector("canvas") as HTMLCanvasElement | null;
+      const wrap = containerRef.current?.closest(".office-canvas-wrap") as HTMLElement | null;
+      if (canvas && wrap && totalHRef.current > 0) {
+        const logicalY = ROOF_H + PENTHOUSE_H + CONFERENCE_FLOOR_H + deptIdx * FLOOR_TOTAL_H;
+        const scale = canvas.clientHeight / totalHRef.current;
+        const scrollY = logicalY * scale - wrap.clientHeight * 0.35;
+        wrap.scrollTo({ top: Math.max(0, scrollY), behavior: "smooth" });
+      }
+    }
+  }, []);
+
+  const handleCallElevator = useCallback((_dept: import("../types").Department, floorIdx: number) => {
+    elevatorStateRef.current.targetFloorIndex = floorIdx;
+    elevatorStateRef.current.idleTicks = 0;
+  }, []);
+
+  const handleScrollToFloor = useCallback((target: "ceo" | "conf" | "basement") => {
+    const canvas = containerRef.current?.querySelector("canvas") as HTMLCanvasElement | null;
+    const wrap = containerRef.current?.closest(".office-canvas-wrap") as HTMLElement | null;
+    if (!canvas || !wrap || totalHRef.current <= 0) return;
+    const nFloors = dataRef.current.departments.length;
+    let logicalY: number;
+    if (target === "ceo") {
+      logicalY = 0; // scroll to very top — penthouse is at ROOF_H
+    } else if (target === "conf") {
+      logicalY = ROOF_H + PENTHOUSE_H;
+    } else {
+      logicalY = ROOF_H + PENTHOUSE_H + CONFERENCE_FLOOR_H + nFloors * FLOOR_TOTAL_H;
+    }
+    const scale = canvas.clientHeight / totalHRef.current;
+    const scrollY = logicalY * scale - wrap.clientHeight * 0.1;
+    wrap.scrollTo({ top: Math.max(0, scrollY), behavior: "smooth" });
+  }, []);
+
+  const cbRef = useRef({ onSelectAgent: handleCanvasSelectAgent, onSelectDepartment: handleCanvasSelectDept });
+  cbRef.current = { onSelectAgent: handleCanvasSelectAgent, onSelectDepartment: handleCanvasSelectDept };
   const activeMeetingTaskIdRef = useRef<string | null>(activeMeetingTaskId ?? null);
   activeMeetingTaskIdRef.current = activeMeetingTaskId ?? null;
   const meetingMinutesOpenRef = useRef<typeof onOpenActiveMeetingMinutes>(onOpenActiveMeetingMinutes);
   meetingMinutesOpenRef.current = onOpenActiveMeetingMinutes;
   const [showVirtualPad, setShowVirtualPad] = useState(false);
+  const [selectedAgent, setSelectedAgent] = useState<import("../types").Agent | null>(null);
+  const [selectedDept, setSelectedDept] = useState<import("../types").Department | null>(null);
+  const [quickChatAgent, setQuickChatAgent] = useState<import("../types").Agent | null>(null);
   const showVirtualPadRef = useRef(showVirtualPad);
   showVirtualPadRef.current = showVirtualPad;
   const scrollHostXRef = useRef<HTMLElement | null>(null);
@@ -325,6 +402,20 @@ export default function OfficeView({
       seasonalParticleRef,
       seasonKeyRef,
       setSceneRevision,
+      elevatorCarRef,
+      elevatorFloorDisplayRef,
+      elevatorDoorRef,
+      elevatorStateRef,
+      elevatorNFloorsRef,
+      exteriorWindowsRef,
+      antennaLedRef,
+      elevatorFloorLedsRef,
+      floorGlowsRef,
+      floorSelectBoxesRef,
+      selectedFloorIdxRef,
+      ceoVisitorAlertRef,
+      visitorLayerRef,
+      visitorTickRef,
     });
   }, []);
 
@@ -332,7 +423,9 @@ export default function OfficeView({
   useEffect(() => {
     const handler = (e: Event) => {
       const pref = (e as CustomEvent).detail as string;
-      seasonKeyRef.current = resolveSeasonKey(pref as any);
+      const newKey = resolveSeasonKey(pref as any);
+      seasonKeyRef.current = newKey;
+      setCurrentSeasonKey(newKey);
       if (initDoneRef.current && appRef.current) buildScene();
     };
     window.addEventListener("agentdesk_season_change", handler);
@@ -414,9 +507,28 @@ export default function OfficeView({
       seasonalParticleRef,
       ceoCustomizationRef,
       ceoTrailParticlesRef,
+      elevatorCarRef,
+      elevatorFloorDisplayRef,
+      elevatorDoorRef,
+      elevatorStateRef,
+      elevatorNFloorsRef,
+      exteriorWindowsRef,
+      antennaLedRef,
+      elevatorFloorLedsRef,
+      floorGlowsRef,
+      floorSelectBoxesRef,
+      selectedFloorIdxRef,
+      ceoVisitorAlertRef,
+      agentPosRef,
+      onSelectAgent: handleCanvasSelectAgent,
+      visitorLayerRef,
+      visitorTickRef,
+      themeRef,
+      texturesRef,
+      spriteMapRef,
       followCeoInView,
     }),
-    [followCeoInView, cliUsageRef],
+    [followCeoInView, cliUsageRef, handleCanvasSelectAgent],
   );
 
   useOfficePixiRuntime({
@@ -484,22 +596,349 @@ export default function OfficeView({
     processedCeoOfficeRef,
   });
 
-  return (
-    <div className="w-full overflow-auto" style={{ minHeight: "100%" }}>
-      <div className="relative mx-auto w-full">
-        <div
-          ref={containerRef}
-          className="mx-auto"
-          style={{ maxWidth: "100%", lineHeight: 0, outline: "none" }}
-          tabIndex={0}
-        />
+  const [clockStr, setClockStr] = useState(() => {
+    const n = new Date();
+    return `${n.getHours().toString().padStart(2, "0")}:${n.getMinutes().toString().padStart(2, "0")}`;
+  });
 
-        <VirtualPadOverlay
-          showVirtualPad={showVirtualPad}
-          t={t}
-          onInteract={triggerDepartmentInteract}
-          onSetMoveDirectionPressed={setMoveDirectionPressed}
-        />
+  // Task completion burst particles
+  const prevTaskStatusesRef = useRef<Map<string, string>>(new Map());
+  const [completionBursts, setCompletionBursts] = useState<Array<{ id: string; x: number; y: number; label: string }>>([]);
+
+  useEffect(() => {
+    const prev = prevTaskStatusesRef.current;
+    const newlyDone: Array<{ id: string; label: string }> = [];
+    for (const task of tasks) {
+      const prevStatus = prev.get(task.id);
+      if (prevStatus && prevStatus !== "done" && task.status === "done") {
+        newlyDone.push({ id: task.id, label: task.title?.slice(0, 20) ?? "DONE" });
+      }
+      prev.set(task.id, task.status);
+    }
+    if (newlyDone.length === 0) return;
+    const bursts = newlyDone.map((t) => ({
+      id: `burst-${t.id}-${Date.now()}`,
+      x: 20 + Math.random() * 60,
+      y: 20 + Math.random() * 60,
+      label: t.label,
+    }));
+    setCompletionBursts((prev) => [...prev, ...bursts]);
+    const timer = setTimeout(() => {
+      setCompletionBursts((prev) => prev.filter((b) => !bursts.some((nb) => nb.id === b.id)));
+    }, 1400);
+    return () => clearTimeout(timer);
+  }, [tasks]);
+
+  // Poll visitor state every 1s for FM ticker + CEO incoming alert + dept visitor badges
+  const [visitorCount, setVisitorCount] = useState(0);
+  const [ceoIncomingCount, setCeoIncomingCount] = useState(0);
+  const [visitorsByDeptId, setVisitorsByDeptId] = useState<Record<string, number>>({});
+  const [visitingAgentIds, setVisitingAgentIds] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    const inboundPhases = new Set([
+      "walk_to_elev", "fading_out", "in_elev", "fading_in", "walk_to_dest", "at_dest",
+    ]);
+    const timer = setInterval(() => {
+      const visitors = visitorTickRef.current?.visitors ?? [];
+      setVisitorCount(visitors.length);
+      setCeoIncomingCount(visitors.filter((v) => v.destFloor === 0 && inboundPhases.has(v.phase)).length);
+      // Map destFloor → dept.id using same sort order as OfficeDeptPanel
+      const sortedDepts = [...(dataRef.current.departments ?? [])].sort((a, b) => a.sort_order - b.sort_order);
+      const byDeptId: Record<string, number> = {};
+      for (const v of visitors) {
+        if (v.destFloor >= 1 && v.destFloor <= sortedDepts.length && inboundPhases.has(v.phase)) {
+          const dept = sortedDepts[v.destFloor - 1];
+          if (dept) byDeptId[dept.id] = (byDeptId[dept.id] ?? 0) + 1;
+        }
+      }
+      setVisitorsByDeptId(byDeptId);
+      setVisitingAgentIds(new Set(visitors.map((v) => v.agentId)));
+      const n = new Date();
+      setClockStr(`${n.getHours().toString().padStart(2, "0")}:${n.getMinutes().toString().padStart(2, "0")}`);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // FM-style live event ticker — computed from current agent/task state
+  const fmTickerEvents = useMemo(() => {
+    const working = agents.filter((a) => a.status === "working");
+    const idle = agents.filter((a) => a.status === "idle");
+    const onBreak = agents.filter((a) => a.status === "break");
+    const activeTasks = tasks.filter((t) => t.status === "in_progress");
+    const doneTasks = tasks.filter((t) => t.status === "done");
+    const events: string[] = [];
+
+    // Headline capacity
+    if (agents.length > 0) {
+      const actPct = Math.round((working.length / agents.length) * 100);
+      events.push(`HQ CAPACITY ${actPct}% · ${working.length}/${agents.length} AGENTS ACTIVE`);
+    }
+
+    // Working agents + their tasks
+    if (working.length > 0) {
+      const sample = working.slice(0, 3);
+      for (const a of sample) {
+        const task = tasks.find((t) => t.assigned_agent_id === a.id && t.status === "in_progress");
+        if (task) events.push(`${a.avatar_emoji} ${a.name} >> ${task.title.slice(0, 30)}`);
+      }
+    }
+
+    // Dept highlights
+    const topDept = departments
+      .map((d) => {
+        const das = agents.filter((a) => a.department_id === d.id);
+        const runCount = das.filter((a) => a.status === "working").length;
+        return { d, pct: das.length > 0 ? Math.round((runCount / das.length) * 100) : 0 };
+      })
+      .sort((a, b) => b.pct - a.pct)[0];
+    if (topDept && topDept.pct > 0) {
+      events.push(`${topDept.d.icon} ${topDept.d.name} LEADS AT ${topDept.pct}% ACTIVITY`);
+    }
+
+    if (idle.length > 0) events.push(`${idle.length} AGENT${idle.length > 1 ? "S" : ""} IDLE — AWAITING ASSIGNMENT`);
+    if (onBreak.length > 0) events.push(`${onBreak.length} IN BREAK ROOM`);
+    if (visitorCount > 0) events.push(`${visitorCount} AGENT${visitorCount > 1 ? "S" : ""} ON INTER-DEPT VISIT`);
+
+    // Task throughput
+    if (activeTasks.length > 0) events.push(`${activeTasks.length} TASK${activeTasks.length > 1 ? "S" : ""} IN PROGRESS`);
+    if (doneTasks.length > 0) events.push(`${doneTasks.length} TASK${doneTasks.length > 1 ? "S" : ""} COMPLETED`);
+
+    // Top XP agent
+    const topXpAgent = [...agents].sort((a, b) => (b.stats_xp ?? 0) - (a.stats_xp ?? 0))[0];
+    if (topXpAgent && (topXpAgent.stats_xp ?? 0) > 0) {
+      events.push(`TOP PERFORMER: ${topXpAgent.avatar_emoji} ${topXpAgent.name} · ${(topXpAgent.stats_xp ?? 0).toLocaleString()} XP`);
+    }
+
+    if (events.length === 0) events.push("AGENTDESK HQ — ALL SYSTEMS NOMINAL");
+    return events.join("     //     ");
+  }, [agents, tasks, departments, visitorCount]);
+
+  return (
+    <div className="office-screen">
+      {/* ── Toolbar ── */}
+      <div className="office-toolbar">
+        <div className="office-toolbar-breadcrumb">
+          <span className="office-toolbar-prompt">▶</span>
+          <span className="office-toolbar-title">AgentDesk HQ</span>
+          <span className="office-toolbar-sep">·</span>
+          <span className="office-toolbar-sub">
+            {departments.length}F Tower
+          </span>
+        </div>
+        <div className="office-toolbar-center">
+          <span className="office-toolbar-stat-chip" style={{ color: "#22c55e" }}>
+            {agents.filter((a) => a.status === "working").length} RUNNING
+          </span>
+          <span className="office-toolbar-stat-chip">
+            {tasks.filter((t) => t.status === "in_progress").length} TASKS
+          </span>
+          {visitorCount > 0 && (
+            <span className="office-toolbar-stat-chip" style={{ color: "var(--th-accent)" }}>
+              {visitorCount} VISITING
+            </span>
+          )}
+          {currentSeasonKey !== "none" && (
+            <span className="office-toolbar-stat-chip" style={{ color: "rgba(255,255,255,0.5)" }}>
+              {currentSeasonKey === "spring" ? "SPRING" : currentSeasonKey === "summer" ? "SUMMER" : currentSeasonKey === "autumn" ? "AUTUMN" : "WINTER"}
+            </span>
+          )}
+        </div>
+        <div className="office-toolbar-actions">
+          <span style={{ fontFamily: "var(--th-font-mono)", fontSize: "0.65rem", color: "var(--th-accent)", letterSpacing: 2, opacity: 0.85 }}>
+            {clockStr}
+          </span>
+          <button className="office-toolbar-btn" title="Season / Style settings" onClick={onOpenRoomManager}>
+            Season ▾
+          </button>
+          <button className="office-toolbar-btn" title="Season / Style settings" onClick={onOpenRoomManager}>
+            Style ▾
+          </button>
+        </div>
+      </div>
+
+      {/* ── 3-column body ── */}
+      <div className="office-body">
+        {/* Left — department list */}
+        <motion.div
+          className="office-left"
+          initial={{ opacity: 0, x: -16 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.18, ease: "linear" }}
+        >
+          <OfficeDeptPanel
+            departments={departments}
+            agents={agents}
+            tasks={tasks}
+            selectedDeptId={selectedDept?.id ?? null}
+            onSelectDept={handleCanvasSelectDept}
+            onCallElevator={handleCallElevator}
+            onScrollToFloor={handleScrollToFloor}
+            visitorsByDeptId={visitorsByDeptId}
+            cliStatus={cliStatus}
+            cliUsage={cliUsage}
+            cliUsageRefreshing={cliUsageRefreshing}
+            onRefreshCliUsage={onRefreshCliUsage}
+          />
+        </motion.div>
+
+        {/* Center — PixiJS canvas */}
+        <div className="office-canvas-wrap" style={{ position: "relative" }}>
+          {/* office-canvas-frame: inline-block, sizes to canvas, amber cut-frame border */}
+          <div className="office-canvas-frame">
+            <div
+              ref={containerRef}
+              style={{ lineHeight: 0, outline: "none", display: "block" }}
+              tabIndex={0}
+            />
+          </div>
+          <VirtualPadOverlay
+            showVirtualPad={showVirtualPad}
+            t={t}
+            onInteract={triggerDepartmentInteract}
+            onSetMoveDirectionPressed={setMoveDirectionPressed}
+          />
+          {/* Task completion burst particles */}
+          {completionBursts.map((burst) => (
+            <div
+              key={burst.id}
+              className="pointer-events-none"
+              style={{ position: "absolute", left: `${burst.x}%`, top: `${burst.y}%`, zIndex: 50 }}
+            >
+              {/* Rays */}
+              {[0, 45, 90, 135, 180, 225, 270, 315].map((deg, ri) => (
+                <div
+                  key={ri}
+                  style={{
+                    position: "absolute",
+                    width: 3,
+                    height: 3,
+                    borderRadius: "50%",
+                    background: ri % 2 === 0 ? "var(--th-accent)" : "rgb(52,211,153)",
+                    animation: "task-burst-ray 1.2s ease-out forwards",
+                    animationDelay: `${ri * 30}ms`,
+                    transform: `rotate(${deg}deg)`,
+                    transformOrigin: "1.5px 1.5px",
+                  }}
+                />
+              ))}
+              {/* Label */}
+              <div
+                style={{
+                  position: "absolute",
+                  left: 8,
+                  top: -10,
+                  whiteSpace: "nowrap",
+                  fontSize: 9,
+                  fontFamily: "var(--th-font-mono)",
+                  color: "var(--th-accent)",
+                  background: "rgba(0,0,0,0.7)",
+                  padding: "1px 4px",
+                  borderRadius: 2,
+                  animation: "task-burst-label 1.2s ease-out forwards",
+                  letterSpacing: 0.5,
+                }}
+              >
+                ✓ {burst.label}
+              </div>
+            </div>
+          ))}
+
+          {/* Quick chat popup — appears when agent is clicked on canvas */}
+          {quickChatAgent && (
+            <div
+              style={{
+                position: "absolute",
+                bottom: 16,
+                right: 16,
+                zIndex: 40,
+              }}
+            >
+              <OfficeQuickChat
+                agent={quickChatAgent}
+                agents={agents}
+                onClose={() => setQuickChatAgent(null)}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Right — agent / dept detail */}
+        <motion.div
+          className="office-right"
+          initial={{ opacity: 0, x: 16 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.18, ease: "linear", delay: 0.04 }}
+        >
+          <OfficeAgentPanel
+            selectedAgent={selectedAgent}
+            selectedDept={selectedDept}
+            agents={agents}
+            tasks={tasks}
+            departments={departments}
+            ceoIncoming={ceoIncomingCount}
+            visitingAgentIds={visitingAgentIds}
+            onViewAgent={onSelectAgent}
+            onViewDept={onSelectDepartment}
+          />
+        </motion.div>
+      </div>
+
+      {/* ── FM Event Ticker ── */}
+      <div className="office-fm-ticker" aria-label="Live event feed">
+        <span className="office-fm-ticker__label">
+          <span className="office-fm-ticker__dot" />
+          LIVE
+        </span>
+        <div className="office-fm-ticker__track">
+          <span className="office-fm-ticker__text">{fmTickerEvents}</span>
+        </div>
+      </div>
+
+      {/* ── FM-style Action bar ── */}
+      <div className="office-actionbar">
+        <div className="office-actionbar-stat">
+          <span className="office-actionbar-stat__lbl">AGT</span>
+          <span className="office-actionbar-stat__val" style={{ color: "#22c55e" }}>
+            {agents.filter((a) => a.status === "working").length}
+          </span>
+          <span className="office-actionbar-stat__total">/{agents.length}</span>
+        </div>
+        <div className="office-actionbar-sep" />
+        <div className="office-actionbar-stat">
+          <span className="office-actionbar-stat__lbl">TSK</span>
+          <span className="office-actionbar-stat__val" style={{ color: "var(--th-accent)" }}>
+            {tasks.filter((t) => t.status === "in_progress").length}
+          </span>
+          <span className="office-actionbar-stat__total">/{tasks.length}</span>
+        </div>
+        <div className="office-actionbar-sep" />
+        <div className="office-actionbar-stat">
+          <span className="office-actionbar-stat__lbl">DEPT</span>
+          <span className="office-actionbar-stat__val">{departments.length}</span>
+        </div>
+        <div className="office-actionbar-sep" />
+        <div className="office-actionbar-stat">
+          <span className="office-actionbar-stat__lbl">BREAK</span>
+          <span className="office-actionbar-stat__val" style={{ color: "rgba(245,158,11,0.7)" }}>
+            {agents.filter((a) => a.status === "break").length}
+          </span>
+        </div>
+        {visitorCount > 0 && (
+          <>
+            <div className="office-actionbar-sep" />
+            <div className="office-actionbar-stat">
+              <span className="office-actionbar-stat__lbl">VISIT</span>
+              <span className="office-actionbar-stat__val" style={{ color: "#22c55e" }}>
+                {visitorCount}
+              </span>
+            </div>
+          </>
+        )}
+        <div className="office-actionbar-info" style={{ marginLeft: "auto" }}>
+          <span style={{ color: agents.filter((a) => a.status === "working").length > 0 ? "#22c55e" : "var(--th-text-muted)" }}>
+            {agents.filter((a) => a.status === "working").length > 0 ? "RUNNING" : "IDLE"}
+          </span>
+        </div>
       </div>
     </div>
   );

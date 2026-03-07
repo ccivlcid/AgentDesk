@@ -212,7 +212,7 @@ export const CATEGORY_ICONS: Record<string, string> = {
 };
 
 export const CATEGORY_COLORS: Record<string, string> = {
-  Frontend: "text-blue-400 bg-blue-500/15 border-blue-500/30",
+  Frontend: "text-[#60a5fa] bg-[rgba(59,130,246,0.15)] border-[rgba(59,130,246,0.3)]",
   Backend: "text-green-400 bg-green-500/15 border-green-500/30",
   Design: "text-pink-400 bg-pink-500/15 border-pink-500/30",
   "AI & Agent": "text-purple-400 bg-purple-500/15 border-purple-500/30",
@@ -222,7 +222,7 @@ export const CATEGORY_COLORS: Record<string, string> = {
   Productivity: "text-emerald-400 bg-emerald-500/15 border-emerald-500/30",
   Architecture: "text-indigo-400 bg-indigo-500/15 border-indigo-500/30",
   Security: "text-red-400 bg-red-500/15 border-red-500/30",
-  Other: "text-slate-400 bg-slate-500/15 border-slate-500/30",
+  Other: "text-[#94a3b8] bg-[rgba(100,116,139,0.15)] border-[rgba(100,116,139,0.3)]",
 };
 
 export function categoryLabel(category: string, t: TFunction) {
@@ -258,11 +258,11 @@ export function categoryLabel(category: string, t: TFunction) {
 
 export function getRankBadge(rank: number) {
   if (rank === 1) return { icon: "🥇", color: "text-yellow-400" };
-  if (rank === 2) return { icon: "🥈", color: "text-slate-300" };
+  if (rank === 2) return { icon: "🥈", color: "text-[#cbd5e1]" };
   if (rank === 3) return { icon: "🥉", color: "text-amber-600" };
   if (rank <= 10) return { icon: "🏆", color: "text-amber-400" };
-  if (rank <= 50) return { icon: "⭐", color: "text-blue-400" };
-  return { icon: "", color: "text-slate-500" };
+  if (rank <= 50) return { icon: "⭐", color: "text-[#60a5fa]" };
+  return { icon: "", color: "text-[#64748b]" };
 }
 
 export function formatFirstSeen(value: string, localeTag: string): string {
@@ -396,11 +396,11 @@ export function cliProviderIcon(provider: SkillHistoryProvider) {
   if (provider === "claude") return <CliClaudeLogo />;
   if (provider === "codex") return <CliCodexLogo />;
   if (provider === "gemini") return <CliGeminiLogo />;
-  if (provider === "opencode") return <span className="text-[11px] text-slate-200">⚪</span>;
-  if (provider === "copilot") return <span className="text-[11px] text-slate-200">🚀</span>;
-  if (provider === "antigravity") return <span className="text-[11px] text-slate-200">🌌</span>;
+  if (provider === "opencode") return <span className="text-[11px] text-[#e2e8f0]">⚪</span>;
+  if (provider === "copilot") return <span className="text-[11px] text-[#e2e8f0]">🚀</span>;
+  if (provider === "antigravity") return <span className="text-[11px] text-[#e2e8f0]">🌌</span>;
   if (provider === "cursor") return <CliCursorLogo />;
-  return <span className="text-[11px] text-slate-200">🔌</span>;
+  return <span className="text-[11px] text-[#e2e8f0]">🔌</span>;
 }
 
 export function learningStatusLabel(status: SkillLearnJob["status"] | null, t: TFunction): string {

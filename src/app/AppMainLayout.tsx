@@ -1,4 +1,5 @@
-import { useCallback, useMemo, type ReactNode } from "react";
+import { useCallback, useMemo, type ReactNode, lazy, Suspense } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import NotificationCenter from "../components/NotificationCenter";
 import Sidebar from "../components/Sidebar";
 import OfficeView from "../components/OfficeView";
@@ -10,12 +11,12 @@ import Deliverables from "../components/deliverables/Deliverables";
 import AgentManager from "../components/AgentManager";
 import HeartbeatPanel from "../components/office-view/HeartbeatPanel";
 import ScheduledTasksPanel from "../components/scheduled-tasks/ScheduledTasksPanel";
-import SkillsLibrary from "../components/SkillsLibrary";
-import AgentRulesLibrary from "../components/AgentRulesLibrary";
-import MemoryLibrary from "../components/MemoryLibrary";
-import HooksLibrary from "../components/HooksLibrary";
-import SettingsPanel from "../components/SettingsPanel";
-import GameRoom from "../components/GameRoom";
+const SkillsLibrary     = lazy(() => import("../components/SkillsLibrary"));
+const AgentRulesLibrary = lazy(() => import("../components/AgentRulesLibrary"));
+const MemoryLibrary     = lazy(() => import("../components/MemoryLibrary"));
+const HooksLibrary      = lazy(() => import("../components/HooksLibrary"));
+const SettingsPanel     = lazy(() => import("../components/SettingsPanel"));
+const GameRoom          = lazy(() => import("../components/GameRoom"));
 import { I18nProvider, useI18n } from "../i18n";
 import type {
   Agent,
@@ -79,6 +80,7 @@ interface AppMainLayoutLabels {
   uiLanguage: string;
   viewTitle: string;
   announcementLabel: string;
+  groupChatLabel: string;
   roomManagerLabel: string;
   roomManagerDepartments: { id: string; name: string }[];
   reportLabel: string;
@@ -171,6 +173,7 @@ interface AppMainLayoutProps {
   onOpenAgentStatus: () => void;
   onOpenReportHistory: () => void;
   onOpenAnnouncement: () => void;
+  onOpenGroupChat: () => void;
   onOpenRoomManager: () => void;
   onDismissAutoUpdateNotice: () => Promise<void>;
   onDismissUpdate: () => void;
@@ -234,6 +237,7 @@ export default function AppMainLayout({
   onOpenAgentStatus,
   onOpenReportHistory,
   onOpenAnnouncement,
+  onOpenGroupChat,
   onOpenRoomManager,
   onDismissAutoUpdateNotice,
   onDismissUpdate,
@@ -420,7 +424,7 @@ export default function AppMainLayout({
           />
         </div>
 
-        <main className="flex-1 overflow-y-auto overflow-x-hidden min-w-0">
+        <main className="flex-1 flex flex-col overflow-hidden min-w-0">
           <AppHeaderBar
             currentView={view}
             connected={connected}
@@ -432,6 +436,7 @@ export default function AppMainLayout({
             agentStatusLabel={labels.agentStatusLabel}
             reportLabel={labels.reportLabel}
             announcementLabel={labels.announcementLabel}
+            groupChatLabel={labels.groupChatLabel}
             roomManagerLabel={labels.roomManagerLabel}
             notificationSlot={
               <NotificationCenter
@@ -449,6 +454,7 @@ export default function AppMainLayout({
             onOpenAgentStatus={onOpenAgentStatus}
             onOpenReportHistory={onOpenReportHistory}
             onOpenAnnouncement={onOpenAnnouncement}
+            onOpenGroupChat={onOpenGroupChat}
             onOpenRoomManager={onOpenRoomManager}
             officePackControl={{
               label: officePackLabel,
@@ -504,14 +510,16 @@ export default function AppMainLayout({
                     href={labels.updateReleaseUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="rounded-md border border-amber-300/40 bg-amber-200/10 px-2.5 py-1 text-[11px] text-amber-100 transition hover:bg-amber-200/20"
+                    className="border px-2.5 py-1 text-[11px] transition hover:opacity-80"
+                    style={{ borderRadius: "2px", borderColor: "rgba(251,191,36,0.4)", background: "rgba(251,191,36,0.1)", color: "var(--th-accent)" }}
                   >
                     {labels.updateReleaseLabel}
                   </a>
                   <button
                     type="button"
                     onClick={onDismissUpdate}
-                    className="rounded-md border border-slate-500/40 bg-slate-700/30 px-2.5 py-1 text-[11px] text-slate-100 transition hover:bg-slate-700/50"
+                    className="px-2.5 py-1 text-[11px] font-mono transition"
+                    style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
                   >
                     {labels.updateDismissLabel}
                   </button>
@@ -520,8 +528,15 @@ export default function AppMainLayout({
             </div>
           )}
 
-          <div className="p-3 sm:p-4 lg:p-6">
-            {view === "office" && (
+          <AnimatePresence mode="wait">
+          {view === "office" ? (
+            <motion.div
+              key="office"
+              className="flex-1 min-h-0 flex flex-col"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1, transition: { duration: 0.1, ease: "linear" } }}
+              exit={{ opacity: 0, transition: { duration: 0.06 } }}
+            >
               <OfficeView
                 departments={officePresentation.departments}
                 agents={officePresentation.agents}
@@ -544,9 +559,18 @@ export default function AppMainLayout({
                 cliUsageRef={cliUsageRef}
                 cliUsageRefreshing={cliUsageRefreshing}
                 onRefreshCliUsage={handleRefreshUsage}
+                onOpenRoomManager={onOpenRoomManager}
               />
-            )}
-
+            </motion.div>
+          ) : (
+            <motion.div
+              key={view}
+              className="flex-1 overflow-y-auto overflow-x-hidden"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1, transition: { duration: 0.1, ease: "linear" } }}
+              exit={{ opacity: 0, transition: { duration: 0.06 } }}
+            >
+              <div className="p-3 sm:p-4 lg:p-6">
             {view === "cli-usage" && (
               <div className="mx-auto max-w-4xl px-4 py-6">
                 <CliUsagePage
@@ -573,6 +597,7 @@ export default function AppMainLayout({
               <TaskBoard
                 tasks={tasksForActivePack}
                 agents={displayAgents}
+                projectManagerAgents={agents}
                 departments={displayDepartments}
                 subtasks={subtasks}
                 onCreateTask={handleCreateTaskForActivePack}
@@ -630,38 +655,47 @@ export default function AppMainLayout({
               />
             )}
 
-            {view === "skills" && <SkillsLibrary agents={managerAgents} />}
+            <Suspense fallback={
+              <div className="flex items-center justify-center h-full font-mono text-xs" style={{ color: "var(--th-text-muted)" }}>
+                loading...
+              </div>
+            }>
+              {view === "skills" && <SkillsLibrary agents={managerAgents} />}
 
-            {view === "agent-rules" && (
-              <AgentRulesLibrary agents={managerAgents} departments={managerDepartments} />
-            )}
+              {view === "agent-rules" && (
+                <AgentRulesLibrary agents={managerAgents} departments={managerDepartments} />
+              )}
 
-            {view === "memory" && (
-              <MemoryLibrary agents={managerAgents} departments={managerDepartments} />
-            )}
+              {view === "memory" && (
+                <MemoryLibrary agents={managerAgents} departments={managerDepartments} />
+              )}
 
-            {view === "hooks" && (
-              <HooksLibrary agents={managerAgents} departments={managerDepartments} />
-            )}
+              {view === "hooks" && (
+                <HooksLibrary agents={managerAgents} departments={managerDepartments} />
+              )}
 
-            {view === "game-room" && <GameRoom agents={displayAgents} />}
+              {view === "game-room" && <GameRoom agents={displayAgents} />}
 
-            {view === "settings" && (
-              <SettingsPanel
-                settings={settings}
-                cliStatus={cliStatus}
-                onSave={(nextSettings) => {
-                  void onSaveSettings(nextSettings);
-                }}
-                onRefreshCli={() => {
-                  void onRefreshCli();
-                }}
-                oauthResult={oauthResult}
-                onOauthResultClear={onOauthResultClear}
-                managerAgents={managerAgents}
-              />
-            )}
-          </div>
+              {view === "settings" && (
+                <SettingsPanel
+                  settings={settings}
+                  cliStatus={cliStatus}
+                  onSave={(nextSettings) => {
+                    void onSaveSettings(nextSettings);
+                  }}
+                  onRefreshCli={() => {
+                    void onRefreshCli();
+                  }}
+                  oauthResult={oauthResult}
+                  onOauthResultClear={onOauthResultClear}
+                  managerAgents={managerAgents}
+                />
+              )}
+            </Suspense>
+              </div>
+            </motion.div>
+          )}
+          </AnimatePresence>
         </main>
 
         {children}

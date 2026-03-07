@@ -25,11 +25,11 @@ export const STATUS_BADGES: Record<string, { label: LangText; color: string }> =
   },
   inbox: {
     label: { ko: "수신함", en: "Inbox", ja: "受信箱", zh: "收件箱" },
-    color: "bg-slate-500/20 text-slate-400 border-slate-500/40",
+    color: "bg-[rgba(100,116,139,0.2)] text-[#94a3b8] border-[rgba(100,116,139,0.4)]",
   },
   planned: {
     label: { ko: "예정", en: "Planned", ja: "予定", zh: "计划" },
-    color: "bg-blue-500/20 text-blue-400 border-blue-500/40",
+    color: "bg-[rgba(59,130,246,0.2)] text-[#60a5fa] border-[rgba(59,130,246,0.4)]",
   },
   cancelled: {
     label: { ko: "취소", en: "Cancelled", ja: "キャンセル", zh: "已取消" },

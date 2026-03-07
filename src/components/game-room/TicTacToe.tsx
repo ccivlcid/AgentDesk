@@ -247,29 +247,29 @@ export default function TicTacToe({ opponent, onFinish, onBack }: TicTacToeProps
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <button onClick={onBack} className="text-sm text-slate-400 hover:text-slate-200 transition">
+        <button onClick={onBack} className="text-sm font-mono transition hover:text-[var(--th-text-primary)]" style={{ color: "var(--th-text-muted)" }}>
           &larr; {t({ ko: "로비", en: "Lobby", ja: "ロビー", zh: "大厅" })}
         </button>
-        <div className="text-xs text-slate-500">
+        <div className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
           {opponent.avatar_emoji} {opponentName} · {difficultyLabel}
         </div>
       </div>
 
       {/* Match score: first to 2 wins */}
       <div className="flex justify-center gap-4 text-sm">
-        <span className="text-blue-400/90 font-medium">
-          CEO <span className="text-slate-100 font-bold">{roundPlayerWins}</span>
+        <span className="text-[#60a5fa] font-medium font-mono">
+          CEO <span className="font-bold" style={{ color: "var(--th-text-primary)" }}>{roundPlayerWins}</span>
         </span>
-        <span className="text-slate-500">
+        <span className="font-mono" style={{ color: "var(--th-text-muted)" }}>
           {t({ ko: "라운드", en: "Round", ja: "ラウンド", zh: "局" })} {roundNumber}
         </span>
-        <span className="text-red-400/90 font-medium">
-          <span className="text-slate-100 font-bold">{roundOpponentWins}</span> {opponentName}
+        <span className="text-red-400/90 font-medium font-mono">
+          <span className="font-bold" style={{ color: "var(--th-text-primary)" }}>{roundOpponentWins}</span> {opponentName}
         </span>
       </div>
 
       {/* Status */}
-      <div className="text-center text-sm text-slate-300 h-6">
+      <div className="text-center text-sm font-mono h-6" style={{ color: "var(--th-text-secondary)" }}>
         {statusText}
       </div>
 
@@ -283,19 +283,28 @@ export default function TicTacToe({ opponent, onFinish, onBack }: TicTacToeProps
                 key={i}
                 onClick={() => handleClick(i)}
                 disabled={!!cell || !isPlayerTurn || gameOver}
-                className={`w-20 h-20 rounded-xl border-2 text-3xl font-bold transition-all flex items-center justify-center ${
+                className={`w-20 h-20 text-3xl font-bold transition-all flex items-center justify-center ${
                   isWin
                     ? cell === "O"
-                      ? "border-blue-400 bg-blue-500/20 text-blue-300"
-                      : "border-red-400 bg-red-500/20 text-red-300"
+                      ? "text-[#93c5fd]"
+                      : "text-red-300"
                     : cell === "O"
-                      ? "border-slate-600 bg-slate-800/60 text-blue-400"
+                      ? "text-[#60a5fa]"
                       : cell === "X"
-                        ? "border-slate-600 bg-slate-800/60 text-red-400"
+                        ? "text-red-400"
                         : isPlayerTurn && !gameOver
-                          ? "border-slate-700 bg-slate-800/40 hover:border-blue-500/40 hover:bg-slate-800/60 cursor-pointer"
-                          : "border-slate-700/50 bg-slate-800/30 cursor-not-allowed"
+                          ? "hover:border-[rgba(59,130,246,0.4)] cursor-pointer"
+                          : "cursor-not-allowed"
                 }`}
+                style={{
+                  borderRadius: "4px",
+                  border: isWin
+                    ? cell === "O" ? "2px solid #60a5fa" : "2px solid #f87171"
+                    : "2px solid var(--th-border)",
+                  background: isWin
+                    ? cell === "O" ? "rgba(59,130,246,0.15)" : "rgba(239,68,68,0.15)"
+                    : "var(--th-bg-elevated)",
+                }}
               >
                 {cell}
               </button>
@@ -305,13 +314,13 @@ export default function TicTacToe({ opponent, onFinish, onBack }: TicTacToeProps
       </div>
 
       {/* Legend */}
-      <div className="flex justify-center gap-6 text-xs text-slate-400">
-        <span><span className="text-blue-400 font-bold">O</span> = CEO</span>
+      <div className="flex justify-center gap-6 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
+        <span><span className="text-[#60a5fa] font-bold">O</span> = CEO</span>
         <span><span className="text-red-400 font-bold">X</span> = {opponent.avatar_emoji} {opponentName}</span>
       </div>
 
       {gameOver && isMatchOver && (
-        <div className="text-center text-slate-400 text-sm animate-pulse">
+        <div className="text-center text-sm font-mono animate-pulse" style={{ color: "var(--th-text-muted)" }}>
           {t({ ko: "결과 화면으로 이동 중...", en: "Going to results...", ja: "結果画面へ...", zh: "正在跳转结果..." })}
         </div>
       )}

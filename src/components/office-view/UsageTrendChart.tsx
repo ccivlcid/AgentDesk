@@ -80,12 +80,12 @@ export default function UsageTrendChart({ language }: Props) {
   }, [data]);
 
   if (loading) {
-    return <div className="text-xs text-slate-500 py-4 text-center">Loading...</div>;
+    return <div className="text-xs font-mono py-4 text-center" style={{ color: "var(--th-text-muted)" }}>Loading...</div>;
   }
 
   if (!chartData || chartData.sortedDays.length === 0) {
     return (
-      <div className="text-xs text-slate-500 py-4 text-center">
+      <div className="text-xs font-mono py-4 text-center" style={{ color: "var(--th-text-muted)" }}>
         {tr("사용 데이터가 없습니다", "No usage data yet")}
       </div>
     );
@@ -95,7 +95,7 @@ export default function UsageTrendChart({ language }: Props) {
     <div className="space-y-3">
       {/* Controls */}
       <div className="flex items-center justify-between">
-        <h4 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
+        <h4 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider font-mono" style={{ color: "var(--th-text-muted)" }}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M18 20V10M12 20V4M6 20v-6" />
           </svg>
@@ -106,10 +106,10 @@ export default function UsageTrendChart({ language }: Props) {
             <button
               key={d}
               onClick={() => setDays(d)}
-              className={`rounded-lg px-2.5 py-1 text-[11px] transition-colors ${
+              className={`px-2.5 py-1 text-[11px] font-mono transition-colors ${
                 days === d
                   ? "bg-cyan-500/30 text-cyan-300 border border-cyan-500/40"
-                  : "border border-slate-700/60 bg-slate-800/60 text-slate-400 hover:border-slate-600 hover:text-slate-200"
+                  : "border border-[var(--th-border)] bg-[var(--th-bg-elevated)] text-[var(--th-text-muted)] hover:border-[var(--th-text-muted)] hover:text-[var(--th-text-secondary)]"
               }`}
             >
               {d}{tr("일", "d")}
@@ -119,7 +119,7 @@ export default function UsageTrendChart({ language }: Props) {
       </div>
 
       {/* Legend */}
-      <div className="flex flex-wrap gap-2 text-[11px] text-slate-400">
+      <div className="flex flex-wrap gap-2 text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>
         {chartData.providers.map((p) => (
           <span key={p} className="flex items-center gap-1">
             <span
@@ -204,7 +204,7 @@ export default function UsageTrendChart({ language }: Props) {
       </div>
 
       {/* Total stats */}
-      <div className="flex gap-3 text-[11px] text-slate-400">
+      <div className="flex gap-3 text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>
         <span>
           {tr("총 실행", "Total runs")}:{" "}
           {data.reduce((sum, d) => sum + d.run_count, 0)}

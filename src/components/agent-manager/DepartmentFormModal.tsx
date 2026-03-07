@@ -191,7 +191,7 @@ export default function DepartmentFormModal({
   };
 
   const inputCls =
-    "w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-colors";
+    "w-full px-3 py-2 border text-sm focus:outline-none transition-colors";
   const inputStyle = {
     background: "var(--th-input-bg)",
     borderColor: "var(--th-input-border)",
@@ -208,11 +208,11 @@ export default function DepartmentFormModal({
       }}
     >
       <div
-        className="w-full max-w-lg rounded-2xl p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200 max-h-[85vh] overflow-y-auto"
+        className="w-full max-w-lg p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200 max-h-[85vh] overflow-y-auto"
         style={{
-          background: "var(--th-card-bg)",
-          border: "1px solid var(--th-card-border)",
-          backdropFilter: "blur(20px)",
+          borderRadius: "4px",
+          background: "var(--th-bg-surface)",
+          border: "1px solid var(--th-border)",
         }}
       >
         {/* Header */}
@@ -223,8 +223,8 @@ export default function DepartmentFormModal({
           </h3>
           <button
             onClick={onClose}
-            className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-[var(--th-bg-surface-hover)] transition-colors"
-            style={{ color: "var(--th-text-muted)" }}
+            className="w-7 h-7 flex items-center justify-center hover:bg-[var(--th-bg-surface-hover)] transition-colors"
+            style={{ borderRadius: "2px", color: "var(--th-text-muted)" }}
           >
             ✕
           </button>
@@ -265,8 +265,9 @@ export default function DepartmentFormModal({
                   key={c}
                   type="button"
                   onClick={() => setForm({ ...form, color: c })}
-                  className="w-7 h-7 rounded-full transition-all hover:scale-110"
+                  className="w-7 h-7 transition-all hover:scale-110"
                   style={{
+                    borderRadius: "50%",
                     background: c,
                     outline: form.color === c ? `2px solid ${c}` : "2px solid transparent",
                     outlineOffset: "3px",
@@ -368,7 +369,8 @@ export default function DepartmentFormModal({
           <button
             onClick={handleSave}
             disabled={saving || !form.name.trim()}
-            className="flex-1 px-4 py-2.5 rounded-lg text-sm font-medium transition-all bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white disabled:opacity-40 shadow-sm shadow-blue-600/20"
+            className="flex-1 px-4 py-2.5 text-sm font-medium font-mono transition-all disabled:opacity-40"
+            style={{ borderRadius: "2px", background: "var(--th-accent)", color: "#000" }}
           >
             {saving
               ? tr("처리 중...", "Saving...")
@@ -382,14 +384,15 @@ export default function DepartmentFormModal({
                 <button
                   onClick={handleDelete}
                   disabled={saving}
-                  className="px-3 py-2.5 rounded-lg text-xs font-medium bg-red-600 hover:bg-red-500 text-white disabled:opacity-40 transition-colors"
+                  className="px-3 py-2.5 text-xs font-medium font-mono disabled:opacity-40 transition-colors"
+                  style={{ borderRadius: "2px", background: "rgba(244,63,94,0.15)", color: "rgb(253,164,175)", border: "1px solid rgba(244,63,94,0.35)" }}
                 >
                   {tr("삭제 확인", "Confirm")}
                 </button>
                 <button
                   onClick={() => setConfirmDelete(false)}
-                  className="px-2 py-2.5 rounded-lg text-xs transition-colors"
-                  style={{ color: "var(--th-text-muted)" }}
+                  className="px-2 py-2.5 text-xs font-mono transition-colors"
+                  style={{ borderRadius: "2px", color: "var(--th-text-muted)" }}
                 >
                   {tr("취소", "No")}
                 </button>
@@ -397,16 +400,16 @@ export default function DepartmentFormModal({
             ) : (
               <button
                 onClick={() => setConfirmDelete(true)}
-                className="px-3 py-2.5 rounded-lg text-sm font-medium transition-all hover:bg-red-500/15 hover:text-red-400"
-                style={{ border: "1px solid var(--th-input-border)", color: "var(--th-text-muted)" }}
+                className="px-3 py-2.5 text-sm font-medium font-mono transition-all"
+                style={{ borderRadius: "2px", border: "1px solid rgba(244,63,94,0.3)", color: "rgb(253,164,175)" }}
               >
                 {tr("삭제", "Delete")}
               </button>
             ))}
           <button
             onClick={onClose}
-            className="px-4 py-2.5 rounded-lg text-sm font-medium transition-all hover:bg-[var(--th-bg-surface-hover)]"
-            style={{ border: "1px solid var(--th-input-border)", color: "var(--th-text-secondary)" }}
+            className="px-4 py-2.5 text-sm font-medium font-mono transition-all hover:bg-[var(--th-bg-surface-hover)]"
+            style={{ borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)" }}
           >
             {tr("취소", "Cancel")}
           </button>

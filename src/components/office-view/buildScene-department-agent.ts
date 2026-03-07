@@ -80,6 +80,9 @@ export function renderDeskAgentAndSubClones({
     if (isOffline) {
       animSprite.alpha = 0.3;
       animSprite.tint = 0x888899;
+    } else {
+      // Subtle cool tint to harmonize with terminal palette
+      animSprite.tint = 0xd8e8ff;
     }
     charContainer.addChild(animSprite);
     animSpriteRef = animSprite;
@@ -98,27 +101,37 @@ export function renderDeskAgentAndSubClones({
   const bedY = deskY;
 
   const bedG = new Graphics();
-  bedG.roundRect(bedX, bedY, bedW, bedH, 4).fill(0x5c3d2e);
-  bedG.roundRect(bedX + 1, bedY + 1, bedW - 2, bedH - 2, 3).fill(0x8b6347);
-  bedG.roundRect(bedX + 3, bedY + 3, bedW - 6, bedH - 6, 2).fill(0xf0e6d3);
-  bedG.roundRect(bedX - 2, bedY - 1, 6, bedH + 2, 3).fill(0x4a2e1a);
-  bedG.ellipse(bedX + 16, bedY + bedH / 2, 9, 7).fill(0xfff8ee);
-  bedG.ellipse(bedX + 16, bedY + bedH / 2, 9, 7).stroke({ width: 0.5, color: 0xd8d0c0 });
-  bedG.ellipse(bedX + 16, bedY + bedH / 2, 5, 4).fill({ color: 0xf0e8d8, alpha: 0.6 });
+  // Terminal rest pod — dark metal chassis
+  bedG.rect(bedX, bedY, bedW, bedH).fill(0x0c0e14);
+  bedG.rect(bedX, bedY, bedW, bedH).stroke({ width: 0.6, color: 0x2a3048 });
+  bedG.rect(bedX, bedY, 2, bedH).fill({ color: 0xf59e0b, alpha: 0.5 });
+  // Pillow zone — terminal scan area
+  bedG.rect(bedX + 3, bedY + 3, 20, bedH - 6).fill(0x141820);
+  bedG.circle(bedX + 13, bedY + bedH / 2, 7).fill({ color: 0x1a2838, alpha: 0.8 });
+  bedG.circle(bedX + 13, bedY + bedH / 2, 4).fill({ color: 0x22cc88, alpha: 0.12 });
   bedG.visible = false;
   room.addChild(bedG);
 
   const blanketG = new Graphics();
   const blanketX = bedX + bedW * 0.35;
   const blanketW = bedW * 0.62;
-  blanketG.roundRect(blanketX, bedY + 2, blanketW, bedH - 4, 3).fill(0xc8d8be);
-  blanketG.roundRect(blanketX, bedY + 2, blanketW, bedH - 4, 3).stroke({ width: 0.5, color: 0xa8b898 });
-  blanketG
-    .moveTo(blanketX + 2, bedY + bedH / 2)
-    .lineTo(blanketX + blanketW - 4, bedY + bedH / 2)
-    .stroke({ width: 0.4, color: 0xb0c0a0, alpha: 0.5 });
+  // Rest module cover — dark panel with scan lines
+  blanketG.rect(blanketX, bedY + 2, blanketW, bedH - 4).fill(0x141820);
+  blanketG.rect(blanketX, bedY + 2, blanketW, bedH - 4).stroke({ width: 0.5, color: 0x2a3048 });
+  for (let ly = 4; ly < bedH - 4; ly += 4) {
+    blanketG.rect(blanketX + 1, bedY + ly, blanketW - 2, 1).fill({ color: 0x22cc88, alpha: 0.04 });
+  }
+  blanketG.rect(blanketX + 2, bedY + bedH / 2 - 0.5, blanketW - 4, 1).fill({ color: 0x22cc88, alpha: 0.2 });
   blanketG.visible = false;
   room.addChild(blanketG);
+
+  // Persona glow — soft aura ring behind agent sprite when persona_id is set
+  let personaGlow: Graphics | undefined;
+  if (agent.persona_id) {
+    personaGlow = new Graphics();
+    personaGlow.circle(ax, charFeetY - TARGET_CHAR_H * 0.5, 18).fill({ color: 0xf59e0b, alpha: 0 });
+    room.addChildAt(personaGlow, 0);
+  }
 
   const particles = new Container();
   room.addChild(particles);
@@ -137,35 +150,40 @@ export function renderDeskAgentAndSubClones({
     animated: animSpriteRef,
     frameCount: frames.length,
     bounceUntilTick: 0,
+    personaGlow,
   });
 
   const activeTask = tasks.find((task) => task.assigned_agent_id === agent.id && task.status === "in_progress");
   if (activeTask) {
     const txt = activeTask.title.length > 16 ? `${activeTask.title.slice(0, 16)}...` : activeTask.title;
     const bubbleText = new Text({
-      text: `💬 ${txt}`,
+      text: txt,
       style: new TextStyle({
-        fontSize: 6.5,
-        fill: 0x333333,
-        fontFamily: "system-ui, sans-serif",
+        fontSize: 6,
+        fill: 0x22cc88,
+        fontFamily: "monospace",
         wordWrap: true,
         wordWrapWidth: 85,
       }),
     });
     bubbleText.anchor.set(0.5, 1);
-    const bw = Math.min(bubbleText.width + 8, 100);
+    const bw = Math.min(bubbleText.width + 10, 100);
     const bh = bubbleText.height + 6;
     const bubbleTop = charFeetY - TARGET_CHAR_H - bh - 6;
     const bubbleG = new Graphics();
-    bubbleG.roundRect(ax - bw / 2, bubbleTop, bw, bh, 4).fill(0xffffff);
-    bubbleG.roundRect(ax - bw / 2, bubbleTop, bw, bh, 4).stroke({ width: 1.2, color: themeAccent, alpha: 0.4 });
+    // Terminal dark task bubble
+    bubbleG.rect(ax - bw / 2, bubbleTop, bw, bh).fill({ color: 0x050810, alpha: 0.92 });
+    bubbleG.rect(ax - bw / 2, bubbleTop, bw, bh).stroke({ width: 0.8, color: themeAccent, alpha: 0.6 });
+    // Amber left accent bar
+    bubbleG.rect(ax - bw / 2, bubbleTop, 2, bh).fill({ color: themeAccent, alpha: 0.7 });
+    // Tail
     bubbleG
       .moveTo(ax - 3, bubbleTop + bh)
       .lineTo(ax, bubbleTop + bh + 4)
       .lineTo(ax + 3, bubbleTop + bh)
-      .fill(0xffffff);
+      .fill({ color: 0x050810, alpha: 0.92 });
     room.addChild(bubbleG);
-    bubbleText.position.set(ax, bubbleTop + bh - 3);
+    bubbleText.position.set(ax + 1, bubbleTop + bh - 3);
     room.addChild(bubbleText);
   }
 
@@ -195,7 +213,7 @@ export function renderDeskAgentAndSubClones({
       const cloneVisual = cloneFrames.length > 1 ? new AnimatedSprite(cloneFrames) : new Sprite(baseTexture);
       cloneVisual.anchor.set(0.5, 1);
       cloneVisual.scale.set(baseScale);
-      cloneVisual.tint = 0xffffff;
+      cloneVisual.tint = 0xd0e0ff;
       cloneVisual.alpha = 0.97;
       if (cloneVisual instanceof AnimatedSprite) cloneVisual.gotoAndStop((index + 1) % cloneFrames.length);
       cloneContainer.addChild(cloneVisual);

@@ -4,6 +4,7 @@ import type { RuntimeContext } from "../../../../types/runtime-context.ts";
 import { buildTaskInterruptControlToken } from "../../../../security/auth.ts";
 import { buildTerminalProgressHints } from "./progress-hints.ts";
 import { prettyStreamJson } from "./pretty-stream-json.ts";
+import { extractThinkingBlocks } from "./extract-thinking-blocks.ts";
 
 export function registerTaskTerminalRoutes(ctx: RuntimeContext): void {
   const { app, logsDir, hasStructuredJsonLines, db, taskExecutionSessions, ensureTaskExecutionSession } = ctx;
@@ -49,13 +50,18 @@ export function registerTaskTerminalRoutes(ctx: RuntimeContext): void {
     const tail = parts.slice(Math.max(0, parts.length - lines)).join("\n");
     let text = tail;
     let progressHints: ReturnType<typeof buildTerminalProgressHints> | null = null;
+    let thinkingBlocks: ReturnType<typeof extractThinkingBlocks> | null = null;
     if (pretty) {
-      const parsed = prettyStreamJson(tail, { includeReasoning: true });
+      const parsed = prettyStreamJson(tail, { includeReasoning: false });
       text = parsed;
       if (hasStructuredJsonLines(tail)) {
         const hints = buildTerminalProgressHints(tail);
         if (hints.hints.length > 0) {
           progressHints = hints;
+        }
+        const thinking = extractThinkingBlocks(tail);
+        if (thinking.length > 0) {
+          thinkingBlocks = thinking;
         }
       }
     }
@@ -72,6 +78,7 @@ export function registerTaskTerminalRoutes(ctx: RuntimeContext): void {
       text,
       task_logs: taskLogs,
       progress_hints: progressHints,
+      thinking_blocks: thinkingBlocks,
       interrupt,
     });
   });

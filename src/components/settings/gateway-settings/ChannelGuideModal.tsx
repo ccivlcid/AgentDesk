@@ -380,7 +380,7 @@ export default function ChannelGuideModal({ t, onClose }: GuideModalProps) {
 
           {/* Tip */}
           {active.tip && (
-            <div className="mt-4 rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3 flex gap-2.5">
+            <div className="mt-4 px-4 py-3 flex gap-2.5" style={{ borderRadius: "4px", border: "1px solid rgba(251,191,36,0.2)", background: "rgba(251,191,36,0.05)" }}>
               <span className="text-amber-400 text-sm flex-shrink-0 mt-px">💡</span>
               <p className="text-xs text-amber-200/80 leading-relaxed">{active.tip}</p>
             </div>

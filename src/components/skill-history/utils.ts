@@ -40,7 +40,7 @@ export function statusLabel(status: SkillLearningHistoryEntry["status"]): string
 export function statusClass(status: SkillLearningHistoryEntry["status"]): string {
   if (status === "succeeded") return "border-emerald-400/40 bg-emerald-500/10 text-emerald-300";
   if (status === "running") return "border-amber-400/40 bg-amber-500/10 text-amber-200";
-  if (status === "queued") return "border-slate-500/40 bg-slate-600/10 text-slate-300";
+  if (status === "queued") return "border-[rgba(100,116,139,0.4)] bg-[rgba(71,85,105,0.1)] text-[#cbd5e1]";
   return "border-rose-400/40 bg-rose-500/10 text-rose-300";
 }
 

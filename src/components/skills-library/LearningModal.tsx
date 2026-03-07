@@ -113,11 +113,11 @@ export default function LearningModal({
   if (!learningSkill) return null;
 
   return (
-    <div className="skills-learn-modal fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/75 backdrop-blur-sm p-4">
-      <div className="skills-learn-modal-card w-full max-w-3xl max-h-[90vh] overflow-hidden rounded-2xl border border-slate-700/60 bg-slate-900/95 shadow-2xl">
-        <div className="flex items-start justify-between gap-4 border-b border-slate-700/60 px-5 py-4">
+    <div className="skills-learn-modal fixed inset-0 z-[80] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.75)" }}>
+      <div className="skills-learn-modal-card w-full max-w-3xl max-h-[90vh] overflow-hidden shadow-2xl" style={{ borderRadius: "4px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
+        <div className="flex items-start justify-between gap-4 px-5 py-4" style={{ borderBottom: "1px solid var(--th-border)" }}>
           <div>
-            <h3 className="text-base font-semibold text-white">
+            <h3 className="text-base font-semibold font-mono" style={{ color: "var(--th-text-heading)" }}>
               {t({
                 ko: "스킬 학습 스쿼드",
                 en: "Skill Learning Squad",
@@ -125,18 +125,17 @@ export default function LearningModal({
                 zh: "技能学习小队",
               })}
             </h3>
-            <div className="mt-1 text-xs text-slate-400">
+            <div className="mt-1 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
               {learningSkill.name} · {learningSkill.repo}
             </div>
           </div>
           <button
             onClick={onClose}
             disabled={learnInProgress}
-            className={`rounded-lg border px-2.5 py-1 text-xs transition-all ${
-              learnInProgress
-                ? "cursor-not-allowed border-slate-700 text-slate-600"
-                : "border-slate-600 text-slate-300 hover:bg-slate-800"
-            }`}
+            className="px-2.5 py-1 text-xs font-mono transition-all"
+            style={learnInProgress
+              ? { borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-muted)", background: "transparent", cursor: "not-allowed" }
+              : { borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
           >
             {learnInProgress
               ? t({ ko: "학습중", en: "Running", ja: "実行中", zh: "进行中" })
@@ -145,8 +144,8 @@ export default function LearningModal({
         </div>
 
         <div className="space-y-4 overflow-y-auto px-5 py-4 max-h-[calc(90vh-72px)]">
-          <div className="rounded-xl border border-emerald-500/25 bg-emerald-500/8 px-3 py-2">
-            <div className="text-[11px] text-emerald-200">
+          <div className="px-3 py-2" style={{ borderRadius: "2px", border: "1px solid rgba(52,211,153,0.25)", background: "var(--th-terminal-bg)" }}>
+            <div className="text-[11px] font-mono" style={{ color: "rgb(167,243,208)" }}>
               {t({ ko: "실행 명령", en: "Install command", ja: "実行コマンド", zh: "执行命令" })}
             </div>
             <div className="mt-1 text-[11px] font-mono text-emerald-300 break-all">
@@ -155,7 +154,7 @@ export default function LearningModal({
           </div>
 
           <div className="flex items-center justify-between gap-3">
-            <div className="text-xs text-slate-400">
+            <div className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
               {t({
                 ko: "CLI 대표자를 선택하세요 (복수 선택 가능)",
                 en: "Select CLI representatives (multi-select)",
@@ -163,7 +162,7 @@ export default function LearningModal({
                 zh: "选择 CLI 代表（可多选）",
               })}
             </div>
-            <div className="text-[11px] text-slate-500">
+            <div className="text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>
               {selectedProviders.length}
               {t({ ko: "명 선택됨", en: " selected", ja: "名を選択", zh: " 已选择" })}
             </div>
@@ -203,13 +202,12 @@ export default function LearningModal({
                     }
                   }}
                   aria-disabled={!hasAgent || learnInProgress}
-                  className={`relative overflow-hidden rounded-xl border p-3 text-left transition-all ${
-                    !hasAgent
-                      ? "cursor-not-allowed border-slate-700/80 bg-slate-800/40 opacity-60"
-                      : isSelected
-                        ? "border-emerald-500/50 bg-emerald-500/10"
-                        : "border-slate-700/70 bg-slate-800/60 hover:border-slate-500/80 hover:bg-slate-800/80"
-                  }`}
+                  className="relative overflow-hidden p-3 text-left transition-all"
+                  style={!hasAgent
+                    ? { borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", opacity: 0.6, cursor: "not-allowed" }
+                    : isSelected
+                      ? { borderRadius: "2px", border: "1px solid rgba(52,211,153,0.5)", background: "rgba(52,211,153,0.1)" }
+                      : { borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}
                 >
                   {isAnimating && (
                     <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -241,9 +239,9 @@ export default function LearningModal({
                     </div>
 
                     <div className="min-w-0 flex-1">
-                      <div className="text-[11px] text-slate-400">{providerLabel(row.provider)}</div>
-                      <div className="text-sm font-medium text-white truncate">{displayName}</div>
-                      <div className="text-[11px] text-slate-500">
+                      <div className="text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>{providerLabel(row.provider)}</div>
+                      <div className="text-sm font-medium font-mono truncate" style={{ color: "var(--th-text-heading)" }}>{displayName}</div>
+                      <div className="text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>
                         {row.agent
                           ? roleLabel(row.agent.role, t)
                           : t({ ko: "사용 불가", en: "Unavailable", ja: "利用不可", zh: "不可用" })}
@@ -252,13 +250,12 @@ export default function LearningModal({
 
                     <div className="flex shrink-0 flex-col items-end gap-1.5">
                       <div
-                        className={`text-[11px] px-2 py-0.5 rounded-full border ${
-                          isAlreadyLearned
-                            ? "border-emerald-400/50 text-emerald-300 bg-emerald-500/15"
-                            : isSelected
-                              ? "border-blue-400/50 text-blue-300 bg-blue-500/15"
-                              : "border-slate-600 text-slate-400 bg-slate-700/40"
-                        }`}
+                        className="text-[11px] px-2 py-0.5 font-mono"
+                        style={isAlreadyLearned
+                          ? { borderRadius: "2px", border: "1px solid rgba(52,211,153,0.5)", color: "rgb(110,231,183)", background: "rgba(52,211,153,0.15)" }
+                          : isSelected
+                            ? { borderRadius: "2px", border: "1px solid rgba(251,191,36,0.5)", color: "var(--th-accent)", background: "rgba(251,191,36,0.1)" }
+                            : { borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-muted)", background: "var(--th-bg-primary)" }}
                       >
                         {isAlreadyLearned
                           ? t({ ko: "학습됨", en: "Learned", ja: "学習済み", zh: "已学习" })
@@ -274,11 +271,10 @@ export default function LearningModal({
                             onUnlearnProvider(row.provider);
                           }}
                           disabled={learnInProgress || isUnlearning}
-                          className={`skill-unlearn-btn rounded-md border px-2 py-0.5 text-[10px] transition-all ${
-                            learnInProgress || isUnlearning
-                              ? "cursor-not-allowed border-slate-700 text-slate-600"
-                              : "border-rose-500/35 bg-rose-500/10 text-rose-300 hover:bg-rose-500/20"
-                          }`}
+                          className="skill-unlearn-btn px-2 py-0.5 text-[10px] font-mono transition-all"
+                          style={learnInProgress || isUnlearning
+                            ? { borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-muted)", background: "transparent", cursor: "not-allowed" }
+                            : { borderRadius: "2px", border: "1px solid rgba(244,63,94,0.35)", color: "rgb(253,164,175)", background: "rgba(244,63,94,0.1)" }}
                         >
                           {isUnlearning
                             ? t({ ko: "취소중...", en: "Unlearning...", ja: "取消中...", zh: "取消中..." })
@@ -305,11 +301,10 @@ export default function LearningModal({
                 return (
                   <div
                     key={`squad-${agent.id}`}
-                    className={`relative overflow-hidden rounded-xl border p-3 text-left transition-all ${
-                      isProviderSelected
-                        ? "border-emerald-500/50 bg-emerald-500/10"
-                        : "border-slate-700/70 bg-slate-800/60"
-                    }`}
+                    className="relative overflow-hidden p-3 text-left transition-all"
+                    style={isProviderSelected
+                      ? { borderRadius: "2px", border: "1px solid rgba(52,211,153,0.5)", background: "rgba(52,211,153,0.1)" }
+                      : { borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}
                   >
                     {isAnimating && (
                       <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -332,22 +327,21 @@ export default function LearningModal({
                       </div>
 
                       <div className="min-w-0 flex-1">
-                        <div className="text-[11px] text-slate-400">
+                        <div className="text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>
                           {agentProvider ? providerLabel(agentProvider) : "—"}
                         </div>
-                        <div className="text-sm font-medium text-white truncate">{displayName}</div>
-                        <div className="text-[11px] text-slate-500">{roleLabel(agent.role, t)}</div>
+                        <div className="text-sm font-medium font-mono truncate" style={{ color: "var(--th-text-heading)" }}>{displayName}</div>
+                        <div className="text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>{roleLabel(agent.role, t)}</div>
                       </div>
 
                       <button
                         type="button"
                         onClick={() => onRemoveAgent(agent.id)}
                         disabled={learnInProgress}
-                        className={`shrink-0 rounded-md border px-1.5 py-0.5 text-[10px] transition-all ${
-                          learnInProgress
-                            ? "cursor-not-allowed border-slate-700 text-slate-600"
-                            : "border-slate-600 text-slate-400 hover:border-rose-500/40 hover:text-rose-300 hover:bg-rose-500/10"
-                        }`}
+                        className="shrink-0 px-1.5 py-0.5 text-[10px] font-mono transition-all"
+                        style={learnInProgress
+                          ? { borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-muted)", background: "transparent", cursor: "not-allowed" }
+                          : { borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
                       >
                         ✕
                       </button>
@@ -368,30 +362,30 @@ export default function LearningModal({
                 }
               }}
               disabled={learnInProgress}
-              className={`w-full rounded-xl border border-dashed p-2.5 text-xs transition-all ${
-                learnInProgress
-                  ? "cursor-not-allowed border-slate-700 text-slate-600"
-                  : "border-slate-600 text-slate-400 hover:border-slate-400 hover:text-slate-200 hover:bg-slate-800/40"
-              }`}
+              className="w-full p-2.5 text-xs font-mono transition-all"
+              style={learnInProgress
+                ? { borderRadius: "2px", border: "1px dashed var(--th-border)", color: "var(--th-text-muted)", background: "transparent", cursor: "not-allowed" }
+                : { borderRadius: "2px", border: "1px dashed var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
             >
               + {t({ ko: "에이전트 추가", en: "Add Agent", ja: "エージェント追加", zh: "添加代理" })}
             </button>
 
             {showAgentPicker && (
-              <div className="absolute left-0 right-0 top-full z-20 mt-1 max-h-52 overflow-hidden rounded-xl border border-slate-600 bg-slate-900 shadow-xl">
-                <div className="border-b border-slate-700/60 px-3 py-2">
+              <div className="absolute left-0 right-0 top-full z-20 mt-1 max-h-52 overflow-hidden" style={{ borderRadius: "4px", border: "1px solid var(--th-border)", background: "var(--th-bg-primary)" }}>
+                <div className="px-3 py-2" style={{ borderBottom: "1px solid var(--th-border)" }}>
                   <input
                     type="text"
                     value={agentSearch}
                     onChange={(e) => setAgentSearch(e.target.value)}
                     placeholder={t({ ko: "검색...", en: "Search...", ja: "検索...", zh: "搜索..." })}
-                    className="w-full bg-transparent text-xs text-white placeholder-slate-500 outline-none"
+                    className="w-full bg-transparent text-xs font-mono outline-none"
+                    style={{ color: "var(--th-text-primary)" }}
                     autoFocus
                   />
                 </div>
                 <div className="max-h-40 overflow-y-auto">
                   {availableAgents.length === 0 ? (
-                    <div className="px-3 py-3 text-center text-[11px] text-slate-500">
+                    <div className="px-3 py-3 text-center text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>
                       {t({
                         ko: "추가 가능한 에이전트가 없습니다",
                         en: "No agents available",
@@ -413,12 +407,12 @@ export default function LearningModal({
                             setShowAgentPicker(false);
                             setAgentSearch("");
                           }}
-                          className="flex w-full items-center gap-2.5 px-3 py-2 text-left transition-colors hover:bg-slate-800"
+                          className="flex w-full items-center gap-2.5 px-3 py-2 text-left transition-all hover:bg-[var(--th-bg-surface-hover)]"
                         >
                           <AgentAvatar agent={agent} agents={agents} size={28} rounded="lg" />
                           <div className="min-w-0 flex-1">
-                            <div className="text-xs font-medium text-white truncate">{displayName}</div>
-                            <div className="text-[10px] text-slate-500">
+                            <div className="text-xs font-medium font-mono truncate" style={{ color: "var(--th-text-heading)" }}>{displayName}</div>
+                            <div className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
                               {agent.cli_provider ? providerLabel(agent.cli_provider as SkillLearnProvider) : "—"} · {roleLabel(agent.role, t)}
                             </div>
                           </div>
@@ -431,9 +425,9 @@ export default function LearningModal({
             )}
           </div>
 
-          <div className="rounded-xl border border-slate-700/70 bg-slate-800/55 p-3">
+          <div className="p-3" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
             <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-              <div className="text-slate-300">
+              <div className="font-mono" style={{ color: "var(--th-text-secondary)" }}>
                 {t({ ko: "작업 상태", en: "Job status", ja: "ジョブ状態", zh: "任务状态" })}:{" "}
                 <span
                   className={`font-medium ${
@@ -443,7 +437,7 @@ export default function LearningModal({
                         ? "text-rose-300"
                         : learnJob?.status === "running" || learnJob?.status === "queued"
                           ? "text-amber-300"
-                          : "text-slate-500"
+                          : "text-[#64748b]"
                   }`}
                 >
                   {learningStatusLabel(learnJob?.status ?? null, t)}
@@ -451,7 +445,7 @@ export default function LearningModal({
               </div>
 
               {learnJob?.completedAt && (
-                <div className="text-[11px] text-slate-500">
+                <div className="text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>
                   {new Intl.DateTimeFormat(localeTag, {
                     hour: "2-digit",
                     minute: "2-digit",
@@ -461,17 +455,17 @@ export default function LearningModal({
               )}
             </div>
 
-            {learnError && <div className="mt-2 text-[11px] text-rose-300">{learnError}</div>}
-            {unlearnError && <div className="mt-2 text-[11px] text-rose-300">{unlearnError}</div>}
-            {learnJob?.error && <div className="mt-2 text-[11px] text-rose-300">{learnJob.error}</div>}
+            {learnError && <div className="mt-2 text-[11px] font-mono" style={{ color: "rgb(253,164,175)" }}>{learnError}</div>}
+            {unlearnError && <div className="mt-2 text-[11px] font-mono" style={{ color: "rgb(253,164,175)" }}>{unlearnError}</div>}
+            {learnJob?.error && <div className="mt-2 text-[11px] font-mono" style={{ color: "rgb(253,164,175)" }}>{learnJob.error}</div>}
 
             {learnJob && (
-              <div className="mt-2 rounded-lg border border-slate-700 bg-slate-900/70 p-2 font-mono text-[10px] text-slate-300 max-h-32 overflow-y-auto space-y-1">
-                <div className="text-slate-500">$ {learnJob.command}</div>
+              <div className="mt-2 p-2 font-mono text-[10px] max-h-32 overflow-y-auto space-y-1" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-terminal-bg)", color: "var(--th-text-secondary)" }}>
+                <div style={{ color: "var(--th-text-muted)" }}>$ {learnJob.command}</div>
                 {learnJob.logTail.length > 0 ? (
                   learnJob.logTail.slice(-10).map((line, idx) => <div key={`${learnJob.id}-log-${idx}`}>{line}</div>)
                 ) : (
-                  <div className="text-slate-600">
+                  <div style={{ color: "var(--th-text-muted)" }}>
                     {t({ ko: "로그가 아직 없습니다", en: "No logs yet", ja: "ログはまだありません", zh: "暂无日志" })}
                   </div>
                 )}
@@ -483,11 +477,10 @@ export default function LearningModal({
             <button
               onClick={onClose}
               disabled={learnInProgress}
-              className={`px-3 py-1.5 rounded-lg text-xs border transition-all ${
-                learnInProgress
-                  ? "cursor-not-allowed border-slate-700 text-slate-600"
-                  : "border-slate-600 text-slate-300 hover:bg-slate-800"
-              }`}
+              className="px-3 py-1.5 text-xs font-mono border transition-all"
+            style={learnInProgress
+              ? { borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-muted)", background: "transparent", cursor: "not-allowed" }
+              : { borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
             >
               {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}
             </button>
@@ -499,11 +492,10 @@ export default function LearningModal({
                 learnInProgress ||
                 defaultSelectedProviders.length === 0
               }
-              className={`px-3 py-1.5 rounded-lg text-xs border transition-all ${
-                selectedProviders.length === 0 || learnInProgress || defaultSelectedProviders.length === 0
-                  ? "cursor-not-allowed border-slate-700 text-slate-600"
-                  : "border-emerald-500/50 bg-emerald-500/20 text-emerald-200 hover:bg-emerald-500/30"
-              }`}
+              className="px-3 py-1.5 text-xs font-mono border transition-all"
+              style={selectedProviders.length === 0 || learnInProgress || defaultSelectedProviders.length === 0
+                ? { borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-muted)", background: "transparent", cursor: "not-allowed" }
+                : { borderRadius: "2px", border: "1px solid rgba(52,211,153,0.5)", background: "rgba(52,211,153,0.2)", color: "rgb(167,243,208)" }}
             >
               {learnSubmitting || learnInProgress
                 ? t({ ko: "학습중...", en: "Learning...", ja: "学習中...", zh: "学习中..." })

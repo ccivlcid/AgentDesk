@@ -15,20 +15,25 @@ export default function MemoryScopeBar({
 }: MemoryScopeBarProps) {
   return (
     <div className="flex flex-wrap gap-2">
-      {ALL_SCOPES.map((scope) => (
-        <button
-          key={scope}
-          onClick={() => onSelectScope(scope)}
-          className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
-            selectedScope === scope
-              ? "bg-emerald-600/20 text-emerald-400 border-emerald-500/40"
-              : "bg-slate-800/40 text-slate-400 border-slate-700/50 hover:bg-slate-700/40 hover:text-slate-300"
-          }`}
-        >
-          {SCOPE_ICONS[scope]} {scopeLabel(scope, t)}
-          <span className="ml-1 text-slate-500">{scopeCounts[scope] || 0}</span>
-        </button>
-      ))}
+      {ALL_SCOPES.map((scope) => {
+        const isActive = selectedScope === scope;
+        return (
+          <button
+            key={scope}
+            onClick={() => onSelectScope(scope)}
+            className="px-3 py-1.5 text-xs font-medium font-mono border transition-all"
+            style={{
+              borderRadius: "2px",
+              background: isActive ? "rgba(52,211,153,0.15)" : "var(--th-bg-elevated)",
+              borderColor: isActive ? "rgba(52,211,153,0.5)" : "var(--th-border)",
+              color: isActive ? "rgb(167,243,208)" : "var(--th-text-secondary)",
+            }}
+          >
+            {SCOPE_ICONS[scope]} {scopeLabel(scope, t)}
+            <span className="ml-1" style={{ color: "var(--th-text-muted)" }}>{scopeCounts[scope] || 0}</span>
+          </button>
+        );
+      })}
     </div>
   );
 }

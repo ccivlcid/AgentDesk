@@ -100,7 +100,7 @@ export default function GitHubDeviceConnect({ reason, onConnected, onCancel }: G
 
   return (
     <div className="space-y-4 p-6">
-      <p className="text-sm text-slate-300">{description}</p>
+      <p className="text-sm font-mono" style={{ color: "var(--th-text-secondary)" }}>{description}</p>
 
       {deviceStatus === "idle" && (
         <div className="flex gap-2">
@@ -108,7 +108,8 @@ export default function GitHubDeviceConnect({ reason, onConnected, onCancel }: G
             type="button"
             disabled={disconnecting}
             onClick={() => void startFlow()}
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500 disabled:opacity-50"
+            className="px-4 py-2 text-sm font-mono transition disabled:opacity-50"
+            style={{ borderRadius: "2px", border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.15)", color: "var(--th-accent)" }}
           >
             {disconnecting
               ? t({ ko: "연결 해제 중...", en: "Disconnecting...", ja: "切断中...", zh: "断开中..." })
@@ -124,7 +125,8 @@ export default function GitHubDeviceConnect({ reason, onConnected, onCancel }: G
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-lg border border-slate-700 px-3 py-2 text-xs text-slate-300"
+            className="px-3 py-2 text-xs font-mono transition"
+            style={{ borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)" }}
           >
             {t({ ko: "닫기", en: "Close", ja: "閉じる", zh: "关闭" })}
           </button>
@@ -132,8 +134,8 @@ export default function GitHubDeviceConnect({ reason, onConnected, onCancel }: G
       )}
 
       {deviceStatus === "waiting" && deviceUserCode && (
-        <div className="space-y-3 rounded-xl border border-blue-500/30 bg-blue-900/20 p-4">
-          <p className="text-xs text-slate-300">
+        <div className="space-y-3 p-4" style={{ borderRadius: "2px", border: "1px solid rgba(251,191,36,0.3)", background: "rgba(251,191,36,0.05)" }}>
+          <p className="text-xs font-mono" style={{ color: "var(--th-text-secondary)" }}>
             {t({
               ko: "아래 코드를 GitHub 인증 페이지에 입력하세요:",
               en: "Enter this code on the GitHub verification page:",
@@ -142,7 +144,8 @@ export default function GitHubDeviceConnect({ reason, onConnected, onCancel }: G
             })}
           </p>
           <div className="flex items-center gap-3">
-            <code className="rounded-lg bg-slate-800 px-4 py-2 text-lg font-bold tracking-widest text-white">
+            <code className="px-4 py-2 text-lg font-bold tracking-widest font-mono"
+              style={{ borderRadius: "2px", background: "var(--th-terminal-bg)", color: "var(--th-accent)" }}>
               {deviceUserCode}
             </code>
             <button
@@ -150,7 +153,8 @@ export default function GitHubDeviceConnect({ reason, onConnected, onCancel }: G
               onClick={() => {
                 void navigator.clipboard.writeText(deviceUserCode);
               }}
-              className="rounded border border-slate-600 px-2 py-1 text-xs text-slate-300 hover:bg-slate-700"
+              className="px-2 py-1 text-xs font-mono transition"
+              style={{ borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)" }}
             >
               {t({ ko: "복사", en: "Copy", ja: "コピー", zh: "复制" })}
             </button>
@@ -160,7 +164,8 @@ export default function GitHubDeviceConnect({ reason, onConnected, onCancel }: G
               href={deviceVerifyUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-block text-xs text-blue-400 underline hover:text-blue-300"
+              className="inline-block text-xs font-mono underline"
+              style={{ color: "var(--th-accent)" }}
             >
               {t({
                 ko: "GitHub 인증 페이지 열기",
@@ -170,14 +175,14 @@ export default function GitHubDeviceConnect({ reason, onConnected, onCancel }: G
               })}
             </a>
           )}
-          <p className="animate-pulse text-xs text-slate-400">
+          <p className="animate-pulse text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
             {t({ ko: "인증 대기 중...", en: "Waiting for authorization...", ja: "認証待ち...", zh: "等待授权..." })}
           </p>
         </div>
       )}
 
       {deviceStatus === "complete" && (
-        <div className="rounded-lg border border-green-500/20 bg-green-500/10 px-3 py-2 text-xs text-green-400">
+        <div className="px-3 py-2 text-xs font-mono" style={{ borderRadius: "2px", border: "1px solid rgba(52,211,153,0.35)", background: "rgba(52,211,153,0.08)", color: "rgb(167,243,208)" }}>
           {t({
             ko: "GitHub 연결 완료! 리포 목록을 불러옵니다...",
             en: "GitHub connected! Loading repositories...",
@@ -189,7 +194,7 @@ export default function GitHubDeviceConnect({ reason, onConnected, onCancel }: G
 
       {deviceStatus === "error" && (
         <div className="space-y-2">
-          <div className="rounded-lg border border-rose-500/60 bg-rose-500/10 px-3 py-2 text-xs text-rose-200">
+          <div className="px-3 py-2 text-xs font-mono" style={{ borderRadius: "2px", border: "1px solid rgba(244,63,94,0.5)", background: "rgba(244,63,94,0.08)", color: "rgb(253,164,175)" }}>
             {deviceError}
           </div>
           <button
@@ -198,7 +203,8 @@ export default function GitHubDeviceConnect({ reason, onConnected, onCancel }: G
               setDeviceStatus("idle");
               setDeviceError(null);
             }}
-            className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs text-slate-300"
+            className="px-3 py-1.5 text-xs font-mono transition"
+            style={{ borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)" }}
           >
             {t({ ko: "다시 시도", en: "Try again", ja: "再試行", zh: "重试" })}
           </button>

@@ -568,10 +568,10 @@ export default function Tetris({ opponent, onFinish, onBack }: TetrisProps) {
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <button onClick={handleBack} className="text-sm text-slate-400 hover:text-slate-200 transition">
+        <button onClick={handleBack} className="text-sm font-mono transition hover:text-[var(--th-text-primary)]" style={{ color: "var(--th-text-muted)" }}>
           &larr; {t({ ko: "로비", en: "Lobby", ja: "ロビー", zh: "大厅" })}
         </button>
-        <div className="text-xs text-slate-500">
+        <div className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
           {t({ ko: "테트리스", en: "Tetris", ja: "テトリス", zh: "俄罗斯方块" })}
         </div>
       </div>
@@ -579,7 +579,7 @@ export default function Tetris({ opponent, onFinish, onBack }: TetrisProps) {
       <div className="flex flex-nowrap justify-start gap-4 sm:gap-6 pb-2" style={{ minWidth: "min-content" }}>
         {/* CEO (내 게임) — 왼쪽 */}
         <div className="flex flex-col items-center gap-2 shrink-0">
-          <div className="text-xs font-semibold text-blue-400">
+          <div className="text-xs font-semibold text-[#60a5fa]">
             {t({ ko: "CEO", en: "CEO", ja: "CEO", zh: "CEO" })}
           </div>
           <div className="flex gap-3">
@@ -612,23 +612,23 @@ export default function Tetris({ opponent, onFinish, onBack }: TetrisProps) {
             {/* CEO side panel */}
             <div style={{ display: "flex", flexDirection: "column", gap: 12, minWidth: 120 }}>
           {/* Score */}
-          <div className="bg-slate-800/60 border border-slate-700 rounded-lg p-3">
-            <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">
+          <div className="p-3" style={{ borderRadius: "4px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
+            <div className="text-[10px] font-mono uppercase tracking-wider mb-1" style={{ color: "var(--th-text-muted)" }}>
               {t({ ko: "점수", en: "Score", ja: "スコア", zh: "分数" })}
             </div>
             <div className="text-lg font-bold text-amber-400 font-mono">{gs.score.toLocaleString()}</div>
           </div>
 
           {/* Level & Lines */}
-          <div className="bg-slate-800/60 border border-slate-700 rounded-lg p-3 space-y-2">
+          <div className="p-3 space-y-2" style={{ borderRadius: "4px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
             <div>
-              <div className="text-[10px] text-slate-500 uppercase tracking-wider">
+              <div className="text-[10px] font-mono uppercase tracking-wider" style={{ color: "var(--th-text-muted)" }}>
                 {t({ ko: "레벨", en: "Level", ja: "レベル", zh: "等级" })}
               </div>
               <div className="text-sm font-bold text-green-400">{gs.level}</div>
             </div>
             <div>
-              <div className="text-[10px] text-slate-500 uppercase tracking-wider">
+              <div className="text-[10px] font-mono uppercase tracking-wider" style={{ color: "var(--th-text-muted)" }}>
                 {t({ ko: "라인", en: "Lines", ja: "ライン", zh: "行数" })}
               </div>
               <div className="text-sm font-bold text-cyan-400">{gs.lines}</div>
@@ -636,8 +636,8 @@ export default function Tetris({ opponent, onFinish, onBack }: TetrisProps) {
           </div>
 
           {/* Next piece */}
-          <div className="bg-slate-800/60 border border-slate-700 rounded-lg p-3">
-            <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-2">
+          <div className="p-3" style={{ borderRadius: "4px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
+            <div className="text-[10px] font-mono uppercase tracking-wider mb-2" style={{ color: "var(--th-text-muted)" }}>
               {t({ ko: "다음", en: "Next", ja: "次", zh: "下一个" })}
             </div>
             <div style={{ display: "flex", justifyContent: "center" }}>
@@ -648,9 +648,9 @@ export default function Tetris({ opponent, onFinish, onBack }: TetrisProps) {
           </div>
 
           {/* Agent reaction */}
-          <div className="bg-slate-800/60 border border-slate-700 rounded-lg p-3 text-center">
+          <div className="p-3 text-center" style={{ borderRadius: "4px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
             <div className="text-lg mb-1">{opponent.avatar_emoji}</div>
-            <div className="text-[10px] text-slate-400">{opponentName}</div>
+            <div className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>{opponentName}</div>
             {reaction && (
               <div className="text-xs text-amber-300 mt-1 animate-bounce">{reaction}</div>
             )}
@@ -660,7 +660,8 @@ export default function Tetris({ opponent, onFinish, onBack }: TetrisProps) {
           {!gs.over && (
             <button
               onClick={() => setPaused((v) => !v)}
-              className="px-3 py-1.5 rounded-lg bg-slate-700/40 text-slate-300 border border-slate-600/50 hover:bg-slate-700/60 transition-all text-xs"
+              className="px-3 py-1.5 text-xs font-mono transition-all hover:bg-[var(--th-bg-surface-hover)]"
+              style={{ borderRadius: "2px", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)", border: "1px solid var(--th-border)" }}
             >
               {paused
                 ? t({ ko: "계속", en: "Resume", ja: "再開", zh: "继续" })
@@ -699,23 +700,23 @@ export default function Tetris({ opponent, onFinish, onBack }: TetrisProps) {
 
             {/* Opponent side panel: score, level, lines, reaction */}
             <div style={{ display: "flex", flexDirection: "column", gap: 12, minWidth: 120 }}>
-              <div className="bg-slate-800/60 border border-slate-700 rounded-lg p-3">
-                <div className="text-[10px] text-slate-500 uppercase tracking-wider mb-1">
+              <div className="p-3" style={{ borderRadius: "4px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
+                <div className="text-[10px] font-mono uppercase tracking-wider mb-1" style={{ color: "var(--th-text-muted)" }}>
                   {t({ ko: "점수", en: "Score", ja: "スコア", zh: "分数" })}
                 </div>
                 <div className="text-lg font-bold text-amber-400 font-mono">{opponentGs.score.toLocaleString()}</div>
               </div>
-              <div className="bg-slate-800/60 border border-slate-700 rounded-lg p-3 space-y-2">
+              <div className="p-3 space-y-2" style={{ borderRadius: "4px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
                 <div>
-                  <div className="text-[10px] text-slate-500 uppercase tracking-wider">{t({ ko: "레벨", en: "Level", ja: "レベル", zh: "等级" })}</div>
+                  <div className="text-[10px] font-mono uppercase tracking-wider" style={{ color: "var(--th-text-muted)" }}>{t({ ko: "레벨", en: "Level", ja: "レベル", zh: "等级" })}</div>
                   <div className="text-sm font-bold text-green-400">{opponentGs.level}</div>
                 </div>
                 <div>
-                  <div className="text-[10px] text-slate-500 uppercase tracking-wider">{t({ ko: "라인", en: "Lines", ja: "ライン", zh: "行数" })}</div>
+                  <div className="text-[10px] font-mono uppercase tracking-wider" style={{ color: "var(--th-text-muted)" }}>{t({ ko: "라인", en: "Lines", ja: "ライン", zh: "行数" })}</div>
                   <div className="text-sm font-bold text-cyan-400">{opponentGs.lines}</div>
                 </div>
               </div>
-              <div className="bg-slate-800/60 border border-slate-700 rounded-lg p-3 text-center">
+              <div className="p-3 text-center" style={{ borderRadius: "4px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
                 {reaction && (
                   <div className="text-xs text-amber-300 animate-bounce">{reaction}</div>
                 )}
@@ -726,7 +727,7 @@ export default function Tetris({ opponent, onFinish, onBack }: TetrisProps) {
       </div>
 
       {/* Controls */}
-      <div className="text-center text-[10px] text-slate-600 space-x-3">
+      <div className="text-center text-[10px] font-mono space-x-3" style={{ color: "var(--th-border)" }}>
         <span>&larr;&rarr; {t({ ko: "이동", en: "Move", ja: "移動", zh: "移动" })}</span>
         <span>&uarr; {t({ ko: "회전", en: "Rotate", ja: "回転", zh: "旋转" })}</span>
         <span>&darr; {t({ ko: "내리기", en: "Soft Drop", ja: "下移動", zh: "下移" })}</span>

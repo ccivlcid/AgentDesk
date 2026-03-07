@@ -249,8 +249,8 @@ export default function ScheduledTasksPanel({ agents = [] }: Props) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 border-2 border-sky-500/30 border-t-sky-500 rounded-full animate-spin" />
-          <span className="text-sm text-slate-500">{tr("로딩 중...", "Loading...")}</span>
+          <div className="w-8 h-8 border-2 animate-spin" style={{ borderRadius: "50%", borderColor: "var(--th-border)", borderTopColor: "var(--th-accent)" }} />
+          <span className="text-sm font-mono" style={{ color: "var(--th-text-muted)" }}>{tr("로딩 중...", "Loading...")}</span>
         </div>
       </div>
     );
@@ -282,17 +282,17 @@ export default function ScheduledTasksPanel({ agents = [] }: Props) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-sky-500/20 to-indigo-500/20 border border-sky-500/20 flex items-center justify-center">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-sky-400">
+          <div className="w-11 h-11 flex items-center justify-center" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--th-accent)" }}>
               <circle cx="12" cy="12" r="9" />
               <path d="M12 7v5l3 3" />
             </svg>
           </div>
           <div>
-            <h2 className="text-lg font-bold text-white tracking-tight">
+            <h2 className="text-lg font-bold font-mono tracking-tight" style={{ color: "var(--th-text-heading)" }}>
               {tr("반복 태스크 스케줄러", "Task Scheduler")}
             </h2>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-xs font-mono mt-0.5" style={{ color: "var(--th-text-muted)" }}>
               {tr("Cron 기반 자동 태스크 생성 및 관리", "Cron-based automatic task creation")}
             </p>
           </div>
@@ -305,11 +305,10 @@ export default function ScheduledTasksPanel({ agents = [] }: Props) {
               if (showForm) { resetForm(); setShowForm(false); }
               else { resetForm(); setShowForm(true); setTimeout(() => formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100); }
             }}
-            className={`group flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-xl transition-all duration-200 ${
-              showForm
-                ? "bg-slate-800 text-slate-400 hover:text-slate-300 border border-slate-700/50"
-                : "bg-sky-600 hover:bg-sky-500 text-white shadow-lg shadow-sky-600/20 hover:shadow-sky-500/30"
-            }`}
+            className="group flex items-center gap-2 px-4 py-2.5 text-sm font-medium font-mono transition-all duration-200"
+            style={showForm
+              ? { borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-muted)", background: "transparent" }
+              : { borderRadius: "2px", border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.15)", color: "var(--th-accent)" }}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
               className={`transition-transform duration-200 ${showForm ? "rotate-45" : "group-hover:rotate-90"}`}
@@ -322,11 +321,10 @@ export default function ScheduledTasksPanel({ agents = [] }: Props) {
         {activeTab === "templates" && (
           <button
             onClick={() => { if (showTplForm) { resetTplForm(); setShowTplForm(false); } else { resetTplForm(); setShowTplForm(true); } }}
-            className={`group flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-xl transition-all duration-200 ${
-              showTplForm
-                ? "bg-slate-800 text-slate-400 hover:text-slate-300 border border-slate-700/50"
-                : "bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/20 hover:shadow-indigo-500/30"
-            }`}
+            className="group flex items-center gap-2 px-4 py-2.5 text-sm font-medium font-mono transition-all duration-200"
+            style={showTplForm
+              ? { borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-muted)", background: "transparent" }
+              : { borderRadius: "2px", border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.15)", color: "var(--th-accent)" }}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
               className={`transition-transform duration-200 ${showTplForm ? "rotate-45" : "group-hover:rotate-90"}`}
@@ -339,25 +337,25 @@ export default function ScheduledTasksPanel({ agents = [] }: Props) {
       </div>
 
       {/* Tab bar */}
-      <div className="flex items-center gap-1 bg-slate-800/40 border border-slate-700/30 rounded-xl p-1">
+      <div className="flex items-center gap-1 p-1" style={{ borderRadius: "4px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
         {TABS.map((tab) => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
-            className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-150 ${
-              activeTab === tab.key
-                ? "bg-slate-700/60 text-white shadow-sm"
-                : "text-slate-500 hover:text-slate-300 hover:bg-slate-800/40"
-            }`}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium font-mono transition-all duration-150"
+            style={activeTab === tab.key
+              ? { borderRadius: "2px", background: "var(--th-border-strong)", color: "var(--th-text-primary)" }
+              : { borderRadius: "2px", background: "transparent", color: "var(--th-text-muted)" }}
           >
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
               <path d={tab.icon} />
             </svg>
             {tab.label}
             {tab.count !== undefined && (
-              <span className={`text-[10px] px-1.5 py-0.5 rounded-md ${
-                activeTab === tab.key ? "bg-slate-600/60 text-slate-300" : "bg-slate-800/60 text-slate-600"
-              }`}>
+              <span className="text-[10px] px-1.5 py-0.5 font-mono"
+                style={activeTab === tab.key
+                  ? { borderRadius: "2px", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }
+                  : { borderRadius: "2px", background: "var(--th-bg-primary)", color: "var(--th-text-muted)" }}>
                 {tab.count}
               </span>
             )}
@@ -371,58 +369,58 @@ export default function ScheduledTasksPanel({ agents = [] }: Props) {
           {/* Stats bar */}
           {schedules.length > 0 && (
             <div className="grid grid-cols-3 gap-3">
-              <div className="bg-slate-800/40 border border-slate-700/30 rounded-xl px-4 py-3">
-                <div className="text-[11px] text-slate-500 uppercase tracking-wider font-medium">{tr("전체", "Total")}</div>
-                <div className="text-xl font-bold text-white mt-0.5">{schedules.length}</div>
+              <div className="px-4 py-3" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
+                <div className="text-[11px] font-mono uppercase tracking-wider font-medium" style={{ color: "var(--th-text-muted)" }}>{tr("전체", "Total")}</div>
+                <div className="text-xl font-bold font-mono mt-0.5" style={{ color: "var(--th-text-heading)" }}>{schedules.length}</div>
               </div>
-              <div className="bg-slate-800/40 border border-slate-700/30 rounded-xl px-4 py-3">
-                <div className="text-[11px] text-slate-500 uppercase tracking-wider font-medium">{tr("활성", "Active")}</div>
-                <div className="text-xl font-bold text-emerald-400 mt-0.5">{activeCount}</div>
+              <div className="px-4 py-3" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
+                <div className="text-[11px] font-mono uppercase tracking-wider font-medium" style={{ color: "var(--th-text-muted)" }}>{tr("활성", "Active")}</div>
+                <div className="text-xl font-bold font-mono mt-0.5" style={{ color: "rgb(52,211,153)" }}>{activeCount}</div>
               </div>
-              <div className="bg-slate-800/40 border border-slate-700/30 rounded-xl px-4 py-3">
-                <div className="text-[11px] text-slate-500 uppercase tracking-wider font-medium">{tr("총 실행", "Total Runs")}</div>
-                <div className="text-xl font-bold text-sky-400 mt-0.5">{totalRuns}</div>
+              <div className="px-4 py-3" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
+                <div className="text-[11px] font-mono uppercase tracking-wider font-medium" style={{ color: "var(--th-text-muted)" }}>{tr("총 실행", "Total Runs")}</div>
+                <div className="text-xl font-bold font-mono mt-0.5" style={{ color: "var(--th-accent)" }}>{totalRuns}</div>
               </div>
             </div>
           )}
 
           {/* Create / Edit Form */}
           {showForm && (
-            <div ref={formRef} className="relative bg-slate-800/60 backdrop-blur-sm border border-slate-700/50 rounded-2xl overflow-hidden">
-              <div className="h-0.5 bg-gradient-to-r from-sky-500 via-indigo-500 to-purple-500" />
+            <div ref={formRef} className="relative overflow-hidden" style={{ borderRadius: "4px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
+              <div className="h-0.5" style={{ background: "var(--th-accent)" }} />
               <div className="p-6 space-y-5">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-semibold text-white flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-sky-400" />
+                  <h3 className="text-sm font-semibold font-mono flex items-center gap-2" style={{ color: "var(--th-text-heading)" }}>
+                    <span className="w-1.5 h-1.5" style={{ borderRadius: "50%", background: "var(--th-accent)" }} />
                     {editingId ? tr("스케줄 수정", "Edit Schedule") : tr("새 스케줄 생성", "Create New Schedule")}
                   </h3>
                   {cronDesc && (
-                    <span className="text-xs text-sky-400/80 bg-sky-500/10 px-2.5 py-1 rounded-lg">{cronDesc}</span>
+                    <span className="text-xs font-mono px-2.5 py-1" style={{ borderRadius: "2px", border: "1px solid rgba(251,191,36,0.3)", background: "rgba(251,191,36,0.1)", color: "var(--th-accent)" }}>{cronDesc}</span>
                   )}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Name */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-slate-400">{tr("스케줄 이름", "Schedule Name")}</label>
+                    <label className="text-xs font-medium font-mono" style={{ color: "var(--th-text-muted)" }}>{tr("스케줄 이름", "Schedule Name")}</label>
                     <input type="text" value={formName} onChange={(e) => setFormName(e.target.value)}
                       placeholder={tr("예: 일일 코드 리뷰", "e.g. Daily Code Review")}
-                      className="w-full bg-slate-900/50 border border-slate-600/40 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/20 transition-all" />
+                      className="w-full px-3.5 py-2.5 text-sm font-mono focus:outline-none transition-all"
+                      style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }} />
                   </div>
 
                   {/* Cron */}
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <label className="text-xs font-medium text-slate-400">{tr("Cron 표현식", "Cron Expression")}</label>
-                      <button onClick={() => setShowCronHelp(!showCronHelp)} className="text-[10px] text-slate-500 hover:text-sky-400 transition-colors">
+                      <label className="text-xs font-medium font-mono" style={{ color: "var(--th-text-muted)" }}>{tr("Cron 표현식", "Cron Expression")}</label>
+                      <button onClick={() => setShowCronHelp(!showCronHelp)} className="text-[10px] font-mono transition-colors" style={{ color: "var(--th-text-muted)" }}>
                         {tr("도움말", "Help")} ?
                       </button>
                     </div>
                     <div className="relative">
                       <input type="text" value={formCron} onChange={(e) => setFormCron(e.target.value)} placeholder="0 9 * * 1-5"
-                        className={`w-full bg-slate-900/50 border rounded-xl px-3.5 py-2.5 text-sm text-white font-mono placeholder-slate-600 focus:outline-none focus:ring-1 transition-all ${
-                          cronValid ? "border-slate-600/40 focus:border-sky-500/50 focus:ring-sky-500/20" : "border-red-500/50 focus:border-red-500/50 focus:ring-red-500/20"
-                        }`} />
+                        className="w-full px-3.5 py-2.5 text-sm font-mono focus:outline-none transition-all"
+                        style={{ borderRadius: "2px", border: cronValid ? "1px solid var(--th-border)" : "1px solid rgba(244,63,94,0.5)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }} />
                       <div className="absolute right-3 top-1/2 -translate-y-1/2">
                         {cronValid ? (
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-emerald-400"><polyline points="20 6 9 17 4 12" /></svg>
@@ -435,15 +433,14 @@ export default function ScheduledTasksPanel({ agents = [] }: Props) {
 
                   {/* Presets */}
                   <div className="md:col-span-2 space-y-1.5">
-                    <label className="text-xs font-medium text-slate-400">{tr("빠른 선택", "Quick Presets")}</label>
+                    <label className="text-xs font-medium font-mono" style={{ color: "var(--th-text-muted)" }}>{tr("빠른 선택", "Quick Presets")}</label>
                     <div className="flex flex-wrap gap-2">
                       {CRON_PRESETS.map((p) => (
                         <button key={p.expr} onClick={() => setFormCron(p.expr)}
-                          className={`flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg border transition-all duration-150 ${
-                            formCron === p.expr
-                              ? "bg-sky-500/15 border-sky-500/40 text-sky-300 shadow-sm shadow-sky-500/10"
-                              : "bg-slate-800/30 border-slate-700/30 text-slate-500 hover:text-slate-300 hover:border-slate-600/50 hover:bg-slate-800/50"
-                          }`}
+                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono transition-all duration-150"
+                          style={formCron === p.expr
+                            ? { borderRadius: "2px", border: "1px solid rgba(251,191,36,0.4)", background: "rgba(251,191,36,0.1)", color: "var(--th-accent)" }
+                            : { borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-muted)" }}
                         >
                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-60"><path d={p.icon} /></svg>
                           {language === "ko" ? p.labelKo : p.label}
@@ -454,8 +451,8 @@ export default function ScheduledTasksPanel({ agents = [] }: Props) {
 
                   {/* Cron help */}
                   {showCronHelp && (
-                    <div className="md:col-span-2 bg-slate-900/40 border border-slate-700/30 rounded-xl p-4 text-xs text-slate-500">
-                      <pre className="font-mono leading-relaxed text-slate-400">
+                    <div className="md:col-span-2 p-4 text-xs font-mono" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-terminal-bg)", color: "var(--th-text-muted)" }}>
+                      <pre className="font-mono leading-relaxed" style={{ color: "var(--th-text-secondary)" }}>
 {`  ┌──── ${tr("분", "min")} (0-59)
   │ ┌── ${tr("시", "hour")} (0-23)
   │ │ ┌─ ${tr("일", "day")} (1-31)
@@ -463,7 +460,7 @@ export default function ScheduledTasksPanel({ agents = [] }: Props) {
   │ │ │ │ ┌ ${tr("요일", "wday")} (0-6)
   * * * * *`}
                       </pre>
-                      <p className="mt-2 text-slate-500">
+                      <p className="mt-2" style={{ color: "var(--th-text-muted)" }}>
                         {tr("예: */30 * * * * (30분마다) | 0 9 * * 1-5 (평일 9시)", "Ex: */30 * * * * (every 30m) | 0 9 * * 1-5 (weekdays 9AM)")}
                       </p>
                     </div>
@@ -471,19 +468,20 @@ export default function ScheduledTasksPanel({ agents = [] }: Props) {
 
                   {/* Template select */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-slate-400">
+                    <label className="text-xs font-medium font-mono" style={{ color: "var(--th-text-muted)" }}>
                       {tr("태스크 템플릿", "Task Template")}
-                      <span className="text-slate-600 ml-1">{tr("(선택)", "(optional)")}</span>
+                      <span className="ml-1" style={{ color: "var(--th-text-muted)" }}>{tr("(선택)", "(optional)")}</span>
                     </label>
                     <select value={formTemplateId} onChange={(e) => setFormTemplateId(e.target.value)}
-                      className="w-full bg-slate-900/50 border border-slate-600/40 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/20 transition-all">
+                      className="w-full px-3.5 py-2.5 text-sm font-mono focus:outline-none transition-all"
+                      style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}>
                       <option value="">{tr("-- 선택 안 함 --", "-- None --")}</option>
                       {templates.map((tpl) => (
                         <option key={tpl.id} value={tpl.id}>{tpl.name}{tpl.title ? ` - ${tpl.title}` : ""}</option>
                       ))}
                     </select>
                     {templates.length === 0 && (
-                      <p className="text-[11px] text-slate-600">
+                      <p className="text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>
                         {tr("템플릿 탭에서 먼저 템플릿을 등록하세요", "Create a template in the Templates tab first")}
                       </p>
                     )}
@@ -491,12 +489,13 @@ export default function ScheduledTasksPanel({ agents = [] }: Props) {
 
                   {/* Agent */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-slate-400">
+                    <label className="text-xs font-medium font-mono" style={{ color: "var(--th-text-muted)" }}>
                       {tr("담당 에이전트", "Assigned Agent")}
-                      <span className="text-slate-600 ml-1">{tr("(선택)", "(optional)")}</span>
+                      <span className="ml-1" style={{ color: "var(--th-text-muted)" }}>{tr("(선택)", "(optional)")}</span>
                     </label>
                     <select value={formAgentId} onChange={(e) => setFormAgentId(e.target.value)}
-                      className="w-full bg-slate-900/50 border border-slate-600/40 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/20 transition-all">
+                      className="w-full px-3.5 py-2.5 text-sm font-mono focus:outline-none transition-all"
+                      style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}>
                       <option value="">{tr("-- 자동 배정 --", "-- Auto Assign --")}</option>
                       {agents.map((a) => (
                         <option key={a.id} value={a.id}>{a.avatar_emoji} {language === "ko" ? a.name_ko || a.name : a.name}</option>
@@ -506,12 +505,13 @@ export default function ScheduledTasksPanel({ agents = [] }: Props) {
 
                   {/* Project */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-slate-400">
+                    <label className="text-xs font-medium font-mono" style={{ color: "var(--th-text-muted)" }}>
                       {tr("프로젝트", "Project")}
-                      <span className="text-slate-600 ml-1">{tr("(선택)", "(optional)")}</span>
+                      <span className="ml-1" style={{ color: "var(--th-text-muted)" }}>{tr("(선택)", "(optional)")}</span>
                     </label>
                     <select value={formProjectId} onChange={(e) => setFormProjectId(e.target.value)}
-                      className="w-full bg-slate-900/50 border border-slate-600/40 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-sky-500/50 focus:ring-1 focus:ring-sky-500/20 transition-all">
+                      className="w-full px-3.5 py-2.5 text-sm font-mono focus:outline-none transition-all"
+                      style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}>
                       <option value="">{tr("-- 선택 안 함 --", "-- None --")}</option>
                       {projects.map((p) => (
                         <option key={p.id} value={p.id}>{p.name}</option>
@@ -522,21 +522,26 @@ export default function ScheduledTasksPanel({ agents = [] }: Props) {
                   {/* Auto-run */}
                   <div className="flex items-center gap-3 pt-3">
                     <button type="button" role="switch" aria-checked={formAutoRun} onClick={() => setFormAutoRun(!formAutoRun)}
-                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ${formAutoRun ? "bg-sky-500" : "bg-slate-700"}`}>
-                      <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition-transform duration-200 ${formAutoRun ? "translate-x-5" : "translate-x-0"}`} />
+                      className="relative inline-flex h-6 w-11 shrink-0 cursor-pointer border-2 border-transparent transition-colors duration-200"
+                      style={{ borderRadius: "999px", background: formAutoRun ? "var(--th-accent)" : "var(--th-bg-elevated)", border: "1px solid var(--th-border)" }}>
+                      <span className={`pointer-events-none inline-block h-5 w-5 transform shadow-lg ring-0 transition-transform duration-200 ${formAutoRun ? "translate-x-5" : "translate-x-0"}`}
+                        style={{ borderRadius: "50%", background: "#fff" }} />
                     </button>
-                    <span className="text-sm text-slate-300">{tr("생성 시 자동 실행", "Auto-run on creation")}</span>
+                    <span className="text-sm font-mono" style={{ color: "var(--th-text-secondary)" }}>{tr("생성 시 자동 실행", "Auto-run on creation")}</span>
                   </div>
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center gap-3 pt-2 border-t border-slate-700/30">
+                <div className="flex items-center gap-3 pt-2" style={{ borderTop: "1px solid var(--th-border)" }}>
                   <button onClick={handleSubmit} disabled={!formName.trim() || !cronValid}
-                    className="flex items-center gap-2 px-5 py-2.5 bg-sky-600 hover:bg-sky-500 disabled:bg-slate-800 disabled:text-slate-600 disabled:cursor-not-allowed text-white text-sm font-medium rounded-xl shadow-lg shadow-sky-600/20 hover:shadow-sky-500/30 disabled:shadow-none transition-all duration-200">
+                    className="flex items-center gap-2 px-5 py-2.5 text-sm font-medium font-mono transition-all duration-200"
+                    style={!formName.trim() || !cronValid
+                      ? { borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-muted)", background: "transparent", cursor: "not-allowed" }
+                      : { borderRadius: "2px", border: "1px solid rgba(52,211,153,0.5)", background: "rgba(52,211,153,0.2)", color: "rgb(167,243,208)" }}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
                     {editingId ? tr("변경 저장", "Save Changes") : tr("스케줄 생성", "Create Schedule")}
                   </button>
-                  <button onClick={() => { resetForm(); setShowForm(false); }} className="px-4 py-2.5 text-sm text-slate-400 hover:text-slate-300 transition-colors">
+                  <button onClick={() => { resetForm(); setShowForm(false); }} className="px-4 py-2.5 text-sm font-mono transition-colors" style={{ color: "var(--th-text-muted)" }}>
                     {tr("취소", "Cancel")}
                   </button>
                 </div>
@@ -559,52 +564,52 @@ export default function ScheduledTasksPanel({ agents = [] }: Props) {
                 const urgency = s.enabled ? getNextRunUrgency(s.next_run_at) : "disabled";
                 return (
                   <div key={s.id}
-                    className={`group relative bg-slate-800/40 border rounded-xl transition-all duration-200 hover:bg-slate-800/60 ${
-                      s.enabled ? "border-slate-700/40 hover:border-slate-700/60" : "border-slate-800/40 opacity-50 hover:opacity-70"
-                    }`}>
-                    <div className={`absolute left-0 top-3 bottom-3 w-0.5 rounded-full transition-colors ${s.enabled ? "bg-emerald-500/60" : "bg-slate-700/40"}`} />
+                    className="group relative transition-all duration-200"
+                    style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", opacity: s.enabled ? 1 : 0.5 }}>
+                    <div className="absolute left-0 top-3 bottom-3 w-0.5 transition-colors" style={{ background: s.enabled ? "rgba(52,211,153,0.6)" : "var(--th-border)" }} />
 
                     <div className="flex items-center gap-4 px-5 py-3.5">
                       <button onClick={() => handleToggle(s.id)} className="shrink-0" title={s.enabled ? "ON" : "OFF"}>
-                        <div className={`relative w-9 h-5 rounded-full transition-colors duration-200 ${s.enabled ? "bg-emerald-500/80" : "bg-slate-700"}`}>
-                          <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-transform duration-200 ${s.enabled ? "translate-x-[18px]" : "translate-x-0.5"}`} />
+                        <div className="relative w-9 h-5 transition-colors duration-200" style={{ borderRadius: "999px", background: s.enabled ? "rgba(52,211,153,0.8)" : "var(--th-bg-elevated)", border: "1px solid var(--th-border)" }}>
+                          <div className={`absolute top-0.5 w-4 h-4 shadow-sm transition-transform duration-200 ${s.enabled ? "translate-x-[18px]" : "translate-x-0.5"}`}
+                            style={{ borderRadius: "50%", background: "#fff" }} />
                         </div>
                       </button>
 
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2.5">
-                          <h4 className="font-semibold text-sm text-white truncate">{s.name}</h4>
-                          <code className="text-[11px] text-sky-400/80 bg-sky-500/8 px-2 py-0.5 rounded-md font-mono shrink-0">{s.cron_expression}</code>
+                          <h4 className="font-semibold text-sm font-mono truncate" style={{ color: "var(--th-text-heading)" }}>{s.name}</h4>
+                          <code className="text-[11px] px-2 py-0.5 font-mono shrink-0" style={{ borderRadius: "2px", border: "1px solid rgba(251,191,36,0.2)", background: "rgba(251,191,36,0.08)", color: "var(--th-accent)" }}>{s.cron_expression}</code>
                           {s.auto_run && (
-                            <span className="text-[10px] px-1.5 py-0.5 bg-amber-500/10 text-amber-400/80 border border-amber-500/20 rounded-md shrink-0">{tr("자동실행", "Auto")}</span>
+                            <span className="text-[10px] px-1.5 py-0.5 font-mono shrink-0" style={{ borderRadius: "2px", border: "1px solid rgba(251,191,36,0.3)", background: "rgba(251,191,36,0.1)", color: "var(--th-accent)" }}>{tr("자동실행", "Auto")}</span>
                           )}
                         </div>
-                        <div className="flex items-center gap-3 mt-1.5 text-xs text-slate-500">
-                          <span className="text-slate-400">{language === "ko" ? s.cron_description_ko : s.cron_description_en}</span>
-                          {s.template_name && (<><span className="text-slate-700">|</span><span>{s.template_name}</span></>)}
-                          {s.agent_name && (<><span className="text-slate-700">|</span><span>{s.agent_avatar} {s.agent_name}</span></>)}
-                          {s.project_name && (<><span className="text-slate-700">|</span><span>{s.project_name}</span></>)}
+                        <div className="flex items-center gap-3 mt-1.5 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
+                          <span style={{ color: "var(--th-text-secondary)" }}>{language === "ko" ? s.cron_description_ko : s.cron_description_en}</span>
+                          {s.template_name && (<><span style={{ color: "var(--th-border)" }}>|</span><span>{s.template_name}</span></>)}
+                          {s.agent_name && (<><span style={{ color: "var(--th-border)" }}>|</span><span>{s.agent_avatar} {s.agent_name}</span></>)}
+                          {s.project_name && (<><span style={{ color: "var(--th-border)" }}>|</span><span>{s.project_name}</span></>)}
                         </div>
                       </div>
 
                       <div className="flex items-center gap-4 shrink-0">
                         <div className="text-right hidden sm:block">
-                          <div className="text-[10px] text-slate-600 uppercase tracking-wider">{tr("다음 실행", "Next")}</div>
-                          <div className={`text-xs font-medium mt-0.5 ${urgency === "imminent" ? "text-amber-400" : urgency === "soon" ? "text-sky-400" : urgency === "disabled" ? "text-slate-600" : "text-slate-400"}`}>
+                          <div className="text-[10px] font-mono uppercase tracking-wider" style={{ color: "var(--th-text-muted)" }}>{tr("다음 실행", "Next")}</div>
+                          <div className="text-xs font-medium font-mono mt-0.5" style={{ color: urgency === "imminent" ? "var(--th-accent)" : urgency === "soon" ? "rgb(110,231,183)" : urgency === "disabled" ? "var(--th-text-muted)" : "var(--th-text-secondary)" }}>
                             {s.enabled ? fmtRelative(s.next_run_at) : tr("비활성", "OFF")}
                           </div>
                         </div>
                         <div className="text-right hidden sm:block">
-                          <div className="text-[10px] text-slate-600 uppercase tracking-wider">{tr("실행", "Runs")}</div>
-                          <div className="text-xs font-medium text-slate-400 mt-0.5">{s.run_count}</div>
+                          <div className="text-[10px] font-mono uppercase tracking-wider" style={{ color: "var(--th-text-muted)" }}>{tr("실행", "Runs")}</div>
+                          <div className="text-xs font-medium font-mono mt-0.5" style={{ color: "var(--th-text-secondary)" }}>{s.run_count}</div>
                         </div>
                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                          <button onClick={() => startEdit(s)} className="p-1.5 text-slate-500 hover:text-white hover:bg-slate-700/60 rounded-lg transition-colors" title={tr("수정", "Edit")}>
+                          <button onClick={() => startEdit(s)} className="p-1.5 transition-all" style={{ borderRadius: "2px", color: "var(--th-text-muted)" }} title={tr("수정", "Edit")}>
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                               <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
                             </svg>
                           </button>
-                          <button onClick={() => setDeletingId(s.id)} className="p-1.5 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors" title={tr("삭제", "Delete")}>
+                          <button onClick={() => setDeletingId(s.id)} className="p-1.5 transition-all" style={{ borderRadius: "2px", color: "var(--th-text-muted)" }} title={tr("삭제", "Delete")}>
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                               <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
                             </svg>
@@ -615,9 +620,9 @@ export default function ScheduledTasksPanel({ agents = [] }: Props) {
 
                     {deletingId === s.id && (
                       <div className="flex items-center justify-end gap-2 px-5 pb-3 -mt-1">
-                        <span className="text-xs text-red-400">{tr("정말 삭제하시겠습니까?", "Delete this schedule?")}</span>
-                        <button onClick={() => handleDelete(s.id)} className="px-3 py-1 text-xs bg-red-500/15 text-red-400 border border-red-500/25 rounded-lg hover:bg-red-500/25 transition-colors">{tr("삭제", "Delete")}</button>
-                        <button onClick={() => setDeletingId(null)} className="px-3 py-1 text-xs text-slate-500 hover:text-slate-300 transition-colors">{tr("취소", "Cancel")}</button>
+                        <span className="text-xs font-mono" style={{ color: "rgb(253,164,175)" }}>{tr("정말 삭제하시겠습니까?", "Delete this schedule?")}</span>
+                        <button onClick={() => handleDelete(s.id)} className="px-3 py-1 text-xs font-mono transition-all" style={{ borderRadius: "2px", border: "1px solid rgba(244,63,94,0.35)", background: "rgba(244,63,94,0.1)", color: "rgb(253,164,175)" }}>{tr("삭제", "Delete")}</button>
+                        <button onClick={() => setDeletingId(null)} className="px-3 py-1 text-xs font-mono transition-colors" style={{ color: "var(--th-text-muted)" }}>{tr("취소", "Cancel")}</button>
                       </div>
                     )}
                   </div>
@@ -633,40 +638,44 @@ export default function ScheduledTasksPanel({ agents = [] }: Props) {
         <div className="space-y-5">
           {/* Template form */}
           {showTplForm && (
-            <div className="relative bg-slate-800/60 backdrop-blur-sm border border-slate-700/50 rounded-2xl overflow-hidden">
-              <div className="h-0.5 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500" />
+            <div className="relative overflow-hidden" style={{ borderRadius: "4px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
+              <div className="h-0.5" style={{ background: "var(--th-accent)" }} />
               <div className="p-6 space-y-5">
-                <h3 className="text-sm font-semibold text-white flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
+                <h3 className="text-sm font-semibold font-mono flex items-center gap-2" style={{ color: "var(--th-text-heading)" }}>
+                  <span className="w-1.5 h-1.5" style={{ borderRadius: "50%", background: "var(--th-accent)" }} />
                   {tr("새 태스크 템플릿", "New Task Template")}
                 </h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-slate-400">{tr("템플릿 이름", "Template Name")} *</label>
+                    <label className="text-xs font-medium font-mono" style={{ color: "var(--th-text-muted)" }}>{tr("템플릿 이름", "Template Name")} *</label>
                     <input type="text" value={tplName} onChange={(e) => setTplName(e.target.value)}
                       placeholder={tr("예: 일일 코드 리뷰", "e.g. Daily Code Review")}
-                      className="w-full bg-slate-900/50 border border-slate-600/40 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20 transition-all" />
+                      className="w-full px-3.5 py-2.5 text-sm font-mono focus:outline-none transition-all"
+                      style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }} />
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-slate-400">{tr("태스크 제목", "Task Title")}</label>
+                    <label className="text-xs font-medium font-mono" style={{ color: "var(--th-text-muted)" }}>{tr("태스크 제목", "Task Title")}</label>
                     <input type="text" value={tplTitle} onChange={(e) => setTplTitle(e.target.value)}
                       placeholder={tr("생성될 태스크의 제목", "Title for created tasks")}
-                      className="w-full bg-slate-900/50 border border-slate-600/40 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20 transition-all" />
+                      className="w-full px-3.5 py-2.5 text-sm font-mono focus:outline-none transition-all"
+                      style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }} />
                   </div>
 
                   <div className="md:col-span-2 space-y-1.5">
-                    <label className="text-xs font-medium text-slate-400">{tr("설명", "Description")}</label>
+                    <label className="text-xs font-medium font-mono" style={{ color: "var(--th-text-muted)" }}>{tr("설명", "Description")}</label>
                     <textarea value={tplDesc} onChange={(e) => setTplDesc(e.target.value)} rows={2}
                       placeholder={tr("태스크에 대한 상세 설명...", "Detailed task description...")}
-                      className="w-full bg-slate-900/50 border border-slate-600/40 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20 transition-all resize-none" />
+                      className="w-full px-3.5 py-2.5 text-sm font-mono focus:outline-none transition-all resize-none"
+                      style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }} />
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-slate-400">{tr("워크플로우 팩", "Workflow Pack")}</label>
+                    <label className="text-xs font-medium font-mono" style={{ color: "var(--th-text-muted)" }}>{tr("워크플로우 팩", "Workflow Pack")}</label>
                     <select value={tplWorkflowPack} onChange={(e) => setTplWorkflowPack(e.target.value)}
-                      className="w-full bg-slate-900/50 border border-slate-600/40 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20 transition-all">
+                      className="w-full px-3.5 py-2.5 text-sm font-mono focus:outline-none transition-all"
+                      style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}>
                       {workflowPackOptions.map((o) => (
                         <option key={o.key || "_none"} value={o.key}>{o.label}</option>
                       ))}
@@ -674,9 +683,10 @@ export default function ScheduledTasksPanel({ agents = [] }: Props) {
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-slate-400">{tr("우선순위", "Priority")}</label>
+                    <label className="text-xs font-medium font-mono" style={{ color: "var(--th-text-muted)" }}>{tr("우선순위", "Priority")}</label>
                     <select value={tplPriority} onChange={(e) => setTplPriority(Number(e.target.value))}
-                      className="w-full bg-slate-900/50 border border-slate-600/40 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20 transition-all">
+                      className="w-full px-3.5 py-2.5 text-sm font-mono focus:outline-none transition-all"
+                      style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}>
                       {PRIORITY_OPTIONS.map((o) => (
                         <option key={o.value} value={o.value}>{language === "ko" ? o.labelKo : o.label} (P{o.value})</option>
                       ))}
@@ -684,9 +694,10 @@ export default function ScheduledTasksPanel({ agents = [] }: Props) {
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-slate-400">{tr("태스크 유형", "Task Type")}</label>
+                    <label className="text-xs font-medium font-mono" style={{ color: "var(--th-text-muted)" }}>{tr("태스크 유형", "Task Type")}</label>
                     <select value={tplTaskType} onChange={(e) => setTplTaskType(e.target.value)}
-                      className="w-full bg-slate-900/50 border border-slate-600/40 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20 transition-all">
+                      className="w-full px-3.5 py-2.5 text-sm font-mono focus:outline-none transition-all"
+                      style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}>
                       <option value="general">{tr("일반", "General")}</option>
                       <option value="development">{tr("개발", "Development")}</option>
                       <option value="design">{tr("디자인", "Design")}</option>
@@ -696,13 +707,16 @@ export default function ScheduledTasksPanel({ agents = [] }: Props) {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 pt-2 border-t border-slate-700/30">
+                <div className="flex items-center gap-3 pt-2" style={{ borderTop: "1px solid var(--th-border)" }}>
                   <button onClick={handleTplSubmit} disabled={!tplName.trim()}
-                    className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-800 disabled:text-slate-600 disabled:cursor-not-allowed text-white text-sm font-medium rounded-xl shadow-lg shadow-indigo-600/20 hover:shadow-indigo-500/30 disabled:shadow-none transition-all duration-200">
+                    className="flex items-center gap-2 px-5 py-2.5 text-sm font-medium font-mono transition-all duration-200"
+                    style={!tplName.trim()
+                      ? { borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-muted)", background: "transparent", cursor: "not-allowed" }
+                      : { borderRadius: "2px", border: "1px solid rgba(52,211,153,0.5)", background: "rgba(52,211,153,0.2)", color: "rgb(167,243,208)" }}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
                     {tr("템플릿 생성", "Create Template")}
                   </button>
-                  <button onClick={() => { resetTplForm(); setShowTplForm(false); }} className="px-4 py-2.5 text-sm text-slate-400 hover:text-slate-300 transition-colors">
+                  <button onClick={() => { resetTplForm(); setShowTplForm(false); }} className="px-4 py-2.5 text-sm font-mono transition-colors" style={{ color: "var(--th-text-muted)" }}>
                     {tr("취소", "Cancel")}
                   </button>
                 </div>
@@ -725,11 +739,11 @@ export default function ScheduledTasksPanel({ agents = [] }: Props) {
                 const packOption = workflowPackOptions.find((o) => o.key === tpl.workflow_pack_key);
                 const prioOption = PRIORITY_OPTIONS.find((o) => o.value === tpl.priority);
                 return (
-                  <div key={tpl.id} className="group relative bg-slate-800/40 border border-slate-700/40 rounded-xl transition-all duration-200 hover:bg-slate-800/60 hover:border-slate-700/60">
-                    <div className="absolute left-0 top-3 bottom-3 w-0.5 rounded-full bg-indigo-500/40" />
+                  <div key={tpl.id} className="group relative transition-all duration-200" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
+                    <div className="absolute left-0 top-3 bottom-3 w-0.5" style={{ borderRadius: "1px", background: "var(--th-accent)", opacity: 0.5 }} />
                     <div className="flex items-center gap-4 px-5 py-3.5">
-                      <div className="w-9 h-9 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shrink-0">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-indigo-400">
+                      <div className="w-9 h-9 flex items-center justify-center shrink-0" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-primary)" }}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--th-accent)" }}>
                           <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
                           <polyline points="14 2 14 8 20 8" />
                         </svg>
@@ -737,27 +751,27 @@ export default function ScheduledTasksPanel({ agents = [] }: Props) {
 
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2.5">
-                          <h4 className="font-semibold text-sm text-white truncate">{tpl.name}</h4>
-                          {tpl.title && <span className="text-xs text-slate-500 truncate">- {tpl.title}</span>}
+                          <h4 className="font-semibold text-sm font-mono truncate" style={{ color: "var(--th-text-heading)" }}>{tpl.name}</h4>
+                          {tpl.title && <span className="text-xs font-mono truncate" style={{ color: "var(--th-text-muted)" }}>- {tpl.title}</span>}
                         </div>
-                        <div className="flex items-center gap-3 mt-1.5 text-xs text-slate-500">
+                        <div className="flex items-center gap-3 mt-1.5 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
                           {packOption && packOption.key && (
-                            <span className="px-1.5 py-0.5 bg-purple-500/10 text-purple-400/80 border border-purple-500/20 rounded-md text-[10px]">
+                            <span className="px-1.5 py-0.5 text-[10px] font-mono" style={{ borderRadius: "2px", border: "1px solid rgba(251,191,36,0.3)", background: "rgba(251,191,36,0.1)", color: "var(--th-accent)" }}>
                               {packOption.label}
                             </span>
                           )}
                           {prioOption && (
-                            <span className="text-slate-400">P{tpl.priority} {language === "ko" ? prioOption.labelKo : prioOption.label}</span>
+                            <span style={{ color: "var(--th-text-secondary)" }}>P{tpl.priority} {language === "ko" ? prioOption.labelKo : prioOption.label}</span>
                           )}
-                          <span className="text-slate-600">{tpl.task_type}</span>
+                          <span style={{ color: "var(--th-text-muted)" }}>{tpl.task_type}</span>
                           {tpl.description && (
-                            <><span className="text-slate-700">|</span><span className="truncate max-w-[200px]">{tpl.description}</span></>
+                            <><span style={{ color: "var(--th-border)" }}>|</span><span className="truncate max-w-[200px]">{tpl.description}</span></>
                           )}
                         </div>
                       </div>
 
                       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                        <button onClick={() => setDeletingTplId(tpl.id)} className="p-1.5 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors" title={tr("삭제", "Delete")}>
+                        <button onClick={() => setDeletingTplId(tpl.id)} className="p-1.5 transition-all" style={{ borderRadius: "2px", color: "var(--th-text-muted)" }} title={tr("삭제", "Delete")}>
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
                           </svg>
@@ -767,9 +781,9 @@ export default function ScheduledTasksPanel({ agents = [] }: Props) {
 
                     {deletingTplId === tpl.id && (
                       <div className="flex items-center justify-end gap-2 px-5 pb-3 -mt-1">
-                        <span className="text-xs text-red-400">{tr("정말 삭제하시겠습니까?", "Delete this template?")}</span>
-                        <button onClick={() => handleTplDelete(tpl.id)} className="px-3 py-1 text-xs bg-red-500/15 text-red-400 border border-red-500/25 rounded-lg hover:bg-red-500/25 transition-colors">{tr("삭제", "Delete")}</button>
-                        <button onClick={() => setDeletingTplId(null)} className="px-3 py-1 text-xs text-slate-500 hover:text-slate-300 transition-colors">{tr("취소", "Cancel")}</button>
+                        <span className="text-xs font-mono" style={{ color: "rgb(253,164,175)" }}>{tr("정말 삭제하시겠습니까?", "Delete this template?")}</span>
+                        <button onClick={() => handleTplDelete(tpl.id)} className="px-3 py-1 text-xs font-mono transition-all" style={{ borderRadius: "2px", border: "1px solid rgba(244,63,94,0.35)", background: "rgba(244,63,94,0.1)", color: "rgb(253,164,175)" }}>{tr("삭제", "Delete")}</button>
+                        <button onClick={() => setDeletingTplId(null)} className="px-3 py-1 text-xs font-mono transition-colors" style={{ color: "var(--th-text-muted)" }}>{tr("취소", "Cancel")}</button>
                       </div>
                     )}
                   </div>
@@ -795,15 +809,16 @@ function EmptyState({ icon, title, description, actionLabel, onAction }: {
 }) {
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
-      <div className="w-16 h-16 rounded-2xl bg-slate-800/60 border border-slate-700/30 flex items-center justify-center mb-4">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-slate-600">
+      <div className="w-16 h-16 flex items-center justify-center mb-4" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--th-text-muted)" }}>
           <path d={icon} />
         </svg>
       </div>
-      <p className="text-sm font-medium text-slate-400">{title}</p>
-      <p className="text-xs text-slate-600 mt-1.5 max-w-[280px]">{description}</p>
+      <p className="text-sm font-medium font-mono" style={{ color: "var(--th-text-secondary)" }}>{title}</p>
+      <p className="text-xs font-mono mt-1.5 max-w-[280px]" style={{ color: "var(--th-text-muted)" }}>{description}</p>
       <button onClick={onAction}
-        className="mt-5 flex items-center gap-2 px-4 py-2 text-sm text-sky-400 hover:text-sky-300 bg-sky-500/10 hover:bg-sky-500/15 border border-sky-500/20 rounded-xl transition-all">
+        className="mt-5 flex items-center gap-2 px-4 py-2 text-sm font-mono transition-all"
+        style={{ borderRadius: "2px", border: "1px solid rgba(251,191,36,0.3)", background: "rgba(251,191,36,0.1)", color: "var(--th-accent)" }}>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
         </svg>
@@ -969,18 +984,18 @@ function UserGuide({ tr, language, guideExpanded, setGuideExpanded }: {
   return (
     <div className="space-y-3">
       {/* Guide header */}
-      <div className="bg-slate-800/40 border border-slate-700/30 rounded-xl p-5">
+      <div className="p-5" style={{ borderRadius: "4px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
         <div className="flex items-center gap-3 mb-3">
-          <div className="w-9 h-9 rounded-lg bg-sky-500/10 border border-sky-500/20 flex items-center justify-center">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-sky-400">
+          <div className="w-9 h-9 flex items-center justify-center" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-primary)" }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--th-accent)" }}>
               <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
             </svg>
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-white">
+            <h3 className="text-sm font-semibold font-mono" style={{ color: "var(--th-text-heading)" }}>
               {tr("스케줄러 사용 가이드", "Scheduler User Guide")}
             </h3>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className="text-xs font-mono mt-0.5" style={{ color: "var(--th-text-muted)" }}>
               {tr("아래 항목을 클릭하여 상세 내용을 확인하세요", "Click each section below for details")}
             </p>
           </div>
@@ -989,18 +1004,19 @@ function UserGuide({ tr, language, guideExpanded, setGuideExpanded }: {
 
       {/* Accordion sections */}
       {sections.map((sec) => (
-        <div key={sec.id} className="bg-slate-800/40 border border-slate-700/30 rounded-xl overflow-hidden transition-all duration-200">
+        <div key={sec.id} className="overflow-hidden transition-all duration-200" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
           <button
             onClick={() => setGuideExpanded(guideExpanded === sec.id ? null : sec.id)}
-            className="w-full flex items-center gap-3 px-5 py-3.5 text-left hover:bg-slate-800/60 transition-colors"
+            className="w-full flex items-center gap-3 px-5 py-3.5 text-left transition-colors hover:bg-[var(--th-bg-surface-hover)]"
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-slate-500 shrink-0">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="shrink-0" style={{ color: "var(--th-text-muted)" }}>
               <path d={sec.icon} />
             </svg>
-            <span className="text-sm font-medium text-white flex-1">{sec.title}</span>
+            <span className="text-sm font-medium font-mono flex-1" style={{ color: "var(--th-text-heading)" }}>{sec.title}</span>
             <svg
               width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-              className={`text-slate-600 transition-transform duration-200 ${guideExpanded === sec.id ? "rotate-180" : ""}`}
+              className={`transition-transform duration-200 ${guideExpanded === sec.id ? "rotate-180" : ""}`}
+              style={{ color: "var(--th-text-muted)" }}
             >
               <polyline points="6 9 12 15 18 9" />
             </svg>
@@ -1008,14 +1024,14 @@ function UserGuide({ tr, language, guideExpanded, setGuideExpanded }: {
 
           {guideExpanded === sec.id && (
             <div className="px-5 pb-4 pt-0">
-              <div className="border-t border-slate-700/30 pt-3 space-y-1.5">
+              <div className="pt-3 space-y-1.5" style={{ borderTop: "1px solid var(--th-border)" }}>
                 {sec.content.map((line, i) => (
                   line === "" ? (
                     <div key={i} className="h-2" />
                   ) : line.startsWith("  ") ? (
-                    <pre key={i} className="text-xs text-slate-400 font-mono leading-relaxed">{line}</pre>
+                    <pre key={i} className="text-xs font-mono leading-relaxed" style={{ color: "var(--th-text-secondary)" }}>{line}</pre>
                   ) : (
-                    <p key={i} className="text-xs text-slate-400 leading-relaxed">{line}</p>
+                    <p key={i} className="text-xs leading-relaxed" style={{ color: "var(--th-text-secondary)" }}>{line}</p>
                   )
                 ))}
               </div>

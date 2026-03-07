@@ -1,8 +1,9 @@
 import type { Agent, Department } from "../../types";
 import { localeName } from "../../i18n";
 import AgentAvatar from "../AgentAvatar";
-import { ROLE_BADGE, ROLE_LABEL, STATUS_DOT } from "./constants";
+import { ROLE_BADGE, ROLE_LABEL } from "./constants";
 import type { Translator } from "./types";
+import { PersonaBadge } from "../agent-persona/PersonaBadge";
 
 interface AgentCardProps {
   agent: Agent;
@@ -18,6 +19,34 @@ interface AgentCardProps {
   onDeleteCancel: () => void;
   saving: boolean;
 }
+
+const STATUS_BADGE_CLASS: Record<string, string> = {
+  working: "status-badge status-badge-running",
+  idle: "status-badge status-badge-idle",
+  break: "status-badge status-badge-paused",
+  offline: "status-badge status-badge-error",
+};
+
+const STATUS_LABEL: Record<string, string> = {
+  working: "RUNNING",
+  idle: "IDLE",
+  break: "BREAK",
+  offline: "OFFLINE",
+};
+
+const ACTIVITY_PCT: Record<string, number> = {
+  working: 85,
+  idle: 50,
+  break: 22,
+  offline: 5,
+};
+
+const ACTIVITY_COLOR: Record<string, string> = {
+  working: "var(--th-attr-elite)",
+  idle: "var(--th-attr-avg)",
+  break: "var(--th-attr-poor)",
+  offline: "var(--th-attr-vlow)",
+};
 
 export default function AgentCard({
   agent,
@@ -35,103 +64,134 @@ export default function AgentCard({
 }: AgentCardProps) {
   const isDeleting = confirmDeleteId === agent.id;
   const dept = departments.find((d) => d.id === agent.department_id);
+  const isWorking = agent.status === "working";
+  const activityPct = ACTIVITY_PCT[agent.status] ?? 5;
+  const activityColor = ACTIVITY_COLOR[agent.status] ?? "var(--th-attr-vlow)";
 
   return (
     <div
       onClick={onEdit}
-      className="group rounded-xl p-4 cursor-pointer transition-all hover:scale-[1.01] hover:shadow-lg hover:shadow-black/10"
-      style={{ background: "var(--th-bg-surface)", border: "1px solid var(--th-border)" }}
+      className="group cursor-pointer fm-agent-card"
+      style={{
+        background: "var(--th-bg-surface)",
+        border: "1px solid var(--th-border)",
+        borderLeft: isWorking ? "3px solid #22c55e" : "3px solid var(--th-border)",
+        borderRadius: "4px",
+        transition: "border-color 0.1s linear, background 0.1s linear",
+      }}
     >
-      <div className="flex items-start gap-3">
-        <div className="relative shrink-0">
-          <AgentAvatar agent={agent} spriteMap={spriteMap} size={44} rounded="xl" />
-          <div
-            className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 ${STATUS_DOT[agent.status] ?? STATUS_DOT.idle}`}
-            style={{ borderColor: "var(--th-bg-surface)" }}
-          />
+      {/* Top: avatar + name + status badge */}
+      <div className="flex items-start gap-2.5 px-3 pt-3 pb-2">
+        <div className="relative shrink-0 mt-0.5">
+          <AgentAvatar agent={agent} spriteMap={spriteMap} size={38} rounded="sm" />
         </div>
+
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5">
-            <span className="font-semibold text-sm truncate" style={{ color: "var(--th-text-heading)" }}>
+          <div className="flex items-start justify-between gap-1.5 mb-1">
+            <span
+              className="font-semibold text-sm leading-tight truncate"
+              style={{ color: "var(--th-text-heading)", fontFamily: "var(--th-font-mono)" }}
+            >
               {localeName(locale, agent)}
             </span>
-            <span className="text-[10px] shrink-0" style={{ color: "var(--th-text-muted)" }}>
-              {(() => {
-                const primary = localeName(locale, agent);
-                const sub = locale === "en" ? agent.name_ko || "" : agent.name;
-                return primary !== sub ? sub : "";
-              })()}
-            </span>
+            <div className="flex items-center gap-1 shrink-0">
+              {agent.persona_id && <PersonaBadge personaId={agent.persona_id} size="sm" />}
+              <span className={STATUS_BADGE_CLASS[agent.status] ?? "status-badge status-badge-idle"}>
+                {STATUS_LABEL[agent.status] ?? "IDLE"}
+              </span>
+            </div>
           </div>
-          <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-            <span className={`text-[10px] px-1.5 py-0.5 rounded-md border font-medium ${ROLE_BADGE[agent.role] || ""}`}>
+
+          {/* Role + Dept row */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className={`text-[10px] px-1.5 py-0.5 border font-medium font-mono ${ROLE_BADGE[agent.role] || ""}`} style={{ borderRadius: "2px" }}>
               {isKo ? ROLE_LABEL[agent.role]?.ko : ROLE_LABEL[agent.role]?.en}
             </span>
             {dept && (
               <span
-                className="text-[10px] px-1.5 py-0.5 rounded-md"
-                style={{ background: "var(--th-bg-surface)", color: "var(--th-text-muted)" }}
+                className="text-[10px] font-mono"
+                style={{ color: "var(--th-text-muted)" }}
               >
                 {localeName(locale, dept)}
               </span>
             )}
           </div>
+
+          {/* CLI provider */}
+          <div className="mt-1 text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
+            {agent.cli_provider}
+          </div>
         </div>
       </div>
 
+      {/* FM2024 Attribute bar */}
       <div
-        className="flex items-center justify-between mt-3 pt-2.5"
-        style={{ borderTop: "1px solid var(--th-border)" }}
+        className="px-3 pb-2.5"
+        style={{ borderTop: "1px solid var(--th-border)", paddingTop: "0.5rem" }}
       >
         <div className="flex items-center gap-2">
           <span
-            className="text-[10px] font-mono px-1.5 py-0.5 rounded"
-            style={{ background: "var(--th-bg-surface)", color: "var(--th-text-muted)" }}
+            className="text-[9px] font-mono uppercase tracking-widest shrink-0"
+            style={{ color: "var(--th-text-muted)", width: "3.25rem" }}
           >
-            {agent.cli_provider}
+            ACTIVITY
           </span>
-          {agent.personality && (
-            <span
-              className="text-[10px] truncate max-w-[120px]"
-              style={{ color: "var(--th-text-muted)" }}
-              title={agent.personality}
-            >
-              {agent.personality}
-            </span>
-          )}
+          <div
+            className="flex-1 overflow-hidden"
+            style={{ height: "4px", borderRadius: "1px", background: "var(--th-border)" }}
+          >
+            <div
+              style={{
+                width: `${activityPct}%`,
+                height: "100%",
+                background: activityColor,
+                transition: "width 0.3s linear",
+              }}
+            />
+          </div>
+          <span
+            className="text-[9px] font-mono tabular-nums shrink-0 text-right"
+            style={{ color: activityColor, width: "1.5rem" }}
+          >
+            {activityPct}
+          </span>
         </div>
-        <div
-          className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {isDeleting ? (
-            <>
-              <button
-                onClick={onDeleteConfirm}
-                disabled={saving || agent.status === "working"}
-                className="px-2 py-0.5 rounded text-[10px] font-medium bg-red-600 hover:bg-red-500 text-white disabled:opacity-40 transition-colors"
-              >
-                {tr("해고", "Fire")}
-              </button>
-              <button
-                onClick={onDeleteCancel}
-                className="px-2 py-0.5 rounded text-[10px] transition-colors"
-                style={{ color: "var(--th-text-muted)" }}
-              >
-                {tr("취소", "No")}
-              </button>
-            </>
-          ) : (
+      </div>
+
+      {/* Delete action — only on hover */}
+      <div
+        className="flex items-center justify-end px-3 pb-1.5 opacity-0 group-hover:opacity-100"
+        style={{ transition: "opacity 0.1s linear" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {isDeleting ? (
+          <>
             <button
-              onClick={onDeleteClick}
-              className="px-1.5 py-0.5 rounded text-xs hover:bg-red-500/15 hover:text-red-400 transition-colors"
-              style={{ color: "var(--th-text-muted)" }}
-              title={tr("해고", "Fire")}
+              onClick={onDeleteConfirm}
+              disabled={saving || agent.status === "working"}
+              className="px-2 py-0.5 text-[10px] font-medium font-mono uppercase tracking-wider bg-red-600 hover:bg-red-500 text-white disabled:opacity-40 transition-colors"
+              style={{ borderRadius: "2px" }}
             >
-              ✕
+              {tr("해고", "Fire")}
             </button>
-          )}
-        </div>
+            <button
+              onClick={onDeleteCancel}
+              className="ml-1.5 px-2 py-0.5 text-[10px] font-mono transition-colors"
+              style={{ color: "var(--th-text-muted)", borderRadius: "2px" }}
+            >
+              {tr("취소", "No")}
+            </button>
+          </>
+        ) : (
+          <button
+            onClick={onDeleteClick}
+            className="px-1.5 py-0.5 text-xs font-mono hover:bg-red-500/15 hover:text-red-400 transition-colors"
+            style={{ borderRadius: "2px", color: "var(--th-text-muted)" }}
+            title={tr("해고", "Fire")}
+          >
+            ✕
+          </button>
+        )}
       </div>
     </div>
   );

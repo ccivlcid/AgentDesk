@@ -53,12 +53,12 @@ export default function CustomSkillSection({ t, customSkills, localeTag, onDelet
   if (customSkills.length === 0) return null;
 
   return (
-    <div className="custom-skill-list rounded-xl border border-violet-500/30 bg-violet-500/5 p-4">
+    <div className="custom-skill-list p-4" style={{ borderRadius: "4px", border: "1px solid rgba(139,92,246,0.3)", background: "rgba(139,92,246,0.05)" }}>
       <div className="flex items-center justify-between mb-3">
         <div className="text-sm font-semibold text-violet-200 flex items-center gap-2">
           <span>✏️</span>
           {t({ ko: "커스텀 스킬", en: "Custom Skills", ja: "カスタムスキル", zh: "自定义技能" })}
-          <span className="text-[11px] text-slate-500 font-normal">({customSkills.length})</span>
+          <span className="text-[11px] font-mono font-normal" style={{ color: "var(--th-text-muted)" }}>({customSkills.length})</span>
         </div>
         <div className="flex items-center gap-1.5">
           <input
@@ -85,11 +85,12 @@ export default function CustomSkillSection({ t, customSkills, localeTag, onDelet
         {customSkills.map((skill) => (
           <div
             key={skill.skillName}
-            className="custom-skill-card flex items-center justify-between bg-slate-800/50 border border-slate-700/40 rounded-lg px-3 py-2"
+            className="custom-skill-card flex items-center justify-between px-3 py-2"
+            style={{ borderRadius: "2px", background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)" }}
           >
             <div className="min-w-0 flex-1">
               <div className="text-xs font-medium text-white truncate">{skill.skillName}</div>
-              <div className="text-[10px] text-slate-500">
+              <div className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
                 {skill.providers.map((provider) => providerLabel(provider as SkillLearnProvider)).join(", ")}
                 {" · "}
                 {new Date(skill.createdAt).toLocaleDateString(localeTag)}

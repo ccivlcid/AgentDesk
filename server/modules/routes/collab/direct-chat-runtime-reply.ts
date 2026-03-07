@@ -136,7 +136,7 @@ export function createDirectReplyRuntime(deps: DirectReplyRuntimeDeps) {
     scenario: string,
     fallback: string,
   ): Promise<string> {
-    const personaBlock = buildCharacterPersonaBlock(agent.personality);
+    const personaBlock = buildCharacterPersonaBlock(agent.personality, (agent as any).persona_id);
     if (!personaBlock) return fallback;
 
     if (shouldPreserveStructuredFallback(fallback)) {

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo, type ReactNode } from "react";
 import type { Agent, Task, MeetingMinute } from "../types";
 import * as api from "../api";
-import type { TerminalProgressHint, TerminalProgressHintsPayload } from "../api";
+import type { TerminalProgressHint, TerminalProgressHintsPayload, TerminalThinkingBlock } from "../api";
 import AgentAvatar from "./AgentAvatar";
 import { useI18n } from "../i18n";
 import {
@@ -41,6 +41,8 @@ export default function TerminalPanel({
   const [text, setText] = useState("");
   const [taskLogs, setTaskLogs] = useState<TaskLogEntry[]>([]);
   const [progressHints, setProgressHints] = useState<TerminalProgressHintsPayload | null>(null);
+  const [thinkingBlocks, setThinkingBlocks] = useState<TerminalThinkingBlock[]>([]);
+  const [showThinking, setShowThinking] = useState(false);
   const [meetingMinutes, setMeetingMinutes] = useState<MeetingMinute[]>([]);
   const [logPath, setLogPath] = useState("");
   const [follow, setFollow] = useState(true);
@@ -107,6 +109,11 @@ export default function TerminalPanel({
           });
         }
         setProgressHints(res.progress_hints ?? null);
+        setThinkingBlocks((prev) => {
+          const next = res.thinking_blocks ?? [];
+          if (prev.length === next.length && prev.every((b, i) => b.text === next[i].text)) return prev;
+          return next;
+        });
         setInterruptProof(res.interrupt ?? null);
         if (res.exists) {
           const nextText = res.text ?? "";
@@ -530,6 +537,18 @@ export default function TerminalPanel({
         </div>
 
         <div className="flex items-center gap-1.5 flex-shrink-0">
+          {thinkingBlocks.length > 0 && (
+            <button
+              onClick={() => setShowThinking((p) => !p)}
+              className="px-2 py-1 text-[10px] font-mono border transition"
+              style={showThinking
+                ? { borderRadius: "2px", background: "rgba(251,191,36,0.15)", color: "var(--th-accent)", borderColor: "rgba(251,191,36,0.4)" }
+                : { borderRadius: "2px", background: "var(--th-bg-surface)", color: "var(--th-text-secondary)", borderColor: "var(--th-border)" }}
+              title={tr("사고 흐름", "Reasoning", "思考フロー", "推理流程")}
+            >
+              {tr("사고", "THINK", "思考", "推理")}
+            </button>
+          )}
           {isInterventionTarget && (
             <button
               onClick={() => {
@@ -778,6 +797,32 @@ export default function TerminalPanel({
         </div>
       )}
 
+      {/* Thinking blocks panel */}
+      {activeTab === "terminal" && showThinking && thinkingBlocks.length > 0 && (
+        <div className="border-b" style={{ borderColor: "var(--th-border)", background: "rgba(15,17,23,0.9)" }}>
+          <div className="max-h-52 overflow-y-auto px-4 py-2.5">
+            <div className="mb-1.5 flex items-center gap-2 text-[10px] font-mono" style={{ color: "var(--th-accent)" }}>
+              <span>&#9670; REASONING</span>
+              <span className="ml-auto" style={{ color: "var(--th-text-muted)" }}>
+                {thinkingBlocks.length} {thinkingBlocks.length === 1 ? "block" : "blocks"}
+                {thinkingBlocks[thinkingBlocks.length - 1].truncated ? " (truncated)" : ""}
+              </span>
+            </div>
+            <pre
+              className="text-[11px] leading-relaxed font-mono whitespace-pre-wrap break-words"
+              style={{ color: "rgba(251,191,36,0.65)" }}
+            >
+              {thinkingBlocks[thinkingBlocks.length - 1].text}
+            </pre>
+            {thinkingBlocks.length > 1 && (
+              <div className="mt-2 text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
+                + {thinkingBlocks.length - 1} earlier {thinkingBlocks.length === 2 ? "block" : "blocks"}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Terminal body */}
       {activeTab === "terminal" ? (
         <div ref={containerRef} className="flex-1 overflow-y-auto p-4" onScroll={handleScroll}>
@@ -880,7 +925,7 @@ export default function TerminalPanel({
       )}
 
       {activeTab === "terminal" && shouldShowProgressHints && progressHints && (
-        <div className="terminal-panel-strip border-t px-4 py-2 backdrop-blur-sm">
+        <div className="terminal-panel-strip border-t px-4 py-2">
           <div className="text-[10px] italic" style={{ color: "var(--th-text-secondary)" }}>
             {activeToolHint
               ? tr(

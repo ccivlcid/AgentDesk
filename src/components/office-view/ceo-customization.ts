@@ -9,6 +9,11 @@ export interface CeoCustomization {
   headwear: CeoHeadwear;
   outfitTint: number; // 0xffffff = no tint
   title: string; // default "CEO"
+  name: string;        // display name shown on CEO nameplate (e.g. "김대표")
+  companyName: string; // company name shown on roof sign (e.g. "ACME Corp")
+  avatarEmoji: string; // emoji overlaid on robot face (empty = default robot visor)
+  greetings: string[]; // custom visitor chat phrases (empty = use defaults)
+  personaId: string | null; // persona from PERSONA_CATALOG (null = no persona)
   trailEffect: CeoTrailEffect;
 }
 
@@ -18,6 +23,11 @@ const DEFAULT_CEO_CUSTOMIZATION: CeoCustomization = {
   headwear: "crown",
   outfitTint: 0xffffff,
   title: "CEO",
+  name: "",
+  companyName: "",
+  avatarEmoji: "",
+  greetings: [],
+  personaId: null,
   trailEffect: "none",
 };
 
@@ -67,6 +77,11 @@ export function loadCeoCustomization(): CeoCustomization {
       headwear: parsed.headwear ?? DEFAULT_CEO_CUSTOMIZATION.headwear,
       outfitTint: parsed.outfitTint ?? DEFAULT_CEO_CUSTOMIZATION.outfitTint,
       title: parsed.title ?? DEFAULT_CEO_CUSTOMIZATION.title,
+      name: parsed.name ?? DEFAULT_CEO_CUSTOMIZATION.name,
+      companyName: parsed.companyName ?? DEFAULT_CEO_CUSTOMIZATION.companyName,
+      avatarEmoji: parsed.avatarEmoji ?? DEFAULT_CEO_CUSTOMIZATION.avatarEmoji,
+      greetings: Array.isArray(parsed.greetings) ? parsed.greetings : DEFAULT_CEO_CUSTOMIZATION.greetings,
+      personaId: parsed.personaId ?? DEFAULT_CEO_CUSTOMIZATION.personaId,
       trailEffect: parsed.trailEffect ?? DEFAULT_CEO_CUSTOMIZATION.trailEffect,
     };
   } catch {

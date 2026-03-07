@@ -235,7 +235,7 @@ export default function Sidebar({ currentView, onChangeView, departments, agents
       <div className="sidebar-brand">
         <div className="sidebar-brand-inner">
           <div className="sidebar-brand-avatar">
-            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-blue-400">
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: "#f59e0b" }}>
               <rect x="4" y="14" width="24" height="12" rx="1.5" />
               <path d="M8 14V8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v6" />
               <path d="M12 22v2M20 22v2M16 20v4" />

@@ -12,7 +12,7 @@ interface VirtualPadOverlayProps {
 }
 
 const mobilePadButtonClass =
-  "pointer-events-auto flex h-9 w-9 items-center justify-center rounded-lg border border-slate-300/70 bg-transparent text-sm font-bold text-slate-100 shadow-none active:scale-95 active:bg-slate-500/20";
+  "pointer-events-auto flex h-9 w-9 items-center justify-center rounded-[4px] border border-[rgba(203,213,225,0.7)] bg-transparent text-sm font-bold text-[#f1f5f9] shadow-none active:scale-95 active:bg-[rgba(100,116,139,0.2)]";
 
 export default function VirtualPadOverlay({
   showVirtualPad,
@@ -28,7 +28,7 @@ export default function VirtualPadOverlay({
         <button
           type="button"
           aria-label="Interact"
-          className="pointer-events-auto flex h-10 min-w-12 items-center justify-center rounded-xl border border-amber-300/80 bg-amber-500/85 px-2 text-[11px] font-bold tracking-wide text-slate-950 shadow-none active:scale-95 active:bg-amber-400"
+          className="pointer-events-auto flex h-10 min-w-12 items-center justify-center rounded-[8px] border border-amber-300/80 bg-amber-500/85 px-2 text-[11px] font-bold tracking-wide text-[#020617] shadow-none active:scale-95 active:bg-amber-400"
           style={{ touchAction: "none" }}
           onPointerDown={(event) => event.preventDefault()}
           onClick={onInteract}

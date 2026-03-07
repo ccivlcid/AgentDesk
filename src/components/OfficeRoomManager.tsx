@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from "react";
+import { PERSONA_CATALOG } from "../data/personas";
 import { HexColorPicker } from "react-colorful";
 import type { RoomTheme } from "../types";
 import { BUILTIN_THEME_PRESETS, type OfficeThemePreset } from "./office-theme/theme-presets";
@@ -125,6 +126,11 @@ const L = {
   headwear: { ko: "모자/장식", en: "Headwear", ja: "帽子/装飾", zh: "帽子/装饰" },
   outfitColor: { ko: "의상 색상", en: "Outfit Color", ja: "衣装カラー", zh: "服装颜色" },
   ceoTitle: { ko: "칭호", en: "Title", ja: "称号", zh: "称号" },
+  ceoName: { ko: "실명 (명패 표시)", en: "Display Name", ja: "表示名", zh: "显示名" },
+  companyName: { ko: "회사명 (옥상 간판)", en: "Company Name", ja: "会社名", zh: "公司名" },
+  avatarEmoji: { ko: "얼굴 이모지", en: "Face Emoji", ja: "顔絵文字", zh: "头像表情" },
+  greetings: { ko: "방문자 인사말 (줄바꿈 구분, 빈칸=기본)", en: "Visitor Greetings (one per line, empty=default)", ja: "挨拶フレーズ（行区切り）", zh: "访客问候语（换行分隔）" },
+  ceoPersona: { ko: "CEO 퍼소나", en: "CEO Persona", ja: "CEOペルソナ", zh: "CEO角色" },
   trailEffect: { ko: "이동 이펙트", en: "Trail Effect", ja: "移動エフェクト", zh: "移动特效" },
   roomDecor: { ko: "방 꾸미기", en: "Room Decor", ja: "部屋デコ", zh: "房间装饰" },
   wallDecor: { ko: "벽 장식", en: "Wall Decor", ja: "壁飾り", zh: "墙饰" },
@@ -729,7 +735,7 @@ export default function OfficeRoomManager({ departments, customThemes, onThemeCh
                                 </svg>
                               </button>
                               {menuOpenId === up.id && (
-                                <div className="absolute right-0 top-6 z-10 shadow-xl py-1 min-w-[100px]"
+                                <div className="absolute right-0 top-6 z-10 py-1 min-w-[100px]"
                                   style={{ borderRadius: "2px", border: "1px solid var(--th-border-strong)", background: "var(--th-bg-elevated)" }}>
                                   {active && (
                                     <button
@@ -1038,6 +1044,119 @@ export default function OfficeRoomManager({ departments, customThemes, onThemeCh
                 className="w-full text-sm px-3 py-1.5 outline-none font-mono"
                 style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
               />
+            </div>
+
+            {/* Avatar emoji */}
+            <div className="space-y-1.5">
+              <span className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>{L.avatarEmoji[language]}</span>
+              <div className="flex items-center gap-2">
+                <span className="text-2xl leading-none" style={{ minWidth: "2rem", textAlign: "center" }}>
+                  {ceoConfig.avatarEmoji?.trim() || "🤖"}
+                </span>
+                <input
+                  value={ceoConfig.avatarEmoji}
+                  onChange={(e) => {
+                    const next = { ...ceoConfig, avatarEmoji: e.target.value.slice(0, 4) };
+                    setCeoConfig(next);
+                    saveCeoCustomization(next);
+                  }}
+                  placeholder="🤖"
+                  maxLength={4}
+                  className="w-24 text-xl px-2 py-1 outline-none text-center"
+                  style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
+                />
+                {ceoConfig.avatarEmoji?.trim() && (
+                  <button
+                    onClick={() => {
+                      const next = { ...ceoConfig, avatarEmoji: "" };
+                      setCeoConfig(next);
+                      saveCeoCustomization(next);
+                    }}
+                    className="text-xs font-mono px-2 py-1"
+                    style={{ border: "1px solid var(--th-border)", borderRadius: "2px", color: "var(--th-text-muted)", background: "transparent" }}
+                  >✕</button>
+                )}
+              </div>
+            </div>
+
+            {/* CEO Persona */}
+            <div className="space-y-1.5">
+              <span className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>{L.ceoPersona[language]}</span>
+              <select
+                value={ceoConfig.personaId ?? ""}
+                onChange={(e) => {
+                  const next = { ...ceoConfig, personaId: e.target.value || null };
+                  setCeoConfig(next);
+                  saveCeoCustomization(next);
+                }}
+                className="w-full text-xs px-3 py-1.5 outline-none font-mono"
+                style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
+              >
+                <option value="">— None —</option>
+                {PERSONA_CATALOG.map((p) => (
+                  <option key={p.id} value={p.id}>{p.badge} {p.name}</option>
+                ))}
+              </select>
+              {ceoConfig.personaId && (
+                <p className="text-xs font-mono" style={{ color: "var(--th-accent)", marginTop: "2px" }}>
+                  {PERSONA_CATALOG.find((p) => p.id === ceoConfig.personaId)?.tagline ?? ""}
+                </p>
+              )}
+            </div>
+
+            {/* Display Name */}
+            <div className="space-y-1.5">
+              <span className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>{L.ceoName[language]}</span>
+              <input
+                value={ceoConfig.name}
+                onChange={(e) => {
+                  const next = { ...ceoConfig, name: e.target.value.slice(0, 16) };
+                  setCeoConfig(next);
+                  saveCeoCustomization(next);
+                }}
+                placeholder="e.g. 김대표"
+                maxLength={16}
+                className="w-full text-sm px-3 py-1.5 outline-none font-mono"
+                style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
+              />
+            </div>
+
+            {/* Company Name */}
+            <div className="space-y-1.5">
+              <span className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>{L.companyName[language]}</span>
+              <input
+                value={ceoConfig.companyName}
+                onChange={(e) => {
+                  const next = { ...ceoConfig, companyName: e.target.value.slice(0, 20) };
+                  setCeoConfig(next);
+                  saveCeoCustomization(next);
+                }}
+                placeholder="e.g. ACME Corp"
+                maxLength={20}
+                className="w-full text-sm px-3 py-1.5 outline-none font-mono"
+                style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
+              />
+            </div>
+
+            {/* Visitor Greetings */}
+            <div className="space-y-1.5">
+              <span className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>{L.greetings[language]}</span>
+              <textarea
+                value={(ceoConfig.greetings ?? []).join("\n")}
+                onChange={(e) => {
+                  const lines = e.target.value.split("\n").map((l) => l.slice(0, 40));
+                  const next = { ...ceoConfig, greetings: lines.slice(0, 10) };
+                  setCeoConfig(next);
+                  saveCeoCustomization(next);
+                }}
+                placeholder={"Hello!\nReport?\nMeeting?"}
+                rows={4}
+                className="w-full text-xs px-3 py-1.5 outline-none font-mono resize-none"
+                style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
+              />
+              <span className="text-xs font-mono" style={{ color: "var(--th-text-muted)", fontSize: "10px" }}>
+                {(ceoConfig.greetings ?? []).filter(Boolean).length}/10 phrases
+              </span>
             </div>
 
             {/* Trail effect */}

@@ -27,7 +27,7 @@ export const CATEGORY_ICONS: Record<string, string> = {
 };
 
 export const CATEGORY_COLORS: Record<string, string> = {
-  context: "text-blue-400 bg-blue-500/15 border-blue-500/30",
+  context: "text-[#60a5fa] bg-[rgba(59,130,246,0.15)] border-[rgba(59,130,246,0.3)]",
   preference: "text-amber-400 bg-amber-500/15 border-amber-500/30",
   convention: "text-emerald-400 bg-emerald-500/15 border-emerald-500/30",
   knowledge: "text-purple-400 bg-purple-500/15 border-purple-500/30",
@@ -116,7 +116,7 @@ export function memoryStatusLabel(status: string): string {
 export function memoryStatusClass(status: string): string {
   if (status === "succeeded") return "border-emerald-400/40 bg-emerald-500/10 text-emerald-300";
   if (status === "running") return "border-amber-400/40 bg-amber-500/10 text-amber-200";
-  if (status === "queued") return "border-slate-500/40 bg-slate-600/10 text-slate-300";
+  if (status === "queued") return "border-[rgba(100,116,139,0.4)] bg-[rgba(71,85,105,0.1)] text-[#cbd5e1]";
   return "border-rose-400/40 bg-rose-500/10 text-rose-300";
 }
 
@@ -209,9 +209,9 @@ export function cliProviderIcon(provider: MemoryHistoryProvider) {
   if (provider === "claude") return <CliClaudeLogo />;
   if (provider === "codex") return <CliCodexLogo />;
   if (provider === "gemini") return <CliGeminiLogo />;
-  if (provider === "opencode") return <span className="text-[11px] text-slate-200">&#x26AA;</span>;
-  if (provider === "copilot") return <span className="text-[11px] text-slate-200">&#x1F680;</span>;
-  if (provider === "antigravity") return <span className="text-[11px] text-slate-200">&#x1F30C;</span>;
+  if (provider === "opencode") return <span className="text-[11px] text-[#e2e8f0]">&#x26AA;</span>;
+  if (provider === "copilot") return <span className="text-[11px] text-[#e2e8f0]">&#x1F680;</span>;
+  if (provider === "antigravity") return <span className="text-[11px] text-[#e2e8f0]">&#x1F30C;</span>;
   if (provider === "cursor") return <CliCursorLogo />;
-  return <span className="text-[11px] text-slate-200">&#x1F50C;</span>;
+  return <span className="text-[11px] text-[#e2e8f0]">&#x1F50C;</span>;
 }

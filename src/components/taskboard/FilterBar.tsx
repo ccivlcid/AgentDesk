@@ -1,6 +1,5 @@
-import type { Agent, Department } from "../../types";
+import type { Department } from "../../types";
 import { useI18n } from "../../i18n";
-import AgentSelect from "../AgentSelect";
 import { TASK_TYPE_OPTIONS, taskTypeLabel } from "./constants";
 
 interface ProjectOption {
@@ -9,32 +8,26 @@ interface ProjectOption {
 }
 
 interface FilterBarProps {
-  agents: Agent[];
   departments: Department[];
   projects: ProjectOption[];
   filterDept: string;
-  filterAgent: string;
   filterType: string;
   filterProject: string;
   search: string;
   onFilterDept: (value: string) => void;
-  onFilterAgent: (value: string) => void;
   onFilterType: (value: string) => void;
   onFilterProject: (value: string) => void;
   onSearch: (value: string) => void;
 }
 
 export default function FilterBar({
-  agents,
   departments,
   projects,
   filterDept,
-  filterAgent,
   filterType,
   filterProject,
   search,
   onFilterDept,
-  onFilterAgent,
   onFilterType,
   onFilterProject,
   onSearch,
@@ -49,11 +42,16 @@ export default function FilterBar({
           value={search}
           onChange={(event) => onSearch(event.target.value)}
           placeholder={t({ ko: "업무 검색...", en: "Search tasks...", ja: "タスク検索...", zh: "搜索任务..." })}
-          className="w-full rounded-lg border py-1.5 pl-3 pr-3 text-sm outline-none transition focus:ring-1"
+          className="w-full outline-none"
           style={{
-            borderColor: "var(--th-border)",
+            border: "1px solid var(--th-border)",
+            borderRadius: "2px",
+            padding: "0.3rem 0.625rem",
             background: "var(--th-bg-surface)",
             color: "var(--th-text-primary)",
+            fontFamily: "var(--th-font-mono)",
+            fontSize: "0.8125rem",
+            transition: "border-color 0.1s linear",
           }}
           aria-label={t({ ko: "업무 검색", en: "Search tasks", ja: "タスク検索", zh: "搜索任务" })}
         />
@@ -62,11 +60,15 @@ export default function FilterBar({
       <select
         value={filterDept}
         onChange={(event) => onFilterDept(event.target.value)}
-        className="rounded-lg border px-3 py-1.5 text-sm outline-none transition focus:ring-1"
+        className="outline-none"
         style={{
-          borderColor: "var(--th-border)",
+          border: "1px solid var(--th-border)",
+          borderRadius: "2px",
+          padding: "0.3rem 0.625rem",
           background: "var(--th-bg-surface)",
           color: "var(--th-text-secondary)",
+          fontFamily: "var(--th-font-mono)",
+          fontSize: "0.8125rem",
         }}
       >
         <option value="">{t({ ko: "전체 부서", en: "All Departments", ja: "全部署", zh: "全部门" })}</option>
@@ -77,23 +79,18 @@ export default function FilterBar({
         ))}
       </select>
 
-      <AgentSelect
-        agents={agents}
-        departments={departments}
-        value={filterAgent}
-        onChange={onFilterAgent}
-        placeholder={t({ ko: "전체 에이전트", en: "All Agents", ja: "全エージェント", zh: "全部代理" })}
-        size="md"
-      />
-
       <select
         value={filterType}
         onChange={(event) => onFilterType(event.target.value)}
-        className="rounded-lg border px-3 py-1.5 text-sm outline-none transition focus:ring-1"
+        className="outline-none"
         style={{
-          borderColor: "var(--th-border)",
+          border: "1px solid var(--th-border)",
+          borderRadius: "2px",
+          padding: "0.3rem 0.625rem",
           background: "var(--th-bg-surface)",
           color: "var(--th-text-secondary)",
+          fontFamily: "var(--th-font-mono)",
+          fontSize: "0.8125rem",
         }}
       >
         <option value="">{t({ ko: "전체 유형", en: "All Types", ja: "全タイプ", zh: "全部类型" })}</option>
@@ -108,11 +105,15 @@ export default function FilterBar({
         <select
           value={filterProject}
           onChange={(event) => onFilterProject(event.target.value)}
-          className="rounded-lg border px-3 py-1.5 text-sm outline-none transition focus:ring-1"
+          className="border outline-none transition"
           style={{
+            borderRadius: "2px",
+            padding: "0.3rem 0.625rem",
             borderColor: "var(--th-border)",
             background: "var(--th-bg-surface)",
             color: "var(--th-text-secondary)",
+            fontFamily: "var(--th-font-mono)",
+            fontSize: "0.8125rem",
           }}
         >
           <option value="">{t({ ko: "전체 프로젝트", en: "All Projects", ja: "全プロジェクト", zh: "全部项目" })}</option>

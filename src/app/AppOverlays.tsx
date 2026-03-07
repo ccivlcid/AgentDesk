@@ -1,5 +1,6 @@
 import type { TaskReportDetail } from "../api";
 import { ChatPanel } from "../components/ChatPanel";
+import GroupChatPanel from "../components/chat-panel/GroupChatPanel";
 import DecisionInboxModal from "../components/DecisionInboxModal";
 import AgentDetail from "../components/AgentDetail";
 import TerminalPanel from "../components/TerminalPanel";
@@ -67,6 +68,8 @@ interface AppOverlaysProps {
   onCloseReportHistory: () => void;
   showAgentStatus: boolean;
   onCloseAgentStatus: () => void;
+  showGroupChat: boolean;
+  onCloseGroupChat: () => void;
   showRoomManager: boolean;
   roomManagerDepartments: { id: string; name: string }[];
   customRoomThemes: RoomThemeMap;
@@ -114,6 +117,8 @@ export default function AppOverlays({
   onCloseReportHistory,
   showAgentStatus,
   onCloseAgentStatus,
+  showGroupChat,
+  onCloseGroupChat,
   showRoomManager,
   roomManagerDepartments,
   customRoomThemes,
@@ -123,6 +128,10 @@ export default function AppOverlays({
 }: AppOverlaysProps) {
   return (
     <>
+      {showGroupChat && (
+        <GroupChatPanel agents={agents} onClose={onCloseGroupChat} />
+      )}
+
       {showChat && (
         <ChatPanel
           selectedAgent={chatAgent}

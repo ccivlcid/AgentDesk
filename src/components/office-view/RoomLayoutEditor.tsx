@@ -176,34 +176,39 @@ export default function RoomLayoutEditor({ roomId, roomW, roomH, layouts, onLayo
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-between">
-        <span className="text-[11px] text-slate-400 font-medium">{L.editorTitle[language]}</span>
+        <span className="text-[11px] font-medium font-mono" style={{ color: "var(--th-text-muted)" }}>{L.editorTitle[language]}</span>
         <div className="flex items-center gap-1">
           <button
             onClick={undo}
             disabled={historyIdx <= 0}
-            className="text-[10px] px-1.5 py-0.5 rounded border border-slate-600 text-slate-400 hover:text-slate-200 disabled:opacity-30 disabled:cursor-not-allowed"
+            className="text-[10px] px-1.5 py-0.5 font-mono border disabled:opacity-30 disabled:cursor-not-allowed"
+            style={{ borderRadius: "2px", borderColor: "var(--th-border)", color: "var(--th-text-muted)" }}
             title={`${L.undo[language]} (Ctrl+Z)`}
           >{L.undo[language]}</button>
           <button
             onClick={redo}
             disabled={historyIdx >= history.length - 1}
-            className="text-[10px] px-1.5 py-0.5 rounded border border-slate-600 text-slate-400 hover:text-slate-200 disabled:opacity-30 disabled:cursor-not-allowed"
+            className="text-[10px] px-1.5 py-0.5 font-mono border disabled:opacity-30 disabled:cursor-not-allowed"
+            style={{ borderRadius: "2px", borderColor: "var(--th-border)", color: "var(--th-text-muted)" }}
             title={`${L.redo[language]} (Ctrl+Shift+Z)`}
           >{L.redo[language]}</button>
           {selectedIdx !== null && (
             <button
               onClick={handleRemove}
-              className="text-[10px] px-1.5 py-0.5 rounded border border-red-600 text-red-400 hover:text-red-300 hover:border-red-500"
+              className="text-[10px] px-1.5 py-0.5 font-mono"
+              style={{ borderRadius: "2px", border: "1px solid rgba(244,63,94,0.5)", color: "rgb(253,164,175)", background: "rgba(244,63,94,0.08)" }}
               title={`${L.remove[language]} (Del)`}
             >{L.remove[language]}</button>
           )}
         </div>
       </div>
-      <div className="text-[10px] text-slate-600">{L.dragHint[language]}</div>
+      <div className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>{L.dragHint[language]}</div>
       <div
         ref={canvasRef}
-        className="relative border border-slate-600 rounded-md overflow-hidden select-none"
+        className="relative border overflow-hidden select-none"
         style={{
+          borderRadius: "4px",
+          borderColor: "var(--th-border)",
           width: displayW,
           height: displayH,
           background: "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)",
@@ -222,21 +227,23 @@ export default function RoomLayoutEditor({ roomId, roomW, roomH, layouts, onLayo
 
         {/* Room boundary */}
         <div
-          className="absolute border border-slate-500/40 rounded-sm pointer-events-none"
-          style={{ left: 2, top: 2, width: displayW - 4, height: displayH - 4 }}
+          className="absolute pointer-events-none"
+          style={{ borderRadius: "2px", border: "1px solid rgba(100,116,139,0.4)", left: 2, top: 2, width: displayW - 4, height: displayH - 4 }}
         />
 
         {/* Agent area hint */}
         <div
-          className="absolute pointer-events-none border border-dashed border-slate-700/50 rounded-sm"
+          className="absolute pointer-events-none"
           style={{
+            borderRadius: "2px",
+            border: "1px dashed rgba(51,65,85,0.5)",
             left: 16 * scaleX,
             top: 38 * scaleY,
             width: (roomW - 32) * scaleX,
             height: Math.max(0, (roomH - 60)) * scaleY,
           }}
         >
-          <span className="absolute top-0.5 left-1 text-[8px] text-slate-700">Agent Area</span>
+          <span className="absolute top-0.5 left-1 text-[8px]" style={{ color: "var(--th-text-muted)" }}>Agent Area</span>
         </div>
 
         {/* Placed items */}
@@ -251,7 +258,7 @@ export default function RoomLayoutEditor({ roomId, roomW, roomH, layouts, onLayo
             <div
               key={idx}
               className={`absolute flex items-center justify-center cursor-grab active:cursor-grabbing transition-shadow ${
-                isSelected ? "ring-2 ring-blue-400 z-20" : isDragging ? "z-30" : "z-10"
+                isSelected ? "ring-2 ring-[var(--th-accent)] z-20" : isDragging ? "z-30" : "z-10"
               }`}
               style={{
                 left: itemX * scaleX - (def.gridW * scaleX) / 2,

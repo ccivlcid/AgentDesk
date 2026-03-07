@@ -42,7 +42,7 @@ export default function CollaboratorSection({ taskId, agents, sectionOpen, onTog
 
   if (error) {
     return (
-      <div className="rounded-lg border border-slate-700/50 bg-slate-900/40 px-3 py-2 text-[11px] text-rose-400">
+      <div className="px-3 py-2 text-[11px] font-mono" style={{ borderRadius: "2px", border: "1px solid rgba(244,63,94,0.3)", background: "var(--th-bg-surface)", color: "rgb(253,164,175)" }}>
         {t({ ko: "협업 정보를 불러올 수 없습니다", en: "Failed to load collaboration info", ja: "コラボ情報を取得できません", zh: "无法加载协作信息" })}
       </div>
     );
@@ -50,7 +50,7 @@ export default function CollaboratorSection({ taskId, agents, sectionOpen, onTog
 
   if (collaborators === null) {
     return (
-      <div className="rounded-lg border border-slate-700/50 bg-slate-900/40 px-3 py-2 text-[11px] text-slate-500 animate-pulse">
+      <div className="px-3 py-2 text-[11px] font-mono animate-pulse" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface)", color: "var(--th-text-muted)" }}>
         {t({ ko: "협업 정보 로딩중...", en: "Loading collaborators...", ja: "コラボ情報を読み込み中...", zh: "加载协作信息..." })}
       </div>
     );
@@ -67,9 +67,9 @@ export default function CollaboratorSection({ taskId, agents, sectionOpen, onTog
       case "review":
         return "border-amber-500/40 bg-amber-500/15 text-amber-300";
       case "in_progress":
-        return "border-blue-500/40 bg-blue-500/15 text-blue-300";
+        return "border-[rgba(59,130,246,0.4)] bg-[rgba(59,130,246,0.15)] text-[#93c5fd]";
       default:
-        return "border-slate-600 bg-slate-700/40 text-slate-400";
+        return "border-[var(--th-border)] bg-[var(--th-bg-elevated)] text-[var(--th-text-muted)]";
     }
   };
 
@@ -87,24 +87,25 @@ export default function CollaboratorSection({ taskId, agents, sectionOpen, onTog
   };
 
   return (
-    <div className="rounded-lg border border-slate-700/50 bg-slate-900/40 overflow-hidden">
+    <div className="overflow-hidden" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
       <button
         type="button"
         onClick={onToggleSection}
-        className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-slate-800/40 transition"
+        className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-[var(--th-bg-surface-hover)] transition"
       >
-        <span className="text-[11px] font-medium text-slate-400">
+        <span className="text-[11px] font-medium font-mono" style={{ color: "var(--th-text-muted)" }}>
           {t({ ko: "협업 참여자", en: "Collaborators", ja: "コラボレーター", zh: "协作者" })}
-          <span className="ml-1.5 text-slate-500">{collaborators.length}{t({ ko: "명", en: "", ja: "名", zh: "人" })}</span>
+          <span className="ml-1.5" style={{ color: "var(--th-text-muted)" }}>{collaborators.length}{t({ ko: "명", en: "", ja: "名", zh: "人" })}</span>
         </span>
         <svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor"
           strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-          className={`text-slate-500 transition-transform ${sectionOpen ? "rotate-180" : ""}`}>
+          className={`transition-transform ${sectionOpen ? "rotate-180" : ""}`}
+          style={{ color: "var(--th-text-muted)" }}>
           <path d="M6 8l4 4 4-4" />
         </svg>
       </button>
       {sectionOpen && (
-        <div className="divide-y divide-slate-700/40 border-t border-slate-700/40">
+        <div style={{ borderTop: "1px solid var(--th-border)" }}>
           {collaborators.map((collab) => {
             const agent = collab.agent_id ? agentMap.get(collab.agent_id) : undefined;
             const name = preferKo
@@ -117,19 +118,19 @@ export default function CollaboratorSection({ taskId, agents, sectionOpen, onTog
             const role = ROLE_LABELS[roleKey]?.[locale] || ROLE_LABELS[roleKey]?.en || roleKey;
 
             return (
-              <div key={collab.task_id} className="flex items-start gap-2.5 px-3 py-2.5">
+              <div key={collab.task_id} className="flex items-start gap-2.5 px-3 py-2.5" style={{ borderBottom: "1px solid var(--th-border)" }}>
                 <AgentAvatar agent={agent} agents={agents} size={28} rounded="lg" />
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-1.5">
-                    <span className="text-xs font-medium text-slate-200">{name || "-"}</span>
-                    {dept && <span className="text-[10px] text-slate-500">{dept}</span>}
-                    {role && <span className="text-[10px] text-slate-600">· {role}</span>}
-                    <span className={`ml-auto inline-flex items-center rounded-full border px-1.5 py-0.5 text-[9px] font-medium ${statusCls(collab.status)}`}>
+                    <span className="text-xs font-medium font-mono" style={{ color: "var(--th-text-heading)" }}>{name || "-"}</span>
+                    {dept && <span className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>{dept}</span>}
+                    {role && <span className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>· {role}</span>}
+                    <span className={`ml-auto inline-flex items-center border px-1.5 py-0.5 text-[9px] font-medium font-mono ${statusCls(collab.status)}`} style={{ borderRadius: "2px" }}>
                       {statusLabel(collab.status)}
                     </span>
                   </div>
                   {collab.summary && (
-                    <div className="mt-0.5 text-[11px] text-slate-400 truncate" title={collab.summary}>
+                    <div className="mt-0.5 text-[11px] font-mono truncate" style={{ color: "var(--th-text-secondary)" }} title={collab.summary}>
                       {collab.summary.length > 120 ? `${collab.summary.slice(0, 120)}...` : collab.summary}
                     </div>
                   )}

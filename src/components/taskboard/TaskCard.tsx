@@ -44,13 +44,6 @@ interface TaskCardProps {
   onUnhideTask?: (id: string) => void;
 }
 
-const SUBTASK_STATUS_ICON: Record<string, string> = {
-  pending: "\u23F3",
-  in_progress: "\uD83D\uDD28",
-  done: "\u2705",
-  blocked: "\uD83D\uDEAB",
-};
-
 const STATUS_LEFT_BORDER: Partial<Record<string, string>> = {
   in_progress: "#22c55e",
   review: "#a78bfa",
@@ -155,6 +148,19 @@ export default function TaskCard({
       if (terminalPollRef.current) clearInterval(terminalPollRef.current);
     };
   }, [showTerminalPreview, task.status, fetchTerminalPreview]);
+
+  const subtaskTotal = task.subtask_total ?? taskSubtasks.length;
+  const subtaskDoneCount = taskSubtasks.filter((s) => s.status === "done").length;
+  const subtaskInProgressCount = taskSubtasks.filter((s) => s.status === "in_progress").length;
+  const subtaskBlockedCount = taskSubtasks.filter((s) => s.status === "blocked").length;
+  const subtaskPendingCount = Math.max(0, subtaskTotal - subtaskDoneCount - subtaskInProgressCount - subtaskBlockedCount);
+
+  const SUBTASK_STATUS_COLOR: Record<string, string> = {
+    done: "rgb(52,211,153)",
+    in_progress: "var(--th-accent, #f59e0b)",
+    blocked: "rgb(253,164,175)",
+    pending: "var(--th-text-muted)",
+  };
 
   const leftBorderColor = STATUS_LEFT_BORDER[task.status] ?? "var(--th-border)";
   const assignedAgent = task.assigned_agent ?? agents.find((agent) => agent.id === task.assigned_agent_id);
@@ -324,7 +330,7 @@ export default function TaskCard({
           }}
         />
         {agentWarning && (
-          <p className="mt-1 text-xs font-medium text-red-400 animate-[shake_0.4s_ease-in-out]">
+          <p className="mt-1 text-xs font-medium animate-[shake_0.4s_ease-in-out]" style={{ color: "rgb(253,164,175)" }}>
             {t({
               ko: "담당자를 배정해주세요!",
               en: "Please assign an agent!",
@@ -335,64 +341,96 @@ export default function TaskCard({
         )}
       </div>
 
-      {(task.subtask_total ?? 0) > 0 && (
+      {subtaskTotal > 0 && (
         <div className="mb-3">
+          {/* Progress bar + fraction */}
           <button
             onClick={() => setShowSubtasks((v) => !v)}
-            className="mb-1.5 flex w-full items-center gap-2 text-left"
+            className="mb-1 flex w-full items-center gap-2 text-left"
           >
             <div
-              className="flex-1 h-1.5 overflow-hidden"
+              className="flex h-1.5 flex-1 overflow-hidden"
               style={{ borderRadius: "1px", background: "var(--th-border)" }}
             >
-              <div
-                className="h-full transition-all"
-                style={{
-                  borderRadius: "1px",
-                  width: `${Math.round(((task.subtask_done ?? 0) / (task.subtask_total ?? 1)) * 100)}%`,
-                  background: "var(--th-accent, #f59e0b)",
-                }}
-              />
+              {subtaskDoneCount > 0 && (
+                <div
+                  className="h-full transition-all"
+                  style={{ width: `${(subtaskDoneCount / subtaskTotal) * 100}%`, background: "rgb(52,211,153)" }}
+                />
+              )}
+              {subtaskInProgressCount > 0 && (
+                <div
+                  className="h-full transition-all"
+                  style={{ width: `${(subtaskInProgressCount / subtaskTotal) * 100}%`, background: "var(--th-accent)" }}
+                />
+              )}
+              {subtaskBlockedCount > 0 && (
+                <div
+                  className="h-full transition-all"
+                  style={{ width: `${(subtaskBlockedCount / subtaskTotal) * 100}%`, background: "rgb(253,164,175)" }}
+                />
+              )}
             </div>
-            <span className="text-xs whitespace-nowrap" style={{ color: "var(--th-text-muted)" }}>
-              {task.subtask_done ?? 0}/{task.subtask_total ?? 0}
+            <span className="font-mono text-[10px] tabular-nums whitespace-nowrap" style={{ color: "var(--th-text-muted)" }}>
+              {subtaskDoneCount}/{subtaskTotal}
             </span>
-            <span className="text-xs" style={{ color: "var(--th-text-muted)" }}>{showSubtasks ? "▲" : "▼"}</span>
+            <span className="text-[10px]" style={{ color: "var(--th-text-muted)" }}>{showSubtasks ? "▲" : "▼"}</span>
           </button>
+
+          {/* Status chips */}
+          <div className="mb-1.5 flex flex-wrap items-center gap-2 text-[10px] font-mono">
+            {subtaskDoneCount > 0 && <span style={{ color: "rgb(52,211,153)" }}>✓ {subtaskDoneCount}</span>}
+            {subtaskInProgressCount > 0 && <span style={{ color: "var(--th-accent)" }}>⚡ {subtaskInProgressCount}</span>}
+            {subtaskBlockedCount > 0 && <span style={{ color: "rgb(253,164,175)" }}>✖ {subtaskBlockedCount}</span>}
+            {subtaskPendingCount > 0 && <span style={{ color: "var(--th-text-muted)" }}>· {subtaskPendingCount} pending</span>}
+          </div>
+
+          {/* Subtask rows */}
           {showSubtasks && taskSubtasks.length > 0 && (
-            <div className="space-y-1 pl-1">
+            <div className="space-y-px">
               {taskSubtasks.map((subtask) => {
                 const targetDepartment = subtask.target_department_id
-                  ? departments.find((departmentItem) => departmentItem.id === subtask.target_department_id)
+                  ? departments.find((d) => d.id === subtask.target_department_id)
                   : null;
+                const barColor = SUBTASK_STATUS_COLOR[subtask.status] ?? "var(--th-border)";
                 return (
-                  <div key={subtask.id} className="flex items-center gap-1.5 text-xs">
-                    <span>{SUBTASK_STATUS_ICON[subtask.status] || "\u23F3"}</span>
+                  <div
+                    key={subtask.id}
+                    className="flex items-center gap-1.5 py-1 pl-2"
+                    style={{ borderLeft: `2px solid ${barColor}` }}
+                  >
                     <span
-                      className={`flex-1 truncate ${subtask.status === "done" ? "line-through" : ""}`}
-                      style={{ color: subtask.status === "done" ? "var(--th-text-muted)" : "var(--th-text-secondary)" }}
+                      className={`flex-1 truncate text-[11px] font-mono`}
+                      style={{
+                        color: subtask.status === "done" ? "var(--th-text-muted)" : "var(--th-text-secondary)",
+                        textDecoration: subtask.status === "done" ? "line-through" : "none",
+                      }}
                     >
                       {subtask.title}
                     </span>
                     {targetDepartment && (
                       <span
-                        className="shrink-0 px-1 py-0.5 text-[10px] font-medium font-mono"
-                        style={{ backgroundColor: targetDepartment.color + "30", color: targetDepartment.color, borderRadius: "2px" }}
+                        className="shrink-0 px-1 py-0.5 text-[10px] font-mono"
+                        style={{ background: targetDepartment.color + "30", color: targetDepartment.color, borderRadius: "2px" }}
                       >
-                        {targetDepartment.icon} {targetDepartment.name_ko}
+                        {targetDepartment.icon}
                       </span>
                     )}
                     {subtask.delegated_task_id && subtask.status !== "done" && (
                       <span
-                        className="shrink-0"
+                        className="shrink-0 text-[10px] font-mono"
                         style={{ color: "#60a5fa" }}
                         title={t({ ko: "위임됨", en: "Delegated", ja: "委任済み", zh: "已委派" })}
                       >
-                        🔗
+                        ↗
                       </span>
                     )}
                     {subtask.status === "blocked" && subtask.blocked_reason && (
-                      <span className="text-red-400 text-[10px] truncate max-w-[80px]" title={subtask.blocked_reason}>
+                      <span
+                        className="shrink-0 truncate max-w-[80px] text-[10px] font-mono"
+                        style={{ color: "rgb(253,164,175)" }}
+                        title={subtask.blocked_reason}
+                      >
                         {subtask.blocked_reason}
                       </span>
                     )}

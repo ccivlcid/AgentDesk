@@ -129,8 +129,8 @@ export default function ProjectEditorPanel({
   onDelete,
 }: ProjectEditorPanelProps) {
   return (
-    <div className="min-w-0 space-y-3 rounded-xl border border-slate-700 bg-slate-800/50 p-4">
-      <label className="block text-xs text-slate-400">
+    <div className="min-w-0 space-y-3 p-4" style={{ border: "1px solid var(--th-border)", borderRadius: "2px", background: "var(--th-bg-surface)" }}>
+      <label className="block text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
         {t({ ko: "프로젝트 이름", en: "Project Name", ja: "プロジェクト名", zh: "项目名称" })}
         <input
           type="text"
@@ -140,10 +140,11 @@ export default function ProjectEditorPanel({
             setFormFeedback(null);
           }}
           disabled={!isCreating && !editingProjectId}
-          className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white outline-none focus:border-blue-500"
+          className="mt-1 w-full px-3 py-2 text-xs font-mono outline-none"
+          style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
         />
       </label>
-      <label className="block text-xs text-slate-400">
+      <label className="block text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
         {t({ ko: "프로젝트 경로", en: "Project Path", ja: "プロジェクトパス", zh: "项目路径" })}
         <input
           type="text"
@@ -154,7 +155,8 @@ export default function ProjectEditorPanel({
             setFormFeedback(null);
           }}
           disabled={!isCreating && !editingProjectId}
-          className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white outline-none focus:border-blue-500"
+          className="mt-1 w-full px-3 py-2 text-xs font-mono outline-none"
+          style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
         />
       </label>
       {pathToolsVisible && (
@@ -168,7 +170,8 @@ export default function ProjectEditorPanel({
                 setManualPathPickerOpen(true);
                 void loadManualPathEntries(projectPath.trim() || undefined);
               }}
-              className="rounded-md border border-slate-600 px-2.5 py-1 text-xs font-semibold text-slate-200 transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
+              className="px-2.5 py-1 text-xs font-semibold font-mono transition disabled:cursor-not-allowed disabled:opacity-40"
+              style={{ borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
             >
               {t({
                 ko: "앱 내 폴더 탐색",
@@ -184,7 +187,8 @@ export default function ProjectEditorPanel({
                 setFormFeedback(null);
                 setPathSuggestionsOpen((prev) => !prev);
               }}
-              className="rounded-md border border-slate-600 px-2.5 py-1 text-xs font-semibold text-slate-200 transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
+              className="px-2.5 py-1 text-xs font-semibold font-mono transition disabled:cursor-not-allowed disabled:opacity-40"
+              style={{ borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
             >
               {pathSuggestionsOpen
                 ? t({ ko: "자동 경로찾기 닫기", en: "Close Auto Finder", ja: "自動候補を閉じる", zh: "关闭自动查找" })
@@ -231,7 +235,8 @@ export default function ProjectEditorPanel({
                   setNativePathPicking(false);
                 }
               }}
-              className="rounded-md border border-slate-600 px-2.5 py-1 text-xs font-semibold text-slate-200 transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
+              className="px-2.5 py-1 text-xs font-semibold font-mono transition disabled:cursor-not-allowed disabled:opacity-40"
+              style={{ borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
             >
               {nativePathPicking
                 ? t({
@@ -251,9 +256,9 @@ export default function ProjectEditorPanel({
             </button>
           </div>
           {pathSuggestionsOpen && (
-            <div className="max-h-40 overflow-y-auto rounded-lg border border-slate-700 bg-slate-800/70">
+            <div className="max-h-40 overflow-y-auto" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
               {pathSuggestionsLoading ? (
-                <p className="px-3 py-2 text-xs text-slate-400">
+                <p className="px-3 py-2 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
                   {t({
                     ko: "경로 후보를 불러오는 중...",
                     en: "Loading path suggestions...",
@@ -262,7 +267,7 @@ export default function ProjectEditorPanel({
                   })}
                 </p>
               ) : pathSuggestions.length === 0 ? (
-                <p className="px-3 py-2 text-xs text-slate-400">
+                <p className="px-3 py-2 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
                   {t({
                     ko: "추천 경로가 없습니다. 직접 입력해주세요.",
                     en: "No suggested path. Enter one manually.",
@@ -281,7 +286,8 @@ export default function ProjectEditorPanel({
                       setPathSuggestionsOpen(false);
                       setFormFeedback(null);
                     }}
-                    className="w-full px-3 py-2 text-left text-xs text-slate-200 transition hover:bg-slate-700/70"
+                    className="w-full px-3 py-2 text-left text-xs font-mono transition"
+                    style={{ color: "var(--th-text-primary)" }}
                   >
                     {candidate}
                   </button>
@@ -303,16 +309,18 @@ export default function ProjectEditorPanel({
       )}
       {formFeedback && (
         <div
-          className={`rounded-lg border px-3 py-2 text-xs ${
-            formFeedback.tone === "error"
-              ? "border-rose-500/60 bg-rose-500/10 text-rose-800 dark:text-rose-200"
-              : "border-cyan-500/50 bg-cyan-500/10 text-cyan-800 dark:text-cyan-100"
-          }`}
+          className="px-3 py-2 text-xs font-mono"
+          style={{
+            borderRadius: "2px",
+            border: formFeedback.tone === "error" ? "1px solid rgba(244,63,94,0.6)" : "1px solid rgba(6,182,212,0.5)",
+            background: formFeedback.tone === "error" ? "rgba(244,63,94,0.1)" : "rgba(6,182,212,0.1)",
+            color: formFeedback.tone === "error" ? "#fda4af" : "#67e8f9",
+          }}
         >
           {formFeedback.message}
         </div>
       )}
-      <label className="block text-xs text-slate-400">
+      <label className="block text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
         {t({ ko: "핵심 목표", en: "Core Goal", ja: "コア目標", zh: "核心目标" })}
         <textarea
           rows={5}
@@ -322,17 +330,19 @@ export default function ProjectEditorPanel({
             setFormFeedback(null);
           }}
           disabled={!isCreating && !editingProjectId}
-          className="mt-1 w-full resize-none rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white outline-none focus:border-blue-500"
+          className="mt-1 w-full resize-none px-3 py-2 text-xs font-mono outline-none"
+          style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
         />
       </label>
 
-      <label className="block text-xs text-slate-400">
-        {t({ ko: "기본 워크플로우 팩", en: "Default Workflow Pack", ja: "デフォルトワークフローパック", zh: "默认工作流包" })}
+      <label className="block text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
+        {t({ ko: "오피스 팩", en: "Office Pack", ja: "オフィスパック", zh: "办公包" })}
         <select
           value={defaultPackKey}
           onChange={(e) => setDefaultPackKey(e.target.value as WorkflowPackKey)}
           disabled={!isCreating && !editingProjectId}
-          className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white outline-none focus:border-blue-500"
+          className="mt-1 w-full px-3 py-2 text-xs font-mono outline-none"
+          style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
         >
           {WORKFLOW_PACK_KEYS.map((key) => (
             <option key={key} value={key}>
@@ -340,12 +350,12 @@ export default function ProjectEditorPanel({
             </option>
           ))}
         </select>
-        <span className="mt-1 block text-[10px] text-slate-500">
+        <span className="mt-1 block text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
           {t({
-            ko: "이 프로젝트에서 생성되는 태스크의 기본 팩을 설정합니다",
-            en: "Sets the default pack for tasks created in this project",
-            ja: "このプロジェクトで作成されるタスクのデフォルトパックを設定します",
-            zh: "设置在此项目中创建的任务的默认工作流包",
+            ko: "이 프로젝트에서 생성되는 태스크의 오피스 팩을 설정합니다",
+            en: "Sets the office pack for tasks created in this project",
+            ja: "このプロジェクトで作成されるタスクのオフィスパックを設定します",
+            zh: "设置在此项目中创建的任务的办公包",
           })}
         </span>
       </label>
@@ -378,7 +388,8 @@ export default function ProjectEditorPanel({
               onSave();
             }}
             disabled={!canSave || saving}
-            className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-500 disabled:opacity-40"
+            className="px-3 py-1.5 text-xs font-bold font-mono uppercase tracking-wider disabled:opacity-40"
+            style={{ borderRadius: "2px", background: "var(--th-accent)", color: "#000" }}
           >
             {editingProjectId
               ? t({ ko: "수정 저장", en: "Save", ja: "保存", zh: "保存" })
@@ -389,7 +400,8 @@ export default function ProjectEditorPanel({
           <button
             type="button"
             onClick={onCancelEdit}
-            className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs text-slate-300"
+            className="px-3 py-1.5 text-xs font-mono"
+            style={{ borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
           >
             {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}
           </button>
@@ -398,7 +410,8 @@ export default function ProjectEditorPanel({
           type="button"
           onClick={onStartEditSelected}
           disabled={!selectedProject || isCreating || !!editingProjectId}
-          className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs text-slate-300 disabled:opacity-40"
+          className="px-3 py-1.5 text-xs font-mono disabled:opacity-40"
+          style={{ borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
         >
           {t({ ko: "선택 프로젝트 편집", en: "Edit Selected", ja: "選択編集", zh: "编辑选中项" })}
         </button>
@@ -406,7 +419,8 @@ export default function ProjectEditorPanel({
           type="button"
           onClick={onDelete}
           disabled={!selectedProject}
-          className="rounded-lg border border-red-700/70 px-3 py-1.5 text-xs text-red-300 disabled:opacity-40"
+          className="px-3 py-1.5 text-xs font-mono disabled:opacity-40"
+          style={{ borderRadius: "2px", border: "1px solid rgba(239,68,68,0.5)", color: "#fca5a5", background: "transparent" }}
         >
           {t({ ko: "삭제", en: "Delete", ja: "削除", zh: "删除" })}
         </button>

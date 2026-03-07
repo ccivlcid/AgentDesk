@@ -20,10 +20,10 @@ export default function HooksHeader({
   onOpenCreateModal,
 }: HooksHeaderProps) {
   return (
-    <div className="bg-slate-800/60 backdrop-blur-sm border border-slate-700/50 rounded-xl p-5">
+    <div className="border rounded p-5" style={{ background: "var(--th-bg-surface)", borderColor: "var(--th-border)" }}>
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="text-lg font-bold text-white flex items-center gap-2">
+          <h2 className="text-lg font-bold flex items-center gap-2" style={{ color: "var(--th-text-primary)" }}>
             <span className="text-2xl">{"\u{1F517}"}</span>
             {t({
               ko: "\uD6C5 \uAD00\uB9AC",
@@ -32,7 +32,7 @@ export default function HooksHeader({
               zh: "\u94A9\u5B50\u7BA1\u7406",
             })}
           </h2>
-          <p className="text-sm text-slate-400 mt-1">
+          <p className="text-sm mt-1" style={{ color: "var(--th-text-muted)" }}>
             {t({
               ko: "\uC5D0\uC774\uC804\uD2B8 \uD0DC\uC2A4\uD06C \uB77C\uC774\uD504\uC0AC\uC774\uD074 \uD6C5 \uAD00\uB9AC",
               en: "Manage agent task lifecycle hooks",
@@ -44,7 +44,8 @@ export default function HooksHeader({
         <div className="flex items-center gap-3">
           <button
             onClick={onOpenCreateModal}
-            className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium bg-violet-600/20 text-violet-300 border border-violet-500/30 rounded-lg hover:bg-violet-600/30 transition-all"
+            className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium bg-violet-600/20 text-violet-300 border border-violet-500/30 transition-all"
+            style={{ borderRadius: "2px" }}
             title={t({
               ko: "\uC0C8 \uD6C5 \uCD94\uAC00",
               en: "Add new hook",
@@ -56,8 +57,8 @@ export default function HooksHeader({
             {t({ ko: "\uD6C5 \uCD94\uAC00", en: "Add Hook", ja: "\u30D5\u30C3\u30AF\u8FFD\u52A0", zh: "\u6DFB\u52A0\u94A9\u5B50" })}
           </button>
           <div className="text-right">
-            <div className="text-2xl font-bold text-empire-gold">{hooksCount}</div>
-            <div className="text-xs text-slate-500">
+            <div className="text-2xl font-bold font-mono" style={{ color: "var(--th-accent)" }}>{hooksCount}</div>
+            <div className="text-xs" style={{ color: "var(--th-text-muted)" }}>
               {t({ ko: "\uB4F1\uB85D\uB41C \uD6C5", en: "Registered hooks", ja: "\u767B\u9332\u6E08\u307F\u30D5\u30C3\u30AF", zh: "\u5DF2\u6CE8\u518C\u94A9\u5B50" })}
             </div>
           </div>
@@ -76,12 +77,14 @@ export default function HooksHeader({
               ja: "フック検索...（タイトル・説明・コマンド）",
               zh: "搜索钩子...（标题、描述、命令）",
             })}
-            className="w-full bg-slate-900/60 border border-slate-600/50 rounded-lg px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/25"
+            className="w-full rounded px-4 py-2.5 text-sm focus:outline-none"
+            style={{ background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)" }}
           />
           {search && (
             <button
               onClick={() => onSearchChange("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
+              className="absolute right-3 top-1/2 -translate-y-1/2"
+              style={{ color: "var(--th-text-muted)" }}
             >
               &times;
             </button>
@@ -91,7 +94,8 @@ export default function HooksHeader({
         <select
           value={sortBy}
           onChange={(e) => onSortByChange(e.target.value as HookSortBy)}
-          className="bg-slate-900/60 border border-slate-600/50 rounded-lg px-3 py-2.5 text-sm text-slate-300 focus:outline-none focus:border-blue-500/50"
+          className="rounded px-3 py-2.5 text-sm focus:outline-none"
+          style={{ background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)" }}
         >
           <option value="priority">
             {t({ ko: "\uC6B0\uC120\uC21C\uC704\uC21C", en: "By Priority", ja: "\u512A\u5148\u9806\u4F4D\u9806", zh: "\u6309\u4F18\u5148\u7EA7" })}

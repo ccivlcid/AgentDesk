@@ -1,7 +1,7 @@
 # AgentDesk — Development Progress
 
 > **Rule**: This document is updated every time work is completed or a phase transitions.
-> Last updated: 2026-03-07 (FM2024 deep overhaul — OfficeRoomManager, GitHubImportWizard, GitHubDeviceConnect, ProjectFlowDialog fully converted)
+> Last updated: 2026-03-07 (태스크템플릿 DONE 확인, 활동 캘린더 위젯 신규 구현 — DashboardCalendar, Phase 15-2 HIGH 항목 전체 이미 클린 확인)
 
 ---
 
@@ -488,6 +488,9 @@ Phase 5 (Office Tower) — largest visual overhaul, last
 | `deliverables/Deliverables.tsx` | ~8 | ✅ DONE |
 | `taskboard/GanttChart.tsx` | ~25 | ✅ DONE |
 | `chat-panel/ChatMessageList.tsx` | ~30 | ✅ DONE |
+| `chat-panel/ChatPanelHeader.tsx` | 8 | ✅ DONE |
+| `ChatPanel.tsx` | 1 | ✅ DONE |
+| `agent-manager/AgentFormModal.tsx` | 1 | ✅ DONE |
 | `chat-panel/ChatComposer.tsx` | ~20 | ✅ DONE |
 | `chat-panel/ProjectFlowDialog.tsx` | 28 | ✅ DONE |
 | `AgentSelect.tsx` | ~15 | ✅ DONE |
@@ -506,7 +509,7 @@ Phase 5 (Office Tower) — largest visual overhaul, last
 | `settings/OAuthConnectCards.tsx` | 13 | ✅ DONE |
 | `settings/gateway-settings/ChannelGuideModal.tsx` | 16 | ✅ DONE |
 | `settings/GitHubOAuthAppConfig.tsx` | 8 | ✅ DONE |
-| `settings/gateway-settings/ChatEditorModal.tsx` | 6 | HIGH |
+| `settings/gateway-settings/ChatEditorModal.tsx` | 6 | ✅ DONE |
 | `settings/OAuthSettingsTab.tsx` | 3 | ✅ DONE |
 | `settings/ApiAssignModal.tsx` | 4 | ✅ DONE |
 | `settings/GatewaySettingsTab.tsx` | 2 | ✅ DONE |
@@ -530,7 +533,7 @@ Phase 5 (Office Tower) — largest visual overhaul, last
 | `memory/MemoryMemorySection.tsx` | 3 | LOW |
 | `memory/MemoryHistoryPanel.tsx` | 3 | LOW |
 | `memory/model.tsx` | 6 | LOW |
-| `hooks/HooksGrid.tsx` | 4 | MED |
+| `hooks/HooksGrid.tsx` | 4 | ✅ DONE |
 | `hooks/HooksEventTypeBar.tsx` | 5 | MED |
 | `hooks/HookFormModal.tsx` | 2 | LOW |
 | `hooks/HookLearningModal.tsx` | 3 | LOW |
@@ -552,11 +555,13 @@ Phase 5 (Office Tower) — largest visual overhaul, last
 
 | File | 매치 수 | Priority |
 |---|---|---|
-| `game-room/TicTacToe.tsx` | 15 | LOW |
-| `game-room/GameResult.tsx` | 14 | LOW |
-| `game-room/Tetris.tsx` | 20 | LOW |
-| `game-room/RockPaperScissors.tsx` | 15 | LOW |
-| `game-room/MemoryMatch.tsx` | 12 | LOW |
+| `game-room/TicTacToe.tsx` | 15 | ✅ DONE |
+| `game-room/GameResult.tsx` | 14 | ✅ DONE |
+| `game-room/Tetris.tsx` | 20 | ✅ DONE |
+| `game-room/RockPaperScissors.tsx` | 15 | ✅ DONE |
+| `game-room/MemoryMatch.tsx` | 12 | ✅ DONE |
+
+> **Phase 13 COMPLETE**: `src/**/*.tsx` 전체 0개 위반 달성 (2026-03-07)
 
 **기타 소파일**:
 
@@ -581,7 +586,7 @@ Phase 5 (Office Tower) — largest visual overhaul, last
 | `office-view/RoomLayoutEditor.tsx` | 8 | MED |
 | `office-view/CliUsagePanel.tsx` | 4 | MED |
 | `taskboard/DiffModal.tsx` | 2 | LOW |
-| `project-manager/ProjectInsightsPanel.tsx` | 5 | MED |
+| `project-manager/ProjectInsightsPanel.tsx` | 5 | ✅ DONE |
 | `project-manager/BurndownChart.tsx` | 4 | MED |
 | `project-manager/ManualAssignmentSelector.tsx` | 1 | LOW |
 | `scheduled-tasks/ScheduledTasksPanel.tsx` | 4 | MED |
@@ -596,28 +601,28 @@ Phase 5 (Office Tower) — largest visual overhaul, last
 
 | 기능 | 설명 | Priority |
 |---|---|---|
-| 에이전트 "사고 흐름" 스트리밍 | TerminalPanel에 thinking... 단계 실시간 표시 | HIGH |
-| 에이전트 간 DM 채팅 | agent-to-agent 메시지 뷰어 | HIGH |
-| 에이전트 성과 히스토리 그래프 | 주간/월간 task 완료율 차트 (AgentPerformancePanel) | MED |
-| 에이전트 "오늘의 작업 요약" | 일일 자동 리포트 in Dashboard | MED |
+| 에이전트 "사고 흐름" 스트리밍 | TerminalPanel에 thinking... 단계 실시간 표시 | ✅ DONE |
+| 에이전트 간 DM 채팅 | agent-to-agent 메시지 뷰어 | ✅ DONE |
+| 에이전트 성과 히스토리 그래프 | 주간/월간 task 완료율 차트 (AgentPerformancePanel) | ✅ DONE |
+| 에이전트 "오늘의 작업 요약" | 일일 자동 리포트 in Dashboard | ✅ DONE |
 
 ### 14-2. 태스크 보드 고도화
 
 | 기능 | 설명 | Priority |
 |---|---|---|
-| 태스크 의존성 그래프 | DAG 뷰어 — 어떤 태스크가 어떤 것에 의존하는지 | HIGH |
-| 서브태스크 진행률 바 | 태스크카드에 인라인 서브태스크 트리 | HIGH |
-| 태스크 타임라인 뷰 개선 | GanttChart: 현재시각 표시선 + 드래그 날짜 조정 | MED |
-| 태스크 템플릿 | 자주 쓰는 태스크 패턴 저장/재사용 | MED |
-| 태스크 일괄 액션 | 체크박스 선택 후 batch assign/stop/delete | MED |
+| 태스크 의존성 그래프 | DAG 뷰어 — 어떤 태스크가 어떤 것에 의존하는지 | ✅ DONE |
+| 서브태스크 진행률 바 | 태스크카드에 인라인 서브태스크 트리 | ✅ DONE |
+| 태스크 타임라인 뷰 개선 | GanttChart: 현재시각 표시선 + 드래그 날짜 조정 | ✅ DONE |
+| 태스크 템플릿 | 자주 쓰는 태스크 패턴 저장/재사용 | ✅ DONE |
+| 태스크 일괄 액션 | 체크박스 선택 후 batch assign/stop/delete | ✅ DONE |
 
 ### 14-3. 오피스 뷰 인터랙티브 강화
 
 | 기능 | 설명 | Priority |
 |---|---|---|
-| 에이전트 클릭 → 즉석 채팅 팝업 | 캔버스에서 에이전트 클릭 시 미니 채팅창 | HIGH |
+| 에이전트 클릭 → 즉석 채팅 팝업 | 캔버스에서 에이전트 클릭 시 미니 채팅창 | ✅ DONE |
 | 층별 부서 드래그&드롭 재배치 | OfficeRoomManager 연동 | MED |
-| 실시간 태스크 완료 이펙트 | 태스크 완료 시 캔버스에 파티클 이펙트 | MED |
+| 실시간 태스크 완료 이펙트 | 태스크 완료 시 캔버스에 파티클 이펙트 | ✅ DONE |
 | 엘리베이터 승하차 애니메이션 정교화 | 에이전트 캐릭터가 실제로 탑승/하차하는 스프라이트 | LOW |
 | 방문자 에이전트 랜덤 이벤트 | 방문자가 선물 전달, 회의 요청 등 랜덤 이벤트 트리거 | LOW |
 
@@ -625,9 +630,9 @@ Phase 5 (Office Tower) — largest visual overhaul, last
 
 | 기능 | 설명 | Priority |
 |---|---|---|
-| 멀티 에이전트 그룹 채팅 | 여러 에이전트를 한 채널에서 동시 소통 | HIGH |
-| 채팅 메시지 핀고정 | 중요 메시지 핀 → 패널 상단 고정 | MED |
-| 채팅 검색 | 메시지 내 키워드 검색 + 하이라이트 | MED |
+| 멀티 에이전트 그룹 채팅 | 여러 에이전트를 한 채널에서 동시 소통 | ✅ DONE |
+| 채팅 메시지 핀고정 | 중요 메시지 핀 → 패널 상단 고정 | ✅ DONE |
+| 채팅 검색 | 메시지 내 키워드 검색 + 하이라이트 | ✅ DONE |
 | 채팅 내보내기 | 대화 내용 markdown/txt로 export | LOW |
 | 음성 입력 지원 | Web Speech API로 STT 채팅 입력 | LOW |
 
@@ -637,14 +642,57 @@ Phase 5 (Office Tower) — largest visual overhaul, last
 |---|---|---|
 | 위젯 드래그&드롭 레이아웃 | 사용자가 대시보드 위젯 배치 커스터마이즈 | MED |
 | "AI 인사이트" 위젯 | 에이전트 성과 분석 요약 (자동 생성) | MED |
-| 알림 센터 | 태스크 완료/오류/임박 마감 실시간 알림 | HIGH |
-| 일정 달력 위젯 | 태스크 마감일 달력 뷰 | MED |
+| 알림 센터 | 태스크 완료/오류/임박 마감 실시간 알림 | ✅ DONE |
+| 일정 달력 위젯 | 태스크 마감일 달력 뷰 | ✅ DONE |
+
+### 14-P1 구현 상세 — 에이전트 사고 흐름 스트리밍 (DONE)
+
+| 파일 | 변경 내용 |
+|---|---|
+| `server/modules/routes/ops/terminal/extract-thinking-blocks.ts` | **신규** — `extractThinkingBlocks(raw)` 함수: stream_event thinking_delta/content_block_start/stop, assistant message thinking blocks, direct thinking/reasoning types, text+part.type 5가지 포맷 파싱 |
+| `server/modules/routes/ops/terminal/routes.ts` | `extractThinkingBlocks` 호출 → `thinking_blocks` 응답 포함; `prettyStreamJson` `includeReasoning: false`로 변경 (reasoning이 terminal text에 섞이지 않도록) |
+| `src/api/messaging-runtime-oauth.ts` | `TerminalThinkingBlock` 타입 추가; `getTerminal` 반환 타입에 `thinking_blocks?: TerminalThinkingBlock[] \| null` 추가 |
+| `src/components/TerminalPanel.tsx` | `thinkingBlocks` + `showThinking` 상태 추가; `fetchTerminal`에서 `thinking_blocks` 수신; 헤더에 "THINK" 토글 버튼 (thinking blocks 있을 때만 표시); 터미널 바디 위 REASONING 패널 — 최신 블록 표시 + amber 0.65 opacity 텍스트 |
+
+### 14-P2 구현 상세 — 태스크 의존성 DAG 그래프 (DONE)
+
+| 파일 | 변경 내용 |
+|---|---|
+| `server/modules/routes/core/task-dependencies.ts` | `GET /api/task-dependencies/all` 엔드포인트 추가 — 전체 엣지 일괄 반환 |
+| `src/api/task-dependencies.ts` | `getAllTaskDependencies()` + `AllTaskDependenciesResponse` 타입 추가 |
+| `src/components/taskboard/DependencyGraph.tsx` | **신규** — SVG DAG 뷰어: 위상 정렬 기반 rank 레이아웃, 베지어 곡선 화살표, 노드 hover 엣지 하이라이트, 마우스 휠 줌/드래그 팬, 상태별 색상 시스템 |
+| `src/components/TaskBoard.tsx` | viewMode `"board" \| "gantt"` → `"board" \| "gantt" \| "dag"` 확장; DAG 버튼 추가; DependencyGraph 렌더링 |
+
+### 14-P4 구현 상세 — Office View 즉석 채팅 팝업 (DONE)
+
+| 파일 | 변경 내용 |
+|---|---|
+| `src/components/office-view/OfficeQuickChat.tsx` | **신규** — 에이전트 avatar + 이름 헤더, textarea 입력, `sendMessage({ receiver_type: "agent", receiver_id })` 전송, Ctrl+Enter 단축키, 성공 시 "✓ 전송 완료" 표시 후 자동 닫힘, Escape 닫힘 |
+| `src/components/OfficeView.tsx` | `quickChatAgent` 상태 추가; `handleCanvasSelectAgent`에서 `setQuickChatAgent(agent)` 호출; canvas wrap 우하단에 절대 위치 팝업 렌더링 |
+
+### 14-P6 구현 상세 — API 키 헬스체크 대시보드 (DONE)
+
+| 파일 | 변경 내용 |
+|---|---|
+| `src/components/dashboard/ProviderHealthPanel.tsx` | **신규** — CLI 프로바이더(claude/codex/gemini 등 8종) 설치/인증 상태 좌측 바, API 프로바이더 개별 테스트 버튼 + "Test All APIs" 일괄 테스트, 인라인 결과 배지(✓ N models / ✗ 에러) |
+| `src/components/Dashboard.tsx` | `SectionKey`에 `"providers"` 추가, `defaultSectionsOpen` 추가, `sectionTitles.providers` 추가, "Provider health" CollapsibleSection 렌더링 |
+
+### 14-P7 구현 상세 — 멀티 에이전트 그룹 채팅 (DONE)
+
+| 파일 | 변경 내용 |
+|---|---|
+| `src/components/chat-panel/GroupChatPanel.tsx` | **신규** — 좌측 에이전트 체크박스 선택(검색 포함), 우측 통합 메시지 피드(전 에이전트 메시지 병합·시간순 정렬), Ctrl+Enter 전송, 일괄 `sendMessage` 루프, 자동 스크롤 |
+| `src/app/useAppLabels.ts` | `groupChatLabel` 4개국어 추가 |
+| `src/app/AppHeaderBar.tsx` | `groupChatLabel` + `onOpenGroupChat` prop 추가, 헤더 우측 버튼 + 모바일 메뉴 항목 추가 |
+| `src/app/AppMainLayout.tsx` | `AppMainLayoutLabels` + 핸들러 인터페이스에 groupChat 추가, AppHeaderBar 연결 |
+| `src/app/AppOverlays.tsx` | `showGroupChat` + `onCloseGroupChat` prop 추가, `GroupChatPanel` 렌더링 |
+| `src/App.tsx` | `showGroupChat` 상태 추가, `onOpenGroupChat`/`onCloseGroupChat` 핸들러 연결 |
 
 ### 14-6. 설정 & 연동 강화
 
 | 기능 | 설명 | Priority |
 |---|---|---|
-| API 키 헬스체크 대시보드 | 각 LLM provider 연결 상태 + 토큰 사용량 | HIGH |
+| API 키 헬스체크 대시보드 | 각 LLM provider 연결 상태 + 토큰 사용량 | ✅ DONE |
 | Slack/Discord 웹훅 연동 | 태스크 완료 시 외부 채널 알림 | MED |
 | 에이전트 스킬 마켓플레이스 | 커뮤니티 스킬 검색/설치 UI | LOW |
 | 자동 백업 설정 | DB/설정 파일 자동 백업 스케줄러 UI | LOW |
@@ -653,10 +701,207 @@ Phase 5 (Office Tower) — largest visual overhaul, last
 
 | 기능 | 설명 | Priority |
 |---|---|---|
-| 컴포넌트 lazy loading | 라이브러리 탭 (Rules/Memory/Hooks/Skills) lazy import | HIGH |
+| 컴포넌트 lazy loading | 라이브러리 탭 (Rules/Memory/Hooks/Skills) lazy import | ✅ DONE |
 | OfficeView WebWorker | PixiJS 틱 루프를 WebWorker로 분리 (메인 스레드 보호) | MED |
 | 가상 스크롤 | 태스크 리스트, 메시지 리스트 virtualizer 도입 | MED |
 | SSE → WebSocket 마이그레이션 | 실시간 이벤트를 WebSocket으로 전환 (더 낮은 오버헤드) | LOW |
+
+---
+
+## Phase 15 — Office View 레이아웃 수정 + FM2024 잔여 컴포넌트
+
+### 15-0. Phase 15 추가 수정 (완료)
+
+| 항목 | 파일 | Status |
+|---|---|---|
+| FM2024 잔여 shadow-xl/backdrop-blur 제거 (NotificationCenter, LearningModal×4, CreateTaskModalView, Sections) | 7개 파일 | ✅ DONE |
+| AgentSelect, OfficeRoomManager, AppHeaderBar, AppMainLayout rounded-md/shadow-xl 제거 | 4개 파일 | ✅ DONE |
+| OfficeDeptPanel: CONF(Meeting Room), B1(Break Room) 항목 추가 + onScrollToFloor prop | `OfficeDeptPanel.tsx` | ✅ DONE |
+| OfficeView: handleScrollToFloor 핸들러 추가, 하드코딩 상수 → 실제 상수로 수정 | `OfficeView.tsx` | ✅ DONE |
+| visitorTick: walkingLeft 방향 판단 버그 수정 (walk_to_dest/walk_home 항상 left였던 문제) | `visitorTick.ts` | ✅ DONE |
+
+### 15-1. Office View 레이아웃 문제 (스크린샷 v8 기준 분석)
+
+**문제 진단 (2026-03-07 스크린샷 분석):**
+
+| 항목 | 현황 | 원인 | 목표 |
+|---|---|---|---|
+| 캐릭터 크기 | TARGET_CHAR_H=52, 층 높이 대비 43% 차지 | 캔버스 380px가 CSS ~2× 스케일 → 실 표시 ~100px | TARGET_CHAR_H=36으로 축소 |
+| 층 높이 | FLOOR_ROOM_H=120 — 매우 좁고 숨막힘 | SLOT_H=120이 FLOOR_ROOM_H로 직결 | SLOT_H=156으로 확장 |
+| 회의실 | CEO 펜트하우스 내부에 작은 테이블로만 존재, 별도 층 없음 | Phase 5 리팩 시 별도 층 제거됨 | 펜트하우스 바로 아래 전용 회의실 층 추가 |
+| 휴게실 | 최하단 basement에 있어 6개 부서 스크롤 후에야 도달 | 구조적으로 맨 아래 위치 | 존재는 유지, 오피스 패널 사이드 메뉴에 "휴게실 보기" 스크롤 버튼 추가 |
+| 배치 엉킴 | 가구/이름 태그/캐릭터가 겹쳐 보임 | 층 높이 120px로는 여유 없음 | 층 높이 확장으로 자연 해결 |
+| FM 스타일 | CEO 펜트하우스 가구가 과도하게 픽셀 아트 블럭 스타일 | 기본 스타일 drawer가 너무 chunky | drawPenthouse 가구 재배치 + 축소 |
+
+**수정 계획 — 상수 변경:**
+```
+SLOT_H: 120 → 156  (FLOOR_ROOM_H도 자동 변경)
+TARGET_CHAR_H: 52 → 36
+FLOOR_HALLWAY_H: 24 → 28
+FLOOR_TOTAL_H: 144 → 184  (자동)
+MINI_CHAR_H: 28 → 20
+```
+
+**수정 계획 — 구조 변경:**
+- `drawConferenceFloor.ts` 신규 — 펜트하우스 아래 전용 회의실 층 (높이 100px)
+- `buildScene.ts` — 회의실 층 삽입 (totalH 계산에 포함)
+- `drawPenthouse.ts` — 회의 테이블 제거 (별도 층으로 이동), 가구 크기/위치 조정
+- `drawFloor.ts` — nameY, charFeetY, deskY 오프셋 재조정
+
+**수정 계획 — OfficeView 패널:**
+- 오른쪽 패널에 "B1 휴게실" 클릭 → 캔버스 맨 아래로 스크롤
+- 패널 층 목록에 회의실(CONF), 부서들, 휴게실 항목 추가
+
+**예상 결과:**
+- 캐릭터/층 비율: 36/156 = 23% (현재 43% → 크게 개선)
+- 층당 여유 공간: 156 - (20+24+36+26) = 50px 여유 확보
+- 회의실이 별도 층으로 명확히 구분됨
+
+### 15-2. FM2024 잔여 컴포넌트 감사 결과
+
+**완전 미변환 (legacy Tailwind 클래스 다수, th- 변수 부재/부족):**
+
+| 컴포넌트 | 파일 | 주요 문제 | Priority |
+|---|---|---|---|
+| ScheduledTasksPanel | `src/components/scheduled-tasks/ScheduledTasksPanel.tsx` | rounded-md, bg-gray 혼재 | HIGH |
+| CreateTaskModalView | `src/components/taskboard/create-modal/CreateTaskModalView.tsx` | shadow-xl 드롭다운, rounded-md | HIGH |
+| CreateTaskModal Sections | `src/components/taskboard/create-modal/Sections.tsx` | rounded-md, legacy border colors | HIGH |
+| NotificationCenter | `src/components/NotificationCenter.tsx` | shadow-xl, rounded-md 팝업 | MED |
+| AgentSelect | `src/components/AgentSelect.tsx` | rounded-md, shadow-xl 드롭다운 | MED |
+
+**부분 변환 (th- 변수는 있으나 legacy 혼재):**
+
+| 컴포넌트 | 파일 | 남은 문제 | Priority |
+|---|---|---|---|
+| MemoryLearningModal | `src/components/memory/MemoryLearningModal.tsx` | shadow-xl 드롭다운만 | LOW |
+| RuleLearningModal | `src/components/agent-rules/RuleLearningModal.tsx` | shadow-xl 드롭다운만 | LOW |
+| HookLearningModal | `src/components/hooks/HookLearningModal.tsx` | shadow-xl 드롭다운만 | LOW |
+| LearningModal (Skills) | `src/components/skills-library/LearningModal.tsx` | shadow-xl 드롭다운만 | LOW |
+| OfficeRoomManager | `src/components/OfficeRoomManager.tsx` | rounded-md 패널 | MED |
+| MemoryHistoryPanel | `src/components/memory/MemoryHistoryPanel.tsx` | rounded-md, shadow | MED |
+
+**이미 완전 변환된 컴포넌트 (참고):**
+- HeartbeatPanel, CliUsagePanel, GeneralSettingsTab, ApiSettingsTab, CliSettingsTab, DataSettingsTab, SettingsTabNav, GatewaySettingsTab, HeroSections, OpsSections, TaskCard, MemoryGrid, HooksGrid, AgentRulesGrid, SkillsGrid, ApiAssignModal, ChatEditorModal, OAuthConnectedProvidersSection, MemoryFormModal, HookFormModal, AgentCard, AgentFormModal, AgentsTab, DashboardCollapsibleSection, TaskBoard, ProviderHealthPanel, GroupChatPanel
+
+---
+
+## Phase 16 — CEO 커스터마이즈 확장 + 오피스 뷰 내비게이션
+
+> **현재 상태 (2026-03-07)**
+> - 오피스 뷰 좌측 패널에 CEO Penthouse(P), Meeting Room(CONF), Break Room(B1) 클릭-스크롤 항목 추가 ✅
+> - CEO 커스터마이즈 기능: OfficeRoomManager 내 `CEO Customize` 섹션에 headwear/outfitTint/title/trailEffect 구현 ✅
+> - CEO 룸 테마(floor/wall/accent): OfficeRoomManager Room Themes 섹션 ✅
+> - **CEO 실명/회사명 (16-2-A)**: `name`(명패) + `companyName`(옥상 간판) 필드 추가, OfficeRoomManager 입력 폼 연동 ✅
+> - **CEO 아바타 이모지 (16-2-B)**: `avatarEmoji` 필드 추가, 로봇 얼굴 위 PixiJS Text 오버레이, OfficeRoomManager 이모지 입력 ✅
+> - **방문자 인사말 커스텀 (16-2-D)**: `greetings[]` 필드, visitorTick phrasePool 동적 교체, OfficeRoomManager textarea 입력 ✅
+> - **CEO 퍼소나 연결 (16-2-C)**: `personaId` 필드, 펜트하우스 스트립 배지 표시, OfficeRoomManager PERSONA_CATALOG 드롭다운 ✅
+> - **회의실 높이 확대**: CONFERENCE_FLOOR_H 100 → 140 ✅
+> - **FM2024 클린업**: HeartbeatGuideModal shadow-2xl 제거, RoomLayoutEditor rounded 버튼 변환, DiffModal shadow-2xl 제거 ✅
+
+---
+
+### 16-1. CEO 커스터마이즈 현황 감사
+
+**현재 구현된 항목:**
+
+| 기능 | 저장 키 | 위치 | 상태 |
+|---|---|---|---|
+| 머리 장식 (crown/tophat/cap/halo/horns/ribbon/none) | `headwear` | OfficeRoomManager | ✅ |
+| 복장 색상 (hex 컬러 피커) | `outfitTint` | OfficeRoomManager | ✅ |
+| 직함 텍스트 (최대 12자) | `title` | OfficeRoomManager | ✅ |
+| 이동 트레일 효과 (sparkle/stars/hearts/fire) | `trailEffect` | OfficeRoomManager | ✅ |
+| 펜트하우스 방 테마 (floor1/floor2/wall/accent) | `ceoOffice` in RoomThemes | OfficeRoomManager | ✅ |
+
+**현재 없는 항목 (Phase 16 추가 계획):**
+
+| 기능 | 설명 | 우선순위 |
+|---|---|---|
+| CEO 실명 + 회사명 | 명패에 "CEO" 외 실제 이름 표시, 옥상 사인 "AGENTDESK HQ" → 사용자 지정 회사명 | HIGH |
+| CEO 아바타 이모지 | 로봇 스프라이트 위에 이모지 오버레이 or 이모지 전용 스프라이트 | HIGH |
+| CEO 퍼소나 연결 | 페르소나 카탈로그에서 선택 → CEO 캐릭터 성격/접근 방식 결정 | MED |
+| 방문자 인사말 커스텀 | 에이전트가 CEO실 방문 시 표시되는 고정 문구 (현재 랜덤 VISITOR_PHRASES) | MED |
+| CEO 책상 스타일 | default/executive/minimal 3종 (drawPenthouse의 desk 렌더링 분기) | LOW |
+| 펜트하우스 KPI 목표치 | 터미널 스트립의 STAFF/ACTIVE/TASKS/DONE 외 사용자 정의 목표 수치 표시 | LOW |
+
+---
+
+### 16-2. CEO 커스터마이즈 확장 구현 계획
+
+#### 16-2-A. CEO 실명 + 회사명 (HIGH)
+
+**변경 파일:**
+- `ceo-customization.ts` — `CeoCustomization` 인터페이스에 `name: string`, `companyName: string` 추가
+- `drawPenthouse.ts` — CEO 명패 `"CEO"` → `ceoConfig.name` 또는 `ceoConfig.title` 표시
+- `drawRoof.ts` — 옥상 사인 `"[ AGENTDESK // MISSION CTRL ]"` → `"[ ${companyName} // MISSION CTRL ]"`
+- `buildScene-final-layers.ts` — CEO 로봇 이름 배지에 `name` 반영
+- `OfficeRoomManager.tsx` — 입력 폼 2개 추가 (name 최대 16자, companyName 최대 20자)
+
+**저장 구조:**
+```typescript
+interface CeoCustomization {
+  headwear: CeoHeadwear;
+  outfitTint: number;
+  title: string;       // 직함 "CEO" / "CTO" 등
+  name: string;        // 실명 "김대표" — 명패에 표시 (NEW)
+  companyName: string; // 회사명 — 옥상 사인 (NEW)
+  trailEffect: CeoTrailEffect;
+}
+```
+
+#### 16-2-B. CEO 아바타 이모지 (HIGH)
+
+**현재:** CEO는 PixiJS Graphics로 그린 로봇 픽셀아트 (buildScene-final-layers.ts)
+
+**구현 방안 A — 이모지 오버레이** (권장):
+- `CeoCustomization`에 `avatarEmoji: string` 필드 추가 (기본값 `""` = 로봇 유지)
+- `buildScene-final-layers.ts`의 로봇 헤드 위치에 PixiJS `Text` (fontSize 18)로 이모지 렌더링
+- OfficeRoomManager에 이모지 입력 필드 또는 EmojiPicker 연동
+
+**구현 방안 B — 에이전트 연결** (대안):
+- CEO 역할을 특정 에이전트(userId)로 지정 → 해당 에이전트의 avatar_emoji 사용
+- 에이전트 스프라이트 시스템과 CEO 스프라이트 통합
+
+→ **권장: 방안 A** (독립적, 구현 쉬움)
+
+#### 16-2-C. CEO 퍼소나 연결 (MED)
+
+**현재:** CEO는 퍼소나 없음. 에이전트만 persona_id를 가짐.
+
+**구현 방안:**
+- `CeoCustomization`에 `personaId: string | null` 추가
+- OfficeRoomManager CEO 섹션에 PersonaCatalog 드롭다운 추가
+- CEO 퍼소나는 시스템 전역 context 주입 (태스크 실행 프롬프트에 CEO 성격 반영)
+- CEO 명패 옆에 PersonaBadge 표시
+
+#### 16-2-D. 방문자 인사말 커스텀 (MED)
+
+**현재:** `VISITOR_PHRASES` 배열이 visitorTick.ts에 하드코딩 (12개)
+
+**구현 방안:**
+- `CeoCustomization`에 `greetings: string[]` (최대 5개) 추가
+- visitorTick.ts에서 CEO 방문 시 `ceoCustomization.greetings`가 있으면 우선 사용
+- OfficeRoomManager에 인사말 입력 섹션 (textarea, 줄바꿈 구분)
+
+---
+
+### 16-3. OfficeRoomManager UI 개편 계획
+
+현재 OfficeRoomManager는 한 패널에 모든 설정이 있어 스크롤이 많음.
+
+**개선 방향:**
+- 탭 구조로 변경: `[ 방 테마 ]  [ CEO 커스텀 ]  [ 시즌/스타일 ]`
+- CEO 커스텀 탭에 16-2-A~D 항목 통합
+
+---
+
+### 16-4. 오피스 패널 내비게이션 (완료)
+
+| 항목 | 설명 | 상태 |
+|---|---|---|
+| `P` (CEO Penthouse) | 클릭 → 캔버스 최상단 스크롤 | ✅ DONE |
+| `CONF` (Meeting Room) | 클릭 → 회의실 층 스크롤 | ✅ DONE |
+| `F1~FN` (부서 층) | 클릭 → 해당 부서 층 스크롤 + 엘리베이터 이동 + 선택 박스 | ✅ DONE |
+| `B1` (Break Room) | 클릭 → 지하 휴게실 스크롤 | ✅ DONE |
 
 ---
 

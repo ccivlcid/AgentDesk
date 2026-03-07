@@ -124,17 +124,17 @@ export default function RockPaperScissors({ opponent, onFinish, onBack }: RockPa
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <button onClick={onBack} className="text-sm text-slate-400 hover:text-slate-200 transition">
+        <button onClick={onBack} className="text-sm font-mono transition hover:text-[var(--th-text-primary)]" style={{ color: "var(--th-text-muted)" }}>
           &larr; {t({ ko: "\uB85C\uBE44", en: "Lobby", ja: "\u30ED\u30D3\u30FC", zh: "\u5927\u5385" })}
         </button>
-        <div className="text-sm text-slate-400">
+        <div className="text-sm font-mono" style={{ color: "var(--th-text-muted)" }}>
           {t({
             ko: `\uB77C\uC6B4\uB4DC ${round}`,
             en: `Round ${round}`,
             ja: `\u30E9\u30A6\u30F3\u30C9 ${round}`,
             zh: `\u7B2C ${round} \u5C40`,
           })}
-          <span className="text-slate-600 ml-1">
+          <span className="ml-1" style={{ color: "var(--th-border)" }}>
             ({t({ ko: "2\uC2B9 \uC2DC \uC885\uB8CC", en: "First to 2", ja: "2\u52DD\u5148\u53D6", zh: "\u5148\u80DC2\u5C40" })})
           </span>
         </div>
@@ -143,13 +143,13 @@ export default function RockPaperScissors({ opponent, onFinish, onBack }: RockPa
       {/* Score bar */}
       <div className="flex items-center justify-center gap-8 text-center">
         <div>
-          <div className="text-2xl font-bold text-blue-400">{scoreDisplay.playerWins}</div>
-          <div className="text-xs text-slate-400">CEO</div>
+          <div className="text-2xl font-bold text-[#60a5fa]">{scoreDisplay.playerWins}</div>
+          <div className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>CEO</div>
         </div>
-        <div className="text-slate-600 text-sm">vs</div>
+        <div className="text-sm font-mono" style={{ color: "var(--th-border)" }}>vs</div>
         <div>
           <div className="text-2xl font-bold text-red-400">{scoreDisplay.opponentWins}</div>
-          <div className="text-xs text-slate-400">
+          <div className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
             {opponent.avatar_emoji} {opponentName}
           </div>
         </div>
@@ -164,7 +164,7 @@ export default function RockPaperScissors({ opponent, onFinish, onBack }: RockPa
           >
             {playerChoice ? CHOICE_EMOJI[playerChoice] : "\u2753"}
           </div>
-          <div className="text-xs text-slate-400">CEO</div>
+          <div className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>CEO</div>
         </div>
 
         {/* VS / Countdown */}
@@ -173,12 +173,13 @@ export default function RockPaperScissors({ opponent, onFinish, onBack }: RockPa
             <div className="text-4xl font-bold text-amber-400 animate-ping">{countdown}</div>
           ) : roundResult ? (
             <div
-              className={`text-lg font-bold ${roundResult === "win" ? "text-green-400" : roundResult === "lose" ? "text-red-400" : "text-slate-400"}`}
+              className={`text-lg font-bold font-mono ${roundResult === "win" ? "text-green-400" : roundResult === "lose" ? "text-red-400" : ""}`}
+          style={roundResult === "draw" ? { color: "var(--th-text-muted)" } : undefined}
             >
               {resultLabel}
             </div>
           ) : (
-            <div className="text-2xl text-slate-600">VS</div>
+            <div className="text-2xl font-mono" style={{ color: "var(--th-border)" }}>VS</div>
           )}
         </div>
 
@@ -189,7 +190,7 @@ export default function RockPaperScissors({ opponent, onFinish, onBack }: RockPa
           >
             {oppChoice ? CHOICE_EMOJI[oppChoice] : phase === "countdown" ? "\u2753" : "\uD83D\uDE0F"}
           </div>
-          <div className="text-xs text-slate-400">
+          <div className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
             {opponent.avatar_emoji} {opponentName}
           </div>
         </div>
@@ -203,21 +204,22 @@ export default function RockPaperScissors({ opponent, onFinish, onBack }: RockPa
               key={c}
               onClick={() => handleChoice(c)}
               disabled={phase !== "choosing"}
-              className={`flex flex-col items-center gap-2 px-6 py-4 rounded-xl border transition-all ${
+              className={`flex flex-col items-center gap-2 px-6 py-4 transition-all ${
                 phase !== "choosing"
-                  ? "border-slate-700 bg-slate-800/30 opacity-40 cursor-not-allowed"
-                  : "border-slate-600 bg-slate-800/60 hover:border-blue-500/50 hover:bg-slate-800 cursor-pointer hover:scale-105"
+                  ? "opacity-40 cursor-not-allowed"
+                  : "hover:border-[rgba(59,130,246,0.5)] hover:scale-105 cursor-pointer"
               }`}
+              style={{ borderRadius: "4px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}
             >
               <span className="text-3xl">{CHOICE_EMOJI[c]}</span>
-              <span className="text-xs text-slate-300">{choiceLabel(c)}</span>
+              <span className="text-xs font-mono" style={{ color: "var(--th-text-secondary)" }}>{choiceLabel(c)}</span>
             </button>
           ))}
         </div>
       )}
 
       {phase === "done" && (
-        <div className="text-center text-slate-400 text-sm animate-pulse">
+        <div className="text-center text-sm font-mono animate-pulse" style={{ color: "var(--th-text-muted)" }}>
           {t({
             ko: "\uACB0\uACFC \uD654\uBA74\uC73C\uB85C \uC774\uB3D9 \uC911...",
             en: "Going to results...",

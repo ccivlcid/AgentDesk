@@ -64,7 +64,7 @@ function renderInline(text: string): (string | JSX.Element)[] {
     } else if (match[5]) {
       // `code`
       parts.push(
-        <code key={key++} className="px-1 py-0.5 bg-gray-700 text-emerald-300 rounded text-xs font-mono">
+        <code key={key++} className="px-1 py-0.5 text-xs font-mono" style={{ borderRadius: "2px", background: "var(--th-terminal-bg)", color: "rgb(110,231,183)" }}>
           {match[6]}
         </code>,
       );
@@ -76,7 +76,8 @@ function renderInline(text: string): (string | JSX.Element)[] {
           href={match[9]}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-blue-400 underline hover:text-blue-300"
+          className="underline"
+          style={{ color: "var(--th-accent)" }}
         >
           {match[8]}
         </a>,
@@ -84,7 +85,7 @@ function renderInline(text: string): (string | JSX.Element)[] {
     } else if (match[10]) {
       // @mention
       parts.push(
-        <span key={key++} className="px-1 py-0.5 bg-blue-500/20 text-blue-300 rounded font-medium">
+        <span key={key++} className="px-1 py-0.5 font-medium" style={{ borderRadius: "2px", background: "rgba(251,191,36,0.15)", color: "var(--th-accent)" }}>
           {match[10]}
         </span>,
       );
@@ -160,7 +161,8 @@ export default function MessageContent({ content, className = "" }: MessageConte
           return (
             <pre
               key={bi}
-              className="bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-xs font-mono text-green-300 overflow-x-auto whitespace-pre-wrap"
+              className="px-3 py-2 text-xs font-mono overflow-x-auto whitespace-pre-wrap"
+              style={{ borderRadius: "2px", background: "var(--th-terminal-bg)", border: "1px solid var(--th-border)", color: "rgb(110,231,183)" }}
             >
               {block.content}
             </pre>
@@ -171,14 +173,15 @@ export default function MessageContent({ content, className = "" }: MessageConte
           const table = parseTable(block.content);
           if (table) {
             return (
-              <div key={bi} className="overflow-x-auto rounded-lg border border-gray-600">
+              <div key={bi} className="overflow-x-auto" style={{ borderRadius: "2px", border: "1px solid var(--th-border)" }}>
                 <table className="w-full text-xs">
                   <thead>
-                    <tr className="bg-gray-700/80">
+                    <tr style={{ background: "var(--th-bg-elevated)" }}>
                       {table.headers.map((h, hi) => (
                         <th
                           key={hi}
-                          className="px-2.5 py-1.5 text-left font-semibold text-gray-200 border-b border-gray-600 whitespace-nowrap"
+                          className="px-2.5 py-1.5 text-left font-semibold font-mono whitespace-nowrap"
+                          style={{ color: "var(--th-text-secondary)", borderBottom: "1px solid var(--th-border)" }}
                         >
                           {renderInline(h)}
                         </th>
@@ -187,11 +190,12 @@ export default function MessageContent({ content, className = "" }: MessageConte
                   </thead>
                   <tbody>
                     {table.rows.map((row, ri) => (
-                      <tr key={ri} className={ri % 2 === 0 ? "bg-gray-800/50" : "bg-gray-800/30"}>
+                      <tr key={ri} style={{ background: ri % 2 === 0 ? "var(--th-bg-surface)" : "var(--th-bg-primary)" }}>
                         {row.map((cell, ci) => (
                           <td
                             key={ci}
-                            className="px-2.5 py-1.5 text-gray-300 border-b border-gray-700/50 whitespace-nowrap"
+                            className="px-2.5 py-1.5 whitespace-nowrap font-mono"
+                            style={{ color: "var(--th-text-secondary)", borderBottom: "1px solid var(--th-border)" }}
                           >
                             {renderInline(cell)}
                           </td>
@@ -242,7 +246,7 @@ export default function MessageContent({ content, className = "" }: MessageConte
               if (/^[-*]\s/.test(trimmed)) {
                 return (
                   <div key={li} className="flex gap-1.5 items-start">
-                    <span className="text-gray-500 mt-0.5 shrink-0">•</span>
+                    <span className="mt-0.5 shrink-0" style={{ color: "var(--th-text-muted)" }}>•</span>
                     <span>{renderInline(trimmed.slice(2))}</span>
                   </div>
                 );
@@ -253,7 +257,7 @@ export default function MessageContent({ content, className = "" }: MessageConte
               if (olMatch) {
                 return (
                   <div key={li} className="flex gap-1.5 items-start">
-                    <span className="text-gray-500 mt-0.5 shrink-0 min-w-[1em] text-right">{olMatch[1]}.</span>
+                    <span className="mt-0.5 shrink-0 min-w-[1em] text-right" style={{ color: "var(--th-text-muted)" }}>{olMatch[1]}.</span>
                     <span>{renderInline(olMatch[2])}</span>
                   </div>
                 );
@@ -261,7 +265,7 @@ export default function MessageContent({ content, className = "" }: MessageConte
 
               // Horizontal rule
               if (/^[-*_]{3,}$/.test(trimmed)) {
-                return <hr key={li} className="border-gray-600 my-1" />;
+                return <hr key={li} className="my-1" style={{ borderColor: "var(--th-border)" }} />;
               }
 
               // Normal paragraph

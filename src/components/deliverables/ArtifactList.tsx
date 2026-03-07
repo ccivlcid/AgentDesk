@@ -63,7 +63,7 @@ export default function ArtifactList({ taskId, artifacts, onPreview }: ArtifactL
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   return (
-    <div className="divide-y divide-slate-700/40">
+    <div style={{ borderTop: "1px solid var(--th-border)" }}>
       {artifacts.map((art) => {
         const isText = art.type === "text";
         const isHtml = art.mime === "text/html";
@@ -76,24 +76,23 @@ export default function ArtifactList({ taskId, artifacts, onPreview }: ArtifactL
 
         return (
           <div key={art.id}>
-            <div className="flex items-center gap-2.5 px-3 py-2 hover:bg-slate-800/50 transition">
+            <div className="flex items-center gap-2.5 px-3 py-2 hover:bg-[var(--th-bg-surface-hover)] transition" style={{ borderBottom: "1px solid var(--th-border)" }}>
               <span className="text-base shrink-0">{getIcon(art.title)}</span>
               <div className="min-w-0 flex-1">
-                <div className="text-xs text-slate-200 truncate" title={art.relativePath}>
+                <div className="text-xs font-mono truncate" style={{ color: "var(--th-text-primary)" }} title={art.relativePath}>
                   {art.title}
                 </div>
-                <div className="text-[10px] text-slate-500">{formatSize(art.size)}</div>
+                <div className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>{formatSize(art.size)}</div>
               </div>
               <div className="flex items-center gap-1.5 shrink-0">
                 {canInlinePreview && (
                   <button
                     type="button"
                     onClick={() => setExpandedId(isExpanded ? null : art.id)}
-                    className={`rounded-md border px-2 py-0.5 text-[10px] transition ${
-                      isExpanded
-                        ? "border-sky-500/40 bg-sky-500/15 text-sky-300"
-                        : "border-slate-600 bg-slate-700/50 text-slate-300 hover:bg-slate-600/50"
-                    }`}
+                    className="px-2 py-0.5 text-[10px] font-mono transition"
+                    style={isExpanded
+                      ? { borderRadius: "2px", border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.1)", color: "var(--th-accent)" }
+                      : { borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
                     title={t({ ko: "미리보기", en: "Preview", ja: "プレビュー", zh: "预览" })}
                   >
                     {isExpanded
@@ -105,7 +104,8 @@ export default function ArtifactList({ taskId, artifacts, onPreview }: ArtifactL
                   <button
                     type="button"
                     onClick={() => onPreview(art)}
-                    className="rounded-md border border-slate-600 bg-slate-700/50 px-2 py-0.5 text-[10px] text-slate-300 hover:bg-slate-600/50 transition"
+                    className="px-2 py-0.5 text-[10px] font-mono transition"
+                    style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
                     title={t({ ko: "보기", en: "View", ja: "表示", zh: "查看" })}
                   >
                     {t({ ko: "보기", en: "View", ja: "表示", zh: "查看" })}
@@ -116,7 +116,8 @@ export default function ArtifactList({ taskId, artifacts, onPreview }: ArtifactL
                     href={previewUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="rounded-md border border-cyan-500/40 bg-cyan-500/10 px-2 py-0.5 text-[10px] text-cyan-300 hover:bg-cyan-500/20 transition"
+                    className="px-2 py-0.5 text-[10px] font-mono transition"
+                    style={{ borderRadius: "2px", border: "1px solid rgba(167,139,250,0.4)", background: "rgba(167,139,250,0.1)", color: "rgb(196,181,253)" }}
                   >
                     {t({ ko: "미리보기", en: "Preview", ja: "プレビュー", zh: "预览" })}
                   </a>
@@ -124,7 +125,8 @@ export default function ArtifactList({ taskId, artifacts, onPreview }: ArtifactL
                 <a
                   href={downloadUrl}
                   download
-                  className="rounded-md border border-slate-600 bg-slate-700/50 px-2 py-0.5 text-[10px] text-slate-300 hover:bg-slate-600/50 transition"
+                  className="px-2 py-0.5 text-[10px] font-mono transition"
+                  style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
                   title={t({ ko: "다운로드", en: "Download", ja: "ダウンロード", zh: "下载" })}
                 >
                   {t({ ko: "다운", en: "DL", ja: "DL", zh: "下载" })}
@@ -134,11 +136,11 @@ export default function ArtifactList({ taskId, artifacts, onPreview }: ArtifactL
             {/* Inline preview */}
             {isExpanded && isImage && (
               <div className="px-3 pb-3">
-                <div className="rounded-lg border border-slate-700/50 bg-slate-900/60 p-2 flex items-center justify-center">
+                <div className="p-2 flex items-center justify-center" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
                   <img
                     src={previewUrl}
                     alt={art.title}
-                    className="max-w-full max-h-80 object-contain rounded"
+                    className="max-w-full max-h-80 object-contain"
                     loading="lazy"
                   />
                 </div>
@@ -149,7 +151,8 @@ export default function ArtifactList({ taskId, artifacts, onPreview }: ArtifactL
                 <iframe
                   src={previewUrl}
                   title={art.title}
-                  className="w-full h-96 rounded-lg border border-slate-700/50 bg-white"
+                  className="w-full h-96 bg-white"
+                  style={{ borderRadius: "2px", border: "1px solid var(--th-border)" }}
                 />
               </div>
             )}

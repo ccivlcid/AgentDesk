@@ -107,6 +107,27 @@ export function updateBreakRoomAndDeliveryAnimations(
       }
       destroyNode(delivery.sprite);
       deliveries.splice(i, 1);
+    } else if (delivery.waypoints && delivery.waypoints.length >= 2) {
+      // ── Hallway waypoint walk ──────────────────────────────
+      const wpts = delivery.waypoints;
+      const totalSegs = wpts.length - 1;
+      const segFloat = delivery.progress * totalSegs;
+      const segIdx = Math.min(Math.floor(segFloat), totalSegs - 1);
+      const segFrac = segFloat - segIdx;
+      const ease = segFrac < 0.5 ? 2 * segFrac * segFrac : -1 + (4 - 2 * segFrac) * segFrac;
+      const from = wpts[segIdx];
+      const to = wpts[segIdx + 1];
+      delivery.sprite.position.x = from.x + (to.x - from.x) * ease;
+      delivery.sprite.position.y = from.y + (to.y - from.y) * ease;
+      // Bounce only on horizontal segments (same Y)
+      if (Math.abs(to.y - from.y) < 4) {
+        delivery.sprite.position.y -= Math.abs(Math.sin(segFrac * Math.PI * 10)) * 2.5;
+      }
+      const t = delivery.progress;
+      if (t < 0.05) delivery.sprite.alpha = t / 0.05;
+      else if (t > 0.9) delivery.sprite.alpha = (1 - t) / 0.1;
+      else delivery.sprite.alpha = 1;
+      delivery.sprite.scale.x = to.x > from.x ? 1 : to.x < from.x ? -1 : delivery.sprite.scale.x;
     } else if (delivery.type === "walk") {
       const t = delivery.progress;
       const ease = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;

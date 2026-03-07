@@ -14,6 +14,7 @@ import type {
 } from "../types";
 import AgentAvatar from "./AgentAvatar";
 import AgentDetailTabContent from "./agent-detail/AgentDetailTabContent";
+import AgentChatTab from "./agent-detail/AgentChatTab";
 import { CLI_LABELS, oauthAccountLabel, roleLabel, STATUS_CONFIG, statusLabel } from "./agent-detail/constants";
 
 interface AgentDetailProps {
@@ -56,7 +57,7 @@ export default function AgentDetail({
   onAgentUpdated,
 }: AgentDetailProps) {
   const { t, language } = useI18n();
-  const [tab, setTab] = useState<"info" | "tasks" | "alba" | "performance">("info");
+  const [tab, setTab] = useState<"info" | "tasks" | "alba" | "performance" | "chat">("info");
   const [editingCli, setEditingCli] = useState(false);
   const [selectedCli, setSelectedCli] = useState(agent.cli_provider);
   const [selectedOAuthAccountId, setSelectedOAuthAccountId] = useState(agent.oauth_account_id ?? "");
@@ -354,17 +355,26 @@ export default function AgentDetail({
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="w-[calc(100vw-1.5rem)] max-w-[480px] max-h-[85vh] overflow-hidden rounded-2xl border border-slate-700 bg-slate-800 shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
+      <div className="w-[calc(100vw-1.5rem)] max-w-[480px] max-h-[85vh] overflow-hidden rounded border shadow-2xl" style={{ background: "var(--th-bg-elevated)", borderColor: "var(--th-border-strong)" }}>
         <div
-          className="relative px-6 py-5 border-b border-slate-700"
+          className="relative px-6 py-5"
           style={{
+            borderBottom: "1px solid var(--th-border)",
             background: department ? `linear-gradient(135deg, ${department.color}22, transparent)` : undefined,
           }}
         >
           <button
             onClick={onClose}
-            className="absolute top-3 right-3 w-8 h-8 rounded-full bg-slate-700/50 hover:bg-slate-600 flex items-center justify-center text-slate-400 hover:text-white transition-colors"
+            className="absolute top-3 right-3 w-7 h-7 flex items-center justify-center transition-colors"
+            style={{
+              border: "1px solid var(--th-border)",
+              background: "var(--th-bg-surface)",
+              color: "var(--th-text-muted)",
+              borderRadius: "2px",
+              fontFamily: "var(--th-font-mono)",
+              fontSize: "0.75rem",
+            }}
           >
             ✕
           </button>
@@ -379,30 +389,31 @@ export default function AgentDetail({
                 className={agent.status === "working" ? "animate-agent-work" : ""}
               />
               <div
-                className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-slate-800 ${
+                className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full ${
                   agent.status === "working"
-                    ? "bg-blue-500"
+                    ? "bg-[#3b82f6]"
                     : agent.status === "idle"
                       ? "bg-green-500"
                       : agent.status === "break"
                         ? "bg-yellow-500"
-                        : "bg-slate-500"
+                        : "bg-[var(--th-text-muted)]"
                 }`}
+                style={{ border: "2px solid var(--th-bg-primary)" }}
               />
             </div>
 
             <div className="flex-1">
               <div className="flex items-center gap-2">
-                <h2 className="text-lg font-bold text-white">{localeName(language, agent)}</h2>
-                <span className={`text-xs px-1.5 py-0.5 rounded ${statusCfg.bg} ${statusCfg.color}`}>
+                <h2 className="text-base font-bold" style={{ fontFamily: "var(--th-font-mono)", color: "var(--th-text-heading)" }}>{localeName(language, agent)}</h2>
+                <span className={`text-xs px-1.5 py-0.5 font-mono ${statusCfg.bg} ${statusCfg.color}`} style={{ borderRadius: "2px" }}>
                   {statusLabel(statusCfg.label, t)}
                 </span>
               </div>
-              <div className="text-sm text-slate-400 mt-0.5">
+              <div className="text-xs font-mono mt-0.5" style={{ color: "var(--th-text-secondary)" }}>
                 {department?.icon} {department ? localeName(language, department) : ""} · {roleLabel(agent.role, t)}
               </div>
               {agent.role === "team_leader" && (
-                <label className="mt-1 inline-flex items-center gap-1.5 text-xs text-slate-300">
+                <label className="mt-1 inline-flex items-center gap-1.5 text-xs font-mono" style={{ color: "var(--th-text-secondary)" }}>
                   <input
                     type="checkbox"
                     checked={actsAsPlanningLead}
@@ -410,7 +421,8 @@ export default function AgentDetail({
                     onChange={(event) => {
                       void handlePlanningLeadToggle(event.target.checked);
                     }}
-                    className="h-3.5 w-3.5 rounded border-slate-600 bg-slate-700 text-blue-500 focus:ring-blue-500/50 disabled:opacity-60"
+                    className="h-3.5 w-3.5 disabled:opacity-60"
+                    style={{ borderRadius: "2px", accentColor: "var(--th-accent)" }}
                   />
                   <span>
                     {t({
@@ -421,13 +433,13 @@ export default function AgentDetail({
                     })}
                   </span>
                   {savingPlanningLead && (
-                    <span className="text-[10px] text-slate-400">
+                    <span className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
                       {t({ ko: "저장중...", en: "Saving...", ja: "保存中...", zh: "保存中..." })}
                     </span>
                   )}
                 </label>
               )}
-              <div className="text-xs text-slate-500 mt-0.5">
+              <div className="text-xs font-mono mt-0.5" style={{ color: "var(--th-text-muted)" }}>
                 {editingCli ? (
                   selectedCli === "codex" ? (
                     <div className="space-y-1">
@@ -440,7 +452,8 @@ export default function AgentDetail({
                             setSelectedCliModel("");
                             setSelectedCliReasoningLevel("");
                           }}
-                          className="w-[94px] shrink-0 bg-slate-700 text-slate-200 text-xs rounded px-1 py-0.5 border border-slate-600 focus:outline-none focus:border-blue-500"
+                          className="w-[94px] shrink-0 text-xs outline-none"
+                          style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)", padding: "0.125rem 0.25rem", fontFamily: "var(--th-font-mono)" }}
                         >
                           {Object.entries(CLI_LABELS).map(([key, label]) => (
                             <option key={key} value={key}>
@@ -449,7 +462,7 @@ export default function AgentDetail({
                           ))}
                         </select>
                         {cliModelsLoading ? (
-                          <span className="text-[10px] text-slate-400">
+                          <span className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
                             {t({
                               ko: "모델 로딩...",
                               en: "Loading models...",
@@ -467,7 +480,8 @@ export default function AgentDetail({
                                 const nextMeta = selectedCliModelOptions.find((model) => model.slug === nextModel);
                                 setSelectedCliReasoningLevel(nextMeta?.defaultReasoningLevel || "");
                               }}
-                              className="w-0 min-w-0 flex-1 bg-slate-700 text-slate-200 text-xs rounded px-1 py-0.5 border border-slate-600 focus:outline-none focus:border-blue-500"
+                              className="w-0 min-w-0 flex-1 text-xs outline-none"
+                              style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)", padding: "0.125rem 0.25rem", fontFamily: "var(--th-font-mono)" }}
                             >
                               <option value="">
                                 {t({
@@ -487,7 +501,8 @@ export default function AgentDetail({
                               <select
                                 value={selectedCliReasoningLevel}
                                 onChange={(event) => setSelectedCliReasoningLevel(event.target.value)}
-                                className="w-0 min-w-0 flex-1 bg-slate-700 text-slate-200 text-xs rounded px-1 py-0.5 border border-slate-600 focus:outline-none focus:border-blue-500"
+                                className="w-0 min-w-0 flex-1 text-xs outline-none"
+                              style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)", padding: "0.125rem 0.25rem", fontFamily: "var(--th-font-mono)" }}
                               >
                                 <option value="">
                                   {t({
@@ -509,7 +524,7 @@ export default function AgentDetail({
                             )}
                           </>
                         ) : (
-                          <span className="text-[10px] text-slate-400">
+                          <span className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
                             {t({
                               ko: "모델 목록이 없습니다",
                               en: "No model list available",
@@ -520,7 +535,7 @@ export default function AgentDetail({
                         )}
                       </div>
                       <div className="flex flex-wrap items-center gap-1">
-                        <span className="text-[10px] text-slate-400">
+                        <span className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
                           {t({
                             ko: "알바생 모델은 설정창 값을 따릅니다",
                             en: "Sub-agent model follows Settings",
@@ -533,13 +548,15 @@ export default function AgentDetail({
                           onClick={() => {
                             void handleSaveCli();
                           }}
-                          className="text-[10px] px-1.5 py-0.5 bg-blue-600 hover:bg-blue-500 text-white rounded transition-colors disabled:opacity-50"
+                          className="text-[10px] px-1.5 py-0.5 font-mono font-bold uppercase transition-colors disabled:opacity-50"
+                          style={{ borderRadius: "2px", background: "var(--th-accent)", color: "#000" }}
                         >
                           {savingCli ? "..." : t({ ko: "저장", en: "Save", ja: "保存", zh: "保存" })}
                         </button>
                         <button
                           onClick={handleCancelCliEdit}
-                          className="text-[10px] px-1.5 py-0.5 bg-slate-600 hover:bg-slate-500 text-slate-300 rounded transition-colors"
+                          className="text-[10px] px-1.5 py-0.5 font-mono transition-colors"
+                          style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface-hover)", color: "var(--th-text-secondary)" }}
                         >
                           {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}
                         </button>
@@ -555,7 +572,8 @@ export default function AgentDetail({
                           setSelectedCliModel("");
                           setSelectedCliReasoningLevel("");
                         }}
-                        className="bg-slate-700 text-slate-200 text-xs rounded px-1.5 py-0.5 border border-slate-600 focus:outline-none focus:border-blue-500"
+                        className="text-xs outline-none"
+                        style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)", padding: "0.125rem 0.375rem", fontFamily: "var(--th-font-mono)" }}
                       >
                         {Object.entries(CLI_LABELS).map(([key, label]) => (
                           <option key={key} value={key}>
@@ -565,7 +583,7 @@ export default function AgentDetail({
                       </select>
                       {requiresOAuthAccount &&
                         (oauthLoading ? (
-                          <span className="text-[10px] text-slate-400">
+                          <span className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
                             {t({
                               ko: "계정 로딩...",
                               en: "Loading accounts...",
@@ -577,7 +595,8 @@ export default function AgentDetail({
                           <select
                             value={selectedOAuthAccountId}
                             onChange={(event) => setSelectedOAuthAccountId(event.target.value)}
-                            className="bg-slate-700 text-slate-200 text-xs rounded px-1.5 py-0.5 border border-slate-600 focus:outline-none focus:border-blue-500 max-w-[170px]"
+                            className="text-xs outline-none max-w-[170px]"
+                            style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)", padding: "0.125rem 0.375rem", fontFamily: "var(--th-font-mono)" }}
                           >
                             {activeOAuthAccounts.map((account) => (
                               <option key={account.id} value={account.id}>
@@ -607,7 +626,7 @@ export default function AgentDetail({
                       )}
                       {supportsCliModelOverride &&
                         (cliModelsLoading ? (
-                          <span className="text-[10px] text-slate-400">
+                          <span className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
                             {t({
                               ko: "모델 로딩...",
                               en: "Loading models...",
@@ -623,7 +642,8 @@ export default function AgentDetail({
                                 const nextModel = event.target.value;
                                 setSelectedCliModel(nextModel);
                               }}
-                              className="bg-slate-700 text-slate-200 text-xs rounded px-1.5 py-0.5 border border-slate-600 focus:outline-none focus:border-blue-500 max-w-[210px]"
+                              className="text-xs outline-none max-w-[210px]"
+                              style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)", padding: "0.125rem 0.375rem", fontFamily: "var(--th-font-mono)" }}
                             >
                               <option value="">
                                 {t({
@@ -639,7 +659,7 @@ export default function AgentDetail({
                                 </option>
                               ))}
                             </select>
-                            <span className="text-[10px] text-slate-400">
+                            <span className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
                               {t({
                                 ko: "알바생 모델은 설정창 값을 따릅니다",
                                 en: "Sub-agent model follows Settings",
@@ -649,7 +669,7 @@ export default function AgentDetail({
                             </span>
                           </>
                         ) : (
-                          <span className="text-[10px] text-slate-400">
+                          <span className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
                             {t({
                               ko: "모델 목록이 없습니다",
                               en: "No model list available",
@@ -663,13 +683,15 @@ export default function AgentDetail({
                         onClick={() => {
                           void handleSaveCli();
                         }}
-                        className="text-[10px] px-1.5 py-0.5 bg-blue-600 hover:bg-blue-500 text-white rounded transition-colors disabled:opacity-50"
+                        className="text-[10px] px-1.5 py-0.5 font-mono transition-colors disabled:opacity-50"
+                        style={{ borderRadius: "2px", background: "rgba(251,191,36,0.15)", color: "var(--th-accent)", border: "1px solid rgba(251,191,36,0.35)" }}
                       >
                         {savingCli ? "..." : t({ ko: "저장", en: "Save", ja: "保存", zh: "保存" })}
                       </button>
                       <button
                         onClick={handleCancelCliEdit}
-                        className="text-[10px] px-1.5 py-0.5 bg-slate-600 hover:bg-slate-500 text-slate-300 rounded transition-colors"
+                        className="text-[10px] px-1.5 py-0.5 font-mono transition-colors"
+                        style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "transparent", color: "var(--th-text-secondary)" }}
                       >
                         {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}
                       </button>
@@ -678,7 +700,8 @@ export default function AgentDetail({
                 ) : (
                   <button
                     onClick={() => setEditingCli(true)}
-                    className="flex items-center gap-1 hover:text-slate-300 transition-colors"
+                    className="flex items-center gap-1 transition-colors"
+                    style={{ color: "var(--th-text-muted)" }}
                     title={t({
                       ko: "클릭하여 CLI 변경",
                       en: "Click to change CLI",
@@ -696,7 +719,7 @@ export default function AgentDetail({
                         : agent.cli_provider === "codex" && agent.cli_reasoning_level
                           ? `${CLI_LABELS[agent.cli_provider] ?? agent.cli_provider} · (${agent.cli_reasoning_level})`
                           : (CLI_LABELS[agent.cli_provider] ?? agent.cli_provider)}
-                    <span className="text-[9px] text-slate-600 ml-0.5">✏️</span>
+                    <span className="text-[9px] ml-0.5" style={{ color: "var(--th-text-muted)" }}>✏️</span>
                   </button>
                 )}
               </div>
@@ -705,17 +728,17 @@ export default function AgentDetail({
 
           <div className="mt-3 flex items-center gap-2">
             <span className="text-xs text-yellow-400 font-bold">Lv.{xpLevel}</span>
-            <div className="flex-1 h-1.5 bg-slate-700 rounded-full overflow-hidden">
+            <div className="flex-1 h-1.5 overflow-hidden" style={{ borderRadius: "1px", background: "var(--th-bg-surface-hover)" }}>
               <div
-                className="h-full bg-gradient-to-r from-yellow-500 to-amber-400 rounded-full transition-all"
+                className="h-full bg-gradient-to-r from-yellow-500 to-amber-400 transition-all"
                 style={{ width: `${xpProgress}%` }}
               />
             </div>
-            <span className="text-[10px] text-slate-500">{agent.stats_xp} XP</span>
+            <span className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>{agent.stats_xp} XP</span>
           </div>
         </div>
 
-        <div className="flex border-b border-slate-700">
+        <div className="flex" style={{ borderBottom: "1px solid var(--th-border)" }}>
           {[
             { key: "info", label: t({ ko: "정보", en: "Info", ja: "情報", zh: "信息" }) },
             {
@@ -728,15 +751,23 @@ export default function AgentDetail({
             },
             {
               key: "performance",
-              label: t({ ko: "성과", en: "Performance", ja: "実績", zh: "绩效" }),
+              label: t({ ko: "성과", en: "Performance", ja: "実績", zh: "绩効" }),
+            },
+            {
+              key: "chat",
+              label: t({ ko: "채팅", en: "Chat", ja: "チャット", zh: "聊天" }),
             },
           ].map((tabItem) => (
             <button
               key={tabItem.key}
               onClick={() => setTab(tabItem.key as typeof tab)}
-              className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
-                tab === tabItem.key ? "text-blue-400 border-b-2 border-blue-400" : "text-slate-400 hover:text-slate-200"
-              }`}
+              className="flex-1 py-2 text-xs font-bold uppercase tracking-wider transition-colors"
+              style={{
+                fontFamily: "var(--th-font-mono)",
+                color: tab === tabItem.key ? "var(--th-accent)" : "var(--th-text-muted)",
+                borderBottom: `2px solid ${tab === tabItem.key ? "var(--th-accent)" : "transparent"}`,
+                background: "transparent",
+              }}
             >
               {tabItem.label}
             </button>
@@ -744,21 +775,25 @@ export default function AgentDetail({
         </div>
 
         <div className="p-4 overflow-y-auto max-h-[40vh]">
-          <AgentDetailTabContent
-            tab={tab}
-            t={t}
-            language={language}
-            agent={agent}
-            departments={departments}
-            agentTasks={agentTasks}
-            agentSubAgents={agentSubAgents}
-            subtasksByTask={subtasksByTask}
-            expandedTaskId={expandedTaskId}
-            setExpandedTaskId={setExpandedTaskId}
-            onChat={onChat}
-            onAssignTask={onAssignTask}
-            onOpenTerminal={onOpenTerminal}
-          />
+          {tab === "chat" ? (
+            <AgentChatTab agent={agent} />
+          ) : (
+            <AgentDetailTabContent
+              tab={tab}
+              t={t}
+              language={language}
+              agent={agent}
+              departments={departments}
+              agentTasks={agentTasks}
+              agentSubAgents={agentSubAgents}
+              subtasksByTask={subtasksByTask}
+              expandedTaskId={expandedTaskId}
+              setExpandedTaskId={setExpandedTaskId}
+              onChat={onChat}
+              onAssignTask={onAssignTask}
+              onOpenTerminal={onOpenTerminal}
+            />
+          )}
         </div>
       </div>
     </div>

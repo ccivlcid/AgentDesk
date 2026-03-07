@@ -377,18 +377,100 @@ KPI는 숫자만 크게, JetBrains Mono로
 
 ## 6. 애니메이션 & 인터랙션
 
+### 6-0. 애니메이션 라이브러리 — Framer Motion
+
+**설치:**
+```bash
+pnpm add framer-motion
+```
+
+**선택 이유:**
+
+| 이유 | 설명 |
+|---|---|
+| `AnimatePresence` | 모달/패널 unmount 시 exit 애니메이션 지원. 없으면 구현이 매우 복잡해짐 |
+| `variants + stagger` | 터미널 스타일 순차 텍스트/카드 등장에 최적 |
+| `layout` 애니메이션 | 리스트 재정렬, 패널 크기 변화 자동 처리 |
+| React 19 완전 지원 | 현재 프로젝트 React 19.2 와 호환 |
+| Tree-shakeable | 사용하는 기능만 번들에 포함, 불필요한 코드 없음 |
+| Electron 환경 | 웹 성능 제약 없음. 이미 PixiJS + Remotion이 들어가 있어 번들 크기 문제 없음 |
+
+**담당 범위 — Framer Motion vs 순수 CSS 역할 분리:**
+
+```
+Framer Motion 담당 (복잡한 오케스트레이션):
+  ✅ 모달 열기/닫기 (AnimatePresence + exit 애니메이션)
+  ✅ 부팅 시퀀스 (줄별 stagger 순차 등장)
+  ✅ 뷰 전환 (페이지 간 fade/slide)
+  ✅ 카드 목록 stagger (에이전트/태스크 카드 순차 등장)
+  ✅ 레이아웃 변경 (사이드 패널 크기 변화)
+  ✅ 숫자 카운터 (KPI 값 애니메이션)
+
+순수 CSS 담당 (단순 반복/상태):
+  ✅ 커서 깜빡임 (▋ blink)
+  ✅ [RUNNING] 배지 펄스
+  ✅ 버튼 hover 색상 전환
+  ✅ scanline 효과 (선택적)
+  ✅ 포커스 링 전환
+```
+
+**Retro Terminal 스타일로 쓰는 패턴:**
+
+```tsx
+import { motion, AnimatePresence } from "framer-motion";
+
+// 1. 부팅 시퀀스 — 줄별 순차 등장
+const bootContainer = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.12 } },
+};
+const bootLine = {
+  hidden: { opacity: 0, x: -8 },
+  show:   { opacity: 1, x: 0, transition: { duration: 0.08, ease: "linear" } },
+};
+
+// 2. 카드 stagger
+const cardContainer = {
+  show: { transition: { staggerChildren: 0.04 } },
+};
+const cardItem = {
+  hidden: { opacity: 0, y: 6 },
+  show:   { opacity: 1, y: 0, transition: { duration: 0.1, ease: "linear" } },
+};
+
+// 3. 모달 (AnimatePresence로 exit 처리)
+const modalVariants = {
+  hidden: { opacity: 0, scale: 0.97 },
+  show:   { opacity: 1, scale: 1,   transition: { duration: 0.1, ease: "linear" } },
+  exit:   { opacity: 0, scale: 0.97, transition: { duration: 0.08 } },
+};
+
+// 4. 뷰 전환
+const pageVariants = {
+  hidden: { opacity: 0 },
+  show:   { opacity: 1, transition: { duration: 0.12, ease: "linear" } },
+  exit:   { opacity: 0, transition: { duration: 0.08 } },
+};
+```
+
+> **핵심 원칙**: Retro Terminal 특성상 모든 duration을 **짧고 linear** 하게.
+> `ease-in-out` 같은 부드러운 곡선은 쓰지 않는다. 즉각적인 반응이 터미널 감성.
+
+---
+
 ### 6-1. 전환 — "Terminal Response"
 
 ```
 기존: ease-in-out 0.3s (부드러운 SaaS 느낌)
-변경: linear 0.1s 또는 step 기반 (즉각 반응)
+변경: linear 0.1s 이하 (즉각 반응)
 
-버튼 hover: 0ms (즉각)
-패널 슬라이드: 150ms linear
-모달 fade: 100ms linear
+버튼 hover:    CSS transition 50ms linear
+패널 슬라이드: Framer Motion 120ms linear
+모달 fade:     Framer Motion 100ms linear (AnimatePresence)
+뷰 전환:       Framer Motion 120ms linear
 ```
 
-### 6-2. 타이핑 커서 효과
+### 6-2. 타이핑 커서 효과 (순수 CSS)
 
 ```css
 /* 로딩 중, 에이전트 작업 중 상태에 사용 */
@@ -404,32 +486,38 @@ KPI는 숫자만 크게, JetBrains Mono로
 }
 ```
 
-### 6-3. 에이전트 상태 표시
+### 6-3. 에이전트 상태 표시 (순수 CSS)
 
-```
-[RUNNING] 상태: 앰버 펄스 애니메이션 (현재 green pulse 유지, 색만 변경)
-[ERROR] 상태: 빨간 고정 (pulse 없음 — 이미 주의 끌고 있음)
-작업 완료: 순간 green flash → [DONE] 뱃지
+```css
+/* [RUNNING] 앰버 펄스 */
+@keyframes pulse-amber {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.5); }
+  50%       { box-shadow: 0 0 0 5px rgba(245, 158, 11, 0); }
+}
+
+/* [ERROR] 고정 — 펄스 없음, 이미 빨간색으로 주의 끔 */
+/* 작업 완료: green flash 1회 → [DONE] 뱃지로 전환 (Framer Motion) */
 ```
 
-### 6-4. 로딩 화면 — "Boot Sequence"
+### 6-4. 로딩 화면 — "Boot Sequence" (Framer Motion)
 
 ```
 현재: 기본 스피너
 
-변경: 터미널 부팅 시퀀스 텍스트 애니메이션
+변경: 터미널 부팅 시퀀스 — stagger로 줄별 순차 등장
 
 AgentDesk v1.0.0
 ━━━━━━━━━━━━━━━━━━━━
-> Initializing agent runtime...    [OK]
-> Loading departments...           [OK]
-> Connecting to CLI...             [OK]
-> Starting office view...          [OK]
+> Initializing agent runtime...    [OK]   ← 120ms 후 등장
+> Loading departments...           [OK]   ← 240ms 후 등장
+> Connecting to CLI...             [OK]   ← 360ms 후 등장
+> Starting office view...          [OK]   ← 480ms 후 등장
 ━━━━━━━━━━━━━━━━━━━━
-Ready.
+Ready.                                    ← 600ms 후 등장, 앰버 색
 
 폰트: JetBrains Mono
 색상: 텍스트 #e8e8e8, [OK] #22c55e, > 프롬프트 #f59e0b
+구현: motion.div + staggerChildren: 0.12
 ```
 
 ---
@@ -505,6 +593,16 @@ DrawingStyle 기본값:
 ---
 
 ## 9. 구현 계획
+
+### Phase 0 — 의존성 설치 (즉시)
+
+```bash
+pnpm add framer-motion
+```
+
+설치 후 확인:
+- [ ] `framer-motion` import 동작 확인
+- [ ] `motion.div`, `AnimatePresence` 기본 테스트
 
 ### Phase 1 — CSS 변수 & 토큰 교체 (1주)
 

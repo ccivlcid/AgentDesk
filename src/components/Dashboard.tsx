@@ -1,4 +1,5 @@
 import { useMemo, useState, useCallback } from "react";
+import { motion } from "framer-motion";
 import type { Agent, CompanyStats, Task } from "../types";
 import { localeName, useI18n } from "../i18n";
 import {
@@ -8,11 +9,13 @@ import {
   type HudStat,
   type RankedAgent,
 } from "./dashboard/HeroSections";
-import { DashboardDeptAndSquad, DashboardMissionLog, type DepartmentPerformance } from "./dashboard/OpsSections";
+import { DashboardDeptAndSquad, DashboardMissionLog, DashboardActivePersonas, DashboardTodaySummary, type DepartmentPerformance } from "./dashboard/OpsSections";
 import { CollapsibleSection } from "./dashboard/CollapsibleSection";
 import { DEPT_COLORS, useNow } from "./dashboard/model";
+import ProviderHealthPanel from "./dashboard/ProviderHealthPanel";
+import { DashboardCalendar } from "./dashboard/CalendarWidget";
 
-type SectionKey = "overview" | "metrics" | "ranking" | "dept" | "mission";
+type SectionKey = "overview" | "metrics" | "ranking" | "personas" | "dept" | "mission" | "providers" | "today" | "calendar";
 
 interface DashboardProps {
   stats: CompanyStats | null;
@@ -26,8 +29,12 @@ const defaultSectionsOpen: Record<SectionKey, boolean> = {
   overview: true,
   metrics: true,
   ranking: true,
+  personas: true,
   dept: true,
   mission: true,
+  providers: true,
+  today: true,
+  calendar: true,
 };
 
 export default function Dashboard({ stats, agents, tasks, companyName, onPrimaryCtaClick }: DashboardProps) {
@@ -150,8 +157,8 @@ export default function Dashboard({ stats, agents, tasks, companyName, onPrimary
       label: t({ ko: "미션", en: "MISSIONS", ja: "ミッション", zh: "任务" }),
       value: totalTasks,
       sub: t({ ko: "누적 태스크", en: "Total tasks", ja: "累積タスク", zh: "累计任务" }),
-      color: "#3b82f6",
-      icon: "📋",
+      color: "#06b6d4",
+      icon: "TSK",
     },
     {
       id: "clear",
@@ -159,7 +166,7 @@ export default function Dashboard({ stats, agents, tasks, companyName, onPrimary
       value: `${completionRate}%`,
       sub: `${numberFormatter.format(completedTasks)} ${t({ ko: "클리어", en: "cleared", ja: "クリア", zh: "完成" })}`,
       color: "#10b981",
-      icon: "✅",
+      icon: "CLR",
     },
     {
       id: "squad",
@@ -167,7 +174,7 @@ export default function Dashboard({ stats, agents, tasks, companyName, onPrimary
       value: `${activeAgents}/${totalAgents}`,
       sub: `${t({ ko: "가동률", en: "uptime", ja: "稼働率", zh: "运行率" })} ${activeRate}%`,
       color: "#00f0ff",
-      icon: "🤖",
+      icon: "AGT",
     },
     {
       id: "active",
@@ -180,20 +187,32 @@ export default function Dashboard({ stats, agents, tasks, companyName, onPrimary
         zh: "项",
       })}`,
       color: "#f59e0b",
-      icon: "⚡",
+      icon: "RUN",
     },
   ];
+
+  const agentsWithPersona = agents.filter((a) => a.persona_id);
 
   const sectionTitles = {
     overview: t({ ko: "요약", en: "Overview", ja: "概要", zh: "概览" }),
     metrics: t({ ko: "핵심 지표", en: "Key metrics", ja: "主要指標", zh: "关键指标" }),
     ranking: t({ ko: "에이전트 순위", en: "Agent ranking", ja: "エージェント順位", zh: "代理排名" }),
+    personas: t({ ko: "활성 페르소나", en: "Active personas", ja: "アクティブペルソナ", zh: "活跃角色" }),
     dept: t({ ko: "부서 성과 · 스쿼드", en: "Department & squad", ja: "部署・スクワッド", zh: "部门与小队" }),
     mission: t({ ko: "최근 활동", en: "Recent activity", ja: "最近の活動", zh: "最近活动" }),
+    providers: t({ ko: "프로바이더 상태", en: "Provider health", ja: "プロバイダー状態", zh: "提供商状态" }),
+    today: t({ ko: "오늘의 작업 요약", en: "Today's activity", ja: "本日の作業", zh: "今日工作汇总" }),
+    calendar: t({ ko: "활동 캘린더", en: "Activity calendar", ja: "アクティビティカレンダー", zh: "活动日历" }),
   };
 
   return (
-    <section className="relative isolate space-y-4" style={{ color: "var(--th-text-primary)" }}>
+    <motion.section
+      className="relative isolate space-y-4"
+      style={{ color: "var(--th-text-primary)" }}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.14, ease: "linear" }}
+    >
       <CollapsibleSection
         id="overview"
         title={sectionTitles.overview}
@@ -230,7 +249,7 @@ export default function Dashboard({ stats, agents, tasks, companyName, onPrimary
         subtitle={t({ ko: "XP 기준", en: "By XP", ja: "XP 基準", zh: "按 XP" })}
         right={
           topAgents.length > 0 ? (
-            <span className="rounded border border-[var(--th-border)] bg-[var(--th-bg-primary)] px-2 py-0.5 text-[10px] font-medium text-[var(--th-text-muted)]">
+            <span className="px-2 py-0.5 font-mono text-[10px] font-medium" style={{ border: "1px solid var(--th-border)", borderRadius: "2px", background: "var(--th-bg-primary)", color: "var(--th-text-muted)" }}>
               Top {topAgents.length}
             </span>
           ) : undefined
@@ -248,6 +267,23 @@ export default function Dashboard({ stats, agents, tasks, companyName, onPrimary
           t={t}
           embedded
         />
+      </CollapsibleSection>
+
+      <CollapsibleSection
+        id="personas"
+        title={sectionTitles.personas}
+        subtitle={t({ ko: "페르소나 지정 에이전트", en: "Persona-assigned agents", ja: "ペルソナ割り当てエージェント", zh: "角色分配代理" })}
+        right={
+          agentsWithPersona.length > 0 ? (
+            <span className="px-2 py-0.5 font-mono text-[10px] font-medium" style={{ border: "1px solid var(--th-border)", borderRadius: "2px", background: "var(--th-bg-primary)", color: "var(--th-text-muted)" }}>
+              {agentsWithPersona.length}
+            </span>
+          ) : undefined
+        }
+        open={sectionOpen.personas}
+        onToggle={() => toggleSection("personas")}
+      >
+        <DashboardActivePersonas agents={agents} language={language} t={t} />
       </CollapsibleSection>
 
       <CollapsibleSection
@@ -290,6 +326,33 @@ export default function Dashboard({ stats, agents, tasks, companyName, onPrimary
           embedded
         />
       </CollapsibleSection>
-    </section>
+
+      <CollapsibleSection
+        id="today"
+        title={sectionTitles.today}
+        open={sectionOpen.today}
+        onToggle={() => toggleSection("today")}
+      >
+        <DashboardTodaySummary agents={agents} tasks={tasks} language={language} t={t} />
+      </CollapsibleSection>
+
+      <CollapsibleSection
+        id="calendar"
+        title={sectionTitles.calendar}
+        open={sectionOpen.calendar}
+        onToggle={() => toggleSection("calendar")}
+      >
+        <DashboardCalendar tasks={tasks} t={t} />
+      </CollapsibleSection>
+
+      <CollapsibleSection
+        id="providers"
+        title={sectionTitles.providers}
+        open={sectionOpen.providers}
+        onToggle={() => toggleSection("providers")}
+      >
+        <ProviderHealthPanel />
+      </CollapsibleSection>
+    </motion.section>
   );
 }

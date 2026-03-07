@@ -25,7 +25,7 @@ export default function ChatModeHint({ mode, isDirectiveMode, tr }: ChatModeHint
       ) : (
         <>
           {mode === "task" && (
-            <p className="text-xs text-blue-400">
+            <p className="text-xs text-amber-400">
               📋{" "}
               {tr(
                 "업무 지시 모드 — 에이전트에게 작업을 할당합니다",

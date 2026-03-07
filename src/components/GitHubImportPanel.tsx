@@ -275,7 +275,7 @@ export default function GitHubImportPanel({ onComplete, onCancel }: GitHubImport
   if (statusLoading) {
     return (
       <div className="flex items-center justify-center p-8">
-        <p className="text-sm text-slate-400">
+        <p className="text-sm font-mono" style={{ color: "var(--th-text-muted)" }}>
           {t({ ko: "확인 중...", en: "Checking...", ja: "確認中...", zh: "检查中..." })}
         </p>
       </div>

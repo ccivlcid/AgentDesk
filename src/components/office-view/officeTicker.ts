@@ -1,5 +1,5 @@
 import type { MutableRefObject } from "react";
-import { Graphics, Text, TextStyle, type AnimatedSprite, type Container, type Sprite } from "pixi.js";
+import { Graphics, Text, TextStyle, type AnimatedSprite, type Container, type Sprite, type Texture } from "pixi.js";
 import type { MeetingPresence } from "../../types";
 import {
   type Delivery,
@@ -23,14 +23,29 @@ import {
   AGENT_WORK_BOB_Y_AMP,
   AGENT_TASK_BOUNCE_DURATION,
   AGENT_TASK_BOUNCE_HEIGHT,
+  ROOF_H,
+  PENTHOUSE_H,
+  CONFERENCE_FLOOR_H,
+  FLOOR_TOTAL_H,
 } from "./model";
 import { applyWallClockTime, blendColor } from "./drawing-core";
 import { DEPT_THEME, DEFAULT_BREAK_THEME, DEFAULT_CEO_THEME } from "./themes-locale";
 import { updateBreakRoomAndDeliveryAnimations } from "./officeTickerRoomAndDelivery";
+import {
+  type VisitorTickState,
+  spawnVisitor,
+  updateVisitorAgents,
+  MAX_VISITORS,
+  SPAWN_INTERVAL,
+  VISITOR_PHRASES,
+} from "./visitorTick";
+import type { Agent } from "../../types";
 import type { SeasonalParticleState } from "./seasonal-particles";
 import { updateSeasonalParticles } from "./seasonal-particles";
 import type { CeoCustomization } from "./ceo-customization";
 import { getTrailColors } from "./ceo-customization";
+import { updateElevatorTick, type ElevatorTickState } from "./elevatorTick";
+import type { ExteriorWindowVisual } from "./drawExteriorWalls";
 
 interface AgentAnimItem {
   sprite: Container;
@@ -43,6 +58,7 @@ interface AgentAnimItem {
   deskG?: Container;
   bedG?: Graphics;
   blanketG?: Graphics;
+  personaGlow?: Graphics;
   phase: number;
   animated?: AnimatedSprite;
   frameCount: number;
@@ -71,6 +87,7 @@ interface BreakAnimItem {
 interface OfficeTickerData {
   customDeptThemes?: Record<string, { floor1: number; floor2: number; wall: number; accent: number }>;
   meetingPresence?: MeetingPresence[];
+  agents?: Agent[];
 }
 
 export interface OfficeTickerContext {
@@ -100,6 +117,25 @@ export interface OfficeTickerContext {
   seasonalParticleRef: MutableRefObject<SeasonalParticleState | null>;
   ceoCustomizationRef: MutableRefObject<CeoCustomization>;
   ceoTrailParticlesRef: MutableRefObject<Container | null>;
+  elevatorCarRef: MutableRefObject<Container | null>;
+  elevatorFloorDisplayRef: MutableRefObject<Text | null>;
+  elevatorDoorRef: MutableRefObject<Graphics | null>;
+  elevatorStateRef: MutableRefObject<ElevatorTickState>;
+  elevatorNFloorsRef: MutableRefObject<number>;
+  exteriorWindowsRef: MutableRefObject<ExteriorWindowVisual[]>;
+  antennaLedRef: MutableRefObject<Graphics | null>;
+  elevatorFloorLedsRef: MutableRefObject<Graphics[]>;
+  floorGlowsRef: MutableRefObject<Graphics[]>;
+  floorSelectBoxesRef: MutableRefObject<Graphics[]>;
+  selectedFloorIdxRef: MutableRefObject<number>;
+  ceoVisitorAlertRef: MutableRefObject<Text | null>;
+  agentPosRef: MutableRefObject<Map<string, { x: number; y: number }>>;
+  onSelectAgent: (agent: Agent) => void;
+  visitorLayerRef: MutableRefObject<Container | null>;
+  visitorTickRef: MutableRefObject<VisitorTickState | null>;
+  themeRef: MutableRefObject<string>;
+  texturesRef: MutableRefObject<Record<string, Texture>>;
+  spriteMapRef: MutableRefObject<Map<string, number>>;
   followCeoInView: () => void;
 }
 
@@ -158,7 +194,7 @@ export function runOfficeTickerStep(ctx: OfficeTickerContext): void {
 
     const crown = ctx.crownRef.current;
     if (crown) {
-      crown.position.y = -CEO_SIZE / 2 + 2 + Math.sin(tick * 0.06) * 2;
+      crown.position.y = -30 + Math.sin(tick * 0.06) * 2;
       crown.rotation = Math.sin(tick * 0.03) * 0.06;
     }
   }
@@ -306,6 +342,13 @@ export function runOfficeTickerStep(ctx: OfficeTickerContext): void {
       }
     }
     // ===== END CHARACTER ANIMATION BLOCK =====
+
+    // Persona glow pulse — soft amber aura behind agents with a persona
+    if (item.personaGlow && !item.personaGlow.destroyed) {
+      const pulseAlpha = (0.12 + Math.sin(tick * 0.05 + item.phase) * 0.08) * (status === "working" ? 1.4 : 0.7);
+      item.personaGlow.clear();
+      item.personaGlow.circle(baseX, baseY - 26, 18).fill({ color: 0xf59e0b, alpha: Math.max(0, pulseAlpha) });
+    }
 
     if (status === "working") {
       if (tick % 10 === 0) {
@@ -554,5 +597,157 @@ export function runOfficeTickerStep(ctx: OfficeTickerContext): void {
   // Seasonal particle animation
   if (ctx.seasonalParticleRef.current) {
     updateSeasonalParticles(ctx.seasonalParticleRef.current, tick);
+  }
+
+  // Elevator animation
+  updateElevatorTick(
+    ctx.elevatorStateRef,
+    ctx.elevatorCarRef,
+    ctx.elevatorFloorDisplayRef,
+    ctx.elevatorNFloorsRef,
+    ctx.elevatorDoorRef,
+  );
+
+  // Elevator floor LED indicators — amber=elevator here, green=agents working, dim=idle
+  const floorLeds = ctx.elevatorFloorLedsRef.current;
+  if (floorLeds.length > 0) {
+    const currentFloor = ctx.elevatorStateRef.current.floorIndex;
+    const nFloors = ctx.elevatorNFloorsRef.current;
+    const pulse = 0.7 + Math.sin(tick * 0.15) * 0.3;
+
+    // Build a set of floor indices that have working agents
+    const activeFloors = new Set<number>();
+    const agents = ctx.dataRef.current.agents ?? [];
+    const posMap = ctx.agentPosRef.current;
+    for (const agent of agents) {
+      if (agent.status !== "working") continue;
+      const pos = posMap.get(agent.id);
+      if (!pos) continue;
+      const confBottom = ROOF_H + PENTHOUSE_H + CONFERENCE_FLOOR_H;
+      const basementStart = ROOF_H + PENTHOUSE_H + CONFERENCE_FLOOR_H + nFloors * FLOOR_TOTAL_H;
+      let floorIdx: number;
+      if (pos.y < confBottom) floorIdx = 0;
+      else if (pos.y >= basementStart) floorIdx = nFloors + 1;
+      else floorIdx = Math.min(nFloors, Math.max(1, Math.floor((pos.y - confBottom) / FLOOR_TOTAL_H) + 1));
+      activeFloors.add(floorIdx);
+    }
+
+    for (let li = 0; li < floorLeds.length; li++) {
+      const led = floorLeds[li];
+      if (!led || led.destroyed) continue;
+      if (li === currentFloor) {
+        led.tint = 0xf59e0b;
+        led.alpha = pulse;
+      } else if (activeFloors.has(li)) {
+        led.tint = 0x22c55e;
+        led.alpha = 0.45 + Math.sin(tick * 0.08 + li * 1.2) * 0.15;
+      } else {
+        led.tint = 0xffffff;
+        led.alpha = 0.10;
+      }
+    }
+
+    // Floor activity glow overlays — subtle green/amber tint when agents work
+    const selectedFloorIdx = ctx.selectedFloorIdxRef.current; // 1-based, 0=none
+    const floorGlows = ctx.floorGlowsRef.current;
+    for (let gi = 0; gi < floorGlows.length; gi++) {
+      const glow = floorGlows[gi];
+      if (!glow || glow.destroyed) continue;
+      const floorIdxForGlow = gi + 1; // glow 0 = dept floor 1
+      const isActive = activeFloors.has(floorIdxForGlow);
+      const isSelected = selectedFloorIdx === floorIdxForGlow;
+      const targetAlpha = isSelected
+        ? 0.10 + Math.sin(tick * 0.06) * 0.03
+        : isActive
+          ? 0.06 + Math.sin(tick * 0.045 + gi * 0.9) * 0.02
+          : 0;
+      glow.alpha += (targetAlpha - glow.alpha) * 0.035; // smooth lerp
+      glow.tint = isSelected ? 0xf59e0b : isActive ? 0x22c55e : 0xffffff;
+    }
+  }
+
+  // Floor selection boxes — amber outline on the selected dept floor
+  const selectedFloorIdx = ctx.selectedFloorIdxRef.current;
+  const selBoxes = ctx.floorSelectBoxesRef.current;
+  for (let si = 0; si < selBoxes.length; si++) {
+    const box = selBoxes[si];
+    if (!box || box.destroyed) continue;
+    const isSelected = (si + 1) === selectedFloorIdx;
+    const targetAlpha = isSelected ? (0.75 + Math.sin(tick * 0.1) * 0.2) : 0;
+    box.alpha += (targetAlpha - box.alpha) * 0.15;
+  }
+
+  // CEO visitor alert — blink amber text in penthouse when visitor is inbound
+  const ceoAlert = ctx.ceoVisitorAlertRef.current;
+  if (ceoAlert && !ceoAlert.destroyed) {
+    const visitorTick2 = ctx.visitorTickRef.current;
+    const hasCeoVisitor = visitorTick2?.visitors.some(
+      (v) => v.destFloor === 0 && (
+        v.phase === "walk_to_elev" || v.phase === "fading_out" ||
+        v.phase === "in_elev" || v.phase === "fading_in" ||
+        v.phase === "walk_to_dest" || v.phase === "at_dest"
+      ),
+    ) ?? false;
+    if (hasCeoVisitor) {
+      // Fast blink: on 20t / off 10t cycle
+      const blinkPhase = tick % 30;
+      ceoAlert.alpha = blinkPhase < 20 ? 0.9 : 0;
+    } else {
+      ceoAlert.alpha = Math.max(0, ceoAlert.alpha - 0.05);
+    }
+  }
+
+  // Antenna LED blink — 3-frame cycle: on(30t) → dim(10t) → off(10t)
+  const led = ctx.antennaLedRef.current;
+  if (led && !led.destroyed) {
+    const phase = tick % 50;
+    led.alpha = phase < 30 ? 1 : phase < 40 ? 0.3 : 0;
+  }
+
+  // ── Visitor agent system (inter-dept movement) ───────────────
+  const visitorTick = ctx.visitorTickRef.current;
+  const visitorLayer = ctx.visitorLayerRef.current;
+  if (visitorTick && visitorLayer && !visitorLayer.destroyed) {
+    const nFloors = ctx.elevatorNFloorsRef.current;
+    // Sync phrase pool from CEO greetings customization
+    const customGreetings = ctx.ceoCustomizationRef.current?.greetings;
+    if (Array.isArray(customGreetings) && customGreetings.length > 0) {
+      visitorTick.phrasePool = customGreetings;
+    } else {
+      visitorTick.phrasePool = VISITOR_PHRASES;
+    }
+    // Tick spawn cooldown
+    if (visitorTick.spawnCooldown > 0) {
+      visitorTick.spawnCooldown--;
+    } else if (visitorTick.visitors.length < MAX_VISITORS) {
+      const agents = ctx.dataRef.current.agents ?? [];
+      if (agents.length > 0) {
+        const isDark = ctx.themeRef.current === "dark";
+        spawnVisitor(visitorTick, visitorLayer, agents, ctx.agentPosRef, nFloors, isDark, ctx.onSelectAgent, ctx.texturesRef.current, ctx.spriteMapRef.current);
+        visitorTick.spawnCooldown = SPAWN_INTERVAL + Math.floor(Math.random() * 120);
+      }
+    }
+    updateVisitorAgents(visitorTick, ctx.elevatorStateRef, nFloors, tick);
+  }
+
+  // Exterior window flicker — floor-aware: active floors stay lit, idle floors dim
+  if (tick % 60 === 0) {
+    const activeFloors = new Set([ctx.selectedFloorIdxRef.current]);
+    const wins = ctx.exteriorWindowsRef.current;
+    if (wins.length > 0) {
+      const target = wins[Math.floor(Math.random() * wins.length)];
+      if (!target.g.destroyed) {
+        // Active floor windows prefer to stay lit; idle floors prefer dark
+        const floorActive = activeFloors.has(target.floorIdx);
+        const litThreshold = floorActive ? 0.75 : 0.30;
+        target.isLit = Math.random() < litThreshold;
+        target.g.clear();
+        target.g.rect(target.wx, target.wy, 4, 6).fill(target.isLit ? target.litColor : target.darkColor);
+        target.g.rect(target.wx, target.wy, 4, 6).stroke({ width: 0.5, color: target.strokeColor, alpha: 0.6 });
+        if (target.isLit) {
+          target.g.rect(target.wx + 1, target.wy + 2, 2, 1).fill({ color: 0xffffff, alpha: 0.2 });
+        }
+      }
+    }
   }
 }

@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { SQLInputValue } from "node:sqlite";
 import type { RuntimeContext } from "../../../../types/runtime-context.ts";
+import { PERSONA_PROMPTS } from "../../../workflow/core/persona-catalog.ts";
 import type { MeetingReviewDecision } from "../../shared/types.ts";
 import {
   DEFAULT_WORKFLOW_PACK_KEY,
@@ -383,6 +384,11 @@ export function registerAgentCrudRoutes(ctx: RuntimeContext): void {
     }
   });
 
+  app.get("/api/personas", (_req, res) => {
+    const personas = Object.keys(PERSONA_PROMPTS).map((id) => ({ id, hasPrompt: true }));
+    res.json({ personas });
+  });
+
   app.post("/api/agents", (req, res) => {
     try {
       const body = (req.body ?? {}) as Record<string, unknown>;
@@ -421,13 +427,14 @@ export function registerAgentCrudRoutes(ctx: RuntimeContext): void {
       const sprite_number =
         typeof body.sprite_number === "number" && body.sprite_number > 0 ? body.sprite_number : null;
       const personality = typeof body.personality === "string" ? body.personality.trim() || null : null;
+      const persona_id = typeof body.persona_id === "string" ? body.persona_id.trim() || null : null;
 
       const id = randomUUID();
       try {
         if (hasAgentWorkflowPackColumn) {
           db.prepare(
-            `INSERT INTO agents (id, name, name_ko, name_ja, name_zh, department_id, workflow_pack_key, role, cli_provider, avatar_emoji, sprite_number, personality)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            `INSERT INTO agents (id, name, name_ko, name_ja, name_zh, department_id, workflow_pack_key, role, cli_provider, avatar_emoji, sprite_number, personality, persona_id)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           ).run(
             id,
             name,
@@ -441,11 +448,12 @@ export function registerAgentCrudRoutes(ctx: RuntimeContext): void {
             avatar_emoji,
             sprite_number,
             personality,
+            persona_id,
           );
         } else {
           db.prepare(
-            `INSERT INTO agents (id, name, name_ko, name_ja, name_zh, department_id, role, cli_provider, avatar_emoji, sprite_number, personality)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            `INSERT INTO agents (id, name, name_ko, name_ja, name_zh, department_id, role, cli_provider, avatar_emoji, sprite_number, personality, persona_id)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           ).run(
             id,
             name,
@@ -458,6 +466,7 @@ export function registerAgentCrudRoutes(ctx: RuntimeContext): void {
             avatar_emoji,
             sprite_number,
             personality,
+            persona_id,
           );
         }
       } catch (err: any) {
@@ -673,6 +682,7 @@ export function registerAgentCrudRoutes(ctx: RuntimeContext): void {
       "avatar_emoji",
       "sprite_number",
       "personality",
+      "persona_id",
       "status",
       "current_task_id",
       "acts_as_planning_leader",

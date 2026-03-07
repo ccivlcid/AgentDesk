@@ -65,6 +65,16 @@ export function ChatPanel({
   const [input, setInput] = useState("");
   const [attachments, setAttachments] = useState<File[]>([]);
   const [mode, setMode] = useState<ChatMode>(selectedAgent ? "task" : "announcement");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [pinnedIds, setPinnedIds] = useState<Set<string>>(() => {
+    try {
+      const key = `agentdesk_pinned_${selectedAgent?.id ?? "all"}`;
+      const raw = localStorage.getItem(key);
+      return raw ? new Set(JSON.parse(raw) as string[]) : new Set();
+    } catch { return new Set(); }
+  });
+  const [pinnedBarOpen, setPinnedBarOpen] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const spriteMap = useMemo(() => buildSpriteMap(agents), [agents]);
@@ -437,6 +447,30 @@ export function ChatPanel({
     return mapped;
   }, [selectedAgentId, visibleMessages]);
 
+  const displayMessages = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return visibleMessages;
+    return visibleMessages.filter((m) => m.content.toLowerCase().includes(q));
+  }, [visibleMessages, searchQuery]);
+
+  const handleSearchToggle = useCallback(() => {
+    setSearchOpen((prev) => {
+      if (prev) setSearchQuery("");
+      return !prev;
+    });
+  }, []);
+
+  const handlePinToggle = useCallback((msgId: string) => {
+    const agentKey = selectedAgent?.id ?? "all";
+    setPinnedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(msgId)) next.delete(msgId);
+      else next.add(msgId);
+      try { localStorage.setItem(`agentdesk_pinned_${agentKey}`, JSON.stringify([...next])); } catch {}
+      return next;
+    });
+  }, [selectedAgent?.id]);
+
   const { handleDecisionOptionReply, handleDecisionManualDraft } = useDecisionReplyHandlers({
     tr,
     onSendMessage,
@@ -447,7 +481,7 @@ export function ChatPanel({
   });
 
   return (
-    <div className="fixed inset-0 z-50 flex h-full w-full flex-col bg-gray-900 shadow-2xl lg:relative lg:inset-auto lg:z-auto lg:w-96 lg:border-l lg:border-gray-700">
+    <div className="fixed inset-0 z-50 flex h-full w-full flex-col shadow-2xl lg:relative lg:inset-auto lg:z-auto lg:w-96 lg:border-l" style={{ background: "var(--th-bg-primary)", borderColor: "var(--th-border)" }}>
       <ChatPanelHeader
         selectedAgent={selectedAgent}
         selectedDeptName={selectedDeptName}
@@ -461,11 +495,52 @@ export function ChatPanel({
         visibleMessagesLength={visibleMessages.length}
         onClearMessages={onClearMessages}
         onClose={onClose}
+        searchOpen={searchOpen}
+        searchQuery={searchQuery}
+        searchResultCount={displayMessages.length}
+        onSearchToggle={handleSearchToggle}
+        onSearchChange={setSearchQuery}
       />
+
+      {/* Pinned messages bar */}
+      {pinnedIds.size > 0 && (
+        <div className="flex-shrink-0" style={{ borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
+          <button
+            type="button"
+            onClick={() => setPinnedBarOpen((p) => !p)}
+            className="w-full flex items-center gap-2 px-3 py-1.5 text-left transition-colors hover:bg-[var(--th-bg-surface-hover)]"
+          >
+            <span className="text-[10px]">📌</span>
+            <span className="flex-1 text-[10px] font-mono" style={{ color: "var(--th-accent)" }}>
+              {pinnedIds.size} {tr("고정된 메시지", "pinned message(s)", "ピン留めメッセージ", "固定消息")}
+            </span>
+            <span className="text-[9px]" style={{ color: "var(--th-text-muted)" }}>{pinnedBarOpen ? "▲" : "▼"}</span>
+          </button>
+          {pinnedBarOpen && (
+            <div className="max-h-24 overflow-y-auto px-3 pb-2 space-y-1">
+              {visibleMessages.filter((m) => pinnedIds.has(m.id)).map((m) => (
+                <div key={m.id} className="flex items-start gap-2">
+                  <p className="flex-1 text-[10px] font-mono truncate" style={{ color: "var(--th-text-secondary)" }}>
+                    {m.content.slice(0, 80)}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => handlePinToggle(m.id)}
+                    className="flex-shrink-0 text-[9px] font-mono"
+                    style={{ color: "var(--th-text-muted)" }}
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       <ChatMessageList
         selectedAgent={selectedAgent}
-        visibleMessages={visibleMessages}
+        visibleMessages={displayMessages}
         agents={agents}
         spriteMap={spriteMap}
         locale={locale}
@@ -477,6 +552,9 @@ export function ChatPanel({
         onDecisionManualDraft={handleDecisionManualDraft}
         streamingMessage={streamingMessage}
         messagesEndRef={messagesEndRef}
+        searchQuery={searchQuery}
+        pinnedIds={pinnedIds}
+        onPinToggle={handlePinToggle}
       />
 
       <ProjectFlowDialog

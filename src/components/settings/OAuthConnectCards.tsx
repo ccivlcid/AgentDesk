@@ -103,7 +103,8 @@ export default function OAuthConnectCards({
                   ) : (
                     <button
                       onClick={() => onConnect(id)}
-                      className="text-[11px] px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-medium transition-colors"
+                      className="text-[11px] px-3 py-1 font-medium font-mono transition-colors"
+                      style={{ borderRadius: "2px", background: "rgba(251,191,36,0.15)", color: "var(--th-accent)", border: "1px solid rgba(251,191,36,0.35)" }}
                     >
                       {isConnected || isDetectedOnly
                         ? t({ ko: "계정 추가", en: "Add Account", ja: "アカウント追加", zh: "添加账号" })

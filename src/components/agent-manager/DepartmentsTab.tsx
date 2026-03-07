@@ -48,8 +48,9 @@ export default function DepartmentsTab({
     <div className="space-y-4">
       {deptOrderDirty && (
         <div
-          className="flex items-center gap-3 px-4 py-3 rounded-xl"
+          className="flex items-center gap-3 px-4 py-3"
           style={{
+            borderRadius: "4px",
             background: "var(--th-bg-surface)",
             border: "1px solid var(--th-border)",
           }}
@@ -61,16 +62,16 @@ export default function DepartmentsTab({
             type="button"
             onClick={onSaveOrder}
             disabled={reorderSaving}
-            className="ml-auto rounded-lg px-4 py-1.5 text-sm font-medium transition-opacity hover:opacity-90 disabled:opacity-50"
-            style={{ background: "var(--th-accent, #2563eb)", color: "var(--th-text-heading)" }}
+            className="ml-auto px-4 py-1.5 text-sm font-medium font-mono transition-opacity hover:opacity-90 disabled:opacity-50"
+            style={{ borderRadius: "2px", background: "var(--th-accent)", color: "#000" }}
           >
             {reorderSaving ? tr("저장 중...", "Saving...") : tr("순번 저장", "Save Order")}
           </button>
           <button
             type="button"
             onClick={onCancelOrder}
-            className="rounded-lg px-3 py-1.5 text-sm font-medium transition-opacity hover:opacity-90"
-            style={{ color: "var(--th-text-muted)", background: "var(--th-bg-surface-hover)" }}
+            className="px-3 py-1.5 text-sm font-medium font-mono transition-opacity hover:opacity-90"
+            style={{ borderRadius: "2px", color: "var(--th-text-muted)", background: "var(--th-bg-surface-hover)" }}
           >
             {tr("취소", "Cancel")}
           </button>
@@ -92,18 +93,18 @@ export default function DepartmentsTab({
               onDragOver={(e) => onDragOver(dept.id, e)}
               onDrop={(e) => onDrop(dept.id, e)}
               onDragEnd={onDragEnd}
-              className={`relative flex items-center gap-3 px-4 py-3 rounded-xl transition-all hover:shadow-md group ${isDragging ? "opacity-60" : ""}`}
-              style={{ background: "var(--th-bg-surface)", border: "1px solid var(--th-border)" }}
+              className={`relative flex items-center gap-3 px-4 py-3 transition-all group ${isDragging ? "opacity-60" : ""}`}
+              style={{ borderRadius: "4px", background: "var(--th-bg-surface)", border: "1px solid var(--th-border)" }}
             >
               {showDropBefore && (
                 <div
-                  className="pointer-events-none absolute left-2 right-2 top-0 h-0.5 rounded"
+                  className="pointer-events-none absolute left-2 right-2 top-0 h-0.5"
                   style={{ background: "var(--th-accent, #2563eb)" }}
                 />
               )}
               {showDropAfter && (
                 <div
-                  className="pointer-events-none absolute left-2 right-2 bottom-0 h-0.5 rounded"
+                  className="pointer-events-none absolute left-2 right-2 bottom-0 h-0.5"
                   style={{ background: "var(--th-accent, #2563eb)" }}
                 />
               )}
@@ -113,7 +114,7 @@ export default function DepartmentsTab({
                   type="button"
                   onClick={() => onMoveDept(index, -1)}
                   disabled={index === 0}
-                  className="w-6 h-5 flex items-center justify-center rounded text-xs transition-colors hover:opacity-80 disabled:opacity-20"
+                  className="w-6 h-5 flex items-center justify-center text-xs transition-colors hover:opacity-80 disabled:opacity-20"
                   style={{ color: "var(--th-text-muted)" }}
                 >
                   ▲
@@ -122,7 +123,7 @@ export default function DepartmentsTab({
                   type="button"
                   onClick={() => onMoveDept(index, 1)}
                   disabled={index === deptOrder.length - 1}
-                  className="w-6 h-5 flex items-center justify-center rounded text-xs transition-colors hover:opacity-80 disabled:opacity-20"
+                  className="w-6 h-5 flex items-center justify-center text-xs transition-colors hover:opacity-80 disabled:opacity-20"
                   style={{ color: "var(--th-text-muted)" }}
                 >
                   ▼
@@ -130,8 +131,8 @@ export default function DepartmentsTab({
               </div>
 
               <div
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold"
-                style={{ background: `${dept.color}22`, color: dept.color }}
+                className="w-8 h-8 flex items-center justify-center text-sm font-bold font-mono"
+                style={{ borderRadius: "2px", background: `${dept.color}22`, color: dept.color }}
               >
                 {index + 1}
               </div>
@@ -141,10 +142,10 @@ export default function DepartmentsTab({
                   <span className="font-semibold text-sm" style={{ color: "var(--th-text-heading)" }}>
                     {localeName(locale, dept)}
                   </span>
-                  <span className="w-3 h-3 rounded-full inline-block" style={{ background: dept.color }}></span>
+                  <span className="w-3 h-3 inline-block" style={{ borderRadius: "50%", background: dept.color }}></span>
                   <span
-                    className="text-xs px-2 py-0.5 rounded-full"
-                    style={{ background: `${dept.color}22`, color: dept.color }}
+                    className="text-xs px-2 py-0.5 font-mono"
+                    style={{ borderRadius: "2px", background: `${dept.color}22`, color: dept.color }}
                   >
                     {agentCountForDept} {tr("명", "agents")}
                   </span>
@@ -156,15 +157,15 @@ export default function DepartmentsTab({
                 )}
               </div>
 
-              <code className="text-[10px] px-2 py-0.5 rounded opacity-50" style={{ background: "var(--th-bg-surface-hover)" }}>
+              <code className="text-[10px] px-2 py-0.5 opacity-50 font-mono" style={{ borderRadius: "2px", background: "var(--th-bg-surface-hover)" }}>
                 {dept.id}
               </code>
 
               <button
                 type="button"
                 onClick={() => onEditDept(dept)}
-                className="px-3 py-1.5 rounded-lg text-xs font-medium transition-opacity opacity-0 group-hover:opacity-100 hover:opacity-90"
-                style={{ color: "var(--th-text-muted)", background: "var(--th-bg-surface-hover)" }}
+                className="px-3 py-1.5 text-xs font-medium font-mono transition-opacity opacity-0 group-hover:opacity-100 hover:opacity-90"
+                style={{ borderRadius: "2px", color: "var(--th-text-muted)", background: "var(--th-bg-surface-hover)" }}
               >
                 {tr("편집", "Edit")}
               </button>

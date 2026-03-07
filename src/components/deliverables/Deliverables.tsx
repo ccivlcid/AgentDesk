@@ -72,7 +72,7 @@ export default function Deliverables({ agents }: DeliverablesProps) {
     <div className="space-y-4">
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-lg font-semibold text-white">
+        <h2 className="text-lg font-semibold font-mono" style={{ color: "var(--th-text-heading)" }}>
           {t({
             ko: "결과물",
             en: "Deliverables",
@@ -85,7 +85,8 @@ export default function Deliverables({ agents }: DeliverablesProps) {
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-            className="rounded-lg border border-slate-600 bg-slate-800 px-2.5 py-1.5 text-xs text-slate-200 outline-none"
+            className="px-2.5 py-1.5 text-xs font-mono outline-none"
+            style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
           >
             <option value="all">{t({ ko: "전체 상태", en: "All Status", ja: "全ステータス", zh: "全部状态" })}</option>
             <option value="done">{t({ ko: "완료", en: "Done", ja: "完了", zh: "完成" })}</option>
@@ -97,7 +98,8 @@ export default function Deliverables({ agents }: DeliverablesProps) {
               setArtifacts({});
               void fetchItems();
             }}
-            className="rounded-lg border border-slate-600 bg-slate-800 px-2.5 py-1.5 text-xs text-slate-300 hover:bg-slate-700 transition"
+            className="px-2.5 py-1.5 text-xs font-mono transition"
+            style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
           >
             {t({ ko: "새로고침", en: "Refresh", ja: "更新", zh: "刷新" })}
           </button>
@@ -108,11 +110,11 @@ export default function Deliverables({ agents }: DeliverablesProps) {
       {loading ? (
         <div className="space-y-3">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={`skel-${i}`} className="animate-pulse rounded-xl border border-slate-700/60 bg-slate-800/50 p-4 h-32" />
+            <div key={`skel-${i}`} className="animate-pulse p-4 h-32" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }} />
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-slate-500">
+        <div className="flex flex-col items-center justify-center py-16 font-mono" style={{ color: "var(--th-text-muted)" }}>
           <div className="text-4xl mb-3">📦</div>
           <div className="text-sm">
             {t({

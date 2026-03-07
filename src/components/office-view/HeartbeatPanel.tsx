@@ -76,7 +76,8 @@ const ChevronDown = ({ open }: { open: boolean }) => (
     strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
-    className={`text-slate-500 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+    style={{ color: "var(--th-text-muted)", transition: "transform 0.2s" }}
+    className={open ? "rotate-180" : ""}
   >
     <polyline points="6 9 12 15 18 9" />
   </svg>
@@ -221,7 +222,7 @@ export default function HeartbeatPanel({ language, agents = [], standalone = fal
 
   return (
     <div className={standalone ? "p-4" : "mt-4 px-2"}>
-      <div className="rounded-2xl border border-slate-700/60 bg-slate-900/80 p-4 backdrop-blur-sm">
+      <div className="p-4" style={{ border: "1px solid var(--th-border)", borderRadius: "4px", background: "var(--th-bg-surface)" }}>
         {!standalone && (
           <button
             type="button"
@@ -229,44 +230,45 @@ export default function HeartbeatPanel({ language, agents = [], standalone = fal
             className="flex w-full items-center justify-between gap-2 text-left transition-colors hover:opacity-90"
           >
             <div className="flex items-center gap-2.5">
-              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-rose-500/20">
+              <span className="flex h-8 w-8 items-center justify-center" style={{ background: "rgba(244,63,94,0.15)", borderRadius: "2px" }}>
                 <HeartbeatIcon />
               </span>
               <div className="flex flex-col items-start gap-0.5">
-                <span className="text-sm font-semibold text-slate-200">
+                <span className="text-sm font-semibold font-mono" style={{ color: "var(--th-text-heading)" }}>
                   {isKo ? "Heartbeat" : "Heartbeat"}
                 </span>
-                <span className="text-[11px] text-slate-500">
+                <span className="text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>
                   {isKo ? "직원 상태 주기 확인 · 이상 시 알림" : "Periodic staff status · Alerts on issues"}
                 </span>
               </div>
               {activeCount > 0 && (
-                <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[11px] font-medium text-emerald-400">
+                <span className="px-2 py-0.5 text-[11px] font-medium font-mono text-emerald-400" style={{ borderRadius: "2px", background: "rgba(16,185,129,0.15)" }}>
                   {activeCount} {isKo ? "활성" : "active"}
                 </span>
               )}
               {alertLogs.length > 0 && (
-                <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-[11px] font-medium text-amber-400">
+                <span className="px-2 py-0.5 text-[11px] font-medium font-mono text-amber-400" style={{ borderRadius: "2px", background: "rgba(245,158,11,0.15)" }}>
                   {alertLogs.length} {isKo ? "알림" : "alert"}
                 </span>
               )}
             </div>
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-800/60 text-slate-400">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center" style={{ borderRadius: "2px", background: "var(--th-bg-elevated)", color: "var(--th-text-muted)" }}>
               <ChevronDown open={expanded} />
             </span>
           </button>
         )}
 
         {effectiveExpanded && (
-          <div className="mt-4 space-y-5 border-t border-slate-700/40 pt-4">
+          <div className="mt-4 space-y-5 pt-4" style={{ borderTop: "1px solid var(--th-border)" }}>
             {/* 가이드: 접기/펼치기 인라인 */}
-            <section className="rounded-xl border border-slate-700/40 bg-slate-800/30 overflow-hidden">
+            <section className="overflow-hidden" style={{ border: "1px solid var(--th-border)", borderRadius: "2px", background: "var(--th-bg-elevated)" }}>
               <button
                 type="button"
                 onClick={() => setGuideExpanded((v) => !v)}
-                className="flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left text-slate-300 hover:bg-slate-800/50 transition-colors"
+                className="flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left transition-colors"
+                style={{ color: "var(--th-text-secondary)" }}
               >
-                <span className="text-xs font-semibold uppercase tracking-wider">
+                <span className="text-xs font-semibold font-mono uppercase tracking-wider">
                   {isKo ? "직원 살펴보기 가이드" : "Heartbeat Guide"}
                 </span>
                 <svg
@@ -282,8 +284,8 @@ export default function HeartbeatPanel({ language, agents = [], standalone = fal
                 </svg>
               </button>
               {guideExpanded && (
-                <div className="border-t border-slate-700/40 px-3 pb-3 pt-2 space-y-3">
-                  <div className="space-y-2 text-[12px] text-slate-300 leading-relaxed">
+                <div className="px-3 pb-3 pt-2 space-y-3" style={{ borderTop: "1px solid var(--th-border)" }}>
+                  <div className="space-y-2 text-[12px] leading-relaxed" style={{ color: "var(--th-text-secondary)" }}>
                     <p>
                       {isKo
                         ? "직원 살펴보기(Heartbeat)는 선택한 직원의 프로젝트·태스크 상태를 주기적으로 자동으로 확인하는 기능입니다. 따로 지시하지 않아도 이상이 있으면 알림을 보냅니다."
@@ -300,7 +302,7 @@ export default function HeartbeatPanel({ language, agents = [], standalone = fal
                         : "When status is normal, only logs are recorded. When issues are found, alerts go to the notification center and CEO messenger. Use 'Run' to trigger a check manually."}
                     </p>
                   </div>
-                  <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 px-3 py-2 flex gap-2">
+                  <div className="px-3 py-2 flex gap-2" style={{ borderRadius: "2px", border: "1px solid rgba(245,158,11,0.25)", background: "rgba(245,158,11,0.05)" }}>
                     <span className="text-amber-400 shrink-0">💡</span>
                     <p className="text-[11px] text-amber-200/90 leading-relaxed">
                       {isKo
@@ -314,7 +316,7 @@ export default function HeartbeatPanel({ language, agents = [], standalone = fal
 
             {/* 직원 추가: 현재 오피스 팩(managerAgents) 기준 */}
             <section className="space-y-2">
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              <h3 className="text-xs font-semibold font-mono uppercase tracking-wider" style={{ color: "var(--th-text-muted)" }}>
                 {isKo ? "살펴볼 직원 추가" : "Add to monitor"}
               </h3>
               {agentsWithoutConfig.length > 0 ? (
@@ -357,7 +359,8 @@ export default function HeartbeatPanel({ language, agents = [], standalone = fal
                         })
                         .finally(() => setAdding(false));
                     }}
-                    className="min-w-0 flex-1 rounded-xl border border-slate-600/60 bg-slate-800/80 px-3 py-2.5 text-sm text-slate-200 focus:border-rose-500/50 focus:outline-none focus:ring-2 focus:ring-rose-500/20 transition-colors disabled:opacity-60 disabled:cursor-wait sm:max-w-[280px]"
+                    className="min-w-0 flex-1 px-3 py-2.5 text-sm focus:outline-none transition-colors disabled:opacity-60 disabled:cursor-wait sm:max-w-[280px]"
+                    style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)", fontFamily: "var(--th-font-mono)" }}
                     aria-label={isKo ? "살펴볼 직원 선택" : "Select staff to monitor"}
                   >
                     <option value="">{isKo ? "이 팩의 직원 선택…" : "Select staff in this pack…"}</option>
@@ -367,12 +370,12 @@ export default function HeartbeatPanel({ language, agents = [], standalone = fal
                       </option>
                     ))}
                   </select>
-                  <span className="text-[11px] text-slate-500">
+                  <span className="text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>
                     {agentsWithoutConfig.length} {isKo ? "명 추가 가능" : "available"}
                   </span>
                 </div>
               ) : (
-                <p className="rounded-xl border border-slate-700/40 bg-slate-800/30 px-3 py-2 text-[12px] text-slate-500">
+                <p className="px-3 py-2 text-[12px] font-mono" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-muted)" }}>
                   {isKo
                     ? "이 오피스 팩의 직원은 모두 살펴보기 대상에 포함되어 있습니다."
                     : "All staff in this pack are already being monitored."}
@@ -381,7 +384,7 @@ export default function HeartbeatPanel({ language, agents = [], standalone = fal
             </section>
 
             {visibleConfigs.length === 0 && agents.length === 0 && (
-              <p className="rounded-xl border border-slate-700/40 bg-slate-800/40 px-4 py-4 text-center text-sm text-slate-500">
+              <p className="px-4 py-4 text-center text-sm font-mono" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-muted)" }}>
                 {isKo
                   ? "직원 살펴보기 설정이 없습니다. 직원을 먼저 추가하세요."
                   : "No heartbeat configs. Add staff first."}
@@ -389,7 +392,7 @@ export default function HeartbeatPanel({ language, agents = [], standalone = fal
             )}
 
             {visibleConfigs.length === 0 && agents.length > 0 && (
-              <p className="rounded-xl border border-slate-700/40 bg-slate-800/40 px-4 py-4 text-center text-sm text-slate-500">
+              <p className="px-4 py-4 text-center text-sm font-mono" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-muted)" }}>
                 {isKo
                   ? "이 오피스 팩에 설정된 살펴보기 대상이 없습니다. 위에서 직원을 추가하세요."
                   : "No heartbeat configs for this pack. Add staff above."}
@@ -399,32 +402,34 @@ export default function HeartbeatPanel({ language, agents = [], standalone = fal
             {/* 살펴볼 직원 목록 */}
             {visibleConfigs.length > 0 && (
               <section className="space-y-2">
-                <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                <h3 className="text-xs font-semibold font-mono uppercase tracking-wider" style={{ color: "var(--th-text-muted)" }}>
                   {isKo ? "살펴보기 대상" : "Monitored staff"} · {visibleConfigs.length}
                 </h3>
                 <div className="space-y-2.5">
                   {visibleConfigs.map((cfg) => (
                 <div
                   key={cfg.agent_id}
-                  className="rounded-xl border border-slate-700/40 bg-slate-800/40 p-3 transition-all duration-200 hover:border-slate-600/50 hover:bg-slate-800/60"
+                  className="p-3 transition-all duration-200"
+                  style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}
                 >
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex min-w-0 items-center gap-2">
                       <span className="text-lg leading-none">{cfg.agent_avatar}</span>
-                      <span className="truncate text-sm font-medium text-slate-200">
+                      <span className="truncate text-sm font-medium font-mono" style={{ color: "var(--th-text-primary)" }}>
                         {isKo && cfg.agent_name_ko ? cfg.agent_name_ko : cfg.agent_name}
                       </span>
                       <span
-                        className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium ${
-                          cfg.enabled
-                            ? "bg-emerald-500/20 text-emerald-400"
-                            : "bg-slate-700/60 text-slate-500"
-                        }`}
+                        className="shrink-0 px-2 py-0.5 text-[10px] font-medium font-mono"
+                        style={{
+                          borderRadius: "2px",
+                          background: cfg.enabled ? "rgba(16,185,129,0.15)" : "var(--th-bg-surface-hover)",
+                          color: cfg.enabled ? "#34d399" : "var(--th-text-muted)",
+                        }}
                       >
                         {cfg.enabled ? (isKo ? "ON" : "ON") : "OFF"}
                       </span>
                       {!!cfg.enabled && (
-                        <span className="shrink-0 text-[11px] text-slate-500">
+                        <span className="shrink-0 text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>
                           {cfg.interval_minutes} min
                         </span>
                       )}
@@ -435,10 +440,11 @@ export default function HeartbeatPanel({ language, agents = [], standalone = fal
                           type="button"
                           onClick={() => handleTrigger(cfg.agent_id)}
                           disabled={triggering === cfg.agent_id}
-                          className="flex items-center justify-center gap-1.5 rounded-lg bg-cyan-600/20 px-2.5 py-1.5 text-[11px] font-medium text-cyan-400 transition-colors hover:bg-cyan-600/30 disabled:opacity-50 min-w-[52px]"
+                          className="flex items-center justify-center gap-1.5 px-2.5 py-1.5 text-[11px] font-medium font-mono text-cyan-400 transition-colors disabled:opacity-50 min-w-[52px]"
+                          style={{ borderRadius: "2px", background: "rgba(6,182,212,0.15)", border: "1px solid rgba(6,182,212,0.25)" }}
                         >
                           {triggering === cfg.agent_id ? (
-                            <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-cyan-400/50 border-t-cyan-400" />
+                            <span className="inline-block h-3 w-3 animate-spin border-2 border-cyan-400/50 border-t-cyan-400" style={{ borderRadius: "50%" }} />
                           ) : (
                             <>{isKo ? "실행" : "Run"}</>
                           )}
@@ -447,7 +453,8 @@ export default function HeartbeatPanel({ language, agents = [], standalone = fal
                       <button
                         type="button"
                         onClick={() => handleEdit(cfg)}
-                        className="rounded-lg bg-slate-700/50 px-2.5 py-1.5 text-[11px] font-medium text-slate-300 transition-colors hover:bg-slate-700/70 hover:text-slate-200"
+                        className="px-2.5 py-1.5 text-[11px] font-medium font-mono transition-colors"
+                        style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
                       >
                         {isKo ? "설정" : "Edit"}
                       </button>
@@ -466,7 +473,8 @@ export default function HeartbeatPanel({ language, agents = [], standalone = fal
                             .finally(() => setRemovingAgentId(null));
                         }}
                         disabled={removingAgentId === cfg.agent_id}
-                        className="rounded-lg bg-red-500/10 px-2.5 py-1.5 text-[11px] font-medium text-red-400 transition-colors hover:bg-red-500/20 disabled:opacity-50"
+                        className="px-2.5 py-1.5 text-[11px] font-medium font-mono text-red-400 transition-colors disabled:opacity-50"
+                        style={{ borderRadius: "2px", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)" }}
                         title={isKo ? "살펴보기에서 제거" : "Remove from watch list"}
                       >
                         {removingAgentId === cfg.agent_id ? "…" : isKo ? "제거" : "Remove"}
@@ -476,7 +484,7 @@ export default function HeartbeatPanel({ language, agents = [], standalone = fal
 
                   {/* 인라인 편집 폼 */}
                   {editingAgent === cfg.agent_id && (
-                    <div className="mt-3 space-y-3 border-t border-slate-700/40 pt-3">
+                    <div className="mt-3 space-y-3 pt-3" style={{ borderTop: "1px solid var(--th-border)" }}>
                       <label className="flex cursor-pointer items-center gap-2">
                         <input
                           type="checkbox"
@@ -484,12 +492,13 @@ export default function HeartbeatPanel({ language, agents = [], standalone = fal
                           onChange={(e) =>
                             setEditForm((f) => ({ ...f, enabled: e.target.checked }))
                           }
-                          className="h-4 w-4 rounded border-slate-600 bg-slate-800 text-rose-500 focus:ring-rose-500/40"
+                          className="h-4 w-4"
+                          style={{ borderRadius: "2px", accentColor: "var(--th-accent)" }}
                         />
-                        <span className="text-sm text-slate-300">{isKo ? "활성화" : "Enabled"}</span>
+                        <span className="text-sm font-mono" style={{ color: "var(--th-text-secondary)" }}>{isKo ? "활성화" : "Enabled"}</span>
                       </label>
                       <div className="flex items-center gap-2">
-                        <span className="text-[11px] text-slate-500">{isKo ? "간격" : "Interval"}</span>
+                        <span className="text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>{isKo ? "간격" : "Interval"}</span>
                         <input
                           type="number"
                           min={5}
@@ -501,12 +510,13 @@ export default function HeartbeatPanel({ language, agents = [], standalone = fal
                               interval_minutes: Number(e.target.value) || 30,
                             }))
                           }
-                          className="w-16 rounded-lg border border-slate-600/60 bg-slate-800/80 px-2 py-1.5 text-center text-sm text-slate-200 focus:border-rose-500/50 focus:outline-none"
+                          className="w-16 px-2 py-1.5 text-center text-sm focus:outline-none"
+                          style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)", fontFamily: "var(--th-font-mono)" }}
                         />
-                        <span className="text-[11px] text-slate-500">min</span>
+                        <span className="text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>min</span>
                       </div>
                       <div>
-                        <span className="mb-1.5 block text-[11px] text-slate-500">
+                        <span className="mb-1.5 block text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>
                           {isKo ? "체크 항목" : "Check items"}
                         </span>
                         <div className="flex flex-wrap gap-x-4 gap-y-1.5">
@@ -519,9 +529,10 @@ export default function HeartbeatPanel({ language, agents = [], standalone = fal
                                 type="checkbox"
                                 checked={editForm.check_items.includes(item)}
                                 onChange={() => toggleCheckItem(item)}
-                                className="h-4 w-4 rounded border-slate-600 bg-slate-800 text-rose-500 focus:ring-rose-500/40"
+                                className="h-4 w-4"
+                          style={{ borderRadius: "2px", accentColor: "var(--th-accent)" }}
                               />
-                              <span className="text-sm text-slate-400">
+                              <span className="text-sm font-mono" style={{ color: "var(--th-text-secondary)" }}>
                                 {isKo ? CHECK_LABELS[item].ko : CHECK_LABELS[item].en}
                               </span>
                             </label>
@@ -533,14 +544,16 @@ export default function HeartbeatPanel({ language, agents = [], standalone = fal
                           type="button"
                           onClick={handleSave}
                           disabled={saving}
-                          className="rounded-lg bg-rose-600/30 px-3 py-1.5 text-sm font-medium text-rose-300 transition-colors hover:bg-rose-600/50 disabled:opacity-50"
+                          className="px-3 py-1.5 text-sm font-medium font-mono text-rose-300 transition-colors disabled:opacity-50"
+                          style={{ borderRadius: "2px", background: "rgba(244,63,94,0.2)", border: "1px solid rgba(244,63,94,0.3)" }}
                         >
                           {saving ? "..." : isKo ? "저장" : "Save"}
                         </button>
                         <button
                           type="button"
                           onClick={() => setEditingAgent(null)}
-                          className="rounded-lg bg-slate-700/50 px-3 py-1.5 text-sm font-medium text-slate-400 transition-colors hover:bg-slate-700/70"
+                          className="px-3 py-1.5 text-sm font-medium font-mono transition-colors"
+                          style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "transparent", color: "var(--th-text-secondary)" }}
                         >
                           {isKo ? "취소" : "Cancel"}
                         </button>
@@ -555,9 +568,9 @@ export default function HeartbeatPanel({ language, agents = [], standalone = fal
 
             {/* 최근 로그 (현재 팩 직원만) */}
             {visibleLogs.length > 0 && (
-              <section className="space-y-2 border-t border-slate-700/40 pt-4">
+              <section className="space-y-2 pt-4" style={{ borderTop: "1px solid var(--th-border)" }}>
                 <div className="flex items-center justify-between gap-2">
-                  <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                  <h3 className="text-xs font-semibold font-mono uppercase tracking-wider" style={{ color: "var(--th-text-muted)" }}>
                     {isKo ? "최근 로그" : "Recent logs"}
                   </h3>
                   <div className="flex items-center gap-2">
@@ -579,14 +592,15 @@ export default function HeartbeatPanel({ language, agents = [], standalone = fal
                           .finally(() => setDeletingAllLogs(false));
                       }}
                       disabled={deletingAllLogs}
-                      className="text-[10px] font-medium text-slate-500 hover:text-red-400 disabled:opacity-50"
+                      className="text-[10px] font-medium font-mono disabled:opacity-50"
+                      style={{ color: "var(--th-text-muted)" }}
                       title={isKo ? "로그 전체 삭제" : "Delete all logs"}
                     >
                       {deletingAllLogs ? (isKo ? "삭제 중…" : "Deleting…") : (isKo ? "전체 삭제" : "Delete all")}
                     </button>
                   </div>
                 </div>
-                <div className="max-h-52 space-y-1 overflow-y-auto rounded-xl border border-slate-700/40 bg-slate-800/30 p-2">
+                <div className="max-h-52 space-y-1 overflow-y-auto p-2" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
                   {visibleLogs.slice(0, 20).map((log) => {
                     let findings: HeartbeatFinding[] = [];
                     try {
@@ -612,13 +626,15 @@ export default function HeartbeatPanel({ language, agents = [], standalone = fal
                     return (
                       <div
                         key={log.id}
-                        className={`rounded-md ${rowBg} overflow-hidden`}
+                        className="overflow-hidden"
+                        style={{ borderRadius: "2px", background: rowBg ? rowBg : undefined }}
                       >
                         <div className="flex items-center gap-2 px-2 py-1.5 text-[11px]">
                           <button
                             type="button"
                             onClick={() => setExpandedLogId((id) => (id === log.id ? null : log.id))}
-                            className="flex shrink-0 items-center justify-center w-5 h-5 rounded text-slate-500 hover:text-slate-300"
+                            className="flex shrink-0 items-center justify-center w-5 h-5"
+                            style={{ color: "var(--th-text-muted)" }}
                             aria-expanded={isExpanded}
                           >
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={isExpanded ? "rotate-90" : ""}>
@@ -627,17 +643,17 @@ export default function HeartbeatPanel({ language, agents = [], standalone = fal
                           </button>
                           <StatusIcon />
                           <span className="shrink-0 text-base leading-none">{log.agent_avatar ?? "👤"}</span>
-                          <span className="shrink-0 text-slate-300">
+                          <span className="shrink-0 font-mono" style={{ color: "var(--th-text-secondary)" }}>
                             {(isKo && log.agent_name_ko) ? log.agent_name_ko : log.agent_name ?? log.agent_id}
                           </span>
-                          <span className="min-w-0 flex-1 truncate text-slate-400">
+                          <span className="min-w-0 flex-1 truncate font-mono" style={{ color: "var(--th-text-muted)" }}>
                             {log.status === "ok"
                               ? (isKo ? "정상" : "Normal")
                               : findings.length > 0
                                 ? findings[0].message
                                 : log.summary ?? "—"}
                           </span>
-                          <span className="shrink-0 text-[10px] text-slate-500">
+                          <span className="shrink-0 text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
                             {fmtAgo(log.created_at)}
                           </span>
                           <button
@@ -656,7 +672,8 @@ export default function HeartbeatPanel({ language, agents = [], standalone = fal
                                 .finally(() => setDeletingLogId(null));
                             }}
                             disabled={isDeleting}
-                            className="shrink-0 p-1 rounded text-slate-500 hover:text-red-400 hover:bg-red-500/10 disabled:opacity-50"
+                            className="shrink-0 p-1 disabled:opacity-50"
+                            style={{ borderRadius: "2px", color: "var(--th-text-muted)" }}
                             title={isKo ? "로그 삭제" : "Delete log"}
                           >
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -668,14 +685,14 @@ export default function HeartbeatPanel({ language, agents = [], standalone = fal
                           </button>
                         </div>
                         {isExpanded && (
-                          <div className="border-t border-slate-700/40 px-2 py-2 pl-7 text-[11px] text-slate-400 space-y-1.5 bg-slate-900/40">
+                          <div className="px-2 py-2 pl-7 text-[11px] font-mono space-y-1.5" style={{ borderTop: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "var(--th-bg-primary)" }}>
                             {findings.length > 0 ? (
                               <>
                                 {log.summary && log.summary !== "HEARTBEAT_OK" && (
-                                  <p><span className="text-slate-500">{isKo ? "요약:" : "Summary:"}</span> {log.summary}</p>
+                                  <p><span style={{ color: "var(--th-text-muted)" }}>{isKo ? "요약:" : "Summary:"}</span> {log.summary}</p>
                                 )}
                                 <div>
-                                  <span className="text-slate-500">{isKo ? "발견 항목:" : "Findings:"}</span>
+                                  <span style={{ color: "var(--th-text-muted)" }}>{isKo ? "발견 항목:" : "Findings:"}</span>
                                   <ul className="list-disc list-inside mt-0.5 space-y-0.5">
                                     {findings.map((f, i) => (
                                       <li key={i}>{f.message}</li>
@@ -684,7 +701,7 @@ export default function HeartbeatPanel({ language, agents = [], standalone = fal
                                 </div>
                               </>
                             ) : (
-                              <p className="text-slate-500">
+                              <p style={{ color: "var(--th-text-muted)" }}>
                                 {(log.summary === "normal" || log.summary === "HEARTBEAT_OK" || !log.summary)
                                   ? (isKo ? "정상입니다. 이상 없음." : "OK. No issues detected.")
                                   : log.summary}

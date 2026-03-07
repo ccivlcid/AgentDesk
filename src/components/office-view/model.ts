@@ -35,6 +35,7 @@ interface OfficeViewProps {
   cliUsageRef?: { current: Record<string, CliUsageEntry> | null };
   cliUsageRefreshing?: boolean;
   onRefreshCliUsage?: () => void;
+  onOpenRoomManager?: () => void;
 }
 
 interface Delivery {
@@ -56,6 +57,8 @@ interface Delivery {
   meetingDecision?: MeetingReviewDecision;
   badgeGraphics?: Graphics;
   badgeText?: Text;
+  /** Multi-segment waypoint path for hallway routing. When set, overrides from/to linear interpolation. */
+  waypoints?: Array<{ x: number; y: number }>;
 }
 
 interface RoomRect {
@@ -64,6 +67,18 @@ interface RoomRect {
   y: number;
   w: number;
   h: number;
+  floorIndex?: number;
+  isElevator?: boolean;
+  isPenthouse?: boolean;
+  isBasement?: boolean;
+}
+
+interface ElevatorState {
+  currentFloor: number;  // 0=basement, 1=floor1, ..., N=penthouse
+  targetFloor: number;
+  carY: number;          // pixel Y of car top
+  doorState: "closed" | "opening" | "open" | "closing";
+  doorFrame: number;     // 0-3
 }
 
 interface WallClockVisual {
@@ -133,13 +148,13 @@ function findScrollContainer(start: HTMLElement | null, axis: ScrollAxis): HTMLE
 const MIN_OFFICE_W = 360;
 const CEO_ZONE_H = 110;
 const HALLWAY_H = 32;
-const TARGET_CHAR_H = 52;
-const MINI_CHAR_H = 28;
+const TARGET_CHAR_H = 36;   // was 52 — reduced for better FM2024 proportions
+const MINI_CHAR_H = 20;     // was 28
 const CEO_SIZE = 44;
 const DESK_W = 48;
 const DESK_H = 26;
-const SLOT_W = 100;
-const SLOT_H = 120;
+const SLOT_W = 110;         // was 100 — slightly wider per slot
+const SLOT_H = 156;         // was 120 — taller rooms give breathing room
 const COLS_PER_ROW = 3;
 const ROOM_PAD = 16;
 const TILE = 20;
@@ -148,6 +163,20 @@ const DELIVERY_SPEED = 0.012;
 
 const BREAK_ROOM_H = 110;
 const BREAK_ROOM_GAP = 32;
+
+/* ---- Tower redesign constants (Phase 5/15) ---- */
+const WALL_W = 20;
+const ELEVATOR_W = 40;
+const FLOOR_W = COLS_PER_ROW * SLOT_W + ELEVATOR_W + WALL_W * 2; // 410
+const PENTHOUSE_H = 160;
+const PENTHOUSE_INTERIOR_H = 140;
+const CONFERENCE_FLOOR_H = 140;  // dedicated meeting room floor
+const FLOOR_ROOM_H = SLOT_H;    // 156
+const FLOOR_HALLWAY_H = 28;     // was 24
+const FLOOR_TOTAL_H = FLOOR_ROOM_H + FLOOR_HALLWAY_H; // 184
+const BASEMENT_H = 140;         // was 130 — slightly taller break room
+const BASEMENT_INTERIOR_H = 120; // was 110
+const ROOF_H = 40;
 const MAX_VISIBLE_SUB_CLONES_PER_AGENT = 3;
 const SUB_CLONE_WAVE_SPEED = 0.04;
 const SUB_CLONE_MOVE_X_AMPLITUDE = 0.16;
@@ -281,6 +310,7 @@ export {
   type OfficeViewProps,
   type Delivery,
   type RoomRect,
+  type ElevatorState,
   type WallClockVisual,
   detachNode,
   destroyNode,
@@ -305,6 +335,18 @@ export {
   DELIVERY_SPEED,
   BREAK_ROOM_H,
   BREAK_ROOM_GAP,
+  WALL_W,
+  ELEVATOR_W,
+  FLOOR_W,
+  PENTHOUSE_H,
+  PENTHOUSE_INTERIOR_H,
+  CONFERENCE_FLOOR_H,
+  FLOOR_ROOM_H,
+  FLOOR_HALLWAY_H,
+  FLOOR_TOTAL_H,
+  BASEMENT_H,
+  BASEMENT_INTERIOR_H,
+  ROOF_H,
   MAX_VISIBLE_SUB_CLONES_PER_AGENT,
   SUB_CLONE_WAVE_SPEED,
   SUB_CLONE_MOVE_X_AMPLITUDE,

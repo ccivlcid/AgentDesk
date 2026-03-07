@@ -98,7 +98,7 @@ export default function SkillsGrid({
                           <span className="flex h-2.5 w-2.5 items-center justify-center">
                             {cliProviderIcon(provider)}
                           </span>
-                          <span className="h-2.5 w-2.5 overflow-hidden rounded-[3px] bg-slate-800/80">
+                          <span className="h-2.5 w-2.5 overflow-hidden" style={{ borderRadius: "3px", background: "rgba(15,17,23,0.8)" }}>
                             <AgentAvatar agent={agent ?? undefined} agents={agents} size={10} rounded="xl" />
                           </span>
                         </span>
@@ -148,8 +148,8 @@ export default function SkillsGrid({
                     </button>
                     <button
                       onClick={() => onCopy(skill)}
-                      className="px-2 py-1 text-[10px] bg-blue-600/20 text-blue-400 border border-blue-500/30 hover:bg-blue-600/30 font-mono transition-all"
-                      style={{ borderRadius: "2px" }}
+                      className="px-2 py-1 text-[10px] font-mono transition-all"
+                      style={{ borderRadius: "2px", background: "rgba(251,191,36,0.1)", color: "var(--th-accent)", border: "1px solid rgba(251,191,36,0.3)" }}
                       title={`npx skills add ${skill.repo}`}
                     >
                       {copiedSkill === skill.name

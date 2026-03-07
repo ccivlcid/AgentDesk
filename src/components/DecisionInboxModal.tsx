@@ -213,31 +213,42 @@ export default function DecisionInboxModal({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75" onClick={onClose}>
       <div
-        className="relative mx-4 w-full max-w-3xl rounded-2xl border border-indigo-500/30 bg-slate-900 shadow-2xl shadow-indigo-500/10"
+        className="relative mx-4 w-full max-w-3xl rounded border shadow-2xl"
+        style={{ background: "var(--th-bg-elevated)", borderColor: "var(--th-border-strong)" }}
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b border-slate-700/50 px-6 py-4">
+        <div
+          className="flex items-center justify-between px-6 py-4"
+          style={{ borderBottom: "1px solid var(--th-border)", borderLeft: "3px solid var(--th-accent)" }}
+        >
           <div className="flex items-center gap-3">
-            <span className="text-2xl">🧭</span>
-            <h2 className="text-lg font-bold text-white">
+            <h2
+              className="text-xs font-bold uppercase tracking-widest"
+              style={{ color: "var(--th-text-heading)", fontFamily: "var(--th-font-mono)" }}
+            >
               {t({ ko: "미결 의사결정", en: "Pending Decisions", ja: "未決の意思決定", zh: "待处理决策" })}
             </h2>
-            <span className="rounded-full bg-indigo-500/20 px-2 py-0.5 text-xs font-medium text-indigo-300">
+            <span
+              className="px-2 py-0.5 text-xs font-bold font-mono"
+              style={{ background: "var(--th-accent)20", color: "var(--th-accent)", borderRadius: "2px" }}
+            >
               {items.length}
             </span>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={onRefresh}
-              className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs text-slate-300 transition hover:bg-slate-800 hover:text-white"
+              className="px-3 py-1.5 text-xs font-mono transition"
+              style={{ border: "1px solid var(--th-border)", borderRadius: "2px", color: "var(--th-text-secondary)", background: "transparent" }}
             >
               {t({ ko: "새로고침", en: "Refresh", ja: "更新", zh: "刷新" })}
             </button>
             <button
               onClick={onClose}
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-800 hover:text-white"
+              className="flex h-7 w-7 items-center justify-center text-xs font-mono transition"
+              style={{ border: "1px solid var(--th-border)", borderRadius: "2px", color: "var(--th-text-muted)", background: "transparent" }}
             >
               ✕
             </button>
@@ -246,7 +257,7 @@ export default function DecisionInboxModal({
 
         <div className="max-h-[70vh] overflow-y-auto p-4">
           {loading ? (
-            <div className="py-12 text-center text-sm text-slate-500">
+            <div className="py-12 text-center text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
               {t({
                 ko: "미결 목록 불러오는 중...",
                 en: "Loading pending decisions...",
@@ -255,7 +266,7 @@ export default function DecisionInboxModal({
               })}
             </div>
           ) : items.length === 0 ? (
-            <div className="py-12 text-center text-sm text-slate-500">
+            <div className="py-12 text-center text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
               {t({
                 ko: "현재 미결 의사결정이 없습니다.",
                 en: "No pending decisions right now.",
@@ -266,21 +277,18 @@ export default function DecisionInboxModal({
           ) : (
             <div className="space-y-3">
               {items.map((item) => (
-                <div key={item.id} className="rounded-xl border border-slate-700/60 bg-slate-800/50 p-3">
+                <div key={item.id} className="p-3" style={{ border: "1px solid var(--th-border)", borderRadius: "2px", background: "var(--th-bg-surface)" }}>
                   <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                     {(() => {
                       const agent = item.agentId ? agentById.get(item.agentId) : undefined;
                       return (
                         <div className="flex min-w-0 items-start gap-2">
                           {agent ? (
-                            <AgentAvatar
-                              agent={agent}
-                              spriteMap={spriteMap}
-                              size={32}
-                              className="mt-0.5 border border-slate-600 bg-slate-900"
-                            />
+                            <span className="mt-0.5 inline-block" style={{ border: "1px solid var(--th-border)", borderRadius: "2px", background: "var(--th-terminal-bg)" }}>
+                              <AgentAvatar agent={agent} spriteMap={spriteMap} size={32} />
+                            </span>
                           ) : (
-                            <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-600 bg-slate-900 text-base">
+                            <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center text-base" style={{ border: "1px solid var(--th-border)", borderRadius: "2px", background: "var(--th-terminal-bg)" }}>
                               {item.agentAvatar || getKindAvatarFallback(item.kind)}
                             </span>
                           )}
@@ -289,7 +297,7 @@ export default function DecisionInboxModal({
                               {isKorean ? item.agentNameKo : item.agentName}
                             </p>
                             <p className="text-[11px] text-indigo-300/90">{getKindLabel(item.kind)}</p>
-                            <p className="text-[11px] text-slate-400">{formatTime(item.createdAt, uiLanguage)}</p>
+                            <p className="text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>{formatTime(item.createdAt, uiLanguage)}</p>
                           </div>
                         </div>
                       );
@@ -297,14 +305,15 @@ export default function DecisionInboxModal({
                     {item.agentId ? (
                       <button
                         onClick={() => onOpenChat(item.agentId!)}
-                        className="rounded-md border border-slate-600 px-2 py-1 text-[11px] text-slate-300 transition hover:border-slate-400 hover:bg-slate-700 hover:text-white"
+                        className="px-2 py-1 text-[11px] font-mono transition"
+                        style={{ border: "1px solid var(--th-border)", borderRadius: "2px", color: "var(--th-text-secondary)", background: "transparent" }}
                       >
                         {t({ ko: "채팅 열기", en: "Open Chat", ja: "チャットを開く", zh: "打开聊天" })}
                       </button>
                     ) : null}
                   </div>
 
-                  <div className="rounded-lg border border-slate-700/70 bg-slate-900/60 px-2.5 py-2 text-xs text-slate-200">
+                  <div className="px-2.5 py-2 text-xs font-mono" style={{ border: "1px solid var(--th-border)", borderRadius: "2px", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)" }}>
                     <MessageContent content={item.requestContent} />
                   </div>
 
@@ -313,7 +322,7 @@ export default function DecisionInboxModal({
                       (() => {
                         if (item.options.length === 0) {
                           return (
-                            <p className="rounded-md border border-slate-700/70 bg-slate-900/50 px-2.5 py-2 text-xs text-slate-400">
+                            <p className="px-2.5 py-2 text-xs font-mono" style={{ border: "1px solid var(--th-border)", borderRadius: "2px", background: "var(--th-bg-elevated)", color: "var(--th-text-muted)" }}>
                               {t({
                                 ko: "기획팀장 의견 취합중...",
                                 en: "Planning lead is consolidating opinions...",
@@ -339,13 +348,14 @@ export default function DecisionInboxModal({
                                   type="button"
                                   onClick={() => toggleReviewPick(item.id, option.number)}
                                   disabled={isItemBusy}
-                                  className={`decision-inbox-option w-full rounded-md px-2.5 py-1.5 text-left text-xs transition disabled:cursor-not-allowed disabled:opacity-60${selectedFlag ? " decision-inbox-option-active" : ""}`}
+                                  className={`decision-inbox-option w-full px-2.5 py-1.5 text-left text-xs font-mono transition disabled:cursor-not-allowed disabled:opacity-60${selectedFlag ? " decision-inbox-option-active" : ""}`}
+                                  style={{ borderRadius: "2px" }}
                                 >
                                   {`${option.number}. ${option.label}`}
                                 </button>
                               );
                             })}
-                            <p className="text-[11px] text-slate-400">
+                            <p className="text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>
                               {t({
                                 ko: `선택 항목: ${selectedCount}건`,
                                 en: `Selected: ${selectedCount} item(s)`,
@@ -363,7 +373,8 @@ export default function DecisionInboxModal({
                                 ja: "追加意見があれば入力してください。（任意）",
                                 zh: "如有补充意见请填写。（可选）",
                               })}
-                              className="w-full resize-y rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-xs text-slate-100 placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none"
+                              className="w-full resize-y px-3 py-2 text-xs font-mono outline-none"
+                              style={{ border: "1px solid var(--th-border)", borderRadius: "2px", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
                             />
                             <div className="flex flex-wrap items-center justify-end gap-2">
                               {skipOption ? (
@@ -371,7 +382,8 @@ export default function DecisionInboxModal({
                                   type="button"
                                   onClick={() => handleSkipReviewRound(item)}
                                   disabled={isItemBusy}
-                                  className="decision-round-skip rounded-md px-3 py-1.5 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-60"
+                                  className="decision-round-skip px-3 py-1.5 text-xs font-semibold font-mono transition disabled:cursor-not-allowed disabled:opacity-60"
+                                  style={{ borderRadius: "2px" }}
                                 >
                                   {isItemBusy
                                     ? t({ ko: "전송 중...", en: "Sending...", ja: "送信中...", zh: "发送中..." })
@@ -382,7 +394,8 @@ export default function DecisionInboxModal({
                                 type="button"
                                 onClick={() => handleSubmitReviewPick(item)}
                                 disabled={isItemBusy}
-                                className="decision-round-submit rounded-md px-3 py-1.5 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-60"
+                                className="decision-round-submit px-3 py-1.5 text-xs font-semibold font-mono transition disabled:cursor-not-allowed disabled:opacity-60"
+                                style={{ borderRadius: "2px" }}
                               >
                                 {isItemBusy
                                   ? t({ ko: "전송 중...", en: "Sending...", ja: "送信中...", zh: "发送中..." })
@@ -407,7 +420,8 @@ export default function DecisionInboxModal({
                             type="button"
                             onClick={() => handleOptionClick(item, option.number, option.action)}
                             disabled={isBusy}
-                            className="decision-inbox-option w-full rounded-md px-2.5 py-1.5 text-left text-xs transition disabled:cursor-not-allowed disabled:opacity-60"
+                            className="decision-inbox-option w-full px-2.5 py-1.5 text-left text-xs font-mono transition disabled:cursor-not-allowed disabled:opacity-60"
+                            style={{ borderRadius: "2px" }}
                           >
                             {isBusy
                               ? t({ ko: "전송 중...", en: "Sending...", ja: "送信中...", zh: "发送中..." })
@@ -416,7 +430,7 @@ export default function DecisionInboxModal({
                         );
                       })
                     ) : (
-                      <p className="rounded-md border border-slate-700/70 bg-slate-900/50 px-2.5 py-2 text-xs text-slate-400">
+                      <p className="px-2.5 py-2 text-xs font-mono" style={{ border: "1px solid var(--th-border)", borderRadius: "2px", background: "var(--th-bg-elevated)", color: "var(--th-text-muted)" }}>
                         {item.kind === "project_review_ready"
                           ? t({
                               ko: "기획팀장 의견 취합중...",
@@ -439,8 +453,8 @@ export default function DecisionInboxModal({
           )}
         </div>
         {followupItem ? (
-          <div className="border-t border-slate-700/60 bg-slate-900/90 px-4 py-3">
-            <p className="mb-2 text-xs font-semibold text-slate-200">
+          <div className="px-4 py-3" style={{ borderTop: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
+            <p className="mb-2 text-xs font-semibold font-mono" style={{ color: "var(--th-text-primary)" }}>
               {t({
                 ko: "추가요청사항 입력",
                 en: "Additional Follow-up Request",
@@ -458,14 +472,16 @@ export default function DecisionInboxModal({
                 zh: "请输入请求详情。",
               })}
               rows={3}
-              className="w-full resize-y rounded-lg border border-slate-600 bg-slate-950 px-3 py-2 text-xs text-slate-100 placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none"
+              className="w-full resize-y px-3 py-2 text-xs font-mono focus:outline-none"
+              style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-terminal-bg)", color: "var(--th-text-primary)" }}
             />
             <div className="mt-2 flex items-center justify-end gap-2">
               <button
                 type="button"
                 onClick={handleCancelFollowup}
                 disabled={isFollowupSubmitting}
-                className="rounded-md border border-slate-600 px-3 py-1.5 text-xs text-slate-300 transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                className="px-3 py-1.5 text-xs font-mono transition disabled:cursor-not-allowed disabled:opacity-60"
+                style={{ border: "1px solid var(--th-border)", borderRadius: "2px", color: "var(--th-text-secondary)", background: "transparent" }}
               >
                 {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}
               </button>
@@ -473,7 +489,8 @@ export default function DecisionInboxModal({
                 type="button"
                 onClick={handleSubmitFollowup}
                 disabled={!canSubmitFollowup}
-                className="decision-followup-submit rounded-md px-3 py-1.5 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-60"
+                className="decision-followup-submit px-3 py-1.5 text-xs font-semibold font-mono transition disabled:cursor-not-allowed disabled:opacity-60"
+                style={{ borderRadius: "2px" }}
               >
                 {isFollowupSubmitting
                   ? t({ ko: "전송 중...", en: "Sending...", ja: "送信中...", zh: "发送中..." })

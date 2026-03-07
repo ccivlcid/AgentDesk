@@ -35,29 +35,29 @@ const OFFICE_PASTEL_DARK = {
 let OFFICE_PASTEL = OFFICE_PASTEL_LIGHT;
 
 const DEFAULT_CEO_THEME_LIGHT: RoomTheme = {
-  floor1: 0xe5d9b9,
-  floor2: 0xdfd0a8,
-  wall: 0x998243,
-  accent: 0xa77d0c,
+  floor1: 0x2a3040,  // dark navy (consistent with dark aesthetic)
+  floor2: 0x222838,
+  wall: 0x3a4258,
+  accent: 0xf59e0b,  // amber
 };
 const DEFAULT_CEO_THEME_DARK: RoomTheme = {
-  floor1: 0x101020,
-  floor2: 0x0e0e1c,
-  wall: 0x2a2450,
-  accent: 0x584818,
+  floor1: 0x0e0c08,
+  floor2: 0x0c0a06,
+  wall: 0x28220e,
+  accent: 0xf59e0b,  // terminal amber
 };
 
 const DEFAULT_BREAK_THEME_LIGHT: RoomTheme = {
-  floor1: 0xf7e2b7,
-  floor2: 0xf6dead,
-  wall: 0xa99c83,
-  accent: 0xf0c878,
+  floor1: 0xe8ede8,
+  floor2: 0xdee8de,
+  wall: 0x7a9a7a,
+  accent: 0x5aaa6a,
 };
 const DEFAULT_BREAK_THEME_DARK: RoomTheme = {
-  floor1: 0x141210,
-  floor2: 0x10100e,
-  wall: 0x302a20,
-  accent: 0x4a3c18,
+  floor1: 0x080e08,
+  floor2: 0x060c06,
+  wall: 0x162416,
+  accent: 0x22c55e,  // terminal green
 };
 
 let DEFAULT_CEO_THEME = DEFAULT_CEO_THEME_LIGHT;
@@ -105,6 +105,12 @@ const LOCALE_TEXT = {
     en: "☕ Break Room",
     ja: "☕ 休憩室",
     zh: "☕ 休息室",
+  },
+  conferenceRoom: {
+    ko: "회의실",
+    en: "CONFERENCE",
+    ja: "会議室",
+    zh: "会议室",
   },
   role: {
     team_leader: { ko: "팀장", en: "Lead", ja: "リーダー", zh: "组长" },
@@ -426,21 +432,23 @@ const BREAK_SPOTS = [
   { x: -144, y: 56, dir: "R" }, // 하이테이블 오른쪽
 ];
 
+// Light: desaturated, each dept has a distinct tonal identity
 const DEPT_THEME_LIGHT: Record<string, RoomTheme> = {
-  dev: { floor1: 0xd8e8f5, floor2: 0xcce1f2, wall: 0x6c96b7, accent: 0x5a9fd4 },
-  design: { floor1: 0xe8def2, floor2: 0xe1d4ee, wall: 0x9378ad, accent: 0x9a6fc4 },
-  planning: { floor1: 0xf0e1c5, floor2: 0xeddaba, wall: 0xae9871, accent: 0xd4a85a },
-  operations: { floor1: 0xd0eede, floor2: 0xc4ead5, wall: 0x6eaa89, accent: 0x5ac48a },
-  qa: { floor1: 0xf0cbcb, floor2: 0xedc0c0, wall: 0xae7979, accent: 0xd46a6a },
-  devsecops: { floor1: 0xf0d5c5, floor2: 0xedcdba, wall: 0xae8871, accent: 0xd4885a },
+  dev:      { floor1: 0xe4ecf6, floor2: 0xd8e4f0, wall: 0x5c7ea0, accent: 0x3a7cbf },
+  design:   { floor1: 0xede4f6, floor2: 0xe4d8f0, wall: 0x7a5ca0, accent: 0x8050c0 },
+  planning: { floor1: 0xf5ecd8, floor2: 0xf0e2c8, wall: 0x9a8050, accent: 0xd4920a },
+  operations:{ floor1: 0xe2f0e8, floor2: 0xd4e8de, wall: 0x4e8a68, accent: 0x28a855 },
+  qa:       { floor1: 0xf5e0e2, floor2: 0xefd4d6, wall: 0xa05050, accent: 0xd43030 },
+  devsecops:{ floor1: 0xf0ece0, floor2: 0xe8e2d4, wall: 0x8a7050, accent: 0xb86820 },
 };
+// Dark: deep terminal palette — each dept is a distinct screen color
 const DEPT_THEME_DARK: Record<string, RoomTheme> = {
-  dev: { floor1: 0x0c1620, floor2: 0x0a121c, wall: 0x1e3050, accent: 0x285890 },
-  design: { floor1: 0x120c20, floor2: 0x100a1e, wall: 0x2c1c50, accent: 0x482888 },
-  planning: { floor1: 0x18140c, floor2: 0x16120a, wall: 0x3a2c1c, accent: 0x785828 },
-  operations: { floor1: 0x0c1a18, floor2: 0x0a1614, wall: 0x1c4030, accent: 0x287848 },
-  qa: { floor1: 0x1a0c10, floor2: 0x180a0e, wall: 0x401c1c, accent: 0x782828 },
-  devsecops: { floor1: 0x18100c, floor2: 0x160e0a, wall: 0x3a241c, accent: 0x783828 },
+  dev:      { floor1: 0x060d18, floor2: 0x050b14, wall: 0x142540, accent: 0x2a6abf },
+  design:   { floor1: 0x0a0618, floor2: 0x080414, wall: 0x1e1040, accent: 0x6030c0 },
+  planning: { floor1: 0x100a04, floor2: 0x0e0802, wall: 0x2a1e08, accent: 0xf59e0b },
+  operations:{ floor1: 0x041008, floor2: 0x020e06, wall: 0x0e2818, accent: 0x22c55e },
+  qa:       { floor1: 0x100406, floor2: 0x0e0404, wall: 0x280c10, accent: 0xef4444 },
+  devsecops:{ floor1: 0x100804, floor2: 0x0e0602, wall: 0x281408, accent: 0xea580c },
 };
 let DEPT_THEME = DEPT_THEME_LIGHT;
 

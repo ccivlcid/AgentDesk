@@ -168,6 +168,11 @@ export type TerminalProgressHintsPayload = {
   ok_items: string[];
 };
 
+export type TerminalThinkingBlock = {
+  text: string;
+  truncated: boolean;
+};
+
 // Terminal
 export async function getTerminal(
   id: string,
@@ -181,6 +186,7 @@ export async function getTerminal(
   text: string;
   task_logs?: Array<{ id: number; kind: string; message: string; created_at: number }>;
   progress_hints?: TerminalProgressHintsPayload | null;
+  thinking_blocks?: TerminalThinkingBlock[] | null;
   interrupt?: {
     session_id: string;
     control_token: string;

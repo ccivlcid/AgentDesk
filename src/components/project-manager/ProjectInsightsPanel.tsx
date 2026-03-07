@@ -81,31 +81,31 @@ function ProjectProgressSection({ t, groupedTaskCards }: ProjectProgressSectionP
 
   const statusItems = [
     { key: "done", label: t({ ko: "완료", en: "Done", ja: "完了", zh: "完成" }), color: "bg-emerald-500", textColor: "text-emerald-400" },
-    { key: "in_progress", label: t({ ko: "진행중", en: "In Progress", ja: "進行中", zh: "进行中" }), color: "bg-blue-500", textColor: "text-blue-400" },
+    { key: "in_progress", label: t({ ko: "진행중", en: "In Progress", ja: "進行中", zh: "进行中" }), color: "bg-[#3b82f6]", textColor: "text-[#60a5fa]" },
     { key: "review", label: t({ ko: "리뷰", en: "Review", ja: "レビュー", zh: "审查" }), color: "bg-amber-400", textColor: "text-amber-400" },
     { key: "paused", label: t({ ko: "일시정지", en: "Paused", ja: "一時停止", zh: "暂停" }), color: "bg-yellow-500", textColor: "text-yellow-400" },
-    { key: "planned", label: t({ ko: "예정", en: "Planned", ja: "予定", zh: "计划" }), color: "bg-slate-500", textColor: "text-slate-400" },
+    { key: "planned", label: t({ ko: "예정", en: "Planned", ja: "予定", zh: "计划" }), color: "bg-[#64748b]", textColor: "text-[#94a3b8]" },
     { key: "failed", label: t({ ko: "실패", en: "Failed", ja: "失敗", zh: "失败" }), color: "bg-red-500", textColor: "text-red-400" },
   ].filter((item) => (stats.counts[item.key] ?? 0) > 0);
 
   return (
-    <div className="min-w-0 rounded-xl border border-slate-700 bg-slate-800/40 p-4">
-      <h4 className="mb-3 text-sm font-semibold text-white">
+    <div className="min-w-0 p-4" style={{ border: "1px solid var(--th-border)", borderRadius: "2px", background: "var(--th-bg-surface)" }}>
+      <h4 className="mb-3 text-xs font-bold uppercase tracking-widest" style={{ color: "var(--th-text-heading)", fontFamily: "var(--th-font-mono)" }}>
         {t({ ko: "프로젝트 진행률", en: "Project Progress", ja: "プロジェクト進捗", zh: "项目进度" })}
       </h4>
 
       {/* Progress bar */}
       <div className="mb-1 flex items-center justify-between text-xs">
-        <span className="text-slate-400">
+        <span className="font-mono" style={{ color: "var(--th-text-muted)" }}>
           {stats.counts.done}/{stats.total} {t({ ko: "태스크 완료", en: "tasks done", ja: "タスク完了", zh: "任务完成" })}
         </span>
-        <span className={`font-semibold ${stats.donePct >= 80 ? "text-emerald-400" : stats.donePct >= 40 ? "text-amber-400" : "text-slate-300"}`}>
+        <span className={`font-semibold font-mono ${stats.donePct >= 80 ? "text-emerald-400" : stats.donePct >= 40 ? "text-amber-400" : ""}`} style={stats.donePct < 40 ? { color: "var(--th-text-secondary)" } : undefined}>
           {stats.donePct}%
         </span>
       </div>
-      <div className="mb-4 h-2.5 w-full overflow-hidden rounded-full bg-slate-700/60">
+      <div className="mb-4 h-2.5 w-full overflow-hidden" style={{ borderRadius: "1px", background: "var(--th-bg-surface-hover)" }}>
         <div
-          className={`h-full rounded-full transition-all duration-700 ${stats.donePct >= 80 ? "bg-emerald-500" : stats.donePct >= 40 ? "bg-amber-400" : "bg-blue-500"}`}
+          className={`h-full transition-all duration-700 ${stats.donePct >= 80 ? "bg-emerald-500" : stats.donePct >= 40 ? "bg-amber-400" : "bg-[#3b82f6]"}`}
           style={{ width: `${stats.donePct}%` }}
         />
       </div>
@@ -113,10 +113,10 @@ function ProjectProgressSection({ t, groupedTaskCards }: ProjectProgressSectionP
       {/* Status breakdown */}
       <div className="mb-4 flex flex-wrap gap-2">
         {statusItems.map((item) => (
-          <div key={item.key} className="flex items-center gap-1.5 rounded-full bg-slate-900/60 px-2 py-1">
-            <span className={`h-2 w-2 rounded-full ${item.color}`} />
-            <span className={`text-[11px] font-medium ${item.textColor}`}>{stats.counts[item.key]}</span>
-            <span className="text-[11px] text-slate-500">{item.label}</span>
+          <div key={item.key} className="flex items-center gap-1.5 px-2 py-1" style={{ borderRadius: "2px", background: "var(--th-bg-elevated)" }}>
+            <span className={`h-2 w-2 ${item.color}`} style={{ borderRadius: "1px" }} />
+            <span className={`text-[11px] font-mono font-medium ${item.textColor}`}>{stats.counts[item.key]}</span>
+            <span className="text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>{item.label}</span>
           </div>
         ))}
       </div>
@@ -124,7 +124,7 @@ function ProjectProgressSection({ t, groupedTaskCards }: ProjectProgressSectionP
       {/* Agent contribution */}
       {stats.topAgents.length > 0 && (
         <div>
-          <p className="mb-2 text-[11px] font-medium text-slate-400">
+          <p className="mb-2 text-[11px] font-medium font-mono" style={{ color: "var(--th-text-muted)" }}>
             {t({ ko: "에이전트 기여도", en: "Agent Contribution", ja: "エージェント貢献度", zh: "代理贡献度" })}
           </p>
           <div className="space-y-1.5">
@@ -132,14 +132,14 @@ function ProjectProgressSection({ t, groupedTaskCards }: ProjectProgressSectionP
               const agentPct = agent.total > 0 ? Math.round((agent.done / agent.total) * 100) : 0;
               return (
                 <div key={agent.name} className="flex items-center gap-2">
-                  <span className="w-24 truncate text-[11px] text-slate-300">{agent.name}</span>
-                  <div className="flex-1 overflow-hidden rounded-full bg-slate-700/60" style={{ height: 6 }}>
+                  <span className="w-24 truncate text-[11px] font-mono" style={{ color: "var(--th-text-secondary)" }}>{agent.name}</span>
+                  <div className="flex-1 overflow-hidden" style={{ height: 6, borderRadius: "1px", background: "var(--th-bg-surface-hover)" }}>
                     <div
-                      className="h-full rounded-full bg-cyan-500/70"
+                      className="h-full bg-cyan-500/70"
                       style={{ width: `${agentPct}%` }}
                     />
                   </div>
-                  <span className="w-8 text-right text-[11px] text-slate-400">{agent.done}/{agent.total}</span>
+                  <span className="w-8 text-right text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>{agent.done}/{agent.total}</span>
                 </div>
               );
             })}
@@ -150,7 +150,7 @@ function ProjectProgressSection({ t, groupedTaskCards }: ProjectProgressSectionP
       {/* Department contribution */}
       {stats.topDepts.length > 0 && (
         <div>
-          <p className="mb-2 text-[11px] font-medium text-slate-400">
+          <p className="mb-2 text-[11px] font-medium font-mono" style={{ color: "var(--th-text-muted)" }}>
             {t({ ko: "부서별 기여도", en: "Department Contribution", ja: "部署別貢献度", zh: "部门贡献度" })}
           </p>
           <div className="space-y-1.5">
@@ -158,14 +158,14 @@ function ProjectProgressSection({ t, groupedTaskCards }: ProjectProgressSectionP
               const deptPct = dept.total > 0 ? Math.round((dept.done / dept.total) * 100) : 0;
               return (
                 <div key={dept.name} className="flex items-center gap-2">
-                  <span className="w-24 truncate text-[11px] text-slate-300">{dept.name}</span>
-                  <div className="flex-1 overflow-hidden rounded-full bg-slate-700/60" style={{ height: 6 }}>
+                  <span className="w-24 truncate text-[11px] font-mono" style={{ color: "var(--th-text-secondary)" }}>{dept.name}</span>
+                  <div className="flex-1 overflow-hidden" style={{ height: 6, borderRadius: "1px", background: "var(--th-bg-surface-hover)" }}>
                     <div
-                      className="h-full rounded-full bg-violet-500/70"
+                      className="h-full bg-violet-500/70"
                       style={{ width: `${deptPct}%` }}
                     />
                   </div>
-                  <span className="w-8 text-right text-[11px] text-slate-400">{dept.done}/{dept.total}</span>
+                  <span className="w-8 text-right text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>{dept.done}/{dept.total}</span>
                 </div>
               );
             })}
@@ -201,9 +201,9 @@ export default function ProjectInsightsPanel({
 }: ProjectInsightsPanelProps) {
   return (
     <div className="min-w-0 space-y-4">
-      <div className="min-w-0 rounded-xl border border-slate-700 bg-slate-800/40 p-4">
+      <div className="min-w-0 p-4" style={{ border: "1px solid var(--th-border)", borderRadius: "2px", background: "var(--th-bg-surface)" }}>
         <div className="flex items-center justify-between">
-          <h4 className="text-sm font-semibold text-white">
+          <h4 className="text-xs font-bold uppercase tracking-widest" style={{ color: "var(--th-text-heading)", fontFamily: "var(--th-font-mono)" }}>
             {t({ ko: "프로젝트 정보", en: "Project Info", ja: "プロジェクト情報", zh: "项目信息" })}
           </h4>
           {selectedProject?.github_repo && (
@@ -212,7 +212,8 @@ export default function ProjectInsightsPanel({
               target="_blank"
               rel="noopener noreferrer"
               title={selectedProject.github_repo}
-              className="flex items-center gap-1 rounded-md border border-slate-600 px-2 py-0.5 text-[11px] text-slate-300 transition hover:border-blue-500 hover:text-white"
+              className="flex items-center gap-1 px-2 py-0.5 text-[11px] font-mono transition"
+              style={{ borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)" }}
             >
               <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="currentColor">
                 <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
@@ -222,11 +223,11 @@ export default function ProjectInsightsPanel({
           )}
         </div>
         {loadingDetail ? (
-          <p className="mt-2 text-xs text-slate-400">
+          <p className="mt-2 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
             {t({ ko: "불러오는 중...", en: "Loading...", ja: "読み込み中...", zh: "加载中..." })}
           </p>
         ) : isCreating ? (
-          <p className="mt-2 text-xs text-slate-500">
+          <p className="mt-2 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
             {t({
               ko: "신규 프로젝트를 입력 중입니다",
               en: "Creating a new project",
@@ -235,19 +236,19 @@ export default function ProjectInsightsPanel({
             })}
           </p>
         ) : !selectedProject ? (
-          <p className="mt-2 text-xs text-slate-500">
+          <p className="mt-2 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
             {t({ ko: "프로젝트를 선택하세요", en: "Select a project", ja: "プロジェクトを選択", zh: "请选择项目" })}
           </p>
         ) : (
           <div className="mt-2 space-y-2 text-xs">
-            <p className="text-slate-200">
-              <span className="text-slate-500">ID:</span> {selectedProject.id}
+            <p className="font-mono text-xs" style={{ color: "var(--th-text-primary)" }}>
+              <span style={{ color: "var(--th-text-muted)" }}>ID:</span> {selectedProject.id}
             </p>
-            <p className="break-all text-slate-200">
-              <span className="text-slate-500">Path:</span> {selectedProject.project_path}
+            <p className="break-all font-mono text-xs" style={{ color: "var(--th-text-primary)" }}>
+              <span style={{ color: "var(--th-text-muted)" }}>Path:</span> {selectedProject.project_path}
             </p>
-            <p className="break-all text-slate-200">
-              <span className="text-slate-500">Goal:</span> {selectedProject.core_goal}
+            <p className="break-all font-mono text-xs" style={{ color: "var(--th-text-primary)" }}>
+              <span style={{ color: "var(--th-text-muted)" }}>Goal:</span> {selectedProject.core_goal}
             </p>
           </div>
         )}
@@ -258,22 +259,22 @@ export default function ProjectInsightsPanel({
       )}
 
       {selectedProject && !loadingDetail && !isCreating && groupedTaskCards.length > 0 && (
-        <div className="min-w-0 rounded-xl border border-slate-700 bg-slate-800/40 p-4">
-          <h4 className="mb-2 text-sm font-semibold text-white">
+        <div className="min-w-0 p-4" style={{ border: "1px solid var(--th-border)", borderRadius: "2px", background: "var(--th-bg-surface)" }}>
+          <h4 className="mb-2 text-xs font-bold uppercase tracking-widest" style={{ color: "var(--th-text-heading)", fontFamily: "var(--th-font-mono)" }}>
             {t({ ko: "번다운 차트", en: "Burndown Chart", ja: "バーンダウンチャート", zh: "燃尽图" })}
           </h4>
           <BurndownChart projectId={selectedProject.id} t={t} />
         </div>
       )}
 
-      <div className="min-w-0 rounded-xl border border-slate-700 bg-slate-800/40 p-4">
-        <h4 className="text-sm font-semibold text-white">
+      <div className="min-w-0 p-4" style={{ border: "1px solid var(--th-border)", borderRadius: "2px", background: "var(--th-bg-surface)" }}>
+        <h4 className="text-xs font-bold uppercase tracking-widest" style={{ color: "var(--th-text-heading)", fontFamily: "var(--th-font-mono)" }}>
           {t({ ko: "작업 이력", en: "Task History", ja: "作業履歴", zh: "任务历史" })}
         </h4>
         {!selectedProject ? (
-          <p className="mt-2 text-xs text-slate-500">-</p>
+          <p className="mt-2 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>-</p>
         ) : groupedTaskCards.length === 0 ? (
-          <p className="mt-2 text-xs text-slate-500">
+          <p className="mt-2 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
             {t({ ko: "연결된 작업이 없습니다", en: "No mapped tasks", ja: "紐づくタスクなし", zh: "没有映射任务" })}
           </p>
         ) : (
@@ -283,28 +284,29 @@ export default function ProjectInsightsPanel({
                 key={group.root.id}
                 type="button"
                 onClick={() => void handleOpenTaskDetail(group.root.id)}
-                className="w-full min-w-0 overflow-hidden rounded-lg border border-slate-700/70 bg-slate-900/60 px-3 py-2 text-left transition hover:border-blue-500/70 hover:bg-slate-900"
+                className="w-full min-w-0 overflow-hidden px-3 py-2 text-left transition"
+                style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}
               >
-                <p className="whitespace-pre-wrap break-all text-xs font-semibold text-slate-100">{group.root.title}</p>
-                <p className="mt-1 break-all text-[11px] text-slate-400">
+                <p className="whitespace-pre-wrap break-all text-xs font-semibold font-mono" style={{ color: "var(--th-text-primary)" }}>{group.root.title}</p>
+                <p className="mt-1 break-all text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>
                   {group.root.status} · {group.root.task_type} · {fmtTime(group.root.created_at)}
                 </p>
-                <p className="mt-1 break-all text-[11px] text-slate-500">
+                <p className="mt-1 break-all text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>
                   {t({ ko: "담당", en: "Owner", ja: "担当", zh: "负责人" })}:{" "}
                   {group.root.assigned_agent_name_ko || group.root.assigned_agent_name || "-"}
                 </p>
-                <p className="mt-1 text-[11px] text-blue-300">
+                <p className="mt-1 text-[11px] text-[#93c5fd]">
                   {t({ ko: "하위 작업", en: "Sub tasks", ja: "サブタスク", zh: "子任务" })}: {group.children.length}
                 </p>
                 {group.children.length > 0 && (
                   <div className="mt-1 space-y-1">
                     {group.children.slice(0, 3).map((child: ProjectTaskHistoryItem) => (
-                      <p key={child.id} className="whitespace-pre-wrap break-all text-[11px] text-slate-500">
+                      <p key={child.id} className="whitespace-pre-wrap break-all text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>
                         - {child.title}
                       </p>
                     ))}
                     {group.children.length > 3 && (
-                      <p className="text-[11px] text-slate-500">+{group.children.length - 3}</p>
+                      <p className="text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>+{group.children.length - 3}</p>
                     )}
                   </div>
                 )}
@@ -322,14 +324,14 @@ export default function ProjectInsightsPanel({
         )}
       </div>
 
-      <div className="min-w-0 rounded-xl border border-slate-700 bg-slate-800/40 p-4">
-        <h4 className="text-sm font-semibold text-white">
+      <div className="min-w-0 p-4" style={{ border: "1px solid var(--th-border)", borderRadius: "2px", background: "var(--th-bg-surface)" }}>
+        <h4 className="text-xs font-bold uppercase tracking-widest" style={{ color: "var(--th-text-heading)", fontFamily: "var(--th-font-mono)" }}>
           {t({ ko: "보고서 이력(프로젝트 매핑)", en: "Mapped Reports", ja: "紐づくレポート", zh: "映射报告" })}
         </h4>
         {!selectedProject ? (
-          <p className="mt-2 text-xs text-slate-500">-</p>
+          <p className="mt-2 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>-</p>
         ) : sortedReports.length === 0 ? (
-          <p className="mt-2 text-xs text-slate-500">
+          <p className="mt-2 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
             {t({
               ko: "연결된 보고서가 없습니다",
               en: "No mapped reports",
@@ -342,16 +344,18 @@ export default function ProjectInsightsPanel({
             {sortedReports.map((row) => (
               <div
                 key={row.id}
-                className="flex min-w-0 items-center justify-between gap-2 rounded-lg border border-slate-700/70 bg-slate-900/60 px-3 py-2"
+                className="flex min-w-0 items-center justify-between gap-2 px-3 py-2"
+                style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}
               >
                 <div className="min-w-0">
-                  <p className="whitespace-pre-wrap break-all text-xs font-medium text-slate-100">{row.title}</p>
-                  <p className="text-[11px] text-slate-400">{fmtTime(row.completed_at || row.created_at)}</p>
+                  <p className="whitespace-pre-wrap break-all text-xs font-medium font-mono" style={{ color: "var(--th-text-primary)" }}>{row.title}</p>
+                  <p className="text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>{fmtTime(row.completed_at || row.created_at)}</p>
                 </div>
                 <button
                   type="button"
                   onClick={() => void handleOpenTaskDetail(row.id)}
-                  className="shrink-0 rounded-md bg-emerald-700 px-2 py-1 text-[11px] text-white hover:bg-emerald-600"
+                  className="shrink-0 px-2 py-1 text-[11px] font-mono font-bold uppercase"
+                  style={{ borderRadius: "2px", background: "var(--th-accent)", color: "#000" }}
                 >
                   {t({ ko: "열람", en: "Open", ja: "表示", zh: "查看" })}
                 </button>
@@ -361,14 +365,14 @@ export default function ProjectInsightsPanel({
         )}
       </div>
 
-      <div className="min-w-0 rounded-xl border border-slate-700 bg-slate-800/40 p-4">
-        <h4 className="text-sm font-semibold text-white">
+      <div className="min-w-0 p-4" style={{ border: "1px solid var(--th-border)", borderRadius: "2px", background: "var(--th-bg-surface)" }}>
+        <h4 className="text-xs font-bold uppercase tracking-widest" style={{ color: "var(--th-text-heading)", fontFamily: "var(--th-font-mono)" }}>
           {t({ ko: "대표 선택사항", en: "Representative Decisions", ja: "代表選択事項", zh: "代表选择事项" })}
         </h4>
         {!selectedProject ? (
-          <p className="mt-2 text-xs text-slate-500">-</p>
+          <p className="mt-2 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>-</p>
         ) : sortedDecisionEvents.length === 0 ? (
-          <p className="mt-2 text-xs text-slate-500">
+          <p className="mt-2 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
             {t({
               ko: "기록된 대표 의사결정이 없습니다",
               en: "No representative decision records",
@@ -396,17 +400,18 @@ export default function ProjectInsightsPanel({
               return (
                 <div
                   key={`${event.id}-${event.created_at}`}
-                  className="rounded-lg border border-slate-700/70 bg-slate-900/60 px-3 py-2"
+                  className="px-3 py-2"
+                  style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <p className="min-w-0 truncate text-xs font-semibold text-slate-100">
+                    <p className="min-w-0 truncate text-xs font-semibold font-mono" style={{ color: "var(--th-text-primary)" }}>
                       {getDecisionEventLabel(event.event_type)}
                     </p>
-                    <p className="text-[11px] text-slate-400">{fmtTime(event.created_at)}</p>
+                    <p className="text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>{fmtTime(event.created_at)}</p>
                   </div>
-                  <p className="mt-1 whitespace-pre-wrap break-all text-[11px] text-slate-300">{event.summary}</p>
+                  <p className="mt-1 whitespace-pre-wrap break-all text-[11px] font-mono" style={{ color: "var(--th-text-secondary)" }}>{event.summary}</p>
                   {selectedLabels.length > 0 && (
-                    <p className="mt-1 whitespace-pre-wrap break-all text-[11px] text-blue-300">
+                    <p className="mt-1 whitespace-pre-wrap break-all text-[11px] text-[#93c5fd]">
                       {t({ ko: "선택 내용", en: "Selected Items", ja: "選択内容", zh: "已选内容" })}:{" "}
                       {selectedLabels.join(" / ")}
                     </p>

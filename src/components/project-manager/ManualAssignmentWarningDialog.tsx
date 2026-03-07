@@ -20,16 +20,17 @@ export default function ManualAssignmentWarningDialog({
   return (
     <div className="fixed inset-0 z-[61] flex items-center justify-center bg-black/70 p-4" onClick={onCancel}>
       <div
-        className="w-full max-w-lg overflow-hidden rounded-xl border border-amber-500/40 bg-slate-900 shadow-2xl"
+        className="w-full max-w-lg overflow-hidden"
+        style={{ borderRadius: "4px", border: "1px solid rgba(245,158,11,0.4)", background: "var(--th-bg-surface)" }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="border-b border-amber-500/30 px-4 py-3">
-          <h3 className="text-sm font-semibold text-amber-200">
+          <h3 className="text-xs font-bold uppercase tracking-widest" style={{ color: "var(--th-accent)", fontFamily: "var(--th-font-mono)" }}>
             {t({ ko: "수동 배정 확인", en: "Manual Assignment Check", ja: "手動割り当て確認", zh: "手动分配确认" })}
           </h3>
         </div>
         <div className="space-y-2 px-4 py-4">
-          <p className="text-sm text-slate-100">
+          <p className="text-xs font-mono" style={{ color: "var(--th-text-primary)" }}>
             {warning.reason === "no_agents"
               ? t({
                   ko: "직원이 선택되지 않았습니다. 이 상태로 저장하면 수동 모드 안전장치에 따라 팀장이 직접(단독) 실행할 수 있습니다. 계속 저장할까요?",
@@ -44,7 +45,7 @@ export default function ManualAssignmentWarningDialog({
                   zh: "当前仅选择了组长。若无下属成员，运行时可能由组长直接执行。是否继续？",
                 })}
           </p>
-          <div className="rounded-md border border-slate-700 bg-slate-800/60 px-3 py-2 text-[11px] text-slate-300">
+          <div className="px-3 py-2 text-[11px] font-mono" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}>
             <p>
               {t({ ko: "선택 요약", en: "Selection Summary", ja: "選択サマリー", zh: "选择摘要" })}: {stats.total}
             </p>
@@ -54,18 +55,20 @@ export default function ManualAssignmentWarningDialog({
             </p>
           </div>
         </div>
-        <div className="flex justify-end gap-2 border-t border-slate-700 px-4 py-3">
+        <div className="flex justify-end gap-2 px-4 py-3" style={{ borderTop: "1px solid var(--th-border)" }}>
           <button
             type="button"
             onClick={onCancel}
-            className="rounded-md border border-slate-600 px-3 py-1.5 text-xs font-semibold text-slate-200 transition hover:bg-slate-800"
+            className="px-3 py-1.5 text-xs font-semibold font-mono transition"
+            style={{ borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
           >
             {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}
           </button>
           <button
             type="button"
             onClick={() => onConfirm(warning)}
-            className="rounded-md bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-amber-500"
+            className="px-3 py-1.5 text-xs font-semibold font-mono uppercase transition"
+            style={{ borderRadius: "2px", background: "var(--th-accent)", color: "#000" }}
           >
             {t({ ko: "계속 저장", en: "Save Anyway", ja: "そのまま保存", zh: "仍然保存" })}
           </button>

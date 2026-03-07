@@ -1,5 +1,7 @@
 import type { Dispatch, MutableRefObject, SetStateAction } from "react";
 import type { Application, AnimatedSprite, Container, Graphics, Sprite, Text, Texture } from "pixi.js";
+import type { ElevatorTickState } from "./elevatorTick";
+import type { ExteriorWindowVisual } from "./drawExteriorWalls";
 import type { Agent, Department, SubAgent, Task } from "../../types";
 import type { ThemeMode } from "../../ThemeContext";
 import type { Delivery, RoomRect, SubCloneBurstParticle, WallClockVisual } from "./model";
@@ -9,6 +11,7 @@ import type { CeoCustomization } from "./ceo-customization";
 import type { RoomDecoration } from "./room-decoration";
 import type { StyleKey } from "./drawing-styles";
 import type { FurnitureLayout } from "./furniture-catalog";
+import type { VisitorTickState } from "./visitorTick";
 
 export interface DataSnapshot {
   departments: Department[];
@@ -40,6 +43,7 @@ export interface AnimItem {
   animated?: AnimatedSprite;
   frameCount: number;
   bounceUntilTick: number;
+  personaGlow?: Graphics;
 }
 
 export interface BreakAnimItem {
@@ -102,4 +106,18 @@ export interface BuildOfficeSceneContext {
   seasonalParticleRef: MutableRefObject<SeasonalParticleState | null>;
   seasonKeyRef: MutableRefObject<SeasonKey>;
   setSceneRevision: Dispatch<SetStateAction<number>>;
+  elevatorCarRef: MutableRefObject<Container | null>;
+  elevatorFloorDisplayRef: MutableRefObject<Text | null>;
+  elevatorDoorRef: MutableRefObject<Graphics | null>;
+  elevatorStateRef: MutableRefObject<ElevatorTickState>;
+  elevatorNFloorsRef: MutableRefObject<number>;
+  exteriorWindowsRef: MutableRefObject<ExteriorWindowVisual[]>;
+  antennaLedRef: MutableRefObject<Graphics | null>;
+  elevatorFloorLedsRef: MutableRefObject<Graphics[]>;
+  floorGlowsRef: MutableRefObject<Graphics[]>;
+  floorSelectBoxesRef: MutableRefObject<Graphics[]>;
+  selectedFloorIdxRef: MutableRefObject<number>;
+  ceoVisitorAlertRef: MutableRefObject<Text | null>;
+  visitorLayerRef: MutableRefObject<Container | null>;
+  visitorTickRef: MutableRefObject<VisitorTickState | null>;
 }

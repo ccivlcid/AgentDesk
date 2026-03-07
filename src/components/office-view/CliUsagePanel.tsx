@@ -71,15 +71,15 @@ const CLI_DISPLAY: Array<{ key: string; name: string; icon: ReactNode; color: st
     key: "gemini",
     name: "Gemini",
     icon: <GeminiLogo />,
-    color: "text-blue-300",
-    bgColor: "bg-blue-500/15 border-blue-400/30",
+    color: "text-[#93c5fd]",
+    bgColor: "bg-[rgba(59,130,246,0.15)] border-[rgba(96,165,250,0.3)]",
   },
   {
     key: "cursor",
     name: "Cursor AI",
     icon: <CliCursorLogo />,
-    color: "text-slate-300",
-    bgColor: "bg-slate-500/15 border-slate-400/30",
+    color: "text-[#cbd5e1]",
+    bgColor: "bg-[rgba(100,116,139,0.15)] border-[rgba(148,163,184,0.3)]",
   },
   {
     key: "copilot",
@@ -151,7 +151,7 @@ export default function CliUsagePanel({
       {/* Page header */}
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-700/60 bg-slate-800/80 shadow-sm">
+          <span className="flex h-10 w-10 items-center justify-center" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
             <svg
               width="20"
               height="20"
@@ -168,10 +168,10 @@ export default function CliUsagePanel({
             </svg>
           </span>
           <div>
-            <h1 className="text-lg font-semibold tracking-tight text-slate-100">
+            <h1 className="text-lg font-semibold tracking-tight font-mono" style={{ color: "var(--th-text-heading)" }}>
               {t(LOCALE_TEXT.cliUsageTitle)}
             </h1>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
               {connectedClis.length} {t(LOCALE_TEXT.cliConnected)}
             </p>
           </div>
@@ -179,7 +179,8 @@ export default function CliUsagePanel({
         <button
           onClick={onRefreshUsage}
           disabled={refreshing}
-          className="flex items-center gap-2 rounded-xl border border-slate-700/60 bg-slate-800/80 px-3 py-2 text-sm text-slate-300 transition-colors hover:border-slate-600 hover:bg-slate-700/80 hover:text-slate-100 disabled:opacity-50"
+          className="flex items-center gap-2 px-3 py-2 text-sm font-mono transition-colors disabled:opacity-50"
+          style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
           title={t(LOCALE_TEXT.cliRefreshTitle)}
         >
           <svg
@@ -201,21 +202,20 @@ export default function CliUsagePanel({
       </header>
 
       {connectedClis.length === 0 ? (
-        <section className="rounded-2xl border border-slate-700/50 bg-slate-900/60 p-8 backdrop-blur-sm text-center">
-          <p className="text-sm text-slate-400">
-            {t(LOCALE_TEXT.cliNoConnectedEmpty)}
-          </p>
-          <p className="mt-2 text-xs text-slate-500">
+        <section className="terminal-empty-state rounded border p-8" style={{ borderColor: "var(--th-border)" }}>
+          <p className="terminal-empty-state-cmd">$ cli status --all</p>
+          <p className="terminal-empty-state-result">{t(LOCALE_TEXT.cliNoConnectedEmpty)}</p>
+          <p className="terminal-empty-state-hint">
             {t(LOCALE_TEXT.cliUsageTitle).includes("사용량")
-              ? "Claude Code, Codex, Gemini 등 CLI가 설치·인증되면 프로바이더별 사용률과 비용 알림을 설정할 수 있습니다."
-              : "When a CLI (e.g. Claude Code, Codex, Gemini) is installed and authenticated, you can view usage and set cost alerts here."}
+              ? "Claude Code, Codex, Gemini 등 CLI가 설치·인증되면 사용률과 비용 알림을 확인할 수 있습니다."
+              : "Install and authenticate a CLI (Claude Code, Codex, Gemini) to view usage and set cost alerts."}
           </p>
         </section>
       ) : (
         <>
       {/* Provider usage cards */}
-      <section className="rounded-2xl border border-slate-700/50 bg-slate-900/60 p-4 backdrop-blur-sm">
-        <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">
+      <section className="rounded border p-4" style={{ borderColor: "var(--th-border)", background: "var(--th-bg-surface)" }}>
+        <h2 className="mb-3 text-xs font-semibold font-mono uppercase tracking-wider" style={{ color: "var(--th-text-muted)" }}>
           {t(LOCALE_TEXT.cliUsageTitle).includes("사용량") ? "프로바이더별 사용률" : "Usage by provider"}
         </h2>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -224,28 +224,29 @@ export default function CliUsagePanel({
             return (
               <div
                 key={cli.key}
-                className={`rounded-xl border ${cli.bgColor} p-3.5 transition-colors hover:border-opacity-80`}
+                className={`border ${cli.bgColor} p-3.5 transition-colors`}
+                style={{ borderRadius: "2px" }}
               >
                 <div className="mb-2 flex items-center gap-2">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-800/60 text-base">{cli.icon}</span>
+                  <span className="flex h-8 w-8 items-center justify-center text-base" style={{ borderRadius: "2px", background: "var(--th-bg-elevated)" }}>{cli.icon}</span>
                   <span className={`text-sm font-semibold ${cli.color}`}>{cli.name}</span>
                 </div>
 
                 {usage?.error === "unauthenticated" && (
-                  <p className="text-[11px] text-slate-500 italic">
+                  <p className="text-[11px] font-mono italic" style={{ color: "var(--th-text-muted)" }}>
                     {cli.key === "cursor" ? t(LOCALE_TEXT.cliNoUsageDisplay) : t(LOCALE_TEXT.cliNotSignedIn)}
                   </p>
                 )}
                 {usage?.error === "not_implemented" && (
-                  <p className="text-[11px] text-slate-500 italic">
+                  <p className="text-[11px] font-mono italic" style={{ color: "var(--th-text-muted)" }}>
                     {cli.key === "cursor" ? t(LOCALE_TEXT.cliNoUsageDisplay) : t(LOCALE_TEXT.cliNoApi)}
                   </p>
                 )}
                 {usage?.error && usage.error !== "unauthenticated" && usage.error !== "not_implemented" && (
-                  <p className="text-[11px] text-slate-500 italic">{t(LOCALE_TEXT.cliUnavailable)}</p>
+                  <p className="text-[11px] font-mono italic" style={{ color: "var(--th-text-muted)" }}>{t(LOCALE_TEXT.cliUnavailable)}</p>
                 )}
 
-                {!usage && <p className="text-[11px] text-slate-500 italic">{t(LOCALE_TEXT.cliLoading)}</p>}
+                {!usage && <p className="text-[11px] font-mono italic" style={{ color: "var(--th-text-muted)" }}>{t(LOCALE_TEXT.cliLoading)}</p>}
 
                 {usage && !usage.error && usage.windows.length > 0 && (
                   <div
@@ -260,30 +261,25 @@ export default function CliUsagePanel({
                       return (
                         <div key={windowEntry.label} className="space-y-1">
                           <div className="flex items-center justify-between text-[11px]">
-                            <span className="text-slate-400">{windowEntry.label}</span>
+                            <span className="font-mono" style={{ color: "var(--th-text-muted)" }}>{windowEntry.label}</span>
                             <span className="flex items-center gap-2">
                               <span
-                                className={
-                                  percentage >= 80
-                                    ? "font-medium text-red-400"
-                                    : percentage >= 50
-                                      ? "text-amber-400"
-                                      : "text-slate-400"
-                                }
+                                className={percentage >= 80 ? "font-medium text-red-400" : percentage >= 50 ? "text-amber-400" : ""}
+                                style={percentage < 50 ? { color: "var(--th-text-muted)" } : undefined}
                               >
                                 {percentage}%
                               </span>
                               {windowEntry.resetsAt && (
-                                <span className="text-slate-500 text-[10px]">
+                                <span className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
                                   {t(LOCALE_TEXT.cliResets)} {formatReset(windowEntry.resetsAt, language)}
                                 </span>
                               )}
                             </span>
                           </div>
-                          <div className="h-2 overflow-hidden rounded-full bg-slate-800">
+                          <div className="h-2 overflow-hidden" style={{ borderRadius: "1px", background: "var(--th-bg-surface-hover)" }}>
                             <div
-                              className={`h-full rounded-full ${barColor} transition-all duration-500`}
-                              style={{ width: `${Math.min(100, percentage)}%` }}
+                              className={`h-full ${barColor} transition-all duration-500`}
+                              style={{ borderRadius: "1px", width: `${Math.min(100, percentage)}%` }}
                             />
                           </div>
                         </div>
@@ -294,8 +290,8 @@ export default function CliUsagePanel({
 
                 {usage && !usage.error && usage.windows.length === 0 && (
                   <div className="space-y-1">
-                    <p className="text-[11px] text-slate-500">{t(LOCALE_TEXT.cliNoData)}</p>
-                    <p className="text-[10px] text-slate-600">{t(LOCALE_TEXT.cliNoDataHint)}</p>
+                    <p className="text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>{t(LOCALE_TEXT.cliNoData)}</p>
+                    <p className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>{t(LOCALE_TEXT.cliNoDataHint)}</p>
                   </div>
                 )}
               </div>
@@ -306,10 +302,11 @@ export default function CliUsagePanel({
 
       {/* Agent Usage Summary */}
       {agentUsage.length > 0 && (
-        <section className="rounded-2xl border border-slate-700/50 bg-slate-900/60 p-4 backdrop-blur-sm">
+        <section className="rounded border p-4" style={{ borderColor: "var(--th-border)", background: "var(--th-bg-surface)" }}>
           <button
             onClick={() => setAgentUsageExpanded((v) => !v)}
-            className="flex w-full items-center justify-between rounded-lg py-1 text-left text-xs font-medium text-slate-400 transition-colors hover:text-slate-200"
+            className="flex w-full items-center justify-between py-1 text-left text-xs font-medium font-mono transition-colors"
+            style={{ color: "var(--th-text-muted)" }}
           >
             <span className="flex items-center gap-2">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
@@ -330,14 +327,14 @@ export default function CliUsagePanel({
                 const durationMin = Math.round(row.total_duration_ms / 60000);
                 const successRate = row.run_count > 0 ? Math.round((row.success_count / row.run_count) * 100) : 0;
                 return (
-                  <div key={`${row.agent_id}-${row.provider}`} className="flex items-center gap-3 rounded-lg border border-slate-700/40 bg-slate-800/50 px-3 py-2 text-[11px]">
+                  <div key={`${row.agent_id}-${row.provider}`} className="flex items-center gap-3 px-3 py-2 text-[11px]" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
                     <span className="text-lg leading-none">{row.avatar_emoji || "🤖"}</span>
-                    <span className="min-w-0 flex-1 truncate font-medium text-slate-200">
+                    <span className="min-w-0 flex-1 truncate font-medium font-mono" style={{ color: "var(--th-text-primary)" }}>
                       {language === "ko" ? row.agent_name_ko || row.agent_name : row.agent_name}
                     </span>
-                    <span className="shrink-0 rounded bg-slate-700/60 px-1.5 py-0.5 text-[10px] text-slate-400">{row.provider}</span>
-                    <span className="shrink-0 text-slate-500">{row.run_count}{language === "ko" ? "회" : language === "ja" ? "回" : "x"}</span>
-                    <span className="shrink-0 text-slate-500">{durationMin}m</span>
+                    <span className="shrink-0 px-1.5 py-0.5 text-[10px] font-mono" style={{ borderRadius: "2px", background: "var(--th-bg-surface-hover)", color: "var(--th-text-muted)" }}>{row.provider}</span>
+                    <span className="shrink-0 font-mono" style={{ color: "var(--th-text-muted)" }}>{row.run_count}{language === "ko" ? "회" : language === "ja" ? "回" : "x"}</span>
+                    <span className="shrink-0 font-mono" style={{ color: "var(--th-text-muted)" }}>{durationMin}m</span>
                     <span className={`shrink-0 font-medium ${successRate >= 80 ? "text-emerald-400" : successRate >= 50 ? "text-amber-400" : "text-red-400"}`}>
                       {successRate}%
                     </span>
@@ -363,8 +360,8 @@ export default function CliUsagePanel({
         const entries = [...providerStats.entries()].sort((a, b) => b[1].runs - a[1].runs);
         if (entries.length === 0) return null;
         return (
-          <section className="rounded-2xl border border-slate-700/50 bg-slate-900/60 p-4 backdrop-blur-sm">
-            <span className="flex items-center gap-2 text-xs font-medium text-slate-400 mb-3">
+          <section className="rounded border p-4" style={{ borderColor: "var(--th-border)", background: "var(--th-bg-surface)" }}>
+            <span className="flex items-center gap-2 text-xs font-medium font-mono mb-3" style={{ color: "var(--th-text-muted)" }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
               </svg>
@@ -375,18 +372,19 @@ export default function CliUsagePanel({
                 const rate = stats.runs > 0 ? Math.round((stats.success / stats.runs) * 100) : 0;
                 const barWidth = stats.runs > 0 ? (stats.success / stats.runs) * 100 : 0;
                 return (
-                  <div key={provider} className="rounded-lg border border-slate-700/40 bg-slate-800/50 px-3 py-2">
+                  <div key={provider} className="px-3 py-2" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
                     <div className="flex items-center justify-between text-[11px] mb-1">
-                      <span className="font-medium text-slate-200">{provider}</span>
-                      <span className="text-slate-500">
+                      <span className="font-medium font-mono" style={{ color: "var(--th-text-primary)" }}>{provider}</span>
+                      <span className="font-mono" style={{ color: "var(--th-text-muted)" }}>
                         {stats.runs}{language === "ko" ? "회" : "x"} · {Math.round(stats.durationMs / 60000)}m
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="flex-1 h-1.5 rounded-full bg-slate-700/60 overflow-hidden">
+                      <div className="flex-1 h-1.5 overflow-hidden" style={{ borderRadius: "1px", background: "var(--th-bg-surface-hover)" }}>
                         <div
-                          className="h-full rounded-full transition-all"
+                          className="h-full transition-all"
                           style={{
+                            borderRadius: "1px",
                             width: `${barWidth}%`,
                             background: rate >= 80 ? "#22c55e" : rate >= 50 ? "#f59e0b" : "#ef4444",
                           }}
@@ -396,7 +394,7 @@ export default function CliUsagePanel({
                         {rate}%
                       </span>
                     </div>
-                    <div className="flex gap-3 mt-1 text-[10px] text-slate-500">
+                    <div className="flex gap-3 mt-1 text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
                       <span className="text-emerald-400/70">{stats.success} {language === "ko" ? "성공" : "ok"}</span>
                       <span className="text-red-400/70">{stats.failure} {language === "ko" ? "실패" : "fail"}</span>
                     </div>
@@ -409,10 +407,11 @@ export default function CliUsagePanel({
       })()}
 
       {/* Cost Alert Settings */}
-      <section className="rounded-2xl border border-slate-700/50 bg-slate-900/60 p-4 backdrop-blur-sm">
+      <section className="rounded border p-4" style={{ borderColor: "var(--th-border)", background: "var(--th-bg-surface)" }}>
         <button
           onClick={() => setAlertExpanded((v) => !v)}
-          className="flex w-full items-center justify-between rounded-lg py-1 text-left text-xs font-medium text-slate-400 transition-colors hover:text-slate-200"
+          className="flex w-full items-center justify-between py-1 text-left text-xs font-medium font-mono transition-colors"
+          style={{ color: "var(--th-text-muted)" }}
         >
           <span className="flex items-center gap-2">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
@@ -430,33 +429,36 @@ export default function CliUsagePanel({
             {connectedClis.map((cli) => {
               const conf = alertConfig[cli.key] ?? { alertThreshold: 80, enabled: false };
               return (
-                <div key={cli.key} className="flex flex-wrap items-center gap-2 rounded-lg border border-slate-700/40 bg-slate-800/50 px-3 py-2">
+                <div key={cli.key} className="flex flex-wrap items-center gap-2 px-3 py-2" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
                   <label className="flex cursor-pointer items-center gap-2">
                     <input
                       type="checkbox"
                       checked={conf.enabled}
                       onChange={(e) => handleAlertChange(cli.key, "enabled", e.target.checked)}
-                      className="h-3.5 w-3.5 rounded border-slate-600 bg-slate-800 text-cyan-500 focus:ring-1 focus:ring-cyan-500/50"
+                      className="h-3.5 w-3.5"
+                      style={{ borderRadius: "2px", accentColor: "var(--th-accent)" }}
                     />
                     <span className={`text-sm font-medium ${cli.color}`}>{cli.name}</span>
                   </label>
-                  <span className="text-slate-500">@</span>
+                  <span className="font-mono" style={{ color: "var(--th-text-muted)" }}>@</span>
                   <input
                     type="number"
                     min={10}
                     max={100}
                     value={conf.alertThreshold}
                     onChange={(e) => handleAlertChange(cli.key, "alertThreshold", Number(e.target.value))}
-                    className="w-14 rounded-lg border border-slate-700/60 bg-slate-800 px-2 py-1.5 text-center text-sm text-slate-200 focus:border-cyan-500/50 focus:outline-none focus:ring-1 focus:ring-cyan-500/30"
+                    className="w-14 px-2 py-1.5 text-center text-sm focus:outline-none"
+                    style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)", fontFamily: "var(--th-font-mono)" }}
                   />
-                  <span className="text-slate-500 text-sm">%</span>
+                  <span className="text-sm font-mono" style={{ color: "var(--th-text-muted)" }}>%</span>
                 </div>
               );
             })}
             <button
               onClick={handleSaveAlerts}
               disabled={alertSaving}
-              className="rounded-xl border border-cyan-500/40 bg-cyan-500/20 px-4 py-2 text-sm font-medium text-cyan-300 transition-colors hover:bg-cyan-500/30 disabled:opacity-50"
+              className="px-4 py-2 text-sm font-medium font-mono text-cyan-300 transition-colors disabled:opacity-50"
+              style={{ borderRadius: "2px", border: "1px solid rgba(6,182,212,0.4)", background: "rgba(6,182,212,0.15)" }}
             >
               {alertSaving ? "…" : t(LOCALE_TEXT.cliUsageTitle).includes("사용량") ? "저장" : "Save"}
             </button>
@@ -465,7 +467,7 @@ export default function CliUsagePanel({
       </section>
 
       {/* Daily Usage Trend Chart */}
-      <section className="rounded-2xl border border-slate-700/50 bg-slate-900/60 p-4 backdrop-blur-sm">
+      <section className="rounded border p-4" style={{ borderColor: "var(--th-border)", background: "var(--th-bg-surface)" }}>
         <UsageTrendChart language={language} />
       </section>
         </>

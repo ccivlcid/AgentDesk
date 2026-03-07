@@ -16,7 +16,7 @@ export default function ClassroomOverlay({ t, show, skillName, providers, agents
   if (!show) return null;
 
   return createPortal(
-    <div className="classroom-overlay fixed inset-0 z-[90] flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 animate-in fade-in duration-300">
+    <div className="classroom-overlay fixed inset-0 z-[90] flex items-center justify-center p-4 animate-in fade-in duration-300" style={{ background: "rgba(0,0,0,0.8)" }}>
       <div className="w-full max-w-2xl">
         <div className="classroom-scene">
           <div className="classroom-blackboard">
@@ -85,7 +85,7 @@ export default function ClassroomOverlay({ t, show, skillName, providers, agents
               zh: `"${skillName}" 技能培训中...`,
             })}
           </div>
-          <div className="text-[11px] text-slate-500 mt-1">
+          <div className="text-[11px] font-mono mt-1" style={{ color: "var(--th-text-muted)" }}>
             {t({
               ko: "CLI 대표자들이 열심히 학습하고 있습니다 📖",
               en: "CLI representatives are studying hard 📖",

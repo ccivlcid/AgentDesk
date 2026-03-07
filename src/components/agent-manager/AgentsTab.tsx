@@ -1,8 +1,17 @@
+import { motion } from "framer-motion";
 import type { Agent, Department } from "../../types";
 import { localeName } from "../../i18n";
 import AgentCard from "./AgentCard";
 import { StackedSpriteIcon } from "./EmojiPicker";
 import type { Translator } from "./types";
+
+const cardContainer = {
+  show: { transition: { staggerChildren: 0.04 } },
+};
+const cardItem = {
+  hidden: { opacity: 0, y: 6 },
+  show:   { opacity: 1, y: 0, transition: { duration: 0.1, ease: "linear" as const } },
+};
 
 interface AgentsTabProps {
   tr: Translator;
@@ -71,33 +80,44 @@ export default function AgentsTab({
         ].map((summary) => (
           <div
             key={summary.label}
-            className="rounded-xl px-4 py-3"
-            style={{ background: "var(--th-bg-surface)", border: "1px solid var(--th-border)" }}
+            style={{
+              background: "var(--th-bg-surface)",
+              border: "1px solid var(--th-border)",
+              borderRadius: "4px",
+              padding: "0.625rem 0.875rem",
+            }}
           >
-            <div className="flex items-center gap-1.5 text-xs mb-1" style={{ color: "var(--th-text-muted)" }}>
+            <div
+              className="flex items-center gap-1.5 mb-1 uppercase tracking-wider"
+              style={{ color: "var(--th-text-muted)", fontFamily: "var(--th-font-mono)", fontSize: "0.625rem" }}
+            >
               {summary.icon}
               {summary.label}
             </div>
-            <div className="text-2xl font-bold tabular-nums" style={{ color: "var(--th-text-heading)" }}>
+            <div
+              className="tabular-nums font-bold"
+              style={{ color: "var(--th-text-heading)", fontFamily: "var(--th-font-mono)", fontSize: "1.5rem" }}
+            >
               {summary.value}
             </div>
           </div>
         ))}
       </div>
 
-      <div className="flex items-center gap-2 flex-wrap" style={{ borderBottom: "1px solid var(--th-border)" }}>
+      <div className="flex items-center gap-0 flex-wrap" style={{ borderBottom: "1px solid var(--th-border)" }}>
         <button
           type="button"
           onClick={() => setDeptTab("all")}
-          className={`flex items-center gap-1 px-3 py-2 text-xs font-medium transition-colors border-b-2 ${
-            deptTab === "all" ? "" : "border-transparent"
-          }`}
+          className="flex items-center gap-1 px-3 py-2 border-b-2 transition-colors"
           style={{
+            fontFamily: "var(--th-font-mono)",
+            fontSize: "0.75rem",
             color: deptTab === "all" ? "var(--th-text-heading)" : "var(--th-text-muted)",
-            borderColor: deptTab === "all" ? "var(--th-accent, #2563eb)" : undefined,
+            borderColor: deptTab === "all" ? "var(--th-accent, #f59e0b)" : "transparent",
+            transition: "color 0.1s linear, border-color 0.1s linear",
           }}
         >
-          {tr("전체", "All")} <span className="opacity-60">{agents.length}</span>
+          ALL <span style={{ opacity: 0.5, marginLeft: "0.25rem" }}>{agents.length}</span>
         </button>
         {departments.map((department) => {
           const count = deptCounts.get(department.id);
@@ -112,16 +132,17 @@ export default function AgentsTab({
                 onEditDepartment(department);
               }}
               title={tr("더블클릭: 부서 편집", "Double-click: edit dept")}
-              className={`flex items-center gap-1 px-3 py-2 text-xs font-medium transition-colors border-b-2 ${
-                isActive ? "" : "border-transparent"
-              }`}
+              className="flex items-center gap-1 px-3 py-2 border-b-2 transition-colors"
               style={{
+                fontFamily: "var(--th-font-mono)",
+                fontSize: "0.75rem",
                 color: isActive ? "var(--th-text-heading)" : "var(--th-text-muted)",
-                borderColor: isActive ? "var(--th-accent, #2563eb)" : undefined,
+                borderColor: isActive ? "var(--th-accent, #f59e0b)" : "transparent",
+                transition: "color 0.1s linear, border-color 0.1s linear",
               }}
             >
               <span className="hidden sm:inline">{localeName(locale, department)}</span>
-              <span className="opacity-60">{count?.total ?? 0}</span>
+              <span style={{ opacity: 0.5, marginLeft: "0.25rem" }}>{count?.total ?? 0}</span>
             </button>
           );
         })}
@@ -131,40 +152,54 @@ export default function AgentsTab({
             placeholder={`${tr("검색", "Search")}...`}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="px-3 py-1.5 rounded-lg text-xs outline-none transition-shadow w-36 focus:ring-1"
             style={{
               background: "var(--th-bg-surface)",
               border: "1px solid var(--th-border)",
+              borderRadius: "2px",
               color: "var(--th-text-primary)",
+              fontFamily: "var(--th-font-mono)",
+              fontSize: "0.75rem",
+              padding: "0.25rem 0.625rem",
+              outline: "none",
+              width: "9rem",
             }}
           />
         </div>
       </div>
 
       {sortedAgents.length === 0 ? (
-        <div className="text-center py-16 text-sm" style={{ color: "var(--th-text-muted)" }}>
-          {tr("검색 결과 없음", "No agents found")}
+        <div className="terminal-empty-state py-16">
+          <p className="terminal-empty-state-cmd">$ ls agents/</p>
+          <p className="terminal-empty-state-result">(empty)</p>
+          <p className="terminal-empty-state-hint">{tr("검색 결과 없음", "No agents found")}</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <motion.div
+          key={`${deptTab}:${search}`}
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
+          variants={cardContainer}
+          initial="hidden"
+          animate="show"
+        >
           {sortedAgents.map((agent) => (
-            <AgentCard
-              key={agent.id}
-              agent={agent}
-              spriteMap={spriteMap}
-              isKo={isKo}
-              locale={locale}
-              tr={tr}
-              departments={departments}
-              onEdit={() => onEditAgent(agent)}
-              confirmDeleteId={confirmDeleteId}
-              onDeleteClick={() => setConfirmDeleteId(agent.id)}
-              onDeleteConfirm={() => onDeleteAgent(agent.id)}
-              onDeleteCancel={() => setConfirmDeleteId(null)}
-              saving={saving}
-            />
+            <motion.div key={agent.id} variants={cardItem}>
+              <AgentCard
+                agent={agent}
+                spriteMap={spriteMap}
+                isKo={isKo}
+                locale={locale}
+                tr={tr}
+                departments={departments}
+                onEdit={() => onEditAgent(agent)}
+                confirmDeleteId={confirmDeleteId}
+                onDeleteClick={() => setConfirmDeleteId(agent.id)}
+                onDeleteConfirm={() => onDeleteAgent(agent.id)}
+                onDeleteCancel={() => setConfirmDeleteId(null)}
+                saving={saving}
+              />
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       )}
     </>
   );

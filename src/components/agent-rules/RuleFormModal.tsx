@@ -96,17 +96,17 @@ export default function RuleFormModal({
   };
 
   return createPortal(
-    <div className="skills-learn-modal fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/75 backdrop-blur-sm p-4">
-      <div className="skills-learn-modal-card w-full max-w-lg max-h-[90vh] overflow-hidden rounded-2xl border border-slate-700/60 bg-slate-900/95 shadow-2xl">
+    <div className="skills-learn-modal fixed inset-0 z-[80] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.75)" }}>
+      <div className="skills-learn-modal-card w-full max-w-lg max-h-[90vh] overflow-hidden shadow-2xl" style={{ borderRadius: "4px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
         {/* Header */}
-        <div className="flex items-start justify-between gap-4 border-b border-slate-700/60 px-5 py-4">
+        <div className="flex items-start justify-between gap-4 px-5 py-4" style={{ borderBottom: "1px solid var(--th-border)" }}>
           <div>
-            <h3 className="text-base font-semibold text-white">
+            <h3 className="text-base font-semibold font-mono" style={{ color: "var(--th-text-heading)" }}>
               {isEditing
                 ? t({ ko: "룰 수정", en: "Edit Rule", ja: "ルール編集", zh: "编辑规则" })
                 : t({ ko: "새 룰 추가", en: "Add New Rule", ja: "新しいルール追加", zh: "添加新规则" })}
             </h3>
-            <div className="mt-1 text-xs text-slate-400">
+            <div className="mt-1 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
               {t({
                 ko: "룰 제목과 내용을 입력하세요",
                 en: "Enter rule title and content",
@@ -118,7 +118,8 @@ export default function RuleFormModal({
           <button
             onClick={onClose}
             disabled={submitting}
-            className="rounded-lg border border-slate-600 px-2.5 py-1 text-xs text-slate-300 hover:bg-slate-800 transition-all"
+            className="px-2.5 py-1 text-xs font-mono transition-all"
+            style={{ borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
           >
             {t({ ko: "닫기", en: "Close", ja: "閉じる", zh: "关闭" })}
           </button>
@@ -128,7 +129,7 @@ export default function RuleFormModal({
         <div className="space-y-4 overflow-y-auto px-5 py-4 max-h-[calc(90vh-72px)]">
           {/* Title */}
           <div>
-            <label className="block text-xs text-slate-400 mb-1.5">
+            <label className="block text-xs mb-1.5 font-mono" style={{ color: "var(--th-text-muted)" }}>
               {t({ ko: "룰 제목 (영문)", en: "Rule Title (EN)", ja: "ルールタイトル（英語）", zh: "规则标题（英文）" })} *
             </label>
             <input
@@ -141,13 +142,14 @@ export default function RuleFormModal({
                 ja: "例: Always write tests first",
                 zh: "例如: Always write tests first",
               })}
-              className="w-full bg-slate-900/60 border border-slate-600/50 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/25"
+              className="w-full px-3 py-2 text-sm focus:outline-none"
+              style={{ borderRadius: "2px", background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)" }}
             />
           </div>
 
           {/* Title KO */}
           <div>
-            <label className="block text-xs text-slate-400 mb-1.5">
+            <label className="block text-xs mb-1.5 font-mono" style={{ color: "var(--th-text-muted)" }}>
               {t({ ko: "룰 제목 (한국어)", en: "Rule Title (KO)", ja: "ルールタイトル（韓国語）", zh: "规则标题（韩文）" })}
             </label>
             <input
@@ -160,13 +162,14 @@ export default function RuleFormModal({
                 ja: "例: 항상 테스트를 먼저 작성",
                 zh: "例如: 항상 테스트를 먼저 작성",
               })}
-              className="w-full bg-slate-900/60 border border-slate-600/50 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/25"
+              className="w-full px-3 py-2 text-sm focus:outline-none"
+              style={{ borderRadius: "2px", background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)" }}
             />
           </div>
 
           {/* Description */}
           <div>
-            <label className="block text-xs text-slate-400 mb-1.5">
+            <label className="block text-xs mb-1.5 font-mono" style={{ color: "var(--th-text-muted)" }}>
               {t({ ko: "설명", en: "Description", ja: "説明", zh: "描述" })}
             </label>
             <textarea
@@ -179,13 +182,14 @@ export default function RuleFormModal({
                 ja: "このルールが必要な理由を簡単に説明してください",
                 zh: "简要说明此规则的必要性",
               })}
-              className="w-full bg-slate-900/60 border border-slate-600/50 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/25 resize-none"
+              className="w-full px-3 py-2 text-sm focus:outline-none resize-none"
+              style={{ borderRadius: "2px", background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)" }}
             />
           </div>
 
           {/* Rule Content */}
           <div>
-            <label className="block text-xs text-slate-400 mb-1.5">
+            <label className="block text-xs mb-1.5 font-mono" style={{ color: "var(--th-text-muted)" }}>
               {t({ ko: "룰 내용", en: "Rule Content", ja: "ルール内容", zh: "规则内容" })} *
             </label>
             <textarea
@@ -198,10 +202,11 @@ export default function RuleFormModal({
                 ja: "エージェントに伝えられる実際のルールテキストを入力してください",
                 zh: "输入将传达给代理的实际规则文本",
               })}
-              className="w-full bg-slate-900/60 border border-slate-600/50 rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/25 resize-none font-mono"
+              className="w-full px-3 py-2 text-sm focus:outline-none resize-none font-mono"
+              style={{ borderRadius: "2px", background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)" }}
             />
             <div className="flex items-center justify-between mt-1.5">
-              <div className="text-[10px] text-slate-500">
+              <div className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
                 {t({
                   ko: "이 텍스트가 에이전트 프롬프트에 주입됩니다",
                   en: "This text will be injected into agent prompts",
@@ -213,7 +218,8 @@ export default function RuleFormModal({
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="flex items-center gap-1.5 px-2.5 py-1 text-[10px] bg-slate-800/60 border border-slate-600/50 rounded-lg text-slate-300 hover:bg-slate-700/60 transition-all"
+                  className="flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-mono transition-all"
+                  style={{ borderRadius: "2px", background: "var(--th-bg-surface-hover)", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)" }}
                 >
                   {t({ ko: "파일에서 불러오기", en: "Load from file", ja: "ファイルから読込", zh: "从文件加载" })}
                 </button>
@@ -255,8 +261,8 @@ export default function RuleFormModal({
             </div>
             {/* File content preview when loaded from file */}
             {fileName && ruleContent && (
-              <div className="mt-2 rounded-lg border border-slate-700/50 bg-slate-900/60 p-2 max-h-24 overflow-y-auto">
-                <pre className="text-[10px] text-slate-400 whitespace-pre-wrap break-all">
+              <div className="mt-2 p-2 max-h-24 overflow-y-auto" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-terminal-bg)" }}>
+                <pre className="text-[10px] whitespace-pre-wrap break-all font-mono" style={{ color: "var(--th-text-muted)" }}>
                   {ruleContent.slice(0, 500)}
                   {ruleContent.length > 500 && "..."}
                 </pre>
@@ -267,13 +273,14 @@ export default function RuleFormModal({
           {/* Category + Priority Row */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs text-slate-400 mb-1.5">
+              <label className="block text-xs mb-1.5 font-mono" style={{ color: "var(--th-text-muted)" }}>
                 {t({ ko: "카테고리", en: "Category", ja: "カテゴリ", zh: "分类" })}
               </label>
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value as AgentRuleCategory)}
-                className="w-full bg-slate-900/60 border border-slate-600/50 rounded-lg px-3 py-2 text-sm text-slate-300 focus:outline-none focus:border-violet-500/50"
+                className="w-full px-3 py-2 text-sm focus:outline-none"
+              style={{ borderRadius: "2px", background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)" }}
               >
                 {RULE_CATEGORIES.map((cat) => (
                   <option key={cat} value={cat}>
@@ -283,7 +290,7 @@ export default function RuleFormModal({
               </select>
             </div>
             <div>
-              <label className="block text-xs text-slate-400 mb-1.5">
+              <label className="block text-xs mb-1.5 font-mono" style={{ color: "var(--th-text-muted)" }}>
                 {t({ ko: "우선순위", en: "Priority", ja: "優先順位", zh: "优先级" })} (1-100)
               </label>
               <input
@@ -292,14 +299,15 @@ export default function RuleFormModal({
                 max={100}
                 value={priority}
                 onChange={(e) => setPriority(Math.max(1, Math.min(100, Number(e.target.value) || 50)))}
-                className="w-full bg-slate-900/60 border border-slate-600/50 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/25"
+                className="w-full px-3 py-2 text-sm focus:outline-none"
+              style={{ borderRadius: "2px", background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)" }}
               />
             </div>
           </div>
 
           {/* Error */}
           {error && (
-            <div className="text-[11px] text-rose-300 bg-rose-500/10 border border-rose-500/30 rounded-lg px-3 py-2">
+            <div className="text-[11px] text-rose-300 bg-rose-500/10 border border-rose-500/30 px-3 py-2" style={{ borderRadius: "2px" }}>
               {error}
             </div>
           )}
@@ -309,22 +317,27 @@ export default function RuleFormModal({
             <button
               onClick={onClose}
               disabled={submitting}
-              className="px-3 py-1.5 rounded-lg text-xs border border-slate-600 text-slate-300 hover:bg-slate-800 transition-all"
+              className="px-3 py-1.5 text-xs font-mono transition-all"
+              style={{ borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
             >
               {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}
             </button>
             <button
               onClick={handleSubmit}
               disabled={!canSubmit || submitting}
-              className={`px-4 py-1.5 rounded-lg text-xs border transition-all flex items-center gap-1.5 ${
-                !canSubmit
-                  ? "cursor-not-allowed border-slate-700 text-slate-600"
-                  : "border-violet-500/50 bg-violet-500/20 text-violet-200 hover:bg-violet-500/30"
+              className={`px-4 py-1.5 text-xs font-mono uppercase tracking-wide transition-all flex items-center gap-1.5 ${
+                !canSubmit ? "cursor-not-allowed opacity-40" : ""
               }`}
+              style={{
+                borderRadius: "2px",
+                background: !canSubmit ? "var(--th-bg-surface-hover)" : "var(--th-accent)",
+                color: !canSubmit ? "var(--th-text-muted)" : "#000",
+                border: "none",
+              }}
             >
               {submitting ? (
                 <>
-                  <span className="animate-spin w-3 h-3 border border-violet-400 border-t-transparent rounded-full" />
+                  <span className="animate-spin w-3 h-3 border border-t-transparent" style={{ borderRadius: "50%", borderColor: "#000", borderTopColor: "transparent" }} />
                   {t({ ko: "저장중...", en: "Saving...", ja: "保存中...", zh: "保存中..." })}
                 </>
               ) : isEditing ? (

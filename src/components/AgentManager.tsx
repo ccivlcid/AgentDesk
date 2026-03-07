@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState, type DragEvent } from "react";
+import { motion } from "framer-motion";
 import type { Agent, Department } from "../types";
 import { useI18n } from "../i18n";
 import * as api from "../api";
@@ -119,6 +120,7 @@ export default function AgentManager({
         avatar_emoji: agent.avatar_emoji,
         sprite_number: computed,
         personality: agent.personality || "",
+        persona_id: agent.persona_id || undefined,
       });
       setShowModal(true);
     },
@@ -145,6 +147,7 @@ export default function AgentManager({
         avatar_emoji: form.avatar_emoji || "🤖",
         sprite_number: form.sprite_number,
         personality: form.personality.trim() || null,
+        persona_id: form.persona_id || null,
       };
       if (isIsolatedPack) {
         if (useDbBackedPack) {
@@ -483,61 +486,65 @@ export default function AgentManager({
   );
 
   return (
-    <div className="mx-auto max-w-4xl space-y-4 sm:space-y-5">
-      <div>
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h1 className="text-lg font-semibold tracking-tight" style={{ color: "var(--th-text-heading)" }}>
-            {tr("직원관리", "Agents")}
-          </h1>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={openCreateDept}
-              className="rounded-lg border px-3 py-2 text-sm font-medium transition-colors hover:opacity-90"
-              style={{
-                borderColor: "var(--th-border)",
-                color: "var(--th-text-heading)",
-                background: "var(--th-bg-surface)",
-              }}
-            >
-              + {tr("부서 추가", "Add Dept")}
-            </button>
-            <button
-              type="button"
-              onClick={openCreate}
-              className="rounded-lg px-4 py-2 text-sm font-semibold transition-colors hover:opacity-90"
-              style={{ background: "var(--th-accent, #2563eb)", color: "var(--th-text-heading)" }}
-            >
-              + {tr("신규 채용", "Hire Agent")}
-            </button>
-          </div>
+    <motion.div
+      className="mx-auto max-w-4xl space-y-4 sm:space-y-5"
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.12, ease: "linear" }}
+    >
+      <div className="flex flex-wrap items-center justify-between gap-3" style={{ borderLeft: "3px solid var(--th-accent)", paddingLeft: "0.75rem" }}>
+        <h1
+          className="text-sm font-bold uppercase tracking-widest"
+          style={{ color: "var(--th-text-heading)", fontFamily: "var(--th-font-mono)" }}
+        >
+          {tr("직원관리", "Agent Management")}
+        </h1>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={openCreateDept}
+            className="px-3 py-1.5 text-xs font-mono uppercase transition-colors hover:opacity-90"
+            style={{
+              borderRadius: "2px",
+              border: "1px solid var(--th-border)",
+              color: "var(--th-text-heading)",
+              background: "var(--th-bg-surface)",
+            }}
+          >
+            + {tr("부서 추가", "ADD DEPT")}
+          </button>
+          <button
+            type="button"
+            onClick={openCreate}
+            className="px-4 py-1.5 text-xs font-mono font-bold uppercase transition-colors hover:opacity-90"
+            style={{ borderRadius: "2px", background: "var(--th-accent)", color: "#000" }}
+          >
+            + {tr("신규 채용", "HIRE")}
+          </button>
         </div>
-        <p className="mt-0.5 text-sm" style={{ color: "var(--th-text-muted)" }}>
-          {tr("직원과 부서를 등록·편집하고, CLI 제공자를 지정합니다.", "Register and edit agents and departments, assign CLI providers.")}
-        </p>
       </div>
 
       <div
-        className="flex gap-1 p-1 rounded-xl"
-        style={{ background: "var(--th-bg-surface)", border: "1px solid var(--th-border)" }}
+        className="flex"
+        style={{ background: "var(--th-bg-surface)", border: "1px solid var(--th-border)", borderRadius: "2px" }}
       >
         {[
-          { key: "agents" as const, label: tr("직원", "Agents"), icon: <StackedSpriteIcon sprites={randomIconSprites.tab} /> },
-          { key: "departments" as const, label: tr("부서", "Departments"), icon: null },
-        ].map((tab) => (
+          { key: "agents" as const, label: tr("직원", "AGENTS") },
+          { key: "departments" as const, label: tr("부서", "DEPARTMENTS") },
+        ].map((tab, idx) => (
           <button
             key={tab.key}
             type="button"
             onClick={() => setSubTab(tab.key)}
-            className={`flex-1 flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              subTab === tab.key ? "" : "hover:opacity-80"
-            }`}
+            className="flex-1 flex items-center justify-center px-4 py-2 text-xs font-mono font-bold uppercase transition-colors hover:opacity-90"
             style={{
-              color: subTab === tab.key ? "var(--th-text-heading)" : "var(--th-text-muted)",
-              background: subTab === tab.key ? "var(--th-bg-surface-hover)" : "transparent",
+              color: subTab === tab.key ? "var(--th-accent)" : "var(--th-text-muted)",
+              background: "transparent",
+              borderBottom: subTab === tab.key ? "2px solid var(--th-accent)" : "2px solid transparent",
+              borderRight: idx === 0 ? "1px solid var(--th-border)" : "none",
+              letterSpacing: "0.08em",
             }}
           >
-            {tab.icon}
             {tab.label}
           </button>
         ))}
@@ -619,6 +626,6 @@ export default function AgentManager({
           onClose={closeDeptModal}
         />
       )}
-    </div>
+    </motion.div>
   );
 }

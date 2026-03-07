@@ -685,6 +685,555 @@
   animation: unlearn-pot-drop 0.9s ease-out both;
 }
 
+/* ═══════════════════════════════════════════════════════════
+   Office View — FM Match View Wrapper
+   3-column layout: dept panel | canvas | agent panel
+   ═══════════════════════════════════════════════════════════ */
+
+/* Screen wrapper */
+.office-screen {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  background: var(--th-bg-primary);
+  overflow: hidden;
+}
+
+/* Toolbar (44px) */
+.office-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 12px;
+  background: var(--th-bg-primary);
+  border-bottom: 1px solid var(--th-border);
+  flex-shrink: 0;
+}
+.office-toolbar-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--th-font-mono);
+  font-size: 0.75rem;
+}
+.office-toolbar-prompt {
+  color: var(--th-accent);
+}
+.office-toolbar-title {
+  font-family: var(--th-font-display);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--th-text-heading);
+}
+.office-toolbar-sep {
+  color: var(--th-border-strong);
+}
+.office-toolbar-sub {
+  color: var(--th-text-muted);
+  font-size: 0.7rem;
+}
+.office-toolbar-center {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 auto;
+}
+.office-toolbar-stat-chip {
+  font-family: var(--th-font-mono);
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  color: var(--th-text-muted);
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--th-border);
+  padding: 1px 6px;
+}
+.office-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.office-toolbar-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  height: 26px;
+  background: transparent;
+  border: 1px solid var(--th-border);
+  border-radius: 3px;
+  color: var(--th-text-secondary);
+  font-family: var(--th-font-mono);
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: color 100ms linear, background 100ms linear, border-color 100ms linear;
+}
+.office-toolbar-btn:hover {
+  color: var(--th-text-primary);
+  background: var(--th-bg-surface-hover);
+  border-color: var(--th-border-strong);
+}
+
+/* 3-column body */
+.office-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Left panel — department list (180px) */
+.office-left {
+  width: 180px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--th-bg-secondary);
+  border-right: 1px solid var(--th-border);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Center — canvas */
+.office-canvas-wrap {
+  flex: 1;
+  min-width: 0;
+  background: #010409;
+  overflow: auto;
+  position: relative;
+}
+
+/* Amber cross-section frame — sizes to canvas content, never collapses */
+.office-canvas-frame {
+  display: inline-block;
+  min-width: 100%;
+  border-left: 3px solid #f59e0b;
+  border-right: 3px solid #f59e0b;
+  border-top: 3px solid #f59e0b;
+  box-sizing: border-box;
+  vertical-align: top;
+}
+
+/* Right panel — agent / dept detail (240px) */
+.office-right {
+  width: 240px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--th-bg-secondary);
+  border-left: 1px solid var(--th-border);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* FM Event Ticker */
+.office-fm-ticker {
+  display: flex;
+  align-items: center;
+  height: 22px;
+  background: #000000;
+  border-top: 1px solid rgba(245, 158, 11, 0.25);
+  border-bottom: 1px solid rgba(245, 158, 11, 0.15);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.office-fm-ticker__label {
+  font-family: var(--th-font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  color: #000000;
+  background: var(--th-accent);
+  padding: 0 7px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  letter-spacing: 1px;
+  flex-shrink: 0;
+  margin-right: 0;
+  border-right: 1px solid rgba(0,0,0,0.3);
+}
+.office-fm-ticker__dot {
+  width: 5px;
+  height: 5px;
+  background: #000;
+  border-radius: 50%;
+  animation: fm-dot-blink 1.2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+@keyframes fm-dot-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.1; }
+}
+.office-fm-ticker__track {
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  padding: 0 12px;
+}
+.office-fm-ticker__text {
+  display: inline-block;
+  font-family: var(--th-font-mono);
+  font-size: 9px;
+  color: rgba(245, 158, 11, 0.85);
+  letter-spacing: 0.5px;
+  animation: fm-ticker-scroll 32s linear infinite;
+}
+.office-fm-ticker:hover .office-fm-ticker__text {
+  animation-play-state: paused;
+}
+@keyframes fm-ticker-scroll {
+  0%   { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+
+/* Action bar (32px) */
+.office-actionbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  background: var(--th-bg-secondary);
+  border-top: 1px solid var(--th-border);
+  flex-shrink: 0;
+}
+.office-actionbar-btn {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 6px;
+  background: transparent;
+  border: none;
+  color: var(--th-text-muted);
+  font-family: var(--th-font-mono);
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: color 100ms linear, background 100ms linear;
+}
+.office-actionbar-btn:hover {
+  color: var(--th-text-primary);
+  background: var(--th-bg-surface-hover);
+}
+.office-actionbar-btn--accent {
+  color: var(--th-accent);
+}
+.office-actionbar-sep {
+  width: 1px;
+  height: 16px;
+  background: var(--th-border);
+  flex-shrink: 0;
+}
+.office-actionbar-info {
+  margin-left: auto;
+  font-family: var(--th-font-mono);
+  font-size: 0.6rem;
+  color: var(--th-text-muted);
+}
+.office-actionbar-info--warn {
+  color: var(--th-danger-text);
+}
+.office-actionbar-stat {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+}
+.office-actionbar-stat__lbl {
+  font-family: var(--th-font-mono);
+  font-size: 0.5rem;
+  letter-spacing: 0.8px;
+  color: var(--th-text-muted);
+}
+.office-actionbar-stat__val {
+  font-family: var(--th-font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--th-text-primary);
+  line-height: 1;
+}
+.office-actionbar-stat__total {
+  font-family: var(--th-font-mono);
+  font-size: 0.55rem;
+  color: var(--th-text-muted);
+}
+
+/* Panel section label */
+.office-panel-label {
+  padding: 10px 12px 4px;
+  font-family: var(--th-font-mono);
+  font-size: 0.6rem;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--th-text-muted);
+}
+
+/* Department item */
+.office-dept-item {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  padding: 6px 12px;
+  min-height: 52px;
+  cursor: pointer;
+  border-left: 3px solid transparent;
+  transition: background 100ms linear, border-color 100ms linear;
+}
+.office-dept-item:hover {
+  background: var(--th-bg-surface-hover);
+}
+.office-dept-item--active {
+  border-left-color: var(--th-accent);
+  background: var(--th-bg-surface);
+}
+.office-dept-item__name {
+  font-family: var(--th-font-display);
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--th-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.office-dept-item__sub {
+  font-family: var(--th-font-mono);
+  font-size: 0.65rem;
+  color: var(--th-text-muted);
+}
+.office-dept-item__bar {
+  height: 2px;
+  background: var(--th-border);
+  border-radius: 1px;
+  margin-top: 2px;
+  overflow: hidden;
+}
+/* FM-style dept panel extras */
+.fm-lift-btn {
+  font-family: var(--th-font-mono);
+  font-size: 0.5rem;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  color: var(--th-accent);
+  background: transparent;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  padding: 1px 5px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 100ms linear, color 100ms linear;
+}
+.fm-lift-btn:hover {
+  background: var(--th-accent);
+  color: #000;
+}
+.fm-attr-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 3px;
+}
+.fm-attr {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex: 1;
+}
+.fm-attr__lbl {
+  font-family: var(--th-font-mono);
+  font-size: 0.5rem;
+  color: var(--th-text-muted);
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+.fm-attr__bar {
+  flex: 1;
+  height: 4px;
+  background: var(--th-border);
+  overflow: hidden;
+}
+.fm-attr__fill {
+  height: 100%;
+  transition: width 400ms linear;
+}
+.fm-attr__val {
+  font-family: var(--th-font-mono);
+  font-size: 0.5rem;
+  color: var(--th-text-muted);
+  min-width: 18px;
+  text-align: right;
+}
+.fm-attr__agents {
+  font-family: var(--th-font-mono);
+  font-size: 0.55rem;
+  white-space: nowrap;
+}
+
+.office-dept-item__bar-fill {
+  height: 100%;
+  background: var(--th-accent);
+  border-radius: 1px;
+  transition: width 300ms linear;
+}
+
+/* Panel divider */
+.office-panel-divider {
+  height: 1px;
+  background: var(--th-border);
+  margin: 6px 0;
+}
+
+/* Right panel — attribute bar */
+.office-attr-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+.office-attr-label {
+  font-family: var(--th-font-mono);
+  font-size: 0.6rem;
+  color: var(--th-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  width: 52px;
+  flex-shrink: 0;
+}
+.office-attr-track {
+  flex: 1;
+  height: 4px;
+  background: var(--th-border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.office-attr-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 300ms linear;
+}
+.office-attr-value {
+  font-family: var(--th-font-mono);
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--th-text-primary);
+  width: 20px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* Right panel — mini task row */
+.office-task-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--th-border);
+}
+.office-task-id {
+  font-family: var(--th-font-mono);
+  font-size: 0.6rem;
+  color: var(--th-text-muted);
+  flex-shrink: 0;
+}
+.office-task-title {
+  flex: 1;
+  font-size: 0.7rem;
+  color: var(--th-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Right panel — agent header */
+.office-agent-name {
+  font-family: var(--th-font-display);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--th-text-heading);
+}
+.office-agent-role {
+  font-family: var(--th-font-mono);
+  font-size: 0.7rem;
+  color: var(--th-text-muted);
+  margin-top: 1px;
+}
+
+/* Right panel — action buttons */
+.office-panel-btn {
+  display: block;
+  width: 100%;
+  padding: 5px 10px;
+  border-radius: 3px;
+  font-family: var(--th-font-mono);
+  font-size: 0.65rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  text-align: center;
+  transition: background 100ms linear, border-color 100ms linear, color 100ms linear;
+}
+.office-panel-btn--primary {
+  background: var(--th-accent);
+  color: #000;
+  border: none;
+}
+.office-panel-btn--primary:hover {
+  background: var(--th-accent-dim);
+}
+.office-panel-btn--secondary {
+  background: transparent;
+  color: var(--th-text-secondary);
+  border: 1px solid var(--th-border);
+  margin-top: 4px;
+}
+.office-panel-btn--secondary:hover {
+  background: var(--th-bg-surface-hover);
+  color: var(--th-text-primary);
+  border-color: var(--th-border-strong);
+}
+
+/* Empty state for right panel */
+.office-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 20px 14px;
+}
+.office-empty-cmd {
+  font-family: var(--th-font-mono);
+  font-size: 0.7rem;
+  color: var(--th-accent);
+  margin-bottom: 4px;
+}
+.office-empty-hint {
+  font-family: var(--th-font-mono);
+  font-size: 0.65rem;
+  color: var(--th-text-muted);
+  line-height: 1.5;
+}
+
+/* Responsive: hide right panel on <1280px, left on <1024px */
+@media (max-width: 1279px) {
+  .office-right {
+    display: none;
+  }
+}
+@media (max-width: 1023px) {
+  .office-left {
+    display: none;
+  }
+}
+
 .unlearn-hammer-swing {
   position: absolute;
   right: -10px;
@@ -694,4 +1243,473 @@
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.45));
   transform-origin: 90% 90%;
   animation: unlearn-hammer-swing 0.85s ease-out both;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   AgentDesk — FM2024 Management Sim × Retro Terminal
+   Design System Components
+   ═══════════════════════════════════════════════════════════ */
+
+/* ─── FM2024 Agent Card ─── */
+.fm-agent-card:hover {
+  background: var(--th-bg-surface-hover) !important;
+  border-color: var(--th-border-strong) !important;
+}
+.fm-agent-card:hover[style*="border-left: 3px solid #22c55e"] {
+  border-left-color: #22c55e !important;
+}
+
+/* ─── FM2024 Panel ─── */
+.fm-panel {
+  background: var(--th-panel-bg);
+  border: 1px solid var(--th-panel-border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.fm-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--th-border);
+  border-left: 3px solid var(--th-accent, #f59e0b);
+}
+.fm-panel-title {
+  font-family: var(--th-font-display);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--th-text-heading);
+  letter-spacing: -0.01em;
+}
+.fm-panel-body {
+  padding: 12px 14px;
+}
+
+/* ─── FM2024 Section header ─── */
+.fm-section-label {
+  font-family: var(--th-font-mono);
+  font-size: 0.6rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--th-text-muted);
+  padding: 10px 0 4px;
+}
+
+/* ─── FM2024 Data Table ─── */
+.fm-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+.fm-table thead tr {
+  background: var(--th-bg-secondary);
+  border-bottom: 1px solid var(--th-border);
+}
+.fm-table thead th {
+  font-family: var(--th-font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--th-text-muted);
+  padding: 7px 10px;
+  text-align: left;
+}
+.fm-table tbody tr {
+  border-bottom: 1px solid var(--th-bg-surface);
+  transition: background 0.08s linear;
+}
+.fm-table tbody tr:hover {
+  background: var(--th-bg-surface);
+}
+.fm-table tbody tr.fm-row-active {
+  background: var(--th-bg-surface);
+  border-left: 2px solid var(--th-accent, #f59e0b);
+}
+.fm-table tbody td {
+  padding: 7px 10px;
+  color: var(--th-text-primary);
+}
+
+/* ─── FM2024 Attribute Bar ─── */
+.fm-attr-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.fm-attr-label {
+  font-size: 0.75rem;
+  color: var(--th-text-secondary);
+  width: 100px;
+  flex-shrink: 0;
+}
+.fm-attr-track {
+  flex: 1;
+  height: 4px;
+  background: var(--th-border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.fm-attr-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+.fm-attr-fill-elite { background: var(--th-attr-elite, #22c55e); }
+.fm-attr-fill-good  { background: var(--th-attr-good,  #86efac); }
+.fm-attr-fill-avg   { background: var(--th-attr-avg,   #fbbf24); }
+.fm-attr-fill-poor  { background: var(--th-attr-poor,  #f87171); }
+.fm-attr-fill-vlow  { background: var(--th-attr-vlow,  #6e7681); }
+.fm-attr-value {
+  font-family: var(--th-font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  width: 28px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* ─── FM2024 Tabs ─── */
+.fm-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--th-border);
+  gap: 0;
+}
+.fm-tab {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--th-text-muted);
+  padding: 8px 14px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: color 0.1s linear, border-color 0.1s linear;
+  white-space: nowrap;
+}
+.fm-tab:hover {
+  color: var(--th-text-primary);
+}
+.fm-tab.fm-tab-active {
+  color: var(--th-text-accent);
+  border-bottom-color: var(--th-accent, #f59e0b);
+}
+
+/* ─── FM2024 Activity Feed (인박스 스타일) ─── */
+.fm-feed-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--th-bg-surface);
+  font-size: 0.8125rem;
+}
+.fm-feed-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 5px;
+}
+.fm-feed-dot-green  { background: var(--th-attr-elite); }
+.fm-feed-dot-amber  { background: var(--th-accent, #f59e0b); }
+.fm-feed-dot-red    { background: var(--th-danger-border); }
+.fm-feed-dot-blue   { background: #58a6ff; }
+.fm-feed-text { color: var(--th-text-primary); flex: 1; }
+.fm-feed-time {
+  font-family: var(--th-font-mono);
+  font-size: 0.6875rem;
+  color: var(--th-text-muted);
+  flex-shrink: 0;
+}
+
+/* ─── Terminal cursor blink ─── */
+@keyframes terminal-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+.terminal-cursor::after {
+  content: "▋";
+  color: var(--th-text-accent);
+  animation: terminal-blink 1s step-end infinite;
+  margin-left: 2px;
+}
+
+/* ─── Status badge pulse (RUNNING) ─── */
+@keyframes pulse-amber {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.5); }
+  50%       { box-shadow: 0 0 0 4px rgba(245, 158, 11, 0); }
+}
+@keyframes pulse-green {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.5); }
+  50%       { box-shadow: 0 0 0 4px rgba(34, 197, 94, 0); }
+}
+
+/* ─── [STATUS] badge system ─── */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--th-font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  border-radius: 2px;
+  padding: 1px 6px;
+  border-width: 1px;
+  border-style: solid;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.status-badge-running {
+  background: rgba(34, 197, 94, 0.1);
+  color: #22c55e;
+  border-color: rgba(34, 197, 94, 0.3);
+  animation: pulse-green 2s ease-in-out infinite;
+}
+.status-badge-idle {
+  background: rgba(85, 85, 85, 0.15);
+  color: #888888;
+  border-color: rgba(85, 85, 85, 0.3);
+}
+.status-badge-error {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+.status-badge-paused {
+  background: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
+  border-color: rgba(245, 158, 11, 0.3);
+  animation: pulse-amber 2s ease-in-out infinite;
+}
+.status-badge-done {
+  background: rgba(6, 182, 212, 0.1);
+  color: #06b6d4;
+  border-color: rgba(6, 182, 212, 0.3);
+}
+
+/* ─── Terminal card: flat + 1px border ─── */
+.terminal-card {
+  background: var(--th-card-bg);
+  border: 1px solid var(--th-card-border);
+  border-radius: 4px;
+  transition: border-color 0.1s linear, background 0.1s linear;
+}
+.terminal-card:hover {
+  background: var(--th-card-bg-hover);
+  border-color: var(--th-border-strong);
+}
+.terminal-card-accent {
+  border-left: 2px solid var(--th-text-accent);
+}
+
+/* ─── Accent left bar (선택/활성 카드) ─── */
+.accent-bar-amber { border-left: 2px solid #f59e0b; }
+.accent-bar-green  { border-left: 2px solid #22c55e; }
+.accent-bar-cyan   { border-left: 2px solid #06b6d4; }
+.accent-bar-red    { border-left: 2px solid #ef4444; }
+
+/* ─── Terminal section header ─── */
+.terminal-section-header {
+  font-family: var(--th-font-mono);
+  font-size: 0.65rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--th-text-muted);
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--th-border);
+  margin-bottom: 8px;
+}
+
+/* ─── Terminal input ─── */
+.terminal-input {
+  background: var(--th-input-bg);
+  border: 1px solid var(--th-input-border);
+  border-radius: 2px;
+  color: var(--th-text-primary);
+  font-family: var(--th-font-body);
+  transition: border-color 0.1s linear, box-shadow 0.1s linear;
+}
+.terminal-input:focus {
+  outline: none;
+  border-color: var(--th-focus-ring);
+  box-shadow: 0 0 0 1px var(--th-focus-ring-shadow);
+}
+.terminal-input::placeholder {
+  color: var(--th-text-muted);
+  font-family: var(--th-font-mono);
+  font-size: 0.8125rem;
+}
+
+/* ─── Terminal zone (태스크 실행 / 채팅 영역) ─── */
+.terminal-zone {
+  background: var(--th-terminal-bg, #010409);
+  border: 1px solid var(--th-border);
+  border-radius: 6px;
+  font-family: var(--th-font-mono);
+  overflow: hidden;
+}
+.terminal-zone-titlebar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: var(--th-bg-secondary);
+  border-bottom: 1px solid var(--th-border);
+}
+.terminal-zone-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+.terminal-zone-dot-red   { background: #f85149; }
+.terminal-zone-dot-amber { background: #f59e0b; }
+.terminal-zone-dot-green { background: #3fb950; }
+.terminal-zone-title {
+  font-size: 0.75rem;
+  color: var(--th-text-muted);
+  margin-left: 4px;
+}
+.terminal-zone-output {
+  padding: 12px 16px;
+  color: var(--th-terminal-text, #e6edf3);
+  font-size: 0.8125rem;
+  line-height: 1.7;
+}
+.terminal-zone-prompt  { color: var(--th-terminal-prompt,  #f59e0b); }
+.terminal-zone-success { color: var(--th-terminal-success, #3fb950); }
+.terminal-zone-error   { color: var(--th-terminal-error,   #f85149); }
+.terminal-zone-info    { color: var(--th-terminal-info,    #58a6ff); }
+.terminal-zone-muted   { color: var(--th-text-muted); }
+
+/* ─── Boot sequence: loading screen ─── */
+.boot-screen {
+  position: fixed;
+  inset: 0;
+  background: #0f1117;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  font-family: var(--th-font-mono);
+}
+.boot-line {
+  font-size: 0.8125rem;
+  line-height: 1.8;
+  color: #e8e8e8;
+}
+.boot-line-prompt {
+  color: #f59e0b;
+}
+.boot-line-ok {
+  color: #22c55e;
+}
+.boot-line-title {
+  color: #f0f0f0;
+  font-size: 1.125rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+.boot-line-divider {
+  color: #333333;
+  letter-spacing: -0.05em;
+}
+.boot-line-ready {
+  color: #f59e0b;
+  font-weight: 600;
+}
+
+/* ─── Mono number/stat display ─── */
+.mono-stat {
+  font-family: var(--th-font-mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* ─── Terminal empty state ─── */
+.terminal-empty {
+  font-family: var(--th-font-mono);
+  color: var(--th-text-muted);
+  font-size: 0.8125rem;
+  line-height: 1.8;
+}
+.terminal-empty-prompt {
+  color: var(--th-text-accent);
+}
+
+/* ─── Transition speed: Terminal Response ─── */
+.transition-terminal {
+  transition-duration: 100ms;
+  transition-timing-function: linear;
+}
+.transition-terminal-fast {
+  transition-duration: 50ms;
+  transition-timing-function: linear;
+}
+
+/* ─── Retro Terminal OS: Global overrides ─── */
+
+/* Remove heavy backdrop-blur from persistent UI (pixel-sharp aesthetic).
+   backdrop-blur-sm on dark overlays is kept intentionally via higher specificity. */
+.backdrop-blur-xl,
+.backdrop-blur-2xl {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Flatten Skills/Rules/Memory section header cards (remove glassmorphism) */
+.bg-slate-800\/60.backdrop-blur-sm,
+.bg-slate-900\/60.backdrop-blur-sm {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Terminal zone: tighten border-radius */
+.terminal-zone {
+  border-radius: 4px;
+}
+
+/* Boot screen: update to terminal black */
+.boot-screen {
+  background: #0c0c0c;
+}
+
+/* ─── Empty state: Terminal style ─── */
+.terminal-empty-state {
+  font-family: var(--th-font-mono);
+  font-size: 0.8125rem;
+  color: var(--th-text-muted);
+  line-height: 1.9;
+  padding: 2rem 1.5rem;
+  text-align: center;
+}
+.terminal-empty-state-cmd {
+  color: var(--th-text-secondary);
+  margin-bottom: 0.25rem;
+}
+.terminal-empty-state-result {
+  color: var(--th-text-muted);
+  margin-bottom: 1rem;
+}
+.terminal-empty-state-hint {
+  font-size: 0.75rem;
+  color: var(--th-text-muted);
+  opacity: 0.7;
+}
+
+/* ─── Focus ring: amber terminal style ─── */
+:focus-visible {
+  outline: 1px solid var(--th-focus-ring, #f59e0b);
+  outline-offset: 2px;
+}
+
+/* ─── Input focus: amber glow ─── */
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  border-color: var(--th-focus-ring, #f59e0b) !important;
+  box-shadow: 0 0 0 1px var(--th-focus-ring-shadow, rgba(245,158,11,0.2)) !important;
+  outline: none !important;
 }

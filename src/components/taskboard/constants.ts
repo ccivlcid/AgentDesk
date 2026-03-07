@@ -4,6 +4,61 @@ import type { UiLanguage } from "../../i18n";
 export type Locale = UiLanguage;
 export type TFunction = (messages: Record<Locale, string>) => string;
 
+/** 오피스 팩 입력 필드 키 → 다국어 라벨. 매칭 없으면 snake_case → 공백 표시 */
+export const PACK_FIELD_LABELS: Record<string, { ko: string; en: string; ja: string; zh: string }> = {
+  // development
+  project: { ko: "프로젝트", en: "Project", ja: "プロジェクト", zh: "项目" },
+  instruction: { ko: "지시 사항", en: "Instruction", ja: "指示内容", zh: "指示" },
+  acceptance_criteria: { ko: "완료 기준", en: "Acceptance Criteria", ja: "完了基準", zh: "验收标准" },
+  deadline: { ko: "마감", en: "Deadline", ja: "期限", zh: "截止时间" },
+  // novel
+  genre: { ko: "장르", en: "Genre", ja: "ジャンル", zh: "体裁" },
+  tone: { ko: "톤/어조", en: "Tone", ja: "トーン", zh: "语气" },
+  length: { ko: "분량", en: "Length", ja: "分量", zh: "篇幅" },
+  characters: { ko: "캐릭터", en: "Characters", ja: "キャラクター", zh: "角色" },
+  world_setting: { ko: "세계관/배경", en: "World Setting", ja: "世界観", zh: "世界观" },
+  point_of_view: { ko: "시점", en: "Point of View", ja: "視点", zh: "视角" },
+  // report
+  goal: { ko: "목표", en: "Goal", ja: "目標", zh: "目标" },
+  audience: { ko: "대상 독자", en: "Audience", ja: "対象読者", zh: "受众" },
+  format: { ko: "형식", en: "Format", ja: "形式", zh: "格式" },
+  // video_preprod
+  platform: { ko: "플랫폼", en: "Platform", ja: "プラットフォーム", zh: "平台" },
+  duration: { ko: "길이", en: "Duration", ja: "尺", zh: "时长" },
+  target_audience: { ko: "타깃 시청자", en: "Target Audience", ja: "ターゲット視聴者", zh: "目标观众" },
+  style: { ko: "스타일", en: "Style", ja: "スタイル", zh: "风格" },
+  cta: { ko: "CTA(행동 유도)", en: "CTA", ja: "CTA", zh: "行动号召" },
+  // web_research_report
+  topic: { ko: "주제", en: "Topic", ja: "トピック", zh: "主题" },
+  time_range: { ko: "기간 범위", en: "Time Range", ja: "期間範囲", zh: "时间范围" },
+  source_policy: { ko: "출처 정책", en: "Source Policy", ja: "出典ポリシー", zh: "来源策略" },
+  language: { ko: "언어", en: "Language", ja: "言語", zh: "语言" },
+  depth: { ko: "조사 깊이", en: "Depth", ja: "調査の深さ", zh: "调研深度" },
+  // roleplay
+  character: { ko: "캐릭터", en: "Character", ja: "キャラクター", zh: "角色" },
+  setting: { ko: "배경/상황", en: "Setting", ja: "設定", zh: "设定" },
+  safety_rules: { ko: "안전 규칙", en: "Safety Rules", ja: "安全ルール", zh: "安全规则" },
+  // asset_management (공통 constraints 재사용)
+  asset_class: { ko: "자산 유형", en: "Asset Class", ja: "資産クラス", zh: "资产类型" },
+  investment_goal: { ko: "투자 목표", en: "Investment Goal", ja: "投資目標", zh: "投资目标" },
+  risk_level: { ko: "위험 수준", en: "Risk Level", ja: "リスクレベル", zh: "风险等级" },
+  time_horizon: { ko: "투자 기간", en: "Time Horizon", ja: "投資期間", zh: "投资期限" },
+  benchmark: { ko: "벤치마크", en: "Benchmark", ja: "ベンチマーク", zh: "基准" },
+  constraints: { ko: "제약 조건", en: "Constraints", ja: "制約条件", zh: "约束条件" },
+  portfolio_size: { ko: "포트폴리오 규모", en: "Portfolio Size", ja: "ポートフォリオ規模", zh: "组合规模" },
+};
+
+/** 오피스 팩 키 → 다국어 표시명 (섹션 제목 등) */
+export const PACK_DISPLAY_NAMES: Record<string, { ko: string; en: string; ja: string; zh: string }> = {
+  development: { ko: "개발", en: "Development", ja: "開発", zh: "开发" },
+  novel: { ko: "소설", en: "Novel", ja: "小説", zh: "小说" },
+  report: { ko: "보고서", en: "Report", ja: "レポート", zh: "报告" },
+  video_preprod: { ko: "영상기획", en: "Video Preprod", ja: "映像企画", zh: "视频策划" },
+  web_research_report: { ko: "웹서치+리포트", en: "Web Research", ja: "Web調査", zh: "网页调研" },
+  roleplay: { ko: "롤플레이", en: "Roleplay", ja: "ロールプレイ", zh: "角色扮演" },
+  asset_management: { ko: "자산운용", en: "Asset Management", ja: "資産運用", zh: "资产管理" },
+};
+
 const TASK_CREATE_DRAFTS_STORAGE_KEY = "agentdesk.taskCreateDrafts";
 
 export const HIDEABLE_STATUSES = ["done", "pending", "cancelled"] as const;
@@ -113,16 +168,16 @@ export const COLUMNS: {
   {
     status: "inbox",
     icon: "📥",
-    headerBg: "bg-slate-800",
-    borderColor: "border-slate-600",
-    dotColor: "bg-slate-400",
+    headerBg: "bg-[#1e293b]",
+    borderColor: "border-[#475569]",
+    dotColor: "bg-[#94a3b8]",
   },
   {
     status: "planned",
     icon: "📋",
-    headerBg: "bg-blue-900",
-    borderColor: "border-blue-700",
-    dotColor: "bg-blue-400",
+    headerBg: "bg-[#1e3a5f]",
+    borderColor: "border-[#1d4ed8]",
+    dotColor: "bg-[#60a5fa]",
   },
   {
     status: "collaborating",
@@ -180,7 +235,7 @@ export const STATUS_OPTIONS: TaskStatus[] = [
 ];
 
 export const TASK_TYPE_OPTIONS: { value: TaskType; color: string }[] = [
-  { value: "general", color: "bg-slate-700 text-slate-300" },
+  { value: "general", color: "bg-[#334155] text-[#cbd5e1]" },
   { value: "development", color: "bg-cyan-900 text-cyan-300" },
   { value: "design", color: "bg-pink-900 text-pink-300" },
   { value: "analysis", color: "bg-indigo-900 text-indigo-300" },

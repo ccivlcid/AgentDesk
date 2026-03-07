@@ -224,10 +224,10 @@ export default function MemoryMatch({ opponent, onFinish, onBack }: MemoryMatchP
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <button onClick={onBack} className="text-sm text-slate-400 hover:text-slate-200 transition">
+        <button onClick={onBack} className="text-sm font-mono transition hover:text-[var(--th-text-primary)]" style={{ color: "var(--th-text-muted)" }}>
           &larr; {t({ ko: "\uB85C\uBE44", en: "Lobby", ja: "\u30ED\u30D3\u30FC", zh: "\u5927\u5385" })}
         </button>
-        <div className="text-xs text-slate-500">
+        <div className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
           {t({ ko: "\uCE74\uB4DC \uC9DD\uB9DE\uCD94\uAE30", en: "Memory Match", ja: "\u795E\u7D4C\u8870\u5F31", zh: "\u8BB0\u5FC6\u914D\u5BF9" })}
         </div>
       </div>
@@ -235,18 +235,18 @@ export default function MemoryMatch({ opponent, onFinish, onBack }: MemoryMatchP
       {/* Score */}
       <div className="flex items-center justify-center gap-8 text-center">
         <div>
-          <div className={`text-2xl font-bold ${isPlayerTurn && !gameOver ? "text-blue-400" : "text-slate-400"}`}>{playerScore}</div>
-          <div className="text-xs text-slate-400">CEO</div>
+          <div className={`text-2xl font-bold ${isPlayerTurn && !gameOver ? "text-[#60a5fa]" : ""}`} style={!(isPlayerTurn && !gameOver) ? { color: "var(--th-text-muted)" } : undefined}>{playerScore}</div>
+          <div className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>CEO</div>
         </div>
-        <div className="text-slate-600 text-sm">vs</div>
+        <div className="text-sm font-mono" style={{ color: "var(--th-border)" }}>vs</div>
         <div>
-          <div className={`text-2xl font-bold ${!isPlayerTurn && !gameOver ? "text-red-400" : "text-slate-400"}`}>{oppScore}</div>
-          <div className="text-xs text-slate-400">{opponent.avatar_emoji} {opponentName}</div>
+          <div className={`text-2xl font-bold ${!isPlayerTurn && !gameOver ? "text-red-400" : ""}`} style={!(!isPlayerTurn && !gameOver) ? { color: "var(--th-text-muted)" } : undefined}>{oppScore}</div>
+          <div className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>{opponent.avatar_emoji} {opponentName}</div>
         </div>
       </div>
 
       {/* Status */}
-      <div className="text-center text-sm text-slate-300 h-6">{statusText}</div>
+      <div className="text-center text-sm font-mono h-6" style={{ color: "var(--th-text-secondary)" }}>{statusText}</div>
 
       {/* Card Grid */}
       <div className="flex justify-center">
@@ -256,21 +256,34 @@ export default function MemoryMatch({ opponent, onFinish, onBack }: MemoryMatchP
               key={card.id}
               onClick={() => handleCardClick(card.id)}
               disabled={card.flipped || card.matched || !isPlayerTurn || checking || gameOver}
-              className={`w-16 h-16 sm:w-20 sm:h-20 rounded-xl border-2 text-2xl transition-all duration-300 flex items-center justify-center ${
+              className={`w-16 h-16 sm:w-20 sm:h-20 text-2xl transition-all duration-300 flex items-center justify-center ${
                 card.matched
-                  ? "border-green-500/50 bg-green-500/10 text-green-300"
-                  : card.flipped
-                    ? "border-amber-500/50 bg-amber-500/10"
-                    : isPlayerTurn && !checking && !gameOver
-                      ? "border-slate-600 bg-slate-800/60 hover:border-blue-500/40 hover:bg-slate-800 cursor-pointer"
-                      : "border-slate-700/50 bg-slate-800/40 cursor-not-allowed"
+                  ? "text-green-300"
+                  : isPlayerTurn && !checking && !gameOver && !card.flipped
+                    ? "hover:border-[rgba(59,130,246,0.4)] cursor-pointer"
+                    : !isPlayerTurn || checking || gameOver
+                      ? "cursor-not-allowed"
+                      : ""
               }`}
-              style={{ perspective: "600px" }}
+              style={{
+                borderRadius: "4px",
+                perspective: "600px",
+                border: card.matched
+                  ? "2px solid rgba(52,211,153,0.5)"
+                  : card.flipped
+                    ? "2px solid rgba(245,158,11,0.5)"
+                    : "2px solid var(--th-border)",
+                background: card.matched
+                  ? "rgba(52,211,153,0.1)"
+                  : card.flipped
+                    ? "rgba(245,158,11,0.1)"
+                    : "var(--th-bg-elevated)",
+              }}
             >
               {card.flipped || card.matched ? (
                 <span className="animate-in">{card.emoji}</span>
               ) : (
-                <span className="text-slate-600">?</span>
+                <span style={{ color: "var(--th-border)" }}>?</span>
               )}
             </button>
           ))}
@@ -278,7 +291,7 @@ export default function MemoryMatch({ opponent, onFinish, onBack }: MemoryMatchP
       </div>
 
       {gameOver && (
-        <div className="text-center text-slate-400 text-sm animate-pulse">
+        <div className="text-center text-sm font-mono animate-pulse" style={{ color: "var(--th-text-muted)" }}>
           {t({ ko: "\uACB0\uACFC \uD654\uBA74\uC73C\uB85C \uC774\uB3D9 \uC911...", en: "Going to results...", ja: "\u7D50\u679C\u753B\u9762\u3078...", zh: "\u6B63\u5728\u8DF3\u8F6C\u7ED3\u679C..." })}
         </div>
       )}

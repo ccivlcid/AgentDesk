@@ -135,6 +135,12 @@ export function useAppLabels({
     ja: "全社告知",
     zh: "全员公告",
   });
+  const groupChatLabel = pickLang(uiLanguage, {
+    ko: "그룹 채팅",
+    en: "Group Chat",
+    ja: "グループチャット",
+    zh: "群聊",
+  });
   const roomManagerLabel = pickLang(uiLanguage, {
     ko: "사무실 관리",
     en: "Office Manager",
@@ -289,6 +295,7 @@ export function useAppLabels({
     loadingSubtitle,
     viewTitle,
     announcementLabel,
+    groupChatLabel,
     roomManagerLabel,
     roomManagerDepartments,
     reportLabel,

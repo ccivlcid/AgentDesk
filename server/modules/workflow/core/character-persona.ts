@@ -1,9 +1,22 @@
+import { getPersonaPrompt } from "./persona-catalog.ts";
+
 /**
- * Builds a consistent [Character Persona] prompt block from an agent's personality field.
+ * Builds a consistent [Character Persona] prompt block from an agent's personality field
+ * and optional famous persona ID.
  * Used across task execution, meetings, direct chat, and delegation prompts.
  */
-export function buildCharacterPersonaBlock(personality: string | null | undefined): string {
-  const text = (personality || "").trim();
+export function buildCharacterPersonaBlock(
+  personality: string | null | undefined,
+  personaId?: string | null,
+): string {
+  const catalogPrompt = getPersonaPrompt(personaId);
+  const customText = (personality || "").trim();
+  // Catalog persona takes precedence; custom personality appended if both exist
+  const text = catalogPrompt
+    ? customText
+      ? `${catalogPrompt}\n\nAdditional context: ${customText}`
+      : catalogPrompt
+    : customText;
   if (!text) return "";
   return [
     "[Character Persona - Highest Priority]",

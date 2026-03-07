@@ -148,21 +148,20 @@ export default function AgentStatusPanel({ agents, uiLanguage, onClose }: AgentS
       : cliProcesses.filter((proc) => proc.provider !== "node" && proc.provider !== "python");
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={onClose}>
       <div
-        className={`relative mx-4 w-full rounded-2xl border border-blue-500/30 bg-slate-900 shadow-2xl shadow-blue-500/10 ${
-          inspectorMode ? "max-w-3xl" : "max-w-lg"
-        }`}
+        className={`relative mx-4 w-full shadow-2xl ${inspectorMode ? "max-w-3xl" : "max-w-lg"}`}
+        style={{ borderRadius: "4px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-700/50 px-6 py-4">
+        <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid var(--th-border)" }}>
           <div className="flex items-center gap-3">
             <span className="text-2xl">&#x1F6E0;</span>
-            <h2 className="text-lg font-bold text-white">
+            <h2 className="text-lg font-bold font-mono" style={{ color: "var(--th-text-heading)" }}>
               {t({ ko: "활성 에이전트", en: "Active Agents", ja: "アクティブエージェント", zh: "活跃代理" })}
             </h2>
-            <span className="rounded-full bg-blue-500/20 px-2 py-0.5 text-xs font-medium text-blue-400">
+            <span className="px-2 py-0.5 text-xs font-medium font-mono" style={{ borderRadius: "2px", border: "1px solid rgba(251,191,36,0.3)", background: "rgba(251,191,36,0.1)", color: "var(--th-accent)" }}>
               {activeAgents.length}
             </span>
           </div>
@@ -174,11 +173,10 @@ export default function AgentStatusPanel({ agents, uiLanguage, onClose }: AgentS
                 setInspectorMode(nextMode);
                 if (nextMode) refreshCli();
               }}
-              className={`flex h-8 items-center gap-1 rounded-lg border px-2 text-[11px] font-medium whitespace-nowrap transition ${
-                inspectorMode === "script"
-                  ? "border-violet-500/40 bg-violet-500/20 text-violet-300"
-                  : "border-slate-700 text-slate-400 hover:border-slate-500 hover:bg-slate-800 hover:text-white"
-              }`}
+              className="flex h-8 items-center gap-1 px-2 text-[11px] font-medium font-mono whitespace-nowrap transition"
+              style={inspectorMode === "script"
+                ? { borderRadius: "2px", border: "1px solid rgba(251,191,36,0.4)", background: "rgba(251,191,36,0.1)", color: "var(--th-accent)" }
+                : { borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-muted)", background: "transparent" }}
               title={t({ ko: "Script 조회", en: "Script Inspector", ja: "Script確認", zh: "Script查看" })}
             >
               <span>{t({ ko: "Script조회", en: "Script", ja: "Script", zh: "Script" })}</span>
@@ -191,11 +189,10 @@ export default function AgentStatusPanel({ agents, uiLanguage, onClose }: AgentS
                 setInspectorMode(nextMode);
                 if (nextMode) refreshCli();
               }}
-              className={`flex h-8 items-center gap-1 rounded-lg border px-2 text-[11px] font-medium whitespace-nowrap transition ${
-                inspectorMode === "idle_cli"
-                  ? "border-blue-500/40 bg-blue-500/20 text-blue-300"
-                  : "border-slate-700 text-slate-400 hover:border-slate-500 hover:bg-slate-800 hover:text-white"
-              }`}
+              className="flex h-8 items-center gap-1 px-2 text-[11px] font-medium font-mono whitespace-nowrap transition"
+              style={inspectorMode === "idle_cli"
+                ? { borderRadius: "2px", border: "1px solid rgba(251,191,36,0.4)", background: "rgba(251,191,36,0.1)", color: "var(--th-accent)" }
+                : { borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-muted)", background: "transparent" }}
               title={t({ ko: "유휴 CLI 조회", en: "Idle CLI Inspector", ja: "アイドルCLI確認", zh: "闲置CLI查看" })}
             >
               <span>{t({ ko: "유휴CLI조회", en: "Idle CLI", ja: "アイドルCLI", zh: "闲置CLI" })}</span>
@@ -206,14 +203,16 @@ export default function AgentStatusPanel({ agents, uiLanguage, onClose }: AgentS
                 e.stopPropagation();
                 refresh();
               }}
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-800 hover:text-white"
+              className="flex h-8 w-8 items-center justify-center transition"
+              style={{ borderRadius: "2px", color: "var(--th-text-muted)", background: "transparent" }}
               title={t({ ko: "새로고침", en: "Refresh", ja: "リフレッシュ", zh: "刷新" })}
             >
               &#x21BB;
             </button>
             <button
               onClick={onClose}
-              className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-800 hover:text-white"
+              className="flex h-8 w-8 items-center justify-center transition"
+              style={{ borderRadius: "2px", color: "var(--th-text-muted)", background: "transparent" }}
             >
               &#x2715;
             </button>
@@ -223,9 +222,9 @@ export default function AgentStatusPanel({ agents, uiLanguage, onClose }: AgentS
         {/* Content */}
         <div className="max-h-[70vh] overflow-y-auto">
           {inspectorMode && (
-            <div className="border-b border-slate-700/50 bg-slate-950/40 px-4 py-3">
+            <div className="px-4 py-3" style={{ borderBottom: "1px solid var(--th-border)", background: "var(--th-terminal-bg)" }}>
               <div className="mb-2 flex items-center justify-between">
-                <span className="text-xs font-semibold uppercase tracking-wider text-slate-300">
+                <span className="text-xs font-semibold font-mono uppercase tracking-wider" style={{ color: "var(--th-text-secondary)" }}>
                   {inspectorMode === "script"
                     ? t({
                         ko: "실행 중인 Script",
@@ -241,7 +240,7 @@ export default function AgentStatusPanel({ agents, uiLanguage, onClose }: AgentS
                       })}
                 </span>
                 <div className="flex items-center gap-2">
-                  <span className="rounded bg-slate-800 px-1.5 py-0.5 text-[10px] text-slate-400">
+                  <span className="px-1.5 py-0.5 text-[10px] font-mono" style={{ borderRadius: "2px", background: "var(--th-bg-primary)", color: "var(--th-text-muted)" }}>
                     {visibleCliProcesses.length}
                   </span>
                   <button
@@ -250,14 +249,15 @@ export default function AgentStatusPanel({ agents, uiLanguage, onClose }: AgentS
                       e.stopPropagation();
                       refreshCli();
                     }}
-                    className="rounded border border-slate-700 px-2 py-0.5 text-[11px] text-slate-300 transition hover:border-slate-500 hover:text-white"
+                    className="px-2 py-0.5 text-[11px] font-mono transition"
+                    style={{ borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
                   >
                     {t({ ko: "새로고침", en: "Refresh", ja: "更新", zh: "刷新" })}
                   </button>
                 </div>
               </div>
               {cliLoading && visibleCliProcesses.length === 0 ? (
-                <div className="py-2 text-xs text-slate-500">
+                <div className="py-2 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
                   {inspectorMode === "script"
                     ? t({
                         ko: "Script 목록 불러오는 중...",
@@ -273,7 +273,7 @@ export default function AgentStatusPanel({ agents, uiLanguage, onClose }: AgentS
                       })}
                 </div>
               ) : visibleCliProcesses.length === 0 ? (
-                <div className="py-2 text-xs text-slate-500">
+                <div className="py-2 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
                   {inspectorMode === "script"
                     ? t({
                         ko: "실행 중인 Script가 없습니다",
@@ -289,7 +289,7 @@ export default function AgentStatusPanel({ agents, uiLanguage, onClose }: AgentS
                       })}
                 </div>
               ) : (
-                <div className="max-h-56 divide-y divide-slate-800 overflow-y-auto rounded-lg border border-slate-800/80 bg-slate-900/50">
+                <div className="max-h-56 overflow-y-auto" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-primary)" }}>
                   {visibleCliProcesses.map((proc) => {
                     const isKilling = killingCliPids.has(proc.pid);
                     const agentName =
@@ -301,30 +301,31 @@ export default function AgentStatusPanel({ agents, uiLanguage, onClose }: AgentS
                         <div className="flex items-center justify-between gap-2">
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-1.5 text-[11px]">
-                              <span className="rounded bg-slate-700/80 px-1.5 py-0.5 text-slate-200">
+                              <span className="px-1.5 py-0.5 font-mono" style={{ borderRadius: "2px", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)" }}>
                                 {displayCliProvider(proc.provider)}
                               </span>
-                              <span className="text-slate-400">PID {proc.pid}</span>
+                              <span className="font-mono" style={{ color: "var(--th-text-muted)" }}>PID {proc.pid}</span>
                               {proc.is_idle ? (
-                                <span className="rounded bg-amber-500/15 px-1.5 py-0.5 text-amber-300">
+                                <span className="px-1.5 py-0.5 font-mono" style={{ borderRadius: "2px", border: "1px solid rgba(251,191,36,0.3)", background: "rgba(251,191,36,0.1)", color: "var(--th-accent)" }}>
                                   {t({ ko: "유휴", en: "Idle", ja: "アイドル", zh: "空闲" })}
                                 </span>
                               ) : (
-                                <span className="rounded bg-emerald-500/15 px-1.5 py-0.5 text-emerald-300">
-                                  {t({ ko: "활성", en: "Active", ja: "稼働中", zh: "活跃" })}
+                                <span className="px-1.5 py-0.5 font-mono" style={{ borderRadius: "2px", border: "1px solid rgba(52,211,153,0.3)", background: "rgba(52,211,153,0.1)", color: "rgb(110,231,183)" }}>
+                                  {t({ ko: "활성", en: "Active", ja: "稼働中", zh: "활跃" })}
                                 </span>
                               )}
                             </div>
                             {displayTitle ? (
-                              <p className="mt-1 text-[11px] text-slate-300 break-all">{displayTitle}</p>
+                              <p className="mt-1 text-[11px] font-mono break-all" style={{ color: "var(--th-text-secondary)" }}>{displayTitle}</p>
                             ) : null}
                             <p
-                              className="mt-1 overflow-x-auto font-mono text-[10px] leading-relaxed text-slate-400 whitespace-pre-wrap break-all"
+                              className="mt-1 overflow-x-auto font-mono text-[10px] leading-relaxed whitespace-pre-wrap break-all"
+                              style={{ color: "var(--th-text-muted)" }}
                               title={commandText}
                             >
                               {commandText}
                             </p>
-                            <div className="mt-0.5 flex flex-wrap items-center gap-2 text-[10px] text-slate-500">
+                            <div className="mt-0.5 flex flex-wrap items-center gap-2 text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
                               <span>
                                 {t({ ko: "담당", en: "Agent", ja: "担当", zh: "代理" })}: {agentName}
                               </span>
@@ -338,11 +339,10 @@ export default function AgentStatusPanel({ agents, uiLanguage, onClose }: AgentS
                             type="button"
                             onClick={() => handleKillCliProcess(proc.pid)}
                             disabled={isKilling}
-                            className={`flex-shrink-0 rounded border px-2 py-1 text-[11px] font-medium transition ${
-                              isKilling
-                                ? "cursor-not-allowed border-slate-700 bg-slate-800 text-slate-500"
-                                : "border-red-500/40 bg-red-600/15 text-red-300 hover:bg-red-600/25"
-                            }`}
+                            className="flex-shrink-0 px-2 py-1 text-[11px] font-medium font-mono transition"
+                            style={isKilling
+                              ? { borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-muted)", background: "var(--th-bg-elevated)", cursor: "not-allowed" }
+                              : { borderRadius: "2px", border: "1px solid rgba(244,63,94,0.4)", background: "rgba(244,63,94,0.15)", color: "rgb(253,164,175)" }}
                           >
                             {isKilling
                               ? t({ ko: "중지 중...", en: "Killing...", ja: "停止中...", zh: "停止中..." })
@@ -359,14 +359,14 @@ export default function AgentStatusPanel({ agents, uiLanguage, onClose }: AgentS
 
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="text-sm text-slate-500">
+              <div className="text-sm font-mono" style={{ color: "var(--th-text-muted)" }}>
                 {t({ ko: "불러오는 중...", en: "Loading...", ja: "読み込み中...", zh: "加载中..." })}
               </div>
             </div>
           ) : activeAgents.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <span className="mb-2 text-3xl opacity-40">&#x1F634;</span>
-              <p className="text-sm text-slate-500">
+              <p className="text-sm font-mono" style={{ color: "var(--th-text-muted)" }}>
                 {t({
                   ko: "현재 작업 중인 에이전트가 없습니다",
                   en: "No agents currently working",
@@ -376,7 +376,7 @@ export default function AgentStatusPanel({ agents, uiLanguage, onClose }: AgentS
               </p>
             </div>
           ) : (
-            <div className="divide-y divide-slate-700/30">
+            <div className="divide-y" style={{ borderColor: "var(--th-border)" }}>
               {activeAgents.map((ag) => {
                 const fullAgent = agents.find((a) => a.id === ag.id);
                 const agentName = localeName(uiLanguage, ag);
@@ -391,16 +391,16 @@ export default function AgentStatusPanel({ agents, uiLanguage, onClose }: AgentS
                       <AgentAvatar agent={fullAgent} agents={agents} size={40} rounded="xl" />
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-medium text-white">{agentName}</span>
-                          <span className="rounded bg-slate-700/80 px-1.5 py-0.5 text-[10px] text-slate-400">
+                          <span className="text-sm font-medium font-mono" style={{ color: "var(--th-text-heading)" }}>{agentName}</span>
+                          <span className="px-1.5 py-0.5 text-[10px] font-mono" style={{ borderRadius: "2px", background: "var(--th-bg-elevated)", color: "var(--th-text-muted)" }}>
                             {deptName}
                           </span>
-                          <span className="rounded bg-slate-700/60 px-1.5 py-0.5 text-[10px] text-slate-500">
+                          <span className="px-1.5 py-0.5 text-[10px] font-mono" style={{ borderRadius: "2px", background: "var(--th-bg-primary)", color: "var(--th-text-muted)" }}>
                             {ag.cli_provider}
                           </span>
                         </div>
-                        {ag.task_title && <p className="mt-0.5 truncate text-xs text-slate-400">{ag.task_title}</p>}
-                        <div className="mt-1 flex flex-wrap items-center gap-3 text-[11px] text-slate-500">
+                        {ag.task_title && <p className="mt-0.5 truncate text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>{ag.task_title}</p>}
+                        <div className="mt-1 flex flex-wrap items-center gap-3 text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>
                           {ag.has_active_process ? (
                             <span className="flex items-center gap-1">
                               <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-green-500" />
@@ -423,11 +423,10 @@ export default function AgentStatusPanel({ agents, uiLanguage, onClose }: AgentS
                         <button
                           onClick={() => handleKill(ag.task_id!)}
                           disabled={isKilling}
-                          className={`flex-shrink-0 rounded-lg px-3 py-1.5 text-xs font-medium transition ${
-                            isKilling
-                              ? "bg-slate-700 text-slate-500 cursor-not-allowed"
-                              : "bg-red-600/20 border border-red-500/30 text-red-400 hover:bg-red-600/30"
-                          }`}
+                          className="flex-shrink-0 px-3 py-1.5 text-xs font-medium font-mono transition"
+                          style={isKilling
+                            ? { borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-muted)", background: "var(--th-bg-elevated)", cursor: "not-allowed" }
+                            : { borderRadius: "2px", border: "1px solid rgba(244,63,94,0.35)", background: "rgba(244,63,94,0.1)", color: "rgb(253,164,175)" }}
                         >
                           {isKilling
                             ? t({ ko: "중지 중...", en: "Stopping...", ja: "停止中...", zh: "停止中..." })
@@ -443,9 +442,9 @@ export default function AgentStatusPanel({ agents, uiLanguage, onClose }: AgentS
         </div>
 
         {/* Footer */}
-        <div className="border-t border-slate-700/50 px-6 py-3">
+        <div className="px-6 py-3" style={{ borderTop: "1px solid var(--th-border)" }}>
           <div className="flex items-center justify-between">
-            <span className="text-xs text-slate-500">
+            <span className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
               {t({
                 ko: "5초마다 자동 갱신",
                 en: "Auto-refresh every 5s",
@@ -455,7 +454,8 @@ export default function AgentStatusPanel({ agents, uiLanguage, onClose }: AgentS
             </span>
             <button
               onClick={onClose}
-              className="rounded-lg bg-slate-700 px-4 py-1.5 text-sm font-medium text-slate-300 transition hover:bg-slate-600"
+              className="px-4 py-1.5 text-sm font-medium font-mono transition"
+              style={{ borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "var(--th-bg-elevated)" }}
             >
               {t({ ko: "닫기", en: "Close", ja: "閉じる", zh: "关闭" })}
             </button>

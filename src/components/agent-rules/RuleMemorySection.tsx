@@ -20,12 +20,12 @@ export default function RuleMemorySection({
   optimisticHistoryRows,
 }: RuleMemorySectionProps) {
   return (
-    <div className="rounded-xl border border-slate-700/60 bg-slate-900/50 p-3">
+    <div className="p-3" style={{ borderRadius: "4px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
       <div className="mb-2 flex items-center justify-between">
-        <div className="text-sm font-semibold text-slate-100">
+        <div className="text-sm font-semibold font-mono" style={{ color: "var(--th-text-heading)" }}>
           {t({ ko: "학습 메모리", en: "Learning Memory", ja: "学習メモリ", zh: "学习记忆" })}
         </div>
-        <div className="text-[11px] text-slate-500">
+        <div className="text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>
           {t({ ko: "CLI별 룰 이력", en: "Per-CLI rule history", ja: "CLI別ルール履歴", zh: "按 CLI 的规则记录" })}
         </div>
       </div>

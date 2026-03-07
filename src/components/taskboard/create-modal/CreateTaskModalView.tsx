@@ -2,7 +2,15 @@ import { useMemo, useState, type ComponentProps, type FormEventHandler } from "r
 import type { Agent, Department, TaskType } from "../../../types";
 import type { WorkflowPackConfig } from "../../../api/workflow-skills-subtasks";
 import type { TaskTemplate } from "../../../api/task-templates";
-import { TASK_TYPE_OPTIONS, taskTypeLabel, type FormFeedback, type TFunction } from "../constants";
+import { normalizeLanguage, pickLang } from "../../../i18n";
+import {
+  PACK_DISPLAY_NAMES,
+  PACK_FIELD_LABELS,
+  TASK_TYPE_OPTIONS,
+  taskTypeLabel,
+  type FormFeedback,
+  type TFunction,
+} from "../constants";
 import CreateTaskModalOverlays from "./Overlays";
 import type { CreateTaskModalOverlaysProps } from "./overlay-types";
 import { AssigneeSection, PrioritySection, ProjectSection } from "./Sections";
@@ -87,9 +95,19 @@ export default function CreateTaskModalView({
     if (required.length === 0 && optional.length === 0) return null;
     return { required, optional };
   }, [packConfig]);
+
+  const lang = useMemo(() => normalizeLanguage(locale), [locale]);
+  const packFieldLabel = (fieldKey: string) =>
+    PACK_FIELD_LABELS[fieldKey] ? pickLang(lang, PACK_FIELD_LABELS[fieldKey]) : fieldKey.replace(/_/g, " ");
+  const packSectionTitle =
+    packConfig?.key && PACK_DISPLAY_NAMES[packConfig.key]
+      ? pickLang(lang, PACK_DISPLAY_NAMES[packConfig.key])
+      : packConfig?.name ?? "Pack";
+
+  const modalMaxH = "min(85dvh, calc(100dvh - 1rem))";
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/60 p-3 backdrop-blur-sm sm:items-center sm:p-4"
+      className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 p-2 sm:items-center sm:p-3"
       onClick={(event) => {
         if (event.target === event.currentTarget) {
           event.preventDefault();
@@ -97,12 +115,17 @@ export default function CreateTaskModalView({
       }}
     >
       <div
-        className={`my-3 flex max-h-[calc(100dvh-2rem)] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-slate-700 bg-slate-900 shadow-2xl transition-[max-width] duration-300 ease-out sm:my-0 sm:max-h-[90dvh] lg:max-h-none lg:max-w-2xl ${
+        className={`my-2 flex w-full max-w-lg flex-col transition-[max-width] duration-300 ease-out sm:my-0 lg:max-w-2xl ${
           createNewProjectMode ? "lg:max-w-5xl" : ""
         }`}
+        style={{ height: `calc(${modalMaxH})`, maxHeight: `calc(${modalMaxH})`, background: "var(--th-bg-surface)", border: "1px solid var(--th-border)", borderRadius: "4px" }}
       >
-        <div className="flex items-center justify-between border-b border-slate-700 px-6 py-5">
-          <h2 className="text-lg font-bold text-white">
+        <div
+          className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain"
+          style={{ WebkitOverflowScrolling: "touch" }}
+        >
+          <div className="flex shrink-0 items-center justify-between px-4 py-3 sm:px-6 sm:py-4" style={{ borderBottom: "1px solid var(--th-border)", borderLeft: "3px solid var(--th-accent, #f59e0b)" }}>
+          <h2 className="text-xs font-bold uppercase tracking-widest" style={{ color: "var(--th-text-heading)", fontFamily: "var(--th-font-mono)" }}>
             {t({ ko: "새 업무 만들기", en: "Create New Task", ja: "新しいタスクを作成", zh: "创建新任务" })}
           </h2>
           <div className="flex items-center gap-2">
@@ -112,19 +135,21 @@ export default function CreateTaskModalView({
                 <button
                   type="button"
                   onClick={() => setTemplateMenuOpen((p) => !p)}
-                  className="rounded-lg border border-slate-700 px-2.5 py-1.5 text-xs text-slate-200 transition hover:bg-slate-800"
+                  className="border px-2.5 py-1.5 text-xs font-mono transition hover:opacity-80"
+                  style={{ borderColor: "var(--th-border)", color: "var(--th-text-secondary)", background: "var(--th-bg-primary)", borderRadius: "2px" }}
                   title={t({ ko: "템플릿에서 불러오기", en: "Load from template", ja: "テンプレートから読込", zh: "从模板加载" })}
                 >
                   {t({ ko: "템플릿", en: "Templates", ja: "テンプレ", zh: "模板" })}
                   ({templates.length})
                 </button>
                 {templateMenuOpen && (
-                  <div className="absolute right-0 top-full z-10 mt-1 w-56 max-h-56 overflow-y-auto rounded-lg border border-slate-700 bg-slate-800 shadow-xl">
+                  <div className="absolute right-0 top-full z-10 mt-1 w-56 max-h-56 overflow-y-auto border" style={{ borderColor: "var(--th-border)", background: "var(--th-bg-surface)", borderRadius: "2px" }}>
                     {templates.map((tpl) => (
-                      <div key={tpl.id} className="flex items-center gap-1 border-b border-slate-700/50 last:border-0">
+                      <div key={tpl.id} className="flex items-center gap-1 last:border-0" style={{ borderBottom: "1px solid var(--th-border)" }}>
                         <button
                           type="button"
-                          className="flex-1 px-3 py-2 text-left text-xs text-slate-200 hover:bg-slate-700 truncate"
+                          className="flex-1 px-3 py-2 text-left text-xs truncate hover:opacity-80 transition"
+                          style={{ color: "var(--th-text-primary)", fontFamily: "var(--th-font-mono)" }}
                           onClick={() => {
                             onLoadTemplate(tpl.id);
                             setTemplateMenuOpen(false);
@@ -135,7 +160,8 @@ export default function CreateTaskModalView({
                         {onDeleteTemplate && (
                           <button
                             type="button"
-                            className="px-2 py-2 text-[10px] text-slate-500 hover:text-red-400 transition"
+                            className="px-2 py-2 text-[10px] font-mono transition hover:text-red-400"
+                            style={{ color: "var(--th-text-muted)" }}
                             onClick={() => void onDeleteTemplate(tpl.id)}
                             title={t({ ko: "삭제", en: "Delete", ja: "削除", zh: "删除" })}
                           >
@@ -151,7 +177,8 @@ export default function CreateTaskModalView({
             <button
               type="button"
               onClick={onOpenDraftModal}
-              className="rounded-lg border border-slate-700 px-2.5 py-1.5 text-xs text-slate-200 transition hover:bg-slate-800"
+              className="border px-2.5 py-1.5 text-xs font-mono transition hover:opacity-80"
+              style={{ borderColor: "var(--th-border)", color: "var(--th-text-muted)", background: "var(--th-bg-primary)", borderRadius: "2px" }}
               title={t({
                 ko: "임시 저장 항목 열기",
                 en: "Open temporary drafts",
@@ -163,7 +190,8 @@ export default function CreateTaskModalView({
             </button>
             <button
               onClick={onRequestClose}
-              className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-800 hover:text-white"
+              className="w-7 h-7 flex items-center justify-center font-mono text-xs transition hover:opacity-80"
+              style={{ border: "1px solid var(--th-border)", color: "var(--th-text-muted)", background: "var(--th-bg-surface)", borderRadius: "2px" }}
               title={t({ ko: "닫기", en: "Close", ja: "閉じる", zh: "关闭" })}
             >
               ✕
@@ -171,145 +199,166 @@ export default function CreateTaskModalView({
           </div>
         </div>
 
-        <form onSubmit={onSubmit} className="flex min-h-0 flex-1 flex-col">
+        <form onSubmit={onSubmit} className="flex flex-col">
           <div
-            className={`min-h-0 flex-1 overflow-y-auto px-6 py-4 lg:overflow-visible ${createNewProjectMode ? "lg:grid lg:grid-cols-2 lg:gap-5" : ""}`}
+            className={`px-4 py-3 sm:px-6 sm:py-4 ${createNewProjectMode ? "lg:grid lg:grid-cols-2 lg:gap-5" : ""}`}
           >
-            <div className="min-w-0 space-y-4">
-              <div>
-                <label className="mb-1 block text-sm font-medium text-slate-300">
-                  {t({ ko: "제목", en: "Title", ja: "タイトル", zh: "标题" })} <span className="text-red-400">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={title}
-                  onChange={(event) => onTitleChange(event.target.value)}
-                  placeholder={t({
-                    ko: "업무 제목을 입력하세요",
-                    en: "Enter a task title",
-                    ja: "タスクのタイトルを入力してください",
-                    zh: "请输入任务标题",
-                  })}
-                  required
-                  className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-white placeholder-slate-500 outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                />
-              </div>
-
-              <div>
-                <label className="mb-1 block text-sm font-medium text-slate-300">
-                  {t({ ko: "설명", en: "Description", ja: "説明", zh: "说明" })}
-                </label>
-                <textarea
-                  value={description}
-                  onChange={(event) => onDescriptionChange(event.target.value)}
-                  placeholder={t({
-                    ko: "업무에 대한 상세 설명을 입력하세요",
-                    en: "Enter a detailed description",
-                    ja: "タスクの詳細説明を入力してください",
-                    zh: "请输入任务详细说明",
-                  })}
-                  rows={3}
-                  className="w-full resize-none rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-white placeholder-slate-500 outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                />
-              </div>
-
-              {packInputSchema && onPackMetaChange && (
-                <div
-                  className="space-y-3 rounded-lg border border-indigo-500/30 bg-indigo-500/5 p-3"
-                >
-                  <p className="text-xs font-semibold uppercase tracking-wider text-indigo-300">
-                    {packConfig?.name ?? "Pack"} {t({ ko: "입력 항목", en: "Fields", ja: "入力項目", zh: "输入字段" })}
-                  </p>
-                  {packInputSchema.required.map((field) => (
-                    <div key={field}>
-                      <label className="mb-1 block text-sm font-medium text-slate-300">
-                        {field.replace(/_/g, " ")} <span className="text-red-400">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={packMeta?.[field] ?? ""}
-                        onChange={(e) => onPackMetaChange(field, e.target.value)}
-                        placeholder={field.replace(/_/g, " ")}
-                        className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-white placeholder-slate-500 outline-none transition focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-                      />
-                    </div>
-                  ))}
-                  {packInputSchema.optional.map((field) => (
-                    <div key={field}>
-                      <label className="mb-1 block text-sm font-medium text-slate-400">
-                        {field.replace(/_/g, " ")}
-                      </label>
-                      <input
-                        type="text"
-                        value={packMeta?.[field] ?? ""}
-                        onChange={(e) => onPackMetaChange(field, e.target.value)}
-                        placeholder={`${field.replace(/_/g, " ")} (${t({ ko: "선택", en: "optional", ja: "任意", zh: "可选" })})`}
-                        className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-white placeholder-slate-500 outline-none transition focus:border-slate-600 focus:ring-1 focus:ring-slate-600"
-                      />
-                    </div>
-                  ))}
+            <div className="min-w-0 space-y-4 sm:space-y-5">
+              {/* 1. 기본 정보 */}
+              <section className="space-y-2 sm:space-y-3">
+                <h3 className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "var(--th-text-muted)", fontFamily: "var(--th-font-mono)" }}>
+                  {t({ ko: "기본 정보", en: "Basic Info", ja: "基本情報", zh: "基本信息" })}
+                </h3>
+                <div>
+                  <label className="mb-1 block text-xs font-medium font-mono" style={{ color: "var(--th-text-secondary)" }}>
+                    {t({ ko: "제목", en: "Title", ja: "タイトル", zh: "标题" })} <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={title}
+                    onChange={(event) => onTitleChange(event.target.value)}
+                    placeholder={t({
+                      ko: "업무 제목을 입력하세요",
+                      en: "Enter a task title",
+                      ja: "タスクのタイトルを入力してください",
+                      zh: "请输入任务标题",
+                    })}
+                    required
+                    className="w-full border outline-none transition"
+                    style={{ borderRadius: "2px", borderColor: "var(--th-border)", background: "var(--th-input-bg, var(--th-bg-primary))", color: "var(--th-text-primary)", fontFamily: "var(--th-font-mono)", fontSize: "0.8125rem", padding: "0.4rem 0.625rem" }}
+                  />
                 </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium font-mono" style={{ color: "var(--th-text-secondary)" }}>
+                    {t({ ko: "설명", en: "Description", ja: "説明", zh: "说明" })}
+                  </label>
+                  <textarea
+                    value={description}
+                    onChange={(event) => onDescriptionChange(event.target.value)}
+                    placeholder={t({
+                      ko: "업무에 대한 상세 설명을 입력하세요",
+                      en: "Enter a detailed description",
+                      ja: "タスクの詳細説明を入力してください",
+                      zh: "请输入任务详细说明",
+                    })}
+                    rows={2}
+                    className="w-full resize-none border outline-none transition"
+                    style={{ borderRadius: "2px", borderColor: "var(--th-border)", background: "var(--th-input-bg, var(--th-bg-primary))", color: "var(--th-text-primary)", fontFamily: "var(--th-font-mono)", fontSize: "0.8125rem", padding: "0.4rem 0.625rem" }}
+                  />
+                </div>
+              </section>
+
+              {/* 2. 오피스 팩 입력 항목 (팩별 커스텀 필드) */}
+              {packInputSchema && onPackMetaChange && (
+                <section className="space-y-2 p-3 sm:space-y-3 sm:p-4" style={{ border: "1px solid var(--th-border)", borderLeft: "3px solid var(--th-accent, #f59e0b)", borderRadius: "2px", background: "var(--th-bg-primary)" }}>
+                  <h3 className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#f59e0b", fontFamily: "var(--th-font-mono)" }}>
+                    {packSectionTitle} {t({ ko: "입력 항목", en: "Input Fields", ja: "入力項目", zh: "输入字段" })}
+                  </h3>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {packInputSchema.required.map((field) => (
+                      <div key={field}>
+                        <label className="mb-1 block text-xs font-medium font-mono" style={{ color: "var(--th-text-secondary)" }}>
+                          {packFieldLabel(field)} <span className="text-red-400">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={packMeta?.[field] ?? ""}
+                          onChange={(e) => onPackMetaChange(field, e.target.value)}
+                          placeholder={packFieldLabel(field)}
+                          className="w-full border outline-none transition"
+                          style={{ borderRadius: "2px", borderColor: "var(--th-border)", background: "var(--th-input-bg, var(--th-bg-primary))", color: "var(--th-text-primary)", fontFamily: "var(--th-font-mono)", fontSize: "0.8125rem", padding: "0.4rem 0.625rem" }}
+                        />
+                      </div>
+                    ))}
+                    {packInputSchema.optional.map((field) => (
+                      <div key={field}>
+                        <label className="mb-1 block text-xs font-medium font-mono" style={{ color: "var(--th-text-muted)" }}>
+                          {packFieldLabel(field)} ({t({ ko: "선택", en: "optional", ja: "任意", zh: "可选" })})
+                        </label>
+                        <input
+                          type="text"
+                          value={packMeta?.[field] ?? ""}
+                          onChange={(e) => onPackMetaChange(field, e.target.value)}
+                          placeholder={packFieldLabel(field)}
+                          className="w-full border outline-none transition"
+                          style={{ borderRadius: "2px", borderColor: "var(--th-border)", background: "var(--th-input-bg, var(--th-bg-primary))", color: "var(--th-text-primary)", fontFamily: "var(--th-font-mono)", fontSize: "0.8125rem", padding: "0.4rem 0.625rem" }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </section>
               )}
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="mb-1 block text-sm font-medium text-slate-300">
-                    {t({ ko: "부서", en: "Department", ja: "部署", zh: "部门" })}
-                  </label>
-                  <select
-                    value={departmentId}
-                    onChange={(event) => onDepartmentChange(event.target.value)}
-                    className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-white outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                  >
-                    <option value="">
-                      {t({ ko: "-- 전체 --", en: "-- All --", ja: "-- 全体 --", zh: "-- 全部 --" })}
-                    </option>
-                    {departments.map((department) => (
-                      <option key={department.id} value={department.id}>
-                        {department.icon} {locale === "ko" ? department.name_ko : department.name}
+              {/* 3. 배정 및 옵션 */}
+              <section className="space-y-2 sm:space-y-3">
+                <h3 className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "var(--th-text-muted)", fontFamily: "var(--th-font-mono)" }}>
+                  {t({ ko: "배정 및 옵션", en: "Assignment & Options", ja: "割当・オプション", zh: "分配与选项" })}
+                </h3>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-1 block text-xs font-medium font-mono" style={{ color: "var(--th-text-secondary)" }}>
+                      {t({ ko: "부서", en: "Department", ja: "部署", zh: "部门" })}
+                    </label>
+                    <select
+                      value={departmentId}
+                      onChange={(event) => onDepartmentChange(event.target.value)}
+                      className="w-full border outline-none transition"
+                      style={{ borderRadius: "2px", borderColor: "var(--th-border)", background: "var(--th-input-bg, var(--th-bg-primary))", color: "var(--th-text-primary)", fontFamily: "var(--th-font-mono)", fontSize: "0.8125rem", padding: "0.4rem 0.625rem" }}
+                    >
+                      <option value="">
+                        {t({ ko: "-- 전체 --", en: "-- All --", ja: "-- 全体 --", zh: "-- 全部 --" })}
                       </option>
-                    ))}
-                  </select>
+                      {departments.map((department) => (
+                        <option key={department.id} value={department.id}>
+                          {department.icon} {locale === "ko" ? department.name_ko : department.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-medium font-mono" style={{ color: "var(--th-text-secondary)" }}>
+                      {t({ ko: "업무 유형", en: "Task Type", ja: "タスク種別", zh: "任务类型" })}
+                    </label>
+                    <select
+                      value={taskType}
+                      onChange={(event) => onTaskTypeChange(event.target.value as TaskType)}
+                      className="w-full border outline-none transition"
+                      style={{ borderRadius: "2px", borderColor: "var(--th-border)", background: "var(--th-input-bg, var(--th-bg-primary))", color: "var(--th-text-primary)", fontFamily: "var(--th-font-mono)", fontSize: "0.8125rem", padding: "0.4rem 0.625rem" }}
+                    >
+                      {TASK_TYPE_OPTIONS.map((typeOption) => (
+                        <option key={typeOption.value} value={typeOption.value}>
+                          {taskTypeLabel(typeOption.value, t)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
 
-                <div>
-                  <label className="mb-1 block text-sm font-medium text-slate-300">
-                    {t({ ko: "업무 유형", en: "Task Type", ja: "タスク種別", zh: "任务类型" })}
-                  </label>
-                  <select
-                    value={taskType}
-                    onChange={(event) => onTaskTypeChange(event.target.value as TaskType)}
-                    className="w-full rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-white outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                  >
-                    {TASK_TYPE_OPTIONS.map((typeOption) => (
-                      <option key={typeOption.value} value={typeOption.value}>
-                        {taskTypeLabel(typeOption.value, t)}
-                      </option>
-                    ))}
-                  </select>
+                <div className={createNewProjectMode ? "lg:hidden" : ""}>
+                  <AssigneeSection
+                    agents={filteredAgents}
+                    departments={departments}
+                    departmentId={departmentId}
+                    assignAgentId={assignAgentId}
+                    t={t}
+                    onAssignAgentChange={onAssignAgentChange}
+                  />
                 </div>
-              </div>
 
-              <ProjectSection {...projectSectionProps} />
+                <ProjectSection {...projectSectionProps} />
 
-              <div className={createNewProjectMode ? "lg:hidden" : ""}>
-                <PrioritySection priority={priority} t={t} onPriorityChange={onPriorityChange} />
-              </div>
-              <div className={createNewProjectMode ? "lg:hidden" : ""}>
-                <AssigneeSection
-                  agents={filteredAgents}
-                  departments={departments}
-                  departmentId={departmentId}
-                  assignAgentId={assignAgentId}
-                  t={t}
-                  onAssignAgentChange={onAssignAgentChange}
-                />
-              </div>
+                <div className={createNewProjectMode ? "lg:hidden" : ""}>
+                  <PrioritySection priority={priority} t={t} onPriorityChange={onPriorityChange} />
+                </div>
+              </section>
             </div>
 
             {createNewProjectMode && (
               <aside className="hidden min-w-0 lg:block lg:transition-all lg:duration-300 lg:ease-out">
-                <div className="space-y-4 rounded-xl border border-slate-700/80 bg-slate-900/80 p-4 shadow-[0_8px_24px_rgba(0,0,0,0.25)]">
+                <div className="space-y-4 p-4" style={{ border: "1px solid var(--th-border)", borderRadius: "2px", background: "var(--th-bg-primary)" }}>
+                  <h3 className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "var(--th-text-muted)", fontFamily: "var(--th-font-mono)" }}>
+                    {t({ ko: "우선순위 · 담당", en: "Priority & Assignee", ja: "優先度・担当", zh: "优先级与负责人" })}
+                  </h3>
                   <PrioritySection priority={priority} t={t} onPriorityChange={onPriorityChange} />
                   <AssigneeSection
                     agents={filteredAgents}
@@ -325,20 +374,21 @@ export default function CreateTaskModalView({
           </div>
 
           {formFeedback && (
-            <div className="px-6 pb-3">
+            <div className="shrink-0 px-4 pb-2 sm:px-6 sm:pb-3">
               <div
-                className={`rounded-lg border px-3 py-2 text-xs ${
+                className={`border px-3 py-2 text-xs font-mono ${
                   formFeedback.tone === "error"
                     ? "border-rose-500/60 bg-rose-500/10 text-rose-200"
                     : "border-cyan-500/50 bg-cyan-500/10 text-cyan-100"
                 }`}
+                style={{ borderRadius: "2px" }}
               >
                 {formFeedback.message}
               </div>
             </div>
           )}
 
-          <div className="flex items-center gap-3 border-t border-slate-700 px-6 py-4">
+          <div className="flex shrink-0 flex-wrap items-center gap-2 px-4 py-3 sm:gap-3 sm:px-6 sm:py-4" style={{ borderTop: "1px solid var(--th-border)" }}>
             {onSaveTemplate && title.trim() && (
               <div className="flex items-center gap-1.5">
                 <input
@@ -346,7 +396,8 @@ export default function CreateTaskModalView({
                   value={saveTemplateName}
                   onChange={(e) => setSaveTemplateName(e.target.value)}
                   placeholder={t({ ko: "템플릿 이름", en: "Template name", ja: "テンプレート名", zh: "模板名称" })}
-                  className="w-32 rounded-lg border border-slate-700 bg-slate-800 px-2 py-1.5 text-xs text-white placeholder-slate-500 outline-none focus:border-emerald-500"
+                  className="w-32 border outline-none"
+                  style={{ borderRadius: "2px", borderColor: "var(--th-border)", background: "var(--th-input-bg, var(--th-bg-primary))", color: "var(--th-text-primary)", fontFamily: "var(--th-font-mono)", fontSize: "0.75rem", padding: "0.3rem 0.5rem" }}
                 />
                 <button
                   type="button"
@@ -360,7 +411,8 @@ export default function CreateTaskModalView({
                       setSavingTemplate(false);
                     }
                   }}
-                  className="rounded-lg border border-emerald-600/50 bg-emerald-600/10 px-2.5 py-1.5 text-xs text-emerald-300 transition hover:bg-emerald-600/20 disabled:opacity-40"
+                  className="border px-2.5 py-1.5 text-xs font-mono transition hover:opacity-80 disabled:opacity-40"
+                  style={{ borderColor: "rgba(34,197,94,0.4)", background: "rgba(34,197,94,0.08)", color: "#22c55e", borderRadius: "2px" }}
                 >
                   {savingTemplate
                     ? "..."
@@ -372,14 +424,16 @@ export default function CreateTaskModalView({
               <button
                 type="button"
                 onClick={onRequestClose}
-                className="rounded-lg border border-slate-700 px-4 py-2 text-sm text-slate-300 transition hover:bg-slate-800"
+                className="border px-4 py-2 text-xs font-mono transition hover:opacity-80"
+                style={{ borderColor: "var(--th-border)", color: "var(--th-text-secondary)", background: "var(--th-bg-primary)", borderRadius: "2px" }}
               >
                 {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}
               </button>
               <button
                 type="submit"
                 disabled={!title.trim() || submitBusy}
-                className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-40"
+                className="px-5 py-2 text-xs font-bold font-mono uppercase tracking-wider transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+                style={{ background: "var(--th-accent, #f59e0b)", color: "#000", borderRadius: "2px", border: "none" }}
               >
                 {submitBusy
                   ? t({ ko: "생성 중...", en: "Creating...", ja: "作成中...", zh: "创建中..." })
@@ -388,6 +442,7 @@ export default function CreateTaskModalView({
             </div>
           </div>
         </form>
+        </div>
       </div>
 
       <CreateTaskModalOverlays {...overlaysProps} />

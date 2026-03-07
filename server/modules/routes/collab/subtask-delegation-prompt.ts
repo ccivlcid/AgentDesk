@@ -278,7 +278,7 @@ export function createSubtaskDelegationPromptBuilder(deps: PromptDeps) {
         ``,
         `---`,
         `Agent: ${agentDisplayName} (${roleLabel}, ${targetDeptName})`,
-        buildCharacterPersonaBlock(execAgent.personality),
+        buildCharacterPersonaBlock(execAgent.personality, (execAgent as any).persona_id),
         deptConstraint,
         deptPromptBlock,
         buildDocumentGenerationGuidance(parentTask.title, parentTask.description, lang),

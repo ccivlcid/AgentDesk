@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useI18n } from "../../i18n";
 import type { Task, Agent, Department } from "../../types";
 
@@ -15,8 +15,8 @@ const STATUS_COLORS: Record<string, string> = {
   in_progress: "bg-sky-500/80",
   review: "bg-amber-500/80",
   collaborating: "bg-violet-500/80",
-  planned: "bg-slate-400/60",
-  inbox: "bg-slate-500/40",
+  planned: "bg-[rgba(148,163,184,0.6)]",
+  inbox: "bg-[rgba(100,116,139,0.4)]",
   pending: "bg-orange-400/60",
   cancelled: "bg-red-500/30",
 };
@@ -52,6 +52,13 @@ export default function GanttChart({ tasks, agents, departments }: Props) {
   const [zoom, setZoom] = useState<ZoomLevel>("day");
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterDept, setFilterDept] = useState<string>("all");
+  const [nowMs, setNowMs] = useState(Date.now());
+
+  // Live "now" line — updates every minute
+  useEffect(() => {
+    const id = setInterval(() => setNowMs(Date.now()), 60_000);
+    return () => clearInterval(id);
+  }, []);
 
   // Filter tasks that have meaningful time data
   const chartTasks = useMemo(() => {
@@ -66,9 +73,9 @@ export default function GanttChart({ tasks, agents, departments }: Props) {
 
   // Calculate time range
   const timeRange = useMemo(() => {
-    if (chartTasks.length === 0) return { start: Date.now(), end: Date.now() + 86_400_000 * 7, days: 7 };
+    if (chartTasks.length === 0) return { start: nowMs, end: nowMs + 86_400_000 * 7, days: 7 };
     const starts = chartTasks.map((t) => t.started_at ?? t.created_at);
-    const ends = chartTasks.map((t) => t.completed_at ?? Date.now());
+    const ends = chartTasks.map((t) => t.completed_at ?? nowMs);
     const minStart = Math.min(...starts);
     const maxEnd = Math.max(...ends);
     // Add 1 day padding on each side
@@ -216,7 +223,7 @@ export default function GanttChart({ tasks, agents, departments }: Props) {
               return (
                 <div
                   key={task.id}
-                  className="h-7 px-2 flex items-center gap-1 hover:bg-slate-800/30 transition"
+                  className="h-7 px-2 flex items-center gap-1 hover:bg-[var(--th-bg-surface-hover)] transition"
                   style={{ borderBottom: "1px solid var(--th-border)" }}
                   title={task.title}
                 >
@@ -231,7 +238,7 @@ export default function GanttChart({ tasks, agents, departments }: Props) {
 
           {/* Right: Timeline */}
           <div className="flex-1 overflow-x-auto">
-            <div style={{ minWidth: totalWidth }}>
+            <div className="relative" style={{ minWidth: totalWidth }}>
               {/* Time header */}
               <div className="h-8 flex" style={{ borderBottom: "1px solid var(--th-border)" }}>
                 {headers.map((h, i) => (
@@ -255,7 +262,7 @@ export default function GanttChart({ tasks, agents, departments }: Props) {
                 const { left, width } = getBarPosition(task);
                 const statusColor = STATUS_COLORS[task.status] ?? STATUS_COLORS.inbox;
                 const startTs = task.started_at ?? task.created_at;
-                const endTs = task.completed_at ?? Date.now();
+                const endTs = task.completed_at ?? nowMs;
 
                 return (
                   <div
@@ -263,13 +270,6 @@ export default function GanttChart({ tasks, agents, departments }: Props) {
                     className="h-7 relative"
                     style={{ borderBottom: "1px solid var(--th-border)" }}
                   >
-                    {/* Today marker */}
-                    <div
-                      className="absolute top-0 bottom-0 w-px bg-red-500/30"
-                      style={{
-                        left: daysBetween(timeRange.start, Date.now()) * colWidth,
-                      }}
-                    />
                     {/* Bar */}
                     <div
                       className={`absolute top-1 h-5 ${statusColor} cursor-default transition-all hover:brightness-110`}
@@ -285,6 +285,33 @@ export default function GanttChart({ tasks, agents, departments }: Props) {
                   </div>
                 );
               })}
+
+              {/* NOW line — single full-height amber line */}
+              {(() => {
+                const nowLeft = daysBetween(timeRange.start, nowMs) * colWidth;
+                if (nowLeft < 0 || nowLeft > totalWidth) return null;
+                return (
+                  <div
+                    className="absolute top-0 bottom-0 pointer-events-none"
+                    style={{ left: nowLeft, width: 1, background: "rgba(251,191,36,0.6)", zIndex: 10 }}
+                  >
+                    <div
+                      className="absolute text-[8px] font-mono font-bold whitespace-nowrap px-1 py-0.5"
+                      style={{
+                        top: 0,
+                        left: "50%",
+                        transform: "translateX(-50%)",
+                        background: "var(--th-accent)",
+                        color: "#000",
+                        borderRadius: "0 0 2px 2px",
+                        letterSpacing: 0.5,
+                      }}
+                    >
+                      NOW
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           </div>
         </div>
@@ -296,8 +323,8 @@ export default function GanttChart({ tasks, agents, departments }: Props) {
           {tr("기간", "Period")}: {formatDate(timeRange.start)} — {formatDate(timeRange.end)} ({timeRange.days}{tr("일", "d")})
         </span>
         <span className="flex items-center gap-1">
-          <span className="w-px h-3 bg-red-500/50" />
-          {tr("오늘", "Today")}
+          <span className="w-px h-3" style={{ background: "rgba(251,191,36,0.7)" }} />
+          {tr("현재 시각", "Now")}
         </span>
       </div>
     </div>

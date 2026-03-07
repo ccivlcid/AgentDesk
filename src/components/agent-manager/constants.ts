@@ -15,14 +15,14 @@ export const ROLE_BADGE: Record<string, string> = {
   team_leader: "bg-amber-500/15 text-amber-400 border-amber-500/25",
   senior: "bg-sky-500/15 text-sky-400 border-sky-500/25",
   junior: "bg-emerald-500/15 text-emerald-400 border-emerald-500/25",
-  intern: "bg-slate-500/15 text-slate-400 border-slate-500/25",
+  intern: "bg-[rgba(100,116,139,0.15)] text-[#94a3b8] border-[rgba(100,116,139,0.25)]",
 };
 
 export const STATUS_DOT: Record<string, string> = {
   working: "bg-emerald-400 shadow-emerald-400/50 shadow-sm",
   break: "bg-amber-400",
   offline: "bg-red-400",
-  idle: "bg-slate-500",
+  idle: "bg-[#64748b]",
 };
 
 export const ICON_SPRITE_POOL = Array.from({ length: 13 }, (_, i) => i + 1);

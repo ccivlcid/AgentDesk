@@ -20,10 +20,10 @@ export default function AgentRulesHeader({
   onOpenCreateModal,
 }: AgentRulesHeaderProps) {
   return (
-    <div className="bg-slate-800/60 backdrop-blur-sm border border-slate-700/50 rounded-xl p-5">
+    <div className="border rounded p-5" style={{ background: "var(--th-bg-surface)", borderColor: "var(--th-border)" }}>
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="text-lg font-bold text-white flex items-center gap-2">
+          <h2 className="text-lg font-bold flex items-center gap-2" style={{ color: "var(--th-text-primary)" }}>
             <span className="text-2xl">🛡️</span>
             {t({
               ko: "에이전트 룰 문서고",
@@ -32,7 +32,7 @@ export default function AgentRulesHeader({
               zh: "代理规则资料库",
             })}
           </h2>
-          <p className="text-sm text-slate-400 mt-1">
+          <p className="text-sm mt-1" style={{ color: "var(--th-text-muted)" }}>
             {t({
               ko: "에이전트 행동 규칙 · 태스크 실행 시 프롬프트에 자동 주입",
               en: "Agent behavior rules · Auto-injected into prompts during task execution",
@@ -44,7 +44,8 @@ export default function AgentRulesHeader({
         <div className="flex items-center gap-3">
           <button
             onClick={onOpenCreateModal}
-            className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium bg-violet-600/20 text-violet-300 border border-violet-500/30 rounded-lg hover:bg-violet-600/30 transition-all"
+            className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium bg-violet-600/20 text-violet-300 border border-violet-500/30 transition-all"
+            style={{ borderRadius: "2px" }}
             title={t({
               ko: "새 룰 추가",
               en: "Add new rule",
@@ -56,8 +57,8 @@ export default function AgentRulesHeader({
             {t({ ko: "룰 추가", en: "Add Rule", ja: "ルール追加", zh: "添加规则" })}
           </button>
           <div className="text-right">
-            <div className="text-2xl font-bold text-empire-gold">{rulesCount}</div>
-            <div className="text-xs text-slate-500">
+            <div className="text-2xl font-bold font-mono" style={{ color: "var(--th-accent)" }}>{rulesCount}</div>
+            <div className="text-xs" style={{ color: "var(--th-text-muted)" }}>
               {t({ ko: "등록된 룰", en: "Registered rules", ja: "登録済みルール", zh: "已注册规则" })}
             </div>
           </div>
@@ -76,12 +77,14 @@ export default function AgentRulesHeader({
               ja: "ルール検索...（タイトル・説明・内容・スコープ）",
               zh: "搜索规则...（标题、描述、内容、范围）",
             })}
-            className="w-full bg-slate-900/60 border border-slate-600/50 rounded-lg px-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/25"
+            className="w-full rounded px-4 py-2.5 text-sm focus:outline-none"
+            style={{ background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)" }}
           />
           {search && (
             <button
               onClick={() => onSearchChange("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
+              className="absolute right-3 top-1/2 -translate-y-1/2"
+              style={{ color: "var(--th-text-muted)" }}
             >
               &times;
             </button>
@@ -91,7 +94,8 @@ export default function AgentRulesHeader({
         <select
           value={sortBy}
           onChange={(e) => onSortByChange(e.target.value as RuleSortBy)}
-          className="bg-slate-900/60 border border-slate-600/50 rounded-lg px-3 py-2.5 text-sm text-slate-300 focus:outline-none focus:border-blue-500/50"
+          className="rounded px-3 py-2.5 text-sm focus:outline-none"
+          style={{ background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)" }}
         >
           <option value="priority">
             {t({ ko: "우선순위순", en: "By Priority", ja: "優先順位順", zh: "按优先级" })}

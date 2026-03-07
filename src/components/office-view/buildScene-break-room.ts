@@ -96,13 +96,13 @@ export function buildBreakRoom({
   const furnitureBaseX = brx + 16;
   drawer.drawCoffeeMachine(breakRoom, furnitureBaseX, bry + 20);
   drawer.drawPlant(breakRoom, furnitureBaseX + 30, bry + 38, 1);
-  drawer.drawSofa(breakRoom, furnitureBaseX + 50, bry + 56, 0xc89da6);
+  drawer.drawSofa(breakRoom, furnitureBaseX + 50, bry + 56, 0x1e2a3a);
   drawer.drawCoffeeTable(breakRoom, furnitureBaseX + 140, bry + 58);
 
   const furnitureRightX = brx + brw - 16;
   drawer.drawVendingMachine(breakRoom, furnitureRightX - 26, bry + 20);
   drawer.drawPlant(breakRoom, furnitureRightX - 36, bry + 38, 2);
-  drawer.drawSofa(breakRoom, furnitureRightX - 120, bry + 56, 0x91bcae);
+  drawer.drawSofa(breakRoom, furnitureRightX - 120, bry + 56, 0x1a2e28);
   drawer.drawHighTable(breakRoom, furnitureRightX - 170, bry + 24);
 
   drawer.drawPictureFrame(breakRoom, brx + brw / 2 - 8, bry + 14);
