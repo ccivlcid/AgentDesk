@@ -1,7 +1,7 @@
 # AgentDesk — Development Progress
 
 > **Rule**: This document is updated every time work is completed or a phase transitions.
-> Last updated: 2026-03-07 (태스크템플릿 DONE 확인, 활동 캘린더 위젯 신규 구현 — DashboardCalendar, Phase 15-2 HIGH 항목 전체 이미 클린 확인)
+> Last updated: 2026-03-07 (AI 인사이트 위젯 DashboardInsights, Slack/Discord 웹훅 연동 — DB/API/Settings UI/자동 트리거 완료)
 
 ---
 
@@ -641,7 +641,7 @@ Phase 5 (Office Tower) — largest visual overhaul, last
 | 기능 | 설명 | Priority |
 |---|---|---|
 | 위젯 드래그&드롭 레이아웃 | 사용자가 대시보드 위젯 배치 커스터마이즈 | MED |
-| "AI 인사이트" 위젯 | 에이전트 성과 분석 요약 (자동 생성) | MED |
+| "AI 인사이트" 위젯 | 에이전트 성과 분석 요약 (자동 생성) | ✅ DONE |
 | 알림 센터 | 태스크 완료/오류/임박 마감 실시간 알림 | ✅ DONE |
 | 일정 달력 위젯 | 태스크 마감일 달력 뷰 | ✅ DONE |
 
@@ -693,7 +693,7 @@ Phase 5 (Office Tower) — largest visual overhaul, last
 | 기능 | 설명 | Priority |
 |---|---|---|
 | API 키 헬스체크 대시보드 | 각 LLM provider 연결 상태 + 토큰 사용량 | ✅ DONE |
-| Slack/Discord 웹훅 연동 | 태스크 완료 시 외부 채널 알림 | MED |
+| Slack/Discord 웹훅 연동 | 태스크 완료 시 외부 채널 알림 | ✅ DONE |
 | 에이전트 스킬 마켓플레이스 | 커뮤니티 스킬 검색/설치 UI | LOW |
 | 자동 백업 설정 | DB/설정 파일 자동 백업 스케줄러 UI | LOW |
 

@@ -2,6 +2,7 @@ import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { sendDeliverableFiles } from "../../../gateway/client.ts";
+import { triggerWebhooks } from "../../routes/core/webhooks.ts";
 import {
   discoverVideoArtifact,
   resolveVideoArtifactRelativeCandidates,
@@ -736,6 +737,7 @@ export function createReviewFinalizeTools(deps: CreateReviewFinalizeToolsDeps) {
 
       const updatedTask = db.prepare("SELECT * FROM tasks WHERE id = ?").get(taskId);
       broadcast("task_update", updatedTask);
+      triggerWebhooks(db, "task_done", { task_id: taskId, title: taskTitle, completed_at: t });
       notifyTaskStatus(taskId, taskTitle, "done", lang);
       insertNotification({
         type: "task_complete",

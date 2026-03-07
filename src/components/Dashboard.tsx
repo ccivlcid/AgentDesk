@@ -14,8 +14,9 @@ import { CollapsibleSection } from "./dashboard/CollapsibleSection";
 import { DEPT_COLORS, useNow } from "./dashboard/model";
 import ProviderHealthPanel from "./dashboard/ProviderHealthPanel";
 import { DashboardCalendar } from "./dashboard/CalendarWidget";
+import { DashboardInsights } from "./dashboard/InsightsWidget";
 
-type SectionKey = "overview" | "metrics" | "ranking" | "personas" | "dept" | "mission" | "providers" | "today" | "calendar";
+type SectionKey = "overview" | "metrics" | "ranking" | "personas" | "dept" | "mission" | "providers" | "today" | "calendar" | "insights";
 
 interface DashboardProps {
   stats: CompanyStats | null;
@@ -35,6 +36,7 @@ const defaultSectionsOpen: Record<SectionKey, boolean> = {
   providers: true,
   today: true,
   calendar: true,
+  insights: true,
 };
 
 export default function Dashboard({ stats, agents, tasks, companyName, onPrimaryCtaClick }: DashboardProps) {
@@ -203,6 +205,7 @@ export default function Dashboard({ stats, agents, tasks, companyName, onPrimary
     providers: t({ ko: "프로바이더 상태", en: "Provider health", ja: "プロバイダー状態", zh: "提供商状态" }),
     today: t({ ko: "오늘의 작업 요약", en: "Today's activity", ja: "本日の作業", zh: "今日工作汇总" }),
     calendar: t({ ko: "활동 캘린더", en: "Activity calendar", ja: "アクティビティカレンダー", zh: "活动日历" }),
+    insights: t({ ko: "AI 인사이트", en: "AI insights", ja: "AIインサイト", zh: "AI洞察" }),
   };
 
   return (
@@ -241,6 +244,15 @@ export default function Dashboard({ stats, agents, tasks, companyName, onPrimary
         onToggle={() => toggleSection("metrics")}
       >
         <DashboardHudStats hudStats={hudStats} numberFormatter={numberFormatter} />
+      </CollapsibleSection>
+
+      <CollapsibleSection
+        id="insights"
+        title={sectionTitles.insights}
+        open={sectionOpen.insights}
+        onToggle={() => toggleSection("insights")}
+      >
+        <DashboardInsights tasks={tasks} agents={agents} language={language} t={t} />
       </CollapsibleSection>
 
       <CollapsibleSection

@@ -757,4 +757,18 @@ function ensureMessagesIdempotencySchema(db: DbLike): void {
     ON messages(idempotency_key)
     WHERE idempotency_key IS NOT NULL
   `);
+
+  // Webhooks table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS webhooks (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      url TEXT NOT NULL,
+      events TEXT NOT NULL DEFAULT '["task_done"]',
+      enabled INTEGER NOT NULL DEFAULT 1,
+      secret TEXT,
+      created_at INTEGER NOT NULL,
+      updated_at INTEGER NOT NULL
+    )
+  `);
 }

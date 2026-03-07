@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { sendDeliverableFiles } from "../../../gateway/client.ts";
 import { resolveWorkflowPackKeyForTask } from "../packs/task-pack-resolver.ts";
+import { triggerWebhooks } from "../../routes/core/webhooks.ts";
 
 type CreateReportWorkflowToolsDeps = Record<string, any>;
 
@@ -213,6 +214,7 @@ export function createReportWorkflowTools(deps: CreateReportWorkflowToolsDeps) {
 
     const updatedTask = db.prepare("SELECT * FROM tasks WHERE id = ?").get(task.id);
     broadcast("task_update", updatedTask);
+    triggerWebhooks(db, "task_done", { task_id: task.id, title: task.title, completed_at: t });
     notifyTaskStatus(task.id, task.title, "done", lang);
     insertNotification({
       type: "task_complete",

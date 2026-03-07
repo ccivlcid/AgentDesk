@@ -35,6 +35,7 @@ import { registerProjectRoutes } from "./core/projects.ts";
 import { registerTaskCrudRoutes } from "./core/tasks/crud.ts";
 import { registerTaskTemplateRoutes } from "./core/task-templates.ts";
 import { registerTaskDependencyRoutes } from "./core/task-dependencies.ts";
+import { registerWebhookRoutes } from "./core/webhooks.ts";
 import { registerPipelineGateRoutes } from "./core/pipeline-gates.ts";
 import { registerTaskExecutionRoutes } from "./core/tasks/execution.ts";
 import { registerTaskSubtaskRoutes } from "./core/tasks/subtasks.ts";
@@ -385,6 +386,7 @@ export function registerRoutesPartA(ctx: RuntimeContext): Record<string, never> 
   // ---------------------------------------------------------------------------
   registerTaskTemplateRoutes({ app, db, nowMs });
   registerTaskDependencyRoutes({ app, db, nowMs });
+  registerWebhookRoutes({ app, db, nowMs });
   registerPipelineGateRoutes({ app, db, nowMs });
 
   // ---------------------------------------------------------------------------
