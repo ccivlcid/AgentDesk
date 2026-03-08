@@ -798,10 +798,11 @@
   overflow-x: hidden;
 }
 
-/* Center — canvas */
+/* Center — canvas (fills its parent wrapper) */
 .office-canvas-wrap {
   flex: 1;
   min-width: 0;
+  min-height: 0;
   background: #010409;
   overflow: auto;
   position: relative;
@@ -890,6 +891,66 @@
   0%   { transform: translateX(100%); }
   100% { transform: translateX(-100%); }
 }
+
+/* ── Pack HUD overlay (above FM ticker) ── */
+.pack-hud {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 28px;
+  padding: 0 14px;
+  font-family: var(--th-font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--th-text-secondary);
+  background: var(--th-bg-primary);
+  border-top: 1px solid var(--th-border);
+  flex-shrink: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.pack-hud__sep {
+  width: 1px;
+  height: 12px;
+  background: var(--th-border);
+  flex-shrink: 0;
+}
+.pack-hud__badge {
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+.pack-hud__rec-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ef4444;
+  flex-shrink: 0;
+  animation: pack-hud-blink 1s ease-in-out infinite;
+}
+.pack-hud__bar-wrap {
+  width: 60px;
+  height: 4px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 1px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.pack-hud__bar-fill {
+  height: 100%;
+  border-radius: 1px;
+  transition: width 0.3s;
+}
+@keyframes pack-hud-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+/* Pack-specific tints */
+.pack-hud--report { border-left: 3px solid #ef4444; }
+.pack-hud--video { border-left: 3px solid #ef4444; background: #050505; }
+.pack-hud--rpg { border-left: 3px solid #f59e0b; }
+.pack-hud--asset { border-left: 3px solid #22c55e; background: #020c04; color: #22c55e; }
+.pack-hud--novel { border-left: 3px solid #d4a85a; }
 
 /* Action bar (32px) */
 .office-actionbar {

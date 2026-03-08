@@ -8,6 +8,9 @@ import {
   type WallClockVisual,
   CEO_SIZE,
   CEO_SPEED,
+  CEO_ACCEL,
+  CEO_FRICTION,
+  CEO_MAX_SPEED,
   SUB_CLONE_FIREWORK_INTERVAL,
   SUB_CLONE_FLOAT_DRIFT,
   SUB_CLONE_MOVE_X_AMPLITUDE,
@@ -141,6 +144,10 @@ export interface OfficeTickerContext {
   followCeoInView: () => void;
 }
 
+// ── CEO velocity state (persists across ticks) ──
+let ceoVelX = 0;
+let ceoVelY = 0;
+
 export function runOfficeTickerStep(ctx: OfficeTickerContext): void {
   const tick = ++ctx.tickRef.current;
   const keys = ctx.keysRef.current;
@@ -154,16 +161,46 @@ export function runOfficeTickerStep(ctx: OfficeTickerContext): void {
   }
 
   if (ceo) {
-    let dx = 0;
-    let dy = 0;
-    if (keys["ArrowLeft"] || keys["KeyA"]) dx -= CEO_SPEED;
-    if (keys["ArrowRight"] || keys["KeyD"]) dx += CEO_SPEED;
-    if (keys["ArrowUp"] || keys["KeyW"]) dy -= CEO_SPEED;
-    if (keys["ArrowDown"] || keys["KeyS"]) dy += CEO_SPEED;
+    // ── Velocity-based CEO movement with friction ──
+    let inputX = 0;
+    let inputY = 0;
+    if (keys["ArrowLeft"] || keys["KeyA"]) inputX -= 1;
+    if (keys["ArrowRight"] || keys["KeyD"]) inputX += 1;
+    if (keys["ArrowUp"] || keys["KeyW"]) inputY -= 1;
+    if (keys["ArrowDown"] || keys["KeyS"]) inputY += 1;
 
-    if (dx || dy) {
-      ctx.ceoPosRef.current.x = Math.max(28, Math.min(ctx.officeWRef.current - 28, ctx.ceoPosRef.current.x + dx));
-      ctx.ceoPosRef.current.y = Math.max(18, Math.min(ctx.totalHRef.current - 28, ctx.ceoPosRef.current.y + dy));
+    // Normalize diagonal input
+    if (inputX && inputY) {
+      const inv = 1 / Math.SQRT2;
+      inputX *= inv;
+      inputY *= inv;
+    }
+
+    // Apply acceleration or friction
+    if (inputX || inputY) {
+      ceoVelX += inputX * CEO_ACCEL;
+      ceoVelY += inputY * CEO_ACCEL;
+    } else {
+      ceoVelX *= CEO_FRICTION;
+      ceoVelY *= CEO_FRICTION;
+    }
+
+    // Clamp velocity
+    const speed = Math.sqrt(ceoVelX * ceoVelX + ceoVelY * ceoVelY);
+    if (speed > CEO_MAX_SPEED) {
+      const scale = CEO_MAX_SPEED / speed;
+      ceoVelX *= scale;
+      ceoVelY *= scale;
+    }
+
+    // Stop when nearly still
+    if (Math.abs(ceoVelX) < 0.15) ceoVelX = 0;
+    if (Math.abs(ceoVelY) < 0.15) ceoVelY = 0;
+
+    const hasMoved = ceoVelX !== 0 || ceoVelY !== 0;
+    if (hasMoved) {
+      ctx.ceoPosRef.current.x = Math.max(28, Math.min(ctx.officeWRef.current - 28, ctx.ceoPosRef.current.x + ceoVelX));
+      ctx.ceoPosRef.current.y = Math.max(18, Math.min(ctx.totalHRef.current - 28, ctx.ceoPosRef.current.y + ceoVelY));
       ceo.position.set(ctx.ceoPosRef.current.x, ctx.ceoPosRef.current.y);
       ctx.followCeoInView();
 
@@ -192,6 +229,17 @@ export function runOfficeTickerStep(ctx: OfficeTickerContext): void {
           trailLayer.addChild(p);
         }
       }
+    }
+
+    // CEO idle breathing (when not moving)
+    if (!hasMoved) {
+      const breath = Math.sin(tick * 0.04) * 0.8;
+      ceo.position.y = ctx.ceoPosRef.current.y + breath;
+      ceo.rotation *= 0.9; // decay tilt back to 0
+    } else {
+      // Movement tilt: lean into direction of travel
+      const targetTilt = ceoVelX * 0.012;
+      ceo.rotation += (targetTilt - ceo.rotation) * 0.15;
     }
 
     const crown = ctx.crownRef.current;
@@ -331,6 +379,8 @@ export function runOfficeTickerStep(ctx: OfficeTickerContext): void {
 
       // Breathing Y-axis bob (all visible agents)
       sprite.position.y = baseY + Math.sin(wave) * AGENT_BREATHE_Y_AMP;
+      // Subtle idle sway (X-axis micro-movement)
+      sprite.position.x = baseX + Math.sin(wave * 0.7 + phase * 2) * 0.3;
 
       if (status === "working") {
         // Frame cycling (D-1 ↔ D-2 ↔ D-3)
@@ -340,15 +390,27 @@ export function runOfficeTickerStep(ctx: OfficeTickerContext): void {
           const frame = Math.min(frameCount - 1, Math.floor(frameFloat));
           animated.gotoAndStop(frame);
         }
-        // Typing bob (Y-axis only)
+        // Typing bob (Y-axis — more energetic)
         const typingWave = tick * AGENT_WORK_BOB_SPEED + phase;
         sprite.position.y += Math.sin(typingWave) * AGENT_WORK_BOB_Y_AMP;
+        // Typing lean (slight tilt while working)
+        sprite.rotation = Math.sin(typingWave * 0.6) * 0.02;
+      } else {
+        // Idle slight rocking
+        sprite.rotation = Math.sin(wave * 0.5) * 0.015;
       }
 
-      // Task reception bounce
+      // Task reception bounce (elastic spring effect)
       if (item.bounceUntilTick > 0 && tick <= item.bounceUntilTick) {
-        const bounceProgress = 1 - (item.bounceUntilTick - tick) / AGENT_TASK_BOUNCE_DURATION;
-        sprite.position.y -= Math.sin(bounceProgress * Math.PI) * AGENT_TASK_BOUNCE_HEIGHT;
+        const t = 1 - (item.bounceUntilTick - tick) / AGENT_TASK_BOUNCE_DURATION;
+        // Damped spring: bounces then settles
+        const spring = Math.sin(t * Math.PI * 2.5) * (1 - t) * AGENT_TASK_BOUNCE_HEIGHT;
+        sprite.position.y -= Math.abs(spring);
+        // Squash & stretch on bounce
+        const squash = 1 + Math.sin(t * Math.PI * 2.5) * (1 - t) * 0.1;
+        sprite.scale.set(2 - squash, squash);
+      } else {
+        sprite.scale.set(1, 1);
       }
     }
 

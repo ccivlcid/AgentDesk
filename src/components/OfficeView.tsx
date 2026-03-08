@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useCallback, useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import OfficeDeptPanel from "./office-view/OfficeDeptPanel";
-import { ROOF_H, PENTHOUSE_H, CONFERENCE_FLOOR_H, FLOOR_TOTAL_H, BASEMENT_H, FLOOR_W } from "./office-view/model";
+import { ROOF_H, PENTHOUSE_H, CONFERENCE_FLOOR_H, FLOOR_TOTAL_H, BASEMENT_H, FLOOR_W, SKY_H, GROUND_H } from "./office-view/model";
 import OfficeAgentPanel from "./office-view/OfficeAgentPanel";
 import OfficeQuickChat from "./office-view/OfficeQuickChat";
 import {
@@ -16,6 +16,10 @@ import {
 import { useI18n } from "../i18n";
 import { useTheme, type ThemeMode } from "../ThemeContext";
 import VirtualPadOverlay from "./office-view/VirtualPadOverlay";
+import OfficeMinimap from "./office-view/OfficeMinimap";
+import OfficeOverviewBars from "./office-view/OfficeOverviewBars";
+import { usePackVocab } from "../pack-identity/vocabulary";
+import PackHud from "./hud/PackHud";
 import {
   type OfficeViewProps,
   type Delivery,
@@ -69,8 +73,10 @@ export default function OfficeView({
   cliUsageRefreshing: cliUsageRefreshingProp,
   onRefreshCliUsage: onRefreshCliUsageProp,
   onOpenRoomManager,
+  activeWorkflowPackKey,
 }: OfficeViewProps) {
   const { language, t } = useI18n();
+  const packVocab = usePackVocab(activeWorkflowPackKey ?? "development");
   const { theme: currentTheme } = useTheme();
   const themeRef = useRef<ThemeMode>(currentTheme);
   themeRef.current = currentTheme;
@@ -180,6 +186,7 @@ export default function OfficeView({
   const floorSelectBoxesRef = useRef<Graphics[]>([]) as React.MutableRefObject<Graphics[]>;
   const selectedFloorIdxRef = useRef<number>(0);
   const ceoVisitorAlertRef = useRef<Text | null>(null);
+  const towerOffsetXRef = useRef<number>(0);
   const localeRef = useRef<SupportedLocale>(language);
   localeRef.current = language;
   const themeHighlightTargetIdRef = useRef<string | null>(themeHighlightTargetId ?? null);
@@ -214,7 +221,7 @@ export default function OfficeView({
     setSelectedDept(null);
     setQuickChatAgent(agent);
   }, []);
-  const isOverviewModeRef = useRef(false);
+  const isOverviewModeRef = useRef(true);
 
   const handleCallElevator = useCallback((_dept: import("../types").Department, floorIdx: number) => {
     elevatorStateRef.current.targetFloorIndex = floorIdx;
@@ -264,8 +271,14 @@ export default function OfficeView({
     if (!container) return;
 
     const containerRect = container.getBoundingClientRect();
-    const scaleX = officeWRef.current > 0 ? container.clientWidth / officeWRef.current : 1;
-    const scaleY = totalHRef.current > 0 ? container.clientHeight / totalHRef.current : scaleX;
+    // The canvas logical size includes cityscape; CEO pos is tower-local
+    // We need to convert tower-local coords → scene coords → rendered pixels
+    const canvas = container.querySelector("canvas");
+    const resolution = Math.min(window.devicePixelRatio || 1, 2);
+    const logicalW = canvas ? canvas.width / resolution : officeWRef.current;
+    const logicalH = canvas ? canvas.height / resolution : (totalHRef.current + SKY_H + GROUND_H);
+    const scaleX = logicalW > 0 ? container.clientWidth / logicalW : 1;
+    const scaleY = logicalH > 0 ? container.clientHeight / logicalH : scaleX;
 
     let hostX = scrollHostXRef.current;
     if (!hostX || !canScrollOnAxis(hostX, "x")) {
@@ -283,7 +296,7 @@ export default function OfficeView({
     let movedX = false;
     if (hostX) {
       const hostRectX = hostX.getBoundingClientRect();
-      const ceoInHostX = containerRect.left - hostRectX.left + ceoPosRef.current.x * scaleX;
+      const ceoInHostX = containerRect.left - hostRectX.left + (towerOffsetXRef.current + ceoPosRef.current.x) * scaleX;
       const ceoContentX = hostX.scrollLeft + ceoInHostX;
       const targetLeft = ceoContentX - hostX.clientWidth * 0.45;
       const maxLeft = Math.max(0, hostX.scrollWidth - hostX.clientWidth);
@@ -295,7 +308,7 @@ export default function OfficeView({
     let movedY = false;
     if (hostY) {
       const hostRectY = hostY.getBoundingClientRect();
-      const ceoInHostY = containerRect.top - hostRectY.top + ceoPosRef.current.y * scaleY;
+      const ceoInHostY = containerRect.top - hostRectY.top + (SKY_H + ceoPosRef.current.y) * scaleY;
       const ceoContentY = hostY.scrollTop + ceoInHostY;
       const targetTop = ceoContentY - hostY.clientHeight * 0.45;
       const maxTop = Math.max(0, hostY.scrollHeight - hostY.clientHeight);
@@ -354,8 +367,8 @@ export default function OfficeView({
     );
   }, [containerRef, scrollHostYRef]);
 
-  /** Overview = full tower fits in viewport (default).
-   *  Sets canvas to fit-all via explicit pixel size + centering. */
+  /** Overview = full tower + cityscape fits in viewport.
+   *  Scene canvas includes sky, tower, and ground — aspect ratio is close to viewport. */
   const applyFitAll = useCallback(() => {
     const canvas = containerRef.current?.querySelector("canvas") as HTMLCanvasElement | null;
     if (!canvas) return;
@@ -367,10 +380,14 @@ export default function OfficeView({
 
     const visH = wrap.clientHeight || window.innerHeight;
     const visW = wrap.clientWidth || FLOOR_W;
-    // Fit entire tower: scale = min(visW/FLOOR_W, visH/totalH), with 4% breathing room
-    const fitScale = Math.min(visW / FLOOR_W, visH / totalH) * 0.96;
-    const canvasW = Math.floor(FLOOR_W * fitScale);
-    const canvasH = Math.floor(totalH * fitScale);
+    // Scene dimensions (canvas logical size includes cityscape)
+    const sceneH = totalH + SKY_H + GROUND_H;
+    const resolution = Math.min(window.devicePixelRatio || 1, 2);
+    const sceneW = canvas.width / resolution;
+    // Fit entire scene height to viewport, let width fill naturally
+    const fitScale = Math.min(visW / sceneW, visH / sceneH) * 0.98;
+    const canvasW = Math.floor(sceneW * fitScale);
+    const canvasH = Math.floor(sceneH * fitScale);
 
     canvas.style.width = `${canvasW}px`;
     canvas.style.height = `${canvasH}px`;
@@ -389,17 +406,26 @@ export default function OfficeView({
     wrap.scrollTop = 0;
   }, [containerRef, totalHRef, getScrollWrap]);
 
-  /** Floor Focus = canvas fills width, vertical scroll enabled */
+  /** Floor Focus = tower fills viewport width, vertical scroll enabled */
   const applyFloorFocus = useCallback(() => {
     const canvas = containerRef.current?.querySelector("canvas") as HTMLCanvasElement | null;
     if (!canvas) return;
     const frame = containerRef.current?.parentElement as HTMLElement | null;
     const wrap = getScrollWrap();
 
-    canvas.style.width = "100%";
+    const resolution = Math.min(window.devicePixelRatio || 1, 2);
+    const sceneW = canvas.width / resolution;
+    const visW = wrap?.clientWidth || 800;
+    // Scale so canvas width fills viewport, but cap so floors aren't too huge
+    const rawScale = visW / sceneW;
+    const maxScale = 2.5; // cap: each floor ≤ 460px tall
+    const scale = Math.min(rawScale, maxScale);
+    const canvasW = Math.floor(sceneW * scale);
+
+    canvas.style.width = `${canvasW}px`;
     canvas.style.height = "auto";
     canvas.style.maxWidth = "";
-    canvas.style.margin = "";
+    canvas.style.margin = "0 auto";
     canvas.style.display = "block";
 
     if (frame) {
@@ -414,20 +440,25 @@ export default function OfficeView({
     }
   }, [containerRef, getScrollWrap]);
 
-  /** Convert PixiJS logical Y to actual scroll Y */
+  /** Convert tower-local logical Y to actual scroll Y (accounting for cityscape offset) */
   const scrollToFloorY = useCallback((logicalY: number, offset = 0.35) => {
     const wrap = getScrollWrap();
     if (!wrap || totalHRef.current <= 0) return;
     const canvas = containerRef.current?.querySelector("canvas");
     if (!canvas) return;
     const renderedH = canvas.getBoundingClientRect().height;
-    const scale = renderedH / totalHRef.current;
-    const scrollY = logicalY * scale;
+    // Scene height = sky + tower + ground; tower-local Y needs SKY_H offset
+    const sceneH = totalHRef.current + SKY_H + GROUND_H;
+    const scale = renderedH / sceneH;
+    const scrollY = (SKY_H + logicalY) * scale;
     wrap.scrollTo({ top: Math.max(0, scrollY - wrap.clientHeight * offset), behavior: "smooth" });
   }, [getScrollWrap, containerRef]);
 
   /** Exit overview → switch to floor focus + scroll to target */
   const exitOverviewAndScroll = useCallback((logicalY: number, offset = 0.35) => {
+    // Sync ref BEFORE applying CSS so that if buildScene fires (ResizeObserver)
+    // it sees the correct mode and doesn't re-apply fitAll over floorFocus.
+    isOverviewModeRef.current = false;
     applyFloorFocus();
     setIsOverviewMode(false);
     // Wait for layout reflow after CSS change
@@ -535,19 +566,19 @@ export default function OfficeView({
       ceoVisitorAlertRef,
       visitorLayerRef,
       visitorTickRef,
+      towerOffsetXRef,
     });
 
-    // Default = floor focus (full width, scrollable) — Tiny Tower style
-    // Overview (fit-all) only when user explicitly toggles
-    if (wasOverview) {
+    // Default = overview (full tower + cityscape visible)
+    // Floor focus when user clicks a dept or explicitly toggles
+    if (isFirst) {
+      // First load: show full tower overview
+      applyFitAll();
+      isOverviewModeRef.current = true;
+    } else if (wasOverview) {
       applyFitAll();
     } else {
       applyFloorFocus();
-      // On first load, scroll to top
-      if (isFirst) {
-        const wrap = getScrollWrap();
-        if (wrap) wrap.scrollTop = 0;
-      }
     }
   }, [applyFitAll, applyFloorFocus, getScrollWrap]);
 
@@ -752,18 +783,89 @@ export default function OfficeView({
   // Task completion burst particles
   const prevTaskStatusesRef = useRef<Map<string, string>>(new Map());
   const [completionBursts, setCompletionBursts] = useState<Array<{ id: string; x: number; y: number; label: string }>>([]);
-  const [isOverviewMode, setIsOverviewMode] = useState(false);
+  const [isOverviewMode, setIsOverviewMode] = useState(true);
   // Keep a ref in sync so callbacks with [] deps can read the current value
   isOverviewModeRef.current = isOverviewMode;
 
   const handleToggleOverview = useCallback(() => {
     if (!isOverviewMode) {
+      isOverviewModeRef.current = true;
       applyFitAll();
     } else {
+      isOverviewModeRef.current = false;
       applyFloorFocus();
     }
     setIsOverviewMode((prev) => !prev);
   }, [isOverviewMode, applyFitAll, applyFloorFocus]);
+
+  // ── Ctrl+Wheel zoom ───────────────────────────────────────────
+  useEffect(() => {
+    const wrap = getScrollWrap();
+    const el = containerRef.current?.parentElement?.parentElement ?? wrap;
+    if (!el) return;
+
+    const onWheel = (e: WheelEvent) => {
+      if (!e.ctrlKey && !e.metaKey) return;
+      e.preventDefault();
+      // Zoom out → overview, zoom in → floor focus
+      if (e.deltaY > 0) {
+        // Zoom out
+        if (!isOverviewModeRef.current) {
+          isOverviewModeRef.current = true;
+          applyFitAll();
+          setIsOverviewMode(true);
+        }
+      } else {
+        // Zoom in
+        if (isOverviewModeRef.current) {
+          isOverviewModeRef.current = false;
+          applyFloorFocus();
+          setIsOverviewMode(false);
+        }
+      }
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, [getScrollWrap, applyFitAll, applyFloorFocus]);
+
+  // ── Keyboard shortcuts (Escape=overview, Home/End=top/bottom) ──
+  useEffect(() => {
+    const isInputFocused = () => {
+      const tag = document.activeElement?.tagName;
+      return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" ||
+        (document.activeElement as HTMLElement)?.isContentEditable;
+    };
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (isInputFocused()) return;
+      if (e.code === "Escape") {
+        e.preventDefault();
+        if (!isOverviewModeRef.current) {
+          isOverviewModeRef.current = true;
+          applyFitAll();
+          setIsOverviewMode(true);
+        }
+      } else if (e.code === "Home") {
+        e.preventDefault();
+        if (isOverviewModeRef.current) {
+          exitOverviewAndScroll(0, 0);
+        } else {
+          scrollToFloorY(0, 0);
+        }
+      } else if (e.code === "End") {
+        e.preventDefault();
+        const nFloors = dataRef.current.departments.length;
+        const basementY = ROOF_H + PENTHOUSE_H + CONFERENCE_FLOOR_H + nFloors * FLOOR_TOTAL_H;
+        if (isOverviewModeRef.current) {
+          exitOverviewAndScroll(basementY, 0.5);
+        } else {
+          scrollToFloorY(basementY, 0.5);
+        }
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [applyFitAll, applyFloorFocus, exitOverviewAndScroll, scrollToFloorY]);
 
   useEffect(() => {
     const prev = prevTaskStatusesRef.current;
@@ -801,6 +903,56 @@ export default function OfficeView({
     window.addEventListener("agentdesk_office_announcement", handler);
     return () => window.removeEventListener("agentdesk_office_announcement", handler);
   }, []);
+
+  // ── Floor indicator (shows current floor during scroll) ──────
+  const [floorIndicator, setFloorIndicator] = useState<string | null>(null);
+  const floorIndicatorTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (isOverviewMode) return;
+    const wrap = getScrollWrap();
+    if (!wrap) return;
+
+    const onScroll = () => {
+      const canvas = containerRef.current?.querySelector("canvas");
+      if (!canvas || totalHRef.current <= 0) return;
+      const renderedH = canvas.getBoundingClientRect().height;
+      const sceneH = totalHRef.current + SKY_H + GROUND_H;
+      const scale = renderedH / sceneH;
+      // Center of viewport in tower-local Y
+      const viewCenterScrollY = wrap.scrollTop + wrap.clientHeight / 2;
+      const towerLocalY = viewCenterScrollY / scale - SKY_H;
+
+      const depts = dataRef.current.departments;
+      let label = "";
+      if (towerLocalY < ROOF_H) {
+        label = "ROOF";
+      } else if (towerLocalY < ROOF_H + PENTHOUSE_H) {
+        label = "P  CEO";
+      } else if (towerLocalY < ROOF_H + PENTHOUSE_H + CONFERENCE_FLOOR_H) {
+        label = "CONF";
+      } else {
+        const floorStartY = ROOF_H + PENTHOUSE_H + CONFERENCE_FLOOR_H;
+        const basementStartY = floorStartY + depts.length * FLOOR_TOTAL_H;
+        if (towerLocalY >= basementStartY) {
+          label = "B1  BREAK";
+        } else {
+          const idx = Math.floor((towerLocalY - floorStartY) / FLOOR_TOTAL_H);
+          const dept = depts[Math.min(idx, depts.length - 1)];
+          label = dept ? `F${idx + 1}  ${dept.name}` : `F${idx + 1}`;
+        }
+      }
+
+      setFloorIndicator(label);
+      if (floorIndicatorTimerRef.current) clearTimeout(floorIndicatorTimerRef.current);
+      floorIndicatorTimerRef.current = setTimeout(() => setFloorIndicator(null), 1200);
+    };
+
+    wrap.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      wrap.removeEventListener("scroll", onScroll);
+      if (floorIndicatorTimerRef.current) clearTimeout(floorIndicatorTimerRef.current);
+    };
+  }, [isOverviewMode, getScrollWrap]);
 
   const [visitorCount, setVisitorCount] = useState(0);
   const [ceoIncomingCount, setCeoIncomingCount] = useState(0);
@@ -843,7 +995,7 @@ export default function OfficeView({
     // Headline capacity
     if (agents.length > 0) {
       const actPct = Math.round((working.length / agents.length) * 100);
-      events.push(`HQ CAPACITY ${actPct}% · ${working.length}/${agents.length} AGENTS ACTIVE`);
+      events.push(`HQ CAPACITY ${actPct}% · ${working.length}/${agents.length} ${packVocab.agents.toUpperCase()} ACTIVE`);
     }
 
     // Working agents + their tasks
@@ -867,23 +1019,23 @@ export default function OfficeView({
       events.push(`${topDept.d.icon} ${topDept.d.name} LEADS AT ${topDept.pct}% ACTIVITY`);
     }
 
-    if (idle.length > 0) events.push(`${idle.length} AGENT${idle.length > 1 ? "S" : ""} IDLE — AWAITING ASSIGNMENT`);
-    if (onBreak.length > 0) events.push(`${onBreak.length} IN BREAK ROOM`);
-    if (visitorCount > 0) events.push(`${visitorCount} AGENT${visitorCount > 1 ? "S" : ""} ON INTER-DEPT VISIT`);
+    if (idle.length > 0) events.push(`${idle.length} ${packVocab.agent.toUpperCase()}${idle.length > 1 ? "S" : ""} ${packVocab.idle.toUpperCase()} — AWAITING ASSIGNMENT`);
+    if (onBreak.length > 0) events.push(`${onBreak.length} IN ${packVocab.breakRoom.toUpperCase()}`);
+    if (visitorCount > 0) events.push(`${visitorCount} ${packVocab.agent.toUpperCase()}${visitorCount > 1 ? "S" : ""} ON INTER-DEPT VISIT`);
 
     // Task throughput
-    if (activeTasks.length > 0) events.push(`${activeTasks.length} TASK${activeTasks.length > 1 ? "S" : ""} IN PROGRESS`);
-    if (doneTasks.length > 0) events.push(`${doneTasks.length} TASK${doneTasks.length > 1 ? "S" : ""} COMPLETED`);
+    if (activeTasks.length > 0) events.push(`${activeTasks.length} ${packVocab.task.toUpperCase()}${activeTasks.length > 1 ? "S" : ""} IN PROGRESS`);
+    if (doneTasks.length > 0) events.push(`${doneTasks.length} ${packVocab.task.toUpperCase()}${doneTasks.length > 1 ? "S" : ""} ${packVocab.done.toUpperCase()}`);
 
     // Top XP agent
     const topXpAgent = [...agents].sort((a, b) => (b.stats_xp ?? 0) - (a.stats_xp ?? 0))[0];
     if (topXpAgent && (topXpAgent.stats_xp ?? 0) > 0) {
-      events.push(`TOP PERFORMER: ${topXpAgent.avatar_emoji} ${topXpAgent.name} · ${(topXpAgent.stats_xp ?? 0).toLocaleString()} XP`);
+      events.push(`TOP PERFORMER: ${topXpAgent.avatar_emoji} ${topXpAgent.name} · ${(topXpAgent.stats_xp ?? 0).toLocaleString()} ${packVocab.xp}`);
     }
 
     if (events.length === 0) events.push("AGENTDESK HQ — ALL SYSTEMS NOMINAL");
     return events.join("     //     ");
-  }, [agents, tasks, departments, visitorCount]);
+  }, [agents, tasks, departments, visitorCount, packVocab]);
 
   return (
     <div className="office-screen">
@@ -899,10 +1051,10 @@ export default function OfficeView({
         </div>
         <div className="office-toolbar-center">
           <span className="office-toolbar-stat-chip" style={{ color: "#22c55e" }}>
-            {agents.filter((a) => a.status === "working").length} RUNNING
+            {agents.filter((a) => a.status === "working").length} {packVocab.running.toUpperCase()}
           </span>
           <span className="office-toolbar-stat-chip">
-            {tasks.filter((t) => t.status === "in_progress").length} TASKS
+            {tasks.filter((t) => t.status === "in_progress").length} {packVocab.tasks.toUpperCase()}
           </span>
           {visitorCount > 0 && (
             <span className="office-toolbar-stat-chip" style={{ color: "var(--th-accent)" }}>
@@ -919,14 +1071,37 @@ export default function OfficeView({
           <span style={{ fontFamily: "var(--th-font-mono)", fontSize: "0.65rem", color: "var(--th-accent)", letterSpacing: 2, opacity: 0.85 }}>
             {clockStr}
           </span>
-          <button
-            className="office-toolbar-btn"
-            title={isOverviewMode ? "Close Overview" : "Full Tower View"}
-            onClick={handleToggleOverview}
-            style={isOverviewMode ? { color: "var(--th-accent)", borderColor: "var(--th-accent)" } : undefined}
-          >
-            {isOverviewMode ? "⊡ Close" : "⊟ Overview"}
-          </button>
+          {/* Zoom controls */}
+          <div style={{ display: "flex", alignItems: "center", gap: 0, border: "1px solid var(--th-border)", borderRadius: 2 }}>
+            <button
+              className="office-toolbar-btn"
+              title="Zoom In (Floor Focus)"
+              onClick={() => { if (isOverviewMode) { isOverviewModeRef.current = false; applyFloorFocus(); setIsOverviewMode(false); } }}
+              style={{ borderRadius: "2px 0 0 2px", border: "none", padding: "2px 6px", fontSize: "0.7rem", opacity: isOverviewMode ? 1 : 0.4 }}
+            >
+              +
+            </button>
+            <button
+              className="office-toolbar-btn"
+              title={isOverviewMode ? "Floor Focus (Esc)" : "Overview (Esc)"}
+              onClick={handleToggleOverview}
+              style={{
+                border: "none", borderLeft: "1px solid var(--th-border)", borderRight: "1px solid var(--th-border)",
+                padding: "2px 8px", fontSize: "0.6rem", letterSpacing: 1,
+                ...(isOverviewMode ? { color: "var(--th-accent)" } : {}),
+              }}
+            >
+              {isOverviewMode ? "FIT" : "1:1"}
+            </button>
+            <button
+              className="office-toolbar-btn"
+              title="Zoom Out (Overview)"
+              onClick={() => { if (!isOverviewMode) { isOverviewModeRef.current = true; applyFitAll(); setIsOverviewMode(true); } }}
+              style={{ borderRadius: "0 2px 2px 0", border: "none", padding: "2px 6px", fontSize: "0.7rem", opacity: isOverviewMode ? 0.4 : 1 }}
+            >
+              -
+            </button>
+          </div>
           <button className="office-toolbar-btn" title="Season / Style settings" onClick={onOpenRoomManager}>
             Season ▾
           </button>
@@ -961,119 +1136,177 @@ export default function OfficeView({
           />
         </motion.div>
 
-        {/* Center — PixiJS canvas */}
-        <div className="office-canvas-wrap" style={{ position: "relative" }}>
-          {/* office-canvas-frame: inline-block, sizes to canvas, amber cut-frame border */}
-          <div className="office-canvas-frame">
-            <div
-              ref={containerRef}
-              style={{ lineHeight: 0, outline: "none", display: "block" }}
-              tabIndex={0}
+        {/* Center — PixiJS canvas + fixed overlay for HUD elements */}
+        <div style={{ position: "relative", flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
+          <div className="office-canvas-wrap" style={{ position: "relative" }}>
+            {/* office-canvas-frame: inline-block, sizes to canvas, amber cut-frame border */}
+            <div className="office-canvas-frame">
+              <div
+                ref={containerRef}
+                style={{ lineHeight: 0, outline: "none", display: "block" }}
+                tabIndex={0}
+              />
+            </div>
+            <VirtualPadOverlay
+              showVirtualPad={showVirtualPad}
+              t={t}
+              onInteract={triggerDepartmentInteract}
+              onSetMoveDirectionPressed={setMoveDirectionPressed}
+            />
+
+            {/* ── Semantic Zoom: Overview summary bars (scrolls with canvas) ── */}
+            <OfficeOverviewBars
+              departments={sortedDepartments}
+              agents={agents}
+              tasks={tasks}
+              isOverviewMode={isOverviewMode}
+              onClickFloor={exitOverviewAndScroll}
+              containerRef={containerRef}
+              totalH={totalHRef.current}
+              customDeptThemes={customDeptThemes}
             />
           </div>
-          <VirtualPadOverlay
-            showVirtualPad={showVirtualPad}
-            t={t}
-            onInteract={triggerDepartmentInteract}
-            onSetMoveDirectionPressed={setMoveDirectionPressed}
-          />
 
-          {/* ── Global Announcement Banner ── */}
-          {announcementBanner && (
-            <motion.div
-              key={announcementBanner.text + announcementBanner.sender}
-              initial={{ y: -60, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: -60, opacity: 0 }}
-              transition={{ duration: 0.25, ease: "linear" }}
-              className="pointer-events-none"
-              style={{
-                position: "absolute",
-                top: 8,
-                left: "50%",
-                transform: "translateX(-50%)",
-                zIndex: 80,
-                minWidth: 280,
-                maxWidth: "90%",
-                background: "rgba(0,0,0,0.88)",
-                border: "1px solid rgba(245,158,11,0.6)",
-                borderRadius: "2px",
-                padding: "8px 14px",
-              }}
-            >
-              <div className="flex items-center gap-2">
-                <span style={{ color: "var(--th-accent)", fontSize: 9, fontFamily: "monospace", letterSpacing: 1 }}>◉ BROADCAST</span>
-                <span style={{ color: "rgba(245,158,11,0.4)", fontSize: 9 }}>|</span>
-                <span style={{ color: "var(--th-text-primary)", fontSize: 10, fontFamily: "monospace", flex: 1 }}>{announcementBanner.text}</span>
-              </div>
-              <div style={{ color: "rgba(245,158,11,0.55)", fontSize: 8, fontFamily: "monospace", textAlign: "right", marginTop: 2 }}>
-                — {announcementBanner.sender}
-              </div>
-            </motion.div>
-          )}
-          {/* Task completion burst particles */}
-          {completionBursts.map((burst) => (
-            <div
-              key={burst.id}
-              className="pointer-events-none"
-              style={{ position: "absolute", left: `${burst.x}%`, top: `${burst.y}%`, zIndex: 50 }}
-            >
-              {/* Rays */}
-              {[0, 45, 90, 135, 180, 225, 270, 315].map((deg, ri) => (
-                <div
-                  key={ri}
-                  style={{
-                    position: "absolute",
-                    width: 3,
-                    height: 3,
-                    borderRadius: "50%",
-                    background: ri % 2 === 0 ? "var(--th-accent)" : "rgb(52,211,153)",
-                    animation: "task-burst-ray 1.2s ease-out forwards",
-                    animationDelay: `${ri * 30}ms`,
-                    transform: `rotate(${deg}deg)`,
-                    transformOrigin: "1.5px 1.5px",
-                  }}
-                />
-              ))}
-              {/* Label */}
+          {/* ── Fixed overlay (doesn't scroll with canvas) ── */}
+          <div
+            className="pointer-events-none"
+            style={{ position: "absolute", inset: 0, zIndex: 40, overflow: "hidden" }}
+          >
+            {/* ── Minimap ── */}
+            <div className="pointer-events-auto" style={{ position: "absolute", bottom: 8, right: 8 }}>
+              <OfficeMinimap
+                departments={sortedDepartments}
+                totalH={totalHRef.current}
+                getScrollWrap={getScrollWrap}
+                containerRef={containerRef}
+                isOverviewMode={isOverviewMode}
+                customDeptThemes={customDeptThemes}
+              />
+            </div>
+
+            {/* ── Floor Indicator (shows current floor during scroll) ── */}
+            {floorIndicator && !isOverviewMode && (
               <div
                 style={{
                   position: "absolute",
-                  left: 8,
-                  top: -10,
-                  whiteSpace: "nowrap",
-                  fontSize: 9,
-                  fontFamily: "var(--th-font-mono)",
-                  color: "var(--th-accent)",
-                  background: "rgba(0,0,0,0.7)",
-                  padding: "1px 4px",
+                  left: 12,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  zIndex: 60,
+                  background: "rgba(0,0,0,0.82)",
+                  border: "1px solid rgba(245,158,11,0.5)",
                   borderRadius: 2,
-                  animation: "task-burst-label 1.2s ease-out forwards",
-                  letterSpacing: 0.5,
+                  padding: "4px 10px",
+                  fontFamily: "var(--th-font-mono)",
+                  fontSize: 11,
+                  color: "var(--th-accent)",
+                  letterSpacing: 1.5,
+                  whiteSpace: "nowrap",
+                  transition: "opacity 0.15s",
                 }}
               >
-                ✓ {burst.label}
+                {floorIndicator}
               </div>
-            </div>
-          ))}
+            )}
 
-          {/* Quick chat popup — appears when agent is clicked on canvas */}
-          {quickChatAgent && (
-            <div
-              style={{
-                position: "absolute",
-                bottom: 16,
-                right: 16,
-                zIndex: 40,
-              }}
-            >
-              <OfficeQuickChat
-                agent={quickChatAgent}
-                agents={agents}
-                onClose={() => setQuickChatAgent(null)}
-              />
-            </div>
-          )}
+            {/* ── Global Announcement Banner ── */}
+            {announcementBanner && (
+              <motion.div
+                key={announcementBanner.text + announcementBanner.sender}
+                initial={{ y: -60, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: -60, opacity: 0 }}
+                transition={{ duration: 0.25, ease: "linear" }}
+                style={{
+                  position: "absolute",
+                  top: 8,
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                  zIndex: 80,
+                  minWidth: 280,
+                  maxWidth: "90%",
+                  background: "rgba(0,0,0,0.88)",
+                  border: "1px solid rgba(245,158,11,0.6)",
+                  borderRadius: "2px",
+                  padding: "8px 14px",
+                  pointerEvents: "none",
+                }}
+              >
+                <div className="flex items-center gap-2">
+                  <span style={{ color: "var(--th-accent)", fontSize: 9, fontFamily: "monospace", letterSpacing: 1 }}>◉ BROADCAST</span>
+                  <span style={{ color: "rgba(245,158,11,0.4)", fontSize: 9 }}>|</span>
+                  <span style={{ color: "var(--th-text-primary)", fontSize: 10, fontFamily: "monospace", flex: 1 }}>{announcementBanner.text}</span>
+                </div>
+                <div style={{ color: "rgba(245,158,11,0.55)", fontSize: 8, fontFamily: "monospace", textAlign: "right", marginTop: 2 }}>
+                  — {announcementBanner.sender}
+                </div>
+              </motion.div>
+            )}
+            {/* Task completion burst particles */}
+            {completionBursts.map((burst) => (
+              <div
+                key={burst.id}
+                className="pointer-events-none"
+                style={{ position: "absolute", left: `${burst.x}%`, top: `${burst.y}%`, zIndex: 50 }}
+              >
+                {/* Rays */}
+                {[0, 45, 90, 135, 180, 225, 270, 315].map((deg, ri) => (
+                  <div
+                    key={ri}
+                    style={{
+                      position: "absolute",
+                      width: 3,
+                      height: 3,
+                      borderRadius: "50%",
+                      background: ri % 2 === 0 ? "var(--th-accent)" : "rgb(52,211,153)",
+                      animation: "task-burst-ray 1.2s ease-out forwards",
+                      animationDelay: `${ri * 30}ms`,
+                      transform: `rotate(${deg}deg)`,
+                      transformOrigin: "1.5px 1.5px",
+                    }}
+                  />
+                ))}
+                {/* Label */}
+                <div
+                  style={{
+                    position: "absolute",
+                    left: 8,
+                    top: -10,
+                    whiteSpace: "nowrap",
+                    fontSize: 9,
+                    fontFamily: "var(--th-font-mono)",
+                    color: "var(--th-accent)",
+                    background: "rgba(0,0,0,0.7)",
+                    padding: "1px 4px",
+                    borderRadius: 2,
+                    animation: "task-burst-label 1.2s ease-out forwards",
+                    letterSpacing: 0.5,
+                  }}
+                >
+                  ✓ {burst.label}
+                </div>
+              </div>
+            ))}
+
+            {/* Quick chat popup — appears when agent is clicked on canvas */}
+            {quickChatAgent && (
+              <div
+                className="pointer-events-auto"
+                style={{
+                  position: "absolute",
+                  bottom: 16,
+                  right: 16,
+                  zIndex: 40,
+                }}
+              >
+                <OfficeQuickChat
+                  agent={quickChatAgent}
+                  agents={agents}
+                  onClose={() => setQuickChatAgent(null)}
+                />
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Right — agent / dept detail */}
@@ -1108,10 +1341,17 @@ export default function OfficeView({
         </div>
       </div>
 
+      {/* ── Pack HUD overlay ── */}
+      <PackHud
+        packKey={activeWorkflowPackKey ?? "development"}
+        agents={agents}
+        tasks={tasks}
+      />
+
       {/* ── FM-style Action bar ── */}
       <div className="office-actionbar">
         <div className="office-actionbar-stat">
-          <span className="office-actionbar-stat__lbl">AGT</span>
+          <span className="office-actionbar-stat__lbl">{packVocab.agent.slice(0, 3).toUpperCase()}</span>
           <span className="office-actionbar-stat__val" style={{ color: "#22c55e" }}>
             {agents.filter((a) => a.status === "working").length}
           </span>
@@ -1119,7 +1359,7 @@ export default function OfficeView({
         </div>
         <div className="office-actionbar-sep" />
         <div className="office-actionbar-stat">
-          <span className="office-actionbar-stat__lbl">TSK</span>
+          <span className="office-actionbar-stat__lbl">{packVocab.task.slice(0, 3).toUpperCase()}</span>
           <span className="office-actionbar-stat__val" style={{ color: "var(--th-accent)" }}>
             {tasks.filter((t) => t.status === "in_progress").length}
           </span>
@@ -1127,12 +1367,12 @@ export default function OfficeView({
         </div>
         <div className="office-actionbar-sep" />
         <div className="office-actionbar-stat">
-          <span className="office-actionbar-stat__lbl">DEPT</span>
+          <span className="office-actionbar-stat__lbl">{packVocab.department.slice(0, 4).toUpperCase()}</span>
           <span className="office-actionbar-stat__val">{departments.length}</span>
         </div>
         <div className="office-actionbar-sep" />
         <div className="office-actionbar-stat">
-          <span className="office-actionbar-stat__lbl">BREAK</span>
+          <span className="office-actionbar-stat__lbl">{packVocab.onBreak.slice(0, 5).toUpperCase()}</span>
           <span className="office-actionbar-stat__val" style={{ color: "rgba(245,158,11,0.7)" }}>
             {agents.filter((a) => a.status === "break").length}
           </span>
@@ -1150,7 +1390,7 @@ export default function OfficeView({
         )}
         <div className="office-actionbar-info" style={{ marginLeft: "auto" }}>
           <span style={{ color: agents.filter((a) => a.status === "working").length > 0 ? "#22c55e" : "var(--th-text-muted)" }}>
-            {agents.filter((a) => a.status === "working").length > 0 ? "RUNNING" : "IDLE"}
+            {agents.filter((a) => a.status === "working").length > 0 ? packVocab.running.toUpperCase() : packVocab.idle.toUpperCase()}
           </span>
         </div>
       </div>

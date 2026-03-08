@@ -563,6 +563,7 @@ export default function AppMainLayout({
                 cliUsageRefreshing={cliUsageRefreshing}
                 onRefreshCliUsage={handleRefreshUsage}
                 onOpenRoomManager={onOpenRoomManager}
+                activeWorkflowPackKey={officePackKey}
               />
             </motion.div>
           ) : (

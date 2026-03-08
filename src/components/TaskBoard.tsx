@@ -23,6 +23,7 @@ import DependencyGraph from "./taskboard/DependencyGraph";
 import GanttChart from "./taskboard/GanttChart";
 import TaskCard from "./taskboard/TaskCard";
 import { COLUMNS, isHideableStatus, taskStatusLabel, type HideableStatus } from "./taskboard/constants";
+import { usePackVocab } from "../pack-identity/vocabulary";
 
 const COLLAPSED_CARD_IDS_KEY = "agentdesk_taskboard_collapsed_ids";
 
@@ -141,6 +142,7 @@ export function TaskBoard({
   activeWorkflowPackKey,
 }: TaskBoardProps) {
   const { t } = useI18n();
+  const packVocab = usePackVocab(activeWorkflowPackKey ?? "development");
   const [viewMode, setViewMode] = useState<"board" | "gantt" | "dag">("board");
   const [showCreate, setShowCreate] = useState(false);
   const [showProjectManager, setShowProjectManager] = useState(false);
@@ -336,13 +338,13 @@ export function TaskBoard({
           className="text-sm font-bold tracking-widest uppercase"
           style={{ color: "var(--th-text-heading)", fontFamily: "var(--th-font-mono)" }}
         >
-          {t({ ko: "업무 보드", en: "Task Board", ja: "タスクボード", zh: "任务看板" })}
+          {t({ ko: `${packVocab.task} 보드`, en: `${packVocab.task} Board`, ja: `${packVocab.task}ボード`, zh: `${packVocab.task}看板` })}
         </h1>
         <span
           className="px-2 py-0.5 text-xs font-mono"
           style={{ background: "var(--th-bg-surface)", color: "var(--th-text-muted)", border: "1px solid var(--th-border)", borderRadius: "2px" }}
         >
-          {filteredTasks.length} {t({ ko: "건", en: "tasks", ja: "件", zh: "项" })}
+          {filteredTasks.length} {t({ ko: "건", en: packVocab.tasks.toLowerCase(), ja: "件", zh: "项" })}
           {activeFilterCount > 0 && ` · ${activeFilterCount} filter`}
         </span>
       </div>

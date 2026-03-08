@@ -135,7 +135,15 @@ export function drawFloor({
   addedWorkingSubIds,
   nextSubSnapshot,
 }: DrawFloorParams): void {
-  const theme = customTheme ?? DEPT_THEME[dept.id] ?? DEPT_THEME.dev;
+  const rawTheme = customTheme ?? DEPT_THEME[dept.id] ?? DEPT_THEME.dev;
+  // When dark mode is active and a custom theme provides bright floor/wall colors,
+  // darken them so the floor doesn't look white/washed-out.
+  const theme = (isDark && customTheme) ? {
+    floor1: blendColor(rawTheme.floor1, 0x000000, 0.85),
+    floor2: blendColor(rawTheme.floor2, 0x000000, 0.85),
+    wall:   blendColor(rawTheme.wall,   0x000000, 0.70),
+    accent: rawTheme.accent,
+  } : rawTheme;
   const rx = WALL_W;                                  // 20
   const rw = FLOOR_W - ELEVATOR_W - WALL_W * 2;      // 300
   const rh = FLOOR_ROOM_H;                            // 120

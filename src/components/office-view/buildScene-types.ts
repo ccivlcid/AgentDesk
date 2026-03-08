@@ -122,4 +122,6 @@ export interface BuildOfficeSceneContext {
   ceoVisitorAlertRef: MutableRefObject<Text | null>;
   visitorLayerRef: MutableRefObject<Container | null>;
   visitorTickRef: MutableRefObject<VisitorTickState | null>;
+  /** Horizontal offset of tower within the expanded scene canvas (for scroll conversion). */
+  towerOffsetXRef: MutableRefObject<number>;
 }

@@ -79,7 +79,7 @@ export function useOfficePixiRuntime({
       await app.init({
         width: officeWRef.current,
         height: 600,
-        backgroundAlpha: 0,
+        backgroundAlpha: 1,
         antialias: false,
         resolution: Math.min(window.devicePixelRatio || 1, 2),
         autoDensity: true,
@@ -95,6 +95,7 @@ export function useOfficePixiRuntime({
       appRef.current = app;
       const canvas = app.canvas as HTMLCanvasElement;
       canvas.style.imageRendering = "pixelated";
+      canvas.style.background = "#080c14";
       element.innerHTML = "";
       element.appendChild(canvas);
 

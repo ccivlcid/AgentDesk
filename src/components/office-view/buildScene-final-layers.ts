@@ -6,6 +6,8 @@ import { type CeoCustomization, getHeadwearEmoji, loadCeoCustomization } from ".
 
 interface BuildFinalLayersParams {
   app: Application;
+  /** Container to add final layers to (towerContainer, not app.stage). */
+  stage: Container;
   textures: Record<string, Texture>;
   tasks: Task[];
   ceoPosRef: MutableRefObject<{ x: number; y: number }>;
@@ -23,6 +25,7 @@ interface BuildFinalLayersParams {
 
 export function buildFinalLayers({
   app,
+  stage,
   textures,
   tasks,
   ceoPosRef,
@@ -38,7 +41,7 @@ export function buildFinalLayers({
   setSceneRevision,
 }: BuildFinalLayersParams): void {
   const deliveryLayer = new Container();
-  app.stage.addChild(deliveryLayer);
+  stage.addChild(deliveryLayer);
   deliveryLayerRef.current = deliveryLayer;
 
   deliveriesRef.current = deliveriesRef.current.filter((delivery) => !delivery.sprite.destroyed);
@@ -47,7 +50,7 @@ export function buildFinalLayers({
   }
 
   const highlight = new Graphics();
-  app.stage.addChild(highlight);
+  stage.addChild(highlight);
   highlightRef.current = highlight;
 
   const ceoConfig = ceoCustomizationRef.current;
@@ -148,11 +151,11 @@ export function buildFinalLayers({
 
   // CEO trail particle layer (behind CEO)
   const trailLayer = new Container();
-  app.stage.addChild(trailLayer);
+  stage.addChild(trailLayer);
   ceoTrailParticlesRef.current = trailLayer;
 
   ceoCharacter.position.set(ceoPosRef.current.x, ceoPosRef.current.y);
-  app.stage.addChild(ceoCharacter);
+  stage.addChild(ceoCharacter);
   ceoSpriteRef.current = ceoCharacter;
 
   const currentAssign = new Set(

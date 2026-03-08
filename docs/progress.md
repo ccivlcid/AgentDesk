@@ -1,7 +1,7 @@
 # AgentDesk — Development Progress
 
 > **Rule**: This document is updated every time work is completed or a phase transitions.
-> Last updated: 2026-03-08 (Phaser 3 Migration 완료 + Full Tower View 오버뷰 모드 구현)
+> Last updated: 2026-03-08 (Phase 19 Office View 렌더링 버그 수정)
 
 ---
 
@@ -951,6 +951,17 @@ interface CeoCustomization {
 
 **유지 파일** (수정 없음): `OfficeAgentPanel`, `OfficeDeptPanel`, `CliUsagePanel`, `HeartbeatPanel`, `RoomLayoutEditor`, `OfficeQuickChat`, 상수/데이터 파일
 
+### Phase 19 — Office View 렌더링 버그 수정 (2026-03-08)
+
+| 버그 | 수정 파일 | 상태 |
+|---|---|---|
+| pixi-compat `children` proxy — `destroy()` 미구현 크래시 | `pixi-compat.ts` | DONE |
+| 다크 모드에서 DB 커스텀 테마 밝게 렌더링 | `buildScene.ts`, `drawFloor.ts` | DONE |
+| Cityscape 배경 투명 갭 (하늘 그라데이션 부족) | `drawCityscape.ts` | DONE |
+| Canvas 배경 투명 → 흰색 노출 | `useOfficePixiRuntime.ts` | DONE |
+| SCENE_W 타워 중심 490px 고정 | `buildScene.ts` | DONE |
+| 디버그 아티팩트 제거 (빨간 사각형) | `buildScene.ts`, `drawing-core.ts` | DONE |
+
 ---
 
 ## Phase 18 — Pack Identity System
@@ -968,22 +979,25 @@ interface CeoCustomization {
 
 | 항목 | 파일 | 상태 |
 |---|---|---|
-| PACK_VOCAB 맵 (7팩 × 10단어) | `src/pack-identity/vocabulary.ts` | TODO |
-| usePackVocab() 훅 | `src/pack-identity/vocabulary.ts` | TODO |
-| TaskBoard 어휘 적용 | `src/components/TaskBoard.tsx` | TODO |
+| PACK_VOCAB 맵 (7팩 × 15단어) | `src/pack-identity/vocabulary.ts` | ✅ DONE |
+| usePackVocab() 훅 | `src/pack-identity/vocabulary.ts` | ✅ DONE |
+| TaskBoard 어휘 적용 (헤더, 카운트) | `src/components/TaskBoard.tsx` | ✅ DONE |
+| OfficeView 어휘 적용 (툴바, 티커, 액션바) | `src/components/OfficeView.tsx` | ✅ DONE |
 | Dashboard 어휘 적용 | `src/components/Dashboard.tsx` | TODO |
-| OfficeView 패널 어휘 적용 | `src/components/office-view/OfficeDeptPanel.tsx` 등 | TODO |
+| OfficeDeptPanel 어휘 적용 | `src/components/office-view/OfficeDeptPanel.tsx` | TODO |
 
 ### Phase 18-B — HUD Overlay
 
 | 항목 | 파일 | 상태 |
 |---|---|---|
-| ReportHud (마감 카운트다운) | `src/components/hud/ReportHud.tsx` | TODO |
-| VideoHud (ON-AIR 라이트) | `src/components/hud/VideoHud.tsx` | TODO |
-| RpgHud (파티/퀘스트) | `src/components/hud/RpgHud.tsx` | TODO |
-| AssetHud (P&L 실시간) | `src/components/hud/AssetHud.tsx` | TODO |
-| PackHud 진입점 | `src/components/hud/PackHud.tsx` | TODO |
-| OfficeView PackHud 연결 | `src/components/OfficeView.tsx` | TODO |
+| ReportHud (마감 카운트다운) | `src/components/hud/ReportHud.tsx` | ✅ DONE |
+| VideoHud (ON-AIR 라이트) | `src/components/hud/VideoHud.tsx` | ✅ DONE |
+| RpgHud (파티/퀘스트) | `src/components/hud/RpgHud.tsx` | ✅ DONE |
+| AssetHud (P&L 실시간) | `src/components/hud/AssetHud.tsx` | ✅ DONE |
+| NovelHud (집필 목표) | `src/components/hud/NovelHud.tsx` | ✅ DONE |
+| PackHud 진입점 | `src/components/hud/PackHud.tsx` | ✅ DONE |
+| OfficeView PackHud 연결 | `src/components/OfficeView.tsx` | ✅ DONE |
+| HUD CSS 스타일 | `index.part03.css` | ✅ DONE |
 
 ### Phase 18-C — Task Card Forms
 
@@ -1018,11 +1032,34 @@ interface CeoCustomization {
 | Overview 토글 (fitScale 기반) | `OfficeView.tsx` | ✅ DONE |
 | 부서 클릭 → smooth scroll | `OfficeView.tsx` | ✅ DONE |
 | CEO/CONF/Break 클릭 → scroll | `OfficeView.tsx` | ✅ DONE |
-| 7가지 방안 기획 문서화 | `office-view-tower-redesign.md` | ✅ DONE |
-| **방안 A 구현 (Cityscape 배경)** | `drawCityscape.ts`, `buildScene.ts` | TODO |
-| `OfficeMinimap.tsx` 신규 컴포넌트 | `office-view/OfficeMinimap.tsx` | TODO |
-| 줌 컨트롤 UI (Ctrl+wheel, 버튼) | `OfficeView.tsx` | TODO |
-| 모바일 층 인디케이터 | `OfficeView.tsx` | TODO |
+| 9가지 방안 기획 문서화 (A~I) | `office-view-tower-redesign.md` | ✅ DONE |
+| **방안 A 구현 (Cityscape 배경)** | `drawCityscape.ts`, `buildScene.ts` | ✅ DONE |
+| towerContainer 분리 (타워+배경 레이어 분리) | `buildScene.ts`, `buildScene-final-layers.ts` | ✅ DONE |
+| 접속 시 전체 타워 Overview 기본 | `OfficeView.tsx` | ✅ DONE |
+| `OfficeMinimap.tsx` 신규 컴포넌트 | `office-view/OfficeMinimap.tsx` | ✅ DONE |
+| 줌 컨트롤 UI (Ctrl+wheel, 버튼, 키보드) | `OfficeView.tsx` | ✅ DONE |
+| 층 인디케이터 (스크롤 시 현재 층 표시) | `OfficeView.tsx` | ✅ DONE |
+| **방안 H 구현 (시맨틱 줌 Overview 바)** | `OfficeOverviewBars.tsx` | ✅ DONE |
+
+### Phase 18-F — Smooth Movement Enhancement (게임급 모션)
+
+> Phaser-adjacent 수학적 이징을 기존 ticker 시스템에 적용하여 전체 오피스 타워의 움직임을 게임 캐릭터급으로 부드럽게 개선.
+
+| 항목 | 파일 | 상태 |
+|---|---|---|
+| CEO 속도 기반 이동 (가속+마찰+대각선 정규화) | `officeTicker.ts` | ✅ DONE |
+| CEO idle 호흡 애니메이션 (`sin(t*0.04)*0.8`) | `officeTicker.ts` | ✅ DONE |
+| CEO 이동 기울기 (tilt lerp) | `officeTicker.ts` | ✅ DONE |
+| 엘리베이터 큐빅 스무스스텝 이징 `t²(3−2t)` | `elevatorTick.ts` | ✅ DONE |
+| 엘리베이터 문 이징 (opening=ease-out, closing=ease-in) | `elevatorTick.ts` | ✅ DONE |
+| 방문자 ramp 기반 감속 (endpoints 30px 이내) | `visitorTick.ts` | ✅ DONE |
+| 방문자 걸음 bob 강화 (amp 1.0→1.5, speed 0.10→0.16) | `visitorTick.ts` | ✅ DONE |
+| 방문자 걷기 기울기 tilt | `visitorTick.ts` | ✅ DONE |
+| 에이전트 idle X-sway + rocking rotation | `officeTicker.ts` | ✅ DONE |
+| 에이전트 working lean (타이핑 흔들림) | `officeTicker.ts` | ✅ DONE |
+| 에이전트 태스크 수신 감쇠 스프링 바운스 + squash&stretch | `officeTicker.ts` | ✅ DONE |
+| PhaserApp.scene 접근자 (향후 네이티브 Tween 사용 대비) | `pixi-compat.ts` | ✅ DONE |
+| CEO 물리 상수 추가 (CEO_ACCEL, CEO_FRICTION, CEO_MAX_SPEED) | `model.ts` | ✅ DONE |
 
 ---
 

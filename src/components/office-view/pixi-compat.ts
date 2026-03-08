@@ -517,9 +517,17 @@ export class Container {
   }
 
   get children(): CompatNode[] {
-    // Return lightweight proxy array
+    // Return lightweight proxy array with destroy support
     return (this._obj.list as Phaser.GameObjects.GameObject[]).map(go => {
-      const w: any = Object.create(null); w._obj = go; return w as CompatNode;
+      const w: any = Object.create(null);
+      w._obj = go;
+      Object.defineProperty(w, 'destroyed', { get: () => !(go as any).scene });
+      w.destroy = (opts?: { children?: boolean }) => {
+        if ((go as any).destroy) {
+          try { (go as any).destroy(opts?.children); } catch { /* already destroyed */ }
+        }
+      };
+      return w as CompatNode;
     });
   }
 
@@ -717,6 +725,9 @@ export class PhaserApp {
       );
     }
   }
+
+  /** Access the underlying Phaser Scene (for tweens, cameras, etc.) */
+  get scene(): Phaser.Scene | null { return this._scene; }
 
   /** Reset camera to default (zoom=1, origin top-left). */
   resetZoom(): void {

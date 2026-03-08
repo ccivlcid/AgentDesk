@@ -9,8 +9,8 @@ const SHAFT_X = FLOOR_W - ELEVATOR_W - WALL_W;
 const CAR_X   = SHAFT_X + EL_CAR_X_OFFSET;
 const DOOR_ZONE_X = CAR_X + EL_PILLAR_W;
 
-/** Pixels per tick the car travels */
-const ELEVATOR_SPEED = 1.4;
+/** Max pixels per tick the car travels */
+const ELEVATOR_SPEED = 1.8;
 /** Ticks to fully open or fully close the door */
 const DOOR_ANIM_TICKS = 22;
 /** Ticks door stays fully open */
@@ -30,6 +30,12 @@ export interface ElevatorTickState {
   doorProgress: number;
   /** Door animation phase */
   doorPhase: "closed" | "opening" | "open" | "closing";
+  /** Travel easing state: start Y when movement began */
+  travelStartY?: number;
+  /** Total distance for current travel */
+  travelDist?: number;
+  /** Travel progress 0→1 */
+  travelProgress?: number;
 }
 
 /** Returns the carContainer.y for a given logical floor index.
@@ -71,24 +77,55 @@ export function updateElevatorTick(
   const targetY = getFloorCarY(state.targetFloorIndex, nFloors);
   const diff = targetY - state.carY;
 
-  // ── Moving phase ─────────────────────────────────────────────
+  // ── Moving phase (eased interpolation) ──────────────────────
   if (state.doorPhase === "closed" && Math.abs(diff) > 0.8) {
-    const step = Math.min(ELEVATOR_SPEED, Math.abs(diff)) * Math.sign(diff);
-    state.carY += step;
+    // Initialize travel easing on first tick of movement
+    if (state.travelStartY === undefined || state.travelDist === undefined) {
+      state.travelStartY = state.carY;
+      state.travelDist = diff;
+      state.travelProgress = 0;
+    }
+
+    // Advance progress based on speed / total distance
+    const totalDist = Math.abs(state.travelDist);
+    const progressStep = totalDist > 0 ? ELEVATOR_SPEED / totalDist : 1;
+    state.travelProgress = Math.min(1, (state.travelProgress ?? 0) + progressStep);
+
+    // Ease-in-out (smooth cubic) — t³(3-2t) (smoother than quadratic)
+    const t = state.travelProgress;
+    const eased = t * t * (3 - 2 * t);
+
+    state.carY = state.travelStartY + state.travelDist * eased;
     car.y = state.carY;
 
     // Show direction + destination in transit
-    const arrow = diff > 0 ? "v" : "^";  // ↓ or ↑ (monospace safe chars)
+    const arrow = state.travelDist > 0 ? "v" : "^";
     const destLabel = getFloorLabel(state.targetFloorIndex, nFloors);
     display.text = `${arrow}${destLabel}`;
+
+    // Check if arrived
+    if (state.travelProgress >= 1) {
+      state.carY = targetY;
+      car.y = state.carY;
+      state.travelStartY = undefined;
+      state.travelDist = undefined;
+      state.travelProgress = undefined;
+      state.floorIndex = state.targetFloorIndex;
+      display.text = getFloorLabel(state.floorIndex, nFloors);
+      state.doorPhase = "opening";
+      state.doorProgress = 0;
+      state.idleTicks = 0;
+    }
     return;
   }
 
-  // ── Arrived — run door sequence ───────────────────────────────
+  // ── Arrived (target changed while already at floor) ─────────
   if (state.doorPhase === "closed" && Math.abs(diff) <= 0.8) {
-    // Snap to floor
     state.carY = targetY;
     car.y = state.carY;
+    state.travelStartY = undefined;
+    state.travelDist = undefined;
+    state.travelProgress = undefined;
     state.floorIndex = state.targetFloorIndex;
     display.text = getFloorLabel(state.floorIndex, nFloors);
     state.doorPhase = "opening";
@@ -98,7 +135,9 @@ export function updateElevatorTick(
 
   if (state.doorPhase === "opening") {
     state.doorProgress = Math.min(1, state.doorProgress + 1 / DOOR_ANIM_TICKS);
-    redrawDoor(doorGRef.current, state.doorProgress);
+    // Ease-out for opening (fast start, slow finish)
+    const easeOut = 1 - (1 - state.doorProgress) * (1 - state.doorProgress);
+    redrawDoor(doorGRef.current, easeOut);
     if (state.doorProgress >= 1) {
       state.doorPhase = "open";
       state.idleTicks = 0;
@@ -116,7 +155,9 @@ export function updateElevatorTick(
 
   if (state.doorPhase === "closing") {
     state.doorProgress = Math.max(0, state.doorProgress - 1 / DOOR_ANIM_TICKS);
-    redrawDoor(doorGRef.current, state.doorProgress);
+    // Ease-in for closing (slow start, fast finish)
+    const easeIn = state.doorProgress * state.doorProgress;
+    redrawDoor(doorGRef.current, easeIn);
     if (state.doorProgress <= 0) {
       state.doorPhase = "closed";
       state.idleTicks = 0;

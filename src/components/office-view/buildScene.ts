@@ -10,6 +10,8 @@ import {
   BASEMENT_H,
   WALL_W,
   ELEVATOR_W,
+  SKY_H,
+  GROUND_H,
   detachNode,
 } from "./model";
 import { drawConferenceFloor } from "./drawConferenceFloor";
@@ -25,6 +27,19 @@ import { drawBasement } from "./drawBasement";
 import { drawElevatorShaft, getElevatorShaftX } from "./drawElevator";
 import { getFloorCarY } from "./elevatorTick";
 import { drawExteriorWalls } from "./drawExteriorWalls";
+import { drawCityscape } from "./drawCityscape";
+import { blendColor } from "./drawing-core";
+import type { RoomTheme } from "./model";
+
+/** Darken a custom theme for dark mode so bright floor/wall colors don't look washed-out. */
+function darkenTheme(t: RoomTheme): RoomTheme {
+  return {
+    floor1: blendColor(t.floor1, 0x000000, 0.85),
+    floor2: blendColor(t.floor2, 0x000000, 0.85),
+    wall:   blendColor(t.wall,   0x000000, 0.70),
+    accent: t.accent,
+  };
+}
 
 export function buildOfficeScene(context: BuildOfficeSceneContext): void {
   const {
@@ -82,6 +97,7 @@ export function buildOfficeScene(context: BuildOfficeSceneContext): void {
     ceoVisitorAlertRef,
     visitorLayerRef,
     visitorTickRef,
+    towerOffsetXRef,
   } = context;
 
   const app = appRef.current;
@@ -148,44 +164,69 @@ export function buildOfficeScene(context: BuildOfficeSceneContext): void {
   const isDark = themeRef.current === "dark";
   applyOfficeThemeMode(isDark);
 
-  const ceoTheme = customThemes?.ceoOffice ?? DEFAULT_CEO_THEME;
-  const breakTheme = customThemes?.breakRoom ?? DEFAULT_BREAK_THEME;
+  const rawCeoTheme = customThemes?.ceoOffice ?? DEFAULT_CEO_THEME;
+  const rawBreakTheme = customThemes?.breakRoom ?? DEFAULT_BREAK_THEME;
+  const ceoTheme = (isDark && customThemes?.ceoOffice) ? darkenTheme(rawCeoTheme) : rawCeoTheme;
+  const breakTheme = (isDark && customThemes?.breakRoom) ? darkenTheme(rawBreakTheme) : rawBreakTheme;
   const spriteMap = buildSpriteMap(agents);
   spriteMapRef.current = spriteMap;
   const drawer = getDrawer(styleKeyRef.current);
 
   // ── Tower dimensions ──────────────────────────────────────────
   const nFloors = Math.max(1, departments.length);
-  // CONFERENCE_FLOOR_H (100) is the dedicated meeting room floor between penthouse and dept floors
   const totalH = ROOF_H + PENTHOUSE_H + CONFERENCE_FLOOR_H + nFloors * FLOOR_TOTAL_H + BASEMENT_H;
-  const OFFICE_W = FLOOR_W; // 380
 
+  // Store tower dimensions (used by CEO movement bounds in ticker)
   totalHRef.current = totalH;
-  officeWRef.current = OFFICE_W;
-  app.renderer.resize(OFFICE_W, totalH);
+  officeWRef.current = FLOOR_W;
+
+  // ── Scene dimensions (tower + cityscape) ────────────────────
+  const canvasEl = app.canvas as HTMLCanvasElement;
+  const CITY_MARGIN = 40; // px of cityscape on each side of tower
+  const SCENE_W = FLOOR_W + CITY_MARGIN * 2; // 490px — tower-centric scene
+  const SCENE_H = SKY_H + totalH + GROUND_H;
+  const towerX = Math.floor((SCENE_W - FLOOR_W) / 2);
+
+  towerOffsetXRef.current = towerX;
+  app.renderer.resize(SCENE_W, SCENE_H);
 
   // Canvas CSS sizing is controlled by OfficeView.tsx (applyFitAll / applyFloorFocus)
-  const canvasEl = app.canvas as HTMLCanvasElement;
   canvasEl.style.display = "block";
 
-  // ── Full building background ──────────────────────────────────
-  // Drawn by drawRoof (roof cap) + zone backgrounds below
+  // ── 0. Cityscape background ────────────────────────────────
+  const bgContainer = new Container();
+  app.stage.addChild(bgContainer);
+  drawCityscape({
+    stage: bgContainer,
+    sceneW: SCENE_W,
+    sceneH: SCENE_H,
+    towerX,
+    towerW: FLOOR_W,
+    skyH: SKY_H,
+    groundH: GROUND_H,
+    towerH: totalH,
+    isDark,
+  });
 
-  // ── 0. Exterior walls (behind everything) ────────────────────
+  // ── Tower container (all tower elements drawn in tower-local coords) ──
+  const towerContainer = new Container(towerX, SKY_H);
+  app.stage.addChild(towerContainer);
+
+  // ── 1. Exterior walls (behind everything) ────────────────────
   exteriorWindowsRef.current = drawExteriorWalls({
-    stage: app.stage as Container,
+    stage: towerContainer,
     nFloors: departments.length,
     totalH,
     isDark,
   });
 
-  // ── 1. Roof ──────────────────────────────────────────────────
+  // ── 2. Roof ──────────────────────────────────────────────────
   const ceoCustomization = ceoCustomizationRef.current;
-  antennaLedRef.current = drawRoof({ stage: app.stage as Container, floorW: FLOOR_W, roofH: ROOF_H, isDark, companyName: ceoCustomization?.companyName });
+  antennaLedRef.current = drawRoof({ stage: towerContainer, floorW: FLOOR_W, roofH: ROOF_H, isDark, companyName: ceoCustomization?.companyName });
 
-  // ── 2. Penthouse (CEO) ───────────────────────────────────────
+  // ── 3. Penthouse (CEO) ───────────────────────────────────────
   drawPenthouse({
-    stage: app.stage as Container,
+    stage: towerContainer,
     drawer,
     pentY: ROOF_H,
     isDark,
@@ -204,9 +245,9 @@ export function buildOfficeScene(context: BuildOfficeSceneContext): void {
     ceoOfficeRectRef,
   });
 
-  // ── 2b. Conference floor (between penthouse and dept floors) ──
+  // ── 4. Conference floor ──────────────────────────────────────
   drawConferenceFloor({
-    stage: app.stage as Container,
+    stage: towerContainer,
     drawer,
     confY: ROOF_H + PENTHOUSE_H,
     isDark,
@@ -217,13 +258,13 @@ export function buildOfficeScene(context: BuildOfficeSceneContext): void {
     agents,
   });
 
-  // ── 3. Department floors (top → bottom) ──────────────────────
+  // ── 5. Department floors (top → bottom) ──────────────────────
   departments.forEach((dept, deptIdx) => {
     const floorY = ROOF_H + PENTHOUSE_H + CONFERENCE_FLOOR_H + deptIdx * FLOOR_TOTAL_H;
     const deptAgents = agents.filter((a) => a.department_id === dept.id);
 
     drawFloor({
-      stage: app.stage as Container,
+      stage: towerContainer,
       drawer,
       textures,
       dept,
@@ -256,31 +297,28 @@ export function buildOfficeScene(context: BuildOfficeSceneContext): void {
 
   subCloneSnapshotRef.current = nextSubSnapshot;
 
-  // ── 3b. Floor activity glow overlays (one per dept floor, updated in ticker) ──
+  // ── 5b. Floor activity glow overlays ──────────────────────────
   floorGlowsRef.current = [];
   floorSelectBoxesRef.current = [];
-  const glowW = FLOOR_W - ELEVATOR_W - WALL_W * 2; // 300
+  const glowW = FLOOR_W - ELEVATOR_W - WALL_W * 2;
   departments.forEach((_dept, deptIdx) => {
     const floorY = ROOF_H + PENTHOUSE_H + CONFERENCE_FLOOR_H + deptIdx * FLOOR_TOTAL_H;
-    // Activity glow fill
     const glowG = new Graphics();
     glowG.rect(WALL_W, floorY, glowW, FLOOR_ROOM_H).fill({ color: 0xffffff, alpha: 0.1 });
     glowG.alpha = 0;
     glowG.tint = 0x22c55e;
-    (app.stage as Container).addChild(glowG);
+    towerContainer.addChild(glowG);
     floorGlowsRef.current.push(glowG);
-    // Selection highlight box (amber stroke outline, hidden until selected)
     const selBox = new Graphics();
     selBox.rect(WALL_W + 1, floorY + 1, glowW - 2, FLOOR_ROOM_H - 2)
       .stroke({ width: 2, color: 0xf59e0b });
     selBox.alpha = 0;
-    (app.stage as Container).addChild(selBox);
+    towerContainer.addChild(selBox);
     floorSelectBoxesRef.current.push(selBox);
   });
-  // Reset selection on scene rebuild
   selectedFloorIdxRef.current = 0;
 
-  // ── 3c. CEO visitor alert text (blinks in penthouse when visitor is inbound) ──
+  // ── 5c. CEO visitor alert text ────────────────────────────────
   {
     const alertT = new Text({
       text: "▲ VISITOR INBOUND",
@@ -289,14 +327,14 @@ export function buildOfficeScene(context: BuildOfficeSceneContext): void {
     alertT.anchor.set(0.5, 1);
     alertT.position.set(FLOOR_W / 2 - ELEVATOR_W / 2, ROOF_H + PENTHOUSE_H - 8);
     alertT.alpha = 0;
-    (app.stage as Container).addChild(alertT);
+    towerContainer.addChild(alertT);
     ceoVisitorAlertRef.current = alertT;
   }
 
-  // ── 4. Basement (Break Room) ──────────────────────────────────
+  // ── 6. Basement (Break Room) ──────────────────────────────────
   const basementY = ROOF_H + PENTHOUSE_H + CONFERENCE_FLOOR_H + nFloors * FLOOR_TOTAL_H;
   drawBasement({
-    stage: app.stage as Container,
+    stage: towerContainer,
     drawer,
     textures,
     agents,
@@ -314,10 +352,10 @@ export function buildOfficeScene(context: BuildOfficeSceneContext): void {
     agentPosRef,
   });
 
-  // ── 5. Elevator shaft ────────────────────────────────────────
+  // ── 7. Elevator shaft ────────────────────────────────────────
   const shaftX = getElevatorShaftX(FLOOR_W, ELEVATOR_W, WALL_W);
   const elevatorVisuals = drawElevatorShaft({
-    stage: app.stage as Container,
+    stage: towerContainer,
     shaftX,
     shaftTopY: ROOF_H,
     totalH,
@@ -329,7 +367,6 @@ export function buildOfficeScene(context: BuildOfficeSceneContext): void {
   elevatorDoorRef.current = elevatorVisuals.doorG;
   elevatorFloorLedsRef.current = elevatorVisuals.floorLeds;
   elevatorNFloorsRef.current = departments.length;
-  // Reset elevator to penthouse on every rebuild
   elevatorStateRef.current = {
     floorIndex: 0,
     targetFloorIndex: 0,
@@ -339,45 +376,42 @@ export function buildOfficeScene(context: BuildOfficeSceneContext): void {
     doorPhase: "closed",
   };
 
-  // ── 6. Seasonal particles (masked to interior — no exterior wall overflow) ──
+  // ── 8. Seasonal particles (masked to tower interior) ──────────
   if (seasonalParticleRef.current) {
     destroySeasonalParticles(seasonalParticleRef.current);
     seasonalParticleRef.current = null;
   }
   if (seasonKeyRef.current !== "none") {
-    const interiorW = FLOOR_W - ELEVATOR_W - WALL_W * 2; // 300
+    const interiorW = FLOOR_W - ELEVATOR_W - WALL_W * 2;
     seasonalParticleRef.current = createSeasonalParticleState(
-      app.stage as Container,
+      towerContainer,
       seasonKeyRef.current,
       interiorW,
       totalH,
     );
-    // Clip particles to interior — prevents bleed onto exterior walls.
-    // Add mask as a child of the particle container (PixiJS v8 pattern).
-    // The mask is in container-local space: x=0..interiorW clips particles to interior.
     const pMask = new Graphics();
     pMask.rect(0, 0, interiorW, totalH).fill(0xffffff);
     seasonalParticleRef.current.container.addChild(pMask);
     seasonalParticleRef.current.container.mask = pMask;
-    // Shift container so particle X=0 aligns with interior left edge (WALL_W in stage space)
     seasonalParticleRef.current.container.x = WALL_W;
   }
 
-  // ── 7. Visitor layer (inter-dept agent movement) ──────────────
+  // ── 9. Visitor layer (inter-dept agent movement) ──────────────
   if (visitorLayerRef.current && !visitorLayerRef.current.destroyed) {
     visitorLayerRef.current.destroy({ children: true });
   }
   const visitorLayer = new Container();
-  app.stage.addChild(visitorLayer as Container);
+  towerContainer.addChild(visitorLayer);
   visitorLayerRef.current = visitorLayer;
   if (visitorTickRef.current) {
     visitorTickRef.current.visitors = [];
     visitorTickRef.current.spawnCooldown = 120;
   }
 
-  // ── 8. Final layers (CEO sprite, delivery layer, highlight) ──
+  // ── 10. Final layers (CEO sprite, delivery layer, highlight) ──
   buildFinalLayers({
     app,
+    stage: towerContainer,
     textures,
     tasks,
     ceoPosRef,

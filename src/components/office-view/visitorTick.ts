@@ -18,7 +18,21 @@ import type { ElevatorTickState } from "./elevatorTick";
 
 const SHAFT_X       = FLOOR_W - ELEVATOR_W - WALL_W;
 const ELEV_ENTRY_X  = SHAFT_X - 8;
-const VISITOR_SPEED = 0.9;
+const VISITOR_SPEED = 1.1;
+
+/** Eased walk step — accelerates at start, decelerates at end of walk segment.
+ *  Returns new x. Sets v.x directly. */
+function easedWalkStep(currentX: number, targetX: number, speed: number): number {
+  const dx = targetX - currentX;
+  const dist = Math.abs(dx);
+  if (dist <= speed + 1) return targetX; // snap
+
+  // Ease factor: slow near start/end (within 30px), full speed in middle
+  const rampDist = 30;
+  const fromEdge = Math.min(dist, rampDist);
+  const ease = 0.4 + 0.6 * (fromEdge / rampDist); // 0.4→1.0
+  return currentX + Math.sign(dx) * speed * ease;
+}
 const VISIT_TICKS   = 300;
 const FADE_TICKS    = 20;
 export const MAX_VISITORS    = 3;
@@ -316,14 +330,14 @@ export function updateVisitorAgents(
     switch (v.phase) {
       case "walk_to_elev": {
         const dx = ELEV_ENTRY_X - v.x;
-        if (Math.abs(dx) <= VISITOR_SPEED + 1) {
+        if (Math.abs(dx) <= VISITOR_SPEED + 2) {
           v.x = ELEV_ENTRY_X;
           v.phase = "fading_out";
           v.fadeTick = 0;
           elevatorStateRef.current.targetFloorIndex = v.homeFloor;
           elevatorStateRef.current.idleTicks = 0;
         } else {
-          v.x += Math.sign(dx) * VISITOR_SPEED;
+          v.x = easedWalkStep(v.x, v.x + dx, VISITOR_SPEED); // target = v.x + dx
         }
         break;
       }
@@ -361,7 +375,7 @@ export function updateVisitorAgents(
 
       case "walk_to_dest": {
         const dx = v.destX - v.x;
-        if (Math.abs(dx) <= VISITOR_SPEED + 1) {
+        if (Math.abs(dx) <= VISITOR_SPEED + 2) {
           v.x = v.destX;
           v.phase = "at_dest";
           v.waitTick = 0;
@@ -370,7 +384,7 @@ export function updateVisitorAgents(
             v.animSprite.animationSpeed = 0.04;
           }
         } else {
-          v.x += Math.sign(dx) * VISITOR_SPEED;
+          v.x = easedWalkStep(v.x, v.x + dx, VISITOR_SPEED); // target = v.x + dx
         }
         break;
       }
@@ -441,14 +455,14 @@ export function updateVisitorAgents(
 
       case "walk_back_to_elev": {
         const dx = ELEV_ENTRY_X - v.x;
-        if (Math.abs(dx) <= VISITOR_SPEED + 1) {
+        if (Math.abs(dx) <= VISITOR_SPEED + 2) {
           v.x = ELEV_ENTRY_X;
           v.phase = "fading_out_return";
           v.fadeTick = 0;
           elevatorStateRef.current.targetFloorIndex = v.destFloor;
           elevatorStateRef.current.idleTicks = 0;
         } else {
-          v.x += Math.sign(dx) * VISITOR_SPEED;
+          v.x = easedWalkStep(v.x, v.x + dx, VISITOR_SPEED); // target = v.x + dx
         }
         break;
       }
@@ -486,11 +500,11 @@ export function updateVisitorAgents(
 
       case "walk_home": {
         const dx = v.homeX - v.x;
-        if (Math.abs(dx) <= VISITOR_SPEED + 1) {
+        if (Math.abs(dx) <= VISITOR_SPEED + 2) {
           v.x = v.homeX;
           v.phase = "done";
         } else {
-          v.x += Math.sign(dx) * VISITOR_SPEED;
+          v.x = easedWalkStep(v.x, v.x + dx, VISITOR_SPEED); // target = v.x + dx
         }
         break;
       }
@@ -520,10 +534,13 @@ export function updateVisitorAgents(
 
     if (isVisible) {
       const t      = (tick ?? 0) + v.agentId.charCodeAt(0) * 7;
-      const bobAmp = v.phase === "at_dest" ? 0.5 : 1.0;
-      const bobSpd = v.phase === "at_dest" ? 0.025 : 0.10;
+      const bobAmp = isWalking ? 1.5 : 0.5;  // stronger walk bob
+      const bobSpd = isWalking ? 0.16 : 0.025; // faster walk cycle
       const bobY   = Math.sin(t * bobSpd) * bobAmp;
+      // Walking tilt: slight lean in direction of movement
+      const leanAngle = isWalking ? Math.sin(t * 0.12) * 0.04 : 0;
       v.container.position.set(v.x, v.y + bobY);
+      v.container.rotation = leanAngle;
       v.container.alpha = 1;
 
       // ── Direction flip (bodyC named "body") ──────────────────────

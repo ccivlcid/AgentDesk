@@ -36,6 +36,7 @@ interface OfficeViewProps {
   cliUsageRefreshing?: boolean;
   onRefreshCliUsage?: () => void;
   onOpenRoomManager?: () => void;
+  activeWorkflowPackKey?: import("../../types").WorkflowPackKey;
 }
 
 interface Delivery {
@@ -159,6 +160,9 @@ const COLS_PER_ROW = 3;
 const ROOM_PAD = 16;
 const TILE = 20;
 const CEO_SPEED = 7;
+const CEO_ACCEL = 1.2;       // acceleration per tick
+const CEO_FRICTION = 0.82;   // velocity decay per tick (0-1, lower = more friction)
+const CEO_MAX_SPEED = 5.5;   // max velocity
 const DELIVERY_SPEED = 0.012;
 
 const BREAK_ROOM_H = 110;
@@ -177,6 +181,11 @@ const FLOOR_TOTAL_H = FLOOR_ROOM_H + FLOOR_HALLWAY_H; // 184
 const BASEMENT_H = 140;         // was 130 — slightly taller break room
 const BASEMENT_INTERIOR_H = 120; // was 110
 const ROOF_H = 40;
+
+/* ---- Cityscape scene constants (A+H approach) ---- */
+const SKY_H = 80;        // sky area above tower
+const GROUND_H = 50;     // ground area below tower
+
 const MAX_VISIBLE_SUB_CLONES_PER_AGENT = 3;
 const SUB_CLONE_WAVE_SPEED = 0.04;
 const SUB_CLONE_MOVE_X_AMPLITUDE = 0.16;
@@ -332,6 +341,9 @@ export {
   ROOM_PAD,
   TILE,
   CEO_SPEED,
+  CEO_ACCEL,
+  CEO_FRICTION,
+  CEO_MAX_SPEED,
   DELIVERY_SPEED,
   BREAK_ROOM_H,
   BREAK_ROOM_GAP,
@@ -347,6 +359,8 @@ export {
   BASEMENT_H,
   BASEMENT_INTERIOR_H,
   ROOF_H,
+  SKY_H,
+  GROUND_H,
   MAX_VISIBLE_SUB_CLONES_PER_AGENT,
   SUB_CLONE_WAVE_SPEED,
   SUB_CLONE_MOVE_X_AMPLITUDE,
