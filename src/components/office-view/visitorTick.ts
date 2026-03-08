@@ -1,4 +1,4 @@
-import { AnimatedSprite, Container, Graphics, Text, TextStyle, type Texture } from "pixi.js";
+import { AnimatedSprite, Container, Graphics, Text, TextStyle, type Texture } from "./pixi-compat";
 import type { MutableRefObject } from "react";
 import type { Agent } from "../../types";
 import {

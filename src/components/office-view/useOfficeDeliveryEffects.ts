@@ -1,5 +1,5 @@
 import { useEffect, type MutableRefObject } from "react";
-import { AnimatedSprite, Container, Graphics, Text, TextStyle, type Texture } from "pixi.js";
+import { AnimatedSprite, Container, Graphics, Text, TextStyle, type Texture } from "./pixi-compat";
 import type { Agent, CeoOfficeCall, CrossDeptDelivery, MeetingPresence } from "../../types";
 import { hashStr } from "./drawing-core";
 import { type Delivery, destroyNode, trackProcessedId } from "./model";

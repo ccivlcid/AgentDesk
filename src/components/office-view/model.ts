@@ -1,4 +1,4 @@
-import { type Container, Graphics, Text, TextStyle } from "pixi.js";
+import { type Container, type CompatNode, Graphics, Text, TextStyle } from "./pixi-compat";
 import type {
   Department,
   Agent,
@@ -93,9 +93,9 @@ function detachNode(node: Container): void {
 }
 
 /** Remove from parent AND destroy to free GPU/texture memory. */
-function destroyNode(node: Container): void {
+function destroyNode(node: CompatNode): void {
   if (node.destroyed) return;
-  node.parent?.removeChild(node);
+  (node as Container).parent?.removeChild(node as Container);
   node.destroy({ children: true });
 }
 
@@ -206,7 +206,7 @@ type MobileMoveDirection = keyof typeof MOBILE_MOVE_CODES;
 type RoomTheme = { floor1: number; floor2: number; wall: number; accent: number };
 
 type SubCloneBurstParticle = {
-  node: Container;
+  node: Container | Graphics | Text;
   vx: number;
   vy: number;
   life: number;

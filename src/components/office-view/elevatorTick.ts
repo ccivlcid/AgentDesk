@@ -1,5 +1,5 @@
 import type { MutableRefObject } from "react";
-import type { Container, Graphics, Text } from "pixi.js";
+import type { Container, Graphics, Text } from "./pixi-compat";
 import { ROOF_H, PENTHOUSE_H, CONFERENCE_FLOOR_H, FLOOR_TOTAL_H, FLOOR_ROOM_H, BASEMENT_H, FLOOR_W, WALL_W, ELEVATOR_W } from "./model";
 import { EL_CAR_W, EL_CAR_H, EL_CAR_X_OFFSET, EL_PILLAR_W, EL_HALF_DOOR, EL_DOOR_Y, EL_DOOR_H } from "./drawElevator";
 

@@ -198,7 +198,7 @@ export default function ChatMessageList({
     // Dispatch office banner event for new announcement messages from user/CEO
     if (hasNewMessages) {
       const lastMsg = visibleMessages[visibleMessages.length - 1];
-      if (lastMsg && lastMsg.message_type === "announcement" && (lastMsg.sender_type === "user" || lastMsg.sender_type === "ceo")) {
+      if (lastMsg && lastMsg.message_type === "announcement" && lastMsg.sender_type === "ceo") {
         window.dispatchEvent(new CustomEvent("agentdesk_office_announcement", {
           detail: { text: lastMsg.content?.slice(0, 120) ?? "", sender: "CEO" },
         }));

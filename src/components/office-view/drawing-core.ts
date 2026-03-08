@@ -1,4 +1,4 @@
-import { Container, Graphics } from "pixi.js";
+import { Container, Graphics } from "./pixi-compat";
 import { OFFICE_PASTEL } from "./themes-locale";
 import { TILE, type WallClockVisual } from "./model";
 

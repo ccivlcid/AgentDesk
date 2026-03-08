@@ -1,7 +1,7 @@
 # AgentDesk — Development Progress
 
 > **Rule**: This document is updated every time work is completed or a phase transitions.
-> Last updated: 2026-03-07 (Phase 17-A: OfficeRoomManager 탭 리팩터 완료 — 4탭 UI (테마/CEO/가구/시즌) 인플레이스 구현)
+> Last updated: 2026-03-08 (Phaser 3 Migration 완료 + Full Tower View 오버뷰 모드 구현)
 
 ---
 

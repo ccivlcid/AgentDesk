@@ -1,4 +1,4 @@
-import { Container, Graphics, Text, TextStyle } from "pixi.js";
+import { Container, Graphics, Text, TextStyle } from "./pixi-compat";
 
 interface DrawRoofParams {
   stage: Container;

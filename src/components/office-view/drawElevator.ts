@@ -1,4 +1,4 @@
-import { Container, Graphics, Text, TextStyle } from "pixi.js";
+import { Container, Graphics, Text, TextStyle } from "./pixi-compat";
 import { ELEVATOR_W, ROOF_H, PENTHOUSE_H, CONFERENCE_FLOOR_H, FLOOR_TOTAL_H, BASEMENT_H } from "./model";
 
 // Car metrics — must stay in sync with elevatorTick.ts

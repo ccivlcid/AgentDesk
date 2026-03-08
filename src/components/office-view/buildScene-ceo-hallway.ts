@@ -1,5 +1,5 @@
 import type { MutableRefObject } from "react";
-import { type Application, Container, Graphics, Text, TextStyle } from "pixi.js";
+import { type Application, Container, Graphics, Text, TextStyle } from "./pixi-compat";
 import type { Agent, Task } from "../../types";
 import type { Delivery, RoomTheme, WallClockVisual } from "./model";
 import { CEO_ZONE_H, HALLWAY_H, TILE } from "./model";

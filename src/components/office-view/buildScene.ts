@@ -1,4 +1,4 @@
-import { Container, Graphics, Text, TextStyle } from "pixi.js";
+import { Container, Graphics, Text, TextStyle } from "./pixi-compat";
 import { buildSpriteMap } from "../AgentAvatar";
 import {
   FLOOR_W,
@@ -98,7 +98,7 @@ export function buildOfficeScene(context: BuildOfficeSceneContext): void {
 
   const oldChildren = app.stage.removeChildren();
   for (const child of oldChildren) {
-    if (preservedDeliverySprites.has(child)) continue;
+    if (preservedDeliverySprites.has(child as Container)) continue;
     if (!child.destroyed) child.destroy({ children: true });
   }
 

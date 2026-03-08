@@ -105,7 +105,7 @@ export default function GatewaySettingsTab({
     const officeOptions = listOfficePackOptions(locale);
     const map = new Map<WorkflowPackKey, { key: WorkflowPackKey; name: string; enabled: boolean }>();
     for (const opt of officeOptions) {
-      map.set(opt.key, { key: opt.key, name: opt.label, enabled: true });
+      map.set(opt.key as WorkflowPackKey, { key: opt.key as WorkflowPackKey, name: opt.label, enabled: true });
     }
     for (const pack of workflowPacks) {
       if (!isWorkflowPackKey(pack.key)) continue;

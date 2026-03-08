@@ -164,8 +164,8 @@ interface AppMainLayoutProps {
   onOpenTerminal: (taskId: string) => void;
   onOpenMeetingMinutes: (taskId: string) => void;
   onAgentsChange: () => void;
-  activeOfficeWorkflowPack: string;
-  onChangeOfficeWorkflowPack: (packKey: string) => void;
+  activeOfficeWorkflowPack: WorkflowPackKey;
+  onChangeOfficeWorkflowPack: (packKey: WorkflowPackKey) => void;
   onSaveSettings: (settings: CompanySettings) => Promise<void>;
   onRefreshCli: () => Promise<void>;
   onOauthResultClear: () => void;
@@ -463,7 +463,7 @@ export default function AppMainLayout({
               label: officePackLabel,
               value: officePackKey,
               options: officePackOptions,
-              onChange: onChangeOfficeWorkflowPack,
+              onChange: (k) => onChangeOfficeWorkflowPack(normalizeOfficeWorkflowPack(k)),
             }}
             onToggleTheme={toggleTheme}
             onToggleMobileHeaderMenu={() => setMobileHeaderMenuOpen(!mobileHeaderMenuOpen)}

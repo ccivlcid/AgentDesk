@@ -204,7 +204,7 @@ export default function App() {
     };
   };
 
-  const handleOfficeWorkflowPackChange = (packKey: string) => {
+  const handleOfficeWorkflowPackChange = (packKey: WorkflowPackKey) => {
     const previousPack = settings.officeWorkflowPack ?? "development";
     const previousProfiles = settings.officePackProfiles;
     const currentHydratedSet = readHydratedPackSet(settings);
@@ -457,7 +457,7 @@ export default function App() {
       onOpenTerminal={(taskId) => setTaskPanel({ taskId, tab: "terminal" })}
       onOpenMeetingMinutes={(taskId) => setTaskPanel({ taskId, tab: "minutes" })}
       onAgentsChange={actions.handleAgentsChange}
-      activeOfficeWorkflowPack={settings.officeWorkflowPack ?? "development"}
+      activeOfficeWorkflowPack={normalizeOfficeWorkflowPack(settings.officeWorkflowPack)}
       onChangeOfficeWorkflowPack={handleOfficeWorkflowPackChange}
       onSaveSettings={actions.handleSaveSettings}
       onRefreshCli={actions.handleRefreshCli}
@@ -501,7 +501,7 @@ export default function App() {
         onReplyDecisionOption={actions.handleReplyDecisionOption}
         onOpenDecisionChat={actions.handleOpenDecisionChat}
         selectedAgent={selectedAgent}
-        activeOfficeWorkflowPack={settings.officeWorkflowPack ?? "development"}
+        activeOfficeWorkflowPack={normalizeOfficeWorkflowPack(settings.officeWorkflowPack)}
         departments={overlayDepartments}
         tasks={tasks}
         subAgents={subAgents}

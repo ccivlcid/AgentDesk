@@ -2,7 +2,7 @@
 /*  SVG Drawer Base — shared utilities for SVG-based styles            */
 /* ================================================================== */
 
-import { Assets, Sprite, Container, Graphics, type Texture } from "pixi.js";
+import { Assets, Sprite, Container, Graphics, type Texture } from "../pixi-compat";
 import type { WallClockVisual } from "../model";
 import { DESK_W } from "../model";
 import { applyWallClockTime } from "../drawing-core";

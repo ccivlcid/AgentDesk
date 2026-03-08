@@ -1,4 +1,4 @@
-import { type Graphics, type Text, TextStyle } from "pixi.js";
+import { type Graphics, type Text, TextStyle } from "./pixi-compat";
 import type { UiLanguage } from "../../i18n";
 import type { MeetingReviewDecision } from "../../types";
 import type { RoomTheme } from "./model";

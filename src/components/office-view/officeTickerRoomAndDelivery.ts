@@ -1,4 +1,4 @@
-import { Graphics, type Container } from "pixi.js";
+import { Graphics, type Container } from "./pixi-compat";
 import type { MutableRefObject } from "react";
 import { DELIVERY_SPEED, type Delivery, destroyNode } from "./model";
 import { hashStr } from "./drawing-core";

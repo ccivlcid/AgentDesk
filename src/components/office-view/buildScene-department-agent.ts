@@ -1,5 +1,5 @@
 import type { MutableRefObject } from "react";
-import { AnimatedSprite, Container, Graphics, Sprite, Text, TextStyle, type Texture } from "pixi.js";
+import { AnimatedSprite, Container, Graphics, Sprite, Text, TextStyle, type Texture } from "./pixi-compat";
 import type { Agent, SubAgent, Task } from "../../types";
 import type { AnimItem, CallbackSnapshot, SubCloneAnimItem } from "./buildScene-types";
 import {

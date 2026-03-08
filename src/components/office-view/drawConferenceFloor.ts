@@ -1,4 +1,4 @@
-import { Container, Graphics, Text, TextStyle } from "pixi.js";
+import { Container, Graphics, Text, TextStyle } from "./pixi-compat";
 import { FLOOR_W, WALL_W, ELEVATOR_W, CONFERENCE_FLOOR_H } from "./model";
 import { LOCALE_TEXT, type SupportedLocale, pickLocale } from "./themes-locale";
 import {

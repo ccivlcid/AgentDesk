@@ -2,7 +2,7 @@
 /*  FurnitureDrawer interface + Style Registry                         */
 /* ================================================================== */
 
-import type { Container } from "pixi.js";
+import type { Container, Graphics } from "../pixi-compat";
 import type { WallClockVisual } from "../model";
 
 export type StyleKey = "default" | "pixel" | "business" | "retro" | "cyber";
@@ -12,7 +12,7 @@ export interface FurnitureDrawer {
   init?(): Promise<void>;
 
   // ── Furniture ──
-  drawDesk(parent: Container, x: number, y: number, working: boolean): Container;
+  drawDesk(parent: Container, x: number, y: number, working: boolean): Container | Graphics;
   drawChair(parent: Container, x: number, y: number, color: number): void;
   drawBookshelf(parent: Container, x: number, y: number): void;
   drawWhiteboard(parent: Container, x: number, y: number): void;

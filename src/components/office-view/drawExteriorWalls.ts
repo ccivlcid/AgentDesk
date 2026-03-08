@@ -1,4 +1,4 @@
-import { Container, Graphics } from "pixi.js";
+import { Container, Graphics } from "./pixi-compat";
 import { FLOOR_W, WALL_W, ROOF_H, PENTHOUSE_H, FLOOR_TOTAL_H, FLOOR_ROOM_H, BASEMENT_H } from "./model";
 
 export interface ExteriorWindowVisual {

@@ -1,7 +1,7 @@
-import { useEffect, useRef, useCallback, useState, useMemo } from "react";
+import React, { useEffect, useRef, useCallback, useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import OfficeDeptPanel from "./office-view/OfficeDeptPanel";
-import { ROOF_H, PENTHOUSE_H, CONFERENCE_FLOOR_H, FLOOR_TOTAL_H, BASEMENT_H } from "./office-view/model";
+import { ROOF_H, PENTHOUSE_H, CONFERENCE_FLOOR_H, FLOOR_TOTAL_H, BASEMENT_H, FLOOR_W } from "./office-view/model";
 import OfficeAgentPanel from "./office-view/OfficeAgentPanel";
 import OfficeQuickChat from "./office-view/OfficeQuickChat";
 import {
@@ -12,7 +12,7 @@ import {
   type Sprite,
   type Texture,
   type AnimatedSprite,
-} from "pixi.js";
+} from "./office-view/pixi-compat";
 import { useI18n } from "../i18n";
 import { useTheme, type ThemeMode } from "../ThemeContext";
 import VirtualPadOverlay from "./office-view/VirtualPadOverlay";
@@ -80,6 +80,7 @@ export default function OfficeView({
   const destroyedRef = useRef(false);
   const initIdRef = useRef(0);
   const initDoneRef = useRef(false);
+  const firstBuildDoneRef = useRef(false);
   const [sceneRevision, setSceneRevision] = useState(0);
 
   const cliUsageFromHook = useCliUsage(tasks);
@@ -110,10 +111,13 @@ export default function OfficeView({
       deskG?: Graphics;
       bedG?: Graphics;
       blanketG?: Graphics;
+      personaGlow?: Graphics;
       phase: number;
       animated?: AnimatedSprite;
       frameCount: number;
       bounceUntilTick: number;
+      moodIcon?: Text;
+      idleTicks: number;
     }>
   >([]);
   const roomRectsRef = useRef<RoomRect[]>([]);
@@ -140,7 +144,7 @@ export default function OfficeView({
     Array<{
       container: Container;
       aura: Graphics;
-      cloneVisual: Sprite;
+      cloneVisual: Sprite | AnimatedSprite;
       animated?: AnimatedSprite;
       frameCount: number;
       baseScale: number;
@@ -164,16 +168,16 @@ export default function OfficeView({
   const seasonKeyRef = useRef<SeasonKey>(resolveSeasonKey(loadSeasonPreference()));
   const elevatorCarRef = useRef<Container | null>(null);
   const elevatorFloorDisplayRef = useRef<Text | null>(null);
-  const elevatorDoorRef = useRef<import("pixi.js").Graphics | null>(null);
+  const elevatorDoorRef = useRef<Graphics | null>(null) as React.MutableRefObject<Graphics | null>;
   const elevatorStateRef = useRef({ floorIndex: 0, targetFloorIndex: 0, carY: 0, idleTicks: 0, doorProgress: 0, doorPhase: "closed" as const });
   const elevatorNFloorsRef = useRef(0);
   const exteriorWindowsRef = useRef<ExteriorWindowVisual[]>([]);
-  const antennaLedRef = useRef<import("pixi.js").Graphics | null>(null);
+  const antennaLedRef = useRef<Graphics | null>(null) as React.MutableRefObject<Graphics | null>;
   const visitorLayerRef = useRef<Container | null>(null);
   const visitorTickRef = useRef<VisitorTickState | null>(createVisitorTickState());
-  const elevatorFloorLedsRef = useRef<import("pixi.js").Graphics[]>([]);
-  const floorGlowsRef = useRef<import("pixi.js").Graphics[]>([]);
-  const floorSelectBoxesRef = useRef<import("pixi.js").Graphics[]>([]);
+  const elevatorFloorLedsRef = useRef<Graphics[]>([]) as React.MutableRefObject<Graphics[]>;
+  const floorGlowsRef = useRef<Graphics[]>([]) as React.MutableRefObject<Graphics[]>;
+  const floorSelectBoxesRef = useRef<Graphics[]>([]) as React.MutableRefObject<Graphics[]>;
   const selectedFloorIdxRef = useRef<number>(0);
   const ceoVisitorAlertRef = useRef<Text | null>(null);
   const localeRef = useRef<SupportedLocale>(language);
@@ -210,53 +214,14 @@ export default function OfficeView({
     setSelectedDept(null);
     setQuickChatAgent(agent);
   }, []);
-  const handleCanvasSelectDept = useCallback((dept: import("../types").Department) => {
-    setSelectedDept(dept);
-    setSelectedAgent(null);
-    // Send elevator to the clicked department's floor
-    const deptIdx = dataRef.current.departments.findIndex((d) => d.id === dept.id);
-    if (deptIdx >= 0) {
-      elevatorStateRef.current.targetFloorIndex = deptIdx + 1;
-      elevatorStateRef.current.idleTicks = 0;
-      // Light up the amber selection box on the dept floor in the canvas
-      selectedFloorIdxRef.current = deptIdx + 1;
-      // Scroll canvas to center on the dept floor
-      const canvas = containerRef.current?.querySelector("canvas") as HTMLCanvasElement | null;
-      const wrap = containerRef.current?.closest(".office-canvas-wrap") as HTMLElement | null;
-      if (canvas && wrap && totalHRef.current > 0) {
-        const logicalY = ROOF_H + PENTHOUSE_H + CONFERENCE_FLOOR_H + deptIdx * FLOOR_TOTAL_H;
-        const scale = canvas.clientHeight / totalHRef.current;
-        const scrollY = logicalY * scale - wrap.clientHeight * 0.35;
-        wrap.scrollTo({ top: Math.max(0, scrollY), behavior: "smooth" });
-      }
-    }
-  }, []);
+  const isOverviewModeRef = useRef(false);
 
   const handleCallElevator = useCallback((_dept: import("../types").Department, floorIdx: number) => {
     elevatorStateRef.current.targetFloorIndex = floorIdx;
     elevatorStateRef.current.idleTicks = 0;
   }, []);
 
-  const handleScrollToFloor = useCallback((target: "ceo" | "conf" | "basement") => {
-    const canvas = containerRef.current?.querySelector("canvas") as HTMLCanvasElement | null;
-    const wrap = containerRef.current?.closest(".office-canvas-wrap") as HTMLElement | null;
-    if (!canvas || !wrap || totalHRef.current <= 0) return;
-    const nFloors = dataRef.current.departments.length;
-    let logicalY: number;
-    if (target === "ceo") {
-      logicalY = 0; // scroll to very top — penthouse is at ROOF_H
-    } else if (target === "conf") {
-      logicalY = ROOF_H + PENTHOUSE_H;
-    } else {
-      logicalY = ROOF_H + PENTHOUSE_H + CONFERENCE_FLOOR_H + nFloors * FLOOR_TOTAL_H;
-    }
-    const scale = canvas.clientHeight / totalHRef.current;
-    const scrollY = logicalY * scale - wrap.clientHeight * 0.1;
-    wrap.scrollTo({ top: Math.max(0, scrollY), behavior: "smooth" });
-  }, []);
-
-  const cbRef = useRef({ onSelectAgent: handleCanvasSelectAgent, onSelectDepartment: handleCanvasSelectDept });
-  cbRef.current = { onSelectAgent: handleCanvasSelectAgent, onSelectDepartment: handleCanvasSelectDept };
+  const cbRef = useRef({ onSelectAgent: handleCanvasSelectAgent, onSelectDepartment: (_dept: import("../types").Department) => {} });
   const activeMeetingTaskIdRef = useRef<string | null>(activeMeetingTaskId ?? null);
   activeMeetingTaskIdRef.current = activeMeetingTaskId ?? null;
   const meetingMinutesOpenRef = useRef<typeof onOpenActiveMeetingMinutes>(onOpenActiveMeetingMinutes);
@@ -379,8 +344,135 @@ export default function OfficeView({
     [clearVirtualMovement],
   );
 
+  /* ── Overview helpers ── */
+  // DOM structure: containerRef → .office-canvas-frame → .office-canvas-wrap (scroll host)
+  const getScrollWrap = useCallback((): HTMLElement | null => {
+    // Try cached ref first, then walk 2 levels up to .office-canvas-wrap
+    return (
+      scrollHostYRef.current ??
+      (containerRef.current?.parentElement?.parentElement as HTMLElement | null) ??
+      null
+    );
+  }, [containerRef, scrollHostYRef]);
+
+  const applyOverviewZoom = useCallback(() => {
+    const inner = containerRef.current;
+    if (!inner) return;
+    const totalH = totalHRef.current;
+    if (!totalH) return;
+    const scrollWrap = getScrollWrap();
+    if (!scrollWrap) return;
+    const visH = scrollWrap.clientHeight || window.innerHeight;
+    const visW = scrollWrap.clientWidth || FLOOR_W;
+    // Canvas is already CSS-scaled (width:100%, height:auto), so rendered content height
+    // = (visW / FLOOR_W) * totalH.  We need to shrink the frame so it fits visH.
+    const renderedContentH = (visW / FLOOR_W) * totalH;
+    const fitScale = Math.min(1, visH / renderedContentH) * 0.96;
+    // Apply transform to .office-canvas-frame
+    const frame = inner.parentElement; // .office-canvas-frame
+    if (frame) {
+      frame.style.transformOrigin = "top center";
+      frame.style.transform = `scale(${fitScale})`;
+      frame.style.height = `${visH}px`;
+    }
+    // Prevent scrolling in overview mode
+    scrollWrap.style.overflow = "hidden";
+    scrollWrap.scrollTop = 0;
+  }, [containerRef, totalHRef, getScrollWrap]);
+
+  const clearOverviewZoom = useCallback(() => {
+    const inner = containerRef.current;
+    if (!inner) return;
+    const frame = inner.parentElement; // .office-canvas-frame
+    if (frame) {
+      frame.style.transform = "";
+      frame.style.transformOrigin = "";
+      frame.style.height = "";
+    }
+    const scrollWrap = getScrollWrap();
+    if (scrollWrap) {
+      scrollWrap.style.overflow = "";
+    }
+  }, [containerRef, getScrollWrap]);
+
+  /** Convert PixiJS logical Y to actual scroll Y (canvas is CSS-scaled via width:100%) */
+  const logicalToScrollY = useCallback((logicalY: number) => {
+    const wrap = getScrollWrap();
+    if (!wrap) return logicalY;
+    const canvas = containerRef.current?.querySelector("canvas");
+    if (!canvas) return logicalY;
+    const renderedH = canvas.getBoundingClientRect().height;
+    const totalH = totalHRef.current;
+    if (totalH <= 0) return logicalY;
+    const scale = renderedH / totalH;
+    return logicalY * scale;
+  }, [getScrollWrap, containerRef]);
+
+  const scrollToFloorY = useCallback((logicalY: number, offset = 0.35) => {
+    const wrap = getScrollWrap();
+    if (!wrap || totalHRef.current <= 0) return;
+    const scrollY = logicalToScrollY(logicalY);
+    wrap.scrollTo({ top: Math.max(0, scrollY - wrap.clientHeight * offset), behavior: "smooth" });
+  }, [getScrollWrap, logicalToScrollY]);
+
+  const handleCanvasSelectDept = useCallback((dept: import("../types").Department) => {
+    setSelectedDept(dept);
+    setSelectedAgent(null);
+    const deptIdx = dataRef.current.departments.findIndex((d) => d.id === dept.id);
+    if (deptIdx < 0) return;
+
+    elevatorStateRef.current.targetFloorIndex = deptIdx + 1;
+    elevatorStateRef.current.idleTicks = 0;
+    selectedFloorIdxRef.current = deptIdx + 1;
+
+    const logicalY = ROOF_H + PENTHOUSE_H + CONFERENCE_FLOOR_H + deptIdx * FLOOR_TOTAL_H;
+
+    // If in overview mode, exit it first then scroll to the clicked floor
+    if (isOverviewModeRef.current) {
+      clearOverviewZoom();
+      setIsOverviewMode(false);
+      // Wait two frames for layout to settle after zoom removal
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => scrollToFloorY(logicalY));
+      });
+    } else {
+      scrollToFloorY(logicalY);
+    }
+  }, [clearOverviewZoom, scrollToFloorY]);
+  cbRef.current = { onSelectAgent: handleCanvasSelectAgent, onSelectDepartment: handleCanvasSelectDept };
+
+  const handleScrollToFloor = useCallback((target: "ceo" | "conf" | "basement") => {
+    const nFloors = dataRef.current.departments.length;
+    let logicalY: number;
+    if (target === "ceo") {
+      logicalY = 0;
+    } else if (target === "conf") {
+      logicalY = ROOF_H + PENTHOUSE_H;
+    } else {
+      logicalY = ROOF_H + PENTHOUSE_H + CONFERENCE_FLOOR_H + nFloors * FLOOR_TOTAL_H;
+    }
+
+    // Exit overview mode first if active
+    if (isOverviewModeRef.current) {
+      clearOverviewZoom();
+      setIsOverviewMode(false);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => scrollToFloorY(logicalY, 0.1));
+      });
+    } else {
+      scrollToFloorY(logicalY, 0.1);
+    }
+  }, [clearOverviewZoom, scrollToFloorY]);
+
   /* ── BUILD SCENE (no app destroy, just stage clear + rebuild) ── */
   const buildScene = useCallback(() => {
+    const isFirst = !firstBuildDoneRef.current;
+    firstBuildDoneRef.current = true;
+    // Temporarily clear CSS zoom during rebuild so PixiJS measures correctly,
+    // then re-apply if overview mode is still active.
+    const wasOverview = isOverviewModeRef.current;
+    if (wasOverview) clearOverviewZoom();
+
     buildOfficeScene({
       appRef,
       texturesRef,
@@ -437,7 +529,13 @@ export default function OfficeView({
       visitorLayerRef,
       visitorTickRef,
     });
-  }, []);
+
+    // Auto-enter overview on very first scene load, or re-apply if still in overview
+    if (isFirst || wasOverview) {
+      applyOverviewZoom();
+      setIsOverviewMode(true);
+    }
+  }, [applyOverviewZoom, clearOverviewZoom]);
 
   // Listen for season preference changes from OfficeRoomManager
   useEffect(() => {
@@ -640,6 +738,18 @@ export default function OfficeView({
   // Task completion burst particles
   const prevTaskStatusesRef = useRef<Map<string, string>>(new Map());
   const [completionBursts, setCompletionBursts] = useState<Array<{ id: string; x: number; y: number; label: string }>>([]);
+  const [isOverviewMode, setIsOverviewMode] = useState(false);
+  // Keep a ref in sync so callbacks with [] deps can read the current value
+  isOverviewModeRef.current = isOverviewMode;
+
+  const handleToggleOverview = useCallback(() => {
+    if (!isOverviewMode) {
+      applyOverviewZoom();
+    } else {
+      clearOverviewZoom();
+    }
+    setIsOverviewMode((prev) => !prev);
+  }, [isOverviewMode, applyOverviewZoom, clearOverviewZoom]);
 
   useEffect(() => {
     const prev = prevTaskStatusesRef.current;
@@ -795,6 +905,14 @@ export default function OfficeView({
           <span style={{ fontFamily: "var(--th-font-mono)", fontSize: "0.65rem", color: "var(--th-accent)", letterSpacing: 2, opacity: 0.85 }}>
             {clockStr}
           </span>
+          <button
+            className="office-toolbar-btn"
+            title={isOverviewMode ? "Close Overview" : "Full Tower View"}
+            onClick={handleToggleOverview}
+            style={isOverviewMode ? { color: "var(--th-accent)", borderColor: "var(--th-accent)" } : undefined}
+          >
+            {isOverviewMode ? "⊡ Close" : "⊟ Overview"}
+          </button>
           <button className="office-toolbar-btn" title="Season / Style settings" onClick={onOpenRoomManager}>
             Season ▾
           </button>

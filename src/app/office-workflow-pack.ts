@@ -864,9 +864,10 @@ const PACK_PRESETS: Record<WorkflowPackKey, PackPreset> = {
   },
 };
 
-export function normalizeOfficeWorkflowPack(value: unknown): string {
+export function normalizeOfficeWorkflowPack(value: unknown): WorkflowPackKey {
   if (typeof value !== "string" || !value.trim()) return "development";
-  return value;
+  const VALID: WorkflowPackKey[] = ["development", "novel", "report", "video_preprod", "web_research_report", "roleplay", "asset_management"];
+  return (VALID.includes(value as WorkflowPackKey) ? value : "development") as WorkflowPackKey;
 }
 
 function pickText(locale: UiLanguageLike, text: Localized): string {

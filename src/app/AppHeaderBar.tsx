@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import type { WorkflowPackKey } from "../types";
 import type { View } from "./types";
 
 type OfficePackOption = {
@@ -27,7 +28,7 @@ interface AppHeaderBarProps {
     label: string;
     value: string;
     options: OfficePackOption[];
-    onChange: (packKey: string) => void;
+    onChange: (packKey: string | WorkflowPackKey) => void;
   } | null;
   notificationSlot?: ReactNode;
   theme: "light" | "dark";

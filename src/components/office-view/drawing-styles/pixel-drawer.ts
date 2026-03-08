@@ -2,7 +2,7 @@
 /*  Pixel Drawer — 8-bit retro style using rect() only                 */
 /* ================================================================== */
 
-import { type Container, Graphics, Text, TextStyle } from "pixi.js";
+import { type Container, Graphics, Text, TextStyle } from "../pixi-compat";
 import type { FurnitureDrawer } from "./index";
 import type { WallClockVisual } from "../model";
 import { DESK_H, DESK_W } from "../model";

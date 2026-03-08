@@ -1,5 +1,5 @@
 import type { Dispatch, MutableRefObject, SetStateAction } from "react";
-import { Container, Graphics, Text, TextStyle, type Application, type Texture } from "pixi.js";
+import { Container, Graphics, Text, TextStyle, type Application, type Texture } from "./pixi-compat";
 import type { Task } from "../../types";
 import { CEO_SIZE, DESK_H, type Delivery } from "./model";
 import { type CeoCustomization, getHeadwearEmoji, loadCeoCustomization } from "./ceo-customization";

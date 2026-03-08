@@ -1,5 +1,5 @@
 import type { MutableRefObject } from "react";
-import { Graphics, Text, TextStyle, type AnimatedSprite, type Container, type Sprite, type Texture } from "pixi.js";
+import { Graphics, Text, TextStyle, type AnimatedSprite, type Container, type Sprite, type Texture } from "./pixi-compat";
 import type { MeetingPresence } from "../../types";
 import {
   type Delivery,
@@ -55,7 +55,7 @@ interface AgentAnimItem {
   particles: Container;
   agentId?: string;
   cliProvider?: string;
-  deskG?: Container;
+  deskG?: Container | Graphics;
   bedG?: Graphics;
   blanketG?: Graphics;
   personaGlow?: Graphics;
@@ -70,7 +70,7 @@ interface AgentAnimItem {
 interface SubCloneAnimItem {
   container: Container;
   aura: Graphics;
-  cloneVisual: Sprite;
+  cloneVisual: Sprite | AnimatedSprite;
   animated?: AnimatedSprite;
   frameCount: number;
   baseScale: number;

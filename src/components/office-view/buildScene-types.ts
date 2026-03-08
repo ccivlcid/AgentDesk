@@ -1,5 +1,5 @@
 import type { Dispatch, MutableRefObject, SetStateAction } from "react";
-import type { Application, AnimatedSprite, Container, Graphics, Sprite, Text, Texture } from "pixi.js";
+import type { Application, AnimatedSprite, Container, Graphics, Sprite, Text, Texture } from "./pixi-compat";
 import type { ElevatorTickState } from "./elevatorTick";
 import type { ExteriorWindowVisual } from "./drawExteriorWalls";
 import type { Agent, Department, SubAgent, Task } from "../../types";
@@ -36,7 +36,7 @@ export interface AnimItem {
   particles: Container;
   agentId?: string;
   cliProvider?: string;
-  deskG?: Container;
+  deskG?: Container | Graphics;
   bedG?: Graphics;
   blanketG?: Graphics;
   phase: number;
@@ -57,7 +57,7 @@ export interface BreakAnimItem {
 export interface SubCloneAnimItem {
   container: Container;
   aura: Graphics;
-  cloneVisual: Sprite;
+  cloneVisual: Sprite | AnimatedSprite;
   animated?: AnimatedSprite;
   frameCount: number;
   baseScale: number;

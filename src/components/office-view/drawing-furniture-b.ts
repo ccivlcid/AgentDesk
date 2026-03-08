@@ -1,4 +1,4 @@
-import { type Container, Graphics } from "pixi.js";
+import { type Container, Graphics } from "./pixi-compat";
 import { blendColor } from "./drawing-core";
 import { LOCALE_TEXT, OFFICE_PASTEL, pickLocale, type SupportedLocale } from "./themes-locale";
 

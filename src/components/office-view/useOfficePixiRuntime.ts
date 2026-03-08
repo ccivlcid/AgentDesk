@@ -1,5 +1,5 @@
 import { useEffect, type MutableRefObject } from "react";
-import { Application, Assets, TextureStyle, type Texture } from "pixi.js";
+import { Application, Assets, TextureStyle, type Texture } from "./pixi-compat";
 import type { Agent, Department, SubAgent, Task } from "../../types";
 import { buildSpriteMap } from "../AgentAvatar";
 import { type Delivery, MIN_OFFICE_W, findScrollContainer } from "./model";
