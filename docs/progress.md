@@ -1000,27 +1000,29 @@ interface CeoCustomization {
 
 > 팩 무관 공통 기능. 개발 오피스 포함 모든 팩에 적용.
 
-**전체 보기 (Overview Mode)**:
-- 툴바 버튼 → CSS `transform: scale(fitScale)` on canvas (PixiJS 변경 없음)
-- `fitScale = min(wrapW/officeW, wrapH/totalH) * 0.95`
-- 전체 보기 중 `wrap.overflow = hidden`, 스크롤 잠금
-- 층 클릭 내비게이션 시 자동 해제
+**설계 방안 7가지** (`docs/office-view-tower-redesign.md` Section 7):
+- **A. 배경 씬 (Cityscape)** ★ — 타워 주변에 도시 배경 렌더링, 기존 코드 100% 재사용
+- **B. 6열 확장** — COLS_PER_ROW 3→6, 비율 1:1 근접
+- **C. 아코디언** — 축소 바(52px) + 1개 층만 PixiJS 확장
+- **D. 2단 분할** — 부서를 좌우 2열 그리드 배치
+- **E. 아이소메트릭 2.5D** — 30° 각도 기울어진 층 렌더링
+- **F. 대시보드+미니타워** — 좌측 축소 타워 + 우측 대시보드 카드
+- **G. 카드 그리드** — 타워 은유 제거, CSS Grid 카드 레이아웃
+- **H. 시맨틱 줌 (LOD)** — Overview 시 부서를 축소 바(40px)로 대체, 비례 압축으로 1:1 비율 달성
+- **I. Phaser 3 카메라** — 네이티브 줌/팬/미니맵, CSS hack 제거 (근본 해결)
 
-**미니맵 (OfficeMinimap)**:
-- HTML 2D canvas (별도 PixiJS 인스턴스 아님) — `72px × max200px`
-- 층별 department.color 블록 렌더링
-- amber 반투명 뷰포트 인디케이터
-- 클릭/드래그 → `wrap.scrollTo()` 연동
+**추천 경로**: A+H(단기, 배경씬+시맨틱줌) → I(중기, Phaser 마이그레이션) → 팩별 Scene(장기)
 
 | 항목 | 파일 | 상태 |
 |---|---|---|
-| `overviewMode` 상태 + fitScale 계산 | `OfficeView.tsx` | TODO |
-| 캔버스 CSS scale + overflow 전환 | `OfficeView.tsx` | TODO |
-| 툴바 OVERVIEW 토글 버튼 | `OfficeView.tsx` | TODO |
+| Overview 토글 (fitScale 기반) | `OfficeView.tsx` | ✅ DONE |
+| 부서 클릭 → smooth scroll | `OfficeView.tsx` | ✅ DONE |
+| CEO/CONF/Break 클릭 → scroll | `OfficeView.tsx` | ✅ DONE |
+| 7가지 방안 기획 문서화 | `office-view-tower-redesign.md` | ✅ DONE |
+| **방안 A 구현 (Cityscape 배경)** | `drawCityscape.ts`, `buildScene.ts` | TODO |
 | `OfficeMinimap.tsx` 신규 컴포넌트 | `office-view/OfficeMinimap.tsx` | TODO |
-| 2D canvas 층별 색상 블록 렌더링 | `OfficeMinimap.tsx` | TODO |
-| 뷰포트 인디케이터 + 스크롤 연동 | `OfficeMinimap.tsx` | TODO |
-| OfficeView 마운트 + 전체 보기 시 숨김 | `OfficeView.tsx` | TODO |
+| 줌 컨트롤 UI (Ctrl+wheel, 버튼) | `OfficeView.tsx` | TODO |
+| 모바일 층 인디케이터 | `OfficeView.tsx` | TODO |
 
 ---
 

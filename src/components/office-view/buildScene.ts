@@ -164,10 +164,8 @@ export function buildOfficeScene(context: BuildOfficeSceneContext): void {
   officeWRef.current = OFFICE_W;
   app.renderer.resize(OFFICE_W, totalH);
 
-  // CSS-scale the canvas to fill the container — overrides autoDensity inline px values
+  // Canvas CSS sizing is controlled by OfficeView.tsx (applyFitAll / applyFloorFocus)
   const canvasEl = app.canvas as HTMLCanvasElement;
-  canvasEl.style.width = "100%";
-  canvasEl.style.height = "auto";
   canvasEl.style.display = "block";
 
   // ── Full building background ──────────────────────────────────

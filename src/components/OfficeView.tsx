@@ -344,10 +344,9 @@ export default function OfficeView({
     [clearVirtualMovement],
   );
 
-  /* ── Overview helpers ── */
-  // DOM structure: containerRef → .office-canvas-frame → .office-canvas-wrap (scroll host)
+  /* ── View mode helpers ── */
+  // DOM: containerRef → .office-canvas-frame → .office-canvas-wrap (scroll host)
   const getScrollWrap = useCallback((): HTMLElement | null => {
-    // Try cached ref first, then walk 2 levels up to .office-canvas-wrap
     return (
       scrollHostYRef.current ??
       (containerRef.current?.parentElement?.parentElement as HTMLElement | null) ??
@@ -355,65 +354,87 @@ export default function OfficeView({
     );
   }, [containerRef, scrollHostYRef]);
 
-  const applyOverviewZoom = useCallback(() => {
-    const inner = containerRef.current;
-    if (!inner) return;
+  /** Overview = full tower fits in viewport (default).
+   *  Sets canvas to fit-all via explicit pixel size + centering. */
+  const applyFitAll = useCallback(() => {
+    const canvas = containerRef.current?.querySelector("canvas") as HTMLCanvasElement | null;
+    if (!canvas) return;
     const totalH = totalHRef.current;
     if (!totalH) return;
-    const scrollWrap = getScrollWrap();
-    if (!scrollWrap) return;
-    const visH = scrollWrap.clientHeight || window.innerHeight;
-    const visW = scrollWrap.clientWidth || FLOOR_W;
-    // Canvas is already CSS-scaled (width:100%, height:auto), so rendered content height
-    // = (visW / FLOOR_W) * totalH.  We need to shrink the frame so it fits visH.
-    const renderedContentH = (visW / FLOOR_W) * totalH;
-    const fitScale = Math.min(1, visH / renderedContentH) * 0.96;
-    // Apply transform to .office-canvas-frame
-    const frame = inner.parentElement; // .office-canvas-frame
+    const wrap = getScrollWrap();
+    if (!wrap) return;
+    const frame = containerRef.current?.parentElement as HTMLElement | null;
+
+    const visH = wrap.clientHeight || window.innerHeight;
+    const visW = wrap.clientWidth || FLOOR_W;
+    // Fit entire tower: scale = min(visW/FLOOR_W, visH/totalH), with 4% breathing room
+    const fitScale = Math.min(visW / FLOOR_W, visH / totalH) * 0.96;
+    const canvasW = Math.floor(FLOOR_W * fitScale);
+    const canvasH = Math.floor(totalH * fitScale);
+
+    canvas.style.width = `${canvasW}px`;
+    canvas.style.height = `${canvasH}px`;
+    canvas.style.maxWidth = "";
+    canvas.style.margin = "0 auto";
+    canvas.style.display = "block";
+
     if (frame) {
-      frame.style.transformOrigin = "top center";
-      frame.style.transform = `scale(${fitScale})`;
-      frame.style.height = `${visH}px`;
+      frame.style.minWidth = "";
+      frame.style.display = "flex";
+      frame.style.alignItems = "center";
+      frame.style.justifyContent = "center";
+      frame.style.height = "100%";
     }
-    // Prevent scrolling in overview mode
-    scrollWrap.style.overflow = "hidden";
-    scrollWrap.scrollTop = 0;
+    wrap.style.overflow = "hidden";
+    wrap.scrollTop = 0;
   }, [containerRef, totalHRef, getScrollWrap]);
 
-  const clearOverviewZoom = useCallback(() => {
-    const inner = containerRef.current;
-    if (!inner) return;
-    const frame = inner.parentElement; // .office-canvas-frame
+  /** Floor Focus = canvas fills width, vertical scroll enabled */
+  const applyFloorFocus = useCallback(() => {
+    const canvas = containerRef.current?.querySelector("canvas") as HTMLCanvasElement | null;
+    if (!canvas) return;
+    const frame = containerRef.current?.parentElement as HTMLElement | null;
+    const wrap = getScrollWrap();
+
+    canvas.style.width = "100%";
+    canvas.style.height = "auto";
+    canvas.style.maxWidth = "";
+    canvas.style.margin = "";
+    canvas.style.display = "block";
+
     if (frame) {
-      frame.style.transform = "";
-      frame.style.transformOrigin = "";
+      frame.style.minWidth = "100%";
+      frame.style.display = "";
+      frame.style.alignItems = "";
+      frame.style.justifyContent = "";
       frame.style.height = "";
     }
-    const scrollWrap = getScrollWrap();
-    if (scrollWrap) {
-      scrollWrap.style.overflow = "";
+    if (wrap) {
+      wrap.style.overflow = "";
     }
   }, [containerRef, getScrollWrap]);
 
-  /** Convert PixiJS logical Y to actual scroll Y (canvas is CSS-scaled via width:100%) */
-  const logicalToScrollY = useCallback((logicalY: number) => {
-    const wrap = getScrollWrap();
-    if (!wrap) return logicalY;
-    const canvas = containerRef.current?.querySelector("canvas");
-    if (!canvas) return logicalY;
-    const renderedH = canvas.getBoundingClientRect().height;
-    const totalH = totalHRef.current;
-    if (totalH <= 0) return logicalY;
-    const scale = renderedH / totalH;
-    return logicalY * scale;
-  }, [getScrollWrap, containerRef]);
-
+  /** Convert PixiJS logical Y to actual scroll Y */
   const scrollToFloorY = useCallback((logicalY: number, offset = 0.35) => {
     const wrap = getScrollWrap();
     if (!wrap || totalHRef.current <= 0) return;
-    const scrollY = logicalToScrollY(logicalY);
+    const canvas = containerRef.current?.querySelector("canvas");
+    if (!canvas) return;
+    const renderedH = canvas.getBoundingClientRect().height;
+    const scale = renderedH / totalHRef.current;
+    const scrollY = logicalY * scale;
     wrap.scrollTo({ top: Math.max(0, scrollY - wrap.clientHeight * offset), behavior: "smooth" });
-  }, [getScrollWrap, logicalToScrollY]);
+  }, [getScrollWrap, containerRef]);
+
+  /** Exit overview → switch to floor focus + scroll to target */
+  const exitOverviewAndScroll = useCallback((logicalY: number, offset = 0.35) => {
+    applyFloorFocus();
+    setIsOverviewMode(false);
+    // Wait for layout reflow after CSS change
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => scrollToFloorY(logicalY, offset));
+    });
+  }, [applyFloorFocus, scrollToFloorY]);
 
   const handleCanvasSelectDept = useCallback((dept: import("../types").Department) => {
     setSelectedDept(dept);
@@ -427,18 +448,12 @@ export default function OfficeView({
 
     const logicalY = ROOF_H + PENTHOUSE_H + CONFERENCE_FLOOR_H + deptIdx * FLOOR_TOTAL_H;
 
-    // If in overview mode, exit it first then scroll to the clicked floor
     if (isOverviewModeRef.current) {
-      clearOverviewZoom();
-      setIsOverviewMode(false);
-      // Wait two frames for layout to settle after zoom removal
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => scrollToFloorY(logicalY));
-      });
+      exitOverviewAndScroll(logicalY);
     } else {
       scrollToFloorY(logicalY);
     }
-  }, [clearOverviewZoom, scrollToFloorY]);
+  }, [exitOverviewAndScroll, scrollToFloorY]);
   cbRef.current = { onSelectAgent: handleCanvasSelectAgent, onSelectDepartment: handleCanvasSelectDept };
 
   const handleScrollToFloor = useCallback((target: "ceo" | "conf" | "basement") => {
@@ -452,26 +467,18 @@ export default function OfficeView({
       logicalY = ROOF_H + PENTHOUSE_H + CONFERENCE_FLOOR_H + nFloors * FLOOR_TOTAL_H;
     }
 
-    // Exit overview mode first if active
     if (isOverviewModeRef.current) {
-      clearOverviewZoom();
-      setIsOverviewMode(false);
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => scrollToFloorY(logicalY, 0.1));
-      });
+      exitOverviewAndScroll(logicalY, 0.1);
     } else {
       scrollToFloorY(logicalY, 0.1);
     }
-  }, [clearOverviewZoom, scrollToFloorY]);
+  }, [exitOverviewAndScroll, scrollToFloorY]);
 
   /* ── BUILD SCENE (no app destroy, just stage clear + rebuild) ── */
   const buildScene = useCallback(() => {
     const isFirst = !firstBuildDoneRef.current;
     firstBuildDoneRef.current = true;
-    // Temporarily clear CSS zoom during rebuild so PixiJS measures correctly,
-    // then re-apply if overview mode is still active.
     const wasOverview = isOverviewModeRef.current;
-    if (wasOverview) clearOverviewZoom();
 
     buildOfficeScene({
       appRef,
@@ -530,12 +537,19 @@ export default function OfficeView({
       visitorTickRef,
     });
 
-    // Auto-enter overview on very first scene load, or re-apply if still in overview
-    if (isFirst || wasOverview) {
-      applyOverviewZoom();
-      setIsOverviewMode(true);
+    // Default = floor focus (full width, scrollable) — Tiny Tower style
+    // Overview (fit-all) only when user explicitly toggles
+    if (wasOverview) {
+      applyFitAll();
+    } else {
+      applyFloorFocus();
+      // On first load, scroll to top
+      if (isFirst) {
+        const wrap = getScrollWrap();
+        if (wrap) wrap.scrollTop = 0;
+      }
     }
-  }, [applyOverviewZoom, clearOverviewZoom]);
+  }, [applyFitAll, applyFloorFocus, getScrollWrap]);
 
   // Listen for season preference changes from OfficeRoomManager
   useEffect(() => {
@@ -744,12 +758,12 @@ export default function OfficeView({
 
   const handleToggleOverview = useCallback(() => {
     if (!isOverviewMode) {
-      applyOverviewZoom();
+      applyFitAll();
     } else {
-      clearOverviewZoom();
+      applyFloorFocus();
     }
     setIsOverviewMode((prev) => !prev);
-  }, [isOverviewMode, applyOverviewZoom, clearOverviewZoom]);
+  }, [isOverviewMode, applyFitAll, applyFloorFocus]);
 
   useEffect(() => {
     const prev = prevTaskStatusesRef.current;
