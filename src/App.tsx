@@ -235,16 +235,18 @@ export default function App() {
     api
       .saveSettingsPatch(patchPayload)
       .then(async () => {
-        const [nextDepartments, nextAgents, nextLibraryAgents, nextSettingsRaw] = await Promise.all([
+        const [nextDepartments, nextAgents, nextLibraryAgents, nextSettingsRaw, nextStats] = await Promise.all([
           api.getDepartments({ workflowPackKey: packKey }),
           api.getAgents({ includeSeed: packKey !== "development" }),
           api.getAgents({ includeSeed: true }),
           api.getSettings(),
+          api.getStats(),
         ]);
         setDepartments(nextDepartments);
         setAgents(nextAgents);
         setLibraryAgents(nextLibraryAgents);
         setSettings(mergeSettingsWithDefaults(nextSettingsRaw));
+        setStats(nextStats);
         const clearNotice = () => {
           if (officePackBootstrapReqRef.current !== reqId) return;
           setOfficePackBootstrappingLabel(null);

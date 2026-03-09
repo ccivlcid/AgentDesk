@@ -255,6 +255,12 @@ export function useAppActions({
       }
       try {
         await api.saveSettings(nextSettings);
+        const packChanged =
+          normalizeOfficeWorkflowPack(nextSettings.officeWorkflowPack) !==
+          normalizeOfficeWorkflowPack(settings.officeWorkflowPack);
+        if (packChanged) {
+          api.getStats().then(setStats).catch((err) => console.error("Refetch stats after pack change failed:", err));
+        }
         if (autoUpdateChanged) {
           try {
             await api.setAutoUpdateEnabled(Boolean(nextSettings.autoUpdateEnabled));
@@ -272,7 +278,7 @@ export function useAppActions({
         console.error("Save settings failed:", error);
       }
     },
-    [settings, setSettings],
+    [settings, setSettings, setStats],
   );
 
   const handleDismissAutoUpdateNotice = useCallback(async () => {

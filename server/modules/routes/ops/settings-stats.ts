@@ -173,45 +173,94 @@ export function registerOpsSettingsStatsRoutes(ctx: RuntimeContext): void {
   });
 
   app.get("/api/stats", (_req, res) => {
-    const totalTasks = (db.prepare("SELECT COUNT(*) as cnt FROM tasks").get() as CountRow).cnt;
-    const doneTasks = (db.prepare("SELECT COUNT(*) as cnt FROM tasks WHERE status = 'done'").get() as CountRow)
-      .cnt;
-    const inProgressTasks = (
-      db.prepare("SELECT COUNT(*) as cnt FROM tasks WHERE status = 'in_progress'").get() as CountRow
+    const activePackRow = db.prepare("SELECT value FROM settings WHERE key = 'officeWorkflowPack' LIMIT 1").get() as
+      | { value?: unknown }
+      | undefined;
+    const activePack = normalizePackKey(activePackRow?.value) ?? "development";
+
+    const taskPackFilter = " WHERE COALESCE(workflow_pack_key, 'development') = ? ";
+    const taskPackArg = [activePack];
+    const agentPackFilter = " WHERE COALESCE(workflow_pack_key, 'development') = ? ";
+    const agentPackArg = [activePack];
+
+    const totalTasks = (
+      db.prepare(`SELECT COUNT(*) as cnt FROM tasks${taskPackFilter}`).get(...taskPackArg) as CountRow
     ).cnt;
-    const inboxTasks = (db.prepare("SELECT COUNT(*) as cnt FROM tasks WHERE status = 'inbox'").get() as CountRow)
-      .cnt;
+    const doneTasks = (
+      db
+        .prepare(
+          `SELECT COUNT(*) as cnt FROM tasks WHERE COALESCE(workflow_pack_key, 'development') = ? AND status = 'done'`,
+        )
+        .get(...taskPackArg) as CountRow
+    ).cnt;
+    const inProgressTasks = (
+      db
+        .prepare(
+          `SELECT COUNT(*) as cnt FROM tasks WHERE COALESCE(workflow_pack_key, 'development') = ? AND status = 'in_progress'`,
+        )
+        .get(...taskPackArg) as CountRow
+    ).cnt;
+    const inboxTasks = (
+      db
+        .prepare(
+          `SELECT COUNT(*) as cnt FROM tasks WHERE COALESCE(workflow_pack_key, 'development') = ? AND status = 'inbox'`,
+        )
+        .get(...taskPackArg) as CountRow
+    ).cnt;
     const plannedTasks = (
-      db.prepare("SELECT COUNT(*) as cnt FROM tasks WHERE status = 'planned'").get() as CountRow
+      db
+        .prepare(
+          `SELECT COUNT(*) as cnt FROM tasks WHERE COALESCE(workflow_pack_key, 'development') = ? AND status = 'planned'`,
+        )
+        .get(...taskPackArg) as CountRow
     ).cnt;
     const reviewTasks = (
-      db.prepare("SELECT COUNT(*) as cnt FROM tasks WHERE status = 'review'").get() as CountRow
+      db
+        .prepare(
+          `SELECT COUNT(*) as cnt FROM tasks WHERE COALESCE(workflow_pack_key, 'development') = ? AND status = 'review'`,
+        )
+        .get(...taskPackArg) as CountRow
     ).cnt;
     const cancelledTasks = (
-      db.prepare("SELECT COUNT(*) as cnt FROM tasks WHERE status = 'cancelled'").get() as CountRow
+      db
+        .prepare(
+          `SELECT COUNT(*) as cnt FROM tasks WHERE COALESCE(workflow_pack_key, 'development') = ? AND status = 'cancelled'`,
+        )
+        .get(...taskPackArg) as CountRow
     ).cnt;
     const collaboratingTasks = (
-      db.prepare("SELECT COUNT(*) as cnt FROM tasks WHERE status = 'collaborating'").get() as CountRow
+      db
+        .prepare(
+          `SELECT COUNT(*) as cnt FROM tasks WHERE COALESCE(workflow_pack_key, 'development') = ? AND status = 'collaborating'`,
+        )
+        .get(...taskPackArg) as CountRow
     ).cnt;
 
-    const totalAgents = (db.prepare("SELECT COUNT(*) as cnt FROM agents").get() as CountRow).cnt;
+    const totalAgents = (
+      db.prepare(`SELECT COUNT(*) as cnt FROM agents${agentPackFilter}`).get(...agentPackArg) as CountRow
+    ).cnt;
     const workingAgents = (
-      db.prepare("SELECT COUNT(*) as cnt FROM agents WHERE status = 'working'").get() as CountRow
+      db
+        .prepare(
+          `SELECT COUNT(*) as cnt FROM agents WHERE COALESCE(workflow_pack_key, 'development') = ? AND status = 'working'`,
+        )
+        .get(...agentPackArg) as CountRow
     ).cnt;
     const idleAgents = (
-      db.prepare("SELECT COUNT(*) as cnt FROM agents WHERE status = 'idle'").get() as CountRow
+      db
+        .prepare(
+          `SELECT COUNT(*) as cnt FROM agents WHERE COALESCE(workflow_pack_key, 'development') = ? AND status = 'idle'`,
+        )
+        .get(...agentPackArg) as CountRow
     ).cnt;
 
     const completionRate = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
 
     const topAgents = db
-      .prepare("SELECT id, name, avatar_emoji, stats_tasks_done, stats_xp FROM agents ORDER BY stats_xp DESC LIMIT 5")
-      .all();
-
-    const activePackRow = db.prepare("SELECT value FROM settings WHERE key = 'officeWorkflowPack' LIMIT 1").get() as
-      | { value?: unknown }
-      | undefined;
-    const activePack = normalizePackKey(activePackRow?.value) ?? "development";
+      .prepare(
+        "SELECT id, name, avatar_emoji, stats_tasks_done, stats_xp FROM agents WHERE COALESCE(workflow_pack_key, 'development') = ? ORDER BY stats_xp DESC LIMIT 5",
+      )
+      .all(activePack) as unknown[];
 
     let tasksByDept: unknown[];
     if (activePack !== "development") {
@@ -266,12 +315,12 @@ export function registerOpsSettingsStatsRoutes(ctx: RuntimeContext): void {
         `
     SELECT tl.*, t.title AS task_title
     FROM task_logs tl
-    LEFT JOIN tasks t ON tl.task_id = t.id
+    INNER JOIN tasks t ON tl.task_id = t.id AND COALESCE(t.workflow_pack_key, 'development') = ?
     ORDER BY tl.created_at DESC
     LIMIT 20
   `,
       )
-      .all();
+      .all(activePack) as unknown[];
 
     res.json({
       stats: {

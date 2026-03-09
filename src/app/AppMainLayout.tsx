@@ -591,7 +591,7 @@ export default function AppMainLayout({
               <Dashboard
                 stats={stats}
                 agents={displayAgents}
-                tasks={tasks}
+                tasks={tasksForActivePack}
                 companyName={settings.companyName}
                 onPrimaryCtaClick={() => setView("tasks-board")}
               />
