@@ -1,13 +1,11 @@
 import type { MutableRefObject } from "react";
-import { Graphics, Text, TextStyle, type AnimatedSprite, type Container, type Sprite, type Texture } from "./pixi-compat";
+import { Graphics, Text, TextStyle, type AnimatedSprite, type Container, type Sprite, type Texture, spawnParticleTween, tweenNode } from "./pixi-compat";
 import type { MeetingPresence } from "../../types";
 import {
   type Delivery,
   type RoomRect,
-  type SubCloneBurstParticle,
   type WallClockVisual,
   CEO_SIZE,
-  CEO_SPEED,
   CEO_ACCEL,
   CEO_FRICTION,
   CEO_MAX_SPEED,
@@ -17,7 +15,7 @@ import {
   SUB_CLONE_MOVE_Y_AMPLITUDE,
   SUB_CLONE_WAVE_SPEED,
   TARGET_CHAR_H,
-  destroyNode,
+  TXT,
   emitSubCloneFireworkBurst,
   AGENT_BREATHE_SPEED,
   AGENT_BREATHE_Y_AMP,
@@ -100,7 +98,6 @@ export interface OfficeTickerContext {
   keysRef: MutableRefObject<Record<string, boolean>>;
   ceoPosRef: MutableRefObject<{ x: number; y: number }>;
   ceoSpriteRef: MutableRefObject<Container | null>;
-  crownRef: MutableRefObject<Text | null>;
   highlightRef: MutableRefObject<Graphics | null>;
   animItemsRef: MutableRefObject<AgentAnimItem[]>;
   cliUsageRef: MutableRefObject<Record<string, { windows?: Array<{ utilization: number }> }> | null>;
@@ -108,7 +105,6 @@ export interface OfficeTickerContext {
   deliveriesRef: MutableRefObject<Delivery[]>;
   breakAnimItemsRef: MutableRefObject<BreakAnimItem[]>;
   subCloneAnimItemsRef: MutableRefObject<SubCloneAnimItem[]>;
-  subCloneBurstParticlesRef: MutableRefObject<SubCloneBurstParticle[]>;
   breakSteamParticlesRef: MutableRefObject<Container | null>;
   breakBubblesRef: MutableRefObject<Container[]>;
   wallClocksRef: MutableRefObject<WallClockVisual[]>;
@@ -225,8 +221,13 @@ export function runOfficeTickerStep(ctx: OfficeTickerContext): void {
             ctx.ceoPosRef.current.x + (Math.random() - 0.5) * 16,
             ctx.ceoPosRef.current.y + 8 + Math.random() * 8,
           );
-          (p as any)._life = 0;
-          trailLayer.addChild(p);
+          // Phaser tween: float up, fade out, shrink over ~420ms (≈25 ticks), then auto-destroy
+          spawnParticleTween(trailLayer, p, {
+            y: p.position.y - 12.5,
+            alpha: 0,
+            scaleX: 0.1,
+            scaleY: 0.1,
+          }, 420, { ease: "Sine.easeOut" });
         }
       }
     }
@@ -242,11 +243,7 @@ export function runOfficeTickerStep(ctx: OfficeTickerContext): void {
       ceo.rotation += (targetTilt - ceo.rotation) * 0.15;
     }
 
-    const crown = ctx.crownRef.current;
-    if (crown) {
-      crown.position.y = -30 + Math.sin(tick * 0.06) * 2;
-      crown.rotation = Math.sin(tick * 0.03) * 0.06;
-    }
+    // Crown bob: handled by persistent Phaser tween (buildScene-final-layers)
   }
 
   const highlight = ctx.highlightRef.current;
@@ -400,25 +397,26 @@ export function runOfficeTickerStep(ctx: OfficeTickerContext): void {
         sprite.rotation = Math.sin(wave * 0.5) * 0.015;
       }
 
-      // Task reception bounce (elastic spring effect)
-      if (item.bounceUntilTick > 0 && tick <= item.bounceUntilTick) {
-        const t = 1 - (item.bounceUntilTick - tick) / AGENT_TASK_BOUNCE_DURATION;
-        // Damped spring: bounces then settles
-        const spring = Math.sin(t * Math.PI * 2.5) * (1 - t) * AGENT_TASK_BOUNCE_HEIGHT;
-        sprite.position.y -= Math.abs(spring);
-        // Squash & stretch on bounce
-        const squash = 1 + Math.sin(t * Math.PI * 2.5) * (1 - t) * 0.1;
-        sprite.scale.set(2 - squash, squash);
-      } else {
-        sprite.scale.set(1, 1);
-      }
+      // Task reception bounce: triggered via tweenNode (see bounce trigger below)
     }
 
-    // Bounce trigger: detect arriving delivery for this agent
+    // Bounce trigger: detect arriving delivery → Phaser elastic tween
     if (agentId && item.bounceUntilTick <= tick) {
       for (const d of ctx.deliveriesRef.current) {
         if (d.agentId === agentId && d.progress > 0.85 && d.progress < 1 && !d.holdAtSeat) {
           item.bounceUntilTick = tick + AGENT_TASK_BOUNCE_DURATION;
+          // Bounce up with elastic ease, then return
+          tweenNode(sprite, { y: sprite.position.y - AGENT_TASK_BOUNCE_HEIGHT }, 500, {
+            ease: "Bounce.easeOut",
+            yoyo: true,
+            repeat: 0,
+          });
+          // Squash & stretch
+          tweenNode(sprite, { scaleY: 1.1, scaleX: 0.9 }, 250, {
+            ease: "Sine.easeOut",
+            yoyo: true,
+            repeat: 0,
+          });
           break;
         }
       }
@@ -434,27 +432,19 @@ export function runOfficeTickerStep(ctx: OfficeTickerContext): void {
 
     if (status === "working") {
       if (tick % 10 === 0) {
-        const particle = new Graphics();
+        const sparkle = new Graphics();
         const colors = [0x55aaff, 0x55ff88, 0xffaa33, 0xff5577, 0xaa77ff];
-        particle.star(0, 0, 4, 2, 1, 0).fill(colors[Math.floor(Math.random() * colors.length)]);
-        particle.position.set(baseX + (Math.random() - 0.5) * 24, baseY - 16 - Math.random() * 8);
-        (particle as any)._vy = -0.4 - Math.random() * 0.3;
-        (particle as any)._life = 0;
-        particles.addChild(particle);
-      }
-
-      for (let i = particles.children.length - 1; i >= 0; i--) {
-        const particle = particles.children[i] as any;
-        if (particle._sweat) continue;
-        particle._life++;
-        particle.position.y += particle._vy ?? -0.4;
-        particle.position.x += Math.sin(particle._life * 0.2) * 0.2;
-        particle.alpha = Math.max(0, 1 - particle._life * 0.03);
-        particle.scale.set(Math.max(0.1, 1 - particle._life * 0.02));
-        if (particle._life > 35) {
-          particles.removeChild(particle);
-          particle.destroy();
-        }
+        sparkle.star(0, 0, 4, 2, 1, 0).fill(colors[Math.floor(Math.random() * colors.length)]);
+        const startX = baseX + (Math.random() - 0.5) * 24;
+        const startY = baseY - 16 - Math.random() * 8;
+        sparkle.position.set(startX, startY);
+        // Phaser tween: float up, fade out, shrink over ~580ms (≈35 ticks), auto-destroy
+        spawnParticleTween(particles, sparkle, {
+          y: startY + (-0.4 - Math.random() * 0.3) * 35,
+          alpha: 0,
+          scaleX: 0.1,
+          scaleY: 0.1,
+        }, 580, { ease: "Sine.easeOut" });
       }
     }
 
@@ -498,23 +488,26 @@ export function runOfficeTickerStep(ctx: OfficeTickerContext): void {
           const star = new Graphics();
           star.star(0, 0, 5, 3, 1.5, 0).fill({ color: 0xffdd44, alpha: 0.8 });
           star.position.set(headX, bedCenterY - 22);
-          (star as any)._sweat = true;
-          (star as any)._dizzy = true;
-          (star as any)._offset = Math.random() * Math.PI * 2;
-          (star as any)._life = 0;
-          particles.addChild(star);
+          // Dizzy star: orbit around head using Phaser tween with yoyo+repeat
+          spawnParticleTween(particles, star, {
+            x: headX + 14,
+            y: bedCenterY - 18,
+            alpha: 0,
+          }, 630, { ease: "Sine.easeInOut" });
         }
 
         if (tick % 80 === 0) {
           const sleepy = new Text({
             text: "z",
-            style: new TextStyle({ fontSize: 7 + Math.random() * 3, fill: 0xaaaacc, fontFamily: "monospace" }),
+            style: new TextStyle({ fontSize: TXT.NORMAL + Math.random() * 3, fill: 0xaaaacc, fontFamily: "monospace" }),
           });
           sleepy.anchor.set(0.5, 0.5);
           sleepy.position.set(headX + 6, bedCenterY - 18);
-          (sleepy as any)._sweat = true;
-          (sleepy as any)._life = 0;
-          particles.addChild(sleepy);
+          // Float up and fade out over ~630ms
+          spawnParticleTween(particles, sleepy, {
+            y: bedCenterY - 32,
+            alpha: 0,
+          }, 630, { ease: "Sine.easeOut" });
         }
       } else if (maxUtil >= 0.8) {
         sprite.rotation = 0;
@@ -535,9 +528,11 @@ export function runOfficeTickerStep(ctx: OfficeTickerContext): void {
             .fill({ color: 0x7ec8e3, alpha: 0.85 });
           drop.circle(0, 3.8, 1.2).fill({ color: 0xbde4f4, alpha: 0.5 });
           drop.position.set(baseX + 8, baseY - 36);
-          (drop as any)._sweat = true;
-          (drop as any)._life = 0;
-          particles.addChild(drop);
+          // Sweat drop: drip down and fade over ~630ms
+          spawnParticleTween(particles, drop, {
+            y: baseY - 36 + 17,
+            alpha: 0,
+          }, 630, { ease: "Sine.easeIn" });
         }
       } else if (maxUtil >= 0.6) {
         sprite.rotation = 0;
@@ -558,9 +553,11 @@ export function runOfficeTickerStep(ctx: OfficeTickerContext): void {
             .fill({ color: 0x7ec8e3, alpha: 0.85 });
           drop.circle(0, 3.8, 1.2).fill({ color: 0xbde4f4, alpha: 0.5 });
           drop.position.set(baseX + 8, baseY - 36);
-          (drop as any)._sweat = true;
-          (drop as any)._life = 0;
-          particles.addChild(drop);
+          // Sweat drop: drip down and fade over ~630ms
+          spawnParticleTween(particles, drop, {
+            y: baseY - 36 + 17,
+            alpha: 0,
+          }, 630, { ease: "Sine.easeIn" });
         }
       } else {
         sprite.rotation = 0;
@@ -572,29 +569,7 @@ export function runOfficeTickerStep(ctx: OfficeTickerContext): void {
         if (blanketG) blanketG.visible = false;
       }
 
-      for (let i = particles.children.length - 1; i >= 0; i--) {
-        const particle = particles.children[i] as any;
-        if (!particle._sweat) continue;
-        particle._life++;
-
-        if (particle._dizzy) {
-          const headPX = baseX - TARGET_CHAR_H / 2 + 10;
-          const bedCenterY = baseY - 8 + 18;
-          const angle = tick * 0.08 + particle._offset;
-          particle.position.x = headPX + Math.cos(angle) * 14;
-          particle.position.y = bedCenterY - 22 + Math.sin(angle * 0.7) * 4;
-          particle.alpha = 0.7 + Math.sin(tick * 0.1) * 0.3;
-        } else {
-          particle.position.y += 0.45;
-          particle.position.x += Math.sin(particle._life * 0.15) * 0.15;
-          particle.alpha = Math.max(0, 0.85 - particle._life * 0.022);
-        }
-
-        if (particle._life > 38) {
-          particles.removeChild(particle);
-          particle.destroy();
-        }
-      }
+      // Sweat/sleep particles: cleanup handled by spawnParticleTween auto-destroy
     }
   }
 
@@ -625,7 +600,6 @@ export function runOfficeTickerStep(ctx: OfficeTickerContext): void {
       if (room) {
         emitSubCloneFireworkBurst(
           room,
-          ctx.subCloneBurstParticlesRef.current,
           clone.container.position.x,
           clone.container.position.y - 24,
         );
@@ -633,21 +607,7 @@ export function runOfficeTickerStep(ctx: OfficeTickerContext): void {
     }
   }
 
-  const burstParticles = ctx.subCloneBurstParticlesRef.current;
-  for (let i = burstParticles.length - 1; i >= 0; i--) {
-    const particle = burstParticles[i];
-    particle.life += 1;
-    particle.node.position.x += particle.vx;
-    particle.node.position.y += particle.vy;
-    particle.node.rotation += particle.spin;
-    particle.node.scale.set(particle.node.scale.x + particle.growth, particle.node.scale.y + particle.growth);
-    particle.node.alpha = Math.max(0, 1 - particle.life / particle.maxLife);
-
-    if (particle.life >= particle.maxLife || particle.node.destroyed) {
-      destroyNode(particle.node);
-      burstParticles.splice(i, 1);
-    }
-  }
+  // Sub-clone burst particles: cleanup handled by spawnParticleTween auto-destroy
 
   updateBreakRoomAndDeliveryAnimations(
     {
@@ -660,21 +620,7 @@ export function runOfficeTickerStep(ctx: OfficeTickerContext): void {
     tick,
   );
 
-  // CEO trail particle cleanup
-  const trailLayer = ctx.ceoTrailParticlesRef.current;
-  if (trailLayer) {
-    for (let i = trailLayer.children.length - 1; i >= 0; i--) {
-      const p = trailLayer.children[i] as any;
-      p._life++;
-      p.position.y -= 0.5;
-      p.alpha = Math.max(0, 0.8 - p._life * 0.04);
-      p.scale.set(Math.max(0.1, 1 - p._life * 0.03));
-      if (p._life > 25) {
-        trailLayer.removeChild(p);
-        p.destroy();
-      }
-    }
-  }
+  // CEO trail particles: cleanup handled by spawnParticleTween auto-destroy
 
   // Seasonal particle animation
   if (ctx.seasonalParticleRef.current) {

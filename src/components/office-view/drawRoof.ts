@@ -1,4 +1,5 @@
 import { Container, Graphics, Text, TextStyle } from "./pixi-compat";
+import { TXT } from "./model";
 
 interface DrawRoofParams {
   stage: Container;
@@ -99,7 +100,7 @@ export function drawRoof({ stage, floorW, roofH, isDark, companyName }: DrawRoof
   const signName = companyName?.trim() ? companyName.trim().toUpperCase() : "AGENTDESK";
   const sign = new Text({
     text: `[ ${signName} // MISSION CTRL ]`,
-    style: new TextStyle({ fontSize: 6, fill: 0xf59e0b, fontWeight: "bold", fontFamily: "monospace", letterSpacing: 1 }),
+    style: new TextStyle({ fontSize: TXT.SMALL, fill: 0xf59e0b, fontWeight: "bold", fontFamily: "monospace", letterSpacing: 1 }),
   });
   sign.anchor.set(0, 0.5);
   sign.position.set(13, 13);

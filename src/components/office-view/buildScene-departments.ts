@@ -10,8 +10,8 @@ import {
   SLOT_H,
   SLOT_W,
   TARGET_CHAR_H,
+  TXT,
   type RoomRect,
-  type SubCloneBurstParticle,
   type WallClockVisual,
   emitSubCloneSmokeBurst,
 } from "./model";
@@ -54,7 +54,6 @@ interface BuildDepartmentRoomsParams {
   agentPosRef: MutableRefObject<Map<string, { x: number; y: number }>>;
   animItemsRef: MutableRefObject<AnimItem[]>;
   subCloneAnimItemsRef: MutableRefObject<SubCloneAnimItem[]>;
-  subCloneBurstParticlesRef: MutableRefObject<SubCloneBurstParticle[]>;
   wallClocksRef: MutableRefObject<WallClockVisual[]>;
   roomDecorations: Record<string, RoomDecoration>;
   furnitureLayouts: FurnitureLayout;
@@ -87,7 +86,6 @@ export function buildDepartmentRooms({
   agentPosRef,
   animItemsRef,
   subCloneAnimItemsRef,
-  subCloneBurstParticlesRef,
   wallClocksRef,
   roomDecorations,
   furnitureLayouts,
@@ -130,7 +128,7 @@ export function buildDepartmentRooms({
     const signTxt = new Text({
       text: `${dept.icon || "🏢"} ${localeName(activeLocale, dept)}`,
       style: new TextStyle({
-        fontSize: 9,
+        fontSize: TXT.MEDIUM,
         fill: 0xffffff,
         fontWeight: "bold",
         fontFamily: "system-ui, sans-serif",
@@ -180,7 +178,7 @@ export function buildDepartmentRooms({
     if (deptAgents.length === 0) {
       const emptyText = new Text({
         text: pickLocale(activeLocale, LOCALE_TEXT.noAssignedAgent),
-        style: new TextStyle({ fontSize: 10, fill: 0x9a8a7a, fontFamily: "system-ui, sans-serif" }),
+        style: new TextStyle({ fontSize: TXT.MEDIUM, fill: 0x9a8a7a, fontFamily: "system-ui, sans-serif" }),
       });
       emptyText.anchor.set(0.5, 0.5);
       emptyText.position.set(rx + roomW / 2, ry + roomH / 2);
@@ -208,7 +206,7 @@ export function buildDepartmentRooms({
       const removedBursts = removedSubBurstsByParent.get(agent.id);
       if (removedBursts && removedBursts.length > 0) {
         for (const burst of removedBursts) {
-          emitSubCloneSmokeBurst(room, subCloneBurstParticlesRef.current, burst.x, burst.y, "despawn");
+          emitSubCloneSmokeBurst(room, burst.x, burst.y, "despawn");
         }
         removedSubBurstsByParent.delete(agent.id);
       }
@@ -232,7 +230,6 @@ export function buildDepartmentRooms({
           cbRef,
           animItemsRef,
           subCloneAnimItemsRef,
-          subCloneBurstParticlesRef,
           addedWorkingSubIds,
           nextSubSnapshot,
           themeAccent: theme.accent,
@@ -326,7 +323,7 @@ function renderAgentHeader(
   const nameText = new Text({
     text: localeName(activeLocale, agent),
     style: new TextStyle({
-      fontSize: 7,
+      fontSize: TXT.NORMAL,
       fill: 0x3a3a4a,
       fontWeight: "bold",
       fontFamily: "system-ui, sans-serif",
@@ -348,7 +345,7 @@ function renderAgentHeader(
     room.addChild(bangBg);
     const bangTxt = new Text({
       text: "!",
-      style: new TextStyle({ fontSize: 8, fill: 0xffffff, fontWeight: "bold", fontFamily: "monospace" }),
+      style: new TextStyle({ fontSize: TXT.NORMAL, fill: 0xffffff, fontWeight: "bold", fontFamily: "monospace" }),
     });
     bangTxt.anchor.set(0.5, 0.5);
     bangTxt.position.set(bangX, nameY + 6);
@@ -366,7 +363,7 @@ function renderAgentHeader(
       },
     ),
     style: new TextStyle({
-      fontSize: 6,
+      fontSize: TXT.SMALL,
       fill: contrastTextColor(accent),
       fontFamily: "system-ui, sans-serif",
     }),
@@ -395,7 +392,7 @@ function drawBreakAwayTag(
   const awayTag = new Text({
     text: pickLocale(activeLocale, LOCALE_TEXT.breakRoom),
     style: new TextStyle({
-      fontSize: 8,
+      fontSize: TXT.NORMAL,
       fill: contrastTextColor(awayTagBgColor),
       fontWeight: "bold",
       fontFamily: "system-ui, sans-serif",

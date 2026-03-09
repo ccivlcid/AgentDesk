@@ -13,8 +13,8 @@ import {
   FLOOR_W,
   FLOOR_ROOM_H,
   FLOOR_HALLWAY_H,
+  TXT,
   type RoomRect,
-  type SubCloneBurstParticle,
   type WallClockVisual,
   emitSubCloneSmokeBurst,
 } from "./model";
@@ -67,7 +67,7 @@ function drawFloorStatStrip(
     `A:${activeAgents}`,
   ];
   const rowH = Math.floor((rh - 4) / stats.length);
-  const txtStyle = new TextStyle({ fontSize: 5, fill: accent, fontFamily: "monospace", align: "left" });
+  const txtStyle = new TextStyle({ fontSize: TXT.SMALL, fill: accent, fontFamily: "monospace", align: "left" });
   stats.forEach((line, i) => {
     const t = new Text({ text: line, style: txtStyle });
     t.anchor.set(0, 0.5);
@@ -98,7 +98,6 @@ interface DrawFloorParams {
   agentPosRef: MutableRefObject<Map<string, { x: number; y: number }>>;
   animItemsRef: MutableRefObject<AnimItem[]>;
   subCloneAnimItemsRef: MutableRefObject<SubCloneAnimItem[]>;
-  subCloneBurstParticlesRef: MutableRefObject<SubCloneBurstParticle[]>;
   wallClocksRef: MutableRefObject<WallClockVisual[]>;
   roomDecorations: Record<string, RoomDecoration>;
   furnitureLayouts: FurnitureLayout;
@@ -128,7 +127,6 @@ export function drawFloor({
   agentPosRef,
   animItemsRef,
   subCloneAnimItemsRef,
-  subCloneBurstParticlesRef,
   wallClocksRef,
   roomDecorations,
   removedSubBurstsByParent,
@@ -139,9 +137,9 @@ export function drawFloor({
   // When dark mode is active and a custom theme provides bright floor/wall colors,
   // darken them so the floor doesn't look white/washed-out.
   const theme = (isDark && customTheme) ? {
-    floor1: blendColor(rawTheme.floor1, 0x000000, 0.85),
-    floor2: blendColor(rawTheme.floor2, 0x000000, 0.85),
-    wall:   blendColor(rawTheme.wall,   0x000000, 0.70),
+    floor1: blendColor(rawTheme.floor1, 0x000000, 0.45),
+    floor2: blendColor(rawTheme.floor2, 0x000000, 0.45),
+    wall:   blendColor(rawTheme.wall,   0x000000, 0.35),
     accent: rawTheme.accent,
   } : rawTheme;
   const rx = WALL_W;                                  // 20
@@ -226,7 +224,7 @@ export function drawFloor({
 
   const signTxt = new Text({
     text: localeName(activeLocale, dept).toUpperCase(),
-    style: new TextStyle({ fontSize: 7, fill: theme.accent, fontWeight: "bold", fontFamily: "monospace", letterSpacing: 1 }),
+    style: new TextStyle({ fontSize: TXT.NORMAL, fill: theme.accent, fontWeight: "bold", fontFamily: "monospace", letterSpacing: 1 }),
   });
   signTxt.anchor.set(0, 0.5);
   signTxt.position.set(rx + 6, ry + 5);
@@ -235,7 +233,7 @@ export function drawFloor({
   // Floor number — top-right, monospace
   const floorNumTxt = new Text({
     text: `NODE-${String(floorIndex + 1).padStart(2, "0")}`,
-    style: new TextStyle({ fontSize: 6, fill: isDark ? 0x444444 : 0x888888, fontFamily: "monospace" }),
+    style: new TextStyle({ fontSize: TXT.SMALL, fill: isDark ? 0x444444 : 0x888888, fontFamily: "monospace" }),
   });
   floorNumTxt.anchor.set(1, 0);
   floorNumTxt.position.set(rx + rw - 4, ry + 3);
@@ -289,7 +287,7 @@ export function drawFloor({
   if (visibleAgents.length === 0) {
     const emptyTxt = new Text({
       text: pickLocale(activeLocale, LOCALE_TEXT.noAssignedAgent),
-      style: new TextStyle({ fontSize: 9, fill: 0x9a8a7a, fontFamily: "system-ui, sans-serif" }),
+      style: new TextStyle({ fontSize: TXT.MEDIUM, fill: 0x9a8a7a, fontFamily: "system-ui, sans-serif" }),
     });
     emptyTxt.anchor.set(0.5, 0.5);
     emptyTxt.position.set(rx + rw / 2, ry + rh / 2);
@@ -315,7 +313,7 @@ export function drawFloor({
     const removedBursts = removedSubBurstsByParent.get(agent.id);
     if (removedBursts?.length) {
       for (const burst of removedBursts) {
-        emitSubCloneSmokeBurst(floor, subCloneBurstParticlesRef.current, burst.x, burst.y, "despawn");
+        emitSubCloneSmokeBurst(floor, burst.x, burst.y, "despawn");
       }
       removedSubBurstsByParent.delete(agent.id);
     }
@@ -340,7 +338,6 @@ export function drawFloor({
         cbRef,
         animItemsRef,
         subCloneAnimItemsRef,
-        subCloneBurstParticlesRef,
         addedWorkingSubIds,
         nextSubSnapshot,
         themeAccent: theme.accent,
@@ -360,7 +357,7 @@ export function drawFloor({
   if (hasOverflow) {
     const overflowTxt = new Text({
       text: `+${deptAgents.length - MAX_AGENTS_PER_FLOOR}`,
-      style: new TextStyle({ fontSize: 7, fill: theme.accent, fontWeight: "bold", fontFamily: "monospace" }),
+      style: new TextStyle({ fontSize: TXT.NORMAL, fill: theme.accent, fontWeight: "bold", fontFamily: "monospace" }),
     });
     overflowTxt.anchor.set(1, 1);
     overflowTxt.position.set(rx + rw - 4, ry + rh - 4);
@@ -411,7 +408,7 @@ export function drawFloor({
   // Floor label (left side, small badge)
   const floorNumH = new Text({
     text: `F${floorIndex + 1}`,
-    style: new TextStyle({ fontSize: 5, fill: isDark ? 0x3a4c68 : 0x446080, fontFamily: "monospace" }),
+    style: new TextStyle({ fontSize: TXT.SMALL, fill: isDark ? 0x3a4c68 : 0x446080, fontFamily: "monospace" }),
   });
   floorNumH.anchor.set(0, 0.5);
   floorNumH.position.set(rx + 4, centerY);
@@ -432,15 +429,15 @@ function drawAgentNameTag(
   // Terminal-style name tag: dark rect + accent border-left + monospace text
   const nameText = new Text({
     text: localeName(activeLocale, agent),
-    style: new TextStyle({ fontSize: 7, fill: accent, fontWeight: "bold", fontFamily: "monospace" }),
+    style: new TextStyle({ fontSize: TXT.NORMAL, fill: accent, fontWeight: "bold", fontFamily: "monospace" }),
   });
   nameText.anchor.set(0.5, 0);
   const nameTagW = nameText.width + 8;
   const nameTagBg = new Graphics();
-  nameTagBg.rect(ax - nameTagW / 2, nameY, nameTagW, 11).fill({ color: 0x050810, alpha: 0.88 });
-  nameTagBg.rect(ax - nameTagW / 2, nameY, 2, 11).fill({ color: accent, alpha: 0.8 });
+  nameTagBg.rect(ax - nameTagW / 2, nameY, nameTagW, 14).fill({ color: 0x050810, alpha: 0.88 });
+  nameTagBg.rect(ax - nameTagW / 2, nameY, 2, 14).fill({ color: accent, alpha: 0.8 });
   room.addChild(nameTagBg);
-  nameText.position.set(ax + 1, nameY + 2);
+  nameText.position.set(ax + 1, nameY + 3);
   room.addChild(nameText);
 
   if (unread?.has(agent.id)) {
@@ -448,7 +445,7 @@ function drawAgentNameTag(
     const bangBg = new Graphics();
     bangBg.rect(bangX - 3, nameY + 1, 6, 9).fill(0xef4444);
     room.addChild(bangBg);
-    const bangTxt = new Text({ text: "!", style: new TextStyle({ fontSize: 7, fill: 0xffffff, fontWeight: "bold", fontFamily: "monospace" }) });
+    const bangTxt = new Text({ text: "!", style: new TextStyle({ fontSize: TXT.NORMAL, fill: 0xffffff, fontWeight: "bold", fontFamily: "monospace" }) });
     bangTxt.anchor.set(0.5, 0.5);
     bangTxt.position.set(bangX, nameY + 5);
     room.addChild(bangTxt);
@@ -460,15 +457,15 @@ function drawAgentNameTag(
       activeLocale,
       LOCALE_TEXT.role[agent.role as keyof typeof LOCALE_TEXT.role] ?? { ko: agent.role, en: agent.role, ja: agent.role, zh: agent.role },
     ),
-    style: new TextStyle({ fontSize: 5, fill: 0x666688, fontFamily: "monospace" }),
+    style: new TextStyle({ fontSize: TXT.SMALL, fill: 0x666688, fontFamily: "monospace" }),
   });
   roleText.anchor.set(0.5, 0.5);
   const roleTagW = roleText.width + 6;
   const roleTagBg = new Graphics();
-  roleTagBg.rect(ax - roleTagW / 2, nameY + 12, roleTagW, 8).fill({ color: 0x0a0e1a, alpha: 0.75 });
-  roleTagBg.rect(ax - roleTagW / 2, nameY + 19, roleTagW, 1).fill({ color: accent, alpha: 0.35 });
+  roleTagBg.rect(ax - roleTagW / 2, nameY + 15, roleTagW, 10).fill({ color: 0x0a0e1a, alpha: 0.75 });
+  roleTagBg.rect(ax - roleTagW / 2, nameY + 24, roleTagW, 1).fill({ color: accent, alpha: 0.35 });
   room.addChild(roleTagBg);
-  roleText.position.set(ax, nameY + 16);
+  roleText.position.set(ax, nameY + 20);
   room.addChild(roleText);
 }
 
@@ -482,7 +479,7 @@ function drawBreakAwayTag(
   const awayBgColor = blendColor(accent, 0x101826, 0.78);
   const awayTagTxt = new Text({
     text: pickLocale(activeLocale, LOCALE_TEXT.breakRoom),
-    style: new TextStyle({ fontSize: 7, fill: contrastTextColor(awayBgColor), fontWeight: "bold", fontFamily: "system-ui, sans-serif" }),
+    style: new TextStyle({ fontSize: TXT.NORMAL, fill: contrastTextColor(awayBgColor), fontWeight: "bold", fontFamily: "system-ui, sans-serif" }),
   });
   awayTagTxt.anchor.set(0.5, 0.5);
   const atW = awayTagTxt.width + 10;

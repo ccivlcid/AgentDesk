@@ -3,7 +3,6 @@ import { motion } from "framer-motion";
 import OfficeDeptPanel from "./office-view/OfficeDeptPanel";
 import { ROOF_H, PENTHOUSE_H, CONFERENCE_FLOOR_H, FLOOR_TOTAL_H, BASEMENT_H, FLOOR_W, SKY_H, GROUND_H } from "./office-view/model";
 import OfficeAgentPanel from "./office-view/OfficeAgentPanel";
-import OfficeQuickChat from "./office-view/OfficeQuickChat";
 import {
   type Application,
   type Container,
@@ -30,7 +29,6 @@ import {
   MIN_OFFICE_W,
   MOBILE_MOVE_CODES,
   type MobileMoveDirection,
-  type SubCloneBurstParticle,
 } from "./office-view/model";
 import { type SupportedLocale } from "./office-view/themes-locale";
 import { useCliUsage } from "./office-view/useCliUsage";
@@ -160,7 +158,6 @@ export default function OfficeView({
       fireworkOffset: number;
     }>
   >([]);
-  const subCloneBurstParticlesRef = useRef<SubCloneBurstParticle[]>([]);
   const subCloneSnapshotRef = useRef<Map<string, { parentAgentId: string; x: number; y: number }>>(new Map());
   const breakSteamParticlesRef = useRef<Container | null>(null);
   const breakBubblesRef = useRef<Container[]>([]);
@@ -219,7 +216,6 @@ export default function OfficeView({
   const handleCanvasSelectAgent = useCallback((agent: import("../types").Agent) => {
     setSelectedAgent(agent);
     setSelectedDept(null);
-    setQuickChatAgent(agent);
   }, []);
   const isOverviewModeRef = useRef(true);
 
@@ -236,7 +232,6 @@ export default function OfficeView({
   const [showVirtualPad, setShowVirtualPad] = useState(false);
   const [selectedAgent, setSelectedAgent] = useState<import("../types").Agent | null>(null);
   const [selectedDept, setSelectedDept] = useState<import("../types").Department | null>(null);
-  const [quickChatAgent, setQuickChatAgent] = useState<import("../types").Agent | null>(null);
   const showVirtualPadRef = useRef(showVirtualPad);
   showVirtualPadRef.current = showVirtualPad;
   const scrollHostXRef = useRef<HTMLElement | null>(null);
@@ -274,7 +269,7 @@ export default function OfficeView({
     // The canvas logical size includes cityscape; CEO pos is tower-local
     // We need to convert tower-local coords → scene coords → rendered pixels
     const canvas = container.querySelector("canvas");
-    const resolution = Math.min(window.devicePixelRatio || 1, 2);
+    const resolution = 2;
     const logicalW = canvas ? canvas.width / resolution : officeWRef.current;
     const logicalH = canvas ? canvas.height / resolution : (totalHRef.current + SKY_H + GROUND_H);
     const scaleX = logicalW > 0 ? container.clientWidth / logicalW : 1;
@@ -382,7 +377,7 @@ export default function OfficeView({
     const visW = wrap.clientWidth || FLOOR_W;
     // Scene dimensions (canvas logical size includes cityscape)
     const sceneH = totalH + SKY_H + GROUND_H;
-    const resolution = Math.min(window.devicePixelRatio || 1, 2);
+    const resolution = 2;
     const sceneW = canvas.width / resolution;
     // Fit entire scene height to viewport, let width fill naturally
     const fitScale = Math.min(visW / sceneW, visH / sceneH) * 0.98;
@@ -394,49 +389,55 @@ export default function OfficeView({
     canvas.style.maxWidth = "";
     canvas.style.margin = "0 auto";
     canvas.style.display = "block";
+    canvas.style.transform = "";
+    canvas.style.imageRendering = "pixelated";
 
     if (frame) {
       frame.style.minWidth = "";
+      frame.style.width = "";
+      frame.style.maxWidth = "";
+      frame.style.overflow = "";
       frame.style.display = "flex";
       frame.style.alignItems = "center";
       frame.style.justifyContent = "center";
-      frame.style.height = "100%";
+      frame.style.height = "";
     }
     wrap.style.overflow = "hidden";
     wrap.scrollTop = 0;
+    wrap.scrollLeft = 0;
   }, [containerRef, totalHRef, getScrollWrap]);
 
-  /** Floor Focus = tower fills viewport width, vertical scroll enabled */
+  /** Floor Focus = canvas fills viewport width, vertical scroll enabled */
   const applyFloorFocus = useCallback(() => {
     const canvas = containerRef.current?.querySelector("canvas") as HTMLCanvasElement | null;
     if (!canvas) return;
     const frame = containerRef.current?.parentElement as HTMLElement | null;
     const wrap = getScrollWrap();
 
-    const resolution = Math.min(window.devicePixelRatio || 1, 2);
-    const sceneW = canvas.width / resolution;
     const visW = wrap?.clientWidth || 800;
-    // Scale so canvas width fills viewport, but cap so floors aren't too huge
-    const rawScale = visW / sceneW;
-    const maxScale = 2.5; // cap: each floor ≤ 460px tall
-    const scale = Math.min(rawScale, maxScale);
-    const canvasW = Math.floor(sceneW * scale);
 
-    canvas.style.width = `${canvasW}px`;
+    canvas.style.width = `${visW}px`;
     canvas.style.height = "auto";
     canvas.style.maxWidth = "";
-    canvas.style.margin = "0 auto";
+    canvas.style.margin = "0";
     canvas.style.display = "block";
+    canvas.style.transform = "";
+    // With resolution=2, canvas has 2x physical pixels — downscale looks crisp
+    canvas.style.imageRendering = "pixelated";
 
     if (frame) {
-      frame.style.minWidth = "100%";
-      frame.style.display = "";
+      frame.style.display = "block";
+      frame.style.width = "";
+      frame.style.minWidth = "";
+      frame.style.maxWidth = "";
+      frame.style.overflow = "";
       frame.style.alignItems = "";
       frame.style.justifyContent = "";
       frame.style.height = "";
     }
     if (wrap) {
-      wrap.style.overflow = "";
+      wrap.style.overflow = "auto";
+      wrap.scrollLeft = 0;
     }
   }, [containerRef, getScrollWrap]);
 
@@ -451,7 +452,7 @@ export default function OfficeView({
     const sceneH = totalHRef.current + SKY_H + GROUND_H;
     const scale = renderedH / sceneH;
     const scrollY = (SKY_H + logicalY) * scale;
-    wrap.scrollTo({ top: Math.max(0, scrollY - wrap.clientHeight * offset), behavior: "smooth" });
+    wrap.scrollTo({ top: Math.max(0, scrollY - wrap.clientHeight * offset), left: 0, behavior: "smooth" });
   }, [getScrollWrap, containerRef]);
 
   /** Exit overview → switch to floor focus + scroll to target */
@@ -461,11 +462,20 @@ export default function OfficeView({
     isOverviewModeRef.current = false;
     applyFloorFocus();
     setIsOverviewMode(false);
-    // Wait for layout reflow after CSS change
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => scrollToFloorY(logicalY, offset));
-    });
-  }, [applyFloorFocus, scrollToFloorY]);
+    // Wait for layout reflow after CSS change — need enough delay for canvas resize
+    setTimeout(() => {
+      const wrap = getScrollWrap();
+      if (!wrap || totalHRef.current <= 0) return;
+      const canvas = containerRef.current?.querySelector("canvas");
+      if (!canvas) return;
+      const renderedH = canvas.getBoundingClientRect().height;
+      const sceneH = totalHRef.current + SKY_H + GROUND_H;
+      const scale = renderedH / sceneH;
+      const scrollY = (SKY_H + logicalY) * scale;
+      // Instant jump first (no smooth animation from 0)
+      wrap.scrollTo({ top: Math.max(0, scrollY - wrap.clientHeight * offset), left: 0, behavior: "instant" });
+    }, 80);
+  }, [applyFloorFocus, getScrollWrap, containerRef]);
 
   const handleCanvasSelectDept = useCallback((dept: import("../types").Department) => {
     setSelectedDept(dept);
@@ -540,7 +550,6 @@ export default function OfficeView({
       breakRoomRectRef,
       breakAnimItemsRef,
       subCloneAnimItemsRef,
-      subCloneBurstParticlesRef,
       subCloneSnapshotRef,
       breakSteamParticlesRef,
       breakBubblesRef,
@@ -664,7 +673,6 @@ export default function OfficeView({
       keysRef,
       ceoPosRef,
       ceoSpriteRef,
-      crownRef,
       highlightRef,
       animItemsRef,
       cliUsageRef,
@@ -672,7 +680,6 @@ export default function OfficeView({
       deliveriesRef,
       breakAnimItemsRef,
       subCloneAnimItemsRef,
-      subCloneBurstParticlesRef,
       breakSteamParticlesRef,
       breakBubblesRef,
       wallClocksRef,
@@ -1147,14 +1154,16 @@ export default function OfficeView({
                 tabIndex={0}
               />
             </div>
-            <VirtualPadOverlay
-              showVirtualPad={showVirtualPad}
-              t={t}
-              onInteract={triggerDepartmentInteract}
-              onSetMoveDirectionPressed={setMoveDirectionPressed}
-            />
+            {!isOverviewMode && (
+              <VirtualPadOverlay
+                showVirtualPad={showVirtualPad}
+                t={t}
+                onInteract={triggerDepartmentInteract}
+                onSetMoveDirectionPressed={setMoveDirectionPressed}
+              />
+            )}
 
-            {/* ── Semantic Zoom: Overview summary bars (scrolls with canvas) ── */}
+            {/* ── Semantic Zoom: Full-screen department list (overview) or hidden ── */}
             <OfficeOverviewBars
               departments={sortedDepartments}
               agents={agents}
@@ -1288,28 +1297,10 @@ export default function OfficeView({
               </div>
             ))}
 
-            {/* Quick chat popup — appears when agent is clicked on canvas */}
-            {quickChatAgent && (
-              <div
-                className="pointer-events-auto"
-                style={{
-                  position: "absolute",
-                  bottom: 16,
-                  right: 16,
-                  zIndex: 40,
-                }}
-              >
-                <OfficeQuickChat
-                  agent={quickChatAgent}
-                  agents={agents}
-                  onClose={() => setQuickChatAgent(null)}
-                />
-              </div>
-            )}
           </div>
         </div>
 
-        {/* Right — agent / dept detail */}
+        {/* Right — agent / dept detail (visible >= 1280px) */}
         <motion.div
           className="office-right"
           initial={{ opacity: 0, x: 16 }}
@@ -1328,6 +1319,28 @@ export default function OfficeView({
             onViewDept={onSelectDepartment}
           />
         </motion.div>
+
+        {/* Floating agent/dept detail (visible < 1280px when selected) */}
+        {(selectedAgent || selectedDept) && (
+          <div className="office-right-float">
+            <button
+              className="office-right-float__close"
+              onClick={() => { setSelectedAgent(null); setSelectedDept(null); }}
+              aria-label="Close"
+            >✕</button>
+            <OfficeAgentPanel
+              selectedAgent={selectedAgent}
+              selectedDept={selectedDept}
+              agents={agents}
+              tasks={tasks}
+              departments={departments}
+              ceoIncoming={ceoIncomingCount}
+              visitingAgentIds={visitingAgentIds}
+              onViewAgent={onSelectAgent}
+              onViewDept={onSelectDepartment}
+            />
+          </div>
+        )}
       </div>
 
       {/* ── FM Event Ticker ── */}

@@ -2,7 +2,7 @@ import type { MutableRefObject } from "react";
 import { type Application, Container, Graphics, Text, TextStyle } from "./pixi-compat";
 import type { Agent, Task } from "../../types";
 import type { Delivery, RoomTheme, WallClockVisual } from "./model";
-import { CEO_ZONE_H, HALLWAY_H, TILE } from "./model";
+import { CEO_ZONE_H, HALLWAY_H, TILE, TXT } from "./model";
 import { LOCALE_TEXT, type SupportedLocale, pickLocale } from "./themes-locale";
 import {
   blendColor,
@@ -88,7 +88,7 @@ export function buildCeoAndHallway({
   const ceoLabel = new Text({
     text: pickLocale(activeLocale, LOCALE_TEXT.ceoOffice),
     style: new TextStyle({
-      fontSize: 10,
+      fontSize: TXT.MEDIUM,
       fill: 0xffffff,
       fontWeight: "bold",
       fontFamily: "monospace",
@@ -131,7 +131,7 @@ export function buildCeoAndHallway({
   ceoLayer.addChild(cdg);
   const ceoPlateText = new Text({
     text: "CEO",
-    style: new TextStyle({ fontSize: 5, fill: 0x000000, fontWeight: "bold", fontFamily: "monospace" }),
+    style: new TextStyle({ fontSize: TXT.SMALL, fill: 0x000000, fontWeight: "bold", fontFamily: "monospace" }),
   });
   ceoPlateText.anchor.set(0.5, 0.5);
   ceoPlateText.position.set(cdx + 32, cdy + 27.5);
@@ -168,7 +168,7 @@ export function buildCeoAndHallway({
   const meetingLabel = new Text({
     text: pickLocale(activeLocale, LOCALE_TEXT.collabTable),
     style: new TextStyle({
-      fontSize: 7,
+      fontSize: TXT.NORMAL,
       fill: 0x7a5c2a,
       fontWeight: "bold",
       fontFamily: "monospace",
@@ -239,14 +239,14 @@ export function buildCeoAndHallway({
     statCard.roundRect(sx, sy, 74, 26, 4).fill({ color: 0xfff4d8, alpha: 0.85 });
     statCard.roundRect(sx, sy, 74, 26, 4).stroke({ width: 1, color: 0xe8c870, alpha: 0.5 });
     ceoLayer.addChild(statCard);
-    const iconText = new Text({ text: stat.icon, style: new TextStyle({ fontSize: 10 }) });
+    const iconText = new Text({ text: stat.icon, style: new TextStyle({ fontSize: TXT.MEDIUM }) });
     iconText.position.set(sx + 4, sy + 4);
     ceoLayer.addChild(iconText);
     ceoLayer.addChild(
       Object.assign(
         new Text({
           text: stat.label,
-          style: new TextStyle({ fontSize: 7, fill: 0x8b7040, fontFamily: "monospace" }),
+          style: new TextStyle({ fontSize: TXT.NORMAL, fill: 0x8b7040, fontFamily: "monospace" }),
         }),
         { x: sx + 18, y: sy + 2 },
       ),
@@ -255,7 +255,7 @@ export function buildCeoAndHallway({
       Object.assign(
         new Text({
           text: stat.val,
-          style: new TextStyle({ fontSize: 10, fill: 0x5a4020, fontWeight: "bold", fontFamily: "monospace" }),
+          style: new TextStyle({ fontSize: TXT.MEDIUM, fill: 0x5a4020, fontWeight: "bold", fontFamily: "monospace" }),
         }),
         { x: sx + 18, y: sy + 13 },
       ),
@@ -265,7 +265,7 @@ export function buildCeoAndHallway({
   const hint = new Text({
     text: pickLocale(activeLocale, LOCALE_TEXT.hint),
     style: new TextStyle({
-      fontSize: 10,
+      fontSize: TXT.MEDIUM,
       fontWeight: "bold",
       fill: 0x8b7040,
       fontFamily: "monospace",
@@ -278,7 +278,7 @@ export function buildCeoAndHallway({
     const meetingHint = new Text({
       text: pickLocale(activeLocale, LOCALE_TEXT.meetingTableHint),
       style: new TextStyle({
-        fontSize: 12,
+        fontSize: TXT.LARGE,
         fill: 0x8b6b30,
         fontWeight: "bold",
         fontFamily: "system-ui, sans-serif",

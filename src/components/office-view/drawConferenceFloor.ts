@@ -1,5 +1,5 @@
 import { Container, Graphics, Text, TextStyle } from "./pixi-compat";
-import { FLOOR_W, WALL_W, ELEVATOR_W, CONFERENCE_FLOOR_H } from "./model";
+import { FLOOR_W, WALL_W, ELEVATOR_W, CONFERENCE_FLOOR_H, TXT } from "./model";
 import { LOCALE_TEXT, type SupportedLocale, pickLocale } from "./themes-locale";
 import {
   blendColor,
@@ -100,7 +100,7 @@ export function drawConferenceFloor({
 
   const signTxt = new Text({
     text: pickLocale(activeLocale, LOCALE_TEXT.conferenceRoom ?? { ko: "회의실", en: "CONFERENCE", ja: "会議室", zh: "会议室" }),
-    style: new TextStyle({ fontSize: 7, fill: CONF_THEME.accent, fontWeight: "bold", fontFamily: "monospace", letterSpacing: 1 }),
+    style: new TextStyle({ fontSize: TXT.NORMAL, fill: CONF_THEME.accent, fontWeight: "bold", fontFamily: "monospace", letterSpacing: 1 }),
   });
   signTxt.anchor.set(0, 0.5);
   signTxt.position.set(cx + 6, confY + 5);
@@ -114,7 +114,7 @@ export function drawConferenceFloor({
   layer.addChild(statusBadge);
   const statusTxt = new Text({
     text: isMeeting ? "● IN MEETING" : "○ STANDBY",
-    style: new TextStyle({ fontSize: 6, fill: isMeeting ? 0xffffff : 0x6b7280, fontFamily: "monospace", letterSpacing: 1 }),
+    style: new TextStyle({ fontSize: TXT.SMALL, fill: isMeeting ? 0xffffff : 0x6b7280, fontFamily: "monospace", letterSpacing: 1 }),
   });
   statusTxt.anchor.set(0, 0.5);
   statusTxt.position.set(cx + signW + 10, confY + 6);
@@ -156,7 +156,7 @@ export function drawConferenceFloor({
   // Table label
   const tableLbl = new Text({
     text: isMeeting ? "[ MEETING IN PROGRESS ]" : "[ CONF TABLE ]",
-    style: new TextStyle({ fontSize: 6, fill: isDark ? 0xf59e0b : 0xa07020, fontFamily: "monospace", letterSpacing: 2 }),
+    style: new TextStyle({ fontSize: TXT.SMALL, fill: isDark ? 0xf59e0b : 0xa07020, fontFamily: "monospace", letterSpacing: 2 }),
   });
   tableLbl.anchor.set(0.5, 0.5);
   tableLbl.position.set(tableX + tableW / 2, tableY + tableH / 2);
@@ -203,7 +203,7 @@ export function drawConferenceFloor({
         figureG.circle(sx - 1.5, headY - 0.5, 0.9).fill({ color: 0x000000, alpha: 0.55 });
         figureG.circle(sx + 1.5, headY - 0.5, 0.9).fill({ color: 0x000000, alpha: 0.55 });
         layer.addChild(figureG);
-        const lbl = new Text({ text: (agent.name ?? "?").slice(0, 5), style: new TextStyle({ fontSize: 5, fill: 0xffffff, fontFamily: "monospace", align: "center" }) });
+        const lbl = new Text({ text: (agent.name ?? "?").slice(0, 5), style: new TextStyle({ fontSize: TXT.TINY, fill: 0xffffff, fontFamily: "monospace", align: "center" }) });
         lbl.anchor.set(0.5, 1);
         lbl.position.set(sx, headY - 7);
         layer.addChild(lbl);
@@ -215,7 +215,7 @@ export function drawConferenceFloor({
         figureG.circle(sx - 1.5, headY - 0.5, 0.9).fill({ color: 0x000000, alpha: 0.55 });
         figureG.circle(sx + 1.5, headY - 0.5, 0.9).fill({ color: 0x000000, alpha: 0.55 });
         layer.addChild(figureG);
-        const lbl = new Text({ text: (agent.name ?? "?").slice(0, 5), style: new TextStyle({ fontSize: 5, fill: 0xffffff, fontFamily: "monospace", align: "center" }) });
+        const lbl = new Text({ text: (agent.name ?? "?").slice(0, 5), style: new TextStyle({ fontSize: TXT.TINY, fill: 0xffffff, fontFamily: "monospace", align: "center" }) });
         lbl.anchor.set(0.5, 0);
         lbl.position.set(sx, headY + 7);
         layer.addChild(lbl);

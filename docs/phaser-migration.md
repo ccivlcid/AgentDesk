@@ -1,7 +1,7 @@
 # PixiJS → Phaser 3 마이그레이션 계획
 
 > Created: 2026-03-08
-> Status: PLANNING
+> Status: IN PROGRESS
 > 연관 문서: `docs/pack-identity-system.md` (Phase 18-D 팩별 씬)
 
 ---
@@ -619,16 +619,39 @@ export class OfficeSceneDev extends Phaser.Scene {
 
 | Phase | 대상 | 파일 수 | 예상 기간 | 상태 |
 |---|---|---|---|---|
-| M-1 | 패키지 교체 | 1 | 0.5일 | TODO |
-| M-2 | 기반 타입/상수 | 3 | 0.5일 | TODO |
-| M-3 | 드로잉 원시 함수 | 3 | 2일 | TODO |
-| M-4 | 개별 드로잉 모듈 | 7 | 2일 | TODO |
-| M-5 | 씬 빌더 | 7 | 2일 | TODO |
-| M-6 | 애니메이션 시스템 | 6 | 3일 | TODO |
+| M-0 | **Phaser 호환 심 (pixi-compat.ts)** | 1 | — | ✅ DONE |
+| M-0a | **Tween 기반 파티클 전환** | 8 | — | ✅ DONE |
+| M-0b | **Crown bob / Task bounce → tweenNode** | 3 | — | ✅ DONE |
+| M-1 | 패키지 교체 | 1 | 0.5일 | SKIP (심 사용) |
+| M-2 | 기반 타입/상수 | 3 | 0.5일 | SKIP (심 사용) |
+| M-3 | 드로잉 원시 함수 | 3 | 2일 | SKIP (심 사용) |
+| M-4 | 개별 드로잉 모듈 | 7 | 2일 | SKIP (심 사용) |
+| M-5 | 씬 빌더 | 7 | 2일 | SKIP (심 사용) |
+| M-6 | 애니메이션 시스템 | 6 | 3일 | **IN PROGRESS** |
 | M-7 | React 래퍼 | 2 | 1일 | TODO |
-| M-8 | Drawing Styles | 6 | 1일 | TODO |
+| M-8 | Drawing Styles | 6 | 1일 | SKIP (심 사용) |
 | M-9 | 검증 및 QA | — | 1일 | TODO |
-| **합계** | **30개 파일** | **~9,000줄** | **~11일** | |
+
+### 완료된 Phaser 네이티브 전환 (Phase 4)
+
+**Phase 4A — 파티클 → spawnParticleTween (✅)**
+- CEO 트레일 파티클: 수동 `_life`/위치/알파 업데이트 → 자동 tween
+- 에이전트 작업 스파클: `_vy`/`_life` 추적 → 자동 tween
+- 땀/수면/어지러움 파티클: 3가지 수동 루프 → 자동 tween
+- 서브클론 버스트 파티클: `SubCloneBurstParticle` 타입+배열 전체 제거 (8개 파일)
+- 휴게실 스팀: 수동 업데이트 루프 → 자동 tween
+
+**Phase 4B — 연속 애니메이션 → tweenNode (✅)**
+- 왕관 흔들림: 매 틱 Math.sin → persistent yoyo tween (buildScene에서 1회 생성)
+- 태스크 수신 바운스: 수동 감쇠 스프링 → Bounce.easeOut tween
+- crownRef 틱커 컨텍스트에서 제거, CEO_SPEED 미사용 import 제거
+
+**유지 (수동 per-frame 코드가 적합한 항목):**
+- 에이전트 호흡/흔들림: tick+phase 의존, 상태별 분기
+- 하이라이트/LED 펄스: 매 프레임 Graphics 재그리기
+- 서브클론 드리프트: 다중 주파수 사인파
+- 엘리베이터 상태머신: 명시적 상태 전환이 더 명확
+- 계절 파티클: 바람 효과 사인파 의존
 
 ---
 

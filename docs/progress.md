@@ -794,7 +794,7 @@ MINI_CHAR_H: 28 → 20
 > - **CEO 실명/회사명 (16-2-A)**: `name`(명패) + `companyName`(옥상 간판) 필드 추가, OfficeRoomManager 입력 폼 연동 ✅
 > - **CEO 아바타 이모지 (16-2-B)**: `avatarEmoji` 필드 추가, 로봇 얼굴 위 PixiJS Text 오버레이, OfficeRoomManager 이모지 입력 ✅
 > - **방문자 인사말 커스텀 (16-2-D)**: `greetings[]` 필드, visitorTick phrasePool 동적 교체, OfficeRoomManager textarea 입력 ✅
-> - **CEO 퍼소나 연결 (16-2-C)**: `personaId` 필드, 펜트하우스 스트립 배지 표시, OfficeRoomManager PERSONA_CATALOG 드롭다운 ✅
+> - **CEO 페르소나 연결 (16-2-C)**: `personaId` 필드, 펜트하우스 스트립 배지 표시, OfficeRoomManager PERSONA_CATALOG 드롭다운 ✅
 > - **회의실 높이 확대**: CONFERENCE_FLOOR_H 100 → 140 ✅
 > - **FM2024 클린업**: HeartbeatGuideModal shadow-2xl 제거, RoomLayoutEditor rounded 버튼 변환, DiffModal shadow-2xl 제거 ✅
 
@@ -818,7 +818,7 @@ MINI_CHAR_H: 28 → 20
 |---|---|---|
 | CEO 실명 + 회사명 | 명패에 "CEO" 외 실제 이름 표시, 옥상 사인 "AGENTDESK HQ" → 사용자 지정 회사명 | HIGH |
 | CEO 아바타 이모지 | 로봇 스프라이트 위에 이모지 오버레이 or 이모지 전용 스프라이트 | HIGH |
-| CEO 퍼소나 연결 | 페르소나 카탈로그에서 선택 → CEO 캐릭터 성격/접근 방식 결정 | MED |
+| CEO 페르소나나 연결 | 페르소나 카탈로그에서 선택 → CEO 캐릭터 성격/접근 방식 결정 | MED |
 | 방문자 인사말 커스텀 | 에이전트가 CEO실 방문 시 표시되는 고정 문구 (현재 랜덤 VISITOR_PHRASES) | MED |
 | CEO 책상 스타일 | default/executive/minimal 3종 (drawPenthouse의 desk 렌더링 분기) | LOW |
 | 펜트하우스 KPI 목표치 | 터미널 스트립의 STAFF/ACTIVE/TASKS/DONE 외 사용자 정의 목표 수치 표시 | LOW |
@@ -863,14 +863,14 @@ interface CeoCustomization {
 
 → **권장: 방안 A** (독립적, 구현 쉬움)
 
-#### 16-2-C. CEO 퍼소나 연결 (MED)
+#### 16-2-C. CEO 페르소나 연결 (MED)
 
-**현재:** CEO는 퍼소나 없음. 에이전트만 persona_id를 가짐.
+**현재:** CEO는 페르소나 없음. 에이전트만 persona_id를 가짐.
 
 **구현 방안:**
 - `CeoCustomization`에 `personaId: string | null` 추가
 - OfficeRoomManager CEO 섹션에 PersonaCatalog 드롭다운 추가
-- CEO 퍼소나는 시스템 전역 context 주입 (태스크 실행 프롬프트에 CEO 성격 반영)
+- CEO 페르소나는 시스템 전역 context 주입 (태스크 실행 프롬프트에 CEO 성격 반영)
 - CEO 명패 옆에 PersonaBadge 표시
 
 #### 16-2-D. 방문자 인사말 커스텀 (MED)

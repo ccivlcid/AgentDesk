@@ -4,7 +4,7 @@ import type { ElevatorTickState } from "./elevatorTick";
 import type { ExteriorWindowVisual } from "./drawExteriorWalls";
 import type { Agent, Department, SubAgent, Task } from "../../types";
 import type { ThemeMode } from "../../ThemeContext";
-import type { Delivery, RoomRect, SubCloneBurstParticle, WallClockVisual } from "./model";
+import type { Delivery, RoomRect, WallClockVisual } from "./model";
 import type { SupportedLocale } from "./themes-locale";
 import type { SeasonalParticleState, SeasonKey } from "./seasonal-particles";
 import type { CeoCustomization } from "./ceo-customization";
@@ -96,7 +96,6 @@ export interface BuildOfficeSceneContext {
   breakRoomRectRef: MutableRefObject<{ x: number; y: number; w: number; h: number } | null>;
   breakAnimItemsRef: MutableRefObject<BreakAnimItem[]>;
   subCloneAnimItemsRef: MutableRefObject<SubCloneAnimItem[]>;
-  subCloneBurstParticlesRef: MutableRefObject<SubCloneBurstParticle[]>;
   subCloneSnapshotRef: MutableRefObject<Map<string, { parentAgentId: string; x: number; y: number }>>;
   breakSteamParticlesRef: MutableRefObject<Container | null>;
   breakBubblesRef: MutableRefObject<Container[]>;

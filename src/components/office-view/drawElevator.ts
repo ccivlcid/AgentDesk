@@ -1,5 +1,5 @@
 import { Container, Graphics, Text, TextStyle } from "./pixi-compat";
-import { ELEVATOR_W, ROOF_H, PENTHOUSE_H, CONFERENCE_FLOOR_H, FLOOR_TOTAL_H, BASEMENT_H } from "./model";
+import { ELEVATOR_W, ROOF_H, PENTHOUSE_H, CONFERENCE_FLOOR_H, FLOOR_TOTAL_H, BASEMENT_H, TXT } from "./model";
 
 // Car metrics — must stay in sync with elevatorTick.ts
 export const EL_CAR_W = ELEVATOR_W - 8;        // 32px
@@ -195,7 +195,7 @@ export function drawElevatorShaft({
 
   const floorDisplay = new Text({
     text: "P",
-    style: new TextStyle({ fontSize: 7, fill: 0xf59e0b, fontWeight: "bold", fontFamily: "monospace" }),
+    style: new TextStyle({ fontSize: TXT.NORMAL, fill: 0xf59e0b, fontWeight: "bold", fontFamily: "monospace" }),
   });
   floorDisplay.anchor.set(0.5, 0.5);
   floorDisplay.position.set(shaftX + ELEVATOR_W / 2, -9);

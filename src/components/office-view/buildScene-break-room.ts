@@ -3,7 +3,7 @@ import { Container, Graphics, Sprite, Text, TextStyle, type Application, type Te
 import type { Agent } from "../../types";
 import { localeName } from "../../i18n";
 import type { CallbackSnapshot, BreakAnimItem } from "./buildScene-types";
-import { BREAK_ROOM_H, TARGET_CHAR_H, type RoomTheme, type WallClockVisual } from "./model";
+import { BREAK_ROOM_H, TARGET_CHAR_H, TXT, type RoomTheme, type WallClockVisual } from "./model";
 import { BREAK_CHAT_MESSAGES, BREAK_SPOTS, LOCALE_TEXT, type SupportedLocale, pickLocale } from "./themes-locale";
 import {
   blendColor,
@@ -126,7 +126,7 @@ export function buildBreakRoom({
   const brSignTxt = new Text({
     text: pickLocale(activeLocale, LOCALE_TEXT.breakRoom),
     style: new TextStyle({
-      fontSize: 9,
+      fontSize: TXT.MEDIUM,
       fill: breakSignTextColor,
       fontWeight: "bold",
       fontFamily: "system-ui, sans-serif",
@@ -184,14 +184,14 @@ export function buildBreakRoom({
       baseY: spotY,
     });
 
-    const coffeeEmoji = new Text({ text: "☕", style: new TextStyle({ fontSize: 10 }) });
+    const coffeeEmoji = new Text({ text: "☕", style: new TextStyle({ fontSize: TXT.MEDIUM }) });
     coffeeEmoji.anchor.set(0.5, 0.5);
     coffeeEmoji.position.set(spotX + 14, spotY - 10);
     breakRoom.addChild(coffeeEmoji);
 
     const nameTag = new Text({
       text: localeName(activeLocale, agent),
-      style: new TextStyle({ fontSize: 6, fill: 0x4a3a2a, fontFamily: "system-ui, sans-serif" }),
+      style: new TextStyle({ fontSize: TXT.SMALL, fill: 0x4a3a2a, fontFamily: "system-ui, sans-serif" }),
     });
     nameTag.anchor.set(0.5, 0);
     const ntW = nameTag.width + 4;
@@ -217,7 +217,7 @@ export function buildBreakRoom({
       const msg = chatPool[(seed + phase) % chatPool.length];
       const bubbleText = new Text({
         text: msg,
-        style: new TextStyle({ fontSize: 7, fill: 0x333333, fontFamily: "system-ui, sans-serif" }),
+        style: new TextStyle({ fontSize: TXT.NORMAL, fill: 0x333333, fontFamily: "system-ui, sans-serif" }),
       });
       bubbleText.anchor.set(0.5, 1);
       const bw = bubbleText.width + 10;

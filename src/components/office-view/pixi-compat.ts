@@ -3,7 +3,7 @@
  * All office-view drawing code imports from this file instead of "pixi.js".
  */
 
-import Phaser from "phaser";
+import * as Phaser from "phaser";
 
 // ─── Global scene reference ───────────────────────────────────────────────────
 let _scene: Phaser.Scene | null = null;
@@ -184,9 +184,9 @@ export class Graphics {
   private _inPath = false;
   private _tintVal = 0xffffff;
 
-  // event stubs (no-op for interaction)
   eventMode: string = "none";
   cursor: string = "default";
+  private _interactive = false;
 
   private _position: VecProxy;
   private _scale: VecProxy;
@@ -205,7 +205,17 @@ export class Graphics {
     );
   }
 
-  on(_event: string, _cb: (...args: unknown[]) => void) { return this; }
+  on(event: string, cb: (...args: unknown[]) => void) {
+    if (!this._interactive) {
+      this._obj.setInteractive(
+        new Phaser.Geom.Rectangle(-10, -10, 60, 40),
+        Phaser.Geom.Rectangle.Contains,
+      );
+      this._interactive = true;
+    }
+    this._obj.on(event, cb);
+    return this;
+  }
 
   // ── Shape builders ──────────────────────────────────────────────────────────
   private _endPath() { this._inPath = false; this._pathCmds = []; }
@@ -484,6 +494,7 @@ export class Container {
   private _position: VecProxy;
   private _scale: VecProxy;
   private _maskVal: Phaser.Display.Masks.GeometryMask | null = null;
+  private _interactive = false;
 
   constructor(x = 0, y = 0) {
     this._obj = new Phaser.GameObjects.Container(requireScene(), x, y);
@@ -499,7 +510,18 @@ export class Container {
     );
   }
 
-  on(_event: string, _cb: (...a: unknown[]) => void) { return this; }
+  on(event: string, cb: (...a: unknown[]) => void) {
+    if (!this._interactive) {
+      // Set interactive with a generous hit area based on container size
+      this._obj.setInteractive(
+        new Phaser.Geom.Rectangle(-20, -20, 80, 60),
+        Phaser.Geom.Rectangle.Contains,
+      );
+      this._interactive = true;
+    }
+    this._obj.on(event, cb);
+    return this;
+  }
 
   addChild<T extends CompatNode>(child: T): T {
     this._obj.add(getInnerObj(child) as Phaser.GameObjects.GameObject); return child;
@@ -632,6 +654,7 @@ export class PhaserApp {
   private _stage: Container | null = null;
   private _tickerCbs: Array<(dt: number) => void> = [];
   private _tickHandler: ((t: number, d: number) => void) | null = null;
+  private _resolution = 1;
 
   get canvas(): HTMLCanvasElement { return this._game!.canvas as HTMLCanvasElement; }
 
@@ -644,8 +667,26 @@ export class PhaserApp {
     const self = this;
     return {
       resize(w: number, h: number) {
-        self._game?.scale.resize(w, h);
-        self._scene?.cameras.main.setSize(w, h);
+        const dpr = self._resolution;
+        if (dpr > 1 && self._game) {
+          // Render at dpr× physical pixels for crisp text/graphics
+          self._game.scale.resize(w * dpr, h * dpr);
+          const cam = self._scene?.cameras.main;
+          if (cam) {
+            cam.setSize(w * dpr, h * dpr);
+            cam.setZoom(1);
+            cam.scrollX = 0;
+            cam.scrollY = 0;
+          }
+          // Scale stage container by dpr so all world-coordinate drawing
+          // fills the larger canvas — text & graphics render at native 2× resolution
+          if (self._stage) {
+            self._stage._obj.setScale(dpr);
+          }
+        } else {
+          self._game?.scale.resize(w, h);
+          self._scene?.cameras.main.setSize(w, h);
+        }
       },
     };
   }
@@ -667,6 +708,7 @@ export class PhaserApp {
     autoDensity?: boolean; [key: string]: unknown;
   }): Promise<void> {
     const { width = 410, height = 600, backgroundAlpha = 0, parent } = cfg;
+    this._resolution = cfg.resolution ?? 1;
 
     return new Promise<void>((resolve) => {
       const self = this;
@@ -757,6 +799,64 @@ export { PhaserApp as Application };
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 export type CompatNode = Container | Graphics | Text | Sprite | AnimatedSprite;
+
+// ─── Phaser Tween helpers ──────────────────────────────────────────────────────
+
+/** Create a Phaser tween targeting a compat node's underlying Phaser object. */
+export function tweenNode(
+  node: CompatNode,
+  props: Record<string, number>,
+  duration: number,
+  opts?: {
+    ease?: string;
+    delay?: number;
+    yoyo?: boolean;
+    repeat?: number;
+    onComplete?: () => void;
+  },
+): Phaser.Tweens.Tween | null {
+  if (!_scene) return null;
+  const obj = getInnerObj(node);
+  return _scene.tweens.add({
+    targets: obj,
+    ...props,
+    duration,
+    ease: opts?.ease ?? "Linear",
+    delay: opts?.delay ?? 0,
+    yoyo: opts?.yoyo ?? false,
+    repeat: opts?.repeat ?? 0,
+    onComplete: opts?.onComplete,
+  });
+}
+
+/**
+ * Spawn a one-shot particle: tween its properties over `duration` ms then destroy it.
+ * Removes boilerplate of manual _life tracking and per-frame position/alpha updates.
+ */
+export function spawnParticleTween(
+  parent: Container,
+  particle: Graphics | Text,
+  props: Record<string, number>,
+  duration: number,
+  opts?: { ease?: string; delay?: number },
+): void {
+  parent.addChild(particle);
+  if (!_scene) return;
+  const obj = (particle as any)._obj;
+  _scene.tweens.add({
+    targets: obj,
+    ...props,
+    duration,
+    ease: opts?.ease ?? "Linear",
+    delay: opts?.delay ?? 0,
+    onComplete: () => {
+      try {
+        if (parent && !parent.destroyed) parent.removeChild(particle);
+        if (!particle.destroyed) particle.destroy();
+      } catch { /* already cleaned up */ }
+    },
+  });
+}
 
 // ─── loadSprite helper ────────────────────────────────────────────────────────
 export async function loadSprite(

@@ -1,4 +1,4 @@
-import { Graphics, type Container } from "./pixi-compat";
+import { Graphics, type Container, spawnParticleTween } from "./pixi-compat";
 import type { MutableRefObject } from "react";
 import { DELIVERY_SPEED, type Delivery, destroyNode } from "./model";
 import { hashStr } from "./drawing-core";
@@ -27,7 +27,21 @@ export function updateBreakRoomAndDeliveryAnimations(
   }: UpdateBreakRoomAndDeliveryParams,
   tick: number,
 ): void {
+  // Guard: during scene rebuild, destroyed sprites may linger in refs — wrap safely.
+  try { _updateBreakRoomAndDelivery(breakAnimItemsRef, breakSteamParticlesRef, breakRoomRectRef, breakBubblesRef, deliveriesRef, tick); }
+  catch { /* scene objects destroyed mid-tick during rebuild */ }
+}
+
+function _updateBreakRoomAndDelivery(
+  breakAnimItemsRef: MutableRefObject<BreakAnimItem[]>,
+  breakSteamParticlesRef: MutableRefObject<Container | null>,
+  breakRoomRectRef: MutableRefObject<{ x: number; y: number; w: number; h: number } | null>,
+  breakBubblesRef: MutableRefObject<Container[]>,
+  deliveriesRef: MutableRefObject<Delivery[]>,
+  tick: number,
+): void {
   for (const { sprite, baseX, baseY } of breakAnimItemsRef.current) {
+    if (!sprite || sprite.destroyed) continue;
     const seed = hashStr((sprite as any)._name || `${baseX}`);
     sprite.position.x = baseX + Math.sin(tick * 0.02 + seed) * 1.5;
     sprite.position.y = baseY + Math.sin(tick * 0.03 + seed) * 0.8;
@@ -40,22 +54,13 @@ export function updateBreakRoomAndDeliveryAnimations(
       particle.circle(0, 0, 1.5 + Math.random()).fill({ color: 0xffffff, alpha: 0.5 });
       const breakRoom = breakRoomRectRef.current;
       if (breakRoom) {
-        particle.position.set(breakRoom.x + 26, breakRoom.y + 18);
-        (particle as any)._vy = -0.3 - Math.random() * 0.2;
-        (particle as any)._life = 0;
-        steamContainer.addChild(particle);
-      }
-    }
-
-    for (let i = steamContainer.children.length - 1; i >= 0; i--) {
-      const particle = steamContainer.children[i] as any;
-      particle._life++;
-      particle.position.y += particle._vy ?? -0.3;
-      particle.position.x += Math.sin(particle._life * 0.15) * 0.3;
-      particle.alpha = Math.max(0, 0.5 - particle._life * 0.016);
-      if (particle._life > 30) {
-        steamContainer.removeChild(particle);
-        particle.destroy();
+        const startY = breakRoom.y + 18;
+        particle.position.set(breakRoom.x + 26, startY);
+        // Steam: float up, fade out over ~500ms (≈30 ticks), auto-destroy
+        spawnParticleTween(steamContainer, particle, {
+          y: startY + (-0.3 - Math.random() * 0.2) * 30,
+          alpha: 0,
+        }, 500, { ease: "Sine.easeOut" });
       }
     }
   }

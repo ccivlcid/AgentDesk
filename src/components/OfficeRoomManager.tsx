@@ -145,7 +145,7 @@ const L = {
   companyName: { ko: "회사명 (옥상 간판)", en: "Company Name", ja: "会社名", zh: "公司名" },
   avatarEmoji: { ko: "얼굴 이모지", en: "Face Emoji", ja: "顔絵文字", zh: "头像表情" },
   greetings: { ko: "방문자 인사말 (줄바꿈 구분, 빈칸=기본)", en: "Visitor Greetings (one per line, empty=default)", ja: "挨拶フレーズ（行区切り）", zh: "访客问候语（换行分隔）" },
-  ceoPersona: { ko: "CEO 퍼소나", en: "CEO Persona", ja: "CEOペルソナ", zh: "CEO角色" },
+  ceoPersona: { ko: "CEO 페르소나", en: "CEO Persona", ja: "CEOペルソナ", zh: "CEO角色" },
   trailEffect: { ko: "이동 이펙트", en: "Trail Effect", ja: "移動エフェクト", zh: "移动特效" },
   roomDecor: { ko: "방 꾸미기", en: "Room Decor", ja: "部屋デコ", zh: "房间装饰" },
   wallDecor: { ko: "벽 장식", en: "Wall Decor", ja: "壁飾り", zh: "墙饰" },

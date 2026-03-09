@@ -12,6 +12,7 @@ import {
   ELEVATOR_W,
   SKY_H,
   GROUND_H,
+  TXT,
   detachNode,
 } from "./model";
 import { drawConferenceFloor } from "./drawConferenceFloor";
@@ -34,9 +35,9 @@ import type { RoomTheme } from "./model";
 /** Darken a custom theme for dark mode so bright floor/wall colors don't look washed-out. */
 function darkenTheme(t: RoomTheme): RoomTheme {
   return {
-    floor1: blendColor(t.floor1, 0x000000, 0.85),
-    floor2: blendColor(t.floor2, 0x000000, 0.85),
-    wall:   blendColor(t.wall,   0x000000, 0.70),
+    floor1: blendColor(t.floor1, 0x000000, 0.45),
+    floor2: blendColor(t.floor2, 0x000000, 0.45),
+    wall:   blendColor(t.wall,   0x000000, 0.35),
     accent: t.accent,
   };
 }
@@ -71,7 +72,6 @@ export function buildOfficeScene(context: BuildOfficeSceneContext): void {
     breakRoomRectRef,
     breakAnimItemsRef,
     subCloneAnimItemsRef,
-    subCloneBurstParticlesRef,
     subCloneSnapshotRef,
     breakSteamParticlesRef,
     breakBubblesRef,
@@ -124,7 +124,6 @@ export function buildOfficeScene(context: BuildOfficeSceneContext): void {
   agentPosRef.current.clear();
   breakAnimItemsRef.current = [];
   subCloneAnimItemsRef.current = [];
-  subCloneBurstParticlesRef.current = [];
   breakBubblesRef.current = [];
   breakSteamParticlesRef.current = null;
   wallClocksRef.current = [];
@@ -285,7 +284,6 @@ export function buildOfficeScene(context: BuildOfficeSceneContext): void {
       agentPosRef,
       animItemsRef,
       subCloneAnimItemsRef,
-      subCloneBurstParticlesRef,
       wallClocksRef,
       roomDecorations: roomDecorationsRef.current,
       furnitureLayouts: furnitureLayoutsRef.current,
@@ -322,7 +320,7 @@ export function buildOfficeScene(context: BuildOfficeSceneContext): void {
   {
     const alertT = new Text({
       text: "▲ VISITOR INBOUND",
-      style: new TextStyle({ fontSize: 7, fill: 0xf59e0b, fontWeight: "bold", fontFamily: "monospace", letterSpacing: 2 }),
+      style: new TextStyle({ fontSize: TXT.NORMAL, fill: 0xf59e0b, fontWeight: "bold", fontFamily: "monospace", letterSpacing: 2 }),
     });
     alertT.anchor.set(0.5, 1);
     alertT.position.set(FLOOR_W / 2 - ELEVATOR_W / 2, ROOF_H + PENTHOUSE_H - 8);

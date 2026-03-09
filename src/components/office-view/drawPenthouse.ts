@@ -2,7 +2,7 @@ import type { MutableRefObject } from "react";
 import { Container, Graphics, Text, TextStyle } from "./pixi-compat";
 import type { Agent, Task } from "../../types";
 import type { Delivery, RoomTheme, WallClockVisual } from "./model";
-import { FLOOR_W, WALL_W, ELEVATOR_W, PENTHOUSE_H } from "./model";
+import { FLOOR_W, WALL_W, ELEVATOR_W, PENTHOUSE_H, TXT } from "./model";
 import { LOCALE_TEXT, type SupportedLocale, pickLocale } from "./themes-locale";
 import {
   blendColor,
@@ -124,7 +124,7 @@ export function drawPenthouse({
 
   const ceoPlate = new Text({
     text: plateName,
-    style: new TextStyle({ fontSize: 5, fill: 0xf59e0b, fontWeight: "bold", fontFamily: "monospace" }),
+    style: new TextStyle({ fontSize: TXT.SMALL, fill: 0xf59e0b, fontWeight: "bold", fontFamily: "monospace" }),
   });
   ceoPlate.anchor.set(0.5, 0.5);
   ceoPlate.position.set(deskCX, deskY + 28);
@@ -161,7 +161,7 @@ export function drawPenthouse({
   // "CEO" label on left of strip
   const ceoLbl = new Text({
     text: stripLabel,
-    style: new TextStyle({ fontSize: 7, fill: 0xf59e0b, fontWeight: "bold", fontFamily: "monospace", letterSpacing: 2 }),
+    style: new TextStyle({ fontSize: TXT.NORMAL, fill: 0xf59e0b, fontWeight: "bold", fontFamily: "monospace", letterSpacing: 2 }),
   });
   ceoLbl.anchor.set(0, 0.5);
   ceoLbl.position.set(px + 8, pentY + stripH / 2);
@@ -176,7 +176,7 @@ export function drawPenthouse({
   if (personaBadge?.trim()) {
     const pbText = new Text({
       text: personaBadge.trim(),
-      style: new TextStyle({ fontSize: 6, fill: 0x22cc88, fontWeight: "bold", fontFamily: "monospace", letterSpacing: 1 }),
+      style: new TextStyle({ fontSize: TXT.SMALL, fill: 0x22cc88, fontWeight: "bold", fontFamily: "monospace", letterSpacing: 1 }),
     });
     pbText.anchor.set(0, 0.5);
     pbText.position.set(px + 35, pentY + stripH / 2);
@@ -196,14 +196,14 @@ export function drawPenthouse({
     const cx = px + 36 + colW * i + colW / 2;
     const lbl = new Text({
       text: s.label,
-      style: new TextStyle({ fontSize: 5, fill: isDark ? 0x555555 : 0x666666, fontFamily: "monospace", letterSpacing: 1 }),
+      style: new TextStyle({ fontSize: TXT.SMALL, fill: isDark ? 0x555555 : 0x666666, fontFamily: "monospace", letterSpacing: 1 }),
     });
     lbl.anchor.set(0.5, 0);
     lbl.position.set(cx, pentY + 3);
     pLayer.addChild(lbl);
     const val = new Text({
       text: s.val,
-      style: new TextStyle({ fontSize: 9, fill: 0xf59e0b, fontWeight: "bold", fontFamily: "monospace" }),
+      style: new TextStyle({ fontSize: TXT.MEDIUM, fill: 0xf59e0b, fontWeight: "bold", fontFamily: "monospace" }),
     });
     val.anchor.set(0.5, 1);
     val.position.set(cx, pentY + stripH - 2);
@@ -235,7 +235,7 @@ export function drawPenthouse({
   if (activeMeetingTaskId) {
     const hint = new Text({
       text: pickLocale(activeLocale, LOCALE_TEXT.meetingTableHint),
-      style: new TextStyle({ fontSize: 11, fill: 0x8b6b30, fontWeight: "bold", fontFamily: "system-ui, sans-serif" }),
+      style: new TextStyle({ fontSize: TXT.LARGE, fill: 0x8b6b30, fontWeight: "bold", fontFamily: "system-ui, sans-serif" }),
     });
     hint.anchor.set(1, 1);
     hint.position.set(px + pw - 10, pentY + ph - 8);

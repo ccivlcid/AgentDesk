@@ -1283,10 +1283,43 @@
   line-height: 1.5;
 }
 
+/* Floating agent/dept detail panel — only visible on narrow screens */
+.office-right-float {
+  display: none;
+  position: absolute;
+  top: 48px;
+  right: 8px;
+  width: 260px;
+  max-height: calc(100% - 80px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: var(--th-bg-secondary);
+  border: 1px solid var(--th-border);
+  border-left: 3px solid var(--th-accent, #f59e0b);
+  box-shadow: -2px 4px 16px rgba(0,0,0,0.5);
+  z-index: 50;
+}
+.office-right-float__close {
+  position: sticky;
+  top: 0;
+  float: right;
+  background: var(--th-bg-secondary);
+  border: none;
+  color: var(--th-text-muted);
+  font-size: 0.75rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  z-index: 1;
+}
+.office-right-float__close:hover { color: var(--th-text-primary); }
+
 /* Responsive: hide right panel on <1280px, left on <1024px */
 @media (max-width: 1279px) {
   .office-right {
     display: none;
+  }
+  .office-right-float {
+    display: block;
   }
 }
 @media (max-width: 1023px) {

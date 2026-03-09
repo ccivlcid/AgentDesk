@@ -81,8 +81,9 @@ export function useOfficePixiRuntime({
         height: 600,
         backgroundAlpha: 1,
         antialias: false,
-        resolution: Math.min(window.devicePixelRatio || 1, 2),
+        resolution: 2,
         autoDensity: true,
+        parent: element,
       });
 
       if (initIdRef.current !== currentInitId) {

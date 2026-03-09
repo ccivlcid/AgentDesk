@@ -7,7 +7,7 @@ import {
   MAX_VISIBLE_SUB_CLONES_PER_AGENT,
   SUB_CLONE_FIREWORK_INTERVAL,
   TARGET_CHAR_H,
-  type SubCloneBurstParticle,
+  TXT,
   emitSubCloneFireworkBurst,
   emitSubCloneSmokeBurst,
 } from "./model";
@@ -30,7 +30,6 @@ interface RenderDeskAgentAndSubClonesParams {
   cbRef: MutableRefObject<CallbackSnapshot>;
   animItemsRef: MutableRefObject<AnimItem[]>;
   subCloneAnimItemsRef: MutableRefObject<SubCloneAnimItem[]>;
-  subCloneBurstParticlesRef: MutableRefObject<SubCloneBurstParticle[]>;
   addedWorkingSubIds: Set<string>;
   nextSubSnapshot: Map<string, { parentAgentId: string; x: number; y: number }>;
   themeAccent: number;
@@ -52,7 +51,6 @@ export function renderDeskAgentAndSubClones({
   cbRef,
   animItemsRef,
   subCloneAnimItemsRef,
-  subCloneBurstParticlesRef,
   addedWorkingSubIds,
   nextSubSnapshot,
   themeAccent,
@@ -134,7 +132,7 @@ export function renderDeskAgentAndSubClones({
   }
 
   // Mood icon — visible above agent head, updated each ticker tick
-  const moodIcon = new Text({ text: "", style: new TextStyle({ fontSize: 10 }) });
+  const moodIcon = new Text({ text: "", style: new TextStyle({ fontSize: TXT.SMALL }) });
   moodIcon.anchor.set(0.5, 1);
   moodIcon.position.set(0, -TARGET_CHAR_H - 4);
   moodIcon.visible = false;
@@ -168,7 +166,7 @@ export function renderDeskAgentAndSubClones({
     const bubbleText = new Text({
       text: txt,
       style: new TextStyle({
-        fontSize: 6,
+        fontSize: TXT.SMALL,
         fill: 0x22cc88,
         fontFamily: "monospace",
         wordWrap: true,
@@ -233,8 +231,8 @@ export function renderDeskAgentAndSubClones({
 
       nextSubSnapshot.set(sub.id, { parentAgentId: agent.id, x: sx, y: sy });
       if (addedWorkingSubIds.has(sub.id)) {
-        emitSubCloneSmokeBurst(room, subCloneBurstParticlesRef.current, sx, sy, "spawn");
-        emitSubCloneFireworkBurst(room, subCloneBurstParticlesRef.current, sx, sy - 24);
+        emitSubCloneSmokeBurst(room, sx, sy, "spawn");
+        emitSubCloneFireworkBurst(room, sx, sy - 24);
         addedWorkingSubIds.delete(sub.id);
       }
 
@@ -259,7 +257,7 @@ export function renderDeskAgentAndSubClones({
       room.addChild(moreBg);
       const moreTxt = new Text({
         text: `+${remain}`,
-        style: new TextStyle({ fontSize: 6.5, fill: 0xe2e8f8, fontWeight: "bold", fontFamily: "monospace" }),
+        style: new TextStyle({ fontSize: TXT.SMALL, fill: 0xe2e8f8, fontWeight: "bold", fontFamily: "monospace" }),
       });
       moreTxt.anchor.set(0.5, 0.5);
       moreTxt.position.set(ax + 27, deskY - 13);

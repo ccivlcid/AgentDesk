@@ -1,4 +1,4 @@
-import { type Container, type CompatNode, Graphics, Text, TextStyle } from "./pixi-compat";
+import { type Container, type CompatNode, Graphics, Text, TextStyle, spawnParticleTween } from "./pixi-compat";
 import type {
   Department,
   Agent,
@@ -11,6 +11,20 @@ import type {
 } from "../../types";
 import type { CliStatusMap } from "../../types";
 import type { CliUsageEntry } from "../../api";
+
+/** Centralised text sizes for canvas rendering (scaled by 2× stage for crisp output). */
+export const TXT = {
+  /** 9px — conference attendee names, tiny stat labels */
+  TINY: 9,
+  /** 10px — role tags, floor stats, node IDs */
+  SMALL: 10,
+  /** 12px — department signs, agent names, status badges, elevator display */
+  NORMAL: 12,
+  /** 14px — department headings, section titles, stat values */
+  MEDIUM: 14,
+  /** 16px — meeting hints, emphasis */
+  LARGE: 16,
+} as const;
 
 interface OfficeViewProps {
   departments: Department[];
@@ -214,19 +228,8 @@ const MOBILE_MOVE_CODES = {
 type MobileMoveDirection = keyof typeof MOBILE_MOVE_CODES;
 type RoomTheme = { floor1: number; floor2: number; wall: number; accent: number };
 
-type SubCloneBurstParticle = {
-  node: Container | Graphics | Text;
-  vx: number;
-  vy: number;
-  life: number;
-  maxLife: number;
-  spin: number;
-  growth: number;
-};
-
 function emitSubCloneSmokeBurst(
   target: Container,
-  particles: SubCloneBurstParticle[],
   x: number,
   y: number,
   mode: "spawn" | "despawn",
@@ -239,37 +242,37 @@ function emitSubCloneSmokeBurst(
     const radius = 1.8 + Math.random() * 2.8;
     puff.circle(0, 0, radius).fill({ color: baseColor, alpha: 0.62 + Math.random() * 0.18 });
     puff.circle(0, 0, radius).stroke({ width: 0.6, color: strokeColor, alpha: 0.32 });
-    puff.position.set(x + (Math.random() - 0.5) * 10, y - 14 + (Math.random() - 0.5) * 6);
-    target.addChild(puff);
-    particles.push({
-      node: puff,
-      vx: (Math.random() - 0.5) * (mode === "spawn" ? 1.4 : 1.1),
-      vy: -0.22 - Math.random() * 0.6,
-      life: 0,
-      maxLife: 20 + Math.floor(Math.random() * 12),
-      spin: (Math.random() - 0.5) * 0.1,
-      growth: 0.013 + Math.random() * 0.012,
-    });
+    const startX = x + (Math.random() - 0.5) * 10;
+    const startY = y - 14 + (Math.random() - 0.5) * 6;
+    puff.position.set(startX, startY);
+    const vx = (Math.random() - 0.5) * (mode === "spawn" ? 1.4 : 1.1);
+    const vy = -0.22 - Math.random() * 0.6;
+    const maxLife = 20 + Math.floor(Math.random() * 12);
+    const growth = 0.013 + Math.random() * 0.012;
+    spawnParticleTween(target, puff, {
+      x: startX + vx * maxLife,
+      y: startY + vy * maxLife,
+      alpha: 0,
+      scaleX: 1 + growth * maxLife,
+      scaleY: 1 + growth * maxLife,
+    }, maxLife * 17, { ease: "Sine.easeOut" });
   }
 
   const flash = new Graphics();
   flash.circle(0, 0, mode === "spawn" ? 5.4 : 4.2).fill({ color: 0xf8fbff, alpha: mode === "spawn" ? 0.52 : 0.42 });
   flash.position.set(x, y - 14);
-  target.addChild(flash);
-  particles.push({
-    node: flash,
-    vx: 0,
-    vy: -0.16,
-    life: 0,
-    maxLife: mode === "spawn" ? 14 : 12,
-    spin: 0,
-    growth: 0.022,
-  });
+  const flashLife = mode === "spawn" ? 14 : 12;
+  spawnParticleTween(target, flash, {
+    y: y - 14 + (-0.16 * flashLife),
+    alpha: 0,
+    scaleX: 1 + 0.022 * flashLife,
+    scaleY: 1 + 0.022 * flashLife,
+  }, flashLife * 17, { ease: "Sine.easeOut" });
 
   const burstTxt = new Text({
     text: "펑",
     style: new TextStyle({
-      fontSize: 7,
+      fontSize: TXT.NORMAL,
       fill: mode === "spawn" ? 0xeff4ff : 0xdde4f5,
       fontWeight: "bold",
       fontFamily: "system-ui, sans-serif",
@@ -278,19 +281,16 @@ function emitSubCloneSmokeBurst(
   });
   burstTxt.anchor.set(0.5, 0.5);
   burstTxt.position.set(x, y - 24);
-  target.addChild(burstTxt);
-  particles.push({
-    node: burstTxt,
-    vx: (Math.random() - 0.5) * 0.35,
-    vy: -0.3,
-    life: 0,
-    maxLife: mode === "spawn" ? 18 : 16,
-    spin: (Math.random() - 0.5) * 0.04,
-    growth: 0.004,
-  });
+  const txtVx = (Math.random() - 0.5) * 0.35;
+  const txtLife = mode === "spawn" ? 18 : 16;
+  spawnParticleTween(target, burstTxt, {
+    x: x + txtVx * txtLife,
+    y: y - 24 + (-0.3 * txtLife),
+    alpha: 0,
+  }, txtLife * 17, { ease: "Sine.easeOut" });
 }
 
-function emitSubCloneFireworkBurst(target: Container, particles: SubCloneBurstParticle[], x: number, y: number): void {
+function emitSubCloneFireworkBurst(target: Container, x: number, y: number): void {
   const colors = [0xff6b6b, 0xffc75f, 0x7ce7ff, 0x8cff9f, 0xd7a6ff];
   const sparkCount = 10;
   for (let i = 0; i < sparkCount; i++) {
@@ -299,19 +299,22 @@ function emitSubCloneFireworkBurst(target: Container, particles: SubCloneBurstPa
     const radius = 0.85 + Math.random() * 0.6;
     spark.circle(0, 0, radius).fill({ color, alpha: 0.96 });
     spark.circle(0, 0, radius).stroke({ width: 0.45, color: 0xffffff, alpha: 0.5 });
-    spark.position.set(x + (Math.random() - 0.5) * 5, y + (Math.random() - 0.5) * 3);
-    target.addChild(spark);
+    const startX = x + (Math.random() - 0.5) * 5;
+    const startY = y + (Math.random() - 0.5) * 3;
+    spark.position.set(startX, startY);
     const angle = (Math.PI * 2 * i) / sparkCount + (Math.random() - 0.5) * 0.45;
     const speed = 0.9 + Math.random() * 0.85;
-    particles.push({
-      node: spark,
-      vx: Math.cos(angle) * speed,
-      vy: Math.sin(angle) * speed - 0.45,
-      life: 0,
-      maxLife: 16 + Math.floor(Math.random() * 8),
-      spin: (Math.random() - 0.5) * 0.08,
-      growth: 0.006 + Math.random() * 0.006,
-    });
+    const vx = Math.cos(angle) * speed;
+    const vy = Math.sin(angle) * speed - 0.45;
+    const maxLife = 16 + Math.floor(Math.random() * 8);
+    const growth = 0.006 + Math.random() * 0.006;
+    spawnParticleTween(target, spark, {
+      x: startX + vx * maxLife,
+      y: startY + vy * maxLife,
+      alpha: 0,
+      scaleX: 1 + growth * maxLife,
+      scaleY: 1 + growth * maxLife,
+    }, maxLife * 17, { ease: "Sine.easeOut" });
   }
 }
 
@@ -370,7 +373,6 @@ export {
   MOBILE_MOVE_CODES,
   type MobileMoveDirection,
   type RoomTheme,
-  type SubCloneBurstParticle,
   emitSubCloneSmokeBurst,
   emitSubCloneFireworkBurst,
   AGENT_BREATHE_SPEED,

@@ -1,7 +1,7 @@
 import type { Dispatch, MutableRefObject, SetStateAction } from "react";
-import { Container, Graphics, Text, TextStyle, type Application, type Texture } from "./pixi-compat";
+import { Container, Graphics, Text, TextStyle, type Application, type Texture, tweenNode } from "./pixi-compat";
 import type { Task } from "../../types";
-import { CEO_SIZE, DESK_H, type Delivery } from "./model";
+import { CEO_SIZE, DESK_H, TXT, type Delivery } from "./model";
 import { type CeoCustomization, getHeadwearEmoji, loadCeoCustomization } from "./ceo-customization";
 
 interface BuildFinalLayersParams {
@@ -56,57 +56,70 @@ export function buildFinalLayers({
   const ceoConfig = ceoCustomizationRef.current;
   const ceoCharacter = new Container();
 
-  // ── Terminal Robot CEO (pixel-art android) ──────────────────────
+  // ── Cute Chibi CEO Character ──────────────────────────────────
   const robot = new Graphics();
-  const bodyColor = 0x141820;
-  const panelColor = 0x1a2030;
-  const jointColor = 0x2a3048;
+  const bodyColor = 0x2a3448;
+  const panelColor = 0x3a4a60;
   const amberAccent = 0xf59e0b;
-  // Antenna mast + tip
-  robot.rect(-1, -28, 2, 8).fill(jointColor);
-  robot.circle(0, -29, 2.5).fill({ color: amberAccent, alpha: 0.95 });
-  // Head
-  robot.rect(-9, -20, 18, 13).fill(bodyColor);
-  robot.rect(-9, -20, 18, 13).stroke({ width: 0.8, color: jointColor });
-  // Ear modules
-  robot.rect(-12, -18, 3, 6).fill(panelColor);
-  robot.rect(9, -18, 3, 6).fill(panelColor);
-  // Visor (amber eye-slit)
-  robot.rect(-7, -16, 14, 6).fill(0x0d0800);
-  robot.rect(-6, -15, 12, 4).fill({ color: amberAccent, alpha: 0.8 });
-  robot.rect(-2, -14, 4, 2).fill({ color: 0xffd060, alpha: 0.95 }); // bright center
-  // Chin / neck
-  robot.rect(-4, -7, 8, 4).fill(panelColor);
-  // Shoulders
-  robot.rect(-14, -4, 28, 3).fill(panelColor);
-  robot.rect(-14, -4, 28, 3).stroke({ width: 0.5, color: jointColor });
-  // Body
-  robot.rect(-10, -1, 20, 16).fill(bodyColor);
-  robot.rect(-10, -1, 20, 16).stroke({ width: 0.6, color: jointColor });
-  // Amber side accent strips
-  robot.rect(-10, -1, 2, 16).fill({ color: amberAccent, alpha: 0.5 });
-  robot.rect(8, -1, 2, 16).fill({ color: amberAccent, alpha: 0.5 });
-  // Chest terminal display
-  robot.rect(-6, 2, 12, 7).fill(0x050810);
-  robot.rect(-5, 3, 8, 1).fill({ color: 0x22cc88, alpha: 0.7 });
-  robot.rect(-5, 5, 6, 1).fill({ color: amberAccent, alpha: 0.7 });
-  robot.rect(-5, 7, 10, 1).fill({ color: 0x4488cc, alpha: 0.5 });
-  // Status LED row
-  robot.circle(-4, 11, 1.2).fill({ color: 0x22cc44, alpha: 0.95 });
-  robot.circle(0, 11, 1.2).fill({ color: amberAccent, alpha: 0.9 });
-  robot.circle(4, 11, 1.2).fill({ color: 0x3366aa, alpha: 0.7 });
-  // Arms
-  robot.rect(-16, -1, 5, 12).fill(panelColor);
-  robot.rect(11, -1, 5, 12).fill(panelColor);
-  // Hand units
-  robot.rect(-16, 11, 5, 4).fill(jointColor);
-  robot.rect(11, 11, 5, 4).fill(jointColor);
-  // Legs
-  robot.rect(-8, 15, 6, 11).fill(panelColor);
-  robot.rect(2, 15, 6, 11).fill(panelColor);
-  // Feet / boots
-  robot.rect(-9, 26, 8, 3).fill(bodyColor);
-  robot.rect(1, 26, 8, 3).fill(bodyColor);
+  const eyeWhite = 0xffffff;
+  const pupilColor = 0x1a1a2e;
+  const blushColor = 0xff6b8a;
+  const mouthColor = 0x1a1a2e;
+
+  // ── Hair / top of head accent ──
+  robot.roundRect(-14, -50, 28, 6, 3).fill(panelColor);
+
+  // ── Large round head (~60% of height) ──
+  robot.circle(0, -30, 16).fill(bodyColor);
+  robot.circle(0, -30, 16).stroke({ width: 0.6, color: panelColor });
+
+  // ── Eyes: big round with sclera, pupils, highlights ──
+  // Left eye
+  robot.circle(-6, -32, 4.5).fill(eyeWhite);
+  robot.circle(-5.5, -31.5, 3).fill(pupilColor);
+  robot.circle(-4.5, -33, 1.2).fill(eyeWhite); // highlight dot
+  // Right eye
+  robot.circle(6, -32, 4.5).fill(eyeWhite);
+  robot.circle(6.5, -31.5, 3).fill(pupilColor);
+  robot.circle(7.5, -33, 1.2).fill(eyeWhite); // highlight dot
+
+  // ── Blush cheeks (semi-transparent pink) ──
+  robot.circle(-10, -27, 3).fill({ color: blushColor, alpha: 0.25 });
+  robot.circle(10, -27, 3).fill({ color: blushColor, alpha: 0.25 });
+
+  // ── Small cute mouth (tiny arc-like shape) ──
+  robot.circle(0, -25, 1.5).fill(mouthColor);
+  robot.circle(0, -24.5, 1.8).fill(bodyColor); // mask upper half to make a smile arc
+
+  // ── Amber hair clip / accessory ──
+  robot.circle(-12, -38, 2.5).fill({ color: amberAccent, alpha: 0.9 });
+
+  // ── Compact rounded body ──
+  robot.roundRect(-10, -14, 20, 18, 5).fill(bodyColor);
+  robot.roundRect(-10, -14, 20, 18, 5).stroke({ width: 0.5, color: panelColor });
+
+  // ── Amber collar / neckline accent ──
+  robot.roundRect(-7, -14, 14, 3, 1.5).fill({ color: amberAccent, alpha: 0.7 });
+
+  // ── Chest badge / emblem ──
+  robot.circle(0, -3, 3).fill(panelColor);
+  robot.circle(0, -3, 2).fill({ color: amberAccent, alpha: 0.8 });
+
+  // ── Stubby rounded arms ──
+  robot.roundRect(-15, -11, 6, 12, 3).fill(panelColor);
+  robot.roundRect(9, -11, 6, 12, 3).fill(panelColor);
+  // Tiny hands
+  robot.circle(-12, 2, 3).fill(bodyColor);
+  robot.circle(12, 2, 3).fill(bodyColor);
+
+  // ── Short stubby legs ──
+  robot.roundRect(-8, 4, 7, 10, 3).fill(panelColor);
+  robot.roundRect(1, 4, 7, 10, 3).fill(panelColor);
+
+  // ── Small rounded feet ──
+  robot.roundRect(-9, 13, 9, 4, 2).fill(bodyColor);
+  robot.roundRect(0, 13, 9, 4, 2).fill(bodyColor);
+
   // Tint from CEO outfit customization
   if (ceoConfig.outfitTint !== 0xffffff) robot.tint = ceoConfig.outfitTint;
   ceoCharacter.addChild(robot);
@@ -118,10 +131,18 @@ export function buildFinalLayers({
     style: new TextStyle({ fontSize: ceoConfig.headwear === "halo" ? 18 : 14 }),
   });
   crown.anchor.set(0.5, 1);
-  crown.position.set(0, -30); // above robot head antenna
+  crown.position.set(0, -48); // above chibi head
   crown.visible = ceoConfig.headwear !== "none";
   ceoCharacter.addChild(crown);
   crownRef.current = crown;
+
+  // Persistent crown bob tween (replaces per-tick Math.sin)
+  if (ceoConfig.headwear !== "none") {
+    // Y bob: -48 → -44 → -48 (amplitude 2, centered at -46 → but we want -48 to -44)
+    tweenNode(crown, { y: -44 }, 1050, { ease: "Sine.easeInOut", yoyo: true, repeat: -1 });
+    // Rotation sway
+    tweenNode(crown, { rotation: 0.06 }, 2100, { ease: "Sine.easeInOut", yoyo: true, repeat: -1 });
+  }
 
   // Avatar emoji face overlay (replaces robot visor visually)
   if (ceoConfig.avatarEmoji?.trim()) {
@@ -130,7 +151,7 @@ export function buildFinalLayers({
       style: new TextStyle({ fontSize: 12 }),
     });
     faceEmoji.anchor.set(0.5, 0.5);
-    faceEmoji.position.set(0, -13); // centered on robot visor
+    faceEmoji.position.set(0, -30); // centered on chibi face
     ceoCharacter.addChild(faceEmoji);
   }
 
@@ -143,7 +164,7 @@ export function buildFinalLayers({
   ceoCharacter.addChild(nameBadge);
   const nameText = new Text({
     text: titleText,
-    style: new TextStyle({ fontSize: 7, fill: 0xf59e0b, fontWeight: "bold", fontFamily: "monospace" }),
+    style: new TextStyle({ fontSize: TXT.NORMAL, fill: 0xf59e0b, fontWeight: "bold", fontFamily: "monospace" }),
   });
   nameText.anchor.set(0.5, 0.5);
   nameText.position.set(0, CEO_SIZE / 2 + 6.5);

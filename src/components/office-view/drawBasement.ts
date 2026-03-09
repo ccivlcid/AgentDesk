@@ -3,7 +3,7 @@ import { Container, Graphics, Sprite, Text, TextStyle, type Texture } from "./pi
 import type { Agent } from "../../types";
 import { localeName } from "../../i18n";
 import type { CallbackSnapshot, BreakAnimItem } from "./buildScene-types";
-import { BASEMENT_H, TARGET_CHAR_H, WALL_W, ELEVATOR_W, FLOOR_W, type RoomTheme, type WallClockVisual } from "./model";
+import { BASEMENT_H, TARGET_CHAR_H, WALL_W, ELEVATOR_W, FLOOR_W, TXT, type RoomTheme, type WallClockVisual } from "./model";
 import { BREAK_CHAT_MESSAGES, BREAK_SPOTS, LOCALE_TEXT, type SupportedLocale, pickLocale } from "./themes-locale";
 import {
   blendColor,
@@ -179,7 +179,7 @@ export function drawBasement({
   const brSignTxt = new Text({
     text: `SYS.IDLE  //  ${pickLocale(activeLocale, LOCALE_TEXT.breakRoom).toUpperCase()}`,
     style: new TextStyle({
-      fontSize: 6,
+      fontSize: TXT.SMALL,
       fill: breakTheme.accent,
       fontWeight: "bold",
       fontFamily: "monospace",
@@ -232,14 +232,14 @@ export function drawBasement({
 
     breakAnimItemsRef.current.push({ sprite: charContainer, baseX: spotX, baseY: spotY });
 
-    const coffee = new Text({ text: "☕", style: new TextStyle({ fontSize: 10 }) });
+    const coffee = new Text({ text: "☕", style: new TextStyle({ fontSize: TXT.MEDIUM }) });
     coffee.anchor.set(0.5, 0.5);
     coffee.position.set(spotX + 14, spotY - 10);
     breakRoom.addChild(coffee);
 
     const nameTag = new Text({
       text: localeName(activeLocale, agent),
-      style: new TextStyle({ fontSize: 6, fill: breakTheme.accent, fontFamily: "monospace" }),
+      style: new TextStyle({ fontSize: TXT.SMALL, fill: breakTheme.accent, fontFamily: "monospace" }),
     });
     nameTag.anchor.set(0.5, 0);
     const ntW = nameTag.width + 6;
@@ -266,7 +266,7 @@ export function drawBasement({
       const msg = chatPool[(seed + phase) % chatPool.length];
       const bubbleText = new Text({
         text: msg,
-        style: new TextStyle({ fontSize: 7, fill: isDark ? 0x88cc88 : 0x44aa44, fontFamily: "monospace" }),
+        style: new TextStyle({ fontSize: TXT.NORMAL, fill: isDark ? 0x88cc88 : 0x44aa44, fontFamily: "monospace" }),
       });
       bubbleText.anchor.set(0.5, 1);
       const bubbleW = bubbleText.width + 10;
