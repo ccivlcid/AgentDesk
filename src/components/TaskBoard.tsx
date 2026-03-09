@@ -541,25 +541,25 @@ export function TaskBoard({
                 <button
                   type="button"
                   onClick={() => toggleColumn(column.status)}
-                  className={`flex items-center gap-2 px-3 py-2 w-full text-left transition-opacity hover:opacity-90 ${column.headerBg}`}
+                  className={`flex flex-nowrap items-center gap-2 px-3 py-2 w-full text-left transition-opacity hover:opacity-90 ${column.headerBg} ${isCollapsed ? "sm:justify-center sm:gap-1" : ""}`}
                   style={{ borderBottom: "1px solid var(--th-border)" }}
                 >
                   <span className={`h-1.5 w-1.5 flex-shrink-0 ${column.dotColor}`} style={{ borderRadius: "1px" }} />
                   {!isCollapsed && (
                     <span
-                      className="flex-1 text-xs font-bold uppercase tracking-wider"
+                      className="flex-1 min-w-0 text-xs font-bold uppercase tracking-wider truncate"
                       style={{ color: "var(--th-text-heading)", fontFamily: "var(--th-font-mono)" }}
                     >
                       {taskStatusLabel(column.status, t)}
                     </span>
                   )}
                   <span
-                    className="px-1.5 py-0.5 text-xs font-mono font-bold"
+                    className="flex-shrink-0 px-1.5 py-0.5 text-xs font-mono font-bold tabular-nums"
                     style={{ background: "rgba(0,0,0,0.25)", color: "var(--th-text-heading)", borderRadius: "2px" }}
                   >
                     {columnTasks.length}
                   </span>
-                  <span className="text-[10px]" style={{ color: "var(--th-text-muted)" }}>{isCollapsed ? "▸" : "▾"}</span>
+                  <span className="flex-shrink-0 text-[10px]" style={{ color: "var(--th-text-muted)" }}>{isCollapsed ? "▸" : "▾"}</span>
                 </button>
 
                 {isCollapsed ? (
@@ -569,10 +569,10 @@ export function TaskBoard({
                       <button
                         type="button"
                         onClick={() => toggleColumn(column.status)}
-                        className="flex flex-1 items-center justify-center py-4 sm:py-0"
+                        className="flex flex-1 min-h-[5rem] sm:min-h-24 items-center justify-center py-4 sm:py-2"
                       >
                         <span
-                          className="text-sm sm:[writing-mode:vertical-lr] sm:rotate-180 font-medium tracking-wider select-none"
+                          className="text-sm sm:[writing-mode:vertical-lr] sm:rotate-180 font-medium tracking-wider select-none whitespace-nowrap overflow-hidden text-ellipsis max-w-full sm:max-w-none sm:max-h-full"
                           style={{ color: "var(--th-text-muted)" }}
                         >
                           {taskStatusLabel(column.status, t)}

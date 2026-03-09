@@ -181,7 +181,7 @@ export default function TaskCard({
 
   return (
     <div
-      className={`group task-card-hover ${cardCollapsed ? "p-2" : "p-3.5"}`}
+      className={`group task-card-hover overflow-hidden ${cardCollapsed ? "p-2" : "p-3.5"} transition-[padding] duration-150`}
       style={{
         background: "var(--th-bg-surface)",
         border: "1px solid var(--th-border)",
@@ -191,8 +191,8 @@ export default function TaskCard({
       }}
     >
       {/* 제목 행 — 접기 아이콘 클릭: 카드 접기/펼치기, 제목 클릭(펼침 시): 설명 2줄↔전체 */}
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex min-w-0 flex-1 items-center gap-2">
+      <div className="flex flex-nowrap items-center justify-between gap-2 min-h-[1.5rem]">
+        <div className="flex min-w-0 flex-1 items-center gap-2 flex-nowrap">
           <button
             type="button"
             onClick={() => setCardCollapsed((v) => !v)}
