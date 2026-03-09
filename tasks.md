@@ -15,4 +15,4 @@
 - [x] 문서: `docs/releases/v2.0.1.md` 릴리즈 노트 신규 작성
 - [x] 문서: `docs/releases/README.md`에 `v2.0.1` 인덱스 추가
 - [x] 문서: `README.md`, `README_ko.md`, `README_jp.md`, `README_zh.md` 최신 릴리즈 섹션 `v2.0.1` 동기화
-- [x] 문서: OpenAPI 반영(`docs/openapi.json`, `docs/api.md`) - Discord 수신기/채널조회 엔드포인트 추가
+- [x] 문서: OpenAPI 반영(`docs/specs/openapi.json`, `docs/specs/api.md`) - Discord 수신기/채널조회 엔드포인트 추가
