@@ -15,6 +15,8 @@ interface Props {
   cliUsage?: Record<string, CliUsageEntry> | null;
   cliUsageRefreshing?: boolean;
   onRefreshCliUsage?: () => void;
+  /** When true, show simplified dept list (no ACT bars, LIFT, task details) */
+  isOverviewMode?: boolean;
 }
 
 function getAttrFillColor(pct: number): string {
@@ -37,8 +39,10 @@ export default function OfficeDeptPanel({
   cliUsage,
   cliUsageRefreshing,
   onRefreshCliUsage,
+  isOverviewMode,
 }: Props) {
-  const sortedDepts = [...departments].sort((a, b) => a.sort_order - b.sort_order);
+  // departments is already sorted by tower floor order (sortedDepartments from OfficeView)
+  const sortedDepts = departments;
 
   // CLI usage — pick the most-used provider's utilization for the summary bar
   const cliProviders = ["claude", "codex", "gemini"] as const;
@@ -73,7 +77,7 @@ export default function OfficeDeptPanel({
         style={{ cursor: "pointer", opacity: 0.9 }}
         onClick={() => onScrollToFloor?.("ceo")}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 2 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
           <span style={{
             fontFamily: "var(--th-font-mono)", fontSize: "0.55rem", fontWeight: 700,
             color: "#000", background: "#f59e0b",
@@ -83,9 +87,11 @@ export default function OfficeDeptPanel({
             CEO Penthouse
           </div>
         </div>
-        <div style={{ fontFamily: "var(--th-font-mono)", fontSize: "0.5rem", color: "var(--th-text-muted)", letterSpacing: 1 }}>
-          ↑ scroll to top
-        </div>
+        {!isOverviewMode && (
+          <div style={{ fontFamily: "var(--th-font-mono)", fontSize: "0.5rem", color: "var(--th-text-muted)", letterSpacing: 1 }}>
+            ↑ scroll to top
+          </div>
+        )}
       </div>
 
       {/* CONF — Meeting Room (fixed floor between penthouse and depts) */}
@@ -94,7 +100,7 @@ export default function OfficeDeptPanel({
         style={{ cursor: "pointer", opacity: 0.85 }}
         onClick={() => onScrollToFloor?.("conf")}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 2 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
           <span style={{
             fontFamily: "var(--th-font-mono)", fontSize: "0.55rem", fontWeight: 700,
             color: "#000", background: "#a855f7",
@@ -104,9 +110,11 @@ export default function OfficeDeptPanel({
             Meeting Room
           </div>
         </div>
-        <div style={{ fontFamily: "var(--th-font-mono)", fontSize: "0.5rem", color: "var(--th-text-muted)", letterSpacing: 1 }}>
-          ↑ scroll to view
-        </div>
+        {!isOverviewMode && (
+          <div style={{ fontFamily: "var(--th-font-mono)", fontSize: "0.5rem", color: "var(--th-text-muted)", letterSpacing: 1 }}>
+            ↑ scroll to view
+          </div>
+        )}
       </div>
 
       <div className="office-panel-label">Departments</div>
@@ -136,7 +144,7 @@ export default function OfficeDeptPanel({
               onClick={() => onSelectDept(dept)}
             >
               {/* FM-style header row: floor badge + activity dot + name + lift button */}
-              <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 2 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: isOverviewMode ? 0 : 2 }}>
                 <span style={{
                   fontFamily: "var(--th-font-mono)", fontSize: "0.55rem", fontWeight: 700,
                   color: "#000", background: "var(--th-accent)",
@@ -151,7 +159,7 @@ export default function OfficeDeptPanel({
                 <div className="office-dept-item__name" title={dept.name} style={{ flex: 1, minWidth: 0 }}>
                   {dept.icon} {dept.name}
                 </div>
-                {visitorsByDeptId?.[dept.id] ? (
+                {!isOverviewMode && visitorsByDeptId?.[dept.id] ? (
                   <span style={{
                     fontFamily: "var(--th-font-mono)", fontSize: "0.42rem", fontWeight: 700,
                     color: "#22c55e", background: "rgba(34,197,94,0.12)",
@@ -161,7 +169,7 @@ export default function OfficeDeptPanel({
                     ↓{visitorsByDeptId[dept.id]}
                   </span>
                 ) : null}
-                {onCallElevator && (
+                {!isOverviewMode && onCallElevator && (
                   <button
                     className="fm-lift-btn"
                     title={`Send elevator to ${dept.name} (${floorLabel})`}
@@ -170,26 +178,36 @@ export default function OfficeDeptPanel({
                     LIFT
                   </button>
                 )}
+                {isOverviewMode && (
+                  <span style={{
+                    fontFamily: "var(--th-font-mono)", fontSize: "0.5rem",
+                    color: "var(--th-text-muted)", flexShrink: 0,
+                  }}>
+                    {runningCount}/{totalCount}
+                  </span>
+                )}
               </div>
 
-              {/* FM attribute bars row */}
-              <div className="fm-attr-row">
-                <div className="fm-attr">
-                  <span className="fm-attr__lbl">ACT</span>
-                  <div className="fm-attr__bar">
-                    <div className="fm-attr__fill" style={{ width: `${activityPct}%`, background: getAttrFillColor(activityPct) }} />
+              {/* FM attribute bars row — hidden in overview */}
+              {!isOverviewMode && (
+                <div className="fm-attr-row">
+                  <div className="fm-attr">
+                    <span className="fm-attr__lbl">ACT</span>
+                    <div className="fm-attr__bar">
+                      <div className="fm-attr__fill" style={{ width: `${activityPct}%`, background: getAttrFillColor(activityPct) }} />
+                    </div>
+                    <span className="fm-attr__val">{activityPct}</span>
                   </div>
-                  <span className="fm-attr__val">{activityPct}</span>
+                  <div className="fm-attr__agents">
+                    <span style={{ color: "#22c55e" }}>{runningCount}W</span>
+                    {idleCount > 0 && <span style={{ color: "var(--th-text-muted)" }}> {idleCount}I</span>}
+                    {breakCount > 0 && <span style={{ color: "var(--th-accent)" }}> {breakCount}B</span>}
+                    {totalCount === 0 && <span style={{ color: "var(--th-text-muted)" }}>no agents</span>}
+                  </div>
                 </div>
-                <div className="fm-attr__agents">
-                  <span style={{ color: "#22c55e" }}>{runningCount}W</span>
-                  {idleCount > 0 && <span style={{ color: "var(--th-text-muted)" }}> {idleCount}I</span>}
-                  {breakCount > 0 && <span style={{ color: "var(--th-accent)" }}> {breakCount}B</span>}
-                  {totalCount === 0 && <span style={{ color: "var(--th-text-muted)" }}>no agents</span>}
-                </div>
-              </div>
-              {/* Task mini-summary */}
-              {(activeTasks > 0 || doneTasks > 0) && (
+              )}
+              {/* Task mini-summary — hidden in overview */}
+              {!isOverviewMode && (activeTasks > 0 || doneTasks > 0) && (
                 <div style={{ display: "flex", gap: 6, marginTop: 2 }}>
                   {activeTasks > 0 && (
                     <span style={{ fontFamily: "var(--th-font-mono)", fontSize: "0.42rem", color: "#f59e0b", letterSpacing: 1 }}>
@@ -214,7 +232,7 @@ export default function OfficeDeptPanel({
         style={{ cursor: "pointer", opacity: 0.85 }}
         onClick={() => onScrollToFloor?.("basement")}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 2 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
           <span style={{
             fontFamily: "var(--th-font-mono)", fontSize: "0.55rem", fontWeight: 700,
             color: "#000", background: "#22c55e",
@@ -224,54 +242,61 @@ export default function OfficeDeptPanel({
             Break Room
           </div>
         </div>
-        <div style={{ fontFamily: "var(--th-font-mono)", fontSize: "0.5rem", color: "var(--th-text-muted)", letterSpacing: 1 }}>
-          ↓ scroll to view
-        </div>
+        {!isOverviewMode && (
+          <div style={{ fontFamily: "var(--th-font-mono)", fontSize: "0.5rem", color: "var(--th-text-muted)", letterSpacing: 1 }}>
+            ↓ scroll to view
+          </div>
+        )}
       </div>
 
-      <div className="office-panel-divider" />
-      <div className="office-panel-label">CLI Usage</div>
+      {/* CLI Usage — hidden in overview mode */}
+      {!isOverviewMode && (
+        <>
+          <div className="office-panel-divider" />
+          <div className="office-panel-label">CLI Usage</div>
 
-      {!isConnected ? (
-        <div style={{ padding: "6px 12px 10px", fontFamily: "var(--th-font-mono)", fontSize: "0.6rem", color: "var(--th-text-muted)", lineHeight: 1.5 }}>
-          No CLI connected.<br />
-          Check Settings.
-        </div>
-      ) : (
-        <div style={{ padding: "6px 12px 10px" }}>
-          {bestUsage ? (
-            <>
-              <div style={{ fontFamily: "var(--th-font-mono)", fontSize: "0.65rem", color: bestUsage.pct >= 80 ? "#f85149" : "var(--th-accent)", marginBottom: 4 }}>
-                {bestUsage.label}
-              </div>
-              <div style={{ height: 3, background: "var(--th-border)", borderRadius: 2, overflow: "hidden" }}>
-                <div
-                  style={{
-                    height: "100%",
-                    width: `${Math.min(100, bestUsage.pct)}%`,
-                    background: bestUsage.pct >= 80 ? "#f85149" : "var(--th-accent)",
-                    borderRadius: 2,
-                    transition: "width 300ms linear",
-                  }}
-                />
-              </div>
-            </>
+          {!isConnected ? (
+            <div style={{ padding: "6px 12px 10px", fontFamily: "var(--th-font-mono)", fontSize: "0.6rem", color: "var(--th-text-muted)", lineHeight: 1.5 }}>
+              No CLI connected.<br />
+              Check Settings.
+            </div>
           ) : (
-            <div style={{ fontFamily: "var(--th-font-mono)", fontSize: "0.6rem", color: "var(--th-text-muted)" }}>
-              No data yet.
+            <div style={{ padding: "6px 12px 10px" }}>
+              {bestUsage ? (
+                <>
+                  <div style={{ fontFamily: "var(--th-font-mono)", fontSize: "0.65rem", color: bestUsage.pct >= 80 ? "#f85149" : "var(--th-accent)", marginBottom: 4 }}>
+                    {bestUsage.label}
+                  </div>
+                  <div style={{ height: 3, background: "var(--th-border)", borderRadius: 2, overflow: "hidden" }}>
+                    <div
+                      style={{
+                        height: "100%",
+                        width: `${Math.min(100, bestUsage.pct)}%`,
+                        background: bestUsage.pct >= 80 ? "#f85149" : "var(--th-accent)",
+                        borderRadius: 2,
+                        transition: "width 300ms linear",
+                      }}
+                    />
+                  </div>
+                </>
+              ) : (
+                <div style={{ fontFamily: "var(--th-font-mono)", fontSize: "0.6rem", color: "var(--th-text-muted)" }}>
+                  No data yet.
+                </div>
+              )}
+              {onRefreshCliUsage && (
+                <button
+                  className="office-actionbar-btn"
+                  style={{ marginTop: 6, padding: "2px 0" }}
+                  onClick={(e) => { e.stopPropagation(); onRefreshCliUsage(); }}
+                  disabled={cliUsageRefreshing}
+                >
+                  {cliUsageRefreshing ? "..." : "REFRESH"}
+                </button>
+              )}
             </div>
           )}
-          {onRefreshCliUsage && (
-            <button
-              className="office-actionbar-btn"
-              style={{ marginTop: 6, padding: "2px 0" }}
-              onClick={(e) => { e.stopPropagation(); onRefreshCliUsage(); }}
-              disabled={cliUsageRefreshing}
-            >
-              {cliUsageRefreshing ? "..." : "REFRESH"}
-            </button>
-          )}
-        </div>
+        </>
       )}
     </>
   );

@@ -14,7 +14,7 @@ import {
 import { useDraggable } from "@dnd-kit/core";
 import { bulkHideTasks, getProjects } from "../api";
 import { useI18n } from "../i18n";
-import type { Agent, Department, Project, SubTask, Task, TaskStatus, WorkflowPackKey } from "../types";
+import type { Agent, Department, Project, SubTask, Task, TaskExecutionState, TaskStatus, WorkflowPackKey } from "../types";
 import ProjectManagerModal from "./ProjectManagerModal";
 import BulkHideModal from "./taskboard/BulkHideModal";
 import CreateTaskModal from "./taskboard/CreateTaskModal";
@@ -150,6 +150,7 @@ export function TaskBoard({
   const [filterDept, setFilterDept] = useState("");
   const [filterType, setFilterType] = useState("");
   const [filterProject, setFilterProject] = useState("");
+  const [filterExecution, setFilterExecution] = useState<"" | TaskExecutionState | "attention">("");
   const [search, setSearch] = useState("");
   const [batchMode, setBatchMode] = useState(false);
   const [selectedTaskIds, setSelectedTaskIds] = useState<Set<string>>(new Set());
@@ -165,6 +166,9 @@ export function TaskBoard({
   const [collapsedCardIds, setCollapsedCardIds] = useState<Set<string>>(() => loadCollapsedCardIds());
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
   const [overColumnStatus, setOverColumnStatus] = useState<string | null>(null);
+  const handleFilterExecution = useCallback((value: string) => {
+    setFilterExecution(value as "" | TaskExecutionState | "attention");
+  }, []);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -199,12 +203,17 @@ export function TaskBoard({
       if (filterDept && task.department_id !== filterDept) return false;
       if (filterType && task.task_type !== filterType) return false;
       if (filterProject && task.project_id !== filterProject) return false;
+      if (filterExecution === "attention") {
+        if (!task.execution_state || !["blocked", "stalled", "failed"].includes(task.execution_state)) return false;
+      } else if (filterExecution && task.execution_state !== filterExecution) {
+        return false;
+      }
       if (search && !task.title.toLowerCase().includes(search.toLowerCase())) return false;
       const isHidden = hiddenTaskIds.has(task.id);
       if (!showAllTasks && isHidden) return false;
       return true;
     });
-  }, [tasks, filterDept, filterType, filterProject, search, hiddenTaskIds, showAllTasks]);
+  }, [tasks, filterDept, filterType, filterProject, filterExecution, search, hiddenTaskIds, showAllTasks]);
 
   const tasksByStatus = useMemo(() => {
     const grouped: Record<string, Task[]> = {};
@@ -317,7 +326,7 @@ export function TaskBoard({
     setSelectedTaskIds(new Set());
   }, [selectedTaskIds, hideTask]);
 
-  const activeFilterCount = [filterDept, filterType, filterProject, search].filter(Boolean).length;
+  const activeFilterCount = [filterDept, filterType, filterProject, filterExecution, search].filter(Boolean).length;
   const hiddenTaskCount = useMemo(() => {
     let count = 0;
     for (const task of tasks) {
@@ -499,10 +508,12 @@ export function TaskBoard({
         filterDept={filterDept}
         filterType={filterType}
         filterProject={filterProject}
+        filterExecution={filterExecution}
         search={search}
         onFilterDept={setFilterDept}
         onFilterType={setFilterType}
         onFilterProject={setFilterProject}
+        onFilterExecution={handleFilterExecution}
         onSearch={setSearch}
       />
 

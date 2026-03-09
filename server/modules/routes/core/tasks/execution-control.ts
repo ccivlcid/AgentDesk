@@ -12,6 +12,7 @@ import {
   queueInterruptPrompt,
   sanitizeInterruptPrompt,
 } from "../../../workflow/core/interrupt-injection-tools.ts";
+import { appendTaskExecutionMetaUpdate, recordTaskExecutionEvent } from "../../../workflow/core/task-execution-meta.ts";
 
 export type TaskExecutionControlRouteDeps = Pick<
   RuntimeContext,
@@ -304,7 +305,27 @@ export function registerTaskExecutionControlRoutes(deps: TaskExecutionControlRou
 
     const activeChild = activeProcesses.get(id);
     if (!activeChild?.pid) {
-      db.prepare("UPDATE tasks SET status = ?, updated_at = ? WHERE id = ?").run(targetStatus, nowMs(), id);
+      {
+        const t = nowMs();
+        const updates = ["status = ?", "updated_at = ?"];
+        const params: unknown[] = [targetStatus, t];
+        appendTaskExecutionMetaUpdate(db as any, updates, params, {
+          execution_state: targetStatus === "pending" ? "blocked" : "cancelled",
+          retry_after: null,
+          execution_error_code: targetStatus === "pending" ? "paused" : "cancelled",
+          execution_error_summary: targetStatus === "pending" ? "Execution paused by operator" : "Execution cancelled by operator",
+        });
+        params.push(id);
+        db.prepare(`UPDATE tasks SET ${updates.join(", ")} WHERE id = ?`).run(...(params as any[]));
+        recordTaskExecutionEvent(db as any, {
+          taskId: id,
+          eventType: targetStatus === "pending" ? "run_paused" : "run_cancelled",
+          fromState: "running",
+          toState: targetStatus === "pending" ? "blocked" : "cancelled",
+          summary: targetStatus === "pending" ? "Execution paused without active process" : "Execution cancelled without active process",
+          createdAt: t,
+        });
+      }
       if (targetStatus !== "pending") {
         cancelDelegatedWorkflowState();
         clearTaskWorkflowState(id);
@@ -398,7 +419,27 @@ export function registerTaskExecutionControlRoutes(deps: TaskExecutionControlRou
     const rolledBack = shouldRollback ? rollbackTaskWorktree(id, `stop_${targetStatus}`) : false;
 
     const t = nowMs();
-    db.prepare("UPDATE tasks SET status = ?, updated_at = ? WHERE id = ?").run(targetStatus, t, id);
+    {
+      const updates = ["status = ?", "updated_at = ?"];
+      const params: unknown[] = [targetStatus, t];
+      appendTaskExecutionMetaUpdate(db as any, updates, params, {
+        execution_state: targetStatus === "pending" ? "blocked" : "cancelled",
+        retry_after: null,
+        execution_error_code: targetStatus === "pending" ? "paused" : "cancelled",
+        execution_error_summary: targetStatus === "pending" ? "Execution paused by operator" : "Execution cancelled by operator",
+      });
+      params.push(id);
+      db.prepare(`UPDATE tasks SET ${updates.join(", ")} WHERE id = ?`).run(...(params as any[]));
+    }
+    recordTaskExecutionEvent(db as any, {
+      taskId: id,
+      eventType: targetStatus === "pending" ? "run_paused" : "run_cancelled",
+      fromState: "running",
+      toState: targetStatus === "pending" ? "blocked" : "cancelled",
+      summary: targetStatus === "pending" ? "Execution paused by operator" : "Execution cancelled by operator",
+      metadata: { pid: activeChild.pid },
+      createdAt: t,
+    });
     if (targetStatus !== "pending") {
       cancelDelegatedWorkflowState();
       clearTaskWorkflowState(id);
@@ -504,8 +545,18 @@ export function registerTaskExecutionControlRoutes(deps: TaskExecutionControlRou
     const wasPaused = task.status === "pending";
     const targetStatus = task.assigned_agent_id ? "planned" : "inbox";
     const t = nowMs();
-    db.prepare("UPDATE tasks SET status = ?, updated_at = ? WHERE id = ?").run(targetStatus, t, id);
-
+    {
+      const updates = ["status = ?", "updated_at = ?"];
+      const params: unknown[] = [targetStatus, t];
+      appendTaskExecutionMetaUpdate(db as any, updates, params, {
+        execution_state: "queued",
+        retry_after: null,
+        execution_error_code: null,
+        execution_error_summary: null,
+      });
+      params.push(id);
+      db.prepare(`UPDATE tasks SET ${updates.join(", ")} WHERE id = ?`).run(...(params as any[]));
+    }
     appendTaskLog(id, "system", `RESUME: ${task.status} → ${targetStatus}`);
 
     const updatedTask = db.prepare("SELECT * FROM tasks WHERE id = ?").get(id);
@@ -529,6 +580,15 @@ export function registerTaskExecutionControlRoutes(deps: TaskExecutionControlRou
         );
       }
     }
+    recordTaskExecutionEvent(db as any, {
+      taskId: id,
+      eventType: "run_resumed",
+      fromState: wasPaused ? "blocked" : "cancelled",
+      toState: "queued",
+      summary: `Task resumed to ${targetStatus}`,
+      metadata: { auto_resumed: autoResumed },
+      createdAt: t,
+    });
 
     if (autoResumed) {
       notifyCeo(

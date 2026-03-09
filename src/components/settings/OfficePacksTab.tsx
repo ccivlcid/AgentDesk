@@ -1,11 +1,16 @@
 import { useCallback, useEffect, useState } from "react";
-import type { CustomOfficePack } from "../../types";
+import type { CliProvider, CustomOfficePack } from "../../types";
 import { useI18n } from "../../i18n";
 import * as api from "../../api";
 import { getBuiltinPackList } from "../../app/office-workflow-pack";
+import { CLI_INFO } from "./constants";
 import CustomPackFormModal from "./CustomPackFormModal";
 
 type BuiltinPack = { key: string; label: string; summary: string; slug: string; accent: number };
+
+function defaultProviderLabel(provider: CliProvider): string {
+  return CLI_INFO[provider]?.label ?? provider;
+}
 
 export default function OfficePacksTab() {
   const { t, language } = useI18n();
@@ -16,6 +21,7 @@ export default function OfficePacksTab() {
   const [builtins] = useState<BuiltinPack[]>(() => getBuiltinPackList(uiLocale));
   const [hiddenKeys, setHiddenKeys] = useState<Set<string>>(new Set());
   const [togglingKey, setTogglingKey] = useState<string | null>(null);
+  const [defaultProvider, setDefaultProvider] = useState<CliProvider>("claude");
 
   const [packs, setPacks] = useState<CustomOfficePack[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,6 +35,7 @@ export default function OfficePacksTab() {
       const [res, settings] = await Promise.all([api.getCustomPacks(), api.getSettings()]);
       setPacks(res);
       setHiddenKeys(new Set(settings.hiddenBuiltinPackKeys ?? []));
+      setDefaultProvider((settings.defaultProvider as CliProvider) ?? "claude");
     } catch (e) {
       console.error("Failed to load packs:", e);
     } finally {
@@ -76,8 +83,8 @@ export default function OfficePacksTab() {
       {/* Notice */}
       <div className="px-4 py-3 text-xs font-mono" style={{ borderRadius: "2px", border: "1px solid rgba(251,191,36,0.2)", background: "rgba(251,191,36,0.06)", color: "var(--th-text-muted)" }}>
         {tr(
-          "AI 자동 생성으로 업종에 맞는 부서 구조와 직원을 한 번에 만들 수 있습니다. Claude API 키 설정이 필요합니다.",
-          "Use AI auto-generation to create department structures and staff for any industry. Requires a Claude API key.",
+          `업종에 맞는 부서·직원을 AI로 한 번에 생성할 수 있습니다. 자동 생성에는 일반 설정의 기본 CLI 프로바이더(${defaultProviderLabel(defaultProvider)})가 사용되며, 해당 프로바이더 연동이 필요합니다.`,
+          `Generate departments and staff for your industry with AI. Auto-generation uses the default CLI provider (${defaultProviderLabel(defaultProvider)}) from General settings; that provider must be connected.`,
         )}
       </div>
 

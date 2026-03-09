@@ -129,7 +129,79 @@ export function applyTaskSchemaMigrations(db: DbLike): void {
     /* already exists */
   }
   try {
+    db.exec("ALTER TABLE tasks ADD COLUMN execution_state TEXT NOT NULL DEFAULT 'queued'");
+  } catch {
+    /* already exists */
+  }
+  try {
+    db.exec("ALTER TABLE tasks ADD COLUMN execution_attempt INTEGER NOT NULL DEFAULT 0");
+  } catch {
+    /* already exists */
+  }
+  try {
+    db.exec("ALTER TABLE tasks ADD COLUMN claimed_by TEXT");
+  } catch {
+    /* already exists */
+  }
+  try {
+    db.exec("ALTER TABLE tasks ADD COLUMN claim_expires_at INTEGER");
+  } catch {
+    /* already exists */
+  }
+  try {
+    db.exec("ALTER TABLE tasks ADD COLUMN last_heartbeat_at INTEGER");
+  } catch {
+    /* already exists */
+  }
+  try {
+    db.exec("ALTER TABLE tasks ADD COLUMN last_output_at INTEGER");
+  } catch {
+    /* already exists */
+  }
+  try {
+    db.exec("ALTER TABLE tasks ADD COLUMN retry_after INTEGER");
+  } catch {
+    /* already exists */
+  }
+  try {
+    db.exec("ALTER TABLE tasks ADD COLUMN execution_error_code TEXT");
+  } catch {
+    /* already exists */
+  }
+  try {
+    db.exec("ALTER TABLE tasks ADD COLUMN execution_error_summary TEXT");
+  } catch {
+    /* already exists */
+  }
+  try {
+    db.exec("ALTER TABLE tasks ADD COLUMN resolved_workflow_contract_hash TEXT");
+  } catch {
+    /* already exists */
+  }
+  try {
     db.exec("CREATE INDEX IF NOT EXISTS idx_tasks_workflow_pack ON tasks(workflow_pack_key, updated_at DESC)");
+  } catch {
+    /* already exists */
+  }
+  try {
+    db.exec("CREATE INDEX IF NOT EXISTS idx_tasks_execution_state ON tasks(execution_state, retry_after, updated_at DESC)");
+  } catch {
+    /* already exists */
+  }
+  try {
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS task_execution_events (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        task_id TEXT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+        event_type TEXT NOT NULL,
+        from_state TEXT,
+        to_state TEXT,
+        summary TEXT,
+        metadata_json TEXT,
+        created_at INTEGER DEFAULT (unixepoch()*1000)
+      )
+    `);
+    db.exec("CREATE INDEX IF NOT EXISTS idx_task_execution_events_task ON task_execution_events(task_id, created_at DESC)");
   } catch {
     /* already exists */
   }

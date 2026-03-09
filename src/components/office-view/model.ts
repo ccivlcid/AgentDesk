@@ -199,6 +199,8 @@ const ROOF_H = 40;
 /* ---- Cityscape scene constants (A+H approach) ---- */
 const SKY_H = 80;        // sky area above tower
 const GROUND_H = 50;     // ground area below tower
+const CITY_MARGIN = 40;  // px of cityscape on each side of tower
+const SCENE_W = FLOOR_W + CITY_MARGIN * 2; // 490px — full scene width
 
 const MAX_VISIBLE_SUB_CLONES_PER_AGENT = 3;
 const SUB_CLONE_WAVE_SPEED = 0.04;
@@ -364,6 +366,8 @@ export {
   ROOF_H,
   SKY_H,
   GROUND_H,
+  CITY_MARGIN,
+  SCENE_W,
   MAX_VISIBLE_SUB_CLONES_PER_AGENT,
   SUB_CLONE_WAVE_SPEED,
   SUB_CLONE_MOVE_X_AMPLITUDE,

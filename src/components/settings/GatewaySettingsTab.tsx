@@ -21,6 +21,8 @@ import {
   normalizeChannelsConfig,
   resolveChannelsConfig,
 } from "./gateway-settings/state";
+import { createWebhook } from "../../api/webhooks";
+import WebhookSettingsTab from "./WebhookSettingsTab";
 
 export default function GatewaySettingsTab({
   t,
@@ -57,6 +59,7 @@ export default function GatewaySettingsTab({
   const [guideOpen, setGuideOpen] = useState(false);
   const [editor, setEditor] = useState(() => createEditorState(channelsConfig));
   const [editorError, setEditorError] = useState<string | null>(null);
+  const [webhookRefreshTrigger, setWebhookRefreshTrigger] = useState(0);
   const [discordChannelsLoading, setDiscordChannelsLoading] = useState(false);
   const [discordChannelOptions, setDiscordChannelOptions] = useState<api.DiscordDiscoverableChannel[]>([]);
   const [discordChannelsError, setDiscordChannelsError] = useState<string | null>(null);
@@ -232,6 +235,7 @@ export default function GatewaySettingsTab({
 
   const openEditModal = (row: ChatRow) => {
     setEditor({
+      ...createEditorState(channelsConfig),
       open: true,
       mode: "edit",
       ref: { channel: row.channel, sessionId: row.session.id },
@@ -252,7 +256,7 @@ export default function GatewaySettingsTab({
     setEditorError(null);
   };
 
-  const handleSaveEditor = () => {
+  const handleSaveEditor = async () => {
     const token = editor.token.trim();
     const name = editor.name.trim();
     const targetId = editor.targetId.trim();
@@ -354,6 +358,26 @@ export default function GatewaySettingsTab({
         }),
       );
       return;
+    }
+    if ((editor.channel === "slack" || editor.channel === "discord") && editor.webhookUrl?.trim()) {
+      try {
+        await createWebhook({
+          name: editor.webhookName?.trim() || editor.name?.trim() || (editor.channel === "slack" ? "Slack 알림" : "Discord 알림"),
+          url: editor.webhookUrl.trim(),
+          events: editor.webhookEvents?.length ? editor.webhookEvents : ["task_done"],
+        });
+        setWebhookRefreshTrigger((t) => t + 1);
+      } catch {
+        setEditorError(
+          t({
+            ko: "웹훅 저장에 실패했습니다.",
+            en: "Failed to save webhook.",
+            ja: "ウェブフックの保存に失敗しました。",
+            zh: "保存 Webhook 失败。",
+          }),
+        );
+        return;
+      }
     }
     setSelectedChatKey(`${editor.channel}:${nextSession.id}`);
     closeEditorModal();
@@ -813,6 +837,18 @@ export default function GatewaySettingsTab({
             </div>
           </div>
         )}
+      </div>
+
+      <div className="mt-5 p-3 space-y-3" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
+        <p className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
+          {t({
+            ko: "Slack·Discord 웹훅은 위 '새 채팅 추가'에서 해당 채널을 선택한 뒤 모달 안에서 설정하세요. 기타 URL은 아래에서 추가할 수 있습니다.",
+            en: "Set Slack/Discord webhooks in the channel modal (Add Chat → choose Slack or Discord). Add other URLs below.",
+            ja: "Slack・Discord のウェブフックは「チャット追加」で該当チャネルを選び、モーダル内で設定。その他URLは下で追加できます。",
+            zh: "Slack/Discord Webhook 请在“新增聊天”中选择对应频道后在弹窗中设置。其他 URL 可在下方添加。",
+          })}
+        </p>
+        <WebhookSettingsTab refreshTrigger={webhookRefreshTrigger} />
       </div>
 
       {editor.open && (

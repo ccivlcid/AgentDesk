@@ -666,27 +666,10 @@ export class PhaserApp {
   get renderer() {
     const self = this;
     return {
+      /** @deprecated Use resizeViewport() + setCameraBounds() instead. */
       resize(w: number, h: number) {
-        const dpr = self._resolution;
-        if (dpr > 1 && self._game) {
-          // Render at dpr× physical pixels for crisp text/graphics
-          self._game.scale.resize(w * dpr, h * dpr);
-          const cam = self._scene?.cameras.main;
-          if (cam) {
-            cam.setSize(w * dpr, h * dpr);
-            cam.setZoom(1);
-            cam.scrollX = 0;
-            cam.scrollY = 0;
-          }
-          // Scale stage container by dpr so all world-coordinate drawing
-          // fills the larger canvas — text & graphics render at native 2× resolution
-          if (self._stage) {
-            self._stage._obj.setScale(dpr);
-          }
-        } else {
-          self._game?.scale.resize(w, h);
-          self._scene?.cameras.main.setSize(w, h);
-        }
+        // Legacy: delegates to resizeViewport (preserves camera state)
+        self.resizeViewport(w, h);
       },
     };
   }
@@ -783,6 +766,97 @@ export class PhaserApp {
   setScene(scene: Phaser.Scene) {
     this._scene = scene;
     setCurrentScene(scene);
+  }
+
+  // ── Camera-based viewport API ─────────────────────────────────────────────
+  // All world coordinate methods account for DPR stage scaling automatically.
+
+  /** Resize the viewport (canvas) to match container dimensions.
+   *  World objects remain at their positions; camera scroll/zoom preserved. */
+  resizeViewport(w: number, h: number): void {
+    const dpr = this._resolution;
+    this._game?.scale.resize(w * dpr, h * dpr);
+    const cam = this._scene?.cameras.main;
+    if (cam) cam.setSize(w * dpr, h * dpr);
+    if (dpr > 1 && this._stage) {
+      this._stage._obj.setScale(dpr);
+    }
+    // CSS size = logical dimensions (not physical)
+    const canvas = this._game?.canvas as HTMLCanvasElement | undefined;
+    if (canvas) {
+      canvas.style.width = `${w}px`;
+      canvas.style.height = `${h}px`;
+    }
+  }
+
+  /** Set camera world bounds. World is in logical units; we scale by resolution for Phaser. */
+  setCameraBounds(x: number, y: number, w: number, h: number): void {
+    const cam = this._scene?.cameras.main;
+    const dpr = this._resolution;
+    cam?.setBounds(x * dpr, y * dpr, w * dpr, h * dpr);
+  }
+
+  /** Set camera scroll (logical coordinates from caller; we scale for Phaser world). */
+  setCameraScroll(x: number, y: number): void {
+    const cam = this._scene?.cameras.main;
+    const dpr = this._resolution;
+    if (cam) {
+      cam.scrollX = x * dpr;
+      cam.scrollY = y * dpr;
+    }
+  }
+
+  /** Get camera scroll in logical coordinates (Phaser world / resolution). */
+  getCameraScroll(): { x: number; y: number } {
+    const cam = this._scene?.cameras.main;
+    const dpr = this._resolution;
+    return {
+      x: (cam?.scrollX ?? 0) / dpr,
+      y: (cam?.scrollY ?? 0) / dpr,
+    };
+  }
+
+  /** Get camera viewport size in world coordinates (accounts for zoom). */
+  getCameraViewportSize(): { w: number; h: number } {
+    const cam = this._scene?.cameras.main;
+    const dpr = this._resolution;
+    const zoom = cam?.zoom ?? 1;
+    return {
+      w: (cam?.width ?? 0) / (dpr * zoom),
+      h: (cam?.height ?? 0) / (dpr * zoom),
+    };
+  }
+
+  /** Set camera zoom (1 = 1:1 pixel, <1 = zoomed out). */
+  setCameraZoom(zoom: number): void {
+    this._scene?.cameras.main?.setZoom(zoom);
+  }
+
+  /** Get current camera zoom. */
+  getCameraZoom(): number {
+    return this._scene?.cameras.main?.zoom ?? 1;
+  }
+
+  /** Smoothly pan camera to center on a world point (logical coordinates). */
+  panCamera(worldX: number, worldY: number, duration: number, ease = "Linear"): void {
+    const cam = this._scene?.cameras.main;
+    const dpr = this._resolution;
+    cam?.pan(worldX * dpr, worldY * dpr, duration, ease, true);
+  }
+
+  /** Smoothly zoom camera. */
+  zoomCamera(zoom: number, duration: number, ease = "Linear"): void {
+    this._scene?.cameras.main?.zoomTo(zoom, duration, ease, true);
+  }
+
+  /** Stop all camera effects (pan/zoom/shake). */
+  stopCameraEffects(): void {
+    const cam = this._scene?.cameras.main;
+    if (cam) {
+      cam.stopFollow();
+      try { (cam as any).panEffect?.reset(); } catch { /* v3.x compat */ }
+      try { (cam as any).zoomEffect?.reset(); } catch { /* v3.x compat */ }
+    }
   }
 
   destroy(removeView = false, _opts?: unknown) {

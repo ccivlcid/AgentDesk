@@ -1,5 +1,5 @@
 import { Container, Graphics } from "./pixi-compat";
-import { FLOOR_W, WALL_W, ROOF_H, PENTHOUSE_H, FLOOR_TOTAL_H, FLOOR_ROOM_H, BASEMENT_H } from "./model";
+import { FLOOR_W, WALL_W, ROOF_H, PENTHOUSE_H, CONFERENCE_FLOOR_H, FLOOR_TOTAL_H, FLOOR_ROOM_H, BASEMENT_H } from "./model";
 
 export interface ExteriorWindowVisual {
   g: Graphics;
@@ -72,7 +72,7 @@ export function drawExteriorWalls({
   // AC unit brackets (small boxes between floors, left wall)
   const acG = new Graphics();
   for (let fi = 0; fi < nFloors; fi++) {
-    const acY = ROOF_H + PENTHOUSE_H + fi * FLOOR_TOTAL_H + FLOOR_ROOM_H - 10;
+    const acY = ROOF_H + PENTHOUSE_H + CONFERENCE_FLOOR_H + fi * FLOOR_TOTAL_H + FLOOR_ROOM_H - 10;
     acG.rect(3, acY, 9, 7).fill({ color: isDark ? 0x1a2438 : 0x6a7888, alpha: 0.85 });
     acG.rect(3, acY, 9, 7).stroke({ width: 0.5, color: isDark ? 0x2a3850 : 0x8a98a8, alpha: 0.7 });
     acG.rect(5, acY + 2, 5, 1).fill({ color: isDark ? 0x0c1220 : 0x4a5870, alpha: 0.8 });
@@ -113,7 +113,7 @@ export function drawExteriorWalls({
   // AC units on right wall
   const acGr = new Graphics();
   for (let fi = 0; fi < nFloors; fi++) {
-    const acY = ROOF_H + PENTHOUSE_H + fi * FLOOR_TOTAL_H + FLOOR_ROOM_H - 10;
+    const acY = ROOF_H + PENTHOUSE_H + CONFERENCE_FLOOR_H + fi * FLOOR_TOTAL_H + FLOOR_ROOM_H - 10;
     acGr.rect(rightX + 8, acY, 9, 7).fill({ color: isDark ? 0x1a2438 : 0x6a7888, alpha: 0.85 });
     acGr.rect(rightX + 8, acY, 9, 7).stroke({ width: 0.5, color: isDark ? 0x2a3850 : 0x8a98a8, alpha: 0.7 });
     acGr.rect(rightX + 10, acY + 2, 5, 1).fill({ color: isDark ? 0x0c1220 : 0x4a5870, alpha: 0.8 });
@@ -176,8 +176,8 @@ function buildZoneList(nFloors: number): Array<{ midY: number; floorIdx: number 
   const zones: Array<{ midY: number; floorIdx: number }> = [];
   zones.push({ midY: ROOF_H + PENTHOUSE_H / 2, floorIdx: 0 });
   for (let i = 0; i < nFloors; i++) {
-    zones.push({ midY: ROOF_H + PENTHOUSE_H + i * FLOOR_TOTAL_H + FLOOR_ROOM_H / 2, floorIdx: i + 1 });
+    zones.push({ midY: ROOF_H + PENTHOUSE_H + CONFERENCE_FLOOR_H + i * FLOOR_TOTAL_H + FLOOR_ROOM_H / 2, floorIdx: i + 1 });
   }
-  zones.push({ midY: ROOF_H + PENTHOUSE_H + nFloors * FLOOR_TOTAL_H + BASEMENT_H / 2, floorIdx: nFloors + 1 });
+  zones.push({ midY: ROOF_H + PENTHOUSE_H + CONFERENCE_FLOOR_H + nFloors * FLOOR_TOTAL_H + BASEMENT_H / 2, floorIdx: nFloors + 1 });
   return zones;
 }

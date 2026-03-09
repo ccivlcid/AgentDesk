@@ -2,6 +2,7 @@ import { Container, Graphics, Text, TextStyle } from "./pixi-compat";
 import { buildSpriteMap } from "../AgentAvatar";
 import {
   FLOOR_W,
+  SCENE_W,
   ROOF_H,
   PENTHOUSE_H,
   CONFERENCE_FLOOR_H,
@@ -181,15 +182,13 @@ export function buildOfficeScene(context: BuildOfficeSceneContext): void {
 
   // ── Scene dimensions (tower + cityscape) ────────────────────
   const canvasEl = app.canvas as HTMLCanvasElement;
-  const CITY_MARGIN = 40; // px of cityscape on each side of tower
-  const SCENE_W = FLOOR_W + CITY_MARGIN * 2; // 490px — tower-centric scene
   const SCENE_H = SKY_H + totalH + GROUND_H;
   const towerX = Math.floor((SCENE_W - FLOOR_W) / 2);
 
   towerOffsetXRef.current = towerX;
-  app.renderer.resize(SCENE_W, SCENE_H);
 
-  // Canvas CSS sizing is controlled by OfficeView.tsx (applyFitAll / applyFloorFocus)
+  // Set camera world bounds (viewport size managed by OfficeView)
+  app.setCameraBounds(0, 0, SCENE_W, SCENE_H);
   canvasEl.style.display = "block";
 
   // ── 0. Cityscape background ────────────────────────────────

@@ -8,6 +8,7 @@ import { notifyTaskStatus } from "../gateway/client.ts";
 import { startDiscordReceiver } from "../messenger/discord-receiver.ts";
 import { startTelegramReceiver } from "../messenger/telegram-receiver.ts";
 import { registerGracefulShutdownHandlers } from "./lifecycle/register-graceful-shutdown.ts";
+import { appendTaskExecutionMetaUpdate, recordTaskExecutionEvent } from "./workflow/core/task-execution-meta.ts";
 
 export function startLifecycle(ctx: RuntimeContext): void {
   const {
@@ -46,6 +47,7 @@ export function startLifecycle(ctx: RuntimeContext): void {
     runInTransaction,
     stopProgressTimer,
     stopRequestedTasks,
+    taskExecutionSessions,
     wsClients,
     logsDir,
   } = ctx as any;
@@ -266,10 +268,28 @@ export function startLifecycle(ctx: RuntimeContext): void {
       }
 
       const t = nowMs();
+      const updates = ["status = 'inbox'", "updated_at = ?"];
+      const params: unknown[] = [t];
+      appendTaskExecutionMetaUpdate(db as any, updates, params, {
+        execution_state: "failed",
+        retry_after: null,
+        execution_error_code: "orphaned_run",
+        execution_error_summary: `Recovered orphaned in_progress task during ${reason}`,
+      });
+      params.push(task.id);
       const move = db
-        .prepare("UPDATE tasks SET status = 'inbox', updated_at = ? WHERE id = ? AND status = 'in_progress'")
-        .run(t, task.id) as { changes?: number };
+        .prepare(`UPDATE tasks SET ${updates.join(", ")} WHERE id = ? AND status = 'in_progress'`)
+        .run(...params) as { changes?: number };
       if ((move.changes ?? 0) === 0) continue;
+      recordTaskExecutionEvent(db as any, {
+        taskId: task.id,
+        eventType: "orphan_recovered",
+        fromState: "running",
+        toState: "failed",
+        summary: `Recovered orphaned in_progress task during ${reason}`,
+        metadata: { age_ms: ageMs },
+        createdAt: t,
+      });
 
       stopProgressTimer(task.id);
       clearTaskWorkflowState(task.id);
@@ -335,6 +355,93 @@ export function startLifecycle(ctx: RuntimeContext): void {
         finishReview(task.id, task.title);
       }, delay);
     });
+  }
+
+  const TASK_HEARTBEAT_SWEEP_MS = 30_000;
+  const TASK_STALLED_THRESHOLD_MS = 90_000;
+
+  function updateRunningTaskHeartbeats(): void {
+    const now = nowMs();
+    const trackedTaskIds = new Set<string>([
+      ...(Array.from(activeProcesses.keys()) as string[]),
+      ...(Array.from(taskExecutionSessions.keys()) as string[]),
+    ]);
+
+    for (const taskId of trackedTaskIds) {
+      const task = db
+        .prepare("SELECT id, status FROM tasks WHERE id = ?")
+        .get(taskId) as { id: string; status: string } | undefined;
+      if (!task || task.status !== "in_progress") continue;
+
+      let lastOutputAt: number | null = null;
+      try {
+        const logPath = path.join(logsDir, `${taskId}.log`);
+        const stat = fs.statSync(logPath);
+        lastOutputAt = Math.floor(stat.mtimeMs || 0) || null;
+      } catch {
+        lastOutputAt = null;
+      }
+
+      const updates = ["updated_at = updated_at"];
+      const params: unknown[] = [];
+      appendTaskExecutionMetaUpdate(db as any, updates, params, {
+        last_heartbeat_at: now,
+        last_output_at: lastOutputAt ?? now,
+      });
+      params.push(taskId);
+      db.prepare(`UPDATE tasks SET ${updates.join(", ")} WHERE id = ?`).run(...(params as any[]));
+
+      const session = taskExecutionSessions.get(taskId);
+      if (session) {
+        session.lastTouchedAt = now;
+        taskExecutionSessions.set(taskId, session);
+      }
+    }
+  }
+
+  function markStalledInProgressTasks(): void {
+    const now = nowMs();
+    const rows = db
+      .prepare(
+        `SELECT id, title, last_heartbeat_at, updated_at
+         FROM tasks
+         WHERE status = 'in_progress'
+           AND execution_state = 'running'`,
+      )
+      .all() as Array<{
+        id: string;
+        title: string;
+        last_heartbeat_at: number | null;
+        updated_at: number | null;
+      }>;
+
+    for (const row of rows) {
+      if (activeProcesses.has(row.id)) continue;
+      const lastSignalAt = Math.max(row.last_heartbeat_at ?? 0, row.updated_at ?? 0);
+      if (lastSignalAt <= 0 || now - lastSignalAt < TASK_STALLED_THRESHOLD_MS) continue;
+
+      const updates = ["updated_at = ?"];
+      const params: unknown[] = [now];
+      appendTaskExecutionMetaUpdate(db as any, updates, params, {
+        execution_state: "stalled",
+        execution_error_code: "heartbeat_stalled",
+        execution_error_summary: "Task heartbeat timed out while status remained in_progress",
+      });
+      params.push(row.id);
+      db.prepare(`UPDATE tasks SET ${updates.join(", ")} WHERE id = ? AND status = 'in_progress'`).run(...(params as any[]));
+      appendTaskLog(row.id, "system", "Execution marked stalled (heartbeat timeout)");
+      recordTaskExecutionEvent(db as any, {
+        taskId: row.id,
+        eventType: "run_stalled",
+        fromState: "running",
+        toState: "stalled",
+        summary: "Execution marked stalled after heartbeat timeout",
+        metadata: { stalled_threshold_ms: TASK_STALLED_THRESHOLD_MS },
+        createdAt: now,
+      });
+      const updatedTask = db.prepare("SELECT * FROM tasks WHERE id = ?").get(row.id);
+      broadcast("task_update", updatedTask);
+    }
   }
 
   function sweepPendingSubtaskDelegations(): void {
@@ -409,6 +516,8 @@ export function startLifecycle(ctx: RuntimeContext): void {
   setTimeout(rotateBreaks, 5_000);
   setInterval(rotateBreaks, 60_000);
   setTimeout(recoverInterruptedWorkflowOnStartup, 3_000);
+  setInterval(updateRunningTaskHeartbeats, TASK_HEARTBEAT_SWEEP_MS);
+  setInterval(markStalledInProgressTasks, TASK_HEARTBEAT_SWEEP_MS);
   setInterval(() => recoverOrphanInProgressTasks("interval"), IN_PROGRESS_ORPHAN_SWEEP_MS);
   setTimeout(sweepPendingSubtaskDelegations, 4_000);
   setInterval(sweepPendingSubtaskDelegations, SUBTASK_DELEGATION_SWEEP_MS);

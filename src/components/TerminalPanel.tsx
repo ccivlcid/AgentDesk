@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo, type ReactNode } from "react";
-import type { Agent, Task, MeetingMinute } from "../types";
+import type { Agent, Task, MeetingMinute, TaskExecutionEvent, TaskExecutionState, TaskExecutionSummary } from "../types";
 import * as api from "../api";
 import type { TerminalProgressHint, TerminalProgressHintsPayload, TerminalThinkingBlock } from "../api";
 import AgentAvatar from "./AgentAvatar";
@@ -44,8 +44,11 @@ export default function TerminalPanel({
   const [thinkingBlocks, setThinkingBlocks] = useState<TerminalThinkingBlock[]>([]);
   const [showThinking, setShowThinking] = useState(false);
   const [meetingMinutes, setMeetingMinutes] = useState<MeetingMinute[]>([]);
+  const [execution, setExecution] = useState<TaskExecutionSummary | null>(null);
+  const [executionEvents, setExecutionEvents] = useState<TaskExecutionEvent[]>([]);
   const [logPath, setLogPath] = useState("");
   const [follow, setFollow] = useState(true);
+  const [opsDetailsOpen, setOpsDetailsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"terminal" | "minutes">(initialTab);
   const [logSearch, setLogSearch] = useState("");
   const [logKindFilter, setLogKindFilter] = useState<"all" | "system" | "error">("all");
@@ -136,6 +139,19 @@ export default function TerminalPanel({
     }
   }, [taskId]);
 
+  const fetchExecution = useCallback(async () => {
+    try {
+      const [executionRes, eventsRes] = await Promise.all([
+        api.getTaskExecution(taskId),
+        api.getTaskExecutionEvents(taskId, 8),
+      ]);
+      setExecution(executionRes.execution);
+      setExecutionEvents(eventsRes.events);
+    } catch {
+      // ignore
+    }
+  }, [taskId]);
+
   useEffect(() => {
     const fn = activeTab === "terminal" ? fetchTerminal : fetchMeetingMinutes;
     const ms = activeTab === "terminal" ? 1500 : 2500;
@@ -158,6 +174,12 @@ export default function TerminalPanel({
       document.removeEventListener("visibilitychange", handleVisibility);
     };
   }, [activeTab, fetchTerminal, fetchMeetingMinutes]);
+
+  useEffect(() => {
+    void fetchExecution();
+    const timer = setInterval(() => void fetchExecution(), 5000);
+    return () => clearInterval(timer);
+  }, [fetchExecution]);
 
   // Close on Escape key
   useEffect(() => {
@@ -382,6 +404,26 @@ export default function TerminalPanel({
 
   const badge = STATUS_BADGES[task?.status ?? ""] ?? STATUS_BADGES.inbox;
   const badgeLabel = t(badge.label);
+  const effectiveExecution = execution ?? (task
+    ? {
+        id: task.id,
+        status: task.status,
+        execution_state: task.execution_state,
+        execution_attempt: task.execution_attempt,
+        claimed_by: task.claimed_by,
+        claim_expires_at: task.claim_expires_at,
+        last_heartbeat_at: task.last_heartbeat_at,
+        last_output_at: task.last_output_at,
+        retry_after: task.retry_after,
+        execution_error_code: task.execution_error_code,
+        execution_error_summary: task.execution_error_summary,
+        resolved_workflow_contract_hash: task.resolved_workflow_contract_hash,
+        started_at: task.started_at,
+        completed_at: task.completed_at,
+        updated_at: task.updated_at,
+      }
+    : null);
+  const executionState = effectiveExecution?.execution_state;
   const meetingTypeLabel = (type: "planned" | "review") =>
     type === "planned"
       ? tr("Planned 승인", "Planned Approval", "Planned 承認", "Planned 审批")
@@ -481,6 +523,53 @@ export default function TerminalPanel({
     shouldShowProgressHints && progressHints
       ? ([...progressHints.hints].reverse().find((hint) => hint.phase === "use") ?? latestHint)
       : null;
+  const hasExecutionIssue =
+    executionState === "stalled" ||
+    executionState === "failed" ||
+    executionState === "blocked" ||
+    Boolean(effectiveExecution?.execution_error_summary);
+
+  const executionStateMeta: Partial<Record<TaskExecutionState, { label: string; style: React.CSSProperties }>> = {
+    queued: { label: "QUEUED", style: { background: "rgba(6,182,212,0.12)", color: "#67e8f9", borderColor: "rgba(6,182,212,0.28)" } },
+    running: { label: "RUNNING", style: { background: "rgba(34,197,94,0.12)", color: "#86efac", borderColor: "rgba(34,197,94,0.28)" } },
+    awaiting_review: { label: "AWAITING REVIEW", style: { background: "rgba(167,139,250,0.12)", color: "#c4b5fd", borderColor: "rgba(167,139,250,0.28)" } },
+    blocked: { label: "BLOCKED", style: { background: "rgba(251,191,36,0.12)", color: "#fcd34d", borderColor: "rgba(251,191,36,0.28)" } },
+    stalled: { label: "STALLED", style: { background: "rgba(244,63,94,0.12)", color: "#fda4af", borderColor: "rgba(244,63,94,0.28)" } },
+    succeeded: { label: "SUCCEEDED", style: { background: "rgba(34,197,94,0.12)", color: "#86efac", borderColor: "rgba(34,197,94,0.28)" } },
+    failed: { label: "FAILED", style: { background: "rgba(244,63,94,0.12)", color: "#fda4af", borderColor: "rgba(244,63,94,0.28)" } },
+    cancelled: { label: "CANCELLED", style: { background: "rgba(110,118,129,0.18)", color: "#d1d5db", borderColor: "rgba(110,118,129,0.28)" } },
+  };
+
+  const formatExecutionTime = useCallback(
+    (value?: number | null) => {
+      if (!value) return tr("없음", "none", "なし", "无");
+      return new Date(value).toLocaleString(locale, {
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      });
+    },
+    [locale, tr],
+  );
+
+  const formatElapsed = useCallback(
+    (value?: number | null) => {
+      if (!value) return tr("없음", "none", "なし", "无");
+      const diffMs = Date.now() - value;
+      const diffSec = Math.max(0, Math.floor(diffMs / 1000));
+      if (diffSec < 60) return `${diffSec}s`;
+      if (diffSec < 3600) return `${Math.floor(diffSec / 60)}m`;
+      if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}h`;
+      return `${Math.floor(diffSec / 86400)}d`;
+    },
+    [tr],
+  );
+
+  useEffect(() => {
+    setOpsDetailsOpen(hasExecutionIssue);
+  }, [taskId, hasExecutionIssue]);
 
   return (
     <div className="terminal-panel-shell fixed inset-0 z-50 flex w-full max-w-full flex-col shadow-2xl lg:inset-y-0 lg:right-0 lg:left-auto lg:w-[560px] lg:border-l">
@@ -500,6 +589,39 @@ export default function TerminalPanel({
             {logPath && (
               <div className="text-[10px] truncate font-mono mt-0.5" style={{ color: "var(--th-text-muted)" }}>
                 {logPath}
+              </div>
+            )}
+            {effectiveExecution && (
+              <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                {executionState && executionStateMeta[executionState] && (
+                  <span
+                    className="px-1.5 py-0.5 text-[10px] font-mono border"
+                    style={{ borderRadius: "2px", ...executionStateMeta[executionState]!.style }}
+                  >
+                    {executionStateMeta[executionState]!.label}
+                  </span>
+                )}
+                <span
+                  className="px-1.5 py-0.5 text-[10px] font-mono border"
+                  style={{ borderRadius: "2px", borderColor: "var(--th-border)", color: "var(--th-text-secondary)" }}
+                  title={tr("실행 시도 횟수", "Execution attempts", "実行回数", "执行次数")}
+                >
+                  {`try ${effectiveExecution.execution_attempt ?? 0}`}
+                </span>
+                <span
+                  className="px-1.5 py-0.5 text-[10px] font-mono border"
+                  style={{ borderRadius: "2px", borderColor: "var(--th-border)", color: "var(--th-text-secondary)" }}
+                  title={`${tr("마지막 heartbeat", "Last heartbeat", "最終 heartbeat", "最近 heartbeat")}: ${formatExecutionTime(effectiveExecution.last_heartbeat_at)}`}
+                >
+                  {`hb ${formatElapsed(effectiveExecution.last_heartbeat_at)}`}
+                </span>
+                <span
+                  className="px-1.5 py-0.5 text-[10px] font-mono border"
+                  style={{ borderRadius: "2px", borderColor: "var(--th-border)", color: "var(--th-text-secondary)" }}
+                  title={`${tr("마지막 출력", "Last output", "最終出力", "最近输出")}: ${formatExecutionTime(effectiveExecution.last_output_at)}`}
+                >
+                  {`out ${formatElapsed(effectiveExecution.last_output_at)}`}
+                </span>
               </div>
             )}
             <div
@@ -737,6 +859,77 @@ export default function TerminalPanel({
                     "担当エージェントがいないためセッショントークンを作成できません。先にエージェントを割り当ててください。",
                     "未分配代理，无法创建会话令牌。请先分配代理。",
                   )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === "terminal" && effectiveExecution && (
+        <div className="border-b px-4 py-2.5 space-y-2" style={{ borderColor: "var(--th-border)" }}>
+          <div className="flex items-center justify-between gap-3 text-[10px] font-mono">
+            <div className="flex min-w-0 flex-wrap items-center gap-2" style={{ color: "var(--th-text-secondary)" }}>
+              <span>{`${tr("attempt", "attempt", "attempt", "attempt")}: ${effectiveExecution.execution_attempt ?? 0}`}</span>
+              <span title={formatExecutionTime(effectiveExecution.last_output_at)}>
+                {`${tr("output", "output", "output", "output")}: ${formatElapsed(effectiveExecution.last_output_at)}`}
+              </span>
+              {effectiveExecution.claimed_by && (
+                <span className="truncate">{`${tr("claimed", "claimed", "claimed", "claimed")}: ${effectiveExecution.claimed_by}`}</span>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => setOpsDetailsOpen((prev) => !prev)}
+              className="shrink-0 px-1 py-0.5 text-[10px] font-mono transition"
+              style={{
+                borderRadius: "2px",
+                border: `1px solid ${hasExecutionIssue ? "rgba(244,63,94,0.28)" : "var(--th-border)"}`,
+                color: hasExecutionIssue ? "#fda4af" : "var(--th-text-muted)",
+                background: hasExecutionIssue ? "rgba(244,63,94,0.08)" : "transparent",
+              }}
+            >
+              {opsDetailsOpen
+                ? tr("ops 닫기", "Hide ops", "ops を閉じる", "收起 ops")
+                : tr("ops 보기", "Show ops", "ops を表示", "显示 ops")}
+            </button>
+          </div>
+          {hasExecutionIssue && effectiveExecution.execution_error_summary && (
+            <div
+              className="text-[10px] font-mono break-words border px-2 py-1.5"
+              style={{
+                borderRadius: "2px",
+                borderColor: "rgba(244,63,94,0.28)",
+                background: "rgba(244,63,94,0.08)",
+                color: "#fda4af",
+              }}
+            >
+              {effectiveExecution.execution_error_summary}
+            </div>
+          )}
+          {opsDetailsOpen && (
+            <div className="grid grid-cols-2 gap-2 text-[10px] font-mono" style={{ color: "var(--th-text-secondary)" }}>
+              <div>{`${tr("execution", "execution", "execution", "execution")}: ${effectiveExecution.execution_state ?? "-"}`}</div>
+              <div title={formatExecutionTime(effectiveExecution.last_heartbeat_at)}>
+                {`${tr("heartbeat", "heartbeat", "heartbeat", "heartbeat")}: ${formatElapsed(effectiveExecution.last_heartbeat_at)}`}
+              </div>
+              <div title={formatExecutionTime(effectiveExecution.last_output_at)}>
+                {`${tr("last output", "last output", "last output", "last output")}: ${formatExecutionTime(effectiveExecution.last_output_at)}`}
+              </div>
+              <div>{`${tr("updated", "updated", "updated", "updated")}: ${formatExecutionTime(effectiveExecution.updated_at)}`}</div>
+            </div>
+          )}
+          {opsDetailsOpen && executionEvents.length > 0 && (
+            <div className="space-y-1">
+              <div className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
+                {tr("최근 execution events", "Recent execution events", "最近 execution events", "最近 execution events")}
+              </div>
+              <div className="max-h-24 space-y-0.5 overflow-y-auto">
+                {executionEvents.slice(0, 5).map((event) => (
+                  <div key={event.id} className="text-[10px] font-mono" style={{ color: "var(--th-text-secondary)" }}>
+                    [{taskLogTimeFormatter.format(new Date(event.created_at))}] {event.event_type}
+                    {event.summary ? ` · ${event.summary}` : ""}
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>

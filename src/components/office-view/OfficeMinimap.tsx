@@ -8,16 +8,16 @@ import {
   FLOOR_W,
   SKY_H,
   GROUND_H,
+  SCENE_W,
 } from "./model";
 import type { Department } from "../../types";
+import type { Application } from "./pixi-compat";
 
 interface OfficeMinimapProps {
   departments: Department[];
   totalH: number;
-  /** The scroll host element for the canvas */
-  getScrollWrap: () => HTMLElement | null;
-  /** The canvas container ref (to read rendered size) */
-  containerRef: React.RefObject<HTMLDivElement | null>;
+  /** The Phaser application ref (for camera-based viewport reading) */
+  appRef: React.RefObject<Application | null>;
   /** Whether overview mode is active (minimap hidden when overview) */
   isOverviewMode: boolean;
   /** Custom dept themes for floor colors */
@@ -45,8 +45,7 @@ function hexToCSS(hex: number): string {
 export default function OfficeMinimap({
   departments,
   totalH,
-  getScrollWrap,
-  containerRef,
+  appRef,
   isOverviewMode,
   customDeptThemes,
 }: OfficeMinimapProps) {
@@ -141,15 +140,14 @@ export default function OfficeMinimap({
     ctx.lineWidth = 1;
     ctx.strokeRect(towerLeft - 0.5, towerTop - 0.5, towerW + 1, towerH + 1);
 
-    // Viewport indicator
-    const wrap = getScrollWrap();
-    const canvas = containerRef.current?.querySelector("canvas");
-    if (wrap && canvas && !isOverviewMode) {
-      const renderedH = canvas.getBoundingClientRect().height;
-      if (renderedH > 0 && sceneH > 0) {
-        const viewScale = renderedH / sceneH;
-        const vpTop = wrap.scrollTop / viewScale * scale;
-        const vpH = (wrap.clientHeight / viewScale) * scale;
+    // Viewport indicator (from camera position)
+    const app = appRef.current;
+    if (app && !isOverviewMode) {
+      const { y: scrollY } = app.getCameraScroll();
+      const vp = app.getCameraViewportSize();
+      if (sceneH > 0) {
+        const vpTop = scrollY * scale;
+        const vpH = vp.h * scale;
         ctx.fillStyle = "rgba(245,158,11,0.15)";
         ctx.fillRect(1, vpTop, w - 2, vpH);
         ctx.strokeStyle = "rgba(245,158,11,0.6)";
@@ -157,7 +155,7 @@ export default function OfficeMinimap({
         ctx.strokeRect(1.5, vpTop + 0.5, w - 3, vpH - 1);
       }
     }
-  }, [departments, totalH, mapH, scale, sceneH, getScrollWrap, containerRef, isOverviewMode, customDeptThemes]);
+  }, [departments, totalH, mapH, scale, sceneH, appRef, isOverviewMode, customDeptThemes]);
 
   // Continuous draw loop (for viewport indicator tracking)
   useEffect(() => {
@@ -180,23 +178,20 @@ export default function OfficeMinimap({
     if (isOverviewMode) draw();
   }, [draw, isOverviewMode]);
 
-  // Click/drag to scroll
+  // Click to scroll camera
   const handleMinimapClick = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
     const cv = canvasRef.current;
     if (!cv || isOverviewMode) return;
-    const wrap = getScrollWrap();
-    const canvas = containerRef.current?.querySelector("canvas");
-    if (!wrap || !canvas) return;
+    const app = appRef.current;
+    if (!app) return;
 
     const rect = cv.getBoundingClientRect();
     const clickY = e.clientY - rect.top;
-    // Convert minimap Y → scene Y → scroll Y
-    const sceneY = clickY / scale;
-    const renderedH = canvas.getBoundingClientRect().height;
-    const viewScale = renderedH / sceneH;
-    const scrollY = sceneY * viewScale - wrap.clientHeight / 2;
-    wrap.scrollTo({ top: Math.max(0, scrollY), behavior: "smooth" });
-  }, [scale, sceneH, getScrollWrap, containerRef, isOverviewMode]);
+    // Convert minimap Y → world Y → camera scroll
+    const worldY = clickY / scale;
+    const vp = app.getCameraViewportSize();
+    app.setCameraScroll(0, Math.max(0, worldY - vp.h / 2));
+  }, [scale, appRef, isOverviewMode]);
 
   if (totalH <= 0) return null;
 

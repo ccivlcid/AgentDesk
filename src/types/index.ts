@@ -97,6 +97,20 @@ export type TaskStatus =
   | "done"
   | "pending"
   | "cancelled";
+export type TaskExecutionState =
+  | "queued"
+  | "claiming"
+  | "workspace_preparing"
+  | "ready"
+  | "running"
+  | "awaiting_review"
+  | "retry_backoff"
+  | "blocked"
+  | "stalled"
+  | "recovering"
+  | "succeeded"
+  | "failed"
+  | "cancelled";
 export type TaskType = "general" | "development" | "design" | "analysis" | "presentation" | "documentation";
 export const WORKFLOW_PACK_KEYS = [
   "development",
@@ -121,6 +135,16 @@ export interface Task {
   agent_avatar?: string | null;
   project_id?: string | null;
   status: TaskStatus;
+  execution_state?: TaskExecutionState;
+  execution_attempt?: number;
+  claimed_by?: string | null;
+  claim_expires_at?: number | null;
+  last_heartbeat_at?: number | null;
+  last_output_at?: number | null;
+  retry_after?: number | null;
+  execution_error_code?: string | null;
+  execution_error_summary?: string | null;
+  resolved_workflow_contract_hash?: string | null;
   priority: number;
   task_type: TaskType;
   workflow_pack_key?: WorkflowPackKey;
@@ -136,6 +160,34 @@ export interface Task {
   subtask_total?: number;
   subtask_done?: number;
   hidden?: number;
+}
+
+export interface TaskExecutionSummary {
+  id: string;
+  status: TaskStatus;
+  execution_state?: TaskExecutionState;
+  execution_attempt?: number;
+  claimed_by?: string | null;
+  claim_expires_at?: number | null;
+  last_heartbeat_at?: number | null;
+  last_output_at?: number | null;
+  retry_after?: number | null;
+  execution_error_code?: string | null;
+  execution_error_summary?: string | null;
+  resolved_workflow_contract_hash?: string | null;
+  started_at?: number | null;
+  completed_at?: number | null;
+  updated_at?: number;
+}
+
+export interface TaskExecutionEvent {
+  id: number;
+  event_type: string;
+  from_state?: TaskExecutionState | null;
+  to_state?: TaskExecutionState | null;
+  summary?: string | null;
+  metadata_json?: string | null;
+  created_at: number;
 }
 
 export type AssignmentMode = "auto" | "manual";

@@ -10,7 +10,12 @@ import {
   type Webhook,
 } from "../../api/webhooks";
 
-export default function WebhookSettingsTab() {
+interface WebhookSettingsTabProps {
+  /** 외부에서 웹훅 목록 갱신 요청 (예: 채널 추가 모달에서 웹훅 생성 후) */
+  refreshTrigger?: number;
+}
+
+export default function WebhookSettingsTab({ refreshTrigger }: WebhookSettingsTabProps) {
   const { t } = useI18n();
   const tr = (ko: string, en: string) => t({ ko, en, ja: en, zh: en });
 
@@ -36,7 +41,9 @@ export default function WebhookSettingsTab() {
     finally { setLoading(false); }
   }, []);
 
-  useEffect(() => { refresh(); }, [refresh]);
+  useEffect(() => {
+    refresh();
+  }, [refresh, refreshTrigger]);
 
   function resetForm() {
     setFormName(""); setFormUrl(""); setFormSecret(""); setFormEvents(["task_done"]); setFormError("");

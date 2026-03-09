@@ -627,8 +627,8 @@ export class OfficeSceneDev extends Phaser.Scene {
 | M-3 | 드로잉 원시 함수 | 3 | 2일 | SKIP (심 사용) |
 | M-4 | 개별 드로잉 모듈 | 7 | 2일 | SKIP (심 사용) |
 | M-5 | 씬 빌더 | 7 | 2일 | SKIP (심 사용) |
-| M-6 | 애니메이션 시스템 | 6 | 3일 | **IN PROGRESS** |
-| M-7 | React 래퍼 | 2 | 1일 | TODO |
+| M-6 | 애니메이션 시스템 | 6 | 3일 | ✅ DONE |
+| M-7 | Camera-based Viewport | 5 | 1일 | ✅ DONE |
 | M-8 | Drawing Styles | 6 | 1일 | SKIP (심 사용) |
 | M-9 | 검증 및 QA | — | 1일 | TODO |
 
@@ -645,6 +645,21 @@ export class OfficeSceneDev extends Phaser.Scene {
 - 왕관 흔들림: 매 틱 Math.sin → persistent yoyo tween (buildScene에서 1회 생성)
 - 태스크 수신 바운스: 수동 감쇠 스프링 → Bounce.easeOut tween
 - crownRef 틱커 컨텍스트에서 제거, CEO_SPEED 미사용 import 제거
+
+**Phase M-7 — Camera-based Viewport (✅)**
+- DOM 스크롤 → Phaser 카메라 스크롤/줌으로 전환
+- `pixi-compat.ts`: `resizeViewport()`, `setCameraBounds()`, `setCameraScroll()`, `getCameraScroll()`, `getCameraViewportSize()`, `setCameraZoom()`, `getCameraZoom()`, `panCamera()`, `zoomCamera()`, `stopCameraEffects()` 추가
+- `buildScene.ts`: `app.renderer.resize(SCENE_W, SCENE_H)` → `app.setCameraBounds(0, 0, SCENE_W, SCENE_H)` (뷰포트 크기 분리)
+- `OfficeView.tsx`: `applyFitAll`/`applyFloorFocus` CSS 스케일링 → `applyCameraOverview`/`applyCameraFloorFocus` 카메라 줌
+  - `scrollToFloorY` DOM scrollTo → `setCameraScroll`
+  - `exitOverviewAndScroll` setTimeout 대기 제거 → 즉시 카메라 전환
+  - `followCeoInView` DOM 좌표 변환 70줄 → 카메라 기반 15줄 (lerp 포함)
+  - 휠 스크롤: DOM 네이티브 → `onWheel` 이벤트 → `setCameraScroll`
+  - 층 표시기: DOM scrollTop → `getCameraScroll` 기반
+  - `scrollHostXRef`/`scrollHostYRef`/`getScrollWrap`/`findScrollContainer`/`canScrollOnAxis` 제거
+- `useOfficePixiRuntime.ts`: 뷰포트 크기(w×h)로 초기화, ResizeObserver 높이 변경 감지 추가
+- `OfficeMinimap.tsx`: DOM scrollTop/scrollHeight → `appRef.getCameraScroll()`/`getCameraViewportSize()`
+- `model.ts`: `SCENE_W`, `CITY_MARGIN` 상수 추가 및 export
 
 **유지 (수동 per-frame 코드가 적합한 항목):**
 - 에이전트 호흡/흔들림: tick+phase 의존, 상태별 분기

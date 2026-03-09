@@ -18,7 +18,9 @@ import type { ElevatorTickState } from "./elevatorTick";
 
 const SHAFT_X       = FLOOR_W - ELEVATOR_W - WALL_W;
 const ELEV_ENTRY_X  = SHAFT_X - 8;
-const VISITOR_SPEED = 1.1;
+const VISITOR_SPEED = 1.6;
+/** Visitor feet Y offset inside elevator car (EL_CAR_H = 28, stand near bottom). */
+const ELEV_CAR_STAND_Y = 26;
 
 /** Eased walk step — accelerates at start, decelerates at end of walk segment.
  *  Returns new x. Sets v.x directly. */
@@ -334,17 +336,34 @@ export function updateVisitorAgents(
           v.x = ELEV_ENTRY_X;
           v.phase = "fading_out";
           v.fadeTick = 0;
+          v.currentElevTick = 0; // reuse as wait counter
           elevatorStateRef.current.targetFloorIndex = v.homeFloor;
           elevatorStateRef.current.idleTicks = 0;
         } else {
-          v.x = easedWalkStep(v.x, v.x + dx, VISITOR_SPEED); // target = v.x + dx
+          v.x = easedWalkStep(v.x, v.x + dx, VISITOR_SPEED);
         }
         break;
       }
 
       case "fading_out": {
+        // First wait for elevator to arrive at home floor with door opening/open
+        const elevHere = elevatorStateRef.current.floorIndex === v.homeFloor;
+        const doorReady = elevatorStateRef.current.doorPhase === "open" ||
+          elevatorStateRef.current.doorPhase === "opening";
+        if (v.fadeTick === 0 && !(elevHere && doorReady)) {
+          // Keep calling elevator, wait visibly at elevator entry
+          elevatorStateRef.current.targetFloorIndex = v.homeFloor;
+          elevatorStateRef.current.idleTicks = 0;
+          v.container.alpha = 1;
+          v.container.position.set(v.x, v.y);
+          v.currentElevTick++;
+          if (v.currentElevTick > 300) v.fadeTick = 1; // timeout ~5s
+          break;
+        }
+        // Elevator arrived — fade into car
         v.fadeTick++;
         v.container.alpha = Math.max(0, 1 - v.fadeTick / FADE_TICKS);
+        v.container.position.set(v.x, v.y);
         if (v.fadeTick >= FADE_TICKS) {
           v.phase = "in_elev";
           v.currentElevTick = 0;
@@ -356,11 +375,24 @@ export function updateVisitorAgents(
 
       case "in_elev": {
         v.currentElevTick++;
-        if (v.currentElevTick >= v.elevTravelTicks) {
+        // Continuously hold elevator target to prevent random wandering
+        elevatorStateRef.current.targetFloorIndex = v.destFloor;
+        elevatorStateRef.current.idleTicks = 0;
+        // Sync visitor position with elevator car (feet at car bottom)
+        const carY = elevatorStateRef.current.carY;
+        v.x = ELEV_ENTRY_X;
+        v.y = carY + ELEV_CAR_STAND_Y;
+        v.container.position.set(v.x, v.y);
+        v.container.alpha = 0.7;
+        // Exit when elevator arrives at destination floor with door open
+        const elevAtDest = elevatorStateRef.current.floorIndex === v.destFloor &&
+          (elevatorStateRef.current.doorPhase === "open" || elevatorStateRef.current.doorPhase === "opening");
+        if (elevAtDest || v.currentElevTick >= v.elevTravelTicks + 300) {
           v.x = ELEV_ENTRY_X;
           v.y = v.destY;
           v.phase = "fading_in";
           v.fadeTick = 0;
+          v.container.alpha = 0;
         }
         break;
       }
@@ -459,17 +491,33 @@ export function updateVisitorAgents(
           v.x = ELEV_ENTRY_X;
           v.phase = "fading_out_return";
           v.fadeTick = 0;
+          v.currentElevTick = 0; // reuse as wait counter
+          // Call elevator to current floor (destFloor)
           elevatorStateRef.current.targetFloorIndex = v.destFloor;
           elevatorStateRef.current.idleTicks = 0;
         } else {
-          v.x = easedWalkStep(v.x, v.x + dx, VISITOR_SPEED); // target = v.x + dx
+          v.x = easedWalkStep(v.x, v.x + dx, VISITOR_SPEED);
         }
         break;
       }
 
       case "fading_out_return": {
+        // Wait for elevator to arrive at dest floor (current location) with door open
+        const elevHereR = elevatorStateRef.current.floorIndex === v.destFloor;
+        const doorReadyR = elevatorStateRef.current.doorPhase === "open" ||
+          elevatorStateRef.current.doorPhase === "opening";
+        if (v.fadeTick === 0 && !(elevHereR && doorReadyR)) {
+          elevatorStateRef.current.targetFloorIndex = v.destFloor;
+          elevatorStateRef.current.idleTicks = 0;
+          v.container.alpha = 1;
+          v.container.position.set(v.x, v.y);
+          v.currentElevTick++;
+          if (v.currentElevTick > 300) v.fadeTick = 1; // timeout
+          break;
+        }
         v.fadeTick++;
         v.container.alpha = Math.max(0, 1 - v.fadeTick / FADE_TICKS);
+        v.container.position.set(v.x, v.y);
         if (v.fadeTick >= FADE_TICKS) {
           v.phase = "in_elev_return";
           v.currentElevTick = 0;
@@ -481,11 +529,24 @@ export function updateVisitorAgents(
 
       case "in_elev_return": {
         v.currentElevTick++;
-        if (v.currentElevTick >= v.elevTravelTicks) {
+        // Continuously hold elevator target
+        elevatorStateRef.current.targetFloorIndex = v.homeFloor;
+        elevatorStateRef.current.idleTicks = 0;
+        // Sync visitor position with elevator car
+        const returnCarY = elevatorStateRef.current.carY;
+        v.x = ELEV_ENTRY_X;
+        v.y = returnCarY + ELEV_CAR_STAND_Y;
+        v.container.position.set(v.x, v.y);
+        v.container.alpha = 0.7;
+        // Exit when elevator arrives at home floor with door open
+        const elevAtHome = elevatorStateRef.current.floorIndex === v.homeFloor &&
+          (elevatorStateRef.current.doorPhase === "open" || elevatorStateRef.current.doorPhase === "opening");
+        if (elevAtHome || v.currentElevTick >= v.elevTravelTicks + 300) {
           v.x = ELEV_ENTRY_X;
           v.y = v.homeY;
           v.phase = "fading_in_return";
           v.fadeTick = 0;
+          v.container.alpha = 0;
         }
         break;
       }
@@ -534,11 +595,12 @@ export function updateVisitorAgents(
 
     if (isVisible) {
       const t      = (tick ?? 0) + v.agentId.charCodeAt(0) * 7;
-      const bobAmp = isWalking ? 1.5 : 0.5;  // stronger walk bob
-      const bobSpd = isWalking ? 0.16 : 0.025; // faster walk cycle
-      const bobY   = Math.sin(t * bobSpd) * bobAmp;
+      const bobAmp = isWalking ? 2.5 : 0.5;  // walk bounce
+      const bobSpd = isWalking ? 0.22 : 0.025; // walk cycle frequency
+      const bobRaw = Math.sin(t * bobSpd);
+      const bobY   = isWalking ? -Math.abs(bobRaw) * bobAmp : bobRaw * bobAmp; // hop up
       // Walking tilt: slight lean in direction of movement
-      const leanAngle = isWalking ? Math.sin(t * 0.12) * 0.04 : 0;
+      const leanAngle = isWalking ? Math.sin(t * 0.15) * 0.06 : 0;
       v.container.position.set(v.x, v.y + bobY);
       v.container.rotation = leanAngle;
       v.container.alpha = 1;

@@ -8,6 +8,7 @@ import {
 import { evaluateRemotionOnlyGateFromLogFiles } from "../packs/video-render-engine-gate.ts";
 import { extractAndSaveTaskLearnings } from "./autonomous-memory.ts";
 import { evaluateAutoGates } from "../../routes/core/pipeline-gates.ts";
+import { appendTaskExecutionMetaUpdate, recordTaskExecutionEvent } from "../core/task-execution-meta.ts";
 
 type CreateRunCompleteHandlerDeps = Record<string, any>;
 
@@ -360,7 +361,14 @@ export function createRunCompleteHandler(deps: CreateRunCompleteHandlerDeps) {
     }
 
     if (result) {
-      db.prepare("UPDATE tasks SET result = ? WHERE id = ?").run(result, taskId);
+      const updates = ["result = ?"];
+      const params: unknown[] = [result];
+      appendTaskExecutionMetaUpdate(db as any, updates, params, {
+        last_output_at: t,
+        last_heartbeat_at: t,
+      });
+      params.push(taskId);
+      db.prepare(`UPDATE tasks SET ${updates.join(", ")} WHERE id = ?`).run(...params);
     }
 
     // Auto-complete own-department subtasks on CLI success; foreign ones get delegated
@@ -586,7 +594,28 @@ export function createRunCompleteHandler(deps: CreateRunCompleteHandlerDeps) {
 
     if (finalExitCode === 0) {
       // ── SUCCESS: Move to 'review' for team leader check ──
-      db.prepare("UPDATE tasks SET status = 'review', updated_at = ? WHERE id = ?").run(t, taskId);
+      {
+        const updates = ["status = 'review'", "updated_at = ?"];
+        const params: unknown[] = [t];
+        appendTaskExecutionMetaUpdate(db as any, updates, params, {
+          execution_state: "awaiting_review",
+          last_output_at: t,
+          last_heartbeat_at: t,
+          execution_error_code: null,
+          execution_error_summary: null,
+        });
+        params.push(taskId);
+        db.prepare(`UPDATE tasks SET ${updates.join(", ")} WHERE id = ?`).run(...params);
+      }
+      recordTaskExecutionEvent(db as any, {
+        taskId,
+        eventType: "run_completed",
+        fromState: "running",
+        toState: "awaiting_review",
+        summary: "Task run completed and moved to review",
+        metadata: { exit_code: finalExitCode },
+        createdAt: t,
+      });
 
       appendTaskLog(taskId, "system", "Status → review (team leader review pending)");
 
@@ -751,7 +780,29 @@ export function createRunCompleteHandler(deps: CreateRunCompleteHandlerDeps) {
       }, 2500);
     } else {
       // ── FAILURE: Reset to inbox, team leader reports failure ──
-      db.prepare("UPDATE tasks SET status = 'inbox', updated_at = ? WHERE id = ?").run(t, taskId);
+      {
+        const updates = ["status = 'inbox'", "updated_at = ?"];
+        const params: unknown[] = [t];
+        appendTaskExecutionMetaUpdate(db as any, updates, params, {
+          execution_state: "failed",
+          last_output_at: t,
+          last_heartbeat_at: t,
+          retry_after: null,
+          execution_error_code: `exit_${finalExitCode}`,
+          execution_error_summary: `Task run failed with exit code ${finalExitCode}`,
+        });
+        params.push(taskId);
+        db.prepare(`UPDATE tasks SET ${updates.join(", ")} WHERE id = ?`).run(...params);
+      }
+      recordTaskExecutionEvent(db as any, {
+        taskId,
+        eventType: "run_failed",
+        fromState: "running",
+        toState: "failed",
+        summary: `Task run failed with exit code ${finalExitCode}`,
+        metadata: { exit_code: finalExitCode },
+        createdAt: t,
+      });
 
       if (task?.source_task_id) {
         reconcileDelegatedSubtasksAfterRun(taskId, finalExitCode);

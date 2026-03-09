@@ -3,6 +3,7 @@ import path from "node:path";
 import { sendDeliverableFiles } from "../../../gateway/client.ts";
 import { resolveWorkflowPackKeyForTask } from "../packs/task-pack-resolver.ts";
 import { triggerWebhooks } from "../../routes/core/webhooks.ts";
+import { appendTaskExecutionMetaUpdate, recordTaskExecutionEvent } from "../core/task-execution-meta.ts";
 
 type CreateReportWorkflowToolsDeps = Record<string, any>;
 
@@ -206,7 +207,28 @@ export function createReportWorkflowTools(deps: CreateReportWorkflowToolsDeps) {
     const t = nowMs();
     const lang = resolveLang(task.description ?? task.title);
     appendTaskLog(task.id, "system", note);
-    db.prepare("UPDATE tasks SET status = 'done', completed_at = ?, updated_at = ? WHERE id = ?").run(t, t, task.id);
+    {
+      const updates = ["status = 'done'", "completed_at = ?", "updated_at = ?"];
+      const params: unknown[] = [t, t];
+      appendTaskExecutionMetaUpdate(db as any, updates, params, {
+        execution_state: "succeeded",
+        last_heartbeat_at: t,
+        last_output_at: t,
+        retry_after: null,
+        execution_error_code: null,
+        execution_error_summary: null,
+      });
+      params.push(task.id);
+      db.prepare(`UPDATE tasks SET ${updates.join(", ")} WHERE id = ?`).run(...params);
+    }
+    recordTaskExecutionEvent(db as any, {
+      taskId: task.id,
+      eventType: "review_skipped_done",
+      fromState: "awaiting_review",
+      toState: "succeeded",
+      summary: note,
+      createdAt: t,
+    });
     setTaskCreationAuditCompletion(task.id, true);
     reviewRoundState.delete(task.id);
     reviewInFlight.delete(task.id);

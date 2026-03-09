@@ -7,6 +7,8 @@ import type {
   Project,
   SubTask,
   Task,
+  TaskExecutionEvent,
+  TaskExecutionSummary,
   TaskLog,
   TaskStatus,
   TaskType,
@@ -249,6 +251,19 @@ export async function getTasks(filters?: {
 
 export async function getTask(id: string): Promise<{ task: Task; logs: TaskLog[]; subtasks: SubTask[] }> {
   return request(`/api/tasks/${id}`);
+}
+
+export async function getTaskExecution(
+  id: string,
+): Promise<{ execution: TaskExecutionSummary; latest_event: TaskExecutionEvent | null }> {
+  return request(`/api/tasks/${id}/execution`);
+}
+
+export async function getTaskExecutionEvents(
+  id: string,
+  limit = 20,
+): Promise<{ events: TaskExecutionEvent[] }> {
+  return request(`/api/tasks/${id}/execution-events?limit=${Math.max(1, Math.min(500, Math.trunc(limit)))}`);
 }
 
 export async function createTask(input: {

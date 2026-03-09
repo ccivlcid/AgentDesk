@@ -31,6 +31,10 @@ export type ChatEditorState = {
   agentId: string;
   workflowPackKey: WorkflowPackKey;
   receiveEnabled: boolean;
+  /** Slack/Discord 전용: 태스크 알림 웹훅 URL (채널 추가 모달에서 설정) */
+  webhookUrl: string;
+  webhookName: string;
+  webhookEvents: string[];
 };
 
 export function createSessionId(channel: MessengerChannelType): string {
@@ -115,6 +119,9 @@ export function createEditorState(channelsConfig: MessengerChannelsConfig): Chat
     agentId: "",
     workflowPackKey: "development",
     receiveEnabled: channelsConfig.telegram.receiveEnabled !== false,
+    webhookUrl: "",
+    webhookName: "",
+    webhookEvents: ["task_done"],
   };
 }
 

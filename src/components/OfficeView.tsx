@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useCallback, useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import OfficeDeptPanel from "./office-view/OfficeDeptPanel";
-import { ROOF_H, PENTHOUSE_H, CONFERENCE_FLOOR_H, FLOOR_TOTAL_H, BASEMENT_H, FLOOR_W, SKY_H, GROUND_H } from "./office-view/model";
+import { ROOF_H, PENTHOUSE_H, CONFERENCE_FLOOR_H, FLOOR_TOTAL_H, BASEMENT_H, FLOOR_W, SKY_H, GROUND_H, SCENE_W } from "./office-view/model";
 import OfficeAgentPanel from "./office-view/OfficeAgentPanel";
 import {
   type Application,
@@ -24,8 +24,6 @@ import {
   type Delivery,
   type RoomRect,
   type WallClockVisual,
-  canScrollOnAxis,
-  findScrollContainer,
   MIN_OFFICE_W,
   MOBILE_MOVE_CODES,
   type MobileMoveDirection,
@@ -47,6 +45,7 @@ import { type RoomDecoration, loadRoomDecorations } from "./office-view/room-dec
 import { type FurnitureLayout, loadFurnitureLayouts } from "./office-view/furniture-catalog";
 import { type VisitorTickState, createVisitorTickState } from "./office-view/visitorTick";
 import type { ExteriorWindowVisual } from "./office-view/drawExteriorWalls";
+import type { Agent, Department } from "../types";
 
 export default function OfficeView({
   departments,
@@ -93,6 +92,9 @@ export default function OfficeView({
   const cliUsageRef = cliUsageRefProp ?? cliUsageFromHook.cliUsageRef;
   const cliUsageRefreshing = cliUsageRefreshingProp ?? cliUsageFromHook.refreshing;
   const onRefreshCliUsage = onRefreshCliUsageProp ?? cliUsageFromHook.handleRefreshUsage;
+
+  // Camera target state — persists across buildScene calls so zoom/scroll aren't clobbered
+  const cameraTargetRef = useRef<{ zoom: number; scrollY: number } | null>(null);
 
   // Animation state refs
   const tickRef = useRef(0);
@@ -213,29 +215,30 @@ export default function OfficeView({
   const dataRef = useRef({ departments: sortedDepartments, agents, tasks, subAgents, unreadAgentIds, meetingPresence, customDeptThemes });
   dataRef.current = { departments: sortedDepartments, agents, tasks, subAgents, unreadAgentIds, meetingPresence, customDeptThemes };
   // Wrap canvas callbacks: update right panel state AND call parent
-  const handleCanvasSelectAgent = useCallback((agent: import("../types").Agent) => {
+  const handleCanvasSelectAgent = useCallback((agent: Agent) => {
     setSelectedAgent(agent);
     setSelectedDept(null);
   }, []);
   const isOverviewModeRef = useRef(true);
 
-  const handleCallElevator = useCallback((_dept: import("../types").Department, floorIdx: number) => {
-    elevatorStateRef.current.targetFloorIndex = floorIdx;
+  const handleCallElevator = useCallback((dept: Department, _floorIdx: number) => {
+    // Look up the actual tower floor index from dataRef (sortedDepartments order)
+    const actualIdx = dataRef.current.departments.findIndex((d) => d.id === dept.id);
+    const towerFloorIdx = actualIdx >= 0 ? actualIdx + 1 : _floorIdx;
+    elevatorStateRef.current.targetFloorIndex = towerFloorIdx;
     elevatorStateRef.current.idleTicks = 0;
   }, []);
 
-  const cbRef = useRef({ onSelectAgent: handleCanvasSelectAgent, onSelectDepartment: (_dept: import("../types").Department) => {} });
+  const cbRef = useRef({ onSelectAgent: handleCanvasSelectAgent, onSelectDepartment: (_dept: Department) => {} });
   const activeMeetingTaskIdRef = useRef<string | null>(activeMeetingTaskId ?? null);
   activeMeetingTaskIdRef.current = activeMeetingTaskId ?? null;
   const meetingMinutesOpenRef = useRef<typeof onOpenActiveMeetingMinutes>(onOpenActiveMeetingMinutes);
   meetingMinutesOpenRef.current = onOpenActiveMeetingMinutes;
   const [showVirtualPad, setShowVirtualPad] = useState(false);
-  const [selectedAgent, setSelectedAgent] = useState<import("../types").Agent | null>(null);
-  const [selectedDept, setSelectedDept] = useState<import("../types").Department | null>(null);
+  const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
+  const [selectedDept, setSelectedDept] = useState<Department | null>(null);
   const showVirtualPadRef = useRef(showVirtualPad);
   showVirtualPadRef.current = showVirtualPad;
-  const scrollHostXRef = useRef<HTMLElement | null>(null);
-  const scrollHostYRef = useRef<HTMLElement | null>(null);
 
   const triggerDepartmentInteract = useCallback(() => {
     const cx = ceoPosRef.current.x;
@@ -262,72 +265,25 @@ export default function OfficeView({
 
   const followCeoInView = useCallback(() => {
     if (!showVirtualPadRef.current) return;
-    const container = containerRef.current;
-    if (!container) return;
+    const app = appRef.current;
+    if (!app || isOverviewModeRef.current) return;
 
-    const containerRect = container.getBoundingClientRect();
-    // The canvas logical size includes cityscape; CEO pos is tower-local
-    // We need to convert tower-local coords → scene coords → rendered pixels
-    const canvas = container.querySelector("canvas");
-    const resolution = 2;
-    const logicalW = canvas ? canvas.width / resolution : officeWRef.current;
-    const logicalH = canvas ? canvas.height / resolution : (totalHRef.current + SKY_H + GROUND_H);
-    const scaleX = logicalW > 0 ? container.clientWidth / logicalW : 1;
-    const scaleY = logicalH > 0 ? container.clientHeight / logicalH : scaleX;
+    // CEO position is tower-local; convert to scene coords
+    const ceoWorldX = towerOffsetXRef.current + ceoPosRef.current.x;
+    const ceoWorldY = SKY_H + ceoPosRef.current.y;
 
-    let hostX = scrollHostXRef.current;
-    if (!hostX || !canScrollOnAxis(hostX, "x")) {
-      hostX = findScrollContainer(container, "x") ?? (document.scrollingElement as HTMLElement | null);
-      scrollHostXRef.current = hostX;
-    }
+    // Target: center CEO at 45% of viewport
+    const vp = app.getCameraViewportSize();
+    const targetX = ceoWorldX - vp.w * 0.45;
+    const targetY = ceoWorldY - vp.h * 0.45;
 
-    let hostY = scrollHostYRef.current;
-    if (!hostY || !canScrollOnAxis(hostY, "y")) {
-      hostY = findScrollContainer(container, "y") ?? (document.scrollingElement as HTMLElement | null);
-      scrollHostYRef.current = hostY;
-    }
+    // Smooth lerp toward target
+    const { x: curX, y: curY } = app.getCameraScroll();
+    const lerpFactor = 0.12;
+    const nextX = curX + (targetX - curX) * lerpFactor;
+    const nextY = curY + (targetY - curY) * lerpFactor;
 
-    let nextLeft: number | null = null;
-    let movedX = false;
-    if (hostX) {
-      const hostRectX = hostX.getBoundingClientRect();
-      const ceoInHostX = containerRect.left - hostRectX.left + (towerOffsetXRef.current + ceoPosRef.current.x) * scaleX;
-      const ceoContentX = hostX.scrollLeft + ceoInHostX;
-      const targetLeft = ceoContentX - hostX.clientWidth * 0.45;
-      const maxLeft = Math.max(0, hostX.scrollWidth - hostX.clientWidth);
-      nextLeft = Math.max(0, Math.min(maxLeft, targetLeft));
-      movedX = Math.abs(hostX.scrollLeft - nextLeft) > 1;
-    }
-
-    let nextTop: number | null = null;
-    let movedY = false;
-    if (hostY) {
-      const hostRectY = hostY.getBoundingClientRect();
-      const ceoInHostY = containerRect.top - hostRectY.top + (SKY_H + ceoPosRef.current.y) * scaleY;
-      const ceoContentY = hostY.scrollTop + ceoInHostY;
-      const targetTop = ceoContentY - hostY.clientHeight * 0.45;
-      const maxTop = Math.max(0, hostY.scrollHeight - hostY.clientHeight);
-      nextTop = Math.max(0, Math.min(maxTop, targetTop));
-      movedY = Math.abs(hostY.scrollTop - nextTop) > 1;
-    }
-
-    if (hostX && hostY && hostX === hostY) {
-      if (movedX || movedY) {
-        hostX.scrollTo({
-          left: movedX && nextLeft !== null ? nextLeft : hostX.scrollLeft,
-          top: movedY && nextTop !== null ? nextTop : hostX.scrollTop,
-          behavior: "auto",
-        });
-      }
-      return;
-    }
-
-    if (hostX && movedX && nextLeft !== null) {
-      hostX.scrollTo({ left: nextLeft, top: hostX.scrollTop, behavior: "auto" });
-    }
-    if (hostY && movedY && nextTop !== null) {
-      hostY.scrollTo({ left: hostY.scrollLeft, top: nextTop, behavior: "auto" });
-    }
+    app.setCameraScroll(Math.max(0, nextX), Math.max(0, nextY));
   }, []);
 
   useEffect(() => {
@@ -352,132 +308,106 @@ export default function OfficeView({
     [clearVirtualMovement],
   );
 
-  /* ── View mode helpers ── */
-  // DOM: containerRef → .office-canvas-frame → .office-canvas-wrap (scroll host)
-  const getScrollWrap = useCallback((): HTMLElement | null => {
-    return (
-      scrollHostYRef.current ??
-      (containerRef.current?.parentElement?.parentElement as HTMLElement | null) ??
-      null
-    );
-  }, [containerRef, scrollHostYRef]);
+  /* ── Camera-based view mode helpers ── */
 
-  /** Overview = full tower + cityscape fits in viewport.
-   *  Scene canvas includes sky, tower, and ground — aspect ratio is close to viewport. */
-  const applyFitAll = useCallback(() => {
-    const canvas = containerRef.current?.querySelector("canvas") as HTMLCanvasElement | null;
-    if (!canvas) return;
-    const totalH = totalHRef.current;
-    if (!totalH) return;
-    const wrap = getScrollWrap();
-    if (!wrap) return;
-    const frame = containerRef.current?.parentElement as HTMLElement | null;
-
-    const visH = wrap.clientHeight || window.innerHeight;
-    const visW = wrap.clientWidth || FLOOR_W;
-    // Scene dimensions (canvas logical size includes cityscape)
-    const sceneH = totalH + SKY_H + GROUND_H;
-    const resolution = 2;
-    const sceneW = canvas.width / resolution;
-    // Fit entire scene height to viewport, let width fill naturally
-    const fitScale = Math.min(visW / sceneW, visH / sceneH) * 0.98;
-    const canvasW = Math.floor(sceneW * fitScale);
-    const canvasH = Math.floor(sceneH * fitScale);
-
-    canvas.style.width = `${canvasW}px`;
-    canvas.style.height = `${canvasH}px`;
-    canvas.style.maxWidth = "";
-    canvas.style.margin = "0 auto";
-    canvas.style.display = "block";
-    canvas.style.transform = "";
-    canvas.style.imageRendering = "pixelated";
-
-    if (frame) {
-      frame.style.minWidth = "";
-      frame.style.width = "";
-      frame.style.maxWidth = "";
-      frame.style.overflow = "";
-      frame.style.display = "flex";
-      frame.style.alignItems = "center";
-      frame.style.justifyContent = "center";
-      frame.style.height = "";
-    }
-    wrap.style.overflow = "hidden";
-    wrap.scrollTop = 0;
-    wrap.scrollLeft = 0;
-  }, [containerRef, totalHRef, getScrollWrap]);
-
-  /** Floor Focus = canvas fills viewport width, vertical scroll enabled */
-  const applyFloorFocus = useCallback(() => {
-    const canvas = containerRef.current?.querySelector("canvas") as HTMLCanvasElement | null;
-    if (!canvas) return;
-    const frame = containerRef.current?.parentElement as HTMLElement | null;
-    const wrap = getScrollWrap();
-
-    const visW = wrap?.clientWidth || 800;
-
-    canvas.style.width = `${visW}px`;
-    canvas.style.height = "auto";
-    canvas.style.maxWidth = "";
-    canvas.style.margin = "0";
-    canvas.style.display = "block";
-    canvas.style.transform = "";
-    // With resolution=2, canvas has 2x physical pixels — downscale looks crisp
-    canvas.style.imageRendering = "pixelated";
-
-    if (frame) {
-      frame.style.display = "block";
-      frame.style.width = "";
-      frame.style.minWidth = "";
-      frame.style.maxWidth = "";
-      frame.style.overflow = "";
-      frame.style.alignItems = "";
-      frame.style.justifyContent = "";
-      frame.style.height = "";
-    }
-    if (wrap) {
-      wrap.style.overflow = "auto";
-      wrap.scrollLeft = 0;
-    }
-  }, [containerRef, getScrollWrap]);
-
-  /** Convert tower-local logical Y to actual scroll Y (accounting for cityscape offset) */
-  const scrollToFloorY = useCallback((logicalY: number, offset = 0.35) => {
-    const wrap = getScrollWrap();
-    if (!wrap || totalHRef.current <= 0) return;
-    const canvas = containerRef.current?.querySelector("canvas");
-    if (!canvas) return;
-    const renderedH = canvas.getBoundingClientRect().height;
-    // Scene height = sky + tower + ground; tower-local Y needs SKY_H offset
+  /** Compute the zoom level that fits the entire scene into the viewport. */
+  const getOverviewZoom = useCallback((): number => {
+    const app = appRef.current;
+    if (!app) return 1;
+    const container = containerRef.current;
+    const visW = container?.clientWidth || FLOOR_W;
+    const visH = container?.clientHeight || 600;
     const sceneH = totalHRef.current + SKY_H + GROUND_H;
-    const scale = renderedH / sceneH;
-    const scrollY = (SKY_H + logicalY) * scale;
-    wrap.scrollTo({ top: Math.max(0, scrollY - wrap.clientHeight * offset), left: 0, behavior: "smooth" });
-  }, [getScrollWrap, containerRef]);
+    return Math.min(visW / SCENE_W, visH / sceneH) * 0.98;
+  }, []);
 
-  /** Exit overview → switch to floor focus + scroll to target */
-  const exitOverviewAndScroll = useCallback((logicalY: number, offset = 0.35) => {
-    // Sync ref BEFORE applying CSS so that if buildScene fires (ResizeObserver)
-    // it sees the correct mode and doesn't re-apply fitAll over floorFocus.
+  /** Compute the zoom level that fits scene width to viewport width. */
+  const getFloorFocusZoom = useCallback((): number => {
+    const container = containerRef.current;
+    const visW = container?.clientWidth || FLOOR_W;
+    return visW / SCENE_W;
+  }, []);
+
+  /** Overview = entire tower + cityscape fits in viewport via camera zoom. */
+  const applyCameraOverview = useCallback(() => {
+    const app = appRef.current;
+    if (!app) return;
+    const sceneH = totalHRef.current + SKY_H + GROUND_H;
+    const zoom = getOverviewZoom();
+    app.setCameraZoom(zoom);
+    // Center on the middle of the scene
+    app.setCameraScroll(
+      (SCENE_W - SCENE_W) / 2, // 0 — scene is already centered
+      (sceneH - sceneH) / 2,   // 0 — show from top
+    );
+    isOverviewModeRef.current = true;
+    setIsOverviewMode(true);
+  }, [getOverviewZoom]);
+
+  /** Floor Focus = scene width fits viewport, camera scrolls vertically. */
+  const applyCameraFloorFocus = useCallback(() => {
+    const app = appRef.current;
+    if (!app) return;
+    const zoom = getFloorFocusZoom();
+    app.setCameraZoom(zoom);
+    cameraTargetRef.current = null; // clear custom target
     isOverviewModeRef.current = false;
-    applyFloorFocus();
     setIsOverviewMode(false);
-    // Wait for layout reflow after CSS change — need enough delay for canvas resize
-    setTimeout(() => {
-      const wrap = getScrollWrap();
-      if (!wrap || totalHRef.current <= 0) return;
-      const canvas = containerRef.current?.querySelector("canvas");
-      if (!canvas) return;
-      const renderedH = canvas.getBoundingClientRect().height;
-      const sceneH = totalHRef.current + SKY_H + GROUND_H;
-      const scale = renderedH / sceneH;
-      const scrollY = (SKY_H + logicalY) * scale;
-      // Instant jump first (no smooth animation from 0)
-      wrap.scrollTo({ top: Math.max(0, scrollY - wrap.clientHeight * offset), left: 0, behavior: "instant" });
-    }, 80);
-  }, [applyFloorFocus, getScrollWrap, containerRef]);
+  }, [getFloorFocusZoom]);
 
-  const handleCanvasSelectDept = useCallback((dept: import("../types").Department) => {
+  /** Scroll camera to show a tower-local Y position. */
+  const scrollToFloorY = useCallback((logicalY: number, offset = 0.35) => {
+    const app = appRef.current;
+    if (!app || totalHRef.current <= 0) return;
+    const vp = app.getCameraViewportSize();
+    const worldY = SKY_H + logicalY;
+    const scrollY = Math.max(0, worldY - vp.h * offset);
+    app.setCameraScroll(0, scrollY);
+    cameraTargetRef.current = { zoom: app.getCameraZoom(), scrollY };
+  }, []);
+
+  /**
+   * Exit overview → floor focus and scroll so the given zone is visible.
+   * Coordinates: tower-local Y (0 = roof top), same as buildScene and OfficeOverviewBars.
+   * World Y = SKY_H + towerLocalY. Apply camera on next frame so layout is stable.
+   */
+  const exitOverviewAndScroll = useCallback((logicalY: number, offset = 0.35, areaH?: number) => {
+    isOverviewModeRef.current = false;
+    setIsOverviewMode(false);
+
+    const payload = {
+      logicalY,
+      offset,
+      areaH,
+      totalH: totalHRef.current,
+    };
+
+    requestAnimationFrame(() => {
+      const app = appRef.current;
+      if (!app) return;
+
+      const container = containerRef.current;
+      const visW = container?.clientWidth || FLOOR_W;
+      const floorZoom = visW / SCENE_W;
+
+      app.setCameraZoom(floorZoom);
+      const vp = app.getCameraViewportSize();
+
+      const sceneH = payload.totalH + SKY_H + GROUND_H;
+      const worldYStart = SKY_H + payload.logicalY;
+      const worldYCenter = worldYStart + (payload.areaH && payload.areaH > 0 ? payload.areaH / 2 : 0);
+      const rawScrollY =
+        payload.areaH && payload.areaH > 0
+          ? worldYCenter - vp.h / 2
+          : worldYStart - vp.h * payload.offset;
+      const scrollY = Math.max(0, Math.min(rawScrollY, sceneH - vp.h));
+
+      app.setCameraScroll(0, scrollY);
+      cameraTargetRef.current = { zoom: floorZoom, scrollY };
+    });
+  }, []);
+
+  const handleCanvasSelectDept = useCallback((dept: Department) => {
     setSelectedDept(dept);
     setSelectedAgent(null);
     const deptIdx = dataRef.current.departments.findIndex((d) => d.id === dept.id);
@@ -487,33 +417,32 @@ export default function OfficeView({
     elevatorStateRef.current.idleTicks = 0;
     selectedFloorIdxRef.current = deptIdx + 1;
 
-    const logicalY = ROOF_H + PENTHOUSE_H + CONFERENCE_FLOOR_H + deptIdx * FLOOR_TOTAL_H;
+    // In overview mode, only select dept (show in right panel) — don't navigate
+    if (isOverviewModeRef.current) return;
 
-    if (isOverviewModeRef.current) {
-      exitOverviewAndScroll(logicalY);
-    } else {
-      scrollToFloorY(logicalY);
-    }
-  }, [exitOverviewAndScroll, scrollToFloorY]);
+    const logicalY = ROOF_H + PENTHOUSE_H + CONFERENCE_FLOOR_H + deptIdx * FLOOR_TOTAL_H;
+    scrollToFloorY(logicalY);
+  }, [scrollToFloorY]);
   cbRef.current = { onSelectAgent: handleCanvasSelectAgent, onSelectDepartment: handleCanvasSelectDept };
 
   const handleScrollToFloor = useCallback((target: "ceo" | "conf" | "basement") => {
+    // In overview mode, left panel BUILDING items don't navigate — info only
+    if (isOverviewModeRef.current) return;
+
     const nFloors = dataRef.current.departments.length;
     let logicalY: number;
     if (target === "ceo") {
-      logicalY = 0;
+      logicalY = ROOF_H;
     } else if (target === "conf") {
       logicalY = ROOF_H + PENTHOUSE_H;
     } else {
       logicalY = ROOF_H + PENTHOUSE_H + CONFERENCE_FLOOR_H + nFloors * FLOOR_TOTAL_H;
     }
 
-    if (isOverviewModeRef.current) {
-      exitOverviewAndScroll(logicalY, 0.1);
-    } else {
-      scrollToFloorY(logicalY, 0.1);
-    }
-  }, [exitOverviewAndScroll, scrollToFloorY]);
+    const offset = target === "ceo" ? 0.02 : 0.1;
+    const areaH = target === "ceo" ? PENTHOUSE_H : target === "conf" ? CONFERENCE_FLOOR_H : BASEMENT_H;
+    exitOverviewAndScroll(logicalY, offset, areaH);
+  }, [exitOverviewAndScroll]);
 
   /* ── BUILD SCENE (no app destroy, just stage clear + rebuild) ── */
   const buildScene = useCallback(() => {
@@ -578,18 +507,18 @@ export default function OfficeView({
       towerOffsetXRef,
     });
 
-    // Default = overview (full tower + cityscape visible)
-    // Floor focus when user clicks a dept or explicitly toggles
-    if (isFirst) {
-      // First load: show full tower overview
-      applyFitAll();
-      isOverviewModeRef.current = true;
-    } else if (wasOverview) {
-      applyFitAll();
+    // Apply camera mode after scene rebuild.
+    // Priority: cameraTargetRef (user just clicked a floor) > wasOverview > isFirst > default
+    if (cameraTargetRef.current) {
+      appRef.current?.setCameraZoom(cameraTargetRef.current.zoom);
+      appRef.current?.setCameraScroll(0, cameraTargetRef.current.scrollY);
+    } else if (isFirst || wasOverview) {
+      applyCameraOverview();
     } else {
-      applyFloorFocus();
+      // Normal floor focus — fit scene width to viewport
+      appRef.current?.setCameraZoom(getFloorFocusZoom());
     }
-  }, [applyFitAll, applyFloorFocus, getScrollWrap]);
+  }, [applyCameraOverview, getFloorFocusZoom]);
 
   // Listen for season preference changes from OfficeRoomManager
   useEffect(() => {
@@ -713,6 +642,7 @@ export default function OfficeView({
       texturesRef,
       spriteMapRef,
       followCeoInView,
+      isOverviewModeRef,
     }),
     [followCeoInView, cliUsageRef, handleCanvasSelectAgent],
   );
@@ -725,8 +655,6 @@ export default function OfficeView({
     initIdRef,
     initDoneRef,
     officeWRef,
-    scrollHostXRef,
-    scrollHostYRef,
     deliveriesRef,
     dataRef,
     buildScene,
@@ -796,44 +724,85 @@ export default function OfficeView({
 
   const handleToggleOverview = useCallback(() => {
     if (!isOverviewMode) {
-      isOverviewModeRef.current = true;
-      applyFitAll();
+      applyCameraOverview();
     } else {
-      isOverviewModeRef.current = false;
-      applyFloorFocus();
+      applyCameraFloorFocus();
     }
-    setIsOverviewMode((prev) => !prev);
-  }, [isOverviewMode, applyFitAll, applyFloorFocus]);
+  }, [isOverviewMode, applyCameraOverview, applyCameraFloorFocus]);
 
-  // ── Ctrl+Wheel zoom ───────────────────────────────────────────
+  // ── Floor indicator (shows current floor from camera position) ──────
+  const [floorIndicator, setFloorIndicator] = useState<string | null>(null);
+  const floorIndicatorTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const updateFloorIndicator = useCallback(() => {
+    const app = appRef.current;
+    if (!app || totalHRef.current <= 0 || isOverviewModeRef.current) return;
+
+    const { y: scrollY } = app.getCameraScroll();
+    const vp = app.getCameraViewportSize();
+    const viewCenterY = scrollY + vp.h / 2;
+    const towerLocalY = viewCenterY - SKY_H;
+
+    const depts = dataRef.current.departments;
+    let label = "";
+    if (towerLocalY < ROOF_H) {
+      label = "ROOF";
+    } else if (towerLocalY < ROOF_H + PENTHOUSE_H) {
+      label = "P  CEO";
+    } else if (towerLocalY < ROOF_H + PENTHOUSE_H + CONFERENCE_FLOOR_H) {
+      label = "CONF";
+    } else {
+      const floorStartY = ROOF_H + PENTHOUSE_H + CONFERENCE_FLOOR_H;
+      const basementStartY = floorStartY + depts.length * FLOOR_TOTAL_H;
+      if (towerLocalY >= basementStartY) {
+        label = "B1  BREAK";
+      } else {
+        const idx = Math.floor((towerLocalY - floorStartY) / FLOOR_TOTAL_H);
+        const dept = depts[Math.min(idx, depts.length - 1)];
+        label = dept ? `F${idx + 1}  ${dept.name}` : `F${idx + 1}`;
+      }
+    }
+
+    setFloorIndicator(label);
+    if (floorIndicatorTimerRef.current) clearTimeout(floorIndicatorTimerRef.current);
+    floorIndicatorTimerRef.current = setTimeout(() => setFloorIndicator(null), 1200);
+  }, []);
+
+  // ── Wheel: Ctrl+Wheel = zoom toggle, normal wheel = camera scroll ──
   useEffect(() => {
-    const wrap = getScrollWrap();
-    const el = containerRef.current?.parentElement?.parentElement ?? wrap;
+    const el = containerRef.current?.parentElement?.parentElement ?? containerRef.current;
     if (!el) return;
 
     const onWheel = (e: WheelEvent) => {
-      if (!e.ctrlKey && !e.metaKey) return;
-      e.preventDefault();
-      // Zoom out → overview, zoom in → floor focus
-      if (e.deltaY > 0) {
-        // Zoom out
-        if (!isOverviewModeRef.current) {
-          isOverviewModeRef.current = true;
-          applyFitAll();
-          setIsOverviewMode(true);
+      if (e.ctrlKey || e.metaKey) {
+        e.preventDefault();
+        if (e.deltaY > 0 && !isOverviewModeRef.current) {
+          applyCameraOverview();
+        } else if (e.deltaY < 0 && isOverviewModeRef.current) {
+          applyCameraFloorFocus();
         }
-      } else {
-        // Zoom in
-        if (isOverviewModeRef.current) {
-          isOverviewModeRef.current = false;
-          applyFloorFocus();
-          setIsOverviewMode(false);
-        }
+        return;
       }
+      // In overview mode, ignore normal wheel scroll
+      if (isOverviewModeRef.current) return;
+      e.preventDefault();
+      cameraTargetRef.current = null; // manual scroll clears area-zoom target
+      const app = appRef.current;
+      if (!app) return;
+      const { y: curY } = app.getCameraScroll();
+      const zoom = app.getCameraZoom();
+      // Convert CSS deltaY to world units (1.5× multiplier for snappier scrolling)
+      const scrollDelta = (e.deltaY / zoom) * 1.5;
+      const sceneH = totalHRef.current + SKY_H + GROUND_H;
+      const vp = app.getCameraViewportSize();
+      const maxScrollY = Math.max(0, sceneH - vp.h);
+      app.setCameraScroll(0, Math.min(maxScrollY, Math.max(0, curY + scrollDelta)));
+      // Trigger floor indicator
+      updateFloorIndicator();
     };
     el.addEventListener("wheel", onWheel, { passive: false });
     return () => el.removeEventListener("wheel", onWheel);
-  }, [getScrollWrap, applyFitAll, applyFloorFocus]);
+  }, [applyCameraOverview, applyCameraFloorFocus]);
 
   // ── Keyboard shortcuts (Escape=overview, Home/End=top/bottom) ──
   useEffect(() => {
@@ -848,9 +817,7 @@ export default function OfficeView({
       if (e.code === "Escape") {
         e.preventDefault();
         if (!isOverviewModeRef.current) {
-          isOverviewModeRef.current = true;
-          applyFitAll();
-          setIsOverviewMode(true);
+          applyCameraOverview();
         }
       } else if (e.code === "Home") {
         e.preventDefault();
@@ -872,7 +839,7 @@ export default function OfficeView({
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [applyFitAll, applyFloorFocus, exitOverviewAndScroll, scrollToFloorY]);
+  }, [applyCameraOverview, exitOverviewAndScroll, scrollToFloorY]);
 
   useEffect(() => {
     const prev = prevTaskStatusesRef.current;
@@ -910,56 +877,6 @@ export default function OfficeView({
     window.addEventListener("agentdesk_office_announcement", handler);
     return () => window.removeEventListener("agentdesk_office_announcement", handler);
   }, []);
-
-  // ── Floor indicator (shows current floor during scroll) ──────
-  const [floorIndicator, setFloorIndicator] = useState<string | null>(null);
-  const floorIndicatorTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => {
-    if (isOverviewMode) return;
-    const wrap = getScrollWrap();
-    if (!wrap) return;
-
-    const onScroll = () => {
-      const canvas = containerRef.current?.querySelector("canvas");
-      if (!canvas || totalHRef.current <= 0) return;
-      const renderedH = canvas.getBoundingClientRect().height;
-      const sceneH = totalHRef.current + SKY_H + GROUND_H;
-      const scale = renderedH / sceneH;
-      // Center of viewport in tower-local Y
-      const viewCenterScrollY = wrap.scrollTop + wrap.clientHeight / 2;
-      const towerLocalY = viewCenterScrollY / scale - SKY_H;
-
-      const depts = dataRef.current.departments;
-      let label = "";
-      if (towerLocalY < ROOF_H) {
-        label = "ROOF";
-      } else if (towerLocalY < ROOF_H + PENTHOUSE_H) {
-        label = "P  CEO";
-      } else if (towerLocalY < ROOF_H + PENTHOUSE_H + CONFERENCE_FLOOR_H) {
-        label = "CONF";
-      } else {
-        const floorStartY = ROOF_H + PENTHOUSE_H + CONFERENCE_FLOOR_H;
-        const basementStartY = floorStartY + depts.length * FLOOR_TOTAL_H;
-        if (towerLocalY >= basementStartY) {
-          label = "B1  BREAK";
-        } else {
-          const idx = Math.floor((towerLocalY - floorStartY) / FLOOR_TOTAL_H);
-          const dept = depts[Math.min(idx, depts.length - 1)];
-          label = dept ? `F${idx + 1}  ${dept.name}` : `F${idx + 1}`;
-        }
-      }
-
-      setFloorIndicator(label);
-      if (floorIndicatorTimerRef.current) clearTimeout(floorIndicatorTimerRef.current);
-      floorIndicatorTimerRef.current = setTimeout(() => setFloorIndicator(null), 1200);
-    };
-
-    wrap.addEventListener("scroll", onScroll, { passive: true });
-    return () => {
-      wrap.removeEventListener("scroll", onScroll);
-      if (floorIndicatorTimerRef.current) clearTimeout(floorIndicatorTimerRef.current);
-    };
-  }, [isOverviewMode, getScrollWrap]);
 
   const [visitorCount, setVisitorCount] = useState(0);
   const [ceoIncomingCount, setCeoIncomingCount] = useState(0);
@@ -1083,7 +1000,7 @@ export default function OfficeView({
             <button
               className="office-toolbar-btn"
               title="Zoom In (Floor Focus)"
-              onClick={() => { if (isOverviewMode) { isOverviewModeRef.current = false; applyFloorFocus(); setIsOverviewMode(false); } }}
+              onClick={() => { if (isOverviewMode) applyCameraFloorFocus(); }}
               style={{ borderRadius: "2px 0 0 2px", border: "none", padding: "2px 6px", fontSize: "0.7rem", opacity: isOverviewMode ? 1 : 0.4 }}
             >
               +
@@ -1103,7 +1020,7 @@ export default function OfficeView({
             <button
               className="office-toolbar-btn"
               title="Zoom Out (Overview)"
-              onClick={() => { if (!isOverviewMode) { isOverviewModeRef.current = true; applyFitAll(); setIsOverviewMode(true); } }}
+              onClick={() => { if (!isOverviewMode) applyCameraOverview(); }}
               style={{ borderRadius: "0 2px 2px 0", border: "none", padding: "2px 6px", fontSize: "0.7rem", opacity: isOverviewMode ? 0.4 : 1 }}
             >
               -
@@ -1128,7 +1045,7 @@ export default function OfficeView({
           transition={{ duration: 0.18, ease: "linear" }}
         >
           <OfficeDeptPanel
-            departments={departments}
+            departments={sortedDepartments}
             agents={agents}
             tasks={tasks}
             selectedDeptId={selectedDept?.id ?? null}
@@ -1140,17 +1057,18 @@ export default function OfficeView({
             cliUsage={cliUsage}
             cliUsageRefreshing={cliUsageRefreshing}
             onRefreshCliUsage={onRefreshCliUsage}
+            isOverviewMode={isOverviewMode}
           />
         </motion.div>
 
         {/* Center — PixiJS canvas + fixed overlay for HUD elements */}
         <div style={{ position: "relative", flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
-          <div className="office-canvas-wrap" style={{ position: "relative" }}>
-            {/* office-canvas-frame: inline-block, sizes to canvas, amber cut-frame border */}
-            <div className="office-canvas-frame">
+          <div className="office-canvas-wrap" style={{ position: "relative", overflow: "hidden" }}>
+            {/* office-canvas-frame: fills container, amber border, camera handles scroll */}
+            <div className="office-canvas-frame" style={{ display: "block", width: "100%", height: "100%" }}>
               <div
                 ref={containerRef}
-                style={{ lineHeight: 0, outline: "none", display: "block" }}
+                style={{ lineHeight: 0, outline: "none", display: "block", width: "100%", height: "100%" }}
                 tabIndex={0}
               />
             </div>
@@ -1170,6 +1088,7 @@ export default function OfficeView({
               tasks={tasks}
               isOverviewMode={isOverviewMode}
               onClickFloor={exitOverviewAndScroll}
+              onSelectDept={(dept) => { setSelectedDept(dept); setSelectedAgent(null); }}
               containerRef={containerRef}
               totalH={totalHRef.current}
               customDeptThemes={customDeptThemes}
@@ -1181,17 +1100,18 @@ export default function OfficeView({
             className="pointer-events-none"
             style={{ position: "absolute", inset: 0, zIndex: 40, overflow: "hidden" }}
           >
-            {/* ── Minimap ── */}
-            <div className="pointer-events-auto" style={{ position: "absolute", bottom: 8, right: 8 }}>
-              <OfficeMinimap
-                departments={sortedDepartments}
-                totalH={totalHRef.current}
-                getScrollWrap={getScrollWrap}
-                containerRef={containerRef}
-                isOverviewMode={isOverviewMode}
-                customDeptThemes={customDeptThemes}
-              />
-            </div>
+            {/* ── Minimap (hidden in overview — whole scene already visible) ── */}
+            {!isOverviewMode && (
+              <div className="pointer-events-auto" style={{ position: "absolute", bottom: 8, right: 8 }}>
+                <OfficeMinimap
+                  departments={sortedDepartments}
+                  totalH={totalHRef.current}
+                  appRef={appRef}
+                  isOverviewMode={isOverviewMode}
+                  customDeptThemes={customDeptThemes}
+                />
+              </div>
+            )}
 
             {/* ── Floor Indicator (shows current floor during scroll) ── */}
             {floorIndicator && !isOverviewMode && (

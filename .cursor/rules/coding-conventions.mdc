@@ -1,0 +1,58 @@
+---
+description: TypeScript/React 코딩 규칙 — 타입 import, 파일 길이, 네이밍
+alwaysApply: true
+---
+
+# Coding Conventions (TypeScript / React)
+
+## 파일 길이 (300줄 이하)
+
+- **단일 파일은 300줄 이하를 원칙으로 한다.**
+- 300줄을 넘기면 로직·UI·훅·타입을 역할별로 나누어 별도 파일로 분리한다.
+
+### 분리 권장 패턴
+
+- 컴포넌트가 커지면: 훅 → `useXxx.ts` / `useXxx.tsx`, 하위 UI → `XxxSection.tsx`, 타입/상수 → `types.ts` / `constants.ts`
+- 한 파일에 여러 책임이 몰리지 않도록 단일 책임 단위로 쪼갠다.
+- 이미 `office-view/`, `gateway-settings/` 처럼 폴더로 도메인을 나눈 구조는 유지하고, 그 안에서 300줄 이하 파일로 세분화한다.
+
+---
+
+## 네이밍
+
+- **컴포넌트·파일**: PascalCase (예: `OfficeView.tsx`, `ChatEditorModal.tsx`)
+- **훅**: `use` 접두사 + camelCase (예: `useCliUsage`, `useOfficePixiRuntime`)
+- **함수·변수**: camelCase (예: `handleCanvasSelectDept`, `scrollToFloorY`)
+- **상수(고정값)**: UPPER_SNAKE_CASE (예: `MIN_OFFICE_W`, `FLOOR_TOTAL_H`, `MOBILE_MOVE_CODES`)
+- **타입·인터페이스**: PascalCase (예: `OfficeViewProps`, `RoomRect`, `Delivery`)
+- **이벤트 핸들러**: `handle` 접두사 권장 (예: `handleScrollToFloor`, `onOpenRoomManager`는 props이므로 그대로)
+- **boolean 상태/변수**: `is`·`has`·`show` 등 접두사로 의미 명확히 (예: `isOverviewMode`, `showVirtualPad`)
+
+파일명은 해당 파일의 기본 export(컴포넌트·훅·타입)와 맞추면 찾기 쉽다.
+
+---
+
+## Type imports
+
+- **타입만 사용하는 import는 상단에서 `import type`으로 선언한다.**
+- 인라인 타입 참조 `import("...path").TypeName`은 사용하지 않는다.
+
+### 올바른 예
+
+```ts
+import type { Agent, Department } from "../types";
+
+function handleSelect(agent: Agent) {}
+const [selected, setSelected] = useState<Department | null>(null);
+```
+
+### 피할 것
+
+```ts
+// 인라인 타입 참조 — 사용 금지
+const handleSelect = useCallback((agent: import("../types").Agent) => {}, []);
+const [selected, setSelected] = useState<import("../types").Department | null>(null);
+```
+
+- 여러 곳에서 쓰는 타입은 파일 상단에 `import type { A, B } from "..."` 로 한 번만 가져와서 사용한다.
+- ESLint `@typescript-eslint/consistent-type-imports` 설정과 맞춰 유지한다.

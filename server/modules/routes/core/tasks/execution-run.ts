@@ -3,6 +3,7 @@ import { notifyTaskStatus } from "../../../../gateway/client.ts";
 import type { RuntimeContext } from "../../../../types/runtime-context.ts";
 import type { AgentRow } from "../../shared/types.ts";
 import { resolveConstrainedAgentScopeForTask, selectAutoAssignableAgentForTask } from "./execution-run-auto-assign.ts";
+import { appendTaskExecutionMetaUpdate, recordTaskExecutionEvent } from "../../../workflow/core/task-execution-meta.ts";
 import { buildWorkflowPackExecutionGuidance } from "../../../workflow/packs/execution-guidance.ts";
 import { resolveVideoArtifactSpecForTask } from "../../../workflow/packs/video-artifact.ts";
 import { ensureVideoPreprodRemotionBestPracticesSkill } from "../../../workflow/core/video-skill-bootstrap.ts";
@@ -149,7 +150,25 @@ export function registerTaskRunRoute(deps: TaskRunRouteDeps): void {
         return res.status(400).json({ error: "already_running" });
       }
       const t = nowMs();
-      db.prepare("UPDATE tasks SET status = 'pending', updated_at = ? WHERE id = ?").run(t, id);
+      {
+        const updates = ["status = 'pending'", "updated_at = ?"];
+        const params: unknown[] = [t];
+        appendTaskExecutionMetaUpdate(db as any, updates, params, {
+          execution_state: "stalled",
+          execution_error_code: "stale_in_progress",
+          execution_error_summary: "Recovered stale in_progress task before re-run",
+        });
+        params.push(id);
+        db.prepare(`UPDATE tasks SET ${updates.join(", ")} WHERE id = ?`).run(...(params as any[]));
+      }
+      recordTaskExecutionEvent(db as any, {
+        taskId: id,
+        eventType: "stale_run_recovered",
+        fromState: "running",
+        toState: "stalled",
+        summary: "Recovered stale in_progress task before re-run",
+        createdAt: t,
+      });
       task.status = "pending";
       appendTaskLog(id, "system", `Reset stale in_progress status (no active process) for re-run`);
     }
@@ -546,9 +565,32 @@ Whenever you complete a subtask, report it in this format:
       const fakePid = getNextHttpAgentPid();
 
       const t = nowMs();
-      db.prepare(
-        "UPDATE tasks SET status = 'in_progress', assigned_agent_id = ?, started_at = ?, updated_at = ? WHERE id = ?",
-      ).run(agentId, t, t, id);
+      {
+        const updates = ["status = 'in_progress'", "assigned_agent_id = ?", "started_at = ?", "updated_at = ?"];
+        const params: unknown[] = [agentId, t, t];
+        appendTaskExecutionMetaUpdate(db as any, updates, params, {
+          execution_state: "running",
+          claimed_by: agentId,
+          claim_expires_at: null,
+          last_heartbeat_at: t,
+          last_output_at: t,
+          retry_after: null,
+          execution_error_code: null,
+          execution_error_summary: null,
+          increment_execution_attempt: true,
+        });
+        params.push(id);
+        db.prepare(`UPDATE tasks SET ${updates.join(", ")} WHERE id = ?`).run(...(params as any[]));
+      }
+      recordTaskExecutionEvent(db as any, {
+        taskId: id,
+        eventType: "run_started",
+        fromState: "queued",
+        toState: "running",
+        summary: `Task run started via ${provider}`,
+        metadata: { provider, agent_id: agentId },
+        createdAt: t,
+      });
       db.prepare("UPDATE agents SET status = 'working', current_task_id = ? WHERE id = ?").run(id, agentId);
 
       const updatedTask = db.prepare("SELECT * FROM tasks WHERE id = ?").get(id);
@@ -603,9 +645,32 @@ Whenever you complete a subtask, report it in this format:
       const fakePid = getNextHttpAgentPid();
 
       const t = nowMs();
-      db.prepare(
-        "UPDATE tasks SET status = 'in_progress', assigned_agent_id = ?, started_at = ?, updated_at = ? WHERE id = ?",
-      ).run(agentId, t, t, id);
+      {
+        const updates = ["status = 'in_progress'", "assigned_agent_id = ?", "started_at = ?", "updated_at = ?"];
+        const params: unknown[] = [agentId, t, t];
+        appendTaskExecutionMetaUpdate(db as any, updates, params, {
+          execution_state: "running",
+          claimed_by: agentId,
+          claim_expires_at: null,
+          last_heartbeat_at: t,
+          last_output_at: t,
+          retry_after: null,
+          execution_error_code: null,
+          execution_error_summary: null,
+          increment_execution_attempt: true,
+        });
+        params.push(id);
+        db.prepare(`UPDATE tasks SET ${updates.join(", ")} WHERE id = ?`).run(...(params as any[]));
+      }
+      recordTaskExecutionEvent(db as any, {
+        taskId: id,
+        eventType: "run_started",
+        fromState: "queued",
+        toState: "running",
+        summary: `Task run started via ${provider}`,
+        metadata: { provider, agent_id: agentId },
+        createdAt: t,
+      });
       db.prepare("UPDATE agents SET status = 'working', current_task_id = ? WHERE id = ?").run(id, agentId);
 
       const updatedTask = db.prepare("SELECT * FROM tasks WHERE id = ?").get(id);
@@ -653,9 +718,32 @@ Whenever you complete a subtask, report it in this format:
     });
 
     const t = nowMs();
-    db.prepare(
-      "UPDATE tasks SET status = 'in_progress', assigned_agent_id = ?, started_at = ?, updated_at = ? WHERE id = ?",
-    ).run(agentId, t, t, id);
+    {
+      const updates = ["status = 'in_progress'", "assigned_agent_id = ?", "started_at = ?", "updated_at = ?"];
+      const params: unknown[] = [agentId, t, t];
+      appendTaskExecutionMetaUpdate(db as any, updates, params, {
+        execution_state: "running",
+        claimed_by: agentId,
+        claim_expires_at: null,
+        last_heartbeat_at: t,
+        last_output_at: t,
+        retry_after: null,
+        execution_error_code: null,
+        execution_error_summary: null,
+        increment_execution_attempt: true,
+      });
+      params.push(id);
+      db.prepare(`UPDATE tasks SET ${updates.join(", ")} WHERE id = ?`).run(...(params as any[]));
+    }
+    recordTaskExecutionEvent(db as any, {
+      taskId: id,
+      eventType: "run_started",
+      fromState: "queued",
+      toState: "running",
+      summary: `Task run started via ${provider}`,
+      metadata: { provider, agent_id: agentId },
+      createdAt: t,
+    });
     db.prepare("UPDATE agents SET status = 'working', current_task_id = ? WHERE id = ?").run(id, agentId);
 
     const updatedTask = db.prepare("SELECT * FROM tasks WHERE id = ?").get(id);

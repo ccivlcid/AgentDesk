@@ -1,4 +1,4 @@
-import type { Department } from "../../types";
+import type { Department, TaskExecutionState } from "../../types";
 import { useI18n } from "../../i18n";
 import { TASK_TYPE_OPTIONS, taskTypeLabel } from "./constants";
 
@@ -13,12 +13,24 @@ interface FilterBarProps {
   filterDept: string;
   filterType: string;
   filterProject: string;
+  filterExecution: string;
   search: string;
   onFilterDept: (value: string) => void;
   onFilterType: (value: string) => void;
   onFilterProject: (value: string) => void;
+  onFilterExecution: (value: string) => void;
   onSearch: (value: string) => void;
 }
+
+const EXECUTION_FILTER_OPTIONS: Array<{ value: "" | TaskExecutionState | "attention"; label: Record<string, string> }> = [
+  { value: "", label: { ko: "전체 실행", en: "All Execution", ja: "全実行", zh: "全部执行" } },
+  { value: "running", label: { ko: "실행 중", en: "Running", ja: "実行中", zh: "执行中" } },
+  { value: "awaiting_review", label: { ko: "리뷰 대기", en: "Awaiting Review", ja: "レビュー待ち", zh: "等待审查" } },
+  { value: "blocked", label: { ko: "보류", en: "Blocked", ja: "保留", zh: "阻塞" } },
+  { value: "stalled", label: { ko: "멈춤", en: "Stalled", ja: "停止", zh: "停滞" } },
+  { value: "failed", label: { ko: "실패", en: "Failed", ja: "失敗", zh: "失败" } },
+  { value: "attention", label: { ko: "주의 필요", en: "Needs Attention", ja: "要注意", zh: "需要关注" } },
+];
 
 export default function FilterBar({
   departments,
@@ -26,10 +38,12 @@ export default function FilterBar({
   filterDept,
   filterType,
   filterProject,
+  filterExecution,
   search,
   onFilterDept,
   onFilterType,
   onFilterProject,
+  onFilterExecution,
   onSearch,
 }: FilterBarProps) {
   const { t, language: locale } = useI18n();
@@ -124,6 +138,27 @@ export default function FilterBar({
           ))}
         </select>
       )}
+
+      <select
+        value={filterExecution}
+        onChange={(event) => onFilterExecution(event.target.value)}
+        className="outline-none"
+        style={{
+          border: "1px solid var(--th-border)",
+          borderRadius: "2px",
+          padding: "0.3rem 0.625rem",
+          background: "var(--th-bg-surface)",
+          color: "var(--th-text-secondary)",
+          fontFamily: "var(--th-font-mono)",
+          fontSize: "0.8125rem",
+        }}
+      >
+        {EXECUTION_FILTER_OPTIONS.map((option) => (
+          <option key={option.value || "all"} value={option.value}>
+            {option.label[locale] ?? option.label.en}
+          </option>
+        ))}
+      </select>
     </div>
   );
 }

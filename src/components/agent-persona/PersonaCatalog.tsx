@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { PERSONA_CATALOG, PERSONA_CATEGORIES, type PersonaCategory } from "../../data/personas";
+import { useI18n } from "../../i18n";
 import { PersonaCard } from "./PersonaCard";
 
 interface PersonaCatalogProps {
@@ -8,6 +9,8 @@ interface PersonaCatalogProps {
 }
 
 export function PersonaCatalog({ selectedId, onSelect }: PersonaCatalogProps) {
+  const { language } = useI18n();
+  const isKo = language === "ko";
   const [category, setCategory] = useState<PersonaCategory | "all">("all");
 
   const filtered =
@@ -36,7 +39,7 @@ export function PersonaCatalog({ selectedId, onSelect }: PersonaCatalogProps) {
                 transition: "all 0.1s linear",
               }}
             >
-              {cat.label}
+              {isKo ? cat.label_ko : cat.label}
             </button>
           );
         })}
@@ -54,7 +57,7 @@ export function PersonaCatalog({ selectedId, onSelect }: PersonaCatalogProps) {
               transition: "all 0.1s linear",
             }}
           >
-            CLEAR
+            {isKo ? "해제" : "CLEAR"}
           </button>
         )}
       </div>
@@ -68,6 +71,7 @@ export function PersonaCatalog({ selectedId, onSelect }: PersonaCatalogProps) {
             selected={selectedId === persona.id}
             onSelect={onSelect}
             compact
+            isKo={isKo}
           />
         ))}
       </div>

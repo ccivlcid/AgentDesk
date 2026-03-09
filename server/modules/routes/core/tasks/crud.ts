@@ -7,6 +7,7 @@ import type { RuntimeContext } from "../../../../types/runtime-context.ts";
 import type { MeetingMinuteEntryRow, MeetingMinutesRow } from "../../shared/types.ts";
 import { isWorkflowPackKey } from "../../../workflow/packs/definitions.ts";
 import { resolveWorkflowPackKeyForTask } from "../../../workflow/packs/task-pack-resolver.ts";
+import { recordTaskExecutionEvent, taskExecutionEventsTableExists } from "../../../workflow/core/task-execution-meta.ts";
 
 export type TaskCrudRouteDeps = Pick<
   RuntimeContext,
@@ -279,6 +280,17 @@ export function registerTaskCrudRoutes(deps: TaskCrudRouteDeps): void {
     }
 
     appendTaskLog(id, "system", `Task created: ${title}`);
+    recordTaskExecutionEvent(db as any, {
+      taskId: id,
+      eventType: "task_created",
+      toState: "queued",
+      summary: `Task created: ${title}`,
+      metadata: {
+        status: (body as any).status ?? "inbox",
+        assigned_agent_id: (body as any).assigned_agent_id ?? null,
+      },
+      createdAt: t,
+    });
 
     const task = db.prepare("SELECT * FROM tasks WHERE id = ?").get(id);
     broadcast("task_update", task);
@@ -372,6 +384,59 @@ export function registerTaskCrudRoutes(deps: TaskCrudRouteDeps): void {
     const subtasks = db.prepare("SELECT * FROM subtasks WHERE task_id = ? ORDER BY created_at").all(id);
 
     res.json({ task, logs, subtasks });
+  });
+
+  app.get("/api/tasks/:id/execution", (req, res) => {
+    const id = String(req.params.id);
+    const task = db
+      .prepare(
+        `SELECT
+           id, status, execution_state, execution_attempt, claimed_by, claim_expires_at,
+           last_heartbeat_at, last_output_at, retry_after, execution_error_code,
+           execution_error_summary, resolved_workflow_contract_hash, started_at, completed_at, updated_at
+         FROM tasks
+         WHERE id = ?`,
+      )
+      .get(id) as Record<string, unknown> | undefined;
+    if (!task) return res.status(404).json({ error: "not_found" });
+
+    const latestEvent =
+      taskExecutionEventsTableExists(db as any)
+        ? (db
+            .prepare(
+              "SELECT id, event_type, from_state, to_state, summary, metadata_json, created_at FROM task_execution_events WHERE task_id = ? ORDER BY created_at DESC, id DESC LIMIT 1",
+            )
+            .get(id) as Record<string, unknown> | undefined)
+        : null;
+
+    res.json({
+      execution: task,
+      latest_event: latestEvent ?? null,
+    });
+  });
+
+  app.get("/api/tasks/:id/execution-events", (req, res) => {
+    const id = String(req.params.id);
+    const task = db.prepare("SELECT id FROM tasks WHERE id = ?").get(id) as { id: string } | undefined;
+    if (!task) return res.status(404).json({ error: "not_found" });
+
+    if (!taskExecutionEventsTableExists(db as any)) {
+      return res.json({ events: [] });
+    }
+
+    const limitRaw = Number(firstQueryValue(req.query.limit) ?? 100);
+    const limit = Number.isFinite(limitRaw) ? Math.max(1, Math.min(500, Math.trunc(limitRaw))) : 100;
+    const events = db
+      .prepare(
+        `SELECT id, event_type, from_state, to_state, summary, metadata_json, created_at
+         FROM task_execution_events
+         WHERE task_id = ?
+         ORDER BY created_at DESC, id DESC
+         LIMIT ?`,
+      )
+      .all(id, limit);
+
+    res.json({ events });
   });
 
   app.get("/api/tasks/:id/meeting-minutes", (req, res) => {

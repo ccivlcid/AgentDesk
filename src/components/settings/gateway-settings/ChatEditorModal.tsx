@@ -6,6 +6,7 @@ import type { ChannelSettingsTabProps } from "../types";
 import { CHANNEL_META, channelTargetHint, isWorkflowPackKey } from "./constants";
 import type { ChatEditorState } from "./state";
 import { MESSENGER_CHANNELS } from "../../../types";
+import { WEBHOOK_EVENTS } from "../../../api/webhooks";
 
 type WorkflowPackOption = {
   key: WorkflowPackKey;
@@ -267,6 +268,77 @@ export default function ChatEditorModal({
             )}
           </div>
         </div>
+
+        {(editor.channel === "slack" || editor.channel === "discord") && (
+          <div className="space-y-3 p-3" style={{ border: "1px solid var(--th-border)", borderRadius: "2px", background: "var(--th-bg-elevated)" }}>
+            <h4 className="text-[10px] font-mono uppercase tracking-wider font-bold" style={{ color: "var(--th-accent)" }}>
+              {t({ ko: "태스크 알림 웹훅 (선택)", en: "Task notification webhook (optional)", ja: "タスク通知ウェブフック（任意）", zh: "任务通知 Webhook（可选）" })}
+            </h4>
+            <p className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
+              {t({
+                ko: "태스크 완료 시 이 채널로 알림을 보낼 웹훅 URL을 입력하세요.",
+                en: "Enter webhook URL to send task notifications to this channel.",
+                ja: "タスク完了時にこのチャネルへ通知するウェブフックURLを入力してください。",
+                zh: "输入用于向该频道发送任务通知的 Webhook URL。",
+              })}
+            </p>
+            <div className="space-y-2">
+              <div>
+                <label className="block text-[10px] font-mono uppercase mb-0.5" style={{ color: "var(--th-text-muted)" }}>URL</label>
+                <input
+                  type="url"
+                  value={editor.webhookUrl}
+                  onChange={(e) => setEditor((prev) => ({ ...prev, webhookUrl: e.target.value }))}
+                  placeholder={editor.channel === "slack" ? "https://hooks.slack.com/services/..." : "https://discord.com/api/webhooks/..."}
+                  className="w-full px-3 py-2 text-xs font-mono focus:outline-none"
+                  style={{ borderRadius: "2px", background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)" }}
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-mono uppercase mb-0.5" style={{ color: "var(--th-text-muted)" }}>
+                  {t({ ko: "웹훅 이름 (선택)", en: "Webhook name (optional)", ja: "ウェブフック名（任意）", zh: "Webhook 名称（可选）" })}
+                </label>
+                <input
+                  type="text"
+                  value={editor.webhookName}
+                  onChange={(e) => setEditor((prev) => ({ ...prev, webhookName: e.target.value }))}
+                  placeholder={editor.name.trim() || (editor.channel === "slack" ? "Slack 알림" : "Discord 알림")}
+                  className="w-full px-3 py-2 text-xs font-mono focus:outline-none"
+                  style={{ borderRadius: "2px", background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)" }}
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-mono uppercase mb-1" style={{ color: "var(--th-text-muted)" }}>
+                  {t({ ko: "이벤트", en: "Events", ja: "イベント", zh: "事件" })}
+                </label>
+                <div className="flex flex-wrap gap-1.5">
+                  {WEBHOOK_EVENTS.map((ev) => (
+                    <button
+                      key={ev.value}
+                      type="button"
+                      onClick={() =>
+                        setEditor((prev) => ({
+                          ...prev,
+                          webhookEvents: prev.webhookEvents.includes(ev.value)
+                            ? prev.webhookEvents.filter((e) => e !== ev.value)
+                            : [...prev.webhookEvents, ev.value],
+                        }))
+                      }
+                      className="px-2 py-1 text-[10px] font-mono transition"
+                      style={
+                        editor.webhookEvents.includes(ev.value)
+                          ? { border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.12)", color: "var(--th-accent)", borderRadius: "2px" }
+                          : { border: "1px solid var(--th-border)", background: "var(--th-bg-primary)", color: "var(--th-text-muted)", borderRadius: "2px" }
+                      }
+                    >
+                      {ev.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div>
           <label className="block text-xs mb-1 font-mono" style={{ color: "var(--th-text-muted)" }}>

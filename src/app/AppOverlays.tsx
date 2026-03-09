@@ -18,6 +18,7 @@ interface AppOverlaysProps {
   chatAgent: Agent | null;
   messages: Message[];
   agents: Agent[];
+  groupChatAgents: Agent[];
   streamingMessage: {
     message_id: string;
     agent_id: string;
@@ -83,6 +84,7 @@ export default function AppOverlays({
   chatAgent,
   messages,
   agents,
+  groupChatAgents,
   streamingMessage,
   onSendMessage,
   onSendAnnouncement,
@@ -129,7 +131,7 @@ export default function AppOverlays({
   return (
     <>
       {showGroupChat && (
-        <GroupChatPanel agents={agents} onClose={onCloseGroupChat} />
+        <GroupChatPanel agents={groupChatAgents} onClose={onCloseGroupChat} />
       )}
 
       {showChat && (

@@ -383,7 +383,7 @@ export default function App() {
       }),
     [activePackKey, activePackProfile?.departments, departments],
   );
-  const { mergedAgents: overlayAgents } = useMemo(
+  const { scopedAgents: packScopedAgents, mergedAgents: overlayAgents } = useMemo(
     () =>
       resolvePackAgentViews({
         packKey: activePackKey,
@@ -485,6 +485,7 @@ export default function App() {
         chatAgent={chatAgent}
         messages={messages}
         agents={overlayAgents}
+        groupChatAgents={packScopedAgents}
         streamingMessage={streamingMessage}
         onSendMessage={actions.handleSendMessage}
         onSendAnnouncement={actions.handleSendAnnouncement}

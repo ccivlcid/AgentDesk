@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { Agent, Department, SubTask, Task, TaskStatus } from "../../types";
+import type { Agent, Department, SubTask, Task, TaskExecutionState, TaskStatus } from "../../types";
 import { useI18n } from "../../i18n";
 import AgentAvatar from "../AgentAvatar";
 import AgentSelect from "../AgentSelect";
@@ -53,6 +53,17 @@ const STATUS_LEFT_BORDER: Partial<Record<string, string>> = {
   done: "#30363d",
   pending: "#f87171",
   cancelled: "#6e7681",
+};
+
+const EXECUTION_STATE_BADGES: Partial<Record<TaskExecutionState, { label: string; style: React.CSSProperties }>> = {
+  queued: { label: "Q", style: { background: "rgba(6,182,212,0.08)", color: "#7dd3fc", border: "1px solid rgba(6,182,212,0.18)" } },
+  running: { label: "RUN", style: { background: "rgba(34,197,94,0.08)", color: "#86efac", border: "1px solid rgba(34,197,94,0.18)" } },
+  awaiting_review: { label: "REV", style: { background: "rgba(167,139,250,0.08)", color: "#c4b5fd", border: "1px solid rgba(167,139,250,0.18)" } },
+  blocked: { label: "HOLD", style: { background: "rgba(251,191,36,0.08)", color: "#fcd34d", border: "1px solid rgba(251,191,36,0.18)" } },
+  stalled: { label: "STALL", style: { background: "rgba(244,63,94,0.1)", color: "#fda4af", border: "1px solid rgba(244,63,94,0.2)" } },
+  succeeded: { label: "OK", style: { background: "rgba(34,197,94,0.08)", color: "#86efac", border: "1px solid rgba(34,197,94,0.18)" } },
+  failed: { label: "ERR", style: { background: "rgba(244,63,94,0.1)", color: "#fda4af", border: "1px solid rgba(244,63,94,0.2)" } },
+  cancelled: { label: "STOP", style: { background: "rgba(110,118,129,0.14)", color: "#d1d5db", border: "1px solid rgba(110,118,129,0.2)" } },
 };
 
 export default function TaskCard({
@@ -163,6 +174,7 @@ export default function TaskCard({
   };
 
   const leftBorderColor = STATUS_LEFT_BORDER[task.status] ?? "var(--th-border)";
+  const executionAlert = task.execution_state === "stalled" || task.execution_state === "failed";
   const assignedAgent = task.assigned_agent ?? agents.find((agent) => agent.id === task.assigned_agent_id);
   const fallbackAssignedName =
     (locale === "ko" ? task.agent_name_ko || task.agent_name : task.agent_name || task.agent_name_ko) ||
@@ -171,6 +183,7 @@ export default function TaskCard({
   const assignedLabel = assignedDisplayName || fallbackAssignedName || null;
   const department = departments.find((d) => d.id === task.department_id);
   const typeBadge = getTaskTypeBadge(task.task_type, t);
+  const executionBadge = task.execution_state ? EXECUTION_STATE_BADGES[task.execution_state] : null;
 
   const canRun = task.status === "planned" || task.status === "inbox";
   const canStop = task.status === "in_progress";
@@ -184,10 +197,11 @@ export default function TaskCard({
       className={`group task-card-hover overflow-hidden ${cardCollapsed ? "p-2" : "p-3.5"} transition-[padding] duration-150`}
       style={{
         background: "var(--th-bg-surface)",
-        border: "1px solid var(--th-border)",
-        borderLeft: `3px solid ${leftBorderColor}`,
+        border: executionAlert ? "1px solid rgba(244,63,94,0.22)" : "1px solid var(--th-border)",
+        borderLeft: `3px solid ${executionAlert ? "#fb7185" : leftBorderColor}`,
         borderRadius: "4px",
         opacity: isHiddenTask ? 0.7 : 1,
+        boxShadow: executionAlert ? "inset 0 0 0 1px rgba(244,63,94,0.06)" : undefined,
       }}
     >
       {/* 제목 행 — 접기 아이콘 클릭: 카드 접기/펼치기, 제목 클릭(펼침 시): 설명 2줄↔전체 */}
@@ -256,6 +270,15 @@ export default function TaskCard({
             style={{ background: "var(--th-bg-surface-hover)", color: "var(--th-text-secondary)", borderRadius: "2px" }}
           >
             {locale === "ko" ? department.name_ko : department.name}
+          </span>
+        )}
+        {executionBadge && (
+          <span
+            className="px-2 py-0.5 text-xs font-medium font-mono"
+            style={{ borderRadius: "2px", ...executionBadge.style }}
+            title={`execution: ${task.execution_state}`}
+          >
+            {executionBadge.label}
           </span>
         )}
       </div>

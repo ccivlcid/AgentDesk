@@ -2,7 +2,7 @@ import { useEffect, type MutableRefObject } from "react";
 import { Application, Assets, TextureStyle, type Texture } from "./pixi-compat";
 import type { Agent, Department, SubAgent, Task } from "../../types";
 import { buildSpriteMap } from "../AgentAvatar";
-import { type Delivery, MIN_OFFICE_W, findScrollContainer } from "./model";
+import { type Delivery, MIN_OFFICE_W } from "./model";
 import { runOfficeTickerStep, type OfficeTickerContext } from "./officeTicker";
 
 interface UseOfficePixiRuntimeParams {
@@ -13,8 +13,6 @@ interface UseOfficePixiRuntimeParams {
   initIdRef: MutableRefObject<number>;
   initDoneRef: MutableRefObject<boolean>;
   officeWRef: MutableRefObject<number>;
-  scrollHostXRef: MutableRefObject<HTMLElement | null>;
-  scrollHostYRef: MutableRefObject<HTMLElement | null>;
   deliveriesRef: MutableRefObject<Delivery[]>;
   dataRef: MutableRefObject<{ agents: Agent[] }>;
   buildScene: () => void;
@@ -41,8 +39,6 @@ export function useOfficePixiRuntime({
   initIdRef,
   initDoneRef,
   officeWRef,
-  scrollHostXRef,
-  scrollHostYRef,
   deliveriesRef,
   dataRef,
   buildScene,
@@ -66,25 +62,29 @@ export function useOfficePixiRuntime({
 
     destroyedRef.current = false;
     const currentInitId = ++initIdRef.current;
-    scrollHostXRef.current = findScrollContainer(element, "x");
-    scrollHostYRef.current = findScrollContainer(element, "y");
 
     async function init() {
       if (!element) return;
       TextureStyle.defaultOptions.scaleMode = "nearest";
 
-      officeWRef.current = Math.max(MIN_OFFICE_W, element.clientWidth);
+      // Viewport = container dimensions (flexbox gives definite height)
+      const viewportW = Math.max(MIN_OFFICE_W, element.clientWidth);
+      const viewportH = Math.max(300, element.clientHeight || 600);
+      officeWRef.current = viewportW;
 
       const app = new Application();
       await app.init({
-        width: officeWRef.current,
-        height: 600,
+        width: viewportW,
+        height: viewportH,
         backgroundAlpha: 1,
         antialias: false,
         resolution: 2,
         autoDensity: true,
         parent: element,
       });
+
+      // Apply DPR scaling (viewport-sized canvas at 2x physical pixels)
+      app.resizeViewport(viewportW, viewportH);
 
       if (initIdRef.current !== currentInitId) {
         try {
@@ -196,8 +196,13 @@ export function useOfficePixiRuntime({
       const entry = entries[0];
       if (!entry || !appRef.current || destroyedRef.current || initIdRef.current !== currentInitId) return;
       const newWidth = Math.max(MIN_OFFICE_W, Math.floor(entry.contentRect.width));
-      if (Math.abs(newWidth - officeWRef.current) > 10) {
+      const newHeight = Math.max(300, Math.floor(entry.contentRect.height));
+      const widthChanged = Math.abs(newWidth - officeWRef.current) > 10;
+      const heightChanged = Math.abs(newHeight - (appRef.current.getCameraViewportSize().h * appRef.current.getCameraZoom())) > 10;
+      if (widthChanged || heightChanged) {
         officeWRef.current = newWidth;
+        // Resize viewport canvas to match container
+        appRef.current.resizeViewport(newWidth, newHeight);
         buildScene();
       }
     });
@@ -212,8 +217,6 @@ export function useOfficePixiRuntime({
       window.removeEventListener("keyup", onKeyUp);
       deliveriesRef.current = [];
       initDoneRef.current = false;
-      scrollHostXRef.current = null;
-      scrollHostYRef.current = null;
 
       if (appRef.current) {
         appRef.current.destroy(true, { children: true });
@@ -228,8 +231,6 @@ export function useOfficePixiRuntime({
     initIdRef,
     initDoneRef,
     officeWRef,
-    scrollHostXRef,
-    scrollHostYRef,
     deliveriesRef,
     dataRef,
     buildScene,

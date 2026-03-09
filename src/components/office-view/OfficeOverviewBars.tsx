@@ -4,7 +4,8 @@ import {
   PENTHOUSE_H,
   CONFERENCE_FLOOR_H,
   FLOOR_TOTAL_H,
-  BASEMENT_H,
+  FLOOR_ROOM_H,
+  BASEMENT_INTERIOR_H,
 } from "./model";
 import type { Department, Agent, Task } from "../../types";
 
@@ -13,8 +14,10 @@ interface OfficeOverviewBarsProps {
   agents: Agent[];
   tasks: Task[];
   isOverviewMode: boolean;
-  /** Called when a bar is clicked — (towerLocalY, scrollOffset) */
-  onClickFloor: (logicalY: number, offset: number) => void;
+  /** Called when a bar is clicked — (towerLocalY, scrollOffset, areaH?) */
+  onClickFloor: (logicalY: number, offset: number, areaH?: number) => void;
+  /** Called when a department bar is clicked — selects it for the right panel */
+  onSelectDept?: (dept: Department) => void;
   /** The canvas container ref to read rendered canvas dimensions */
   containerRef: React.RefObject<HTMLDivElement | null>;
   /** Total tower height (tower-local) */
@@ -32,12 +35,13 @@ function hexNumToCSS(hex: number): string {
   return "#" + hex.toString(16).padStart(6, "0");
 }
 
-export default function OfficeOverviewBars({
+function OfficeOverviewBars({
   departments,
   agents,
   tasks,
   isOverviewMode,
   onClickFloor,
+  onSelectDept,
   customDeptThemes,
 }: OfficeOverviewBarsProps) {
   const bars = useMemo(() => {
@@ -50,10 +54,14 @@ export default function OfficeOverviewBars({
       icon: string;
       accent: string;
       yStart: number;
+      /** Tower-local height of the target area (for zoom calculation) */
+      areaH?: number;
       working: number;
       total: number;
       extra?: string;
       agentNames?: string[];
+      /** Associated department (for right panel selection) */
+      dept?: Department;
     }> = [];
 
     // CEO (Penthouse)
@@ -64,6 +72,7 @@ export default function OfficeOverviewBars({
       icon: "👑",
       accent: "#f59e0b",
       yStart: ROOF_H,
+      areaH: PENTHOUSE_H,
       working: ceoTasks,
       total: tasks.length,
       extra: `${ceoTasks} active`,
@@ -77,6 +86,7 @@ export default function OfficeOverviewBars({
       icon: "🤝",
       accent: "#a855f7",
       yStart: ROOF_H + PENTHOUSE_H,
+      areaH: CONFERENCE_FLOOR_H,
       working: workingCount,
       total: agents.length,
       extra: workingCount > 0 ? `${workingCount} working` : "",
@@ -96,9 +106,11 @@ export default function OfficeOverviewBars({
         icon: dept.icon || "🏢",
         accent,
         yStart: ROOF_H + PENTHOUSE_H + CONFERENCE_FLOOR_H + i * FLOOR_TOTAL_H,
+        areaH: FLOOR_ROOM_H,
         working,
         total: deptAgents.length,
         agentNames: deptAgents.map(a => a.name),
+        dept,
       });
     });
 
@@ -110,6 +122,7 @@ export default function OfficeOverviewBars({
       icon: "☕",
       accent: "#92400e",
       yStart: ROOF_H + PENTHOUSE_H + CONFERENCE_FLOOR_H + nFloors * FLOOR_TOTAL_H,
+      areaH: BASEMENT_INTERIOR_H,
       working: 0,
       total: breakAgents.length,
       extra: breakAgents.length > 0 ? `${breakAgents.length} resting` : "",
@@ -118,9 +131,10 @@ export default function OfficeOverviewBars({
     return sections;
   }, [isOverviewMode, departments, agents, tasks, customDeptThemes]);
 
-  const handleClick = useCallback((yStart: number) => {
-    onClickFloor(yStart, 0.35);
-  }, [onClickFloor]);
+  const handleClick = useCallback((yStart: number, areaH?: number, dept?: Department) => {
+    if (dept) onSelectDept?.(dept);
+    onClickFloor(yStart, 0.35, areaH);
+  }, [onClickFloor, onSelectDept]);
 
   if (!isOverviewMode || bars.length === 0) return null;
 
@@ -133,13 +147,13 @@ export default function OfficeOverviewBars({
         display: "flex",
         flexDirection: "column",
         background: "var(--th-bg-primary, #0a0a0a)",
-        overflow: "auto",
+        overflow: "hidden",
       }}
     >
       {bars.map((bar) => (
         <div
           key={bar.key}
-          onClick={() => handleClick(bar.yStart)}
+          onClick={() => handleClick(bar.yStart, bar.areaH, bar.dept)}
           style={{
             flex: 1,
             minHeight: 56,
@@ -217,3 +231,5 @@ export default function OfficeOverviewBars({
     </div>
   );
 }
+
+export default React.memo(OfficeOverviewBars);

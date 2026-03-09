@@ -53,9 +53,9 @@ const isProduction = IS_PRODUCTION;
 const runInTransaction = createRunInTransaction(db);
 const readSettingString = createReadSettingString(db);
 
+applyTaskSchemaMigrations(db);
 applyBaseSchema(db);
 const oauthRuntime = initializeOAuthRuntime({ db, nowMs, runInTransaction });
-applyTaskSchemaMigrations(db);
 applyDefaultSeeds(db);
 
 const messageIdempotency = createMessageIdempotencyTools({

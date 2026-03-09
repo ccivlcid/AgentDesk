@@ -93,6 +93,16 @@ CREATE TABLE IF NOT EXISTS tasks (
   assigned_agent_id TEXT REFERENCES agents(id),
   project_id TEXT REFERENCES projects(id),
   status TEXT NOT NULL DEFAULT 'inbox' CHECK(status IN ('inbox','planned','collaborating','in_progress','review','done','cancelled','pending')),
+  execution_state TEXT NOT NULL DEFAULT 'queued' CHECK(execution_state IN ('queued','claiming','workspace_preparing','ready','running','awaiting_review','retry_backoff','blocked','stalled','recovering','succeeded','failed','cancelled')),
+  execution_attempt INTEGER NOT NULL DEFAULT 0,
+  claimed_by TEXT,
+  claim_expires_at INTEGER,
+  last_heartbeat_at INTEGER,
+  last_output_at INTEGER,
+  retry_after INTEGER,
+  execution_error_code TEXT,
+  execution_error_summary TEXT,
+  resolved_workflow_contract_hash TEXT,
   priority INTEGER DEFAULT 0,
   task_type TEXT DEFAULT 'general' CHECK(task_type IN ('general','development','design','analysis','presentation','documentation')),
   workflow_pack_key TEXT NOT NULL DEFAULT 'development',
@@ -148,6 +158,17 @@ CREATE TABLE IF NOT EXISTS task_logs (
   task_id TEXT REFERENCES tasks(id),
   kind TEXT NOT NULL,
   message TEXT NOT NULL,
+  created_at INTEGER DEFAULT (unixepoch()*1000)
+);
+
+CREATE TABLE IF NOT EXISTS task_execution_events (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  task_id TEXT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+  event_type TEXT NOT NULL,
+  from_state TEXT,
+  to_state TEXT,
+  summary TEXT,
+  metadata_json TEXT,
   created_at INTEGER DEFAULT (unixepoch()*1000)
 );
 
@@ -373,11 +394,13 @@ CREATE INDEX IF NOT EXISTS idx_review_round_decision_states_updated
   ON review_round_decision_states(updated_at DESC);
 CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status, updated_at DESC);
 CREATE INDEX IF NOT EXISTS idx_tasks_agent ON tasks(assigned_agent_id);
+CREATE INDEX IF NOT EXISTS idx_tasks_execution_state ON tasks(execution_state, retry_after, updated_at DESC);
 CREATE INDEX IF NOT EXISTS idx_tasks_dept ON tasks(department_id);
 CREATE INDEX IF NOT EXISTS idx_projects_recent ON projects(last_used_at DESC, updated_at DESC);
 CREATE INDEX IF NOT EXISTS idx_task_creation_audits_task ON task_creation_audits(task_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_task_creation_audits_trigger ON task_creation_audits(trigger, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_task_logs_task ON task_logs(task_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_task_execution_events_task ON task_execution_events(task_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_task_interrupt_injections_task
   ON task_interrupt_injections(task_id, session_id, consumed_at, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_messages_receiver ON messages(receiver_type, receiver_id, created_at DESC);

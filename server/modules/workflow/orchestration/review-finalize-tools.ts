@@ -12,6 +12,7 @@ import { evaluateRemotionOnlyGateFromLogFiles } from "../packs/video-render-engi
 import { readYoloModeEnabled } from "../../routes/ops/messages/decision-inbox/yolo-mode.ts";
 import { reconcileVideoRenderDelegationState } from "./video-render-delegation-state.ts";
 import type { CountRow } from "../../routes/shared/types.ts";
+import { appendTaskExecutionMetaUpdate, recordTaskExecutionEvent } from "../core/task-execution-meta.ts";
 
 type CreateReviewFinalizeToolsDeps = Record<string, any>;
 
@@ -729,7 +730,28 @@ export function createReviewFinalizeTools(deps: CreateReviewFinalizeToolsDeps) {
         } catch { /* best effort */ }
       }
 
-      db.prepare("UPDATE tasks SET status = 'done', completed_at = ?, updated_at = ? WHERE id = ?").run(t, t, taskId);
+      {
+        const updates = ["status = 'done'", "completed_at = ?", "updated_at = ?"];
+        const params: unknown[] = [t, t];
+        appendTaskExecutionMetaUpdate(db as any, updates, params, {
+          execution_state: "succeeded",
+          last_heartbeat_at: t,
+          last_output_at: t,
+          retry_after: null,
+          execution_error_code: null,
+          execution_error_summary: null,
+        });
+        params.push(taskId);
+        db.prepare(`UPDATE tasks SET ${updates.join(", ")} WHERE id = ?`).run(...params);
+      }
+      recordTaskExecutionEvent(db as any, {
+        taskId,
+        eventType: "review_approved",
+        fromState: "awaiting_review",
+        toState: "succeeded",
+        summary: "Task approved in review and marked done",
+        createdAt: t,
+      });
       setTaskCreationAuditCompletion(taskId, true);
 
       appendTaskLog(taskId, "system", "Status → done (all leaders approved)");

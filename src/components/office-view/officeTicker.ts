@@ -138,6 +138,7 @@ export interface OfficeTickerContext {
   texturesRef: MutableRefObject<Record<string, Texture>>;
   spriteMapRef: MutableRefObject<Map<string, number>>;
   followCeoInView: () => void;
+  isOverviewModeRef: MutableRefObject<boolean>;
 }
 
 // ── CEO velocity state (persists across ticks) ──
@@ -146,6 +147,9 @@ let ceoVelY = 0;
 
 export function runOfficeTickerStep(ctx: OfficeTickerContext): void {
   const tick = ++ctx.tickRef.current;
+  const isOverview = ctx.isOverviewModeRef.current;
+  // In overview mode, skip every other tick for non-essential work (halves CPU cost)
+  const skipDetailTick = isOverview && (tick & 1) === 0;
   const keys = ctx.keysRef.current;
   const ceo = ctx.ceoSpriteRef.current;
   const wallClockNow = new Date();
@@ -332,6 +336,8 @@ export function runOfficeTickerStep(ctx: OfficeTickerContext): void {
     }
   }
 
+  // In overview, skip detailed per-agent animation on alternate ticks
+  if (!skipDetailTick)
   for (const item of ctx.animItemsRef.current) {
     const { sprite, status, baseX, baseY, particles, agentId, cliProvider, deskG, bedG, blanketG, phase, animated, frameCount, moodIcon } = item;
     if (agentId) {
@@ -341,8 +347,16 @@ export function runOfficeTickerStep(ctx: OfficeTickerContext): void {
       });
       const inMeeting =
         inMeetingPresence || ctx.deliveriesRef.current.some((d) => d.agentId === agentId && d.holdAtSeat && d.arrived);
-      sprite.visible = !inMeeting;
-      if (inMeeting) continue;
+      // Hide desk agent while they are on a visitor trip (inter-dept visit)
+      const onVisitorTrip = ctx.visitorTickRef.current?.visitors.some(
+        (v) => v.agentId === agentId && v.phase !== "done",
+      ) ?? false;
+      // Also hide desk agent while they are walking via delivery (CEO call, cross-dept)
+      const onDeliveryWalk = ctx.deliveriesRef.current.some(
+        (d) => d.agentId === agentId && !d.arrived,
+      );
+      sprite.visible = !inMeeting && !onVisitorTrip && !onDeliveryWalk;
+      if (!sprite.visible) continue;
     }
 
     sprite.position.x = baseX;
@@ -573,6 +587,7 @@ export function runOfficeTickerStep(ctx: OfficeTickerContext): void {
     }
   }
 
+  if (!skipDetailTick)
   for (const clone of ctx.subCloneAnimItemsRef.current) {
     const wave = tick * SUB_CLONE_WAVE_SPEED + clone.phase;
     const driftX =
@@ -622,8 +637,8 @@ export function runOfficeTickerStep(ctx: OfficeTickerContext): void {
 
   // CEO trail particles: cleanup handled by spawnParticleTween auto-destroy
 
-  // Seasonal particle animation
-  if (ctx.seasonalParticleRef.current) {
+  // Seasonal particle animation (throttled in overview)
+  if (ctx.seasonalParticleRef.current && !skipDetailTick) {
     updateSeasonalParticles(ctx.seasonalParticleRef.current, tick);
   }
 

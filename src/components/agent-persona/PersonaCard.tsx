@@ -5,9 +5,14 @@ interface PersonaCardProps {
   selected: boolean;
   onSelect: (id: string) => void;
   compact?: boolean;
+  isKo?: boolean;
 }
 
-export function PersonaCard({ persona, selected, onSelect, compact = false }: PersonaCardProps) {
+export function PersonaCard({ persona, selected, onSelect, compact = false, isKo = false }: PersonaCardProps) {
+  const displayName = isKo && persona.name_ko ? `${persona.name_ko}` : persona.name;
+  const tagline = isKo && persona.tagline_ko ? persona.tagline_ko : persona.tagline;
+  const bestFor = isKo && persona.bestFor_ko ? persona.bestFor_ko : persona.bestFor;
+
   return (
     <button
       type="button"
@@ -45,15 +50,23 @@ export function PersonaCard({ persona, selected, onSelect, compact = false }: Pe
               className="text-xs font-semibold truncate"
               style={{ color: "var(--th-text-primary)" }}
             >
-              {persona.name}
+              {displayName}
             </span>
+            {isKo && persona.name_ko && (
+              <span
+                className="text-[10px] truncate"
+                style={{ color: "var(--th-text-muted)" }}
+              >
+                {persona.name}
+              </span>
+            )}
           </div>
           {!compact && (
             <p
               className="mt-1 text-[10px] italic truncate"
               style={{ color: "var(--th-text-muted)" }}
             >
-              "{persona.tagline}"
+              "{tagline}"
             </p>
           )}
         </div>
@@ -68,7 +81,7 @@ export function PersonaCard({ persona, selected, onSelect, compact = false }: Pe
       </div>
       {!compact && (
         <div className="mt-2 flex flex-wrap gap-1">
-          {persona.bestFor.map((tag) => (
+          {bestFor.map((tag) => (
             <span
               key={tag}
               className="font-mono text-[9px] uppercase"
