@@ -1,4 +1,4 @@
-# CEO Structure Map
+# System Structure Map
 
 Generated from parallel architecture analysis lanes:
 1. Frontend module map (`src/`)

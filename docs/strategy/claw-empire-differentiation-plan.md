@@ -44,6 +44,7 @@
 ### A) 기본 카테고리 템플릿 제공
 
 - IT Delivery
+- Software Development (소프트웨어 개발)
 - Investment Ops
 - Research/Strategy
 - Marketing/Growth
@@ -148,7 +149,7 @@
 
 **Phase 1–2 (모델·CRUD·UI):**
 - `feat(category): category/category_version 스키마 추가`
-- `feat(category): 기본 템플릿 시드(IT/Investment/Research/Marketing/Custom)`
+- `feat(category): 기본 템플릿 시드(IT/Software Development/Investment/Research/Marketing/Custom)`
 - `feat(category): 카테고리 CRUD + 버저닝 API`
 - `feat(ui): 카테고리 선택형 프로젝트 생성 플로우`
 - `feat(ui): 카테고리 에디터(정책/KPI/게이트/산출물)`

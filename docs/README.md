@@ -9,6 +9,7 @@
 
 ## 핵심 문서 (우선 읽기)
 
+- [product-design.md](product-design.md) — **제품설계서** (비전, 포지셔닝, 구조, 기능, UX, 용어 정의)
 - [strategy/claw-empire-differentiation-plan.md](strategy/claw-empire-differentiation-plan.md) — Project OS 전략, 카테고리 시스템, 60일 로드맵
 - [strategy/claw-empire-comparison.md](strategy/claw-empire-comparison.md) — Claw-Empire 대비 유사점/차이점
 - [design/DESIGN.md](design/DESIGN.md) — UI/UX 핵심 가이드
@@ -52,7 +53,7 @@
 ## architecture/ — 아키텍처
 
 - [architecture/README.md](architecture/README.md)
-- `CEO-STRUCTURE-MAP.md`, `org-chart.mmd`, `backend-dependencies.mmd`, `frontend-imports.mmd`
+- `SYSTEM-STRUCTURE-MAP.md`, `org-chart.mmd`, `backend-dependencies.mmd`, `frontend-imports.mmd`
 - `architecture.json`, `source-tree.txt`
 
 ---

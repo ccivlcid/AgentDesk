@@ -376,14 +376,14 @@ function readOrgData() {
 }
 
 function buildOrgMermaid(orgData) {
-  const lines = ["flowchart TD", '  CEO["CEO"]'];
+  const lines = ["flowchart TD", '  Project["Project"]'];
   let depIndex = 1;
   let agentIndex = 1;
 
   for (const dep of orgData) {
     const depId = `D${depIndex++}`;
     lines.push(`  ${depId}[\"${dep.name}\"]`);
-    lines.push(`  CEO --> ${depId}`);
+    lines.push(`  Project --> ${depId}`);
 
     for (const agent of dep.agents) {
       const aId = `A${agentIndex++}`;
@@ -576,6 +576,8 @@ ${toMarkdownTable(["Event", "Server Broadcast", "Frontend Listen"], eventRows)}
 ${toMarkdownTable(["Table"], tableRows)}
 
 ## Sub-Agent Organization (from SQLite)
+
+> **2.0 (Project OS):** 실행 컨텍스트 최상단은 프로젝트(Project). 부서/에이전트는 프로젝트 하위 실행 단위.
 
 \`\`\`mermaid
 ${orgMermaid}
