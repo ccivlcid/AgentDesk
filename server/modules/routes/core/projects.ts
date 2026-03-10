@@ -247,6 +247,7 @@ export function registerProjectRoutes({
     }
 
     const githubRepo = typeof body.github_repo === "string" ? body.github_repo.trim() || null : null;
+    const categoryId = typeof body.category_id === "string" ? body.category_id.trim() || null : null;
     const assignmentMode = body.assignment_mode === "manual" ? "manual" : "auto";
     const requestedDefaultPackKey = normalizeTextField(body.default_pack_key);
     if (requestedDefaultPackKey && !isWorkflowPackKey(requestedDefaultPackKey)) {
@@ -268,11 +269,11 @@ export function registerProjectRoutes({
       db.prepare(
         `
       INSERT INTO projects (
-        id, name, project_path, core_goal, default_pack_key, assignment_mode, last_used_at, created_at, updated_at, github_repo
+        id, name, project_path, core_goal, default_pack_key, assignment_mode, category_id, last_used_at, created_at, updated_at, github_repo
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `,
-      ).run(id, name, projectPath, coreGoal, defaultPackKey, assignmentMode, t, t, t, githubRepo);
+      ).run(id, name, projectPath, coreGoal, defaultPackKey, assignmentMode, categoryId, t, t, t, githubRepo);
 
       if (assignmentMode === "manual" && agentIds.length > 0) {
         const insertPA = db.prepare("INSERT INTO project_agents (project_id, agent_id, created_at) VALUES (?, ?, ?)");

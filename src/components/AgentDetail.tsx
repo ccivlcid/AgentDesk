@@ -25,7 +25,7 @@ interface AgentDetailProps {
   tasks: Task[];
   subAgents: SubAgent[];
   subtasks: SubTask[];
-  activeOfficeWorkflowPack: WorkflowPackKey;
+  activeOfficeWorkflowPack?: WorkflowPackKey;
   onClose: () => void;
   onChat: (agent: Agent) => void;
   onAssignTask: (agentId: string) => void;
@@ -49,7 +49,7 @@ export default function AgentDetail({
   tasks,
   subAgents,
   subtasks,
-  activeOfficeWorkflowPack,
+  activeOfficeWorkflowPack = "development",
   onClose,
   onChat,
   onAssignTask,

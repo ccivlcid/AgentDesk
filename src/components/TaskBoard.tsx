@@ -23,7 +23,6 @@ import DependencyGraph from "./taskboard/DependencyGraph";
 import GanttChart from "./taskboard/GanttChart";
 import TaskCard from "./taskboard/TaskCard";
 import { COLUMNS, isHideableStatus, taskStatusLabel, type HideableStatus } from "./taskboard/constants";
-import { usePackVocab } from "../pack-identity/vocabulary";
 
 const COLLAPSED_CARD_IDS_KEY = "agentdesk_taskboard_collapsed_ids";
 
@@ -92,6 +91,7 @@ function DroppableColumn({
 interface TaskBoardProps {
   tasks: Task[];
   agents: Agent[];
+  currentProject?: import("../types").Project | null;
   /** 프로젝트 관리 모달용 전체 에이전트(모든 오피스 팩). 미전달 시 agents 사용 → 선택한 오피스 팩에 해당 직원이 없을 수 있음 */
   projectManagerAgents?: Agent[];
   departments: Department[];
@@ -119,11 +119,13 @@ interface TaskBoardProps {
   onMergeTask?: (id: string) => void;
   onDiscardTask?: (id: string) => void;
   activeWorkflowPackKey?: WorkflowPackKey;
+  onProjectCreate?: () => void;
 }
 
 export function TaskBoard({
   tasks,
   agents,
+  currentProject,
   projectManagerAgents,
   departments,
   subtasks,
@@ -140,16 +142,18 @@ export function TaskBoard({
   onMergeTask,
   onDiscardTask,
   activeWorkflowPackKey,
+  onProjectCreate,
 }: TaskBoardProps) {
   const { t } = useI18n();
-  const packVocab = usePackVocab(activeWorkflowPackKey ?? "development");
+  const packVocab = { task: t({ ko: "업무", en: "Task", ja: "タスク", zh: "任务" }), tasks: t({ ko: "업무", en: "Tasks", ja: "タスク", zh: "任务" }) };
   const [viewMode, setViewMode] = useState<"board" | "gantt" | "dag">("board");
   const [showCreate, setShowCreate] = useState(false);
   const [showProjectManager, setShowProjectManager] = useState(false);
   const [showBulkHideModal, setShowBulkHideModal] = useState(false);
   const [filterDept, setFilterDept] = useState("");
   const [filterType, setFilterType] = useState("");
-  const [filterProject, setFilterProject] = useState("");
+  const [filterProject, setFilterProject] = useState(() => currentProject?.id ?? "");
+  const [filterAgent, setFilterAgent] = useState("");
   const [filterExecution, setFilterExecution] = useState<"" | TaskExecutionState | "attention">("");
   const [search, setSearch] = useState("");
   const [batchMode, setBatchMode] = useState(false);
@@ -161,6 +165,11 @@ export function TaskBoard({
       .then((res) => setProjects(res.projects.map((p) => ({ id: p.id, name: p.name }))))
       .catch(() => {});
   }, []);
+
+  // Sync project filter when sidebar project selection changes
+  useEffect(() => {
+    setFilterProject(currentProject?.id ?? "");
+  }, [currentProject?.id]);
   const [showAllTasks, setShowAllTasks] = useState(false);
   const [collapsedColumns, setCollapsedColumns] = useState<Set<string>>(new Set());
   const [collapsedCardIds, setCollapsedCardIds] = useState<Set<string>>(() => loadCollapsedCardIds());
@@ -203,6 +212,7 @@ export function TaskBoard({
       if (filterDept && task.department_id !== filterDept) return false;
       if (filterType && task.task_type !== filterType) return false;
       if (filterProject && task.project_id !== filterProject) return false;
+      if (filterAgent && task.assigned_agent_id !== filterAgent) return false;
       if (filterExecution === "attention") {
         if (!task.execution_state || !["blocked", "stalled", "failed"].includes(task.execution_state)) return false;
       } else if (filterExecution && task.execution_state !== filterExecution) {
@@ -213,7 +223,7 @@ export function TaskBoard({
       if (!showAllTasks && isHidden) return false;
       return true;
     });
-  }, [tasks, filterDept, filterType, filterProject, filterExecution, search, hiddenTaskIds, showAllTasks]);
+  }, [tasks, filterDept, filterType, filterProject, filterAgent, filterExecution, search, hiddenTaskIds, showAllTasks]);
 
   const tasksByStatus = useMemo(() => {
     const grouped: Record<string, Task[]> = {};
@@ -326,7 +336,7 @@ export function TaskBoard({
     setSelectedTaskIds(new Set());
   }, [selectedTaskIds, hideTask]);
 
-  const activeFilterCount = [filterDept, filterType, filterProject, filterExecution, search].filter(Boolean).length;
+  const activeFilterCount = [filterDept, filterType, filterProject, filterAgent, filterExecution, search].filter(Boolean).length;
   const hiddenTaskCount = useMemo(() => {
     let count = 0;
     for (const task of tasks) {
@@ -349,6 +359,14 @@ export function TaskBoard({
         >
           {t({ ko: `${packVocab.task} 보드`, en: `${packVocab.task} Board`, ja: `${packVocab.task}ボード`, zh: `${packVocab.task}看板` })}
         </h1>
+        {currentProject && (
+          <span
+            className="text-[10px] font-mono px-1.5 py-0.5"
+            style={{ color: "var(--th-accent)", background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)", borderRadius: "2px" }}
+          >
+            {currentProject.name}
+          </span>
+        )}
         <span
           className="px-2 py-0.5 text-xs font-mono"
           style={{ background: "var(--th-bg-surface)", color: "var(--th-text-muted)", border: "1px solid var(--th-border)", borderRadius: "2px" }}
@@ -489,8 +507,18 @@ export function TaskBoard({
             className="px-3 py-1.5 text-xs font-mono uppercase transition-colors hover:opacity-90"
             style={{ borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-heading)", background: "var(--th-bg-surface)" }}
           >
-            {t({ ko: "프로젝트", en: "PROJ", ja: "プロジェクト", zh: "项目" })}
+            {t({ ko: "프로젝트 관리", en: "PROJ", ja: "プロジェクト", zh: "项目管理" })}
           </button>
+          {onProjectCreate && (
+            <button
+              type="button"
+              onClick={onProjectCreate}
+              className="px-3 py-1.5 text-xs font-mono uppercase transition-colors hover:opacity-90"
+              style={{ borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-heading)", background: "var(--th-bg-surface)" }}
+            >
+              + {t({ ko: "새 프로젝트", en: "NEW PROJ", ja: "新規PJ", zh: "新项目" })}
+            </button>
+          )}
           <button
             type="button"
             onClick={() => setShowCreate(true)}
@@ -505,14 +533,17 @@ export function TaskBoard({
       <FilterBar
         departments={departments}
         projects={projects}
+        agents={agents}
         filterDept={filterDept}
         filterType={filterType}
         filterProject={filterProject}
+        filterAgent={filterAgent}
         filterExecution={filterExecution}
         search={search}
         onFilterDept={setFilterDept}
         onFilterType={setFilterType}
         onFilterProject={setFilterProject}
+        onFilterAgent={setFilterAgent}
         onFilterExecution={handleFilterExecution}
         onSearch={setSearch}
       />
@@ -524,6 +555,25 @@ export function TaskBoard({
       ) : viewMode === "gantt" ? (
         <div className="flex-1 overflow-auto pb-2">
           <GanttChart tasks={filteredTasks} agents={agents} departments={departments} />
+        </div>
+      ) : filteredTasks.length === 0 && filterProject ? (
+        <div className="flex-1 flex flex-col items-center justify-center text-center px-6">
+          <p className="text-sm font-medium mb-1" style={{ color: "var(--th-text)" }}>
+            아직 태스크가 없어요.
+          </p>
+          <p className="text-[12px] text-[var(--th-text-muted)] mb-4">
+            목표에서 시작해볼까요?
+          </p>
+          {onProjectCreate && (
+            <button
+              type="button"
+              onClick={onProjectCreate}
+              className="text-xs px-4 py-2 rounded hover:opacity-90 transition-opacity"
+              style={{ background: "var(--th-accent)", color: "#000" }}
+            >
+              + 태스크 만들기
+            </button>
+          )}
         </div>
       ) : (
       <DndContext
@@ -609,9 +659,12 @@ export function TaskBoard({
                                 {t({ ko: "여기에 놓기", en: "drop here", ja: "ここにドロップ", zh: "放在这里" })}
                               </span>
                             ) : (
-                              <div className="terminal-empty-state py-2">
-                                <p className="terminal-empty-state-cmd">$ ls tasks/</p>
-                                <p className="terminal-empty-state-result">(empty)</p>
+                              <div className="py-4 text-center">
+                                <p className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
+                                  {filterProject
+                                    ? "태스크 없음"
+                                    : t({ ko: "비어 있음", en: "empty", ja: "空", zh: "空" })}
+                                </p>
                               </div>
                             )}
                           </div>
@@ -784,6 +837,7 @@ export function TaskBoard({
           agents={projectManagerAgents ?? agents}
           departments={departments}
           onClose={() => setShowProjectManager(false)}
+          onCreateProject={onProjectCreate}
         />
       )}
 

@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as api from "../../api";
-import AgentAvatar, { useSpriteMap } from "../AgentAvatar";
-import { listOfficePackOptions } from "../../app/office-workflow-pack";
+import AgentAvatar from "../AgentAvatar";
 import {
   MESSENGER_CHANNELS,
   WORKFLOW_PACK_KEYS,
@@ -54,8 +53,6 @@ export default function GatewaySettingsTab({
   const [agents, setAgents] = useState<Agent[]>([]);
   const [workflowPacksLoading, setWorkflowPacksLoading] = useState(false);
   const [workflowPacks, setWorkflowPacks] = useState<Awaited<ReturnType<typeof api.getWorkflowPacks>>["packs"]>([]);
-  const spriteMap = useSpriteMap(agents);
-
   const [guideOpen, setGuideOpen] = useState(false);
   const [editor, setEditor] = useState(() => createEditorState(channelsConfig));
   const [editorError, setEditorError] = useState<string | null>(null);
@@ -104,18 +101,12 @@ export default function GatewaySettingsTab({
   }, [agents]);
 
   const workflowPackOptions = useMemo(() => {
-    const locale = (form.language || "ko") as "ko" | "en" | "ja" | "zh";
-    const officeOptions = listOfficePackOptions(locale);
     const map = new Map<WorkflowPackKey, { key: WorkflowPackKey; name: string; enabled: boolean }>();
-    for (const opt of officeOptions) {
-      map.set(opt.key as WorkflowPackKey, { key: opt.key as WorkflowPackKey, name: opt.label, enabled: true });
-    }
     for (const pack of workflowPacks) {
       if (!isWorkflowPackKey(pack.key)) continue;
-      const existing = map.get(pack.key);
       map.set(pack.key, {
         key: pack.key,
-        name: existing?.name ?? defaultWorkflowPackLabel(t, pack.key),
+        name: defaultWorkflowPackLabel(t, pack.key),
         enabled: pack.enabled !== false,
       });
     }
@@ -632,7 +623,7 @@ export default function GatewaySettingsTab({
                           <>
                             <span>{t({ ko: "대화 Agent", en: "Agent", ja: "担当Agent", zh: "对话 Agent" })}:</span>
                             {assignedAgent && (
-                              <AgentAvatar agent={assignedAgent} spriteMap={spriteMap} size={14} rounded="xl" />
+                              <AgentAvatar agent={assignedAgent} size={14} rounded="xl" />
                             )}
                             <span className="truncate">{assignedAgentName}</span>
                           </>

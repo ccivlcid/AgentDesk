@@ -207,6 +207,74 @@ or
 | GET | `/api/update-status` | Update status |
 | POST | `/api/update-auto-config` | Toggle auto update |
 
+### 2.0 카테고리 & 프로젝트 팀 (Phase 1–2 신규)
+
+> **2.0 리뉴얼** 에서 추가되는 엔드포인트. 상세 UX 스펙: `docs/design/ux-renewal-2.0.md`.
+
+#### Categories (프로젝트 유형)
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| GET | `/api/categories` | 카테고리 목록 (시스템 템플릿 + 사용자 정의) |
+| POST | `/api/categories` | 카테고리 생성 |
+| PATCH | `/api/categories/:id` | 카테고리 수정 (버전 자동 증가) |
+| DELETE | `/api/categories/:id` | 카테고리 삭제 (시스템 템플릿 불가) |
+| GET | `/api/categories/:id/versions` | 버전 이력 조회 |
+| POST | `/api/categories/:id/clone` | 카테고리 복제 |
+
+`GET /api/categories` 응답 필드: `id`, `name`, `slug`, `description`, `icon`, `color`, `kpi_schema`, `risk_schema`, `gate_schema`, `deliverable_schema`, `is_template`, `version`, `owner_scope`
+
+`PATCH /api/categories/:id` 동작:
+- 수정 시 `version` 자동 증가
+- 기존 프로젝트의 `category_version`은 변경되지 않음 (재현성 보장)
+
+#### Project Team (프로젝트 팀원)
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| GET | `/api/projects/:id/agents` | 프로젝트 팀원 목록 |
+| POST | `/api/projects/:id/agents` | 팀원 추가 (`{ agent_id }`) |
+| DELETE | `/api/projects/:id/agents/:agentId` | 팀원 제거 |
+
+#### Project Dashboard Quadrants (대시보드 4분면)
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| GET | `/api/projects/:id/objectives` | 목표 목록 |
+| POST | `/api/projects/:id/objectives` | 목표 추가 |
+| PATCH | `/api/projects/:id/objectives/:objId` | 목표 수정 |
+| DELETE | `/api/projects/:id/objectives/:objId` | 목표 삭제 |
+| GET | `/api/projects/:id/risks` | 리스크 목록 |
+| POST | `/api/projects/:id/risks` | 리스크 추가 |
+| PATCH | `/api/projects/:id/risks/:riskId` | 리스크 수정 |
+| DELETE | `/api/projects/:id/risks/:riskId` | 리스크 삭제 |
+| GET | `/api/projects/:id/gates` | 검토 단계 목록 |
+| POST | `/api/projects/:id/gates` | 검토 단계 추가 |
+| PATCH | `/api/projects/:id/gates/:gateId` | 검토 단계 수정 (상태 포함) |
+| DELETE | `/api/projects/:id/gates/:gateId` | 검토 단계 삭제 |
+| GET | `/api/projects/:id/outputs` | 결과물 목록 |
+| POST | `/api/projects/:id/outputs` | 결과물 항목 추가 |
+| PATCH | `/api/projects/:id/outputs/:outputId` | 결과물 수정 |
+| DELETE | `/api/projects/:id/outputs/:outputId` | 결과물 삭제 |
+
+> **주의**: `/api/projects/:id/outputs`는 프로젝트 레벨의 계획된 산출물(PRD, API 명세서 등)이다.
+> 태스크 실행 결과물(파일, Git diff)은 기존 `/api/deliverables` 및 `/api/task-reports/:id/artifacts`를 사용한다.
+
+#### Projects 기존 엔드포인트 확장
+
+`POST /api/projects` 요청 바디에 2.0 필드 추가:
+```json
+{
+  "name": "string",
+  "category_id": "string",       // 선택. 없으면 Custom Blank 적용
+  "description": "string"
+}
+```
+
+응답에 추가 필드: `category_id`, `category_version`, `success_metric`, `risk_profile`, `required_gates`, `deliverable_schema`
+
+---
+
 ## Known Follow-up
 
 - Promote this baseline to OpenAPI (`/api/*.yaml`) in incremental slices:
@@ -214,3 +282,4 @@ or
   2. tasks/subtasks
   3. inbox/directives
   4. project/github/update routes
+  5. categories + project team + dashboard quadrants (2.0 신규)

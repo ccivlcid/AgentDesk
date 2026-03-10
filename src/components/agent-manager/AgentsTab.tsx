@@ -2,7 +2,6 @@ import { motion } from "framer-motion";
 import type { Agent, Department } from "../../types";
 import { localeName } from "../../i18n";
 import AgentCard from "./AgentCard";
-import { StackedSpriteIcon } from "./EmojiPicker";
 import type { Translator } from "./types";
 
 const cardContainer = {
@@ -19,21 +18,18 @@ interface AgentsTabProps {
   isKo: boolean;
   agents: Agent[];
   departments: Department[];
+  projectAgentIds?: Set<string>;
   deptTab: string;
   setDeptTab: (deptId: string) => void;
   search: string;
   setSearch: (next: string) => void;
   sortedAgents: Agent[];
-  spriteMap: Map<string, number>;
   confirmDeleteId: string | null;
   setConfirmDeleteId: (id: string | null) => void;
   onEditAgent: (agent: Agent) => void;
   onEditDepartment: (department: Department) => void;
   onDeleteAgent: (agentId: string) => void;
   saving: boolean;
-  randomIconSprites: {
-    total: [number, number];
-  };
 }
 
 export default function AgentsTab({
@@ -42,19 +38,18 @@ export default function AgentsTab({
   isKo,
   agents,
   departments,
+  projectAgentIds,
   deptTab,
   setDeptTab,
   search,
   setSearch,
   sortedAgents,
-  spriteMap,
   confirmDeleteId,
   setConfirmDeleteId,
   onEditAgent,
   onEditDepartment,
   onDeleteAgent,
   saving,
-  randomIconSprites,
 }: AgentsTabProps) {
   const workingCount = agents.filter((agent) => agent.status === "working").length;
   const deptCounts = new Map<string, { total: number; working: number }>();
@@ -73,7 +68,7 @@ export default function AgentsTab({
           {
             label: tr("전체 인원", "Total"),
             value: agents.length,
-            icon: <StackedSpriteIcon sprites={randomIconSprites.total} />,
+            icon: null,
           },
           { label: tr("근무 중", "Working"), value: workingCount, icon: null },
           { label: tr("부서", "Departments"), value: departments.length, icon: null },
@@ -185,11 +180,11 @@ export default function AgentsTab({
             <motion.div key={agent.id} variants={cardItem}>
               <AgentCard
                 agent={agent}
-                spriteMap={spriteMap}
                 isKo={isKo}
                 locale={locale}
                 tr={tr}
                 departments={departments}
+                isProjectMember={projectAgentIds !== undefined && projectAgentIds.has(agent.id)}
                 onEdit={() => onEditAgent(agent)}
                 confirmDeleteId={confirmDeleteId}
                 onDeleteClick={() => setConfirmDeleteId(agent.id)}

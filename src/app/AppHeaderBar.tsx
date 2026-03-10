@@ -1,15 +1,5 @@
 import type { ReactNode } from "react";
-import type { WorkflowPackKey } from "../types";
 import type { View } from "./types";
-
-type OfficePackOption = {
-  key: string;
-  label: string;
-  summary: string;
-  slug: string;
-  accent: number;
-  isCustom?: boolean;
-};
 
 interface AppHeaderBarProps {
   currentView: View;
@@ -23,13 +13,6 @@ interface AppHeaderBarProps {
   reportLabel: string;
   announcementLabel: string;
   groupChatLabel: string;
-  roomManagerLabel: string;
-  officePackControl?: {
-    label: string;
-    value: string;
-    options: OfficePackOption[];
-    onChange: (packKey: string | WorkflowPackKey) => void;
-  } | null;
   notificationSlot?: ReactNode;
   theme: "light" | "dark";
   mobileHeaderMenuOpen: boolean;
@@ -40,7 +23,6 @@ interface AppHeaderBarProps {
   onOpenReportHistory: () => void;
   onOpenAnnouncement: () => void;
   onOpenGroupChat: () => void;
-  onOpenRoomManager: () => void;
   onToggleTheme: () => void;
   onToggleMobileHeaderMenu: () => void;
   onCloseMobileHeaderMenu: () => void;
@@ -58,8 +40,6 @@ export default function AppHeaderBar({
   reportLabel,
   announcementLabel,
   groupChatLabel,
-  roomManagerLabel,
-  officePackControl,
   notificationSlot,
   theme,
   mobileHeaderMenuOpen,
@@ -70,7 +50,6 @@ export default function AppHeaderBar({
   onOpenReportHistory,
   onOpenAnnouncement,
   onOpenGroupChat,
-  onOpenRoomManager,
   onToggleTheme,
   onToggleMobileHeaderMenu,
   onCloseMobileHeaderMenu,
@@ -103,50 +82,8 @@ export default function AppHeaderBar({
           className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden"
           style={{ color: "var(--th-text-heading)" }}
         >
-          {currentView === "agents" && (
-            <span className="relative hidden shrink-0 sm:inline-flex" style={{ width: 28, height: 20 }}>
-              <img
-                src="/sprites/8-D-1.png"
-                alt=""
-                className="absolute left-0 top-0 h-5 w-5 rounded-full object-cover"
-                style={{ imageRendering: "pixelated", opacity: 0.85 }}
-              />
-              <img
-                src="/sprites/3-D-1.png"
-                alt=""
-                className="absolute left-3 top-0.5 h-5 w-5 rounded-full object-cover"
-                style={{ imageRendering: "pixelated", zIndex: 1 }}
-              />
-            </span>
-          )}
           <span className="header-sleek-title truncate text-base font-semibold tracking-tight sm:text-lg">{viewTitle}</span>
         </h1>
-        {officePackControl && (
-          <label
-            className="header-sleek-pack header-pack-selector flex flex-shrink-0 items-center gap-1.5 border px-2.5 py-1"
-            style={{ borderColor: "var(--th-border)", background: "var(--th-bg-surface)", borderRadius: "2px" }}
-          >
-            <span
-              className="hidden shrink-0 text-[10px] font-medium uppercase tracking-wider md:inline"
-              style={{ color: "var(--th-text-muted)" }}
-            >
-              {officePackControl.label}
-            </span>
-            <select
-              value={officePackControl.value}
-              onChange={(e) => officePackControl.onChange(e.target.value)}
-              className="min-w-0 max-w-[120px] bg-transparent text-[11px] font-medium focus:outline-none sm:max-w-[140px] sm:text-xs lg:max-w-[160px]"
-              style={{ color: "var(--th-text-primary)" }}
-              title={officePackControl.options.find((o) => o.key === officePackControl.value)?.label}
-            >
-              {officePackControl.options.map((option) => (
-                <option key={option.key} value={option.key}>
-                  {option.slug} · {option.label}
-                </option>
-              ))}
-            </select>
-          </label>
-        )}
       </div>
       {/* Center: primary tabs (FM-style monospace, no emoji) */}
       <div className="header-sleek-tabs flex flex-shrink-0 items-center">
@@ -182,9 +119,6 @@ export default function AppHeaderBar({
         </button>
         <button onClick={onOpenGroupChat} className="header-action-btn header-action-btn-secondary header-desktop-only" title={groupChatLabel}>
           {groupChatLabel}
-        </button>
-        <button onClick={onOpenRoomManager} className="header-action-btn header-action-btn-secondary header-desktop-only" title={roomManagerLabel}>
-          {roomManagerLabel}
         </button>
         <span className="header-sleek-divider hidden h-5 w-px sm:block" style={{ background: "var(--th-border)" }} />
         {notificationSlot}
@@ -266,37 +200,6 @@ export default function AppHeaderBar({
                 className="absolute right-0 top-full z-50 mt-1 min-w-[180px] py-1"
                 style={{ borderRadius: "4px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}
               >
-                {officePackControl && (
-                  <div className="px-3 py-2" style={{ borderBottom: "1px solid var(--th-border)" }}>
-                    <label
-                      htmlFor="mobile-office-pack-selector"
-                      className="mb-1 block text-[10px] uppercase tracking-wider"
-                      style={{ color: "var(--th-text-muted)" }}
-                    >
-                      {officePackControl.label}
-                    </label>
-                    <select
-                      id="mobile-office-pack-selector"
-                      value={officePackControl.value}
-                      onChange={(e) => {
-                        officePackControl.onChange(e.target.value);
-                        onCloseMobileHeaderMenu();
-                      }}
-                      className="w-full px-2 py-1.5 text-xs focus:outline-none"
-                      style={{
-                        border: "1px solid var(--th-border)",
-                        background: "var(--th-bg-elevated)",
-                        color: "var(--th-text-primary)",
-                      }}
-                    >
-                      {officePackControl.options.map((option) => (
-                        <option key={option.key} value={option.key}>
-                          {option.slug} · {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
                 <button
                   onClick={() => {
                     onOpenAgentStatus();
@@ -326,16 +229,6 @@ export default function AppHeaderBar({
                   style={{ color: "var(--th-text-primary)", fontFamily: "var(--th-font-mono)" }}
                 >
                   {groupChatLabel}
-                </button>
-                <button
-                  onClick={() => {
-                    onOpenRoomManager();
-                    onCloseMobileHeaderMenu();
-                  }}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition hover:opacity-80"
-                  style={{ color: "var(--th-text-primary)", fontFamily: "var(--th-font-mono)" }}
-                >
-                  {roomManagerLabel}
                 </button>
               </div>
             </>

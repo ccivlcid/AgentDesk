@@ -221,6 +221,31 @@ export default function DeliverableCard({ report, artifacts, agent, agents }: De
             {report.project_path && (
               <GitSection taskId={report.id} sectionOpen={!!sectionOpen.git} onToggleSection={() => toggleSection("git")} />
             )}
+
+            {/* Register as official deliverable */}
+            <div className="pt-1 flex justify-end">
+              <button
+                type="button"
+                className="text-[11px] font-mono px-3 py-1.5 transition-colors"
+                style={{
+                  borderRadius: "2px",
+                  border: "1px solid var(--th-border)",
+                  color: "var(--th-text-muted)",
+                  background: "transparent",
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLButtonElement).style.color = "var(--th-accent)";
+                  (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(245,158,11,0.4)";
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLButtonElement).style.color = "var(--th-text-muted)";
+                  (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--th-border)";
+                }}
+                title={t({ ko: "이 산출물을 프로젝트 공식 결과물로 등록합니다", en: "Register as an official project deliverable", ja: "プロジェクト公式成果物として登録する", zh: "注册为项目正式产出物" })}
+              >
+                ↑ {t({ ko: "공식 결과물로 등록하기", en: "Register as deliverable", ja: "公式成果物として登録", zh: "注册为正式产出物" })}
+              </button>
+            </div>
           </div>
         )}
       </div>

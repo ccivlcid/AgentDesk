@@ -1,4 +1,4 @@
-import AgentAvatar, { buildSpriteMap } from "../AgentAvatar";
+import AgentAvatar from "../AgentAvatar";
 import type { Agent } from "../../types";
 import type { ApiStateBundle, TFunction } from "./types";
 
@@ -14,7 +14,6 @@ export default function ApiAssignModal({ t, localeTag, apiState }: ApiAssignModa
 
   if (!apiAssignTarget) return null;
 
-  const spriteMap = buildSpriteMap(apiAssignAgents);
   const localName = (nameEn: string, nameKo: string) => (localeTag === "ko" ? nameKo || nameEn : nameEn || nameKo);
   const ROLE_LABELS: Record<string, Record<string, string>> = {
     team_leader: { ko: "팀장", en: "Team Leader", ja: "チームリーダー", zh: "组长" },
@@ -61,7 +60,7 @@ export default function ApiAssignModal({ t, localeTag, apiState }: ApiAssignModa
         className="w-full text-left px-2 py-1.5 text-xs font-mono transition flex items-center gap-2.5 disabled:opacity-60"
         style={{ borderRadius: "2px", ...(isAssigned ? { background: "rgba(52,211,153,0.1)", color: "rgb(167,243,208)", cursor: "default" } : { color: "var(--th-text-primary)" }) }}
       >
-        <AgentAvatar agent={agent} spriteMap={spriteMap} size={28} rounded="xl" />
+        <AgentAvatar agent={agent} size={28} rounded="xl" />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
             <span className="text-xs font-medium truncate">{localName(agent.name, agent.name_ko)}</span>

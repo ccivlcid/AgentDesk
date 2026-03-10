@@ -10,10 +10,13 @@ import GatewaySettingsTab from "./settings/GatewaySettingsTab";
 import GeneralSettingsTab from "./settings/GeneralSettingsTab";
 import OAuthSettingsTab from "./settings/OAuthSettingsTab";
 import DataSettingsTab from "./settings/DataSettingsTab";
-import OfficePacksTab from "./settings/OfficePacksTab";
+import CategoriesTab from "./settings/CategoriesTab";
+import ProjectSettingsTab from "./settings/ProjectSettingsTab";
 import SettingsTabNav from "./settings/SettingsTabNav";
 import type { AccountDraftMap, AccountDraftPatch, LocalSettings, SettingsTab } from "./settings/types";
 import { useApiProvidersState } from "./settings/useApiProvidersState";
+import type { Category, Project } from "../types";
+import { updateProject } from "../api/organization-projects";
 
 interface SettingsPanelProps {
   settings: CompanySettings;
@@ -24,6 +27,8 @@ interface SettingsPanelProps {
   onOauthResultClear?: () => void;
   /** 현재 오피스 팩 직원 (메신저 채팅 대화 직원 선택용) */
   managerAgents?: Agent[];
+  currentProject?: Project | null;
+  categories?: Category[];
 }
 
 export default function SettingsPanel({
@@ -34,6 +39,8 @@ export default function SettingsPanel({
   oauthResult,
   onOauthResultClear,
   managerAgents,
+  currentProject,
+  categories = [],
 }: SettingsPanelProps) {
   const [form, setForm] = useState<LocalSettings>(settings as LocalSettings);
   const { t, locale: localeTag } = useI18n(form.language);
@@ -478,7 +485,23 @@ export default function SettingsPanel({
       )}
 
       {tab === "data" && <DataSettingsTab t={t} />}
-      {tab === "office_packs" && <OfficePacksTab />}
+      {tab === "categories" && <CategoriesTab />}
+      {tab === "project" && (
+        currentProject ? (
+          <ProjectSettingsTab
+            project={currentProject}
+            categories={categories}
+            t={t}
+            onUpdate={async (patch) => {
+              await updateProject(currentProject.id, patch);
+            }}
+          />
+        ) : (
+          <div className="py-12 text-center font-mono text-sm" style={{ color: "var(--th-text-muted)" }}>
+            {t({ ko: "프로젝트를 먼저 선택해주세요.", en: "Please select a project first.", ja: "プロジェクトを選択してください。", zh: "请先选择项目。" })}
+          </div>
+        )
+      )}
     </div>
   );
 }

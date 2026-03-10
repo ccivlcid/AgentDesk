@@ -162,6 +162,15 @@ export async function createAgent(data: {
   return j.agent;
 }
 
+export async function uploadAgentAvatar(agentId: string, imageDataUrl: string): Promise<{ avatar_url: string }> {
+  const j = (await post(`/api/agents/${agentId}/avatar`, { image: imageDataUrl })) as { ok: boolean; avatar_url: string };
+  return { avatar_url: j.avatar_url };
+}
+
+export async function deleteAgentAvatar(agentId: string): Promise<void> {
+  await del(`/api/agents/${agentId}/avatar`);
+}
+
 export async function generatePersona(data: {
   name: string;
   role: string;

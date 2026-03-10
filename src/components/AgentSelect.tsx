@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import type { Agent, Department } from "../types";
-import AgentAvatar, { useSpriteMap } from "./AgentAvatar";
+import AgentAvatar from "./AgentAvatar";
 import { useI18n, localeName } from "../i18n";
 import type { LangText } from "../i18n";
 
@@ -33,7 +33,6 @@ export default function AgentSelect({
   const [open, setOpen] = useState(false);
   const [dropUp, setDropUp] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const spriteMap = useSpriteMap(agents);
   const { t, locale } = useI18n();
   const selected = agents.find((a) => a.id === value);
   const departmentById = useMemo(() => {
@@ -92,7 +91,7 @@ export default function AgentSelect({
       >
         {selected ? (
           <>
-            <AgentAvatar agent={selected} spriteMap={spriteMap} size={avatarSize} />
+            <AgentAvatar agent={selected} size={avatarSize} />
             <span className="truncate">{getAgentName(selected)}</span>
             <span className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>({getRoleLabel(selected.role)})</span>
             {getDepartmentLabel(selected) && (
@@ -143,7 +142,7 @@ export default function AgentSelect({
                 ? { background: "rgba(251,191,36,0.1)", color: "var(--th-accent)" }
                 : { color: "var(--th-text-primary)" }}
             >
-              <AgentAvatar agent={a} spriteMap={spriteMap} size={avatarSize} />
+              <AgentAvatar agent={a} size={avatarSize} />
               <span className="truncate">{getAgentName(a)}</span>
               <span className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>({getRoleLabel(a.role)})</span>
               {getDepartmentLabel(a) && <span className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>· {getDepartmentLabel(a)}</span>}

@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import type { DecisionInboxItem } from "./components/chat/decision-inbox";
 import { useWebSocket } from "./hooks/useWebSocket";
 import type {
@@ -14,49 +14,37 @@ import type {
   SubAgent,
   CrossDeptDelivery,
   CeoOfficeCall,
-  OfficePackProfile,
-  RoomTheme,
-  WorkflowPackKey,
+  Category,
+  Project,
 } from "./types";
-import { WORKFLOW_PACK_KEYS } from "./types";
 import type { TaskReportDetail } from "./api";
 import * as api from "./api";
-import { detectBrowserLanguage, normalizeLanguage } from "./i18n";
+import { detectBrowserLanguage } from "./i18n";
 import { useTheme } from "./ThemeContext";
-import { ROOM_THEMES_STORAGE_KEY, UPDATE_BANNER_DISMISS_STORAGE_KEY } from "./app/constants";
+import { UPDATE_BANNER_DISMISS_STORAGE_KEY } from "./app/constants";
 import {
   detectRuntimeOs,
   isForceUpdateBannerEnabled,
   mergeSettingsWithDefaults,
-  readStoredRoomThemes,
 } from "./app/utils";
-import type { OAuthCallbackResult, RuntimeOs, RoomThemeMap, TaskPanelTab, View } from "./app/types";
+import type { OAuthCallbackResult, RuntimeOs, TaskPanelTab, View } from "./app/types";
 import { useRealtimeSync } from "./app/useRealtimeSync";
 import { useAppLabels } from "./app/useAppLabels";
 import AppLoadingScreen from "./app/AppLoadingScreen";
 import AppMainLayout from "./app/AppMainLayout";
 import AppOverlays from "./app/AppOverlays";
+import ProjectCreateModal from "./components/project-create-modal/ProjectCreateModal";
 import { useAppActions } from "./app/useAppActions";
 import { useActiveMeetingTaskId } from "./app/useActiveMeetingTaskId";
 import { useUpdateStatusPolling } from "./app/useUpdateStatusPolling";
 import { useAppViewEffects } from "./app/useAppViewEffects";
 import { useAppBootstrapData } from "./app/useAppBootstrapData";
 import { useLiveSyncScheduler } from "./app/useLiveSyncScheduler";
-import { resolvePackAgentViews, resolvePackDepartmentsForDisplay } from "./app/office-pack-display";
-import {
-  buildOfficePackPresentation,
-  buildOfficePackStarterAgents,
-  getOfficePackMeta,
-  normalizeOfficeWorkflowPack,
-  resolveOfficePackSeedProvider,
-} from "./app/office-workflow-pack";
 
 export type { OAuthCallbackResult } from "./app/types";
 
 export default function App() {
   const { theme, toggleTheme } = useTheme();
-  const initialRoomThemes = useMemo(() => readStoredRoomThemes(), []);
-  const hasLocalRoomThemesRef = useRef<boolean>(initialRoomThemes.hasStored);
 
   const [view, setView] = useState<View>("office");
   const [departments, setDepartments] = useState<Department[]>([]);
@@ -86,16 +74,12 @@ export default function App() {
   const [showReportHistory, setShowReportHistory] = useState(false);
   const [showAgentStatus, setShowAgentStatus] = useState(false);
   const [showGroupChat, setShowGroupChat] = useState(false);
-  const [showRoomManager, setShowRoomManager] = useState(false);
   const [showDecisionInbox, setShowDecisionInbox] = useState(false);
   const [decisionInboxLoading, setDecisionInboxLoading] = useState(false);
   const [decisionInboxItems, setDecisionInboxItems] = useState<DecisionInboxItem[]>([]);
   const [decisionReplyBusyKey, setDecisionReplyBusyKey] = useState<string | null>(null);
-  const [activeRoomThemeTargetId, setActiveRoomThemeTargetId] = useState<string | null>(null);
-  const [customRoomThemes, setCustomRoomThemes] = useState<RoomThemeMap>(() => initialRoomThemes.themes);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [mobileHeaderMenuOpen, setMobileHeaderMenuOpen] = useState(false);
-  const [officePackBootstrappingLabel, setOfficePackBootstrappingLabel] = useState<string | null>(null);
   const [runtimeOs] = useState<RuntimeOs>(() => detectRuntimeOs());
   const [forceUpdateBanner] = useState<boolean>(() => isForceUpdateBannerEnabled());
   const [updateStatus, setUpdateStatus] = useState<api.UpdateStatus | null>(null);
@@ -110,6 +94,21 @@ export default function App() {
     agent_avatar: string;
     content: string;
   } | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [showProjectCreate, setShowProjectCreate] = useState(false);
+  const [projectCreateBusy, setProjectCreateBusy] = useState(false);
+  const [currentProjectId, setCurrentProjectId] = useState<string | null>(() => {
+    try { return window.localStorage.getItem("agentdesk_current_project") ?? null; } catch { return null; }
+  });
+
+  const currentProject = projects.find((p) => p.id === currentProjectId) ?? null;
+
+  useEffect(() => {
+    if (currentProjectId) {
+      try { window.localStorage.setItem("agentdesk_current_project", currentProjectId); } catch { /* ignore */ }
+    }
+  }, [currentProjectId]);
 
   const viewRef = useRef<View>("office");
   viewRef.current = view;
@@ -124,161 +123,9 @@ export default function App() {
   const subAgentStreamTailRef = useRef<Map<string, string>>(new Map());
   const activeChatRef = useRef<{ showChat: boolean; agentId: string | null }>({ showChat: false, agentId: null });
   activeChatRef.current = { showChat, agentId: chatAgent?.id ?? null };
-  const officePackBootstrapReqRef = useRef(0);
-
-  const readHydratedPackSet = (source: CompanySettings): Set<string> => {
-    const raw = source.officePackHydratedPacks;
-    if (!Array.isArray(raw)) return new Set<string>();
-    return new Set(raw.map((value) => String(value ?? "").trim()).filter((value) => value.length > 0));
-  };
-
-  const getPackLabelByLanguage = (packKey: WorkflowPackKey, language: string): string => {
-    const label = getOfficePackMeta(packKey).label;
-    const lang = normalizeLanguage(language);
-    if (lang === "ko") return label.ko || label.en;
-    if (lang === "ja") return label.ja || label.en;
-    if (lang === "zh") return label.zh || label.en;
-    return label.en;
-  };
-
-  const maybeBuildSeedProfileForPack = (
-    packKey: WorkflowPackKey,
-    sourceSettings: CompanySettings,
-  ): OfficePackProfile | null => {
-    if (packKey === "development") return null;
-
-    const existingProfile = sourceSettings.officePackProfiles?.[packKey];
-    if (existingProfile?.departments?.length && existingProfile?.agents?.length) {
-      return null;
-    }
-
-    const locale = normalizeLanguage(sourceSettings.language) as "ko" | "en" | "ja" | "zh";
-    const presentation = buildOfficePackPresentation({
-      packKey,
-      locale,
-      departments,
-      agents,
-      customRoomThemes,
-    });
-    if (presentation.departments.length <= 0) return null;
-
-    const starterDrafts = buildOfficePackStarterAgents({
-      packKey,
-      departments: presentation.departments,
-      targetCount: 8,
-      locale,
-    });
-    if (starterDrafts.length <= 0) return null;
-
-    const now = Date.now();
-    const seededAgents: Agent[] = starterDrafts.map((draft, index) => ({
-      id: `${packKey}-seed-${index + 1}`,
-      name: draft.name,
-      name_ko: draft.name_ko,
-      name_ja: draft.name_ja,
-      name_zh: draft.name_zh,
-      department_id: draft.department_id,
-      role: draft.role,
-      acts_as_planning_leader: draft.acts_as_planning_leader,
-      cli_provider: resolveOfficePackSeedProvider({
-        packKey,
-        departmentId: draft.department_id,
-        role: draft.role,
-        seedIndex: index + 1,
-        seedOrderInDepartment: draft.seed_order_in_department,
-      }),
-      avatar_emoji: draft.avatar_emoji,
-      sprite_number: draft.sprite_number,
-      personality: draft.personality,
-      status: "idle",
-      current_task_id: null,
-      stats_tasks_done: 0,
-      stats_xp: 0,
-      created_at: now + index,
-    }));
-
-    return {
-      departments: presentation.departments,
-      agents: seededAgents,
-      updated_at: now,
-    };
-  };
-
-  const handleOfficeWorkflowPackChange = (packKey: WorkflowPackKey) => {
-    const previousPack = settings.officeWorkflowPack ?? "development";
-    const previousProfiles = settings.officePackProfiles;
-    const currentHydratedSet = readHydratedPackSet(settings);
-    const isBuiltinPack = WORKFLOW_PACK_KEYS.includes(packKey as WorkflowPackKey);
-    const shouldShowBootstrap = packKey !== "development" && !currentHydratedSet.has(packKey);
-    const seedProfile = shouldShowBootstrap && isBuiltinPack ? maybeBuildSeedProfileForPack(packKey as WorkflowPackKey, settings) : null;
-    const nextOfficePackProfiles = seedProfile
-      ? {
-          ...(settings.officePackProfiles ?? {}),
-          [packKey]: seedProfile,
-        }
-      : settings.officePackProfiles;
-    const patchPayload: Record<string, unknown> = { officeWorkflowPack: packKey };
-    if (seedProfile) {
-      patchPayload.officePackProfiles = nextOfficePackProfiles;
-    }
-    const reqId = ++officePackBootstrapReqRef.current;
-    if (shouldShowBootstrap && isBuiltinPack) {
-      setOfficePackBootstrappingLabel(getPackLabelByLanguage(packKey as WorkflowPackKey, settings.language));
-    } else {
-      setOfficePackBootstrappingLabel(null);
-    }
-    setSettings((prev) => ({
-      ...prev,
-      officeWorkflowPack: packKey,
-      ...(seedProfile ? { officePackProfiles: nextOfficePackProfiles } : {}),
-    }));
-    api
-      .saveSettingsPatch(patchPayload)
-      .then(async () => {
-        const [nextDepartments, nextAgents, nextLibraryAgents, nextSettingsRaw, nextStats] = await Promise.all([
-          api.getDepartments({ workflowPackKey: packKey }),
-          api.getAgents({ includeSeed: packKey !== "development" }),
-          api.getAgents({ includeSeed: true }),
-          api.getSettings(),
-          api.getStats(),
-        ]);
-        setDepartments(nextDepartments);
-        setAgents(nextAgents);
-        setLibraryAgents(nextLibraryAgents);
-        setSettings(mergeSettingsWithDefaults(nextSettingsRaw));
-        setStats(nextStats);
-        const clearNotice = () => {
-          if (officePackBootstrapReqRef.current !== reqId) return;
-          setOfficePackBootstrappingLabel(null);
-        };
-        if (shouldShowBootstrap) {
-          setTimeout(clearNotice, 650);
-        } else {
-          clearNotice();
-        }
-      })
-      .catch((error) => {
-        console.error("Save office workflow pack failed:", error);
-        if (officePackBootstrapReqRef.current === reqId) {
-          setOfficePackBootstrappingLabel(null);
-        }
-        setSettings((prev) =>
-          prev.officeWorkflowPack === packKey
-            ? {
-                ...prev,
-                officeWorkflowPack: previousPack,
-                ...(seedProfile ? { officePackProfiles: previousProfiles } : {}),
-              }
-            : prev,
-        );
-      });
-  };
 
   const { connected, on } = useWebSocket();
-  const shouldIncludeSeedAgents = useCallback(
-    () => normalizeOfficeWorkflowPack(settings.officeWorkflowPack ?? "development") !== "development",
-    [settings.officeWorkflowPack],
-  );
+  const shouldIncludeSeedAgents = useCallback(() => false, []);
   const scheduleLiveSync = useLiveSyncScheduler({
     setTasks,
     setAgents,
@@ -288,8 +135,6 @@ export default function App() {
   });
 
   useAppBootstrapData({
-    initialRoomThemes,
-    hasLocalRoomThemesRef,
     setDepartments,
     setAgents,
     setLibraryAgents,
@@ -299,7 +144,8 @@ export default function App() {
     setSubtasks,
     setMeetingPresence,
     setDecisionInboxItems,
-    setCustomRoomThemes,
+    setCategories,
+    setProjects,
     setLoading,
   });
 
@@ -363,35 +209,12 @@ export default function App() {
   const labels = useAppLabels({
     view,
     settings,
-    departments,
     theme,
     runtimeOs,
     forceUpdateBanner,
     updateStatus,
     dismissedUpdateVersion,
   });
-
-  const activePackKey = normalizeOfficeWorkflowPack(settings.officeWorkflowPack ?? "development");
-  const activePackProfile =
-    activePackKey === "development" ? null : (settings.officePackProfiles?.[activePackKey] ?? null);
-  const overlayDepartments = useMemo(
-    () =>
-      resolvePackDepartmentsForDisplay({
-        packKey: activePackKey,
-        globalDepartments: departments,
-        packDepartments: activePackProfile?.departments ?? null,
-      }),
-    [activePackKey, activePackProfile?.departments, departments],
-  );
-  const { scopedAgents: packScopedAgents, mergedAgents: overlayAgents } = useMemo(
-    () =>
-      resolvePackAgentViews({
-        packKey: activePackKey,
-        globalAgents: agents,
-        packAgents: activePackProfile?.agents ?? null,
-      }),
-    [activePackKey, activePackProfile?.agents, agents],
-  );
 
   if (loading) {
     return (
@@ -431,18 +254,15 @@ export default function App() {
       unreadAgentIds={unreadAgentIds}
       crossDeptDeliveries={crossDeptDeliveries}
       ceoOfficeCalls={ceoOfficeCalls}
-      customRoomThemes={customRoomThemes}
-      activeRoomThemeTargetId={activeRoomThemeTargetId}
       onCrossDeptDeliveryProcessed={(id) => setCrossDeptDeliveries((prev) => prev.filter((d) => d.id !== id))}
       onCeoOfficeCallProcessed={(id) => setCeoOfficeCalls((prev) => prev.filter((d) => d.id !== id))}
       onOpenActiveMeetingMinutes={(taskId) => setTaskPanel({ taskId, tab: "minutes" })}
       onSelectAgent={setSelectedAgent}
       onSelectDepartment={(department) => {
-        const candidateAgents = overlayAgents;
         const leader =
-          candidateAgents.find((agent) => agent.department_id === department.id && agent.role === "team_leader") ??
+          agents.find((agent) => agent.department_id === department.id && agent.role === "team_leader") ??
           (department.id === "planning"
-            ? candidateAgents.find(
+            ? agents.find(
                 (agent) => agent.role === "team_leader" && Number(agent.acts_as_planning_leader ?? 0) === 1,
               )
             : undefined);
@@ -459,8 +279,6 @@ export default function App() {
       onOpenTerminal={(taskId) => setTaskPanel({ taskId, tab: "terminal" })}
       onOpenMeetingMinutes={(taskId) => setTaskPanel({ taskId, tab: "minutes" })}
       onAgentsChange={actions.handleAgentsChange}
-      activeOfficeWorkflowPack={normalizeOfficeWorkflowPack(settings.officeWorkflowPack)}
-      onChangeOfficeWorkflowPack={handleOfficeWorkflowPackChange}
       onSaveSettings={actions.handleSaveSettings}
       onRefreshCli={actions.handleRefreshCli}
       onOauthResultClear={() => setOauthResult(null)}
@@ -469,7 +287,6 @@ export default function App() {
       onOpenReportHistory={() => setShowReportHistory(true)}
       onOpenAnnouncement={actions.handleOpenAnnouncement}
       onOpenGroupChat={() => setShowGroupChat(true)}
-      onOpenRoomManager={() => setShowRoomManager(true)}
       onDismissAutoUpdateNotice={actions.handleDismissAutoUpdateNotice}
       onDismissUpdate={() => {
         const latest = labels.effectiveUpdateStatus?.latest_version ?? "";
@@ -478,14 +295,18 @@ export default function App() {
           window.localStorage.setItem(UPDATE_BANNER_DISMISS_STORAGE_KEY, latest);
         }
       }}
-      officePackBootstrappingLabel={officePackBootstrappingLabel}
+      projects={projects}
+      categories={categories}
+      currentProject={currentProject}
+      onProjectSelect={setCurrentProjectId}
+      onProjectCreate={() => setShowProjectCreate(true)}
     >
       <AppOverlays
         showChat={showChat}
         chatAgent={chatAgent}
         messages={messages}
-        agents={overlayAgents}
-        groupChatAgents={packScopedAgents}
+        agents={agents}
+        groupChatAgents={agents}
         streamingMessage={streamingMessage}
         onSendMessage={actions.handleSendMessage}
         onSendAnnouncement={actions.handleSendAnnouncement}
@@ -504,8 +325,7 @@ export default function App() {
         onReplyDecisionOption={actions.handleReplyDecisionOption}
         onOpenDecisionChat={actions.handleOpenDecisionChat}
         selectedAgent={selectedAgent}
-        activeOfficeWorkflowPack={normalizeOfficeWorkflowPack(settings.officeWorkflowPack)}
-        departments={overlayDepartments}
+        departments={departments}
         tasks={tasks}
         subAgents={subAgents}
         subtasks={subtasks}
@@ -527,9 +347,8 @@ export default function App() {
             .getSettings()
             .then(async (nextSettingsRaw) => {
               const nextSettings = mergeSettingsWithDefaults(nextSettingsRaw);
-              const activePack = nextSettings.officeWorkflowPack ?? "development";
               const [nextAgents, nextLibraryAgents] = await Promise.all([
-                api.getAgents({ includeSeed: activePack !== "development" }),
+                api.getAgents({ includeSeed: false }),
                 api.getAgents({ includeSeed: true }),
               ]);
               setAgents(nextAgents);
@@ -540,15 +359,6 @@ export default function App() {
               const fromAgents = nextAgents.find((agent) => agent.id === selectedAgent.id);
               if (fromAgents) {
                 setSelectedAgent(fromAgents);
-                return;
-              }
-
-              const profilePackKey = nextSettings.officeWorkflowPack ?? "development";
-              const fromPackProfile = nextSettings.officePackProfiles?.[profilePackKey]?.agents?.find(
-                (agent) => agent.id === selectedAgent.id,
-              );
-              if (fromPackProfile) {
-                setSelectedAgent(fromPackProfile);
               }
             })
             .catch(console.error);
@@ -563,27 +373,33 @@ export default function App() {
         onCloseAgentStatus={() => setShowAgentStatus(false)}
         showGroupChat={showGroupChat}
         onCloseGroupChat={() => setShowGroupChat(false)}
-        showRoomManager={showRoomManager}
-        roomManagerDepartments={labels.roomManagerDepartments}
-        customRoomThemes={customRoomThemes}
-        onActiveRoomThemeTargetIdChange={setActiveRoomThemeTargetId}
-        onRoomThemeChange={(themes) => {
-          setCustomRoomThemes(themes as RoomThemeMap);
-          hasLocalRoomThemesRef.current = true;
-          try {
-            window.localStorage.setItem(ROOM_THEMES_STORAGE_KEY, JSON.stringify(themes));
-          } catch {
-            // ignore quota errors
-          }
-          api.saveRoomThemes(themes as Record<string, RoomTheme>).catch((error) => {
-            console.error("Save room themes failed:", error);
-          });
-        }}
-        onCloseRoomManager={() => {
-          setShowRoomManager(false);
-          setActiveRoomThemeTargetId(null);
-        }}
       />
+      {showProjectCreate && (
+        <ProjectCreateModal
+          categories={categories}
+          onConfirm={({ name, categoryId, project_path, core_goal }) => {
+            if (projectCreateBusy) return;
+            setProjectCreateBusy(true);
+            const cat = categories.find((c) => c.id === categoryId);
+            const resolvedGoal = core_goal || (cat ? `${cat.name_ko ?? cat.name} 프로젝트` : name.trim());
+            (api.createProject as (input: Record<string, unknown>) => Promise<Project>)({
+              name: name.trim(),
+              project_path: project_path ?? "",
+              core_goal: resolvedGoal,
+              category_id: categoryId ?? undefined,
+              create_path_if_missing: false,
+            })
+              .then((newProject) => {
+                setProjects((prev) => [...prev, newProject]);
+                setCurrentProjectId(newProject.id);
+                setShowProjectCreate(false);
+              })
+              .catch((err) => console.error("Project create failed:", err))
+              .finally(() => setProjectCreateBusy(false));
+          }}
+          onClose={() => setShowProjectCreate(false)}
+        />
+      )}
     </AppMainLayout>
   );
 }

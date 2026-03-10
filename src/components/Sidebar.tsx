@@ -1,7 +1,8 @@
 import { useState } from "react";
-import type { Department, Agent, CompanySettings } from "../types";
+import type { Department, Agent, CompanySettings, Project, Category } from "../types";
 import { useI18n, localeName } from "../i18n";
 import type { View } from "../app/types";
+import ProjectSelector from "./project-selector/ProjectSelector";
 
 interface SidebarProps {
   currentView: View;
@@ -10,6 +11,11 @@ interface SidebarProps {
   agents: Agent[];
   settings: CompanySettings;
   connected: boolean;
+  projects?: Project[];
+  categories?: Category[];
+  currentProject?: Project | null;
+  onProjectSelect?: (id: string) => void;
+  onProjectCreate?: () => void;
 }
 
 /* Top-level nav items. "library" is a group parent, not a view itself. */
@@ -18,7 +24,13 @@ type NavEntry =
   | { kind: "group"; id: string; children: { view: View }[] };
 
 const NAV_STRUCTURE: NavEntry[] = [
+  { kind: "item", view: "dashboard" },
   { kind: "item", view: "office" },
+  {
+    kind: "group",
+    id: "tasks",
+    children: [{ view: "tasks-board" }, { view: "tasks-scheduled" }, { view: "tasks-deliverables" }],
+  },
   {
     kind: "group",
     id: "agents",
@@ -29,29 +41,24 @@ const NAV_STRUCTURE: NavEntry[] = [
     id: "library",
     children: [{ view: "skills" }, { view: "agent-rules" }, { view: "memory" }, { view: "hooks" }],
   },
-  { kind: "item", view: "dashboard" },
   { kind: "item", view: "cli-usage" },
-  {
-    kind: "group",
-    id: "tasks",
-    children: [{ view: "tasks-board" }, { view: "tasks-deliverables" }, { view: "tasks-scheduled" }],
-  },
-  { kind: "item", view: "game-room" },
   { kind: "item", view: "settings" },
 ];
 
 const AGENTS_CHILDREN: View[] = ["agents", "heartbeat"];
 const LIBRARY_CHILDREN: View[] = ["skills", "agent-rules", "memory", "hooks"];
-const TASKS_CHILDREN: View[] = ["tasks-board", "tasks-deliverables", "tasks-scheduled"];
+const TASKS_CHILDREN: View[] = ["tasks-board", "tasks-scheduled", "tasks-deliverables"];
 
 const NAV_ICONS: Partial<Record<View | "library", React.ReactNode>> = {
   office: (
     <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 17V5a1 1 0 011-1h5a1 1 0 011 1v12" />
-      <path d="M10 17V9a1 1 0 011-1h5a1 1 0 011 1v8" />
-      <path d="M1 17h18" />
-      <path d="M5.5 7h1M5.5 10h1M5.5 13h1" />
-      <path d="M12.5 11h1M12.5 14h1" />
+      <circle cx="4" cy="4" r="2" />
+      <circle cx="16" cy="4" r="2" />
+      <circle cx="4" cy="16" r="2" />
+      <circle cx="16" cy="16" r="2" />
+      <circle cx="10" cy="10" r="2" />
+      <path d="M6 4h8M4 6v8M16 6v8M6 16h8" />
+      <path d="M6 6l3 3M14 6l-3 3M6 14l3-3M14 14l-3-3" />
     </svg>
   ),
   agents: (
@@ -127,13 +134,6 @@ const NAV_ICONS: Partial<Record<View | "library", React.ReactNode>> = {
       <rect x="14" y="3" width="5" height="7" rx="1" />
     </svg>
   ),
-  "tasks-deliverables": (
-    <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M4 4a2 2 0 012-2h5l5 5v9a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" />
-      <path d="M11 2v5h5" />
-      <path d="M8 12l2 2 3-3" />
-    </svg>
-  ),
   "tasks-scheduled": (
     <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="10" cy="10" r="7" />
@@ -141,12 +141,12 @@ const NAV_ICONS: Partial<Record<View | "library", React.ReactNode>> = {
       <path d="M16 4l1.5-1.5M4 4L2.5 2.5" />
     </svg>
   ),
-  "game-room": (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 14v-1.5a2.5 2.5 0 012.5-2.5h9a2.5 2.5 0 012.5 2.5V14" />
-      <path d="M4 14h12v2a1 1 0 01-1 1H5a1 1 0 01-1-1v-2z" />
-      <path d="M6 10v1M14 10v1" />
-      <path d="M8 6l1.5 4h1L12 6" />
+  "tasks-deliverables": (
+    <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M5 3h10a1 1 0 011 1v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4a1 1 0 011-1z" />
+      <path d="M7 8h6M7 11h4" />
+      <path d="M13 14l1.5 1.5" />
+      <circle cx="14" cy="15" r="1" />
     </svg>
   ),
   settings: (
@@ -157,7 +157,19 @@ const NAV_ICONS: Partial<Record<View | "library", React.ReactNode>> = {
   ),
 };
 
-export default function Sidebar({ currentView, onChangeView, departments, agents, settings, connected }: SidebarProps) {
+export default function Sidebar({
+  currentView,
+  onChangeView,
+  departments,
+  agents,
+  settings,
+  connected,
+  projects = [],
+  categories = [],
+  currentProject = null,
+  onProjectSelect,
+  onProjectCreate,
+}: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [deptOpen, setDeptOpen] = useState(true);
   const [agentsOpen, setAgentsOpen] = useState(() => AGENTS_CHILDREN.includes(currentView as View));
@@ -170,8 +182,8 @@ export default function Sidebar({ currentView, onChangeView, departments, agents
   const tr = (ko: string, en: string, ja = en, zh = en) => t({ ko, en, ja, zh });
 
   const navLabels: Record<string, string> = {
-    office: tr("오피스", "Office", "オフィス", "办公室"),
-    agents: tr("직원관리", "Agents", "社員管理", "员工管理"),
+    office: tr("워크맵", "Work Map", "ワークマップ", "工作图"),
+    agents: tr("팀", "Team", "チーム", "团队"),
     heartbeat: tr("직원 살펴보기", "Heartbeat", "社員の様子", "员工动态"),
     library: tr("도서관", "Library", "ライブラリ", "图书馆"),
     skills: tr("스킬스", "Skills", "スキル", "技能"),
@@ -182,9 +194,8 @@ export default function Sidebar({ currentView, onChangeView, departments, agents
     "cli-usage": tr("CLI 사용량", "CLI Usage", "CLI使用量", "CLI 使用量"),
     tasks: tr("업무 관리", "Tasks", "タスク管理", "任务管理"),
     "tasks-board": tr("업무 보드", "Task Board", "タスクボード", "任务看板"),
-    "tasks-deliverables": tr("결과물", "Deliverables", "成果物", "交付物"),
     "tasks-scheduled": tr("스케줄러", "Scheduler", "スケジューラ", "调度器"),
-    "game-room": tr("휴게실", "Lounge", "休憩室", "休息室"),
+    "tasks-deliverables": tr("산출물", "Outputs", "成果物", "产出物"),
     settings: tr("설정", "Settings", "設定", "设置"),
   };
 
@@ -233,21 +244,34 @@ export default function Sidebar({ currentView, onChangeView, departments, agents
     <aside className={`sidebar-shell ${collapsed ? "sidebar-collapsed" : "sidebar-expanded"}`}>
       {/* [A] Brand header */}
       <div className="sidebar-brand">
-        <div className="sidebar-brand-inner">
-          <div className="sidebar-brand-avatar">
-            <svg width="32" height="32" viewBox="0 0 32 32" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ color: "#f59e0b" }}>
-              <rect x="4" y="14" width="24" height="12" rx="1.5" />
-              <path d="M8 14V8a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v6" />
-              <path d="M12 22v2M20 22v2M16 20v4" />
-            </svg>
+        {collapsed ? (
+          <div className="sidebar-brand-inner justify-center">
+            <ProjectSelector
+              currentProject={currentProject}
+              projects={projects}
+              categories={categories}
+              onSelect={onProjectSelect ?? (() => {})}
+              onCreateNew={onProjectCreate ?? (() => {})}
+              collapsed={true}
+            />
           </div>
-          {!collapsed && (
-            <div className="overflow-hidden">
-              <div className="sidebar-brand-company">{settings.companyName}</div>
-              <div className="sidebar-brand-ceo">{settings.ceoName}</div>
+        ) : (
+          <div className="flex flex-col gap-1.5 w-full">
+            <div className="px-1 text-[13px] font-extrabold tracking-tight text-[var(--th-accent)]"
+              style={{ fontFamily: "'Sora', sans-serif", letterSpacing: "-0.01em" }}
+            >
+              AgentDesk
             </div>
-          )}
-        </div>
+            <ProjectSelector
+              currentProject={currentProject}
+              projects={projects}
+              categories={categories}
+              onSelect={onProjectSelect ?? (() => {})}
+              onCreateNew={onProjectCreate ?? (() => {})}
+              collapsed={false}
+            />
+          </div>
+        )}
       </div>
 
       {/* [B] Navigation */}

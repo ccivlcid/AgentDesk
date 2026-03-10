@@ -86,7 +86,6 @@ interface ChatMessageListProps {
   selectedAgent: Agent | null;
   visibleMessages: Message[];
   agents: Agent[];
-  spriteMap: ReturnType<typeof import("../AgentAvatar").buildSpriteMap>;
   locale: string;
   tr: Tr;
   getAgentName: (agent: Agent | null | undefined) => string;
@@ -155,7 +154,6 @@ export default function ChatMessageList({
   selectedAgent,
   visibleMessages,
   agents,
-  spriteMap,
   locale,
   tr,
   getAgentName,
@@ -232,7 +230,7 @@ export default function ChatMessageList({
     if (msg.sender_type === "agent" && msg.receiver_type === "all") {
       return (
         <div className="group flex items-end gap-2">
-          <AgentAvatar agent={senderAgent} spriteMap={spriteMap} size={28} />
+          <AgentAvatar agent={senderAgent} size={28} />
           <div className="flex max-w-[75%] flex-col gap-1">
             <span className="px-1 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>{senderName}</span>
             <div className="announcement-reply-bubble border border-yellow-500/20 px-4 py-2.5 text-sm" style={{ borderRadius: "2px", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)" }}>
@@ -291,7 +289,7 @@ export default function ChatMessageList({
 
     return (
       <div className="group flex items-end gap-2">
-        <AgentAvatar agent={senderAgent} spriteMap={spriteMap} size={28} />
+        <AgentAvatar agent={senderAgent} size={28} />
         <div className="flex max-w-[75%] flex-col gap-1">
           <span className="px-1 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>{senderName}</span>
           <div className="px-4 py-2.5 text-sm" style={{ borderRadius: "2px", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)" }}>
@@ -307,7 +305,7 @@ export default function ChatMessageList({
       </div>
     );
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [agents, spriteMap, locale, tr, getAgentName, decisionRequestByMessage, decisionReplyKey, onDecisionOptionReply, onDecisionManualDraft, onPinToggle, pinnedIds]);
+  }, [agents, locale, tr, getAgentName, decisionRequestByMessage, decisionReplyKey, onDecisionOptionReply, onDecisionManualDraft, onPinToggle, pinnedIds]);
 
   function renderDecisionRequest(msg: Message, decisionRequest: { options: DecisionOption[] }) {
     return (
@@ -423,7 +421,7 @@ export default function ChatMessageList({
 
           {isStreamingForAgent && streamingMessage?.content && (
             <div className="flex items-end gap-2">
-              <AgentAvatar agent={selectedAgent ?? undefined} spriteMap={spriteMap} size={28} />
+              <AgentAvatar agent={selectedAgent ?? undefined} size={28} />
               <div className="flex max-w-[75%] flex-col gap-1">
                 <span className="px-1 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>{getAgentName(selectedAgent)}</span>
                 <div className="border border-emerald-500/20 px-4 py-2.5 text-sm" style={{ borderRadius: "2px", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)" }}>
@@ -436,7 +434,7 @@ export default function ChatMessageList({
 
           {selectedAgent && selectedAgent.status === "working" && !isStreamingForAgent && (
             <div className="flex items-end gap-2">
-              <AgentAvatar agent={selectedAgent} spriteMap={spriteMap} size={28} />
+              <AgentAvatar agent={selectedAgent} size={28} />
               <TypingIndicator />
             </div>
           )}

@@ -7,11 +7,10 @@ import TerminalPanel from "../components/TerminalPanel";
 import TaskReportPopup from "../components/TaskReportPopup";
 import ReportHistory from "../components/ReportHistory";
 import AgentStatusPanel from "../components/AgentStatusPanel";
-import OfficeRoomManager from "../components/OfficeRoomManager";
 import type { DecisionInboxItem } from "../components/chat/decision-inbox";
-import type { Agent, Department, Message, RoomTheme, SubAgent, SubTask, Task, WorkflowPackKey } from "../types";
+import type { Agent, Department, Message, SubAgent, SubTask, Task, WorkflowPackKey } from "../types";
 import type { UiLanguage } from "../i18n";
-import type { ProjectMetaPayload, RoomThemeMap, TaskPanelTab } from "./types";
+import type { ProjectMetaPayload, TaskPanelTab } from "./types";
 
 interface AppOverlaysProps {
   showChat: boolean;
@@ -51,7 +50,7 @@ interface AppOverlaysProps {
   ) => Promise<void>;
   onOpenDecisionChat: (agentId: string) => void;
   selectedAgent: Agent | null;
-  activeOfficeWorkflowPack: WorkflowPackKey;
+  activeOfficeWorkflowPack?: WorkflowPackKey;
   departments: Department[];
   tasks: Task[];
   subAgents: SubAgent[];
@@ -71,12 +70,6 @@ interface AppOverlaysProps {
   onCloseAgentStatus: () => void;
   showGroupChat: boolean;
   onCloseGroupChat: () => void;
-  showRoomManager: boolean;
-  roomManagerDepartments: { id: string; name: string }[];
-  customRoomThemes: RoomThemeMap;
-  onActiveRoomThemeTargetIdChange: (departmentId: string | null) => void;
-  onRoomThemeChange: (themes: Record<string, RoomTheme>) => void;
-  onCloseRoomManager: () => void;
 }
 
 export default function AppOverlays({
@@ -121,12 +114,6 @@ export default function AppOverlays({
   onCloseAgentStatus,
   showGroupChat,
   onCloseGroupChat,
-  showRoomManager,
-  roomManagerDepartments,
-  customRoomThemes,
-  onActiveRoomThemeTargetIdChange,
-  onRoomThemeChange,
-  onCloseRoomManager,
 }: AppOverlaysProps) {
   return (
     <>
@@ -217,16 +204,6 @@ export default function AppOverlays({
 
       {showAgentStatus && <AgentStatusPanel agents={agents} uiLanguage={uiLanguage} onClose={onCloseAgentStatus} />}
 
-      {showRoomManager && (
-        <OfficeRoomManager
-          departments={roomManagerDepartments}
-          customThemes={customRoomThemes}
-          onActiveDeptChange={onActiveRoomThemeTargetIdChange}
-          onThemeChange={onRoomThemeChange}
-          onClose={onCloseRoomManager}
-          language={uiLanguage}
-        />
-      )}
     </>
   );
 }

@@ -1,6 +1,6 @@
 import { localeName, type UiLanguage } from "../../i18n";
 import type { Agent, Department, SubAgent, SubTask, Task } from "../../types";
-import { getSubAgentSpriteNum, SUBTASK_STATUS_ICON, taskStatusLabel, taskTypeLabel, type TFunction } from "./constants";
+import { SUBTASK_STATUS_ICON, taskStatusLabel, taskTypeLabel, type TFunction } from "./constants";
 import AgentPerformancePanel from "./AgentPerformancePanel";
 
 interface AgentDetailTabContentProps {
@@ -222,13 +222,11 @@ export default function AgentDetailTabContent({
             className={`border rounded p-3 flex items-center gap-3 ${subAgent.status === "working" ? "animate-alba-spawn" : ""}`}
             style={{ background: "var(--th-bg-surface)", borderColor: "var(--th-border)" }}
           >
-            <div className="w-8 h-8 bg-amber-500/20 overflow-hidden flex items-center justify-center" style={{ borderRadius: "2px" }}>
-              <img
-                src={`/sprites/${getSubAgentSpriteNum(subAgent.id)}-D-1.png`}
-                alt={t({ ko: "알바생", en: "Sub-agent", ja: "サブエージェント", zh: "子代理" })}
-                className="w-full h-full object-cover"
-                style={{ imageRendering: "pixelated" }}
-              />
+            <div className="w-8 h-8 bg-amber-500/20 flex items-center justify-center" style={{ borderRadius: "2px" }}>
+              <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="#f59e0b" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="10" cy="7" r="3" />
+                <path d="M4 18v-1a6 6 0 0112 0v1" />
+              </svg>
             </div>
             <div className="flex-1 min-w-0">
               <div className="text-sm truncate flex items-center gap-1.5" style={{ color: "var(--th-text-primary)" }}>

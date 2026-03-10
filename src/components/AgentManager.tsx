@@ -3,30 +3,27 @@ import { motion } from "framer-motion";
 import type { Agent, Department } from "../types";
 import { useI18n } from "../i18n";
 import * as api from "../api";
-import { normalizeOfficeWorkflowPack } from "../app/office-workflow-pack";
-import { buildSpriteMap } from "./AgentAvatar";
 import AgentFormModal from "./agent-manager/AgentFormModal";
 import AgentsTab from "./agent-manager/AgentsTab";
-import { BLANK, ICON_SPRITE_POOL } from "./agent-manager/constants";
+import { BLANK } from "./agent-manager/constants";
 import DepartmentFormModal from "./agent-manager/DepartmentFormModal";
 import DepartmentsTab from "./agent-manager/DepartmentsTab";
-import { StackedSpriteIcon } from "./agent-manager/EmojiPicker";
 import type { AgentManagerProps, FormData } from "./agent-manager/types";
-import { pickRandomSpritePair } from "./agent-manager/utils";
 
 export default function AgentManager({
   agents,
   departments,
   onAgentsChange,
-  activeOfficeWorkflowPack,
+  activeOfficeWorkflowPack = "development",
   dbBackedOfficePack = false,
   onSaveOfficePackProfile,
+  projectAgentIds,
 }: AgentManagerProps) {
   const { t, locale } = useI18n();
   const isKo = locale.startsWith("ko");
   const tr = (ko: string, en: string) => t({ ko, en, ja: en, zh: en });
-  const officePackKey = normalizeOfficeWorkflowPack(activeOfficeWorkflowPack);
-  const isIsolatedPack = officePackKey !== "development";
+  const officePackKey = "development" as const;
+  const isIsolatedPack = false;
   const useDbBackedPack = isIsolatedPack && dbBackedOfficePack;
 
   const [subTab, setSubTab] = useState<"agents" | "departments">("agents");
@@ -49,7 +46,7 @@ export default function AgentManager({
 
   const persistIsolatedProfile = useCallback(
     async (nextDepartments: Department[], nextAgents: Agent[]) => {
-      if (!isIsolatedPack) return;
+      if (!isIsolatedPack || !onSaveOfficePackProfile) return;
       await onSaveOfficePackProfile(officePackKey, {
         departments: nextDepartments,
         agents: nextAgents,
@@ -66,15 +63,6 @@ export default function AgentManager({
     setDragOverDeptId(null);
     setDragOverPosition(null);
   }, [departments]);
-
-  const spriteMap = buildSpriteMap(agents);
-  const randomIconSprites = useMemo(
-    () => ({
-      tab: pickRandomSpritePair(ICON_SPRITE_POOL),
-      total: pickRandomSpritePair(ICON_SPRITE_POOL),
-    }),
-    [],
-  );
 
   const filteredAgents = useMemo(
     () =>
@@ -108,7 +96,6 @@ export default function AgentManager({
   const openEdit = useCallback(
     (agent: Agent) => {
       setModalAgent(agent);
-      const computed = agent.sprite_number ?? buildSpriteMap(agents).get(agent.id) ?? null;
       setForm({
         name: agent.name,
         name_ko: agent.name_ko,
@@ -118,7 +105,9 @@ export default function AgentManager({
         role: agent.role,
         cli_provider: agent.cli_provider,
         avatar_emoji: agent.avatar_emoji,
-        sprite_number: computed,
+        avatar_url: agent.avatar_url ?? null,
+        pendingAvatarDataUrl: null,
+        sprite_number: agent.sprite_number ?? null,
         personality: agent.personality || "",
         persona_id: agent.persona_id || undefined,
       });
@@ -149,6 +138,7 @@ export default function AgentManager({
         personality: form.personality.trim() || null,
         persona_id: form.persona_id || null,
       };
+      let savedAgentId: string | undefined = modalAgent?.id;
       if (isIsolatedPack) {
         if (useDbBackedPack) {
           if (modalAgent) {
@@ -173,6 +163,7 @@ export default function AgentManager({
               department_id: departmentId || null,
               workflow_pack_key: officePackKey,
             });
+            savedAgentId = createdAgent.id;
             await persistIsolatedProfile(departments, [...agents, createdAgent]);
           }
           onAgentsChange();
@@ -212,13 +203,29 @@ export default function AgentManager({
             department_id: departmentId || null,
           });
         } else {
-          await api.createAgent({
+          const createdAgent = await api.createAgent({
             ...basePayload,
             department_id: departmentId || null,
           });
+          savedAgentId = createdAgent.id;
         }
         onAgentsChange();
       }
+      // Avatar upload/delete (after agent is saved so we have an ID)
+      const agentId = savedAgentId;
+      if (agentId) {
+        if (form.pendingAvatarDataUrl) {
+          await api.uploadAgentAvatar(agentId, form.pendingAvatarDataUrl).catch((e) =>
+            console.error("Avatar upload failed:", e),
+          );
+        } else if (form.avatar_url === null && modalAgent?.avatar_url) {
+          // User explicitly removed the avatar
+          await api.deleteAgentAvatar(agentId).catch((e) =>
+            console.error("Avatar delete failed:", e),
+          );
+        }
+      }
+
       closeModal();
     } catch (err) {
       console.error("Save failed:", err);
@@ -637,19 +644,18 @@ export default function AgentManager({
           isKo={isKo}
           agents={agents}
           departments={departments}
+          projectAgentIds={projectAgentIds}
           deptTab={deptTab}
           setDeptTab={setDeptTab}
           search={search}
           setSearch={setSearch}
           sortedAgents={sortedAgents}
-          spriteMap={spriteMap}
           confirmDeleteId={confirmDeleteId}
           setConfirmDeleteId={setConfirmDeleteId}
           onEditAgent={openEdit}
           onEditDepartment={openEditDept}
           onDeleteAgent={handleDelete}
           saving={saving}
-          randomIconSprites={{ total: randomIconSprites.total }}
         />
       )}
 

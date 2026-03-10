@@ -1,131 +1,492 @@
-# AgentDesk 2.0 ? Menu (Sidebar) Definition and Renewal
+# AgentDesk 2.0 메뉴(사이드바) 정의 및 리뉴얼 스펙
 
-**Note:** This doc was restored in English after encoding corruption. You can re-add Korean labels in your editor and save as UTF-8 if needed.
-
-Date: 2026-03-09  
-Goal: Define current menu structure and renewal direction for Project OS + category-centric 2.0. (No login.)
-
----
-
-## 1. Current Menu Structure (As-Is)
-
-Source: `src/components/Sidebar.tsx` ? `NAV_STRUCTURE` + brand / departments / status bar
-
-### 1-1. Top brand area
-
-| Element | Content |
-|---------|---------|
-| Logo/icon | AgentDesk desk icon (amber) |
-| Line 1 | `settings.companyName` (company name) |
-| Line 2 | `settings.ceoName` (CEO name) |
-
-? **Role(CEO)-centric** exposure. **(Remove CEO concept in 2.0)**
-
-### 1-2. Navigation order (top to bottom)
-
-| Order | Type | View ID | Label (KO) | Note |
-|-------|------|---------|------------|------|
-| 1 | Single | `office` | Office | Pixel office canvas |
-| 2 | Group | **agents** | Agents | Expand: Agents & Depts / Heartbeat |
-| 3 | Group | **library** | Library | Expand: Skills / Agent Rules / Memory / Hooks |
-| 4 | Single | `dashboard` | Dashboard | |
-| 5 | Single | `cli-usage` | CLI Usage | |
-| 6 | Group | **tasks** | Tasks | Expand: Task Board / Deliverables / Scheduler |
-| 7 | Single | `game-room` | Lounge | |
-| 8 | Single | `settings` | Settings | |
-
-### 1-3. Bottom fixed area
-
-| Area | Content |
-|------|---------|
-| **Departments** | Collapse/expand. Dept icon, name, progress bar, working count |
-| **Status bar** | Connection (Online/Offline) � `workingCount/totalAgents` |
-| **Collapse btn** | Sidebar collapse (icons only when collapsed) |
-
-### 1-4. Current structure notes
-
-- **Entry**: App launch ? last view or default. **No project/category selection step.**
-- **3 groups**: Agents (agents/heartbeat), Library (skills/agent-rules/memory/hooks), Tasks (tasks-board/deliverables/scheduled).
-- **Role exposure**: Brand shows CEO name and company name. **(Remove in 2.0)**
-- **Project switch**: Not in sidebar. (May be in modal/header ? TBD.)
+작성일: 2026-03-09
+업데이트: 2026-03-10 (워크맵 전환, 라운지 제거)
+목적: Project OS + 카테고리 중심 2.0에 맞는 메뉴 구조 정의. (로그인 없음.)
+참조: [ux-renewal-2.0.md §4 사이드바 프로젝트 셀렉터](ux-renewal-2.0.md)
 
 ---
 
-## 2. 2.0 Renewal Direction (Policy)
+## 1. 현재 메뉴 구조 (As-Is)
 
-- **Project OS**: First impression = "project goals, risk, decisions, deliverables."
-- **Category-centric**: **Project / category** before role (CEO/CTO).
-- **Remove CEO concept**: No CEO/CTO wording or exposure. Top = "logo + current project" only.
-- **No login**: Entry = "app launch ? (optional) project/category context ? dashboard/work."
-- **Keep existing views**: Office, agents, library, tasks, settings stay; adjust **group names, order, brand area**.
+소스: `src/components/Sidebar.tsx` → `NAV_STRUCTURE` + 브랜드 영역 / 부서 / 상태바
 
----
+### 1-1. 상단 브랜드 영역
 
-## 3. 2.0 Menu Structure Proposal (To-Be)
+| 요소 | 현재 내용 |
+|------|-----------|
+| 로고/아이콘 | AgentDesk 데스크 아이콘 (amber) |
+| 1행 | `settings.companyName` (회사명) |
+| 2행 | `settings.ceoName` (CEO 이름) |
 
-### 3-1. Top: Context area (brand ? project/category)
+→ **직책(CEO) 중심** 노출. **(2.0에서 CEO 개념 제거)**
 
-| Element | Current | 2.0 Proposal |
-|---------|---------|--------------|
-| Logo | AgentDesk + company + CEO | **AgentDesk logo** + **project selector** (name + category badge). Click ? project list / category filter or "No project ? create" |
-| CEO/company | Always shown | **Remove**. CEO concept removed. Top = logo + current project only. (Company name only in settings if needed.) |
+### 1-2. 내비게이션 순서 (위→아래)
 
-? **CEO concept removal** is 2.0 policy. First screen shows only "which project you're in."
+| 순서 | 타입 | View ID | 레이블(KO) | 비고 |
+|------|------|---------|------------|------|
+| 1 | 단독 | `dashboard` | 대시보드 | 2.0 "홈". 4분면 |
+| 2 | 단독 | `work-map` | 워크맵 | 에이전트-태스크 연결 맵 |
+| 3 | 그룹 | **agents** | 에이전트 | 하위: 에이전트&부서 / Heartbeat |
+| 4 | 그룹 | **library** | 라이브러리 | 하위: Skills / Agent Rules / Memory / Hooks |
+| 5 | 단독 | `cli-usage` | CLI 사용량 | |
+| 6 | 그룹 | **tasks** | 태스크 | 하위: 태스크 보드 / 산출물 / 스케줄러 |
+| 7 | 단독 | `settings` | 설정 | |
 
-### 3-2. Navigation order proposal
+### 1-3. 하단 고정 영역
 
-Goal: **Dashboard (goals/risk/gates/deliverables)** as "work home," then Office ? Tasks ? Team ? Library to reduce cognitive load.
+| 영역 | 내용 |
+|------|------|
+| **부서** | 접기/펼치기. 부서 아이콘, 이름, 진행률, 작업 중 수 |
+| **상태 바** | 연결 상태 (Online/Offline) · `workingCount/totalAgents` |
+| **접기 버튼** | 사이드바 접기 (접혔을 때 아이콘만 표시) |
 
-| Order | Type | View ID | Label (KO) proposal | Note |
-|-------|------|---------|---------------------|------|
-| 1 | Single | `dashboard` | **Dashboard** | 2.0 "home." 4 quadrants (goals/risk/gates/deliverables) |
-| 2 | Single | `office` | Office | Keep |
-| 3 | Group | **tasks** | **Tasks** | Task board / Deliverables / Scheduler (same as now, unify group name) |
-| 4 | Group | **agents** | **Team** | Agents & Depts / Heartbeat |
-| 5 | Group | **library** | Library | Skills / Agent Rules / Memory / Hooks (keep) |
-| 6 | Single | `cli-usage` | CLI Usage | Keep |
-| 7 | Single | `game-room` | Lounge | Keep |
-| 8 | Single | `settings` | Settings | Keep. **Category editor** = tab under settings or separate submenu |
+### 1-4. 현재 구조 특이사항
 
-Summary:
-- **Dashboard** first so "project performance at a glance" is first.
-- **Tasks** right under Office (flow: dashboard ? office ? tasks).
-- **Team (agents)**: rename from "Agents" to "Team" (Project OS tone).
-- Group IDs/Views stay compatible.
-
-### 3-3. Bottom area
-
-| Area | 2.0 Proposal |
-|------|--------------|
-| **Departments** | Keep. Align with "Team" menu. |
-| **Status bar** | Keep (connection, working/total) |
-| **Collapse btn** | Keep |
-
-### 3-4. Project/category entry (supplement)
-
-- **No project**: After launch, top "project selector" click ? "New project" or "Pick category then create" (align with differentiation plan Phase 2).
-- **Has project**: Enter last-used or default project; switch at top.
+- **진입**: 앱 실행 → 마지막 뷰 또는 기본값. **프로젝트/카테고리 선택 단계 없음.**
+- **그룹 3개**: Agents (에이전트/Heartbeat), Library (skills/agent-rules/memory/hooks), Tasks (tasks-board/deliverables/scheduled).
+- **직책 노출**: 브랜드 영역에 CEO 이름과 회사명 표시. **(2.0에서 제거)**
+- **프로젝트 전환**: 사이드바에 없음. (모달/헤더 → Phase 2에서 구현)
 
 ---
 
-## 4. Implementation checklist
+## 2. 2.0 리뉴얼 방향 (정책)
 
-- [ ] `NAV_STRUCTURE` order: dashboard ? office ? tasks ? agents ? library ? cli-usage ? game-room ? settings
-- [ ] Brand area: **Remove CEO/ceoName**. Keep `companyName` for settings only; top = logo + project selector (name + category)
-- [ ] Optional label change: "Agents" ? "Team," "Tasks" ? "Tasks" (unify)
-- [ ] Add "Category editor" tab/link under settings (Phase 2)
-- [ ] First-entry when no project: top click ? project create / category select (separate spec)
+- **Project OS**: 첫인상 = "프로젝트 목표, 리스크, 의사결정, 산출물."
+- **카테고리 중심**: 직책(CEO/CTO)보다 **프로젝트 / 카테고리**가 먼저.
+- **CEO 개념 제거**: 사이드바 상단에 CEO/CTO 용어·노출 없음. 상단 = "로고 + 현재 프로젝트"만.
+- **로그인 없이 시작**: 진입 = "앱 실행 → (선택) 프로젝트/카테고리 컨텍스트 → 대시보드/작업."
+- **기존 뷰 조정**: 오피스는 워크맵으로 전환. 에이전트, 라이브러리, 태스크, 설정은 유지; **그룹명, 순서, 브랜드 영역**만 조정.
 
 ---
 
-## 5. Summary
+## 3. 2.0 메뉴 구조 제안 (To-Be)
 
-| Item | Current | 2.0 |
-|------|---------|-----|
-| Top | Company + CEO | AgentDesk + **project selector** (name � category). **CEO concept removed** |
-| 1st menu | Office | **Dashboard** |
-| Group order | Office ? Agents ? Library ? Dashboard ? CLI ? Tasks ? Lounge ? Settings | Dashboard ? Office ? **Tasks** ? **Team** ? Library ? CLI ? Lounge ? Settings |
-| Terms | Agents, Tasks | **Team**, **Tasks** (optional) |
-| Role | CEO shown | **CEO concept removed** (no exposure except in settings if needed) |
+### 3-1. 상단: 컨텍스트 영역 (브랜드 → 프로젝트/카테고리)
 
-Use this doc for Phase 1 (menu order + brand area) then Phase 2 (project/category selector + category editor entry).
+| 요소 | 현재 | 2.0 제안 |
+|------|------|----------|
+| 로고 | AgentDesk + 회사명 + CEO | **AgentDesk 로고** + **프로젝트 셀렉터** (프로젝트명 + 카테고리 배지). 클릭 → 프로젝트 목록 / 카테고리 필터 또는 "프로젝트 없음 → 생성" |
+| CEO/회사명 | 항상 표시 | **제거**. CEO 개념 제거. 상단 = 로고 + 현재 프로젝트만. (회사명은 필요 시 설정에서만.) |
+
+→ **CEO 개념 제거**는 2.0 정책. 첫 화면은 "어떤 프로젝트에 있는가"만 보여준다.
+
+**프로젝트 셀렉터 와이어프레임** ([ux-renewal-2.0.md §4](ux-renewal-2.0.md) 상세 참조):
+
+```
+┌─ AGENTDESK ──────────────────────┐
+│  ▼ 마케팅 캠페인 Q1               │  ← 프로젝트명 클릭 → 목록 드롭다운
+│    [Marketing/Growth]             │  ← 카테고리 배지
+└──────────────────────────────────┘
+```
+
+- 배지: `[카테고리 슬러그]` — 카테고리별 색상 포인트
+- 프로젝트 없을 때: `프로젝트 선택 또는 만들기 +`
+- 드롭다운: 최근 프로젝트 목록 + "새 프로젝트 만들기" 항목
+
+### 3-2. 내비게이션 순서 제안
+
+목표: **대시보드(목표/리스크/게이트/산출물)** = "업무 홈", 그 다음 워크맵 → 태스크 → 팀 → 라이브러리 순으로 인지 부하 감소.
+
+| 순서 | 타입 | View ID | 레이블(KO) 제안 | 비고 |
+|------|------|---------|-----------------|------|
+| 1 | 단독 | `dashboard` | **대시보드** | 2.0 "홈". 4분면 (목표/리스크/검토 단계/결과물) |
+| 2 | 단독 | `work-map` | **워크맵** | 에이전트-태스크 연결 맵 |
+| 3 | 그룹 | **tasks** | **태스크** | 태스크 보드 / 산출물 / 스케줄러 |
+| 4 | 그룹 | **agents** | **팀** | 에이전트&부서 / Heartbeat |
+| 5 | 그룹 | **library** | 라이브러리 | Skills / Agent Rules / Memory / Hooks |
+| 6 | 단독 | `cli-usage` | CLI 사용량 | 유지 |
+| 7 | 단독 | `settings` | 설정 | **카테고리 에디터** = 설정 탭 또는 별도 서브메뉴 |
+
+요약:
+- **대시보드 1번**: "프로젝트 성과 한눈에" = 홈.
+- **워크맵 2번**: 에이전트-태스크 연결 시각화 (흐름: 대시보드 → 워크맵 → 태스크).
+- **팀(에이전트)**: "에이전트" → "팀" 으로 이름 변경 (Project OS 톤).
+- 그룹 ID/뷰는 코드 호환성 유지.
+
+### 3-3. 하단 영역
+
+| 영역 | 2.0 제안 |
+|------|----------|
+| **부서** | 유지. "팀" 메뉴와 정렬. |
+| **상태 바** | 유지 (연결 상태, 작업 중/전체) |
+| **접기 버튼** | 유지 |
+
+### 3-4. 프로젝트/카테고리 진입 (보충)
+
+- **프로젝트 없을 때**: 앱 실행 후 상단 "프로젝트 셀렉터" 클릭 → "새 프로젝트" 또는 "카테고리 선택 후 생성" (차별화 전략 Phase 2와 정렬). 상세는 [ux-renewal-2.0.md §5 온보딩 플로우](ux-renewal-2.0.md) 참조.
+- **프로젝트 있을 때**: 마지막 사용 또는 기본 프로젝트 진입; 상단에서 전환.
+
+---
+
+## 3-5. 사이드바 전체 UX/UI 스펙 (2.0 리뉴얼)
+
+### 전체 레이아웃 와이어프레임
+
+```
+┌──────────────────────────────────┐  width: 220px (expanded) / 48px (collapsed)
+│                                  │  background: var(--th-bg-sidebar)
+│  ╔══════════════════════════════╗ │  ← 상단 브랜드 + 프로젝트 셀렉터
+│  ║ ◈ AgentDesk                 ║ │    border-bottom: 1px solid var(--th-border)
+│  ║                              ║ │    padding: 12px
+│  ║ ▼ 쇼핑몰 앱 개발 2026       ║ │  ← 프로젝트명 (클릭 → 드롭다운)
+│  ║   [소프트웨어 개발]           ║ │  ← 카테고리 배지
+│  ╚══════════════════════════════╝ │
+│                                  │
+│  ● 대시보드                      │  ← 1번. 활성 상태 (amber 좌측 바)
+│    워크맵                        │  ← 2번
+│  ▸ 태스크                        │  ← 3번 그룹 (접힌 상태: ▸, 펼친 상태: ▾)
+│      업무 보드                   │  ←   서브 아이템
+│      결과물                      │
+│      스케줄러                    │
+│  ▾ 팀                            │  ← 4번 그룹 (펼쳐진 상태)
+│      직원·부서                   │
+│      직원 살펴보기               │
+│    라이브러리                    │  ← 5번 그룹
+│      스킬스                      │
+│      에이전트 룰                 │
+│      메모리                      │
+│      훅                          │
+│    CLI 사용량                    │  ← 6번
+│    설정                          │  ← 7번
+│                                  │
+│  ─────────────────────────────── │  ← 구분선
+│  ▾ 부서                          │  ← 하단 부서 목록 (접기/펼치기)
+│    개발팀 🖥  ████░░  2/3 작업   │
+│    기획팀 📋  ██░░░░  1/3 작업   │
+│  ─────────────────────────────── │
+│  ● 연결됨  8/12 작업 중         │  ← 상태바
+│  [◁ 접기]                        │  ← 사이드바 접기 버튼
+└──────────────────────────────────┘
+```
+
+---
+
+### 상단 영역 — 브랜드 + 프로젝트 셀렉터
+
+```
+┌──────────────────────────────────┐
+│  ◈ AGENTDESK                    │  로고: amber (#f59e0b), Sora 800, 0.8rem
+│                                  │  letter-spacing: 0.1em
+│  ┌──────────────────────────┐   │
+│  │ ▼ 쇼핑몰 앱 개발 2026   │   │  프로젝트명: 0.875rem, Sora 500
+│  │   [소프트웨어 개발]       │   │  배지: 0.65rem, border-radius: 2px
+│  └──────────────────────────┘   │  클릭 영역 전체 (hover: border amber)
+└──────────────────────────────────┘
+
+프로젝트 없을 때:
+┌──────────────────────────────────┐
+│  ◈ AGENTDESK                    │
+│  ┌──────────────────────────┐   │
+│  │ + 프로젝트 시작하기      │   │  Primary CTA 스타일 (amber 배경 없음,
+│  └──────────────────────────┘   │  border: 1px dashed var(--th-accent))
+└──────────────────────────────────┘
+```
+
+---
+
+### 내비게이션 항목별 UX 정의
+
+#### 1. 대시보드 `dashboard`
+
+```
+아이콘:  ⊞ (2×2 그리드 — 4분면을 상징)
+레이블: 대시보드
+역할:   운영 본부. 목표·리스크·검토 단계·결과물을 한눈에.
+
+활성 상태:
+ border-left: 3px solid var(--th-accent)   ← amber 좌측 바
+ background: var(--th-bg-elevated)
+ color: var(--th-accent)
+
+비활성:
+ color: var(--th-text-secondary)
+
+hover:
+ background: var(--th-bg-surface)
+ color: var(--th-text)
+```
+
+#### 2. 워크맵 `work-map`
+
+```
+아이콘:  노드-엣지 네트워크 그래프 아이콘 (SVG)
+레이블: 워크맵 / Work Map
+서브라벨: 에이전트 × 태스크 맵
+역할:   현재 프로젝트 내 에이전트별 담당 태스크를 시각 연결.
+        에이전트 카드 + 태스크 라인 연결, 프로젝트별 필터링.
+        픽셀 아트 없음, 클린 카드 기반 시각화.
+
+구성:
+ - 에이전트 카드: 프로필 이미지(있으면 원형 이미지, 없으면 이모지 fallback) + 상태 배지 + 현재 태스크
+ - 연결선: 에이전트 카드 → 태스크 카드 (SVG line, amber)
+ - 프로젝트 필터: "이 프로젝트만 / 전체" 토글
+
+특이사항:
+ - 활성 프로젝트의 팀원 강조, 비팀원 dim 처리
+ - 작업 중 에이전트 수를 레이블 옆에 소형 배지로 표시
+   예: 워크맵  ●3  (amber 점 + 숫자, 작업 중 에이전트)
+```
+
+#### 3. 태스크 그룹 `tasks`
+
+```
+그룹 아이콘:  ☰ (체크리스트 라인) 또는 칸반 아이콘
+그룹 레이블: 태스크
+역할:        실행 추적. 목표 달성을 위한 일의 흐름.
+
+그룹 동작:
+ - 클릭: 펼치기/접기 토글 + 첫 번째 서브 항목(업무 보드)으로 이동
+ - 접혔을 때: ▸ 태스크
+ - 펼쳤을 때: ▾ 태스크 (하위 3개 노출)
+ - 서브 항목 활성 시 그룹 항상 펼침 유지
+
+서브 항목:
+
+  3-1. 업무 보드 `tasks-board`
+       아이콘: ☰ (칸반 컬럼)
+       레이블: 업무 보드
+       역할:  태스크 칸반. 대기 중 / 진행 중 / 완료.
+
+  3-2. 결과물 `tasks-deliverables`
+       아이콘: 📎 (클립/첨부)
+       레이블: 태스크 산출물
+       역할:  태스크 실행 중 생성된 파일·결과물.
+              (대시보드 "결과물"과 구분 — §12-2 역할 분리)
+
+  3-3. 스케줄러 `tasks-scheduled`
+       아이콘: 🗓 (달력)
+       레이블: 스케줄러
+       역할:  예약된 태스크 타임라인.
+```
+
+#### 4. 팀 그룹 `agents`
+
+```
+그룹 아이콘:  👥 (사람 2명) 또는 팀 SVG
+그룹 레이블: 팀
+역할:        인력 운영. 이 프로젝트를 함께 하는 팀원.
+
+그룹 동작: 태스크 그룹과 동일 (클릭 → 펼치기 + 첫 서브 이동)
+
+서브 항목:
+
+  4-1. 직원·부서 `agents`
+       아이콘: 🤖
+       레이블: 직원·부서
+       역할:  에이전트 CRUD, 부서 관리.
+              직원 등록/수정 폼(AgentFormModal)에서 프로필 이미지 업로드 가능.
+              아바타 표시: avatar_url(업로드 이미지) → avatar_emoji(이모지 fallback) 순.
+
+  4-2. 직원 살펴보기 `heartbeat`
+       아이콘: ♥ (심박)
+       레이블: 직원 살펴보기
+       역할:  에이전트 활성도·상태 모니터링.
+```
+
+#### 5. 라이브러리 그룹 `library`
+
+```
+그룹 아이콘:  📚 (책 스택)
+그룹 레이블: 라이브러리
+역할:        지식 자산. 재사용 가능한 스킬·규칙·메모리.
+
+서브 항목:
+
+  5-1. 스킬스 `skills`
+       아이콘: ⚡
+       레이블: 스킬스
+       역할:  에이전트가 쓸 수 있는 도구·기능.
+
+  5-2. 에이전트 룰 `agent-rules`
+       아이콘: 📜
+       레이블: 에이전트 룰
+       역할:  에이전트 행동 규칙·지침.
+
+  5-3. 메모리 `memory`
+       아이콘: 🧠
+       레이블: 메모리
+       역할:  에이전트가 기억하는 지식·컨텍스트.
+
+  5-4. 훅 `hooks`
+       아이콘: 🔗
+       레이블: 훅
+       역할:  자동화 트리거.
+```
+
+#### 6. CLI 사용량 `cli-usage`
+
+```
+아이콘:  >_ (터미널)
+레이블: CLI 사용량
+역할:   운영 비용. AI API 사용량·비용 모니터링.
+
+배지: 사용량 경고 시 amber 점 표시
+ 예: CLI 사용량  ⚠  (70% 이상 사용 시)
+```
+
+#### 7. 설정 `settings`
+
+```
+아이콘:  ⚙
+레이블: 설정
+역할:   운영 정책. 앱 설정 + 카테고리 에디터.
+
+배지: 업데이트 알림 시 빨간 점
+```
+
+---
+
+### 그룹 공통 동작 규칙
+
+```
+접기/펼치기:
+ - 그룹 헤더 클릭 → 펼치기 + 첫 서브 항목 이동
+ - 이미 펼쳐진 상태에서 그룹 헤더 클릭 → 접기
+ - 서브 항목 활성 시 그룹은 항상 펼침 (강제 유지)
+ - 초기 상태: 대시보드 활성 → 모든 그룹 접힘
+
+서브 항목 들여쓰기:
+ padding-left: 28px (아이콘 width + gap 만큼)
+ font-size: 0.8rem (부모보다 작게)
+ color: var(--th-text-muted) → 활성 시 var(--th-text)
+```
+
+---
+
+### 접힌 사이드바 (width: 48px)
+
+```
+┌────┐
+│ ◈  │  ← 로고만
+├────┤
+│ ⊞  │  ← 대시보드 (hover: tooltip "대시보드")
+│ ⬡  │  ← 워크맵 (노드-엣지 그래프 아이콘)
+│ ☰  │  ← 태스크 그룹
+│ 👥  │  ← 팀 그룹
+│ 📚  │  ← 라이브러리 그룹
+│ >_  │  ← CLI 사용량
+│ ⚙  │  ← 설정
+└────┘
+
+접힌 상태 규칙:
+ - 아이콘만 표시, 레이블 숨김
+ - hover 시 오른쪽에 tooltip 표시 (레이블 텍스트)
+ - 그룹 항목 클릭 → 사이드바 자동 펼침 + 해당 그룹 오픈
+ - 활성 항목: amber 좌측 바 2px 유지
+```
+
+---
+
+### 상태 정의
+
+| 상태 | 스타일 |
+|------|--------|
+| **활성 (active)** | `border-left: 3px solid var(--th-accent)` + `background: var(--th-bg-elevated)` + `color: var(--th-accent)` |
+| **Hover** | `background: var(--th-bg-surface)` + `color: var(--th-text)` |
+| **비활성** | `color: var(--th-text-secondary)` + `background: transparent` |
+| **그룹 활성** (서브 활성) | 그룹 헤더: `color: var(--th-accent)` + 펼침 유지, border-left 없음 |
+| **배지 — 경고** | amber 점 (`#f59e0b`) 8px, 아이콘 우상단 |
+| **배지 — 알림** | red 점 (`#ef4444`) 8px |
+| **배지 — 카운터** | amber 텍스트 10px, 레이블 우측 |
+
+---
+
+### 하단 고정 영역 — 2.0 정의
+
+#### 부서 섹션
+
+```
+▾ 부서                                 ← 클릭: 전체 접기/펼치기
+──────────────────────────────────────
+개발팀  🖥   ████████░░  4/5 작업 중   ← 아이콘 + 이름 + 진행 바 + 카운터
+기획팀  📋   ████░░░░░░  2/5 작업 중
+디자인  🎨   ██░░░░░░░░  1/5 작업 중
+
+스타일:
+ font-size: 0.75rem
+ color: var(--th-text-muted)
+ 진행 바: width 60px, height 3px, background var(--th-border)
+          fill: var(--th-accent) (amber)
+```
+
+#### 상태 바
+
+```
+● 연결됨   8/12 작업 중
+
+● 연결됨: green (#22c55e)
+● 연결 끊김: red (#ef4444)
+  → "연결 끊김 — 재연결 중..." (애니메이션 점)
+
+8/12: 작업 중 에이전트 / 전체 에이전트
+font-size: 0.7rem, color: var(--th-text-muted)
+```
+
+---
+
+## 4. 구현 체크리스트
+
+### Phase 1–3 (완료)
+- [x] `NAV_STRUCTURE` 순서 변경: dashboard → work-map → tasks → agents → library → cli-usage → settings
+- [x] 브랜드 영역: **CEO/ceoName 제거**. 상단 = 로고 + 프로젝트 셀렉터 (이름 + 카테고리 배지)
+- [x] 레이블 변경: "에이전트" 그룹 → "팀" 으로 변경
+- [x] 카테고리 에디터 탭 설정 추가 (Phase 3)
+- [x] 프로젝트 없을 때 첫 진입: 환영 온보딩 → 카테고리 선택 → 프로젝트 생성 (Phase 2)
+- [x] ProjectSelector 드롭다운 (이름 + 카테고리 배지 + 새 프로젝트)
+
+### Phase 4 (미착수) — 기존 화면 Project OS 통합
+- [ ] 공통 프로젝트 컨텍스트 바 (워크맵·태스크·팀·라이브러리 상단 공통)
+- [ ] 태스크 보드 프로젝트 필터 기본 적용
+- [ ] 팀 뷰 "이 프로젝트 팀 / 전체 조직 / Heartbeat" 3탭 구조
+- [ ] 워크맵 구현: 에이전트 카드 + 태스크 연결선 + 프로젝트 필터
+- [ ] 워크맵 툴바 프로젝트명 + 팀원 카운터
+- [ ] 에이전트 카드 프로젝트 팀 배지 통합
+- [ ] tasks-deliverables ↔ 대시보드 결과물 역할 분리 UI
+- [ ] CLI 사용량 프로젝트별 분리 표시
+- [ ] 레거시 Dashboard.tsx 제거
+
+---
+
+## 5. 뷰별 Project OS 포지셔닝
+
+Phase 4 목표: 모든 화면이 "Project OS의 어떤 기능인가"를 명확히 전달해야 한다.
+
+| 뷰 | Project OS 역할 | 현황 |
+|----|----------------|------|
+| 대시보드 | **운영 본부** — 목표·리스크·검토·결과물 한눈에 | ✅ 2.0 완료 |
+| 워크맵 | **실행 현장** — 누가 지금 무엇을 하는지 에이전트-태스크 맵으로 시각화. UI: 에이전트 프로필 이미지 카드 + 태스크 연결선 | 🔴 Phase 4 구현 예정 |
+| 태스크 보드 | **실행 추적** — 목표를 위한 일을 관리 | 🔶 프로젝트 필터 미완 |
+| 팀 | **인력 운영** — 이 프로젝트를 함께 하는 팀원 | 🔶 TeamPanel 구현, 팀 뷰 탭 미완 |
+| 라이브러리 | **지식 자산** — 재사용 가능한 스킬·규칙·메모리 | 🔴 프로젝트 맥락 연결 미완 |
+| CLI 사용량 | **운영 비용** — 프로젝트별 AI 사용 현황 | 🔴 전역만, 프로젝트별 미완 |
+| 설정 | **운영 정책** — 카테고리·앱 설정 | 🔶 카테고리 탭 완료, 나머지 유지 |
+
+---
+
+## 6. 요약
+
+| 항목 | As-Is (1.x) | 2.0 완료 | Phase 4 목표 |
+|------|------------|---------|-------------|
+| 상단 | 회사명 + CEO | ✅ 로고 + 프로젝트 셀렉터 | — |
+| 1번 메뉴 | 오피스 | ✅ 대시보드 | — |
+| 2번 메뉴 | (없음) | 🔴 워크맵 (신규) | ✅ Phase 4 |
+| 용어 | 에이전트 | ✅ 팀 | — |
+| 직책 | CEO 표시 | ✅ CEO 제거 | — |
+| 라운지/게임룸 | 있음 | ✅ 제거 | — |
+| 프로젝트 컨텍스트 | 없음 | ✅ 대시보드·사이드바 | 모든 뷰로 확장 |
+| 태스크-목표 연결 | 없음 | — | ✅ Phase 4 |
+| 팀 뷰 프로젝트 필터 | 없음 | 🔶 부분 | ✅ Phase 4 |
+| 워크맵 에이전트-태스크 맵 | 없음 | 🔴 미착수 | ✅ Phase 4 |
+| 에이전트 프로필 이미지 | 픽셀 스프라이트 | ✅ 이모지 전용 | ✅ Phase 4 (업로드 이미지) |
+
+---
+
+## 변경 이력
+
+| 버전 | 일자 | 변경 요약 |
+|------|------|-----------|
+| 1.0 | 2026-03-09 | 초안. As-Is 메뉴 구조 분석 + 2.0 To-Be 제안. |
+| 2.0 | 2026-03-10 | ux-renewal-2.0.md 반영. 대시보드 1번, 팀 레이블, 프로젝트 셀렉터 스펙 추가. 사이드바 UX/UI 상세 스펙(§3-5) 작성. |
+| 3.0 | 2026-03-10 | 오피스 → 워크맵(Work Map) 전환. 라운지/게임룸(`game-room`) 완전 제거. 내비게이션 순서 확정: 대시보드→워크맵→태스크→팀→라이브러리→CLI→설정. 워크맵 아이콘·라벨·역할·구성 스펙 추가. 픽셀 스프라이트 제거, 에이전트 아바타 이모지 전용. Phase 4 체크리스트 업데이트. |
+| 4.0 | 2026-03-10 | 에이전트 프로필 이미지 시스템 반영. §2 워크맵 카드 구성에 "에이전트 프로필 이미지 카드" 명시. §4-1 직원·부서에 AgentFormModal 이미지 업로드 및 avatar_url→avatar_emoji fallback 순서 추가. §5 워크맵 포지셔닝에 UI 스타일 명시. §6 요약 테이블에 에이전트 프로필 이미지 Phase 4 항목 추가. |

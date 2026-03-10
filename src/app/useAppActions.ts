@@ -5,7 +5,6 @@ import { isApiRequestError } from "../api/core";
 import { buildDecisionInboxItems } from "../components/chat/decision-inbox";
 import type { DecisionInboxItem } from "../components/chat/decision-inbox";
 import { LANGUAGE_USER_SET_STORAGE_KEY, normalizeLanguage, pickLang } from "../i18n";
-import { normalizeOfficeWorkflowPack } from "./office-workflow-pack";
 import type {
   Agent,
   CliStatusMap,
@@ -14,7 +13,6 @@ import type {
   Department,
   Message,
   Task,
-  WorkflowPackKey,
 } from "../types";
 import { mapWorkflowDecisionItemsLocalized } from "./decision-inbox";
 import { mergeSettingsWithDefaults, syncClientLanguage } from "./utils";
@@ -127,8 +125,6 @@ export function useAppActions({
       project_id?: string;
       project_path?: string;
       assigned_agent_id?: string;
-      workflow_pack_key?: WorkflowPackKey;
-      workflow_meta_json?: string;
     }) => {
       try {
         await api.createTask(input as Parameters<typeof api.createTask>[0]);
@@ -169,12 +165,10 @@ export function useAppActions({
   );
 
   const refreshTasksAndAgents = useCallback(async () => {
-    const activePack = normalizeOfficeWorkflowPack(settings.officeWorkflowPack ?? "development");
-    const includeSeedAgents = activePack !== "development";
-    const [tks, ags] = await Promise.all([api.getTasks(), api.getAgents({ includeSeed: includeSeedAgents })]);
+    const [tks, ags] = await Promise.all([api.getTasks(), api.getAgents({ includeSeed: false })]);
     setTasks(tks);
     setAgents(ags);
-  }, [setTasks, setAgents, settings.officeWorkflowPack]);
+  }, [setTasks, setAgents]);
 
   const handleAssignTask = useCallback(
     async (taskId: string, agentId: string) => {
@@ -255,12 +249,6 @@ export function useAppActions({
       }
       try {
         await api.saveSettings(nextSettings);
-        const packChanged =
-          normalizeOfficeWorkflowPack(nextSettings.officeWorkflowPack) !==
-          normalizeOfficeWorkflowPack(settings.officeWorkflowPack);
-        if (packChanged) {
-          api.getStats().then(setStats).catch((err) => console.error("Refetch stats after pack change failed:", err));
-        }
         if (autoUpdateChanged) {
           try {
             await api.setAutoUpdateEnabled(Boolean(nextSettings.autoUpdateEnabled));
@@ -454,13 +442,11 @@ export function useAppActions({
   );
 
   const handleAgentsChange = useCallback(() => {
-    const activePack = normalizeOfficeWorkflowPack(settings.officeWorkflowPack ?? "development");
-    const includeSeedAgents = activePack !== "development";
-    api.getAgents({ includeSeed: includeSeedAgents }).then(setAgents).catch(console.error);
+    api.getAgents({ includeSeed: false }).then(setAgents).catch(console.error);
     api.getAgents({ includeSeed: true }).then(setLibraryAgents).catch(console.error);
-    api.getDepartments({ workflowPackKey: activePack }).then(setDepartments).catch(console.error);
+    api.getDepartments().then(setDepartments).catch(console.error);
     api.getTasks().then(setTasks).catch(console.error);
-  }, [setAgents, setLibraryAgents, setDepartments, setTasks, settings.officeWorkflowPack]);
+  }, [setAgents, setLibraryAgents, setDepartments, setTasks]);
 
   const handleRefreshCli = useCallback(async () => {
     const status = await api.getCliStatus(true);

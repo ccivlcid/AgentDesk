@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { UiLanguage } from "../i18n";
 import { pickLang } from "../i18n";
 import type { Agent } from "../types";
-import AgentAvatar, { buildSpriteMap } from "./AgentAvatar";
+import AgentAvatar from "./AgentAvatar";
 import MessageContent from "./MessageContent";
 import type { DecisionInboxItem } from "./chat/decision-inbox";
 import { formatDecisionInboxTime as formatTime, type DecisionInboxModalProps } from "./chat/decision-inbox-modal.meta";
@@ -21,7 +21,6 @@ export default function DecisionInboxModal({
 }: DecisionInboxModalProps) {
   const t = (text: { ko: string; en: string; ja?: string; zh?: string }) => pickLang(uiLanguage, text);
   const isKorean = uiLanguage.startsWith("ko");
-  const spriteMap = useMemo(() => buildSpriteMap(agents), [agents]);
   const agentById = useMemo(() => {
     const map = new Map<string, Agent>();
     for (const agent of agents) map.set(agent.id, agent);
@@ -285,7 +284,7 @@ export default function DecisionInboxModal({
                         <div className="flex min-w-0 items-start gap-2">
                           {agent ? (
                             <span className="mt-0.5 inline-block" style={{ border: "1px solid var(--th-border)", borderRadius: "2px", background: "var(--th-terminal-bg)" }}>
-                              <AgentAvatar agent={agent} spriteMap={spriteMap} size={32} />
+                              <AgentAvatar agent={agent} size={32} />
                             </span>
                           ) : (
                             <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center text-base" style={{ border: "1px solid var(--th-border)", borderRadius: "2px", background: "var(--th-terminal-bg)" }}>

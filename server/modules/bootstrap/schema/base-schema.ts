@@ -652,5 +652,99 @@ CREATE TABLE IF NOT EXISTS scheduled_tasks (
   updated_at INTEGER DEFAULT (unixepoch()*1000)
 );
 CREATE INDEX IF NOT EXISTS idx_scheduled_tasks_next ON scheduled_tasks(enabled, next_run_at);
+
+CREATE TABLE IF NOT EXISTS categories (
+  id          TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(8)))),
+  name        TEXT NOT NULL,
+  name_ko     TEXT,
+  slug        TEXT NOT NULL UNIQUE,
+  description TEXT,
+  icon        TEXT DEFAULT 'folder',
+  color       TEXT DEFAULT '#f59e0b',
+  kpi_schema         TEXT DEFAULT '[]',
+  risk_schema        TEXT DEFAULT '[]',
+  gate_schema        TEXT DEFAULT '[]',
+  deliverable_schema TEXT DEFAULT '[]',
+  routing_policy     TEXT DEFAULT '{}',
+  is_template INTEGER DEFAULT 1 CHECK(is_template IN (0,1)),
+  version     INTEGER DEFAULT 1,
+  owner_scope TEXT DEFAULT 'global' CHECK(owner_scope IN ('global','org','team')),
+  created_at  INTEGER DEFAULT (unixepoch() * 1000),
+  updated_at  INTEGER DEFAULT (unixepoch() * 1000)
+);
+
+CREATE INDEX IF NOT EXISTS idx_categories_slug ON categories(slug);
+CREATE INDEX IF NOT EXISTS idx_categories_owner_scope ON categories(owner_scope);
+
+CREATE TABLE IF NOT EXISTS category_versions (
+  id           TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(8)))),
+  category_id  TEXT NOT NULL REFERENCES categories(id) ON DELETE CASCADE,
+  version      INTEGER NOT NULL,
+  snapshot_json TEXT NOT NULL,
+  created_at   INTEGER DEFAULT (unixepoch() * 1000),
+  UNIQUE(category_id, version)
+);
+
+CREATE INDEX IF NOT EXISTS idx_category_versions_cid ON category_versions(category_id);
+
+CREATE TABLE IF NOT EXISTS project_objectives (
+  id          TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(8)))),
+  project_id  TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  title       TEXT NOT NULL,
+  description TEXT,
+  status      TEXT DEFAULT 'active' CHECK(status IN ('active','completed','cancelled')),
+  progress    INTEGER DEFAULT 0 CHECK(progress >= 0 AND progress <= 100),
+  sort_order  INTEGER DEFAULT 0,
+  created_at  INTEGER DEFAULT (unixepoch() * 1000),
+  updated_at  INTEGER DEFAULT (unixepoch() * 1000)
+);
+
+CREATE INDEX IF NOT EXISTS idx_project_objectives_pid ON project_objectives(project_id);
+
+CREATE TABLE IF NOT EXISTS project_risks (
+  id          TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(8)))),
+  project_id  TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  title       TEXT NOT NULL,
+  description TEXT,
+  severity    TEXT DEFAULT 'medium' CHECK(severity IN ('high','medium','low')),
+  status      TEXT DEFAULT 'open' CHECK(status IN ('open','mitigated','closed')),
+  mitigation  TEXT,
+  owner       TEXT,
+  created_at  INTEGER DEFAULT (unixepoch() * 1000),
+  updated_at  INTEGER DEFAULT (unixepoch() * 1000)
+);
+
+CREATE INDEX IF NOT EXISTS idx_project_risks_pid ON project_risks(project_id);
+
+CREATE TABLE IF NOT EXISTS project_gates (
+  id          TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(8)))),
+  project_id  TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  title       TEXT NOT NULL,
+  description TEXT,
+  criteria    TEXT,
+  status      TEXT DEFAULT 'pending' CHECK(status IN ('pending','in_progress','passed','failed')),
+  due_date    INTEGER,
+  completed_at INTEGER,
+  sort_order  INTEGER DEFAULT 0,
+  created_at  INTEGER DEFAULT (unixepoch() * 1000),
+  updated_at  INTEGER DEFAULT (unixepoch() * 1000)
+);
+
+CREATE INDEX IF NOT EXISTS idx_project_gates_pid ON project_gates(project_id);
+
+CREATE TABLE IF NOT EXISTS project_outputs (
+  id          TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(8)))),
+  project_id  TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  title       TEXT NOT NULL,
+  type        TEXT DEFAULT 'document',
+  status      TEXT DEFAULT 'pending' CHECK(status IN ('pending','in_progress','done')),
+  version     TEXT,
+  url         TEXT,
+  sort_order  INTEGER DEFAULT 0,
+  created_at  INTEGER DEFAULT (unixepoch() * 1000),
+  updated_at  INTEGER DEFAULT (unixepoch() * 1000)
+);
+
+CREATE INDEX IF NOT EXISTS idx_project_outputs_pid ON project_outputs(project_id);
 `);
 }

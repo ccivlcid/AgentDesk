@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { useI18n } from "../i18n";
-import type { Agent, Department } from "../types";
+import type { Agent, Department, Project } from "../types";
 import AgentRulesCategoryBar from "./agent-rules/AgentRulesCategoryBar";
 import AgentRulesGrid from "./agent-rules/AgentRulesGrid";
 import AgentRulesHeader from "./agent-rules/AgentRulesHeader";
@@ -12,10 +13,12 @@ import { useAgentRulesState } from "./agent-rules/useAgentRulesState";
 interface AgentRulesLibraryProps {
   agents: Agent[];
   departments: Department[];
+  currentProject?: Project | null;
 }
 
-export default function AgentRulesLibrary({ agents, departments }: AgentRulesLibraryProps) {
+export default function AgentRulesLibrary({ agents, departments, currentProject }: AgentRulesLibraryProps) {
   const { t, locale: localeTag } = useI18n();
+  const [activeTab, setActiveTab] = useState<"global" | "project">("global");
   const vm = useAgentRulesState({ agents, departments, t });
 
   if (vm.loading) {
@@ -64,6 +67,65 @@ export default function AgentRulesLibrary({ agents, departments }: AgentRulesLib
 
   return (
     <div className="space-y-4">
+      {/* Project / Global tab switcher */}
+      {currentProject && (
+        <div
+          className="flex gap-1 p-1"
+          style={{ background: "var(--th-bg-primary)", borderRadius: "4px", border: "1px solid var(--th-border)" }}
+        >
+          {(["global", "project"] as const).map((tab) => {
+            const isActive = activeTab === tab;
+            const label = tab === "global"
+              ? t({ ko: "전역", en: "Global", ja: "グローバル", zh: "全局" })
+              : t({ ko: "이 프로젝트", en: "This Project", ja: "このプロジェクト", zh: "此项目" });
+            return (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => setActiveTab(tab)}
+                className="flex items-center gap-2 px-3 py-2 text-sm font-medium font-mono transition-colors"
+                style={{
+                  borderRadius: "2px",
+                  background: isActive ? "var(--th-bg-surface)" : "transparent",
+                  color: isActive ? "var(--th-text-primary)" : "var(--th-text-muted)",
+                  border: isActive ? "1px solid var(--th-border)" : "1px solid transparent",
+                }}
+              >
+                {label}
+                {tab === "project" && (
+                  <span className="text-[9px] px-1" style={{ color: "var(--th-accent)", background: "rgba(245,158,11,0.08)", borderRadius: "2px", border: "1px solid rgba(245,158,11,0.2)" }}>
+                    {currentProject.name}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Project rules placeholder */}
+      {activeTab === "project" && currentProject && (
+        <div className="flex flex-col items-center justify-center py-16 text-center font-mono" style={{ color: "var(--th-text-muted)" }}>
+          <div className="text-3xl mb-3">🛡️</div>
+          <p className="text-sm font-medium mb-1" style={{ color: "var(--th-text)" }}>
+            {t({ ko: "프로젝트 규칙", en: "Project Rules", ja: "プロジェクトルール", zh: "项目规则" })}
+          </p>
+          <p className="text-[12px]" style={{ color: "var(--th-text-muted)" }}>
+            {t({
+              ko: "이 프로젝트에서만 적용되는 에이전트 규칙을 관리합니다.",
+              en: "Manage agent rules that apply only to this project.",
+              ja: "このプロジェクト専用のエージェントルールを管理します。",
+              zh: "管理仅适用于此项目的代理规则。",
+            })}
+          </p>
+          <p className="text-[11px] mt-3 px-4 py-2" style={{ background: "var(--th-bg-surface)", borderRadius: "4px", border: "1px solid var(--th-border)" }}>
+            {t({ ko: "현재 준비 중입니다.", en: "Coming soon.", ja: "現在準備中です。", zh: "即将推出。" })}
+          </p>
+        </div>
+      )}
+
+      {activeTab === "global" && (
+        <>
       <AgentRulesHeader
         t={t}
         rulesCount={vm.rules.length}
@@ -158,10 +220,12 @@ export default function AgentRulesLibrary({ agents, departments }: AgentRulesLib
         {t({
           ko: "에이전트 룰은 태스크 실행 시 에이전트 프롬프트에 자동 주입됩니다",
           en: "Agent rules are automatically injected into agent prompts during task execution",
-          ja: "エージェントルールはタスク実行時にエージェントプロンプトに自動注入されます",
+          ja: "エージェントルールはタスク実행時にエージェントプロンプトに自動注入されます",
           zh: "代理规则在任务执行时自动注入到代理提示中",
         })}
       </div>
+        </>
+      )}
     </div>
   );
 }

@@ -1,11 +1,10 @@
-import { type ReactNode, useCallback, useEffect, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { type CliUsageEntry, type CliUsageWindow, type CostAlertConfig, getCostAlerts, saveCostAlerts } from "../../api";
 import { type AgentUsageSummary, getAgentUsageSummary } from "../../api/agent-usage";
 import type { UiLanguage } from "../../i18n";
 import type { CliStatusMap } from "../../types";
 import { CliCursorLogo } from "../settings/Logos";
-import { formatReset } from "./drawing-furniture-b";
-import { LOCALE_TEXT } from "./themes-locale";
+import { formatReset, LOCALE_TEXT } from "./cli-locale";
 import UsageTrendChart from "./UsageTrendChart";
 
 type TFunction = (messages: Record<UiLanguage, string>) => string;
@@ -17,6 +16,8 @@ interface CliUsagePanelProps {
   refreshing: boolean;
   onRefreshUsage: () => void;
   t: TFunction;
+  /** 현재 프로젝트 팀원 ID (Agent Usage 필터용) */
+  projectAgentIds?: Set<string>;
 }
 
 const ClaudeLogo = () => (
@@ -104,6 +105,7 @@ export default function CliUsagePanel({
   refreshing,
   onRefreshUsage,
   t,
+  projectAgentIds,
 }: CliUsagePanelProps) {
   const connectedClis = CLI_DISPLAY.filter((cli) => {
     const status = cliStatus?.[cli.key as keyof CliStatusMap];
@@ -115,6 +117,13 @@ export default function CliUsagePanel({
   const [alertSaving, setAlertSaving] = useState(false);
   const [agentUsage, setAgentUsage] = useState<AgentUsageSummary[]>([]);
   const [agentUsageExpanded, setAgentUsageExpanded] = useState(false);
+  const [usageFilter, setUsageFilter] = useState<"current" | "all">("current");
+
+  // 프로젝트 팀원 기준 에이전트 사용량 필터
+  const filteredAgentUsage = useMemo(() => {
+    if (!projectAgentIds || projectAgentIds.size === 0 || usageFilter === "all") return agentUsage;
+    return agentUsage.filter((row) => projectAgentIds.has(row.agent_id));
+  }, [agentUsage, projectAgentIds, usageFilter]);
 
   useEffect(() => {
     getCostAlerts().then(setAlertConfig).catch(() => {});
@@ -316,14 +325,43 @@ export default function CliUsagePanel({
                 <path d="M16 3.13a4 4 0 0 1 0 7.75" />
               </svg>
               {language === "ko" ? "에이전트별 사용량 (24h)" : language === "ja" ? "エージェント別使用量 (24h)" : "Agent Usage (24h)"}
+              {filteredAgentUsage.length !== agentUsage.length && (
+                <span className="text-[10px] px-1.5 py-0.5 font-mono" style={{ borderRadius: "2px", background: "rgba(251,191,36,0.12)", color: "var(--th-accent)" }}>
+                  {filteredAgentUsage.length}/{agentUsage.length}
+                </span>
+              )}
             </span>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={`transition-transform ${agentUsageExpanded ? "rotate-180" : ""}`}>
               <polyline points="6 9 12 15 18 9" />
             </svg>
           </button>
           {agentUsageExpanded && (
+            <>
+            {/* 프로젝트 필터 토글 */}
+            {projectAgentIds && projectAgentIds.size > 0 && (
+              <div className="flex items-center gap-2 mt-2 mb-1">
+                <button
+                  onClick={() => setUsageFilter("current")}
+                  className="px-2.5 py-1 text-[10px] font-medium font-mono transition-colors"
+                  style={usageFilter === "current"
+                    ? { borderRadius: "2px", border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.15)", color: "var(--th-accent)" }
+                    : { borderRadius: "2px", border: "1px solid var(--th-border)", background: "transparent", color: "var(--th-text-muted)" }}
+                >
+                  {language === "ko" ? "프로젝트 팀" : "Project Team"}
+                </button>
+                <button
+                  onClick={() => setUsageFilter("all")}
+                  className="px-2.5 py-1 text-[10px] font-medium font-mono transition-colors"
+                  style={usageFilter === "all"
+                    ? { borderRadius: "2px", border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.15)", color: "var(--th-accent)" }
+                    : { borderRadius: "2px", border: "1px solid var(--th-border)", background: "transparent", color: "var(--th-text-muted)" }}
+                >
+                  {language === "ko" ? "전체" : "All"} ({agentUsage.length})
+                </button>
+              </div>
+            )}
             <div className="mt-3 space-y-1.5">
-              {agentUsage.map((row) => {
+              {filteredAgentUsage.map((row) => {
                 const durationMin = Math.round(row.total_duration_ms / 60000);
                 const successRate = row.run_count > 0 ? Math.round((row.success_count / row.run_count) * 100) : 0;
                 return (
@@ -342,14 +380,15 @@ export default function CliUsagePanel({
                 );
               })}
             </div>
+            </>
           )}
         </section>
       )}
 
       {/* Provider Success/Failure Analysis */}
-      {agentUsage.length > 0 && (() => {
+      {filteredAgentUsage.length > 0 && (() => {
         const providerStats = new Map<string, { runs: number; success: number; failure: number; durationMs: number }>();
-        for (const row of agentUsage) {
+        for (const row of filteredAgentUsage) {
           const prev = providerStats.get(row.provider) ?? { runs: 0, success: 0, failure: 0, durationMs: 0 };
           prev.runs += row.run_count;
           prev.success += row.success_count;

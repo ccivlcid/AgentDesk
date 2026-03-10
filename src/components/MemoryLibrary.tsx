@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { useI18n } from "../i18n";
-import type { Agent, Department } from "../types";
+import type { Agent, Department, Project } from "../types";
 import MemoryCategoryBar from "./memory/MemoryCategoryBar";
 import MemoryGrid from "./memory/MemoryGrid";
 import MemoryHeader from "./memory/MemoryHeader";
@@ -11,10 +12,12 @@ import { useMemoryState } from "./memory/useMemoryState";
 interface MemoryLibraryProps {
   agents: Agent[];
   departments: Department[];
+  currentProject?: Project | null;
 }
 
-export default function MemoryLibrary({ agents, departments }: MemoryLibraryProps) {
+export default function MemoryLibrary({ agents, departments, currentProject }: MemoryLibraryProps) {
   const { t, locale: localeTag } = useI18n();
+  const [activeTab, setActiveTab] = useState<"global" | "project">("global");
   const vm = useMemoryState({ agents, departments, t });
 
   if (vm.loading) {
@@ -63,6 +66,65 @@ export default function MemoryLibrary({ agents, departments }: MemoryLibraryProp
 
   return (
     <div className="space-y-4">
+      {/* Project / Global tab switcher */}
+      {currentProject && (
+        <div
+          className="flex gap-1 p-1"
+          style={{ background: "var(--th-bg-primary)", borderRadius: "4px", border: "1px solid var(--th-border)" }}
+        >
+          {(["global", "project"] as const).map((tab) => {
+            const isActive = activeTab === tab;
+            const label = tab === "global"
+              ? t({ ko: "전역", en: "Global", ja: "グローバル", zh: "全局" })
+              : t({ ko: "이 프로젝트", en: "This Project", ja: "このプロジェクト", zh: "此项目" });
+            return (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => setActiveTab(tab)}
+                className="flex items-center gap-2 px-3 py-2 text-sm font-medium font-mono transition-colors"
+                style={{
+                  borderRadius: "2px",
+                  background: isActive ? "var(--th-bg-surface)" : "transparent",
+                  color: isActive ? "var(--th-text-primary)" : "var(--th-text-muted)",
+                  border: isActive ? "1px solid var(--th-border)" : "1px solid transparent",
+                }}
+              >
+                {label}
+                {tab === "project" && (
+                  <span className="text-[9px] px-1" style={{ color: "var(--th-accent)", background: "rgba(245,158,11,0.08)", borderRadius: "2px", border: "1px solid rgba(245,158,11,0.2)" }}>
+                    {currentProject.name}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Project memory placeholder */}
+      {activeTab === "project" && currentProject && (
+        <div className="flex flex-col items-center justify-center py-16 text-center font-mono" style={{ color: "var(--th-text-muted)" }}>
+          <div className="text-3xl mb-3">🗂️</div>
+          <p className="text-sm font-medium mb-1" style={{ color: "var(--th-text)" }}>
+            {t({ ko: "프로젝트 메모리", en: "Project Memory", ja: "プロジェクトメモリ", zh: "项目记忆" })}
+          </p>
+          <p className="text-[12px]" style={{ color: "var(--th-text-muted)" }}>
+            {t({
+              ko: "프로젝트별 결정 사항과 컨텍스트가 여기에 쌓입니다.",
+              en: "Project decisions and context will accumulate here.",
+              ja: "プロジェクトの決定事項やコンテキストがここに蓄積されます。",
+              zh: "项目决策和上下文将在此累积。",
+            })}
+          </p>
+          <p className="text-[11px] mt-3 px-4 py-2" style={{ background: "var(--th-bg-surface)", borderRadius: "4px", border: "1px solid var(--th-border)" }}>
+            {t({ ko: "현재 준비 중입니다.", en: "Coming soon.", ja: "現在準備中です。", zh: "即将推出。" })}
+          </p>
+        </div>
+      )}
+
+      {activeTab === "global" && (
+        <>
       <MemoryHeader
         t={t}
         entriesCount={vm.entries.length}
@@ -153,6 +215,8 @@ export default function MemoryLibrary({ agents, departments }: MemoryLibraryProp
           zh: "\u5185\u5B58\u6761\u76EE\u5728\u4EFB\u52A1\u6267\u884C\u65F6\u81EA\u52A8\u6CE8\u5165\u5230\u4EE3\u7406\u4E0A\u4E0B\u6587\u4E2D",
         })}
       </div>
+        </>
+      )}
     </div>
   );
 }
