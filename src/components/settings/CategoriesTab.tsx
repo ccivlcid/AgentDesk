@@ -57,8 +57,8 @@ export default function CategoriesTab() {
         </div>
         <button
           onClick={openCreate}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded text-white transition-opacity hover:opacity-90"
-          style={{ backgroundColor: "var(--th-accent)" }}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-white transition-opacity hover:opacity-90"
+          style={{ borderRadius: "2px", backgroundColor: "var(--th-accent)" }}
         >
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <line x1="12" y1="5" x2="12" y2="19" />
@@ -71,7 +71,7 @@ export default function CategoriesTab() {
       {loading ? (
         <div className="flex flex-col gap-2">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="h-16 rounded border border-[var(--th-border)] animate-pulse bg-[var(--th-bg-surface)]" />
+            <div key={i} className="h-16 border border-[var(--th-border)] animate-pulse bg-[var(--th-bg-surface)]" style={{ borderRadius: "2px" }} />
           ))}
         </div>
       ) : (

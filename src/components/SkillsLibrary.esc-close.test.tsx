@@ -223,10 +223,14 @@ describe("SkillsLibrary learning modal ESC close", () => {
     });
 
     render(<SkillsLibrary agents={[TEST_AGENT]} />);
-    await screen.findByRole("button", { name: exactText(UI_TEXT.ko.learn) });
-    fireEvent.click(screen.getByRole("button", { name: exactText(UI_TEXT.ko.learn) }));
+    // Skill is already learned, so the button shows "학습됨" instead of "학습"
+    await screen.findByRole("button", { name: /^학습됨$/ });
+    fireEvent.click(screen.getByRole("button", { name: /^학습됨$/ }));
 
-    await screen.findByText(/^학습됨$/);
+    // Modal opens with the learned badge (grid button + modal badge = 2 "학습됨" elements)
+    await waitFor(() => {
+      expect(screen.getAllByText(/^학습됨$/).length).toBeGreaterThanOrEqual(2);
+    });
     expect(screen.getByText(/^0명 선택됨$/)).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "학습 취소" }));
 

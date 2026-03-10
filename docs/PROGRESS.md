@@ -18,6 +18,7 @@
 | Phase 2 | 카테고리 CRUD · 대시보드 · 온보딩 · 팀 · 페르소나 | DONE | 100% |
 | Phase 3 | 카테고리 에디터 · 자동화 · 자산화              | DONE | 100% |
 | Phase 4 | 기존 화면 2.0 통합 (태스크 보드·에이전트·오피스)    | DONE | 100% |
+| Phase 6 | 잔여 화면 프로젝트 컨텍스트 통합               | DONE | 100% |
 
 
 ---
@@ -259,6 +260,19 @@
 
 ---
 
+## Phase 6 — 잔여 화면 프로젝트 컨텍스트 통합 (완료)
+
+| #   | 작업                                         | 파일                                                    | 상태   |
+| --- | ------------------------------------------ | ----------------------------------------------------- | ---- |
+| 1   | ScheduledTasksPanel 프로젝트 필터 추가              | `src/components/scheduled-tasks/ScheduledTasksPanel.tsx` | DONE |
+| 2   | HeartbeatPanel 프로젝트 팀 컨텍스트 추가              | `src/components/office-view/HeartbeatPanel.tsx`         | DONE |
+| 3   | CliUsagePanel 프로젝트별 에이전트 사용량 필터            | `src/components/office-view/CliUsagePanel.tsx`          | DONE |
+| 4   | AppMainLayout에서 프로젝트 컨텍스트 전달               | `src/app/AppMainLayout.tsx`                            | DONE |
+| 5   | CategoriesTab 2.0 스타일 통일 (rounded → borderRadius) | `src/components/settings/CategoriesTab.tsx`        | DONE |
+| 6   | HeartbeatPanel "오피스 팩" 용어 → "프로젝트 팀" 전환   | `src/components/office-view/HeartbeatPanel.tsx`         | DONE |
+
+---
+
 ## 변경 이력
 
 
@@ -272,5 +286,6 @@
 | 2026-03-10 | Phase 2 완료 확인: 2-G #26~31 이미 구현 완료 확인. App.tsx onProjectCreate 스텁 → ProjectCreateModal 실제 연동 완료.                                         |
 | 2026-03-10 | 2-F 팀 구성 UX 완료: ①Dashboard2 TeamPanel(팀원 추가/제거), ②FilterBar 담당자 필터, ③OfficeView 비팀원 dim (alpha 0.25, grey tint).                         |
 | 2026-03-10 | Phase 4 초안 작성: 기존 화면(태스크 보드·에이전트·오피스 등)과 2.0 신규 화면 간 불일치 항목 문서화. 결정 필요 사항 정리.                                                            |
+| 2026-03-10 | Phase 6 완료: ①ScheduledTasksPanel 프로젝트 필터, ②HeartbeatPanel 프로젝트 팀 컨텍스트, ③CliUsagePanel 프로젝트별 필터, ④CategoriesTab 2.0 스타일 통일, ⑤오피스 팩 용어 → 프로젝트 팀.  |
 
 
