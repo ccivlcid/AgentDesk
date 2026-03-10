@@ -15,6 +15,7 @@ const AgentRulesLibrary = lazy(() => import("../components/AgentRulesLibrary"));
 const MemoryLibrary     = lazy(() => import("../components/MemoryLibrary"));
 const HooksLibrary      = lazy(() => import("../components/HooksLibrary"));
 const SettingsPanel     = lazy(() => import("../components/SettingsPanel"));
+const Deliverables      = lazy(() => import("../components/deliverables/Deliverables"));
 import { I18nProvider, useI18n } from "../i18n";
 import type {
   Agent,
@@ -475,6 +476,16 @@ export default function AppMainLayout({
               <ScheduledTasksPanel agents={agents} />
             )}
 
+            {view === "tasks-deliverables" && (
+              <Suspense fallback={
+                <div className="flex items-center justify-center h-full font-mono text-xs" style={{ color: "var(--th-text-muted)" }}>
+                  loading...
+                </div>
+              }>
+                <Deliverables agents={agents} currentProject={currentProject ?? null} />
+              </Suspense>
+            )}
+
             {view === "agents" && (
               <TeamPageView
                 agents={agents}
@@ -511,7 +522,7 @@ export default function AppMainLayout({
               )}
 
               {view === "memory" && (
-                <MemoryLibrary agents={libraryAgents} departments={departments} />
+                <MemoryLibrary agents={libraryAgents} departments={departments} currentProject={currentProject ?? null} />
               )}
 
               {view === "hooks" && (

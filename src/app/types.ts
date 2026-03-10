@@ -9,6 +9,7 @@ export type View =
   | "tasks"
   | "tasks-board"
   | "tasks-scheduled"
+  | "tasks-deliverables"
   | "skills"
   | "agent-rules"
   | "memory"

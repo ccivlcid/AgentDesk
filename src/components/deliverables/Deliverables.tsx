@@ -6,16 +6,17 @@ import {
   type DeliverableItem,
   type TaskArtifact,
 } from "../../api";
-import type { Agent } from "../../types";
+import type { Agent, Project } from "../../types";
 import DeliverableCard from "./DeliverableCard";
 
 interface DeliverablesProps {
   agents: Agent[];
+  currentProject?: Project | null;
 }
 
 type StatusFilter = "all" | "done" | "review";
 
-export default function Deliverables({ agents }: DeliverablesProps) {
+export default function Deliverables({ agents, currentProject }: DeliverablesProps) {
   const { t } = useI18n();
 
   const [items, setItems] = useState<DeliverableItem[]>([]);
@@ -72,14 +73,24 @@ export default function Deliverables({ agents }: DeliverablesProps) {
     <div className="space-y-4">
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-lg font-semibold font-mono" style={{ color: "var(--th-text-heading)" }}>
-          {t({
-            ko: "결과물",
-            en: "Deliverables",
-            ja: "成果物",
-            zh: "交付物",
-          })}
-        </h2>
+        <div>
+          <h2 className="text-lg font-semibold font-mono" style={{ color: "var(--th-text-heading)" }}>
+            {t({ ko: "산출물", en: "Outputs", ja: "成果物", zh: "产出物" })}
+            {currentProject && (
+              <span className="ml-2 text-sm font-normal" style={{ color: "var(--th-text-muted)" }}>
+                · {currentProject.name}
+              </span>
+            )}
+          </h2>
+          <p className="text-xs mt-0.5 font-mono" style={{ color: "var(--th-text-muted)" }}>
+            {t({
+              ko: "태스크 실행 중 생성된 파일과 결과물을 모아 봅니다.",
+              en: "Files and outputs generated during task execution.",
+              ja: "タスク実行中に生成されたファイルと成果物を確認できます。",
+              zh: "查看任务执行期间生成的文件和产出物。",
+            })}
+          </p>
+        </div>
 
         <div className="flex items-center gap-2">
           <select

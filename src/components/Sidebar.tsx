@@ -29,7 +29,7 @@ const NAV_STRUCTURE: NavEntry[] = [
   {
     kind: "group",
     id: "tasks",
-    children: [{ view: "tasks-board" }, { view: "tasks-scheduled" }],
+    children: [{ view: "tasks-board" }, { view: "tasks-scheduled" }, { view: "tasks-deliverables" }],
   },
   {
     kind: "group",
@@ -47,7 +47,7 @@ const NAV_STRUCTURE: NavEntry[] = [
 
 const AGENTS_CHILDREN: View[] = ["agents", "heartbeat"];
 const LIBRARY_CHILDREN: View[] = ["skills", "agent-rules", "memory", "hooks"];
-const TASKS_CHILDREN: View[] = ["tasks-board", "tasks-scheduled"];
+const TASKS_CHILDREN: View[] = ["tasks-board", "tasks-scheduled", "tasks-deliverables"];
 
 const NAV_ICONS: Partial<Record<View | "library", React.ReactNode>> = {
   office: (
@@ -141,6 +141,14 @@ const NAV_ICONS: Partial<Record<View | "library", React.ReactNode>> = {
       <path d="M16 4l1.5-1.5M4 4L2.5 2.5" />
     </svg>
   ),
+  "tasks-deliverables": (
+    <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M5 3h10a1 1 0 011 1v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4a1 1 0 011-1z" />
+      <path d="M7 8h6M7 11h4" />
+      <path d="M13 14l1.5 1.5" />
+      <circle cx="14" cy="15" r="1" />
+    </svg>
+  ),
   settings: (
     <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="10" cy="10" r="2.5" />
@@ -187,6 +195,7 @@ export default function Sidebar({
     tasks: tr("업무 관리", "Tasks", "タスク管理", "任务管理"),
     "tasks-board": tr("업무 보드", "Task Board", "タスクボード", "任务看板"),
     "tasks-scheduled": tr("스케줄러", "Scheduler", "スケジューラ", "调度器"),
+    "tasks-deliverables": tr("산출물", "Outputs", "成果物", "产出物"),
     settings: tr("설정", "Settings", "設定", "设置"),
   };
 
