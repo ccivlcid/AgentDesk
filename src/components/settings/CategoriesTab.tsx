@@ -50,9 +50,9 @@ export default function CategoriesTab() {
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-sm font-semibold">프로젝트 카테고리</h3>
+          <h3 className="text-sm font-semibold">프로젝트 유형 관리</h3>
           <p className="text-[10px] text-[var(--th-text-muted)] mt-0.5">
-            프로젝트 유형을 정의하는 카테고리를 관리합니다.
+            프로젝트를 만들 때 사용하는 유형을 정의합니다.
           </p>
         </div>
         <button
@@ -64,7 +64,7 @@ export default function CategoriesTab() {
             <line x1="12" y1="5" x2="12" y2="19" />
             <line x1="5" y1="12" x2="19" y2="12" />
           </svg>
-          새 카테고리
+          + 새 유형 만들기
         </button>
       </div>
 
@@ -78,7 +78,7 @@ export default function CategoriesTab() {
         <>
           {customCats.length > 0 && (
             <section>
-              <p className="text-[10px] font-mono text-[var(--th-text-muted)] mb-2 uppercase tracking-wider">커스텀</p>
+              <p className="text-[10px] font-mono text-[var(--th-text-muted)] mb-2 uppercase tracking-wider">내가 만든 유형</p>
               <div className="flex flex-col gap-2">
                 {customCats.map((cat) => (
                   <CategoryCard key={cat.id} category={cat} onEdit={openEdit} onDelete={handleDelete} />
@@ -88,7 +88,10 @@ export default function CategoriesTab() {
           )}
 
           <section>
-            <p className="text-[10px] font-mono text-[var(--th-text-muted)] mb-2 uppercase tracking-wider">기본 제공</p>
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-[10px] font-mono text-[var(--th-text-muted)] uppercase tracking-wider">기본 제공 유형</p>
+              <span className="text-[9px] text-[var(--th-text-muted)]">ⓘ 수정 불가 · 복사해서 수정하세요</span>
+            </div>
             <div className="flex flex-col gap-2">
               {globalCats.map((cat) => (
                 <CategoryCard key={cat.id} category={cat} onEdit={openEdit} onDelete={handleDelete} />

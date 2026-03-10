@@ -72,7 +72,7 @@ const TAB_ITEMS: Array<{
   },
   {
     key: "categories",
-    label: (t) => t({ ko: "카테고리", en: "Categories", ja: "カテゴリ", zh: "分类" }),
+    label: (t) => t({ ko: "프로젝트 유형", en: "Project Types", ja: "プロジェクト種別", zh: "项目类型" }),
     Icon: ({ className }) => (
       <svg className={className} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
