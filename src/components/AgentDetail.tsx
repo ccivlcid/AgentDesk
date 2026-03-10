@@ -10,7 +10,6 @@ import type {
   SubAgent,
   SubTask,
   Task,
-  WorkflowPackKey,
 } from "../types";
 import AgentAvatar from "./AgentAvatar";
 import AgentDetailTabContent from "./agent-detail/AgentDetailTabContent";
@@ -25,7 +24,6 @@ interface AgentDetailProps {
   tasks: Task[];
   subAgents: SubAgent[];
   subtasks: SubTask[];
-  activeOfficeWorkflowPack?: WorkflowPackKey;
   onClose: () => void;
   onChat: (agent: Agent) => void;
   onAssignTask: (agentId: string) => void;
@@ -49,7 +47,6 @@ export default function AgentDetail({
   tasks,
   subAgents,
   subtasks,
-  activeOfficeWorkflowPack = "development",
   onClose,
   onChat,
   onAssignTask,
@@ -260,28 +257,6 @@ export default function AgentDetail({
     agent.cli_reasoning_level,
   ]);
 
-  const resolvePackLabel = useCallback(
-    (packKey: WorkflowPackKey) => {
-      switch (packKey) {
-        case "development":
-          return t({ ko: "개발", en: "Development", ja: "開発", zh: "开发" });
-        case "novel":
-          return t({ ko: "소설", en: "Novel", ja: "小説", zh: "小说" });
-        case "report":
-          return t({ ko: "리포트", en: "Report", ja: "レポート", zh: "报告" });
-        case "video_preprod":
-          return t({ ko: "영상 프리프로덕션", en: "Video Pre-production", ja: "動画プリプロ", zh: "视频前期" });
-        case "web_research_report":
-          return t({ ko: "웹 리서치 리포트", en: "Web Research Report", ja: "Webリサーチ", zh: "网页调研报告" });
-        case "roleplay":
-          return t({ ko: "역할놀이", en: "Roleplay", ja: "ロールプレイ", zh: "角色扮演" });
-        default:
-          return packKey;
-      }
-    },
-    [t],
-  );
-
   const handlePlanningLeadToggle = useCallback(
     async (nextChecked: boolean) => {
       if (agent.role !== "team_leader" || savingPlanningLead) return;
@@ -292,7 +267,7 @@ export default function AgentDetail({
       try {
         await api.updateAgent(agent.id, {
           acts_as_planning_leader: nextChecked ? 1 : 0,
-          workflow_pack_key: activeOfficeWorkflowPack,
+          workflow_pack_key: "development",
         });
         onAgentUpdated?.();
       } catch (error) {
@@ -304,28 +279,25 @@ export default function AgentDetail({
         ) {
           const details = (error.details ?? {}) as {
             existing_leader?: { name?: string | null; name_ko?: string | null };
-            pack_key?: WorkflowPackKey | null;
           };
           const existingLeaderName = String(
             details.existing_leader?.name_ko ||
               details.existing_leader?.name ||
               t({ ko: "기존 리더", en: "current leader" }),
           ).trim();
-          const packKey = details.pack_key ?? activeOfficeWorkflowPack;
-          const packLabel = resolvePackLabel(packKey);
           const confirmed = window.confirm(
             t({
-              ko: `이미 ${existingLeaderName}가 ${packLabel} 오피스팩의 리더입니다. 변경하시겠습니까?`,
-              en: `${existingLeaderName} is already the leader for the ${packLabel} office pack. Change leader?`,
-              ja: `${existingLeaderName}さんが既に${packLabel}オフィスパックのリーダーです。変更しますか？`,
-              zh: `${existingLeaderName} 已是 ${packLabel} 办公包负责人。要变更吗？`,
+              ko: `이미 ${existingLeaderName}가 리더입니다. 변경하시겠습니까?`,
+              en: `${existingLeaderName} is already the leader. Change leader?`,
+              ja: `${existingLeaderName}さんが既にリーダーです。変更しますか？`,
+              zh: `${existingLeaderName} 已是负责人。要变更吗？`,
             }),
           );
           if (confirmed) {
             try {
               await api.updateAgent(agent.id, {
                 acts_as_planning_leader: 1,
-                workflow_pack_key: activeOfficeWorkflowPack,
+                workflow_pack_key: "development",
                 force_planning_leader_override: true,
               });
               onAgentUpdated?.();
@@ -343,12 +315,10 @@ export default function AgentDetail({
       }
     },
     [
-      activeOfficeWorkflowPack,
       agent.id,
       agent.role,
       actsAsPlanningLead,
       onAgentUpdated,
-      resolvePackLabel,
       savingPlanningLead,
       t,
     ],

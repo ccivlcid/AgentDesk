@@ -1,6 +1,6 @@
 import { useCallback, type Dispatch, type SetStateAction } from "react";
 import { checkProjectPath, createProject, isApiRequestError, updateProject } from "../../api";
-import type { AssignmentMode, WorkflowPackKey } from "../../types";
+import type { AssignmentMode } from "../../types";
 import type { ManualAssignmentWarning, ProjectI18nTranslate } from "./types";
 import type { ProjectManagerPathTools } from "./useProjectManagerPathTools";
 
@@ -9,7 +9,7 @@ interface UseProjectSaveHandlerParams {
   saving: boolean;
   setSaving: Dispatch<SetStateAction<boolean>>;
   assignmentMode: AssignmentMode;
-  defaultPackKey: WorkflowPackKey;
+  defaultPackKey: string;
   getManualAssignmentWarning: () => ManualAssignmentWarning["reason"] | null;
   setManualAssignmentWarning: Dispatch<SetStateAction<ManualAssignmentWarning | null>>;
   projectPath: string;

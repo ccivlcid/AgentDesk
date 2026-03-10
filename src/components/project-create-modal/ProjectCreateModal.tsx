@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import type { Category } from "../../types";
 import CategorySelectStep from "./CategorySelectStep";
 
@@ -27,6 +27,8 @@ export default function ProjectCreateModal({ categories, onConfirm, onClose }: P
   const [step, setStep] = useState<Step>("category");
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [projectName, setProjectName] = useState("");
+  const [projectPath, setProjectPath] = useState("");
+  const [coreGoal, setCoreGoal] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [busy, setBusy] = useState(false);
   const autoAdvanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -39,18 +41,27 @@ export default function ProjectCreateModal({ categories, onConfirm, onClose }: P
 
   const selectedCategory = categories.find((c) => c.id === selectedCategoryId) ?? null;
 
-  const canConfirm = projectName.trim().length > 0;
+  // Auto-generate project_path from name
+  useEffect(() => {
+    if (!projectName.trim()) {
+      setProjectPath("");
+      return;
+    }
+    const safeName = projectName.trim().toLowerCase().replace(/[^a-z0-9가-힣]+/g, "-").replace(/^-|-$/g, "");
+    setProjectPath(`~/projects/${safeName}`);
+  }, [projectName]);
+
+  const canConfirm = projectName.trim().length > 0 && projectPath.trim().length > 0;
 
   const handleConfirm = () => {
     setSubmitted(true);
     if (!canConfirm) return;
     setBusy(true);
-    const safeName = projectName.trim().toLowerCase().replace(/[^a-z0-9가-힣]+/g, "-").replace(/^-|-$/g, "");
     onConfirm({
       name: projectName.trim(),
       categoryId: selectedCategoryId,
-      project_path: `~/projects/${safeName}`,
-      core_goal: selectedCategory ? `${selectedCategory.name_ko ?? selectedCategory.name} 프로젝트` : undefined,
+      project_path: projectPath.trim(),
+      core_goal: coreGoal.trim() || (selectedCategory ? `${selectedCategory.name_ko ?? selectedCategory.name} 프로젝트` : undefined),
     });
   };
 
@@ -101,7 +112,7 @@ export default function ProjectCreateModal({ categories, onConfirm, onClose }: P
           </span>
           <span className="text-[var(--th-border)]">────</span>
           <span className={step === "info" ? "font-semibold text-[var(--th-accent)]" : "text-[var(--th-text-muted)]"}>
-            ② 이름 입력
+            ② 기본 정보
           </span>
         </div>
 
@@ -162,7 +173,6 @@ export default function ProjectCreateModal({ categories, onConfirm, onClose }: P
                   type="text"
                   value={projectName}
                   onChange={(e) => setProjectName(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && !busy && handleConfirm()}
                   placeholder="예: 쇼핑몰 앱 개발 2026"
                   className="w-full px-3 py-2 text-sm bg-[var(--th-bg-surface)] border border-[var(--th-border)] rounded outline-none focus:border-[var(--th-accent)] transition-colors"
                   style={submitted && !projectName.trim() ? { borderColor: "var(--th-error, #ef4444)" } : {}}
@@ -172,6 +182,44 @@ export default function ProjectCreateModal({ categories, onConfirm, onClose }: P
                     프로젝트 이름을 입력해주세요.
                   </p>
                 )}
+              </div>
+
+              {/* 프로젝트 경로 */}
+              <div>
+                <label className="block text-xs font-medium mb-1.5">
+                  프로젝트 경로 <span style={{ color: "var(--th-error, #ef4444)" }}>*</span>
+                </label>
+                <p className="text-[10px] text-[var(--th-text-muted)] mb-1.5">
+                  AI 에이전트가 실행될 로컬 폴더 경로입니다.
+                </p>
+                <input
+                  type="text"
+                  value={projectPath}
+                  onChange={(e) => setProjectPath(e.target.value)}
+                  placeholder="/Users/me/projects/my-app"
+                  className="w-full px-3 py-2 text-sm bg-[var(--th-bg-surface)] border border-[var(--th-border)] rounded outline-none focus:border-[var(--th-accent)] transition-colors font-mono"
+                  style={submitted && !projectPath.trim() ? { borderColor: "var(--th-error, #ef4444)" } : {}}
+                />
+                {submitted && !projectPath.trim() && (
+                  <p className="text-[10px] mt-1" style={{ color: "var(--th-error, #ef4444)" }}>
+                    프로젝트 경로는 필수입니다.
+                  </p>
+                )}
+              </div>
+
+              {/* 한 줄 목표 */}
+              <div>
+                <label className="block text-xs font-medium mb-1.5">
+                  한 줄 목표 <span className="text-[var(--th-text-muted)] font-normal">(선택)</span>
+                </label>
+                <input
+                  type="text"
+                  value={coreGoal}
+                  onChange={(e) => setCoreGoal(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && !busy && handleConfirm()}
+                  placeholder="예: 2026년 Q2 출시를 위한 신규 기능 개발"
+                  className="w-full px-3 py-2 text-sm bg-[var(--th-bg-surface)] border border-[var(--th-border)] rounded outline-none focus:border-[var(--th-accent)] transition-colors"
+                />
               </div>
 
               {/* 자동 포함 항목 요약 */}

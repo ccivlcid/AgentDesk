@@ -1,5 +1,5 @@
 import React from "react";
-import type { Agent, Task, WorkflowPackKey } from "../../types";
+import type { Agent, Task } from "../../types";
 import ReportHud from "./ReportHud";
 import VideoHud from "./VideoHud";
 import RpgHud from "./RpgHud";
@@ -7,7 +7,7 @@ import AssetHud from "./AssetHud";
 import NovelHud from "./NovelHud";
 
 interface PackHudProps {
-  packKey: WorkflowPackKey;
+  packKey: string;
   agents: Agent[];
   tasks: Task[];
 }

@@ -1,6 +1,5 @@
 import React from "react";
 import type { Task } from "../../types";
-import { usePackVocab } from "../../pack-identity/vocabulary";
 
 interface ReportHudProps {
   tasks: Task[];
@@ -8,7 +7,6 @@ interface ReportHudProps {
 
 /** Editorial Newsroom HUD — deadline countdown + story progress */
 export default function ReportHud({ tasks }: ReportHudProps) {
-  const vocab = usePackVocab("report");
   const activeTasks = tasks.filter((t) => t.status === "in_progress");
   const doneTasks = tasks.filter((t) => t.status === "done");
   const totalStories = activeTasks.length + doneTasks.length;
@@ -25,11 +23,11 @@ export default function ReportHud({ tasks }: ReportHudProps) {
     <div className="pack-hud pack-hud--report">
       <span className="pack-hud__badge" style={{ color: "#ef4444" }}>DEADLINE</span>
       <span className="pack-hud__sep" />
-      <span>{totalStories} {vocab.tasks}</span>
+      <span>{totalStories} Tasks</span>
       <span className="pack-hud__sep" />
       <span>{hoursLeft}h {minsLeft}m left</span>
       <span className="pack-hud__sep" />
-      <span>{doneTasks.length} {vocab.done}</span>
+      <span>{doneTasks.length} Done</span>
       <span className="pack-hud__sep" />
       <span className="pack-hud__bar-wrap">
         <span className="pack-hud__bar-fill" style={{ width: `${pct}%`, background: "#22c55e" }} />

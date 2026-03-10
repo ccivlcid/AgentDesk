@@ -387,7 +387,7 @@ export default function App() {
               project_path: project_path ?? "",
               core_goal: resolvedGoal,
               category_id: categoryId ?? undefined,
-              create_path_if_missing: false,
+              create_path_if_missing: true,
             })
               .then((newProject) => {
                 setProjects((prev) => [...prev, newProject]);

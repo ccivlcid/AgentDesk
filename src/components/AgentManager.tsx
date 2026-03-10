@@ -14,17 +14,11 @@ export default function AgentManager({
   agents,
   departments,
   onAgentsChange,
-  activeOfficeWorkflowPack = "development",
-  dbBackedOfficePack = false,
-  onSaveOfficePackProfile,
   projectAgentIds,
 }: AgentManagerProps) {
   const { t, locale } = useI18n();
   const isKo = locale.startsWith("ko");
   const tr = (ko: string, en: string) => t({ ko, en, ja: en, zh: en });
-  const officePackKey = "development" as const;
-  const isIsolatedPack = false;
-  const useDbBackedPack = isIsolatedPack && dbBackedOfficePack;
 
   const [subTab, setSubTab] = useState<"agents" | "departments">("agents");
   const [search, setSearch] = useState("");
@@ -43,18 +37,6 @@ export default function AgentManager({
   const [draggingDeptId, setDraggingDeptId] = useState<string | null>(null);
   const [dragOverDeptId, setDragOverDeptId] = useState<string | null>(null);
   const [dragOverPosition, setDragOverPosition] = useState<"before" | "after" | null>(null);
-
-  const persistIsolatedProfile = useCallback(
-    async (nextDepartments: Department[], nextAgents: Agent[]) => {
-      if (!isIsolatedPack || !onSaveOfficePackProfile) return;
-      await onSaveOfficePackProfile(officePackKey, {
-        departments: nextDepartments,
-        agents: nextAgents,
-        updated_at: Date.now(),
-      });
-    },
-    [isIsolatedPack, officePackKey, onSaveOfficePackProfile],
-  );
 
   useEffect(() => {
     setDeptOrder([...departments].sort((a, b) => a.sort_order - b.sort_order));
@@ -139,78 +121,19 @@ export default function AgentManager({
         persona_id: form.persona_id || null,
       };
       let savedAgentId: string | undefined = modalAgent?.id;
-      if (isIsolatedPack) {
-        if (useDbBackedPack) {
-          if (modalAgent) {
-            await api.updateAgent(modalAgent.id, {
-              ...basePayload,
-              department_id: departmentId || null,
-              workflow_pack_key: officePackKey,
-            });
-            const nextAgents = agents.map((agent) =>
-              agent.id === modalAgent.id
-                ? {
-                    ...agent,
-                    ...basePayload,
-                    department_id: departmentId || null,
-                  }
-                : agent,
-            );
-            await persistIsolatedProfile(departments, nextAgents);
-          } else {
-            const createdAgent = await api.createAgent({
-              ...basePayload,
-              department_id: departmentId || null,
-              workflow_pack_key: officePackKey,
-            });
-            savedAgentId = createdAgent.id;
-            await persistIsolatedProfile(departments, [...agents, createdAgent]);
-          }
-          onAgentsChange();
-        } else {
-          const nextAgents = modalAgent
-            ? agents.map((agent) =>
-                agent.id === modalAgent.id
-                  ? {
-                      ...agent,
-                      ...basePayload,
-                      department_id: departmentId || null,
-                    }
-                  : agent,
-              )
-            : [
-                ...agents,
-                {
-                  id:
-                    typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
-                      ? crypto.randomUUID()
-                      : `agent-${Date.now()}`,
-                  ...basePayload,
-                  department_id: departmentId || null,
-                  status: "idle" as const,
-                  current_task_id: null,
-                  stats_tasks_done: 0,
-                  stats_xp: 0,
-                  created_at: Date.now(),
-                },
-              ];
-          await persistIsolatedProfile(departments, nextAgents);
-        }
+      if (modalAgent) {
+        await api.updateAgent(modalAgent.id, {
+          ...basePayload,
+          department_id: departmentId || null,
+        });
       } else {
-        if (modalAgent) {
-          await api.updateAgent(modalAgent.id, {
-            ...basePayload,
-            department_id: departmentId || null,
-          });
-        } else {
-          const createdAgent = await api.createAgent({
-            ...basePayload,
-            department_id: departmentId || null,
-          });
-          savedAgentId = createdAgent.id;
-        }
-        onAgentsChange();
+        const createdAgent = await api.createAgent({
+          ...basePayload,
+          department_id: departmentId || null,
+        });
+        savedAgentId = createdAgent.id;
       }
+      onAgentsChange();
       // Avatar upload/delete (after agent is saved so we have an ID)
       const agentId = savedAgentId;
       if (agentId) {
@@ -237,31 +160,16 @@ export default function AgentManager({
     closeModal,
     departments,
     form,
-    isIsolatedPack,
     modalAgent,
     onAgentsChange,
-    persistIsolatedProfile,
-    useDbBackedPack,
   ]);
 
   const handleDelete = useCallback(
     async (id: string) => {
       setSaving(true);
       try {
-        if (isIsolatedPack) {
-          if (useDbBackedPack) {
-            await api.deleteAgent(id);
-            const nextAgents = agents.filter((agent) => agent.id !== id);
-            await persistIsolatedProfile(departments, nextAgents);
-            onAgentsChange();
-          } else {
-            const nextAgents = agents.filter((agent) => agent.id !== id);
-            await persistIsolatedProfile(departments, nextAgents);
-          }
-        } else {
-          await api.deleteAgent(id);
-          onAgentsChange();
-        }
+        await api.deleteAgent(id);
+        onAgentsChange();
         setConfirmDeleteId(null);
         if (modalAgent?.id === id) closeModal();
       } catch (err) {
@@ -271,14 +179,9 @@ export default function AgentManager({
       }
     },
     [
-      agents,
       closeModal,
-      departments,
-      isIsolatedPack,
       modalAgent,
       onAgentsChange,
-      persistIsolatedProfile,
-      useDbBackedPack,
     ],
   );
 
@@ -349,30 +252,16 @@ export default function AgentManager({
         ...department,
         sort_order: index + 1,
       }));
-      if (isIsolatedPack) {
-        if (useDbBackedPack) {
-          const orders = nextDepartments.map((department) => ({
-            id: department.id,
-            sort_order: department.sort_order,
-          }));
-          await api.reorderDepartments(orders, { workflowPackKey: officePackKey });
-          await persistIsolatedProfile(nextDepartments, agents);
-          onAgentsChange();
-        } else {
-          await persistIsolatedProfile(nextDepartments, agents);
-        }
-      } else {
-        const orders = nextDepartments.map((department) => ({ id: department.id, sort_order: department.sort_order }));
-        await api.reorderDepartments(orders);
-        onAgentsChange();
-      }
+      const orders = nextDepartments.map((department) => ({ id: department.id, sort_order: department.sort_order }));
+      await api.reorderDepartments(orders);
+      onAgentsChange();
       setDeptOrderDirty(false);
     } catch (err) {
       console.error("Reorder failed:", err);
     } finally {
       setReorderSaving(false);
     }
-  }, [agents, deptOrder, isIsolatedPack, onAgentsChange, persistIsolatedProfile, useDbBackedPack]);
+  }, [deptOrder, onAgentsChange]);
 
   const resetDeptOrder = useCallback(() => {
     setDeptOrder([...departments].sort((a, b) => a.sort_order - b.sort_order));
@@ -411,165 +300,6 @@ export default function AgentManager({
       clearDeptDragState();
     },
     [clearDeptDragState, draggingDeptId, getDropPosition, moveDeptByDrag],
-  );
-
-  const handleDbBackedDepartmentSave = useCallback(
-    async (input: {
-      mode: "create" | "update";
-      id: string;
-      payload: {
-        name: string;
-        name_ko: string;
-        name_ja: string | null;
-        name_zh: string | null;
-        icon: string;
-        color: string;
-        description: string | null;
-        prompt: string | null;
-        sort_order: number;
-      };
-    }) => {
-      if (!useDbBackedPack) return;
-      if (input.mode === "update") {
-        await api.updateDepartment(input.id, {
-          name: input.payload.name,
-          name_ko: input.payload.name_ko,
-          name_ja: input.payload.name_ja,
-          name_zh: input.payload.name_zh,
-          icon: input.payload.icon,
-          color: input.payload.color,
-          description: input.payload.description,
-          prompt: input.payload.prompt,
-          workflow_pack_key: officePackKey,
-        });
-        const nextDepartments = departments.map((d) =>
-          d.id === input.id
-            ? {
-                ...d,
-                name: input.payload.name,
-                name_ko: input.payload.name_ko,
-                name_ja: input.payload.name_ja,
-                name_zh: input.payload.name_zh,
-                icon: input.payload.icon,
-                color: input.payload.color,
-                description: input.payload.description,
-                prompt: input.payload.prompt,
-              }
-            : d,
-        );
-        await persistIsolatedProfile(nextDepartments, agents);
-      } else {
-        const created = await api.createDepartment({
-          id: input.id,
-          name: input.payload.name,
-          name_ko: input.payload.name_ko,
-          name_ja: input.payload.name_ja ?? undefined,
-          name_zh: input.payload.name_zh ?? undefined,
-          icon: input.payload.icon,
-          color: input.payload.color,
-          description: input.payload.description ?? undefined,
-          prompt: input.payload.prompt ?? undefined,
-          workflow_pack_key: officePackKey,
-        });
-        await persistIsolatedProfile([...departments, created], agents);
-      }
-    },
-    [agents, departments, officePackKey, persistIsolatedProfile, useDbBackedPack],
-  );
-
-  const handleDbBackedDepartmentDelete = useCallback(
-    async (departmentId: string) => {
-      if (!useDbBackedPack) return;
-      await api.deleteDepartment(departmentId, { workflowPackKey: officePackKey });
-      const nextDepartments = departments
-        .filter((d) => d.id !== departmentId)
-        .sort((a, b) => a.sort_order - b.sort_order)
-        .map((d, i) => ({ ...d, sort_order: i + 1 }));
-      const nextAgents = agents.map((a) =>
-        a.department_id === departmentId ? { ...a, department_id: null } : a,
-      );
-      await persistIsolatedProfile(nextDepartments, nextAgents);
-    },
-    [agents, departments, officePackKey, persistIsolatedProfile, useDbBackedPack],
-  );
-
-  const handleIsolatedDepartmentSave = useCallback(
-    async (input: {
-      mode: "create" | "update";
-      id: string;
-      payload: {
-        name: string;
-        name_ko: string;
-        name_ja: string | null;
-        name_zh: string | null;
-        icon: string;
-        color: string;
-        description: string | null;
-        prompt: string | null;
-        sort_order: number;
-      };
-    }) => {
-      if (!isIsolatedPack) return;
-      const nextDepartments =
-        input.mode === "create"
-          ? [
-              ...departments,
-              {
-                id: input.id,
-                name: input.payload.name,
-                name_ko: input.payload.name_ko,
-                name_ja: input.payload.name_ja,
-                name_zh: input.payload.name_zh,
-                icon: input.payload.icon,
-                color: input.payload.color,
-                description: input.payload.description,
-                prompt: input.payload.prompt,
-                sort_order: input.payload.sort_order,
-                created_at: Date.now(),
-              },
-            ]
-          : departments.map((department) =>
-              department.id === input.id
-                ? {
-                    ...department,
-                    name: input.payload.name,
-                    name_ko: input.payload.name_ko,
-                    name_ja: input.payload.name_ja,
-                    name_zh: input.payload.name_zh,
-                    icon: input.payload.icon,
-                    color: input.payload.color,
-                    description: input.payload.description,
-                    prompt: input.payload.prompt,
-                    sort_order: input.payload.sort_order,
-                  }
-                : department,
-            );
-      await persistIsolatedProfile(nextDepartments, agents);
-    },
-    [agents, departments, isIsolatedPack, persistIsolatedProfile],
-  );
-
-  const handleIsolatedDepartmentDelete = useCallback(
-    async (departmentId: string) => {
-      if (!isIsolatedPack) return;
-      const filteredDepartments = departments
-        .filter((department) => department.id !== departmentId)
-        .sort((a, b) => a.sort_order - b.sort_order)
-        .map((department, index) => ({
-          ...department,
-          sort_order: index + 1,
-        }));
-      const nextAgents = agents.map((agent) =>
-        agent.department_id === departmentId
-          ? {
-              ...agent,
-              department_id: null,
-            }
-          : agent,
-      );
-      await persistIsolatedProfile(filteredDepartments, nextAgents);
-    },
-    [agents, departments, isIsolatedPack, persistIsolatedProfile],
   );
 
   return (
@@ -703,24 +433,9 @@ export default function AgentManager({
           tr={tr}
           department={editDept}
           departments={departments}
-          workflowPackKey={isIsolatedPack ? officePackKey : undefined}
           onSave={() => {
-            if (!isIsolatedPack || useDbBackedPack) onAgentsChange();
+            onAgentsChange();
           }}
-          onSaveDepartment={
-            isIsolatedPack
-              ? useDbBackedPack
-                ? handleDbBackedDepartmentSave
-                : handleIsolatedDepartmentSave
-              : undefined
-          }
-          onDeleteDepartment={
-            isIsolatedPack
-              ? useDbBackedPack
-                ? handleDbBackedDepartmentDelete
-                : handleIsolatedDepartmentDelete
-              : undefined
-          }
           onClose={closeDeptModal}
         />
       )}

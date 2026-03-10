@@ -216,18 +216,18 @@ if (!body.project_path?.trim()) {
 
 ## 7. 구현 체크리스트
 
-- [ ] `ProjectCreateModal` — Step 2에 `project_path` 입력 추가 (필수)
-- [ ] `ProjectCreateModal` — `onConfirm` 타입에 `project_path` 추가
-- [ ] `App.tsx` `handleProjectCreate` — `project_path` 전달 처리
-- [ ] `ProjectManagerModal` — 신규 생성을 `ProjectCreateModal`로 위임
-- [ ] `createProject` API — `project_path` 필수화
-- [ ] 기존 프로젝트 누락 경로 안내 배너
-- [ ] `core_goal` 선택 입력 추가 (Step 2)
-- [ ] 빌드 검증
+- [x] `ProjectCreateModal` — Step 2에 `project_path` 입력 추가 (필수)
+- [x] `ProjectCreateModal` — `onConfirm` 타입에 `project_path` 추가
+- [x] `App.tsx` `handleProjectCreate` — `project_path` 전달 처리
+- [x] `ProjectManagerModal` — 신규 생성을 `ProjectCreateModal`로 위임
+- [ ] `createProject` API — `project_path` 필수화 (서버측, 별도 작업)
+- [ ] 기존 프로젝트 누락 경로 안내 배너 (별도 작업)
+- [x] `core_goal` 선택 입력 추가 (Step 2)
+- [x] 빌드 검증
 
 ---
 
 ## 8. 현재 상태
 
-- [ ] 계획 작성 완료
-- [ ] 구현 미착수
+- [x] 계획 작성 완료
+- [x] 클라이언트 구현 완료 (ProjectCreateModal 확장, ProjectManagerModal 위임, 오피스팩 UI 제거)

@@ -14,7 +14,7 @@ import {
 import { useDraggable } from "@dnd-kit/core";
 import { bulkHideTasks, getProjects } from "../api";
 import { useI18n } from "../i18n";
-import type { Agent, Department, Project, SubTask, Task, TaskExecutionState, TaskStatus, WorkflowPackKey } from "../types";
+import type { Agent, Department, Project, SubTask, Task, TaskExecutionState, TaskStatus } from "../types";
 import ProjectManagerModal from "./ProjectManagerModal";
 import BulkHideModal from "./taskboard/BulkHideModal";
 import CreateTaskModal from "./taskboard/CreateTaskModal";
@@ -118,7 +118,6 @@ interface TaskBoardProps {
   onOpenMeetingMinutes?: (taskId: string) => void;
   onMergeTask?: (id: string) => void;
   onDiscardTask?: (id: string) => void;
-  activeWorkflowPackKey?: WorkflowPackKey;
   onProjectCreate?: () => void;
 }
 
@@ -141,7 +140,6 @@ export function TaskBoard({
   onOpenMeetingMinutes,
   onMergeTask,
   onDiscardTask,
-  activeWorkflowPackKey,
   onProjectCreate,
 }: TaskBoardProps) {
   const { t } = useI18n();
@@ -828,7 +826,6 @@ export function TaskBoard({
           onClose={() => setShowCreate(false)}
           onCreate={onCreateTask}
           onAssign={onAssignTask}
-          activeWorkflowPackKey={activeWorkflowPackKey}
         />
       )}
 
