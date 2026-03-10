@@ -45,12 +45,14 @@ function CliUsagePage({
   language,
   refreshing,
   onRefreshUsage,
+  projectAgentIds,
 }: {
   cliStatus: CliStatusMap | null;
   cliUsage: Record<string, CliUsageEntry> | null;
   language: UiLanguage;
   refreshing: boolean;
   onRefreshUsage: () => void;
+  projectAgentIds?: Set<string>;
 }) {
   const { t } = useI18n();
   return (
@@ -61,6 +63,7 @@ function CliUsagePage({
       refreshing={refreshing}
       onRefreshUsage={onRefreshUsage}
       t={t}
+      projectAgentIds={projectAgentIds}
     />
   );
 }
@@ -429,6 +432,7 @@ export default function AppMainLayout({
                   language={labels.uiLanguage as "ko" | "en" | "ja" | "zh"}
                   refreshing={cliUsageRefreshing}
                   onRefreshUsage={handleRefreshUsage}
+                  projectAgentIds={projectAgentIds.size > 0 ? projectAgentIds : undefined}
                 />
               </div>
             )}
@@ -465,7 +469,7 @@ export default function AppMainLayout({
             )}
 
             {view === "tasks-scheduled" && (
-              <ScheduledTasksPanel agents={agents} />
+              <ScheduledTasksPanel agents={agents} currentProjectId={currentProject?.id} />
             )}
 
             {view === "agents" && (
@@ -487,6 +491,7 @@ export default function AppMainLayout({
                   avatar_emoji: a.avatar_emoji ?? undefined,
                 }))}
                 standalone
+                currentProjectName={currentProject?.name}
               />
             )}
 

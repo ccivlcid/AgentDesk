@@ -20,6 +20,7 @@ import {
 
 interface Props {
   agents?: Agent[];
+  currentProjectId?: string | null;
 }
 
 type TabKey = "schedules" | "templates" | "guide";
@@ -68,7 +69,7 @@ function getNextRunUrgency(ts: number | null): "imminent" | "soon" | "normal" | 
 
 /* ─────────────────────────────────────────────────────── */
 
-export default function ScheduledTasksPanel({ agents = [] }: Props) {
+export default function ScheduledTasksPanel({ agents = [], currentProjectId }: Props) {
   const { t, locale, language } = useI18n();
   const tr = (ko: string, en: string) => t({ ko, en, ja: en, zh: en });
 
@@ -239,8 +240,15 @@ export default function ScheduledTasksPanel({ agents = [] }: Props) {
     refresh();
   }
 
-  const activeCount = schedules.filter((s) => s.enabled).length;
-  const totalRuns = schedules.reduce((sum, s) => sum + s.run_count, 0);
+  // 프로젝트 필터: currentProjectId가 있으면 해당 프로젝트 스케줄만 표시
+  const [projectFilter, setProjectFilter] = useState<"current" | "all">("current");
+  const filteredSchedules = useMemo(() => {
+    if (!currentProjectId || projectFilter === "all") return schedules;
+    return schedules.filter((s) => s.project_id === currentProjectId);
+  }, [schedules, currentProjectId, projectFilter]);
+
+  const activeCount = filteredSchedules.filter((s) => s.enabled).length;
+  const totalRuns = filteredSchedules.reduce((sum, s) => sum + s.run_count, 0);
 
   if (loading) {
     return (
@@ -259,7 +267,7 @@ export default function ScheduledTasksPanel({ agents = [] }: Props) {
       key: "schedules",
       label: tr("스케줄", "Schedules"),
       icon: "M12 7v5l3 3M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
-      count: schedules.length,
+      count: filteredSchedules.length,
     },
     {
       key: "templates",
@@ -363,12 +371,36 @@ export default function ScheduledTasksPanel({ agents = [] }: Props) {
       {/* ═══════════════════ SCHEDULES TAB ═══════════════════ */}
       {activeTab === "schedules" && (
         <div className="space-y-5">
+          {/* Project filter toggle */}
+          {currentProjectId && (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setProjectFilter("current")}
+                className="px-3 py-1.5 text-[11px] font-medium font-mono transition-colors"
+                style={projectFilter === "current"
+                  ? { borderRadius: "2px", border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.15)", color: "var(--th-accent)" }
+                  : { borderRadius: "2px", border: "1px solid var(--th-border)", background: "transparent", color: "var(--th-text-muted)" }}
+              >
+                {tr("현재 프로젝트", "Current Project")}
+              </button>
+              <button
+                onClick={() => setProjectFilter("all")}
+                className="px-3 py-1.5 text-[11px] font-medium font-mono transition-colors"
+                style={projectFilter === "all"
+                  ? { borderRadius: "2px", border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.15)", color: "var(--th-accent)" }
+                  : { borderRadius: "2px", border: "1px solid var(--th-border)", background: "transparent", color: "var(--th-text-muted)" }}
+              >
+                {tr("전체", "All")} ({schedules.length})
+              </button>
+            </div>
+          )}
+
           {/* Stats bar */}
-          {schedules.length > 0 && (
+          {filteredSchedules.length > 0 && (
             <div className="grid grid-cols-3 gap-3">
               <div className="px-4 py-3" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
                 <div className="text-[11px] font-mono uppercase tracking-wider font-medium" style={{ color: "var(--th-text-muted)" }}>{tr("전체", "Total")}</div>
-                <div className="text-xl font-bold font-mono mt-0.5" style={{ color: "var(--th-text-heading)" }}>{schedules.length}</div>
+                <div className="text-xl font-bold font-mono mt-0.5" style={{ color: "var(--th-text-heading)" }}>{filteredSchedules.length}</div>
               </div>
               <div className="px-4 py-3" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
                 <div className="text-[11px] font-mono uppercase tracking-wider font-medium" style={{ color: "var(--th-text-muted)" }}>{tr("활성", "Active")}</div>
@@ -547,17 +579,19 @@ export default function ScheduledTasksPanel({ agents = [] }: Props) {
           )}
 
           {/* Schedule list */}
-          {schedules.length === 0 && !showForm ? (
+          {filteredSchedules.length === 0 && !showForm ? (
             <EmptyState
               icon="M12 7v5l3 3M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
               title={tr("등록된 스케줄이 없습니다", "No schedules yet")}
-              description={tr("반복 태스크 스케줄을 추가하여 업무를 자동화하세요", "Add a schedule to automate recurring task creation")}
+              description={currentProjectId && projectFilter === "current"
+                ? tr("현재 프로젝트에 등록된 스케줄이 없습니다", "No schedules for the current project")
+                : tr("반복 태스크 스케줄을 추가하여 업무를 자동화하세요", "Add a schedule to automate recurring task creation")}
               actionLabel={tr("첫 스케줄 추가", "Add First Schedule")}
               onAction={() => { resetForm(); setShowForm(true); }}
             />
-          ) : schedules.length > 0 && (
+          ) : filteredSchedules.length > 0 && (
             <div className="space-y-2.5">
-              {schedules.map((s) => {
+              {filteredSchedules.map((s) => {
                 const urgency = s.enabled ? getNextRunUrgency(s.next_run_at) : "disabled";
                 return (
                   <div key={s.id}

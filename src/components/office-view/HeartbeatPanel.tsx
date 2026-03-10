@@ -40,6 +40,8 @@ interface Props {
   agents?: SimpleAgent[];
   /** 전용 페이지(직원관리 > Heartbeat)에서 사용 시 true. 접기 헤더 없이 항상 내용만 표시 */
   standalone?: boolean;
+  /** 현재 프로젝트명 (프로젝트 컨텍스트 표시용) */
+  currentProjectName?: string | null;
 }
 
 function fmtAgo(ts: number): string {
@@ -106,7 +108,7 @@ const StatusErrorIcon = () => (
   </svg>
 );
 
-export default function HeartbeatPanel({ language, agents = [], standalone = false }: Props) {
+export default function HeartbeatPanel({ language, agents = [], standalone = false, currentProjectName }: Props) {
   const isKo = language === "ko";
   const [configs, setConfigs] = useState<HeartbeatConfig[]>([]);
   const [logs, setLogs] = useState<HeartbeatLog[]>([]);
@@ -120,7 +122,7 @@ export default function HeartbeatPanel({ language, agents = [], standalone = fal
   const [saving, setSaving] = useState(false);
   const [triggering, setTriggering] = useState<string | null>(null);
   const [removingAgentId, setRemovingAgentId] = useState<string | null>(null);
-  /** 직원 추가 셀렉트 값(팩 변경 시 초기화되도록 controlled) */
+  /** 직원 추가 셀렉트 값(팀 변경 시 초기화되도록 controlled) */
   const [addAgentId, setAddAgentId] = useState("");
   const [adding, setAdding] = useState(false);
   const [guideExpanded, setGuideExpanded] = useState(false);
@@ -188,7 +190,7 @@ export default function HeartbeatPanel({ language, agents = [], standalone = fal
     }));
   };
 
-  /** 현재 오피스 팩(agents)에 포함된 직원의 설정·로그만 표시 */
+  /** 현재 프로젝트 팀에 포함된 직원의 설정·로그만 표시 */
   const agentIds = useMemo(() => new Set(agents.map((a) => a.id)), [agents]);
   const visibleConfigs = useMemo(
     () => configs.filter((c) => agentIds.has(c.agent_id)),
@@ -202,19 +204,19 @@ export default function HeartbeatPanel({ language, agents = [], standalone = fal
   const alertLogs = visibleLogs.filter((l) => l.status !== "ok");
   const okCount = visibleLogs.filter((l) => l.status === "ok").length;
   const activeCount = visibleConfigs.filter((c) => c.enabled).length;
-  /** 현재 팩 직원 중 점검 설정이 없는 직원만(추가 가능 목록) */
+  /** 현재 팀 직원 중 점검 설정이 없는 직원만(추가 가능 목록) */
   const agentsWithoutConfig = useMemo(
     () => agents.filter((a) => !configs.some((c) => c.agent_id === a.id)),
     [agents, configs],
   );
 
-  /** 팩 변경 시 추가 셀렉트 초기화 */
+  /** 팀 변경 시 추가 셀렉트 초기화 */
   useEffect(() => {
     const valid = agentsWithoutConfig.some((a) => a.id === addAgentId);
     if (!valid) setAddAgentId("");
   }, [agentsWithoutConfig, addAgentId]);
 
-  /** 팩/목록 식별용 키(셀렉트 리마운트로 옵션 확실히 갱신) */
+  /** 팀/목록 식별용 키(셀렉트 리마운트로 옵션 확실히 갱신) */
   const addSelectKey = useMemo(
     () => `pack-${agents.map((a) => a.id).sort().join("-")}`,
     [agents],
@@ -293,8 +295,8 @@ export default function HeartbeatPanel({ language, agents = [], standalone = fal
                     </p>
                     <p>
                       {isKo
-                        ? "오피스 팩을 선택한 뒤, '살펴볼 직원 추가'에서 이 팩에 속한 직원을 선택하면 해당 직원이 살펴보기 대상에 포함됩니다. 간격(분)과 확인 항목을 설정할 수 있습니다."
-                        : "Use 'Add to monitor' to select staff in the current pack. You can set the interval (minutes) and which items to check."}
+                        ? "프로젝트 팀에서 '살펴볼 직원 추가'로 팀원을 선택하면 해당 직원이 살펴보기 대상에 포함됩니다. 간격(분)과 확인 항목을 설정할 수 있습니다."
+                        : "Use 'Add to monitor' to select staff in the current project team. You can set the interval (minutes) and which items to check."}
                     </p>
                     <p>
                       {isKo
@@ -306,15 +308,27 @@ export default function HeartbeatPanel({ language, agents = [], standalone = fal
                     <span className="text-amber-400 shrink-0">💡</span>
                     <p className="text-[11px] text-amber-200/90 leading-relaxed">
                       {isKo
-                        ? "현재 보이는 직원 목록과 살펴보기 대상은 선택한 오피스 팩에 따라 달라집니다."
-                        : "The staff list and monitored list depend on the selected office pack."}
+                        ? "현재 보이는 직원 목록과 살펴보기 대상은 선택한 프로젝트 팀에 따라 달라집니다."
+                        : "The staff list and monitored list depend on the current project team."}
                     </p>
                   </div>
                 </div>
               )}
             </section>
 
-            {/* 직원 추가: 현재 오피스 팩(managerAgents) 기준 */}
+            {/* 프로젝트 컨텍스트 표시 */}
+            {currentProjectName && (
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>
+                  {isKo ? "프로젝트:" : "Project:"}
+                </span>
+                <span className="px-2 py-0.5 text-[11px] font-medium font-mono" style={{ borderRadius: "2px", background: "rgba(251,191,36,0.12)", border: "1px solid rgba(251,191,36,0.3)", color: "var(--th-accent)" }}>
+                  {currentProjectName}
+                </span>
+              </div>
+            )}
+
+            {/* 팀원 추가 */}
             <section className="space-y-2">
               <h3 className="text-xs font-semibold font-mono uppercase tracking-wider" style={{ color: "var(--th-text-muted)" }}>
                 {isKo ? "살펴볼 직원 추가" : "Add to monitor"}
@@ -363,7 +377,7 @@ export default function HeartbeatPanel({ language, agents = [], standalone = fal
                     style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)", fontFamily: "var(--th-font-mono)" }}
                     aria-label={isKo ? "살펴볼 직원 선택" : "Select staff to monitor"}
                   >
-                    <option value="">{isKo ? "이 팩의 직원 선택…" : "Select staff in this pack…"}</option>
+                    <option value="">{isKo ? "팀원 선택…" : "Select team member…"}</option>
                     {agentsWithoutConfig.map((a) => (
                       <option key={a.id} value={a.id}>
                         {a.avatar_emoji ?? "👤"} {isKo && a.name_ko ? a.name_ko : a.name}
@@ -377,8 +391,8 @@ export default function HeartbeatPanel({ language, agents = [], standalone = fal
               ) : (
                 <p className="px-3 py-2 text-[12px] font-mono" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-muted)" }}>
                   {isKo
-                    ? "이 오피스 팩의 직원은 모두 살펴보기 대상에 포함되어 있습니다."
-                    : "All staff in this pack are already being monitored."}
+                    ? "팀원 전원이 살펴보기 대상에 포함되어 있습니다."
+                    : "All team members are already being monitored."}
                 </p>
               )}
             </section>
@@ -394,8 +408,8 @@ export default function HeartbeatPanel({ language, agents = [], standalone = fal
             {visibleConfigs.length === 0 && agents.length > 0 && (
               <p className="px-4 py-4 text-center text-sm font-mono" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-muted)" }}>
                 {isKo
-                  ? "이 오피스 팩에 설정된 살펴보기 대상이 없습니다. 위에서 직원을 추가하세요."
-                  : "No heartbeat configs for this pack. Add staff above."}
+                  ? "살펴보기 대상이 없습니다. 위에서 직원을 추가하세요."
+                  : "No heartbeat configs. Add staff above."}
               </p>
             )}
 
