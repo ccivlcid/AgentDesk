@@ -556,6 +556,25 @@ export function TaskBoard({
         <div className="flex-1 overflow-auto pb-2">
           <GanttChart tasks={filteredTasks} agents={agents} departments={departments} />
         </div>
+      ) : filteredTasks.length === 0 && filterProject ? (
+        <div className="flex-1 flex flex-col items-center justify-center text-center px-6">
+          <p className="text-sm font-medium mb-1" style={{ color: "var(--th-text)" }}>
+            아직 태스크가 없어요.
+          </p>
+          <p className="text-[12px] text-[var(--th-text-muted)] mb-4">
+            목표에서 시작해볼까요?
+          </p>
+          {onProjectCreate && (
+            <button
+              type="button"
+              onClick={onProjectCreate}
+              className="text-xs px-4 py-2 rounded hover:opacity-90 transition-opacity"
+              style={{ background: "var(--th-accent)", color: "#000" }}
+            >
+              + 태스크 만들기
+            </button>
+          )}
+        </div>
       ) : (
       <DndContext
         sensors={sensors}
@@ -640,9 +659,12 @@ export function TaskBoard({
                                 {t({ ko: "여기에 놓기", en: "drop here", ja: "ここにドロップ", zh: "放在这里" })}
                               </span>
                             ) : (
-                              <div className="terminal-empty-state py-2">
-                                <p className="terminal-empty-state-cmd">$ ls tasks/</p>
-                                <p className="terminal-empty-state-result">(empty)</p>
+                              <div className="py-4 text-center">
+                                <p className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
+                                  {filterProject
+                                    ? "태스크 없음"
+                                    : t({ ko: "비어 있음", en: "empty", ja: "空", zh: "空" })}
+                                </p>
                               </div>
                             )}
                           </div>
