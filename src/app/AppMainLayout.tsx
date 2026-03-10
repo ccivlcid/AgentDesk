@@ -37,6 +37,8 @@ import type { OAuthCallbackResult, View } from "./types";
 import AppHeaderBar from "./AppHeaderBar";
 import type { UiLanguage } from "../i18n";
 import type { CliUsageEntry } from "../api";
+import ProjectContextBar from "../components/ProjectContextBar";
+import TeamPageView from "../components/TeamPageView";
 
 /** CLI 사용량 전용 페이지: useI18n으로 t를 주입해 CliUsagePanel 렌더 */
 function CliUsagePage({
@@ -379,6 +381,11 @@ export default function AppMainLayout({
             </div>
           )}
 
+          {/* 프로젝트 컨텍스트 바 — office/dashboard 제외, 프로젝트 선택 시만 표시 */}
+          {currentProject && view !== "office" && view !== "dashboard" && (
+            <ProjectContextBar project={currentProject} categories={categories} />
+          )}
+
           <AnimatePresence mode="wait">
           {view === "office" ? (
             <motion.div
@@ -469,11 +476,12 @@ export default function AppMainLayout({
             )}
 
             {view === "agents" && (
-              <AgentManager
+              <TeamPageView
                 agents={agents}
                 departments={departments}
                 onAgentsChange={onAgentsChange}
                 projectAgentIds={projectAgentIds.size > 0 ? projectAgentIds : undefined}
+                currentProject={currentProject}
               />
             )}
 
