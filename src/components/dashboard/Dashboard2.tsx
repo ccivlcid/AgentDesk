@@ -8,6 +8,8 @@ import RisksPanel from "./RisksPanel";
 import GatesPanel from "./GatesPanel";
 import OutputsPanel from "./OutputsPanel";
 import TeamPanel from "./TeamPanel";
+import AgentActivityPanel from "./AgentActivityPanel";
+import TerminalPanel from "../TerminalPanel";
 
 interface Dashboard2Props {
   project: Project | null;
@@ -72,6 +74,7 @@ function Dashboard2Inner({
 }) {
   const { objectives, risks, gates, outputs, loading, setObjectives, setRisks, setGates, setOutputs } =
     useDashboardData(project.id);
+  const [selectedTerminal, setSelectedTerminal] = useState<{ taskId: string; agent: Agent } | null>(null);
 
 
   const category = project.category_id ? categories.find((c) => c.id === project.category_id) : undefined;
@@ -82,7 +85,7 @@ function Dashboard2Inner({
   const doneOutputs = outputs.filter((o) => o.status === "done").length;
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
+    <div className="relative flex flex-col h-full overflow-hidden">
       {/* 프로젝트 헤더 */}
       <div
         className="flex items-center gap-3 px-4 py-2.5 border-b flex-shrink-0"
@@ -156,10 +159,38 @@ function Dashboard2Inner({
           </div>
 
           {/* 팀 섹션 */}
-          <div className="px-4 pb-4">
+          <div className="px-4 pb-2">
             <TeamPanel projectId={project.id} allAgents={agents} />
           </div>
+
+          {/* 에이전트 활동 섹션 */}
+          <div className="px-4 pb-4">
+            <AgentActivityPanel
+              projectId={project.id}
+              allAgents={agents}
+              onOpenTerminal={(taskId, agent) => setSelectedTerminal({ taskId, agent })}
+            />
+          </div>
         </>
+      )}
+
+      {/* 터미널 overlay */}
+      {selectedTerminal && (
+        <div
+          className="absolute inset-0 z-50 flex items-stretch"
+          style={{ background: "rgba(0,0,0,0.6)" }}
+          onClick={(e) => { if (e.target === e.currentTarget) setSelectedTerminal(null); }}
+        >
+          <div className="flex-1 m-4 rounded overflow-hidden flex flex-col" style={{ minHeight: 0 }}>
+            <TerminalPanel
+              taskId={selectedTerminal.taskId}
+              task={undefined}
+              agent={selectedTerminal.agent}
+              agents={agents}
+              onClose={() => setSelectedTerminal(null)}
+            />
+          </div>
+        </div>
       )}
     </div>
   );
