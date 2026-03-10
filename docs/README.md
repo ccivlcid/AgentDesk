@@ -61,6 +61,7 @@
 
 ## plans/ — 개발·운영 계획
 
+- `tech-implementation-2.0.md` — **2.0 기술 구현 계획서** (DB 스키마·백엔드 라우트·프론트엔드 컴포넌트·Phase별 코딩 순서)
 - `2026-02-25-server-types-nocheck-removal.md`
 - `2026-02-27-workflow-pack-mvp.md`
 - `heartbeat-logs-guide.md`
