@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { Agent, Department, TaskType, WorkflowPackKey } from "../../types";
+import type { Agent, Department, TaskType } from "../../types";
 import type { WorkflowPackConfig } from "../../api/workflow-skills-subtasks";
-import { getWorkflowPacks } from "../../api/workflow-skills-subtasks";
 import { getTaskTemplates, createTaskTemplate, deleteTaskTemplate, type TaskTemplate } from "../../api/task-templates";
 import { useI18n } from "../../i18n";
 import { type CreateTaskDraft, type FormFeedback } from "./constants";
@@ -25,14 +24,13 @@ interface CreateModalProps {
     project_id?: string;
     project_path?: string;
     assigned_agent_id?: string;
-    workflow_pack_key?: WorkflowPackKey;
+    workflow_pack_key?: string;
     workflow_meta_json?: string;
   }) => void;
   onAssign: (taskId: string, agentId: string) => void;
-  activeWorkflowPackKey?: WorkflowPackKey;
 }
 
-function CreateModal({ agents, departments, onClose, onCreate, onAssign, activeWorkflowPackKey }: CreateModalProps) {
+function CreateModal({ agents, departments, onClose, onCreate, onAssign }: CreateModalProps) {
   void onAssign;
   const { t, language: locale, locale: localeTag } = useI18n();
   const [title, setTitle] = useState("");
@@ -80,12 +78,12 @@ function CreateModal({ agents, departments, onClose, onCreate, onAssign, activeW
         department_id: departmentId || null,
         task_type: taskType,
         priority,
-        workflow_pack_key: activeWorkflowPackKey ?? null,
+        workflow_pack_key: null,
         workflow_meta_json: Object.keys(nonEmptyMeta).length > 0 ? JSON.stringify(nonEmptyMeta) : null,
       });
       setTemplates((prev) => [tpl, ...prev]);
     },
-    [title, description, departmentId, taskType, priority, packMeta, activeWorkflowPackKey],
+    [title, description, departmentId, taskType, priority, packMeta],
   );
 
   const handleDeleteTemplate = useCallback(async (templateId: string) => {
@@ -93,40 +91,18 @@ function CreateModal({ agents, departments, onClose, onCreate, onAssign, activeW
     setTemplates((prev) => prev.filter((t) => t.id !== templateId));
   }, []);
 
-  useEffect(() => {
-    if (!activeWorkflowPackKey || activeWorkflowPackKey === "development") {
-      setPackConfig(null);
-      return;
-    }
-    getWorkflowPacks()
-      .then((res) => {
-        const found = res.packs.find((p) => p.key === activeWorkflowPackKey);
-        setPackConfig(found ?? null);
-      })
-      .catch(() => setPackConfig(null));
-  }, [activeWorkflowPackKey]);
-
-  /** 현재 오피스 팩에 소속된 에이전트만 사용(직원 필터링). */
-  const agentsInCurrentPack = useMemo(() => {
-    if (!activeWorkflowPackKey || activeWorkflowPackKey === "development") {
-      return agents.filter((a) => !a.workflow_pack_key || a.workflow_pack_key === "development");
-    }
-    return agents.filter((a) => a.workflow_pack_key === activeWorkflowPackKey);
-  }, [agents, activeWorkflowPackKey]);
-
   const filteredAgents = useMemo(
     () =>
       departmentId
-        ? agentsInCurrentPack.filter((agent) => agent.department_id === departmentId)
-        : agentsInCurrentPack,
-    [agentsInCurrentPack, departmentId],
+        ? agents.filter((agent) => agent.department_id === departmentId)
+        : agents,
+    [agents, departmentId],
   );
 
-  /** 현재 오피스 팩에 직원이 한 명이라도 있는 부서만 부서 드롭다운에 표시 */
-  const departmentsInCurrentPack = useMemo(() => {
-    const deptIds = new Set(agentsInCurrentPack.map((a) => a.department_id).filter(Boolean));
+  const departmentsWithAgents = useMemo(() => {
+    const deptIds = new Set(agents.map((a) => a.department_id).filter(Boolean));
     return departments.filter((d) => deptIds.has(d.id));
-  }, [departments, agentsInCurrentPack]);
+  }, [departments, agents]);
 
   const { unsupportedPathApiMessage, resolvePathHelperErrorMessage } = usePathHelperMessages(t);
 
@@ -363,7 +339,7 @@ function CreateModal({ agents, departments, onClose, onCreate, onAssign, activeW
       assignAgentId={assignAgentId}
       submitBusy={submitBusy}
       formFeedback={formFeedback}
-      departments={departmentsInCurrentPack}
+      departments={departmentsWithAgents}
       filteredAgents={filteredAgents}
       projectSectionProps={projectSectionProps}
       overlaysProps={overlaysProps}

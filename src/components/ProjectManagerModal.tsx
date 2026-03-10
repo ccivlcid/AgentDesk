@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { Agent, AssignmentMode, Department, Project, WorkflowPackKey } from "../types";
+import type { Agent, AssignmentMode, Department, Project } from "../types";
 import {
   deleteProject,
   getProjectDetail,
@@ -55,25 +55,17 @@ export default function ProjectManagerModal({ agents, departments = [], onClose,
   const [saving, setSaving] = useState(false);
   const [reportDetail, setReportDetail] = useState<TaskReportDetail | null>(null);
 
-  const [defaultPackKey, setDefaultPackKey] = useState<WorkflowPackKey>("development");
+  const [defaultPackKey, setDefaultPackKey] = useState<string>("development");
   const [assignmentMode, setAssignmentMode] = useState<AssignmentMode>("auto");
   const [selectedAgentIds, setSelectedAgentIds] = useState<Set<string>>(new Set());
   const [agentFilterDept, setAgentFilterDept] = useState<string>("all");
   const [manualAssignmentWarning, setManualAssignmentWarning] = useState<ManualAssignmentWarning | null>(null);
 
-  /** 직원 선택 목록: 선택된 기본 워크플로우 팩(오피스팩)에 소속된 에이전트만 표시 */
-  const agentsInCurrentPack = useMemo(() => {
-    if (defaultPackKey === "development") {
-      return agents.filter((a) => !a.workflow_pack_key || a.workflow_pack_key === "development");
-    }
-    return agents.filter((a) => a.workflow_pack_key === defaultPackKey);
-  }, [agents, defaultPackKey]);
-
-  /** 해당 팩에 직원이 한 명이라도 있는 부서만 직원 필터 드롭다운에 표시 */
-  const departmentsInCurrentPack = useMemo(() => {
-    const deptIds = new Set(agentsInCurrentPack.map((a) => a.department_id).filter(Boolean));
+  /** 직원이 한 명이라도 있는 부서만 직원 필터 드롭다운에 표시 */
+  const departmentsWithAgents = useMemo(() => {
+    const deptIds = new Set(agents.map((a) => a.department_id).filter(Boolean));
     return departments.filter((d) => deptIds.has(d.id));
-  }, [departments, agentsInCurrentPack]);
+  }, [departments, agents]);
 
   const viewedProject = detail?.project ?? null;
   const selectedProject = isCreating ? null : viewedProject;
@@ -434,8 +426,8 @@ export default function ProjectManagerModal({ agents, departments = [], onClose,
                   setSelectedAgentIds={setSelectedAgentIds}
                   agentFilterDept={agentFilterDept}
                   setAgentFilterDept={setAgentFilterDept}
-                  agents={agentsInCurrentPack}
-                  departments={departmentsInCurrentPack}
+                  agents={agents}
+                  departments={departmentsWithAgents}
                   onSave={() => {
                     void handleSave();
                   }}

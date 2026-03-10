@@ -15,24 +15,6 @@ export interface WorkMapProps {
   currentProject?: Project | null;
   onAddToTeam?: (agentId: string) => Promise<void>;
   onRemoveFromTeam?: (agentId: string) => Promise<void>;
-  // Legacy props — accepted but unused
-  subAgents?: unknown;
-  meetingPresence?: unknown;
-  activeMeetingTaskId?: string | null;
-  crossDeptDeliveries?: unknown;
-  onCrossDeptDeliveryProcessed?: unknown;
-  ceoOfficeCalls?: unknown;
-  onCeoOfficeCallProcessed?: unknown;
-  onOpenActiveMeetingMinutes?: unknown;
-  customDeptThemes?: unknown;
-  themeHighlightTargetId?: unknown;
-  cliStatus?: unknown;
-  cliUsage?: unknown;
-  cliUsageRef?: unknown;
-  cliUsageRefreshing?: boolean;
-  onRefreshCliUsage?: unknown;
-  onOpenRoomManager?: unknown;
-  activeWorkflowPackKey?: unknown;
 }
 
 const AGENT_STATUS_LABEL: Record<string, string> = {

@@ -1,6 +1,6 @@
 import type { Dispatch, SetStateAction } from "react";
 import { isApiRequestError, pickProjectPathNative, type ProjectDetailResponse } from "../../api";
-import { WORKFLOW_PACK_KEYS, type Agent, type AssignmentMode, type Department, type Project, type WorkflowPackKey } from "../../types";
+import { type Agent, type AssignmentMode, type Department, type Project } from "../../types";
 import type {
   FormFeedback,
   ManualAssignmentWarning,
@@ -44,8 +44,8 @@ interface ProjectEditorPanelProps {
   resolvePathHelperErrorMessage: (err: unknown, fallback: { ko: string; en: string; ja: string; zh: string }) => string;
   formFeedback: FormFeedback | null;
   setFormFeedback: Dispatch<SetStateAction<FormFeedback | null>>;
-  defaultPackKey: WorkflowPackKey;
-  setDefaultPackKey: Dispatch<SetStateAction<WorkflowPackKey>>;
+  defaultPackKey: string;
+  setDefaultPackKey: Dispatch<SetStateAction<string>>;
   assignmentMode: AssignmentMode;
   setAssignmentMode: Dispatch<SetStateAction<AssignmentMode>>;
   setManualAssignmentWarning: Dispatch<SetStateAction<ManualAssignmentWarning | null>>;
@@ -62,18 +62,6 @@ interface ProjectEditorPanelProps {
   onDelete: () => void;
 }
 
-function packLabel(t: ProjectI18nTranslate, key: WorkflowPackKey): string {
-  const labels: Record<WorkflowPackKey, { ko: string; en: string; ja: string; zh: string }> = {
-    development: { ko: "개발", en: "Development", ja: "開発", zh: "开发" },
-    novel: { ko: "소설", en: "Novel", ja: "小説", zh: "小说" },
-    report: { ko: "보고서", en: "Report", ja: "レポート", zh: "报告" },
-    video_preprod: { ko: "영상기획", en: "Video Preprod", ja: "映像企画", zh: "视频策划" },
-    web_research_report: { ko: "웹서치+리포트", en: "Web Research", ja: "Web調査", zh: "网页调研" },
-    roleplay: { ko: "롤플레이", en: "Roleplay", ja: "ロールプレイ", zh: "角色扮演" },
-    asset_management: { ko: "자산운용", en: "Asset Management", ja: "資産運用", zh: "资产管理" },
-  };
-  return t(labels[key] ?? { ko: key, en: key, ja: key, zh: key });
-}
 
 export default function ProjectEditorPanel({
   t,
@@ -333,30 +321,6 @@ export default function ProjectEditorPanel({
         />
       </label>
 
-      <label className="block text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
-        {t({ ko: "오피스 팩", en: "Office Pack", ja: "オフィスパック", zh: "办公包" })}
-        <select
-          value={defaultPackKey}
-          onChange={(e) => setDefaultPackKey(e.target.value as WorkflowPackKey)}
-          disabled={!isCreating && !editingProjectId}
-          className="mt-1 w-full px-3 py-2 text-xs font-mono outline-none"
-          style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
-        >
-          {WORKFLOW_PACK_KEYS.map((key) => (
-            <option key={key} value={key}>
-              {packLabel(t, key)}
-            </option>
-          ))}
-        </select>
-        <span className="mt-1 block text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
-          {t({
-            ko: "이 프로젝트에서 생성되는 태스크의 오피스 팩을 설정합니다",
-            en: "Sets the office pack for tasks created in this project",
-            ja: "このプロジェクトで作成されるタスクのオフィスパックを設定します",
-            zh: "设置在此项目中创建的任务的办公包",
-          })}
-        </span>
-      </label>
 
       <ManualAssignmentSelector
         t={t}

@@ -160,7 +160,7 @@ src/app/AppHeaderBar.mobile-office-pack.test.tsx  삭제
 - [x] `StackedSpriteIcon` 제거 (이번 세션)
 - [x] 헤더 스프라이트 이미지 제거 (이번 세션)
 - [x] `customRoomThemes` 옵셔널화 (임시)
-- [ ] Phase A — 어휘 단일화
-- [ ] Phase B — 헤더 UI 제거
-- [ ] Phase C — 상태/로직 제거
-- [ ] Phase D — 파일 삭제
+- [x] Phase A — 어휘 단일화
+- [x] Phase B — 헤더 UI 제거
+- [x] Phase C — 상태/로직 제거 (클라이언트 컴포넌트)
+- [x] Phase D — 파일 삭제 (vocabulary.ts, office-theme/, office-pack-sync)

@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import type { Agent, Task } from "../../types";
-import { usePackVocab } from "../../pack-identity/vocabulary";
 
 interface VideoHudProps {
   agents: Agent[];
@@ -9,7 +8,6 @@ interface VideoHudProps {
 
 /** Production Studio HUD — ON AIR indicator + active shot info */
 export default function VideoHud({ agents, tasks }: VideoHudProps) {
-  const vocab = usePackVocab("video_preprod");
   const workingAgents = agents.filter((a) => a.status === "working");
   const isOnAir = workingAgents.length > 0;
   const activeTask = tasks.find((t) => t.status === "in_progress");
@@ -54,7 +52,7 @@ export default function VideoHud({ agents, tasks }: VideoHudProps) {
       )}
       <span style={{ fontVariantNumeric: "tabular-nums" }}>{elapsed}</span>
       <span className="pack-hud__sep" />
-      <span>{workingAgents.length} {vocab.agents}</span>
+      <span>{workingAgents.length} Agents</span>
     </div>
   );
 }

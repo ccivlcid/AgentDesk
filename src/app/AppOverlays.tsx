@@ -8,7 +8,7 @@ import TaskReportPopup from "../components/TaskReportPopup";
 import ReportHistory from "../components/ReportHistory";
 import AgentStatusPanel from "../components/AgentStatusPanel";
 import type { DecisionInboxItem } from "../components/chat/decision-inbox";
-import type { Agent, Department, Message, SubAgent, SubTask, Task, WorkflowPackKey } from "../types";
+import type { Agent, Department, Message, SubAgent, SubTask, Task } from "../types";
 import type { UiLanguage } from "../i18n";
 import type { ProjectMetaPayload, TaskPanelTab } from "./types";
 
@@ -50,7 +50,6 @@ interface AppOverlaysProps {
   ) => Promise<void>;
   onOpenDecisionChat: (agentId: string) => void;
   selectedAgent: Agent | null;
-  activeOfficeWorkflowPack?: WorkflowPackKey;
   departments: Department[];
   tasks: Task[];
   subAgents: SubAgent[];
@@ -94,7 +93,6 @@ export default function AppOverlays({
   onReplyDecisionOption,
   onOpenDecisionChat,
   selectedAgent,
-  activeOfficeWorkflowPack,
   departments,
   tasks,
   subAgents,
@@ -164,7 +162,6 @@ export default function AppOverlays({
           onAssignTask={onAssignTaskFromAgentDetail}
           onOpenTerminal={onOpenTerminalFromAgentDetail}
           onAgentUpdated={onAgentUpdated}
-          activeOfficeWorkflowPack={activeOfficeWorkflowPack}
         />
       )}
 

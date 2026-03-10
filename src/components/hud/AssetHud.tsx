@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import type { Agent, Task } from "../../types";
-import { usePackVocab } from "../../pack-identity/vocabulary";
 
 interface AssetHudProps {
   agents: Agent[];
@@ -9,7 +8,6 @@ interface AssetHudProps {
 
 /** Trading Floor HUD — live orders + simulated P&L + market clock */
 export default function AssetHud({ agents, tasks }: AssetHudProps) {
-  const vocab = usePackVocab("asset_management");
   const executing = tasks.filter((t) => t.status === "in_progress").length;
   const watching = agents.filter((a) => a.status === "idle").length;
   const settled = tasks.filter((t) => t.status === "done").length;
@@ -37,11 +35,11 @@ export default function AssetHud({ agents, tasks }: AssetHudProps) {
       <span className="pack-hud__rec-dot" style={{ background: "#22c55e" }} />
       <span style={{ color: "#22c55e", fontWeight: 700 }}>LIVE</span>
       <span className="pack-hud__sep" />
-      <span>{vocab.tasks.toUpperCase()}: {executing} EXEC</span>
+      <span>TASKS: {executing} EXEC</span>
       <span className="pack-hud__sep" />
       <span>{watching} WATCH</span>
       <span className="pack-hud__sep" />
-      <span>TODAY {vocab.xp}: <span style={{ color: pnlColor }}>{pnlSign}{pnl}%</span></span>
+      <span>TODAY XP: <span style={{ color: pnlColor }}>{pnlSign}{pnl}%</span></span>
       <span className="pack-hud__sep" />
       <span style={{ fontVariantNumeric: "tabular-nums" }}>{clock}</span>
     </div>

@@ -236,8 +236,6 @@ export default function App() {
       stats={stats}
       tasks={tasks}
       subtasks={subtasks}
-      subAgents={subAgents}
-      meetingPresence={meetingPresence}
       settings={settings}
       cliStatus={cliStatus}
       oauthResult={oauthResult}
@@ -250,13 +248,7 @@ export default function App() {
       toggleTheme={toggleTheme}
       decisionInboxLoading={decisionInboxLoading}
       decisionInboxCount={decisionInboxItems.length}
-      activeMeetingTaskId={activeMeetingTaskId}
       unreadAgentIds={unreadAgentIds}
-      crossDeptDeliveries={crossDeptDeliveries}
-      ceoOfficeCalls={ceoOfficeCalls}
-      onCrossDeptDeliveryProcessed={(id) => setCrossDeptDeliveries((prev) => prev.filter((d) => d.id !== id))}
-      onCeoOfficeCallProcessed={(id) => setCeoOfficeCalls((prev) => prev.filter((d) => d.id !== id))}
-      onOpenActiveMeetingMinutes={(taskId) => setTaskPanel({ taskId, tab: "minutes" })}
       onSelectAgent={setSelectedAgent}
       onSelectDepartment={(department) => {
         const leader =
@@ -387,7 +379,7 @@ export default function App() {
               project_path: project_path ?? "",
               core_goal: resolvedGoal,
               category_id: categoryId ?? undefined,
-              create_path_if_missing: false,
+              create_path_if_missing: true,
             })
               .then((newProject) => {
                 setProjects((prev) => [...prev, newProject]);
