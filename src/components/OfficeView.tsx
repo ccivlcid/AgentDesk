@@ -13,6 +13,8 @@ export interface WorkMapProps {
   projectAgentIds?: Set<string>;
   unreadAgentIds?: Set<string>;
   currentProject?: Project | null;
+  onAddToTeam?: (agentId: string) => Promise<void>;
+  onRemoveFromTeam?: (agentId: string) => Promise<void>;
   // Legacy props — accepted but unused
   subAgents?: unknown;
   meetingPresence?: unknown;
@@ -76,6 +78,10 @@ function AgentRow({
   isKo,
   unread,
   dimmed,
+  inTeam,
+  hasProject,
+  onAddToTeam,
+  onRemoveFromTeam,
   onClick,
 }: {
   agent: Agent;
@@ -84,6 +90,10 @@ function AgentRow({
   isKo: boolean;
   unread: boolean;
   dimmed: boolean;
+  inTeam: boolean;
+  hasProject: boolean;
+  onAddToTeam?: () => void;
+  onRemoveFromTeam?: () => void;
   onClick: () => void;
 }) {
   const currentTask = getAgentCurrentTask(agent.id, tasks);
@@ -134,8 +144,31 @@ function AgentRow({
         </p>
       </div>
 
-      {/* Activity bar + badge */}
+      {/* Activity bar + badge + team button */}
       <div className="flex items-center gap-2 shrink-0">
+        {/* Team add/remove button — hover only */}
+        {hasProject && inTeam && onRemoveFromTeam && (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onRemoveFromTeam(); }}
+            className="opacity-0 group-hover:opacity-100 text-[9px] font-mono px-1.5 py-0.5 transition-opacity"
+            style={{ color: "var(--th-text-muted)", border: "1px solid var(--th-border)", borderRadius: 2 }}
+            title={isKo ? "팀에서 제거" : "Remove from team"}
+          >
+            × {isKo ? "제거" : "Remove"}
+          </button>
+        )}
+        {hasProject && !inTeam && onAddToTeam && (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onAddToTeam(); }}
+            className="opacity-0 group-hover:opacity-100 text-[9px] font-mono px-1.5 py-0.5 transition-opacity"
+            style={{ color: "var(--th-accent)", border: "1px solid rgba(245,158,11,0.3)", borderRadius: 2 }}
+            title={isKo ? "팀에 추가" : "Add to team"}
+          >
+            + {isKo ? "추가" : "Add"}
+          </button>
+        )}
         <div
           className="overflow-hidden"
           style={{ width: 40, height: 3, borderRadius: "1px", background: "var(--th-border)" }}
@@ -165,8 +198,11 @@ function DeptPanel({
   isKo,
   unreadAgentIds,
   projectAgentIds,
+  hasProject,
   onSelectAgent,
   onSelectDepartment,
+  onAddToTeam,
+  onRemoveFromTeam,
 }: {
   dept: Department;
   agents: Agent[];
@@ -175,8 +211,11 @@ function DeptPanel({
   isKo: boolean;
   unreadAgentIds: Set<string>;
   projectAgentIds?: Set<string>;
+  hasProject: boolean;
   onSelectAgent: (a: Agent) => void;
   onSelectDepartment?: (d: Department) => void;
+  onAddToTeam?: (agentId: string) => void;
+  onRemoveFromTeam?: (agentId: string) => void;
 }) {
   const workingCount = agents.filter((a) => a.status === "working").length;
   const activeTasks = tasks.filter(
@@ -231,6 +270,10 @@ function DeptPanel({
             isKo={isKo}
             unread={unreadAgentIds.has(agent.id)}
             dimmed={projectAgentIds !== undefined && !projectAgentIds.has(agent.id)}
+            inTeam={projectAgentIds !== undefined && projectAgentIds.has(agent.id)}
+            hasProject={hasProject}
+            onAddToTeam={onAddToTeam ? () => onAddToTeam(agent.id) : undefined}
+            onRemoveFromTeam={onRemoveFromTeam ? () => onRemoveFromTeam(agent.id) : undefined}
             onClick={() => onSelectAgent(agent)}
           />
         ))}
@@ -248,6 +291,8 @@ export default function OfficeView({
   projectAgentIds,
   unreadAgentIds = new Set(),
   currentProject,
+  onAddToTeam,
+  onRemoveFromTeam,
 }: WorkMapProps) {
   const { t, locale } = useI18n();
   const [filterDeptId, setFilterDeptId] = useState<string | null>(null);
@@ -388,8 +433,11 @@ export default function OfficeView({
                   isKo={isKo}
                   unreadAgentIds={unreadAgentIds}
                   projectAgentIds={projectAgentIds}
+                  hasProject={!!currentProject}
                   onSelectAgent={onSelectAgent}
                   onSelectDepartment={onSelectDepartment}
+                  onAddToTeam={onAddToTeam}
+                  onRemoveFromTeam={onRemoveFromTeam}
                 />
               );
             })}

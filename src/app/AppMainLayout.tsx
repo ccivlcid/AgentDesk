@@ -233,17 +233,36 @@ export default function AppMainLayout({
   // 현재 프로젝트 팀원 ID 세트 (WorkMap dim용)
   const [projectAgentIds, setProjectAgentIds] = useState<Set<string>>(new Set());
   const prevProjectIdRef = useRef<string | null>(null);
+
+  const refreshProjectAgents = (pid: string) => {
+    import("../api/categories-dashboard").then(({ fetchProjectAgents }) =>
+      fetchProjectAgents(pid)
+        .then((agentList) => setProjectAgentIds(new Set(agentList.map((a: { id: string }) => a.id))))
+        .catch(() => {}),
+    );
+  };
+
   useEffect(() => {
     const pid = currentProject?.id ?? null;
     if (pid === prevProjectIdRef.current) return;
     prevProjectIdRef.current = pid;
     if (!pid) { setProjectAgentIds(new Set()); return; }
-    import("../api/categories-dashboard").then(({ fetchProjectAgents }) =>
-      fetchProjectAgents(pid)
-        .then((agentList) => setProjectAgentIds(new Set(agentList.map((a: { id: string }) => a.id))))
-        .catch(() => setProjectAgentIds(new Set())),
-    );
+    refreshProjectAgents(pid);
   }, [currentProject?.id]);
+
+  const handleAddToTeam = async (agentId: string) => {
+    if (!currentProject) return;
+    const { addProjectAgent } = await import("../api/categories-dashboard");
+    await addProjectAgent(currentProject.id, agentId);
+    refreshProjectAgents(currentProject.id);
+  };
+
+  const handleRemoveFromTeam = async (agentId: string) => {
+    if (!currentProject) return;
+    const { removeProjectAgent } = await import("../api/categories-dashboard");
+    await removeProjectAgent(currentProject.id, agentId);
+    refreshProjectAgents(currentProject.id);
+  };
 
   const { cliStatus: cliStatusFromUsage, cliUsage, cliUsageRef, refreshing: cliUsageRefreshing, handleRefreshUsage } =
     useCliUsage(tasks, view);
@@ -418,6 +437,8 @@ export default function AppMainLayout({
                 cliUsageRefreshing={cliUsageRefreshing}
                 onRefreshCliUsage={handleRefreshUsage}
                 projectAgentIds={projectAgentIds.size > 0 ? projectAgentIds : undefined}
+                onAddToTeam={currentProject ? handleAddToTeam : undefined}
+                onRemoveFromTeam={currentProject ? handleRemoveFromTeam : undefined}
               />
             </motion.div>
           ) : (
@@ -518,7 +539,7 @@ export default function AppMainLayout({
               {view === "skills" && <SkillsLibrary agents={agents} />}
 
               {view === "agent-rules" && (
-                <AgentRulesLibrary agents={libraryAgents} departments={departments} />
+                <AgentRulesLibrary agents={libraryAgents} departments={departments} currentProject={currentProject ?? null} />
               )}
 
               {view === "memory" && (
@@ -542,6 +563,8 @@ export default function AppMainLayout({
                   oauthResult={oauthResult}
                   onOauthResultClear={onOauthResultClear}
                   managerAgents={agents}
+                  currentProject={currentProject ?? null}
+                  categories={categories}
                 />
               )}
             </Suspense>

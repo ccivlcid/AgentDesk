@@ -15,7 +15,7 @@ export type Locale = UiLanguage;
 export type TFunction = (messages: Record<Locale, string>) => string;
 
 export type LocalSettings = Omit<CompanySettings, "language"> & { language: Locale };
-export type SettingsTab = "general" | "cli" | "oauth" | "api" | "gateway" | "data" | "webhooks" | "categories";
+export type SettingsTab = "general" | "cli" | "oauth" | "api" | "gateway" | "data" | "webhooks" | "categories" | "project";
 
 export type SetLocalSettings = Dispatch<SetStateAction<LocalSettings>>;
 

@@ -79,6 +79,16 @@ const TAB_ITEMS: Array<{
       </svg>
     ),
   },
+  {
+    key: "project",
+    label: (t) => t({ ko: "프로젝트 설정", en: "Project", ja: "プロジェクト設定", zh: "项目设置" }),
+    Icon: ({ className }) => (
+      <svg className={className} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z" />
+        <circle cx="12" cy="12" r="3" />
+      </svg>
+    ),
+  },
 ];
 
 export default function SettingsTabNav({ tab, setTab, t }: SettingsTabNavProps) {
