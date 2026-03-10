@@ -1,9 +1,25 @@
 import { createRef } from "react";
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import type { Message } from "../../types";
 import ChatMessageList from "./ChatMessageList";
+
+// Mock virtualizer so all items render without a real scroll container
+vi.mock("@tanstack/react-virtual", () => ({
+  useVirtualizer: (opts: { count: number; estimateSize: () => number }) => ({
+    getVirtualItems: () =>
+      Array.from({ length: opts.count }, (_, i) => ({
+        index: i,
+        key: String(i),
+        start: i * opts.estimateSize(),
+        size: opts.estimateSize(),
+      })),
+    getTotalSize: () => opts.count * opts.estimateSize(),
+    measureElement: () => {},
+    scrollToIndex: () => {},
+  }),
+}));
 
 function tr(ko: string): string {
   return ko;
