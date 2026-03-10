@@ -1,131 +1,144 @@
-# AgentDesk 2.0 ? Menu (Sidebar) Definition and Renewal
+# AgentDesk 2.0 메뉴(사이드바) 정의 및 리뉴얼 스펙
 
-**Note:** This doc was restored in English after encoding corruption. You can re-add Korean labels in your editor and save as UTF-8 if needed.
-
-Date: 2026-03-09  
-Goal: Define current menu structure and renewal direction for Project OS + category-centric 2.0. (No login.)
-
----
-
-## 1. Current Menu Structure (As-Is)
-
-Source: `src/components/Sidebar.tsx` ? `NAV_STRUCTURE` + brand / departments / status bar
-
-### 1-1. Top brand area
-
-| Element | Content |
-|---------|---------|
-| Logo/icon | AgentDesk desk icon (amber) |
-| Line 1 | `settings.companyName` (company name) |
-| Line 2 | `settings.ceoName` (CEO name) |
-
-? **Role(CEO)-centric** exposure. **(Remove CEO concept in 2.0)**
-
-### 1-2. Navigation order (top to bottom)
-
-| Order | Type | View ID | Label (KO) | Note |
-|-------|------|---------|------------|------|
-| 1 | Single | `office` | Office | Pixel office canvas |
-| 2 | Group | **agents** | Agents | Expand: Agents & Depts / Heartbeat |
-| 3 | Group | **library** | Library | Expand: Skills / Agent Rules / Memory / Hooks |
-| 4 | Single | `dashboard` | Dashboard | |
-| 5 | Single | `cli-usage` | CLI Usage | |
-| 6 | Group | **tasks** | Tasks | Expand: Task Board / Deliverables / Scheduler |
-| 7 | Single | `game-room` | Lounge | |
-| 8 | Single | `settings` | Settings | |
-
-### 1-3. Bottom fixed area
-
-| Area | Content |
-|------|---------|
-| **Departments** | Collapse/expand. Dept icon, name, progress bar, working count |
-| **Status bar** | Connection (Online/Offline) � `workingCount/totalAgents` |
-| **Collapse btn** | Sidebar collapse (icons only when collapsed) |
-
-### 1-4. Current structure notes
-
-- **Entry**: App launch ? last view or default. **No project/category selection step.**
-- **3 groups**: Agents (agents/heartbeat), Library (skills/agent-rules/memory/hooks), Tasks (tasks-board/deliverables/scheduled).
-- **Role exposure**: Brand shows CEO name and company name. **(Remove in 2.0)**
-- **Project switch**: Not in sidebar. (May be in modal/header ? TBD.)
+작성일: 2026-03-09
+업데이트: 2026-03-10 (ux-renewal-2.0.md 반영)
+목적: Project OS + 카테고리 중심 2.0에 맞는 메뉴 구조 정의. (로그인 없음.)
+참조: [ux-renewal-2.0.md §4 사이드바 프로젝트 셀렉터](ux-renewal-2.0.md)
 
 ---
 
-## 2. 2.0 Renewal Direction (Policy)
+## 1. 현재 메뉴 구조 (As-Is)
 
-- **Project OS**: First impression = "project goals, risk, decisions, deliverables."
-- **Category-centric**: **Project / category** before role (CEO/CTO).
-- **Remove CEO concept**: No CEO/CTO wording or exposure. Top = "logo + current project" only.
-- **No login**: Entry = "app launch ? (optional) project/category context ? dashboard/work."
-- **Keep existing views**: Office, agents, library, tasks, settings stay; adjust **group names, order, brand area**.
+소스: `src/components/Sidebar.tsx` → `NAV_STRUCTURE` + 브랜드 영역 / 부서 / 상태바
 
----
+### 1-1. 상단 브랜드 영역
 
-## 3. 2.0 Menu Structure Proposal (To-Be)
+| 요소 | 현재 내용 |
+|------|-----------|
+| 로고/아이콘 | AgentDesk 데스크 아이콘 (amber) |
+| 1행 | `settings.companyName` (회사명) |
+| 2행 | `settings.ceoName` (CEO 이름) |
 
-### 3-1. Top: Context area (brand ? project/category)
+→ **직책(CEO) 중심** 노출. **(2.0에서 CEO 개념 제거)**
 
-| Element | Current | 2.0 Proposal |
-|---------|---------|--------------|
-| Logo | AgentDesk + company + CEO | **AgentDesk logo** + **project selector** (name + category badge). Click ? project list / category filter or "No project ? create" |
-| CEO/company | Always shown | **Remove**. CEO concept removed. Top = logo + current project only. (Company name only in settings if needed.) |
+### 1-2. 내비게이션 순서 (위→아래)
 
-? **CEO concept removal** is 2.0 policy. First screen shows only "which project you're in."
+| 순서 | 타입 | View ID | 레이블(KO) | 비고 |
+|------|------|---------|------------|------|
+| 1 | 단독 | `office` | 오피스 | 픽셀 오피스 캔버스 |
+| 2 | 그룹 | **agents** | 에이전트 | 하위: 에이전트&부서 / Heartbeat |
+| 3 | 그룹 | **library** | 라이브러리 | 하위: Skills / Agent Rules / Memory / Hooks |
+| 4 | 단독 | `dashboard` | 대시보드 | |
+| 5 | 단독 | `cli-usage` | CLI 사용량 | |
+| 6 | 그룹 | **tasks** | 태스크 | 하위: 태스크 보드 / 산출물 / 스케줄러 |
+| 7 | 단독 | `game-room` | 라운지 | |
+| 8 | 단독 | `settings` | 설정 | |
 
-### 3-2. Navigation order proposal
+### 1-3. 하단 고정 영역
 
-Goal: **Dashboard (goals/risk/gates/deliverables)** as "work home," then Office ? Tasks ? Team ? Library to reduce cognitive load.
+| 영역 | 내용 |
+|------|------|
+| **부서** | 접기/펼치기. 부서 아이콘, 이름, 진행률, 작업 중 수 |
+| **상태 바** | 연결 상태 (Online/Offline) · `workingCount/totalAgents` |
+| **접기 버튼** | 사이드바 접기 (접혔을 때 아이콘만 표시) |
 
-| Order | Type | View ID | Label (KO) proposal | Note |
-|-------|------|---------|---------------------|------|
-| 1 | Single | `dashboard` | **Dashboard** | 2.0 "home." 4 quadrants (goals/risk/gates/deliverables) |
-| 2 | Single | `office` | Office | Keep |
-| 3 | Group | **tasks** | **Tasks** | Task board / Deliverables / Scheduler (same as now, unify group name) |
-| 4 | Group | **agents** | **Team** | Agents & Depts / Heartbeat |
-| 5 | Group | **library** | Library | Skills / Agent Rules / Memory / Hooks (keep) |
-| 6 | Single | `cli-usage` | CLI Usage | Keep |
-| 7 | Single | `game-room` | Lounge | Keep |
-| 8 | Single | `settings` | Settings | Keep. **Category editor** = tab under settings or separate submenu |
+### 1-4. 현재 구조 특이사항
 
-Summary:
-- **Dashboard** first so "project performance at a glance" is first.
-- **Tasks** right under Office (flow: dashboard ? office ? tasks).
-- **Team (agents)**: rename from "Agents" to "Team" (Project OS tone).
-- Group IDs/Views stay compatible.
-
-### 3-3. Bottom area
-
-| Area | 2.0 Proposal |
-|------|--------------|
-| **Departments** | Keep. Align with "Team" menu. |
-| **Status bar** | Keep (connection, working/total) |
-| **Collapse btn** | Keep |
-
-### 3-4. Project/category entry (supplement)
-
-- **No project**: After launch, top "project selector" click ? "New project" or "Pick category then create" (align with differentiation plan Phase 2).
-- **Has project**: Enter last-used or default project; switch at top.
+- **진입**: 앱 실행 → 마지막 뷰 또는 기본값. **프로젝트/카테고리 선택 단계 없음.**
+- **그룹 3개**: Agents (에이전트/Heartbeat), Library (skills/agent-rules/memory/hooks), Tasks (tasks-board/deliverables/scheduled).
+- **직책 노출**: 브랜드 영역에 CEO 이름과 회사명 표시. **(2.0에서 제거)**
+- **프로젝트 전환**: 사이드바에 없음. (모달/헤더 → Phase 2에서 구현)
 
 ---
 
-## 4. Implementation checklist
+## 2. 2.0 리뉴얼 방향 (정책)
 
-- [ ] `NAV_STRUCTURE` order: dashboard ? office ? tasks ? agents ? library ? cli-usage ? game-room ? settings
-- [ ] Brand area: **Remove CEO/ceoName**. Keep `companyName` for settings only; top = logo + project selector (name + category)
-- [ ] Optional label change: "Agents" ? "Team," "Tasks" ? "Tasks" (unify)
-- [ ] Add "Category editor" tab/link under settings (Phase 2)
-- [ ] First-entry when no project: top click ? project create / category select (separate spec)
+- **Project OS**: 첫인상 = "프로젝트 목표, 리스크, 의사결정, 산출물."
+- **카테고리 중심**: 직책(CEO/CTO)보다 **프로젝트 / 카테고리**가 먼저.
+- **CEO 개념 제거**: 사이드바 상단에 CEO/CTO 용어·노출 없음. 상단 = "로고 + 현재 프로젝트"만.
+- **로그인 없이 시작**: 진입 = "앱 실행 → (선택) 프로젝트/카테고리 컨텍스트 → 대시보드/작업."
+- **기존 뷰 유지**: 오피스, 에이전트, 라이브러리, 태스크, 설정은 유지; **그룹명, 순서, 브랜드 영역**만 조정.
 
 ---
 
-## 5. Summary
+## 3. 2.0 메뉴 구조 제안 (To-Be)
 
-| Item | Current | 2.0 |
-|------|---------|-----|
-| Top | Company + CEO | AgentDesk + **project selector** (name � category). **CEO concept removed** |
-| 1st menu | Office | **Dashboard** |
-| Group order | Office ? Agents ? Library ? Dashboard ? CLI ? Tasks ? Lounge ? Settings | Dashboard ? Office ? **Tasks** ? **Team** ? Library ? CLI ? Lounge ? Settings |
-| Terms | Agents, Tasks | **Team**, **Tasks** (optional) |
-| Role | CEO shown | **CEO concept removed** (no exposure except in settings if needed) |
+### 3-1. 상단: 컨텍스트 영역 (브랜드 → 프로젝트/카테고리)
 
-Use this doc for Phase 1 (menu order + brand area) then Phase 2 (project/category selector + category editor entry).
+| 요소 | 현재 | 2.0 제안 |
+|------|------|----------|
+| 로고 | AgentDesk + 회사명 + CEO | **AgentDesk 로고** + **프로젝트 셀렉터** (프로젝트명 + 카테고리 배지). 클릭 → 프로젝트 목록 / 카테고리 필터 또는 "프로젝트 없음 → 생성" |
+| CEO/회사명 | 항상 표시 | **제거**. CEO 개념 제거. 상단 = 로고 + 현재 프로젝트만. (회사명은 필요 시 설정에서만.) |
+
+→ **CEO 개념 제거**는 2.0 정책. 첫 화면은 "어떤 프로젝트에 있는가"만 보여준다.
+
+**프로젝트 셀렉터 와이어프레임** ([ux-renewal-2.0.md §4](ux-renewal-2.0.md) 상세 참조):
+
+```
+┌─ AGENTDESK ──────────────────────┐
+│  ▼ 마케팅 캠페인 Q1               │  ← 프로젝트명 클릭 → 목록 드롭다운
+│    [Marketing/Growth]             │  ← 카테고리 배지
+└──────────────────────────────────┘
+```
+
+- 배지: `[카테고리 슬러그]` — 카테고리별 색상 포인트
+- 프로젝트 없을 때: `프로젝트 선택 또는 만들기 +`
+- 드롭다운: 최근 프로젝트 목록 + "새 프로젝트 만들기" 항목
+
+### 3-2. 내비게이션 순서 제안
+
+목표: **대시보드(목표/리스크/게이트/산출물)** = "업무 홈", 그 다음 오피스 → 태스크 → 팀 → 라이브러리 순으로 인지 부하 감소.
+
+| 순서 | 타입 | View ID | 레이블(KO) 제안 | 비고 |
+|------|------|---------|-----------------|------|
+| 1 | 단독 | `dashboard` | **대시보드** | 2.0 "홈". 4분면 (목표/리스크/검토 단계/결과물) |
+| 2 | 단독 | `office` | 오피스 | 유지 |
+| 3 | 그룹 | **tasks** | **태스크** | 태스크 보드 / 산출물 / 스케줄러 |
+| 4 | 그룹 | **agents** | **팀** | 에이전트&부서 / Heartbeat |
+| 5 | 그룹 | **library** | 라이브러리 | Skills / Agent Rules / Memory / Hooks |
+| 6 | 단독 | `cli-usage` | CLI 사용량 | 유지 |
+| 7 | 단독 | `game-room` | 라운지 | 유지 |
+| 8 | 단독 | `settings` | 설정 | **카테고리 에디터** = 설정 탭 또는 별도 서브메뉴 |
+
+요약:
+- **대시보드 1번**: "프로젝트 성과 한눈에" = 홈.
+- **태스크**를 오피스 바로 아래 (흐름: 대시보드 → 오피스 → 태스크).
+- **팀(에이전트)**: "에이전트" → "팀" 으로 이름 변경 (Project OS 톤).
+- 그룹 ID/뷰는 코드 호환성 유지.
+
+### 3-3. 하단 영역
+
+| 영역 | 2.0 제안 |
+|------|----------|
+| **부서** | 유지. "팀" 메뉴와 정렬. |
+| **상태 바** | 유지 (연결 상태, 작업 중/전체) |
+| **접기 버튼** | 유지 |
+
+### 3-4. 프로젝트/카테고리 진입 (보충)
+
+- **프로젝트 없을 때**: 앱 실행 후 상단 "프로젝트 셀렉터" 클릭 → "새 프로젝트" 또는 "카테고리 선택 후 생성" (차별화 전략 Phase 2와 정렬). 상세는 [ux-renewal-2.0.md §5 온보딩 플로우](ux-renewal-2.0.md) 참조.
+- **프로젝트 있을 때**: 마지막 사용 또는 기본 프로젝트 진입; 상단에서 전환.
+
+---
+
+## 4. 구현 체크리스트
+
+- [ ] `NAV_STRUCTURE` 순서 변경: dashboard → office → tasks → agents → library → cli-usage → game-room → settings
+- [ ] 브랜드 영역: **CEO/ceoName 제거**. 상단 = 로고 + 프로젝트 셀렉터 (이름 + 카테고리 배지)
+- [ ] 레이블 변경: "에이전트" 그룹 → "팀" 으로 변경
+- [ ] 카테고리 에디터 탭/링크를 설정 아래 추가 (Phase 2)
+- [ ] 프로젝트 없을 때 첫 진입: 상단 클릭 → 프로젝트 생성 / 카테고리 선택 (별도 스펙: [ux-renewal-2.0.md §5, §7](ux-renewal-2.0.md))
+
+---
+
+## 5. 요약
+
+| 항목 | 현재 | 2.0 |
+|------|------|-----|
+| 상단 | 회사명 + CEO | AgentDesk 로고 + **프로젝트 셀렉터** (이름 + 카테고리 배지). **CEO 개념 제거** |
+| 1번 메뉴 | 오피스 | **대시보드** |
+| 그룹 순서 | 오피스 → 에이전트 → 라이브러리 → 대시보드 → CLI → 태스크 → 라운지 → 설정 | 대시보드 → 오피스 → **태스크** → **팀** → 라이브러리 → CLI → 라운지 → 설정 |
+| 용어 | 에이전트 | **팀** |
+| 직책 | CEO 표시 | **CEO 개념 제거** (필요 시 설정에서만) |
+
+Phase 1(메뉴 순서 + 브랜드 영역 변경) 구현 시 이 문서를 기준으로 하고, Phase 2에서 프로젝트/카테고리 셀렉터 + 카테고리 에디터 진입을 추가한다.

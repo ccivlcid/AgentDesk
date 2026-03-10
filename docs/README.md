@@ -31,6 +31,7 @@
 
 ## design/ — 디자인·경험
 
+- `ux-renewal-2.0.md` — **2.0 리뉴얼 UX 스펙** (사이드바/대시보드/카테고리/온보딩 플로우)
 - `design-system.md` — 디자인 시스템
 - `design-retro-terminal-overhaul.md` — 레트로 터미널 개편
 - `office-customization-design.md` — 오피스 커스터마이징

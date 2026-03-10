@@ -125,9 +125,9 @@
 | 영역 | 설명 | 참조 |
 |------|------|------|
 | **프로젝트·카테고리** | 프로젝트 생성/선택, 카테고리 선택·정의·편집, 버전 고정·정책 주입 | 차별화 전략 §3-2, §4 |
-| **대시보드** | 목표/리스크/게이트/산출물 4분면, 카테고리별 위젯 | 메뉴 스펙, 차별화 전략 §5 |
+| **대시보드** | 목표/리스크/게이트/산출물 4분면, 카테고리별 위젯 | 메뉴 스펙, 차별화 전략 §5, [UX 스펙 §6](design/ux-renewal-2.0.md) |
 | **태스크** | 태스크 보드, 산출물(Deliverables), 스케줄러 | 기존 기능 유지, 팩·카테고리와 연동 |
-| **팀(에이전트)** | 에이전트·부서 관리, Heartbeat | 기존 기능 유지, "Agents" → "Team" 용어 전환(메뉴) |
+| **팀(에이전트)** | 에이전트·부서 관리, Heartbeat, 프로젝트 팀 구성 | 기존 기능 유지, "Agents" → "Team" 용어 전환, [UX 스펙 §11-A·B](design/ux-renewal-2.0.md) |
 | **라이브러리** | Skills, Agent Rules, Memory, Hooks | 기존 기능 유지 |
 | **오피스** | 픽셀 오피스 캔버스, 부서·에이전트 시각화 | 기존 기능 유지 |
 | **설정** | 회사/앱 설정, **카테고리 에디터** 진입(탭 또는 서브메뉴) | 메뉴 스펙, 차별화 전략 §5 |
@@ -190,6 +190,7 @@
 | 문서 | 내용 |
 |------|------|
 | [strategy/claw-empire-differentiation-plan.md](strategy/claw-empire-differentiation-plan.md) | 전략·데이터 모델·60일 로드맵·개발 티켓 |
+| [design/ux-renewal-2.0.md](design/ux-renewal-2.0.md) | **UX 리뉴얼 2.0 스펙** — "누구나 쉽게" 원칙, 사이드바/대시보드/온보딩/팀 구성/페르소나 UX |
 | [design/agentdesk-2.0-menu-spec.md](design/agentdesk-2.0-menu-spec.md) | 메뉴 As-Is/To-Be, 구현 체크리스트 |
 | [architecture/README.md](architecture/README.md) | 시스템 구조·API·DB·실행 구조 |
 | [specs/api.md](specs/api.md) | API 계약 |
@@ -210,3 +211,4 @@
 | 버전 | 일자 | 변경 요약 |
 |------|------|------------|
 | 1.0 | 2026-03-09 | 초안 작성. 비전·포지셔닝·구조·기능·UX·용어·관련 문서 정리. |
+| 1.1 | 2026-03-10 | §6 팀(에이전트)·대시보드 행에 ux-renewal-2.0.md 참조 추가. §10-1에 UX 스펙 문서 링크 추가. |
