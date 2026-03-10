@@ -12,7 +12,6 @@ import {
   type TaskReportDetail,
 } from "../api";
 import { useI18n } from "../i18n";
-import { useSpriteMap } from "./AgentAvatar";
 import GitHubImportPanel from "./GitHubImportPanel";
 import TaskReportPopup from "./TaskReportPopup";
 import ManualAssignmentWarningDialog from "./project-manager/ManualAssignmentWarningDialog";
@@ -34,7 +33,7 @@ import { useProjectSaveHandler } from "./project-manager/useProjectSaveHandler";
 
 const PAGE_SIZE = 5;
 
-export default function ProjectManagerModal({ agents, departments = [], onClose }: ProjectManagerModalProps) {
+export default function ProjectManagerModal({ agents, departments = [], onClose, onCreateProject }: ProjectManagerModalProps) {
   const { t, language } = useI18n();
 
   const [projects, setProjects] = useState<Project[]>([]);
@@ -61,8 +60,6 @@ export default function ProjectManagerModal({ agents, departments = [], onClose 
   const [selectedAgentIds, setSelectedAgentIds] = useState<Set<string>>(new Set());
   const [agentFilterDept, setAgentFilterDept] = useState<string>("all");
   const [manualAssignmentWarning, setManualAssignmentWarning] = useState<ManualAssignmentWarning | null>(null);
-
-  const spriteMap = useSpriteMap(agents);
 
   /** 직원 선택 목록: 선택된 기본 워크플로우 팩(오피스팩)에 소속된 에이전트만 표시 */
   const agentsInCurrentPack = useMemo(() => {
@@ -215,6 +212,12 @@ export default function ProjectManagerModal({ agents, departments = [], onClose 
   );
 
   const startCreate = useCallback(() => {
+    if (onCreateProject) {
+      // 통일된 ProjectCreateModal로 위임 — 모달 닫고 생성 흐름 실행
+      onClose();
+      onCreateProject();
+      return;
+    }
     setIsCreating(true);
     setEditingProjectId(null);
     setName("");
@@ -225,7 +228,7 @@ export default function ProjectManagerModal({ agents, departments = [], onClose 
     setSelectedAgentIds(new Set());
     setManualAssignmentWarning(null);
     pathTools.resetPathHelperState();
-  }, [pathTools]);
+  }, [onCreateProject, onClose, pathTools]);
 
   const startEditSelected = useCallback(() => {
     if (!viewedProject) return;
@@ -433,7 +436,6 @@ export default function ProjectManagerModal({ agents, departments = [], onClose 
                   setAgentFilterDept={setAgentFilterDept}
                   agents={agentsInCurrentPack}
                   departments={departmentsInCurrentPack}
-                  spriteMap={spriteMap}
                   onSave={() => {
                     void handleSave();
                   }}

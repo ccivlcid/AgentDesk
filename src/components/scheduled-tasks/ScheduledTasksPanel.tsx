@@ -17,7 +17,6 @@ import {
   deleteTaskTemplate,
   type TaskTemplate,
 } from "../../api/task-templates";
-import { listOfficePackOptions } from "../../app/office-workflow-pack";
 
 interface Props {
   agents?: Agent[];
@@ -111,12 +110,10 @@ export default function ScheduledTasksPanel({ agents = [] }: Props) {
   const formRef = useRef<HTMLDivElement>(null);
 
   const workflowPackOptions = useMemo(() => {
-    const uiLang = (locale === "ko" || locale === "en" || locale === "ja" || locale === "zh" ? locale : "en") as "ko" | "en" | "ja" | "zh";
     return [
       { key: "", label: t({ ko: "없음", en: "None", ja: "なし", zh: "无" }) },
-      ...listOfficePackOptions(uiLang).map((o) => ({ key: o.key, label: o.label })),
     ];
-  }, [locale, t]);
+  }, [t]);
 
   const refresh = useCallback(async () => {
     try {

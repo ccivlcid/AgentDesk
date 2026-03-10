@@ -1,7 +1,6 @@
 import { useMemo, type Dispatch, type SetStateAction } from "react";
 import AgentSelect from "../../AgentSelect";
 import type { Agent, MessengerChannelType, MessengerChannelsConfig, OfficePackProfiles, WorkflowPackKey } from "../../../types";
-import { resolvePackAgentViews } from "../../../app/office-pack-display";
 import type { ChannelSettingsTabProps } from "../types";
 import { CHANNEL_META, channelTargetHint, isWorkflowPackKey } from "./constants";
 import type { ChatEditorState } from "./state";
@@ -61,20 +60,7 @@ export default function ChatEditorModal({
   const discordSelectedChannel =
     editor.channel === "discord" ? discordChannels.find((entry) => entry.id === editor.targetId.trim()) : null;
 
-  const displayAgents = useMemo(() => {
-    if (agentsAreCurrentPackOnly) return agents;
-    const packKey = editor.workflowPackKey || "development";
-    if (packKey === "development") {
-      return agents.filter((a) => !a.workflow_pack_key || a.workflow_pack_key === "development");
-    }
-    const profileAgents = officePackProfiles?.[packKey]?.agents;
-    if (profileAgents?.length) {
-      return resolvePackAgentViews({ packKey, globalAgents: agents, packAgents: profileAgents }).scopedAgents;
-    }
-    const packDbAgents = agents.filter((a) => a.workflow_pack_key === packKey);
-    if (packDbAgents.length > 0) return packDbAgents;
-    return agents;
-  }, [agents, agentsAreCurrentPackOnly, editor.workflowPackKey, officePackProfiles]);
+  const displayAgents = agents;
 
   return (
     <div className="fixed inset-0 z-[2200] flex items-center justify-center px-4">

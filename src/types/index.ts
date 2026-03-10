@@ -41,6 +41,7 @@ export interface Agent {
   cli_model?: string | null;
   cli_reasoning_level?: string | null;
   avatar_emoji: string;
+  avatar_url?: string | null;
   sprite_number?: number | null;
   personality: string | null;
   persona_id?: string | null;
@@ -192,6 +193,104 @@ export interface TaskExecutionEvent {
 
 export type AssignmentMode = "auto" | "manual";
 
+// Category (프로젝트 유형 템플릿)
+export interface Category {
+  id: string;
+  name: string;
+  name_ko: string | null;
+  slug: string;
+  description: string | null;
+  icon: string;
+  color: string;
+  kpi_schema: string;
+  risk_schema: string;
+  gate_schema: string;
+  deliverable_schema: string;
+  is_template: number;
+  version: number;
+  owner_scope: "global" | "org" | "team";
+  created_at: number;
+  updated_at: number;
+}
+
+// Dashboard 4-quadrant types
+export interface ProjectObjective {
+  id: string;
+  project_id: string;
+  title: string;
+  description: string | null;
+  status: "active" | "completed" | "cancelled";
+  progress: number;
+  sort_order: number;
+  created_at: number;
+  updated_at: number;
+}
+
+export interface ProjectRisk {
+  id: string;
+  project_id: string;
+  title: string;
+  description: string | null;
+  severity: "high" | "medium" | "low";
+  status: "open" | "mitigated" | "closed";
+  mitigation: string | null;
+  owner: string | null;
+  created_at: number;
+  updated_at: number;
+}
+
+export interface ProjectGate {
+  id: string;
+  project_id: string;
+  title: string;
+  description: string | null;
+  criteria: string | null;
+  status: "pending" | "in_progress" | "passed" | "failed";
+  due_date: number | null;
+  completed_at: number | null;
+  sort_order: number;
+  created_at: number;
+  updated_at: number;
+}
+
+export interface ProjectOutput {
+  id: string;
+  project_id: string;
+  title: string;
+  type: string;
+  status: "pending" | "in_progress" | "done";
+  version: string | null;
+  url: string | null;
+  sort_order: number;
+  created_at: number;
+  updated_at: number;
+}
+
+// Persona (에이전트 사고 방식)
+export type PersonaThinkingStyle =
+  | "structured"
+  | "creative"
+  | "analytical"
+  | "empathetic"
+  | "strategic"
+  | "pragmatic";
+
+export interface Persona {
+  id: string;
+  name: string;
+  name_ko: string;
+  thinking_style: PersonaThinkingStyle;
+  description: string;
+  description_ko: string;
+  prompt_prefix: string;
+  icon: string;
+  color: string;
+  accent_color: string;
+  style_keywords: string[];
+  best_for: string[];
+  category: "tech" | "biz" | "creative" | "investor" | "scientist" | "operator";
+}
+
 export interface Project {
   id: string;
   name: string;
@@ -205,6 +304,13 @@ export interface Project {
   created_at: number;
   updated_at: number;
   github_repo?: string | null;
+  // 2.0 fields
+  category_id?: string | null;
+  category_version?: number | null;
+  success_metric?: string | null;
+  risk_profile?: string | null;
+  required_gates?: string | null;
+  deliverable_schema?: string | null;
 }
 
 export interface TaskLog {

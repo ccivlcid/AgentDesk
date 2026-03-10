@@ -19,6 +19,7 @@ export interface ProjectManagerModalProps {
   agents: Agent[];
   departments?: Department[];
   onClose: () => void;
+  onCreateProject?: () => void;
 }
 
 export interface MissingPathPrompt {

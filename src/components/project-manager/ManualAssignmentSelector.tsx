@@ -19,7 +19,6 @@ interface ManualAssignmentSelectorProps {
   setAgentFilterDept: Dispatch<SetStateAction<string>>;
   departments: Department[];
   agents: Agent[];
-  spriteMap: Map<string, number>;
   detail: ProjectDetailResponse | null;
   selectedProject: Project | null;
 }
@@ -39,7 +38,6 @@ export default function ManualAssignmentSelector({
   setAgentFilterDept,
   departments,
   agents,
-  spriteMap,
   detail,
   selectedProject,
 }: ManualAssignmentSelectorProps) {
@@ -171,7 +169,7 @@ export default function ManualAssignmentSelector({
                           className="h-3.5 w-3.5"
                           style={{ borderRadius: "2px", accentColor: "var(--th-accent)" }}
                         />
-                        <AgentAvatar agent={agent} spriteMap={spriteMap} size={24} />
+                        <AgentAvatar agent={agent} size={24} />
                         <span className="text-xs font-medium font-mono" style={{ color: "var(--th-text-primary)" }}>
                           {language === "ko" ? agent.name_ko || agent.name : agent.name}
                         </span>
@@ -233,7 +231,7 @@ export default function ManualAssignmentSelector({
                   className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-mono"
                   style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface)", color: "var(--th-text-secondary)" }}
                 >
-                  <AgentAvatar agent={agent} spriteMap={spriteMap} size={16} />
+                  <AgentAvatar agent={agent} size={16} />
                   {language === "ko" ? agent.name_ko || agent.name : agent.name}
                 </span>
               ))}

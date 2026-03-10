@@ -56,7 +56,6 @@ interface ProjectEditorPanelProps {
   setAgentFilterDept: Dispatch<SetStateAction<string>>;
   agents: Agent[];
   departments: Department[];
-  spriteMap: Map<string, number>;
   onSave: () => void;
   onCancelEdit: () => void;
   onStartEditSelected: () => void;
@@ -122,7 +121,6 @@ export default function ProjectEditorPanel({
   setAgentFilterDept,
   agents,
   departments,
-  spriteMap,
   onSave,
   onCancelEdit,
   onStartEditSelected,
@@ -375,7 +373,6 @@ export default function ProjectEditorPanel({
         setAgentFilterDept={setAgentFilterDept}
         departments={departments}
         agents={agents}
-        spriteMap={spriteMap}
         detail={detail}
         selectedProject={selectedProject}
       />

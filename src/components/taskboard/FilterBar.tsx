@@ -1,4 +1,4 @@
-import type { Department, TaskExecutionState } from "../../types";
+import type { Agent, Department, TaskExecutionState } from "../../types";
 import { useI18n } from "../../i18n";
 import { TASK_TYPE_OPTIONS, taskTypeLabel } from "./constants";
 
@@ -10,14 +10,17 @@ interface ProjectOption {
 interface FilterBarProps {
   departments: Department[];
   projects: ProjectOption[];
+  agents?: Agent[];
   filterDept: string;
   filterType: string;
   filterProject: string;
+  filterAgent: string;
   filterExecution: string;
   search: string;
   onFilterDept: (value: string) => void;
   onFilterType: (value: string) => void;
   onFilterProject: (value: string) => void;
+  onFilterAgent: (value: string) => void;
   onFilterExecution: (value: string) => void;
   onSearch: (value: string) => void;
 }
@@ -35,14 +38,17 @@ const EXECUTION_FILTER_OPTIONS: Array<{ value: "" | TaskExecutionState | "attent
 export default function FilterBar({
   departments,
   projects,
+  agents = [],
   filterDept,
   filterType,
   filterProject,
+  filterAgent,
   filterExecution,
   search,
   onFilterDept,
   onFilterType,
   onFilterProject,
+  onFilterAgent,
   onFilterExecution,
   onSearch,
 }: FilterBarProps) {
@@ -134,6 +140,30 @@ export default function FilterBar({
           {projects.map((project) => (
             <option key={project.id} value={project.id}>
               {project.name}
+            </option>
+          ))}
+        </select>
+      )}
+
+      {agents.length > 0 && (
+        <select
+          value={filterAgent}
+          onChange={(event) => onFilterAgent(event.target.value)}
+          className="outline-none"
+          style={{
+            border: "1px solid var(--th-border)",
+            borderRadius: "2px",
+            padding: "0.3rem 0.625rem",
+            background: "var(--th-bg-surface)",
+            color: "var(--th-text-secondary)",
+            fontFamily: "var(--th-font-mono)",
+            fontSize: "0.8125rem",
+          }}
+        >
+          <option value="">{t({ ko: "전체 담당자", en: "All Agents", ja: "全担当", zh: "全部担当" })}</option>
+          {agents.map((agent) => (
+            <option key={agent.id} value={agent.id}>
+              {agent.avatar_emoji} {locale === "ko" ? (agent.name_ko || agent.name) : agent.name}
             </option>
           ))}
         </select>

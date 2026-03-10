@@ -7,11 +7,11 @@ import { PersonaBadge } from "../agent-persona/PersonaBadge";
 
 interface AgentCardProps {
   agent: Agent;
-  spriteMap: Map<string, number>;
   isKo: boolean;
   locale: string;
   tr: Translator;
   departments: Department[];
+  isProjectMember?: boolean;
   onEdit: () => void;
   confirmDeleteId: string | null;
   onDeleteClick: () => void;
@@ -50,11 +50,11 @@ const ACTIVITY_COLOR: Record<string, string> = {
 
 export default function AgentCard({
   agent,
-  spriteMap,
   isKo,
   locale,
   tr,
   departments,
+  isProjectMember,
   onEdit,
   confirmDeleteId,
   onDeleteClick,
@@ -83,7 +83,7 @@ export default function AgentCard({
       {/* Top: avatar + name + status badge */}
       <div className="flex items-start gap-2.5 px-3 pt-3 pb-2">
         <div className="relative shrink-0 mt-0.5">
-          <AgentAvatar agent={agent} spriteMap={spriteMap} size={38} rounded="sm" />
+          <AgentAvatar agent={agent} size={38} rounded="sm" />
         </div>
 
         <div className="flex-1 min-w-0">
@@ -95,6 +95,11 @@ export default function AgentCard({
               {localeName(locale, agent)}
             </span>
             <div className="flex items-center gap-1 shrink-0">
+              {isProjectMember && (
+                <span className="text-[9px] px-1 py-0.5 rounded font-semibold" style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.25)" }}>
+                  팀원
+                </span>
+              )}
               {agent.persona_id && <PersonaBadge personaId={agent.persona_id} size="sm" />}
               <span className={STATUS_BADGE_CLASS[agent.status] ?? "status-badge status-badge-idle"}>
                 {STATUS_LABEL[agent.status] ?? "IDLE"}

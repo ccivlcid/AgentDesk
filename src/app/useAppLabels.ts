@@ -1,13 +1,11 @@
-import { useMemo } from "react";
 import type * as api from "../api";
 import { normalizeLanguage, pickLang } from "../i18n";
-import type { CompanySettings, Department } from "../types";
+import type { CompanySettings } from "../types";
 import type { RuntimeOs, View } from "./types";
 
 interface UseAppLabelsParams {
   view: View;
   settings: CompanySettings;
-  departments: Department[];
   theme: "light" | "dark";
   runtimeOs: RuntimeOs;
   forceUpdateBanner: boolean;
@@ -18,7 +16,6 @@ interface UseAppLabelsParams {
 export function useAppLabels({
   view,
   settings,
-  departments,
   theme,
   runtimeOs,
   forceUpdateBanner,
@@ -68,13 +65,6 @@ export function useAppLabels({
           en: "Task Board",
           ja: "タスクボード",
           zh: "任务看板",
-        });
-      case "tasks-deliverables":
-        return pickLang(uiLanguage, {
-          ko: "결과물",
-          en: "Deliverables",
-          ja: "成果物",
-          zh: "交付物",
         });
       case "agents":
         return pickLang(uiLanguage, {
@@ -141,36 +131,6 @@ export function useAppLabels({
     ja: "グループチャット",
     zh: "群聊",
   });
-  const roomManagerLabel = pickLang(uiLanguage, {
-    ko: "사무실 관리",
-    en: "Office Manager",
-    ja: "オフィス管理",
-    zh: "办公室管理",
-  });
-  const roomManagerDepartments = useMemo(
-    () => [
-      {
-        id: "ceoOffice",
-        name: pickLang(uiLanguage, {
-          ko: "CEO 오피스",
-          en: "CEO Office",
-          ja: "CEOオフィス",
-          zh: "CEO办公室",
-        }),
-      },
-      ...departments,
-      {
-        id: "breakRoom",
-        name: pickLang(uiLanguage, {
-          ko: "휴게실",
-          en: "Break Room",
-          ja: "休憩室",
-          zh: "休息室",
-        }),
-      },
-    ],
-    [departments, uiLanguage],
-  );
   const reportLabel = pickLang(uiLanguage, {
     ko: "보고서",
     en: "Reports",
@@ -296,8 +256,6 @@ export function useAppLabels({
     viewTitle,
     announcementLabel,
     groupChatLabel,
-    roomManagerLabel,
-    roomManagerDepartments,
     reportLabel,
     tasksPrimaryLabel,
     agentStatusLabel,

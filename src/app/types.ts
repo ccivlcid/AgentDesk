@@ -8,13 +8,11 @@ export type View =
   | "cli-usage"
   | "tasks"
   | "tasks-board"
-  | "tasks-deliverables"
   | "tasks-scheduled"
   | "skills"
   | "agent-rules"
   | "memory"
   | "hooks"
-  | "game-room"
   | "settings";
 export type TaskPanelTab = "terminal" | "minutes";
 export type RuntimeOs = "windows" | "mac" | "linux" | "unknown";

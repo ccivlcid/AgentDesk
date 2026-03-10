@@ -42,12 +42,7 @@ export default function AgentFormModal({
 }) {
   const { t } = useI18n();
   const overlayRef = useRef<HTMLDivElement>(null);
-  const [spriteFile, setSpriteFile] = useState<File | null>(null);
-  const [processing, setProcessing] = useState(false);
-  const [previews, setPreviews] = useState<Record<string, string> | null>(null);
-  const [spriteNum, setSpriteNum] = useState(form.sprite_number ?? 0);
-  const [registering, setRegistering] = useState(false);
-  const [registered, setRegistered] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
   const [generatingPersona, setGeneratingPersona] = useState(false);
 
   const handleGeneratePersona = useCallback(async () => {
@@ -128,69 +123,71 @@ export default function AgentFormModal({
             >
               {tr("기본 정보", "Basic Info")}
             </div>
-            {/* ── 스프라이트 얼굴 미리보기 + 위/아래 변경 ── */}
+            {/* ── 프로필 이미지 + 이름 ── */}
             <div className="flex items-center gap-3">
-              <div className="flex flex-col items-center gap-1">
+              {/* Avatar upload circle */}
+              <div className="flex flex-col items-center gap-1 flex-shrink-0">
+                <input
+                  ref={avatarInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  className="hidden"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    if (file.size > 5 * 1024 * 1024) {
+                      alert(tr("이미지는 5MB 이하여야 합니다.", "Image must be under 5 MB."));
+                      return;
+                    }
+                    const dataUrl = await fileToBase64(file);
+                    setForm({ ...form, pendingAvatarDataUrl: dataUrl });
+                  }}
+                />
                 <button
                   type="button"
-                  className="w-6 h-6 flex items-center justify-center text-xs hover:bg-[var(--th-bg-surface-hover)] transition-colors"
-                  style={{ color: "var(--th-text-muted)", border: "1px solid var(--th-input-border)" }}
-                  onClick={() => {
-                    const next = Math.max(1, spriteNum || 0) + 1;
-                    setSpriteNum(next);
-                    setForm({ ...form, sprite_number: next });
-                  }}
+                  title={tr("프로필 이미지 업로드", "Upload profile image")}
+                  className="relative w-14 h-14 rounded-full overflow-hidden flex items-center justify-center hover:ring-2 hover:ring-amber-500/60 transition-all group"
+                  style={{ background: "var(--th-bg-elevated)", border: "2px solid var(--th-input-border)" }}
+                  onClick={() => avatarInputRef.current?.click()}
                 >
-                  ▲
-                </button>
-                <div
-                  className="w-14 h-14 overflow-hidden flex items-center justify-center flex-shrink-0"
-                  style={{ background: "var(--th-bg-elevated)", border: "2px solid var(--th-input-border)", borderRadius: "4px" }}
-                >
-                  {spriteNum > 0 ? (
+                  {form.pendingAvatarDataUrl ?? form.avatar_url ? (
                     <img
-                      src={`/sprites/${spriteNum}-D-1.png`}
-                      alt={`sprite ${spriteNum}`}
+                      src={(form.pendingAvatarDataUrl ?? form.avatar_url)!}
+                      alt="avatar"
                       className="w-full h-full object-cover"
-                      style={{ imageRendering: "pixelated" }}
                     />
                   ) : (
                     <span className="text-2xl">{form.avatar_emoji || "🤖"}</span>
                   )}
-                </div>
-                <button
-                  type="button"
-                  className="w-6 h-6 flex items-center justify-center text-xs hover:bg-[var(--th-bg-surface-hover)] transition-colors"
-                  style={{ color: "var(--th-text-muted)", border: "1px solid var(--th-input-border)" }}
-                  onClick={() => {
-                    const next = Math.max(1, (spriteNum || 1) - 1);
-                    setSpriteNum(next);
-                    setForm({ ...form, sprite_number: next });
-                  }}
-                >
-                  ▼
+                  {/* Hover overlay */}
+                  <span className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity text-white text-xs font-medium">
+                    {tr("변경", "Edit")}
+                  </span>
                 </button>
+                {(form.pendingAvatarDataUrl ?? form.avatar_url) && (
+                  <button
+                    type="button"
+                    className="text-[10px] hover:text-red-400 transition-colors"
+                    style={{ color: "var(--th-text-muted)" }}
+                    onClick={() => setForm({ ...form, pendingAvatarDataUrl: null, avatar_url: null })}
+                  >
+                    {tr("제거", "Remove")}
+                  </button>
+                )}
               </div>
+              {/* Name input */}
               <div className="flex-1 min-w-0">
-                <span
-                  className="text-xs font-mono px-1.5 py-0.5"
-                  style={{ color: "var(--th-text-muted)", background: "var(--th-bg-surface-hover)", borderRadius: "2px" }}
-                >
-                  #{spriteNum || "—"}
-                </span>
-                <div className="mt-2">
-                  <label className="block text-xs mb-1.5 font-medium" style={{ color: "var(--th-text-secondary)" }}>
-                    {tr("영문 이름", "Name")} <span className="text-red-400">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={form.name}
-                    onChange={(e) => setForm({ ...form, name: e.target.value })}
-                    placeholder="DORO"
-                    className={inputCls}
-                    style={inputStyle}
-                  />
-                </div>
+                <label className="block text-xs mb-1.5 font-medium" style={{ color: "var(--th-text-secondary)" }}>
+                  {tr("영문 이름", "Name")} <span className="text-red-400">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  placeholder="DORO"
+                  className={inputCls}
+                  style={inputStyle}
+                />
               </div>
             </div>
             {/* 로캘 기반 현지 이름 필드 */}
@@ -414,165 +411,6 @@ export default function AgentFormModal({
                   "The selected persona's philosophy is injected into the AI system prompt.",
                 )}
               </p>
-            </div>
-          )}
-        </div>
-
-        {/* ── Sprite Upload ── */}
-        <div className="mt-5 pt-4" style={{ borderTop: "1px solid var(--th-border)" }}>
-          <div
-            className="text-[10px] font-semibold uppercase tracking-widest mb-3"
-            style={{ color: "var(--th-text-muted)" }}
-          >
-            {tr("캐릭터 스프라이트", "Character Sprite")}
-          </div>
-
-          {!previews && !processing && (
-            <label
-              className="flex flex-col items-center justify-center gap-2 py-6 border-2 border-dashed cursor-pointer transition-colors hover:border-amber-500/50"
-              style={{ borderRadius: "4px", borderColor: "var(--th-input-border)", color: "var(--th-text-muted)" }}
-            >
-              <span className="text-2xl">🖼️</span>
-              <span className="text-xs">
-                {tr("4방향 스프라이트 시트 업로드 (2x2 그리드)", "Upload 4-direction sprite sheet (2x2 grid)")}
-              </span>
-              <span className="text-xs">{tr("앞 / 왼 / 뒤 / 오른 순서", "Front / Left / Back / Right order")}</span>
-              <span className="text-xs">
-                {t({
-                  ko: "(흰색배경)",
-                  en: "(White background)",
-                  ja: "（白背景）",
-                  zh: "（白色背景）",
-                })}
-              </span>
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={async (e) => {
-                  const file = e.target.files?.[0];
-                  if (!file) return;
-                  setSpriteFile(file);
-                  setProcessing(true);
-                  setPreviews(null);
-                  setRegistered(false);
-                  try {
-                    const base64 = await fileToBase64(file);
-                    const result = await api.processSprite(base64);
-                    setPreviews(result.previews);
-                    setSpriteNum(result.suggestedNumber);
-                  } catch (err) {
-                    console.error("Sprite processing failed:", err);
-                  } finally {
-                    setProcessing(false);
-                  }
-                }}
-              />
-            </label>
-          )}
-
-          {processing && (
-            <div className="flex items-center justify-center gap-2 py-8" style={{ color: "var(--th-text-muted)" }}>
-              <span className="animate-spin text-lg">⏳</span>
-              <span className="text-sm">
-                {tr("배경 제거 및 분할 처리 중...", "Removing background & splitting...")}
-              </span>
-            </div>
-          )}
-
-          {previews && !processing && (
-            <div className="space-y-3">
-              {/* Preview grid */}
-              <div className="grid grid-cols-3 gap-3">
-                {(["D", "L", "R"] as const).map((dir) => (
-                  <div key={dir} className="text-center">
-                    <div className="text-[10px] font-medium mb-1" style={{ color: "var(--th-text-muted)" }}>
-                      {dir === "D" ? tr("정면", "Front") : dir === "L" ? tr("좌측", "Left") : tr("우측", "Right")}
-                    </div>
-                    <div
-                      className="p-2 flex items-center justify-center h-24"
-                      style={{ borderRadius: "2px", background: "var(--th-input-bg)", border: "1px solid var(--th-input-border)" }}
-                    >
-                      {previews[dir] ? (
-                        <img
-                          src={previews[dir]}
-                          alt={dir}
-                          className="max-h-20 object-contain"
-                          style={{ imageRendering: "pixelated" }}
-                        />
-                      ) : (
-                        <span className="text-xs" style={{ color: "var(--th-text-muted)" }}>
-                          —
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Sprite number + register */}
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2">
-                  <label className="text-xs font-medium" style={{ color: "var(--th-text-secondary)" }}>
-                    {tr("스프라이트 번호", "Sprite #")}
-                  </label>
-                  <input
-                    type="number"
-                    value={spriteNum}
-                    onChange={(e) => setSpriteNum(Number(e.target.value))}
-                    min={1}
-                    className="w-16 px-2 py-1 border text-sm text-center focus:outline-none focus:ring-2 focus:ring-amber-500/30"
-                    style={{
-                      borderRadius: "2px",
-                      background: "var(--th-input-bg)",
-                      borderColor: "var(--th-input-border)",
-                      color: "var(--th-text-primary)",
-                    }}
-                  />
-                </div>
-                <button
-                  onClick={async () => {
-                    if (!previews) return;
-                    setRegistering(true);
-                    try {
-                      await api.registerSprite(previews, spriteNum);
-                      setRegistered(true);
-                      setForm({ ...form, sprite_number: spriteNum });
-                    } catch (err) {
-                      console.error("Sprite register failed:", err);
-                    } finally {
-                      setRegistering(false);
-                    }
-                  }}
-                  disabled={registering || registered || !spriteNum}
-                  className="px-3 py-1.5 text-xs font-mono font-medium transition-all disabled:opacity-50"
-                  style={{
-                    borderRadius: "2px",
-                    ...(registered
-                      ? { background: "rgba(34,197,94,0.12)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.3)" }
-                      : { background: "rgba(245,158,11,0.12)", color: "#f59e0b", border: "1px solid rgba(245,158,11,0.4)" }),
-                  }}
-                >
-                  {registering
-                    ? tr("등록 중...", "Registering...")
-                    : registered
-                      ? tr("등록 완료!", "Registered!")
-                      : tr("스프라이트 등록", "Register Sprite")}
-                </button>
-                {previews && (
-                  <button
-                    onClick={() => {
-                      setPreviews(null);
-                      setSpriteFile(null);
-                      setRegistered(false);
-                    }}
-                    className="text-xs px-2 py-1 hover:bg-[var(--th-bg-surface-hover)] transition-colors font-mono"
-                    style={{ borderRadius: "2px", color: "var(--th-text-muted)" }}
-                  >
-                    {tr("다시 업로드", "Re-upload")}
-                  </button>
-                )}
-              </div>
             </div>
           )}
         </div>

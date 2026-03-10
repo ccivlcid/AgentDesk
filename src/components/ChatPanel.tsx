@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import type { Agent, Message, Project } from "../types";
-import { buildSpriteMap } from "./AgentAvatar";
 import { useI18n } from "../i18n";
 import { createProject, getProjects } from "../api";
 import { uploadChatFiles } from "../api/messaging-runtime-oauth";
@@ -77,7 +76,6 @@ export function ChatPanel({
   const [pinnedBarOpen, setPinnedBarOpen] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const spriteMap = useMemo(() => buildSpriteMap(agents), [agents]);
   const { t, locale } = useI18n();
   const isKorean = locale.startsWith("ko");
 
@@ -485,7 +483,6 @@ export function ChatPanel({
       <ChatPanelHeader
         selectedAgent={selectedAgent}
         selectedDeptName={selectedDeptName}
-        spriteMap={spriteMap}
         tr={tr}
         getAgentName={getAgentName}
         getRoleLabel={getRoleLabel}
@@ -542,7 +539,6 @@ export function ChatPanel({
         selectedAgent={selectedAgent}
         visibleMessages={displayMessages}
         agents={agents}
-        spriteMap={spriteMap}
         locale={locale}
         tr={tr}
         getAgentName={getAgentName}

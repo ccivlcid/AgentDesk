@@ -59,6 +59,8 @@ export const BLANK: FormData = {
   role: "junior",
   cli_provider: "claude",
   avatar_emoji: "🤖",
+  avatar_url: null,
+  pendingAvatarDataUrl: null,
   sprite_number: null,
   personality: "",
 };

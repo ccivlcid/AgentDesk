@@ -10,7 +10,7 @@ import GatewaySettingsTab from "./settings/GatewaySettingsTab";
 import GeneralSettingsTab from "./settings/GeneralSettingsTab";
 import OAuthSettingsTab from "./settings/OAuthSettingsTab";
 import DataSettingsTab from "./settings/DataSettingsTab";
-import OfficePacksTab from "./settings/OfficePacksTab";
+import CategoriesTab from "./settings/CategoriesTab";
 import SettingsTabNav from "./settings/SettingsTabNav";
 import type { AccountDraftMap, AccountDraftPatch, LocalSettings, SettingsTab } from "./settings/types";
 import { useApiProvidersState } from "./settings/useApiProvidersState";
@@ -478,7 +478,7 @@ export default function SettingsPanel({
       )}
 
       {tab === "data" && <DataSettingsTab t={t} />}
-      {tab === "office_packs" && <OfficePacksTab />}
+      {tab === "categories" && <CategoriesTab />}
     </div>
   );
 }

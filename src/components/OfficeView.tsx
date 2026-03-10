@@ -1,290 +1,373 @@
-import React, { useEffect, useMemo } from "react";
-import { useI18n } from "../i18n";
-import { useTheme } from "../ThemeContext";
-import { usePackVocab } from "../pack-identity/vocabulary";
-import PackHud from "./hud/PackHud";
-import type { OfficeViewProps } from "./office-view/model";
-import { useCliUsage } from "./office-view/useCliUsage";
-import { useOfficeViewRefs } from "./office-view/useOfficeViewRefs";
-import { useOfficeViewCamera } from "./office-view/useOfficeViewCamera";
-import { useOfficeViewInteractions } from "./office-view/useOfficeViewInteractions";
-import { useOfficeViewBuildScene } from "./office-view/useOfficeViewBuildScene";
-import { useOfficeViewUIState } from "./office-view/useOfficeViewUIState";
-import { useOfficeViewTickerAndDelivery } from "./office-view/useOfficeViewTickerAndDelivery";
-import OfficeViewToolbar from "./office-view/OfficeViewToolbar";
-import OfficeViewBody from "./office-view/OfficeViewBody";
-import OfficeViewActionBar from "./office-view/OfficeViewActionBar";
+import { useState, useMemo } from "react";
+import { useI18n, localeName } from "../i18n";
+import type { Agent, Department, Project, Task } from "../types";
+import AgentAvatar from "./AgentAvatar";
+import { ROLE_BADGE, ROLE_LABEL } from "./agent-manager/constants";
+
+export interface WorkMapProps {
+  departments: Department[];
+  agents: Agent[];
+  tasks: Task[];
+  onSelectAgent: (agent: Agent) => void;
+  onSelectDepartment?: (dept: Department) => void;
+  projectAgentIds?: Set<string>;
+  unreadAgentIds?: Set<string>;
+  currentProject?: Project | null;
+  // Legacy props — accepted but unused
+  subAgents?: unknown;
+  meetingPresence?: unknown;
+  activeMeetingTaskId?: string | null;
+  crossDeptDeliveries?: unknown;
+  onCrossDeptDeliveryProcessed?: unknown;
+  ceoOfficeCalls?: unknown;
+  onCeoOfficeCallProcessed?: unknown;
+  onOpenActiveMeetingMinutes?: unknown;
+  customDeptThemes?: unknown;
+  themeHighlightTargetId?: unknown;
+  cliStatus?: unknown;
+  cliUsage?: unknown;
+  cliUsageRef?: unknown;
+  cliUsageRefreshing?: boolean;
+  onRefreshCliUsage?: unknown;
+  onOpenRoomManager?: unknown;
+  activeWorkflowPackKey?: unknown;
+}
+
+const AGENT_STATUS_LABEL: Record<string, string> = {
+  working: "RUNNING",
+  idle: "IDLE",
+  break: "BREAK",
+  offline: "OFFLINE",
+};
+
+const AGENT_STATUS_CLASS: Record<string, string> = {
+  working: "status-badge status-badge-running",
+  idle: "status-badge status-badge-idle",
+  break: "status-badge status-badge-paused",
+  offline: "status-badge status-badge-error",
+};
+
+const ACTIVITY_PCT: Record<string, number> = {
+  working: 85,
+  idle: 50,
+  break: 22,
+  offline: 5,
+};
+
+const ACTIVITY_COLOR: Record<string, string> = {
+  working: "var(--th-attr-elite)",
+  idle: "var(--th-attr-avg)",
+  break: "var(--th-attr-poor)",
+  offline: "var(--th-attr-vlow)",
+};
+
+function getAgentCurrentTask(agentId: string, tasks: Task[]): Task | null {
+  return (
+    tasks.find((t) => t.assigned_agent_id === agentId && t.status === "in_progress") ??
+    tasks.find((t) => t.assigned_agent_id === agentId && t.status === "pending") ??
+    null
+  );
+}
+
+function AgentRow({
+  agent,
+  tasks,
+  locale,
+  isKo,
+  unread,
+  dimmed,
+  onClick,
+}: {
+  agent: Agent;
+  tasks: Task[];
+  locale: string;
+  isKo: boolean;
+  unread: boolean;
+  dimmed: boolean;
+  onClick: () => void;
+}) {
+  const currentTask = getAgentCurrentTask(agent.id, tasks);
+  const activityPct = ACTIVITY_PCT[agent.status] ?? 5;
+  const activityColor = ACTIVITY_COLOR[agent.status] ?? "var(--th-attr-vlow)";
+  const isWorking = agent.status === "working";
+
+  return (
+    <button
+      onClick={onClick}
+      className="group w-full text-left flex items-center gap-3 px-3 py-2 transition-colors hover:bg-[var(--th-bg-surface-hover)]"
+      style={{
+        borderLeft: isWorking ? "2px solid #22c55e" : "2px solid transparent",
+        opacity: dimmed ? 0.4 : 1,
+        transition: "opacity 0.1s linear, border-color 0.1s linear",
+      }}
+    >
+      {/* Avatar */}
+      <div className="relative shrink-0">
+        <AgentAvatar agent={agent} size={32} rounded="sm" />
+        {unread && (
+          <span
+            className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-[var(--th-accent)]"
+            style={{ border: "1px solid var(--th-bg-surface)" }}
+          />
+        )}
+      </div>
+
+      {/* Name + role */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-1.5 mb-0.5">
+          <span
+            className="text-xs font-semibold font-mono truncate"
+            style={{ color: "var(--th-text-heading)" }}
+          >
+            {localeName(locale, agent)}
+          </span>
+          <span
+            className={`text-[9px] px-1 border font-medium font-mono shrink-0 ${ROLE_BADGE[agent.role] || ""}`}
+            style={{ borderRadius: "2px" }}
+          >
+            {isKo ? ROLE_LABEL[agent.role]?.ko : ROLE_LABEL[agent.role]?.en}
+          </span>
+        </div>
+        {/* Task or status */}
+        <p className="text-[10px] font-mono truncate" style={{ color: "var(--th-text-muted)" }}>
+          {currentTask ? `↳ ${currentTask.title}` : "—"}
+        </p>
+      </div>
+
+      {/* Activity bar + badge */}
+      <div className="flex items-center gap-2 shrink-0">
+        <div
+          className="overflow-hidden"
+          style={{ width: 40, height: 3, borderRadius: "1px", background: "var(--th-border)" }}
+        >
+          <div
+            style={{
+              width: `${activityPct}%`,
+              height: "100%",
+              background: activityColor,
+              transition: "width 0.3s linear",
+            }}
+          />
+        </div>
+        <span className={AGENT_STATUS_CLASS[agent.status] ?? "status-badge status-badge-idle"} style={{ fontSize: "8px" }}>
+          {AGENT_STATUS_LABEL[agent.status] ?? "IDLE"}
+        </span>
+      </div>
+    </button>
+  );
+}
+
+function DeptPanel({
+  dept,
+  agents,
+  tasks,
+  locale,
+  isKo,
+  unreadAgentIds,
+  projectAgentIds,
+  onSelectAgent,
+  onSelectDepartment,
+}: {
+  dept: Department;
+  agents: Agent[];
+  tasks: Task[];
+  locale: string;
+  isKo: boolean;
+  unreadAgentIds: Set<string>;
+  projectAgentIds?: Set<string>;
+  onSelectAgent: (a: Agent) => void;
+  onSelectDepartment?: (d: Department) => void;
+}) {
+  const workingCount = agents.filter((a) => a.status === "working").length;
+  const activeTasks = tasks.filter(
+    (t) => agents.some((a) => a.id === t.assigned_agent_id) && t.status === "in_progress",
+  ).length;
+
+  return (
+    <div
+      style={{
+        background: "var(--th-bg-surface)",
+        border: "1px solid var(--th-border)",
+        borderRadius: "4px",
+        overflow: "hidden",
+      }}
+    >
+      {/* Dept header */}
+      <button
+        className="w-full flex items-center gap-2 px-3 py-2 hover:bg-[var(--th-bg-surface-hover)] transition-colors"
+        style={{ borderBottom: "1px solid var(--th-border)" }}
+        onClick={() => onSelectDepartment?.(dept)}
+      >
+        <span style={{ fontSize: 14 }}>{dept.icon ?? "🏢"}</span>
+        <span
+          className="flex-1 text-left text-xs font-semibold font-mono uppercase tracking-wider truncate"
+          style={{ color: "var(--th-text-heading)" }}
+        >
+          {localeName(locale, dept)}
+        </span>
+        <div className="flex items-center gap-2 shrink-0">
+          {activeTasks > 0 && (
+            <span
+              className="text-[9px] font-mono px-1"
+              style={{ color: "var(--th-attr-elite)", background: "rgba(34,197,94,0.08)", borderRadius: "2px", border: "1px solid rgba(34,197,94,0.2)" }}
+            >
+              {activeTasks} {isKo ? "진행중" : "active"}
+            </span>
+          )}
+          <span className="text-[9px] font-mono" style={{ color: "var(--th-text-muted)" }}>
+            {workingCount}/{agents.length}
+          </span>
+        </div>
+      </button>
+
+      {/* Agent rows */}
+      <div className="divide-y" style={{ borderColor: "var(--th-border)" }}>
+        {agents.map((agent) => (
+          <AgentRow
+            key={agent.id}
+            agent={agent}
+            tasks={tasks}
+            locale={locale}
+            isKo={isKo}
+            unread={unreadAgentIds.has(agent.id)}
+            dimmed={projectAgentIds !== undefined && !projectAgentIds.has(agent.id)}
+            onClick={() => onSelectAgent(agent)}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function OfficeView({
   departments,
   agents,
   tasks,
-  subAgents,
-  meetingPresence,
-  activeMeetingTaskId,
-  unreadAgentIds,
-  crossDeptDeliveries,
-  onCrossDeptDeliveryProcessed,
-  ceoOfficeCalls,
-  onCeoOfficeCallProcessed,
-  onOpenActiveMeetingMinutes,
-  customDeptThemes,
-  themeHighlightTargetId,
   onSelectAgent,
   onSelectDepartment,
-  cliStatus: cliStatusProp,
-  cliUsage: cliUsageProp,
-  cliUsageRef: cliUsageRefProp,
-  cliUsageRefreshing: cliUsageRefreshingProp,
-  onRefreshCliUsage: onRefreshCliUsageProp,
-  onOpenRoomManager,
-  activeWorkflowPackKey,
-}: OfficeViewProps) {
-  const { language, t } = useI18n();
-  const packVocab = usePackVocab(activeWorkflowPackKey ?? "development");
-  const { theme: currentTheme } = useTheme();
+  projectAgentIds,
+  unreadAgentIds = new Set(),
+  currentProject,
+}: WorkMapProps) {
+  const { t, locale } = useI18n();
+  const [filterDeptId, setFilterDeptId] = useState<string | null>(null);
+  const isKo = locale.startsWith("ko");
 
-  const cliUsageFromHook = useCliUsage(tasks);
-  const cliStatus = cliStatusProp ?? cliUsageFromHook.cliStatus;
-  const cliUsage = cliUsageProp ?? cliUsageFromHook.cliUsage;
-  const cliUsageRef = cliUsageRefProp ?? cliUsageFromHook.cliUsageRef;
-  const cliUsageRefreshing = cliUsageRefreshingProp ?? cliUsageFromHook.refreshing;
-  const onRefreshCliUsage = onRefreshCliUsageProp ?? cliUsageFromHook.handleRefreshUsage;
+  const tr = (ko: string, en: string) => t({ ko, en, ja: en, zh: en });
 
-  const refs = useOfficeViewRefs({
-    departments,
-    agents,
-    tasks,
-    subAgents,
-    unreadAgentIds,
-    meetingPresence,
-    customDeptThemes,
-    language,
-    currentTheme,
-    themeHighlightTargetId,
-    activeMeetingTaskId,
-    onOpenActiveMeetingMinutes,
-  });
+  const visibleDepts = useMemo(
+    () => (filterDeptId ? departments.filter((d) => d.id === filterDeptId) : departments),
+    [departments, filterDeptId],
+  );
 
-  const camera = useOfficeViewCamera({
-    containerRef: refs.containerRef,
-    appRef: refs.appRef,
-    totalHRef: refs.totalHRef,
-    dataRef: refs.dataRef,
-    isOverviewModeRef: refs.isOverviewModeRef,
-    cameraTargetRef: refs.cameraTargetRef,
-  });
-
-  const interactions = useOfficeViewInteractions({
-    roomRectsRef: refs.roomRectsRef,
-    ceoPosRef: refs.ceoPosRef,
-    dataRef: refs.dataRef,
-    cbRef: refs.cbRef,
-    elevatorStateRef: refs.elevatorStateRef,
-    selectedFloorIdxRef: refs.selectedFloorIdxRef,
-    appRef: refs.appRef,
-    showVirtualPadRef: refs.showVirtualPadRef,
-    isOverviewModeRef: refs.isOverviewModeRef,
-    towerOffsetXRef: refs.towerOffsetXRef,
-    setSelectedAgent: refs.setSelectedAgent,
-    setSelectedDept: refs.setSelectedDept,
-    scrollToFloorY: camera.scrollToFloorY,
-    exitOverviewAndScroll: camera.exitOverviewAndScroll,
-    keysRef: refs.keysRef,
-  });
-
-  useEffect(() => {
-    refs.cbRef.current = {
-      onSelectAgent: interactions.handleCanvasSelectAgent,
-      onSelectDepartment: interactions.handleCanvasSelectDept,
-    };
-  }, [interactions.handleCanvasSelectAgent, interactions.handleCanvasSelectDept, refs.cbRef]);
-
-  const buildScene = useOfficeViewBuildScene({
-    ...refs,
-    firstBuildDoneRef: refs.firstBuildDoneRef,
-    initDoneRef: refs.initDoneRef,
-    isOverviewModeRef: refs.isOverviewModeRef,
-    cameraTargetRef: refs.cameraTargetRef,
-    setCurrentSeasonKey: refs.setCurrentSeasonKey,
-    setDeptFloorOrder: refs.setDeptFloorOrder,
-    deptFloorOrder: refs.deptFloorOrder,
-    applyCameraOverview: camera.applyCameraOverview,
-    getFloorFocusZoom: camera.getFloorFocusZoom,
-  });
-
-  useOfficeViewTickerAndDelivery({
-    refs,
-    buildScene,
-    interactions,
-    cliUsageRef,
-    meetingPresence,
-    language,
-    crossDeptDeliveries,
-    onCrossDeptDeliveryProcessed,
-    ceoOfficeCalls,
-    onCeoOfficeCallProcessed,
-    departments,
-    agents,
-    tasks,
-    subAgents,
-    unreadAgentIds,
-    activeMeetingTaskId,
-    customDeptThemes,
-    currentTheme,
-  });
-
-  const uiState = useOfficeViewUIState({
-    containerRef: refs.containerRef,
-    appRef: refs.appRef,
-    totalHRef: refs.totalHRef,
-    cameraTargetRef: refs.cameraTargetRef,
-    isOverviewModeRef: refs.isOverviewModeRef,
-    dataRef: refs.dataRef,
-    visitorTickRef: refs.visitorTickRef,
-    setShowVirtualPad: refs.setShowVirtualPad,
-    showVirtualPad: refs.showVirtualPad,
-    clearVirtualMovement: interactions.clearVirtualMovement,
-    applyCameraOverview: camera.applyCameraOverview,
-    applyCameraFloorFocus: camera.applyCameraFloorFocus,
-    updateFloorIndicator: camera.updateFloorIndicator,
-    exitOverviewAndScroll: camera.exitOverviewAndScroll,
-    scrollToFloorY: camera.scrollToFloorY,
-    tasks,
-  });
-
-  const fmTickerEvents = useMemo(() => {
-    const working = agents.filter((a) => a.status === "working");
-    const idle = agents.filter((a) => a.status === "idle");
-    const onBreak = agents.filter((a) => a.status === "break");
-    const activeTasks = tasks.filter((t) => t.status === "in_progress");
-    const doneTasks = tasks.filter((t) => t.status === "done");
-    const events: string[] = [];
-    if (agents.length > 0) {
-      const actPct = Math.round((working.length / agents.length) * 100);
-      events.push(
-        `HQ CAPACITY ${actPct}% · ${working.length}/${agents.length} ${packVocab.agents.toUpperCase()} ACTIVE`
-      );
+  const agentsByDept = useMemo(() => {
+    const map = new Map<string, Agent[]>();
+    for (const dept of departments) {
+      map.set(dept.id, agents.filter((a) => a.department_id === dept.id));
     }
-    if (working.length > 0) {
-      const sample = working.slice(0, 3);
-      for (const a of sample) {
-        const task = tasks.find(
-          (t) => t.assigned_agent_id === a.id && t.status === "in_progress"
-        );
-        if (task) events.push(`${a.avatar_emoji} ${a.name} >> ${task.title.slice(0, 30)}`);
-      }
-    }
-    const topDept = departments
-      .map((d) => {
-        const das = agents.filter((a) => a.department_id === d.id);
-        const runCount = das.filter((a) => a.status === "working").length;
-        return { d, pct: das.length > 0 ? Math.round((runCount / das.length) * 100) : 0 };
-      })
-      .sort((a, b) => b.pct - a.pct)[0];
-    if (topDept && topDept.pct > 0) {
-      events.push(`${topDept.d.icon} ${topDept.d.name} LEADS AT ${topDept.pct}% ACTIVITY`);
-    }
-    if (idle.length > 0)
-      events.push(
-        `${idle.length} ${packVocab.agent.toUpperCase()}${idle.length > 1 ? "S" : ""} ${packVocab.idle.toUpperCase()} — AWAITING ASSIGNMENT`
-      );
-    if (onBreak.length > 0)
-      events.push(`${onBreak.length} IN ${packVocab.breakRoom.toUpperCase()}`);
-    if (uiState.visitorCount > 0)
-      events.push(
-        `${uiState.visitorCount} ${packVocab.agent.toUpperCase()}${uiState.visitorCount > 1 ? "S" : ""} ON INTER-DEPT VISIT`
-      );
-    if (activeTasks.length > 0)
-      events.push(
-        `${activeTasks.length} ${packVocab.task.toUpperCase()}${activeTasks.length > 1 ? "S" : ""} IN PROGRESS`
-      );
-    if (doneTasks.length > 0)
-      events.push(
-        `${doneTasks.length} ${packVocab.task.toUpperCase()}${doneTasks.length > 1 ? "S" : ""} ${packVocab.done.toUpperCase()}`
-      );
-    const topXpAgent = [...agents].sort((a, b) => (b.stats_xp ?? 0) - (a.stats_xp ?? 0))[0];
-    if (topXpAgent && (topXpAgent.stats_xp ?? 0) > 0) {
-      events.push(
-        `TOP PERFORMER: ${topXpAgent.avatar_emoji} ${topXpAgent.name} · ${(topXpAgent.stats_xp ?? 0).toLocaleString()} ${packVocab.xp}`
-      );
-    }
-    if (events.length === 0) events.push("AGENTDESK HQ — ALL SYSTEMS NOMINAL");
-    return events.join("     //     ");
-  }, [agents, tasks, departments, uiState.visitorCount, packVocab]);
+    return map;
+  }, [departments, agents]);
+
+  const workingCount = agents.filter((a) => a.status === "working").length;
+  const inProgressTaskCount = tasks.filter((t) => t.status === "in_progress").length;
 
   return (
-    <div className="office-screen">
-      <OfficeViewToolbar
-        isOverviewMode={camera.isOverviewMode}
-        handleToggleOverview={camera.handleToggleOverview}
-        applyCameraOverview={camera.applyCameraOverview}
-        applyCameraFloorFocus={camera.applyCameraFloorFocus}
-        onOpenRoomManager={onOpenRoomManager}
-        departmentCount={departments.length}
-        workingCount={agents.filter((a) => a.status === "working").length}
-        inProgressTaskCount={tasks.filter((t) => t.status === "in_progress").length}
-        visitorCount={uiState.visitorCount}
-        currentSeasonKey={refs.currentSeasonKey}
-        clockStr={uiState.clockStr}
-        packVocab={packVocab}
-      />
-      <OfficeViewBody
-        containerRef={refs.containerRef}
-        appRef={refs.appRef}
-        sortedDepartments={refs.sortedDepartments}
-        agents={agents}
-        tasks={tasks}
-        departments={departments}
-        selectedDept={refs.selectedDept}
-        selectedAgent={refs.selectedAgent}
-        setSelectedDept={refs.setSelectedDept}
-        setSelectedAgent={refs.setSelectedAgent}
-        handleCanvasSelectDept={interactions.handleCanvasSelectDept}
-        handleCallElevator={interactions.handleCallElevator}
-        handleScrollToFloor={interactions.handleScrollToFloor}
-        visitorsByDeptId={uiState.visitorsByDeptId}
-        cliStatus={cliStatus}
-        cliUsage={cliUsage}
-        cliUsageRefreshing={cliUsageRefreshing}
-        onRefreshCliUsage={onRefreshCliUsage}
-        isOverviewMode={camera.isOverviewMode}
-        showVirtualPad={refs.showVirtualPad}
-        t={t}
-        triggerDepartmentInteract={interactions.triggerDepartmentInteract}
-        setMoveDirectionPressed={interactions.setMoveDirectionPressed}
-        exitOverviewAndScroll={camera.exitOverviewAndScroll}
-        customDeptThemes={customDeptThemes}
-        totalH={refs.totalHRef.current}
-        floorIndicator={uiState.floorIndicator}
-        announcementBanner={uiState.announcementBanner}
-        completionBursts={uiState.completionBursts}
-        onSelectAgent={onSelectAgent}
-        onSelectDepartment={onSelectDepartment}
-        ceoIncomingCount={uiState.ceoIncomingCount}
-        visitingAgentIds={uiState.visitingAgentIds}
-      />
-      <div className="office-fm-ticker" aria-label="Live event feed">
-        <span className="office-fm-ticker__label">
-          <span className="office-fm-ticker__dot" />
-          LIVE
-        </span>
-        <div className="office-fm-ticker__track">
-          <span className="office-fm-ticker__text">{fmTickerEvents}</span>
+    <div className="flex flex-col h-full overflow-hidden">
+      {/* Top status bar */}
+      <div
+        className="flex-shrink-0 flex items-center gap-4 px-4 py-2"
+        style={{ borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}
+      >
+        <div className="flex items-center gap-2">
+          {workingCount > 0 && (
+            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+          )}
+          <span
+            className="text-[10px] font-mono uppercase tracking-widest"
+            style={{ color: "var(--th-text-muted)" }}
+          >
+            {tr("워크맵", "WORK MAP")}
+          </span>
+          {currentProject && (
+            <span
+              className="text-[10px] font-mono px-1.5 py-0.5"
+              style={{ color: "var(--th-accent)", background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)", borderRadius: "2px" }}
+            >
+              {currentProject.name}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="text-[10px] font-mono tabular-nums" style={{ color: "var(--th-attr-elite)" }}>
+            {workingCount} {tr("근무중", "working")}
+          </span>
+          {inProgressTaskCount > 0 && (
+            <span className="text-[10px] font-mono tabular-nums" style={{ color: "var(--th-text-muted)" }}>
+              {inProgressTaskCount} {tr("진행중 태스크", "tasks active")}
+            </span>
+          )}
+        </div>
+
+        {/* Dept filter */}
+        <div className="ml-auto flex items-center gap-0" style={{ borderLeft: "1px solid var(--th-border)", paddingLeft: "0.75rem" }}>
+          <button
+            className="px-2.5 py-1 text-[10px] font-mono transition-colors"
+            style={{
+              color: filterDeptId === null ? "var(--th-text-heading)" : "var(--th-text-muted)",
+              borderBottom: filterDeptId === null ? "1px solid var(--th-accent, #f59e0b)" : "1px solid transparent",
+            }}
+            onClick={() => setFilterDeptId(null)}
+          >
+            ALL
+          </button>
+          {departments.map((dept) => (
+            <button
+              key={dept.id}
+              className="flex items-center gap-1 px-2.5 py-1 text-[10px] font-mono transition-colors"
+              style={{
+                color: filterDeptId === dept.id ? "var(--th-text-heading)" : "var(--th-text-muted)",
+                borderBottom: filterDeptId === dept.id ? "1px solid var(--th-accent, #f59e0b)" : "1px solid transparent",
+              }}
+              onClick={() => setFilterDeptId(dept.id)}
+            >
+              {dept.icon && <span style={{ fontSize: 11 }}>{dept.icon}</span>}
+              <span className="hidden sm:inline">{localeName(locale, dept)}</span>
+            </button>
+          ))}
         </div>
       </div>
-      <PackHud
-        packKey={activeWorkflowPackKey ?? "development"}
-        agents={agents}
-        tasks={tasks}
-      />
-      <OfficeViewActionBar
-        packVocab={packVocab}
-        agents={agents}
-        tasks={tasks}
-        departmentCount={departments.length}
-        visitorCount={uiState.visitorCount}
-      />
+
+      {/* Dept panels grid */}
+      <div className="flex-1 overflow-y-auto p-4">
+        {visibleDepts.length === 0 ? (
+          <div className="terminal-empty-state py-16">
+            <p className="terminal-empty-state-cmd">$ ls departments/</p>
+            <p className="terminal-empty-state-result">(empty)</p>
+            <p className="terminal-empty-state-hint">{tr("부서가 없습니다", "No departments yet")}</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+            {visibleDepts.map((dept) => {
+              const deptAgents = agentsByDept.get(dept.id) ?? [];
+              if (deptAgents.length === 0) return null;
+              return (
+                <DeptPanel
+                  key={dept.id}
+                  dept={dept}
+                  agents={deptAgents}
+                  tasks={tasks}
+                  locale={locale}
+                  isKo={isKo}
+                  unreadAgentIds={unreadAgentIds}
+                  projectAgentIds={projectAgentIds}
+                  onSelectAgent={onSelectAgent}
+                  onSelectDepartment={onSelectDepartment}
+                />
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

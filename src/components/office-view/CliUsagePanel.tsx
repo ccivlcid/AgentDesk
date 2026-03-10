@@ -4,8 +4,7 @@ import { type AgentUsageSummary, getAgentUsageSummary } from "../../api/agent-us
 import type { UiLanguage } from "../../i18n";
 import type { CliStatusMap } from "../../types";
 import { CliCursorLogo } from "../settings/Logos";
-import { formatReset } from "./drawing-furniture-b";
-import { LOCALE_TEXT } from "./themes-locale";
+import { formatReset, LOCALE_TEXT } from "./cli-locale";
 import UsageTrendChart from "./UsageTrendChart";
 
 type TFunction = (messages: Record<UiLanguage, string>) => string;

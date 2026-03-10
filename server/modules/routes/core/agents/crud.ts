@@ -680,6 +680,7 @@ export function registerAgentCrudRoutes(ctx: RuntimeContext): void {
       "cli_model",
       "cli_reasoning_level",
       "avatar_emoji",
+      "avatar_url",
       "sprite_number",
       "personality",
       "persona_id",

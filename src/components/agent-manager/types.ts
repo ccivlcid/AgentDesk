@@ -6,9 +6,10 @@ export interface AgentManagerProps {
   agents: Agent[];
   departments: Department[];
   onAgentsChange: () => void;
-  activeOfficeWorkflowPack: WorkflowPackKey;
+  activeOfficeWorkflowPack?: WorkflowPackKey;
   dbBackedOfficePack?: boolean;
-  onSaveOfficePackProfile: (packKey: WorkflowPackKey, profile: OfficePackProfile) => Promise<void>;
+  onSaveOfficePackProfile?: (packKey: WorkflowPackKey, profile: OfficePackProfile) => Promise<void>;
+  projectAgentIds?: Set<string>;
 }
 
 export interface FormData {
@@ -20,6 +21,8 @@ export interface FormData {
   role: import("../../types").AgentRole;
   cli_provider: import("../../types").CliProvider;
   avatar_emoji: string;
+  avatar_url?: string | null;
+  pendingAvatarDataUrl?: string | null;
   sprite_number: number | null;
   personality: string;
   persona_id?: string;

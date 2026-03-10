@@ -6,7 +6,6 @@ type Tr = (ko: string, en: string, ja?: string, zh?: string) => string;
 interface ChatPanelHeaderProps {
   selectedAgent: Agent | null;
   selectedDeptName?: string | null;
-  spriteMap: ReturnType<typeof import("../AgentAvatar").buildSpriteMap>;
   tr: Tr;
   getAgentName: (agent: Agent | null | undefined) => string;
   getRoleLabel: (role: string) => string;
@@ -26,7 +25,6 @@ interface ChatPanelHeaderProps {
 export default function ChatPanelHeader({
   selectedAgent,
   selectedDeptName,
-  spriteMap,
   tr,
   getAgentName,
   getRoleLabel,
@@ -48,7 +46,7 @@ export default function ChatPanelHeader({
         {selectedAgent ? (
           <>
             <div className="relative flex-shrink-0">
-              <AgentAvatar agent={selectedAgent} spriteMap={spriteMap} size={40} />
+              <AgentAvatar agent={selectedAgent} size={40} />
               <span
                 className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 ${
                   statusColors[selectedAgent.status] ?? "bg-[#64748b]"

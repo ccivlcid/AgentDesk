@@ -41,6 +41,9 @@ import { registerTaskExecutionRoutes } from "./core/tasks/execution.ts";
 import { registerTaskSubtaskRoutes } from "./core/tasks/subtasks.ts";
 import { registerUpdateAutoRoutes } from "./core/update-auto/register.ts";
 import { registerOfficePackRoutes } from "./core/office-packs.ts";
+import { registerCategoryRoutes } from "./core/categories.ts";
+import { registerProjectDashboardRoutes } from "./core/project-dashboard.ts";
+import { registerPersonaRoutes } from "./core/personas.ts";
 import type { AgentRow, MeetingMinuteEntryRow, MeetingMinutesRow, MeetingReviewDecision } from "./shared/types.ts";
 import { getDiscordReceiverStatus } from "../../messenger/discord-receiver.ts";
 
@@ -390,6 +393,9 @@ export function registerRoutesPartA(ctx: RuntimeContext): Record<string, never> 
   registerTaskDependencyRoutes({ app, db, nowMs });
   registerWebhookRoutes({ app, db, nowMs });
   registerPipelineGateRoutes({ app, db, nowMs });
+  registerCategoryRoutes({ app, db, nowMs });
+  registerProjectDashboardRoutes({ app, db, nowMs });
+  registerPersonaRoutes({ app });
 
   // ---------------------------------------------------------------------------
   // SubTask endpoints
