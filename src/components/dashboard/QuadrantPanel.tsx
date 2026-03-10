@@ -5,6 +5,7 @@ interface QuadrantPanelProps {
   subtitle: string;
   accentColor?: string;
   emptyText: string;
+  emptyGuide?: string;
   addLabel: string;
   onAdd: () => void;
   children: ReactNode;
@@ -16,6 +17,7 @@ export default function QuadrantPanel({
   subtitle,
   accentColor = "var(--th-accent)",
   emptyText,
+  emptyGuide,
   addLabel,
   onAdd,
   children,
@@ -35,13 +37,17 @@ export default function QuadrantPanel({
       {/* 콘텐츠 */}
       <div className="flex-1 overflow-y-auto min-h-0">
         {isEmpty ? (
-          <div className="flex flex-col items-center justify-center h-full py-6 px-4 text-center">
-            <div className="text-[11px] text-[var(--th-text-muted)] mb-3">{emptyText}</div>
+          <div
+            className="flex flex-col items-center justify-center h-full py-8 px-4 text-center mx-2 my-2 rounded"
+            style={{ border: "1px dashed var(--th-border)" }}
+          >
+            <div className="text-sm font-medium mb-1" style={{ color: "var(--th-text)" }}>{emptyText}</div>
+            {emptyGuide && (
+              <div className="text-[11px] text-[var(--th-text-muted)] mb-3 leading-snug">{emptyGuide}</div>
+            )}
             <button
               onClick={onAdd}
-              className="text-[11px] px-3 py-1 border border-dashed border-[var(--th-border)]
-                         text-[var(--th-text-muted)] hover:border-[var(--th-accent)]
-                         hover:text-[var(--th-accent)] rounded transition-colors"
+              className="text-xs px-4 py-1.5 bg-[var(--th-accent)] text-white rounded hover:opacity-90 transition-opacity"
             >
               + {addLabel}
             </button>

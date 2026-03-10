@@ -48,10 +48,11 @@ export default function ObjectivesPanel({ projectId, objectives, onUpdate }: Obj
   return (
     <QuadrantPanel
       title="목표"
-      subtitle="프로젝트가 달성해야 할 핵심 결과"
+      subtitle="프로젝트가 이루려는 것"
       accentColor="#3b82f6"
-      emptyText="아직 목표가 없어요"
-      addLabel="목표 추가"
+      emptyText="아직 목표가 없어요."
+      emptyGuide="프로젝트가 이루려는 것을 추가해보세요."
+      addLabel="첫 번째 목표 추가하기"
       onAdd={() => setShowInput(true)}
       isEmpty={objectives.length === 0 && !showInput}
     >

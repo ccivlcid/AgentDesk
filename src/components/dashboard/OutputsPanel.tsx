@@ -61,11 +61,12 @@ export default function OutputsPanel({ projectId, outputs, onUpdate }: OutputsPa
 
   return (
     <QuadrantPanel
-      title="산출물"
-      subtitle="프로젝트가 만들어낼 결과물 목록"
+      title="결과물"
+      subtitle="만들어야 하는 것"
       accentColor="#10b981"
-      emptyText="아직 산출물이 없어요"
-      addLabel="산출물 추가"
+      emptyText="아직 결과물이 없어요."
+      emptyGuide="프로젝트가 끝날 때 만들어야 하는 것을 추가해보세요."
+      addLabel="결과물 추가하기"
       onAdd={() => setShowInput(true)}
       isEmpty={outputs.length === 0 && !showInput}
     >

@@ -1,12 +1,13 @@
 interface WelcomeScreenProps {
   onCreateProject: () => void;
+  onSkip?: () => void;
 }
 
-export default function WelcomeScreen({ onCreateProject }: WelcomeScreenProps) {
+export default function WelcomeScreen({ onCreateProject, onSkip }: WelcomeScreenProps) {
   return (
     <div className="flex flex-col items-center justify-center h-full px-8 text-center">
       {/* 로고 */}
-      <div className="mb-6">
+      <div className="mb-5">
         <svg
           width="48"
           height="48"
@@ -24,30 +25,48 @@ export default function WelcomeScreen({ onCreateProject }: WelcomeScreenProps) {
       </div>
 
       {/* 타이틀 */}
-      <h1 className="text-lg font-bold mb-2">AgentDesk에 오신 걸 환영해요</h1>
+      <h1
+        className="text-xl font-bold mb-3"
+        style={{ fontFamily: "'Sora', sans-serif" }}
+      >
+        AgentDesk에 오신 걸 환영해요!
+      </h1>
+
+      {/* 설명 */}
+      <p className="text-sm text-[var(--th-text-muted)] max-w-sm mb-2 leading-relaxed">
+        AgentDesk는 프로젝트의 목표·리스크·결과물을
+        <br />
+        한 곳에서 관리하는 도구입니다.
+      </p>
       <p className="text-sm text-[var(--th-text-muted)] max-w-sm mb-8 leading-relaxed">
-        AI 에이전트와 함께 프로젝트를 운영하세요.
-        첫 번째 프로젝트를 만들어 대시보드를 시작해요.
+        시작하려면 첫 번째 프로젝트를 만들어보세요.
       </p>
 
-      {/* CTA */}
+      {/* Primary CTA */}
       <button
         onClick={onCreateProject}
-        className="flex items-center gap-2 px-5 py-2.5 bg-[var(--th-accent)] text-white
-                   text-sm font-medium rounded hover:opacity-90 transition-opacity"
+        className="flex items-center gap-2 px-6 py-3 bg-[var(--th-accent)] text-white
+                   text-sm font-semibold rounded hover:opacity-90 transition-opacity mb-4"
       >
-        <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2">
-          <path d="M10 4v12M4 10h12" />
-        </svg>
-        첫 프로젝트 만들기
+        프로젝트 만들기 →
       </button>
+
+      {/* Skip */}
+      {onSkip && (
+        <button
+          onClick={onSkip}
+          className="text-xs text-[var(--th-text-muted)] hover:text-[var(--th-text)] transition-colors underline"
+        >
+          나중에 만들게요 (건너뛰기)
+        </button>
+      )}
 
       {/* 하단 힌트 */}
       <div className="mt-10 grid grid-cols-3 gap-6 max-w-md text-left">
         {[
-          { icon: "🎯", title: "목표 관리", desc: "프로젝트 목표와 KPI를 추적해요" },
-          { icon: "⚠️", title: "리스크 관리", desc: "위험 요소를 사전에 식별해요" },
-          { icon: "✅", title: "검토 단계", desc: "게이트별 품질을 보장해요" },
+          { icon: "🎯", title: "목표 관리", desc: "프로젝트가 이루려는 것을 추적해요" },
+          { icon: "⚠️", title: "리스크 관리", desc: "주의가 필요한 항목을 미리 기록해요" },
+          { icon: "✅", title: "결과물 관리", desc: "만들어야 하는 것을 한눈에 봐요" },
         ].map(({ icon, title, desc }) => (
           <div key={title} className="text-center">
             <div className="text-2xl mb-1">{icon}</div>

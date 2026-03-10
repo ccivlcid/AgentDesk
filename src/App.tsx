@@ -384,10 +384,10 @@ export default function App() {
             const resolvedGoal = core_goal || (cat ? `${cat.name_ko ?? cat.name} 프로젝트` : name.trim());
             (api.createProject as (input: Record<string, unknown>) => Promise<Project>)({
               name: name.trim(),
-              project_path: project_path.trim(),
+              project_path: project_path ?? "",
               core_goal: resolvedGoal,
               category_id: categoryId ?? undefined,
-              create_path_if_missing: true,
+              create_path_if_missing: false,
             })
               .then((newProject) => {
                 setProjects((prev) => [...prev, newProject]);

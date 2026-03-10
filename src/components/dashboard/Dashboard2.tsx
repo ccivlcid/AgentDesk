@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { Agent, Category, Project } from "../../types";
 import { useDashboardData } from "../../hooks/useDashboardData";
 import CategoryBadge from "../project-selector/CategoryBadge";
@@ -30,8 +31,29 @@ function LoadingPlaceholder() {
 }
 
 export default function Dashboard2({ project, agents, categories, onCreateProject }: Dashboard2Props) {
+  const [skipped, setSkipped] = useState(false);
+
   if (!project) {
-    return <WelcomeScreen onCreateProject={onCreateProject} />;
+    if (!skipped) {
+      return (
+        <WelcomeScreen
+          onCreateProject={onCreateProject}
+          onSkip={() => setSkipped(true)}
+        />
+      );
+    }
+    /* 건너뛰기 후: 최소 빈 상태 */
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-center px-8">
+        <p className="text-sm text-[var(--th-text-muted)] mb-4">아직 프로젝트가 없어요.</p>
+        <button
+          onClick={onCreateProject}
+          className="text-xs px-4 py-2 bg-[var(--th-accent)] text-white rounded hover:opacity-90 transition-opacity"
+        >
+          + 첫 번째 프로젝트 만들기
+        </button>
+      </div>
+    );
   }
 
   return <Dashboard2Inner project={project} agents={agents} categories={categories} onCreateProject={onCreateProject} />;
@@ -108,10 +130,10 @@ function Dashboard2Inner({
             리스크 <strong className="font-semibold">{openRisks}</strong>
           </span>
           <span className="px-2 py-0.5 rounded-full bg-[var(--th-bg-surface)] border border-[var(--th-border)] text-[var(--th-text-muted)]">
-            게이트 <strong className="text-[var(--th-text)] font-semibold">{passedGates}/{gates.length}</strong>
+            검토 단계 <strong className="text-[var(--th-text)] font-semibold">{passedGates}/{gates.length}</strong>
           </span>
           <span className="px-2 py-0.5 rounded-full bg-[var(--th-bg-surface)] border border-[var(--th-border)] text-[var(--th-text-muted)]">
-            산출물 <strong className="text-[var(--th-text)] font-semibold">{doneOutputs}/{outputs.length}</strong>
+            결과물 <strong className="text-[var(--th-text)] font-semibold">{doneOutputs}/{outputs.length}</strong>
           </span>
         </div>
       </div>

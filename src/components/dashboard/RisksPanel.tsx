@@ -52,10 +52,11 @@ export default function RisksPanel({ projectId, risks, onUpdate }: RisksPanelPro
   return (
     <QuadrantPanel
       title="리스크"
-      subtitle="식별된 위험 요소 및 대응 현황"
+      subtitle="주의가 필요한 항목"
       accentColor="#ef4444"
-      emptyText="식별된 리스크가 없어요"
-      addLabel="리스크 추가"
+      emptyText="아직 리스크가 없어요."
+      emptyGuide="주의가 필요한 항목을 미리 기록해두세요."
+      addLabel="리스크 추가하기"
       onAdd={() => setShowInput(true)}
       isEmpty={risks.length === 0 && !showInput}
     >

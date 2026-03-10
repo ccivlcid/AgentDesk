@@ -56,10 +56,11 @@ export default function GatesPanel({ projectId, gates, onUpdate }: GatesPanelPro
   return (
     <QuadrantPanel
       title="검토 단계"
-      subtitle="프로젝트 진행을 위한 필수 게이트"
+      subtitle="완료 전 확인해야 할 것"
       accentColor="#8b5cf6"
-      emptyText="검토 단계가 없어요"
-      addLabel="단계 추가"
+      emptyText="아직 검토 단계가 없어요."
+      emptyGuide="완료 전 확인해야 할 체크포인트를 추가해보세요."
+      addLabel="검토 단계 추가하기"
       onAdd={() => setShowInput(true)}
       isEmpty={gates.length === 0 && !showInput}
     >

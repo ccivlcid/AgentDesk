@@ -247,9 +247,11 @@ export default function Sidebar({
             />
           </div>
         ) : (
-          <div className="flex flex-col gap-1 w-full">
-            <div className="px-1 text-[9px] font-bold tracking-widest text-[var(--th-accent)] uppercase">
-              {settings.companyName}
+          <div className="flex flex-col gap-1.5 w-full">
+            <div className="px-1 text-[13px] font-extrabold tracking-tight text-[var(--th-accent)]"
+              style={{ fontFamily: "'Sora', sans-serif", letterSpacing: "-0.01em" }}
+            >
+              AgentDesk
             </div>
             <ProjectSelector
               currentProject={currentProject}
