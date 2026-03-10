@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import type { Category } from "../../types";
 import CategorySelectStep from "./CategorySelectStep";
+import RecommendedSkillsSection from "./RecommendedSkillsSection";
 
 interface ProjectCreateModalProps {
   categories: Category[];
@@ -176,6 +177,11 @@ export default function ProjectCreateModal({ categories, onConfirm, onClose }: P
                   className="w-full px-3 py-2 text-sm bg-[var(--th-bg-surface)] border border-[var(--th-border)] rounded outline-none focus:border-[var(--th-accent)] transition-colors"
                 />
               </div>
+
+              {/* 추천 스킬 */}
+              {selectedCategoryId && (
+                <RecommendedSkillsSection categoryId={selectedCategoryId} />
+              )}
             </div>
           )}
         </div>
