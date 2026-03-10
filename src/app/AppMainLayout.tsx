@@ -20,15 +20,11 @@ import { I18nProvider, useI18n } from "../i18n";
 import type {
   Agent,
   Category,
-  CeoOfficeCall,
   CliStatusMap,
   CompanyStats,
   CompanySettings,
-  CrossDeptDelivery,
   Department,
-  MeetingPresence,
   Project,
-  SubAgent,
   SubTask,
   Task,
   WSEventType,
@@ -110,8 +106,6 @@ interface AppMainLayoutProps {
   stats: CompanyStats | null;
   tasks: Task[];
   subtasks: SubTask[];
-  subAgents: SubAgent[];
-  meetingPresence: MeetingPresence[];
   settings: CompanySettings;
   cliStatus: CliStatusMap | null;
   oauthResult: OAuthCallbackResult | null;
@@ -124,13 +118,7 @@ interface AppMainLayoutProps {
   toggleTheme: () => void;
   decisionInboxLoading: boolean;
   decisionInboxCount: number;
-  activeMeetingTaskId: string | null;
   unreadAgentIds: Set<string>;
-  crossDeptDeliveries: CrossDeptDelivery[];
-  ceoOfficeCalls: CeoOfficeCall[];
-  onCrossDeptDeliveryProcessed: (id: string) => void;
-  onCeoOfficeCallProcessed: (id: string) => void;
-  onOpenActiveMeetingMinutes: (taskId: string) => void;
   onSelectAgent: (agent: Agent) => void;
   onSelectDepartment: (department: Department) => void;
   onCreateTask: (input: {
@@ -182,8 +170,6 @@ export default function AppMainLayout({
   stats,
   tasks,
   subtasks,
-  subAgents,
-  meetingPresence,
   settings,
   cliStatus,
   oauthResult,
@@ -196,13 +182,7 @@ export default function AppMainLayout({
   toggleTheme,
   decisionInboxLoading,
   decisionInboxCount,
-  activeMeetingTaskId,
   unreadAgentIds,
-  crossDeptDeliveries,
-  ceoOfficeCalls,
-  onCrossDeptDeliveryProcessed,
-  onCeoOfficeCallProcessed,
-  onOpenActiveMeetingMinutes,
   onSelectAgent,
   onSelectDepartment,
   onCreateTask,
@@ -273,6 +253,14 @@ export default function AppMainLayout({
   return (
     <I18nProvider language={labels.uiLanguage}>
       <div className="app-shell flex h-[100dvh] min-h-[100dvh] overflow-hidden">
+        {/* Skip navigation link for keyboard/screen reader users */}
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[9999] focus:px-4 focus:py-2 focus:text-sm focus:font-medium"
+          style={{ background: "var(--th-accent)", color: "#000", borderRadius: "2px" }}
+        >
+          Skip to main content
+        </a>
         <div className="hidden lg:flex lg:flex-shrink-0">
           <Sidebar
             currentView={view}
@@ -314,7 +302,7 @@ export default function AppMainLayout({
           />
         </div>
 
-        <main className="flex-1 flex flex-col overflow-hidden min-w-0">
+        <main id="main-content" className="flex-1 flex flex-col overflow-hidden min-w-0">
           <AppHeaderBar
             currentView={view}
             connected={connected}
@@ -422,23 +410,10 @@ export default function AppMainLayout({
                 departments={departments}
                 agents={agents}
                 tasks={tasks}
-                subAgents={subAgents}
-                meetingPresence={meetingPresence}
-                activeMeetingTaskId={activeMeetingTaskId}
                 unreadAgentIds={unreadAgentIds}
-                crossDeptDeliveries={crossDeptDeliveries}
-                onCrossDeptDeliveryProcessed={onCrossDeptDeliveryProcessed}
-                ceoOfficeCalls={ceoOfficeCalls}
-                onCeoOfficeCallProcessed={onCeoOfficeCallProcessed}
-                onOpenActiveMeetingMinutes={onOpenActiveMeetingMinutes}
                 onSelectAgent={onSelectAgent}
                 onSelectDepartment={onSelectDepartment}
                 currentProject={currentProject}
-                cliStatus={cliStatusFromUsage}
-                cliUsage={cliUsage}
-                cliUsageRef={cliUsageRef}
-                cliUsageRefreshing={cliUsageRefreshing}
-                onRefreshCliUsage={handleRefreshUsage}
                 projectAgentIds={projectAgentIds.size > 0 ? projectAgentIds : undefined}
                 onAddToTeam={currentProject ? handleAddToTeam : undefined}
                 onRemoveFromTeam={currentProject ? handleRemoveFromTeam : undefined}

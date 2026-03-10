@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import type { Department } from "../../types";
 import { localeName, useI18n } from "../../i18n";
 import * as api from "../../api";
@@ -7,6 +7,7 @@ import EmojiPicker from "./EmojiPicker";
 import type { FormData } from "./types";
 import { PersonaCatalog } from "../agent-persona/PersonaCatalog";
 import { getPersonaById } from "../../data/personas";
+import { Modal, ModalHeader, ModalBody, ModalFooter, Button, Input, Textarea } from "../ui";
 
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -41,9 +42,9 @@ export default function AgentFormModal({
   onClose: () => void;
 }) {
   const { t } = useI18n();
-  const overlayRef = useRef<HTMLDivElement>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const [generatingPersona, setGeneratingPersona] = useState(false);
+  const [showPersonaCatalog, setShowPersonaCatalog] = useState(false);
 
   const handleGeneratePersona = useCallback(async () => {
     if (!form.name.trim() || generatingPersona) return;
@@ -63,69 +64,29 @@ export default function AgentFormModal({
     }
   }, [form, isKo, generatingPersona, setForm]);
 
-  // ESC 키로 닫기
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [onClose]);
-
-  const [showPersonaCatalog, setShowPersonaCatalog] = useState(false);
-
-  const inputCls =
-    "w-full px-3 py-2 border text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500/50 transition-colors";
-  const inputStyle = {
+  const selectStyle: React.CSSProperties = {
     background: "var(--th-input-bg)",
     borderColor: "var(--th-input-border)",
     color: "var(--th-text-primary)",
   };
 
   return (
-    <div
-      ref={overlayRef}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: "var(--th-modal-overlay)" }}
-      onClick={(e) => {
-        if (e.target === overlayRef.current) onClose();
-      }}
-    >
-      <div
-        className="w-full max-w-2xl max-h-[90vh] overflow-y-auto overscroll-contain p-6 animate-in fade-in zoom-in-95 duration-200"
-        style={{
-          background: "var(--th-bg-surface)",
-          border: "1px solid var(--th-border)",
-          borderRadius: "4px",
-        }}
-      >
-        {/* Modal header */}
-        <div className="flex items-center justify-between mb-5">
-          <h3 className="text-xs font-bold uppercase tracking-widest" style={{ color: "var(--th-text-heading)", fontFamily: "var(--th-font-mono)" }}>
-            {isEdit ? tr("직원 정보 수정", "Edit Agent") : tr("신규 직원 채용", "Hire New Agent")}
-          </h3>
-          <button
-            onClick={onClose}
-            className="w-7 h-7 flex items-center justify-center hover:bg-[var(--th-bg-surface-hover)] transition-colors font-mono"
-            style={{ color: "var(--th-text-muted)", borderRadius: "2px" }}
-          >
-            ✕
-          </button>
-        </div>
+    <Modal open onClose={onClose} width="lg">
+      <ModalHeader onClose={onClose}>
+        {isEdit ? tr("직원 정보 수정", "Edit Agent") : tr("신규 직원 채용", "Hire New Agent")}
+      </ModalHeader>
 
+      <ModalBody>
         {/* 2-column layout */}
         <div className="grid grid-cols-2 gap-5">
           {/* ── Left column: 기본 정보 ── */}
           <div className="space-y-4">
-            <div
-              className="text-[10px] font-semibold uppercase tracking-widest"
-              style={{ color: "var(--th-text-muted)" }}
-            >
+            <div className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: "var(--th-text-muted)" }}>
               {tr("기본 정보", "Basic Info")}
             </div>
-            {/* ── 프로필 이미지 + 이름 ── */}
+
+            {/* 프로필 이미지 + 이름 */}
             <div className="flex items-center gap-3">
-              {/* Avatar upload circle */}
               <div className="flex flex-col items-center gap-1 flex-shrink-0">
                 <input
                   ref={avatarInputRef}
@@ -146,7 +107,7 @@ export default function AgentFormModal({
                 <button
                   type="button"
                   title={tr("프로필 이미지 업로드", "Upload profile image")}
-                  className="relative w-14 h-14 rounded-full overflow-hidden flex items-center justify-center hover:ring-2 hover:ring-amber-500/60 transition-all group"
+                  className="relative w-14 h-14 rounded-full overflow-hidden flex items-center justify-center transition-all group"
                   style={{ background: "var(--th-bg-elevated)", border: "2px solid var(--th-input-border)" }}
                   onClick={() => avatarInputRef.current?.click()}
                 >
@@ -159,7 +120,6 @@ export default function AgentFormModal({
                   ) : (
                     <span className="text-2xl">{form.avatar_emoji || "🤖"}</span>
                   )}
-                  {/* Hover overlay */}
                   <span className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity text-white text-xs font-medium">
                     {tr("변경", "Edit")}
                   </span>
@@ -167,7 +127,7 @@ export default function AgentFormModal({
                 {(form.pendingAvatarDataUrl ?? form.avatar_url) && (
                   <button
                     type="button"
-                    className="text-[10px] hover:text-red-400 transition-colors"
+                    className="text-[10px] transition-colors"
                     style={{ color: "var(--th-text-muted)" }}
                     onClick={() => setForm({ ...form, pendingAvatarDataUrl: null, avatar_url: null })}
                   >
@@ -175,35 +135,25 @@ export default function AgentFormModal({
                   </button>
                 )}
               </div>
-              {/* Name input */}
               <div className="flex-1 min-w-0">
                 <label className="block text-xs mb-1.5 font-medium" style={{ color: "var(--th-text-secondary)" }}>
-                  {tr("영문 이름", "Name")} <span className="text-red-400">*</span>
+                  {tr("영문 이름", "Name")} <span style={{ color: "var(--th-danger-text)" }}>*</span>
                 </label>
-                <input
-                  type="text"
+                <Input
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
                   placeholder="DORO"
-                  className={inputCls}
-                  style={inputStyle}
                 />
               </div>
             </div>
+
             {/* 로캘 기반 현지 이름 필드 */}
             {locale.startsWith("ko") && (
               <div>
                 <label className="block text-xs mb-1.5 font-medium" style={{ color: "var(--th-text-secondary)" }}>
                   {tr("한글 이름", "Korean Name")}
                 </label>
-                <input
-                  type="text"
-                  value={form.name_ko}
-                  onChange={(e) => setForm({ ...form, name_ko: e.target.value })}
-                  placeholder="도로롱"
-                  className={inputCls}
-                  style={inputStyle}
-                />
+                <Input value={form.name_ko} onChange={(e) => setForm({ ...form, name_ko: e.target.value })} placeholder="도로롱" />
               </div>
             )}
             {locale.startsWith("ja") && (
@@ -211,14 +161,7 @@ export default function AgentFormModal({
                 <label className="block text-xs mb-1.5 font-medium" style={{ color: "var(--th-text-secondary)" }}>
                   {t({ ko: "일본어 이름", en: "Japanese Name", ja: "日本語名", zh: "日语名" })}
                 </label>
-                <input
-                  type="text"
-                  value={form.name_ja}
-                  onChange={(e) => setForm({ ...form, name_ja: e.target.value })}
-                  placeholder="ドロロン"
-                  className={inputCls}
-                  style={inputStyle}
-                />
+                <Input value={form.name_ja} onChange={(e) => setForm({ ...form, name_ja: e.target.value })} placeholder="ドロロン" />
               </div>
             )}
             {locale.startsWith("zh") && (
@@ -226,25 +169,16 @@ export default function AgentFormModal({
                 <label className="block text-xs mb-1.5 font-medium" style={{ color: "var(--th-text-secondary)" }}>
                   {t({ ko: "중국어 이름", en: "Chinese Name", ja: "中国語名", zh: "中文名" })}
                 </label>
-                <input
-                  type="text"
-                  value={form.name_zh}
-                  onChange={(e) => setForm({ ...form, name_zh: e.target.value })}
-                  placeholder="多罗隆"
-                  className={inputCls}
-                  style={inputStyle}
-                />
+                <Input value={form.name_zh} onChange={(e) => setForm({ ...form, name_zh: e.target.value })} placeholder="多罗隆" />
               </div>
             )}
+
             <div className="grid grid-cols-[72px_1fr] gap-2">
               <div>
                 <label className="block text-xs mb-1.5 font-medium" style={{ color: "var(--th-text-secondary)" }}>
                   {tr("이모지", "Emoji")}
                 </label>
-                <EmojiPicker
-                  value={form.avatar_emoji}
-                  onChange={(emoji) => setForm({ ...form, avatar_emoji: emoji })}
-                />
+                <EmojiPicker value={form.avatar_emoji} onChange={(emoji) => setForm({ ...form, avatar_emoji: emoji })} />
               </div>
               <div>
                 <label className="block text-xs mb-1.5 font-medium" style={{ color: "var(--th-text-secondary)" }}>
@@ -253,8 +187,8 @@ export default function AgentFormModal({
                 <select
                   value={form.department_id}
                   onChange={(e) => setForm({ ...form, department_id: e.target.value })}
-                  className={`${inputCls} cursor-pointer`}
-                  style={inputStyle}
+                  className="w-full px-3 py-2 border text-sm outline-none transition-colors"
+                  style={selectStyle}
                 >
                   <option value="">{tr("— 미배정 —", "— Unassigned —")}</option>
                   {departments.map((d) => (
@@ -269,12 +203,10 @@ export default function AgentFormModal({
 
           {/* ── Right column: 역할 설정 ── */}
           <div className="space-y-4">
-            <div
-              className="text-[10px] font-semibold uppercase tracking-widest"
-              style={{ color: "var(--th-text-muted)" }}
-            >
+            <div className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: "var(--th-text-muted)" }}>
               {tr("역할 설정", "Role Config")}
             </div>
+
             {/* 직급 */}
             <div>
               <label className="block text-xs mb-1.5 font-medium" style={{ color: "var(--th-text-secondary)" }}>
@@ -287,12 +219,9 @@ export default function AgentFormModal({
                     <button
                       key={r}
                       onClick={() => setForm({ ...form, role: r })}
-                      className={`py-2 text-xs font-mono font-medium border transition-all ${
-                        active ? ROLE_BADGE[r] : ""
-                      }`}
+                      className={`py-2 text-xs font-mono font-medium border transition-all ${active ? ROLE_BADGE[r] : ""}`}
                       style={{
                         borderRadius: "2px",
-                        transition: "all 0.1s linear",
                         ...(!active ? { borderColor: "var(--th-input-border)", color: "var(--th-text-muted)" } : {}),
                       }}
                     >
@@ -302,6 +231,7 @@ export default function AgentFormModal({
                 })}
               </div>
             </div>
+
             {/* CLI Provider */}
             <div>
               <label className="block text-xs mb-1.5 font-medium" style={{ color: "var(--th-text-secondary)" }}>
@@ -317,9 +247,8 @@ export default function AgentFormModal({
                       className="px-2.5 py-1.5 text-[11px] font-mono border transition-all"
                       style={{
                         borderRadius: "2px",
-                        transition: "all 0.1s linear",
                         ...(active
-                          ? { background: "rgba(245,158,11,0.12)", color: "#f59e0b", borderColor: "rgba(245,158,11,0.35)" }
+                          ? { background: "var(--th-accent-glow)", color: "var(--th-accent)", borderColor: "var(--th-border-accent)" }
                           : { borderColor: "var(--th-input-border)", color: "var(--th-text-muted)" }),
                       }}
                     >
@@ -329,6 +258,7 @@ export default function AgentFormModal({
                 })}
               </div>
             </div>
+
             {/* 성격/프롬프트 */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
@@ -336,35 +266,28 @@ export default function AgentFormModal({
                   {tr("캐릭터 페르소나", "Character Persona")}
                 </label>
                 {form.name && (
-                  <button
-                    type="button"
+                  <Button
+                    variant="secondary"
+                    size="sm"
                     disabled={generatingPersona || !form.name.trim()}
-                    className="text-[10px] px-2 py-0.5 transition-colors hover:opacity-80 disabled:opacity-50 font-mono"
-                    style={{
-                      borderRadius: "2px",
-                      border: "1px solid rgba(245,158,11,0.4)",
-                      background: "rgba(245,158,11,0.1)",
-                      color: "#f59e0b",
-                    }}
                     onClick={handleGeneratePersona}
+                    style={{ borderColor: "var(--th-border-accent)", background: "var(--th-accent-glow)", color: "var(--th-accent)" }}
                   >
                     {generatingPersona
                       ? tr("생성 중...", "Generating...")
                       : form.personality
                         ? tr("AI 재생성", "AI Regenerate")
                         : tr("AI 자동생성", "AI Generate")}
-                  </button>
+                  </Button>
                 )}
               </div>
-              <textarea
+              <Textarea
                 value={form.personality}
                 onChange={(e) => setForm({ ...form, personality: e.target.value })}
                 rows={5}
                 placeholder={isKo
                   ? "예: 나는 제갈량, 천하삼분지계의 전략가다. 항상 세 수 앞을 내다보고, '상중하 세 가지 전략'을 제시하는 것이 습관이다. 고사성어와 역사적 비유로 논점을 풀어내고, 은유적이지만 결론은 명쾌하다..."
                   : "e.g. I am Ada Lovelace, the world's first programmer. I approach problems by grasping the underlying structure first. I speak with Victorian formality, combining technical rigor with poetic expression..."}
-                className={`${inputCls} resize-none`}
-                style={inputStyle}
               />
               <p className="text-[10px] mt-1" style={{ color: "var(--th-text-muted)" }}>
                 {tr(
@@ -382,7 +305,7 @@ export default function AgentFormModal({
             type="button"
             onClick={() => setShowPersonaCatalog((v) => !v)}
             className="flex w-full items-center justify-between"
-            style={{ borderLeft: "3px solid var(--th-accent, #f59e0b)", paddingLeft: "0.5rem", transition: "background 0.1s linear" }}
+            style={{ borderLeft: "3px solid var(--th-accent)", paddingLeft: "0.5rem" }}
           >
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-semibold uppercase tracking-widest font-mono" style={{ color: "var(--th-text-muted)" }}>
@@ -414,36 +337,25 @@ export default function AgentFormModal({
             </div>
           )}
         </div>
+      </ModalBody>
 
-        {/* Actions — full width */}
-        <div className="flex gap-2 mt-5 pt-4" style={{ borderTop: "1px solid var(--th-border)" }}>
-          <button
-            onClick={onSave}
-            disabled={saving || !form.name.trim()}
-            className="flex-1 px-4 py-2.5 text-sm font-mono font-medium transition-all disabled:opacity-40"
-            style={{
-              borderRadius: "2px",
-              border: "1px solid rgba(245,158,11,0.5)",
-              background: "rgba(245,158,11,0.12)",
-              color: "#f59e0b",
-              transition: "background 0.1s linear",
-            }}
-          >
-            {saving
-              ? tr("처리 중...", "Saving...")
-              : isEdit
-                ? tr("변경사항 저장", "Save Changes")
-                : tr("채용 확정", "Confirm Hire")}
-          </button>
-          <button
-            onClick={onClose}
-            className="px-4 py-2.5 text-sm font-mono font-medium transition-all hover:bg-[var(--th-bg-surface-hover)]"
-            style={{ borderRadius: "2px", border: "1px solid var(--th-input-border)", color: "var(--th-text-secondary)" }}
-          >
-            {tr("취소", "Cancel")}
-          </button>
-        </div>
-      </div>
-    </div>
+      <ModalFooter>
+        <Button variant="secondary" onClick={onClose}>
+          {tr("취소", "Cancel")}
+        </Button>
+        <Button
+          variant="primary"
+          onClick={onSave}
+          disabled={saving || !form.name.trim()}
+          className="flex-1"
+        >
+          {saving
+            ? tr("처리 중...", "Saving...")
+            : isEdit
+              ? tr("변경사항 저장", "Save Changes")
+              : tr("채용 확정", "Confirm Hire")}
+        </Button>
+      </ModalFooter>
+    </Modal>
   );
 }
