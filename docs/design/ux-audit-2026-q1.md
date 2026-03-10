@@ -76,10 +76,13 @@
 | 드래그앤드롭 상태 변경 | 양호 ✅ (@dnd-kit) | — | — |
 | 일괄 삭제 확인 | `window.confirm()` 사용 | #6 실수 방지 (UX 미달) | High |
 | API 실패 시 무응답 | `.catch(() => {})` | #7 상태 항상 표시 | Critical |
+| 태스크 실행/중지/일시정지/재개 실패 | `window.alert()` 4곳 | #6 실수 방지 (UX 미달) | High |
+| 비용 한도 초과 알림 | `alert()` (영어 하드코딩) | #1 평어 우선, #6 실수 방지 | High |
 | 프로젝트 목록 로딩 실패 | 에러 무시 | #7 상태 항상 표시 | High |
 | 로딩 상태 | 일부 누락 (스피너 없음) | #7 상태 항상 표시 | Medium |
 
 **코드 위치:**
+- `src/app/useAppActions.ts:193,329,379,412,429` — alert 5곳 (태스크 실행 에러, 비용 한도)
 - `src/components/TaskBoard.tsx:323` — window.confirm (일괄 삭제)
 - `src/components/TaskBoard.tsx` — .catch(() => {})
 - `src/components/taskboard/CreateTaskModal.tsx` — .catch(() => {})
@@ -148,7 +151,7 @@
 
 | 문제 | 수치 | 영향 |
 |------|------|------|
-| `window.alert()` | **16곳** | 브라우저 기본 다이얼로그가 제품 경험 파괴 |
+| `window.alert()` | **21곳** | 브라우저 기본 다이얼로그가 제품 경험 파괴 |
 | `window.confirm()` | **9곳** | 비표준 확인 다이얼로그, 커스터마이징 불가 |
 | `.catch(() => {})` (에러 무시) | **12곳** 8파일 | 사용자에게 피드백 없이 실패 |
 | `!important` | **380회** | CSS 유지보수성·예측성 저하 |
@@ -404,7 +407,7 @@ API 성공/실패 피드백용.
 - `src/components/ui/Button.tsx` — 확인/취소 버튼
 - `src/components/NotificationCenter.tsx` — 알림 패턴 참조
 
-**교체 대상:** `window.alert` 16곳 + `window.confirm` 9곳 = **25곳**
+**교체 대상:** `window.alert` 21곳 + `window.confirm` 9곳 = **30곳**
 
 ### P1: 점진적 공개 + 용어 친화화 + 빈 상태
 
@@ -455,7 +458,7 @@ API 성공/실패 피드백용.
 | 하드코딩 rgba() | 313건 |
 | @keyframes 애니메이션 | 57개 |
 | 커스텀 CSS 클래스 | 407개 |
-| window.alert() | 16곳 |
+| window.alert() | 21곳 |
 | window.confirm() | 9곳 |
 | .catch(() => {}) | 12곳 (8파일) |
 | console.error (프로덕션) | 105+곳 |
@@ -473,10 +476,15 @@ API 성공/실패 피드백용.
 
 ## 부록: `window.alert` / `window.confirm` 전체 위치
 
-### window.alert (16곳)
+### window.alert (21곳)
 
 | 파일 | 라인 | 내용 |
 |------|------|------|
+| `app/useAppActions.ts` | 193 | 비용 한도 초과 (영어 하드코딩) |
+| `app/useAppActions.ts` | 329 | 태스크 실행 실패 |
+| `app/useAppActions.ts` | 379 | 태스크 중지 실패 |
+| `app/useAppActions.ts` | 412 | 태스크 일시정지 실패 |
+| `app/useAppActions.ts` | 429 | 태스크 재개 실패 |
 | `agent-manager/AgentFormModal.tsx` | 100 | 이미지 5MB 초과 |
 | `agent-manager/DepartmentFormModal.tsx` | 151 | 부서 ID 중복 |
 | `agent-manager/DepartmentFormModal.tsx` | 153 | 부서 생성 실패 |
