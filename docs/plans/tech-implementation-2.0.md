@@ -217,10 +217,16 @@ function applyV2CategoryMigrations(db: DatabaseSync) {
   if (!names.includes("deliverable_schema")) {
     db.exec("ALTER TABLE projects ADD COLUMN deliverable_schema TEXT DEFAULT '[]'");
   }
+  // 기존 버그 수정 — assignment_mode가 types/index.ts에 있으나 DB 컬럼 누락
+  if (!names.includes("assignment_mode")) {
+    db.exec("ALTER TABLE projects ADD COLUMN assignment_mode TEXT DEFAULT 'auto' CHECK(assignment_mode IN ('auto','manual'))");
+  }
 }
 ```
 
 `applyTaskSchemaMigrations()` 맨 끝에 `applyV2CategoryMigrations(db)` 호출을 추가한다.
+
+> **주의**: `assignment_mode`는 2.0 이전부터 `src/types/index.ts`에 선언되어 있었으나 DB 컬럼이 누락된 기존 버그다. 2.0 마이그레이션 작업 시 함께 수정한다.
 
 ### 2-4. 카테고리 시드 데이터
 
@@ -873,6 +879,10 @@ src/components/
 
 사이드바 상단에 삽입. `Sidebar.tsx`에서 브랜드 영역을 교체한다.
 
+> **Phase 경계 명확화**
+> - **Phase 1**: 현재 프로젝트 이름만 표시하는 최소 버전. 드롭다운 없음. 클릭 불가 또는 클릭 시 단순 안내 텍스트.
+> - **Phase 2**: 카테고리 배지 + 프로젝트 전환 드롭다운 + "새 프로젝트 만들기" 진입. 아래 코드는 Phase 2 기준이므로 Phase 1 구현 시 버튼과 드롭다운 부분은 제외한다.
+
 ```tsx
 // src/components/project-selector/ProjectSelector.tsx
 interface Props {
@@ -1185,7 +1195,26 @@ export default function PersonaCard({ persona, selected, onSelect }: Props) {
 
 ## 7. 뷰 라우팅 변경
 
-### 7-1. AppMainLayout.tsx
+### 7-1. View 타입 업데이트
+
+`src/app/AppMainLayout.tsx` (또는 `src/types/index.ts`)의 `View` 타입에 신규 뷰 ID를 추가한다.
+
+```typescript
+// Phase 2에서 추가할 View ID
+type View =
+  // ... 기존 뷰들 유지 ...
+  | "dashboard"          // Dashboard2로 교체 (기존 ID 재사용)
+  | "categories"         // 카테고리 에디터 — 설정 서브탭으로 처리할 경우 불필요
+  ;
+
+// 결정: 카테고리 에디터는 별도 뷰(view="categories")로 만들지 않고
+//       settings 뷰 내 탭으로 구현한다 (NAV_STRUCTURE 변경 없이 처리).
+//       따라서 신규 최상위 View ID는 추가하지 않아도 된다.
+```
+
+> **결정 사항**: 카테고리 에디터는 `settings` 뷰 내부의 새 탭으로 구현. 별도 View ID 불필요. `SettingsPanel.tsx`에 "프로젝트 유형" 탭만 추가.
+
+### 7-2. AppMainLayout.tsx
 
 뷰 추가 및 Dashboard → Dashboard2 전환 처리:
 
