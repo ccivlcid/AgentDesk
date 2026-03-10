@@ -40,6 +40,8 @@ interface Props {
   agents?: SimpleAgent[];
   /** 전용 페이지(직원관리 > Heartbeat)에서 사용 시 true. 접기 헤더 없이 항상 내용만 표시 */
   standalone?: boolean;
+  /** 현재 프로젝트 팀원 ID 세트 — "이 프로젝트만 보기" 토글용 */
+  projectAgentIds?: Set<string>;
 }
 
 function fmtAgo(ts: number): string {
@@ -106,8 +108,9 @@ const StatusErrorIcon = () => (
   </svg>
 );
 
-export default function HeartbeatPanel({ language, agents = [], standalone = false }: Props) {
+export default function HeartbeatPanel({ language, agents = [], standalone = false, projectAgentIds }: Props) {
   const isKo = language === "ko";
+  const [filterProjectOnly, setFilterProjectOnly] = useState(false);
   const [configs, setConfigs] = useState<HeartbeatConfig[]>([]);
   const [logs, setLogs] = useState<HeartbeatLog[]>([]);
   const [expanded, setExpanded] = useState(false);
@@ -188,8 +191,14 @@ export default function HeartbeatPanel({ language, agents = [], standalone = fal
     }));
   };
 
+  /** 이 프로젝트만 보기 토글 적용된 에이전트 목록 */
+  const visibleAgents = useMemo(
+    () => (filterProjectOnly && projectAgentIds ? agents.filter((a) => projectAgentIds.has(a.id)) : agents),
+    [agents, filterProjectOnly, projectAgentIds],
+  );
+
   /** 현재 오피스 팩(agents)에 포함된 직원의 설정·로그만 표시 */
-  const agentIds = useMemo(() => new Set(agents.map((a) => a.id)), [agents]);
+  const agentIds = useMemo(() => new Set(visibleAgents.map((a) => a.id)), [visibleAgents]);
   const visibleConfigs = useMemo(
     () => configs.filter((c) => agentIds.has(c.agent_id)),
     [configs, agentIds],
@@ -204,8 +213,8 @@ export default function HeartbeatPanel({ language, agents = [], standalone = fal
   const activeCount = visibleConfigs.filter((c) => c.enabled).length;
   /** 현재 팩 직원 중 점검 설정이 없는 직원만(추가 가능 목록) */
   const agentsWithoutConfig = useMemo(
-    () => agents.filter((a) => !configs.some((c) => c.agent_id === a.id)),
-    [agents, configs],
+    () => visibleAgents.filter((a) => !configs.some((c) => c.agent_id === a.id)),
+    [visibleAgents, configs],
   );
 
   /** 팩 변경 시 추가 셀렉트 초기화 */
@@ -256,6 +265,25 @@ export default function HeartbeatPanel({ language, agents = [], standalone = fal
               <ChevronDown open={expanded} />
             </span>
           </button>
+        )}
+
+        {/* 이 프로젝트만 보기 토글 (standalone + projectAgentIds 있을 때) */}
+        {standalone && projectAgentIds && projectAgentIds.size > 0 && (
+          <div className="flex justify-end mb-2">
+            <button
+              type="button"
+              onClick={() => setFilterProjectOnly((v) => !v)}
+              className="text-[9px] font-mono px-2 py-0.5 transition-colors"
+              style={{
+                borderRadius: 2,
+                border: `1px solid ${filterProjectOnly ? "var(--th-accent)" : "var(--th-border)"}`,
+                color: filterProjectOnly ? "var(--th-accent)" : "var(--th-text-muted)",
+                background: filterProjectOnly ? "rgba(245,158,11,0.08)" : "transparent",
+              }}
+            >
+              {filterProjectOnly ? "✓ 이 프로젝트 팀원만" : "이 프로젝트 팀원만 보기"}
+            </button>
+          </div>
         )}
 
         {effectiveExpanded && (
@@ -331,7 +359,7 @@ export default function HeartbeatPanel({ language, agents = [], standalone = fal
                         setAddAgentId("");
                         return;
                       }
-                      const agent = agents.find((a) => a.id === agentId);
+                      const agent = visibleAgents.find((a) => a.id === agentId);
                       setAdding(true);
                       setAddAgentId("");
                       // 낙관적 업데이트: configs에 즉시 반영해 셀렉트 옵션에서 제거(목록과 옵션 일치)

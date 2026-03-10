@@ -494,6 +494,7 @@ export default function AppMainLayout({
                   name_ko: a.name_ko ?? undefined,
                   avatar_emoji: a.avatar_emoji ?? undefined,
                 }))}
+                projectAgentIds={projectAgentIds.size > 0 ? projectAgentIds : undefined}
                 standalone
               />
             )}

@@ -251,6 +251,7 @@ export default function OfficeView({
 }: WorkMapProps) {
   const { t, locale } = useI18n();
   const [filterDeptId, setFilterDeptId] = useState<string | null>(null);
+  const [filterProjectOnly, setFilterProjectOnly] = useState(false);
   const isKo = locale.startsWith("ko");
 
   const tr = (ko: string, en: string) => t({ ko, en, ja: en, zh: en });
@@ -260,16 +261,22 @@ export default function OfficeView({
     [departments, filterDeptId],
   );
 
+  const effectiveAgents = useMemo(
+    () => (filterProjectOnly && projectAgentIds ? agents.filter((a) => projectAgentIds.has(a.id)) : agents),
+    [agents, filterProjectOnly, projectAgentIds],
+  );
+
   const agentsByDept = useMemo(() => {
     const map = new Map<string, Agent[]>();
     for (const dept of departments) {
-      map.set(dept.id, agents.filter((a) => a.department_id === dept.id));
+      map.set(dept.id, effectiveAgents.filter((a) => a.department_id === dept.id));
     }
     return map;
-  }, [departments, agents]);
+  }, [departments, effectiveAgents]);
 
-  const workingCount = agents.filter((a) => a.status === "working").length;
+  const workingCount = effectiveAgents.filter((a) => a.status === "working").length;
   const inProgressTaskCount = tasks.filter((t) => t.status === "in_progress").length;
+  const teamCount = projectAgentIds?.size ?? 0;
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
@@ -296,6 +303,11 @@ export default function OfficeView({
               {currentProject.name}
             </span>
           )}
+          {currentProject && teamCount > 0 && (
+            <span className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
+              팀원 {teamCount}명
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-3">
           <span className="text-[10px] font-mono tabular-nums" style={{ color: "var(--th-attr-elite)" }}>
@@ -305,6 +317,22 @@ export default function OfficeView({
             <span className="text-[10px] font-mono tabular-nums" style={{ color: "var(--th-text-muted)" }}>
               {inProgressTaskCount} {tr("진행중 태스크", "tasks active")}
             </span>
+          )}
+          {/* 이 프로젝트만 보기 토글 */}
+          {currentProject && projectAgentIds && projectAgentIds.size > 0 && (
+            <button
+              type="button"
+              onClick={() => setFilterProjectOnly((v) => !v)}
+              className="text-[9px] font-mono px-2 py-0.5 transition-colors"
+              style={{
+                borderRadius: 2,
+                border: `1px solid ${filterProjectOnly ? "var(--th-accent)" : "var(--th-border)"}`,
+                color: filterProjectOnly ? "var(--th-accent)" : "var(--th-text-muted)",
+                background: filterProjectOnly ? "rgba(245,158,11,0.08)" : "transparent",
+              }}
+            >
+              {filterProjectOnly ? "✓ 이 프로젝트만" : "이 프로젝트만"}
+            </button>
           )}
         </div>
 
