@@ -105,7 +105,7 @@ interface TaskBoardProps {
     project_id?: string;
     project_path?: string;
     assigned_agent_id?: string;
-    workflow_pack_key?: WorkflowPackKey;
+    workflow_pack_key?: string;
   }) => void;
   onUpdateTask: (id: string, data: Partial<Task>) => void;
   onDeleteTask: (id: string) => void;

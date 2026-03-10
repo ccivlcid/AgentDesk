@@ -58,7 +58,7 @@ export default function ProjectSettingsTab({ project, categories, t, onUpdate }:
         className="flex items-center gap-3 px-4 py-3"
         style={{ background: "var(--th-bg-surface)", border: "1px solid var(--th-border)", borderRadius: "4px" }}
       >
-        <span style={{ fontSize: 28 }}>{project.icon ?? "📁"}</span>
+        <span style={{ fontSize: 28 }}>{"📁"}</span>
         <div className="min-w-0">
           <p className="text-sm font-semibold font-mono truncate" style={{ color: "var(--th-text-heading)" }}>
             {project.name}

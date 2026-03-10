@@ -532,7 +532,6 @@ export default function AppMainLayout({
                 }))}
                 projectAgentIds={projectAgentIds.size > 0 ? projectAgentIds : undefined}
                 standalone
-                currentProjectName={currentProject?.name}
               />
             )}
 
