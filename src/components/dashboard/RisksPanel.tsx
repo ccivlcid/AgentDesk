@@ -12,8 +12,16 @@ interface RisksPanelProps {
 const SEVERITY_CONFIG: Record<ProjectRisk["severity"], { label: string; color: string }> = {
   high:   { label: "높음", color: "#ef4444" },
   medium: { label: "보통", color: "#f59e0b" },
-  low:    { label: "낮음", color: "#10b981" },
+  low:    { label: "낮음", color: "#3b82f6" },
 };
+
+const ICON = (
+  <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2"
+    strokeLinecap="round" strokeLinejoin="round">
+    <path d="M10 2L2 17h16L10 2z" />
+    <path d="M10 8v4M10 14h.01" />
+  </svg>
+);
 
 export default function RisksPanel({ projectId, risks, onUpdate }: RisksPanelProps) {
   const [addingTitle, setAddingTitle] = useState("");
@@ -53,6 +61,7 @@ export default function RisksPanel({ projectId, risks, onUpdate }: RisksPanelPro
     <QuadrantPanel
       title="리스크"
       subtitle="주의가 필요한 항목"
+      icon={ICON}
       accentColor="#ef4444"
       emptyText="아직 리스크가 없어요."
       emptyGuide="주의가 필요한 항목을 미리 기록해두세요."
@@ -73,7 +82,12 @@ export default function RisksPanel({ projectId, risks, onUpdate }: RisksPanelPro
             >
               {sev.label}
             </span>
-            <span className="flex-1 text-xs leading-snug">{risk.title}</span>
+            <span className="flex-1 min-w-0">
+              <span className="text-xs leading-snug">{risk.title}</span>
+              {risk.owner && (
+                <span className="ml-1 text-[9px] text-[var(--th-text-muted)]">@{risk.owner}</span>
+              )}
+            </span>
             <button
               onClick={() => void handleStatusToggle(risk)}
               className="opacity-0 group-hover:opacity-100 text-[10px] text-[var(--th-text-muted)] hover:text-[var(--th-accent)] transition-opacity whitespace-nowrap"

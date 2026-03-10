@@ -17,10 +17,18 @@ const TYPE_CONFIG: Record<ProjectOutput["type"], { label: string; icon: string }
 };
 
 const STATUS_CONFIG: Record<ProjectOutput["status"], { label: string; color: string }> = {
-  pending:     { label: "대기", color: "#6b7280" },
-  in_progress: { label: "진행", color: "#3b82f6" },
+  pending:     { label: "미착수", color: "#6b7280" },
+  in_progress: { label: "검토 중", color: "#3b82f6" },
   done:        { label: "완료", color: "#10b981" },
 };
+
+const ICON = (
+  <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2"
+    strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4 2h8l4 4v12a2 2 0 01-2 2H4a2 2 0 01-2-2V4a2 2 0 012-2z" />
+    <path d="M12 2v4h4M7 10h6M7 14h4" />
+  </svg>
+);
 
 const STATUS_CYCLE: Record<ProjectOutput["status"], ProjectOutput["status"]> = {
   pending: "in_progress",
@@ -63,6 +71,7 @@ export default function OutputsPanel({ projectId, outputs, onUpdate }: OutputsPa
     <QuadrantPanel
       title="결과물"
       subtitle="만들어야 하는 것"
+      icon={ICON}
       accentColor="#10b981"
       emptyText="아직 결과물이 없어요."
       emptyGuide="프로젝트가 끝날 때 만들어야 하는 것을 추가해보세요."
@@ -79,10 +88,15 @@ export default function OutputsPanel({ projectId, outputs, onUpdate }: OutputsPa
             className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-[var(--th-bg-elevated)] group"
           >
             <span className="flex-shrink-0 text-sm">{typeCfg.icon}</span>
-            <span
-              className={`flex-1 text-xs leading-snug truncate ${output.status === "done" ? "line-through text-[var(--th-text-muted)]" : ""}`}
-            >
-              {output.title}
+            <span className="flex-1 min-w-0">
+              <span
+                className={`text-xs leading-snug ${output.status === "done" ? "line-through text-[var(--th-text-muted)]" : ""}`}
+              >
+                {output.title}
+              </span>
+              {output.version && (
+                <span className="ml-1 text-[9px] font-mono text-[var(--th-text-muted)]">v{output.version}</span>
+              )}
             </span>
             <button
               onClick={() => void handleStatusCycle(output)}

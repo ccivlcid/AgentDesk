@@ -9,16 +9,27 @@ interface ObjectivesPanelProps {
   onUpdate: (v: ProjectObjective[]) => void;
 }
 
-const STATUS_COLORS: Record<ProjectObjective["status"], string> = {
+const STATUS_COLOR: Record<ProjectObjective["status"], string> = {
   active: "#3b82f6",
-  completed: "#10b981",
+  completed: "#3fb950",
   cancelled: "#6b7280",
 };
+
+const ICON = (
+  <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2"
+    strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="10" cy="10" r="7" />
+    <circle cx="10" cy="10" r="3" />
+    <path d="M10 3V1M10 19v-2M3 10H1M19 10h-2" />
+  </svg>
+);
 
 export default function ObjectivesPanel({ projectId, objectives, onUpdate }: ObjectivesPanelProps) {
   const [addingTitle, setAddingTitle] = useState("");
   const [showInput, setShowInput] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [editingProgress, setEditingProgress] = useState<string | null>(null);
+  const [progressDraft, setProgressDraft] = useState("");
 
   const handleAdd = async () => {
     const title = addingTitle.trim();
@@ -40,6 +51,13 @@ export default function ObjectivesPanel({ projectId, objectives, onUpdate }: Obj
     onUpdate(objectives.map((o) => (o.id === obj.id ? updated : o)));
   };
 
+  const handleProgressSave = async (obj: ProjectObjective) => {
+    const val = Math.min(100, Math.max(0, parseInt(progressDraft, 10) || 0));
+    const updated = await objectivesApi.update(projectId, obj.id, { progress: val });
+    onUpdate(objectives.map((o) => (o.id === obj.id ? updated : o)));
+    setEditingProgress(null);
+  };
+
   const handleDelete = async (id: string) => {
     await objectivesApi.delete(projectId, id);
     onUpdate(objectives.filter((o) => o.id !== id));
@@ -49,6 +67,7 @@ export default function ObjectivesPanel({ projectId, objectives, onUpdate }: Obj
     <QuadrantPanel
       title="목표"
       subtitle="프로젝트가 이루려는 것"
+      icon={ICON}
       accentColor="#3b82f6"
       emptyText="아직 목표가 없어요."
       emptyGuide="프로젝트가 이루려는 것을 추가해보세요."
@@ -56,37 +75,93 @@ export default function ObjectivesPanel({ projectId, objectives, onUpdate }: Obj
       onAdd={() => setShowInput(true)}
       isEmpty={objectives.length === 0 && !showInput}
     >
-      {objectives.map((obj) => (
-        <div
-          key={obj.id}
-          className="flex items-start gap-2 px-2 py-1.5 rounded hover:bg-[var(--th-bg-elevated)] group"
-        >
-          <button
-            onClick={() => void handleStatusToggle(obj)}
-            className="flex-shrink-0 mt-0.5 w-3.5 h-3.5 rounded-full border-2 transition-colors"
+      {objectives.map((obj) => {
+        const color = STATUS_COLOR[obj.status];
+        const progress = obj.progress ?? 0;
+        const done = obj.status === "completed";
+        return (
+          <div
+            key={obj.id}
+            className="group rounded px-2.5 py-2"
             style={{
-              borderColor: STATUS_COLORS[obj.status],
-              backgroundColor: obj.status === "completed" ? STATUS_COLORS.completed : "transparent",
+              background: "var(--th-bg-surface)",
+              border: "1px solid var(--th-border)",
+              opacity: obj.status === "cancelled" ? 0.5 : 1,
             }}
-          />
-          <span
-            className={`flex-1 text-xs leading-snug ${obj.status === "completed" ? "line-through text-[var(--th-text-muted)]" : ""}`}
           >
-            {obj.title}
-          </span>
-          <button
-            onClick={() => void handleDelete(obj.id)}
-            className="opacity-0 group-hover:opacity-100 text-[var(--th-text-muted)] hover:text-red-400 transition-opacity"
-          >
-            <svg width="10" height="10" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M4 4l12 12M4 16L16 4" />
-            </svg>
-          </button>
-        </div>
-      ))}
+            {/* 목표명 + 진행률 */}
+            <div className="flex items-start justify-between gap-2 mb-1.5">
+              <div className="flex items-start gap-1.5 flex-1 min-w-0">
+                <button
+                  onClick={() => void handleStatusToggle(obj)}
+                  className="flex-shrink-0 mt-0.5 w-3 h-3 rounded-full border-2 transition-colors"
+                  style={{
+                    borderColor: color,
+                    backgroundColor: done ? color : "transparent",
+                  }}
+                  title={done ? "완료됨 (클릭해서 되돌리기)" : "클릭해서 완료 표시"}
+                />
+                <span
+                  className={`text-xs leading-snug flex-1 min-w-0 ${done ? "line-through text-[var(--th-text-muted)]" : ""}`}
+                >
+                  {obj.title}
+                </span>
+              </div>
+              {/* 진행률 — 클릭해서 편집 */}
+              {editingProgress === obj.id ? (
+                <input
+                  autoFocus
+                  type="number"
+                  min={0}
+                  max={100}
+                  value={progressDraft}
+                  onChange={(e) => setProgressDraft(e.target.value)}
+                  onBlur={() => void handleProgressSave(obj)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") void handleProgressSave(obj);
+                    if (e.key === "Escape") setEditingProgress(null);
+                  }}
+                  className="w-10 text-[10px] text-right px-1 rounded outline-none font-mono"
+                  style={{ background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)" }}
+                />
+              ) : (
+                <button
+                  onClick={() => { setEditingProgress(obj.id); setProgressDraft(String(progress)); }}
+                  className="flex-shrink-0 text-[10px] font-mono tabular-nums opacity-0 group-hover:opacity-100 transition-opacity"
+                  style={{ color: done ? "#3fb950" : "#3b82f6" }}
+                  title="클릭해서 진행률 수정"
+                >
+                  {progress}%
+                </button>
+              )}
+              {/* 삭제 */}
+              <button
+                onClick={() => void handleDelete(obj.id)}
+                className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                style={{ color: "var(--th-text-muted)" }}
+              >
+                <svg width="10" height="10" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M4 4l12 12M4 16L16 4" />
+                </svg>
+              </button>
+            </div>
+
+            {/* 진행 바 */}
+            <div
+              className="rounded-full overflow-hidden"
+              style={{ height: 4, background: "var(--th-bg-elevated)" }}
+            >
+              <div
+                className="h-full rounded-full transition-all"
+                style={{ width: `${progress}%`, background: done ? "#3fb950" : "#3b82f6" }}
+              />
+            </div>
+          </div>
+        );
+      })}
 
       {showInput && (
-        <div className="flex gap-1 px-2 py-1">
+        <div className="flex gap-1 px-1 py-1">
           <input
             autoFocus
             type="text"
@@ -97,15 +172,23 @@ export default function ObjectivesPanel({ projectId, objectives, onUpdate }: Obj
               if (e.key === "Escape") { setShowInput(false); setAddingTitle(""); }
             }}
             placeholder="목표를 입력하세요"
-            className="flex-1 text-xs px-2 py-1 bg-[var(--th-bg-base)] border border-[var(--th-border)]
-                       rounded outline-none focus:border-[var(--th-accent)]"
+            className="flex-1 text-xs px-2 py-1.5 rounded outline-none"
+            style={{ background: "var(--th-bg-base)", border: "1px solid var(--th-border)" }}
           />
           <button
             onClick={() => void handleAdd()}
             disabled={busy}
-            className="text-[10px] px-2 py-1 bg-[var(--th-accent)] text-white rounded disabled:opacity-40"
+            className="text-[10px] px-3 py-1.5 rounded font-medium disabled:opacity-40"
+            style={{ background: "#3b82f6", color: "#fff" }}
           >
             추가
+          </button>
+          <button
+            onClick={() => { setShowInput(false); setAddingTitle(""); }}
+            className="text-[10px] px-2 py-1.5 rounded"
+            style={{ color: "var(--th-text-muted)" }}
+          >
+            취소
           </button>
         </div>
       )}

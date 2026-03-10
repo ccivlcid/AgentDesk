@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 interface QuadrantPanelProps {
   title: string;
   subtitle: string;
+  icon?: ReactNode;
   accentColor?: string;
   emptyText: string;
   emptyGuide?: string;
@@ -15,6 +16,7 @@ interface QuadrantPanelProps {
 export default function QuadrantPanel({
   title,
   subtitle,
+  icon,
   accentColor = "var(--th-accent)",
   emptyText,
   emptyGuide,
@@ -27,11 +29,23 @@ export default function QuadrantPanel({
     <div className="flex flex-col border border-[var(--th-border)] rounded bg-[var(--th-bg-surface)] overflow-hidden min-h-0">
       {/* 헤더 */}
       <div
-        className="px-3 py-2.5 border-b border-[var(--th-border)]"
+        className="flex items-start gap-2 px-3 py-2.5 border-b border-[var(--th-border)] flex-shrink-0"
         style={{ borderLeftWidth: "3px", borderLeftStyle: "solid", borderLeftColor: accentColor }}
       >
-        <div className="text-xs font-semibold">{title}</div>
-        <div className="text-[10px] text-[var(--th-text-muted)] mt-0.5">{subtitle}</div>
+        {icon && (
+          <span className="flex-shrink-0 mt-0.5 text-base leading-none" style={{ color: accentColor }}>
+            {icon}
+          </span>
+        )}
+        <div className="min-w-0">
+          <div
+            className="text-[13px] font-semibold leading-tight"
+            style={{ fontFamily: "'Sora', sans-serif" }}
+          >
+            {title}
+          </div>
+          <div className="text-[11px] text-[var(--th-text-muted)] mt-0.5">{subtitle}</div>
+        </div>
       </div>
 
       {/* 콘텐츠 */}
@@ -47,7 +61,8 @@ export default function QuadrantPanel({
             )}
             <button
               onClick={onAdd}
-              className="text-xs px-4 py-1.5 bg-[var(--th-accent)] text-white rounded hover:opacity-90 transition-opacity"
+              className="text-xs px-4 py-1.5 rounded hover:opacity-90 transition-opacity font-medium"
+              style={{ background: accentColor, color: "#fff" }}
             >
               + {addLabel}
             </button>
@@ -59,12 +74,22 @@ export default function QuadrantPanel({
 
       {/* 추가 버튼 (항목이 있을 때) */}
       {!isEmpty && (
-        <div className="px-2 pb-2">
+        <div className="px-2 pb-2 flex-shrink-0">
           <button
             onClick={onAdd}
-            className="w-full text-[10px] text-[var(--th-text-muted)] hover:text-[var(--th-accent)]
-                       py-1 border border-dashed border-[var(--th-border)]
-                       hover:border-[var(--th-accent)] rounded transition-colors"
+            className="w-full text-[11px] py-1.5 rounded transition-colors"
+            style={{
+              border: "1px dashed var(--th-border)",
+              color: "var(--th-text-muted)",
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.borderColor = accentColor;
+              (e.currentTarget as HTMLButtonElement).style.color = accentColor;
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--th-border)";
+              (e.currentTarget as HTMLButtonElement).style.color = "var(--th-text-muted)";
+            }}
           >
             + {addLabel}
           </button>

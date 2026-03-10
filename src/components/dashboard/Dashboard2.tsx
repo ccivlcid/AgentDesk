@@ -83,57 +83,46 @@ function Dashboard2Inner({
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      {/* project_path 없는 프로젝트 경고 배너 */}
-      {!project.project_path && (
-        <div
-          className="flex items-center gap-2 px-4 py-2 text-xs border-b flex-shrink-0"
-          style={{ background: "rgba(245,158,11,0.08)", borderColor: "rgba(245,158,11,0.3)", color: "var(--th-text)" }}
-        >
-          <span style={{ color: "#f59e0b" }}>⚠</span>
-          <span>
-            <strong style={{ color: "#f59e0b" }}>프로젝트 경로 미설정</strong>
-            {" — AI 에이전트가 이 프로젝트를 실행하려면 로컬 폴더 경로가 필요합니다."}
-          </span>
-          <span className="ml-auto text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
-            설정 → 프로젝트 관리에서 지정하세요
-          </span>
-        </div>
-      )}
-
       {/* 프로젝트 헤더 */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-[var(--th-border)] flex-shrink-0">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <h1 className="text-sm font-semibold truncate">{project.name}</h1>
-            {category && (
-              <CategoryBadge label={category.name_ko ?? category.name} color={category.color} />
-            )}
-          </div>
-          {project.project_path && (
-            <p className="text-[10px] font-mono text-[var(--th-text-muted)] truncate mt-0.5" title={project.project_path}>
-              {project.project_path}
-            </p>
+      <div
+        className="flex items-center gap-3 px-4 py-2.5 border-b flex-shrink-0"
+        style={{ borderColor: "var(--th-border)", background: "var(--th-bg-elevated)" }}
+      >
+        {/* 브레드크럼 + 프로젝트명 */}
+        <div className="flex items-center gap-1.5 flex-1 min-w-0">
+          <span className="text-[11px] text-[var(--th-text-muted)]">대시보드</span>
+          <span className="text-[11px] text-[var(--th-text-muted)]">/</span>
+          <h1 className="text-[13px] font-semibold truncate">{project.name}</h1>
+          {category && (
+            <CategoryBadge label={category.name_ko ?? category.name} color={category.color} />
           )}
         </div>
 
         {/* 요약 스탯 */}
-        <div className="hidden sm:flex items-center gap-1.5 text-[10px]">
-          <span className="px-2 py-0.5 rounded-full bg-[var(--th-bg-surface)] border border-[var(--th-border)] text-[var(--th-text-muted)]">
-            목표 <strong className="text-[var(--th-text)] font-semibold">{completedObjectives}/{objectives.length}</strong>
+        <div className="hidden sm:flex items-center gap-1 text-[10px]">
+          <span className="flex items-center gap-1 px-2 py-0.5 rounded"
+            style={{ background: "var(--th-bg-surface)", border: "1px solid var(--th-border)", color: "var(--th-text-muted)" }}>
+            <span style={{ color: "#3b82f6" }}>●</span>
+            목표 <strong className="font-semibold" style={{ color: "var(--th-text)" }}>{completedObjectives}/{objectives.length}</strong>
           </span>
-          <span className={[
-            "px-2 py-0.5 rounded-full border",
-            openRisks > 0
-              ? "bg-red-500/10 border-red-500/30 text-red-400"
-              : "bg-[var(--th-bg-surface)] border-[var(--th-border)] text-[var(--th-text-muted)]",
-          ].join(" ")}>
+          <span className="flex items-center gap-1 px-2 py-0.5 rounded"
+            style={{
+              background: openRisks > 0 ? "rgba(239,68,68,0.08)" : "var(--th-bg-surface)",
+              border: `1px solid ${openRisks > 0 ? "rgba(239,68,68,0.3)" : "var(--th-border)"}`,
+              color: openRisks > 0 ? "#ef4444" : "var(--th-text-muted)",
+            }}>
+            <span>⚠</span>
             리스크 <strong className="font-semibold">{openRisks}</strong>
           </span>
-          <span className="px-2 py-0.5 rounded-full bg-[var(--th-bg-surface)] border border-[var(--th-border)] text-[var(--th-text-muted)]">
-            검토 단계 <strong className="text-[var(--th-text)] font-semibold">{passedGates}/{gates.length}</strong>
+          <span className="flex items-center gap-1 px-2 py-0.5 rounded"
+            style={{ background: "var(--th-bg-surface)", border: "1px solid var(--th-border)", color: "var(--th-text-muted)" }}>
+            <span style={{ color: "#8b5cf6" }}>✓</span>
+            검토 <strong className="font-semibold" style={{ color: "var(--th-text)" }}>{passedGates}/{gates.length}</strong>
           </span>
-          <span className="px-2 py-0.5 rounded-full bg-[var(--th-bg-surface)] border border-[var(--th-border)] text-[var(--th-text-muted)]">
-            결과물 <strong className="text-[var(--th-text)] font-semibold">{doneOutputs}/{outputs.length}</strong>
+          <span className="flex items-center gap-1 px-2 py-0.5 rounded"
+            style={{ background: "var(--th-bg-surface)", border: "1px solid var(--th-border)", color: "var(--th-text-muted)" }}>
+            <span style={{ color: "#10b981" }}>■</span>
+            결과물 <strong className="font-semibold" style={{ color: "var(--th-text)" }}>{doneOutputs}/{outputs.length}</strong>
           </span>
         </div>
       </div>

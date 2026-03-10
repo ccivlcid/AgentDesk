@@ -9,11 +9,12 @@ interface GatesPanelProps {
   onUpdate: (v: ProjectGate[]) => void;
 }
 
+/* spec §6-5 상태 아이콘/색상 */
 const STATUS_CONFIG: Record<ProjectGate["status"], { label: string; color: string; icon: string }> = {
-  pending:     { label: "대기", color: "#6b7280", icon: "○" },
-  in_progress: { label: "진행", color: "#3b82f6", icon: "◐" },
-  passed:      { label: "통과", color: "#10b981", icon: "●" },
-  failed:      { label: "실패", color: "#ef4444", icon: "✕" },
+  pending:     { label: "대기 중",  color: "#6e7681", icon: "○" },
+  in_progress: { label: "진행 중",  color: "#f59e0b", icon: "▶" },
+  passed:      { label: "완료",     color: "#3fb950", icon: "✓" },
+  failed:      { label: "실패",     color: "#f85149", icon: "✕" },
 };
 
 const STATUS_CYCLE: Record<ProjectGate["status"], ProjectGate["status"]> = {
@@ -22,6 +23,20 @@ const STATUS_CYCLE: Record<ProjectGate["status"], ProjectGate["status"]> = {
   passed: "pending",
   failed: "pending",
 };
+
+const ICON = (
+  <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2"
+    strokeLinecap="round" strokeLinejoin="round">
+    <path d="M9 11l2 2 4-4" />
+    <rect x="3" y="3" width="14" height="14" rx="2" />
+  </svg>
+);
+
+function formatDate(ts: number | null): string | null {
+  if (!ts) return null;
+  const d = new Date(ts * 1000);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
 
 export default function GatesPanel({ projectId, gates, onUpdate }: GatesPanelProps) {
   const [addingTitle, setAddingTitle] = useState("");
@@ -57,6 +72,7 @@ export default function GatesPanel({ projectId, gates, onUpdate }: GatesPanelPro
     <QuadrantPanel
       title="검토 단계"
       subtitle="완료 전 확인해야 할 것"
+      icon={ICON}
       accentColor="#8b5cf6"
       emptyText="아직 검토 단계가 없어요."
       emptyGuide="완료 전 확인해야 할 체크포인트를 추가해보세요."
@@ -64,38 +80,52 @@ export default function GatesPanel({ projectId, gates, onUpdate }: GatesPanelPro
       onAdd={() => setShowInput(true)}
       isEmpty={gates.length === 0 && !showInput}
     >
-      {gates.map((gate, i) => {
+      {gates.map((gate) => {
         const cfg = STATUS_CONFIG[gate.status];
+        const dueDate = formatDate(gate.due_date);
+        const isPassed = gate.status === "passed";
         return (
           <div
             key={gate.id}
-            className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-[var(--th-bg-elevated)] group"
+            className="group flex items-center gap-2 px-2.5 py-1.5 rounded hover:bg-[var(--th-bg-elevated)] transition-colors"
           >
-            <span className="flex-shrink-0 text-[10px] text-[var(--th-text-muted)] w-4 text-right">
-              {i + 1}
-            </span>
+            {/* 상태 아이콘 — 클릭해서 순환 */}
             <button
               onClick={() => void handleStatusCycle(gate)}
-              className="flex-shrink-0 text-sm leading-none transition-colors"
+              className="flex-shrink-0 w-5 text-center text-sm leading-none transition-colors font-mono"
               style={{ color: cfg.color }}
-              title={cfg.label}
+              title={`${cfg.label} → 클릭해서 변경`}
             >
               {cfg.icon}
             </button>
+
+            {/* 제목 + due_date */}
+            <div className="flex-1 min-w-0">
+              <span
+                className={`text-xs leading-snug ${isPassed ? "line-through text-[var(--th-text-muted)]" : ""}`}
+              >
+                {gate.title}
+              </span>
+              {dueDate && !isPassed && (
+                <span className="ml-2 text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
+                  {dueDate}
+                </span>
+              )}
+            </div>
+
+            {/* 상태 라벨 (hover) */}
             <span
-              className={`flex-1 text-xs leading-snug ${gate.status === "passed" ? "line-through text-[var(--th-text-muted)]" : ""}`}
-            >
-              {gate.title}
-            </span>
-            <span
-              className="hidden group-hover:block text-[9px] px-1 rounded flex-shrink-0"
-              style={{ backgroundColor: `${cfg.color}22`, color: cfg.color }}
+              className="hidden group-hover:inline text-[9px] px-1.5 py-0.5 rounded flex-shrink-0 font-medium"
+              style={{ background: `${cfg.color}22`, color: cfg.color }}
             >
               {cfg.label}
             </span>
+
+            {/* 삭제 */}
             <button
               onClick={() => void handleDelete(gate.id)}
-              className="opacity-0 group-hover:opacity-100 text-[var(--th-text-muted)] hover:text-red-400 transition-opacity"
+              className="opacity-0 group-hover:opacity-100 flex-shrink-0 transition-opacity"
+              style={{ color: "var(--th-text-muted)" }}
             >
               <svg width="10" height="10" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M4 4l12 12M4 16L16 4" />
@@ -106,7 +136,7 @@ export default function GatesPanel({ projectId, gates, onUpdate }: GatesPanelPro
       })}
 
       {showInput && (
-        <div className="flex gap-1 px-2 py-1">
+        <div className="flex gap-1 px-1 py-1">
           <input
             autoFocus
             type="text"
@@ -116,16 +146,24 @@ export default function GatesPanel({ projectId, gates, onUpdate }: GatesPanelPro
               if (e.key === "Enter") void handleAdd();
               if (e.key === "Escape") { setShowInput(false); setAddingTitle(""); }
             }}
-            placeholder="단계명을 입력하세요"
-            className="flex-1 text-xs px-2 py-1 bg-[var(--th-bg-base)] border border-[var(--th-border)]
-                       rounded outline-none focus:border-[var(--th-accent)]"
+            placeholder="검토 단계명을 입력하세요"
+            className="flex-1 text-xs px-2 py-1.5 rounded outline-none"
+            style={{ background: "var(--th-bg-base)", border: "1px solid var(--th-border)" }}
           />
           <button
             onClick={() => void handleAdd()}
             disabled={busy}
-            className="text-[10px] px-2 py-1 bg-[var(--th-accent)] text-white rounded disabled:opacity-40"
+            className="text-[10px] px-3 py-1.5 rounded font-medium disabled:opacity-40"
+            style={{ background: "#8b5cf6", color: "#fff" }}
           >
             추가
+          </button>
+          <button
+            onClick={() => { setShowInput(false); setAddingTitle(""); }}
+            className="text-[10px] px-2 py-1.5 rounded"
+            style={{ color: "var(--th-text-muted)" }}
+          >
+            취소
           </button>
         </div>
       )}
