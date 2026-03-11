@@ -6,81 +6,132 @@ interface CategoryCardProps {
   onDelete: (id: string) => void;
 }
 
-const SCOPE_LABEL: Record<string, string> = {
-  global: "전역",
-  org: "조직",
-  team: "팀",
-};
-
 export default function CategoryCard({ category, onEdit, onDelete }: CategoryCardProps) {
+  const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };
   const label = category.name_ko ?? category.name;
   const isGlobal = category.owner_scope === "global";
 
   return (
     <div
-      className="group flex items-start gap-3 p-3 rounded border transition-colors"
-      style={{ borderColor: `${category.color}44`, backgroundColor: `${category.color}08` }}
+      className="group"
+      style={{
+        ...mono,
+        display: "flex",
+        alignItems: "center",
+        gap: 0,
+        borderBottom: "1px solid var(--th-border)",
+        borderLeft: `3px solid ${category.color ?? "var(--th-border)"}`,
+        background: "var(--th-bg-primary)",
+        transition: "background 0.1s",
+        cursor: "default",
+      }}
+      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--th-bg-elevated)"; }}
+      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--th-bg-primary)"; }}
     >
-      {/* 색상 도트 + 아이콘 */}
+      {/* 아이콘 (긴 라벨일 때 한 줄 유지) */}
       <div
-        className="flex-shrink-0 w-8 h-8 rounded flex items-center justify-center text-sm"
-        style={{ backgroundColor: `${category.color}22`, color: category.color }}
+        style={{
+          width: 44,
+          minWidth: 44,
+          flexShrink: 0,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "10px 4px",
+          fontSize: "11px",
+          whiteSpace: "nowrap",
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+        }}
+        title={category.icon || undefined}
       >
         {category.icon || "📁"}
       </div>
 
-      {/* 내용 */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold truncate">{label}</span>
-          <span
-            className="text-[9px] px-1 py-px rounded font-mono"
-            style={{
-              backgroundColor: `${category.color}18`,
-              color: category.color,
-              border: `1px solid ${category.color}44`,
-            }}
-          >
-            {SCOPE_LABEL[category.owner_scope] ?? category.owner_scope}
-          </span>
-          {category.is_template === 1 && (
-            <span className="text-[9px] px-1 py-px rounded font-mono text-[var(--th-text-muted)] border border-[var(--th-border)]">
-              템플릿
-            </span>
-          )}
+      {/* 이름 + slug */}
+      <div style={{ width: 160, flexShrink: 0, padding: "10px 8px" }}>
+        <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--th-text-primary)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+          {label}
         </div>
-        {category.description && (
-          <p className="text-[10px] text-[var(--th-text-muted)] mt-0.5 line-clamp-2">{category.description}</p>
-        )}
-        <div className="text-[9px] text-[var(--th-text-muted)] font-mono mt-1">
-          v{category.version} · {category.slug}
+        <div style={{ fontSize: "9px", color: category.color ?? "var(--th-text-muted)", marginTop: 2, opacity: 0.8 }}>
+          {category.slug ?? category.name}
         </div>
       </div>
 
-      {/* 액션 버튼 (hover 시 표시) */}
-      <div className="flex-shrink-0 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+      {/* 설명 */}
+      <div style={{ flex: 1, minWidth: 0, padding: "10px 8px" }}>
+        {category.description ? (
+          <span style={{ fontSize: "10px", color: "var(--th-text-muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "block" }}>
+            {category.description}
+          </span>
+        ) : (
+          <span style={{ fontSize: "10px", color: "var(--th-text-muted)", opacity: 0.3 }}>—</span>
+        )}
+      </div>
+
+      {/* 메타 배지들 (한 줄 유지) */}
+      <div style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: 6, padding: "0 12px", whiteSpace: "nowrap" }}>
+        <span style={{ fontSize: "8px", padding: "1px 5px", border: `1px solid ${category.color ?? "var(--th-border)"}44`, color: category.color ?? "var(--th-text-muted)", background: `${category.color ?? "#888"}11`, letterSpacing: "0.06em" }}>
+          {isGlobal ? "GLOBAL" : "CUSTOM"}
+        </span>
+        <span style={{ fontSize: "8px", color: "var(--th-text-muted)", opacity: 0.5 }}>
+          v{category.version}
+        </span>
+        {category.is_template === 1 && (
+          <span style={{ fontSize: "8px", padding: "1px 5px", border: "1px solid var(--th-border)", color: "var(--th-text-muted)", opacity: 0.6 }}>
+            TPL
+          </span>
+        )}
+      </div>
+
+      {/* 액션 버튼 */}
+      <div
+        className="opacity-0 group-hover:opacity-100"
+        style={{ flexShrink: 0, display: "flex", gap: 0, transition: "opacity 0.1s", borderLeft: "1px solid var(--th-border)" }}
+      >
         <button
           onClick={() => onEdit(category)}
-          className="p-1 rounded text-[var(--th-text-muted)] hover:text-[var(--th-text)] hover:bg-[var(--th-bg-elevated)] transition-colors"
           title="편집"
+          style={{
+            ...mono,
+            fontSize: "9px",
+            fontWeight: 700,
+            padding: "0 12px",
+            height: "100%",
+            minHeight: 44,
+            background: "none",
+            border: "none",
+            borderRight: "1px solid var(--th-border)",
+            color: "var(--th-text-muted)",
+            cursor: "pointer",
+            letterSpacing: "0.05em",
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.color = "var(--th-accent)"; e.currentTarget.style.background = "rgba(245,158,11,0.06)"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.color = "var(--th-text-muted)"; e.currentTarget.style.background = "none"; }}
         >
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-          </svg>
+          EDIT
         </button>
         {!isGlobal && (
           <button
             onClick={() => onDelete(category.id)}
-            className="p-1 rounded text-[var(--th-text-muted)] hover:text-red-400 hover:bg-[var(--th-bg-elevated)] transition-colors"
             title="삭제"
+            style={{
+              ...mono,
+              fontSize: "9px",
+              fontWeight: 700,
+              padding: "0 12px",
+              height: "100%",
+              minHeight: 44,
+              background: "none",
+              border: "none",
+              color: "var(--th-text-muted)",
+              cursor: "pointer",
+              letterSpacing: "0.05em",
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = "#f87171"; e.currentTarget.style.background = "rgba(248,113,113,0.06)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = "var(--th-text-muted)"; e.currentTarget.style.background = "none"; }}
           >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="3 6 5 6 21 6" />
-              <path d="M19 6l-1 14H6L5 6" />
-              <path d="M10 11v6M14 11v6" />
-              <path d="M9 6V4h6v2" />
-            </svg>
+            DEL
           </button>
         )}
       </div>

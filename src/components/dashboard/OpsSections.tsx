@@ -39,7 +39,7 @@ export function DashboardDeptAndSquad({
 }: DashboardDeptAndSquadProps) {
   return (
     <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.2fr_1fr]">
-      <div className="dashboard-panel p-5" style={{ border: "1px solid var(--th-border)", borderRadius: "4px", background: "var(--th-bg-surface)" }}>
+      <div className="dashboard-panel p-5" style={{ border: "1px solid var(--th-border)", borderRadius: 0, background: "var(--th-bg-surface)" }}>
         <h2 className="mb-4 flex items-center justify-between">
           <span className="text-xs font-bold uppercase tracking-widest" style={{ color: "var(--th-text-heading)", fontFamily: "var(--th-font-mono)" }}>
             {t({ ko: "부서 성과", en: "Department performance", ja: "部署パフォーマンス", zh: "部门绩效" })}
@@ -61,24 +61,24 @@ export function DashboardDeptAndSquad({
               <article
                 key={dept.id}
                 className="border border-[var(--th-border)] bg-[var(--th-bg-primary)] p-3 transition-colors hover:bg-[var(--th-bg-surface-hover)]"
-                style={{ borderRadius: "2px" }}
+                style={{ borderRadius: 0 }}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
                     <span
                       className="flex h-8 w-8 items-center justify-center text-sm"
-                      style={{ background: "var(--th-bg-surface)", color: "var(--th-text-secondary)", borderRadius: "2px" }}
+                      style={{ background: "var(--th-bg-surface)", color: "var(--th-text-secondary)", borderRadius: 0 }}
                     >
                       {dept.icon}
                     </span>
                     <span className="text-sm font-medium text-[var(--th-text-primary)]">{dept.name}</span>
                   </div>
-                  <span className={`px-2 py-0.5 text-[10px] font-semibold font-mono ${dept.color.badge}`} style={{ borderRadius: "2px" }}>
+                  <span className={`px-2 py-0.5 text-[10px] font-semibold font-mono ${dept.color.badge}`} style={{ borderRadius: 0 }}>
                     {dept.ratio}%
                   </span>
                 </div>
 
-                <div className="mt-2.5 h-1.5 overflow-hidden bg-[var(--th-bg-surface)]" style={{ borderRadius: "1px" }}>
+                <div className="mt-2.5 h-1.5 overflow-hidden bg-[var(--th-bg-surface)]" style={{ borderRadius: 0 }}>
                   <div
                     className={`h-full bg-gradient-to-r ${dept.color.bar} transition-all duration-500`}
                     style={{ width: `${dept.ratio}%` }}
@@ -99,17 +99,17 @@ export function DashboardDeptAndSquad({
         )}
       </div>
 
-      <div className="dashboard-panel p-5" style={{ border: "1px solid var(--th-border)", borderRadius: "4px", background: "var(--th-bg-surface)" }}>
+      <div className="dashboard-panel p-5" style={{ border: "1px solid var(--th-border)", borderRadius: 0, background: "var(--th-bg-surface)" }}>
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-xs font-bold uppercase tracking-widest" style={{ color: "var(--th-text-heading)", fontFamily: "var(--th-font-mono)" }}>
             {t({ ko: "스쿼드", en: "Squad", ja: "スクワッド", zh: "小队" })}
           </h2>
           <div className="flex items-center gap-2 text-[10px]">
-            <span className="flex items-center gap-1 px-2 py-0.5 font-mono font-medium" style={{ border: "1px solid rgba(34,197,94,0.3)", borderRadius: "2px", background: "rgba(34,197,94,0.08)", color: "#22c55e" }}>
-              <span className="h-1.5 w-1.5 bg-emerald-500 [.dark_theme_*]:bg-emerald-400" style={{ borderRadius: "1px" }} />
+            <span className="flex items-center gap-1 px-2 py-0.5 font-mono font-medium" style={{ border: "1px solid rgba(34,197,94,0.3)", borderRadius: 0, background: "rgba(34,197,94,0.08)", color: "#22c55e" }}>
+              <span className="h-1.5 w-1.5 bg-emerald-500 [.dark_theme_*]:bg-emerald-400" style={{ borderRadius: 0 }} />
               {numberFormatter.format(workingAgents.length)}
             </span>
-            <span className="border border-[var(--th-border)] bg-[var(--th-bg-primary)] px-2 py-0.5 font-mono font-medium text-[var(--th-text-muted)]" style={{ borderRadius: "2px", fontSize: "0.625rem" }}>
+            <span className="border border-[var(--th-border)] bg-[var(--th-bg-primary)] px-2 py-0.5 font-mono font-medium text-[var(--th-text-muted)]" style={{ borderRadius: 0, fontSize: "0.625rem" }}>
               {numberFormatter.format(idleAgentsList.length)}
             </span>
           </div>
@@ -133,7 +133,7 @@ export function DashboardDeptAndSquad({
                   <div
                     className="overflow-hidden border border-[var(--th-border)] transition-colors group-hover:border-[var(--th-border-strong)]"
                     style={{
-                      borderRadius: "4px",
+                      borderRadius: 0,
                       ...(isWorking ? { borderColor: `${tier.color}50`, boxShadow: `0 0 0 1px ${tier.color}30` } : {}),
                     }}
                   >
@@ -204,12 +204,12 @@ export function DashboardMissionLog({
               <article
                 key={task.id}
                 className={`group grid grid-cols-[auto_1fr_auto] items-center gap-3 border border-[var(--th-border)] border-l-[3px] ${leftBorder} bg-[var(--th-bg-primary)] p-3 transition-colors hover:bg-[var(--th-bg-surface-hover)]`}
-                style={{ borderRadius: "2px" }}
+                style={{ borderRadius: 0 }}
               >
                 {assignedAgent ? (
                   <AgentAvatar agent={assignedAgent} agents={agents} size={36} rounded="lg" />
                 ) : (
-                  <div className="flex h-9 w-9 items-center justify-center border border-[var(--th-border)] bg-[var(--th-bg-surface)] text-xs font-medium text-[var(--th-text-muted)]" style={{ borderRadius: "2px" }}>
+                  <div className="flex h-9 w-9 items-center justify-center border border-[var(--th-border)] bg-[var(--th-bg-surface)] text-xs font-medium text-[var(--th-text-muted)]" style={{ borderRadius: 0 }}>
                     —
                   </div>
                 )}
@@ -227,7 +227,7 @@ export function DashboardMissionLog({
                 <div className="flex flex-col items-end gap-0.5">
                   <span
                     className={`px-2 py-0.5 text-[9px] font-semibold font-mono ${statusInfo.color}`}
-                    style={{ borderRadius: "2px" }}
+                    style={{ borderRadius: 0 }}
                   >
                     {taskStatusLabel(task.status, t)}
                   </span>
@@ -246,12 +246,12 @@ export function DashboardMissionLog({
   }
 
   return (
-    <div className="dashboard-panel p-5" style={{ border: "1px solid var(--th-border)", borderRadius: "4px", background: "var(--th-bg-surface)" }}>
+    <div className="dashboard-panel p-5" style={{ border: "1px solid var(--th-border)", borderRadius: 0, background: "var(--th-bg-surface)" }}>
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-xs font-bold uppercase tracking-widest" style={{ color: "var(--th-text-heading)", fontFamily: "var(--th-font-mono)" }}>
           {t({ ko: "최근 활동", en: "Recent activity", ja: "最近の活動", zh: "最近活动" })}
         </h2>
-        <span className="border border-[var(--th-border)] bg-[var(--th-bg-primary)] px-2 py-0.5 font-mono font-medium text-[var(--th-text-muted)]" style={{ borderRadius: "2px", fontSize: "0.625rem" }}>
+        <span className="border border-[var(--th-border)] bg-[var(--th-bg-primary)] px-2 py-0.5 font-mono font-medium text-[var(--th-text-muted)]" style={{ borderRadius: 0, fontSize: "0.625rem" }}>
           {t({ ko: "유휴", en: "Idle", ja: "待機", zh: "空闲" })} {numberFormatter.format(idleAgents)}
         </span>
       </div>
@@ -291,7 +291,7 @@ export function DashboardActivePersonas({ agents, language, t }: DashboardActive
             className="flex items-center gap-2 px-2.5 py-2"
             style={{
               border: `1px solid ${isWorking ? "rgba(34,197,94,0.25)" : "var(--th-border)"}`,
-              borderRadius: "2px",
+              borderRadius: 0,
               background: isWorking ? "rgba(34,197,94,0.05)" : "var(--th-bg-primary)",
             }}
           >
@@ -369,23 +369,23 @@ export function DashboardTodaySummary({ agents, tasks, language, t }: TodaySumma
         <span className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
           {t({ ko: "오늘 완료", en: "Completed today", ja: "本日完了", zh: "今日完成" })}
         </span>
-        <span className="px-2 py-0.5 text-[10px] font-mono font-bold" style={{ borderRadius: "2px", background: "rgba(52,211,153,0.15)", color: "rgb(110,231,183)", border: "1px solid rgba(52,211,153,0.3)" }}>
+        <span className="px-2 py-0.5 text-[10px] font-mono font-bold" style={{ borderRadius: 0, background: "rgba(52,211,153,0.15)", color: "rgb(110,231,183)", border: "1px solid rgba(52,211,153,0.3)" }}>
           {totalDoneToday}
         </span>
       </div>
       {todayStats.map(({ agent, done, inProgress }) => (
-        <div key={agent.id} className="flex items-center gap-3 px-2.5 py-2" style={{ borderRadius: "2px", background: "var(--th-bg-surface)", border: "1px solid var(--th-border)" }}>
+        <div key={agent.id} className="flex items-center gap-3 px-2.5 py-2" style={{ borderRadius: 0, background: "var(--th-bg-surface)", border: "1px solid var(--th-border)" }}>
           <AgentAvatar agent={agent} size={24} />
           <span className="flex-1 min-w-0 text-xs font-mono truncate" style={{ color: "var(--th-text-secondary)" }}>
             {language === "ko" ? agent.name_ko || agent.name : agent.name}
           </span>
           {done > 0 && (
-            <span className="flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-mono" style={{ borderRadius: "2px", background: "rgba(52,211,153,0.12)", color: "rgb(110,231,183)" }}>
+            <span className="flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-mono" style={{ borderRadius: 0, background: "rgba(52,211,153,0.12)", color: "rgb(110,231,183)" }}>
               ✓ {done}
             </span>
           )}
           {inProgress > 0 && (
-            <span className="flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-mono" style={{ borderRadius: "2px", background: "rgba(251,191,36,0.1)", color: "var(--th-accent)" }}>
+            <span className="flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-mono" style={{ borderRadius: 0, background: "rgba(251,191,36,0.1)", color: "var(--th-accent)" }}>
               ▶ {inProgress}
             </span>
           )}

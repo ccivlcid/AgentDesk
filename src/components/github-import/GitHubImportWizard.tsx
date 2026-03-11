@@ -89,8 +89,8 @@ export default function GitHubImportWizard({
           onClick={onResetToRepo}
           className="px-3 py-1 text-xs font-mono transition"
           style={step === "repo"
-            ? { borderRadius: "2px", border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.15)", color: "var(--th-accent)" }
-            : { borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
+            ? { borderRadius: 0, border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.15)", color: "var(--th-accent)" }
+            : { borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
         >
           1. {t({ ko: "리포 선택", en: "Select Repo", ja: "リポ選択", zh: "选择仓库" })}
         </button>
@@ -101,8 +101,8 @@ export default function GitHubImportWizard({
           onClick={onGoToBranch}
           className="px-3 py-1 text-xs font-mono transition disabled:opacity-40"
           style={step === "branch"
-            ? { borderRadius: "2px", border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.15)", color: "var(--th-accent)" }
-            : { borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
+            ? { borderRadius: 0, border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.15)", color: "var(--th-accent)" }
+            : { borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
         >
           2. {t({ ko: "브랜치", en: "Branch", ja: "ブランチ", zh: "分支" })}
         </button>
@@ -113,8 +113,8 @@ export default function GitHubImportWizard({
           onClick={onGoToClone}
           className="px-3 py-1 text-xs font-mono transition disabled:opacity-40"
           style={step === "clone"
-            ? { borderRadius: "2px", border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.15)", color: "var(--th-accent)" }
-            : { borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
+            ? { borderRadius: 0, border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.15)", color: "var(--th-accent)" }
+            : { borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
         >
           3. {t({ ko: "가져오기", en: "Import", ja: "インポート", zh: "导入" })}
         </button>
@@ -123,7 +123,7 @@ export default function GitHubImportWizard({
           type="button"
           onClick={onCancel}
           className="px-3 py-1 text-xs font-mono transition"
-          style={{ borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-muted)" }}
+          style={{ borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-muted)" }}
         >
           {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}
         </button>
@@ -132,7 +132,7 @@ export default function GitHubImportWizard({
       <div className="flex-1 overflow-y-auto p-5">
         {step === "repo" && (
           <div className="space-y-3">
-            <div className="space-y-2 p-3" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
+            <div className="space-y-2 p-3" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
               <p className="text-xs font-mono" style={{ color: "var(--th-text-secondary)" }}>
                 {t({
                   ko: "직접 입력 (Private 리포 포함)",
@@ -156,14 +156,14 @@ export default function GitHubImportWizard({
                     if (event.key === "Enter") onDirectInputSubmit();
                   }}
                   className="flex-1 px-3 py-2 text-sm outline-none font-mono"
-                  style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
+                  style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
                 />
                 <button
                   type="button"
                   onClick={onDirectInputSubmit}
                   disabled={!directInput.trim()}
                   className="shrink-0 px-4 py-2 text-xs font-mono transition disabled:opacity-40"
-                  style={{ borderRadius: "2px", border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.15)", color: "var(--th-accent)" }}
+                  style={{ borderRadius: 0, border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.15)", color: "var(--th-accent)" }}
                 >
                   {t({ ko: "이동", en: "Go", ja: "移動", zh: "前往" })}
                 </button>
@@ -195,7 +195,7 @@ export default function GitHubImportWizard({
               value={repoSearch}
               onChange={(event) => onRepoSearchChange(event.target.value)}
               className="w-full px-3 py-2 text-sm outline-none font-mono"
-              style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
+              style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
             />
             {reposLoading ? (
               <p className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
@@ -213,15 +213,15 @@ export default function GitHubImportWizard({
                     type="button"
                     onClick={() => onRepoSelect(repo)}
                     className="w-full px-4 py-3 text-left transition"
-                    style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}
+                    style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}
                   >
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-mono" style={{ color: "var(--th-text-heading)" }}>{repo.full_name}</span>
                       <span
                         className="px-1.5 py-0.5 text-[10px] font-mono"
                         style={repo.private
-                          ? { borderRadius: "2px", border: "1px solid rgba(251,191,36,0.3)", color: "var(--th-accent)" }
-                          : { borderRadius: "2px", border: "1px solid rgba(52,211,153,0.3)", color: "rgb(167,243,208)" }}
+                          ? { borderRadius: 0, border: "1px solid rgba(251,191,36,0.3)", color: "var(--th-accent)" }
+                          : { borderRadius: 0, border: "1px solid rgba(52,211,153,0.3)", color: "rgb(167,243,208)" }}
                       >
                         {repo.private ? "Private" : "Public"}
                       </span>
@@ -240,7 +240,7 @@ export default function GitHubImportWizard({
 
         {step === "branch" && selectedRepo && (
           <div className="space-y-3">
-            <div className="px-4 py-2" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
+            <div className="px-4 py-2" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
               <p className="text-sm font-mono" style={{ color: "var(--th-text-heading)" }}>{selectedRepo.full_name}</p>
               {selectedRepo.description && <p className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>{selectedRepo.description}</p>}
             </div>
@@ -249,10 +249,10 @@ export default function GitHubImportWizard({
             </h4>
             {branchError && (
               <div className="space-y-3">
-                <div className="px-3 py-2 text-xs font-mono" style={{ borderRadius: "2px", border: "1px solid rgba(244,63,94,0.5)", background: "rgba(244,63,94,0.08)", color: "rgb(253,164,175)" }}>
+                <div className="px-3 py-2 text-xs font-mono" style={{ borderRadius: 0, border: "1px solid rgba(244,63,94,0.5)", background: "rgba(244,63,94,0.08)", color: "rgb(253,164,175)" }}>
                   {branchError}
                 </div>
-                <div className="space-y-2 p-3" style={{ borderRadius: "2px", border: "1px solid rgba(251,191,36,0.3)", background: "rgba(251,191,36,0.05)" }}>
+                <div className="space-y-2 p-3" style={{ borderRadius: 0, border: "1px solid rgba(251,191,36,0.3)", background: "rgba(251,191,36,0.05)" }}>
                   <p className="text-xs font-mono" style={{ color: "var(--th-accent)" }}>
                     {t({
                       ko: "Personal Access Token (PAT)으로 인증",
@@ -279,14 +279,14 @@ export default function GitHubImportWizard({
                         if (event.key === "Enter" && patToken.trim()) onPatRetry();
                       }}
                       className="flex-1 px-3 py-2 text-sm outline-none font-mono"
-                      style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
+                      style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
                     />
                     <button
                       type="button"
                       onClick={onPatRetry}
                       disabled={!patToken.trim() || patLoading}
                       className="shrink-0 px-4 py-2 text-xs font-mono transition disabled:opacity-40"
-                      style={{ borderRadius: "2px", border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.15)", color: "var(--th-accent)" }}
+                      style={{ borderRadius: 0, border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.15)", color: "var(--th-accent)" }}
                     >
                       {patLoading
                         ? t({ ko: "확인 중...", en: "Verifying...", ja: "確認中...", zh: "验证中..." })
@@ -313,14 +313,14 @@ export default function GitHubImportWizard({
                     onClick={() => onBranchSelect(branch.name)}
                     className="w-full px-4 py-2.5 text-left transition"
                     style={branch.is_default
-                      ? { borderRadius: "2px", border: "1px solid rgba(251,191,36,0.4)", background: "rgba(251,191,36,0.06)" }
-                      : { borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}
+                      ? { borderRadius: 0, border: "1px solid rgba(251,191,36,0.4)", background: "rgba(251,191,36,0.06)" }
+                      : { borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}
                   >
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-mono" style={{ color: "var(--th-text-primary)" }}>{branch.name}</span>
                       {branch.is_default && (
                         <span className="px-1.5 py-0.5 text-[10px] font-mono"
-                          style={{ borderRadius: "2px", border: "1px solid rgba(251,191,36,0.4)", color: "var(--th-accent)" }}>
+                          style={{ borderRadius: 0, border: "1px solid rgba(251,191,36,0.4)", color: "var(--th-accent)" }}>
                           default
                         </span>
                       )}
@@ -335,7 +335,7 @@ export default function GitHubImportWizard({
 
         {step === "clone" && selectedRepo && selectedBranch && (
           <div className="space-y-4">
-            <div className="px-4 py-2" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
+            <div className="px-4 py-2" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
               <p className="text-sm font-mono" style={{ color: "var(--th-text-primary)" }}>
                 {selectedRepo.full_name} <span style={{ color: "var(--th-accent)" }}>({selectedBranch})</span>
               </p>
@@ -349,7 +349,7 @@ export default function GitHubImportWizard({
                 onChange={(event) => onProjectNameChange(event.target.value)}
                 disabled={creating}
                 className="mt-1 w-full px-3 py-2 text-sm outline-none font-mono disabled:opacity-50"
-                style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
+                style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
               />
             </label>
 
@@ -361,7 +361,7 @@ export default function GitHubImportWizard({
                 onChange={(event) => onTargetPathChange(event.target.value)}
                 disabled={creating}
                 className="mt-1 w-full px-3 py-2 text-sm outline-none font-mono disabled:opacity-50"
-                style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
+                style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
               />
             </label>
 
@@ -378,7 +378,7 @@ export default function GitHubImportWizard({
                 onChange={(event) => onCoreGoalChange(event.target.value)}
                 disabled={creating}
                 className="mt-1 w-full resize-none px-3 py-2 text-sm outline-none font-mono disabled:opacity-50"
-                style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
+                style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
               />
             </label>
 
@@ -392,7 +392,7 @@ export default function GitHubImportWizard({
                   </span>
                   <span style={{ color: "var(--th-text-muted)" }}>{cloneProgress}%</span>
                 </div>
-                <div className="h-2 w-full overflow-hidden" style={{ borderRadius: "2px", background: "var(--th-bg-elevated)" }}>
+                <div className="h-2 w-full overflow-hidden" style={{ borderRadius: 0, background: "var(--th-bg-elevated)" }}>
                   <div
                     className="h-full transition-all duration-300"
                     style={{ width: `${cloneProgress}%`, background: "var(--th-accent)" }}
@@ -402,7 +402,7 @@ export default function GitHubImportWizard({
             )}
 
             {cloneError && (
-              <div className="px-3 py-2 text-xs font-mono" style={{ borderRadius: "2px", border: "1px solid rgba(244,63,94,0.5)", background: "rgba(244,63,94,0.08)", color: "rgb(253,164,175)" }}>
+              <div className="px-3 py-2 text-xs font-mono" style={{ borderRadius: 0, border: "1px solid rgba(244,63,94,0.5)", background: "rgba(244,63,94,0.08)", color: "rgb(253,164,175)" }}>
                 {cloneError}
               </div>
             )}
@@ -413,7 +413,7 @@ export default function GitHubImportWizard({
                 onClick={onImport}
                 disabled={creating || !projectName.trim() || !targetPath.trim()}
                 className="px-4 py-2 text-sm font-mono transition disabled:opacity-40"
-                style={{ borderRadius: "2px", border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.15)", color: "var(--th-accent)" }}
+                style={{ borderRadius: 0, border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.15)", color: "var(--th-accent)" }}
               >
                 {creating
                   ? t({ ko: "가져오는 중...", en: "Importing...", ja: "インポート中...", zh: "正在导入..." })
@@ -429,7 +429,7 @@ export default function GitHubImportWizard({
                 onClick={onBackToBranch}
                 disabled={creating}
                 className="px-3 py-2 text-xs font-mono transition disabled:opacity-40"
-                style={{ borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)" }}
+                style={{ borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)" }}
               >
                 {t({ ko: "이전", en: "Back", ja: "戻る", zh: "返回" })}
               </button>

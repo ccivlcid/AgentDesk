@@ -868,11 +868,12 @@
   gap: 0.625rem;
   width: 100%;
   padding: 0.45rem 0.625rem;
-  border-radius: 2px;
+  border-radius: 0;
   font-size: 0.8125rem;
   font-family: var(--th-font-mono);
-  transition: background 0.1s linear, color 0.1s linear, border-color 0.1s linear;
-  border: 1px solid transparent;
+  transition: background 0.1s linear, color 0.1s linear;
+  border: none;
+  border-left: 2px solid transparent;
   color: var(--th-text-secondary);
   cursor: pointer;
   letter-spacing: 0.01em;
@@ -880,29 +881,19 @@
 .sidebar-collapsed .sidebar-nav-item {
   justify-content: center;
   padding: 0.5rem;
+  border-left: none;
 }
 .sidebar-nav-item:hover {
-  background: var(--th-bg-surface-hover);
+  background: rgba(255, 255, 255, 0.04);
   color: var(--th-text-primary);
 }
 .sidebar-nav-item:active {
   opacity: 0.8;
 }
 .sidebar-nav-item.active {
-  background: rgba(245, 158, 11, 0.1);
+  background: rgba(245, 158, 11, 0.08);
   color: #f59e0b;
-  border-color: rgba(245, 158, 11, 0.25);
-  box-shadow: none;
-}
-.sidebar-nav-item.active::before {
-  content: "";
-  position: absolute;
-  left: -2px;
-  top: 20%;
-  height: 60%;
-  width: 3px;
-  border-radius: 0 3px 3px 0;
-  background: #f59e0b;
+  border-left-color: #f59e0b;
 }
 .sidebar-nav-item.active .sidebar-nav-icon {
   filter: drop-shadow(0 0 4px rgba(245, 158, 11, 0.4));
@@ -910,11 +901,7 @@
 [data-theme="light"] .sidebar-nav-item.active {
   background: rgba(217, 119, 6, 0.08);
   color: #b45309;
-  border-color: rgba(217, 119, 6, 0.2);
-  box-shadow: none;
-}
-[data-theme="light"] .sidebar-nav-item.active::before {
-  background: #d97706;
+  border-left-color: #d97706;
 }
 [data-theme="light"] .sidebar-nav-item:hover {
   background: rgba(0, 0, 0, 0.04);
@@ -1227,24 +1214,28 @@
   gap: 0.5rem;
   width: 100%;
   padding: 0.3125rem 0.5rem;
-  border-radius: 2px;
+  border-radius: 0;
   font-size: 0.75rem;
   font-family: var(--th-font-mono);
   transition: background 0.1s linear, color 0.1s linear;
+  border: none;
+  border-left: 2px solid transparent;
   color: var(--th-text-secondary);
   cursor: pointer;
 }
 .sidebar-sub-item:hover {
-  background: var(--th-bg-surface-hover);
+  background: rgba(255, 255, 255, 0.04);
   color: var(--th-text-primary);
 }
 .sidebar-sub-item.active {
   color: #f59e0b;
   background: rgba(245, 158, 11, 0.08);
+  border-left-color: #f59e0b;
 }
 [data-theme="light"] .sidebar-sub-item.active {
   color: #d97706;
   background: rgba(217, 119, 6, 0.08);
+  border-left-color: #d97706;
 }
 [data-theme="light"] .sidebar-sub-item:hover {
   background: rgba(0, 0, 0, 0.04);

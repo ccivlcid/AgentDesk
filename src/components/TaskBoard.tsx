@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useToast } from "./ui";
 import { motion } from "framer-motion";
 import {
   DndContext,
@@ -145,6 +146,7 @@ export function TaskBoard({
 }: TaskBoardProps) {
   const { t } = useI18n();
   const { confirm } = useConfirm();
+  const { showToast } = useToast();
   const packVocab = { task: t({ ko: "업무", en: "Task", ja: "タスク", zh: "任务" }), tasks: t({ ko: "업무", en: "Tasks", ja: "タスク", zh: "任务" }) };
   const [viewMode, setViewMode] = useState<"board" | "gantt" | "dag">("board");
   const [showCreate, setShowCreate] = useState(false);
@@ -163,7 +165,7 @@ export function TaskBoard({
   useEffect(() => {
     getProjects({ page_size: 200 })
       .then((res) => setProjects(res.projects.map((p) => ({ id: p.id, name: p.name }))))
-      .catch(() => {});
+      .catch(() => { showToast("Failed to load projects.", "error"); });
   }, []);
 
   // Sync project filter when sidebar project selection changes
@@ -352,208 +354,172 @@ export function TaskBoard({
     return count;
   }, [tasks, hiddenTaskIds]);
 
+  // 상태별 카운트 (status summary bar용)
+  const statusCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const task of filteredTasks) {
+      counts[task.status] = (counts[task.status] ?? 0) + 1;
+    }
+    return counts;
+  }, [filteredTasks]);
+
+  const STATUS_CODE: Record<string, { code: string; color: string }> = {
+    inbox:        { code: "INBOX",  color: "#94a3b8" },
+    planned:      { code: "PLAN",   color: "#60a5fa" },
+    collaborating:{ code: "COLLAB", color: "#818cf8" },
+    in_progress:  { code: "WIP",    color: "#4ade80" },
+    review:       { code: "REV",    color: "#c084fc" },
+    done:         { code: "DONE",   color: "#6b7280" },
+    pending:      { code: "HOLD",   color: "#fb923c" },
+    cancelled:    { code: "VOID",   color: "#6b7280" },
+  };
+
+  const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };
+
+  const btnBase: React.CSSProperties = {
+    ...mono, fontSize: "10px", fontWeight: 700, letterSpacing: "0.06em",
+    padding: "3px 9px", border: "1px solid var(--th-border)",
+    background: "transparent", color: "var(--th-text-muted)", cursor: "pointer",
+  };
+
   return (
     <motion.div
-      className="taskboard-shell flex h-full flex-col gap-4 p-3 sm:p-4"
+      className="taskboard-shell flex h-full flex-col"
+      style={{ gap: 0 }}
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.12, ease: "linear" }}
     >
-      <div className="flex flex-wrap items-center gap-3" style={{ borderLeft: "3px solid var(--th-accent)", paddingLeft: "0.75rem" }}>
-        <h1
-          className="text-sm font-bold tracking-widest uppercase"
-          style={{ color: "var(--th-text-heading)", fontFamily: "var(--th-font-mono)" }}
-        >
-          {t({ ko: `${packVocab.task} 보드`, en: `${packVocab.task} Board`, ja: `${packVocab.task}ボード`, zh: `${packVocab.task}看板` })}
-        </h1>
-        {currentProject && (
-          <span
-            className="text-[10px] font-mono px-1.5 py-0.5"
-            style={{ color: "var(--th-accent)", background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)", borderRadius: "2px" }}
-          >
-            {currentProject.name}
+      {/* ── 터미널 타이틀 바 ── */}
+      <div
+        className="flex-shrink-0 flex items-center justify-between px-4 py-2"
+        style={{ borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}
+      >
+        <div className="flex items-center gap-3 min-w-0">
+          <span style={{ ...mono, fontSize: "11px", color: "var(--th-accent)", fontWeight: 700 }}>$</span>
+          <span style={{ ...mono, fontSize: "11px", color: "var(--th-text-secondary)", whiteSpace: "nowrap" }}>
+            task-queue list
+            {currentProject && (
+              <span style={{ color: "var(--th-accent)" }}> --project=<span style={{ color: "#7dd3fc" }}>{currentProject.name}</span></span>
+            )}
+            {!showAllTasks && <span style={{ color: "var(--th-text-muted)" }}> --active</span>}
+            {activeFilterCount > 0 && <span style={{ color: "#fb923c" }}> --filter={activeFilterCount}</span>}
           </span>
-        )}
-        <span
-          className="px-2 py-0.5 text-xs font-mono"
-          style={{ background: "var(--th-bg-surface)", color: "var(--th-text-muted)", border: "1px solid var(--th-border)", borderRadius: "2px" }}
-        >
-          {filteredTasks.length} {t({ ko: "건", en: packVocab.tasks.toLowerCase(), ja: "件", zh: "项" })}
-          {activeFilterCount > 0 && ` · ${activeFilterCount} filter`}
-        </span>
-      </div>
+          <span style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", padding: "1px 5px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
+            {filteredTasks.length} {t({ ko: "건", en: "tasks", ja: "件", zh: "项" })}
+          </span>
+        </div>
 
-      <div className="flex flex-wrap items-center gap-2">
-        {activeFilterCount > 0 && (
-          <button
-            type="button"
-            onClick={() => {
-              setFilterDept("");
-              setFilterType("");
-              setFilterProject("");
-              setSearch("");
-            }}
-            className="px-3 py-1.5 text-xs font-medium font-mono transition-colors hover:opacity-90"
-            style={{ borderRadius: "2px", borderColor: "var(--th-border)", color: "var(--th-text-secondary)", background: "var(--th-bg-surface)" }}
-          >
-            {t({ ko: "필터 초기화", en: "Reset filters", ja: "フィルターリセット", zh: "重置筛选" })}
-          </button>
-        )}
-        <button
-          type="button"
-          onClick={() => setShowAllTasks((prev) => !prev)}
-          className={`px-3 py-1.5 text-xs font-medium font-mono transition-colors ${
-            showAllTasks
-              ? "border-[rgba(251,191,36,0.5)] bg-[rgba(251,191,36,0.1)] text-[var(--th-accent)]"
-              : "border-[var(--th-border)] bg-[var(--th-bg-surface)] text-[var(--th-text-secondary)] hover:bg-[var(--th-bg-surface-hover)]"
-          }`}
-            title={
-              showAllTasks
-                ? t({
-                    ko: "진행중 보기로 전환 (숨김 제외)",
-                    en: "Switch to active view (exclude hidden)",
-                    ja: "進行中表示へ切替（非表示を除外）",
-                    zh: "切换到进行中视图（排除隐藏）",
-                  })
-                : t({
-                    ko: "모두보기로 전환 (숨김 포함)",
-                    en: "Switch to all view (include hidden)",
-                    ja: "全体表示へ切替（非表示を含む）",
-                    zh: "切换到全部视图（包含隐藏）",
-                  })
-            }
-          >
-            <span className={showAllTasks ? "opacity-60" : ""} style={{ color: "var(--th-text-secondary)" }}>
-              {t({ ko: "진행중", en: "Active", ja: "進行中", zh: "进行中" })}
-            </span>
-            <span className="mx-1 opacity-50" style={{ color: "var(--th-text-muted)" }}>/</span>
-            <span className={showAllTasks ? "" : "opacity-60"} style={{ color: "var(--th-text-secondary)" }}>
-              {t({ ko: "모두보기", en: "All", ja: "すべて", zh: "全部" })}
-            </span>
-            <span
-              className="ml-1 px-1.5 py-0.5 text-[10px] font-medium font-mono"
-              style={{ borderRadius: "2px", background: "var(--th-bg-surface)", color: "var(--th-text-muted)" }}
-            >
-              {hiddenTaskCount}
-            </span>
-          </button>
-        <div className="ml-auto flex items-center gap-2">
-          <div className="flex items-center" style={{ border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
-            <button
-              type="button"
-              onClick={() => setViewMode("board")}
-              className="px-2.5 py-1 text-xs transition-colors"
-              style={{
-                fontFamily: "var(--th-font-mono)",
-                background: viewMode === "board" ? "var(--th-accent)" : "transparent",
-                color: viewMode === "board" ? "#000" : "var(--th-text-secondary)",
-                borderRight: "1px solid var(--th-border)",
-              }}
-            >
-              {t({ ko: "보드", en: "BOARD", ja: "ボード", zh: "看板" })}
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode("gantt")}
-              className="px-2.5 py-1 text-xs transition-colors"
-              style={{
-                fontFamily: "var(--th-font-mono)",
-                background: viewMode === "gantt" ? "var(--th-accent)" : "transparent",
-                color: viewMode === "gantt" ? "#000" : "var(--th-text-secondary)",
-                borderRight: "1px solid var(--th-border)",
-              }}
-            >
-              {t({ ko: "간트", en: "GANTT", ja: "ガント", zh: "甘特" })}
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode("dag")}
-              className="px-2.5 py-1 text-xs transition-colors"
-              style={{
-                fontFamily: "var(--th-font-mono)",
-                background: viewMode === "dag" ? "var(--th-accent)" : "transparent",
-                color: viewMode === "dag" ? "#000" : "var(--th-text-secondary)",
-              }}
-            >
-              {t({ ko: "그래프", en: "DAG", ja: "グラフ", zh: "图谱" })}
-            </button>
+        {/* 뷰 모드 토글 + 주요 버튼 */}
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+          {/* 뷰 모드 */}
+          <div className="flex" style={{ border: "1px solid var(--th-border)" }}>
+            {(["board", "gantt", "dag"] as const).map((mode, i) => (
+              <button
+                key={mode}
+                type="button"
+                onClick={() => setViewMode(mode)}
+                style={{
+                  ...mono, fontSize: "10px", fontWeight: 700,
+                  padding: "3px 8px",
+                  background: viewMode === mode ? "var(--th-accent)" : "transparent",
+                  color: viewMode === mode ? "#000" : "var(--th-text-muted)",
+                  borderRight: i < 2 ? "1px solid var(--th-border)" : "none",
+                  cursor: "pointer",
+                  letterSpacing: "0.04em",
+                }}
+              >
+                {mode === "board" ? t({ ko: "보드", en: "BOARD", ja: "ボード", zh: "看板" })
+                  : mode === "gantt" ? t({ ko: "간트", en: "GANTT", ja: "ガント", zh: "甘特" })
+                  : "DAG"}
+              </button>
+            ))}
           </div>
-          <button
-            type="button"
-            onClick={toggleBatchMode}
-            className="px-3 py-1.5 text-xs font-mono uppercase transition-colors hover:opacity-90"
-            style={{
-              borderRadius: "2px",
-              border: batchMode ? "1px solid rgba(251,191,36,0.5)" : "1px solid var(--th-border)",
-              color: batchMode ? "var(--th-accent)" : "var(--th-text-secondary)",
-              background: batchMode ? "rgba(251,191,36,0.08)" : "var(--th-bg-surface)",
-            }}
-            title={t({ ko: "일괄 선택 모드", en: "Batch select mode", ja: "一括選択モード", zh: "批量选择模式" })}
-          >
-            {batchMode
-              ? t({ ko: "선택 취소", en: "CANCEL", ja: "キャンセル", zh: "取消" })
-              : t({ ko: "일괄 선택", en: "SELECT", ja: "一括", zh: "批量" })}
+
+          <button type="button" onClick={toggleBatchMode} style={{ ...btnBase, ...(batchMode ? { borderColor: "rgba(245,158,11,0.4)", color: "var(--th-accent)", background: "rgba(245,158,11,0.06)" } : {}) }}>
+            {batchMode ? t({ ko: "취소", en: "CANCEL", ja: "取消", zh: "取消" }) : t({ ko: "일괄", en: "SELECT", ja: "一括", zh: "批量" })}
           </button>
-          <button
-            type="button"
-            onClick={() => setShowBulkHideModal(true)}
-            className="px-3 py-1.5 text-xs font-mono uppercase transition-colors hover:opacity-90"
-            style={{ borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "var(--th-bg-surface)" }}
-            title={t({
-              ko: "완료/보류/취소 상태 업무 숨기기",
-              en: "Hide done/pending/cancelled tasks",
-              ja: "完了/保留/キャンセル状態を非表示",
-              zh: "隐藏完成/待处理/已取消任务",
-            })}
-          >
-            {t({ ko: "숨김 관리", en: "HIDE", ja: "非表示", zh: "隐藏" })}
+          <button type="button" onClick={() => setShowBulkHideModal(true)} style={btnBase}>
+            {t({ ko: "숨김", en: "HIDE", ja: "非表示", zh: "隐藏" })}
           </button>
-          <button
-            type="button"
-            onClick={() => setShowProjectManager(true)}
-            className="px-3 py-1.5 text-xs font-mono uppercase transition-colors hover:opacity-90"
-            style={{ borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-heading)", background: "var(--th-bg-surface)" }}
-          >
-            {t({ ko: "프로젝트 관리", en: "PROJ", ja: "プロジェクト", zh: "项目管理" })}
+          <button type="button" onClick={() => setShowProjectManager(true)} style={btnBase}>
+            {t({ ko: "프로젝트", en: "PROJ", ja: "PJ", zh: "项目" })}
           </button>
           {onProjectCreate && (
-            <button
-              type="button"
-              onClick={onProjectCreate}
-              className="px-3 py-1.5 text-xs font-mono uppercase transition-colors hover:opacity-90"
-              style={{ borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-heading)", background: "var(--th-bg-surface)" }}
-            >
+            <button type="button" onClick={onProjectCreate} style={btnBase}>
               + {t({ ko: "새 프로젝트", en: "NEW PROJ", ja: "新規PJ", zh: "新项目" })}
             </button>
           )}
           <button
             type="button"
             onClick={() => setShowCreate(true)}
-            className="px-4 py-1.5 text-xs font-mono font-bold uppercase transition-colors hover:opacity-90"
-            style={{ borderRadius: "2px", background: "var(--th-accent)", color: "#000" }}
+            style={{ ...mono, fontSize: "11px", fontWeight: 700, padding: "3px 14px", background: "var(--th-accent)", color: "#000", border: "none", cursor: "pointer", letterSpacing: "0.06em" }}
           >
-            + {t({ ko: "새 업무", en: "NEW", ja: "新規", zh: "新建" })}
+            + {t({ ko: "새 업무", en: "NEW TASK", ja: "新規", zh: "新建" })}
           </button>
         </div>
       </div>
 
-      <FilterBar
-        departments={departments}
-        projects={projects}
-        agents={agents}
-        filterDept={filterDept}
-        filterType={filterType}
-        filterProject={filterProject}
-        filterAgent={filterAgent}
-        filterExecution={filterExecution}
-        search={search}
-        onFilterDept={setFilterDept}
-        onFilterType={setFilterType}
-        onFilterProject={setFilterProject}
-        onFilterAgent={setFilterAgent}
-        onFilterExecution={handleFilterExecution}
-        onSearch={setSearch}
-      />
+      {/* ── 상태 요약 바 ── */}
+      <div
+        className="flex-shrink-0 flex items-center gap-0 overflow-x-auto"
+        style={{ borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-primary)" }}
+      >
+        {COLUMNS.map((col, i) => {
+          const sc = STATUS_CODE[col.status];
+          const count = statusCounts[col.status] ?? 0;
+          return (
+            <div
+              key={col.status}
+              className="flex items-center gap-1.5 px-3 py-1.5"
+              style={{ borderRight: i < COLUMNS.length - 1 ? "1px solid var(--th-border)" : "none", flexShrink: 0 }}
+            >
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: count > 0 ? sc.color : "var(--th-border)", display: "inline-block", flexShrink: 0 }} />
+              <span style={{ ...mono, fontSize: "9px", fontWeight: 700, color: count > 0 ? sc.color : "var(--th-text-muted)", letterSpacing: "0.06em" }}>
+                {sc.code}
+              </span>
+              <span style={{ ...mono, fontSize: "9px", color: count > 0 ? "var(--th-text-secondary)" : "var(--th-text-muted)", fontWeight: count > 0 ? 700 : 400 }}>
+                {count}
+              </span>
+            </div>
+          );
+        })}
+        {/* 숨김/전체 토글 */}
+        <button
+          type="button"
+          onClick={() => setShowAllTasks((prev) => !prev)}
+          style={{
+            ...mono, fontSize: "9px", padding: "0 12px", height: "100%",
+            background: showAllTasks ? "rgba(245,158,11,0.06)" : "transparent",
+            color: showAllTasks ? "var(--th-accent)" : "var(--th-text-muted)",
+            borderTop: "none", borderBottom: "none", borderRight: "none", borderLeft: "1px solid var(--th-border)", cursor: "pointer", flexShrink: 0, fontWeight: 700,
+          }}
+        >
+          {showAllTasks
+            ? t({ ko: "전체", en: "ALL", ja: "全", zh: "全" })
+            : t({ ko: "진행중", en: "ACTIVE", ja: "進行", zh: "进行" })}
+          {hiddenTaskCount > 0 && <span style={{ marginLeft: 4, opacity: 0.6 }}>({hiddenTaskCount})</span>}
+        </button>
+      </div>
+
+      {/* ── 필터 바 ── */}
+      <div className="flex-shrink-0" style={{ borderBottom: "1px solid var(--th-border)" }}>
+
+        <FilterBar
+          departments={departments}
+          projects={projects}
+          filterDept={filterDept}
+          filterType={filterType}
+          filterProject={filterProject}
+          filterExecution={filterExecution}
+          search={search}
+          onFilterDept={setFilterDept}
+          onFilterType={setFilterType}
+          onFilterProject={setFilterProject}
+          onFilterExecution={handleFilterExecution}
+          onSearch={setSearch}
+        />
+      </div>
 
       {viewMode === "dag" ? (
         <div className="flex-1 overflow-hidden">
@@ -565,22 +531,19 @@ export function TaskBoard({
         </div>
       ) : filteredTasks.length === 0 && filterProject ? (
         <div className="flex-1 flex flex-col items-center justify-center text-center px-6">
-          <p className="text-sm font-medium mb-1" style={{ color: "var(--th-text)" }}>
-            아직 태스크가 없어요.
+          <p style={{ ...mono, fontSize: "10px", color: "var(--th-text-muted)", marginBottom: 4 }}>
+            <span style={{ color: "var(--th-accent)" }}>$</span> task-queue list --project={currentProject?.name ?? "?"} <span className="animate-pulse">▌</span>
           </p>
-          <p className="text-[12px] text-[var(--th-text-muted)] mb-4">
-            목표에서 시작해볼까요?
+          <p style={{ ...mono, fontSize: "11px", color: "var(--th-text-secondary)", marginBottom: 16 }}>
+            {t({ ko: "아직 업무가 없습니다.", en: "No tasks yet.", ja: "タスクなし", zh: "暂无任务" })}
           </p>
-          {onProjectCreate && (
-            <button
-              type="button"
-              onClick={onProjectCreate}
-              className="text-xs px-4 py-2 rounded hover:opacity-90 transition-opacity"
-              style={{ background: "var(--th-accent)", color: "#000" }}
-            >
-              + 태스크 만들기
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={() => setShowCreate(true)}
+            style={{ ...mono, fontSize: "11px", fontWeight: 700, padding: "5px 18px", background: "var(--th-accent)", color: "#000", border: "none", cursor: "pointer" }}
+          >
+            + {t({ ko: "첫 업무 만들기", en: "Create first task", ja: "最初のタスク作成", zh: "创建第一个任务" })}
+          </button>
         </div>
       ) : (
       <DndContext
@@ -595,43 +558,57 @@ export function TaskBoard({
             const columnTasks = tasksByStatus[column.status] ?? [];
             const isCollapsed = collapsedColumns.has(column.status);
             const isDragOver = overColumnStatus === column.status;
+            const sc = STATUS_CODE[column.status];
             return (
               <div
                 key={column.status}
-                className={`taskboard-column flex flex-col border transition-all duration-200 ${
-                  isCollapsed ? "w-full sm:w-14 sm:flex-shrink-0" : "w-full sm:w-72 sm:flex-shrink-0"
-                } ${column.borderColor} ${isDragOver ? "ring-2 ring-[rgba(251,191,36,0.5)]" : ""}`}
+                className={`taskboard-column flex flex-col transition-all duration-200 ${
+                  isCollapsed ? "w-full sm:w-12 sm:flex-shrink-0" : "w-full sm:w-72 sm:flex-shrink-0"
+                }`}
                 style={{
-                  background: isDragOver ? "var(--th-bg-surface-hover)" : "var(--th-bg-surface)",
-                  borderColor: isDragOver ? "var(--th-border)" : undefined,
+                  border: isDragOver ? `1px solid ${sc?.color ?? "var(--th-border)"}` : "1px solid var(--th-border)",
+                  background: isDragOver ? "rgba(255,255,255,0.02)" : "var(--th-bg-surface)",
+                  outline: isDragOver ? `1px solid ${sc?.color ?? "transparent"}` : "none",
                 }}
               >
+                {/* 컬럼 헤더 */}
                 <button
                   type="button"
                   onClick={() => toggleColumn(column.status)}
-                  className={`flex flex-nowrap items-center gap-2 px-3 py-2 w-full text-left transition-opacity hover:opacity-90 ${column.headerBg} ${isCollapsed ? "sm:justify-center sm:gap-1" : ""}`}
-                  style={{ borderBottom: "1px solid var(--th-border)" }}
+                  className={`flex flex-nowrap items-center gap-1.5 px-2.5 py-2 w-full text-left ${isCollapsed ? "sm:flex-col sm:justify-center sm:gap-1 sm:px-1" : ""}`}
+                  style={{ borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}
                 >
-                  <span className={`h-1.5 w-1.5 flex-shrink-0 ${column.dotColor}`} style={{ borderRadius: "1px" }} />
+                  <span
+                    style={{ width: 6, height: 6, borderRadius: "50%", background: sc?.color ?? "#888", flexShrink: 0,
+                      ...(column.status === "in_progress" ? { boxShadow: `0 0 4px ${sc?.color}` } : {}) }}
+                  />
                   {!isCollapsed && (
                     <span
-                      className="flex-1 min-w-0 text-xs font-bold uppercase tracking-wider truncate"
-                      style={{ color: "var(--th-text-heading)", fontFamily: "var(--th-font-mono)" }}
+                      className="flex-1 min-w-0 truncate"
+                      style={{ ...mono, fontSize: "10px", fontWeight: 700, letterSpacing: "0.08em", color: sc?.color ?? "var(--th-text-heading)" }}
                     >
-                      {taskStatusLabel(column.status, t)}
+                      {sc?.code ?? column.status.toUpperCase()}
                     </span>
                   )}
                   <span
-                    className="flex-shrink-0 px-1.5 py-0.5 text-xs font-mono font-bold tabular-nums"
-                    style={{ background: "rgba(0,0,0,0.25)", color: "var(--th-text-heading)", borderRadius: "2px" }}
+                    style={{
+                      ...mono, fontSize: "9px", fontWeight: 700,
+                      padding: "0 5px",
+                      background: columnTasks.length > 0 ? `${sc?.color}18` : "transparent",
+                      color: columnTasks.length > 0 ? sc?.color : "var(--th-text-muted)",
+                      border: `1px solid ${columnTasks.length > 0 ? `${sc?.color}40` : "var(--th-border)"}`,
+                      flexShrink: 0,
+                    }}
                   >
                     {columnTasks.length}
                   </span>
-                  <span className="flex-shrink-0 text-[10px]" style={{ color: "var(--th-text-muted)" }}>{isCollapsed ? "▸" : "▾"}</span>
+                  {!isCollapsed && (
+                    <span style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", flexShrink: 0 }}>{isCollapsed ? "▸" : "▾"}</span>
+                  )}
                 </button>
 
                 {isCollapsed ? (
-                  /* Collapsed body — vertical label, click to expand */
+                  /* Collapsed body — vertical label */
                   <DroppableColumn status={column.status}>
                     {() => (
                       <button
@@ -641,38 +618,34 @@ export function TaskBoard({
                       >
                         <span
                           className="text-sm sm:[writing-mode:vertical-lr] sm:rotate-180 font-medium tracking-wider select-none whitespace-nowrap overflow-hidden text-ellipsis max-w-full sm:max-w-none sm:max-h-full"
-                          style={{ color: "var(--th-text-muted)" }}
+                          style={{ ...mono, fontSize: "9px", color: sc?.color ?? "var(--th-text-muted)", letterSpacing: "0.1em" }}
                         >
-                          {taskStatusLabel(column.status, t)}
+                          {sc?.code ?? column.status.toUpperCase()}
                         </span>
                       </button>
                     )}
                   </DroppableColumn>
                 ) : (
-                  /* Expanded body — droppable zone with cards */
+                  /* Expanded body */
                   <DroppableColumn status={column.status}>
                     {(isOver) => (
-                      <div className="flex flex-col gap-2.5 p-2.5 sm:flex-1 sm:overflow-y-auto">
+                      <div className="flex flex-col gap-2 p-2 sm:flex-1 sm:overflow-y-auto">
                         {columnTasks.length === 0 ? (
                           <div
-                            className="flex min-h-24 flex-col items-center justify-center rounded border border-dashed py-6 sm:flex-1 transition-colors"
+                            className="flex min-h-24 flex-col items-center justify-center py-6 sm:flex-1 transition-colors"
                             style={{
-                              borderColor: isOver ? "var(--th-accent)" : "var(--th-border)",
-                              background: isOver ? "var(--th-bg-surface-hover)" : "transparent",
+                              border: `1px dashed ${isOver ? sc?.color ?? "var(--th-accent)" : "var(--th-border)"}`,
+                              background: isOver ? `${sc?.color}08` : "transparent",
                             }}
                           >
                             {isOver ? (
-                              <span className="font-mono text-xs" style={{ color: "var(--th-accent)" }}>
-                                {t({ ko: "여기에 놓기", en: "drop here", ja: "ここにドロップ", zh: "放在这里" })}
+                              <span style={{ ...mono, fontSize: "10px", color: sc?.color ?? "var(--th-accent)" }}>
+                                ▼ {t({ ko: "여기에 놓기", en: "drop here", ja: "ここにドロップ", zh: "放这里" })}
                               </span>
                             ) : (
-                              <div className="py-4 text-center">
-                                <p className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
-                                  {filterProject
-                                    ? "태스크 없음"
-                                    : t({ ko: "비어 있음", en: "empty", ja: "空", zh: "空" })}
-                                </p>
-                              </div>
+                              <p style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", opacity: 0.5 }}>
+                                — {t({ ko: "비어 있음", en: "empty", ja: "空", zh: "空" })} —
+                              </p>
                             )}
                           </div>
                         ) : (
@@ -684,13 +657,13 @@ export function TaskBoard({
                                   <>
                                     <div
                                       className="absolute inset-0 z-10 cursor-pointer"
-                                      style={{ borderRadius: "2px", background: isSelected ? "rgba(251,191,36,0.08)" : "transparent", border: isSelected ? "2px solid rgba(251,191,36,0.6)" : "2px solid transparent" }}
+                                      style={{ borderRadius: 0, background: isSelected ? "rgba(251,191,36,0.08)" : "transparent", border: isSelected ? "2px solid rgba(251,191,36,0.6)" : "2px solid transparent" }}
                                       onClick={() => toggleTaskSelection(task.id)}
                                     />
                                     <div className="absolute top-2 right-2 z-20 pointer-events-none">
                                       <div
                                         className="h-4 w-4 flex items-center justify-center"
-                                        style={{ borderRadius: "2px", border: "1px solid rgba(251,191,36,0.7)", background: isSelected ? "var(--th-accent)" : "var(--th-bg-surface)" }}
+                                        style={{ borderRadius: 0, border: "1px solid rgba(251,191,36,0.7)", background: isSelected ? "var(--th-accent)" : "var(--th-bg-surface)" }}
                                       >
                                         {isSelected && <span className="text-[9px] font-bold text-black">✓</span>}
                                       </div>
@@ -742,57 +715,57 @@ export function TaskBoard({
         {/* Batch action bar */}
         {batchMode && (
           <div
-            className="flex-shrink-0 flex items-center gap-3 px-4 py-2.5 mt-1"
-            style={{ borderTop: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", borderRadius: "2px" }}
+            className="flex-shrink-0 flex items-center gap-2 px-4 py-2"
+            style={{ borderTop: "2px solid var(--th-accent)", background: "var(--th-bg-elevated)" }}
           >
+            <span style={{ ...mono, fontSize: "10px", color: "var(--th-accent)", fontWeight: 700, marginRight: 4 }}>
+              $ batch
+            </span>
             <button
               type="button"
-              onClick={() => setSelectedTaskIds(new Set(filteredTasks.map((t) => t.id)))}
-              className="text-xs font-mono transition-colors hover:opacity-80"
-              style={{ color: "var(--th-text-muted)" }}
+              onClick={() => setSelectedTaskIds(new Set(filteredTasks.map((task) => task.id)))}
+              style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", background: "none", border: "none", cursor: "pointer", padding: "0 4px" }}
             >
-              {t({ ko: "전체 선택", en: "Select all", ja: "全選択", zh: "全选" })} ({filteredTasks.length})
+              {t({ ko: "전체선택", en: "all", ja: "全選", zh: "全选" })}({filteredTasks.length})
             </button>
-            <span style={{ color: "var(--th-border)" }}>·</span>
+            <span style={{ color: "var(--th-border)", fontSize: "10px" }}>·</span>
             <button
               type="button"
               onClick={() => setSelectedTaskIds(new Set())}
-              className="text-xs font-mono transition-colors hover:opacity-80"
-              style={{ color: "var(--th-text-muted)" }}
               disabled={selectedTaskIds.size === 0}
+              style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", background: "none", border: "none", cursor: "pointer", padding: "0 4px", opacity: selectedTaskIds.size === 0 ? 0.4 : 1 }}
             >
-              {t({ ko: "선택 해제", en: "Clear", ja: "解除", zh: "清除" })}
+              {t({ ko: "해제", en: "clear", ja: "解除", zh: "清除" })}
             </button>
-            <span className="text-xs font-mono ml-1" style={{ color: "var(--th-accent)" }}>
-              {selectedTaskIds.size > 0 && `${selectedTaskIds.size} ${t({ ko: "선택됨", en: "selected", ja: "選択中", zh: "已选" })}`}
-            </span>
-            <div className="ml-auto flex items-center gap-2">
+            {selectedTaskIds.size > 0 && (
+              <span style={{ ...mono, fontSize: "9px", color: "var(--th-accent)", marginLeft: 4, fontWeight: 700 }}>
+                [{selectedTaskIds.size} {t({ ko: "선택됨", en: "selected", ja: "選択中", zh: "已选" })}]
+              </span>
+            )}
+            <div className="ml-auto flex items-center gap-1.5">
               <button
                 type="button"
                 onClick={handleBatchStop}
                 disabled={selectedTaskIds.size === 0}
-                className="px-3 py-1 text-xs font-mono uppercase disabled:opacity-30"
-                style={{ borderRadius: "2px", border: "1px solid rgba(251,191,36,0.4)", color: "var(--th-accent)", background: "rgba(251,191,36,0.06)" }}
+                style={{ ...mono, fontSize: "9px", fontWeight: 700, padding: "2px 8px", border: "1px solid rgba(251,191,36,0.4)", color: "var(--th-accent)", background: "rgba(251,191,36,0.06)", cursor: "pointer", opacity: selectedTaskIds.size === 0 ? 0.3 : 1 }}
               >
-                {t({ ko: "중지", en: "Stop", ja: "停止", zh: "停止" })}
+                STOP
               </button>
               <button
                 type="button"
                 onClick={handleBatchHide}
                 disabled={selectedTaskIds.size === 0}
-                className="px-3 py-1 text-xs font-mono uppercase disabled:opacity-30"
-                style={{ borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "var(--th-bg-surface)" }}
+                style={{ ...mono, fontSize: "9px", fontWeight: 700, padding: "2px 8px", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent", cursor: "pointer", opacity: selectedTaskIds.size === 0 ? 0.3 : 1 }}
               >
-                {t({ ko: "숨김", en: "Hide", ja: "非表示", zh: "隐藏" })}
+                HIDE
               </button>
               <button
                 type="button"
                 onClick={handleBatchDelete}
                 disabled={selectedTaskIds.size === 0}
-                className="px-3 py-1 text-xs font-mono uppercase disabled:opacity-30"
-                style={{ borderRadius: "2px", border: "1px solid rgba(244,63,94,0.4)", color: "rgb(253,164,175)", background: "rgba(244,63,94,0.06)" }}
+                style={{ ...mono, fontSize: "9px", fontWeight: 700, padding: "2px 8px", border: "1px solid rgba(244,63,94,0.4)", color: "rgb(253,164,175)", background: "rgba(244,63,94,0.06)", cursor: "pointer", opacity: selectedTaskIds.size === 0 ? 0.3 : 1 }}
               >
-                {t({ ko: "삭제", en: "Delete", ja: "削除", zh: "删除" })}
+                DEL
               </button>
             </div>
           </div>

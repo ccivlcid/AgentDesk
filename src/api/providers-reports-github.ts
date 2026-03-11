@@ -343,6 +343,25 @@ export function getTaskArtifactDownloadUrl(taskId: string, relativePath: string,
   return `/api/task-reports/${taskId}/artifacts/download?${params.toString()}`;
 }
 
+export function getTaskArtifactsZipUrl(taskId: string): string {
+  return `/api/task-reports/${taskId}/artifacts/zip`;
+}
+
+export async function uploadTaskArtifacts(taskId: string, files: File[]): Promise<TaskArtifact[]> {
+  const formData = new FormData();
+  for (const file of files) {
+    formData.append("files", file);
+  }
+  const res = await fetch(`/api/task-reports/${taskId}/artifacts/upload`, {
+    method: "POST",
+    credentials: "same-origin",
+    body: formData,
+  });
+  if (!res.ok) throw new Error(`Upload failed: ${res.status}`);
+  const j = await res.json();
+  return j.artifacts ?? [];
+}
+
 // ---------- GitHub Import ----------
 
 export interface GitHubRepo {

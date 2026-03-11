@@ -25,7 +25,7 @@ export function PersonaCard({ persona, selected, onSelect, compact = false, isKo
         borderLeft: selected
           ? `3px solid ${persona.color}`
           : "3px solid transparent",
-        borderRadius: "2px",
+        borderRadius: 0,
         background: selected ? `${persona.color}10` : "var(--th-bg-primary)",
         padding: compact ? "0.5rem 0.625rem" : "0.625rem 0.75rem",
         transition: "border-color 0.1s linear, background 0.1s linear",
@@ -39,7 +39,7 @@ export function PersonaCard({ persona, selected, onSelect, compact = false, isKo
               style={{
                 color: persona.color,
                 border: `1px solid ${persona.color}40`,
-                borderRadius: "2px",
+                borderRadius: 0,
                 padding: "0 4px",
                 background: `${persona.color}12`,
               }}
@@ -87,7 +87,7 @@ export function PersonaCard({ persona, selected, onSelect, compact = false, isKo
               className="font-mono text-[9px] uppercase"
               style={{
                 border: "1px solid var(--th-border)",
-                borderRadius: "2px",
+                borderRadius: 0,
                 padding: "0 4px",
                 color: "var(--th-text-muted)",
               }}

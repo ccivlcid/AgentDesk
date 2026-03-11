@@ -1,11 +1,8 @@
-import { useMemo, useState, type ComponentProps, type FormEventHandler } from "react";
+import { useState, type ComponentProps, type FormEventHandler } from "react";
 import type { Agent, Department, TaskType } from "../../../types";
 import type { WorkflowPackConfig } from "../../../api/workflow-skills-subtasks";
 import type { TaskTemplate } from "../../../api/task-templates";
-import { normalizeLanguage, pickLang } from "../../../i18n";
 import {
-  PACK_DISPLAY_NAMES,
-  PACK_FIELD_LABELS,
   TASK_TYPE_OPTIONS,
   taskTypeLabel,
   type FormFeedback,
@@ -13,13 +10,14 @@ import {
 } from "../constants";
 import CreateTaskModalOverlays from "./Overlays";
 import type { CreateTaskModalOverlaysProps } from "./overlay-types";
-import { AssigneeSection, PrioritySection, ProjectSection } from "./Sections";
+import { AssigneeSection, ProjectSection } from "./Sections";
 
 interface CreateTaskModalViewProps {
   t: TFunction;
   locale: string;
   createNewProjectMode: boolean;
   draftsCount: number;
+  defaultAgentId?: string;
   title: string;
   description: string;
   departmentId: string;
@@ -50,11 +48,26 @@ interface CreateTaskModalViewProps {
   onDeleteTemplate?: (templateId: string) => Promise<void>;
 }
 
+const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };
+const inputBase: React.CSSProperties = {
+  ...mono,
+  borderRadius: 0,
+  border: "1px solid var(--th-border)",
+  background: "var(--th-bg-elevated)",
+  color: "var(--th-text-primary)",
+  outline: "none",
+  fontSize: "12px",
+  padding: "5px 8px",
+  width: "100%",
+  boxSizing: "border-box",
+};
+
 export default function CreateTaskModalView({
   t,
   locale,
   createNewProjectMode,
   draftsCount,
+  defaultAgentId,
   title,
   description,
   departmentId,
@@ -76,9 +89,6 @@ export default function CreateTaskModalView({
   onTaskTypeChange,
   onPriorityChange,
   onAssignAgentChange,
-  packConfig,
-  packMeta,
-  onPackMetaChange,
   templates,
   onLoadTemplate,
   onSaveTemplate,
@@ -87,87 +97,64 @@ export default function CreateTaskModalView({
   const [templateMenuOpen, setTemplateMenuOpen] = useState(false);
   const [saveTemplateName, setSaveTemplateName] = useState("");
   const [savingTemplate, setSavingTemplate] = useState(false);
-  const packInputSchema = useMemo(() => {
-    if (!packConfig?.input_schema) return null;
-    const schema = packConfig.input_schema as { required?: string[]; optional?: string[] };
-    const required = Array.isArray(schema.required) ? schema.required : [];
-    const optional = Array.isArray(schema.optional) ? schema.optional : [];
-    if (required.length === 0 && optional.length === 0) return null;
-    return { required, optional };
-  }, [packConfig]);
 
-  const lang = useMemo(() => normalizeLanguage(locale), [locale]);
-  const packFieldLabel = (fieldKey: string) =>
-    PACK_FIELD_LABELS[fieldKey] ? pickLang(lang, PACK_FIELD_LABELS[fieldKey]) : fieldKey.replace(/_/g, " ");
-  const packSectionTitle =
-    packConfig?.key && PACK_DISPLAY_NAMES[packConfig.key]
-      ? pickLang(lang, PACK_DISPLAY_NAMES[packConfig.key])
-      : packConfig?.name ?? "Pack";
+  void createNewProjectMode;
 
-  const modalMaxH = "min(85dvh, calc(100dvh - 1rem))";
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 p-2 sm:items-center sm:p-3"
-      onClick={(event) => {
-        if (event.target === event.currentTarget) {
-          event.preventDefault();
-        }
-      }}
+      className="fixed inset-0 z-50 flex items-start justify-center bg-black/70 p-3 sm:items-center"
+      onClick={(e) => { if (e.target === e.currentTarget) e.preventDefault(); }}
     >
       <div
-        className={`my-2 flex w-full max-w-lg flex-col rounded-lg shadow-xl transition-[max-width] duration-300 ease-out sm:my-0 lg:max-w-2xl ${
-          createNewProjectMode ? "lg:max-w-5xl" : ""
-        }`}
-        style={{ height: `calc(${modalMaxH})`, maxHeight: `calc(${modalMaxH})`, background: "var(--th-bg-base)", border: "1px solid var(--th-border)" }}
+        className="flex w-full max-w-lg flex-col"
+        style={{
+          borderRadius: 0,
+          background: "var(--th-bg-primary)",
+          border: "1px solid var(--th-border)",
+          boxShadow: "0 8px 40px rgba(0,0,0,0.6)",
+          maxHeight: "calc(100dvh - 2rem)",
+          borderLeft: "3px solid var(--th-accent)",
+        }}
       >
+        {/* ── Header ── */}
         <div
-          className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-contain"
-          style={{ WebkitOverflowScrolling: "touch" }}
+          className="flex items-center justify-between px-4 py-2.5 flex-shrink-0"
+          style={{ borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}
         >
-          <div className="flex shrink-0 items-center justify-between px-5 py-4" style={{ borderBottom: "1px solid var(--th-border)" }}>
-          <div>
-            <h2 className="text-sm font-semibold">
-              {t({ ko: "새 업무 만들기", en: "Create New Task", ja: "新しいタスクを作成", zh: "创建新任务" })}
-            </h2>
-            <p className="text-[11px] mt-0.5" style={{ color: "var(--th-text-muted)" }}>
-              {t({ ko: "AI 에이전트에게 시킬 작업을 등록합니다", en: "Register a task for your AI agent to work on", ja: "AIエージェントに作業を登録します", zh: "为 AI 代理注册一项任务" })}
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            {/* Template dropdown */}
+          <span style={{ ...mono, fontSize: "10px", fontWeight: 700, letterSpacing: "0.1em", color: "var(--th-accent)", textTransform: "uppercase" }}>
+            ▶ {t({ ko: "새 업무", en: "NEW TASK", ja: "新規タスク", zh: "新建任务" })}
+          </span>
+          <div className="flex items-center gap-1.5">
+            {/* 템플릿 드롭다운 */}
             {templates && templates.length > 0 && onLoadTemplate && (
               <div className="relative">
                 <button
                   type="button"
                   onClick={() => setTemplateMenuOpen((p) => !p)}
-                  className="border px-2.5 py-1.5 text-xs font-mono transition hover:opacity-80"
-                  style={{ borderColor: "var(--th-border)", color: "var(--th-text-secondary)", background: "var(--th-bg-primary)", borderRadius: "6px" }}
-                  title={t({ ko: "템플릿에서 불러오기", en: "Load from template", ja: "テンプレートから読込", zh: "从模板加载" })}
+                  style={{ ...mono, fontSize: "9px", padding: "2px 7px", borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)", color: "var(--th-text-muted)", cursor: "pointer", letterSpacing: "0.05em" }}
                 >
-                  📋 {t({ ko: "템플릿", en: "Templates", ja: "テンプレ", zh: "模板" })} ({templates.length})
+                  TPL ({templates.length})
                 </button>
                 {templateMenuOpen && (
-                  <div className="absolute right-0 top-full z-10 mt-1 w-56 max-h-56 overflow-y-auto border" style={{ borderColor: "var(--th-border)", background: "var(--th-bg-surface)", borderRadius: "6px" }}>
+                  <div
+                    className="absolute right-0 top-full z-10 mt-1 w-52 max-h-52 overflow-y-auto"
+                    style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}
+                  >
                     {templates.map((tpl) => (
-                      <div key={tpl.id} className="flex items-center gap-1 last:border-0" style={{ borderBottom: "1px solid var(--th-border)" }}>
+                      <div key={tpl.id} className="flex items-center last:border-0" style={{ borderBottom: "1px solid var(--th-border)" }}>
                         <button
                           type="button"
-                          className="flex-1 px-3 py-2 text-left text-xs truncate hover:opacity-80 transition"
-                          style={{ color: "var(--th-text-primary)", fontFamily: "var(--th-font-mono)" }}
-                          onClick={() => {
-                            onLoadTemplate(tpl.id);
-                            setTemplateMenuOpen(false);
-                          }}
+                          className="flex-1 px-3 py-1.5 text-left truncate hover:opacity-80 transition"
+                          style={{ ...mono, fontSize: "10px", color: "var(--th-text-primary)" }}
+                          onClick={() => { onLoadTemplate(tpl.id); setTemplateMenuOpen(false); }}
                         >
                           {tpl.name}
                         </button>
                         {onDeleteTemplate && (
                           <button
                             type="button"
-                            className="px-2 py-2 text-[10px] font-mono transition hover:text-red-400"
-                            style={{ color: "var(--th-text-muted)" }}
+                            style={{ ...mono, padding: "6px 8px", fontSize: "9px", color: "var(--th-text-muted)", cursor: "pointer" }}
                             onClick={() => void onDeleteTemplate(tpl.id)}
-                            title={t({ ko: "삭제", en: "Delete", ja: "削除", zh: "删除" })}
                           >
                             ✕
                           </button>
@@ -178,275 +165,297 @@ export default function CreateTaskModalView({
                 )}
               </div>
             )}
+            {/* 초안 버튼 */}
             {draftsCount > 0 && (
               <button
                 type="button"
                 onClick={onOpenDraftModal}
-                className="border px-2.5 py-1.5 text-xs font-mono transition hover:opacity-80"
-                style={{ borderColor: "var(--th-border)", color: "var(--th-text-muted)", background: "var(--th-bg-primary)", borderRadius: "6px" }}
-                title={t({
-                  ko: "임시 저장된 초안 보기",
-                  en: "View saved drafts",
-                  ja: "一時保存した下書きを見る",
-                  zh: "查看保存的草稿",
-                })}
+                style={{ ...mono, fontSize: "9px", padding: "2px 7px", borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)", color: "var(--th-text-muted)", cursor: "pointer", letterSpacing: "0.05em" }}
               >
-                🗒 {t({ ko: "초안", en: "Drafts", ja: "下書き", zh: "草稿" })} ({draftsCount})
+                DRAFT ({draftsCount})
               </button>
             )}
+            {/* 닫기 */}
             <button
+              type="button"
               onClick={onRequestClose}
-              className="text-[var(--th-text-muted)] hover:text-[var(--th-text)] transition-colors"
-              title={t({ ko: "닫기", en: "Close", ja: "閉じる", zh: "关闭" })}
+              style={{ ...mono, fontSize: "12px", color: "var(--th-text-muted)", cursor: "pointer", padding: "2px 4px", lineHeight: 1 }}
             >
-              <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M4 4l12 12M4 16L16 4" />
-              </svg>
+              ✕
             </button>
           </div>
         </div>
 
-        <form onSubmit={onSubmit} className="flex flex-col">
-          <div
-            className={`px-4 py-3 sm:px-6 sm:py-4 ${createNewProjectMode ? "lg:grid lg:grid-cols-2 lg:gap-5" : ""}`}
-          >
-            <div className="min-w-0 space-y-4 sm:space-y-5">
-              {/* 1. 기본 정보 */}
-              <section className="space-y-2 sm:space-y-3">
-                <h3 className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "var(--th-text-muted)", fontFamily: "var(--th-font-mono)" }}>
-                  {t({ ko: "기본 정보", en: "Basic Info", ja: "基本情報", zh: "基本信息" })}
-                </h3>
-                <div>
-                  <label className="mb-1 block text-xs font-medium font-mono" style={{ color: "var(--th-text-secondary)" }}>
-                    {t({ ko: "제목", en: "Title", ja: "タイトル", zh: "标题" })} <span className="text-red-400">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={title}
-                    onChange={(event) => onTitleChange(event.target.value)}
-                    placeholder={t({
-                      ko: "업무 제목을 입력하세요",
-                      en: "Enter a task title",
-                      ja: "タスクのタイトルを入力してください",
-                      zh: "请输入任务标题",
-                    })}
-                    required
-                    className="w-full border outline-none transition"
-                    style={{ borderRadius: "6px", borderColor: "var(--th-border)", background: "var(--th-input-bg, var(--th-bg-primary))", color: "var(--th-text-primary)", fontFamily: "var(--th-font-mono)", fontSize: "0.8125rem", padding: "0.4rem 0.625rem" }}
-                  />
-                </div>
-                <div>
-                  <label className="mb-1 block text-xs font-medium font-mono" style={{ color: "var(--th-text-secondary)" }}>
-                    {t({ ko: "설명", en: "Description", ja: "説明", zh: "说明" })}
-                  </label>
-                  <textarea
-                    value={description}
-                    onChange={(event) => onDescriptionChange(event.target.value)}
-                    placeholder={t({
-                      ko: "업무에 대한 상세 설명을 입력하세요",
-                      en: "Enter a detailed description",
-                      ja: "タスクの詳細説明を入力してください",
-                      zh: "请输入任务详细说明",
-                    })}
-                    rows={2}
-                    className="w-full resize-none border outline-none transition"
-                    style={{ borderRadius: "6px", borderColor: "var(--th-border)", background: "var(--th-input-bg, var(--th-bg-primary))", color: "var(--th-text-primary)", fontFamily: "var(--th-font-mono)", fontSize: "0.8125rem", padding: "0.4rem 0.625rem" }}
-                  />
-                </div>
-              </section>
+        {/* ── Body (스크롤 가능) ── */}
+        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
+          <form onSubmit={onSubmit}>
+            <div className="px-4 py-4 space-y-3">
 
-              {/* 2. 오피스 팩 입력 항목 (팩별 커스텀 필드) */}
-              {packInputSchema && onPackMetaChange && (
-                <section className="space-y-2 p-3 sm:space-y-3 sm:p-4" style={{ border: "1px solid var(--th-border)", borderLeft: "3px solid var(--th-accent, #f59e0b)", borderRadius: "6px", background: "var(--th-bg-primary)" }}>
-                  <h3 className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "#f59e0b", fontFamily: "var(--th-font-mono)" }}>
-                    {packSectionTitle} {t({ ko: "입력 항목", en: "Input Fields", ja: "入力項目", zh: "输入字段" })}
-                  </h3>
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    {packInputSchema.required.map((field) => (
-                      <div key={field}>
-                        <label className="mb-1 block text-xs font-medium font-mono" style={{ color: "var(--th-text-secondary)" }}>
-                          {packFieldLabel(field)} <span className="text-red-400">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={packMeta?.[field] ?? ""}
-                          onChange={(e) => onPackMetaChange(field, e.target.value)}
-                          placeholder={packFieldLabel(field)}
-                          className="w-full border outline-none transition"
-                          style={{ borderRadius: "6px", borderColor: "var(--th-border)", background: "var(--th-input-bg, var(--th-bg-primary))", color: "var(--th-text-primary)", fontFamily: "var(--th-font-mono)", fontSize: "0.8125rem", padding: "0.4rem 0.625rem" }}
-                        />
-                      </div>
-                    ))}
-                    {packInputSchema.optional.map((field) => (
-                      <div key={field}>
-                        <label className="mb-1 block text-xs font-medium font-mono" style={{ color: "var(--th-text-muted)" }}>
-                          {packFieldLabel(field)} ({t({ ko: "선택", en: "optional", ja: "任意", zh: "可选" })})
-                        </label>
-                        <input
-                          type="text"
-                          value={packMeta?.[field] ?? ""}
-                          onChange={(e) => onPackMetaChange(field, e.target.value)}
-                          placeholder={packFieldLabel(field)}
-                          className="w-full border outline-none transition"
-                          style={{ borderRadius: "6px", borderColor: "var(--th-border)", background: "var(--th-input-bg, var(--th-bg-primary))", color: "var(--th-text-primary)", fontFamily: "var(--th-font-mono)", fontSize: "0.8125rem", padding: "0.4rem 0.625rem" }}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </section>
-              )}
-
-              {/* 3. 배정 및 옵션 */}
-              <section className="space-y-2 sm:space-y-3">
-                <h3 className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "var(--th-text-muted)", fontFamily: "var(--th-font-mono)" }}>
-                  {t({ ko: "배정 및 옵션", en: "Assignment & Options", ja: "割当・オプション", zh: "分配与选项" })}
-                </h3>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div>
-                    <label className="mb-1 block text-xs font-medium font-mono" style={{ color: "var(--th-text-secondary)" }}>
-                      {t({ ko: "부서", en: "Department", ja: "部署", zh: "部门" })}
-                    </label>
-                    <select
-                      value={departmentId}
-                      onChange={(event) => onDepartmentChange(event.target.value)}
-                      className="w-full border outline-none transition"
-                      style={{ borderRadius: "6px", borderColor: "var(--th-border)", background: "var(--th-input-bg, var(--th-bg-primary))", color: "var(--th-text-primary)", fontFamily: "var(--th-font-mono)", fontSize: "0.8125rem", padding: "0.4rem 0.625rem" }}
-                    >
-                      <option value="">
-                        {t({ ko: "-- 전체 --", en: "-- All --", ja: "-- 全体 --", zh: "-- 全部 --" })}
-                      </option>
-                      {departments.map((department) => (
-                        <option key={department.id} value={department.id}>
-                          {department.icon} {locale === "ko" ? department.name_ko : department.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-xs font-medium font-mono" style={{ color: "var(--th-text-secondary)" }}>
-                      {t({ ko: "업무 유형", en: "Task Type", ja: "タスク種別", zh: "任务类型" })}
-                    </label>
-                    <select
-                      value={taskType}
-                      onChange={(event) => onTaskTypeChange(event.target.value as TaskType)}
-                      className="w-full border outline-none transition"
-                      style={{ borderRadius: "6px", borderColor: "var(--th-border)", background: "var(--th-input-bg, var(--th-bg-primary))", color: "var(--th-text-primary)", fontFamily: "var(--th-font-mono)", fontSize: "0.8125rem", padding: "0.4rem 0.625rem" }}
-                    >
-                      {TASK_TYPE_OPTIONS.map((typeOption) => (
-                        <option key={typeOption.value} value={typeOption.value}>
-                          {taskTypeLabel(typeOption.value, t)}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div className={createNewProjectMode ? "lg:hidden" : ""}>
-                  <AssigneeSection
-                    agents={filteredAgents}
-                    departments={departments}
-                    departmentId={departmentId}
-                    assignAgentId={assignAgentId}
-                    t={t}
-                    onAssignAgentChange={onAssignAgentChange}
-                  />
-                </div>
-
-                <ProjectSection {...projectSectionProps} />
-
-                <div className={createNewProjectMode ? "lg:hidden" : ""}>
-                  <PrioritySection priority={priority} t={t} onPriorityChange={onPriorityChange} />
-                </div>
-              </section>
-            </div>
-
-            {createNewProjectMode && (
-              <aside className="hidden min-w-0 lg:block lg:transition-all lg:duration-300 lg:ease-out">
-                <div className="space-y-4 p-4" style={{ border: "1px solid var(--th-border)", borderRadius: "6px", background: "var(--th-bg-primary)" }}>
-                  <h3 className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "var(--th-text-muted)", fontFamily: "var(--th-font-mono)" }}>
-                    {t({ ko: "우선순위 · 담당", en: "Priority & Assignee", ja: "優先度・担当", zh: "优先级与负责人" })}
-                  </h3>
-                  <PrioritySection priority={priority} t={t} onPriorityChange={onPriorityChange} />
-                  <AssigneeSection
-                    agents={filteredAgents}
-                    departments={departments}
-                    departmentId={departmentId}
-                    assignAgentId={assignAgentId}
-                    t={t}
-                    onAssignAgentChange={onAssignAgentChange}
-                  />
-                </div>
-              </aside>
-            )}
-          </div>
-
-          {formFeedback && (
-            <div className="shrink-0 px-4 pb-2 sm:px-6 sm:pb-3">
-              <div
-                className={`border px-3 py-2 text-xs font-mono ${
-                  formFeedback.tone === "error"
-                    ? "border-rose-500/60 bg-rose-500/10 text-rose-200"
-                    : "border-cyan-500/50 bg-cyan-500/10 text-cyan-100"
-                }`}
-                style={{ borderRadius: "6px" }}
-              >
-                {formFeedback.message}
-              </div>
-            </div>
-          )}
-
-          <div className="flex shrink-0 flex-wrap items-center gap-2 px-5 py-4 sm:gap-3" style={{ borderTop: "1px solid var(--th-border)" }}>
-            {onSaveTemplate && title.trim() && (
-              <div className="flex items-center gap-1.5">
+              {/* 제목 — 터미널 프롬프트 스타일 */}
+              <div className="flex items-center gap-2" style={{ borderBottom: "1px solid var(--th-border)", paddingBottom: "6px" }}>
+                <span style={{ ...mono, fontSize: "13px", color: "var(--th-accent)", flexShrink: 0, fontWeight: 700 }}>$</span>
                 <input
                   type="text"
-                  value={saveTemplateName}
-                  onChange={(e) => setSaveTemplateName(e.target.value)}
-                  placeholder={t({ ko: "템플릿 이름", en: "Template name", ja: "テンプレート名", zh: "模板名称" })}
-                  className="w-32 border outline-none"
-                  style={{ borderRadius: "6px", borderColor: "var(--th-border)", background: "var(--th-input-bg, var(--th-bg-primary))", color: "var(--th-text-primary)", fontFamily: "var(--th-font-mono)", fontSize: "0.75rem", padding: "0.3rem 0.5rem" }}
-                />
-                <button
-                  type="button"
-                  disabled={!saveTemplateName.trim() || savingTemplate}
-                  onClick={async () => {
-                    setSavingTemplate(true);
-                    try {
-                      await onSaveTemplate(saveTemplateName.trim());
-                      setSaveTemplateName("");
-                    } finally {
-                      setSavingTemplate(false);
-                    }
+                  value={title}
+                  onChange={(e) => onTitleChange(e.target.value)}
+                  placeholder={t({ ko: "업무 제목을 입력하세요...", en: "enter task title...", ja: "タイトルを入力...", zh: "输入任务标题..." })}
+                  required
+                  autoFocus
+                  style={{
+                    flex: 1,
+                    background: "transparent",
+                    border: "none",
+                    outline: "none",
+                    ...mono,
+                    fontSize: "14px",
+                    color: "var(--th-text-heading)",
+                    padding: "2px 0",
+                    caretColor: "var(--th-accent)",
                   }}
-                  className="border px-2.5 py-1.5 text-xs font-mono transition hover:opacity-80 disabled:opacity-40"
-                  style={{ borderColor: "rgba(34,197,94,0.4)", background: "rgba(34,197,94,0.08)", color: "#22c55e", borderRadius: "6px" }}
+                />
+              </div>
+
+              {/* 설명 */}
+              <div>
+                <textarea
+                  value={description}
+                  onChange={(e) => onDescriptionChange(e.target.value)}
+                  placeholder={t({ ko: "설명 (선택)", en: "description (optional)", ja: "説明（任意）", zh: "说明（可选）" })}
+                  rows={2}
+                  style={{ ...inputBase, resize: "none" }}
+                />
+              </div>
+
+              {/* 부서 필 */}
+              {departments.length > 0 && (
+                <div>
+                  <div style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "6px" }}>
+                    DEPT
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    <button
+                      type="button"
+                      onClick={() => onDepartmentChange("")}
+                      style={{
+                        ...mono, fontSize: "10px", padding: "3px 8px", borderRadius: 0,
+                        background: !departmentId ? "var(--th-accent)" : "var(--th-bg-elevated)",
+                        color: !departmentId ? "#000" : "var(--th-text-muted)",
+                        border: `1px solid ${!departmentId ? "var(--th-accent)" : "var(--th-border)"}`,
+                        cursor: "pointer",
+                      }}
+                    >
+                      ALL
+                    </button>
+                    {departments.map((d) => (
+                      <button
+                        key={d.id}
+                        type="button"
+                        onClick={() => onDepartmentChange(d.id)}
+                        style={{
+                          ...mono, fontSize: "10px", padding: "3px 8px", borderRadius: 0,
+                          background: departmentId === d.id ? "var(--th-accent)" : "var(--th-bg-elevated)",
+                          color: departmentId === d.id ? "#000" : "var(--th-text-muted)",
+                          border: `1px solid ${departmentId === d.id ? "var(--th-accent)" : "var(--th-border)"}`,
+                          cursor: "pointer",
+                        }}
+                      >
+                        {d.icon} {locale === "ko" ? d.name_ko : d.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 타입 + 우선순위 가로 배치 */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <div style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "6px" }}>
+                    TYPE
+                  </div>
+                  <select
+                    value={taskType}
+                    onChange={(e) => onTaskTypeChange(e.target.value as TaskType)}
+                    style={{ ...inputBase }}
+                  >
+                    {TASK_TYPE_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {taskTypeLabel(opt.value, t)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <div style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "6px" }}>
+                    PRIORITY
+                  </div>
+                  <div className="flex gap-0.5">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        type="button"
+                        onClick={() => onPriorityChange(star)}
+                        style={{
+                          flex: 1,
+                          padding: "5px 0",
+                          fontSize: "11px",
+                          borderRadius: 0,
+                          background: star <= priority ? "rgba(245,158,11,0.85)" : "var(--th-bg-elevated)",
+                          color: star <= priority ? "#000" : "var(--th-text-muted)",
+                          border: `1px solid ${star <= priority ? "rgba(245,158,11,0.6)" : "var(--th-border)"}`,
+                          cursor: "pointer",
+                        }}
+                      >
+                        ★
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* 담당 에이전트 */}
+              <div>
+                <div className="flex items-center justify-between" style={{ marginBottom: "6px" }}>
+                  <div style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                    AGENT
+                  </div>
+                  {/* 에이전트가 미리 지정된 경우 변경 링크 */}
+                  {defaultAgentId && assignAgentId === defaultAgentId && (
+                    <button
+                      type="button"
+                      onClick={() => onAssignAgentChange("")}
+                      style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", cursor: "pointer", textDecoration: "underline" }}
+                    >
+                      변경
+                    </button>
+                  )}
+                </div>
+
+                {/* 미리 지정된 에이전트 — 배지로 표시 */}
+                {defaultAgentId && assignAgentId === defaultAgentId ? (() => {
+                  const agent = filteredAgents.find((a) => a.id === defaultAgentId);
+                  if (!agent) return <AssigneeSection agents={filteredAgents} departments={departments} departmentId={departmentId} assignAgentId={assignAgentId} t={t} onAssignAgentChange={onAssignAgentChange} />;
+                  return (
+                    <div
+                      style={{
+                        ...mono,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "8px",
+                        padding: "7px 10px",
+                        border: "1px solid var(--th-accent)",
+                        background: "rgba(245,158,11,0.06)",
+                        fontSize: "12px",
+                      }}
+                    >
+                      <span style={{ fontSize: "16px", lineHeight: 1 }}>{agent.avatar_emoji || "🤖"}</span>
+                      <span style={{ fontWeight: 600, color: "var(--th-accent)" }}>{agent.name_ko || agent.name}</span>
+                      <span style={{
+                        fontSize: "8px",
+                        padding: "1px 4px",
+                        border: "1px solid rgba(245,158,11,0.35)",
+                        background: "rgba(245,158,11,0.08)",
+                        color: "#f59e0b",
+                      }}>
+                        {({ claude: "Claude Code", codex: "Codex CLI", gemini: "Gemini CLI", opencode: "OpenCode", copilot: "Copilot", antigravity: "Antigravity", cursor: "Cursor", ollama: "Ollama" } as Record<string, string>)[agent.cli_provider] ?? agent.cli_provider}
+                      </span>
+                      <span style={{ fontSize: "9px", color: "#22c55e", marginLeft: "auto" }}>✓ 배정됨</span>
+                    </div>
+                  );
+                })() : (
+                  <AssigneeSection
+                    agents={filteredAgents}
+                    departments={departments}
+                    departmentId={departmentId}
+                    assignAgentId={assignAgentId}
+                    t={t}
+                    onAssignAgentChange={onAssignAgentChange}
+                  />
+                )}
+              </div>
+
+              {/* 프로젝트 */}
+              <div>
+                <div style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "6px" }}>
+                  PROJECT
+                </div>
+                <ProjectSection {...projectSectionProps} />
+              </div>
+
+            </div>
+
+            {/* 피드백 메시지 */}
+            {formFeedback && (
+              <div className="px-4 pb-3">
+                <div
+                  style={{
+                    ...mono,
+                    fontSize: "11px",
+                    padding: "6px 10px",
+                    borderRadius: 0,
+                    border: formFeedback.tone === "error" ? "1px solid rgba(244,63,94,0.5)" : "1px solid rgba(6,182,212,0.4)",
+                    background: formFeedback.tone === "error" ? "rgba(244,63,94,0.08)" : "rgba(6,182,212,0.08)",
+                    color: formFeedback.tone === "error" ? "#fb7185" : "#7dd3fc",
+                  }}
                 >
-                  {savingTemplate
-                    ? "..."
-                    : t({ ko: "저장", en: "Save", ja: "保存", zh: "保存" })}
-                </button>
+                  {formFeedback.message}
+                </div>
               </div>
             )}
-            <div className="ml-auto flex items-center gap-3">
-              <button
-                type="button"
-                onClick={onRequestClose}
-                className="text-xs text-[var(--th-text-muted)] hover:text-[var(--th-text)] transition-colors"
-              >
-                {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}
-              </button>
-              <button
-                type="submit"
-                disabled={!title.trim() || submitBusy}
-                className="px-4 py-1.5 text-xs font-medium bg-[var(--th-accent)] text-white rounded hover:opacity-90 disabled:opacity-40 transition-opacity"
-              >
-                {submitBusy
-                  ? t({ ko: "생성 중...", en: "Creating...", ja: "作成中...", zh: "创建中..." })
-                  : t({ ko: "업무 만들기", en: "Create Task", ja: "タスク作成", zh: "创建任务" })}
-              </button>
+
+            {/* ── Footer ── */}
+            <div
+              className="flex flex-wrap items-center gap-2 px-4 py-3 flex-shrink-0"
+              style={{ borderTop: "1px solid var(--th-border)" }}
+            >
+              {/* 템플릿 저장 */}
+              {onSaveTemplate && title.trim() && (
+                <div className="flex items-center gap-1">
+                  <input
+                    type="text"
+                    value={saveTemplateName}
+                    onChange={(e) => setSaveTemplateName(e.target.value)}
+                    placeholder={t({ ko: "템플릿 이름", en: "template name", ja: "テンプレ名", zh: "模板名" })}
+                    style={{ ...mono, borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)", fontSize: "10px", padding: "3px 6px", width: "8rem", outline: "none" }}
+                  />
+                  <button
+                    type="button"
+                    disabled={!saveTemplateName.trim() || savingTemplate}
+                    onClick={async () => {
+                      setSavingTemplate(true);
+                      try {
+                        await onSaveTemplate(saveTemplateName.trim());
+                        setSaveTemplateName("");
+                      } finally {
+                        setSavingTemplate(false);
+                      }
+                    }}
+                    style={{ ...mono, fontSize: "10px", padding: "3px 8px", borderRadius: 0, border: "1px solid rgba(34,197,94,0.4)", background: "rgba(34,197,94,0.08)", color: "#22c55e", cursor: "pointer" }}
+                  >
+                    {savingTemplate ? "..." : "SAVE"}
+                  </button>
+                </div>
+              )}
+
+              <div className="ml-auto flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={onRequestClose}
+                  style={{ ...mono, fontSize: "11px", padding: "5px 12px", borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-muted)", cursor: "pointer" }}
+                >
+                  {t({ ko: "취소", en: "CANCEL", ja: "キャンセル", zh: "取消" })}
+                </button>
+                <button
+                  type="submit"
+                  disabled={!title.trim() || submitBusy}
+                  style={{ ...mono, fontSize: "11px", fontWeight: 700, padding: "5px 16px", borderRadius: 0, background: "var(--th-accent)", color: "#000", cursor: "pointer", opacity: !title.trim() || submitBusy ? 0.4 : 1 }}
+                >
+                  {submitBusy
+                    ? t({ ko: "생성 중...", en: "CREATING...", ja: "作成中...", zh: "创建中..." })
+                    : t({ ko: "업무 만들기 ↵", en: "CREATE ↵", ja: "作成 ↵", zh: "创建 ↵" })}
+                </button>
+              </div>
             </div>
-          </div>
-        </form>
+          </form>
         </div>
       </div>
 

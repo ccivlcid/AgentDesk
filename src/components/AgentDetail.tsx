@@ -131,8 +131,6 @@ export default function AgentDetail({
     [t],
   );
 
-  const xpLevel = Math.floor(agent.stats_xp / 100) + 1;
-  const xpProgress = agent.stats_xp % 100;
 
   useEffect(() => {
     setSelectedCli(agent.cli_provider);
@@ -342,7 +340,7 @@ export default function AgentDetail({
               border: "1px solid var(--th-border)",
               background: "var(--th-bg-surface)",
               color: "var(--th-text-muted)",
-              borderRadius: "2px",
+              borderRadius: 0,
               fontFamily: "var(--th-font-mono)",
               fontSize: "0.75rem",
             }}
@@ -376,7 +374,7 @@ export default function AgentDetail({
             <div className="flex-1">
               <div className="flex items-center gap-2">
                 <h2 className="text-base font-bold" style={{ fontFamily: "var(--th-font-mono)", color: "var(--th-text-heading)" }}>{localeName(language, agent)}</h2>
-                <span className={`text-xs px-1.5 py-0.5 font-mono ${statusCfg.bg} ${statusCfg.color}`} style={{ borderRadius: "2px" }}>
+                <span className={`text-xs px-1.5 py-0.5 font-mono ${statusCfg.bg} ${statusCfg.color}`} style={{ borderRadius: 0 }}>
                   {statusLabel(statusCfg.label, t)}
                 </span>
               </div>
@@ -393,7 +391,7 @@ export default function AgentDetail({
                       void handlePlanningLeadToggle(event.target.checked);
                     }}
                     className="h-3.5 w-3.5 disabled:opacity-60"
-                    style={{ borderRadius: "2px", accentColor: "var(--th-accent)" }}
+                    style={{ borderRadius: 0, accentColor: "var(--th-accent)" }}
                   />
                   <span>
                     {t({
@@ -424,7 +422,7 @@ export default function AgentDetail({
                             setSelectedCliReasoningLevel("");
                           }}
                           className="w-[94px] shrink-0 text-xs outline-none"
-                          style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)", padding: "0.125rem 0.25rem", fontFamily: "var(--th-font-mono)" }}
+                          style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)", padding: "0.125rem 0.25rem", fontFamily: "var(--th-font-mono)" }}
                         >
                           {Object.entries(CLI_LABELS).map(([key, label]) => (
                             <option key={key} value={key}>
@@ -452,7 +450,7 @@ export default function AgentDetail({
                                 setSelectedCliReasoningLevel(nextMeta?.defaultReasoningLevel || "");
                               }}
                               className="w-0 min-w-0 flex-1 text-xs outline-none"
-                              style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)", padding: "0.125rem 0.25rem", fontFamily: "var(--th-font-mono)" }}
+                              style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)", padding: "0.125rem 0.25rem", fontFamily: "var(--th-font-mono)" }}
                             >
                               <option value="">
                                 {t({
@@ -473,7 +471,7 @@ export default function AgentDetail({
                                 value={selectedCliReasoningLevel}
                                 onChange={(event) => setSelectedCliReasoningLevel(event.target.value)}
                                 className="w-0 min-w-0 flex-1 text-xs outline-none"
-                              style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)", padding: "0.125rem 0.25rem", fontFamily: "var(--th-font-mono)" }}
+                              style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)", padding: "0.125rem 0.25rem", fontFamily: "var(--th-font-mono)" }}
                               >
                                 <option value="">
                                   {t({
@@ -520,14 +518,14 @@ export default function AgentDetail({
                             void handleSaveCli();
                           }}
                           className="text-[10px] px-1.5 py-0.5 font-mono font-bold uppercase transition-colors disabled:opacity-50"
-                          style={{ borderRadius: "2px", background: "var(--th-accent)", color: "#000" }}
+                          style={{ borderRadius: 0, background: "var(--th-accent)", color: "#000" }}
                         >
                           {savingCli ? "..." : t({ ko: "저장", en: "Save", ja: "保存", zh: "保存" })}
                         </button>
                         <button
                           onClick={handleCancelCliEdit}
                           className="text-[10px] px-1.5 py-0.5 font-mono transition-colors"
-                          style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface-hover)", color: "var(--th-text-secondary)" }}
+                          style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-surface-hover)", color: "var(--th-text-secondary)" }}
                         >
                           {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}
                         </button>
@@ -544,7 +542,7 @@ export default function AgentDetail({
                           setSelectedCliReasoningLevel("");
                         }}
                         className="text-xs outline-none"
-                        style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)", padding: "0.125rem 0.375rem", fontFamily: "var(--th-font-mono)" }}
+                        style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)", padding: "0.125rem 0.375rem", fontFamily: "var(--th-font-mono)" }}
                       >
                         {Object.entries(CLI_LABELS).map(([key, label]) => (
                           <option key={key} value={key}>
@@ -567,7 +565,7 @@ export default function AgentDetail({
                             value={selectedOAuthAccountId}
                             onChange={(event) => setSelectedOAuthAccountId(event.target.value)}
                             className="text-xs outline-none max-w-[170px]"
-                            style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)", padding: "0.125rem 0.375rem", fontFamily: "var(--th-font-mono)" }}
+                            style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)", padding: "0.125rem 0.375rem", fontFamily: "var(--th-font-mono)" }}
                           >
                             {activeOAuthAccounts.map((account) => (
                               <option key={account.id} value={account.id}>
@@ -614,7 +612,7 @@ export default function AgentDetail({
                                 setSelectedCliModel(nextModel);
                               }}
                               className="text-xs outline-none max-w-[210px]"
-                              style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)", padding: "0.125rem 0.375rem", fontFamily: "var(--th-font-mono)" }}
+                              style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)", padding: "0.125rem 0.375rem", fontFamily: "var(--th-font-mono)" }}
                             >
                               <option value="">
                                 {t({
@@ -655,14 +653,14 @@ export default function AgentDetail({
                           void handleSaveCli();
                         }}
                         className="text-[10px] px-1.5 py-0.5 font-mono transition-colors disabled:opacity-50"
-                        style={{ borderRadius: "2px", background: "rgba(251,191,36,0.15)", color: "var(--th-accent)", border: "1px solid rgba(251,191,36,0.35)" }}
+                        style={{ borderRadius: 0, background: "rgba(251,191,36,0.15)", color: "var(--th-accent)", border: "1px solid rgba(251,191,36,0.35)" }}
                       >
                         {savingCli ? "..." : t({ ko: "저장", en: "Save", ja: "保存", zh: "保存" })}
                       </button>
                       <button
                         onClick={handleCancelCliEdit}
                         className="text-[10px] px-1.5 py-0.5 font-mono transition-colors"
-                        style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "transparent", color: "var(--th-text-secondary)" }}
+                        style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "transparent", color: "var(--th-text-secondary)" }}
                       >
                         {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}
                       </button>
@@ -697,16 +695,6 @@ export default function AgentDetail({
             </div>
           </div>
 
-          <div className="mt-3 flex items-center gap-2">
-            <span className="text-xs text-yellow-400 font-bold">Lv.{xpLevel}</span>
-            <div className="flex-1 h-1.5 overflow-hidden" style={{ borderRadius: "1px", background: "var(--th-bg-surface-hover)" }}>
-              <div
-                className="h-full bg-gradient-to-r from-yellow-500 to-amber-400 transition-all"
-                style={{ width: `${xpProgress}%` }}
-              />
-            </div>
-            <span className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>{agent.stats_xp} XP</span>
-          </div>
         </div>
 
         <div className="flex" style={{ borderBottom: "1px solid var(--th-border)" }}>

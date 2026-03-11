@@ -1,8 +1,9 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useRef, useState, useEffect } from "react";
 import type React from "react";
 import type { Agent, Department } from "../types";
 import type { TaskReportDetail, TaskReportDocument, TaskReportTeamSection, TaskArtifact } from "../api";
 import { archiveTaskReport, getTaskReportDetail, getTaskArtifacts, getTaskArtifactDownloadUrl } from "../api";
+import { uploadTaskArtifacts, getTaskArtifactsZipUrl } from "../api/providers-reports-github";
 import type { UiLanguage } from "../i18n";
 import { pickLang } from "../i18n";
 import AgentAvatar from "./AgentAvatar";
@@ -55,6 +56,10 @@ export default function TaskReportPopup({ report, agents, departments, uiLanguag
   const [activeTab, setActiveTab] = useState<string>("planning");
   const [expandedDocs, setExpandedDocs] = useState<Record<string, boolean>>({});
   const [documentPages, setDocumentPages] = useState<Record<string, number>>({});
+  const [uploadPending, setUploadPending] = useState<File[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const artifactFileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setCurrentReport(report);
@@ -152,7 +157,7 @@ export default function TaskReportPopup({ report, agents, departments, uiLanguag
         {visibleDocs.map((doc) => {
           const isExpanded = expandedDocs[doc.id] !== false;
           return (
-            <div key={doc.id} className="p-3" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
+            <div key={doc.id} className="p-3" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
               <div className="mb-2 flex items-center justify-between gap-2">
                 <div className="min-w-0">
                   <p className="truncate text-xs font-semibold font-mono" style={{ color: "var(--th-text-heading)" }}>{doc.title}</p>
@@ -164,28 +169,28 @@ export default function TaskReportPopup({ report, agents, departments, uiLanguag
                 <button
                   onClick={() => toggleDoc(doc.id)}
                   className="px-2 py-1 text-[11px] font-mono transition-all"
-                  style={{ borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
+                  style={{ borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
                 >
                   {isExpanded
                     ? t({ ko: "접기", en: "Collapse", ja: "折りたたむ", zh: "收起" })
                     : t({ ko: "확장", en: "Expand", ja: "展開", zh: "展开" })}
                 </button>
               </div>
-              <pre className="max-h-72 overflow-auto whitespace-pre-wrap p-2 text-[11px] leading-relaxed" style={{ borderRadius: "2px", background: "var(--th-terminal-bg)", color: "var(--th-text-secondary)" }}>
+              <pre className="max-h-72 overflow-auto whitespace-pre-wrap p-2 text-[11px] leading-relaxed" style={{ borderRadius: 0, background: "var(--th-terminal-bg)", color: "var(--th-text-secondary)" }}>
                 {isExpanded ? doc.content : doc.text_preview}
               </pre>
             </div>
           );
         })}
         {totalPages > 1 && (
-          <div className="mt-1 flex items-center justify-between px-3 py-2" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
+          <div className="mt-1 flex items-center justify-between px-3 py-2" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
             <button
               type="button"
               onClick={() => setDocumentPages((prev) => ({ ...prev, [scopeKey]: Math.max(1, currentPage - 1) }))}
               disabled={currentPage <= 1}
               className={`px-2 py-1 text-[11px] font-mono transition-all ${currentPage <= 1 ? "cursor-not-allowed" : ""}`}
               style={{
-                borderRadius: "2px",
+                borderRadius: 0,
                 border: `1px solid ${currentPage <= 1 ? "rgba(51,65,85,1)" : "var(--th-border)"}`,
                 color: currentPage <= 1 ? "var(--th-text-muted)" : "var(--th-text-secondary)",
                 background: "transparent",
@@ -209,7 +214,7 @@ export default function TaskReportPopup({ report, agents, departments, uiLanguag
               disabled={currentPage >= totalPages}
               className={`px-2 py-1 text-[11px] font-mono transition-all ${currentPage >= totalPages ? "cursor-not-allowed" : ""}`}
               style={{
-                borderRadius: "2px",
+                borderRadius: 0,
                 border: `1px solid ${currentPage >= totalPages ? "rgba(51,65,85,1)" : "var(--th-border)"}`,
                 color: currentPage >= totalPages ? "var(--th-text-muted)" : "var(--th-text-secondary)",
                 background: "transparent",
@@ -225,7 +230,7 @@ export default function TaskReportPopup({ report, agents, departments, uiLanguag
 
   const renderPlanningSummary = () => (
     <div className="space-y-3">
-      <div className="p-3" style={{ borderRadius: "2px", border: "1px solid rgba(52,211,153,0.3)", background: "rgba(52,211,153,0.1)" }}>
+      <div className="p-3" style={{ borderRadius: 0, border: "1px solid rgba(52,211,153,0.3)", background: "rgba(52,211,153,0.1)" }}>
         <div className="mb-1 flex items-center justify-between gap-2">
           <p className="text-xs font-semibold font-mono text-emerald-300">
             {t({
@@ -241,7 +246,7 @@ export default function TaskReportPopup({ report, agents, departments, uiLanguag
               disabled={refreshingArchive}
               className={`px-2 py-1 text-[11px] font-mono transition-all ${refreshingArchive ? "cursor-not-allowed" : ""}`}
               style={{
-                borderRadius: "2px",
+                borderRadius: 0,
                 border: `1px solid ${refreshingArchive ? "rgba(52,211,153,0.2)" : "rgba(52,211,153,0.4)"}`,
                 color: refreshingArchive ? "rgba(110,231,183,0.7)" : "rgb(167,243,208)",
                 background: refreshingArchive ? "rgba(52,211,153,0.1)" : "rgba(52,211,153,0.15)",
@@ -280,10 +285,10 @@ export default function TaskReportPopup({ report, agents, departments, uiLanguag
 
     return (
       <div className="space-y-3">
-        <div className="p-3" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
+        <div className="p-3" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
           <div className="mb-1 flex items-center justify-between gap-2">
             <p className="text-sm font-semibold font-mono" style={{ color: "var(--th-text-heading)" }}>{team.title}</p>
-            <span className="px-2 py-0.5 text-[11px] font-mono" style={{ borderRadius: "2px", ...statusStyle(team.status) }}>{team.status}</span>
+            <span className="px-2 py-0.5 text-[11px] font-mono" style={{ borderRadius: 0, ...statusStyle(team.status) }}>{team.status}</span>
           </div>
           <p className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
             {teamName} · {teamAgent || "-"}
@@ -295,7 +300,7 @@ export default function TaskReportPopup({ report, agents, departments, uiLanguag
         </div>
 
         {team.linked_subtasks.length > 0 && (
-          <div className="p-3" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
+          <div className="p-3" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
             <p className="mb-2 text-xs font-mono uppercase tracking-wider" style={{ color: "var(--th-text-muted)" }}>
               {t({ ko: "연결된 서브태스크", en: "Linked Subtasks", ja: "関連サブタスク", zh: "关联子任务" })}
             </p>
@@ -304,10 +309,10 @@ export default function TaskReportPopup({ report, agents, departments, uiLanguag
                 <div
                   key={st.id}
                   className="flex items-center justify-between gap-2 px-2 py-1.5 text-[11px]"
-                  style={{ borderRadius: "2px", background: "var(--th-bg-primary)" }}
+                  style={{ borderRadius: 0, background: "var(--th-bg-primary)" }}
                 >
                   <span className="min-w-0 flex-1 truncate font-mono" style={{ color: "var(--th-text-secondary)" }}>{st.title}</span>
-                  <span className="px-1.5 py-0.5 font-mono" style={{ borderRadius: "2px", ...statusStyle(st.status) }}>{st.status}</span>
+                  <span className="px-1.5 py-0.5 font-mono" style={{ borderRadius: 0, ...statusStyle(st.status) }}>{st.status}</span>
                 </div>
               ))}
             </div>
@@ -322,7 +327,7 @@ export default function TaskReportPopup({ report, agents, departments, uiLanguag
         </div>
 
         {keyLogs.length > 0 && (
-          <div className="p-3" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
+          <div className="p-3" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
             <p className="mb-2 text-xs font-mono uppercase tracking-wider" style={{ color: "var(--th-text-muted)" }}>
               {t({ ko: "진행 로그", en: "Progress Logs", ja: "進行ログ", zh: "进度日志" })}
             </p>
@@ -364,6 +369,21 @@ export default function TaskReportPopup({ report, agents, departments, uiLanguag
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
+  const handleArtifactUpload = async () => {
+    if (uploadPending.length === 0 || uploading) return;
+    setUploading(true);
+    setUploadError(null);
+    try {
+      const added = await uploadTaskArtifacts(rootTaskId, uploadPending);
+      setArtifacts((prev) => [...(prev ?? []), ...added]);
+      setUploadPending([]);
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message.slice(0, 80) : t({ ko: "업로드 실패", en: "Upload failed", ja: "アップロード失敗", zh: "上传失败" }));
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const renderArtifacts = () => {
     const taskId = rootTaskId;
     if (artifacts === null) {
@@ -373,28 +393,109 @@ export default function TaskReportPopup({ report, agents, departments, uiLanguag
         </div>
       );
     }
-    if (artifacts.length === 0) {
-      return (
-        <div className="flex flex-col items-center justify-center py-8" style={{ color: "var(--th-text-muted)" }}>
-          <span className="mb-2 text-3xl opacity-40">&#x1F4E6;</span>
-          <p className="text-sm font-mono">
-            {t({ ko: "산출물 파일이 없습니다", en: "No artifact files found", ja: "成果物ファイルはありません", zh: "没有产出文件" })}
-          </p>
-        </div>
-      );
-    }
-    const totalSize = artifacts.reduce((s, a) => s + a.size, 0);
+
+    const totalSize = (artifacts ?? []).reduce((s, a) => s + a.size, 0);
     return (
       <div className="space-y-3">
+        {/* Upload area */}
+        <div className="space-y-2">
+          <input
+            ref={artifactFileInputRef}
+            type="file"
+            multiple
+            className="hidden"
+            onChange={(e) => {
+              if (!e.target.files) return;
+              const incoming = Array.from(e.target.files).filter((f) => f.size <= 50 * 1024 * 1024);
+              setUploadPending((prev) => {
+                const merged = [...prev];
+                for (const f of incoming) {
+                  if (!merged.some((x) => x.name === f.name && x.size === f.size)) merged.push(f);
+                }
+                return merged.slice(0, 10);
+              });
+              e.target.value = "";
+            }}
+          />
+          {uploadPending.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 p-2" style={{ background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)" }}>
+              {uploadPending.map((f, i) => (
+                <div key={i} className="flex items-center gap-1 px-2 py-0.5 text-[10px] font-mono" style={{ background: "var(--th-bg-primary)", border: "1px solid var(--th-border)", borderRadius: 0, color: "var(--th-text-secondary)" }}>
+                  <span>{getArtifactIcon(f.name)}</span>
+                  <span className="max-w-[120px] truncate">{f.name}</span>
+                  <span style={{ color: "var(--th-text-muted)" }}>({formatFileSize(f.size)})</span>
+                  <button onClick={() => setUploadPending((prev) => prev.filter((_, j) => j !== i))} className="ml-0.5 hover:opacity-70" style={{ color: "var(--th-text-muted)" }}>✕</button>
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => artifactFileInputRef.current?.click()}
+              className="px-3 py-1.5 text-[11px] font-mono transition hover:opacity-80"
+              style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
+            >
+              📎 {t({ ko: "파일 선택", en: "Choose Files", ja: "ファイル選択", zh: "选择文件" })}
+            </button>
+            {uploadPending.length > 0 && (
+              <button
+                onClick={() => { void handleArtifactUpload(); }}
+                disabled={uploading}
+                className="px-3 py-1.5 text-[11px] font-mono font-bold transition disabled:opacity-50"
+                style={{ borderRadius: 0, border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.12)", color: "var(--th-accent)" }}
+              >
+                {uploading
+                  ? t({ ko: "업로드 중...", en: "Uploading...", ja: "アップロード中...", zh: "上传中..." })
+                  : t({ ko: `${uploadPending.length}개 업로드`, en: `Upload ${uploadPending.length} file${uploadPending.length > 1 ? "s" : ""}`, ja: `${uploadPending.length}件アップロード`, zh: `上传 ${uploadPending.length} 个文件` })}
+              </button>
+            )}
+            <span className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
+              {t({ ko: "최대 50MB / 파일 10개", en: "Max 50MB per file, 10 files", ja: "最大50MB×10ファイル", zh: "每文件最大50MB，最多10个" })}
+            </span>
+          </div>
+          {uploadError && <p className="text-[11px] font-mono" style={{ color: "rgb(253,164,175)" }}>{uploadError}</p>}
+        </div>
+
+        {artifacts.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-6" style={{ color: "var(--th-text-muted)" }}>
+            <span className="mb-2 text-3xl opacity-40">&#x1F4E6;</span>
+            <p className="text-sm font-mono">
+              {t({ ko: "산출물 파일이 없습니다", en: "No artifact files found", ja: "成果物ファイルはありません", zh: "没有产出文件" })}
+            </p>
+          </div>
+        ) : null}
+
         <div className="flex items-center justify-between">
           <p className="text-xs font-mono uppercase tracking-wider" style={{ color: "var(--th-text-muted)" }}>
             {t({ ko: "산출물 파일", en: "Artifact Files", ja: "成果物ファイル", zh: "产出文件" })}
           </p>
-          <span className="text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>
-            {artifacts.length} {t({ ko: "파일", en: "files", ja: "ファイル", zh: "文件" })} ({formatFileSize(totalSize)})
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>
+              {artifacts.length} {t({ ko: "파일", en: "files", ja: "ファイル", zh: "文件" })} ({formatFileSize(totalSize)})
+            </span>
+            {artifacts.length > 0 && (
+              <a
+                href={getTaskArtifactsZipUrl(taskId)}
+                download
+                className="flex items-center gap-1 px-2.5 py-1 text-[11px] font-mono font-bold transition-all hover:opacity-80"
+                style={{
+                  borderRadius: 0,
+                  border: "1px solid rgba(251,191,36,0.5)",
+                  background: "rgba(251,191,36,0.12)",
+                  color: "var(--th-accent)",
+                  textDecoration: "none",
+                }}
+              >
+                <svg width="11" height="11" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M10 3v10M6 9l4 4 4-4" />
+                  <path d="M3 17h14" />
+                </svg>
+                {t({ ko: "전체 다운로드 (ZIP)", en: "Download All (ZIP)", ja: "全てDL (ZIP)", zh: "全部下载 (ZIP)" })}
+              </a>
+            )}
+          </div>
         </div>
-        <div className="divide-y" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", borderColor: "var(--th-border)" }}>
+        <div className="divide-y" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", borderColor: "var(--th-border)" }}>
           {artifacts.map((art) => {
             const isText = art.type === "text" && art.mime !== "text/html";
             const isHtml = art.mime === "text/html";
@@ -414,7 +515,7 @@ export default function TaskReportPopup({ report, agents, departments, uiLanguag
                       target="_blank"
                       rel="noreferrer"
                       className="px-2 py-0.5 text-[10px] font-mono transition-all"
-                      style={{ borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
+                      style={{ borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
                     >
                       {t({ ko: "보기", en: "View", ja: "表示", zh: "查看" })}
                     </a>
@@ -425,7 +526,7 @@ export default function TaskReportPopup({ report, agents, departments, uiLanguag
                       target="_blank"
                       rel="noreferrer"
                       className="px-2 py-0.5 text-[10px] font-mono transition-all"
-                      style={{ borderRadius: "2px", border: "1px solid rgba(6,182,212,0.4)", color: "rgb(103,232,249)", background: "rgba(6,182,212,0.1)" }}
+                      style={{ borderRadius: 0, border: "1px solid rgba(6,182,212,0.4)", color: "rgb(103,232,249)", background: "rgba(6,182,212,0.1)" }}
                     >
                       {t({ ko: "미리보기", en: "Preview", ja: "プレビュー", zh: "预览" })}
                     </a>
@@ -434,7 +535,7 @@ export default function TaskReportPopup({ report, agents, departments, uiLanguag
                     href={downloadUrl}
                     download
                     className="px-2 py-0.5 text-[10px] font-mono transition"
-                    style={{ borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "var(--th-bg-elevated)" }}
+                    style={{ borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "var(--th-bg-elevated)" }}
                   >
                     {t({ ko: "다운로드", en: "Download", ja: "DL", zh: "下载" })}
                   </a>
@@ -451,7 +552,7 @@ export default function TaskReportPopup({ report, agents, departments, uiLanguag
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={onClose}>
       <div
         className="relative mx-4 w-full max-w-4xl shadow-2xl"
-        style={{ borderRadius: "4px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}
+        style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid var(--th-border)" }}>
@@ -466,14 +567,14 @@ export default function TaskReportPopup({ report, agents, departments, uiLanguag
                   zh: "任务完成报告",
                 })}
               </h2>
-              <span className="px-2 py-0.5 text-xs font-mono text-emerald-300" style={{ borderRadius: "2px", background: "rgba(52,211,153,0.2)" }}>{projectName}</span>
+              <span className="px-2 py-0.5 text-xs font-mono text-emerald-300" style={{ borderRadius: 0, background: "rgba(52,211,153,0.2)" }}>{projectName}</span>
             </div>
             <p className="truncate text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>{projectPath || "-"}</p>
           </div>
           <button
             onClick={onClose}
             className="flex h-8 w-8 items-center justify-center transition-all"
-            style={{ borderRadius: "2px", color: "var(--th-text-muted)", background: "transparent" }}
+            style={{ borderRadius: 0, color: "var(--th-text-muted)", background: "transparent" }}
           >
             &#x2715;
           </button>
@@ -485,7 +586,7 @@ export default function TaskReportPopup({ report, agents, departments, uiLanguag
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold font-mono" style={{ color: "var(--th-text-primary)" }}>{currentReport.task.title}</p>
               <div className="mt-1 flex flex-wrap items-center gap-2 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
-                <span className="px-1.5 py-0.5" style={{ borderRadius: "2px", background: "var(--th-bg-primary)" }}>{taskDeptName}</span>
+                <span className="px-1.5 py-0.5" style={{ borderRadius: 0, background: "var(--th-bg-primary)" }}>{taskDeptName}</span>
                 <span>
                   {taskAgentName} ({currentReport.task.agent_role})
                 </span>
@@ -493,7 +594,7 @@ export default function TaskReportPopup({ report, agents, departments, uiLanguag
                   {t({ ko: "완료", en: "Completed", ja: "完了", zh: "完成" })}:{" "}
                   {fmtTime(currentReport.task.completed_at)}
                 </span>
-                <span className="px-1.5 py-0.5 text-emerald-400" style={{ borderRadius: "2px", background: "rgba(52,211,153,0.15)" }}>
+                <span className="px-1.5 py-0.5 text-emerald-400" style={{ borderRadius: 0, background: "rgba(52,211,153,0.15)" }}>
                   {elapsed(currentReport.task.created_at, currentReport.task.completed_at)}
                 </span>
               </div>
@@ -507,7 +608,7 @@ export default function TaskReportPopup({ report, agents, departments, uiLanguag
               onClick={() => setActiveTab("planning")}
               className="px-3 py-1.5 text-xs font-mono transition-all"
               style={{
-                borderRadius: "2px",
+                borderRadius: 0,
                 border: `1px solid ${activeTab === "planning" ? "rgba(52,211,153,0.5)" : "var(--th-border)"}`,
                 background: activeTab === "planning" ? "rgba(52,211,153,0.15)" : "var(--th-bg-elevated)",
                 color: activeTab === "planning" ? "rgb(110,231,183)" : "var(--th-text-secondary)",
@@ -519,7 +620,7 @@ export default function TaskReportPopup({ report, agents, departments, uiLanguag
               onClick={() => setActiveTab("artifacts")}
               className="px-3 py-1.5 text-xs font-mono transition-all"
               style={{
-                borderRadius: "2px",
+                borderRadius: 0,
                 border: `1px solid ${activeTab === "artifacts" ? "rgba(251,191,36,0.5)" : "var(--th-border)"}`,
                 background: activeTab === "artifacts" ? "rgba(251,191,36,0.1)" : "var(--th-bg-elevated)",
                 color: activeTab === "artifacts" ? "var(--th-accent)" : "var(--th-text-secondary)",
@@ -527,7 +628,7 @@ export default function TaskReportPopup({ report, agents, departments, uiLanguag
             >
               {t({ ko: "산출물", en: "Artifacts", ja: "成果物", zh: "产出物" })}
               {artifacts && artifacts.length > 0 && (
-                <span className="ml-1 px-1.5 text-[10px]" style={{ borderRadius: "2px", background: "rgba(251,191,36,0.3)" }}>{artifacts.length}</span>
+                <span className="ml-1 px-1.5 text-[10px]" style={{ borderRadius: 0, background: "rgba(251,191,36,0.3)" }}>{artifacts.length}</span>
               )}
             </button>
             {teamReports.map((team) => {
@@ -541,7 +642,7 @@ export default function TaskReportPopup({ report, agents, departments, uiLanguag
                   onClick={() => setActiveTab(team.id)}
                   className="px-3 py-1.5 text-xs font-mono transition-all"
                   style={{
-                    borderRadius: "2px",
+                    borderRadius: 0,
                     border: `1px solid ${activeTab === team.id ? "rgba(99,102,241,0.5)" : "var(--th-border)"}`,
                     background: activeTab === team.id ? "rgba(99,102,241,0.15)" : "var(--th-bg-elevated)",
                     color: activeTab === team.id ? "rgb(165,180,252)" : "var(--th-text-secondary)",
@@ -586,7 +687,7 @@ export default function TaskReportPopup({ report, agents, departments, uiLanguag
             <button
               onClick={onClose}
               className="px-4 py-1.5 text-xs font-mono uppercase tracking-wide transition-all text-white"
-              style={{ borderRadius: "2px", background: "rgba(52,211,153,0.8)", border: "none" }}
+              style={{ borderRadius: 0, background: "rgba(52,211,153,0.8)", border: "none" }}
             >
               {t({ ko: "확인", en: "OK", ja: "OK", zh: "确认" })}
             </button>

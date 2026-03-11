@@ -68,7 +68,9 @@ interface AppOverlaysProps {
   showAgentStatus: boolean;
   onCloseAgentStatus: () => void;
   showGroupChat: boolean;
+  groupChatInitialAgentIds?: string[];
   onCloseGroupChat: () => void;
+  onOpenGroupChatWithAgents?: (agentIds: string[]) => void;
 }
 
 export default function AppOverlays({
@@ -111,12 +113,18 @@ export default function AppOverlays({
   showAgentStatus,
   onCloseAgentStatus,
   showGroupChat,
+  groupChatInitialAgentIds,
   onCloseGroupChat,
+  onOpenGroupChatWithAgents,
 }: AppOverlaysProps) {
   return (
     <>
       {showGroupChat && (
-        <GroupChatPanel agents={groupChatAgents} onClose={onCloseGroupChat} />
+        <GroupChatPanel
+          agents={groupChatAgents}
+          initialAgentIds={groupChatInitialAgentIds}
+          onClose={onCloseGroupChat}
+        />
       )}
 
       {showChat && (
@@ -145,6 +153,7 @@ export default function AppOverlays({
           onRefresh={onRefreshDecisionInbox}
           onReplyOption={onReplyDecisionOption}
           onOpenChat={onOpenDecisionChat}
+          onOpenGroupChat={onOpenGroupChatWithAgents}
         />
       )}
 

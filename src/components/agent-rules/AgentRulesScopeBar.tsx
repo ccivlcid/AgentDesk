@@ -23,7 +23,7 @@ export default function AgentRulesScopeBar({
             onClick={() => onSelectScope(scope)}
             className="px-3 py-1.5 text-xs font-medium font-mono border transition-all"
             style={{
-              borderRadius: "2px",
+              borderRadius: 0,
               background: isActive ? "rgba(52,211,153,0.15)" : "var(--th-bg-elevated)",
               borderColor: isActive ? "rgba(52,211,153,0.5)" : "var(--th-border)",
               color: isActive ? "rgb(167,243,208)" : "var(--th-text-secondary)",

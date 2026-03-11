@@ -109,7 +109,7 @@ export default function HookFormModal({
 
   return createPortal(
     <div className="skills-learn-modal fixed inset-0 z-[80] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.75)" }}>
-      <div className="skills-learn-modal-card w-full max-w-lg max-h-[90vh] overflow-hidden shadow-2xl" style={{ borderRadius: "4px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
+      <div className="skills-learn-modal-card w-full max-w-lg max-h-[90vh] overflow-hidden shadow-2xl" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
         {/* Header */}
         <div className="flex items-start justify-between gap-4 px-5 py-4" style={{ borderBottom: "1px solid var(--th-border)" }}>
           <div>
@@ -131,7 +131,7 @@ export default function HookFormModal({
             onClick={onClose}
             disabled={submitting}
             className="px-2.5 py-1 text-xs font-mono transition-all"
-            style={{ borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
+            style={{ borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
           >
             {t({ ko: "\uB2EB\uAE30", en: "Close", ja: "\u9589\u3058\u308B", zh: "\u5173\u95ED" })}
           </button>
@@ -155,7 +155,7 @@ export default function HookFormModal({
                 zh: "\u4F8B\u5982: Run linting before task",
               })}
               className="w-full px-3 py-2 text-sm focus:outline-none"
-              style={{ borderRadius: "2px", background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)" }}
+              style={{ borderRadius: 0, background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)" }}
             />
           </div>
 
@@ -175,7 +175,7 @@ export default function HookFormModal({
                 zh: "\u4F8B\u5982: \uD0DC\uC2A4\uD06C \uC804 \uB9B0\uD305 \uC2E4\uD589",
               })}
               className="w-full px-3 py-2 text-sm focus:outline-none"
-              style={{ borderRadius: "2px", background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)" }}
+              style={{ borderRadius: 0, background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)" }}
             />
           </div>
 
@@ -195,7 +195,7 @@ export default function HookFormModal({
                 zh: "\u7B80\u8981\u8BF4\u660E\u6B64\u94A9\u5B50\u7684\u4F5C\u7528",
               })}
               className="w-full px-3 py-2 text-sm focus:outline-none resize-none"
-              style={{ borderRadius: "2px", background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)" }}
+              style={{ borderRadius: 0, background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)" }}
             />
           </div>
 
@@ -215,7 +215,7 @@ export default function HookFormModal({
                 zh: "\u8F93\u5165\u8981\u6267\u884C\u7684shell\u547D\u4EE4",
               })}
               className="w-full px-3 py-2 text-sm text-green-300 focus:outline-none resize-none font-mono"
-              style={{ borderRadius: "2px", background: "var(--th-terminal-bg)", border: "1px solid var(--th-border)" }}
+              style={{ borderRadius: 0, background: "var(--th-terminal-bg)", border: "1px solid var(--th-border)" }}
             />
             <div className="flex items-center justify-between mt-1.5">
               <div className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
@@ -231,7 +231,7 @@ export default function HookFormModal({
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   className="flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-mono transition-all"
-                  style={{ borderRadius: "2px", background: "var(--th-bg-surface-hover)", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)" }}
+                  style={{ borderRadius: 0, background: "var(--th-bg-surface-hover)", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)" }}
                 >
                   {t({ ko: "\uD30C\uC77C\uC5D0\uC11C \uBD88\uB7EC\uC624\uAE30", en: "Load from file", ja: "\u30D5\u30A1\u30A4\u30EB\u304B\u3089\u8AAD\u8FBC", zh: "\u4ECE\u6587\u4EF6\u52A0\u8F7D" })}
                 </button>
@@ -273,7 +273,7 @@ export default function HookFormModal({
             </div>
             {/* File content preview when loaded from file */}
             {fileName && command && (
-              <div className="mt-2 p-2 max-h-24 overflow-y-auto" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-terminal-bg)" }}>
+              <div className="mt-2 p-2 max-h-24 overflow-y-auto" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-terminal-bg)" }}>
                 <pre className="text-[10px] text-green-300/70 whitespace-pre-wrap break-all font-mono">
                   {command.slice(0, 500)}
                   {command.length > 500 && "..."}
@@ -299,7 +299,7 @@ export default function HookFormModal({
                       : "border-[var(--th-border)] hover:bg-[var(--th-bg-surface-hover)]"
                   }`}
                   style={{
-                    borderRadius: "2px",
+                    borderRadius: 0,
                     background: eventType === et ? "rgba(245,158,11,0.15)" : "var(--th-bg-surface-hover)",
                     color: eventType === et ? "var(--th-accent)" : "var(--th-text-muted)",
                   }}
@@ -322,7 +322,7 @@ export default function HookFormModal({
                 onChange={(e) => setWorkingDirectory(e.target.value)}
                 placeholder="/home/user/project"
                 className="w-full px-3 py-2 text-sm focus:outline-none font-mono"
-              style={{ borderRadius: "2px", background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)" }}
+              style={{ borderRadius: 0, background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)" }}
               />
             </div>
             <div>
@@ -337,7 +337,7 @@ export default function HookFormModal({
                 value={timeoutMs}
                 onChange={(e) => setTimeoutMs(Math.max(1000, Math.min(300000, Number(e.target.value) || 30000)))}
                 className="w-full px-3 py-2 text-sm focus:outline-none"
-              style={{ borderRadius: "2px", background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)" }}
+              style={{ borderRadius: 0, background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)" }}
               />
               <div className="text-[10px] mt-0.5 font-mono" style={{ color: "var(--th-text-muted)" }}>
                 = {(timeoutMs / 1000).toFixed(1)}s
@@ -357,13 +357,13 @@ export default function HookFormModal({
               value={priority}
               onChange={(e) => setPriority(Math.max(1, Math.min(100, Number(e.target.value) || 50)))}
               className="w-full px-3 py-2 text-sm focus:outline-none"
-              style={{ borderRadius: "2px", background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)" }}
+              style={{ borderRadius: 0, background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)" }}
             />
           </div>
 
           {/* Error */}
           {error && (
-            <div className="text-[11px] text-rose-300 bg-rose-500/10 border border-rose-500/30 px-3 py-2" style={{ borderRadius: "2px" }}>
+            <div className="text-[11px] text-rose-300 bg-rose-500/10 border border-rose-500/30 px-3 py-2" style={{ borderRadius: 0 }}>
               {error}
             </div>
           )}
@@ -374,7 +374,7 @@ export default function HookFormModal({
               onClick={onClose}
               disabled={submitting}
               className="px-3 py-1.5 text-xs font-mono transition-all"
-              style={{ borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
+              style={{ borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
             >
               {t({ ko: "\uCDE8\uC18C", en: "Cancel", ja: "\u30AD\u30E3\u30F3\u30BB\u30EB", zh: "\u53D6\u6D88" })}
             </button>
@@ -385,7 +385,7 @@ export default function HookFormModal({
                 !canSubmit ? "cursor-not-allowed opacity-40" : ""
               }`}
               style={{
-                borderRadius: "2px",
+                borderRadius: 0,
                 background: !canSubmit ? "var(--th-bg-surface-hover)" : "var(--th-accent)",
                 color: !canSubmit ? "var(--th-text-muted)" : "#000",
                 border: "none",

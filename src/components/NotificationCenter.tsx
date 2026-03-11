@@ -217,7 +217,7 @@ export default function NotificationCenter({ on, onNavigateTask }: Props) {
       {open && (
         <div
           className="absolute right-0 top-full z-50 mt-2 w-[340px] max-h-[420px] overflow-hidden"
-          style={{ borderRadius: "4px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}
+          style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}
         >
           <div
             className="flex items-center justify-between gap-3 px-4 py-3"
@@ -240,7 +240,7 @@ export default function NotificationCenter({ on, onNavigateTask }: Props) {
                     }
                   }}
                   className="inline-flex h-8 w-8 items-center justify-center transition"
-                  style={{ borderRadius: "2px", background: pushEnabled ? "var(--th-success, #22c55e)" : "var(--th-bg-elevated)", color: pushEnabled ? "#fff" : "var(--th-text-muted)", border: "1px solid var(--th-border)" }}
+                  style={{ borderRadius: 0, background: pushEnabled ? "var(--th-success, #22c55e)" : "var(--th-bg-elevated)", color: pushEnabled ? "#fff" : "var(--th-text-muted)", border: "1px solid var(--th-border)" }}
                   title={pushEnabled ? "Browser push ON" : "Browser push OFF"}
                   aria-label={pushEnabled ? "Disable browser notifications" : "Enable browser notifications"}
                 >
@@ -251,7 +251,7 @@ export default function NotificationCenter({ on, onNavigateTask }: Props) {
                 type="button"
                 onClick={() => setHideRead((v) => !v)}
                 className="inline-flex h-8 items-center justify-center px-2 text-[11px] font-medium transition"
-                style={{ borderRadius: "2px", background: hideRead ? "var(--th-accent, #3b82f6)" : "var(--th-bg-elevated)", color: hideRead ? "#fff" : "var(--th-text-muted)", border: hideRead ? "none" : "1px solid var(--th-border)" }}
+                style={{ borderRadius: 0, background: hideRead ? "var(--th-accent, #3b82f6)" : "var(--th-bg-elevated)", color: hideRead ? "#fff" : "var(--th-text-muted)", border: hideRead ? "none" : "1px solid var(--th-border)" }}
                 title={hideRead ? "Show all notifications" : "Hide read notifications"}
               >
                 {hideRead ? "Unread" : "All"}
@@ -261,7 +261,7 @@ export default function NotificationCenter({ on, onNavigateTask }: Props) {
                   type="button"
                   onClick={handleMarkAllRead}
                   className="text-xs font-medium px-2 py-1 transition"
-                  style={{ borderRadius: "2px", color: "var(--th-text-link, var(--th-accent, #3b82f6))" }}
+                  style={{ borderRadius: 0, color: "var(--th-text-link, var(--th-accent, #3b82f6))" }}
                 >
                   Mark all read
                 </button>
@@ -281,7 +281,7 @@ export default function NotificationCenter({ on, onNavigateTask }: Props) {
                   type="button"
                   onClick={() => setTypeFilter(f.key)}
                   className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium transition whitespace-nowrap"
-                  style={{ borderRadius: "2px", background: active ? "var(--th-accent, #3b82f6)" : "var(--th-bg-elevated)", color: active ? "#fff" : "var(--th-text-secondary)", border: active ? "none" : "1px solid var(--th-border)" }}
+                  style={{ borderRadius: 0, background: active ? "var(--th-accent, #3b82f6)" : "var(--th-bg-elevated)", color: active ? "#fff" : "var(--th-text-secondary)", border: active ? "none" : "1px solid var(--th-border)" }}
                 >
                   {f.icon}
                   {f.label}

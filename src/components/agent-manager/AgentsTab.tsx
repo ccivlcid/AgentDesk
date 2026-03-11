@@ -1,16 +1,6 @@
-import { motion } from "framer-motion";
 import type { Agent, Department } from "../../types";
 import { localeName } from "../../i18n";
-import AgentCard from "./AgentCard";
 import type { Translator } from "./types";
-
-const cardContainer = {
-  show: { transition: { staggerChildren: 0.04 } },
-};
-const cardItem = {
-  hidden: { opacity: 0, y: 6 },
-  show:   { opacity: 1, y: 0, transition: { duration: 0.1, ease: "linear" as const } },
-};
 
 interface AgentsTabProps {
   tr: Translator;
@@ -32,10 +22,25 @@ interface AgentsTabProps {
   saving: boolean;
 }
 
+function StatusBadge({ status }: { status: string }) {
+  if (status === "working") {
+    return (
+      <span style={{ fontFamily: "var(--th-font-mono)", fontSize: "10px", color: "#22c55e" }}>● RUNNING</span>
+    );
+  }
+  if (status === "offline") {
+    return (
+      <span style={{ fontFamily: "var(--th-font-mono)", fontSize: "10px", color: "var(--th-text-muted)", opacity: 0.5 }}>● OFFLINE</span>
+    );
+  }
+  return (
+    <span style={{ fontFamily: "var(--th-font-mono)", fontSize: "10px", color: "var(--th-text-muted)" }}>○ IDLE</span>
+  );
+}
+
 export default function AgentsTab({
   tr,
   locale,
-  isKo,
   agents,
   departments,
   projectAgentIds,
@@ -51,55 +56,42 @@ export default function AgentsTab({
   onDeleteAgent,
   saving,
 }: AgentsTabProps) {
-  const workingCount = agents.filter((agent) => agent.status === "working").length;
-  const deptCounts = new Map<string, { total: number; working: number }>();
-  for (const agent of agents) {
-    const key = agent.department_id || "__none";
-    const count = deptCounts.get(key) ?? { total: 0, working: 0 };
-    count.total += 1;
-    if (agent.status === "working") count.working += 1;
-    deptCounts.set(key, count);
+  const workingCount = agents.filter((a) => a.status === "working").length;
+
+  // Group sortedAgents by dept for list view
+  const deptMap = new Map(departments.map((d) => [d.id, d]));
+  const grouped: Array<{ dept: Department | null; agents: Agent[] }> = [];
+
+  if (deptTab === "all") {
+    // Group by department in dept order
+    const seen = new Set<string | null>();
+    // first pass: in dept order
+    for (const dept of departments) {
+      const deptAgents = sortedAgents.filter((a) => a.department_id === dept.id);
+      if (deptAgents.length > 0) {
+        grouped.push({ dept, agents: deptAgents });
+        seen.add(dept.id);
+      }
+    }
+    // unassigned
+    const unassigned = sortedAgents.filter((a) => !a.department_id || !deptMap.has(a.department_id));
+    if (unassigned.length > 0) {
+      grouped.push({ dept: null, agents: unassigned });
+    }
+  } else {
+    const dept = deptMap.get(deptTab) ?? null;
+    grouped.push({ dept, agents: sortedAgents });
   }
 
   return (
     <>
-      <div className="grid grid-cols-3 gap-3">
-        {[
-          {
-            label: tr("전체 인원", "Total"),
-            value: agents.length,
-            icon: null,
-          },
-          { label: tr("근무 중", "Working"), value: workingCount, icon: null },
-          { label: tr("부서", "Departments"), value: departments.length, icon: null },
-        ].map((summary) => (
-          <div
-            key={summary.label}
-            style={{
-              background: "var(--th-bg-surface)",
-              border: "1px solid var(--th-border)",
-              borderRadius: "4px",
-              padding: "0.625rem 0.875rem",
-            }}
-          >
-            <div
-              className="flex items-center gap-1.5 mb-1 uppercase tracking-wider"
-              style={{ color: "var(--th-text-muted)", fontFamily: "var(--th-font-mono)", fontSize: "0.625rem" }}
-            >
-              {summary.icon}
-              {summary.label}
-            </div>
-            <div
-              className="tabular-nums font-bold"
-              style={{ color: "var(--th-text-heading)", fontFamily: "var(--th-font-mono)", fontSize: "1.5rem" }}
-            >
-              {summary.value}
-            </div>
-          </div>
-        ))}
-      </div>
-
+      {/* Dept tab bar + inline stat */}
       <div className="flex items-center gap-0 flex-wrap" style={{ borderBottom: "1px solid var(--th-border)" }}>
+        <div className="flex items-center gap-3 px-3 py-2 mr-2" style={{ borderRight: "1px solid var(--th-border)" }}>
+          <span style={{ fontFamily: "var(--th-font-mono)", fontSize: "10px", color: "var(--th-text-muted)" }}>
+            {agents.length} total · {workingCount} running
+          </span>
+        </div>
         <button
           type="button"
           onClick={() => setDeptTab("all")}
@@ -112,20 +104,16 @@ export default function AgentsTab({
             transition: "color 0.1s linear, border-color 0.1s linear",
           }}
         >
-          ALL <span style={{ opacity: 0.5, marginLeft: "0.25rem" }}>{agents.length}</span>
+          ALL
         </button>
         {departments.map((department) => {
-          const count = deptCounts.get(department.id);
           const isActive = deptTab === department.id;
           return (
             <button
               key={department.id}
               type="button"
               onClick={() => setDeptTab(department.id)}
-              onDoubleClick={(e) => {
-                e.preventDefault();
-                onEditDepartment(department);
-              }}
+              onDoubleClick={(e) => { e.preventDefault(); onEditDepartment(department); }}
               title={tr("더블클릭: 부서 편집", "Double-click: edit dept")}
               className="flex items-center gap-1 px-3 py-2 border-b-2 transition-colors"
               style={{
@@ -137,7 +125,6 @@ export default function AgentsTab({
               }}
             >
               <span className="hidden sm:inline">{localeName(locale, department)}</span>
-              <span style={{ opacity: 0.5, marginLeft: "0.25rem" }}>{count?.total ?? 0}</span>
             </button>
           );
         })}
@@ -150,7 +137,7 @@ export default function AgentsTab({
             style={{
               background: "var(--th-bg-surface)",
               border: "1px solid var(--th-border)",
-              borderRadius: "2px",
+              borderRadius: 0,
               color: "var(--th-text-primary)",
               fontFamily: "var(--th-font-mono)",
               fontSize: "0.75rem",
@@ -162,6 +149,7 @@ export default function AgentsTab({
         </div>
       </div>
 
+      {/* Agent list — dept-grouped */}
       {sortedAgents.length === 0 ? (
         <div className="terminal-empty-state py-16">
           <p className="terminal-empty-state-cmd">$ ls agents/</p>
@@ -169,32 +157,108 @@ export default function AgentsTab({
           <p className="terminal-empty-state-hint">{tr("검색 결과 없음", "No agents found")}</p>
         </div>
       ) : (
-        <motion.div
-          key={`${deptTab}:${search}`}
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
-          variants={cardContainer}
-          initial="hidden"
-          animate="show"
-        >
-          {sortedAgents.map((agent) => (
-            <motion.div key={agent.id} variants={cardItem}>
-              <AgentCard
-                agent={agent}
-                isKo={isKo}
-                locale={locale}
-                tr={tr}
-                departments={departments}
-                isProjectMember={projectAgentIds !== undefined && projectAgentIds.has(agent.id)}
-                onEdit={() => onEditAgent(agent)}
-                confirmDeleteId={confirmDeleteId}
-                onDeleteClick={() => setConfirmDeleteId(agent.id)}
-                onDeleteConfirm={() => onDeleteAgent(agent.id)}
-                onDeleteCancel={() => setConfirmDeleteId(null)}
-                saving={saving}
-              />
-            </motion.div>
+        <div className="space-y-4">
+          {grouped.map(({ dept, agents: groupAgents }) => (
+            <div key={dept?.id ?? "__none"}>
+              {/* Dept header */}
+              <div
+                className="flex items-center gap-2 px-2 py-1.5 cursor-pointer"
+                style={{ borderBottom: "1px solid var(--th-border)", borderLeft: "2px solid var(--th-border)" }}
+                onDoubleClick={() => dept && onEditDepartment(dept)}
+                title={dept ? tr("더블클릭: 부서 편집", "Double-click: edit dept") : undefined}
+              >
+                <span style={{ fontFamily: "var(--th-font-mono)", fontSize: "10px", fontWeight: 700, letterSpacing: "0.08em", color: "var(--th-text-muted)", textTransform: "uppercase" }}>
+                  {dept ? (locale === "ko" ? dept.name_ko : dept.name) : tr("미배정", "Unassigned")}
+                </span>
+                <span
+                  className="px-1.5 py-0.5"
+                  style={{ fontFamily: "var(--th-font-mono)", fontSize: "10px", background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)", color: "var(--th-text-muted)", borderRadius: 0 }}
+                >
+                  {groupAgents.length}
+                </span>
+              </div>
+
+              {/* Agent rows */}
+              <div>
+                {groupAgents.map((agent) => {
+                  const isWorking = agent.status === "working";
+                  const isTeamMember = projectAgentIds !== undefined && projectAgentIds.has(agent.id);
+                  const agentName = locale === "ko" ? (agent.name_ko || agent.name) : agent.name;
+                  const isConfirmingDelete = confirmDeleteId === agent.id;
+
+                  return (
+                    <div
+                      key={agent.id}
+                      className="flex items-center gap-2 px-3 py-2 group transition-colors"
+                      style={{
+                        borderBottom: "1px solid var(--th-border)",
+                        borderLeft: isWorking ? "3px solid #22c55e" : "3px solid transparent",
+                        background: "var(--th-bg-surface)",
+                      }}
+                    >
+                      <span className="text-base shrink-0">{agent.avatar_emoji || "🤖"}</span>
+                      <span className="font-mono text-sm font-medium min-w-0 truncate" style={{ color: "var(--th-text-heading)", flex: "0 0 auto", maxWidth: "8rem" }}>
+                        {agentName}
+                      </span>
+                      {agent.role && (
+                        <span className="shrink-0 px-1.5 py-0.5 text-[10px] font-mono uppercase" style={{ background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)", color: "var(--th-text-muted)", borderRadius: 0 }}>
+                          {agent.role.slice(0, 3).toUpperCase()}
+                        </span>
+                      )}
+                      {isTeamMember && (
+                        <span className="shrink-0 px-1 py-0.5 text-[10px] font-mono" style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.3)", color: "var(--th-accent)", borderRadius: 0 }}>
+                          TEAM
+                        </span>
+                      )}
+                      <span className="flex-1" />
+                      <StatusBadge status={agent.status ?? "idle"} />
+                      <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          type="button"
+                          onClick={() => onEditAgent(agent)}
+                          className="px-2 py-1 text-[10px] font-mono transition"
+                          style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
+                        >
+                          {tr("편집", "edit")}
+                        </button>
+                        {isConfirmingDelete ? (
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => { onDeleteAgent(agent.id); setConfirmDeleteId(null); }}
+                              disabled={saving}
+                              className="px-2 py-1 text-[10px] font-mono"
+                              style={{ borderRadius: 0, border: "1px solid rgba(244,63,94,0.5)", background: "rgba(244,63,94,0.1)", color: "#fb7185" }}
+                            >
+                              {tr("확인", "confirm")}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setConfirmDeleteId(null)}
+                              className="px-2 py-1 text-[10px] font-mono"
+                              style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-muted)" }}
+                            >
+                              {tr("취소", "cancel")}
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setConfirmDeleteId(agent.id)}
+                            className="px-2 py-1 text-[10px] font-mono transition"
+                            style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-muted)" }}
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           ))}
-        </motion.div>
+        </div>
       )}
     </>
   );

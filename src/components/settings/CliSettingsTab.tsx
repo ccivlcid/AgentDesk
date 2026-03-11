@@ -14,7 +14,7 @@ export default function CliSettingsTab({
   return (
     <section
       className="p-5 sm:p-6 space-y-5"
-      style={{ borderRadius: "4px", background: "var(--th-bg-surface)", borderColor: "var(--th-border)" }}
+      style={{ borderRadius: 0, background: "var(--th-bg-surface)", borderColor: "var(--th-border)" }}
     >
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold" style={{ color: "var(--th-text-heading)" }}>
@@ -52,7 +52,7 @@ export default function CliSettingsTab({
                 <div
                   key={provider}
                   className="p-3 space-y-2"
-                  style={{ borderRadius: "2px", background: "var(--th-bg-primary)", borderColor: "var(--th-border)" }}
+                  style={{ borderRadius: 0, background: "var(--th-bg-primary)", borderColor: "var(--th-border)" }}
                 >
                   <div className="flex items-center gap-3">
                     <span className="text-lg flex-shrink-0">{info?.icon ?? "?"}</span>
@@ -74,7 +74,7 @@ export default function CliSettingsTab({
                       <span
                         className="text-xs font-mono px-2 py-0.5"
                         style={{
-                          borderRadius: "2px",
+                          borderRadius: 0,
                           background: status.installed ? "rgba(34,197,94,0.12)" : "var(--th-bg-surface-hover)",
                           color: status.installed ? "#4ade80" : "var(--th-text-muted)",
                         }}
@@ -87,7 +87,7 @@ export default function CliSettingsTab({
                         <span
                           className="text-xs font-mono px-2 py-0.5"
                           style={{
-                            borderRadius: "2px",
+                            borderRadius: 0,
                             background: status.authenticated ? "rgba(245,158,11,0.12)" : "rgba(234,179,8,0.12)",
                             color: status.authenticated ? "var(--th-accent)" : "#facc15",
                           }}
@@ -132,7 +132,7 @@ export default function CliSettingsTab({
                               persistSettings(newForm);
                             }}
                             className="w-full min-w-0 px-2 py-1 text-xs font-mono focus:outline-none sm:flex-1"
-                            style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
+                            style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
                           >
                             <option value="">{t({ ko: "기본값", en: "Default", ja: "デフォルト", zh: "默认" })}</option>
                             {modelList.map((m) => (
@@ -166,7 +166,7 @@ export default function CliSettingsTab({
                               persistSettings(newForm);
                             }}
                             className="w-full min-w-0 px-2 py-1 text-xs font-mono focus:outline-none sm:flex-1"
-                          style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
+                          style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
                           >
                             {reasoningLevels.map((rl) => (
                               <option key={rl.effort} value={rl.effort}>
@@ -212,7 +212,7 @@ export default function CliSettingsTab({
                                   persistSettings(newForm);
                                 }}
                                 className="w-full min-w-0 px-2 py-1 text-xs font-mono focus:outline-none sm:flex-1"
-                          style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
+                          style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
                               >
                                 <option value="">
                                   {t({ ko: "기본값", en: "Default", ja: "デフォルト", zh: "默认" })}
@@ -254,7 +254,7 @@ export default function CliSettingsTab({
                                     persistSettings(newForm);
                                   }}
                                   className="w-full min-w-0 px-2 py-1 text-xs font-mono focus:outline-none sm:flex-1"
-                          style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
+                          style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
                                 >
                                   {subLevels.map((rl) => (
                                     <option key={rl.effort} value={rl.effort}>

@@ -48,7 +48,7 @@ export default function CustomSkillModal({
 
   return createPortal(
     <div className="custom-skill-modal fixed inset-0 z-[80] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.75)" }}>
-      <div className="custom-skill-modal-card w-full max-w-lg max-h-[90vh] overflow-hidden shadow-2xl" style={{ borderRadius: "4px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
+      <div className="custom-skill-modal-card w-full max-w-lg max-h-[90vh] overflow-hidden shadow-2xl" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
         <div className="flex items-start justify-between gap-4 px-5 py-4" style={{ borderBottom: "1px solid var(--th-border)" }}>
           <div>
             <h3 className="text-base font-semibold font-mono flex items-center gap-2" style={{ color: "var(--th-text-heading)" }}>
@@ -68,7 +68,7 @@ export default function CustomSkillModal({
             onClick={onClose}
             disabled={customSkillSubmitting}
             className="px-2.5 py-1 text-xs font-mono transition"
-            style={{ borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
+            style={{ borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
           >
             {t({ ko: "닫기", en: "Close", ja: "閉じる", zh: "关闭" })}
           </button>
@@ -90,7 +90,7 @@ export default function CustomSkillModal({
                 zh: "例如: my-custom-skill",
               })}
               className="w-full px-3 py-2 text-sm font-mono focus:outline-none"
-              style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
+              style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
             />
             <div className="text-[10px] font-mono mt-1" style={{ color: "var(--th-text-muted)" }}>
               {t({
@@ -110,7 +110,7 @@ export default function CustomSkillModal({
               <button
                 onClick={() => customFileInputRef.current?.click()}
                 className="flex items-center gap-1.5 px-3 py-2 text-xs font-mono transition"
-                style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
+                style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
               >
                 <span>📎</span>
                 {t({ ko: "파일 선택", en: "Choose File", ja: "ファイル選択", zh: "选择文件" })}
@@ -127,7 +127,7 @@ export default function CustomSkillModal({
               )}
             </div>
             {customSkillContent && (
-              <div className="mt-2 p-2 max-h-32 overflow-y-auto" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-terminal-bg)" }}>
+              <div className="mt-2 p-2 max-h-32 overflow-y-auto" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-terminal-bg)" }}>
                 <pre className="text-[10px] font-mono whitespace-pre-wrap break-all" style={{ color: "var(--th-text-muted)" }}>
                   {customSkillContent.slice(0, 500)}
                   {customSkillContent.length > 500 && "..."}
@@ -161,10 +161,10 @@ export default function CustomSkillModal({
                     disabled={!hasAgent}
                     className="flex items-center gap-2 p-2 text-left transition"
                     style={!hasAgent
-                      ? { borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-primary)", opacity: 0.5, cursor: "not-allowed" }
+                      ? { borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-primary)", opacity: 0.5, cursor: "not-allowed" }
                       : isSelected
-                        ? { borderRadius: "2px", border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.1)" }
-                        : { borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}
+                        ? { borderRadius: 0, border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.1)" }
+                        : { borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}
                   >
                     <AgentAvatar agent={row.agent ?? undefined} agents={agents} size={32} rounded="xl" />
                     <div className="min-w-0 flex-1">
@@ -174,8 +174,8 @@ export default function CustomSkillModal({
                     <div
                       className="w-4 h-4 border flex items-center justify-center text-[10px] font-mono"
                       style={isSelected
-                        ? { borderRadius: "2px", border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.15)", color: "var(--th-accent)" }
-                        : { borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-primary)" }}
+                        ? { borderRadius: 0, border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.15)", color: "var(--th-accent)" }
+                        : { borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-primary)" }}
                     >
                       {isSelected && "✓"}
                     </div>
@@ -186,7 +186,7 @@ export default function CustomSkillModal({
           </div>
 
           {customSkillError && (
-            <div className="text-[11px] font-mono px-3 py-2" style={{ borderRadius: "2px", border: "1px solid rgba(244,63,94,0.35)", background: "rgba(244,63,94,0.1)", color: "rgb(253,164,175)" }}>
+            <div className="text-[11px] font-mono px-3 py-2" style={{ borderRadius: 0, border: "1px solid rgba(244,63,94,0.35)", background: "rgba(244,63,94,0.1)", color: "rgb(253,164,175)" }}>
               {customSkillError}
             </div>
           )}
@@ -196,7 +196,7 @@ export default function CustomSkillModal({
               onClick={onClose}
               disabled={customSkillSubmitting}
               className="px-3 py-1.5 text-xs font-mono transition"
-              style={{ borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
+              style={{ borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
             >
               {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}
             </button>
@@ -210,8 +210,8 @@ export default function CustomSkillModal({
               }
               className="custom-skill-submit-btn px-4 py-1.5 text-xs font-mono border transition flex items-center gap-1.5"
               style={!customSkillName.trim() || !customSkillContent.trim() || customSkillProviders.length === 0
-                ? { borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-muted)", cursor: "not-allowed" }
-                : { borderRadius: "2px", border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.15)", color: "var(--th-accent)" }}
+                ? { borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-muted)", cursor: "not-allowed" }
+                : { borderRadius: 0, border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.15)", color: "var(--th-accent)" }}
             >
               {customSkillSubmitting ? (
                 <>

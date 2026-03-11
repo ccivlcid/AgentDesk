@@ -16,7 +16,7 @@ export default function SkillsMemorySection({
   onRefreshHistory,
 }: SkillsMemorySectionProps) {
   return (
-    <div className="p-3" style={{ borderRadius: "4px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
+    <div className="p-3" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
       <div className="mb-2 flex items-center justify-between">
         <div className="text-sm font-semibold font-mono" style={{ color: "var(--th-text-heading)" }}>
           {t({ ko: "학습 메모리", en: "Learning Memory", ja: "学習メモリ", zh: "学习记忆" })}

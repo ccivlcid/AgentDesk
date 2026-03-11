@@ -56,7 +56,7 @@ export default function AgentRulesLibrary({ agents, departments, currentProject 
           <button
             onClick={vm.loadRules}
             className="mt-4 px-4 py-2 text-sm font-mono transition-all"
-            style={{ borderRadius: "2px", background: "rgba(251,191,36,0.1)", color: "var(--th-accent)", border: "1px solid rgba(251,191,36,0.35)" }}
+            style={{ borderRadius: 0, background: "rgba(251,191,36,0.1)", color: "var(--th-accent)", border: "1px solid rgba(251,191,36,0.35)" }}
           >
             {t({ ko: "다시 시도", en: "Retry", ja: "再試行", zh: "重试" })}
           </button>
@@ -71,7 +71,7 @@ export default function AgentRulesLibrary({ agents, departments, currentProject 
       {currentProject && (
         <div
           className="flex gap-1 p-1"
-          style={{ background: "var(--th-bg-primary)", borderRadius: "4px", border: "1px solid var(--th-border)" }}
+          style={{ background: "var(--th-bg-primary)", borderRadius: 0, border: "1px solid var(--th-border)" }}
         >
           {(["global", "project"] as const).map((tab) => {
             const isActive = activeTab === tab;
@@ -85,7 +85,7 @@ export default function AgentRulesLibrary({ agents, departments, currentProject 
                 onClick={() => setActiveTab(tab)}
                 className="flex items-center gap-2 px-3 py-2 text-sm font-medium font-mono transition-colors"
                 style={{
-                  borderRadius: "2px",
+                  borderRadius: 0,
                   background: isActive ? "var(--th-bg-surface)" : "transparent",
                   color: isActive ? "var(--th-text-primary)" : "var(--th-text-muted)",
                   border: isActive ? "1px solid var(--th-border)" : "1px solid transparent",
@@ -93,7 +93,7 @@ export default function AgentRulesLibrary({ agents, departments, currentProject 
               >
                 {label}
                 {tab === "project" && (
-                  <span className="text-[9px] px-1" style={{ color: "var(--th-accent)", background: "rgba(245,158,11,0.08)", borderRadius: "2px", border: "1px solid rgba(245,158,11,0.2)" }}>
+                  <span className="text-[9px] px-1" style={{ color: "var(--th-accent)", background: "rgba(245,158,11,0.08)", borderRadius: 0, border: "1px solid rgba(245,158,11,0.2)" }}>
                     {currentProject.name}
                   </span>
                 )}
@@ -118,7 +118,7 @@ export default function AgentRulesLibrary({ agents, departments, currentProject 
               zh: "管理仅适用于此项目的代理规则。",
             })}
           </p>
-          <p className="text-[11px] mt-3 px-4 py-2" style={{ background: "var(--th-bg-surface)", borderRadius: "4px", border: "1px solid var(--th-border)" }}>
+          <p className="text-[11px] mt-3 px-4 py-2" style={{ background: "var(--th-bg-surface)", borderRadius: 0, border: "1px solid var(--th-border)" }}>
             {t({ ko: "현재 준비 중입니다.", en: "Coming soon.", ja: "現在準備中です。", zh: "即将推出。" })}
           </p>
         </div>

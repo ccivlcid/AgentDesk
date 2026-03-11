@@ -125,8 +125,8 @@ export default function ChatComposer({
           disabled={!selectedAgent}
           className="flex flex-1 items-center justify-center gap-1 px-2 py-1.5 text-xs font-medium font-mono transition disabled:cursor-not-allowed disabled:opacity-40"
           style={mode === "task"
-            ? { borderRadius: "2px", border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.15)", color: "var(--th-accent)" }
-            : { borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
+            ? { borderRadius: 0, border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.15)", color: "var(--th-accent)" }
+            : { borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
         >
           <span>📋</span>
           <span>{tr("업무 지시", "Task", "タスク指示", "任务指示")}</span>
@@ -136,8 +136,8 @@ export default function ChatComposer({
           onClick={() => onModeChange(mode === "announcement" ? "chat" : "announcement")}
           className="flex flex-1 items-center justify-center gap-1 px-2 py-1.5 text-xs font-medium font-mono transition"
           style={mode === "announcement"
-            ? { borderRadius: "2px", border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.15)", color: "var(--th-accent)" }
-            : { borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
+            ? { borderRadius: 0, border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.15)", color: "var(--th-accent)" }
+            : { borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
         >
           <span>📢</span>
           <span>{tr("전사 공지", "Announcement", "全体告知", "全员公告")}</span>
@@ -148,8 +148,8 @@ export default function ChatComposer({
           disabled={!selectedAgent}
           className="flex flex-1 items-center justify-center gap-1 px-2 py-1.5 text-xs font-medium font-mono transition disabled:cursor-not-allowed disabled:opacity-40"
           style={mode === "report"
-            ? { borderRadius: "2px", border: "1px solid rgba(52,211,153,0.5)", background: "rgba(52,211,153,0.15)", color: "rgb(167,243,208)" }
-            : { borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
+            ? { borderRadius: 0, border: "1px solid rgba(52,211,153,0.5)", background: "rgba(52,211,153,0.15)", color: "rgb(167,243,208)" }
+            : { borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
         >
           <span>📊</span>
           <span>{tr("보고 요청", "Report", "レポート依頼", "报告请求")}</span>
@@ -165,7 +165,7 @@ export default function ChatComposer({
             <div
               key={`${file.name}-${file.size}-${idx}`}
               className="flex items-center gap-1.5 px-2 py-1 text-xs font-mono"
-              style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
+              style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
             >
               <span>{getFileIcon(file.name)}</span>
               <span className="max-w-[120px] truncate">{file.name}</span>
@@ -202,7 +202,7 @@ export default function ChatComposer({
           onDrop={handleDrop}
           className="flex items-end gap-2 transition"
           style={{
-            borderRadius: "2px",
+            borderRadius: 0,
             background: "var(--th-input-bg)",
             border: `1px solid ${
               isDirectiveMode ? "rgba(244,63,94,0.5)"
@@ -217,7 +217,7 @@ export default function ChatComposer({
             onClick={() => fileInputRef.current?.click()}
             disabled={attachments.length >= MAX_FILES}
             className="mb-2 ml-2 flex h-9 w-9 flex-shrink-0 items-center justify-center transition disabled:cursor-not-allowed disabled:opacity-40"
-            style={{ borderRadius: "2px", color: "var(--th-text-muted)" }}
+            style={{ borderRadius: 0, color: "var(--th-text-muted)" }}
             aria-label={tr("파일 첨부", "Attach files", "ファイル添付", "附加文件")}
             title={tr(
               `파일 첨부 (최대 ${MAX_FILES}개, 각 10MB)`,
@@ -287,14 +287,14 @@ export default function ChatComposer({
             style={
               input.trim() || attachments.length > 0
                 ? {
-                    borderRadius: "2px",
+                    borderRadius: 0,
                     background: isDirectiveMode ? "rgba(244,63,94,0.8)"
                       : isAnnouncementMode || mode === "task" ? "var(--th-accent)"
                       : mode === "report" ? "rgb(52,211,153)"
                       : "var(--th-accent)",
                     color: "#000",
                   }
-                : { borderRadius: "2px", background: "var(--th-bg-elevated)", color: "var(--th-text-muted)", cursor: "not-allowed" }
+                : { borderRadius: 0, background: "var(--th-bg-elevated)", color: "var(--th-text-muted)", cursor: "not-allowed" }
             }
             aria-label={tr("전송", "Send", "送信", "发送")}
           >

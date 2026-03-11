@@ -1,8 +1,7 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useI18n, localeName } from "../i18n";
 import type { Agent, Department, Project, Task } from "../types";
-import AgentAvatar from "./AgentAvatar";
-import { ROLE_BADGE, ROLE_LABEL } from "./agent-manager/constants";
+import { ROLE_LABEL } from "./agent-manager/constants";
 
 export interface WorkMapProps {
   departments: Department[];
@@ -17,35 +16,14 @@ export interface WorkMapProps {
   onRemoveFromTeam?: (agentId: string) => Promise<void>;
 }
 
-const AGENT_STATUS_LABEL: Record<string, string> = {
-  working: "RUNNING",
-  idle: "IDLE",
-  break: "BREAK",
-  offline: "OFFLINE",
-};
+type SortKey = "status" | "load" | "name" | "dept" | "time";
 
-const AGENT_STATUS_CLASS: Record<string, string> = {
-  working: "status-badge status-badge-running",
-  idle: "status-badge status-badge-idle",
-  break: "status-badge status-badge-paused",
-  offline: "status-badge status-badge-error",
-};
+const STATUS_ORDER: Record<string, number> = { working: 0, idle: 1, break: 2, offline: 3 };
+const STATUS_LABEL: Record<string, string> = { working: "R", idle: "S", break: "T", offline: "Z" };
+const STATUS_FULL: Record<string, string> = { working: "RUNNING", idle: "IDLE", break: "BREAK", offline: "OFFLINE" };
+const STATUS_COLOR: Record<string, string> = { working: "#22c55e", idle: "#6b7280", break: "#f59e0b", offline: "#374151" };
 
-const ACTIVITY_PCT: Record<string, number> = {
-  working: 85,
-  idle: 50,
-  break: 22,
-  offline: 5,
-};
-
-const ACTIVITY_COLOR: Record<string, string> = {
-  working: "var(--th-attr-elite)",
-  idle: "var(--th-attr-avg)",
-  break: "var(--th-attr-poor)",
-  offline: "var(--th-attr-vlow)",
-};
-
-function getAgentCurrentTask(agentId: string, tasks: Task[]): Task | null {
+function getAgentTask(agentId: string, tasks: Task[]): Task | null {
   return (
     tasks.find((t) => t.assigned_agent_id === agentId && t.status === "in_progress") ??
     tasks.find((t) => t.assigned_agent_id === agentId && t.status === "pending") ??
@@ -53,399 +31,562 @@ function getAgentCurrentTask(agentId: string, tasks: Task[]): Task | null {
   );
 }
 
+function getLoad(agent: Agent, task: Task | null): number {
+  if (agent.status !== "working") return 0;
+  return (task as any)?.progress_percent ?? 50;
+}
+
+function getLoadColor(pct: number): string {
+  if (pct >= 80) return "#f87171";
+  if (pct >= 50) return "#fbbf24";
+  return "#22c55e";
+}
+
+function formatUptime(startedAt: number | null): string {
+  if (!startedAt) return "—";
+  const secs = Math.floor((Date.now() - startedAt) / 1000);
+  if (secs < 60) return `${secs}s`;
+  const mins = Math.floor(secs / 60);
+  if (mins < 60) return `${mins}m`;
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return `${h}h${m.toString().padStart(2, "0")}m`;
+}
+
+/** htop 상단 패널: 에이전트별 부하 바 */
+function TopPanel({ agents, tasks }: { agents: Agent[]; tasks: Task[] }) {
+  const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };
+  const BAR_CELLS = 32;
+
+  return (
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
+        gap: "2px 12px",
+        padding: "8px 14px",
+        borderBottom: "1px solid var(--th-border)",
+        background: "var(--th-bg-primary)",
+        flexShrink: 0,
+      }}
+    >
+      {agents.map((agent) => {
+        const task = getAgentTask(agent.id, tasks);
+        const load = getLoad(agent, task);
+        const barColor = agent.status === "working" ? getLoadColor(load) : STATUS_COLOR[agent.status];
+        const filled = agent.status === "working" ? Math.round((load / 100) * BAR_CELLS) : 0;
+
+        return (
+          <div key={agent.id} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            {/* Agent number/emoji */}
+            <span style={{ ...mono, fontSize: "10px", width: 16, color: "var(--th-text-muted)", flexShrink: 0, textAlign: "right" }}>
+              {agent.avatar_emoji || "🤖"}
+            </span>
+            {/* Name */}
+            <span style={{ ...mono, fontSize: "10px", width: 60, color: barColor, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flexShrink: 0 }}>
+              {(agent.name_ko ?? agent.name).slice(0, 6)}
+            </span>
+            {/* Bar */}
+            <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 1 }}>
+              <span style={{ ...mono, fontSize: "10px", color: "var(--th-text-muted)", flexShrink: 0 }}>[</span>
+              <div style={{ flex: 1, height: "10px", display: "flex", alignItems: "stretch", background: "transparent", gap: 0 }}>
+                {Array.from({ length: BAR_CELLS }).map((_, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      flex: 1,
+                      background: i < filled ? barColor : "rgba(255,255,255,0.06)",
+                    }}
+                  />
+                ))}
+              </div>
+              <span style={{ ...mono, fontSize: "10px", color: "var(--th-text-muted)", flexShrink: 0 }}>]</span>
+            </div>
+            {/* Percentage */}
+            <span style={{ ...mono, fontSize: "10px", width: 28, color: barColor, textAlign: "right", flexShrink: 0 }}>
+              {agent.status === "working" ? `${load}%` : STATUS_LABEL[agent.status] ?? "?"}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/** 요약 통계 라인 */
+function SummaryBar({
+  agents,
+  tasks,
+  currentProject,
+  teamCount,
+}: {
+  agents: Agent[];
+  tasks: Task[];
+  currentProject?: Project | null;
+  teamCount: number;
+}) {
+  const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };
+  const running = agents.filter((a) => a.status === "working").length;
+  const idle = agents.filter((a) => a.status === "idle" || a.status === "break").length;
+  const offline = agents.filter((a) => a.status === "offline").length;
+  const inProgress = tasks.filter((t) => t.status === "in_progress").length;
+  const done = tasks.filter((t) => t.status === "done").length;
+
+  const dot = (color: string) => (
+    <span style={{ display: "inline-block", width: 6, height: 6, borderRadius: "50%", background: color, marginRight: 3 }} />
+  );
+
+  return (
+    <div
+      style={{
+        flexShrink: 0,
+        display: "flex",
+        alignItems: "center",
+        gap: 0,
+        padding: "4px 14px",
+        borderBottom: "1px solid var(--th-border)",
+        background: "var(--th-bg-elevated)",
+        flexWrap: "wrap",
+      }}
+    >
+      <span style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", marginRight: 16 }}>
+        Agents: <strong style={{ color: "var(--th-text-secondary)" }}>{agents.length}</strong>
+      </span>
+      <span style={{ ...mono, fontSize: "9px", color: "#22c55e", marginRight: 12 }}>
+        {dot("#22c55e")}{running} running
+      </span>
+      <span style={{ ...mono, fontSize: "9px", color: "#6b7280", marginRight: 12 }}>
+        {dot("#6b7280")}{idle} idle
+      </span>
+      <span style={{ ...mono, fontSize: "9px", color: "#374151", marginRight: 16 }}>
+        {dot("#374151")}{offline} offline
+      </span>
+      <span style={{ width: 1, height: 12, background: "var(--th-border)", margin: "0 12px 0 0" }} />
+      <span style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", marginRight: 12 }}>
+        Tasks: <span style={{ color: "#22c55e" }}>{inProgress} active</span>
+        {" / "}
+        <span style={{ color: "var(--th-text-muted)" }}>{done} done today</span>
+      </span>
+      {currentProject && teamCount > 0 && (
+        <>
+          <span style={{ width: 1, height: 12, background: "var(--th-border)", margin: "0 12px 0 0" }} />
+          <span style={{ ...mono, fontSize: "9px", color: "var(--th-accent)", opacity: 0.8 }}>
+            team: {teamCount}
+          </span>
+        </>
+      )}
+    </div>
+  );
+}
+
+/** 컬럼 헤더 */
+function TableHeader({
+  sortKey,
+  onSort,
+}: {
+  sortKey: SortKey;
+  onSort: (k: SortKey) => void;
+}) {
+  const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };
+
+  const col = (key: SortKey, label: string, w: number | string) => (
+    <button
+      key={key}
+      type="button"
+      onClick={() => onSort(key)}
+      style={{
+        ...mono, fontSize: "9px", fontWeight: 700, letterSpacing: "0.06em",
+        color: sortKey === key ? "var(--th-accent)" : "var(--th-text-muted)",
+        background: "none", border: "none", cursor: "pointer", padding: 0,
+        width: typeof w === "number" ? w : undefined, flex: typeof w === "string" ? w : undefined,
+        textAlign: "left", whiteSpace: "nowrap",
+      }}
+    >
+      {sortKey === key ? `▾ ${label}` : label}
+    </button>
+  );
+
+  return (
+    <div
+      style={{
+        display: "flex", alignItems: "center", gap: 0,
+        padding: "5px 14px",
+        borderBottom: "2px solid var(--th-border)",
+        background: "var(--th-bg-elevated)",
+        flexShrink: 0,
+      }}
+    >
+      <span style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", width: 28, flexShrink: 0 }}>PID</span>
+      <span style={{ width: 36, flexShrink: 0 }} />
+      {col("name", "AGENT", 90)}
+      {col("dept", "DEPT", 80)}
+      {col("status", "STAT", 60)}
+      <span style={{ ...mono, fontSize: "9px", fontWeight: 700, color: "var(--th-text-muted)", flex: "1 1 0", minWidth: 80 }}>LOAD</span>
+      {col("load", "%CPU", 40)}
+      <span style={{ ...mono, fontSize: "9px", fontWeight: 700, color: "var(--th-text-muted)", width: 80, flexShrink: 0 }}>TASK#</span>
+      {col("time", "TIME", 60)}
+      <span style={{ ...mono, fontSize: "9px", fontWeight: 700, color: "var(--th-text-muted)", flex: "2 1 0", minWidth: 120 }}>COMMAND</span>
+    </div>
+  );
+}
+
+/** 에이전트 행 */
 function AgentRow({
   agent,
-  tasks,
+  task,
   locale,
   isKo,
-  unread,
   dimmed,
   inTeam,
   hasProject,
+  unread,
   onAddToTeam,
   onRemoveFromTeam,
   onClick,
 }: {
   agent: Agent;
-  tasks: Task[];
+  task: Task | null;
   locale: string;
   isKo: boolean;
-  unread: boolean;
   dimmed: boolean;
   inTeam: boolean;
   hasProject: boolean;
+  unread: boolean;
   onAddToTeam?: () => void;
   onRemoveFromTeam?: () => void;
   onClick: () => void;
 }) {
-  const currentTask = getAgentCurrentTask(agent.id, tasks);
-  const activityPct = ACTIVITY_PCT[agent.status] ?? 5;
-  const activityColor = ACTIVITY_COLOR[agent.status] ?? "var(--th-attr-vlow)";
-  const isWorking = agent.status === "working";
+  const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };
+  const load = getLoad(agent, task);
+  const barColor = agent.status === "working" ? getLoadColor(load) : STATUS_COLOR[agent.status];
+  const isRunning = agent.status === "working";
+  const BAR = 20;
+  const filled = isRunning ? Math.round((load / 100) * BAR) : 0;
+
+  const dept = agent.department;
+  const deptName = dept ? (isKo ? dept.name_ko ?? dept.name : dept.name) : "—";
+  const uptime = isRunning && task?.started_at ? formatUptime(task.started_at) : "—";
 
   return (
     <button
+      type="button"
       onClick={onClick}
-      className="group w-full text-left flex items-center gap-3 px-3 py-2 transition-colors hover:bg-[var(--th-bg-surface-hover)]"
+      className="group w-full text-left transition-colors"
       style={{
-        borderLeft: isWorking ? "2px solid #22c55e" : "2px solid transparent",
-        opacity: dimmed ? 0.4 : 1,
-        transition: "opacity 0.1s linear, border-color 0.1s linear",
+        display: "flex",
+        alignItems: "center",
+        gap: 0,
+        padding: "4px 14px",
+        borderBottom: `1px solid var(--th-border)`,
+        background: isRunning ? "rgba(34,197,94,0.04)" : "transparent",
+        opacity: dimmed ? 0.3 : 1,
+        cursor: "pointer",
+        borderLeft: isRunning ? "2px solid #22c55e" : "2px solid transparent",
       }}
     >
+      {/* PID */}
+      <span style={{ ...mono, fontSize: "10px", color: "var(--th-text-muted)", width: 28, flexShrink: 0, overflow: "hidden" }}>
+        {agent.id.slice(0, 4)}
+      </span>
+
       {/* Avatar */}
-      <div className="relative shrink-0">
-        <AgentAvatar agent={agent} size={32} rounded="sm" />
+      <div style={{ width: 20, flexShrink: 0, position: "relative" }}>
+        <span style={{ fontSize: "14px" }}>{agent.avatar_emoji || "🤖"}</span>
         {unread && (
-          <span
-            className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-[var(--th-accent)]"
-            style={{ border: "1px solid var(--th-bg-surface)" }}
-          />
+          <span style={{ position: "absolute", top: -1, right: -1, width: 5, height: 5, borderRadius: "50%", background: "var(--th-accent)", border: "1px solid var(--th-bg-primary)" }} />
         )}
       </div>
+      <span style={{ width: 16, flexShrink: 0 }} />
 
-      {/* Name + role */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-1.5 mb-0.5">
-          <span
-            className="text-xs font-semibold font-mono truncate"
-            style={{ color: "var(--th-text-heading)" }}
-          >
-            {localeName(locale, agent)}
-          </span>
-          <span
-            className={`text-[9px] px-1 border font-medium font-mono shrink-0 ${ROLE_BADGE[agent.role] || ""}`}
-            style={{ borderRadius: "2px" }}
-          >
-            {isKo ? ROLE_LABEL[agent.role]?.ko : ROLE_LABEL[agent.role]?.en}
-          </span>
+      {/* Name */}
+      <span style={{ ...mono, fontSize: "10px", fontWeight: 700, color: isRunning ? "#86efac" : "var(--th-text-secondary)", width: 90, flexShrink: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        {(agent.name_ko ?? agent.name).slice(0, 8)}
+      </span>
+
+      {/* Dept */}
+      <span style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", width: 80, flexShrink: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        {deptName.slice(0, 9)}
+      </span>
+
+      {/* STAT */}
+      <span style={{ ...mono, fontSize: "9px", fontWeight: 700, color: barColor, width: 60, flexShrink: 0 }}>
+        {STATUS_LABEL[agent.status] ?? "?"} {STATUS_FULL[agent.status]?.slice(0, 3) ?? "???"}
+      </span>
+
+      {/* Load bar */}
+      <div style={{ flex: "1 1 0", minWidth: 80, display: "flex", alignItems: "center", gap: 1 }}>
+        <span style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", flexShrink: 0 }}>[</span>
+        <div style={{ flex: 1, height: 8, display: "flex", gap: 0 }}>
+          {Array.from({ length: BAR }).map((_, i) => (
+            <div
+              key={i}
+              style={{
+                flex: 1,
+                background: i < filled ? barColor : "rgba(255,255,255,0.05)",
+              }}
+            />
+          ))}
         </div>
-        {/* Task or status */}
-        <p className="text-[10px] font-mono truncate" style={{ color: "var(--th-text-muted)" }}>
-          {currentTask ? `↳ ${currentTask.title}` : "—"}
-        </p>
+        <span style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", flexShrink: 0 }}>]</span>
       </div>
 
-      {/* Activity bar + badge + team button */}
-      <div className="flex items-center gap-2 shrink-0">
-        {/* Team add/remove button — hover only */}
-        {hasProject && inTeam && onRemoveFromTeam && (
-          <button
-            type="button"
-            onClick={(e) => { e.stopPropagation(); onRemoveFromTeam(); }}
-            className="opacity-0 group-hover:opacity-100 text-[9px] font-mono px-1.5 py-0.5 transition-opacity"
-            style={{ color: "var(--th-text-muted)", border: "1px solid var(--th-border)", borderRadius: 2 }}
-            title={isKo ? "팀에서 제거" : "Remove from team"}
-          >
-            × {isKo ? "제거" : "Remove"}
-          </button>
-        )}
-        {hasProject && !inTeam && onAddToTeam && (
-          <button
-            type="button"
-            onClick={(e) => { e.stopPropagation(); onAddToTeam(); }}
-            className="opacity-0 group-hover:opacity-100 text-[9px] font-mono px-1.5 py-0.5 transition-opacity"
-            style={{ color: "var(--th-accent)", border: "1px solid rgba(245,158,11,0.3)", borderRadius: 2 }}
-            title={isKo ? "팀에 추가" : "Add to team"}
-          >
-            + {isKo ? "추가" : "Add"}
-          </button>
-        )}
-        <div
-          className="overflow-hidden"
-          style={{ width: 40, height: 3, borderRadius: "1px", background: "var(--th-border)" }}
+      {/* %CPU */}
+      <span style={{ ...mono, fontSize: "10px", color: barColor, width: 40, textAlign: "right", paddingRight: 8, flexShrink: 0 }}>
+        {isRunning ? `${load}%` : "0%"}
+      </span>
+
+      {/* Task# */}
+      <span style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", width: 80, flexShrink: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        {task ? `#${task.id.slice(0, 6)}` : "—"}
+      </span>
+
+      {/* Time */}
+      <span style={{ ...mono, fontSize: "9px", color: isRunning ? "#86efac" : "var(--th-text-muted)", width: 60, flexShrink: 0 }}>
+        {uptime}
+      </span>
+
+      {/* Command */}
+      <span style={{ ...mono, fontSize: "10px", color: isRunning ? "var(--th-text-secondary)" : "var(--th-text-muted)", flex: "2 1 0", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        {task ? task.title : <span style={{ opacity: 0.4 }}>—</span>}
+      </span>
+
+      {/* Team buttons (hover) */}
+      {hasProject && inTeam && onRemoveFromTeam && (
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onRemoveFromTeam(); }}
+          className="opacity-0 group-hover:opacity-100 transition-opacity"
+          style={{ ...mono, fontSize: "8px", padding: "2px 5px", borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-muted)", background: "var(--th-bg-elevated)", cursor: "pointer", flexShrink: 0, marginLeft: 6 }}
         >
-          <div
-            style={{
-              width: `${activityPct}%`,
-              height: "100%",
-              background: activityColor,
-              transition: "width 0.3s linear",
-            }}
-          />
-        </div>
-        <span className={AGENT_STATUS_CLASS[agent.status] ?? "status-badge status-badge-idle"} style={{ fontSize: "8px" }}>
-          {AGENT_STATUS_LABEL[agent.status] ?? "IDLE"}
-        </span>
-      </div>
+          × RM
+        </button>
+      )}
+      {hasProject && !inTeam && onAddToTeam && (
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onAddToTeam(); }}
+          className="opacity-0 group-hover:opacity-100 transition-opacity"
+          style={{ ...mono, fontSize: "8px", padding: "2px 5px", borderRadius: 0, border: "1px solid rgba(245,158,11,0.3)", color: "var(--th-accent)", background: "transparent", cursor: "pointer", flexShrink: 0, marginLeft: 6 }}
+        >
+          + ADD
+        </button>
+      )}
     </button>
   );
 }
 
-function DeptPanel({
-  dept,
-  agents,
-  tasks,
-  locale,
-  isKo,
-  unreadAgentIds,
-  projectAgentIds,
-  hasProject,
-  onSelectAgent,
-  onSelectDepartment,
-  onAddToTeam,
-  onRemoveFromTeam,
-}: {
-  dept: Department;
-  agents: Agent[];
-  tasks: Task[];
-  locale: string;
-  isKo: boolean;
-  unreadAgentIds: Set<string>;
-  projectAgentIds?: Set<string>;
-  hasProject: boolean;
-  onSelectAgent: (a: Agent) => void;
-  onSelectDepartment?: (d: Department) => void;
-  onAddToTeam?: (agentId: string) => void;
-  onRemoveFromTeam?: (agentId: string) => void;
-}) {
-  const workingCount = agents.filter((a) => a.status === "working").length;
-  const activeTasks = tasks.filter(
-    (t) => agents.some((a) => a.id === t.assigned_agent_id) && t.status === "in_progress",
-  ).length;
-
+/** F-key 하단 바 */
+function FKeyBar({ onSearch, onToggleProject, projectOnly }: { onSearch: () => void; onToggleProject: () => void; projectOnly: boolean }) {
+  const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };
+  const keys = [
+    { f: "F3", label: "Search", action: onSearch },
+    { f: "F5", label: projectOnly ? "All Agents" : "This Project", action: onToggleProject },
+    { f: "F6", label: "SortBy", action: undefined },
+    { f: "F10", label: "Quit", action: undefined },
+  ];
   return (
     <div
       style={{
-        background: "var(--th-bg-surface)",
-        border: "1px solid var(--th-border)",
-        borderRadius: 0,
-        overflow: "hidden",
+        flexShrink: 0, display: "flex", alignItems: "stretch",
+        borderTop: "1px solid var(--th-border)",
+        background: "var(--th-bg-elevated)",
+        height: 22,
       }}
     >
-      {/* Dept header */}
-      <button
-        className="w-full flex items-center gap-2 px-3 py-2 hover:bg-[var(--th-bg-surface-hover)] transition-colors"
-        style={{ borderBottom: "1px solid var(--th-border)" }}
-        onClick={() => onSelectDepartment?.(dept)}
-      >
-        <span style={{ fontSize: 14 }}>{dept.icon ?? "🏢"}</span>
-        <span
-          className="flex-1 text-left text-xs font-semibold font-mono uppercase tracking-wider truncate"
-          style={{ color: "var(--th-text-heading)" }}
+      {keys.map((k) => (
+        <button
+          key={k.f}
+          type="button"
+          onClick={k.action}
+          style={{
+            display: "flex", alignItems: "center", gap: 0,
+            border: "none", borderRight: "1px solid var(--th-border)",
+            background: "none", cursor: k.action ? "pointer" : "default", padding: 0,
+          }}
         >
-          {localeName(locale, dept)}
-        </span>
-        <div className="flex items-center gap-2 shrink-0">
-          {activeTasks > 0 && (
-            <span
-              className="text-[9px] font-mono px-1"
-              style={{ color: "var(--th-attr-elite)", background: "rgba(34,197,94,0.08)", borderRadius: 0, border: "1px solid rgba(34,197,94,0.2)" }}
-            >
-              {activeTasks} {isKo ? "진행중" : "active"}
-            </span>
-          )}
-          <span className="text-[9px] font-mono" style={{ color: "var(--th-text-muted)" }}>
-            {workingCount}/{agents.length}
+          <span style={{ ...mono, fontSize: "9px", fontWeight: 700, background: "var(--th-text-secondary)", color: "var(--th-bg-primary)", padding: "0 4px", height: "100%", display: "flex", alignItems: "center" }}>
+            {k.f}
           </span>
-        </div>
-      </button>
-
-      {/* Agent rows */}
-      <div className="divide-y" style={{ borderColor: "var(--th-border)" }}>
-        {agents.map((agent) => (
-          <AgentRow
-            key={agent.id}
-            agent={agent}
-            tasks={tasks}
-            locale={locale}
-            isKo={isKo}
-            unread={unreadAgentIds.has(agent.id)}
-            dimmed={projectAgentIds !== undefined && !projectAgentIds.has(agent.id)}
-            inTeam={projectAgentIds !== undefined && projectAgentIds.has(agent.id)}
-            hasProject={hasProject}
-            onAddToTeam={onAddToTeam ? () => onAddToTeam(agent.id) : undefined}
-            onRemoveFromTeam={onRemoveFromTeam ? () => onRemoveFromTeam(agent.id) : undefined}
-            onClick={() => onSelectAgent(agent)}
-          />
-        ))}
-      </div>
+          <span style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", padding: "0 8px" }}>
+            {k.label}
+          </span>
+        </button>
+      ))}
     </div>
   );
 }
 
+/** ── Main OfficeView (htop style) ── */
 export default function OfficeView({
   departments,
   agents,
   tasks,
   onSelectAgent,
-  onSelectDepartment,
   projectAgentIds,
   unreadAgentIds = new Set(),
   currentProject,
   onAddToTeam,
   onRemoveFromTeam,
 }: WorkMapProps) {
-  const { t, locale } = useI18n();
-  const [filterDeptId, setFilterDeptId] = useState<string | null>(null);
-  const [filterProjectOnly, setFilterProjectOnly] = useState(false);
-  const [filterStatus, setFilterStatus] = useState<string | null>(null);
+  const { locale } = useI18n();
   const isKo = locale.startsWith("ko");
 
-  const tr = (ko: string, en: string) => t({ ko, en, ja: en, zh: en });
+  const [sortKey, setSortKey] = useState<SortKey>("status");
+  const [filterProjectOnly, setFilterProjectOnly] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [tick, setTick] = useState(0);
 
-  const visibleDepts = useMemo(
-    () => (filterDeptId ? departments.filter((d) => d.id === filterDeptId) : departments),
-    [departments, filterDeptId],
-  );
+  const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };
 
-  const effectiveAgents = useMemo(() => {
-    let result = filterProjectOnly && projectAgentIds
-      ? agents.filter((a) => projectAgentIds.has(a.id))
-      : agents;
-    if (filterStatus === "running") result = result.filter((a) => a.status === "working");
-    else if (filterStatus === "idle") result = result.filter((a) => a.status === "idle" || a.status === "break");
-    else if (filterStatus === "offline") result = result.filter((a) => a.status === "offline");
-    return result;
-  }, [agents, filterProjectOnly, projectAgentIds, filterStatus]);
+  // 1초마다 uptime 갱신
+  useEffect(() => {
+    const id = setInterval(() => setTick((v) => v + 1), 1000);
+    return () => clearInterval(id);
+  }, []);
 
-  const agentsByDept = useMemo(() => {
-    const map = new Map<string, Agent[]>();
-    for (const dept of departments) {
-      map.set(dept.id, effectiveAgents.filter((a) => a.department_id === dept.id));
+  // 표시할 에이전트 풀
+  const baseAgents = useMemo(() => {
+    let pool = filterProjectOnly && projectAgentIds ? agents.filter((a) => projectAgentIds.has(a.id)) : agents;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      pool = pool.filter((a) =>
+        (a.name_ko ?? a.name).toLowerCase().includes(q) ||
+        a.name.toLowerCase().includes(q) ||
+        (a.department?.name ?? "").toLowerCase().includes(q)
+      );
     }
-    return map;
-  }, [departments, effectiveAgents]);
+    return pool;
+  }, [agents, filterProjectOnly, projectAgentIds, searchQuery]);
 
-  const workingCount = effectiveAgents.filter((a) => a.status === "working").length;
-  const inProgressTaskCount = tasks.filter((t) => t.status === "in_progress").length;
+  // 정렬
+  const sortedAgents = useMemo(() => {
+    const arr = [...baseAgents];
+    arr.sort((a, b) => {
+      if (sortKey === "status") return (STATUS_ORDER[a.status] ?? 9) - (STATUS_ORDER[b.status] ?? 9);
+      if (sortKey === "name") return (a.name_ko ?? a.name).localeCompare(b.name_ko ?? b.name);
+      if (sortKey === "dept") return (a.department?.name ?? "").localeCompare(b.department?.name ?? "");
+      if (sortKey === "load") {
+        const ta = getAgentTask(a.id, tasks);
+        const tb = getAgentTask(b.id, tasks);
+        return getLoad(b, tb) - getLoad(a, ta);
+      }
+      if (sortKey === "time") {
+        const ta = getAgentTask(a.id, tasks);
+        const tb = getAgentTask(b.id, tasks);
+        return (tb?.started_at ?? 0) - (ta?.started_at ?? 0);
+      }
+      return 0;
+    });
+    return arr;
+  }, [baseAgents, sortKey, tasks, tick]);
+
   const teamCount = projectAgentIds?.size ?? 0;
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
-      {/* Top status bar */}
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden", background: "var(--th-bg-primary)" }}>
+
+      {/* ── 헤더 ── */}
       <div
-        className="flex-shrink-0 flex items-center gap-4 px-4 py-2"
-        style={{ borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}
+        style={{
+          flexShrink: 0, display: "flex", alignItems: "center", gap: 8,
+          padding: "6px 14px",
+          borderBottom: "1px solid var(--th-border)",
+          background: "var(--th-bg-elevated)",
+          borderLeft: "3px solid var(--th-accent)",
+        }}
       >
-        <div className="flex items-center gap-2">
-          {workingCount > 0 && (
-            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-          )}
-          <span
-            className="text-[10px] font-mono uppercase tracking-widest"
-            style={{ color: "var(--th-text-muted)" }}
-          >
-            {tr("워크맵", "WORK MAP")}
-          </span>
-          {currentProject && (
-            <span
-              className="text-[10px] font-mono px-1.5 py-0.5"
-              style={{ color: "var(--th-accent)", background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)", borderRadius: 0 }}
-            >
+        <span style={{ ...mono, fontSize: "9px", fontWeight: 700, letterSpacing: "0.15em", color: "var(--th-text-muted)" }}>
+          WORKMAP
+        </span>
+        {currentProject && (
+          <>
+            <span style={{ color: "var(--th-border)" }}>▸</span>
+            <span style={{ ...mono, fontSize: "10px", fontWeight: 600, color: "var(--th-text-heading)" }}>
               {currentProject.name}
             </span>
-          )}
-          {currentProject && teamCount > 0 && (
-            <span className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
-              팀원 {teamCount}명
-            </span>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          {/* 상태 필터 탭 */}
-          {[
-            { key: null, label: tr("전체", "ALL") },
-            { key: "running", label: "● RUNNING" },
-            { key: "idle", label: "○ IDLE" },
-            { key: "offline", label: "○ OFFLINE" },
-          ].map((f) => (
-            <button
-              key={String(f.key)}
-              type="button"
-              onClick={() => setFilterStatus(f.key)}
-              className="text-[9px] font-mono px-2 py-0.5 transition-colors"
-              style={{
-                borderRadius: 0,
-                border: `1px solid ${filterStatus === f.key ? "var(--th-accent)" : "var(--th-border)"}`,
-                color: filterStatus === f.key ? "var(--th-accent)" : "var(--th-text-muted)",
-                background: filterStatus === f.key ? "rgba(245,158,11,0.08)" : "transparent",
-              }}
-            >
-              {f.label}
-            </button>
-          ))}
-          {/* 이 프로젝트만 보기 토글 */}
-          {currentProject && projectAgentIds && projectAgentIds.size > 0 && (
-            <button
-              type="button"
-              onClick={() => setFilterProjectOnly((v) => !v)}
-              className="text-[9px] font-mono px-2 py-0.5 transition-colors"
-              style={{
-                borderRadius: 0,
-                border: `1px solid ${filterProjectOnly ? "var(--th-accent)" : "var(--th-border)"}`,
-                color: filterProjectOnly ? "var(--th-accent)" : "var(--th-text-muted)",
-                background: filterProjectOnly ? "rgba(245,158,11,0.08)" : "transparent",
-              }}
-            >
-              {filterProjectOnly ? "✓ " + tr("이 프로젝트만", "This project") : tr("이 프로젝트만", "This project")}
-            </button>
-          )}
-        </div>
+          </>
+        )}
+        <span style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", marginLeft: 8, opacity: 0.6 }}>
+          htop {new Date().toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false })}
+        </span>
 
-        {/* Dept filter */}
-        <div className="ml-auto flex items-center gap-0" style={{ borderLeft: "1px solid var(--th-border)", paddingLeft: "0.75rem" }}>
-          <button
-            className="px-2.5 py-1 text-[10px] font-mono transition-colors"
-            style={{
-              color: filterDeptId === null ? "var(--th-text-heading)" : "var(--th-text-muted)",
-              borderBottom: filterDeptId === null ? "1px solid var(--th-accent, #f59e0b)" : "1px solid transparent",
-            }}
-            onClick={() => setFilterDeptId(null)}
-          >
-            ALL
-          </button>
-          {departments.map((dept) => (
+        {/* dept 필터 */}
+        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 0 }}>
+          {departments.map((d) => (
             <button
-              key={dept.id}
-              className="flex items-center gap-1 px-2.5 py-1 text-[10px] font-mono transition-colors"
-              style={{
-                color: filterDeptId === dept.id ? "var(--th-text-heading)" : "var(--th-text-muted)",
-                borderBottom: filterDeptId === dept.id ? "1px solid var(--th-accent, #f59e0b)" : "1px solid transparent",
-              }}
-              onClick={() => setFilterDeptId(dept.id)}
+              key={d.id}
+              type="button"
+              title={isKo ? d.name_ko ?? d.name : d.name}
+              style={{ ...mono, fontSize: "9px", padding: "3px 7px", border: "none", background: "transparent", color: "var(--th-text-muted)", cursor: "pointer" }}
             >
-              {dept.icon && <span style={{ fontSize: 11 }}>{dept.icon}</span>}
-              <span className="hidden sm:inline">{localeName(locale, dept)}</span>
+              {d.icon ?? d.name.slice(0, 1)}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Dept panels grid */}
-      <div className="flex-1 overflow-y-auto p-4">
-        {visibleDepts.length === 0 ? (
-          <div className="terminal-empty-state py-16">
-            <p className="terminal-empty-state-cmd">$ ls departments/</p>
-            <p className="terminal-empty-state-result">(empty)</p>
-            <p className="terminal-empty-state-hint">{tr("부서가 없습니다", "No departments yet")}</p>
+      {/* ── 상단 에이전트 부하 바 패널 ── */}
+      <TopPanel agents={sortedAgents} tasks={tasks} />
+
+      {/* ── 요약 통계 라인 ── */}
+      <SummaryBar agents={baseAgents} tasks={tasks} currentProject={currentProject} teamCount={teamCount} />
+
+      {/* ── 검색 바 (F3) ── */}
+      {searchOpen && (
+        <div style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: 8, padding: "4px 14px", borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
+          <span style={{ ...mono, fontSize: "9px", color: "var(--th-accent)", fontWeight: 700 }}>Search:</span>
+          <input
+            autoFocus
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Escape") { setSearchOpen(false); setSearchQuery(""); } }}
+            placeholder="agent name / dept..."
+            style={{ ...mono, fontSize: "10px", flex: 1, background: "transparent", border: "none", outline: "none", color: "var(--th-text-primary)", caretColor: "var(--th-accent)" }}
+          />
+          <button onClick={() => { setSearchOpen(false); setSearchQuery(""); }} style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", background: "none", border: "none", cursor: "pointer" }}>ESC</button>
+        </div>
+      )}
+
+      {/* ── 컬럼 헤더 ── */}
+      <TableHeader sortKey={sortKey} onSort={setSortKey} />
+
+      {/* ── 프로세스 목록 ── */}
+      <div style={{ flex: 1, overflowY: "auto" }}>
+        {sortedAgents.length === 0 ? (
+          <div style={{ ...mono, fontSize: "11px", color: "var(--th-text-muted)", textAlign: "center", padding: "40px 0", opacity: 0.5 }}>
+            <p>no processes</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
-            {visibleDepts.map((dept) => {
-              const deptAgents = agentsByDept.get(dept.id) ?? [];
-              if (deptAgents.length === 0) return null;
-              return (
-                <DeptPanel
-                  key={dept.id}
-                  dept={dept}
-                  agents={deptAgents}
-                  tasks={tasks}
-                  locale={locale}
-                  isKo={isKo}
-                  unreadAgentIds={unreadAgentIds}
-                  projectAgentIds={projectAgentIds}
-                  hasProject={!!currentProject}
-                  onSelectAgent={onSelectAgent}
-                  onSelectDepartment={onSelectDepartment}
-                  onAddToTeam={onAddToTeam}
-                  onRemoveFromTeam={onRemoveFromTeam}
-                />
-              );
-            })}
-          </div>
+          sortedAgents.map((agent) => {
+            const task = getAgentTask(agent.id, tasks);
+            return (
+              <AgentRow
+                key={agent.id}
+                agent={agent}
+                task={task}
+                locale={locale}
+                isKo={isKo}
+                dimmed={filterProjectOnly && projectAgentIds !== undefined && !projectAgentIds.has(agent.id)}
+                inTeam={projectAgentIds !== undefined && projectAgentIds.has(agent.id)}
+                hasProject={!!currentProject}
+                unread={unreadAgentIds.has(agent.id)}
+                onAddToTeam={onAddToTeam ? () => void onAddToTeam(agent.id) : undefined}
+                onRemoveFromTeam={onRemoveFromTeam ? () => void onRemoveFromTeam(agent.id) : undefined}
+                onClick={() => onSelectAgent(agent)}
+              />
+            );
+          })
         )}
       </div>
+
+      {/* ── F-key 바 ── */}
+      <FKeyBar
+        onSearch={() => setSearchOpen(true)}
+        onToggleProject={() => setFilterProjectOnly((v) => !v)}
+        projectOnly={filterProjectOnly}
+      />
     </div>
   );
 }

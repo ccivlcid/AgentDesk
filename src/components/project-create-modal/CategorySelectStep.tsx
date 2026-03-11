@@ -26,14 +26,14 @@ export default function CategorySelectStep({ categories, selectedId, onSelect }:
             key={cat.id}
             onClick={() => onSelect(cat.id)}
             className={[
-              "flex items-start gap-3 p-3 rounded border text-left transition-all",
+              "flex items-start gap-3 p-3 border text-left transition-all",
               isSelected
                 ? "border-[var(--th-accent)] bg-[var(--th-bg-elevated)]"
                 : "border-[var(--th-border)] bg-[var(--th-bg-surface)] hover:border-[var(--th-border-accent)]",
             ].join(" ")}
           >
             <span
-              className="flex-shrink-0 w-8 h-8 rounded flex items-center justify-center text-sm font-bold"
+              className="flex-shrink-0 w-8 h-8 flex items-center justify-center text-sm font-bold"
               style={{ backgroundColor: `${cat.color}22`, color: cat.color }}
             >
               {ICON_MAP[cat.icon] ?? cat.icon}

@@ -65,7 +65,7 @@ export default function ChatEditorModal({
   return (
     <div className="fixed inset-0 z-[2200] flex items-center justify-center px-4">
       <button className="absolute inset-0" style={{ background: "rgba(0,0,0,0.7)" }} onClick={closeEditorModal} aria-label="close modal" />
-      <div className="relative w-full max-w-lg p-4 shadow-2xl space-y-3" style={{ borderRadius: "4px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
+      <div className="relative w-full max-w-lg p-4 shadow-2xl space-y-3" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
         <div className="flex items-center justify-between">
           <h4 className="text-sm font-semibold font-mono" style={{ color: "var(--th-text-heading)" }}>
             {editor.mode === "create"
@@ -75,7 +75,7 @@ export default function ChatEditorModal({
           <button
             onClick={closeEditorModal}
             className="px-2 py-1 text-xs font-mono transition-colors"
-            style={{ borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
+            style={{ borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
           >
             {t({ ko: "닫기", en: "Close", ja: "閉じる", zh: "关闭" })}
           </button>
@@ -98,7 +98,7 @@ export default function ChatEditorModal({
                 }));
               }}
               className="w-full px-3 py-2 text-sm focus:outline-none"
-              style={{ borderRadius: "2px", background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)" }}
+              style={{ borderRadius: 0, background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)" }}
             >
               {MESSENGER_CHANNELS.map((channel) => (
                 <option key={channel} value={channel}>
@@ -141,7 +141,7 @@ export default function ChatEditorModal({
               zh: `输入 ${CHANNEL_META[editor.channel].label} 令牌`,
             })}
             className="w-full px-3 py-2 text-sm focus:outline-none"
-            style={{ borderRadius: "2px", background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)" }}
+            style={{ borderRadius: 0, background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)" }}
           />
         </div>
 
@@ -160,7 +160,7 @@ export default function ChatEditorModal({
                 zh: "例如：设计组通知",
               })}
               className="w-full px-3 py-2 text-sm focus:outline-none"
-              style={{ borderRadius: "2px", background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)" }}
+              style={{ borderRadius: 0, background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)" }}
             />
           </div>
 
@@ -183,7 +183,7 @@ export default function ChatEditorModal({
                   });
                 }}
                 className="mb-2 w-full px-3 py-2 text-xs focus:outline-none"
-                style={{ borderRadius: "2px", background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)" }}
+                style={{ borderRadius: 0, background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)" }}
               >
                 <option value="">
                   {t({
@@ -218,7 +218,7 @@ export default function ChatEditorModal({
               }}
               placeholder={channelTargetHint(editor.channel)}
               className="w-full px-3 py-2 text-sm font-mono focus:outline-none"
-              style={{ borderRadius: "2px", background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)" }}
+              style={{ borderRadius: 0, background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)" }}
             />
             {editor.channel === "discord" && (
               <div className="mt-1 space-y-1">
@@ -256,7 +256,7 @@ export default function ChatEditorModal({
         </div>
 
         {(editor.channel === "slack" || editor.channel === "discord") && (
-          <div className="space-y-3 p-3" style={{ border: "1px solid var(--th-border)", borderRadius: "2px", background: "var(--th-bg-elevated)" }}>
+          <div className="space-y-3 p-3" style={{ border: "1px solid var(--th-border)", borderRadius: 0, background: "var(--th-bg-elevated)" }}>
             <h4 className="text-[10px] font-mono uppercase tracking-wider font-bold" style={{ color: "var(--th-accent)" }}>
               {t({ ko: "태스크 알림 웹훅 (선택)", en: "Task notification webhook (optional)", ja: "タスク通知ウェブフック（任意）", zh: "任务通知 Webhook（可选）" })}
             </h4>
@@ -277,7 +277,7 @@ export default function ChatEditorModal({
                   onChange={(e) => setEditor((prev) => ({ ...prev, webhookUrl: e.target.value }))}
                   placeholder={editor.channel === "slack" ? "https://hooks.slack.com/services/..." : "https://discord.com/api/webhooks/..."}
                   className="w-full px-3 py-2 text-xs font-mono focus:outline-none"
-                  style={{ borderRadius: "2px", background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)" }}
+                  style={{ borderRadius: 0, background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)" }}
                 />
               </div>
               <div>
@@ -290,7 +290,7 @@ export default function ChatEditorModal({
                   onChange={(e) => setEditor((prev) => ({ ...prev, webhookName: e.target.value }))}
                   placeholder={editor.name.trim() || (editor.channel === "slack" ? "Slack 알림" : "Discord 알림")}
                   className="w-full px-3 py-2 text-xs font-mono focus:outline-none"
-                  style={{ borderRadius: "2px", background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)" }}
+                  style={{ borderRadius: 0, background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)" }}
                 />
               </div>
               <div>
@@ -313,8 +313,8 @@ export default function ChatEditorModal({
                       className="px-2 py-1 text-[10px] font-mono transition"
                       style={
                         editor.webhookEvents.includes(ev.value)
-                          ? { border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.12)", color: "var(--th-accent)", borderRadius: "2px" }
-                          : { border: "1px solid var(--th-border)", background: "var(--th-bg-primary)", color: "var(--th-text-muted)", borderRadius: "2px" }
+                          ? { border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.12)", color: "var(--th-accent)", borderRadius: 0 }
+                          : { border: "1px solid var(--th-border)", background: "var(--th-bg-primary)", color: "var(--th-text-muted)", borderRadius: 0 }
                       }
                     >
                       {ev.label}
@@ -339,7 +339,7 @@ export default function ChatEditorModal({
               }))
             }
             className="w-full px-3 py-2 text-sm focus:outline-none"
-            style={{ borderRadius: "2px", background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)" }}
+            style={{ borderRadius: 0, background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)" }}
           >
             {workflowPackOptions.map((pack) => (
               <option key={pack.key} value={pack.key} disabled={!pack.enabled && pack.key !== editor.workflowPackKey}>
@@ -401,14 +401,14 @@ export default function ChatEditorModal({
           <button
             onClick={closeEditorModal}
             className="px-3 py-1.5 text-xs font-mono transition-colors"
-            style={{ borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
+            style={{ borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
           >
             {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}
           </button>
           <button
             onClick={handleSaveEditor}
             className="px-3 py-1.5 text-xs font-mono uppercase tracking-wide transition-colors"
-            style={{ borderRadius: "2px", background: "var(--th-accent)", color: "#000" }}
+            style={{ borderRadius: 0, background: "var(--th-accent)", color: "#000" }}
           >
             {t({ ko: "확인", en: "Confirm", ja: "確認", zh: "确认" })}
           </button>

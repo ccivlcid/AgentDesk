@@ -52,7 +52,7 @@ export default function HooksLibrary({ agents, departments }: HooksLibraryProps)
           <button
             onClick={vm.loadHooks}
             className="mt-4 px-4 py-2 text-sm font-mono transition-all"
-            style={{ borderRadius: "2px", background: "rgba(251,191,36,0.1)", color: "var(--th-accent)", border: "1px solid rgba(251,191,36,0.35)" }}
+            style={{ borderRadius: 0, background: "rgba(251,191,36,0.1)", color: "var(--th-accent)", border: "1px solid rgba(251,191,36,0.35)" }}
           >
             {t({ ko: "\uB2E4\uC2DC \uC2DC\uB3C4", en: "Retry", ja: "\u518D\u8A66\u884C", zh: "\u91CD\u8BD5" })}
           </button>

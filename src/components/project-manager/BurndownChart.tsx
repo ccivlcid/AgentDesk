@@ -111,11 +111,11 @@ export default function BurndownChart({ projectId, t }: Props) {
           {tr(t, "전체", "Total")}
         </span>
         <span className="flex items-center gap-1">
-          <span className="w-3 h-0.5" style={{ background: "rgb(52,211,153)", borderRadius: "1px" }} />
+          <span className="w-3 h-0.5" style={{ background: "rgb(52,211,153)", borderRadius: 0 }} />
           {tr(t, "완료", "Done")}
         </span>
         <span className="flex items-center gap-1">
-          <span className="w-3 h-0.5" style={{ background: "rgb(251,191,36)", borderRadius: "1px" }} />
+          <span className="w-3 h-0.5" style={{ background: "rgb(251,191,36)", borderRadius: 0 }} />
           {tr(t, "잔여", "Remaining")}
         </span>
       </div>

@@ -37,13 +37,6 @@ export function useAppLabels({
   });
   const viewTitle = (() => {
     switch (view) {
-      case "office":
-        return pickLang(uiLanguage, {
-          ko: "오피스",
-          en: "Office",
-          ja: "オフィス",
-          zh: "办公室",
-        });
       case "dashboard":
         return pickLang(uiLanguage, {
           ko: "대시보드",
@@ -126,10 +119,10 @@ export function useAppLabels({
     zh: "全员公告",
   });
   const groupChatLabel = pickLang(uiLanguage, {
-    ko: "그룹 채팅",
-    en: "Group Chat",
-    ja: "グループチャット",
-    zh: "群聊",
+    ko: "회의",
+    en: "Meeting",
+    ja: "会議",
+    zh: "会议",
   });
   const reportLabel = pickLang(uiLanguage, {
     ko: "보고서",

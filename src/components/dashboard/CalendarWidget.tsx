@@ -89,13 +89,13 @@ export function DashboardCalendar({ tasks, t }: Props) {
   }, [creationsByDay, viewYear, viewMonth, daysInMonth]);
 
   return (
-    <div className="space-y-3 p-4" style={{ background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)", borderRadius: "2px" }}>
+    <div className="space-y-3 p-4" style={{ background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)", borderRadius: 0 }}>
       {/* Nav bar */}
       <div className="flex items-center justify-between">
         <button
           onClick={prevMonth}
           className="px-2 py-1 text-xs font-mono transition hover:opacity-70"
-          style={{ color: "var(--th-text-muted)", border: "1px solid var(--th-border)", borderRadius: "2px", background: "var(--th-bg-primary)" }}
+          style={{ color: "var(--th-text-muted)", border: "1px solid var(--th-border)", borderRadius: 0, background: "var(--th-bg-primary)" }}
         >
           ‹
         </button>
@@ -115,7 +115,7 @@ export function DashboardCalendar({ tasks, t }: Props) {
         <button
           onClick={nextMonth}
           className="px-2 py-1 text-xs font-mono transition hover:opacity-70"
-          style={{ color: "var(--th-text-muted)", border: "1px solid var(--th-border)", borderRadius: "2px", background: "var(--th-bg-primary)" }}
+          style={{ color: "var(--th-text-muted)", border: "1px solid var(--th-border)", borderRadius: 0, background: "var(--th-bg-primary)" }}
         >
           ›
         </button>
@@ -146,7 +146,7 @@ export function DashboardCalendar({ tasks, t }: Props) {
               className="flex flex-col items-center justify-center"
               style={{
                 height: 28,
-                borderRadius: "2px",
+                borderRadius: 0,
                 border: isToday
                   ? "1px solid var(--th-accent)"
                   : done > 0
@@ -182,13 +182,13 @@ export function DashboardCalendar({ tasks, t }: Props) {
       {/* Legend */}
       <div className="flex items-center gap-4 pt-1" style={{ borderTop: "1px solid var(--th-border)" }}>
         <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3" style={{ borderRadius: "1px", background: "rgba(52,211,153,0.5)" }} />
+          <div className="w-3 h-3" style={{ borderRadius: 0, background: "rgba(52,211,153,0.5)" }} />
           <span className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
             {t({ ko: "완료", en: "Done", ja: "完了", zh: "完成" })}
           </span>
         </div>
         <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3" style={{ borderRadius: "1px", border: "1px solid var(--th-accent)" }} />
+          <div className="w-3 h-3" style={{ borderRadius: 0, border: "1px solid var(--th-accent)" }} />
           <span className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
             {t({ ko: "오늘", en: "Today", ja: "今日", zh: "今天" })}
           </span>

@@ -8,6 +8,18 @@ import MessageContent from "./MessageContent";
 import type { DecisionInboxItem } from "./chat/decision-inbox";
 import { formatDecisionInboxTime as formatTime, type DecisionInboxModalProps } from "./chat/decision-inbox-modal.meta";
 
+const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };
+
+const KIND_META: Record<
+  string,
+  { label: { ko: string; en: string }; color: string; badge: string }
+> = {
+  project_review_ready: { label: { ko: "프로젝트 검토", en: "Project Review" }, color: "#818cf8", badge: "REVIEW" },
+  task_timeout_resume:  { label: { ko: "타임아웃 재개", en: "Timeout Resume" }, color: "#fb923c", badge: "TIMEOUT" },
+  review_round_pick:    { label: { ko: "리뷰 라운드",   en: "Review Round"  }, color: "#34d399", badge: "ROUND" },
+};
+const defaultKind = { label: { ko: "에이전트 요청", en: "Agent Request" }, color: "#94a3b8", badge: "REQUEST" };
+
 export default function DecisionInboxModal({
   open,
   loading,
@@ -19,6 +31,7 @@ export default function DecisionInboxModal({
   onRefresh,
   onReplyOption,
   onOpenChat,
+  onOpenGroupChat,
 }: DecisionInboxModalProps) {
   const t = (text: { ko: string; en: string; ja?: string; zh?: string }) => pickLang(uiLanguage, text);
   const { showToast } = useToast();
@@ -28,10 +41,8 @@ export default function DecisionInboxModal({
     for (const agent of agents) map.set(agent.id, agent);
     return map;
   }, [agents]);
-  const [followupTarget, setFollowupTarget] = useState<{
-    itemId: string;
-    optionNumber: number;
-  } | null>(null);
+
+  const [followupTarget, setFollowupTarget] = useState<{ itemId: string; optionNumber: number } | null>(null);
   const [followupDraft, setFollowupDraft] = useState("");
   const [reviewPickSelections, setReviewPickSelections] = useState<Record<string, number[]>>({});
   const [reviewPickDrafts, setReviewPickDrafts] = useState<Record<string, string>>({});
@@ -46,10 +57,7 @@ export default function DecisionInboxModal({
     }
     if (!followupTarget) return;
     const stillExists = items.some((entry) => entry.id === followupTarget.itemId);
-    if (!stillExists) {
-      setFollowupTarget(null);
-      setFollowupDraft("");
-    }
+    if (!stillExists) { setFollowupTarget(null); setFollowupDraft(""); }
   }, [open, followupTarget, items]);
 
   useEffect(() => {
@@ -58,10 +66,7 @@ export default function DecisionInboxModal({
       const next: Record<string, number[]> = {};
       let changed = false;
       for (const [itemId, nums] of Object.entries(prev)) {
-        if (!keep.has(itemId)) {
-          changed = true;
-          continue;
-        }
+        if (!keep.has(itemId)) { changed = true; continue; }
         next[itemId] = nums;
       }
       return changed ? next : prev;
@@ -71,10 +76,7 @@ export default function DecisionInboxModal({
       const next: Record<string, string> = {};
       let changed = false;
       for (const [itemId, draft] of Object.entries(prev)) {
-        if (!keep.has(itemId)) {
-          changed = true;
-          continue;
-        }
+        if (!keep.has(itemId)) { changed = true; continue; }
         next[itemId] = draft;
       }
       return changed ? next : prev;
@@ -124,36 +126,17 @@ export default function DecisionInboxModal({
     setReviewPickSelections((prev) => {
       const current = prev[itemId] ?? [];
       const exists = current.includes(optionNumber);
-      const nextList = exists
-        ? current.filter((num) => num !== optionNumber)
-        : [...current, optionNumber].sort((a, b) => a - b);
-      return {
-        ...prev,
-        [itemId]: nextList,
-      };
+      return { ...prev, [itemId]: exists ? current.filter((n) => n !== optionNumber) : [...current, optionNumber].sort((a, b) => a - b) };
     });
   }
 
   function setReviewDraft(itemId: string, value: string) {
-    setReviewPickDrafts((prev) => ({
-      ...prev,
-      [itemId]: value,
-    }));
+    setReviewPickDrafts((prev) => ({ ...prev, [itemId]: value }));
   }
 
   function clearReviewInput(itemId: string) {
-    setReviewPickSelections((prev) => {
-      if (!(itemId in prev)) return prev;
-      const next = { ...prev };
-      delete next[itemId];
-      return next;
-    });
-    setReviewPickDrafts((prev) => {
-      if (!(itemId in prev)) return prev;
-      const next = { ...prev };
-      delete next[itemId];
-      return next;
-    });
+    setReviewPickSelections((prev) => { const next = { ...prev }; delete next[itemId]; return next; });
+    setReviewPickDrafts((prev) => { const next = { ...prev }; delete next[itemId]; return next; });
   }
 
   function handleSubmitReviewPick(item: DecisionInboxItem) {
@@ -166,10 +149,7 @@ export default function DecisionInboxModal({
       showToast("Pick at least one option or enter an extra note.", "warning");
       return;
     }
-    onReplyOption(item, optionNumber, {
-      selected_option_numbers: selected,
-      ...(extraNote ? { note: extraNote } : {}),
-    });
+    onReplyOption(item, optionNumber, { selected_option_numbers: selected, ...(extraNote ? { note: extraNote } : {}) });
     clearReviewInput(item.id);
   }
 
@@ -180,302 +160,350 @@ export default function DecisionInboxModal({
     onReplyOption(item, skipOption.number);
   }
 
-  const getKindLabel = (kind: DecisionInboxItem["kind"]) => {
-    if (kind === "project_review_ready") {
-      return t({ ko: "프로젝트 의사결정", en: "Project Decision", ja: "プロジェクト判断", zh: "项目决策" });
-    }
-    if (kind === "task_timeout_resume") {
-      return t({ ko: "중단 작업 재개", en: "Timeout Resume", ja: "中断タスク再開", zh: "超时任务续跑" });
-    }
-    if (kind === "review_round_pick") {
-      return t({
-        ko: "리뷰 라운드 의사결정",
-        en: "Review Round Decision",
-        ja: "レビューラウンド判断",
-        zh: "评审轮次决策",
-      });
-    }
-    return t({ ko: "에이전트 요청", en: "Agent Request", ja: "エージェント要請", zh: "代理请求" });
-  };
-  const getKindAvatarFallback = (kind: DecisionInboxItem["kind"]) => {
-    if (kind === "project_review_ready") return "🧑‍💼";
-    if (kind === "task_timeout_resume") return "⏱️";
-    if (kind === "review_round_pick") return "🧾";
-    return "🤖";
-  };
-
   if (!open) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75" onClick={onClose}>
       <div
-        className="relative mx-4 w-full max-w-3xl rounded border shadow-2xl"
-        style={{ background: "var(--th-bg-elevated)", borderColor: "var(--th-border-strong)" }}
-        onClick={(event) => event.stopPropagation()}
+        className="relative mx-4 w-full max-w-2xl flex flex-col shadow-2xl"
+        style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-primary)", maxHeight: "85vh" }}
+        onClick={(e) => e.stopPropagation()}
       >
+        {/* ── 헤더 ── */}
         <div
-          className="flex items-center justify-between px-6 py-4"
-          style={{ borderBottom: "1px solid var(--th-border)", borderLeft: "3px solid var(--th-accent)" }}
+          className="flex items-center justify-between px-5 py-3 flex-shrink-0"
+          style={{ borderBottom: "2px solid var(--th-accent)", background: "var(--th-bg-elevated)" }}
         >
           <div className="flex items-center gap-3">
-            <h2
-              className="text-xs font-bold uppercase tracking-widest"
-              style={{ color: "var(--th-text-heading)", fontFamily: "var(--th-font-mono)" }}
-            >
-              {t({ ko: "미결 의사결정", en: "Pending Decisions", ja: "未決の意思決定", zh: "待处理决策" })}
-            </h2>
+            <span style={{ ...mono, fontSize: "11px", fontWeight: 700, color: "var(--th-accent)", letterSpacing: "0.08em" }}>
+              ■ DECISION INBOX
+            </span>
             <span
-              className="px-2 py-0.5 text-xs font-bold font-mono"
-              style={{ background: "var(--th-accent)20", color: "var(--th-accent)", borderRadius: "2px" }}
+              style={{
+                ...mono, fontSize: "11px", fontWeight: 700,
+                padding: "1px 8px",
+                background: items.length > 0 ? "var(--th-accent)" : "var(--th-bg-surface)",
+                color: items.length > 0 ? "#000" : "var(--th-text-muted)",
+              }}
             >
               {items.length}
             </span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             <button
               onClick={onRefresh}
-              className="px-3 py-1.5 text-xs font-mono transition"
-              style={{ border: "1px solid var(--th-border)", borderRadius: "2px", color: "var(--th-text-secondary)", background: "transparent" }}
+              style={{
+                ...mono, fontSize: "10px", fontWeight: 700,
+                padding: "2px 8px",
+                border: "1px solid var(--th-border)",
+                background: "transparent",
+                color: "var(--th-text-muted)",
+                cursor: "pointer",
+                letterSpacing: "0.04em",
+              }}
             >
-              {t({ ko: "새로고침", en: "Refresh", ja: "更新", zh: "刷新" })}
+              ↺ {t({ ko: "새로고침", en: "REFRESH", ja: "更新", zh: "刷新" })}
             </button>
             <button
               onClick={onClose}
-              className="flex h-7 w-7 items-center justify-center text-xs font-mono transition"
-              style={{ border: "1px solid var(--th-border)", borderRadius: "2px", color: "var(--th-text-muted)", background: "transparent" }}
+              style={{
+                ...mono, fontSize: "12px",
+                width: 26, height: 26,
+                border: "1px solid var(--th-border)",
+                background: "transparent",
+                color: "var(--th-text-muted)",
+                cursor: "pointer",
+              }}
             >
               ✕
             </button>
           </div>
         </div>
 
-        <div className="max-h-[70vh] overflow-y-auto p-4">
+        {/* ── 목록 ── */}
+        <div className="flex-1 overflow-y-auto">
           {loading ? (
-            <div className="py-12 text-center text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
-              {t({
-                ko: "미결 목록 불러오는 중...",
-                en: "Loading pending decisions...",
-                ja: "未決一覧を読み込み中...",
-                zh: "正在加载待处理决策...",
-              })}
+            <div className="flex items-center gap-2 px-5 py-8" style={{ ...mono, fontSize: "12px", color: "var(--th-text-muted)" }}>
+              <span className="animate-pulse">▌</span>
+              {t({ ko: "불러오는 중...", en: "Loading...", ja: "読み込み中...", zh: "加载中..." })}
             </div>
           ) : items.length === 0 ? (
-            <div className="py-12 text-center text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
-              {t({
-                ko: "현재 미결 의사결정이 없습니다.",
-                en: "No pending decisions right now.",
-                ja: "現在、未決の意思決定はありません。",
-                zh: "当前没有待处理决策。",
-              })}
+            <div className="px-5 py-10 text-center">
+              <p style={{ ...mono, fontSize: "28px", opacity: 0.2 }}>✓</p>
+              <p style={{ ...mono, fontSize: "11px", color: "var(--th-text-muted)", marginTop: 8 }}>
+                {t({ ko: "미결 의사결정 없음", en: "No pending decisions", ja: "未決の意思決定なし", zh: "无待处理决策" })}
+              </p>
             </div>
           ) : (
-            <div className="space-y-3">
-              {items.map((item) => (
-                <div key={item.id} className="p-3" style={{ border: "1px solid var(--th-border)", borderRadius: "2px", background: "var(--th-bg-surface)" }}>
-                  <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-                    {(() => {
-                      const agent = item.agentId ? agentById.get(item.agentId) : undefined;
-                      return (
-                        <div className="flex min-w-0 items-start gap-2">
-                          {agent ? (
-                            <span className="mt-0.5 inline-block" style={{ border: "1px solid var(--th-border)", borderRadius: "2px", background: "var(--th-terminal-bg)" }}>
-                              <AgentAvatar agent={agent} size={32} />
+            <div>
+              {items.map((item, idx) => {
+                const agent = item.agentId ? agentById.get(item.agentId) : undefined;
+                const agentName = isKorean ? item.agentNameKo : item.agentName;
+                const meta = KIND_META[item.kind] ?? defaultKind;
+                const kindLabel = isKorean ? meta.label.ko : meta.label.en;
+                const isItemBusy = Boolean(busyKey?.startsWith(`${item.id}:`));
+
+                return (
+                  <div
+                    key={item.id}
+                    style={{
+                      borderBottom: "1px solid var(--th-border)",
+                      background: idx % 2 === 0 ? "transparent" : "rgba(255,255,255,0.012)",
+                    }}
+                  >
+                    {/* 에이전트 행 */}
+                    <div className="flex items-center justify-between gap-3 px-5 pt-3 pb-2">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        {/* 순번 */}
+                        <span style={{ ...mono, fontSize: "10px", color: "var(--th-text-muted)", flexShrink: 0, opacity: 0.5 }}>
+                          {String(idx + 1).padStart(2, "0")}
+                        </span>
+                        {/* 아바타 */}
+                        {agent ? (
+                          <AgentAvatar agent={agent} size={28} />
+                        ) : (
+                          <span
+                            className="flex items-center justify-center text-base"
+                            style={{ width: 28, height: 28, background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)", flexShrink: 0 }}
+                          >
+                            {item.agentAvatar || "🤖"}
+                          </span>
+                        )}
+                        {/* 이름 + 타입 */}
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span style={{ ...mono, fontSize: "12px", fontWeight: 700, color: "var(--th-text-heading)" }}>
+                              {agentName}
                             </span>
-                          ) : (
-                            <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center text-base" style={{ border: "1px solid var(--th-border)", borderRadius: "2px", background: "var(--th-terminal-bg)" }}>
-                              {item.agentAvatar || getKindAvatarFallback(item.kind)}
+                            <span
+                              style={{
+                                ...mono, fontSize: "8px", fontWeight: 700,
+                                padding: "1px 5px",
+                                border: `1px solid ${meta.color}40`,
+                                background: `${meta.color}12`,
+                                color: meta.color,
+                                letterSpacing: "0.08em",
+                              }}
+                            >
+                              {meta.badge}
                             </span>
-                          )}
-                          <div className="min-w-0">
-                            <p className="truncate text-sm font-semibold text-white">
-                              {isKorean ? item.agentNameKo : item.agentName}
-                            </p>
-                            <p className="text-[11px] text-indigo-300/90">{getKindLabel(item.kind)}</p>
-                            <p className="text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>{formatTime(item.createdAt, uiLanguage)}</p>
+                            <span style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)" }}>
+                              {kindLabel}
+                            </span>
                           </div>
+                          <span style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", opacity: 0.6 }}>
+                            {formatTime(item.createdAt, uiLanguage)}
+                          </span>
                         </div>
-                      );
-                    })()}
-                    {item.agentId ? (
-                      <button
-                        onClick={() => onOpenChat(item.agentId!)}
-                        className="px-2 py-1 text-[11px] font-mono transition"
-                        style={{ border: "1px solid var(--th-border)", borderRadius: "2px", color: "var(--th-text-secondary)", background: "transparent" }}
-                      >
-                        {t({ ko: "채팅 열기", en: "Open Chat", ja: "チャットを開く", zh: "打开聊天" })}
-                      </button>
-                    ) : null}
-                  </div>
+                      </div>
+                      {item.agentId && (
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          {item.kind === "project_review_ready" && onOpenGroupChat && (
+                            <button
+                              onClick={() => { onOpenGroupChat?.([item.agentId!]); }}
+                              style={{
+                                ...mono, fontSize: "9px", fontWeight: 700,
+                                padding: "2px 8px",
+                                border: "1px solid rgba(129,140,248,0.5)",
+                                background: "rgba(129,140,248,0.1)",
+                                color: "#818cf8",
+                                cursor: "pointer",
+                                letterSpacing: "0.04em",
+                              }}
+                            >
+                              {t({ ko: "회의 참여", en: "JOIN MEETING", ja: "会議参加", zh: "加入会议" })}
+                            </button>
+                          )}
+                          <button
+                            onClick={() => onOpenChat(item.agentId!)}
+                            style={{
+                              ...mono, fontSize: "9px", fontWeight: 700,
+                              padding: "2px 8px",
+                              border: "1px solid var(--th-border)",
+                              background: "transparent",
+                              color: "var(--th-text-muted)",
+                              cursor: "pointer",
+                              letterSpacing: "0.04em",
+                            }}
+                          >
+                            {t({ ko: "채팅", en: "CHAT", ja: "チャット", zh: "聊天" })}
+                          </button>
+                        </div>
+                      )}
+                    </div>
 
-                  <div className="px-2.5 py-2 text-xs font-mono" style={{ border: "1px solid var(--th-border)", borderRadius: "2px", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)" }}>
-                    <MessageContent content={item.requestContent} />
-                  </div>
+                    {/* 메시지 내용 */}
+                    <div
+                      className="mx-5 mb-2 px-3 py-2.5"
+                      style={{
+                        border: "1px solid var(--th-border)",
+                        borderLeft: `2px solid ${meta.color}60`,
+                        background: "var(--th-bg-elevated)",
+                        ...mono, fontSize: "11px", color: "var(--th-text-primary)",
+                      }}
+                    >
+                      <MessageContent content={item.requestContent} />
+                    </div>
 
-                  <div className="mt-2 space-y-1.5">
-                    {item.kind === "review_round_pick" ? (
-                      (() => {
-                        if (item.options.length === 0) {
+                    {/* 선택지 */}
+                    <div className="px-5 pb-3">
+                      {item.kind === "review_round_pick" ? (
+                        (() => {
+                          if (item.options.length === 0) {
+                            return (
+                              <p style={{ ...mono, fontSize: "10px", color: "var(--th-text-muted)", padding: "6px 0" }}>
+                                ⏳ {t({ ko: "기획팀장 의견 취합중...", en: "Planning lead is consolidating opinions...", ja: "企画リードが意見集約中...", zh: "规划负责人汇总意见中..." })}
+                              </p>
+                            );
+                          }
+                          const pickOptions = getReviewPickOptions(item);
+                          const skipOption = getReviewSkipOption(item);
+                          const selected = reviewPickSelections[item.id] ?? [];
+                          const draft = reviewPickDrafts[item.id] ?? "";
                           return (
-                            <p className="px-2.5 py-2 text-xs font-mono" style={{ border: "1px solid var(--th-border)", borderRadius: "2px", background: "var(--th-bg-elevated)", color: "var(--th-text-muted)" }}>
-                              {t({
-                                ko: "기획팀장 의견 취합중...",
-                                en: "Planning lead is consolidating opinions...",
-                                ja: "企画リードが意見を集約中...",
-                                zh: "规划负责人正在汇总意见...",
+                            <div className="space-y-1.5">
+                              {pickOptions.map((option) => {
+                                const isSelected = selected.includes(option.number);
+                                return (
+                                  <button
+                                    key={`${item.id}:${option.number}`}
+                                    type="button"
+                                    onClick={() => toggleReviewPick(item.id, option.number)}
+                                    disabled={isItemBusy}
+                                    className="w-full text-left transition"
+                                    style={{
+                                      ...mono, fontSize: "11px",
+                                      padding: "6px 10px",
+                                      border: isSelected ? `1px solid var(--th-accent)` : "1px solid var(--th-border)",
+                                      background: isSelected ? "rgba(245,158,11,0.1)" : "var(--th-bg-elevated)",
+                                      color: isSelected ? "var(--th-accent)" : "var(--th-text-secondary)",
+                                      cursor: isItemBusy ? "not-allowed" : "pointer",
+                                      opacity: isItemBusy ? 0.6 : 1,
+                                      display: "flex", alignItems: "center", gap: 8,
+                                    }}
+                                  >
+                                    <span style={{ fontSize: "9px", opacity: 0.6, flexShrink: 0 }}>
+                                      {isSelected ? "■" : "□"}
+                                    </span>
+                                    {`${option.number}. ${option.label}`}
+                                  </button>
+                                );
                               })}
-                            </p>
-                          );
-                        }
-                        const pickOptions = getReviewPickOptions(item);
-                        const skipOption = getReviewSkipOption(item);
-                        const selected = reviewPickSelections[item.id] ?? [];
-                        const selectedCount = selected.length;
-                        const draft = reviewPickDrafts[item.id] ?? "";
-                        const isItemBusy = Boolean(busyKey?.startsWith(`${item.id}:`));
-                        return (
-                          <div className="space-y-2">
-                            {pickOptions.map((option) => {
-                              const selectedFlag = selected.includes(option.number);
-                              return (
-                                <button
-                                  key={`${item.id}:${option.number}`}
-                                  type="button"
-                                  onClick={() => toggleReviewPick(item.id, option.number)}
-                                  disabled={isItemBusy}
-                                  className={`decision-inbox-option w-full px-2.5 py-1.5 text-left text-xs font-mono transition disabled:cursor-not-allowed disabled:opacity-60${selectedFlag ? " decision-inbox-option-active" : ""}`}
-                                  style={{ borderRadius: "2px" }}
-                                >
-                                  {`${option.number}. ${option.label}`}
-                                </button>
-                              );
-                            })}
-                            <p className="text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>
-                              {t({
-                                ko: `선택 항목: ${selectedCount}건`,
-                                en: `Selected: ${selectedCount} item(s)`,
-                                ja: `選択項目: ${selectedCount}件`,
-                                zh: `已选项: ${selectedCount} 项`,
-                              })}
-                            </p>
-                            <textarea
-                              value={draft}
-                              onChange={(event) => setReviewDraft(item.id, event.target.value)}
-                              rows={2}
-                              placeholder={t({
-                                ko: "추가 의견이 있으면 입력해 주세요. (선택)",
-                                en: "Enter extra notes if needed. (Optional)",
-                                ja: "追加意見があれば入力してください。（任意）",
-                                zh: "如有补充意见请填写。（可选）",
-                              })}
-                              className="w-full resize-y px-3 py-2 text-xs font-mono outline-none"
-                              style={{ border: "1px solid var(--th-border)", borderRadius: "2px", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
-                            />
-                            <div className="flex flex-wrap items-center justify-end gap-2">
-                              {skipOption ? (
+                              <p style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)" }}>
+                                {isKorean ? `${selected.length}건 선택됨` : `${selected.length} selected`}
+                              </p>
+                              <textarea
+                                value={draft}
+                                onChange={(e) => setReviewDraft(item.id, e.target.value)}
+                                rows={2}
+                                placeholder={t({ ko: "추가 의견 (선택)", en: "Extra notes (optional)", ja: "追加意見（任意）", zh: "补充意见（可选）" })}
+                                className="w-full resize-y outline-none"
+                                style={{ ...mono, fontSize: "11px", padding: "6px 10px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
+                              />
+                              <div className="flex items-center justify-end gap-2 pt-1">
+                                {skipOption && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleSkipReviewRound(item)}
+                                    disabled={isItemBusy}
+                                    className="decision-round-skip transition"
+                                    style={{ ...mono, fontSize: "10px", padding: "4px 10px", cursor: isItemBusy ? "not-allowed" : "pointer", opacity: isItemBusy ? 0.6 : 1 }}
+                                  >
+                                    {isItemBusy ? "…" : `${skipOption.number}. ${skipOption.label}`}
+                                  </button>
+                                )}
                                 <button
                                   type="button"
-                                  onClick={() => handleSkipReviewRound(item)}
+                                  onClick={() => handleSubmitReviewPick(item)}
                                   disabled={isItemBusy}
-                                  className="decision-round-skip px-3 py-1.5 text-xs font-semibold font-mono transition disabled:cursor-not-allowed disabled:opacity-60"
-                                  style={{ borderRadius: "2px" }}
+                                  className="decision-round-submit transition"
+                                  style={{ ...mono, fontSize: "10px", fontWeight: 700, padding: "4px 14px", cursor: isItemBusy ? "not-allowed" : "pointer", opacity: isItemBusy ? 0.6 : 1 }}
                                 >
                                   {isItemBusy
                                     ? t({ ko: "전송 중...", en: "Sending...", ja: "送信中...", zh: "发送中..." })
-                                    : `${skipOption.number}. ${skipOption.label}`}
+                                    : t({ ko: "선택 항목 진행", en: "Run Selected", ja: "選択で進行", zh: "执行所选" })}
                                 </button>
-                              ) : null}
-                              <button
-                                type="button"
-                                onClick={() => handleSubmitReviewPick(item)}
-                                disabled={isItemBusy}
-                                className="decision-round-submit px-3 py-1.5 text-xs font-semibold font-mono transition disabled:cursor-not-allowed disabled:opacity-60"
-                                style={{ borderRadius: "2px" }}
-                              >
-                                {isItemBusy
-                                  ? t({ ko: "전송 중...", en: "Sending...", ja: "送信中...", zh: "发送中..." })
-                                  : t({
-                                      ko: "선택 항목 진행",
-                                      en: "Run Selected",
-                                      ja: "選択項目で進行",
-                                      zh: "按所选项执行",
-                                    })}
-                              </button>
+                              </div>
                             </div>
-                          </div>
-                        );
-                      })()
-                    ) : item.options.length > 0 ? (
-                      item.options.map((option) => {
-                        const key = `${item.id}:${option.number}`;
-                        const isBusy = busyKey === key;
-                        return (
-                          <button
-                            key={key}
-                            type="button"
-                            onClick={() => handleOptionClick(item, option.number, option.action)}
-                            disabled={isBusy}
-                            className="decision-inbox-option w-full px-2.5 py-1.5 text-left text-xs font-mono transition disabled:cursor-not-allowed disabled:opacity-60"
-                            style={{ borderRadius: "2px" }}
-                          >
-                            {isBusy
-                              ? t({ ko: "전송 중...", en: "Sending...", ja: "送信中...", zh: "发送中..." })
-                              : `${option.number}. ${option.label}`}
-                          </button>
-                        );
-                      })
-                    ) : (
-                      <p className="px-2.5 py-2 text-xs font-mono" style={{ border: "1px solid var(--th-border)", borderRadius: "2px", background: "var(--th-bg-elevated)", color: "var(--th-text-muted)" }}>
-                        {item.kind === "project_review_ready"
-                          ? t({
-                              ko: "기획팀장 의견 취합중...",
-                              en: "Planning lead is consolidating opinions...",
-                              ja: "企画リードが意見を集約中...",
-                              zh: "规划负责人正在汇总意见...",
-                            })
-                          : t({
-                              ko: "선택지 준비 중...",
-                              en: "Options are being prepared...",
-                              ja: "選択肢を準備中...",
-                              zh: "正在准备选项...",
-                            })}
-                      </p>
-                    )}
+                          );
+                        })()
+                      ) : item.options.length > 0 ? (
+                        <div className="space-y-1.5">
+                          {item.options.map((option, oIdx) => {
+                            const key = `${item.id}:${option.number}`;
+                            const isBusy = busyKey === key;
+                            // 첫 번째 옵션은 주요 액션으로 강조
+                            const isPrimary = oIdx === 0;
+                            return (
+                              <button
+                                key={key}
+                                type="button"
+                                onClick={() => handleOptionClick(item, option.number, option.action)}
+                                disabled={isBusy}
+                                className="w-full text-left transition"
+                                style={{
+                                  ...mono, fontSize: "11px",
+                                  padding: "7px 10px",
+                                  border: isPrimary ? `1px solid ${meta.color}50` : "1px solid var(--th-border)",
+                                  background: isPrimary ? `${meta.color}0e` : "var(--th-bg-elevated)",
+                                  color: isPrimary ? meta.color : "var(--th-text-secondary)",
+                                  cursor: isBusy ? "not-allowed" : "pointer",
+                                  opacity: isBusy ? 0.6 : 1,
+                                  display: "flex", alignItems: "center", gap: 8,
+                                }}
+                              >
+                                <span style={{ fontSize: "8px", opacity: 0.5, flexShrink: 0 }}>▶</span>
+                                {isBusy
+                                  ? t({ ko: "전송 중...", en: "Sending...", ja: "送信中...", zh: "发送中..." })
+                                  : `${option.number}. ${option.label}`}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <p style={{ ...mono, fontSize: "10px", color: "var(--th-text-muted)", padding: "4px 0" }}>
+                          ⏳ {item.kind === "project_review_ready"
+                            ? t({ ko: "기획팀장 의견 취합중...", en: "Planning lead is consolidating...", ja: "企画リードが集約中...", zh: "规划负责人汇总中..." })
+                            : t({ ko: "선택지 준비 중...", en: "Options being prepared...", ja: "選択肢準備中...", zh: "正在准备选项..." })}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
-        {followupItem ? (
-          <div className="px-4 py-3" style={{ borderTop: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
-            <p className="mb-2 text-xs font-semibold font-mono" style={{ color: "var(--th-text-primary)" }}>
-              {t({
-                ko: "추가요청사항 입력",
-                en: "Additional Follow-up Request",
-                ja: "追加要請内容の入力",
-                zh: "输入追加请求事项",
-              })}
+
+        {/* ── followup 입력 ── */}
+        {followupItem && (
+          <div
+            className="px-5 py-3 flex-shrink-0"
+            style={{ borderTop: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}
+          >
+            <p style={{ ...mono, fontSize: "10px", fontWeight: 700, color: "var(--th-accent)", marginBottom: 8, letterSpacing: "0.06em" }}>
+              + {t({ ko: "추가 요청사항", en: "FOLLOW-UP REQUEST", ja: "追加要請", zh: "追加请求" })}
             </p>
             <textarea
               value={followupDraft}
-              onChange={(event) => setFollowupDraft(event.target.value)}
-              placeholder={t({
-                ko: "요청사항을 입력해 주세요.",
-                en: "Enter your request details.",
-                ja: "要請内容を入力してください。",
-                zh: "请输入请求详情。",
-              })}
+              onChange={(e) => setFollowupDraft(e.target.value)}
+              placeholder={t({ ko: "요청사항을 입력해 주세요.", en: "Enter your request details.", ja: "要請内容を入力してください。", zh: "请输入请求详情。" })}
               rows={3}
-              className="w-full resize-y px-3 py-2 text-xs font-mono focus:outline-none"
-              style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-terminal-bg)", color: "var(--th-text-primary)" }}
+              className="w-full resize-y outline-none"
+              style={{ ...mono, fontSize: "11px", padding: "8px 10px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface)", color: "var(--th-text-primary)" }}
             />
             <div className="mt-2 flex items-center justify-end gap-2">
               <button
                 type="button"
                 onClick={handleCancelFollowup}
                 disabled={isFollowupSubmitting}
-                className="px-3 py-1.5 text-xs font-mono transition disabled:cursor-not-allowed disabled:opacity-60"
-                style={{ border: "1px solid var(--th-border)", borderRadius: "2px", color: "var(--th-text-secondary)", background: "transparent" }}
+                style={{
+                  ...mono, fontSize: "10px", padding: "4px 10px",
+                  border: "1px solid var(--th-border)",
+                  background: "transparent",
+                  color: "var(--th-text-muted)",
+                  cursor: isFollowupSubmitting ? "not-allowed" : "pointer",
+                }}
               >
                 {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}
               </button>
@@ -483,16 +511,20 @@ export default function DecisionInboxModal({
                 type="button"
                 onClick={handleSubmitFollowup}
                 disabled={!canSubmitFollowup}
-                className="decision-followup-submit px-3 py-1.5 text-xs font-semibold font-mono transition disabled:cursor-not-allowed disabled:opacity-60"
-                style={{ borderRadius: "2px" }}
+                className="decision-followup-submit"
+                style={{
+                  ...mono, fontSize: "10px", fontWeight: 700, padding: "4px 14px",
+                  cursor: !canSubmitFollowup ? "not-allowed" : "pointer",
+                  opacity: !canSubmitFollowup ? 0.5 : 1,
+                }}
               >
                 {isFollowupSubmitting
                   ? t({ ko: "전송 중...", en: "Sending...", ja: "送信中...", zh: "发送中..." })
-                  : t({ ko: "요청 등록", en: "Submit Request", ja: "要請登録", zh: "提交请求" })}
+                  : t({ ko: "요청 등록", en: "Submit", ja: "要請登録", zh: "提交" })}
               </button>
             </div>
           </div>
-        ) : null}
+        )}
       </div>
     </div>
   );

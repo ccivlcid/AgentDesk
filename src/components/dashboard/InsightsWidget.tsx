@@ -230,7 +230,7 @@ export function DashboardInsights({ tasks, agents, language, t }: Props) {
             style={{
               border: `1px solid ${colors.border}`,
               background: colors.bg,
-              borderRadius: "2px",
+              borderRadius: 0,
               borderLeft: `3px solid ${colors.icon}`,
             }}
           >

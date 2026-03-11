@@ -71,8 +71,8 @@ export default function OAuthSettingsTab({
         <div
           className="flex items-center justify-between px-3 py-2 text-sm font-mono"
           style={oauthResult.error
-            ? { borderRadius: "2px", background: "rgba(244,63,94,0.08)", border: "1px solid rgba(244,63,94,0.35)", color: "rgb(253,164,175)" }
-            : { borderRadius: "2px", background: "rgba(52,211,153,0.1)", border: "1px solid rgba(52,211,153,0.3)", color: "rgb(167,243,208)" }}
+            ? { borderRadius: 0, background: "rgba(244,63,94,0.08)", border: "1px solid rgba(244,63,94,0.35)", color: "rgb(253,164,175)" }
+            : { borderRadius: 0, background: "rgba(52,211,153,0.1)", border: "1px solid rgba(52,211,153,0.3)", color: "rgb(167,243,208)" }}
         >
           <span>
             {oauthResult.error
@@ -89,8 +89,8 @@ export default function OAuthSettingsTab({
         <div
           className="flex items-center gap-2 px-3 py-2 text-xs font-mono"
           style={oauthStatus.storageReady
-            ? { borderRadius: "2px", background: "rgba(52,211,153,0.1)", border: "1px solid rgba(52,211,153,0.3)", color: "rgb(167,243,208)" }
-            : { borderRadius: "2px", background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.3)", color: "var(--th-accent)" }}
+            ? { borderRadius: 0, background: "rgba(52,211,153,0.1)", border: "1px solid rgba(52,211,153,0.3)", color: "rgb(167,243,208)" }
+            : { borderRadius: 0, background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.3)", color: "var(--th-accent)" }}
         >
           <span>{oauthStatus.storageReady ? "🔒" : "⚠️"}</span>
           <span>

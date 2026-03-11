@@ -70,32 +70,20 @@ const TAB_ITEMS: Array<{
       </svg>
     ),
   },
-  {
-    key: "categories",
-    label: (t) => t({ ko: "프로젝트 유형", en: "Project Types", ja: "プロジェクト種別", zh: "项目类型" }),
-    Icon: ({ className }) => (
-      <svg className={className} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-      </svg>
-    ),
-  },
-  {
-    key: "project",
-    label: (t) => t({ ko: "프로젝트 설정", en: "Project", ja: "プロジェクト設定", zh: "项目设置" }),
-    Icon: ({ className }) => (
-      <svg className={className} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z" />
-        <circle cx="12" cy="12" r="3" />
-      </svg>
-    ),
-  },
 ];
+
+const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };
 
 export default function SettingsTabNav({ tab, setTab, t }: SettingsTabNavProps) {
   return (
     <div
-      className="flex flex-wrap gap-1 p-1"
-      style={{ borderRadius: "4px", borderColor: "var(--th-border)", background: "var(--th-bg-primary)" }}
+      className="flex flex-wrap gap-0"
+      style={{
+        ...mono,
+        borderBottom: "1px solid var(--th-border)",
+        background: "var(--th-bg-primary)",
+        paddingLeft: 2,
+      }}
     >
       {TAB_ITEMS.map((item) => {
         const isActive = tab === item.key;
@@ -104,14 +92,38 @@ export default function SettingsTabNav({ tab, setTab, t }: SettingsTabNavProps) 
             key={item.key}
             type="button"
             onClick={() => setTab(item.key)}
-            className={`flex items-center gap-2 px-3 py-2 text-sm font-medium font-mono transition-colors ${
-              isActive
-                ? "bg-[var(--th-bg-surface)] text-[var(--th-text-primary)] shadow-sm"
-                : "text-[var(--th-text-muted)] hover:text-[var(--th-text-secondary)] hover:bg-[var(--th-bg-surface-hover)]"
-            }`}
-            style={{ borderRadius: "2px", ...(isActive ? { border: "1px solid var(--th-border)" } : {}) }}
+            style={{
+              ...mono,
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              padding: "8px 14px",
+              fontSize: "11px",
+              fontWeight: isActive ? 700 : 400,
+              letterSpacing: "0.04em",
+              background: isActive ? "var(--th-bg-surface)" : "transparent",
+              color: isActive ? "var(--th-accent)" : "var(--th-text-muted)",
+              border: "none",
+              borderBottom: isActive ? "2px solid var(--th-accent)" : "2px solid transparent",
+              cursor: "pointer",
+              transition: "color 0.1s, background 0.1s",
+            }}
+            onMouseEnter={(e) => {
+              if (!isActive) {
+                e.currentTarget.style.color = "var(--th-text-secondary)";
+                e.currentTarget.style.background = "var(--th-bg-surface-hover)";
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!isActive) {
+                e.currentTarget.style.color = "var(--th-text-muted)";
+                e.currentTarget.style.background = "transparent";
+              }
+            }}
           >
-            <item.Icon className={isActive ? "text-amber-400" : "opacity-70"} />
+            <span style={{ display: "inline-flex", width: 14, height: 14, opacity: isActive ? 1 : 0.6 }}>
+              <item.Icon />
+            </span>
             <span>{item.label(t)}</span>
           </button>
         );

@@ -1,6 +1,8 @@
 import { useState } from "react";
+import type React from "react";
 import { useI18n } from "../../i18n";
 import type { DeliverableItem, TaskArtifact } from "../../api";
+import { getTaskArtifactsZipUrl } from "../../api/providers-reports-github";
 import type { Agent } from "../../types";
 import AgentAvatar from "../AgentAvatar";
 import ArtifactList from "./ArtifactList";
@@ -15,6 +17,8 @@ interface DeliverableCardProps {
   agents: Agent[];
 }
 
+const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };
+
 function formatSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
@@ -24,33 +28,33 @@ function formatSize(bytes: number): string {
 function formatDate(ts: number | null): string {
   if (!ts) return "-";
   return new Intl.DateTimeFormat(undefined, {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
+    month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit",
   }).format(new Date(ts));
 }
 
-function SectionToggle({ label, open, onToggle, borderColor = "border-[var(--th-border)]", children }: {
-  label: string; open: boolean; onToggle: () => void; borderColor?: string; children: React.ReactNode;
+function CliSection({ label, open, onToggle, action, children }: {
+  label: string; open: boolean; onToggle: () => void; action?: React.ReactNode; children: React.ReactNode;
 }) {
   return (
-    <div className="overflow-hidden" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
-      <button
-        type="button"
+    <div style={{ borderBottom: "1px solid var(--th-border)" }}>
+      <div
+        style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 14px", background: "var(--th-bg-elevated)", cursor: "pointer" }}
         onClick={onToggle}
-        className="w-full flex items-center justify-between px-3 py-2 text-left hover:bg-[var(--th-bg-surface-hover)] transition"
       >
-        <span className="text-[11px] font-medium font-mono" style={{ color: "var(--th-text-muted)" }}>{label}</span>
-        <svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor"
-          strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-          className={`transition-transform ${open ? "rotate-180" : ""}`}
-          style={{ color: "var(--th-text-muted)" }}>
-          <path d="M6 8l4 4 4-4" />
-        </svg>
-      </button>
-      {open && children}
+        <span style={{ ...mono, fontSize: "9px", color: "var(--th-accent)", fontWeight: 700 }}>
+          {open ? "▾" : "▸"}
+        </span>
+        <span style={{ ...mono, fontSize: "9px", fontWeight: 700, letterSpacing: "0.08em", color: "var(--th-text-muted)", flex: 1 }}>
+          {label}
+        </span>
+        {action && <div onClick={(e) => e.stopPropagation()}>{action}</div>}
+      </div>
+      {open && (
+        <div style={{ background: "var(--th-bg-primary)" }}>
+          {children}
+        </div>
+      )}
     </div>
   );
 }
@@ -60,197 +64,171 @@ export default function DeliverableCard({ report, artifacts, agent, agents }: De
   const [previewArtifact, setPreviewArtifact] = useState<TaskArtifact | null>(null);
   const [expanded, setExpanded] = useState(false);
   const [sectionOpen, setSectionOpen] = useState<Record<string, boolean>>({
-    result: false,
-    collaborators: false,
-    artifacts: false,
-    git: false,
+    result: false, collaborators: false, artifacts: false, git: false,
   });
   const toggleSection = (key: string) => setSectionOpen((prev) => ({ ...prev, [key]: !prev[key] }));
-  const expandAllSections = () =>
-    setSectionOpen({ result: true, collaborators: true, artifacts: true, git: true });
-  const collapseAllSections = () =>
-    setSectionOpen({ result: false, collaborators: false, artifacts: false, git: false });
+  const expandAll   = () => setSectionOpen({ result: true,  collaborators: true,  artifacts: true,  git: true  });
+  const collapseAll = () => setSectionOpen({ result: false, collaborators: false, artifacts: false, git: false });
 
   const preferKo = locale === "ko";
   const agentName = agent
-    ? preferKo
-      ? agent.name_ko || agent.name
-      : agent.name || agent.name_ko
+    ? preferKo ? agent.name_ko || agent.name : agent.name || agent.name_ko
     : report.agent_name_ko || report.agent_name || "-";
   const deptName = preferKo ? report.dept_name_ko || report.dept_name : report.dept_name || report.dept_name_ko;
 
-  const statusBadge = report.status === "done"
-    ? { label: t({ ko: "완료", en: "Done", ja: "完了", zh: "完成" }), cls: "border-emerald-500/40 bg-emerald-500/15 text-emerald-300" }
-    : { label: t({ ko: "리뷰", en: "Review", ja: "レビュー", zh: "审核" }), cls: "border-amber-500/40 bg-amber-500/15 text-amber-300" };
+  const isDone = report.status === "done";
+  const statusColor = isDone ? "#4ade80" : "var(--th-accent)";
+  const statusLabel = isDone
+    ? t({ ko: "완료", en: "DONE",   ja: "完了",     zh: "完成" })
+    : t({ ko: "리뷰", en: "REVIEW", ja: "レビュー", zh: "审核" });
 
   const hasArtifacts = artifacts && artifacts.length > 0;
   const totalSize = artifacts ? artifacts.reduce((s, a) => s + a.size, 0) : 0;
 
   return (
     <>
-      <div className="transition" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
-        {/* Card header — always visible */}
+      <div style={{ borderBottom: "1px solid var(--th-border)", borderLeft: `3px solid ${statusColor}` }}>
+
+        {/* ── 행 헤더 (항상 표시) ── */}
         <button
           type="button"
           onClick={() => setExpanded(!expanded)}
-          className="w-full flex items-start gap-3 p-4 text-left"
+          style={{
+            ...mono,
+            width: "100%",
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            padding: "10px 14px",
+            background: expanded ? "var(--th-bg-elevated)" : "var(--th-bg-primary)",
+            border: "none",
+            cursor: "pointer",
+            textAlign: "left",
+            transition: "background 0.1s",
+          }}
+          onMouseEnter={(e) => { if (!expanded) (e.currentTarget as HTMLElement).style.background = "var(--th-bg-elevated)"; }}
+          onMouseLeave={(e) => { if (!expanded) (e.currentTarget as HTMLElement).style.background = "var(--th-bg-primary)"; }}
         >
-          <AgentAvatar agent={agent ?? undefined} agents={agents} size={40} rounded="xl" />
+          {/* 토글 아이콘 */}
+          <span style={{ fontSize: "9px", color: "var(--th-text-muted)", width: 10, flexShrink: 0 }}>
+            {expanded ? "▾" : "▸"}
+          </span>
 
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-sm font-semibold text-white truncate">{report.title}</span>
-              <span className={`inline-flex items-center border px-2 py-0.5 text-[10px] font-medium font-mono ${statusBadge.cls}`} style={{ borderRadius: "2px" }}>
-                {statusBadge.label}
-              </span>
-            </div>
+          {/* 상태 배지 */}
+          <span style={{ fontSize: "8px", fontWeight: 700, padding: "2px 6px", border: `1px solid ${statusColor}44`, color: statusColor, background: `${statusColor}11`, letterSpacing: "0.08em", flexShrink: 0, width: 44, textAlign: "center" }}>
+            {statusLabel}
+          </span>
 
-            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] font-mono" style={{ color: "var(--th-text-secondary)" }}>
-              <span>{agentName}</span>
-              {deptName && (
-                <>
-                  <span style={{ color: "var(--th-border-strong)" }}>·</span>
-                  <span>{deptName}</span>
-                </>
-              )}
-              <span style={{ color: "var(--th-border-strong)" }}>·</span>
-              <span>{formatDate(report.completed_at)}</span>
-              {hasArtifacts && (
-                <>
-                  <span style={{ color: "var(--th-border-strong)" }}>·</span>
-                  <span style={{ color: "var(--th-text-muted)" }}>
-                    {artifacts!.length} {t({ ko: "파일", en: "files", ja: "ファイル", zh: "文件" })} ({formatSize(totalSize)})
-                  </span>
-                </>
-              )}
-            </div>
-          </div>
+          {/* 에이전트 아바타 */}
+          <AgentAvatar agent={agent ?? undefined} agents={agents} size={20} />
 
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 20 20"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className={`shrink-0 mt-1 transition-transform ${expanded ? "rotate-180" : ""}`}
-            style={{ color: "var(--th-text-muted)" }}
-          >
-            <path d="M6 8l4 4 4-4" />
-          </svg>
+          {/* 제목 */}
+          <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--th-text-primary)", flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            {report.title}
+          </span>
+
+          {/* 에이전트명 */}
+          <span style={{ fontSize: "9px", color: "var(--th-text-muted)", width: 130, flexShrink: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            {agentName}{deptName ? ` · ${deptName}` : ""}
+          </span>
+
+          {/* 완료일시 */}
+          <span style={{ fontSize: "9px", color: "var(--th-text-muted)", width: 120, flexShrink: 0 }}>
+            {formatDate(report.completed_at)}
+          </span>
+
+          {/* 파일 수 */}
+          <span style={{ fontSize: "9px", color: hasArtifacts ? "var(--th-text-secondary)" : "var(--th-text-muted)", width: 80, flexShrink: 0, opacity: hasArtifacts ? 1 : 0.3 }}>
+            {artifacts === null ? "…" : hasArtifacts ? `${artifacts.length} file${artifacts.length !== 1 ? "s" : ""} (${formatSize(totalSize)})` : "—"}
+          </span>
         </button>
 
-        {/* Expanded body — collapsible sections */}
+        {/* ── 확장 바디 ── */}
         {expanded && (
-          <div className="px-4 pb-4 pt-3 space-y-3" style={{ borderTop: "1px solid var(--th-border)" }}>
-            <div className="flex items-center justify-end gap-2 text-[11px]">
-              <button
-                type="button"
-                onClick={expandAllSections}
-                className="font-mono transition" style={{ color: "var(--th-text-muted)" }}
-              >
-                {t({ ko: "전체 펼치기", en: "Expand all", ja: "すべて展開", zh: "全部展开" })}
-              </button>
-              <span style={{ color: "var(--th-border-strong)" }}>|</span>
-              <button
-                type="button"
-                onClick={collapseAllSections}
-                className="font-mono transition" style={{ color: "var(--th-text-muted)" }}
-              >
-                {t({ ko: "전체 접기", en: "Collapse all", ja: "すべて折りたたむ", zh: "全部折叠" })}
-              </button>
+          <div style={{ borderTop: "1px solid var(--th-border)" }}>
+            {/* expand/collapse all */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 14px", borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-primary)" }}>
+              <span style={{ ...mono, fontSize: "9px", color: "var(--th-accent)", fontWeight: 700 }}>$</span>
+              <span style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)" }}>cat report/{report.id.slice(0, 8)}</span>
+              <div style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
+                <button type="button" onClick={expandAll}   style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", background: "none", border: "none", cursor: "pointer", padding: 0 }}>expand all</button>
+                <span style={{ fontSize: "9px", color: "var(--th-border)" }}>|</span>
+                <button type="button" onClick={collapseAll} style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", background: "none", border: "none", cursor: "pointer", padding: 0 }}>collapse all</button>
+              </div>
             </div>
 
-            {/* Section A: Result Summary */}
+            {/* RESULT */}
             {report.result && (
-              <SectionToggle
-                label={t({ ko: "결과 요약", en: "Result Summary", ja: "結果要約", zh: "结果摘要" })}
+              <CliSection
+                label={t({ ko: "RESULT SUMMARY", en: "RESULT SUMMARY", ja: "結果要約", zh: "结果摘要" })}
                 open={!!sectionOpen.result}
                 onToggle={() => toggleSection("result")}
-                borderColor="border-emerald-500/25"
               >
-                <div className="px-3 py-2" style={{ borderTop: "1px solid rgba(52,211,153,0.15)", background: "var(--th-terminal-bg)" }}>
-                  <div className="text-xs font-mono whitespace-pre-wrap break-words max-h-32 overflow-y-auto leading-relaxed" style={{ color: "var(--th-text-secondary)" }}>
-                    {report.result.length > 600 ? `${report.result.slice(0, 600)}...` : report.result}
-                  </div>
+                <div style={{ padding: "10px 14px", borderLeft: "2px solid #4ade8033" }}>
+                  <pre style={{ ...mono, fontSize: "10px", color: "var(--th-text-secondary)", whiteSpace: "pre-wrap", wordBreak: "break-word", margin: 0, maxHeight: 140, overflowY: "auto", lineHeight: 1.7 }}>
+                    {report.result.length > 600 ? `${report.result.slice(0, 600)}…` : report.result}
+                  </pre>
                 </div>
-              </SectionToggle>
+              </CliSection>
             )}
 
-            {/* Section B: Collaborators */}
-            <CollaboratorSection taskId={report.id} agents={agents} sectionOpen={!!sectionOpen.collaborators} onToggleSection={() => toggleSection("collaborators")} />
+            {/* COLLABORATORS */}
+            <CollaboratorSection
+              taskId={report.id}
+              agents={agents}
+              sectionOpen={!!sectionOpen.collaborators}
+              onToggleSection={() => toggleSection("collaborators")}
+            />
 
-            {/* Section C: Artifact Files */}
+            {/* ARTIFACT FILES */}
             {artifacts === null ? (
-              <SectionToggle
-                label={t({ ko: "산출물 파일", en: "Artifact Files", ja: "成果物ファイル", zh: "产出文件" })}
+              <CliSection
+                label={t({ ko: "ARTIFACT FILES", en: "ARTIFACT FILES", ja: "成果物ファイル", zh: "产出文件" })}
                 open={!!sectionOpen.artifacts}
                 onToggle={() => toggleSection("artifacts")}
               >
-                <div className="px-3 py-2 text-[11px] font-mono animate-pulse" style={{ borderTop: "1px solid var(--th-border)", color: "var(--th-text-muted)" }}>
-                  {t({ ko: "산출물 로딩중...", en: "Loading artifacts...", ja: "成果物を読み込み中...", zh: "加载中..." })}
-                </div>
-              </SectionToggle>
+                <div style={{ ...mono, padding: "8px 14px", fontSize: "10px", color: "var(--th-text-muted)" }}>loading…</div>
+              </CliSection>
             ) : artifacts.length > 0 ? (
-              <SectionToggle
-                label={`${t({ ko: "산출물 파일", en: "Artifact Files", ja: "成果物ファイル", zh: "产出文件" })} (${artifacts.length})`}
+              <CliSection
+                label={`ARTIFACT FILES  (${artifacts.length})  ${formatSize(totalSize)}`}
                 open={!!sectionOpen.artifacts}
                 onToggle={() => toggleSection("artifacts")}
+                action={
+                  <a
+                    href={getTaskArtifactsZipUrl(report.id)}
+                    download
+                    style={{ ...mono, fontSize: "9px", fontWeight: 700, padding: "2px 8px", border: "1px solid rgba(245,158,11,0.4)", background: "rgba(245,158,11,0.08)", color: "var(--th-accent)", textDecoration: "none", letterSpacing: "0.04em" }}
+                    title={t({ ko: "전체 ZIP 다운로드", en: "Download all as ZIP", ja: "全てZIPでDL", zh: "全部下载ZIP" })}
+                  >
+                    ↓ ZIP
+                  </a>
+                }
               >
-                <ArtifactList
-                  taskId={report.id}
-                  artifacts={artifacts}
-                  onPreview={setPreviewArtifact}
-                />
-              </SectionToggle>
+                <ArtifactList taskId={report.id} artifacts={artifacts} onPreview={setPreviewArtifact} />
+              </CliSection>
             ) : (
-              <SectionToggle
-                label={t({ ko: "산출물 파일", en: "Artifact Files", ja: "成果物ファイル", zh: "产出文件" })}
+              <CliSection
+                label={t({ ko: "ARTIFACT FILES", en: "ARTIFACT FILES", ja: "成果物ファイル", zh: "产出文件" })}
                 open={!!sectionOpen.artifacts}
                 onToggle={() => toggleSection("artifacts")}
               >
-                <div className="px-3 py-2 text-[11px] font-mono" style={{ borderTop: "1px solid var(--th-border)", color: "var(--th-text-muted)" }}>
-                  {t({ ko: "산출물 파일 없음", en: "No artifact files", ja: "成果物ファイルなし", zh: "无产出文件" })}
-                </div>
-              </SectionToggle>
+                <div style={{ ...mono, padding: "8px 14px", fontSize: "10px", color: "var(--th-text-muted)", opacity: 0.4 }}>— no files —</div>
+              </CliSection>
             )}
 
-            {/* Section D: Git Changes */}
+            {/* GIT */}
             {report.project_path && (
-              <GitSection taskId={report.id} sectionOpen={!!sectionOpen.git} onToggleSection={() => toggleSection("git")} />
+              <GitSection
+                taskId={report.id}
+                sectionOpen={!!sectionOpen.git}
+                onToggleSection={() => toggleSection("git")}
+              />
             )}
-
-            {/* Register as official deliverable */}
-            <div className="pt-1 flex justify-end">
-              <button
-                type="button"
-                className="text-[11px] font-mono px-3 py-1.5 transition-colors"
-                style={{
-                  borderRadius: "2px",
-                  border: "1px solid var(--th-border)",
-                  color: "var(--th-text-muted)",
-                  background: "transparent",
-                }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLButtonElement).style.color = "var(--th-accent)";
-                  (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(245,158,11,0.4)";
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLButtonElement).style.color = "var(--th-text-muted)";
-                  (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--th-border)";
-                }}
-                title={t({ ko: "이 산출물을 프로젝트 공식 결과물로 등록합니다", en: "Register as an official project deliverable", ja: "プロジェクト公式成果物として登録する", zh: "注册为项目正式产出物" })}
-              >
-                ↑ {t({ ko: "공식 결과물로 등록하기", en: "Register as deliverable", ja: "公式成果物として登録", zh: "注册为正式产出物" })}
-              </button>
-            </div>
           </div>
         )}
       </div>
 
-      {/* Text Preview Modal */}
       {previewArtifact && (
         <TextPreviewModal
           taskId={report.id}

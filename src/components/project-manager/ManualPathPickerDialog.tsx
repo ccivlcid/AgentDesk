@@ -33,7 +33,7 @@ export default function ManualPathPickerDialog({
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4" onClick={onClose}>
       <div
         className="w-full max-w-2xl overflow-hidden"
-        style={{ borderRadius: "4px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}
+        style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: "1px solid var(--th-border)", borderLeft: "3px solid var(--th-accent)" }}>
@@ -49,13 +49,13 @@ export default function ManualPathPickerDialog({
             type="button"
             onClick={onClose}
             className="px-2 py-1 text-xs font-mono transition"
-            style={{ borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-muted)", background: "transparent" }}
+            style={{ borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-muted)", background: "transparent" }}
           >
             ✕
           </button>
         </div>
         <div className="space-y-3 px-4 py-4">
-          <div className="px-3 py-2" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
+          <div className="px-3 py-2" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
             <p className="text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>
               {t({ ko: "현재 위치", en: "Current Location", ja: "現在位置", zh: "当前位置" })}
             </p>
@@ -70,7 +70,7 @@ export default function ManualPathPickerDialog({
                 void onLoadEntries(manualPathParent);
               }}
               className="px-2.5 py-1 text-xs font-semibold font-mono transition disabled:cursor-not-allowed disabled:opacity-40"
-              style={{ borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
+              style={{ borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
             >
               {t({ ko: "상위 폴더", en: "Up", ja: "上位フォルダ", zh: "上级目录" })}
             </button>
@@ -79,12 +79,12 @@ export default function ManualPathPickerDialog({
               disabled={manualPathLoading}
               onClick={() => void onLoadEntries(manualPathCurrent || undefined)}
               className="px-2.5 py-1 text-xs font-semibold font-mono transition disabled:cursor-not-allowed disabled:opacity-40"
-              style={{ borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
+              style={{ borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
             >
               {t({ ko: "새로고침", en: "Refresh", ja: "更新", zh: "刷新" })}
             </button>
           </div>
-          <div className="max-h-[45dvh] overflow-y-auto" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
+          <div className="max-h-[45dvh] overflow-y-auto" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
             {manualPathLoading ? (
               <p className="px-3 py-2 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
                 {t({
@@ -136,7 +136,7 @@ export default function ManualPathPickerDialog({
             type="button"
             onClick={onClose}
             className="px-3 py-1.5 text-xs font-semibold font-mono transition"
-            style={{ borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
+            style={{ borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
           >
             {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}
           </button>
@@ -145,7 +145,7 @@ export default function ManualPathPickerDialog({
             disabled={!manualPathCurrent}
             onClick={onSelectCurrent}
             className="px-3 py-1.5 text-xs font-semibold font-mono uppercase transition disabled:cursor-not-allowed disabled:opacity-40"
-            style={{ borderRadius: "2px", background: "var(--th-accent)", color: "#000" }}
+            style={{ borderRadius: 0, background: "var(--th-accent)", color: "#000" }}
           >
             {t({ ko: "현재 폴더 선택", en: "Select Current Folder", ja: "現在フォルダを選択", zh: "选择当前文件夹" })}
           </button>

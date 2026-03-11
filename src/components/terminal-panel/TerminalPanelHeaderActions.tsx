@@ -46,8 +46,8 @@ export function TerminalPanelHeaderActions({
           className="px-2 py-1 text-[10px] font-mono border transition"
           style={
             showThinking
-              ? { borderRadius: "2px", background: "rgba(251,191,36,0.15)", color: "var(--th-accent)", borderColor: "rgba(251,191,36,0.4)" }
-              : { borderRadius: "2px", background: "var(--th-bg-surface)", color: "var(--th-text-secondary)", borderColor: "var(--th-border)" }
+              ? { borderRadius: 0, background: "rgba(251,191,36,0.15)", color: "var(--th-accent)", borderColor: "rgba(251,191,36,0.4)" }
+              : { borderRadius: 0, background: "var(--th-bg-surface)", color: "var(--th-text-secondary)", borderColor: "var(--th-border)" }
           }
           title={tr("사고 흐름", "Reasoning", "思考フロー", "推理流程")}
         >
@@ -64,8 +64,8 @@ export function TerminalPanelHeaderActions({
           className="px-2 py-1 text-[10px] font-mono border transition"
           style={
             interventionOpen
-              ? { borderRadius: "2px", background: "rgba(244,63,94,0.15)", color: "rgb(253,164,175)", borderColor: "rgba(244,63,94,0.4)" }
-              : { borderRadius: "2px", background: "var(--th-bg-surface)", color: "var(--th-text-secondary)", borderColor: "var(--th-border)" }
+              ? { borderRadius: 0, background: "rgba(244,63,94,0.15)", color: "rgb(253,164,175)", borderColor: "rgba(244,63,94,0.4)" }
+              : { borderRadius: 0, background: "var(--th-bg-surface)", color: "var(--th-text-secondary)", borderColor: "var(--th-border)" }
           }
           title={tr("난입 패널", "Interrupt panel", "割り込みパネル", "中断面板")}
         >
@@ -78,8 +78,8 @@ export function TerminalPanelHeaderActions({
         className="px-2 py-1 text-[10px] font-mono border transition"
         style={
           showSearchBar
-            ? { borderRadius: "2px", background: "rgba(251,191,36,0.15)", color: "var(--th-accent)", borderColor: "rgba(251,191,36,0.4)" }
-            : { borderRadius: "2px", background: "var(--th-bg-surface)", color: "var(--th-text-secondary)", borderColor: "var(--th-border)" }
+            ? { borderRadius: 0, background: "rgba(251,191,36,0.15)", color: "var(--th-accent)", borderColor: "rgba(251,191,36,0.4)" }
+            : { borderRadius: 0, background: "var(--th-bg-surface)", color: "var(--th-text-secondary)", borderColor: "var(--th-border)" }
         }
         title={tr("검색", "Search", "検索", "搜索")}
       >
@@ -92,7 +92,7 @@ export function TerminalPanelHeaderActions({
         type="button"
         onClick={onCopyLog}
         className="px-2 py-1 text-[10px] font-mono border transition"
-        style={{ borderRadius: "2px", background: "var(--th-bg-surface)", color: "var(--th-text-secondary)", borderColor: "var(--th-border)" }}
+        style={{ borderRadius: 0, background: "var(--th-bg-surface)", color: "var(--th-text-secondary)", borderColor: "var(--th-border)" }}
         title={tr("복사", "Copy log", "コピー", "复制")}
       >
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -104,7 +104,7 @@ export function TerminalPanelHeaderActions({
         type="button"
         onClick={onDownloadLog}
         className="px-2 py-1 text-[10px] font-mono border transition"
-        style={{ borderRadius: "2px", background: "var(--th-bg-surface)", color: "var(--th-text-secondary)", borderColor: "var(--th-border)" }}
+        style={{ borderRadius: 0, background: "var(--th-bg-surface)", color: "var(--th-text-secondary)", borderColor: "var(--th-border)" }}
         title={tr("다운로드", "Download log", "ダウンロード", "下载")}
       >
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -119,8 +119,8 @@ export function TerminalPanelHeaderActions({
         className="px-2 py-1 text-[10px] font-mono border transition"
         style={
           follow
-            ? { borderRadius: "2px", background: "rgba(52,211,153,0.15)", color: "rgb(167,243,208)", borderColor: "rgba(52,211,153,0.4)" }
-            : { borderRadius: "2px", background: "var(--th-bg-surface)", color: "var(--th-text-secondary)", borderColor: "var(--th-border)" }
+            ? { borderRadius: 0, background: "rgba(52,211,153,0.15)", color: "rgb(167,243,208)", borderColor: "rgba(52,211,153,0.4)" }
+            : { borderRadius: 0, background: "var(--th-bg-surface)", color: "var(--th-text-secondary)", borderColor: "var(--th-border)" }
         }
         title={
           follow
@@ -134,14 +134,14 @@ export function TerminalPanelHeaderActions({
         type="button"
         onClick={onScrollToBottom}
         className="p-1.5 transition"
-        style={{ borderRadius: "2px", color: "var(--th-text-secondary)" }}
+        style={{ borderRadius: 0, color: "var(--th-text-secondary)" }}
         title={tr("맨 아래로", "Scroll to bottom", "一番下へ", "滚动到底部")}
       >
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M12 5v14M5 12l7 7 7-7" />
         </svg>
       </button>
-      <button type="button" onClick={onClose} className="p-1.5 transition" style={{ borderRadius: "2px", color: "var(--th-text-secondary)" }}>
+      <button type="button" onClick={onClose} className="p-1.5 transition" style={{ borderRadius: 0, color: "var(--th-text-secondary)" }}>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M18 6L6 18M6 6l12 12" />
         </svg>

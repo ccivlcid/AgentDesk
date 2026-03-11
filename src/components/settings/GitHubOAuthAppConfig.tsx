@@ -30,7 +30,7 @@ export default function GitHubOAuthAppConfig({ t }: { t: TFunction }) {
   };
 
   return (
-    <div className="space-y-2 p-4" style={{ borderRadius: "4px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
+    <div className="space-y-2 p-4" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
       <div className="flex items-center gap-2">
         <h4 className="text-xs font-semibold font-mono uppercase tracking-wider" style={{ color: "var(--th-text-muted)" }}>
           {t({
@@ -103,11 +103,11 @@ export default function GitHubOAuthAppConfig({ t }: { t: TFunction }) {
             onKeyDown={(e) => {
               if (e.key === "Enter") saveClientId();
             }}
-            className="flex-1 px-3 py-1.5 text-xs font-mono outline-none" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
+            className="flex-1 px-3 py-1.5 text-xs font-mono outline-none" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
           />
           <button
             onClick={saveClientId}
-            className="shrink-0 px-3 py-1.5 text-[11px] font-mono font-medium transition" style={{ borderRadius: "2px", background: "var(--th-accent)", color: "#000" }}
+            className="shrink-0 px-3 py-1.5 text-[11px] font-mono font-medium transition" style={{ borderRadius: 0, background: "var(--th-accent)", color: "#000" }}
           >
             {t({ ko: "저장", en: "Save", ja: "保存", zh: "保存" })}
           </button>

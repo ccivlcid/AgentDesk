@@ -76,7 +76,7 @@ export default function AgentCard({
         background: "var(--th-bg-surface)",
         border: "1px solid var(--th-border)",
         borderLeft: isWorking ? "3px solid #22c55e" : "3px solid var(--th-border)",
-        borderRadius: "4px",
+        borderRadius: 0,
         transition: "border-color 0.1s linear, background 0.1s linear",
       }}
     >
@@ -109,7 +109,7 @@ export default function AgentCard({
 
           {/* Role + Dept row */}
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className={`text-[10px] px-1.5 py-0.5 border font-medium font-mono ${ROLE_BADGE[agent.role] || ""}`} style={{ borderRadius: "2px" }}>
+            <span className={`text-[10px] px-1.5 py-0.5 border font-medium font-mono ${ROLE_BADGE[agent.role] || ""}`} style={{ borderRadius: 0 }}>
               {isKo ? ROLE_LABEL[agent.role]?.ko : ROLE_LABEL[agent.role]?.en}
             </span>
             {dept && (
@@ -143,7 +143,7 @@ export default function AgentCard({
           </span>
           <div
             className="flex-1 overflow-hidden"
-            style={{ height: "4px", borderRadius: "1px", background: "var(--th-border)" }}
+            style={{ height: "4px", borderRadius: 0, background: "var(--th-border)" }}
           >
             <div
               style={{
@@ -175,14 +175,14 @@ export default function AgentCard({
               onClick={onDeleteConfirm}
               disabled={saving || agent.status === "working"}
               className="px-2 py-0.5 text-[10px] font-medium font-mono uppercase tracking-wider bg-red-600 hover:bg-red-500 text-white disabled:opacity-40 transition-colors"
-              style={{ borderRadius: "2px" }}
+              style={{ borderRadius: 0 }}
             >
               {tr("해고", "Fire")}
             </button>
             <button
               onClick={onDeleteCancel}
               className="ml-1.5 px-2 py-0.5 text-[10px] font-mono transition-colors"
-              style={{ color: "var(--th-text-muted)", borderRadius: "2px" }}
+              style={{ color: "var(--th-text-muted)", borderRadius: 0 }}
             >
               {tr("취소", "No")}
             </button>
@@ -191,7 +191,7 @@ export default function AgentCard({
           <button
             onClick={onDeleteClick}
             className="px-1.5 py-0.5 text-xs font-mono hover:bg-red-500/15 hover:text-red-400 transition-colors"
-            style={{ borderRadius: "2px", color: "var(--th-text-muted)" }}
+            style={{ borderRadius: 0, color: "var(--th-text-muted)" }}
             title={tr("해고", "Fire")}
           >
             ✕

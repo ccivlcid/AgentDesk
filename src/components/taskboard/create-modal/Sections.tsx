@@ -31,7 +31,7 @@ export function PrioritySection({ priority, t, onPriorityChange }: PrioritySecti
             onClick={() => onPriorityChange(star)}
             className="flex-1 py-2 text-base transition hover:opacity-80"
             style={{
-              borderRadius: "2px",
+              borderRadius: 0,
               background: star <= priority ? "rgba(245,158,11,0.85)" : "var(--th-bg-primary)",
               color: star <= priority ? "#000" : "var(--th-text-muted)",
               border: `1px solid ${star <= priority ? "rgba(245,158,11,0.6)" : "var(--th-border)"}`,
@@ -179,13 +179,13 @@ export function ProjectSection({
               zh: "输入项目名称或路径",
             })}
             className="w-full border outline-none transition"
-            style={{ borderRadius: "2px", borderColor: "var(--th-border)", background: "var(--th-input-bg, var(--th-bg-primary))", color: "var(--th-text-primary)", fontFamily: "var(--th-font-mono)", fontSize: "0.8125rem", padding: "0.4rem 0.625rem" }}
+            style={{ borderRadius: 0, borderColor: "var(--th-border)", background: "var(--th-input-bg, var(--th-bg-primary))", color: "var(--th-text-primary)", fontFamily: "var(--th-font-mono)", fontSize: "0.8125rem", padding: "0.4rem 0.625rem" }}
           />
           <button
             type="button"
             onClick={onToggleProjectDropdown}
             className="border px-2.5 py-2 text-xs font-mono transition hover:opacity-80"
-            style={{ borderRadius: "2px", borderColor: "var(--th-border)", background: "var(--th-bg-primary)", color: "var(--th-text-secondary)" }}
+            style={{ borderRadius: 0, borderColor: "var(--th-border)", background: "var(--th-bg-primary)", color: "var(--th-text-secondary)" }}
             title={t({
               ko: "프로젝트 목록 토글",
               en: "Toggle project list",
@@ -198,7 +198,7 @@ export function ProjectSection({
         </div>
 
         {projectDropdownOpen && (
-          <div className="absolute z-20 mt-1 max-h-52 w-full overflow-y-auto border" style={{ borderRadius: "2px", borderColor: "var(--th-border)", background: "var(--th-bg-surface)" }}>
+          <div className="absolute z-20 mt-1 max-h-52 w-full overflow-y-auto border" style={{ borderRadius: 0, borderColor: "var(--th-border)", background: "var(--th-bg-surface)" }}>
             <button
               type="button"
               onMouseDown={(event) => {
@@ -241,7 +241,7 @@ export function ProjectSection({
                     onEnableCreateNewProject();
                   }}
                   className="ml-auto shrink-0 border px-3 py-1.5 text-xs font-semibold font-mono transition hover:opacity-80"
-                  style={{ borderRadius: "2px", borderColor: "rgba(34,197,94,0.4)", background: "rgba(34,197,94,0.12)", color: "#22c55e" }}
+                  style={{ borderRadius: 0, borderColor: "rgba(34,197,94,0.4)", background: "rgba(34,197,94,0.12)", color: "#22c55e" }}
                 >
                   {t({ ko: "예", en: "Yes", ja: "はい", zh: "是" })}
                 </button>
@@ -292,7 +292,7 @@ export function ProjectSection({
             onChange={(event) => onNewProjectPathChange(event.target.value)}
             placeholder="/absolute/path/to/project"
             className="w-full border outline-none transition"
-            style={{ borderRadius: "2px", borderColor: "var(--th-border)", background: "var(--th-input-bg, var(--th-bg-primary))", color: "var(--th-text-primary)", fontFamily: "var(--th-font-mono)", fontSize: "0.8125rem", padding: "0.4rem 0.625rem" }}
+            style={{ borderRadius: 0, borderColor: "var(--th-border)", background: "var(--th-input-bg, var(--th-bg-primary))", color: "var(--th-text-primary)", fontFamily: "var(--th-font-mono)", fontSize: "0.8125rem", padding: "0.4rem 0.625rem" }}
           />
           <div className="flex justify-end gap-2">
             <button
@@ -300,7 +300,7 @@ export function ProjectSection({
               disabled={pathApiUnsupported}
               onClick={onOpenManualPathBrowser}
               className="border px-2.5 py-1 text-xs font-semibold font-mono transition hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-40"
-              style={{ borderRadius: "2px", borderColor: "var(--th-border)", color: "var(--th-text-secondary)", background: "var(--th-bg-primary)" }}
+              style={{ borderRadius: 0, borderColor: "var(--th-border)", color: "var(--th-text-secondary)", background: "var(--th-bg-primary)" }}
             >
               {t({
                 ko: "앱 내 폴더 탐색",
@@ -314,7 +314,7 @@ export function ProjectSection({
               disabled={pathApiUnsupported}
               onClick={onTogglePathSuggestions}
               className="border px-2.5 py-1 text-xs font-semibold font-mono transition hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-40"
-              style={{ borderRadius: "2px", borderColor: "var(--th-border)", color: "var(--th-text-secondary)", background: "var(--th-bg-primary)" }}
+              style={{ borderRadius: 0, borderColor: "var(--th-border)", color: "var(--th-text-secondary)", background: "var(--th-bg-primary)" }}
             >
               {pathSuggestionsOpen
                 ? t({
@@ -330,7 +330,7 @@ export function ProjectSection({
               disabled={nativePathPicking}
               onClick={onPickNativePath}
               className="border px-2.5 py-1 text-xs font-semibold font-mono transition hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-40"
-              style={{ borderRadius: "2px", borderColor: "var(--th-border)", color: "var(--th-text-secondary)", background: "var(--th-bg-primary)" }}
+              style={{ borderRadius: 0, borderColor: "var(--th-border)", color: "var(--th-text-secondary)", background: "var(--th-bg-primary)" }}
             >
               {nativePathPicking
                 ? t({
@@ -355,7 +355,7 @@ export function ProjectSection({
             </button>
           </div>
           {pathSuggestionsOpen && (
-            <div className="max-h-40 overflow-y-auto border" style={{ borderRadius: "2px", borderColor: "var(--th-border)", background: "var(--th-bg-primary)" }}>
+            <div className="max-h-40 overflow-y-auto border" style={{ borderRadius: 0, borderColor: "var(--th-border)", background: "var(--th-bg-primary)" }}>
               {pathSuggestionsLoading ? (
                 <p className="px-3 py-2 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
                   {t({

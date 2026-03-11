@@ -284,7 +284,7 @@ export default function ChannelGuideModal({ t, onClose }: GuideModalProps) {
       aria-labelledby="channel-guide-title"
     >
       <div
-        className="skills-learn-modal-card relative w-full max-w-2xl min-w-0 max-h-[90vh] flex flex-col overflow-hidden" style={{ borderRadius: "4px", border: "1px solid var(--th-border-strong)", background: "var(--th-bg-surface)" }}
+        className="skills-learn-modal-card relative w-full max-w-2xl min-w-0 max-h-[90vh] flex flex-col overflow-hidden" style={{ borderRadius: 0, border: "1px solid var(--th-border-strong)", background: "var(--th-bg-surface)" }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -310,7 +310,7 @@ export default function ChannelGuideModal({ t, onClose }: GuideModalProps) {
             </div>
             <button
               onClick={onClose}
-              className="w-7 h-7 flex items-center justify-center transition" style={{ borderRadius: "2px", color: "var(--th-text-muted)" }}
+              className="w-7 h-7 flex items-center justify-center transition" style={{ borderRadius: 0, color: "var(--th-text-muted)" }}
             >
               <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M4 4l8 8M12 4l-8 8" />
@@ -341,13 +341,13 @@ export default function ChannelGuideModal({ t, onClose }: GuideModalProps) {
         <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-6 py-5">
           {/* Field Reference */}
           <div className="grid grid-cols-2 gap-3 mb-5">
-            <div className="p-3" style={{ borderRadius: "2px", background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)" }}>
+            <div className="p-3" style={{ borderRadius: 0, background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)" }}>
               <div className="text-[10px] uppercase tracking-wider font-mono mb-1" style={{ color: "var(--th-text-muted)" }}>
                 {t({ ko: "토큰", en: "Token", ja: "トークン", zh: "令牌" })}
               </div>
               <div className="text-xs font-mono font-medium" style={{ color: "var(--th-text-primary)" }}>{active.tokenLabel}</div>
             </div>
-            <div className="p-3" style={{ borderRadius: "2px", background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)" }}>
+            <div className="p-3" style={{ borderRadius: 0, background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)" }}>
               <div className="text-[10px] uppercase tracking-wider font-mono mb-1" style={{ color: "var(--th-text-muted)" }}>
                 {t({ ko: "채널/대상 ID", en: "Channel/Target ID", ja: "チャンネル/対象ID", zh: "频道/目标ID" })}
               </div>
@@ -380,7 +380,7 @@ export default function ChannelGuideModal({ t, onClose }: GuideModalProps) {
 
           {/* Tip */}
           {active.tip && (
-            <div className="mt-4 px-4 py-3 flex gap-2.5" style={{ borderRadius: "4px", border: "1px solid rgba(251,191,36,0.2)", background: "rgba(251,191,36,0.05)" }}>
+            <div className="mt-4 px-4 py-3 flex gap-2.5" style={{ borderRadius: 0, border: "1px solid rgba(251,191,36,0.2)", background: "rgba(251,191,36,0.05)" }}>
               <span className="text-amber-400 text-sm flex-shrink-0 mt-px">💡</span>
               <p className="text-xs text-amber-200/80 leading-relaxed">{active.tip}</p>
             </div>
@@ -391,7 +391,7 @@ export default function ChannelGuideModal({ t, onClose }: GuideModalProps) {
         <div className="flex-shrink-0 px-6 py-3 flex justify-end" style={{ borderTop: "1px solid var(--th-border)" }}>
           <button
             onClick={onClose}
-            className="px-4 py-1.5 text-xs font-mono transition" style={{ borderRadius: "2px", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)", border: "1px solid var(--th-border)" }}
+            className="px-4 py-1.5 text-xs font-mono transition" style={{ borderRadius: 0, background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)", border: "1px solid var(--th-border)" }}
           >
             {t({ ko: "닫기", en: "Close", ja: "閉じる", zh: "关闭" })}
           </button>

@@ -16,7 +16,7 @@ export function TerminalPanelTabs({ activeTab, setActiveTab, tr, children }: Ter
     <>
       <div
         className="inline-flex overflow-hidden w-fit"
-        style={{ borderRadius: "2px", border: "1px solid var(--th-border)" }}
+        style={{ borderRadius: 0, border: "1px solid var(--th-border)" }}
       >
         <button
           type="button"

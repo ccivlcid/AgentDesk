@@ -38,10 +38,17 @@ export function useToast(): ToastContextValue {
 // ── Icons ────────────────────────────────────────────────────────────────────
 
 const ICONS: Record<ToastVariant, string> = {
-  success: "[OK]",
-  error: "[ERR]",
-  warning: "[WARN]",
-  info: "[INFO]",
+  success: "✓",
+  error: "✕",
+  warning: "⚠",
+  info: "ℹ",
+};
+
+const AUTO_DISMISS_BY_VARIANT: Record<ToastVariant, number | null> = {
+  success: 3000,
+  error: 5000,
+  warning: null,
+  info: 4000,
 };
 
 const COLORS: Record<ToastVariant, { text: string; border: string; bg: string }> = {
@@ -69,7 +76,7 @@ const COLORS: Record<ToastVariant, { text: string; border: string; bg: string }>
 
 // ── Single Toast ─────────────────────────────────────────────────────────────
 
-const AUTO_DISMISS_MS = 4000;
+const MAX_TOASTS = 3;
 
 function Toast({
   item,
@@ -80,13 +87,15 @@ function Toast({
 }) {
   const colors = COLORS[item.variant];
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dismissMs = AUTO_DISMISS_BY_VARIANT[item.variant];
 
   useEffect(() => {
-    timerRef.current = setTimeout(() => onRemove(item.id), AUTO_DISMISS_MS);
+    if (dismissMs === null) return;
+    timerRef.current = setTimeout(() => onRemove(item.id), dismissMs);
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [item.id, onRemove]);
+  }, [item.id, dismissMs, onRemove]);
 
   return (
     <div
@@ -97,7 +106,7 @@ function Toast({
         alignItems: "center",
         gap: "10px",
         padding: "10px 14px",
-        borderRadius: "2px",
+        borderRadius: "0",
         border: `1px solid ${colors.border}`,
         background: colors.bg,
         backdropFilter: "none",
@@ -157,7 +166,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
   const showToast = useCallback((message: string, variant: ToastVariant = "info") => {
     const id = `toast-${++counterRef.current}`;
-    setToasts((prev) => [...prev, { id, message, variant }]);
+    setToasts((prev) => {
+      const next = [...prev, { id, message, variant }];
+      return next.length > MAX_TOASTS ? next.slice(next.length - MAX_TOASTS) : next;
+    });
   }, []);
 
   const removeToast = useCallback((id: string) => {

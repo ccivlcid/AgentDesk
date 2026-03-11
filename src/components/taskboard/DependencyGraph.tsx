@@ -231,7 +231,7 @@ export default function DependencyGraph({ tasks, onOpenTerminal }: DependencyGra
         <button
           onClick={() => { setPan({ x: 0, y: 0 }); setScale(1); }}
           className="border px-2 py-0.5 hover:opacity-80 transition"
-          style={{ borderRadius: "2px", borderColor: "var(--th-border)", color: "var(--th-text-secondary)" }}
+          style={{ borderRadius: 0, borderColor: "var(--th-border)", color: "var(--th-text-secondary)" }}
         >
           {tr("초기화", "Reset")}
         </button>
@@ -316,14 +316,14 @@ export default function DependencyGraph({ tasks, onOpenTerminal }: DependencyGra
                   <rect
                     width={NODE_W}
                     height={NODE_H}
-                    rx={2}
+                    rx={0}
                     fill={isHovered ? "var(--th-bg-elevated)" : "var(--th-bg-surface)"}
                     stroke={isHovered ? "rgba(251,191,36,0.7)" : sc.border}
                     strokeWidth={isHovered ? 2 : 1}
                     style={{ transition: "fill 0.1s, stroke 0.1s" }}
                   />
                   {/* Status left bar */}
-                  <rect x={0} y={0} width={3} height={NODE_H} rx={2} fill={sc.dot} />
+                  <rect x={0} y={0} width={3} height={NODE_H} rx={0} fill={sc.dot} />
 
                   {/* Task ID badge */}
                   <text

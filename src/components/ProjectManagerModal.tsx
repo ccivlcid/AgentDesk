@@ -321,7 +321,7 @@ export default function ProjectManagerModal({ agents, departments = [], onClose,
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="flex h-[86vh] w-[min(1180px,95vw)] flex-col overflow-hidden md:flex-row" style={{ border: "1px solid var(--th-border)", borderRadius: "4px", background: "var(--th-bg-surface)" }}>
+      <div className="flex h-[86vh] w-[min(1180px,95vw)] flex-col overflow-hidden md:flex-row" style={{ border: "1px solid var(--th-border)", borderRadius: 0, background: "var(--th-bg-surface)" }}>
         <div
           className={`w-full md:w-[330px] ${selectedProjectId || isCreating || githubImportMode ? "hidden md:block" : "block"}`}
         >
@@ -364,7 +364,7 @@ export default function ProjectManagerModal({ agents, departments = [], onClose,
                 setGithubImportMode(false);
               }}
               className="px-2 py-1 text-xs font-mono transition"
-              style={{ borderRadius: "2px", color: "var(--th-text-secondary)", background: "transparent" }}
+              style={{ borderRadius: 0, color: "var(--th-text-secondary)", background: "transparent" }}
             >
               ← {t({ ko: "목록", en: "List", ja: "一覧", zh: "列表" })}
             </button>

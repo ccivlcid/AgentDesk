@@ -129,7 +129,7 @@ export default function Modal({
         tabIndex={-1}
         onKeyDown={handleKeyDown}
         className={`${WIDTH_CLASS[width]} max-h-[90vh] flex flex-col bg-[var(--th-bg-base,var(--th-bg-elevated))] border border-[var(--th-border)] shadow-xl overflow-hidden ${className}`}
-        style={{ borderRadius: "4px" }}
+        style={{ borderRadius: 0 }}
       >
         {children}
       </div>

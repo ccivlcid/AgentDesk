@@ -15,8 +15,8 @@ export interface ConfirmOptions {
   message?: string;
   confirmLabel?: string;
   cancelLabel?: string;
-  /** 'danger' shows the confirm button in red. Default is 'default' (amber). */
-  variant?: "default" | "danger";
+  /** 'danger' shows confirm in red, 'warning' in amber, 'info' in neutral. Default is 'default' (amber). */
+  variant?: "default" | "danger" | "warning" | "info";
 }
 
 interface ConfirmDialogContextValue {
@@ -50,18 +50,13 @@ function Dialog({ state, onClose }: { state: DialogState; onClose: (result: bool
 
   const confirmColors =
     variant === "danger"
-      ? {
-          bg: "transparent",
-          border: "1px solid rgba(248,81,73,0.5)",
-          color: "#f85149",
-          hoverBg: "rgba(248,81,73,0.1)",
-        }
-      : {
-          bg: "#f59e0b",
-          border: "none",
-          color: "#000",
-          hoverBg: "#d97706",
-        };
+      ? { bg: "transparent", border: "1px solid rgba(248,81,73,0.5)", color: "#f85149" }
+      : variant === "info"
+        ? { bg: "transparent", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)" }
+        : { bg: "#f59e0b", border: "none", color: "#000" };
+
+  const titleIcon =
+    variant === "danger" || variant === "warning" ? "⚠ " : variant === "info" ? "ℹ " : "";
 
   return createPortal(
     <div
@@ -87,7 +82,7 @@ function Dialog({ state, onClose }: { state: DialogState; onClose: (result: bool
         style={{
           background: "var(--th-bg-elevated)",
           border: "1px solid var(--th-border-strong)",
-          borderRadius: "4px",
+          borderRadius: "0",
           padding: "24px",
           width: "min(400px, 92vw)",
           boxShadow: "0 8px 32px rgba(0,0,0,0.6)",
@@ -104,7 +99,7 @@ function Dialog({ state, onClose }: { state: DialogState; onClose: (result: bool
             marginBottom: options.message ? "8px" : "20px",
           }}
         >
-          {options.title}
+          {titleIcon}{options.title}
         </p>
 
         {/* Message */}
@@ -130,7 +125,7 @@ function Dialog({ state, onClose }: { state: DialogState; onClose: (result: bool
             style={{
               background: "transparent",
               border: "1px solid var(--th-border)",
-              borderRadius: "2px",
+              borderRadius: 0,
               padding: "6px 14px",
               fontFamily: "var(--th-font-mono)",
               fontSize: "0.75rem",
@@ -146,7 +141,7 @@ function Dialog({ state, onClose }: { state: DialogState; onClose: (result: bool
             style={{
               background: confirmColors.bg,
               border: confirmColors.border,
-              borderRadius: "2px",
+              borderRadius: 0,
               padding: "6px 14px",
               fontFamily: "var(--th-font-mono)",
               fontSize: "0.75rem",

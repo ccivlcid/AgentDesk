@@ -12,11 +12,13 @@ interface TeamPageViewProps {
   currentProject?: Project | null;
 }
 
-const STATUS_CONFIG: Record<Agent["status"], { label: string; color: string; dot: string }> = {
-  working: { label: "실행 중", color: "#f59e0b", dot: "●" },
-  idle:    { label: "대기 중", color: "#6b7280", dot: "○" },
-  break:   { label: "휴식 중", color: "#8b5cf6", dot: "◐" },
-  offline: { label: "오프라인", color: "#374151", dot: "○" },
+const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };
+
+const STATUS_DOT: Record<Agent["status"], { dot: string; color: string; label: string }> = {
+  working: { dot: "●", color: "#f59e0b", label: "WORKING" },
+  idle:    { dot: "○", color: "#4ade80", label: "IDLE" },
+  break:   { dot: "◐", color: "#8b5cf6", label: "BREAK" },
+  offline: { dot: "○", color: "#374151", label: "OFFLINE" },
 };
 
 export default function TeamPageView({
@@ -30,7 +32,6 @@ export default function TeamPageView({
     currentProject ? "project" : "org",
   );
 
-  // 프로젝트가 바뀌면 "이 프로젝트 팀" 탭으로 이동
   useEffect(() => {
     if (currentProject) setTopTab("project");
     else setTopTab("org");
@@ -74,7 +75,6 @@ export default function TeamPageView({
     });
   };
 
-  // 프로젝트 없으면 바로 전체 조직 뷰
   if (!currentProject) {
     return (
       <AgentManager
@@ -91,198 +91,232 @@ export default function TeamPageView({
     (a) => !teamAgentIds.has(a.id) && a.status !== "offline",
   );
 
+  const TABS = [
+    { key: "project" as const, label: "THIS PROJECT TEAM", count: teamAgents.length },
+    { key: "org" as const, label: "ALL AGENTS", count: agents.length },
+  ];
+
   return (
-    <div className="mx-auto max-w-4xl space-y-4">
-      {/* 최상위 탭 */}
-      <div
-        className="flex"
-        style={{
-          background: "var(--th-bg-surface)",
-          border: "1px solid var(--th-border)",
-          borderRadius: 2,
-        }}
-      >
-        {[
-          { key: "project" as const, label: "이 프로젝트 팀" },
-          { key: "org" as const, label: "전체 조직" },
-        ].map((tab, idx) => (
+    <div style={{ ...mono, display: "flex", flexDirection: "column", gap: 0 }}>
+
+      {/* ── 터미널 헤더 ── */}
+      <div style={{ borderBottom: "1px solid var(--th-border)", padding: "10px 16px", background: "var(--th-bg-elevated)", display: "flex", alignItems: "center", gap: 8 }}>
+        <span style={{ color: "var(--th-accent)", fontWeight: 700, fontSize: "11px" }}>$</span>
+        <span style={{ fontSize: "11px", color: "var(--th-text-muted)" }}>
+          ls team/ --project=&quot;{currentProject.name}&quot;
+        </span>
+        <span style={{ marginLeft: "auto", fontSize: "9px", color: "var(--th-text-muted)", opacity: 0.6 }}>
+          {teamAgents.length} members
+        </span>
+      </div>
+
+      {/* ── 탭 바 ── */}
+      <div style={{ borderBottom: "1px solid var(--th-border)", display: "flex", background: "var(--th-bg-primary)" }}>
+        {TABS.map((tab, idx) => (
           <button
             key={tab.key}
             type="button"
             onClick={() => setTopTab(tab.key)}
-            className="flex-1 flex items-center justify-center px-4 py-2 text-xs font-mono font-bold uppercase transition-colors"
             style={{
-              color: topTab === tab.key ? "var(--th-accent)" : "var(--th-text-muted)",
-              background: "transparent",
-              borderBottom: topTab === tab.key ? "2px solid var(--th-accent)" : "2px solid transparent",
-              borderRight: idx === 0 ? "1px solid var(--th-border)" : "none",
+              ...mono,
+              flex: 1,
+              fontSize: "9px",
+              fontWeight: 700,
               letterSpacing: "0.08em",
+              padding: "8px 16px",
+              border: "none",
+              borderRight: idx === 0 ? "1px solid var(--th-border)" : "none",
+              borderBottom: topTab === tab.key ? "2px solid var(--th-accent)" : "2px solid transparent",
+              background: topTab === tab.key ? "var(--th-bg-elevated)" : "transparent",
+              color: topTab === tab.key ? "var(--th-accent)" : "var(--th-text-muted)",
+              cursor: "pointer",
             }}
           >
             {tab.label}
-            {tab.key === "project" && teamAgents.length > 0 && (
-              <span
-                className="ml-1.5 text-[9px] px-1 py-0.5 rounded-full font-normal"
-                style={{ background: "var(--th-bg-elevated)", color: "var(--th-text-muted)" }}
-              >
-                {teamAgents.length}
-              </span>
-            )}
+            <span style={{ marginLeft: 6, opacity: 0.6 }}>({tab.count})</span>
           </button>
         ))}
       </div>
 
-      {/* 이 프로젝트 팀 탭 */}
+      {/* ── 이 프로젝트 팀 ── */}
       {topTab === "project" && (
-        <div className="space-y-3">
-          {/* 헤더 */}
-          <div
-            className="flex items-center justify-between"
-            style={{ borderLeft: "3px solid var(--th-accent)", paddingLeft: "0.75rem" }}
-          >
-            <div>
-              <h1
-                className="text-sm font-bold uppercase tracking-widest"
-                style={{ color: "var(--th-text-heading)", fontFamily: "var(--th-font-mono)" }}
-              >
-                {currentProject.name} 팀
-              </h1>
-              <p className="text-[11px] text-[var(--th-text-muted)] mt-0.5">
-                이 프로젝트에 배정된 에이전트
-              </p>
-            </div>
+        <>
+          {/* 액션 바 */}
+          <div style={{ borderBottom: "1px solid var(--th-border)", padding: "5px 12px", background: "var(--th-bg-primary)", display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ fontSize: "9px", color: "var(--th-text-muted)", opacity: 0.6 }}>
+              {loadingTeam ? "loading…" : `${teamAgents.length} assigned`}
+            </span>
             <button
               type="button"
               onClick={() => setShowPicker((v) => !v)}
-              className="px-3 py-1.5 text-xs font-mono uppercase transition-colors hover:opacity-90"
               style={{
-                borderRadius: 2,
-                border: "1px solid var(--th-border)",
-                color: "var(--th-text-heading)",
-                background: "var(--th-bg-surface)",
+                ...mono,
+                marginLeft: "auto",
+                fontSize: "9px",
+                fontWeight: 700,
+                padding: "3px 10px",
+                border: `1px solid ${showPicker ? "rgba(245,158,11,0.5)" : "var(--th-border)"}`,
+                background: showPicker ? "rgba(245,158,11,0.08)" : "transparent",
+                color: showPicker ? "var(--th-accent)" : "var(--th-text-muted)",
+                cursor: "pointer",
+                letterSpacing: "0.05em",
               }}
             >
-              {showPicker ? "✕ 닫기" : "+ 팀원 추가"}
+              {showPicker ? "✕ CLOSE" : "+ ADD MEMBER"}
             </button>
           </div>
 
           {/* 팀원 추가 피커 */}
-          {showPicker && availableAgents.length > 0 && (
-            <div
-              className="p-3 rounded space-y-2"
-              style={{ background: "var(--th-bg-surface)", border: "1px solid var(--th-border)" }}
-            >
-              <p className="text-[11px] text-[var(--th-text-muted)]">추가할 에이전트 선택</p>
-              <div className="flex flex-wrap gap-1.5">
-                {availableAgents.map((agent) => (
-                  <button
-                    key={agent.id}
-                    type="button"
-                    onClick={() => void handleAdd(agent.id)}
-                    className="inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded transition-colors hover:opacity-90"
-                    style={{
-                      border: "1px solid var(--th-border)",
-                      background: "var(--th-bg-elevated)",
-                      color: "var(--th-text)",
-                    }}
-                  >
-                    <span>{agent.avatar_emoji || "🤖"}</span>
-                    <span>{agent.name_ko || agent.name}</span>
-                  </button>
-                ))}
+          {showPicker && (
+            <div style={{ borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", padding: "10px 14px" }}>
+              <div style={{ fontSize: "9px", color: "var(--th-text-muted)", marginBottom: 8, opacity: 0.7 }}>
+                $ select agent --add-to-project
               </div>
+              {availableAgents.length === 0 ? (
+                <div style={{ fontSize: "10px", color: "var(--th-text-muted)", opacity: 0.4 }}>— no available agents —</div>
+              ) : (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                  {availableAgents.map((agent) => {
+                    const st = STATUS_DOT[agent.status] ?? STATUS_DOT.idle;
+                    return (
+                      <button
+                        key={agent.id}
+                        type="button"
+                        onClick={() => void handleAdd(agent.id)}
+                        style={{
+                          ...mono,
+                          fontSize: "9px",
+                          fontWeight: 700,
+                          padding: "3px 10px",
+                          border: "1px solid var(--th-border)",
+                          background: "var(--th-bg-primary)",
+                          color: "var(--th-text-secondary)",
+                          cursor: "pointer",
+                          letterSpacing: "0.04em",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 6,
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.borderColor = "rgba(245,158,11,0.5)"; e.currentTarget.style.color = "var(--th-accent)"; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--th-border)"; e.currentTarget.style.color = "var(--th-text-secondary)"; }}
+                      >
+                        <span style={{ color: st.color, fontSize: "8px" }}>{st.dot}</span>
+                        {agent.name_ko || agent.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* 컬럼 헤더 */}
+          {!loadingTeam && teamAgents.length > 0 && (
+            <div style={{ display: "flex", alignItems: "center", padding: "4px 14px", background: "var(--th-bg-primary)", borderBottom: "1px solid var(--th-border)", gap: 8 }}>
+              <span style={{ fontSize: "8px", fontWeight: 700, letterSpacing: "0.1em", color: "var(--th-text-muted)", width: 70, flexShrink: 0 }}>STATUS</span>
+              <span style={{ fontSize: "8px", fontWeight: 700, letterSpacing: "0.1em", color: "var(--th-text-muted)", flex: 1 }}>NAME</span>
+              <span style={{ fontSize: "8px", fontWeight: 700, letterSpacing: "0.1em", color: "var(--th-text-muted)", width: 100, flexShrink: 0 }}>ROLE</span>
             </div>
           )}
 
           {/* 팀원 목록 */}
           {loadingTeam ? (
-            <div className="text-[11px] text-[var(--th-text-muted)] py-4 text-center">로딩 중…</div>
+            <div>
+              {[1, 2, 3].map((i) => (
+                <div key={i} style={{ height: 48, borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-surface)", opacity: 0.4, borderLeft: "3px solid var(--th-border)" }} />
+              ))}
+            </div>
           ) : teamAgents.length === 0 ? (
-            <div
-              className="text-center py-10 rounded"
-              style={{ border: "1px dashed var(--th-border)" }}
-            >
-              <p className="text-sm text-[var(--th-text-muted)] mb-1">아직 팀원이 없어요.</p>
-              <p className="text-[11px] text-[var(--th-text-muted)]">
-                + 팀원 추가 버튼으로 에이전트를 배정해보세요.
-              </p>
+            <div style={{ padding: "40px 16px", textAlign: "center" }}>
+              <div style={{ fontSize: "10px", color: "var(--th-text-muted)" }}>$ ls team/</div>
+              <div style={{ fontSize: "11px", color: "var(--th-text-muted)", opacity: 0.4, marginTop: 6 }}>(empty)</div>
+              <div style={{ fontSize: "10px", color: "var(--th-text-muted)", opacity: 0.3, marginTop: 4 }}>use [+ ADD MEMBER] to assign agents</div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
               {teamAgents.map((agent) => {
-                const statusCfg = STATUS_CONFIG[agent.status] ?? STATUS_CONFIG.idle;
+                const st = STATUS_DOT[agent.status] ?? STATUS_DOT.idle;
+                const roleLabel =
+                  agent.role === "team_leader" ? "LEADER" :
+                  agent.role === "senior" ? "SENIOR" :
+                  agent.role === "junior" ? "JUNIOR" : "INTERN";
                 return (
                   <div
                     key={agent.id}
-                    className="group rounded p-3 flex items-start gap-3"
+                    className="group"
                     style={{
-                      background: "var(--th-bg-surface)",
-                      border: "1px solid var(--th-border)",
+                      ...mono,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      borderBottom: "1px solid var(--th-border)",
+                      borderLeft: `3px solid ${st.color}`,
+                      padding: "10px 14px",
+                      background: "var(--th-bg-primary)",
+                      transition: "background 0.1s",
                     }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--th-bg-elevated)"; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--th-bg-primary)"; }}
                   >
                     {/* 아바타 */}
-                    <div className="flex-shrink-0">
-                      <AgentAvatar agent={agent} size={36} />
-                    </div>
+                    <AgentAvatar agent={agent} size={22} />
 
-                    {/* 정보 */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        <span className="text-[13px] font-semibold text-[var(--th-text)]">
-                          {agent.name_ko || agent.name}
-                        </span>
-                        <span
-                          className="text-[9px] px-1.5 py-0.5 rounded font-medium flex-shrink-0"
-                          style={{
-                            background: `${statusCfg.color}22`,
-                            color: statusCfg.color,
-                          }}
-                        >
-                          {statusCfg.dot} {statusCfg.label}
-                        </span>
-                      </div>
+                    {/* 상태 */}
+                    <span style={{ fontSize: "8px", fontWeight: 700, width: 58, flexShrink: 0, color: st.color, letterSpacing: "0.06em" }}>
+                      {st.dot} {st.label}
+                    </span>
 
-                      {/* 역할 */}
-                      <p className="text-[11px] text-[var(--th-text-muted)] mt-0.5">
-                        {agent.role === "team_leader" ? "팀 리더" :
-                         agent.role === "senior" ? "시니어" :
-                         agent.role === "junior" ? "주니어" : "인턴"}
-                        {agent.personality && (
-                          <span className="ml-1.5 text-[var(--th-text-muted)]">
-                            · {agent.personality.slice(0, 30)}{agent.personality.length > 30 ? "…" : ""}
-                          </span>
-                        )}
-                      </p>
+                    {/* 이름 */}
+                    <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--th-text-primary)", flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {agent.name_ko || agent.name}
+                    </span>
 
-                      {/* 현재 태스크 */}
-                      {agent.status === "working" && agent.current_task_id && (
-                        <p className="text-[10px] mt-1" style={{ color: "#f59e0b" }}>
-                          ▶ 태스크 실행 중
-                        </p>
+                    {/* 역할 */}
+                    <span style={{ fontSize: "8px", color: "var(--th-text-muted)", width: 100, flexShrink: 0 }}>
+                      {roleLabel}
+                      {agent.status === "working" && (
+                        <span style={{ marginLeft: 6, color: "#f59e0b" }}>▶ running</span>
                       )}
-                    </div>
+                    </span>
 
                     {/* 제거 버튼 */}
                     <button
                       type="button"
                       onClick={() => void handleRemove(agent.id)}
-                      className="flex-shrink-0 opacity-0 group-hover:opacity-100 text-[10px] px-2 py-1 rounded transition-opacity"
+                      className="opacity-0 group-hover:opacity-100"
                       style={{
+                        ...mono,
+                        fontSize: "9px",
+                        fontWeight: 700,
+                        padding: "2px 8px",
                         border: "1px solid var(--th-border)",
+                        background: "none",
                         color: "var(--th-text-muted)",
+                        cursor: "pointer",
+                        letterSpacing: "0.04em",
+                        transition: "opacity 0.1s",
                       }}
+                      onMouseEnter={(e) => { e.currentTarget.style.color = "#f87171"; e.currentTarget.style.borderColor = "rgba(248,113,113,0.4)"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.color = "var(--th-text-muted)"; e.currentTarget.style.borderColor = "var(--th-border)"; }}
                     >
-                      제거
+                      REMOVE
                     </button>
                   </div>
                 );
               })}
             </div>
           )}
-        </div>
+
+          {/* 푸터 */}
+          <div style={{ borderTop: "1px solid var(--th-border)", padding: "5px 16px", background: "var(--th-bg-primary)" }}>
+            <span style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", opacity: 0.4 }}>
+              $ {teamAgents.length} members · {availableAgents.length} available
+            </span>
+          </div>
+        </>
       )}
 
-      {/* 전체 조직 탭 */}
+      {/* ── 전체 조직 탭 ── */}
       {topTab === "org" && (
         <AgentManager
           agents={agents}

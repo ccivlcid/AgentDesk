@@ -25,7 +25,7 @@ export function CollapsibleSection({
     <div
       style={{
         border: "1px solid var(--th-border)",
-        borderRadius: "4px",
+        borderRadius: 0,
         overflow: "hidden",
         background: "var(--th-bg-surface)",
       }}

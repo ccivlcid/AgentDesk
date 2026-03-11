@@ -2,7 +2,6 @@ import { useState } from "react";
 import type { Department, Agent, CompanySettings, Project, Category } from "../types";
 import { useI18n, localeName } from "../i18n";
 import type { View } from "../app/types";
-import ProjectSelector from "./project-selector/ProjectSelector";
 
 interface SidebarProps {
   currentView: View;
@@ -18,29 +17,19 @@ interface SidebarProps {
   onProjectCreate?: () => void;
 }
 
-/* Top-level nav items. "library" is a group parent, not a view itself. */
+/* Top-level nav items. Sections with children are collapsible. */
 type NavEntry =
   | { kind: "item"; view: View }
-  | { kind: "group"; id: string; children: { view: View }[] };
+  | { kind: "section"; label: string; id?: string; children?: { view: View }[] };
 
 const NAV_STRUCTURE: NavEntry[] = [
+  { kind: "section", label: "OVERVIEW" },
   { kind: "item", view: "dashboard" },
-  { kind: "item", view: "office" },
-  {
-    kind: "group",
-    id: "tasks",
-    children: [{ view: "tasks-board" }, { view: "tasks-scheduled" }, { view: "tasks-deliverables" }],
-  },
-  {
-    kind: "group",
-    id: "agents",
-    children: [{ view: "agents" }, { view: "heartbeat" }],
-  },
-  {
-    kind: "group",
-    id: "library",
-    children: [{ view: "skills" }, { view: "agent-rules" }, { view: "memory" }, { view: "hooks" }],
-  },
+  { kind: "item", view: "project-types" },
+  { kind: "section", label: "TASKS", id: "tasks", children: [{ view: "tasks-board" }, { view: "tasks-scheduled" }, { view: "tasks-deliverables" }] },
+  { kind: "section", label: "AGENTS", id: "agents", children: [{ view: "agents" }, { view: "heartbeat" }] },
+  { kind: "section", label: "LIBRARY", id: "library", children: [{ view: "skills" }, { view: "agent-rules" }, { view: "memory" }, { view: "hooks" }] },
+  { kind: "section", label: "SYSTEM" },
   { kind: "item", view: "cli-usage" },
   { kind: "item", view: "settings" },
 ];
@@ -50,17 +39,6 @@ const LIBRARY_CHILDREN: View[] = ["skills", "agent-rules", "memory", "hooks"];
 const TASKS_CHILDREN: View[] = ["tasks-board", "tasks-scheduled", "tasks-deliverables"];
 
 const NAV_ICONS: Partial<Record<View | "library", React.ReactNode>> = {
-  office: (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="4" cy="4" r="2" />
-      <circle cx="16" cy="4" r="2" />
-      <circle cx="4" cy="16" r="2" />
-      <circle cx="16" cy="16" r="2" />
-      <circle cx="10" cy="10" r="2" />
-      <path d="M6 4h8M4 6v8M16 6v8M6 16h8" />
-      <path d="M6 6l3 3M14 6l-3 3M6 14l3-3M14 14l-3-3" />
-    </svg>
-  ),
   agents: (
     <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <circle cx="7" cy="6" r="2.5" />
@@ -111,6 +89,12 @@ const NAV_ICONS: Partial<Record<View | "library", React.ReactNode>> = {
       <rect x="11" y="2" width="7" height="5" rx="1" />
       <rect x="2" y="12" width="7" height="6" rx="1" />
       <rect x="11" y="9" width="7" height="9" rx="1" />
+    </svg>
+  ),
+  "project-types": (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M2 6a2 2 0 012-2h4l2 2h6a2 2 0 012 2v7a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" />
+      <path d="M7 11h6M7 14h4" />
     </svg>
   ),
   "cli-usage": (
@@ -182,7 +166,6 @@ export default function Sidebar({
   const tr = (ko: string, en: string, ja = en, zh = en) => t({ ko, en, ja, zh });
 
   const navLabels: Record<string, string> = {
-    office: tr("워크맵", "Work Map", "ワークマップ", "工作图"),
     agents: tr("팀", "Team", "チーム", "团队"),
     heartbeat: tr("직원 살펴보기", "Heartbeat", "社員の様子", "员工动态"),
     library: tr("도서관", "Library", "ライブラリ", "图书馆"),
@@ -197,6 +180,7 @@ export default function Sidebar({
     "tasks-scheduled": tr("스케줄러", "Scheduler", "スケジューラ", "调度器"),
     "tasks-deliverables": tr("산출물", "Outputs", "成果物", "产出物"),
     settings: tr("설정", "Settings", "設定", "设置"),
+    "project-types": tr("프로젝트 유형", "Project Types", "プロジェクト種別", "项目类型"),
   };
 
   const isAgentsActive = AGENTS_CHILDREN.includes(currentView as View);
@@ -218,7 +202,7 @@ export default function Sidebar({
     >
       <span className="sidebar-nav-icon">{NAV_ICONS[view]}</span>
       {!collapsed && <span className="sidebar-nav-label">{navLabels[view]}</span>}
-      {view === "agents" && !isAgentsActive && workingCount > 0 && (
+      {(view === "dashboard" || view === "tasks-board") && workingCount > 0 && (
         <span className="sidebar-nav-badge">{workingCount}</span>
       )}
     </button>
@@ -234,7 +218,7 @@ export default function Sidebar({
       <span className="sidebar-nav-label">
         {parentId === "agents" ? (agentsGroupSubLabels[view] ?? navLabels[view]) : navLabels[view]}
       </span>
-      {view === "agents" && parentId === "agents" && workingCount > 0 && (
+      {view === "tasks-board" && workingCount > 0 && (
         <span className="sidebar-nav-badge">{workingCount}</span>
       )}
     </button>
@@ -242,106 +226,101 @@ export default function Sidebar({
 
   return (
     <aside className={`sidebar-shell ${collapsed ? "sidebar-collapsed" : "sidebar-expanded"}`}>
-      {/* [A] Brand header */}
+      {/* [A] Brand header — logo only; project selector lives in AppHeaderBar */}
       <div className="sidebar-brand">
-        {collapsed ? (
-          <div className="sidebar-brand-inner justify-center">
-            <ProjectSelector
-              currentProject={currentProject}
-              projects={projects}
-              categories={categories}
-              onSelect={onProjectSelect ?? (() => {})}
-              onCreateNew={onProjectCreate ?? (() => {})}
-              collapsed={true}
-            />
-          </div>
-        ) : (
-          <div className="flex flex-col gap-1.5 w-full">
-            <div className="px-1 text-[13px] font-extrabold tracking-tight text-[var(--th-accent)]"
-              style={{ fontFamily: "'Sora', sans-serif", letterSpacing: "-0.01em" }}
-            >
-              AgentDesk
-            </div>
-            <ProjectSelector
-              currentProject={currentProject}
-              projects={projects}
-              categories={categories}
-              onSelect={onProjectSelect ?? (() => {})}
-              onCreateNew={onProjectCreate ?? (() => {})}
-              collapsed={false}
-            />
+        {!collapsed && (
+          <div className="px-3 py-2 text-[11px] font-bold tracking-widest" style={{ fontFamily: "var(--th-font-mono)", color: "var(--th-text-muted)", letterSpacing: "0.12em" }}>
+            AGENTDESK
           </div>
         )}
       </div>
 
       {/* [B] Navigation */}
       <nav className="sidebar-nav">
-        {NAV_STRUCTURE.map((entry) => {
-          if (entry.kind === "item") {
-            return renderNavItem(entry.view);
-          }
-          /* Group: agents / library / tasks */
-          const isGroupActive =
-            entry.id === "agents"
-              ? isAgentsActive
-              : entry.id === "library"
-                ? isLibraryActive
-                : isTasksActive;
-          const isGroupOpen =
-            entry.id === "agents"
-              ? agentsOpen
-              : entry.id === "library"
-                ? libraryOpen
-                : tasksOpen;
-          const toggleGroup =
-            entry.id === "agents"
-              ? () => setAgentsOpen(!agentsOpen)
-              : entry.id === "library"
-                ? () => setLibraryOpen(!libraryOpen)
-                : () => setTasksOpen(!tasksOpen);
-          return (
-            <div key={entry.id} className="sidebar-nav-group">
-              <button
-                onClick={() => {
-                  if (collapsed) {
-                    onChangeView(entry.children[0].view);
-                  } else {
-                    toggleGroup();
-                  }
-                }}
-                title={collapsed ? navLabels[entry.id] : undefined}
-                className={`sidebar-nav-item ${isGroupActive ? "active" : ""}`}
-              >
-                <span className="sidebar-nav-icon">{NAV_ICONS[entry.id as keyof typeof NAV_ICONS]}</span>
-                {!collapsed && (
-                  <>
-                    <span className="sidebar-nav-label">{navLabels[entry.id]}</span>
-                    {entry.id === "agents" && workingCount > 0 && (
-                      <span className="sidebar-nav-badge">{workingCount}</span>
-                    )}
+        {NAV_STRUCTURE.map((entry, i) => {
+          if (entry.kind === "section") {
+            /* Collapsible section (TASKS / AGENTS / LIBRARY) */
+            if (entry.children && entry.id) {
+              const isActive =
+                entry.id === "agents" ? isAgentsActive :
+                entry.id === "library" ? isLibraryActive : isTasksActive;
+              const isOpen =
+                entry.id === "agents" ? agentsOpen :
+                entry.id === "library" ? libraryOpen : tasksOpen;
+              const toggle =
+                entry.id === "agents" ? () => setAgentsOpen(!agentsOpen) :
+                entry.id === "library" ? () => setLibraryOpen(!libraryOpen) :
+                () => setTasksOpen(!tasksOpen);
+              if (collapsed) {
+                /* collapsed: show first child as icon nav button */
+                return entry.children.map((child) => renderNavItem(child.view));
+              }
+              return (
+                <div key={`section-${entry.id}`}>
+                  <button
+                    onClick={toggle}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      width: "100%",
+                      padding: "12px 12px 4px",
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                      gap: "4px",
+                    }}
+                  >
+                    <span style={{
+                      fontFamily: "var(--th-font-mono)",
+                      fontSize: "9px",
+                      fontWeight: 700,
+                      letterSpacing: "0.1em",
+                      color: isActive ? "var(--th-accent)" : "var(--th-text-muted)",
+                      textTransform: "uppercase" as const,
+                      userSelect: "none" as const,
+                      flex: 1,
+                      textAlign: "left" as const,
+                    }}>
+                      {entry.label}
+                    </span>
                     <svg
-                      width="12"
-                      height="12"
-                      viewBox="0 0 20 20"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className={`sidebar-group-chevron ${isGroupOpen ? "open" : ""}`}
+                      width="10" height="10" viewBox="0 0 20 20" fill="none"
+                      stroke="currentColor" strokeWidth="2.5"
+                      strokeLinecap="round" strokeLinejoin="round"
+                      style={{ color: "var(--th-text-muted)", transform: isOpen ? "rotate(0deg)" : "rotate(-90deg)", transition: "transform 0.15s" }}
                     >
                       <path d="M6 8l4 4 4-4" />
                     </svg>
-                  </>
-                )}
-              </button>
-              {!collapsed && isGroupOpen && (
-                <div className="sidebar-sub-list">
-                  {entry.children.map((child) => renderSubItem(child.view, entry.id))}
+                  </button>
+                  {isOpen && (
+                    <div className="sidebar-sub-list">
+                      {entry.children.map((child) => renderSubItem(child.view, entry.id))}
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          );
+              );
+            }
+            /* Static section label (OVERVIEW / SYSTEM) */
+            if (collapsed) return null;
+            return (
+              <div
+                key={`section-${entry.label}-${i}`}
+                style={{
+                  padding: "12px 12px 4px",
+                  fontFamily: "var(--th-font-mono)",
+                  fontSize: "9px",
+                  fontWeight: 700,
+                  letterSpacing: "0.1em",
+                  color: "var(--th-text-muted)",
+                  textTransform: "uppercase" as const,
+                  userSelect: "none" as const,
+                }}
+              >
+                {entry.label}
+              </div>
+            );
+          }
+          return renderNavItem(entry.view);
         })}
       </nav>
 

@@ -92,7 +92,7 @@ export default function MemoryFormModal({
   };
 
   const selectStyle: React.CSSProperties = {
-    borderRadius: "2px",
+    borderRadius: 0,
     background: "var(--th-input-bg)",
     border: "1px solid var(--th-input-border)",
     color: "var(--th-text-secondary)",
@@ -222,7 +222,7 @@ export default function MemoryFormModal({
             </div>
           </div>
           {fileName && content && (
-            <div className="mt-2 p-2 max-h-24 overflow-y-auto" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-terminal-bg)" }}>
+            <div className="mt-2 p-2 max-h-24 overflow-y-auto" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-terminal-bg)" }}>
               <pre className="text-[10px] whitespace-pre-wrap break-all font-mono" style={{ color: "var(--th-text-muted)" }}>
                 {content.slice(0, 500)}
                 {content.length > 500 && "..."}
@@ -261,7 +261,7 @@ export default function MemoryFormModal({
 
         {/* Error */}
         {error && (
-          <div className="text-[11px] px-3 py-2" style={{ borderRadius: "2px", background: "var(--th-danger-bg)", border: "1px solid var(--th-danger-border)", color: "var(--th-danger-text)" }}>
+          <div className="text-[11px] px-3 py-2" style={{ borderRadius: 0, background: "var(--th-danger-bg)", border: "1px solid var(--th-danger-border)", color: "var(--th-danger-text)" }}>
             {error}
           </div>
         )}

@@ -56,7 +56,7 @@ export function DashboardHeroHeader({
   return (
     <div
       className="dashboard-panel relative overflow-hidden"
-      style={{ border: "1px solid var(--th-border)", borderRadius: "4px", background: "var(--th-bg-surface)", padding: "1.25rem 1.5rem" }}
+      style={{ border: "1px solid var(--th-border)", borderRadius: 0, background: "var(--th-bg-surface)", padding: "1.25rem 1.5rem" }}
     >
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="space-y-1">
@@ -69,9 +69,9 @@ export function DashboardHeroHeader({
             </h1>
             <span
               className="flex items-center gap-1.5 px-2 py-0.5 font-mono text-[10px] uppercase tracking-wider"
-              style={{ border: "1px solid rgba(34,197,94,0.35)", borderRadius: "2px", background: "rgba(34,197,94,0.08)", color: "#22c55e" }}
+              style={{ border: "1px solid rgba(34,197,94,0.35)", borderRadius: 0, background: "rgba(34,197,94,0.08)", color: "#22c55e" }}
             >
-              <span className="h-1.5 w-1.5 bg-emerald-500" style={{ borderRadius: "1px" }} />
+              <span className="h-1.5 w-1.5 bg-emerald-500" style={{ borderRadius: 0 }} />
               {t({ ko: "실시간", en: "Live", ja: "ライブ", zh: "实时" })}
             </span>
           </div>
@@ -88,20 +88,20 @@ export function DashboardHeroHeader({
         <div className="flex items-center gap-3">
           <div
             className="flex items-center gap-2 px-3 py-2"
-            style={{ border: "1px solid var(--th-border)", borderRadius: "2px", background: "var(--th-bg-primary)" }}
+            style={{ border: "1px solid var(--th-border)", borderRadius: 0, background: "var(--th-bg-primary)" }}
           >
             <span className="font-mono text-lg font-medium" style={{ color: "var(--th-text-primary)" }}>{time}</span>
           </div>
           <div className="hidden flex-col gap-1 sm:flex">
             <span
               className="px-2 py-0.5 font-mono text-[10px]"
-              style={{ border: "1px solid var(--th-border)", borderRadius: "2px", background: "var(--th-bg-primary)", color: "var(--th-text-muted)" }}
+              style={{ border: "1px solid var(--th-border)", borderRadius: 0, background: "var(--th-bg-primary)", color: "var(--th-text-muted)" }}
             >
               {date}
             </span>
             <span
               className="px-2 py-0.5 font-mono text-[10px]"
-              style={{ border: "1px solid rgba(245,158,11,0.25)", borderRadius: "2px", background: "rgba(245,158,11,0.06)", color: "#f59e0b" }}
+              style={{ border: "1px solid rgba(245,158,11,0.25)", borderRadius: 0, background: "rgba(245,158,11,0.06)", color: "#f59e0b" }}
               title={t({
                 ko: "현재 시간대 표시 (오전 브리핑 / 오후 운영 점검 / 저녁 마감 점검)",
                 en: "Current time-of-day label (Morning / Afternoon / Evening)",
@@ -115,7 +115,7 @@ export function DashboardHeroHeader({
           {reviewQueue > 0 && (
             <span
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium font-mono"
-              style={{ border: "1px solid rgba(245,158,11,0.35)", borderRadius: "2px", background: "rgba(245,158,11,0.1)", color: "#f59e0b" }}
+              style={{ border: "1px solid rgba(245,158,11,0.35)", borderRadius: 0, background: "rgba(245,158,11,0.1)", color: "#f59e0b" }}
             >
               {t({ ko: "검토 대기", en: "In review", ja: "レビュー待ち", zh: "待审核" })} {numberFormatter.format(reviewQueue)}
               {t({ ko: "건", en: "", ja: "件", zh: "项" })}
@@ -126,7 +126,7 @@ export function DashboardHeroHeader({
 
       <div
         className="relative mt-5 p-4"
-        style={{ border: "1px solid var(--th-border)", borderRadius: "2px", background: "var(--th-bg-primary)", borderLeft: "3px solid var(--th-accent, #f59e0b)" }}
+        style={{ border: "1px solid var(--th-border)", borderRadius: 0, background: "var(--th-bg-primary)", borderLeft: "3px solid var(--th-accent, #f59e0b)" }}
       >
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
@@ -144,7 +144,7 @@ export function DashboardHeroHeader({
             className="inline-flex w-full items-center justify-center gap-2 px-5 py-2.5 text-sm font-medium font-mono sm:w-auto sm:min-w-[180px]"
             style={{
               border: "1px solid rgba(245,158,11,0.5)",
-              borderRadius: "2px",
+              borderRadius: 0,
               background: "rgba(245,158,11,0.12)",
               color: "#f59e0b",
               transition: "background 0.1s linear, border-color 0.1s linear",
@@ -180,7 +180,7 @@ export function DashboardHudStats({ hudStats, numberFormatter }: DashboardHudSta
           style={{
             border: "1px solid var(--th-border)",
             borderLeft: `3px solid ${stat.color}`,
-            borderRadius: "4px",
+            borderRadius: 0,
             background: "var(--th-bg-surface)",
             padding: "0.875rem 1rem",
             transition: "border-color 0.1s linear",
@@ -207,7 +207,7 @@ export function DashboardHudStats({ hudStats, numberFormatter }: DashboardHudSta
               style={{
                 backgroundColor: `${stat.color}15`,
                 border: `1px solid ${stat.color}30`,
-                borderRadius: "2px",
+                borderRadius: 0,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -275,7 +275,7 @@ export function DashboardRankingBoard({
                     <span className="text-xs font-medium text-[var(--th-text-muted)]">#{rank}</span>
                     <div
                       className="overflow-hidden border border-[var(--th-border)] bg-[var(--th-bg-primary)]"
-                      style={{ borderColor: `${tier.color}40`, borderRadius: "2px" }}
+                      style={{ borderColor: `${tier.color}40`, borderRadius: 0 }}
                     >
                       <AgentAvatar agent={agentMap.get(agent.id)} agents={agents} size={avatarSize} rounded="xl" />
                     </div>
@@ -312,12 +312,12 @@ export function DashboardRankingBoard({
                   <div
                     key={agent.id}
                     className="flex items-center gap-3 border border-[var(--th-border)] bg-[var(--th-bg-primary)] p-3 transition-colors hover:bg-[var(--th-bg-surface-hover)]"
-                    style={{ borderRadius: "2px", borderLeftWidth: "3px", borderLeftColor: `${tier.color}50` }}
+                    style={{ borderRadius: 0, borderLeftWidth: "3px", borderLeftColor: `${tier.color}50` }}
                   >
                     <span className="w-6 text-center font-mono text-xs font-medium text-[var(--th-text-muted)]">
                       #{rank}
                     </span>
-                    <div className="flex-shrink-0 overflow-hidden border border-[var(--th-border)]" style={{ borderRadius: "2px" }}>
+                    <div className="flex-shrink-0 overflow-hidden border border-[var(--th-border)]" style={{ borderRadius: 0 }}>
                       <AgentAvatar agent={agentMap.get(agent.id)} agents={agents} size={32} rounded="sm" />
                     </div>
                     <div className="min-w-0 flex-1">
@@ -347,9 +347,9 @@ export function DashboardRankingBoard({
             return (
               <div
                 className="flex items-center gap-4 border border-[var(--th-border)] p-4"
-                style={{ backgroundColor: `${tier.color}08`, borderColor: `${tier.color}30`, borderRadius: "2px" }}
+                style={{ backgroundColor: `${tier.color}08`, borderColor: `${tier.color}30`, borderRadius: 0 }}
               >
-                <div className="overflow-hidden border border-[var(--th-border)]" style={{ borderRadius: "2px" }}>
+                <div className="overflow-hidden border border-[var(--th-border)]" style={{ borderRadius: 0 }}>
                   <AgentAvatar agent={agentMap.get(agent.id)} agents={agents} size={48} rounded="xl" />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -375,7 +375,7 @@ export function DashboardRankingBoard({
   }
 
   return (
-    <div className="dashboard-panel relative overflow-hidden border border-[var(--th-border)] bg-[var(--th-bg-surface)] p-5" style={{ borderRadius: "4px" }}>
+    <div className="dashboard-panel relative overflow-hidden border border-[var(--th-border)] bg-[var(--th-bg-surface)] p-5" style={{ borderRadius: 0 }}>
       <div className="mb-5 flex items-center justify-between">
         <div>
           <h2 className="text-xs font-bold uppercase tracking-widest" style={{ color: "var(--th-text-heading)", fontFamily: "var(--th-font-mono)" }}>
@@ -386,7 +386,7 @@ export function DashboardRankingBoard({
           </p>
         </div>
         {topAgents.length > 0 && (
-          <span className="border border-[var(--th-border)] bg-[var(--th-bg-primary)] px-2 py-0.5 font-mono text-[10px] font-medium text-[var(--th-text-muted)]" style={{ borderRadius: "2px" }}>
+          <span className="border border-[var(--th-border)] bg-[var(--th-bg-primary)] px-2 py-0.5 font-mono text-[10px] font-medium text-[var(--th-text-muted)]" style={{ borderRadius: 0 }}>
             Top {topAgents.length}
           </span>
         )}

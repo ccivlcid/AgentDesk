@@ -53,7 +53,7 @@ export default function RecommendedSkillsSection({ categoryId }: Props) {
     <div
       className="border"
       style={{
-        borderRadius: "2px",
+        borderRadius: 0,
         borderColor: "var(--th-border)",
         background: "var(--th-bg-surface)",
       }}
@@ -69,7 +69,7 @@ export default function RecommendedSkillsSection({ categoryId }: Props) {
           <span
             className="px-1.5 py-0.5 text-[10px] font-mono"
             style={{
-              borderRadius: "2px",
+              borderRadius: 0,
               background: "rgba(251,191,36,0.1)",
               color: "var(--th-accent)",
             }}
@@ -106,7 +106,7 @@ export default function RecommendedSkillsSection({ categoryId }: Props) {
                 key={skill.name}
                 className="flex items-center gap-2 px-2.5 py-2 border"
                 style={{
-                  borderRadius: "2px",
+                  borderRadius: 0,
                   borderColor: "var(--th-border)",
                   background: "var(--th-bg-elevated)",
                 }}
@@ -114,7 +114,7 @@ export default function RecommendedSkillsSection({ categoryId }: Props) {
                 <span
                   className="flex h-5 w-5 shrink-0 items-center justify-center text-[10px] font-bold font-mono"
                   style={{
-                    borderRadius: "2px",
+                    borderRadius: 0,
                     background: "rgba(251,191,36,0.15)",
                     color: "var(--th-accent)",
                   }}
@@ -132,7 +132,7 @@ export default function RecommendedSkillsSection({ categoryId }: Props) {
                   <div className="flex items-center gap-1.5 mt-0.5">
                     <span
                       className={`inline-flex items-center gap-0.5 px-1 py-px text-[9px] border ${colorClass}`}
-                      style={{ borderRadius: "2px" }}
+                      style={{ borderRadius: 0 }}
                     >
                       {icon}
                     </span>

@@ -149,7 +149,7 @@ export default function DataSettingsTab({ t }: DataSettingsTabProps) {
   return (
     <div className="data-settings-tab space-y-6">
       {/* Page intro */}
-      <div className="p-4" style={{ borderRadius: "4px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
+      <div className="p-4" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
         <h2 className="mb-1 text-base font-semibold tracking-tight" style={{ color: "var(--th-text-heading)" }}>
           {t({ ko: "데이터 관리", en: "Data Management", ja: "データ管理", zh: "数据管理" })}
         </h2>
@@ -164,9 +164,9 @@ export default function DataSettingsTab({ t }: DataSettingsTabProps) {
       </div>
 
       {/* Backup */}
-      <div className="p-5 transition-colors" style={{ borderRadius: "4px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
+      <div className="p-5 transition-colors" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
         <div className="mb-3 flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center" style={{ borderRadius: "2px", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}>
+          <span className="flex h-10 w-10 items-center justify-center" style={{ borderRadius: 0, background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}>
             <IconBackup />
           </span>
           <div>
@@ -187,7 +187,7 @@ export default function DataSettingsTab({ t }: DataSettingsTabProps) {
           onClick={handleBackup}
           disabled={backupBusy}
           className="data-settings-btn data-settings-btn-primary px-4 py-2.5 text-sm font-medium transition disabled:opacity-50"
-          style={{ borderRadius: "2px" }}
+          style={{ borderRadius: 0 }}
         >
           {backupBusy
             ? t({ ko: "다운로드 중...", en: "Downloading...", ja: "ダウンロード中...", zh: "下载中..." })
@@ -196,9 +196,9 @@ export default function DataSettingsTab({ t }: DataSettingsTabProps) {
       </div>
 
       {/* Restore */}
-      <div className="p-5 transition-colors" style={{ borderRadius: "4px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
+      <div className="p-5 transition-colors" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
         <div className="mb-3 flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center" style={{ borderRadius: "2px", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}>
+          <span className="flex h-10 w-10 items-center justify-center" style={{ borderRadius: 0, background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}>
             <IconRestore />
           </span>
           <div>
@@ -228,7 +228,7 @@ export default function DataSettingsTab({ t }: DataSettingsTabProps) {
             onClick={triggerFileInput}
             disabled={restoreBusy}
             className="data-settings-btn data-settings-btn-secondary px-4 py-2.5 text-sm font-medium transition disabled:opacity-50"
-            style={{ borderRadius: "2px" }}
+            style={{ borderRadius: 0 }}
           >
             {t({ ko: "파일 선택", en: "Choose File", ja: "ファイルを選択", zh: "选择文件" })}
           </button>
@@ -236,7 +236,7 @@ export default function DataSettingsTab({ t }: DataSettingsTabProps) {
             onClick={handleRestore}
             disabled={restoreBusy}
             className="data-settings-btn data-settings-btn-danger px-4 py-2.5 text-sm font-medium transition disabled:opacity-50"
-            style={{ borderRadius: "2px" }}
+            style={{ borderRadius: 0 }}
           >
             {restoreBusy
               ? t({ ko: "복원 중...", en: "Restoring...", ja: "復元中...", zh: "恢复中..." })
@@ -246,9 +246,9 @@ export default function DataSettingsTab({ t }: DataSettingsTabProps) {
       </div>
 
       {/* Export */}
-      <div className="p-5 transition-colors" style={{ borderRadius: "4px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
+      <div className="p-5 transition-colors" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
         <div className="mb-3 flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center" style={{ borderRadius: "2px", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}>
+          <span className="flex h-10 w-10 items-center justify-center" style={{ borderRadius: 0, background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}>
             <IconExport />
           </span>
           <div>
@@ -270,7 +270,7 @@ export default function DataSettingsTab({ t }: DataSettingsTabProps) {
             onClick={handleExportCsv}
             disabled={exportBusy}
             className="data-settings-btn data-settings-btn-secondary px-4 py-2.5 text-sm font-medium transition disabled:opacity-50"
-            style={{ borderRadius: "2px" }}
+            style={{ borderRadius: 0 }}
           >
             {t({ ko: "CSV 내보내기", en: "Export CSV", ja: "CSVエクスポート", zh: "导出CSV" })}
           </button>
@@ -278,7 +278,7 @@ export default function DataSettingsTab({ t }: DataSettingsTabProps) {
             onClick={handleExportJson}
             disabled={exportBusy}
             className="data-settings-btn data-settings-btn-secondary px-4 py-2.5 text-sm font-medium transition disabled:opacity-50"
-            style={{ borderRadius: "2px" }}
+            style={{ borderRadius: 0 }}
           >
             {t({ ko: "JSON 내보내기", en: "Export JSON", ja: "JSONエクスポート", zh: "导出JSON" })}
           </button>
@@ -291,7 +291,7 @@ export default function DataSettingsTab({ t }: DataSettingsTabProps) {
           role="alert"
           className="data-settings-feedback px-4 py-3 text-sm font-mono"
           style={{
-            borderRadius: "2px",
+            borderRadius: 0,
             border: feedback.type === "success" ? "1px solid rgba(16,185,129,0.3)" : "1px solid rgba(239,68,68,0.3)",
             background: feedback.type === "success" ? "rgba(16,185,129,0.08)" : "rgba(239,68,68,0.08)",
             color: feedback.type === "success" ? "#34d399" : "#f87171",

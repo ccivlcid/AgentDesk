@@ -98,7 +98,7 @@ export default function TerminalPanel({
               <h3 className="text-sm font-bold truncate" style={{ color: "var(--th-text-heading)" }}>
                 {task?.title ?? taskId}
               </h3>
-              <span className={`text-[10px] px-1.5 py-0.5 border font-mono flex-shrink-0 ${badge.color}`} style={{ borderRadius: "2px" }}>
+              <span className={`text-[10px] px-1.5 py-0.5 border font-mono flex-shrink-0 ${badge.color}`} style={{ borderRadius: 0 }}>
                 {badgeLabel}
               </span>
             </div>
@@ -112,28 +112,28 @@ export default function TerminalPanel({
                 {executionState && executionStateMeta[executionState] && (
                   <span
                     className="px-1.5 py-0.5 text-[10px] font-mono border"
-                    style={{ borderRadius: "2px", ...executionStateMeta[executionState]!.style }}
+                    style={{ borderRadius: 0, ...executionStateMeta[executionState]!.style }}
                   >
                     {executionStateMeta[executionState]!.label}
                   </span>
                 )}
                 <span
                   className="px-1.5 py-0.5 text-[10px] font-mono border"
-                  style={{ borderRadius: "2px", borderColor: "var(--th-border)", color: "var(--th-text-secondary)" }}
+                  style={{ borderRadius: 0, borderColor: "var(--th-border)", color: "var(--th-text-secondary)" }}
                   title={tr("실행 시도 횟수", "Execution attempts", "実行回数", "执行次数")}
                 >
                   {`try ${effectiveExecution.execution_attempt ?? 0}`}
                 </span>
                 <span
                   className="px-1.5 py-0.5 text-[10px] font-mono border"
-                  style={{ borderRadius: "2px", borderColor: "var(--th-border)", color: "var(--th-text-secondary)" }}
+                  style={{ borderRadius: 0, borderColor: "var(--th-border)", color: "var(--th-text-secondary)" }}
                   title={`${tr("마지막 heartbeat", "Last heartbeat", "最終 heartbeat", "最近 heartbeat")}: ${formatExecutionTime(effectiveExecution.last_heartbeat_at)}`}
                 >
                   {`hb ${formatElapsed(effectiveExecution.last_heartbeat_at)}`}
                 </span>
                 <span
                   className="px-1.5 py-0.5 text-[10px] font-mono border"
-                  style={{ borderRadius: "2px", borderColor: "var(--th-border)", color: "var(--th-text-secondary)" }}
+                  style={{ borderRadius: 0, borderColor: "var(--th-border)", color: "var(--th-text-secondary)" }}
                   title={`${tr("마지막 출력", "Last output", "最終出力", "最近输出")}: ${formatExecutionTime(effectiveExecution.last_output_at)}`}
                 >
                   {`out ${formatElapsed(effectiveExecution.last_output_at)}`}

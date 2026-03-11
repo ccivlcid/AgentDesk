@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import type { View } from "./types";
 
 interface AppHeaderBarProps {
@@ -26,6 +26,8 @@ interface AppHeaderBarProps {
   onToggleTheme: () => void;
   onToggleMobileHeaderMenu: () => void;
   onCloseMobileHeaderMenu: () => void;
+  onOpenCommandPalette?: () => void;
+  projectSelectorSlot?: ReactNode;
 }
 
 export default function AppHeaderBar({
@@ -53,19 +55,33 @@ export default function AppHeaderBar({
   onToggleTheme,
   onToggleMobileHeaderMenu,
   onCloseMobileHeaderMenu,
+  onOpenCommandPalette,
+  projectSelectorSlot,
 }: AppHeaderBarProps) {
+  useEffect(() => {
+    if (!onOpenCommandPalette) return;
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        onOpenCommandPalette();
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [onOpenCommandPalette]);
+
   return (
     <header
       className="header-sleek sticky top-0 z-30 flex min-h-[44px] items-center gap-3 px-3 py-2 sm:px-4 sm:py-2.5 lg:px-6"
       style={{ borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-header)" }}
     >
-      {/* Left: nav, title, office pack */}
+      {/* Left: nav, logo */}
       <div className="header-sleek-left flex min-w-0 flex-1 items-center gap-3 overflow-hidden">
         <button
           onClick={onOpenMobileNav}
           className="inline-flex h-9 w-9 flex-shrink-0 items-center justify-center transition lg:hidden"
           style={{
-            borderRadius: "8px",
+            borderRadius: "0",
             border: "1px solid var(--th-border)",
             background: "var(--th-bg-surface)",
             color: "var(--th-text-secondary)",
@@ -78,12 +94,20 @@ export default function AppHeaderBar({
             <line x1="3" y1="18" x2="21" y2="18" />
           </svg>
         </button>
-        <h1
-          className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden"
-          style={{ color: "var(--th-text-heading)" }}
-        >
-          <span className="header-sleek-title truncate text-base font-semibold tracking-tight sm:text-lg">{viewTitle}</span>
-        </h1>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <span style={{ color: "#f59e0b", fontFamily: "var(--th-font-mono)", fontWeight: 700, fontSize: "0.9rem" }}>▶</span>
+          <span style={{ fontFamily: "var(--th-font-mono)", fontWeight: 700, fontSize: "0.875rem", color: "var(--th-text-heading)", letterSpacing: "0.02em" }}>AgentDesk</span>
+        </div>
+        {/* Project selector */}
+        {projectSelectorSlot && (
+          <>
+            <span style={{ color: "var(--th-border)", fontFamily: "var(--th-font-mono)", fontSize: "0.75rem" }} className="hidden sm:inline">·</span>
+            <div className="hidden sm:block">{projectSelectorSlot}</div>
+          </>
+        )}
+        {/* Current view title */}
+        <span style={{ color: "var(--th-border)", fontFamily: "var(--th-font-mono)", fontSize: "0.75rem" }} className="hidden sm:inline">·</span>
+        <span className="hidden sm:inline truncate" style={{ fontFamily: "var(--th-font-mono)", fontSize: "0.75rem", color: "var(--th-text-muted)" }}>{viewTitle}</span>
       </div>
       {/* Center: primary tabs (FM-style monospace, no emoji) */}
       <div className="header-sleek-tabs flex flex-shrink-0 items-center">
@@ -108,17 +132,38 @@ export default function AppHeaderBar({
         <button onClick={onOpenAgentStatus} className="header-action-btn header-action-btn-secondary header-tab-item header-desktop-only">
           {agentStatusLabel}
         </button>
+        <button onClick={onOpenGroupChat} className="header-action-btn header-action-btn-secondary header-tab-item">
+          {groupChatLabel}
+        </button>
       </div>
-      {/* Right: utils, notification, theme, status */}
+      {/* Right: utils, command palette, notification, theme, status */}
       <div className="header-sleek-right flex flex-shrink-0 items-center gap-2">
+        {onOpenCommandPalette && (
+          <button
+            onClick={onOpenCommandPalette}
+            className="hidden sm:flex items-center gap-2"
+            style={{
+              background: "var(--th-bg-surface)",
+              border: "1px solid var(--th-border)",
+              borderRadius: "0",
+              padding: "4px 10px",
+              fontFamily: "var(--th-font-mono)",
+              fontSize: "0.75rem",
+              color: "var(--th-text-muted)",
+              cursor: "pointer",
+              gap: "8px",
+            }}
+            title="Open command palette (Ctrl+K)"
+          >
+            <span>⌘K</span>
+            <span style={{ color: "var(--th-text-muted)", opacity: 0.6 }}>Search...</span>
+          </button>
+        )}
         <button onClick={onOpenReportHistory} className="header-action-btn header-action-btn-secondary header-desktop-only" title={reportLabel}>
           {reportLabel}
         </button>
         <button onClick={onOpenAnnouncement} className="header-action-btn header-action-btn-secondary" title={announcementLabel}>
           {announcementLabel}
-        </button>
-        <button onClick={onOpenGroupChat} className="header-action-btn header-action-btn-secondary header-desktop-only" title={groupChatLabel}>
-          {groupChatLabel}
         </button>
         <span className="header-sleek-divider hidden h-5 w-px sm:block" style={{ background: "var(--th-border)" }} />
         {notificationSlot}
@@ -171,7 +216,7 @@ export default function AppHeaderBar({
             onClick={onToggleMobileHeaderMenu}
             className="inline-flex h-8 w-8 items-center justify-center transition"
             style={{
-              borderRadius: "4px",
+              borderRadius: 0,
               border: "1px solid var(--th-border)",
               background: "var(--th-bg-surface)",
               color: "var(--th-text-secondary)",
@@ -198,7 +243,7 @@ export default function AppHeaderBar({
               <button className="fixed inset-0 z-40" onClick={onCloseMobileHeaderMenu} aria-label="Close menu" />
               <div
                 className="absolute right-0 top-full z-50 mt-1 min-w-[180px] py-1"
-                style={{ borderRadius: "4px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}
+                style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}
               >
                 <button
                   onClick={() => {
@@ -234,7 +279,7 @@ export default function AppHeaderBar({
             </>
           )}
         </div>
-        <div className="header-sleek-status flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium" style={{ background: "var(--th-bg-surface)", color: "var(--th-text-muted)", border: "1px solid var(--th-border)", borderRadius: "2px", fontFamily: "var(--th-font-mono)" }}>
+        <div className="header-sleek-status flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium" style={{ background: "var(--th-bg-surface)", color: "var(--th-text-muted)", border: "1px solid var(--th-border)", borderRadius: 0, fontFamily: "var(--th-font-mono)" }}>
           <div className={`h-1.5 w-1.5 rounded-full ${connected ? "bg-emerald-500" : "bg-red-400"}`} />
           <span className="hidden sm:inline">{connected ? "Live" : "Offline"}</span>
         </div>

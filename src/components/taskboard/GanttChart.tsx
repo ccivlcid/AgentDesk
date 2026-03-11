@@ -12,8 +12,8 @@ type ZoomLevel = "day" | "week" | "month";
 
 const STATUS_COLORS: Record<string, string> = {
   done: "bg-emerald-500/80",
-  in_progress: "bg-sky-500/80",
-  review: "bg-amber-500/80",
+  in_progress: "bg-amber-500/80",
+  review: "bg-violet-400/80",
   collaborating: "bg-violet-500/80",
   planned: "bg-[rgba(148,163,184,0.6)]",
   inbox: "bg-[rgba(100,116,139,0.4)]",
@@ -146,15 +146,15 @@ export default function GanttChart({ tasks, agents, departments }: Props) {
     <div className="space-y-4">
       {/* Controls */}
       <div className="flex items-center gap-3 flex-wrap">
-        <div className="flex items-center gap-1 p-0.5" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
+        <div className="flex items-center gap-1 p-0.5" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
           {(["day", "week", "month"] as ZoomLevel[]).map((z) => (
             <button
               key={z}
               onClick={() => setZoom(z)}
               className="px-3 py-1 text-xs font-mono transition"
               style={zoom === z
-                ? { borderRadius: "2px", background: "rgba(251,191,36,0.15)", border: "1px solid rgba(251,191,36,0.5)", color: "var(--th-accent)" }
-                : { borderRadius: "2px", background: "transparent", border: "1px solid transparent", color: "var(--th-text-muted)" }}
+                ? { borderRadius: 0, background: "rgba(251,191,36,0.15)", border: "1px solid rgba(251,191,36,0.5)", color: "var(--th-accent)" }
+                : { borderRadius: 0, background: "transparent", border: "1px solid transparent", color: "var(--th-text-muted)" }}
             >
               {z === "day" ? tr("일", "Day") : z === "week" ? tr("주", "Week") : tr("월", "Month")}
             </button>
@@ -165,7 +165,7 @@ export default function GanttChart({ tasks, agents, departments }: Props) {
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value)}
           className="px-2 py-1 text-xs font-mono outline-none"
-          style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
+          style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
         >
           <option value="all">{tr("전체 상태", "All Status")}</option>
           {Object.entries(STATUS_LABELS).map(([k, v]) => (
@@ -180,7 +180,7 @@ export default function GanttChart({ tasks, agents, departments }: Props) {
             value={filterDept}
             onChange={(e) => setFilterDept(e.target.value)}
             className="px-2 py-1 text-xs font-mono outline-none"
-            style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
+            style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
           >
             <option value="all">{tr("전체 부서", "All Depts")}</option>
             {departments.map((d) => (
@@ -207,7 +207,7 @@ export default function GanttChart({ tasks, agents, departments }: Props) {
       </div>
 
       {/* Chart */}
-      <div className="overflow-hidden" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-primary)" }}>
+      <div className="overflow-hidden" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-primary)" }}>
         <div className="flex">
           {/* Left: Task names */}
           <div className="shrink-0 w-52" style={{ borderRight: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
@@ -225,9 +225,12 @@ export default function GanttChart({ tasks, agents, departments }: Props) {
                   key={task.id}
                   className="h-7 px-2 flex items-center gap-1 hover:bg-[var(--th-bg-surface-hover)] transition"
                   style={{ borderBottom: "1px solid var(--th-border)" }}
-                  title={task.title}
+                  title={`#${task.id.slice(0, 5)} ${task.title}`}
                 >
                   {agent && <span className="text-xs">{agent.avatar_emoji}</span>}
+                  <span className="text-[10px] font-mono shrink-0 tabular-nums" style={{ color: "var(--th-text-muted)", opacity: 0.7 }}>
+                    #{task.id.slice(0, 5)}
+                  </span>
                   <span className="text-[11px] font-mono truncate flex-1" style={{ color: "var(--th-text-secondary)" }}>
                     {task.title}
                   </span>
@@ -273,7 +276,7 @@ export default function GanttChart({ tasks, agents, departments }: Props) {
                     {/* Bar */}
                     <div
                       className={`absolute top-1 h-5 ${statusColor} cursor-default transition-all hover:brightness-110`}
-                      style={{ borderRadius: "2px", left, width }}
+                      style={{ borderRadius: 0, left, width }}
                       title={`${task.title}\n${formatDateFull(startTs)} → ${task.completed_at ? formatDateFull(endTs) : tr("진행중", "ongoing")}\n${locale === "ko" ? STATUS_LABELS[task.status]?.ko : STATUS_LABELS[task.status]?.en}`}
                     >
                       {width > 60 && (

@@ -17,7 +17,7 @@ export interface UseTerminalPanelDataParams {
 }
 
 export interface UseTerminalPanelDataRefs {
-  preRef: React.RefObject<HTMLPreElement | null>;
+  preRef: React.RefObject<HTMLElement | null>;
   containerRef: React.RefObject<HTMLDivElement | null>;
   searchInputRef: React.RefObject<HTMLInputElement | null>;
   promptInputRef: React.RefObject<HTMLTextAreaElement | null>;
@@ -56,7 +56,7 @@ export function useTerminalPanelData({
   } | null>(null);
 
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const preRef = useRef<HTMLPreElement>(null);
+  const preRef = useRef<HTMLElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const promptInputRef = useRef<HTMLTextAreaElement>(null);
 

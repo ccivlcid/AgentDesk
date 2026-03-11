@@ -40,9 +40,7 @@ interface SimpleAgent {
 interface Props {
   language: UiLanguage;
   agents?: SimpleAgent[];
-  /** 전용 페이지(직원관리 > Heartbeat)에서 사용 시 true. 접기 헤더 없이 항상 내용만 표시 */
   standalone?: boolean;
-  /** 현재 프로젝트 팀원 ID 세트 — "이 프로젝트만 보기" 토글용 */
   projectAgentIds?: Set<string>;
 }
 
@@ -53,67 +51,18 @@ function fmtAgo(ts: number): string {
   return `${Math.floor(diff / 3_600_000)}h ago`;
 }
 
-// 아이콘: Heartbeat 브랜딩용 펄스/하트
-const HeartbeatIcon = () => (
-  <svg
-    width="16"
-    height="16"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className="text-rose-400"
-  >
-    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-  </svg>
-);
-
-const ChevronDown = ({ open }: { open: boolean }) => (
-  <svg
-    width="14"
-    height="14"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    style={{ color: "var(--th-text-muted)", transition: "transform 0.2s" }}
-    className={open ? "rotate-180" : ""}
-  >
-    <polyline points="6 9 12 15 18 9" />
-  </svg>
-);
-
-const StatusOkIcon = () => (
-  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" className="text-emerald-400 shrink-0">
-    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-    <polyline points="22 4 12 14.01 9 11.01" />
-  </svg>
-);
-
-const StatusAlertIcon = () => (
-  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="text-amber-400 shrink-0">
-    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-    <line x1="12" y1="9" x2="12" y2="13" />
-    <line x1="12" y1="17" x2="12.01" y2="17" />
-  </svg>
-);
-
-const StatusErrorIcon = () => (
-  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="text-red-400 shrink-0">
-    <circle cx="12" cy="12" r="10" />
-    <line x1="15" y1="9" x2="9" y2="15" />
-    <line x1="9" y1="9" x2="15" y2="15" />
-  </svg>
-);
+function statusSymbol(status: string): { sym: string; color: string } {
+  if (status === "ok") return { sym: "✓", color: "#4ade80" };
+  if (status === "alert") return { sym: "!", color: "#f59e0b" };
+  return { sym: "✕", color: "#f87171" };
+}
 
 export default function HeartbeatPanel({ language, agents = [], standalone = false, projectAgentIds }: Props) {
   const isKo = language === "ko";
   const { confirm } = useConfirm();
   const { showToast } = useToast();
+  const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };
+
   const [filterProjectOnly, setFilterProjectOnly] = useState(false);
   const [configs, setConfigs] = useState<HeartbeatConfig[]>([]);
   const [logs, setLogs] = useState<HeartbeatLog[]>([]);
@@ -127,7 +76,6 @@ export default function HeartbeatPanel({ language, agents = [], standalone = fal
   const [saving, setSaving] = useState(false);
   const [triggering, setTriggering] = useState<string | null>(null);
   const [removingAgentId, setRemovingAgentId] = useState<string | null>(null);
-  /** 직원 추가 셀렉트 값(팩 변경 시 초기화되도록 controlled) */
   const [addAgentId, setAddAgentId] = useState("");
   const [adding, setAdding] = useState(false);
   const [guideExpanded, setGuideExpanded] = useState(false);
@@ -147,16 +95,8 @@ export default function HeartbeatPanel({ language, agents = [], standalone = fal
 
   const handleEdit = (config: HeartbeatConfig) => {
     let checks: HeartbeatCheckItem[] = ALL_CHECKS;
-    try {
-      checks = JSON.parse(config.check_items_json);
-    } catch {
-      /* use default */
-    }
-    setEditForm({
-      enabled: config.enabled === 1,
-      interval_minutes: config.interval_minutes,
-      check_items: checks,
-    });
+    try { checks = JSON.parse(config.check_items_json); } catch { /* use default */ }
+    setEditForm({ enabled: config.enabled === 1, interval_minutes: config.interval_minutes, check_items: checks });
     setEditingAgent(config.agent_id);
   };
 
@@ -167,23 +107,15 @@ export default function HeartbeatPanel({ language, agents = [], standalone = fal
       await updateHeartbeatConfig(editingAgent, editForm);
       setEditingAgent(null);
       refresh();
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setSaving(false);
-    }
+    } catch (e) { console.error(e); }
+    finally { setSaving(false); }
   };
 
   const handleTrigger = async (agentId: string) => {
     setTriggering(agentId);
-    try {
-      await triggerHeartbeat(agentId);
-      refresh();
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setTriggering(null);
-    }
+    try { await triggerHeartbeat(agentId); refresh(); }
+    catch (e) { console.error(e); }
+    finally { setTriggering(null); }
   };
 
   const toggleCheckItem = (item: HeartbeatCheckItem) => {
@@ -195,582 +127,726 @@ export default function HeartbeatPanel({ language, agents = [], standalone = fal
     }));
   };
 
-  /** 이 프로젝트만 보기 토글 적용된 에이전트 목록 */
   const visibleAgents = useMemo(
     () => (filterProjectOnly && projectAgentIds ? agents.filter((a) => projectAgentIds.has(a.id)) : agents),
     [agents, filterProjectOnly, projectAgentIds],
   );
-
-  /** 현재 오피스 팩(agents)에 포함된 직원의 설정·로그만 표시 */
   const agentIds = useMemo(() => new Set(visibleAgents.map((a) => a.id)), [visibleAgents]);
-  const visibleConfigs = useMemo(
-    () => configs.filter((c) => agentIds.has(c.agent_id)),
-    [configs, agentIds],
-  );
-  const visibleLogs = useMemo(
-    () => logs.filter((l) => agentIds.has(l.agent_id)),
-    [logs, agentIds],
-  );
-
+  const visibleConfigs = useMemo(() => configs.filter((c) => agentIds.has(c.agent_id)), [configs, agentIds]);
+  const visibleLogs = useMemo(() => logs.filter((l) => agentIds.has(l.agent_id)), [logs, agentIds]);
   const alertLogs = visibleLogs.filter((l) => l.status !== "ok");
   const okCount = visibleLogs.filter((l) => l.status === "ok").length;
   const activeCount = visibleConfigs.filter((c) => c.enabled).length;
-  /** 현재 팩 직원 중 점검 설정이 없는 직원만(추가 가능 목록) */
   const agentsWithoutConfig = useMemo(
     () => visibleAgents.filter((a) => !configs.some((c) => c.agent_id === a.id)),
     [visibleAgents, configs],
   );
+  const addSelectKey = useMemo(() => `pack-${agents.map((a) => a.id).sort().join("-")}`, [agents]);
 
-  /** 팩 변경 시 추가 셀렉트 초기화 */
   useEffect(() => {
     const valid = agentsWithoutConfig.some((a) => a.id === addAgentId);
     if (!valid) setAddAgentId("");
   }, [agentsWithoutConfig, addAgentId]);
 
-  /** 팩/목록 식별용 키(셀렉트 리마운트로 옵션 확실히 갱신) */
-  const addSelectKey = useMemo(
-    () => `pack-${agents.map((a) => a.id).sort().join("-")}`,
-    [agents],
+  // ── Collapsed (non-standalone) ──
+  if (!standalone) {
+    return (
+      <div style={{ borderTop: "1px solid var(--th-border)" }}>
+        <button
+          type="button"
+          onClick={() => setExpanded((v) => !v)}
+          style={{
+            ...mono,
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            width: "100%",
+            padding: "7px 14px",
+            background: "transparent",
+            border: "none",
+            borderLeft: expanded ? "2px solid var(--th-accent)" : "2px solid transparent",
+            cursor: "pointer",
+            textAlign: "left",
+          }}
+        >
+          <span style={{ fontSize: "10px", color: expanded ? "var(--th-accent)" : "var(--th-text-muted)" }}>
+            {expanded ? "▾" : "▸"}
+          </span>
+          <span style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.1em", color: "var(--th-text-secondary)" }}>
+            HEARTBEAT
+          </span>
+          <span style={{ fontSize: "9px", color: "var(--th-text-muted)", marginLeft: 4 }}>
+            {visibleConfigs.length} watching
+            {activeCount > 0 && <span style={{ color: "#4ade80", marginLeft: 6 }}>· {activeCount} active</span>}
+            {alertLogs.length > 0 && <span style={{ color: "#f59e0b", marginLeft: 6 }}>· {alertLogs.length} alert</span>}
+          </span>
+        </button>
+        {expanded && <HeartbeatBody {...{ isKo, mono, standalone, filterProjectOnly, setFilterProjectOnly, projectAgentIds, visibleConfigs, visibleLogs, alertLogs, okCount, activeCount, agentsWithoutConfig, addAgentId, setAddAgentId, addSelectKey, adding, setAdding, setConfigs, agents, visibleAgents, ALL_CHECKS, editingAgent, setEditingAgent, editForm, setEditForm, saving, triggering, removingAgentId, setRemovingAgentId, expandedLogId, setExpandedLogId, deletingLogId, setDeletingLogId, deletingAllLogs, setDeletingAllLogs, guideExpanded, setGuideExpanded, configs, refresh, handleEdit, handleSave, handleTrigger, toggleCheckItem, confirm, showToast }} />}
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden", background: "var(--th-bg-primary)" }}>
+      {/* ── 헤더 ── */}
+      <div
+        style={{
+          ...mono,
+          flexShrink: 0,
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          padding: "6px 14px",
+          borderBottom: "1px solid var(--th-border)",
+          background: "var(--th-bg-elevated)",
+          borderLeft: "3px solid var(--th-accent)",
+        }}
+      >
+        <span style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.15em", color: "var(--th-text-muted)" }}>HEARTBEAT</span>
+        <span style={{ color: "var(--th-border)", fontSize: "9px" }}>·</span>
+        <span style={{ fontSize: "9px", color: "var(--th-text-muted)" }}>
+          {visibleConfigs.length} watching
+        </span>
+        {activeCount > 0 && (
+          <span style={{ fontSize: "9px", color: "#4ade80" }}>· {activeCount} active</span>
+        )}
+        {alertLogs.length > 0 && (
+          <span style={{ fontSize: "9px", color: "#f59e0b" }}>· {alertLogs.length} alert</span>
+        )}
+        {projectAgentIds && projectAgentIds.size > 0 && (
+          <button
+            type="button"
+            onClick={() => setFilterProjectOnly((v) => !v)}
+            style={{
+              ...mono,
+              marginLeft: "auto",
+              fontSize: "9px",
+              padding: "2px 7px",
+              background: "transparent",
+              border: `1px solid ${filterProjectOnly ? "var(--th-accent)" : "var(--th-border)"}`,
+              color: filterProjectOnly ? "var(--th-accent)" : "var(--th-text-muted)",
+              cursor: "pointer",
+            }}
+          >
+            {filterProjectOnly ? "✓ THIS PROJECT" : "THIS PROJECT"}
+          </button>
+        )}
+      </div>
+
+      <div className="flex-1 overflow-y-auto" style={{ background: "var(--th-bg-primary)" }}>
+        <HeartbeatBody {...{ isKo, mono, standalone, filterProjectOnly, setFilterProjectOnly, projectAgentIds, visibleConfigs, visibleLogs, alertLogs, okCount, activeCount, agentsWithoutConfig, addAgentId, setAddAgentId, addSelectKey, adding, setAdding, setConfigs, agents, visibleAgents, ALL_CHECKS, editingAgent, setEditingAgent, editForm, setEditForm, saving, triggering, removingAgentId, setRemovingAgentId, expandedLogId, setExpandedLogId, deletingLogId, setDeletingLogId, deletingAllLogs, setDeletingAllLogs, guideExpanded, setGuideExpanded, configs, refresh, handleEdit, handleSave, handleTrigger, toggleCheckItem, confirm, showToast }} />
+      </div>
+    </div>
+  );
+}
+
+// ── 공통 본문 컴포넌트 ──
+function HeartbeatBody({
+  isKo, mono,
+  visibleConfigs, visibleLogs, alertLogs, okCount, activeCount,
+  agentsWithoutConfig, addAgentId, setAddAgentId, addSelectKey,
+  adding, setAdding, setConfigs, agents, visibleAgents,
+  editingAgent, setEditingAgent, editForm, setEditForm,
+  saving, triggering,
+  removingAgentId, setRemovingAgentId,
+  expandedLogId, setExpandedLogId,
+  deletingLogId, setDeletingLogId,
+  deletingAllLogs, setDeletingAllLogs,
+  guideExpanded, setGuideExpanded,
+  configs, refresh,
+  handleEdit, handleSave, handleTrigger, toggleCheckItem,
+  confirm, showToast,
+}: any) {
+  const Divider = ({ label }: { label: string }) => (
+    <div
+      style={{
+        ...mono,
+        display: "flex",
+        alignItems: "center",
+        gap: 8,
+        padding: "5px 14px",
+        background: "var(--th-bg-elevated)",
+        borderBottom: "1px solid var(--th-border)",
+        borderTop: "1px solid var(--th-border)",
+      }}
+    >
+      <span style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", color: "var(--th-text-muted)" }}>
+        {label}
+      </span>
+      <span style={{ flex: 1, height: 1, background: "var(--th-border)", opacity: 0.5 }} />
+    </div>
   );
 
   return (
-    <div className={standalone ? "p-4" : "mt-4 px-2"}>
-      <div className="p-4" style={{ border: "1px solid var(--th-border)", borderRadius: "4px", background: "var(--th-bg-surface)" }}>
-        {!standalone && (
-          <button
-            type="button"
-            onClick={() => setExpanded((v) => !v)}
-            className="flex w-full items-center justify-between gap-2 text-left transition-colors hover:opacity-90"
-          >
-            <div className="flex items-center gap-2.5">
-              <span className="flex h-8 w-8 items-center justify-center" style={{ background: "rgba(244,63,94,0.15)", borderRadius: "2px" }}>
-                <HeartbeatIcon />
-              </span>
-              <div className="flex flex-col items-start gap-0.5">
-                <span className="text-sm font-semibold font-mono" style={{ color: "var(--th-text-heading)" }}>
-                  {isKo ? "Heartbeat" : "Heartbeat"}
-                </span>
-                <span className="text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>
-                  {isKo ? "직원 상태 주기 확인 · 이상 시 알림" : "Periodic staff status · Alerts on issues"}
-                </span>
-              </div>
-              {activeCount > 0 && (
-                <span className="px-2 py-0.5 text-[11px] font-medium font-mono text-emerald-400" style={{ borderRadius: "2px", background: "rgba(16,185,129,0.15)" }}>
-                  {activeCount} {isKo ? "활성" : "active"}
-                </span>
-              )}
-              {alertLogs.length > 0 && (
-                <span className="px-2 py-0.5 text-[11px] font-medium font-mono text-amber-400" style={{ borderRadius: "2px", background: "rgba(245,158,11,0.15)" }}>
-                  {alertLogs.length} {isKo ? "알림" : "alert"}
-                </span>
-              )}
-            </div>
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center" style={{ borderRadius: "2px", background: "var(--th-bg-elevated)", color: "var(--th-text-muted)" }}>
-              <ChevronDown open={expanded} />
-            </span>
-          </button>
-        )}
-
-        {/* 이 프로젝트만 보기 토글 (standalone + projectAgentIds 있을 때) */}
-        {standalone && projectAgentIds && projectAgentIds.size > 0 && (
-          <div className="flex justify-end mb-2">
-            <button
-              type="button"
-              onClick={() => setFilterProjectOnly((v) => !v)}
-              className="text-[9px] font-mono px-2 py-0.5 transition-colors"
-              style={{
-                borderRadius: 2,
-                border: `1px solid ${filterProjectOnly ? "var(--th-accent)" : "var(--th-border)"}`,
-                color: filterProjectOnly ? "var(--th-accent)" : "var(--th-text-muted)",
-                background: filterProjectOnly ? "rgba(245,158,11,0.08)" : "transparent",
+    <>
+      {/* ── ADD TO MONITOR ── */}
+      <Divider label={isKo ? "ADD TO MONITOR" : "ADD TO MONITOR"} />
+      <div style={{ padding: "8px 14px", borderBottom: "1px solid var(--th-border)" }}>
+        {agentsWithoutConfig.length > 0 ? (
+          <div style={{ ...mono, display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ fontSize: "10px", color: "var(--th-accent)", fontWeight: 700 }}>$</span>
+            <span style={{ fontSize: "10px", color: "var(--th-text-muted)" }}>heartbeat --add</span>
+            <select
+              key={addSelectKey}
+              value={addAgentId}
+              disabled={adding}
+              onChange={(e) => {
+                const agentId = e.target.value;
+                if (!agentId) { setAddAgentId(""); return; }
+                const agent = visibleAgents.find((a: any) => a.id === agentId);
+                setAdding(true);
+                setAddAgentId("");
+                setConfigs((prev: any[]) => [
+                  ...prev,
+                  {
+                    agent_id: agentId,
+                    enabled: 1,
+                    interval_minutes: 30,
+                    check_items_json: JSON.stringify(ALL_CHECKS),
+                    agent_name: agent?.name ?? "",
+                    agent_name_ko: agent?.name_ko ?? "",
+                    agent_avatar: agent?.avatar_emoji ?? "👤",
+                  } as HeartbeatConfig,
+                ]);
+                updateHeartbeatConfig(agentId, { enabled: true, interval_minutes: 30, check_items: ALL_CHECKS })
+                  .then(() => refresh())
+                  .catch((err: any) => { console.error(err); refresh(); })
+                  .finally(() => setAdding(false));
               }}
+              style={{
+                ...mono,
+                fontSize: "10px",
+                background: "var(--th-bg-elevated)",
+                border: "1px solid var(--th-border)",
+                borderRadius: 0,
+                color: "var(--th-text-secondary)",
+                padding: "3px 8px",
+                cursor: "pointer",
+                minWidth: 180,
+                opacity: adding ? 0.5 : 1,
+              }}
+              aria-label={isKo ? "살펴볼 직원 선택" : "Select staff to monitor"}
             >
-              {filterProjectOnly ? "✓ 이 프로젝트 팀원만" : "이 프로젝트 팀원만 보기"}
-            </button>
+              <option value="">{isKo ? "직원 선택…" : "Select staff…"}</option>
+              {agentsWithoutConfig.map((a: any) => (
+                <option key={a.id} value={a.id}>
+                  {a.avatar_emoji ?? "👤"} {isKo && a.name_ko ? a.name_ko : a.name}
+                </option>
+              ))}
+            </select>
+            <span style={{ fontSize: "9px", color: "var(--th-text-muted)", opacity: 0.6 }}>
+              {agentsWithoutConfig.length} available
+            </span>
+          </div>
+        ) : (
+          <div style={{ ...mono, fontSize: "10px", color: "var(--th-text-muted)", display: "flex", alignItems: "center", gap: 6 }}>
+            <span style={{ color: "#4ade80" }}>✓</span>
+            {isKo ? "이 팩의 모든 직원이 살펴보기 대상입니다." : "All staff in this pack are monitored."}
           </div>
         )}
-
-        {effectiveExpanded && (
-          <div className="mt-4 space-y-5 pt-4" style={{ borderTop: "1px solid var(--th-border)" }}>
-            {/* 가이드: 접기/펼치기 인라인 */}
-            <section className="overflow-hidden" style={{ border: "1px solid var(--th-border)", borderRadius: "2px", background: "var(--th-bg-elevated)" }}>
-              <button
-                type="button"
-                onClick={() => setGuideExpanded((v) => !v)}
-                className="flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left transition-colors"
-                style={{ color: "var(--th-text-secondary)" }}
-              >
-                <span className="text-xs font-semibold font-mono uppercase tracking-wider">
-                  {isKo ? "직원 살펴보기 가이드" : "Heartbeat Guide"}
-                </span>
-                <svg
-                  width="14"
-                  height="14"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  className={`shrink-0 transition-transform ${guideExpanded ? "rotate-180" : ""}`}
-                >
-                  <polyline points="6 9 12 15 18 9" />
-                </svg>
-              </button>
-              {guideExpanded && (
-                <div className="px-3 pb-3 pt-2 space-y-3" style={{ borderTop: "1px solid var(--th-border)" }}>
-                  <div className="space-y-2 text-[12px] leading-relaxed" style={{ color: "var(--th-text-secondary)" }}>
-                    <p>
-                      {isKo
-                        ? "직원 살펴보기(Heartbeat)는 선택한 직원의 프로젝트·태스크 상태를 주기적으로 자동으로 확인하는 기능입니다. 따로 지시하지 않아도 이상이 있으면 알림을 보냅니다."
-                        : "Heartbeat automatically checks on projects and tasks for selected staff at set intervals. You get notified when something needs attention."}
-                    </p>
-                    <p>
-                      {isKo
-                        ? "오피스 팩을 선택한 뒤, '살펴볼 직원 추가'에서 이 팩에 속한 직원을 선택하면 해당 직원이 살펴보기 대상에 포함됩니다. 간격(분)과 확인 항목을 설정할 수 있습니다."
-                        : "Use 'Add to monitor' to select staff in the current pack. You can set the interval (minutes) and which items to check."}
-                    </p>
-                    <p>
-                      {isKo
-                        ? "상태가 정상이면 로그만 남고 알림은 가지 않습니다. 문제가 발견되면 알림 센터와 CEO 메신저로 알림이 전송됩니다. '실행' 버튼으로 수동 확인을 실행할 수 있습니다."
-                        : "When status is normal, only logs are recorded. When issues are found, alerts go to the notification center and CEO messenger. Use 'Run' to trigger a check manually."}
-                    </p>
-                  </div>
-                  <div className="px-3 py-2 flex gap-2" style={{ borderRadius: "2px", border: "1px solid rgba(245,158,11,0.25)", background: "rgba(245,158,11,0.05)" }}>
-                    <span className="text-amber-400 shrink-0">💡</span>
-                    <p className="text-[11px] text-amber-200/90 leading-relaxed">
-                      {isKo
-                        ? "현재 보이는 직원 목록과 살펴보기 대상은 선택한 오피스 팩에 따라 달라집니다."
-                        : "The staff list and monitored list depend on the selected office pack."}
-                    </p>
-                  </div>
-                </div>
-              )}
-            </section>
-
-            {/* 직원 추가: 현재 오피스 팩(managerAgents) 기준 */}
-            <section className="space-y-2">
-              <h3 className="text-xs font-semibold font-mono uppercase tracking-wider" style={{ color: "var(--th-text-muted)" }}>
-                {isKo ? "살펴볼 직원 추가" : "Add to monitor"}
-              </h3>
-              {agentsWithoutConfig.length > 0 ? (
-                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                  <select
-                    key={addSelectKey}
-                    value={addAgentId}
-                    disabled={adding}
-                    onChange={(e) => {
-                      const agentId = e.target.value;
-                      if (!agentId) {
-                        setAddAgentId("");
-                        return;
-                      }
-                      const agent = visibleAgents.find((a) => a.id === agentId);
-                      setAdding(true);
-                      setAddAgentId("");
-                      // 낙관적 업데이트: configs에 즉시 반영해 셀렉트 옵션에서 제거(목록과 옵션 일치)
-                      setConfigs((prev) => [
-                        ...prev,
-                        {
-                          agent_id: agentId,
-                          enabled: 1,
-                          interval_minutes: 30,
-                          check_items_json: JSON.stringify(ALL_CHECKS),
-                          agent_name: agent?.name ?? "",
-                          agent_name_ko: agent?.name_ko ?? "",
-                          agent_avatar: agent?.avatar_emoji ?? "👤",
-                        } as HeartbeatConfig,
-                      ]);
-                      updateHeartbeatConfig(agentId, {
-                        enabled: true,
-                        interval_minutes: 30,
-                        check_items: ALL_CHECKS,
-                      })
-                        .then(() => refresh())
-                        .catch((err) => {
-                          console.error(err);
-                          refresh();
-                        })
-                        .finally(() => setAdding(false));
-                    }}
-                    className="min-w-0 flex-1 px-3 py-2.5 text-sm focus:outline-none transition-colors disabled:opacity-60 disabled:cursor-wait sm:max-w-[280px]"
-                    style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)", fontFamily: "var(--th-font-mono)" }}
-                    aria-label={isKo ? "살펴볼 직원 선택" : "Select staff to monitor"}
-                  >
-                    <option value="">{isKo ? "이 팩의 직원 선택…" : "Select staff in this pack…"}</option>
-                    {agentsWithoutConfig.map((a) => (
-                      <option key={a.id} value={a.id}>
-                        {a.avatar_emoji ?? "👤"} {isKo && a.name_ko ? a.name_ko : a.name}
-                      </option>
-                    ))}
-                  </select>
-                  <span className="text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>
-                    {agentsWithoutConfig.length} {isKo ? "명 추가 가능" : "available"}
-                  </span>
-                </div>
-              ) : (
-                <p className="px-3 py-2 text-[12px] font-mono" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-muted)" }}>
-                  {isKo
-                    ? "이 오피스 팩의 직원은 모두 살펴보기 대상에 포함되어 있습니다."
-                    : "All staff in this pack are already being monitored."}
-                </p>
-              )}
-            </section>
-
-            {visibleConfigs.length === 0 && agents.length === 0 && (
-              <p className="px-4 py-4 text-center text-sm font-mono" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-muted)" }}>
-                {isKo
-                  ? "직원 살펴보기 설정이 없습니다. 직원을 먼저 추가하세요."
-                  : "No heartbeat configs. Add staff first."}
-              </p>
-            )}
-
-            {visibleConfigs.length === 0 && agents.length > 0 && (
-              <p className="px-4 py-4 text-center text-sm font-mono" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-muted)" }}>
-                {isKo
-                  ? "이 오피스 팩에 설정된 살펴보기 대상이 없습니다. 위에서 직원을 추가하세요."
-                  : "No heartbeat configs for this pack. Add staff above."}
-              </p>
-            )}
-
-            {/* 살펴볼 직원 목록 */}
-            {visibleConfigs.length > 0 && (
-              <section className="space-y-2">
-                <h3 className="text-xs font-semibold font-mono uppercase tracking-wider" style={{ color: "var(--th-text-muted)" }}>
-                  {isKo ? "살펴보기 대상" : "Monitored staff"} · {visibleConfigs.length}
-                </h3>
-                <div className="space-y-2.5">
-                  {visibleConfigs.map((cfg) => (
-                <div
-                  key={cfg.agent_id}
-                  className="p-3 transition-all duration-200"
-                  style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex min-w-0 items-center gap-2">
-                      <span className="text-lg leading-none">{cfg.agent_avatar}</span>
-                      <span className="truncate text-sm font-medium font-mono" style={{ color: "var(--th-text-primary)" }}>
-                        {isKo && cfg.agent_name_ko ? cfg.agent_name_ko : cfg.agent_name}
-                      </span>
-                      <span
-                        className="shrink-0 px-2 py-0.5 text-[10px] font-medium font-mono"
-                        style={{
-                          borderRadius: "2px",
-                          background: cfg.enabled ? "rgba(16,185,129,0.15)" : "var(--th-bg-surface-hover)",
-                          color: cfg.enabled ? "#34d399" : "var(--th-text-muted)",
-                        }}
-                      >
-                        {cfg.enabled ? (isKo ? "ON" : "ON") : "OFF"}
-                      </span>
-                      {!!cfg.enabled && (
-                        <span className="shrink-0 text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>
-                          {cfg.interval_minutes} min
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex shrink-0 items-center gap-1.5">
-                      {!!cfg.enabled && (
-                        <button
-                          type="button"
-                          onClick={() => handleTrigger(cfg.agent_id)}
-                          disabled={triggering === cfg.agent_id}
-                          className="flex items-center justify-center gap-1.5 px-2.5 py-1.5 text-[11px] font-medium font-mono text-cyan-400 transition-colors disabled:opacity-50 min-w-[52px]"
-                          style={{ borderRadius: "2px", background: "rgba(6,182,212,0.15)", border: "1px solid rgba(6,182,212,0.25)" }}
-                        >
-                          {triggering === cfg.agent_id ? (
-                            <span className="inline-block h-3 w-3 animate-spin border-2 border-cyan-400/50 border-t-cyan-400" style={{ borderRadius: "50%" }} />
-                          ) : (
-                            <>{isKo ? "실행" : "Run"}</>
-                          )}
-                        </button>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => handleEdit(cfg)}
-                        className="px-2.5 py-1.5 text-[11px] font-medium font-mono transition-colors"
-                        style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
-                      >
-                        {isKo ? "설정" : "Edit"}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={async () => {
-                          const ok = await confirm({
-                            title: isKo ? "살펴보기 대상 제거" : "Remove from watch list",
-                            message: isKo ? "이 직원을 살펴보기 대상에서 제거할까요?" : "Remove this staff from the watch list?",
-                            confirmLabel: isKo ? "제거" : "Remove",
-                            cancelLabel: isKo ? "취소" : "Cancel",
-                            variant: "danger",
-                          });
-                          if (!ok) return;
-                          setRemovingAgentId(cfg.agent_id);
-                          deleteHeartbeatConfig(cfg.agent_id)
-                            .then(() => refresh())
-                            .catch((err: unknown) => {
-                              console.error(err);
-                              const msg = err instanceof Error ? err.message : String(err);
-                              showToast(isKo ? `제거 실패: ${msg}` : `Remove failed: ${msg}`, "error");
-                            })
-                            .finally(() => setRemovingAgentId(null));
-                        }}
-                        disabled={removingAgentId === cfg.agent_id}
-                        className="px-2.5 py-1.5 text-[11px] font-medium font-mono text-red-400 transition-colors disabled:opacity-50"
-                        style={{ borderRadius: "2px", background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)" }}
-                        title={isKo ? "살펴보기에서 제거" : "Remove from watch list"}
-                      >
-                        {removingAgentId === cfg.agent_id ? "…" : isKo ? "제거" : "Remove"}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* 인라인 편집 폼 */}
-                  {editingAgent === cfg.agent_id && (
-                    <div className="mt-3 space-y-3 pt-3" style={{ borderTop: "1px solid var(--th-border)" }}>
-                      <label className="flex cursor-pointer items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={editForm.enabled}
-                          onChange={(e) =>
-                            setEditForm((f) => ({ ...f, enabled: e.target.checked }))
-                          }
-                          className="h-4 w-4"
-                          style={{ borderRadius: "2px", accentColor: "var(--th-accent)" }}
-                        />
-                        <span className="text-sm font-mono" style={{ color: "var(--th-text-secondary)" }}>{isKo ? "활성화" : "Enabled"}</span>
-                      </label>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>{isKo ? "간격" : "Interval"}</span>
-                        <input
-                          type="number"
-                          min={5}
-                          max={1440}
-                          value={editForm.interval_minutes}
-                          onChange={(e) =>
-                            setEditForm((f) => ({
-                              ...f,
-                              interval_minutes: Number(e.target.value) || 30,
-                            }))
-                          }
-                          className="w-16 px-2 py-1.5 text-center text-sm focus:outline-none"
-                          style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)", fontFamily: "var(--th-font-mono)" }}
-                        />
-                        <span className="text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>min</span>
-                      </div>
-                      <div>
-                        <span className="mb-1.5 block text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>
-                          {isKo ? "체크 항목" : "Check items"}
-                        </span>
-                        <div className="flex flex-wrap gap-x-4 gap-y-1.5">
-                          {ALL_CHECKS.map((item) => (
-                            <label
-                              key={item}
-                              className="flex cursor-pointer items-center gap-2"
-                            >
-                              <input
-                                type="checkbox"
-                                checked={editForm.check_items.includes(item)}
-                                onChange={() => toggleCheckItem(item)}
-                                className="h-4 w-4"
-                          style={{ borderRadius: "2px", accentColor: "var(--th-accent)" }}
-                              />
-                              <span className="text-sm font-mono" style={{ color: "var(--th-text-secondary)" }}>
-                                {isKo ? CHECK_LABELS[item].ko : CHECK_LABELS[item].en}
-                              </span>
-                            </label>
-                          ))}
-                        </div>
-                      </div>
-                      <div className="flex gap-2 pt-1">
-                        <button
-                          type="button"
-                          onClick={handleSave}
-                          disabled={saving}
-                          className="px-3 py-1.5 text-sm font-medium font-mono text-rose-300 transition-colors disabled:opacity-50"
-                          style={{ borderRadius: "2px", background: "rgba(244,63,94,0.2)", border: "1px solid rgba(244,63,94,0.3)" }}
-                        >
-                          {saving ? "..." : isKo ? "저장" : "Save"}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setEditingAgent(null)}
-                          className="px-3 py-1.5 text-sm font-medium font-mono transition-colors"
-                          style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "transparent", color: "var(--th-text-secondary)" }}
-                        >
-                          {isKo ? "취소" : "Cancel"}
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {/* 최근 로그 (현재 팩 직원만) */}
-            {visibleLogs.length > 0 && (
-              <section className="space-y-2 pt-4" style={{ borderTop: "1px solid var(--th-border)" }}>
-                <div className="flex items-center justify-between gap-2">
-                  <h3 className="text-xs font-semibold font-mono uppercase tracking-wider" style={{ color: "var(--th-text-muted)" }}>
-                    {isKo ? "최근 로그" : "Recent logs"}
-                  </h3>
-                  <div className="flex items-center gap-2">
-                    {okCount > 0 && (
-                      <span className="text-[10px] font-medium text-emerald-500">{okCount} OK</span>
-                    )}
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        const ok = await confirm({
-                          title: isKo ? "로그 전체 삭제" : "Delete all logs",
-                          message: isKo ? "최근 로그를 모두 삭제할까요?" : "Delete all heartbeat logs?",
-                          confirmLabel: isKo ? "삭제" : "Delete",
-                          cancelLabel: isKo ? "취소" : "Cancel",
-                          variant: "danger",
-                        });
-                        if (!ok) return;
-                        setDeletingAllLogs(true);
-                        deleteAllHeartbeatLogs()
-                          .then(() => refresh())
-                          .catch((err: unknown) => {
-                            console.error(err);
-                            const msg = err instanceof Error ? err.message : String(err);
-                            showToast(isKo ? `전체 삭제 실패: ${msg}` : `Delete all failed: ${msg}`, "error");
-                          })
-                          .finally(() => setDeletingAllLogs(false));
-                      }}
-                      disabled={deletingAllLogs}
-                      className="text-[10px] font-medium font-mono disabled:opacity-50"
-                      style={{ color: "var(--th-text-muted)" }}
-                      title={isKo ? "로그 전체 삭제" : "Delete all logs"}
-                    >
-                      {deletingAllLogs ? (isKo ? "삭제 중…" : "Deleting…") : (isKo ? "전체 삭제" : "Delete all")}
-                    </button>
-                  </div>
-                </div>
-                <div className="max-h-52 space-y-1 overflow-y-auto p-2" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
-                  {visibleLogs.slice(0, 20).map((log) => {
-                    let findings: HeartbeatFinding[] = [];
-                    try {
-                      if (log.findings_json) findings = JSON.parse(log.findings_json);
-                    } catch {
-                      /* ignore */
-                    }
-                    const StatusIcon =
-                      log.status === "ok"
-                        ? StatusOkIcon
-                        : log.status === "alert"
-                          ? StatusAlertIcon
-                          : StatusErrorIcon;
-                    const rowBg =
-                      log.status === "ok"
-                        ? ""
-                        : log.status === "alert"
-                          ? "bg-amber-500/5"
-                          : "bg-red-500/5";
-                    const isExpanded = expandedLogId === log.id;
-                    const isDeleting = deletingLogId === log.id;
-
-                    return (
-                      <div
-                        key={log.id}
-                        className="overflow-hidden"
-                        style={{ borderRadius: "2px", background: rowBg ? rowBg : undefined }}
-                      >
-                        <div className="flex items-center gap-2 px-2 py-1.5 text-[11px]">
-                          <button
-                            type="button"
-                            onClick={() => setExpandedLogId((id) => (id === log.id ? null : log.id))}
-                            className="flex shrink-0 items-center justify-center w-5 h-5"
-                            style={{ color: "var(--th-text-muted)" }}
-                            aria-expanded={isExpanded}
-                          >
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={isExpanded ? "rotate-90" : ""}>
-                              <polyline points="9 18 15 12 9 6" />
-                            </svg>
-                          </button>
-                          <StatusIcon />
-                          <span className="shrink-0 text-base leading-none">{log.agent_avatar ?? "👤"}</span>
-                          <span className="shrink-0 font-mono" style={{ color: "var(--th-text-secondary)" }}>
-                            {(isKo && log.agent_name_ko) ? log.agent_name_ko : log.agent_name ?? log.agent_id}
-                          </span>
-                          <span className="min-w-0 flex-1 truncate font-mono" style={{ color: "var(--th-text-muted)" }}>
-                            {log.status === "ok"
-                              ? (isKo ? "정상" : "Normal")
-                              : findings.length > 0
-                                ? findings[0].message
-                                : log.summary ?? "—"}
-                          </span>
-                          <span className="shrink-0 text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
-                            {fmtAgo(log.created_at)}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={async (e) => {
-                              e.stopPropagation();
-                              const ok = await confirm({
-                                title: isKo ? "로그 삭제" : "Delete log",
-                                message: isKo ? "이 로그를 삭제할까요?" : "Delete this log?",
-                                confirmLabel: isKo ? "삭제" : "Delete",
-                                cancelLabel: isKo ? "취소" : "Cancel",
-                                variant: "danger",
-                              });
-                              if (!ok) return;
-                              setDeletingLogId(log.id);
-                              deleteHeartbeatLog(log.id)
-                                .then(() => refresh())
-                                .catch((err: unknown) => {
-                                  console.error(err);
-                                  const msg = err instanceof Error ? err.message : String(err);
-                                  showToast(isKo ? `로그 삭제 실패: ${msg}` : `Delete failed: ${msg}`, "error");
-                                })
-                                .finally(() => setDeletingLogId(null));
-                            }}
-                            disabled={isDeleting}
-                            className="shrink-0 p-1 disabled:opacity-50"
-                            style={{ borderRadius: "2px", color: "var(--th-text-muted)" }}
-                            title={isKo ? "로그 삭제" : "Delete log"}
-                          >
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <polyline points="3 6 5 6 21 6" />
-                              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                              <line x1="10" y1="11" x2="10" y2="17" />
-                              <line x1="14" y1="11" x2="14" y2="17" />
-                            </svg>
-                          </button>
-                        </div>
-                        {isExpanded && (
-                          <div className="px-2 py-2 pl-7 text-[11px] font-mono space-y-1.5" style={{ borderTop: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "var(--th-bg-primary)" }}>
-                            {findings.length > 0 ? (
-                              <>
-                                {log.summary && log.summary !== "HEARTBEAT_OK" && (
-                                  <p><span style={{ color: "var(--th-text-muted)" }}>{isKo ? "요약:" : "Summary:"}</span> {log.summary}</p>
-                                )}
-                                <div>
-                                  <span style={{ color: "var(--th-text-muted)" }}>{isKo ? "발견 항목:" : "Findings:"}</span>
-                                  <ul className="list-disc list-inside mt-0.5 space-y-0.5">
-                                    {findings.map((f, i) => (
-                                      <li key={i}>{f.message}</li>
-                                    ))}
-                                  </ul>
-                                </div>
-                              </>
-                            ) : (
-                              <p style={{ color: "var(--th-text-muted)" }}>
-                                {(log.summary === "normal" || log.summary === "HEARTBEAT_OK" || !log.summary)
-                                  ? (isKo ? "정상입니다. 이상 없음." : "OK. No issues detected.")
-                                  : log.summary}
-                              </p>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </section>
-            )}
+        {visibleConfigs.length === 0 && agents.length === 0 && (
+          <div style={{ ...mono, fontSize: "10px", color: "var(--th-text-muted)", marginTop: 6 }}>
+            <span style={{ color: "#f87171" }}>!</span> {isKo ? "직원을 먼저 추가하세요." : "Add staff first."}
           </div>
         )}
       </div>
-    </div>
+
+      {/* ── WATCH TABLE ── */}
+      {visibleConfigs.length > 0 && (
+        <>
+          <Divider label={`WATCHING · ${visibleConfigs.length}`} />
+          {/* 컬럼 헤더 */}
+          <div
+            style={{
+              ...mono,
+              display: "flex",
+              alignItems: "center",
+              gap: 0,
+              padding: "4px 14px",
+              borderBottom: "2px solid var(--th-border)",
+              background: "var(--th-bg-elevated)",
+            }}
+          >
+            {[
+              { label: "AGENT", w: 140 },
+              { label: "STATUS", w: 60 },
+              { label: "INTERVAL", w: 80 },
+              { label: "ACTIONS", w: "auto" },
+            ].map((col) => (
+              <span
+                key={col.label}
+                style={{
+                  fontSize: "9px",
+                  fontWeight: 700,
+                  letterSpacing: "0.06em",
+                  color: "var(--th-text-muted)",
+                  width: col.w === "auto" ? undefined : col.w,
+                  flex: col.w === "auto" ? 1 : undefined,
+                }}
+              >
+                {col.label}
+              </span>
+            ))}
+          </div>
+
+          {visibleConfigs.map((cfg: HeartbeatConfig) => (
+            <div key={cfg.agent_id} style={{ borderBottom: "1px solid var(--th-border)" }}>
+              {/* 행 */}
+              <div
+                style={{
+                  ...mono,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 0,
+                  padding: "5px 14px",
+                  background: cfg.enabled ? "rgba(34,197,94,0.03)" : "transparent",
+                  borderLeft: cfg.enabled ? "2px solid #22c55e" : "2px solid transparent",
+                }}
+              >
+                {/* AGENT */}
+                <div style={{ width: 140, display: "flex", alignItems: "center", gap: 6, overflow: "hidden" }}>
+                  <span style={{ fontSize: "13px", flexShrink: 0 }}>{cfg.agent_avatar}</span>
+                  <span style={{ fontSize: "10px", fontWeight: 700, color: "var(--th-text-secondary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {isKo && cfg.agent_name_ko ? cfg.agent_name_ko : cfg.agent_name}
+                  </span>
+                </div>
+                {/* STATUS */}
+                <span
+                  style={{
+                    width: 60,
+                    fontSize: "9px",
+                    fontWeight: 700,
+                    color: cfg.enabled ? "#4ade80" : "var(--th-text-muted)",
+                  }}
+                >
+                  [{cfg.enabled ? "ON" : "OFF"}]
+                </span>
+                {/* INTERVAL */}
+                <span style={{ width: 80, fontSize: "9px", color: "var(--th-text-muted)" }}>
+                  {cfg.interval_minutes}m
+                </span>
+                {/* ACTIONS */}
+                <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 4 }}>
+                  {!!cfg.enabled && (
+                    <button
+                      type="button"
+                      onClick={() => handleTrigger(cfg.agent_id)}
+                      disabled={triggering === cfg.agent_id}
+                      style={{
+                        ...mono,
+                        fontSize: "9px",
+                        padding: "2px 6px",
+                        background: "transparent",
+                        border: "1px solid rgba(6,182,212,0.4)",
+                        color: "#67e8f9",
+                        cursor: "pointer",
+                        borderRadius: 0,
+                        opacity: triggering === cfg.agent_id ? 0.5 : 1,
+                      }}
+                    >
+                      {triggering === cfg.agent_id ? "···" : "[RUN]"}
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => handleEdit(cfg)}
+                    style={{
+                      ...mono,
+                      fontSize: "9px",
+                      padding: "2px 6px",
+                      background: "transparent",
+                      border: "1px solid var(--th-border)",
+                      color: "var(--th-text-muted)",
+                      cursor: "pointer",
+                      borderRadius: 0,
+                    }}
+                  >
+                    [EDIT]
+                  </button>
+                  <button
+                    type="button"
+                    disabled={removingAgentId === cfg.agent_id}
+                    onClick={async () => {
+                      const ok = await confirm({
+                        title: isKo ? "살펴보기 대상 제거" : "Remove from watch list",
+                        message: isKo ? "이 직원을 살펴보기 대상에서 제거할까요?" : "Remove this staff from the watch list?",
+                        confirmLabel: isKo ? "제거" : "Remove",
+                        cancelLabel: isKo ? "취소" : "Cancel",
+                        variant: "danger",
+                      });
+                      if (!ok) return;
+                      setRemovingAgentId(cfg.agent_id);
+                      deleteHeartbeatConfig(cfg.agent_id)
+                        .then(() => refresh())
+                        .catch((err: unknown) => {
+                          console.error(err);
+                          const msg = err instanceof Error ? err.message : String(err);
+                          showToast(isKo ? `제거 실패: ${msg}` : `Remove failed: ${msg}`, "error");
+                        })
+                        .finally(() => setRemovingAgentId(null));
+                    }}
+                    style={{
+                      ...mono,
+                      fontSize: "9px",
+                      padding: "2px 6px",
+                      background: "transparent",
+                      border: "1px solid rgba(239,68,68,0.3)",
+                      color: "#f87171",
+                      cursor: "pointer",
+                      borderRadius: 0,
+                      opacity: removingAgentId === cfg.agent_id ? 0.5 : 1,
+                    }}
+                  >
+                    {removingAgentId === cfg.agent_id ? "···" : "[×RM]"}
+                  </button>
+                </div>
+              </div>
+
+              {/* 인라인 편집 폼 */}
+              {editingAgent === cfg.agent_id && (
+                <div
+                  style={{
+                    ...mono,
+                    padding: "10px 14px 10px 30px",
+                    borderTop: "1px solid var(--th-border)",
+                    background: "rgba(245,158,11,0.03)",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 8,
+                  }}
+                >
+                  <div style={{ fontSize: "9px", color: "var(--th-accent)", marginBottom: 2 }}>
+                    $ heartbeat --edit {cfg.agent_id.slice(0, 8)}
+                  </div>
+                  {/* enabled */}
+                  <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
+                    <input
+                      type="checkbox"
+                      checked={editForm.enabled}
+                      onChange={(e) => setEditForm((f: any) => ({ ...f, enabled: e.target.checked }))}
+                      style={{ accentColor: "var(--th-accent)", width: 12, height: 12 }}
+                    />
+                    <span style={{ fontSize: "10px", color: "var(--th-text-secondary)" }}>
+                      --enabled
+                    </span>
+                  </label>
+                  {/* interval */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ fontSize: "10px", color: "var(--th-text-muted)" }}>--interval</span>
+                    <input
+                      type="number"
+                      min={5}
+                      max={1440}
+                      value={editForm.interval_minutes}
+                      onChange={(e) => setEditForm((f: any) => ({ ...f, interval_minutes: Number(e.target.value) || 30 }))}
+                      style={{
+                        ...mono,
+                        width: 52,
+                        fontSize: "10px",
+                        background: "var(--th-bg-elevated)",
+                        border: "1px solid var(--th-border)",
+                        borderRadius: 0,
+                        color: "var(--th-text-primary)",
+                        padding: "2px 6px",
+                        textAlign: "center",
+                      }}
+                    />
+                    <span style={{ fontSize: "9px", color: "var(--th-text-muted)" }}>min</span>
+                  </div>
+                  {/* checks */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                    <span style={{ fontSize: "10px", color: "var(--th-text-muted)" }}>--checks</span>
+                    {ALL_CHECKS.map((item: HeartbeatCheckItem) => (
+                      <label key={item} style={{ display: "flex", alignItems: "center", gap: 4, cursor: "pointer" }}>
+                        <input
+                          type="checkbox"
+                          checked={editForm.check_items.includes(item)}
+                          onChange={() => toggleCheckItem(item)}
+                          style={{ accentColor: "var(--th-accent)", width: 12, height: 12 }}
+                        />
+                        <span style={{ fontSize: "9px", color: "var(--th-text-secondary)" }}>
+                          {isKo ? CHECK_LABELS[item].ko : CHECK_LABELS[item].en}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                  {/* 저장/취소 */}
+                  <div style={{ display: "flex", gap: 6 }}>
+                    <button
+                      type="button"
+                      onClick={handleSave}
+                      disabled={saving}
+                      style={{
+                        ...mono,
+                        fontSize: "9px",
+                        padding: "3px 10px",
+                        background: "rgba(245,158,11,0.15)",
+                        border: "1px solid rgba(245,158,11,0.4)",
+                        color: "var(--th-accent)",
+                        cursor: "pointer",
+                        borderRadius: 0,
+                        opacity: saving ? 0.5 : 1,
+                      }}
+                    >
+                      {saving ? "···" : "[SAVE]"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEditingAgent(null)}
+                      style={{
+                        ...mono,
+                        fontSize: "9px",
+                        padding: "3px 10px",
+                        background: "transparent",
+                        border: "1px solid var(--th-border)",
+                        color: "var(--th-text-muted)",
+                        cursor: "pointer",
+                        borderRadius: 0,
+                      }}
+                    >
+                      [ESC]
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </>
+      )}
+
+      {/* ── LOGS ── */}
+      {visibleLogs.length > 0 && (
+        <>
+          <Divider label={`LOGS · ${visibleLogs.length}`} />
+          {/* 로그 헤더 */}
+          <div
+            style={{
+              ...mono,
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "4px 14px",
+              borderBottom: "1px solid var(--th-border)",
+              background: "var(--th-bg-elevated)",
+            }}
+          >
+            <span style={{ fontSize: "9px", color: "var(--th-text-muted)", flex: 1 }}>
+              {okCount > 0 && <span style={{ color: "#4ade80", marginRight: 8 }}>{okCount} OK</span>}
+              {(visibleLogs.length - okCount) > 0 && <span style={{ color: "#f59e0b" }}>{visibleLogs.length - okCount} ALERT</span>}
+            </span>
+            <button
+              type="button"
+              onClick={async () => {
+                const ok = await confirm({
+                  title: isKo ? "로그 전체 삭제" : "Delete all logs",
+                  message: isKo ? "최근 로그를 모두 삭제할까요?" : "Delete all heartbeat logs?",
+                  confirmLabel: isKo ? "삭제" : "Delete",
+                  cancelLabel: isKo ? "취소" : "Cancel",
+                  variant: "danger",
+                });
+                if (!ok) return;
+                setDeletingAllLogs(true);
+                deleteAllHeartbeatLogs()
+                  .then(() => refresh())
+                  .catch((err: unknown) => {
+                    console.error(err);
+                    const msg = err instanceof Error ? err.message : String(err);
+                    showToast(isKo ? `전체 삭제 실패: ${msg}` : `Delete all failed: ${msg}`, "error");
+                  })
+                  .finally(() => setDeletingAllLogs(false));
+              }}
+              disabled={deletingAllLogs}
+              style={{
+                ...mono,
+                fontSize: "9px",
+                padding: "1px 6px",
+                background: "transparent",
+                border: "1px solid rgba(239,68,68,0.3)",
+                color: "#f87171",
+                cursor: "pointer",
+                borderRadius: 0,
+                opacity: deletingAllLogs ? 0.5 : 1,
+              }}
+            >
+              {deletingAllLogs ? "···" : "[CLEAR]"}
+            </button>
+          </div>
+
+          {visibleLogs.slice(0, 20).map((log: HeartbeatLog) => {
+            let findings: HeartbeatFinding[] = [];
+            try { if (log.findings_json) findings = JSON.parse(log.findings_json); } catch { /* ignore */ }
+            const { sym, color } = statusSymbol(log.status);
+            const isExpanded = expandedLogId === log.id;
+
+            return (
+              <div key={log.id} style={{ borderBottom: "1px solid var(--th-border)" }}>
+                <div
+                  style={{
+                    ...mono,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    padding: "4px 14px",
+                    background: log.status === "alert" ? "rgba(245,158,11,0.03)" : log.status === "error" ? "rgba(239,68,68,0.03)" : "transparent",
+                  }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setExpandedLogId((id: any) => id === log.id ? null : log.id)}
+                    style={{ background: "none", border: "none", cursor: "pointer", padding: 0, fontSize: "9px", color: "var(--th-text-muted)", flexShrink: 0, width: 10 }}
+                  >
+                    {isExpanded ? "▾" : "▸"}
+                  </button>
+                  <span style={{ fontSize: "11px", color, flexShrink: 0, width: 12 }}>{sym}</span>
+                  <span style={{ fontSize: "12px", flexShrink: 0 }}>{log.agent_avatar ?? "👤"}</span>
+                  <span style={{ fontSize: "10px", fontWeight: 600, color: "var(--th-text-secondary)", flexShrink: 0, width: 100, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {(isKo && log.agent_name_ko) ? log.agent_name_ko : log.agent_name ?? log.agent_id}
+                  </span>
+                  <span style={{ fontSize: "10px", color: "var(--th-text-muted)", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {log.status === "ok"
+                      ? (isKo ? "정상" : "normal")
+                      : findings.length > 0 ? findings[0].message : log.summary ?? "—"}
+                  </span>
+                  <span style={{ fontSize: "9px", color: "var(--th-text-muted)", flexShrink: 0, marginLeft: 8 }}>
+                    {fmtAgo(log.created_at)}
+                  </span>
+                  <button
+                    type="button"
+                    disabled={deletingLogId === log.id}
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      const ok = await confirm({
+                        title: isKo ? "로그 삭제" : "Delete log",
+                        message: isKo ? "이 로그를 삭제할까요?" : "Delete this log?",
+                        confirmLabel: isKo ? "삭제" : "Delete",
+                        cancelLabel: isKo ? "취소" : "Cancel",
+                        variant: "danger",
+                      });
+                      if (!ok) return;
+                      setDeletingLogId(log.id);
+                      deleteHeartbeatLog(log.id)
+                        .then(() => refresh())
+                        .catch((err: unknown) => {
+                          console.error(err);
+                          const msg = err instanceof Error ? err.message : String(err);
+                          showToast(isKo ? `로그 삭제 실패: ${msg}` : `Delete failed: ${msg}`, "error");
+                        })
+                        .finally(() => setDeletingLogId(null));
+                    }}
+                    style={{
+                      ...mono,
+                      fontSize: "9px",
+                      padding: "1px 5px",
+                      background: "transparent",
+                      border: "1px solid var(--th-border)",
+                      color: "var(--th-text-muted)",
+                      cursor: "pointer",
+                      borderRadius: 0,
+                      opacity: deletingLogId === log.id ? 0.5 : 1,
+                      flexShrink: 0,
+                    }}
+                  >
+                    ×
+                  </button>
+                </div>
+                {isExpanded && (
+                  <div
+                    style={{
+                      ...mono,
+                      padding: "8px 14px 8px 38px",
+                      borderTop: "1px solid var(--th-border)",
+                      background: "var(--th-bg-elevated)",
+                      fontSize: "10px",
+                      color: "var(--th-text-muted)",
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 4,
+                    }}
+                  >
+                    {findings.length > 0 ? (
+                      <>
+                        {log.summary && log.summary !== "HEARTBEAT_OK" && (
+                          <div><span style={{ color: "var(--th-text-muted)" }}>summary: </span>{log.summary}</div>
+                        )}
+                        {findings.map((f: HeartbeatFinding, i: number) => (
+                          <div key={i}>
+                            <span style={{ color: "#f59e0b" }}>  ! </span>
+                            <span style={{ color: "var(--th-text-secondary)" }}>{f.message}</span>
+                          </div>
+                        ))}
+                      </>
+                    ) : (
+                      <div>
+                        <span style={{ color: "#4ade80" }}>✓ </span>
+                        {(log.summary === "normal" || log.summary === "HEARTBEAT_OK" || !log.summary)
+                          ? (isKo ? "정상입니다. 이상 없음." : "OK. No issues detected.")
+                          : log.summary}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </>
+      )}
+
+      {/* ── GUIDE ── */}
+      <Divider label="GUIDE" />
+      <div style={{ borderBottom: "1px solid var(--th-border)" }}>
+        <button
+          type="button"
+          onClick={() => setGuideExpanded((v: boolean) => !v)}
+          style={{
+            ...mono,
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            width: "100%",
+            padding: "6px 14px",
+            background: "transparent",
+            border: "none",
+            cursor: "pointer",
+          }}
+        >
+          <span style={{ fontSize: "9px", color: "var(--th-text-muted)" }}>{guideExpanded ? "▾" : "▸"}</span>
+          <span style={{ fontSize: "9px", color: "var(--th-text-muted)", letterSpacing: "0.06em" }}>
+            {isKo ? "직원 살펴보기 사용 방법" : "How Heartbeat works"}
+          </span>
+        </button>
+        {guideExpanded && (
+          <div
+            style={{
+              ...mono,
+              padding: "10px 14px 12px 28px",
+              borderTop: "1px solid var(--th-border)",
+              background: "var(--th-bg-elevated)",
+              display: "flex",
+              flexDirection: "column",
+              gap: 6,
+            }}
+          >
+            {[
+              isKo
+                ? "직원 살펴보기(Heartbeat)는 선택한 직원의 프로젝트·태스크 상태를 주기적으로 자동으로 확인하는 기능입니다."
+                : "Heartbeat automatically checks on projects and tasks for selected staff at set intervals.",
+              isKo
+                ? "오피스 팩을 선택한 뒤 ADD TO MONITOR 에서 직원을 추가하세요. 간격과 확인 항목을 설정할 수 있습니다."
+                : "Use ADD TO MONITOR to select staff. You can set the interval and which items to check.",
+              isKo
+                ? "정상이면 로그만 남고, 문제가 있으면 알림 센터로 알림이 전송됩니다. [RUN]으로 수동 실행할 수 있습니다."
+                : "Normal → logs only. Issues → notification center alert. Use [RUN] to trigger manually.",
+            ].map((line, i) => (
+              <div key={i} style={{ fontSize: "10px", color: "var(--th-text-muted)", lineHeight: 1.7 }}>
+                <span style={{ color: "var(--th-accent)", marginRight: 6 }}>$</span>{line}
+              </div>
+            ))}
+            <div style={{ marginTop: 4, padding: "6px 10px", background: "rgba(245,158,11,0.06)", borderLeft: "2px solid rgba(245,158,11,0.4)", fontSize: "10px", color: "#fde68a" }}>
+              ! {isKo ? "현재 보이는 직원 목록은 선택한 오피스 팩에 따라 달라집니다." : "The staff list depends on the selected office pack."}
+            </div>
+          </div>
+        )}
+      </div>
+    </>
   );
 }

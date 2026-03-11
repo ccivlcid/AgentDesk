@@ -72,7 +72,7 @@ export default function OfficeQuickChat({ agent, agents, onClose }: OfficeQuickC
         background: "var(--th-bg-elevated)",
         border: "1px solid var(--th-border)",
         borderTop: "2px solid var(--th-accent)",
-        borderRadius: "4px",
+        borderRadius: 0,
       }}
     >
       {/* Header */}
@@ -125,7 +125,7 @@ export default function OfficeQuickChat({ agent, agents, onClose }: OfficeQuickC
               disabled={sending}
               className="w-full resize-none border px-2 py-1.5 text-xs font-mono outline-none disabled:opacity-60"
               style={{
-                borderRadius: "2px",
+                borderRadius: 0,
                 borderColor: "var(--th-input-border)",
                 background: "var(--th-bg-primary)",
                 color: "var(--th-text-primary)",
@@ -149,7 +149,7 @@ export default function OfficeQuickChat({ agent, agents, onClose }: OfficeQuickC
                 disabled={!content.trim() || sending}
                 className="px-3 py-1 text-[11px] font-mono font-bold transition disabled:opacity-40 disabled:cursor-not-allowed"
                 style={{
-                  borderRadius: "2px",
+                  borderRadius: 0,
                   background: "var(--th-accent)",
                   color: "#000",
                 }}

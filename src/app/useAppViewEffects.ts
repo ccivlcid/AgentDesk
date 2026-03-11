@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 
 import * as api from "../api";
-import type { CliStatusMap, MeetingPresence } from "../types";
+import type { CliStatusMap } from "../types";
 import type { OAuthCallbackResult, View } from "./types";
 
 type UseAppViewEffectsParams = {
@@ -11,7 +11,6 @@ type UseAppViewEffectsParams = {
   setOauthResult: (next: OAuthCallbackResult | null) => void;
   setCliStatus: (next: CliStatusMap | null) => void;
   setMobileNavOpen: (next: boolean) => void;
-  setMeetingPresence: (next: MeetingPresence[]) => void;
 };
 
 export function useAppViewEffects({
@@ -21,7 +20,6 @@ export function useAppViewEffects({
   setOauthResult,
   setCliStatus,
   setMobileNavOpen,
-  setMeetingPresence,
 }: UseAppViewEffectsParams): void {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -55,13 +53,4 @@ export function useAppViewEffects({
     return () => window.removeEventListener("resize", closeMobileNavOnDesktop);
   }, [setMobileNavOpen]);
 
-  useEffect(() => {
-    if (view !== "office") return;
-    api
-      .getMeetingPresence()
-      .then(setMeetingPresence)
-      .catch(() => {
-        // keep UI responsive even if meeting-presence endpoint is temporarily unavailable
-      });
-  }, [view, setMeetingPresence]);
 }

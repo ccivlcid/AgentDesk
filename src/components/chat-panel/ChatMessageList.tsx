@@ -45,7 +45,7 @@ function AttachmentChips({ attachments }: { attachments: MessageAttachment[] }) 
                   src={downloadUrl}
                   alt={att.fileName}
                   className="max-h-32 max-w-[200px] object-cover"
-                  style={{ borderRadius: "2px", border: "1px solid var(--th-border)" }}
+                  style={{ borderRadius: 0, border: "1px solid var(--th-border)" }}
                   loading="lazy"
                 />
               </a>
@@ -55,7 +55,7 @@ function AttachmentChips({ attachments }: { attachments: MessageAttachment[] }) 
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-mono transition"
-              style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
+              style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
             >
               <span>{getAttachmentIcon(att.fileName)}</span>
               <span className="max-w-[140px] truncate">{att.fileName}</span>
@@ -110,7 +110,7 @@ function formatTime(ts: number, locale: string): string {
 function TypingIndicator() {
   return (
     <div className="flex items-center gap-1 px-4 py-2">
-      <div className="flex items-center gap-1 px-4 py-2" style={{ borderRadius: "2px", background: "var(--th-bg-elevated)" }}>
+      <div className="flex items-center gap-1 px-4 py-2" style={{ borderRadius: 0, background: "var(--th-bg-elevated)" }}>
         <span className="h-2 w-2 animate-bounce" style={{ borderRadius: "50%", background: "var(--th-text-muted)", animationDelay: "0ms" }} />
         <span className="h-2 w-2 animate-bounce" style={{ borderRadius: "50%", background: "var(--th-text-muted)", animationDelay: "150ms" }} />
         <span className="h-2 w-2 animate-bounce" style={{ borderRadius: "50%", background: "var(--th-text-muted)", animationDelay: "300ms" }} />
@@ -233,7 +233,7 @@ export default function ChatMessageList({
           <AgentAvatar agent={senderAgent} size={28} />
           <div className="flex max-w-[75%] flex-col gap-1">
             <span className="px-1 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>{senderName}</span>
-            <div className="announcement-reply-bubble border border-yellow-500/20 px-4 py-2.5 text-sm" style={{ borderRadius: "2px", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)" }}>
+            <div className="announcement-reply-bubble border border-yellow-500/20 px-4 py-2.5 text-sm" style={{ borderRadius: 0, background: "var(--th-bg-elevated)", color: "var(--th-text-primary)" }}>
               <MessageContent content={msg.content} />
               {msg.attachments && <AttachmentChips attachments={msg.attachments} />}
             </div>
@@ -251,7 +251,7 @@ export default function ChatMessageList({
       return (
         <div className="flex flex-col items-center gap-1">
           {isDirective && (
-            <span className="border px-2 py-0.5 text-xs font-bold font-mono" style={{ borderRadius: "2px", borderColor: "rgba(244,63,94,0.35)", background: "rgba(244,63,94,0.1)", color: "rgb(253,164,175)" }}>
+            <span className="border px-2 py-0.5 text-xs font-bold font-mono" style={{ borderRadius: 0, borderColor: "rgba(244,63,94,0.35)", background: "rgba(244,63,94,0.1)", color: "rgb(253,164,175)" }}>
               {tr("업무지시", "Directive", "業務指示", "业务指示")}
             </span>
           )}
@@ -261,7 +261,7 @@ export default function ChatMessageList({
                 ? "border border-red-500/30 bg-red-500/15 text-red-300"
                 : "announcement-message-bubble border border-yellow-500/30 bg-yellow-500/15 text-yellow-300"
             }`}
-            style={{ borderRadius: "2px" }}
+            style={{ borderRadius: 0 }}
           >
             <MessageContent content={msg.content} />
             {msg.attachments && <AttachmentChips attachments={msg.attachments} />}
@@ -275,7 +275,7 @@ export default function ChatMessageList({
       return (
         <div className="group flex flex-col items-end gap-1">
           <span className="px-1 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>{tr("CEO", "CEO")}</span>
-          <div className="max-w-[80%] px-4 py-2.5 text-sm text-black" style={{ borderRadius: "2px", background: "var(--th-accent)" }}>
+          <div className="max-w-[80%] px-4 py-2.5 text-sm text-black" style={{ borderRadius: 0, background: "var(--th-accent)" }}>
             <MessageContent content={msg.content} />
             {msg.attachments && <AttachmentChips attachments={msg.attachments} />}
           </div>
@@ -292,7 +292,7 @@ export default function ChatMessageList({
         <AgentAvatar agent={senderAgent} size={28} />
         <div className="flex max-w-[75%] flex-col gap-1">
           <span className="px-1 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>{senderName}</span>
-          <div className="px-4 py-2.5 text-sm" style={{ borderRadius: "2px", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)" }}>
+          <div className="px-4 py-2.5 text-sm" style={{ borderRadius: 0, background: "var(--th-bg-elevated)", color: "var(--th-text-primary)" }}>
             <MessageContent content={msg.content} />
             {msg.attachments && <AttachmentChips attachments={msg.attachments} />}
           </div>
@@ -309,7 +309,7 @@ export default function ChatMessageList({
 
   function renderDecisionRequest(msg: Message, decisionRequest: { options: DecisionOption[] }) {
     return (
-      <div className="px-2 py-2" style={{ borderRadius: "2px", border: "1px solid rgba(251,191,36,0.3)", background: "rgba(251,191,36,0.05)" }}>
+      <div className="px-2 py-2" style={{ borderRadius: 0, border: "1px solid rgba(251,191,36,0.3)", background: "rgba(251,191,36,0.05)" }}>
         <p className="text-[11px] font-medium font-mono" style={{ color: "var(--th-accent)" }}>
           {tr("의사결정 요청", "Decision request", "意思決定リクエスト", "决策请求")}
         </p>
@@ -324,7 +324,7 @@ export default function ChatMessageList({
                 onClick={() => onDecisionOptionReply(msg, option)}
                 disabled={isBusy}
                 className="decision-inline-option w-full px-2 py-1.5 text-left text-[11px] font-mono transition disabled:opacity-60"
-                style={{ borderRadius: "2px" }}
+                style={{ borderRadius: 0 }}
               >
                 {isBusy ? tr("전송 중...", "Sending...", "送信中...", "发送中...") : `${option.number}. ${option.label}`}
               </button>
@@ -424,7 +424,7 @@ export default function ChatMessageList({
               <AgentAvatar agent={selectedAgent ?? undefined} size={28} />
               <div className="flex max-w-[75%] flex-col gap-1">
                 <span className="px-1 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>{getAgentName(selectedAgent)}</span>
-                <div className="border border-emerald-500/20 px-4 py-2.5 text-sm" style={{ borderRadius: "2px", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)" }}>
+                <div className="border border-emerald-500/20 px-4 py-2.5 text-sm" style={{ borderRadius: 0, background: "var(--th-bg-elevated)", color: "var(--th-text-primary)" }}>
                   <MessageContent content={streamingMessage.content} />
                   <span className="ml-0.5 inline-block h-4 w-1.5 animate-pulse rounded-sm bg-emerald-400 align-text-bottom" />
                 </div>

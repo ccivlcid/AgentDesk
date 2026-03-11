@@ -151,7 +151,7 @@ export default function CustomPackFormModal({ pack, onSave, onClose }: Props) {
             <button
               onClick={onClose}
               className="w-7 h-7 flex items-center justify-center transition-all hover:bg-[var(--th-bg-elevated)]"
-              style={{ color: "var(--th-text-muted)", borderRadius: "4px" }}
+              style={{ color: "var(--th-text-muted)", borderRadius: 0 }}
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
@@ -160,10 +160,10 @@ export default function CustomPackFormModal({ pack, onSave, onClose }: Props) {
           </div>
 
           {/* Live preview card */}
-          <div className="mx-5 mb-4 flex items-center gap-3 px-3.5 py-2.5" style={{ borderRadius: "4px", background: "var(--th-bg-surface)", border: "1px solid var(--th-border)" }}>
+          <div className="mx-5 mb-4 flex items-center gap-3 px-3.5 py-2.5" style={{ borderRadius: 0, background: "var(--th-bg-surface)", border: "1px solid var(--th-border)" }}>
             <div
               className="w-10 h-10 flex items-center justify-center text-xl shrink-0"
-              style={{ borderRadius: "4px", background: `${color}20`, boxShadow: `inset 0 0 0 1px ${color}30` }}
+              style={{ borderRadius: 0, background: `${color}20`, boxShadow: `inset 0 0 0 1px ${color}30` }}
             >
               {icon}
             </div>
@@ -175,7 +175,7 @@ export default function CustomPackFormModal({ pack, onSave, onClose }: Props) {
                 {nameKo.trim() || description.trim() || "미리보기"}
               </div>
             </div>
-            <div className="w-2 h-8 shrink-0" style={{ borderRadius: "2px", background: color }} />
+            <div className="w-2 h-8 shrink-0" style={{ borderRadius: 0, background: color }} />
           </div>
         </div>
 
@@ -191,7 +191,7 @@ export default function CustomPackFormModal({ pack, onSave, onClose }: Props) {
                 onClick={() => setShowIconPicker((v) => !v)}
                 className="w-12 h-12 flex items-center justify-center text-2xl transition-all hover:scale-105"
                 style={{
-                  borderRadius: "4px",
+                  borderRadius: 0,
                   background: `${color}15`,
                   border: `1.5px solid ${color}50`,
                   boxShadow: showIconPicker ? `0 0 0 2px ${color}30` : "none",
@@ -216,7 +216,7 @@ export default function CustomPackFormModal({ pack, onSave, onClose }: Props) {
                       onClick={() => { setIcon(ic); setShowIconPicker(false); }}
                       className="w-10 h-10 flex items-center justify-center text-lg transition-all hover:scale-110"
                       style={{
-                        borderRadius: "4px",
+                        borderRadius: 0,
                         background: icon === ic ? `${color}25` : "transparent",
                         outline: icon === ic ? `2px solid ${color}` : "none",
                       }}
@@ -269,7 +269,7 @@ export default function CustomPackFormModal({ pack, onSave, onClose }: Props) {
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Game Studio"
                 className={`w-full px-3 py-2 border text-sm font-mono ${focusRing}`}
-                style={{ borderRadius: "4px", background: "var(--th-input-bg)", borderColor: "var(--th-input-border)", color: "var(--th-text-primary)" }}
+                style={{ borderRadius: 0, background: "var(--th-input-bg)", borderColor: "var(--th-input-border)", color: "var(--th-text-primary)" }}
               />
             </div>
             <div>
@@ -280,7 +280,7 @@ export default function CustomPackFormModal({ pack, onSave, onClose }: Props) {
                 onChange={(e) => setNameKo(e.target.value)}
                 placeholder="게임 스튜디오"
                 className={`w-full px-3 py-2 border text-sm font-mono ${focusRing}`}
-                style={{ borderRadius: "4px", background: "var(--th-input-bg)", borderColor: "var(--th-input-border)", color: "var(--th-text-primary)" }}
+                style={{ borderRadius: 0, background: "var(--th-input-bg)", borderColor: "var(--th-input-border)", color: "var(--th-text-primary)" }}
               />
             </div>
           </div>
@@ -294,7 +294,7 @@ export default function CustomPackFormModal({ pack, onSave, onClose }: Props) {
               rows={2}
               placeholder="이 오피스 팩의 업종/주제를 설명해주세요..."
               className={`w-full px-3 py-2 border text-sm font-mono resize-none ${focusRing}`}
-              style={{ borderRadius: "4px", background: "var(--th-input-bg)", borderColor: "var(--th-input-border)", color: "var(--th-text-primary)" }}
+              style={{ borderRadius: 0, background: "var(--th-input-bg)", borderColor: "var(--th-input-border)", color: "var(--th-text-primary)" }}
             />
           </div>
 
@@ -303,7 +303,7 @@ export default function CustomPackFormModal({ pack, onSave, onClose }: Props) {
             <div
               className="p-4 space-y-3"
               style={{
-                borderRadius: "4px",
+                borderRadius: 0,
                 border: "1px solid rgba(251,191,36,0.2)",
                 background: "linear-gradient(135deg, rgba(251,191,36,0.06), rgba(251,191,36,0.02))",
               }}
@@ -311,7 +311,7 @@ export default function CustomPackFormModal({ pack, onSave, onClose }: Props) {
               <div className="flex items-center gap-2 mb-1">
                 <div
                   className="w-5 h-5 flex items-center justify-center shrink-0"
-                  style={{ borderRadius: "4px", background: "rgba(251,191,36,0.15)" }}
+                  style={{ borderRadius: 0, background: "rgba(251,191,36,0.15)" }}
                 >
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--th-accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z" />
@@ -330,7 +330,7 @@ export default function CustomPackFormModal({ pack, onSave, onClose }: Props) {
                 disabled={generating || !name.trim()}
                 className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-xs font-medium font-mono transition-all disabled:opacity-40"
                 style={{
-                  borderRadius: "4px",
+                  borderRadius: 0,
                   border: "1px solid rgba(251,191,36,0.4)",
                   background: "rgba(251,191,36,0.1)",
                   color: "var(--th-accent)",
@@ -352,7 +352,7 @@ export default function CustomPackFormModal({ pack, onSave, onClose }: Props) {
               </button>
 
               {genError && (
-                <div className="text-[11px] font-mono px-3 py-2.5" style={{ borderRadius: "4px", background: "rgba(244,63,94,0.08)", border: "1px solid rgba(244,63,94,0.25)", color: "rgb(253,164,175)" }}>
+                <div className="text-[11px] font-mono px-3 py-2.5" style={{ borderRadius: 0, background: "rgba(244,63,94,0.08)", border: "1px solid rgba(244,63,94,0.25)", color: "rgb(253,164,175)" }}>
                   {genError}
                 </div>
               )}
@@ -360,7 +360,7 @@ export default function CustomPackFormModal({ pack, onSave, onClose }: Props) {
               {genPreview && (
                 <div
                   className="space-y-2.5 p-3"
-                  style={{ borderRadius: "4px", background: "rgba(52,211,153,0.06)", border: "1px solid rgba(52,211,153,0.2)" }}
+                  style={{ borderRadius: 0, background: "rgba(52,211,153,0.06)", border: "1px solid rgba(52,211,153,0.2)" }}
                 >
                   <div className="flex items-center gap-2">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgb(52,211,153)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -411,7 +411,7 @@ export default function CustomPackFormModal({ pack, onSave, onClose }: Props) {
           <button
             onClick={onClose}
             className="px-4 py-2.5 text-sm font-medium font-mono transition-all hover:opacity-80"
-            style={{ borderRadius: "4px", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)" }}
+            style={{ borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)" }}
           >
             취소
           </button>
@@ -420,7 +420,7 @@ export default function CustomPackFormModal({ pack, onSave, onClose }: Props) {
             onClick={handleSave}
             disabled={saving || !name.trim()}
             className="px-5 py-2.5 text-sm font-medium font-mono transition-all disabled:opacity-40 hover:brightness-110"
-            style={{ borderRadius: "4px", background: color, color: "#fff", boxShadow: `0 2px 8px ${color}30` }}
+            style={{ borderRadius: 0, background: color, color: "#fff", boxShadow: `0 2px 8px ${color}30` }}
           >
             {saving ? "저장 중..." : isEdit ? "변경사항 저장" : "팩 만들기"}
           </button>

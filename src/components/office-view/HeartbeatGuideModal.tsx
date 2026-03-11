@@ -62,14 +62,14 @@ export default function HeartbeatGuideModal({ language, onClose }: HeartbeatGuid
     >
       <div
         className="relative w-full max-w-2xl min-w-0 max-h-[90vh] flex flex-col overflow-hidden"
-        style={{ borderRadius: "4px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}
+        style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex-shrink-0 px-6 pt-5 pb-4" style={{ borderBottom: "1px solid var(--th-border)" }}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="flex h-8 w-8 items-center justify-center" style={{ borderRadius: "2px", background: "rgba(244,63,94,0.15)", color: "rgb(253,164,175)" }}>
+              <span className="flex h-8 w-8 items-center justify-center" style={{ borderRadius: 0, background: "rgba(244,63,94,0.15)", color: "rgb(253,164,175)" }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
                 </svg>
@@ -87,7 +87,7 @@ export default function HeartbeatGuideModal({ language, onClose }: HeartbeatGuid
               type="button"
               onClick={onClose}
               className="w-7 h-7 flex items-center justify-center transition-colors hover:bg-[var(--th-bg-surface-hover)]"
-              style={{ borderRadius: "2px", color: "var(--th-text-muted)" }}
+              style={{ borderRadius: 0, color: "var(--th-text-muted)" }}
               aria-label={t({ ko: "닫기", en: "Close", ja: "閉じる", zh: "关闭" })}
             >
               <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
@@ -117,7 +117,7 @@ export default function HeartbeatGuideModal({ language, onClose }: HeartbeatGuid
             ))}
           </div>
 
-          <div className="mt-4 px-4 py-3 flex gap-2.5" style={{ borderRadius: "2px", border: "1px solid rgba(251,191,36,0.2)", background: "rgba(251,191,36,0.05)" }}>
+          <div className="mt-4 px-4 py-3 flex gap-2.5" style={{ borderRadius: 0, border: "1px solid rgba(251,191,36,0.2)", background: "rgba(251,191,36,0.05)" }}>
             <span className="text-amber-400 text-sm flex-shrink-0 mt-px">💡</span>
             <p className="text-xs text-amber-200/90 leading-relaxed">{tip}</p>
           </div>
@@ -129,7 +129,7 @@ export default function HeartbeatGuideModal({ language, onClose }: HeartbeatGuid
             type="button"
             onClick={onClose}
             className="px-4 py-1.5 text-xs font-mono transition-colors hover:bg-[var(--th-bg-surface-hover)]"
-            style={{ borderRadius: "2px", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)", border: "1px solid var(--th-border)" }}
+            style={{ borderRadius: 0, background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)", border: "1px solid var(--th-border)" }}
           >
             {t({ ko: "닫기", en: "Close", ja: "閉じる", zh: "关闭" })}
           </button>

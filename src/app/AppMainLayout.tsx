@@ -2,10 +2,10 @@ import { useEffect, useRef, useState, type ReactNode, lazy, Suspense } from "rea
 import { AnimatePresence, motion } from "framer-motion";
 import NotificationCenter from "../components/NotificationCenter";
 import Sidebar from "../components/Sidebar";
-import OfficeView from "../components/OfficeView";
 import CliUsagePanel from "../components/office-view/CliUsagePanel";
 import { useCliUsage } from "../components/office-view/useCliUsage";
 import Dashboard2 from "../components/dashboard/Dashboard2";
+import CategoriesTab from "../components/settings/CategoriesTab";
 import TaskBoard from "../components/TaskBoard";
 import AgentManager from "../components/AgentManager";
 import HeartbeatPanel from "../components/office-view/HeartbeatPanel";
@@ -32,6 +32,8 @@ import type {
 import type { UpdateStatus } from "../api";
 import type { OAuthCallbackResult, View } from "./types";
 import AppHeaderBar from "./AppHeaderBar";
+import CommandPalette from "../components/CommandPalette";
+import ProjectSelector from "../components/project-selector/ProjectSelector";
 import type { UiLanguage } from "../i18n";
 import type { CliUsageEntry } from "../api";
 import ProjectContextBar from "../components/ProjectContextBar";
@@ -217,6 +219,7 @@ export default function AppMainLayout({
   onProjectUpdated,
   children,
 }: AppMainLayoutProps) {
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   // 현재 프로젝트 팀원 ID 세트 (WorkMap dim용)
   const [projectAgentIds, setProjectAgentIds] = useState<Set<string>>(new Set());
   const prevProjectIdRef = useRef<string | null>(null);
@@ -261,7 +264,7 @@ export default function AppMainLayout({
         <a
           href="#main-content"
           className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[9999] focus:px-4 focus:py-2 focus:text-sm focus:font-medium"
-          style={{ background: "var(--th-accent)", color: "#000", borderRadius: "2px" }}
+          style={{ background: "var(--th-accent)", color: "#000", borderRadius: 0 }}
         >
           Skip to main content
         </a>
@@ -339,6 +342,26 @@ export default function AppMainLayout({
             onToggleTheme={toggleTheme}
             onToggleMobileHeaderMenu={() => setMobileHeaderMenuOpen(!mobileHeaderMenuOpen)}
             onCloseMobileHeaderMenu={() => setMobileHeaderMenuOpen(false)}
+            onOpenCommandPalette={() => setCommandPaletteOpen(true)}
+            projectSelectorSlot={
+              <ProjectSelector
+                currentProject={currentProject ?? null}
+                projects={projects}
+                categories={categories}
+                onSelect={onProjectSelect ?? (() => {})}
+                onCreateNew={onProjectCreate ?? (() => {})}
+              />
+            }
+          />
+          <CommandPalette
+            open={commandPaletteOpen}
+            onClose={() => setCommandPaletteOpen(false)}
+            agents={agents}
+            tasks={tasks}
+            projects={projects}
+            currentProject={currentProject}
+            onNavigate={(v) => { setView(v as any); }}
+            onCreateTask={onProjectCreate}
           />
 
           {labels.autoUpdateNoticeVisible && (
@@ -379,7 +402,7 @@ export default function AppMainLayout({
                     target="_blank"
                     rel="noreferrer"
                     className="border px-2.5 py-1 text-[11px] transition hover:opacity-80"
-                    style={{ borderRadius: "2px", borderColor: "rgba(251,191,36,0.4)", background: "rgba(251,191,36,0.1)", color: "var(--th-accent)" }}
+                    style={{ borderRadius: 0, borderColor: "rgba(251,191,36,0.4)", background: "rgba(251,191,36,0.1)", color: "var(--th-accent)" }}
                   >
                     {labels.updateReleaseLabel}
                   </a>
@@ -387,7 +410,7 @@ export default function AppMainLayout({
                     type="button"
                     onClick={onDismissUpdate}
                     className="px-2.5 py-1 text-[11px] font-mono transition"
-                    style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
+                    style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
                   >
                     {labels.updateDismissLabel}
                   </button>
@@ -396,34 +419,12 @@ export default function AppMainLayout({
             </div>
           )}
 
-          {/* 프로젝트 컨텍스트 바 — office/dashboard 제외, 프로젝트 선택 시만 표시 */}
-          {currentProject && view !== "office" && view !== "dashboard" && (
+          {/* 프로젝트 컨텍스트 바 — dashboard 제외, 프로젝트 선택 시만 표시 */}
+          {currentProject && view !== "dashboard" && (
             <ProjectContextBar project={currentProject} categories={categories} />
           )}
 
           <AnimatePresence mode="wait">
-          {view === "office" ? (
-            <motion.div
-              key="office"
-              className="flex-1 min-h-0 flex flex-col"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1, transition: { duration: 0.1, ease: "linear" } }}
-              exit={{ opacity: 0, transition: { duration: 0.06 } }}
-            >
-              <OfficeView
-                departments={departments}
-                agents={agents}
-                tasks={tasks}
-                unreadAgentIds={unreadAgentIds}
-                onSelectAgent={onSelectAgent}
-                onSelectDepartment={onSelectDepartment}
-                currentProject={currentProject}
-                projectAgentIds={projectAgentIds.size > 0 ? projectAgentIds : undefined}
-                onAddToTeam={currentProject ? handleAddToTeam : undefined}
-                onRemoveFromTeam={currentProject ? handleRemoveFromTeam : undefined}
-              />
-            </motion.div>
-          ) : (
             <motion.div
               key={view}
               className="flex-1 overflow-y-auto overflow-x-hidden"
@@ -445,10 +446,17 @@ export default function AppMainLayout({
               </div>
             )}
 
-            {view === "dashboard" && (
+            {view === "project-types" && (
+              <div className="max-w-2xl mx-auto py-2">
+                <CategoriesTab />
+              </div>
+            )}
+
+            <div style={{ display: view === "dashboard" ? undefined : "none" }}>
               <Dashboard2
                 project={currentProject ?? null}
                 agents={agents}
+                tasks={tasks}
                 departments={departments}
                 categories={categories}
                 onCreateProject={onProjectCreate ?? (() => {})}
@@ -457,8 +465,9 @@ export default function AppMainLayout({
                 onGoToTasks={() => setView("tasks-board")}
                 onCreateTask={(input) => void onCreateTask(input)}
                 onAssignTask={onAssignTask}
+                onTeamChange={() => { if (currentProject?.id) refreshProjectAgents(currentProject.id); }}
               />
-            )}
+            </div>
 
             {(view === "tasks" || view === "tasks-board") && (
               <TaskBoard
@@ -552,15 +561,11 @@ export default function AppMainLayout({
                   oauthResult={oauthResult}
                   onOauthResultClear={onOauthResultClear}
                   managerAgents={agents}
-                  currentProject={currentProject ?? null}
-                  categories={categories}
-                  onProjectDelete={onProjectDelete}
                 />
               )}
             </Suspense>
               </div>
             </motion.div>
-          )}
           </AnimatePresence>
         </main>
 

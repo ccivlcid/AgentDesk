@@ -4,7 +4,6 @@ import type { TaskReportSummary, TaskReportDetail } from "../api";
 import type { UiLanguage } from "../i18n";
 import { pickLang } from "../i18n";
 import { getTaskReports, getTaskReportDetail } from "../api";
-import AgentAvatar from "./AgentAvatar";
 import TaskReportPopup from "./TaskReportPopup";
 
 interface ReportHistoryProps {
@@ -14,23 +13,29 @@ interface ReportHistoryProps {
   onClose: () => void;
 }
 
-const PAGE_SIZE = 5;
-const GROUP_ITEMS_PER_PAGE = 3;
+const PAGE_SIZE = 50;
 
 function fmtDate(ts: number | null | undefined): string {
-  if (!ts) return "-";
+  if (!ts) return "--:--";
   const d = new Date(ts);
-  if (isNaN(d.getTime())) return "-";
+  if (isNaN(d.getTime())) return "--:--";
   const pad = (n: number) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
+function elapsed(start: number | null | undefined, end: number | null | undefined): string {
+  if (!start || !end) return "-";
+  const ms = end - start;
+  if (ms < 60_000) return `${Math.round(ms / 1000)}s`;
+  if (ms < 3_600_000) return `${Math.round(ms / 60_000)}m`;
+  return `${(ms / 3_600_000).toFixed(1)}h`;
+}
+
 function projectNameFromSummary(report: TaskReportSummary): string {
   if (report.project_name && report.project_name.trim()) return report.project_name.trim();
-  if (!report.project_path) return "General";
+  if (!report.project_path) return "general";
   const trimmed = report.project_path.replace(/[\\/]+$/, "");
-  const seg = trimmed.split(/[\\/]/).pop();
-  return seg || "General";
+  return trimmed.split(/[\\/]/).pop() || "general";
 }
 
 export default function ReportHistory({ agents, departments, uiLanguage, onClose }: ReportHistoryProps) {
@@ -38,35 +43,9 @@ export default function ReportHistory({ agents, departments, uiLanguage, onClose
   const [reports, setReports] = useState<TaskReportSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [detail, setDetail] = useState<TaskReportDetail | null>(null);
+  const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
-  const [groupPages, setGroupPages] = useState<Record<string, number>>({});
-
-  const totalPages = Math.max(1, Math.ceil(reports.length / PAGE_SIZE));
-  const currentPage = Math.min(Math.max(page, 0), totalPages - 1);
-  const pageStart = currentPage * PAGE_SIZE;
-  const pageEnd = Math.min(pageStart + PAGE_SIZE, reports.length);
-  const pageReports = reports.slice(pageStart, pageEnd);
-
-  const groupedPageReports = useMemo(() => {
-    const groups = new Map<string, TaskReportSummary[]>();
-    for (const report of pageReports) {
-      const key = projectNameFromSummary(report);
-      const bucket = groups.get(key) ?? [];
-      bucket.push(report);
-      groups.set(key, bucket);
-    }
-    return [...groups.entries()];
-  }, [pageReports]);
-
-  useEffect(() => {
-    setPage(0);
-    setGroupPages({});
-  }, [reports]);
-
-  // 페이지 변경 시 그룹 서브 페이지 리셋
-  useEffect(() => {
-    setGroupPages({});
-  }, [page]);
+  const [openingId, setOpeningId] = useState<string | null>(null);
 
   useEffect(() => {
     getTaskReports()
@@ -75,21 +54,36 @@ export default function ReportHistory({ agents, departments, uiLanguage, onClose
       .finally(() => setLoading(false));
   }, []);
 
-  const handleGroupPageChange = (groupKey: string, nextPage: number, groupTotalPages: number) => {
-    const bounded = Math.min(Math.max(nextPage, 0), Math.max(groupTotalPages - 1, 0));
-    setGroupPages((prev) => ({ ...prev, [groupKey]: bounded }));
-  };
+  useEffect(() => { setPage(0); }, [search]);
+
+  const filtered = useMemo(() => {
+    if (!search.trim()) return reports;
+    const q = search.toLowerCase();
+    return reports.filter(
+      (r) =>
+        r.title.toLowerCase().includes(q) ||
+        (r.agent_name || "").toLowerCase().includes(q) ||
+        (r.agent_name_ko || "").toLowerCase().includes(q) ||
+        projectNameFromSummary(r).toLowerCase().includes(q),
+    );
+  }, [reports, search]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const currentPage = Math.min(Math.max(page, 0), totalPages - 1);
+  const pageReports = filtered.slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE);
 
   const handleOpenDetail = async (taskId: string) => {
+    setOpeningId(taskId);
     try {
       const d = await getTaskReportDetail(taskId);
       setDetail(d);
     } catch (e) {
-      console.error("Failed to load report detail:", e);
+      console.error(e);
+    } finally {
+      setOpeningId(null);
     }
   };
 
-  // 상세 보기가 열려 있으면 TaskReportPopup 표시
   if (detail) {
     return (
       <TaskReportPopup
@@ -102,176 +96,225 @@ export default function ReportHistory({ agents, departments, uiLanguage, onClose
     );
   }
 
+  void departments;
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-stretch justify-end">
+      {/* Backdrop */}
+      <button
+        className="absolute inset-0"
+        style={{ background: "rgba(0,0,0,0.65)" }}
+        onClick={onClose}
+        aria-label="Close"
+      />
+
+      {/* Terminal Panel */}
       <div
-        className="relative mx-4 w-full max-w-2xl shadow-2xl"
-        style={{ borderRadius: "4px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}
-        onClick={(e) => e.stopPropagation()}
+        className="relative flex h-full w-full flex-col overflow-hidden sm:w-[640px]"
+        style={{ background: "#0d1117", borderLeft: "1px solid #30363d" }}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: "1px solid var(--th-border)" }}>
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">&#x1F4CA;</span>
-            <h2 className="text-lg font-bold font-mono" style={{ color: "var(--th-text-heading)" }}>
-              {t({ ko: "작업 보고서 이력", en: "Report History", ja: "レポート履歴", zh: "报告历史" })}
-            </h2>
+        {/* Terminal title bar */}
+        <div
+          className="flex flex-shrink-0 items-center gap-2 px-4 py-2.5"
+          style={{ background: "#161b22", borderBottom: "1px solid #30363d" }}
+        >
+          {/* macOS dots */}
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={onClose}
+              className="h-3 w-3 transition hover:opacity-80"
+              style={{ borderRadius: "50%", background: "#ff5f57" }}
+              title="Close"
+            />
+            <div className="h-3 w-3" style={{ borderRadius: "50%", background: "#30363d" }} />
+            <div className="h-3 w-3" style={{ borderRadius: "50%", background: "#30363d" }} />
+          </div>
+          <div className="flex-1 text-center text-[11px] font-mono" style={{ color: "#8b949e" }}>
+            agentdesk — report-history
           </div>
           <button
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center transition-all"
-            style={{ borderRadius: "2px", color: "var(--th-text-muted)", background: "transparent" }}
+            className="text-[11px] font-mono transition hover:opacity-70"
+            style={{ color: "#8b949e" }}
           >
-            &#x2715;
+            ✕
           </button>
         </div>
 
-        {/* Content */}
-        <div className="max-h-[70vh] overflow-y-auto">
+        {/* Shell output area */}
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3" style={{ fontFamily: "var(--th-font-mono)" }}>
+          {/* $ command line */}
+          <div className="mb-3 flex items-center gap-2 text-xs">
+            <span style={{ color: "#3fb950" }}>agentdesk</span>
+            <span style={{ color: "#8b949e" }}>on</span>
+            <span style={{ color: "#58a6ff" }}>main</span>
+            <span style={{ color: "#8b949e" }}>via</span>
+            <span style={{ color: "#f0883e" }}>⬡ node</span>
+          </div>
+          <div className="mb-4 flex items-center gap-2 text-xs">
+            <span style={{ color: "#8b949e" }}>❯</span>
+            <span style={{ color: "#e6edf3" }}>report-history</span>
+            <span style={{ color: "#8b949e" }}>--all</span>
+            {search && <span style={{ color: "#8b949e" }}>--grep=<span style={{ color: "#f0883e" }}>"{search}"</span></span>}
+          </div>
+
           {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="text-sm font-mono" style={{ color: "var(--th-text-muted)" }}>
-                {t({ ko: "불러오는 중...", en: "Loading...", ja: "読み込み中...", zh: "加载中..." })}
-              </div>
+            <div className="text-xs" style={{ color: "#3fb950" }}>
+              <span className="animate-pulse">▋</span>
+              <span className="ml-2" style={{ color: "#8b949e" }}>
+                {t({ ko: "보고서 불러오는 중...", en: "fetching reports...", ja: "レポート取得中...", zh: "加载报告中..." })}
+              </span>
             </div>
-          ) : reports.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <span className="mb-2 text-3xl opacity-40">&#x1F4ED;</span>
-              <p className="text-sm font-mono" style={{ color: "var(--th-text-muted)" }}>
-                {t({
-                  ko: "완료된 보고서가 없습니다",
-                  en: "No completed reports",
-                  ja: "完了レポートなし",
-                  zh: "没有已完成的报告",
-                })}
-              </p>
+          ) : filtered.length === 0 ? (
+            <div className="space-y-1 text-xs">
+              <div style={{ color: "#8b949e" }}>
+                {search
+                  ? <>grep: <span style={{ color: "#f0883e" }}>"{search}"</span> — {t({ ko: "0건 일치", en: "0 matches", ja: "0件一致", zh: "0 条结果" })}</>
+                  : t({ ko: "보고서 없음", en: "0 reports found", ja: "レポートなし", zh: "暂无报告" })}
+              </div>
+              {!search && (
+                <div style={{ color: "#8b949e", opacity: 0.6 }}>
+                  hint: {t({ ko: "완료된 업무가 여기에 나타납니다", en: "completed tasks will appear here", ja: "完了したタスクがここに表示されます", zh: "已完成的任务将显示在这里" })}
+                </div>
+              )}
             </div>
           ) : (
-            <div className="space-y-4 px-4 py-3">
-              {groupedPageReports.map(([projectName, rows]) => {
-                const groupTotal = Math.max(1, Math.ceil(rows.length / GROUP_ITEMS_PER_PAGE));
-                const groupCurrent = Math.min(Math.max(groupPages[projectName] ?? 0, 0), groupTotal - 1);
-                const gStart = groupCurrent * GROUP_ITEMS_PER_PAGE;
-                const gEnd = Math.min(gStart + GROUP_ITEMS_PER_PAGE, rows.length);
-                const visibleRows = rows.slice(gStart, gEnd);
+            <div className="space-y-0">
+              {/* Column header */}
+              <div
+                className="mb-1 flex items-center gap-0 text-[10px] pb-1"
+                style={{ borderBottom: "1px solid #30363d", color: "#8b949e" }}
+              >
+                <span className="w-[130px] flex-shrink-0">{t({ ko: "완료시각", en: "COMPLETED", ja: "完了時刻", zh: "完成时间" })}</span>
+                <span className="w-[50px] flex-shrink-0 text-right pr-3">{t({ ko: "소요", en: "DUR", ja: "所要", zh: "时长" })}</span>
+                <span className="w-[90px] flex-shrink-0">{t({ ko: "에이전트", en: "AGENT", ja: "エージェント", zh: "代理" })}</span>
+                <span className="flex-1">{t({ ko: "업무", en: "TASK", ja: "タスク", zh: "任务" })}</span>
+              </div>
+
+              {pageReports.map((r) => {
+                const agentName = uiLanguage === "ko" ? r.agent_name_ko || r.agent_name : r.agent_name;
+                const proj = projectNameFromSummary(r);
+                const dur = elapsed(r.created_at, r.completed_at);
+                const isOpening = openingId === r.id;
 
                 return (
-                  <div key={projectName} className="overflow-hidden" style={{ borderRadius: "2px", border: "1px solid var(--th-border)" }}>
-                    <div className="flex items-center justify-between px-4 py-2" style={{ background: "var(--th-bg-elevated)" }}>
-                      <p className="truncate text-xs font-semibold font-mono uppercase tracking-wider text-emerald-300">
-                        {projectName}
-                      </p>
-                      <span className="text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>{rows.length}</span>
-                    </div>
-                    <div className="divide-y" style={{ borderColor: "var(--th-border)" }}>
-                      {visibleRows.map((r) => {
-                        const agent = agents.find((a) => a.id === r.assigned_agent_id);
-                        const agentName = uiLanguage === "ko" ? r.agent_name_ko || r.agent_name : r.agent_name;
-                        const deptName = uiLanguage === "ko" ? r.dept_name_ko || r.dept_name : r.dept_name;
-                        return (
-                          <button
-                            key={r.id}
-                            onClick={() => handleOpenDetail(r.id)}
-                            className="flex w-full items-center gap-3 px-4 py-3 text-left transition-all hover:bg-[var(--th-bg-surface-hover)]"
-                          >
-                            <AgentAvatar agent={agent} agents={agents} size={34} rounded="xl" />
-                            <div className="min-w-0 flex-1">
-                              <p className="truncate text-sm font-medium font-mono" style={{ color: "var(--th-text-primary)" }}>{r.title}</p>
-                              <div className="mt-0.5 flex items-center gap-2 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
-                                <span className="px-1.5 py-0.5" style={{ borderRadius: "2px", background: "var(--th-bg-primary)" }}>{deptName}</span>
-                                <span>{agentName}</span>
-                                <span style={{ color: "var(--th-text-muted)" }}>&middot;</span>
-                                <span>{fmtDate(r.completed_at)}</span>
-                              </div>
-                            </div>
-                            <span className="flex-shrink-0 text-xs text-emerald-400">&#x2713;</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                    {groupTotal > 1 && (
-                      <div className="flex items-center justify-between px-3 py-2" style={{ borderTop: "1px solid var(--th-border)", background: "var(--th-bg-primary)" }}>
-                        <span className="text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>
-                          {gStart + 1}-{gEnd} / {rows.length}
-                        </span>
-                        <div className="flex items-center gap-1.5">
-                          <button
-                            type="button"
-                            onClick={() => handleGroupPageChange(projectName, groupCurrent - 1, groupTotal)}
-                            disabled={groupCurrent <= 0}
-                            className="px-2 py-0.5 text-[11px] font-mono transition-all disabled:cursor-not-allowed disabled:opacity-40"
-                            style={{ borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
-                          >
-                            {t({ ko: "이전", en: "Prev", ja: "前へ", zh: "上一页" })}
-                          </button>
-                          <span className="text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>
-                            {groupCurrent + 1} / {groupTotal}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => handleGroupPageChange(projectName, groupCurrent + 1, groupTotal)}
-                            disabled={groupCurrent >= groupTotal - 1}
-                            className="px-2 py-0.5 text-[11px] font-mono transition-all disabled:cursor-not-allowed disabled:opacity-40"
-                            style={{ borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
-                          >
-                            {t({ ko: "다음", en: "Next", ja: "次へ", zh: "下一页" })}
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  <button
+                    key={r.id}
+                    onClick={() => { void handleOpenDetail(r.id); }}
+                    disabled={isOpening}
+                    className="group flex w-full items-baseline gap-0 py-[3px] text-left text-[11px] transition-all"
+                    style={{ background: "transparent", opacity: isOpening ? 0.6 : 1 }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#161b22"; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+                  >
+                    {/* status dot */}
+                    <span className="mr-2 flex-shrink-0 text-[8px]" style={{ color: "#3fb950" }}>●</span>
+
+                    {/* completed date */}
+                    <span className="w-[120px] flex-shrink-0 tabular-nums" style={{ color: "#8b949e" }}>
+                      {fmtDate(r.completed_at)}
+                    </span>
+
+                    {/* duration */}
+                    <span className="w-[46px] flex-shrink-0 text-right pr-3 tabular-nums" style={{ color: "#3fb950", opacity: 0.8 }}>
+                      {dur}
+                    </span>
+
+                    {/* agent */}
+                    <span className="w-[88px] flex-shrink-0 truncate" style={{ color: "#58a6ff" }}>
+                      {agentName || "-"}
+                    </span>
+
+                    {/* title */}
+                    <span className="min-w-0 flex-1 truncate" style={{ color: "#e6edf3" }}>
+                      {r.title}
+                    </span>
+
+                    {/* project tag */}
+                    <span
+                      className="ml-2 flex-shrink-0 text-[10px]"
+                      style={{ color: "#8b949e" }}
+                    >
+                      [{proj}]
+                    </span>
+
+                    {/* arrow on hover */}
+                    <span
+                      className="ml-2 flex-shrink-0 opacity-0 transition-opacity group-hover:opacity-100 text-[10px]"
+                      style={{ color: "#f0883e" }}
+                    >
+                      {isOpening ? "..." : "→"}
+                    </span>
+                  </button>
                 );
               })}
+
+              {/* summary line */}
+              <div className="mt-3 border-t pt-2 text-[10px]" style={{ borderColor: "#30363d", color: "#8b949e" }}>
+                <span style={{ color: "#3fb950" }}>{filtered.length}</span>
+                {" "}{t({ ko: "건", en: "reports", ja: "件", zh: "条" })}
+                {search && (
+                  <span>
+                    {" "}({t({ ko: "전체", en: "filtered from", ja: "全体", zh: "共" })}{" "}
+                    <span style={{ color: "#e6edf3" }}>{reports.length}</span>
+                    {t({ ko: "건 중", en: "", ja: "件中", zh: "条中" })})
+                  </span>
+                )}
+              </div>
             </div>
           )}
         </div>
 
-        {/* Footer */}
-        <div className="px-6 py-3" style={{ borderTop: "1px solid var(--th-border)" }}>
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
-              {t({
-                ko: `총 ${reports.length}건`,
-                en: `${reports.length} reports`,
-                ja: `全${reports.length}件`,
-                zh: `共${reports.length}条`,
-              })}
-            </span>
-            <div className="flex items-center gap-3">
-              {totalPages > 1 && (
-                <div className="flex items-center gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => setPage(currentPage - 1)}
-                    disabled={currentPage <= 0}
-                    className="px-2 py-0.5 text-[11px] font-mono transition-all disabled:cursor-not-allowed disabled:opacity-40"
-                    style={{ borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
-                  >
-                    {t({ ko: "이전", en: "Prev", ja: "前へ", zh: "上一页" })}
-                  </button>
-                  <span className="text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>
-                    {currentPage + 1} / {totalPages}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setPage(currentPage + 1)}
-                    disabled={currentPage >= totalPages - 1}
-                    className="px-2 py-0.5 text-[11px] font-mono transition-all disabled:cursor-not-allowed disabled:opacity-40"
-                    style={{ borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
-                  >
-                    {t({ ko: "다음", en: "Next", ja: "次へ", zh: "下一页" })}
-                  </button>
-                </div>
-              )}
-              <button
-                onClick={onClose}
-                className="px-4 py-1.5 text-xs font-mono transition-all"
-                style={{ borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
-              >
-                {t({ ko: "닫기", en: "Close", ja: "閉じる", zh: "关闭" })}
+        {/* Bottom prompt / search */}
+        <div
+          className="flex-shrink-0"
+          style={{ background: "#161b22", borderTop: "1px solid #30363d" }}
+        >
+          {/* search input styled as shell prompt */}
+          <div className="flex items-center gap-2 px-4 py-2.5">
+            <span className="text-xs font-mono" style={{ color: "#3fb950" }}>❯</span>
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder={t({ ko: "grep 검색...", en: "grep filter...", ja: "grep...", zh: "过滤..." })}
+              className="flex-1 bg-transparent text-xs font-mono outline-none"
+              style={{ color: "#e6edf3" }}
+            />
+            {search && (
+              <button onClick={() => setSearch("")} className="text-[11px] font-mono transition hover:opacity-70" style={{ color: "#8b949e" }}>
+                {t({ ko: "지우기", en: "clear", ja: "クリア", zh: "清除" })}
               </button>
-            </div>
+            )}
           </div>
+
+          {/* pagination */}
+          {totalPages > 1 && (
+            <div
+              className="flex items-center justify-between px-4 py-1.5 text-[10px] font-mono"
+              style={{ borderTop: "1px solid #30363d", color: "#8b949e" }}
+            >
+              <span>{t({ ko: `페이지 ${currentPage + 1}/${totalPages}`, en: `page ${currentPage + 1}/${totalPages}`, ja: `ページ ${currentPage + 1}/${totalPages}`, zh: `第 ${currentPage + 1}/${totalPages} 页` })}</span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setPage(currentPage - 1)}
+                  disabled={currentPage <= 0}
+                  className="transition hover:opacity-80 disabled:opacity-30"
+                  style={{ color: "#58a6ff" }}
+                >
+                  ← {t({ ko: "이전", en: "prev", ja: "前へ", zh: "上页" })}
+                </button>
+                <button
+                  onClick={() => setPage(currentPage + 1)}
+                  disabled={currentPage >= totalPages - 1}
+                  className="transition hover:opacity-80 disabled:opacity-30"
+                  style={{ color: "#58a6ff" }}
+                >
+                  {t({ ko: "다음", en: "next", ja: "次へ", zh: "下页" })} →
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

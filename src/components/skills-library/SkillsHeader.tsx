@@ -20,48 +20,25 @@ export default function SkillsHeader({
   onOpenCustomSkillModal,
 }: SkillsHeaderProps) {
   return (
-    <div className="border rounded p-5" style={{ background: "var(--th-bg-surface)", borderColor: "var(--th-border)" }}>
+    <div className="border p-4" style={{ background: "var(--th-bg-surface)", borderColor: "var(--th-border)", borderRadius: 0 }}>
       <div className="flex items-center justify-between mb-4">
-        <div>
-          <h2 className="text-lg font-bold flex items-center gap-2" style={{ color: "var(--th-text-primary)" }}>
-            <span className="text-2xl">📚</span>
-            {t({
-              ko: "Agent Skills 문서고",
-              en: "Agent Skills Library",
-              ja: "Agent Skills ライブラリ",
-              zh: "Agent Skills 资料库",
-            })}
-          </h2>
-          <p className="text-sm mt-1" style={{ color: "var(--th-text-muted)" }}>
-            {t({
-              ko: "AI 에이전트 스킬 디렉토리 · skills.sh 실시간 데이터",
-              en: "AI agent skill directory · live skills.sh data",
-              ja: "AI エージェントスキルディレクトリ · skills.sh リアルタイムデータ",
-              zh: "AI 代理技能目录 · skills.sh 实时数据",
-            })}
-          </p>
-        </div>
         <div className="flex items-center gap-3">
+          <span style={{ fontFamily: "var(--th-font-mono)", fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", color: "var(--th-text-heading)", textTransform: "uppercase" }}>
+            {t({ ko: "SKILLS LIBRARY", en: "SKILLS LIBRARY", ja: "SKILLS LIBRARY", zh: "SKILLS LIBRARY" })}
+          </span>
+          <span style={{ fontFamily: "var(--th-font-mono)", fontSize: "11px", color: "var(--th-text-muted)" }}>
+            · {skillsCount} {t({ ko: "skills", en: "skills", ja: "skills", zh: "skills" })}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
           <button
             onClick={onOpenCustomSkillModal}
-            className="custom-skill-add-btn flex items-center gap-1.5 px-3 py-2 text-xs font-medium bg-violet-600/20 text-violet-300 border border-violet-500/30 transition-all"
-            style={{ borderRadius: "2px" }}
-            title={t({
-              ko: "커스텀 스킬 직접 추가",
-              en: "Add custom skill",
-              ja: "カスタムスキルを追加",
-              zh: "添加自定义技能",
-            })}
+            className="custom-skill-add-btn flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium transition-all"
+            style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)", fontFamily: "var(--th-font-mono)" }}
+            title={t({ ko: "커스텀 스킬 직접 추가", en: "Add custom skill", ja: "カスタムスキルを追加", zh: "添加自定义技能" })}
           >
-            <span className="text-base">✏️</span>
-            {t({ ko: "커스텀 스킬 추가", en: "Add Custom Skill", ja: "カスタムスキル追加", zh: "添加自定义技能" })}
+            + {t({ ko: "Add Skill", en: "Add Skill", ja: "Add Skill", zh: "Add Skill" })}
           </button>
-          <div className="text-right">
-            <div className="text-2xl font-bold font-mono" style={{ color: "var(--th-accent)" }}>{skillsCount}</div>
-            <div className="text-xs" style={{ color: "var(--th-text-muted)" }}>
-              {t({ ko: "등록된 스킬", en: "Registered skills", ja: "登録済みスキル", zh: "已收录技能" })}
-            </div>
-          </div>
         </div>
       </div>
 
@@ -77,8 +54,8 @@ export default function SkillsHeader({
               ja: "スキル検索...（名前・リポジトリ・カテゴリ）",
               zh: "搜索技能...（名称、仓库、分类）",
             })}
-            className="w-full rounded px-4 py-2.5 text-sm focus:outline-none"
-            style={{ background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)" }}
+            className="w-full px-4 py-2 text-sm focus:outline-none"
+            style={{ background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)", borderRadius: 0, fontFamily: "var(--th-font-mono)", fontSize: "12px" }}
           />
           {search && (
             <button
@@ -94,8 +71,8 @@ export default function SkillsHeader({
         <select
           value={sortBy}
           onChange={(e) => onSortByChange(e.target.value as "rank" | "name" | "installs")}
-          className="rounded px-3 py-2.5 text-sm focus:outline-none"
-          style={{ background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)" }}
+          className="px-3 py-2 text-xs focus:outline-none"
+          style={{ background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", borderRadius: 0, fontFamily: "var(--th-font-mono)" }}
         >
           <option value="rank">{t({ ko: "순위순", en: "By Rank", ja: "順位順", zh: "按排名" })}</option>
           <option value="installs">

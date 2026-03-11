@@ -92,7 +92,7 @@ export default function HooksGrid({
             className={`relative p-4 transition-all group ${
               !hook.enabled ? "opacity-50" : ""
             } ${isDeleting ? "pointer-events-none opacity-30" : ""}`}
-            style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}
+            style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}
           >
             {/* Header: event type icon + title + learned avatars */}
             <div className="flex items-start justify-between gap-2 mb-2">
@@ -107,14 +107,14 @@ export default function HooksGrid({
               </div>
 
               {learnedProviders.length > 0 && (
-                <div className="grid w-[64px] shrink-0 grid-cols-2 gap-1 p-1" style={{ borderRadius: "2px", border: "1px solid rgba(16,185,129,0.25)", background: "rgba(16,185,129,0.05)" }}>
+                <div className="grid w-[64px] shrink-0 grid-cols-2 gap-1 p-1" style={{ borderRadius: 0, border: "1px solid rgba(16,185,129,0.25)", background: "rgba(16,185,129,0.05)" }}>
                   {learnedProviders.map((provider) => {
                     const agent = learnedRepresentatives.get(provider) ?? null;
                     return (
                       <span
                         key={`${hook.id}-${provider}`}
                         className="inline-flex h-5 w-6 items-center justify-center gap-0.5 border border-emerald-500/20"
-                        style={{ borderRadius: "2px", background: "rgba(15,17,23,0.7)" }}
+                        style={{ borderRadius: 0, background: "rgba(15,17,23,0.7)" }}
                         title={`${hookLearnedProviderLabel(provider)}${agent ? ` \u00B7 ${agent.name}` : ""}`}
                       >
                         <span className="flex h-2.5 w-2.5 items-center justify-center">
@@ -131,7 +131,7 @@ export default function HooksGrid({
             </div>
 
             {/* Command preview */}
-            <div className="mb-3 px-2 py-1.5 border" style={{ borderRadius: "2px", background: "var(--th-terminal-bg)", borderColor: "var(--th-border)" }}>
+            <div className="mb-3 px-2 py-1.5 border" style={{ borderRadius: 0, background: "var(--th-terminal-bg)", borderColor: "var(--th-border)" }}>
               <p className="text-xs text-green-300 line-clamp-2 font-mono">{hook.command}</p>
             </div>
 
@@ -139,20 +139,20 @@ export default function HooksGrid({
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-1.5 flex-wrap min-w-0">
                 {/* Event type badge */}
-                <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium font-mono border ${etColor}`} style={{ borderRadius: "2px" }}>
+                <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium font-mono border ${etColor}`} style={{ borderRadius: 0 }}>
                   {eventTypeLabel(hook.event_type, t)}
                 </span>
                 {/* Priority badge */}
-                <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium font-mono border" style={{ borderRadius: "2px", background: "var(--th-bg-surface-hover)", color: "var(--th-text-muted)", borderColor: "var(--th-border)" }}>
+                <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium font-mono border" style={{ borderRadius: 0, background: "var(--th-bg-surface-hover)", color: "var(--th-text-muted)", borderColor: "var(--th-border)" }}>
                   P{hook.priority}
                 </span>
                 {/* Execution count badge */}
-                <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium font-mono border" style={{ borderRadius: "2px", background: "var(--th-bg-surface-hover)", color: "var(--th-text-muted)", borderColor: "var(--th-border)" }}>
+                <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium font-mono border" style={{ borderRadius: 0, background: "var(--th-bg-surface-hover)", color: "var(--th-text-muted)", borderColor: "var(--th-border)" }}>
                   {t({ ko: "\uC2E4\uD589", en: "Runs", ja: "\u5B9F\u884C", zh: "\u8FD0\u884C" })}: {hook.execution_count}
                 </span>
                 {/* Last executed relative time */}
                 {hook.last_executed_at && (
-                  <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium font-mono border" style={{ borderRadius: "2px", background: "var(--th-bg-elevated)", color: "var(--th-text-muted)", borderColor: "var(--th-border)" }}>
+                  <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium font-mono border" style={{ borderRadius: 0, background: "var(--th-bg-elevated)", color: "var(--th-text-muted)", borderColor: "var(--th-border)" }}>
                     {formatRelativeTime(hook.last_executed_at, t)}
                   </span>
                 )}
@@ -168,7 +168,7 @@ export default function HooksGrid({
                         ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/40 cursor-pointer hover:bg-emerald-500/25"
                         : "bg-emerald-600/20 text-emerald-300 border-emerald-500/30 hover:bg-emerald-600/30"
                     }`}
-                    style={{ borderRadius: "2px" }}
+                    style={{ borderRadius: 0 }}
                     title={
                       learnedProviders.length > 0
                         ? t({
@@ -199,7 +199,7 @@ export default function HooksGrid({
                         ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/25"
                         : "bg-[rgba(51,65,85,0.4)] text-[#94a3b8] border-[rgba(71,85,105,0.3)] hover:bg-[rgba(51,65,85,0.6)]"
                     }`}
-                    style={{ borderRadius: "2px" }}
+                    style={{ borderRadius: 0 }}
                     title={hook.enabled
                       ? t({ ko: "\uBE44\uD65C\uC131\uD654", en: "Disable", ja: "\u7121\u52B9\u5316", zh: "\u7981\u7528" })
                       : t({ ko: "\uD65C\uC131\uD654", en: "Enable", ja: "\u6709\u52B9\u5316", zh: "\u542F\u7528" })}
@@ -211,14 +211,14 @@ export default function HooksGrid({
                   <button
                     onClick={() => onEdit(hook)}
                     className="px-2 py-1 text-[10px] font-medium font-mono transition-all"
-                    style={{ borderRadius: "2px", background: "rgba(251,191,36,0.1)", color: "var(--th-accent)", border: "1px solid rgba(251,191,36,0.35)" }}
+                    style={{ borderRadius: 0, background: "rgba(251,191,36,0.1)", color: "var(--th-accent)", border: "1px solid rgba(251,191,36,0.35)" }}
                   >
                     {t({ ko: "\uC218\uC815", en: "Edit", ja: "\u7DE8\u96C6", zh: "\u7F16\u8F91" })}
                   </button>
                   <button
                     onClick={() => onDelete(hook.id)}
                     className="px-2 py-1 text-[10px] font-medium font-mono bg-rose-500/10 text-rose-300 border border-rose-500/20 hover:bg-rose-500/20 transition-all"
-                    style={{ borderRadius: "2px" }}
+                    style={{ borderRadius: 0 }}
                   >
                     {t({ ko: "\uC0AD\uC81C", en: "Delete", ja: "\u524A\u9664", zh: "\u5220\u9664" })}
                   </button>

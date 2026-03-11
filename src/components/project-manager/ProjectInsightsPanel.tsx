@@ -89,7 +89,7 @@ function ProjectProgressSection({ t, groupedTaskCards }: ProjectProgressSectionP
   ].filter((item) => (stats.counts[item.key] ?? 0) > 0);
 
   return (
-    <div className="min-w-0 p-4" style={{ border: "1px solid var(--th-border)", borderRadius: "2px", background: "var(--th-bg-surface)" }}>
+    <div className="min-w-0 p-4" style={{ border: "1px solid var(--th-border)", borderRadius: 0, background: "var(--th-bg-surface)" }}>
       <h4 className="mb-3 text-xs font-bold uppercase tracking-widest" style={{ color: "var(--th-text-heading)", fontFamily: "var(--th-font-mono)" }}>
         {t({ ko: "프로젝트 진행률", en: "Project Progress", ja: "プロジェクト進捗", zh: "项目进度" })}
       </h4>
@@ -103,7 +103,7 @@ function ProjectProgressSection({ t, groupedTaskCards }: ProjectProgressSectionP
           {stats.donePct}%
         </span>
       </div>
-      <div className="mb-4 h-2.5 w-full overflow-hidden" style={{ borderRadius: "1px", background: "var(--th-bg-surface-hover)" }}>
+      <div className="mb-4 h-2.5 w-full overflow-hidden" style={{ borderRadius: 0, background: "var(--th-bg-surface-hover)" }}>
         <div
           className={`h-full transition-all duration-700 ${stats.donePct >= 80 ? "bg-emerald-500" : stats.donePct >= 40 ? "bg-amber-400" : "bg-[#3b82f6]"}`}
           style={{ width: `${stats.donePct}%` }}
@@ -113,8 +113,8 @@ function ProjectProgressSection({ t, groupedTaskCards }: ProjectProgressSectionP
       {/* Status breakdown */}
       <div className="mb-4 flex flex-wrap gap-2">
         {statusItems.map((item) => (
-          <div key={item.key} className="flex items-center gap-1.5 px-2 py-1" style={{ borderRadius: "2px", background: "var(--th-bg-elevated)" }}>
-            <span className={`h-2 w-2 ${item.color}`} style={{ borderRadius: "1px" }} />
+          <div key={item.key} className="flex items-center gap-1.5 px-2 py-1" style={{ borderRadius: 0, background: "var(--th-bg-elevated)" }}>
+            <span className={`h-2 w-2 ${item.color}`} style={{ borderRadius: 0 }} />
             <span className={`text-[11px] font-mono font-medium ${item.textColor}`}>{stats.counts[item.key]}</span>
             <span className="text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>{item.label}</span>
           </div>
@@ -133,7 +133,7 @@ function ProjectProgressSection({ t, groupedTaskCards }: ProjectProgressSectionP
               return (
                 <div key={agent.name} className="flex items-center gap-2">
                   <span className="w-24 truncate text-[11px] font-mono" style={{ color: "var(--th-text-secondary)" }}>{agent.name}</span>
-                  <div className="flex-1 overflow-hidden" style={{ height: 6, borderRadius: "1px", background: "var(--th-bg-surface-hover)" }}>
+                  <div className="flex-1 overflow-hidden" style={{ height: 6, borderRadius: 0, background: "var(--th-bg-surface-hover)" }}>
                     <div
                       className="h-full bg-cyan-500/70"
                       style={{ width: `${agentPct}%` }}
@@ -159,7 +159,7 @@ function ProjectProgressSection({ t, groupedTaskCards }: ProjectProgressSectionP
               return (
                 <div key={dept.name} className="flex items-center gap-2">
                   <span className="w-24 truncate text-[11px] font-mono" style={{ color: "var(--th-text-secondary)" }}>{dept.name}</span>
-                  <div className="flex-1 overflow-hidden" style={{ height: 6, borderRadius: "1px", background: "var(--th-bg-surface-hover)" }}>
+                  <div className="flex-1 overflow-hidden" style={{ height: 6, borderRadius: 0, background: "var(--th-bg-surface-hover)" }}>
                     <div
                       className="h-full bg-violet-500/70"
                       style={{ width: `${deptPct}%` }}
@@ -201,7 +201,7 @@ export default function ProjectInsightsPanel({
 }: ProjectInsightsPanelProps) {
   return (
     <div className="min-w-0 space-y-4">
-      <div className="min-w-0 p-4" style={{ border: "1px solid var(--th-border)", borderRadius: "2px", background: "var(--th-bg-surface)" }}>
+      <div className="min-w-0 p-4" style={{ border: "1px solid var(--th-border)", borderRadius: 0, background: "var(--th-bg-surface)" }}>
         <div className="flex items-center justify-between">
           <h4 className="text-xs font-bold uppercase tracking-widest" style={{ color: "var(--th-text-heading)", fontFamily: "var(--th-font-mono)" }}>
             {t({ ko: "프로젝트 정보", en: "Project Info", ja: "プロジェクト情報", zh: "项目信息" })}
@@ -213,7 +213,7 @@ export default function ProjectInsightsPanel({
               rel="noopener noreferrer"
               title={selectedProject.github_repo}
               className="flex items-center gap-1 px-2 py-0.5 text-[11px] font-mono transition"
-              style={{ borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)" }}
+              style={{ borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)" }}
             >
               <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="currentColor">
                 <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" />
@@ -259,7 +259,7 @@ export default function ProjectInsightsPanel({
       )}
 
       {selectedProject && !loadingDetail && !isCreating && groupedTaskCards.length > 0 && (
-        <div className="min-w-0 p-4" style={{ border: "1px solid var(--th-border)", borderRadius: "2px", background: "var(--th-bg-surface)" }}>
+        <div className="min-w-0 p-4" style={{ border: "1px solid var(--th-border)", borderRadius: 0, background: "var(--th-bg-surface)" }}>
           <h4 className="mb-2 text-xs font-bold uppercase tracking-widest" style={{ color: "var(--th-text-heading)", fontFamily: "var(--th-font-mono)" }}>
             {t({ ko: "번다운 차트", en: "Burndown Chart", ja: "バーンダウンチャート", zh: "燃尽图" })}
           </h4>
@@ -267,7 +267,7 @@ export default function ProjectInsightsPanel({
         </div>
       )}
 
-      <div className="min-w-0 p-4" style={{ border: "1px solid var(--th-border)", borderRadius: "2px", background: "var(--th-bg-surface)" }}>
+      <div className="min-w-0 p-4" style={{ border: "1px solid var(--th-border)", borderRadius: 0, background: "var(--th-bg-surface)" }}>
         <h4 className="text-xs font-bold uppercase tracking-widest" style={{ color: "var(--th-text-heading)", fontFamily: "var(--th-font-mono)" }}>
           {t({ ko: "작업 이력", en: "Task History", ja: "作業履歴", zh: "任务历史" })}
         </h4>
@@ -285,7 +285,7 @@ export default function ProjectInsightsPanel({
                 type="button"
                 onClick={() => void handleOpenTaskDetail(group.root.id)}
                 className="w-full min-w-0 overflow-hidden px-3 py-2 text-left transition"
-                style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}
+                style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}
               >
                 <p className="whitespace-pre-wrap break-all text-xs font-semibold font-mono" style={{ color: "var(--th-text-primary)" }}>{group.root.title}</p>
                 <p className="mt-1 break-all text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>
@@ -324,7 +324,7 @@ export default function ProjectInsightsPanel({
         )}
       </div>
 
-      <div className="min-w-0 p-4" style={{ border: "1px solid var(--th-border)", borderRadius: "2px", background: "var(--th-bg-surface)" }}>
+      <div className="min-w-0 p-4" style={{ border: "1px solid var(--th-border)", borderRadius: 0, background: "var(--th-bg-surface)" }}>
         <h4 className="text-xs font-bold uppercase tracking-widest" style={{ color: "var(--th-text-heading)", fontFamily: "var(--th-font-mono)" }}>
           {t({ ko: "보고서 이력(프로젝트 매핑)", en: "Mapped Reports", ja: "紐づくレポート", zh: "映射报告" })}
         </h4>
@@ -345,7 +345,7 @@ export default function ProjectInsightsPanel({
               <div
                 key={row.id}
                 className="flex min-w-0 items-center justify-between gap-2 px-3 py-2"
-                style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}
+                style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}
               >
                 <div className="min-w-0">
                   <p className="whitespace-pre-wrap break-all text-xs font-medium font-mono" style={{ color: "var(--th-text-primary)" }}>{row.title}</p>
@@ -355,7 +355,7 @@ export default function ProjectInsightsPanel({
                   type="button"
                   onClick={() => void handleOpenTaskDetail(row.id)}
                   className="shrink-0 px-2 py-1 text-[11px] font-mono font-bold uppercase"
-                  style={{ borderRadius: "2px", background: "var(--th-accent)", color: "#000" }}
+                  style={{ borderRadius: 0, background: "var(--th-accent)", color: "#000" }}
                 >
                   {t({ ko: "열람", en: "Open", ja: "表示", zh: "查看" })}
                 </button>
@@ -365,7 +365,7 @@ export default function ProjectInsightsPanel({
         )}
       </div>
 
-      <div className="min-w-0 p-4" style={{ border: "1px solid var(--th-border)", borderRadius: "2px", background: "var(--th-bg-surface)" }}>
+      <div className="min-w-0 p-4" style={{ border: "1px solid var(--th-border)", borderRadius: 0, background: "var(--th-bg-surface)" }}>
         <h4 className="text-xs font-bold uppercase tracking-widest" style={{ color: "var(--th-text-heading)", fontFamily: "var(--th-font-mono)" }}>
           {t({ ko: "대표 선택사항", en: "Representative Decisions", ja: "代表選択事項", zh: "代表选择事项" })}
         </h4>
@@ -401,7 +401,7 @@ export default function ProjectInsightsPanel({
                 <div
                   key={`${event.id}-${event.created_at}`}
                   className="px-3 py-2"
-                  style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}
+                  style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}
                 >
                   <div className="flex items-center justify-between gap-2">
                     <p className="min-w-0 truncate text-xs font-semibold font-mono" style={{ color: "var(--th-text-primary)" }}>

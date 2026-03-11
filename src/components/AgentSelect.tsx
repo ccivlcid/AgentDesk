@@ -21,6 +21,37 @@ const ROLE_LABELS: Record<string, LangText> = {
   intern: { ko: "인턴", en: "Intern", ja: "インターン", zh: "实习生" },
 };
 
+const CLI_LABEL: Record<string, string> = {
+  claude: "Claude Code",
+  codex: "Codex CLI",
+  gemini: "Gemini CLI",
+  opencode: "OpenCode",
+  copilot: "Copilot",
+  antigravity: "Antigravity",
+  cursor: "Cursor",
+  ollama: "Ollama",
+};
+
+function CliTag({ provider }: { provider: string }) {
+  const label = CLI_LABEL[provider] ?? provider;
+  return (
+    <span
+      style={{
+        fontFamily: "var(--th-font-mono)",
+        fontSize: "8px",
+        padding: "1px 4px",
+        border: "1px solid rgba(245,158,11,0.35)",
+        background: "rgba(245,158,11,0.08)",
+        color: "#f59e0b",
+        letterSpacing: "0.04em",
+        flexShrink: 0,
+      }}
+    >
+      {label}
+    </span>
+  );
+}
+
 export default function AgentSelect({
   agents,
   departments,
@@ -86,20 +117,21 @@ export default function AgentSelect({
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className={`w-full flex items-center gap-2 px-2 ${padY} ${textSize} font-mono outline-none transition`}
-        style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
+        className={`w-full flex items-center gap-2 px-2 ${padY} ${textSize} font-mono outline-none transition min-h-0`}
+        style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
       >
         {selected ? (
           <>
-            <AgentAvatar agent={selected} size={avatarSize} />
-            <span className="truncate">{getAgentName(selected)}</span>
-            <span className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>({getRoleLabel(selected.role)})</span>
+            <AgentAvatar agent={selected} size={avatarSize} className="flex-shrink-0" />
+            <span className="truncate min-w-0">{getAgentName(selected)}</span>
+            <CliTag provider={selected.cli_provider} />
+            <span className="text-[10px] font-mono whitespace-nowrap flex-shrink-0" style={{ color: "var(--th-text-muted)" }}>({getRoleLabel(selected.role)})</span>
             {getDepartmentLabel(selected) && (
-              <span className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>· {getDepartmentLabel(selected)}</span>
+              <span className="text-[10px] font-mono whitespace-nowrap flex-shrink-0" style={{ color: "var(--th-text-muted)" }}>· {getDepartmentLabel(selected)}</span>
             )}
           </>
         ) : (
-          <span className="font-mono" style={{ color: "var(--th-text-muted)" }}>{effectivePlaceholder}</span>
+          <span className="font-mono truncate min-w-0" style={{ color: "var(--th-text-muted)" }}>{effectivePlaceholder}</span>
         )}
         <svg
           className="ml-auto w-3 h-3 flex-shrink-0"
@@ -108,6 +140,7 @@ export default function AgentSelect({
           fill="none"
           stroke="currentColor"
           strokeWidth="2"
+          aria-hidden
         >
           <path d="M3 5l3 3 3-3" />
         </svg>
@@ -115,7 +148,7 @@ export default function AgentSelect({
 
       {/* Dropdown */}
       {open && (
-        <div className={`absolute z-50 w-full max-h-48 overflow-y-auto ${dropUp ? "bottom-full mb-1" : "mt-1"}`} style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
+        <div className={`absolute z-50 w-full max-h-48 overflow-y-auto ${dropUp ? "bottom-full mb-1" : "mt-1"}`} style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
           {/* None option */}
           <button
             type="button"
@@ -137,15 +170,16 @@ export default function AgentSelect({
                 onChange(a.id);
                 setOpen(false);
               }}
-              className={`w-full flex items-center gap-2 px-2 ${padY} ${textSize} font-mono transition hover:bg-[var(--th-bg-surface-hover)]`}
+              className={`w-full flex items-center gap-2 px-2 ${padY} ${textSize} font-mono transition hover:bg-[var(--th-bg-surface-hover)] min-w-0`}
               style={a.id === value
                 ? { background: "rgba(251,191,36,0.1)", color: "var(--th-accent)" }
                 : { color: "var(--th-text-primary)" }}
             >
-              <AgentAvatar agent={a} size={avatarSize} />
-              <span className="truncate">{getAgentName(a)}</span>
-              <span className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>({getRoleLabel(a.role)})</span>
-              {getDepartmentLabel(a) && <span className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>· {getDepartmentLabel(a)}</span>}
+              <AgentAvatar agent={a} size={avatarSize} className="flex-shrink-0" />
+              <span className="truncate min-w-0">{getAgentName(a)}</span>
+              <CliTag provider={a.cli_provider} />
+              <span className="text-[10px] font-mono whitespace-nowrap flex-shrink-0" style={{ color: "var(--th-text-muted)" }}>({getRoleLabel(a.role)})</span>
+              {getDepartmentLabel(a) && <span className="text-[10px] font-mono whitespace-nowrap flex-shrink-0" style={{ color: "var(--th-text-muted)" }}>· {getDepartmentLabel(a)}</span>}
               {a.status === "working" && (
                 <span className="ml-auto w-1.5 h-1.5 flex-shrink-0" style={{ borderRadius: "50%", background: "var(--th-accent)" }} />
               )}

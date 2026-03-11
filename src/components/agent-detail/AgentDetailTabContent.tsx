@@ -34,8 +34,6 @@ export default function AgentDetailTabContent({
   onAssignTask,
   onOpenTerminal,
 }: AgentDetailTabContentProps) {
-  const xpLevel = Math.floor(agent.stats_xp / 100) + 1;
-
   if (tab === "info") {
     return (
       <div className="space-y-3">
@@ -48,16 +46,12 @@ export default function AgentDetailTabContent({
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 gap-2">
           <div className="border rounded p-3 text-center" style={{ background: "var(--th-bg-surface)", borderColor: "var(--th-border)" }}>
             <div className="text-lg font-bold font-mono" style={{ color: "var(--th-accent)" }}>{agent.stats_tasks_done}</div>
             <div className="text-[10px]" style={{ color: "var(--th-text-muted)" }}>
               {t({ ko: "완료 업무", en: "Completed", ja: "完了タスク", zh: "已完成任务" })}
             </div>
-          </div>
-          <div className="border rounded p-3 text-center" style={{ background: "var(--th-bg-surface)", borderColor: "var(--th-border)" }}>
-            <div className="text-lg font-bold font-mono" style={{ color: "var(--th-accent)" }}>{xpLevel}</div>
-            <div className="text-[10px]" style={{ color: "var(--th-text-muted)" }}>{t({ ko: "레벨", en: "Level", ja: "レベル", zh: "等级" })}</div>
           </div>
           <div className="border rounded p-3 text-center" style={{ background: "var(--th-bg-surface)", borderColor: "var(--th-border)" }}>
             <div className="text-lg font-bold font-mono" style={{ color: "var(--th-accent)" }}>
@@ -122,7 +116,7 @@ export default function AgentDetailTabContent({
                   <div
                     className="w-2 h-2 mt-1.5 shrink-0"
                     style={{
-                      borderRadius: "1px",
+                      borderRadius: 0,
                       background: taskItem.status === "done"
                         ? "rgb(34,197,94)"
                         : taskItem.status === "in_progress"
@@ -137,7 +131,7 @@ export default function AgentDetailTabContent({
                     </div>
                     {subTotal > 0 && (
                       <div className="flex items-center gap-2 mt-1.5">
-                        <div className="flex-1 h-1 overflow-hidden" style={{ borderRadius: "1px", background: "var(--th-border)" }}>
+                        <div className="flex-1 h-1 overflow-hidden" style={{ borderRadius: 0, background: "var(--th-border)" }}>
                           <div
                             className="h-full transition-all"
                             style={{ width: `${Math.round((subDone / subTotal) * 100)}%`, background: "#22c55e" }}
@@ -168,7 +162,7 @@ export default function AgentDetailTabContent({
                           {targetDepartment && (
                             <span
                               className="shrink-0 px-1 py-0.5 text-[10px] font-medium font-mono"
-                              style={{ borderRadius: "2px", backgroundColor: targetDepartment.color + "30", color: targetDepartment.color }}
+                              style={{ borderRadius: 0, backgroundColor: targetDepartment.color + "30", color: targetDepartment.color }}
                             >
                               {targetDepartment.icon} {localeName(language, targetDepartment)}
                             </span>
@@ -222,7 +216,7 @@ export default function AgentDetailTabContent({
             className={`border rounded p-3 flex items-center gap-3 ${subAgent.status === "working" ? "animate-alba-spawn" : ""}`}
             style={{ background: "var(--th-bg-surface)", borderColor: "var(--th-border)" }}
           >
-            <div className="w-8 h-8 bg-amber-500/20 flex items-center justify-center" style={{ borderRadius: "2px" }}>
+            <div className="w-8 h-8 bg-amber-500/20 flex items-center justify-center" style={{ borderRadius: 0 }}>
               <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="#f59e0b" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="10" cy="7" r="3" />
                 <path d="M4 18v-1a6 6 0 0112 0v1" />
@@ -230,7 +224,7 @@ export default function AgentDetailTabContent({
             </div>
             <div className="flex-1 min-w-0">
               <div className="text-sm truncate flex items-center gap-1.5" style={{ color: "var(--th-text-primary)" }}>
-                <span className="text-[10px] px-1 py-0.5 bg-amber-500/20 text-amber-400 font-mono" style={{ borderRadius: "2px" }}>
+                <span className="text-[10px] px-1 py-0.5 bg-amber-500/20 text-amber-400 font-mono" style={{ borderRadius: 0 }}>
                   {t({ ko: "알바", en: "Sub", ja: "サブ", zh: "子任务" })}
                 </span>
                 {subAgent.task}

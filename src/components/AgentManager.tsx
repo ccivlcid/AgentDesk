@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState, type DragEvent } from "react";
-import { motion } from "framer-motion";
 import type { Agent, Department } from "../types";
 import { useI18n } from "../i18n";
 import * as api from "../api";
@@ -302,69 +301,92 @@ export default function AgentManager({
     [clearDeptDragState, draggingDeptId, getDropPosition, moveDeptByDrag],
   );
 
+  const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };
+
   return (
-    <motion.div
-      className="mx-auto max-w-4xl space-y-4 sm:space-y-5"
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.12, ease: "linear" }}
-    >
-      <div className="flex flex-wrap items-center justify-between gap-3" style={{ borderLeft: "3px solid var(--th-accent)", paddingLeft: "0.75rem" }}>
-        <h1
-          className="text-sm font-bold uppercase tracking-widest"
-          style={{ color: "var(--th-text-heading)", fontFamily: "var(--th-font-mono)" }}
-        >
-          {tr("직원관리", "Agent Management")}
-        </h1>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={openCreateDept}
-            className="px-3 py-1.5 text-xs font-mono uppercase transition-colors hover:opacity-90"
-            style={{
-              borderRadius: "2px",
-              border: "1px solid var(--th-border)",
-              color: "var(--th-text-heading)",
-              background: "var(--th-bg-surface)",
-            }}
-          >
-            + {tr("부서 추가", "ADD DEPT")}
-          </button>
-          <button
-            type="button"
-            onClick={openCreate}
-            className="px-4 py-1.5 text-xs font-mono font-bold uppercase transition-colors hover:opacity-90"
-            style={{ borderRadius: "2px", background: "var(--th-accent)", color: "#000" }}
-          >
-            + {tr("신규 채용", "HIRE")}
-          </button>
-        </div>
+    <div style={{ ...mono, display: "flex", flexDirection: "column", gap: 0 }}>
+
+      {/* ── 터미널 헤더 ── */}
+      <div style={{ borderBottom: "1px solid var(--th-border)", padding: "10px 16px", background: "var(--th-bg-elevated)", display: "flex", alignItems: "center", gap: 8 }}>
+        <span style={{ color: "var(--th-accent)", fontWeight: 700, fontSize: "11px" }}>$</span>
+        <span style={{ fontSize: "11px", color: "var(--th-text-muted)" }}>
+          ls agents/ --all{deptTab !== "all" ? ` --dept="${deptTab}"` : ""}
+        </span>
+        <span style={{ marginLeft: "auto", fontSize: "9px", color: "var(--th-text-muted)", opacity: 0.6 }}>
+          {agents.length} agents · {departments.length} depts
+        </span>
       </div>
 
-      <div
-        className="flex"
-        style={{ background: "var(--th-bg-surface)", border: "1px solid var(--th-border)", borderRadius: "2px" }}
-      >
-        {[
-          { key: "agents" as const, label: tr("직원", "AGENTS") },
-          { key: "departments" as const, label: tr("부서", "DEPARTMENTS") },
-        ].map((tab, idx) => (
+      {/* ── 서브탭 + 액션 버튼 ── */}
+      <div style={{ borderBottom: "1px solid var(--th-border)", display: "flex", alignItems: "stretch", background: "var(--th-bg-primary)" }}>
+        {([
+          { key: "agents" as const, label: isKo ? "직원" : "AGENTS" },
+          { key: "departments" as const, label: isKo ? "부서" : "DEPARTMENTS" },
+        ] as const).map((tab, idx) => (
           <button
             key={tab.key}
             type="button"
             onClick={() => setSubTab(tab.key)}
-            className="flex-1 flex items-center justify-center px-4 py-2 text-xs font-mono font-bold uppercase transition-colors hover:opacity-90"
             style={{
-              color: subTab === tab.key ? "var(--th-accent)" : "var(--th-text-muted)",
-              background: "transparent",
-              borderBottom: subTab === tab.key ? "2px solid var(--th-accent)" : "2px solid transparent",
-              borderRight: idx === 0 ? "1px solid var(--th-border)" : "none",
+              ...mono,
+              fontSize: "9px",
+              fontWeight: 700,
               letterSpacing: "0.08em",
+              padding: "8px 20px",
+              border: "none",
+              borderRight: idx === 0 ? "1px solid var(--th-border)" : "none",
+              borderBottom: subTab === tab.key ? "2px solid var(--th-accent)" : "2px solid transparent",
+              background: subTab === tab.key ? "var(--th-bg-elevated)" : "transparent",
+              color: subTab === tab.key ? "var(--th-accent)" : "var(--th-text-muted)",
+              cursor: "pointer",
             }}
           >
             {tab.label}
           </button>
         ))}
+        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 0, borderLeft: "1px solid var(--th-border)" }}>
+          <button
+            type="button"
+            onClick={openCreateDept}
+            style={{
+              ...mono,
+              fontSize: "9px",
+              fontWeight: 700,
+              padding: "0 12px",
+              height: "100%",
+              border: "none",
+              borderRight: "1px solid var(--th-border)",
+              background: "none",
+              color: "var(--th-text-muted)",
+              cursor: "pointer",
+              letterSpacing: "0.05em",
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = "var(--th-accent)"; e.currentTarget.style.background = "rgba(245,158,11,0.06)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = "var(--th-text-muted)"; e.currentTarget.style.background = "none"; }}
+          >
+            + {isKo ? "부서 추가" : "ADD DEPT"}
+          </button>
+          <button
+            type="button"
+            onClick={openCreate}
+            style={{
+              ...mono,
+              fontSize: "9px",
+              fontWeight: 700,
+              padding: "0 14px",
+              height: "100%",
+              border: "none",
+              background: "rgba(245,158,11,0.08)",
+              color: "var(--th-accent)",
+              cursor: "pointer",
+              letterSpacing: "0.05em",
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(245,158,11,0.15)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(245,158,11,0.08)"; }}
+          >
+            + {isKo ? "신규 채용" : "HIRE"}
+          </button>
+        </div>
       </div>
 
       {subTab === "agents" && (
@@ -439,6 +461,6 @@ export default function AgentManager({
           onClose={closeDeptModal}
         />
       )}
-    </motion.div>
+    </div>
   );
 }

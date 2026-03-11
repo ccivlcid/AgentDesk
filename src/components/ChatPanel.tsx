@@ -9,6 +9,7 @@ import type { DecisionOption } from "./chat/decision-request";
 import ChatComposer from "./chat-panel/ChatComposer";
 import ChatMessageList from "./chat-panel/ChatMessageList";
 import ChatPanelHeader from "./chat-panel/ChatPanelHeader";
+import AnnouncementCliPanel from "./chat-panel/AnnouncementCliPanel";
 import { useDecisionReplyHandlers } from "./chat-panel/useDecisionReply";
 import {
   ROLE_LABELS,
@@ -477,6 +478,34 @@ export function ChatPanel({
     setInput,
     textareaRef,
   });
+
+  // 전사 공지 모드 → CLI 터미널 스타일 패널
+  if (!selectedAgent) {
+    return (
+      <AnnouncementCliPanel
+        messages={displayMessages}
+        agents={agents}
+        locale={locale}
+        input={input}
+        attachments={attachments}
+        streamingMessage={streamingMessage}
+        messagesEndRef={messagesEndRef}
+        tr={tr}
+        getAgentName={getAgentName}
+        searchOpen={searchOpen}
+        searchQuery={searchQuery}
+        searchResultCount={displayMessages.length}
+        onInputChange={setInput}
+        onSend={() => void handleSend()}
+        onKeyDown={handleKeyDown}
+        onAttachmentsChange={setAttachments}
+        onClose={onClose}
+        onClearMessages={onClearMessages ? () => onClearMessages(undefined) : undefined}
+        onSearchToggle={handleSearchToggle}
+        onSearchChange={setSearchQuery}
+      />
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex h-full w-full flex-col shadow-2xl lg:relative lg:inset-auto lg:z-auto lg:w-96 lg:border-l" style={{ background: "var(--th-bg-primary)", borderColor: "var(--th-border)" }}>

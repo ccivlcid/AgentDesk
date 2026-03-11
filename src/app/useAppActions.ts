@@ -129,7 +129,11 @@ export function useAppActions({
       assigned_agent_id?: string;
     }) => {
       try {
-        await api.createTask(input as Parameters<typeof api.createTask>[0]);
+        const taskId = await api.createTask(input as Parameters<typeof api.createTask>[0]);
+        // 에이전트가 지정된 경우 즉시 실행 (수신함 행 방지)
+        if (input.assigned_agent_id) {
+          await api.runTask(taskId);
+        }
         const tks = await api.getTasks();
         setTasks(tks);
         const sts = await api.getStats();
@@ -149,9 +153,48 @@ export function useAppActions({
         setTasks(tks);
       } catch (error) {
         console.error("Update task failed:", error);
+        return;
+      }
+
+      // 완료 처리 시 자동 병합 + 결과물 파일 생성
+      if (data.status === "done") {
+        const locale = normalizeLanguage(settingsRef.current.language);
+        try {
+          const result = await api.mergeTask(id);
+          if (result.ok) {
+            showToast(
+              pickLang(locale, {
+                ko: `병합 완료: ${result.message}`,
+                en: `Merged: ${result.message}`,
+                ja: `マージ完了: ${result.message}`,
+                zh: `合并完成: ${result.message}`,
+              }),
+              "success",
+            );
+          } else if (result.message) {
+            // 워크트리 없음(비 git 프로젝트) 등은 조용히 무시
+            const isNoWorktree =
+              result.message.includes("worktree") ||
+              result.message.includes("No git") ||
+              result.message.includes("already merged");
+            if (!isNoWorktree) {
+              showToast(
+                pickLang(locale, {
+                  ko: `병합 실패: ${result.message}`,
+                  en: `Merge failed: ${result.message}`,
+                  ja: `マージ失敗: ${result.message}`,
+                  zh: `合并失败: ${result.message}`,
+                }),
+                "error",
+              );
+            }
+          }
+        } catch (mergeError) {
+          console.error("Auto-merge failed:", mergeError);
+        }
       }
     },
-    [setTasks],
+    [setTasks, showToast],
   );
 
   const handleDeleteTask = useCallback(

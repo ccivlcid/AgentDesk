@@ -104,8 +104,8 @@ export default function WebhookSettingsTab({ refreshTrigger }: WebhookSettingsTa
           onClick={() => { if (showForm) { resetForm(); setShowForm(false); } else { resetForm(); setShowForm(true); } }}
           className="flex items-center gap-1.5 px-3 py-2 text-xs font-mono transition"
           style={showForm
-            ? { border: "1px solid var(--th-border)", color: "var(--th-text-muted)", background: "transparent", borderRadius: "2px" }
-            : { border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.12)", color: "var(--th-accent)", borderRadius: "2px" }}
+            ? { border: "1px solid var(--th-border)", color: "var(--th-text-muted)", background: "transparent", borderRadius: 0 }
+            : { border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.12)", color: "var(--th-accent)", borderRadius: 0 }}
         >
           {showForm ? tr("취소", "Cancel") : `+ ${tr("웹훅 추가", "Add Webhook")}`}
         </button>
@@ -113,7 +113,7 @@ export default function WebhookSettingsTab({ refreshTrigger }: WebhookSettingsTa
 
       {/* Create form */}
       {showForm && (
-        <div className="space-y-4 p-4" style={{ border: "1px solid var(--th-border)", borderLeft: "3px solid var(--th-accent)", borderRadius: "2px", background: "var(--th-bg-elevated)" }}>
+        <div className="space-y-4 p-4" style={{ border: "1px solid var(--th-border)", borderLeft: "3px solid var(--th-accent)", borderRadius: 0, background: "var(--th-bg-elevated)" }}>
           <h3 className="text-[10px] font-mono uppercase tracking-wider font-bold" style={{ color: "var(--th-accent)" }}>
             {tr("새 웹훅", "New Webhook")}
           </h3>
@@ -125,7 +125,7 @@ export default function WebhookSettingsTab({ refreshTrigger }: WebhookSettingsTa
                 type="text" value={formName} onChange={(e) => setFormName(e.target.value)}
                 placeholder={tr("예: Slack 완료 알림", "e.g. Slack completion alert")}
                 className="w-full text-xs font-mono px-3 py-2 outline-none"
-                style={{ border: "1px solid var(--th-border)", background: "var(--th-input-bg, var(--th-bg-primary))", color: "var(--th-text-primary)", borderRadius: "2px" }}
+                style={{ border: "1px solid var(--th-border)", background: "var(--th-input-bg, var(--th-bg-primary))", color: "var(--th-text-primary)", borderRadius: 0 }}
               />
             </div>
             <div className="space-y-1">
@@ -134,7 +134,7 @@ export default function WebhookSettingsTab({ refreshTrigger }: WebhookSettingsTa
                 type="url" value={formUrl} onChange={(e) => setFormUrl(e.target.value)}
                 placeholder="https://hooks.slack.com/services/..."
                 className="w-full text-xs font-mono px-3 py-2 outline-none"
-                style={{ border: "1px solid var(--th-border)", background: "var(--th-input-bg, var(--th-bg-primary))", color: "var(--th-text-primary)", borderRadius: "2px" }}
+                style={{ border: "1px solid var(--th-border)", background: "var(--th-input-bg, var(--th-bg-primary))", color: "var(--th-text-primary)", borderRadius: 0 }}
               />
             </div>
             <div className="space-y-1 sm:col-span-2">
@@ -143,7 +143,7 @@ export default function WebhookSettingsTab({ refreshTrigger }: WebhookSettingsTa
                 type="text" value={formSecret} onChange={(e) => setFormSecret(e.target.value)}
                 placeholder={tr("X-AgentDesk-Secret 헤더로 전송됨", "Sent as X-AgentDesk-Secret header")}
                 className="w-full text-xs font-mono px-3 py-2 outline-none"
-                style={{ border: "1px solid var(--th-border)", background: "var(--th-input-bg, var(--th-bg-primary))", color: "var(--th-text-primary)", borderRadius: "2px" }}
+                style={{ border: "1px solid var(--th-border)", background: "var(--th-input-bg, var(--th-bg-primary))", color: "var(--th-text-primary)", borderRadius: 0 }}
               />
             </div>
             <div className="space-y-2 sm:col-span-2">
@@ -154,8 +154,8 @@ export default function WebhookSettingsTab({ refreshTrigger }: WebhookSettingsTa
                     key={ev.value} type="button" onClick={() => toggleEvent(ev.value)}
                     className="px-2.5 py-1 text-[10px] font-mono transition"
                     style={formEvents.includes(ev.value)
-                      ? { border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.12)", color: "var(--th-accent)", borderRadius: "2px" }
-                      : { border: "1px solid var(--th-border)", background: "var(--th-bg-primary)", color: "var(--th-text-muted)", borderRadius: "2px" }}
+                      ? { border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.12)", color: "var(--th-accent)", borderRadius: 0 }
+                      : { border: "1px solid var(--th-border)", background: "var(--th-bg-primary)", color: "var(--th-text-muted)", borderRadius: 0 }}
                   >
                     {ev.label}
                   </button>
@@ -172,7 +172,7 @@ export default function WebhookSettingsTab({ refreshTrigger }: WebhookSettingsTa
             <button
               onClick={() => void handleSubmit()} disabled={submitting}
               className="px-4 py-1.5 text-xs font-mono font-bold transition disabled:opacity-40"
-              style={{ border: "1px solid rgba(52,211,153,0.4)", background: "rgba(52,211,153,0.1)", color: "rgb(167,243,208)", borderRadius: "2px" }}
+              style={{ border: "1px solid rgba(52,211,153,0.4)", background: "rgba(52,211,153,0.1)", color: "rgb(167,243,208)", borderRadius: 0 }}
             >
               {submitting ? "..." : tr("저장", "Save")}
             </button>
@@ -185,7 +185,7 @@ export default function WebhookSettingsTab({ refreshTrigger }: WebhookSettingsTa
 
       {/* Webhook list */}
       {webhooks.length === 0 && !showForm ? (
-        <div className="py-10 text-center" style={{ border: "1px dashed var(--th-border)", borderRadius: "2px" }}>
+        <div className="py-10 text-center" style={{ border: "1px dashed var(--th-border)", borderRadius: 0 }}>
           <div className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
             {tr("$ ls webhooks/ (empty)", "$ ls webhooks/ (empty)")}
           </div>
@@ -205,7 +205,7 @@ export default function WebhookSettingsTab({ refreshTrigger }: WebhookSettingsTa
                   border: "1px solid var(--th-border)",
                   borderLeft: `3px solid ${hook.enabled ? "rgba(52,211,153,0.5)" : "var(--th-border)"}`,
                   background: "var(--th-bg-elevated)",
-                  borderRadius: "2px",
+                  borderRadius: 0,
                   opacity: hook.enabled ? 1 : 0.6,
                 }}
               >
@@ -222,7 +222,7 @@ export default function WebhookSettingsTab({ refreshTrigger }: WebhookSettingsTa
                       <span className="text-sm font-mono font-semibold truncate" style={{ color: "var(--th-text-heading)" }}>{hook.name}</span>
                       <div className="flex gap-1 flex-wrap">
                         {hook.events.map((ev) => (
-                          <span key={ev} className="text-[9px] font-mono px-1.5 py-0.5" style={{ border: "1px solid rgba(251,191,36,0.25)", background: "rgba(251,191,36,0.06)", color: "var(--th-accent)", borderRadius: "2px" }}>
+                          <span key={ev} className="text-[9px] font-mono px-1.5 py-0.5" style={{ border: "1px solid rgba(251,191,36,0.25)", background: "rgba(251,191,36,0.06)", color: "var(--th-accent)", borderRadius: 0 }}>
                             {ev}
                           </span>
                         ))}
@@ -241,14 +241,14 @@ export default function WebhookSettingsTab({ refreshTrigger }: WebhookSettingsTa
                       onClick={() => void handleTest(hook.id)}
                       disabled={testingId === hook.id}
                       className="px-2 py-1 text-[10px] font-mono transition disabled:opacity-40"
-                      style={{ border: "1px solid var(--th-border)", color: "var(--th-text-muted)", background: "var(--th-bg-primary)", borderRadius: "2px" }}
+                      style={{ border: "1px solid var(--th-border)", color: "var(--th-text-muted)", background: "var(--th-bg-primary)", borderRadius: 0 }}
                     >
                       {testingId === hook.id ? "..." : tr("테스트", "Test")}
                     </button>
                     <button
                       onClick={() => setDeletingId(hook.id)}
                       className="px-2 py-1 text-[10px] font-mono transition hover:opacity-70"
-                      style={{ border: "1px solid rgba(244,63,94,0.3)", color: "rgb(253,164,175)", background: "rgba(244,63,94,0.06)", borderRadius: "2px" }}
+                      style={{ border: "1px solid rgba(244,63,94,0.3)", color: "rgb(253,164,175)", background: "rgba(244,63,94,0.06)", borderRadius: 0 }}
                     >
                       {tr("삭제", "Del")}
                     </button>
@@ -258,7 +258,7 @@ export default function WebhookSettingsTab({ refreshTrigger }: WebhookSettingsTa
                 {deletingId === hook.id && (
                   <div className="flex items-center gap-2 px-4 pb-3">
                     <span className="text-[10px] font-mono" style={{ color: "rgb(253,164,175)" }}>{tr("정말 삭제하시겠습니까?", "Delete this webhook?")}</span>
-                    <button onClick={() => void handleDelete(hook.id)} className="px-2 py-0.5 text-[10px] font-mono" style={{ border: "1px solid rgba(244,63,94,0.35)", background: "rgba(244,63,94,0.1)", color: "rgb(253,164,175)", borderRadius: "2px" }}>
+                    <button onClick={() => void handleDelete(hook.id)} className="px-2 py-0.5 text-[10px] font-mono" style={{ border: "1px solid rgba(244,63,94,0.35)", background: "rgba(244,63,94,0.1)", color: "rgb(253,164,175)", borderRadius: 0 }}>
                       {tr("삭제", "Delete")}
                     </button>
                     <button onClick={() => setDeletingId(null)} className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
@@ -273,7 +273,7 @@ export default function WebhookSettingsTab({ refreshTrigger }: WebhookSettingsTa
       )}
 
       {/* Payload reference */}
-      <div className="p-3 text-[10px] font-mono" style={{ border: "1px solid var(--th-border)", background: "var(--th-terminal-bg, var(--th-bg-primary))", borderRadius: "2px", color: "var(--th-text-muted)" }}>
+      <div className="p-3 text-[10px] font-mono" style={{ border: "1px solid var(--th-border)", background: "var(--th-terminal-bg, var(--th-bg-primary))", borderRadius: 0, color: "var(--th-text-muted)" }}>
         <div className="mb-1 font-bold" style={{ color: "var(--th-accent)" }}>POST payload (task_done)</div>
         <pre style={{ color: "var(--th-text-secondary)" }}>{`{
   "event": "task_done",

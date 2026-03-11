@@ -40,7 +40,7 @@ export function OpsDetailsSection({
           onClick={() => setOpsDetailsOpen((prev) => !prev)}
           className="shrink-0 px-1 py-0.5 text-[10px] font-mono transition"
           style={{
-            borderRadius: "2px",
+            borderRadius: 0,
             border: `1px solid ${hasExecutionIssue ? "rgba(244,63,94,0.28)" : "var(--th-border)"}`,
             color: hasExecutionIssue ? "#fda4af" : "var(--th-text-muted)",
             background: hasExecutionIssue ? "rgba(244,63,94,0.08)" : "transparent",
@@ -53,7 +53,7 @@ export function OpsDetailsSection({
         <div
           className="text-[10px] font-mono break-words border px-2 py-1.5"
           style={{
-            borderRadius: "2px",
+            borderRadius: 0,
             borderColor: "rgba(244,63,94,0.28)",
             background: "rgba(244,63,94,0.08)",
             color: "#fda4af",

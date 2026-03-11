@@ -235,7 +235,7 @@ export function useRealtimeSync({
               decision: p.decision,
               taskId: p.task_id,
               holdUntil: p.hold_until,
-              instant: action === "arrive" && viewRef.current !== "office",
+              instant: action === "arrive",
             },
             MAX_CEO_OFFICE_CALLS,
           ),

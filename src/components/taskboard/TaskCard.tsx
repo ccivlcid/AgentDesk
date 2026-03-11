@@ -221,7 +221,7 @@ export default function TaskCard({
         background: "var(--th-bg-surface)",
         border: executionAlert ? "1px solid rgba(244,63,94,0.22)" : "1px solid var(--th-border)",
         borderLeft: `3px solid ${executionAlert ? "#fb7185" : leftBorderColor}`,
-        borderRadius: "4px",
+        borderRadius: 0,
         opacity: isHiddenTask ? 0.7 : 1,
         boxShadow: executionAlert ? "inset 0 0 0 1px rgba(244,63,94,0.06)" : undefined,
       }}
@@ -277,11 +277,11 @@ export default function TaskCard({
       )}
 
       <div className="mb-3 flex flex-wrap items-center gap-1.5">
-        <span className={`px-2 py-0.5 text-xs font-medium font-mono ${typeBadge.color}`} style={{ borderRadius: "2px" }}>{typeBadge.label}</span>
+        <span className={`px-2 py-0.5 text-xs font-medium font-mono ${typeBadge.color}`} style={{ borderRadius: 0 }}>{typeBadge.label}</span>
         {isHiddenTask && (
           <span
             className="px-2 py-0.5 text-xs font-medium font-mono"
-            style={{ background: "var(--th-bg-surface-hover)", color: "var(--th-text-muted)", borderRadius: "2px" }}
+            style={{ background: "var(--th-bg-surface-hover)", color: "var(--th-text-muted)", borderRadius: 0 }}
           >
             HIDDEN
           </span>
@@ -289,7 +289,7 @@ export default function TaskCard({
         {department && (
           <span
             className="px-2 py-0.5 text-xs font-medium font-mono"
-            style={{ background: "var(--th-bg-surface-hover)", color: "var(--th-text-secondary)", borderRadius: "2px" }}
+            style={{ background: "var(--th-bg-surface-hover)", color: "var(--th-text-secondary)", borderRadius: 0 }}
           >
             {locale === "ko" ? department.name_ko : department.name}
           </span>
@@ -297,7 +297,7 @@ export default function TaskCard({
         {executionBadge && (
           <span
             className="px-2 py-0.5 text-xs font-medium font-mono"
-            style={{ borderRadius: "2px", ...executionBadge.style }}
+            style={{ borderRadius: 0, ...executionBadge.style }}
             title={`execution: ${task.execution_state}`}
           >
             {executionBadge.label}
@@ -312,7 +312,7 @@ export default function TaskCard({
           className="w-full outline-none"
           style={{
             border: "1px solid var(--th-border)",
-            borderRadius: "2px",
+            borderRadius: 0,
             background: "var(--th-bg-surface)",
             color: "var(--th-text-primary)",
             fontFamily: "var(--th-font-mono)",
@@ -395,7 +395,7 @@ export default function TaskCard({
           >
             <div
               className="flex h-1.5 flex-1 overflow-hidden"
-              style={{ borderRadius: "1px", background: "var(--th-border)" }}
+              style={{ borderRadius: 0, background: "var(--th-border)" }}
             >
               {subtaskDoneCount > 0 && (
                 <div
@@ -456,7 +456,7 @@ export default function TaskCard({
                     {targetDepartment && (
                       <span
                         className="shrink-0 px-1 py-0.5 text-[10px] font-mono"
-                        style={{ background: targetDepartment.color + "30", color: targetDepartment.color, borderRadius: "2px" }}
+                        style={{ background: targetDepartment.color + "30", color: targetDepartment.color, borderRadius: 0 }}
                       >
                         {targetDepartment.icon}
                       </span>
@@ -500,7 +500,7 @@ export default function TaskCard({
             }}
             title={t({ ko: "작업 실행", en: "Run task", ja: "タスク実行", zh: "运行任务" })}
             className="flex flex-1 items-center justify-center gap-1 bg-green-700 px-2 py-1.5 text-xs font-medium font-mono text-white transition hover:bg-green-600"
-            style={{ borderRadius: "2px" }}
+            style={{ borderRadius: 0 }}
           >
             ▶ {t({ ko: "실행", en: "Run", ja: "実行", zh: "运行" })}
           </button>
@@ -510,7 +510,7 @@ export default function TaskCard({
             onClick={() => onPauseTask!(task.id)}
             title={t({ ko: "작업 일시중지", en: "Pause task", ja: "タスク一時停止", zh: "暂停任务" })}
             className="flex flex-1 items-center justify-center gap-1 bg-orange-700 px-2 py-1.5 text-xs font-medium font-mono text-white transition hover:bg-orange-600"
-            style={{ borderRadius: "2px" }}
+            style={{ borderRadius: 0 }}
           >
             ⏸ {t({ ko: "일시중지", en: "Pause", ja: "一時停止", zh: "暂停" })}
           </button>
@@ -520,7 +520,7 @@ export default function TaskCard({
             onClick={() => void handleStopTask()}
             title={t({ ko: "작업 중지", en: "Cancel task", ja: "タスク停止", zh: "取消任务" })}
             className="flex items-center justify-center gap-1 bg-red-800 px-2 py-1.5 text-xs font-medium font-mono text-white transition hover:bg-red-700"
-            style={{ borderRadius: "2px" }}
+            style={{ borderRadius: 0 }}
           >
             ⏹ {t({ ko: "중지", en: "Cancel", ja: "キャンセル", zh: "取消" })}
           </button>
@@ -530,7 +530,7 @@ export default function TaskCard({
             onClick={() => onResumeTask!(task.id)}
             title={t({ ko: "작업 재개", en: "Resume task", ja: "タスク再開", zh: "恢复任务" })}
             className="flex flex-1 items-center justify-center gap-1 px-2 py-1.5 text-xs font-medium font-mono transition"
-            style={{ borderRadius: "2px", background: "rgba(245,158,11,0.15)", color: "#f59e0b", border: "1px solid rgba(245,158,11,0.3)" }}
+            style={{ borderRadius: 0, background: "rgba(245,158,11,0.15)", color: "#f59e0b", border: "1px solid rgba(245,158,11,0.3)" }}
           >
             ↩ {t({ ko: "재개", en: "Resume", ja: "再開", zh: "恢复" })}
           </button>
@@ -549,7 +549,7 @@ export default function TaskCard({
                 zh: "查看终端输出",
               })}
               className="flex items-center justify-center px-2 py-1.5 text-xs font-mono transition"
-              style={{ background: "var(--th-bg-surface-hover)", color: "var(--th-text-secondary)", borderRadius: "2px" }}
+              style={{ background: "var(--th-bg-surface-hover)", color: "var(--th-text-secondary)", borderRadius: 0 }}
             >
               &#128421;
             </button>
@@ -570,7 +570,7 @@ export default function TaskCard({
                 zh: "查看会议纪要",
               })}
               className="flex items-center justify-center bg-cyan-800/70 px-2 py-1.5 text-xs font-mono text-cyan-200 transition hover:bg-cyan-700 hover:text-white"
-              style={{ borderRadius: "2px" }}
+              style={{ borderRadius: 0 }}
             >
               📝
             </button>
@@ -585,7 +585,7 @@ export default function TaskCard({
               zh: "查看更改 (Git diff)",
             })}
             className="flex items-center justify-center gap-1 bg-purple-800 px-2 py-1.5 text-xs font-medium font-mono text-purple-200 transition hover:bg-purple-700"
-            style={{ borderRadius: "2px" }}
+            style={{ borderRadius: 0 }}
           >
             {t({ ko: "Diff", en: "Diff", ja: "差分", zh: "差异" })}
           </button>
@@ -600,7 +600,7 @@ export default function TaskCard({
               zh: "隐藏已完成/待处理/已取消任务",
             })}
             className="flex items-center justify-center gap-1 px-2 py-1.5 text-xs font-medium font-mono transition-opacity hover:opacity-90"
-            style={{ background: "var(--th-bg-surface-hover)", color: "var(--th-text-secondary)", borderRadius: "2px" }}
+            style={{ background: "var(--th-bg-surface-hover)", color: "var(--th-text-secondary)", borderRadius: 0 }}
           >
             {t({ ko: "숨김", en: "Hide", ja: "非表示", zh: "隐藏" })}
           </button>
@@ -610,7 +610,7 @@ export default function TaskCard({
             onClick={() => onUnhideTask(task.id)}
             title={t({ ko: "숨긴 작업 복원", en: "Restore hidden task", ja: "非表示タスクを復元", zh: "恢复隐藏任务" })}
             className="flex items-center justify-center gap-1 px-2 py-1.5 text-xs font-medium font-mono transition-opacity hover:opacity-90"
-            style={{ background: "var(--th-accent, #f59e0b)", color: "#0f1117", borderRadius: "2px" }}
+            style={{ background: "var(--th-accent, #f59e0b)", color: "#0f1117", borderRadius: 0 }}
           >
             {t({ ko: "복원", en: "Restore", ja: "復元", zh: "恢复" })}
           </button>
@@ -620,7 +620,7 @@ export default function TaskCard({
             onClick={() => void handleDeleteTask()}
             title={t({ ko: "작업 삭제", en: "Delete task", ja: "タスク削除", zh: "删除任务" })}
             className="flex items-center justify-center bg-red-900/60 px-2 py-1.5 text-xs font-mono text-red-400 transition hover:bg-red-800 hover:text-red-300"
-            style={{ borderRadius: "2px" }}
+            style={{ borderRadius: 0 }}
           >
             🗑
           </button>
@@ -645,7 +645,7 @@ export default function TaskCard({
             </svg>
             {t({ ko: "선행 태스크", en: "Dependencies", ja: "依存関係", zh: "依赖关系" })}
             {depPredecessors.length > 0 && (
-              <span className="bg-amber-500/20 px-1.5 text-[10px] font-mono text-amber-400" style={{ borderRadius: "2px" }}>{depPredecessors.length}</span>
+              <span className="bg-amber-500/20 px-1.5 text-[10px] font-mono text-amber-400" style={{ borderRadius: 0 }}>{depPredecessors.length}</span>
             )}
             <span className="ml-0.5">{showDeps ? "▲" : "▼"}</span>
           </button>
@@ -658,7 +658,7 @@ export default function TaskCard({
                 </p>
               )}
               {depPredecessors.map((dep) => (
-                <div key={dep.id} className="flex items-center justify-between gap-2 border px-2 py-1" style={{ borderColor: "var(--th-border)", background: "var(--th-bg-primary)", borderRadius: "2px" }}>
+                <div key={dep.id} className="flex items-center justify-between gap-2 border px-2 py-1" style={{ borderColor: "var(--th-border)", background: "var(--th-bg-primary)", borderRadius: 0 }}>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-[11px] font-medium" style={{ color: "var(--th-text-primary)" }}>{dep.title}</p>
                     <p className="text-[10px]" style={{ color: "var(--th-text-muted)" }}>{dep.status}</p>
@@ -670,7 +670,7 @@ export default function TaskCard({
                       await loadDeps();
                     }}
                     className="shrink-0 p-0.5 text-[10px] font-mono text-red-400 hover:text-red-300"
-                    style={{ borderRadius: "2px" }}
+                    style={{ borderRadius: 0 }}
                   >✕</button>
                 </div>
               ))}
@@ -681,7 +681,7 @@ export default function TaskCard({
                   onChange={(e) => { setDepInput(e.target.value); setDepError(null); }}
                   placeholder={t({ ko: "태스크 ID 입력", en: "Enter task ID", ja: "タスクIDを入力", zh: "输入任务ID" })}
                   className="flex-1 border px-2 py-1 text-[11px] font-mono outline-none"
-                  style={{ borderRadius: "2px", borderColor: "var(--th-border)", background: "var(--th-bg-primary)", color: "var(--th-text-primary)" }}
+                  style={{ borderRadius: 0, borderColor: "var(--th-border)", background: "var(--th-bg-primary)", color: "var(--th-text-primary)" }}
                 />
                 <button
                   type="button"
@@ -697,7 +697,7 @@ export default function TaskCard({
                     }
                   }}
                   className="border px-2 py-1 text-[11px] font-mono transition-colors hover:opacity-80"
-                  style={{ borderRadius: "2px", borderColor: "var(--th-border)", background: "var(--th-bg-surface)", color: "var(--th-text-secondary)" }}
+                  style={{ borderRadius: 0, borderColor: "var(--th-border)", background: "var(--th-bg-surface)", color: "var(--th-text-secondary)" }}
                 >+</button>
               </div>
               {depError && <p className="text-[10px] text-red-400">{depError}</p>}
@@ -718,7 +718,7 @@ export default function TaskCard({
                 <span className="ml-0.5">{showTerminalPreview ? "▲" : "▼"}</span>
               </button>
               {showTerminalPreview && (
-                <div className="terminal-zone mt-2" style={{ borderRadius: "4px" }}>
+                <div className="terminal-zone mt-2" style={{ borderRadius: 0 }}>
                   <div className="terminal-zone-titlebar">
                     <span className="terminal-zone-dot terminal-zone-dot-red" />
                     <span className="terminal-zone-dot terminal-zone-dot-amber" style={{ marginLeft: 4 }} />
@@ -779,7 +779,7 @@ export default function TaskCard({
                     failed > 0 ? "bg-red-500/20 text-red-400" :
                     passed === gateResults.length ? "bg-emerald-500/20 text-emerald-400" :
                     "bg-amber-500/20 text-amber-400"
-                  }`} style={{ borderRadius: "2px" }}>
+                  }`} style={{ borderRadius: 0 }}>
                     {passed}/{gateResults.length}
                   </span>
                 );
@@ -804,7 +804,7 @@ export default function TaskCard({
                     <div
                       key={gate.gate_id}
                       className="flex items-center justify-between gap-2 border px-2 py-1"
-                      style={{ borderColor: "var(--th-border)", background: "var(--th-bg-primary)", borderRadius: "2px" }}
+                      style={{ borderColor: "var(--th-border)", background: "var(--th-bg-primary)", borderRadius: 0 }}
                     >
                       <div className="flex items-center gap-1.5 min-w-0 flex-1">
                         <span className="text-xs">{statusIcon}</span>
@@ -812,7 +812,7 @@ export default function TaskCard({
                           {locale === "ko" && gate.gate_label_ko ? gate.gate_label_ko : gate.gate_label}
                         </span>
                         {isManual && (
-                          <span className="px-1 text-[9px] font-mono" style={{ background: "rgba(245,158,11,0.15)", color: "#f59e0b", borderRadius: "2px" }}>
+                          <span className="px-1 text-[9px] font-mono" style={{ background: "rgba(245,158,11,0.15)", color: "#f59e0b", borderRadius: 0 }}>
                             {t({ ko: "수동", en: "Manual", ja: "手動", zh: "手动" })}
                           </span>
                         )}
@@ -831,7 +831,7 @@ export default function TaskCard({
                               await loadGates();
                             }}
                             className="px-1.5 py-0.5 text-[10px] font-mono bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30"
-                            style={{ borderRadius: "2px" }}
+                            style={{ borderRadius: 0 }}
                           >
                             {t({ ko: "승인", en: "Pass", ja: "承認", zh: "通过" })}
                           </button>
@@ -842,7 +842,7 @@ export default function TaskCard({
                               await loadGates();
                             }}
                             className="px-1.5 py-0.5 text-[10px] font-mono bg-red-500/20 text-red-400 hover:bg-red-500/30"
-                            style={{ borderRadius: "2px" }}
+                            style={{ borderRadius: 0 }}
                           >
                             {t({ ko: "반려", en: "Fail", ja: "却下", zh: "拒绝" })}
                           </button>

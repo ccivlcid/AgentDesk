@@ -10,14 +10,10 @@ import GatewaySettingsTab from "./settings/GatewaySettingsTab";
 import GeneralSettingsTab from "./settings/GeneralSettingsTab";
 import OAuthSettingsTab from "./settings/OAuthSettingsTab";
 import DataSettingsTab from "./settings/DataSettingsTab";
-import CategoriesTab from "./settings/CategoriesTab";
-import ProjectSettingsTab from "./settings/ProjectSettingsTab";
 import SettingsTabNav from "./settings/SettingsTabNav";
 import { useConfirm } from "./ui/ConfirmDialog";
 import type { AccountDraftMap, AccountDraftPatch, LocalSettings, SettingsTab } from "./settings/types";
 import { useApiProvidersState } from "./settings/useApiProvidersState";
-import type { Category, Project } from "../types";
-import { updateProject } from "../api/organization-projects";
 
 interface SettingsPanelProps {
   settings: CompanySettings;
@@ -28,9 +24,6 @@ interface SettingsPanelProps {
   onOauthResultClear?: () => void;
   /** 현재 오피스 팩 직원 (메신저 채팅 대화 직원 선택용) */
   managerAgents?: Agent[];
-  currentProject?: Project | null;
-  categories?: Category[];
-  onProjectDelete?: (id: string) => void;
 }
 
 export default function SettingsPanel({
@@ -41,9 +34,6 @@ export default function SettingsPanel({
   oauthResult,
   onOauthResultClear,
   managerAgents,
-  currentProject,
-  categories = [],
-  onProjectDelete,
 }: SettingsPanelProps) {
   const [form, setForm] = useState<LocalSettings>(settings as LocalSettings);
   const { t, locale: localeTag } = useI18n(form.language);
@@ -409,24 +399,31 @@ export default function SettingsPanel({
     [loadOAuthStatus, confirm, t],
   );
 
+  const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };
+
   return (
-    <div className="mx-auto max-w-2xl space-y-5 sm:space-y-6">
-      <div>
-        <h2 className="text-lg font-semibold tracking-tight" style={{ color: "var(--th-text-heading)" }}>
-          {t({ ko: "설정", en: "Settings", ja: "設定", zh: "设置" })}
-        </h2>
-        <p className="mt-0.5 text-sm" style={{ color: "var(--th-text-muted)" }}>
-          {t({
-            ko: "회사 정보, CLI·OAuth·API·채널 연동을 관리합니다.",
-            en: "Manage company info, CLI, OAuth, API, and channel integrations.",
-            ja: "会社情報、CLI・OAuth・API・チャネル連携を管理します。",
-            zh: "管理公司信息、CLI、OAuth、API 及频道集成。",
-          })}
-        </p>
+    <div style={{ ...mono, display: "flex", flexDirection: "column", gap: 0, maxWidth: 720, margin: "0 auto" }}>
+      {/* CLI 헤더 */}
+      <div
+        style={{
+          borderBottom: "1px solid var(--th-border)",
+          padding: "10px 16px",
+          background: "var(--th-bg-elevated)",
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+        }}
+      >
+        <span style={{ color: "var(--th-accent)", fontWeight: 700, fontSize: "11px" }}>$</span>
+        <span style={{ fontSize: "11px", color: "var(--th-text-secondary)" }}>agentdesk settings</span>
+        <span style={{ marginLeft: "auto", fontSize: "9px", color: "var(--th-text-muted)", opacity: 0.6 }}>
+          {t({ ko: "회사 정보 · CLI · OAuth · API · 채널", en: "company · CLI · OAuth · API · channel", ja: "会社・CLI・OAuth・API・チャネル", zh: "公司 · CLI · OAuth · API · 频道" })}
+        </span>
       </div>
 
       <SettingsTabNav tab={tab} setTab={setTab} t={t} />
 
+      <div className="space-y-5 sm:space-y-6" style={{ padding: "20px 16px 24px", background: "var(--th-bg-primary)" }}>
       {tab === "general" && (
         <GeneralSettingsTab t={t} form={form} setForm={setForm} saved={saved} onSave={handleSave} />
       )}
@@ -490,24 +487,7 @@ export default function SettingsPanel({
       )}
 
       {tab === "data" && <DataSettingsTab t={t} />}
-      {tab === "categories" && <CategoriesTab />}
-      {tab === "project" && (
-        currentProject ? (
-          <ProjectSettingsTab
-            project={currentProject}
-            categories={categories}
-            t={t}
-            onUpdate={async (patch) => {
-              await updateProject(currentProject.id, patch);
-            }}
-            onDelete={onProjectDelete}
-          />
-        ) : (
-          <div className="py-12 text-center font-mono text-sm" style={{ color: "var(--th-text-muted)" }}>
-            {t({ ko: "프로젝트를 먼저 선택해주세요.", en: "Please select a project first.", ja: "プロジェクトを選択してください。", zh: "请先选择项目。" })}
-          </div>
-        )
-      )}
+      </div>
     </div>
   );
 }

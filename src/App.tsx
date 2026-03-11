@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import type { DecisionInboxItem } from "./components/chat/decision-inbox";
 import { useWebSocket } from "./hooks/useWebSocket";
 import type {
@@ -34,6 +34,7 @@ import AppLoadingScreen from "./app/AppLoadingScreen";
 import AppMainLayout from "./app/AppMainLayout";
 import AppOverlays from "./app/AppOverlays";
 import ProjectCreateModal from "./components/project-create-modal/ProjectCreateModal";
+import CreateTaskModal from "./components/taskboard/CreateTaskModal";
 import { useAppActions } from "./app/useAppActions";
 import { useActiveMeetingTaskId } from "./app/useActiveMeetingTaskId";
 import { useUpdateStatusPolling } from "./app/useUpdateStatusPolling";
@@ -46,7 +47,7 @@ export type { OAuthCallbackResult } from "./app/types";
 export default function App() {
   const { theme, toggleTheme } = useTheme();
 
-  const [view, setView] = useState<View>("office");
+  const [view, setView] = useState<View>("dashboard");
   const [departments, setDepartments] = useState<Department[]>([]);
   const [agents, setAgents] = useState<Agent[]>([]);
   const [libraryAgents, setLibraryAgents] = useState<Agent[]>([]);
@@ -74,6 +75,7 @@ export default function App() {
   const [showReportHistory, setShowReportHistory] = useState(false);
   const [showAgentStatus, setShowAgentStatus] = useState(false);
   const [showGroupChat, setShowGroupChat] = useState(false);
+  const [groupChatInitialAgentIds, setGroupChatInitialAgentIds] = useState<string[]>([]);
   const [showDecisionInbox, setShowDecisionInbox] = useState(false);
   const [decisionInboxLoading, setDecisionInboxLoading] = useState(false);
   const [decisionInboxItems, setDecisionInboxItems] = useState<DecisionInboxItem[]>([]);
@@ -98,6 +100,7 @@ export default function App() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [showProjectCreate, setShowProjectCreate] = useState(false);
   const [projectCreateBusy, setProjectCreateBusy] = useState(false);
+  const [showCreateTaskAfterCreate, setShowCreateTaskAfterCreate] = useState(false);
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(() => {
     try { return window.localStorage.getItem("agentdesk_current_project") ?? null; } catch { return null; }
   });
@@ -110,7 +113,35 @@ export default function App() {
     }
   }, [currentProjectId]);
 
-  const viewRef = useRef<View>("office");
+  const [projectAgentIds, setProjectAgentIds] = useState<Set<string>>(new Set());
+  const [projectAgentsLoaded, setProjectAgentsLoaded] = useState(false);
+  useEffect(() => {
+    if (!currentProjectId) {
+      setProjectAgentIds(new Set());
+      setProjectAgentsLoaded(false);
+      return;
+    }
+    setProjectAgentsLoaded(false);
+    import("./api/categories-dashboard").then(({ fetchProjectAgents }) =>
+      fetchProjectAgents(currentProjectId)
+        .then((list) => {
+          setProjectAgentIds(new Set(list.map((a: { id: string }) => a.id)));
+          setProjectAgentsLoaded(true);
+        })
+        .catch(() => { setProjectAgentsLoaded(true); }),
+    );
+  }, [currentProjectId]);
+
+  const projectAgents = useMemo(() => {
+    // 프로젝트 미선택 → 전체 에이전트
+    if (!currentProjectId) return agents;
+    // 로딩 중 → 전체 에이전트 (깜빡임 방지)
+    if (!projectAgentsLoaded) return agents;
+    // 로딩 완료 → 프로젝트 팀원만 (빈 경우 빈 배열 반환, 전체 폴백 없음)
+    return agents.filter((a) => projectAgentIds.has(a.id));
+  }, [agents, projectAgentIds, projectAgentsLoaded, currentProjectId]);
+
+  const viewRef = useRef<View>("dashboard");
   viewRef.current = view;
   const agentsRef = useRef<Agent[]>(agents);
   agentsRef.current = agents;
@@ -157,7 +188,6 @@ export default function App() {
     setOauthResult,
     setCliStatus,
     setMobileNavOpen,
-    setMeetingPresence,
   });
 
   useRealtimeSync({
@@ -305,7 +335,7 @@ export default function App() {
         chatAgent={chatAgent}
         messages={messages}
         agents={agents}
-        groupChatAgents={agents}
+        groupChatAgents={projectAgents}
         streamingMessage={streamingMessage}
         onSendMessage={actions.handleSendMessage}
         onSendAnnouncement={actions.handleSendAnnouncement}
@@ -371,12 +401,15 @@ export default function App() {
         showAgentStatus={showAgentStatus}
         onCloseAgentStatus={() => setShowAgentStatus(false)}
         showGroupChat={showGroupChat}
-        onCloseGroupChat={() => setShowGroupChat(false)}
+        groupChatInitialAgentIds={groupChatInitialAgentIds}
+        onCloseGroupChat={() => { setShowGroupChat(false); setGroupChatInitialAgentIds([]); }}
+        onOpenGroupChatWithAgents={(agentIds) => { setGroupChatInitialAgentIds(agentIds); setShowGroupChat(true); }}
       />
       {showProjectCreate && (
         <ProjectCreateModal
           categories={categories}
-          onConfirm={({ name, categoryId, project_path, core_goal }) => {
+          agents={agents}
+          onConfirm={({ name, categoryId, project_path, core_goal, agentIds }) => {
             if (projectCreateBusy) return;
             setProjectCreateBusy(true);
             const cat = categories.find((c) => c.id === categoryId);
@@ -388,15 +421,37 @@ export default function App() {
               category_id: categoryId ?? undefined,
               create_path_if_missing: true,
             })
-              .then((newProject) => {
+              .then(async (newProject) => {
+                if (agentIds.length > 0) {
+                  const { addProjectAgent } = await import("./api/categories-dashboard");
+                  await Promise.all(agentIds.map((id) => addProjectAgent(newProject.id, id).catch(() => {})));
+                }
                 setProjects((prev) => [...prev, newProject]);
                 setCurrentProjectId(newProject.id);
                 setShowProjectCreate(false);
+                setShowCreateTaskAfterCreate(true);
               })
               .catch((err) => console.error("Project create failed:", err))
               .finally(() => setProjectCreateBusy(false));
           }}
           onClose={() => setShowProjectCreate(false)}
+        />
+      )}
+      {showCreateTaskAfterCreate && currentProject && (
+        <CreateTaskModal
+          agents={agents}
+          departments={departments}
+          onClose={() => setShowCreateTaskAfterCreate(false)}
+          onCreate={(input) => {
+            void actions.handleCreateTask({
+              ...input,
+              project_id: currentProject.id,
+              project_path: currentProject.project_path ?? undefined,
+            });
+            setShowCreateTaskAfterCreate(false);
+          }}
+          onAssign={async (taskId, agentId) => { await actions.handleAssignTask(taskId, agentId); }}
+          defaultProjectId={currentProject.id}
         />
       )}
     </AppMainLayout>

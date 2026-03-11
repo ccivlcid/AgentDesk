@@ -121,7 +121,7 @@ export default function ProviderHealthPanel() {
           onClick={() => void load(true)}
           disabled={refreshing}
           className="px-2.5 py-1 text-[10px] font-mono border transition hover:opacity-80 disabled:opacity-50"
-          style={{ borderRadius: "2px", borderColor: "var(--th-border)", background: "var(--th-bg-surface)", color: "var(--th-text-secondary)" }}
+          style={{ borderRadius: 0, borderColor: "var(--th-border)", background: "var(--th-bg-surface)", color: "var(--th-text-secondary)" }}
         >
           {refreshing ? tr("새로고침 중...", "Refreshing...") : `↺ ${tr("CLI 새로고침", "Refresh CLI")}`}
         </button>
@@ -130,7 +130,7 @@ export default function ProviderHealthPanel() {
             onClick={() => void handleTestAll()}
             disabled={testingAll || !!testing}
             className="px-2.5 py-1 text-[10px] font-mono border transition hover:opacity-80 disabled:opacity-50"
-            style={{ borderRadius: "2px", borderColor: "rgba(251,191,36,0.4)", background: "rgba(251,191,36,0.08)", color: "var(--th-accent)" }}
+            style={{ borderRadius: 0, borderColor: "rgba(251,191,36,0.4)", background: "rgba(251,191,36,0.08)", color: "var(--th-accent)" }}
           >
             {testingAll ? tr("테스트 중...", "Testing...") : tr("API 전체 테스트", "Test All APIs")}
           </button>
@@ -175,7 +175,7 @@ export default function ProviderHealthPanel() {
                   <span
                     className="text-[10px] font-mono px-1.5 py-0.5"
                     style={{
-                      borderRadius: "2px",
+                      borderRadius: 0,
                       background: isOk ? "rgba(52,211,153,0.1)" : isPartial ? "rgba(251,191,36,0.1)" : "var(--th-bg-elevated)",
                       color: dotColor,
                       border: `1px solid ${isOk ? "rgba(52,211,153,0.3)" : isPartial ? "rgba(251,191,36,0.3)" : "var(--th-border)"}`,
@@ -242,7 +242,7 @@ export default function ProviderHealthPanel() {
                     <span
                       className="text-[10px] font-mono px-1.5 py-0.5 truncate max-w-[140px]"
                       style={{
-                        borderRadius: "2px",
+                        borderRadius: 0,
                         background: result.ok ? "rgba(52,211,153,0.1)" : "rgba(253,164,175,0.1)",
                         color: result.ok ? "rgb(52,211,153)" : "rgb(253,164,175)",
                         border: `1px solid ${result.ok ? "rgba(52,211,153,0.3)" : "rgba(253,164,175,0.3)"}`,
@@ -257,7 +257,7 @@ export default function ProviderHealthPanel() {
                       onClick={() => void handleTestOne(provider.id)}
                       disabled={isTesting || testingAll}
                       className="text-[10px] font-mono border px-2 py-0.5 transition hover:opacity-80 disabled:opacity-50"
-                      style={{ borderRadius: "2px", borderColor: "var(--th-border)", color: "var(--th-text-secondary)", background: "var(--th-bg-elevated)" }}
+                      style={{ borderRadius: 0, borderColor: "var(--th-border)", color: "var(--th-text-secondary)", background: "var(--th-bg-elevated)" }}
                     >
                       {isTesting ? "…" : tr("테스트", "Test")}
                     </button>

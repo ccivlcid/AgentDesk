@@ -8,6 +8,7 @@ import {
 } from "../../api";
 import type { Agent, Project } from "../../types";
 import DeliverableCard from "./DeliverableCard";
+import { useToast } from "../ui";
 
 interface DeliverablesProps {
   agents: Agent[];
@@ -16,8 +17,11 @@ interface DeliverablesProps {
 
 type StatusFilter = "all" | "done" | "review";
 
+const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };
+
 export default function Deliverables({ agents, currentProject }: DeliverablesProps) {
   const { t } = useI18n();
+  const { showToast } = useToast();
 
   const [items, setItems] = useState<DeliverableItem[]>([]);
   const [artifacts, setArtifacts] = useState<Record<string, TaskArtifact[]>>({});
@@ -30,17 +34,14 @@ export default function Deliverables({ agents, currentProject }: DeliverablesPro
       const data = await getDeliverables();
       setItems(data);
     } catch {
-      // silently fail
+      showToast(t({ ko: "산출물 로드에 실패했습니다.", en: "Failed to load deliverables.", ja: "成果物の読み込みに失敗しました。", zh: "加载成果物失败。" }), "error");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [showToast, t]);
 
-  useEffect(() => {
-    void fetchItems();
-  }, [fetchItems]);
+  useEffect(() => { void fetchItems(); }, [fetchItems]);
 
-  // Fetch artifacts for each item that has a project_path
   useEffect(() => {
     for (const item of items) {
       if (artifacts[item.id] !== undefined) continue;
@@ -49,12 +50,8 @@ export default function Deliverables({ agents, currentProject }: DeliverablesPro
         continue;
       }
       getTaskArtifacts(item.id)
-        .then((arts) => {
-          setArtifacts((prev) => ({ ...prev, [item.id]: arts }));
-        })
-        .catch(() => {
-          setArtifacts((prev) => ({ ...prev, [item.id]: [] }));
-        });
+        .then((arts) => setArtifacts((prev) => ({ ...prev, [item.id]: arts })))
+        .catch(() => setArtifacts((prev) => ({ ...prev, [item.id]: [] })));
     }
   }, [items, artifacts]);
 
@@ -69,75 +66,103 @@ export default function Deliverables({ agents, currentProject }: DeliverablesPro
     return m;
   }, [agents]);
 
+  const doneCnt   = items.filter((i) => i.status === "done").length;
+  const reviewCnt = items.filter((i) => i.status === "review").length;
+
+  const FILTERS: { key: StatusFilter; label: string }[] = [
+    { key: "all",    label: t({ ko: "전체",   en: "ALL",    ja: "すべて",     zh: "全部" }) },
+    { key: "done",   label: t({ ko: "완료",   en: "DONE",   ja: "完了",       zh: "完成" }) },
+    { key: "review", label: t({ ko: "검토중", en: "REVIEW", ja: "レビュー中", zh: "审核中" }) },
+  ];
+
   return (
-    <div className="space-y-4">
-      {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h2 className="text-lg font-semibold font-mono" style={{ color: "var(--th-text-heading)" }}>
-            {t({ ko: "산출물", en: "Outputs", ja: "成果物", zh: "产出物" })}
-            {currentProject && (
-              <span className="ml-2 text-sm font-normal" style={{ color: "var(--th-text-muted)" }}>
-                · {currentProject.name}
-              </span>
-            )}
-          </h2>
-          <p className="text-xs mt-0.5 font-mono" style={{ color: "var(--th-text-muted)" }}>
-            {t({
-              ko: "태스크 실행 중 생성된 파일과 결과물을 모아 봅니다.",
-              en: "Files and outputs generated during task execution.",
-              ja: "タスク実行中に生成されたファイルと成果物を確認できます。",
-              zh: "查看任务执行期间生成的文件和产出物。",
-            })}
-          </p>
-        </div>
+    <div style={{ ...mono, display: "flex", flexDirection: "column", gap: 0 }}>
 
-        <div className="flex items-center gap-2">
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as StatusFilter)}
-            className="px-2.5 py-1.5 text-xs font-mono outline-none"
-            style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
-          >
-            <option value="all">{t({ ko: "전체 상태", en: "All Status", ja: "全ステータス", zh: "全部状态" })}</option>
-            <option value="done">{t({ ko: "완료", en: "Done", ja: "完了", zh: "完成" })}</option>
-            <option value="review">{t({ ko: "리뷰", en: "Review", ja: "レビュー", zh: "审核" })}</option>
-          </select>
-
-          <button
-            onClick={() => {
-              setArtifacts({});
-              void fetchItems();
-            }}
-            className="px-2.5 py-1.5 text-xs font-mono transition"
-            style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
-          >
-            {t({ ko: "새로고침", en: "Refresh", ja: "更新", zh: "刷新" })}
-          </button>
-        </div>
+      {/* ── 터미널 헤더 ── */}
+      <div style={{ borderBottom: "1px solid var(--th-border)", padding: "10px 16px", background: "var(--th-bg-elevated)", display: "flex", alignItems: "center", gap: 8 }}>
+        <span style={{ color: "var(--th-accent)", fontWeight: 700, fontSize: "11px" }}>$</span>
+        <span style={{ fontSize: "11px", color: "var(--th-text-muted)" }}>
+          ls deliverables/{currentProject ? ` --project="${currentProject.name}"` : ""}
+        </span>
+        {!loading && (
+          <span style={{ marginLeft: "auto", fontSize: "9px", color: "var(--th-text-muted)", opacity: 0.6 }}>
+            <span style={{ color: "#4ade80" }}>{doneCnt} done</span>
+            {reviewCnt > 0 && <> · <span style={{ color: "var(--th-accent)" }}>{reviewCnt} review</span></>}
+            {" "}· {items.length} total
+          </span>
+        )}
       </div>
 
-      {/* Content */}
+      {/* ── 필터 + 리프레시 ── */}
+      <div style={{ borderBottom: "1px solid var(--th-border)", padding: "5px 12px", background: "var(--th-bg-primary)", display: "flex", alignItems: "center", gap: 4 }}>
+        {FILTERS.map((f) => (
+          <button
+            key={f.key}
+            onClick={() => setStatusFilter(f.key)}
+            style={{
+              ...mono,
+              fontSize: "9px",
+              fontWeight: 700,
+              padding: "3px 10px",
+              border: `1px solid ${statusFilter === f.key ? "rgba(245,158,11,0.5)" : "var(--th-border)"}`,
+              background: statusFilter === f.key ? "rgba(245,158,11,0.08)" : "transparent",
+              color: statusFilter === f.key ? "var(--th-accent)" : "var(--th-text-muted)",
+              cursor: "pointer",
+              letterSpacing: "0.06em",
+            }}
+          >
+            {f.label}
+          </button>
+        ))}
+        <button
+          onClick={() => { setArtifacts({}); void fetchItems(); }}
+          style={{
+            ...mono,
+            marginLeft: "auto",
+            fontSize: "10px",
+            padding: "3px 10px",
+            border: "1px solid var(--th-border)",
+            background: "transparent",
+            color: "var(--th-text-muted)",
+            cursor: "pointer",
+          }}
+          title={t({ ko: "새로고침", en: "Refresh", ja: "更新", zh: "刷新" })}
+        >
+          ↻
+        </button>
+      </div>
+
+      {/* ── 컬럼 헤더 ── */}
+      {!loading && filtered.length > 0 && (
+        <div style={{ display: "flex", alignItems: "center", padding: "4px 14px", background: "var(--th-bg-primary)", borderBottom: "1px solid var(--th-border)", gap: 8 }}>
+          <span style={{ fontSize: "8px", fontWeight: 700, letterSpacing: "0.1em", color: "var(--th-text-muted)", width: 44, flexShrink: 0 }}>STATUS</span>
+          <span style={{ fontSize: "8px", fontWeight: 700, letterSpacing: "0.1em", color: "var(--th-text-muted)", flex: 1 }}>TITLE</span>
+          <span style={{ fontSize: "8px", fontWeight: 700, letterSpacing: "0.1em", color: "var(--th-text-muted)", width: 130, flexShrink: 0 }}>AGENT</span>
+          <span style={{ fontSize: "8px", fontWeight: 700, letterSpacing: "0.1em", color: "var(--th-text-muted)", width: 120, flexShrink: 0 }}>COMPLETED</span>
+          <span style={{ fontSize: "8px", fontWeight: 700, letterSpacing: "0.1em", color: "var(--th-text-muted)", width: 80, flexShrink: 0 }}>FILES</span>
+        </div>
+      )}
+
+      {/* ── 컨텐츠 ── */}
       {loading ? (
-        <div className="space-y-3">
+        <div>
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={`skel-${i}`} className="animate-pulse p-4 h-32" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }} />
+            <div
+              key={`skel-${i}`}
+              style={{ height: 48, borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-surface)", opacity: 0.4, borderLeft: "3px solid var(--th-border)" }}
+            />
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 font-mono" style={{ color: "var(--th-text-muted)" }}>
-          <div className="text-4xl mb-3">📦</div>
-          <div className="text-sm">
-            {t({
-              ko: "완료된 업무가 없습니다",
-              en: "No completed tasks found",
-              ja: "完了したタスクはありません",
-              zh: "没有已完成的任务",
-            })}
+        <div style={{ padding: "40px 16px", textAlign: "center", color: "var(--th-text-muted)" }}>
+          <div style={{ fontSize: "10px", marginBottom: 6 }}>$ ls deliverables/</div>
+          <div style={{ fontSize: "11px", opacity: 0.5 }}>(empty)</div>
+          <div style={{ fontSize: "10px", marginTop: 8, opacity: 0.4 }}>
+            {t({ ko: "완료된 태스크가 없습니다", en: "No completed tasks", ja: "完了タスクなし", zh: "没有已完成的任务" })}
           </div>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div>
           {filtered.map((report) => (
             <DeliverableCard
               key={report.id}
@@ -147,6 +172,15 @@ export default function Deliverables({ agents, currentProject }: DeliverablesPro
               agents={agents}
             />
           ))}
+        </div>
+      )}
+
+      {/* ── footer ── */}
+      {!loading && (
+        <div style={{ borderTop: "1px solid var(--th-border)", padding: "5px 16px", background: "var(--th-bg-primary)" }}>
+          <span style={{ fontSize: "9px", color: "var(--th-text-muted)", opacity: 0.4 }}>
+            $ {filtered.length} entries{statusFilter !== "all" ? ` (filtered: ${statusFilter})` : ""}
+          </span>
         </div>
       )}
     </div>

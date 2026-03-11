@@ -81,7 +81,7 @@ export default function ChatPanelHeader({
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <span className="truncate text-sm font-semibold text-white">{getAgentName(selectedAgent)}</span>
-                <span className="px-1.5 py-0.5 text-xs font-mono" style={{ borderRadius: "2px", background: "var(--th-bg-surface)", color: "var(--th-text-secondary)" }}>
+                <span className="px-1.5 py-0.5 text-xs font-mono" style={{ borderRadius: 0, background: "var(--th-bg-surface)", color: "var(--th-text-secondary)" }}>
                   {getRoleLabel(selectedAgent.role)}
                 </span>
               </div>
@@ -118,7 +118,7 @@ export default function ChatPanelHeader({
           <button
             onClick={onSearchToggle}
             className="flex h-8 w-8 items-center justify-center transition-colors hover:bg-[var(--th-bg-surface-hover)]"
-            style={{ borderRadius: "2px", color: searchOpen ? "var(--th-accent)" : "var(--th-text-muted)" }}
+            style={{ borderRadius: 0, color: searchOpen ? "var(--th-accent)" : "var(--th-text-muted)" }}
             aria-label={tr("메시지 검색", "Search messages", "メッセージを検索", "搜索消息")}
             title={tr("메시지 검색", "Search messages", "メッセージを検索", "搜索消息")}
           >

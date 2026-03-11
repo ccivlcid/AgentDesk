@@ -31,13 +31,13 @@ export function MinutesTabContent({
           <div
             key={meeting.id}
             className="border p-3"
-            style={{ borderRadius: "2px", borderColor: "var(--th-border)", background: "var(--th-bg-elevated)" }}
+            style={{ borderRadius: 0, borderColor: "var(--th-border)", background: "var(--th-bg-elevated)" }}
           >
             <div className="mb-2 flex flex-wrap items-center gap-2">
               <span
                 className="px-2 py-0.5 text-[10px] font-mono"
                 style={{
-                  borderRadius: "2px",
+                  borderRadius: 0,
                   background: "rgba(251,191,36,0.1)",
                   border: "1px solid rgba(251,191,36,0.3)",
                   color: "var(--th-accent)",
@@ -48,7 +48,7 @@ export function MinutesTabContent({
               <span
                 className="px-2 py-0.5 text-[10px] font-mono"
                 style={{
-                  borderRadius: "2px",
+                  borderRadius: 0,
                   background: "var(--th-bg-primary)",
                   border: "1px solid var(--th-border)",
                   color: "var(--th-text-secondary)",
@@ -59,7 +59,7 @@ export function MinutesTabContent({
               <span
                 className="px-2 py-0.5 text-[10px] font-mono"
                 style={{
-                  borderRadius: "2px",
+                  borderRadius: 0,
                   background: "var(--th-bg-primary)",
                   border: "1px solid var(--th-border)",
                   color: "var(--th-text-secondary)",
@@ -77,7 +77,7 @@ export function MinutesTabContent({
                   key={entry.id}
                   className="border px-2 py-1.5"
                   style={{
-                    borderRadius: "2px",
+                    borderRadius: 0,
                     borderColor: "var(--th-border)",
                     background: "var(--th-bg-primary)",
                   }}

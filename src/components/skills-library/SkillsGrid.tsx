@@ -69,13 +69,13 @@ export default function SkillsGrid({
             <div
               key={`${skill.rank}-${detailId}`}
               className="relative p-4 transition-all group"
-              style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}
+              style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}
               onMouseEnter={() => onHoverEnter(skill)}
               onMouseLeave={onHoverLeave}
             >
               <div className="mb-3 flex items-start justify-between gap-2">
                 <div className="flex min-w-0 items-start gap-3">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center text-sm font-bold" style={{ borderRadius: "2px", background: "var(--th-bg-primary)" }}>
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center text-sm font-bold" style={{ borderRadius: 0, background: "var(--th-bg-primary)" }}>
                     {badge.icon ? <span>{badge.icon}</span> : <span className={badge.color}>#{skill.rank}</span>}
                   </div>
                   <div className="min-w-0 flex-1">
@@ -85,14 +85,14 @@ export default function SkillsGrid({
                 </div>
 
                 {learnedProvidersForCard.length > 0 && (
-                  <div className="grid w-[64px] shrink-0 grid-cols-2 gap-1 p-1" style={{ borderRadius: "2px", border: "1px solid rgba(16,185,129,0.25)", background: "rgba(16,185,129,0.05)" }}>
+                  <div className="grid w-[64px] shrink-0 grid-cols-2 gap-1 p-1" style={{ borderRadius: 0, border: "1px solid rgba(16,185,129,0.25)", background: "rgba(16,185,129,0.05)" }}>
                     {learnedProvidersForCard.map((provider) => {
                       const agent = learnedRepresentatives.get(provider) ?? null;
                       return (
                         <span
                           key={`${detailKey}-${provider}`}
                           className="inline-flex h-5 w-6 items-center justify-center gap-0.5 border border-emerald-500/20"
-                          style={{ borderRadius: "2px", background: "rgba(15,17,23,0.7)" }}
+                          style={{ borderRadius: 0, background: "rgba(15,17,23,0.7)" }}
                           title={`${learnedProviderLabel(provider)}${agent ? ` · ${agent.name}` : ""}`}
                         >
                           <span className="flex h-2.5 w-2.5 items-center justify-center">
@@ -109,7 +109,7 @@ export default function SkillsGrid({
               </div>
 
               <div className="flex items-center justify-between gap-2">
-                <span className={`text-[10px] px-2 py-0.5 border font-mono ${catColor}`} style={{ borderRadius: "2px" }}>
+                <span className={`text-[10px] px-2 py-0.5 border font-mono ${catColor}`} style={{ borderRadius: 0 }}>
                   {CATEGORY_ICONS[skill.category]} {categoryLabel(skill.category, t)}
                 </span>
                 <div className="flex items-center gap-2 shrink-0">
@@ -125,7 +125,7 @@ export default function SkillsGrid({
                           ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/40 cursor-pointer hover:bg-emerald-500/25"
                           : "bg-emerald-600/20 text-emerald-300 border-emerald-500/30 hover:bg-emerald-600/30"
                       }`}
-                      style={{ borderRadius: "2px" }}
+                      style={{ borderRadius: 0 }}
                       title={
                         learnedProviders.length > 0
                           ? t({
@@ -149,7 +149,7 @@ export default function SkillsGrid({
                     <button
                       onClick={() => onCopy(skill)}
                       className="px-2 py-1 text-[10px] font-mono transition-all"
-                      style={{ borderRadius: "2px", background: "rgba(251,191,36,0.1)", color: "var(--th-accent)", border: "1px solid rgba(251,191,36,0.3)" }}
+                      style={{ borderRadius: 0, background: "rgba(251,191,36,0.1)", color: "var(--th-accent)", border: "1px solid rgba(251,191,36,0.3)" }}
                       title={`npx skills add ${skill.repo}`}
                     >
                       {copiedSkill === skill.name
@@ -164,7 +164,7 @@ export default function SkillsGrid({
                 <div
                   ref={tooltipRef}
                   className="absolute z-50 left-0 right-0 top-full mt-2 p-4 shadow-2xl shadow-black/40 animate-in fade-in slide-in-from-top-1 duration-200"
-                  style={{ borderRadius: "4px", border: "1px solid var(--th-border-strong)", background: "var(--th-bg-elevated)" }}
+                  style={{ borderRadius: 0, border: "1px solid var(--th-border-strong)", background: "var(--th-bg-elevated)" }}
                   onMouseEnter={() => {
                     if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
                     setHoveredSkill(detailKey);
@@ -245,7 +245,7 @@ export default function SkillsGrid({
                               <span
                                 key={platform.name}
                                 className="text-[10px] px-2 py-0.5 border font-mono"
-                                style={{ borderRadius: "2px", background: "var(--th-bg-primary)", borderColor: "var(--th-border)", color: "var(--th-text-muted)" }}
+                                style={{ borderRadius: 0, background: "var(--th-bg-primary)", borderColor: "var(--th-border)", color: "var(--th-text-muted)" }}
                               >
                                 {platform.name} <span style={{ color: "rgb(167,243,208)" }}>{platform.installs}</span>
                               </span>
@@ -266,7 +266,7 @@ export default function SkillsGrid({
                                     ? "text-amber-400 bg-amber-500/10 border-amber-500/30"
                                     : "text-red-400 bg-red-500/10 border-red-500/30"
                               }`}
-                              style={{ borderRadius: "2px" }}
+                              style={{ borderRadius: 0 }}
                             >
                               {audit.name}: {localizeAuditStatus(audit.status, t)}
                             </span>
@@ -274,7 +274,7 @@ export default function SkillsGrid({
                         </div>
                       )}
 
-                      <div className="text-[10px] font-mono px-2 py-1.5 truncate" style={{ color: "var(--th-text-muted)", background: "var(--th-terminal-bg)", borderRadius: "2px" }}>
+                      <div className="text-[10px] font-mono px-2 py-1.5 truncate" style={{ color: "var(--th-text-muted)", background: "var(--th-terminal-bg)", borderRadius: 0 }}>
                         $ {detail.installCommand}
                       </div>
                     </div>

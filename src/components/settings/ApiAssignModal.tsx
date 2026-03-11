@@ -33,7 +33,7 @@ export default function ApiAssignModal({ t, localeTag, apiState }: ApiAssignModa
           : role === "junior"
             ? { color: "rgb(167,243,208)", background: "rgba(52,211,153,0.15)" }
             : { color: "var(--th-text-muted)", background: "var(--th-bg-elevated)" };
-    return <span className="text-[9px] px-1.5 py-0.5 font-medium font-mono" style={{ borderRadius: "2px", ...colorStyle }}>{text}</span>;
+    return <span className="text-[9px] px-1.5 py-0.5 font-medium font-mono" style={{ borderRadius: 0, ...colorStyle }}>{text}</span>;
   };
 
   const grouped = apiAssignDepts
@@ -58,7 +58,7 @@ export default function ApiAssignModal({ t, localeTag, apiState }: ApiAssignModa
         disabled={apiAssigning || isAssigned}
         onClick={() => void handleApiAssignToAgent(agent.id)}
         className="w-full text-left px-2 py-1.5 text-xs font-mono transition flex items-center gap-2.5 disabled:opacity-60"
-        style={{ borderRadius: "2px", ...(isAssigned ? { background: "rgba(52,211,153,0.1)", color: "rgb(167,243,208)", cursor: "default" } : { color: "var(--th-text-primary)" }) }}
+        style={{ borderRadius: 0, ...(isAssigned ? { background: "rgba(52,211,153,0.1)", color: "rgb(167,243,208)", cursor: "default" } : { color: "var(--th-text-primary)" }) }}
       >
         <AgentAvatar agent={agent} size={28} rounded="xl" />
         <div className="flex-1 min-w-0">
@@ -82,7 +82,7 @@ export default function ApiAssignModal({ t, localeTag, apiState }: ApiAssignModa
     >
       <div
         className="w-96 max-h-[75vh] shadow-2xl overflow-hidden"
-        style={{ borderRadius: "4px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}
+        style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="px-4 py-3" style={{ borderBottom: "1px solid var(--th-border)" }}>
@@ -140,7 +140,7 @@ export default function ApiAssignModal({ t, localeTag, apiState }: ApiAssignModa
           <button
             onClick={() => setApiAssignTarget(null)}
             className="text-xs px-3 py-1.5 font-mono transition-colors"
-            style={{ borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
+            style={{ borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
           >
             {t({ ko: "닫기", en: "Close", ja: "閉じる", zh: "关闭" })}
           </button>

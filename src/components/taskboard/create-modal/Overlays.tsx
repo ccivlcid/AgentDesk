@@ -47,7 +47,7 @@ export default function CreateTaskModalOverlays({
         >
           <div
             className="w-full max-w-md overflow-hidden shadow-2xl"
-            style={{ border: "1px solid var(--th-border)", borderRadius: "4px", background: "var(--th-bg-surface)" }}
+            style={{ border: "1px solid var(--th-border)", borderRadius: 0, background: "var(--th-bg-surface)" }}
             onClick={(event) => event.stopPropagation()}
           >
             <div className="px-4 py-3" style={{ borderBottom: "1px solid var(--th-border)", borderLeft: "3px solid var(--th-accent, #f59e0b)" }}>
@@ -86,7 +86,7 @@ export default function CreateTaskModalOverlays({
                       type="button"
                       onClick={() => onSelectRestoreDraft(draft.id)}
                       className="w-full border px-3 py-2 text-left transition hover:opacity-80"
-                      style={{ borderRadius: "2px", borderColor: isSelected ? "rgba(245,158,11,0.5)" : "var(--th-border)", background: isSelected ? "rgba(245,158,11,0.08)" : "var(--th-bg-primary)" }}
+                      style={{ borderRadius: 0, borderColor: isSelected ? "rgba(245,158,11,0.5)" : "var(--th-border)", background: isSelected ? "rgba(245,158,11,0.08)" : "var(--th-bg-primary)" }}
                     >
                       <p className="truncate text-xs font-bold font-mono" style={{ color: "var(--th-text-primary)" }}>
                         {draft.title ||
@@ -110,7 +110,7 @@ export default function CreateTaskModalOverlays({
                 type="button"
                 onClick={onCloseRestorePrompt}
                 className="border px-3 py-1.5 text-xs font-semibold font-mono transition hover:opacity-80"
-                style={{ borderRadius: "2px", borderColor: "var(--th-border)", color: "var(--th-text-secondary)", background: "var(--th-bg-primary)" }}
+                style={{ borderRadius: 0, borderColor: "var(--th-border)", color: "var(--th-text-secondary)", background: "var(--th-bg-primary)" }}
               >
                 {t({ ko: "새로 작성", en: "Start Fresh", ja: "新規作成", zh: "重新填写" })}
               </button>
@@ -118,7 +118,7 @@ export default function CreateTaskModalOverlays({
                 type="button"
                 onClick={onLoadSelectedRestoreDraft}
                 className="px-3 py-1.5 text-xs font-semibold font-mono uppercase tracking-wider transition hover:opacity-90"
-                style={{ borderRadius: "2px", background: "var(--th-accent, #f59e0b)", color: "#000", border: "none" }}
+                style={{ borderRadius: 0, background: "var(--th-accent, #f59e0b)", color: "#000", border: "none" }}
               >
                 {t({ ko: "불러오기", en: "Load", ja: "読み込み", zh: "加载" })}
               </button>
@@ -134,7 +134,7 @@ export default function CreateTaskModalOverlays({
         >
           <div
             className="w-full max-w-md overflow-hidden shadow-2xl"
-            style={{ border: "1px solid var(--th-border)", borderRadius: "4px", background: "var(--th-bg-surface)" }}
+            style={{ border: "1px solid var(--th-border)", borderRadius: 0, background: "var(--th-bg-surface)" }}
             onClick={(event) => event.stopPropagation()}
           >
             <div className="px-4 py-3" style={{ borderBottom: "1px solid var(--th-border)", borderLeft: "3px solid var(--th-accent, #f59e0b)" }}>
@@ -170,7 +170,7 @@ export default function CreateTaskModalOverlays({
                 type="button"
                 onClick={onCloseSubmitWithoutProjectPrompt}
                 className="border px-3 py-1.5 text-xs font-semibold font-mono transition hover:opacity-80"
-                style={{ borderRadius: "2px", borderColor: "var(--th-border)", color: "var(--th-text-secondary)", background: "var(--th-bg-primary)" }}
+                style={{ borderRadius: 0, borderColor: "var(--th-border)", color: "var(--th-text-secondary)", background: "var(--th-bg-primary)" }}
               >
                 {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}
               </button>
@@ -178,7 +178,7 @@ export default function CreateTaskModalOverlays({
                 type="button"
                 onClick={onConfirmSubmitWithoutProject}
                 className="px-3 py-1.5 text-xs font-semibold font-mono uppercase tracking-wider transition hover:opacity-90"
-                style={{ borderRadius: "2px", background: "var(--th-accent, #f59e0b)", color: "#000", border: "none" }}
+                style={{ borderRadius: 0, background: "var(--th-accent, #f59e0b)", color: "#000", border: "none" }}
               >
                 {t({ ko: "계속", en: "Continue", ja: "続行", zh: "继续" })}
               </button>
@@ -194,7 +194,7 @@ export default function CreateTaskModalOverlays({
         >
           <div
             className="w-full max-w-md overflow-hidden shadow-2xl"
-            style={{ border: "1px solid var(--th-border)", borderRadius: "4px", background: "var(--th-bg-surface)" }}
+            style={{ border: "1px solid var(--th-border)", borderRadius: 0, background: "var(--th-bg-surface)" }}
             onClick={(event) => event.stopPropagation()}
           >
             <div className="px-4 py-3" style={{ borderBottom: "1px solid var(--th-border)", borderLeft: "3px solid var(--th-accent, #f59e0b)" }}>
@@ -216,7 +216,7 @@ export default function CreateTaskModalOverlays({
                   zh: "该路径不存在。现在创建吗？",
                 })}
               </p>
-              <p className="break-all border px-2.5 py-2 text-xs font-mono" style={{ borderRadius: "2px", borderColor: "var(--th-border)", background: "var(--th-bg-primary)", color: "var(--th-text-primary)" }}>
+              <p className="break-all border px-2.5 py-2 text-xs font-mono" style={{ borderRadius: 0, borderColor: "var(--th-border)", background: "var(--th-bg-primary)", color: "var(--th-text-primary)" }}>
                 {missingPathPrompt.normalizedPath}
               </p>
               {missingPathPrompt.nearestExistingParent && (
@@ -245,7 +245,7 @@ export default function CreateTaskModalOverlays({
                 type="button"
                 onClick={onCloseMissingPathPrompt}
                 className="border px-3 py-1.5 text-xs font-semibold font-mono transition hover:opacity-80"
-                style={{ borderRadius: "2px", borderColor: "var(--th-border)", color: "var(--th-text-secondary)", background: "var(--th-bg-primary)" }}
+                style={{ borderRadius: 0, borderColor: "var(--th-border)", color: "var(--th-text-secondary)", background: "var(--th-bg-primary)" }}
               >
                 {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}
               </button>
@@ -254,7 +254,7 @@ export default function CreateTaskModalOverlays({
                 disabled={!missingPathPrompt.canCreate || submitBusy}
                 onClick={onConfirmCreateMissingPath}
                 className="border px-3 py-1.5 text-xs font-semibold font-mono transition hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-40"
-                style={{ borderRadius: "2px", borderColor: "rgba(34,197,94,0.4)", background: "rgba(34,197,94,0.12)", color: "#22c55e" }}
+                style={{ borderRadius: 0, borderColor: "rgba(34,197,94,0.4)", background: "rgba(34,197,94,0.12)", color: "#22c55e" }}
               >
                 {t({ ko: "예", en: "Yes", ja: "はい", zh: "是" })}
               </button>
@@ -270,7 +270,7 @@ export default function CreateTaskModalOverlays({
         >
           <div
             className="w-full max-w-2xl overflow-hidden shadow-2xl"
-            style={{ border: "1px solid var(--th-border)", borderRadius: "4px", background: "var(--th-bg-surface)" }}
+            style={{ border: "1px solid var(--th-border)", borderRadius: 0, background: "var(--th-bg-surface)" }}
             onClick={(event) => event.stopPropagation()}
           >
             <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: "1px solid var(--th-border)", borderLeft: "3px solid var(--th-accent, #f59e0b)" }}>
@@ -286,13 +286,13 @@ export default function CreateTaskModalOverlays({
                 type="button"
                 onClick={onCloseManualPathPicker}
                 className="w-7 h-7 flex items-center justify-center text-xs font-mono transition hover:opacity-80"
-                style={{ border: "1px solid var(--th-border)", borderRadius: "2px", color: "var(--th-text-muted)", background: "var(--th-bg-primary)" }}
+                style={{ border: "1px solid var(--th-border)", borderRadius: 0, color: "var(--th-text-muted)", background: "var(--th-bg-primary)" }}
               >
                 ✕
               </button>
             </div>
             <div className="space-y-3 px-4 py-4">
-              <div className="border px-3 py-2" style={{ borderRadius: "2px", borderColor: "var(--th-border)", background: "var(--th-bg-primary)" }}>
+              <div className="border px-3 py-2" style={{ borderRadius: 0, borderColor: "var(--th-border)", background: "var(--th-bg-primary)" }}>
                 <p className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
                   {t({ ko: "현재 위치", en: "Current Location", ja: "現在位置", zh: "当前位置" })}
                 </p>
@@ -304,7 +304,7 @@ export default function CreateTaskModalOverlays({
                   disabled={!manualPathParent || manualPathLoading}
                   onClick={onManualPathGoUp}
                   className="border px-2.5 py-1 text-xs font-semibold font-mono transition hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-40"
-                  style={{ borderRadius: "2px", borderColor: "var(--th-border)", color: "var(--th-text-secondary)", background: "var(--th-bg-primary)" }}
+                  style={{ borderRadius: 0, borderColor: "var(--th-border)", color: "var(--th-text-secondary)", background: "var(--th-bg-primary)" }}
                 >
                   {t({ ko: "상위 폴더", en: "Up", ja: "上位フォルダ", zh: "上级目录" })}
                 </button>
@@ -313,12 +313,12 @@ export default function CreateTaskModalOverlays({
                   disabled={manualPathLoading}
                   onClick={onManualPathRefresh}
                   className="border px-2.5 py-1 text-xs font-semibold font-mono transition hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-40"
-                  style={{ borderRadius: "2px", borderColor: "var(--th-border)", color: "var(--th-text-secondary)", background: "var(--th-bg-primary)" }}
+                  style={{ borderRadius: 0, borderColor: "var(--th-border)", color: "var(--th-text-secondary)", background: "var(--th-bg-primary)" }}
                 >
                   {t({ ko: "새로고침", en: "Refresh", ja: "更新", zh: "刷新" })}
                 </button>
               </div>
-              <div className="max-h-[45dvh] overflow-y-auto border" style={{ borderRadius: "2px", borderColor: "var(--th-border)", background: "var(--th-bg-primary)" }}>
+              <div className="max-h-[45dvh] overflow-y-auto border" style={{ borderRadius: 0, borderColor: "var(--th-border)", background: "var(--th-bg-primary)" }}>
                 {manualPathLoading ? (
                   <p className="px-3 py-2 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
                     {t({
@@ -370,7 +370,7 @@ export default function CreateTaskModalOverlays({
                 type="button"
                 onClick={onCloseManualPathPicker}
                 className="border px-3 py-1.5 text-xs font-semibold font-mono transition hover:opacity-80"
-                style={{ borderRadius: "2px", borderColor: "var(--th-border)", color: "var(--th-text-secondary)", background: "var(--th-bg-primary)" }}
+                style={{ borderRadius: 0, borderColor: "var(--th-border)", color: "var(--th-text-secondary)", background: "var(--th-bg-primary)" }}
               >
                 {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}
               </button>
@@ -379,7 +379,7 @@ export default function CreateTaskModalOverlays({
                 disabled={!manualPathCurrent}
                 onClick={onSelectManualCurrentPath}
                 className="px-3 py-1.5 text-xs font-semibold font-mono uppercase tracking-wider transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
-                style={{ borderRadius: "2px", background: "var(--th-accent, #f59e0b)", color: "#000", border: "none" }}
+                style={{ borderRadius: 0, background: "var(--th-accent, #f59e0b)", color: "#000", border: "none" }}
               >
                 {t({
                   ko: "현재 폴더 선택",
@@ -400,7 +400,7 @@ export default function CreateTaskModalOverlays({
         >
           <div
             className="w-full max-w-xl overflow-hidden shadow-2xl"
-            style={{ border: "1px solid var(--th-border)", borderRadius: "4px", background: "var(--th-bg-surface)" }}
+            style={{ border: "1px solid var(--th-border)", borderRadius: 0, background: "var(--th-bg-surface)" }}
             onClick={(event) => event.stopPropagation()}
           >
             <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: "1px solid var(--th-border)", borderLeft: "3px solid var(--th-accent, #f59e0b)" }}>
@@ -411,7 +411,7 @@ export default function CreateTaskModalOverlays({
                 type="button"
                 onClick={onCloseDraftModal}
                 className="w-7 h-7 flex items-center justify-center text-xs font-mono transition hover:opacity-80"
-                style={{ border: "1px solid var(--th-border)", borderRadius: "2px", color: "var(--th-text-muted)", background: "var(--th-bg-primary)" }}
+                style={{ border: "1px solid var(--th-border)", borderRadius: 0, color: "var(--th-text-muted)", background: "var(--th-bg-primary)" }}
                 title={t({ ko: "닫기", en: "Close", ja: "閉じる", zh: "关闭" })}
               >
                 ✕
@@ -420,7 +420,7 @@ export default function CreateTaskModalOverlays({
 
             <div className="max-h-[55dvh] space-y-2 overflow-y-auto px-4 py-3">
               {drafts.length === 0 ? (
-                <div className="border px-3 py-4 text-center text-xs font-mono" style={{ borderRadius: "2px", borderColor: "var(--th-border)", background: "var(--th-bg-primary)", color: "var(--th-text-muted)" }}>
+                <div className="border px-3 py-4 text-center text-xs font-mono" style={{ borderRadius: 0, borderColor: "var(--th-border)", background: "var(--th-bg-primary)", color: "var(--th-text-muted)" }}>
                   {t({
                     ko: "저장된 임시 항목이 없습니다.",
                     en: "No temporary drafts saved.",
@@ -430,7 +430,7 @@ export default function CreateTaskModalOverlays({
                 </div>
               ) : (
                 drafts.map((draft) => (
-                  <div key={draft.id} className="border p-3" style={{ borderRadius: "2px", borderColor: "var(--th-border)", background: "var(--th-bg-primary)" }}>
+                  <div key={draft.id} className="border p-3" style={{ borderRadius: 0, borderColor: "var(--th-border)", background: "var(--th-bg-primary)" }}>
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
                         <p className="truncate text-xs font-bold font-mono" style={{ color: "var(--th-text-primary)" }}>
@@ -454,7 +454,7 @@ export default function CreateTaskModalOverlays({
                           type="button"
                           onClick={() => onLoadDraft(draft)}
                           className="px-2.5 py-1 text-xs font-semibold font-mono uppercase tracking-wider transition hover:opacity-90"
-                          style={{ borderRadius: "2px", background: "var(--th-accent, #f59e0b)", color: "#000", border: "none" }}
+                          style={{ borderRadius: 0, background: "var(--th-accent, #f59e0b)", color: "#000", border: "none" }}
                         >
                           {t({ ko: "불러오기", en: "Load", ja: "読み込み", zh: "加载" })}
                         </button>
@@ -462,7 +462,7 @@ export default function CreateTaskModalOverlays({
                           type="button"
                           onClick={() => onDeleteDraft(draft.id)}
                           className="border px-2.5 py-1 text-xs font-semibold font-mono transition hover:opacity-80"
-                          style={{ borderRadius: "2px", borderColor: "rgba(239,68,68,0.5)", color: "#f87171", background: "transparent" }}
+                          style={{ borderRadius: 0, borderColor: "rgba(239,68,68,0.5)", color: "#f87171", background: "transparent" }}
                         >
                           {t({ ko: "삭제", en: "Delete", ja: "削除", zh: "删除" })}
                         </button>
@@ -479,7 +479,7 @@ export default function CreateTaskModalOverlays({
                 onClick={onClearDrafts}
                 disabled={drafts.length === 0}
                 className="px-3 py-1.5 text-xs font-semibold font-mono uppercase tracking-wider transition disabled:cursor-not-allowed disabled:opacity-40"
-                style={{ border: "1px solid var(--th-border)", borderRadius: "2px", color: "var(--th-text-secondary)", background: "transparent" }}
+                style={{ border: "1px solid var(--th-border)", borderRadius: 0, color: "var(--th-text-secondary)", background: "transparent" }}
               >
                 {t({ ko: "전체 삭제", en: "Delete All", ja: "すべて削除", zh: "全部删除" })}
               </button>

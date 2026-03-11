@@ -49,7 +49,7 @@ export default function EmojiPicker({
         type="button"
         onClick={() => setOpen(!open)}
         className={`${btnSize} border flex items-center justify-center transition-all hover:scale-105 hover:shadow-md`}
-        style={{ borderRadius: "4px", background: "var(--th-input-bg)", borderColor: "var(--th-input-border)" }}
+        style={{ borderRadius: 0, background: "var(--th-input-bg)", borderColor: "var(--th-input-border)" }}
       >
         {value || "❓"}
       </button>

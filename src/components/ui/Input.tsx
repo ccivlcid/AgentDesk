@@ -11,7 +11,7 @@ const INPUT_INLINE: React.CSSProperties = {
   padding: "8px 12px",
   background: "var(--th-input-bg)",
   border: "1px solid var(--th-input-border)",
-  borderRadius: "2px",
+  borderRadius: 0,
   color: "var(--th-text-primary)",
 };
 

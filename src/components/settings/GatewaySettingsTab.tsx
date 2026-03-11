@@ -512,7 +512,7 @@ export default function GatewaySettingsTab({
   return (
     <section
       className="space-y-4 p-4 sm:p-5"
-      style={{ borderRadius: "4px", background: "var(--th-bg-surface)", borderColor: "var(--th-border)" }}
+      style={{ borderRadius: 0, background: "var(--th-bg-surface)", borderColor: "var(--th-border)" }}
     >
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold" style={{ color: "var(--th-text-heading)" }}>
@@ -538,7 +538,7 @@ export default function GatewaySettingsTab({
         })}
       </p>
 
-      <div className="p-3 space-y-3" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
+      <div className="p-3 space-y-3" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
         <div className="flex items-center justify-between">
           <div className="text-sm font-semibold font-mono" style={{ color: "var(--th-text-heading)" }}>
             {t({ ko: "채팅 세션", en: "Chat Sessions", ja: "チャットセッション", zh: "聊天会话" })}
@@ -548,7 +548,7 @@ export default function GatewaySettingsTab({
               type="button"
               onClick={() => setGuideOpen(true)}
               className="flex items-center justify-center w-7 h-7 transition-colors"
-              style={{ borderRadius: "2px", border: "1px solid var(--th-border)", color: "var(--th-text-muted)", background: "var(--th-bg-elevated)" }}
+              style={{ borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-muted)", background: "var(--th-bg-elevated)" }}
               title={t({ ko: "설정 가이드", en: "Setup Guide", ja: "設定ガイド", zh: "设置指南" })}
               aria-label={t({ ko: "설정 가이드", en: "Setup Guide", ja: "設定ガイド", zh: "设置指南" })}
             >
@@ -561,7 +561,7 @@ export default function GatewaySettingsTab({
             <button
               onClick={openCreateModal}
               className="text-xs px-3 py-1 font-mono transition-colors"
-              style={{ borderRadius: "2px", background: "var(--th-accent)", color: "#000" }}
+              style={{ borderRadius: 0, background: "var(--th-accent)", color: "#000" }}
             >
               + {t({ ko: "새 채팅 추가", en: "Add Chat", ja: "チャット追加", zh: "新增聊天" })}
             </button>
@@ -592,27 +592,27 @@ export default function GatewaySettingsTab({
                 workflowPackNameByKey.get(workflowPackKey) ?? defaultWorkflowPackLabel(t, workflowPackKey);
               const tokenReady = row.token.trim().length > 0;
               return (
-                <div key={row.key} className="px-3 py-2" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
+                <div key={row.key} className="px-3 py-2" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-semibold font-mono" style={{ color: "var(--th-text-primary)" }}>{row.session.name}</span>
-                        <span className="text-[10px] px-1.5 py-0.5 font-mono uppercase" style={{ borderRadius: "2px", background: "var(--th-bg-surface-hover)", color: "var(--th-text-secondary)" }}>
+                        <span className="text-[10px] px-1.5 py-0.5 font-mono uppercase" style={{ borderRadius: 0, background: "var(--th-bg-surface-hover)", color: "var(--th-text-secondary)" }}>
                           {meta.label}
                         </span>
                         <span
                           className="text-[10px] px-1.5 py-0.5 font-mono"
-                          style={{ borderRadius: "2px", background: meta.transportReady ? "rgba(16,185,129,0.15)" : "rgba(245,158,11,0.15)", color: meta.transportReady ? "#34d399" : "#fbbf24" }}
+                          style={{ borderRadius: 0, background: meta.transportReady ? "rgba(16,185,129,0.15)" : "rgba(245,158,11,0.15)", color: meta.transportReady ? "#34d399" : "#fbbf24" }}
                         >
                           {meta.transportReady
                             ? t({ ko: "직접연동", en: "Native", ja: "直接連携", zh: "直连" })
                             : t({ ko: "호환설정", en: "Compat", ja: "互換設定", zh: "兼容配置" })}
                         </span>
-                        <span className="text-[10px] px-1.5 py-0.5 font-mono text-indigo-300" style={{ borderRadius: "2px", background: "rgba(99,102,241,0.15)" }}>
+                        <span className="text-[10px] px-1.5 py-0.5 font-mono text-indigo-300" style={{ borderRadius: 0, background: "rgba(99,102,241,0.15)" }}>
                           {workflowPackLabel}
                         </span>
                         {!tokenReady && (
-                          <span className="text-[10px] px-1.5 py-0.5 font-mono text-red-300" style={{ borderRadius: "2px", background: "rgba(239,68,68,0.15)" }}>
+                          <span className="text-[10px] px-1.5 py-0.5 font-mono text-red-300" style={{ borderRadius: 0, background: "rgba(239,68,68,0.15)" }}>
                             {t({ ko: "토큰 없음", en: "No token", ja: "トークンなし", zh: "无令牌" })}
                           </span>
                         )}
@@ -643,14 +643,14 @@ export default function GatewaySettingsTab({
                       <button
                         onClick={() => openEditModal(row)}
                         className="px-2 py-1 text-[11px] font-mono transition-colors"
-                        style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
+                        style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
                       >
                         {t({ ko: "편집", en: "Edit", ja: "編集", zh: "编辑" })}
                       </button>
                       <button
                         onClick={() => removeChat(row)}
                         className="px-2 py-1 text-[11px] font-mono text-red-300 transition-colors"
-                        style={{ borderRadius: "2px", background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.3)" }}
+                        style={{ borderRadius: 0, background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.3)" }}
                       >
                         {t({ ko: "삭제", en: "Delete", ja: "削除", zh: "删除" })}
                       </button>
@@ -672,7 +672,7 @@ export default function GatewaySettingsTab({
         </div>
       </div>
 
-      <div className="p-3 space-y-3" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
+      <div className="p-3 space-y-3" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
         <div className="flex items-center justify-between">
           <div className="text-sm font-semibold font-mono" style={{ color: "var(--th-text-heading)" }}>
             {t({ ko: "세션 테스트 전송", en: "Test Send", ja: "送信テスト", zh: "发送测试" })}
@@ -696,7 +696,7 @@ export default function GatewaySettingsTab({
         </div>
 
         {telegramReceiverStatus && (
-          <div className="px-3 py-2 text-xs font-mono space-y-1" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface)", color: "var(--th-text-secondary)" }}>
+          <div className="px-3 py-2 text-xs font-mono space-y-1" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)", color: "var(--th-text-secondary)" }}>
             <div>
               {t({ ko: "텔레그램 수신기", en: "Telegram Receiver", ja: "Telegram 受信機", zh: "Telegram 接收器" })}:{" "}
               <span className={telegramReceiverStatus.enabled ? "text-emerald-400" : "text-amber-300"}>
@@ -714,7 +714,7 @@ export default function GatewaySettingsTab({
         )}
 
         {discordReceiverStatus && (
-          <div className="px-3 py-2 text-xs font-mono space-y-1" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface)", color: "var(--th-text-secondary)" }}>
+          <div className="px-3 py-2 text-xs font-mono space-y-1" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)", color: "var(--th-text-secondary)" }}>
             <div>
               {t({ ko: "디스코드 수신기", en: "Discord Receiver", ja: "Discord 受信機", zh: "Discord 接收器" })}:{" "}
               <span className={discordReceiverStatus.enabled ? "text-emerald-400" : "text-amber-300"}>
@@ -749,7 +749,7 @@ export default function GatewaySettingsTab({
               value={selectedChat?.key ?? ""}
               onChange={(e) => setSelectedChatKey(e.target.value)}
               className="w-full px-3 py-2 text-sm focus:outline-none"
-              style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
+              style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
             >
               {chatRows.map((row) => (
                 <option key={row.key} value={row.key}>
@@ -771,11 +771,11 @@ export default function GatewaySettingsTab({
             zh: "输入测试消息...",
           })}
           className="w-full px-3 py-2 text-sm focus:outline-none resize-y"
-          style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
+          style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
         />
 
         {!selectedChatTransportReady && selectedChat && (
-          <div className="text-xs font-mono px-3 py-2 text-amber-300" style={{ borderRadius: "2px", border: "1px solid rgba(245,158,11,0.25)", background: "rgba(245,158,11,0.08)" }}>
+          <div className="text-xs font-mono px-3 py-2 text-amber-300" style={{ borderRadius: 0, border: "1px solid rgba(245,158,11,0.25)", background: "rgba(245,158,11,0.08)" }}>
             {t({
               ko: "이 채널은 현재 설정 저장/매핑은 가능하지만, 직접 전송 런타임은 아직 준비되지 않았습니다.",
               en: "This channel can be configured and mapped, but direct transport runtime is not ready yet.",
@@ -789,7 +789,7 @@ export default function GatewaySettingsTab({
           onClick={() => void handleSendMessage()}
           disabled={sending || !selectedChat || !sendText.trim() || !selectedChatTransportReady}
           className="px-4 py-2 text-sm font-medium font-mono uppercase tracking-wider transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          style={{ borderRadius: "2px", background: "var(--th-accent)", color: "#000" }}
+          style={{ borderRadius: 0, background: "var(--th-accent)", color: "#000" }}
         >
           {sending
             ? t({ ko: "전송 중...", en: "Sending...", ja: "送信中...", zh: "发送中..." })
@@ -800,7 +800,7 @@ export default function GatewaySettingsTab({
           <div
             className="text-xs font-mono px-3 py-2"
             style={{
-              borderRadius: "2px",
+              borderRadius: 0,
               background: sendStatus.ok ? "rgba(34,197,94,0.08)" : "rgba(239,68,68,0.08)",
               border: sendStatus.ok ? "1px solid rgba(34,197,94,0.2)" : "1px solid rgba(239,68,68,0.2)",
               color: sendStatus.ok ? "#4ade80" : "#f87171",
@@ -815,7 +815,7 @@ export default function GatewaySettingsTab({
             <div className="text-xs font-mono mb-1" style={{ color: "var(--th-text-muted)" }}>
               {t({ ko: "런타임 세션", en: "Runtime Sessions", ja: "実行中セッション", zh: "运行时会话" })}
             </div>
-            <div className="max-h-44 overflow-auto" style={{ borderRadius: "2px", border: "1px solid var(--th-border)" }}>
+            <div className="max-h-44 overflow-auto" style={{ borderRadius: 0, border: "1px solid var(--th-border)" }}>
               {runtimeSessions.map((session) => (
                 <div
                   key={session.sessionKey}
@@ -830,7 +830,7 @@ export default function GatewaySettingsTab({
         )}
       </div>
 
-      <div className="mt-5 p-3 space-y-3" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
+      <div className="mt-5 p-3 space-y-3" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
         <p className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
           {t({
             ko: "Slack·Discord 웹훅은 위 '새 채팅 추가'에서 해당 채널을 선택한 뒤 모달 안에서 설정하세요. 기타 URL은 아래에서 추가할 수 있습니다.",

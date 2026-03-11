@@ -91,7 +91,7 @@ export default function RuleFormModal({
   };
 
   const selectStyle: React.CSSProperties = {
-    borderRadius: "2px",
+    borderRadius: 0,
     background: "var(--th-input-bg)",
     border: "1px solid var(--th-input-border)",
     color: "var(--th-text-secondary)",
@@ -219,7 +219,7 @@ export default function RuleFormModal({
             </div>
           </div>
           {fileName && ruleContent && (
-            <div className="mt-2 p-2 max-h-24 overflow-y-auto" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-terminal-bg)" }}>
+            <div className="mt-2 p-2 max-h-24 overflow-y-auto" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-terminal-bg)" }}>
               <pre className="text-[10px] whitespace-pre-wrap break-all font-mono" style={{ color: "var(--th-text-muted)" }}>
                 {ruleContent.slice(0, 500)}
                 {ruleContent.length > 500 && "..."}
@@ -258,7 +258,7 @@ export default function RuleFormModal({
 
         {/* Error */}
         {error && (
-          <div className="text-[11px] px-3 py-2" style={{ borderRadius: "2px", background: "var(--th-danger-bg)", border: "1px solid var(--th-danger-border)", color: "var(--th-danger-text)" }}>
+          <div className="text-[11px] px-3 py-2" style={{ borderRadius: 0, background: "var(--th-danger-bg)", border: "1px solid var(--th-danger-border)", color: "var(--th-danger-text)" }}>
             {error}
           </div>
         )}

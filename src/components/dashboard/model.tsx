@@ -129,12 +129,12 @@ export const DEPT_COLORS = [
 export function XpBar({ xp, maxXp, color }: { xp: number; maxXp: number; color: string }) {
   const pct = maxXp > 0 ? Math.min(100, Math.round((xp / maxXp) * 100)) : 0;
   return (
-    <div className="relative h-2 w-full overflow-hidden border border-white/[0.08] bg-white/[0.04]" style={{ borderRadius: "1px" }}>
+    <div className="relative h-2 w-full overflow-hidden border border-white/[0.08] bg-white/[0.04]" style={{ borderRadius: 0 }}>
       <div
         className="xp-bar-fill h-full transition-all duration-1000 ease-out"
         style={{
           width: `${pct}%`,
-          borderRadius: "1px",
+          borderRadius: 0,
           background: `linear-gradient(90deg, ${color}88, ${color})`,
         }}
       />

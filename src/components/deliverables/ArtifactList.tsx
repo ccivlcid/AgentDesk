@@ -8,48 +8,38 @@ interface ArtifactListProps {
   onPreview: (artifact: TaskArtifact) => void;
 }
 
-const FILE_ICONS: Record<string, string> = {
-  ".pptx": "\uD83D\uDCCA",
-  ".ppt": "\uD83D\uDCCA",
-  ".xlsx": "\uD83D\uDCC8",
-  ".xls": "\uD83D\uDCC8",
-  ".docx": "\uD83D\uDCC4",
-  ".doc": "\uD83D\uDCC4",
-  ".pdf": "\uD83D\uDCD5",
-  ".mp4": "\uD83C\uDFAC",
-  ".mp3": "\uD83C\uDFB5",
-  ".html": "\uD83C\uDF10",
-  ".htm": "\uD83C\uDF10",
-  ".md": "\uD83D\uDCDD",
-  ".markdown": "\uD83D\uDCDD",
-  ".txt": "\uD83D\uDCDD",
-  ".json": "\uD83D\uDCDD",
-  ".csv": "\uD83D\uDCDD",
-  ".png": "\uD83D\uDDBC\uFE0F",
-  ".jpg": "\uD83D\uDDBC\uFE0F",
-  ".jpeg": "\uD83D\uDDBC\uFE0F",
-  ".gif": "\uD83D\uDDBC\uFE0F",
-  ".svg": "\uD83D\uDDBC\uFE0F",
-  ".webp": "\uD83D\uDDBC\uFE0F",
-  ".zip": "\uD83D\uDCE6",
+const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };
+
+const EXT_COLOR: Record<string, string> = {
+  ".pptx": "#f59e0b", ".ppt": "#f59e0b",
+  ".xlsx": "#4ade80", ".xls": "#4ade80",
+  ".docx": "#60a5fa", ".doc": "#60a5fa",
+  ".pdf":  "#f87171",
+  ".mp4":  "#c084fc", ".mp3": "#c084fc",
+  ".html": "#34d399", ".htm": "#34d399",
+  ".md":   "#94a3b8", ".txt": "#94a3b8",
+  ".json": "#fbbf24", ".csv": "#fbbf24",
+  ".png":  "#818cf8", ".jpg": "#818cf8", ".jpeg": "#818cf8",
+  ".gif":  "#818cf8", ".svg": "#818cf8", ".webp": "#818cf8",
+  ".zip":  "#f59e0b",
 };
 
-function getIcon(fileName: string): string {
-  const ext = fileName.slice(fileName.lastIndexOf(".")).toLowerCase();
-  return FILE_ICONS[ext] || "\uD83D\uDCC1";
-}
+const EXT_TAG: Record<string, string> = {
+  ".pptx": "PPT",  ".ppt":  "PPT",
+  ".xlsx": "XLS",  ".xls":  "XLS",
+  ".docx": "DOC",  ".doc":  "DOC",
+  ".pdf":  "PDF",
+  ".mp4":  "MP4",  ".mp3":  "MP3",
+  ".html": "HTML", ".htm":  "HTML",
+  ".md":   "MD",   ".txt":  "TXT",
+  ".json": "JSON", ".csv":  "CSV",
+  ".png":  "PNG",  ".jpg":  "JPG",  ".jpeg": "JPG",
+  ".gif":  "GIF",  ".svg":  "SVG",  ".webp": "WEBP",
+  ".zip":  "ZIP",
+};
 
-const IMAGE_EXTS = new Set([".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp", ".bmp", ".ico"]);
-const PDF_EXTS = new Set([".pdf"]);
-
-function isImageFile(fileName: string): boolean {
-  const ext = fileName.slice(fileName.lastIndexOf(".")).toLowerCase();
-  return IMAGE_EXTS.has(ext);
-}
-
-function isPdfFile(fileName: string): boolean {
-  const ext = fileName.slice(fileName.lastIndexOf(".")).toLowerCase();
-  return PDF_EXTS.has(ext);
+function getExt(fileName: string): string {
+  return fileName.slice(fileName.lastIndexOf(".")).toLowerCase();
 }
 
 function formatSize(bytes: number): string {
@@ -58,57 +48,104 @@ function formatSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+const IMAGE_EXTS = new Set([".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp", ".bmp", ".ico"]);
+const PDF_EXTS   = new Set([".pdf"]);
+
 export default function ArtifactList({ taskId, artifacts, onPreview }: ArtifactListProps) {
   const { t } = useI18n();
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   return (
-    <div style={{ borderTop: "1px solid var(--th-border)" }}>
-      {artifacts.map((art) => {
-        const isText = art.type === "text";
-        const isHtml = art.mime === "text/html";
-        const isImage = isImageFile(art.title);
-        const isPdf = isPdfFile(art.title);
-        const canInlinePreview = isImage || isPdf;
+    <div>
+      {artifacts.map((art, idx) => {
+        const ext = getExt(art.title);
+        const extColor = EXT_COLOR[ext] ?? "#64748b";
+        const extTag   = EXT_TAG[ext]   ?? ext.replace(".", "").toUpperCase().slice(0, 4);
+        const isText   = art.type === "text";
+        const isHtml   = art.mime === "text/html";
+        const isImage  = IMAGE_EXTS.has(ext);
+        const isPdf    = PDF_EXTS.has(ext);
+        const canInline = isImage || isPdf;
         const isExpanded = expandedId === art.id;
         const downloadUrl = getTaskArtifactDownloadUrl(taskId, art.relativePath);
-        const previewUrl = getTaskArtifactDownloadUrl(taskId, art.relativePath, true);
+        const previewUrl  = getTaskArtifactDownloadUrl(taskId, art.relativePath, true);
 
         return (
           <div key={art.id}>
-            <div className="flex items-center gap-2.5 px-3 py-2 hover:bg-[var(--th-bg-surface-hover)] transition" style={{ borderBottom: "1px solid var(--th-border)" }}>
-              <span className="text-base shrink-0">{getIcon(art.title)}</span>
-              <div className="min-w-0 flex-1">
-                <div className="text-xs font-mono truncate" style={{ color: "var(--th-text-primary)" }} title={art.relativePath}>
+            <div
+              className="group"
+              style={{
+                ...mono,
+                display: "flex",
+                alignItems: "center",
+                gap: 0,
+                borderBottom: idx < artifacts.length - 1 || isExpanded ? "1px solid var(--th-border)" : "none",
+                background: "var(--th-bg-primary)",
+                transition: "background 0.1s",
+              }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--th-bg-elevated)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--th-bg-primary)"; }}
+            >
+              {/* 파일 타입 태그 */}
+              <div style={{ width: 44, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", padding: "10px 0" }}>
+                <span style={{ fontSize: "8px", fontWeight: 700, padding: "1px 4px", border: `1px solid ${extColor}44`, color: extColor, background: `${extColor}11`, letterSpacing: "0.06em" }}>
+                  {extTag}
+                </span>
+              </div>
+
+              {/* 파일명 + 경로 */}
+              <div style={{ flex: 1, minWidth: 0, padding: "10px 8px" }}>
+                <div style={{ fontSize: "10px", fontWeight: 600, color: "var(--th-text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                  title={art.relativePath}
+                >
                   {art.title}
                 </div>
-                <div className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>{formatSize(art.size)}</div>
+                {art.relativePath !== art.title && (
+                  <div style={{ fontSize: "9px", color: "var(--th-text-muted)", opacity: 0.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {art.relativePath}
+                  </div>
+                )}
               </div>
-              <div className="flex items-center gap-1.5 shrink-0">
-                {canInlinePreview && (
+
+              {/* 크기 */}
+              <span style={{ fontSize: "9px", color: "var(--th-text-muted)", width: 64, flexShrink: 0, textAlign: "right", paddingRight: 12 }}>
+                {formatSize(art.size)}
+              </span>
+
+              {/* 액션 버튼 */}
+              <div style={{ display: "flex", borderLeft: "1px solid var(--th-border)", flexShrink: 0 }}>
+                {canInline && (
                   <button
                     type="button"
                     onClick={() => setExpandedId(isExpanded ? null : art.id)}
-                    className="px-2 py-0.5 text-[10px] font-mono transition"
-                    style={isExpanded
-                      ? { borderRadius: "2px", border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.1)", color: "var(--th-accent)" }
-                      : { borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
-                    title={t({ ko: "미리보기", en: "Preview", ja: "プレビュー", zh: "预览" })}
+                    style={{
+                      ...mono,
+                      fontSize: "9px",
+                      fontWeight: 700,
+                      padding: "0 10px",
+                      minHeight: 38,
+                      background: isExpanded ? "rgba(245,158,11,0.08)" : "none",
+                      border: "none",
+                      borderRight: "1px solid var(--th-border)",
+                      color: isExpanded ? "var(--th-accent)" : "var(--th-text-muted)",
+                      cursor: "pointer",
+                      letterSpacing: "0.04em",
+                    }}
                   >
                     {isExpanded
-                      ? t({ ko: "접기", en: "Hide", ja: "閉じる", zh: "收起" })
-                      : t({ ko: "미리보기", en: "Preview", ja: "プレビュー", zh: "预览" })}
+                      ? t({ ko: "접기", en: "HIDE", ja: "閉じる", zh: "收起" })
+                      : t({ ko: "보기", en: "VIEW", ja: "プレビュー", zh: "预览" })}
                   </button>
                 )}
                 {isText && !isHtml && (
                   <button
                     type="button"
                     onClick={() => onPreview(art)}
-                    className="px-2 py-0.5 text-[10px] font-mono transition"
-                    style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
-                    title={t({ ko: "보기", en: "View", ja: "表示", zh: "查看" })}
+                    style={{ ...mono, fontSize: "9px", fontWeight: 700, padding: "0 10px", minHeight: 38, background: "none", border: "none", borderRight: "1px solid var(--th-border)", color: "var(--th-text-muted)", cursor: "pointer", letterSpacing: "0.04em" }}
+                    onMouseEnter={(e) => { e.currentTarget.style.color = "var(--th-accent)"; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.color = "var(--th-text-muted)"; }}
                   >
-                    {t({ ko: "보기", en: "View", ja: "表示", zh: "查看" })}
+                    VIEW
                   </button>
                 )}
                 {isHtml && (
@@ -116,44 +153,33 @@ export default function ArtifactList({ taskId, artifacts, onPreview }: ArtifactL
                     href={previewUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="px-2 py-0.5 text-[10px] font-mono transition"
-                    style={{ borderRadius: "2px", border: "1px solid rgba(167,139,250,0.4)", background: "rgba(167,139,250,0.1)", color: "rgb(196,181,253)" }}
+                    style={{ ...mono, fontSize: "9px", fontWeight: 700, padding: "0 10px", minHeight: 38, display: "flex", alignItems: "center", background: "rgba(167,139,250,0.08)", borderRight: "1px solid var(--th-border)", color: "rgb(196,181,253)", textDecoration: "none", letterSpacing: "0.04em" }}
                   >
-                    {t({ ko: "미리보기", en: "Preview", ja: "プレビュー", zh: "预览" })}
+                    OPEN
                   </a>
                 )}
                 <a
                   href={downloadUrl}
                   download
-                  className="px-2 py-0.5 text-[10px] font-mono transition"
-                  style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
+                  style={{ ...mono, fontSize: "9px", fontWeight: 700, padding: "0 10px", minHeight: 38, display: "flex", alignItems: "center", background: "none", color: "var(--th-text-muted)", textDecoration: "none", letterSpacing: "0.04em" }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = "#4ade80"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = "var(--th-text-muted)"; }}
                   title={t({ ko: "다운로드", en: "Download", ja: "ダウンロード", zh: "下载" })}
                 >
-                  {t({ ko: "다운", en: "DL", ja: "DL", zh: "下载" })}
+                  ↓ DL
                 </a>
               </div>
             </div>
-            {/* Inline preview */}
+
+            {/* 인라인 미리보기 */}
             {isExpanded && isImage && (
-              <div className="px-3 pb-3">
-                <div className="p-2 flex items-center justify-center" style={{ borderRadius: "2px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
-                  <img
-                    src={previewUrl}
-                    alt={art.title}
-                    className="max-w-full max-h-80 object-contain"
-                    loading="lazy"
-                  />
-                </div>
+              <div style={{ padding: "10px 14px", borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
+                <img src={previewUrl} alt={art.title} style={{ maxWidth: "100%", maxHeight: 320, objectFit: "contain", display: "block" }} loading="lazy" />
               </div>
             )}
             {isExpanded && isPdf && (
-              <div className="px-3 pb-3">
-                <iframe
-                  src={previewUrl}
-                  title={art.title}
-                  className="w-full h-96 bg-white"
-                  style={{ borderRadius: "2px", border: "1px solid var(--th-border)" }}
-                />
+              <div style={{ borderBottom: "1px solid var(--th-border)" }}>
+                <iframe src={previewUrl} title={art.title} style={{ width: "100%", height: 400, background: "#fff", display: "block", border: "none" }} />
               </div>
             )}
           </div>

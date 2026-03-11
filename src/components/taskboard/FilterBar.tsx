@@ -25,6 +25,8 @@ interface FilterBarProps {
   onSearch: (value: string) => void;
 }
 
+type _AgentUnused = Agent; // suppress unused import warning
+
 const EXECUTION_FILTER_OPTIONS: Array<{ value: "" | TaskExecutionState | "attention"; label: Record<string, string> }> = [
   { value: "", label: { ko: "전체 실행", en: "All Execution", ja: "全実行", zh: "全部执行" } },
   { value: "running", label: { ko: "실행 중", en: "Running", ja: "実行中", zh: "执行中" } },
@@ -35,160 +37,109 @@ const EXECUTION_FILTER_OPTIONS: Array<{ value: "" | TaskExecutionState | "attent
   { value: "attention", label: { ko: "주의 필요", en: "Needs Attention", ja: "要注意", zh: "需要关注" } },
 ];
 
+const selectStyle: React.CSSProperties = {
+  border: "1px solid var(--th-border)",
+  borderRadius: 0,
+  padding: "0.25rem 0.5rem",
+  background: "var(--th-bg-surface)",
+  color: "var(--th-text-secondary)",
+  fontFamily: "var(--th-font-mono)",
+  fontSize: "0.75rem",
+  outline: "none",
+};
+
 export default function FilterBar({
   departments,
   projects,
-  agents = [],
   filterDept,
   filterType,
   filterProject,
-  filterAgent,
   filterExecution,
   search,
   onFilterDept,
   onFilterType,
   onFilterProject,
-  onFilterAgent,
   onFilterExecution,
   onSearch,
-}: FilterBarProps) {
+}: Omit<FilterBarProps, "agents" | "filterAgent" | "onFilterAgent">) {
   const { t, language: locale } = useI18n();
 
+  const hasFilter = !!(filterDept || filterType || filterProject || filterExecution || search);
+
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <div className="relative min-w-[140px] flex-1 sm:min-w-[180px]">
-        <input
-          type="text"
-          value={search}
-          onChange={(event) => onSearch(event.target.value)}
-          placeholder={t({ ko: "업무 검색...", en: "Search tasks...", ja: "タスク検索...", zh: "搜索任务..." })}
-          className="w-full outline-none"
-          style={{
-            border: "1px solid var(--th-border)",
-            borderRadius: "2px",
-            padding: "0.3rem 0.625rem",
-            background: "var(--th-bg-surface)",
-            color: "var(--th-text-primary)",
-            fontFamily: "var(--th-font-mono)",
-            fontSize: "0.8125rem",
-            transition: "border-color 0.1s linear",
-          }}
-          aria-label={t({ ko: "업무 검색", en: "Search tasks", ja: "タスク検索", zh: "搜索任务" })}
-        />
-      </div>
-
-      <select
-        value={filterDept}
-        onChange={(event) => onFilterDept(event.target.value)}
-        className="outline-none"
+    <div className="flex flex-wrap items-center gap-1.5 px-3 py-2">
+      {/* 검색 */}
+      <input
+        type="text"
+        value={search}
+        onChange={(e) => onSearch(e.target.value)}
+        placeholder={t({ ko: "검색...", en: "search...", ja: "検索...", zh: "搜索..." })}
         style={{
-          border: "1px solid var(--th-border)",
-          borderRadius: "2px",
-          padding: "0.3rem 0.625rem",
-          background: "var(--th-bg-surface)",
-          color: "var(--th-text-secondary)",
-          fontFamily: "var(--th-font-mono)",
-          fontSize: "0.8125rem",
+          ...selectStyle,
+          minWidth: 120,
+          flex: 1,
+          color: "var(--th-text-primary)",
+          padding: "0.25rem 0.625rem",
         }}
-      >
-        <option value="">{t({ ko: "전체 부서", en: "All Departments", ja: "全部署", zh: "全部门" })}</option>
-        {departments.map((department) => (
-          <option key={department.id} value={department.id}>
-            {department.icon} {locale === "ko" ? department.name_ko : department.name}
+        aria-label={t({ ko: "업무 검색", en: "Search tasks", ja: "タスク検索", zh: "搜索任务" })}
+      />
+
+      {/* 부서 */}
+      <select value={filterDept} onChange={(e) => onFilterDept(e.target.value)} style={selectStyle}>
+        <option value="">{t({ ko: "전체 부서", en: "ALL DEPT", ja: "全部署", zh: "全部门" })}</option>
+        {departments.map((d) => (
+          <option key={d.id} value={d.id}>
+            {d.icon} {locale === "ko" ? d.name_ko : d.name}
           </option>
         ))}
       </select>
 
-      <select
-        value={filterType}
-        onChange={(event) => onFilterType(event.target.value)}
-        className="outline-none"
-        style={{
-          border: "1px solid var(--th-border)",
-          borderRadius: "2px",
-          padding: "0.3rem 0.625rem",
-          background: "var(--th-bg-surface)",
-          color: "var(--th-text-secondary)",
-          fontFamily: "var(--th-font-mono)",
-          fontSize: "0.8125rem",
-        }}
-      >
-        <option value="">{t({ ko: "전체 유형", en: "All Types", ja: "全タイプ", zh: "全部类型" })}</option>
-        {TASK_TYPE_OPTIONS.map((typeOption) => (
-          <option key={typeOption.value} value={typeOption.value}>
-            {taskTypeLabel(typeOption.value, t)}
-          </option>
+      {/* 유형 */}
+      <select value={filterType} onChange={(e) => onFilterType(e.target.value)} style={selectStyle}>
+        <option value="">{t({ ko: "전체 유형", en: "ALL TYPE", ja: "全タイプ", zh: "全类型" })}</option>
+        {TASK_TYPE_OPTIONS.map((o) => (
+          <option key={o.value} value={o.value}>{taskTypeLabel(o.value, t)}</option>
         ))}
       </select>
 
+      {/* 프로젝트 */}
       {projects.length > 0 && (
-        <select
-          value={filterProject}
-          onChange={(event) => onFilterProject(event.target.value)}
-          className="border outline-none transition"
-          style={{
-            borderRadius: "2px",
-            padding: "0.3rem 0.625rem",
-            borderColor: "var(--th-border)",
-            background: "var(--th-bg-surface)",
-            color: "var(--th-text-secondary)",
-            fontFamily: "var(--th-font-mono)",
-            fontSize: "0.8125rem",
-          }}
-        >
-          <option value="">{t({ ko: "전체 프로젝트", en: "All Projects", ja: "全プロジェクト", zh: "全部项目" })}</option>
-          {projects.map((project) => (
-            <option key={project.id} value={project.id}>
-              {project.name}
-            </option>
+        <select value={filterProject} onChange={(e) => onFilterProject(e.target.value)} style={selectStyle}>
+          <option value="">{t({ ko: "전체 프로젝트", en: "ALL PROJ", ja: "全PJ", zh: "全项目" })}</option>
+          {projects.map((p) => (
+            <option key={p.id} value={p.id}>{p.name}</option>
           ))}
         </select>
       )}
 
-      {agents.length > 0 && (
-        <select
-          value={filterAgent}
-          onChange={(event) => onFilterAgent(event.target.value)}
-          className="outline-none"
-          style={{
-            border: "1px solid var(--th-border)",
-            borderRadius: "2px",
-            padding: "0.3rem 0.625rem",
-            background: "var(--th-bg-surface)",
-            color: "var(--th-text-secondary)",
-            fontFamily: "var(--th-font-mono)",
-            fontSize: "0.8125rem",
-          }}
-        >
-          <option value="">{t({ ko: "전체 담당자", en: "All Agents", ja: "全担当", zh: "全部担当" })}</option>
-          {agents.map((agent) => (
-            <option key={agent.id} value={agent.id}>
-              {agent.avatar_emoji} {locale === "ko" ? (agent.name_ko || agent.name) : agent.name}
-            </option>
-          ))}
-        </select>
-      )}
-
-      <select
-        value={filterExecution}
-        onChange={(event) => onFilterExecution(event.target.value)}
-        className="outline-none"
-        style={{
-          border: "1px solid var(--th-border)",
-          borderRadius: "2px",
-          padding: "0.3rem 0.625rem",
-          background: "var(--th-bg-surface)",
-          color: "var(--th-text-secondary)",
-          fontFamily: "var(--th-font-mono)",
-          fontSize: "0.8125rem",
-        }}
-      >
-        {EXECUTION_FILTER_OPTIONS.map((option) => (
-          <option key={option.value || "all"} value={option.value}>
-            {option.label[locale] ?? option.label.en}
+      {/* 실행 상태 */}
+      <select value={filterExecution} onChange={(e) => onFilterExecution(e.target.value)} style={selectStyle}>
+        {EXECUTION_FILTER_OPTIONS.map((o) => (
+          <option key={o.value || "all"} value={o.value}>
+            {o.label[locale] ?? o.label.en}
           </option>
         ))}
       </select>
+
+      {/* 필터 초기화 — 항상 표시, 필터 없으면 dim */}
+      <button
+        type="button"
+        onClick={() => { onFilterDept(""); onFilterType(""); onFilterProject(""); onFilterExecution(""); onSearch(""); }}
+        style={{
+          fontFamily: "var(--th-font-mono)",
+          fontSize: "10px",
+          fontWeight: 700,
+          padding: "3px 8px",
+          border: `1px solid ${hasFilter ? "rgba(251,191,36,0.4)" : "var(--th-border)"}`,
+          background: hasFilter ? "rgba(251,191,36,0.06)" : "transparent",
+          color: hasFilter ? "var(--th-accent)" : "var(--th-text-muted)",
+          cursor: "pointer",
+          letterSpacing: "0.04em",
+          opacity: hasFilter ? 1 : 0.4,
+        }}
+      >
+        ✕ {t({ ko: "초기화", en: "RESET", ja: "リセット", zh: "重置" })}
+      </button>
     </div>
   );
 }

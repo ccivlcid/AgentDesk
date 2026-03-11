@@ -29,9 +29,10 @@ interface CreateModalProps {
   }) => void;
   onAssign: (taskId: string, agentId: string) => void;
   defaultProjectId?: string;
+  defaultAgentId?: string;
 }
 
-function CreateModal({ agents, departments, onClose, onCreate, onAssign, defaultProjectId }: CreateModalProps) {
+function CreateModal({ agents, departments, onClose, onCreate, onAssign, defaultProjectId, defaultAgentId }: CreateModalProps) {
   void onAssign;
   const { t, language: locale, locale: localeTag } = useI18n();
   const [title, setTitle] = useState("");
@@ -41,7 +42,7 @@ function CreateModal({ agents, departments, onClose, onCreate, onAssign, default
   const [departmentId, setDepartmentId] = useState("");
   const [taskType, setTaskType] = useState<TaskType>("general");
   const [priority, setPriority] = useState(3);
-  const [assignAgentId, setAssignAgentId] = useState("");
+  const [assignAgentId, setAssignAgentId] = useState(defaultAgentId ?? "");
   const [submitBusy, setSubmitBusy] = useState(false);
   const [submitWithoutProjectPromptOpen, setSubmitWithoutProjectPromptOpen] = useState(false);
   const [formFeedback, setFormFeedback] = useState<FormFeedback | null>(null);
@@ -333,6 +334,7 @@ function CreateModal({ agents, departments, onClose, onCreate, onAssign, default
       locale={locale}
       createNewProjectMode={projectPicker.createNewProjectMode}
       draftsCount={drafts.length}
+      defaultAgentId={defaultAgentId}
       title={title}
       description={description}
       departmentId={departmentId}

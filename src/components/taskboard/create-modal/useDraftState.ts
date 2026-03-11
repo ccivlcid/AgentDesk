@@ -49,19 +49,10 @@ export function useDraftState({ localeTag, submitBusy, formState, applyFormState
     [applyFormState],
   );
 
+  // title이 있어야 저장 의미 있음 — projectId 등 자동 세팅값만으로는 저장하지 않음
   const hasWorkingDraftData = useMemo(
-    () =>
-      Boolean(formState.title.trim()) ||
-      Boolean(formState.description.trim()) ||
-      Boolean(formState.departmentId) ||
-      formState.taskType !== "general" ||
-      formState.priority !== 3 ||
-      Boolean(formState.assignAgentId) ||
-      Boolean(formState.projectId) ||
-      Boolean(formState.projectQuery.trim()) ||
-      formState.createNewProjectMode ||
-      Boolean(formState.newProjectPath.trim()),
-    [formState],
+    () => Boolean(formState.title.trim()),
+    [formState.title],
   );
 
   const saveCurrentAsDraft = useCallback(() => {

@@ -1,10 +1,10 @@
 import type { RoomTheme } from "../types";
 
 export type View =
-  | "office"
   | "agents"
   | "heartbeat"
   | "dashboard"
+  | "project-types"
   | "cli-usage"
   | "tasks"
   | "tasks-board"

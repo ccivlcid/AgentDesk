@@ -62,7 +62,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         className={`${BASE} ${VARIANT_STYLES[variant]} ${SIZE_STYLES[size]} ${className}`}
         style={{
-          borderRadius: "2px",
+          borderRadius: 0,
           ...VARIANT_INLINE[variant],
           ...style,
         }}

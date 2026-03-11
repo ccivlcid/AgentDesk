@@ -77,7 +77,7 @@ export default function ProjectSettingsTab({ project, categories, t, onUpdate, o
       {/* Project badge */}
       <div
         className="flex items-center gap-3 px-4 py-3"
-        style={{ background: "var(--th-bg-surface)", border: "1px solid var(--th-border)", borderRadius: "4px" }}
+        style={{ background: "var(--th-bg-surface)", border: "1px solid var(--th-border)", borderRadius: 0 }}
       >
         <span style={{ fontSize: 28 }}>{"📁"}</span>
         <div className="min-w-0">
@@ -95,7 +95,7 @@ export default function ProjectSettingsTab({ project, categories, t, onUpdate, o
               background: `${category.color ?? "var(--th-accent)"}18`,
               border: `1px solid ${category.color ?? "var(--th-accent)"}40`,
               color: category.color ?? "var(--th-accent)",
-              borderRadius: "2px",
+              borderRadius: 0,
             }}
           >
             {category.icon} {category.name}
@@ -114,7 +114,7 @@ export default function ProjectSettingsTab({ project, categories, t, onUpdate, o
           onChange={(e) => setName(e.target.value)}
           className="w-full px-3 py-2 text-sm font-mono outline-none"
           style={{
-            borderRadius: "2px",
+            borderRadius: 0,
             border: "1px solid var(--th-border)",
             background: "var(--th-input-bg)",
             color: "var(--th-text-primary)",
@@ -130,14 +130,14 @@ export default function ProjectSettingsTab({ project, categories, t, onUpdate, o
         <p className="text-[10px] font-mono mb-1.5" style={{ color: "var(--th-text-muted)" }}>
           {t({ ko: "AI 에이전트가 작업할 실제 폴더 경로입니다. (생성 후 변경 불가)", en: "The actual folder where the AI agent will work. (Cannot be changed after creation)", ja: "AIエージェントが作業するフォルダパスです。(作成後に変更不可)", zh: "AI 代理工作的实际文件夹路径（创建后不可更改）" })}
         </p>
-        <div className="flex items-center gap-2">
+        <div className="flex items-stretch gap-2">
           <input
             type="text"
             value={project.project_path ?? ""}
             readOnly
-            className="flex-1 px-3 py-2 text-sm font-mono outline-none"
+            className="flex-1 min-h-[2.5rem] px-3 py-2 text-sm font-mono outline-none"
             style={{
-              borderRadius: "2px",
+              borderRadius: 0,
               border: "1px solid var(--th-border)",
               background: "var(--th-bg-elevated)",
               color: "var(--th-text-muted)",
@@ -146,9 +146,9 @@ export default function ProjectSettingsTab({ project, categories, t, onUpdate, o
           <button
             type="button"
             onClick={handleCopyPath}
-            className="px-3 py-2 text-xs font-mono transition-colors"
+            className="flex-shrink-0 inline-flex items-center justify-center min-h-[2.5rem] px-3 py-2 text-xs font-mono leading-normal whitespace-nowrap transition-colors"
             style={{
-              borderRadius: "2px",
+              borderRadius: 0,
               border: "1px solid var(--th-border)",
               background: "var(--th-bg-elevated)",
               color: copied ? "var(--th-attr-elite)" : "var(--th-text-muted)",
@@ -173,7 +173,7 @@ export default function ProjectSettingsTab({ project, categories, t, onUpdate, o
           className="w-full px-3 py-2 text-sm font-mono outline-none resize-none"
           placeholder={t({ ko: "프로젝트의 핵심 목표를 입력하세요", en: "Describe the core goal of this project", ja: "プロジェクトのコアゴールを入力してください", zh: "输入项目核心目标" })}
           style={{
-            borderRadius: "2px",
+            borderRadius: 0,
             border: "1px solid var(--th-border)",
             background: "var(--th-input-bg)",
             color: "var(--th-text-primary)",
@@ -201,7 +201,7 @@ export default function ProjectSettingsTab({ project, categories, t, onUpdate, o
           disabled={!isDirty || saving}
           className="px-4 py-2 text-sm font-mono transition-all"
           style={{
-            borderRadius: "2px",
+            borderRadius: 0,
             background: isDirty && !saving ? "var(--th-accent)" : "var(--th-bg-elevated)",
             color: isDirty && !saving ? "#000" : "var(--th-text-muted)",
             border: "1px solid transparent",
@@ -220,24 +220,27 @@ export default function ProjectSettingsTab({ project, categories, t, onUpdate, o
       {/* Danger Zone */}
       {onDelete && (
         <div
-          className="pt-4"
-          style={{ borderTop: "1px solid rgba(239,68,68,0.25)" }}
+          className="pt-6 pb-1 rounded-sm"
+          style={{
+            borderTop: "1px solid rgba(239,68,68,0.3)",
+            background: "rgba(239,68,68,0.05)",
+          }}
         >
-          <p className="text-[11px] font-mono font-semibold mb-2" style={{ color: "#ef4444" }}>
+          <p className="text-xs font-mono font-semibold mb-3" style={{ color: "#f87171" }}>
             {t({ ko: "위험 구역", en: "Danger Zone", ja: "危険エリア", zh: "危险区域" })}
           </p>
-          <p className="text-[11px] font-mono mb-3" style={{ color: "var(--th-text-muted)" }}>
+          <p className="text-[11px] font-mono mb-4 leading-relaxed" style={{ color: "rgba(248,113,113,0.95)" }}>
             {t({ ko: "프로젝트를 삭제하면 모든 업무·목표·결과물이 영구적으로 사라집니다.", en: "Deleting this project permanently removes all tasks, objectives, and outputs.", ja: "プロジェクトを削除すると、すべてのタスク・目標・成果物が永久に失われます。", zh: "删除项目将永久移除所有任务、目标和交付物。" })}
           </p>
           <button
             type="button"
             onClick={() => void handleDelete()}
-            className="px-4 py-2 text-sm font-mono transition-all"
+            className="px-4 py-2.5 text-sm font-mono transition-all hover:opacity-90"
             style={{
-              borderRadius: "2px",
+              borderRadius: 0,
               background: "transparent",
-              color: "#ef4444",
-              border: "1px solid rgba(239,68,68,0.4)",
+              color: "#f87171",
+              border: "1px solid rgba(248,113,113,0.5)",
               cursor: "pointer",
             }}
           >

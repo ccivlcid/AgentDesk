@@ -20,7 +20,7 @@ function ToggleSettingCard({ label, checked, onToggle, title }: ToggleSettingCar
   return (
     <div
       className="flex items-center justify-between gap-3 px-3 py-2.5 sm:px-4"
-      style={{ borderRadius: "2px", borderColor: "var(--th-card-border)", background: "var(--th-input-bg)" }}
+      style={{ borderRadius: 0, borderColor: "var(--th-card-border)", background: "var(--th-input-bg)" }}
     >
       <label className="text-sm" style={{ color: "var(--th-text-secondary)" }}>
         {label}
@@ -49,7 +49,7 @@ export default function GeneralSettingsTab({ t, form, setForm, saved, onSave }: 
     <>
       <section
         className="p-5 sm:p-6 space-y-5"
-        style={{ borderRadius: "4px", background: "var(--th-bg-surface)", borderColor: "var(--th-border)" }}
+        style={{ borderRadius: 0, background: "var(--th-bg-surface)", borderColor: "var(--th-border)" }}
       >
         <h3 className="text-sm font-semibold" style={{ color: "var(--th-text-heading)" }}>
           {t({ ko: "회사 정보", en: "Company", ja: "会社情報", zh: "公司信息" })}
@@ -65,7 +65,7 @@ export default function GeneralSettingsTab({ t, form, setForm, saved, onSave }: 
             onChange={(e) => setForm({ ...form, companyName: e.target.value })}
             className="w-full px-3 py-2 text-sm focus:outline-none transition-colors"
             style={{
-              borderRadius: "2px",
+              borderRadius: 0,
               border: "1px solid var(--th-border)",
               background: "var(--th-input-bg)",
               borderColor: "var(--th-input-border)",
@@ -84,7 +84,7 @@ export default function GeneralSettingsTab({ t, form, setForm, saved, onSave }: 
             onChange={(e) => setForm({ ...form, ceoName: e.target.value })}
             className="w-full px-3 py-2 text-sm focus:outline-none transition-colors"
             style={{
-              borderRadius: "2px",
+              borderRadius: 0,
               border: "1px solid var(--th-border)",
               background: "var(--th-input-bg)",
               borderColor: "var(--th-input-border)",
@@ -156,7 +156,7 @@ export default function GeneralSettingsTab({ t, form, setForm, saved, onSave }: 
             onChange={(e) => setForm({ ...form, defaultProvider: e.target.value as CliProvider })}
             className="w-full px-3 py-2 text-sm focus:outline-none transition-colors"
             style={{
-              borderRadius: "2px",
+              borderRadius: 0,
               border: "1px solid var(--th-border)",
               background: "var(--th-input-bg)",
               borderColor: "var(--th-input-border)",
@@ -180,7 +180,7 @@ export default function GeneralSettingsTab({ t, form, setForm, saved, onSave }: 
             onChange={(e) => setForm({ ...form, language: e.target.value as LocalSettings["language"] })}
             className="w-full px-3 py-2 text-sm focus:outline-none transition-colors"
             style={{
-              borderRadius: "2px",
+              borderRadius: 0,
               border: "1px solid var(--th-border)",
               background: "var(--th-input-bg)",
               borderColor: "var(--th-input-border)",
@@ -205,7 +205,7 @@ export default function GeneralSettingsTab({ t, form, setForm, saved, onSave }: 
           type="button"
           onClick={onSave}
           className="px-5 py-2.5 text-sm font-medium font-mono uppercase tracking-wider transition-colors"
-          style={{ borderRadius: "2px", background: "var(--th-accent)", color: "#000" }}
+          style={{ borderRadius: 0, background: "var(--th-accent)", color: "#000" }}
         >
           {t({ ko: "저장", en: "Save", ja: "保存", zh: "保存" })}
         </button>
