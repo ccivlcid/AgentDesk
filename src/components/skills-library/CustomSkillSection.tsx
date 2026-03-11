@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import { exportCustomSkill, importCustomSkill, type CustomSkillEntry, type SkillLearnProvider, type SkillPackage } from "../../api";
 import { providerLabel, type TFunction } from "./model";
+import { useToast } from "../ui";
 
 interface CustomSkillSectionProps {
   t: TFunction;
@@ -21,6 +22,7 @@ function downloadJson(data: unknown, filename: string): void {
 }
 
 export default function CustomSkillSection({ t, customSkills, localeTag, onDeleteSkill, onRefresh }: CustomSkillSectionProps) {
+  const { showToast } = useToast();
   const importInputRef = useRef<HTMLInputElement>(null);
 
   const handleExport = async (skillName: string) => {
@@ -39,14 +41,14 @@ export default function CustomSkillSection({ t, customSkills, localeTag, onDelet
       const text = await file.text();
       const pkg = JSON.parse(text) as SkillPackage;
       if (!pkg.skillName || !pkg.content) {
-        alert("Invalid skill package file");
+        showToast(t({ ko: "유효하지 않은 스킬 패키지 파일입니다.", en: "Invalid skill package file", ja: "無効なスキルパッケージファイルです。", zh: "无效的技能包文件" }), "error");
         return;
       }
       await importCustomSkill(pkg);
       onRefresh();
     } catch (err) {
       console.error("Failed to import skill:", err);
-      alert("Failed to import skill package");
+      showToast(t({ ko: "스킬 패키지 가져오기 실패", en: "Failed to import skill package", ja: "スキルパッケージのインポートに失敗しました", zh: "导入技能包失败" }), "error");
     }
   };
 

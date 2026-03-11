@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
+import { useToast } from "../ui";
 import type { HookEntry, HookEventType, Agent, Department } from "../../types";
 import type { CreateHookInput, UpdateHookInput } from "../../api/hooks";
 import {
@@ -34,6 +35,7 @@ export default function HookFormModal({
   onCreate,
   onUpdate,
 }: HookFormModalProps) {
+  const { showToast } = useToast();
   const [title, setTitle] = useState("");
   const [titleKo, setTitleKo] = useState("");
   const [titleJa, setTitleJa] = useState("");
@@ -241,12 +243,12 @@ export default function HookFormModal({
                     const file = e.target.files?.[0];
                     if (!file) return;
                     if (file.size > 512_000) {
-                      alert(t({
+                      showToast(t({
                         ko: "\uD30C\uC77C \uD06C\uAE30\uAC00 \uB108\uBB34 \uD07D\uB2C8\uB2E4 (\uCD5C\uB300 512KB)",
                         en: "File too large (max 512KB)",
                         ja: "\u30D5\u30A1\u30A4\u30EB\u30B5\u30A4\u30BA\u304C\u5927\u304D\u3059\u304E\u307E\u3059\uFF08\u6700\u5927512KB\uFF09",
                         zh: "\u6587\u4EF6\u8FC7\u5927\uFF08\u6700\u5927512KB\uFF09",
-                      }));
+                      }), "warning");
                       return;
                     }
                     const reader = new FileReader();

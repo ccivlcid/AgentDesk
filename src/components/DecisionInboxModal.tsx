@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { UiLanguage } from "../i18n";
 import { pickLang } from "../i18n";
+import { useToast } from "./ui/Toast";
 import type { Agent } from "../types";
 import AgentAvatar from "./AgentAvatar";
 import MessageContent from "./MessageContent";
@@ -20,6 +21,7 @@ export default function DecisionInboxModal({
   onOpenChat,
 }: DecisionInboxModalProps) {
   const t = (text: { ko: string; en: string; ja?: string; zh?: string }) => pickLang(uiLanguage, text);
+  const { showToast } = useToast();
   const isKorean = uiLanguage.startsWith("ko");
   const agentById = useMemo(() => {
     const map = new Map<string, Agent>();
@@ -161,14 +163,7 @@ export default function DecisionInboxModal({
     const optionNumber = selected[0] ?? pickOptions[0]?.number;
     if (!optionNumber) return;
     if (selected.length <= 0 && !extraNote) {
-      window.alert(
-        t({
-          ko: "최소 1개 선택하거나 추가 의견을 입력해 주세요.",
-          en: "Pick at least one option or enter an extra note.",
-          ja: "少なくとも1件を選択するか、追加意見を入力してください。",
-          zh: "请至少选择一项或输入补充意见。",
-        }),
-      );
+      showToast("Pick at least one option or enter an extra note.", "warning");
       return;
     }
     onReplyOption(item, optionNumber, {

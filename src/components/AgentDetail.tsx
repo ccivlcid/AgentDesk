@@ -15,6 +15,7 @@ import AgentAvatar from "./AgentAvatar";
 import AgentDetailTabContent from "./agent-detail/AgentDetailTabContent";
 import AgentChatTab from "./agent-detail/AgentChatTab";
 import { CLI_LABELS, oauthAccountLabel, roleLabel, STATUS_CONFIG, statusLabel } from "./agent-detail/constants";
+import { useConfirm } from "./ui/ConfirmDialog";
 
 interface AgentDetailProps {
   agent: Agent;
@@ -54,6 +55,7 @@ export default function AgentDetail({
   onAgentUpdated,
 }: AgentDetailProps) {
   const { t, language } = useI18n();
+  const { confirm } = useConfirm();
   const [tab, setTab] = useState<"info" | "tasks" | "alba" | "performance" | "chat">("info");
   const [editingCli, setEditingCli] = useState(false);
   const [selectedCli, setSelectedCli] = useState(agent.cli_provider);
@@ -285,14 +287,13 @@ export default function AgentDetail({
               details.existing_leader?.name ||
               t({ ko: "기존 리더", en: "current leader" }),
           ).trim();
-          const confirmed = window.confirm(
-            t({
-              ko: `이미 ${existingLeaderName}가 리더입니다. 변경하시겠습니까?`,
-              en: `${existingLeaderName} is already the leader. Change leader?`,
-              ja: `${existingLeaderName}さんが既にリーダーです。変更しますか？`,
-              zh: `${existingLeaderName} 已是负责人。要变更吗？`,
-            }),
-          );
+          const confirmed = await confirm({
+            title: "Change Leader?",
+            message: `${existingLeaderName} is already the leader. Change leader?`,
+            confirmLabel: "Confirm",
+            cancelLabel: "Cancel",
+            variant: "default",
+          });
           if (confirmed) {
             try {
               await api.updateAgent(agent.id, {

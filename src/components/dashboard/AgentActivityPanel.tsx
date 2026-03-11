@@ -41,7 +41,7 @@ function AgentCard({ agent, taskTitle, lines, onOpen }: AgentCardProps) {
         <span className="text-[12px] font-medium text-[var(--th-text)] flex-shrink-0">
           {agent.name_ko || agent.name}
         </span>
-        <span className="flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded flex-shrink-0 font-medium"
+        <span className="flex items-center gap-1 text-[9px] px-1.5 py-0.5 flex-shrink-0 font-medium"
           style={{ background: "rgba(245,158,11,0.15)", color: "#f59e0b" }}>
           <span className="text-[8px]">●</span> 실행 중
         </span>
@@ -53,7 +53,7 @@ function AgentCard({ agent, taskTitle, lines, onOpen }: AgentCardProps) {
         </span>
         <button
           onClick={onOpen}
-          className="flex-shrink-0 text-[9px] px-2 py-1 rounded transition-colors font-mono"
+          className="flex-shrink-0 text-[9px] px-2 py-1 transition-colors font-mono"
           style={{ border: "1px solid var(--th-border)", color: "var(--th-text-muted)" }}
           onMouseEnter={(e) => {
             (e.currentTarget as HTMLButtonElement).style.borderColor = "#f59e0b";
@@ -72,7 +72,7 @@ function AgentCard({ agent, taskTitle, lines, onOpen }: AgentCardProps) {
       <div
         style={{
           background: "#0d1117",
-          borderRadius: 4,
+          borderRadius: 0,
           padding: "5px 8px",
           fontFamily: "'JetBrains Mono', 'Fira Mono', 'Consolas', monospace",
           fontSize: 10,
@@ -202,8 +202,8 @@ export default function AgentActivityPanel({ projectId, allAgents, onOpenTermina
 
   return (
     <div
-      className="border border-[var(--th-border)] rounded flex flex-col"
-      style={{ borderLeft: "3px solid #f59e0b" }}
+      className="flex flex-col"
+      style={{ borderTop: "1px solid var(--th-border)", flex: 1 }}
     >
       {/* 헤더 */}
       <div className="flex items-center justify-between px-3 py-2 border-b border-[var(--th-border)]">
@@ -216,7 +216,7 @@ export default function AgentActivityPanel({ projectId, allAgents, onOpenTermina
         <div className="flex items-center gap-1.5">
           {workingCount > 0 ? (
             <span
-              className="text-[9px] px-2 py-0.5 rounded font-medium font-mono"
+              className="text-[9px] px-2 py-0.5 font-medium font-mono"
               style={{ background: "rgba(245,158,11,0.15)", color: "#f59e0b" }}
             >
               실행 중 {workingCount}

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import type { MemoryEntry, MemoryCategory, Agent, Department } from "../../types";
 import type { CreateMemoryInput, UpdateMemoryInput } from "../../api/memory";
 import { MEMORY_CATEGORIES, categoryLabel, type TFunction } from "./model";
-import { Modal, ModalHeader, ModalBody, ModalFooter, Button, Input, Textarea, FormField } from "../ui";
+import { Modal, ModalHeader, ModalBody, ModalFooter, Button, Input, Textarea, FormField, useToast } from "../ui";
 
 interface MemoryFormModalProps {
   t: TFunction;
@@ -29,6 +29,7 @@ export default function MemoryFormModal({
   onCreate,
   onUpdate,
 }: MemoryFormModalProps) {
+  const { showToast } = useToast();
   const [title, setTitle] = useState("");
   const [titleKo, setTitleKo] = useState("");
   const [titleJa, setTitleJa] = useState("");
@@ -192,12 +193,12 @@ export default function MemoryFormModal({
                   const file = e.target.files?.[0];
                   if (!file) return;
                   if (file.size > 1_048_576) {
-                    alert(t({
+                    showToast(t({
                       ko: "파일 크기가 너무 큽니다 (최대 1MB)",
                       en: "File too large (max 1MB)",
                       ja: "ファイルサイズが大きすぎます（最大1MB）",
                       zh: "文件过大（最大1MB）",
-                    }));
+                    }), "warning");
                     return;
                   }
                   const reader = new FileReader();

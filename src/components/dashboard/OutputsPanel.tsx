@@ -70,14 +70,15 @@ export default function OutputsPanel({ projectId, outputs, onUpdate }: OutputsPa
   return (
     <QuadrantPanel
       title="결과물"
-      subtitle="만들어야 하는 것"
+      subtitle="프로젝트 완료 시 납품할 산출물"
       icon={ICON}
       accentColor="#10b981"
       emptyText="아직 결과물이 없어요."
-      emptyGuide="프로젝트가 끝날 때 만들어야 하는 것을 추가해보세요."
+      emptyGuide={"프로젝트 완료 시 납품할 것들을 추가하세요.\n예: '기능 명세서', 'API 문서', '출시 버전'"}
       addLabel="결과물 추가하기"
       onAdd={() => setShowInput(true)}
       isEmpty={outputs.length === 0 && !showInput}
+      helpText={"결과물은 프로젝트가 끝났을 때 최종적으로\n완성하거나 납품해야 하는 것들입니다.\n\n예시:\n• 기능 명세서 (문서)\n• 디자인 시스템 (스펙)\n• 출시 버전 앱 (기타)\n• 성과 분석 보고서 (보고서)\n\n사용법:\n• 유형(문서/스펙/보고서/기타) 선택 후 추가\n• 상태 버튼 클릭 → 미착수 → 검토 중 → 완료\n• 항목에 마우스 올리기 → 삭제 버튼"}
     >
       {outputs.map((output) => {
         const typeCfg = TYPE_CONFIG[output.type];

@@ -15,6 +15,7 @@ import { useDraggable } from "@dnd-kit/core";
 import { bulkHideTasks, getProjects } from "../api";
 import { useI18n } from "../i18n";
 import type { Agent, Department, Project, SubTask, Task, TaskExecutionState, TaskStatus } from "../types";
+import { useConfirm } from "./ui/ConfirmDialog";
 import ProjectManagerModal from "./ProjectManagerModal";
 import BulkHideModal from "./taskboard/BulkHideModal";
 import CreateTaskModal from "./taskboard/CreateTaskModal";
@@ -143,6 +144,7 @@ export function TaskBoard({
   onProjectCreate,
 }: TaskBoardProps) {
   const { t } = useI18n();
+  const { confirm } = useConfirm();
   const packVocab = { task: t({ ko: "업무", en: "Task", ja: "タスク", zh: "任务" }), tasks: t({ ko: "업무", en: "Tasks", ja: "タスク", zh: "任务" }) };
   const [viewMode, setViewMode] = useState<"board" | "gantt" | "dag">("board");
   const [showCreate, setShowCreate] = useState(false);
@@ -319,13 +321,20 @@ export function TaskBoard({
     setSelectedTaskIds(new Set());
   }, [selectedTaskIds, tasks, onStopTask]);
 
-  const handleBatchDelete = useCallback(() => {
-    if (!window.confirm(t({ ko: `${selectedTaskIds.size}개 업무를 삭제하시겠습니까?`, en: `Delete ${selectedTaskIds.size} task(s)?`, ja: `${selectedTaskIds.size}件を削除しますか？`, zh: `确定删除 ${selectedTaskIds.size} 个任务？` }))) return;
+  const handleBatchDelete = useCallback(async () => {
+    const ok = await confirm({
+      title: t({ ko: "업무 일괄 삭제", en: "Delete Tasks", ja: "タスクの一括削除", zh: "批量删除任务" }),
+      message: t({ ko: `${selectedTaskIds.size}개 업무를 삭제하시겠습니까?`, en: `Delete ${selectedTaskIds.size} task(s)?`, ja: `${selectedTaskIds.size}件を削除しますか？`, zh: `确定删除 ${selectedTaskIds.size} 个任务？` }),
+      confirmLabel: t({ ko: "삭제", en: "Delete", ja: "削除", zh: "删除" }),
+      cancelLabel: t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" }),
+      variant: "danger",
+    });
+    if (!ok) return;
     for (const id of selectedTaskIds) {
       onDeleteTask(id);
     }
     setSelectedTaskIds(new Set());
-  }, [selectedTaskIds, onDeleteTask, t]);
+  }, [selectedTaskIds, onDeleteTask, confirm, t]);
 
   const handleBatchHide = useCallback(() => {
     for (const id of selectedTaskIds) {
@@ -826,6 +835,7 @@ export function TaskBoard({
           onClose={() => setShowCreate(false)}
           onCreate={onCreateTask}
           onAssign={onAssignTask}
+          defaultProjectId={currentProject?.id}
         />
       )}
 

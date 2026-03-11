@@ -66,14 +66,15 @@ export default function ObjectivesPanel({ projectId, objectives, onUpdate }: Obj
   return (
     <QuadrantPanel
       title="목표"
-      subtitle="프로젝트가 이루려는 것"
+      subtitle="프로젝트가 달성해야 할 목표"
       icon={ICON}
       accentColor="#3b82f6"
       emptyText="아직 목표가 없어요."
-      emptyGuide="프로젝트가 이루려는 것을 추가해보세요."
+      emptyGuide={"목표를 추가해 프로젝트 방향을 잡아보세요.\n예: 'Q2까지 앱 출시 완료', '사용자 1,000명 달성'"}
       addLabel="첫 번째 목표 추가하기"
       onAdd={() => setShowInput(true)}
       isEmpty={objectives.length === 0 && !showInput}
+      helpText={"목표는 프로젝트가 완료됐을 때 무엇을 달성했는지를 나타냅니다.\n\n예시:\n• Q2까지 앱 출시 완료\n• 사용자 만족도 90% 달성\n• 오픈베타 사용자 1,000명 확보\n\n사용법:\n• 왼쪽 동그라미 클릭 → 완료 표시\n• 진행률(%) 클릭 → 수정\n• 항목에 마우스 올리기 → 삭제 버튼"}
     >
       {objectives.map((obj) => {
         const color = STATUS_COLOR[obj.status];
@@ -127,7 +128,7 @@ export default function ObjectivesPanel({ projectId, objectives, onUpdate }: Obj
               ) : (
                 <button
                   onClick={() => { setEditingProgress(obj.id); setProgressDraft(String(progress)); }}
-                  className="flex-shrink-0 text-[10px] font-mono tabular-nums opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="flex-shrink-0 text-[10px] font-mono tabular-nums transition-opacity"
                   style={{ color: done ? "#3fb950" : "#3b82f6" }}
                   title="클릭해서 진행률 수정"
                 >
@@ -137,7 +138,7 @@ export default function ObjectivesPanel({ projectId, objectives, onUpdate }: Obj
               {/* 삭제 */}
               <button
                 onClick={() => void handleDelete(obj.id)}
-                className="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                className="flex-shrink-0 opacity-0 group-hover:opacity-100 hover:text-red-400 transition-opacity"
                 style={{ color: "var(--th-text-muted)" }}
               >
                 <svg width="10" height="10" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2">

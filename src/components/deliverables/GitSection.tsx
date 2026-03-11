@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useI18n } from "../../i18n";
 import { getTaskDiff, mergeTask, discardTask, type TaskDiffResult } from "../../api";
 import DiffModal from "../taskboard/DiffModal";
+import { useConfirm } from "../ui/ConfirmDialog";
 
 interface GitSectionProps {
   taskId: string;
@@ -11,6 +12,7 @@ interface GitSectionProps {
 
 export default function GitSection({ taskId, sectionOpen, onToggleSection }: GitSectionProps) {
   const { t } = useI18n();
+  const { confirm } = useConfirm();
   const [diff, setDiff] = useState<TaskDiffResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [showDiff, setShowDiff] = useState(false);
@@ -59,15 +61,19 @@ export default function GitSection({ taskId, sectionOpen, onToggleSection }: Git
   };
 
   const handleDiscard = async () => {
-    const confirmed = window.confirm(
-      t({
+    const ok = await confirm({
+      title: t({ ko: "변경사항 폐기", en: "Discard Changes", ja: "変更を破棄", zh: "丢弃变更" }),
+      message: t({
         ko: "정말 폐기하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
         en: "Are you sure you want to discard? This cannot be undone.",
         ja: "本当に破棄しますか？この操作は元に戻せません。",
         zh: "确定要丢弃吗？此操作无法撤销。",
       }),
-    );
-    if (!confirmed) return;
+      confirmLabel: t({ ko: "폐기", en: "Discard", ja: "破棄", zh: "丢弃" }),
+      cancelLabel: t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" }),
+      variant: "danger",
+    });
+    if (!ok) return;
     setDiscarding(true);
     setActionMsg(null);
     try {

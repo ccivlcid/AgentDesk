@@ -1,12 +1,15 @@
 import { useState, useEffect } from "react";
 import type { Category, Project } from "../../types";
 import type { TFunction } from "./types";
+import { useConfirm, useToast } from "../ui";
+import { deleteProject } from "../../api/organization-projects";
 
 interface ProjectSettingsTabProps {
   project: Project;
   categories: Category[];
   t: TFunction;
   onUpdate: (patch: { name?: string; core_goal?: string }) => Promise<void>;
+  onDelete?: (id: string) => void;
 }
 
 function formatDate(ts: number): string {
@@ -17,12 +20,14 @@ function formatDate(ts: number): string {
   }).format(new Date(ts));
 }
 
-export default function ProjectSettingsTab({ project, categories, t, onUpdate }: ProjectSettingsTabProps) {
+export default function ProjectSettingsTab({ project, categories, t, onUpdate, onDelete }: ProjectSettingsTabProps) {
   const [name, setName] = useState(project.name);
   const [coreGoal, setCoreGoal] = useState(project.core_goal ?? "");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [copied, setCopied] = useState(false);
+  const { confirm } = useConfirm();
+  const { showToast } = useToast();
 
   useEffect(() => {
     setName(project.name);
@@ -47,6 +52,22 @@ export default function ProjectSettingsTab({ project, categories, t, onUpdate }:
     void navigator.clipboard.writeText(project.project_path ?? "");
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
+  };
+
+  const handleDelete = async () => {
+    const ok = await confirm({
+      title: t({ ko: `"${project.name}" 프로젝트를 삭제할까요?`, en: `Delete project "${project.name}"?`, ja: `「${project.name}」を削除しますか？`, zh: `删除项目"${project.name}"？` }),
+      message: t({ ko: "프로젝트와 관련된 모든 업무·목표·결과물이 영구 삭제됩니다.", en: "All tasks, objectives, and outputs will be permanently deleted.", ja: "すべてのタスク・目標・成果物が永久に削除されます。", zh: "所有任务、目标和交付物将被永久删除。" }),
+      confirmLabel: t({ ko: "삭제", en: "Delete", ja: "削除", zh: "删除" }),
+      variant: "danger",
+    });
+    if (!ok) return;
+    try {
+      await deleteProject(project.id);
+      onDelete?.(project.id);
+    } catch {
+      showToast(t({ ko: "삭제에 실패했습니다.", en: "Failed to delete project.", ja: "削除に失敗しました。", zh: "删除失败。" }), "error");
+    }
   };
 
   const category = categories.find((c) => c.id === project.category_id);
@@ -103,9 +124,12 @@ export default function ProjectSettingsTab({ project, categories, t, onUpdate }:
 
       {/* Path */}
       <div>
-        <label className="block text-xs font-medium font-mono mb-1.5" style={{ color: "var(--th-text-secondary)" }}>
+        <label className="block text-xs font-medium font-mono mb-1" style={{ color: "var(--th-text-secondary)" }}>
           {t({ ko: "프로젝트 경로", en: "Project Path", ja: "プロジェクトパス", zh: "项目路径" })}
         </label>
+        <p className="text-[10px] font-mono mb-1.5" style={{ color: "var(--th-text-muted)" }}>
+          {t({ ko: "AI 에이전트가 작업할 실제 폴더 경로입니다. (생성 후 변경 불가)", en: "The actual folder where the AI agent will work. (Cannot be changed after creation)", ja: "AIエージェントが作業するフォルダパスです。(作成後に変更不可)", zh: "AI 代理工作的实际文件夹路径（创建后不可更改）" })}
+        </p>
         <div className="flex items-center gap-2">
           <input
             type="text"
@@ -192,6 +216,35 @@ export default function ProjectSettingsTab({ project, categories, t, onUpdate }:
             : t({ ko: "저장", en: "Save", ja: "保存", zh: "保存" })}
         </button>
       </div>
+
+      {/* Danger Zone */}
+      {onDelete && (
+        <div
+          className="pt-4"
+          style={{ borderTop: "1px solid rgba(239,68,68,0.25)" }}
+        >
+          <p className="text-[11px] font-mono font-semibold mb-2" style={{ color: "#ef4444" }}>
+            {t({ ko: "위험 구역", en: "Danger Zone", ja: "危険エリア", zh: "危险区域" })}
+          </p>
+          <p className="text-[11px] font-mono mb-3" style={{ color: "var(--th-text-muted)" }}>
+            {t({ ko: "프로젝트를 삭제하면 모든 업무·목표·결과물이 영구적으로 사라집니다.", en: "Deleting this project permanently removes all tasks, objectives, and outputs.", ja: "プロジェクトを削除すると、すべてのタスク・目標・成果物が永久に失われます。", zh: "删除项目将永久移除所有任务、目标和交付物。" })}
+          </p>
+          <button
+            type="button"
+            onClick={() => void handleDelete()}
+            className="px-4 py-2 text-sm font-mono transition-all"
+            style={{
+              borderRadius: "2px",
+              background: "transparent",
+              color: "#ef4444",
+              border: "1px solid rgba(239,68,68,0.4)",
+              cursor: "pointer",
+            }}
+          >
+            {t({ ko: "프로젝트 삭제", en: "Delete Project", ja: "プロジェクトを削除", zh: "删除项目" })}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

@@ -60,14 +60,15 @@ export default function RisksPanel({ projectId, risks, onUpdate }: RisksPanelPro
   return (
     <QuadrantPanel
       title="리스크"
-      subtitle="주의가 필요한 항목"
+      subtitle="프로젝트를 위협하는 위험 요소"
       icon={ICON}
       accentColor="#ef4444"
       emptyText="아직 리스크가 없어요."
-      emptyGuide="주의가 필요한 항목을 미리 기록해두세요."
+      emptyGuide={"위험 요소를 미리 파악해두세요.\n예: '핵심 인력 이탈', 'API 응답 지연', '예산 초과'"}
       addLabel="리스크 추가하기"
       onAdd={() => setShowInput(true)}
       isEmpty={risks.length === 0 && !showInput}
+      helpText={"리스크는 프로젝트 성공을 방해할 수 있는\n위험 요소를 미리 파악하고 추적합니다.\n\n예시:\n• 핵심 인력 이탈 위험 (높음)\n• 외부 API 불안정 (보통)\n• 일정 지연 가능성 (보통)\n• 예산 초과 우려 (높음)\n\n사용법:\n• 심각도(높음/보통/낮음) 선택 후 추가\n• '해결' 클릭 → 해결된 항목으로 이동\n• 항목에 마우스 올리기 → 버튼 표시"}
     >
       {activeRisks.map((risk) => {
         const sev = SEVERITY_CONFIG[risk.severity];

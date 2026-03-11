@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Agent, Department, SubTask, Task, TaskExecutionState, TaskStatus } from "../../types";
 import { useI18n } from "../../i18n";
+import { useConfirm } from "../ui";
 import AgentAvatar from "../AgentAvatar";
 import AgentSelect from "../AgentSelect";
 import DiffModal from "./DiffModal";
@@ -91,6 +92,27 @@ export default function TaskCard({
   void onMergeTask;
   void onDiscardTask;
   const { t, locale: localeTag, language: locale } = useI18n();
+  const { confirm } = useConfirm();
+
+  const handleStopTask = useCallback(async () => {
+    const ok = await confirm({
+      title: t({ ko: `"${task.title}" 작업을 중지할까요?`, en: `Stop task?`, ja: `タスクを停止しますか？`, zh: `要停止任务吗？` }),
+      message: t({ ko: "경고: Stop 처리 시 해당 프로젝트 변경분은 롤백됩니다.", en: "Warning: stopping will roll back project changes.", ja: "停止するとプロジェクトの変更はロールバックされます。", zh: "停止后将回滚该项目的更改。" }),
+      confirmLabel: t({ ko: "중지", en: "Stop", ja: "停止", zh: "停止" }),
+      variant: "danger",
+    });
+    if (ok) onStopTask(task.id);
+  }, [confirm, t, task.title, task.id, onStopTask]);
+
+  const handleDeleteTask = useCallback(async () => {
+    const ok = await confirm({
+      title: t({ ko: `"${task.title}" 업무를 삭제할까요?`, en: `Delete task?`, ja: `タスクを削除しますか？`, zh: `要删除任务吗？` }),
+      confirmLabel: t({ ko: "삭제", en: "Delete", ja: "削除", zh: "删除" }),
+      variant: "danger",
+    });
+    if (ok) onDeleteTask(task.id);
+  }, [confirm, t, task.title, task.id, onDeleteTask]);
+
   const [cardCollapsedLocal, setCardCollapsedLocal] = useState(false);
   const cardCollapsed = cardCollapsedProp ?? cardCollapsedLocal;
   const setCardCollapsed = (value: boolean | ((prev: boolean) => boolean)) => {
@@ -495,20 +517,7 @@ export default function TaskCard({
         )}
         {canStop && (
           <button
-            onClick={() => {
-              if (
-                confirm(
-                  t({
-                    ko: `"${task.title}" 작업을 중지할까요?\n\n경고: Stop 처리 시 해당 프로젝트 변경분은 롤백됩니다.`,
-                    en: `Stop "${task.title}"?\n\nWarning: stopping will roll back project changes.`,
-                    ja: `「${task.title}」を停止しますか？\n\n警告: 停止するとプロジェクトの変更はロールバックされます。`,
-                    zh: `要停止“${task.title}”吗？\n\n警告：停止后将回滚该项目的更改。`,
-                  }),
-                )
-              ) {
-                onStopTask(task.id);
-              }
-            }}
+            onClick={() => void handleStopTask()}
             title={t({ ko: "작업 중지", en: "Cancel task", ja: "タスク停止", zh: "取消任务" })}
             className="flex items-center justify-center gap-1 bg-red-800 px-2 py-1.5 text-xs font-medium font-mono text-white transition hover:bg-red-700"
             style={{ borderRadius: "2px" }}
@@ -608,19 +617,7 @@ export default function TaskCard({
         )}
         {canDelete && (
           <button
-            onClick={() => {
-              if (
-                confirm(
-                  t({
-                    ko: `"${task.title}" 업무를 삭제할까요?`,
-                    en: `Delete "${task.title}"?`,
-                    ja: `「${task.title}」を削除しますか？`,
-                    zh: `要删除“${task.title}”吗？`,
-                  }),
-                )
-              )
-                onDeleteTask(task.id);
-            }}
+            onClick={() => void handleDeleteTask()}
             title={t({ ko: "작업 삭제", en: "Delete task", ja: "タスク削除", zh: "删除任务" })}
             className="flex items-center justify-center bg-red-900/60 px-2 py-1.5 text-xs font-mono text-red-400 transition hover:bg-red-800 hover:text-red-300"
             style={{ borderRadius: "2px" }}

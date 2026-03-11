@@ -71,14 +71,15 @@ export default function GatesPanel({ projectId, gates, onUpdate }: GatesPanelPro
   return (
     <QuadrantPanel
       title="검토 단계"
-      subtitle="완료 전 확인해야 할 것"
+      subtitle="다음 단계로 가기 전 통과해야 할 관문"
       icon={ICON}
       accentColor="#8b5cf6"
       emptyText="아직 검토 단계가 없어요."
-      emptyGuide="완료 전 확인해야 할 체크포인트를 추가해보세요."
+      emptyGuide={"각 단계별 통과 기준을 추가해보세요.\n예: '코드 리뷰 완료', '디자인 승인', '테스트 통과'"}
       addLabel="검토 단계 추가하기"
       onAdd={() => setShowInput(true)}
       isEmpty={gates.length === 0 && !showInput}
+      helpText={"검토 단계(Gate)는 프로젝트가 다음 단계로 넘어가기 전\n반드시 통과해야 할 조건입니다.\n\n예시:\n• MVP 코드 리뷰 완료\n• 디자인 최종 승인\n• 스테이징 테스트 통과\n• QA 검토 완료\n\n사용법:\n• 상태 아이콘(○▶✓✕) 클릭 → 상태 변경\n• 순서: 대기 → 진행 중 → 완료\n• 항목에 마우스 올리기 → 삭제 버튼"}
     >
       {gates.map((gate) => {
         const cfg = STATUS_CONFIG[gate.status];

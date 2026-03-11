@@ -1,518 +1,529 @@
-# AgentDesk UX 종합 감사 보고서 — 2026 Q1
+# AgentDesk UX Comprehensive Audit Report — 2026 Q1
 
-**버전:** 1.0
-**작성일:** 2026-03-10
-**전제 문서:** [product-design.md](../product-design.md), [ux-renewal-2.0.md](ux-renewal-2.0.md), [design-system.md](design-system.md)
-
----
-
-## 0. 감사 기준
-
-### 제품 정의
-
-> **AgentDesk는 "누구나 쉽게 에이전트를 이용해서 소프트웨어 개발 및 프로젝트를 생성·운영하는 Project OS"이다.**
-
-이 감사는 위 정의를 기준으로, 사용자가 **프로젝트를 만들고 → 에이전트와 협업하고 → 결과물을 만들어내기까지의 여정** 전체에서 마찰이 어디에 있는지 진단한다.
-
-### UX 7대 원칙 (`ux-renewal-2.0.md`)
-
-| # | 원칙 | 핵심 |
-|---|------|------|
-| 1 | **평어 우선** | 전문 용어보다 일상 언어. 불가피하면 옆에 설명 |
-| 2 | **한 번에 하나** | 화면당 사용자 행동 1개 |
-| 3 | **왜 하는지 설명** | 모든 입력 요청에 한 줄 이유 |
-| 4 | **빈 화면은 안내판** | 데이터 없는 상태가 가장 친절해야 한다 |
-| 5 | **점진적 공개** | 처음 단순, 준비되면 고급 기능 |
-| 6 | **실수 방지** | 파괴적 행동 전 확인. 되돌릴 수 없으면 명시 |
-| 7 | **상태 항상 표시** | 지금 어디, 뭘 하고 있는지 항상 보여준다 |
-
-### 감사 범위
-
-- 프론트엔드 코드 전체 (TSX 컴포넌트, CSS 스타일, i18n)
-- 5개 핵심 사용자 여정
-- 접근성, 모바일 대응, 디자인 시스템 일관성
+**Version:** 1.1
+**Date:** 2026-03-11
+**Reference Documents:** [product-design.md](../product-design.md), [ux-renewal-2.0.md](ux-renewal-2.0.md), [design-system.md](design-system.md), [DESIGN.md](DESIGN.md)
 
 ---
 
-## 1. 현재 UX 문제점 — 사용자 여정별 진단
+## 0. Audit Criteria
 
-### 여정 A: 프로젝트 생성 (온보딩)
+### Product Definition
 
-| 항목 | 현황 | 위반 원칙 | 심각도 |
-|------|------|-----------|--------|
-| 카테고리 선택 → 기본 정보 2단계 | 원칙 준수 ✅ | — | — |
-| 프로젝트 경로 입력 (`~/projects/...`) | 비개발자에게 기술적 장벽 | #1 평어 우선 | High |
-| 카테고리 없이 시작 시 대시보드 빈 화면 | 안내 메시지 있으나 CTA 부족 | #4 빈 화면은 안내판 | Medium |
-| 프로젝트 경로 자동 생성 로직 | 한국어 포함 시 깨질 수 있음 | #6 실수 방지 | Low |
+> **AgentDesk is a CLI Agent Management Tool — a professional control plane for AI agents that execute as CLI processes.**
 
-**코드 위치:**
-- `src/components/project-create-modal/ProjectCreateModal.tsx` — 프로젝트 생성 모달
-- `src/components/dashboard/Dashboard2.tsx` — 빈 상태 WelcomeScreen
+The design identity is **CLI Concept**: the UI should feel like a sophisticated terminal management interface (k9s, lazygit, htop-class) rather than a marketing SaaS dashboard. This audit evaluates the current state against both usability principles and the CLI concept design direction.
+
+### Design Direction Update (2026-03-11)
+
+| Dimension | Old Direction | New Direction (CLI Concept) |
+|-----------|---------------|-----------------------------|
+| Visual identity | Game/simulator aesthetic | CLI management tool — dark, dense, precise |
+| Typography | Mixed (mono everywhere) | Sans-serif UI layer + mono for data/IDs/status |
+| Interaction model | Click-first | Keyboard-first (`Cmd+K`, `N`, `J/K`, `/`) |
+| Status display | Varied approaches | Terminal process states: `RUNNING`, `IDLE`, `FAILED` |
+| Empty states | Generic messages | Actionable with keyboard hint ("Press N to create") |
+| Feedback | `window.alert/confirm` | Toast + ConfirmDialog (themed, non-blocking) |
+
+### 7 UX Principles (`ux-renewal-2.0.md`)
+
+| # | Principle | Core Idea |
+|---|-----------|-----------|
+| 1 | **Plain Language First** | Use everyday language over jargon. If technical terms are unavoidable, explain them inline. |
+| 2 | **One Thing at a Time** | One user action per screen. |
+| 3 | **Explain Why** | Every input request should include one line explaining the reason. |
+| 4 | **Empty State = Guidance** | Screens with no data should be the most helpful. |
+| 5 | **Progressive Disclosure** | Start simple; surface advanced features only when the user is ready. |
+| 6 | **Error Prevention** | Confirm before destructive actions. Explicitly state when something cannot be undone. |
+| 7 | **Always Show State** | Always communicate where the user is and what is happening. |
+
+### Audit Scope
+
+- All front-end code (TSX components, CSS styles, i18n)
+- 7 core user journeys
+- Accessibility, mobile responsiveness, and design system consistency
 
 ---
 
-### 여정 B: 에이전트 팀 구성
+## 1. Current UX Issues — Diagnosis by User Journey
 
-| 항목 | 현황 | 위반 원칙 | 심각도 |
-|------|------|-----------|--------|
-| 에이전트 생성 폼 13+ 필드 | 한 화면에 전부 노출 | #5 점진적 공개 | High |
-| CLI provider 선택 (Anthropic, OpenAI 등) | 용어에 대한 설명/툴팁 없음 | #3 왜 하는지 설명 | Medium |
-| 아바타 파일 크기 검증 | `alert()` 사용 | #6 실수 방지 (UX 미달) | High |
-| 에이전트 삭제 확인 | `window.confirm()` 사용 | #6 실수 방지 (UX 미달) | High |
-| 부서 관리 에러 | `alert()` 5곳 사용 | #6 실수 방지 (UX 미달) | High |
+### Journey A: Project Creation (Onboarding)
 
-**코드 위치:**
-- `src/components/agent-manager/AgentFormModal.tsx:100` — alert (이미지 크기)
-- `src/components/AgentDetail.tsx:288` — window.confirm (삭제)
-- `src/components/agent-manager/DepartmentFormModal.tsx:151,153,178,180,182` — alert 5곳
+| Item | Current State | Violated Principle | Severity |
+|------|---------------|--------------------|----------|
+| Category selection → Basic info (2 steps) | Follows principle ✅ | — | — |
+| Project path input (`~/projects/...`) | Technical barrier for non-developers | #1 Plain Language First | High |
+| Dashboard empty state when no category exists | Guidance message present but CTA is weak | #4 Empty State = Guidance | Medium |
+| Auto-generated project path logic | May break with non-ASCII (e.g., Korean) characters | #6 Error Prevention | Low |
+
+**Code locations:**
+- `src/components/project-create-modal/ProjectCreateModal.tsx` — project creation modal
+- `src/components/dashboard/Dashboard2.tsx` — empty state WelcomeScreen
 
 ---
 
-### 여정 C: 업무 실행 (태스크 관리)
+### Journey B: Agent Team Setup
 
-| 항목 | 현황 | 위반 원칙 | 심각도 |
-|------|------|-----------|--------|
-| 태스크 생성 | 2클릭, 양호 ✅ | — | — |
-| 드래그앤드롭 상태 변경 | 양호 ✅ (@dnd-kit) | — | — |
-| 일괄 삭제 확인 | `window.confirm()` 사용 | #6 실수 방지 (UX 미달) | High |
-| API 실패 시 무응답 | `.catch(() => {})` | #7 상태 항상 표시 | Critical |
-| 태스크 실행/중지/일시정지/재개 실패 | `window.alert()` 4곳 | #6 실수 방지 (UX 미달) | High |
-| 비용 한도 초과 알림 | `alert()` (영어 하드코딩) | #1 평어 우선, #6 실수 방지 | High |
-| 프로젝트 목록 로딩 실패 | 에러 무시 | #7 상태 항상 표시 | High |
-| 로딩 상태 | 일부 누락 (스피너 없음) | #7 상태 항상 표시 | Medium |
+| Item | Current State | Violated Principle | Severity |
+|------|---------------|--------------------|----------|
+| Agent creation form with 13+ fields | All fields exposed on one screen | #5 Progressive Disclosure | High |
+| CLI provider selection (Anthropic, OpenAI, etc.) | No explanation or tooltip for the term | #3 Explain Why | Medium |
+| Avatar file size validation | Uses `alert()` | #6 Error Prevention (UX substandard) | High |
+| Agent deletion confirmation | Uses `window.confirm()` | #6 Error Prevention (UX substandard) | High |
+| Department management errors | Uses `alert()` in 5 places | #6 Error Prevention (UX substandard) | High |
 
-**코드 위치:**
-- `src/app/useAppActions.ts:193,329,379,412,429` — alert 5곳 (태스크 실행 에러, 비용 한도)
-- `src/components/TaskBoard.tsx:323` — window.confirm (일괄 삭제)
+**Code locations:**
+- `src/components/agent-manager/AgentFormModal.tsx:100` — alert (image size)
+- `src/components/AgentDetail.tsx:288` — window.confirm (delete)
+- `src/components/agent-manager/DepartmentFormModal.tsx:151,153,178,180,182` — alert in 5 places
+
+---
+
+### Journey C: Task Execution (Task Management)
+
+| Item | Current State | Violated Principle | Severity |
+|------|---------------|--------------------|----------|
+| Task creation | 2 clicks, acceptable ✅ | — | — |
+| Drag-and-drop status change | Acceptable ✅ (@dnd-kit) | — | — |
+| Bulk delete confirmation | Uses `window.confirm()` | #6 Error Prevention (UX substandard) | High |
+| Silent failure on API error | `.catch(() => {})` | #7 Always Show State | Critical |
+| Task run/stop/pause/resume failure | Uses `window.alert()` in 4 places | #6 Error Prevention (UX substandard) | High |
+| Cost limit exceeded notification | Uses `alert()` (English hardcoded) | #1 Plain Language First, #6 Error Prevention | High |
+| Project list load failure | Error silently ignored | #7 Always Show State | High |
+| Loading state | Missing in some places (no spinner) | #7 Always Show State | Medium |
+
+**Code locations:**
+- `src/app/useAppActions.ts:193,329,379,412,429` — alert in 5 places (task execution errors, cost limit)
+- `src/components/TaskBoard.tsx:323` — window.confirm (bulk delete)
 - `src/components/TaskBoard.tsx` — .catch(() => {})
 - `src/components/taskboard/CreateTaskModal.tsx` — .catch(() => {})
 
 ---
 
-### 여정 D: 의사결정 (Decision Inbox)
+### Journey D: Decision Making (Decision Inbox)
 
-| 항목 | 현황 | 위반 원칙 | 심각도 |
-|------|------|-----------|--------|
-| 옵션 선택 UI | 번호 버튼 + 멀티셀렉트, 양호 ✅ | — | — |
-| 빈 선택 검증 | `window.alert()` 사용 | #6 실수 방지 (UX 미달) | High |
-| 전송 로딩 상태 | "Sending..." 텍스트, 양호 ✅ | — | — |
+| Item | Current State | Violated Principle | Severity |
+|------|---------------|--------------------|----------|
+| Option selection UI | Numbered buttons + multi-select, acceptable ✅ | — | — |
+| Empty selection validation | Uses `window.alert()` | #6 Error Prevention (UX substandard) | High |
+| Submission loading state | "Sending..." text, acceptable ✅ | — | — |
 
-**코드 위치:**
-- `src/components/DecisionInboxModal.tsx:164` — window.alert (검증)
-
----
-
-### 여정 E: 설정 & 연동
-
-| 항목 | 현황 | 위반 원칙 | 심각도 |
-|------|------|-----------|--------|
-| 8개 탭 | 인지 과부하 | #5 점진적 공개 | Medium |
-| OAuth 계정 삭제 | `window.confirm()` 사용 | #6 실수 방지 (UX 미달) | High |
-| 데이터 초기화 | `window.confirm()` 사용 | #6 실수 방지 (UX 미달) | High |
-| 저장 성공 피드백 | 2초 토스트, 양호 ✅ | — | — |
-
-**코드 위치:**
-- `src/components/SettingsPanel.tsx:382` — window.confirm (OAuth 삭제)
-- `src/components/settings/DataSettingsTab.tsx:70` — window.confirm (데이터 초기화)
+**Code locations:**
+- `src/components/DecisionInboxModal.tsx:164` — window.alert (validation)
 
 ---
 
-### 여정 F: 라이브러리 관리 (메모리, 룰, 훅, 스킬)
+### Journey E: Settings & Integrations
 
-| 항목 | 현황 | 위반 원칙 | 심각도 |
-|------|------|-----------|--------|
-| 파일 크기 검증 | `alert()` 사용 (메모리, 룰, 훅) | #6 실수 방지 (UX 미달) | Medium |
-| 커스텀 스킬 임포트 에러 | 하드코딩 영어 alert | #1 평어 우선, #6 실수 방지 | High |
-| 채팅 기록 삭제 | `window.confirm()` 사용 | #6 실수 방지 (UX 미달) | Medium |
+| Item | Current State | Violated Principle | Severity |
+|------|---------------|--------------------|----------|
+| 8 tabs | Cognitive overload | #5 Progressive Disclosure | Medium |
+| OAuth account deletion | Uses `window.confirm()` | #6 Error Prevention (UX substandard) | High |
+| Data reset | Uses `window.confirm()` | #6 Error Prevention (UX substandard) | High |
+| Save success feedback | 2-second toast, acceptable ✅ | — | — |
 
-**코드 위치:**
-- `src/components/memory/MemoryFormModal.tsx:195` — alert (파일 크기)
-- `src/components/agent-rules/RuleFormModal.tsx:192` — alert (파일 크기)
-- `src/components/hooks/HookFormModal.tsx:244` — alert (파일 크기)
-- `src/components/skills-library/CustomSkillSection.tsx:42,49` — alert (영어 하드코딩)
-- `src/components/chat-panel/ChatPanelHeader.tsx:112` — window.confirm (기록 삭제)
+**Code locations:**
+- `src/components/SettingsPanel.tsx:382` — window.confirm (OAuth deletion)
+- `src/components/settings/DataSettingsTab.tsx:70` — window.confirm (data reset)
 
 ---
 
-### 여정 G: 하트비트 (직원 모니터링)
+### Journey F: Library Management (Memory, Rules, Hooks, Skills)
 
-| 항목 | 현황 | 위반 원칙 | 심각도 |
-|------|------|-----------|--------|
-| 워치리스트 제거 확인 | `window.confirm()` 사용 | #6 실수 방지 (UX 미달) | Medium |
-| 로그 삭제 확인 | `window.confirm()` 사용 | #6 실수 방지 (UX 미달) | Medium |
-| 실패 시 에러 표시 | `window.alert()` 사용 | #7 상태 항상 표시 (UX 미달) | Medium |
+| Item | Current State | Violated Principle | Severity |
+|------|---------------|--------------------|----------|
+| File size validation | Uses `alert()` (memory, rules, hooks) | #6 Error Prevention (UX substandard) | Medium |
+| Custom skill import error | Hardcoded English alert | #1 Plain Language First, #6 Error Prevention | High |
+| Chat history deletion | Uses `window.confirm()` | #6 Error Prevention (UX substandard) | Medium |
 
-**코드 위치:**
-- `src/components/office-view/HeartbeatPanel.tsx:492,499,611,618,691,698` — confirm/alert 6곳
-
----
-
-### 기술적 문제 (전체)
-
-| 문제 | 수치 | 영향 |
-|------|------|------|
-| `window.alert()` | **21곳** | 브라우저 기본 다이얼로그가 제품 경험 파괴 |
-| `window.confirm()` | **9곳** | 비표준 확인 다이얼로그, 커스터마이징 불가 |
-| `.catch(() => {})` (에러 무시) | **12곳** 8파일 | 사용자에게 피드백 없이 실패 |
-| `!important` | **380회** | CSS 유지보수성·예측성 저하 |
-| 하드코딩 rgba() | **313건** | 테마 변수 시스템 우회, 일관성 위험 |
-| 모바일 미디어 쿼리 | **8개** | 반응형 대응 미흡 |
-| ARIA 속성 | **거의 없음** | 스크린리더·키보드 접근성 부재 |
-| `console.error` (프로덕션) | **105+곳** | 개발자 도구 없으면 사용자 인지 불가 |
-| App.tsx `useState` | **60+개** | 루트 컴포넌트 상태 복잡도 극심, prop drilling |
-| AppMainLayout props | **58개** | 과도한 파라미터 전달 |
-| 모달 구현체 | **28개** | 다수가 공유 Modal 프리미티브 미사용 |
-| URL 라우팅 | **없음** | 딥링크/북마크 불가, 뒤로가기 미지원 |
-| 브레드크럼 | **없음** | 현재 위치 인지 어려움 |
-| 반응형 코드 | **16곳** | 모바일 최적화 사실상 부재 |
+**Code locations:**
+- `src/components/memory/MemoryFormModal.tsx:195` — alert (file size)
+- `src/components/agent-rules/RuleFormModal.tsx:192` — alert (file size)
+- `src/components/hooks/HookFormModal.tsx:244` — alert (file size)
+- `src/components/skills-library/CustomSkillSection.tsx:42,49` — alert (English hardcoded)
+- `src/components/chat-panel/ChatPanelHeader.tsx:112` — window.confirm (history deletion)
 
 ---
 
-## 2. 근본 원인 분석
+### Journey G: Heartbeat (Agent Monitoring)
 
-| 원인 | 영향 범위 | 설명 |
-|------|-----------|------|
-| **피드백 시스템 부재** | 전체 여정 | 통합된 Toast/ConfirmDialog가 없어 `window.alert/confirm`으로 대체 |
-| **디자인 시스템 미성숙** | 전체 | 공유 UI 프리미티브(Modal, Button 등)가 최근에야 생성됨. 이전 코드는 각 컴포넌트가 독자적으로 스타일링 |
-| **에러 핸들링 전략 부재** | 여정 B~G | API 호출 실패를 일관되게 처리하는 패턴 없이 `.catch(() => {})` 관행 |
-| **Tailwind v4 전환 과도기** | CSS | CSS 변수 기반 토큰과 기존 유틸리티 클래스 충돌 → `!important` 남발 |
-| **레트로 터미널 테마 특수성** | CSS | glassmorphism 제거, border-radius 평탄화 등 대량 오버라이드 필요 |
-| **모바일 후순위** | 레이아웃 | 데스크톱 중심 설계, 반응형은 사후 패치 수준 |
-| **기술 용어 설명 부재** | 여정 A, B | CLI provider 등 기술 용어에 대한 설명·툴팁이 없어 비개발자가 이해하기 어려움 |
-| **루트 상태 과부하** | 전체 | App.tsx에 60+ useState, AppMainLayout에 58 props → 유지보수·성능 저하 |
-| **URL 라우팅 부재** | 네비게이션 | 순수 상태 기반 뷰 전환 → 딥링크·북마크·뒤로가기 불가 |
-| **모달 표준화 미완** | 전체 | 28개 모달 중 다수가 독자 구현, 공유 Modal primitive 미사용 |
+| Item | Current State | Violated Principle | Severity |
+|------|---------------|--------------------|----------|
+| Watchlist removal confirmation | Uses `window.confirm()` | #6 Error Prevention (UX substandard) | Medium |
+| Log deletion confirmation | Uses `window.confirm()` | #6 Error Prevention (UX substandard) | Medium |
+| Error display on failure | Uses `window.alert()` | #7 Always Show State (UX substandard) | Medium |
+
+**Code locations:**
+- `src/components/office-view/HeartbeatPanel.tsx:492,499,611,618,691,698` — confirm/alert in 6 places
 
 ---
 
-## 3. UX 개선 전략 — Impact × Effort 매트릭스
+### Technical Issues (Global)
 
-### 우선순위 정의
-- **P0 (즉시)**: 제품 핵심 경험을 직접 훼손하는 문제
-- **P1 (다음 스프린트)**: "누구나 쉽게" 원칙 위반, 해결 비용 적절
-- **P2 (백로그)**: 개선 효과 있으나 공수 큼
-- **P3 (장기)**: 유지보수성 개선
-
-| 개선 항목 | 관련 원칙 | Impact | Effort | 우선순위 |
-|-----------|-----------|--------|--------|----------|
-| ConfirmDialog/Toast 시스템 구축 | #6 실수 방지, #7 상태 표시 | ★★★ | ★☆☆ | **P0** |
-| API 에러 피드백 일관화 | #7 상태 항상 표시 | ★★★ | ★★☆ | **P0** |
-| 에이전트 폼 점진적 공개 | #5 점진적 공개 | ★★☆ | ★☆☆ | **P1** |
-| 기술 용어에 설명/툴팁 추가 (CLI provider 등) | #3 왜 하는지 설명 | ★★☆ | ★☆☆ | **P1** |
-| 빈 상태(EmptyState) 안내 통합 | #4 빈 화면은 안내판 | ★★☆ | ★☆☆ | **P1** |
-| 접근성 (ARIA, 키보드 내비게이션) | "누구나 쉽게" | ★★★ | ★★☆ | **P1** |
-| 폼 유효성 검증 인라인 피드백 | #3 왜 하는지 설명 | ★★☆ | ★☆☆ | **P1** |
-| 설정 8탭 → 3그룹 재구성 | #5 점진적 공개 | ★☆☆ | ★☆☆ | **P2** |
-| 모바일 반응형 전면 대응 | "누구나 쉽게" | ★★☆ | ★★★ | **P2** |
-| 나머지 모달 28개 → 공유 Modal 마이그레이션 | (일관성) | ★★☆ | ★★☆ | **P2** |
-| URL 기반 라우팅 도입 (딥링크·뒤로가기) | #7 상태 항상 표시 | ★★☆ | ★★★ | **P2** |
-| 상태 관리 리팩터링 (App.tsx 60+ useState) | (유지보수·성능) | ★★☆ | ★★★ | **P3** |
-| CSS !important/rgba 정리 | (유지보수) | ★☆☆ | ★★★ | **P3** |
+| Issue | Count | Impact |
+|-------|-------|--------|
+| `window.alert()` | **21 places** | Browser-native dialogs destroy the product experience |
+| `window.confirm()` | **9 places** | Non-standard confirmation dialogs, not customizable |
+| `.catch(() => {})` (silenced errors) | **12 places**, 8 files | Failures with no user feedback |
+| `!important` | **380 occurrences** | Degrades CSS maintainability and predictability |
+| Hardcoded rgba() | **313 instances** | Bypasses theme variable system, risks inconsistency |
+| Mobile media queries | **8** | Insufficient responsive design coverage |
+| ARIA attributes | **Nearly absent** | Lack of screen reader and keyboard accessibility |
+| `console.error` (in production) | **105+ places** | Users cannot detect errors without developer tools |
+| App.tsx `useState` hooks | **60+** | Extreme root component state complexity, prop drilling |
+| AppMainLayout props | **58** | Excessive parameter passing |
+| Modal implementations | **28** | Many do not use the shared Modal primitive |
+| URL routing | **None** | Deep linking, bookmarking, and back-navigation unsupported |
+| Breadcrumbs | **None** | Difficult to understand current location |
+| Responsive code | **16 places** | Mobile optimization is effectively absent |
 
 ---
 
-## 4. 레이아웃 개선
+## 2. Root Cause Analysis
 
-### 현재 구조 (유지)
+| Cause | Affected Scope | Description |
+|-------|---------------|-------------|
+| **No unified feedback system** | All journeys | No shared Toast/ConfirmDialog system, so `window.alert/confirm` is used as a fallback |
+| **Immature design system** | Global | Shared UI primitives (Modal, Button, etc.) were only recently created; older code has per-component ad-hoc styling |
+| **No error handling strategy** | Journeys B–G | No consistent pattern for handling API failures; `.catch(() => {})` is the de facto approach |
+| **Tailwind v4 migration in progress** | CSS | Conflicts between CSS variable-based tokens and legacy utility classes lead to overuse of `!important` |
+| **Retro terminal theme specificity** | CSS | Removing glassmorphism, flattening border-radius, etc. requires large numbers of overrides |
+| **Mobile treated as secondary** | Layout | Desktop-first design; responsive support is patch-level |
+| **No explanations for technical terms** | Journeys A, B | CLI provider (the AI model vendor, e.g., Anthropic, OpenAI) and similar terms lack explanations or tooltips, making them opaque to non-developers |
+| **Root state overload** | Global | 60+ useState hooks in App.tsx, 58 props in AppMainLayout → degraded maintainability and performance |
+| **No URL routing** | Navigation | Pure state-based view switching → deep linking, bookmarking, and back-navigation impossible |
+| **Modal standardization incomplete** | Global | Many of the 28 modals are independently implemented and do not use the shared Modal primitive |
+
+---
+
+## 3. UX Improvement Strategy — Impact × Effort Matrix
+
+### Priority Definitions
+- **P0 (Immediate):** Directly damages the core product experience
+- **P1 (Next sprint):** Violates the "anyone can use it easily" principle; reasonable effort to fix
+- **P2 (Backlog):** Meaningful improvement but requires significant effort
+- **P3 (Long-term):** Maintainability improvements
+
+| Improvement Item | Related Principle | Impact | Effort | Priority |
+|-----------------|-------------------|--------|--------|----------|
+| Build ConfirmDialog/Toast system | #6 Error Prevention, #7 Always Show State | ★★★ | ★☆☆ | **P0** |
+| Consistent API error feedback | #7 Always Show State | ★★★ | ★★☆ | **P0** |
+| Progressive disclosure for agent form | #5 Progressive Disclosure | ★★☆ | ★☆☆ | **P1** |
+| Add explanations/tooltips for technical terms (CLI provider, etc.) | #3 Explain Why | ★★☆ | ★☆☆ | **P1** |
+| Unified empty state (EmptyState) guidance | #4 Empty State = Guidance | ★★☆ | ★☆☆ | **P1** |
+| Accessibility (ARIA, keyboard navigation) | "Anyone can use it" | ★★★ | ★★☆ | **P1** |
+| Inline feedback for form validation | #3 Explain Why | ★★☆ | ★☆☆ | **P1** |
+| Restructure settings from 8 tabs → 3 groups | #5 Progressive Disclosure | ★☆☆ | ★☆☆ | **P2** |
+| Full mobile responsive overhaul | "Anyone can use it" | ★★☆ | ★★★ | **P2** |
+| Migrate remaining 28 modals → shared Modal | (Consistency) | ★★☆ | ★★☆ | **P2** |
+| Introduce URL-based routing (deep linking, back-navigation) | #7 Always Show State | ★★☆ | ★★★ | **P2** |
+| State management refactor (App.tsx 60+ useState) | (Maintainability / Performance) | ★★☆ | ★★★ | **P3** |
+| Clean up CSS !important / rgba hardcoding | (Maintainability) | ★☆☆ | ★★★ | **P3** |
+
+---
+
+## 4. Layout Improvements
+
+### Current Structure (retained)
 
 ```
 ┌──────────┬───────────────────────────────────┐
-│          │ [Header: 로고 + 뷰 타이틀 + 액션]  │
+│          │ [Header: Logo + View Title + Actions] │
 │ Sidebar  ├───────────────────────────────────┤
-│ (네비)   │                                   │
+│ (Nav)    │                                   │
 │          │        Main Content Area          │
 │          │                                   │
 └──────────┴───────────────────────────────────┘
 ```
 
-### 개선 제안
+### Proposed Improvements
 
-| 영역 | 현재 | 개선안 |
-|------|------|--------|
-| 헤더 "Tasks" 버튼 | 사이드바 "업무 관리"와 중복 | 헤더 버튼을 "업무" 또는 아이콘으로 차별화 |
-| 대시보드 빈 상태 | WelcomeScreen 있으나 단순 | CTA 강화: "첫 번째 목표를 추가해볼까요?" + 큰 버튼 |
-| 설정 탭 | 8개 수평 탭 (General, CLI, OAuth, API, Gateway, Data, Categories, Project) | 3그룹: **기본**(General·Project) / **연동**(OAuth·API·CLI) / **고급**(Gateway·Data·Categories) |
-| 모바일 사이드바 | 햄버거 토글 | 오버레이 서랍형 + 스와이프 제스처 |
+| Area | Current | Proposed |
+|------|---------|----------|
+| Header "Tasks" button | Duplicates sidebar "Task Management" | Differentiate header button as "Tasks" or icon-only |
+| Dashboard empty state | WelcomeScreen present but minimal | Strengthen CTA: "Ready to add your first goal?" + large button |
+| Settings tabs | 8 horizontal tabs (General, CLI, OAuth, API, Gateway, Data, Categories, Project) | 3 groups: **Basic** (General · Project) / **Integrations** (OAuth · API · CLI) / **Advanced** (Gateway · Data · Categories) |
+| Mobile sidebar | Hamburger toggle | Overlay drawer + outside-click / swipe-to-close |
 
 ---
 
-## 5. 컴포넌트 개선
+## 5. Component Improvements
 
-### 5-1. 신규 프리미티브
+### 5-1. New Primitives
 
 #### ConfirmDialog
 
-`window.confirm()` / `window.alert()` 25곳을 전량 대체.
+Replaces all 25 uses of `window.confirm()` / `window.alert()`.
 
 ```
 ┌────────────────────────────────────────┐
-│ ⚠ 정말 삭제하시겠습니까?                  │
+│ ⚠ Are you sure you want to delete?     │
 │                                        │
-│ 이 업무 3개가 영구 삭제됩니다.             │
-│ 이 작업은 되돌릴 수 없습니다.             │
+│ 3 tasks will be permanently deleted.   │
+│ This action cannot be undone.          │
 │                                        │
-│            [취소]  [삭제하기]             │
+│              [Cancel]  [Delete]        │
 └────────────────────────────────────────┘
 ```
 
-- 기존 `src/components/ui/Modal.tsx` 위에 구축
+- Built on top of the existing `src/components/ui/Modal.tsx`
 - Props: `title`, `message`, `confirmLabel`, `cancelLabel`, `variant` (danger/warning/info)
-- i18n 지원 (t 함수 사용)
+- i18n support (uses `t` function)
 
 #### Toast / Snackbar
 
-API 성공/실패 피드백용.
+For API success and failure feedback.
 
 ```
 ┌──────────────────────────────────┐
-│ ✓ 저장되었습니다                    │  ← 3초 후 자동 닫힘
+│ ✓ Saved successfully             │  ← Auto-closes after 3 seconds
 └──────────────────────────────────┘
 
 ┌──────────────────────────────────┐
-│ ✕ 저장에 실패했습니다. 다시 시도해주세요 │  ← 5초 후 자동 닫힘
+│ ✕ Save failed. Please try again. │  ← Auto-closes after 5 seconds
 └──────────────────────────────────┘
 ```
 
-- `createPortal` + `position: fixed` (하단 중앙)
-- Context 기반 관리 (`useToast` 훅)
-- 기존 `src/components/NotificationCenter.tsx` 패턴 참조
+- `createPortal` + `position: fixed` (bottom-center)
+- Context-based management (`useToast` hook)
+- Reference the existing `src/components/NotificationCenter.tsx` pattern
 
 #### EmptyState
 
-빈 화면 안내 통합 패턴.
+A unified pattern for empty-screen guidance.
 
 ```
 ┌────────────────────────────────────────┐
 │                                        │
-│            📋                          │
-│     아직 목표가 없어요.                  │
-│   첫 번째 목표를 추가해볼까요?            │
+│               📋                       │
+│       No goals yet.                    │
+│   Ready to add your first goal?        │
 │                                        │
-│        [ + 목표 추가하기 ]               │
+│         [ + Add a Goal ]               │
 │                                        │
 └────────────────────────────────────────┘
 ```
 
 - Props: `icon`, `title`, `description`, `actionLabel`, `onAction`
 
-### 5-2. 기존 컴포넌트 개선
+### 5-2. Existing Component Improvements
 
-#### 에이전트 생성 폼 — 점진적 공개
+#### Agent Creation Form — Progressive Disclosure
 
-**현재**: 13+ 필드가 한 화면에 전부 노출 (2-column)
+**Current:** 13+ fields all visible on one screen (2-column layout)
 
-**개선안**: 2단계 분리
+**Proposed:** Split into 2 steps
 
-| 단계 | 필드 | 설명 |
-|------|------|------|
-| 1단계 (기본) | 이름(EN), 이름(KO), 이모지, 부서, 역할 | 에이전트 생성에 필수적인 최소 정보 |
-| 2단계 (고급, 접힌 상태) | CLI 프로바이더, 페르소나, 아바타 | "고급 설정 열기" 클릭 시 확장 |
+| Step | Fields | Notes |
+|------|--------|-------|
+| Step 1 (Basic) | Name (EN), Name (KO), emoji, department, role | Minimum information required to create an agent |
+| Step 2 (Advanced, collapsed) | CLI provider (AI model vendor, e.g., Anthropic, OpenAI), persona, avatar | Expanded on "Open advanced settings" click |
 
-**코드 위치**: `src/components/agent-manager/AgentFormModal.tsx`
+**Code location:** `src/components/agent-manager/AgentFormModal.tsx`
 
-#### 프로젝트 경로 — 기술 장벽 완화
+#### Project Path — Lowering the Technical Barrier
 
-**현재**: `~/projects/project-name` 직접 입력
+**Current:** User manually types `~/projects/project-name`
 
-**개선안**:
-- 기본값 자동 생성 유지 (현재와 동일)
-- 입력 필드 위에 안내 문구: "에이전트가 작업할 폴더입니다. 기본값을 사용해도 됩니다."
-- 향후: 네이티브 폴더 선택기 연동 (Electron/Tauri 전환 시)
-
----
-
-## 6. 인터랙션 개선
-
-### 6-1. 파괴적 행동 흐름
-
-**현재**: `window.confirm("삭제하시겠습니까?")` → 즉시 실행
-
-**개선안**:
-1. 사용자가 삭제 버튼 클릭
-2. ConfirmDialog 모달 표시 (되돌릴 수 없음 명시)
-3. 확인 클릭 → 로딩 표시 → API 호출
-4. 성공 → Toast ("삭제되었습니다") + UI 갱신
-5. 실패 → Toast ("삭제에 실패했습니다")
-
-### 6-2. API 호출 피드백 일관화
-
-**현재**: `.catch(() => {})` — 실패해도 아무 피드백 없음 (12곳, 8파일)
-
-**개선안**: 모든 API 호출에 에러 토스트 추가
-
-교체 대상:
-- `src/app/AppMainLayout.tsx` — 1곳
-- `src/components/NotificationCenter.tsx` — 3곳
-- `src/components/dashboard/AgentActivityPanel.tsx` — 1곳
-- `src/components/TaskBoard.tsx` — 1곳
-- `src/components/taskboard/CreateTaskModal.tsx` — 1곳
-- `src/components/settings/GitHubOAuthAppConfig.tsx` — 1곳
-- `src/components/project-create-modal/RecommendedSkillsSection.tsx` — 1곳
-- `src/components/office-view/CliUsagePanel.tsx` — 3곳
-
-### 6-3. 로딩 상태 표준화
-
-| 상황 | 현재 | 개선안 |
-|------|------|--------|
-| 버튼 클릭 후 API 호출 | 일부만 disabled 처리 | disabled + 텍스트 변경 ("저장 중...") 통일 |
-| 패널 데이터 로딩 | 일부 skeleton, 일부 빈 화면 | skeleton placeholder 통일 |
-| 페이지 전환 | framer-motion 페이드, 양호 ✅ | 유지 |
-
-### 6-4. 키보드 단축키 (향후)
-
-| 단축키 | 기능 |
-|--------|------|
-| `Cmd/Ctrl + K` | 글로벌 검색 |
-| `Cmd/Ctrl + N` | 새로 만들기 (현재 뷰에 맞는 생성) |
-| `Escape` | 모달/패널 닫기 (이미 구현 ✅) |
+**Proposed:**
+- Keep auto-generation of default value (same as current)
+- Add explanatory text above the input field: "This is the folder where the agent will work. You can keep the default value."
+- Future: Native folder picker integration (when migrating to Electron/Tauri)
 
 ---
 
-## 7. 모바일 UX 개선
+## 6. Interaction Improvements
 
-### 현황
+### 6-1. Destructive Action Flow
 
-- 미디어 쿼리 **8개**만 사용 (전체 CSS 4,934줄 대비)
-- 사이드바: 모바일 햄버거 토글 있으나 최적화 미흡
-- 태스크보드: 다중 컬럼이 모바일에서 가로 스크롤
-- 터치 타깃: 일부 버튼이 44px 미만
+**Current:** `window.confirm("Are you sure you want to delete?")` → immediately executes
 
-### 개선안
+**Proposed:**
+1. User clicks the delete button
+2. ConfirmDialog modal appears (explicitly states the action cannot be undone)
+3. User confirms → loading indicator shown → API call made
+4. Success → Toast ("Deleted successfully") + UI updated
+5. Failure → Toast ("Deletion failed")
 
-| 영역 | 현재 | 개선안 |
-|------|------|--------|
-| 브레이크포인트 | 비체계적 (639, 1023, 1279px) | 표준화: sm(640), md(768), lg(1024), xl(1280) |
-| 사이드바 | 단순 토글 | 오버레이 서랍형 + 바깥 클릭/스와이프 닫기 |
-| 태스크보드 | 다중 컬럼 가로 스크롤 | 단일 컬럼 + 좌우 스와이프 전환 |
-| 에이전트 카드 | 그리드 레이아웃 | 스택형 (세로 리스트) |
-| 터치 타깃 | 미표준 | 최소 44×44px |
-| 대시보드 | 2×2 그리드 | 세로 스택 (1열) |
+### 6-2. Consistent API Call Feedback
 
----
+**Current:** `.catch(() => {})` — failure produces no feedback whatsoever (12 places, 8 files)
 
-## 8. 프론트엔드 구현 제안
+**Proposed:** Add error toast to every API call
 
-### P0: ConfirmDialog + Toast 시스템
+Files to update:
+- `src/app/AppMainLayout.tsx` — 1 place
+- `src/components/NotificationCenter.tsx` — 3 places
+- `src/components/dashboard/AgentActivityPanel.tsx` — 1 place
+- `src/components/TaskBoard.tsx` — 1 place
+- `src/components/taskboard/CreateTaskModal.tsx` — 1 place
+- `src/components/settings/GitHubOAuthAppConfig.tsx` — 1 place
+- `src/components/project-create-modal/RecommendedSkillsSection.tsx` — 1 place
+- `src/components/office-view/CliUsagePanel.tsx` — 3 places
 
-**신규 파일:**
+### 6-3. Loading State Standardization
 
-| 파일 | 설명 |
-|------|------|
-| `src/components/ui/ConfirmDialog.tsx` | Modal 기반 확인 다이얼로그 |
-| `src/components/ui/Toast.tsx` | Portal 기반 토스트 알림 |
-| `src/hooks/useToast.ts` | Context + 훅으로 토스트 관리 |
+| Situation | Current | Proposed |
+|-----------|---------|----------|
+| After button click, API call in flight | Only some buttons are disabled | Consistently disabled + label change ("Saving...") |
+| Panel data loading | Some have skeletons, some show blank | Unified skeleton placeholder |
+| View transitions | framer-motion fade, acceptable ✅ | Retain as-is |
 
-**기존 코드 활용:**
-- `src/components/ui/Modal.tsx` — ConfirmDialog의 기반
-- `src/components/ui/Button.tsx` — 확인/취소 버튼
-- `src/components/NotificationCenter.tsx` — 알림 패턴 참조
+### 6-4. Keyboard Shortcuts (Future)
 
-**교체 대상:** `window.alert` 21곳 + `window.confirm` 9곳 = **30곳**
-
-### P1: 점진적 공개 + 용어 친화화 + 빈 상태
-
-**에이전트 폼 리팩터링:**
-- `src/components/agent-manager/AgentFormModal.tsx` — 2단계(기본/고급) 분리
-- 고급 설정은 `<details>` 또는 토글 버튼으로 접기
-
-**빈 상태 통합:**
-- `src/components/ui/EmptyState.tsx` 신규 생성
-- 대시보드, 태스크보드, 에이전트 목록 등 빈 상태에 적용
-
-**용어 친화화:**
-- `ux-renewal-2.0.md` §2 용어 가이드 적용
-- CLI provider 등 기술 용어에 ⓘ 툴팁 설명 추가 (용어 자체는 유지)
-
-### P1: 접근성
-
-**즉시 적용 가능:**
-- icon-only 버튼에 `aria-label` 일괄 추가
-- 커스텀 `<select>`에 `role="listbox"` + `aria-expanded`
-- `prefers-reduced-motion` 미디어 쿼리 이미 CSS에 있음 ✅
-
-**이미 완료된 항목:**
-- Skip-to-content 링크 ✅ (`src/app/AppMainLayout.tsx`)
-- Modal 포커스 트랩 ✅ (`src/components/ui/Modal.tsx`)
-- WCAG AA 대비율 ✅ (`--th-text-muted` 4.5:1 이상)
-
-### P2: 모바일 반응형
-
-**신규:**
-- `src/hooks/useMediaQuery.ts` — 반응형 브레이크포인트 훅
-
-**수정 대상:**
-- `src/components/Sidebar.tsx` — 오버레이 서랍형
-- `src/components/TaskBoard.tsx` — 모바일 단일 컬럼
-- `src/components/AgentManager.tsx` — 모바일 스택 레이아웃
-- `src/components/dashboard/Dashboard2.tsx` — 모바일 1열 스택
+| Shortcut | Action |
+|----------|--------|
+| `Cmd/Ctrl + K` | Global search |
+| `Cmd/Ctrl + N` | New item (contextual to the current view) |
+| `Escape` | Close modal/panel (already implemented ✅) |
 
 ---
 
-## 부록: 수치 요약
+## 7. Mobile UX Improvements
 
-| 지표 | 수치 |
-|------|------|
-| CSS 파일 | 5개, 4,934줄 |
-| CSS 변수 (--th-*) | 68개 |
-| !important 사용 | 380회 |
-| 하드코딩 rgba() | 313건 |
-| @keyframes 애니메이션 | 57개 |
-| 커스텀 CSS 클래스 | 407개 |
-| window.alert() | 21곳 |
-| window.confirm() | 9곳 |
-| .catch(() => {}) | 12곳 (8파일) |
-| console.error (프로덕션) | 105+곳 |
-| 미디어 쿼리 | 8개 |
-| i18n 지원 언어 | 4개 (ko, en, ja, zh) |
-| 공유 UI 프리미티브 | 5개 (Modal, Button, Input, Textarea, FormField) |
-| 모달/다이얼로그 구현체 | 28개 (다수가 공유 Modal 미사용) |
-| App.tsx useState 훅 | 60+개 |
-| AppMainLayout props | 58개 |
-| URL 라우팅 | 없음 (상태 기반 뷰 전환) |
-| 뷰 (View) 수 | 13개 |
-| 컴포넌트 총 라인 | ~44,000줄 (50+ 파일) |
+### Current State
+
+- Only **8** media queries used (across 4,934 lines of CSS)
+- Sidebar: mobile hamburger toggle present but not optimized
+- Task board: multiple columns require horizontal scrolling on mobile
+- Touch targets: some buttons are smaller than 44px
+
+### Proposed Improvements
+
+| Area | Current | Proposed |
+|------|---------|----------|
+| Breakpoints | Ad-hoc (639, 1023, 1279px) | Standardize: sm(640), md(768), lg(1024), xl(1280) |
+| Sidebar | Simple toggle | Overlay drawer + outside-click / swipe-to-close |
+| Task board | Multi-column horizontal scroll | Single column + left/right swipe to switch |
+| Agent cards | Grid layout | Stacked (vertical list) |
+| Touch targets | Non-standard | Minimum 44×44px |
+| Dashboard | 2×2 grid | Vertical stack (1 column) |
 
 ---
 
-## 부록: `window.alert` / `window.confirm` 전체 위치
+## 8. Front-End Implementation Proposals
 
-### window.alert (21곳)
+### P0: ConfirmDialog + Toast System
 
-| 파일 | 라인 | 내용 |
-|------|------|------|
-| `app/useAppActions.ts` | 193 | 비용 한도 초과 (영어 하드코딩) |
-| `app/useAppActions.ts` | 329 | 태스크 실행 실패 |
-| `app/useAppActions.ts` | 379 | 태스크 중지 실패 |
-| `app/useAppActions.ts` | 412 | 태스크 일시정지 실패 |
-| `app/useAppActions.ts` | 429 | 태스크 재개 실패 |
-| `agent-manager/AgentFormModal.tsx` | 100 | 이미지 5MB 초과 |
-| `agent-manager/DepartmentFormModal.tsx` | 151 | 부서 ID 중복 |
-| `agent-manager/DepartmentFormModal.tsx` | 153 | 부서 생성 실패 |
-| `agent-manager/DepartmentFormModal.tsx` | 178 | 소속 직원 있어 삭제 불가 |
-| `agent-manager/DepartmentFormModal.tsx` | 180 | 연결 태스크 있어 삭제 불가 |
-| `agent-manager/DepartmentFormModal.tsx` | 182 | 시스템 부서 삭제 불가 |
-| `memory/MemoryFormModal.tsx` | 195 | 파일 1MB 초과 |
-| `agent-rules/RuleFormModal.tsx` | 192 | 파일 512KB 초과 |
-| `hooks/HookFormModal.tsx` | 244 | 파일 크기 초과 |
-| `skills-library/CustomSkillSection.tsx` | 42 | Invalid skill package (영어 하드코딩) |
-| `skills-library/CustomSkillSection.tsx` | 49 | Import failed (영어 하드코딩) |
-| `DecisionInboxModal.tsx` | 164 | 선택 없이 제출 시도 |
-| `office-view/HeartbeatPanel.tsx` | 499 | 워치리스트 제거 실패 |
-| `office-view/HeartbeatPanel.tsx` | 618 | 전체 삭제 실패 |
-| `office-view/HeartbeatPanel.tsx` | 698 | 로그 삭제 실패 |
-| `office-view/HeartbeatPanel.tsx` | (추가 1곳) | — |
+**New files:**
 
-### window.confirm (9곳)
+| File | Description |
+|------|-------------|
+| `src/components/ui/ConfirmDialog.tsx` | Modal-based confirmation dialog |
+| `src/components/ui/Toast.tsx` | Portal-based toast notifications |
+| `src/hooks/useToast.ts` | Context + hook for toast management |
 
-| 파일 | 라인 | 내용 |
-|------|------|------|
-| `AgentDetail.tsx` | 288 | 에이전트 삭제 |
-| `ProjectManagerModal.tsx` | 264 | 프로젝트 삭제 |
-| `TaskBoard.tsx` | 323 | 일괄 태스크 삭제 |
-| `SettingsPanel.tsx` | 382 | OAuth 계정 삭제 |
-| `settings/DataSettingsTab.tsx` | 70 | 데이터 초기화 |
-| `chat-panel/ChatPanelHeader.tsx` | 112 | 채팅 기록 삭제 |
-| `deliverables/GitSection.tsx` | 62 | Git 작업 확인 |
-| `office-view/HeartbeatPanel.tsx` | 492 | 워치리스트 제거 |
-| `office-view/HeartbeatPanel.tsx` | 611 | 전체 로그 삭제 |
-| `office-view/HeartbeatPanel.tsx` | 691 | 개별 로그 삭제 |
+**Existing code to leverage:**
+- `src/components/ui/Modal.tsx` — foundation for ConfirmDialog
+- `src/components/ui/Button.tsx` — confirm/cancel buttons
+- `src/components/NotificationCenter.tsx` — notification pattern reference
+
+**Replacement targets:** `window.alert` (21 places) + `window.confirm` (9 places) = **30 places total**
+
+### P1: Progressive Disclosure + Plain Language + Empty States
+
+**Agent form refactor:**
+- `src/components/agent-manager/AgentFormModal.tsx` — split into 2 steps (Basic / Advanced)
+- Advanced settings collapsed using `<details>` or a toggle button
+
+**Unified empty states:**
+- Create `src/components/ui/EmptyState.tsx`
+- Apply to dashboard, task board, agent list, and other empty states
+
+**Plain language for technical terms:**
+- Apply terminology guide from `ux-renewal-2.0.md` §2
+- Add ⓘ tooltip explanations for technical terms such as CLI provider (the AI model vendor, e.g., Anthropic, OpenAI) — the terms themselves are retained
+
+### P1: Accessibility
+
+**Can be applied immediately:**
+- Add `aria-label` to all icon-only buttons
+- Add `role="listbox"` + `aria-expanded` to custom `<select>` elements
+- `prefers-reduced-motion` media query already present in CSS ✅
+
+**Already completed:**
+- Skip-to-content link ✅ (`src/app/AppMainLayout.tsx`)
+- Modal focus trap ✅ (`src/components/ui/Modal.tsx`)
+- WCAG AA contrast ratio ✅ (`--th-text-muted` at 4.5:1 or higher)
+
+### P2: Mobile Responsiveness
+
+**New:**
+- `src/hooks/useMediaQuery.ts` — responsive breakpoint hook
+
+**Files to update:**
+- `src/components/Sidebar.tsx` — overlay drawer
+- `src/components/TaskBoard.tsx` — mobile single column
+- `src/components/AgentManager.tsx` — mobile stacked layout
+- `src/components/dashboard/Dashboard2.tsx` — mobile 1-column stack
+
+---
+
+## Appendix: Metrics Summary
+
+| Metric | Value |
+|--------|-------|
+| CSS files | 5 files, 4,934 lines |
+| CSS variables (--th-*) | 68 |
+| !important usage | 380 occurrences |
+| Hardcoded rgba() | 313 instances |
+| @keyframes animations | 57 |
+| Custom CSS classes | 407 |
+| window.alert() | 21 places |
+| window.confirm() | 9 places |
+| .catch(() => {}) | 12 places (8 files) |
+| console.error (in production) | 105+ places |
+| Media queries | 8 |
+| i18n supported languages | 4 (ko, en, ja, zh) |
+| Shared UI primitives | 5 (Modal, Button, Input, Textarea, FormField) |
+| Modal/dialog implementations | 28 (many do not use shared Modal) |
+| App.tsx useState hooks | 60+ |
+| AppMainLayout props | 58 |
+| URL routing | None (state-based view switching) |
+| Number of views | 13 |
+| Total component lines | ~44,000 lines (50+ files) |
+
+---
+
+## Appendix: Full List of `window.alert` / `window.confirm` Locations
+
+### window.alert (21 places)
+
+| File | Line | Description |
+|------|------|-------------|
+| `app/useAppActions.ts` | 193 | Cost limit exceeded (English hardcoded) |
+| `app/useAppActions.ts` | 329 | Task execution failed |
+| `app/useAppActions.ts` | 379 | Task stop failed |
+| `app/useAppActions.ts` | 412 | Task pause failed |
+| `app/useAppActions.ts` | 429 | Task resume failed |
+| `agent-manager/AgentFormModal.tsx` | 100 | Image exceeds 5MB |
+| `agent-manager/DepartmentFormModal.tsx` | 151 | Duplicate department ID |
+| `agent-manager/DepartmentFormModal.tsx` | 153 | Department creation failed |
+| `agent-manager/DepartmentFormModal.tsx` | 178 | Cannot delete: department has members |
+| `agent-manager/DepartmentFormModal.tsx` | 180 | Cannot delete: department has linked tasks |
+| `agent-manager/DepartmentFormModal.tsx` | 182 | Cannot delete: system department |
+| `memory/MemoryFormModal.tsx` | 195 | File exceeds 1MB |
+| `agent-rules/RuleFormModal.tsx` | 192 | File exceeds 512KB |
+| `hooks/HookFormModal.tsx` | 244 | File size exceeded |
+| `skills-library/CustomSkillSection.tsx` | 42 | Invalid skill package (English hardcoded) |
+| `skills-library/CustomSkillSection.tsx` | 49 | Import failed (English hardcoded) |
+| `DecisionInboxModal.tsx` | 164 | Submission attempted with no selection |
+| `office-view/HeartbeatPanel.tsx` | 499 | Watchlist removal failed |
+| `office-view/HeartbeatPanel.tsx` | 618 | Bulk deletion failed |
+| `office-view/HeartbeatPanel.tsx` | 698 | Log deletion failed |
+| `office-view/HeartbeatPanel.tsx` | (1 additional) | — |
+
+### window.confirm (9 places)
+
+| File | Line | Description |
+|------|------|-------------|
+| `AgentDetail.tsx` | 288 | Agent deletion |
+| `ProjectManagerModal.tsx` | 264 | Project deletion |
+| `TaskBoard.tsx` | 323 | Bulk task deletion |
+| `SettingsPanel.tsx` | 382 | OAuth account deletion |
+| `settings/DataSettingsTab.tsx` | 70 | Data reset |
+| `chat-panel/ChatPanelHeader.tsx` | 112 | Chat history deletion |
+| `deliverables/GitSection.tsx` | 62 | Git operation confirmation |
+| `office-view/HeartbeatPanel.tsx` | 492 | Watchlist item removal |
+| `office-view/HeartbeatPanel.tsx` | 611 | Bulk log deletion |
+| `office-view/HeartbeatPanel.tsx` | 691 | Individual log deletion |

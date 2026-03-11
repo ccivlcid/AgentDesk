@@ -1,6 +1,7 @@
 import { useCallback, useRef, useState } from "react";
 import { downloadBackup, restoreBackup, exportTasksCsv, exportTasksJson } from "../../api/backup";
 import type { TFunction } from "./types";
+import { useConfirm } from "../ui/ConfirmDialog";
 
 interface DataSettingsTabProps {
   t: TFunction;
@@ -28,6 +29,7 @@ const IconExport = () => (
 );
 
 export default function DataSettingsTab({ t }: DataSettingsTabProps) {
+  const { confirm } = useConfirm();
   const [backupBusy, setBackupBusy] = useState(false);
   const [restoreBusy, setRestoreBusy] = useState(false);
   const [exportBusy, setExportBusy] = useState(false);
@@ -67,15 +69,19 @@ export default function DataSettingsTab({ t }: DataSettingsTabProps) {
     const file = fileRef.current?.files?.[0];
     if (!file) return;
 
-    const confirmed = window.confirm(
-      t({
+    const ok = await confirm({
+      title: t({ ko: "데이터베이스 복원", en: "Restore Database", ja: "データベースを復元", zh: "恢复数据库" }),
+      message: t({
         ko: "현재 데이터베이스를 업로드한 파일로 교체합니다. 기존 데이터의 백업이 자동으로 생성됩니다. 계속하시겠습니까?",
         en: "This will replace the current database with the uploaded file. A backup of the existing data will be created automatically. Continue?",
         ja: "現在のデータベースをアップロードファイルで置き換えます。既存データのバックアップが自動作成されます。続行しますか？",
         zh: "将用上传的文件替换当前数据库。现有数据的备份将自动创建。是否继续？",
       }),
-    );
-    if (!confirmed) return;
+      confirmLabel: t({ ko: "복원", en: "Restore", ja: "復元", zh: "恢复" }),
+      cancelLabel: t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" }),
+      variant: "danger",
+    });
+    if (!ok) return;
 
     setRestoreBusy(true);
     setFeedback(null);
@@ -108,7 +114,7 @@ export default function DataSettingsTab({ t }: DataSettingsTabProps) {
       setRestoreBusy(false);
       if (fileRef.current) fileRef.current.value = "";
     }
-  }, [t]);
+  }, [confirm, t]);
 
   const handleExportCsv = useCallback(async () => {
     setExportBusy(true);

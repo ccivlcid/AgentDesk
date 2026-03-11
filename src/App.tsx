@@ -292,6 +292,13 @@ export default function App() {
       currentProject={currentProject}
       onProjectSelect={setCurrentProjectId}
       onProjectCreate={() => setShowProjectCreate(true)}
+      onProjectDelete={(id) => {
+        setProjects((prev) => prev.filter((p) => p.id !== id));
+        if (currentProjectId === id) setCurrentProjectId(null);
+      }}
+      onProjectUpdated={(id, patch) => {
+        setProjects((prev) => prev.map((p) => p.id === id ? { ...p, ...patch } : p));
+      }}
     >
       <AppOverlays
         showChat={showChat}

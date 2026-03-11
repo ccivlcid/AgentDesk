@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 
 interface QuadrantPanelProps {
   title: string;
@@ -11,6 +11,7 @@ interface QuadrantPanelProps {
   onAdd: () => void;
   children: ReactNode;
   isEmpty: boolean;
+  helpText?: string;
 }
 
 export default function QuadrantPanel({
@@ -24,7 +25,10 @@ export default function QuadrantPanel({
   onAdd,
   children,
   isEmpty,
+  helpText,
 }: QuadrantPanelProps) {
+  const [helpOpen, setHelpOpen] = useState(false);
+
   return (
     <div className="flex flex-col border border-[var(--th-border)] rounded bg-[var(--th-bg-surface)] overflow-hidden min-h-0">
       {/* 헤더 */}
@@ -37,7 +41,7 @@ export default function QuadrantPanel({
             {icon}
           </span>
         )}
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <div
             className="text-[13px] font-semibold leading-tight"
             style={{ fontFamily: "'Sora', sans-serif" }}
@@ -46,6 +50,47 @@ export default function QuadrantPanel({
           </div>
           <div className="text-[11px] text-[var(--th-text-muted)] mt-0.5">{subtitle}</div>
         </div>
+        {helpText && (
+          <div className="relative flex-shrink-0">
+            <button
+              onClick={() => setHelpOpen((v) => !v)}
+              className="w-5 h-5 flex items-center justify-center rounded-full text-[10px] font-bold transition-colors"
+              style={{
+                border: `1px solid ${helpOpen ? accentColor : "var(--th-border)"}`,
+                color: helpOpen ? accentColor : "var(--th-text-muted)",
+                background: helpOpen ? `${accentColor}15` : "transparent",
+              }}
+              title="사용 방법 보기"
+            >
+              ?
+            </button>
+            {helpOpen && (
+              <div
+                className="absolute right-0 top-7 z-50 rounded shadow-lg p-3 text-left"
+                style={{
+                  width: 240,
+                  background: "var(--th-bg-elevated)",
+                  border: `1px solid ${accentColor}40`,
+                  boxShadow: `0 4px 20px rgba(0,0,0,0.25)`,
+                }}
+              >
+                <div
+                  className="text-[11px] leading-relaxed whitespace-pre-line"
+                  style={{ color: "var(--th-text-muted)" }}
+                >
+                  {helpText}
+                </div>
+                <button
+                  onClick={() => setHelpOpen(false)}
+                  className="mt-2 text-[10px] font-medium"
+                  style={{ color: accentColor }}
+                >
+                  닫기
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* 콘텐츠 */}

@@ -209,7 +209,7 @@ function DeptPanel({
       style={{
         background: "var(--th-bg-surface)",
         border: "1px solid var(--th-border)",
-        borderRadius: "4px",
+        borderRadius: 0,
         overflow: "hidden",
       }}
     >
@@ -230,7 +230,7 @@ function DeptPanel({
           {activeTasks > 0 && (
             <span
               className="text-[9px] font-mono px-1"
-              style={{ color: "var(--th-attr-elite)", background: "rgba(34,197,94,0.08)", borderRadius: "2px", border: "1px solid rgba(34,197,94,0.2)" }}
+              style={{ color: "var(--th-attr-elite)", background: "rgba(34,197,94,0.08)", borderRadius: 0, border: "1px solid rgba(34,197,94,0.2)" }}
             >
               {activeTasks} {isKo ? "진행중" : "active"}
             </span>
@@ -279,6 +279,7 @@ export default function OfficeView({
   const { t, locale } = useI18n();
   const [filterDeptId, setFilterDeptId] = useState<string | null>(null);
   const [filterProjectOnly, setFilterProjectOnly] = useState(false);
+  const [filterStatus, setFilterStatus] = useState<string | null>(null);
   const isKo = locale.startsWith("ko");
 
   const tr = (ko: string, en: string) => t({ ko, en, ja: en, zh: en });
@@ -288,10 +289,15 @@ export default function OfficeView({
     [departments, filterDeptId],
   );
 
-  const effectiveAgents = useMemo(
-    () => (filterProjectOnly && projectAgentIds ? agents.filter((a) => projectAgentIds.has(a.id)) : agents),
-    [agents, filterProjectOnly, projectAgentIds],
-  );
+  const effectiveAgents = useMemo(() => {
+    let result = filterProjectOnly && projectAgentIds
+      ? agents.filter((a) => projectAgentIds.has(a.id))
+      : agents;
+    if (filterStatus === "running") result = result.filter((a) => a.status === "working");
+    else if (filterStatus === "idle") result = result.filter((a) => a.status === "idle" || a.status === "break");
+    else if (filterStatus === "offline") result = result.filter((a) => a.status === "offline");
+    return result;
+  }, [agents, filterProjectOnly, projectAgentIds, filterStatus]);
 
   const agentsByDept = useMemo(() => {
     const map = new Map<string, Agent[]>();
@@ -325,7 +331,7 @@ export default function OfficeView({
           {currentProject && (
             <span
               className="text-[10px] font-mono px-1.5 py-0.5"
-              style={{ color: "var(--th-accent)", background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)", borderRadius: "2px" }}
+              style={{ color: "var(--th-accent)", background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)", borderRadius: 0 }}
             >
               {currentProject.name}
             </span>
@@ -336,15 +342,29 @@ export default function OfficeView({
             </span>
           )}
         </div>
-        <div className="flex items-center gap-3">
-          <span className="text-[10px] font-mono tabular-nums" style={{ color: "var(--th-attr-elite)" }}>
-            {workingCount} {tr("근무중", "working")}
-          </span>
-          {inProgressTaskCount > 0 && (
-            <span className="text-[10px] font-mono tabular-nums" style={{ color: "var(--th-text-muted)" }}>
-              {inProgressTaskCount} {tr("진행중 태스크", "tasks active")}
-            </span>
-          )}
+        <div className="flex items-center gap-2">
+          {/* 상태 필터 탭 */}
+          {[
+            { key: null, label: tr("전체", "ALL") },
+            { key: "running", label: "● RUNNING" },
+            { key: "idle", label: "○ IDLE" },
+            { key: "offline", label: "○ OFFLINE" },
+          ].map((f) => (
+            <button
+              key={String(f.key)}
+              type="button"
+              onClick={() => setFilterStatus(f.key)}
+              className="text-[9px] font-mono px-2 py-0.5 transition-colors"
+              style={{
+                borderRadius: 0,
+                border: `1px solid ${filterStatus === f.key ? "var(--th-accent)" : "var(--th-border)"}`,
+                color: filterStatus === f.key ? "var(--th-accent)" : "var(--th-text-muted)",
+                background: filterStatus === f.key ? "rgba(245,158,11,0.08)" : "transparent",
+              }}
+            >
+              {f.label}
+            </button>
+          ))}
           {/* 이 프로젝트만 보기 토글 */}
           {currentProject && projectAgentIds && projectAgentIds.size > 0 && (
             <button
@@ -352,13 +372,13 @@ export default function OfficeView({
               onClick={() => setFilterProjectOnly((v) => !v)}
               className="text-[9px] font-mono px-2 py-0.5 transition-colors"
               style={{
-                borderRadius: 2,
+                borderRadius: 0,
                 border: `1px solid ${filterProjectOnly ? "var(--th-accent)" : "var(--th-border)"}`,
                 color: filterProjectOnly ? "var(--th-accent)" : "var(--th-text-muted)",
                 background: filterProjectOnly ? "rgba(245,158,11,0.08)" : "transparent",
               }}
             >
-              {filterProjectOnly ? "✓ 이 프로젝트만" : "이 프로젝트만"}
+              {filterProjectOnly ? "✓ " + tr("이 프로젝트만", "This project") : tr("이 프로젝트만", "This project")}
             </button>
           )}
         </div>

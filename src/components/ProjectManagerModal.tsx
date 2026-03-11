@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Agent, AssignmentMode, Department, Project } from "../types";
+import { useConfirm } from "./ui/ConfirmDialog";
 import {
   deleteProject,
   getProjectDetail,
@@ -35,6 +36,7 @@ const PAGE_SIZE = 5;
 
 export default function ProjectManagerModal({ agents, departments = [], onClose, onCreateProject }: ProjectManagerModalProps) {
   const { t, language } = useI18n();
+  const { confirm } = useConfirm();
 
   const [projects, setProjects] = useState<Project[]>([]);
   const [page, setPage] = useState(1);
@@ -261,15 +263,19 @@ export default function ProjectManagerModal({ agents, departments = [], onClose,
 
   const handleDelete = useCallback(async () => {
     if (!selectedProject) return;
-    const confirmed = window.confirm(
-      t({
+    const ok = await confirm({
+      title: t({ ko: "프로젝트 삭제", en: "Delete Project", ja: "プロジェクト削除", zh: "删除项目" }),
+      message: t({
         ko: `프로젝트 '${selectedProject.name}' 을(를) 삭제할까요?`,
         en: `Delete project '${selectedProject.name}'?`,
         ja: `プロジェクト '${selectedProject.name}' を削除しますか？`,
         zh: `要删除项目 '${selectedProject.name}' 吗？`,
       }),
-    );
-    if (!confirmed) return;
+      confirmLabel: t({ ko: "삭제", en: "Delete", ja: "削除", zh: "删除" }),
+      cancelLabel: t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" }),
+      variant: "danger",
+    });
+    if (!ok) return;
 
     try {
       await deleteProject(selectedProject.id);

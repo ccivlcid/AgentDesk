@@ -156,6 +156,8 @@ interface AppMainLayoutProps {
   currentProject?: Project | null;
   onProjectSelect?: (id: string) => void;
   onProjectCreate?: () => void;
+  onProjectDelete?: (id: string) => void;
+  onProjectUpdated?: (id: string, patch: { name: string; core_goal: string }) => void;
   children?: ReactNode;
 }
 
@@ -211,6 +213,8 @@ export default function AppMainLayout({
   currentProject = null,
   onProjectSelect,
   onProjectCreate,
+  onProjectDelete,
+  onProjectUpdated,
   children,
 }: AppMainLayoutProps) {
   // 현재 프로젝트 팀원 ID 세트 (WorkMap dim용)
@@ -445,8 +449,14 @@ export default function AppMainLayout({
               <Dashboard2
                 project={currentProject ?? null}
                 agents={agents}
+                departments={departments}
                 categories={categories}
                 onCreateProject={onProjectCreate ?? (() => {})}
+                onDeleteProject={onProjectDelete}
+                onProjectUpdated={onProjectUpdated}
+                onGoToTasks={() => setView("tasks-board")}
+                onCreateTask={(input) => void onCreateTask(input)}
+                onAssignTask={onAssignTask}
               />
             )}
 
@@ -544,6 +554,7 @@ export default function AppMainLayout({
                   managerAgents={agents}
                   currentProject={currentProject ?? null}
                   categories={categories}
+                  onProjectDelete={onProjectDelete}
                 />
               )}
             </Suspense>

@@ -28,9 +28,10 @@ interface CreateModalProps {
     workflow_meta_json?: string;
   }) => void;
   onAssign: (taskId: string, agentId: string) => void;
+  defaultProjectId?: string;
 }
 
-function CreateModal({ agents, departments, onClose, onCreate, onAssign }: CreateModalProps) {
+function CreateModal({ agents, departments, onClose, onCreate, onAssign, defaultProjectId }: CreateModalProps) {
   void onAssign;
   const { t, language: locale, locale: localeTag } = useI18n();
   const [title, setTitle] = useState("");
@@ -111,6 +112,7 @@ function CreateModal({ agents, departments, onClose, onCreate, onAssign }: Creat
     resolvePathHelperErrorMessage,
     setFormFeedback,
     setSubmitWithoutProjectPromptOpen,
+    defaultProjectId,
   });
 
   const applyFormStateFromDraft = useCallback(

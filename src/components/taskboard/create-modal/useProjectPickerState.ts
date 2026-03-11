@@ -16,6 +16,7 @@ interface UseProjectPickerStateParams {
   resolvePathHelperErrorMessage: ResolvePathHelperErrorMessage;
   setFormFeedback: (feedback: FormFeedback | null) => void;
   setSubmitWithoutProjectPromptOpen: (open: boolean) => void;
+  defaultProjectId?: string;
 }
 
 export function useProjectPickerState({
@@ -23,8 +24,9 @@ export function useProjectPickerState({
   resolvePathHelperErrorMessage,
   setFormFeedback,
   setSubmitWithoutProjectPromptOpen,
+  defaultProjectId,
 }: UseProjectPickerStateParams) {
-  const [projectId, setProjectId] = useState("");
+  const [projectId, setProjectId] = useState(defaultProjectId ?? "");
   const [projectQuery, setProjectQuery] = useState("");
   const [projectDropdownOpen, setProjectDropdownOpen] = useState(false);
   const [projectActiveIndex, setProjectActiveIndex] = useState(-1);

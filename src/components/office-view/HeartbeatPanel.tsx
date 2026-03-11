@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { UiLanguage } from "../../i18n";
+import { useConfirm } from "../ui/ConfirmDialog";
+import { useToast } from "../ui/Toast";
 import {
   type HeartbeatConfig,
   type HeartbeatLog,
@@ -110,6 +112,8 @@ const StatusErrorIcon = () => (
 
 export default function HeartbeatPanel({ language, agents = [], standalone = false, projectAgentIds }: Props) {
   const isKo = language === "ko";
+  const { confirm } = useConfirm();
+  const { showToast } = useToast();
   const [filterProjectOnly, setFilterProjectOnly] = useState(false);
   const [configs, setConfigs] = useState<HeartbeatConfig[]>([]);
   const [logs, setLogs] = useState<HeartbeatLog[]>([]);
@@ -488,15 +492,22 @@ export default function HeartbeatPanel({ language, agents = [], standalone = fal
                       </button>
                       <button
                         type="button"
-                        onClick={() => {
-                          if (!window.confirm(isKo ? "이 직원을 살펴보기 대상에서 제거할까요?" : "Remove this staff from the watch list?")) return;
+                        onClick={async () => {
+                          const ok = await confirm({
+                            title: isKo ? "살펴보기 대상 제거" : "Remove from watch list",
+                            message: isKo ? "이 직원을 살펴보기 대상에서 제거할까요?" : "Remove this staff from the watch list?",
+                            confirmLabel: isKo ? "제거" : "Remove",
+                            cancelLabel: isKo ? "취소" : "Cancel",
+                            variant: "danger",
+                          });
+                          if (!ok) return;
                           setRemovingAgentId(cfg.agent_id);
                           deleteHeartbeatConfig(cfg.agent_id)
                             .then(() => refresh())
                             .catch((err: unknown) => {
                               console.error(err);
                               const msg = err instanceof Error ? err.message : String(err);
-                              window.alert(isKo ? `제거 실패: ${msg}` : `Remove failed: ${msg}`);
+                              showToast(isKo ? `제거 실패: ${msg}` : `Remove failed: ${msg}`, "error");
                             })
                             .finally(() => setRemovingAgentId(null));
                         }}
@@ -607,15 +618,22 @@ export default function HeartbeatPanel({ language, agents = [], standalone = fal
                     )}
                     <button
                       type="button"
-                      onClick={() => {
-                        if (!window.confirm(isKo ? "최근 로그를 모두 삭제할까요?" : "Delete all heartbeat logs?")) return;
+                      onClick={async () => {
+                        const ok = await confirm({
+                          title: isKo ? "로그 전체 삭제" : "Delete all logs",
+                          message: isKo ? "최근 로그를 모두 삭제할까요?" : "Delete all heartbeat logs?",
+                          confirmLabel: isKo ? "삭제" : "Delete",
+                          cancelLabel: isKo ? "취소" : "Cancel",
+                          variant: "danger",
+                        });
+                        if (!ok) return;
                         setDeletingAllLogs(true);
                         deleteAllHeartbeatLogs()
                           .then(() => refresh())
                           .catch((err: unknown) => {
                             console.error(err);
                             const msg = err instanceof Error ? err.message : String(err);
-                            window.alert(isKo ? `전체 삭제 실패: ${msg}` : `Delete all failed: ${msg}`);
+                            showToast(isKo ? `전체 삭제 실패: ${msg}` : `Delete all failed: ${msg}`, "error");
                           })
                           .finally(() => setDeletingAllLogs(false));
                       }}
@@ -686,16 +704,23 @@ export default function HeartbeatPanel({ language, agents = [], standalone = fal
                           </span>
                           <button
                             type="button"
-                            onClick={(e) => {
+                            onClick={async (e) => {
                               e.stopPropagation();
-                              if (!window.confirm(isKo ? "이 로그를 삭제할까요?" : "Delete this log?")) return;
+                              const ok = await confirm({
+                                title: isKo ? "로그 삭제" : "Delete log",
+                                message: isKo ? "이 로그를 삭제할까요?" : "Delete this log?",
+                                confirmLabel: isKo ? "삭제" : "Delete",
+                                cancelLabel: isKo ? "취소" : "Cancel",
+                                variant: "danger",
+                              });
+                              if (!ok) return;
                               setDeletingLogId(log.id);
                               deleteHeartbeatLog(log.id)
                                 .then(() => refresh())
                                 .catch((err: unknown) => {
                                   console.error(err);
                                   const msg = err instanceof Error ? err.message : String(err);
-                                  window.alert(isKo ? `로그 삭제 실패: ${msg}` : `Delete failed: ${msg}`);
+                                  showToast(isKo ? `로그 삭제 실패: ${msg}` : `Delete failed: ${msg}`, "error");
                                 })
                                 .finally(() => setDeletingLogId(null));
                             }}

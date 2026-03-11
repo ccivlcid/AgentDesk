@@ -2,6 +2,7 @@ import { useCallback, useRef } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import * as api from "../api";
 import { isApiRequestError } from "../api/core";
+import { useToast } from "../components/ui/Toast";
 import { buildDecisionInboxItems } from "../components/chat/decision-inbox";
 import type { DecisionInboxItem } from "../components/chat/decision-inbox";
 import { LANGUAGE_USER_SET_STORAGE_KEY, normalizeLanguage, pickLang } from "../i18n";
@@ -59,6 +60,7 @@ export function useAppActions({
   setDecisionReplyBusyKey,
   setCliStatus,
 }: UseAppActionsParams) {
+  const { showToast } = useToast();
   const settingsRef = useRef(settings);
   settingsRef.current = settings;
   const settingsSaveRequestSeqRef = useRef(0);
@@ -190,9 +192,10 @@ export function useAppActions({
       } catch (error) {
         if (isApiRequestError(error) && error.code === "cost_limit_exceeded") {
           const details = error.details as { message?: string } | null;
-          alert(details?.message || "Execution blocked: cost limit exceeded. Adjust cost alert settings.");
+          showToast(details?.message || "Execution blocked: cost limit exceeded. Adjust cost alert settings.", "warning");
         } else {
           console.error("Run task failed:", error);
+          showToast("Failed to start task. Please try again.", "error");
         }
       }
     },
@@ -326,13 +329,14 @@ export function useAppActions({
     (agentId: string) => {
       const matchedAgent = agents.find((agent) => agent.id === agentId);
       if (!matchedAgent) {
-        window.alert(
+        showToast(
           pickLang(normalizeLanguage(settings.language), {
             ko: "요청 에이전트 정보를 찾지 못했습니다.",
             en: "Could not find the requested agent.",
             ja: "対象エージェント情報が見つかりません。",
             zh: "未找到对应代理信息。",
           }),
+          "error",
         );
         return;
       }
@@ -376,13 +380,14 @@ export function useAppActions({
           if (selectedAction === "add_followup_request") {
             const note = payloadInput?.note?.trim() ?? "";
             if (!note) {
-              window.alert(
+              showToast(
                 pickLang(locale, {
                   ko: "추가요청사항이 비어 있습니다.",
                   en: "Additional request is empty.",
                   ja: "追加要請が空です。",
                   zh: "追加请求内容为空。",
                 }),
+                "warning",
               );
               return;
             }
@@ -409,13 +414,14 @@ export function useAppActions({
                     ja: "\n\n詳細はタスクログを確認してください。",
                     zh: "\n\n请查看任务日志了解详情。",
                   });
-            window.alert(
+            showToast(
               pickLang(locale, {
-                ko: `팀장 회의 시작이 보류되었습니다. 필요한 게이트를 먼저 해소해 주세요.${blockedSummary}`,
-                en: `Team-lead meeting start is on hold. Resolve required gates first.${blockedSummary}`,
-                ja: `チームリーダー会議の開始は保留です。先に必要なゲートを解消してください。${blockedSummary}`,
-                zh: `组长评审会议暂缓启动。请先解决必要门禁。${blockedSummary}`,
+                ko: "팀장 회의 시작이 보류되었습니다. 필요한 게이트를 먼저 해소해 주세요.",
+                en: "Team-lead meeting start is on hold. Resolve required gates first.",
+                ja: "チームリーダー会議の開始は保留です。先に必要なゲートを解消してください。",
+                zh: "组长评审会议暂缓启动。请先解决必要门禁。",
               }),
+              "warning",
             );
           }
           if (replyResult.resolved) {
@@ -426,13 +432,14 @@ export function useAppActions({
         }
       } catch (error) {
         console.error("Decision reply failed:", error);
-        window.alert(
+        showToast(
           pickLang(locale, {
             ko: "의사결정 회신 전송에 실패했습니다. 잠시 후 다시 시도해 주세요.",
             en: "Failed to send decision reply. Please try again.",
             ja: "意思決定返信の送信に失敗しました。もう一度お試しください。",
             zh: "发送决策回复失败，请稍后重试。",
           }),
+          "error",
         );
       } finally {
         setDecisionReplyBusyKey((prev) => (prev === busyKey ? null : prev));

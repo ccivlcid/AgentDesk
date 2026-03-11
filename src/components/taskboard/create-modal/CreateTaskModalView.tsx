@@ -129,6 +129,9 @@ export default function CreateTaskModalView({
             <h2 className="text-sm font-semibold">
               {t({ ko: "새 업무 만들기", en: "Create New Task", ja: "新しいタスクを作成", zh: "创建新任务" })}
             </h2>
+            <p className="text-[11px] mt-0.5" style={{ color: "var(--th-text-muted)" }}>
+              {t({ ko: "AI 에이전트에게 시킬 작업을 등록합니다", en: "Register a task for your AI agent to work on", ja: "AIエージェントに作業を登録します", zh: "为 AI 代理注册一项任务" })}
+            </p>
           </div>
           <div className="flex items-center gap-2">
             {/* Template dropdown */}
@@ -141,8 +144,7 @@ export default function CreateTaskModalView({
                   style={{ borderColor: "var(--th-border)", color: "var(--th-text-secondary)", background: "var(--th-bg-primary)", borderRadius: "6px" }}
                   title={t({ ko: "템플릿에서 불러오기", en: "Load from template", ja: "テンプレートから読込", zh: "从模板加载" })}
                 >
-                  {t({ ko: "템플릿", en: "Templates", ja: "テンプレ", zh: "模板" })}
-                  ({templates.length})
+                  📋 {t({ ko: "템플릿", en: "Templates", ja: "テンプレ", zh: "模板" })} ({templates.length})
                 </button>
                 {templateMenuOpen && (
                   <div className="absolute right-0 top-full z-10 mt-1 w-56 max-h-56 overflow-y-auto border" style={{ borderColor: "var(--th-border)", background: "var(--th-bg-surface)", borderRadius: "6px" }}>
@@ -176,20 +178,22 @@ export default function CreateTaskModalView({
                 )}
               </div>
             )}
-            <button
-              type="button"
-              onClick={onOpenDraftModal}
-              className="border px-2.5 py-1.5 text-xs font-mono transition hover:opacity-80"
-              style={{ borderColor: "var(--th-border)", color: "var(--th-text-muted)", background: "var(--th-bg-primary)", borderRadius: "6px" }}
-              title={t({
-                ko: "임시 저장 항목 열기",
-                en: "Open temporary drafts",
-                ja: "一時保存を開く",
-                zh: "打开临时草稿",
-              })}
-            >
-              {`[${t({ ko: "임시", en: "Temp", ja: "一時", zh: "临时" })}(${draftsCount})]`}
-            </button>
+            {draftsCount > 0 && (
+              <button
+                type="button"
+                onClick={onOpenDraftModal}
+                className="border px-2.5 py-1.5 text-xs font-mono transition hover:opacity-80"
+                style={{ borderColor: "var(--th-border)", color: "var(--th-text-muted)", background: "var(--th-bg-primary)", borderRadius: "6px" }}
+                title={t({
+                  ko: "임시 저장된 초안 보기",
+                  en: "View saved drafts",
+                  ja: "一時保存した下書きを見る",
+                  zh: "查看保存的草稿",
+                })}
+              >
+                🗒 {t({ ko: "초안", en: "Drafts", ja: "下書き", zh: "草稿" })} ({draftsCount})
+              </button>
+            )}
             <button
               onClick={onRequestClose}
               className="text-[var(--th-text-muted)] hover:text-[var(--th-text)] transition-colors"

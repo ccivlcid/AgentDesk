@@ -7,7 +7,7 @@ import EmojiPicker from "./EmojiPicker";
 import type { FormData } from "./types";
 import { PersonaCatalog } from "../agent-persona/PersonaCatalog";
 import { getPersonaById } from "../../data/personas";
-import { Modal, ModalHeader, ModalBody, ModalFooter, Button, Input, Textarea } from "../ui";
+import { Modal, ModalHeader, ModalBody, ModalFooter, Button, Input, Textarea, useToast } from "../ui";
 
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -42,6 +42,7 @@ export default function AgentFormModal({
   onClose: () => void;
 }) {
   const { t } = useI18n();
+  const { showToast } = useToast();
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const [generatingPersona, setGeneratingPersona] = useState(false);
   const [showPersonaCatalog, setShowPersonaCatalog] = useState(false);
@@ -97,7 +98,7 @@ export default function AgentFormModal({
                     const file = e.target.files?.[0];
                     if (!file) return;
                     if (file.size > 5 * 1024 * 1024) {
-                      alert(tr("이미지는 5MB 이하여야 합니다.", "Image must be under 5 MB."));
+                      showToast(tr("이미지는 5MB 이하여야 합니다.", "Image must be under 5 MB."), "warning");
                       return;
                     }
                     const dataUrl = await fileToBase64(file);

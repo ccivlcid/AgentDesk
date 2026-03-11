@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import type { AgentRule, AgentRuleCategory, Agent, Department } from "../../types";
 import type { CreateAgentRuleInput, UpdateAgentRuleInput } from "../../api/agent-rules";
 import { RULE_CATEGORIES, categoryLabel, type TFunction } from "./model";
-import { Modal, ModalHeader, ModalBody, ModalFooter, Button, Input, Textarea, FormField } from "../ui";
+import { Modal, ModalHeader, ModalBody, ModalFooter, Button, Input, Textarea, FormField, useToast } from "../ui";
 
 interface RuleFormModalProps {
   t: TFunction;
@@ -29,6 +29,7 @@ export default function RuleFormModal({
   onCreate,
   onUpdate,
 }: RuleFormModalProps) {
+  const { showToast } = useToast();
   const [title, setTitle] = useState("");
   const [titleKo, setTitleKo] = useState("");
   const [titleJa, setTitleJa] = useState("");
@@ -189,12 +190,12 @@ export default function RuleFormModal({
                   const file = e.target.files?.[0];
                   if (!file) return;
                   if (file.size > 512_000) {
-                    alert(t({
+                    showToast(t({
                       ko: "파일 크기가 너무 큽니다 (최대 512KB)",
                       en: "File too large (max 512KB)",
                       ja: "ファイルサイズが大きすぎます（最大512KB）",
                       zh: "文件过大（最大512KB）",
-                    }));
+                    }), "warning");
                     return;
                   }
                   const reader = new FileReader();

@@ -13,6 +13,7 @@ import DataSettingsTab from "./settings/DataSettingsTab";
 import CategoriesTab from "./settings/CategoriesTab";
 import ProjectSettingsTab from "./settings/ProjectSettingsTab";
 import SettingsTabNav from "./settings/SettingsTabNav";
+import { useConfirm } from "./ui/ConfirmDialog";
 import type { AccountDraftMap, AccountDraftPatch, LocalSettings, SettingsTab } from "./settings/types";
 import { useApiProvidersState } from "./settings/useApiProvidersState";
 import type { Category, Project } from "../types";
@@ -29,6 +30,7 @@ interface SettingsPanelProps {
   managerAgents?: Agent[];
   currentProject?: Project | null;
   categories?: Category[];
+  onProjectDelete?: (id: string) => void;
 }
 
 export default function SettingsPanel({
@@ -41,9 +43,11 @@ export default function SettingsPanel({
   managerAgents,
   currentProject,
   categories = [],
+  onProjectDelete,
 }: SettingsPanelProps) {
   const [form, setForm] = useState<LocalSettings>(settings as LocalSettings);
   const { t, locale: localeTag } = useI18n(form.language);
+  const { confirm } = useConfirm();
   const [saved, setSaved] = useState(false);
   const [tab, setTab] = useState<SettingsTab>(oauthResult ? "oauth" : "general");
 
@@ -378,18 +382,19 @@ export default function SettingsPanel({
 
   const handleDeleteAccount = useCallback(
     async (provider: OAuthConnectProvider, accountId: string) => {
-      if (
-        !window.confirm(
-          t({
-            ko: "이 OAuth 계정을 삭제하시겠습니까?",
-            en: "Delete this OAuth account?",
-            ja: "この OAuth アカウントを削除しますか？",
-            zh: "要删除此 OAuth 账号吗？",
-          }),
-        )
-      ) {
-        return;
-      }
+      const ok = await confirm({
+        title: t({ ko: "OAuth 계정 삭제", en: "Delete OAuth Account", ja: "OAuth アカウントを削除", zh: "删除 OAuth 账号" }),
+        message: t({
+          ko: "이 OAuth 계정을 삭제하시겠습니까?",
+          en: "Delete this OAuth account?",
+          ja: "この OAuth アカウントを削除しますか？",
+          zh: "要删除此 OAuth 账号吗？",
+        }),
+        confirmLabel: t({ ko: "삭제", en: "Delete", ja: "削除", zh: "删除" }),
+        cancelLabel: t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" }),
+        variant: "danger",
+      });
+      if (!ok) return;
 
       setSavingAccountId(accountId);
       try {
@@ -401,7 +406,7 @@ export default function SettingsPanel({
         setSavingAccountId(null);
       }
     },
-    [loadOAuthStatus, t],
+    [loadOAuthStatus, confirm, t],
   );
 
   return (
@@ -495,6 +500,7 @@ export default function SettingsPanel({
             onUpdate={async (patch) => {
               await updateProject(currentProject.id, patch);
             }}
+            onDelete={onProjectDelete}
           />
         ) : (
           <div className="py-12 text-center font-mono text-sm" style={{ color: "var(--th-text-muted)" }}>
