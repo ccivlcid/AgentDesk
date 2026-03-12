@@ -643,3 +643,38 @@ for (const key of required) {
 | 18 | 마이그레이션 버전 시스템 | DB 관리성 ↑ |
 | 19 | Slack 연동 구현 | 기능 완성도 ↑ |
 | 20 | 테스트 커버리지 50%+ 달성 | 전체 신뢰성 ↑ |
+| 21 | 미팅 참여자 필터링 — 프로젝트 미배정 에이전트 차단 | 로직 정합성 ↑ |
+
+---
+
+### K. 미팅 참여자 필터링 버그 (심각도: HIGH)
+
+**문제**: `assignment_mode === "auto"` 프로젝트에서 미배정 에이전트가 미팅에 참여할 수 있다.
+
+**원인 분석 (코드 확인 완료):**
+
+`server/modules/workflow/orchestration/meetings/leader-selection.ts` → `getTaskReviewLeaders()`
+
+1. `resolveConstrainedAgentScopeForTask()` 호출 시:
+   - `loadManualProjectAgentScope()` — `assignment_mode === "manual"`일 때만 `project_agents` 테이블에서 필터링
+   - **`auto` 모드에서는 `null` 반환** → 프로젝트 소속 필터링 없음
+2. `constrainedAgentIds`가 pack scope만 포함 (또는 null = 전체)
+3. 라인 194-200: `leaders.length < minLeaders`이면 `getAllActiveTeamLeaders(constrainedAgentIds)` 폴백
+   → **어떤 부서든 offline 아닌 team_leader 전원 참석 가능**
+4. 결과: auto 모드 프로젝트에서 에이전트를 3명만 선택했어도, 미팅에는 전체 team_leader가 참여
+
+**영향:**
+- 프로젝트 컨텍스트를 모르는 에이전트가 리뷰/승인에 참여
+- 의사결정 품질 저하 — 관련 없는 에이전트가 approve/hold 투표
+- 토큰/비용 낭비 — 불필요한 에이전트의 LLM 호출
+- 프로젝트 정보 누출 — 미배정 에이전트에게 태스크 내용 노출
+
+**수정 방안:**
+- `loadManualProjectAgentScope()` → `loadProjectAgentScope()`로 변경
+- `assignment_mode` 조건 제거: **모든 모드에서** `project_agents` 테이블 기준 필터링
+- 또는 `getTaskReviewLeaders()`에서 `project_id`가 있으면 항상 `project_agents`로 스코프 제한
+- 폴백 로직(라인 164-175, 194-200)도 프로젝트 스코프 내에서만 폴백
+
+**관련 파일:**
+- `server/modules/routes/core/tasks/execution-run-auto-assign.ts:274-284` — `loadManualProjectAgentScope()`
+- `server/modules/workflow/orchestration/meetings/leader-selection.ts:95-203` — `getTaskReviewLeaders()`

@@ -68,13 +68,18 @@ AgentDesk가 Karpathy가 말하는 **"더 큰 IDE"** 를 완성하기 위한 전
 ```
 
 **구현 방안**:
-- **라이브러리**: `@xyflow/react` (구 React Flow) — 노드 기반 그래프 에디터
-- **노드 = 에이전트**: 상태(idle/working/error)별 색상, 현재 태스크 표시
-- **엣지 = 관계**: 위임, 리뷰, 서브태스크 등 관계 유형별 스타일
-- **실시간 업데이트**: 기존 WebSocket 인프라 활용
-- **인터랙션**: 노드 클릭 → 에이전트 상세, 엣지 클릭 → 태스크 상세
+- **방식**: Custom SVG + React (외부 라이브러리 없음, 의존성 0)
+- **노드 = 에이전트**: `foreignObject` 기반 macOS 하이브리드 노드 (borderRadius: 10, glassmorphism)
+- **엣지 = 관계**: 베지어 커브. 위임(실선), 리뷰(앰버 점선), 서브태스크(가는 실선), 크로스부서(굵은 점선)
+- **레이아웃**: 부서별 컬럼 자동 배치 + 역할 순 수직 정렬
+- **줌/팬**: SVG transform 기반 (마우스 휠, 드래그, 핀치)
+- **실시간 업데이트**: 기존 WebSocket 인프라 활용 (agent_status, task_update, subtask_update)
+- **인터랙션**: 노드 클릭 → 에이전트 상세, 엣지 호버 → 태스크 툴팁
+- **메뉴 위치**: 사이드바 에이전트 섹션 (agents, heartbeat 다음)
 
-**예상 작업량**: 프론트엔드 컴포넌트 1개 + WebSocket 이벤트 연동
+**상세 설계**: `docs/strategy/agent-flow-graph-design.md`
+
+**예상 작업량**: 컴포넌트 5~6개 + 훅 2개 (3~4주)
 
 ### 3-2. Live Activity Timeline
 

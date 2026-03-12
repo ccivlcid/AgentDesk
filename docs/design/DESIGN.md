@@ -92,6 +92,18 @@
 
 - `border: 1px solid var(--th-border)` + `divide-y divide-[var(--th-border)]` 로 행 구분. 행 hover: `hover:bg-[var(--th-hover-bg)]`.
 
+### 4-9. Agent Flow Graph (`src/components/flow-graph/AgentFlowGraph.tsx`)
+
+- **구현:** Custom SVG + React (외부 라이브러리 없음).
+- **레이아웃:** 부서별 컬럼 배치, 에이전트 노드를 역할 순 수직 배열.
+- **노드 (AgentNode):** `foreignObject` 기반. Chrome: `borderRadius: 10`, shadow, glassmorphism. Content: 모노폰트, 상태 바.
+  - 상태별 테두리: idle=`--th-border`, working=`--th-accent` (glow), break=`--th-text-muted`, offline=`--th-danger-border`.
+- **부서 그룹:** `borderRadius: 10`, `strokeDasharray: 4 4`, 반투명 배경, `// dept-name` 라벨.
+- **엣지:** 베지어 커브. delegation=실선, review=앰버 점선, subtask=가는 실선, cross_dept=굵은 점선.
+- **인터랙션:** 줌/팬 (마우스 휠/드래그), 노드 클릭→에이전트 상세, fit-to-view.
+- **메뉴 위치:** 사이드바 에이전트 섹션 (agents, heartbeat 다음).
+- 상세 설계: `docs/strategy/agent-flow-graph-design.md`.
+
 ---
 
 ## 5. Layout
