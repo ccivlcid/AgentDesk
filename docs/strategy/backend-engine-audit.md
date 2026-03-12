@@ -381,3 +381,111 @@ wss.on("connection", (ws, req) => {
 - 에러 처리/로깅/rate limiting 체계 부재 → 프로덕션 운영 리스크
 
 **한마디**: 엔진의 "두뇌"(오케스트레이션 로직)는 훌륭하지만, "신경계"(에러 처리, 로깅, 모니터링)는 아직 미성숙하다. 기능 추가보다 운영 품질 향상에 집중할 시점이다.
+
+---
+
+## 부록: 심층 감사 추가 발견사항
+
+### A. 런타임 컨텍스트 타입 안전성 문제
+
+`server-main.ts:78`에서 런타임 컨텍스트가 `Record<string, any>`로 선언됨:
+
+```typescript
+const runtimeContext: Record<string, any> & BaseRuntimeContext = { ... };
+```
+
+100개+ 프로퍼티가 타입 검증 없이 주입되며, 코드 전반에 **410개+ `as any` 타입 단언**이 존재.
+모듈 경계에서 타입 안전성이 사실상 없는 상태.
+
+**권장**: 런타임 컨텍스트를 기능별 인터페이스로 분리 (예: `DbContext`, `WorkflowContext`, `AuthContext`)
+
+### B. 레이스 컨디션 위험
+
+동시 요청이 같은 태스크를 수정할 수 있는 경로가 존재:
+
+```typescript
+// lifecycle.ts: SELECT 후 UPDATE가 원자적이지 않음
+const reviewTasks = db.prepare(`SELECT ... WHERE status = 'review'`).all();
+reviewTasks.forEach((task) => {
+  setTimeout(() => {
+    const current = db.prepare("SELECT status FROM tasks WHERE id = ?").get(task.id);
+    if (current.status !== "review") return;
+    finishReview(task.id, task.title);  // 다른 요청이 이미 변경했을 수 있음
+  }, delay);
+});
+```
+
+**영향받는 경로**:
+- 서브태스크 위임 시 부모 태스크 상태 변경 (트랜잭션 없음)
+- 미팅 상태(meetingPhaseByAgent 등) 동기화 없이 동시 접근
+- 태스크 실행 시작 시 에이전트 상태 업데이트
+
+**권장**: 멀티스텝 상태 변경에 `runInTransaction()` 적용 확대 + optimistic locking (version 컬럼)
+
+### C. API 입력 검증 부재
+
+Zod 등 스키마 검증 라이브러리 미사용. 모든 라우트에서 수동 검증:
+
+```typescript
+// 현재 패턴 (routes 전반)
+const title = req.body.title;
+if (!title || typeof title !== "string") {
+  return res.status(400).json({ error: "title_required" });
+}
+```
+
+**권장**: Zod 스키마 + 검증 미들웨어 도입
+
+```typescript
+// 개선 패턴
+const CreateTaskSchema = z.object({
+  title: z.string().min(1).max(500),
+  description: z.string().optional(),
+  department_id: z.string().uuid().optional(),
+});
+app.post('/api/tasks', validate(CreateTaskSchema), handler);
+```
+
+### D. 응답 형식 비일관성
+
+```typescript
+// 혼재하는 응답 형식들
+res.json({ ok: true, csrf_token: CSRF_TOKEN });          // ok 필드
+res.status(400).json({ error: "invalid_workflow_pack" }); // error만
+res.status(500).json({ ok: false, error: err?.message }); // ok + error
+res.json(row);                                            // raw 데이터
+```
+
+**권장**: 응답 엔벨로프 표준화
+
+```typescript
+// 성공: { data: T }
+// 에러: { error: { code: string, message: string } }
+```
+
+### E. 마이그레이션 시스템 취약점
+
+`task-schema-migrations.ts`에서 컬럼 추가를 try-catch로 처리:
+
+```typescript
+try {
+  db.exec("ALTER TABLE agents ADD COLUMN persona_id TEXT");
+} catch {
+  /* already exists — 하지만 다른 에러도 무시됨 */
+}
+```
+
+**문제점**:
+- 마이그레이션 버전 추적 없음 → 어떤 마이그레이션이 실행되었는지 알 수 없음
+- 롤백 불가능
+- 모든 에러가 무시됨 (컬럼 존재뿐 아니라 디스크 풀, 권한 에러 등도)
+
+**권장**: 마이그레이션 버전 테이블 도입
+
+```sql
+CREATE TABLE IF NOT EXISTS schema_migrations (
+  version INTEGER PRIMARY KEY,
+  name TEXT NOT NULL,
+  applied_at INTEGER DEFAULT (unixepoch()*1000)
+);
+```
