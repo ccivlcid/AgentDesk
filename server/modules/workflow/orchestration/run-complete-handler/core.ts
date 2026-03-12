@@ -9,6 +9,7 @@ import { handleVideoArtifactSync } from "./video-artifact.ts";
 import { runAfterExitGates, applyVideoArtifactGateAfterSuccess } from "./gates.ts";
 import { runExtractLearnings } from "./learnings.ts";
 import { applySuccessStateUpdate, applyFailureStateUpdate, buildStateUpdatesDeps } from "./state-updates.ts";
+import { executeHooks } from "../../core/hook-executor.ts";
 
 export type RunCompleteHandlerDeps = Record<string, unknown>;
 
@@ -175,6 +176,21 @@ export function createRunCompleteHandler(deps: RunCompleteHandlerDeps) {
       logsDir: logsDir as string,
       appendTaskLog: appendTaskLog as (a: string, b: string, c: string) => void,
     });
+
+    // Execute post-task hooks (scoped by project/agent/department)
+    try {
+      const hookEventType = finalExitCode === 0 ? "post-task" : "on-error";
+      const hookContext = {
+        projectId: task.project_id ?? null,
+        agentId: task.assigned_agent_id ?? null,
+        departmentId: task.department_id ?? null,
+        taskId,
+      };
+      executeHooks(db as any, hookEventType, hookContext);
+      executeHooks(db as any, "on-complete", hookContext);
+    } catch {
+      /* hook failures must not block completion */
+    }
 
     if (result) {
       const updates = ["result = ?"];

@@ -191,41 +191,41 @@ AgentManager: isIsolatedPack = false 하드코딩
 
 ---
 
-#### [A5] 프로젝트 스코핑 불완전 — DB 지원 vs 런타임 미적용
+#### [A5] 프로젝트 스코핑 — ✅ 해결됨 (2026-03-12)
 
-**DB 스키마 현황** (scope_type 기반 통합 모델):
+**구현 완료 현황:**
 ```
 project_agents  ✓ DB ✓ 런타임  — 팀 멤버 관리 + auto-assign 필터 적용
-project_rules   ✓ DB ✗ 런타임  — agent_rules 테이블에 scope_type='project' 지원,
-                                  그러나 실행 시 프롬프트에 주입되지 않음
-project_memory  ✓ DB △ 런타임  — memory_entries 테이블에 scope_type='project' 지원,
-                                  프롬프트 주입 시 projectId 필터 누락
-                                  (autonomous-memory.ts:51-66 — global/agent/dept/pack만 조회)
-project_hooks   ✓ DB ✗ 런타임  — hook_entries 테이블에 scope_type='project' 지원,
-                                  그러나 태스크 실행 시 훅 트리거 로직 자체 미구현
-project_skills  ✗ DB ✗ 런타임  — 파일시스템 기반 글로벌 전용, DB에 프로젝트 scope 없음
-                                  (skill_learning_history에 scope_type 컬럼 없음)
+project_rules   ✓ DB ✓ 런타임  — scope_type='project' CHECK 제약 추가,
+                                  buildRulesPromptBlock()으로 프롬프트 주입
+project_memory  ✓ DB ✓ 런타임  — scope_type='project' CHECK 제약 추가,
+                                  searchRelevantMemories()에 projectId 필터 추가
+project_hooks   ✓ DB ✓ 런타임  — scope_type='project' CHECK 제약 추가,
+                                  executeHooks()로 pre-task/post-task/on-error/on-complete 실행
+project_skills  ✓ DB ✓ 런타임  — project_skills 테이블 신규 생성,
+                                  filterSkillsByProject() opt-out 모델로 필터링
 ```
 
-**핵심 문제 — 프로젝트 간 컨텍스트 오염:**
-- 에이전트가 프로젝트 A 태스크 실행 시, 프로젝트 B의 rules/memory/hooks/skills도 함께 적용됨
-- UI에서 사용자가 `scope_type='project'`로 설정해도 런타임에서 무시됨
-- "Project OS" 비전과 달리, 프로젝트는 태스크 분류 레이블에 불과한 상태
+**해결된 문제:**
+- ~~에이전트가 프로젝트 A 태스크 실행 시, 프로젝트 B의 rules/memory/hooks/skills도 함께 적용됨~~ → 프로젝트 scope 필터링 적용
+- ~~UI에서 사용자가 `scope_type='project'`로 설정해도 런타임에서 무시됨~~ → DB CHECK + 런타임 모두 적용
+- 프로젝트가 독립된 실행 컨텍스트로 동작
 
-**런타임 갭 상세:**
+**Scope 해상도 우선순위 (모든 기능 공통):**
+```
+project scope  > agent scope  > department scope  > global scope
+└── 동일 scope 내에서는 priority DESC 순
+```
 
-| 기능 | DB scope 지원 | 런타임 필터링 | 프롬프트 주입 | 실제 격리 |
-|------|:---:|:---:|:---:|:---:|
-| Rules | ✓ | ✗ 미로드 | ✗ 미주입 | ✗ |
-| Memory | ✓ | △ projectId 누락 | ✓ (비필터) | ✗ |
-| Hooks | ✓ | ✗ 미실행 | N/A | ✗ |
-| Skills | ✗ | ✗ 미필터 | ✓ (비필터) | ✗ |
-
-**영향받는 파일:**
-- `server/modules/workflow/orchestration/execution-start-task.ts:296-306` — memory 주입 시 projectId 미전달
-- `server/modules/workflow/orchestration/autonomous-memory.ts:51-66` — scope 조건에 project 누락
-- `server/modules/workflow/core/prompt-skills.ts:81-142` — provider만 필터, project 무관
-- `server/modules/routes/core/tasks/execution-run.ts` — rules/hooks 로딩 로직 없음
+**구현 파일:**
+- `server/modules/bootstrap/schema/task-schema-migrations.ts` — scope_type CHECK 마이그레이션 + project_skills 테이블
+- `server/modules/workflow/core/project-scoped-rules.ts` — buildRulesPromptBlock() (신규)
+- `server/modules/workflow/core/hook-executor.ts` — executeHooks() (신규)
+- `server/modules/workflow/orchestration/autonomous-memory.ts` — projectId 파라미터 추가
+- `server/modules/workflow/core/prompt-skills.ts` — filterSkillsByProject() 추가
+- `server/modules/routes/core/tasks/execution-run.ts` — rules/memory/hooks/skills 연동
+- `server/modules/workflow/orchestration/execution-start-task.ts` — rules/memory/skills 연동
+- `server/modules/workflow/orchestration/run-complete-handler/core.ts` — post-task hooks 연동
 
 ---
 
@@ -517,10 +517,10 @@ Remove:   LiveSyncScheduler (WebSocket으로 흡수)
 
 | 항목 | 설명 | 공수 |
 |------|------|------|
-| C-1. Rules 프롬프트 주입 | buildRulesPromptBlock() 신규 구현, execution-start-task.ts 연동 | 2일 |
-| C-2. Memory 프로젝트 필터 | autonomous-memory.ts에 projectId 파라미터 추가 + 호출부 수정 | 1일 |
-| C-3. Hooks 런타임 실행 | hook-executor.ts 신규, execution-run.ts 생명주기 이벤트 연동 | 3일 |
-| C-4. Skills 프로젝트 스코핑 | project_skills 테이블 + prompt-skills.ts 필터링 | 2일 |
+| ~~C-1. Rules 프롬프트 주입~~ | ~~buildRulesPromptBlock() 신규 구현~~ ✅ 완료 | ~~2일~~ |
+| ~~C-2. Memory 프로젝트 필터~~ | ~~autonomous-memory.ts에 projectId 추가~~ ✅ 완료 | ~~1일~~ |
+| ~~C-3. Hooks 런타임 실행~~ | ~~hook-executor.ts 신규~~ ✅ 완료 | ~~3일~~ |
+| ~~C-4. Skills 프로젝트 스코핑~~ | ~~project_skills 테이블 + 필터링~~ ✅ 완료 | ~~2일~~ |
 | App.tsx → Zustand 분리 | 도메인별 스토어 4개 | 4일 |
 | 프로젝트 템플릿 | 카테고리 → objectives/gates 자동 생성 | 2일 |
 | 에이전트 타임라인 뷰 | AgentTrace 기반 실행 가시화 | 3일 |
@@ -562,7 +562,7 @@ Remove:   LiveSyncScheduler (WebSocket으로 흡수)
 | **P1** | 에이전트 실행 상태 머신 | 크래시 → 무한 "실행중" 완전 방지 | 3일 |
 | **P1** | 동기화 전략 단일화 | WebSocket 신뢰성 + 코드 단순화 | 2일 |
 | **P2** | WorkflowPackKey 완전 제거 | 개념 혼동 제거, 기술 부채 청산 | 1일 |
-| **P2** | 프로젝트 스코핑 런타임 적용 | DB scope 모델 존재하나 런타임 미적용 — 프로젝트 간 오염 방지 핵심 | 8일 |
+| ~~**P2**~~ | ~~프로젝트 스코핑 런타임 적용~~ | ✅ 해결됨 — DB CHECK + 런타임 적용 완료 (C-1~C-4) | ~~8일~~ |
 | **P3** | App.tsx → Zustand 분리 | 성능 + 장기 유지보수성 | 4일 |
 
 ---

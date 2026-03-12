@@ -14,6 +14,9 @@ import {
   consumeInterruptPrompts,
   loadPendingInterruptPrompts,
 } from "../../../workflow/core/interrupt-injection-tools.ts";
+import { buildRulesPromptBlock } from "../../../workflow/core/project-scoped-rules.ts";
+import { buildMemoryPromptBlock } from "../../../workflow/orchestration/autonomous-memory.ts";
+import { executeHooks } from "../../../workflow/core/hook-executor.ts";
 
 export type TaskRunRouteDeps = Pick<
   RuntimeContext,
@@ -455,12 +458,43 @@ Whenever you complete a subtask, report it in this format:
       qaRulesJson,
     });
 
+    const rulesBlock = buildRulesPromptBlock(
+      db as any,
+      {
+        projectId: task.project_id ?? null,
+        agentId: agentId ?? null,
+        departmentId: agent.department_id ?? null,
+      },
+      taskLang,
+    );
+    const memoryBlock = buildMemoryPromptBlock(
+      { db },
+      {
+        agentId: agentId ?? null,
+        departmentId: agent.department_id ?? null,
+        workflowPackKey: task.workflow_pack_key,
+        projectId: task.project_id ?? null,
+        taskTitle: task.title,
+        taskDescription: task.description,
+      },
+      taskLang,
+    );
+
+    // Execute pre-task hooks
+    executeHooks(db as any, "pre-task", {
+      projectId: task.project_id ?? null,
+      agentId: agentId ?? null,
+      departmentId: agent.department_id ?? null,
+      taskId: id,
+      workingDirectory: agentCwd,
+    });
+
     const prompt = buildTaskExecutionPrompt(
       [
         (
           buildAvailableSkillsPromptBlock ||
           ((providerName: string) => `[Available Skills][provider=${providerName || "unknown"}][unavailable]`)
-        )(provider),
+        )(provider, task.project_id),
         `[Task Session] id=${executionSession.sessionId} owner=${executionSession.agentId} provider=${executionSession.provider}`,
         "This session is task-scoped. Keep continuity for this task only and do not cross-contaminate context from other projects.",
         projectStructureBlock,
@@ -478,6 +512,8 @@ Whenever you complete a subtask, report it in this format:
         departmentPromptBlock,
         `NOTE: You are working in an isolated Git worktree branch (agentdesk/${id.slice(0, 8)}). Commit your changes normally.`,
         interruptPromptBlock,
+        rulesBlock,
+        memoryBlock,
         subtaskInstruction,
         subModelHint,
         continuationInstruction,

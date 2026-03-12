@@ -12,6 +12,7 @@ import {
 import { buildCharacterPersonaBlock } from "../core/character-persona.ts";
 import { buildDocumentGenerationGuidance } from "../core/document-generation-guidance.ts";
 import { buildMemoryPromptBlock } from "./autonomous-memory.ts";
+import { buildRulesPromptBlock } from "../core/project-scoped-rules.ts";
 
 type CreateExecutionStartTaskToolsDeps = {
   nowMs: RuntimeContext["nowMs"];
@@ -292,15 +293,25 @@ export function createExecutionStartTaskTools(deps: CreateExecutionStartTaskTool
       ),
       taskLang,
     );
-    const availableSkillsPromptBlock = buildAvailableSkillsPromptBlock(provider);
+    const availableSkillsPromptBlock = buildAvailableSkillsPromptBlock(provider, taskData.project_id);
     const memoryBlock = buildMemoryPromptBlock(
       { db },
       {
         agentId: execAgent.id,
         departmentId: deptId ?? taskData.department_id ?? null,
         workflowPackKey: taskData.workflow_pack_key,
+        projectId: taskData.project_id ?? null,
         taskTitle: taskData.title,
         taskDescription: taskData.description,
+      },
+      taskLang,
+    );
+    const rulesBlock = buildRulesPromptBlock(
+      db as any,
+      {
+        projectId: taskData.project_id ?? null,
+        agentId: execAgent.id,
+        departmentId: deptId ?? taskData.department_id ?? null,
       },
       taskLang,
     );
@@ -324,6 +335,7 @@ export function createExecutionStartTaskTools(deps: CreateExecutionStartTaskTool
         deptPromptBlock,
         `NOTE: You are working in an isolated Git worktree branch (agentdesk/${taskId.slice(0, 8)}). Commit your changes normally.`,
         interruptPromptBlock,
+        rulesBlock,
         memoryBlock,
         continuationInstruction,
         runInstruction,

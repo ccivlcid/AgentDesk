@@ -41,17 +41,22 @@ export function searchRelevantMemories(
     agentId: string | null;
     departmentId: string | null;
     workflowPackKey: string | null;
+    projectId?: string | null;
     taskTitle: string;
     taskDescription: string | null;
   },
 ): MemoryEntry[] {
   const { db } = deps;
-  const { agentId, departmentId, workflowPackKey, taskTitle, taskDescription } = context;
+  const { agentId, departmentId, workflowPackKey, projectId, taskTitle, taskDescription } = context;
 
   // Get all enabled memories that match scope
   const scopeConditions: string[] = ["(scope_type = 'global')"];
   const params: any[] = [];
 
+  if (projectId) {
+    scopeConditions.push("(scope_type = 'project' AND scope_id = ?)");
+    params.push(projectId);
+  }
   if (agentId) {
     scopeConditions.push("(scope_type = 'agent' AND scope_id = ?)");
     params.push(agentId);
@@ -86,7 +91,8 @@ export function searchRelevantMemories(
   const scored = memories.map((m) => {
     const memText = `${m.title} ${m.content}`.toLowerCase();
     let score = m.priority / 100; // base score from priority
-    // Scope-specific memories get a bonus
+    // Scope-specific memories get a bonus (project highest priority)
+    if (m.scope_type === "project") score += 3;
     if (m.scope_type === "agent") score += 2;
     if (m.scope_type === "department") score += 1.5;
     if (m.scope_type === "workflow_pack") score += 1;
@@ -111,6 +117,7 @@ export function buildMemoryPromptBlock(
     agentId: string | null;
     departmentId: string | null;
     workflowPackKey: string | null;
+    projectId?: string | null;
     taskTitle: string;
     taskDescription: string | null;
   },
@@ -151,12 +158,13 @@ export function extractAndSaveTaskLearnings(
     agentId: string | null;
     departmentId: string | null;
     workflowPackKey: string | null;
+    projectId?: string | null;
     exitCode: number;
     result: string | null;
   },
 ): number {
   const { db, nowMs, logsDir, appendTaskLog } = deps;
-  const { taskId, taskTitle, agentId, departmentId, workflowPackKey, exitCode, result } = taskInfo;
+  const { taskId, taskTitle, agentId, departmentId, workflowPackKey, projectId, exitCode, result } = taskInfo;
 
   // Only extract from successful completions (or capture failure patterns)
   const logPath = path.join(logsDir, `${taskId}.log`);
@@ -193,8 +201,8 @@ export function extractAndSaveTaskLearnings(
           title,
           content: `Task "${taskTitle}" failed (exit ${exitCode}). Key errors:\n${errorSummary}`,
           category: "knowledge",
-          scope_type: agentId ? "agent" : departmentId ? "department" : "global",
-          scope_id: agentId || departmentId || null,
+          scope_type: projectId ? "project" : agentId ? "agent" : departmentId ? "department" : "global",
+          scope_id: projectId || agentId || departmentId || null,
           priority: 40,
           now,
         });

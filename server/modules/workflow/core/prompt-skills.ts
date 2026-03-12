@@ -127,17 +127,48 @@ function buildSkillRuntimePolicyLines(providerScoped: boolean): string[] {
   ];
 }
 
+/**
+ * Filter skills by project_skills table (opt-out model).
+ * Skills not listed in project_skills are considered enabled by default.
+ * Only explicitly disabled skills (enabled = 0) are excluded.
+ */
+function filterSkillsByProject(
+  db: DatabaseSync,
+  skills: PromptSkillRow[],
+  projectId: string,
+): PromptSkillRow[] {
+  if (skills.length === 0) return skills;
+  try {
+    const disabledRows = db
+      .prepare(
+        "SELECT skill_id FROM project_skills WHERE project_id = ? AND enabled = 0",
+      )
+      .all(projectId) as Array<{ skill_id: string }>;
+    if (disabledRows.length === 0) return skills;
+    const disabledSet = new Set(disabledRows.map((r) => r.skill_id));
+    return skills.filter((s) => !disabledSet.has(s.skill_id));
+  } catch {
+    return skills;
+  }
+}
+
 export function createPromptSkillsHelper(db: DatabaseSync): {
-  buildAvailableSkillsPromptBlock: (provider: string) => string;
+  buildAvailableSkillsPromptBlock: (provider: string, projectId?: string | null) => string;
 } {
-  function buildAvailableSkillsPromptBlock(provider: string): string {
+  function buildAvailableSkillsPromptBlock(provider: string, projectId?: string | null): string {
     const providerDisplay = getPromptSkillProviderDisplayName(provider);
     try {
       const providerKey = isPromptSkillProvider(provider) ? provider : null;
-      const providerLearnedSkills = providerKey
+      let providerLearnedSkills = providerKey
         ? queryPromptSkillsByProvider(db, providerKey, SKILL_PROMPT_FETCH_LIMIT)
         : [];
-      const globalLearnedSkills = queryPromptSkillsGlobal(db, SKILL_PROMPT_FETCH_LIMIT);
+      let globalLearnedSkills = queryPromptSkillsGlobal(db, SKILL_PROMPT_FETCH_LIMIT);
+
+      // Apply project-level skill filtering (opt-out model)
+      if (projectId) {
+        providerLearnedSkills = filterSkillsByProject(db, providerLearnedSkills, projectId);
+        globalLearnedSkills = filterSkillsByProject(db, globalLearnedSkills, projectId);
+      }
 
       if (providerLearnedSkills.length > 0) {
         return [
