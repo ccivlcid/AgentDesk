@@ -125,6 +125,14 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onCl
   const canConfirmInfo = projectName.trim().length > 0 && projectPath.trim().length > 0;
   const canConfirmAgent = selectedAgentIds.size > 0;
 
+  const deptCoverage = (() => {
+    const allDepts = new Set(cliAgents.map((a) => a.department?.id).filter(Boolean));
+    const selectedDepts = new Set(
+      cliAgents.filter((a) => selectedAgentIds.has(a.id)).map((a) => a.department?.id).filter(Boolean),
+    );
+    return { covered: selectedDepts.size, total: allDepts.size };
+  })();
+
   const handleConfirm = () => {
     setSubmitted(true);
     if (!canConfirmInfo || !canConfirmAgent) return;
@@ -297,12 +305,19 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onCl
                     {t({ ko: "부서별 최적 에이전트 자동 선택됨 · 변경 가능", en: "Auto-selected best agent per dept · adjustable", ja: "部門別最適エージェント自動選択済 · 変更可", zh: "已按部门自动选择最优代理 · 可调整" })}
                   </p>
                 </div>
-                {/* 선택 현황 */}
-                {selectedAgentIds.size > 0 && (
-                  <span style={{ ...mono, fontSize: "10px", color: "var(--th-accent)", flexShrink: 0, fontWeight: 700 }}>
-                    {selectedAgentIds.size} selected
+                {/* 선택 현황 + 부서 커버리지 */}
+                <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
+                  <span style={{ ...mono, fontSize: "10px", color: selectedAgentIds.size > 0 ? "var(--th-accent)" : "var(--th-danger-text, #fb7185)", fontWeight: 700 }}>
+                    {selectedAgentIds.size > 0
+                      ? t({ ko: `${selectedAgentIds.size}명 선택됨`, en: `${selectedAgentIds.size} selected`, ja: `${selectedAgentIds.size}名選択`, zh: `已选 ${selectedAgentIds.size} 名` })
+                      : t({ ko: "필수 선택", en: "Required", ja: "必須", zh: "必选" })}
                   </span>
-                )}
+                  {deptCoverage.total > 0 && (
+                    <span style={{ ...mono, fontSize: "9px", color: deptCoverage.covered < deptCoverage.total ? "rgb(251,191,36)" : "rgb(52,211,153)" }}>
+                      {t({ ko: `부서 ${deptCoverage.covered}/${deptCoverage.total} 커버됨`, en: `${deptCoverage.covered}/${deptCoverage.total} depts covered`, ja: `部門 ${deptCoverage.covered}/${deptCoverage.total} カバー`, zh: `覆盖 ${deptCoverage.covered}/${deptCoverage.total} 部门` })}
+                    </span>
+                  )}
+                </div>
               </div>
 
               {/* 검색 + 전체선택 */}
@@ -409,8 +424,18 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onCl
               )}
 
               {submitted && !canConfirmAgent && (
-                <p style={{ ...mono, fontSize: "10px", color: "var(--th-danger-text, #fb7185)" }}>
-                  {t({ ko: "에이전트를 1명 이상 선택해주세요.", en: "Select at least one agent.", ja: "エージェントを1人以上選択してください。", zh: "请至少选择一个代理。" })}
+                <p style={{ ...mono, fontSize: "10px", color: "var(--th-danger-text, #fb7185)", border: "1px solid rgba(251,113,133,0.4)", padding: "6px 10px", background: "rgba(251,113,133,0.08)" }}>
+                  {t({ ko: "⚠ 에이전트를 1명 이상 선택해야 프로젝트를 생성할 수 있습니다.", en: "⚠ Select at least one agent to create the project.", ja: "⚠ エージェントを1人以上選択してください。", zh: "⚠ 必须至少选择一名代理才能创建项目。" })}
+                </p>
+              )}
+              {selectedAgentIds.size > 0 && deptCoverage.covered < deptCoverage.total && (
+                <p style={{ ...mono, fontSize: "10px", color: "rgb(251,191,36)", border: "1px solid rgba(251,191,36,0.3)", padding: "6px 10px", background: "rgba(251,191,36,0.06)" }}>
+                  {t({
+                    ko: `⚠ ${deptCoverage.total - deptCoverage.covered}개 부서에 직원이 없습니다. 해당 부서 서브태스크는 blocked 처리됩니다.`,
+                    en: `⚠ ${deptCoverage.total - deptCoverage.covered} dept(s) have no agent. Subtasks for those depts will be blocked.`,
+                    ja: `⚠ ${deptCoverage.total - deptCoverage.covered}部門にエージェントがいません。該当部門のサブタスクはブロックされます。`,
+                    zh: `⚠ ${deptCoverage.total - deptCoverage.covered} 个部门没有代理，相关子任务将被阻塞。`,
+                  })}
                 </p>
               )}
             </div>
