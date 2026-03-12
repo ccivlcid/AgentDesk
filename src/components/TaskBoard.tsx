@@ -94,7 +94,7 @@ interface TaskBoardProps {
   tasks: Task[];
   agents: Agent[];
   currentProject?: import("../types").Project | null;
-  /** 프로젝트 관리 모달용 전체 에이전트(모든 오피스 팩). 미전달 시 agents 사용 → 선택한 오피스 팩에 해당 직원이 없을 수 있음 */
+  /** 프로젝트 관리 모달용 전체 에이전트(모든 워크플로 팩). 미전달 시 agents 사용 → 선택한 워크플로 팩에 해당 직원이 없을 수 있음 */
   projectManagerAgents?: Agent[];
   departments: Department[];
   subtasks: SubTask[];

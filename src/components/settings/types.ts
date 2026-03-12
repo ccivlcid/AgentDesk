@@ -126,7 +126,7 @@ export interface ChannelSettingsTabProps {
   form: LocalSettings;
   setForm: SetLocalSettings;
   persistSettings: (next: LocalSettings) => void;
-  /** 현재 오피스 팩 직원만 표시할 때 전달 (메신저 채팅의 대화 직원 선택) */
+  /** 현재 워크플로 팩 직원만 표시할 때 전달 (메신저 채팅의 대화 직원 선택) */
   managerAgents?: Agent[];
 }
 

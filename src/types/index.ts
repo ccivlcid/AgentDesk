@@ -525,24 +525,6 @@ export interface MessengerChannelConfig {
 
 export type MessengerChannelsConfig = Record<MessengerChannelType, MessengerChannelConfig>;
 
-export interface OfficePackProfile {
-  departments: Department[];
-  agents: Agent[];
-  updated_at: number;
-}
-
-export type OfficePackProfiles = Partial<Record<string, OfficePackProfile>>;
-
-export interface CustomOfficePack {
-  key: string;
-  name: string;
-  name_ko: string;
-  icon: string;
-  color: string;
-  description: string;
-  created_at: number;
-}
-
 export interface CompanySettings {
   companyName: string;
   clientName: string;
@@ -558,10 +540,6 @@ export interface CompanySettings {
   providerModelConfig?: Record<string, ProviderModelConfig>;
   roomThemes?: Record<string, RoomTheme>;
   messengerChannels?: MessengerChannelsConfig;
-  officePackProfiles?: OfficePackProfiles;
-  officePackHydratedPacks?: string[];
-  customOfficePacks?: CustomOfficePack[];
-  hiddenBuiltinPackKeys?: string[];
 }
 
 // Agent Rules

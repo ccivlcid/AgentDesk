@@ -71,7 +71,7 @@ AgentDesk가 Karpathy가 말하는 **"더 큰 IDE"** 를 완성하기 위한 전
 - **방식**: Custom SVG + React (외부 라이브러리 없음, 의존성 0)
 - **노드 = 에이전트**: `foreignObject` 기반 macOS 하이브리드 노드 (borderRadius: 10, glassmorphism)
 - **엣지 = 관계**: 베지어 커브. 위임(실선), 리뷰(앰버 점선), 서브태스크(가는 실선), 크로스부서(굵은 점선)
-- **레이아웃**: 부서별 컬럼 자동 배치 + 역할 순 수직 정렬
+- **레이아웃**: 에이전트 중심 관계 기반 배치 (부서는 노드 태그로만 표시)
 - **줌/팬**: SVG transform 기반 (마우스 휠, 드래그, 핀치)
 - **실시간 업데이트**: 기존 WebSocket 인프라 활용 (agent_status, task_update, subtask_update)
 - **인터랙션**: 노드 클릭 → 에이전트 상세, 엣지 호버 → 태스크 툴팁

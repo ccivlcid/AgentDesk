@@ -31,10 +31,10 @@ export default function HeartbeatGuideModal({ language, onClose }: HeartbeatGuid
       zh: "员工动态(Heartbeat)会定期自动查看所选员工的项目与任务状态。有问题时会通知您，无需另行指示。",
     }),
     t({
-      ko: "오피스 팩을 선택한 뒤, '살펴볼 직원 추가'에서 이 팩에 속한 직원을 선택하면 해당 직원이 살펴보기 대상에 포함됩니다. 간격(분)과 확인 항목(정체 태스크, 차단 태스크, 연속 실패, 대기 결정)을 설정할 수 있습니다.",
-      en: "After choosing an office pack, use 'Add to monitor' to select staff in that pack. You can set the interval (minutes) and which items to check: stale tasks, blocked tasks, consecutive failures, pending decisions.",
-      ja: "オフィスパックを選んだあと、「様子を見る社員を追加」でそのパックの社員を選ぶと対象になります。間隔(分)と確認項目を設定できます。",
-      zh: "选择办公包后，在「添加监测对象」中选择该包下的员工即可纳入。可设置间隔(分钟)和确认项。",
+      ko: "워크플로 팩을 선택한 뒤, '살펴볼 직원 추가'에서 이 팩에 속한 직원을 선택하면 해당 직원이 살펴보기 대상에 포함됩니다. 간격(분)과 확인 항목(정체 태스크, 차단 태스크, 연속 실패, 대기 결정)을 설정할 수 있습니다.",
+      en: "After choosing a workflow pack, use 'Add to monitor' to select staff in that pack. You can set the interval (minutes) and which items to check: stale tasks, blocked tasks, consecutive failures, pending decisions.",
+      ja: "ワークフローパックを選んだあと、「様子を見る社員を追加」でそのパックの社員を選ぶと対象になります。間隔(分)と確認項目を設定できます。",
+      zh: "选择工作流包后，在「添加监测对象」中选择该包下的员工即可纳入。可设置间隔(分钟)和确认项。",
     }),
     t({
       ko: "상태가 정상이면 로그만 남고 알림은 가지 않습니다. 문제가 발견되면 알림 센터와 클라이언트 메신저로 알림이 전송됩니다. '실행' 버튼으로 수동 확인을 즉시 실행할 수 있습니다.",
@@ -45,10 +45,10 @@ export default function HeartbeatGuideModal({ language, onClose }: HeartbeatGuid
   ];
 
   const tip = t({
-    ko: "현재 보이는 직원 목록과 살펴보기 대상은 선택한 오피스 팩에 따라 달라집니다. 팩을 바꾸면 해당 팩의 직원만 표시됩니다.",
-    en: "The staff list and monitored list depend on the selected office pack. Changing the pack shows only that pack's staff.",
-    ja: "表示される社員リストと対象は、選択したオフィスパックで変わります。",
-    zh: "显示的员工列表和监测对象随所选办公包变化。",
+    ko: "현재 보이는 직원 목록과 살펴보기 대상은 선택한 워크플로 팩에 따라 달라집니다. 팩을 바꾸면 해당 팩의 직원만 표시됩니다.",
+    en: "The staff list and monitored list depend on the selected workflow pack. Changing the pack shows only that pack's staff.",
+    ja: "表示される社員リストと対象は、選択したワークフローパックで変わります。",
+    zh: "显示的员工列表和监测对象随所选工作流包变化。",
   });
 
   const modal = (

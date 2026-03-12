@@ -8,10 +8,6 @@ import {
 type DbLike = Pick<DatabaseSync, "prepare">;
 let cachedHasAgentWorkflowPackColumn: boolean | null = null;
 
-type ProjectAssignmentModeRow = {
-  assignment_mode?: string | null;
-};
-
 type ProjectAgentRow = {
   agent_id: string;
 };
@@ -273,14 +269,11 @@ function buildPreferredDepartmentOrder(
 
 function loadManualProjectAgentScope(db: DbLike, projectId: string | null | undefined): string[] | null {
   if (!projectId) return null;
-  const project = db.prepare("SELECT assignment_mode FROM projects WHERE id = ?").get(projectId) as
-    | ProjectAssignmentModeRow
-    | undefined;
-  if (project?.assignment_mode !== "manual") return null;
   const rows = db
     .prepare("SELECT agent_id FROM project_agents WHERE project_id = ?")
     .all(projectId) as ProjectAgentRow[];
-  return rows.map((row) => row.agent_id).filter((id) => typeof id === "string" && id.length > 0);
+  const ids = rows.map((row) => row.agent_id).filter((id) => typeof id === "string" && id.length > 0);
+  return ids.length > 0 ? ids : null;
 }
 
 function combineAgentScopes(primary: string[] | null, secondary: string[] | null): string[] | null {
