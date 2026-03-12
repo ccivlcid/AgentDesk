@@ -1,10 +1,6 @@
 import type { RuntimeContext } from "../../../types/runtime-context.ts";
-import { DEFAULT_WORKFLOW_PACK_KEY, type WorkflowPackKey } from "../../workflow/packs/definitions.ts";
-import {
-  getDepartmentForPack,
-  parseWorkflowPackKeyInput,
-  readActiveOfficeWorkflowPackKey,
-} from "../../workflow/packs/department-scope.ts";
+import { DEFAULT_WORKFLOW_PACK_KEY } from "../../workflow/packs/definitions.ts";
+import { getDepartmentForPack, parseWorkflowPackKeyInput } from "../../workflow/packs/department-scope.ts";
 
 export type DepartmentRouteDeps = Pick<
   RuntimeContext,
@@ -32,27 +28,15 @@ export function registerDepartmentRoutes(deps: DepartmentRouteDeps): void {
     return raw === "1" || raw === "true" || raw === "yes";
   }
 
-  function resolvePackKeyFromInput(input: unknown): { packKey: WorkflowPackKey | null; invalid: boolean } {
-    if (Array.isArray(input)) input = input[0];
-    const raw = String(input ?? "").trim();
-    if (!raw) return { packKey: null, invalid: false };
-    const parsed = parseWorkflowPackKeyInput(raw);
-    return parsed ? { packKey: parsed, invalid: false } : { packKey: null, invalid: true };
-  }
-
-  function resolveRequestedPackKey(
-    queryRaw: unknown,
-    bodyRaw?: unknown,
-  ): { packKey: WorkflowPackKey; invalid: boolean } {
-    const fromQuery = resolvePackKeyFromInput(queryRaw);
-    if (fromQuery.invalid) return { packKey: DEFAULT_WORKFLOW_PACK_KEY, invalid: true };
-    if (fromQuery.packKey) return { packKey: fromQuery.packKey, invalid: false };
-
-    const fromBody = resolvePackKeyFromInput(bodyRaw);
-    if (fromBody.invalid) return { packKey: DEFAULT_WORKFLOW_PACK_KEY, invalid: true };
-    if (fromBody.packKey) return { packKey: fromBody.packKey, invalid: false };
-
-    return { packKey: readActiveOfficeWorkflowPackKey(db as any), invalid: false };
+  function resolvePackKey(queryRaw: unknown, bodyRaw?: unknown): { packKey: string; invalid: boolean } {
+    for (const raw of [queryRaw, bodyRaw]) {
+      const s = String(Array.isArray(raw) ? raw[0] : (raw ?? "")).trim();
+      if (!s) continue;
+      const parsed = parseWorkflowPackKeyInput(s);
+      if (!parsed) return { packKey: DEFAULT_WORKFLOW_PACK_KEY, invalid: true };
+      return { packKey: parsed, invalid: false };
+    }
+    return { packKey: DEFAULT_WORKFLOW_PACK_KEY, invalid: false };
   }
 
   function listDevelopmentDepartments(includeSeed: boolean): unknown[] {
@@ -73,45 +57,33 @@ export function registerDepartmentRoutes(deps: DepartmentRouteDeps): void {
       .all();
   }
 
-  function listScopedDepartments(packKey: WorkflowPackKey, includeSeed: boolean): unknown[] {
-    return listDevelopmentDepartments(includeSeed);
-  }
-
   app.get("/api/departments", (req, res) => {
-    const resolved = resolveRequestedPackKey(req.query?.workflow_pack_key);
+    const resolved = resolvePackKey(req.query?.workflow_pack_key);
     if (resolved.invalid) return res.status(400).json({ error: "invalid_workflow_pack_key" });
     const includeSeed = parseIncludeSeedParam(req.query?.include_seed);
-    const departments = listScopedDepartments(resolved.packKey, includeSeed);
-    res.json({ departments });
+    res.json({ departments: listDevelopmentDepartments(includeSeed) });
   });
 
   app.get("/api/departments/:id", (req, res) => {
-    const resolved = resolveRequestedPackKey(req.query?.workflow_pack_key);
-    if (resolved.invalid) return res.status(400).json({ error: "invalid_workflow_pack_key" });
+    if (resolvePackKey(req.query?.workflow_pack_key).invalid)
+      return res.status(400).json({ error: "invalid_workflow_pack_key" });
     const id = String(req.params.id);
     const includeSeed = parseIncludeSeedParam(req.query?.include_seed);
     const seedFilterClause = includeSeed ? "" : " AND id NOT LIKE '%-seed-%'";
     const department = getDepartmentForPack(db as any, id);
     if (!department) return res.status(404).json({ error: "not_found" });
 
-    const agents =
-      resolved.packKey === DEFAULT_WORKFLOW_PACK_KEY
-        ? db
-            .prepare(
-              `SELECT * FROM agents WHERE department_id = ?${hasAgentWorkflowPackColumn ? " AND COALESCE(workflow_pack_key, 'development') = 'development'" : ""}${seedFilterClause} ORDER BY role, name`,
-            )
-            .all(id)
-        : db
-            .prepare(
-              `SELECT * FROM agents WHERE department_id = ?${hasAgentWorkflowPackColumn ? " AND COALESCE(workflow_pack_key, 'development') = ?" : ""}${seedFilterClause} ORDER BY role, name`,
-            )
-            .all(...(hasAgentWorkflowPackColumn ? [id, resolved.packKey] : [id]));
+    const agents = db
+      .prepare(
+        `SELECT * FROM agents WHERE department_id = ?${hasAgentWorkflowPackColumn ? " AND COALESCE(workflow_pack_key, 'development') = 'development'" : ""}${seedFilterClause} ORDER BY role, name`,
+      )
+      .all(id);
     res.json({ department, agents });
   });
 
   app.post("/api/departments", (req, res) => {
     try {
-      const resolved = resolveRequestedPackKey(req.query?.workflow_pack_key, (req.body as any)?.workflow_pack_key);
+      const resolved = resolvePackKey(req.query?.workflow_pack_key, (req.body as any)?.workflow_pack_key);
       if (resolved.invalid) return res.status(400).json({ error: "invalid_workflow_pack_key" });
       const packKey = resolved.packKey;
       const body = req.body;
@@ -162,7 +134,7 @@ export function registerDepartmentRoutes(deps: DepartmentRouteDeps): void {
 
   app.patch("/api/departments/:id", (req, res, next) => {
     try {
-      const resolved = resolveRequestedPackKey(req.query?.workflow_pack_key, (req.body as any)?.workflow_pack_key);
+      const resolved = resolvePackKey(req.query?.workflow_pack_key, (req.body as any)?.workflow_pack_key);
       if (resolved.invalid) return res.status(400).json({ error: "invalid_workflow_pack_key" });
       const packKey = resolved.packKey;
       const id = String(req.params.id);
@@ -268,7 +240,7 @@ export function registerDepartmentRoutes(deps: DepartmentRouteDeps): void {
 
   app.delete("/api/departments/:id", (req, res) => {
     try {
-      const resolved = resolveRequestedPackKey(req.query?.workflow_pack_key, (req.body as any)?.workflow_pack_key);
+      const resolved = resolvePackKey(req.query?.workflow_pack_key, (req.body as any)?.workflow_pack_key);
       if (resolved.invalid) return res.status(400).json({ error: "invalid_workflow_pack_key" });
       const packKey = resolved.packKey;
       const id = String(req.params.id);
@@ -306,7 +278,7 @@ export function registerDepartmentRoutes(deps: DepartmentRouteDeps): void {
 
   app.patch("/api/departments/reorder", (req, res) => {
     try {
-      const resolved = resolveRequestedPackKey(req.query?.workflow_pack_key, (req.body as any)?.workflow_pack_key);
+      const resolved = resolvePackKey(req.query?.workflow_pack_key, (req.body as any)?.workflow_pack_key);
       if (resolved.invalid) return res.status(400).json({ error: "invalid_workflow_pack_key" });
       const packKey = resolved.packKey;
       const body = req.body;
