@@ -262,40 +262,9 @@ export function registerOpsSettingsStatsRoutes(ctx: RuntimeContext): void {
       )
       .all(activePack) as unknown[];
 
-    let tasksByDept: unknown[];
-    if (activePack !== "development") {
-      try {
-        tasksByDept = db
-          .prepare(
-            `
-        SELECT
-          opd.department_id AS id,
-          opd.name,
-          opd.icon,
-          opd.color,
-          COUNT(t.id) AS total_tasks,
-          SUM(CASE WHEN t.status = 'done' THEN 1 ELSE 0 END) AS done_tasks
-        FROM office_pack_departments opd
-        LEFT JOIN tasks t
-          ON t.department_id = opd.department_id
-         AND COALESCE(t.workflow_pack_key, 'development') = ?
-        WHERE opd.workflow_pack_key = ?
-        GROUP BY opd.department_id
-        ORDER BY opd.sort_order ASC, opd.department_id ASC
-      `,
-          )
-          .all(activePack, activePack);
-      } catch {
-        tasksByDept = [];
-      }
-    } else {
-      tasksByDept = [];
-    }
-
-    if (!Array.isArray(tasksByDept) || tasksByDept.length <= 0) {
-      tasksByDept = db
-        .prepare(
-          `
+    const tasksByDept = db
+      .prepare(
+        `
       SELECT d.id, d.name, d.icon, d.color,
         COUNT(t.id) AS total_tasks,
         SUM(CASE WHEN t.status = 'done' THEN 1 ELSE 0 END) AS done_tasks
@@ -306,9 +275,8 @@ export function registerOpsSettingsStatsRoutes(ctx: RuntimeContext): void {
       GROUP BY d.id
       ORDER BY d.sort_order ASC, d.id ASC
     `,
-        )
-        .all();
-    }
+      )
+      .all();
 
     const recentActivity = db
       .prepare(

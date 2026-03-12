@@ -3,6 +3,7 @@ import type { Agent, Message } from "../../types";
 import { getMessages, sendMessage } from "../../api";
 import { uploadChatFiles } from "../../api/messaging-runtime-oauth";
 import { useI18n } from "../../i18n";
+import HeaderModalChrome from "../ui/HeaderModalChrome";
 
 const MAX_CONTENT = 2000;
 const MAX_FILES = 5;
@@ -178,104 +179,95 @@ export default function GroupChatPanel({ agents, initialAgentIds, onClose }: Gro
 
   return (
     <div className="fixed inset-0 z-50 flex items-stretch justify-end">
-      {/* Backdrop */}
       <button
         className="absolute inset-0"
-        style={{ background: "rgba(0,0,0,0.55)" }}
+        style={{ background: "var(--th-modal-overlay)" }}
         onClick={onClose}
         aria-label={tr("닫기", "Close")}
       />
 
-      {/* Panel — CLI 스타일 */}
       <div
         className="relative flex h-full w-full flex-col overflow-hidden sm:w-[680px]"
-        style={{ background: "#0d1117", borderLeft: "1px solid var(--th-border)", fontFamily: "var(--th-font-mono)" }}
+        style={{
+          background: "var(--th-bg-base)",
+          borderLeft: "1px solid var(--th-border)",
+          fontFamily: "var(--th-font-mono)",
+          borderTopLeftRadius: 10,
+          borderBottomLeftRadius: 10,
+          boxShadow: "-4px 0 24px rgba(0,0,0,0.25)",
+        }}
       >
-        {/* CLI 헤더 (전사 공지와 동일 톤) */}
-        <div
-          className="flex flex-shrink-0 items-center gap-3 px-4 py-3 select-none"
-          style={{ borderBottom: "1px solid #21262d", background: "#161b22" }}
-        >
-          <div className="flex items-center gap-1.5">
-            <span className="h-3 w-3 rounded-full inline-block" style={{ background: "#ff5f56" }} />
-            <span className="h-3 w-3 rounded-full inline-block" style={{ background: "#ffbd2e" }} />
-            <span className="h-3 w-3 rounded-full inline-block" style={{ background: "#27c93f" }} />
-          </div>
-          <span className="text-[11px] font-bold" style={{ color: "#f0883e" }}>❯</span>
-          <span className="text-[11px] font-bold" style={{ color: "#cdd9e5" }}>agentdesk</span>
-          <span className="text-[11px]" style={{ color: "#6e7681" }}>group-chat</span>
-          {selectedIds.size > 0 && (
-            <span className="text-[11px]" style={{ color: "#58a6ff" }}>--recipients={selectedIds.size}</span>
-          )}
-          <span className="flex-1" />
-          {selectedIds.size > 0 && (
-            <button
-              onClick={() => setSelectedIds(new Set())}
-              className="px-2 py-1 text-[10px] font-mono border transition hover:opacity-80"
-              style={{ borderRadius: 0, borderColor: "#21262d", color: "#6e7681", background: "#0d1117" }}
-            >
-              {tr("선택 해제", "Clear")}
-            </button>
-          )}
-          <button
-            onClick={onClose}
-            className="flex h-7 w-7 items-center justify-center transition hover:bg-[#21262d]"
-            style={{ color: "#6e7681", borderRadius: 0 }}
-            aria-label={tr("닫기", "Close")}
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M18 6L6 18M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
+        <HeaderModalChrome
+          title={t({ ko: "그룹 채팅", en: "Group Chat", ja: "グループチャット", zh: "群聊" })}
+          rightSlot={
+            selectedIds.size > 0 ? (
+              <button
+                type="button"
+                onClick={() => setSelectedIds(new Set())}
+                style={{
+                  fontSize: "10px",
+                  fontWeight: 600,
+                  padding: "3px 8px",
+                  border: "1px solid var(--th-border)",
+                  background: "transparent",
+                  color: "var(--th-text-muted)",
+                  cursor: "pointer",
+                  fontFamily: "var(--th-font-mono)",
+                }}
+                className="hover:!text-[var(--th-text)] hover:!border-[var(--th-border-strong)]"
+              >
+                {tr("선택 해제", "Clear")}
+              </button>
+            ) : undefined
+          }
+          onClose={onClose}
+        />
 
-        {/* Body: two columns */}
         <div className="flex min-h-0 flex-1 overflow-hidden">
-          {/* Left: agent selector (CLI 스타일) */}
           <div
             className="flex w-[200px] flex-shrink-0 flex-col overflow-hidden"
-            style={{ borderRight: "1px solid #21262d", background: "#0d1117" }}
+            style={{ borderRight: "1px solid var(--th-border)", background: "var(--th-bg-base)" }}
           >
-            {/* Search — grep 스타일 */}
-            <div className="flex-shrink-0 flex items-center gap-2 px-3 py-2" style={{ borderBottom: "1px solid #21262d", background: "#161b22" }}>
-              <span className="text-[11px] shrink-0" style={{ color: "#f0883e" }}>❯</span>
-              <span className="text-[11px] shrink-0" style={{ color: "#6e7681" }}>grep</span>
+            {/* Search — grep 스타일 (테마 변수) */}
+            <div className="flex-shrink-0 flex items-center gap-2 px-3 py-2" style={{ borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-panel)" }}>
+              <span className="text-[11px] shrink-0" style={{ color: "var(--th-accent)" }}>❯</span>
+              <span className="text-[11px] shrink-0" style={{ color: "var(--th-text-muted)" }}>grep</span>
               <input
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder={tr("검색...", "filter...")}
                 className="flex-1 min-w-0 bg-transparent text-[11px] outline-none"
-                style={{ color: "#cdd9e5", caretColor: "#f0883e" }}
+                style={{ color: "var(--th-text-primary)", caretColor: "var(--th-accent)" }}
               />
             </div>
             {/* Agent list */}
-            <div className="flex-1 overflow-y-auto py-1" style={{ background: "#0d1117" }}>
+            <div className="flex-1 overflow-y-auto py-1" style={{ background: "var(--th-bg-base)" }}>
               {filteredAgents.length === 0 ? (
-                <div className="px-3 py-4 text-center text-[11px]" style={{ color: "#6e7681" }}>
+                <div className="px-3 py-4 text-center text-[11px]" style={{ color: "var(--th-text-muted)" }}>
                   {tr("없음", "None")}
                 </div>
               ) : (
                 filteredAgents.map((agent) => {
                   const isSelected = selectedIds.has(agent.id);
                   const isLoading = loadingIds.has(agent.id);
-                  const statusColor = agent.status === "working" ? "#3fb950" : "#6e7681";
+                  const statusColor = agent.status === "working" ? "var(--th-accent)" : "var(--th-text-muted)";
                   return (
                     <button
                       key={agent.id}
                       onClick={() => toggleAgent(agent.id)}
                       className="flex w-full items-center gap-2 px-3 py-2 text-left transition"
                       style={{
-                        background: isSelected ? "rgba(251,191,36,0.08)" : "transparent",
-                        borderLeft: `2px solid ${isSelected ? "#f0883e" : "transparent"}`,
-                        borderBottom: "1px solid rgba(33,38,45,0.6)",
+                        background: isSelected ? "var(--th-bg-surface)" : "transparent",
+                        borderLeft: `2px solid ${isSelected ? "var(--th-accent)" : "transparent"}`,
+                        borderBottom: "1px solid var(--th-border)",
                       }}
                     >
-                      <span className="text-[10px] font-bold shrink-0" style={{ color: isSelected ? "#f0883e" : "#4d555f", width: 14, textAlign: "center" }}>
+                      <span className="text-[10px] font-bold shrink-0" style={{ color: isSelected ? "var(--th-accent)" : "var(--th-text-muted)", width: 14, textAlign: "center" }}>
                         {isSelected ? "▸" : "·"}
                       </span>
                       <span className="flex min-w-0 flex-1 flex-col">
-                        <span className="truncate text-[11px]" style={{ color: isSelected ? "#cdd9e5" : "#8b949e" }}>
+                        <span className="truncate text-[11px]" style={{ color: isSelected ? "var(--th-text-heading)" : "var(--th-text-secondary)" }}>
                           {agent.avatar_emoji} {getAgentName(agent)}
                         </span>
                         <span className="text-[10px]" style={{ color: statusColor }}>
@@ -290,21 +282,20 @@ export default function GroupChatPanel({ agents, initialAgentIds, onClose }: Gro
             </div>
           </div>
 
-          {/* Right: message feed (CLI 로그 스타일) */}
-          <div className="flex min-h-0 flex-1 flex-col overflow-hidden" style={{ background: "#0d1117" }}>
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden" style={{ background: "var(--th-bg-base)" }}>
             <div className="flex-1 overflow-y-auto py-1">
               {selectedIds.size === 0 ? (
                 <div className="flex h-full flex-col items-center justify-center gap-2 text-center px-4">
-                  <p className="text-[11px]" style={{ color: "#6e7681" }}>
+                  <p className="text-[11px]" style={{ color: "var(--th-text-muted)" }}>
                     $ cat recipients
                   </p>
-                  <p className="text-[11px]" style={{ color: "#4d555f" }}>
+                  <p className="text-[11px]" style={{ color: "var(--th-text-secondary)" }}>
                     {tr("왼쪽에서 에이전트를 선택하세요", "Select agents on the left")}
                   </p>
                 </div>
               ) : mergedMessages.length === 0 ? (
                 <div className="flex h-full flex-col items-center justify-center gap-2 text-center px-4">
-                  <p className="text-[11px]" style={{ color: "#6e7681" }}>
+                  <p className="text-[11px]" style={{ color: "var(--th-text-muted)" }}>
                     {tr("선택한 에이전트와 주고받은 메시지가 없습니다", "No messages with selected agents yet")}
                   </p>
                 </div>
@@ -320,10 +311,10 @@ export default function GroupChatPanel({ agents, initialAgentIds, onClose }: Gro
                       : forAgentName;
                   const timeStr = new Date(msg.created_at).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" });
                   const sigil = isCeo ? "❯" : "▸";
-                  const sigilColor = isCeo ? "#f0883e" : "#3fb950";
-                  const rowBg = isCeo ? "rgba(251,191,36,0.04)" : "rgba(63,185,80,0.03)";
-                  const borderColor = isCeo ? "rgba(251,191,36,0.08)" : "rgba(48,54,61,0.6)";
-                  const contentColor = isCeo ? "#e6c07b" : "#adbac7";
+                  const sigilColor = isCeo ? "var(--th-accent)" : "var(--th-accent)";
+                  const rowBg = isCeo ? "var(--th-bg-surface)" : "var(--th-bg-primary)";
+                  const borderColor = "var(--th-border)";
+                  const contentColor = "var(--th-text-primary)";
 
                   return (
                     <div
@@ -332,7 +323,7 @@ export default function GroupChatPanel({ agents, initialAgentIds, onClose }: Gro
                       style={{ borderBottom: `1px solid ${borderColor}`, background: rowBg }}
                     >
                       <div className="flex items-center gap-2 flex-wrap mb-1">
-                        <span className="shrink-0 text-[10px]" style={{ color: "#3d4451" }}>{timeStr}</span>
+                        <span className="shrink-0 text-[10px]" style={{ color: "var(--th-text-muted)" }}>{timeStr}</span>
                         <span className="font-bold shrink-0" style={{ color: sigilColor }}>{sigil}</span>
                         <span className="truncate font-bold shrink-0 max-w-[200px]" style={{ color: sigilColor }}>
                           {senderLabel}
@@ -348,10 +339,10 @@ export default function GroupChatPanel({ agents, initialAgentIds, onClose }: Gro
               <div ref={bottomRef} />
             </div>
 
-            <div style={{ borderTop: "1px solid #21262d" }} />
+            <div style={{ borderTop: "1px solid var(--th-border)" }} />
 
-            {/* Input area — CLI 프롬프트 스타일 */}
-            <div className="flex-shrink-0 px-4 pb-4 pt-2" style={{ background: "#0d1117" }}>
+            {/* Input area — CLI 프롬프트 스타일 (테마 변수) */}
+            <div className="flex-shrink-0 px-4 pb-4 pt-2" style={{ background: "var(--th-bg-primary)" }}>
               <input
                 ref={fileInputRef}
                 type="file"
@@ -362,7 +353,7 @@ export default function GroupChatPanel({ agents, initialAgentIds, onClose }: Gro
               />
 
               {selectedIds.size === 0 && (
-                <div className="text-[10px] text-center mb-2" style={{ color: "#6e7681" }}>
+                <div className="text-[10px] text-center mb-2" style={{ color: "var(--th-text-muted)" }}>
                   {tr("에이전트를 먼저 선택하세요", "Select at least one agent first")}
                 </div>
               )}
@@ -373,12 +364,12 @@ export default function GroupChatPanel({ agents, initialAgentIds, onClose }: Gro
                     <div
                       key={idx}
                       className="flex items-center gap-1 px-2 py-0.5 text-[10px]"
-                      style={{ background: "#161b22", border: "1px solid #21262d", borderRadius: 0, color: "#8b949e" }}
+                      style={{ background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)", borderRadius: 0, color: "var(--th-text-secondary)" }}
                     >
                       <span>{getFileIcon(file.name)}</span>
                       <span className="max-w-[120px] truncate">{file.name}</span>
-                      <span style={{ color: "#3d4451" }}>({formatFileSize(file.size)})</span>
-                      <button type="button" onClick={() => removeFile(idx)} className="ml-0.5 transition hover:opacity-70" style={{ color: "#6e7681", lineHeight: 1 }} title={tr("제거", "Remove")}>✕</button>
+                      <span style={{ color: "var(--th-text-muted)" }}>({formatFileSize(file.size)})</span>
+                      <button type="button" onClick={() => removeFile(idx)} className="ml-0.5 transition hover:opacity-70" style={{ color: "var(--th-text-muted)", lineHeight: 1 }} title={tr("제거", "Remove")}>✕</button>
                     </div>
                   ))}
                 </div>
@@ -386,12 +377,12 @@ export default function GroupChatPanel({ agents, initialAgentIds, onClose }: Gro
 
               <div
                 className="flex items-end gap-0"
-                style={{ border: "1px solid rgba(251,191,36,0.35)", background: "#161b22", borderRadius: 0 }}
+                style={{ border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", borderRadius: 0 }}
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={(e) => { e.preventDefault(); if (e.dataTransfer.files.length > 0) addFiles(e.dataTransfer.files); }}
               >
                 <div className="flex shrink-0 flex-col items-center gap-1 px-3 pb-2.5 pt-3">
-                  <span className="text-sm font-bold leading-none" style={{ color: "#f0883e" }}>❯</span>
+                  <span className="text-sm font-bold leading-none" style={{ color: "var(--th-accent)" }}>❯</span>
                 </div>
                 <textarea
                   value={input}
@@ -405,7 +396,7 @@ export default function GroupChatPanel({ agents, initialAgentIds, onClose }: Gro
                   rows={2}
                   disabled={sending || selectedIds.size === 0}
                   className="min-h-[44px] max-h-32 flex-1 resize-none overflow-y-auto py-3 pr-2 text-xs leading-relaxed focus:outline-none bg-transparent"
-                  style={{ color: "#cdd9e5", caretColor: "#f0883e" }}
+                  style={{ color: "var(--th-text-primary)", caretColor: "var(--th-accent)" }}
                   placeholder={
                     selectedIds.size === 0
                       ? tr("에이전트를 선택하면 입력 가능합니다", "Select agents to enable input")
@@ -418,7 +409,7 @@ export default function GroupChatPanel({ agents, initialAgentIds, onClose }: Gro
                     onClick={() => fileInputRef.current?.click()}
                     disabled={attachments.length >= MAX_FILES || selectedIds.size === 0}
                     className="flex h-7 w-7 items-center justify-center transition hover:opacity-70 disabled:opacity-30"
-                    style={{ color: "#6e7681", borderRadius: 0 }}
+                    style={{ color: "var(--th-text-muted)", borderRadius: 0 }}
                     title={tr("파일 첨부", "Attach")}
                   >
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
@@ -432,8 +423,8 @@ export default function GroupChatPanel({ agents, initialAgentIds, onClose }: Gro
                     className="flex h-7 w-7 items-center justify-center transition disabled:opacity-30"
                     style={
                       input.trim() || attachments.length > 0
-                        ? { borderRadius: 0, background: "rgba(251,191,36,0.8)", color: "#0d1117" }
-                        : { borderRadius: 0, background: "#161b22", color: "#3d4451", cursor: "not-allowed" }
+                        ? { borderRadius: 0, background: "var(--th-accent)", color: "#000" }
+                        : { borderRadius: 0, background: "var(--th-bg-surface)", color: "var(--th-text-muted)", cursor: "not-allowed" }
                     }
                     title={tr("전송 (Ctrl+Enter)", "Send (Ctrl+Enter)")}
                   >
@@ -443,13 +434,13 @@ export default function GroupChatPanel({ agents, initialAgentIds, onClose }: Gro
                   </button>
                 </div>
               </div>
-              {sendError && <div className="text-[10px] mt-1" style={{ color: "#fda4af" }}>{sendError}</div>}
+              {sendError && <div className="text-[10px] mt-1" style={{ color: "var(--th-text-secondary)" }}>{sendError}</div>}
               {(sentOk || uploading) && (
-                <div className="text-[10px] mt-1" style={{ color: "#3fb950" }}>
+                <div className="text-[10px] mt-1" style={{ color: "var(--th-accent)" }}>
                   {uploading ? tr("파일 업로드 중...", "Uploading...") : tr(`✓ ${selectedIds.size}명 전송 완료`, `✓ Sent to ${selectedIds.size}`)}
                 </div>
               )}
-              <p className="mt-1.5 text-[10px]" style={{ color: "#3d4451" }}>
+              <p className="mt-1.5 text-[10px]" style={{ color: "var(--th-text-muted)" }}>
                 Ctrl+Enter {tr("전송", "send")} · 📎 {tr("파일 드래그 가능", "drag to attach")}
               </p>
             </div>

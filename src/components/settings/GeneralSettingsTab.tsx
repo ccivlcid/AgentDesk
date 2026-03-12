@@ -19,195 +19,191 @@ interface ToggleSettingCardProps {
 function ToggleSettingCard({ label, checked, onToggle, title }: ToggleSettingCardProps) {
   return (
     <div
-      className="flex items-center justify-between gap-3 px-3 py-2.5 sm:px-4"
-      style={{ borderRadius: 0, borderColor: "var(--th-card-border)", background: "var(--th-input-bg)" }}
+      className="flex items-center justify-between gap-3 px-3 py-2"
+      style={{ border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", borderRadius: 6 }}
     >
-      <label className="text-sm" style={{ color: "var(--th-text-secondary)" }}>
+      <span className="text-xs font-mono" style={{ color: "var(--th-text-secondary)" }} title={title}>
         {label}
-      </label>
+      </span>
       <button
         type="button"
         aria-pressed={checked}
         aria-label={label}
         onClick={onToggle}
-        className="relative h-6 w-11 transition-colors"
-      style={{ borderRadius: "999px", background: checked ? "var(--th-accent)" : "var(--th-bg-surface-hover)" }}
+        className="flex-shrink-0 font-mono text-[11px] transition-colors"
+        style={{
+          borderRadius: 6,
+          border: `1px solid ${checked ? "var(--th-accent)" : "var(--th-border)"}`,
+          background: checked ? "rgba(245,158,11,0.12)" : "var(--th-bg-surface)",
+          color: checked ? "var(--th-accent)" : "var(--th-text-muted)",
+          padding: "2px 8px",
+          minWidth: "3rem",
+          textAlign: "center",
+          cursor: "pointer",
+        }}
         title={title}
       >
-        <div
-          className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-all ${
-            checked ? "left-[22px]" : "left-0.5"
-          }`}
-        />
+        {checked ? "ON" : "OFF"}
       </button>
     </div>
   );
 }
 
+const fieldLabel = (text: string): React.ReactNode => (
+  <div style={{ fontFamily: "var(--th-font-mono)", fontSize: "9px", color: "var(--th-text-muted)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "6px" }}>
+    // {text}
+  </div>
+);
+
+const inputStyle: React.CSSProperties = {
+  fontFamily: "var(--th-font-mono)",
+  borderRadius: 6,
+  border: "1px solid var(--th-border)",
+  background: "var(--th-bg-elevated)",
+  color: "var(--th-text-primary)",
+  fontSize: "12px",
+  padding: "5px 8px",
+  width: "100%",
+  outline: "none",
+  boxSizing: "border-box",
+};
+
 export default function GeneralSettingsTab({ t, form, setForm, saved, onSave }: GeneralSettingsTabProps) {
   return (
     <>
-      <section
-        className="p-5 sm:p-6 space-y-5"
-        style={{ borderRadius: 0, background: "var(--th-bg-surface)", borderColor: "var(--th-border)" }}
-      >
-        <h3 className="text-sm font-semibold" style={{ color: "var(--th-text-heading)" }}>
-          {t({ ko: "회사 정보", en: "Company", ja: "会社情報", zh: "公司信息" })}
-        </h3>
-
-        <div>
-          <label className="block text-xs mb-1" style={{ color: "var(--th-text-secondary)" }}>
-            {t({ ko: "회사명", en: "Company Name", ja: "会社名", zh: "公司名称" })}
-          </label>
-          <input
-            type="text"
-            value={form.companyName}
-            onChange={(e) => setForm({ ...form, companyName: e.target.value })}
-            className="w-full px-3 py-2 text-sm focus:outline-none transition-colors"
-            style={{
-              borderRadius: 0,
-              border: "1px solid var(--th-border)",
-              background: "var(--th-input-bg)",
-              borderColor: "var(--th-input-border)",
-              color: "var(--th-text-primary)",
-            }}
-          />
+      <div style={{ border: "1px solid var(--th-border)", background: "var(--th-bg-surface)", borderRadius: 8, overflow: "hidden" }}>
+        {/* section header */}
+        <div style={{ padding: "8px 14px", borderBottom: "1px solid var(--th-border)", borderLeft: "3px solid var(--th-accent, #f59e0b)" }}>
+          <span style={{ fontFamily: "var(--th-font-mono)", fontSize: "10px", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--th-text-heading)" }}>
+            // {t({ ko: "company info", en: "company info", ja: "company info", zh: "company info" })}
+          </span>
         </div>
 
-        <div>
-          <label className="block text-xs mb-1" style={{ color: "var(--th-text-secondary)" }}>
-            {t({ ko: "CEO 이름", en: "CEO Name", ja: "CEO 名", zh: "CEO 名称" })}
-          </label>
-          <input
-            type="text"
-            value={form.ceoName}
-            onChange={(e) => setForm({ ...form, ceoName: e.target.value })}
-            className="w-full px-3 py-2 text-sm focus:outline-none transition-colors"
-            style={{
-              borderRadius: 0,
-              border: "1px solid var(--th-border)",
-              background: "var(--th-input-bg)",
-              borderColor: "var(--th-input-border)",
-              color: "var(--th-text-primary)",
-            }}
-          />
+        <div className="space-y-4 p-4">
+          <div>
+            {fieldLabel(t({ ko: "company name", en: "company name", ja: "company name", zh: "company name" }))}
+            <input
+              type="text"
+              value={form.companyName}
+              onChange={(e) => setForm({ ...form, companyName: e.target.value })}
+              style={inputStyle}
+            />
+          </div>
+
+          <div>
+            {fieldLabel(t({ ko: "ceo name", en: "ceo name", ja: "ceo name", zh: "ceo name" }))}
+            <input
+              type="text"
+              value={form.ceoName}
+              onChange={(e) => setForm({ ...form, ceoName: e.target.value })}
+              style={inputStyle}
+            />
+          </div>
+
+          <div>
+            {fieldLabel(t({ ko: "default cli provider", en: "default cli provider", ja: "default cli provider", zh: "default cli provider" }))}
+            <select
+              value={form.defaultProvider}
+              onChange={(e) => setForm({ ...form, defaultProvider: e.target.value as CliProvider })}
+              style={inputStyle}
+            >
+              <option value="claude">Claude Code</option>
+              <option value="codex">Codex CLI</option>
+              <option value="gemini">Gemini CLI</option>
+              <option value="opencode">OpenCode</option>
+              <option value="cursor">Cursor</option>
+            </select>
+          </div>
+
+          <div>
+            {fieldLabel(t({ ko: "language", en: "language", ja: "language", zh: "language" }))}
+            <select
+              value={form.language}
+              onChange={(e) => setForm({ ...form, language: e.target.value as LocalSettings["language"] })}
+              style={inputStyle}
+            >
+              <option value="ko">{t({ ko: "한국어", en: "Korean", ja: "韓国語", zh: "韩语" })}</option>
+              <option value="en">{t({ ko: "영어", en: "English", ja: "英語", zh: "英语" })}</option>
+              <option value="ja">{t({ ko: "일본어", en: "Japanese", ja: "日本語", zh: "日语" })}</option>
+              <option value="zh">{t({ ko: "중국어", en: "Chinese", ja: "中国語", zh: "中文" })}</option>
+            </select>
+          </div>
+
+          <div>
+            {fieldLabel(t({ ko: "동작 설정", en: "TOGGLES", ja: "動作設定", zh: "功能开关" }))}
+            <div className="grid grid-cols-1 gap-1.5 md:grid-cols-2">
+              <ToggleSettingCard
+                label={t({ ko: "자동 배정", en: "AUTO ASSIGN", ja: "自動割当", zh: "自动分配" })}
+                checked={form.autoAssign}
+                onToggle={() => setForm({ ...form, autoAssign: !form.autoAssign })}
+                title={t({
+                  ko: "새 태스크를 에이전트에게 자동으로 배정합니다.",
+                  en: "Automatically assign new tasks to agents.",
+                  ja: "新しいタスクをエージェントに自動的に割り当てます。",
+                  zh: "自动将新任务分配给代理。",
+                })}
+              />
+              <ToggleSettingCard
+                label={t({ ko: "자율 진행", en: "AUTONOMOUS", ja: "自律実行", zh: "自主推进" })}
+                checked={form.yoloMode === true}
+                onToggle={() => setForm({ ...form, yoloMode: !(form.yoloMode === true) })}
+                title={t({
+                  ko: "켜면 에이전트가 인간 확인 없이 의사결정을 자동으로 진행합니다.",
+                  en: "When enabled, agents proceed through decision steps automatically without human confirmation.",
+                  ja: "有効にすると、エージェントが人の確認なしに意思決定を自動的に進めます。",
+                  zh: "启用后，代理无需人工确认即可自动推进决策步骤。",
+                })}
+              />
+              <ToggleSettingCard
+                label={t({ ko: "자동 업데이트", en: "AUTO UPDATE", ja: "自動更新", zh: "自动更新" })}
+                checked={form.autoUpdateEnabled}
+                onToggle={() => setForm({ ...form, autoUpdateEnabled: !form.autoUpdateEnabled })}
+                title={t({
+                  ko: "서버 전체 자동 업데이트 루프를 켜거나 끕니다.",
+                  en: "Enable or disable auto-update loop for the whole server.",
+                  ja: "サーバー全体の自動更新ループを有効/無効にします。",
+                  zh: "启用或禁用整个服务器的自动更新循环。",
+                })}
+              />
+              <ToggleSettingCard
+                label={t({ ko: "OAuth 자동 전환", en: "OAUTH AUTO SWAP", ja: "OAuth 自動切替", zh: "OAuth 自动切换" })}
+                checked={form.oauthAutoSwap !== false}
+                onToggle={() => setForm({ ...form, oauthAutoSwap: !(form.oauthAutoSwap !== false) })}
+                title={t({
+                  ko: "실패/한도 시 다음 OAuth 계정으로 자동 전환",
+                  en: "Auto-switch to next OAuth account on failures/limits",
+                  ja: "失敗/上限時に次の OAuth アカウントへ自動切替",
+                  zh: "失败/额度限制时自动切换到下一个 OAuth 账号",
+                })}
+              />
+            </div>
+          </div>
         </div>
+      </div>
 
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-          <ToggleSettingCard
-            label={t({ ko: "자동 배정", en: "Auto Assign", ja: "自動割り当て", zh: "自动分配" })}
-            checked={form.autoAssign}
-            onToggle={() => setForm({ ...form, autoAssign: !form.autoAssign })}
-          />
-
-          <ToggleSettingCard
-            label={t({ ko: "YOLO 모드", en: "YOLO Mode", ja: "YOLO モード", zh: "YOLO 模式" })}
-            checked={form.yoloMode === true}
-            onToggle={() => setForm({ ...form, yoloMode: !(form.yoloMode === true) })}
-            title={t({
-              ko: "켜면 기획팀장이 의사결정 단계를 자동으로 분석하고 다음 단계를 진행합니다.",
-              en: "When enabled, the planning lead auto-analyzes decision steps and proceeds automatically.",
-              ja: "有効にすると、企画リードが意思決定段階を自動分析して次段階へ進めます。",
-              zh: "启用后，规划负责人会自动分析决策步骤并推进到下一阶段。",
-            })}
-          />
-
-          <ToggleSettingCard
-            label={t({
-              ko: "자동 업데이트 (전역)",
-              en: "Auto Update (Global)",
-              ja: "Auto Update（全体）",
-              zh: "自动更新（全局）",
-            })}
-            checked={form.autoUpdateEnabled}
-            onToggle={() => setForm({ ...form, autoUpdateEnabled: !form.autoUpdateEnabled })}
-            title={t({
-              ko: "서버 전체 자동 업데이트 루프를 켜거나 끕니다.",
-              en: "Enable or disable auto-update loop for the whole server.",
-              ja: "サーバー全体の自動更新ループを有効/無効にします。",
-              zh: "启用或禁用整个服务器的自动更新循环。",
-            })}
-          />
-
-          <ToggleSettingCard
-            label={t({ ko: "OAuth 자동 스왑", en: "OAuth Auto Swap", ja: "OAuth 自動スワップ", zh: "OAuth 自动切换" })}
-            checked={form.oauthAutoSwap !== false}
-            onToggle={() => setForm({ ...form, oauthAutoSwap: !(form.oauthAutoSwap !== false) })}
-            title={t({
-              ko: "실패/한도 시 다음 OAuth 계정으로 자동 전환",
-              en: "Auto-switch to next OAuth account on failures/limits",
-              ja: "失敗/上限時に次の OAuth アカウントへ自動切替",
-              zh: "失败/额度限制时自动切换到下一个 OAuth 账号",
-            })}
-          />
-        </div>
-
-        <div>
-          <label className="block text-xs mb-1" style={{ color: "var(--th-text-secondary)" }}>
-            {t({
-              ko: "기본 CLI 프로바이더",
-              en: "Default CLI Provider",
-              ja: "デフォルト CLI プロバイダ",
-              zh: "默认 CLI 提供方",
-            })}
-          </label>
-          <select
-            value={form.defaultProvider}
-            onChange={(e) => setForm({ ...form, defaultProvider: e.target.value as CliProvider })}
-            className="w-full px-3 py-2 text-sm focus:outline-none transition-colors"
-            style={{
-              borderRadius: 0,
-              border: "1px solid var(--th-border)",
-              background: "var(--th-input-bg)",
-              borderColor: "var(--th-input-border)",
-              color: "var(--th-text-primary)",
-            }}
-          >
-            <option value="claude">Claude Code</option>
-            <option value="codex">Codex CLI</option>
-            <option value="gemini">Gemini CLI</option>
-            <option value="opencode">OpenCode</option>
-            <option value="cursor">Cursor</option>
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-xs mb-1" style={{ color: "var(--th-text-secondary)" }}>
-            {t({ ko: "언어", en: "Language", ja: "言語", zh: "语言" })}
-          </label>
-          <select
-            value={form.language}
-            onChange={(e) => setForm({ ...form, language: e.target.value as LocalSettings["language"] })}
-            className="w-full px-3 py-2 text-sm focus:outline-none transition-colors"
-            style={{
-              borderRadius: 0,
-              border: "1px solid var(--th-border)",
-              background: "var(--th-input-bg)",
-              borderColor: "var(--th-input-border)",
-              color: "var(--th-text-primary)",
-            }}
-          >
-            <option value="ko">{t({ ko: "한국어", en: "Korean", ja: "韓国語", zh: "韩语" })}</option>
-            <option value="en">{t({ ko: "영어", en: "English", ja: "英語", zh: "英语" })}</option>
-            <option value="ja">{t({ ko: "일본어", en: "Japanese", ja: "日本語", zh: "日语" })}</option>
-            <option value="zh">{t({ ko: "중국어", en: "Chinese", ja: "中国語", zh: "中文" })}</option>
-          </select>
-        </div>
-      </section>
-
-      <div className="flex justify-end gap-3">
+      <div className="flex items-center justify-end gap-3 pt-1">
         {saved && (
-          <span className="text-sm self-center" style={{ color: "var(--th-text-muted)" }}>
-            {t({ ko: "저장 완료", en: "Saved", ja: "保存完了", zh: "已保存" })}
+          <span style={{ fontFamily: "var(--th-font-mono)", fontSize: "10px", color: "var(--th-terminal-success, #22c55e)" }}>
+            ✓ {t({ ko: "저장 완료", en: "saved", ja: "保存完了", zh: "已保存" })}
           </span>
         )}
         <button
           type="button"
           onClick={onSave}
-          className="px-5 py-2.5 text-sm font-medium font-mono uppercase tracking-wider transition-colors"
-          style={{ borderRadius: 0, background: "var(--th-accent)", color: "#000" }}
+          style={{
+            fontFamily: "var(--th-font-mono)",
+            fontSize: "11px",
+            fontWeight: 700,
+            padding: "5px 18px",
+            borderRadius: 0,
+            background: "var(--th-accent)",
+            color: "#000",
+            letterSpacing: "0.08em",
+            cursor: "pointer",
+            border: "none",
+          }}
         >
-          {t({ ko: "저장", en: "Save", ja: "保存", zh: "保存" })}
+          {t({ ko: "저장 ↵", en: "SAVE ↵", ja: "保存 ↵", zh: "保存 ↵" })}
         </button>
       </div>
     </>

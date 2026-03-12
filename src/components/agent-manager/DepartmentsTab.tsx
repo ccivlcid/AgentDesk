@@ -50,7 +50,7 @@ export default function DepartmentsTab({
         <div
           className="flex items-center gap-3 px-4 py-3"
           style={{
-            borderRadius: 0,
+            borderRadius: 8,
             background: "var(--th-bg-surface)",
             border: "1px solid var(--th-border)",
           }}
@@ -63,7 +63,7 @@ export default function DepartmentsTab({
             onClick={onSaveOrder}
             disabled={reorderSaving}
             className="ml-auto px-4 py-1.5 text-sm font-medium font-mono transition-opacity hover:opacity-90 disabled:opacity-50"
-            style={{ borderRadius: 0, background: "var(--th-accent)", color: "#000" }}
+            style={{ borderRadius: 6, background: "var(--th-accent)", color: "#000" }}
           >
             {reorderSaving ? tr("저장 중...", "Saving...") : tr("순번 저장", "Save Order")}
           </button>
@@ -71,7 +71,7 @@ export default function DepartmentsTab({
             type="button"
             onClick={onCancelOrder}
             className="px-3 py-1.5 text-sm font-medium font-mono transition-opacity hover:opacity-90"
-            style={{ borderRadius: 0, color: "var(--th-text-muted)", background: "var(--th-bg-surface-hover)" }}
+            style={{ borderRadius: 6, color: "var(--th-text-muted)", background: "var(--th-bg-surface-hover)" }}
           >
             {tr("취소", "Cancel")}
           </button>

@@ -34,7 +34,7 @@ import { useProjectSaveHandler } from "./project-manager/useProjectSaveHandler";
 
 const PAGE_SIZE = 5;
 
-export default function ProjectManagerModal({ agents, departments = [], onClose, onCreateProject }: ProjectManagerModalProps) {
+export default function ProjectManagerModal({ agents, departments = [], onClose, onCreateProject, initialGithubImportMode }: ProjectManagerModalProps) {
   const { t, language } = useI18n();
   const { confirm } = useConfirm();
 
@@ -49,7 +49,7 @@ export default function ProjectManagerModal({ agents, departments = [], onClose,
   const [loadingDetail, setLoadingDetail] = useState(false);
 
   const [isCreating, setIsCreating] = useState(false);
-  const [githubImportMode, setGithubImportMode] = useState(false);
+  const [githubImportMode, setGithubImportMode] = useState(initialGithubImportMode ?? false);
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [projectPath, setProjectPath] = useState("");
@@ -318,10 +318,19 @@ export default function ProjectManagerModal({ agents, departments = [], onClose,
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+      className="fixed inset-0 z-50 flex items-center justify-center"
+      style={{ background: "var(--th-modal-overlay)" }}
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="flex h-[86vh] w-[min(1180px,95vw)] flex-col overflow-hidden md:flex-row" style={{ border: "1px solid var(--th-border)", borderRadius: 0, background: "var(--th-bg-surface)" }}>
+      <div
+        className="flex h-[86vh] w-[min(1180px,95vw)] flex-col overflow-hidden md:flex-row"
+        style={{
+          border: "1px solid var(--th-border)",
+          borderRadius: 10,
+          background: "var(--th-bg-elevated)",
+          boxShadow: "0 20px 50px rgba(0,0,0,0.4)",
+        }}
+      >
         <div
           className={`w-full md:w-[330px] ${selectedProjectId || isCreating || githubImportMode ? "hidden md:block" : "block"}`}
         >

@@ -5,6 +5,7 @@ import type { UiLanguage } from "../i18n";
 import { pickLang, localeName } from "../i18n";
 import { getActiveAgents, getCliProcesses, killCliProcess, stopTask } from "../api";
 import AgentAvatar from "./AgentAvatar";
+import HeaderModalChrome from "./ui/HeaderModalChrome";
 
 interface AgentStatusPanelProps {
   agents: Agent[];
@@ -119,33 +120,32 @@ export default function AgentStatusPanel({ agents, uiLanguage, onClose }: AgentS
       : cliProcesses.filter((proc) => proc.provider !== "node" && proc.provider !== "python");
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center"
+      style={{ background: "var(--th-modal-overlay)" }}
+      onClick={onClose}
+    >
       <div
-        className={`relative mx-4 w-full shadow-2xl flex flex-col ${inspectorMode ? "max-w-3xl" : "max-w-xl"}`}
-        style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-primary)", maxHeight: "85vh" }}
+        className={`relative mx-4 w-full flex flex-col overflow-hidden ${inspectorMode ? "max-w-3xl" : "max-w-xl"}`}
+        style={{
+          borderRadius: 10,
+          border: "1px solid var(--th-border)",
+          background: "var(--th-bg-elevated)",
+          maxHeight: "85vh",
+          fontFamily: "var(--th-font-mono)",
+          boxShadow: "var(--th-glass-shadow)",
+        }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* ── 타이틀 바 (터미널 window chrome) ── */}
-        <div
-          className="flex items-center justify-between px-4 py-2 flex-shrink-0"
-          style={{ background: "var(--th-bg-elevated)", borderBottom: "1px solid var(--th-border)" }}
-        >
-          <div className="flex items-center gap-2">
-            {/* traffic lights */}
-            <span className="w-2.5 h-2.5 rounded-full bg-red-500 opacity-80" />
-            <span className="w-2.5 h-2.5 rounded-full bg-yellow-500 opacity-80" />
-            <span className="w-2.5 h-2.5 rounded-full bg-green-500 opacity-80" />
-            <span style={{ ...mono, fontSize: "11px", color: "var(--th-text-muted)", marginLeft: 8 }}>
-              agent-monitor — bash
-            </span>
-          </div>
-          <button onClick={onClose} style={{ ...mono, fontSize: "14px", color: "var(--th-text-muted)", background: "none", border: "none", cursor: "pointer", lineHeight: 1 }}>✕</button>
-        </div>
+        <HeaderModalChrome
+          title={t({ ko: "에이전트 상태", en: "Agent Status", ja: "エージェント状態", zh: "代理状态" })}
+          onClose={onClose}
+        />
 
-        {/* ── 상태 요약 헤더 ── */}
+        {/* ── 상태 요약 헤더 (ps aux --agents): 다크=터미널 배경, 라이트=패널 배경 ── */}
         <div
-          className="px-4 py-3 flex-shrink-0"
-          style={{ borderBottom: "1px solid var(--th-border)", background: "var(--th-terminal-bg, var(--th-bg-surface))" }}
+          className="agent-status-bar px-4 py-3 flex-shrink-0"
+          style={{ borderBottom: "1px solid var(--th-border)" }}
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -156,8 +156,8 @@ export default function AgentStatusPanel({ agents, uiLanguage, onClose }: AgentS
                 style={{
                   ...mono, fontSize: "10px", fontWeight: 700,
                   padding: "1px 6px",
-                  border: "1px solid rgba(245,158,11,0.35)",
-                  background: "rgba(245,158,11,0.1)",
+                  border: "1px solid var(--th-border-accent)",
+                  background: "var(--th-amber-glow)",
                   color: "var(--th-accent)",
                 }}
               >
@@ -165,7 +165,7 @@ export default function AgentStatusPanel({ agents, uiLanguage, onClose }: AgentS
               </span>
               {!loading && (
                 <span style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)" }}>
-                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" style={{ marginRight: 4, verticalAlign: "middle" }} />
+                  <span className="inline-block w-1.5 h-1.5 rounded-full animate-pulse" style={{ marginRight: 4, verticalAlign: "middle", background: "var(--th-attr-elite)" }} />
                   live · 5s
                 </span>
               )}
@@ -182,8 +182,8 @@ export default function AgentStatusPanel({ agents, uiLanguage, onClose }: AgentS
                     border: "1px solid",
                     cursor: "pointer",
                     letterSpacing: "0.04em",
-                    background: inspectorMode === mode ? "rgba(245,158,11,0.12)" : "transparent",
-                    borderColor: inspectorMode === mode ? "rgba(245,158,11,0.4)" : "var(--th-border)",
+                    background: inspectorMode === mode ? "var(--th-amber-glow)" : "transparent",
+                    borderColor: inspectorMode === mode ? "var(--th-border-accent)" : "var(--th-border)",
                     color: inspectorMode === mode ? "var(--th-accent)" : "var(--th-text-muted)",
                   }}
                 >
@@ -244,7 +244,7 @@ export default function AgentStatusPanel({ agents, uiLanguage, onClose }: AgentS
                   style={{
                     gridTemplateColumns: "32px 1fr 80px 60px 60px 60px",
                     borderBottom: "1px solid var(--th-border)",
-                    background: idx % 2 === 0 ? "transparent" : "rgba(255,255,255,0.015)",
+                    background: idx % 2 === 0 ? "transparent" : "var(--th-glass-bg)",
                   }}
                 >
                   {/* 아바타 */}
@@ -278,15 +278,15 @@ export default function AgentStatusPanel({ agents, uiLanguage, onClose }: AgentS
                   </span>
 
                   {/* Idle */}
-                  <span style={{ ...mono, fontSize: "10px", color: isIdle ? "#fbbf24" : "var(--th-text-muted)" }}>
+                  <span style={{ ...mono, fontSize: "10px", color: isIdle ? "var(--th-accent)" : "var(--th-text-muted)" }}>
                     {ag.has_active_process ? (
                       <span className="flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse inline-block" />
+                        <span className="w-1.5 h-1.5 rounded-full animate-pulse inline-block" style={{ background: "var(--th-attr-elite)" }} />
                         {idleText}
                       </span>
                     ) : (
                       <span className="flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500 inline-block" />
+                        <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: "var(--th-accent)" }} />
                         {idleText}
                       </span>
                     )}
@@ -301,12 +301,11 @@ export default function AgentStatusPanel({ agents, uiLanguage, onClose }: AgentS
                         ...mono, fontSize: "9px", fontWeight: 700,
                         padding: "2px 6px",
                         cursor: isKilling ? "not-allowed" : "pointer",
-                        border: "1px solid",
+                        border: "1px solid var(--th-danger-border)",
                         letterSpacing: "0.04em",
                         opacity: isKilling ? 0.5 : 1,
-                        background: "rgba(244,63,94,0.1)",
-                        borderColor: "rgba(244,63,94,0.35)",
-                        color: "rgb(253,164,175)",
+                        background: "var(--th-danger-bg)",
+                        color: "var(--th-danger-text)",
                       }}
                     >
                       {isKilling ? "…" : "KILL"}
@@ -364,9 +363,9 @@ export default function AgentStatusPanel({ agents, uiLanguage, onClose }: AgentS
                           <span
                             style={{
                               ...mono, fontSize: "9px", padding: "0 4px",
-                              border: proc.is_idle ? "1px solid rgba(245,158,11,0.35)" : "1px solid rgba(52,211,153,0.35)",
-                              color: proc.is_idle ? "#fbbf24" : "#6ee7b7",
-                              background: proc.is_idle ? "rgba(245,158,11,0.08)" : "rgba(52,211,153,0.08)",
+                              border: proc.is_idle ? "1px solid var(--th-border-accent)" : "1px solid var(--th-border)",
+                              color: proc.is_idle ? "var(--th-accent)" : "var(--th-attr-elite)",
+                              background: proc.is_idle ? "var(--th-amber-glow)" : "var(--th-green-glow)",
                             }}
                           >
                             {proc.is_idle ? "IDLE" : "ACTIVE"}
@@ -389,9 +388,9 @@ export default function AgentStatusPanel({ agents, uiLanguage, onClose }: AgentS
                           ...mono, fontSize: "9px", fontWeight: 700,
                           padding: "2px 7px", flexShrink: 0,
                           cursor: isKillingPid ? "not-allowed" : "pointer",
-                          border: "1px solid rgba(244,63,94,0.4)",
-                          background: "rgba(244,63,94,0.12)",
-                          color: "rgb(253,164,175)",
+                          border: "1px solid var(--th-danger-border)",
+                          background: "var(--th-danger-bg)",
+                          color: "var(--th-danger-text)",
                           opacity: isKillingPid ? 0.5 : 1,
                         }}
                       >

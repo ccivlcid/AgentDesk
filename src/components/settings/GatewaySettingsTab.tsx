@@ -3,7 +3,6 @@ import * as api from "../../api";
 import AgentAvatar from "../AgentAvatar";
 import {
   MESSENGER_CHANNELS,
-  WORKFLOW_PACK_KEYS,
   type Agent,
   type MessengerSessionConfig,
   type WorkflowPackKey,
@@ -50,9 +49,8 @@ export default function GatewaySettingsTab({
     ReturnType<typeof api.getDiscordReceiverStatus>
   > | null>(null);
   const [agentsLoading, setAgentsLoading] = useState(false);
-  const [agents, setAgents] = useState<Agent[]>([]);
-  const [workflowPacksLoading, setWorkflowPacksLoading] = useState(false);
-  const [workflowPacks, setWorkflowPacks] = useState<Awaited<ReturnType<typeof api.getWorkflowPacks>>["packs"]>([]);
+  const [fetchedAgents, setFetchedAgents] = useState<Agent[]>([]);
+  const agents = managerAgents ?? fetchedAgents;
   const [guideOpen, setGuideOpen] = useState(false);
   const [editor, setEditor] = useState(() => createEditorState(channelsConfig));
   const [editorError, setEditorError] = useState<string | null>(null);
@@ -100,26 +98,6 @@ export default function GatewaySettingsTab({
     return map;
   }, [agents]);
 
-  const workflowPackOptions = useMemo(() => {
-    const map = new Map<WorkflowPackKey, { key: WorkflowPackKey; name: string; enabled: boolean }>();
-    for (const pack of workflowPacks) {
-      if (!isWorkflowPackKey(pack.key)) continue;
-      map.set(pack.key, {
-        key: pack.key,
-        name: defaultWorkflowPackLabel(t, pack.key),
-        enabled: pack.enabled !== false,
-      });
-    }
-    return Array.from(map.values());
-  }, [workflowPacks, form.language, t]);
-
-  const workflowPackNameByKey = useMemo(() => {
-    const map = new Map<WorkflowPackKey, string>();
-    for (const option of workflowPackOptions) {
-      map.set(option.key, option.name);
-    }
-    return map;
-  }, [workflowPackOptions]);
 
   const resolveDiscordLookupErrorMessage = useCallback(
     (error: unknown): string => {
@@ -420,32 +398,20 @@ export default function GatewaySettingsTab({
   };
 
   const loadAgents = async () => {
+    if (managerAgents) return; // project agents provided externally
     setAgentsLoading(true);
     try {
       const rows = await api.getAgents({ includeSeed: true });
-      setAgents(rows);
+      setFetchedAgents(rows);
     } catch {
-      setAgents([]);
+      setFetchedAgents([]);
     } finally {
       setAgentsLoading(false);
     }
   };
 
-  const loadWorkflowPacks = async () => {
-    setWorkflowPacksLoading(true);
-    try {
-      const result = await api.getWorkflowPacks();
-      setWorkflowPacks(result.packs ?? []);
-    } catch {
-      setWorkflowPacks([]);
-    } finally {
-      setWorkflowPacksLoading(false);
-    }
-  };
-
   useEffect(() => {
     void loadAgents();
-    void loadWorkflowPacks();
   }, []);
 
   useEffect(() => {
@@ -512,12 +478,12 @@ export default function GatewaySettingsTab({
   return (
     <section
       className="space-y-4 p-4 sm:p-5"
-      style={{ borderRadius: 0, background: "var(--th-bg-surface)", borderColor: "var(--th-border)" }}
+      style={{ borderRadius: 8, background: "var(--th-bg-surface)", borderColor: "var(--th-border)" }}
     >
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold" style={{ color: "var(--th-text-heading)" }}>
-          {t({ ko: "채널 메시지 설정", en: "Channel messaging", ja: "チャネルメッセージ設定", zh: "频道消息设置" })}
-        </h3>
+        <div style={{ fontFamily: "var(--th-font-mono)", fontSize: "10px", color: "var(--th-accent)", letterSpacing: "0.08em", textTransform: "uppercase", borderLeft: "3px solid var(--th-accent)", paddingLeft: "8px" }}>
+          // channel messaging
+        </div>
         {saved && <span className="text-xs font-mono" style={{ color: saved.ok ? "rgb(167,243,208)" : "rgb(253,164,175)" }}>{saved.msg}</span>}
       </div>
 
@@ -538,7 +504,7 @@ export default function GatewaySettingsTab({
         })}
       </p>
 
-      <div className="p-3 space-y-3" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
+      <div className="p-3 space-y-3" style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
         <div className="flex items-center justify-between">
           <div className="text-sm font-semibold font-mono" style={{ color: "var(--th-text-heading)" }}>
             {t({ ko: "채팅 세션", en: "Chat Sessions", ja: "チャットセッション", zh: "聊天会话" })}
@@ -588,8 +554,7 @@ export default function GatewaySettingsTab({
               const workflowPackKey = isWorkflowPackKey(row.session.workflowPackKey)
                 ? row.session.workflowPackKey
                 : "development";
-              const workflowPackLabel =
-                workflowPackNameByKey.get(workflowPackKey) ?? defaultWorkflowPackLabel(t, workflowPackKey);
+              const workflowPackLabel = defaultWorkflowPackLabel(t, workflowPackKey);
               const tokenReady = row.token.trim().length > 0;
               return (
                 <div key={row.key} className="px-3 py-2" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
@@ -672,7 +637,7 @@ export default function GatewaySettingsTab({
         </div>
       </div>
 
-      <div className="p-3 space-y-3" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
+      <div className="p-3 space-y-3" style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
         <div className="flex items-center justify-between">
           <div className="text-sm font-semibold font-mono" style={{ color: "var(--th-text-heading)" }}>
             {t({ ko: "세션 테스트 전송", en: "Test Send", ja: "送信テスト", zh: "发送测试" })}
@@ -732,9 +697,9 @@ export default function GatewaySettingsTab({
         )}
 
         <div>
-          <label className="block text-xs font-mono mb-1" style={{ color: "var(--th-text-muted)" }}>
-            {t({ ko: "전송 대상 세션", en: "Target Session", ja: "送信先セッション", zh: "目标会话" })}
-          </label>
+          <div style={{ fontFamily: "var(--th-font-mono)", fontSize: "9px", color: "var(--th-text-muted)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "6px" }}>
+            // {t({ ko: "전송 대상 세션", en: "target session", ja: "送信先セッション", zh: "目标会话" })}
+          </div>
           {chatRows.length === 0 ? (
             <div className="text-xs font-mono py-1" style={{ color: "var(--th-text-muted)" }}>
               {t({
@@ -830,7 +795,7 @@ export default function GatewaySettingsTab({
         )}
       </div>
 
-      <div className="mt-5 p-3 space-y-3" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
+      <div className="mt-5 p-3 space-y-3" style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
         <p className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
           {t({
             ko: "Slack·Discord 웹훅은 위 '새 채팅 추가'에서 해당 채널을 선택한 뒤 모달 안에서 설정하세요. 기타 URL은 아래에서 추가할 수 있습니다.",
@@ -851,11 +816,7 @@ export default function GatewaySettingsTab({
           handleSaveEditor={handleSaveEditor}
           channelsConfig={channelsConfig}
           agents={agents}
-          agentsAreCurrentPackOnly={false}
           agentsLoading={agentsLoading}
-          officePackProfiles={form.officePackProfiles}
-          workflowPackOptions={workflowPackOptions}
-          workflowPacksLoading={workflowPacksLoading}
           editorError={editorError}
           discordChannels={discordChannelOptions}
           discordChannelsLoading={discordChannelsLoading}

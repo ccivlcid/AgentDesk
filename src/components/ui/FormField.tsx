@@ -1,25 +1,19 @@
 import type { ReactNode } from "react";
 
+const mono = "var(--th-font-mono)";
+
 interface FormFieldProps {
-  /** Field label text */
   label: string;
-  /** Show required asterisk */
   required?: boolean;
-  /** Optional hint below the label */
   hint?: string;
-  /** Error message (shown below the input) */
   error?: string;
-  /** Sub-label like "(optional)" */
   suffix?: string;
-  /** The input element(s) */
   children: ReactNode;
 }
 
 /**
- * Shared form field wrapper.
- *
- * Provides consistent label, hint, error, and spacing
- * across all form modals.
+ * Shared form field wrapper — Modern Terminal CLI style.
+ * Label: `// field-name` pattern (mono, muted, uppercase).
  */
 export default function FormField({
   label,
@@ -31,28 +25,38 @@ export default function FormField({
 }: FormFieldProps) {
   return (
     <div>
-      <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--th-text-heading)" }}>
-        {label}
+      {/* // field-name label */}
+      <label
+        className="flex items-center gap-1.5 mb-1.5"
+        style={{ fontFamily: mono, fontSize: "10px", fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase" as const, color: "var(--th-text-muted)" }}
+      >
+        <span style={{ opacity: 0.6 }}>//</span>
+        <span>{label}</span>
         {required && (
-          <span style={{ color: "var(--th-danger-text, #ef4444)" }} aria-hidden="true">
-            {" *"}
-          </span>
+          <span style={{ color: "var(--th-accent)", fontWeight: 700 }} aria-hidden="true">*</span>
         )}
         {suffix && (
-          <span className="font-normal ml-1" style={{ color: "var(--th-text-muted)" }}>
+          <span style={{ fontWeight: 400, opacity: 0.6, textTransform: "none" as const }}>
             {suffix}
           </span>
         )}
       </label>
+
       {hint && (
-        <p className="text-[11px] mb-1.5" style={{ color: "var(--th-text-muted)" }}>
+        <p className="mb-1.5 text-[11px]" style={{ fontFamily: mono, color: "var(--th-text-muted)", lineHeight: 1.5 }}>
           {hint}
         </p>
       )}
+
       {children}
+
       {error && (
-        <p className="text-[11px] mt-1" style={{ color: "var(--th-danger-text, #ef4444)" }} role="alert">
-          {error}
+        <p
+          className="mt-1 text-[11px]"
+          style={{ fontFamily: mono, color: "var(--th-danger-text, #f85149)", letterSpacing: "0.02em" }}
+          role="alert"
+        >
+          ✗ {error}
         </p>
       )}
     </div>

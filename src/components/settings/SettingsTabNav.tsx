@@ -1,4 +1,3 @@
-import type { ReactElement } from "react";
 import type { SettingsTab, TFunction } from "./types";
 
 interface SettingsTabNavProps {
@@ -10,66 +9,14 @@ interface SettingsTabNavProps {
 const TAB_ITEMS: Array<{
   key: SettingsTab;
   label: (t: TFunction) => string;
-  Icon: (props: { className?: string }) => ReactElement;
+  sigil: string;
 }> = [
-  {
-    key: "general",
-    label: (t) => t({ ko: "일반", en: "General", ja: "一般", zh: "常规" }),
-    Icon: ({ className }) => (
-      <svg className={className} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="3" />
-        <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
-      </svg>
-    ),
-  },
-  {
-    key: "cli",
-    label: (t) => t({ ko: "CLI", en: "CLI", ja: "CLI", zh: "CLI" }),
-    Icon: ({ className }) => (
-      <svg className={className} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
-      </svg>
-    ),
-  },
-  {
-    key: "oauth",
-    label: (t) => t({ ko: "OAuth", en: "OAuth", ja: "OAuth", zh: "OAuth" }),
-    Icon: ({ className }) => (
-      <svg className={className} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
-        <circle cx="12" cy="12" r="4" />
-      </svg>
-    ),
-  },
-  {
-    key: "api",
-    label: (t) => t({ ko: "API", en: "API", ja: "API", zh: "API" }),
-    Icon: ({ className }) => (
-      <svg className={className} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M18 20V10M12 20V4M6 20v-6" />
-      </svg>
-    ),
-  },
-  {
-    key: "gateway",
-    label: (t) => t({ ko: "채널", en: "Channel", ja: "チャネル", zh: "频道" }),
-    Icon: ({ className }) => (
-      <svg className={className} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-      </svg>
-    ),
-  },
-  {
-    key: "data",
-    label: (t) => t({ ko: "데이터", en: "Data", ja: "データ", zh: "数据" }),
-    Icon: ({ className }) => (
-      <svg className={className} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <ellipse cx="12" cy="5" rx="9" ry="3" />
-        <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
-        <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
-      </svg>
-    ),
-  },
+  { key: "general", label: (t) => t({ ko: "일반",   en: "GENERAL", ja: "一般",     zh: "通用"   }), sigil: "⚙" },
+  { key: "cli",     label: (t) => t({ ko: "CLI",    en: "CLI",     ja: "CLI",     zh: "CLI"    }), sigil: "$" },
+  { key: "oauth",   label: (t) => t({ ko: "OAUTH",  en: "OAUTH",   ja: "OAUTH",   zh: "OAUTH"  }), sigil: "⇄" },
+  { key: "api",     label: (t) => t({ ko: "API",    en: "API",     ja: "API",     zh: "API"    }), sigil: "⌁" },
+  { key: "gateway", label: (t) => t({ ko: "채널",   en: "CHANNEL", ja: "チャンネル", zh: "频道" }), sigil: "⌘" },
+  { key: "data",    label: (t) => t({ ko: "데이터", en: "DATA",    ja: "データ",   zh: "数据"   }), sigil: "▦" },
 ];
 
 const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };
@@ -77,12 +24,12 @@ const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };
 export default function SettingsTabNav({ tab, setTab, t }: SettingsTabNavProps) {
   return (
     <div
-      className="flex flex-wrap gap-0"
+      className="flex flex-wrap gap-1"
       style={{
         ...mono,
         borderBottom: "1px solid var(--th-border)",
         background: "var(--th-bg-primary)",
-        paddingLeft: 2,
+        padding: "6px 12px 0",
       }}
     >
       {TAB_ITEMS.map((item) => {
@@ -96,22 +43,23 @@ export default function SettingsTabNav({ tab, setTab, t }: SettingsTabNavProps) 
               ...mono,
               display: "flex",
               alignItems: "center",
-              gap: 6,
+              gap: 5,
               padding: "8px 14px",
-              fontSize: "11px",
+              fontSize: "10px",
               fontWeight: isActive ? 700 : 400,
-              letterSpacing: "0.04em",
+              letterSpacing: "0.06em",
               background: isActive ? "var(--th-bg-surface)" : "transparent",
               color: isActive ? "var(--th-accent)" : "var(--th-text-muted)",
               border: "none",
               borderBottom: isActive ? "2px solid var(--th-accent)" : "2px solid transparent",
               cursor: "pointer",
               transition: "color 0.1s, background 0.1s",
+              borderRadius: "6px 6px 0 0",
             }}
             onMouseEnter={(e) => {
               if (!isActive) {
                 e.currentTarget.style.color = "var(--th-text-secondary)";
-                e.currentTarget.style.background = "var(--th-bg-surface-hover)";
+                e.currentTarget.style.background = "var(--th-hover-bg, rgba(255,255,255,0.04))";
               }
             }}
             onMouseLeave={(e) => {
@@ -121,9 +69,7 @@ export default function SettingsTabNav({ tab, setTab, t }: SettingsTabNavProps) 
               }
             }}
           >
-            <span style={{ display: "inline-flex", width: 14, height: 14, opacity: isActive ? 1 : 0.6 }}>
-              <item.Icon />
-            </span>
+            <span style={{ opacity: isActive ? 1 : 0.5, fontSize: "11px" }}>{item.sigil}</span>
             <span>{item.label(t)}</span>
           </button>
         );

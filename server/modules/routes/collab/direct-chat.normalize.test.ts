@@ -13,20 +13,20 @@ import {
 
 describe("normalizeAgentReply", () => {
   it("중복된 전체 응답 블록을 1회로 축약한다", () => {
-    const input = "안녕하세요! 디자인팀 도로롱입니다, 대표님 ㅎㅎ 안녕하세요! 디자인팀 도로롱입니다, 대표님 ㅎㅎ";
-    expect(normalizeAgentReply(input)).toBe("안녕하세요! 디자인팀 도로롱입니다, 대표님 ㅎㅎ");
+    const input = "안녕하세요! 디자인팀 도로롱입니다, 클라이언트님 ㅎㅎ 안녕하세요! 디자인팀 도로롱입니다, 클라이언트님 ㅎㅎ";
+    expect(normalizeAgentReply(input)).toBe("안녕하세요! 디자인팀 도로롱입니다, 클라이언트님 ㅎㅎ");
   });
 
   it("연속 중복된 문장 블록(A+B+C, A+B+C)을 1회로 축약한다", () => {
     const input =
-      "죄송합니다 대표님, 지금 시간 바로 확인해볼게요!앗 대표님, 지금 새벽 1시 30분이에요… 이 시간에 아직 안 주무시고 일하고 계신 건가요? 대표님도 좀 쉬셔야죠! 앗 대표님, 지금 새벽 1시 30분이에요… 이 시간에 아직 안 주무시고 일하고 계신 건가요? 대표님도 좀 쉬셔야죠!";
+      "죄송합니다 클라이언트님, 지금 시간 바로 확인해볼게요!앗 클라이언트님, 지금 새벽 1시 30분이에요… 이 시간에 아직 안 주무시고 일하고 계신 건가요? 클라이언트님도 좀 쉬셔야죠! 앗 클라이언트님, 지금 새벽 1시 30분이에요… 이 시간에 아직 안 주무시고 일하고 계신 건가요? 클라이언트님도 좀 쉬셔야죠!";
     expect(normalizeAgentReply(input)).toBe(
-      "죄송합니다 대표님, 지금 시간 바로 확인해볼게요! 앗 대표님, 지금 새벽 1시 30분이에요… 이 시간에 아직 안 주무시고 일하고 계신 건가요? 대표님도 좀 쉬셔야죠!",
+      "죄송합니다 클라이언트님, 지금 시간 바로 확인해볼게요! 앗 클라이언트님, 지금 새벽 1시 30분이에요… 이 시간에 아직 안 주무시고 일하고 계신 건가요? 클라이언트님도 좀 쉬셔야죠!",
     );
   });
 
   it("중복이 없는 응답은 유지한다", () => {
-    const input = "네 대표님, 점검 후 10분 내에 결과 공유드리겠습니다.";
+    const input = "네 클라이언트님, 점검 후 10분 내에 결과 공유드리겠습니다.";
     expect(normalizeAgentReply(input)).toBe(input);
   });
 });
@@ -84,7 +84,7 @@ describe("task intent upgrade", () => {
     const contextual = resolveContextualTaskMessage("고고", [
       { content: "고고", messageType: "chat", createdAt: 3000 },
       { content: "현재 소스코드 디자인 평가를 받고싶어 업무 진행 가능해?", messageType: "chat", createdAt: 2000 },
-      { content: "네 대표님, 가능합니다!", messageType: "chat", createdAt: 1000 },
+      { content: "네 클라이언트님, 가능합니다!", messageType: "chat", createdAt: 1000 },
     ]);
     expect(contextual).toBe("현재 소스코드 디자인 평가를 받고싶어 업무 진행 가능해?");
   });

@@ -566,7 +566,7 @@ export interface CompanySettings {
 
 // Agent Rules
 export type AgentRuleCategory = "coding" | "communication" | "quality" | "execution" | "security" | "workflow" | "general";
-export type AgentRuleScopeType = "global" | "department" | "agent" | "workflow_pack";
+export type AgentRuleScopeType = "global" | "department" | "agent" | "workflow_pack" | "project";
 
 export interface AgentRule {
   id: string;
@@ -588,7 +588,7 @@ export interface AgentRule {
 
 // Memory
 export type MemoryCategory = "context" | "preference" | "convention" | "knowledge" | "instruction" | "reference";
-export type MemoryScopeType = "global" | "department" | "agent" | "workflow_pack";
+export type MemoryScopeType = "global" | "department" | "agent" | "workflow_pack" | "project";
 
 export interface MemoryEntry {
   id: string;
@@ -610,7 +610,7 @@ export interface MemoryEntry {
 
 // Hooks
 export type HookEventType = "pre-task" | "post-task" | "on-error" | "on-complete" | "on-status-change" | "on-start";
-export type HookScopeType = "global" | "department" | "agent" | "workflow_pack";
+export type HookScopeType = "global" | "department" | "agent" | "workflow_pack" | "project";
 
 export interface HookEntry {
   id: string;

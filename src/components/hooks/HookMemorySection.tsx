@@ -16,7 +16,7 @@ export default function HookMemorySection({
   onRefreshHistory,
 }: HookMemorySectionProps) {
   return (
-    <div className="p-3" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
+    <div className="p-3" style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
       <div className="mb-2 flex items-center justify-between">
         <div className="text-sm font-semibold font-mono" style={{ color: "var(--th-text-heading)" }}>
           {t({ ko: "\uD559\uC2B5 \uBA54\uBAA8\uB9AC", en: "Learning Memory", ja: "\u5B66\u7FD2\u30E1\u30E2\u30EA", zh: "\u5B66\u4E60\u8BB0\u5FC6" })}

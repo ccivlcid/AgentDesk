@@ -8,7 +8,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 
-// ── Types ────────────────────────────────────────────────────────────────────
+// ── Types ─────────────────────────────────────────────────────────────────────
 
 export interface ConfirmOptions {
   title: string;
@@ -42,21 +42,20 @@ interface DialogState {
   resolve: (value: boolean) => void;
 }
 
+const mono = "var(--th-font-mono)";
+
 function Dialog({ state, onClose }: { state: DialogState; onClose: (result: boolean) => void }) {
   const { options } = state;
   const variant = options.variant ?? "default";
-  const confirmLabel = options.confirmLabel ?? "Confirm";
-  const cancelLabel = options.cancelLabel ?? "Cancel";
+  const confirmLabel = options.confirmLabel ?? "confirm";
+  const cancelLabel  = options.cancelLabel  ?? "cancel";
 
-  const confirmColors =
+  const confirmStyle: React.CSSProperties =
     variant === "danger"
-      ? { bg: "transparent", border: "1px solid rgba(248,81,73,0.5)", color: "#f85149" }
+      ? { background: "transparent", border: "1px solid rgba(248,81,73,0.4)", color: "#f85149" }
       : variant === "info"
-        ? { bg: "transparent", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)" }
-        : { bg: "#f59e0b", border: "none", color: "#000" };
-
-  const titleIcon =
-    variant === "danger" || variant === "warning" ? "⚠ " : variant === "info" ? "ℹ " : "";
+        ? { background: "transparent", border: "1px solid var(--th-border-strong)", color: "var(--th-text-secondary)" }
+        : { background: "var(--th-accent-glow)", border: "1px solid var(--th-accent-border)", color: "var(--th-accent)" };
 
   return createPortal(
     <div
@@ -69,10 +68,9 @@ function Dialog({ state, onClose }: { state: DialogState; onClose: (result: bool
         alignItems: "center",
         justifyContent: "center",
         background: "var(--th-modal-overlay)",
+        fontFamily: mono,
       }}
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose(false);
-      }}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(false); }}
     >
       <div
         role="alertdialog"
@@ -82,56 +80,79 @@ function Dialog({ state, onClose }: { state: DialogState; onClose: (result: bool
         style={{
           background: "var(--th-bg-elevated)",
           border: "1px solid var(--th-border-strong)",
-          borderRadius: "0",
-          padding: "24px",
+          borderRadius: 10,
+          padding: 0,
           width: "min(400px, 92vw)",
-          boxShadow: "0 8px 32px rgba(0,0,0,0.6)",
+          fontFamily: mono,
+          overflow: "hidden",
+          boxShadow: "0 20px 50px rgba(0,0,0,0.4)",
         }}
       >
-        {/* Title */}
-        <p
-          id="confirm-title"
-          style={{
-            fontFamily: "var(--th-font-display)",
-            fontWeight: 600,
-            fontSize: "0.9375rem",
-            color: "var(--th-text-heading)",
-            marginBottom: options.message ? "8px" : "20px",
-          }}
-        >
-          {titleIcon}{options.title}
-        </p>
-
-        {/* Message */}
+        <div style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "12px",
+          padding: "10px 16px",
+          borderBottom: "1px solid var(--th-border)",
+          background: "var(--th-bg-panel)",
+          borderTopLeftRadius: 10,
+          borderTopRightRadius: 10,
+        }}>
+          <div className="flex flex-shrink-0 items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => onClose(false)}
+              aria-label="Close"
+              className="h-3 w-3 flex-shrink-0 rounded-full border-0 transition-opacity hover:opacity-90"
+              style={{ background: "#ff5f57" }}
+            />
+            <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#ffbd2e" }} />
+            <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#27c93f" }} />
+          </div>
+          <span id="confirm-title" style={{ fontSize: "12px", fontWeight: 600, color: "var(--th-text-heading)", fontFamily: mono }}>{options.title}</span>
+        </div>
         {options.message && (
-          <p
-            id="confirm-message"
-            style={{
-              fontFamily: "var(--th-font-body)",
-              fontSize: "0.875rem",
-              color: "var(--th-text-secondary)",
-              lineHeight: 1.5,
-              marginBottom: "20px",
-            }}
-          >
-            {options.message}
-          </p>
+          <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--th-border)" }}>
+            <p
+              id="confirm-message"
+              style={{
+                fontFamily: mono,
+                fontSize: "12px",
+                color: "var(--th-text-secondary)",
+                lineHeight: 1.6,
+                margin: 0,
+              }}
+            >
+              {options.message}
+            </p>
+          </div>
         )}
 
         {/* Actions */}
-        <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
+        <div style={{
+          display: "flex",
+          gap: "8px",
+          justifyContent: "flex-end",
+          padding: "10px 16px",
+          borderTop: "1px solid var(--th-border)",
+        }}>
           <button
             onClick={() => onClose(false)}
             style={{
               background: "transparent",
-              border: "1px solid var(--th-border)",
+              border: "1px solid var(--th-border-strong)",
               borderRadius: 0,
-              padding: "6px 14px",
-              fontFamily: "var(--th-font-mono)",
-              fontSize: "0.75rem",
+              padding: "4px 14px",
+              fontFamily: mono,
+              fontSize: "11px",
+              fontWeight: 500,
+              letterSpacing: "0.04em",
+              textTransform: "uppercase",
               color: "var(--th-text-secondary)",
               cursor: "pointer",
+              transition: "color 0.1s",
             }}
+            className="hover:!text-[var(--th-text)] hover:!border-[var(--th-border-strong)]"
           >
             {cancelLabel}
           </button>
@@ -139,16 +160,18 @@ function Dialog({ state, onClose }: { state: DialogState; onClose: (result: bool
             autoFocus
             onClick={() => onClose(true)}
             style={{
-              background: confirmColors.bg,
-              border: confirmColors.border,
+              ...confirmStyle,
               borderRadius: 0,
-              padding: "6px 14px",
-              fontFamily: "var(--th-font-mono)",
-              fontSize: "0.75rem",
+              padding: "4px 14px",
+              fontFamily: mono,
+              fontSize: "11px",
               fontWeight: 600,
-              color: confirmColors.color,
+              letterSpacing: "0.04em",
+              textTransform: "uppercase",
               cursor: "pointer",
+              transition: "opacity 0.1s",
             }}
+            className="hover:opacity-80"
           >
             {confirmLabel}
           </button>

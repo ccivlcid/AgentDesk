@@ -37,8 +37,8 @@ export default function OAuthConnectedProvidersSection({
 
   return (
     <div className="space-y-2">
-      <div className="text-xs font-semibold uppercase tracking-wider mb-2 font-mono" style={{ color: "var(--th-text-muted)" }}>
-        {t({ ko: "인증 상태", en: "Auth Status", ja: "認証状態", zh: "认证状态" })}
+      <div style={{ fontFamily: "var(--th-font-mono)", fontSize: "10px", color: "var(--th-accent)", letterSpacing: "0.08em", textTransform: "uppercase", borderLeft: "3px solid var(--th-accent)", paddingLeft: "8px", marginBottom: "8px" }}>
+        // auth status
       </div>
       {detectedProviders.map(([provider, info]) => {
         const oauthInfo = OAUTH_INFO[provider];
@@ -54,7 +54,7 @@ export default function OAuthConnectedProvidersSection({
           <div key={provider} className="space-y-2 overflow-hidden p-4" style={{ borderRadius: 0, background: "var(--th-bg-elevated)" }}>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div className="flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1">
-                {LogoComp ? <LogoComp className="w-5 h-5" /> : <span className="text-lg">🔑</span>}
+                {LogoComp ? <LogoComp className="w-5 h-5" /> : <span style={{ fontFamily: "var(--th-font-mono)", fontSize: "14px", color: "var(--th-text-muted)" }}>⇄</span>}
                 <span className="text-sm font-medium font-mono" style={{ color: "var(--th-text-primary)" }}>{oauthInfo?.label ?? provider}</span>
                 {info.email && <span className="max-w-full break-all text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>{info.email}</span>}
                 {isFileDetected && (
@@ -278,7 +278,7 @@ export default function OAuthConnectedProvidersSection({
                     >
                       <div className="flex flex-wrap items-center gap-1.5">
                         <span
-                          className={`text-[10px] px-1.5 py-0.5 rounded ${
+                          className={`text-[10px] px-1.5 py-0.5 ${
                             account.active ? "bg-green-500/20 text-green-300" : "bg-[var(--th-bg-elevated)] text-[var(--th-text-muted)]"
                           }`}
                           style={{ borderRadius: 0 }}
@@ -288,7 +288,7 @@ export default function OAuthConnectedProvidersSection({
                             : t({ ko: "대기", en: "Standby", ja: "待機", zh: "待命" })}
                         </span>
                         <span
-                          className={`text-[10px] px-1.5 py-0.5 rounded ${
+                          className={`text-[10px] px-1.5 py-0.5 ${
                             account.executionReady ? "bg-[rgba(59,130,246,0.2)] text-[#93c5fd]" : "bg-amber-500/20 text-amber-300"
                           }`}
                           style={{ borderRadius: 0 }}
@@ -303,7 +303,7 @@ export default function OAuthConnectedProvidersSection({
                       <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                         <label className="space-y-1">
                           <span className="block text-[10px] uppercase tracking-wider font-mono" style={{ color: "var(--th-text-muted)" }}>
-                            {t({ ko: "라벨", en: "Label", ja: "ラベル", zh: "标签" })}
+                            // {t({ ko: "라벨", en: "label", ja: "ラベル", zh: "标签" })}
                           </span>
                           <input
                             value={draft.label}
@@ -321,7 +321,7 @@ export default function OAuthConnectedProvidersSection({
 
                         <label className="space-y-1">
                           <span className="block text-[10px] uppercase tracking-wider font-mono" style={{ color: "var(--th-text-muted)" }}>
-                            {t({ ko: "모델 오버라이드", en: "Model Override", ja: "モデル上書き", zh: "模型覆盖" })}
+                            // {t({ ko: "모델 오버라이드", en: "model override", ja: "モデル上書き", zh: "模型覆盖" })}
                           </span>
                           <select
                             value={draft.modelOverride}
@@ -348,7 +348,7 @@ export default function OAuthConnectedProvidersSection({
 
                         <label className="space-y-1">
                           <span className="block text-[10px] uppercase tracking-wider font-mono" style={{ color: "var(--th-text-muted)" }}>
-                            {t({ ko: "우선순위", en: "Priority", ja: "優先度", zh: "优先级" })}
+                            // {t({ ko: "우선순위", en: "priority", ja: "優先度", zh: "优先级" })}
                           </span>
                           <input
                             type="number"

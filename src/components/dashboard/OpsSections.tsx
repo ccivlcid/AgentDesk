@@ -40,14 +40,14 @@ export function DashboardDeptAndSquad({
   return (
     <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1.2fr_1fr]">
       <div className="dashboard-panel p-5" style={{ border: "1px solid var(--th-border)", borderRadius: 0, background: "var(--th-bg-surface)" }}>
-        <h2 className="mb-4 flex items-center justify-between">
-          <span className="text-xs font-bold uppercase tracking-widest" style={{ color: "var(--th-text-heading)", fontFamily: "var(--th-font-mono)" }}>
-            {t({ ko: "부서 성과", en: "Department performance", ja: "部署パフォーマンス", zh: "部门绩效" })}
+        <div className="mb-4 flex items-center justify-between">
+          <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "var(--th-text-muted)", fontFamily: "var(--th-font-mono)" }}>
+            {"// "}{t({ ko: "부서 성과", en: "dept performance", ja: "部署パフォーマンス", zh: "部门绩效" })}
           </span>
-          <span className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
-            {t({ ko: "부서별", en: "By dept.", ja: "部署別", zh: "按部门" })}
+          <span className="text-[10px]" style={{ fontFamily: "var(--th-font-mono)", color: "var(--th-text-muted)" }}>
+            {t({ ko: "부서별", en: "by dept", ja: "部署別", zh: "按部门" })}
           </span>
-        </h2>
+        </div>
 
         {deptData.length === 0 ? (
           <div className="terminal-empty-state min-h-[180px] flex flex-col items-center justify-center">
@@ -101,8 +101,8 @@ export function DashboardDeptAndSquad({
 
       <div className="dashboard-panel p-5" style={{ border: "1px solid var(--th-border)", borderRadius: 0, background: "var(--th-bg-surface)" }}>
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-xs font-bold uppercase tracking-widest" style={{ color: "var(--th-text-heading)", fontFamily: "var(--th-font-mono)" }}>
-            {t({ ko: "스쿼드", en: "Squad", ja: "スクワッド", zh: "小队" })}
+          <h2 className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "var(--th-text-muted)", fontFamily: "var(--th-font-mono)" }}>
+            {"// "}{t({ ko: "스쿼드", en: "squad", ja: "スクワッド", zh: "小队" })}
           </h2>
           <div className="flex items-center gap-2 text-[10px]">
             <span className="flex items-center gap-1 px-2 py-0.5 font-mono font-medium" style={{ border: "1px solid rgba(34,197,94,0.3)", borderRadius: 0, background: "rgba(34,197,94,0.08)", color: "#22c55e" }}>
@@ -248,8 +248,8 @@ export function DashboardMissionLog({
   return (
     <div className="dashboard-panel p-5" style={{ border: "1px solid var(--th-border)", borderRadius: 0, background: "var(--th-bg-surface)" }}>
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-xs font-bold uppercase tracking-widest" style={{ color: "var(--th-text-heading)", fontFamily: "var(--th-font-mono)" }}>
-          {t({ ko: "최근 활동", en: "Recent activity", ja: "最近の活動", zh: "最近活动" })}
+        <h2 className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "var(--th-text-muted)", fontFamily: "var(--th-font-mono)" }}>
+          {"// "}{t({ ko: "최근 활동", en: "recent activity", ja: "最近の活動", zh: "最近活动" })}
         </h2>
         <span className="border border-[var(--th-border)] bg-[var(--th-bg-primary)] px-2 py-0.5 font-mono font-medium text-[var(--th-text-muted)]" style={{ borderRadius: 0, fontSize: "0.625rem" }}>
           {t({ ko: "유휴", en: "Idle", ja: "待機", zh: "空闲" })} {numberFormatter.format(idleAgents)}

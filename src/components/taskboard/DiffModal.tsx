@@ -110,15 +110,25 @@ function DiffModal({ taskId, onClose }: DiffModalProps) {
       style={{ background: "var(--th-modal-overlay)" }}
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="flex max-h-[85vh] w-full max-w-4xl flex-col " style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
-        {/* Header */}
-        <div className="flex items-center justify-between px-5 py-3" style={{ borderBottom: "1px solid var(--th-border)" }}>
+      <div className="flex max-h-[85vh] w-full max-w-4xl flex-col overflow-hidden" style={{ borderRadius: 10, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", boxShadow: "0 20px 50px rgba(0,0,0,0.4)" }}>
+        {/* Header (macOS) */}
+        <div
+          className="flex items-center justify-between px-5 py-3"
+          style={{
+            borderBottom: "1px solid var(--th-border)",
+            background: "var(--th-bg-panel)",
+            borderTopLeftRadius: 10,
+            borderTopRightRadius: 10,
+            backdropFilter: "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)",
+          }}
+        >
           <div className="flex items-center gap-2">
             <span className="text-lg font-bold font-mono" style={{ color: "var(--th-text-heading)" }}>
               {t({ ko: "Git 변경사항", en: "Git Diff", ja: "Git 差分", zh: "Git 差异" })}
             </span>
             {diffData?.branchName && (
-              <span className="px-2.5 py-0.5 text-xs font-mono" style={{ borderRadius: 0, border: "1px solid rgba(167,139,250,0.3)", background: "rgba(167,139,250,0.1)", color: "rgb(196,181,253)" }}>
+              <span className="px-2.5 py-0.5 text-xs font-mono" style={{ borderRadius: 6, border: "1px solid rgba(167,139,250,0.3)", background: "rgba(167,139,250,0.1)", color: "rgb(196,181,253)" }}>
                 {diffData.branchName}
               </span>
             )}
@@ -128,7 +138,7 @@ function DiffModal({ taskId, onClose }: DiffModalProps) {
               onClick={handleMerge}
               disabled={merging || discarding || !diffData?.hasWorktree}
               className="px-3 py-1.5 text-xs font-medium font-mono transition disabled:opacity-40"
-              style={{ borderRadius: 0, border: "1px solid rgba(52,211,153,0.5)", background: "rgba(52,211,153,0.2)", color: "rgb(167,243,208)" }}
+              style={{ borderRadius: 6, border: "1px solid rgba(52,211,153,0.5)", background: "rgba(52,211,153,0.2)", color: "rgb(167,243,208)" }}
             >
               {merging ? "..." : t({ ko: "병합", en: "Merge", ja: "マージ", zh: "合并" })}
             </button>
@@ -136,14 +146,14 @@ function DiffModal({ taskId, onClose }: DiffModalProps) {
               onClick={handleDiscard}
               disabled={merging || discarding || !diffData?.hasWorktree}
               className="px-3 py-1.5 text-xs font-medium font-mono transition disabled:opacity-40"
-              style={{ borderRadius: 0, border: "1px solid rgba(244,63,94,0.35)", background: "rgba(244,63,94,0.1)", color: "rgb(253,164,175)" }}
+              style={{ borderRadius: 6, border: "1px solid rgba(244,63,94,0.35)", background: "rgba(244,63,94,0.1)", color: "rgb(253,164,175)" }}
             >
               {discarding ? "..." : t({ ko: "폐기", en: "Discard", ja: "破棄", zh: "丢弃" })}
             </button>
             <button
               onClick={onClose}
               className="p-1.5 transition"
-              style={{ borderRadius: 0, color: "var(--th-text-muted)", background: "transparent" }}
+              style={{ borderRadius: 6, color: "var(--th-text-muted)", background: "transparent" }}
               title={t({ ko: "닫기", en: "Close", ja: "閉じる", zh: "关闭" })}
             >
               X
@@ -188,7 +198,7 @@ function DiffModal({ taskId, onClose }: DiffModalProps) {
                   <h3 className="mb-1 text-sm font-semibold font-mono" style={{ color: "var(--th-text-secondary)" }}>
                     {t({ ko: "요약", en: "Summary", ja: "概要", zh: "摘要" })}
                   </h3>
-                  <pre className="p-3 text-xs font-mono overflow-x-auto" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}>
+                  <pre className="p-3 text-xs font-mono overflow-x-auto" style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}>
                     {diffData.stat}
                   </pre>
                 </div>
@@ -199,7 +209,7 @@ function DiffModal({ taskId, onClose }: DiffModalProps) {
                   <h3 className="mb-1 text-sm font-semibold font-mono" style={{ color: "var(--th-text-secondary)" }}>
                     {t({ ko: "Diff", en: "Diff", ja: "差分", zh: "差异" })}
                   </h3>
-                  <pre className="max-h-[50vh] overflow-auto p-3 text-xs leading-relaxed" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-terminal-bg)" }}>
+                  <pre className="max-h-[50vh] overflow-auto p-3 text-xs leading-relaxed" style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-terminal-bg)" }}>
                     {diffData.diff.split("\n").map((line, i) => {
                       let cls = "text-[#94a3b8]";
                       if (line.startsWith("+") && !line.startsWith("+++")) cls = "text-green-400";

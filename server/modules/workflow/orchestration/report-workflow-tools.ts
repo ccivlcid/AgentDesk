@@ -299,7 +299,7 @@ export function createReportWorkflowTools(deps: CreateReportWorkflowToolsDeps) {
         reporter,
         pickL(
           l(
-            [`대표님, '${task.title}' 보고 업무를 검토 회의 없이 완료 처리했습니다.`],
+            [`클라이언트님, '${task.title}' 보고 업무를 검토 회의 없이 완료 처리했습니다.`],
             [`CEO, '${task.title}' report work was completed without review meeting.`],
             [`CEO、'${task.title}' の報告業務をレビュー会議なしで完了処理しました。`],
             [`CEO，'${task.title}' 报告任务已在无评审会议情况下完成。`],

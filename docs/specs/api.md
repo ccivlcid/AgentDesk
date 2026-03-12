@@ -2,7 +2,7 @@
 
 This document defines a contributor-facing API baseline for AgentDesk.
 It is intentionally compact and focused on frequently used endpoints.
-Current baseline target: `v1.2.4` (local snapshot, 2026-02-28).
+Current baseline target: `v1.2.4` (local snapshot, 2026-03-12).
 
 ## Base
 
@@ -209,7 +209,7 @@ or
 
 ### 2.0 카테고리 & 프로젝트 팀 (Phase 1–2 신규)
 
-> **2.0 리뉴얼** 에서 추가되는 엔드포인트. 상세 UX 스펙: `docs/design/ux-renewal-2.0.md`.
+> **2.0 리뉴얼** 에서 추가되는 엔드포인트. 구현: `server/modules/routes/core/categories.ts`, `project-dashboard.ts`.
 
 #### Categories (프로젝트 유형)
 
@@ -275,11 +275,22 @@ or
 
 ---
 
+## 서버 전용·기타 엔드포인트 (본 문서 미수록)
+
+아래는 실제 서버에 등록되어 있으나 본 baseline에는 생략된 항목이다. 전체 목록은 `server/modules/routes/**/*.ts` 검색 참고.
+
+- **에이전트:** `GET /api/agents/active`, `GET /api/agents/cli-processes`, `POST /api/agents/:id/spawn`, `POST/DELETE /api/agents/:id/avatar`
+- **태스크:** `GET /api/tasks/:id/execution`, `GET /api/tasks/:id/execution-events`, `GET /api/tasks/:id/dependencies`, `POST /api/tasks/:id/dependencies`, `DELETE /api/tasks/:id/dependencies/:depId`, `GET /api/tasks/:id/diff`, `POST /api/tasks/:id/merge`, `POST /api/tasks/:id/discard`, `POST /api/tasks/bulk-hide`
+- **프로젝트:** `GET /api/projects/:id`, `GET /api/projects/:id/burndown`, `GET /api/projects/path-browse`, `GET /api/projects/path-tree`, `GET /api/projects/:id/branches`, `GET /api/github/repos/:owner/:repo/branches`, `GET /api/github/clone/:cloneId`
+- **스킬:** `GET /api/skills/available`, `GET /api/skills/custom/:skillName/export`, `POST /api/skills/custom/import`
+- **기타:** `GET /api/agent-usage`, `GET /api/agent-usage/trends/daily`, `GET /api/agent-usage/:agentId`, `GET /api/decision-inbox` 등. agent-rules, memory, hooks의 learn/history/available/unlearn, task-reports, deliverables, pipeline-gates, webhooks, backup, notifications, task-templates, custom-packs, worktrees, cli-usage, cost-alerts, oauth 콜백·device 플로우, update-auto-status, update-apply 등은 서버 라우트 등록처 참조.
+
+## OpenAPI
+
+- **스펙 파일:** `docs/specs/openapi.json`
+- **서빙:** 서버가 해당 파일을 읽어 `GET /api/openapi.json`으로 제공하며, Swagger UI는 `/api/docs`에서 제공.
+- **로드 경로:** 서버 코드 `server/modules/routes/ops/api-docs.ts`에서 `docs/specs/openapi.json`을 사용.
+
 ## Known Follow-up
 
-- Promote this baseline to OpenAPI (`/api/*.yaml`) in incremental slices:
-  1. auth/session + settings
-  2. tasks/subtasks
-  3. inbox/directives
-  4. project/github/update routes
-  5. categories + project team + dashboard quadrants (2.0 신규)
+- OpenAPI 스펙을 점진적으로 확장: auth/session, tasks/subtasks, inbox/directives, project/github, categories·project team·dashboard quadrants 등.

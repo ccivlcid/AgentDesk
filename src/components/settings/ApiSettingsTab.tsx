@@ -40,18 +40,18 @@ export default function ApiSettingsTab({ t, localeTag, apiState }: ApiSettingsTa
         style={{ borderRadius: 0, background: "var(--th-bg-surface)", borderColor: "var(--th-border)" }}
       >
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold" style={{ color: "var(--th-text-heading)" }}>
-            {t({ ko: "API 프로바이더", en: "API providers", ja: "API プロバイダー", zh: "API 提供商" })}
-          </h3>
+          <div style={{ fontFamily: "var(--th-font-mono)", fontSize: "10px", color: "var(--th-accent)", letterSpacing: "0.08em", textTransform: "uppercase", borderLeft: "3px solid var(--th-accent)", paddingLeft: "8px" }}>
+            // api providers
+          </div>
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => void loadApiProviders()}
               disabled={apiProvidersLoading}
-              className="text-xs font-medium transition-colors disabled:opacity-50"
-              style={{ color: "var(--th-text-secondary)" }}
+              className="transition-colors disabled:opacity-50 hover:opacity-80"
+              style={{ fontFamily: "var(--th-font-mono)", fontSize: "10px", color: "var(--th-text-muted)", border: "1px solid var(--th-border)", padding: "2px 6px", borderRadius: 0, background: "var(--th-bg-elevated)" }}
             >
-              {t({ ko: "새로고침", en: "Refresh", ja: "更新", zh: "刷新" })}
+              [↺]
             </button>
             {!apiAddMode && (
               <button
@@ -80,21 +80,14 @@ export default function ApiSettingsTab({ t, localeTag, apiState }: ApiSettingsTa
 
         {apiAddMode && (
           <div className="space-y-3 p-4" style={{ borderRadius: 0, border: "1px solid var(--th-border-strong)", background: "var(--th-bg-elevated)" }}>
-            <h4 className="text-xs font-semibold font-mono uppercase tracking-wider" style={{ color: "var(--th-accent)" }}>
-              {apiEditingId
-                ? t({ ko: "프로바이더 수정", en: "Edit Provider", ja: "プロバイダー編集", zh: "编辑提供商" })
-                : t({
-                    ko: "새 프로바이더 추가",
-                    en: "Add New Provider",
-                    ja: "新規プロバイダー追加",
-                    zh: "添加新提供商",
-                  })}
-            </h4>
+            <div style={{ fontFamily: "var(--th-font-mono)", fontSize: "9px", color: "var(--th-accent)", letterSpacing: "0.1em", textTransform: "uppercase", borderLeft: "3px solid var(--th-accent)", paddingLeft: "8px" }}>
+              {apiEditingId ? "// edit provider" : "// add provider"}
+            </div>
 
             <div>
-              <label className="block text-xs font-mono mb-1" style={{ color: "var(--th-text-muted)" }}>
-                {t({ ko: "유형", en: "Type", ja: "タイプ", zh: "类型" })}
-              </label>
+              <div style={{ fontFamily: "var(--th-font-mono)", fontSize: "9px", color: "var(--th-text-muted)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "6px" }}>
+                // {t({ ko: "유형", en: "type", ja: "タイプ", zh: "类型" })}
+              </div>
               <div className="flex flex-wrap gap-1.5">
                 {(
                   Object.entries(API_TYPE_PRESETS) as [
@@ -127,9 +120,9 @@ export default function ApiSettingsTab({ t, localeTag, apiState }: ApiSettingsTa
             </div>
 
             <div>
-              <label className="block text-xs font-mono mb-1" style={{ color: "var(--th-text-muted)" }}>
-                {t({ ko: "이름", en: "Name", ja: "名前", zh: "名称" })}
-              </label>
+              <div style={{ fontFamily: "var(--th-font-mono)", fontSize: "9px", color: "var(--th-text-muted)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "6px" }}>
+                // {t({ ko: "이름", en: "name", ja: "名前", zh: "名称" })}
+              </div>
               <input
                 type="text"
                 value={apiForm.name}
@@ -141,7 +134,7 @@ export default function ApiSettingsTab({ t, localeTag, apiState }: ApiSettingsTa
             </div>
 
             <div>
-              <label className="block text-xs font-mono mb-1" style={{ color: "var(--th-text-muted)" }}>Base URL</label>
+              <div style={{ fontFamily: "var(--th-font-mono)", fontSize: "9px", color: "var(--th-text-muted)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "6px" }}>// base url</div>
               <input
                 type="text"
                 value={apiForm.base_url}
@@ -153,21 +146,13 @@ export default function ApiSettingsTab({ t, localeTag, apiState }: ApiSettingsTa
             </div>
 
             <div>
-              <label className="block text-xs font-mono mb-1" style={{ color: "var(--th-text-muted)" }}>
-                API Key{" "}
-                {apiForm.type === "ollama" && (
-                  <span style={{ color: "var(--th-text-muted)" }}>
-                    (
-                    {t({
-                      ko: "로컬은 보통 불필요",
-                      en: "usually not needed for local",
-                      ja: "ローカルは通常不要",
-                      zh: "本地通常不需要",
-                    })}
-                    )
+              <div style={{ fontFamily: "var(--th-font-mono)", fontSize: "9px", color: "var(--th-text-muted)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "6px" }}>
+                // api key{apiForm.type === "ollama" && (
+                  <span style={{ textTransform: "none", letterSpacing: "normal", marginLeft: "4px" }}>
+                    ({t({ ko: "로컬은 보통 불필요", en: "usually not needed for local", ja: "ローカルは通常不要", zh: "本地通常不需要" })})
                   </span>
                 )}
-              </label>
+              </div>
               <input
                 type="password"
                 value={apiForm.api_key}

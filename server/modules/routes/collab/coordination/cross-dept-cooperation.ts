@@ -320,7 +320,7 @@ export function createCrossDeptCooperationTools(deps: CrossDeptCooperationDeps) 
     const coopReq = pickL(
       l(
         [
-          `${crossCoordinatorName}님, 안녕하세요! 대표님 지시로 "${taskTitle}" 업무 진행 중인데, ${crossDeptName} 협조가 필요합니다. 도움 부탁드려요! 🤝`,
+          `${crossCoordinatorName}님, 안녕하세요! 클라이언트님 지시로 "${taskTitle}" 업무 진행 중인데, ${crossDeptName} 협조가 필요합니다. 도움 부탁드려요! 🤝`,
           `${crossCoordinatorName}님! "${taskTitle}" 건으로 ${crossDeptName} 지원이 필요합니다. 시간 되시면 협의 부탁드립니다.`,
         ],
         [

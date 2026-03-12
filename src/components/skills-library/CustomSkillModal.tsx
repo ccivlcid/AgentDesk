@@ -3,6 +3,7 @@ import type { RefObject } from "react";
 import type { SkillLearnProvider } from "../../api";
 import type { Agent } from "../../types";
 import AgentAvatar from "../AgentAvatar";
+import HeaderModalChrome from "../ui/HeaderModalChrome";
 import { providerLabel, type TFunction } from "./model";
 
 interface CustomSkillModalProps {
@@ -46,35 +47,25 @@ export default function CustomSkillModal({
 }: CustomSkillModalProps) {
   if (!show) return null;
 
-  return createPortal(
-    <div className="custom-skill-modal fixed inset-0 z-[80] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.75)" }}>
-      <div className="custom-skill-modal-card w-full max-w-lg max-h-[90vh] overflow-hidden shadow-2xl" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
-        <div className="flex items-start justify-between gap-4 px-5 py-4" style={{ borderBottom: "1px solid var(--th-border)" }}>
-          <div>
-            <h3 className="text-base font-semibold font-mono flex items-center gap-2" style={{ color: "var(--th-text-heading)" }}>
-              <span>✏️</span>
-              {t({ ko: "커스텀 스킬 추가", en: "Add Custom Skill", ja: "カスタムスキル追加", zh: "添加自定义技能" })}
-            </h3>
-            <div className="mt-1 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
-              {t({
-                ko: "skills.md 파일을 첨부하고 CLI 대표자를 선택하세요",
-                en: "Attach a skills.md file and select CLI representatives",
-                ja: "skills.md ファイルを添付し、CLI代表を選択してください",
-                zh: "附加 skills.md 文件并选择 CLI 代表",
-              })}
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            disabled={customSkillSubmitting}
-            className="px-2.5 py-1 text-xs font-mono transition"
-            style={{ borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
-          >
-            {t({ ko: "닫기", en: "Close", ja: "閉じる", zh: "关闭" })}
-          </button>
-        </div>
+  const title = t({ ko: "커스텀 스킬 추가", en: "Add Custom Skill", ja: "カスタムスキル追加", zh: "添加自定义技能" });
 
-        <div className="space-y-4 overflow-y-auto px-5 py-4 max-h-[calc(90vh-72px)]">
+  return createPortal(
+    <div className="custom-skill-modal fixed inset-0 z-[80] flex items-center justify-center p-4" style={{ background: "var(--th-modal-overlay)" }} onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div
+        className="custom-skill-modal-card w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col"
+        style={{ borderRadius: 10, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", boxShadow: "0 20px 50px rgba(0,0,0,0.4)" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <HeaderModalChrome title={title} onClose={onClose} />
+        <p className="flex-shrink-0 px-5 py-1 text-xs font-mono" style={{ color: "var(--th-text-muted)", borderBottom: "1px solid var(--th-border)" }}>
+          {t({
+            ko: "skills.md 파일을 첨부하고 CLI 대표자를 선택하세요",
+            en: "Attach a skills.md file and select CLI representatives",
+            ja: "skills.md ファイルを添付し、CLI代表を選択してください",
+            zh: "附加 skills.md 文件并选择 CLI 代表",
+          })}
+        </p>
+        <div className="space-y-4 overflow-y-auto px-5 py-4 flex-1 min-h-0 max-h-[calc(90vh-120px)]">
           <div>
             <label className="block text-xs font-mono mb-1.5" style={{ color: "var(--th-text-muted)" }}>
               {t({ ko: "스킬명", en: "Skill Name", ja: "スキル名", zh: "技能名称" })}

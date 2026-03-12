@@ -572,8 +572,8 @@ export function registerRoutesPartB(ctx: RuntimeContext): RouteCollabExports {
     const mentionReq = pickL(
       l(
         [
-          `${crossLeaderName}님! 대표님 지시입니다: "${taskTitle}" — ${crossDeptName}에서 처리 부탁드립니다! 🏷️`,
-          `${crossLeaderName}님, 대표님이 직접 요청하셨습니다. "${taskTitle}" 건, ${crossDeptName} 담당으로 진행해주세요!`,
+          `${crossLeaderName}님! 클라이언트님 지시입니다: "${taskTitle}" — ${crossDeptName}에서 처리 부탁드립니다! 🏷️`,
+          `${crossLeaderName}님, 클라이언트님이 직접 요청하셨습니다. "${taskTitle}" 건, ${crossDeptName} 담당으로 진행해주세요!`,
         ],
         [
           `${crossLeaderName}! CEO directive for ${crossDeptName}: "${taskTitle}" — please handle this! 🏷️`,

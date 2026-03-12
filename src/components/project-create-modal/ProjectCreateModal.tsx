@@ -222,7 +222,6 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onCl
                       value={projectPath}
                       onChange={(e) => handlePathChange(e.target.value)}
                       placeholder="/Users/me/projects/my-app"
-                      mono
                       error={submitted && !projectPath.trim()}
                     />
                   </div>

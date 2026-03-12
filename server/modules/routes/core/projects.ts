@@ -203,6 +203,63 @@ export function registerProjectRoutes({
     });
   });
 
+  app.get("/api/projects/path-tree", (req, res) => {
+    const MAX_DEPTH = 3;
+    const MAX_NODES = 200;
+    const SKIP_DIRS = new Set([
+      "node_modules", ".git", "__pycache__", "dist", ".next",
+      ".nuxt", ".cache", "build", "out", ".venv", "venv", ".tox",
+      "coverage", ".nyc_output", "target", ".gradle",
+    ]);
+
+    const raw = firstQueryValue(req.query.path);
+    const normalized = normalizeProjectPathInput(raw);
+    if (!normalized) return res.status(400).json({ error: "path_required" });
+    if (!isPathInsideAllowedRoots(normalized)) {
+      return res.status(403).json({ error: "project_path_outside_allowed_roots", allowed_roots: PROJECT_PATH_ALLOWED_ROOTS });
+    }
+    try {
+      const stat = fs.statSync(normalized);
+      if (!stat.isDirectory()) return res.status(400).json({ error: "path_not_directory" });
+    } catch {
+      return res.status(404).json({ error: "path_not_found" });
+    }
+
+    type FileTreeNode = { name: string; type: "dir" | "file"; children?: FileTreeNode[] };
+    let nodeCount = 0;
+    let truncated = false;
+
+    function walkDir(dirPath: string, depth: number): FileTreeNode[] {
+      if (depth > MAX_DEPTH || truncated) return [];
+      let dirents: fs.Dirent[];
+      try { dirents = fs.readdirSync(dirPath, { withFileTypes: true }); }
+      catch { return []; }
+
+      const dirs = dirents
+        .filter((d) => d.isDirectory() && !d.name.startsWith(".") && !SKIP_DIRS.has(d.name))
+        .sort((a, b) => a.name.localeCompare(b.name));
+      const files = dirents
+        .filter((d) => d.isFile() && !d.name.startsWith("."))
+        .sort((a, b) => a.name.localeCompare(b.name));
+
+      const nodes: FileTreeNode[] = [];
+      for (const entry of [...dirs, ...files]) {
+        if (truncated || nodeCount >= MAX_NODES) { truncated = true; break; }
+        nodeCount++;
+        if (entry.isDirectory()) {
+          const children = depth < MAX_DEPTH ? walkDir(path.join(dirPath, entry.name), depth + 1) : [];
+          nodes.push({ name: entry.name, type: "dir", children });
+        } else {
+          nodes.push({ name: entry.name, type: "file" });
+        }
+      }
+      return nodes;
+    }
+
+    const tree = walkDir(normalized, 1);
+    res.json({ ok: true, root: normalized, tree, truncated });
+  });
+
   app.post("/api/projects", (req, res) => {
     const body = req.body ?? {};
     const name = normalizeTextField(body.name);

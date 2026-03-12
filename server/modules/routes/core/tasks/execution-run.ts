@@ -227,7 +227,15 @@ export function registerTaskRunRoute(deps: TaskRunRouteDeps): void {
       });
     }
 
-    let agent:
+    const agent = db
+      .prepare(
+        `
+      SELECT a.*, d.name AS department_name, d.name_ko AS department_name_ko, d.prompt AS department_prompt
+      FROM agents a LEFT JOIN departments d ON a.department_id = d.id
+      WHERE a.id = ?
+    `,
+      )
+      .get(agentId) as
       | {
           id: string;
           name: string;
@@ -246,71 +254,6 @@ export function registerTaskRunRoute(deps: TaskRunRouteDeps): void {
           department_prompt: string | null;
         }
       | undefined;
-    try {
-      agent = db
-        .prepare(
-          `
-      SELECT
-        a.*,
-        COALESCE(opd.name, d.name) AS department_name,
-        COALESCE(opd.name_ko, d.name_ko) AS department_name_ko,
-        COALESCE(opd.prompt, d.prompt) AS department_prompt
-      FROM agents a
-      LEFT JOIN office_pack_departments opd
-        ON opd.workflow_pack_key = COALESCE(?, 'development')
-       AND opd.department_id = a.department_id
-      LEFT JOIN departments d ON a.department_id = d.id
-      WHERE a.id = ?
-    `,
-        )
-        .get(task.workflow_pack_key, agentId) as
-        | {
-            id: string;
-            name: string;
-            name_ko: string | null;
-            role: string;
-            cli_provider: string | null;
-            oauth_account_id: string | null;
-            api_provider_id: string | null;
-            api_model: string | null;
-            cli_model: string | null;
-            cli_reasoning_level: string | null;
-            personality: string | null;
-            department_id: string | null;
-            department_name: string | null;
-            department_name_ko: string | null;
-            department_prompt: string | null;
-          }
-        | undefined;
-    } catch {
-      agent = db
-        .prepare(
-          `
-      SELECT a.*, d.name AS department_name, d.name_ko AS department_name_ko, d.prompt AS department_prompt
-      FROM agents a LEFT JOIN departments d ON a.department_id = d.id
-      WHERE a.id = ?
-    `,
-        )
-        .get(agentId) as
-        | {
-            id: string;
-            name: string;
-            name_ko: string | null;
-            role: string;
-            cli_provider: string | null;
-            oauth_account_id: string | null;
-            api_provider_id: string | null;
-            api_model: string | null;
-            cli_model: string | null;
-            cli_reasoning_level: string | null;
-            personality: string | null;
-            department_id: string | null;
-            department_name: string | null;
-            department_name_ko: string | null;
-            department_prompt: string | null;
-          }
-        | undefined;
-    }
     if (!agent) return res.status(400).json({ error: "agent_not_found" });
 
     const agentBusy = activeProcesses.has(
@@ -338,10 +281,6 @@ export function registerTaskRunRoute(deps: TaskRunRouteDeps): void {
       taskId: id,
       appendTaskLog,
     });
-    const executionSession = ensureTaskExecutionSession(id, agentId, provider);
-    const pendingInterruptPrompts = loadPendingInterruptPrompts(db as any, id, executionSession.sessionId);
-    const interruptPromptBlock = buildInterruptPromptBlock(pendingInterruptPrompts);
-
     const projectPath = resolveProjectPath(task) || (req.body?.project_path as string | undefined) || process.cwd();
     const logPath = path.join(logsDir, `${id}.log`);
 
@@ -357,6 +296,10 @@ export function registerTaskRunRoute(deps: TaskRunRouteDeps): void {
         message: "Isolated worktree creation failed. Task execution was blocked to protect the project root.",
       });
     }
+
+    const executionSession = ensureTaskExecutionSession(id, agentId, provider);
+    const pendingInterruptPrompts = loadPendingInterruptPrompts(db as any, id, executionSession.sessionId);
+    const interruptPromptBlock = buildInterruptPromptBlock(pendingInterruptPrompts);
     const agentCwd = worktreePath;
 
     const isDirectMode = worktreePath === projectPath;
@@ -711,12 +654,7 @@ Whenever you complete a subtask, report it in this format:
       return res.json({ ok: true, pid: fakePid, logPath, cwd: agentCwd, worktree: !!worktreePath });
     }
 
-    const child = spawnCliAgent(id, provider, prompt, agentCwd, logPath, mainModel, mainReasoningLevel);
-
-    child.on("close", (code: number | null) => {
-      handleTaskRunComplete(id, code ?? 1);
-    });
-
+    // Set status before spawning — ensures DB reflects reality even if server crashes after spawn
     const t = nowMs();
     {
       const updates = ["status = 'in_progress'", "assigned_agent_id = ?", "started_at = ?", "updated_at = ?"];
@@ -745,6 +683,12 @@ Whenever you complete a subtask, report it in this format:
       createdAt: t,
     });
     db.prepare("UPDATE agents SET status = 'working', current_task_id = ? WHERE id = ?").run(id, agentId);
+
+    const child = spawnCliAgent(id, provider, prompt, agentCwd, logPath, mainModel, mainReasoningLevel);
+
+    child.on("close", (code: number | null) => {
+      handleTaskRunComplete(id, code ?? 1);
+    });
 
     const updatedTask = db.prepare("SELECT * FROM tasks WHERE id = ?").get(id);
     const updatedAgent = db.prepare("SELECT * FROM agents WHERE id = ?").get(agentId);

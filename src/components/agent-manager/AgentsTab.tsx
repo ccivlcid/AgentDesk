@@ -98,6 +98,7 @@ export default function AgentsTab({
           className="flex items-center gap-1 px-3 py-2 border-b-2 transition-colors"
           style={{
             fontFamily: "var(--th-font-mono)",
+            borderRadius: "6px 6px 0 0",
             fontSize: "0.75rem",
             color: deptTab === "all" ? "var(--th-text-heading)" : "var(--th-text-muted)",
             borderColor: deptTab === "all" ? "var(--th-accent, #f59e0b)" : "transparent",
@@ -122,6 +123,7 @@ export default function AgentsTab({
                 color: isActive ? "var(--th-text-heading)" : "var(--th-text-muted)",
                 borderColor: isActive ? "var(--th-accent, #f59e0b)" : "transparent",
                 transition: "color 0.1s linear, border-color 0.1s linear",
+                borderRadius: "6px 6px 0 0",
               }}
             >
               <span className="hidden sm:inline">{localeName(locale, department)}</span>
@@ -137,7 +139,7 @@ export default function AgentsTab({
             style={{
               background: "var(--th-bg-surface)",
               border: "1px solid var(--th-border)",
-              borderRadius: 0,
+              borderRadius: 6,
               color: "var(--th-text-primary)",
               fontFamily: "var(--th-font-mono)",
               fontSize: "0.75rem",
@@ -168,11 +170,11 @@ export default function AgentsTab({
                 title={dept ? tr("더블클릭: 부서 편집", "Double-click: edit dept") : undefined}
               >
                 <span style={{ fontFamily: "var(--th-font-mono)", fontSize: "10px", fontWeight: 700, letterSpacing: "0.08em", color: "var(--th-text-muted)", textTransform: "uppercase" }}>
-                  {dept ? (locale === "ko" ? dept.name_ko : dept.name) : tr("미배정", "Unassigned")}
+                  {dept ? localeName(locale, dept) : tr("미배정", "Unassigned", "未割当", "未分配")}
                 </span>
                 <span
                   className="px-1.5 py-0.5"
-                  style={{ fontFamily: "var(--th-font-mono)", fontSize: "10px", background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)", color: "var(--th-text-muted)", borderRadius: 0 }}
+                  style={{ fontFamily: "var(--th-font-mono)", fontSize: "10px", background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)", color: "var(--th-text-muted)", borderRadius: 6 }}
                 >
                   {groupAgents.length}
                 </span>
@@ -183,7 +185,7 @@ export default function AgentsTab({
                 {groupAgents.map((agent) => {
                   const isWorking = agent.status === "working";
                   const isTeamMember = projectAgentIds !== undefined && projectAgentIds.has(agent.id);
-                  const agentName = locale === "ko" ? (agent.name_ko || agent.name) : agent.name;
+                  const agentName = localeName(locale, agent);
                   const isConfirmingDelete = confirmDeleteId === agent.id;
 
                   return (
@@ -211,6 +213,11 @@ export default function AgentsTab({
                         </span>
                       )}
                       <span className="flex-1" />
+                      {agent.cli_provider && (
+                        <span className="shrink-0 px-1.5 py-0.5 text-[9px] font-mono hidden sm:inline" style={{ color: "var(--th-text-muted)", opacity: 0.7 }}>
+                          {agent.cli_provider}
+                        </span>
+                      )}
                       <StatusBadge status={agent.status ?? "idle"} />
                       <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button

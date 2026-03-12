@@ -168,8 +168,15 @@ export function startLifecycle(ctx: RuntimeContext): void {
 
   type InProgressRecoveryReason = "startup" | "interval";
   const ORPHAN_RECENT_ACTIVITY_WINDOW_MS = Math.max(120_000, IN_PROGRESS_ORPHAN_GRACE_MS);
+  // On startup, orphaned tasks (no active process, no output in last 60s) are recovered immediately
+  // without waiting for the full grace period.
+  const STARTUP_ORPHAN_GRACE_MS = 60_000;
+  const STARTUP_ORPHAN_RECENT_ACTIVITY_WINDOW_MS = 60_000;
 
   function recoverOrphanInProgressTasks(reason: InProgressRecoveryReason): void {
+    const isStartup = reason === "startup";
+    const effectiveGraceMs = isStartup ? STARTUP_ORPHAN_GRACE_MS : IN_PROGRESS_ORPHAN_GRACE_MS;
+    const effectiveActivityWindowMs = isStartup ? STARTUP_ORPHAN_RECENT_ACTIVITY_WINDOW_MS : ORPHAN_RECENT_ACTIVITY_WINDOW_MS;
     const inProgressTasks = db
       .prepare(
         `
@@ -202,8 +209,8 @@ export function startLifecycle(ctx: RuntimeContext): void {
       }
 
       const lastTouchedAt = Math.max(task.updated_at ?? 0, task.started_at ?? 0, task.created_at ?? 0);
-      const ageMs = lastTouchedAt > 0 ? Math.max(0, now - lastTouchedAt) : IN_PROGRESS_ORPHAN_GRACE_MS + 1;
-      if (ageMs < IN_PROGRESS_ORPHAN_GRACE_MS) continue;
+      const ageMs = lastTouchedAt > 0 ? Math.max(0, now - lastTouchedAt) : effectiveGraceMs + 1;
+      if (ageMs < effectiveGraceMs) continue;
 
       // 추가 안전장치 1: task_logs 활동이 최근 윈도우 내에 있으면 아직 활성 상태로 간주
       const recentLog = db
@@ -214,7 +221,7 @@ export function startLifecycle(ctx: RuntimeContext): void {
       ORDER BY created_at DESC LIMIT 1
     `,
         )
-        .get(task.id, now - ORPHAN_RECENT_ACTIVITY_WINDOW_MS) as { created_at: number } | undefined;
+        .get(task.id, now - effectiveActivityWindowMs) as { created_at: number } | undefined;
       if (recentLog) {
         continue;
       }
@@ -225,7 +232,7 @@ export function startLifecycle(ctx: RuntimeContext): void {
         const logPath = path.join(logsDir, `${task.id}.log`);
         const stat = fs.statSync(logPath);
         const logIdleMs = Math.max(0, now - Math.floor(stat.mtimeMs || 0));
-        if (logIdleMs <= ORPHAN_RECENT_ACTIVITY_WINDOW_MS) {
+        if (logIdleMs <= effectiveActivityWindowMs) {
           continue;
         }
       } catch {

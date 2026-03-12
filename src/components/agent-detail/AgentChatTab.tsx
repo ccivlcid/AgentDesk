@@ -147,54 +147,68 @@ export default function AgentChatTab({ agent }: AgentChatTabProps) {
       {/* Divider */}
       <div style={{ borderTop: "1px solid var(--th-border)", marginTop: 4, marginBottom: 8 }} />
 
-      {/* Send input */}
+      {/* Send input — terminal prompt style */}
       <div className="flex flex-col gap-1.5">
-        <textarea
-          ref={textareaRef}
-          value={content}
-          onChange={(e) => setContent(e.target.value.slice(0, MAX_CONTENT))}
-          onKeyDown={(e) => {
-            if ((e.ctrlKey || e.metaKey) && e.key === "Enter" && !sending) {
-              e.preventDefault();
-              void handleSend();
-            }
-          }}
-          rows={2}
-          disabled={sending}
-          className="w-full resize-none border px-2 py-1.5 text-xs font-mono outline-none disabled:opacity-50"
+        <div
           style={{
-            borderRadius: 0,
-            borderColor: "var(--th-input-border)",
-            background: "var(--th-bg-primary)",
-            color: "var(--th-text-primary)",
+            border: "1px solid var(--th-border)",
+            background: "var(--th-bg-elevated)",
           }}
-          placeholder={tr(`${agentName}에게 메시지 전송... (Ctrl+Enter)`, `Message ${agentName}... (Ctrl+Enter)`)}
-        />
-        {sendError && (
-          <div className="text-[10px] font-mono" style={{ color: "rgb(253,164,175)" }}>{sendError}</div>
-        )}
-        <div className="flex items-center justify-between">
-          <span className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
-            {content.length}/{MAX_CONTENT}
-          </span>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => void fetchMessages()}
-              className="px-2 py-1 text-[10px] font-mono border transition hover:opacity-80"
-              style={{ borderRadius: 0, borderColor: "var(--th-border)", color: "var(--th-text-muted)", background: "var(--th-bg-surface)" }}
-              title={tr("새로고침", "Refresh")}
-            >
-              ↺
-            </button>
-            <button
-              onClick={() => void handleSend()}
-              disabled={!content.trim() || sending}
-              className="px-3 py-1 text-[10px] font-mono font-bold transition disabled:opacity-40"
-              style={{ borderRadius: 0, background: "var(--th-accent)", color: "#000" }}
-            >
-              {sending ? tr("전송 중...", "Sending...") : tr("전송", "Send")}
-            </button>
+        >
+          <div
+            className="flex items-center gap-1.5 px-2 pt-1.5"
+            style={{ borderBottom: "1px solid var(--th-border)", paddingBottom: "4px" }}
+          >
+            <span style={{ fontFamily: "var(--th-font-mono)", fontSize: "11px", color: "var(--th-accent)", fontWeight: 700 }}>$</span>
+            <span style={{ fontFamily: "var(--th-font-mono)", fontSize: "9px", color: "var(--th-text-muted)" }}>
+              {tr(`msg → ${agentName}`, `msg → ${agentName}`)}
+            </span>
+            <span style={{ fontFamily: "var(--th-font-mono)", fontSize: "9px", color: "var(--th-text-muted)", marginLeft: "auto" }}>
+              {content.length}/{MAX_CONTENT} · Ctrl+Enter
+            </span>
           </div>
+          <textarea
+            ref={textareaRef}
+            value={content}
+            onChange={(e) => setContent(e.target.value.slice(0, MAX_CONTENT))}
+            onKeyDown={(e) => {
+              if ((e.ctrlKey || e.metaKey) && e.key === "Enter" && !sending) {
+                e.preventDefault();
+                void handleSend();
+              }
+            }}
+            rows={2}
+            disabled={sending}
+            className="w-full resize-none px-2 py-1.5 text-xs font-mono outline-none disabled:opacity-50"
+            style={{
+              background: "transparent",
+              border: "none",
+              color: "var(--th-text-primary)",
+              caretColor: "var(--th-accent)",
+            }}
+            placeholder={tr("메시지 입력...", "type a message...")}
+          />
+        </div>
+        {sendError && (
+          <div className="text-[10px] font-mono" style={{ color: "rgb(253,164,175)" }}>✗ {sendError}</div>
+        )}
+        <div className="flex items-center justify-end gap-1.5">
+          <button
+            onClick={() => void fetchMessages()}
+            className="px-2 py-1 text-[10px] font-mono border transition hover:opacity-80"
+            style={{ borderRadius: 0, borderColor: "var(--th-border)", color: "var(--th-text-muted)", background: "var(--th-bg-surface)" }}
+            title={tr("새로고침", "Refresh")}
+          >
+            [↺]
+          </button>
+          <button
+            onClick={() => void handleSend()}
+            disabled={!content.trim() || sending}
+            className="px-3 py-1 text-[10px] font-mono font-bold transition disabled:opacity-40"
+            style={{ borderRadius: 0, background: "var(--th-accent)", color: "#000" }}
+          >
+            {sending ? tr("전송 중...", "sending...") : tr("전송 ↵", "SEND ↵")}
+          </button>
         </div>
       </div>
     </div>

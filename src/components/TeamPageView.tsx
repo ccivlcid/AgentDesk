@@ -77,12 +77,14 @@ export default function TeamPageView({
 
   if (!currentProject) {
     return (
-      <AgentManager
-        agents={agents}
-        departments={departments}
-        onAgentsChange={onAgentsChange}
-        projectAgentIds={projectAgentIds}
-      />
+      <div className="flex-1 min-h-0 flex flex-col w-full">
+        <AgentManager
+          agents={agents}
+          departments={departments}
+          onAgentsChange={onAgentsChange}
+          projectAgentIds={projectAgentIds}
+        />
+      </div>
     );
   }
 
@@ -97,10 +99,41 @@ export default function TeamPageView({
   ];
 
   return (
-    <div style={{ ...mono, display: "flex", flexDirection: "column", gap: 0 }}>
-
-      {/* ── 터미널 헤더 ── */}
-      <div style={{ borderBottom: "1px solid var(--th-border)", padding: "10px 16px", background: "var(--th-bg-elevated)", display: "flex", alignItems: "center", gap: 8 }}>
+    <div
+      className="flex-1 min-h-0 flex flex-col"
+      style={{
+        ...mono,
+        display: "flex",
+        flexDirection: "column",
+        gap: 0,
+        borderRadius: 10,
+        overflow: "hidden",
+        background: "var(--th-bg-elevated)",
+        border: "1px solid var(--th-border)",
+        boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
+      }}
+    >
+      {/* ── 터미널 헤더 (macOS) ── */}
+      <div
+        style={{
+          borderBottom: "1px solid var(--th-border)",
+          padding: "12px 18px",
+          background: "var(--th-bg-panel)",
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          borderTopLeftRadius: 10,
+          borderTopRightRadius: 10,
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
+        }}
+      >
+        {/* macOS 트래픽 라이트 (●●●) */}
+        <div className="flex flex-shrink-0 items-center gap-1.5">
+          <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#ff5f57" }} aria-hidden />
+          <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#ffbd2e" }} aria-hidden />
+          <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#27c93f" }} aria-hidden />
+        </div>
         <span style={{ color: "var(--th-accent)", fontWeight: 700, fontSize: "11px" }}>$</span>
         <span style={{ fontSize: "11px", color: "var(--th-text-muted)" }}>
           ls team/ --project=&quot;{currentProject.name}&quot;
@@ -111,7 +144,7 @@ export default function TeamPageView({
       </div>
 
       {/* ── 탭 바 ── */}
-      <div style={{ borderBottom: "1px solid var(--th-border)", display: "flex", background: "var(--th-bg-primary)" }}>
+      <div style={{ borderBottom: "1px solid var(--th-border)", display: "flex", background: "var(--th-bg-primary)", padding: "6px 12px 0" }}>
         {TABS.map((tab, idx) => (
           <button
             key={tab.key}
@@ -130,6 +163,7 @@ export default function TeamPageView({
               background: topTab === tab.key ? "var(--th-bg-elevated)" : "transparent",
               color: topTab === tab.key ? "var(--th-accent)" : "var(--th-text-muted)",
               cursor: "pointer",
+              borderRadius: "6px 6px 0 0",
             }}
           >
             {tab.label}
@@ -138,9 +172,9 @@ export default function TeamPageView({
         ))}
       </div>
 
-      {/* ── 이 프로젝트 팀 ── */}
+      {/* ── 이 프로젝트 팀 (스크롤 영역) ── */}
       {topTab === "project" && (
-        <>
+        <div className="min-h-0 flex-1 flex flex-col overflow-hidden">
           {/* 액션 바 */}
           <div style={{ borderBottom: "1px solid var(--th-border)", padding: "5px 12px", background: "var(--th-bg-primary)", display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ fontSize: "9px", color: "var(--th-text-muted)", opacity: 0.6 }}>
@@ -155,6 +189,7 @@ export default function TeamPageView({
                 fontSize: "9px",
                 fontWeight: 700,
                 padding: "3px 10px",
+                borderRadius: 6,
                 border: `1px solid ${showPicker ? "rgba(245,158,11,0.5)" : "var(--th-border)"}`,
                 background: showPicker ? "rgba(245,158,11,0.08)" : "transparent",
                 color: showPicker ? "var(--th-accent)" : "var(--th-text-muted)",
@@ -188,6 +223,7 @@ export default function TeamPageView({
                           fontSize: "9px",
                           fontWeight: 700,
                           padding: "3px 10px",
+                          borderRadius: 6,
                           border: "1px solid var(--th-border)",
                           background: "var(--th-bg-primary)",
                           color: "var(--th-text-secondary)",
@@ -219,21 +255,21 @@ export default function TeamPageView({
             </div>
           )}
 
-          {/* 팀원 목록 */}
+          {/* 팀원 목록 (스크롤) */}
           {loadingTeam ? (
-            <div>
+            <div className="min-h-0 flex-1 overflow-y-auto">
               {[1, 2, 3].map((i) => (
                 <div key={i} style={{ height: 48, borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-surface)", opacity: 0.4, borderLeft: "3px solid var(--th-border)" }} />
               ))}
             </div>
           ) : teamAgents.length === 0 ? (
-            <div style={{ padding: "40px 16px", textAlign: "center" }}>
+            <div className="min-h-0 flex-1 overflow-y-auto" style={{ padding: "40px 16px", textAlign: "center" }}>
               <div style={{ fontSize: "10px", color: "var(--th-text-muted)" }}>$ ls team/</div>
               <div style={{ fontSize: "11px", color: "var(--th-text-muted)", opacity: 0.4, marginTop: 6 }}>(empty)</div>
               <div style={{ fontSize: "10px", color: "var(--th-text-muted)", opacity: 0.3, marginTop: 4 }}>use [+ ADD MEMBER] to assign agents</div>
             </div>
           ) : (
-            <div>
+            <div className="min-h-0 flex-1 overflow-y-auto">
               {teamAgents.map((agent) => {
                 const st = STATUS_DOT[agent.status] ?? STATUS_DOT.idle;
                 const roleLabel =
@@ -289,6 +325,7 @@ export default function TeamPageView({
                         fontSize: "9px",
                         fontWeight: 700,
                         padding: "2px 8px",
+                        borderRadius: 6,
                         border: "1px solid var(--th-border)",
                         background: "none",
                         color: "var(--th-text-muted)",
@@ -308,22 +345,24 @@ export default function TeamPageView({
           )}
 
           {/* 푸터 */}
-          <div style={{ borderTop: "1px solid var(--th-border)", padding: "5px 16px", background: "var(--th-bg-primary)" }}>
+          <div className="flex-shrink-0" style={{ borderTop: "1px solid var(--th-border)", padding: "5px 16px", background: "var(--th-bg-primary)" }}>
             <span style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", opacity: 0.4 }}>
               $ {teamAgents.length} members · {availableAgents.length} available
             </span>
           </div>
-        </>
+        </div>
       )}
 
-      {/* ── 전체 조직 탭 ── */}
+      {/* ── 전체 조직 탭 (스크롤은 AgentManager 내부) ── */}
       {topTab === "org" && (
-        <AgentManager
-          agents={agents}
-          departments={departments}
-          onAgentsChange={onAgentsChange}
-          projectAgentIds={projectAgentIds}
-        />
+        <div className="min-h-0 flex-1 flex flex-col">
+          <AgentManager
+            agents={agents}
+            departments={departments}
+            onAgentsChange={onAgentsChange}
+            projectAgentIds={projectAgentIds}
+          />
+        </div>
       )}
     </div>
   );

@@ -9,61 +9,66 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode;
 }
 
-const BASE =
-  "inline-flex items-center justify-center font-mono text-xs font-medium transition-colors whitespace-nowrap disabled:opacity-40 disabled:cursor-not-allowed";
+const mono = "var(--th-font-mono)";
 
-const VARIANT_STYLES: Record<ButtonVariant, string> = {
-  primary: "",
-  secondary: "",
-  ghost: "",
-  danger: "",
+const SIZE_PADDING: Record<ButtonSize, string> = {
+  sm: "3px 10px",
+  md: "5px 14px",
 };
 
-// We use inline styles for theme variables instead of Tailwind hardcoded colors.
-// This ensures light/dark themes work without override hacks.
-const VARIANT_INLINE: Record<ButtonVariant, React.CSSProperties> = {
+const VARIANT_STYLES: Record<ButtonVariant, React.CSSProperties> = {
   primary: {
-    background: "var(--th-accent)",
-    color: "#000",
-    border: "1px solid transparent",
+    background: "var(--th-accent-glow)",
+    border: "1px solid var(--th-accent-border)",
+    color: "var(--th-accent)",
+    fontWeight: 600,
   },
   secondary: {
-    background: "var(--th-bg-surface)",
-    color: "var(--th-text-primary)",
-    border: "1px solid var(--th-border)",
+    background: "transparent",
+    border: "1px solid var(--th-border-strong)",
+    color: "var(--th-text-secondary)",
+    fontWeight: 500,
   },
   ghost: {
     background: "transparent",
-    color: "var(--th-text-secondary)",
     border: "1px solid transparent",
+    color: "var(--th-text-muted)",
+    fontWeight: 400,
   },
   danger: {
-    background: "var(--th-danger-bg)",
-    color: "var(--th-danger-text)",
-    border: "1px solid var(--th-danger-border)",
+    background: "transparent",
+    border: "1px solid rgba(248,81,73,0.35)",
+    color: "#f85149",
+    fontWeight: 500,
   },
 };
 
-const SIZE_STYLES: Record<ButtonSize, string> = {
-  sm: "px-3 py-1",
-  md: "px-4 py-2",
+const HOVER_CLASS: Record<ButtonVariant, string> = {
+  primary: "hover:!bg-[var(--th-accent)] hover:!text-black hover:!border-[var(--th-accent)]",
+  secondary: "hover:!bg-[var(--th-hover-bg)] hover:!text-[var(--th-text)] hover:!border-[var(--th-border-strong)]",
+  ghost: "hover:!bg-[var(--th-hover-bg)] hover:!text-[var(--th-text-secondary)]",
+  danger: "hover:!bg-[rgba(248,81,73,0.08)] hover:!border-[rgba(248,81,73,0.5)]",
 };
 
 /**
- * Shared button primitive.
- *
- * Uses CSS variables exclusively — no Tailwind color classes that need
- * light-mode overrides.
+ * Shared button — Modern Terminal CLI bracket style.
+ * Font: mono, uppercase, no border-radius.
  */
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ variant = "secondary", size = "md", className = "", style, children, ...props }, ref) => {
     return (
       <button
         ref={ref}
-        className={`${BASE} ${VARIANT_STYLES[variant]} ${SIZE_STYLES[size]} ${className}`}
+        className={`inline-flex items-center justify-center whitespace-nowrap transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${HOVER_CLASS[variant]} ${className}`}
         style={{
           borderRadius: 0,
-          ...VARIANT_INLINE[variant],
+          fontFamily: mono,
+          fontSize: "11px",
+          letterSpacing: "0.04em",
+          textTransform: "uppercase",
+          padding: SIZE_PADDING[size],
+          cursor: "pointer",
+          ...VARIANT_STYLES[variant],
           ...style,
         }}
         {...props}

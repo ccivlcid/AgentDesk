@@ -384,18 +384,39 @@ export function TaskBoard({
 
   return (
     <motion.div
-      className="taskboard-shell flex h-full flex-col"
-      style={{ gap: 0 }}
+      className="taskboard-shell flex h-full min-h-0 flex-col"
+      style={{
+        gap: 0,
+        borderRadius: 10,
+        overflow: "hidden",
+        background: "var(--th-bg-elevated)",
+        border: "1px solid var(--th-border)",
+        boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
+      }}
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.12, ease: "linear" }}
     >
-      {/* ── 터미널 타이틀 바 ── */}
+      {/* ── 터미널 타이틀 바 (설정과 동일 macOS) ── */}
       <div
-        className="flex-shrink-0 flex items-center justify-between px-4 py-2"
-        style={{ borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}
+        className="flex-shrink-0 flex items-center justify-between"
+        style={{
+          borderBottom: "1px solid var(--th-border)",
+          padding: "12px 18px",
+          background: "var(--th-bg-panel)",
+          borderTopLeftRadius: 10,
+          borderTopRightRadius: 10,
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
+        }}
       >
         <div className="flex items-center gap-3 min-w-0">
+          {/* macOS 트래픽 라이트 (●●●) */}
+          <div className="flex flex-shrink-0 items-center gap-1.5">
+            <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#ff5f57" }} aria-hidden />
+            <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#ffbd2e" }} aria-hidden />
+            <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#27c93f" }} aria-hidden />
+          </div>
           <span style={{ ...mono, fontSize: "11px", color: "var(--th-accent)", fontWeight: 700 }}>$</span>
           <span style={{ ...mono, fontSize: "11px", color: "var(--th-text-secondary)", whiteSpace: "nowrap" }}>
             task-queue list
@@ -405,7 +426,7 @@ export function TaskBoard({
             {!showAllTasks && <span style={{ color: "var(--th-text-muted)" }}> --active</span>}
             {activeFilterCount > 0 && <span style={{ color: "#fb923c" }}> --filter={activeFilterCount}</span>}
           </span>
-          <span style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", padding: "1px 5px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
+          <span style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", padding: "1px 5px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface)", borderRadius: 6 }}>
             {filteredTasks.length} {t({ ko: "건", en: "tasks", ja: "件", zh: "项" })}
           </span>
         </div>
@@ -413,7 +434,7 @@ export function TaskBoard({
         {/* 뷰 모드 토글 + 주요 버튼 */}
         <div className="flex items-center gap-1.5 flex-shrink-0">
           {/* 뷰 모드 */}
-          <div className="flex" style={{ border: "1px solid var(--th-border)" }}>
+          <div className="flex" style={{ border: "1px solid var(--th-border)", borderRadius: 6, overflow: "hidden" }}>
             {(["board", "gantt", "dag"] as const).map((mode, i) => (
               <button
                 key={mode}
@@ -427,6 +448,7 @@ export function TaskBoard({
                   borderRight: i < 2 ? "1px solid var(--th-border)" : "none",
                   cursor: "pointer",
                   letterSpacing: "0.04em",
+                  borderRadius: 0,
                 }}
               >
                 {mode === "board" ? t({ ko: "보드", en: "BOARD", ja: "ボード", zh: "看板" })
@@ -453,7 +475,7 @@ export function TaskBoard({
           <button
             type="button"
             onClick={() => setShowCreate(true)}
-            style={{ ...mono, fontSize: "11px", fontWeight: 700, padding: "3px 14px", background: "var(--th-accent)", color: "#000", border: "none", cursor: "pointer", letterSpacing: "0.06em" }}
+            style={{ ...mono, fontSize: "11px", fontWeight: 700, padding: "3px 14px", borderRadius: 6, background: "var(--th-accent)", color: "#000", border: "none", cursor: "pointer", letterSpacing: "0.06em" }}
           >
             + {t({ ko: "새 업무", en: "NEW TASK", ja: "新規", zh: "新建" })}
           </button>
@@ -490,6 +512,7 @@ export function TaskBoard({
           onClick={() => setShowAllTasks((prev) => !prev)}
           style={{
             ...mono, fontSize: "9px", padding: "0 12px", height: "100%",
+            borderRadius: 6,
             background: showAllTasks ? "rgba(245,158,11,0.06)" : "transparent",
             color: showAllTasks ? "var(--th-accent)" : "var(--th-text-muted)",
             borderTop: "none", borderBottom: "none", borderRight: "none", borderLeft: "1px solid var(--th-border)", cursor: "pointer", flexShrink: 0, fontWeight: 700,
@@ -503,7 +526,7 @@ export function TaskBoard({
       </div>
 
       {/* ── 필터 바 ── */}
-      <div className="flex-shrink-0" style={{ borderBottom: "1px solid var(--th-border)" }}>
+      <div className="flex-shrink-0" style={{ borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-primary)" }}>
 
         <FilterBar
           departments={departments}
@@ -522,7 +545,7 @@ export function TaskBoard({
       </div>
 
       {viewMode === "dag" ? (
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
           <DependencyGraph tasks={filteredTasks} onOpenTerminal={onOpenTerminal} />
         </div>
       ) : viewMode === "gantt" ? (
@@ -540,7 +563,7 @@ export function TaskBoard({
           <button
             type="button"
             onClick={() => setShowCreate(true)}
-            style={{ ...mono, fontSize: "11px", fontWeight: 700, padding: "5px 18px", background: "var(--th-accent)", color: "#000", border: "none", cursor: "pointer" }}
+            style={{ ...mono, fontSize: "11px", fontWeight: 700, padding: "5px 18px", borderRadius: 6, background: "var(--th-accent)", color: "#000", border: "none", cursor: "pointer" }}
           >
             + {t({ ko: "첫 업무 만들기", en: "Create first task", ja: "最初のタスク作成", zh: "创建第一个任务" })}
           </button>
@@ -553,7 +576,7 @@ export function TaskBoard({
         onDragEnd={handleDragEnd}
         onDragCancel={handleDragCancel}
       >
-        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto pb-2 sm:flex-row sm:overflow-x-auto sm:overflow-y-hidden">
+        <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto pb-4 pt-1 sm:flex-row sm:overflow-x-auto sm:overflow-y-hidden sm:gap-6 sm:pb-4 sm:px-1">
           {COLUMNS.map((column) => {
             const columnTasks = tasksByStatus[column.status] ?? [];
             const isCollapsed = collapsedColumns.has(column.status);
@@ -567,16 +590,19 @@ export function TaskBoard({
                 }`}
                 style={{
                   border: isDragOver ? `1px solid ${sc?.color ?? "var(--th-border)"}` : "1px solid var(--th-border)",
+                  borderRadius: 10,
+                  overflow: "hidden",
                   background: isDragOver ? "rgba(255,255,255,0.02)" : "var(--th-bg-surface)",
                   outline: isDragOver ? `1px solid ${sc?.color ?? "transparent"}` : "none",
+                  boxShadow: isDragOver ? `0 8px 24px rgba(0,0,0,0.12)` : "0 2px 12px rgba(0,0,0,0.06)",
                 }}
               >
                 {/* 컬럼 헤더 */}
                 <button
                   type="button"
                   onClick={() => toggleColumn(column.status)}
-                  className={`flex flex-nowrap items-center gap-1.5 px-2.5 py-2 w-full text-left ${isCollapsed ? "sm:flex-col sm:justify-center sm:gap-1 sm:px-1" : ""}`}
-                  style={{ borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}
+                  className={`flex flex-nowrap items-center gap-1.5 px-3 py-2.5 w-full text-left ${isCollapsed ? "sm:flex-col sm:justify-center sm:gap-1 sm:px-1" : ""}`}
+                  style={{ borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", borderTopLeftRadius: 10, borderTopRightRadius: 10 }}
                 >
                   <span
                     style={{ width: 6, height: 6, borderRadius: "50%", background: sc?.color ?? "#888", flexShrink: 0,
@@ -594,6 +620,7 @@ export function TaskBoard({
                     style={{
                       ...mono, fontSize: "9px", fontWeight: 700,
                       padding: "0 5px",
+                      borderRadius: 6,
                       background: columnTasks.length > 0 ? `${sc?.color}18` : "transparent",
                       color: columnTasks.length > 0 ? sc?.color : "var(--th-text-muted)",
                       border: `1px solid ${columnTasks.length > 0 ? `${sc?.color}40` : "var(--th-border)"}`,
@@ -634,6 +661,7 @@ export function TaskBoard({
                           <div
                             className="flex min-h-24 flex-col items-center justify-center py-6 sm:flex-1 transition-colors"
                             style={{
+                              borderRadius: 8,
                               border: `1px dashed ${isOver ? sc?.color ?? "var(--th-accent)" : "var(--th-border)"}`,
                               background: isOver ? `${sc?.color}08` : "transparent",
                             }}
@@ -743,30 +771,30 @@ export function TaskBoard({
               </span>
             )}
             <div className="ml-auto flex items-center gap-1.5">
-              <button
-                type="button"
-                onClick={handleBatchStop}
-                disabled={selectedTaskIds.size === 0}
-                style={{ ...mono, fontSize: "9px", fontWeight: 700, padding: "2px 8px", border: "1px solid rgba(251,191,36,0.4)", color: "var(--th-accent)", background: "rgba(251,191,36,0.06)", cursor: "pointer", opacity: selectedTaskIds.size === 0 ? 0.3 : 1 }}
-              >
-                STOP
-              </button>
-              <button
-                type="button"
-                onClick={handleBatchHide}
-                disabled={selectedTaskIds.size === 0}
-                style={{ ...mono, fontSize: "9px", fontWeight: 700, padding: "2px 8px", border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent", cursor: "pointer", opacity: selectedTaskIds.size === 0 ? 0.3 : 1 }}
-              >
-                HIDE
-              </button>
-              <button
-                type="button"
-                onClick={handleBatchDelete}
-                disabled={selectedTaskIds.size === 0}
-                style={{ ...mono, fontSize: "9px", fontWeight: 700, padding: "2px 8px", border: "1px solid rgba(244,63,94,0.4)", color: "rgb(253,164,175)", background: "rgba(244,63,94,0.06)", cursor: "pointer", opacity: selectedTaskIds.size === 0 ? 0.3 : 1 }}
-              >
-                DEL
-              </button>
+            <button
+              type="button"
+              onClick={handleBatchStop}
+              disabled={selectedTaskIds.size === 0}
+              style={{ ...mono, fontSize: "9px", fontWeight: 700, padding: "2px 8px", borderRadius: 6, border: "1px solid rgba(251,191,36,0.4)", color: "var(--th-accent)", background: "rgba(251,191,36,0.06)", cursor: "pointer", opacity: selectedTaskIds.size === 0 ? 0.3 : 1 }}
+            >
+              STOP
+            </button>
+            <button
+              type="button"
+              onClick={handleBatchHide}
+              disabled={selectedTaskIds.size === 0}
+              style={{ ...mono, fontSize: "9px", fontWeight: 700, padding: "2px 8px", borderRadius: 6, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent", cursor: "pointer", opacity: selectedTaskIds.size === 0 ? 0.3 : 1 }}
+            >
+              HIDE
+            </button>
+            <button
+              type="button"
+              onClick={handleBatchDelete}
+              disabled={selectedTaskIds.size === 0}
+              style={{ ...mono, fontSize: "9px", fontWeight: 700, padding: "2px 8px", borderRadius: 6, border: "1px solid rgba(244,63,94,0.4)", color: "rgb(253,164,175)", background: "rgba(244,63,94,0.06)", cursor: "pointer", opacity: selectedTaskIds.size === 0 ? 0.3 : 1 }}
+            >
+              DEL
+            </button>
             </div>
           </div>
         )}

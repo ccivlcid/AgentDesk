@@ -20,7 +20,7 @@ type AgentRuleRow = {
 };
 
 const VALID_CATEGORIES = ["coding", "communication", "quality", "execution", "security", "workflow", "general"] as const;
-const VALID_SCOPE_TYPES = ["global", "department", "agent", "workflow_pack"] as const;
+const VALID_SCOPE_TYPES = ["global", "department", "agent", "workflow_pack", "project"] as const;
 
 function isValidCategory(v: unknown): v is string {
   return typeof v === "string" && (VALID_CATEGORIES as readonly string[]).includes(v);
@@ -79,6 +79,7 @@ export function registerAgentRulesRoutes({ app, db, nowMs }: RegisterAgentRulesR
             WHEN ar.scope_type = 'department' THEN (SELECT d.name FROM departments d WHERE d.id = ar.scope_id)
             WHEN ar.scope_type = 'agent' THEN (SELECT a.name FROM agents a WHERE a.id = ar.scope_id)
             WHEN ar.scope_type = 'workflow_pack' THEN (SELECT w.name FROM workflow_packs w WHERE w.key = ar.scope_id)
+            WHEN ar.scope_type = 'project' THEN (SELECT p.name FROM projects p WHERE p.id = ar.scope_id)
             ELSE NULL
           END AS scope_label
         FROM agent_rules ar

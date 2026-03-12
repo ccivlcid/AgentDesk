@@ -39,7 +39,7 @@ const EXECUTION_FILTER_OPTIONS: Array<{ value: "" | TaskExecutionState | "attent
 
 const selectStyle: React.CSSProperties = {
   border: "1px solid var(--th-border)",
-  borderRadius: 0,
+  borderRadius: 6,
   padding: "0.25rem 0.5rem",
   background: "var(--th-bg-surface)",
   color: "var(--th-text-secondary)",
@@ -130,6 +130,7 @@ export default function FilterBar({
           fontSize: "10px",
           fontWeight: 700,
           padding: "3px 8px",
+          borderRadius: 6,
           border: `1px solid ${hasFilter ? "rgba(251,191,36,0.4)" : "var(--th-border)"}`,
           background: hasFilter ? "rgba(251,191,36,0.06)" : "transparent",
           color: hasFilter ? "var(--th-accent)" : "var(--th-text-muted)",

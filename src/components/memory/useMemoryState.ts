@@ -10,6 +10,7 @@ import {
   getMemoryLearningJob,
   getAvailableLearnedMemories,
   unlearnMemory,
+  type MemoryFilters,
   type CreateMemoryInput,
   type UpdateMemoryInput,
   type MemoryLearnProvider,
@@ -29,9 +30,10 @@ interface UseMemoryStateOptions {
   agents: Agent[];
   departments: Department[];
   t: TFunction;
+  filters?: MemoryFilters;
 }
 
-export function useMemoryState({ agents, departments, t }: UseMemoryStateOptions) {
+export function useMemoryState({ agents, departments, t, filters }: UseMemoryStateOptions) {
   const [entries, setEntries] = useState<MemoryEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -69,14 +71,14 @@ export function useMemoryState({ agents, departments, t }: UseMemoryStateOptions
     try {
       setLoading(true);
       setError(null);
-      const data = await getMemoryEntries();
+      const data = await getMemoryEntries(filters);
       setEntries(data);
     } catch (err: unknown) {
       setError(String((err as Error).message ?? err));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [filters?.scope_type, filters?.scope_id, filters?.category, filters?.enabled]);
 
   useEffect(() => {
     void loadEntries();

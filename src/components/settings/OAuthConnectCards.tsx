@@ -12,13 +12,8 @@ export default function OAuthConnectCards({
 }: OAuthConnectCardProps) {
   return (
     <div className="space-y-3">
-      <div className="text-xs font-semibold font-mono uppercase tracking-wider" style={{ color: "var(--th-text-muted)" }}>
-        {t({
-          ko: "OAuth 계정 추가",
-          en: "Add OAuth Account",
-          ja: "OAuth アカウント追加",
-          zh: "添加 OAuth 账号",
-        })}
+      <div style={{ fontFamily: "var(--th-font-mono)", fontSize: "10px", color: "var(--th-accent)", letterSpacing: "0.08em", textTransform: "uppercase", borderLeft: "3px solid var(--th-accent)", paddingLeft: "8px" }}>
+        // add oauth account
       </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">

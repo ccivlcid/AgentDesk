@@ -179,131 +179,39 @@ function ensureDepartmentExists(
   nowMs: number,
 ): string | null {
   if (!departmentId) return null;
-  if (packKey === DEFAULT_WORKFLOW_PACK_KEY) {
-    const existing = db.prepare("SELECT id FROM departments WHERE id = ? LIMIT 1").get(departmentId) as
-      | { id?: unknown }
-      | undefined;
-    if (normalizeText(existing?.id)) return departmentId;
-  } else {
-    try {
-      const existingPack = db
-        .prepare(
-          "SELECT department_id FROM office_pack_departments WHERE workflow_pack_key = ? AND department_id = ? LIMIT 1",
-        )
-        .get(packKey, departmentId) as { department_id?: unknown } | undefined;
-      if (normalizeText(existingPack?.department_id)) return departmentId;
-    } catch {
-      // fallback to base departments table
-      const existing = db.prepare("SELECT id FROM departments WHERE id = ? LIMIT 1").get(departmentId) as
-        | { id?: unknown }
-        | undefined;
-      if (normalizeText(existing?.id)) return departmentId;
-    }
-  }
+
+  const existing = db.prepare("SELECT id FROM departments WHERE id = ? LIMIT 1").get(departmentId) as
+    | { id?: unknown }
+    | undefined;
+  if (normalizeText(existing?.id)) return departmentId;
 
   const source = department;
   if (!source) return null;
-  if (packKey === DEFAULT_WORKFLOW_PACK_KEY) {
-    try {
-      db.prepare(
-        `
-        INSERT OR IGNORE INTO departments (
-          id, name, name_ko, name_ja, name_zh, icon, color, description, prompt, sort_order, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `,
-      ).run(
-        source.id,
-        source.name,
-        source.name_ko,
-        source.name_ja,
-        source.name_zh,
-        source.icon,
-        source.color,
-        source.description,
-        source.prompt,
-        source.sort_order,
-        source.created_at || nowMs,
-      );
-    } catch {
-      return null;
-    }
-  } else {
-    try {
-      db.prepare(
-        `
-        INSERT INTO office_pack_departments (
-          workflow_pack_key, department_id, name, name_ko, name_ja, name_zh, icon, color, description, prompt, sort_order, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ON CONFLICT(workflow_pack_key, department_id) DO UPDATE SET
-          name = excluded.name,
-          name_ko = excluded.name_ko,
-          name_ja = excluded.name_ja,
-          name_zh = excluded.name_zh,
-          icon = excluded.icon,
-          color = excluded.color,
-          description = excluded.description,
-          prompt = excluded.prompt,
-          sort_order = excluded.sort_order
-      `,
-      ).run(
-        packKey,
-        source.id,
-        source.name,
-        source.name_ko,
-        source.name_ja,
-        source.name_zh,
-        source.icon,
-        source.color,
-        source.description,
-        source.prompt,
-        source.sort_order,
-        source.created_at || nowMs,
-      );
-    } catch {
-      // fallback for legacy test schemas without office_pack_departments.
-      try {
-        db.prepare(
-          `
-          INSERT OR IGNORE INTO departments (
-            id, name, name_ko, name_ja, name_zh, icon, color, description, prompt, sort_order, created_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `,
-        ).run(
-          source.id,
-          source.name,
-          source.name_ko,
-          source.name_ja,
-          source.name_zh,
-          source.icon,
-          source.color,
-          source.description,
-          source.prompt,
-          source.sort_order,
-          source.created_at || nowMs,
-        );
-      } catch {
-        return null;
-      }
-    }
-  }
-
-  if (packKey === DEFAULT_WORKFLOW_PACK_KEY) {
-    const inserted = db.prepare("SELECT id FROM departments WHERE id = ? LIMIT 1").get(departmentId) as
-      | { id?: unknown }
-      | undefined;
-    return normalizeText(inserted?.id) ? departmentId : null;
-  }
 
   try {
-    const insertedPack = db
-      .prepare(
-        "SELECT department_id FROM office_pack_departments WHERE workflow_pack_key = ? AND department_id = ? LIMIT 1",
-      )
-      .get(packKey, departmentId) as { department_id?: unknown } | undefined;
-    if (normalizeText(insertedPack?.department_id)) return departmentId;
+    db.prepare(
+      `
+      INSERT OR IGNORE INTO departments (
+        id, name, name_ko, name_ja, name_zh, icon, color, description, prompt, sort_order, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `,
+    ).run(
+      source.id,
+      source.name,
+      source.name_ko,
+      source.name_ja,
+      source.name_zh,
+      source.icon,
+      source.color,
+      source.description,
+      source.prompt,
+      source.sort_order,
+      source.created_at || nowMs,
+    );
   } catch {
-    // fall through
+    return null;
   }
+
   const inserted = db.prepare("SELECT id FROM departments WHERE id = ? LIMIT 1").get(departmentId) as
     | { id?: unknown }
     | undefined;

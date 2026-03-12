@@ -158,18 +158,42 @@ export default function CliUsagePanel({
   const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };
 
   return (
-    <div style={{ ...mono, display: "flex", flexDirection: "column", gap: 0, maxWidth: 900, margin: "0 auto" }}>
-      {/* CLI 헤더 */}
+    <div
+      style={{
+        ...mono,
+        display: "flex",
+        flexDirection: "column",
+        gap: 0,
+        maxWidth: 900,
+        margin: "0 auto",
+        borderRadius: 10,
+        overflow: "hidden",
+        background: "var(--th-bg-elevated)",
+        border: "1px solid var(--th-border)",
+        boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
+      }}
+    >
+      {/* CLI 헤더 — macOS 스타일 */}
       <div
         style={{
           borderBottom: "1px solid var(--th-border)",
-          padding: "10px 16px",
-          background: "var(--th-bg-elevated)",
+          padding: "12px 18px",
+          background: "var(--th-bg-panel)",
           display: "flex",
           alignItems: "center",
           gap: 8,
+          borderTopLeftRadius: 10,
+          borderTopRightRadius: 10,
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
         }}
       >
+        {/* macOS 트래픽 라이트 (●●●) */}
+        <div className="flex flex-shrink-0 items-center gap-1.5">
+          <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#ff5f57" }} aria-hidden />
+          <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#ffbd2e" }} aria-hidden />
+          <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#27c93f" }} aria-hidden />
+        </div>
         <span style={{ color: "var(--th-accent)", fontWeight: 700, fontSize: "11px" }}>$</span>
         <span style={{ fontSize: "11px", color: "var(--th-text-secondary)" }}>agentdesk cli-usage</span>
         <span style={{ marginLeft: "auto", fontSize: "9px", color: "var(--th-text-muted)", opacity: 0.8 }}>
@@ -178,22 +202,18 @@ export default function CliUsagePanel({
         <button
           onClick={onRefreshUsage}
           disabled={refreshing}
-          className="flex items-center gap-2 px-2.5 py-1.5 text-xs font-mono transition-colors disabled:opacity-50"
-          style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)", color: "var(--th-text-secondary)" }}
+          className="px-2.5 py-1 text-[10px] font-mono transition-opacity disabled:opacity-50"
+          style={{ borderRadius: 6, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)", color: "var(--th-text-secondary)" }}
           title={t(LOCALE_TEXT.cliRefreshTitle)}
         >
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={refreshing ? "animate-spin" : ""}>
-            <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-            <polyline points="21 3 21 9 15 9" />
-          </svg>
-          {refreshing ? (t(LOCALE_TEXT.cliUsageTitle).includes("사용량") ? "새로고침 중…" : "Refreshing…") : (t(LOCALE_TEXT.cliUsageTitle).includes("사용량") ? "새로고침" : "Refresh")}
+          {refreshing ? "↺ …" : "[↺ refresh]"}
         </button>
       </div>
 
-      <div className="space-y-6" style={{ padding: "20px 16px 24px", background: "var(--th-bg-primary)" }}>
+      <div className="space-y-6" style={{ padding: "20px 18px 24px", background: "var(--th-bg-primary)" }}>
 
       {connectedClis.length === 0 ? (
-        <section className="terminal-empty-state rounded border p-8" style={{ borderColor: "var(--th-border)" }}>
+        <section className="terminal-empty-state border p-8" style={{ borderColor: "var(--th-border)", borderRadius: 8 }}>
           <p className="terminal-empty-state-cmd">$ cli status --all</p>
           <p className="terminal-empty-state-result">{t(LOCALE_TEXT.cliNoConnectedEmpty)}</p>
           <p className="terminal-empty-state-hint">
@@ -205,10 +225,10 @@ export default function CliUsagePanel({
       ) : (
         <>
       {/* Provider usage cards */}
-      <section className="rounded border p-4" style={{ borderColor: "var(--th-border)", background: "var(--th-bg-surface)" }}>
-        <h2 className="mb-3 text-xs font-semibold font-mono uppercase tracking-wider" style={{ color: "var(--th-text-muted)" }}>
-          {t(LOCALE_TEXT.cliUsageTitle).includes("사용량") ? "프로바이더별 사용률" : "Usage by provider"}
-        </h2>
+      <section className="border p-4" style={{ borderColor: "var(--th-border)", background: "var(--th-bg-surface)", borderRadius: 8 }}>
+        <div style={{ fontFamily: "var(--th-font-mono)", fontSize: "10px", color: "var(--th-accent)", letterSpacing: "0.08em", textTransform: "uppercase", borderLeft: "3px solid var(--th-accent)", paddingLeft: "8px", marginBottom: "12px" }}>
+          // {t(LOCALE_TEXT.cliUsageTitle).includes("사용량") ? "usage by provider" : "usage by provider"}
+        </div>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {connectedClis.map((cli) => {
             const usage = cliUsage?.[cli.key];
@@ -216,10 +236,10 @@ export default function CliUsagePanel({
               <div
                 key={cli.key}
                 className={`border ${cli.bgColor} p-3.5 transition-colors`}
-                style={{ borderRadius: 0 }}
+                style={{ borderRadius: 8 }}
               >
                 <div className="mb-2 flex items-center gap-2">
-                  <span className="flex h-8 w-8 items-center justify-center text-base" style={{ borderRadius: 0, background: "var(--th-bg-elevated)" }}>{cli.icon}</span>
+                  <span className="flex h-8 w-8 items-center justify-center text-base" style={{ borderRadius: 6, background: "var(--th-bg-elevated)" }}>{cli.icon}</span>
                   <span className={`text-sm font-semibold ${cli.color}`}>{cli.name}</span>
                 </div>
 
@@ -267,10 +287,10 @@ export default function CliUsagePanel({
                               )}
                             </span>
                           </div>
-                          <div className="h-2 overflow-hidden" style={{ borderRadius: 0, background: "var(--th-bg-surface-hover)" }}>
+                          <div className="h-2 overflow-hidden" style={{ borderRadius: 6, background: "var(--th-bg-surface-hover)" }}>
                             <div
                               className={`h-full ${barColor} transition-all duration-500`}
-                              style={{ borderRadius: 0, width: `${Math.min(100, percentage)}%` }}
+                              style={{ borderRadius: 6, width: `${Math.min(100, percentage)}%` }}
                             />
                           </div>
                         </div>
@@ -293,7 +313,7 @@ export default function CliUsagePanel({
 
       {/* Agent Usage Summary */}
       {agentUsage.length > 0 && (
-        <section className="rounded border p-4" style={{ borderColor: "var(--th-border)", background: "var(--th-bg-surface)" }}>
+        <section className="border p-4" style={{ borderColor: "var(--th-border)", background: "var(--th-bg-surface)", borderRadius: 8 }}>
           <button
             onClick={() => setAgentUsageExpanded((v) => !v)}
             className="flex w-full items-center justify-between py-1 text-left text-xs font-medium font-mono transition-colors"
@@ -306,9 +326,9 @@ export default function CliUsagePanel({
                 <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
                 <path d="M16 3.13a4 4 0 0 1 0 7.75" />
               </svg>
-              {language === "ko" ? "에이전트별 사용량 (24h)" : language === "ja" ? "エージェント別使用量 (24h)" : "Agent Usage (24h)"}
+              // {language === "ko" ? "agent usage (24h)" : "agent usage (24h)"}
               {filteredAgentUsage.length !== agentUsage.length && (
-                <span className="text-[10px] px-1.5 py-0.5 font-mono" style={{ borderRadius: 0, background: "rgba(251,191,36,0.12)", color: "var(--th-accent)" }}>
+                <span className="text-[10px] px-1.5 py-0.5 font-mono" style={{ borderRadius: 6, background: "rgba(251,191,36,0.12)", color: "var(--th-accent)" }}>
                   {filteredAgentUsage.length}/{agentUsage.length}
                 </span>
               )}
@@ -326,8 +346,8 @@ export default function CliUsagePanel({
                   onClick={() => setUsageFilter("current")}
                   className="px-2.5 py-1 text-[10px] font-medium font-mono transition-colors"
                   style={usageFilter === "current"
-                    ? { borderRadius: 0, border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.15)", color: "var(--th-accent)" }
-                    : { borderRadius: 0, border: "1px solid var(--th-border)", background: "transparent", color: "var(--th-text-muted)" }}
+                    ? { borderRadius: 6, border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.15)", color: "var(--th-accent)" }
+                    : { borderRadius: 6, border: "1px solid var(--th-border)", background: "transparent", color: "var(--th-text-muted)" }}
                 >
                   {language === "ko" ? "프로젝트 팀" : "Project Team"}
                 </button>
@@ -335,8 +355,8 @@ export default function CliUsagePanel({
                   onClick={() => setUsageFilter("all")}
                   className="px-2.5 py-1 text-[10px] font-medium font-mono transition-colors"
                   style={usageFilter === "all"
-                    ? { borderRadius: 0, border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.15)", color: "var(--th-accent)" }
-                    : { borderRadius: 0, border: "1px solid var(--th-border)", background: "transparent", color: "var(--th-text-muted)" }}
+                    ? { borderRadius: 6, border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.15)", color: "var(--th-accent)" }
+                    : { borderRadius: 6, border: "1px solid var(--th-border)", background: "transparent", color: "var(--th-text-muted)" }}
                 >
                   {language === "ko" ? "전체" : "All"} ({agentUsage.length})
                 </button>
@@ -347,12 +367,12 @@ export default function CliUsagePanel({
                 const durationMin = Math.round(row.total_duration_ms / 60000);
                 const successRate = row.run_count > 0 ? Math.round((row.success_count / row.run_count) * 100) : 0;
                 return (
-                  <div key={`${row.agent_id}-${row.provider}`} className="flex items-center gap-3 px-3 py-2 text-[11px]" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
+                  <div key={`${row.agent_id}-${row.provider}`} className="flex items-center gap-3 px-3 py-2 text-[11px]" style={{ borderRadius: 6, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
                     <span className="text-lg leading-none">{row.avatar_emoji || "🤖"}</span>
                     <span className="min-w-0 flex-1 truncate font-medium font-mono" style={{ color: "var(--th-text-primary)" }}>
                       {language === "ko" ? row.agent_name_ko || row.agent_name : row.agent_name}
                     </span>
-                    <span className="shrink-0 px-1.5 py-0.5 text-[10px] font-mono" style={{ borderRadius: 0, background: "var(--th-bg-surface-hover)", color: "var(--th-text-muted)" }}>{row.provider}</span>
+                    <span className="shrink-0 px-1.5 py-0.5 text-[10px] font-mono" style={{ borderRadius: 6, background: "var(--th-bg-surface-hover)", color: "var(--th-text-muted)" }}>{row.provider}</span>
                     <span className="shrink-0 font-mono" style={{ color: "var(--th-text-muted)" }}>{row.run_count}{language === "ko" ? "회" : language === "ja" ? "回" : "x"}</span>
                     <span className="shrink-0 font-mono" style={{ color: "var(--th-text-muted)" }}>{durationMin}m</span>
                     <span className={`shrink-0 font-medium ${successRate >= 80 ? "text-emerald-400" : successRate >= 50 ? "text-amber-400" : "text-red-400"}`}>
@@ -381,19 +401,19 @@ export default function CliUsagePanel({
         const entries = [...providerStats.entries()].sort((a, b) => b[1].runs - a[1].runs);
         if (entries.length === 0) return null;
         return (
-          <section className="rounded border p-4" style={{ borderColor: "var(--th-border)", background: "var(--th-bg-surface)" }}>
+          <section className="border p-4" style={{ borderColor: "var(--th-border)", background: "var(--th-bg-surface)", borderRadius: 8 }}>
             <span className="flex items-center gap-2 text-xs font-medium font-mono mb-3" style={{ color: "var(--th-text-muted)" }}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
               </svg>
-              {language === "ko" ? "프로바이더별 성공/실패" : language === "ja" ? "プロバイダ別成功/失敗" : "Provider Success/Failure"}
+              // {language === "ko" ? "provider success/failure" : "provider success/failure"}
             </span>
             <div className="space-y-2">
               {entries.map(([provider, stats]) => {
                 const rate = stats.runs > 0 ? Math.round((stats.success / stats.runs) * 100) : 0;
                 const barWidth = stats.runs > 0 ? (stats.success / stats.runs) * 100 : 0;
                 return (
-                  <div key={provider} className="px-3 py-2" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
+                  <div key={provider} className="px-3 py-2" style={{ borderRadius: 6, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
                     <div className="flex items-center justify-between text-[11px] mb-1">
                       <span className="font-medium font-mono" style={{ color: "var(--th-text-primary)" }}>{provider}</span>
                       <span className="font-mono" style={{ color: "var(--th-text-muted)" }}>
@@ -401,11 +421,11 @@ export default function CliUsagePanel({
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="flex-1 h-1.5 overflow-hidden" style={{ borderRadius: 0, background: "var(--th-bg-surface-hover)" }}>
+                      <div className="flex-1 h-1.5 overflow-hidden" style={{ borderRadius: 6, background: "var(--th-bg-surface-hover)" }}>
                         <div
                           className="h-full transition-all"
                           style={{
-                            borderRadius: 0,
+                            borderRadius: 6,
                             width: `${barWidth}%`,
                             background: rate >= 80 ? "#22c55e" : rate >= 50 ? "#f59e0b" : "#ef4444",
                           }}
@@ -428,7 +448,7 @@ export default function CliUsagePanel({
       })()}
 
       {/* Cost Alert Settings */}
-      <section className="rounded border p-4" style={{ borderColor: "var(--th-border)", background: "var(--th-bg-surface)" }}>
+      <section className="border p-4" style={{ borderColor: "var(--th-border)", background: "var(--th-bg-surface)", borderRadius: 8 }}>
         <button
           onClick={() => setAlertExpanded((v) => !v)}
           className="flex w-full items-center justify-between py-1 text-left text-xs font-medium font-mono transition-colors"
@@ -439,7 +459,7 @@ export default function CliUsagePanel({
               <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
               <path d="M13.73 21a2 2 0 0 1-3.46 0" />
             </svg>
-            {t(LOCALE_TEXT.cliUsageTitle).includes("사용량") ? "비용 알림 설정" : "Cost Alerts"}
+            // cost alerts
           </span>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={`transition-transform ${alertExpanded ? "rotate-180" : ""}`}>
             <polyline points="6 9 12 15 18 9" />
@@ -450,14 +470,14 @@ export default function CliUsagePanel({
             {connectedClis.map((cli) => {
               const conf = alertConfig[cli.key] ?? { alertThreshold: 80, enabled: false };
               return (
-                <div key={cli.key} className="flex flex-wrap items-center gap-2 px-3 py-2" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
+                <div key={cli.key} className="flex flex-wrap items-center gap-2 px-3 py-2" style={{ borderRadius: 6, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
                   <label className="flex cursor-pointer items-center gap-2">
                     <input
                       type="checkbox"
                       checked={conf.enabled}
                       onChange={(e) => handleAlertChange(cli.key, "enabled", e.target.checked)}
                       className="h-3.5 w-3.5"
-                      style={{ borderRadius: 0, accentColor: "var(--th-accent)" }}
+                      style={{ borderRadius: 4, accentColor: "var(--th-accent)" }}
                     />
                     <span className={`text-sm font-medium ${cli.color}`}>{cli.name}</span>
                   </label>
@@ -469,7 +489,7 @@ export default function CliUsagePanel({
                     value={conf.alertThreshold}
                     onChange={(e) => handleAlertChange(cli.key, "alertThreshold", Number(e.target.value))}
                     className="w-14 px-2 py-1.5 text-center text-sm focus:outline-none"
-                    style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)", fontFamily: "var(--th-font-mono)" }}
+                    style={{ borderRadius: 6, border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)", fontFamily: "var(--th-font-mono)" }}
                   />
                   <span className="text-sm font-mono" style={{ color: "var(--th-text-muted)" }}>%</span>
                 </div>
@@ -479,7 +499,7 @@ export default function CliUsagePanel({
               onClick={handleSaveAlerts}
               disabled={alertSaving}
               className="px-4 py-2 text-sm font-medium font-mono text-cyan-300 transition-colors disabled:opacity-50"
-              style={{ borderRadius: 0, border: "1px solid rgba(6,182,212,0.4)", background: "rgba(6,182,212,0.15)" }}
+              style={{ borderRadius: 6, border: "1px solid rgba(6,182,212,0.4)", background: "rgba(6,182,212,0.15)" }}
             >
               {alertSaving ? "…" : t(LOCALE_TEXT.cliUsageTitle).includes("사용량") ? "저장" : "Save"}
             </button>
@@ -488,7 +508,7 @@ export default function CliUsagePanel({
       </section>
 
       {/* Daily Usage Trend Chart */}
-      <section className="rounded border p-4" style={{ borderColor: "var(--th-border)", background: "var(--th-bg-surface)" }}>
+      <section className="border p-4" style={{ borderColor: "var(--th-border)", background: "var(--th-bg-surface)", borderRadius: 8 }}>
         <UsageTrendChart language={language} />
       </section>
         </>

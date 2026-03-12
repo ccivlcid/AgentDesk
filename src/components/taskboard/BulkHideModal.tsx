@@ -57,7 +57,7 @@ export default function BulkHideModal({ tasks, hiddenTaskIds, onClose, onApply }
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
       onClick={(event) => event.target === event.currentTarget && onClose()}
     >
-      <div className="w-full max-w-sm p-5 shadow-2xl" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
+      <div className="w-full max-w-sm p-5 shadow-2xl overflow-hidden" style={{ borderRadius: 10, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", boxShadow: "0 20px 50px rgba(0,0,0,0.4)" }}>
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-base font-bold font-mono" style={{ color: "var(--th-text-heading)" }}>
             {t({
@@ -70,7 +70,7 @@ export default function BulkHideModal({ tasks, hiddenTaskIds, onClose, onApply }
           <button
             onClick={onClose}
             className="p-1.5 transition"
-            style={{ borderRadius: 0, color: "var(--th-text-muted)", background: "transparent" }}
+            style={{ borderRadius: 6, color: "var(--th-text-muted)", background: "transparent" }}
             title={t({ ko: "닫기", en: "Close", ja: "閉じる", zh: "关闭" })}
           >
             ✕
@@ -92,8 +92,8 @@ export default function BulkHideModal({ tasks, hiddenTaskIds, onClose, onApply }
               key={status}
               className="flex cursor-pointer items-center justify-between px-3 py-2"
               style={count > 0
-                ? { borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)" }
-                : { borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-primary)", color: "var(--th-text-muted)", cursor: "not-allowed" }}
+                ? { borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)" }
+                : { borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-primary)", color: "var(--th-text-muted)", cursor: "not-allowed" }}
             >
               <span className="flex items-center gap-2 text-sm">
                 <input
@@ -108,7 +108,7 @@ export default function BulkHideModal({ tasks, hiddenTaskIds, onClose, onApply }
                 />
                 {label}
               </span>
-              <span className="px-2 py-0.5 text-[11px] font-mono" style={{ borderRadius: 0, background: "var(--th-bg-primary)", color: "var(--th-text-secondary)" }}>{count}</span>
+              <span className="px-2 py-0.5 text-[11px] font-mono" style={{ borderRadius: 6, background: "var(--th-bg-primary)", color: "var(--th-text-secondary)" }}>{count}</span>
             </label>
           ))}
         </div>
@@ -117,7 +117,7 @@ export default function BulkHideModal({ tasks, hiddenTaskIds, onClose, onApply }
           <button
             onClick={onClose}
             className="px-3 py-1.5 text-xs font-mono transition"
-            style={{ borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
+            style={{ borderRadius: 6, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
           >
             {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}
           </button>
@@ -125,7 +125,7 @@ export default function BulkHideModal({ tasks, hiddenTaskIds, onClose, onApply }
             onClick={() => onApply(selectedStatuses)}
             disabled={hideTargetCount <= 0}
             className="px-3 py-1.5 text-xs font-semibold font-mono transition disabled:cursor-not-allowed disabled:opacity-40"
-            style={{ borderRadius: 0, border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.15)", color: "var(--th-accent)" }}
+            style={{ borderRadius: 6, border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.15)", color: "var(--th-accent)" }}
           >
             {t({ ko: "숨김 적용", en: "Apply hide", ja: "非表示適用", zh: "应用隐藏" })} ({hideTargetCount})
           </button>

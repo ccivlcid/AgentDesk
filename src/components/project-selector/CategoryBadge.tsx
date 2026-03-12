@@ -7,11 +7,12 @@ interface CategoryBadgeProps {
 export default function CategoryBadge({ label, color, icon }: CategoryBadgeProps) {
   return (
     <span
-      className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium leading-none"
+      className="inline-flex items-center gap-1 rounded-none px-1.5 py-0.5 text-[10px] font-medium leading-none"
       style={{
-        backgroundColor: color ? `${color}22` : "var(--th-bg-accent)",
+        fontFamily: "var(--th-font-mono)",
+        backgroundColor: color ? `${color}18` : "var(--th-bg-surface)",
         color: color ?? "var(--th-text-muted)",
-        border: `1px solid ${color ? `${color}44` : "var(--th-border)"}`,
+        border: `1px solid ${color ? `${color}40` : "var(--th-border)"}`,
       }}
     >
       {icon && <span className="text-[10px]">{icon}</span>}

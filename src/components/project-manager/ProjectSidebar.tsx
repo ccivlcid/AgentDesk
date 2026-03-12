@@ -1,4 +1,5 @@
 import type { Project } from "../../types";
+import HeaderModalChrome from "../ui/HeaderModalChrome";
 import type { ProjectI18nTranslate } from "./types";
 
 interface ProjectSidebarProps {
@@ -36,17 +37,7 @@ export default function ProjectSidebar({
 }: ProjectSidebarProps) {
   return (
     <aside className="flex w-full flex-col md:w-[330px]" style={{ borderRight: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
-      <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: "1px solid var(--th-border)", borderLeft: "3px solid var(--th-accent)" }}>
-        <h2 className="text-xs font-bold uppercase tracking-widest" style={{ color: "var(--th-text-heading)", fontFamily: "var(--th-font-mono)" }}>{headerTitle}</h2>
-        <button
-          type="button"
-          onClick={onClose}
-          className="flex h-6 w-6 items-center justify-center text-xs font-mono transition"
-          style={{ borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-muted)", background: "transparent" }}
-        >
-          ✕
-        </button>
-      </div>
+      <HeaderModalChrome title={headerTitle} onClose={onClose} />
 
       <div className="px-4 py-3" style={{ borderBottom: "1px solid var(--th-border)" }}>
         <input

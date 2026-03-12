@@ -11,6 +11,7 @@ import {
 import CreateTaskModalOverlays from "./Overlays";
 import type { CreateTaskModalOverlaysProps } from "./overlay-types";
 import { AssigneeSection, ProjectSection } from "./Sections";
+import HeaderModalChrome from "../../ui/HeaderModalChrome";
 
 interface CreateTaskModalViewProps {
   t: TFunction;
@@ -100,91 +101,81 @@ export default function CreateTaskModalView({
 
   void createNewProjectMode;
 
+  const headerTitle = t({ ko: "새 업무", en: "New Task", ja: "新規タスク", zh: "新建任务" });
+
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center bg-black/70 p-3 sm:items-center"
-      onClick={(e) => { if (e.target === e.currentTarget) e.preventDefault(); }}
+      className="fixed inset-0 z-50 flex items-start justify-center p-3 sm:items-center"
+      style={{ background: "var(--th-modal-overlay)" }}
+      onClick={(e) => { if (e.target === e.currentTarget) onRequestClose(); }}
     >
       <div
-        className="flex w-full max-w-lg flex-col"
+        className="flex w-full max-w-lg flex-col overflow-hidden"
         style={{
-          borderRadius: 0,
-          background: "var(--th-bg-primary)",
+          borderRadius: 10,
+          background: "var(--th-bg-elevated)",
           border: "1px solid var(--th-border)",
-          boxShadow: "0 8px 40px rgba(0,0,0,0.6)",
+          boxShadow: "0 20px 50px rgba(0,0,0,0.4)",
           maxHeight: "calc(100dvh - 2rem)",
-          borderLeft: "3px solid var(--th-accent)",
         }}
+        onClick={(e) => e.stopPropagation()}
       >
-        {/* ── Header ── */}
-        <div
-          className="flex items-center justify-between px-4 py-2.5 flex-shrink-0"
-          style={{ borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}
-        >
-          <span style={{ ...mono, fontSize: "10px", fontWeight: 700, letterSpacing: "0.1em", color: "var(--th-accent)", textTransform: "uppercase" }}>
-            ▶ {t({ ko: "새 업무", en: "NEW TASK", ja: "新規タスク", zh: "新建任务" })}
-          </span>
-          <div className="flex items-center gap-1.5">
-            {/* 템플릿 드롭다운 */}
-            {templates && templates.length > 0 && onLoadTemplate && (
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => setTemplateMenuOpen((p) => !p)}
-                  style={{ ...mono, fontSize: "9px", padding: "2px 7px", borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)", color: "var(--th-text-muted)", cursor: "pointer", letterSpacing: "0.05em" }}
-                >
-                  TPL ({templates.length})
-                </button>
-                {templateMenuOpen && (
-                  <div
-                    className="absolute right-0 top-full z-10 mt-1 w-52 max-h-52 overflow-y-auto"
-                    style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}
+        <HeaderModalChrome
+          title={headerTitle}
+          rightSlot={
+            <div className="flex items-center gap-1.5">
+              {templates && templates.length > 0 && onLoadTemplate && (
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); setTemplateMenuOpen((p) => !p); }}
+                    style={{ ...mono, fontSize: "9px", padding: "2px 7px", borderRadius: 6, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)", color: "var(--th-text-muted)", cursor: "pointer" }}
                   >
-                    {templates.map((tpl) => (
-                      <div key={tpl.id} className="flex items-center last:border-0" style={{ borderBottom: "1px solid var(--th-border)" }}>
-                        <button
-                          type="button"
-                          className="flex-1 px-3 py-1.5 text-left truncate hover:opacity-80 transition"
-                          style={{ ...mono, fontSize: "10px", color: "var(--th-text-primary)" }}
-                          onClick={() => { onLoadTemplate(tpl.id); setTemplateMenuOpen(false); }}
-                        >
-                          {tpl.name}
-                        </button>
-                        {onDeleteTemplate && (
+                    TPL ({templates.length})
+                  </button>
+                  {templateMenuOpen && (
+                    <div
+                      className="absolute right-0 top-full z-10 mt-1 w-52 max-h-52 overflow-y-auto"
+                      style={{ borderRadius: 6, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}
+                    >
+                      {templates.map((tpl) => (
+                        <div key={tpl.id} className="flex items-center last:border-0" style={{ borderBottom: "1px solid var(--th-border)" }}>
                           <button
                             type="button"
-                            style={{ ...mono, padding: "6px 8px", fontSize: "9px", color: "var(--th-text-muted)", cursor: "pointer" }}
-                            onClick={() => void onDeleteTemplate(tpl.id)}
+                            className="flex-1 px-3 py-1.5 text-left truncate hover:opacity-80 transition"
+                            style={{ ...mono, fontSize: "10px", color: "var(--th-text-primary)" }}
+                            onClick={() => { onLoadTemplate(tpl.id); setTemplateMenuOpen(false); }}
                           >
-                            ✕
+                            {tpl.name}
                           </button>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-            {/* 초안 버튼 */}
-            {draftsCount > 0 && (
-              <button
-                type="button"
-                onClick={onOpenDraftModal}
-                style={{ ...mono, fontSize: "9px", padding: "2px 7px", borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)", color: "var(--th-text-muted)", cursor: "pointer", letterSpacing: "0.05em" }}
-              >
-                DRAFT ({draftsCount})
-              </button>
-            )}
-            {/* 닫기 */}
-            <button
-              type="button"
-              onClick={onRequestClose}
-              style={{ ...mono, fontSize: "12px", color: "var(--th-text-muted)", cursor: "pointer", padding: "2px 4px", lineHeight: 1 }}
-            >
-              ✕
-            </button>
-          </div>
-        </div>
+                          {onDeleteTemplate && (
+                            <button
+                              type="button"
+                              style={{ ...mono, padding: "6px 8px", fontSize: "9px", color: "var(--th-text-muted)", cursor: "pointer" }}
+                              onClick={() => void onDeleteTemplate(tpl.id)}
+                            >
+                              ✕
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+              {draftsCount > 0 && (
+                <button
+                  type="button"
+                  onClick={onOpenDraftModal}
+                  style={{ ...mono, fontSize: "9px", padding: "2px 7px", borderRadius: 6, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)", color: "var(--th-text-muted)", cursor: "pointer" }}
+                >
+                  DRAFT ({draftsCount})
+                </button>
+              )}
+            </div>
+          }
+          onClose={onRequestClose}
+        />
 
         {/* ── Body (스크롤 가능) ── */}
         <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
@@ -325,7 +316,7 @@ export default function CreateTaskModalView({
                       onClick={() => onAssignAgentChange("")}
                       style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", cursor: "pointer", textDecoration: "underline" }}
                     >
-                      변경
+                      {t({ ko: "변경", en: "change", ja: "変更", zh: "更改" })}
                     </button>
                   )}
                 </div>
@@ -358,7 +349,7 @@ export default function CreateTaskModalView({
                       }}>
                         {({ claude: "Claude Code", codex: "Codex CLI", gemini: "Gemini CLI", opencode: "OpenCode", copilot: "Copilot", antigravity: "Antigravity", cursor: "Cursor", ollama: "Ollama" } as Record<string, string>)[agent.cli_provider] ?? agent.cli_provider}
                       </span>
-                      <span style={{ fontSize: "9px", color: "#22c55e", marginLeft: "auto" }}>✓ 배정됨</span>
+                      <span style={{ fontSize: "9px", color: "#22c55e", marginLeft: "auto" }}>✓ {t({ ko: "배정됨", en: "assigned", ja: "割り当て済み", zh: "已分配" })}</span>
                     </div>
                   );
                 })() : (

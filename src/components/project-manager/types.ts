@@ -20,6 +20,7 @@ export interface ProjectManagerModalProps {
   departments?: Department[];
   onClose: () => void;
   onCreateProject?: () => void;
+  initialGithubImportMode?: boolean;
 }
 
 export interface MissingPathPrompt {

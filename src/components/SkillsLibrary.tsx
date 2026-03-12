@@ -1,5 +1,5 @@
 import { useI18n } from "../i18n";
-import type { Agent } from "../types";
+import type { Agent, Project } from "../types";
 import ClassroomOverlay from "./skills-library/ClassroomOverlay";
 import CustomSkillModal from "./skills-library/CustomSkillModal";
 import CustomSkillSection from "./skills-library/CustomSkillSection";
@@ -12,11 +12,29 @@ import { useSkillsLibraryState } from "./skills-library/useSkillsLibraryState";
 
 interface SkillsLibraryProps {
   agents: Agent[];
+  currentProject?: Project | null;
 }
 
-export default function SkillsLibrary({ agents }: SkillsLibraryProps) {
+export default function SkillsLibrary({ agents, currentProject }: SkillsLibraryProps) {
   const { t, locale: localeTag } = useI18n();
   const vm = useSkillsLibraryState({ agents, localeTag, t });
+
+  // 프로젝트 미선택
+  if (!currentProject) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <div className="text-center font-mono">
+          <div className="text-3xl mb-3" style={{ opacity: 0.4 }}>&#x1F4E6;</div>
+          <p className="text-sm font-medium mb-1" style={{ color: "var(--th-text-secondary)" }}>
+            {t({ ko: "프로젝트를 선택하세요", en: "Select a project", ja: "プロジェクトを選択してください", zh: "请选择项目" })}
+          </p>
+          <p className="text-xs" style={{ color: "var(--th-text-muted)" }}>
+            {t({ ko: "헤더에서 프로젝트를 선택하면 해당 프로젝트의 스킬을 관리할 수 있습니다.", en: "Select a project in the header to manage its skills.", ja: "ヘッダーでプロジェクトを選択して、スキルを管理できます。", zh: "在标题栏选择项目以管理其技能。" })}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (vm.loading) {
     return (
@@ -53,7 +71,7 @@ export default function SkillsLibrary({ agents }: SkillsLibraryProps) {
           <button
             onClick={vm.loadSkills}
             className="mt-4 px-4 py-2 text-sm font-mono transition-all"
-            style={{ borderRadius: 0, background: "rgba(251,191,36,0.1)", color: "var(--th-accent)", border: "1px solid rgba(251,191,36,0.35)" }}
+            style={{ borderRadius: 6, background: "rgba(251,191,36,0.1)", color: "var(--th-accent)", border: "1px solid rgba(251,191,36,0.35)" }}
           >
             {t({ ko: "다시 시도", en: "Retry", ja: "再試行", zh: "重试" })}
           </button>
@@ -63,7 +81,16 @@ export default function SkillsLibrary({ agents }: SkillsLibraryProps) {
   }
 
   return (
-    <div className="space-y-4">
+    <div
+      style={{
+        borderRadius: 10,
+        overflow: "hidden",
+        background: "var(--th-bg-elevated)",
+        border: "1px solid var(--th-border)",
+        boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
+      }}
+    >
+      <div className="space-y-4" style={{ background: "var(--th-bg-primary)" }}>
       <SkillsHeader
         t={t}
         skillsCount={vm.skills.length}
@@ -181,11 +208,12 @@ export default function SkillsLibrary({ agents }: SkillsLibraryProps) {
 
       <div className="text-center text-xs font-mono py-4" style={{ color: "var(--th-text-muted)" }}>
         {t({
-          ko: "데이터 출처: skills.sh · 설치: npx skills add <owner/repo>",
-          en: "Source: skills.sh · Install: npx skills add <owner/repo>",
-          ja: "データソース: skills.sh · インストール: npx skills add <owner/repo>",
-          zh: "数据来源: skills.sh · 安装: npx skills add <owner/repo>",
+          ko: `'${currentProject.name}' 프로젝트 · 데이터 출처: skills.sh · 설치: npx skills add <owner/repo>`,
+          en: `'${currentProject.name}' project · Source: skills.sh · Install: npx skills add <owner/repo>`,
+          ja: `'${currentProject.name}' プロジェクト · データソース: skills.sh · インストール: npx skills add <owner/repo>`,
+          zh: `'${currentProject.name}' 项目 · 数据来源: skills.sh · 安装: npx skills add <owner/repo>`,
         })}
+      </div>
       </div>
     </div>
   );

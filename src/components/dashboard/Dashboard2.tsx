@@ -8,10 +8,12 @@ import TerminalPanel from "../TerminalPanel";
 import { useI18n } from "../../i18n";
 import { updateProject } from "../../api/organization-projects";
 import ProjectSettingsTab from "../settings/ProjectSettingsTab";
+import Modal, { ModalBody, ModalHeader } from "../ui/Modal";
 import CreateTaskModal from "../taskboard/CreateTaskModal";
 import { fetchProjectAgents, objectivesApi } from "../../api/categories-dashboard";
-
-type DashTab = "overview" | "settings";
+import ProjectManagerModal from "../ProjectManagerModal";
+import ProjectFileTree from "./ProjectFileTree";
+import DashboardTaskList from "./DashboardTaskList";
 
 interface Dashboard2Props {
   project: Project | null;
@@ -20,6 +22,7 @@ interface Dashboard2Props {
   departments: Department[];
   categories: Category[];
   onCreateProject: () => void;
+  onGitHubImport?: () => void;
   onDeleteProject?: (id: string) => void;
   onProjectUpdated?: (id: string, patch: { name: string; core_goal: string }) => void;
   onGoToTasks?: () => void;
@@ -44,6 +47,7 @@ export default function Dashboard2({
   departments,
   categories,
   onCreateProject,
+  onGitHubImport,
   onDeleteProject,
   onProjectUpdated,
   onGoToTasks,
@@ -52,32 +56,47 @@ export default function Dashboard2({
   onTeamChange,
 }: Dashboard2Props) {
   const [skipped, setSkipped] = useState(false);
+  const [showGitHubModal, setShowGitHubModal] = useState(false);
   const { t } = useI18n();
 
+  const handleGitHubImport = onGitHubImport ?? (() => setShowGitHubModal(true));
+
   if (!project) {
-    if (!skipped) {
-      return (
-        <WelcomeScreen
-          onCreateProject={onCreateProject}
-          onSkip={() => setSkipped(true)}
-        />
-      );
-    }
     return (
-      <div className="flex flex-col items-center justify-center h-full text-center px-8">
-        <p className="text-sm mb-4" style={{ color: "var(--th-text-muted)" }}>
-          {t({ ko: "아직 프로젝트가 없어요.", en: "No projects yet.", ja: "まだプロジェクトがありません。", zh: "暂无项目。" })}
-        </p>
-        <button
-          onClick={onCreateProject}
-          className="text-xs px-4 py-2 hover:opacity-90 transition-opacity"
-          style={{ background: "var(--th-accent)", color: "#000", borderRadius: 0 }}
-        >
-          {t({ ko: "+ 첫 번째 프로젝트 만들기", en: "+ Create first project", ja: "+ 最初のプロジェクトを作成", zh: "+ 创建第一个项目" })}
-        </button>
-      </div>
+      <>
+        {!skipped ? (
+          <WelcomeScreen
+            onCreateProject={onCreateProject}
+            onGitHubImport={handleGitHubImport}
+            onSkip={() => setSkipped(true)}
+          />
+        ) : (
+          <div className="flex flex-col items-center justify-center h-full text-center px-8">
+            <p className="text-sm mb-4" style={{ color: "var(--th-text-muted)" }}>
+              {t({ ko: "아직 프로젝트가 없어요.", en: "No projects yet.", ja: "まだプロジェクトがありません。", zh: "暂无项目。" })}
+            </p>
+            <button
+              onClick={onCreateProject}
+              className="text-xs px-4 py-2 hover:opacity-90 transition-opacity"
+              style={{ background: "var(--th-accent)", color: "#000", borderRadius: 0 }}
+            >
+              {t({ ko: "+ 첫 번째 프로젝트 만들기", en: "+ Create first project", ja: "+ 最初のプロジェクトを作成", zh: "+ 创建第一个项目" })}
+            </button>
+          </div>
+        )}
+        {showGitHubModal && (
+          <ProjectManagerModal
+            agents={agents}
+            departments={departments}
+            onClose={() => setShowGitHubModal(false)}
+            onCreateProject={onCreateProject}
+            initialGithubImportMode
+          />
+        )}
+      </>
     );
   }
+
 
   return (
     <Dashboard2Inner
@@ -134,7 +153,7 @@ function Dashboard2Inner({
   onTeamChange?: () => void;
 }) {
   const [selectedTerminal, setSelectedTerminal] = useState<{ taskId: string; agent: Agent } | null>(null);
-  const [dashTab, setDashTab] = useState<DashTab>("overview");
+  const [showProjectSettingsModal, setShowProjectSettingsModal] = useState(false);
   const [showCreateTask, setShowCreateTask] = useState(false);
   const [createTaskDefaultAgentId, setCreateTaskDefaultAgentId] = useState<string | undefined>(undefined);
   const [teamAgentIds, setTeamAgentIds] = useState<Set<string>>(new Set());
@@ -200,24 +219,28 @@ function Dashboard2Inner({
   );
 
   const category = project.category_id ? categories.find((c) => c.id === project.category_id) : undefined;
-  const runningAgents = agents.filter((a) => a.status === "working").length;
-  const idleAgents = agents.filter((a) => a.status === "idle" || a.status === "break").length;
+  const runningAgents = projectAgents.filter((a) => a.status === "working").length;
+  const idleAgents = projectAgents.filter((a) => a.status === "idle" || a.status === "break").length;
 
   const projectTasks = useMemo(
     () => tasks.filter((t) => t.project_id === project.id),
     [tasks, project.id],
   );
-  const taskStats = useMemo(() => ({
-    done:        projectTasks.filter((t) => t.status === "done").length,
-    in_progress: projectTasks.filter((t) => t.status === "in_progress" || t.status === "review" || t.status === "collaborating").length,
-    failed:      projectTasks.filter((t) => t.status === "cancelled").length,
-    waiting:     projectTasks.filter((t) => t.status === "inbox" || t.status === "planned" || t.status === "pending").length,
-    total:       projectTasks.length,
-  }), [projectTasks]);
+  const taskStats = useMemo(() => {
+    const HEARTBEAT_TIMEOUT_MS = 3 * 60 * 1000;
+    const nowMs = Date.now();
+    const isActivelyRunning = (t: Task) =>
+      t.execution_state === "running" &&
+      t.last_heartbeat_at != null &&
+      nowMs - t.last_heartbeat_at < HEARTBEAT_TIMEOUT_MS;
+    return {
+      done:        projectTasks.filter((t) => t.status === "done").length,
+      in_progress: projectTasks.filter(isActivelyRunning).length,
+      cancelled:   projectTasks.filter((t) => t.status === "cancelled").length,
+      waiting:     projectTasks.filter((t) => t.status !== "done" && t.status !== "cancelled" && !isActivelyRunning(t)).length,
+    };
+  }, [projectTasks]);
 
-  useEffect(() => {
-    setDashTab("overview");
-  }, [project.id]);
 
   // Update clock every minute
   useEffect(() => {
@@ -225,245 +248,204 @@ function Dashboard2Inner({
     return () => clearInterval(id);
   }, []);
 
-  const tabItems: { key: DashTab; label: string }[] = [
-    { key: "overview", label: "OVERVIEW" },
-    { key: "settings", label: "PROJECT SETTINGS" },
-  ];
-
   const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };
 
   const timeStr = now.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", hour12: false });
   const dateStr = now.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 
   return (
-    <div className="relative flex flex-col h-full overflow-hidden">
-      {/* ── 헤더 바 ── */}
+    <div
+      className="relative flex flex-col h-full overflow-hidden"
+      style={{
+        borderRadius: 10,
+        border: "1px solid var(--th-border)",
+        boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
+        background: "var(--th-bg-elevated)",
+      }}
+    >
+      {/* ── macOS 스타일 헤더 (설정 패널과 동일) ── */}
       <div
-        className="flex items-center gap-3 px-4 py-2 flex-shrink-0"
-        style={{ borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", borderLeft: "3px solid var(--th-accent)" }}
+        className="flex items-center gap-3 flex-shrink-0"
+        style={{
+          padding: "12px 18px",
+          borderBottom: "1px solid var(--th-border)",
+          background: "var(--th-bg-panel)",
+          borderTopLeftRadius: 10,
+          borderTopRightRadius: 10,
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
+        }}
       >
-        <div className="flex flex-col justify-center flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span style={{ ...mono, fontSize: "9px", fontWeight: 700, letterSpacing: "0.12em", color: "var(--th-text-muted)", textTransform: "uppercase" }}>
-              DASHBOARD
-            </span>
-            <span style={{ color: "var(--th-border)", fontSize: "10px" }}>▸</span>
-            <h1 style={{ ...mono, fontSize: "12px", fontWeight: 700, color: "var(--th-text-heading)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              {project.name}
-            </h1>
-            {category && (
-              <CategoryBadge label={category.name_ko ?? category.name} color={category.color} />
-            )}
-            {/* quick stats */}
-            <span style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", marginLeft: "auto", whiteSpace: "nowrap", flexShrink: 0 }}>
-              <span style={{ color: runningAgents > 0 ? "var(--th-accent)" : "var(--th-text-muted)" }}>
-                {runningAgents > 0 ? "●" : "○"} {runningAgents} RUNNING
-              </span>
-              <span style={{ margin: "0 6px", opacity: 0.4 }}>·</span>
-              <span style={{ opacity: 0.6 }}>{idleAgents} IDLE</span>
-              <span style={{ margin: "0 6px", opacity: 0.4 }}>·</span>
-              <span style={{ opacity: 0.5 }}>{dateStr} {timeStr}</span>
-            </span>
-          </div>
+        {/* Traffic light (●●●) */}
+        <div className="flex flex-shrink-0 items-center gap-1.5">
+          <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#ff5f57" }} aria-hidden />
+          <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#ffbd2e" }} aria-hidden />
+          <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#27c93f" }} aria-hidden />
+        </div>
+
+        <div style={{ width: 1, height: 22, background: "var(--th-border)", flexShrink: 0, margin: "0 2px" }} />
+
+        {/* 프로젝트 이름 */}
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          {category && <span style={{ fontSize: 16, flexShrink: 0 }}>{category.icon}</span>}
+          <h1 style={{ ...mono, fontSize: "13px", fontWeight: 700, color: "var(--th-text-heading)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            {project.name}
+          </h1>
+          {category && (
+            <CategoryBadge label={category.name_ko ?? category.name} color={category.color} />
+          )}
           {project.core_goal && (
-            <p style={{ ...mono, fontSize: "10px", color: "var(--th-text-muted)", marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              <span style={{ color: "var(--th-accent)", opacity: 0.7 }}>▶</span>{" "}
-              {project.core_goal}
-            </p>
+            <span style={{ ...mono, fontSize: "10px", color: "var(--th-text-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", opacity: 0.7 }}>
+              — {project.core_goal}
+            </span>
           )}
         </div>
+
+        {/* 상태 + 시계 */}
+        <div className="flex items-center gap-3 flex-shrink-0">
+          <span style={{ ...mono, fontSize: "10px", color: runningAgents > 0 ? "#4ade80" : "var(--th-text-muted)", display: "flex", alignItems: "center", gap: 4 }}>
+            <span style={{ width: 6, height: 6, borderRadius: "50%", background: runningAgents > 0 ? "#4ade80" : "var(--th-text-muted)", display: "inline-block", opacity: runningAgents > 0 ? 1 : 0.4 }} />
+            {runningAgents} {t({ ko: "실행중", en: "running", ja: "実行中", zh: "运行中" })}
+          </span>
+          <span style={{ ...mono, fontSize: "10px", color: "var(--th-text-muted)", opacity: 0.55 }}>
+            {dateStr} {timeStr}
+          </span>
+        </div>
+
+        <div style={{ width: 1, height: 22, background: "var(--th-border)", flexShrink: 0, margin: "0 2px" }} />
 
         {/* 액션 버튼 */}
-        <div className="flex items-center gap-1.5 flex-shrink-0">
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <button
+            onClick={() => setShowProjectSettingsModal(true)}
+            style={{ ...mono, padding: "5px 12px", borderRadius: 6, border: "1px solid var(--th-border)", background: "transparent", color: "var(--th-text-muted)", fontSize: "11px", cursor: "pointer", whiteSpace: "nowrap" }}
+          >
+            {t({ ko: "프로젝트 설정", en: "Project Settings", ja: "プロジェクト設定", zh: "项目设置" })}
+          </button>
           <button
             onClick={onCreateProject}
-            title={t({ ko: "새 프로젝트 만들기", en: "New project", ja: "新規プロジェクト", zh: "新建项目" })}
-            style={{ ...mono, padding: "4px 8px", borderRadius: 0, border: "1px solid var(--th-border)", background: "transparent", color: "var(--th-text-muted)", fontSize: "0.65rem", cursor: "pointer", whiteSpace: "nowrap" }}
+            style={{ ...mono, padding: "5px 12px", borderRadius: 6, border: "1px solid var(--th-border)", background: "transparent", color: "var(--th-text-muted)", fontSize: "11px", cursor: "pointer", whiteSpace: "nowrap" }}
           >
-            + PROJECT
+            + {t({ ko: "프로젝트", en: "Project", ja: "プロジェクト", zh: "项目" })}
           </button>
-          {dashTab === "overview" && onCreateTask && (
+          {onCreateTask && (
             <button
               onClick={() => setShowCreateTask(true)}
-              style={{ ...mono, padding: "4px 10px", borderRadius: 0, border: "1px solid var(--th-accent)", background: "rgba(245,158,11,0.1)", color: "var(--th-accent)", fontSize: "0.65rem", cursor: "pointer", fontWeight: 700, whiteSpace: "nowrap" }}
+              style={{ ...mono, padding: "5px 14px", borderRadius: 6, border: "none", background: "var(--th-accent)", color: "#000", fontSize: "11px", cursor: "pointer", fontWeight: 700, whiteSpace: "nowrap" }}
             >
-              + {t({ ko: "새 업무", en: "NEW TASK", ja: "新規タスク", zh: "新建任务" })}
-            </button>
-          )}
-          {dashTab === "overview" && onGoToTasks && (
-            <button
-              onClick={onGoToTasks}
-              style={{ ...mono, padding: "4px 10px", borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)", color: "var(--th-text-secondary)", fontSize: "0.65rem", cursor: "pointer", whiteSpace: "nowrap" }}
-            >
-              {t({ ko: "업무 보드 →", en: "TASK BOARD →", ja: "タスクボード →", zh: "任务看板 →" })}
+              + {t({ ko: "새 업무", en: "New Task", ja: "新規タスク", zh: "新建任务" })}
             </button>
           )}
         </div>
       </div>
 
-      {/* ── 탭 바 ── */}
+      {/* ── 오버뷰 + 업무 보드 링크 ── */}
       <div
-        className="flex items-center gap-0 flex-shrink-0"
-        style={{ borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-primary)", paddingLeft: "12px" }}
+        className="flex items-center flex-shrink-0"
+        style={{ borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-primary)", padding: "0 18px" }}
       >
-        {tabItems.map((tab) => (
+        {onGoToTasks && (
           <button
-            key={tab.key}
-            onClick={() => setDashTab(tab.key)}
-            style={{
-              ...mono,
-              fontSize: "10px",
-              padding: "7px 14px",
-              borderTop: "none",
-              borderLeft: "none",
-              borderRight: "1px solid var(--th-border)",
-              borderBottom: dashTab === tab.key ? "2px solid var(--th-accent)" : "2px solid transparent",
-              color: dashTab === tab.key ? "var(--th-accent)" : "var(--th-text-muted)",
-              background: dashTab === tab.key ? "var(--th-bg-elevated)" : "none",
-              cursor: "pointer",
-              fontWeight: dashTab === tab.key ? 700 : 400,
-              letterSpacing: "0.05em",
-              transition: "color 0.1s linear, border-color 0.1s linear",
-            }}
+            onClick={onGoToTasks}
+            style={{ ...mono, fontSize: "11px", padding: "9px 16px", border: "none", borderBottom: "2px solid transparent", color: "var(--th-text-muted)", background: "transparent", cursor: "pointer", marginLeft: "auto", opacity: 0.7 }}
           >
-            {dashTab === tab.key ? `▸ ${tab.label}` : `  ${tab.label}`}
+            {t({ ko: "업무 보드 →", en: "Task Board →", ja: "タスクボード →", zh: "任务看板 →" })}
           </button>
-        ))}
+        )}
       </div>
 
-      {/* ── OVERVIEW 탭 ── */}
-      {dashTab === "overview" && (
-        <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
-          {/* 상단: 메인 + 팀 패널 */}
-          <div className="flex flex-1 min-h-0 overflow-hidden">
-          {/* 메인 영역 */}
-          <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-            {/* 터미널 상태 블록 */}
-            <div
-              className="flex-shrink-0 px-4 py-3"
-              style={{ borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-primary)" }}
-            >
-              {/* prompt line */}
-              <div style={{ ...mono, fontSize: "10px", color: "var(--th-text-muted)", marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>
-                <span style={{ color: "var(--th-accent)", fontWeight: 700 }}>$</span>
-                <span> agentdesk status </span>
-                <span style={{ color: "var(--th-accent)" }}>{project.name}</span>
-                <span style={{ marginLeft: "auto", opacity: 0.4, fontSize: "9px" }}>pid:{project.id.slice(0, 8)}</span>
-              </div>
+      {/* ── 오버뷰 본문 ── */}
+      <div className="flex-1 min-h-0 flex overflow-hidden" style={{ background: "var(--th-bg-primary)", padding: "20px 18px 24px", gap: 10, display: "flex" }}>
 
-              {/* output grid */}
-              <div style={{ ...mono, fontSize: "11px", lineHeight: 2, display: "grid", gridTemplateColumns: "4.5rem 1fr", gap: "0 8px", maxWidth: 520 }}>
-                {project.project_path && (
-                  <>
-                    <span style={{ color: "var(--th-text-muted)", userSelect: "none" }}>  path</span>
-                    <span style={{ color: "#7dd3fc" }}>{project.project_path}</span>
-                  </>
-                )}
-                {project.core_goal && (
-                  <>
-                    <span style={{ color: "var(--th-text-muted)", userSelect: "none" }}>  goal</span>
-                    <span style={{ color: "var(--th-text-secondary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{project.core_goal}</span>
-                  </>
-                )}
-                {category && (
-                  <>
-                    <span style={{ color: "var(--th-text-muted)", userSelect: "none" }}>  type</span>
-                    <span style={{ color: category.color ?? "var(--th-accent)" }}>{category.icon} {category.name}</span>
-                  </>
-                )}
-                <>
-                  <span style={{ color: "var(--th-text-muted)", userSelect: "none" }}>  status</span>
-                  <span>
-                    <span style={{ color: "#4ade80", fontWeight: 700 }}>● ACTIVE</span>
-                    <span style={{ color: "var(--th-text-muted)", marginLeft: 12, fontSize: "10px" }}>
-                      {runningAgents} agent{runningAgents !== 1 ? "s" : ""} running
-                    </span>
-                  </span>
-                </>
-              </div>
-            </div>
+          {/* ── 좌측 메인 컬럼 ── */}
+          <div className="flex-1 min-w-0 flex flex-col overflow-hidden" style={{ gap: 10, display: "flex" }}>
 
-            {/* ── Task Stat Bar ── */}
-            <div
-              className="flex-shrink-0 flex items-stretch"
-              style={{ borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-primary)" }}
-            >
+            {/* 스탯 카드 row (고정) */}
+            <div style={{ flexShrink: 0, display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 8 }}>
               {[
-                { key: "done",        label: t({ ko: "완료",   en: "DONE",    ja: "完了",   zh: "完成" }),   color: "#4ade80",          count: taskStats.done },
-                { key: "in_progress", label: t({ ko: "진행중", en: "IN PROG", ja: "進行中", zh: "进行中" }), color: "var(--th-accent)",  count: taskStats.in_progress },
-                { key: "failed",      label: t({ ko: "에러",   en: "ERROR",   ja: "エラー", zh: "错误" }),   color: "#f87171",          count: taskStats.failed },
-                { key: "waiting",     label: t({ ko: "대기중", en: "WAITING", ja: "待機中", zh: "等待中" }), color: "#94a3b8",          count: taskStats.waiting },
-              ].map((stat, i, arr) => (
+                { key: "done",      label: t({ ko: "완료",   en: "Done",        ja: "完了",   zh: "完成" }),   color: "#4ade80",          count: taskStats.done },
+                { key: "running",   label: t({ ko: "진행중", en: "In Progress",  ja: "進行中", zh: "进行中" }), color: "var(--th-accent)", count: taskStats.in_progress },
+                { key: "cancelled", label: t({ ko: "취소",   en: "Cancelled",   ja: "取消",   zh: "取消" }),  color: "#f87171",          count: taskStats.cancelled },
+                { key: "waiting",   label: t({ ko: "대기중", en: "Idle Agents", ja: "待機中", zh: "等待中" }), color: "#94a3b8",          count: idleAgents },
+              ].map((stat) => (
                 <div
                   key={stat.key}
-                  className="flex flex-col items-center justify-center flex-1 py-2.5"
-                  style={{
-                    borderRight: i < arr.length - 1 ? "1px solid var(--th-border)" : "none",
-                    gap: 4,
-                  }}
+                  style={{ background: "var(--th-bg-elevated)", borderRadius: 10, border: "1px solid var(--th-border)", padding: "12px 14px", display: "flex", flexDirection: "column", gap: 5 }}
                 >
-                  <span style={{ ...mono, fontSize: "20px", fontWeight: 700, color: stat.color, lineHeight: 1 }}>
+                  <span style={{ ...mono, fontSize: "22px", fontWeight: 700, color: stat.color, lineHeight: 1 }}>
                     {stat.count}
                   </span>
-                  <span style={{ ...mono, fontSize: "8px", letterSpacing: "0.1em", color: "var(--th-text-muted)", fontWeight: 600 }}>
+                  <span style={{ ...mono, fontSize: "10px", color: "var(--th-text-muted)", fontWeight: 500 }}>
                     {stat.label}
                   </span>
                 </div>
               ))}
             </div>
 
-            {/* activity feed header */}
-            <div
-              style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", padding: "4px 16px", background: "var(--th-bg-primary)", borderBottom: "1px solid var(--th-border)", display: "flex", alignItems: "center", gap: 6, letterSpacing: "0.05em" }}
-            >
-              <span style={{ color: "var(--th-accent)", fontWeight: 700 }}>$</span>
-              <span>tail -f agent-activity.log</span>
-              <span style={{ marginLeft: "auto", opacity: 0.5 }}>live</span>
-              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#4ade80", display: "inline-block", animation: "pulse 2s infinite" }} />
-            </div>
-
-            {/* 에이전트 활동 패널 */}
-            <div className="flex-1 overflow-auto" style={{ background: "var(--th-bg-primary)" }}>
-              <AgentActivityPanel
-                projectId={project.id}
-                allAgents={agents}
-                onOpenTerminal={(taskId, agent) => setSelectedTerminal({ taskId, agent })}
-                onCreateTask={onCreateTask ? (agentId) => {
-                  setCreateTaskDefaultAgentId(agentId);
-                  setShowCreateTask(true);
-                } : undefined}
-                onManageTeam={() => setDashTab("settings")}
+            {/* 태스크 목록 카드 (고정 높이) */}
+            <div style={{ flexShrink: 0, background: "var(--th-bg-elevated)", borderRadius: 10, border: "1px solid var(--th-border)", overflow: "hidden", display: "flex", flexDirection: "column", maxHeight: 220 }}>
+              <DashboardTaskList
+                tasks={projectTasks}
+                agents={projectAgents}
+                onGoToTasks={onGoToTasks}
+                t={t}
+                fillHeight
               />
             </div>
+
+            {/* 에이전트 활동 카드 (하단까지 채움) */}
+            <div style={{ flex: 1, minHeight: 0, background: "var(--th-bg-elevated)", borderRadius: 10, border: "1px solid var(--th-border)", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+              <div style={{ ...mono, fontSize: "10px", color: "var(--th-text-muted)", padding: "8px 14px", borderBottom: "1px solid var(--th-border)", display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+                <span style={{ color: "var(--th-accent)", fontWeight: 700 }}>$</span>
+                <span>tail -f agent-activity.log</span>
+                <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 6, opacity: 0.6 }}>
+                  {t({ ko: "실시간", en: "live", ja: "ライブ", zh: "实时" })}
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#4ade80", display: "inline-block", animation: "pulse 2s infinite" }} />
+                </span>
+              </div>
+              <div style={{ flex: 1, minHeight: 0, overflow: "auto" }}>
+                <AgentActivityPanel
+                  projectId={project.id}
+                  allAgents={agents}
+                  onOpenTerminal={(taskId, agent) => setSelectedTerminal({ taskId, agent })}
+                  onCreateTask={onCreateTask ? (agentId) => {
+                    setCreateTaskDefaultAgentId(agentId);
+                    setShowCreateTask(true);
+                  } : undefined}
+                  onManageTeam={() => setShowProjectSettingsModal(true)}
+                />
+              </div>
+            </div>
+
           </div>
 
-          {/* 오른쪽: 목표 + 팀 패널 */}
+          {/* ── 우측 사이드바 (독립 스크롤) ── */}
           <div
-            className="w-[220px] flex-shrink-0 flex flex-col overflow-y-auto"
-            style={{ borderLeft: "1px solid var(--th-border)" }}
+            className="flex-shrink-0 overflow-y-auto"
+            style={{ width: 260, borderLeft: "1px solid var(--th-border)", paddingLeft: 12, display: "flex", flexDirection: "column", gap: 10 }}
           >
-            {/* ── 목표 패널 ── */}
-            <div style={{ borderBottom: "1px solid var(--th-border)", flexShrink: 0 }}>
-              {/* 목표 헤더 */}
-              <div style={{ ...mono, display: "flex", alignItems: "center", gap: 6, padding: "6px 10px", background: "var(--th-bg-elevated)", borderBottom: "1px solid var(--th-border)" }}>
-                <span style={{ fontSize: "8px", fontWeight: 700, letterSpacing: "0.1em", color: "#3b82f6" }}>◎</span>
-                <span style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.08em", color: "var(--th-text-muted)", flex: 1 }}>{t({ ko: "목표", en: "OBJECTIVES", ja: "目標", zh: "目标" })}</span>
-                <span style={{ fontSize: "8px", color: "var(--th-text-muted)", opacity: 0.6 }}>
+            {/* 목표 카드 */}
+            <div style={{ background: "var(--th-bg-elevated)", borderRadius: 10, border: "1px solid var(--th-border)", overflow: "hidden" }}>
+              <div style={{ ...mono, display: "flex", alignItems: "center", gap: 6, padding: "10px 14px", borderBottom: "1px solid var(--th-border)" }}>
+                <span style={{ fontSize: "12px", color: "#3b82f6" }}>◎</span>
+                <span style={{ fontSize: "11px", fontWeight: 600, color: "var(--th-text-secondary)", flex: 1 }}>
+                  {t({ ko: "목표", en: "Objectives", ja: "目標", zh: "目标" })}
+                </span>
+                <span style={{ fontSize: "10px", color: "var(--th-text-muted)", opacity: 0.6 }}>
                   {objectives.filter((o) => o.status === "completed").length}/{objectives.length}
                 </span>
                 <button
                   type="button"
                   onClick={() => setObjShowInput((v) => !v)}
-                  style={{ ...mono, fontSize: "9px", fontWeight: 700, color: objShowInput ? "var(--th-accent)" : "var(--th-text-muted)", background: "none", border: "none", cursor: "pointer", padding: "0 2px" }}
+                  style={{ ...mono, fontSize: "14px", fontWeight: 700, color: objShowInput ? "var(--th-accent)" : "var(--th-text-muted)", background: "none", border: "none", cursor: "pointer", padding: "0 2px", lineHeight: 1 }}
                   title={t({ ko: "목표 추가", en: "Add objective", ja: "目標追加", zh: "添加目标" })}
                 >
                   {objShowInput ? "✕" : "+"}
                 </button>
               </div>
 
-              {/* 목표 입력 */}
               {objShowInput && (
-                <div style={{ padding: "6px 8px", borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-primary)", display: "flex", gap: 4 }}>
+                <div style={{ padding: "8px 12px", borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-primary)", display: "flex", gap: 6 }}>
                   <input
                     autoFocus
                     type="text"
@@ -474,23 +456,22 @@ function Dashboard2Inner({
                       if (e.key === "Escape") { setObjShowInput(false); setObjAddingTitle(""); }
                     }}
                     placeholder={t({ ko: "목표 입력…", en: "Enter objective…", ja: "目標を入力…", zh: "输入目标…" })}
-                    style={{ ...mono, flex: 1, fontSize: "9px", padding: "3px 6px", background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)", outline: "none" }}
+                    style={{ ...mono, flex: 1, fontSize: "11px", padding: "5px 8px", borderRadius: 6, background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)", outline: "none" }}
                   />
                   <button
                     type="button"
                     onClick={() => void handleObjAdd()}
                     disabled={objBusy}
-                    style={{ ...mono, fontSize: "9px", fontWeight: 700, padding: "3px 8px", background: "rgba(59,130,246,0.15)", border: "1px solid rgba(59,130,246,0.4)", color: "#3b82f6", cursor: "pointer" }}
+                    style={{ ...mono, fontSize: "11px", fontWeight: 600, padding: "5px 10px", borderRadius: 6, background: "rgba(59,130,246,0.15)", border: "1px solid rgba(59,130,246,0.4)", color: "#3b82f6", cursor: "pointer" }}
                   >
-                    ADD
+                    {t({ ko: "추가", en: "Add", ja: "追加", zh: "添加" })}
                   </button>
                 </div>
               )}
 
-              {/* 목표 목록 */}
               {objectives.length === 0 && !objShowInput ? (
-                <div style={{ ...mono, padding: "12px 10px", fontSize: "9px", color: "var(--th-text-muted)", opacity: 0.4, textAlign: "center" }}>
-                  {t({ ko: "— 목표 없음 —", en: "— no objectives —", ja: "— 目標なし —", zh: "— 暂无目标 —" })}
+                <div style={{ ...mono, padding: "14px", fontSize: "10px", color: "var(--th-text-muted)", opacity: 0.4, textAlign: "center" }}>
+                  {t({ ko: "목표 없음", en: "No objectives", ja: "目標なし", zh: "暂无目标" })}
                 </div>
               ) : (
                 <div>
@@ -498,34 +479,29 @@ function Dashboard2Inner({
                     const done = obj.status === "completed";
                     const progress = obj.progress ?? 0;
                     return (
-                      <div
-                        key={obj.id}
-                        className="group"
-                        style={{ ...mono, padding: "6px 10px", borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-primary)", display: "flex", flexDirection: "column", gap: 4 }}
-                      >
-                        <div style={{ display: "flex", alignItems: "flex-start", gap: 6 }}>
+                      <div key={obj.id} className="group" style={{ padding: "8px 14px", borderBottom: "1px solid var(--th-border)", display: "flex", flexDirection: "column", gap: 5 }}>
+                        <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
                           <button
                             type="button"
                             onClick={() => void handleObjToggle(obj)}
-                            style={{ flexShrink: 0, width: 10, height: 10, borderRadius: "50%", border: `2px solid ${done ? "#3fb950" : "#3b82f6"}`, background: done ? "#3fb950" : "transparent", cursor: "pointer", marginTop: 2 }}
+                            style={{ flexShrink: 0, width: 14, height: 14, borderRadius: "50%", border: `2px solid ${done ? "#3fb950" : "#3b82f6"}`, background: done ? "#3fb950" : "transparent", cursor: "pointer", marginTop: 1 }}
                           />
-                          <span style={{ fontSize: "9px", color: done ? "var(--th-text-muted)" : "var(--th-text-secondary)", flex: 1, lineHeight: 1.5, textDecoration: done ? "line-through" : "none", wordBreak: "break-word" }}>
+                          <span style={{ ...mono, fontSize: "11px", color: done ? "var(--th-text-muted)" : "var(--th-text-secondary)", flex: 1, lineHeight: 1.5, textDecoration: done ? "line-through" : "none", wordBreak: "break-word" }}>
                             {obj.title}
                           </span>
                           <button
                             type="button"
                             onClick={() => void handleObjDelete(obj.id)}
                             className="opacity-0 group-hover:opacity-100"
-                            style={{ flexShrink: 0, background: "none", border: "none", cursor: "pointer", color: "var(--th-text-muted)", fontSize: "8px", lineHeight: 1, padding: 0, transition: "opacity 0.1s" }}
+                            style={{ flexShrink: 0, background: "none", border: "none", cursor: "pointer", color: "var(--th-text-muted)", fontSize: "10px", padding: 0 }}
                             onMouseEnter={(e) => { e.currentTarget.style.color = "#f87171"; }}
                             onMouseLeave={(e) => { e.currentTarget.style.color = "var(--th-text-muted)"; }}
                           >
                             ✕
                           </button>
                         </div>
-                        {/* 진행 바 */}
-                        <div style={{ height: 2, background: "var(--th-bg-elevated)", borderRadius: 1, overflow: "hidden" }}>
-                          <div style={{ height: "100%", width: `${progress}%`, background: done ? "#3fb950" : "#3b82f6", transition: "width 0.3s" }} />
+                        <div style={{ height: 3, background: "var(--th-border)", borderRadius: 2, overflow: "hidden" }}>
+                          <div style={{ height: "100%", width: `${progress}%`, background: done ? "#3fb950" : "#3b82f6", borderRadius: 2, transition: "width 0.3s" }} />
                         </div>
                       </div>
                     );
@@ -534,16 +510,27 @@ function Dashboard2Inner({
               )}
             </div>
 
-            <TeamPanel projectId={project.id} allAgents={agents} onTeamChange={onTeamChange} />
-          </div>
+            {/* 팀 카드 */}
+            <div style={{ background: "var(--th-bg-elevated)", borderRadius: 10, border: "1px solid var(--th-border)", overflow: "hidden" }}>
+              <TeamPanel projectId={project.id} allAgents={agents} onTeamChange={onTeamChange} />
+            </div>
+
+            {/* 파일트리 카드 */}
+            {project.project_path && (
+              <div style={{ background: "var(--th-bg-elevated)", borderRadius: 10, border: "1px solid var(--th-border)", overflow: "hidden" }}>
+                <ProjectFileTree projectPath={project.project_path} />
+              </div>
+            )}
           </div>
 
         </div>
-      )}
 
-      {/* ── PROJECT SETTINGS 탭 ── */}
-      {dashTab === "settings" && (
-        <div className="flex-1 overflow-auto p-6 max-w-lg">
+      {/* ── 프로젝트 설정 모달 ── */}
+      <Modal open={showProjectSettingsModal} onClose={() => setShowProjectSettingsModal(false)} width="lg">
+        <ModalHeader onClose={() => setShowProjectSettingsModal(false)}>
+          {t({ ko: "프로젝트 설정", en: "Project Settings", ja: "プロジェクト設定", zh: "项目设置" })}
+        </ModalHeader>
+        <ModalBody>
           <ProjectSettingsTab
             project={project}
             categories={categories}
@@ -557,10 +544,13 @@ function Dashboard2Inner({
                 });
               }
             }}
-            onDelete={onDeleteProject}
+            onDelete={(id) => {
+              onDeleteProject?.(id);
+              setShowProjectSettingsModal(false);
+            }}
           />
-        </div>
-      )}
+        </ModalBody>
+      </Modal>
 
       {/* ── 터미널 overlay ── */}
       {selectedTerminal && (
@@ -571,9 +561,9 @@ function Dashboard2Inner({
         >
           <div className="flex-1 m-4 overflow-hidden flex flex-col" style={{ minHeight: 0 }}>
             <TerminalPanel
-              taskId={selectedTerminal.taskId}
+              taskId={selectedTerminal!.taskId}
               task={undefined}
-              agent={selectedTerminal.agent}
+              agent={selectedTerminal!.agent}
               agents={agents}
               onClose={() => setSelectedTerminal(null)}
             />
@@ -588,7 +578,7 @@ function Dashboard2Inner({
           departments={departments}
           onClose={() => { setShowCreateTask(false); setCreateTaskDefaultAgentId(undefined); }}
           onCreate={(input) => {
-            onCreateTask({ ...input, project_id: project.id, project_path: project.project_path ?? undefined });
+            onCreateTask?.({ ...input, project_id: project.id, project_path: project.project_path ?? undefined });
             setShowCreateTask(false);
             setCreateTaskDefaultAgentId(undefined);
           }}

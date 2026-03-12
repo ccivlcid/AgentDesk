@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useI18n } from "../../i18n";
 
 interface WelcomeScreenProps {
   onCreateProject: () => void;
@@ -43,7 +44,7 @@ function TerminalAnimation() {
         position: "relative",
         overflow: "hidden",
         background: "var(--th-bg-surface)",
-        borderRadius: 8,
+        borderRadius: 0,
         border: "1px solid var(--th-border)",
         boxShadow: "inset 0 1px 0 rgba(255,255,255,0.03)",
       }}
@@ -105,7 +106,7 @@ function TerminalAnimation() {
             inset: 0,
             background: "repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.02) 2px, rgba(0,0,0,0.02) 4px)",
             pointerEvents: "none",
-            borderRadius: 8,
+            borderRadius: 0,
           }}
         />
       )}
@@ -120,30 +121,23 @@ export default function WelcomeScreen({
   onTemplate,
 }: WelcomeScreenProps) {
   const [hovered, setHovered] = useState<number | null>(null);
+  const { t } = useI18n();
   const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };
 
-  const options = [
+  const options: Array<{ key: number; label: string; hint: string; icon: string; action: () => void; muted?: boolean }> = [
     {
       key: 0,
-      label: "템플릿으로 시작하기",
-      hint: "추천 구성으로 빠르게 시작",
+      label: t({ ko: "템플릿으로 시작하기", en: "Start from template", ja: "テンプレートで開始", zh: "从模板开始" }),
+      hint: t({ ko: "추천 구성으로 빠르게 시작", en: "Quick start with recommended config", ja: "推奨設定で素早く開始", zh: "使用推荐配置快速开始" }),
       icon: "◇",
       action: onTemplate ?? onCreateProject,
     },
     {
       key: 1,
-      label: "GitHub에서 가져오기",
-      hint: "기존 저장소와 연결",
+      label: t({ ko: "GitHub에서 가져오기", en: "Import from GitHub", ja: "GitHubからインポート", zh: "从GitHub导入" }),
+      hint: t({ ko: "기존 저장소와 연결", en: "Connect to existing repo", ja: "既存リポジトリに接続", zh: "连接到현有仓库" }),
       icon: "⎘",
       action: onGitHubImport ?? onCreateProject,
-    },
-    {
-      key: 2,
-      label: "나중에 만들게요",
-      hint: "건너뛰기",
-      icon: "→",
-      action: onSkip ?? (() => {}),
-      muted: true,
     },
   ];
 
@@ -162,12 +156,12 @@ export default function WelcomeScreen({
               padding: "20px 24px",
               background: "var(--th-bg-surface)",
               border: "1px solid var(--th-border)",
-              borderRadius: 8,
-              boxShadow: "0 1px 0 rgba(255,255,255,0.03)",
+              borderRadius: 0,
+              borderLeft: "3px solid var(--th-accent)",
             }}
           >
             <div style={{ fontSize: "10px", color: "var(--th-text-muted)", marginBottom: 10, letterSpacing: "0.08em" }}>
-              agentdesk v1.0.0 — AI agent management
+              agentdesk v2.0.0 — AI agent management
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
               <span style={{ color: "var(--th-accent)", fontWeight: 700, fontSize: "13px" }}>$</span>
@@ -178,7 +172,7 @@ export default function WelcomeScreen({
                   width: 8,
                   height: 14,
                   background: "var(--th-accent)",
-                  borderRadius: 1,
+                  borderRadius: 0,
                   verticalAlign: "middle",
                   animation: "welcomeBlink 1.2s step-end infinite",
                 }}
@@ -186,10 +180,10 @@ export default function WelcomeScreen({
             </div>
             <div style={{ fontSize: "12px", color: "var(--th-text-secondary)", lineHeight: 1.8 }}>
               <span style={{ color: "#4ade80", marginRight: 6 }}>✓</span>
-              AgentDesk가 초기화되었어요.
+              {t({ ko: "AgentDesk가 초기화되었어요.", en: "AgentDesk initialized.", ja: "AgentDesk が初期化されました。", zh: "AgentDesk 已初始化。" })}
             </div>
             <div style={{ fontSize: "11px", color: "var(--th-text-muted)", marginTop: 6 }}>
-              시작 방법을 선택하세요
+              {t({ ko: "시작 방법을 선택하세요", en: "choose how to start", ja: "開始方法を選択してください", zh: "选择启动方式" })}
             </div>
           </div>
 
@@ -212,7 +206,7 @@ export default function WelcomeScreen({
                     padding: "14px 18px",
                     background: isHover && !isMuted ? "var(--th-bg-elevated)" : "var(--th-bg-surface)",
                     border: `1px solid ${isHover && !isMuted ? "var(--th-accent)" : "var(--th-border)"}`,
-                    borderRadius: 8,
+                    borderRadius: 0,
                     cursor: "pointer",
                     textAlign: "left",
                     width: "100%",
@@ -230,7 +224,7 @@ export default function WelcomeScreen({
                       fontSize: "16px",
                       background: isMuted ? "var(--th-bg-elevated)" : (isHover ? "rgba(245,158,11,0.15)" : "var(--th-bg-elevated)"),
                       color: isMuted ? "var(--th-text-muted)" : (isHover ? "var(--th-accent)" : "var(--th-text-secondary)"),
-                      borderRadius: 6,
+                      borderRadius: 0,
                       flexShrink: 0,
                     }}
                   >

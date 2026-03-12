@@ -301,7 +301,7 @@ export function createPlanningArchiveTools(deps: CreatePlanningArchiveToolsDeps)
         planningLeader,
         pickL(
           l(
-            ["대표님, 기획팀장 최종 취합본을 생성해 아카이빙했습니다. 보고서 팝업에서 확인하실 수 있습니다."],
+            ["클라이언트님, 기획팀장 최종 취합본을 생성해 아카이빙했습니다. 보고서 팝업에서 확인하실 수 있습니다."],
             [
               "CEO, the planning lead consolidated final report has been generated and archived. You can review it from the report popup.",
             ],

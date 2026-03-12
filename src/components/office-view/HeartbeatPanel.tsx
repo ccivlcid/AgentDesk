@@ -186,22 +186,50 @@ export default function HeartbeatPanel({ language, agents = [], standalone = fal
     );
   }
 
-  return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden", background: "var(--th-bg-primary)" }}>
-      {/* ── 헤더 ── */}
-      <div
-        style={{
-          ...mono,
-          flexShrink: 0,
-          display: "flex",
-          alignItems: "center",
-          gap: 10,
-          padding: "6px 14px",
-          borderBottom: "1px solid var(--th-border)",
+  const wrapperStyle: React.CSSProperties = {
+    display: "flex",
+    flexDirection: "column",
+    height: "100%",
+    overflow: "hidden",
+    ...(standalone
+      ? {
+          borderRadius: 10,
           background: "var(--th-bg-elevated)",
-          borderLeft: "3px solid var(--th-accent)",
-        }}
-      >
+          border: "1px solid var(--th-border)",
+          boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
+        }
+      : { background: "var(--th-bg-primary)" }),
+  };
+  const headerStyle: React.CSSProperties = {
+    ...mono,
+    flexShrink: 0,
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
+    padding: standalone ? "10px 18px" : "6px 14px",
+    borderBottom: "1px solid var(--th-border)",
+    background: standalone ? "var(--th-bg-panel)" : "var(--th-bg-elevated)",
+    borderLeft: "3px solid var(--th-accent)",
+    ...(standalone
+      ? {
+          borderTopLeftRadius: 10,
+          borderTopRightRadius: 10,
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
+        }
+      : {}),
+  };
+
+  return (
+    <div style={wrapperStyle}>
+      {/* ── 헤더 ── */}
+      <div style={headerStyle}>
+        {/* macOS 트래픽 라이트 (●●●) */}
+        <div className="flex flex-shrink-0 items-center gap-1.5">
+          <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#ff5f57" }} aria-hidden />
+          <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#ffbd2e" }} aria-hidden />
+          <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#27c93f" }} aria-hidden />
+        </div>
         <span style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.15em", color: "var(--th-text-muted)" }}>HEARTBEAT</span>
         <span style={{ color: "var(--th-border)", fontSize: "9px" }}>·</span>
         <span style={{ fontSize: "9px", color: "var(--th-text-muted)" }}>
@@ -221,7 +249,8 @@ export default function HeartbeatPanel({ language, agents = [], standalone = fal
               ...mono,
               marginLeft: "auto",
               fontSize: "9px",
-              padding: "2px 7px",
+              padding: "4px 10px",
+              borderRadius: 6,
               background: "transparent",
               border: `1px solid ${filterProjectOnly ? "var(--th-accent)" : "var(--th-border)"}`,
               color: filterProjectOnly ? "var(--th-accent)" : "var(--th-text-muted)",

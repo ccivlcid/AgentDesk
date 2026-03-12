@@ -76,12 +76,42 @@ export default function Deliverables({ agents, currentProject }: DeliverablesPro
   ];
 
   return (
-    <div style={{ ...mono, display: "flex", flexDirection: "column", gap: 0 }}>
-
-      {/* ── 터미널 헤더 ── */}
-      <div style={{ borderBottom: "1px solid var(--th-border)", padding: "10px 16px", background: "var(--th-bg-elevated)", display: "flex", alignItems: "center", gap: 8 }}>
+    <div
+      style={{
+        ...mono,
+        display: "flex",
+        flexDirection: "column",
+        gap: 0,
+        borderRadius: 10,
+        overflow: "hidden",
+        background: "var(--th-bg-elevated)",
+        border: "1px solid var(--th-border)",
+        boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
+      }}
+    >
+      {/* ── 터미널 헤더 (설정과 동일 macOS) ── */}
+      <div
+        style={{
+          borderBottom: "1px solid var(--th-border)",
+          padding: "12px 18px",
+          background: "var(--th-bg-panel)",
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          borderTopLeftRadius: 10,
+          borderTopRightRadius: 10,
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
+        }}
+      >
+        {/* macOS 트래픽 라이트 (●●●) */}
+        <div className="flex flex-shrink-0 items-center gap-1.5">
+          <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#ff5f57" }} aria-hidden />
+          <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#ffbd2e" }} aria-hidden />
+          <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#27c93f" }} aria-hidden />
+        </div>
         <span style={{ color: "var(--th-accent)", fontWeight: 700, fontSize: "11px" }}>$</span>
-        <span style={{ fontSize: "11px", color: "var(--th-text-muted)" }}>
+        <span style={{ fontSize: "11px", color: "var(--th-text-secondary)" }}>
           ls deliverables/{currentProject ? ` --project="${currentProject.name}"` : ""}
         </span>
         {!loading && (
@@ -104,6 +134,7 @@ export default function Deliverables({ agents, currentProject }: DeliverablesPro
               fontSize: "9px",
               fontWeight: 700,
               padding: "3px 10px",
+              borderRadius: 6,
               border: `1px solid ${statusFilter === f.key ? "rgba(245,158,11,0.5)" : "var(--th-border)"}`,
               background: statusFilter === f.key ? "rgba(245,158,11,0.08)" : "transparent",
               color: statusFilter === f.key ? "var(--th-accent)" : "var(--th-text-muted)",
@@ -121,6 +152,7 @@ export default function Deliverables({ agents, currentProject }: DeliverablesPro
             marginLeft: "auto",
             fontSize: "10px",
             padding: "3px 10px",
+            borderRadius: 6,
             border: "1px solid var(--th-border)",
             background: "transparent",
             color: "var(--th-text-muted)",
@@ -132,6 +164,8 @@ export default function Deliverables({ agents, currentProject }: DeliverablesPro
         </button>
       </div>
 
+      {/* ── 컨텐츠 영역 (설정과 동일 패딩) ── */}
+      <div style={{ flex: 1, overflow: "auto", background: "var(--th-bg-primary)", padding: "20px 18px 24px" }}>
       {/* ── 컬럼 헤더 ── */}
       {!loading && filtered.length > 0 && (
         <div style={{ display: "flex", alignItems: "center", padding: "4px 14px", background: "var(--th-bg-primary)", borderBottom: "1px solid var(--th-border)", gap: 8 }}>
@@ -183,6 +217,7 @@ export default function Deliverables({ agents, currentProject }: DeliverablesPro
           </span>
         </div>
       )}
+      </div>
     </div>
   );
 }

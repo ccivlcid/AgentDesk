@@ -39,9 +39,9 @@ export default function ProjectDropdown({
   return (
     <div
       ref={ref}
-      className="absolute left-0 right-0 top-full mt-1 z-50
-                 bg-[var(--th-bg-elevated)] border border-[var(--th-border)]
-                 rounded shadow-lg overflow-hidden"
+      className="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-none
+                 border border-[var(--th-border-strong)] bg-[var(--th-bg-elevated)]"
+      style={{ fontFamily: "var(--th-font-mono)" }}
     >
       {/* 프로젝트 목록 */}
       <div className="max-h-48 overflow-y-auto">
@@ -60,7 +60,7 @@ export default function ProjectDropdown({
                 className={[
                   "w-full flex items-center gap-2 px-3 py-2 text-left text-xs transition-colors",
                   isActive
-                    ? "bg-[var(--th-bg-accent)] text-[var(--th-text)]"
+                    ? "bg-[var(--th-active-bg)] text-[var(--th-text)]"
                     : "hover:bg-[var(--th-bg-surface)] text-[var(--th-text)]",
                 ].join(" ")}
               >

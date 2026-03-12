@@ -1,5 +1,5 @@
 import { useI18n } from "../i18n";
-import type { Agent, Department } from "../types";
+import type { Agent, Department, Project } from "../types";
 import HooksEventTypeBar from "./hooks/HooksEventTypeBar";
 import HooksGrid from "./hooks/HooksGrid";
 import HooksHeader from "./hooks/HooksHeader";
@@ -11,11 +11,35 @@ import { useHooksState } from "./hooks/useHooksState";
 interface HooksLibraryProps {
   agents: Agent[];
   departments: Department[];
+  currentProject?: Project | null;
 }
 
-export default function HooksLibrary({ agents, departments }: HooksLibraryProps) {
+export default function HooksLibrary({ agents, departments, currentProject }: HooksLibraryProps) {
   const { t, locale: localeTag } = useI18n();
-  const vm = useHooksState({ agents, departments, t });
+
+  const vm = useHooksState({
+    agents,
+    departments,
+    t,
+    filters: currentProject ? { scope_type: "project", scope_id: currentProject.id } : undefined,
+  });
+
+  // 프로젝트 미선택
+  if (!currentProject) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <div className="text-center font-mono">
+          <div className="text-3xl mb-3" style={{ opacity: 0.4 }}>&#x1F3A3;</div>
+          <p className="text-sm font-medium mb-1" style={{ color: "var(--th-text-secondary)" }}>
+            {t({ ko: "프로젝트를 선택하세요", en: "Select a project", ja: "プロジェクトを選択してください", zh: "请选择项目" })}
+          </p>
+          <p className="text-xs" style={{ color: "var(--th-text-muted)" }}>
+            {t({ ko: "헤더에서 프로젝트를 선택하면 해당 프로젝트의 훅을 관리할 수 있습니다.", en: "Select a project in the header to manage its hooks.", ja: "ヘッダーでプロジェクトを選択して、フックを管理できます。", zh: "在标题栏选择项目以管理其钩子。" })}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (vm.loading) {
     return (
@@ -23,12 +47,7 @@ export default function HooksLibrary({ agents, departments }: HooksLibraryProps)
         <div className="text-center">
           <div className="animate-spin w-8 h-8 border-2 border-t-transparent mx-auto mb-4" style={{ borderRadius: "50%", borderColor: "var(--th-accent)", borderTopColor: "transparent" }} />
           <div className="text-sm font-mono" style={{ color: "var(--th-text-muted)" }}>
-            {t({
-              ko: "\uD6C5 \uB85C\uB529\uC911...",
-              en: "Loading hooks...",
-              ja: "\u30D5\u30C3\u30AF\u3092\u8AAD\u307F\u8FBC\u307F\u4E2D...",
-              zh: "\u6B63\u5728\u52A0\u8F7D\u94A9\u5B50...",
-            })}
+            {t({ ko: "훅 로딩중...", en: "Loading hooks...", ja: "フックを読み込み中...", zh: "正在加载钩子..." })}
           </div>
         </div>
       </div>
@@ -39,22 +58,17 @@ export default function HooksLibrary({ agents, departments }: HooksLibraryProps)
     return (
       <div className="flex items-center justify-center py-24">
         <div className="text-center">
-          <div className="text-4xl mb-3">{"\u26A0\uFE0F"}</div>
+          <div className="text-4xl mb-3">&#x26A0;&#xFE0F;</div>
           <div className="text-sm font-mono" style={{ color: "var(--th-text-muted)" }}>
-            {t({
-              ko: "\uD6C5 \uB370\uC774\uD130\uB97C \uBD88\uB7EC\uC62C \uC218 \uC5C6\uC2B5\uB2C8\uB2E4",
-              en: "Unable to load hooks data",
-              ja: "\u30D5\u30C3\u30AF\u30C7\u30FC\u30BF\u3092\u8AAD\u307F\u8FBC\u3081\u307E\u305B\u3093",
-              zh: "\u65E0\u6CD5\u52A0\u8F7D\u94A9\u5B50\u6570\u636E",
-            })}
+            {t({ ko: "훅 데이터를 불러올 수 없습니다", en: "Unable to load hooks data", ja: "フックデータを読み込めません", zh: "无法加载钩子数据" })}
           </div>
           <div className="text-xs font-mono mt-1" style={{ color: "var(--th-text-muted)" }}>{vm.error}</div>
           <button
             onClick={vm.loadHooks}
             className="mt-4 px-4 py-2 text-sm font-mono transition-all"
-            style={{ borderRadius: 0, background: "rgba(251,191,36,0.1)", color: "var(--th-accent)", border: "1px solid rgba(251,191,36,0.35)" }}
+            style={{ borderRadius: 6, background: "rgba(251,191,36,0.1)", color: "var(--th-accent)", border: "1px solid rgba(251,191,36,0.35)" }}
           >
-            {t({ ko: "\uB2E4\uC2DC \uC2DC\uB3C4", en: "Retry", ja: "\u518D\u8A66\u884C", zh: "\u91CD\u8BD5" })}
+            {t({ ko: "다시 시도", en: "Retry", ja: "再試行", zh: "重试" })}
           </button>
         </div>
       </div>
@@ -62,45 +76,64 @@ export default function HooksLibrary({ agents, departments }: HooksLibraryProps)
   }
 
   return (
-    <div className="space-y-4">
-      <HooksHeader
-        t={t}
-        hooksCount={vm.hooks.length}
-        search={vm.search}
-        onSearchChange={vm.setSearch}
-        sortBy={vm.sortBy}
-        onSortByChange={vm.setSortBy}
-        onOpenCreateModal={vm.openCreateModal}
-      />
+    <div
+      style={{
+        borderRadius: 10,
+        overflow: "hidden",
+        background: "var(--th-bg-elevated)",
+        border: "1px solid var(--th-border)",
+        boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
+      }}
+    >
+      <div className="space-y-4" style={{ background: "var(--th-bg-primary)" }}>
+        <HooksHeader
+          t={t}
+          hooksCount={vm.hooks.length}
+          search={vm.search}
+          onSearchChange={vm.setSearch}
+          sortBy={vm.sortBy}
+          onSortByChange={vm.setSortBy}
+          onOpenCreateModal={vm.openCreateModal}
+        />
 
-      <HooksEventTypeBar
-        t={t}
-        selectedEventType={vm.selectedEventType}
-        onSelectEventType={vm.setSelectedEventType}
-        eventTypeCounts={vm.eventTypeCounts}
-        filteredLength={vm.filtered.length}
-        search={vm.search}
-      />
+        <HooksEventTypeBar
+          t={t}
+          selectedEventType={vm.selectedEventType}
+          onSelectEventType={vm.setSelectedEventType}
+          eventTypeCounts={vm.eventTypeCounts}
+          filteredLength={vm.filtered.length}
+          search={vm.search}
+        />
 
-      <HookMemorySection
-        t={t}
-        agents={agents}
-        historyRefreshToken={vm.historyRefreshToken}
-        onRefreshHistory={vm.bumpHistoryRefreshToken}
-      />
+        <HookMemorySection
+          t={t}
+          agents={agents}
+          historyRefreshToken={vm.historyRefreshToken}
+          onRefreshHistory={vm.bumpHistoryRefreshToken}
+        />
 
-      <HooksGrid
-        t={t}
-        filtered={vm.filtered}
-        onToggle={vm.handleToggleHook}
-        onEdit={vm.openEditModal}
-        onDelete={vm.handleDeleteHook}
-        deletingHookId={vm.deletingHookId}
-        learnedProvidersByHook={vm.learnedProvidersByHook}
-        learnedRepresentatives={vm.learnedRepresentatives}
-        agents={agents}
-        onOpenLearningModal={vm.openLearningModal}
-      />
+        <HooksGrid
+          t={t}
+          filtered={vm.filtered}
+          onToggle={vm.handleToggleHook}
+          onEdit={vm.openEditModal}
+          onDelete={vm.handleDeleteHook}
+          deletingHookId={vm.deletingHookId}
+          learnedProvidersByHook={vm.learnedProvidersByHook}
+          learnedRepresentatives={vm.learnedRepresentatives}
+          agents={agents}
+          onOpenLearningModal={vm.openLearningModal}
+        />
+
+        <div className="text-center text-xs font-mono py-4" style={{ color: "var(--th-text-muted)" }}>
+          {t({
+            ko: `'${currentProject.name}' 프로젝트 전용 훅`,
+            en: `Hooks for '${currentProject.name}' project`,
+            ja: `'${currentProject.name}' プロジェクト専用フック`,
+            zh: `'${currentProject.name}' 项目专用钩子`,
+          })}
+        </div>
+      </div>
 
       <HookFormModal
         t={t}
@@ -111,12 +144,9 @@ export default function HooksLibrary({ agents, departments }: HooksLibraryProps)
         submitting={vm.formSubmitting}
         error={vm.formError}
         onClose={vm.closeFormModal}
-        onCreate={(input) => {
-          void vm.handleCreateHook(input);
-        }}
-        onUpdate={(id, input) => {
-          void vm.handleUpdateHook(id, input);
-        }}
+        scopeOverride={{ scope_type: "project", scope_id: currentProject.id }}
+        onCreate={(input) => { void vm.handleCreateHook(input); }}
+        onUpdate={(id, input) => { void vm.handleUpdateHook(id, input); }}
       />
 
       <HookLearningModal
@@ -144,15 +174,6 @@ export default function HooksLibrary({ agents, departments }: HooksLibraryProps)
         onAddAgent={vm.addAgentToSquad}
         onRemoveAgent={vm.removeAgentFromSquad}
       />
-
-      <div className="text-center text-xs font-mono py-4" style={{ color: "var(--th-text-muted)" }}>
-        {t({
-          ko: "\uD6C5\uC740 \uC5D0\uC774\uC804\uD2B8 \uD0DC\uC2A4\uD06C \uB77C\uC774\uD504\uC0AC\uC774\uD074\uC758 \uD2B9\uC815 \uC2DC\uC810\uC5D0 \uC258 \uBA85\uB839\uC744 \uC2E4\uD589\uD569\uB2C8\uB2E4",
-          en: "Hooks execute shell commands at specific points in the agent task lifecycle",
-          ja: "\u30D5\u30C3\u30AF\u306F\u30A8\u30FC\u30B8\u30A7\u30F3\u30C8\u30BF\u30B9\u30AF\u30E9\u30A4\u30D5\u30B5\u30A4\u30AF\u30EB\u306E\u7279\u5B9A\u6642\u70B9\u3067\u30B7\u30A7\u30EB\u30B3\u30DE\u30F3\u30C9\u3092\u5B9F\u884C\u3057\u307E\u3059",
-          zh: "\u94A9\u5B50\u5728\u4EE3\u7406\u4EFB\u52A1\u751F\u547D\u5468\u671F\u7684\u7279\u5B9A\u65F6\u95F4\u70B9\u6267\u884Cshell\u547D\u4EE4",
-        })}
-      </div>
     </div>
   );
 }

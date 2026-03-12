@@ -179,7 +179,7 @@ body,
 }
 
 body {
-  font-family: var(--th-font-body);
+  font-family: var(--th-font-mono);
   background: var(--th-bg-primary);
   color: var(--th-text-primary);
   transition:
@@ -195,7 +195,55 @@ h2,
 h3,
 .dashboard-title-gradient,
 .dashboard-ranking-gradient {
-  font-family: var(--th-font-display);
+  font-family: var(--th-font-mono);
+}
+
+/* ─── Modern Terminal CLI: variable aliases ───────────────────────────
+   New components use the design-system.md token names.
+   These aliases bridge to existing theme variables. */
+:root,
+[data-theme="dark"] {
+  --th-bg-base:        var(--th-bg-primary);
+  --th-bg-panel:       var(--th-bg-sidebar);
+  --th-bg-header:      var(--th-bg-primary);
+  --th-text:           var(--th-text-primary);
+  --th-hover-bg:       rgba(255, 255, 255, 0.04);
+  --th-active-bg:      rgba(255, 255, 255, 0.07);
+  --th-accent-border:  rgba(245, 158, 11, 0.28);
+  --th-green:          var(--th-terminal-success);
+  --th-blue:           var(--th-terminal-info);
+  --th-red:            var(--th-terminal-error);
+}
+
+[data-theme="light"] {
+  --th-bg-base:        var(--th-bg-primary);
+  --th-bg-panel:       var(--th-bg-sidebar);
+  --th-bg-header:      var(--th-bg-primary);
+  --th-text:           var(--th-text-primary);
+  --th-hover-bg:       rgba(0, 0, 0, 0.04);
+  --th-active-bg:      rgba(0, 0, 0, 0.07);
+  --th-accent-border:  rgba(180, 83, 9, 0.28);
+  --th-green:          var(--th-terminal-success);
+  --th-blue:           var(--th-terminal-info);
+  --th-red:            var(--th-terminal-error);
+}
+
+/* 에이전트 상태 모달: ps aux --agents 영역 배경을 모드별로 분리 */
+[data-theme="dark"] .agent-status-bar {
+  background: var(--th-terminal-bg);
+}
+[data-theme="light"] .agent-status-bar {
+  background: var(--th-bg-panel);
+}
+
+/* ─── CLI cursor blink ─────────────────────────────────────────────── */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+@keyframes ping {
+  75%, 100% { transform: scale(2); opacity: 0; }
 }
 
 code,

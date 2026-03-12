@@ -54,16 +54,16 @@ export default function OAuthSettingsTab({
       style={{ background: "var(--th-bg-surface)", borderColor: "var(--th-border)" }}
     >
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold" style={{ color: "var(--th-text-heading)" }}>
-          {t({ ko: "OAuth 인증 현황", en: "OAuth status", ja: "OAuth 認証状態", zh: "OAuth 认证状态" })}
-        </h3>
+        <div style={{ fontFamily: "var(--th-font-mono)", fontSize: "10px", color: "var(--th-accent)", letterSpacing: "0.08em", textTransform: "uppercase", borderLeft: "3px solid var(--th-accent)", paddingLeft: "8px" }}>
+          // oauth status
+        </div>
         <button
           type="button"
           onClick={onRefresh}
-          className="text-xs font-medium transition-colors hover:opacity-80"
-          style={{ color: "var(--th-text-secondary)" }}
+          className="transition-colors hover:opacity-80"
+          style={{ fontFamily: "var(--th-font-mono)", fontSize: "10px", color: "var(--th-text-muted)", border: "1px solid var(--th-border)", padding: "2px 6px", borderRadius: 0, background: "var(--th-bg-elevated)" }}
         >
-          {t({ ko: "새로고침", en: "Refresh", ja: "更新", zh: "刷新" })}
+          [↺]
         </button>
       </div>
 

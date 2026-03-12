@@ -219,46 +219,80 @@ export default function DependencyGraph({ tasks, onOpenTerminal }: DependencyGra
 
   return (
     <div className="relative flex h-full flex-col overflow-hidden" style={{ background: "var(--th-bg-primary)" }}>
-      {/* Toolbar */}
+      {/* Toolbar — macOS 스타일 톤 */}
       <div
-        className="flex items-center gap-3 border-b px-4 py-2 text-[10px] font-mono flex-shrink-0"
-        style={{ borderColor: "var(--th-border)", color: "var(--th-text-muted)" }}
+        className="flex items-center gap-3 flex-shrink-0 px-4 py-2.5 text-[10px] font-mono"
+        style={{
+          borderBottom: "1px solid var(--th-border)",
+          background: "var(--th-bg-panel)",
+          color: "var(--th-text-muted)",
+        }}
       >
-        <span style={{ color: "var(--th-accent)" }}>&#9670; {tr("의존성 그래프", "Dependency Graph")}</span>
+        <span style={{ color: "var(--th-accent)", fontWeight: 700 }}>◇</span>
+        <span style={{ fontWeight: 600, color: "var(--th-text-secondary)" }}>
+          {tr("의존성 그래프", "Dependency Graph")}
+        </span>
+        <span style={{ width: 1, height: 14, background: "var(--th-border)", margin: "0 4px" }} />
         <span>{tasks.length} {tr("업무", "tasks")}</span>
-        <span>{visibleEdges.length} {tr("의존 관계", "edges")}</span>
-        <span className="ml-auto opacity-60">{tr("스크롤=줌 · 드래그=이동", "Scroll=zoom · Drag=pan")}</span>
+        <span>{visibleEdges.length} {tr("관계", "edges")}</span>
+        <span className="ml-auto" style={{ opacity: 0.7 }}>
+          {tr("스크롤=줌 · 드래그=이동", "Scroll=zoom · Drag=pan")}
+        </span>
         <button
+          type="button"
           onClick={() => { setPan({ x: 0, y: 0 }); setScale(1); }}
-          className="border px-2 py-0.5 hover:opacity-80 transition"
-          style={{ borderRadius: 0, borderColor: "var(--th-border)", color: "var(--th-text-secondary)" }}
+          className="border px-2 py-1 hover:opacity-90 transition-opacity"
+          style={{
+            borderRadius: 6,
+            borderColor: "var(--th-border)",
+            background: "transparent",
+            color: "var(--th-text-secondary)",
+            fontFamily: "var(--th-font-mono)",
+            fontSize: "10px",
+          }}
         >
           {tr("초기화", "Reset")}
         </button>
       </div>
 
-      {/* No edges hint */}
+      {/* No edges: 한 줄 안내 (1번 영역 최소화 → 2번 노드 영역이 넓어지도록) */}
       {visibleEdges.length === 0 && (
         <div
-          className="border-b px-4 py-1.5 text-[10px] font-mono"
-          style={{ borderColor: "var(--th-border)", color: "var(--th-text-muted)", background: "rgba(251,191,36,0.04)" }}
+          className="flex-shrink-0 flex items-center gap-2 px-4 py-2 text-[10px] font-mono"
+          style={{
+            borderBottom: "1px solid var(--th-border)",
+            background: "rgba(251,191,36,0.06)",
+            color: "var(--th-text-muted)",
+          }}
         >
-          {tr(
-            "설정된 의존 관계가 없습니다. 업무 상세에서 '선행 업무'를 추가할 수 있습니다.",
-            "No dependencies set. You can add prerequisites in task detail.",
-          )}
+          <span style={{ color: "var(--th-accent)" }}>◇</span>
+          <span>
+            {tr("의존 관계가 없습니다.", "No dependencies set.")}
+            {" "}
+            {tr("아래 노드 클릭 → 터미널에서 선행 업무 추가 시 화살표로 연결됩니다. 스크롤=줌, 드래그=이동", "Click a node below; add prerequisites in task detail to see edges. Scroll=zoom, Drag=pan.")}
+          </span>
         </div>
       )}
 
-      {/* SVG canvas */}
+      {/* 의존 관계 없을 때만: 노드 목록 캡션 */}
+      {visibleEdges.length === 0 && tasks.length > 0 && (
+        <div
+          className="flex-shrink-0 px-4 py-1 text-[10px] font-mono"
+          style={{ borderBottom: "1px solid var(--th-border)", color: "var(--th-text-muted)", background: "var(--th-bg-primary)" }}
+        >
+          {tr("업무 노드 (클릭하면 터미널 열기)", "Task nodes (click to open terminal)")}
+        </div>
+      )}
+
+      {/* SVG canvas — 2번: 하단 최대 영역 (flex로 남은 높이 전부 사용) */}
       <div
-        className="flex-1 overflow-hidden cursor-grab active:cursor-grabbing"
+        className="flex-1 min-h-0 overflow-hidden cursor-grab active:cursor-grabbing"
+        style={{ flex: "1 1 0%", minHeight: 0, userSelect: "none" }}
         onWheel={handleWheel}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
-        style={{ userSelect: "none" }}
       >
         <svg
           ref={svgRef}

@@ -9,7 +9,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 
-// ── Types ────────────────────────────────────────────────────────────────────
+// ── Types ─────────────────────────────────────────────────────────────────────
 
 export type ToastVariant = "success" | "error" | "warning" | "info";
 
@@ -23,11 +23,9 @@ interface ToastContextValue {
   showToast: (message: string, variant?: ToastVariant) => void;
 }
 
-// ── Context ──────────────────────────────────────────────────────────────────
+// ── Context ───────────────────────────────────────────────────────────────────
 
 const ToastContext = createContext<ToastContextValue | null>(null);
-
-// ── Hook ─────────────────────────────────────────────────────────────────────
 
 export function useToast(): ToastContextValue {
   const ctx = useContext(ToastContext);
@@ -35,66 +33,67 @@ export function useToast(): ToastContextValue {
   return ctx;
 }
 
-// ── Icons ────────────────────────────────────────────────────────────────────
+// ── Config ────────────────────────────────────────────────────────────────────
 
-const ICONS: Record<ToastVariant, string> = {
-  success: "✓",
-  error: "✕",
-  warning: "⚠",
-  info: "ℹ",
-};
-
-const AUTO_DISMISS_BY_VARIANT: Record<ToastVariant, number | null> = {
-  success: 3000,
-  error: 5000,
-  warning: null,
-  info: 4000,
-};
-
-const COLORS: Record<ToastVariant, { text: string; border: string; bg: string }> = {
+/** Left accent bar + text color per variant */
+const VARIANT_CONFIG: Record<ToastVariant, {
+  sigil: string;
+  sigilColor: string;
+  accentBar: string;
+  border: string;
+  bg: string;
+}> = {
   success: {
-    text: "#3fb950",
-    border: "rgba(63,185,80,0.3)",
-    bg: "rgba(63,185,80,0.08)",
+    sigil: "✓",
+    sigilColor: "#3fb950",
+    accentBar: "#3fb950",
+    border: "rgba(63,185,80,0.25)",
+    bg: "var(--th-bg-elevated)",
   },
   error: {
-    text: "#f85149",
-    border: "rgba(248,81,73,0.3)",
-    bg: "rgba(248,81,73,0.08)",
+    sigil: "✗",
+    sigilColor: "#f85149",
+    accentBar: "#f85149",
+    border: "rgba(248,81,73,0.25)",
+    bg: "var(--th-bg-elevated)",
   },
   warning: {
-    text: "#f59e0b",
-    border: "rgba(245,158,11,0.3)",
-    bg: "rgba(245,158,11,0.08)",
+    sigil: "~",
+    sigilColor: "#f59e0b",
+    accentBar: "#f59e0b",
+    border: "rgba(245,158,11,0.25)",
+    bg: "var(--th-bg-elevated)",
   },
   info: {
-    text: "#58a6ff",
-    border: "rgba(88,166,255,0.3)",
-    bg: "rgba(88,166,255,0.08)",
+    sigil: "ℹ",
+    sigilColor: "#58a6ff",
+    accentBar: "#58a6ff",
+    border: "rgba(88,166,255,0.25)",
+    bg: "var(--th-bg-elevated)",
   },
 };
 
-// ── Single Toast ─────────────────────────────────────────────────────────────
+const AUTO_DISMISS_MS: Record<ToastVariant, number | null> = {
+  success: 3000,
+  error:   5000,
+  warning: null,
+  info:    4000,
+};
 
 const MAX_TOASTS = 3;
+const mono = "var(--th-font-mono)";
 
-function Toast({
-  item,
-  onRemove,
-}: {
-  item: ToastItem;
-  onRemove: (id: string) => void;
-}) {
-  const colors = COLORS[item.variant];
+// ── Single Toast ──────────────────────────────────────────────────────────────
+
+function Toast({ item, onRemove }: { item: ToastItem; onRemove: (id: string) => void }) {
+  const cfg = VARIANT_CONFIG[item.variant];
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const dismissMs = AUTO_DISMISS_BY_VARIANT[item.variant];
+  const dismissMs = AUTO_DISMISS_MS[item.variant];
 
   useEffect(() => {
     if (dismissMs === null) return;
     timerRef.current = setTimeout(() => onRemove(item.id), dismissMs);
-    return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
+    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
   }, [item.id, dismissMs, onRemove]);
 
   return (
@@ -103,41 +102,41 @@ function Toast({
       aria-live="assertive"
       style={{
         display: "flex",
-        alignItems: "center",
+        alignItems: "flex-start",
         gap: "10px",
         padding: "10px 14px",
-        borderRadius: "0",
-        border: `1px solid ${colors.border}`,
-        background: colors.bg,
-        backdropFilter: "none",
+        borderRadius: 0,
+        border: `1px solid ${cfg.border}`,
+        borderLeft: `3px solid ${cfg.accentBar}`,
+        background: cfg.bg,
         minWidth: "260px",
-        maxWidth: "420px",
-        boxShadow: "0 4px 16px rgba(0,0,0,0.4)",
+        maxWidth: "400px",
+        fontFamily: mono,
       }}
     >
-      <span
-        style={{
-          fontFamily: "var(--th-font-mono)",
-          fontSize: "0.65rem",
-          fontWeight: 600,
-          letterSpacing: "0.06em",
-          color: colors.text,
-          flexShrink: 0,
-        }}
-      >
-        {ICONS[item.variant]}
+      {/* Sigil */}
+      <span style={{
+        fontSize: "11px",
+        fontWeight: 700,
+        color: cfg.sigilColor,
+        flexShrink: 0,
+        paddingTop: "1px",
+      }}>
+        {cfg.sigil}
       </span>
-      <span
-        style={{
-          fontFamily: "var(--th-font-mono)",
-          fontSize: "0.8rem",
-          color: "var(--th-text-primary)",
-          flex: 1,
-          lineHeight: 1.4,
-        }}
-      >
+
+      {/* Message */}
+      <span style={{
+        fontFamily: mono,
+        fontSize: "12px",
+        color: "var(--th-text-primary)",
+        flex: 1,
+        lineHeight: 1.5,
+      }}>
         {item.message}
       </span>
+
+      {/* [×] dismiss */}
       <button
         onClick={() => onRemove(item.id)}
         aria-label="Dismiss"
@@ -147,12 +146,15 @@ function Toast({
           cursor: "pointer",
           color: "var(--th-text-muted)",
           padding: "0 2px",
-          lineHeight: 1,
-          fontSize: "0.85rem",
+          fontFamily: mono,
+          fontSize: "11px",
           flexShrink: 0,
+          lineHeight: 1,
+          transition: "color 0.1s",
         }}
+        className="hover:!text-[var(--th-text-secondary)]"
       >
-        ×
+        [×]
       </button>
     </div>
   );
@@ -184,12 +186,12 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           aria-label="Notifications"
           style={{
             position: "fixed",
-            bottom: "24px",
-            right: "24px",
+            bottom: "20px",
+            right: "20px",
             zIndex: 9999,
             display: "flex",
             flexDirection: "column",
-            gap: "8px",
+            gap: "6px",
             alignItems: "flex-end",
           }}
         >

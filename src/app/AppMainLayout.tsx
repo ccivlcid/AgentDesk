@@ -33,6 +33,7 @@ import type { UpdateStatus } from "../api";
 import type { OAuthCallbackResult, View } from "./types";
 import AppHeaderBar from "./AppHeaderBar";
 import CommandPalette from "../components/CommandPalette";
+import KeyboardShortcutsGuide from "../components/KeyboardShortcutsGuide";
 import ProjectSelector from "../components/project-selector/ProjectSelector";
 import type { UiLanguage } from "../i18n";
 import type { CliUsageEntry } from "../api";
@@ -220,6 +221,7 @@ export default function AppMainLayout({
   children,
 }: AppMainLayoutProps) {
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const [shortcutsGuideOpen, setShortcutsGuideOpen] = useState(false);
   // 현재 프로젝트 팀원 ID 세트 (WorkMap dim용)
   const [projectAgentIds, setProjectAgentIds] = useState<Set<string>>(new Set());
   const prevProjectIdRef = useRef<string | null>(null);
@@ -239,6 +241,48 @@ export default function AppMainLayout({
     if (!pid) { setProjectAgentIds(new Set()); return; }
     refreshProjectAgents(pid);
   }, [currentProject?.id]);
+
+  // 글로벌 키보드 단축키
+  useEffect(() => {
+    const VIEW_SHORTCUTS: Record<string, View> = {
+      "1": "dashboard",
+      "2": "tasks-board",
+      "3": "agents",
+      "4": "skills",
+      "5": "memory",
+      "6": "agent-rules",
+      "7": "hooks",
+      "8": "settings",
+    };
+    const handler = (e: KeyboardEvent) => {
+      // input/textarea 포커스 중 무시
+      const tag = (e.target as HTMLElement)?.tagName;
+      const isEditing = tag === "INPUT" || tag === "TEXTAREA" || (e.target as HTMLElement)?.isContentEditable;
+
+      // Ctrl+Shift+K — command palette
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "K") {
+        e.preventDefault();
+        setCommandPaletteOpen((v) => !v);
+        return;
+      }
+
+      // Ctrl+1~8 — 뷰 이동
+      if ((e.ctrlKey || e.metaKey) && VIEW_SHORTCUTS[e.key]) {
+        e.preventDefault();
+        setView(VIEW_SHORTCUTS[e.key]);
+        return;
+      }
+
+      // ? — 단축키 가이드 (편집 중 제외)
+      if (!isEditing && !e.ctrlKey && !e.metaKey && e.key === "?") {
+        e.preventDefault();
+        setShortcutsGuideOpen((v) => !v);
+        return;
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
 
   const handleAddToTeam = async (agentId: string) => {
     if (!currentProject) return;
@@ -309,6 +353,19 @@ export default function AppMainLayout({
           />
         </div>
 
+        {/* 메인 영역 (사이드바 오른쪽) — macOS 패널 스타일 */}
+        <div
+          className="flex-1 flex flex-col min-w-0 overflow-hidden"
+          style={{
+            borderTopRightRadius: 10,
+            borderBottomRightRadius: 10,
+            borderRight: "1px solid var(--th-border)",
+            borderBottom: "1px solid var(--th-border)",
+            borderTop: "1px solid var(--th-border)",
+            background: "var(--th-bg-primary)",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.08)",
+          }}
+        >
         <main id="main-content" className="flex-1 flex flex-col overflow-hidden min-w-0">
           <AppHeaderBar
             currentView={view}
@@ -362,6 +419,12 @@ export default function AppMainLayout({
             currentProject={currentProject}
             onNavigate={(v) => { setView(v as any); }}
             onCreateTask={onProjectCreate}
+            onSelectProject={(p) => { onProjectSelect?.(p.id); }}
+            onOpenShortcutsGuide={() => setShortcutsGuideOpen(true)}
+          />
+          <KeyboardShortcutsGuide
+            open={shortcutsGuideOpen}
+            onClose={() => setShortcutsGuideOpen(false)}
           />
 
           {labels.autoUpdateNoticeVisible && (
@@ -427,12 +490,12 @@ export default function AppMainLayout({
           <AnimatePresence mode="wait">
             <motion.div
               key={view}
-              className="flex-1 overflow-y-auto overflow-x-hidden"
+              className="flex-1 min-h-0 flex flex-col overflow-hidden"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1, transition: { duration: 0.1, ease: "linear" } }}
               exit={{ opacity: 0, transition: { duration: 0.06 } }}
             >
-              <div className="p-3 sm:p-4 lg:p-6">
+              <div className="flex-1 min-h-0 flex flex-col p-3 sm:p-4 lg:p-6">
             {view === "cli-usage" && (
               <div className="mx-auto max-w-4xl px-4 py-6">
                 <CliUsagePage
@@ -470,25 +533,27 @@ export default function AppMainLayout({
             </div>
 
             {(view === "tasks" || view === "tasks-board") && (
-              <TaskBoard
-                tasks={tasks}
-                agents={agents}
-                currentProject={currentProject}
-                projectManagerAgents={agents}
-                departments={departments}
-                subtasks={subtasks}
-                onCreateTask={onCreateTask}
-                onUpdateTask={onUpdateTask}
-                onDeleteTask={onDeleteTask}
-                onAssignTask={onAssignTask}
-                onRunTask={onRunTask}
-                onStopTask={onStopTask}
-                onPauseTask={onPauseTask}
-                onResumeTask={onResumeTask}
-                onOpenTerminal={onOpenTerminal}
-                onOpenMeetingMinutes={onOpenMeetingMinutes}
-                onProjectCreate={onProjectCreate}
-              />
+              <div className="flex-1 min-h-0 flex flex-col -m-3 sm:-m-4 lg:-m-6 mt-0">
+                <TaskBoard
+                  tasks={tasks}
+                  agents={agents}
+                  currentProject={currentProject}
+                  projectManagerAgents={agents}
+                  departments={departments}
+                  subtasks={subtasks}
+                  onCreateTask={onCreateTask}
+                  onUpdateTask={onUpdateTask}
+                  onDeleteTask={onDeleteTask}
+                  onAssignTask={onAssignTask}
+                  onRunTask={onRunTask}
+                  onStopTask={onStopTask}
+                  onPauseTask={onPauseTask}
+                  onResumeTask={onResumeTask}
+                  onOpenTerminal={onOpenTerminal}
+                  onOpenMeetingMinutes={onOpenMeetingMinutes}
+                  onProjectCreate={onProjectCreate}
+                />
+              </div>
             )}
 
             {view === "tasks-scheduled" && (
@@ -506,13 +571,15 @@ export default function AppMainLayout({
             )}
 
             {view === "agents" && (
-              <TeamPageView
-                agents={agents}
-                departments={departments}
-                onAgentsChange={onAgentsChange}
-                projectAgentIds={projectAgentIds.size > 0 ? projectAgentIds : undefined}
-                currentProject={currentProject}
-              />
+              <div className="flex-1 min-h-0 flex flex-col">
+                <TeamPageView
+                  agents={agents}
+                  departments={departments}
+                  onAgentsChange={onAgentsChange}
+                  projectAgentIds={projectAgentIds.size > 0 ? projectAgentIds : undefined}
+                  currentProject={currentProject}
+                />
+              </div>
             )}
 
             {view === "heartbeat" && (
@@ -534,7 +601,7 @@ export default function AppMainLayout({
                 loading...
               </div>
             }>
-              {view === "skills" && <SkillsLibrary agents={agents} />}
+              {view === "skills" && <SkillsLibrary agents={agents} currentProject={currentProject ?? null} />}
 
               {view === "agent-rules" && (
                 <AgentRulesLibrary agents={libraryAgents} departments={departments} currentProject={currentProject ?? null} />
@@ -545,23 +612,25 @@ export default function AppMainLayout({
               )}
 
               {view === "hooks" && (
-                <HooksLibrary agents={libraryAgents} departments={departments} />
+                <HooksLibrary agents={libraryAgents} departments={departments} currentProject={currentProject ?? null} />
               )}
 
               {view === "settings" && (
-                <SettingsPanel
-                  settings={settings}
-                  cliStatus={cliStatus}
-                  onSave={(nextSettings) => {
-                    void onSaveSettings(nextSettings);
-                  }}
-                  onRefreshCli={() => {
-                    void onRefreshCli();
-                  }}
-                  oauthResult={oauthResult}
-                  onOauthResultClear={onOauthResultClear}
-                  managerAgents={agents}
-                />
+                <div className="flex-1 min-h-0 flex flex-col">
+                  <SettingsPanel
+                    settings={settings}
+                    cliStatus={cliStatus}
+                    onSave={(nextSettings) => {
+                      void onSaveSettings(nextSettings);
+                    }}
+                    onRefreshCli={() => {
+                      void onRefreshCli();
+                    }}
+                    oauthResult={oauthResult}
+                    onOauthResultClear={onOauthResultClear}
+                    managerAgents={projectAgentIds.size > 0 ? agents.filter((a) => projectAgentIds.has(a.id)) : agents}
+                  />
+                </div>
               )}
             </Suspense>
               </div>
@@ -570,6 +639,7 @@ export default function AppMainLayout({
         </main>
 
         {children}
+        </div>
       </div>
     </I18nProvider>
   );

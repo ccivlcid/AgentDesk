@@ -20,7 +20,7 @@ type MemoryRow = {
 };
 
 const VALID_CATEGORIES = ["context", "preference", "convention", "knowledge", "instruction", "reference"] as const;
-const VALID_SCOPE_TYPES = ["global", "department", "agent", "workflow_pack"] as const;
+const VALID_SCOPE_TYPES = ["global", "department", "agent", "workflow_pack", "project"] as const;
 
 function isValidCategory(v: unknown): v is string {
   return typeof v === "string" && (VALID_CATEGORIES as readonly string[]).includes(v);
@@ -79,6 +79,7 @@ export function registerMemoryRoutes({ app, db, nowMs }: RegisterMemoryRoutesOpt
             WHEN m.scope_type = 'department' THEN (SELECT d.name FROM departments d WHERE d.id = m.scope_id)
             WHEN m.scope_type = 'agent' THEN (SELECT a.name FROM agents a WHERE a.id = m.scope_id)
             WHEN m.scope_type = 'workflow_pack' THEN (SELECT w.name FROM workflow_packs w WHERE w.key = m.scope_id)
+            WHEN m.scope_type = 'project' THEN (SELECT p.name FROM projects p WHERE p.id = m.scope_id)
             ELSE NULL
           END AS scope_label
         FROM memory_entries m

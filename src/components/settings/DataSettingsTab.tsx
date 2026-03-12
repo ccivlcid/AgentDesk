@@ -7,25 +7,14 @@ interface DataSettingsTabProps {
   t: TFunction;
 }
 
-const IconBackup = () => (
-  <svg className="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-    <polyline points="7 10 12 15 17 10" />
-    <line x1="12" y1="15" x2="12" y2="3" />
-  </svg>
+const SigilBackup = () => (
+  <span style={{ fontFamily: "var(--th-font-mono)", fontSize: "16px", color: "var(--th-text-secondary)", lineHeight: 1 }}>↓</span>
 );
-const IconRestore = () => (
-  <svg className="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-    <path d="M3 3v5h5" />
-  </svg>
+const SigilRestore = () => (
+  <span style={{ fontFamily: "var(--th-font-mono)", fontSize: "16px", color: "var(--th-text-secondary)", lineHeight: 1 }}>↑</span>
 );
-const IconExport = () => (
-  <svg className="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-    <polyline points="17 8 12 3 7 8" />
-    <line x1="12" y1="3" x2="12" y2="15" />
-  </svg>
+const SigilExport = () => (
+  <span style={{ fontFamily: "var(--th-font-mono)", fontSize: "16px", color: "var(--th-text-secondary)", lineHeight: 1 }}>→</span>
 );
 
 export default function DataSettingsTab({ t }: DataSettingsTabProps) {
@@ -149,11 +138,11 @@ export default function DataSettingsTab({ t }: DataSettingsTabProps) {
   return (
     <div className="data-settings-tab space-y-6">
       {/* Page intro */}
-      <div className="p-4" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
-        <h2 className="mb-1 text-base font-semibold tracking-tight" style={{ color: "var(--th-text-heading)" }}>
-          {t({ ko: "데이터 관리", en: "Data Management", ja: "データ管理", zh: "数据管理" })}
-        </h2>
-        <p className="text-sm" style={{ color: "var(--th-text-muted)" }}>
+      <div className="p-4" style={{ borderRadius: 8, border: "1px solid var(--th-border)", borderLeft: "3px solid var(--th-accent)", background: "var(--th-bg-surface)" }}>
+        <div style={{ fontFamily: "var(--th-font-mono)", fontSize: "10px", color: "var(--th-accent)", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "6px" }}>
+          // data management
+        </div>
+        <p className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
           {t({
             ko: "데이터베이스 백업·복원과 태스크 내보내기를 한 곳에서 할 수 있습니다.",
             en: "Backup, restore the database, and export tasks from one place.",
@@ -164,15 +153,15 @@ export default function DataSettingsTab({ t }: DataSettingsTabProps) {
       </div>
 
       {/* Backup */}
-      <div className="p-5 transition-colors" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
+      <div className="p-5 transition-colors" style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
         <div className="mb-3 flex items-center gap-3">
           <span className="flex h-10 w-10 items-center justify-center" style={{ borderRadius: 0, background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}>
-            <IconBackup />
+            <SigilBackup />
           </span>
           <div>
-            <h3 className="text-sm font-semibold" style={{ color: "var(--th-text-heading)" }}>
-              {t({ ko: "데이터베이스 백업", en: "Database Backup", ja: "データベースバックアップ", zh: "数据库备份" })}
-            </h3>
+            <div style={{ fontFamily: "var(--th-font-mono)", fontSize: "9px", color: "var(--th-accent)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "4px", borderLeft: "3px solid var(--th-accent)", paddingLeft: "6px" }}>
+              // backup
+            </div>
             <p className="text-xs" style={{ color: "var(--th-text-muted)" }}>
               {t({
                 ko: "전체 SQLite 데이터베이스를 파일로 다운로드합니다.",
@@ -196,15 +185,15 @@ export default function DataSettingsTab({ t }: DataSettingsTabProps) {
       </div>
 
       {/* Restore */}
-      <div className="p-5 transition-colors" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
+      <div className="p-5 transition-colors" style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
         <div className="mb-3 flex items-center gap-3">
           <span className="flex h-10 w-10 items-center justify-center" style={{ borderRadius: 0, background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}>
-            <IconRestore />
+            <SigilRestore />
           </span>
           <div>
-            <h3 className="text-sm font-semibold" style={{ color: "var(--th-text-heading)" }}>
-              {t({ ko: "데이터베이스 복원", en: "Database Restore", ja: "データベース復元", zh: "数据库恢复" })}
-            </h3>
+            <div style={{ fontFamily: "var(--th-font-mono)", fontSize: "9px", color: "var(--th-accent)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "4px", borderLeft: "3px solid var(--th-accent)", paddingLeft: "6px" }}>
+              // restore
+            </div>
             <p className="text-xs" style={{ color: "var(--th-text-muted)" }}>
               {t({
                 ko: "이전에 백업한 SQLite 파일을 업로드하여 복원합니다. 복원 후 서버 재시작이 필요합니다.",
@@ -246,15 +235,15 @@ export default function DataSettingsTab({ t }: DataSettingsTabProps) {
       </div>
 
       {/* Export */}
-      <div className="p-5 transition-colors" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
+      <div className="p-5 transition-colors" style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
         <div className="mb-3 flex items-center gap-3">
           <span className="flex h-10 w-10 items-center justify-center" style={{ borderRadius: 0, background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}>
-            <IconExport />
+            <SigilExport />
           </span>
           <div>
-            <h3 className="text-sm font-semibold" style={{ color: "var(--th-text-heading)" }}>
-              {t({ ko: "태스크 데이터 내보내기", en: "Export Tasks", ja: "タスクデータのエクスポート", zh: "导出任务数据" })}
-            </h3>
+            <div style={{ fontFamily: "var(--th-font-mono)", fontSize: "9px", color: "var(--th-accent)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "4px", borderLeft: "3px solid var(--th-accent)", paddingLeft: "6px" }}>
+              // export tasks
+            </div>
             <p className="text-xs" style={{ color: "var(--th-text-muted)" }}>
               {t({
                 ko: "모든 태스크를 CSV 또는 JSON 형식으로 내보냅니다.",

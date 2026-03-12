@@ -21,15 +21,16 @@
   transition: transform 0.1s linear;
 }
 
-/* ─── Task card hover: terminal style ─── */
+/* ─── Task card: modern macOS-style elevation ─── */
 .task-card-hover {
-  transition: border-color 0.1s linear, background 0.1s linear;
+  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 .task-card-hover:hover {
   border-color: var(--th-border-strong) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1) !important;
 }
 [data-theme="light"] .task-card-hover:hover {
-  box-shadow: none;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
   border-color: var(--th-border-strong) !important;
 }
 

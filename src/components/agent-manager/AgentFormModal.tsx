@@ -69,7 +69,7 @@ export default function AgentFormModal({
     background: "var(--th-input-bg)",
     borderColor: "var(--th-input-border)",
     color: "var(--th-text-primary)",
-    borderRadius: 0,
+    borderRadius: 6,
   };
 
   const sectionLabel: React.CSSProperties = {
@@ -119,7 +119,7 @@ export default function AgentFormModal({
                   type="button"
                   title={tr("프로필 이미지 업로드", "Upload profile image")}
                   className="relative w-14 h-14 overflow-hidden flex items-center justify-center transition-all group"
-                  style={{ background: "var(--th-bg-elevated)", border: "2px solid var(--th-input-border)", borderRadius: 0 }}
+                  style={{ background: "var(--th-bg-elevated)", border: "2px solid var(--th-input-border)", borderRadius: 8 }}
                   onClick={() => avatarInputRef.current?.click()}
                 >
                   {form.pendingAvatarDataUrl ?? form.avatar_url ? (
@@ -227,7 +227,7 @@ export default function AgentFormModal({
                         onClick={() => setForm({ ...form, role: r })}
                         className={`py-1.5 text-xs font-mono font-medium border transition-all ${active ? ROLE_BADGE[r] : ""}`}
                         style={{
-                          borderRadius: 0,
+                          borderRadius: 6,
                           ...(!active ? { borderColor: "var(--th-input-border)", color: "var(--th-text-muted)" } : {}),
                         }}
                       >
@@ -260,7 +260,7 @@ export default function AgentFormModal({
                       onClick={() => setForm({ ...form, cli_provider: p })}
                       className="px-2.5 py-1.5 text-[11px] font-mono border transition-all"
                       style={{
-                        borderRadius: 0,
+                        borderRadius: 6,
                         ...(active
                           ? { background: "var(--th-accent-glow)", color: "var(--th-accent)", borderColor: "var(--th-border-accent)" }
                           : { borderColor: "var(--th-input-border)", color: "var(--th-text-muted)" }),
@@ -326,7 +326,7 @@ export default function AgentFormModal({
                   {form.persona_id && (() => {
                     const p = getPersonaById(form.persona_id);
                     return p ? (
-                      <span className="font-mono text-[9px] font-semibold uppercase" style={{ color: p.color, border: `1px solid ${p.color}40`, borderRadius: 0, padding: "0 4px", background: `${p.color}12` }}>
+                      <span className="font-mono text-[9px] font-semibold uppercase" style={{ color: p.color, border: `1px solid ${p.color}40`, borderRadius: 6, padding: "0 4px", background: `${p.color}12` }}>
                         {p.badge}
                       </span>
                     ) : null;

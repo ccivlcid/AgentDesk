@@ -267,7 +267,24 @@ export default function SettingsPanel({
 
       poll();
     } catch (error) {
-      setDeviceError(error instanceof Error ? error.message : String(error));
+      const code = error instanceof Error ? error.message : String(error);
+      const msg =
+        code === "github_client_id_not_configured"
+          ? t({
+              ko: "GitHub OAuth Client ID가 설정되지 않았습니다. 아래 'GitHub OAuth App' 섹션에서 Client ID를 입력하세요.",
+              en: "GitHub OAuth Client ID is not configured. Enter a Client ID in the 'GitHub OAuth App' section below.",
+              ja: "GitHub OAuth Client ID が未設定です。下の「GitHub OAuth App」セクションで Client ID を入力してください。",
+              zh: "GitHub OAuth Client ID 未配置。请在下方的「GitHub OAuth App」部分输入 Client ID。",
+            })
+          : code === "github_device_code_failed"
+            ? t({
+                ko: "GitHub 인증 코드 요청 실패. Client ID가 올바른지, Device Flow가 활성화되었는지 확인하세요.",
+                en: "Failed to request GitHub device code. Check that the Client ID is correct and Device Flow is enabled.",
+                ja: "GitHub デバイスコードのリクエストに失敗しました。Client ID が正しく、Device Flow が有効か確認してください。",
+                zh: "请求 GitHub 设备码失败。请确认 Client ID 正确且已启用 Device Flow。",
+              })
+            : code;
+      setDeviceError(msg);
       setDeviceStatus("error");
     }
   }, [loadOAuthStatus, t]);
@@ -402,18 +419,44 @@ export default function SettingsPanel({
   const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };
 
   return (
-    <div style={{ ...mono, display: "flex", flexDirection: "column", gap: 0, maxWidth: 720, margin: "0 auto" }}>
-      {/* CLI 헤더 */}
+    <div
+      className="min-h-0 flex-1 flex flex-col"
+      style={{
+        ...mono,
+        display: "flex",
+        flexDirection: "column",
+        gap: 0,
+        maxWidth: 720,
+        margin: "0 auto",
+        width: "100%",
+        borderRadius: 10,
+        overflow: "hidden",
+        background: "var(--th-bg-elevated)",
+        border: "1px solid var(--th-border)",
+        boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
+      }}
+    >
+      {/* CLI 헤더 — macOS 스타일 */}
       <div
         style={{
           borderBottom: "1px solid var(--th-border)",
-          padding: "10px 16px",
-          background: "var(--th-bg-elevated)",
+          padding: "12px 18px",
+          background: "var(--th-bg-panel)",
           display: "flex",
           alignItems: "center",
           gap: 8,
+          borderTopLeftRadius: 10,
+          borderTopRightRadius: 10,
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
         }}
       >
+        {/* macOS 트래픽 라이트 (●●●) */}
+        <div className="flex flex-shrink-0 items-center gap-1.5">
+          <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#ff5f57" }} aria-hidden />
+          <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#ffbd2e" }} aria-hidden />
+          <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#27c93f" }} aria-hidden />
+        </div>
         <span style={{ color: "var(--th-accent)", fontWeight: 700, fontSize: "11px" }}>$</span>
         <span style={{ fontSize: "11px", color: "var(--th-text-secondary)" }}>agentdesk settings</span>
         <span style={{ marginLeft: "auto", fontSize: "9px", color: "var(--th-text-muted)", opacity: 0.6 }}>
@@ -423,7 +466,10 @@ export default function SettingsPanel({
 
       <SettingsTabNav tab={tab} setTab={setTab} t={t} />
 
-      <div className="space-y-5 sm:space-y-6" style={{ padding: "20px 16px 24px", background: "var(--th-bg-primary)" }}>
+      <div
+        className="min-h-0 flex-1 overflow-y-auto space-y-5 sm:space-y-6"
+        style={{ padding: "20px 18px 24px", background: "var(--th-bg-primary)" }}
+      >
       {tab === "general" && (
         <GeneralSettingsTab t={t} form={form} setForm={setForm} saved={saved} onSave={handleSave} />
       )}

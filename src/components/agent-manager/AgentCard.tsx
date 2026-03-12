@@ -76,7 +76,7 @@ export default function AgentCard({
         background: "var(--th-bg-surface)",
         border: "1px solid var(--th-border)",
         borderLeft: isWorking ? "3px solid #22c55e" : "3px solid var(--th-border)",
-        borderRadius: 0,
+        borderRadius: 8,
         transition: "border-color 0.1s linear, background 0.1s linear",
       }}
     >
@@ -97,7 +97,7 @@ export default function AgentCard({
             <div className="flex items-center gap-1 shrink-0">
               {isProjectMember && (
                 <span className="text-[9px] px-1 py-0.5 rounded font-semibold" style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.25)" }}>
-                  팀원
+                  {tr("팀원", "MEMBER", "メンバー", "成员")}
                 </span>
               )}
               {agent.persona_id && <PersonaBadge personaId={agent.persona_id} size="sm" />}
@@ -110,7 +110,7 @@ export default function AgentCard({
           {/* Role + Dept row */}
           <div className="flex items-center gap-1.5 flex-wrap">
             <span className={`text-[10px] px-1.5 py-0.5 border font-medium font-mono ${ROLE_BADGE[agent.role] || ""}`} style={{ borderRadius: 0 }}>
-              {isKo ? ROLE_LABEL[agent.role]?.ko : ROLE_LABEL[agent.role]?.en}
+              {tr(ROLE_LABEL[agent.role]?.ko ?? "", ROLE_LABEL[agent.role]?.en ?? "", ROLE_LABEL[agent.role]?.ja, ROLE_LABEL[agent.role]?.zh)}
             </span>
             {dept && (
               <span

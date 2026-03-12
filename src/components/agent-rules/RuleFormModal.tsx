@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import type { AgentRule, AgentRuleCategory, Agent, Department } from "../../types";
+import type { AgentRule, AgentRuleCategory, AgentRuleScopeType, Agent, Department } from "../../types";
 import type { CreateAgentRuleInput, UpdateAgentRuleInput } from "../../api/agent-rules";
 import { RULE_CATEGORIES, categoryLabel, type TFunction } from "./model";
 import { Modal, ModalHeader, ModalBody, ModalFooter, Button, Input, Textarea, FormField, useToast } from "../ui";
@@ -15,6 +15,7 @@ interface RuleFormModalProps {
   onClose: () => void;
   onCreate: (input: CreateAgentRuleInput) => void;
   onUpdate: (id: string, input: UpdateAgentRuleInput) => void;
+  scopeOverride?: { scope_type: AgentRuleScopeType; scope_id?: string };
 }
 
 export default function RuleFormModal({
@@ -28,6 +29,7 @@ export default function RuleFormModal({
   onClose,
   onCreate,
   onUpdate,
+  scopeOverride,
 }: RuleFormModalProps) {
   const { showToast } = useToast();
   const [title, setTitle] = useState("");
@@ -79,7 +81,8 @@ export default function RuleFormModal({
       description: description.trim(),
       rule_content: ruleContent.trim(),
       category,
-      scope_type: "global" as const,
+      scope_type: scopeOverride?.scope_type ?? ("global" as const),
+      scope_id: scopeOverride?.scope_id,
       priority,
     };
 

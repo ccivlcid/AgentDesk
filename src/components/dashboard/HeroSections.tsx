@@ -63,7 +63,7 @@ export function DashboardHeroHeader({
           <div className="flex items-center gap-3">
             <h1
               className="text-xl font-semibold sm:text-2xl"
-              style={{ color: "var(--th-text-heading)", fontFamily: "var(--th-font-display)", letterSpacing: "-0.02em" }}
+              style={{ color: "var(--th-text-heading)", fontFamily: "var(--th-font-mono)", letterSpacing: "0" }}
             >
               {companyName}
             </h1>
@@ -378,11 +378,11 @@ export function DashboardRankingBoard({
     <div className="dashboard-panel relative overflow-hidden border border-[var(--th-border)] bg-[var(--th-bg-surface)] p-5" style={{ borderRadius: 0 }}>
       <div className="mb-5 flex items-center justify-between">
         <div>
-          <h2 className="text-xs font-bold uppercase tracking-widest" style={{ color: "var(--th-text-heading)", fontFamily: "var(--th-font-mono)" }}>
-            {t({ ko: "에이전트 순위", en: "Agent ranking", ja: "エージェント順位", zh: "代理排名" })}
+          <h2 className="text-[10px] font-bold uppercase tracking-widest" style={{ color: "var(--th-text-muted)", fontFamily: "var(--th-font-mono)" }}>
+            {"// "}{t({ ko: "에이전트 순위", en: "agent ranking", ja: "エージェント順位", zh: "代理排名" })}
           </h2>
-          <p className="mt-0.5 font-mono text-[10px]" style={{ color: "var(--th-text-muted)" }}>
-            {t({ ko: "XP 기준", en: "By XP", ja: "XP 基準", zh: "按 XP" })}
+          <p className="mt-0.5 text-[10px]" style={{ fontFamily: "var(--th-font-mono)", color: "var(--th-text-muted)" }}>
+            {t({ ko: "XP 기준", en: "by xp", ja: "XP 基準", zh: "按 XP" })}
           </p>
         </div>
         {topAgents.length > 0 && (

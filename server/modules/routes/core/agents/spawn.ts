@@ -38,7 +38,16 @@ export function registerAgentSpawnRoute(ctx: RuntimeContext): void {
 
   app.post("/api/agents/:id/spawn", (req, res) => {
     const id = String(req.params.id);
-    let agent:
+    const agent = db
+      .prepare(
+        `
+      SELECT a.*, d.name AS department_name, d.prompt AS department_prompt
+      FROM agents a
+      LEFT JOIN departments d ON d.id = a.department_id
+      WHERE a.id = ?
+    `,
+      )
+      .get(id) as
       | {
           id: string;
           name: string;
@@ -57,72 +66,6 @@ export function registerAgentSpawnRoute(ctx: RuntimeContext): void {
           status: string;
         }
       | undefined;
-    try {
-      agent = db
-        .prepare(
-          `
-      SELECT
-        a.*,
-        COALESCE(opd.name, d.name) AS department_name,
-        COALESCE(opd.prompt, d.prompt) AS department_prompt
-      FROM agents a
-      LEFT JOIN tasks t ON t.id = a.current_task_id
-      LEFT JOIN office_pack_departments opd
-        ON opd.workflow_pack_key = COALESCE(t.workflow_pack_key, 'development')
-       AND opd.department_id = a.department_id
-      LEFT JOIN departments d ON d.id = a.department_id
-      WHERE a.id = ?
-    `,
-        )
-        .get(id) as
-        | {
-            id: string;
-            name: string;
-            role: string;
-            cli_provider: string | null;
-            oauth_account_id: string | null;
-            api_provider_id: string | null;
-            api_model: string | null;
-            cli_model: string | null;
-            cli_reasoning_level: string | null;
-            personality: string | null;
-            department_id: string | null;
-            department_name: string | null;
-            department_prompt: string | null;
-            current_task_id: string | null;
-            status: string;
-          }
-        | undefined;
-    } catch {
-      agent = db
-        .prepare(
-          `
-      SELECT a.*, d.name AS department_name, d.prompt AS department_prompt
-      FROM agents a
-      LEFT JOIN departments d ON d.id = a.department_id
-      WHERE a.id = ?
-    `,
-        )
-        .get(id) as
-        | {
-            id: string;
-            name: string;
-            role: string;
-            cli_provider: string | null;
-            oauth_account_id: string | null;
-            api_provider_id: string | null;
-            api_model: string | null;
-            cli_model: string | null;
-            cli_reasoning_level: string | null;
-            personality: string | null;
-            department_id: string | null;
-            department_name: string | null;
-            department_prompt: string | null;
-            current_task_id: string | null;
-            status: string;
-          }
-        | undefined;
-    }
     if (!agent) return res.status(404).json({ error: "not_found" });
 
     const provider = agent.cli_provider || "claude";

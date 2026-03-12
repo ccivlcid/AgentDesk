@@ -65,7 +65,14 @@ export default function ChatPanelHeader({
 
   return (
     <>
-      <div className="chat-header flex flex-shrink-0 items-center gap-3 px-4 py-3" style={{ background: "var(--th-bg-elevated)" }}>
+      <div
+        className="chat-header flex flex-shrink-0 items-center gap-3 px-4 py-2.5"
+        style={{
+          background: "var(--th-bg-panel)",
+          borderBottom: "1px solid var(--th-border)",
+          fontFamily: "var(--th-font-mono)",
+        }}
+      >
         {selectedAgent ? (
           <>
             <div className="relative flex-shrink-0">
@@ -80,7 +87,7 @@ export default function ChatPanelHeader({
 
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
-                <span className="truncate text-sm font-semibold text-white">{getAgentName(selectedAgent)}</span>
+                <span className="truncate text-sm font-semibold" style={{ color: "var(--th-text-heading)" }}>{getAgentName(selectedAgent)}</span>
                 <span className="px-1.5 py-0.5 text-xs font-mono" style={{ borderRadius: 0, background: "var(--th-bg-surface)", color: "var(--th-text-secondary)" }}>
                   {getRoleLabel(selectedAgent.role)}
                 </span>
@@ -98,7 +105,7 @@ export default function ChatPanelHeader({
               📢
             </div>
             <div className="min-w-0 flex-1">
-              <div className="text-sm font-semibold text-white">
+              <div className="text-sm font-semibold" style={{ color: "var(--th-text-heading)" }}>
                 {tr("전사 공지", "Company Announcement", "全体告知", "全员公告")}
               </div>
               <div className="mt-0.5 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
@@ -153,9 +160,16 @@ export default function ChatPanelHeader({
           )}
 
           <button
+            type="button"
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-full transition-colors hover:bg-[var(--th-bg-surface-hover)] hover:text-white"
-            style={{ color: "var(--th-text-secondary)" }}
+            className="flex h-7 w-7 flex-shrink-0 items-center justify-center transition-colors hover:!border-[var(--th-border-strong)] hover:!text-[var(--th-text)] hover:!bg-[var(--th-hover-bg)]"
+            style={{
+              border: "1px solid var(--th-border)",
+              borderRadius: 0,
+              color: "var(--th-text-muted)",
+              fontFamily: "var(--th-font-mono)",
+              fontSize: "12px",
+            }}
             aria-label={tr("닫기", "Close", "閉じる", "关闭")}
           >
             ✕

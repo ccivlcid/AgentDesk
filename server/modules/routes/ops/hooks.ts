@@ -24,7 +24,7 @@ type HookRow = {
 };
 
 const VALID_EVENT_TYPES = ["pre-task", "post-task", "on-error", "on-complete", "on-status-change", "on-start"] as const;
-const VALID_SCOPE_TYPES = ["global", "department", "agent", "workflow_pack"] as const;
+const VALID_SCOPE_TYPES = ["global", "department", "agent", "workflow_pack", "project"] as const;
 
 function isValidEventType(v: unknown): v is string {
   return typeof v === "string" && (VALID_EVENT_TYPES as readonly string[]).includes(v);
@@ -83,6 +83,7 @@ export function registerHookRoutes({ app, db, nowMs }: RegisterHookRoutesOptions
             WHEN h.scope_type = 'department' THEN (SELECT d.name FROM departments d WHERE d.id = h.scope_id)
             WHEN h.scope_type = 'agent' THEN (SELECT a.name FROM agents a WHERE a.id = h.scope_id)
             WHEN h.scope_type = 'workflow_pack' THEN (SELECT w.name FROM workflow_packs w WHERE w.key = h.scope_id)
+            WHEN h.scope_type = 'project' THEN (SELECT p.name FROM projects p WHERE p.id = h.scope_id)
             ELSE NULL
           END AS scope_label
         FROM hook_entries h

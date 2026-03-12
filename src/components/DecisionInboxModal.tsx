@@ -7,6 +7,7 @@ import AgentAvatar from "./AgentAvatar";
 import MessageContent from "./MessageContent";
 import type { DecisionInboxItem } from "./chat/decision-inbox";
 import { formatDecisionInboxTime as formatTime, type DecisionInboxModalProps } from "./chat/decision-inbox-modal.meta";
+import HeaderModalChrome from "./ui/HeaderModalChrome";
 
 const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };
 
@@ -163,62 +164,62 @@ export default function DecisionInboxModal({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center"
+      style={{ background: "var(--th-modal-overlay)" }}
+      onClick={onClose}
+    >
       <div
-        className="relative mx-4 w-full max-w-2xl flex flex-col shadow-2xl"
-        style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-primary)", maxHeight: "85vh" }}
+        className="relative mx-4 w-full max-w-2xl flex flex-col overflow-hidden"
+        style={{
+          borderRadius: 10,
+          border: "1px solid var(--th-border)",
+          background: "var(--th-bg-elevated)",
+          maxHeight: "85vh",
+          fontFamily: "var(--th-font-mono)",
+          boxShadow: "0 20px 50px var(--th-glass-shadow, rgba(0,0,0,0.25))",
+        }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* ── 헤더 ── */}
-        <div
-          className="flex items-center justify-between px-5 py-3 flex-shrink-0"
-          style={{ borderBottom: "2px solid var(--th-accent)", background: "var(--th-bg-elevated)" }}
-        >
-          <div className="flex items-center gap-3">
-            <span style={{ ...mono, fontSize: "11px", fontWeight: 700, color: "var(--th-accent)", letterSpacing: "0.08em" }}>
-              ■ DECISION INBOX
-            </span>
-            <span
-              style={{
-                ...mono, fontSize: "11px", fontWeight: 700,
-                padding: "1px 8px",
-                background: items.length > 0 ? "var(--th-accent)" : "var(--th-bg-surface)",
-                color: items.length > 0 ? "#000" : "var(--th-text-muted)",
-              }}
-            >
-              {items.length}
-            </span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <button
-              onClick={onRefresh}
-              style={{
-                ...mono, fontSize: "10px", fontWeight: 700,
-                padding: "2px 8px",
-                border: "1px solid var(--th-border)",
-                background: "transparent",
-                color: "var(--th-text-muted)",
-                cursor: "pointer",
-                letterSpacing: "0.04em",
-              }}
-            >
-              ↺ {t({ ko: "새로고침", en: "REFRESH", ja: "更新", zh: "刷新" })}
-            </button>
-            <button
-              onClick={onClose}
-              style={{
-                ...mono, fontSize: "12px",
-                width: 26, height: 26,
-                border: "1px solid var(--th-border)",
-                background: "transparent",
-                color: "var(--th-text-muted)",
-                cursor: "pointer",
-              }}
-            >
-              ✕
-            </button>
-          </div>
-        </div>
+        <HeaderModalChrome
+          title={t({ ko: "의사결정", en: "Decision Inbox", ja: "意思決定", zh: "决策收件箱" })}
+          rightSlot={
+            <>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); onRefresh(); }}
+                style={{
+                  ...mono,
+                  fontSize: "10px",
+                  fontWeight: 600,
+                  padding: "3px 8px",
+                  border: "1px solid var(--th-border)",
+                  background: "transparent",
+                  color: "var(--th-text-muted)",
+                  cursor: "pointer",
+                  letterSpacing: "0.04em",
+                }}
+                className="hover:!text-[var(--th-text)] hover:!border-[var(--th-border-strong)]"
+              >
+                ↺ {t({ ko: "새로고침", en: "REFRESH", ja: "更新", zh: "刷新" })}
+              </button>
+              <span
+                style={{
+                  ...mono,
+                  fontSize: "10px",
+                  fontWeight: 700,
+                  padding: "2px 6px",
+                  border: "1px solid var(--th-border)",
+                  background: items.length > 0 ? "var(--th-accent-glow)" : "var(--th-bg-surface)",
+                  color: items.length > 0 ? "var(--th-accent)" : "var(--th-text-muted)",
+                }}
+              >
+                {items.length}
+              </span>
+            </>
+          }
+          onClose={onClose}
+        />
 
         {/* ── 목록 ── */}
         <div className="flex-1 overflow-y-auto">
@@ -248,7 +249,7 @@ export default function DecisionInboxModal({
                     key={item.id}
                     style={{
                       borderBottom: "1px solid var(--th-border)",
-                      background: idx % 2 === 0 ? "transparent" : "rgba(255,255,255,0.012)",
+                      background: idx % 2 === 0 ? "transparent" : "var(--th-bg-surface)",
                     }}
                   >
                     {/* 에이전트 행 */}
@@ -304,12 +305,13 @@ export default function DecisionInboxModal({
                               style={{
                                 ...mono, fontSize: "9px", fontWeight: 700,
                                 padding: "2px 8px",
-                                border: "1px solid rgba(129,140,248,0.5)",
-                                background: "rgba(129,140,248,0.1)",
-                                color: "#818cf8",
+                                border: "1px solid var(--th-accent)",
+                                background: "var(--th-bg-surface)",
+                                color: "var(--th-accent)",
                                 cursor: "pointer",
                                 letterSpacing: "0.04em",
                               }}
+                              className="hover:opacity-90"
                             >
                               {t({ ko: "회의 참여", en: "JOIN MEETING", ja: "会議参加", zh: "加入会议" })}
                             </button>
@@ -374,8 +376,8 @@ export default function DecisionInboxModal({
                                     style={{
                                       ...mono, fontSize: "11px",
                                       padding: "6px 10px",
-                                      border: isSelected ? `1px solid var(--th-accent)` : "1px solid var(--th-border)",
-                                      background: isSelected ? "rgba(245,158,11,0.1)" : "var(--th-bg-elevated)",
+                                      border: isSelected ? "1px solid var(--th-accent)" : "1px solid var(--th-border)",
+                                      background: isSelected ? "var(--th-bg-surface)" : "var(--th-bg-elevated)",
                                       color: isSelected ? "var(--th-accent)" : "var(--th-text-secondary)",
                                       cursor: isItemBusy ? "not-allowed" : "pointer",
                                       opacity: isItemBusy ? 0.6 : 1,
@@ -444,9 +446,9 @@ export default function DecisionInboxModal({
                                 style={{
                                   ...mono, fontSize: "11px",
                                   padding: "7px 10px",
-                                  border: isPrimary ? `1px solid ${meta.color}50` : "1px solid var(--th-border)",
-                                  background: isPrimary ? `${meta.color}0e` : "var(--th-bg-elevated)",
-                                  color: isPrimary ? meta.color : "var(--th-text-secondary)",
+                                  border: isPrimary ? "1px solid var(--th-accent)" : "1px solid var(--th-border)",
+                                  background: isPrimary ? "var(--th-bg-surface)" : "var(--th-bg-elevated)",
+                                  color: isPrimary ? "var(--th-accent)" : "var(--th-text-secondary)",
                                   cursor: isBusy ? "not-allowed" : "pointer",
                                   opacity: isBusy ? 0.6 : 1,
                                   display: "flex", alignItems: "center", gap: 8,

@@ -425,7 +425,7 @@ export function sendProjectProgressReply(
 
   const leadFallback = deps.pickL(
     deps.l(
-      ["네 대표님, 현재 프로젝트 진행 현황 정리했습니다."],
+      ["네 클라이언트님, 현재 프로젝트 진행 현황 정리했습니다."],
       ["Got it. Here's the current project progress summary."],
       ["了解しました。現在のプロジェクト進捗をまとめました。"],
       ["收到，以下是当前项目进度汇总。"],

@@ -1,17 +1,12 @@
-import { useMemo, type Dispatch, type SetStateAction } from "react";
+import { type Dispatch, type SetStateAction } from "react";
 import AgentSelect from "../../AgentSelect";
-import type { Agent, MessengerChannelType, MessengerChannelsConfig, OfficePackProfiles, WorkflowPackKey } from "../../../types";
+import HeaderModalChrome from "../../ui/HeaderModalChrome";
+import type { Agent, MessengerChannelType, MessengerChannelsConfig } from "../../../types";
 import type { ChannelSettingsTabProps } from "../types";
-import { CHANNEL_META, channelTargetHint, isWorkflowPackKey } from "./constants";
+import { CHANNEL_META, channelTargetHint } from "./constants";
 import type { ChatEditorState } from "./state";
 import { MESSENGER_CHANNELS } from "../../../types";
 import { WEBHOOK_EVENTS } from "../../../api/webhooks";
-
-type WorkflowPackOption = {
-  key: WorkflowPackKey;
-  name: string;
-  enabled: boolean;
-};
 
 type ChatEditorModalProps = {
   t: ChannelSettingsTabProps["t"];
@@ -21,12 +16,7 @@ type ChatEditorModalProps = {
   handleSaveEditor: () => void;
   channelsConfig: MessengerChannelsConfig;
   agents: Agent[];
-  /** true면 agents가 이미 현재 오피스 팩 직원만 넘어온 것이므로 필터 생략 */
-  agentsAreCurrentPackOnly?: boolean;
   agentsLoading: boolean;
-  officePackProfiles?: OfficePackProfiles;
-  workflowPackOptions: WorkflowPackOption[];
-  workflowPacksLoading: boolean;
   editorError: string | null;
   discordChannels: Array<{
     id: string;
@@ -47,11 +37,7 @@ export default function ChatEditorModal({
   handleSaveEditor,
   channelsConfig,
   agents,
-  agentsAreCurrentPackOnly = false,
   agentsLoading,
-  officePackProfiles,
-  workflowPackOptions,
-  workflowPacksLoading,
   editorError,
   discordChannels,
   discordChannelsLoading,
@@ -60,30 +46,23 @@ export default function ChatEditorModal({
   const discordSelectedChannel =
     editor.channel === "discord" ? discordChannels.find((entry) => entry.id === editor.targetId.trim()) : null;
 
-  const displayAgents = agents;
+  const title =
+    editor.mode === "create"
+      ? t({ ko: "새 채팅 추가", en: "Add Chat", ja: "チャット追加", zh: "新增聊天" })
+      : t({ ko: "채팅 편집", en: "Edit Chat", ja: "チャット編集", zh: "编辑聊天" });
 
   return (
-    <div className="fixed inset-0 z-[2200] flex items-center justify-center px-4">
-      <button className="absolute inset-0" style={{ background: "rgba(0,0,0,0.7)" }} onClick={closeEditorModal} aria-label="close modal" />
-      <div className="relative w-full max-w-lg p-4 shadow-2xl space-y-3" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
-        <div className="flex items-center justify-between">
-          <h4 className="text-sm font-semibold font-mono" style={{ color: "var(--th-text-heading)" }}>
-            {editor.mode === "create"
-              ? t({ ko: "새 채팅 추가", en: "Add Chat", ja: "チャット追加", zh: "新增聊天" })
-              : t({ ko: "채팅 편집", en: "Edit Chat", ja: "チャット編集", zh: "编辑聊天" })}
-          </h4>
-          <button
-            onClick={closeEditorModal}
-            className="px-2 py-1 text-xs font-mono transition-colors"
-            style={{ borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
-          >
-            {t({ ko: "닫기", en: "Close", ja: "閉じる", zh: "关闭" })}
-          </button>
-        </div>
-
+    <div className="fixed inset-0 z-[2200] flex items-center justify-center px-4" style={{ background: "var(--th-modal-overlay)" }} onClick={(e) => e.target === e.currentTarget && closeEditorModal()}>
+      <div
+        className="relative w-full max-w-lg flex flex-col overflow-hidden"
+        style={{ borderRadius: 10, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", boxShadow: "0 20px 50px rgba(0,0,0,0.4)" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <HeaderModalChrome title={title} onClose={closeEditorModal} />
+        <div className="p-4 space-y-3 overflow-y-auto flex-1 min-h-0">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs mb-1 font-mono" style={{ color: "var(--th-text-muted)" }}>
+            <label className="block text-xs mb-1 font-mono" style={{ color: "var(--th-text-secondary)" }}>
               {t({ ko: "메신저", en: "Messenger", ja: "メッセンジャー", zh: "消息渠道" })}
             </label>
             <select
@@ -109,7 +88,7 @@ export default function ChatEditorModal({
           </div>
 
           <div>
-            <label className="block text-xs mb-1 font-mono" style={{ color: "var(--th-text-muted)" }}>
+            <label className="block text-xs mb-1 font-mono" style={{ color: "var(--th-text-secondary)" }}>
               {t({ ko: "활성 여부", en: "Enabled", ja: "有効", zh: "启用" })}
             </label>
             <label className="inline-flex items-center gap-2 text-xs h-[38px] font-mono" style={{ color: "var(--th-text-secondary)" }}>
@@ -127,7 +106,7 @@ export default function ChatEditorModal({
         </div>
 
         <div>
-          <label className="block text-xs mb-1 font-mono" style={{ color: "var(--th-text-muted)" }}>
+          <label className="block text-xs mb-1 font-mono" style={{ color: "var(--th-text-secondary)" }}>
             {t({ ko: "토큰", en: "Token", ja: "トークン", zh: "令牌" })}
           </label>
           <input
@@ -147,7 +126,7 @@ export default function ChatEditorModal({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs mb-1 font-mono" style={{ color: "var(--th-text-muted)" }}>
+            <label className="block text-xs mb-1 font-mono" style={{ color: "var(--th-text-secondary)" }}>
               {t({ ko: "채팅 이름", en: "Chat Name", ja: "チャット名", zh: "聊天名称" })}
             </label>
             <input
@@ -165,7 +144,7 @@ export default function ChatEditorModal({
           </div>
 
           <div>
-            <label className="block text-xs mb-1 font-mono" style={{ color: "var(--th-text-muted)" }}>
+            <label className="block text-xs mb-1 font-mono" style={{ color: "var(--th-text-secondary)" }}>
               {t({ ko: "채널/대상 ID", en: "Channel/Target ID", ja: "チャンネル/対象 ID", zh: "频道/目标 ID" })}
             </label>
             {editor.channel === "discord" && discordChannels.length > 0 && (
@@ -233,7 +212,7 @@ export default function ChatEditorModal({
                   </div>
                 )}
                 {!discordChannelsLoading && !discordChannelsError && editor.token.trim() && (
-                  <div className="text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>
+                  <div className="text-[11px] font-mono" style={{ color: "var(--th-text-secondary)" }}>
                     {discordChannels.length > 0
                       ? t({
                           ko: `${discordChannels.length}개 채널을 자동으로 불러왔습니다.`,
@@ -260,7 +239,7 @@ export default function ChatEditorModal({
             <h4 className="text-[10px] font-mono uppercase tracking-wider font-bold" style={{ color: "var(--th-accent)" }}>
               {t({ ko: "태스크 알림 웹훅 (선택)", en: "Task notification webhook (optional)", ja: "タスク通知ウェブフック（任意）", zh: "任务通知 Webhook（可选）" })}
             </h4>
-            <p className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
+            <p className="text-[10px] font-mono" style={{ color: "var(--th-text-secondary)" }}>
               {t({
                 ko: "태스크 완료 시 이 채널로 알림을 보낼 웹훅 URL을 입력하세요.",
                 en: "Enter webhook URL to send task notifications to this channel.",
@@ -270,7 +249,7 @@ export default function ChatEditorModal({
             </p>
             <div className="space-y-2">
               <div>
-                <label className="block text-[10px] font-mono uppercase mb-0.5" style={{ color: "var(--th-text-muted)" }}>URL</label>
+                <label className="block text-[10px] font-mono uppercase mb-0.5" style={{ color: "var(--th-text-secondary)" }}>URL</label>
                 <input
                   type="url"
                   value={editor.webhookUrl}
@@ -281,7 +260,7 @@ export default function ChatEditorModal({
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-mono uppercase mb-0.5" style={{ color: "var(--th-text-muted)" }}>
+                <label className="block text-[10px] font-mono uppercase mb-0.5" style={{ color: "var(--th-text-secondary)" }}>
                   {t({ ko: "웹훅 이름 (선택)", en: "Webhook name (optional)", ja: "ウェブフック名（任意）", zh: "Webhook 名称（可选）" })}
                 </label>
                 <input
@@ -294,7 +273,7 @@ export default function ChatEditorModal({
                 />
               </div>
               <div>
-                <label className="block text-[10px] font-mono uppercase mb-1" style={{ color: "var(--th-text-muted)" }}>
+                <label className="block text-[10px] font-mono uppercase mb-1" style={{ color: "var(--th-text-secondary)" }}>
                   {t({ ko: "이벤트", en: "Events", ja: "イベント", zh: "事件" })}
                 </label>
                 <div className="flex flex-wrap gap-1.5">
@@ -314,7 +293,7 @@ export default function ChatEditorModal({
                       style={
                         editor.webhookEvents.includes(ev.value)
                           ? { border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.12)", color: "var(--th-accent)", borderRadius: 0 }
-                          : { border: "1px solid var(--th-border)", background: "var(--th-bg-primary)", color: "var(--th-text-muted)", borderRadius: 0 }
+                          : { border: "1px solid var(--th-border)", background: "var(--th-bg-primary)", color: "var(--th-text-secondary)", borderRadius: 0 }
                       }
                     >
                       {ev.label}
@@ -327,45 +306,11 @@ export default function ChatEditorModal({
         )}
 
         <div>
-          <label className="block text-xs mb-1 font-mono" style={{ color: "var(--th-text-muted)" }}>
-            {t({ ko: "워크플로우 팩", en: "Workflow Pack", ja: "ワークフローパック", zh: "工作流包" })}
-          </label>
-          <select
-            value={editor.workflowPackKey}
-            onChange={(e) =>
-              setEditor((prev) => ({
-                ...prev,
-                workflowPackKey: isWorkflowPackKey(e.target.value) ? e.target.value : "development",
-              }))
-            }
-            className="w-full px-3 py-2 text-sm focus:outline-none"
-            style={{ borderRadius: 0, background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)" }}
-          >
-            {workflowPackOptions.map((pack) => (
-              <option key={pack.key} value={pack.key} disabled={!pack.enabled && pack.key !== editor.workflowPackKey}>
-                {pack.name}
-                {!pack.enabled ? ` (${t({ ko: "비활성", en: "disabled", ja: "無効", zh: "禁用" })})` : ""}
-              </option>
-            ))}
-          </select>
-          {workflowPacksLoading && (
-            <div className="mt-1 text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>
-              {t({
-                ko: "팩 목록 불러오는 중...",
-                en: "Loading packs...",
-                ja: "パックを読み込み中...",
-                zh: "正在加载工作流包...",
-              })}
-            </div>
-          )}
-        </div>
-
-        <div>
-          <label className="block text-xs mb-1 font-mono" style={{ color: "var(--th-text-muted)" }}>
+          <label className="block text-xs mb-1 font-mono" style={{ color: "var(--th-text-secondary)" }}>
             {t({ ko: "대화 Agent", en: "Conversation Agent", ja: "担当Agent", zh: "对话 Agent" })}
           </label>
           <AgentSelect
-            agents={displayAgents}
+            agents={agents}
             value={editor.agentId}
             onChange={(agentId) => setEditor((prev) => ({ ...prev, agentId: agentId || "" }))}
             placeholder={t({
@@ -412,6 +357,7 @@ export default function ChatEditorModal({
           >
             {t({ ko: "확인", en: "Confirm", ja: "確認", zh: "确认" })}
           </button>
+        </div>
         </div>
       </div>
     </div>

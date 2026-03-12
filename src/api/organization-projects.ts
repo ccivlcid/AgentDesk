@@ -546,3 +546,25 @@ export async function deleteProject(id: string): Promise<void> {
 export async function getProjectDetail(id: string): Promise<ProjectDetailResponse> {
   return request(`/api/projects/${id}`);
 }
+
+// File Tree
+export interface FileTreeNode {
+  name: string;
+  type: "dir" | "file";
+  children?: FileTreeNode[];
+}
+
+export interface ProjectFileTreeResult {
+  root: string;
+  tree: FileTreeNode[];
+  truncated: boolean;
+}
+
+export async function getProjectFileTree(projectPath: string): Promise<ProjectFileTreeResult> {
+  const sp = new URLSearchParams();
+  sp.set("path", projectPath);
+  const j = await request<{ ok: boolean; root: string; tree: FileTreeNode[]; truncated: boolean }>(
+    `/api/projects/path-tree?${sp.toString()}`,
+  );
+  return { root: j.root, tree: j.tree ?? [], truncated: Boolean(j.truncated) };
+}

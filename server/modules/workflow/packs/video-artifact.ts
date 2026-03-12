@@ -76,23 +76,9 @@ export function resolveVideoArtifactSpecForTask(
   let departmentNameRow: { name?: string | null; name_ko?: string | null } | undefined;
   if (departmentId) {
     try {
-      if (workflowPackKey && workflowPackKey !== "development") {
-        departmentNameRow = db
-          .prepare(
-            `
-              SELECT name, name_ko
-              FROM office_pack_departments
-              WHERE workflow_pack_key = ? AND department_id = ?
-              LIMIT 1
-            `,
-          )
-          .get(workflowPackKey, departmentId) as { name?: string | null; name_ko?: string | null } | undefined;
-      }
-      if (!departmentNameRow) {
-        departmentNameRow = db.prepare("SELECT name, name_ko FROM departments WHERE id = ?").get(departmentId) as
-          | { name?: string | null; name_ko?: string | null }
-          | undefined;
-      }
+      departmentNameRow = db.prepare("SELECT name, name_ko FROM departments WHERE id = ?").get(departmentId) as
+        | { name?: string | null; name_ko?: string | null }
+        | undefined;
     } catch {
       departmentNameRow = undefined;
     }

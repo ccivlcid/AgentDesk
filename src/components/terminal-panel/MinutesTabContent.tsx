@@ -38,8 +38,8 @@ export function MinutesTabContent({
                 className="px-2 py-0.5 text-[10px] font-mono"
                 style={{
                   borderRadius: 0,
-                  background: "rgba(251,191,36,0.1)",
-                  border: "1px solid rgba(251,191,36,0.3)",
+                  background: "var(--th-bg-surface)",
+                  border: "1px solid var(--th-accent)",
                   color: "var(--th-accent)",
                 }}
               >

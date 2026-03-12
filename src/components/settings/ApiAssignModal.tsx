@@ -1,4 +1,5 @@
 import AgentAvatar from "../AgentAvatar";
+import HeaderModalChrome from "../ui/HeaderModalChrome";
 import type { Agent } from "../../types";
 import type { ApiStateBundle, TFunction } from "./types";
 
@@ -75,26 +76,27 @@ export default function ApiAssignModal({ t, localeTag, apiState }: ApiAssignModa
     );
   };
 
+  const title = t({ ko: "모델 배정", en: "Assign Model", ja: "モデル割当", zh: "分配模型" });
+
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center" style={{ background: "var(--th-modal-overlay)" }}
+      className="fixed inset-0 z-[60] flex items-center justify-center"
+      style={{ background: "var(--th-modal-overlay)" }}
       onClick={() => setApiAssignTarget(null)}
     >
       <div
-        className="w-96 max-h-[75vh] shadow-2xl overflow-hidden"
-        style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}
+        className="flex w-96 max-h-[75vh] flex-col overflow-hidden"
+        style={{
+          borderRadius: 10,
+          border: "1px solid var(--th-border)",
+          background: "var(--th-bg-elevated)",
+          boxShadow: "0 20px 50px rgba(0,0,0,0.4)",
+        }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="px-4 py-3" style={{ borderBottom: "1px solid var(--th-border)" }}>
-          <h4 className="text-sm font-semibold font-mono" style={{ color: "var(--th-text-heading)" }}>
-            {t({
-              ko: "에이전트에 모델 배정",
-              en: "Assign Model to Agent",
-              ja: "エージェントにモデル割当",
-              zh: "分配模型给代理",
-            })}
-          </h4>
-          <p className="text-[11px] mt-0.5 font-mono truncate" style={{ color: "var(--th-text-muted)" }}>{apiAssignTarget.model}</p>
+        <HeaderModalChrome title={title} onClose={() => setApiAssignTarget(null)} />
+        <div className="border-b border-[var(--th-border)] bg-[var(--th-bg-panel)] px-4 py-2">
+          <p className="truncate text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>{apiAssignTarget.model}</p>
         </div>
 
         <div className="max-h-[55vh] overflow-y-auto p-2 space-y-3">
@@ -124,7 +126,7 @@ export default function ApiAssignModal({ t, localeTag, apiState }: ApiAssignModa
               {unassigned.length > 0 && (
                 <div>
                   <div className="flex items-center gap-1.5 px-2 py-1.5" style={{ borderBottom: "1px solid var(--th-border)" }}>
-                    <span className="text-sm">📁</span>
+                    <span style={{ fontFamily: "var(--th-font-mono)", fontSize: "12px", color: "var(--th-text-muted)" }}>◌</span>
                     <span className="text-[11px] font-semibold font-mono tracking-wide" style={{ color: "var(--th-text-muted)" }}>
                       {t({ ko: "미배정", en: "Unassigned", ja: "未配属", zh: "未分配" })}
                     </span>

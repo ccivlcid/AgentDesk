@@ -291,7 +291,7 @@ function DeptView({ dept, agents, tasks, visitingAgentIds, onViewDept }: { dept:
             return (
               <div key={agent.id} style={{ display: "flex", alignItems: "center", gap: 6, padding: "3px 0", borderBottom: "1px solid var(--th-border)" }}>
                 <span style={{ fontSize: "0.9rem", opacity: isVisiting ? 0.5 : 1 }}>{agent.avatar_emoji}</span>
-                <span style={{ flex: 1, fontSize: "0.7rem", color: isVisiting ? "var(--th-text-muted)" : "var(--th-text-secondary)", fontFamily: "var(--th-font-body)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{agent.name}</span>
+                <span style={{ flex: 1, fontSize: "0.7rem", color: isVisiting ? "var(--th-text-muted)" : "var(--th-text-secondary)", fontFamily: "var(--th-font-mono)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{agent.name}</span>
                 {isVisiting ? (
                   <span style={{ fontFamily: "var(--th-font-mono)", fontSize: "0.42rem", fontWeight: 700, color: "#22c55e", background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.3)", padding: "0 3px", lineHeight: "13px", letterSpacing: 1 }}>AWAY</span>
                 ) : (
@@ -424,7 +424,7 @@ function HQOverview({
                 #{idx + 1}
               </span>
               <span style={{ fontSize: "0.9rem", flexShrink: 0 }}>{agent.avatar_emoji}</span>
-              <span style={{ flex: 1, fontFamily: "var(--th-font-body)", fontSize: "0.65rem", color: "var(--th-text-secondary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              <span style={{ flex: 1, fontFamily: "var(--th-font-mono)", fontSize: "0.65rem", color: "var(--th-text-secondary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                 {agent.name}
               </span>
               <span style={{ fontFamily: "var(--th-font-mono)", fontSize: "0.55rem", color: "var(--th-text-muted)", flexShrink: 0 }}>

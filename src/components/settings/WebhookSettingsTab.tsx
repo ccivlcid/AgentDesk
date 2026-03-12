@@ -17,7 +17,7 @@ interface WebhookSettingsTabProps {
 
 export default function WebhookSettingsTab({ refreshTrigger }: WebhookSettingsTabProps) {
   const { t } = useI18n();
-  const tr = (ko: string, en: string) => t({ ko, en, ja: en, zh: en });
+  const tr = (ko: string, en: string, ja?: string, zh?: string) => t({ ko, en, ja: ja ?? en, zh: zh ?? en });
 
   const [webhooks, setWebhooks] = useState<Webhook[]>([]);
   const [loading, setLoading] = useState(true);
@@ -50,13 +50,13 @@ export default function WebhookSettingsTab({ refreshTrigger }: WebhookSettingsTa
   }
 
   async function handleSubmit() {
-    if (!formName.trim() || !formUrl.trim()) { setFormError(tr("이름과 URL은 필수입니다", "Name and URL are required")); return; }
-    try { new URL(formUrl.trim()); } catch { setFormError(tr("유효한 URL을 입력하세요", "Enter a valid URL")); return; }
+    if (!formName.trim() || !formUrl.trim()) { setFormError(tr("이름과 URL은 필수입니다", "Name and URL are required", "名前とURLは必須です", "名称和URL为必填项")); return; }
+    try { new URL(formUrl.trim()); } catch { setFormError(tr("유효한 URL을 입력하세요", "Enter a valid URL", "有効なURLを入力してください", "请输入有效的URL")); return; }
     setSubmitting(true);
     try {
       await createWebhook({ name: formName.trim(), url: formUrl.trim(), events: formEvents, secret: formSecret.trim() || undefined });
       resetForm(); setShowForm(false); refresh();
-    } catch { setFormError(tr("저장에 실패했습니다", "Failed to save")); }
+    } catch { setFormError(tr("저장에 실패했습니다", "Failed to save", "保存に失敗しました", "保存失败")); }
     finally { setSubmitting(false); }
   }
 
@@ -93,11 +93,11 @@ export default function WebhookSettingsTab({ refreshTrigger }: WebhookSettingsTa
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-sm font-bold font-mono uppercase tracking-widest" style={{ color: "var(--th-text-heading)" }}>
-            {tr("웹훅 연동", "Webhook Integration")}
-          </h2>
-          <p className="text-xs font-mono mt-0.5" style={{ color: "var(--th-text-muted)" }}>
-            {tr("태스크 이벤트를 Slack, Discord 등 외부 채널로 전송", "Send task events to Slack, Discord, or any HTTP endpoint")}
+          <div style={{ fontFamily: "var(--th-font-mono)", fontSize: "10px", color: "var(--th-accent)", letterSpacing: "0.08em", textTransform: "uppercase", borderLeft: "3px solid var(--th-accent)", paddingLeft: "8px", marginBottom: "4px" }}>
+            // webhook integration
+          </div>
+          <p className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
+            {tr("태스크 이벤트를 Slack, Discord 등 외부 채널로 전송", "Send task events to Slack, Discord, or any HTTP endpoint", "タスクイベントをSlack、Discordなど外部チャンネルに送信", "将任务事件发送到Slack、Discord等外部频道")}
           </p>
         </div>
         <button
@@ -107,23 +107,23 @@ export default function WebhookSettingsTab({ refreshTrigger }: WebhookSettingsTa
             ? { border: "1px solid var(--th-border)", color: "var(--th-text-muted)", background: "transparent", borderRadius: 0 }
             : { border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.12)", color: "var(--th-accent)", borderRadius: 0 }}
         >
-          {showForm ? tr("취소", "Cancel") : `+ ${tr("웹훅 추가", "Add Webhook")}`}
+          {showForm ? tr("취소", "Cancel", "キャンセル", "取消") : `+ ${tr("웹훅 추가", "Add Webhook", "Webhook追加", "添加Webhook")}`}
         </button>
       </div>
 
       {/* Create form */}
       {showForm && (
         <div className="space-y-4 p-4" style={{ border: "1px solid var(--th-border)", borderLeft: "3px solid var(--th-accent)", borderRadius: 0, background: "var(--th-bg-elevated)" }}>
-          <h3 className="text-[10px] font-mono uppercase tracking-wider font-bold" style={{ color: "var(--th-accent)" }}>
-            {tr("새 웹훅", "New Webhook")}
-          </h3>
+          <div style={{ fontFamily: "var(--th-font-mono)", fontSize: "9px", color: "var(--th-accent)", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+            // new webhook
+          </div>
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="space-y-1">
-              <label className="text-[10px] font-mono uppercase" style={{ color: "var(--th-text-muted)" }}>{tr("이름", "Name")} *</label>
+              <label className="text-[10px] font-mono uppercase" style={{ color: "var(--th-text-muted)" }}>{tr("이름", "Name", "名前", "名称")} *</label>
               <input
                 type="text" value={formName} onChange={(e) => setFormName(e.target.value)}
-                placeholder={tr("예: Slack 완료 알림", "e.g. Slack completion alert")}
+                placeholder={tr("예: Slack 완료 알림", "e.g. Slack completion alert", "例: Slack完了通知", "例: Slack完成通知")}
                 className="w-full text-xs font-mono px-3 py-2 outline-none"
                 style={{ border: "1px solid var(--th-border)", background: "var(--th-input-bg, var(--th-bg-primary))", color: "var(--th-text-primary)", borderRadius: 0 }}
               />
@@ -138,16 +138,16 @@ export default function WebhookSettingsTab({ refreshTrigger }: WebhookSettingsTa
               />
             </div>
             <div className="space-y-1 sm:col-span-2">
-              <label className="text-[10px] font-mono uppercase" style={{ color: "var(--th-text-muted)" }}>{tr("시크릿 키 (선택)", "Secret key (optional)")}</label>
+              <label className="text-[10px] font-mono uppercase" style={{ color: "var(--th-text-muted)" }}>{tr("시크릿 키 (선택)", "Secret key (optional)", "シークレットキー (任意)", "密钥 (可选)")}</label>
               <input
                 type="text" value={formSecret} onChange={(e) => setFormSecret(e.target.value)}
-                placeholder={tr("X-AgentDesk-Secret 헤더로 전송됨", "Sent as X-AgentDesk-Secret header")}
+                placeholder={tr("X-AgentDesk-Secret 헤더로 전송됨", "Sent as X-AgentDesk-Secret header", "X-AgentDesk-Secretヘッダーで送信", "通过X-AgentDesk-Secret标头发送")}
                 className="w-full text-xs font-mono px-3 py-2 outline-none"
                 style={{ border: "1px solid var(--th-border)", background: "var(--th-input-bg, var(--th-bg-primary))", color: "var(--th-text-primary)", borderRadius: 0 }}
               />
             </div>
             <div className="space-y-2 sm:col-span-2">
-              <label className="text-[10px] font-mono uppercase" style={{ color: "var(--th-text-muted)" }}>{tr("이벤트 선택", "Events")}</label>
+              <label className="text-[10px] font-mono uppercase" style={{ color: "var(--th-text-muted)" }}>{tr("이벤트 선택", "Events", "イベント選択", "选择事件")}</label>
               <div className="flex flex-wrap gap-2">
                 {WEBHOOK_EVENTS.map((ev) => (
                   <button
@@ -174,7 +174,7 @@ export default function WebhookSettingsTab({ refreshTrigger }: WebhookSettingsTa
               className="px-4 py-1.5 text-xs font-mono font-bold transition disabled:opacity-40"
               style={{ border: "1px solid rgba(52,211,153,0.4)", background: "rgba(52,211,153,0.1)", color: "rgb(167,243,208)", borderRadius: 0 }}
             >
-              {submitting ? "..." : tr("저장", "Save")}
+              {submitting ? "..." : tr("저장", "Save", "保存", "保存")}
             </button>
             <button onClick={() => { resetForm(); setShowForm(false); }} className="px-3 py-1.5 text-xs font-mono transition" style={{ color: "var(--th-text-muted)" }}>
               {tr("취소", "Cancel")}
@@ -190,7 +190,7 @@ export default function WebhookSettingsTab({ refreshTrigger }: WebhookSettingsTa
             {tr("$ ls webhooks/ (empty)", "$ ls webhooks/ (empty)")}
           </div>
           <div className="text-[10px] font-mono mt-2" style={{ color: "var(--th-text-muted)" }}>
-            {tr("웹훅을 추가하면 태스크 완료 시 외부 채널로 알림을 받을 수 있습니다", "Add a webhook to receive notifications when tasks complete")}
+            {tr("웹훅을 추가하면 태스크 완료 시 외부 채널로 알림을 받을 수 있습니다", "Add a webhook to receive notifications when tasks complete", "Webhookを追加してタスク完了時に通知を受け取れます", "添加Webhook以在任务完成时接收通知")}
           </div>
         </div>
       ) : (
@@ -211,10 +211,21 @@ export default function WebhookSettingsTab({ refreshTrigger }: WebhookSettingsTa
               >
                 <div className="flex items-center gap-3 px-4 py-3">
                   {/* Toggle */}
-                  <button onClick={() => void handleToggle(hook)} title={hook.enabled ? "ON" : "OFF"}>
-                    <div className="relative w-8 h-4 transition-colors" style={{ borderRadius: "999px", background: hook.enabled ? "rgba(52,211,153,0.7)" : "var(--th-bg-primary)", border: "1px solid var(--th-border)" }}>
-                      <div className={`absolute top-0.5 w-3 h-3 shadow transition-transform ${hook.enabled ? "translate-x-4" : "translate-x-0.5"}`} style={{ borderRadius: "50%", background: "#fff" }} />
-                    </div>
+                  <button
+                    onClick={() => void handleToggle(hook)}
+                    style={{
+                      fontFamily: "var(--th-font-mono)",
+                      fontSize: "9px",
+                      letterSpacing: "0.06em",
+                      padding: "2px 5px",
+                      borderRadius: 0,
+                      border: hook.enabled ? "1px solid rgba(52,211,153,0.5)" : "1px solid var(--th-border)",
+                      background: hook.enabled ? "rgba(52,211,153,0.12)" : "var(--th-bg-elevated)",
+                      color: hook.enabled ? "rgb(167,243,208)" : "var(--th-text-muted)",
+                      cursor: "pointer",
+                    }}
+                  >
+                    {hook.enabled ? "ON" : "OFF"}
                   </button>
 
                   <div className="flex-1 min-w-0">
@@ -243,26 +254,26 @@ export default function WebhookSettingsTab({ refreshTrigger }: WebhookSettingsTa
                       className="px-2 py-1 text-[10px] font-mono transition disabled:opacity-40"
                       style={{ border: "1px solid var(--th-border)", color: "var(--th-text-muted)", background: "var(--th-bg-primary)", borderRadius: 0 }}
                     >
-                      {testingId === hook.id ? "..." : tr("테스트", "Test")}
+                      {testingId === hook.id ? "..." : tr("테스트", "Test", "テスト", "测试")}
                     </button>
                     <button
                       onClick={() => setDeletingId(hook.id)}
                       className="px-2 py-1 text-[10px] font-mono transition hover:opacity-70"
                       style={{ border: "1px solid rgba(244,63,94,0.3)", color: "rgb(253,164,175)", background: "rgba(244,63,94,0.06)", borderRadius: 0 }}
                     >
-                      {tr("삭제", "Del")}
+                      {tr("삭제", "Del", "削除", "删除")}
                     </button>
                   </div>
                 </div>
 
                 {deletingId === hook.id && (
                   <div className="flex items-center gap-2 px-4 pb-3">
-                    <span className="text-[10px] font-mono" style={{ color: "rgb(253,164,175)" }}>{tr("정말 삭제하시겠습니까?", "Delete this webhook?")}</span>
+                    <span className="text-[10px] font-mono" style={{ color: "rgb(253,164,175)" }}>{tr("정말 삭제하시겠습니까?", "Delete this webhook?", "本当に削除しますか？", "确定删除此Webhook吗？")}</span>
                     <button onClick={() => void handleDelete(hook.id)} className="px-2 py-0.5 text-[10px] font-mono" style={{ border: "1px solid rgba(244,63,94,0.35)", background: "rgba(244,63,94,0.1)", color: "rgb(253,164,175)", borderRadius: 0 }}>
-                      {tr("삭제", "Delete")}
+                      {tr("삭제", "Delete", "削除", "删除")}
                     </button>
                     <button onClick={() => setDeletingId(null)} className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
-                      {tr("취소", "Cancel")}
+                      {tr("취소", "Cancel", "キャンセル", "取消")}
                     </button>
                   </div>
                 )}

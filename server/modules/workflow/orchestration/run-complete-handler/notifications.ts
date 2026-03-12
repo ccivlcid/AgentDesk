@@ -165,7 +165,7 @@ export function runCompleteNotify(
       let reportContent = reportBody
         ? pickL(
             l(
-              [`대표님, '${task.title}' 업무 완료 보고드립니다.\n\n📋 결과:\n${reportBody}`],
+              [`클라이언트님, '${task.title}' 업무 완료 보고드립니다.\n\n📋 결과:\n${reportBody}`],
               [`CEO, reporting completion for '${task.title}'.\n\n📋 Result:\n${reportBody}`],
               [`CEO、'${task.title}' の完了をご報告します。\n\n📋 結果:\n${reportBody}`],
               [`CEO，汇报 '${task.title}' 已完成。\n\n📋 结果:\n${reportBody}`],
@@ -174,7 +174,7 @@ export function runCompleteNotify(
           )
         : pickL(
             l(
-              [`대표님, '${task.title}' 업무 완료 보고드립니다. 작업이 성공적으로 마무리되었습니다.`],
+              [`클라이언트님, '${task.title}' 업무 완료 보고드립니다. 작업이 성공적으로 마무리되었습니다.`],
               [`CEO, reporting completion for '${task.title}'. The work has been finished successfully.`],
               [`CEO、'${task.title}' の完了をご報告します。作業は正常に完了しました。`],
               [`CEO，汇报 '${task.title}' 已完成。任务已成功结束。`],
@@ -229,7 +229,7 @@ export function runCompleteNotify(
         const failContent = errorBody
           ? pickL(
               l(
-                [`대표님, '${task.title}' 작업에 문제가 발생했습니다 (종료코드: ${finalExitCode}).\n\n❌ 오류 내용:\n${errorBody}\n\n재배정하거나 업무 내용을 수정한 후 다시 시도해주세요.`],
+                [`클라이언트님, '${task.title}' 작업에 문제가 발생했습니다 (종료코드: ${finalExitCode}).\n\n❌ 오류 내용:\n${errorBody}\n\n재배정하거나 업무 내용을 수정한 후 다시 시도해주세요.`],
                 [`CEO, '${task.title}' failed with an issue (exit code: ${finalExitCode}).\n\n❌ Error:\n${errorBody}\n\nPlease reassign the agent or revise the task, then try again.`],
                 [`CEO、'${task.title}' の処理中に問題が発生しました (終了コード: ${finalExitCode})。\n\n❌ エラー内容:\n${errorBody}\n\n担当再割り当てまたはタスク内容を修正して再試行してください。`],
                 [`CEO，'${task.title}' 执行时发生问题（退出码：${finalExitCode}）。\n\n❌ 错误内容:\n${errorBody}\n\n请重新分配代理或修改任务后重试。`],
@@ -238,7 +238,7 @@ export function runCompleteNotify(
             )
           : pickL(
               l(
-                [`대표님, '${task.title}' 작업에 문제가 발생했습니다 (종료코드: ${finalExitCode}). 에이전트를 재배정하거나 업무 내용을 수정한 후 다시 시도해주세요.`],
+                [`클라이언트님, '${task.title}' 작업에 문제가 발생했습니다 (종료코드: ${finalExitCode}). 에이전트를 재배정하거나 업무 내용을 수정한 후 다시 시도해주세요.`],
                 [`CEO, '${task.title}' failed with an issue (exit code: ${finalExitCode}). Please reassign the agent or revise the task, then try again.`],
                 [`CEO、'${task.title}' の処理中に問題が発生しました (終了コード: ${finalExitCode})。担当再割り当てまたはタスク内容を修正して再試行してください。`],
                 [`CEO，'${task.title}' 执行时发生问题（退出码：${finalExitCode}）。请重新分配代理或修改任务后重试。`],

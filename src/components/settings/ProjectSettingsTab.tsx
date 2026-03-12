@@ -79,7 +79,7 @@ export default function ProjectSettingsTab({ project, categories, t, onUpdate, o
         className="flex items-center gap-3 px-4 py-3"
         style={{ background: "var(--th-bg-surface)", border: "1px solid var(--th-border)", borderRadius: 0 }}
       >
-        <span style={{ fontSize: 28 }}>{"📁"}</span>
+        <span style={{ fontFamily: "var(--th-font-mono)", fontSize: "20px", color: "var(--th-accent)" }}>◈</span>
         <div className="min-w-0">
           <p className="text-sm font-semibold font-mono truncate" style={{ color: "var(--th-text-heading)" }}>
             {project.name}
@@ -105,9 +105,9 @@ export default function ProjectSettingsTab({ project, categories, t, onUpdate, o
 
       {/* Name */}
       <div>
-        <label className="block text-xs font-medium font-mono mb-1.5" style={{ color: "var(--th-text-secondary)" }}>
-          {t({ ko: "프로젝트 이름", en: "Project Name", ja: "プロジェクト名", zh: "项目名称" })}
-        </label>
+        <div style={{ fontFamily: "var(--th-font-mono)", fontSize: "9px", color: "var(--th-text-muted)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "6px" }}>
+          // {t({ ko: "프로젝트 이름", en: "project name", ja: "プロジェクト名", zh: "项目名称" })}
+        </div>
         <input
           type="text"
           value={name}
@@ -124,9 +124,9 @@ export default function ProjectSettingsTab({ project, categories, t, onUpdate, o
 
       {/* Path */}
       <div>
-        <label className="block text-xs font-medium font-mono mb-1" style={{ color: "var(--th-text-secondary)" }}>
-          {t({ ko: "프로젝트 경로", en: "Project Path", ja: "プロジェクトパス", zh: "项目路径" })}
-        </label>
+        <div style={{ fontFamily: "var(--th-font-mono)", fontSize: "9px", color: "var(--th-text-muted)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "6px" }}>
+          // {t({ ko: "프로젝트 경로", en: "project path", ja: "プロジェクトパス", zh: "项目路径" })}
+        </div>
         <p className="text-[10px] font-mono mb-1.5" style={{ color: "var(--th-text-muted)" }}>
           {t({ ko: "AI 에이전트가 작업할 실제 폴더 경로입니다. (생성 후 변경 불가)", en: "The actual folder where the AI agent will work. (Cannot be changed after creation)", ja: "AIエージェントが作業するフォルダパスです。(作成後に変更不可)", zh: "AI 代理工作的实际文件夹路径（创建后不可更改）" })}
         </p>
@@ -163,9 +163,9 @@ export default function ProjectSettingsTab({ project, categories, t, onUpdate, o
 
       {/* Core goal */}
       <div>
-        <label className="block text-xs font-medium font-mono mb-1.5" style={{ color: "var(--th-text-secondary)" }}>
-          {t({ ko: "핵심 목표", en: "Core Goal", ja: "コアゴール", zh: "核心目标" })}
-        </label>
+        <div style={{ fontFamily: "var(--th-font-mono)", fontSize: "9px", color: "var(--th-text-muted)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "6px" }}>
+          // {t({ ko: "핵심 목표", en: "core goal", ja: "コアゴール", zh: "核心目标" })}
+        </div>
         <textarea
           value={coreGoal}
           onChange={(e) => setCoreGoal(e.target.value)}
@@ -210,25 +210,26 @@ export default function ProjectSettingsTab({ project, categories, t, onUpdate, o
           }}
         >
           {saved
-            ? t({ ko: "저장됨 ✓", en: "Saved ✓", ja: "保存済み ✓", zh: "已保存 ✓" })
+            ? t({ ko: "✓ saved", en: "✓ saved", ja: "✓ saved", zh: "✓ saved" })
             : saving
-            ? t({ ko: "저장 중...", en: "Saving...", ja: "保存中...", zh: "保存中..." })
-            : t({ ko: "저장", en: "Save", ja: "保存", zh: "保存" })}
+            ? t({ ko: "saving...", en: "saving...", ja: "saving...", zh: "saving..." })
+            : "SAVE ↵"}
         </button>
       </div>
 
       {/* Danger Zone */}
       {onDelete && (
         <div
-          className="pt-6 pb-1 rounded-sm"
           style={{
             borderTop: "1px solid rgba(239,68,68,0.3)",
             background: "rgba(239,68,68,0.05)",
+            paddingTop: "20px",
+            paddingBottom: "4px",
           }}
         >
-          <p className="text-xs font-mono font-semibold mb-3" style={{ color: "#f87171" }}>
-            {t({ ko: "위험 구역", en: "Danger Zone", ja: "危険エリア", zh: "危险区域" })}
-          </p>
+          <div style={{ fontFamily: "var(--th-font-mono)", fontSize: "9px", color: "#f87171", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "12px", borderLeft: "3px solid #f87171", paddingLeft: "8px" }}>
+            // danger zone
+          </div>
           <p className="text-[11px] font-mono mb-4 leading-relaxed" style={{ color: "rgba(248,113,113,0.95)" }}>
             {t({ ko: "프로젝트를 삭제하면 모든 업무·목표·결과물이 영구적으로 사라집니다.", en: "Deleting this project permanently removes all tasks, objectives, and outputs.", ja: "プロジェクトを削除すると、すべてのタスク・目標・成果物が永久に失われます。", zh: "删除项目将永久移除所有任务、目标和交付物。" })}
           </p>

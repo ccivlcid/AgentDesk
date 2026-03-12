@@ -283,10 +283,42 @@ export default function ScheduledTasksPanel({ agents = [], currentProjectId }: P
   ];
 
   return (
-    <div className="max-w-5xl mx-auto p-6 space-y-5">
-      {/* Header */}
-      <div className="flex items-center justify-between" style={{ borderLeft: "3px solid var(--th-accent)", paddingLeft: "0.75rem" }}>
+    <div
+      style={{
+        fontFamily: "var(--th-font-mono)",
+        display: "flex",
+        flexDirection: "column",
+        gap: 0,
+        maxWidth: 900,
+        margin: "0 auto",
+        borderRadius: 10,
+        overflow: "hidden",
+        background: "var(--th-bg-elevated)",
+        border: "1px solid var(--th-border)",
+        boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
+      }}
+    >
+      {/* 헤더 (설정과 동일 macOS) */}
+      <div
+        className="flex items-center justify-between"
+        style={{
+          borderLeft: "3px solid var(--th-accent)",
+          padding: "12px 18px",
+          borderBottom: "1px solid var(--th-border)",
+          background: "var(--th-bg-panel)",
+          borderTopLeftRadius: 10,
+          borderTopRightRadius: 10,
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
+        }}
+      >
         <div className="flex items-center gap-3">
+          {/* macOS 트래픽 라이트 (●●●) */}
+          <div className="flex flex-shrink-0 items-center gap-1.5">
+            <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#ff5f57" }} aria-hidden />
+            <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#ffbd2e" }} aria-hidden />
+            <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#27c93f" }} aria-hidden />
+          </div>
           <span style={{ fontFamily: "var(--th-font-mono)", fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", color: "var(--th-text-heading)", textTransform: "uppercase" }}>
             {tr("SCHEDULED TASKS", "SCHEDULED TASKS")}
           </span>
@@ -304,8 +336,8 @@ export default function ScheduledTasksPanel({ agents = [], currentProjectId }: P
             }}
             className="group flex items-center gap-2 px-4 py-2.5 text-sm font-medium font-mono transition-all duration-200"
             style={showForm
-              ? { borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-muted)", background: "transparent" }
-              : { borderRadius: 0, border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.15)", color: "var(--th-accent)" }}
+              ? { borderRadius: 6, border: "1px solid var(--th-border)", color: "var(--th-text-muted)", background: "transparent" }
+              : { borderRadius: 6, border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.15)", color: "var(--th-accent)" }}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
               className={`transition-transform duration-200 ${showForm ? "rotate-45" : "group-hover:rotate-90"}`}
@@ -320,8 +352,8 @@ export default function ScheduledTasksPanel({ agents = [], currentProjectId }: P
             onClick={() => { if (showTplForm) { resetTplForm(); setShowTplForm(false); } else { resetTplForm(); setShowTplForm(true); } }}
             className="group flex items-center gap-2 px-4 py-2.5 text-sm font-medium font-mono transition-all duration-200"
             style={showTplForm
-              ? { borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-muted)", background: "transparent" }
-              : { borderRadius: 0, border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.15)", color: "var(--th-accent)" }}
+              ? { borderRadius: 6, border: "1px solid var(--th-border)", color: "var(--th-text-muted)", background: "transparent" }
+              : { borderRadius: 6, border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.15)", color: "var(--th-accent)" }}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
               className={`transition-transform duration-200 ${showTplForm ? "rotate-45" : "group-hover:rotate-90"}`}
@@ -333,16 +365,18 @@ export default function ScheduledTasksPanel({ agents = [], currentProjectId }: P
         )}
       </div>
 
+      {/* 본문 (설정과 동일 패딩) */}
+      <div style={{ flex: 1, overflow: "auto", background: "var(--th-bg-primary)", padding: "20px 18px 24px" }}>
       {/* Tab bar */}
-      <div className="flex items-center gap-1 p-1" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
+      <div className="flex items-center gap-1 p-1 mb-5" style={{ borderRadius: 6, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", overflow: "hidden" }}>
         {TABS.map((tab) => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
             className="flex items-center gap-2 px-4 py-2 text-sm font-medium font-mono transition-all duration-150"
             style={activeTab === tab.key
-              ? { borderRadius: 0, background: "var(--th-border-strong)", color: "var(--th-text-primary)" }
-              : { borderRadius: 0, background: "transparent", color: "var(--th-text-muted)" }}
+              ? { borderRadius: 6, background: "var(--th-border-strong)", color: "var(--th-text-primary)" }
+              : { borderRadius: 6, background: "transparent", color: "var(--th-text-muted)" }}
           >
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
               <path d={tab.icon} />
@@ -351,8 +385,8 @@ export default function ScheduledTasksPanel({ agents = [], currentProjectId }: P
             {tab.count !== undefined && (
               <span className="text-[10px] px-1.5 py-0.5 font-mono"
                 style={activeTab === tab.key
-                  ? { borderRadius: 0, background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }
-                  : { borderRadius: 0, background: "var(--th-bg-primary)", color: "var(--th-text-muted)" }}>
+                  ? { borderRadius: 6, background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }
+                  : { borderRadius: 6, background: "var(--th-bg-primary)", color: "var(--th-text-muted)" }}>
                 {tab.count}
               </span>
             )}
@@ -821,6 +855,7 @@ export default function ScheduledTasksPanel({ agents = [], currentProjectId }: P
       {activeTab === "guide" && (
         <UserGuide tr={tr} language={language} guideExpanded={guideExpanded} setGuideExpanded={setGuideExpanded} />
       )}
+      </div>
     </div>
   );
 }

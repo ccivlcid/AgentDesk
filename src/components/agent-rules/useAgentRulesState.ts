@@ -10,6 +10,7 @@ import {
   getRuleLearningJob,
   getAvailableLearnedRules,
   unlearnRule,
+  type AgentRuleFilters,
   type CreateAgentRuleInput,
   type UpdateAgentRuleInput,
   type RuleLearnProvider,
@@ -31,9 +32,10 @@ interface UseAgentRulesStateOptions {
   agents: Agent[];
   departments: Department[];
   t: TFunction;
+  filters?: AgentRuleFilters;
 }
 
-export function useAgentRulesState({ agents, departments, t }: UseAgentRulesStateOptions) {
+export function useAgentRulesState({ agents, departments, t, filters }: UseAgentRulesStateOptions) {
   const [rules, setRules] = useState<AgentRule[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -72,14 +74,14 @@ export function useAgentRulesState({ agents, departments, t }: UseAgentRulesStat
     try {
       setLoading(true);
       setError(null);
-      const data = await getAgentRules();
+      const data = await getAgentRules(filters);
       setRules(data);
     } catch (err: unknown) {
       setError(String((err as Error).message ?? err));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [filters?.scope_type, filters?.scope_id, filters?.category, filters?.enabled]);
 
   useEffect(() => {
     void loadRules();

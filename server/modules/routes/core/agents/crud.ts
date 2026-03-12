@@ -179,39 +179,17 @@ export function registerAgentCrudRoutes(ctx: RuntimeContext): void {
   app.get("/api/agents", (req, res) => {
     const includeSeed = parseIncludeSeedParam(req.query?.include_seed);
     const seedFilterClause = includeSeed ? "" : "WHERE a.id NOT LIKE '%-seed-%'";
-    let agents: unknown[];
-    try {
-      agents = db
-        .prepare(
-          `
-      SELECT
-        a.*,
-        COALESCE(opd.name, d.name) AS department_name,
-        COALESCE(opd.name_ko, d.name_ko) AS department_name_ko,
-        COALESCE(opd.color, d.color) AS department_color
-      FROM agents a
-      LEFT JOIN office_pack_departments opd
-        ON opd.workflow_pack_key = ${agentPackExpr}
-       AND opd.department_id = a.department_id
-      LEFT JOIN departments d ON a.department_id = d.id
-      ${seedFilterClause}
-      ORDER BY a.department_id, a.role, a.name
-    `,
-        )
-        .all();
-    } catch {
-      agents = db
-        .prepare(
-          `
+    const agents = db
+      .prepare(
+        `
       SELECT a.*, d.name AS department_name, d.name_ko AS department_name_ko, d.color AS department_color
       FROM agents a
       LEFT JOIN departments d ON a.department_id = d.id
       ${seedFilterClause}
       ORDER BY a.department_id, a.role, a.name
     `,
-        )
-        .all();
-    }
+      )
+      .all();
     res.json({ agents });
   });
 
@@ -252,37 +230,16 @@ export function registerAgentCrudRoutes(ctx: RuntimeContext): void {
 
   app.get("/api/agents/:id", (req, res) => {
     const id = String(req.params.id);
-    let agent: unknown;
-    try {
-      agent = db
-        .prepare(
-          `
-      SELECT
-        a.*,
-        COALESCE(opd.name, d.name) AS department_name,
-        COALESCE(opd.name_ko, d.name_ko) AS department_name_ko,
-        COALESCE(opd.color, d.color) AS department_color
-      FROM agents a
-      LEFT JOIN office_pack_departments opd
-        ON opd.workflow_pack_key = ${agentPackExpr}
-       AND opd.department_id = a.department_id
-      LEFT JOIN departments d ON a.department_id = d.id
-      WHERE a.id = ?
-    `,
-        )
-        .get(id);
-    } catch {
-      agent = db
-        .prepare(
-          `
+    const agent = db
+      .prepare(
+        `
       SELECT a.*, d.name AS department_name, d.name_ko AS department_name_ko, d.color AS department_color
       FROM agents a
       LEFT JOIN departments d ON a.department_id = d.id
       WHERE a.id = ?
     `,
-        )
-        .get(id);
-    }
+      )
+      .get(id);
     if (!agent) return res.status(404).json({ error: "not_found" });
 
     const recentTasks = db
@@ -477,36 +434,15 @@ export function registerAgentCrudRoutes(ctx: RuntimeContext): void {
         throw err;
       }
 
-      let created: unknown;
-      try {
-        created = db
-          .prepare(
-            `
-        SELECT
-          a.*,
-          COALESCE(opd.name, d.name) AS department_name,
-          COALESCE(opd.name_ko, d.name_ko) AS department_name_ko,
-          COALESCE(opd.color, d.color) AS department_color
-        FROM agents a
-        LEFT JOIN office_pack_departments opd
-          ON opd.workflow_pack_key = ${agentPackExpr}
-         AND opd.department_id = a.department_id
-        LEFT JOIN departments d ON a.department_id = d.id
-        WHERE a.id = ?
-      `,
-          )
-          .get(id);
-      } catch {
-        created = db
-          .prepare(
-            `
+      const created = db
+        .prepare(
+          `
         SELECT a.*, d.name AS department_name, d.name_ko AS department_name_ko, d.color AS department_color
         FROM agents a LEFT JOIN departments d ON a.department_id = d.id
         WHERE a.id = ?
       `,
-          )
-          .get(id);
-      }
+        )
+        .get(id);
       broadcast("agent_created", created);
       res.status(201).json({ ok: true, agent: created });
     } catch (err) {

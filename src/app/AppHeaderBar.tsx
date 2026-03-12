@@ -30,6 +30,81 @@ interface AppHeaderBarProps {
   projectSelectorSlot?: ReactNode;
 }
 
+const mono = "var(--th-font-mono)";
+
+/** CLI bracket button — design-system: [run] style */
+function HdrBtn({
+  onClick,
+  children,
+  primary,
+  badge,
+  title,
+  disabled,
+}: {
+  onClick: () => void;
+  children: ReactNode;
+  primary?: boolean;
+  badge?: number;
+  title?: string;
+  disabled?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      title={title}
+      style={{
+        position: "relative",
+        display: "inline-flex",
+        alignItems: "center",
+        gap: "4px",
+        padding: "4px 10px",
+        background: primary ? "var(--th-accent-glow)" : "transparent",
+        border: `1px solid ${primary ? "var(--th-accent-border)" : "var(--th-border)"}`,
+        borderRadius: 6,
+        color: primary ? "var(--th-accent)" : "var(--th-text-secondary)",
+        fontFamily: mono,
+        fontSize: "11px",
+        fontWeight: primary ? 600 : 500,
+        letterSpacing: "0.03em",
+        cursor: disabled ? "wait" : "pointer",
+        opacity: disabled ? 0.5 : 1,
+        whiteSpace: "nowrap",
+        transition: "color 0.15s, border-color 0.15s, background 0.15s",
+      }}
+      className={
+        !primary && !disabled
+          ? "hover:!text-[var(--th-text)] hover:!border-[var(--th-border-strong)] hover:!bg-[var(--th-hover-bg)] focus-visible:!outline focus-visible:!outline-2 focus-visible:!outline-offset-1 focus-visible:!outline-[var(--th-accent)]"
+          : "focus-visible:!outline focus-visible:!outline-2 focus-visible:!outline-offset-1 focus-visible:!outline-[var(--th-accent)]"
+      }
+    >
+      {children}
+      {badge !== undefined && badge > 0 && (
+        <span
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            minWidth: "16px",
+            height: "16px",
+            padding: "0 3px",
+            background: "var(--th-accent)",
+            color: "#000",
+            fontFamily: mono,
+            fontSize: "9px",
+            fontWeight: 700,
+            borderRadius: 8,
+            lineHeight: 1,
+          }}
+        >
+          {badge}
+        </span>
+      )}
+    </button>
+  );
+}
+
 export default function AppHeaderBar({
   currentView,
   connected,
@@ -58,230 +133,385 @@ export default function AppHeaderBar({
   onOpenCommandPalette,
   projectSelectorSlot,
 }: AppHeaderBarProps) {
-  useEffect(() => {
-    if (!onOpenCommandPalette) return;
-    const handler = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-        e.preventDefault();
-        onOpenCommandPalette();
-      }
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [onOpenCommandPalette]);
 
   return (
     <header
-      className="header-sleek sticky top-0 z-30 flex min-h-[44px] items-center gap-3 px-3 py-2 sm:px-4 sm:py-2.5 lg:px-6"
-      style={{ borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-header)" }}
+      style={{
+        position: "sticky",
+        top: 0,
+        zIndex: 30,
+        display: "flex",
+        alignItems: "center",
+        gap: 0,
+        padding: "12px 18px",
+        minHeight: "52px",
+        borderBottom: "1px solid var(--th-border)",
+        background: "var(--th-bg-panel)",
+        fontFamily: mono,
+        borderTopLeftRadius: 10,
+        borderTopRightRadius: 10,
+        boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
+        backdropFilter: "blur(12px)",
+        WebkitBackdropFilter: "blur(12px)",
+      }}
     >
-      {/* Left: nav, logo */}
-      <div className="header-sleek-left flex min-w-0 flex-1 items-center gap-3 overflow-hidden">
-        <button
-          onClick={onOpenMobileNav}
-          className="inline-flex h-9 w-9 flex-shrink-0 items-center justify-center transition lg:hidden"
+      {/* Mobile nav toggle */}
+      <button
+        type="button"
+        onClick={onOpenMobileNav}
+        className="lg:hidden"
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          width: "32px",
+          height: "32px",
+          flexShrink: 0,
+          marginRight: "4px",
+          border: "1px solid var(--th-border)",
+          background: "transparent",
+          borderRadius: 6,
+          color: "var(--th-text-muted)",
+          cursor: "pointer",
+          fontFamily: mono,
+          fontSize: "14px",
+        }}
+        aria-label="Open navigation"
+      >
+        ☰
+      </button>
+
+      {/* === LEFT: Prompt line (identity + breadcrumb) === */}
+      <div
+        style={{
+          flex: 1,
+          display: "flex",
+          alignItems: "center",
+          gap: 0,
+          minWidth: 0,
+          overflow: "hidden",
+          paddingRight: "12px",
+        }}
+      >
+        {/* $ prompt — sigil: app root */}
+        <span
           style={{
-            borderRadius: "0",
-            border: "1px solid var(--th-border)",
-            background: "var(--th-bg-surface)",
-            color: "var(--th-text-secondary)",
+            color: "var(--th-accent)",
+            fontWeight: 700,
+            fontSize: "13px",
+            paddingRight: "6px",
+            flexShrink: 0,
           }}
-          aria-label="Open navigation"
         >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="3" y1="6" x2="21" y2="6" />
-            <line x1="3" y1="12" x2="21" y2="12" />
-            <line x1="3" y1="18" x2="21" y2="18" />
-          </svg>
-        </button>
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <span style={{ color: "#f59e0b", fontFamily: "var(--th-font-mono)", fontWeight: 700, fontSize: "0.9rem" }}>▶</span>
-          <span style={{ fontFamily: "var(--th-font-mono)", fontWeight: 700, fontSize: "0.875rem", color: "var(--th-text-heading)", letterSpacing: "0.02em" }}>AgentDesk</span>
-        </div>
-        {/* Project selector */}
+          $
+        </span>
+        <span
+          style={{
+            fontWeight: 600,
+            fontSize: "12px",
+            color: "var(--th-text-heading)",
+            flexShrink: 0,
+          }}
+        >
+          agentdesk
+        </span>
+
+        {/* / project */}
         {projectSelectorSlot && (
           <>
-            <span style={{ color: "var(--th-border)", fontFamily: "var(--th-font-mono)", fontSize: "0.75rem" }} className="hidden sm:inline">·</span>
-            <div className="hidden sm:block">{projectSelectorSlot}</div>
+            <span
+              className="hidden sm:inline"
+              style={{
+                color: "var(--th-text-muted)",
+                padding: "0 6px",
+                fontSize: "12px",
+                flexShrink: 0,
+              }}
+            >
+              /
+            </span>
+            <div
+              className="hidden sm:block"
+              style={{ flexShrink: 0, maxWidth: "200px", minWidth: 0 }}
+            >
+              {projectSelectorSlot}
+            </div>
           </>
         )}
-        {/* Current view title */}
-        <span style={{ color: "var(--th-border)", fontFamily: "var(--th-font-mono)", fontSize: "0.75rem" }} className="hidden sm:inline">·</span>
-        <span className="hidden sm:inline truncate" style={{ fontFamily: "var(--th-font-mono)", fontSize: "0.75rem", color: "var(--th-text-muted)" }}>{viewTitle}</span>
+
+        {/* > view — sigil: active nav (current page) */}
+        {viewTitle && (
+          <>
+            <span
+              className="hidden sm:inline"
+              style={{
+                color: "var(--th-text-muted)",
+                padding: "0 6px",
+                fontSize: "12px",
+                flexShrink: 0,
+              }}
+            >
+              /
+            </span>
+            <span
+              className="hidden sm:inline"
+              style={{
+                fontSize: "12px",
+                fontWeight: 500,
+                color: "var(--th-accent)",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                flexShrink: 0,
+                maxWidth: "140px",
+              }}
+              title={viewTitle}
+            >
+              {viewTitle}
+            </span>
+          </>
+        )}
+
+        {/* cursor blink */}
+        <span
+          className="hidden sm:inline"
+          style={{
+            display: "inline-block",
+            width: "2px",
+            height: "13px",
+            background: "var(--th-accent)",
+            marginLeft: "6px",
+            flexShrink: 0,
+            animation: "blink 1.2s step-end infinite",
+          }}
+        />
       </div>
-      {/* Center: primary tabs (FM-style monospace, no emoji) */}
-      <div className="header-sleek-tabs flex flex-shrink-0 items-center">
-        <button
-          onClick={onOpenTasks}
-          className="header-action-btn header-action-btn-primary header-tab-item"
-          aria-label={tasksPrimaryLabel}
-        >
+
+      {/* Divider: breadcrumb | actions */}
+      <span
+        style={{
+          width: "1px",
+          height: "20px",
+          background: "var(--th-border)",
+          marginRight: "10px",
+          flexShrink: 0,
+        }}
+        className="hidden sm:block"
+        aria-hidden
+      />
+
+      {/* === CENTER: Primary actions (업무, 의사결정) === */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "6px",
+          flexShrink: 0,
+          paddingRight: "10px",
+        }}
+      >
+        <HdrBtn onClick={onOpenTasks} primary>
           {tasksPrimaryLabel}
-        </button>
-        <button
+        </HdrBtn>
+        <HdrBtn
           onClick={onOpenDecisionInbox}
           disabled={decisionInboxLoading}
-          className={`header-action-btn header-action-btn-secondary header-tab-item disabled:cursor-wait disabled:opacity-60${
-            decisionInboxCount > 0 ? " decision-has-pending" : ""
-          }`}
-          aria-label={decisionLabel}
+          badge={decisionInboxCount}
         >
-          {decisionInboxLoading ? "..." : decisionLabel}
-          {decisionInboxCount > 0 && <span className="header-decision-badge">{decisionInboxCount}</span>}
-        </button>
-        <button onClick={onOpenAgentStatus} className="header-action-btn header-action-btn-secondary header-tab-item header-desktop-only">
-          {agentStatusLabel}
-        </button>
-        <button onClick={onOpenGroupChat} className="header-action-btn header-action-btn-secondary header-tab-item">
-          {groupChatLabel}
-        </button>
+          {decisionInboxLoading ? "···" : decisionLabel}
+        </HdrBtn>
       </div>
-      {/* Right: utils, command palette, notification, theme, status */}
-      <div className="header-sleek-right flex flex-shrink-0 items-center gap-2">
+
+      {/* Divider: primary | secondary */}
+      <span
+        style={{
+          width: "1px",
+          height: "20px",
+          background: "var(--th-border)",
+          marginRight: "10px",
+          flexShrink: 0,
+        }}
+        className="hidden md:block"
+        aria-hidden
+      />
+
+      {/* Secondary actions (agent status, group chat) */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "6px",
+          flexShrink: 0,
+          paddingRight: "10px",
+        }}
+        className="hidden md:flex"
+      >
+        <HdrBtn onClick={onOpenAgentStatus} title={agentStatusLabel}>
+          {agentStatusLabel}
+        </HdrBtn>
+        <HdrBtn onClick={onOpenGroupChat}>{groupChatLabel}</HdrBtn>
+      </div>
+
+      {/* === RIGHT: Utils === */}
+      <div style={{ display: "flex", alignItems: "center", gap: "6px", flexShrink: 0 }}>
+        {/* Command palette */}
         {onOpenCommandPalette && (
           <button
+            type="button"
             onClick={onOpenCommandPalette}
-            className="hidden sm:flex items-center gap-2"
+            title="Command palette (Ctrl+Shift+K)"
             style={{
-              background: "var(--th-bg-surface)",
-              border: "1px solid var(--th-border)",
-              borderRadius: "0",
+              display: "flex",
+              alignItems: "center",
+              gap: "6px",
               padding: "4px 10px",
-              fontFamily: "var(--th-font-mono)",
-              fontSize: "0.75rem",
+              background: "transparent",
+              border: "1px solid var(--th-border)",
+              borderRadius: 6,
+              fontFamily: mono,
+              fontSize: "11px",
               color: "var(--th-text-muted)",
               cursor: "pointer",
-              gap: "8px",
+              transition: "color 0.15s, border-color 0.15s",
             }}
-            title="Open command palette (Ctrl+K)"
+            className="hidden sm:flex hover:!text-[var(--th-text-secondary)] hover:!border-[var(--th-border-strong)] focus-visible:!outline focus-visible:!outline-2 focus-visible:!outline-offset-1 focus-visible:!outline-[var(--th-accent)]"
           >
-            <span>⌘K</span>
-            <span style={{ color: "var(--th-text-muted)", opacity: 0.6 }}>Search...</span>
+            <span style={{ opacity: 0.8 }}>⌘⇧K</span>
+            <span style={{ opacity: 0.5 }}>search...</span>
           </button>
         )}
-        <button onClick={onOpenReportHistory} className="header-action-btn header-action-btn-secondary header-desktop-only" title={reportLabel}>
-          {reportLabel}
-        </button>
-        <button onClick={onOpenAnnouncement} className="header-action-btn header-action-btn-secondary" title={announcementLabel}>
-          {announcementLabel}
-        </button>
-        <span className="header-sleek-divider hidden h-5 w-px sm:block" style={{ background: "var(--th-border)" }} />
+
+        <HdrBtn onClick={onOpenReportHistory} title={reportLabel}>
+          <span className="hidden lg:inline">{reportLabel}</span>
+          <span className="lg:hidden">↗</span>
+        </HdrBtn>
+
+        <HdrBtn onClick={onOpenAnnouncement} title={announcementLabel}>
+          <span className="hidden lg:inline">{announcementLabel}</span>
+          <span className="lg:hidden">!</span>
+        </HdrBtn>
+
+        {/* divider */}
+        <span style={{ width: "1px", height: "16px", background: "var(--th-border)", margin: "0 2px", flexShrink: 0 }} className="hidden sm:block" />
+
         {notificationSlot}
+
+        {/* Theme toggle */}
         <button
+          type="button"
           onClick={onToggleTheme}
-          className="theme-toggle-btn header-sleek-icon-btn"
           aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-          title={theme === "dark" ? "라이트 모드" : "다크 모드"}
+          style={{
+            padding: "4px 8px",
+            background: "transparent",
+            border: "1px solid var(--th-border)",
+            borderRadius: 6,
+            color: "var(--th-text-muted)",
+            fontFamily: mono,
+            fontSize: "11px",
+            cursor: "pointer",
+            transition: "color 0.15s, border-color 0.15s",
+          }}
+          className="hover:!text-[var(--th-text-secondary)] hover:!border-[var(--th-border-strong)] focus-visible:!outline focus-visible:!outline-2 focus-visible:!outline-offset-1 focus-visible:!outline-[var(--th-accent)]"
+          title={theme === "dark" ? "light mode" : "dark mode"}
         >
-          <span className="theme-toggle-icon">
-            {theme === "dark" ? (
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-              </svg>
-            ) : (
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <circle cx="12" cy="12" r="5" />
-                <line x1="12" y1="1" x2="12" y2="3" />
-                <line x1="12" y1="21" x2="12" y2="23" />
-                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
-                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-                <line x1="1" y1="12" x2="3" y2="12" />
-                <line x1="21" y1="12" x2="23" y2="12" />
-                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
-                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-              </svg>
-            )}
-          </span>
+          {theme === "dark" ? "○" : "●"}
         </button>
+
+        {/* Status indicator */}
+        <div style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "5px",
+          padding: "3px 8px",
+          border: "1px solid var(--th-border)",
+          background: "transparent",
+          fontFamily: mono,
+          fontSize: "10px",
+          color: "var(--th-text-muted)",
+          borderRadius: 6,
+        }}>
+          <span style={{
+            display: "inline-flex",
+            width: "6px",
+            height: "6px",
+            borderRadius: "50%",
+            background: connected ? "var(--th-green)" : "var(--th-red)",
+            flexShrink: 0,
+          }} />
+          <span className="hidden sm:inline">{connected ? "live" : "offline"}</span>
+        </div>
+
+        {/* Mobile overflow */}
         <div className="relative sm:hidden">
           <button
             onClick={onToggleMobileHeaderMenu}
-            className="inline-flex h-8 w-8 items-center justify-center transition"
             style={{
-              borderRadius: 0,
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "30px",
+              height: "30px",
               border: "1px solid var(--th-border)",
-              background: "var(--th-bg-surface)",
-              color: "var(--th-text-secondary)",
+              background: "transparent",
+              borderRadius: 0,
+              color: "var(--th-text-muted)",
+              fontFamily: mono,
+              fontSize: "12px",
+              cursor: "pointer",
             }}
-            aria-label="더보기 메뉴"
+            aria-label="More"
           >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <circle cx="12" cy="5" r="1" />
-              <circle cx="12" cy="12" r="1" />
-              <circle cx="12" cy="19" r="1" />
-            </svg>
+            ···
           </button>
           {mobileHeaderMenuOpen && (
             <>
-              <button className="fixed inset-0 z-40" onClick={onCloseMobileHeaderMenu} aria-label="Close menu" />
+              <button className="fixed inset-0 z-40" onClick={onCloseMobileHeaderMenu} aria-label="Close menu" style={{ background: "transparent", border: "none" }} />
               <div
-                className="absolute right-0 top-full z-50 mt-1 min-w-[180px] py-1"
-                style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}
+                className="absolute right-0 top-full z-50 mt-1"
+                style={{
+                  border: "1px solid var(--th-border)",
+                  background: "var(--th-bg-elevated)",
+                  minWidth: "160px",
+                  fontFamily: mono,
+                  borderRadius: 8,
+                  boxShadow: "0 8px 24px rgba(0,0,0,0.25)",
+                  overflow: "hidden",
+                }}
               >
-                <button
-                  onClick={() => {
-                    onOpenAgentStatus();
-                    onCloseMobileHeaderMenu();
-                  }}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition hover:opacity-80"
-                  style={{ color: "var(--th-text-primary)", fontFamily: "var(--th-font-mono)" }}
-                >
-                  {agentStatusLabel}
-                </button>
-                <button
-                  onClick={() => {
-                    onOpenReportHistory();
-                    onCloseMobileHeaderMenu();
-                  }}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition hover:opacity-80"
-                  style={{ color: "var(--th-text-primary)", fontFamily: "var(--th-font-mono)" }}
-                >
-                  {reportLabel}
-                </button>
-                <button
-                  onClick={() => {
-                    onOpenGroupChat();
-                    onCloseMobileHeaderMenu();
-                  }}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition hover:opacity-80"
-                  style={{ color: "var(--th-text-primary)", fontFamily: "var(--th-font-mono)" }}
-                >
-                  {groupChatLabel}
-                </button>
+                {[
+                  { label: agentStatusLabel, action: onOpenAgentStatus },
+                  { label: reportLabel, action: onOpenReportHistory },
+                  { label: groupChatLabel, action: onOpenGroupChat },
+                ].map(({ label, action }) => (
+                  <button
+                    key={label}
+                    onClick={() => { action(); onCloseMobileHeaderMenu(); }}
+                    style={{
+                      display: "flex",
+                      width: "100%",
+                      alignItems: "center",
+                      gap: "8px",
+                      padding: "8px 12px",
+                      background: "transparent",
+                      border: "none",
+                      borderBottom: "1px solid var(--th-border)",
+                      color: "var(--th-text-secondary)",
+                      fontFamily: mono,
+                      fontSize: "12px",
+                      cursor: "pointer",
+                      textAlign: "left",
+                      transition: "background 0.1s",
+                    }}
+                    className="hover:bg-[var(--th-hover-bg)]"
+                  >
+                    <span style={{ color: "var(--th-text-muted)" }}>›</span>
+                    {label}
+                  </button>
+                ))}
               </div>
             </>
           )}
-        </div>
-        <div className="header-sleek-status flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium" style={{ background: "var(--th-bg-surface)", color: "var(--th-text-muted)", border: "1px solid var(--th-border)", borderRadius: 0, fontFamily: "var(--th-font-mono)" }}>
-          <div className={`h-1.5 w-1.5 rounded-full ${connected ? "bg-emerald-500" : "bg-red-400"}`} />
-          <span className="hidden sm:inline">{connected ? "Live" : "Offline"}</span>
         </div>
       </div>
     </header>

@@ -88,9 +88,33 @@ export default function TerminalPanel({
   const canInjectPrompt = task?.status === "pending";
 
   return (
-    <div className="terminal-panel-shell fixed inset-0 z-50 flex w-full max-w-full flex-col shadow-2xl lg:inset-y-0 lg:right-0 lg:left-auto lg:w-[560px] lg:border-l">
-      {/* Header */}
-      <div className="terminal-panel-header flex items-center gap-3 border-b px-4 py-3">
+    <div
+      className="terminal-panel-shell fixed inset-0 z-50 flex w-full max-w-full flex-col shadow-2xl lg:inset-y-4 lg:right-4 lg:left-auto lg:w-[560px] lg:max-h-[calc(100vh-2rem)]"
+      style={{
+        background: "var(--th-bg-elevated)",
+        border: "1px solid var(--th-border)",
+        borderRadius: 10,
+        overflow: "hidden",
+      }}
+    >
+      {/* macOS 스타일 헤더 */}
+      <div
+        className="flex items-center gap-3 flex-shrink-0"
+        style={{
+          padding: "12px 18px",
+          borderBottom: "1px solid var(--th-border)",
+          background: "var(--th-bg-panel)",
+          borderTopLeftRadius: 10,
+          borderTopRightRadius: 10,
+        }}
+      >
+        <div className="flex flex-shrink-0 items-center gap-1.5">
+          <button type="button" onClick={onClose} aria-label="Close" className="h-3 w-3 flex-shrink-0 rounded-full border-0 transition-opacity hover:opacity-90" style={{ background: "#ff5f57" }} />
+          <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#ffbd2e" }} />
+          <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#27c93f" }} />
+        </div>
+        <div style={{ width: 1, height: 22, background: "var(--th-border)", flexShrink: 0, margin: "0 2px" }} />
+      {/* Header content */}
         <div className="flex items-center gap-2 flex-1 min-w-0">
           {agent && <AgentAvatar agent={agent} agents={agents} size={28} />}
           <div className="min-w-0 flex-1">

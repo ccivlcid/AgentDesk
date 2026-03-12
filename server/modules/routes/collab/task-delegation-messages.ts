@@ -44,7 +44,7 @@ export function buildLeaderAckMessage(params: LeaderAckParams): string {
     return pickL(
       l(
         [
-          `네, 대표님! 팀장 계획 회의는 생략하고 ${crossDeptNames} 유관부서 사전 조율 후 ${subRole} ${subName}에게 즉시 하달하겠습니다. 📋`,
+          `네, 클라이언트님! 팀장 계획 회의는 생략하고 ${crossDeptNames} 유관부서 사전 조율 후 ${subRole} ${subName}에게 즉시 하달하겠습니다. 📋`,
         ],
         [
           `Understood. We'll skip the leaders' planning meeting, coordinate quickly with ${crossDeptNames}, then delegate immediately to ${subRole} ${subName}. 📋`,
@@ -62,7 +62,7 @@ export function buildLeaderAckMessage(params: LeaderAckParams): string {
     return pickL(
       l(
         [
-          `네, 대표님! 팀장 계획 회의 없이 바로 ${subRole} ${subName}에게 하달하고 ${crossDeptNames} 협업을 병행하겠습니다. 📋`,
+          `네, 클라이언트님! 팀장 계획 회의 없이 바로 ${subRole} ${subName}에게 하달하고 ${crossDeptNames} 협업을 병행하겠습니다. 📋`,
         ],
         [
           `Understood. We'll skip the planning meeting, delegate directly to ${subRole} ${subName}, and coordinate with ${crossDeptNames} in parallel. 📋`,
@@ -79,7 +79,7 @@ export function buildLeaderAckMessage(params: LeaderAckParams): string {
   if (skipPlannedMeeting) {
     return pickL(
       l(
-        [`네, 대표님! 팀장 계획 회의는 생략하고 ${subRole} ${subName}에게 즉시 하달하겠습니다. 📋`],
+        [`네, 클라이언트님! 팀장 계획 회의는 생략하고 ${subRole} ${subName}에게 즉시 하달하겠습니다. 📋`],
         [`Understood. We'll skip the leaders' planning meeting and delegate immediately to ${subRole} ${subName}. 📋`],
         [`了解しました。リーダー計画会議は省略し、${subRole} ${subName} へ即時委任します。📋`],
         [`收到。将跳过负责人规划会议，立即下达给${subRole} ${subName}。📋`],
@@ -92,7 +92,7 @@ export function buildLeaderAckMessage(params: LeaderAckParams): string {
     return pickL(
       l(
         [
-          `네, 대표님! 먼저 ${crossDeptNames} 유관부서 목록을 확정하고 회의/선행 협업을 완료한 뒤 ${subRole} ${subName}에게 하달하겠습니다. 📋`,
+          `네, 클라이언트님! 먼저 ${crossDeptNames} 유관부서 목록을 확정하고 회의/선행 협업을 완료한 뒤 ${subRole} ${subName}에게 하달하겠습니다. 📋`,
           `알겠습니다! 기획팀에서 유관부서 선처리까지 마친 뒤 ${subName}에게 최종 하달하겠습니다.`,
         ],
         [
@@ -111,7 +111,7 @@ export function buildLeaderAckMessage(params: LeaderAckParams): string {
     return pickL(
       l(
         [
-          `네, 대표님! 먼저 팀장 계획 회의를 진행한 뒤 ${subRole} ${subName}에게 하달하고, ${crossDeptNames} 협업도 연계하겠습니다. 📋`,
+          `네, 클라이언트님! 먼저 팀장 계획 회의를 진행한 뒤 ${subRole} ${subName}에게 하달하고, ${crossDeptNames} 협업도 연계하겠습니다. 📋`,
           `알겠습니다! 팀장 계획 회의에서 착수안 정리 완료 후 ${subName} 배정과 ${crossDeptNames} 협업 조율을 진행하겠습니다 🤝`,
         ],
         [
@@ -130,9 +130,9 @@ export function buildLeaderAckMessage(params: LeaderAckParams): string {
   return pickL(
     l(
       [
-        `네, 대표님! 먼저 팀장 계획 회의를 소집하고, 회의 결과 정리 후 ${subRole} ${subName}에게 하달하겠습니다. 📋`,
+        `네, 클라이언트님! 먼저 팀장 계획 회의를 소집하고, 회의 결과 정리 후 ${subRole} ${subName}에게 하달하겠습니다. 📋`,
         `알겠습니다! 우리 팀 ${subName}가 적임자이며, 팀장 계획 회의 종료 후 순차적으로 지시하겠습니다.`,
-        `확인했습니다, 대표님! 팀장 계획 회의 후 ${subName}에게 전달하고 진행 관리하겠습니다.`,
+        `확인했습니다, 클라이언트님! 팀장 계획 회의 후 ${subName}에게 전달하고 진행 관리하겠습니다.`,
       ],
       [
         `Understood. I'll convene the team-lead planning meeting first, then assign to ${subRole} ${subName} after the planning output is finalized. 📋`,
@@ -157,7 +157,7 @@ export function buildDelegateMessage(params: DelegateMessageParams): string {
   return pickL(
     l(
       [
-        `${subName}, 대표님 지시사항이야. "${ceoMessage}" — 확인하고 진행해줘!`,
+        `${subName}, 클라이언트님 지시사항이야. "${ceoMessage}" — 확인하고 진행해줘!`,
         `${subName}! 긴급 업무야. "${ceoMessage}" — 우선순위 높게 처리 부탁해.`,
         `${subName}, 새 업무 할당이야: "${ceoMessage}" — 진행 상황 수시로 공유해줘 👍`,
       ],
@@ -205,7 +205,7 @@ export function buildSelfExecutionMessage(params: SelfMessageParams): string {
   if (skipPlannedMeeting) {
     return pickL(
       l(
-        [`네, 대표님! 팀장 계획 회의는 생략하고 팀 내 가용 인력이 없어 제가 즉시 직접 처리하겠습니다. 💪`],
+        [`네, 클라이언트님! 팀장 계획 회의는 생략하고 팀 내 가용 인력이 없어 제가 즉시 직접 처리하겠습니다. 💪`],
         [
           `Understood. We'll skip the leaders' planning meeting and I'll execute this directly right away since no assignee is available. 💪`,
         ],
@@ -218,7 +218,7 @@ export function buildSelfExecutionMessage(params: SelfMessageParams): string {
   return pickL(
     l(
       [
-        `네, 대표님! 먼저 팀장 계획 회의를 진행하고, 팀 내 가용 인력이 없어 회의 정리 후 제가 직접 처리하겠습니다. 💪`,
+        `네, 클라이언트님! 먼저 팀장 계획 회의를 진행하고, 팀 내 가용 인력이 없어 회의 정리 후 제가 직접 처리하겠습니다. 💪`,
         `알겠습니다! 팀장 계획 회의 완료 후 제가 직접 진행하겠습니다.`,
       ],
       [

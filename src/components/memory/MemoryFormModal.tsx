@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import type { MemoryEntry, MemoryCategory, Agent, Department } from "../../types";
+import type { MemoryEntry, MemoryCategory, MemoryScopeType, Agent, Department } from "../../types";
 import type { CreateMemoryInput, UpdateMemoryInput } from "../../api/memory";
 import { MEMORY_CATEGORIES, categoryLabel, type TFunction } from "./model";
 import { Modal, ModalHeader, ModalBody, ModalFooter, Button, Input, Textarea, FormField, useToast } from "../ui";
@@ -15,6 +15,7 @@ interface MemoryFormModalProps {
   onClose: () => void;
   onCreate: (input: CreateMemoryInput) => void;
   onUpdate: (id: string, input: UpdateMemoryInput) => void;
+  scopeOverride?: { scope_type: MemoryScopeType; scope_id?: string };
 }
 
 export default function MemoryFormModal({
@@ -28,6 +29,7 @@ export default function MemoryFormModal({
   onClose,
   onCreate,
   onUpdate,
+  scopeOverride,
 }: MemoryFormModalProps) {
   const { showToast } = useToast();
   const [title, setTitle] = useState("");
@@ -79,8 +81,8 @@ export default function MemoryFormModal({
       description: description.trim(),
       content: content.trim(),
       category,
-      scope_type: "global" as const,
-      scope_id: undefined,
+      scope_type: scopeOverride?.scope_type ?? ("global" as const),
+      scope_id: scopeOverride?.scope_id,
       priority,
     };
 

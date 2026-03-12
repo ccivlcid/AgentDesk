@@ -10,6 +10,7 @@ import {
   getHookLearningJob,
   getAvailableLearnedHooks,
   unlearnHook,
+  type HookFilters,
   type CreateHookInput,
   type UpdateHookInput,
   type HookLearnProvider,
@@ -29,9 +30,10 @@ interface UseHooksStateOptions {
   agents: Agent[];
   departments: Department[];
   t: TFunction;
+  filters?: HookFilters;
 }
 
-export function useHooksState({ agents, departments, t }: UseHooksStateOptions) {
+export function useHooksState({ agents, departments, t, filters }: UseHooksStateOptions) {
   const [hooks, setHooks] = useState<HookEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -69,14 +71,14 @@ export function useHooksState({ agents, departments, t }: UseHooksStateOptions) 
     try {
       setLoading(true);
       setError(null);
-      const data = await getHooks();
+      const data = await getHooks(filters);
       setHooks(data);
     } catch (err: unknown) {
       setError(String((err as Error).message ?? err));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [filters?.scope_type, filters?.scope_id, filters?.event_type, filters?.enabled]);
 
   useEffect(() => {
     void loadHooks();

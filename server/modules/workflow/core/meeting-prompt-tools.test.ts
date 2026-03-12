@@ -42,7 +42,7 @@ describe("buildDirectReplyPrompt", () => {
   it("includes character persona block when personality exists", () => {
     const tools = createTools();
     const agent = createAgent({
-      personality: "Playful design specialist. Call CEO '대표님' and keep warm expressive tone.",
+      personality: "Playful design specialist. Call CEO '클라이언트님' and keep warm expressive tone.",
     });
     const built = tools.buildDirectReplyPrompt(agent, "Can you help me now?", "chat");
     expect(built.prompt).toContain("[Character Persona - Highest Priority]");

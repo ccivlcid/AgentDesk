@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useToast } from "../ui";
-import type { HookEntry, HookEventType, Agent, Department } from "../../types";
+import HeaderModalChrome from "../ui/HeaderModalChrome";
+import type { HookEntry, HookEventType, HookScopeType, Agent, Department } from "../../types";
 import type { CreateHookInput, UpdateHookInput } from "../../api/hooks";
 import {
   HOOK_EVENT_TYPES,
@@ -21,6 +22,7 @@ interface HookFormModalProps {
   onClose: () => void;
   onCreate: (input: CreateHookInput) => void;
   onUpdate: (id: string, input: UpdateHookInput) => void;
+  scopeOverride?: { scope_type: HookScopeType; scope_id?: string };
 }
 
 export default function HookFormModal({
@@ -32,6 +34,7 @@ export default function HookFormModal({
   submitting,
   error,
   onClose,
+  scopeOverride,
   onCreate,
   onUpdate,
 }: HookFormModalProps) {
@@ -95,8 +98,8 @@ export default function HookFormModal({
       event_type: eventType,
       working_directory: workingDirectory.trim(),
       timeout_ms: timeoutMs,
-      scope_type: "global" as const,
-      scope_id: undefined,
+      scope_type: scopeOverride?.scope_type ?? ("global" as const),
+      scope_id: scopeOverride?.scope_id,
       priority,
     };
 
@@ -107,38 +110,20 @@ export default function HookFormModal({
     }
   };
 
-  return createPortal(
-    <div className="skills-learn-modal fixed inset-0 z-[80] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.75)" }}>
-      <div className="skills-learn-modal-card w-full max-w-lg max-h-[90vh] overflow-hidden shadow-2xl" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
-        {/* Header */}
-        <div className="flex items-start justify-between gap-4 px-5 py-4" style={{ borderBottom: "1px solid var(--th-border)" }}>
-          <div>
-            <h3 className="text-base font-semibold font-mono" style={{ color: "var(--th-text-heading)" }}>
-              {isEditing
-                ? t({ ko: "\uD6C5 \uC218\uC815", en: "Edit Hook", ja: "\u30D5\u30C3\u30AF\u7DE8\u96C6", zh: "\u7F16\u8F91\u94A9\u5B50" })
-                : t({ ko: "\uC0C8 \uD6C5 \uCD94\uAC00", en: "Add New Hook", ja: "\u65B0\u3057\u3044\u30D5\u30C3\u30AF\u8FFD\u52A0", zh: "\u6DFB\u52A0\u65B0\u94A9\u5B50" })}
-            </h3>
-            <div className="mt-1 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
-              {t({
-                ko: "\uD6C5 \uC81C\uBAA9\uACFC \uBA85\uB839\uC5B4\uB97C \uC785\uB825\uD558\uACE0 \uC801\uC6A9 \uBC94\uC704\uB97C \uC124\uC815\uD558\uC138\uC694",
-                en: "Enter hook title and command",
-                ja: "\u30D5\u30C3\u30AF\u306E\u30BF\u30A4\u30C8\u30EB\u3068\u30B3\u30DE\u30F3\u30C9\u3092\u5165\u529B\u3057\u3001\u9069\u7528\u7BC4\u56F2\u3092\u8A2D\u5B9A\u3057\u3066\u304F\u3060\u3055\u3044",
-                zh: "\u8F93\u5165\u94A9\u5B50\u6807\u9898\u548C\u547D\u4EE4\uFF0C\u7136\u540E\u8BBE\u7F6E\u9002\u7528\u8303\u56F4",
-              })}
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            disabled={submitting}
-            className="px-2.5 py-1 text-xs font-mono transition-all"
-            style={{ borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
-          >
-            {t({ ko: "\uB2EB\uAE30", en: "Close", ja: "\u9589\u3058\u308B", zh: "\u5173\u95ED" })}
-          </button>
-        </div>
+  const modalTitle = isEditing
+    ? t({ ko: "훅 수정", en: "Edit Hook", ja: "フック編集", zh: "编辑钩子" })
+    : t({ ko: "새 훅 추가", en: "Add New Hook", ja: "新しいフック追加", zh: "添加新钩子" });
 
+  return createPortal(
+    <div className="skills-learn-modal fixed inset-0 z-[80] flex items-center justify-center p-4" style={{ background: "var(--th-modal-overlay)" }} onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div
+        className="skills-learn-modal-card w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col"
+        style={{ borderRadius: 10, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", boxShadow: "0 20px 50px rgba(0,0,0,0.4)" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <HeaderModalChrome title={modalTitle} onClose={onClose} />
         {/* Body */}
-        <div className="space-y-4 overflow-y-auto px-5 py-4 max-h-[calc(90vh-72px)]">
+        <div className="space-y-4 overflow-y-auto px-5 py-4 flex-1 min-h-0 max-h-[calc(90vh-80px)]">
           {/* Title */}
           <div>
             <label className="block text-xs mb-1.5 font-mono" style={{ color: "var(--th-text-muted)" }}>

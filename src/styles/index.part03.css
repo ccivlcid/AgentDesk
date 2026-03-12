@@ -722,7 +722,7 @@
   color: var(--th-accent);
 }
 .office-toolbar-title {
-  font-family: var(--th-font-display);
+  font-family: var(--th-font-mono);
   font-size: 0.875rem;
   font-weight: 600;
   color: var(--th-text-heading);
@@ -1057,7 +1057,7 @@
   background: var(--th-bg-surface);
 }
 .office-dept-item__name {
-  font-family: var(--th-font-display);
+  font-family: var(--th-font-mono);
   font-size: 0.8rem;
   font-weight: 500;
   color: var(--th-text-primary);
@@ -1214,7 +1214,7 @@
 
 /* Right panel — agent header */
 .office-agent-name {
-  font-family: var(--th-font-display);
+  font-family: var(--th-font-mono);
   font-size: 0.9rem;
   font-weight: 600;
   color: var(--th-text-heading);
@@ -1369,7 +1369,7 @@
   border-left: 3px solid var(--th-accent, #f59e0b);
 }
 .fm-panel-title {
-  font-family: var(--th-font-display);
+  font-family: var(--th-font-mono);
   font-size: 0.875rem;
   font-weight: 600;
   color: var(--th-text-heading);
@@ -1622,7 +1622,7 @@
   border: 1px solid var(--th-input-border);
   border-radius: 2px;
   color: var(--th-text-primary);
-  font-family: var(--th-font-body);
+  font-family: var(--th-font-mono);
   transition: border-color 0.1s linear, box-shadow 0.1s linear;
 }
 .terminal-input:focus {

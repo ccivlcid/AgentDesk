@@ -5,7 +5,7 @@ import swaggerUi from "swagger-ui-express";
 
 type OpenApiDocument = Record<string, unknown>;
 
-const OPENAPI_PATH = path.resolve(process.cwd(), "docs", "openapi.json");
+const OPENAPI_PATH = path.resolve(process.cwd(), "docs", "specs", "openapi.json");
 
 let cachedOpenApiDoc: OpenApiDocument | null = null;
 let cachedOpenApiMtimeMs = 0;

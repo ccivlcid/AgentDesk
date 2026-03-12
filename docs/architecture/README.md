@@ -8,6 +8,8 @@ Generated at: 2026-03-09T12:23:55.456Z
 npm run arch:map
 ```
 
+> **Note:** 생성된 Project Tree의 `docs/` 하위 목록은 스크립트 실행 시점 기준이며, 실제 문서 인덱스는 [docs/README.md](../README.md)를 참조하세요.
+
 ## System Overview
 
 ```mermaid

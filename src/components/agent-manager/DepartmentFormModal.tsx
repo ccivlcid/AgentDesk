@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { Department } from "../../types";
 import { useI18n } from "../../i18n";
 import { useToast } from "../ui";
+import HeaderModalChrome from "../ui/HeaderModalChrome";
 import * as api from "../../api";
 import { DEPT_BLANK, DEPT_COLORS } from "./constants";
 import EmojiPicker from "./EmojiPicker";
@@ -197,6 +198,8 @@ export default function DepartmentFormModal({
     color: "var(--th-text-primary)",
   };
 
+  const title = isEdit ? tr("부서 정보 수정", "Edit Department") : tr("신규 부서 추가", "Add Department");
+
   return (
     <div
       ref={overlayRef}
@@ -207,29 +210,16 @@ export default function DepartmentFormModal({
       }}
     >
       <div
-        className="w-full max-w-lg p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-200 max-h-[85vh] overflow-y-auto"
+        className="flex w-full max-w-lg flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200 max-h-[85vh]"
         style={{
-          borderRadius: 0,
-          background: "var(--th-bg-surface)",
+          borderRadius: 10,
+          background: "var(--th-bg-elevated)",
           border: "1px solid var(--th-border)",
+          boxShadow: "0 20px 50px rgba(0,0,0,0.4)",
         }}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between mb-5">
-          <h3 className="text-base font-bold flex items-center gap-2" style={{ color: "var(--th-text-heading)" }}>
-            <span className="text-lg">{form.icon}</span>
-            {isEdit ? tr("부서 정보 수정", "Edit Department") : tr("신규 부서 추가", "Add Department")}
-          </h3>
-          <button
-            onClick={onClose}
-            className="w-7 h-7 flex items-center justify-center hover:bg-[var(--th-bg-surface-hover)] transition-colors"
-            style={{ borderRadius: 0, color: "var(--th-text-muted)" }}
-          >
-            ✕
-          </button>
-        </div>
-
-        <div className="space-y-4">
+        <HeaderModalChrome title={title} onClose={onClose} />
+        <div className="flex-1 overflow-y-auto p-6 space-y-4">
           {/* 아이콘 + 영문이름 */}
           <div className="flex items-start gap-3">
             <div>
@@ -364,7 +354,7 @@ export default function DepartmentFormModal({
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-2 mt-5 pt-4" style={{ borderTop: "1px solid var(--th-card-border)" }}>
+        <div className="flex flex-shrink-0 items-center gap-2 px-6 pb-6 pt-4" style={{ borderTop: "1px solid var(--th-border)" }}>
           <button
             onClick={handleSave}
             disabled={saving || !form.name.trim()}

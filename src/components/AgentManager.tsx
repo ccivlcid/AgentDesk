@@ -17,7 +17,7 @@ export default function AgentManager({
 }: AgentManagerProps) {
   const { t, locale } = useI18n();
   const isKo = locale.startsWith("ko");
-  const tr = (ko: string, en: string) => t({ ko, en, ja: en, zh: en });
+  const tr = (ko: string, en: string, ja?: string, zh?: string) => t({ ko, en, ja: ja ?? en, zh: zh ?? en });
 
   const [subTab, setSubTab] = useState<"agents" | "departments">("agents");
   const [search, setSearch] = useState("");
@@ -304,10 +304,41 @@ export default function AgentManager({
   const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };
 
   return (
-    <div style={{ ...mono, display: "flex", flexDirection: "column", gap: 0 }}>
-
-      {/* ── 터미널 헤더 ── */}
-      <div style={{ borderBottom: "1px solid var(--th-border)", padding: "10px 16px", background: "var(--th-bg-elevated)", display: "flex", alignItems: "center", gap: 8 }}>
+    <div
+      className="min-h-0 flex-1 flex flex-col w-full"
+      style={{
+        ...mono,
+        display: "flex",
+        flexDirection: "column",
+        gap: 0,
+        borderRadius: 10,
+        overflow: "hidden",
+        background: "var(--th-bg-elevated)",
+        border: "1px solid var(--th-border)",
+        boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
+      }}
+    >
+      {/* ── 터미널 헤더 (macOS) ── */}
+      <div
+        style={{
+          borderBottom: "1px solid var(--th-border)",
+          padding: "12px 18px",
+          background: "var(--th-bg-panel)",
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          borderTopLeftRadius: 10,
+          borderTopRightRadius: 10,
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
+        }}
+      >
+        {/* macOS 트래픽 라이트 (●●●) */}
+        <div className="flex flex-shrink-0 items-center gap-1.5">
+          <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#ff5f57" }} aria-hidden />
+          <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#ffbd2e" }} aria-hidden />
+          <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#27c93f" }} aria-hidden />
+        </div>
         <span style={{ color: "var(--th-accent)", fontWeight: 700, fontSize: "11px" }}>$</span>
         <span style={{ fontSize: "11px", color: "var(--th-text-muted)" }}>
           ls agents/ --all{deptTab !== "all" ? ` --dept="${deptTab}"` : ""}
@@ -318,10 +349,10 @@ export default function AgentManager({
       </div>
 
       {/* ── 서브탭 + 액션 버튼 ── */}
-      <div style={{ borderBottom: "1px solid var(--th-border)", display: "flex", alignItems: "stretch", background: "var(--th-bg-primary)" }}>
+      <div style={{ borderBottom: "1px solid var(--th-border)", display: "flex", alignItems: "stretch", background: "var(--th-bg-primary)", padding: "6px 12px 0" }}>
         {([
-          { key: "agents" as const, label: isKo ? "직원" : "AGENTS" },
-          { key: "departments" as const, label: isKo ? "부서" : "DEPARTMENTS" },
+          { key: "agents" as const, label: tr("직원", "AGENTS", "エージェント", "代理") },
+          { key: "departments" as const, label: tr("부서", "DEPARTMENTS", "部署", "部门") },
         ] as const).map((tab, idx) => (
           <button
             key={tab.key}
@@ -339,12 +370,13 @@ export default function AgentManager({
               background: subTab === tab.key ? "var(--th-bg-elevated)" : "transparent",
               color: subTab === tab.key ? "var(--th-accent)" : "var(--th-text-muted)",
               cursor: "pointer",
+              borderRadius: "6px 6px 0 0",
             }}
           >
             {tab.label}
           </button>
         ))}
-        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 0, borderLeft: "1px solid var(--th-border)" }}>
+        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 6, paddingLeft: 8 }}>
           <button
             type="button"
             onClick={openCreateDept}
@@ -352,10 +384,9 @@ export default function AgentManager({
               ...mono,
               fontSize: "9px",
               fontWeight: 700,
-              padding: "0 12px",
-              height: "100%",
-              border: "none",
-              borderRight: "1px solid var(--th-border)",
+              padding: "6px 12px",
+              border: "1px solid var(--th-border)",
+              borderRadius: 6,
               background: "none",
               color: "var(--th-text-muted)",
               cursor: "pointer",
@@ -364,7 +395,7 @@ export default function AgentManager({
             onMouseEnter={(e) => { e.currentTarget.style.color = "var(--th-accent)"; e.currentTarget.style.background = "rgba(245,158,11,0.06)"; }}
             onMouseLeave={(e) => { e.currentTarget.style.color = "var(--th-text-muted)"; e.currentTarget.style.background = "none"; }}
           >
-            + {isKo ? "부서 추가" : "ADD DEPT"}
+            + {tr("부서 추가", "ADD DEPT", "部署追加", "添加部门")}
           </button>
           <button
             type="button"
@@ -373,9 +404,9 @@ export default function AgentManager({
               ...mono,
               fontSize: "9px",
               fontWeight: 700,
-              padding: "0 14px",
-              height: "100%",
+              padding: "6px 14px",
               border: "none",
+              borderRadius: 6,
               background: "rgba(245,158,11,0.08)",
               color: "var(--th-accent)",
               cursor: "pointer",
@@ -384,11 +415,12 @@ export default function AgentManager({
             onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(245,158,11,0.15)"; }}
             onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(245,158,11,0.08)"; }}
           >
-            + {isKo ? "신규 채용" : "HIRE"}
+            + {tr("신규 채용", "HIRE", "採用", "招聘")}
           </button>
         </div>
       </div>
 
+      <div className="min-h-0 flex-1 overflow-y-auto">
       {subTab === "agents" && (
         <AgentsTab
           tr={tr}
@@ -433,6 +465,7 @@ export default function AgentManager({
           onDragEnd={clearDeptDragState}
         />
       )}
+      </div>
 
       {showModal && (
         <AgentFormModal
