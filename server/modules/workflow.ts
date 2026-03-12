@@ -79,7 +79,7 @@ export function initializeWorkflow(
     mergeWorktree: runtime.mergeWorktree,
     mergeToDevAndCreatePR: runtime.mergeToDevAndCreatePR,
     normalizeOAuthProvider: runtime.normalizeOAuthProvider,
-    notifyCeo: runtime.notifyCeo,
+    notifyClient: runtime.notifyClient,
     archivePlanningConsolidatedReport: runtime.archivePlanningConsolidatedReport,
     randomDelay: runtime.randomDelay,
     refreshGoogleToken: runtime.refreshGoogleToken,

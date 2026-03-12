@@ -35,7 +35,7 @@ describe("ChatMessageList sender fallback", () => {
         sender_name: "리안",
         sender_avatar: "🎬",
         receiver_type: "agent",
-        receiver_id: "ceo",
+        receiver_id: "client",
         content: "진행 옵션\n1. A\n2. B",
         message_type: "chat",
         task_id: null,

@@ -117,11 +117,11 @@ export function registerPipelineGateRoutes({ app, db, nowMs }: PipelineGateRoute
       gateId,
       body.status,
       now,
-      body.evaluated_by || "ceo",
+      body.evaluated_by || "client",
       body.note || null,
       body.status,
       now,
-      body.evaluated_by || "ceo",
+      body.evaluated_by || "client",
       body.note || null,
     );
 

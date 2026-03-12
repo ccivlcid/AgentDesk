@@ -89,10 +89,10 @@ export function createMeetingPresenceTools(deps: PresenceDeps) {
     return true;
   }
 
-  function callLeadersToCeoOffice(taskId: string, leaders: AgentRow[], phase: "kickoff" | "review"): void {
+  function callLeadersToClientOffice(taskId: string, leaders: AgentRow[], phase: "kickoff" | "review"): void {
     leaders.slice(0, 6).forEach((leader, seatIndex) => {
       markAgentInMeeting(leader.id, 600_000, seatIndex, phase, taskId);
-      broadcast("ceo_office_call", {
+      broadcast("client_office_call", {
         from_agent_id: leader.id,
         seat_index: seatIndex,
         phase,
@@ -103,14 +103,14 @@ export function createMeetingPresenceTools(deps: PresenceDeps) {
     });
   }
 
-  function dismissLeadersFromCeoOffice(taskId: string, leaders: AgentRow[]): void {
+  function dismissLeadersFromClientOffice(taskId: string, leaders: AgentRow[]): void {
     leaders.slice(0, 6).forEach((leader) => {
       meetingPresenceUntil.delete(leader.id);
       meetingSeatIndexByAgent.delete(leader.id);
       meetingPhaseByAgent.delete(leader.id);
       meetingTaskIdByAgent.delete(leader.id);
       meetingReviewDecisionByAgent.delete(leader.id);
-      broadcast("ceo_office_call", {
+      broadcast("client_office_call", {
         from_agent_id: leader.id,
         task_id: taskId,
         action: "dismiss",
@@ -133,7 +133,7 @@ export function createMeetingPresenceTools(deps: PresenceDeps) {
     } else {
       meetingReviewDecisionByAgent.delete(agentId);
     }
-    broadcast("ceo_office_call", {
+    broadcast("client_office_call", {
       from_agent_id: agentId,
       seat_index: seatIndex,
       phase,
@@ -147,8 +147,8 @@ export function createMeetingPresenceTools(deps: PresenceDeps) {
   return {
     markAgentInMeeting,
     isAgentInMeeting,
-    callLeadersToCeoOffice,
-    dismissLeadersFromCeoOffice,
+    callLeadersToClientOffice,
+    dismissLeadersFromClientOffice,
     emitMeetingSpeech,
   };
 }

@@ -121,7 +121,7 @@ export function createReviewRoundPlanningHelpers(deps: ReviewRoundPlanningDeps):
             `Language: ${input.lang}`,
             "Goal:",
             "- Read all round options and summarize each team's stance.",
-            "- Recommend which option numbers the CEO should pick (multiple allowed), or explicitly recommend SKIP.",
+            "- Recommend which option numbers the Client should pick (multiple allowed), or explicitly recommend SKIP.",
             "- Keep it concise and decision-oriented.",
             "",
             "Round option sources:",

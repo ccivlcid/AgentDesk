@@ -47,7 +47,7 @@ describe("review finalize video gate", () => {
       ).run(taskId, "Video intro", "/tmp/non-existing-video-root");
 
       const appendTaskLog = vi.fn();
-      const notifyCeo = vi.fn();
+      const notifyClient = vi.fn();
       const startReviewConsensusMeeting = vi.fn();
       const mergeWorktree = vi.fn(() => ({ success: true, message: "merged" }));
 
@@ -62,7 +62,7 @@ describe("review finalize video gate", () => {
         resolveLang: () => "ko",
         getProjectReviewGateSnapshot: () => ({ activeReview: 1, activeTotal: 1, ready: true }),
         projectReviewGateNotifiedAt: new Map<string, number>(),
-        notifyCeo,
+        notifyClient,
         taskWorktrees: new Map<string, { worktreePath: string; projectPath: string; branchName: string }>(),
         mergeToDevAndCreatePR: vi.fn(() => ({ success: true, message: "pr created" })),
         mergeWorktree,
@@ -99,7 +99,7 @@ describe("review finalize video gate", () => {
         "system",
         expect.stringContaining("Review hold: video artifact gate blocked approval"),
       );
-      expect(notifyCeo).toHaveBeenCalled();
+      expect(notifyClient).toHaveBeenCalled();
     } finally {
       db.close();
     }
@@ -123,7 +123,7 @@ describe("review finalize video gate", () => {
       ).run(taskId, "Video intro", projectRoot);
 
       const appendTaskLog = vi.fn();
-      const notifyCeo = vi.fn();
+      const notifyClient = vi.fn();
       const startReviewConsensusMeeting = vi.fn();
       const mergeWorktree = vi.fn(() => ({ success: true, message: "merged" }));
 
@@ -139,7 +139,7 @@ describe("review finalize video gate", () => {
         resolveLang: () => "ko",
         getProjectReviewGateSnapshot: () => ({ activeReview: 1, activeTotal: 1, ready: true }),
         projectReviewGateNotifiedAt: new Map<string, number>(),
-        notifyCeo,
+        notifyClient,
         taskWorktrees: new Map<string, { worktreePath: string; projectPath: string; branchName: string }>(),
         mergeToDevAndCreatePR: vi.fn(() => ({ success: true, message: "pr created" })),
         mergeWorktree,
@@ -176,7 +176,7 @@ describe("review finalize video gate", () => {
         "system",
         expect.stringContaining("remotion evidence missing/invalid"),
       );
-      expect(notifyCeo).toHaveBeenCalled();
+      expect(notifyClient).toHaveBeenCalled();
     } finally {
       try {
         fs.rmSync(projectRoot, { recursive: true, force: true });

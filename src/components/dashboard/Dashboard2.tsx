@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Agent, Category, Department, Project, ProjectObjective, Task } from "../../types";
 import CategoryBadge from "../project-selector/CategoryBadge";
 import WelcomeScreen from "../onboarding/WelcomeScreen";
+import GettingStartedGuidePanel from "../onboarding/GettingStartedGuidePanel";
+import DashboardGuidePanel from "./DashboardGuidePanel";
 import TeamPanel from "./TeamPanel";
 import AgentActivityPanel from "./AgentActivityPanel";
 import TerminalPanel from "../TerminalPanel";
@@ -64,26 +66,34 @@ export default function Dashboard2({
   if (!project) {
     return (
       <>
-        {!skipped ? (
-          <WelcomeScreen
-            onCreateProject={onCreateProject}
-            onGitHubImport={handleGitHubImport}
-            onSkip={() => setSkipped(true)}
-          />
-        ) : (
-          <div className="flex flex-col items-center justify-center h-full text-center px-8">
-            <p className="text-sm mb-4" style={{ color: "var(--th-text-muted)" }}>
-              {t({ ko: "아직 프로젝트가 없어요.", en: "No projects yet.", ja: "まだプロジェクトがありません。", zh: "暂无项目。" })}
-            </p>
-            <button
-              onClick={onCreateProject}
-              className="text-xs px-4 py-2 hover:opacity-90 transition-opacity"
-              style={{ background: "var(--th-accent)", color: "#000", borderRadius: 0 }}
-            >
-              {t({ ko: "+ 첫 번째 프로젝트 만들기", en: "+ Create first project", ja: "+ 最初のプロジェクトを作成", zh: "+ 创建第一个项目" })}
-            </button>
+        <div
+          className="flex flex-1 min-h-0 flex-col lg:flex-row"
+          style={{ overflow: "hidden" }}
+        >
+          <div className="flex-1 min-h-0 overflow-auto">
+            {!skipped ? (
+              <WelcomeScreen
+                onCreateProject={onCreateProject}
+                onGitHubImport={handleGitHubImport}
+                onSkip={() => setSkipped(true)}
+              />
+            ) : (
+              <div className="flex flex-col items-center justify-center min-h-full text-center px-8 py-12">
+                <p className="text-sm mb-4" style={{ color: "var(--th-text-muted)" }}>
+                  {t({ ko: "아직 프로젝트가 없어요.", en: "No projects yet.", ja: "まだプロジェクトがありません。", zh: "暂无项目。" })}
+                </p>
+                <button
+                  onClick={onCreateProject}
+                  className="text-xs px-4 py-2 hover:opacity-90 transition-opacity"
+                  style={{ background: "var(--th-accent)", color: "#000", borderRadius: 0 }}
+                >
+                  {t({ ko: "+ 첫 번째 프로젝트 만들기", en: "+ Create first project", ja: "+ 最初のプロジェクトを作成", zh: "+ 创建第一个项目" })}
+                </button>
+              </div>
+            )}
           </div>
-        )}
+          <GettingStartedGuidePanel />
+        </div>
         {showGitHubModal && (
           <ProjectManagerModal
             agents={agents}
@@ -254,15 +264,16 @@ function Dashboard2Inner({
   const dateStr = now.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 
   return (
-    <div
-      className="relative flex flex-col h-full overflow-hidden"
-      style={{
-        borderRadius: 10,
-        border: "1px solid var(--th-border)",
-        boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
-        background: "var(--th-bg-elevated)",
-      }}
-    >
+    <div className="flex flex-1 min-h-0 min-w-0 flex-col lg:flex-row">
+      <div
+        className="relative flex flex-col flex-1 min-h-0 overflow-hidden"
+        style={{
+          borderRadius: 10,
+          border: "1px solid var(--th-border)",
+          boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
+          background: "var(--th-bg-elevated)",
+        }}
+      >
       {/* ── macOS 스타일 헤더 (설정 패널과 동일) ── */}
       <div
         className="flex items-center gap-3 flex-shrink-0"
@@ -587,6 +598,8 @@ function Dashboard2Inner({
           defaultAgentId={createTaskDefaultAgentId}
         />
       )}
+      </div>
+      <DashboardGuidePanel />
     </div>
   );
 }

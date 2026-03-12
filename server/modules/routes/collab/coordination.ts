@@ -33,7 +33,7 @@ export function initializeCollabCoordination(ctx: RuntimeContext): any {
   const isTaskWorkflowInterrupted = __ctx.isTaskWorkflowInterrupted;
   const l = __ctx.l;
   const logsDir = __ctx.logsDir;
-  const notifyCeo = __ctx.notifyCeo;
+  const notifyClient = __ctx.notifyClient;
   const nowMs = __ctx.nowMs;
   const pickL = __ctx.pickL;
   const randomDelay = __ctx.randomDelay;
@@ -58,7 +58,7 @@ export function initializeCollabCoordination(ctx: RuntimeContext): any {
   }
 
   /**
-   * Detect project path from CEO message.
+   * Detect project path from Client message.
    * Recognizes:
    * 1. Absolute paths: /home/user/Projects/foo, ~/Projects/bar
    * 2. Project names: "agentdesk 프로젝트", "agentdesk-kanban에서"
@@ -276,7 +276,7 @@ export function initializeCollabCoordination(ctx: RuntimeContext): any {
     getDeptName,
     getAgentDisplayName,
     sendAgentMessage,
-    notifyCeo,
+    notifyClient,
     l,
     pickL,
     startTaskExecutionForAgent,
@@ -309,7 +309,7 @@ export function initializeCollabCoordination(ctx: RuntimeContext): any {
       appendTaskLog,
       getAgentDisplayName,
       sendAgentMessage,
-      notifyCeo,
+      notifyClient,
       l,
       pickL,
       broadcast,

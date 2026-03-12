@@ -28,7 +28,7 @@ export function buildStateUpdatesDeps(deps: Record<string, unknown>): StateUpdat
     resolveLang: deps.resolveLang as (s: string) => string,
     taskWorktrees: deps.taskWorktrees as Map<string, { projectPath?: string }>,
     cleanupWorktree: deps.cleanupWorktree as (path: string, id: string) => void,
-    notifyCeo: deps.notifyCeo as (msg: string, taskId: string) => void,
+    notifyClient: deps.notifyClient as (msg: string, taskId: string) => void,
     sendAgentMessage: deps.sendAgentMessage as (...args: unknown[]) => void,
     insertNotification: deps.insertNotification as (p: object) => void,
     findTeamLeader: deps.findTeamLeader as (id: string | null) => { id: string } | undefined,

@@ -75,7 +75,7 @@ export interface CrossDeptDelivery {
   toAgentId: string;
 }
 
-export interface CeoOfficeCall {
+export interface ClientOfficeCall {
   id: string;
   fromAgentId: string;
   seatIndex: number;
@@ -348,7 +348,7 @@ export interface MeetingMinute {
 }
 
 // Messages
-export type SenderType = "ceo" | "agent" | "system";
+export type SenderType = "client" | "agent" | "system";
 export type ReceiverType = "agent" | "department" | "all";
 export type MessageType = "chat" | "task_assign" | "announcement" | "directive" | "report" | "status_update";
 
@@ -453,7 +453,7 @@ export type WSEventType =
   | "cli_usage_update"
   | "subtask_update"
   | "cross_dept_delivery"
-  | "ceo_office_call"
+  | "client_office_call"
   | "chat_stream"
   | "task_report"
   | "notification"
@@ -545,7 +545,7 @@ export interface CustomOfficePack {
 
 export interface CompanySettings {
   companyName: string;
-  ceoName: string;
+  clientName: string;
   autoAssign: boolean;
   yoloMode?: boolean;
   autoUpdateEnabled: boolean;
@@ -636,7 +636,7 @@ export interface HookEntry {
 
 export const DEFAULT_SETTINGS: CompanySettings = {
   companyName: "AgentDesk",
-  ceoName: "CEO",
+  clientName: "Client",
   autoAssign: true,
   yoloMode: false,
   autoUpdateEnabled: false,

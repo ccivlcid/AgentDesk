@@ -184,7 +184,7 @@ export function registerTaskSubtaskRoutes(deps: TaskSubtaskRouteDeps): void {
     const msgId = randomUUID();
     db.prepare(
       `INSERT INTO messages (id, sender_type, sender_id, receiver_type, receiver_id, content, message_type, task_id, created_at)
-     VALUES (?, 'ceo', NULL, 'agent', ?, ?, 'task_assign', ?, ?)`,
+     VALUES (?, 'client', NULL, 'agent', ?, ?, 'task_assign', ?, ?)`,
     ).run(msgId, agentId, `New task assigned: ${task.title}`, id, t);
 
     const updatedTask = db.prepare("SELECT * FROM tasks WHERE id = ?").get(id);
@@ -194,7 +194,7 @@ export function registerTaskSubtaskRoutes(deps: TaskSubtaskRouteDeps): void {
     broadcast("agent_status", updatedAgent);
     broadcast("new_message", {
       id: msgId,
-      sender_type: "ceo",
+      sender_type: "client",
       receiver_type: "agent",
       receiver_id: agentId,
       content: `New task assigned: ${task.title}`,

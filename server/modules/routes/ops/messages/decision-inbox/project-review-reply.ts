@@ -308,7 +308,7 @@ export function handleProjectReviewDecisionReply(input: ProjectReviewReplyInput)
         .prepare("SELECT COALESCE(MAX(created_at), 0) AS max_created_at FROM task_logs WHERE task_id = ?")
         .get(task.id) as { max_created_at?: number } | undefined;
       const baselineLogTs = Number(beforeLog?.max_created_at ?? 0);
-      appendTaskLog(task.id, "system", "Decision inbox: project-level review meeting approved by CEO");
+      appendTaskLog(task.id, "system", "Decision inbox: project-level review meeting approved by Client");
       finishReview(task.id, task.title, {
         bypassProjectDecisionGate: true,
         trigger: "decision_inbox",

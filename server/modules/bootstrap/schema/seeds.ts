@@ -139,7 +139,7 @@ export function applyDefaultSeeds(db: DbLike): void {
   // Seed default settings if none exist
   {
     const defaultRoomThemes = {
-      ceoOffice: { accent: 0xa77d0c, floor1: 0xe5d9b9, floor2: 0xdfd0a8, wall: 0x998243 },
+      clientOffice: { accent: 0xa77d0c, floor1: 0xe5d9b9, floor2: 0xdfd0a8, wall: 0x998243 },
       planning: { accent: 0xd4a85a, floor1: 0xf0e1c5, floor2: 0xeddaba, wall: 0xae9871 },
       dev: { accent: 0x5a9fd4, floor1: 0xd8e8f5, floor2: 0xcce1f2, wall: 0x6c96b7 },
       design: { accent: 0x9a6fc4, floor1: 0xe8def2, floor2: 0xe1d4ee, wall: 0x9378ad },
@@ -154,7 +154,7 @@ export function applyDefaultSeeds(db: DbLike): void {
     if (settingsCount === 0) {
       const insertSetting = db.prepare("INSERT INTO settings (key, value) VALUES (?, ?)");
       insertSetting.run("companyName", "AgentDesk");
-      insertSetting.run("ceoName", "CEO");
+      insertSetting.run("clientName", "Client");
       insertSetting.run("autoAssign", "true");
       insertSetting.run("yoloMode", "false");
       insertSetting.run("autoUpdateEnabled", "false");

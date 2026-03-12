@@ -56,13 +56,13 @@ function CliLine({ msg, agents, locale, getAgentName, searchQuery }: CliLineProp
   const isDirective = msg.message_type === "directive";
   const isAnnouncement = msg.message_type === "announcement" || msg.receiver_type === "all";
   const isAgentReply = msg.sender_type === "agent";
-  const isCeo = msg.sender_type === "ceo";
+  const isClient = msg.sender_type === "client";
 
-  type LineVariant = "directive" | "ceo-announce" | "ceo" | "agent" | "system";
+  type LineVariant = "directive" | "client-announce" | "client" | "agent" | "system";
   let variant: LineVariant = "system";
   if (isDirective) variant = "directive";
-  else if (isCeo && isAnnouncement) variant = "ceo-announce";
-  else if (isCeo) variant = "ceo";
+  else if (isClient && isAnnouncement) variant = "client-announce";
+  else if (isClient) variant = "client";
   else if (isAgentReply) variant = "agent";
 
   const agentName = isAgentReply ? getAgentDisplayName(msg, agents, getAgentName) : "";
@@ -73,11 +73,11 @@ function CliLine({ msg, agents, locale, getAgentName, searchQuery }: CliLineProp
     label: string; labelColor: string;
     contentColor: string;
   }> = {
-    directive:    { rowBg: "var(--th-danger-bg)",   border: "var(--th-danger-border)", sigil: "$",  sigilColor: "var(--th-danger-text)", label: "DIRECTIVE", labelColor: "var(--th-danger-text)", contentColor: "var(--th-text-primary)" },
-    "ceo-announce":{ rowBg: "var(--th-amber-glow)", border: "var(--th-border-accent)", sigil: "❯",  sigilColor: "var(--th-accent)", label: "CEO",       labelColor: "var(--th-accent)", contentColor: "var(--th-text-primary)" },
-    ceo:          { rowBg: "var(--th-bg-surface)", border: "var(--th-border)",        sigil: "❯",  sigilColor: "var(--th-accent)", label: "CEO",       labelColor: "var(--th-accent)", contentColor: "var(--th-text-primary)" },
-    agent:        { rowBg: "var(--th-green-glow)", border: "var(--th-border)",        sigil: "▸",  sigilColor: "var(--th-attr-elite)", label: agentName,   labelColor: "var(--th-attr-elite)", contentColor: "var(--th-text-primary)" },
-    system:       { rowBg: "transparent",          border: "var(--th-border)",         sigil: "//", sigilColor: "var(--th-text-muted)", label: "SYSTEM",    labelColor: "var(--th-text-muted)", contentColor: "var(--th-text-secondary)" },
+    directive:        { rowBg: "var(--th-danger-bg)",   border: "var(--th-danger-border)", sigil: "$",  sigilColor: "var(--th-danger-text)", label: "DIRECTIVE", labelColor: "var(--th-danger-text)", contentColor: "var(--th-text-primary)" },
+    "client-announce":{ rowBg: "var(--th-amber-glow)", border: "var(--th-border-accent)", sigil: "❯",  sigilColor: "var(--th-accent)", label: "Client",    labelColor: "var(--th-accent)", contentColor: "var(--th-text-primary)" },
+    client:           { rowBg: "var(--th-bg-surface)", border: "var(--th-border)",        sigil: "❯",  sigilColor: "var(--th-accent)", label: "Client",    labelColor: "var(--th-accent)", contentColor: "var(--th-text-primary)" },
+    agent:            { rowBg: "var(--th-green-glow)", border: "var(--th-border)",        sigil: "▸",  sigilColor: "var(--th-attr-elite)", label: agentName,   labelColor: "var(--th-attr-elite)", contentColor: "var(--th-text-primary)" },
+    system:           { rowBg: "transparent",          border: "var(--th-border)",         sigil: "//", sigilColor: "var(--th-text-muted)", label: "SYSTEM",    labelColor: "var(--th-text-muted)", contentColor: "var(--th-text-secondary)" },
   };
 
   const v = VARIANTS[variant];

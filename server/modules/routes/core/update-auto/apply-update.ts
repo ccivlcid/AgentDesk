@@ -57,7 +57,7 @@ type ApplyDeps = {
   fetchUpdateStatus: (forceRefresh?: boolean) => Promise<UpdateStatusPayload>;
   runCommandCapture: (cmd: string, args: string[], timeoutMs: number) => Promise<CommandCaptureResult>;
   logAutoUpdate: (message: string) => void;
-  notifyCeo: (message: string, taskId: string | null, messageType?: string) => void;
+  notifyClient: (message: string, taskId: string | null, messageType?: string) => void;
   scheduleExit: (delayMs: number) => void;
 };
 
@@ -84,7 +84,7 @@ export async function applyUpdateNow(
     fetchUpdateStatus,
     runCommandCapture,
     logAutoUpdate,
-    notifyCeo,
+    notifyClient,
     scheduleExit,
   } = deps;
 
@@ -294,7 +294,7 @@ export async function applyUpdateNow(
     if (options.trigger === "auto") {
       const summary = `[Auto Update] applied ${beforeHead || "?"} -> ${afterHead || "?"} (latest=${status.latest_version || "unknown"}, mode=${AUTO_UPDATE_RESTART_MODE})`;
       try {
-        notifyCeo(summary, null, "status_update");
+        notifyClient(summary, null, "status_update");
       } catch {
         /* ignore */
       }

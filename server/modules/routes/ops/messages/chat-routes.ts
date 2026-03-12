@@ -102,7 +102,7 @@ export function registerChatMessageRoutes(ctx: ChatMessageRouteCtx, deps: ChatMe
       return res.status(400).json({ error: "content_required" });
     }
 
-    const senderType = typeof body.sender_type === "string" ? body.sender_type : "ceo";
+    const senderType = typeof body.sender_type === "string" ? body.sender_type : "client";
     const senderId = typeof body.sender_id === "string" ? body.sender_id : null;
     const receiverType = typeof body.receiver_type === "string" ? body.receiver_type : "all";
     const receiverId = typeof body.receiver_id === "string" ? body.receiver_id : null;
@@ -198,8 +198,8 @@ export function registerChatMessageRoutes(ctx: ChatMessageRouteCtx, deps: ChatMe
       return;
     broadcast("new_message", msg);
 
-    // Schedule agent auto-reply when CEO messages an agent
-    if (senderType === "ceo" && receiverType === "agent" && receiverId) {
+    // Schedule agent auto-reply when Client messages an agent
+    if (senderType === "client" && receiverType === "agent" && receiverId) {
       if (messageType === "report") {
         const handled = handleReportRequest(receiverId, content);
         if (!handled) {
@@ -265,7 +265,7 @@ export function registerChatMessageRoutes(ctx: ChatMessageRouteCtx, deps: ChatMe
       const result = db
         .prepare(
           `DELETE FROM messages WHERE
-        (sender_type = 'ceo' AND receiver_type = 'agent' AND receiver_id = ?)
+        (sender_type = 'client' AND receiver_type = 'agent' AND receiver_id = ?)
         OR (sender_type = 'agent' AND sender_id = ?)
         OR receiver_type = 'all'
         OR message_type = 'announcement'`,

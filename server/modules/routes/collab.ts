@@ -42,7 +42,7 @@ export function registerRoutesPartB(ctx: RuntimeContext): RouteCollabExports {
   const launchApiProviderAgent = __ctx.launchApiProviderAgent;
   const launchHttpAgent = __ctx.launchHttpAgent;
   const logsDir = __ctx.logsDir;
-  const notifyCeo = __ctx.notifyCeo;
+  const notifyClient = __ctx.notifyClient;
   const nowMs = __ctx.nowMs;
   const randomDelay = __ctx.randomDelay;
   const recordTaskCreationAudit = __ctx.recordTaskCreationAudit;
@@ -576,11 +576,11 @@ export function registerRoutesPartB(ctx: RuntimeContext): RouteCollabExports {
           `${crossLeaderName}님, 클라이언트님이 직접 요청하셨습니다. "${taskTitle}" 건, ${crossDeptName} 담당으로 진행해주세요!`,
         ],
         [
-          `${crossLeaderName}! CEO directive for ${crossDeptName}: "${taskTitle}" — please handle this! 🏷️`,
-          `${crossLeaderName}, CEO requested this for your team: "${taskTitle}"`,
+          `${crossLeaderName}! Client directive for ${crossDeptName}: "${taskTitle}" — please handle this! 🏷️`,
+          `${crossLeaderName}, Client requested this for your team: "${taskTitle}"`,
         ],
-        [`${crossLeaderName}さん！CEO指示です："${taskTitle}" — ${crossDeptName}で対応お願いします！🏷️`],
-        [`${crossLeaderName}，CEO指示："${taskTitle}" — 请${crossDeptName}处理！🏷️`],
+        [`${crossLeaderName}さん！Client指示です："${taskTitle}" — ${crossDeptName}で対応お願いします！🏷️`],
+        [`${crossLeaderName}，Client指示："${taskTitle}" — 请${crossDeptName}处理！🏷️`],
       ),
       lang,
     );
@@ -775,7 +775,7 @@ export function registerRoutesPartB(ctx: RuntimeContext): RouteCollabExports {
     subtaskDelegationCallbacks,
     subtaskDelegationDispatchInFlight,
     subtaskDelegationCompletionNoticeSent,
-    notifyCeo,
+    notifyClient,
     sendAgentMessage,
     appendTaskLog,
     finishReview,
@@ -846,7 +846,7 @@ export function registerRoutesPartB(ctx: RuntimeContext): RouteCollabExports {
     broadcast,
     l,
     pickL,
-    notifyCeo,
+    notifyClient,
     isTaskWorkflowInterrupted,
     hasOpenForeignSubtasks,
     processSubtaskDelegations,

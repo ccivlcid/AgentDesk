@@ -16,7 +16,7 @@ export function registerWorktreeAndUsageRoutes(ctx: RuntimeContext): {
     resolveLang,
     pickL,
     l,
-    notifyCeo,
+    notifyClient,
     db,
     nowMs,
     CLI_TOOLS,
@@ -82,7 +82,7 @@ export function registerWorktreeAndUsageRoutes(ctx: RuntimeContext): {
     if (result.success) {
       cleanupWorktree(wtInfo.projectPath, id);
       appendTaskLog(id, "system", `Manual merge completed: ${result.message}`);
-      notifyCeo(
+      notifyClient(
         pickL(
           l(
             [`수동 병합 완료: ${result.message}`],
@@ -111,7 +111,7 @@ export function registerWorktreeAndUsageRoutes(ctx: RuntimeContext): {
     cleanupWorktree(wtInfo.projectPath, id);
     appendTaskLog(id, "system", "Worktree discarded (changes abandoned)");
     const lang = resolveLang();
-    notifyCeo(
+    notifyClient(
       pickL(
         l(
           [`작업 브랜치가 폐기되었습니다: agentdesk/${id.slice(0, 8)}`],

@@ -142,7 +142,7 @@ CREATE TABLE IF NOT EXISTS task_creation_audits (
 
 CREATE TABLE IF NOT EXISTS messages (
   id TEXT PRIMARY KEY,
-  sender_type TEXT NOT NULL CHECK(sender_type IN ('ceo','agent','system')),
+  sender_type TEXT NOT NULL CHECK(sender_type IN ('client','agent','system')),
   sender_id TEXT,
   receiver_type TEXT NOT NULL CHECK(receiver_type IN ('agent','department','all')),
   receiver_id TEXT,

@@ -26,7 +26,7 @@ export type TaskExecutionControlRouteDeps = Pick<
   | "clearTaskWorkflowState"
   | "endTaskExecutionSession"
   | "broadcast"
-  | "notifyCeo"
+  | "notifyClient"
   | "pickL"
   | "l"
   | "stopRequestedTasks"
@@ -59,7 +59,7 @@ export function registerTaskExecutionControlRoutes(deps: TaskExecutionControlRou
     clearTaskWorkflowState,
     endTaskExecutionSession,
     broadcast,
-    notifyCeo,
+    notifyClient,
     pickL,
     l,
     stopRequestedTasks,
@@ -342,7 +342,7 @@ export function registerTaskExecutionControlRoutes(deps: TaskExecutionControlRou
       broadcast("task_update", updatedTask);
       const statusChanged = task.status !== targetStatus;
       if (targetStatus === "pending" && statusChanged) {
-        notifyCeo(
+        notifyClient(
           pickL(
             l(
               [
@@ -363,7 +363,7 @@ export function registerTaskExecutionControlRoutes(deps: TaskExecutionControlRou
           id,
         );
       } else if (targetStatus !== "pending") {
-        notifyCeo(
+        notifyClient(
           pickL(
             l(
               [
@@ -456,7 +456,7 @@ export function registerTaskExecutionControlRoutes(deps: TaskExecutionControlRou
     broadcast("task_update", updatedTask);
 
     if (targetStatus === "pending") {
-      notifyCeo(
+      notifyClient(
         pickL(
           l(
             [
@@ -477,7 +477,7 @@ export function registerTaskExecutionControlRoutes(deps: TaskExecutionControlRou
         id,
       );
     } else {
-      notifyCeo(
+      notifyClient(
         pickL(
           l(
             [
@@ -591,7 +591,7 @@ export function registerTaskExecutionControlRoutes(deps: TaskExecutionControlRou
     });
 
     if (autoResumed) {
-      notifyCeo(
+      notifyClient(
         pickL(
           l(
             [`'${task.title}' 작업이 복구되었습니다. (${targetStatus}) 기존 세션을 유지한 채 자동 재개를 시작합니다.`],
@@ -606,7 +606,7 @@ export function registerTaskExecutionControlRoutes(deps: TaskExecutionControlRou
         id,
       );
     } else {
-      notifyCeo(
+      notifyClient(
         pickL(
           l(
             [`'${task.title}' 작업이 복구되었습니다. (${targetStatus})`],

@@ -217,7 +217,7 @@ function createDeps(seed?: {
     clearTaskWorkflowState: ReturnType<typeof vi.fn>;
     endTaskExecutionSession: ReturnType<typeof vi.fn>;
     appendTaskLog: ReturnType<typeof vi.fn>;
-    notifyCeo: ReturnType<typeof vi.fn>;
+    notifyClient: ReturnType<typeof vi.fn>;
     startTaskExecutionForAgent: ReturnType<typeof vi.fn>;
     randomDelay: ReturnType<typeof vi.fn>;
     ensureTaskExecutionSession: ReturnType<typeof vi.fn>;
@@ -276,7 +276,7 @@ function createDeps(seed?: {
   const clearTaskWorkflowState = vi.fn();
   const endTaskExecutionSession = vi.fn();
   const appendTaskLog = vi.fn();
-  const notifyCeo = vi.fn();
+  const notifyClient = vi.fn();
   const startTaskExecutionForAgent = vi.fn();
   const randomDelay = vi.fn(() => 0);
 
@@ -310,7 +310,7 @@ function createDeps(seed?: {
     clearTaskWorkflowState,
     endTaskExecutionSession,
     broadcast: vi.fn(),
-    notifyCeo,
+    notifyClient,
     pickL: (bundle: any, lang: string) => bundle[lang] ?? bundle.en ?? bundle.ko,
     l: (ko: string[], en: string[], ja: string[], zh: string[]) => ({ ko, en, ja, zh }),
     stopRequestedTasks,
@@ -342,7 +342,7 @@ function createDeps(seed?: {
       clearTaskWorkflowState,
       endTaskExecutionSession,
       appendTaskLog,
-      notifyCeo,
+      notifyClient,
       startTaskExecutionForAgent,
       randomDelay,
       ensureTaskExecutionSession,

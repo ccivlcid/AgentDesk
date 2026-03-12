@@ -10,12 +10,12 @@ import type {
   SubAgent,
   SubTask,
   Task,
-  CeoOfficeCall,
+  ClientOfficeCall,
   WSEventType,
 } from "../types";
 import {
   CODEX_THREAD_BINDING_TTL_MS,
-  MAX_CEO_OFFICE_CALLS,
+  MAX_CLIENT_OFFICE_CALLS,
   MAX_CODEX_THREAD_BINDINGS,
   MAX_CROSS_DEPT_DELIVERIES,
   MAX_LIVE_MESSAGES,
@@ -46,7 +46,7 @@ interface UseRealtimeSyncParams {
   setUnreadAgentIds: Dispatch<SetStateAction<Set<string>>>;
   setTaskReport: Dispatch<SetStateAction<TaskReportDetail | null>>;
   setCrossDeptDeliveries: Dispatch<SetStateAction<CrossDeptDelivery[]>>;
-  setCeoOfficeCalls: Dispatch<SetStateAction<CeoOfficeCall[]>>;
+  setClientOfficeCalls: Dispatch<SetStateAction<ClientOfficeCall[]>>;
   setMeetingPresence: Dispatch<SetStateAction<MeetingPresence[]>>;
   setSubtasks: Dispatch<SetStateAction<SubTask[]>>;
   setSubAgents: Dispatch<SetStateAction<SubAgent[]>>;
@@ -77,7 +77,7 @@ export function useRealtimeSync({
   setUnreadAgentIds,
   setTaskReport,
   setCrossDeptDeliveries,
-  setCeoOfficeCalls,
+  setClientOfficeCalls,
   setMeetingPresence,
   setSubtasks,
   setSubAgents,
@@ -183,7 +183,7 @@ export function useRealtimeSync({
           ),
         );
       }),
-      on("ceo_office_call", (payload: unknown) => {
+      on("client_office_call", (payload: unknown) => {
         const p = payload as {
           from_agent_id: string;
           seat_index?: number;
@@ -222,11 +222,11 @@ export function useRealtimeSync({
         } else if (action === "dismiss") {
           setMeetingPresence((prev) => prev.filter((row) => row.agent_id !== p.from_agent_id));
         }
-        setCeoOfficeCalls((prev) =>
+        setClientOfficeCalls((prev) =>
           appendCapped(
             prev,
             {
-              id: `ceo-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+              id: `client-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
               fromAgentId: p.from_agent_id,
               seatIndex: p.seat_index ?? 0,
               phase: p.phase ?? "kickoff",
@@ -237,7 +237,7 @@ export function useRealtimeSync({
               holdUntil: p.hold_until,
               instant: action === "arrive",
             },
-            MAX_CEO_OFFICE_CALLS,
+            MAX_CLIENT_OFFICE_CALLS,
           ),
         );
       }),

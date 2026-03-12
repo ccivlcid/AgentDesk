@@ -23,7 +23,7 @@ interface SubtaskDelegationDeps {
   subtaskDelegationCallbacks: Map<string, () => void>;
   subtaskDelegationDispatchInFlight: Set<string>;
   subtaskDelegationCompletionNoticeSent: Set<string>;
-  notifyCeo: (content: string, taskId?: string | null, messageType?: string) => void;
+  notifyClient: (content: string, taskId?: string | null, messageType?: string) => void;
   sendAgentMessage: (
     agent: AgentRow,
     content: string,
@@ -119,7 +119,7 @@ export function initializeSubtaskDelegation(deps: SubtaskDelegationDeps) {
     subtaskDelegationCallbacks,
     subtaskDelegationDispatchInFlight,
     subtaskDelegationCompletionNoticeSent,
-    notifyCeo,
+    notifyClient,
     sendAgentMessage,
     appendTaskLog,
     finishReview,
@@ -296,7 +296,7 @@ export function initializeSubtaskDelegation(deps: SubtaskDelegationDeps) {
     subtaskDelegationDispatchInFlight.add(taskId);
     subtaskDelegationCompletionNoticeSent.delete(parentTask.id);
 
-    notifyCeo(
+    notifyClient(
       pickL(
         l(
           [`'${parentTask.title}' 의 외부 부서 서브태스크 ${eligible.length}건을 부서별 배치로 순차 위임합니다.`],
@@ -492,7 +492,7 @@ export function initializeSubtaskDelegation(deps: SubtaskDelegationDeps) {
     const progressSuffix = subtaskProgressSummary
       ? `\n${pickL(l(["보완/협업 완료 현황"], ["Remediation/Collaboration completion"], ["補完/協業 完了状況"], ["整改/协作完成情况"]), lang)}\n${subtaskProgressSummary}`
       : "";
-    notifyCeo(
+    notifyClient(
       pickL(
         l(
           [`'${parentTask.title}' 의 모든 서브태스크(부서간 협업 포함)가 완료되었습니다. ✅${progressSuffix}`],
@@ -584,7 +584,7 @@ export function initializeSubtaskDelegation(deps: SubtaskDelegationDeps) {
     findBestSubordinate,
     nowMs,
     broadcast,
-    notifyCeo,
+    notifyClient,
     sendAgentMessage,
     appendTaskLog,
     recordTaskCreationAudit,

@@ -449,7 +449,7 @@ export function createDirectChatHandlers(deps: DirectChatDeps) {
           `
           SELECT content, message_type, created_at
           FROM messages
-          WHERE sender_type = 'ceo'
+          WHERE sender_type = 'client'
             AND receiver_type = 'agent'
             AND receiver_id = ?
             AND created_at >= ?

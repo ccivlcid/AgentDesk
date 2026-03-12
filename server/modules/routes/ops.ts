@@ -93,7 +93,7 @@ export function registerRoutesPartC(ctx: RuntimeContext): RouteOpsExports {
   const meetingTaskIdByAgent = __ctx.meetingTaskIdByAgent;
   const mergeWorktree = __ctx.mergeWorktree;
   const normalizeOAuthProvider = __ctx.normalizeOAuthProvider;
-  const notifyCeo = __ctx.notifyCeo;
+  const notifyClient = __ctx.notifyClient;
   const archivePlanningConsolidatedReport = __ctx.archivePlanningConsolidatedReport;
   const nowMs = __ctx.nowMs;
   const randomDelay = __ctx.randomDelay;

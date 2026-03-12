@@ -19,7 +19,7 @@ type SubtaskSeedingDeps = {
   l: (ko: string[], en: string[], ja: string[], zh: string[]) => any;
   pickL: (choices: any, lang: string) => string;
   appendTaskLog: (taskId: string | null, kind: string, message: string) => void;
-  notifyCeo: (message: string, taskId: string | null, messageType?: string) => void;
+  notifyClient: (message: string, taskId: string | null, messageType?: string) => void;
 };
 
 export function createSubtaskSeedingTools(deps: SubtaskSeedingDeps) {
@@ -36,7 +36,7 @@ export function createSubtaskSeedingTools(deps: SubtaskSeedingDeps) {
     l,
     pickL,
     appendTaskLog,
-    notifyCeo,
+    notifyClient,
   } = deps;
 
   function createSubtaskFromCli(taskId: string, toolUseId: string, title: string): void {
@@ -344,7 +344,7 @@ export function createSubtaskSeedingTools(deps: SubtaskSeedingDeps) {
       "system",
       `Planned meeting seeded ${items.length} subtasks (plan-notes: ${uniquePlanNotes.length}, cross-dept: ${relatedDepts.length})`,
     );
-    notifyCeo(
+    notifyClient(
       pickL(
         l(
           [

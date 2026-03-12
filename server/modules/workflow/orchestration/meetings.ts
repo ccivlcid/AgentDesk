@@ -38,7 +38,7 @@ export function initializeWorkflowMeetingTools(ctx: RuntimeContext): any {
   const getTaskStatusById = __ctx.getTaskStatusById;
   const getReviewRoundMode = __ctx.getReviewRoundMode;
   const scheduleNextReviewRound = __ctx.scheduleNextReviewRound;
-  const notifyCeo = __ctx.notifyCeo;
+  const notifyClient = __ctx.notifyClient;
   const runAgentOneShot = __ctx.runAgentOneShot;
   const resolveProjectPath = __ctx.resolveProjectPath;
   const resolveLang = __ctx.resolveLang;
@@ -90,8 +90,8 @@ export function initializeWorkflowMeetingTools(ctx: RuntimeContext): any {
   const {
     markAgentInMeeting,
     isAgentInMeeting,
-    callLeadersToCeoOffice,
-    dismissLeadersFromCeoOffice,
+    callLeadersToClientOffice,
+    dismissLeadersFromClientOffice,
     emitMeetingSpeech,
   } = createMeetingPresenceTools({
     db,
@@ -119,7 +119,7 @@ export function initializeWorkflowMeetingTools(ctx: RuntimeContext): any {
     runAgentOneShot,
     chooseSafeReply,
     appendTaskLog,
-    notifyCeo,
+    notifyClient,
     pickL,
     l,
     sendAgentMessage,
@@ -130,8 +130,8 @@ export function initializeWorkflowMeetingTools(ctx: RuntimeContext): any {
     appendMeetingMinuteEntry,
     beginMeetingMinutes,
     finishMeetingMinutes,
-    callLeadersToCeoOffice,
-    dismissLeadersFromCeoOffice,
+    callLeadersToClientOffice,
+    dismissLeadersFromClientOffice,
     wantsReviewRevision,
     meetingReviewDecisionByAgent,
     findLatestTranscriptContentByAgent,
@@ -173,8 +173,8 @@ export function initializeWorkflowMeetingTools(ctx: RuntimeContext): any {
     appendTaskReviewFinalMemo,
     markAgentInMeeting,
     isAgentInMeeting,
-    callLeadersToCeoOffice,
-    dismissLeadersFromCeoOffice,
+    callLeadersToClientOffice,
+    dismissLeadersFromClientOffice,
     emitMeetingSpeech,
     startReviewConsensusMeeting,
   };

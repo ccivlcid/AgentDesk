@@ -37,7 +37,7 @@ export function startLifecycle(ctx: RuntimeContext): void {
     isPidAlive,
     isProduction,
     killPidTree,
-    notifyCeo,
+    notifyClient,
     nowMs,
     processSubtaskDelegations,
     reconcileCrossDeptSubtasks,
@@ -86,7 +86,7 @@ export function startLifecycle(ctx: RuntimeContext): void {
 
     if (allAgents.length === 0) return;
 
-    // Meeting/CEO-office summoned agents should stay in office, not break room.
+    // Meeting/Client-office summoned agents should stay in office, not break room.
     for (const a of allAgents) {
       if (a.status === "break" && isAgentInMeeting(a.id)) {
         db.prepare("UPDATE agents SET status = 'idle' WHERE id = ?").run(a.id);
@@ -327,7 +327,7 @@ export function startLifecycle(ctx: RuntimeContext): void {
             : lang === "zh"
               ? `[WATCHDOG] '${task.title}' 处于 in_progress，但未发现执行进程，已恢复到 inbox。`
               : `[WATCHDOG] '${task.title}' 작업이 in_progress 상태였지만 실행 프로세스가 없어 inbox로 복구했습니다.`;
-      notifyCeo(watchdogMessage, task.id);
+      notifyClient(watchdogMessage, task.id);
     }
   }
 

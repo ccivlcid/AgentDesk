@@ -44,7 +44,7 @@ interface TaskDelegationDeps {
   broadcast: (event: string, payload: unknown) => void;
   l: (ko: string[], en: string[], ja?: string[], zh?: string[]) => L10n;
   pickL: (pool: L10n, lang: Lang) => string;
-  notifyCeo: (content: string, taskId?: string | null, messageType?: string) => void;
+  notifyClient: (content: string, taskId?: string | null, messageType?: string) => void;
   isTaskWorkflowInterrupted: (taskId: string) => boolean;
   hasOpenForeignSubtasks: (taskId: string, targetDeptIds?: string[]) => boolean;
   processSubtaskDelegations: (taskId: string, opts?: { includeRender?: boolean }) => void;
@@ -111,7 +111,7 @@ export function createTaskDelegationHandler(deps: TaskDelegationDeps) {
     broadcast,
     l,
     pickL,
-    notifyCeo,
+    notifyClient,
     isTaskWorkflowInterrupted,
     hasOpenForeignSubtasks,
     processSubtaskDelegations,
@@ -164,7 +164,7 @@ export function createTaskDelegationHandler(deps: TaskDelegationDeps) {
         projectContext: projectContextHint,
       });
       const detectedPath = detectedPathRaw || selectedProject.projectPath || null;
-      const taskDescriptionLines = [`[CEO] ${ceoMessage}`];
+      const taskDescriptionLines = [`[Client] ${ceoMessage}`];
       if (selectedProject.name) taskDescriptionLines.push(`[PROJECT] ${selectedProject.name}`);
       if (selectedProject.coreGoal) taskDescriptionLines.push(`[PROJECT CORE GOAL] ${selectedProject.coreGoal}`);
       taskDescriptionLines.push(`[ROUND GOAL] ${roundGoal}`);
@@ -197,13 +197,13 @@ export function createTaskDelegationHandler(deps: TaskDelegationDeps) {
         assignedAgentId: teamLeader.id,
         taskType: "general",
         projectPath: detectedPath ?? null,
-        trigger: "workflow.delegation.ceo_message",
+        trigger: "workflow.delegation.client_message",
         triggerDetail: `skip_planned_meeting=${skipPlannedMeeting}; skip_plan_subtasks=${skipPlanSubtasks}`,
         actorType: "agent",
         actorId: teamLeader.id,
         actorName: teamLeader.name,
         body: {
-          ceo_message: ceoMessage,
+          client_message: ceoMessage,
           options: {
             skip_planned_meeting: skipPlannedMeeting,
             skip_plan_subtasks: skipPlanSubtasks,
@@ -216,7 +216,7 @@ export function createTaskDelegationHandler(deps: TaskDelegationDeps) {
       if (selectedProject.id) {
         db.prepare("UPDATE projects SET last_used_at = ?, updated_at = ? WHERE id = ?").run(t, t, selectedProject.id);
       }
-      appendTaskLog(taskId, "system", `CEO → ${leaderName}: ${ceoMessage}`);
+      appendTaskLog(taskId, "system", `Client → ${leaderName}: ${ceoMessage}`);
       if (selectedProject.id) {
         appendTaskLog(taskId, "system", `Project linked: ${selectedProject.name || selectedProject.id}`);
       }
@@ -248,7 +248,7 @@ export function createTaskDelegationHandler(deps: TaskDelegationDeps) {
             ? mentionedDepts.map(getDeptName).join(", ")
             : pickL(l(["없음"], ["None"], ["なし"], ["无"]), lang);
         appendTaskLog(taskId, "system", `Planning pre-check related departments: ${relatedLabel}`);
-        notifyCeo(
+        notifyClient(
           pickL(
             l(
               [`[기획팀] '${taskTitle}' 유관부서 사전 파악 완료: ${relatedLabel}`],
@@ -271,13 +271,13 @@ export function createTaskDelegationHandler(deps: TaskDelegationDeps) {
 
         const crossDeptNames = mentionedDepts.map(getDeptName).join(", ");
         if (hasOpenForeignSubtasks(taskId, mentionedDepts)) {
-          notifyCeo(
+          notifyClient(
             pickL(
               l(
-                [`[CEO OFFICE] 기획팀 선행 협업을 서브태스크 통합 디스패처로 실행합니다: ${crossDeptNames}`],
-                [`[CEO OFFICE] Running planning pre-collaboration via unified subtask dispatcher: ${crossDeptNames}`],
-                [`[CEO OFFICE] 企画先行協業を統合サブタスクディスパッチャで実行します: ${crossDeptNames}`],
-                [`[CEO OFFICE] 企划前置协作改为统一 SubTask 调度执行：${crossDeptNames}`],
+                [`[Client OFFICE] 기획팀 선행 협업을 서브태스크 통합 디스패처로 실행합니다: ${crossDeptNames}`],
+                [`[Client OFFICE] Running planning pre-collaboration via unified subtask dispatcher: ${crossDeptNames}`],
+                [`[Client OFFICE] 企画先行協業を統合サブタスクディスパッチャで実行します: ${crossDeptNames}`],
+                [`[Client OFFICE] 企划前置协作改为统一 SubTask 调度执行：${crossDeptNames}`],
               ),
               lang,
             ),
@@ -293,13 +293,13 @@ export function createTaskDelegationHandler(deps: TaskDelegationDeps) {
           return;
         }
 
-        notifyCeo(
+        notifyClient(
           pickL(
             l(
-              [`[CEO OFFICE] 기획팀 선행 협업 처리 시작: ${crossDeptNames}`],
-              [`[CEO OFFICE] Planning pre-collaboration started with: ${crossDeptNames}`],
-              [`[CEO OFFICE] 企画チームの先行協業を開始: ${crossDeptNames}`],
-              [`[CEO OFFICE] 企划团队前置协作已启动：${crossDeptNames}`],
+              [`[Client OFFICE] 기획팀 선행 협업 처리 시작: ${crossDeptNames}`],
+              [`[Client OFFICE] Planning pre-collaboration started with: ${crossDeptNames}`],
+              [`[Client OFFICE] 企画チームの先行協業を開始: ${crossDeptNames}`],
+              [`[Client OFFICE] 企划团队前置协作已启动：${crossDeptNames}`],
             ),
             lang,
           ),
@@ -326,13 +326,13 @@ export function createTaskDelegationHandler(deps: TaskDelegationDeps) {
           },
           () => {
             if (isTaskWorkflowInterrupted(taskId)) return;
-            notifyCeo(
+            notifyClient(
               pickL(
                 l(
-                  ["[CEO OFFICE] 유관부서 선행 처리 완료. 이제 내부 업무 하달을 시작합니다."],
-                  ["[CEO OFFICE] Related-department pre-processing complete. Starting internal delegation now."],
-                  ["[CEO OFFICE] 関連部門の先行処理が完了。これより内部委任を開始します。"],
-                  ["[CEO OFFICE] 相关部门前置处理完成，现开始内部下达。"],
+                  ["[Client OFFICE] 유관부서 선행 처리 완료. 이제 내부 업무 하달을 시작합니다."],
+                  ["[Client OFFICE] Related-department pre-processing complete. Starting internal delegation now."],
+                  ["[Client OFFICE] 関連部門の先行処理が完了。これより内部委任を開始します。"],
+                  ["[Client OFFICE] 相关部门前置处理完成，现开始内部下达。"],
                 ),
                 lang,
               ),
@@ -383,7 +383,7 @@ export function createTaskDelegationHandler(deps: TaskDelegationDeps) {
       const runPlanningPhase = (afterPlan: () => void) => {
         if (isTaskWorkflowInterrupted(taskId)) return;
         if (skipPlannedMeeting) {
-          appendTaskLog(taskId, "system", "Planned meeting skipped by CEO directive");
+          appendTaskLog(taskId, "system", "Planned meeting skipped by Client directive");
           if (!skipPlanSubtasks) {
             seedApprovedPlanSubtasks(taskId, leaderDeptId, []);
           }
@@ -452,7 +452,7 @@ export function createTaskDelegationHandler(deps: TaskDelegationDeps) {
       } else {
         // No subordinate — team leader handles it themselves
         if (manualFallbackToLeader) {
-          notifyCeo(buildManualFallbackNotice({ l, pickL, lang, leaderName }), taskId);
+          notifyClient(buildManualFallbackNotice({ l, pickL, lang, leaderName }), taskId);
         }
         const selfMsg = buildSelfExecutionMessage({ l, pickL, lang, skipPlannedMeeting });
         sendAgentMessage(teamLeader, selfMsg, "chat", "agent", null, taskId);

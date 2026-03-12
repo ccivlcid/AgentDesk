@@ -246,6 +246,16 @@ h3,
   75%, 100% { transform: scale(2); opacity: 0; }
 }
 
+/* ─── Screen guide panel (macOS Inspector style) ────────────────────── */
+@keyframes screenGuideSlideIn {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+@keyframes screenGuideOverlayIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
 code,
 pre,
 .font-mono {

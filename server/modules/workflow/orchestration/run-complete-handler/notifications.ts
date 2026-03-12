@@ -1,5 +1,5 @@
 /**
- * Run-complete notifications: broadcast, CEO, agent messages, task status, callbacks.
+ * Run-complete notifications: broadcast, Client, agent messages, task status, callbacks.
  */
 
 import fs from "node:fs";
@@ -7,7 +7,7 @@ import path from "node:path";
 
 export type RunCompleteNotifyDeps = {
   broadcast: (event: string, payload: unknown) => void;
-  notifyCeo: (message: string, taskId: string) => void;
+  notifyClient: (message: string, taskId: string) => void;
   sendAgentMessage: (
     agent: { id: string },
     content: string,
@@ -52,7 +52,7 @@ export type TaskForNotify = {
 };
 
 /**
- * Run all post-run notifications: task status, CEO messages, agent reports, callbacks.
+ * Run all post-run notifications: task status, Client messages, agent reports, callbacks.
  * Call after core has updated status, broadcast task_update, and (on failure) cleaned worktree.
  */
 export function runCompleteNotify(
@@ -64,7 +64,7 @@ export function runCompleteNotify(
 ): void {
   const {
     notifyTaskStatus,
-    notifyCeo,
+    notifyClient,
     sendAgentMessage,
     insertNotification,
     findTeamLeader,
@@ -91,7 +91,7 @@ export function runCompleteNotify(
 
     if (task.source_task_id) {
       const sourceLang = resolveLang(task.description ?? task.title);
-      notifyCeo(
+      notifyClient(
         pickL(
           l(
             [`'${task.title}' 협업 하위 태스크가 Review 대기 상태로 전환되었습니다. 상위 업무의 전체 취합 회의에서 일괄 검토/머지합니다.`],
@@ -123,7 +123,7 @@ export function runCompleteNotify(
     const leaderName = leader
       ? getAgentDisplayName(leader, lang)
       : pickL(l(["팀장"], ["Team Lead"], ["チームリーダー"], ["组长"]), lang);
-    notifyCeo(
+    notifyClient(
       pickL(
         l(
           [`${leaderName}이(가) '${task.title}' 결과를 검토 중입니다.`],
@@ -166,18 +166,18 @@ export function runCompleteNotify(
         ? pickL(
             l(
               [`클라이언트님, '${task.title}' 업무 완료 보고드립니다.\n\n📋 결과:\n${reportBody}`],
-              [`CEO, reporting completion for '${task.title}'.\n\n📋 Result:\n${reportBody}`],
-              [`CEO、'${task.title}' の完了をご報告します。\n\n📋 結果:\n${reportBody}`],
-              [`CEO，汇报 '${task.title}' 已完成。\n\n📋 结果:\n${reportBody}`],
+              [`Client, reporting completion for '${task.title}'.\n\n📋 Result:\n${reportBody}`],
+              [`クライアント、'${task.title}' の完了をご報告します。\n\n📋 結果:\n${reportBody}`],
+              [`客户端，汇报 '${task.title}' 已完成。\n\n📋 结果:\n${reportBody}`],
             ),
             reportLang,
           )
         : pickL(
             l(
               [`클라이언트님, '${task.title}' 업무 완료 보고드립니다. 작업이 성공적으로 마무리되었습니다.`],
-              [`CEO, reporting completion for '${task.title}'. The work has been finished successfully.`],
-              [`CEO、'${task.title}' の完了をご報告します。作業は正常に完了しました。`],
-              [`CEO，汇报 '${task.title}' 已完成。任务已成功结束。`],
+              [`Client, reporting completion for '${task.title}'. The work has been finished successfully.`],
+              [`クライアント、'${task.title}' の完了をご報告します。作業は正常に完了しました。`],
+              [`客户端，汇报 '${task.title}' 已完成。任务已成功结束。`],
             ),
             reportLang,
           );
@@ -230,18 +230,18 @@ export function runCompleteNotify(
           ? pickL(
               l(
                 [`클라이언트님, '${task.title}' 작업에 문제가 발생했습니다 (종료코드: ${finalExitCode}).\n\n❌ 오류 내용:\n${errorBody}\n\n재배정하거나 업무 내용을 수정한 후 다시 시도해주세요.`],
-                [`CEO, '${task.title}' failed with an issue (exit code: ${finalExitCode}).\n\n❌ Error:\n${errorBody}\n\nPlease reassign the agent or revise the task, then try again.`],
-                [`CEO、'${task.title}' の処理中に問題が発生しました (終了コード: ${finalExitCode})。\n\n❌ エラー内容:\n${errorBody}\n\n担当再割り当てまたはタスク内容を修正して再試行してください。`],
-                [`CEO，'${task.title}' 执行时发生问题（退出码：${finalExitCode}）。\n\n❌ 错误内容:\n${errorBody}\n\n请重新分配代理或修改任务后重试。`],
+                [`Client, '${task.title}' failed with an issue (exit code: ${finalExitCode}).\n\n❌ Error:\n${errorBody}\n\nPlease reassign the agent or revise the task, then try again.`],
+                [`クライアント、'${task.title}' の処理中に問題が発生しました (終了コード: ${finalExitCode})。\n\n❌ エラー内容:\n${errorBody}\n\n担当再割り当てまたはタスク内容を修正して再試行してください。`],
+                [`客户端，'${task.title}' 执行时发生问题（退出码：${finalExitCode}）。\n\n❌ 错误内容:\n${errorBody}\n\n请重新分配代理或修改任务后重试。`],
               ),
               failLang,
             )
           : pickL(
               l(
                 [`클라이언트님, '${task.title}' 작업에 문제가 발생했습니다 (종료코드: ${finalExitCode}). 에이전트를 재배정하거나 업무 내용을 수정한 후 다시 시도해주세요.`],
-                [`CEO, '${task.title}' failed with an issue (exit code: ${finalExitCode}). Please reassign the agent or revise the task, then try again.`],
-                [`CEO、'${task.title}' の処理中に問題が発生しました (終了コード: ${finalExitCode})。担当再割り当てまたはタスク内容を修正して再試行してください。`],
-                [`CEO，'${task.title}' 执行时发生问题（退出码：${finalExitCode}）。请重新分配代理或修改任务后重试。`],
+                [`Client, '${task.title}' failed with an issue (exit code: ${finalExitCode}). Please reassign the agent or revise the task, then try again.`],
+                [`クライアント、'${task.title}' の処理中に問題が発生しました (終了コード: ${finalExitCode})。担当再割り当てまたはタスク内容を修正して再試行してください。`],
+                [`客户端，'${task.title}' 执行时发生问题（退出码：${finalExitCode}）。请重新分配代理或修改任务后重试。`],
               ),
               failLang,
             );
@@ -249,7 +249,7 @@ export function runCompleteNotify(
       }, 1500);
     }
     const failLang = resolveLang(task.description ?? task.title);
-    notifyCeo(
+    notifyClient(
       pickL(
         l(
           [`'${task.title}' 작업 실패 (exit code: ${finalExitCode}).`],

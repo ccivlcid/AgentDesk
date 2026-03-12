@@ -24,7 +24,7 @@ export function registerUpdateAutoRoutes(ctx: RuntimeContext): void {
   const dbPath = __ctx.dbPath;
   const appendTaskLog = __ctx.appendTaskLog;
   const activeProcesses = __ctx.activeProcesses;
-  const notifyCeo = __ctx.notifyCeo;
+  const notifyClient = __ctx.notifyClient;
   const readSettingString = __ctx.readSettingString;
   const killPidTree = __ctx.killPidTree;
 
@@ -330,7 +330,7 @@ export function registerUpdateAutoRoutes(ctx: RuntimeContext): void {
             fetchUpdateStatus,
             runCommandCapture,
             logAutoUpdate,
-            notifyCeo,
+            notifyClient,
             scheduleExit,
           },
           { trigger: "auto", dryRun: false },
@@ -508,7 +508,7 @@ export function registerUpdateAutoRoutes(ctx: RuntimeContext): void {
             fetchUpdateStatus,
             runCommandCapture,
             logAutoUpdate,
-            notifyCeo,
+            notifyClient,
             scheduleExit,
           },
           { trigger: "manual", dryRun, force, forceConfirmed: forceConfirm },

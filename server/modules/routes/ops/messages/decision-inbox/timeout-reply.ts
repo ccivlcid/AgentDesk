@@ -84,7 +84,7 @@ export function handleTimeoutResumeDecisionReply(input: TimeoutReplyInput): bool
 
   const deptId = agent.department_id ?? task.department_id ?? null;
   const deptName = deptId ? getDeptName(deptId) : "Unassigned";
-  appendTaskLog(taskId, "system", "Decision inbox: timeout resume approved by CEO");
+  appendTaskLog(taskId, "system", "Decision inbox: timeout resume approved by Client");
   startTaskExecutionForAgent(taskId, agent, deptId, deptName);
 
   res.json({

@@ -162,16 +162,16 @@ export function buildDelegateMessage(params: DelegateMessageParams): string {
         `${subName}, 새 업무 할당이야: "${ceoMessage}" — 진행 상황 수시로 공유해줘 👍`,
       ],
       [
-        `${subName}, directive from the CEO: "${ceoMessage}" — please handle this!`,
+        `${subName}, directive from the Client: "${ceoMessage}" — please handle this!`,
         `${subName}! Priority task: "${ceoMessage}" — needs immediate attention.`,
         `${subName}, new assignment: "${ceoMessage}" — keep me posted on progress 👍`,
       ],
       [
-        `${subName}、CEOからの指示だよ。"${ceoMessage}" — 確認して進めて！`,
+        `${subName}、Clientからの指示だよ。"${ceoMessage}" — 確認して進めて！`,
         `${subName}！優先タスク: "${ceoMessage}" — よろしく頼む 👍`,
       ],
       [
-        `${subName}，CEO的指示："${ceoMessage}" — 请跟进处理！`,
+        `${subName}，Client的指示："${ceoMessage}" — 请跟进处理！`,
         `${subName}！优先任务："${ceoMessage}" — 随时更新进度 👍`,
       ],
     ),
@@ -237,15 +237,15 @@ export function buildManualFallbackNotice(params: ManualFallbackNoticeParams): s
   return pickL(
     l(
       [
-        `[CEO OFFICE] 수동 배정 안전장치 적용: 지정 직원 중 실행 가능한 하위 직원이 없어 팀장(${leaderName})이 직접 수행합니다.`,
+        `[Client OFFICE] 수동 배정 안전장치 적용: 지정 직원 중 실행 가능한 하위 직원이 없어 팀장(${leaderName})이 직접 수행합니다.`,
       ],
       [
-        `[CEO OFFICE] Manual assignment safeguard applied: no eligible subordinate in assigned agents, so team leader (${leaderName}) will execute directly.`,
+        `[Client OFFICE] Manual assignment safeguard applied: no eligible subordinate in assigned agents, so team leader (${leaderName}) will execute directly.`,
       ],
       [
-        `[CEO OFFICE] 手動割り当ての安全装置を適用: 指定エージェントに実行可能なサブ担当がいないため、チームリーダー (${leaderName}) が直接実行します。`,
+        `[Client OFFICE] 手動割り当ての安全装置を適用: 指定エージェントに実行可能なサブ担当がいないため、チームリーダー (${leaderName}) が直接実行します。`,
       ],
-      [`[CEO OFFICE] 已应用手动分配安全机制：指定员工中无可执行的下属成员，由组长（${leaderName}）直接执行。`],
+      [`[Client OFFICE] 已应用手动分配安全机制：指定员工中无可执行的下属成员，由组长（${leaderName}）直接执行。`],
     ),
     lang,
   );

@@ -33,7 +33,7 @@ export interface RuntimeContextAutoAugmented {
   buildSubtaskDelegationPrompt: any;
   cachedCliModels: any;
   cachedSkills: any;
-  callLeadersToCeoOffice: any;
+  callLeadersToClientOffice: any;
   classifyIntent: any;
   cliOutputDedupCache: any;
   collectPlannedActionItems: any;
@@ -50,7 +50,7 @@ export interface RuntimeContextAutoAugmented {
   detectProjectPath: any;
   detectReportOutputFormat: any;
   detectTechStack: any;
-  dismissLeadersFromCeoOffice: any;
+  dismissLeadersFromClientOffice: any;
   emitMeetingSpeech: any;
   exchangeCopilotToken: any;
   executeApiProviderAgent: any;

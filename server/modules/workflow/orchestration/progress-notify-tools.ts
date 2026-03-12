@@ -23,9 +23,9 @@ export function createProgressNotifyTools(deps: CreateProgressNotifyToolsDeps) {
           pickL(
             l(
               [`클라이언트님, '${taskTitle}' 작업 진행 중입니다. 현재 순조롭게 진행되고 있어요.`],
-              [`CEO, '${taskTitle}' is in progress and currently going smoothly.`],
-              [`CEO、'${taskTitle}' は進行中で、現在は順調です。`],
-              [`CEO，'${taskTitle}' 正在进行中，目前进展顺利。`],
+              [`Client, '${taskTitle}' is in progress and currently going smoothly.`],
+              [`Client、'${taskTitle}' は進行中で、現在は順調です。`],
+              [`Client，'${taskTitle}' 正在进行中，目前进展顺利。`],
             ),
             lang,
           ),
@@ -48,9 +48,9 @@ export function createProgressNotifyTools(deps: CreateProgressNotifyToolsDeps) {
   }
 
   // ---------------------------------------------------------------------------
-  // Send CEO notification for all significant workflow events (B4)
+  // Send Client notification for all significant workflow events (B4)
   // ---------------------------------------------------------------------------
-  function notifyCeo(content: string, taskId: string | null = null, messageType: string = "status_update"): void {
+  function notifyClient(content: string, taskId: string | null = null, messageType: string = "status_update"): void {
     const msgId = randomUUID();
     const t = nowMs();
     db.prepare(
@@ -70,6 +70,6 @@ export function createProgressNotifyTools(deps: CreateProgressNotifyToolsDeps) {
   return {
     startProgressTimer,
     stopProgressTimer,
-    notifyCeo,
+    notifyClient,
   };
 }

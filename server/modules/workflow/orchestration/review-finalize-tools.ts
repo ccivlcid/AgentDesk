@@ -29,7 +29,7 @@ export function createReviewFinalizeTools(deps: CreateReviewFinalizeToolsDeps) {
     resolveLang,
     getProjectReviewGateSnapshot,
     projectReviewGateNotifiedAt,
-    notifyCeo,
+    notifyClient,
     taskWorktrees,
     mergeToDevAndCreatePR,
     mergeWorktree,
@@ -169,20 +169,20 @@ export function createReviewFinalizeTools(deps: CreateReviewFinalizeToolsDeps) {
             | { name: string | null }
             | undefined;
           const projectName = (project?.name || currentTask.project_id).trim();
-          notifyCeo(
+          notifyClient(
             pickL(
               l(
                 [
-                  `[CEO OFFICE] 프로젝트 '${projectName}'의 활성 항목 ${gateSnapshot.activeTotal}건이 모두 Review 상태입니다. 의사결정 인박스에서 승인하면 팀장 회의를 시작합니다.`,
+                  `[Client OFFICE] 프로젝트 '${projectName}'의 활성 항목 ${gateSnapshot.activeTotal}건이 모두 Review 상태입니다. 의사결정 인박스에서 승인하면 팀장 회의를 시작합니다.`,
                 ],
                 [
-                  `[CEO OFFICE] Project '${projectName}' now has all ${gateSnapshot.activeTotal} active tasks in Review. Approve from Decision Inbox to start team-lead review meetings.`,
+                  `[Client OFFICE] Project '${projectName}' now has all ${gateSnapshot.activeTotal} active tasks in Review. Approve from Decision Inbox to start team-lead review meetings.`,
                 ],
                 [
-                  `[CEO OFFICE] プロジェクト'${projectName}'のアクティブタスク${gateSnapshot.activeTotal}件がすべてReviewに到達しました。Decision Inboxで承認するとチームリーダー会議を開始します。`,
+                  `[Client OFFICE] プロジェクト'${projectName}'のアクティブタスク${gateSnapshot.activeTotal}件がすべてReviewに到達しました。Decision Inboxで承認するとチームリーダー会議を開始します。`,
                 ],
                 [
-                  `[CEO OFFICE] 项目'${projectName}'的 ${gateSnapshot.activeTotal} 个活跃任务已全部进入 Review。请在 Decision Inbox 批准后启动组长评审会议。`,
+                  `[Client OFFICE] 项目'${projectName}'的 ${gateSnapshot.activeTotal} 个活跃任务已全部进入 Review。请在 Decision Inbox 批准后启动组长评审会议。`,
                 ],
               ),
               lang,
@@ -286,7 +286,7 @@ export function createReviewFinalizeTools(deps: CreateReviewFinalizeToolsDeps) {
         return;
       }
 
-      notifyCeo(
+      notifyClient(
         pickL(
           l(
             [`'${taskTitle}' 는 아직 ${remainingSubtaskCount}개 서브태스크가 남아 있어 Review 단계에서 대기합니다.`],
@@ -322,7 +322,7 @@ export function createReviewFinalizeTools(deps: CreateReviewFinalizeToolsDeps) {
       const childReady = childReview + childDone;
       if (childTotal > 0 && childReady < childTotal) {
         const waiting = childTotal - childReady;
-        notifyCeo(
+        notifyClient(
           pickL(
             l(
               [`'${taskTitle}' 는 협업 하위 태스크 ${waiting}건이 아직 Review 진입 전이라 전체 팀장회의를 대기합니다.`],
@@ -413,7 +413,7 @@ export function createReviewFinalizeTools(deps: CreateReviewFinalizeToolsDeps) {
           "system",
           `Review hold: video artifact gate blocked approval (missing/empty video file). checked=${candidatePaths.join(", ")}`,
         );
-        notifyCeo(
+        notifyClient(
           pickL(
             l(
               [
@@ -492,7 +492,7 @@ export function createReviewFinalizeTools(deps: CreateReviewFinalizeToolsDeps) {
           "system",
           `Review hold: video artifact gate blocked approval (remotion evidence missing/invalid). checked_tasks=${remotionGate.checkedTaskIds.join(", ")}, remotion_tasks=${remotionGate.remotionEvidenceTaskIds.join(", ") || "none"}, forbidden_tasks=${remotionGate.forbiddenEngineTaskIds.join(", ") || "none"}`,
         );
-        notifyCeo(
+        notifyClient(
           pickL(
             l(
               [
@@ -685,7 +685,7 @@ export function createReviewFinalizeTools(deps: CreateReviewFinalizeToolsDeps) {
                 lang,
               )
             : "";
-          notifyCeo(
+          notifyClient(
             pickL(
               l(
                 [
@@ -808,7 +808,7 @@ export function createReviewFinalizeTools(deps: CreateReviewFinalizeToolsDeps) {
       const progressSuffix = subtaskProgressSummary
         ? `\n${pickL(l(["보완/협업 완료 현황"], ["Remediation/Collaboration completion"], ["補完/協業 完了状況"], ["整改/协作完成情况"]), lang)}\n${subtaskProgressSummary}`
         : "";
-      notifyCeo(
+      notifyClient(
         pickL(
           l(
             [`${leaderName}: '${taskTitle}' 최종 승인 완료 보고드립니다.${mergeNote}${progressSuffix}`],

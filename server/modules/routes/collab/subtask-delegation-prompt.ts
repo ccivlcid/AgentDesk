@@ -224,7 +224,7 @@ export function createSubtaskDelegationPromptBuilder(deps: PromptDeps) {
       lang,
     );
     const originalTaskLabel = pickL(l(["원본 업무"], ["Original task"], ["元タスク"], ["原始任务"]), lang);
-    const ceoRequestLabel = pickL(l(["CEO 요청"], ["CEO request"], ["CEO依頼"], ["CEO指示"]), lang);
+    const ceoRequestLabel = pickL(l(["클라이언트 요청"], ["Client request"], ["Client依頼"], ["Client指示"]), lang);
     const allSubtasksLabel = pickL(
       l(["전체 서브태스크 현황"], ["All subtask status"], ["全サブタスク状況"], ["全部 SubTask 状态"]),
       lang,

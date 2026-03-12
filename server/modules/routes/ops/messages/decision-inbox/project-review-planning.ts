@@ -302,7 +302,7 @@ export function createProjectReviewPlanningHelpers(deps: ProjectReviewPlanningDe
             `Consolidate project-level review status for '${projectName}'.`,
             `Language: ${lang}`,
             "Output requirements:",
-            "- Provide one concise paragraph for CEO decision support.",
+            "- Provide one concise paragraph for Client decision support.",
             "- Include: representative selection guidance, meeting start condition, and follow-up request usage hint.",
             "- If round-level decisions exist, reflect them explicitly in the recommendation.",
             "- Keep it under 10 lines.",

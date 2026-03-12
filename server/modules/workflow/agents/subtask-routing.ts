@@ -21,7 +21,7 @@ type SubtaskRoutingDeps = {
   l: (ko: string[], en: string[], ja: string[], zh: string[]) => any;
   broadcast: (event: string, payload: unknown) => void;
   appendTaskLog: (taskId: string | null, kind: string, message: string) => void;
-  notifyCeo: (message: string, taskId: string | null, messageType?: string) => void;
+  notifyClient: (message: string, taskId: string | null, messageType?: string) => void;
 };
 
 export function createSubtaskRoutingTools(deps: SubtaskRoutingDeps) {
@@ -38,7 +38,7 @@ export function createSubtaskRoutingTools(deps: SubtaskRoutingDeps) {
     l,
     broadcast,
     appendTaskLog,
-    notifyCeo,
+    notifyClient,
   } = deps;
 
   function findExplicitDepartmentByMention(text: string, parentDeptId: string | null): string | null {
@@ -376,7 +376,7 @@ export function createSubtaskRoutingTools(deps: SubtaskRoutingDeps) {
       if (updated > 0) {
         const summaryText = [...summaryByDept.entries()].map(([deptId, cnt]) => `${deptId}:${cnt}`).join(", ");
         appendTaskLog(taskId, "system", `Planning leader rerouted ${updated} subtasks (${phase}) => ${summaryText}`);
-        notifyCeo(
+        notifyClient(
           pickL(
             l(
               [

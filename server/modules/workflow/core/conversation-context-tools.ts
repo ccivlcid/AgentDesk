@@ -23,7 +23,7 @@ export function createConversationContextTools(deps: CreateConversationContextTo
     SELECT sender_type, sender_id, content, message_type, created_at
     FROM messages
     WHERE (
-      (sender_type = 'ceo' AND receiver_type = 'agent' AND receiver_id = ?)
+      (sender_type = 'client' AND receiver_type = 'agent' AND receiver_id = ?)
       OR (sender_type = 'agent' AND sender_id = ?)
       OR (receiver_type = 'all')
     )
@@ -42,7 +42,7 @@ export function createConversationContextTools(deps: CreateConversationContextTo
     if (msgs.length === 0) return "";
 
     const lines = msgs.reverse().map((m) => {
-      const role = m.sender_type === "ceo" ? "CEO" : "Agent";
+      const role = m.sender_type === "client" ? "Client" : "Agent";
       const type = m.message_type !== "chat" ? ` [${m.message_type}]` : "";
       return `${role}${type}: ${m.content}`;
     });

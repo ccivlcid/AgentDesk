@@ -288,7 +288,7 @@ export interface WorkflowOrchestrationExports {
   startProgressTimer: (...args: any[]) => any;
   stopProgressTimer: (...args: any[]) => any;
   scheduleNextReviewRound: (...args: any[]) => any;
-  notifyCeo: (...args: any[]) => any;
+  notifyClient: (...args: any[]) => any;
   archivePlanningConsolidatedReport: (...args: any[]) => any;
   isAgentInMeeting: (...args: any[]) => any;
   startTaskExecutionForAgent: (...args: any[]) => any;

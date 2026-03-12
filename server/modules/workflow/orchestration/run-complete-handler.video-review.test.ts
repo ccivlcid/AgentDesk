@@ -75,7 +75,7 @@ function createDeps(db: DatabaseSync, logsDir = "/tmp") {
       return "";
     },
     l: (ko: string[], en: string[], ja?: string[], zh?: string[]) => ({ ko, en, ja: ja ?? en, zh: zh ?? en }),
-    notifyCeo: vi.fn(),
+    notifyClient: vi.fn(),
     sendAgentMessage: vi.fn(),
     resolveLang: vi.fn(() => "ko"),
     formatTaskSubtaskProgressSummary: vi.fn(() => ""),

@@ -150,7 +150,7 @@ describe("api client", () => {
     expect(body.content).toBe("hello");
     expect(typeof headerKey).toBe("string");
     expect(headerKey).toBe(body.idempotency_key);
-    expect(String(headerKey)).toMatch(/^ceo-message-/);
+    expect(String(headerKey)).toMatch(/^client-message-/);
   });
 
   it("bootstrapSession은 401에서 prompt 입력 토큰으로 재시도한다", async () => {

@@ -37,10 +37,10 @@ export default function HeartbeatGuideModal({ language, onClose }: HeartbeatGuid
       zh: "选择办公包后，在「添加监测对象」中选择该包下的员工即可纳入。可设置间隔(分钟)和确认项。",
     }),
     t({
-      ko: "상태가 정상이면 로그만 남고 알림은 가지 않습니다. 문제가 발견되면 알림 센터와 CEO 메신저로 알림이 전송됩니다. '실행' 버튼으로 수동 확인을 즉시 실행할 수 있습니다.",
-      en: "When status is normal, only logs are recorded and no notification is sent. When issues are found, alerts go to the notification center and CEO messenger. Use 'Run' to trigger a check manually.",
-      ja: "状態が正常の場合はログのみで通知は送られません。問題があれば通知センターとCEOメッセンジャーに送信されます。「実行」で手動確認できます。",
-      zh: "状态正常时仅记录日志不发送通知。发现问题时会向通知中心和CEO messenger发送提醒。可用「运行」手动执行确认。",
+      ko: "상태가 정상이면 로그만 남고 알림은 가지 않습니다. 문제가 발견되면 알림 센터와 클라이언트 메신저로 알림이 전송됩니다. '실행' 버튼으로 수동 확인을 즉시 실행할 수 있습니다.",
+      en: "When status is normal, only logs are recorded and no notification is sent. When issues are found, alerts go to the notification center and client messenger. Use 'Run' to trigger a check manually.",
+      ja: "状態が正常の場合はログのみで通知は送られません。問題があればクライアントメッセンジャーに送信されます。「実行」で手動確認できます。",
+      zh: "状态正常时仅记录日志不发送通知。发现问题时会向通知中心和客户端messenger发送提醒。可用「运行」手动执行确认。",
     }),
   ];
 

@@ -68,7 +68,7 @@ export function initializeWorkflowPartA(ctx: RuntimeContext): WorkflowCoreExport
   const meetingSeatIndexByAgent = __ctx.meetingSeatIndexByAgent;
   const meetingTaskIdByAgent = __ctx.meetingTaskIdByAgent;
   const normalizeOAuthProvider = __ctx.normalizeOAuthProvider;
-  const notifyCeo = (...args: any[]) => __ctx.notifyCeo(...args);
+  const notifyClient = (...args: any[]) => __ctx.notifyClient(...args);
   const refreshGoogleToken = __ctx.refreshGoogleToken;
   const seedApprovedPlanSubtasks = __ctx.seedApprovedPlanSubtasks;
   const spawnCliAgent = __ctx.spawnCliAgent;
@@ -148,8 +148,8 @@ export function initializeWorkflowPartA(ctx: RuntimeContext): WorkflowCoreExport
   const appendTaskProjectMemo = __ctx.appendTaskProjectMemo;
   const appendTaskReviewFinalMemo = __ctx.appendTaskReviewFinalMemo;
   const markAgentInMeeting = __ctx.markAgentInMeeting;
-  const callLeadersToCeoOffice = __ctx.callLeadersToCeoOffice;
-  const dismissLeadersFromCeoOffice = __ctx.dismissLeadersFromCeoOffice;
+  const callLeadersToClientOffice = __ctx.callLeadersToClientOffice;
+  const dismissLeadersFromClientOffice = __ctx.dismissLeadersFromClientOffice;
   const emitMeetingSpeech = __ctx.emitMeetingSpeech;
   const startReviewConsensusMeeting = __ctx.startReviewConsensusMeeting;
   const DEPT_KEYWORDS = new Proxy(

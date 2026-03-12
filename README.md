@@ -11,7 +11,6 @@ AgentDesk is a **Project OS**: an operator cockpit for AI agents that run as CLI
 | Item | Description |
 |------|-------------|
 | **One-liner** | **Work your way, get the results you need** — you (the client) define projects, tasks, and agents; manage execution flow and deliverables in one place. |
-| **Metaphor** | Pixel-art **office simulator**: space where departments and agents move. Dashboard, Kanban, and terminal connect as one working environment. |
 | **Design concept** | **CLI management tool** feel (k9s, lazygit-style). Dark terminal tone, monospace, ⌘K command palette. Execution view uses terminal-output style. |
 | **Tagline (EN)** | A Project Operating System Tailored to Your Workflow |
 | **Tagline (KR)** | 어떤 팀이든 맞춤 설계하는 프로젝트 운영체제 |

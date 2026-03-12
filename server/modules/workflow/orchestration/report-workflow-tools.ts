@@ -39,7 +39,7 @@ export function createReportWorkflowTools(deps: CreateReportWorkflowToolsDeps) {
     startTaskExecutionForAgent,
     getDeptName,
     randomDelay,
-    notifyCeo,
+    notifyClient,
     insertNotification,
   } = deps;
 
@@ -300,9 +300,9 @@ export function createReportWorkflowTools(deps: CreateReportWorkflowToolsDeps) {
         pickL(
           l(
             [`클라이언트님, '${task.title}' 보고 업무를 검토 회의 없이 완료 처리했습니다.`],
-            [`CEO, '${task.title}' report work was completed without review meeting.`],
-            [`CEO、'${task.title}' の報告業務をレビュー会議なしで完了処理しました。`],
-            [`CEO，'${task.title}' 报告任务已在无评审会议情况下完成。`],
+            [`Client, '${task.title}' report work was completed without review meeting.`],
+            [`クライアント、'${task.title}' の報告業務をレビュー会議なしで完了処理しました。`],
+            [`客户端，'${task.title}' 报告任务已在无评审会议情况下完成。`],
           ),
           lang,
         ),
@@ -317,7 +317,7 @@ export function createReportWorkflowTools(deps: CreateReportWorkflowToolsDeps) {
     const leaderName = leader
       ? getAgentDisplayName(leader, lang)
       : pickL(l(["팀장"], ["Team Lead"], ["チームリーダー"], ["组长"]), lang);
-    notifyCeo(
+    notifyClient(
       pickL(
         l(
           [`${leaderName}: '${task.title}' 보고 업무를 검토 회의 없이 마감했습니다.`],
@@ -479,7 +479,7 @@ export function createReportWorkflowTools(deps: CreateReportWorkflowToolsDeps) {
     broadcast("task_update", db.prepare("SELECT * FROM tasks WHERE id = ?").get(childTaskId));
     notifyTaskStatus(task.id, task.title, "pending", lang);
 
-    notifyCeo(
+    notifyClient(
       pickL(
         l(
           [
@@ -535,7 +535,7 @@ export function createReportWorkflowTools(deps: CreateReportWorkflowToolsDeps) {
         "system",
         `Final regeneration delayed: assignee ${assignee.name} is busy on ${assignee.current_task_id}`,
       );
-      notifyCeo(
+      notifyClient(
         pickL(
           l(
             [
@@ -578,7 +578,7 @@ export function createReportWorkflowTools(deps: CreateReportWorkflowToolsDeps) {
     broadcast("task_update", db.prepare("SELECT * FROM tasks WHERE id = ?").get(parent.id));
 
     const lang = resolveLang(parent.description ?? parent.title);
-    notifyCeo(
+    notifyClient(
       pickL(
         l(
           [

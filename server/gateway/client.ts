@@ -1010,7 +1010,7 @@ export function notifyTaskStatus(taskId: string, title: string, status: string, 
   });
 }
 
-/** Send deliverable files to all enabled messenger sessions (CEO-level, non-agent) */
+/** Send deliverable files to all enabled messenger sessions (Client-level, non-agent) */
 export async function sendDeliverableFiles(
   taskTitle: string,
   filePaths: Array<{ absolutePath: string; fileName: string }>,
@@ -1033,7 +1033,7 @@ export async function sendDeliverableFiles(
 
     for (const session of channelConfig.sessions) {
       if (!session.enabled) continue;
-      if (session.agentId) continue; // skip agent sessions, only send to CEO
+      if (session.agentId) continue; // skip agent sessions, only send to Client
       const token = normalizeText(session.token) || channelToken;
       if (channel !== "imessage" && !token) continue;
 

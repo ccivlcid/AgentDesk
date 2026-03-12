@@ -7,7 +7,7 @@ interface Props {
   agents: Agent[];
   tasks: Task[];
   departments: Department[];
-  ceoIncoming?: number;
+  clientIncoming?: number;
   visitingAgentIds?: Set<string>;
   onViewAgent: (agent: Agent) => void;
   onViewDept: (dept: Department) => void;
@@ -313,12 +313,12 @@ function DeptView({ dept, agents, tasks, visitingAgentIds, onViewDept }: { dept:
 }
 
 function HQOverview({
-  agents, tasks, departments, ceoIncoming = 0,
+  agents, tasks, departments, clientIncoming = 0,
 }: {
   agents: Agent[];
   tasks: Task[];
   departments: Department[];
-  ceoIncoming?: number;
+  clientIncoming?: number;
 }) {
   const running = agents.filter((a) => a.status === "working").length;
   const idle = agents.filter((a) => a.status === "idle").length;
@@ -348,8 +348,8 @@ function HQOverview({
 
   return (
     <div style={{ padding: "10px 12px", display: "flex", flexDirection: "column", gap: 0 }}>
-      {/* CEO Incoming alert */}
-      {ceoIncoming > 0 && (
+      {/* Client Incoming alert */}
+      {clientIncoming > 0 && (
         <div style={{
           background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.5)",
           padding: "4px 8px", marginBottom: 8,
@@ -359,7 +359,7 @@ function HQOverview({
             ▲ GUEST INCOMING
           </span>
           <span style={{ fontFamily: "var(--th-font-mono)", fontSize: "0.5rem", color: "var(--th-text-muted)" }}>
-            {ceoIncoming} en route to CEO
+            {clientIncoming} en route to Client Office
           </span>
         </div>
       )}
@@ -471,7 +471,7 @@ const panelVariants = {
 };
 const panelTransition = { duration: 0.14, ease: "linear" as const };
 
-export default function OfficeAgentPanel({ selectedAgent, selectedDept, agents, tasks, departments, ceoIncoming, visitingAgentIds, onViewAgent, onViewDept }: Props) {
+export default function OfficeAgentPanel({ selectedAgent, selectedDept, agents, tasks, departments, clientIncoming, visitingAgentIds, onViewAgent, onViewDept }: Props) {
   const key = selectedAgent ? `agent-${selectedAgent.id}` : selectedDept ? `dept-${selectedDept.id}` : "empty";
 
   return (
@@ -490,7 +490,7 @@ export default function OfficeAgentPanel({ selectedAgent, selectedDept, agents, 
         ) : selectedDept ? (
           <DeptView dept={selectedDept} agents={agents} tasks={tasks} visitingAgentIds={visitingAgentIds} onViewDept={onViewDept} />
         ) : (
-          <HQOverview agents={agents} tasks={tasks} departments={departments} ceoIncoming={ceoIncoming} />
+          <HQOverview agents={agents} tasks={tasks} departments={departments} clientIncoming={clientIncoming} />
         )}
       </motion.div>
     </AnimatePresence>

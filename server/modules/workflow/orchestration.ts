@@ -245,7 +245,7 @@ export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrat
   const sendAgentMessage = (...args: any[]) => __ctx.sendAgentMessage(...args);
 
   // ---------------------------------------------------------------------------
-  // Helpers: notifications, progress timers, CEO notifications
+  // Helpers: notifications, progress timers, Client notifications
   // ---------------------------------------------------------------------------
   const { insertNotification } = createNotificationHelper({ db, nowMs, broadcast });
 
@@ -421,10 +421,10 @@ export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrat
   }
 
   // ---------------------------------------------------------------------------
-  // Send CEO notification for all significant workflow events (B4)
+  // Send Client notification for all significant workflow events (B4)
   // ---------------------------------------------------------------------------
-  function notifyCeo(content: string, taskId: string | null = null, messageType: string = "status_update"): void {
-    progressNotifyTools.notifyCeo(content, taskId, messageType);
+  function notifyClient(content: string, taskId: string | null = null, messageType: string = "status_update"): void {
+    progressNotifyTools.notifyClient(content, taskId, messageType);
   }
 
   function cleanArchiveText(value: unknown): string {
@@ -474,7 +474,7 @@ export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrat
     getProviderModelConfig,
     spawnCliAgent,
     handleTaskRunComplete,
-    notifyCeo,
+    notifyClient,
     startProgressTimer,
   });
 
@@ -494,7 +494,7 @@ export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrat
       startTaskExecutionForAgent,
       startProgressTimer,
       stopProgressTimer,
-      notifyCeo,
+      notifyClient,
       reviewMeetingOneShotTimeoutMs: REVIEW_MEETING_ONESHOT_TIMEOUT_MS,
     }),
   );
@@ -515,8 +515,8 @@ export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrat
     appendTaskReviewFinalMemo,
     markAgentInMeeting,
     isAgentInMeeting,
-    callLeadersToCeoOffice,
-    dismissLeadersFromCeoOffice,
+    callLeadersToClientOffice,
+    dismissLeadersFromClientOffice,
     emitMeetingSpeech,
     startReviewConsensusMeeting,
   } = workflowMeetingTools;
@@ -532,7 +532,7 @@ export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrat
     isTaskWorkflowInterrupted,
     getTaskStatusById,
     finishMeetingMinutes,
-    dismissLeadersFromCeoOffice,
+    dismissLeadersFromClientOffice,
     clearTaskWorkflowState,
     getAgentDisplayName,
     getDeptName,
@@ -540,8 +540,8 @@ export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrat
     sendAgentMessage,
     emitMeetingSpeech,
     appendMeetingMinuteEntry,
-    callLeadersToCeoOffice,
-    notifyCeo,
+    callLeadersToClientOffice,
+    notifyClient,
     pickL,
     l,
     buildMeetingPrompt,
@@ -570,7 +570,7 @@ export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrat
     reviewRoundState,
     reviewInFlight,
     appendTaskLog,
-    notifyCeo,
+    notifyClient,
     pickL,
     l,
     db,
@@ -610,12 +610,12 @@ export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrat
     startTaskExecutionForAgent,
     getDeptName,
     randomDelay,
-    notifyCeo,
+    notifyClient,
     insertNotification,
   });
 
   // ---------------------------------------------------------------------------
-  // Run completion handler — enhanced with review flow + CEO reporting
+  // Run completion handler — enhanced with review flow + Client reporting
   // ---------------------------------------------------------------------------
   const runCompleteHandler = createRunCompleteHandler({
     activeProcesses,
@@ -636,7 +636,7 @@ export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrat
     getAgentDisplayName,
     pickL,
     l,
-    notifyCeo,
+    notifyClient,
     sendAgentMessage,
     resolveLang,
     formatTaskSubtaskProgressSummary,
@@ -677,7 +677,7 @@ export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrat
     resolveLang,
     getProjectReviewGateSnapshot,
     projectReviewGateNotifiedAt,
-    notifyCeo,
+    notifyClient,
     taskWorktrees,
     mergeToDevAndCreatePR,
     mergeWorktree,
@@ -724,7 +724,7 @@ export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrat
     activeProcesses,
     broadcast,
     insertNotification,
-    notifyCeo,
+    notifyClient,
   });
 
   // Expose triggerHeartbeat on ctx for API route access
@@ -773,7 +773,7 @@ export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrat
     clearTaskWorkflowState,
     startProgressTimer,
     stopProgressTimer,
-    notifyCeo,
+    notifyClient,
     archivePlanningConsolidatedReport,
     isAgentInMeeting,
     startTaskExecutionForAgent,

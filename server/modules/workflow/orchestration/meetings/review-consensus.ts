@@ -17,7 +17,7 @@ export function createReviewConsensusTools(deps: ReviewConsensusDeps) {
     runAgentOneShot,
     chooseSafeReply,
     appendTaskLog,
-    notifyCeo,
+    notifyClient,
     pickL,
     l,
     sendAgentMessage,
@@ -28,8 +28,8 @@ export function createReviewConsensusTools(deps: ReviewConsensusDeps) {
     appendMeetingMinuteEntry,
     beginMeetingMinutes,
     finishMeetingMinutes,
-    callLeadersToCeoOffice,
-    dismissLeadersFromCeoOffice,
+    callLeadersToClientOffice,
+    dismissLeadersFromClientOffice,
     wantsReviewRevision,
     meetingReviewDecisionByAgent,
     findLatestTranscriptContentByAgent,
@@ -94,20 +94,20 @@ export function createReviewConsensusTools(deps: ReviewConsensusDeps) {
             "system",
             `Review round ${round} exceeds max_rounds=${REVIEW_MAX_ROUNDS}; forcing final decision`,
           );
-          notifyCeo(
+          notifyClient(
             pickL(
               l(
                 [
-                  `[CEO OFFICE] '${taskTitle}' 리뷰 라운드가 최대치(${REVIEW_MAX_ROUNDS})를 초과해 추가 보완은 중단하고 최종 승인 판단으로 전환합니다.`,
+                  `[Client OFFICE] '${taskTitle}' 리뷰 라운드가 최대치(${REVIEW_MAX_ROUNDS})를 초과해 추가 보완은 중단하고 최종 승인 판단으로 전환합니다.`,
                 ],
                 [
-                  `[CEO OFFICE] '${taskTitle}' exceeded max review rounds (${REVIEW_MAX_ROUNDS}). Additional revision rounds are closed and we are moving to final approval decision.`,
+                  `[Client OFFICE] '${taskTitle}' exceeded max review rounds (${REVIEW_MAX_ROUNDS}). Additional revision rounds are closed and we are moving to final approval decision.`,
                 ],
                 [
-                  `[CEO OFFICE] '${taskTitle}' はレビュー上限(${REVIEW_MAX_ROUNDS}回)を超えたため、追加補完を停止して最終承認判断へ移行します。`,
+                  `[Client OFFICE] '${taskTitle}' はレビュー上限(${REVIEW_MAX_ROUNDS}回)を超えたため、追加補完を停止して最終承認判断へ移行します。`,
                 ],
                 [
-                  `[CEO OFFICE] '${taskTitle}' 的评审轮次已超过上限（${REVIEW_MAX_ROUNDS}）。现停止追加整改并转入最终审批判断。`,
+                  `[Client OFFICE] '${taskTitle}' 的评审轮次已超过上限（${REVIEW_MAX_ROUNDS}）。现停止追加整改并转入最终审批判断。`,
                 ],
               ),
               cappedLang,
@@ -194,7 +194,7 @@ export function createReviewConsensusTools(deps: ReviewConsensusDeps) {
           if (!isTaskWorkflowInterrupted(taskId)) return false;
           const status = getTaskStatusById(taskId);
           if (meetingId) finishMeetingMinutes(meetingId, "failed");
-          dismissLeadersFromCeoOffice(taskId, leaders);
+          dismissLeadersFromClientOffice(taskId, leaders);
           clearTaskWorkflowState(taskId);
           if (status) {
             appendTaskLog(taskId, "system", `Review meeting aborted due to task state change (${status})`);
@@ -229,82 +229,82 @@ export function createReviewConsensusTools(deps: ReviewConsensusDeps) {
         };
 
         if (abortIfInactive()) return;
-        callLeadersToCeoOffice(taskId, leaders, "review");
+        callLeadersToClientOffice(taskId, leaders, "review");
         const resumeNotice = isRound2Merge
           ? l(
-              [`[CEO OFFICE] '${taskTitle}' 리뷰 라운드 ${round} 재개. 라운드1 보완 결과 취합/머지 판단을 이어갑니다.`],
+              [`[Client OFFICE] '${taskTitle}' 리뷰 라운드 ${round} 재개. 라운드1 보완 결과 취합/머지 판단을 이어갑니다.`],
               [
-                `[CEO OFFICE] '${taskTitle}' review round ${round} resumed. Continuing consolidation and merge-readiness judgment from round 1 remediation.`,
+                `[Client OFFICE] '${taskTitle}' review round ${round} resumed. Continuing consolidation and merge-readiness judgment from round 1 remediation.`,
               ],
               [
-                `[CEO OFFICE] '${taskTitle}' レビューラウンド${round}を再開。ラウンド1補完結果の集約とマージ可否判断を続行します。`,
+                `[Client OFFICE] '${taskTitle}' レビューラウンド${round}を再開。ラウンド1補完結果の集約とマージ可否判断を続行します。`,
               ],
-              [`[CEO OFFICE] 已恢复'${taskTitle}'第${round}轮 Review，继续汇总第1轮整改结果并判断合并准备度。`],
+              [`[Client OFFICE] 已恢复'${taskTitle}'第${round}轮 Review，继续汇总第1轮整改结果并判断合并准备度。`],
             )
           : isFinalDecisionRound
             ? l(
                 [
-                  `[CEO OFFICE] '${taskTitle}' 리뷰 라운드 ${round} 재개. 추가 보완 없이 최종 승인과 문서 확정을 진행합니다.`,
+                  `[Client OFFICE] '${taskTitle}' 리뷰 라운드 ${round} 재개. 추가 보완 없이 최종 승인과 문서 확정을 진행합니다.`,
                 ],
                 [
-                  `[CEO OFFICE] '${taskTitle}' review round ${round} resumed. Final approval and documentation will be completed without additional remediation.`,
+                  `[Client OFFICE] '${taskTitle}' review round ${round} resumed. Final approval and documentation will be completed without additional remediation.`,
                 ],
                 [
-                  `[CEO OFFICE] '${taskTitle}' レビューラウンド${round}を再開。追加補完なしで最終承認と文書確定を進めます。`,
+                  `[Client OFFICE] '${taskTitle}' レビューラウンド${round}を再開。追加補完なしで最終承認と文書確定を進めます。`,
                 ],
                 [
-                  `[CEO OFFICE] 已恢复'${taskTitle}'第${round}轮 Review，将在不新增整改的前提下完成最终审批与文档确认。`,
+                  `[Client OFFICE] 已恢复'${taskTitle}'第${round}轮 Review，将在不新增整改的前提下完成最终审批与文档确认。`,
                 ],
               )
             : l(
-                [`[CEO OFFICE] '${taskTitle}' 리뷰 라운드 ${round} 재개. 팀장 의견 수집 및 상호 승인 재진행합니다.`],
+                [`[Client OFFICE] '${taskTitle}' 리뷰 라운드 ${round} 재개. 팀장 의견 수집 및 상호 승인 재진행합니다.`],
                 [
-                  `[CEO OFFICE] '${taskTitle}' review round ${round} resumed. Continuing team-lead feedback and mutual approvals.`,
+                  `[Client OFFICE] '${taskTitle}' review round ${round} resumed. Continuing team-lead feedback and mutual approvals.`,
                 ],
                 [
-                  `[CEO OFFICE] '${taskTitle}' レビューラウンド${round}を再開しました。チームリーダー意見収集と相互承認を続行します。`,
+                  `[Client OFFICE] '${taskTitle}' レビューラウンド${round}を再開しました。チームリーダー意見収集と相互承認を続行します。`,
                 ],
-                [`[CEO OFFICE] 已恢复'${taskTitle}'第${round}轮 Review，继续收集团队负责人意见与相互审批。`],
+                [`[Client OFFICE] 已恢复'${taskTitle}'第${round}轮 Review，继续收集团队负责人意见与相互审批。`],
               );
         const startNotice = isRound2Merge
           ? l(
               [
-                `[CEO OFFICE] '${taskTitle}' 리뷰 라운드 ${round} 시작. 라운드1 보완 작업 결과를 팀장회의에서 취합하고 머지 판단을 진행합니다.`,
+                `[Client OFFICE] '${taskTitle}' 리뷰 라운드 ${round} 시작. 라운드1 보완 작업 결과를 팀장회의에서 취합하고 머지 판단을 진행합니다.`,
               ],
               [
-                `[CEO OFFICE] '${taskTitle}' review round ${round} started. Team leads are consolidating round 1 remediation outputs and making merge-readiness decisions.`,
+                `[Client OFFICE] '${taskTitle}' review round ${round} started. Team leads are consolidating round 1 remediation outputs and making merge-readiness decisions.`,
               ],
               [
-                `[CEO OFFICE] '${taskTitle}' レビューラウンド${round}開始。ラウンド1補完結果をチームリーダー会議で集約し、マージ可否を判断します。`,
+                `[Client OFFICE] '${taskTitle}' レビューラウンド${round}開始。ラウンド1補完結果をチームリーダー会議で集約し、マージ可否を判断します。`,
               ],
-              [`[CEO OFFICE] 已开始'${taskTitle}'第${round}轮 Review，团队负责人将汇总第1轮整改结果并进行合并判断。`],
+              [`[Client OFFICE] 已开始'${taskTitle}'第${round}轮 Review，团队负责人将汇总第1轮整改结果并进行合并判断。`],
             )
           : isFinalDecisionRound
             ? l(
                 [
-                  `[CEO OFFICE] '${taskTitle}' 리뷰 라운드 ${round} 시작. 추가 보완 없이 최종 승인 결과와 문서 패키지를 확정합니다.`,
+                  `[Client OFFICE] '${taskTitle}' 리뷰 라운드 ${round} 시작. 추가 보완 없이 최종 승인 결과와 문서 패키지를 확정합니다.`,
                 ],
                 [
-                  `[CEO OFFICE] '${taskTitle}' review round ${round} started. Final approval and documentation package will be finalized without additional remediation.`,
+                  `[Client OFFICE] '${taskTitle}' review round ${round} started. Final approval and documentation package will be finalized without additional remediation.`,
                 ],
                 [
-                  `[CEO OFFICE] '${taskTitle}' レビューラウンド${round}開始。追加補完なしで最終承認結果と文書パッケージを確定します。`,
+                  `[Client OFFICE] '${taskTitle}' レビューラウンド${round}開始。追加補完なしで最終承認結果と文書パッケージを確定します。`,
                 ],
                 [
-                  `[CEO OFFICE] 已开始'${taskTitle}'第${round}轮 Review，在不新增整改的前提下确定最终审批结果与文档包。`,
+                  `[Client OFFICE] 已开始'${taskTitle}'第${round}轮 Review，在不新增整改的前提下确定最终审批结果与文档包。`,
                 ],
               )
             : l(
-                [`[CEO OFFICE] '${taskTitle}' 리뷰 라운드 ${round} 시작. 팀장 의견 수집 및 상호 승인 진행합니다.`],
+                [`[Client OFFICE] '${taskTitle}' 리뷰 라운드 ${round} 시작. 팀장 의견 수집 및 상호 승인 진행합니다.`],
                 [
-                  `[CEO OFFICE] '${taskTitle}' review round ${round} started. Collecting team-lead feedback and mutual approvals.`,
+                  `[Client OFFICE] '${taskTitle}' review round ${round} started. Collecting team-lead feedback and mutual approvals.`,
                 ],
                 [
-                  `[CEO OFFICE] '${taskTitle}' レビューラウンド${round}を開始しました。チームリーダー意見収集と相互承認を進めます。`,
+                  `[Client OFFICE] '${taskTitle}' レビューラウンド${round}を開始しました。チームリーダー意見収集と相互承認を進めます。`,
                 ],
-                [`[CEO OFFICE] 已开始'${taskTitle}'第${round}轮 Review，正在收集团队负责人意见并进行相互审批。`],
+                [`[Client OFFICE] 已开始'${taskTitle}'第${round}轮 Review，正在收集团队负责人意见并进行相互审批。`],
               );
-        notifyCeo(pickL(resumeMeeting ? resumeNotice : startNotice, lang), taskId);
+        notifyClient(pickL(resumeMeeting ? resumeNotice : startNotice, lang), taskId);
 
         const openingPrompt = buildMeetingPrompt(planningLeader, {
           meetingType: "review",
@@ -496,9 +496,9 @@ export function createReviewConsensusTools(deps: ReviewConsensusDeps) {
           l,
           db,
           REVIEW_MAX_REMEDIATION_REQUESTS,
-          notifyCeo,
+          notifyClient,
           finishMeetingMinutes,
-          dismissLeadersFromCeoOffice,
+          dismissLeadersFromClientOffice,
           reviewRoundState,
           reviewInFlight,
           appendTaskReviewFinalMemo,
@@ -508,27 +508,27 @@ export function createReviewConsensusTools(deps: ReviewConsensusDeps) {
       } catch (err: any) {
         if (isTaskWorkflowInterrupted(taskId)) {
           if (meetingId) finishMeetingMinutes(meetingId, "failed");
-          dismissLeadersFromCeoOffice(taskId, leaders);
+          dismissLeadersFromClientOffice(taskId, leaders);
           clearTaskWorkflowState(taskId);
           return;
         }
         const msg = err?.message ? String(err.message) : String(err);
         appendTaskLog(taskId, "error", `Review consensus meeting error: ${msg}`);
         const errLang = resolveLang(taskTitle);
-        notifyCeo(
+        notifyClient(
           pickL(
             l(
-              [`[CEO OFFICE] '${taskTitle}' 리뷰 라운드 처리 중 오류가 발생했습니다: ${msg}`],
-              [`[CEO OFFICE] Error while processing review round for '${taskTitle}': ${msg}`],
-              [`[CEO OFFICE] '${taskTitle}' のレビューラウンド処理中にエラーが発生しました: ${msg}`],
-              [`[CEO OFFICE] 处理'${taskTitle}'评审轮次时发生错误：${msg}`],
+              [`[Client OFFICE] '${taskTitle}' 리뷰 라운드 처리 중 오류가 발생했습니다: ${msg}`],
+              [`[Client OFFICE] Error while processing review round for '${taskTitle}': ${msg}`],
+              [`[Client OFFICE] '${taskTitle}' のレビューラウンド処理中にエラーが発生しました: ${msg}`],
+              [`[Client OFFICE] 处理'${taskTitle}'评审轮次时发生错误：${msg}`],
             ),
             errLang,
           ),
           taskId,
         );
         if (meetingId) finishMeetingMinutes(meetingId, "failed");
-        dismissLeadersFromCeoOffice(taskId, leaders);
+        dismissLeadersFromClientOffice(taskId, leaders);
         reviewInFlight.delete(taskId);
       }
     })();

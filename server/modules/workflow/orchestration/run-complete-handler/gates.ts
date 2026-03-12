@@ -148,7 +148,7 @@ export function runAfterExitGates(
 // ─── Video artifact gate (success path: defer or check now, may set exit 87) ───
 
 export type VideoArtifactGateDeps = RunAfterExitGatesDeps & {
-  notifyCeo: (message: string, taskId: string) => void;
+  notifyClient: (message: string, taskId: string) => void;
   pickL: (pool: unknown, lang: string) => string;
   l: (ko: string[], en: string[], ja?: string[], zh?: string[]) => unknown;
   resolveLang: (text: string) => string;
@@ -167,7 +167,7 @@ export function applyVideoArtifactGateAfterSuccess(
   artifactSync: VideoArtifactSyncResult,
   deps: VideoArtifactGateDeps,
 ): { finalExitCode: number } {
-  const { db, appendTaskLog, notifyCeo, pickL, l, resolveLang } = deps;
+  const { db, appendTaskLog, notifyClient, pickL, l, resolveLang } = deps;
   let finalExitCode = 0;
   const rootVideoTask = !task.source_task_id;
   const shouldCheckArtifactNow = rootVideoTask || isVideoFinalRenderTask;
@@ -191,7 +191,7 @@ export function applyVideoArtifactGateAfterSuccess(
         "system",
         `Video sequencing notice: documentation/collaboration still in progress. Artifact gate deferred until review stage (open_subtasks=${openSubtasks}, open_collab_tasks=${openChildTasks})`,
       );
-      notifyCeo(
+      notifyClient(
         pickL(
           l(
             [
@@ -222,7 +222,7 @@ export function applyVideoArtifactGateAfterSuccess(
         "system",
         `Video artifact gate failed: [VIDEO_FINAL_RENDER] output missing/empty. checked=${artifactSync.projectCandidates.join(", ")}`,
       );
-      notifyCeo(
+      notifyClient(
         pickL(
           l(
             [`'${task.title}' 의 최종 렌더 산출물이 확인되지 않아 실행을 실패 처리했습니다. Remotion으로 출력 파일을 생성한 뒤 다시 실행해 주세요.`],
@@ -240,7 +240,7 @@ export function applyVideoArtifactGateAfterSuccess(
         "system",
         `Video artifact gate notice: missing/empty render output. Review stage will require artifact verification. checked=${artifactSync.projectCandidates.join(", ")}`,
       );
-      notifyCeo(
+      notifyClient(
         pickL(
           l(
             [

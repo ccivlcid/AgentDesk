@@ -40,7 +40,7 @@ type CreateExecutionStartTaskToolsDeps = {
   getProviderModelConfig: RuntimeContext["getProviderModelConfig"];
   spawnCliAgent: RuntimeContext["spawnCliAgent"];
   handleTaskRunComplete: RuntimeContext["handleTaskRunComplete"];
-  notifyCeo: RuntimeContext["notifyCeo"];
+  notifyClient: RuntimeContext["notifyClient"];
   startProgressTimer: RuntimeContext["startProgressTimer"];
 };
 
@@ -72,7 +72,7 @@ export function createExecutionStartTaskTools(deps: CreateExecutionStartTaskTool
     getProviderModelConfig,
     spawnCliAgent,
     handleTaskRunComplete,
-    notifyCeo,
+    notifyClient,
     startProgressTimer,
   } = deps;
 
@@ -126,7 +126,7 @@ export function createExecutionStartTaskTools(deps: CreateExecutionStartTaskTool
       const titles = incompletePredecessors.map((p) => `"${p.title}" (${p.status})`).join(", ");
       appendTaskLog(taskId, "system", `BLOCKED: predecessor tasks not completed — ${titles}`);
       const lang = resolveLang(incompletePredecessors[0].title);
-      notifyCeo(
+      notifyClient(
         pickL(
           l(
             [`선행 태스크가 완료되지 않아 실행이 차단되었습니다: ${titles}`],
@@ -213,7 +213,7 @@ export function createExecutionStartTaskTools(deps: CreateExecutionStartTaskTool
       broadcast("task_update", db.prepare("SELECT * FROM tasks WHERE id = ?").get(taskId));
       broadcast("agent_status", db.prepare("SELECT * FROM agents WHERE id = ?").get(execAgent.id));
       notifyTaskStatus(taskId, taskData.title, "pending", taskLang);
-      notifyCeo(
+      notifyClient(
         pickL(
           l(
             [
@@ -417,7 +417,7 @@ export function createExecutionStartTaskTools(deps: CreateExecutionStartTaskTool
       ),
       taskLang,
     );
-    notifyCeo(
+    notifyClient(
       pickL(
         l(
           [`${execName}가 '${taskData.title}' 작업을 시작했습니다.${worktreeNote}`],

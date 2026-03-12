@@ -7,7 +7,7 @@
  * - consecutive_failures: agent failure rate from agent_usage_logs
  * - pending_decisions: unresolved decision inbox items
  *
- * Normal pattern: only notify CEO when anomalies are found.
+ * Normal pattern: only notify Client when anomalies are found.
  * Integrates with agent-anomaly-monitor for orphan detection.
  */
 
@@ -52,7 +52,7 @@ interface HeartbeatDeps {
     task_id?: string | null;
     agent_id?: string | null;
   }) => string;
-  notifyCeo: (content: string, taskId?: string | null) => void;
+  notifyClient: (content: string, taskId?: string | null) => void;
 }
 
 const SWEEP_INTERVAL_MS = 60_000; // check configs every 60s
@@ -63,7 +63,7 @@ export function startHeartbeatEngine(deps: HeartbeatDeps): {
   stop: () => void;
   triggerAgent: (agentId: string) => Finding[];
 } {
-  const { db, nowMs, activeProcesses, insertNotification, notifyCeo } = deps;
+  const { db, nowMs, activeProcesses, insertNotification, notifyClient } = deps;
 
   // Track last heartbeat time per agent to respect intervals
   const lastHeartbeatAt = new Map<string, number>();
@@ -264,11 +264,11 @@ export function startHeartbeatEngine(deps: HeartbeatDeps): {
         agent_id: agentId,
       });
 
-      // Also notify CEO via messenger
+      // Also notify Client via messenger
       const summary = criticalCount > 0
         ? `${criticalCount} critical, ${warningCount} warning`
         : `${warningCount} warning`;
-      notifyCeo(`[Heartbeat] ${agentName}: ${summary} - ${allFindings[0].message}${allFindings.length > 1 ? ` (+${allFindings.length - 1} more)` : ""}`);
+      notifyClient(`[Heartbeat] ${agentName}: ${summary} - ${allFindings[0].message}${allFindings.length > 1 ? ` (+${allFindings.length - 1} more)` : ""}`);
     }
 
     return allFindings;

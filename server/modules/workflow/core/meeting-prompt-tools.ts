@@ -69,7 +69,7 @@ export function createMeetingPromptTools(deps: CreateMeetingPromptToolsDeps) {
         : "";
     const personaBlock = buildCharacterPersonaBlock(agent.personality, (agent as any).persona_id);
     return [
-      `[CEO OFFICE ${meetingLabel}]`,
+      `[Client OFFICE ${meetingLabel}]`,
       `Task: ${opts.taskTitle}`,
       compactTaskContext ? `Task context: ${compactTaskContext}` : "",
       `Round: ${opts.round}`,
@@ -106,13 +106,13 @@ export function createMeetingPromptTools(deps: CreateMeetingPromptToolsDeps) {
     const recentCtx = getRecentConversationContext(agent.id, 12);
     const typeHint =
       messageType === "report"
-        ? "CEO requested a report update."
+        ? "Client requested a report update."
         : messageType === "task_assign"
-          ? "CEO assigned a task. Confirm understanding and concrete next step."
-          : "CEO sent a direct chat message.";
+          ? "Client assigned a task. Confirm understanding and concrete next step."
+          : "Client sent a direct chat message.";
     const personaBlock = buildCharacterPersonaBlock(agent.personality, (agent as any).persona_id);
     const prompt = [
-      "[CEO 1:1 Conversation]",
+      "[Client 1:1 Conversation]",
       `You are ${getAgentDisplayName(agent, lang)} (${deptName} ${role}).`,
       deptConstraint,
       localeInstruction(lang),
@@ -124,7 +124,7 @@ export function createMeetingPromptTools(deps: CreateMeetingPromptToolsDeps) {
       `Message type: ${messageType}`,
       `Conversation intent: ${typeHint}`,
       "",
-      `CEO message: ${ceoMessage}`,
+      `Client message: ${ceoMessage}`,
       recentCtx,
     ]
       .filter(Boolean)

@@ -27,6 +27,7 @@ interface AppHeaderBarProps {
   onToggleMobileHeaderMenu: () => void;
   onCloseMobileHeaderMenu: () => void;
   onOpenCommandPalette?: () => void;
+  onOpenScreenGuide?: () => void;
   projectSelectorSlot?: ReactNode;
 }
 
@@ -131,6 +132,7 @@ export default function AppHeaderBar({
   onToggleMobileHeaderMenu,
   onCloseMobileHeaderMenu,
   onOpenCommandPalette,
+  onOpenScreenGuide,
   projectSelectorSlot,
 }: AppHeaderBarProps) {
 
@@ -395,6 +397,36 @@ export default function AppHeaderBar({
         <span style={{ width: "1px", height: "16px", background: "var(--th-border)", margin: "0 2px", flexShrink: 0 }} className="hidden sm:block" />
 
         {notificationSlot}
+
+        {/* Screen guide (Help) — macOS Inspector style */}
+        {onOpenScreenGuide && (
+          <button
+            type="button"
+            onClick={onOpenScreenGuide}
+            title="Help (this screen)"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: "28px",
+              height: "28px",
+              padding: 0,
+              background: "transparent",
+              border: "1px solid var(--th-border)",
+              borderRadius: 6,
+              color: "var(--th-text-muted)",
+              fontFamily: mono,
+              fontSize: "13px",
+              fontWeight: 600,
+              cursor: "pointer",
+              transition: "color 0.15s, border-color 0.15s",
+            }}
+            className="hover:!text-[var(--th-text-secondary)] hover:!border-[var(--th-border-strong)] focus-visible:!outline focus-visible:!outline-2 focus-visible:!outline-offset-1 focus-visible:!outline-[var(--th-accent)]"
+            aria-label="Help"
+          >
+            ?
+          </button>
+        )}
 
         {/* Theme toggle */}
         <button

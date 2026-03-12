@@ -55,7 +55,7 @@ describe("decision inbox helpers", () => {
       }),
       createMessage({
         id: "reply-1",
-        sender_type: "ceo",
+        sender_type: "client",
         receiver_type: "agent",
         receiver_id: "agent-1",
         content: "[의사결정 회신] 1번",

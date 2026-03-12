@@ -9,7 +9,7 @@ interface Props {
   selectedDeptId: string | null;
   onSelectDept: (dept: Department) => void;
   onCallElevator?: (dept: Department, floorIdx: number) => void;
-  onScrollToFloor?: (target: "ceo" | "conf" | "basement") => void;
+  onScrollToFloor?: (target: "client" | "conf" | "basement") => void;
   visitorsByDeptId?: Record<string, number>;
   cliStatus?: CliStatusMap | null;
   cliUsage?: Record<string, CliUsageEntry> | null;
@@ -71,11 +71,11 @@ export default function OfficeDeptPanel({
     <>
       <div className="office-panel-label">Building</div>
 
-      {/* P — CEO Penthouse (top of tower) */}
+      {/* P — Client Office (top of tower) */}
       <div
         className="office-dept-item"
         style={{ cursor: "pointer", opacity: 0.9 }}
-        onClick={() => onScrollToFloor?.("ceo")}
+        onClick={() => onScrollToFloor?.("client")}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
           <span style={{
@@ -84,7 +84,7 @@ export default function OfficeDeptPanel({
             padding: "0 4px", lineHeight: "14px", flexShrink: 0, letterSpacing: 1,
           }}>P</span>
           <div className="office-dept-item__name" style={{ flex: 1, minWidth: 0, color: "var(--th-accent)" }}>
-            CEO Penthouse
+            Client Office
           </div>
         </div>
         {!isOverviewMode && (

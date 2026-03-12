@@ -301,13 +301,13 @@ export default function GroupChatPanel({ agents, initialAgentIds, onClose }: Gro
                 </div>
               ) : (
                 mergedMessages.map((msg) => {
-                  const isCeo = msg.sender_type === "ceo";
+                  const isCeo = msg.sender_type === "client";
                   const forAgent = agentById.get(msg._forAgentId);
                   const forAgentName = forAgent ? getAgentName(forAgent) : msg._forAgentId.slice(0, 8);
                   const senderLabel = isCeo
-                    ? `CEO → ${forAgentName}`
+                    ? `Client → ${forAgentName}`
                     : msg.sender_agent
-                      ? `${getAgentName(msg.sender_agent)} → CEO`
+                      ? `${getAgentName(msg.sender_agent)} → Client`
                       : forAgentName;
                   const timeStr = new Date(msg.created_at).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" });
                   const sigil = isCeo ? "❯" : "▸";

@@ -70,7 +70,7 @@ export function createReportRoutingTools(deps: ReportRoutingDeps) {
     appendTaskLog,
     getAgentDisplayName,
     sendAgentMessage,
-    notifyCeo,
+    notifyClient,
     l,
     pickL,
     broadcast,
@@ -483,7 +483,7 @@ export function createReportRoutingTools(deps: ReportRoutingDeps) {
       taskId,
     );
 
-    notifyCeo(
+    notifyClient(
       pickL(
         l(
           [
@@ -503,7 +503,7 @@ export function createReportRoutingTools(deps: ReportRoutingDeps) {
     );
     if (routing.reroutedToClaude && routing.requestedAgent) {
       const requestedName = getAgentDisplayName(routing.requestedAgent, lang);
-      notifyCeo(
+      notifyClient(
         pickL(
           l(
             [
@@ -525,7 +525,7 @@ export function createReportRoutingTools(deps: ReportRoutingDeps) {
       );
     }
     if (routing.claudeUnavailable) {
-      notifyCeo(
+      notifyClient(
         pickL(
           l(
             [

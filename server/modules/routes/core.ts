@@ -115,7 +115,7 @@ export function registerRoutesPartA(ctx: RuntimeContext): Record<string, never> 
   const meetingTaskIdByAgent = __ctx.meetingTaskIdByAgent;
   const mergeWorktree = __ctx.mergeWorktree;
   const normalizeOAuthProvider = __ctx.normalizeOAuthProvider;
-  const notifyCeo = __ctx.notifyCeo;
+  const notifyClient = __ctx.notifyClient;
   const nowMs = __ctx.nowMs;
   const randomDelay = __ctx.randomDelay;
   const recordAcceptedIngressAuditOrRollback = __ctx.recordAcceptedIngressAuditOrRollback;
@@ -443,7 +443,7 @@ export function registerRoutesPartA(ctx: RuntimeContext): Record<string, never> 
     getNextHttpAgentPid,
     broadcast,
     getAgentDisplayName,
-    notifyCeo,
+    notifyClient,
     startProgressTimer,
     launchApiProviderAgent,
     launchHttpAgent,

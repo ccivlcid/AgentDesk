@@ -55,7 +55,7 @@ export function registerAnnouncementRoutes(ctx: AnnouncementRouteCtx, deps: Anno
     let created: boolean;
     try {
       ({ message: storedMessage, created } = await insertMessageWithIdempotency({
-        senderType: "ceo",
+        senderType: "client",
         senderId: null,
         receiverType: "all",
         receiverId: null,

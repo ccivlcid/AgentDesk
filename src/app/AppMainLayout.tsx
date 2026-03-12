@@ -34,6 +34,7 @@ import type { OAuthCallbackResult, View } from "./types";
 import AppHeaderBar from "./AppHeaderBar";
 import CommandPalette from "../components/CommandPalette";
 import KeyboardShortcutsGuide from "../components/KeyboardShortcutsGuide";
+import ScreenGuidePanel from "../components/ScreenGuidePanel";
 import ProjectSelector from "../components/project-selector/ProjectSelector";
 import type { UiLanguage } from "../i18n";
 import type { CliUsageEntry } from "../api";
@@ -222,6 +223,7 @@ export default function AppMainLayout({
 }: AppMainLayoutProps) {
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [shortcutsGuideOpen, setShortcutsGuideOpen] = useState(false);
+  const [screenGuideOpen, setScreenGuideOpen] = useState(false);
   // 현재 프로젝트 팀원 ID 세트 (WorkMap dim용)
   const [projectAgentIds, setProjectAgentIds] = useState<Set<string>>(new Set());
   const prevProjectIdRef = useRef<string | null>(null);
@@ -400,6 +402,7 @@ export default function AppMainLayout({
             onToggleMobileHeaderMenu={() => setMobileHeaderMenuOpen(!mobileHeaderMenuOpen)}
             onCloseMobileHeaderMenu={() => setMobileHeaderMenuOpen(false)}
             onOpenCommandPalette={() => setCommandPaletteOpen(true)}
+            onOpenScreenGuide={() => setScreenGuideOpen(true)}
             projectSelectorSlot={
               <ProjectSelector
                 currentProject={currentProject ?? null}
@@ -425,6 +428,12 @@ export default function AppMainLayout({
           <KeyboardShortcutsGuide
             open={shortcutsGuideOpen}
             onClose={() => setShortcutsGuideOpen(false)}
+          />
+          <ScreenGuidePanel
+            open={screenGuideOpen}
+            view={view}
+            hasProject={!!currentProject}
+            onClose={() => setScreenGuideOpen(false)}
           />
 
           {labels.autoUpdateNoticeVisible && (

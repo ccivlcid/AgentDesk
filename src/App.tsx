@@ -13,7 +13,7 @@ import type {
   MeetingPresence,
   SubAgent,
   CrossDeptDelivery,
-  CeoOfficeCall,
+  ClientOfficeCall,
   Category,
   Project,
 } from "./types";
@@ -68,7 +68,7 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [unreadAgentIds, setUnreadAgentIds] = useState<Set<string>>(new Set());
   const [crossDeptDeliveries, setCrossDeptDeliveries] = useState<CrossDeptDelivery[]>([]);
-  const [ceoOfficeCalls, setCeoOfficeCalls] = useState<CeoOfficeCall[]>([]);
+  const [clientOfficeCalls, setClientOfficeCalls] = useState<ClientOfficeCall[]>([]);
   const [meetingPresence, setMeetingPresence] = useState<MeetingPresence[]>([]);
   const [oauthResult, setOauthResult] = useState<OAuthCallbackResult | null>(null);
   const [taskReport, setTaskReport] = useState<TaskReportDetail | null>(null);
@@ -206,7 +206,7 @@ export default function App() {
     setUnreadAgentIds,
     setTaskReport,
     setCrossDeptDeliveries,
-    setCeoOfficeCalls,
+    setClientOfficeCalls,
     setMeetingPresence,
     setSubtasks,
     setSubAgents,

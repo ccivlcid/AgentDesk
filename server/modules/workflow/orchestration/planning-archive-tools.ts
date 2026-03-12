@@ -212,7 +212,7 @@ export function createPlanningArchiveTools(deps: CreatePlanningArchiveToolsDeps)
 
       const consolidationPrompt = [
         `You are the planning lead (${planningLeader.name}).`,
-        `Create one final consolidated markdown report for the CEO in language: ${lang}.`,
+        `Create one final consolidated markdown report for the Client in language: ${lang}.`,
         "Requirements:",
         "- Must be concrete, not generic.",
         "- Include: Executive Summary, Team-by-team Consolidation, Evidence & Logs, Risks, Final Approval Note.",
@@ -303,10 +303,10 @@ export function createPlanningArchiveTools(deps: CreatePlanningArchiveToolsDeps)
           l(
             ["클라이언트님, 기획팀장 최종 취합본을 생성해 아카이빙했습니다. 보고서 팝업에서 확인하실 수 있습니다."],
             [
-              "CEO, the planning lead consolidated final report has been generated and archived. You can review it from the report popup.",
+              "Client, the planning lead consolidated final report has been generated and archived. You can review it from the report popup.",
             ],
-            ["CEO、企画リード最終統合レポートを生成し、アーカイブしました。レポートポップアップから確認できます。"],
-            ["CEO，规划负责人最终汇总报告已生成并归档，可在报告弹窗中查看。"],
+            ["クライアント、企画リード最終統合レポートを生成し、アーカイブしました。レポートポップアップから確認できます。"],
+            ["客户端，规划负责人最终汇总报告已生成并归档，可在报告弹窗中查看。"],
           ),
           lang,
         ),

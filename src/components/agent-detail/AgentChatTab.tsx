@@ -102,10 +102,10 @@ export default function AgentChatTab({ agent }: AgentChatTabProps) {
           </div>
         ) : (
           messages.map((msg) => {
-            const isCeo = msg.sender_type === "ceo";
+            const isCeo = msg.sender_type === "client";
             const typeLabel = MESSAGE_TYPE_LABEL[msg.message_type] ?? msg.message_type;
             const senderLabel = isCeo
-              ? tr("CEO", "CEO")
+              ? tr("클라이언트", "Client")
               : msg.sender_agent
                 ? (isKo ? msg.sender_agent.name_ko || msg.sender_agent.name : msg.sender_agent.name || msg.sender_agent.name_ko)
                 : msg.sender_name || tr("시스템", "system");

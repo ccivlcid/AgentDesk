@@ -37,7 +37,7 @@ export function createCrossDeptCooperationTools(deps: CrossDeptCooperationDeps) 
     getDeptName,
     getAgentDisplayName,
     sendAgentMessage,
-    notifyCeo,
+    notifyClient,
     l,
     pickL,
     startTaskExecutionForAgent,
@@ -226,7 +226,7 @@ export function createCrossDeptCooperationTools(deps: CrossDeptCooperationDeps) 
     const ctx: CrossDeptContext = {
       teamLeader: leader,
       taskTitle: parent.title,
-      ceoMessage: (parent.description ?? "").replace(/^\[CEO\]\s*/, ""),
+      ceoMessage: (parent.description ?? "").replace(/^\[Client\]\s*/, ""),
       leaderDeptId: parent.department_id,
       leaderDeptName: getDeptName(parent.department_id),
       leaderName: getAgentDisplayName(leader, lang),
@@ -301,7 +301,7 @@ export function createCrossDeptCooperationTools(deps: CrossDeptCooperationDeps) 
     // Notify remaining queue
     if (deptIds.length > 1) {
       const remaining = deptIds.length - index;
-      notifyCeo(
+      notifyClient(
         pickL(
           l(
             [`협업 요청 진행 중: ${crossDeptName} (${index + 1}/${deptIds.length}, 남은 ${remaining}팀 순차 진행)`],
@@ -324,11 +324,11 @@ export function createCrossDeptCooperationTools(deps: CrossDeptCooperationDeps) 
           `${crossCoordinatorName}님! "${taskTitle}" 건으로 ${crossDeptName} 지원이 필요합니다. 시간 되시면 협의 부탁드립니다.`,
         ],
         [
-          `Hi ${crossCoordinatorName}! We're working on "${taskTitle}" per CEO's directive and need ${crossDeptName}'s support. Could you help? 🤝`,
+          `Hi ${crossCoordinatorName}! We're working on "${taskTitle}" per Client's directive and need ${crossDeptName}'s support. Could you help? 🤝`,
           `${crossCoordinatorName}, we need ${crossDeptName}'s input on "${taskTitle}". Let's sync when you have a moment.`,
         ],
-        [`${crossCoordinatorName}さん、CEO指示の"${taskTitle}"で${crossDeptName}の協力が必要です。お願いします！🤝`],
-        [`${crossCoordinatorName}，CEO安排的"${taskTitle}"需要${crossDeptName}配合，麻烦协调一下！🤝`],
+        [`${crossCoordinatorName}さん、Client指示の"${taskTitle}"で${crossDeptName}の協力が必要です。お願いします！🤝`],
+        [`${crossCoordinatorName}，Client安排的"${taskTitle}"需要${crossDeptName}配合，麻烦协调一下！🤝`],
       ),
       lang,
     );
@@ -453,7 +453,7 @@ export function createCrossDeptCooperationTools(deps: CrossDeptCooperationDeps) 
         actorName: crossCoordinator.name,
         body: {
           parent_task_id: taskId,
-          ceo_message: ceoMessage,
+          client_message: ceoMessage,
           from_department_id: leaderDeptId,
           to_department_id: crossDeptId,
         },
@@ -588,7 +588,7 @@ export function createCrossDeptCooperationTools(deps: CrossDeptCooperationDeps) 
             }
           });
 
-          notifyCeo(
+          notifyClient(
             pickL(
               l(
                 [`${crossDeptName} ${execName}가 '${taskTitle}' 협업 작업을 시작했습니다.`],

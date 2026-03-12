@@ -68,7 +68,7 @@ export function createDirectTaskFlow(deps: TaskFlowDeps) {
     const roundGoal = deps.buildRoundGoal(projectCoreGoal, ceoMessage);
     const deptId = agent.department_id ?? null;
     const deptName = deptId ? deps.getDeptName(deptId) : "Unassigned";
-    const descriptionLines = [`[CEO DIRECT] ${ceoMessage}`];
+    const descriptionLines = [`[Client DIRECT] ${ceoMessage}`];
     if (selectedProject.name) descriptionLines.push(`[PROJECT] ${selectedProject.name}`);
     if (projectCoreGoal) descriptionLines.push(`[PROJECT CORE GOAL] ${projectCoreGoal}`);
     descriptionLines.push(`[ROUND GOAL] ${roundGoal}`);
@@ -110,7 +110,7 @@ export function createDirectTaskFlow(deps: TaskFlowDeps) {
       actorId: agent.id,
       actorName: agent.name,
       body: {
-        ceo_message: ceoMessage,
+        client_message: ceoMessage,
         message_type: "task_assign",
         project_id: selectedProject.id,
         project_context: projectContextHint,
@@ -124,7 +124,7 @@ export function createDirectTaskFlow(deps: TaskFlowDeps) {
     }
 
     deps.db.prepare("UPDATE agents SET current_task_id = ? WHERE id = ?").run(taskId, agent.id);
-    deps.appendTaskLog(taskId, "system", `Direct CEO assignment to ${agent.name}: ${ceoMessage}`);
+    deps.appendTaskLog(taskId, "system", `Direct Client assignment to ${agent.name}: ${ceoMessage}`);
     deps.appendTaskLog(taskId, "system", `Round goal: ${roundGoal}`);
     if (selectedProject.id) {
       deps.appendTaskLog(taskId, "system", `Project linked: ${selectedProject.name || selectedProject.id}`);
@@ -145,7 +145,7 @@ export function createDirectTaskFlow(deps: TaskFlowDeps) {
     deps.sendInCharacterAutoMessage({
       agent,
       lang,
-      scenario: "You just accepted CEO's request and registered it as a task. Confirm immediate execution.",
+      scenario: "You just accepted Client's request and registered it as a task. Confirm immediate execution.",
       fallback: ack,
       options,
       messageType: "task_assign",

@@ -42,7 +42,7 @@ export type TaskRunRouteDeps = Pick<
   | "getNextHttpAgentPid"
   | "broadcast"
   | "getAgentDisplayName"
-  | "notifyCeo"
+  | "notifyClient"
   | "startProgressTimer"
   | "launchApiProviderAgent"
   | "launchHttpAgent"
@@ -80,7 +80,7 @@ export function registerTaskRunRoute(deps: TaskRunRouteDeps): void {
     getNextHttpAgentPid,
     broadcast,
     getAgentDisplayName,
-    notifyCeo,
+    notifyClient,
     startProgressTimer,
     launchApiProviderAgent,
     launchHttpAgent,
@@ -552,7 +552,7 @@ Whenever you complete a subtask, report it in this format:
         ),
         taskLang,
       );
-      notifyCeo(
+      notifyClient(
         pickL(
           l(
             [`${assigneeName}가 '${task.title}' 작업을 시작했습니다.${worktreeNote}`],
@@ -632,7 +632,7 @@ Whenever you complete a subtask, report it in this format:
         ),
         taskLang,
       );
-      notifyCeo(
+      notifyClient(
         pickL(
           l(
             [`${assigneeName}가 '${task.title}' 작업을 시작했습니다.${worktreeNote}`],
@@ -706,7 +706,7 @@ Whenever you complete a subtask, report it in this format:
       ),
       taskLang,
     );
-    notifyCeo(
+    notifyClient(
       pickL(
         l(
           [`${assigneeName}가 '${task.title}' 작업을 시작했습니다.${worktreeNote}`],

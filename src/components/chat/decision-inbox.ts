@@ -45,7 +45,7 @@ export function buildDecisionInboxItems(messages: Message[], agents: Agent[]): D
 
     const resolved = messages.some(
       (follow) =>
-        follow.sender_type === "ceo" &&
+        follow.sender_type === "client" &&
         follow.receiver_type === "agent" &&
         follow.receiver_id === msg.sender_id &&
         follow.created_at > msg.created_at &&

@@ -91,11 +91,11 @@ export default function GeneralSettingsTab({ t, form, setForm, saved, onSave }: 
           </div>
 
           <div>
-            {fieldLabel(t({ ko: "ceo name", en: "ceo name", ja: "ceo name", zh: "ceo name" }))}
+            {fieldLabel(t({ ko: "client name", en: "client name", ja: "client name", zh: "client name" }))}
             <input
               type="text"
-              value={form.ceoName}
-              onChange={(e) => setForm({ ...form, ceoName: e.target.value })}
+              value={form.clientName}
+              onChange={(e) => setForm({ ...form, clientName: e.target.value })}
               style={inputStyle}
             />
           </div>

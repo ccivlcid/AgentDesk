@@ -193,12 +193,12 @@ export default function ChatMessageList({
         virtualizer.scrollToIndex(visibleMessages.length - 1, { align: "end" });
       }
     }
-    // Dispatch office banner event for new announcement messages from user/CEO
+    // Dispatch office banner event for new announcement messages from user/Client
     if (hasNewMessages) {
       const lastMsg = visibleMessages[visibleMessages.length - 1];
-      if (lastMsg && lastMsg.message_type === "announcement" && lastMsg.sender_type === "ceo") {
+      if (lastMsg && lastMsg.message_type === "announcement" && lastMsg.sender_type === "client") {
         window.dispatchEvent(new CustomEvent("agentdesk_office_announcement", {
-          detail: { text: lastMsg.content?.slice(0, 120) ?? "", sender: "CEO" },
+          detail: { text: lastMsg.content?.slice(0, 120) ?? "", sender: "Client" },
         }));
       }
     }
@@ -212,7 +212,7 @@ export default function ChatMessageList({
   }, [isStreamingForAgent, streamingMessage?.content]);
 
   const renderMessage = useCallback((msg: Message) => {
-    const isCeo = msg.sender_type === "ceo";
+    const isCeo = msg.sender_type === "client";
     const isDirective = msg.message_type === "directive";
     const isSystem = msg.sender_type === "system" || msg.message_type === "announcement" || isDirective;
 
@@ -220,7 +220,7 @@ export default function ChatMessageList({
       msg.sender_agent ?? agents.find((agent) => agent.id === msg.sender_id) ?? buildFallbackSenderAgent(msg);
     const senderNameFromPayload = normalizeMessageSenderName(msg);
     const senderName = isCeo
-      ? tr("CEO", "CEO")
+      ? tr("클라이언트", "Client")
       : isSystem
         ? tr("시스템", "System", "システム", "系统")
         : getAgentName(senderAgent) || senderNameFromPayload || tr("알 수 없음", "Unknown", "不明", "未知");
@@ -274,7 +274,7 @@ export default function ChatMessageList({
     if (isCeo) {
       return (
         <div className="group flex flex-col items-end gap-1">
-          <span className="px-1 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>{tr("CEO", "CEO")}</span>
+          <span className="px-1 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>{tr("클라이언트", "Client")}</span>
           <div className="max-w-[80%] px-4 py-2.5 text-sm text-black" style={{ borderRadius: 0, background: "var(--th-accent)" }}>
             <MessageContent content={msg.content} />
             {msg.attachments && <AttachmentChips attachments={msg.attachments} />}

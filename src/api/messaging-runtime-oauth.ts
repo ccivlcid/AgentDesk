@@ -101,17 +101,17 @@ export async function sendMessage(input: {
   project_path?: string;
   project_context?: string;
 }): Promise<string> {
-  const idempotencyKey = makeIdempotencyKey("ceo-message");
+  const idempotencyKey = makeIdempotencyKey("client-message");
   const j = await postWithIdempotency<{ id?: string; message?: { id?: string } }>(
     "/api/messages",
-    { sender_type: "ceo", ...input },
+    { sender_type: "client", ...input },
     idempotencyKey,
   );
   return extractMessageId(j);
 }
 
 export async function sendAnnouncement(content: string): Promise<string> {
-  const idempotencyKey = makeIdempotencyKey("ceo-announcement");
+  const idempotencyKey = makeIdempotencyKey("client-announcement");
   const j = await postWithIdempotency<{ id?: string; message?: { id?: string } }>(
     "/api/announcements",
     { content },
@@ -121,7 +121,7 @@ export async function sendAnnouncement(content: string): Promise<string> {
 }
 
 export async function sendDirective(content: string): Promise<string> {
-  const idempotencyKey = makeIdempotencyKey("ceo-directive");
+  const idempotencyKey = makeIdempotencyKey("client-directive");
   const j = await postWithIdempotency<{ id?: string; message?: { id?: string } }>(
     "/api/directives",
     { content },
@@ -136,7 +136,7 @@ export async function sendDirectiveWithProject(input: {
   project_path?: string;
   project_context?: string;
 }): Promise<string> {
-  const idempotencyKey = makeIdempotencyKey("ceo-directive");
+  const idempotencyKey = makeIdempotencyKey("client-directive");
   const j = await postWithIdempotency<{ id?: string; message?: { id?: string } }>(
     "/api/directives",
     input,

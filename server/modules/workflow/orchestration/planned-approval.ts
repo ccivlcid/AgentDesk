@@ -9,7 +9,7 @@ type CreatePlannedApprovalToolsDeps = {
   isTaskWorkflowInterrupted: (...args: any[]) => any;
   getTaskStatusById: (...args: any[]) => any;
   finishMeetingMinutes: (...args: any[]) => any;
-  dismissLeadersFromCeoOffice: (...args: any[]) => any;
+  dismissLeadersFromClientOffice: (...args: any[]) => any;
   clearTaskWorkflowState: (...args: any[]) => any;
   getAgentDisplayName: (...args: any[]) => any;
   getDeptName: (...args: any[]) => any;
@@ -17,8 +17,8 @@ type CreatePlannedApprovalToolsDeps = {
   sendAgentMessage: (...args: any[]) => any;
   emitMeetingSpeech: (...args: any[]) => any;
   appendMeetingMinuteEntry: (...args: any[]) => any;
-  callLeadersToCeoOffice: (...args: any[]) => any;
-  notifyCeo: (...args: any[]) => any;
+  callLeadersToClientOffice: (...args: any[]) => any;
+  notifyClient: (...args: any[]) => any;
   pickL: (...args: any[]) => any;
   l: (...args: any[]) => any;
   buildMeetingPrompt: (...args: any[]) => any;
@@ -44,7 +44,7 @@ export function createPlannedApprovalTools(deps: CreatePlannedApprovalToolsDeps)
     isTaskWorkflowInterrupted,
     getTaskStatusById,
     finishMeetingMinutes,
-    dismissLeadersFromCeoOffice,
+    dismissLeadersFromClientOffice,
     clearTaskWorkflowState,
     getAgentDisplayName,
     getDeptName,
@@ -52,8 +52,8 @@ export function createPlannedApprovalTools(deps: CreatePlannedApprovalToolsDeps)
     sendAgentMessage,
     emitMeetingSpeech,
     appendMeetingMinuteEntry,
-    callLeadersToCeoOffice,
-    notifyCeo,
+    callLeadersToClientOffice,
+    notifyClient,
     pickL,
     l,
     buildMeetingPrompt,
@@ -155,7 +155,7 @@ export function createPlannedApprovalTools(deps: CreatePlannedApprovalToolsDeps)
           if (!isTaskWorkflowInterrupted(taskId)) return false;
           const status = getTaskStatusById(taskId);
           if (meetingId) finishMeetingMinutes(meetingId, "failed");
-          dismissLeadersFromCeoOffice(taskId, leaders);
+          dismissLeadersFromClientOffice(taskId, leaders);
           clearTaskWorkflowState(taskId);
           if (status) {
             appendTaskLog(taskId, "system", `Planned meeting aborted due to task state change (${status})`);
@@ -190,20 +190,20 @@ export function createPlannedApprovalTools(deps: CreatePlannedApprovalToolsDeps)
         };
 
         if (abortIfInactive()) return;
-        callLeadersToCeoOffice(taskId, leaders, "kickoff");
-        notifyCeo(
+        callLeadersToClientOffice(taskId, leaders, "kickoff");
+        notifyClient(
           pickL(
             l(
               [
-                `[CEO OFFICE] '${taskTitle}' Planned 계획 라운드 ${round} 시작. 부서별 보완점 수집 후 실행계획(SubTask)으로 정리합니다.`,
+                `[Client OFFICE] '${taskTitle}' Planned 계획 라운드 ${round} 시작. 부서별 보완점 수집 후 실행계획(SubTask)으로 정리합니다.`,
               ],
               [
-                `[CEO OFFICE] '${taskTitle}' planned round ${round} started. Collecting supplement points and turning them into executable subtasks.`,
+                `[Client OFFICE] '${taskTitle}' planned round ${round} started. Collecting supplement points and turning them into executable subtasks.`,
               ],
               [
-                `[CEO OFFICE] '${taskTitle}' のPlanned計画ラウンド${round}を開始。補完項目を収集し、実行SubTaskへ落とし込みます。`,
+                `[Client OFFICE] '${taskTitle}' のPlanned計画ラウンド${round}を開始。補完項目を収集し、実行SubTaskへ落とし込みます。`,
               ],
-              [`[CEO OFFICE] 已开始'${taskTitle}'第${round}轮 Planned 规划，正在收集补充点并转为可执行 SubTask。`],
+              [`[Client OFFICE] 已开始'${taskTitle}'第${round}轮 Planned 规划，正在收集补充点并转为可执行 SubTask。`],
             ),
             lang,
           ),
@@ -306,20 +306,20 @@ export function createPlannedApprovalTools(deps: CreatePlannedApprovalToolsDeps)
           "system",
           `Planned meeting round ${round}: action items collected (${planItems.length}, supplement-signals=${hasSupplementSignals ? "yes" : "no"})`,
         );
-        notifyCeo(
+        notifyClient(
           pickL(
             l(
               [
-                `[CEO OFFICE] '${taskTitle}' Planned 회의 종료. 보완점 ${planItems.length}건을 계획 항목으로 기록하고 In Progress로 진행합니다.`,
+                `[Client OFFICE] '${taskTitle}' Planned 회의 종료. 보완점 ${planItems.length}건을 계획 항목으로 기록하고 In Progress로 진행합니다.`,
               ],
               [
-                `[CEO OFFICE] Planned meeting for '${taskTitle}' is complete. Recorded ${planItems.length} improvement items and moving to In Progress.`,
+                `[Client OFFICE] Planned meeting for '${taskTitle}' is complete. Recorded ${planItems.length} improvement items and moving to In Progress.`,
               ],
               [
-                `[CEO OFFICE] '${taskTitle}' のPlanned会議が完了。補完項目${planItems.length}件を計画化し、In Progressへ進みます。`,
+                `[Client OFFICE] '${taskTitle}' のPlanned会議が完了。補完項目${planItems.length}件を計画化し、In Progressへ進みます。`,
               ],
               [
-                `[CEO OFFICE] '${taskTitle}' 的 Planned 会议已结束，已记录 ${planItems.length} 个改进项并转入 In Progress。`,
+                `[Client OFFICE] '${taskTitle}' 的 Planned 会议已结束，已记录 ${planItems.length} 个改进项并转入 In Progress。`,
               ],
             ),
             lang,
@@ -327,34 +327,34 @@ export function createPlannedApprovalTools(deps: CreatePlannedApprovalToolsDeps)
           taskId,
         );
         if (meetingId) finishMeetingMinutes(meetingId, "completed");
-        dismissLeadersFromCeoOffice(taskId, leaders);
+        dismissLeadersFromClientOffice(taskId, leaders);
         reviewRoundState.delete(lockKey);
         reviewInFlight.delete(lockKey);
         onApproved(planItems);
       } catch (err: any) {
         if (isTaskWorkflowInterrupted(taskId)) {
           if (meetingId) finishMeetingMinutes(meetingId, "failed");
-          dismissLeadersFromCeoOffice(taskId, leaders);
+          dismissLeadersFromClientOffice(taskId, leaders);
           clearTaskWorkflowState(taskId);
           return;
         }
         const msg = err?.message ? String(err.message) : String(err);
         appendTaskLog(taskId, "error", `Planned meeting error: ${msg}`);
         const errLang = resolveLang(taskTitle);
-        notifyCeo(
+        notifyClient(
           pickL(
             l(
-              [`[CEO OFFICE] '${taskTitle}' Planned 회의 처리 중 오류가 발생했습니다: ${msg}`],
-              [`[CEO OFFICE] Error while processing planned meeting for '${taskTitle}': ${msg}`],
-              [`[CEO OFFICE] '${taskTitle}' のPlanned会議処理中にエラーが発生しました: ${msg}`],
-              [`[CEO OFFICE] 处理'${taskTitle}'的 Planned 会议时发生错误：${msg}`],
+              [`[Client OFFICE] '${taskTitle}' Planned 회의 처리 중 오류가 발생했습니다: ${msg}`],
+              [`[Client OFFICE] Error while processing planned meeting for '${taskTitle}': ${msg}`],
+              [`[Client OFFICE] '${taskTitle}' のPlanned会議処理中にエラーが発生しました: ${msg}`],
+              [`[Client OFFICE] 处理'${taskTitle}'的 Planned 会议时发生错误：${msg}`],
             ),
             errLang,
           ),
           taskId,
         );
         if (meetingId) finishMeetingMinutes(meetingId, "failed");
-        dismissLeadersFromCeoOffice(taskId, leaders);
+        dismissLeadersFromClientOffice(taskId, leaders);
         reviewInFlight.delete(lockKey);
       }
     })();

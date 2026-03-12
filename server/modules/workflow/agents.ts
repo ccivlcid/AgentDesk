@@ -21,7 +21,7 @@ export function initializeWorkflowPartB(ctx: RuntimeContext): WorkflowAgentExpor
   const getPreferredLanguage = (...args: any[]) => __ctx.getPreferredLanguage(...args);
   const l = (...args: any[]) => __ctx.l(...args);
   const pickL = (...args: any[]) => __ctx.pickL(...args);
-  const notifyCeo = (...args: any[]) => __ctx.notifyCeo(...args);
+  const notifyClient = (...args: any[]) => __ctx.notifyClient(...args);
   const detectTargetDepartments = (...args: any[]) => __ctx.detectTargetDepartments(...args);
   const DEPT_KEYWORDS = __ctx.DEPT_KEYWORDS;
   const clearCliOutputDedup = __ctx.clearCliOutputDedup;
@@ -45,7 +45,7 @@ export function initializeWorkflowPartB(ctx: RuntimeContext): WorkflowAgentExpor
     l,
     broadcast,
     appendTaskLog,
-    notifyCeo,
+    notifyClient,
   });
 
   const { createSubtaskFromCli, completeSubtaskFromCli, seedApprovedPlanSubtasks, seedReviewRevisionSubtasks } =
@@ -62,7 +62,7 @@ export function initializeWorkflowPartB(ctx: RuntimeContext): WorkflowAgentExpor
       l,
       pickL,
       appendTaskLog,
-      notifyCeo,
+      notifyClient,
     });
 
   const { codexThreadToSubtask, spawnCliAgent } = createCliRuntimeTools({

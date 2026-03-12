@@ -18,7 +18,7 @@ export function createSessionReviewTools(deps: CreateSessionReviewToolsDeps) {
     reviewRoundState,
     reviewInFlight,
     appendTaskLog,
-    notifyCeo,
+    notifyClient,
     pickL,
     l,
     db,
@@ -106,19 +106,19 @@ export function createSessionReviewTools(deps: CreateSessionReviewToolsDeps) {
   function scheduleNextReviewRound(taskId: string, taskTitle: string, currentRound: number, lang: Lang): void {
     const nextRound = currentRound + 1;
     appendTaskLog(taskId, "system", `Review round ${currentRound}: scheduling round ${nextRound} finalization meeting`);
-    notifyCeo(
+    notifyClient(
       pickL(
         l(
           [
-            `[CEO OFFICE] '${taskTitle}' 리뷰 라운드 ${currentRound} 취합이 완료되어 라운드 ${nextRound} 최종 승인 회의로 즉시 전환합니다.`,
+            `[Client OFFICE] '${taskTitle}' 리뷰 라운드 ${currentRound} 취합이 완료되어 라운드 ${nextRound} 최종 승인 회의로 즉시 전환합니다.`,
           ],
           [
-            `[CEO OFFICE] '${taskTitle}' review round ${currentRound} consolidation is complete. Moving directly to final approval round ${nextRound}.`,
+            `[Client OFFICE] '${taskTitle}' review round ${currentRound} consolidation is complete. Moving directly to final approval round ${nextRound}.`,
           ],
           [
-            `[CEO OFFICE] '${taskTitle}' のレビューラウンド${currentRound}集約が完了したため、最終承認ラウンド${nextRound}へ即時移行します。`,
+            `[Client OFFICE] '${taskTitle}' のレビューラウンド${currentRound}集約が完了したため、最終承認ラウンド${nextRound}へ即時移行します。`,
           ],
-          [`[CEO OFFICE] '${taskTitle}' 第 ${currentRound} 轮评审已完成汇总，立即转入第 ${nextRound} 轮最终审批会议。`],
+          [`[Client OFFICE] '${taskTitle}' 第 ${currentRound} 轮评审已完成汇总，立即转入第 ${nextRound} 轮最终审批会议。`],
         ),
         lang,
       ),

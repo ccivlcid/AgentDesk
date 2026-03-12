@@ -32,7 +32,7 @@ interface BatchDeps {
   findBestSubordinate: (deptId: string, excludeId: string, candidateAgentIds?: string[] | null) => AgentRow | null;
   nowMs: () => number;
   broadcast: (event: string, payload: unknown) => void;
-  notifyCeo: (content: string, taskId?: string | null, messageType?: string) => void;
+  notifyClient: (content: string, taskId?: string | null, messageType?: string) => void;
   sendAgentMessage: (
     agent: AgentRow,
     content: string,
@@ -120,7 +120,7 @@ export function createSubtaskDelegationBatch(deps: BatchDeps) {
     findBestSubordinate,
     nowMs,
     broadcast,
-    notifyCeo,
+    notifyClient,
     sendAgentMessage,
     appendTaskLog,
     recordTaskCreationAudit,
@@ -235,7 +235,7 @@ export function createSubtaskDelegationBatch(deps: BatchDeps) {
     const crossCoordinatorName = getAgentDisplayName(crossCoordinator, lang);
 
     if (queueTotal > 1) {
-      notifyCeo(
+      notifyClient(
         buildQueueProgressNotice({
           l,
           pickL,
@@ -655,7 +655,7 @@ export function createSubtaskDelegationBatch(deps: BatchDeps) {
           }
 
           const worktreeCeoNote = buildWorktreeCeoNote({ l, pickL }, lang, delegatedTaskId, Boolean(worktreePath));
-          notifyCeo(
+          notifyClient(
             buildExecutionStartNotice({
               l,
               pickL,

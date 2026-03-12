@@ -230,7 +230,7 @@ export function registerDirectiveAndInboxRoutes(
     let created: boolean;
     try {
       ({ message: storedMessage, created } = await insertMessageWithIdempotency({
-        senderType: "ceo",
+        senderType: "client",
         senderId: null,
         receiverType: "all",
         receiverId: null,
@@ -546,7 +546,7 @@ export function registerDirectiveAndInboxRoutes(
           `
           DELETE FROM messages
           WHERE
-            (sender_type = 'ceo' AND receiver_type = 'agent' AND receiver_id = ?)
+            (sender_type = 'client' AND receiver_type = 'agent' AND receiver_id = ?)
             OR (sender_type = 'agent' AND sender_id = ?)
         `,
         )
@@ -602,7 +602,7 @@ export function registerDirectiveAndInboxRoutes(
     let created: boolean;
     try {
       ({ message: storedMessage, created } = await insertMessageWithIdempotency({
-        senderType: "ceo",
+        senderType: "client",
         senderId: null,
         receiverType: shouldRouteToSessionAgent ? "agent" : "all",
         receiverId: shouldRouteToSessionAgent && sessionRoute ? sessionRoute.agentId : null,
