@@ -489,3 +489,157 @@ CREATE TABLE IF NOT EXISTS schema_migrations (
   applied_at INTEGER DEFAULT (unixepoch()*1000)
 );
 ```
+
+### F. OAuth 키 파생 취약점
+
+`server/oauth/helpers.ts:14` — 암호화 키를 단순 SHA-256 해시로 생성:
+
+```typescript
+function oauthEncryptionKey(): Buffer {
+  return createHash("sha256").update(OAUTH_ENCRYPTION_SECRET, "utf8").digest();
+}
+```
+
+**문제점**: 비밀키가 약하면 (짧은 문자열) 브루트포스 가능.
+PBKDF2/scrypt 같은 키 파생 함수를 사용해야 함.
+
+**권장**:
+```typescript
+import { pbkdf2Sync } from "node:crypto";
+function oauthEncryptionKey(): Buffer {
+  return pbkdf2Sync(OAUTH_ENCRYPTION_SECRET, "agentdesk-oauth-salt", 100_000, 32, "sha256");
+}
+```
+
+**참고**: 암호화 알고리즘 자체(AES-256-GCM)와 PKCE 구현은 양호함.
+
+### G. 테스트 커버리지 상세 분석
+
+**전체**: 39개 테스트 파일 / 200개+ 모듈 = **약 15% 커버리지**
+
+#### 테스트가 없는 핵심 모듈 (즉시 추가 필요)
+
+| 모듈 | LOC | 위험도 | 이유 |
+|------|-----|--------|------|
+| `routes/core/agents/spawn.ts` | 200+ | 🔴 | 에이전트 실행의 핵심 경로 |
+| `routes/core/tasks/execution-run.ts` | 729 | 🔴 | 태스크 실행 요청 처리 |
+| `routes/core/projects.ts` | 626 | 🔴 | 워크스페이스 격리 |
+| `modules/lifecycle.ts` | 616 | 🔴 | 고아 태스크 복구, 서버 부트 |
+| `bootstrap/schema/` | 1,692 | 🟡 | DB 마이그레이션 |
+| `oauth/` | 88+ | 🟡 | 토큰 암/복호화 |
+| `routes/ops/api-providers.ts` | - | 🟡 | 프로바이더 관리 |
+| `routes/ops/scheduled-tasks.ts` | - | 🟡 | 크론 스케줄링 |
+
+#### 테스트가 양호한 모듈
+
+| 모듈 | 테스트 파일 수 | 상태 |
+|------|--------------|------|
+| workflow/core | 5 | 양호 |
+| workflow/packs | 5 | 양호 |
+| messenger (Discord/Telegram) | 3 | 양호 |
+| security/auth | 1 | 커버리지 양호 |
+| ws/hub | 1 | 양호 |
+
+### H. OpenAPI 스펙 동기화 문제
+
+**현황**: 약 100개+ 엔드포인트 중 25개만 문서화 (**25% 커버리지**)
+
+**문서화되지 않은 주요 API** (75개+):
+- `/api/categories` — CRUD 전체
+- `/api/agents/:id/spawn` — 에이전트 스폰 (핵심!)
+- `/api/github/*` — GitHub 통합
+- `/api/collab/*` — 협업 라우트 20개+
+- `/api/custom-skills`, `/api/hooks`, `/api/memory` — 라이브러리 전체
+- `/api/scheduled-tasks`, `/api/notifications` — 운영 전체
+- `/api/video-render`, `/api/task-reports/*` — 리포트
+
+**권장**: `pnpm openapi:sync` 명령이 이미 존재하므로, CI에서 스펙 일치 검증 추가
+
+### I. 메신저 통합 안정성 문제
+
+Discord/Telegram 수신기 모두 동일한 약점:
+
+| 문제 | Discord | Telegram | 영향 |
+|------|---------|----------|------|
+| 재시도 로직 없음 | ❌ | ❌ | 네트워크 오류 시 메시지 유실 |
+| 지수 백오프 없음 | ❌ | ❌ | API 과부하 |
+| Rate limit 헤더 미파싱 | ❌ | ❌ | API 차단 위험 |
+| Circuit breaker 없음 | ❌ | ❌ | 영구 장애 시 무한 폴링 |
+| Inbox 전달 멱등성 없음 | ❌ | ❌ | 전달 실패 시 메시지 소실 |
+
+**Inbox 전달 실패 시나리오**:
+```typescript
+// discord-receiver.ts — inbox 엔드포인트가 실패하면 메시지 소실
+const inboxRes = await fetchImpl(`http://.../api/inbox`, { ... });
+if (!inboxRes.ok) {
+  throw new Error("discord inbox forward failed");
+  // 재시도 없음 → 메시지 영구 유실
+}
+```
+
+**권장**: 실패 시 로컬 큐에 저장 후 재시도 (최대 5회, 지수 백오프)
+
+### J. 환경 변수 검증 부재
+
+서버 시작 시 필수 환경 변수 검증이 없음:
+
+```typescript
+// 현재: OAUTH_ENCRYPTION_SECRET이 빈 문자열이면 런타임에서야 실패
+const OAUTH_ENCRYPTION_SECRET =
+  process.env.OAUTH_ENCRYPTION_SECRET || process.env.SESSION_SECRET || "";
+```
+
+**권장**: 서버 시작 시 즉시 검증
+```typescript
+// startup validation
+const required = ['OAUTH_ENCRYPTION_SECRET'];
+for (const key of required) {
+  if (!process.env[key]) {
+    throw new Error(`Missing required env: ${key}`);
+  }
+}
+```
+
+---
+
+## 7. 전체 개선 로드맵 (통합)
+
+### Phase 0: 긴급 (프로덕션 전 필수, 1주)
+
+| # | 작업 | 영향 |
+|---|------|------|
+| 1 | 환경 변수 시작 시 검증 | 런타임 장애 방지 |
+| 2 | OAuth 키 파생 PBKDF2로 변경 | 보안 강화 |
+| 3 | 중앙 에러 핸들러 추가 | API 안정성 |
+| 4 | Rate limiting 추가 | DDoS 방지 |
+| 5 | WebSocket 연결 수 제한 | 리소스 보호 |
+
+### Phase 1: 즉시 (1~2주)
+
+| # | 작업 | 영향 |
+|---|------|------|
+| 6 | 메신저 inbox 전달 재시도 로직 | 메시지 유실 방지 |
+| 7 | In-memory Map sweep 로직 | 메모리 안정성 |
+| 8 | `spawn.ts` / `execution-run.ts` 테스트 추가 | 핵심 경로 검증 |
+
+### Phase 2: 단기 (3~4주)
+
+| # | 작업 | 영향 |
+|---|------|------|
+| 9 | `orchestration.ts` 변수 추출 리팩터링 | 유지보수성 ↑ |
+| 10 | `gateway/client.ts` 3개 모듈로 분리 | 유지보수성 ↑ |
+| 11 | 동적 SQL 유틸리티 공용화 | 안전성 ↑ |
+| 12 | 메신저 circuit breaker + 지수 백오프 | 안정성 ↑ |
+| 13 | lifecycle/oauth/migration 테스트 추가 | 신뢰성 ↑ |
+
+### Phase 3: 중기 (5~8주)
+
+| # | 작업 | 영향 |
+|---|------|------|
+| 14 | 구조화 로깅 (pino) 도입 | 운영성 ↑ |
+| 15 | 핵심 워크플로 상태 DB 영속화 | 안정성 ↑ |
+| 16 | OpenAPI 스펙 100% 동기화 | API 품질 ↑ |
+| 17 | Zod 입력 검증 + 응답 엔벨로프 표준화 | API 일관성 ↑ |
+| 18 | 마이그레이션 버전 시스템 | DB 관리성 ↑ |
+| 19 | Slack 연동 구현 | 기능 완성도 ↑ |
+| 20 | 테스트 커버리지 50%+ 달성 | 전체 신뢰성 ↑ |
