@@ -67,7 +67,6 @@ function mapBaseDepartmentRow(row: Record<string, unknown> | undefined): Departm
 
 export function getDepartmentForPack(
   db: DbLike,
-  packKeyInput: unknown,
   departmentIdInput: unknown,
 ): DepartmentScopedRow | null {
   const departmentId = normalizeText(departmentIdInput);
@@ -90,7 +89,7 @@ export function getDepartmentForPack(
   }
 }
 
-export function listDepartmentsForPack(db: DbLike, packKeyInput: unknown): DepartmentScopedRow[] {
+export function listDepartmentsForPack(db: DbLike): DepartmentScopedRow[] {
   try {
     const baseRows = db
       .prepare(
@@ -109,17 +108,15 @@ export function listDepartmentsForPack(db: DbLike, packKeyInput: unknown): Depar
 
 export function getDepartmentPromptForPack(
   db: DbLike,
-  packKeyInput: unknown,
   departmentIdInput: unknown,
 ): string | null {
-  return getDepartmentForPack(db, packKeyInput, departmentIdInput)?.prompt ?? null;
+  return getDepartmentForPack(db, departmentIdInput)?.prompt ?? null;
 }
 
 export function getDepartmentSortOrderForPack(
   db: DbLike,
-  packKeyInput: unknown,
   departmentIdInput: unknown,
 ): number | null {
-  const row = getDepartmentForPack(db, packKeyInput, departmentIdInput);
+  const row = getDepartmentForPack(db, departmentIdInput);
   return row ? row.sort_order : null;
 }

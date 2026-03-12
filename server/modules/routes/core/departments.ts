@@ -91,7 +91,7 @@ export function registerDepartmentRoutes(deps: DepartmentRouteDeps): void {
     const id = String(req.params.id);
     const includeSeed = parseIncludeSeedParam(req.query?.include_seed);
     const seedFilterClause = includeSeed ? "" : " AND id NOT LIKE '%-seed-%'";
-    const department = getDepartmentForPack(db as any, resolved.packKey, id);
+    const department = getDepartmentForPack(db as any, id);
     if (!department) return res.status(404).json({ error: "not_found" });
 
     const agents =
@@ -151,7 +151,7 @@ export function registerDepartmentRoutes(deps: DepartmentRouteDeps): void {
         throw err;
       }
 
-      const dept = getDepartmentForPack(db as any, packKey, id);
+      const dept = getDepartmentForPack(db as any, id);
       broadcast("departments_changed", { workflow_pack_key: packKey });
       res.status(201).json({ department: dept });
     } catch (err) {
@@ -257,7 +257,7 @@ export function registerDepartmentRoutes(deps: DepartmentRouteDeps): void {
         throw err;
       }
 
-      const dept = getDepartmentForPack(db as any, packKey, id);
+      const dept = getDepartmentForPack(db as any, id);
       broadcast("departments_changed", { workflow_pack_key: packKey });
       res.json({ department: dept });
     } catch (err) {

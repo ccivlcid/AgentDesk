@@ -366,7 +366,7 @@ export function registerAgentCrudRoutes(ctx: RuntimeContext): void {
       }
       const department_id = typeof body.department_id === "string" ? body.department_id.trim() || null : null;
       if (department_id) {
-        const deptExists = getDepartmentForPack(db as any, workflowPackKey, department_id);
+        const deptExists = getDepartmentForPack(db as any, department_id);
         if (!deptExists) return res.status(400).json({ error: "department_not_found" });
       }
 
@@ -594,7 +594,7 @@ export function registerAgentCrudRoutes(ctx: RuntimeContext): void {
         if (!normalizedDepartmentId) {
           body.department_id = null;
         } else {
-          const deptExists = getDepartmentForPack(db as any, officePackKey, normalizedDepartmentId);
+          const deptExists = getDepartmentForPack(db as any, normalizedDepartmentId);
           if (!deptExists) return res.status(400).json({ error: "department_not_found" });
           body.department_id = normalizedDepartmentId;
         }

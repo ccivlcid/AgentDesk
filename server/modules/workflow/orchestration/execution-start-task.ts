@@ -251,7 +251,7 @@ export function createExecutionStartTaskTools(deps: CreateExecutionStartTaskTool
     };
     const roleLabel = roleLabels[execAgent.role] ?? execAgent.role;
     const deptConstraint = deptId ? getDeptRoleConstraint(deptId, deptName) : "";
-    const deptPromptRaw = deptId ? getDepartmentPromptForPack(db as any, taskData.workflow_pack_key, deptId) : null;
+    const deptPromptRaw = deptId ? getDepartmentPromptForPack(db as any, deptId) : null;
     const deptPrompt = typeof deptPromptRaw === "string" ? deptPromptRaw.trim() : "";
     const deptPromptBlock = deptPrompt ? `[Department Shared Prompt]\n${deptPrompt}` : "";
     const conversationCtx = getRecentConversationContext(execAgent.id);
