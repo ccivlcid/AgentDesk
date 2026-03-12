@@ -203,15 +203,18 @@ export function createSubtaskDelegationBatch(deps: BatchDeps) {
 
     const crossLeader = findTeamLeader(targetDeptId, projectCandidateAgentIds);
     if (!crossLeader) {
-      const doneAt = nowMs();
+      const blockedReason = manualScoped
+        ? `No agent assigned to department '${targetDeptName}' in this project. Add an agent from '${targetDeptName}' to the project's agent pool.`
+        : `No team leader found in department '${targetDeptName}'. Add an agent with team_leader role to this department.`;
       for (const sid of subtaskIds) {
-        db.prepare("UPDATE subtasks SET status = 'done', completed_at = ?, blocked_reason = NULL WHERE id = ?").run(
-          doneAt,
-          sid,
-        );
+        db.prepare("UPDATE subtasks SET status = 'blocked', blocked_reason = ? WHERE id = ?").run(blockedReason, sid);
         broadcast("subtask_update", db.prepare("SELECT * FROM subtasks WHERE id = ?").get(sid));
       }
-      maybeNotifyAllSubtasksComplete(parentTask.id);
+      appendTaskLog(parentTask.id, "system", `Subtask delegation blocked: ${blockedReason}`);
+      notifyClient(
+        `[!] '${parentTask.title}' — ${targetDeptName} 서브태스크 ${subtaskIds.length}개를 처리할 에이전트가 없습니다. 프로젝트에 ${targetDeptName} 에이전트를 배치하거나 팀장을 등록해주세요.`,
+        parentTask.id,
+      );
       onBatchDone?.();
       return;
     }
