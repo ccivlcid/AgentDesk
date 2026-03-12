@@ -191,21 +191,41 @@ AgentManager: isIsolatedPack = false 하드코딩
 
 ---
 
-#### [A5] 프로젝트 스코핑 불완전
+#### [A5] 프로젝트 스코핑 불완전 — DB 지원 vs 런타임 미적용
 
-**현황:**
+**DB 스키마 현황** (scope_type 기반 통합 모델):
 ```
-project_agents  ✓ 구현됨 (팀 멤버 관리)
-project_memory  ✗ 미구현 (전체 에이전트 글로벌 공유)
-project_rules   ✗ 미구현 (전체 에이전트 글로벌 공유)
-project_hooks   ✗ 미구현 (전체 에이전트 글로벌 공유)
-project_skills  ✗ 미구현 (전체 에이전트 글로벌 공유)
+project_agents  ✓ DB ✓ 런타임  — 팀 멤버 관리 + auto-assign 필터 적용
+project_rules   ✓ DB ✗ 런타임  — agent_rules 테이블에 scope_type='project' 지원,
+                                  그러나 실행 시 프롬프트에 주입되지 않음
+project_memory  ✓ DB △ 런타임  — memory_entries 테이블에 scope_type='project' 지원,
+                                  프롬프트 주입 시 projectId 필터 누락
+                                  (autonomous-memory.ts:51-66 — global/agent/dept/pack만 조회)
+project_hooks   ✓ DB ✗ 런타임  — hook_entries 테이블에 scope_type='project' 지원,
+                                  그러나 태스크 실행 시 훅 트리거 로직 자체 미구현
+project_skills  ✗ DB ✗ 런타임  — 파일시스템 기반 글로벌 전용, DB에 프로젝트 scope 없음
+                                  (skill_learning_history에 scope_type 컬럼 없음)
 ```
 
-**문제:**
+**핵심 문제 — 프로젝트 간 컨텍스트 오염:**
+- 에이전트가 프로젝트 A 태스크 실행 시, 프로젝트 B의 rules/memory/hooks/skills도 함께 적용됨
+- UI에서 사용자가 `scope_type='project'`로 설정해도 런타임에서 무시됨
 - "Project OS" 비전과 달리, 프로젝트는 태스크 분류 레이블에 불과한 상태
-- 에이전트가 프로젝트 A에서 학습한 내용이 프로젝트 B 실행에 영향
-- 프로젝트 간 컨텍스트 오염 가능성
+
+**런타임 갭 상세:**
+
+| 기능 | DB scope 지원 | 런타임 필터링 | 프롬프트 주입 | 실제 격리 |
+|------|:---:|:---:|:---:|:---:|
+| Rules | ✓ | ✗ 미로드 | ✗ 미주입 | ✗ |
+| Memory | ✓ | △ projectId 누락 | ✓ (비필터) | ✗ |
+| Hooks | ✓ | ✗ 미실행 | N/A | ✗ |
+| Skills | ✗ | ✗ 미필터 | ✓ (비필터) | ✗ |
+
+**영향받는 파일:**
+- `server/modules/workflow/orchestration/execution-start-task.ts:296-306` — memory 주입 시 projectId 미전달
+- `server/modules/workflow/orchestration/autonomous-memory.ts:51-66` — scope 조건에 project 누락
+- `server/modules/workflow/core/prompt-skills.ts:81-142` — provider만 필터, project 무관
+- `server/modules/routes/core/tasks/execution-run.ts` — rules/hooks 로딩 로직 없음
 
 ---
 
@@ -301,55 +321,103 @@ request → ExecutionQueue
 
 ---
 
-### Phase C — 프로젝트 컨텍스트 완전 분리
+### Phase C — 프로젝트 컨텍스트 완전 분리 (런타임 적용)
 
-**목표:** 프로젝트가 독립된 실행 컨텍스트
+**목표:** 프로젝트가 독립된 실행 컨텍스트 — DB는 준비됨, 런타임 적용이 핵심
 
-**추가 DB 스키마:**
+**현재 DB 모델 (이미 구현됨):**
+```
+agent_rules, memory_entries, hook_entries 모두
+scope_type = 'global' | 'department' | 'agent' | 'workflow_pack' | 'project'
+scope_id = 해당 scope의 참조 ID
+→ 별도 project_* 테이블 불필요, 기존 통합 스코프 모델 활용
+```
 
+**스킬만 DB 스키마 보강 필요:**
 ```sql
--- 프로젝트 스코프 메모리
-CREATE TABLE project_memory (
-  id TEXT PRIMARY KEY,
-  project_id TEXT NOT NULL REFERENCES projects(id),
-  agent_id TEXT REFERENCES agents(id),  -- NULL = 프로젝트 공용
-  content TEXT NOT NULL,
-  tags TEXT,  -- JSON array
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
+-- skill_learning_history에 프로젝트 스코프 추가
+ALTER TABLE skill_learning_history ADD COLUMN project_id TEXT REFERENCES projects(id);
 
--- 프로젝트 스코프 규칙
-CREATE TABLE project_rules (
-  id TEXT PRIMARY KEY,
-  project_id TEXT NOT NULL REFERENCES projects(id),
-  agent_id TEXT REFERENCES agents(id),
-  rule TEXT NOT NULL,
-  priority INTEGER DEFAULT 0,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
-
--- 프로젝트 스코프 스킬
+-- 프로젝트별 스킬 활성화/비활성화 관리
 CREATE TABLE project_skills (
   project_id TEXT NOT NULL REFERENCES projects(id),
   skill_id TEXT NOT NULL,
   enabled BOOLEAN DEFAULT TRUE,
   PRIMARY KEY (project_id, skill_id)
 );
-
--- 프로젝트 변수 / 컨텍스트
-CREATE TABLE project_context (
-  project_id TEXT NOT NULL REFERENCES projects(id),
-  key TEXT NOT NULL,
-  value TEXT,
-  PRIMARY KEY (project_id, key)
-);
 ```
 
-**에이전트 실행 시 컨텍스트 우선순위:**
+**런타임 적용 — 4단계 구현:**
+
+**C-1. Rules 프롬프트 주입** (신규)
+```typescript
+// execution-start-task.ts에 추가
+function buildRulesPromptBlock(db, projectId, agentId, deptId): string {
+  // priority: project > agent > department > global
+  const rules = db.prepare(`
+    SELECT rule_content, priority FROM agent_rules
+    WHERE enabled = 1 AND (
+      (scope_type = 'project' AND scope_id = ?) OR
+      (scope_type = 'agent' AND scope_id = ?) OR
+      (scope_type = 'department' AND scope_id = ?) OR
+      (scope_type = 'global')
+    )
+    ORDER BY
+      CASE scope_type
+        WHEN 'project' THEN 1
+        WHEN 'agent' THEN 2
+        WHEN 'department' THEN 3
+        WHEN 'global' THEN 4
+      END,
+      priority DESC
+  `).all(projectId, agentId, deptId);
+  // ...
+}
 ```
-project_rules  > agent_rules  > global_rules
-project_memory > agent_memory > global_memory
-project_skills (활성화된 것만 사용)
+
+**C-2. Memory 프로젝트 필터 추가** (기존 수정)
+```typescript
+// autonomous-memory.ts — searchRelevantMemories()에 projectId 파라미터 추가
+if (projectId) {
+  scopeConditions.push("(scope_type = 'project' AND scope_id = ?)");
+  scopeParams.push(projectId);
+}
+// execution-start-task.ts — buildMemoryPromptBlock() 호출 시 projectId 전달
+```
+
+**C-3. Hooks 런타임 실행 엔진** (신규)
+```typescript
+// hook-executor.ts — 태스크 생명주기 이벤트에서 훅 실행
+async function executeHooks(db, eventType, { projectId, agentId, deptId, taskId }) {
+  const hooks = db.prepare(`
+    SELECT command, working_directory, timeout_ms FROM hook_entries
+    WHERE enabled = 1 AND event_type = ? AND (
+      (scope_type = 'project' AND scope_id = ?) OR
+      (scope_type = 'agent' AND scope_id = ?) OR
+      (scope_type = 'department' AND scope_id = ?) OR
+      (scope_type = 'global')
+    )
+    ORDER BY priority DESC
+  `).all(eventType, projectId, agentId, deptId);
+  // child_process.execFile() with timeout
+}
+// execution-run.ts — pre-task, post-task, on-error 시점에서 호출
+```
+
+**C-4. Skills 프로젝트 필터링** (기존 수정)
+```typescript
+// prompt-skills.ts — project_skills 테이블로 활성화된 스킬만 필터
+function queryPromptSkillsByProject(db, provider, projectId): SkillBlock[] {
+  // project_skills.enabled = true인 것만 반환
+  // project_skills에 없는 스킬은 기본 활성화 (opt-out 모델)
+}
+```
+
+**에이전트 실행 시 컨텍스트 우선순위 (scope 해상도):**
+```
+project scope  > agent scope  > department scope  > global scope
+└── 동일 scope 내에서는 priority DESC 순
+└── 같은 key/topic의 상위 scope 항목은 하위 scope에서 override 가능
 ```
 
 ---
@@ -449,7 +517,10 @@ Remove:   LiveSyncScheduler (WebSocket으로 흡수)
 
 | 항목 | 설명 | 공수 |
 |------|------|------|
-| 프로젝트 스코핑 완성 | project_memory / rules / hooks / skills 분리 | 5일 |
+| C-1. Rules 프롬프트 주입 | buildRulesPromptBlock() 신규 구현, execution-start-task.ts 연동 | 2일 |
+| C-2. Memory 프로젝트 필터 | autonomous-memory.ts에 projectId 파라미터 추가 + 호출부 수정 | 1일 |
+| C-3. Hooks 런타임 실행 | hook-executor.ts 신규, execution-run.ts 생명주기 이벤트 연동 | 3일 |
+| C-4. Skills 프로젝트 스코핑 | project_skills 테이블 + prompt-skills.ts 필터링 | 2일 |
 | App.tsx → Zustand 분리 | 도메인별 스토어 4개 | 4일 |
 | 프로젝트 템플릿 | 카테고리 → objectives/gates 자동 생성 | 2일 |
 | 에이전트 타임라인 뷰 | AgentTrace 기반 실행 가시화 | 3일 |
@@ -491,7 +562,7 @@ Remove:   LiveSyncScheduler (WebSocket으로 흡수)
 | **P1** | 에이전트 실행 상태 머신 | 크래시 → 무한 "실행중" 완전 방지 | 3일 |
 | **P1** | 동기화 전략 단일화 | WebSocket 신뢰성 + 코드 단순화 | 2일 |
 | **P2** | WorkflowPackKey 완전 제거 | 개념 혼동 제거, 기술 부채 청산 | 1일 |
-| **P2** | 프로젝트 스코핑 완성 | "Project OS" 핵심 가치 실현 | 5일 |
+| **P2** | 프로젝트 스코핑 런타임 적용 | DB scope 모델 존재하나 런타임 미적용 — 프로젝트 간 오염 방지 핵심 | 8일 |
 | **P3** | App.tsx → Zustand 분리 | 성능 + 장기 유지보수성 | 4일 |
 
 ---
