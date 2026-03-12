@@ -65,6 +65,7 @@ interface AgentCardProps {
 
 function AgentCard({ agent, taskId, taskTitle, lines, onOpen, onCreateTask }: AgentCardProps) {
   const [stopping, setStopping] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
 
   const handleStop = async () => {
     setStopping(true);
@@ -134,11 +135,20 @@ function AgentCard({ agent, taskId, taskTitle, lines, onOpen, onCreateTask }: Ag
           >
             TERMINAL →
           </button>
+          {/* 접기/펴기 */}
+          <button
+            onClick={() => setCollapsed((v) => !v)}
+            className="font-mono transition-colors"
+            style={{ fontSize: "11px", padding: "3px 6px", border: "1px solid var(--th-border)", color: "var(--th-text-muted)", background: "transparent", cursor: "pointer" }}
+            title={collapsed ? "펴기" : "접기"}
+          >
+            {collapsed ? "▸" : "▾"}
+          </button>
         </div>
       </div>
 
       {/* 미니 터미널 */}
-      <div style={{ border: "1px solid #21262d", background: "#0d1117" }}>
+      {!collapsed && <div style={{ border: "1px solid #21262d", background: "#0d1117" }}>
         {/* 터미널 타이틀 바 */}
         <div style={{
           display: "flex", alignItems: "center", gap: 6,
@@ -183,7 +193,94 @@ function AgentCard({ agent, taskId, taskTitle, lines, onOpen, onCreateTask }: Ag
             <span style={{ color: "#3fb950", fontFamily: "var(--th-font-mono)", fontSize: 10 }}>▌</span>
           )}
         </div>
+      </div>}
+    </div>
+  );
+}
+
+// ── 완료된 에이전트 카드 ───────────────────────────────────────
+function CompletedAgentCard({
+  entry,
+  onOpen,
+  onClear,
+}: {
+  entry: CompletedEntry;
+  onOpen: () => void;
+  onClear: () => void;
+}) {
+  const [collapsed, setCollapsed] = useState(false);
+  const elapsed = Math.round((Date.now() - entry.completedAt) / 60000);
+  const elapsedLabel = elapsed < 1 ? "방금" : elapsed < 60 ? `${elapsed}분 전` : `${Math.round(elapsed / 60)}시간 전`;
+  return (
+    <div className="border-b border-[var(--th-border)] last:border-b-0 px-3 py-2.5" style={{ opacity: 0.7 }}>
+      <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+        <span className="text-base leading-none flex-shrink-0">{entry.agent.avatar_emoji || "🤖"}</span>
+        <span className="font-mono font-semibold flex-shrink-0" style={{ fontSize: "12px", color: "var(--th-text-heading)" }}>
+          {entry.agent.name_ko || entry.agent.name}
+        </span>
+        <CliTag provider={entry.agent.cli_provider} />
+        <span className="flex items-center gap-1 font-mono flex-shrink-0"
+          style={{ fontSize: "9px", padding: "1px 6px", background: "rgba(63,185,80,0.1)", color: "#3fb950", border: "1px solid rgba(63,185,80,0.25)" }}>
+          <span style={{ fontSize: "7px" }}>✓</span> DONE · {elapsedLabel}
+        </span>
+        <span className="flex-1 min-w-0 font-mono truncate" style={{ fontSize: "10px", color: "var(--th-text-muted)" }} title={entry.taskTitle}>
+          {entry.taskTitle}
+        </span>
+        <div className="flex items-center gap-1 flex-shrink-0">
+          <button
+            onClick={onOpen}
+            className="font-mono transition-colors"
+            style={{ fontSize: "9px", padding: "3px 8px", border: "1px solid var(--th-border)", color: "var(--th-text-muted)", background: "transparent", cursor: "pointer" }}
+            onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#f59e0b"; e.currentTarget.style.color = "#f59e0b"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--th-border)"; e.currentTarget.style.color = "var(--th-text-muted)"; }}
+          >
+            TERMINAL →
+          </button>
+          <button
+            onClick={onClear}
+            className="font-mono transition-colors"
+            style={{ fontSize: "9px", padding: "3px 8px", border: "1px solid var(--th-border)", color: "var(--th-text-muted)", background: "transparent", cursor: "pointer" }}
+            onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#f87171"; e.currentTarget.style.color = "#f87171"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--th-border)"; e.currentTarget.style.color = "var(--th-text-muted)"; }}
+          >
+            ✕ 초기화
+          </button>
+          {/* 접기/펴기 */}
+          <button
+            onClick={() => setCollapsed((v) => !v)}
+            className="font-mono"
+            style={{ fontSize: "11px", padding: "3px 6px", border: "1px solid var(--th-border)", color: "var(--th-text-muted)", background: "transparent", cursor: "pointer" }}
+            title={collapsed ? "펴기" : "접기"}
+          >
+            {collapsed ? "▸" : "▾"}
+          </button>
+        </div>
       </div>
+      {/* 미니 터미널 — 마지막 출력 유지 */}
+      {!collapsed && <div style={{ border: "1px solid #21262d", background: "#0d1117" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "3px 8px", borderBottom: "1px solid #21262d", background: "#161b22" }}>
+          <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#3fb950", display: "inline-block" }} />
+          <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#484f58", display: "inline-block" }} />
+          <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#484f58", display: "inline-block" }} />
+          <span style={{ fontFamily: "var(--th-font-mono)", fontSize: "9px", color: "#484f58", marginLeft: 4 }}>
+            {entry.agent.cli_provider} — {entry.agent.name_ko || entry.agent.name}
+          </span>
+          <span style={{ marginLeft: "auto", fontFamily: "var(--th-font-mono)", fontSize: "9px", color: "#484f58" }}>
+            ● completed
+          </span>
+        </div>
+        <div style={{ padding: "6px 10px", fontFamily: "'JetBrains Mono','Fira Mono','Consolas',monospace", fontSize: 10, lineHeight: "1.6", minHeight: 48, maxHeight: 180, overflowY: "auto" }}>
+          {entry.lines.length === 0 ? (
+            <span style={{ color: "#484f58" }}>(no output captured)</span>
+          ) : (
+            entry.lines.map((line, i) => (
+              <div key={i} style={{ color: lineColor(line), whiteSpace: "pre-wrap", wordBreak: "break-all" }}>
+                {line || "\u00A0"}
+              </div>
+            ))
+          )}
+        </div>
+      </div>}
     </div>
   );
 }
@@ -261,6 +358,15 @@ function AgentRow({
   );
 }
 
+interface CompletedEntry {
+  agentId: string;
+  agent: Agent;
+  taskId: string;
+  taskTitle: string;
+  lines: string[];
+  completedAt: number;
+}
+
 // ── 메인 패널 ─────────────────────────────────────────────────
 export default function AgentActivityPanel({ projectId, allAgents, onOpenTerminal, onCreateTask, onManageTeam }: AgentActivityPanelProps) {
   const [teamAgentIds, setTeamAgentIds] = useState<Set<string>>(new Set());
@@ -272,9 +378,11 @@ export default function AgentActivityPanel({ projectId, allAgents, onOpenTermina
   const [dispatchLog, setDispatchLog] = useState<string[]>([]);
   const [quickDispatchOpen, setQuickDispatchOpen] = useState(false);
   const [tickSec, setTickSec] = useState(0);
+  const [completedEntries, setCompletedEntries] = useState<CompletedEntry[]>([]);
 
   const terminalLinesRef = useRef(terminalLines);
   terminalLinesRef.current = terminalLines;
+  const prevWorkingRef = useRef<Map<string, { taskId: string; agent: Agent }>>(new Map());
 
   const { on } = useWebSocket();
 
@@ -347,6 +455,26 @@ export default function AgentActivityPanel({ projectId, allAgents, onOpenTermina
   const idleAgents   = teamAgents.filter((a) => a.status === "idle");
   const breakAgents  = teamAgents.filter((a) => a.status === "break");
   const offlineAgents = teamAgents.filter((a) => a.status === "offline" || !["working", "idle", "break"].includes(a.status));
+
+  // 작업 완료 감지 — working → idle/break 전환 시 completedEntries에 추가
+  useEffect(() => {
+    const prevWorking = prevWorkingRef.current;
+    const currentWorkingMap = new Map(workingAgents.map((a) => [a.id, { taskId: a.current_task_id!, agent: a }]));
+    const justFinished: CompletedEntry[] = [];
+    for (const [agentId, info] of prevWorking.entries()) {
+      if (!currentWorkingMap.has(agentId)) {
+        // 이 에이전트가 working에서 빠짐 → 완료
+        const lines = terminalLinesRef.current.get(info.taskId) ?? [];
+        const title = taskTitles.get(info.taskId) ?? info.taskId.slice(0, 8);
+        justFinished.push({ agentId, agent: info.agent, taskId: info.taskId, taskTitle: title, lines, completedAt: Date.now() });
+      }
+    }
+    if (justFinished.length > 0) {
+      setCompletedEntries((prev) => [...justFinished, ...prev].slice(0, 10)); // 최대 10개 유지
+    }
+    prevWorkingRef.current = currentWorkingMap;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workingAgents.map((a) => a.id).join(",")]);
 
   // 태스크 제목 조회 (캐시)
   useEffect(() => {
@@ -518,6 +646,23 @@ export default function AgentActivityPanel({ projectId, allAgents, onOpenTermina
           />
         );
       })}
+
+      {/* ── RECENTLY COMPLETED ── */}
+      {completedEntries.length > 0 && (
+        <>
+          <div style={{ ...mono, fontSize: "9px", padding: "4px 12px", color: "var(--th-text-muted)", background: "var(--th-bg-elevated)", borderTop: "1px solid var(--th-border)", borderBottom: "1px solid var(--th-border)", letterSpacing: "0.08em" }}>
+            // recently completed
+          </div>
+          {completedEntries.map((entry) => (
+            <CompletedAgentCard
+              key={`${entry.agentId}-${entry.completedAt}`}
+              entry={entry}
+              onOpen={() => onOpenTerminal(entry.taskId, entry.agent)}
+              onClear={() => setCompletedEntries((prev) => prev.filter((e) => e.completedAt !== entry.completedAt || e.agentId !== entry.agentId))}
+            />
+          ))}
+        </>
+      )}
 
       {/* ── IDLE ── */}
       {idleAgents.map((agent) => (

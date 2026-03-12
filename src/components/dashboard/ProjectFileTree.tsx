@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getProjectFileTree } from "../../api/organization-projects";
 import type { FileTreeNode } from "../../api/organization-projects";
+import { ApiRequestError } from "../../api/core";
 
 interface ProjectFileTreeProps {
   projectPath: string;
@@ -92,7 +93,7 @@ export default function ProjectFileTree({ projectPath }: ProjectFileTreeProps) {
   const [root, setRoot] = useState<string>("");
   const [truncated, setTruncated] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<{ msg: string; code?: string | null } | null>(null);
   const [collapseState, setCollapseState] = useState<CollapseState>({});
   const loadedPathRef = useRef<string>("");
 
@@ -107,8 +108,18 @@ export default function ProjectFileTree({ projectPath }: ProjectFileTreeProps) {
       setTruncated(result.truncated);
       setCollapseState({});
       loadedPathRef.current = projectPath;
-    } catch {
-      setError("read failed");
+    } catch (err) {
+      if (err instanceof ApiRequestError) {
+        const code = err.code ?? null;
+        const msg =
+          code === "path_not_found" ? "directory not found" :
+          code === "path_not_directory" ? "path is not a directory" :
+          code === "project_path_outside_allowed_roots" ? "path outside allowed roots (check PROJECT_PATH_ALLOWED_ROOTS)" :
+          `read failed (${code ?? err.status})`;
+        setError({ msg, code });
+      } else {
+        setError({ msg: "read failed" });
+      }
     } finally {
       setLoading(false);
     }
@@ -219,14 +230,24 @@ export default function ProjectFileTree({ projectPath }: ProjectFileTreeProps) {
             </span>
           </div>
 
+          {/* 경로 표시 */}
+          <div style={{ ...mono, color: "var(--th-terminal-text)", opacity: 0.3, fontSize: "9px", marginBottom: 4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={root || projectPath}>
+            {root || projectPath}
+          </div>
+
           {loading && (
-            <div style={{ ...mono, color: "var(--th-terminal-text)", opacity: 0.35, padding: "4px 0", fontStyle: "italic" }}>
+            <div style={{ ...mono, color: "var(--th-terminal-text)", opacity: 0.35, padding: "4px 0" }}>
               scanning…
             </div>
           )}
           {error && !loading && (
-            <div style={{ ...mono, color: "var(--th-terminal-error)", opacity: 0.8, padding: "4px 0" }}>
-              ✗ {error}
+            <div style={{ ...mono, color: "var(--th-terminal-error, #f87171)", opacity: 0.9, padding: "4px 0" }}>
+              <span style={{ opacity: 0.6 }}>✗</span> {error.msg}
+              {error.code === "path_not_found" && (
+                <div style={{ opacity: 0.5, marginTop: 3, fontSize: "9px" }}>
+                  directory does not exist on disk — point project to an existing folder
+                </div>
+              )}
             </div>
           )}
           {!loading && !error && tree.length === 0 && (

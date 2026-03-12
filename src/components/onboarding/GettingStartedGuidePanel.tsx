@@ -1,15 +1,16 @@
 import { useI18n } from "../../i18n";
 import { dashboardEmptyGuide } from "../../data/screen-guide";
 
-const mono = "var(--th-font-mono)";
+const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };
 
 /**
- * 프로젝트 없을 때 대시보드에 표시하는 macOS 스타일 "시작하기" 가이드 패널.
- * 인라인으로 화면 오른쪽(또는 하단)에 항상 노출되어 전체 흐름을 안내한다.
+ * 프로젝트 없을 때 대시보드에 표시하는 "시작하기" 가이드 패널.
+ * 대시보드·프로젝트 유형과 동일한 macOS 카드(터미널 헤더 + 본문) 스타일로 통일.
  */
 export default function GettingStartedGuidePanel() {
   const { t } = useI18n();
   const entry = dashboardEmptyGuide;
+  const stepsLabel = t({ ko: "단계", en: "Steps", ja: "手順", zh: "步骤" });
 
   return (
     <aside
@@ -19,71 +20,104 @@ export default function GettingStartedGuidePanel() {
         flexShrink: 0,
         width: 320,
         maxWidth: "100%",
+        minHeight: 0,
         display: "flex",
         flexDirection: "column",
+        borderRadius: 10,
+        overflow: "hidden",
         background: "var(--th-bg-elevated)",
-        borderLeft: "1px solid var(--th-border)",
-        borderTop: "1px solid var(--th-border)",
-        boxShadow: "-4px 0 16px rgba(0,0,0,0.12)",
-        fontFamily: "var(--th-font-body)",
+        border: "1px solid var(--th-border)",
+        boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
+        ...mono,
       }}
       className="lg:min-h-0"
     >
+      {/* 터미널 헤더 (macOS) — 대시보드·프로젝트 유형과 동일 */}
       <div
         style={{
-          flexShrink: 0,
-          padding: "12px 14px",
           borderBottom: "1px solid var(--th-border)",
-          background: "var(--th-bg-surface)",
+          padding: "12px 18px",
+          background: "var(--th-bg-panel)",
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          flexWrap: "wrap",
+          borderTopLeftRadius: 10,
+          borderTopRightRadius: 10,
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
         }}
       >
-        <h3
+        <div className="flex flex-shrink-0 items-center gap-1.5" aria-hidden>
+          <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#ff5f57" }} />
+          <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#ffbd2e" }} />
+          <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#27c93f" }} />
+        </div>
+        <span style={{ color: "var(--th-accent)", fontWeight: 700, fontSize: "11px" }}>$</span>
+        <span style={{ fontSize: "11px", color: "var(--th-text-secondary)" }}>cat getting-started.md</span>
+        <span
           style={{
-            margin: 0,
-            fontSize: "12px",
-            fontWeight: 600,
-            color: "var(--th-text-heading)",
-            fontFamily: mono,
-            letterSpacing: "0.02em",
+            marginLeft: "auto",
+            fontSize: "10px",
+            color: "var(--th-text-muted)",
+            background: "var(--th-bg-surface)",
+            padding: "2px 8px",
+            borderRadius: 6,
+            border: "1px solid var(--th-border)",
           }}
         >
-          {t(entry.title)}
-        </h3>
+          {entry.tips.length} {stepsLabel}
+        </span>
+      </div>
+
+      {/* 본문 (대시보드·프로젝트 유형과 동일 패딩) */}
+      <div
+        style={{
+          flex: 1,
+          minHeight: 0,
+          overflowY: "auto",
+          background: "var(--th-bg-primary)",
+          padding: "20px 18px 24px",
+          fontSize: "12px",
+          lineHeight: 1.6,
+          color: "var(--th-text-secondary)",
+        }}
+      >
         <p
           style={{
-            margin: "8px 0 0",
-            fontSize: "11px",
+            margin: "0 0 16px",
+            fontSize: "12px",
             lineHeight: 1.5,
             color: "var(--th-text-muted)",
           }}
         >
           {t(entry.description)}
         </p>
-      </div>
-      <div
-        style={{
-          flex: 1,
-          minHeight: 0,
-          overflowY: "auto",
-          padding: "12px 14px",
-          fontSize: "12px",
-          lineHeight: 1.55,
-          color: "var(--th-text-secondary)",
-        }}
-      >
-        <ul
+        <div
+          style={{
+            fontSize: "10px",
+            fontWeight: 600,
+            color: "var(--th-text-muted)",
+            textTransform: "uppercase",
+            letterSpacing: "0.08em",
+            marginBottom: 10,
+          }}
+        >
+          {stepsLabel}
+        </div>
+        <ol
           style={{
             margin: 0,
-            paddingLeft: "16px",
+            paddingLeft: "20px",
             listStyle: "decimal",
           }}
         >
           {entry.tips.map((tip, i) => (
-            <li key={i} style={{ marginBottom: 8 }}>
+            <li key={i} style={{ marginBottom: 10 }}>
               {t(tip)}
             </li>
           ))}
-        </ul>
+        </ol>
       </div>
     </aside>
   );

@@ -1,15 +1,16 @@
 import { useI18n } from "../../i18n";
 import { getScreenGuide } from "../../data/screen-guide";
 
-const mono = "var(--th-font-mono)";
+const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };
 
 /**
- * 프로젝트가 있을 때 대시보드 오른쪽에 표시하는 macOS 스타일 가이드 패널.
- * 헤더 ? 패널과 동일한 내용을 인라인으로 제공한다.
+ * 프로젝트가 있을 때 대시보드 오른쪽에 표시하는 가이드 패널.
+ * 대시보드·프로젝트 유형과 동일한 macOS 카드(터미널 헤더 + 본문) 스타일.
  */
 export default function DashboardGuidePanel() {
   const { t } = useI18n();
   const entry = getScreenGuide("dashboard", { hasProject: true });
+  const youCanLabel = t({ ko: "이 화면에서 할 수 있는 것", en: "You can", ja: "この画面でできること", zh: "在此画面您可以" });
 
   return (
     <aside
@@ -19,70 +20,90 @@ export default function DashboardGuidePanel() {
         flexShrink: 0,
         width: 320,
         maxWidth: "100%",
+        minHeight: 0,
         display: "flex",
         flexDirection: "column",
+        borderRadius: 10,
+        overflow: "hidden",
         background: "var(--th-bg-elevated)",
-        borderLeft: "1px solid var(--th-border)",
-        borderTop: "1px solid var(--th-border)",
-        boxShadow: "-4px 0 16px rgba(0,0,0,0.12)",
-        fontFamily: "var(--th-font-body)",
+        border: "1px solid var(--th-border)",
+        boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
+        ...mono,
       }}
       className="lg:min-h-0"
     >
+      {/* 터미널 헤더 (macOS) — 대시보드·프로젝트 유형과 동일 */}
       <div
         style={{
-          flexShrink: 0,
-          padding: "12px 14px",
           borderBottom: "1px solid var(--th-border)",
-          background: "var(--th-bg-surface)",
+          padding: "12px 18px",
+          background: "var(--th-bg-panel)",
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          flexWrap: "wrap",
+          borderTopLeftRadius: 10,
+          borderTopRightRadius: 10,
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
         }}
       >
-        <h3
+        <div className="flex flex-shrink-0 items-center gap-1.5" aria-hidden>
+          <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#ff5f57" }} />
+          <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#ffbd2e" }} />
+          <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#27c93f" }} />
+        </div>
+        <span style={{ color: "var(--th-accent)", fontWeight: 700, fontSize: "11px" }}>$</span>
+        <span style={{ fontSize: "11px", color: "var(--th-text-secondary)" }}>help/ --dashboard</span>
+        <span
           style={{
-            margin: 0,
-            fontSize: "12px",
-            fontWeight: 600,
-            color: "var(--th-text-heading)",
-            fontFamily: mono,
-            letterSpacing: "0.02em",
+            marginLeft: "auto",
+            fontSize: "10px",
+            color: "var(--th-text-muted)",
+            background: "var(--th-bg-surface)",
+            padding: "2px 8px",
+            borderRadius: 6,
+            border: "1px solid var(--th-border)",
           }}
         >
-          {t(entry.title)}
-        </h3>
+          {entry.tips.length} tips
+        </span>
+      </div>
+
+      {/* 본문 (대시보드·프로젝트 유형과 동일 패딩) */}
+      <div
+        style={{
+          flex: 1,
+          minHeight: 0,
+          overflowY: "auto",
+          background: "var(--th-bg-primary)",
+          padding: "20px 18px 24px",
+          fontSize: "12px",
+          lineHeight: 1.55,
+          color: "var(--th-text-secondary)",
+        }}
+      >
         <p
           style={{
-            margin: "8px 0 0",
-            fontSize: "11px",
+            margin: "0 0 14px",
+            fontSize: "12px",
             lineHeight: 1.5,
             color: "var(--th-text-muted)",
           }}
         >
           {t(entry.description)}
         </p>
-      </div>
-      <div
-        style={{
-          flex: 1,
-          minHeight: 0,
-          overflowY: "auto",
-          padding: "12px 14px",
-          fontSize: "12px",
-          lineHeight: 1.55,
-          color: "var(--th-text-secondary)",
-        }}
-      >
         <div
           style={{
-            fontSize: "11px",
+            fontSize: "10px",
             fontWeight: 600,
             color: "var(--th-text-muted)",
             textTransform: "uppercase",
-            letterSpacing: "0.05em",
+            letterSpacing: "0.08em",
             marginBottom: 8,
-            fontFamily: mono,
           }}
         >
-          {t({ ko: "이 화면에서 할 수 있는 것", en: "You can", ja: "この画面でできること", zh: "在此画面您可以" })}
+          {youCanLabel}
         </div>
         <ul
           style={{

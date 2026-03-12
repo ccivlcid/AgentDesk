@@ -17,6 +17,17 @@ type Step = "category" | "info" | "agent";
 
 const CLI_PROVIDERS = new Set(["claude", "codex", "gemini", "opencode", "copilot", "antigravity", "cursor", "ollama"]);
 
+// 카테고리 slug → 관련 부서 목록 (앞에 있을수록 우선 선택)
+// 목록에 없는 부서는 해당 카테고리에서 자동 선택되지 않음
+const CATEGORY_DEPT_PRIORITIES: Record<string, string[]> = {
+  "software-development":  ["dev", "qa", "planning", "devsecops", "operations", "design"],
+  "marketing-campaign":    ["design", "planning", "operations"],
+  "research-analysis":     ["planning", "dev", "qa", "operations"],
+  "product-launch":        ["planning", "dev", "qa", "design", "operations"],
+  "content-production":    ["design", "planning", "operations"],
+  "operations-process":    ["operations", "planning", "dev", "qa"],
+};
+
 const PROVIDER_LABEL: Record<string, string> = {
   claude: "Claude Code",
   codex: "Codex CLI",
@@ -88,7 +99,7 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onCl
     pathTools.setManualPathPickerOpen(false);
   }, [pathTools]);
 
-  const autoSelectByDepartment = useCallback((agentList: typeof agents): Set<string> => {
+  const autoSelectByDepartment = useCallback((agentList: typeof agents, categorySlug?: string | null): Set<string> => {
     const cli = agentList.filter((a) => CLI_PROVIDERS.has(a.cli_provider));
     const byDept = new Map<string, typeof cli>();
     for (const agent of cli) {
@@ -99,13 +110,45 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onCl
     }
     const roleRank = (r: string) => r === "team_leader" ? 0 : r === "senior" ? 1 : r === "junior" ? 2 : 3;
     const statusRank = (s: string) => s === "idle" ? 0 : s === "break" ? 1 : 2;
-    const selected = new Set<string>();
-    for (const deptAgents of byDept.values()) {
-      const best = [...deptAgents].sort((a, b) =>
+    const pickBest = (deptAgents: typeof cli) =>
+      [...deptAgents].sort((a, b) =>
         roleRank(a.role) * 3 + statusRank(a.status) - (roleRank(b.role) * 3 + statusRank(b.status))
       )[0];
-      if (best) selected.add(best.id);
+
+    const selected = new Set<string>();
+    const priorityList = categorySlug ? (CATEGORY_DEPT_PRIORITIES[categorySlug] ?? null) : null;
+
+    if (priorityList) {
+      // 카테고리 기반: 해당 카테고리 관련 부서에서만 우선순위 순으로 최적 1명 선택
+      for (const deptId of priorityList) {
+        const deptAgents = byDept.get(deptId);
+        if (deptAgents?.length) {
+          const best = pickBest(deptAgents);
+          if (best) selected.add(best.id);
+        }
+      }
+      // 관련 부서 에이전트가 전혀 없으면 전체 부서 fallback (부서 미배정 포함)
+      if (selected.size === 0) {
+        for (const deptAgents of byDept.values()) {
+          const best = pickBest(deptAgents);
+          if (best) selected.add(best.id);
+        }
+      }
+    } else {
+      // 카테고리 없음: 부서별 최적 1명 (부서 미배정 포함)
+      for (const deptAgents of byDept.values()) {
+        const best = pickBest(deptAgents);
+        if (best) selected.add(best.id);
+      }
     }
+
+    // 회의 쿼럼 보장: planning 팀장이 반드시 포함되어야 함
+    const planningAgents = byDept.get("planning") ?? [];
+    const planningTl = planningAgents.find((a) => a.role === "team_leader") ?? planningAgents[0];
+    if (planningTl && !selected.has(planningTl.id)) {
+      selected.add(planningTl.id);
+    }
+
     return selected;
   }, []);
 
@@ -301,9 +344,13 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onCl
                   <p style={{ ...mono, fontSize: "11px", color: "var(--th-text-secondary)", marginBottom: 2 }}>
                     {t({ ko: "이 프로젝트에 참여할 CLI 에이전트를 선택하세요.", en: "Select CLI agents that will work on this project.", ja: "このプロジェクトに参加するCLIエージェントを選択してください。", zh: "选择参与此项目的 CLI 代理。" })}
                   </p>
-                  <p style={{ ...mono, fontSize: "10px", color: "var(--th-text-muted)" }}>
-                    {t({ ko: "부서별 최적 에이전트 자동 선택됨 · 변경 가능", en: "Auto-selected best agent per dept · adjustable", ja: "部門別最適エージェント自動選択済 · 変更可", zh: "已按部门自动选择最优代理 · 可调整" })}
-                  </p>
+                  {selectedAgentIds.size > 0 && (
+                    <p style={{ ...mono, fontSize: "10px", color: "var(--th-text-muted)" }}>
+                      {selectedCategory
+                        ? t({ ko: `'${selectedCategory.name_ko ?? selectedCategory.name}' 유형 기반 자동 선택됨 · 변경 가능`, en: `Auto-selected for '${selectedCategory.name}' type · adjustable`, ja: `'${selectedCategory.name}' タイプに合わせて自動選択済 · 変更可`, zh: `已根据'${selectedCategory.name}'类型自动选择 · 可调整` })
+                        : t({ ko: "부서별 최적 에이전트 자동 선택됨 · 변경 가능", en: "Auto-selected best agent per dept · adjustable", ja: "部門別最適エージェント自動選択済 · 変更可", zh: "已按部门自动选择最优代理 · 可调整" })}
+                    </p>
+                  )}
                 </div>
                 {/* 선택 현황 + 부서 커버리지 */}
                 <div className="flex flex-col items-end gap-0.5 flex-shrink-0">
@@ -470,7 +517,7 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onCl
             </div>
           ) : step === "info" ? (
             <Button variant="primary" size="sm" onClick={() => {
-            if (selectedAgentIds.size === 0) setSelectedAgentIds(autoSelectByDepartment(agents));
+            if (selectedAgentIds.size === 0) setSelectedAgentIds(autoSelectByDepartment(agents, selectedCategory?.slug ?? null));
             setStep("agent");
           }} disabled={!canConfirmInfo}>
               {t({ ko: "다음 →", en: "Next →", ja: "次へ →", zh: "下一步 →" })}
