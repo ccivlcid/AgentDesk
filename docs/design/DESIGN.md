@@ -7,10 +7,15 @@
 
 ## 1. Design Philosophy
 
-- **테마:** 다크 기본, 라이트 선택. 터미널 느낌의 다크 배경 + 앰버 포인트.
+- **테마:** 다크 기본, 라이트 선택. macOS 앱 느낌의 외부 chrome + 터미널 느낌의 내부 콘텐츠.
 - **폰트:** 전역 `body`는 `var(--th-font-mono)` (JetBrains Mono). 제목/헤더도 동일 모노 사용.
-- **모서리:** `borderRadius: 0` (직각). 아바타·상태 dot만 `50%` 예외.
-- **색상:** CSS 변수(`--th-*`)만 사용. 인라인 hex는 위험/성공 등 상태 색상만 허용.
+- **모서리 (Dual-layer):**
+  - Chrome(컨테이너): `borderRadius: 10` — 패널, 모달, 카드, 사이드바, 헤더.
+  - Content(내부 요소): `borderRadius: 0` — 버튼, 인풋, 토스트, 리스트 항목.
+  - 아바타·상태 dot: `borderRadius: 50%`.
+- **글래스모피즘:** 사이드바·헤더에 `backdropFilter: blur(12px)` 적용.
+- **macOS 트래픽 라이트:** 헤더·모달 장식 (#ff5f57, #ffbd2e, #27c93f).
+- **색상:** CSS 변수(`--th-*`)만 사용. 인라인 hex는 위험/성공/트래픽 라이트 등 상태 색상만 허용.
 
 ---
 
@@ -65,6 +70,7 @@
 ### 4-4. Modal (`src/components/ui/Modal.tsx`)
 
 - 오버레이 + 내부 패널. `width`: sm/md/lg/xl/full. 내부는 `--th-font-mono` 사용. Escape·포커스 트랩 지원.
+- **Chrome:** `borderRadius: 10`, 깊은 `boxShadow`. macOS 트래픽 라이트 장식 (HeaderModalChrome).
 
 ### 4-5. Toast (`src/components/ui/Toast.tsx`)
 
@@ -77,7 +83,8 @@
 ### 4-7. Sidebar (`src/components/Sidebar.tsx`)
 
 - **구조:** 섹션(개요, 업무, 에이전트, 라이브러리, 시스템) + 항목. `NAV_STRUCTURE` 기반.
-- **항목:** 비활성 `color: var(--th-text-secondary)`, hover `background: var(--th-hover-bg)`, `color: var(--th-text)`.  
+- **Chrome:** `backdropFilter: blur(12px)` 글래스모피즘, macOS Finder 느낌 네비게이션.
+- **항목:** 비활성 `color: var(--th-text-secondary)`, hover `background: var(--th-hover-bg)`, `color: var(--th-text)`.
   활성 `background: var(--th-active-bg)`, `borderLeft: 2px solid var(--th-accent)`, `color: var(--th-accent)`.
 - **폰트:** `var(--th-font-mono)`, 12px.
 
@@ -89,9 +96,9 @@
 
 ## 5. Layout
 
-- **사이드바:** `--th-bg-sidebar`, `border-right: 1px solid var(--th-border)`.
-- **헤더:** `--th-bg-header`, 프로젝트 셀렉터·⌘K 등. `AppHeaderBar.tsx`.
-- **메인:** `--th-bg-primary` 배경, 패딩으로 콘텐츠 영역.
+- **사이드바:** `--th-bg-sidebar`, `border-right: 1px solid var(--th-border)`, `backdropFilter: blur(12px)` 글래스모피즘.
+- **헤더:** `--th-bg-header`, `borderTopLeftRadius: 10`, blur + shadow macOS 앱 바 스타일. 프로젝트 셀렉터·⌘K 등. `AppHeaderBar.tsx`.
+- **메인:** `--th-bg-primary` 배경, 패딩으로 콘텐츠 영역. `AppMainLayout.tsx` — "macOS 패널 스타일" 라운드 코너.
 
 ---
 
@@ -105,7 +112,7 @@
 
 | 항목 | 규칙 |
 |------|------|
-| border-radius | 0 (아바타·dot만 50%) |
+| border-radius | Chrome(패널·모달·카드): 10, Content(버튼·인풋·토스트): 0, 아바타·dot: 50% |
 | 색상 | `var(--th-*)` 사용. 상태(성공/오류)만 hex 허용 |
 | 폰트 | UI 전반 `var(--th-font-mono)` |
 | 버튼 | `Button` 컴포넌트 사용, variant·size 일관 |

@@ -28,13 +28,19 @@ AgentDesk is a "CLI Management Tool" — the operator's cockpit for AI agents th
 3. 업무 보드에서 태스크 상태 관리 (생성/배정/실행/완료)
 4. 에이전트 실행 출력(터미널) 확인 및 디버깅
 
-**Design direction: Modern Terminal CLI**
-- **Universal style**: 전 UI가 CLI 네이티브 언어를 사용 — 단일 디자인 레이어
-- **Font**: `var(--th-font-mono)` (JetBrains Mono) 전용 — sans-serif 금지
-- **Sigil navigation**: `›` (active), `·` (inactive), `//` (section), `$` (prompt), `[action]` (button)
-- **Prompt-line header**: `$ agentdesk / project / view` + cursor blink
+**Design direction: macOS Hybrid — Terminal Content + Native Chrome**
+- **Dual-layer design**: 컨테이너(chrome)는 macOS 네이티브 느낌, 콘텐츠(내부)는 터미널 CLI 언어
+- **Chrome layer** (컨테이너):
+  - macOS 트래픽 라이트 (#ff5f57, #ffbd2e, #27c93f) 헤더/모달 장식
+  - `backdropFilter: blur(12px)` 글래스모피즘 (사이드바, 헤더)
+  - `borderRadius: 10` 패널·모달·카드 모서리
+  - 깊은 그림자 (`boxShadow`) 레이어 분리감
+- **Content layer** (내부):
+  - `var(--th-font-mono)` (JetBrains Mono) 전용 — sans-serif 금지
+  - Sigil navigation: `›` (active), `·` (inactive), `//` (section), `$` (prompt), `[action]` (button)
+  - 터미널 출력 스타일 실행 뷰
 - **Brand color**: Amber (`#f59e0b`) — sparingly: active nav, primary CTA, live indicators
-- **Terminal aesthetic**: Pervasive, but modern and refined — NOT retro ASCII art
+- **Overall feel**: macOS Finder/앱 느낌의 외부 + 터미널 CLI 느낌의 내부 콘텐츠
 
 **i18n requirement:**
 - 모든 UI 텍스트는 `useI18n()` 훅을 통해 설정에서 선택된 언어로 출력
@@ -44,7 +50,9 @@ AgentDesk is a "CLI Management Tool" — the operator's cockpit for AI agents th
 **Tech stack:** React + TypeScript + Tailwind CSS + Framer Motion
 
 **Key design constraints:**
-- `border-radius: 0` everywhere (no rounded corners except avatar dots)
+- **Chrome (컨테이너)**: `borderRadius: 10` (패널, 모달, 카드), glassmorphism blur, macOS 트래픽 라이트 장식
+- **Content (내부 요소)**: `borderRadius: 0` (버튼, 인풋, 토스트 등 터미널 요소)
+- **아바타·상태 dot**: `borderRadius: 50%`
 - Monospace font everywhere (JetBrains Mono)
 - Lists use `border + divide-y` pattern (not individual cards)
 - Hover state: `rgba(255,255,255,0.04)` unified (`--th-hover-bg`)
@@ -54,6 +62,8 @@ AgentDesk is a "CLI Management Tool" — the operator's cockpit for AI agents th
 - Buttons: `[action]` bracket style (uppercase, mono, amber = primary)
 - Modal close: `[×]` bracket style
 - Status badges: `[STATUS]` uppercase mono with status color
+- Sidebar: `backdropFilter: blur(12px)` + macOS 느낌 네비게이션
+- Header: `borderTopLeftRadius: 10` + blur + shadow macOS 앱 바 스타일
 
 ---
 
