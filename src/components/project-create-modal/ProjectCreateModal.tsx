@@ -88,6 +88,27 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onCl
     pathTools.setManualPathPickerOpen(false);
   }, [pathTools]);
 
+  const autoSelectByDepartment = useCallback((agentList: typeof agents): Set<string> => {
+    const cli = agentList.filter((a) => CLI_PROVIDERS.has(a.cli_provider));
+    const byDept = new Map<string, typeof cli>();
+    for (const agent of cli) {
+      const key = agent.department?.id ?? "__none__";
+      const list = byDept.get(key) ?? [];
+      list.push(agent);
+      byDept.set(key, list);
+    }
+    const roleRank = (r: string) => r === "team_leader" ? 0 : r === "senior" ? 1 : r === "junior" ? 2 : 3;
+    const statusRank = (s: string) => s === "idle" ? 0 : s === "break" ? 1 : 2;
+    const selected = new Set<string>();
+    for (const deptAgents of byDept.values()) {
+      const best = [...deptAgents].sort((a, b) =>
+        roleRank(a.role) * 3 + statusRank(a.status) - (roleRank(b.role) * 3 + statusRank(b.status))
+      )[0];
+      if (best) selected.add(best.id);
+    }
+    return selected;
+  }, []);
+
   const toggleAgent = (id: string) => {
     setSelectedAgentIds((prev) => {
       const next = new Set(prev);
@@ -273,7 +294,7 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onCl
                     {t({ ko: "이 프로젝트에 참여할 CLI 에이전트를 선택하세요.", en: "Select CLI agents that will work on this project.", ja: "このプロジェクトに参加するCLIエージェントを選択してください。", zh: "选择参与此项目的 CLI 代理。" })}
                   </p>
                   <p style={{ ...mono, fontSize: "10px", color: "var(--th-text-muted)" }}>
-                    {t({ ko: "복수 선택 가능 · API 전용 에이전트는 표시되지 않음", en: "Multiple selection · API-only agents not shown", ja: "複数選択可 · API専用エージェントは非表示", zh: "可多选 · API 专用代理不显示" })}
+                    {t({ ko: "부서별 최적 에이전트 자동 선택됨 · 변경 가능", en: "Auto-selected best agent per dept · adjustable", ja: "部門別最適エージェント自動選択済 · 変更可", zh: "已按部门自动选择最优代理 · 可调整" })}
                   </p>
                 </div>
                 {/* 선택 현황 */}
@@ -423,7 +444,10 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onCl
               </Button>
             </div>
           ) : step === "info" ? (
-            <Button variant="primary" size="sm" onClick={() => setStep("agent")} disabled={!canConfirmInfo}>
+            <Button variant="primary" size="sm" onClick={() => {
+            if (selectedAgentIds.size === 0) setSelectedAgentIds(autoSelectByDepartment(agents));
+            setStep("agent");
+          }} disabled={!canConfirmInfo}>
               {t({ ko: "다음 →", en: "Next →", ja: "次へ →", zh: "下一步 →" })}
             </Button>
           ) : (
