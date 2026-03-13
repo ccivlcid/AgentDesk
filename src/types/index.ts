@@ -146,6 +146,7 @@ export interface Task {
   execution_error_code?: string | null;
   execution_error_summary?: string | null;
   resolved_workflow_contract_hash?: string | null;
+  timeout_minutes?: number;
   priority: number;
   task_type: TaskType;
   workflow_pack_key?: WorkflowPackKey;
@@ -176,6 +177,7 @@ export interface TaskExecutionSummary {
   execution_error_code?: string | null;
   execution_error_summary?: string | null;
   resolved_workflow_contract_hash?: string | null;
+  timeout_minutes?: number;
   started_at?: number | null;
   completed_at?: number | null;
   updated_at?: number;

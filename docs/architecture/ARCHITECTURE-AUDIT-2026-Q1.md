@@ -505,9 +505,9 @@ Remove:   LiveSyncScheduler (WebSocket으로 흡수)
 
 | 항목 | 설명 | 공수 |
 |------|------|------|
-| 에이전트 실행 상태 머신 | QUEUED → RUNNING → DONE/FAILED/TIMED_OUT | 3일 |
-| 실행 타임아웃 정책 | 태스크 단위 `timeout_minutes` 설정 | 1일 |
-| 에이전트 heartbeat | 30초 간격 ping → 응답 없으면 FAILED | 2일 |
+| ~~에이전트 실행 상태 머신~~ | ✅ 구현 완료 — stalled 자동 복구 + 상태 전이 검증 가드 + agent idle 리셋 | ~~3일~~ |
+| ~~실행 타임아웃 정책~~ | ✅ 구현 완료 — `timeout_minutes` 컬럼 + `enforceTaskTimeouts()` 30초 주기 검사 | ~~1일~~ |
+| ~~에이전트 heartbeat~~ | ✅ 이미 구현됨 — 30초 heartbeat + 90초 stalled 감지 + 180초 자동 복구 | ~~2일~~ |
 | 실행 비용 추적 | 토큰 × 가격 테이블 → 프로젝트별 비용 집계 | 2일 |
 | 동시 실행 제한 | 에이전트당 max 1 active task 강제 | 1일 |
 
@@ -559,7 +559,7 @@ Remove:   LiveSyncScheduler (WebSocket으로 흡수)
 |---------|------|------|------|
 | ~~**P0**~~ | ~~실행 상태 정합성 보정~~ | ✅ 이미 구현됨 — lifecycle.ts orphan recovery + heartbeat sweep | ~~1일~~ |
 | ~~**P0**~~ | ~~API 에러 핸들링 통일~~ | ✅ 구현 완료 — ApiError class + global error middleware + handleApiError 토스트 연동 | ~~2일~~ |
-| **P1** | 에이전트 실행 상태 머신 | 크래시 → 무한 "실행중" 완전 방지 | 3일 |
+| ~~**P1**~~ | ~~에이전트 실행 상태 머신~~ | ✅ 구현 완료 — stalled 자동복구 + timeout + 상태전이 검증 | ~~3일~~ |
 | **P1** | 동기화 전략 단일화 | WebSocket 신뢰성 + 코드 단순화 | 2일 |
 | **P2** | WorkflowPackKey 완전 제거 | 개념 혼동 제거, 기술 부채 청산 | 1일 |
 | ~~**P2**~~ | ~~프로젝트 스코핑 런타임 적용~~ | ✅ 해결됨 — DB CHECK + 런타임 적용 완료 (C-1~C-4) | ~~8일~~ |

@@ -1123,4 +1123,11 @@ function ensureMessagesIdempotencySchema(db: DbLike): void {
       updated_at INTEGER NOT NULL
     )
   `);
+
+  // Task execution timeout (minutes). 0 = no timeout (default).
+  try {
+    db.exec("ALTER TABLE tasks ADD COLUMN timeout_minutes INTEGER NOT NULL DEFAULT 0");
+  } catch {
+    /* already exists */
+  }
 }

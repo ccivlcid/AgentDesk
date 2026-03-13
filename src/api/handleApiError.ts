@@ -18,6 +18,12 @@ const ERROR_CODE_MESSAGES: Record<string, string> = {
   name_and_url_required: "Name and URL are required",
   invalid_id: "Invalid ID",
   cost_limit_exceeded: "Execution blocked: cost limit exceeded",
+  execution_timeout: "Task execution timed out",
+  heartbeat_stalled: "Task heartbeat timed out",
+  stalled_auto_recovered: "Task auto-recovered from stalled state",
+  orphaned_run: "Task recovered from orphaned execution",
+  already_running: "Task is already running",
+  process_still_active: "Previous run is still stopping",
   internal_server_error: "An internal server error occurred",
 };
 
