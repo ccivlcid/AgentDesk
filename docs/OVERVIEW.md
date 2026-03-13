@@ -415,22 +415,7 @@ UIUX 모니터링               ████████████████
   3. `n` → 현재 화면 컨텍스트에 맞는 새 항목 생성
   4. CommandPalette에 최근 실행 명령 히스토리 추가
 
-#### [P3-4] Slack 연동
-- **설계:** `docs/strategy/bigger-ide-vision.md`
-- **작업:**
-  1. `server/modules/messenger/slack-receiver.ts` 신규 구현
-  2. Slack Bot Token, Channel 설정 UI 추가
-  3. 기존 Telegram/Discord 패턴 재사용
-
-#### [P3-5] SQLite → PostgreSQL 마이그레이션
-- **문제:** SQLite로는 팀 협업, 다중 서버 배포 불가
-- **작업:**
-  1. `server/db/` — PostgreSQL 드라이버 (`pg` 또는 `postgres.js`) 도입
-  2. SQL 문법 차이 처리 (JSON, boolean, autoincrement 등)
-  3. 기존 SQLite 데이터 마이그레이션 스크립트
-  4. Docker Compose에 PostgreSQL 서비스 추가
-
-#### [P3-6] 테스트 커버리지 확대
+#### [P3-4] 테스트 커버리지 확대
 - **현황:** `src/i18n.test.ts`, `src/hooks/useWebSocket.test.ts` 정도만 존재
 - **작업:**
   1. 핵심 백엔드 모듈 단위 테스트: `hook-executor`, `project-scoped-rules`, `persona-catalog`
@@ -438,13 +423,20 @@ UIUX 모니터링               ████████████████
   3. 프론트 컴포넌트 테스트 (`@testing-library/react`): CommandPalette, AgentFlowGraph
   4. CI 파이프라인 연동 (GitHub Actions): 머지 전 테스트 자동 실행
 
-#### [P3-7] 이상 감지 인덱스 최적화
+#### [P3-5] 이상 감지 인덱스 최적화
 - **파일:** `server/modules/lifecycle.ts`
 - **문제:** 현재 60초 주기로 전체 실행 중 태스크 풀스캔
 - **작업:**
   1. `task_executions(status, started_at)` 복합 인덱스 추가
   2. 풀스캔 → 인덱스 기반 최신 N개만 조회로 변경
   3. stalled 감지 임계값 설정 가능하게 (현재 하드코딩 90초)
+
+#### [P3-6] Slack 연동
+- **설계:** `docs/strategy/bigger-ide-vision.md`
+- **작업:**
+  1. `server/modules/messenger/slack-receiver.ts` 신규 구현
+  2. Slack Bot Token, Channel 설정 UI 추가
+  3. 기존 Telegram/Discord 패턴 재사용
 
 ---
 
@@ -474,10 +466,9 @@ UIUX 모니터링               ████████████████
 | P3-1 | Split-Pane Layout | 3~4일 | IDE 비전 |
 | P3-2 | Visual Workflow Builder | 3~4주 | IDE 비전 |
 | P3-3 | Keyboard-First UX | 1주 | UX 완성도 |
-| P3-4 | Slack 연동 | 3일 | 기능 확장 |
-| P3-5 | PostgreSQL 마이그레이션 | 2~3주 | 확장성 |
-| P3-6 | 테스트 커버리지 | 3~4주 | 품질 |
-| P3-7 | 이상 감지 최적화 | 1일 | 성능 |
+| P3-4 | 테스트 커버리지 | 3~4주 | 품질 |
+| P3-5 | 이상 감지 최적화 | 1일 | 성능 |
+| P3-6 | Slack 연동 | 3일 | 기능 확장 (최후순위) |
 
 
 
