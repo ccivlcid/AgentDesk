@@ -2,6 +2,7 @@
 
 > 점검일: 2026-03-12
 > 대상: `/server/**` (약 231개 TypeScript 파일, 67,523 LOC)
+> 관련 문서: [에이전트 실행 성능 감사](./agent-performance-audit.md)
 
 ---
 

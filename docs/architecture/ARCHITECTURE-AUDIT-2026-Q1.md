@@ -4,6 +4,7 @@
 **버전:** AgentDesk 2.0.1
 **분석 범위:** 프론트엔드 + 백엔드 + DB + 에이전트 실행 엔진
 **UX 감사:** 별도 문서 참조 (`docs/design/ux-audit-2026-q1.md`)
+**에이전트 실행 성능 감사:** 별도 문서 참조 (`docs/strategy/agent-performance-audit.md`)
 
 ---
 
