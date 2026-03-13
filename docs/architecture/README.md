@@ -70,10 +70,7 @@ AgentDesk
 │   │   ├── DESIGN_SKILLS.md
 │   │   ├── design-retro-terminal-overhaul.md
 │   │   ├── design-system.md
-│   │   ├── DESIGN.md
-│   │   ├── office-customization-design.md
-│   │   ├── office-theme-manager-design.md
-│   │   └── office-view-tower-redesign.md
+│   │   └── DESIGN.md
 │   ├── plans/
 │   │   ├── 2026-02-25-server-types-nocheck-removal.md
 │   │   ├── 2026-02-27-workflow-pack-mvp.md
@@ -1108,11 +1105,9 @@ flowchart LR
   N183["src/components/office-view/CliUsagePanel.tsx"]
   N184["src/components/office-view/HeartbeatGuideModal.tsx"]
   N185["src/components/office-view/HeartbeatPanel.tsx"]
-  N186["src/components/office-view/HeartbeatGuideModal.tsx"]
-  N187["src/components/office-view/CliUsagePanel.tsx"]
-  N188["src/components/office-view/UsageTrendChart.tsx"]
-  N189["src/components/office-view/cli-locale.ts"]
-  N190["src/components/office-view/useCliUsage.ts"]
+  N186["src/components/office-view/UsageTrendChart.tsx"]
+  N187["src/components/office-view/cli-locale.ts"]
+  N188["src/components/office-view/useCliUsage.ts"]
   N242["src/components/project-manager/BurndownChart.tsx"]
   N243["src/components/project-manager/ManualAssignmentSelector.tsx"]
   N244["src/components/project-manager/ManualAssignmentWarningDialog.tsx"]
