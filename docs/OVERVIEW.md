@@ -187,7 +187,8 @@ GET /api/agent-rules?project_id=<id>
 하트비트·이상 감지           █████████████████░░░ 85%
 스케줄링                    █████████████████░░░ 85%
 UIUX 모니터링               ████████████████░░░░ 80%
-시각적 에이전트 그래프       ████████░░░░░░░░░░░░ 40%
+페르소나 시스템              ████████████████░░░░ 80%  (백엔드 완성, FE 일부 미완)
+시각적 에이전트 그래프       ░░░░░░░░░░░░░░░░░░░░  0%  (설계 완성, 구현 미시작)
 ```
 
 ### 동시 실행 안전 한계
@@ -230,13 +231,12 @@ UIUX 모니터링               ████████████████
 | [`docs/OVERVIEW.md`](./OVERVIEW.md) | **지금 이 문서** — 전체 개요 |
 | [`docs/specs/api.md`](./specs/api.md) | REST API 전체 명세 |
 | [`docs/architecture/SYSTEM-STRUCTURE-MAP.md`](./architecture/SYSTEM-STRUCTURE-MAP.md) | 시스템 구조 맵 |
-| [`docs/architecture/README.md`](./architecture/README.md) | 아키텍처 상세 (자동 생성) |
-| [`docs/architecture/ARCHITECTURE-AUDIT-2026-Q1.md`](./architecture/ARCHITECTURE-AUDIT-2026-Q1.md) | 아키텍처 품질 감사 |
-| [`docs/strategy/agent-performance-audit.md`](./strategy/agent-performance-audit.md) | 에이전트 실행 성능 감사 + 로드맵 |
-| [`docs/strategy/backend-engine-audit.md`](./strategy/backend-engine-audit.md) | 백엔드 엔진 품질 감사 |
+| [`docs/architecture/ARCHITECTURE-AUDIT-2026-Q1.md`](./architecture/ARCHITECTURE-AUDIT-2026-Q1.md) | **종합 아키텍처 + 백엔드 감사** (FE/BE/보안/성능/로드맵) |
+| [`docs/strategy/agent-performance-audit.md`](./strategy/agent-performance-audit.md) | 에이전트 실행 성능 감사 + 로드맵 (Phase 1 완료) |
 | [`docs/strategy/bigger-ide-vision.md`](./strategy/bigger-ide-vision.md) | "더 큰 IDE" 전략 비전 |
 | [`docs/strategy/agent-persona-system.md`](./strategy/agent-persona-system.md) | 에이전트 페르소나 시스템 |
-| [`docs/design/DESIGN.md`](./design/DESIGN.md) | UI/UX 디자인 시스템 |
+| [`docs/design/DESIGN.md`](./design/DESIGN.md) | UI/UX 디자인 시스템 + CSS 변수 전체 목록 |
+| [`docs/design/UI-SCREENS.md`](./design/UI-SCREENS.md) | 전체 화면·모달 명세 (13 + 36개) |
 
 ---
 

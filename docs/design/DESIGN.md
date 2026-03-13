@@ -19,19 +19,143 @@
 
 ---
 
-## 2. Color (CSS 변수 요약)
+## 2. Design System — CSS 변수 전체 목록
 
-| 용도 | 변수 | 다크 예시 |
-|------|------|-----------|
-| 배경 | `--th-bg-primary`, `--th-bg-secondary`, `--th-bg-surface`, `--th-bg-sidebar`, `--th-bg-elevated` | #0c0c0c, #111111, #181818 |
-| 테두리 | `--th-border`, `--th-border-strong`, `--th-border-accent` | #2a2a2a, #3a3a3a |
-| 텍스트 | `--th-text-primary`, `--th-text-secondary`, `--th-text-muted`, `--th-text-heading` | #e8e8e8, #888888, #737373 |
-| 액센트 | `--th-accent`, `--th-accent-dim`, `--th-accent-glow`, `--th-accent-border` | #f59e0b |
-| 상호작용 | `--th-hover-bg`, `--th-active-bg` | rgba(255,255,255,0.04/0.07) |
-| 위험 | `--th-danger-bg`, `--th-danger-border`, `--th-danger-text` | #f85149 계열 |
-| 터미널 | `--th-terminal-bg`, `--th-terminal-prompt`, `--th-terminal-success`, `--th-terminal-error` | 터미널 패널 전용 |
+> **정의 위치:** `src/styles/index.part01.css`
+> **테마:** `:root` / `[data-theme="dark"]` (기본), `[data-theme="light"]` (라이트)
 
-상세 값·라이트 테마는 `design-system.md` 참조.
+### 2-1. 폰트
+
+| 변수 | 값 |
+|------|-----|
+| `--th-font-display` | "Sora", "IBM Plex Sans KR", "Segoe UI", sans-serif |
+| `--th-font-body` | "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", "Segoe UI", sans-serif |
+| `--th-font-mono` | "JetBrains Mono", "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", monospace |
+
+### 2-2. 배경
+
+| 변수 | 다크 | 라이트 |
+|------|------|--------|
+| `--th-bg-primary` | #0c0c0c | #f5f0e8 |
+| `--th-bg-secondary` | #111111 | #ede8de |
+| `--th-bg-surface` | #181818 | #faf7f2 |
+| `--th-bg-surface-hover` | #1f1f1f | – |
+| `--th-bg-header` | #0c0c0c | – |
+| `--th-bg-sidebar` | #101010 | #f0ebe2 |
+| `--th-bg-elevated` | #1c1c1c | – |
+
+### 2-3. 테두리
+
+| 변수 | 다크 | 라이트 |
+|------|------|--------|
+| `--th-border` | #2a2a2a | #d4cfc6 |
+| `--th-border-strong` | #3a3a3a | #b8b2a8 |
+| `--th-border-accent` | rgba(245,158,11,0.35) | – |
+
+### 2-4. 텍스트
+
+| 변수 | 다크 | 라이트 |
+|------|------|--------|
+| `--th-text-primary` | #e8e8e8 | #1a1a1a |
+| `--th-text-secondary` | #888888 | #555555 |
+| `--th-text-muted` | #737373 | #706b62 |
+| `--th-text-heading` | #f0f0f0 | – |
+| `--th-text-accent` | #f59e0b | – |
+| `--th-text-code` | #22c55e | – |
+
+### 2-5. 액센트 (Amber)
+
+| 변수 | 다크 | 라이트 |
+|------|------|--------|
+| `--th-accent` | #f59e0b | #b45309 |
+| `--th-accent-dim` | #d97706 | #92400e |
+| `--th-accent-glow` | rgba(245,158,11,0.12) | – |
+| `--th-accent-border` | rgba(245,158,11,0.28) | – |
+| `--th-amber-glow` | rgba(245,158,11,0.15) | – |
+| `--th-hover-bg` | rgba(255,255,255,0.04) | – |
+| `--th-active-bg` | rgba(255,255,255,0.07) | – |
+
+### 2-6. 인풋
+
+| 변수 | 다크 | 라이트 |
+|------|------|--------|
+| `--th-input-bg` | #0c0c0c | #faf7f2 |
+| `--th-input-border` | #2a2a2a | #d4cfc6 |
+
+### 2-7. 카드/패널
+
+| 변수 | 값 |
+|------|-----|
+| `--th-card-bg` | #181818 |
+| `--th-card-border` | #2a2a2a |
+| `--th-card-bg-hover` | #1f1f1f |
+| `--th-panel-bg` | #111111 |
+| `--th-panel-border` | #2a2a2a |
+| `--th-label-color` | #737373 |
+
+### 2-8. 위험 상태
+
+| 변수 | 다크 | 라이트 |
+|------|------|--------|
+| `--th-danger-bg` | rgba(248,81,73,0.1) | – |
+| `--th-danger-border` | #f85149 | #cf222e |
+| `--th-danger-text` | #f85149 | #cf222e |
+
+### 2-9. 터미널
+
+| 변수 | 값 |
+|------|-----|
+| `--th-terminal-bg` | #010409 |
+| `--th-terminal-text` | #e6edf3 |
+| `--th-terminal-prompt` | #f59e0b |
+| `--th-terminal-success` | #3fb950 |
+| `--th-terminal-error` | #f85149 |
+| `--th-terminal-info` | #58a6ff |
+
+### 2-10. 기타
+
+| 변수 | 값 |
+|------|-----|
+| `--th-modal-overlay` | rgba(0,0,0,0.85) |
+| `--th-focus-ring` | #f59e0b |
+| `--th-focus-ring-shadow` | rgba(245,158,11,0.3) |
+| `--th-scrollbar-thumb` | #2a2a2a |
+| `--th-scrollbar-thumb-hover` | #3a3a3a |
+| `--th-glass-bg` | rgba(255,255,255,0.02) |
+| `--th-glass-border` | #2a2a2a |
+| `--th-glass-shadow` | rgba(0,0,0,0.9) |
+| `--th-green-glow` | rgba(63,185,80,0.12) |
+| `--th-red-glow` | rgba(248,81,73,0.12) |
+
+### 2-11. 성능 속성 배지
+
+| 변수 | 값 |
+|------|-----|
+| `--th-attr-elite` | #22c55e |
+| `--th-attr-good` | #86efac |
+| `--th-attr-avg` | #fbbf24 |
+| `--th-attr-poor` | #f87171 |
+| `--th-attr-vlow` | #6e7681 |
+
+### 2-12. 별칭
+
+| 변수 | 대응 |
+|------|------|
+| `--th-bg-base` | var(--th-bg-primary) |
+| `--th-bg-panel` | var(--th-bg-sidebar) |
+| `--th-text` | var(--th-text-primary) |
+| `--th-green` | var(--th-terminal-success) |
+| `--th-blue` | var(--th-terminal-info) |
+| `--th-red` | var(--th-terminal-error) |
+
+### 2-13. Tailwind 매핑 (`index.part05.css`)
+
+slate/gray 유틸리티가 `--th-*`로 재정의됨:
+- `bg-slate-950` → `var(--th-bg-primary)`
+- `bg-slate-800` → `var(--th-bg-surface)`
+- `border-slate-700` → `var(--th-border)`
+- `text-slate-100` → `var(--th-text-primary)`
+- `bg-blue-600` → `var(--th-accent)` + color #000
 
 ---
 
@@ -204,6 +328,5 @@
 
 ## 9. 관련 문서
 
-- **design-system.md** — CSS 변수 전체 목록·다크/라이트 테마 값.
-- **ux-renewal-2.0.md** — UX 원칙·화면별 스펙.
-- **agent-flow-graph-design.md** — 에이전트 플로우 그래프 설계.
+- **UI-SCREENS.md** — 전체 화면·모달 상세 명세 (13개 메인 화면 + 36개 오버레이).
+- **agent-flow-graph-design.md** — 에이전트 플로우 그래프 설계 (상세 SVG 명세).

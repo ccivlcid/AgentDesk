@@ -1,33 +1,54 @@
 # AgentDesk 아키텍처 감사 보고서
 
-**작성일:** 2026-03-11
+**작성일:** 2026-03-11 | **업데이트:** 2026-03-13
 **버전:** AgentDesk 2.0.1
 **분석 범위:** 프론트엔드 + 백엔드 + DB + 에이전트 실행 엔진
-**UX 감사:** 별도 문서 참조 (`docs/design/ux-audit-2026-q1.md`)
 **에이전트 실행 성능 감사:** 별도 문서 참조 (`docs/strategy/agent-performance-audit.md`)
 
 ---
 
 ## 목차
 
-1. [현재 아키텍처 개요](#1-현재-아키텍처-개요)
-2. [문제점 분석](#2-문제점-분석)
-3. [아키텍처 개선 방향](#3-아키텍처-개선-방향)
-4. [플랫폼 로드맵](#4-플랫폼-로드맵)
-5. [즉시 처리 권고](#5-즉시-처리-권고)
+1. [종합 평가](#1-종합-평가)
+2. [현재 아키텍처 개요](#2-현재-아키텍처-개요)
+3. [백엔드 엔진 강점](#3-백엔드-엔진-강점)
+4. [문제점 분석](#4-문제점-분석)
+5. [아키텍처 개선 방향](#5-아키텍처-개선-방향)
+6. [플랫폼 로드맵](#6-플랫폼-로드맵)
+7. [즉시 처리 권고](#7-즉시-처리-권고)
+8. [부록 — 추가 발견사항](#8-부록--추가-발견사항)
 
 ---
 
-## 1. 현재 아키텍처 개요
+## 1. 종합 평가
 
-### 1.1 전체 구조
+```
+백엔드 엔진 상태 (2026-03-13 기준)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+아키텍처 설계         ██████████████████░░ 90%
+보안                 ████████████████░░░░ 80%
+데이터베이스          ██████████████░░░░░░ 70%
+에러 처리            ██████████████░░░░░░ 70%
+테스트 커버리지       ████████████░░░░░░░░ 60%
+코드 모듈화          ██████████░░░░░░░░░░ 50%
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+종합                 ██████████████░░░░░░ ~70%
+```
+
+**한마디**: 핵심 기능은 견고하지만, **거대 파일 분리**, **SQL 안전성**, **에러 처리 체계화**에서 개선이 필요하다.
+
+---
+
+## 2. 현재 아키텍처 개요
+
+### 2.1 전체 구조
 
 ```
 ┌─────────────────────────────────────────────────────────┐
 │              Browser / Electron (Desktop)               │
 ├─────────────────────────────────────────────────────────┤
 │  React 19 + TypeScript                                  │
-│  ├─ App.tsx          최상위 상태 관리 (useState × 14)    │
+│  ├─ App.tsx          최상위 상태 관리 (useState × 40)    │
 │  ├─ AppMainLayout    레이아웃 + 뷰 라우팅                │
 │  ├─ api/             HTTP 클라이언트 레이어              │
 │  └─ hooks/           WebSocket + 폴링                   │
@@ -54,7 +75,7 @@
 └─────────────────────────────────────────────────────────┘
 ```
 
-### 1.2 데이터 모델 계층
+### 2.2 데이터 모델 계층
 
 ```
 Organization
@@ -79,7 +100,7 @@ Task (태스크)
 └── execution_sessions (실행 기록)
 ```
 
-### 1.3 에이전트 실행 흐름
+### 2.3 에이전트 실행 흐름
 
 ```
 POST /api/tasks/:id/run
@@ -108,7 +129,7 @@ broadcast('cli_output') → WebSocket → TerminalPanel
 broadcast('task_update')
 ```
 
-### 1.4 실시간 동기화 전략
+### 2.4 실시간 동기화 전략
 
 | 메커니즘 | 파일 | 용도 |
 |---------|------|------|
@@ -118,7 +139,52 @@ broadcast('task_update')
 
 ---
 
-## 2. 문제점 분석
+## 3. 백엔드 엔진 강점
+
+### 3-1. Deferred Runtime Proxy 패턴 — 우수
+
+`server/modules/deferred-runtime.ts`
+
+- 초기화 시점에 아직 없는 함수를 Proxy로 지연 참조 → 순환 의존성 없이 모듈 간 크로스 참조 해결
+- 미해결 함수가 있으면 서버 시작 시점에 즉시 에러 발생 (`assertRuntimeFunctionsResolved()`)
+- 200개+ 함수의 지연 바인딩 + 검증을 깔끔하게 구현. **변경 불필요.**
+
+### 3-2. 보안 미들웨어 — 양호
+
+`server/security/auth.ts` (222줄)
+
+- `timingSafeEqual()` — 타이밍 공격 방지
+- CSRF 토큰: SHA-256 해시 기반 생성/검증 (execution-control.ts에 적용)
+- CORS: `isTrustedOrigin()` + 허용 도메인 리스트 + suffix 매칭
+- 쿠키: `HttpOnly`, `SameSite=Strict`, 조건부 `Secure`
+- 루프백 전용 접근 + Bearer 토큰 인증, WebSocket 연결 시 origin + 인증 검증
+
+### 3-3. WebSocket Hub — 우수
+
+`server/ws/hub.ts` (70줄)
+
+- 고빈도 이벤트 배칭 (cli_output: 250ms, subtask_update: 150ms)
+- `MAX_BATCH_QUEUE = 60` → 큐 오버플로 방지 (oldest 드롭)
+- 연결 해제 시 `wsClients.delete()` → 메모리 누수 방지. **변경 불필요.**
+
+### 3-4. 라이프사이클 관리 — 우수
+
+`server/modules/lifecycle.ts` (616줄)
+
+- 고아 태스크 복구 (startup + interval 모드), 프로세스 PID 생존 확인
+- 로그 파일 mtime 확인 → 실제 출력 진행 중인지 판별
+- 하트비트 + stalled 감지 (90초 임계), 서브태스크 위임 큐 sweep
+- Graceful shutdown: 모든 프로세스 정리 + WebSocket 종료
+
+### 3-5. SQLite 동시성 처리 — 양호
+
+- `PRAGMA busy_timeout` + `withSqliteBusyRetry`: 지수 백오프 + 지터
+- `runInTransaction`: 트랜잭션 래퍼 (9개 파일에서 23회 사용)
+- 메시지 멱등성 보장 (`message-idempotency.ts`)
+
+---
+
+## 4. 문제점 분석
 
 ### 🔴 Critical — 확장성 한계
 
@@ -127,20 +193,23 @@ broadcast('task_update')
 **위치:** `src/App.tsx`
 
 ```typescript
-// 현재: 모든 비즈니스 상태가 최상위에 집중
+// 현재: 모든 비즈니스 상태가 최상위에 집중 (40개 useState)
 const [departments, setDepartments] = useState<Department[]>([]);
 const [agents, setAgents] = useState<Agent[]>([]);
 const [tasks, setTasks] = useState<Task[]>([]);
 const [projects, setProjects] = useState<Project[]>([]);
 const [categories, setCategories] = useState<Category[]>([]);
-// ... + 9개 더
+// ... + 35개 더 (총 40개)
+// App → AppMainLayout: 40개+ props 전달 (3단계 prop-drilling)
+// AppOverlays: 자체 상태 0개, App.tsx로부터 40개 props 수신
 ```
 
 **문제:**
 - 어떤 하위 컴포넌트 상태 변경이라도 App.tsx → 전체 트리 리렌더 유발
 - 에이전트/프로젝트/태스크 수 증가 시 성능 저하 가속
 - `useAppActions.ts`에 모든 비즈니스 로직 응집 → 단위 테스트 불가
-- 상태 추가 시 prop-drilling 깊이 증가
+- 상태 추가 시 prop-drilling 깊이 증가 (현재 3단계+)
+- 전역 상태 라이브러리 없음 (ThemeContext 1개만 존재)
 
 **영향도:** 프로젝트/에이전트 수 50+ 이상에서 체감 성능 저하
 
@@ -258,13 +327,131 @@ someApi().catch(() => {})          // 에러 삼킴
 someApi().catch(console.error)     // 로그만, 사용자 피드백 없음
 ```
 
-- 백엔드 에러 응답 구조 비표준화
-- 프론트에서 파싱 불가 → 일반적 에러 메시지 표시
-- 에러 로그 집계 없음
+- 백엔드 에러 응답 4가지 형식 혼재 (`{ ok, data }`, `{ error }`, `{ ok, error }`, raw data)
+- 에러 로그 집계 없음 (구조화 로거 미사용)
+- **프론트엔드는 `handleApiError` 유틸로 일관화됨** — 백엔드 응답 형식만 미표준화
 
 ---
 
-## 3. 아키텍처 개선 방향
+### 🔴 Critical — 보안
+
+#### [A9] Rate Limiting 미구현
+
+- API 전체에 rate limiting 없음. 인증된 사용자도 과도한 요청으로 서버 압도 가능.
+- `/api/inbox` (public path) — webhook secret 의존적이지만 brute-force 가능
+
+```typescript
+// 권장: express-rate-limit 추가
+app.use('/api/', rateLimit({ windowMs: 60_000, max: 200 }));
+app.use('/api/inbox', rateLimit({ windowMs: 60_000, max: 30 }));
+```
+
+#### [A10] OAuth 키 파생 취약
+
+**위치:** `server/oauth/helpers.ts:14`
+
+```typescript
+// 현재: 단순 SHA-256 해시 (KDF 없음, salt 없음)
+return createHash("sha256").update(OAUTH_ENCRYPTION_SECRET).digest();
+
+// 권장: PBKDF2
+return pbkdf2Sync(OAUTH_ENCRYPTION_SECRET, "agentdesk-oauth-salt", 100_000, 32, "sha256");
+```
+
+#### [A11] 미팅 참여자 필터링 버그 (HIGH)
+
+**위치:** `server/modules/routes/core/tasks/execution-run-auto-assign.ts:274-284`
+
+`assignment_mode === "auto"` 프로젝트에서 `loadManualProjectAgentScope()`가 `null` 반환 → 프로젝트 미배정 에이전트가 미팅/리뷰에 참여 가능.
+
+**영향:** 관련 없는 에이전트의 approve/hold 투표, 토큰 낭비, 프로젝트 정보 누출.
+
+**수정:** `assignment_mode` 조건 제거 → 모든 모드에서 `project_agents` 테이블 기준 필터링.
+
+#### [A12] 환경 변수 시작 시 검증 없음
+
+```typescript
+// 현재: OAUTH_ENCRYPTION_SECRET 미설정 → 조용히 빈 문자열
+const OAUTH_ENCRYPTION_SECRET =
+  process.env.OAUTH_ENCRYPTION_SECRET || process.env.SESSION_SECRET || "";
+```
+
+서버 시작 시 즉시 throw하도록 수정 필요.
+
+---
+
+### 🟠 High — 코드 부채
+
+#### [A13] 거대 파일 문제
+
+| 파일 | LOC | 문제 |
+|------|-----|------|
+| `gateway/client.ts` | 1,083 | 게이트웨이+메신저+Discord API+RPC 혼재, retry 없음 |
+| `bootstrap/schema/task-schema-migrations.ts` | 1,180 | 마이그레이션 전체가 1파일, 버전 추적 없음 |
+| `workflow/orchestration/review-finalize-tools.ts` | 875 | 리뷰 완료 로직 단일 파일 |
+| `workflow/orchestration.ts` | 785 | 200개+ `__ctx` 변수 추출 패턴 반복 |
+
+#### [A14] WebSocket 연결 수 제한 없음
+
+`wsClients`에 최대 연결 수 제한 없음 → 악의적 클라이언트 다수 연결 가능.
+
+#### [A15] In-Memory Map 15개
+
+`orchestration.ts`에서 15개 Map/Set이 서버 프로세스 메모리에 존재:
+- 서버 재시작 시 미팅/리뷰 세션 상태 전부 소실
+- 수평 확장 불가능
+- `reviewRoundState`, `taskExecutionSessions`, `meetingPresenceUntil` 등
+
+#### [A16] 마이그레이션 버전 추적 없음
+
+```typescript
+// 매 서버 시작마다 전체 재실행, 모든 에러 무시
+try {
+  db.exec("ALTER TABLE agents ADD COLUMN persona_id TEXT");
+} catch { /* 디스크 풀, 권한 오류 포함 모든 에러 무시 */ }
+// schema_migrations 테이블: 없음
+```
+
+---
+
+### 🟡 Medium
+
+#### [A17] 메신저 재시도 없음
+
+Discord/Telegram 수신기 공통: retry 없음, 지수 백오프 없음, circuit breaker 없음.
+inbox 전달 실패 시 메시지 영구 유실.
+
+#### [A18] 동적 SQL 24곳
+
+```typescript
+db.prepare(`UPDATE tasks SET ${updates.join(", ")} WHERE id = ?`).run(...params);
+```
+
+현재는 컬럼명이 하드코딩되어 위험도 낮지만, 패턴이 24곳에 분산 → 실수 가능성.
+
+#### [A19] 구조화 로깅 없음
+
+`console.log`/`console.error`만 사용. 로그 레벨, 트레이스 ID, 구조화 JSON 없음.
+→ `pino` 도입 권장.
+
+#### [A20] 테스트 커버리지 불균형
+
+총 39개 백엔드 테스트 / 200개+ 모듈 = **약 15% 커버리지**.
+
+테스트 없는 핵심 모듈:
+- `lifecycle.ts` (616줄) 🔴
+- `bootstrap/schema/` — DB 마이그레이션 🔴
+- `oauth/` 🔴
+- `routes/core/tasks/execution-run.ts` (729줄) 🔴
+- `gateway/` (1,083줄 대비 테스트 1개) 🟠
+
+#### [A21] TypeScript `as any` 256개
+
+`runtimeContext: Record<string, any>` 설계가 원인. 모듈 경계 타입 안전성 취약.
+
+---
+
+## 5. 아키텍처 개선 방향
 
 ### Phase A — 상태 관리 재설계
 
@@ -488,7 +675,7 @@ Remove:   LiveSyncScheduler (WebSocket으로 흡수)
 
 ---
 
-## 4. 플랫폼 로드맵
+## 6. 플랫폼 로드맵
 
 ### v2.1 — 안정화 (단기, ~4주)
 
@@ -552,23 +739,76 @@ Remove:   LiveSyncScheduler (WebSocket으로 흡수)
 
 ---
 
-## 5. 즉시 처리 권고
+## 7. 즉시 처리 권고
 
-**ROI 순 우선순위:**
+### 이번 주 (보안/버그)
 
-| 우선순위 | 항목 | 이유 | 공수 |
+| 우선순위 | 항목 | 이슈 | 공수 |
 |---------|------|------|------|
-| ~~**P0**~~ | ~~실행 상태 정합성 보정~~ | ✅ 이미 구현됨 — lifecycle.ts orphan recovery + heartbeat sweep | ~~1일~~ |
-| ~~**P0**~~ | ~~API 에러 핸들링 통일~~ | ✅ 구현 완료 — ApiError class + global error middleware + handleApiError 토스트 연동 | ~~2일~~ |
-| ~~**P1**~~ | ~~에이전트 실행 상태 머신~~ | ✅ 구현 완료 — stalled 자동복구 + timeout + 상태전이 검증 | ~~3일~~ |
-| ~~**P1**~~ | ~~동기화 전략 단일화~~ | ✅ 구현 완료 — task_update 직접 적용 + adaptive polling (WS 30s / disconnected 5s) | ~~2일~~ |
-| **P2** | WorkflowPackKey 완전 제거 | 개념 혼동 제거, 기술 부채 청산 | 1일 |
-| ~~**P2**~~ | ~~프로젝트 스코핑 런타임 적용~~ | ✅ 해결됨 — DB CHECK + 런타임 적용 완료 (C-1~C-4) | ~~8일~~ |
-| **P3** | App.tsx → Zustand 분리 | 성능 + 장기 유지보수성 | 4일 |
+| **P0** | 미팅 참여자 필터링 버그 | [A11] execution-run-auto-assign.ts:419 | 0.5일 |
+| **P0** | OAuth PBKDF2 전환 | [A10] oauth/helpers.ts:14 | 0.5일 |
+| **P0** | Rate Limiting 추가 | [A9] express-rate-limit | 0.5일 |
+| **P0** | WS 연결 수 제한 | [A14] ws/hub.ts | 0.5일 |
+| **P0** | 환경 변수 시작 검증 | [A12] config/runtime.ts | 0.5일 |
+
+### 2~3주 (안정성)
+
+| 우선순위 | 항목 | 이슈 | 공수 |
+|---------|------|------|------|
+| **P1** | 메신저 inbox 재시도 | [A17] gateway/client.ts | 1일 |
+| **P1** | In-memory Map sweep | [A15] orchestration.ts | 1일 |
+| **P1** | 마이그레이션 버전 테이블 | [A16] bootstrap/schema/ | 1일 |
+| **P2** | WorkflowPackKey 완전 제거 | [A4] 개념 혼동 청산 | 1일 |
+
+### 중기 (코드 품질)
+
+| 우선순위 | 항목 | 이슈 | 공수 |
+|---------|------|------|------|
+| **P3** | App.tsx → Zustand 분리 | [A1] 40개 useState | 4일 |
+| **P3** | 구조화 로깅 (pino) | [A19] 전체 적용 | 2일 |
+| **P3** | Zod 이미 설치 → 라우트 검증 | [A21] 응답 표준화 | 3일 |
+
+### 완료된 항목 (참고)
+
+| 항목 | 완료 시점 |
+|------|---------|
+| ~~실행 상태 정합성 보정~~ | ✅ lifecycle.ts orphan recovery + heartbeat |
+| ~~API 에러 핸들링 통일~~ | ✅ ApiError class + global middleware + handleApiError |
+| ~~에이전트 실행 상태 머신~~ | ✅ stalled 자동복구 + timeout + 상태전이 검증 |
+| ~~동기화 전략 단일화~~ | ✅ task_update 직접 적용 + adaptive polling |
+| ~~프로젝트 스코핑 런타임 적용~~ | ✅ C-1~C-4 완료 (rules/memory/hooks/skills) |
 
 ---
 
-## 부록 — 핵심 파일 참조
+## 8. 부록 — 추가 발견사항
+
+### B. 레이스 컨디션 위험
+
+`lifecycle.ts`: SELECT 후 UPDATE가 원자적이지 않음. 서브태스크 위임 시 부모 태스크 상태 변경, 미팅 상태 동시 접근 등.
+
+**권장:** 멀티스텝 상태 변경에 `runInTransaction()` 적용 확대 + optimistic locking (version 컬럼).
+
+### C. 응답 형식 비일관성
+
+```typescript
+res.json({ agents })                           // raw
+res.status(201).json({ ok: true, agent })      // ok + data
+res.status(500).json({ ok: false, error })     // ok + error
+res.status(400).json({ error: "code" })        // error만
+```
+
+**권장 표준:** 성공 `{ data: T }`, 에러 `{ error: { code, message } }`.
+
+### D. CSRF 검증 범위 불완전
+
+CSRF 검증은 `execution-control.ts:84~85`에만 적용됨.
+agents CRUD, projects, settings, memory, rules, hooks 미적용.
+
+### E. OpenAPI 스펙 동기화 문제
+
+100개+ 엔드포인트 중 25개만 문서화 (25% 커버리지). `pnpm openapi:sync` 명령 존재 → CI에서 검증 추가 권장.
+
+### F. 핵심 파일 참조
 
 | 역할 | 경로 |
 |------|------|
@@ -580,5 +820,8 @@ Remove:   LiveSyncScheduler (WebSocket으로 흡수)
 | 에이전트 실행 | `server/modules/routes/core/tasks/execution-run.ts` |
 | 프로세스 스폰 | `server/modules/routes/core/agents/spawn.ts` |
 | DB 스키마 | `server/modules/bootstrap/schema/base-schema.ts` |
-| WebSocket | `src/hooks/useWebSocket.ts` |
+| WebSocket Hub | `server/ws/hub.ts` |
+| 라이프사이클 | `server/modules/lifecycle.ts` |
+| OAuth 키 | `server/oauth/helpers.ts` |
+| 미팅 리더 선택 | `server/modules/workflow/orchestration/meetings/leader-selection.ts` |
 | 타입 정의 | `src/types/index.ts` |
