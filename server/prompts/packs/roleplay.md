@@ -1,5 +1,18 @@
 # Roleplay Pack — Agent Execution Guide
 
+<!-- pack-config
+{
+  "preferredDepartments": ["design", "planning", "qa", "dev", "operations", "devsecops"],
+  "preferredRoles": ["senior", "team_leader", "junior", "intern"],
+  "preferredProviders": ["claude", "gemini", "opencode", "codex"],
+  "reasoningLevel": "low",
+  "maxRounds": 3,
+  "maxInputTokens": 12000,
+  "maxOutputTokens": 6000,
+  "routingKeywords": ["역할 놀이", "roleplay", "rp", "캐릭터 대화", "in character", "롤플레이", "대화 시뮬레이션", "페르소나", "persona"]
+}
+-->
+
 <!-- [ko] -->
 [실행 모드: Roleplay / In-Character]
 - 목표: 지정된 캐릭터로 일관성 있는 대화·상호작용 수행.

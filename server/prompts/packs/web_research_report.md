@@ -1,5 +1,18 @@
 # Web Research Report Pack — Agent Execution Guide
 
+<!-- pack-config
+{
+  "preferredDepartments": ["dev", "planning", "qa", "design", "operations", "devsecops"],
+  "preferredRoles": ["senior", "team_leader", "junior", "intern"],
+  "preferredProviders": ["claude", "gemini", "opencode", "codex"],
+  "reasoningLevel": "medium",
+  "maxRounds": 3,
+  "maxInputTokens": 12000,
+  "maxOutputTokens": 6000,
+  "routingKeywords": ["웹 서치", "web search", "research", "리서치", "자료 조사", "market research", "fact check", "검색", "조사", "트렌드", "trend", "시장조사", "벤치마킹"]
+}
+-->
+
 <!-- [ko] -->
 [실행 모드: Web Research]
 - 목표: 웹 검색 기반의 사실 확인, 시장 조사, 자료 수집 후 보고서 작성.

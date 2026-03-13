@@ -1,5 +1,18 @@
 # Video Pre-production Pack — Agent Execution Guide
 
+<!-- pack-config
+{
+  "preferredDepartments": ["design", "planning", "dev", "operations", "qa", "devsecops"],
+  "preferredRoles": ["senior", "team_leader", "junior", "intern"],
+  "preferredProviders": ["claude", "codex", "gemini", "opencode"],
+  "reasoningLevel": "high",
+  "maxRounds": 3,
+  "maxInputTokens": 12000,
+  "maxOutputTokens": 6000,
+  "routingKeywords": ["영상", "video", "콘티", "storyboard", "shot list", "샷리스트", "script for video", "릴스", "쇼츠", "유튜브", "youtube", "광고영상", "홍보영상", "remotion"]
+}
+-->
+
 <!-- [ko] -->
 [실행 모드: Video Pre-production]
 - 목표: 실제 영상 파일(mp4) 생성. 기획 문서만 작성하면 완료가 아닙니다.

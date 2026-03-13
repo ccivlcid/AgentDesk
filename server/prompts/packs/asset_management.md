@@ -1,5 +1,18 @@
 # Asset Management Pack — Agent Execution Guide
 
+<!-- pack-config
+{
+  "preferredDepartments": ["planning", "dev", "qa", "design", "operations", "devsecops"],
+  "preferredRoles": ["team_leader", "senior", "junior", "intern"],
+  "preferredProviders": ["claude", "gemini", "opencode", "codex"],
+  "reasoningLevel": "high",
+  "maxRounds": 3,
+  "maxInputTokens": 12000,
+  "maxOutputTokens": 6000,
+  "routingKeywords": ["투자", "펀드", "자산 운용", "포트폴리오", "수익률", "리스크", "배분", "investment", "portfolio", "fund", "asset management", "hedge", "equity", "주식", "ETF", "채권"]
+}
+-->
+
 <!-- [ko] -->
 [실행 모드: Asset Management / Investment Analysis]
 - 목표: 투자, 펀드, 포트폴리오, 자산 운용 분석 및 전략 수립.

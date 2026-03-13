@@ -1,5 +1,18 @@
 # Report Pack — Agent Execution Guide
 
+<!-- pack-config
+{
+  "preferredDepartments": ["planning", "qa", "design", "dev", "operations", "devsecops"],
+  "preferredRoles": ["team_leader", "senior", "junior", "intern"],
+  "preferredProviders": ["claude", "gemini", "opencode", "codex"],
+  "reasoningLevel": "medium",
+  "maxRounds": 3,
+  "maxInputTokens": 12000,
+  "maxOutputTokens": 6000,
+  "routingKeywords": ["보고서", "리포트", "report", "brief", "summary", "executive summary", "status report", "정리", "분석", "analysis", "요약", "브리핑"]
+}
+-->
+
 <!-- [ko] -->
 [실행 모드: Report Writing]
 - 목표: 명확하고 구조적인 보고서·브리핑·요약문 작성.

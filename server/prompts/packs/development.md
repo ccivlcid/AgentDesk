@@ -1,5 +1,18 @@
 # Development Pack — Agent Execution Guide
 
+<!-- pack-config
+{
+  "preferredDepartments": ["dev", "qa", "devsecops", "operations", "planning", "design"],
+  "preferredRoles": ["senior", "team_leader", "junior", "intern"],
+  "preferredProviders": ["claude", "codex", "gemini", "opencode"],
+  "reasoningLevel": "high",
+  "maxRounds": 3,
+  "maxInputTokens": 12000,
+  "maxOutputTokens": 6000,
+  "routingKeywords": ["코드", "개발", "버그", "수정", "fix", "bug", "refactor", "build", "api", "test", "feature", "deploy", "implement", "debug"]
+}
+-->
+
 <!-- [ko] -->
 [실행 모드: Engineering]
 - 목표: 실용적이고 테스트 가능한 코드. 과도한 설계 금지, 현재 요구사항에 집중.

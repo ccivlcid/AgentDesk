@@ -1,9 +1,98 @@
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { DEFAULT_WORKFLOW_PACK_KEY, isWorkflowPackKey, type WorkflowPackKey } from "./definitions.ts";
+import { DEFAULT_WORKFLOW_PACK_KEY, isWorkflowPackKey, WORKFLOW_PACK_KEYS, type WorkflowPackKey } from "./definitions.ts";
 
 const PACKS_DIR = join(dirname(fileURLToPath(import.meta.url)), "../../../prompts/packs");
+
+// ---------------------------------------------------------------------------
+// Pack config — machine-readable metadata embedded in each .md file
+// ---------------------------------------------------------------------------
+
+export type PackConfig = {
+  /** Department IDs in priority order for agent auto-selection */
+  preferredDepartments: string[];
+  /** Agent roles in priority order (team_leader > senior > ...) */
+  preferredRoles: string[];
+  /** CLI providers in priority order */
+  preferredProviders: string[];
+  /** Reasoning level passed to the agent CLI */
+  reasoningLevel: "high" | "medium" | "low";
+  /** Max execution rounds before giving up */
+  maxRounds: number;
+  /** Max input tokens for the task prompt */
+  maxInputTokens: number;
+  /** Max output tokens per round */
+  maxOutputTokens: number;
+  /** Keywords used by the auto-router to classify tasks into this pack */
+  routingKeywords: string[];
+};
+
+const DEFAULT_PACK_CONFIG: PackConfig = {
+  preferredDepartments: ["dev", "planning", "qa", "design", "operations", "devsecops"],
+  preferredRoles: ["senior", "team_leader", "junior", "intern"],
+  preferredProviders: ["claude", "codex", "gemini", "opencode"],
+  reasoningLevel: "medium",
+  maxRounds: 3,
+  maxInputTokens: 12000,
+  maxOutputTokens: 6000,
+  routingKeywords: [],
+};
+
+const _configCache = new Map<WorkflowPackKey, PackConfig>();
+
+/**
+ * Parse the `<!-- pack-config ... -->` block from .md file content.
+ * Returns null if the block is missing or malformed.
+ */
+function parsePackConfigBlock(content: string): Partial<PackConfig> | null {
+  const START = "<!-- pack-config";
+  const END = "-->";
+  const start = content.indexOf(START);
+  if (start === -1) return null;
+  const jsonStart = start + START.length;
+  const end = content.indexOf(END, jsonStart);
+  if (end === -1) return null;
+  try {
+    return JSON.parse(content.slice(jsonStart, end).trim()) as Partial<PackConfig>;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Load and cache the machine-readable config for a workflow pack.
+ * Falls back to DEFAULT_PACK_CONFIG if the file is missing or the block is absent.
+ */
+export function loadPackConfig(packKey: WorkflowPackKey): PackConfig {
+  const cached = _configCache.get(packKey);
+  if (cached) return cached;
+
+  let parsed: Partial<PackConfig> | null = null;
+  try {
+    const content = readFileSync(join(PACKS_DIR, `${packKey}.md`), "utf-8");
+    parsed = parsePackConfigBlock(content);
+  } catch { /* file missing */ }
+
+  const config: PackConfig = { ...DEFAULT_PACK_CONFIG, ...(parsed ?? {}) };
+  _configCache.set(packKey, config);
+  return config;
+}
+
+/**
+ * Load configs for all packs at once (used by the keyword router).
+ */
+export function loadAllPackConfigs(): Map<WorkflowPackKey, PackConfig> {
+  const out = new Map<WorkflowPackKey, PackConfig>();
+  for (const key of WORKFLOW_PACK_KEYS) {
+    out.set(key, loadPackConfig(key));
+  }
+  return out;
+}
+
+// ---------------------------------------------------------------------------
+// Language extraction helpers
+// ---------------------------------------------------------------------------
 
 type SupportedLang = "ko" | "en" | "ja" | "zh";
 
@@ -27,26 +116,26 @@ function normalizePackKey(raw: string | null | undefined): WorkflowPackKey {
  * If no language markers exist at all, returns the full content trimmed.
  */
 function extractLangSection(content: string, lang: SupportedLang): string {
+  // Strip the pack-config block before extracting language sections
+  const cleaned = content.replace(/<!--\s*pack-config[\s\S]*?-->/g, "");
+
   const marker = `<!-- [${lang}] -->`;
-  const idx = content.indexOf(marker);
+  const idx = cleaned.indexOf(marker);
   if (idx === -1) {
     if (lang !== "en") return extractLangSection(content, "en");
-    // No language markers at all — return full content
-    if (!content.includes("<!-- [")) return content.trim();
+    if (!cleaned.includes("<!-- [")) return cleaned.trim();
     return "";
   }
   const start = idx + marker.length;
-  const nextIdx = content.slice(start).search(/<!-- \[[a-z]+\] -->/);
-  const end = nextIdx === -1 ? content.length : start + nextIdx;
-  return content.slice(start, end).trim();
+  const nextIdx = cleaned.slice(start).search(/<!-- \[[a-z]+\] -->/);
+  const end = nextIdx === -1 ? cleaned.length : start + nextIdx;
+  return cleaned.slice(start, end).trim();
 }
 
-/**
- * Load and return the execution guidance for a workflow pack.
- *
- * Reads from `server/prompts/packs/{packKey}.md`, extracts the appropriate
- * language section, and substitutes template variables.
- */
+// ---------------------------------------------------------------------------
+// Guidance builder (injected into agent prompt)
+// ---------------------------------------------------------------------------
+
 function loadPackGuidance(
   packKey: WorkflowPackKey,
   lang: SupportedLang,

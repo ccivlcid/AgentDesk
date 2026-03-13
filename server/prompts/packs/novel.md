@@ -1,5 +1,18 @@
 # Novel Writing Pack — Agent Execution Guide
 
+<!-- pack-config
+{
+  "preferredDepartments": ["design", "planning", "dev", "qa", "operations", "devsecops"],
+  "preferredRoles": ["senior", "team_leader", "junior", "intern"],
+  "preferredProviders": ["claude", "gemini", "opencode", "codex"],
+  "reasoningLevel": "medium",
+  "maxRounds": 3,
+  "maxInputTokens": 12000,
+  "maxOutputTokens": 6000,
+  "routingKeywords": ["소설", "novel", "fiction", "chapter", "스토리", "세계관", "시놉시스", "창작", "writing", "story", "narrative", "캐릭터", "character"]
+}
+-->
+
 <!-- [ko] -->
 [실행 모드: Creative Writing]
 - 목표: 캐릭터 일관성과 세계관 유지를 최우선으로 한 창작 글쓰기.

@@ -4,6 +4,7 @@ import {
   isWorkflowPackKey,
   type WorkflowPackKey,
 } from "../../../workflow/packs/definitions.ts";
+import { loadPackConfig } from "../../../workflow/packs/execution-guidance.ts";
 
 type DbLike = Pick<DatabaseSync, "prepare">;
 let cachedHasAgentWorkflowPackColumn: boolean | null = null;
@@ -34,16 +35,6 @@ type CandidateTaskShape = {
 export type AutoAssignSelectionResult = {
   packKey: WorkflowPackKey;
   agent: AutoAssignableAgent;
-};
-
-const PACK_DEPARTMENT_PRIORITIES: Record<WorkflowPackKey, string[]> = {
-  development: ["dev", "qa", "devsecops", "operations", "planning", "design"],
-  report: ["planning", "qa", "design", "dev", "operations", "devsecops"],
-  web_research_report: ["dev", "planning", "qa", "design", "operations", "devsecops"],
-  video_preprod: ["design", "planning", "dev", "operations", "qa", "devsecops"],
-  novel: ["design", "planning", "dev", "qa", "operations", "devsecops"],
-  roleplay: ["design", "planning", "qa", "dev", "operations", "devsecops"],
-  asset_management: ["planning", "dev", "qa", "design", "operations", "devsecops"],
 };
 
 const VALID_AGENT_ROLES = new Set(["team_leader", "senior", "junior", "intern"]);
@@ -254,7 +245,7 @@ function buildPreferredDepartmentOrder(
   packKey: WorkflowPackKey,
   taskDepartmentId: string | null | undefined,
 ): string[] {
-  const preferred = PACK_DEPARTMENT_PRIORITIES[packKey] ?? PACK_DEPARTMENT_PRIORITIES[DEFAULT_WORKFLOW_PACK_KEY];
+  const preferred = loadPackConfig(packKey).preferredDepartments;
   const out: string[] = [];
   const add = (value: string | null | undefined) => {
     if (!value) return;
@@ -344,6 +335,7 @@ function selectCandidate(
   preferredDeptIds: string[],
   constrainedAgentIds: string[] | null,
   packKey: WorkflowPackKey,
+  packPreferredRoles?: string[],
 ): AutoAssignableAgent | null {
   if (Array.isArray(constrainedAgentIds) && constrainedAgentIds.length === 0) {
     return null;
@@ -388,13 +380,17 @@ function selectCandidate(
   const runnableRows = rows.filter((row) => isOAuthBackedProviderReady(row, activeOAuthByProvider));
   if (runnableRows.length === 0) return null;
 
+  const roleOrder = packPreferredRoles ?? ["senior", "team_leader", "junior", "intern"];
   const deptRank = (deptId: string | null): number => {
     if (!deptId) return preferredDeptIds.length + 1;
     const index = preferredDeptIds.indexOf(deptId);
     return index >= 0 ? index : preferredDeptIds.length;
   };
   const statusRank = (status: string): number => (status === "idle" ? 0 : status === "break" ? 1 : 2);
-  const leaderRank = (role: string): number => (role === "team_leader" ? 1 : 0);
+  const roleRank = (role: string): number => {
+    const idx = roleOrder.indexOf(role);
+    return idx >= 0 ? idx : roleOrder.length;
+  };
 
   runnableRows.sort((a, b) => {
     const byDept = deptRank(a.department_id) - deptRank(b.department_id);
@@ -403,8 +399,8 @@ function selectCandidate(
     const byStatus = statusRank(a.status) - statusRank(b.status);
     if (byStatus !== 0) return byStatus;
 
-    const byLeader = leaderRank(a.role) - leaderRank(b.role);
-    if (byLeader !== 0) return byLeader;
+    const byRole = roleRank(a.role) - roleRank(b.role);
+    if (byRole !== 0) return byRole;
 
     const byTasksDone = (a.stats_tasks_done ?? 0) - (b.stats_tasks_done ?? 0);
     if (byTasksDone !== 0) return byTasksDone;
@@ -427,15 +423,16 @@ export function selectAutoAssignableAgentForTask(
   task: CandidateTaskShape,
 ): AutoAssignSelectionResult | null {
   const packKey = normalizePackKey(task.workflow_pack_key);
+  const packConfig = loadPackConfig(packKey);
   const preferredDeptIds = buildPreferredDepartmentOrder(packKey, task.department_id);
   const constrainedAgentIds = resolveConstrainedAgentScopeForTask(db, task);
 
-  const preferredCandidate = selectCandidate(db, preferredDeptIds, constrainedAgentIds, packKey);
+  const preferredCandidate = selectCandidate(db, preferredDeptIds, constrainedAgentIds, packKey, packConfig.preferredRoles);
   if (preferredCandidate) {
     return { packKey, agent: preferredCandidate };
   }
 
-  const fallbackCandidate = selectCandidate(db, [], constrainedAgentIds, packKey);
+  const fallbackCandidate = selectCandidate(db, [], constrainedAgentIds, packKey, packConfig.preferredRoles);
   if (!fallbackCandidate) return null;
 
   return { packKey, agent: fallbackCandidate };
