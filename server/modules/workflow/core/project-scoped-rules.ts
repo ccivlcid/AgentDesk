@@ -5,7 +5,10 @@
  * then builds a prompt block for injection into the agent execution prompt.
  *
  * Priority resolution: project > agent > department > global
+ * Results are cached in memory with 5-minute TTL to avoid repeated DB reads.
  */
+
+import { rulesCache, scopeKey } from "./prompt-cache.ts";
 
 interface RuleRow {
   rule_content: string;
@@ -33,39 +36,48 @@ export function buildRulesPromptBlock(
 ): string {
   const { projectId, agentId, departmentId } = context;
 
-  const scopeConditions: string[] = ["(scope_type = 'global')"];
-  const params: unknown[] = [];
+  // Cache lookup — avoid re-querying DB for identical scope within TTL
+  const cacheKeyStr = scopeKey(projectId, agentId, departmentId);
+  const cached = rulesCache.get(cacheKeyStr);
+  const rules: RuleRow[] = cached
+    ? (cached as RuleRow[])
+    : (() => {
+        const scopeConditions: string[] = ["(scope_type = 'global')"];
+        const params: unknown[] = [];
 
-  if (projectId) {
-    scopeConditions.push("(scope_type = 'project' AND scope_id = ?)");
-    params.push(projectId);
-  }
-  if (agentId) {
-    scopeConditions.push("(scope_type = 'agent' AND scope_id = ?)");
-    params.push(agentId);
-  }
-  if (departmentId) {
-    scopeConditions.push("(scope_type = 'department' AND scope_id = ?)");
-    params.push(departmentId);
-  }
+        if (projectId) {
+          scopeConditions.push("(scope_type = 'project' AND scope_id = ?)");
+          params.push(projectId);
+        }
+        if (agentId) {
+          scopeConditions.push("(scope_type = 'agent' AND scope_id = ?)");
+          params.push(agentId);
+        }
+        if (departmentId) {
+          scopeConditions.push("(scope_type = 'department' AND scope_id = ?)");
+          params.push(departmentId);
+        }
 
-  const scopeWhere = scopeConditions.join(" OR ");
-  const rules = db
-    .prepare(
-      `SELECT rule_content, scope_type, priority, title
-       FROM agent_rules
-       WHERE enabled = 1 AND (${scopeWhere})
-       ORDER BY
-         CASE scope_type
-           WHEN 'project' THEN 1
-           WHEN 'agent' THEN 2
-           WHEN 'department' THEN 3
-           WHEN 'global' THEN 4
-         END,
-         priority DESC
-       LIMIT 30`,
-    )
-    .all(...params) as RuleRow[];
+        const scopeWhere = scopeConditions.join(" OR ");
+        const rows = db
+          .prepare(
+            `SELECT rule_content, scope_type, priority, title
+             FROM agent_rules
+             WHERE enabled = 1 AND (${scopeWhere})
+             ORDER BY
+               CASE scope_type
+                 WHEN 'project' THEN 1
+                 WHEN 'agent' THEN 2
+                 WHEN 'department' THEN 3
+                 WHEN 'global' THEN 4
+               END,
+               priority DESC
+             LIMIT 30`,
+          )
+          .all(...params) as RuleRow[];
+        rulesCache.set(cacheKeyStr, rows);
+        return rows;
+      })();
 
   if (rules.length === 0) return "";
 

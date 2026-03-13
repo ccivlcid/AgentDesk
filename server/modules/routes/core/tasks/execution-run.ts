@@ -93,7 +93,7 @@ export function registerTaskRunRoute(deps: TaskRunRouteDeps): void {
     checkCostBlockExecution,
   } = deps;
 
-  app.post("/api/tasks/:id/run", (req, res) => {
+  app.post("/api/tasks/:id/run", async (req, res) => {
     const id = String(req.params.id);
     const task = db.prepare("SELECT * FROM tasks WHERE id = ?").get(id) as
       | {
@@ -480,8 +480,8 @@ Whenever you complete a subtask, report it in this format:
       taskLang,
     );
 
-    // Execute pre-task hooks
-    executeHooks(db as any, "pre-task", {
+    // Execute pre-task hooks (parallel, async)
+    await executeHooks(db as any, "pre-task", {
       projectId: task.project_id ?? null,
       agentId: agentId ?? null,
       departmentId: agent.department_id ?? null,

@@ -1158,4 +1158,23 @@ function ensureMessagesIdempotencySchema(db: DbLike): void {
   } catch {
     /* already exists */
   }
+
+  // Performance indexes: enabled + scope composite indexes for rules/memory/hooks
+  // and agent_id+created_at for anomaly detection queries
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_agent_rules_enabled_scope
+    ON agent_rules(enabled, scope_type, scope_id)
+  `);
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_memory_entries_enabled_scope
+    ON memory_entries(enabled, scope_type, scope_id)
+  `);
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_hook_entries_enabled_event_scope
+    ON hook_entries(enabled, event_type, scope_type, scope_id)
+  `);
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_agent_usage_agent_time
+    ON agent_usage_logs(agent_id, created_at DESC)
+  `);
 }

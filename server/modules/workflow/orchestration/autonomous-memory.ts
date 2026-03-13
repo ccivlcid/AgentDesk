@@ -9,6 +9,7 @@
 import { randomUUID } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
+import { memoriesCache, scopeKey } from "../core/prompt-cache.ts";
 
 interface MemoryEntry {
   id: string;
@@ -49,37 +50,45 @@ export function searchRelevantMemories(
   const { db } = deps;
   const { agentId, departmentId, workflowPackKey, projectId, taskTitle, taskDescription } = context;
 
-  // Get all enabled memories that match scope
-  const scopeConditions: string[] = ["(scope_type = 'global')"];
-  const params: any[] = [];
+  // Get all enabled memories that match scope — cached by scope key (5-min TTL)
+  const cacheKeyStr = scopeKey(projectId, agentId, departmentId, workflowPackKey);
+  const memories: MemoryEntry[] = (() => {
+    const cached = memoriesCache.get(cacheKeyStr);
+    if (cached) return cached as MemoryEntry[];
 
-  if (projectId) {
-    scopeConditions.push("(scope_type = 'project' AND scope_id = ?)");
-    params.push(projectId);
-  }
-  if (agentId) {
-    scopeConditions.push("(scope_type = 'agent' AND scope_id = ?)");
-    params.push(agentId);
-  }
-  if (departmentId) {
-    scopeConditions.push("(scope_type = 'department' AND scope_id = ?)");
-    params.push(departmentId);
-  }
-  if (workflowPackKey) {
-    scopeConditions.push("(scope_type = 'workflow_pack' AND scope_id = ?)");
-    params.push(workflowPackKey);
-  }
+    const scopeConditions: string[] = ["(scope_type = 'global')"];
+    const params: any[] = [];
 
-  const scopeWhere = scopeConditions.join(" OR ");
-  const memories = db
-    .prepare(
-      `SELECT id, title, content, category, scope_type, scope_id, priority
-       FROM memory_entries
-       WHERE enabled = 1 AND (${scopeWhere})
-       ORDER BY priority DESC, updated_at DESC
-       LIMIT 50`,
-    )
-    .all(...params) as MemoryEntry[];
+    if (projectId) {
+      scopeConditions.push("(scope_type = 'project' AND scope_id = ?)");
+      params.push(projectId);
+    }
+    if (agentId) {
+      scopeConditions.push("(scope_type = 'agent' AND scope_id = ?)");
+      params.push(agentId);
+    }
+    if (departmentId) {
+      scopeConditions.push("(scope_type = 'department' AND scope_id = ?)");
+      params.push(departmentId);
+    }
+    if (workflowPackKey) {
+      scopeConditions.push("(scope_type = 'workflow_pack' AND scope_id = ?)");
+      params.push(workflowPackKey);
+    }
+
+    const scopeWhere = scopeConditions.join(" OR ");
+    const rows = db
+      .prepare(
+        `SELECT id, title, content, category, scope_type, scope_id, priority
+         FROM memory_entries
+         WHERE enabled = 1 AND (${scopeWhere})
+         ORDER BY priority DESC, updated_at DESC
+         LIMIT 50`,
+      )
+      .all(...params) as MemoryEntry[];
+    memoriesCache.set(cacheKeyStr, rows);
+    return rows;
+  })();
 
   // Score memories by keyword relevance to task
   const searchText = `${taskTitle} ${taskDescription || ""}`.toLowerCase();
@@ -288,6 +297,7 @@ function insertAutoMemory(
   },
 ): void {
   const id = randomUUID();
+  memoriesCache.invalidateAll();
   db.prepare(
     `INSERT INTO memory_entries (id, title, content, category, scope_type, scope_id, priority, enabled, created_at, updated_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?)`,

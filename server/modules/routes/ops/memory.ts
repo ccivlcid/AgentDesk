@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import type { DatabaseSync, SQLInputValue } from "node:sqlite";
 import { randomUUID } from "node:crypto";
+import { memoriesCache } from "../../workflow/core/prompt-cache.ts";
 
 type MemoryRow = {
   id: string;
@@ -138,6 +139,7 @@ export function registerMemoryRoutes({ app, db, nowMs }: RegisterMemoryRoutesOpt
       const now = nowMs();
       const priority = Math.max(1, Math.min(100, Number(body.priority) || 50));
 
+      memoriesCache.invalidateAll();
       db.prepare(`
         INSERT INTO memory_entries (id, title, title_ko, title_ja, title_zh, description, content, category, scope_type, scope_id, priority, enabled, created_at, updated_at)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)
@@ -220,6 +222,7 @@ export function registerMemoryRoutes({ app, db, nowMs }: RegisterMemoryRoutesOpt
       params.push(nowMs());
       params.push(req.params.id);
 
+      memoriesCache.invalidateAll();
       db.prepare(`UPDATE memory_entries SET ${sets.join(", ")} WHERE id = ?`).run(...params);
 
       const updated = db.prepare("SELECT * FROM memory_entries WHERE id = ?").get(req.params.id) as MemoryRow;
@@ -238,6 +241,7 @@ export function registerMemoryRoutes({ app, db, nowMs }: RegisterMemoryRoutesOpt
       if (!row) return res.status(404).json({ error: "not_found" });
 
       const newEnabled = row.enabled ? 0 : 1;
+      memoriesCache.invalidateAll();
       db.prepare("UPDATE memory_entries SET enabled = ?, updated_at = ? WHERE id = ?").run(
         newEnabled,
         nowMs(),
@@ -258,6 +262,7 @@ export function registerMemoryRoutes({ app, db, nowMs }: RegisterMemoryRoutesOpt
         | undefined;
       if (!row) return res.status(404).json({ error: "not_found" });
 
+      memoriesCache.invalidateAll();
       db.prepare("DELETE FROM memory_entries WHERE id = ?").run(req.params.id);
       res.json({ ok: true });
     } catch (err: unknown) {

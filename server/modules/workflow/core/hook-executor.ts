@@ -3,9 +3,13 @@
  *
  * Hooks are scoped by project > agent > department > global priority.
  * Each hook runs as a child process with configurable timeout.
+ * All matching hooks execute in parallel (Promise.all) to avoid sequential blocking.
  */
 
-import { execFileSync } from "node:child_process";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
+
+const execFileAsync = promisify(execFile);
 
 interface HookRow {
   id: string;
@@ -34,15 +38,14 @@ interface HookContext {
 }
 
 /**
- * Execute all matching hooks for the given event type and scope.
- * Hooks are run synchronously in priority order.
+ * Execute all matching hooks for the given event type and scope in parallel.
  * Failures are logged but do not block task execution.
  */
-export function executeHooks(
+export async function executeHooks(
   db: DbLike,
   eventType: HookEventType,
   context: HookContext,
-): void {
+): Promise<void> {
   const { projectId, agentId, departmentId, taskId, workingDirectory } = context;
 
   const scopeConditions: string[] = ["(scope_type = 'global')"];
@@ -88,40 +91,41 @@ export function executeHooks(
   if (hooks.length === 0) return;
 
   const now = Date.now();
+  const env = {
+    ...process.env,
+    AGENTDESK_TASK_ID: taskId,
+    AGENTDESK_EVENT_TYPE: eventType,
+    AGENTDESK_PROJECT_ID: projectId || "",
+    AGENTDESK_AGENT_ID: agentId || "",
+  };
 
-  for (const hook of hooks) {
-    const cwd = hook.working_directory || workingDirectory || process.cwd();
-    const timeout = Math.min(Math.max(hook.timeout_ms || 30000, 1000), 300000);
+  // Run all hooks in parallel — each failure is independent
+  await Promise.all(
+    hooks.map(async (hook) => {
+      const cwd = hook.working_directory || workingDirectory || process.cwd();
+      const timeout = Math.min(Math.max(hook.timeout_ms || 30000, 1000), 300000);
 
-    try {
-      execFileSync("/bin/sh", ["-c", hook.command], {
-        cwd,
-        timeout,
-        stdio: "ignore",
-        env: {
-          ...process.env,
-          AGENTDESK_TASK_ID: taskId,
-          AGENTDESK_EVENT_TYPE: eventType,
-          AGENTDESK_PROJECT_ID: projectId || "",
-          AGENTDESK_AGENT_ID: agentId || "",
-          AGENTDESK_HOOK_ID: hook.id,
-        },
-      });
-
-      // Update execution stats
       try {
-        db.prepare(
-          "UPDATE hook_entries SET execution_count = execution_count + 1, last_executed_at = ? WHERE id = ?",
-        ).run(now, hook.id);
-      } catch {
-        /* stats update is best-effort */
+        await execFileAsync("/bin/sh", ["-c", hook.command], {
+          cwd,
+          timeout,
+          env: { ...env, AGENTDESK_HOOK_ID: hook.id },
+        });
+
+        // Update execution stats (best-effort)
+        try {
+          db.prepare(
+            "UPDATE hook_entries SET execution_count = execution_count + 1, last_executed_at = ? WHERE id = ?",
+          ).run(now, hook.id);
+        } catch {
+          /* stats update is best-effort */
+        }
+      } catch (err) {
+        console.error(
+          `[AgentDesk] Hook "${hook.title}" (${hook.id}) failed for ${eventType} on task ${taskId}:`,
+          err instanceof Error ? err.message : err,
+        );
       }
-    } catch (err) {
-      // Hook failure must not block task execution
-      console.error(
-        `[AgentDesk] Hook "${hook.title}" (${hook.id}) failed for ${eventType} on task ${taskId}:`,
-        err instanceof Error ? err.message : err,
-      );
-    }
-  }
+    }),
+  );
 }

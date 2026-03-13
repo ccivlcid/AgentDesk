@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import type { DatabaseSync, SQLInputValue } from "node:sqlite";
 import { randomUUID } from "node:crypto";
+import { rulesCache } from "../../workflow/core/prompt-cache.ts";
 
 type AgentRuleRow = {
   id: string;
@@ -138,6 +139,7 @@ export function registerAgentRulesRoutes({ app, db, nowMs }: RegisterAgentRulesR
       const now = nowMs();
       const priority = Math.max(1, Math.min(100, Number(body.priority) || 50));
 
+      rulesCache.invalidateAll();
       db.prepare(`
         INSERT INTO agent_rules (id, title, title_ko, title_ja, title_zh, description, rule_content, category, scope_type, scope_id, priority, enabled, created_at, updated_at)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)
@@ -220,6 +222,7 @@ export function registerAgentRulesRoutes({ app, db, nowMs }: RegisterAgentRulesR
       params.push(nowMs());
       params.push(req.params.id);
 
+      rulesCache.invalidateAll();
       db.prepare(`UPDATE agent_rules SET ${sets.join(", ")} WHERE id = ?`).run(...params);
 
       const updated = db.prepare("SELECT * FROM agent_rules WHERE id = ?").get(req.params.id) as AgentRuleRow;
@@ -238,6 +241,7 @@ export function registerAgentRulesRoutes({ app, db, nowMs }: RegisterAgentRulesR
       if (!row) return res.status(404).json({ error: "not_found" });
 
       const newEnabled = row.enabled ? 0 : 1;
+      rulesCache.invalidateAll();
       db.prepare("UPDATE agent_rules SET enabled = ?, updated_at = ? WHERE id = ?").run(
         newEnabled,
         nowMs(),
@@ -257,6 +261,7 @@ export function registerAgentRulesRoutes({ app, db, nowMs }: RegisterAgentRulesR
       if (!Array.isArray(items)) return res.status(400).json({ error: "items array required" });
 
       const now = nowMs();
+      rulesCache.invalidateAll();
       const stmt = db.prepare("UPDATE agent_rules SET priority = ?, updated_at = ? WHERE id = ?");
       for (const item of items) {
         if (item?.id && typeof item.priority === "number") {
@@ -278,6 +283,7 @@ export function registerAgentRulesRoutes({ app, db, nowMs }: RegisterAgentRulesR
         | undefined;
       if (!row) return res.status(404).json({ error: "not_found" });
 
+      rulesCache.invalidateAll();
       db.prepare("DELETE FROM agent_rules WHERE id = ?").run(req.params.id);
       res.json({ ok: true });
     } catch (err: unknown) {

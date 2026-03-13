@@ -189,8 +189,8 @@ export function createRunCompleteHandler(deps: RunCompleteHandlerDeps) {
       /* skill extraction must not block completion */
     }
 
-    // Execute post-task hooks (scoped by project/agent/department)
-    try {
+    // Execute post-task hooks (parallel, fire-and-forget — must not block completion)
+    {
       const hookEventType = finalExitCode === 0 ? "post-task" : "on-error";
       const hookContext = {
         projectId: task.project_id ?? null,
@@ -198,10 +198,10 @@ export function createRunCompleteHandler(deps: RunCompleteHandlerDeps) {
         departmentId: task.department_id ?? null,
         taskId,
       };
-      executeHooks(db as any, hookEventType, hookContext);
-      executeHooks(db as any, "on-complete", hookContext);
-    } catch {
-      /* hook failures must not block completion */
+      Promise.all([
+        executeHooks(db as any, hookEventType, hookContext),
+        executeHooks(db as any, "on-complete", hookContext),
+      ]).catch(() => {/* hook failures must not block completion */});
     }
 
     if (result) {
