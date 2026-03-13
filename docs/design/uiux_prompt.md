@@ -117,7 +117,7 @@ Improve interactions such as:
 - Draft auto-save for task creation
 
 **Step 6 — Component System**
-Design reusable UI components following `design-system.md` (Modern Terminal CLI patterns).
+Design reusable UI components following `DESIGN.md` (Modern Terminal CLI patterns).
 All components must use `--th-*` CSS variables and `var(--th-font-mono)`.
 
 **Step 7 — Developer Implementation**
@@ -140,7 +140,7 @@ Explain how to implement using React + TypeScript + Tailwind CSS.
 
 ## Reference Documents
 
-- `design-system.md` — CSS variables, Modern Terminal CLI component patterns
+- `DESIGN.md` — CSS variables, Modern Terminal CLI component patterns
 - `ux-renewal-2.0.md` — 7 UX principles, CLI concept philosophy
 - `ux-audit-2026-q1.md` — current UX audit findings
 - `screen-redesign-spec.md` — screen specifications

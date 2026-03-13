@@ -347,5 +347,5 @@ Communication style: {말투/어조}
 ## 참고 문서
 
 - 에이전트 관리: `src/components/agent-manager/`
-- 디자인 시스템: `docs/design/design-system.md`, `docs/design/ux-renewal-2.0.md`
+- 디자인 시스템: `docs/design/DESIGN.md` (CSS 변수 포함)
 - 차별화 전략: `docs/strategy/ui-differentiation-strategy.md`

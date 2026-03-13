@@ -62,15 +62,14 @@ AgentDesk
 │   │   ├── frontend-imports.mmd
 │   │   ├── org-chart.mmd
 │   │   ├── README.md
-│   │   ├── source-tree.txt
 │   │   └── SYSTEM-STRUCTURE-MAP.md
 │   ├── design/
 │   │   ├── agentdesk-2.0-menu-spec.md
 │   │   ├── dashboard-office-pack-steps.md
 │   │   ├── DESIGN_SKILLS.md
 │   │   ├── design-retro-terminal-overhaul.md
-│   │   ├── design-system.md
-│   │   └── DESIGN.md
+│   │   ├── UI-SCREENS.md
+│   │   └── DESIGN.md                 ← CSS 변수 포함 (design-system 통합)
 │   ├── plans/
 │   │   ├── 2026-02-25-server-types-nocheck-removal.md
 │   │   ├── 2026-02-27-workflow-pack-mvp.md

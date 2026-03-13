@@ -185,6 +185,5 @@ AgentDesk에 여러 에이전트를 등록해 개발 작업을 수행할 때 **�
 
 ## 관련 문서
 
-- [백엔드 엔진 심층 점검](./backend-engine-audit.md)
-- [아키텍처 감사 보고서](../architecture/ARCHITECTURE-AUDIT-2026-Q1.md)
+- [종합 아키텍처 감사 보고서](../architecture/ARCHITECTURE-AUDIT-2026-Q1.md) — 백엔드 엔진 심층 점검 포함
 - [API 명세](../specs/api.md)
