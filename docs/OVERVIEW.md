@@ -235,7 +235,8 @@ UIUX 모니터링               ████████████████
 | [`docs/strategy/agent-performance-audit.md`](./strategy/agent-performance-audit.md) | 에이전트 실행 성능 감사 + 로드맵 (Phase 1 완료) |
 | [`docs/strategy/bigger-ide-vision.md`](./strategy/bigger-ide-vision.md) | "더 큰 IDE" 전략 비전 |
 | [`docs/strategy/agent-persona-system.md`](./strategy/agent-persona-system.md) | 에이전트 페르소나 시스템 |
-| [`docs/design/DESIGN.md`](./design/DESIGN.md) | UI/UX 디자인 시스템 + CSS 변수 전체 목록 |
+| [`docs/design/DESIGN.md`](./design/DESIGN.md) | UI 구현 레퍼런스 — CSS 변수 전체 + 컴포넌트 패턴 |
+| [`docs/design/AI-GUIDE.md`](./design/AI-GUIDE.md) | AI 개발자 디자인 가이드 — 원칙·체크리스트·코드 예시 |
 | [`docs/design/UI-SCREENS.md`](./design/UI-SCREENS.md) | 전체 화면·모달 명세 (13 + 36개) |
 
 ---

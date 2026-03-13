@@ -156,7 +156,7 @@ src/components/
 
 > **"방식 우선" 원칙**: 유명인 이름을 모르는 사용자도 쉽게 고를 수 있도록,
 > 카드는 **어떤 방식으로 생각하는지**를 먼저 보여주고, 인물 이름은 보조 텍스트로 표시한다.
-> 상세 UX 스펙: [ux-renewal-2.0.md §11-B](../design/ux-renewal-2.0.md)
+> 상세 UX 스펙: [UI-SCREENS.md — AgentFormModal](../design/UI-SCREENS.md)
 
 ### 4-1. 에이전트 생성 플로우 변경
 

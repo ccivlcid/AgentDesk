@@ -326,7 +326,55 @@ slate/gray 유틸리티가 `--th-*`로 재정의됨:
 
 ---
 
-## 9. 관련 문서
+## 9. 스킬 라이브러리 UI 패턴
+
+> (구 `DESIGN_SKILLS.md` 통합)
+
+### 9-1. 리스트 행 패턴
+
+```tsx
+<div style={{ border: "1px solid var(--th-border)" }}
+     className="divide-y divide-[var(--th-border)] overflow-hidden">
+  {items.map((item) => (
+    <div
+      key={item.id}
+      className="flex items-center gap-3 px-4 py-3 hover:bg-[var(--th-hover-bg)] transition-colors"
+      style={{ fontFamily: "var(--th-font-mono)" }}
+    >
+      <span className="shrink-0">{/* 아이콘/카테고리 */}</span>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm truncate" style={{ color: "var(--th-text-primary)" }}>{item.name}</p>
+        <p className="text-[11px] mt-0.5" style={{ color: "var(--th-text-muted)" }}>{item.meta}</p>
+      </div>
+      {/* 상태 배지 */}
+    </div>
+  ))}
+</div>
+```
+
+### 9-2. 상태 배지 규칙
+
+- `borderRadius: 0`, `fontFamily: var(--th-font-mono)`, `fontSize: 10px`, `textTransform: uppercase`
+- 성공(초록 `--th-terminal-success`), 학습중(앰버 `--th-accent`), 오류(빨강 `--th-danger-text`), 비활성(`--th-text-muted`)
+
+### 9-3. CLI 프롬프트 스킬 표시 포맷
+
+```
+[Skills: TypeScript-Strict Rust-Safety Git-Flow][+3 more]
+```
+
+- 라벨/괄호: `--th-text-muted` / 스킬명: `--th-text-code` (#22c55e) / overflow: muted
+- 최근 학습/사용 순, 한 줄 3~4개 → `+N more`로 축약. 스킬 없으면 미표시.
+
+### 9-4. 에이전트별 그룹 헤더
+
+- 그룹 헤더: `--th-text-muted`, 11px, uppercase 섹션 레이블 스타일
+- 관련 컴포넌트: `SkillsLibrary.tsx`, `SkillHistoryPanel.tsx`
+
+---
+
+## 10. 관련 문서
 
 - **UI-SCREENS.md** — 전체 화면·모달 상세 명세 (13개 메인 화면 + 36개 오버레이).
+- **AI-GUIDE.md** — AI 개발자용 디자인 원칙 + UX 체크리스트.
 - **agent-flow-graph-design.md** — 에이전트 플로우 그래프 설계 (상세 SVG 명세).

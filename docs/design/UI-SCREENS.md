@@ -2,6 +2,24 @@
 
 > **최종 업데이트:** 2026-03-13
 > 전체 메뉴 화면 13개 + 오버레이/모달/패널 36개 이상 기록
+> **디자인 참조:** `DESIGN.md` (CSS 변수), `AI-GUIDE.md` (개발 원칙)
+
+---
+
+## 디자인 철학 — macOS Hybrid
+
+모든 화면은 **이중 레이어 원칙**을 따른다:
+
+| 레이어 | 역할 | 스타일 |
+|--------|------|--------|
+| **Chrome** (컨테이너) | 패널·모달·카드·사이드바 | `borderRadius: 10`, `blur(12px)`, 트래픽 라이트 |
+| **Content** (내부) | 버튼·인풋·토스트·배지 | `borderRadius: 0`, `font-mono`, CLI sigil 언어 |
+
+- **사이드바:** `backdropFilter: blur(12px)` — macOS Finder 느낌의 글래스 네비게이션
+- **헤더:** `borderTopLeftRadius: 10`, blur + shadow — macOS 앱 바 스타일
+- **모달:** `borderRadius: 10`, 트래픽 라이트 장식 — macOS 창 느낌
+- **Brand color:** Amber `--th-accent` — live indicator, active nav, primary CTA
+- **전체 폰트:** `var(--th-font-mono)` (JetBrains Mono) — sans-serif 금지
 
 ---
 

@@ -64,21 +64,11 @@ AgentDesk
 │   │   ├── README.md
 │   │   └── SYSTEM-STRUCTURE-MAP.md
 │   ├── design/
-│   │   ├── agentdesk-2.0-menu-spec.md
-│   │   ├── dashboard-office-pack-steps.md
-│   │   ├── DESIGN_SKILLS.md
-│   │   ├── design-retro-terminal-overhaul.md
-│   │   ├── UI-SCREENS.md
-│   │   └── DESIGN.md                 ← CSS 변수 포함 (design-system 통합)
-│   ├── plans/
-│   │   ├── 2026-02-25-server-types-nocheck-removal.md
-│   │   ├── 2026-02-27-workflow-pack-mvp.md
-│   │   └── heartbeat-logs-guide.md
+│   │   ├── DESIGN.md                 ← CSS 변수 + 컴포넌트 패턴 (주요 참조 문서)
+│   │   ├── UI-SCREENS.md             ← 13개 화면 + 36개 모달 명세
+│   │   └── AI-GUIDE.md               ← AI 개발자용 디자인 원칙 + 체크리스트
 │   ├── reference/
-│   │   ├── exe-packaging-plan.md
-│   │   ├── office-pack-phase17.md
-│   │   ├── phaser-migration.md
-│   │   └── progress.md
+│   │   └── (비어 있음 — exe-packaging-plan.md 제거됨)
 │   ├── reports/
 │   │   ├── Sample_Slides/
 │   │   │   ├── build-pptx.cjs

@@ -146,4 +146,4 @@ Project OS 리뉴얼(2.0)에서 추가되는 DB 테이블 목록. 기존 `projec
 - `deliverable_schema` — JSON
 
 상세 API: [specs/api.md §2.0 카테고리 & 프로젝트 팀](../specs/api.md)
-상세 UX: [design/ux-renewal-2.0.md](../design/ux-renewal-2.0.md)
+상세 UX: [design/UI-SCREENS.md](../design/UI-SCREENS.md)
