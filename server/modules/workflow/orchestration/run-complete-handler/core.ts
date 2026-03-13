@@ -8,6 +8,7 @@ import { appendTaskExecutionMetaUpdate } from "../../core/task-execution-meta.ts
 import { handleVideoArtifactSync } from "./video-artifact.ts";
 import { runAfterExitGates, applyVideoArtifactGateAfterSuccess } from "./gates.ts";
 import { runExtractLearnings } from "./learnings.ts";
+import { runExtractSkills } from "./skills.ts";
 import { applySuccessStateUpdate, applyFailureStateUpdate, buildStateUpdatesDeps } from "./state-updates.ts";
 import { executeHooks } from "../../core/hook-executor.ts";
 
@@ -176,6 +177,17 @@ export function createRunCompleteHandler(deps: RunCompleteHandlerDeps) {
       logsDir: logsDir as string,
       appendTaskLog: appendTaskLog as (a: string, b: string, c: string) => void,
     });
+
+    try {
+      runExtractSkills(taskId, task, finalExitCode, result, {
+        db,
+        nowMs: nowMs as () => number,
+        logsDir: logsDir as string,
+        appendTaskLog: appendTaskLog as (a: string, b: string, c: string) => void,
+      });
+    } catch {
+      /* skill extraction must not block completion */
+    }
 
     // Execute post-task hooks (scoped by project/agent/department)
     try {

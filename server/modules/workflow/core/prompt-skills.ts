@@ -78,7 +78,35 @@ function formatPromptSkillTagLine(rows: PromptSkillRow[]): string {
   return overflow > 0 ? `${inline}[+${overflow} more]` : inline;
 }
 
-function queryPromptSkillsByProvider(db: DatabaseSync, provider: PromptSkillProvider, limit: number): PromptSkillRow[] {
+function queryPromptSkillsByProvider(
+  db: DatabaseSync,
+  provider: PromptSkillProvider,
+  limit: number,
+  projectId?: string | null,
+): PromptSkillRow[] {
+  if (projectId) {
+    return db
+      .prepare(
+        `
+      SELECT
+        repo,
+        skill_id,
+        skill_label,
+        MAX(COALESCE(run_completed_at, updated_at, created_at)) AS learned_at
+      FROM skill_learning_history
+      WHERE status = 'succeeded' AND provider = ?
+        AND (
+          (scope_type = 'project' AND scope_id = ?)
+          OR scope_type = 'global'
+          OR scope_type IS NULL
+        )
+      GROUP BY repo, skill_id, skill_label
+      ORDER BY CASE WHEN scope_type = 'project' THEN 0 ELSE 1 END, learned_at DESC
+      LIMIT ?
+    `,
+      )
+      .all(provider, projectId, limit) as PromptSkillRow[];
+  }
   return db
     .prepare(
       `
@@ -89,6 +117,7 @@ function queryPromptSkillsByProvider(db: DatabaseSync, provider: PromptSkillProv
       MAX(COALESCE(run_completed_at, updated_at, created_at)) AS learned_at
     FROM skill_learning_history
     WHERE status = 'succeeded' AND provider = ?
+      AND (scope_type = 'global' OR scope_type IS NULL)
     GROUP BY repo, skill_id, skill_label
     ORDER BY learned_at DESC
     LIMIT ?
@@ -97,7 +126,30 @@ function queryPromptSkillsByProvider(db: DatabaseSync, provider: PromptSkillProv
     .all(provider, limit) as PromptSkillRow[];
 }
 
-function queryPromptSkillsGlobal(db: DatabaseSync, limit: number): PromptSkillRow[] {
+function queryPromptSkillsScoped(db: DatabaseSync, limit: number, projectId?: string | null): PromptSkillRow[] {
+  if (projectId) {
+    return db
+      .prepare(
+        `
+      SELECT
+        repo,
+        skill_id,
+        skill_label,
+        MAX(COALESCE(run_completed_at, updated_at, created_at)) AS learned_at
+      FROM skill_learning_history
+      WHERE status = 'succeeded'
+        AND (
+          (scope_type = 'project' AND scope_id = ?)
+          OR scope_type = 'global'
+          OR scope_type IS NULL
+        )
+      GROUP BY repo, skill_id, skill_label
+      ORDER BY CASE WHEN scope_type = 'project' THEN 0 ELSE 1 END, learned_at DESC
+      LIMIT ?
+    `,
+      )
+      .all(projectId, limit) as PromptSkillRow[];
+  }
   return db
     .prepare(
       `
@@ -108,6 +160,7 @@ function queryPromptSkillsGlobal(db: DatabaseSync, limit: number): PromptSkillRo
       MAX(COALESCE(run_completed_at, updated_at, created_at)) AS learned_at
     FROM skill_learning_history
     WHERE status = 'succeeded'
+      AND (scope_type = 'global' OR scope_type IS NULL)
     GROUP BY repo, skill_id, skill_label
     ORDER BY learned_at DESC
     LIMIT ?
@@ -127,66 +180,38 @@ function buildSkillRuntimePolicyLines(providerScoped: boolean): string[] {
   ];
 }
 
-/**
- * Filter skills by project_skills table (opt-out model).
- * Skills not listed in project_skills are considered enabled by default.
- * Only explicitly disabled skills (enabled = 0) are excluded.
- */
-function filterSkillsByProject(
-  db: DatabaseSync,
-  skills: PromptSkillRow[],
-  projectId: string,
-): PromptSkillRow[] {
-  if (skills.length === 0) return skills;
-  try {
-    const disabledRows = db
-      .prepare(
-        "SELECT skill_id FROM project_skills WHERE project_id = ? AND enabled = 0",
-      )
-      .all(projectId) as Array<{ skill_id: string }>;
-    if (disabledRows.length === 0) return skills;
-    const disabledSet = new Set(disabledRows.map((r) => r.skill_id));
-    return skills.filter((s) => !disabledSet.has(s.skill_id));
-  } catch {
-    return skills;
-  }
-}
-
 export function createPromptSkillsHelper(db: DatabaseSync): {
   buildAvailableSkillsPromptBlock: (provider: string, projectId?: string | null) => string;
 } {
   function buildAvailableSkillsPromptBlock(provider: string, projectId?: string | null): string {
     const providerDisplay = getPromptSkillProviderDisplayName(provider);
+    const scopeLabel = projectId ? "project" : "global";
     try {
       const providerKey = isPromptSkillProvider(provider) ? provider : null;
-      let providerLearnedSkills = providerKey
-        ? queryPromptSkillsByProvider(db, providerKey, SKILL_PROMPT_FETCH_LIMIT)
-        : [];
-      let globalLearnedSkills = queryPromptSkillsGlobal(db, SKILL_PROMPT_FETCH_LIMIT);
 
-      // Apply project-level skill filtering (opt-out model)
-      if (projectId) {
-        providerLearnedSkills = filterSkillsByProject(db, providerLearnedSkills, projectId);
-        globalLearnedSkills = filterSkillsByProject(db, globalLearnedSkills, projectId);
-      }
+      // Scope-based queries: project skills + global, or global-only when no project
+      const providerLearnedSkills = providerKey
+        ? queryPromptSkillsByProvider(db, providerKey, SKILL_PROMPT_FETCH_LIMIT, projectId)
+        : [];
+      const scopedLearnedSkills = queryPromptSkillsScoped(db, SKILL_PROMPT_FETCH_LIMIT, projectId);
 
       if (providerLearnedSkills.length > 0) {
         return [
           `[Available Skills][provider=${providerDisplay}][source=skills-library-db][scope=provider]${formatPromptSkillTagLine(providerLearnedSkills)}`,
-          `[Available Skills][provider=${providerDisplay}][source=skills-library-db][scope=global]${formatPromptSkillTagLine(globalLearnedSkills)}`,
+          `[Available Skills][provider=${providerDisplay}][source=skills-library-db][scope=${scopeLabel}]${formatPromptSkillTagLine(scopedLearnedSkills)}`,
           ...buildSkillRuntimePolicyLines(true),
         ].join("\n");
       }
 
-      if (globalLearnedSkills.length > 0) {
+      if (scopedLearnedSkills.length > 0) {
         return [
-          `[Available Skills][provider=${providerDisplay}][source=skills-library-db][scope=global]${formatPromptSkillTagLine(globalLearnedSkills)}`,
+          `[Available Skills][provider=${providerDisplay}][source=skills-library-db][scope=${scopeLabel}]${formatPromptSkillTagLine(scopedLearnedSkills)}`,
           ...buildSkillRuntimePolicyLines(false),
         ].join("\n");
       }
 
       return [
-        `[Available Skills][provider=${providerDisplay}][source=skills-library-db][scope=global][empty]${formatPromptSkillTagLine([])}`,
+        `[Available Skills][provider=${providerDisplay}][source=skills-library-db][scope=${scopeLabel}][empty]${formatPromptSkillTagLine([])}`,
         "[Skills Rule] No learned skills recorded in DB yet.",
         ...buildSkillRuntimePolicyLines(false),
       ].join("\n");
