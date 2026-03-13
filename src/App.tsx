@@ -192,6 +192,7 @@ export default function App() {
 
   useRealtimeSync({
     on,
+    connected,
     scheduleLiveSync,
     agentsRef,
     tasksRef,
@@ -201,6 +202,7 @@ export default function App() {
     codexThreadToSubAgentIdRef,
     codexThreadBindingTsRef,
     subAgentStreamTailRef,
+    setTasks,
     setAgents,
     setMessages,
     setUnreadAgentIds,

@@ -495,7 +495,7 @@ Remove:   LiveSyncScheduler (WebSocket으로 흡수)
 |------|------|------|
 | WorkflowPackKey 완전 제거 | `task.workflow_pack_key` → `task.context_hint` | 1일 |
 | ~~API 에러 핸들링 통일~~ | ✅ 구현 완료 — server/errors/ApiError.ts + errorMiddleware.ts + frontend handleApiError.ts 토스트 연동 | ~~2일~~ |
-| 동기화 전략 단일화 | WebSocket primary, polling fallback | 2일 |
+| ~~동기화 전략 단일화~~ | ✅ 구현 완료 — WS task_update 직접 적용 + adaptive polling interval | ~~2일~~ |
 | project_path 검증 API | 서버에서 경로 존재 여부 확인 엔드포인트 | 1일 |
 | ~~실행 상태 정합성 보정~~ | ✅ 이미 구현됨 — `lifecycle.ts` recoverOrphanInProgressTasks() (startup 60s grace + 30s sweep + heartbeat) | ~~1일~~ |
 
@@ -560,7 +560,7 @@ Remove:   LiveSyncScheduler (WebSocket으로 흡수)
 | ~~**P0**~~ | ~~실행 상태 정합성 보정~~ | ✅ 이미 구현됨 — lifecycle.ts orphan recovery + heartbeat sweep | ~~1일~~ |
 | ~~**P0**~~ | ~~API 에러 핸들링 통일~~ | ✅ 구현 완료 — ApiError class + global error middleware + handleApiError 토스트 연동 | ~~2일~~ |
 | ~~**P1**~~ | ~~에이전트 실행 상태 머신~~ | ✅ 구현 완료 — stalled 자동복구 + timeout + 상태전이 검증 | ~~3일~~ |
-| **P1** | 동기화 전략 단일화 | WebSocket 신뢰성 + 코드 단순화 | 2일 |
+| ~~**P1**~~ | ~~동기화 전략 단일화~~ | ✅ 구현 완료 — task_update 직접 적용 + adaptive polling (WS 30s / disconnected 5s) | ~~2일~~ |
 | **P2** | WorkflowPackKey 완전 제거 | 개념 혼동 제거, 기술 부채 청산 | 1일 |
 | ~~**P2**~~ | ~~프로젝트 스코핑 런타임 적용~~ | ✅ 해결됨 — DB CHECK + 런타임 적용 완료 (C-1~C-4) | ~~8일~~ |
 | **P3** | App.tsx → Zustand 분리 | 성능 + 장기 유지보수성 | 4일 |
