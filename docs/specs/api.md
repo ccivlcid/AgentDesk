@@ -275,6 +275,63 @@ or
 
 ---
 
+### Rules / Memory / Hooks
+
+에이전트 프롬프트에 자동 주입되는 룰·메모리·훅 관리 엔드포인트.
+
+#### Agent Rules
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| GET | `/api/agent-rules` | 룰 목록 |
+| POST | `/api/agent-rules` | 룰 생성 |
+| PATCH | `/api/agent-rules/:id` | 룰 수정/활성화 토글 |
+| DELETE | `/api/agent-rules/:id` | 룰 삭제 |
+
+`GET /api/agent-rules` 쿼리 파라미터:
+
+| 파라미터 | 설명 |
+| --- | --- |
+| `project_id` | 해당 프로젝트에 배정된 에이전트의 룰만 반환 (project-scope + 소속 agent-scope + global). `scope_type`/`scope_id`보다 우선 적용 |
+| `scope_type` | `global` \| `agent` \| `department` \| `workflow_pack` \| `project` |
+| `scope_id` | scope 대상 ID |
+| `enabled` | `1` \| `0` |
+
+#### Memory
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| GET | `/api/memory` | 메모리 목록 |
+| POST | `/api/memory` | 메모리 생성 |
+| PATCH | `/api/memory/:id` | 메모리 수정 |
+| DELETE | `/api/memory/:id` | 메모리 삭제 |
+
+`GET /api/memory` 쿼리 파라미터: `project_id`, `scope_type`, `scope_id`, `enabled` (Rules와 동일 동작)
+
+#### Hooks
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| GET | `/api/hooks` | 훅 목록 |
+| POST | `/api/hooks` | 훅 생성 |
+| PATCH | `/api/hooks/:id` | 훅 수정 |
+| DELETE | `/api/hooks/:id` | 훅 삭제 |
+
+`GET /api/hooks` 쿼리 파라미터: `project_id`, `event_type`, `scope_type`, `scope_id`, `enabled` (`project_id`는 Rules와 동일 동작)
+
+#### Skills (History / Available)
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| GET | `/api/skills/history` | 스킬 학습 이력 |
+| GET | `/api/skills/available` | 학습 완료 스킬 목록 |
+
+두 엔드포인트 모두 `project_id` 파라미터 지원: 해당 프로젝트에 배정된 에이전트의 스킬만 반환 (project-scope + 소속 agent-scope + global).
+
+> **`project_id` 필터 동작 원리**: `project_agents` 테이블을 조인하여 프로젝트에 배정된 에이전트의 `scope_type='agent'` 항목만 포함. `scope_type='global'` 및 `scope_type='project' AND scope_id=<project_id>`도 함께 포함.
+
+---
+
 ## 서버 전용·기타 엔드포인트 (본 문서 미수록)
 
 아래는 실제 서버에 등록되어 있으나 본 baseline에는 생략된 항목이다. 전체 목록은 `server/modules/routes/**/*.ts` 검색 참고.
@@ -283,7 +340,7 @@ or
 - **태스크:** `GET /api/tasks/:id/execution`, `GET /api/tasks/:id/execution-events`, `GET /api/tasks/:id/dependencies`, `POST /api/tasks/:id/dependencies`, `DELETE /api/tasks/:id/dependencies/:depId`, `GET /api/tasks/:id/diff`, `POST /api/tasks/:id/merge`, `POST /api/tasks/:id/discard`, `POST /api/tasks/bulk-hide`
 - **프로젝트:** `GET /api/projects/:id`, `GET /api/projects/:id/burndown`, `GET /api/projects/path-browse`, `GET /api/projects/path-tree`, `GET /api/projects/:id/branches`, `GET /api/github/repos/:owner/:repo/branches`, `GET /api/github/clone/:cloneId`
 - **스킬:** `GET /api/skills/available`, `GET /api/skills/custom/:skillName/export`, `POST /api/skills/custom/import`
-- **기타:** `GET /api/agent-usage`, `GET /api/agent-usage/trends/daily`, `GET /api/agent-usage/:agentId`, `GET /api/decision-inbox` 등. agent-rules, memory, hooks의 learn/history/available/unlearn, task-reports, deliverables, pipeline-gates, webhooks, backup, notifications, task-templates, custom-packs, worktrees, cli-usage, cost-alerts, oauth 콜백·device 플로우, update-auto-status, update-apply 등은 서버 라우트 등록처 참조.
+- **기타:** `GET /api/agent-usage`, `GET /api/agent-usage/trends/daily`, `GET /api/agent-usage/:agentId`, `GET /api/decision-inbox` 등. task-reports, deliverables, pipeline-gates, webhooks, backup, notifications, task-templates, custom-packs, worktrees, cli-usage, cost-alerts, oauth 콜백·device 플로우, update-auto-status, update-apply 등은 서버 라우트 등록처 참조.
 
 ## OpenAPI
 
