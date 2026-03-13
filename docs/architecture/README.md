@@ -736,9 +736,6 @@ AgentDesk
 │   │   │   ├── MemoryScopeBar.tsx
 │   │   │   ├── model.tsx
 │   │   │   └── useMemoryState.ts
-│   │   ├── office-theme/
-│   │   │   ├── theme-presets.ts
-│   │   │   └── user-theme-storage.ts
 │   │   ├── office-view/
 │   │   │   ├── CliUsagePanel.tsx
 │   │   │   ├── HeartbeatGuideModal.tsx
@@ -746,9 +743,6 @@ AgentDesk
 │   │   │   ├── UsageTrendChart.tsx
 │   │   │   ├── cli-locale.ts
 │   │   │   └── useCliUsage.ts
-│   │   ├── OfficeRoomManager/
-│   │   │   ├── ThemeModals.tsx
-│   │   │   └── ThemePresetsSection.tsx
 │   │   ├── project-manager/
 │   │   │   ├── BurndownChart.tsx
 │   │   │   ├── ManualAssignmentSelector.tsx
@@ -847,7 +841,6 @@ AgentDesk
 │   │   ├── MemoryLibrary.tsx
 │   │   ├── MessageContent.tsx
 │   │   ├── NotificationCenter.tsx
-│   │   ├── OfficeRoomManager.tsx
 │   │   ├── ProjectManagerModal.tsx
 │   │   ├── ReportHistory.tsx
 │   │   ├── SettingsPanel.tsx
@@ -1011,9 +1004,6 @@ flowchart LR
   N73["src/components/MemoryLibrary.tsx"]
   N74["src/components/MessageContent.tsx"]
   N75["src/components/NotificationCenter.tsx"]
-  N76["src/components/OfficeRoomManager.tsx"]
-  N77["src/components/OfficeRoomManager/ThemeModals.tsx"]
-  N78["src/components/OfficeRoomManager/ThemePresetsSection.tsx"]
   N80["src/components/ProjectManagerModal.tsx"]
   N81["src/components/ReportHistory.tsx"]
   N82["src/components/SettingsPanel.tsx"]
@@ -1115,8 +1105,6 @@ flowchart LR
   N178["src/components/memory/MemoryScopeBar.tsx"]
   N179["src/components/memory/model.tsx"]
   N180["src/components/memory/useMemoryState.ts"]
-  N181["src/components/office-theme/theme-presets.ts"]
-  N182["src/components/office-theme/user-theme-storage.ts"]
   N183["src/components/office-view/CliUsagePanel.tsx"]
   N184["src/components/office-view/HeartbeatGuideModal.tsx"]
   N185["src/components/office-view/HeartbeatPanel.tsx"]

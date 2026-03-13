@@ -82,7 +82,6 @@ interface AgentPersona {
   name: string;               // "Steve Jobs"
   category: PersonaCategory;
   emoji: string;              // 임시 아바타 이모지
-  sprite_variant: string;     // 전용 픽셀아트 스프라이트 ID
   tagline: string;            // "Think Different"
   traits: string[];           // ["단순함", "사용자 집착", "완벽주의"]
   best_for: string[];         // 적합한 태스크 타입
@@ -234,13 +233,7 @@ src/components/
 - 배지 텍스트: 방식명 키워드 (예: `[단순함]`, `[1st원칙]`)
 - 마우스 오버 툴팁: "Steve Jobs 방식 — 단순함, 사용자 경험 중심"
 
-### 4-4. 오피스 뷰 — 방식 오버레이
-
-에이전트 스프라이트 우상단에 방식 이니셜 픽셀 아이콘 표시:
-- 작은 원형 배지에 방식 이니셜 (예: "S" = 단순함, "1" = 1st 원칙)
-- 마우스 오버 시 풀 방식명 툴팁 (예: "단순함 방식 · Steve Jobs")
-
-### 4-5. 에이전트 상세 — PersonaDetailPanel
+### 4-4. 에이전트 상세 — PersonaDetailPanel
 
 ```
 ┌─ 사고 방식 ────────────────────────────────────────────────┐
@@ -329,8 +322,7 @@ Communication style: {말투/어조}
 - [ ] `AgentCard.tsx` — PersonaBadge 연결
 - [ ] `PersonaDetailPanel.tsx` — 에이전트 상세 섹션
 
-### Phase 3 — 오피스 & 대시보드 (1주)
-- [ ] 오피스 뷰 에이전트 스프라이트 페르소나 이니셜 오버레이
+### Phase 3 — 대시보드 (1주)
 - [ ] 대시보드 Active Personas 위젯
 - [ ] 태스크 카드 PersonaBadge 표시
 
@@ -348,7 +340,6 @@ Communication style: {말투/어조}
 | 저작권/초상권 | 공개 철학 추상화, 직접 인용 없음 |
 | 인물 이미지 훼손 | 부정적 묘사 배제, 공식 발언 기반만 |
 | 과도한 의인화 | "이 스타일로 생각한다" 명확히, 직접 의인화 없음 |
-| 픽셀아트 초상 | 실제 외모 모방 없음, 직업/특성 기반 추상 캐릭터 |
 | 법적 이슈 | 고인/생존인 구분 없이 동일 기준 적용 |
 
 ---
