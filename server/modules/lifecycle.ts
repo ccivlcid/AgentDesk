@@ -741,9 +741,15 @@ export function startLifecycle(ctx: RuntimeContext): void {
   // WebSocket server on same HTTP server
   const wss = new WebSocketServer({ server });
 
+  const MAX_WS_CLIENTS = 20;
+
   wss.on("connection", (ws: WsSocket, req: IncomingMessage) => {
     if (!isIncomingMessageOriginTrusted(req) || !isIncomingMessageAuthenticated(req)) {
       ws.close(1008, "unauthorized");
+      return;
+    }
+    if (wsClients.size >= MAX_WS_CLIENTS) {
+      ws.close(4008, "too_many_connections");
       return;
     }
     wsClients.add(ws);

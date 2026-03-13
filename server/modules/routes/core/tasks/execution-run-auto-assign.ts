@@ -272,8 +272,10 @@ function loadManualProjectAgentScope(db: DbLike, projectId: string | null | unde
   const rows = db
     .prepare("SELECT agent_id FROM project_agents WHERE project_id = ?")
     .all(projectId) as ProjectAgentRow[];
-  const ids = rows.map((row) => row.agent_id).filter((id) => typeof id === "string" && id.length > 0);
-  return ids.length > 0 ? ids : null;
+  // Always return an array (possibly empty) when project_id is provided.
+  // Returning null would mean "no constraint" — allowing any agent to be assigned,
+  // even those not belonging to this project.
+  return rows.map((row) => row.agent_id).filter((id) => typeof id === "string" && id.length > 0);
 }
 
 function combineAgentScopes(primary: string[] | null, secondary: string[] | null): string[] | null {

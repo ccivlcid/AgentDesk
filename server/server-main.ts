@@ -44,6 +44,22 @@ import { applyDefaultSeeds } from "./modules/bootstrap/schema/seeds.ts";
 
 export type { TaskCreationAuditInput } from "./modules/bootstrap/security-audit.ts";
 
+// ---------------------------------------------------------------------------
+// Startup environment validation
+// ---------------------------------------------------------------------------
+(function validateEnv() {
+  const warnings: string[] = [];
+  if (!process.env.OAUTH_ENCRYPTION_SECRET?.trim()) {
+    warnings.push("OAUTH_ENCRYPTION_SECRET is not set — OAuth token encryption unavailable");
+  }
+  if (!process.env.API_AUTH_TOKEN?.trim()) {
+    warnings.push("API_AUTH_TOKEN is not set — using ephemeral random token (resets on every restart)");
+  }
+  for (const msg of warnings) {
+    console.warn(`[AgentDesk] ⚠️  ${msg}`);
+  }
+})();
+
 const app = express();
 installSecurityMiddleware(app);
 
