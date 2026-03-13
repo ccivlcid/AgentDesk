@@ -53,16 +53,27 @@ export function registerMemoryRoutes({ app, db, nowMs }: RegisterMemoryRoutesOpt
         params.push(category);
       }
 
-      const scopeType = _req.query.scope_type as string | undefined;
-      if (scopeType && isValidScopeType(scopeType)) {
-        clauses.push("m.scope_type = ?");
-        params.push(scopeType);
-      }
+      const projectId = _req.query.project_id as string | undefined;
+      if (projectId) {
+        // project_id 필터: 해당 프로젝트에 배정된 에이전트의 항목만 포함
+        clauses.push(`(
+          (m.scope_type = 'project' AND m.scope_id = ?)
+          OR (m.scope_type = 'agent' AND m.scope_id IN (SELECT agent_id FROM project_agents WHERE project_id = ?))
+          OR m.scope_type = 'global'
+        )`);
+        params.push(projectId, projectId);
+      } else {
+        const scopeType = _req.query.scope_type as string | undefined;
+        if (scopeType && isValidScopeType(scopeType)) {
+          clauses.push("m.scope_type = ?");
+          params.push(scopeType);
+        }
 
-      const scopeId = _req.query.scope_id as string | undefined;
-      if (scopeId) {
-        clauses.push("m.scope_id = ?");
-        params.push(scopeId);
+        const scopeId = _req.query.scope_id as string | undefined;
+        if (scopeId) {
+          clauses.push("m.scope_id = ?");
+          params.push(scopeId);
+        }
       }
 
       const enabled = _req.query.enabled as string | undefined;
