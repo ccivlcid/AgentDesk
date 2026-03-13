@@ -16,6 +16,7 @@
 
 | 문서 | 설명 |
 |------|------|
+| [UI-SCREENS.md](design/UI-SCREENS.md) | **전체 화면·모달 목록** — 13개 메인 화면 + 36개 오버레이 상세 |
 | [DESIGN.md](design/DESIGN.md) | UI/UX 가이드 — 컴포넌트 패턴, 색·폰트·규칙 |
 | [design-system.md](design/design-system.md) | 디자인 시스템 — CSS 변수(`--th-*`), 다크/라이트 테마 |
 | [DESIGN_SKILLS.md](design/DESIGN_SKILLS.md) | 스킬 학습 히스토리·CLI 프롬프트 UI 스펙 |
