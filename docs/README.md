@@ -1,12 +1,14 @@
 # Docs
 
+> **시작점:** [`OVERVIEW.md`](./OVERVIEW.md) — AgentDesk가 무엇이고, 왜 만들어졌는지, 어떻게 동작하는지 한 문서에서 읽을 수 있다.
+
 ---
 
 ## 루트
 
 | 문서 | 설명 |
 |------|------|
-| [README.md](README.md) | 이 인덱스 |
+| [OVERVIEW.md](OVERVIEW.md) | **마스터 개요** — Project OS 컨셉, 에이전트 모니터링, 실행 파이프라인, 현재 상태, 로드맵 |
 
 ---
 
@@ -26,7 +28,7 @@
 
 | 문서 | 설명 |
 |------|------|
-| [api.md](specs/api.md) | API 계약 — 엔드포인트, 인증, 메신저 |
+| [api.md](specs/api.md) | API 계약 — 엔드포인트, 인증, 메신저, Rules/Memory/Hooks `project_id` 필터 |
 | [openapi.json](specs/openapi.json) | OpenAPI 정의 |
 
 ---
@@ -35,7 +37,11 @@
 
 | 문서 | 설명 |
 |------|------|
-| [agent-persona-system.md](strategy/agent-persona-system.md) | 페르소나 에이전트 아키텍처, "방식 우선" UX |
+| [agent-performance-audit.md](strategy/agent-performance-audit.md) | **에이전트 실행 성능 감사** — 병목 10개, 3단계 수정 로드맵 (Phase 1 완료) |
+| [backend-engine-audit.md](strategy/backend-engine-audit.md) | 백엔드 엔진 품질 감사 — 아키텍처·보안·DB·에러 처리 |
+| [bigger-ide-vision.md](strategy/bigger-ide-vision.md) | "더 큰 IDE" 전략 비전 — 시각화·에이전트 프로그래밍·통합 IDE |
+| [agent-persona-system.md](strategy/agent-persona-system.md) | 에이전트 페르소나 시스템 — 유명인 페르소나 카탈로그 |
+| [agent-flow-graph-design.md](strategy/agent-flow-graph-design.md) | 에이전트 플로우 그래프 설계 |
 
 ---
 
@@ -43,9 +49,9 @@
 
 | 문서 | 설명 |
 |------|------|
-| [README.md](architecture/README.md) | 시스템 개요, 프로젝트 트리, 의존성 다이어그램 |
-| [SYSTEM-STRUCTURE-MAP.md](architecture/SYSTEM-STRUCTURE-MAP.md) | 시스템 구조 맵 |
-| [ARCHITECTURE-AUDIT-2026-Q1.md](architecture/ARCHITECTURE-AUDIT-2026-Q1.md) | 2026 Q1 아키텍처 감사 |
+| [README.md](architecture/README.md) | 시스템 개요, 프로젝트 트리, 의존성 다이어그램 (자동 생성) |
+| [SYSTEM-STRUCTURE-MAP.md](architecture/SYSTEM-STRUCTURE-MAP.md) | 시스템 구조 맵 — Frontend·Backend·DB·실행 흐름 |
+| [ARCHITECTURE-AUDIT-2026-Q1.md](architecture/ARCHITECTURE-AUDIT-2026-Q1.md) | 2026 Q1 아키텍처 감사 — 프론트/백 문제점 및 개선 방향 |
 | org-chart.mmd, backend-dependencies.mmd, frontend-imports.mmd | 자동 생성 다이어그램 |
 | architecture.json, source-tree.txt | 자동 생성 리포트 (`npm run arch:map`으로 재생성) |
 
