@@ -1,34 +1,7 @@
-import { useState, useRef, useCallback, useEffect, useMemo } from "react";
-import type { DecisionInboxItem } from "./components/chat/decision-inbox";
+import { useRef, useCallback, useEffect, useMemo } from "react";
 import { useWebSocket } from "./hooks/useWebSocket";
-import type {
-  Department,
-  Agent,
-  Task,
-  Message,
-  CompanyStats,
-  CompanySettings,
-  CliStatusMap,
-  SubTask,
-  MeetingPresence,
-  SubAgent,
-  CrossDeptDelivery,
-  ClientOfficeCall,
-  Category,
-  Project,
-} from "./types";
-import type { TaskReportDetail } from "./api";
 import * as api from "./api";
-import { detectBrowserLanguage } from "./i18n";
 import { useTheme } from "./ThemeContext";
-import { UPDATE_BANNER_DISMISS_STORAGE_KEY } from "./app/constants";
-import {
-  detectRuntimeOs,
-  isForceUpdateBannerEnabled,
-  mergeSettingsWithDefaults,
-} from "./app/utils";
-import type { OAuthCallbackResult, RuntimeOs, TaskPanelTab, View } from "./app/types";
-import { useRealtimeSync } from "./app/useRealtimeSync";
 import { useAppLabels } from "./app/useAppLabels";
 import AppLoadingScreen from "./app/AppLoadingScreen";
 import AppMainLayout from "./app/AppMainLayout";
@@ -41,80 +14,59 @@ import { useUpdateStatusPolling } from "./app/useUpdateStatusPolling";
 import { useAppViewEffects } from "./app/useAppViewEffects";
 import { useAppBootstrapData } from "./app/useAppBootstrapData";
 import { useLiveSyncScheduler } from "./app/useLiveSyncScheduler";
+import { useRealtimeSync } from "./app/useRealtimeSync";
+import { mergeSettingsWithDefaults } from "./app/utils";
+import { useAgentStore } from "./store/agentStore";
+import { useTaskStore } from "./store/taskStore";
+import { useProjectStore } from "./store/projectStore";
+import { useUiStore } from "./store/uiStore";
 
 export type { OAuthCallbackResult } from "./app/types";
 
 export default function App() {
   const { theme, toggleTheme } = useTheme();
 
-  const [view, setView] = useState<View>("dashboard");
-  const [departments, setDepartments] = useState<Department[]>([]);
-  const [agents, setAgents] = useState<Agent[]>([]);
-  const [libraryAgents, setLibraryAgents] = useState<Agent[]>([]);
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [stats, setStats] = useState<CompanyStats | null>(null);
-  const [settings, setSettings] = useState<CompanySettings>(() =>
-    mergeSettingsWithDefaults({ language: detectBrowserLanguage() }),
-  );
-  const [cliStatus, setCliStatus] = useState<CliStatusMap | null>(null);
-  const [subAgents, setSubAgents] = useState<SubAgent[]>([]);
-  const [subtasks, setSubtasks] = useState<SubTask[]>([]);
+  // ── Agent store ──────────────────────────────────────────────────────────
+  const {
+    departments, agents, libraryAgents, subAgents, stats,
+    selectedAgent, chatAgent, showChat, unreadAgentIds, streamingMessage,
+    setDepartments, setAgents, setLibraryAgents, setSubAgents, setStats,
+    setSelectedAgent, setChatAgent, setShowChat, setUnreadAgentIds, setStreamingMessage,
+  } = useAgentStore();
 
-  const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
-  const [chatAgent, setChatAgent] = useState<Agent | null>(null);
-  const [showChat, setShowChat] = useState(false);
-  const [taskPanel, setTaskPanel] = useState<{ taskId: string; tab: TaskPanelTab } | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [unreadAgentIds, setUnreadAgentIds] = useState<Set<string>>(new Set());
-  const [crossDeptDeliveries, setCrossDeptDeliveries] = useState<CrossDeptDelivery[]>([]);
-  const [clientOfficeCalls, setClientOfficeCalls] = useState<ClientOfficeCall[]>([]);
-  const [meetingPresence, setMeetingPresence] = useState<MeetingPresence[]>([]);
-  const [oauthResult, setOauthResult] = useState<OAuthCallbackResult | null>(null);
-  const [taskReport, setTaskReport] = useState<TaskReportDetail | null>(null);
-  const [showReportHistory, setShowReportHistory] = useState(false);
-  const [showAgentStatus, setShowAgentStatus] = useState(false);
-  const [showGroupChat, setShowGroupChat] = useState(false);
-  const [groupChatInitialAgentIds, setGroupChatInitialAgentIds] = useState<string[]>([]);
-  const [showDecisionInbox, setShowDecisionInbox] = useState(false);
-  const [decisionInboxLoading, setDecisionInboxLoading] = useState(false);
-  const [decisionInboxItems, setDecisionInboxItems] = useState<DecisionInboxItem[]>([]);
-  const [decisionReplyBusyKey, setDecisionReplyBusyKey] = useState<string | null>(null);
-  const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const [mobileHeaderMenuOpen, setMobileHeaderMenuOpen] = useState(false);
-  const [runtimeOs] = useState<RuntimeOs>(() => detectRuntimeOs());
-  const [forceUpdateBanner] = useState<boolean>(() => isForceUpdateBannerEnabled());
-  const [updateStatus, setUpdateStatus] = useState<api.UpdateStatus | null>(null);
-  const [dismissedUpdateVersion, setDismissedUpdateVersion] = useState<string>(() => {
-    if (typeof window === "undefined") return "";
-    return window.localStorage.getItem(UPDATE_BANNER_DISMISS_STORAGE_KEY) ?? "";
-  });
-  const [streamingMessage, setStreamingMessage] = useState<{
-    message_id: string;
-    agent_id: string;
-    agent_name: string;
-    agent_avatar: string;
-    content: string;
-  } | null>(null);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [showProjectCreate, setShowProjectCreate] = useState(false);
-  const [projectCreateBusy, setProjectCreateBusy] = useState(false);
-  const [showCreateTaskAfterCreate, setShowCreateTaskAfterCreate] = useState(false);
-  const [currentProjectId, setCurrentProjectId] = useState<string | null>(() => {
-    try { return window.localStorage.getItem("agentdesk_current_project") ?? null; } catch { return null; }
-  });
+  // ── Task store ───────────────────────────────────────────────────────────
+  const {
+    tasks, messages, cliStatus, subtasks, taskPanel, taskReport,
+    crossDeptDeliveries, clientOfficeCalls, meetingPresence, decisionInboxItems,
+    setTasks, setMessages, setCliStatus, setSubtasks, setTaskPanel, setTaskReport,
+    setCrossDeptDeliveries, setClientOfficeCalls, setMeetingPresence, setDecisionInboxItems,
+  } = useTaskStore();
 
+  // ── Project store ────────────────────────────────────────────────────────
+  const {
+    categories, projects, currentProjectId, projectAgentIds, projectAgentsLoaded,
+    showProjectCreate, projectCreateBusy, showCreateTaskAfterCreate,
+    setCategories, setProjects, setCurrentProjectId, setProjectAgentIds,
+    setProjectAgentsLoaded, setShowProjectCreate, setProjectCreateBusy,
+    setShowCreateTaskAfterCreate,
+  } = useProjectStore();
+
+  // ── UI store ─────────────────────────────────────────────────────────────
+  const {
+    view, loading, settings, oauthResult,
+    showReportHistory, showAgentStatus, showGroupChat, groupChatInitialAgentIds,
+    showDecisionInbox, decisionInboxLoading, decisionReplyBusyKey,
+    mobileNavOpen, mobileHeaderMenuOpen, runtimeOs, forceUpdateBanner,
+    updateStatus, dismissedUpdateVersion,
+    setView, setLoading, setSettings, setOauthResult,
+    setShowReportHistory, setShowAgentStatus, setShowGroupChat, setGroupChatInitialAgentIds,
+    setShowDecisionInbox, setDecisionInboxLoading, setDecisionReplyBusyKey,
+    setMobileNavOpen, setMobileHeaderMenuOpen, setUpdateStatus, setDismissedUpdateVersion,
+  } = useUiStore();
+
+  // ── Derived values ───────────────────────────────────────────────────────
   const currentProject = projects.find((p) => p.id === currentProjectId) ?? null;
 
-  useEffect(() => {
-    if (currentProjectId) {
-      try { window.localStorage.setItem("agentdesk_current_project", currentProjectId); } catch { /* ignore */ }
-    }
-  }, [currentProjectId]);
-
-  const [projectAgentIds, setProjectAgentIds] = useState<Set<string>>(new Set());
-  const [projectAgentsLoaded, setProjectAgentsLoaded] = useState(false);
   useEffect(() => {
     if (!currentProjectId) {
       setProjectAgentIds(new Set());
@@ -133,121 +85,66 @@ export default function App() {
   }, [currentProjectId]);
 
   const projectAgents = useMemo(() => {
-    // 프로젝트 미선택 → 전체 에이전트
     if (!currentProjectId) return agents;
-    // 로딩 중 → 전체 에이전트 (깜빡임 방지)
     if (!projectAgentsLoaded) return agents;
-    // 로딩 완료 → 프로젝트 팀원만 (빈 경우 빈 배열 반환, 전체 폴백 없음)
     return agents.filter((a) => projectAgentIds.has(a.id));
   }, [agents, projectAgentIds, projectAgentsLoaded, currentProjectId]);
 
-  const viewRef = useRef<View>("dashboard");
+  // ── Refs for WebSocket callbacks ─────────────────────────────────────────
+  const viewRef = useRef(view);
   viewRef.current = view;
-  const agentsRef = useRef<Agent[]>(agents);
+  const agentsRef = useRef(agents);
   agentsRef.current = agents;
-  const tasksRef = useRef<Task[]>(tasks);
+  const tasksRef = useRef(tasks);
   tasksRef.current = tasks;
-  const subAgentsRef = useRef<SubAgent[]>(subAgents);
+  const subAgentsRef = useRef(subAgents);
   subAgentsRef.current = subAgents;
   const codexThreadToSubAgentIdRef = useRef<Map<string, string>>(new Map());
   const codexThreadBindingTsRef = useRef<Map<string, number>>(new Map());
   const subAgentStreamTailRef = useRef<Map<string, string>>(new Map());
-  const activeChatRef = useRef<{ showChat: boolean; agentId: string | null }>({ showChat: false, agentId: null });
+  const activeChatRef = useRef({ showChat, agentId: chatAgent?.id ?? null });
   activeChatRef.current = { showChat, agentId: chatAgent?.id ?? null };
 
+  // ── Hooks ────────────────────────────────────────────────────────────────
   const { connected, on } = useWebSocket();
   const shouldIncludeSeedAgents = useCallback(() => false, []);
   const scheduleLiveSync = useLiveSyncScheduler({
-    setTasks,
-    setAgents,
-    setStats,
-    setDecisionInboxItems,
-    shouldIncludeSeedAgents,
+    setTasks, setAgents, setStats, setDecisionInboxItems, shouldIncludeSeedAgents,
   });
 
   useAppBootstrapData({
-    setDepartments,
-    setAgents,
-    setLibraryAgents,
-    setTasks,
-    setStats,
-    setSettings,
-    setSubtasks,
-    setMeetingPresence,
-    setDecisionInboxItems,
-    setCategories,
-    setProjects,
-    setLoading,
+    setDepartments, setAgents, setLibraryAgents, setTasks, setStats,
+    setSettings, setSubtasks, setMeetingPresence, setDecisionInboxItems,
+    setCategories, setProjects, setLoading,
   });
 
   useUpdateStatusPolling(setUpdateStatus);
-  useAppViewEffects({
-    view,
-    cliStatus,
-    setView,
-    setOauthResult,
-    setCliStatus,
-    setMobileNavOpen,
-  });
+  useAppViewEffects({ view, cliStatus, setView, setOauthResult, setCliStatus, setMobileNavOpen });
 
   useRealtimeSync({
-    on,
-    connected,
-    scheduleLiveSync,
-    agentsRef,
-    tasksRef,
-    subAgentsRef,
-    viewRef,
-    activeChatRef,
-    codexThreadToSubAgentIdRef,
-    codexThreadBindingTsRef,
-    subAgentStreamTailRef,
-    setTasks,
-    setAgents,
-    setMessages,
-    setUnreadAgentIds,
-    setTaskReport,
-    setCrossDeptDeliveries,
-    setClientOfficeCalls,
-    setMeetingPresence,
-    setSubtasks,
-    setSubAgents,
-    setStreamingMessage,
+    on, connected, scheduleLiveSync,
+    agentsRef, tasksRef, subAgentsRef, viewRef, activeChatRef,
+    codexThreadToSubAgentIdRef, codexThreadBindingTsRef, subAgentStreamTailRef,
+    setTasks, setAgents, setMessages, setUnreadAgentIds, setTaskReport,
+    setCrossDeptDeliveries, setClientOfficeCalls, setMeetingPresence,
+    setSubtasks, setSubAgents, setStreamingMessage,
   });
 
   const actions = useAppActions({
-    agents,
-    settings,
-    scheduleLiveSync,
-    setSettings,
-    setAgents,
-    setLibraryAgents,
-    setDepartments,
-    setTasks,
-    setStats,
-    setMessages,
-    setChatAgent,
-    setShowChat,
-    setUnreadAgentIds,
-    setShowDecisionInbox,
-    setDecisionInboxLoading,
-    setDecisionInboxItems,
-    setDecisionReplyBusyKey,
-    setCliStatus,
+    agents, settings, scheduleLiveSync,
+    setSettings, setAgents, setLibraryAgents, setDepartments, setTasks, setStats,
+    setMessages, setChatAgent, setShowChat, setUnreadAgentIds,
+    setShowDecisionInbox, setDecisionInboxLoading, setDecisionInboxItems,
+    setDecisionReplyBusyKey, setCliStatus,
   });
 
   const activeMeetingTaskId = useActiveMeetingTaskId(meetingPresence);
 
   const labels = useAppLabels({
-    view,
-    settings,
-    theme,
-    runtimeOs,
-    forceUpdateBanner,
-    updateStatus,
-    dismissedUpdateVersion,
+    view, settings, theme, runtimeOs, forceUpdateBanner, updateStatus, dismissedUpdateVersion,
   });
 
+  // ── Render ───────────────────────────────────────────────────────────────
   if (loading) {
     return (
       <AppLoadingScreen language={labels.uiLanguage} title={labels.loadingTitle} subtitle={labels.loadingSubtitle} />
@@ -284,11 +181,9 @@ export default function App() {
       onSelectAgent={setSelectedAgent}
       onSelectDepartment={(department) => {
         const leader =
-          agents.find((agent) => agent.department_id === department.id && agent.role === "team_leader") ??
+          agents.find((a) => a.department_id === department.id && a.role === "team_leader") ??
           (department.id === "planning"
-            ? agents.find(
-                (agent) => agent.role === "team_leader" && Number(agent.acts_as_planning_leader ?? 0) === 1,
-              )
+            ? agents.find((a) => a.role === "team_leader" && Number(a.acts_as_planning_leader ?? 0) === 1)
             : undefined);
         if (leader) actions.handleOpenChat(leader);
       }}
@@ -313,11 +208,7 @@ export default function App() {
       onOpenGroupChat={() => setShowGroupChat(true)}
       onDismissAutoUpdateNotice={actions.handleDismissAutoUpdateNotice}
       onDismissUpdate={() => {
-        const latest = labels.effectiveUpdateStatus?.latest_version ?? "";
-        setDismissedUpdateVersion(latest);
-        if (typeof window !== "undefined") {
-          window.localStorage.setItem(UPDATE_BANNER_DISMISS_STORAGE_KEY, latest);
-        }
+        setDismissedUpdateVersion(labels.effectiveUpdateStatus?.latest_version ?? "");
       }}
       projects={projects}
       categories={categories}
@@ -329,7 +220,7 @@ export default function App() {
         if (currentProjectId === id) setCurrentProjectId(null);
       }}
       onProjectUpdated={(id, patch) => {
-        setProjects((prev) => prev.map((p) => p.id === id ? { ...p, ...patch } : p));
+        setProjects((prev) => prev.map((p) => (p.id === id ? { ...p, ...patch } : p)));
       }}
     >
       <AppOverlays
@@ -350,9 +241,7 @@ export default function App() {
         decisionReplyBusyKey={decisionReplyBusyKey}
         uiLanguage={labels.uiLanguage}
         onCloseDecisionInbox={() => setShowDecisionInbox(false)}
-        onRefreshDecisionInbox={() => {
-          void actions.loadDecisionInbox();
-        }}
+        onRefreshDecisionInbox={() => { void actions.loadDecisionInbox(); }}
         onReplyDecisionOption={actions.handleReplyDecisionOption}
         onOpenDecisionChat={actions.handleOpenDecisionChat}
         selectedAgent={selectedAgent}
@@ -374,23 +263,19 @@ export default function App() {
           setTaskPanel({ taskId, tab: "terminal" });
         }}
         onAgentUpdated={() => {
-          api
-            .getSettings()
-            .then(async (nextSettingsRaw) => {
-              const nextSettings = mergeSettingsWithDefaults(nextSettingsRaw);
-              const [nextAgents, nextLibraryAgents] = await Promise.all([
+          api.getSettings()
+            .then(async (raw) => {
+              const nextSettings = mergeSettingsWithDefaults(raw);
+              const [nextAgents, nextLibrary] = await Promise.all([
                 api.getAgents({ includeSeed: false }),
                 api.getAgents({ includeSeed: true }),
               ]);
               setAgents(nextAgents);
-              setLibraryAgents(nextLibraryAgents);
+              setLibraryAgents(nextLibrary);
               setSettings(nextSettings);
-
               if (!selectedAgent) return;
-              const fromAgents = nextAgents.find((agent) => agent.id === selectedAgent.id);
-              if (fromAgents) {
-                setSelectedAgent(fromAgents);
-              }
+              const found = nextAgents.find((a) => a.id === selectedAgent.id);
+              if (found) setSelectedAgent(found);
             })
             .catch(console.error);
         }}
@@ -416,7 +301,7 @@ export default function App() {
             setProjectCreateBusy(true);
             const cat = categories.find((c) => c.id === categoryId);
             const resolvedGoal = core_goal || (cat ? `${cat.name_ko ?? cat.name} 프로젝트` : name.trim());
-            (api.createProject as (input: Record<string, unknown>) => Promise<Project>)({
+            (api.createProject as (input: Record<string, unknown>) => Promise<import("./types").Project>)({
               name: name.trim(),
               project_path: project_path ?? "",
               core_goal: resolvedGoal,
