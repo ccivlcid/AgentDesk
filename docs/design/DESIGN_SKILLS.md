@@ -9,7 +9,7 @@
 
 - **스킬 학습 히스토리:** 에이전트별로 학습된 스킬을 웹에서 조회·관리.
 - **CLI 쪽:** 에이전트 프롬프트 헤더에 활성 스킬을 간단히 노출 (구현 시 텍스트/ANSI 규격).
-- **디자인 시스템:** `DESIGN.md`·`DESIGN.md`의 CSS 변수 및 컴포넌트 패턴 준수.
+- **디자인 시스템:** `DESIGN.md`의 CSS 변수 및 컴포넌트 패턴 준수.
 
 ---
 
@@ -51,7 +51,7 @@
 
 ### 2-3. 상태 배지
 
-- `DESIGN.md`·`DESIGN.md`의 배지 규칙 따름.
+- `DESIGN.md`의 배지 규칙 따름.
 - `borderRadius: 0`, `fontFamily: var(--th-font-mono)`, `fontSize: 10px`, `fontWeight: 500` 또는 `600`, `textTransform: uppercase`.
 - 상태별 배경/테두리/글자색: 성공(초록), 학습중(앰버), 오류(빨강), 비활성(뮤트) 등 `--th-*` 또는 동일한 rgba 패턴.
 
@@ -85,4 +85,4 @@
 ## 5. 참조
 
 - **컴포넌트:** `SkillsLibrary.tsx`, `SkillHistoryPanel.tsx`, `AgentAvatar`, `Button`, `Modal`.
-- **스타일:** `DESIGN.md` (색·폰트), `DESIGN.md` (버튼·입력·리스트·배지).
+- **스타일:** `DESIGN.md` (CSS 변수·색·폰트·버튼·입력·리스트·배지 모두 포함).
