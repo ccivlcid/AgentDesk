@@ -47,7 +47,6 @@ flowchart LR
 ```mermaid
 flowchart TD
   App["src/App.tsx"] --> Sidebar["components/Sidebar.tsx"]
-  App --> Office["components/OfficeView.tsx"]
   App --> Dashboard["components/Dashboard.tsx"]
   App --> TaskBoard["components/TaskBoard.tsx"]
   App --> Settings["components/SettingsPanel.tsx"]

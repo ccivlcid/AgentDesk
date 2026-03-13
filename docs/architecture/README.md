@@ -740,66 +740,12 @@ AgentDesk
 │   │   │   ├── theme-presets.ts
 │   │   │   └── user-theme-storage.ts
 │   │   ├── office-view/
-│   │   │   ├── drawing-styles/
-│   │   │   │   ├── business-drawer.ts
-│   │   │   │   ├── cyber-drawer.ts
-│   │   │   │   ├── default-drawer.ts
-│   │   │   │   ├── index.ts
-│   │   │   │   ├── pixel-drawer.ts
-│   │   │   │   ├── retro-drawer.ts
-│   │   │   │   └── svg-drawer-base.ts
-│   │   │   ├── buildScene-break-room.ts
-│   │   │   ├── buildScene-ceo-hallway.ts
-│   │   │   ├── buildScene-department-agent.ts
-│   │   │   ├── buildScene-departments.ts
-│   │   │   ├── buildScene-final-layers.ts
-│   │   │   ├── buildScene-types.ts
-│   │   │   ├── buildScene.ts
-│   │   │   ├── ceo-customization.ts
 │   │   │   ├── CliUsagePanel.tsx
-│   │   │   ├── drawBasement.ts
-│   │   │   ├── drawCityscape.ts
-│   │   │   ├── drawConferenceFloor.ts
-│   │   │   ├── drawElevator.ts
-│   │   │   ├── drawExteriorWalls.ts
-│   │   │   ├── drawFloor.ts
-│   │   │   ├── drawing-core.ts
-│   │   │   ├── drawing-furniture-a.ts
-│   │   │   ├── drawing-furniture-b.ts
-│   │   │   ├── drawPenthouse.ts
-│   │   │   ├── drawRoof.ts
-│   │   │   ├── elevatorTick.ts
-│   │   │   ├── furniture-catalog.ts
 │   │   │   ├── HeartbeatGuideModal.tsx
 │   │   │   ├── HeartbeatPanel.tsx
-│   │   │   ├── model.ts
-│   │   │   ├── OfficeAgentPanel.tsx
-│   │   │   ├── OfficeDeptPanel.tsx
-│   │   │   ├── OfficeMinimap.tsx
-│   │   │   ├── OfficeOverviewBars.tsx
-│   │   │   ├── OfficeQuickChat.tsx
-│   │   │   ├── officeTicker.ts
-│   │   │   ├── officeTickerRoomAndDelivery.ts
-│   │   │   ├── OfficeViewActionBar.tsx
-│   │   │   ├── OfficeViewBody.tsx
-│   │   │   ├── OfficeViewToolbar.tsx
-│   │   │   ├── pixi-compat.ts
-│   │   │   ├── room-decoration.ts
-│   │   │   ├── RoomLayoutEditor.tsx
-│   │   │   ├── seasonal-particles.ts
-│   │   │   ├── themes-locale.ts
 │   │   │   ├── UsageTrendChart.tsx
-│   │   │   ├── useCliUsage.ts
-│   │   │   ├── useOfficeDeliveryEffects.ts
-│   │   │   ├── useOfficePixiRuntime.ts
-│   │   │   ├── useOfficeViewBuildScene.ts
-│   │   │   ├── useOfficeViewCamera.ts
-│   │   │   ├── useOfficeViewInteractions.ts
-│   │   │   ├── useOfficeViewRefs.ts
-│   │   │   ├── useOfficeViewTickerAndDelivery.ts
-│   │   │   ├── useOfficeViewUIState.ts
-│   │   │   ├── VirtualPadOverlay.tsx
-│   │   │   └── visitorTick.ts
+│   │   │   ├── cli-locale.ts
+│   │   │   └── useCliUsage.ts
 │   │   ├── OfficeRoomManager/
 │   │   │   ├── ThemeModals.tsx
 │   │   │   └── ThemePresetsSection.tsx
@@ -902,7 +848,6 @@ AgentDesk
 │   │   ├── MessageContent.tsx
 │   │   ├── NotificationCenter.tsx
 │   │   ├── OfficeRoomManager.tsx
-│   │   ├── OfficeView.tsx
 │   │   ├── ProjectManagerModal.tsx
 │   │   ├── ReportHistory.tsx
 │   │   ├── SettingsPanel.tsx
@@ -1069,7 +1014,6 @@ flowchart LR
   N76["src/components/OfficeRoomManager.tsx"]
   N77["src/components/OfficeRoomManager/ThemeModals.tsx"]
   N78["src/components/OfficeRoomManager/ThemePresetsSection.tsx"]
-  N79["src/components/OfficeView.tsx"]
   N80["src/components/ProjectManagerModal.tsx"]
   N81["src/components/ReportHistory.tsx"]
   N82["src/components/SettingsPanel.tsx"]
@@ -1176,62 +1120,11 @@ flowchart LR
   N183["src/components/office-view/CliUsagePanel.tsx"]
   N184["src/components/office-view/HeartbeatGuideModal.tsx"]
   N185["src/components/office-view/HeartbeatPanel.tsx"]
-  N186["src/components/office-view/OfficeAgentPanel.tsx"]
-  N187["src/components/office-view/OfficeDeptPanel.tsx"]
-  N188["src/components/office-view/OfficeMinimap.tsx"]
-  N189["src/components/office-view/OfficeOverviewBars.tsx"]
-  N190["src/components/office-view/OfficeQuickChat.tsx"]
-  N191["src/components/office-view/OfficeViewActionBar.tsx"]
-  N192["src/components/office-view/OfficeViewBody.tsx"]
-  N193["src/components/office-view/OfficeViewToolbar.tsx"]
-  N194["src/components/office-view/RoomLayoutEditor.tsx"]
-  N195["src/components/office-view/UsageTrendChart.tsx"]
-  N196["src/components/office-view/VirtualPadOverlay.tsx"]
-  N197["src/components/office-view/buildScene-break-room.ts"]
-  N198["src/components/office-view/buildScene-ceo-hallway.ts"]
-  N199["src/components/office-view/buildScene-department-agent.ts"]
-  N200["src/components/office-view/buildScene-departments.ts"]
-  N201["src/components/office-view/buildScene-final-layers.ts"]
-  N202["src/components/office-view/buildScene-types.ts"]
-  N203["src/components/office-view/buildScene.ts"]
-  N204["src/components/office-view/ceo-customization.ts"]
-  N205["src/components/office-view/drawBasement.ts"]
-  N206["src/components/office-view/drawCityscape.ts"]
-  N207["src/components/office-view/drawConferenceFloor.ts"]
-  N208["src/components/office-view/drawElevator.ts"]
-  N209["src/components/office-view/drawExteriorWalls.ts"]
-  N210["src/components/office-view/drawFloor.ts"]
-  N211["src/components/office-view/drawPenthouse.ts"]
-  N212["src/components/office-view/drawRoof.ts"]
-  N213["src/components/office-view/drawing-core.ts"]
-  N214["src/components/office-view/drawing-furniture-a.ts"]
-  N215["src/components/office-view/drawing-furniture-b.ts"]
-  N216["src/components/office-view/drawing-styles/business-drawer.ts"]
-  N217["src/components/office-view/drawing-styles/cyber-drawer.ts"]
-  N218["src/components/office-view/drawing-styles/default-drawer.ts"]
-  N219["src/components/office-view/drawing-styles/index.ts"]
-  N220["src/components/office-view/drawing-styles/pixel-drawer.ts"]
-  N221["src/components/office-view/drawing-styles/retro-drawer.ts"]
-  N222["src/components/office-view/drawing-styles/svg-drawer-base.ts"]
-  N223["src/components/office-view/elevatorTick.ts"]
-  N224["src/components/office-view/furniture-catalog.ts"]
-  N225["src/components/office-view/model.ts"]
-  N226["src/components/office-view/officeTicker.ts"]
-  N227["src/components/office-view/officeTickerRoomAndDelivery.ts"]
-  N228["src/components/office-view/pixi-compat.ts"]
-  N229["src/components/office-view/room-decoration.ts"]
-  N230["src/components/office-view/seasonal-particles.ts"]
-  N231["src/components/office-view/themes-locale.ts"]
-  N232["src/components/office-view/useCliUsage.ts"]
-  N233["src/components/office-view/useOfficeDeliveryEffects.ts"]
-  N234["src/components/office-view/useOfficePixiRuntime.ts"]
-  N235["src/components/office-view/useOfficeViewBuildScene.ts"]
-  N236["src/components/office-view/useOfficeViewCamera.ts"]
-  N237["src/components/office-view/useOfficeViewInteractions.ts"]
-  N238["src/components/office-view/useOfficeViewRefs.ts"]
-  N239["src/components/office-view/useOfficeViewTickerAndDelivery.ts"]
-  N240["src/components/office-view/useOfficeViewUIState.ts"]
-  N241["src/components/office-view/visitorTick.ts"]
+  N186["src/components/office-view/HeartbeatGuideModal.tsx"]
+  N187["src/components/office-view/CliUsagePanel.tsx"]
+  N188["src/components/office-view/UsageTrendChart.tsx"]
+  N189["src/components/office-view/cli-locale.ts"]
+  N190["src/components/office-view/useCliUsage.ts"]
   N242["src/components/project-manager/BurndownChart.tsx"]
   N243["src/components/project-manager/ManualAssignmentSelector.tsx"]
   N244["src/components/project-manager/ManualAssignmentWarningDialog.tsx"]

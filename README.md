@@ -2,7 +2,7 @@
 
 **Product Requirements — Overview**
 
-AgentDesk is a **Project OS**: an operator cockpit for AI agents that run as CLI processes. You manage projects, tasks, and agent teams in one place, with messenger integration and a pixel-office view.
+AgentDesk is a **Project OS**: an operator cockpit for AI agents that run as CLI processes. You manage projects, tasks, and agent teams in one place, with messenger integration.
 
 ---
 
@@ -46,7 +46,6 @@ AgentDesk is a **Project OS**: an operator cockpit for AI agents that run as CLI
 | Area | Description |
 |------|-------------|
 | **Dashboard** | Project overview, team panel, agent activity, ops sections. |
-| **WorkMap** | Pixel-art office view with departments and agents. |
 | **Tasks** | Kanban board, scheduled tasks, deliverables. |
 | **Agents & Team** | Agents, departments, heartbeat monitor; project team assignment. |
 | **Library** | Skills, Agent Rules, Memory, Hooks. |
