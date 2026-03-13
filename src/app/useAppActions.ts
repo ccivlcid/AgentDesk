@@ -2,6 +2,7 @@ import { useCallback, useRef } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import * as api from "../api";
 import { isApiRequestError } from "../api/core";
+import { handleApiError } from "../api/handleApiError";
 import { useToast } from "../components/ui/Toast";
 import { buildDecisionInboxItems } from "../components/chat/decision-inbox";
 import type { DecisionInboxItem } from "../components/chat/decision-inbox";
@@ -86,7 +87,7 @@ export function useAppActions({
         const msgs = await api.getMessages({ receiver_type: receiverType, receiver_id: receiverId, limit: 50 });
         setMessages(msgs);
       } catch (error) {
-        console.error("Send message failed:", error);
+        handleApiError(error, showToast, { context: "Send message failed" });
       }
     },
     [setMessages],
@@ -96,7 +97,7 @@ export function useAppActions({
     try {
       await api.sendAnnouncement(content);
     } catch (error) {
-      console.error("Announcement failed:", error);
+      handleApiError(error, showToast, { context: "Announcement failed" });
     }
   }, []);
 
@@ -113,7 +114,7 @@ export function useAppActions({
         await api.sendDirective(content);
       }
     } catch (error) {
-      console.error("Directive failed:", error);
+      handleApiError(error, showToast, { context: "Directive failed" });
     }
   }, []);
 
@@ -139,7 +140,7 @@ export function useAppActions({
         const sts = await api.getStats();
         setStats(sts);
       } catch (error) {
-        console.error("Create task failed:", error);
+        handleApiError(error, showToast, { context: "Create task failed" });
       }
     },
     [setTasks, setStats],
@@ -152,7 +153,7 @@ export function useAppActions({
         const tks = await api.getTasks();
         setTasks(tks);
       } catch (error) {
-        console.error("Update task failed:", error);
+        handleApiError(error, showToast, { context: "Update task failed" });
         return;
       }
 
@@ -203,7 +204,7 @@ export function useAppActions({
         await api.deleteTask(id);
         setTasks((prev) => prev.filter((task) => task.id !== id));
       } catch (error) {
-        console.error("Delete task failed:", error);
+        handleApiError(error, showToast, { context: "Delete task failed" });
       }
     },
     [setTasks],
@@ -221,7 +222,7 @@ export function useAppActions({
         await api.assignTask(taskId, agentId);
         await refreshTasksAndAgents();
       } catch (error) {
-        console.error("Assign task failed:", error);
+        handleApiError(error, showToast, { context: "Assign task failed" });
       }
     },
     [refreshTasksAndAgents],
@@ -237,8 +238,7 @@ export function useAppActions({
           const details = error.details as { message?: string } | null;
           showToast(details?.message || "Execution blocked: cost limit exceeded. Adjust cost alert settings.", "warning");
         } else {
-          console.error("Run task failed:", error);
-          showToast("Failed to start task. Please try again.", "error");
+          handleApiError(error, showToast, { context: "Failed to start task" });
         }
       }
     },
@@ -251,7 +251,7 @@ export function useAppActions({
         await api.stopTask(id);
         await refreshTasksAndAgents();
       } catch (error) {
-        console.error("Stop task failed:", error);
+        handleApiError(error, showToast, { context: "Stop task failed" });
       }
     },
     [refreshTasksAndAgents],
@@ -263,7 +263,7 @@ export function useAppActions({
         await api.pauseTask(id);
         await refreshTasksAndAgents();
       } catch (error) {
-        console.error("Pause task failed:", error);
+        handleApiError(error, showToast, { context: "Pause task failed" });
       }
     },
     [refreshTasksAndAgents],
@@ -275,7 +275,7 @@ export function useAppActions({
         await api.resumeTask(id);
         await refreshTasksAndAgents();
       } catch (error) {
-        console.error("Resume task failed:", error);
+        handleApiError(error, showToast, { context: "Resume task failed" });
       }
     },
     [refreshTasksAndAgents],
@@ -309,7 +309,7 @@ export function useAppActions({
           setSettings(previousSettings);
           syncClientLanguage(previousSettings.language);
         }
-        console.error("Save settings failed:", error);
+        handleApiError(error, showToast, { context: "Save settings failed" });
       }
     },
     [settings, setSettings, setStats],
@@ -357,7 +357,7 @@ export function useAppActions({
       for (const item of merged) deduped.set(item.id, item);
       setDecisionInboxItems(Array.from(deduped.values()).sort((a, b) => b.createdAt - a.createdAt));
     } catch (error) {
-      console.error("Load decision inbox failed:", error);
+      handleApiError(error, showToast, { context: "Load decision inbox failed" });
     } finally {
       setDecisionInboxLoading(false);
     }
@@ -474,7 +474,7 @@ export function useAppActions({
           await loadDecisionInbox();
         }
       } catch (error) {
-        console.error("Decision reply failed:", error);
+        handleApiError(error, showToast, { context: "Decision reply failed" });
         showToast(
           pickLang(locale, {
             ko: "의사결정 회신 전송에 실패했습니다. 잠시 후 다시 시도해 주세요.",
@@ -515,7 +515,7 @@ export function useAppActions({
         await api.clearMessages(agentId);
         setMessages([]);
       } catch (error) {
-        console.error("Clear messages failed:", error);
+        handleApiError(error, showToast, { context: "Clear messages failed" });
       }
     },
     [setMessages],

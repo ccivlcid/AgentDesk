@@ -1,5 +1,6 @@
-import type { Express, Request, Response } from "express";
+import type { Express, NextFunction, Request, Response } from "express";
 import type { DatabaseSync } from "node:sqlite";
+import { ApiError } from "../../../errors/ApiError.ts";
 
 interface TaskDepsRouteDeps {
   app: Express;
@@ -46,65 +47,64 @@ export function registerTaskDependencyRoutes({ app, db, nowMs }: TaskDepsRouteDe
   });
 
   // POST /api/tasks/:id/dependencies — add a dependency
-  app.post("/api/tasks/:id/dependencies", (req: Request, res: Response) => {
-    const taskId = req.params.id as string;
-    const { depends_on_task_id } = req.body as { depends_on_task_id?: string };
+  app.post("/api/tasks/:id/dependencies", (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const taskId = req.params.id as string;
+      const { depends_on_task_id } = req.body as { depends_on_task_id?: string };
 
-    if (!depends_on_task_id || typeof depends_on_task_id !== "string") {
-      res.status(400).json({ error: "depends_on_task_id is required" });
-      return;
+      if (!depends_on_task_id || typeof depends_on_task_id !== "string") {
+        throw ApiError.badRequest("depends_on_task_id_required", "depends_on_task_id is required");
+      }
+
+      if (depends_on_task_id === taskId) {
+        throw ApiError.badRequest("self_dependency", "A task cannot depend on itself");
+      }
+
+      const taskExists = db.prepare("SELECT id FROM tasks WHERE id = ?").get(taskId);
+      if (!taskExists) {
+        throw ApiError.notFound("task_not_found");
+      }
+
+      const depExists = db.prepare("SELECT id FROM tasks WHERE id = ?").get(depends_on_task_id as string);
+      if (!depExists) {
+        throw ApiError.notFound("dependency_task_not_found");
+      }
+
+      const reverseDep = db
+        .prepare("SELECT 1 FROM task_dependencies WHERE task_id = ? AND depends_on_task_id = ?")
+        .get(depends_on_task_id as string, taskId);
+      if (reverseDep) {
+        throw ApiError.badRequest("circular_dependency", "This would create a circular dependency");
+      }
+
+      db.prepare(
+        "INSERT OR IGNORE INTO task_dependencies (task_id, depends_on_task_id, created_at) VALUES (?, ?, ?)",
+      ).run(taskId, depends_on_task_id, nowMs());
+
+      res.status(201).json({ ok: true });
+    } catch (err) {
+      next(err);
     }
-
-    if (depends_on_task_id === taskId) {
-      res.status(400).json({ error: "A task cannot depend on itself" });
-      return;
-    }
-
-    // Check tasks exist
-    const taskExists = db.prepare("SELECT id FROM tasks WHERE id = ?").get(taskId);
-    if (!taskExists) {
-      res.status(404).json({ error: "task_not_found" });
-      return;
-    }
-
-    const depExists = db.prepare("SELECT id FROM tasks WHERE id = ?").get(depends_on_task_id as string);
-    if (!depExists) {
-      res.status(404).json({ error: "dependency_task_not_found" });
-      return;
-    }
-
-    // Simple cycle check: ensure depends_on_task_id doesn't already (transitively) depend on taskId
-    // For MVP, just check direct reverse dependency
-    const reverseDep = db
-      .prepare("SELECT 1 FROM task_dependencies WHERE task_id = ? AND depends_on_task_id = ?")
-      .get(depends_on_task_id as string, taskId);
-    if (reverseDep) {
-      res.status(400).json({ error: "circular_dependency", message: "This would create a circular dependency" });
-      return;
-    }
-
-    db.prepare(
-      "INSERT OR IGNORE INTO task_dependencies (task_id, depends_on_task_id, created_at) VALUES (?, ?, ?)",
-    ).run(taskId, depends_on_task_id, nowMs());
-
-    res.status(201).json({ ok: true });
   });
 
   // DELETE /api/tasks/:id/dependencies/:depId — remove a dependency
-  app.delete("/api/tasks/:id/dependencies/:depId", (req: Request, res: Response) => {
-    const taskId = req.params.id as string;
-    const depId = req.params.depId as string;
+  app.delete("/api/tasks/:id/dependencies/:depId", (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const taskId = req.params.id as string;
+      const depId = req.params.depId as string;
 
-    const result = db
-      .prepare("DELETE FROM task_dependencies WHERE task_id = ? AND depends_on_task_id = ?")
-      .run(taskId, depId);
+      const result = db
+        .prepare("DELETE FROM task_dependencies WHERE task_id = ? AND depends_on_task_id = ?")
+        .run(taskId, depId);
 
-    if ((result as any).changes === 0) {
-      res.status(404).json({ error: "dependency_not_found" });
-      return;
+      if ((result as any).changes === 0) {
+        throw ApiError.notFound("dependency_not_found");
+      }
+
+      res.json({ ok: true });
+    } catch (err) {
+      next(err);
     }
-
-    res.json({ ok: true });
   });
 
   // GET /api/task-dependencies/all — all edges in one call (for graph view)

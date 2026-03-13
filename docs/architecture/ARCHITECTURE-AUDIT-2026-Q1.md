@@ -494,10 +494,10 @@ Remove:   LiveSyncScheduler (WebSocket으로 흡수)
 | 항목 | 설명 | 공수 |
 |------|------|------|
 | WorkflowPackKey 완전 제거 | `task.workflow_pack_key` → `task.context_hint` | 1일 |
-| API 에러 핸들링 통일 | `ApiError` 클래스 + 프론트 토스트 연동 | 2일 |
+| ~~API 에러 핸들링 통일~~ | ✅ 구현 완료 — server/errors/ApiError.ts + errorMiddleware.ts + frontend handleApiError.ts 토스트 연동 | ~~2일~~ |
 | 동기화 전략 단일화 | WebSocket primary, polling fallback | 2일 |
 | project_path 검증 API | 서버에서 경로 존재 여부 확인 엔드포인트 | 1일 |
-| 실행 상태 정합성 보정 | 서버 재시작 시 `RUNNING` → `FAILED` 자동 전환 | 1일 |
+| ~~실행 상태 정합성 보정~~ | ✅ 이미 구현됨 — `lifecycle.ts` recoverOrphanInProgressTasks() (startup 60s grace + 30s sweep + heartbeat) | ~~1일~~ |
 
 ---
 
@@ -557,8 +557,8 @@ Remove:   LiveSyncScheduler (WebSocket으로 흡수)
 
 | 우선순위 | 항목 | 이유 | 공수 |
 |---------|------|------|------|
-| **P0** | 실행 상태 정합성 보정 | 좀비 태스크 방지, 즉시 안정성 향상 | 1일 |
-| **P0** | API 에러 핸들링 통일 | 사용자 신뢰도 직결 | 2일 |
+| ~~**P0**~~ | ~~실행 상태 정합성 보정~~ | ✅ 이미 구현됨 — lifecycle.ts orphan recovery + heartbeat sweep | ~~1일~~ |
+| ~~**P0**~~ | ~~API 에러 핸들링 통일~~ | ✅ 구현 완료 — ApiError class + global error middleware + handleApiError 토스트 연동 | ~~2일~~ |
 | **P1** | 에이전트 실행 상태 머신 | 크래시 → 무한 "실행중" 완전 방지 | 3일 |
 | **P1** | 동기화 전략 단일화 | WebSocket 신뢰성 + 코드 단순화 | 2일 |
 | **P2** | WorkflowPackKey 완전 제거 | 개념 혼동 제거, 기술 부채 청산 | 1일 |
