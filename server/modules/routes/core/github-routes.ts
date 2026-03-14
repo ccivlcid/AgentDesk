@@ -144,7 +144,7 @@ export function registerGitHubRoutes(deps: GitHubRouteDeps): void {
         })),
       });
     } catch (err) {
-      res.status(502).json({ error: "github_fetch_failed", message: err instanceof Error ? err.message : String(err) });
+      res.status(502).json({ error: "github_fetch_failed" });
     }
   });
 
@@ -203,7 +203,7 @@ export function registerGitHubRoutes(deps: GitHubRouteDeps): void {
         default_branch: repoData?.default_branch ?? null,
       });
     } catch (err) {
-      res.status(502).json({ error: "github_fetch_failed", message: err instanceof Error ? err.message : String(err) });
+      res.status(502).json({ error: "github_fetch_failed" });
     }
   });
 
@@ -272,7 +272,7 @@ export function registerGitHubRoutes(deps: GitHubRouteDeps): void {
           broadcast("clone_progress", { clone_id: cloneId, progress: 100, status: "done" });
         } else {
           entry.status = "error";
-          entry.error = `git clone exited with code ${code}: ${stderrBuf.slice(-500)}`;
+          entry.error = `git clone exited with code ${code}`;
           broadcast("clone_progress", {
             clone_id: cloneId,
             progress: entry.progress,
@@ -287,8 +287,8 @@ export function registerGitHubRoutes(deps: GitHubRouteDeps): void {
       const entry = activeClones.get(cloneId);
       if (entry) {
         entry.status = "error";
-        entry.error = err.message;
-        broadcast("clone_progress", { clone_id: cloneId, progress: 0, status: "error", error: err.message });
+        entry.error = "git_spawn_failed";
+        broadcast("clone_progress", { clone_id: cloneId, progress: 0, status: "error", error: "git_spawn_failed" });
       }
     });
 
@@ -320,7 +320,7 @@ export function registerGitHubRoutes(deps: GitHubRouteDeps): void {
       const branches = lines.map((l: string) => l.replace(/^\*\s+/, ""));
       res.json({ branches, current_branch: current });
     } catch (err) {
-      res.status(500).json({ error: "git_branch_failed", message: err instanceof Error ? err.message : String(err) });
+      res.status(500).json({ error: "git_branch_failed" });
     }
   });
 }

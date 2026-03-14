@@ -536,7 +536,7 @@ export function registerUpdateAutoRoutes(ctx: RuntimeContext): void {
       updateStatusCachedAt = 0;
       updateStatusCache = null;
       releaseAutoUpdateLock();
-      return res.status(500).json({ ok: false, error: err?.message || String(err) });
+      return res.status(500).json({ ok: false, error: "update_start_failed" });
     }
 
     try {
@@ -552,7 +552,7 @@ export function registerUpdateAutoRoutes(ctx: RuntimeContext): void {
       const code = result.status === "failed" ? 500 : 200;
       return res.status(code).json({ ok: result.status !== "failed", result });
     } catch (err: any) {
-      return res.status(500).json({ ok: false, error: err?.message || String(err) });
+      return res.status(500).json({ ok: false, error: "update_failed" });
     }
   });
 }
