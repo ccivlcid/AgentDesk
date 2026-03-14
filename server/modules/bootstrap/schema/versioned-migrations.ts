@@ -112,6 +112,13 @@ export const MIGRATIONS: Migration[] = [
       try { db.exec("ALTER TABLE task_execution_events ADD COLUMN cost_usd REAL DEFAULT 0"); } catch { /* already exists */ }
     },
   },
+  {
+    id: "2026-03-14-007-task-handoff",
+    up: (db) => {
+      try { db.exec("ALTER TABLE tasks ADD COLUMN handoff_to_agent_id TEXT REFERENCES agents(id) ON DELETE SET NULL"); } catch { /* already exists */ }
+      try { db.exec("ALTER TABLE tasks ADD COLUMN handoff_condition TEXT CHECK(handoff_condition IN ('always', 'on_success', 'on_fail'))"); } catch { /* already exists */ }
+    },
+  },
 ];
 
 const ENSURE_TABLE_SQL = `
