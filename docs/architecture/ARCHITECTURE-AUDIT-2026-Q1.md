@@ -1004,37 +1004,47 @@ Remove:   LiveSyncScheduler (WebSocket으로 흡수)
 
 ## 7. 즉시 처리 권고
 
-### 이번 주 (보안/버그)
+### 완료된 P0 항목 (2026-03-14 기준)
+
+| 우선순위 | 항목 | 이슈 | 상태 |
+|---------|------|------|------|
+| ~~**P0**~~ | ~~미팅 참여자 필터링 버그~~ | [A11] `loadManualProjectAgentScope()` assignment_mode 조건 제거 | ✅ 완료 |
+| ~~**P0**~~ | ~~OAuth PBKDF2 전환~~ | [A10] `oauthEncryptionKeyV2()` PBKDF2-SHA256 100k iter 이미 구현 | ✅ 완료 |
+| ~~**P0**~~ | ~~Rate Limiting 추가~~ | [A9] `auth.ts` 인-프로세스 슬라이딩 윈도우 RL (300/20 req/min) 구현 | ✅ 완료 |
+| ~~**P0**~~ | ~~WS 연결 수 제한~~ | [A14] `lifecycle.ts` MAX_WS_CLIENTS=20, code 4008 | ✅ 완료 |
+| ~~**P0**~~ | ~~환경 변수 시작 검증~~ | [A12] `server-main.ts` validateEnv() + oauthEncryptionKeyV2 throw | ✅ 완료 |
+
+### 남은 P1 항목 (1~2주 내)
 
 | 우선순위 | 항목 | 이슈 | 공수 |
 |---------|------|------|------|
-| **P0** | 미팅 참여자 필터링 버그 | [A11] execution-run-auto-assign.ts:419 | 0.5일 |
-| **P0** | OAuth PBKDF2 전환 | [A10] oauth/helpers.ts:14 | 0.5일 |
-| **P0** | Rate Limiting 추가 | [A9] express-rate-limit | 0.5일 |
-| **P0** | WS 연결 수 제한 | [A14] ws/hub.ts | 0.5일 |
-| **P0** | 환경 변수 시작 검증 | [A12] config/runtime.ts | 0.5일 |
+| **P1** | App.tsx → Zustand 분리 | [A1] 46개 useState → 4개 스토어 (zustand 이미 설치됨) | 4일 |
+| **P1** | WorkflowPackKey 완전 제거 | [A4] `workflow_pack_key` → `category_id` 전환 (~20개 파일) | 3일 |
+| **P1** | 구조화 로깅 (pino) | [A19] console.log 200+ → pino logger | 2일 |
 
-### 2~3주 (안정성)
+### 중기 P2 항목
 
-| 우선순위 | 항목 | 이슈 | 공수 |
-|---------|------|------|------|
-| **P1** | 메신저 inbox 재시도 | [A17] gateway/client.ts | 1일 |
-| **P1** | In-memory Map sweep | [A15] orchestration.ts | 1일 |
-| **P1** | 마이그레이션 버전 테이블 | [A16] bootstrap/schema/ | 1일 |
-| **P2** | WorkflowPackKey 완전 제거 | [A4] 개념 혼동 청산 | 1일 |
+| 우선순위 | 항목 | 공수 |
+|---------|------|------|
+| **P2** | Agent Flow Graph 구현 🎯 | 3~4주 |
+| **P2** | 실행 비용 추적 | 3일 |
+| **P2** | 동시 실행 큐 (FIFO) | 3일 |
+| **P2** | 에이전트 타임라인 뷰 | 3일 |
+| **P2** | 태스크 핸드오프 | 4일 |
+| **P2** | 페르소나 UI 완성 | 2일 |
 
-### 중기 (코드 품질)
-
-| 우선순위 | 항목 | 이슈 | 공수 |
-|---------|------|------|------|
-| **P3** | App.tsx → Zustand 분리 | [A1] 40개 useState | 4일 |
-| **P3** | 구조화 로깅 (pino) | [A19] 전체 적용 | 2일 |
-| **P3** | Zod 이미 설치 → 라우트 검증 | [A21] 응답 표준화 | 3일 |
-
-### 완료된 항목 (참고)
+### 완료된 항목 전체 목록
 
 | 항목 | 완료 시점 |
 |------|---------|
+| ~~미팅 참여자 필터링 버그~~ | ✅ 2026-03-14 — loadManualProjectAgentScope 수정 |
+| ~~메신저 inbox 재시도~~ | ✅ 2026-03-14 — forwardToInboxWithRetry (3회, 지수 백오프) |
+| ~~OAuth PBKDF2~~ | ✅ 이미 구현됨 — oauthEncryptionKeyV2 |
+| ~~Rate Limiting~~ | ✅ 이미 구현됨 — auth.ts 인-프로세스 RL |
+| ~~WS 연결 수 제한~~ | ✅ 이미 구현됨 — MAX_WS_CLIENTS=20 |
+| ~~환경 변수 검증~~ | ✅ 이미 구현됨 — validateEnv() |
+| ~~DB 마이그레이션 버전 추적~~ | ✅ 이미 구현됨 — versioned-migrations.ts |
+| ~~In-memory Map 누수~~ | ✅ 이미 구현됨 — onClose/onError delete + RL sweep |
 | ~~실행 상태 정합성 보정~~ | ✅ lifecycle.ts orphan recovery + heartbeat |
 | ~~API 에러 핸들링 통일~~ | ✅ ApiError class + global middleware + handleApiError |
 | ~~에이전트 실행 상태 머신~~ | ✅ stalled 자동복구 + timeout + 상태전이 검증 |

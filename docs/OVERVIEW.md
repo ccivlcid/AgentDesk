@@ -216,42 +216,29 @@ UIUX 모니터링               ████████████████
 
 ### 🔴 P0 — 즉시 처리 (버그·보안)
 
-#### [P0-1] 미팅 참여자 필터링 버그 ← 가장 심각
-- **파일:** `server/modules/routes/core/tasks/execution-run-auto-assign.ts:274-284`
-- **문제:** `assignment_mode === "auto"` 일 때 `loadManualProjectAgentScope()` 가 null 반환 → 프로젝트에 배정되지 않은 에이전트가 태스크 실행에 참여 가능
-- **작업:**
-  1. `loadManualProjectAgentScope()` null 체크 추가
-  2. auto 모드에서도 `project_agents` 테이블 기반 에이전트 풀 제한 적용
-  3. 회귀 테스트 추가
+#### ~~[P0-1] 미팅 참여자 필터링 버그~~ ✅ 완료 (2026-03-14)
+- **파일:** `server/modules/routes/core/tasks/execution-run-auto-assign.ts`
+- **수정 내용:** `loadManualProjectAgentScope()`의 `assignment_mode !== "manual"` 조건 제거 → 모든 모드에서 `project_agents` 테이블 기반 에이전트 풀 제한 적용
+- **효과:** auto 모드 프로젝트에서도 미배정 에이전트의 태스크/리뷰 참여 차단
 
-#### [P0-2] OAuth 비밀번호 해싱 취약
-- **파일:** `server/oauth/helpers.ts:14`
-- **문제:** SHA-256 단순 해시 사용 (salt 없음, KDF 없음) → brute-force 취약
-- **작업:**
-  1. `crypto.pbkdf2` 또는 `bcrypt` 로 교체
-  2. 기존 해시 마이그레이션 스크립트 작성 (기존 사용자 재로그인 유도)
+#### ~~[P0-2] OAuth 비밀번호 해싱 취약~~ ✅ 이미 완료
+- **파일:** `server/oauth/helpers.ts`
+- **현황:** PBKDF2-SHA256 (100k iterations) 방식의 v2 키 이미 구현됨. `encryptSecret()`은 v2 전용, `decryptSecret()`은 v1/v2 하위 호환 지원
 
-#### [P0-3] API Rate Limiting 전무
-- **파일:** `server/app.ts` (미들웨어 등록 위치)
-- **문제:** 모든 API 엔드포인트 무제한 요청 가능
-- **작업:**
-  1. `pnpm add express-rate-limit`
-  2. 전역 미들웨어: 100 req/min per IP
-  3. 실행 트리거 엔드포인트 (`POST /api/tasks/:id/run`): 10 req/min per user
+#### ~~[P0-3] API Rate Limiting 전무~~ ✅ 이미 완료
+- **파일:** `server/security/auth.ts`
+- **현황:** 인-프로세스 슬라이딩 윈도우 Rate Limiter 구현됨
+  - 일반 API: 300 req/min per IP
+  - 태스크 실행 트리거 (`POST /tasks/:id/run`): 20 req/min per IP
+  - 5분 주기 stale 버킷 sweep으로 메모리 누수 방지
 
-#### [P0-4] WebSocket 연결 수 무제한
-- **파일:** `server/ws/hub.ts`
-- **문제:** 클라이언트당 WebSocket 연결 수 제한 없음 → DoS 가능
-- **작업:**
-  1. 연결 등록 시 IP별 최대 연결 수 체크 (권장: 5개)
-  2. 초과 시 코드 `4008` 으로 즉시 close
+#### ~~[P0-4] WebSocket 연결 수 무제한~~ ✅ 이미 완료
+- **파일:** `server/modules/lifecycle.ts`
+- **현황:** `MAX_WS_CLIENTS = 20` 전역 제한 구현됨. 초과 시 코드 `4008` 즉시 close
 
-#### [P0-5] 환경 변수 시작 시 검증 누락
-- **파일:** `server/index.ts` (또는 `server/config.ts`)
-- **문제:** 필수 환경 변수 (`DATABASE_URL`, `JWT_SECRET` 등) 누락 시 런타임에 에러 발생
-- **작업:**
-  1. 서버 부팅 시 필수 env 목록 검증하는 `validateEnv()` 함수 추가
-  2. 누락 시 명확한 에러 메시지와 함께 `process.exit(1)`
+#### ~~[P0-5] 환경 변수 시작 시 검증 누락~~ ✅ 이미 완료
+- **파일:** `server/server-main.ts`
+- **현황:** `validateEnv()` 함수로 서버 시작 시 OAUTH_ENCRYPTION_SECRET, API_AUTH_TOKEN 검증 후 경고 출력. OAuth 실제 사용 시 `oauthEncryptionKeyV2()`에서 throw로 즉시 실패 처리
 
 ---
 
@@ -260,15 +247,15 @@ UIUX 모니터링               ████████████████
 #### [P1-1] App.tsx 상태 관리 분리 — Zustand 도입
 - **파일:** `src/App.tsx` (현재 461줄, 46개 useState)
 - **문제:** prop drilling 3단계+, 에이전트 50+ 시 렌더 성능 저하 예상
+- **현황:** `zustand` v5.0.11 이미 설치됨. 스토어 파일만 작성하면 됨.
 - **작업:**
-  1. `pnpm add zustand`
-  2. 스토어 파일 생성:
+  1. 스토어 파일 생성:
      - `src/store/projectStore.ts` — selectedProject, projects, categories
      - `src/store/agentStore.ts` — agents, departments, activeAgent
      - `src/store/taskStore.ts` — tasks, taskBoard, scheduledTasks
      - `src/store/uiStore.ts` — activeView, modals, toasts, commandPalette
-  3. App.tsx에서 해당 useState 제거 → 스토어로 교체
-  4. 하위 컴포넌트에서 props 대신 `useProjectStore()` 등 직접 구독
+  2. App.tsx에서 해당 useState 제거 → 스토어로 교체
+  3. 하위 컴포넌트에서 props 대신 `useProjectStore()` 등 직접 구독
 
 #### [P1-2] WorkflowPackKey 완전 제거
 - **파일:** 약 20개 파일 (grep: `workflow_pack_key`)
@@ -279,30 +266,18 @@ UIUX 모니터링               ████████████████
   3. 프론트엔드 타입 정의 업데이트 (`src/types/`)
   4. `/api/workflow-packs` 엔드포인트 → `/api/categories` 로 리다이렉트 후 제거
 
-#### [P1-3] 메신저 수신 재시도 로직
-- **파일:** `server/modules/messenger/telegram-receiver.ts`, `discord-receiver.ts`
-- **문제:** 외부 메신저 API 일시 장애 시 메시지 손실 (재시도 없음)
-- **작업:**
-  1. exponential backoff 재시도 (최대 3회, 2s→4s→8s)
-  2. 실패한 메시지 `dead_letter_queue` 테이블에 보관
-  3. 관리자 알림 (시스템 토스트 또는 이메일)
+#### ~~[P1-3] 메신저 수신 재시도 로직~~ ✅ 완료 (2026-03-14)
+- **파일:** `server/messenger/telegram-receiver.ts`, `server/messenger/discord-receiver.ts`
+- **수정 내용:** `forwardToInboxWithRetry()` 헬퍼 추가 (최대 3회, 지수 백오프: 2s→4s→8s)
+- **효과:** inbox 전달 일시 실패 시 자동 재시도, 영구 메시지 손실 방지
 
-#### [P1-4] DB 마이그레이션 버전 추적
-- **파일:** `server/bootstrap/schema/task-schema-migrations.ts` (현재 1,180줄)
-- **문제:** 마이그레이션 버전 테이블 없음 → 서버 재시작마다 전체 마이그레이션 재실행 (멱등성 의존)
-- **작업:**
-  1. `schema_migrations` 테이블 생성 (`version`, `applied_at`)
-  2. 각 마이그레이션 블록에 버전 번호 태깅
-  3. 이미 적용된 버전 스킵 로직 추가
-  4. 마이그레이션 파일을 버전별로 분리 (`migrations/001_initial.sql` 등)
+#### ~~[P1-4] DB 마이그레이션 버전 추적~~ ✅ 이미 완료
+- **파일:** `server/modules/bootstrap/schema/versioned-migrations.ts`
+- **현황:** `schema_migrations` 테이블 + `runVersionedMigrations()` 이미 구현됨. 버전 적용 여부 추적 및 중복 실행 방지
 
-#### [P1-5] In-Memory Map 메모리 누수 방지
-- **파일:** `server/ws/hub.ts`, `server/modules/lifecycle.ts`
-- **문제:** WebSocket 연결 Map, 실행 중 에이전트 Map이 명시적 cleanup 없음
-- **작업:**
-  1. 연결 종료 시 Map 항목 삭제 확인 (`onClose` 핸들러)
-  2. 24시간 이상 된 stale 항목 주기적 sweep (setInterval)
-  3. 메모리 사용량 로깅 추가 (디버그 모드)
+#### ~~[P1-5] In-Memory Map 메모리 누수 방지~~ ✅ 이미 완료
+- **파일:** `server/modules/lifecycle.ts`, `server/security/auth.ts`
+- **현황:** WebSocket `onClose/onError` 핸들러에서 `wsClients.delete()` 구현됨. Rate Limiter 버킷은 5분 주기 sweep으로 stale 항목 자동 정리
 
 #### [P1-6] 구조화 로깅 도입 (pino)
 - **파일:** 전체 서버 (`console.log` 약 200+ 곳)
@@ -440,35 +415,35 @@ UIUX 모니터링               ████████████████
 
 ---
 
-### 📊 우선순위 요약
+### 📊 우선순위 요약 (2026-03-14 기준)
 
-| 코드 | 작업 | 예상 기간 | 임팩트 |
-|------|------|---------|--------|
-| P0-1 | 미팅 참여자 필터링 버그 | 0.5일 | 🔴 P0 버그 |
-| P0-2 | OAuth 해싱 취약 | 1일 | 🔴 보안 |
-| P0-3 | Rate Limiting | 0.5일 | 🔴 보안 |
-| P0-4 | WebSocket 연결 제한 | 0.5일 | 🔴 보안 |
-| P0-5 | 환경 변수 검증 | 0.5일 | 🔴 안정성 |
-| P1-1 | Zustand 상태 관리 | 4일 | 성능·개발속도 |
-| P1-2 | WorkflowPackKey 제거 | 3일 | 코드 명확성 |
-| P1-3 | 메신저 재시도 | 1일 | 안정성 |
-| P1-4 | DB 마이그레이션 버전 | 2일 | 안정성 |
-| P1-5 | Map 메모리 누수 | 1일 | 안정성 |
-| P1-6 | 구조화 로깅 | 2일 | 운영성 |
-| P2-1 | Agent Flow Graph | 3~4주 | 🎯 핵심 비전 |
-| P2-2 | 실행 비용 추적 | 3일 | 사용성 |
-| P2-3 | 동시 실행 큐 | 3일 | 확장성 |
-| P2-4 | spawn DB 배치화 | 2일 | 성능 |
-| P2-5 | 에이전트 타임라인 | 3일 | 시각화 |
-| P2-6 | 태스크 핸드오프 | 4일 | 기능 확장 |
-| P2-7 | 페르소나 UI 완성 | 2일 | UI 완성도 |
-| P2-8 | WebSocket 최적화 | 2일 | 성능 |
-| P3-1 | Split-Pane Layout | 3~4일 | IDE 비전 |
-| P3-2 | Visual Workflow Builder | 3~4주 | IDE 비전 |
-| P3-3 | Keyboard-First UX | 1주 | UX 완성도 |
-| P3-4 | 테스트 커버리지 | 3~4주 | 품질 |
-| P3-5 | 이상 감지 최적화 | 1일 | 성능 |
-| P3-6 | Slack 연동 | 3일 | 기능 확장 (최후순위) |
+| 코드 | 작업 | 예상 기간 | 임팩트 | 상태 |
+|------|------|---------|--------|------|
+| ~~P0-1~~ | ~~미팅 참여자 필터링 버그~~ | 0.5일 | 🔴 P0 버그 | ✅ 완료 |
+| ~~P0-2~~ | ~~OAuth 해싱 취약~~ | 1일 | 🔴 보안 | ✅ 완료 |
+| ~~P0-3~~ | ~~Rate Limiting~~ | 0.5일 | 🔴 보안 | ✅ 완료 |
+| ~~P0-4~~ | ~~WebSocket 연결 제한~~ | 0.5일 | 🔴 보안 | ✅ 완료 |
+| ~~P0-5~~ | ~~환경 변수 검증~~ | 0.5일 | 🔴 안정성 | ✅ 완료 |
+| **P1-1** | **Zustand 상태 관리** | **4일** | 성능·개발속도 | 🔨 진행 필요 |
+| **P1-2** | **WorkflowPackKey 제거** | **3일** | 코드 명확성 | 🔨 진행 필요 |
+| ~~P1-3~~ | ~~메신저 재시도~~ | 1일 | 안정성 | ✅ 완료 |
+| ~~P1-4~~ | ~~DB 마이그레이션 버전~~ | 2일 | 안정성 | ✅ 완료 |
+| ~~P1-5~~ | ~~Map 메모리 누수~~ | 1일 | 안정성 | ✅ 완료 |
+| **P1-6** | **구조화 로깅 (pino)** | **2일** | 운영성 | 🔨 진행 필요 |
+| **P2-1** | **Agent Flow Graph** | **3~4주** | 🎯 핵심 비전 | 🔨 진행 필요 |
+| P2-2 | 실행 비용 추적 | 3일 | 사용성 | ⬜ 미시작 |
+| P2-3 | 동시 실행 큐 | 3일 | 확장성 | ⬜ 미시작 |
+| P2-4 | spawn DB 배치화 | 2일 | 성능 | ⬜ 미시작 |
+| P2-5 | 에이전트 타임라인 | 3일 | 시각화 | ⬜ 미시작 |
+| P2-6 | 태스크 핸드오프 | 4일 | 기능 확장 | ⬜ 미시작 |
+| P2-7 | 페르소나 UI 완성 | 2일 | UI 완성도 | ⬜ 미시작 |
+| P2-8 | WebSocket 최적화 | 2일 | 성능 | ⬜ 미시작 |
+| P3-1 | Split-Pane Layout | 3~4일 | IDE 비전 | ⬜ 미시작 |
+| P3-2 | Visual Workflow Builder | 3~4주 | IDE 비전 | ⬜ 미시작 |
+| P3-3 | Keyboard-First UX | 1주 | UX 완성도 | ⬜ 미시작 |
+| P3-4 | 테스트 커버리지 | 3~4주 | 품질 | ⬜ 미시작 |
+| P3-5 | 이상 감지 최적화 | 1일 | 성능 | ⬜ 미시작 |
+| P3-6 | Slack 연동 | 3일 | 기능 확장 | ⬜ 미시작 |
 
 
 

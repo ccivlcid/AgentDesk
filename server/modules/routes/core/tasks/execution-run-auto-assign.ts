@@ -258,19 +258,15 @@ function buildPreferredDepartmentOrder(
 
 function loadManualProjectAgentScope(db: DbLike, projectId: string | null | undefined): string[] | null {
   if (!projectId) return null;
-  try {
-    const project = db
-      .prepare("SELECT assignment_mode FROM projects WHERE id = ?")
-      .get(projectId) as { assignment_mode?: string } | undefined;
-    // In 'auto' mode there is no manual agent list — return null (no constraint).
-    if (!project || project.assignment_mode !== "manual") return null;
-  } catch {
-    // projects table may not exist in test harnesses that don't model it; fall through.
-  }
+  // Always apply project_agents constraint regardless of assignment_mode.
+  // This prevents agents not assigned to the project from participating in
+  // task auto-assignment and review meetings (fixes meeting participant leak).
   const rows = db
     .prepare("SELECT agent_id FROM project_agents WHERE project_id = ?")
     .all(projectId) as ProjectAgentRow[];
-  return rows.map((row) => row.agent_id).filter((id) => typeof id === "string" && id.length > 0);
+  const ids = rows.map((row) => row.agent_id).filter((id) => typeof id === "string" && id.length > 0);
+  // Return null (no constraint) when project has no assigned agents yet.
+  return ids.length > 0 ? ids : null;
 }
 
 function combineAgentScopes(primary: string[] | null, secondary: string[] | null): string[] | null {
