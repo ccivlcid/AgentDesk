@@ -252,6 +252,116 @@ done:    "--th-terminal-success" // 초록
 
 ---
 
+## 11. 서버 코드 진입점 맵 (AI 에이전트용)
+
+### 서버 디렉토리 구조
+
+```
+server/
+├── server-main.ts                        ← 서버 시작점, 환경변수 검증
+├── gateway/client.ts                     ← notifyClient, notifyTaskStatus 헬퍼
+├── ws/hub.ts                             ← WebSocket broadcast 허브
+├── lib/logger.ts                         ← pino 로거 (import logger from here)
+├── types/runtime-context.ts             ← RuntimeContext 타입 정의
+├── modules/
+│   ├── routes.ts                         ← 라우터 등록 진입점
+│   ├── routes/core/                      ← 에이전트·태스크·프로젝트 API
+│   │   ├── agents/                       ← 에이전트 CRUD, spawn
+│   │   ├── tasks/
+│   │   │   ├── execution-run.ts          ← POST /tasks/:id/run 핸들러
+│   │   │   └── execution-control.ts     ← pause/resume/stop
+│   │   ├── personas.ts                   ← GET /api/personas (PERSONAS 배열 하드코딩)
+│   │   └── projects/                     ← 프로젝트 CRUD
+│   ├── routes/ops/
+│   │   └── worktrees-and-usage.ts        ← CLI 사용량, 비용 알림 API
+│   ├── workflow/orchestration.ts         ← 태스크 실행 오케스트레이터 (784줄)
+│   ├── workflow/orchestration/
+│   │   ├── execution-start-task.ts       ← startTaskExecutionForAgent() — 핵심 실행 로직
+│   │   ├── heartbeat.ts                  ← 에이전트 하트비트 엔진
+│   │   └── task-scheduler.ts            ← 스케줄 태스크 처리
+│   └── bootstrap/schema/
+│       ├── base-schema.ts                ← 전체 DB 테이블 정의 (원본 스키마)
+│       ├── task-schema-migrations.ts     ← ALTER TABLE 방식 마이그레이션 (구형)
+│       └── versioned-migrations.ts       ← ✅ 신규 마이그레이션 작성 위치
+```
+
+### DB 마이그레이션 작성 규칙
+
+신규 컬럼/테이블은 반드시 `versioned-migrations.ts`에 추가:
+
+```typescript
+// server/modules/bootstrap/schema/versioned-migrations.ts
+// MIGRATIONS 배열 맨 끝에 추가
+{
+  id: "YYYY-MM-DD-NNN-short-description",  // 날짜+순번+설명 (고유, 불변)
+  up: (db) => {
+    try {
+      db.exec("ALTER TABLE tasks ADD COLUMN tokens_in INTEGER DEFAULT 0");
+    } catch { /* already exists */ }
+  },
+},
+```
+
+**규칙:**
+- 기존 항목 절대 수정/삭제 금지 (이미 프로덕션 적용됨)
+- 끝에만 append
+- `up` 함수는 트랜잭션 내에서 실행됨 — throw 시 롤백
+
+### 주요 DB 테이블 목록 (base-schema.ts)
+
+| 테이블 | 용도 |
+|---|---|
+| `tasks` | 태스크 (status, assigned_agent_id, project_id 등) |
+| `task_execution_events` | 태스크 상태 변경 이력 (event_type, from_state, to_state) |
+| `task_logs` | 에이전트 실행 로그 (agent stdout/system) |
+| `agents` | 에이전트 (status, current_task_id, persona_id, cli_provider 등) |
+| `subtasks` | 서브태스크 (target_department_id, delegated_task_id 포함) |
+| `skill_learning_history` | 스킬 학습 이력 |
+| `agent_rules` | 에이전트 룰 (project/agent/dept scope) |
+| `memory_entries` | 에이전트 메모리 (project scope) |
+| `hook_entries` | 훅 정의 |
+| `notifications` | 알림 (task_complete, cost_alert 등) |
+| `settings` | 전역 설정 key-value |
+| `api_providers` | API 프로바이더 (ollama, openai 등) |
+| `project_agents` | 프로젝트↔에이전트 매핑 |
+
+### WebSocket broadcast 이벤트 타입
+
+```typescript
+// server/ws/hub.ts — broadcast(type, payload) 호출 시
+broadcast("task_update", taskRow);          // 태스크 상태 변경
+broadcast("agent_status", agentRow);        // 에이전트 상태 변경
+broadcast("cli_output", { taskId, line });  // 터미널 출력 (250ms 배치)
+broadcast("subtask_update", subtaskRow);    // 서브태스크 변경 (150ms 배치)
+broadcast("notification", notifRow);        // 알림 발송
+broadcast("cross_dept_delivery", payload);  // 부서 간 전달
+broadcast("meeting_presence", payload);     // 미팅 참석
+```
+
+**`cli_output`, `subtask_update`는 자동 배치됨** — 나머지는 즉시 전송.
+
+### 서버 사이드 새 API 추가 패턴
+
+```typescript
+// 1. 라우트 파일 선택 (기능에 맞는 위치)
+//    core → 에이전트/태스크/프로젝트 기본 CRUD
+//    ops  → 운영/모니터링/사용량
+//    collab → 협업/미팅/서브태스크
+
+// 2. 라우트 등록 (Express 스타일)
+app.get("/api/your-endpoint", (req, res) => {
+  const rows = db.prepare("SELECT ...").all();
+  res.json(rows);
+});
+
+// 3. 로거 사용 (console.log 금지)
+import logger from "../../../lib/logger.ts";
+logger.info({ taskId }, "task started");
+logger.warn({ err }, "something went wrong");
+```
+
+---
+
 ## 10. 테크 스택 & 참조
 
 ```

@@ -386,6 +386,9 @@ const AGENTS_CHILDREN: View[] = ["agents", "heartbeat"]; // line ~51, "flow-grap
 
 ### 🟡 P2 — 중기 (3~6주)
 
+> **P2-2~P2-8 상세 설계서:** `docs/strategy/p2-tasks-design.md`
+> (파일 경로, 현재 상태, 구현 단계, 코드 예시 포함)
+
 #### [P2-1] Agent Flow Graph 구현 🎯 핵심 기능
 - **설계 문서:** `docs/strategy/agent-flow-graph-design.md` (완성)
 - **목표:** 에이전트 간 관계·태스크 흐름을 실시간 SVG 그래프로 시각화
