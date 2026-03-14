@@ -105,7 +105,7 @@ export const MIGRATIONS: Migration[] = [
     },
   },
   {
-    id: "2026-03-14-004-task-token-cost",
+    id: "2026-03-14-005-task-token-cost",
     up: (db) => {
       try { db.exec("ALTER TABLE task_execution_events ADD COLUMN tokens_in INTEGER DEFAULT 0"); } catch { /* already exists */ }
       try { db.exec("ALTER TABLE task_execution_events ADD COLUMN tokens_out INTEGER DEFAULT 0"); } catch { /* already exists */ }

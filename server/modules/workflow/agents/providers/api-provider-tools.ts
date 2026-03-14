@@ -253,12 +253,28 @@ export function createApiProviderTools(deps: CreateApiProviderToolsDeps) {
       throw new Error(`API provider '${provider.name}' error (${resp.status}): ${text}`);
     }
 
+    let inputTokens = 0;
+    let outputTokens = 0;
+
     if (provider.type === "anthropic") {
-      await parseAnthropicSSEStream(resp.body!, signal, safeWrite, taskId);
+      const usage = await parseAnthropicSSEStream(resp.body!, signal, safeWrite, taskId);
+      inputTokens = usage.inputTokens;
+      outputTokens = usage.outputTokens;
     } else if (provider.type === "google") {
       await parseGeminiSSEStream(resp.body!, signal, safeWrite, taskId);
     } else {
       await parseSSEStream(resp.body!, signal, safeWrite, taskId);
+    }
+
+    if (taskId && (inputTokens > 0 || outputTokens > 0)) {
+      const costUsd = (inputTokens * COST_PER_INPUT_MTOK + outputTokens * COST_PER_OUTPUT_MTOK) / 1_000_000;
+      try {
+        db.prepare(
+          "INSERT INTO task_execution_events (task_id, event_type, tokens_in, tokens_out, cost_usd, created_at) VALUES (?, 'api_completion', ?, ?, ?, ?)",
+        ).run(taskId, inputTokens, outputTokens, costUsd, nowMs());
+      } catch (err) {
+        logger.warn({ err, taskId }, "[api-provider] Failed to record token cost event");
+      }
     }
 
     safeWrite(`\n---\n[api:${provider.type}] Done.\n`);

@@ -324,5 +324,77 @@ export function registerWorktreeAndUsageRoutes(ctx: RuntimeContext): {
     res.json({ ok: true, ...checkCostBlockExecution() });
   });
 
+  // ---------------------------------------------------------------------------
+  // Token / Cost Summary (P2-2)
+  // ---------------------------------------------------------------------------
+
+  function getMonthStartMs(): number {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+  }
+
+  app.get("/api/agents/:id/cost-summary", (req, res) => {
+    const agentId = String(req.params.id);
+    const monthStart = getMonthStartMs();
+
+    const totalRow = db.prepare(
+      `SELECT
+         COALESCE(SUM(e.tokens_in + e.tokens_out), 0) AS totalTokens
+       FROM task_execution_events e
+       JOIN tasks t ON t.id = e.task_id
+       WHERE t.assigned_agent_id = ?`,
+    ).get(agentId) as { totalTokens: number };
+
+    const monthRow = db.prepare(
+      `SELECT
+         COALESCE(SUM(e.cost_usd), 0) AS thisMonthUsd,
+         COALESCE(SUM(e.tokens_in + e.tokens_out), 0) AS thisMonthTokens
+       FROM task_execution_events e
+       JOIN tasks t ON t.id = e.task_id
+       WHERE t.assigned_agent_id = ?
+         AND e.created_at >= ?`,
+    ).get(agentId, monthStart) as { thisMonthUsd: number; thisMonthTokens: number };
+
+    res.json({
+      ok: true,
+      thisMonthUsd: monthRow.thisMonthUsd ?? 0,
+      totalTokens: totalRow.totalTokens ?? 0,
+      thisMonthTokens: monthRow.thisMonthTokens ?? 0,
+    });
+  });
+
+  app.get("/api/cost-summary", (_req, res) => {
+    const monthStart = getMonthStartMs();
+
+    const monthRow = db.prepare(
+      `SELECT
+         COALESCE(SUM(e.cost_usd), 0) AS thisMonthUsd,
+         COALESCE(SUM(e.tokens_in + e.tokens_out), 0) AS totalTokens
+       FROM task_execution_events e
+       WHERE e.created_at >= ?`,
+    ).get(monthStart) as { thisMonthUsd: number; totalTokens: number };
+
+    const agentRows = db.prepare(
+      `SELECT
+         t.assigned_agent_id AS agentId,
+         a.name AS name,
+         COALESCE(SUM(e.cost_usd), 0) AS thisMonthUsd
+       FROM task_execution_events e
+       JOIN tasks t ON t.id = e.task_id
+       LEFT JOIN agents a ON a.id = t.assigned_agent_id
+       WHERE e.created_at >= ?
+         AND t.assigned_agent_id IS NOT NULL
+       GROUP BY t.assigned_agent_id
+       ORDER BY thisMonthUsd DESC`,
+    ).all(monthStart) as Array<{ agentId: string; name: string; thisMonthUsd: number }>;
+
+    res.json({
+      ok: true,
+      thisMonthUsd: monthRow.thisMonthUsd ?? 0,
+      totalTokens: monthRow.totalTokens ?? 0,
+      agentBreakdown: agentRows,
+    });
+  });
+
   return { refreshCliUsageData, checkCostBlockExecution };
 }

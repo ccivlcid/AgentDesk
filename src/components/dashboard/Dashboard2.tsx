@@ -16,6 +16,7 @@ import { fetchProjectAgents, objectivesApi } from "../../api/categories-dashboar
 import ProjectManagerModal from "../ProjectManagerModal";
 import ProjectFileTree from "./ProjectFileTree";
 import DashboardTaskList from "./DashboardTaskList";
+import { getGlobalCostSummary } from "../../api/cost-summary";
 
 interface Dashboard2Props {
   project: Project | null;
@@ -277,6 +278,7 @@ function Dashboard2Inner({
   const [now, setNow] = useState(() => new Date());
   const [objectives, setObjectives] = useState<ProjectObjective[]>([]);
   const [objAddingTitle, setObjAddingTitle] = useState("");
+  const [globalCostThisMonth, setGlobalCostThisMonth] = useState<number | null>(null);
   const [objShowInput, setObjShowInput] = useState(false);
   const [objBusy, setObjBusy] = useState(false);
   const [agentActivityCollapsed, setAgentActivityCollapsed] = useState(() => {
@@ -322,6 +324,10 @@ function Dashboard2Inner({
   }, [project.id]);
 
   useEffect(() => { void loadObjectives(); }, [loadObjectives]);
+
+  useEffect(() => {
+    getGlobalCostSummary().then((s) => setGlobalCostThisMonth(s.thisMonthUsd)).catch(() => {});
+  }, []);
 
   const handleObjAdd = async () => {
     const title = objAddingTitle.trim();
@@ -677,6 +683,31 @@ function Dashboard2Inner({
             {/* 팀 카드 */}
             <div style={{ background: "var(--th-bg-elevated)", borderRadius: 10, border: "1px solid var(--th-border)", overflow: "hidden" }}>
               <TeamPanel projectId={project.id} allAgents={agents} onTeamChange={onTeamChange} />
+            </div>
+
+            {/* 비용 카드 (P2-2) */}
+            <div style={{ background: "var(--th-bg-elevated)", borderRadius: 10, border: "1px solid var(--th-border)", overflow: "hidden" }}>
+              <div style={{ ...mono, display: "flex", alignItems: "center", gap: 6, padding: "10px 14px", borderBottom: "1px solid var(--th-border)" }}>
+                <span style={{ fontSize: "10px", fontWeight: 700, color: "var(--th-text-muted)", textTransform: "uppercase", letterSpacing: "0.05em", flex: 1 }}>
+                  {t({ ko: "// 이번 달 총 비용", en: "// THIS MONTH COST", ja: "// 今月の総コスト", zh: "// 本月总费用" })}
+                </span>
+              </div>
+              <div style={{ padding: "14px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <span
+                  style={{
+                    ...mono,
+                    fontSize: "20px",
+                    fontWeight: 700,
+                    color: "var(--th-accent)",
+                    padding: "4px 12px",
+                    background: "rgba(245,158,11,0.1)",
+                    border: "1px solid rgba(245,158,11,0.3)",
+                    borderRadius: 0,
+                  }}
+                >
+                  {globalCostThisMonth != null ? `$${globalCostThisMonth.toFixed(2)}` : "—"}
+                </span>
+              </div>
             </div>
 
             {/* 파일트리 카드 */}

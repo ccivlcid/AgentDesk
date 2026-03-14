@@ -40,6 +40,7 @@ export default function AgentDetailTabContent({
   const [isEditingPersona, setIsEditingPersona] = useState(false);
   const [editDraft, setEditDraft] = useState("");
   const [savingPersona, setSavingPersona] = useState(false);
+  const [costSummary, setCostSummary] = useState<{ thisMonthUsd: number } | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -47,6 +48,7 @@ export default function AgentDetailTabContent({
     setPersonaText(null);
     setIsEditingPersona(false);
     api.getAgentPersona(agent.id).then((text) => setPersonaText(text || null)).catch(() => setPersonaText(null));
+    api.getAgentCostSummary(agent.id).then((s) => setCostSummary(s)).catch(() => setCostSummary(null));
   }, [agent.id, tab]);
 
   function startEditPersona() {
@@ -140,6 +142,23 @@ export default function AgentDetailTabContent({
             <div className="text-[10px]" style={{ color: "var(--th-text-muted)" }}>
               {t({ ko: "알바생", en: "Sub-agents", ja: "サブエージェント", zh: "子代理" })}
             </div>
+          </div>
+        </div>
+
+        <div
+          className="border p-3 flex items-center justify-between"
+          style={{ background: "var(--th-bg-surface)", borderColor: "var(--th-border)" }}
+        >
+          <div className="text-[10px] font-mono uppercase" style={{ color: "var(--th-text-muted)", letterSpacing: "0.05em" }}>
+            {t({ ko: "// 이번 달 비용", en: "// THIS MONTH COST", ja: "// 今月のコスト", zh: "// 本月费用" })}
+          </div>
+          <div
+            className="text-sm font-mono font-bold px-2 py-0.5"
+            style={{ background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.3)", color: "var(--th-accent)", borderRadius: 0 }}
+          >
+            {costSummary != null
+              ? `$${costSummary.thisMonthUsd.toFixed(2)}`
+              : "—"}
           </div>
         </div>
 
