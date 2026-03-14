@@ -40,12 +40,37 @@
 
 ---
 
-## 다음 작업 후보
+---
+
+## 2026-03-14 — Phase 5 정리 & 완성도
 
 ### Phase 5 — 정리 & 완성도
 
-- [ ] **구버전 파일 삭제** — `AppMainLayout.tsx`, `Sidebar.tsx`, `SplitPaneSecondary.tsx`, `AppHeaderBar.tsx` 제거
-- [ ] **ReplWindow 신규** — `>_` 에이전트 REPL 데스크톱 아이콘 → `src/components/windows/ReplWindow.tsx`
-- [ ] **키보드 단축키** — `g w` Workflow / `g l` Library / `g s` Settings / `g c` Chat
-- [ ] **CommandPalette 통합** — `Ctrl+Shift+K` → Desktop에서 CommandPalette 렌더
-- [ ] **KeyboardShortcutsGuide 업데이트** — 새 단축키 반영
+- [x] **구버전 파일 삭제** — `AppMainLayout.tsx`, `Sidebar.tsx`, `SplitPaneSecondary.tsx`, `AppHeaderBar.tsx` 이미 제거됨
+- [x] **ReplWindow 신규** — `>_` 에이전트 REPL → `src/components/windows/ReplWindow.tsx` + `src/components/AgentRepl.tsx` (488줄)
+- [x] **키보드 단축키** — `g w` Workflow / `g l` Library / `g s` Settings / `g c` Chat / `g a` Agent Manager / `g e` REPL (`Desktop.tsx`)
+- [x] **CommandPalette 통합** — `Ctrl+Shift+K` → Desktop에서 CommandPalette 렌더 완료
+- [x] **KeyboardShortcutsGuide 업데이트** — `g e` REPL 포함 전체 단축키 최신 반영
+
+---
+
+## 2026-03-14 — 보안 패치 (Security Hardening)
+
+### 1차 패치
+
+- [x] **경로 탐색(Path Traversal) 차단** — `server/modules/routes/ops/task-reports/routes.ts` — `path.resolve` + `startsWith` 검증 추가
+- [x] **GitHub PAT 검증 강화** — `server/modules/routes/core/github-routes.ts` — `ghp_` / `github_pat_` 프리픽스 화이트리스트 검증
+- [x] **git clone 경로 정규화** — `github-routes.ts` — `path.resolve` + 프로젝트 루트 밖 탈출 차단
+- [x] **OAuth 리다이렉트 호스트 검증** — `server/oauth/helpers.ts` — `.ts.net` 도메인 bypass 방지, 명시적 허용 호스트 목록으로 교체
+- [x] **Content-Disposition 파일명 인젝션 차단** — `server/modules/routes/ops/chat-upload.ts` — 파일명 sanitize (`"` `/` `\` 제거)
+- [x] **Prompt Injection (projectPath)** — `server/modules/workflow/core/api-provider-tools.ts` — 줄바꿈·제어문자 제거
+- [x] **ReDoS 취약 정규식 제거** — `reply-core-tools.ts`, `messenger-notice-format.ts` — lookbehind → indexOf/slice 로 교체
+- [x] **TOCTOU 파일 읽기 경쟁 조건** — `chat-upload.ts` — `fs.open` + `fd` 기반 원자적 읽기로 교체
+- [x] **파일 쓰기 원자성** — `server/modules/routes/ops/custom-skills.ts` — 임시 파일(`*.tmp`) write 후 `rename` 으로 교체
+
+### 2차 패치
+
+- [x] **에러 메시지 정보노출 — update API** — `register.ts:539,555` — `err.message` → 고정 에러 코드 반환
+- [x] **에러 메시지 정보노출 — GitHub API** — `github-routes.ts:147,206,323` — `message` 필드 제거
+- [x] **git clone stderr WS 브로드캐스트 제거** — `github-routes.ts:275,291` — `stderrBuf` / `err.message` 클라이언트 노출 차단
+- [x] **에러 메시지 정보노출 — API Providers** — `api-providers.ts:254,269,311,335,364` — upstream 에러 본문 제거, 고정 코드로 통일

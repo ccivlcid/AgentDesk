@@ -177,7 +177,7 @@ GET /api/agent-rules?project_id=<id>
 
 ## 6. 현재 시스템 상태
 
-### 완성도 (2026-03-13 기준)
+### 완성도 (2026-03-14 기준)
 
 ```
 에이전트 스폰·관리          ██████████████████░░ 95%
@@ -186,7 +186,8 @@ GET /api/agent-rules?project_id=<id>
 스킬 학습·메모리             █████████████████░░░ 85%
 하트비트·이상 감지           █████████████████░░░ 85%
 스케줄링                    █████████████████░░░ 85%
-UIUX 모니터링               ████████████████░░░░ 80%
+UIUX 모니터링               ████████████████████ 100% (Phase 4~5 완성)
+보안 하드닝                 ████████████████████ 100% (2차 패치 완료)
 페르소나 시스템              ████████████████████ 100% (완성)
 시각적 에이전트 그래프       ████████████████████ 100% (완성)
 ```
@@ -233,7 +234,8 @@ export type WindowType =
   | "library"        // 📚 Skills / Agent Rules / Memory / Hooks / Deliverables
   | "settings"       // ⚙ General / API / OAuth / CLI / Gateway / Data / Project Types / Agents
   | "chat"           // 💬 Direct / Group / Announcement
-  | "agent-manager"; // 👤 에이전트·부서 관리
+  | "agent-manager"  // 👤 에이전트·부서 관리
+  | "repl";          // >_ 에이전트 REPL
 
 // uiStore
 openWindows: Set<WindowType>  // 동시에 여러 창 열기 가능
@@ -259,26 +261,28 @@ widgetLayout: WidgetConfig[]  // 위젯 위치·크기·표시 여부 (localStor
 | `CrossDeptDelivery` | `src/types/index.ts` (line ~72) |
 | `WindowType`, `WidgetConfig`, `RuntimeOs`, `OAuthCallbackResult` | `src/app/types.ts` |
 
-### 7-5. AppMainLayout 현재 props
+### 7-5. Desktop.tsx 주요 props
 
-- `agents: Agent[]` ✅
-- `departments: Department[]` ✅
-- `tasks: Task[]` ✅
-- `subAgents: SubAgent[]` ✅
-- `crossDeptDeliveries: CrossDeptDelivery[]` ✅
-- `meetingPresence: MeetingPresence[]` ✅
-- `projectAgentIds?: Set<string>` ✅
-- `onSelectAgent: (agent: Agent) => void` ✅
+> `AppMainLayout`은 제거됨. 현재 루트 UI 컴포넌트는 `src/components/desktop/Desktop.tsx`.
+
+- `connected: boolean` — WebSocket 연결 상태
+- `on: (event, handler) => () => void` — WS 이벤트 구독
+- `onSaveSettings`, `onRefreshCli` — Settings 창 콜백
+- `oauthResult`, `onOauthResultClear` — OAuth 리다이렉트 결과
+- `onAgentsChange` — 에이전트 변경 시 리프레시
+- `onSendMessage`, `onSendAnnouncement`, `onSendDirective`, `onClearMessages` — Chat 콜백
+- `onProjectCreate`, `onCreateTask` — 데스크톱 아이콘 액션
 
 ### 7-6. 앱 내비게이션 구조 — macOS 바탕화면 OS
 
 **데스크톱 아이콘 (클릭 → 창 열림):**
-- `👤 에이전트 설정` → AgentManagerWindow
+- `👤 에이전트 설정` → AgentManagerWindow (`g a`)
 - `📁 프로젝트 생성` → ProjectCreateModal
 - `▶ 태스크 실행` → CreateTaskModal
-- `⚡ 워크플로 빌더` → WorkflowWindow (Builder 탭)
-- `📋 라이브러리` → LibraryWindow
-- `💬 채팅` → ChatWindow
+- `⚡ 워크플로 빌더` → WorkflowWindow (`g w`)
+- `📋 라이브러리` → LibraryWindow (`g l`)
+- `💬 채팅` → ChatWindow (`g c`)
+- `>_ 에이전트 REPL` → ReplWindow (`g e`)
 
 **Dock (항상 고정, 클릭 → 앱 창):**
 - `⚡ Workflow` → WorkflowWindow (Workflow Builder / Scheduled Tasks)
@@ -490,6 +494,35 @@ widgetLayout: WidgetConfig[]  // 위젯 위치·크기·표시 여부 (localStor
 
 ---
 
+---
+
+### 🔐 보안 패치 (2026-03-14)
+
+#### 1차 패치
+
+| # | 취약점 | 심각도 | 파일 | 상태 |
+|---|--------|--------|------|------|
+| S1 | 경로 탐색(Path Traversal) | 🔴 높음 | `task-reports/routes.ts` | ✅ 완료 |
+| S2 | GitHub PAT 검증 우회 | 🔴 높음 | `github-routes.ts` | ✅ 완료 |
+| S3 | git clone 경로 탈출 | 🔴 높음 | `github-routes.ts` | ✅ 완료 |
+| S4 | OAuth `.ts.net` 리다이렉트 bypass | 🔴 높음 | `oauth/helpers.ts` | ✅ 완료 |
+| S5 | Content-Disposition 파일명 인젝션 | 🟡 중간 | `chat-upload.ts` | ✅ 완료 |
+| S6 | Prompt Injection (projectPath) | 🟡 중간 | `api-provider-tools.ts` | ✅ 완료 |
+| S7 | ReDoS (lookbehind 정규식) | 🟡 중간 | `reply-core-tools.ts`, `messenger-notice-format.ts` | ✅ 완료 |
+| S8 | TOCTOU 파일 읽기 경쟁 조건 | 🟡 중간 | `chat-upload.ts` | ✅ 완료 |
+| S9 | 파일 쓰기 비원자성 | 🟢 낮음 | `custom-skills.ts` | ✅ 완료 |
+
+#### 2차 패치
+
+| # | 취약점 | 심각도 | 파일 | 상태 |
+|---|--------|--------|------|------|
+| S10 | 에러 메시지 정보노출 (update API) | 🔴 높음 | `register.ts` | ✅ 완료 |
+| S11 | 에러 메시지 정보노출 (GitHub API) | 🔴 높음 | `github-routes.ts` | ✅ 완료 |
+| S12 | git clone stderr WS 브로드캐스트 | 🔴 높음 | `github-routes.ts` | ✅ 완료 |
+| S13 | 에러 메시지 정보노출 (API Providers) | 🟡 중간 | `api-providers.ts` | ✅ 완료 |
+
+---
+
 ### 📊 우선순위 요약 (2026-03-14 기준)
 
 | 코드 | 작업 | 예상 기간 | 임팩트 | 상태 |
@@ -519,6 +552,9 @@ widgetLayout: WidgetConfig[]  // 위젯 위치·크기·표시 여부 (localStor
 | ~~P3-4~~ | ~~테스트 커버리지~~ | 3~4주 | 품질 | ✅ 완료 |
 | ~~P3-5~~ | ~~이상 감지 최적화~~ | 1일 | 성능 | ✅ 완료 |
 | ~~P3-6~~ | ~~Slack 연동~~ | 3일 | 기능 확장 | ✅ 완료 |
+| ~~S1~9~~ | ~~보안 패치 1차 (경로탐색·OAuth·ReDoS 등)~~ | 1일 | 🔴 보안 | ✅ 완료 |
+| ~~S10~13~~ | ~~보안 패치 2차 (에러 정보노출·stderr 브로드캐스트)~~ | 0.5일 | 🔴 보안 | ✅ 완료 |
+| ~~Ph5~~ | ~~Phase 5 (ReplWindow·단축키·CommandPalette)~~ | 1일 | UI 완성도 | ✅ 완료 |
 
 
 
