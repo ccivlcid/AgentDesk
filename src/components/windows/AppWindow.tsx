@@ -4,6 +4,22 @@ import { useUiStore } from "../../store/uiStore";
 
 const mono = "var(--th-font-mono)";
 
+const LS_KEY = (wt: WindowType) => `agentdesk_win_${wt}`;
+
+interface WindowState { x: number; y: number; w: number; h: number }
+
+function loadWinState(wt: WindowType, defaults: WindowState): WindowState {
+  try {
+    const raw = window.localStorage.getItem(LS_KEY(wt));
+    if (raw) return { ...defaults, ...JSON.parse(raw) };
+  } catch { /* ignore */ }
+  return defaults;
+}
+
+function saveWinState(wt: WindowType, state: WindowState) {
+  try { window.localStorage.setItem(LS_KEY(wt), JSON.stringify(state)); } catch { /* ignore */ }
+}
+
 export interface AppWindowTab {
   id: string;
   label: string;
@@ -36,10 +52,11 @@ export default function AppWindow({
   const { closeWindow } = useUiStore();
   const [activeTab, setActiveTab] = useState(tabs?.[0]?.id ?? "");
 
-  const initX = defaultX ?? Math.max(40, (window.innerWidth - defaultWidth) / 2);
-  const initY = defaultY ?? Math.max(60, (window.innerHeight - defaultHeight) / 3);
-  const [pos, setPos] = useState({ x: initX, y: initY });
-  const [size, setSize] = useState({ w: defaultWidth, h: defaultHeight });
+  const fallbackX = defaultX ?? Math.max(40, (window.innerWidth - defaultWidth) / 2);
+  const fallbackY = defaultY ?? Math.max(60, (window.innerHeight - defaultHeight) / 3);
+  const saved = loadWinState(windowType, { x: fallbackX, y: fallbackY, w: defaultWidth, h: defaultHeight });
+  const [pos, setPos] = useState({ x: saved.x, y: saved.y });
+  const [size, setSize] = useState({ w: saved.w, h: saved.h });
   const dragStart = useRef<{ mx: number; my: number; ox: number; oy: number } | null>(null);
   const resizeStart = useRef<{ mx: number; my: number; ow: number; oh: number } | null>(null);
 
@@ -57,10 +74,10 @@ export default function AppWindow({
     }
     function onUp(ev: MouseEvent) {
       if (!dragStart.current) return;
-      setPos({
-        x: Math.max(0, dragStart.current.ox + ev.clientX - dragStart.current.mx),
-        y: Math.max(44, dragStart.current.oy + ev.clientY - dragStart.current.my),
-      });
+      const nx = Math.max(0, dragStart.current.ox + ev.clientX - dragStart.current.mx);
+      const ny = Math.max(44, dragStart.current.oy + ev.clientY - dragStart.current.my);
+      setPos({ x: nx, y: ny });
+      saveWinState(windowType, { x: nx, y: ny, w: size.w, h: size.h });
       dragStart.current = null;
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("mouseup", onUp);
@@ -83,6 +100,10 @@ export default function AppWindow({
       });
     }
     function onUp(ev: MouseEvent) {
+      if (!resizeStart.current) return;
+      const nw = Math.max(400, resizeStart.current.ow + ev.clientX - resizeStart.current.mx);
+      const nh = Math.max(300, resizeStart.current.oh + ev.clientY - resizeStart.current.my);
+      saveWinState(windowType, { x: pos.x, y: pos.y, w: nw, h: nh });
       resizeStart.current = null;
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("mouseup", onUp);
