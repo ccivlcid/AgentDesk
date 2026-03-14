@@ -13,4 +13,5 @@ export interface AgentRow {
   api_model: string | null;
   cli_model: string | null;
   cli_reasoning_level: string | null;
+  persona_id?: string | null;
 }

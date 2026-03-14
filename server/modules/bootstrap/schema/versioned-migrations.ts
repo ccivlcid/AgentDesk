@@ -57,6 +57,15 @@ export const MIGRATIONS: Migration[] = [
       } catch { /* column may already be absent */ }
     },
   },
+  {
+    id: "2026-03-14-002-add-agent-persona-id",
+    up: (db) => {
+      // persona_id links agent to a named persona in prompts/personas/{id}.md
+      try {
+        db.exec("ALTER TABLE agents ADD COLUMN persona_id TEXT");
+      } catch { /* column may already exist (added by task-schema-migrations) */ }
+    },
+  },
 ];
 
 const ENSURE_TABLE_SQL = `

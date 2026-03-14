@@ -67,7 +67,7 @@ export function createMeetingPromptTools(deps: CreateMeetingPromptToolsDeps) {
                   "- Do not propose Python renderers (moviepy/Pillow) or any non-Remotion pipeline.",
                 ].join("\n")
         : "";
-    const personaBlock = buildCharacterPersonaBlock((agent as any).persona_id, agent.id);
+    const personaBlock = buildCharacterPersonaBlock(agent.persona_id, agent.id);
     return [
       `[Client OFFICE ${meetingLabel}]`,
       `Task: ${opts.taskTitle}`,
@@ -110,7 +110,7 @@ export function createMeetingPromptTools(deps: CreateMeetingPromptToolsDeps) {
         : messageType === "task_assign"
           ? "Client assigned a task. Confirm understanding and concrete next step."
           : "Client sent a direct chat message.";
-    const personaBlock = buildCharacterPersonaBlock((agent as any).persona_id, agent.id);
+    const personaBlock = buildCharacterPersonaBlock(agent.persona_id, agent.id);
     const prompt = [
       "[Client 1:1 Conversation]",
       `You are ${getAgentDisplayName(agent, lang)} (${deptName} ${role}).`,

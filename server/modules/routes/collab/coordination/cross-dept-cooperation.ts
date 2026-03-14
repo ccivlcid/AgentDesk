@@ -538,7 +538,7 @@ export function createCrossDeptCooperationTools(deps: CrossDeptCooperationDeps) 
               crossConversationCtx,
               `\n---`,
               `Agent: ${execAgent.name} (${roleLabel}, ${crossDeptName})`,
-              buildCharacterPersonaBlock((execAgent as any).persona_id, execAgent.id),
+              buildCharacterPersonaBlock(execAgent.persona_id, execAgent.id),
               deptConstraint,
               deptPromptBlock,
               buildDocumentGenerationGuidance(crossTaskData.title, crossTaskData.description, taskLang),

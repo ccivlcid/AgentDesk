@@ -250,7 +250,7 @@ export function registerTaskRunRoute(deps: TaskRunRouteDeps): void {
           api_model: string | null;
           cli_model: string | null;
           cli_reasoning_level: string | null;
-          personality: string | null;
+          persona_id: string | null;
           department_id: string | null;
           department_name: string | null;
           department_name_ko: string | null;
@@ -509,7 +509,7 @@ Whenever you complete a subtask, report it in this format:
         conversationCtx,
         `\n---`,
         `Agent: ${agent.name} (${roleLabel}, ${agent.department_name || "Unassigned"})`,
-        buildCharacterPersonaBlock((agent as any).persona_id, agent.id),
+        buildCharacterPersonaBlock(agent.persona_id, agent.id),
         deptConstraint,
         departmentPromptBlock,
         `NOTE: You are working in an isolated Git worktree branch (agentdesk/${id.slice(0, 8)}). Commit your changes normally.`,
