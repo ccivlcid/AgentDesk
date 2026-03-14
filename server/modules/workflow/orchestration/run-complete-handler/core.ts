@@ -121,12 +121,16 @@ export function createRunCompleteHandler(deps: RunCompleteHandlerDeps) {
 
     const isVideoPreprodTask = task.workflow_pack_key === "video_preprod";
     const isVideoFinalRenderTask = isVideoPreprodTask && /\[VIDEO_FINAL_RENDER\]/i.test(task.title);
+    // Collaboration child tasks (source_task_id set, not VIDEO_FINAL_RENDER) skip artifact sync.
+    const isVideoPreprodCollabChild = isVideoPreprodTask && !!task.source_task_id && !isVideoFinalRenderTask;
 
-    const artifactSync = handleVideoArtifactSync(taskId, task, {
-      db: db as { prepare: (sql: string) => { get: (...args: unknown[]) => unknown } },
-      taskWorktrees: taskWorktrees as Map<string, { worktreePath?: string; projectPath?: string }>,
-      appendTaskLog: appendTaskLog as (a: string, b: string, c: string) => void,
-    });
+    const artifactSync = (!isVideoPreprodTask || isVideoPreprodCollabChild)
+      ? { videoArtifactReady: false, videoArtifactSpec: { relativePath: "" } }
+      : handleVideoArtifactSync(taskId, task, {
+          db: db as { prepare: (sql: string) => { get: (...args: unknown[]) => unknown } },
+          taskWorktrees: taskWorktrees as Map<string, { worktreePath?: string; projectPath?: string }>,
+          appendTaskLog: appendTaskLog as (a: string, b: string, c: string) => void,
+        });
 
     const gatesResult = runAfterExitGates(
       taskId,

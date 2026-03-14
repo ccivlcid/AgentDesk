@@ -18,7 +18,9 @@ function createDb(): DatabaseSync {
       run_started_at INTEGER,
       run_completed_at INTEGER,
       created_at INTEGER,
-      updated_at INTEGER
+      updated_at INTEGER,
+      scope_type TEXT,
+      scope_id TEXT
     );
   `);
   return db;

@@ -258,12 +258,18 @@ function buildPreferredDepartmentOrder(
 
 function loadManualProjectAgentScope(db: DbLike, projectId: string | null | undefined): string[] | null {
   if (!projectId) return null;
+  try {
+    const project = db
+      .prepare("SELECT assignment_mode FROM projects WHERE id = ?")
+      .get(projectId) as { assignment_mode?: string } | undefined;
+    // In 'auto' mode there is no manual agent list — return null (no constraint).
+    if (!project || project.assignment_mode !== "manual") return null;
+  } catch {
+    // projects table may not exist in test harnesses that don't model it; fall through.
+  }
   const rows = db
     .prepare("SELECT agent_id FROM project_agents WHERE project_id = ?")
     .all(projectId) as ProjectAgentRow[];
-  // Always return an array (possibly empty) when project_id is provided.
-  // Returning null would mean "no constraint" — allowing any agent to be assigned,
-  // even those not belonging to this project.
   return rows.map((row) => row.agent_id).filter((id) => typeof id === "string" && id.length > 0);
 }
 
