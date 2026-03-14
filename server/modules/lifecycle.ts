@@ -22,6 +22,8 @@ export function startLifecycle(ctx: RuntimeContext): void {
     app,
     appendTaskLog,
     broadcast,
+    handleClientMessage,
+    removeClient,
     clearTaskWorkflowState,
     db,
     dbPath,
@@ -768,13 +770,17 @@ export function startLifecycle(ctx: RuntimeContext): void {
       }),
     );
 
+    ws.on("message", (data: Buffer | string) => {
+      handleClientMessage(ws, data.toString());
+    });
+
     ws.on("close", () => {
-      wsClients.delete(ws);
+      removeClient(ws);
       logger.info({ total: wsClients.size }, "[AgentDesk] WebSocket client disconnected (total: %d)");
     });
 
     ws.on("error", () => {
-      wsClients.delete(ws);
+      removeClient(ws);
     });
   });
 

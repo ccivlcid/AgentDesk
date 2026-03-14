@@ -88,5 +88,12 @@ export function useWebSocket() {
     };
   }, []);
 
-  return { connected, on };
+  const send = useCallback((data: unknown): void => {
+    const ws = wsRef.current;
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify(data));
+    }
+  }, []);
+
+  return { connected, on, send };
 }
