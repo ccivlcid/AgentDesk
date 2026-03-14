@@ -9,6 +9,7 @@
 import { randomUUID } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
+import { classifySkillCategory } from "../../routes/ops/custom-skills.ts";
 
 interface ExtractSkillsDeps {
   db: any;
@@ -144,9 +145,10 @@ export function runExtractSkills(
       try {
         db.prepare(
           `INSERT INTO skill_learning_history
-            (id, job_id, provider, repo, skill_id, skill_label, status, command, scope_type, scope_id, run_started_at, run_completed_at, created_at, updated_at)
-           VALUES (?, ?, ?, ?, ?, ?, 'succeeded', ?, ?, ?, ?, ?, ?, ?)`,
-        ).run(id, jobId, provider, repo, skillId, label, command, scope_type, scope_id, now, now, now, now);
+            (id, job_id, provider, repo, skill_id, skill_label, status, command, scope_type, scope_id, run_started_at, run_completed_at, created_at, updated_at, category)
+           VALUES (?, ?, ?, ?, ?, ?, 'succeeded', ?, ?, ?, ?, ?, ?, ?, ?)`,
+        ).run(id, jobId, provider, repo, skillId, label, command, scope_type, scope_id, now, now, now, now,
+          classifySkillCategory(skillId, label));
         savedCount++;
       } catch {
         /* ignore constraint violations */

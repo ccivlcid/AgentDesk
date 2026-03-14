@@ -210,9 +210,36 @@ interface TaskSchedulerDeps {
 export function startTaskScheduler(deps: TaskSchedulerDeps): { stop: () => void } {
   const { db, nowMs, broadcast, insertNotification } = deps;
 
-  const SWEEP_INTERVAL_MS = 60_000; // check every 60 seconds
+  const MAX_INTERVAL_MS = 60_000; // 최대 폴링 간격 60초
+  const MIN_INTERVAL_MS = 1_000;  // 최소 폴링 간격 1초
+
+  let stopped = false;
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+  /** 다음 enabled 스케줄의 next_run_at 반환 */
+  function getNextScheduledMs(): number | null {
+    const row = db
+      .prepare(
+        "SELECT MIN(next_run_at) AS t FROM scheduled_tasks WHERE enabled = 1 AND next_run_at IS NOT NULL",
+      )
+      .get() as { t: number | null } | undefined;
+    return row?.t ?? null;
+  }
+
+  /** sweep 후 다음 실행 간격 계산 */
+  function computeNextDelay(): number {
+    const now = nowMs();
+    const next = getNextScheduledMs();
+    if (next == null) return MAX_INTERVAL_MS;
+    const delta = next - now;
+    // 이미 지났거나 1초 미만 → 1초 후 재확인
+    if (delta <= 0) return MIN_INTERVAL_MS;
+    // 다음 스케줄 시점 + 500ms 여유 (최대 60초)
+    return Math.min(delta + 500, MAX_INTERVAL_MS);
+  }
 
   function sweep(): void {
+    if (stopped) return;
     const now = nowMs();
 
     const dueSchedules = db
@@ -225,9 +252,13 @@ export function startTaskScheduler(deps: TaskSchedulerDeps): { stop: () => void 
       try {
         createTaskFromSchedule(schedule, now);
       } catch (err) {
-        // Log error but don't crash the sweep
         logger.error({ err }, `[TaskScheduler] Error processing schedule ${schedule.id}`);
       }
+    }
+
+    // 동적 폴링: 다음 스케줄 시간에 맞게 setTimeout 재설정
+    if (!stopped) {
+      timeoutId = setTimeout(sweep, computeNextDelay());
     }
   }
 
@@ -324,12 +355,13 @@ export function startTaskScheduler(deps: TaskSchedulerDeps): { stop: () => void 
     }
   }
 
-  const intervalId = setInterval(sweep, SWEEP_INTERVAL_MS);
-
-  // Initial sweep after a short delay
-  setTimeout(sweep, 5_000);
+  // 초기 sweep: 5초 후 시작
+  timeoutId = setTimeout(sweep, 5_000);
 
   return {
-    stop: () => clearInterval(intervalId),
+    stop: () => {
+      stopped = true;
+      if (timeoutId) clearTimeout(timeoutId);
+    },
   };
 }

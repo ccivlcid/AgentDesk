@@ -5,6 +5,88 @@ import type { RuntimeContext } from "../../../../types/runtime-context.ts";
 
 const REPORT_DOC_TEXT_LIMIT = 120_000;
 const REPORT_PREVIEW_LIMIT = 260;
+
+// ---------------------------------------------------------------------------
+// 자동 요약 & 키워드 추출 (규칙 기반)
+// ---------------------------------------------------------------------------
+
+/**
+ * 텍스트에서 핵심 요약을 추출한다.
+ * - Markdown 헤더(`#`) 및 리스트(`-`, `*`, 숫자목록) 항목 우선
+ * - 없으면 첫 문장들로 fallback
+ */
+export function extractAutoSummary(text: string, maxChars = 500): string {
+  if (!text) return "";
+  const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
+
+  // 1. ## 헤더 이후 첫 번째 의미 있는 단락
+  const headerIdx = lines.findIndex((l) => /^#{1,3}\s/.test(l));
+  if (headerIdx >= 0) {
+    const headerLine = lines[headerIdx].replace(/^#+\s*/, "");
+    const bodyLines: string[] = [];
+    for (let i = headerIdx + 1; i < lines.length && bodyLines.join(" ").length < maxChars; i++) {
+      if (/^#{1,3}\s/.test(lines[i])) break;
+      bodyLines.push(lines[i]);
+    }
+    const body = bodyLines.join(" ").trim();
+    const result = body ? `${headerLine}: ${body}` : headerLine;
+    return result.length > maxChars ? `${result.slice(0, maxChars).trimEnd()}...` : result;
+  }
+
+  // 2. 리스트 항목 수집
+  const listItems = lines
+    .filter((l) => /^[-*•]\s+.{5,}/.test(l) || /^\d+\.\s+.{5,}/.test(l))
+    .map((l) => l.replace(/^[-*•\d.]+\s*/, "").trim())
+    .slice(0, 5);
+  if (listItems.length >= 2) {
+    const joined = listItems.join(" / ");
+    return joined.length > maxChars ? `${joined.slice(0, maxChars).trimEnd()}...` : joined;
+  }
+
+  // 3. 첫 의미 있는 문장들
+  const sentences = text
+    .replace(/```[\s\S]*?```/g, "") // 코드 블록 제거
+    .split(/(?<=[.!?])\s+/)
+    .map((s) => s.replace(/\s+/g, " ").trim())
+    .filter((s) => s.length > 20 && !/^[`#>]/.test(s));
+  const joined = sentences.slice(0, 3).join(" ");
+  return joined.length > maxChars ? `${joined.slice(0, maxChars).trimEnd()}...` : joined;
+}
+
+/**
+ * 텍스트에서 기술 키워드를 추출한다.
+ * - camelCase/PascalCase 식별자, 파일 확장자, 슬래시 포함 경로 등
+ */
+export function extractKeywords(text: string, maxKeywords = 10): string[] {
+  if (!text) return [];
+  const candidates = new Map<string, number>();
+
+  // 파일 경로 (src/foo/bar.ts 형태)
+  const pathMatches = text.match(/[A-Za-z0-9_./-]{3,}\/[A-Za-z0-9_./-]{2,}/g) ?? [];
+  for (const m of pathMatches) {
+    const key = m.replace(/^[./]+|[./]+$/g, "");
+    if (key.length > 2) candidates.set(key, (candidates.get(key) ?? 0) + 2);
+  }
+
+  // PascalCase / camelCase 식별자
+  const identMatches = text.match(/\b[A-Z][a-zA-Z0-9]{2,}[a-z][a-zA-Z0-9]*\b/g) ?? [];
+  for (const m of identMatches) {
+    candidates.set(m, (candidates.get(m) ?? 0) + 1);
+  }
+
+  // 백틱으로 감싼 코드 토큰
+  const backtickMatches = text.match(/`([^`\n]{2,40})`/g) ?? [];
+  for (const m of backtickMatches) {
+    const key = m.replace(/`/g, "").trim();
+    if (key.length > 2 && !/^\s*$/.test(key)) candidates.set(key, (candidates.get(key) ?? 0) + 3);
+  }
+
+  // 빈도 정렬 후 상위 N개 반환
+  return [...candidates.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, maxKeywords)
+    .map(([k]) => k);
+}
 const TEXT_DOC_EXTENSIONS = new Set([
   ".md",
   ".markdown",
@@ -289,6 +371,14 @@ export function createTaskReportHelpers(deps: HelperDeps) {
       buildTextPreview(taskResult, 400) ||
       buildTextPreview(normalizeTaskText(taskLogs[taskLogs.length - 1]?.message), 400);
 
+    const autoSummarySource = taskResult || latestReportContent;
+    const keywordSources = [
+      normalizeTaskText(taskRow.title),
+      taskResult,
+      latestReportContent,
+      ...reportMessages.slice(0, 3).map((m) => normalizeTaskText(m.content)),
+    ].filter(Boolean).join(" ");
+
     return {
       id: taskId,
       task_id: taskId,
@@ -306,6 +396,8 @@ export function createTaskReportHelpers(deps: HelperDeps) {
       started_at: Number(taskRow.started_at ?? 0) || null,
       completed_at: Number(taskRow.completed_at ?? 0) || null,
       summary: fallbackSummary,
+      auto_summary: extractAutoSummary(autoSummarySource),
+      keywords: extractKeywords(keywordSources),
       report_messages: reportMessages,
       logs: taskLogs,
       meeting_minutes: taskMinutes,

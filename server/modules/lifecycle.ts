@@ -476,46 +476,63 @@ export function startLifecycle(ctx: RuntimeContext): void {
         updated_at: number | null;
       }>;
 
-    for (const row of rows) {
+    // 복구 대상만 먼저 필터링
+    const candidates = rows.filter((row) => {
       const stalledSince = row.updated_at ?? 0;
-      if (stalledSince <= 0 || now - stalledSince < TASK_STALLED_RECOVERY_THRESHOLD_MS) continue;
+      return stalledSince > 0 && now - stalledSince >= TASK_STALLED_RECOVERY_THRESHOLD_MS;
+    });
+    if (candidates.length === 0) return;
 
-      const t = nowMs();
-      const updates = ["status = 'inbox'", "updated_at = ?"];
-      const params: unknown[] = [t];
-      appendTaskExecutionMetaUpdate(db as any, updates, params, {
-        execution_state: "failed",
-        retry_after: null,
-        execution_error_code: "stalled_auto_recovered",
-        execution_error_summary: "Task auto-recovered from stalled state after timeout",
-      });
-      params.push(row.id);
-      const move = db
-        .prepare(`UPDATE tasks SET ${updates.join(", ")} WHERE id = ? AND status = 'in_progress'`)
-        .run(...(params as any[])) as { changes?: number };
-      if ((move.changes ?? 0) === 0) continue;
+    const t = nowMs();
 
-      recordTaskExecutionEvent(db as any, {
-        taskId: row.id,
-        eventType: "stalled_recovered",
-        fromState: "stalled",
-        toState: "failed",
-        summary: "Auto-recovered stalled task to inbox",
-        metadata: { stalled_recovery_threshold_ms: TASK_STALLED_RECOVERY_THRESHOLD_MS },
-        createdAt: t,
-      });
+    // DB 쓰기를 단일 트랜잭션으로 배치화 (P3-A)
+    const recovered: typeof candidates = [];
+    const batchRecover = db.transaction(() => {
+      for (const row of candidates) {
+        const updates = ["status = 'inbox'", "updated_at = ?"];
+        const params: unknown[] = [t];
+        appendTaskExecutionMetaUpdate(db as any, updates, params, {
+          execution_state: "failed",
+          retry_after: null,
+          execution_error_code: "stalled_auto_recovered",
+          execution_error_summary: "Task auto-recovered from stalled state after timeout",
+        });
+        params.push(row.id);
+        const move = db
+          .prepare(`UPDATE tasks SET ${updates.join(", ")} WHERE id = ? AND status = 'in_progress'`)
+          .run(...(params as any[])) as { changes?: number };
+        if ((move.changes ?? 0) === 0) continue;
 
+        recordTaskExecutionEvent(db as any, {
+          taskId: row.id,
+          eventType: "stalled_recovered",
+          fromState: "stalled",
+          toState: "failed",
+          summary: "Auto-recovered stalled task to inbox",
+          metadata: { stalled_recovery_threshold_ms: TASK_STALLED_RECOVERY_THRESHOLD_MS },
+          createdAt: t,
+        });
+
+        if (row.assigned_agent_id) {
+          db.prepare("UPDATE agents SET status = 'idle', current_task_id = NULL WHERE id = ? AND current_task_id = ?").run(
+            row.assigned_agent_id,
+            row.id,
+          );
+        }
+
+        recovered.push(row);
+      }
+    });
+    batchRecover();
+
+    // 트랜잭션 외부: 사이드 이펙트(로그·브로드캐스트·알림)
+    for (const row of recovered) {
       stopProgressTimer(row.id);
       clearTaskWorkflowState(row.id);
       endTaskExecutionSession(row.id, "stalled_auto_recovery");
       appendTaskLog(row.id, "system", "Auto-recovered from stalled state → inbox (no heartbeat)");
 
-      // Reset the assigned agent back to idle
       if (row.assigned_agent_id) {
-        db.prepare("UPDATE agents SET status = 'idle', current_task_id = NULL WHERE id = ? AND current_task_id = ?").run(
-          row.assigned_agent_id,
-          row.id,
-        );
         const updatedAgent = db.prepare("SELECT * FROM agents WHERE id = ?").get(row.assigned_agent_id);
         broadcast("agent_status", updatedAgent);
       }

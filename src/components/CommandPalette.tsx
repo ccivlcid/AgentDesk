@@ -1,7 +1,23 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useI18n } from "../i18n";
 import type { Agent, Task, Project } from "../types";
+
+const HISTORY_KEY = "cp_history_v1";
+const MAX_HISTORY = 6;
+
+function loadHistory(): string[] {
+  try {
+    return JSON.parse(localStorage.getItem(HISTORY_KEY) ?? "[]") as string[];
+  } catch {
+    return [];
+  }
+}
+
+function saveHistory(action: string): void {
+  const prev = loadHistory().filter((a) => a !== action);
+  localStorage.setItem(HISTORY_KEY, JSON.stringify([action, ...prev].slice(0, MAX_HISTORY)));
+}
 
 interface CommandPaletteProps {
   open: boolean;
@@ -47,12 +63,14 @@ export default function CommandPalette({
   const { t } = useI18n();
   const [query, setQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [history, setHistory] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (open) {
       setQuery("");
       setSelectedIndex(0);
+      setHistory(loadHistory());
       setTimeout(() => inputRef.current?.focus(), 50);
     }
   }, [open]);
@@ -70,6 +88,14 @@ export default function CommandPalette({
     { label: t({ ko: "훅", en: "Hooks", ja: "フック", zh: "钩子" }), icon: "⤷", shortcut: "H", action: "hooks" },
     { label: t({ ko: "설정", en: "Settings", ja: "設定", zh: "设置" }), icon: "⚙", shortcut: ",", action: "settings" },
   ];
+
+  // 히스토리 기반 최근 액션 (검색어 없을 때만)
+  const recentActions = !q
+    ? history
+        .map((h) => QUICK_ACTIONS.find((a) => a.action === h))
+        .filter((a): a is typeof QUICK_ACTIONS[number] => Boolean(a))
+        .slice(0, 3)
+    : [];
 
   const filteredActions = q
     ? QUICK_ACTIONS.filter((a) => a.label.toLowerCase().includes(q) || a.action.includes(q))
@@ -95,6 +121,7 @@ export default function CommandPalette({
     | { kind: "project"; project: Project };
 
   const items: Item[] = [
+    ...recentActions.map((a) => ({ kind: "action" as const, ...a, _recent: true })),
     ...filteredActions.map((a) => ({ kind: "action" as const, ...a })),
     ...filteredAgents.map((a) => ({ kind: "agent" as const, agent: a })),
     ...filteredTasks.map((t) => ({ kind: "task" as const, task: t })),
@@ -132,8 +159,9 @@ export default function CommandPalette({
     }
   };
 
-  const executeItem = (item: Item) => {
+  const executeItem = useCallback((item: Item) => {
     if (item.kind === "action") {
+      saveHistory(item.action);
       if (item.action === "new-task") {
         onCreateTask?.();
         onNavigate("tasks-board");
@@ -141,14 +169,17 @@ export default function CommandPalette({
         onNavigate(item.action);
       }
     } else if (item.kind === "agent") {
+      saveHistory(`agent:${item.agent.id}`);
       onNavigate("agents");
     } else if (item.kind === "task") {
+      saveHistory(`task:${item.task.id}`);
       onNavigate("tasks-board");
     } else if (item.kind === "project") {
+      saveHistory(`project:${item.project.id}`);
       onSelectProject?.(item.project);
     }
     onClose();
-  };
+  }, [onClose, onCreateTask, onNavigate, onSelectProject]);
 
   if (!open) return null;
 
@@ -256,6 +287,41 @@ export default function CommandPalette({
 
         {/* Results */}
         <div style={{ maxHeight: "60vh", overflowY: "auto" }}>
+          {/* 최근 실행 */}
+          {recentActions.length > 0 && (
+            <div>
+              <div style={{ ...mono, fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", color: muted, padding: "8px 16px 4px", textTransform: "uppercase" }}>
+                {t({ ko: "최근 실행", en: "Recent", ja: "最近の実行", zh: "最近使用" })}
+              </div>
+              {recentActions.map((act) => {
+                const idx = flatIdx++;
+                const isSelected = idx === safeIndex;
+                return (
+                  <button
+                    key={`recent-${act.action}`}
+                    onClick={() => executeItem({ kind: "action", ...act })}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      width: "100%",
+                      padding: "7px 16px",
+                      background: isSelected ? "var(--th-bg-surface)" : "transparent",
+                      border: "none",
+                      borderLeft: isSelected ? `2px solid ${accent}` : "2px solid transparent",
+                      cursor: "pointer",
+                      gap: 10,
+                      color: isSelected ? "var(--th-text-heading)" : "var(--th-text-secondary)",
+                    }}
+                  >
+                    <span style={{ ...mono, fontSize: "0.75rem", width: 16, textAlign: "center", flexShrink: 0, opacity: 0.6 }}>↩</span>
+                    <span style={{ ...mono, fontSize: "0.8rem", flex: 1, textAlign: "left" }}>{act.label}</span>
+                    <span style={{ ...mono, fontSize: "0.65rem", color: muted }}>최근</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
           {/* Quick Actions / Views */}
           {filteredActions.length > 0 && (
             <div>

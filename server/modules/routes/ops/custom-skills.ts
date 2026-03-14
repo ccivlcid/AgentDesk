@@ -6,6 +6,37 @@ import type { RuntimeContext } from "../../../types/runtime-context.ts";
 
 const CUSTOM_SKILL_NAME_RE = /^[A-Za-z0-9_-]{1,80}$/;
 
+/**
+ * 스킬 ID/레이블 키워드 기반 자동 카테고리 분류.
+ * 반환값은 skill_learning_history.category 컬럼에 저장된다.
+ */
+const SKILL_CATEGORY_RULES: Array<{ keywords: string[]; category: string }> = [
+  { keywords: ["test", "spec", "jest", "vitest", "playwright", "e2e", "unit", "coverage"], category: "testing" },
+  { keywords: ["deploy", "release", "ci", "cd", "pipeline", "build", "docker", "k8s", "kubernetes"], category: "devops" },
+  { keywords: ["refactor", "lint", "format", "prettier", "eslint", "clean", "migrate"], category: "code-quality" },
+  { keywords: ["review", "pr", "pull-request", "diff", "audit", "analyze"], category: "code-review" },
+  { keywords: ["doc", "readme", "comment", "jsdoc", "tsdoc", "swagger", "openapi"], category: "documentation" },
+  { keywords: ["search", "web", "crawl", "scrape", "fetch", "api", "http", "request"], category: "research" },
+  { keywords: ["write", "draft", "blog", "article", "copy", "content", "novel", "story"], category: "writing" },
+  { keywords: ["db", "sql", "database", "query", "schema", "migration", "sqlite", "postgres"], category: "database" },
+  { keywords: ["git", "commit", "branch", "merge", "rebase", "repo", "github"], category: "version-control" },
+  { keywords: ["ui", "ux", "design", "css", "style", "component", "layout", "tailwind"], category: "frontend" },
+  { keywords: ["server", "backend", "express", "route", "endpoint", "middleware", "auth"], category: "backend" },
+  { keywords: ["perf", "performance", "optim", "speed", "benchmark", "profil"], category: "performance" },
+  { keywords: ["security", "vuln", "audit", "pentest", "cve", "xss", "sqli"], category: "security" },
+  { keywords: ["data", "csv", "json", "parse", "transform", "etl", "analytics"], category: "data-processing" },
+];
+
+export function classifySkillCategory(skillId: string, skillLabel: string): string {
+  const text = `${skillId} ${skillLabel}`.toLowerCase();
+  for (const rule of SKILL_CATEGORY_RULES) {
+    if (rule.keywords.some((kw) => text.includes(kw))) {
+      return rule.category;
+    }
+  }
+  return "general";
+}
+
 /** Atomically write a file by writing to a temp file then renaming. */
 function writeFileAtomic(filePath: string, content: string): void {
   const tmpPath = `${filePath}.tmp.${Date.now()}.${randomUUID().slice(0, 8)}`;
@@ -98,9 +129,9 @@ export function registerCustomSkillRoutes(
           db.prepare(
             `
           INSERT INTO skill_learning_history
-            (id, job_id, provider, repo, skill_id, skill_label, status, command, error, run_started_at, run_completed_at, created_at, updated_at)
+            (id, job_id, provider, repo, skill_id, skill_label, status, command, error, run_started_at, run_completed_at, created_at, updated_at, category)
           VALUES
-            (?, ?, ?, ?, ?, ?, 'succeeded', ?, NULL, ?, ?, ?, ?)
+            (?, ?, ?, ?, ?, ?, 'succeeded', ?, NULL, ?, ?, ?, ?, ?)
         `,
           ).run(
             histId,
@@ -114,6 +145,7 @@ export function registerCustomSkillRoutes(
             now,
             now,
             now,
+            classifySkillCategory(canonicalSkillName, skillName),
           );
         } catch (dbErr) {
           logger.warn(`[skills/custom] failed to record history for ${provider}: ${String(dbErr)}`);
@@ -263,14 +295,15 @@ export function registerCustomSkillRoutes(
         try {
           db.prepare(
             `INSERT INTO skill_learning_history
-              (id, job_id, provider, repo, skill_id, skill_label, status, command, error, run_started_at, run_completed_at, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, 'succeeded', ?, NULL, ?, ?, ?, ?)`,
+              (id, job_id, provider, repo, skill_id, skill_label, status, command, error, run_started_at, run_completed_at, created_at, updated_at, category)
+            VALUES (?, ?, ?, ?, ?, ?, 'succeeded', ?, NULL, ?, ?, ?, ?, ?)`,
           ).run(
             histId, jobId, provider,
             `custom/${parsedSkillName.canonicalName}`,
             parsedSkillName.canonicalName, parsedSkillName.inputName,
             `custom-skill import: ${parsedSkillName.inputName}`,
             now, now, now, now,
+            classifySkillCategory(parsedSkillName.canonicalName, parsedSkillName.inputName),
           );
         } catch (dbErr) {
           logger.warn(`[skills/custom:import] failed to record history for ${provider}: ${String(dbErr)}`);

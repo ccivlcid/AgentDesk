@@ -129,6 +129,37 @@ export const MIGRATIONS: Migration[] = [
       );
     },
   },
+  {
+    id: "2026-03-14-010-skill-category",
+    up: (db) => {
+      // 스킬 자동 분류를 위한 category 컬럼 추가
+      try { db.exec("ALTER TABLE skill_learning_history ADD COLUMN category TEXT"); } catch { /* already exists */ }
+    },
+  },
+  {
+    id: "2026-03-14-009-enabled-scope-indexes",
+    up: (db) => {
+      // P2-B: Composite indexes for enabled+event_type / enabled+scope queries
+      // hook_executor: WHERE enabled = 1 AND event_type = ? AND (scope_type = ...)
+      db.exec(
+        "CREATE INDEX IF NOT EXISTS idx_hook_entries_enabled_event ON hook_entries(enabled, event_type, scope_type, scope_id)",
+      );
+      // project-scoped-rules: WHERE enabled = 1 AND (scope_type = ? AND scope_id = ?)
+      db.exec(
+        "CREATE INDEX IF NOT EXISTS idx_agent_rules_enabled_scope ON agent_rules(enabled, scope_type, scope_id, priority DESC)",
+      );
+      db.exec(
+        "CREATE INDEX IF NOT EXISTS idx_memory_entries_enabled_scope ON memory_entries(enabled, scope_type, scope_id, priority DESC)",
+      );
+
+      // P3-B: Composite index for anomaly detection ROW_NUMBER window query
+      // agent-anomaly-monitor: SELECT agent_id, exit_code, ROW_NUMBER() OVER (PARTITION BY agent_id ORDER BY created_at DESC)
+      //   WHERE created_at >= ?
+      db.exec(
+        "CREATE INDEX IF NOT EXISTS idx_agent_usage_logs_anomaly ON agent_usage_logs(agent_id, created_at DESC, exit_code)",
+      );
+    },
+  },
 ];
 
 const ENSURE_TABLE_SQL = `
