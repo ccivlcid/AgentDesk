@@ -32,9 +32,11 @@ AgentDesk는 macOS 바탕화면 은유로 설계된다. 사이드바가 없다.
 │  AgentDesk  [▾ 프로젝트]                  $2.14  🔔  14:32     │  ← 메뉴바
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                  │
-│  ┌──────┐  ┌──────┐  ┌──────┐  ┌──────┐  ┌──────┐  ┌──────┐  │
-│  │  👤  │  │  📁  │  │  ▶   │  │  ⚡  │  │  📋  │  │  💬  │  │  ← 데스크톱 아이콘
-│  └──────┘  └──────┘  └──────┘  └──────┘  └──────┘  └──────┘  │
+│  ┌──────┐  ┌──────┐  ┌──────┐  ┌──────┐  ┌──────┐  ┌──────┐  ┌──────┐  │
+│  │  👤  │  │  📁  │  │  ▶   │  │  ⚡  │  │  📋  │  │  💬  │  │  >_  │  │  ← 데스크톱 아이콘
+│  └──────┘  └──────┘  └──────┘  └──────┘  └──────┘  └──────┘  └──────┘  │
+│  에이전트  프로젝트  태스크    워크플로   라이브러리  채팅       에이전트  │
+│   설정      생성      실행      빌더                               REPL   │
 │                                                                  │
 │  ┌─ Agents ──── [─][×]┐   ┌─ Tasks ───── [─][×]┐              │
 │  │  (위젯)             │   │  (위젯)             │  ← 위젯      │
@@ -83,6 +85,7 @@ AgentDesk는 macOS 바탕화면 은유로 설계된다. 사이드바가 없다.
 | ⚡ | 워크플로 빌더 | Workflow 창 (Builder 탭) | Workflow Builder |
 | 📋 | 라이브러리 | Library 창 (Skills 탭) | Library |
 | 💬 | 채팅 | Chat 창 | ChatPanel |
+| >_ | 에이전트 REPL | REPL 창 | (신규 — 직접 명령 실행) |
 
 > 우클릭 메뉴: 이름 변경 / 제거 / 바탕화면 재배열
 
@@ -257,6 +260,41 @@ AgentDesk는 macOS 바탕화면 은유로 설계된다. 사이드바가 없다.
 - 에이전트 상태 뱃지 (idle / working / error)
 - `[+ 에이전트]` `[+ 부서]` 버튼
 - 내장 모달: `AgentFormModal`, `DepartmentFormModal`
+
+---
+
+### 5-6. REPL 창 (>_ 아이콘)
+
+**파일:** `src/components/windows/ReplWindow.tsx`
+**트리거:** 데스크톱 아이콘 `>_` 클릭
+
+Task를 생성하지 않고 에이전트에게 직접 명령을 보내고 즉시 응답을 받는 인터랙티브 셸.
+macOS Terminal.app 역할.
+
+```
+┌─────────────────────────────────────────────────────┐
+│ ◉ ◎ ◎  Agent REPL            [▾ dev-01]   [─][×] │
+│ ──────────────────────────────────────────────────  │
+│ $ read src/auth/middleware.ts                        │
+│ > Reading file... (342 lines)                       │
+│ > Found: token expiry check missing on line 87      │
+│                                                      │
+│ $ fix the token expiry issue                        │
+│ > Applying fix to src/auth/middleware.ts            │
+│ > Done. Modified lines 87-93.                       │
+│                                                      │
+│ > _                                                  │
+│ ──────────────────────────────────────────────────  │
+│ [에이전트 선택: dev-01 ▾]  [입력창_______________] [↵] │
+└─────────────────────────────────────────────────────┘
+```
+
+기능:
+- 에이전트 선택 드롭다운 (실행 중인 에이전트 목록)
+- 명령 입력 → 즉시 실행 → 결과 스트리밍
+- 명령 히스토리 (↑↓ 키)
+- Task 생성 없이 one-shot 명령 실행
+- WebSocket `cli_output` 실시간 스트리밍
 
 ---
 
@@ -465,7 +503,8 @@ src/
 │   │   ├── LibraryWindow.tsx        # 📚 Dock 앱 창
 │   │   ├── SettingsWindow.tsx       # ⚙ Dock 앱 창
 │   │   ├── ChatWindow.tsx           # 💬 Dock 앱 창
-│   │   └── AgentManagerWindow.tsx   # 👤 아이콘 앱 창
+│   │   ├── AgentManagerWindow.tsx   # 👤 아이콘 앱 창
+│   │   └── ReplWindow.tsx           # >_ 아이콘 앱 창 (Agent REPL)
 │   ├── flow-graph/                  # AgentFlowGraph (위젯에서 재사용)
 │   ├── workflow-builder/            # WorkflowBuilder (@xyflow/react)
 │   ├── scheduled-tasks/             # ScheduledTasksPanel
