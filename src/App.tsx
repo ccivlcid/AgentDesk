@@ -91,6 +91,9 @@ export default function App() {
   }, [agents, projectAgentIds, projectAgentsLoaded, currentProjectId]);
 
   // ── Refs for WebSocket callbacks ─────────────────────────────────────────
+  // WebSocket 이벤트 핸들러는 마운트 시 한 번만 등록되므로, 최신 state를
+  // 클로저로 캡처할 수 없다. ref를 매 렌더마다 동기화해서 핸들러가 항상
+  // 최신 값을 참조하도록 한다 (stale closure 방지).
   const viewRef = useRef(view);
   viewRef.current = view;
   const agentsRef = useRef(agents);
@@ -99,28 +102,38 @@ export default function App() {
   tasksRef.current = tasks;
   const subAgentsRef = useRef(subAgents);
   subAgentsRef.current = subAgents;
+  // Codex 스트리밍: thread ID → subAgent ID 매핑 (세션 동안 누적)
   const codexThreadToSubAgentIdRef = useRef<Map<string, string>>(new Map());
+  // Codex thread 바인딩 타임스탬프 (오래된 바인딩 무효화용)
   const codexThreadBindingTsRef = useRef<Map<string, number>>(new Map());
+  // subAgent 스트림 마지막 청크 (중복 tail 제거용)
   const subAgentStreamTailRef = useRef<Map<string, string>>(new Map());
+  // 채팅 오버레이 열림 여부 + 현재 채팅 대상 (알림 뱃지 제어에 사용)
   const activeChatRef = useRef({ showChat, agentId: chatAgent?.id ?? null });
   activeChatRef.current = { showChat, agentId: chatAgent?.id ?? null };
 
   // ── Hooks ────────────────────────────────────────────────────────────────
   const { connected, on } = useWebSocket();
   const shouldIncludeSeedAgents = useCallback(() => false, []);
+
+  // 주기적 API 폴링 스케줄러. WebSocket 재연결·이벤트 누락 시 상태를 복구한다.
   const scheduleLiveSync = useLiveSyncScheduler({
     setTasks, setAgents, setStats, setDecisionInboxItems, shouldIncludeSeedAgents,
   });
 
+  // 앱 초기 로딩: 부서·에이전트·태스크·설정·카테고리 등 전체 초기 데이터 fetch
   useAppBootstrapData({
     setDepartments, setAgents, setLibraryAgents, setTasks, setStats,
     setSettings, setSubtasks, setMeetingPresence, setDecisionInboxItems,
     setCategories, setProjects, setLoading,
   });
 
+  // 앱 업데이트 버전 폴링 (백그라운드, 배너 표시용)
   useUpdateStatusPolling(setUpdateStatus);
+  // URL 쿼리(?oauth=...) 파싱, CLI 상태 변화에 따른 뷰 전환 등 부수효과 처리
   useAppViewEffects({ view, cliStatus, setView, setOauthResult, setCliStatus, setMobileNavOpen });
 
+  // WebSocket 이벤트 → 스토어 실시간 반영 (task/agent/message/cli_output 등)
   useRealtimeSync({
     on, connected, scheduleLiveSync,
     agentsRef, tasksRef, subAgentsRef, viewRef, activeChatRef,
@@ -130,6 +143,7 @@ export default function App() {
     setSubtasks, setSubAgents, setStreamingMessage,
   });
 
+  // 사용자 액션 핸들러 모음 (태스크 생성/실행/삭제, 채팅 전송, 설정 저장 등)
   const actions = useAppActions({
     agents, settings, scheduleLiveSync,
     setSettings, setAgents, setLibraryAgents, setDepartments, setTasks, setStats,
@@ -138,8 +152,10 @@ export default function App() {
     setDecisionReplyBusyKey, setCliStatus,
   });
 
+  // 현재 진행 중인 미팅 태스크 ID (미팅 분 패널 자동 오픈용)
   const activeMeetingTaskId = useActiveMeetingTaskId(meetingPresence);
 
+  // 언어·테마·업데이트 배너 등 UI 레이블 계산 (i18n)
   const labels = useAppLabels({
     view, settings, theme, runtimeOs, forceUpdateBanner, updateStatus, dismissedUpdateVersion,
   });
