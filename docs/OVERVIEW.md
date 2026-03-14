@@ -437,13 +437,14 @@ const AGENTS_CHILDREN: View[] = ["agents", "heartbeat"]; // line ~51, "flow-grap
 
 ### 🔵 P3 — 장기 (3개월+)
 
-#### [P3-1] "더 큰 IDE" — Split-Pane Layout
-- **설계:** `docs/strategy/bigger-ide-vision.md` Phase 3
-- **작업:**
-  1. `pnpm add allotment` (또는 `react-resizable-panels`)
-  2. IDE처럼 패널 분할 레이아웃: Dashboard + Flow + Tasks + Logs 동시 표시
-  3. 패널 크기 사용자 설정 저장 (localStorage)
-  4. 단축키로 레이아웃 프리셋 전환 (⌘1~5)
+#### ~~[P3-1] "더 큰 IDE" — Split-Pane Layout~~ ✅ 완료 (2026-03-14)
+- **파일:** `src/hooks/useSplitPane.ts` (신규), `src/app/SplitPaneSecondary.tsx` (신규), `src/app/AppMainLayout.tsx`, `src/app/AppHeaderBar.tsx`
+- **완료 내용:**
+  1. 외부 라이브러리 없이 순수 CSS + 마우스 드래그 리사이즈 구현
+  2. 우측 보조 패널: Flow Graph ◎ / Heartbeat ♡ / Dashboard ▦ 탭 전환
+  3. 분할 비율 25~75% 드래그 조정, localStorage 자동 저장
+  4. 헤더 `⊟` 토글 버튼 (데스크톱 전용), `\` 키보드 단축키
+  5. 단축키 가이드에 `\` 항목 추가
 
 #### [P3-2] Visual Workflow Builder
 - **설계:** `docs/strategy/bigger-ide-vision.md` Phase 2
@@ -508,7 +509,7 @@ const AGENTS_CHILDREN: View[] = ["agents", "heartbeat"]; // line ~51, "flow-grap
 | ~~P2-6~~ | ~~태스크 핸드오프~~ | 4일 | 기능 확장 | ✅ 완료 |
 | ~~P2-7~~ | ~~페르소나 UI 완성~~ | 2일 | UI 완성도 | ✅ 완료 |
 | ~~P2-8~~ | ~~WebSocket 최적화~~ | 2일 | 성능 | ✅ 완료 |
-| P3-1 | Split-Pane Layout | 3~4일 | IDE 비전 | ⬜ 미시작 |
+| ~~P3-1~~ | ~~Split-Pane Layout~~ | 3~4일 | IDE 비전 | ✅ 완료 |
 | P3-2 | Visual Workflow Builder | 3~4주 | IDE 비전 | ⬜ 미시작 |
 | ~~P3-3~~ | ~~Keyboard-First UX~~ | 1주 | UX 완성도 | ✅ 완료 |
 | P3-4 | 테스트 커버리지 | 3~4주 | 품질 | ⬜ 미시작 |

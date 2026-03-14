@@ -32,6 +32,7 @@ export default function KeyboardShortcutsGuide({ open, onClose }: KeyboardShortc
       rows: [
         { keys: ["Ctrl", "Shift", "K"], desc: t({ ko: "커맨드 팔레트 열기", en: "Open command palette", ja: "コマンドパレットを開く", zh: "打开命令面板" }) },
         { keys: ["?"], desc: t({ ko: "이 단축키 가이드", en: "Show this shortcuts guide", ja: "このショートカットガイド", zh: "显示快捷键指南" }) },
+        { keys: ["\\"], desc: t({ ko: "분할 뷰 토글", en: "Toggle split view", ja: "分割ビュー切替", zh: "切换分屏视图" }) },
         { keys: ["n"], desc: t({ ko: "커맨드 팔레트 열기 (새 태스크)", en: "Open palette (new task)", ja: "パレットを開く（新タスク）", zh: "打开面板（新建任务）" }) },
         { keys: ["Ctrl", "1"], desc: t({ ko: "대시보드", en: "Dashboard", ja: "ダッシュボード", zh: "仪表板" }) },
         { keys: ["Ctrl", "2"], desc: t({ ko: "태스크 보드", en: "Task Board", ja: "タスクボード", zh: "任务板" }) },

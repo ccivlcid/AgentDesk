@@ -341,6 +341,13 @@ export default function AppMainLayout({
         setShortcutsGuideOpen((v) => !v);
         return;
       }
+
+      // \ — 분할 뷰 토글
+      if (e.key === "\\") {
+        e.preventDefault();
+        toggleSplit();
+        return;
+      }
     };
     window.addEventListener("keydown", handler);
     return () => {
@@ -505,6 +512,8 @@ export default function AppMainLayout({
             onCloseMobileHeaderMenu={() => setMobileHeaderMenuOpen(false)}
             onOpenCommandPalette={() => setCommandPaletteOpen(true)}
             onOpenScreenGuide={() => setScreenGuideOpen(true)}
+            splitEnabled={splitEnabled}
+            onToggleSplit={toggleSplit}
             projectSelectorSlot={
               <ProjectSelector
                 currentProject={currentProject ?? null}
@@ -598,176 +607,222 @@ export default function AppMainLayout({
             <ProjectContextBar project={currentProject} categories={categories} />
           )}
 
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={view}
-              className="flex-1 min-h-0 flex flex-col overflow-hidden"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1, transition: { duration: 0.1, ease: "linear" } }}
-              exit={{ opacity: 0, transition: { duration: 0.06 } }}
-            >
-              <div className="flex-1 min-h-0 flex flex-col p-3 sm:p-4 lg:p-6">
-            {view === "cli-usage" && (
-              <div className="mx-auto max-w-4xl px-4 py-6">
-                <CliUsagePage
-                  cliStatus={cliStatus ?? cliStatusFromUsage}
-                  cliUsage={cliUsage}
-                  language={labels.uiLanguage as "ko" | "en" | "ja" | "zh"}
-                  refreshing={cliUsageRefreshing}
-                  onRefreshUsage={handleRefreshUsage}
-                  projectAgentIds={projectAgentIds.size > 0 ? projectAgentIds : undefined}
-                />
-              </div>
-            )}
+          {/* Split pane container */}
+          <div
+            ref={splitContainerRef}
+            style={{ flex: 1, minHeight: 0, display: "flex", overflow: "hidden" }}
+          >
+            {/* Primary pane */}
+            <div style={{ flex: splitEnabled ? `0 0 ${splitPct}%` : "1", minWidth: 0, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={view}
+                  className="flex-1 min-h-0 flex flex-col overflow-hidden"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1, transition: { duration: 0.1, ease: "linear" } }}
+                  exit={{ opacity: 0, transition: { duration: 0.06 } }}
+                >
+                  <div className="flex-1 min-h-0 flex flex-col p-3 sm:p-4 lg:p-6">
+                {view === "cli-usage" && (
+                  <div className="mx-auto max-w-4xl px-4 py-6">
+                    <CliUsagePage
+                      cliStatus={cliStatus ?? cliStatusFromUsage}
+                      cliUsage={cliUsage}
+                      language={labels.uiLanguage as "ko" | "en" | "ja" | "zh"}
+                      refreshing={cliUsageRefreshing}
+                      onRefreshUsage={handleRefreshUsage}
+                      projectAgentIds={projectAgentIds.size > 0 ? projectAgentIds : undefined}
+                    />
+                  </div>
+                )}
 
-            {view === "project-types" && (
-              <div className="max-w-2xl mx-auto py-2">
-                <CategoriesTab />
-              </div>
-            )}
+                {view === "project-types" && (
+                  <div className="max-w-2xl mx-auto py-2">
+                    <CategoriesTab />
+                  </div>
+                )}
 
-            <div style={{ display: view === "dashboard" ? undefined : "none" }}>
-              <Dashboard2
-                project={currentProject ?? null}
-                agents={agents}
-                tasks={tasks}
-                departments={departments}
-                categories={categories}
-                onCreateProject={onProjectCreate ?? (() => {})}
-                onDeleteProject={onProjectDelete}
-                onProjectUpdated={onProjectUpdated}
-                onGoToTasks={() => setView("tasks-board")}
-                onCreateTask={(input) => void onCreateTask(input)}
-                onAssignTask={onAssignTask}
-                onTeamChange={() => { if (currentProject?.id) refreshProjectAgents(currentProject.id); }}
-              />
-            </div>
-
-            {(view === "tasks" || view === "tasks-board") && (
-              <div className="flex-1 min-h-0 flex flex-col -m-3 sm:-m-4 lg:-m-6 mt-0">
-                <TaskBoard
-                  tasks={tasks}
-                  agents={agents}
-                  currentProject={currentProject}
-                  projectManagerAgents={agents}
-                  departments={departments}
-                  subtasks={subtasks}
-                  onCreateTask={onCreateTask}
-                  onUpdateTask={onUpdateTask}
-                  onDeleteTask={onDeleteTask}
-                  onAssignTask={onAssignTask}
-                  onRunTask={onRunTask}
-                  onStopTask={onStopTask}
-                  onPauseTask={onPauseTask}
-                  onResumeTask={onResumeTask}
-                  onOpenTerminal={onOpenTerminal}
-                  onOpenMeetingMinutes={onOpenMeetingMinutes}
-                  onProjectCreate={onProjectCreate}
-                />
-              </div>
-            )}
-
-            {view === "tasks-scheduled" && (
-              <ScheduledTasksPanel agents={agents} currentProjectId={currentProject?.id} />
-            )}
-
-            {view === "tasks-deliverables" && (
-              <Suspense fallback={
-                <div className="flex items-center justify-center h-full font-mono text-xs" style={{ color: "var(--th-text-muted)" }}>
-                  loading...
+                <div style={{ display: view === "dashboard" ? undefined : "none" }}>
+                  <Dashboard2
+                    project={currentProject ?? null}
+                    agents={agents}
+                    tasks={tasks}
+                    departments={departments}
+                    categories={categories}
+                    onCreateProject={onProjectCreate ?? (() => {})}
+                    onDeleteProject={onProjectDelete}
+                    onProjectUpdated={onProjectUpdated}
+                    onGoToTasks={() => setView("tasks-board")}
+                    onCreateTask={(input) => void onCreateTask(input)}
+                    onAssignTask={onAssignTask}
+                    onTeamChange={() => { if (currentProject?.id) refreshProjectAgents(currentProject.id); }}
+                  />
                 </div>
-              }>
-                <Deliverables agents={agents} currentProject={currentProject ?? null} />
-              </Suspense>
-            )}
 
-            {view === "agents" && (
-              <div className="flex-1 min-h-0 flex flex-col">
-                <TeamPageView
-                  agents={agents}
-                  departments={departments}
-                  onAgentsChange={onAgentsChange}
-                  projectAgentIds={projectAgentIds.size > 0 ? projectAgentIds : undefined}
-                  currentProject={currentProject}
-                />
-              </div>
-            )}
+                {(view === "tasks" || view === "tasks-board") && (
+                  <div className="flex-1 min-h-0 flex flex-col -m-3 sm:-m-4 lg:-m-6 mt-0">
+                    <TaskBoard
+                      tasks={tasks}
+                      agents={agents}
+                      currentProject={currentProject}
+                      projectManagerAgents={agents}
+                      departments={departments}
+                      subtasks={subtasks}
+                      onCreateTask={onCreateTask}
+                      onUpdateTask={onUpdateTask}
+                      onDeleteTask={onDeleteTask}
+                      onAssignTask={onAssignTask}
+                      onRunTask={onRunTask}
+                      onStopTask={onStopTask}
+                      onPauseTask={onPauseTask}
+                      onResumeTask={onResumeTask}
+                      onOpenTerminal={onOpenTerminal}
+                      onOpenMeetingMinutes={onOpenMeetingMinutes}
+                      onProjectCreate={onProjectCreate}
+                    />
+                  </div>
+                )}
 
-            {view === "heartbeat" && (
-              <HeartbeatPanel
-                language={labels.uiLanguage as "ko" | "en" | "ja" | "zh"}
-                agents={agents.map((a) => ({
-                  id: a.id,
-                  name: a.name,
-                  name_ko: a.name_ko ?? undefined,
-                  avatar_emoji: a.avatar_emoji ?? undefined,
-                }))}
-                projectAgentIds={projectAgentIds.size > 0 ? projectAgentIds : undefined}
-                standalone
-              />
-            )}
+                {view === "tasks-scheduled" && (
+                  <ScheduledTasksPanel agents={agents} currentProjectId={currentProject?.id} />
+                )}
 
-            {view === "flow-graph" && (
-              <div className="flex-1 min-h-0 flex flex-col" style={{ position: "relative" }}>
+                {view === "tasks-deliverables" && (
+                  <Suspense fallback={
+                    <div className="flex items-center justify-center h-full font-mono text-xs" style={{ color: "var(--th-text-muted)" }}>
+                      loading...
+                    </div>
+                  }>
+                    <Deliverables agents={agents} currentProject={currentProject ?? null} />
+                  </Suspense>
+                )}
+
+                {view === "agents" && (
+                  <div className="flex-1 min-h-0 flex flex-col">
+                    <TeamPageView
+                      agents={agents}
+                      departments={departments}
+                      onAgentsChange={onAgentsChange}
+                      projectAgentIds={projectAgentIds.size > 0 ? projectAgentIds : undefined}
+                      currentProject={currentProject}
+                    />
+                  </div>
+                )}
+
+                {view === "heartbeat" && (
+                  <HeartbeatPanel
+                    language={labels.uiLanguage as "ko" | "en" | "ja" | "zh"}
+                    agents={agents.map((a) => ({
+                      id: a.id,
+                      name: a.name,
+                      name_ko: a.name_ko ?? undefined,
+                      avatar_emoji: a.avatar_emoji ?? undefined,
+                    }))}
+                    projectAgentIds={projectAgentIds.size > 0 ? projectAgentIds : undefined}
+                    standalone
+                  />
+                )}
+
+                {view === "flow-graph" && (
+                  <div className="flex-1 min-h-0 flex flex-col" style={{ position: "relative" }}>
+                    <Suspense fallback={
+                      <div className="flex items-center justify-center h-full font-mono text-xs" style={{ color: "var(--th-text-muted)" }}>
+                        loading...
+                      </div>
+                    }>
+                      <AgentFlowGraph
+                        agents={agents}
+                        departments={departments}
+                        tasks={tasks}
+                        subAgents={subAgents}
+                        crossDeptDeliveries={crossDeptDeliveries}
+                        meetingPresences={meetingPresences}
+                        projectAgentIds={projectAgentIds.size > 0 ? projectAgentIds : undefined}
+                        onSelectAgent={onSelectAgent}
+                      />
+                    </Suspense>
+                  </div>
+                )}
+
                 <Suspense fallback={
                   <div className="flex items-center justify-center h-full font-mono text-xs" style={{ color: "var(--th-text-muted)" }}>
                     loading...
                   </div>
                 }>
-                  <AgentFlowGraph
+                  {view === "skills" && <SkillsLibrary agents={agents} currentProject={currentProject ?? null} />}
+
+                  {view === "agent-rules" && (
+                    <AgentRulesLibrary agents={libraryAgents} departments={departments} currentProject={currentProject ?? null} />
+                  )}
+
+                  {view === "memory" && (
+                    <MemoryLibrary agents={libraryAgents} departments={departments} currentProject={currentProject ?? null} />
+                  )}
+
+                  {view === "hooks" && (
+                    <HooksLibrary agents={libraryAgents} departments={departments} currentProject={currentProject ?? null} />
+                  )}
+
+                  {view === "settings" && (
+                    <div className="flex-1 min-h-0 flex flex-col">
+                      <SettingsPanel
+                        settings={settings}
+                        cliStatus={cliStatus}
+                        onSave={(nextSettings) => {
+                          void onSaveSettings(nextSettings);
+                        }}
+                        onRefreshCli={() => {
+                          void onRefreshCli();
+                        }}
+                        oauthResult={oauthResult}
+                        onOauthResultClear={onOauthResultClear}
+                        managerAgents={projectAgentIds.size > 0 ? agents.filter((a) => projectAgentIds.has(a.id)) : agents}
+                      />
+                    </div>
+                  )}
+                </Suspense>
+                  </div>
+                </motion.div>
+              </AnimatePresence>
+            </div>
+
+            {/* Drag handle (only when split enabled) */}
+            {splitEnabled && (
+              <div
+                onMouseDown={onSplitDragStart}
+                style={{
+                  width: 4,
+                  flexShrink: 0,
+                  cursor: "col-resize",
+                  background: "var(--th-border)",
+                  transition: "background 0.15s",
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = "var(--th-accent)")}
+                onMouseLeave={e => (e.currentTarget.style.background = "var(--th-border)")}
+              />
+            )}
+
+            {/* Secondary pane */}
+            {splitEnabled && (
+              <div style={{ flex: `0 0 ${100 - splitPct}%`, minWidth: 0, overflow: "hidden", borderLeft: "1px solid var(--th-border)" }}>
+                <Suspense fallback={null}>
+                  <SplitPaneSecondary
+                    view={secondaryView}
+                    onChangeView={setSecondaryView}
+                    onClose={closeSplit}
                     agents={agents}
                     departments={departments}
                     tasks={tasks}
+                    settings={settings}
                     subAgents={subAgents}
                     crossDeptDeliveries={crossDeptDeliveries}
                     meetingPresences={meetingPresences}
-                    projectAgentIds={projectAgentIds.size > 0 ? projectAgentIds : undefined}
                     onSelectAgent={onSelectAgent}
                   />
                 </Suspense>
               </div>
             )}
-
-            <Suspense fallback={
-              <div className="flex items-center justify-center h-full font-mono text-xs" style={{ color: "var(--th-text-muted)" }}>
-                loading...
-              </div>
-            }>
-              {view === "skills" && <SkillsLibrary agents={agents} currentProject={currentProject ?? null} />}
-
-              {view === "agent-rules" && (
-                <AgentRulesLibrary agents={libraryAgents} departments={departments} currentProject={currentProject ?? null} />
-              )}
-
-              {view === "memory" && (
-                <MemoryLibrary agents={libraryAgents} departments={departments} currentProject={currentProject ?? null} />
-              )}
-
-              {view === "hooks" && (
-                <HooksLibrary agents={libraryAgents} departments={departments} currentProject={currentProject ?? null} />
-              )}
-
-              {view === "settings" && (
-                <div className="flex-1 min-h-0 flex flex-col">
-                  <SettingsPanel
-                    settings={settings}
-                    cliStatus={cliStatus}
-                    onSave={(nextSettings) => {
-                      void onSaveSettings(nextSettings);
-                    }}
-                    onRefreshCli={() => {
-                      void onRefreshCli();
-                    }}
-                    oauthResult={oauthResult}
-                    onOauthResultClear={onOauthResultClear}
-                    managerAgents={projectAgentIds.size > 0 ? agents.filter((a) => projectAgentIds.has(a.id)) : agents}
-                  />
-                </div>
-              )}
-            </Suspense>
-              </div>
-            </motion.div>
-          </AnimatePresence>
+          </div>
         </main>
 
         {children}
