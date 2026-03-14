@@ -389,75 +389,55 @@ const AGENTS_CHILDREN: View[] = ["agents", "heartbeat"]; // line ~51, "flow-grap
 > **P2-2~P2-8 상세 설계서:** `docs/strategy/p2-tasks-design.md`
 > (파일 경로, 현재 상태, 구현 단계, 코드 예시 포함)
 
-#### [P2-1] Agent Flow Graph 구현 🎯 핵심 기능
-- **설계 문서:** `docs/strategy/agent-flow-graph-design.md` (완성)
-- **목표:** 에이전트 간 관계·태스크 흐름을 실시간 SVG 그래프로 시각화
-- **작업:**
-  1. 디렉토리 생성: `src/components/flow-graph/`
-  2. `AgentFlowGraph.tsx` — SVG 렌더러, 줌/팬 (transform), 노드 클릭
-  3. `useFlowLayout.ts` — force-directed 레이아웃 알고리즘 (설계서 3.2절 참조)
-  4. `nodes/AgentNode.tsx` — macOS 스타일 노드 (상태별 색상, pulsing dot)
-  5. `nodes/TaskNode.tsx` — 태스크 노드 (진행률 바)
-  6. `edges/FlowEdge.tsx` — 방향성 엣지 (animated stroke for active)
-  7. WebSocket 구독 연결 (기존 `useWebSocket` 재사용)
-  8. 사이드바 메뉴 "Flow" 항목으로 진입점 추가
-- **예상 작업량:** 3~4주
+#### ~~[P2-1] Agent Flow Graph 구현~~ ✅ 완료 (2026-03-14)
+- **구현 파일:** `src/components/flow-graph/` (AgentFlowGraph, useFlowLayout, AgentNode, MeetingCluster, FlowEdge)
+- **완료 내용:** SVG 실시간 에이전트 관계 시각화, 줌/팬, 노드 클릭, 미팅 클러스터, Sidebar "플로우 그래프 ◎" 메뉴 추가
 
-#### [P2-2] 에이전트 실행 비용 추적
-- **관련 화면:** Dashboard, 에이전트 상세
-- **작업:**
-  1. `task_executions` 테이블에 `tokens_in`, `tokens_out`, `cost_usd` 컬럼 추가
-  2. 실행 완료 시 Claude/OpenAI 응답 헤더에서 토큰 수 파싱
-  3. 프론트: 에이전트 상세 화면에 "이번 달 비용" 뱃지 추가
-  4. Dashboard에 전체 비용 합산 위젯 추가
+#### ~~[P2-2] 에이전트 실행 비용 추적~~ ✅ 완료 (2026-03-14)
+- **완료 내용:**
+  1. `task_execution_events` 테이블에 `tokens_in`, `tokens_out`, `cost_usd` 컬럼 추가 (migration `2026-03-14-005`)
+  2. `api-provider-tools.ts` — Anthropic SDK `response.usage` 파싱 후 DB 저장 (`COST_PER_INPUT_MTOK` / `COST_PER_OUTPUT_MTOK` 환경변수)
+  3. `GET /api/agents/:id/cost-summary`, `GET /api/cost-summary` API 추가
+  4. 에이전트 상세 "이번 달 비용" 뱃지 + Dashboard 총 비용 위젯
 
-#### [P2-3] 동시 실행 제한 (FIFO 대기 큐)
-- **파일:** `server/modules/workflow/orchestration.ts`
-- **문제:** 20개+ 에이전트 동시 실행 시 자원 고갈 위험 (큐 없음)
-- **작업:**
-  1. `MAX_CONCURRENT_AGENTS` 환경 변수 추가 (기본값: 10)
-  2. FIFO 대기 큐 구현 (`server/modules/workflow/agent-queue.ts`)
-  3. 큐 대기 중 태스크는 `queued` 상태로 표시
-  4. Dashboard에 큐 길이 표시 위젯
+#### ~~[P2-3] 동시 실행 제한 (FIFO 대기 큐)~~ ✅ 완료 (2026-03-14)
+- **완료 내용:**
+  1. `server/modules/workflow/orchestration/agent-queue.ts` 신규 — FIFO 큐 모듈
+  2. `MAX_CONCURRENT_AGENTS` 환경변수 (기본값 10) — `server/db/runtime.ts`
+  3. `orchestration.ts` 통합 — enqueue 래핑 + onComplete 훅
+  4. `GET /api/queue-status` API + 헤더 큐 상태 카운터 (실행 중 N / 대기 M)
 
-#### [P2-4] spawn 시 DB 쿼리 배치화
-- **파일:** `server/modules/workflow/orchestration/execution-start-task.ts`
-- **문제:** 태스크 실행 시작마다 DB 6회 개별 조회 (Rules, Memory, Hooks, Skills, Agent, Project)
-- **작업:**
-  1. 단일 JOIN 쿼리로 통합 (또는 Promise.all 병렬화)
-  2. 페이로드 빌드 함수 분리 (`buildExecutionPayload()`)
-  3. 실행 전 preheat: 프로젝트 선택 시점에 미리 조회해 캐싱
+#### ~~[P2-4] spawn 시 DB 쿼리 배치화~~ ✅ 완료 (2026-03-14)
+- **완료 내용:**
+  1. `buildExecutionPayload()` 헬퍼 함수 추출
+  2. 6개 함수(`buildRulesPromptBlock`, `buildMemoryPromptBlock`, `buildAvailableSkillsPromptBlock`, `loadPendingInterruptPrompts`, `getRecentConversationContext`, `getTaskContinuationContext`) `Promise.all()` 병렬화
+  3. `startTaskExecutionForAgent` async 전환
 
-#### [P2-5] 에이전트 타임라인 뷰
-- **목표:** 에이전트 상세 화면에 실행 이력을 타임라인 형태로 표시
-- **작업:**
-  1. `task_logs` 에서 타임스탬프 + 이벤트 타입 파싱
-  2. `AgentTimeline.tsx` 컴포넌트 — 수직 타임라인 (시간축, 이벤트 dot)
-  3. 이벤트 종류: task_start, hook_run, memory_save, skill_learn, task_done/fail
-  4. 에이전트 상세 모달 탭에 "Timeline" 탭 추가
+#### ~~[P2-5] 에이전트 타임라인 뷰~~ ✅ 완료 (2026-03-14)
+- **완료 내용:**
+  1. `GET /api/agents/:id/timeline` API — `task_execution_events` 기반
+  2. `src/components/agent-detail/AgentTimeline.tsx` — 수직 타임라인, 이벤트 타입별 색상 dot
+  3. AgentDetail "Timeline" 탭 추가
 
-#### [P2-6] 태스크 핸드오프 (에이전트 → 에이전트)
-- **목표:** 한 에이전트가 완료한 태스크의 결과를 다른 에이전트에게 자동 전달
-- **작업:**
-  1. `tasks` 테이블에 `handoff_to_agent_id`, `handoff_condition` 컬럼 추가
-  2. 태스크 완료 시 핸드오프 조건 평가 → 후속 태스크 자동 생성
-  3. UI: 태스크 생성 폼에 "완료 후 핸드오프" 옵션 추가
-  4. Flow Graph에서 핸드오프 엣지 시각화
+#### ~~[P2-6] 태스크 핸드오프 (에이전트 → 에이전트)~~ ✅ 완료 (2026-03-14)
+- **완료 내용:**
+  1. `tasks` 테이블에 `handoff_to_agent_id`, `handoff_condition` 컬럼 추가 (migration `2026-03-14-007`)
+  2. `run-complete-handler/core.ts` — 완료 시 핸드오프 조건 평가 → 후속 태스크 자동 생성
+  3. POST/PATCH `/api/tasks` 핸드오프 필드 지원
+  4. `CreateTaskModal` — "HANDOFF ON COMPLETE" 섹션 (토글 + 에이전트 선택 + 조건 선택)
 
-#### [P2-7] 페르소나 시스템 UI 완성
-- **현황:** PersonaCatalog, PersonaCard, PersonaBadge 구현됨 (80%)
-- **작업:**
-  1. 에이전트 상세 모달에 `PersonaDetailPanel.tsx` 추가
-  2. 페르소나 선택 시 "어떤 방식으로 생각하는가" 미리보기 카드 표시
-  3. 페르소나 적용 중인 에이전트에 배지 표시 (에이전트 목록)
+#### ~~[P2-7] 페르소나 시스템 UI 완성~~ ✅ 완료 (2026-03-14)
+- **완료 내용:**
+  1. `src/components/persona/PersonaDetailPanel.tsx` 신규 — 인물명·키워드·best_for·스타일 설명
+  2. AgentDetailTabContent — 카탈로그/직접편집 모드 전환 + persona_id 업데이트
+  3. AgentManager 에이전트 목록에 PersonaBadge 연동
 
-#### [P2-8] WebSocket broadcast 최적화
-- **파일:** `server/ws/hub.ts`
-- **문제:** 에이전트 50+ 동시 실행 시 개별 이벤트마다 모든 클라이언트에 broadcast
-- **작업:**
-  1. 100ms debounce 배치화 (현재 즉시 전송)
-  2. 구독 채널 분리: 클라이언트가 관심 있는 에이전트 ID만 구독
-  3. 대용량 stdout 청크 분할 전송 (현재 무제한)
+#### ~~[P2-8] WebSocket broadcast 최적화~~ ✅ 완료 (2026-03-14)
+- **완료 내용:**
+  1. `server/ws/hub.ts` — `cli_output` 4KB 청크 분할 전송
+  2. 태스크 채널 구독 분리 — `subscribe_task` / `unsubscribe_task` 메시지로 클라이언트별 구독 관리
+  3. `src/hooks/useWebSocket.ts` — `send()` 함수 추가
+  4. 터미널 패널 마운트/언마운트 시 자동 구독/해제
 
 ---
 
@@ -527,14 +507,14 @@ const AGENTS_CHILDREN: View[] = ["agents", "heartbeat"]; // line ~51, "flow-grap
 | ~~P1-4~~ | ~~DB 마이그레이션 버전~~ | 2일 | 안정성 | ✅ 완료 |
 | ~~P1-5~~ | ~~Map 메모리 누수~~ | 1일 | 안정성 | ✅ 완료 |
 | ~~P1-6~~ | ~~구조화 로깅 (pino)~~ | 2일 | 운영성 | ✅ 완료 |
-| **P2-1** | **Agent Flow Graph** | **3~4주** | 🎯 핵심 비전 | 🔨 진행 필요 |
-| P2-2 | 실행 비용 추적 | 3일 | 사용성 | ⬜ 미시작 |
-| P2-3 | 동시 실행 큐 | 3일 | 확장성 | ⬜ 미시작 |
-| P2-4 | spawn DB 배치화 | 2일 | 성능 | ⬜ 미시작 |
-| P2-5 | 에이전트 타임라인 | 3일 | 시각화 | ⬜ 미시작 |
-| P2-6 | 태스크 핸드오프 | 4일 | 기능 확장 | ⬜ 미시작 |
-| P2-7 | 페르소나 UI 완성 | 2일 | UI 완성도 | ⬜ 미시작 |
-| P2-8 | WebSocket 최적화 | 2일 | 성능 | ⬜ 미시작 |
+| ~~P2-1~~ | ~~Agent Flow Graph~~ | 3~4주 | 🎯 핵심 비전 | ✅ 완료 |
+| ~~P2-2~~ | ~~실행 비용 추적~~ | 3일 | 사용성 | ✅ 완료 |
+| ~~P2-3~~ | ~~동시 실행 큐~~ | 3일 | 확장성 | ✅ 완료 |
+| ~~P2-4~~ | ~~spawn DB 배치화~~ | 2일 | 성능 | ✅ 완료 |
+| ~~P2-5~~ | ~~에이전트 타임라인~~ | 3일 | 시각화 | ✅ 완료 |
+| ~~P2-6~~ | ~~태스크 핸드오프~~ | 4일 | 기능 확장 | ✅ 완료 |
+| ~~P2-7~~ | ~~페르소나 UI 완성~~ | 2일 | UI 완성도 | ✅ 완료 |
+| ~~P2-8~~ | ~~WebSocket 최적화~~ | 2일 | 성능 | ✅ 완료 |
 | P3-1 | Split-Pane Layout | 3~4일 | IDE 비전 | ⬜ 미시작 |
 | P3-2 | Visual Workflow Builder | 3~4주 | IDE 비전 | ⬜ 미시작 |
 | P3-3 | Keyboard-First UX | 1주 | UX 완성도 | ⬜ 미시작 |
