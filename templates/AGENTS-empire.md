@@ -2,7 +2,7 @@
 # AgentDesk Orchestration Rules
 
 > This section was added by AgentDesk setup (`pnpm setup`).
-> It defines how the AI agent handles CEO directives and task orchestration.
+> It defines how the AI agent handles Client directives and task orchestration.
 > Place this at the TOP of your AGENTS.md so it takes priority.
 
 ---
@@ -86,9 +86,9 @@ These rules are additive and do NOT delete existing orchestration rules below.
 
 ---
 
-## CEO Directive (`$` prefix)
+## Client Directive (`$` prefix)
 
-**Messages starting with `$` are AgentDesk CEO Directives.**
+**Messages starting with `$` are AgentDesk Client Directives.**
 
 When receiving a message that **starts with `$`**:
 
@@ -417,7 +417,7 @@ curl -X POST http://127.0.0.1:__PORT__/api/inbox \
   -H "x-inbox-secret: $INBOX_SECRET_VALUE" \
   -d '{"source":"telegram","text":"<message>"}'
 
-# Send CEO directive ($ prefix included)
+# Send Client directive ($ prefix included)
 curl -X POST http://127.0.0.1:__PORT__/api/inbox \
   -H 'content-type: application/json' \
   -H "x-inbox-secret: $INBOX_SECRET_VALUE" \
