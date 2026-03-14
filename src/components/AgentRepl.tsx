@@ -5,7 +5,10 @@ import {
   createTask,
   runTask,
   assignTask,
+  injectTaskPrompt,
 } from "../api/organization-projects";
+import { getTerminal } from "../api/messaging-runtime-oauth";
+import { useWebSocket } from "../hooks/useWebSocket";
 
 interface ReplEntry {
   id: string;
@@ -44,10 +47,18 @@ export default function AgentRepl({ agents, currentProject }: Props) {
   const [history, setHistory] = useState<string[]>([]);
   const [historyIdx, setHistoryIdx] = useState(-1);
   const [busy, setBusy] = useState(false);
+  const [runningTaskId, setRunningTaskId] = useState<string | null>(null);
+  const runningTaskIdRef = useRef<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const { send: wsSend, on } = useWebSocket();
   const mono = "var(--th-font-mono)";
+
+  // ref를 state와 동기화
+  useEffect(() => {
+    runningTaskIdRef.current = runningTaskId;
+  }, [runningTaskId]);
 
   // 에이전트 미선택 시 첫 번째 idle 에이전트로 기본 설정
   useEffect(() => {
@@ -60,6 +71,56 @@ export default function AgentRepl({ agents, currentProject }: Props) {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [entries]);
+
+  // 실행 중인 태스크의 cli_output 구독/해제
+  useEffect(() => {
+    if (!runningTaskId) return;
+    wsSend({ type: "subscribe_task", taskId: runningTaskId });
+    return () => {
+      wsSend({ type: "unsubscribe_task", taskId: runningTaskId });
+    };
+  }, [runningTaskId, wsSend]);
+
+  // cli_output 실시간 수신
+  useEffect(() => {
+    return on("cli_output", (payload) => {
+      const p = payload as { task_id?: string; data?: string; text?: string };
+      if (!p.task_id || p.task_id !== runningTaskIdRef.current) return;
+      const raw = p.data ?? p.text ?? "";
+      const lines = raw.split("\n").filter((l) => l.trim() !== "");
+      if (lines.length === 0) return;
+      setEntries((prev) => [
+        ...prev,
+        ...lines.map((line) => ({
+          id: crypto.randomUUID(),
+          kind: "output" as const,
+          text: line,
+          timestamp: new Date(),
+        })),
+      ]);
+    });
+  }, [on]);
+
+  // task_update: 태스크 완료/취소/오류 감지
+  useEffect(() => {
+    return on("task_update", (payload) => {
+      const p = payload as { id?: string; status?: string };
+      if (!p.id || p.id !== runningTaskIdRef.current) return;
+      const terminal = ["done", "cancelled", "error"];
+      if (!terminal.includes(p.status ?? "")) return;
+      setRunningTaskId(null);
+      const statusLabel = (p.status ?? "").toUpperCase();
+      setEntries((prev) => [
+        ...prev,
+        {
+          id: crypto.randomUUID(),
+          kind: p.status === "done" ? "info" : "error",
+          text: `[${statusLabel}]`,
+          timestamp: new Date(),
+        },
+      ]);
+    });
+  }, [on]);
 
   const addEntry = (kind: ReplEntry["kind"], text: string, agentName?: string) => {
     setEntries((prev: ReplEntry[]) => [
@@ -85,7 +146,16 @@ export default function AgentRepl({ agents, currentProject }: Props) {
       const lines = agents.map(
         (a) => `  ${a.avatar_emoji} ${a.name}  [${a.status}]  id:${a.id}`
       );
-      addEntry("info", lines.length > 0 ? lines.join("\n") : "(에이전트 없음)");
+      addEntry("info", lines.length > 0 ? lines.join("\n") : t({ ko: "(에이전트 없음)", en: "(no agents)", ja: "(エージェントなし)", zh: "(无代理)" }));
+      return;
+    }
+    if (trimmed === ":status") {
+      const tid = runningTaskIdRef.current;
+      if (tid) {
+        addEntry("info", t({ ko: `● 실행 중 — task id: ${tid}`, en: `● running — task id: ${tid}`, ja: `● 実行中 — task id: ${tid}`, zh: `● 运行中 — task id: ${tid}` }));
+      } else {
+        addEntry("info", t({ ko: "○ 실행 중인 태스크 없음", en: "○ no running task", ja: "○ 実行中のタスクなし", zh: "○ 无运行中的任务" }));
+      }
       return;
     }
     if (trimmed === ":help") {
@@ -94,35 +164,43 @@ export default function AgentRepl({ agents, currentProject }: Props) {
         t({
           ko: [
             "사용 가능한 명령어:",
-            "  :list / :ls         — 에이전트 목록 보기",
-            "  :use <이름|id>       — 대상 에이전트 변경",
-            "  :clear              — 화면 지우기",
-            "  :help               — 이 도움말",
-            "  <태스크 내용>        — 선택된 에이전트에게 태스크 생성 + 즉시 실행",
+            "  :list / :ls              — 에이전트 목록 보기",
+            "  :use <이름|id>            — 대상 에이전트 변경",
+            "  :status                  — 현재 실행 중인 태스크 확인",
+            "  :inject <텍스트>          — 실행 중인 태스크에 프롬프트 주입",
+            "  :clear                   — 화면 지우기",
+            "  :help                    — 이 도움말",
+            "  <태스크 내용>             — 선택된 에이전트에게 태스크 생성 + 즉시 실행",
           ].join("\n"),
           en: [
             "Available commands:",
-            "  :list / :ls         — show agent list",
-            "  :use <name|id>      — change target agent",
-            "  :clear              — clear screen",
-            "  :help               — this help",
-            "  <any text>          — create & run task on selected agent",
+            "  :list / :ls              — show agent list",
+            "  :use <name|id>           — change target agent",
+            "  :status                  — show current running task",
+            "  :inject <text>           — inject prompt into running task",
+            "  :clear                   — clear screen",
+            "  :help                    — this help",
+            "  <any text>               — create & run task on selected agent",
           ].join("\n"),
           ja: [
             "利用可能なコマンド:",
-            "  :list / :ls         — エージェント一覧",
-            "  :use <名前|id>       — 対象エージェントを変更",
-            "  :clear              — 画面をクリア",
-            "  :help               — このヘルプ",
-            "  <テキスト>           — 選択中エージェントにタスク作成＆実行",
+            "  :list / :ls              — エージェント一覧",
+            "  :use <名前|id>            — 対象エージェントを変更",
+            "  :status                  — 実行中タスクを確認",
+            "  :inject <テキスト>        — 実行中タスクにプロンプトを注入",
+            "  :clear                   — 画面をクリア",
+            "  :help                    — このヘルプ",
+            "  <テキスト>                — 選択中エージェントにタスク作成＆実行",
           ].join("\n"),
           zh: [
             "可用命令:",
-            "  :list / :ls         — 显示代理列表",
-            "  :use <名称|id>       — 切换目标代理",
-            "  :clear              — 清屏",
-            "  :help               — 本帮助",
-            "  <任意文本>           — 向选中代理创建并运行任务",
+            "  :list / :ls              — 显示代理列表",
+            "  :use <名称|id>            — 切换目标代理",
+            "  :status                  — 查看当前运行中的任务",
+            "  :inject <文本>            — 向运行中的任务注入提示",
+            "  :clear                   — 清屏",
+            "  :help                    — 本帮助",
+            "  <任意文本>                — 向选中代理创建并运行任务",
           ].join("\n"),
         })
       );
@@ -141,6 +219,38 @@ export default function AgentRepl({ agents, currentProject }: Props) {
         addEntry("info", `→ ${found.avatar_emoji} ${found.name} (${found.status})`);
       } else {
         addEntry("error", t({ ko: `에이전트를 찾을 수 없습니다: ${query}`, en: `Agent not found: ${query}`, ja: `エージェントが見つかりません: ${query}`, zh: `未找到代理: ${query}` }));
+      }
+      return;
+    }
+    if (trimmed.startsWith(":inject ")) {
+      const prompt = trimmed.slice(8).trim();
+      if (!prompt) {
+        addEntry("error", t({ ko: ":inject <텍스트> 형식으로 입력하세요", en: "Usage: :inject <text>", ja: "使用方法: :inject <テキスト>", zh: "用法: :inject <文本>" }));
+        return;
+      }
+      const tid = runningTaskIdRef.current;
+      if (!tid) {
+        addEntry("error", t({ ko: "실행 중인 태스크가 없습니다. 먼저 태스크를 실행하세요.", en: "No running task. Run a task first.", ja: "実行中のタスクがありません。まずタスクを実行してください。", zh: "没有正在运行的任务。请先运行任务。" }));
+        return;
+      }
+      setBusy(true);
+      try {
+        const res = await getTerminal(tid);
+        if (!res.interrupt) {
+          addEntry("error", t({ ko: "인터럽트 토큰을 가져올 수 없습니다. 태스크가 실행 중인지 확인하세요.", en: "Could not get interrupt token. Check if the task is running.", ja: "割り込みトークンを取得できません。タスクが実行中か確認してください。", zh: "无法获取中断令牌。请检查任务是否正在运行。" }));
+          return;
+        }
+        await injectTaskPrompt(tid, {
+          session_id: res.interrupt.session_id,
+          interrupt_token: res.interrupt.control_token,
+          prompt,
+        });
+        addEntry("info", `→ ${t({ ko: "프롬프트 주입됨", en: "prompt injected", ja: "プロンプト注入済み", zh: "提示已注入" })}`);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        addEntry("error", `✗ ${msg}`);
+      } finally {
+        setBusy(false);
       }
       return;
     }
@@ -165,13 +275,14 @@ export default function AgentRepl({ agents, currentProject }: Props) {
       });
       await assignTask(taskId, agent.id);
       await runTask(taskId);
+      setRunningTaskId(taskId);
       addEntry(
-        "output",
+        "info",
         t({
-          ko: `✓ 태스크 생성 완료 (id: ${taskId})\n  에이전트: ${agent.avatar_emoji} ${agent.name}`,
-          en: `✓ Task created (id: ${taskId})\n  Agent: ${agent.avatar_emoji} ${agent.name}`,
-          ja: `✓ タスク作成完了 (id: ${taskId})\n  エージェント: ${agent.avatar_emoji} ${agent.name}`,
-          zh: `✓ 任务已创建 (id: ${taskId})\n  代理: ${agent.avatar_emoji} ${agent.name}`,
+          ko: `▶ 태스크 실행 시작 (id: ${taskId})\n  에이전트: ${agent.avatar_emoji} ${agent.name}\n  출력이 아래에 스트리밍됩니다.`,
+          en: `▶ Task started (id: ${taskId})\n  Agent: ${agent.avatar_emoji} ${agent.name}\n  Output will stream below.`,
+          ja: `▶ タスク開始 (id: ${taskId})\n  エージェント: ${agent.avatar_emoji} ${agent.name}\n  出力は以下にストリーミングされます。`,
+          zh: `▶ 任务已启动 (id: ${taskId})\n  代理: ${agent.avatar_emoji} ${agent.name}\n  输出将在下方实时显示。`,
         }),
         agent.name
       );
@@ -208,9 +319,9 @@ export default function AgentRepl({ agents, currentProject }: Props) {
 
   const entryColor = (kind: ReplEntry["kind"]) => {
     if (kind === "input") return "var(--th-accent)";
-    if (kind === "error") return "#f87171";
+    if (kind === "error") return "var(--th-terminal-error)";
     if (kind === "info") return "var(--th-text-muted)";
-    return "var(--th-text)";
+    return "var(--th-terminal-text)";
   };
 
   return (
@@ -219,7 +330,7 @@ export default function AgentRepl({ agents, currentProject }: Props) {
         display: "flex",
         flexDirection: "column",
         height: "100%",
-        background: "var(--th-bg)",
+        background: "var(--th-terminal-bg)",
         fontFamily: mono,
       }}
       onClick={() => inputRef.current?.focus()}
@@ -233,14 +344,33 @@ export default function AgentRepl({ agents, currentProject }: Props) {
           alignItems: "center",
           gap: 12,
           flexShrink: 0,
+          background: "var(--th-bg-surface)",
         }}
       >
-        <span style={{ fontSize: 13, fontWeight: 600, color: "var(--th-text)" }}>
+        {/* macOS 트래픽 라이트 */}
+        <div className="flex gap-1.5">
+          <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#ff5f57" }} />
+          <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#ffbd2e" }} />
+          <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#27c93f" }} />
+        </div>
+        <span style={{ fontSize: 11, fontWeight: 700, color: "var(--th-text-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
           {t({ ko: "에이전트 REPL", en: "Agent REPL", ja: "エージェント REPL", zh: "代理 REPL" })}
         </span>
-        <span style={{ fontSize: 11, color: "var(--th-text-muted)" }}>
-          {t({ ko: "에이전트에게 직접 태스크 전송", en: "send tasks directly to agents", ja: "エージェントに直接タスク送信", zh: "直接向代理发送任务" })}
-        </span>
+        {/* 실행 중 표시 */}
+        {runningTaskId && (
+          <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+            <div style={{
+              width: 7,
+              height: 7,
+              borderRadius: "50%",
+              background: "var(--th-accent)",
+              animation: "pulse 1.5s infinite",
+            }} />
+            <span style={{ fontSize: 10, color: "var(--th-accent)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+              {t({ ko: "실행 중", en: "live", ja: "実行中", zh: "运行中" })}
+            </span>
+          </div>
+        )}
         {/* 에이전트 선택 드롭다운 */}
         <select
           value={selectedAgentId}
@@ -250,10 +380,10 @@ export default function AgentRepl({ agents, currentProject }: Props) {
             marginLeft: "auto",
             fontFamily: mono,
             fontSize: 11,
-            background: "var(--th-surface)",
+            background: "var(--th-input-bg)",
             color: "var(--th-text)",
-            border: "1px solid var(--th-border)",
-            borderRadius: 4,
+            border: "1px solid var(--th-input-border)",
+            borderRadius: 0,
             padding: "2px 6px",
             cursor: "pointer",
           }}
@@ -295,7 +425,7 @@ export default function AgentRepl({ agents, currentProject }: Props) {
                   lineHeight: 1.6,
                 }}
               >
-                {entry.kind === "input" && <span style={{ color: "var(--th-text-muted)", marginRight: 4 }}>›</span>}
+                {entry.kind === "input" && <span style={{ color: "var(--th-terminal-prompt)", marginRight: 4 }}>$</span>}
                 {entry.text}
               </span>
             </div>
@@ -313,11 +443,11 @@ export default function AgentRepl({ agents, currentProject }: Props) {
           alignItems: "center",
           gap: 8,
           flexShrink: 0,
-          background: "var(--th-surface)",
+          background: "var(--th-bg-surface)",
         }}
       >
-        <span style={{ fontSize: 11, color: "var(--th-accent)", flexShrink: 0, maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-          {prompt} ›
+        <span style={{ fontSize: 11, color: "var(--th-terminal-prompt)", flexShrink: 0, maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          {prompt} $
         </span>
         <input
           ref={inputRef}
@@ -337,13 +467,18 @@ export default function AgentRepl({ agents, currentProject }: Props) {
             outline: "none",
             fontFamily: mono,
             fontSize: 12,
-            color: "var(--th-text)",
+            color: "var(--th-terminal-text)",
             opacity: busy ? 0.5 : 1,
           }}
           autoFocus
         />
         {busy && (
           <span style={{ fontSize: 10, color: "var(--th-text-muted)", flexShrink: 0 }}>
+            ●
+          </span>
+        )}
+        {runningTaskId && !busy && (
+          <span style={{ fontSize: 10, color: "var(--th-accent)", flexShrink: 0 }}>
             ●
           </span>
         )}
