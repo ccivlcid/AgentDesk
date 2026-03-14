@@ -6,6 +6,13 @@ import type { RuntimeContext } from "../../../types/runtime-context.ts";
 
 const CUSTOM_SKILL_NAME_RE = /^[A-Za-z0-9_-]{1,80}$/;
 
+/** Atomically write a file by writing to a temp file then renaming. */
+function writeFileAtomic(filePath: string, content: string): void {
+  const tmpPath = `${filePath}.tmp.${Date.now()}.${randomUUID().slice(0, 8)}`;
+  fs.writeFileSync(tmpPath, content, "utf-8");
+  fs.renameSync(tmpPath, filePath);
+}
+
 function parseCustomSkillName(raw: unknown): { inputName: string; canonicalName: string } | null {
   const inputName = String(raw ?? "").trim();
   if (!inputName || !CUSTOM_SKILL_NAME_RE.test(inputName)) return null;
@@ -71,7 +78,7 @@ export function registerCustomSkillRoutes(
       fs.mkdirSync(skillDir, { recursive: true });
 
       const skillFilePath = path.join(skillDir, "skills.md");
-      fs.writeFileSync(skillFilePath, content, "utf-8");
+      writeFileAtomic(skillFilePath, content);
 
       const meta = {
         skillName,
@@ -81,7 +88,7 @@ export function registerCustomSkillRoutes(
         updatedAt: Date.now(),
         contentLength: content.length,
       };
-      fs.writeFileSync(path.join(skillDir, "meta.json"), JSON.stringify(meta, null, 2), "utf-8");
+      writeFileAtomic(path.join(skillDir, "meta.json"), JSON.stringify(meta, null, 2));
 
       const jobId = randomUUID();
       for (const provider of providers) {
@@ -236,7 +243,7 @@ export function registerCustomSkillRoutes(
       const skillDir = path.join(customSkillsDir, parsedSkillName.canonicalName);
       fs.mkdirSync(skillDir, { recursive: true });
 
-      fs.writeFileSync(path.join(skillDir, "skills.md"), content, "utf-8");
+      writeFileAtomic(path.join(skillDir, "skills.md"), content);
       const meta = {
         skillName: parsedSkillName.inputName,
         canonicalSkillName: parsedSkillName.canonicalName,
@@ -246,7 +253,7 @@ export function registerCustomSkillRoutes(
         contentLength: content.length,
         importedAt: Date.now(),
       };
-      fs.writeFileSync(path.join(skillDir, "meta.json"), JSON.stringify(meta, null, 2), "utf-8");
+      writeFileAtomic(path.join(skillDir, "meta.json"), JSON.stringify(meta, null, 2));
 
       // Record learning history for each provider
       const jobId = randomUUID();

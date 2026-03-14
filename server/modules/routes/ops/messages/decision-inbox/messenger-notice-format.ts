@@ -66,7 +66,7 @@ export function createDecisionNoticeFormatter(deps: NoticeFormatterDeps) {
         "已批准/可立即推进",
       );
     }
-    const firstClause = text.split(/(?<=[.!?。！？])\s+|[,，;；]\s+/)[0] || text;
+    const firstClause = (text.length > 2000 ? text.slice(0, 2000) : text).split(/(?<=[.!?。！？])\s+|[,，;；]\s+/)[0] || text;
     return truncateLine(firstClause, 70);
   }
 
@@ -76,7 +76,7 @@ export function createDecisionNoticeFormatter(deps: NoticeFormatterDeps) {
       .replace(/\t/g, " ")
       .replace(/[•●]/g, "-")
       .split(/\n+/)
-      .flatMap((line) => line.split(/(?<=[.!?。！？])\s+/))
+      .flatMap((line) => (line.length > 2000 ? line.slice(0, 2000) : line).split(/(?<=[.!?。！？])\s+/))
       .map((line) => summarizeDecisionText(line, 220))
       .filter((line) => line && line !== "-");
     const deduped: string[] = [];

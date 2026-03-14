@@ -149,6 +149,8 @@ export function createApiProviderTools(deps: CreateApiProviderToolsDeps) {
   ): { url: string; headers: Record<string, string>; body: string } {
     const apiKey = provider.api_key_enc ? decryptSecret(provider.api_key_enc) : "";
     const baseUrl = normalizeApiBaseUrl(provider.base_url);
+    // Sanitize projectPath to prevent prompt injection via CRLF or control characters
+    const safeProjectPath = projectPath.replace(/[\r\n\t\x00-\x1f\x7f]/g, " ").trim().slice(0, 512);
 
     if (provider.type === "anthropic") {
       const messagesUrl = baseUrl.endsWith("/v1") ? `${baseUrl}/messages` : `${baseUrl}/v1/messages`;
@@ -164,7 +166,7 @@ export function createApiProviderTools(deps: CreateApiProviderToolsDeps) {
           max_tokens: 16384,
           stream: true,
           messages: [{ role: "user", content: prompt }],
-          system: `You are a coding assistant. Project path: ${projectPath}`,
+          system: `You are a coding assistant. Project path: ${safeProjectPath}`,
         }),
       };
     }
@@ -179,7 +181,7 @@ export function createApiProviderTools(deps: CreateApiProviderToolsDeps) {
         },
         body: JSON.stringify({
           contents: [{ role: "user", parts: [{ text: prompt }] }],
-          systemInstruction: { parts: [{ text: `You are a coding assistant. Project path: ${projectPath}` }] },
+          systemInstruction: { parts: [{ text: `You are a coding assistant. Project path: ${safeProjectPath}` }] },
         }),
       };
     }
@@ -202,7 +204,7 @@ export function createApiProviderTools(deps: CreateApiProviderToolsDeps) {
       body: JSON.stringify({
         model,
         messages: [
-          { role: "system", content: `You are a coding assistant. Project path: ${projectPath}` },
+          { role: "system", content: `You are a coding assistant. Project path: ${safeProjectPath}` },
           { role: "user", content: prompt },
         ],
         stream: true,
