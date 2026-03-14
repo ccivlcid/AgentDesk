@@ -1,11 +1,34 @@
-# Agent Flow Graph — Custom SVG 구현 설계
+# Agent Flow Graph — Custom SVG 구현 레퍼런스
 
+> **상태:** ✅ 구현 완료 (2026-03-14, P2-1)
 > **방식:** 외부 라이브러리 없이 Custom SVG + React로 구현
 > **갱신일:** 2026-03-14
 
 ---
 
-## 0. 작업 시작 전 필독 (AI 에이전트용)
+## 0. 구현 완료 현황
+
+### 파일 위치
+
+| 파일 | 역할 |
+|---|---|
+| `src/components/flow-graph/AgentFlowGraph.tsx` | 메인 컴포넌트 (필터, SVG 캔버스, 컨트롤) |
+| `src/components/flow-graph/useFlowLayout.ts` | 레이아웃 알고리즘 (좌표 계산, 엣지 경로) |
+| `src/components/flow-graph/useViewTransform.ts` | 줌·팬 인터랙션 (SVG transform) |
+| `src/components/flow-graph/nodes/AgentNode.tsx` | 에이전트 노드 (foreignObject 기반) |
+| `src/components/flow-graph/nodes/MeetingCluster.tsx` | 미팅 클러스터 원형 배경 |
+| `src/components/flow-graph/edges/FlowEdge.tsx` | 베지어 곡선 엣지 |
+| `src/components/flow-graph/constants.ts` | NODE_WIDTH, NODE_HEIGHT, NODE_GAP 등 |
+
+### 사이드바 통합 완료
+
+- `src/app/types.ts` — `View` 타입에 `"flow-graph"` 포함
+- `src/components/Sidebar.tsx` — 에이전트 섹션 하위에 등록
+- `src/app/AppMainLayout.tsx` — lazy import, `{view === "flow-graph"}` 렌더링
+
+---
+
+## 0-구. 타입 파일 위치 (참조용)
 
 ### 실제 타입 파일 위치
 

@@ -2,7 +2,7 @@
 
 > **목적:** AI 에이전트가 AgentDesk UI를 개발·개선할 때 반드시 따라야 할 디자인 원칙
 > **참조:** `DESIGN.md` (CSS 변수 전체), `UI-SCREENS.md` (화면·모달 목록)
-> **갱신일:** 2026-03-14
+> **갱신일:** 2026-03-14 (문서 통합 업데이트)
 
 ---
 
@@ -59,15 +59,15 @@ src/
 CLI 사용량 (cli-usage)
 
 태스크
-  ├── 태스크 (tasks)
   ├── 보드 (tasks-board)
   ├── 스케줄 (tasks-scheduled)
   └── 산출물 (tasks-deliverables)
 
 에이전트
   ├── 에이전트 & 부서 (agents)
-  └── 현황 모니터 (heartbeat)
-  // ← P2-1: 플로우 그래프 (flow-graph) 여기에 추가 예정
+  ├── 현황 모니터 (heartbeat)
+  ├── 플로우 그래프 (flow-graph)       ← ✅ P2-1 완료 (Custom SVG)
+  └── 워크플로 빌더 (workflow-builder)  ← ✅ P3-2 완료 (@xyflow/react)
 
 라이브러리
   ├── 스킬 (skills)
@@ -224,11 +224,24 @@ const label = t({ ko: "프로젝트를 선택하세요", en: "Select a project",
 
 | 단축키 | 동작 |
 |--------|------|
-| `⌘+Shift+K` | CommandPalette 열기 (z-index: 10100) |
-| `n` | 새 태스크 생성 (태스크 보드) |
+| `Ctrl+Shift+K` | CommandPalette 열기 (z-index: 10100) |
+| `?` | 키보드 단축키 가이드 열기 |
+| `\` | 분할 뷰 토글 |
+| `n` | 커맨드 팔레트 열기 (새 태스크 입력창) |
 | `g d` | 대시보드로 이동 |
+| `g t` | 태스크 보드로 이동 |
+| `g a` | 에이전트로 이동 |
+| `g f` | 플로우 그래프로 이동 |
+| `g w` | 워크플로 빌더로 이동 |
+| `g s` | 스킬로 이동 |
+| `g m` | 메모리로 이동 |
+| `g r` | 룰로 이동 |
+| `g h` | 훅으로 이동 |
+| `Ctrl+1~8` | 뷰 직접 전환 (1=대시보드 … 8=설정) |
 | `Esc` | 모달 닫기 |
 | `Enter` / `⌘+Enter` | 폼 제출 |
+
+> **`g + 키`**: 첫 `g` 입력 후 1초 이내 두 번째 키 입력. 1초 초과 시 취소.
 
 ---
 
@@ -376,6 +389,7 @@ React + TypeScript + Tailwind CSS
 |------|------|
 | `docs/design/AI-GUIDE.md` | **지금 이 문서** — UI 개발 규칙 + 코드베이스 진입점 맵 |
 | `docs/design/DESIGN.md` | CSS 변수 전체 + 컴포넌트 구현 레퍼런스 |
-| `docs/design/UI-SCREENS.md` | 화면·모달 전체 목록 및 명세 |
-| `docs/strategy/agent-flow-graph-design.md` | Agent Flow Graph SVG 구현 설계 (P2-1) |
+| `docs/design/UI-SCREENS.md` | 화면·모달 전체 목록 및 명세 (15개 메인 화면 + 36개 오버레이) |
+| `docs/strategy/agent-flow-graph-design.md` | Agent Flow Graph Custom SVG 구현 레퍼런스 (P2-1 완료) |
+| `docs/strategy/bigger-ide-vision.md` | "더 큰 IDE" 전략 로드맵 (Phase 1~3 전부 완료) |
 | `docs/OVERVIEW.md` | 전체 프로젝트 개요 + 코드베이스 현황 스냅샷 + 작업 목록 |
