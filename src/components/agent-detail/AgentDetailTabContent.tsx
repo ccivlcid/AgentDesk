@@ -1,9 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { localeName, type UiLanguage } from "../../i18n";
-import type { Agent, Department, SubAgent, SubTask, Task } from "../../types";
+import type { Agent, Department, Persona, SubAgent, SubTask, Task } from "../../types";
 import { SUBTASK_STATUS_ICON, taskStatusLabel, taskTypeLabel, type TFunction } from "./constants";
 import AgentPerformancePanel from "./AgentPerformancePanel";
+import PersonaCatalog from "../persona/PersonaCatalog";
+import PersonaDetailPanel from "../persona/PersonaDetailPanel";
 import * as api from "../../api";
+import { fetchPersonas } from "../../api/categories-dashboard";
 
 interface AgentDetailTabContentProps {
   tab: "info" | "tasks" | "alba" | "performance" | "chat";
@@ -43,12 +46,20 @@ export default function AgentDetailTabContent({
   const [costSummary, setCostSummary] = useState<{ thisMonthUsd: number } | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  // Persona catalog state
+  const [personas, setPersonas] = useState<Persona[]>([]);
+  const [selectedPersonaId, setSelectedPersonaId] = useState<string | null>(agent.persona_id ?? null);
+  const [savingPersonaId, setSavingPersonaId] = useState(false);
+  const [catalogMode, setCatalogMode] = useState<"catalog" | "raw">("catalog");
+
   useEffect(() => {
     if (tab !== "info") return;
     setPersonaText(null);
     setIsEditingPersona(false);
+    setSelectedPersonaId(agent.persona_id ?? null);
     api.getAgentPersona(agent.id).then((text) => setPersonaText(text || null)).catch(() => setPersonaText(null));
     api.getAgentCostSummary(agent.id).then((s) => setCostSummary(s)).catch(() => setCostSummary(null));
+    fetchPersonas().then((ps) => setPersonas(ps)).catch(() => setPersonas([]));
   }, [agent.id, tab]);
 
   function startEditPersona() {
@@ -74,56 +85,132 @@ export default function AgentDetailTabContent({
     }
   }
 
+  async function handlePersonaIdSelect(personaId: string | null) {
+    setSelectedPersonaId(personaId);
+    setSavingPersonaId(true);
+    try {
+      await api.updateAgent(agent.id, { persona_id: personaId });
+    } catch {
+      // revert on error
+      setSelectedPersonaId(agent.persona_id ?? null);
+    } finally {
+      setSavingPersonaId(false);
+    }
+  }
+
   if (tab === "info") {
+    const selectedPersona = personas.find((p) => p.id === selectedPersonaId) ?? null;
+
     return (
       <div className="space-y-3">
-        <div className="border rounded p-3" style={{ background: "var(--th-bg-surface)", borderColor: "var(--th-border)" }}>
-          <div className="flex items-center justify-between mb-1">
-            <div className="text-xs" style={{ color: "var(--th-text-muted)" }}>
-              {t({ ko: "페르소나", en: "Persona", ja: "ペルソナ", zh: "人格" })}
+        {/* ── 페르소나 섹션 ── */}
+        <div className="border rounded" style={{ background: "var(--th-bg-surface)", borderColor: "var(--th-border)", borderRadius: 10, overflow: "hidden" }}>
+          {/* 섹션 헤더 + 탭 전환 */}
+          <div className="flex items-center justify-between px-3 py-2" style={{ borderBottom: "1px solid var(--th-border)" }}>
+            <div className="text-[10px] font-mono uppercase tracking-widest font-bold" style={{ color: "var(--th-text-muted)" }}>
+              {t({ ko: "// 페르소나", en: "// PERSONA", ja: "// ペルソナ", zh: "// 人格" })}
+              {savingPersonaId && (
+                <span className="ml-2 text-[9px]" style={{ color: "var(--th-accent)" }}>
+                  {t({ ko: "저장중...", en: "saving...", ja: "保存中...", zh: "保存中..." })}
+                </span>
+              )}
             </div>
-            {!isEditingPersona && (
+            <div className="flex gap-1">
               <button
-                onClick={startEditPersona}
-                className="text-[10px] px-1.5 py-0.5 font-mono transition-colors"
-                style={{ color: "var(--th-accent)", border: "1px solid rgba(6,182,212,0.3)", borderRadius: 4, background: "rgba(6,182,212,0.07)" }}
+                onClick={() => setCatalogMode("catalog")}
+                className="text-[9px] px-2 py-0.5 font-mono"
+                style={{
+                  background: catalogMode === "catalog" ? "rgba(245,158,11,0.12)" : "transparent",
+                  border: `1px solid ${catalogMode === "catalog" ? "rgba(245,158,11,0.4)" : "var(--th-border)"}`,
+                  color: catalogMode === "catalog" ? "var(--th-accent)" : "var(--th-text-muted)",
+                }}
               >
-                ✏️ {t({ ko: "편집", en: "Edit", ja: "編集", zh: "编辑" })}
+                {t({ ko: "카탈로그", en: "Catalog", ja: "カタログ", zh: "目录" })}
               </button>
-            )}
+              <button
+                onClick={() => setCatalogMode("raw")}
+                className="text-[9px] px-2 py-0.5 font-mono"
+                style={{
+                  background: catalogMode === "raw" ? "rgba(245,158,11,0.12)" : "transparent",
+                  border: `1px solid ${catalogMode === "raw" ? "rgba(245,158,11,0.4)" : "var(--th-border)"}`,
+                  color: catalogMode === "raw" ? "var(--th-accent)" : "var(--th-text-muted)",
+                }}
+              >
+                {t({ ko: "직접 편집", en: "Raw Edit", ja: "直接編集", zh: "直接编辑" })}
+              </button>
+            </div>
           </div>
-          {isEditingPersona ? (
-            <div className="space-y-2">
-              <textarea
-                ref={textareaRef}
-                value={editDraft}
-                onChange={(e) => setEditDraft(e.target.value)}
-                rows={6}
-                className="w-full text-xs font-mono resize-y p-2 outline-none"
-                style={{ background: "var(--th-bg-primary)", border: "1px solid var(--th-border)", borderRadius: 4, color: "var(--th-text-primary)" }}
-                placeholder={t({ ko: "페르소나를 입력하세요...", en: "Enter persona...", ja: "ペルソナを入力...", zh: "输入人格..." })}
-              />
-              <div className="flex gap-1.5 justify-end">
-                <button
-                  onClick={cancelEditPersona}
-                  className="text-[10px] px-2 py-1 font-mono"
-                  style={{ color: "var(--th-text-muted)", border: "1px solid var(--th-border)", borderRadius: 4 }}
-                >
-                  {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}
-                </button>
-                <button
-                  onClick={() => { void savePersona(); }}
-                  disabled={savingPersona}
-                  className="text-[10px] px-2 py-1 font-mono"
-                  style={{ background: "rgba(6,182,212,0.15)", border: "1px solid rgba(6,182,212,0.4)", borderRadius: 4, color: "#06b6d4", opacity: savingPersona ? 0.6 : 1 }}
-                >
-                  {savingPersona ? t({ ko: "저장중...", en: "Saving...", ja: "保存中...", zh: "保存中..." }) : t({ ko: "저장", en: "Save", ja: "保存", zh: "保存" })}
-                </button>
-              </div>
+
+          {catalogMode === "catalog" ? (
+            <div className="p-3 flex flex-col gap-3">
+              {/* PersonaCatalog */}
+              {personas.length > 0 ? (
+                <PersonaCatalog
+                  personas={personas}
+                  selectedId={selectedPersonaId}
+                  onSelect={(id) => { void handlePersonaIdSelect(id); }}
+                />
+              ) : (
+                <div className="text-[11px] text-center py-4" style={{ color: "var(--th-text-muted)" }}>
+                  {t({ ko: "페르소나 로딩중...", en: "Loading personas...", ja: "ペルソナを読み込み中...", zh: "加载人格中..." })}
+                </div>
+              )}
+              {/* 선택된 페르소나 상세 패널 */}
+              {selectedPersona && (
+                <PersonaDetailPanel persona={selectedPersona} />
+              )}
             </div>
           ) : (
-            <div className="text-sm whitespace-pre-wrap" style={{ color: "var(--th-text-secondary)" }}>
-              {personaText ?? <span style={{ color: "var(--th-text-muted)", fontStyle: "italic" }}>{t({ ko: "설정 없음", en: "Not set", ja: "未設定", zh: "未设置" })}</span>}
+            /* Raw text 편집 */
+            <div className="p-3">
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-[10px]" style={{ color: "var(--th-text-muted)" }}>
+                  {t({ ko: "페르소나 텍스트 (Markdown)", en: "Persona text (Markdown)", ja: "ペルソナテキスト (Markdown)", zh: "人格文本 (Markdown)" })}
+                </div>
+                {!isEditingPersona && (
+                  <button
+                    onClick={startEditPersona}
+                    className="text-[10px] px-1.5 py-0.5 font-mono transition-colors"
+                    style={{ color: "var(--th-accent)", border: "1px solid rgba(6,182,212,0.3)", borderRadius: 4, background: "rgba(6,182,212,0.07)" }}
+                  >
+                    {t({ ko: "편집", en: "Edit", ja: "編集", zh: "编辑" })}
+                  </button>
+                )}
+              </div>
+              {isEditingPersona ? (
+                <div className="space-y-2">
+                  <textarea
+                    ref={textareaRef}
+                    value={editDraft}
+                    onChange={(e) => setEditDraft(e.target.value)}
+                    rows={6}
+                    className="w-full text-xs font-mono resize-y p-2 outline-none"
+                    style={{ background: "var(--th-bg-primary)", border: "1px solid var(--th-border)", borderRadius: 4, color: "var(--th-text-primary)" }}
+                    placeholder={t({ ko: "페르소나를 입력하세요...", en: "Enter persona...", ja: "ペルソナを入力...", zh: "输入人格..." })}
+                  />
+                  <div className="flex gap-1.5 justify-end">
+                    <button
+                      onClick={cancelEditPersona}
+                      className="text-[10px] px-2 py-1 font-mono"
+                      style={{ color: "var(--th-text-muted)", border: "1px solid var(--th-border)", borderRadius: 4 }}
+                    >
+                      {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}
+                    </button>
+                    <button
+                      onClick={() => { void savePersona(); }}
+                      disabled={savingPersona}
+                      className="text-[10px] px-2 py-1 font-mono"
+                      style={{ background: "rgba(6,182,212,0.15)", border: "1px solid rgba(6,182,212,0.4)", borderRadius: 4, color: "#06b6d4", opacity: savingPersona ? 0.6 : 1 }}
+                    >
+                      {savingPersona ? t({ ko: "저장중...", en: "Saving...", ja: "保存中...", zh: "保存中..." }) : t({ ko: "저장", en: "Save", ja: "保存", zh: "保存" })}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-sm whitespace-pre-wrap" style={{ color: "var(--th-text-secondary)" }}>
+                  {personaText ?? <span style={{ color: "var(--th-text-muted)", fontStyle: "italic" }}>{t({ ko: "설정 없음", en: "Not set", ja: "未設定", zh: "未设置" })}</span>}
+                </div>
+              )}
             </div>
           )}
         </div>

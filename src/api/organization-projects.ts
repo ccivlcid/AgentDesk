@@ -136,6 +136,7 @@ export async function updateAgent(
       | "avatar_emoji"
       | "sprite_number"
       | "personality"
+      | "persona_id"
     >
   > & {
     workflow_pack_key?: WorkflowPackKey;

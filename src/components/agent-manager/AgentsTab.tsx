@@ -1,6 +1,7 @@
-import type { Agent, Department } from "../../types";
+import type { Agent, Department, Persona } from "../../types";
 import { localeName } from "../../i18n";
 import type { Translator } from "./types";
+import PersonaBadge from "../persona/PersonaBadge";
 
 interface AgentsTabProps {
   tr: Translator;
@@ -8,6 +9,7 @@ interface AgentsTabProps {
   isKo: boolean;
   agents: Agent[];
   departments: Department[];
+  personas?: Persona[];
   projectAgentIds?: Set<string>;
   deptTab: string;
   setDeptTab: (deptId: string) => void;
@@ -43,6 +45,7 @@ export default function AgentsTab({
   locale,
   agents,
   departments,
+  personas = [],
   projectAgentIds,
   deptTab,
   setDeptTab,
@@ -56,6 +59,7 @@ export default function AgentsTab({
   onDeleteAgent,
   saving,
 }: AgentsTabProps) {
+  const personaMap = new Map(personas.map((p) => [p.id, p]));
   const workingCount = agents.filter((a) => a.status === "working").length;
 
   // Group sortedAgents by dept for list view
@@ -211,6 +215,9 @@ export default function AgentsTab({
                         <span className="shrink-0 px-1 py-0.5 text-[10px] font-mono" style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.3)", color: "var(--th-accent)", borderRadius: 0 }}>
                           TEAM
                         </span>
+                      )}
+                      {agent.persona_id && personaMap.has(agent.persona_id) && (
+                        <PersonaBadge persona={personaMap.get(agent.persona_id)!} size="sm" />
                       )}
                       <span className="flex-1" />
                       {agent.cli_provider && (

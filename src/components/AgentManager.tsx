@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState, type DragEvent } from "react";
-import type { Agent, Department } from "../types";
+import type { Agent, Department, Persona } from "../types";
 import { useI18n } from "../i18n";
 import * as api from "../api";
+import { fetchPersonas } from "../api/categories-dashboard";
 import AgentFormModal from "./agent-manager/AgentFormModal";
 import AgentsTab from "./agent-manager/AgentsTab";
 import { BLANK } from "./agent-manager/constants";
@@ -18,6 +19,12 @@ export default function AgentManager({
   const { t, locale } = useI18n();
   const isKo = locale.startsWith("ko");
   const tr = (ko: string, en: string, ja?: string, zh?: string) => t({ ko, en, ja: ja ?? en, zh: zh ?? en });
+
+  const [personas, setPersonas] = useState<Persona[]>([]);
+
+  useEffect(() => {
+    fetchPersonas().then((ps) => setPersonas(ps)).catch(() => setPersonas([]));
+  }, []);
 
   const [subTab, setSubTab] = useState<"agents" | "departments">("agents");
   const [search, setSearch] = useState("");
@@ -433,6 +440,7 @@ export default function AgentManager({
           isKo={isKo}
           agents={agents}
           departments={departments}
+          personas={personas}
           projectAgentIds={projectAgentIds}
           deptTab={deptTab}
           setDeptTab={setDeptTab}
