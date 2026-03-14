@@ -1,7 +1,7 @@
 # AgentDesk UI/UX Design Guide
 
-> **기준:** 현재 프로젝트 구현 (src/styles, src/components/ui, Sidebar, AppHeaderBar 등)
-> **갱신일:** 2026-03-12
+> **기준:** 현재 프로젝트 구현 (src/styles, src/components/ui, Desktop, MenuBar, Dock 등)
+> **갱신일:** 2026-03-14
 
 ---
 
@@ -10,10 +10,10 @@
 - **테마:** 다크 기본, 라이트 선택. macOS 앱 느낌의 외부 chrome + 터미널 느낌의 내부 콘텐츠.
 - **폰트:** 전역 `body`는 `var(--th-font-mono)` (JetBrains Mono). 제목/헤더도 동일 모노 사용.
 - **모서리 (Dual-layer):**
-  - Chrome(컨테이너): `borderRadius: 10` — 패널, 모달, 카드, 사이드바, 헤더.
+  - Chrome(컨테이너): `borderRadius: 10` — 패널, 모달, 카드, 위젯, 앱 창.
   - Content(내부 요소): `borderRadius: 0` — 버튼, 인풋, 토스트, 리스트 항목.
   - 아바타·상태 dot: `borderRadius: 50%`.
-- **글래스모피즘:** 사이드바·헤더에 `backdropFilter: blur(12px)` 적용.
+- **글래스모피즘:** 메뉴바·Dock·앱 창 헤더에 `backdropFilter: blur(12px)` 적용.
 - **macOS 트래픽 라이트:** 헤더·모달 장식 (#ff5f57, #ffbd2e, #27c93f).
 - **색상:** CSS 변수(`--th-*`)만 사용. 인라인 hex는 위험/성공/트래픽 라이트 등 상태 색상만 허용.
 
@@ -204,13 +204,26 @@ slate/gray 유틸리티가 `--th-*`로 재정의됨:
 
 - Primary 버튼: `--th-accent-glow`, `--th-accent-border`, `--th-accent` (Button primary와 동일 톤).
 
-### 4-7. Sidebar (`src/components/Sidebar.tsx`)
+### 4-7. Dock (`src/components/desktop/Dock.tsx`)
 
-- **구조:** 섹션(개요, 업무, 에이전트, 라이브러리, 시스템) + 항목. `NAV_STRUCTURE` 기반.
-- **Chrome:** `backdropFilter: blur(12px)` 글래스모피즘, macOS Finder 느낌 네비게이션.
-- **항목:** 비활성 `color: var(--th-text-secondary)`, hover `background: var(--th-hover-bg)`, `color: var(--th-text)`.
-  활성 `background: var(--th-active-bg)`, `borderLeft: 2px solid var(--th-accent)`, `color: var(--th-accent)`.
-- **폰트:** `var(--th-font-mono)`, 12px.
+- **구조:** 하단 고정 4개 앱 아이콘 (⚡ Workflow / 📚 Library / ⚙ Settings / 💬 Chat).
+- **Chrome:** `backdropFilter: blur(12px)` 글래스모피즘, macOS Dock 느낌.
+- **아이콘:** 비활성 `color: var(--th-text-secondary)`, hover `background: var(--th-hover-bg)`.
+  실행 중(창이 열린 상태) 아이콘 아래 amber dot `background: var(--th-accent)`.
+- **폰트:** `var(--th-font-mono)`, 11px.
+
+### 4-7b. 데스크톱 아이콘 (`src/components/desktop/DesktopIcon.tsx`)
+
+- **구조:** 바탕화면에 자유 배치. 드래그로 위치 변경. 클릭 → 해당 창/모달 열림.
+- **스타일:** 아이콘 박스 `borderRadius: 10`, `blur(8px)`, `border: 1px solid var(--th-border)`.
+- **레이블:** 아이콘 아래 12px 텍스트, `var(--th-font-mono)`.
+
+### 4-7c. 위젯 (`src/components/desktop/Widget.tsx`)
+
+- **구조:** 바탕화면 자유 배치. 드래그·리사이즈·최소화·닫기 지원.
+- **Chrome:** `borderRadius: 10`, `backdropFilter: blur(10px)`, `border: 1px solid var(--th-border)`.
+- **헤더:** 위젯 제목 (좌) + 최소화`[─]` + 닫기`[×]` 버튼 (우).
+- **위젯 목록:** AgentsWidget / TasksWidget / AlertsWidget / CliCostWidget / FlowGraphWidget.
 
 ### 4-8. 리스트 패턴
 
@@ -226,13 +239,13 @@ slate/gray 유틸리티가 `--th-*`로 재정의됨:
 - **미팅 클러스터:** 원형 영역, 앰버 점선 테두리, 참석 에이전트 그룹.
 - **인터랙션:** 줌/팬 (마우스 휠/드래그), 노드 클릭→에이전트 상세, fit-to-view.
 - **태스크 보드와 차별점:** 태스크 보드는 "태스크 상태" 중심, 플로우 그래프는 "에이전트 간 관계" 중심.
-- **메뉴 위치:** 사이드바 에이전트 섹션 (agents, heartbeat 다음).
+- **접근 방법:** 바탕화면 위젯 (FlowGraph 위젯) 또는 Agents 위젯 내 `[Graph]` 토글.
 - 상세 설계: `docs/strategy/agent-flow-graph-design.md`.
 
 ### 4-10. CommandPalette (`src/components/CommandPalette.tsx`)
 
 - `⌘+Shift+K` 트리거. z-index: 10100.
-- 빠른 화면 이동, 프로젝트 전환, 에이전트/태스크 검색.
+- 앱 창 열기 (Workflow/Library/Settings), 프로젝트 전환, 에이전트/태스크 검색, 위젯 추가.
 - 퍼지 검색 + 키보드 네비게이션 (화살표, Enter, Esc).
 
 ### 4-11. 채팅 패널 (`src/components/chat-panel/`)
@@ -255,12 +268,17 @@ slate/gray 유틸리티가 `--th-*`로 재정의됨:
 
 ---
 
-## 5. Layout
+## 5. Layout — macOS 바탕화면 OS
 
-- **사이드바:** `--th-bg-sidebar`, `border-right: 1px solid var(--th-border)`, `backdropFilter: blur(12px)` 글래스모피즘.
-- **헤더:** `--th-bg-header`, `borderTopLeftRadius: 10`, blur + shadow macOS 앱 바 스타일. `AppHeaderBar.tsx`.
-  - 요소: 프로젝트 셀렉터, 의사결정 인박스(배지), 에이전트 상태, 리포트 히스토리, 공지, 그룹채팅, 알림센터, 테마 토글, ⌘K, 키보드 가이드(?), 화면 가이드.
-- **메인:** `--th-bg-primary` 배경, 패딩으로 콘텐츠 영역. `AppMainLayout.tsx` — "macOS 패널 스타일" 라운드 코너.
+- **메뉴바:** `--th-bg-header`, `backdropFilter: blur(12px)`, 상단 고정. `MenuBar.tsx`
+  - 요소: AgentDesk 로고, 프로젝트 셀렉터, CLI 비용 요약, 알림 벨 🔔, 시각.
+- **바탕화면:** `--th-bg-primary` 배경. `Desktop.tsx`
+  - 데스크톱 아이콘 영역 (상단), 위젯 자유 배치 영역 (중앙).
+- **Dock:** `--th-bg-sidebar`, `backdropFilter: blur(12px)`, 하단 고정. `Dock.tsx`
+  - 4개 앱 아이콘 (⚡📚⚙💬), 실행 중 amber dot.
+- **앱 창:** `--th-bg-elevated`, `borderRadius: 10`, `boxShadow: 0 20px 60px rgba(0,0,0,0.9)`. `windows/*.tsx`
+  - 창 헤더: 트래픽 라이트 + 창 제목 + 탭 바.
+- **위젯:** `--th-bg-card`, `borderRadius: 10`, `backdropFilter: blur(10px)`. `Widget.tsx`
 
 ---
 
@@ -283,46 +301,62 @@ slate/gray 유틸리티가 `--th-*`로 재정의됨:
 
 ---
 
-## 8. 화면 목록 (전체 인벤토리)
+## 8. 화면 전체 인벤토리 — macOS 바탕화면 OS
 
-### 사이드바 메뉴 (13개)
+### 데스크톱 아이콘 (7개)
 
-| ID | 화면 | 컴포넌트 | 프로젝트 필요 |
-|----|------|----------|:---:|
-| `dashboard` | 대시보드 | `Dashboard2.tsx` | – |
-| `project-types` | 프로젝트 유형 | `CategoriesTab.tsx` | – |
-| `tasks-board` | 업무 보드 | `TaskBoard.tsx` | – |
-| `tasks-scheduled` | 스케줄러 | `ScheduledTasksPanel.tsx` | – |
-| `tasks-deliverables` | 산출물 | `Deliverables.tsx` | – |
-| `agents` | 에이전트 & 부서 | `TeamPageView.tsx` | – |
-| `heartbeat` | 현황 모니터 | `HeartbeatPanel.tsx` | – |
-| `skills` | 스킬 | `SkillsLibrary.tsx` (lazy) | ✓ |
-| `agent-rules` | 에이전트 룰 | `AgentRulesLibrary.tsx` (lazy) | ✓ |
-| `memory` | 메모리 | `MemoryLibrary.tsx` (lazy) | ✓ |
-| `hooks` | 훅 | `HooksLibrary.tsx` (lazy) | ✓ |
-| `cli-usage` | CLI 사용량 | `CliUsagePage.tsx` | – |
-| `settings` | 설정 | `SettingsPanel.tsx` (lazy) | – |
+| 아이콘 | 레이블 | 열리는 것 | 구 View ID |
+|--------|--------|-----------|-----------|
+| 👤 | 에이전트 설정 | AgentManagerWindow | `agents` |
+| 📁 | 프로젝트 생성 | ProjectCreateModal | — |
+| ▶ | 태스크 실행 | CreateTaskModal | — |
+| ⚡ | 워크플로 빌더 | WorkflowWindow (Builder 탭) | `workflow-builder` |
+| 📋 | 라이브러리 | LibraryWindow (Skills 탭) | `skills` |
+| 💬 | 채팅 | ChatWindow | — |
+| >_ | 에이전트 REPL | ReplWindow | (신규) |
 
-### 모달/오버레이 (33개)
+### 위젯 (5종, 사용자 선택 추가)
 
-**프로젝트:** ProjectCreateModal, ProjectManagerModal, MissingPathPromptDialog, ManualPathPickerDialog, ManualAssignmentWarningDialog
-**태스크:** CreateTaskModal, DiffModal, BulkHideModal, TaskReportPopup
-**에이전트:** AgentFormModal, DepartmentFormModal, AgentDetailPanel
-**채팅:** ChatPanel, GroupChatPanel, DecisionInboxModal, ProjectFlowDialog
-**라이브러리:** SkillModal + LearningModal, RuleFormModal + RuleLearningModal, MemoryFormModal + MemoryLearningModal, HookFormModal + HookLearningModal, ClassroomOverlay
-**설정:** ApiAssignModal, CustomPackFormModal, ChannelGuideModal, ChatEditorModal, CategoryFormModal
-**기타:** CommandPalette, TerminalPanel, TextPreviewModal, HeartbeatGuideModal
+| 위젯 | 컴포넌트 | 구 View ID |
+|------|----------|-----------|
+| Agents 위젯 | `AgentsWidget.tsx` | `heartbeat` |
+| Tasks 위젯 | `TasksWidget.tsx` | `tasks-board` |
+| Alerts 위젯 | `AlertsWidget.tsx` | — |
+| CLI Cost 위젯 | `CliCostWidget.tsx` | `cli-usage` |
+| Flow Graph 위젯 | `FlowGraphWidget.tsx` | `flow-graph` |
 
-### 설정 탭 (6개)
+### Dock 앱 창 (4개)
+
+| Dock | 창 컴포넌트 | 탭 구성 | 구 View ID |
+|------|------------|---------|-----------|
+| ⚡ Workflow | `WorkflowWindow.tsx` | Workflow Builder / Scheduled Tasks | `workflow-builder`, `tasks-scheduled` |
+| 📚 Library | `LibraryWindow.tsx` | Skills / Agent Rules / Memory / Hooks / Deliverables | `skills`, `agent-rules`, `memory`, `hooks`, `tasks-deliverables` |
+| ⚙ Settings | `SettingsWindow.tsx` | General / API / OAuth / CLI / Gateway / Data / Project Types / Agents | `settings`, `project-types` |
+| 💬 Chat | `ChatWindow.tsx` | Direct / Group / Announcement | — |
+
+### Settings 창 탭 (8개)
 
 | 탭 | 내용 |
 |----|------|
-| 일반 | 언어, 테마, 회사 설정 |
+| General | 언어, 테마, 회사 설정 |
 | API | API 프로바이더 (Anthropic, OpenAI 등) 설정 |
-| CLI | CLI 인증, 모델 설정 |
 | OAuth | OAuth 계정 연결/관리 |
-| 게이트웨이 | 메신저 채널 설정 |
-| 데이터 | 데이터 내보내기/가져오기 |
+| CLI | CLI 인증, 모델, 사용량 상세 |
+| Gateway | 메신저 채널 설정 (Telegram/Discord/Slack) |
+| Data | 데이터 내보내기/가져오기 |
+| Project Types | 프로젝트 유형(템플릿) 관리 |
+| Agents | 에이전트·부서 관리 |
+
+### 모달/오버레이 (36개)
+
+**프로젝트:** ProjectCreateModal, ProjectManagerModal, MissingPathPromptDialog, ManualPathPickerDialog, ManualAssignmentWarningDialog
+**태스크:** CreateTaskModal, DiffModal, BulkHideModal, TaskReportPopup, ReportHistory
+**에이전트:** AgentFormModal, DepartmentFormModal, AgentDetail(슬라이드 패널), AgentStatusPanel
+**터미널:** TerminalPanel(하단 드로어)
+**채팅:** ChatPanel, GroupChatPanel, DecisionInboxModal, ProjectFlowDialog
+**라이브러리:** CustomSkillModal, LearningModal(Skills), ClassroomOverlay, RuleFormModal, RuleLearningModal, RuleHistoryPanel, MemoryFormModal, MemoryLearningModal, HookFormModal, HookLearningModal, HookHistoryPanel
+**설정:** ChannelGuideModal, ChatEditorModal, CategoryFormModal, GitHubImportPanel
+**기타:** CommandPalette, KeyboardShortcutsGuide, NotificationCenter, TextPreviewModal, ConfirmDialog
 
 ---
 
