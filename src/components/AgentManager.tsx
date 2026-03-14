@@ -75,8 +75,13 @@ export default function AgentManager({
   }, [deptTab, departments]);
 
   const openEdit = useCallback(
-    (agent: Agent) => {
+    async (agent: Agent) => {
       setModalAgent(agent);
+      // Load persona from .md file
+      let personaText = "";
+      try {
+        personaText = await api.getAgentPersona(agent.id);
+      } catch { /* ignore */ }
       setForm({
         name: agent.name,
         name_ko: agent.name_ko,
@@ -89,7 +94,7 @@ export default function AgentManager({
         avatar_url: agent.avatar_url ?? null,
         pendingAvatarDataUrl: null,
         sprite_number: agent.sprite_number ?? null,
-        personality: agent.personality || "",
+        personality: personaText,
         persona_id: agent.persona_id || undefined,
       });
       setShowModal(true);

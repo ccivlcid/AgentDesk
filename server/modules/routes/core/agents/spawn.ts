@@ -159,7 +159,7 @@ export function registerAgentSpawnRoute(ctx: RuntimeContext): void {
         buildDocumentGenerationGuidance(task.title, task.description, taskLang),
         `NOTE: You are working in an isolated Git worktree branch (agentdesk/${taskId.slice(0, 8)}). Commit your changes normally.`,
         `Agent: ${agent.name} (${roleLabel}, ${agent.department_name || "Unassigned"})`,
-        buildCharacterPersonaBlock(agent.personality, (agent as any).persona_id),
+        buildCharacterPersonaBlock((agent as any).persona_id, agent.id),
         deptConstraint,
         departmentPromptBlock,
         pickL(

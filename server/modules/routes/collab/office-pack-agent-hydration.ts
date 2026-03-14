@@ -71,7 +71,6 @@ type OfficePackProfileAgent = {
   cli_reasoning_level: string | null;
   avatar_emoji: string;
   sprite_number: number | null;
-  personality: string | null;
   created_at: number;
 };
 
@@ -115,7 +114,6 @@ function normalizeOfficePackProfileAgent(raw: unknown, nowMs: number): OfficePac
     cli_reasoning_level: normalizeOptionalText(obj.cli_reasoning_level),
     avatar_emoji: normalizeText(obj.avatar_emoji) || "🤖",
     sprite_number: normalizeNullablePositiveInt(obj.sprite_number),
-    personality: normalizeOptionalText(obj.personality),
     created_at: normalizePositiveInt(obj.created_at, nowMs),
   };
 }
@@ -249,9 +247,9 @@ export function hydrateOfficePackAgentFromSettings(db: DbLike, agentId: string, 
           id, name, name_ko, name_ja, name_zh, department_id, role,
           workflow_pack_key,
           acts_as_planning_leader,
-          cli_provider, avatar_emoji, sprite_number, personality, status, current_task_id,
+          cli_provider, avatar_emoji, sprite_number, status, current_task_id,
           stats_tasks_done, stats_xp, created_at, cli_model, cli_reasoning_level
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'idle', NULL, 0, 0, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'idle', NULL, 0, 0, ?, ?, ?)
       `,
       ).run(
         found.agent.id,
@@ -266,7 +264,6 @@ export function hydrateOfficePackAgentFromSettings(db: DbLike, agentId: string, 
         found.agent.cli_provider,
         found.agent.avatar_emoji,
         found.agent.sprite_number,
-        found.agent.personality,
         found.agent.created_at,
         found.agent.cli_model,
         found.agent.cli_reasoning_level,
@@ -277,9 +274,9 @@ export function hydrateOfficePackAgentFromSettings(db: DbLike, agentId: string, 
         INSERT OR IGNORE INTO agents (
           id, name, name_ko, name_ja, name_zh, department_id, role,
           acts_as_planning_leader,
-          cli_provider, avatar_emoji, sprite_number, personality, status, current_task_id,
+          cli_provider, avatar_emoji, sprite_number, status, current_task_id,
           stats_tasks_done, stats_xp, created_at, cli_model, cli_reasoning_level
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'idle', NULL, 0, 0, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'idle', NULL, 0, 0, ?, ?, ?)
       `,
       ).run(
         found.agent.id,
@@ -293,7 +290,6 @@ export function hydrateOfficePackAgentFromSettings(db: DbLike, agentId: string, 
         found.agent.cli_provider,
         found.agent.avatar_emoji,
         found.agent.sprite_number,
-        found.agent.personality,
         found.agent.created_at,
         found.agent.cli_model,
         found.agent.cli_reasoning_level,
@@ -325,9 +321,9 @@ function upsertOfficePackProfileAgent(
           id, name, name_ko, name_ja, name_zh, department_id, role,
           workflow_pack_key,
           acts_as_planning_leader,
-          cli_provider, avatar_emoji, sprite_number, personality, status, current_task_id,
+          cli_provider, avatar_emoji, sprite_number, status, current_task_id,
           stats_tasks_done, stats_xp, created_at, cli_model, cli_reasoning_level
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'idle', NULL, 0, 0, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'idle', NULL, 0, 0, ?, ?, ?)
         ON CONFLICT(id) DO UPDATE SET
           name = excluded.name,
           name_ko = excluded.name_ko,
@@ -340,7 +336,6 @@ function upsertOfficePackProfileAgent(
           cli_provider = excluded.cli_provider,
           avatar_emoji = excluded.avatar_emoji,
           sprite_number = COALESCE(excluded.sprite_number, agents.sprite_number),
-          personality = excluded.personality,
           cli_model = excluded.cli_model,
           cli_reasoning_level = excluded.cli_reasoning_level
       `,
@@ -358,7 +353,6 @@ function upsertOfficePackProfileAgent(
             agent.cli_provider,
             agent.avatar_emoji,
             agent.sprite_number,
-            agent.personality,
             agent.created_at,
             agent.cli_model,
             agent.cli_reasoning_level,
@@ -369,9 +363,9 @@ function upsertOfficePackProfileAgent(
         INSERT INTO agents (
           id, name, name_ko, name_ja, name_zh, department_id, role,
           acts_as_planning_leader,
-          cli_provider, avatar_emoji, sprite_number, personality, status, current_task_id,
+          cli_provider, avatar_emoji, sprite_number, status, current_task_id,
           stats_tasks_done, stats_xp, created_at, cli_model, cli_reasoning_level
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'idle', NULL, 0, 0, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'idle', NULL, 0, 0, ?, ?, ?)
         ON CONFLICT(id) DO UPDATE SET
           name = excluded.name,
           name_ko = excluded.name_ko,
@@ -383,7 +377,6 @@ function upsertOfficePackProfileAgent(
           cli_provider = excluded.cli_provider,
           avatar_emoji = excluded.avatar_emoji,
           sprite_number = COALESCE(excluded.sprite_number, agents.sprite_number),
-          personality = excluded.personality,
           cli_model = excluded.cli_model,
           cli_reasoning_level = excluded.cli_reasoning_level
       `,
@@ -400,7 +393,6 @@ function upsertOfficePackProfileAgent(
             agent.cli_provider,
             agent.avatar_emoji,
             agent.sprite_number,
-            agent.personality,
             agent.created_at,
             agent.cli_model,
             agent.cli_reasoning_level,

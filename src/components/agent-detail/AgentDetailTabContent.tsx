@@ -1,7 +1,9 @@
+import { useEffect, useState } from "react";
 import { localeName, type UiLanguage } from "../../i18n";
 import type { Agent, Department, SubAgent, SubTask, Task } from "../../types";
 import { SUBTASK_STATUS_ICON, taskStatusLabel, taskTypeLabel, type TFunction } from "./constants";
 import AgentPerformancePanel from "./AgentPerformancePanel";
+import * as api from "../../api";
 
 interface AgentDetailTabContentProps {
   tab: "info" | "tasks" | "alba" | "performance" | "chat";
@@ -34,6 +36,14 @@ export default function AgentDetailTabContent({
   onAssignTask,
   onOpenTerminal,
 }: AgentDetailTabContentProps) {
+  const [personaText, setPersonaText] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (tab !== "info") return;
+    setPersonaText(null);
+    api.getAgentPersona(agent.id).then((text) => setPersonaText(text || null)).catch(() => setPersonaText(null));
+  }, [agent.id, tab]);
+
   if (tab === "info") {
     return (
       <div className="space-y-3">
@@ -42,7 +52,7 @@ export default function AgentDetailTabContent({
             {t({ ko: "성격", en: "Personality", ja: "性格", zh: "性格" })}
           </div>
           <div className="text-sm" style={{ color: "var(--th-text-secondary)" }}>
-            {agent.personality ?? t({ ko: "설정 없음", en: "Not set", ja: "未設定", zh: "未设置" })}
+            {personaText ?? t({ ko: "설정 없음", en: "Not set", ja: "未設定", zh: "未设置" })}
           </div>
         </div>
 

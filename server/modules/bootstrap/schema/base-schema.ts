@@ -52,7 +52,6 @@ CREATE TABLE IF NOT EXISTS agents (
   cli_reasoning_level TEXT,
   avatar_emoji TEXT NOT NULL DEFAULT '🤖',
   sprite_number INTEGER,
-  personality TEXT,
   status TEXT NOT NULL DEFAULT 'idle' CHECK(status IN ('idle','working','break','offline')),
   current_task_id TEXT,
   stats_tasks_done INTEGER DEFAULT 0,

@@ -54,7 +54,6 @@ interface AgentRow {
   name: string;
   name_ko: string;
   role: string;
-  personality: string | null;
   status: string;
   department_id: string | null;
   current_task_id: string | null;

@@ -50,7 +50,6 @@ type OfficePackProfileAgent = {
   role: string;
   cli_provider: string | null;
   avatar_emoji: string;
-  personality: string | null;
   created_at: number;
 };
 
@@ -147,7 +146,6 @@ function normalizeOfficePackProfileAgent(raw: unknown): OfficePackProfileAgent |
     role,
     cli_provider,
     avatar_emoji: normalizeText(obj.avatar_emoji) || "🤖",
-    personality: normalizeOptionalText(obj.personality),
     created_at: normalizePositiveInt(obj.created_at, now),
   };
 }

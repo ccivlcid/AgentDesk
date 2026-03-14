@@ -48,6 +48,15 @@ export const MIGRATIONS: Migration[] = [
       } catch { /* already exists */ }
     },
   },
+  {
+    id: "2026-03-14-001-drop-agent-personality",
+    up: (db) => {
+      // Move persona content to .md files; personality column is no longer used.
+      try {
+        db.exec("ALTER TABLE agents DROP COLUMN personality");
+      } catch { /* column may already be absent */ }
+    },
+  },
 ];
 
 const ENSURE_TABLE_SQL = `

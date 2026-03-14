@@ -330,7 +330,7 @@ export function createExecutionStartTaskTools(deps: CreateExecutionStartTaskTool
         conversationCtx,
         `\n---`,
         `Agent: ${execAgent.name} (${roleLabel}, ${deptName})`,
-        buildCharacterPersonaBlock(execAgent.personality, (execAgent as any).persona_id),
+        buildCharacterPersonaBlock((execAgent as any).persona_id, execAgent.id),
         deptConstraint,
         deptPromptBlock,
         `NOTE: You are working in an isolated Git worktree branch (agentdesk/${taskId.slice(0, 8)}). Commit your changes normally.`,

@@ -43,7 +43,7 @@ export interface Agent {
   avatar_emoji: string;
   avatar_url?: string | null;
   sprite_number?: number | null;
-  personality: string | null;
+  personality?: string | null;
   persona_id?: string | null;
   status: AgentStatus;
   current_task_id: string | null;

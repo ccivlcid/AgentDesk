@@ -509,7 +509,7 @@ Whenever you complete a subtask, report it in this format:
         conversationCtx,
         `\n---`,
         `Agent: ${agent.name} (${roleLabel}, ${agent.department_name || "Unassigned"})`,
-        buildCharacterPersonaBlock(agent.personality, (agent as any).persona_id),
+        buildCharacterPersonaBlock((agent as any).persona_id, agent.id),
         deptConstraint,
         departmentPromptBlock,
         `NOTE: You are working in an isolated Git worktree branch (agentdesk/${id.slice(0, 8)}). Commit your changes normally.`,

@@ -141,7 +141,6 @@ function buildFallbackSenderAgent(msg: Message): Agent | undefined {
     role: "junior",
     cli_provider: "api",
     avatar_emoji: normalizeMessageSenderAvatar(msg),
-    personality: null,
     status: "idle",
     current_task_id: null,
     stats_tasks_done: 0,
