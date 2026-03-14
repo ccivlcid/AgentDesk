@@ -56,6 +56,7 @@ export const SUBTASK_DELEGATION_SWEEP_MS = Math.max(
   readNonNegativeIntEnv("SUBTASK_DELEGATION_SWEEP_MS", 15_000),
 );
 export const CLI_OUTPUT_DEDUP_WINDOW_MS = Math.max(0, readNonNegativeIntEnv("CLI_OUTPUT_DEDUP_WINDOW_MS", 1500));
+export const MAX_CONCURRENT_AGENTS = readNonNegativeIntEnv("MAX_CONCURRENT_AGENTS", 10);
 
 export function initializeDatabaseRuntime(): {
   dbPath: string;

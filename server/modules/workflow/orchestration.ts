@@ -7,6 +7,7 @@ import { spawn, execFile, execFileSync } from "node:child_process";
 import { randomUUID, createHash } from "node:crypto";
 import {
   CLI_OUTPUT_DEDUP_WINDOW_MS,
+  MAX_CONCURRENT_AGENTS,
   readNonNegativeIntEnv,
   REVIEW_MAX_MEMO_ITEMS_PER_DEPT,
   REVIEW_MAX_MEMO_ITEMS_PER_ROUND,
@@ -15,6 +16,8 @@ import {
   REVIEW_MAX_REVISION_SIGNALS_PER_ROUND,
   REVIEW_MAX_ROUNDS,
 } from "../../db/runtime.ts";
+import { createAgentQueue } from "./orchestration/agent-queue.ts";
+import logger from "../../lib/logger.ts";
 import {
   BUILTIN_GOOGLE_CLIENT_ID,
   BUILTIN_GOOGLE_CLIENT_SECRET,
@@ -242,6 +245,12 @@ export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrat
   const resolveLang = (...args: any[]) => __ctx.resolveLang(...args);
   const resolveProjectPath = (...args: any[]) => __ctx.resolveProjectPath(...args);
   const sendAgentMessage = (...args: any[]) => __ctx.sendAgentMessage(...args);
+
+  // ---------------------------------------------------------------------------
+  // Agent execution FIFO queue (P2-3): limits concurrent agent executions
+  // ---------------------------------------------------------------------------
+  const agentQueue = createAgentQueue(MAX_CONCURRENT_AGENTS);
+  logger.info({ maxConcurrent: MAX_CONCURRENT_AGENTS }, "agent queue initialized");
 
   // ---------------------------------------------------------------------------
   // Helpers: notifications, progress timers, Client notifications
