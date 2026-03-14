@@ -1,4 +1,5 @@
 import type { DatabaseSync } from "node:sqlite";
+import logger from "../../../lib/logger";
 
 type DbLike = Pick<DatabaseSync, "prepare">;
 
@@ -52,7 +53,7 @@ export function isValidExecutionStateTransition(
   const allowed = ALLOWED_TRANSITIONS[from];
   if (!allowed) return true; // unknown source — allow
   if (allowed.includes(to)) return true;
-  console.warn(`[state-guard] Invalid execution_state transition: ${from} → ${to}`);
+  logger.warn(`[state-guard] Invalid execution_state transition: ${from} → ${to}`);
   return false;
 }
 

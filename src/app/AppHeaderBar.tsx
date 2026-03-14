@@ -14,6 +14,7 @@ interface AppHeaderBarProps {
   announcementLabel: string;
   groupChatLabel: string;
   notificationSlot?: ReactNode;
+  queueStatusSlot?: ReactNode;
   theme: "light" | "dark";
   mobileHeaderMenuOpen: boolean;
   onOpenMobileNav: () => void;
@@ -29,6 +30,8 @@ interface AppHeaderBarProps {
   onOpenCommandPalette?: () => void;
   onOpenScreenGuide?: () => void;
   projectSelectorSlot?: ReactNode;
+  splitEnabled?: boolean;
+  onToggleSplit?: () => void;
 }
 
 const mono = "var(--th-font-mono)";
@@ -119,6 +122,7 @@ export default function AppHeaderBar({
   announcementLabel,
   groupChatLabel,
   notificationSlot,
+  queueStatusSlot,
   theme,
   mobileHeaderMenuOpen,
   onOpenMobileNav,
@@ -134,6 +138,8 @@ export default function AppHeaderBar({
   onOpenCommandPalette,
   onOpenScreenGuide,
   projectSelectorSlot,
+  splitEnabled,
+  onToggleSplit,
 }: AppHeaderBarProps) {
 
   return (
@@ -398,6 +404,8 @@ export default function AppHeaderBar({
 
         {notificationSlot}
 
+        {queueStatusSlot}
+
         {/* Screen guide (Help) — macOS Inspector style */}
         {onOpenScreenGuide && (
           <button
@@ -425,6 +433,29 @@ export default function AppHeaderBar({
             aria-label="Help"
           >
             ?
+          </button>
+        )}
+
+        {/* Split view toggle — desktop only */}
+        {onToggleSplit && (
+          <button
+            type="button"
+            onClick={onToggleSplit}
+            title={splitEnabled ? "Close split view (\\ )" : "Split view (\\ )"}
+            style={{
+              padding: "4px 8px",
+              background: splitEnabled ? "var(--th-active-bg)" : "transparent",
+              border: "1px solid " + (splitEnabled ? "var(--th-accent)" : "var(--th-border)"),
+              borderRadius: 6,
+              color: splitEnabled ? "var(--th-accent)" : "var(--th-text-muted)",
+              fontFamily: mono,
+              fontSize: "11px",
+              cursor: "pointer",
+              transition: "color 0.15s, border-color 0.15s, background 0.15s",
+            }}
+            className="hidden lg:block hover:!border-[var(--th-border-strong)]"
+          >
+            ⊟
           </button>
         )}
 

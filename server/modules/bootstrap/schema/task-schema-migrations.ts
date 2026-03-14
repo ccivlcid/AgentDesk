@@ -1,5 +1,6 @@
 import type { DatabaseSync } from "node:sqlite";
 import { DEFAULT_WORKFLOW_PACK_KEY, WORKFLOW_PACK_KEYS, isWorkflowPackKey } from "../../workflow/packs/definitions.ts";
+import logger from "../../../lib/logger.ts";
 
 type DbLike = Pick<DatabaseSync, "exec" | "prepare">;
 
@@ -295,7 +296,7 @@ function migrateProjectScopeType(db: DbLike): void {
       | undefined
   )?.sql ?? "";
   if (arDdl && !arDdl.includes("'project'")) {
-    console.log("[AgentDesk] Migrating agent_rules.scope_type CHECK to include 'project'");
+    logger.info("[AgentDesk] Migrating agent_rules.scope_type CHECK to include 'project'");
     db.exec("PRAGMA foreign_keys = OFF");
     try {
       db.exec("BEGIN");
@@ -348,7 +349,7 @@ function migrateProjectScopeType(db: DbLike): void {
       | undefined
   )?.sql ?? "";
   if (meDdl && !meDdl.includes("'project'")) {
-    console.log("[AgentDesk] Migrating memory_entries.scope_type CHECK to include 'project'");
+    logger.info("[AgentDesk] Migrating memory_entries.scope_type CHECK to include 'project'");
     db.exec("PRAGMA foreign_keys = OFF");
     try {
       db.exec("BEGIN");
@@ -401,7 +402,7 @@ function migrateProjectScopeType(db: DbLike): void {
       | undefined
   )?.sql ?? "";
   if (heDdl && !heDdl.includes("'project'")) {
-    console.log("[AgentDesk] Migrating hook_entries.scope_type CHECK to include 'project'");
+    logger.info("[AgentDesk] Migrating hook_entries.scope_type CHECK to include 'project'");
     db.exec("PRAGMA foreign_keys = OFF");
     try {
       db.exec("BEGIN");
@@ -765,7 +766,7 @@ function migrateMessagesDirectiveType(db: DbLike): void {
   const ddl = (row?.sql ?? "").toLowerCase();
   if (ddl.includes("'directive'")) return;
 
-  console.log("[AgentDesk] Migrating messages.message_type CHECK to include 'directive'");
+  logger.info("[AgentDesk] Migrating messages.message_type CHECK to include 'directive'");
   const oldTable = "messages_directive_migration_old";
   db.exec("PRAGMA foreign_keys = OFF");
   try {
@@ -826,7 +827,7 @@ function migrateLegacyTasksStatusSchema(db: DbLike): void {
   const ddl = (row?.sql ?? "").toLowerCase();
   if (ddl.includes("'collaborating'") && ddl.includes("'pending'")) return;
 
-  console.log("[AgentDesk] Migrating legacy tasks.status CHECK constraint");
+  logger.info("[AgentDesk] Migrating legacy tasks.status CHECK constraint");
   const newTable = "tasks_status_migration_new";
   db.exec("PRAGMA foreign_keys = OFF");
   try {
@@ -920,7 +921,7 @@ function repairLegacyTaskForeignKeys(db: DbLike): void {
   ).cnt;
   if (refCount === 0) return;
 
-  console.log("[AgentDesk] Repairing legacy foreign keys to tasks_legacy_status_migration");
+  logger.info("[AgentDesk] Repairing legacy foreign keys to tasks_legacy_status_migration");
   const messagesOld = "messages_fkfix_old";
   const taskLogsOld = "task_logs_fkfix_old";
   const subtasksOld = "subtasks_fkfix_old";

@@ -136,6 +136,7 @@ export async function updateAgent(
       | "avatar_emoji"
       | "sprite_number"
       | "personality"
+      | "persona_id"
     >
   > & {
     workflow_pack_key?: WorkflowPackKey;
@@ -296,6 +297,8 @@ export async function createTask(input: {
   workflow_pack_key?: WorkflowPackKey;
   workflow_meta_json?: Record<string, unknown> | string;
   output_format?: string;
+  handoff_to_agent_id?: string | null;
+  handoff_condition?: "always" | "on_success" | "on_fail" | null;
 }): Promise<string> {
   const j = (await post("/api/tasks", input)) as { id: string };
   return j.id;

@@ -4,7 +4,7 @@ import { runVersionedMigrations, MIGRATIONS, type Migration } from "./versioned-
 
 function makeDb(): DatabaseSync {
   const db = new DatabaseSync(":memory:");
-  // Minimal tables needed by existing migrations
+  // Minimal tables needed by all versioned migrations
   db.exec(`
     CREATE TABLE IF NOT EXISTS projects (
       id TEXT PRIMARY KEY,
@@ -12,13 +12,41 @@ function makeDb(): DatabaseSync {
       project_path TEXT NOT NULL DEFAULT '',
       core_goal TEXT NOT NULL DEFAULT '',
       default_pack_key TEXT NOT NULL DEFAULT 'development',
+      assignment_mode TEXT NOT NULL DEFAULT 'auto',
       last_used_at INTEGER,
       created_at INTEGER DEFAULT (unixepoch()*1000),
       updated_at INTEGER DEFAULT (unixepoch()*1000)
     );
     CREATE TABLE IF NOT EXISTS agents (
       id TEXT PRIMARY KEY,
-      name TEXT NOT NULL DEFAULT ''
+      name TEXT NOT NULL DEFAULT '',
+      persona TEXT,
+      persona_id TEXT
+    );
+    CREATE TABLE IF NOT EXISTS categories (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL DEFAULT '',
+      pack_key TEXT
+    );
+    CREATE TABLE IF NOT EXISTS tasks (
+      id TEXT PRIMARY KEY,
+      title TEXT NOT NULL DEFAULT '',
+      status TEXT NOT NULL DEFAULT 'inbox',
+      assigned_agent_id TEXT,
+      category_id TEXT,
+      last_heartbeat_at INTEGER,
+      execution_state TEXT
+    );
+    CREATE TABLE IF NOT EXISTS task_execution_events (
+      id TEXT PRIMARY KEY,
+      task_id TEXT NOT NULL,
+      event_type TEXT NOT NULL,
+      created_at INTEGER NOT NULL DEFAULT (unixepoch()*1000)
+    );
+    CREATE TABLE IF NOT EXISTS project_agents (
+      project_id TEXT NOT NULL,
+      agent_id TEXT NOT NULL,
+      PRIMARY KEY (project_id, agent_id)
     );
   `);
   return db;

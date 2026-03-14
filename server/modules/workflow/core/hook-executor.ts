@@ -8,6 +8,7 @@
 
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
+import logger from "../../../lib/logger";
 
 const execFileAsync = promisify(execFile);
 
@@ -121,9 +122,9 @@ export async function executeHooks(
           /* stats update is best-effort */
         }
       } catch (err) {
-        console.error(
-          `[AgentDesk] Hook "${hook.title}" (${hook.id}) failed for ${eventType} on task ${taskId}:`,
-          err instanceof Error ? err.message : err,
+        logger.error(
+          { err: err instanceof Error ? err : undefined },
+          `[AgentDesk] Hook "${hook.title}" (${hook.id}) failed for ${eventType} on task ${taskId}: ${err instanceof Error ? err.message : err}`,
         );
       }
     }),

@@ -1,4 +1,5 @@
 import { execFileSync } from "node:child_process";
+import logger from "../../../lib/logger";
 import { decryptSecret } from "../../../../oauth/helpers.ts";
 import type { WorktreeInfo } from "./lifecycle.ts";
 import {
@@ -255,7 +256,7 @@ export function createWorktreeMergeTools(deps: CreateWorktreeMergeToolsDeps) {
             stdio: "pipe",
             timeout: 5000,
           });
-          console.log(`[AgentDesk] Created dev branch from main for task ${taskId.slice(0, 8)}`);
+          logger.info(`[AgentDesk] Created dev branch from main for task ${taskId.slice(0, 8)}`);
         }
       } catch {
         try {
@@ -308,7 +309,7 @@ export function createWorktreeMergeTools(deps: CreateWorktreeMergeToolsDeps) {
             const existingPRs = await listRes.json();
             if (Array.isArray(existingPRs) && existingPRs.length > 0) {
               const prUrl = existingPRs[0].html_url;
-              console.log(`[AgentDesk] Existing PR updated: ${prUrl}`);
+              logger.info(`[AgentDesk] Existing PR updated: ${prUrl}`);
               appendTaskLog(taskId, "system", `GitHub PR updated: ${prUrl}`);
             } else {
               const createRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/pulls`, {
@@ -327,16 +328,16 @@ export function createWorktreeMergeTools(deps: CreateWorktreeMergeToolsDeps) {
               });
               if (createRes.ok) {
                 const prData = (await createRes.json()) as { html_url?: string };
-                console.log(`[AgentDesk] Created PR: ${prData.html_url}`);
+                logger.info(`[AgentDesk] Created PR: ${prData.html_url}`);
                 appendTaskLog(taskId, "system", `GitHub PR created: ${prData.html_url}`);
               } else {
                 const errBody = await createRes.text();
-                console.warn(`[AgentDesk] Failed to create PR: ${createRes.status} ${errBody}`);
+                logger.warn(`[AgentDesk] Failed to create PR: ${createRes.status} ${errBody}`);
                 appendTaskLog(taskId, "system", `GitHub PR creation failed: ${createRes.status}`);
               }
             }
           } catch (prErr) {
-            console.warn(`[AgentDesk] PR creation error:`, prErr);
+            logger.warn({ err: prErr }, `[AgentDesk] PR creation error`);
           }
         })();
       }

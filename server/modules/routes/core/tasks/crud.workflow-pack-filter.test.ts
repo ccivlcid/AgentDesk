@@ -50,7 +50,10 @@ function createTaskCrudHarness(): { db: DatabaseSync; routes: Map<string, RouteH
       source_task_id TEXT,
       hidden INTEGER NOT NULL DEFAULT 0,
       created_at INTEGER NOT NULL,
-      updated_at INTEGER NOT NULL
+      updated_at INTEGER NOT NULL,
+      category_id TEXT,
+      handoff_to_agent_id TEXT,
+      handoff_condition TEXT
     );
     CREATE TABLE agents (
       id TEXT PRIMARY KEY,

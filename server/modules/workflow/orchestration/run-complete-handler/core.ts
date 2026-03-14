@@ -4,6 +4,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { randomUUID } from "node:crypto";
 import { appendTaskExecutionMetaUpdate } from "../../core/task-execution-meta.ts";
 import { handleVideoArtifactSync } from "./video-artifact.ts";
 import { runAfterExitGates, applyVideoArtifactGateAfterSuccess } from "./gates.ts";
@@ -24,6 +25,8 @@ type TaskRow = {
   project_id: string | null;
   project_path: string | null;
   source_task_id: string | null;
+  handoff_to_agent_id?: string | null;
+  handoff_condition?: "always" | "on_success" | "on_fail" | null;
 };
 
 export function createRunCompleteHandler(deps: RunCompleteHandlerDeps) {
@@ -324,6 +327,48 @@ export function createRunCompleteHandler(deps: RunCompleteHandlerDeps) {
     const stateDeps = buildStateUpdatesDeps(deps as Record<string, unknown>);
     if (finalExitCode === 0) applySuccessStateUpdate(taskId, task, finalExitCode, result, t, stateDeps);
     else applyFailureStateUpdate(taskId, task, finalExitCode, result, t, stateDeps);
+
+    // Task handoff: auto-create a follow-up task for another agent on completion
+    if (task?.handoff_to_agent_id) {
+      const condition = task.handoff_condition ?? "on_success";
+      const succeeded = finalExitCode === 0;
+      const shouldHandoff =
+        condition === "always" ||
+        (condition === "on_success" && succeeded) ||
+        (condition === "on_fail" && !succeeded);
+
+      if (shouldHandoff) {
+        try {
+          const newTaskId = randomUUID();
+          const now = (nowMs as () => number)();
+          (db as { prepare: (s: string) => { run: (...a: unknown[]) => void } })
+            .prepare(`
+              INSERT INTO tasks (id, title, description, status, assigned_agent_id, project_id, created_at, updated_at)
+              VALUES (?, ?, ?, 'pending', ?, ?, ?, ?)
+            `)
+            .run(
+              newTaskId,
+              `[Handoff] ${task.title}`,
+              task.description,
+              task.handoff_to_agent_id,
+              task.project_id,
+              now,
+              now,
+            );
+          const newTask = (db as { prepare: (s: string) => { get: (...a: unknown[]) => unknown } })
+            .prepare("SELECT * FROM tasks WHERE id = ?")
+            .get(newTaskId);
+          (broadcast as (e: string, p: unknown) => void)("task_update", newTask);
+          (appendTaskLog as (a: string, b: string, c: string) => void)(
+            taskId,
+            "system",
+            `Handoff task created: ${newTaskId} → agent ${task.handoff_to_agent_id} (condition: ${condition})`,
+          );
+        } catch {
+          /* handoff failure must not block completion */
+        }
+      }
+    }
   }
   return { handleTaskRunComplete };
 }

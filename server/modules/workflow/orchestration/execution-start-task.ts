@@ -113,7 +113,53 @@ export function createExecutionStartTaskTools(deps: CreateExecutionStartTaskTool
     return rules[taskLang] || rules.en;
   }
 
-  function startTaskExecutionForAgent(taskId: string, execAgent: any, deptId: string | null, deptName: string): void {
+  async function buildExecutionPayload(params: {
+    taskId: string;
+    agentId: string;
+    projectId: string | null;
+    departmentId: string | null;
+    workflowPackKey: string | null;
+    provider: string;
+    sessionId: string;
+    taskTitle: string;
+    taskDescription: string | null;
+    taskLang: string;
+  }) {
+    const [rulesBlock, memoryBlock, skillsBlock, interruptPrompts, convCtx, continuationCtx] = await Promise.all([
+      Promise.resolve(
+        buildRulesPromptBlock(
+          db as any,
+          {
+            projectId: params.projectId,
+            agentId: params.agentId,
+            departmentId: params.departmentId,
+          },
+          params.taskLang,
+        ),
+      ),
+      Promise.resolve(
+        buildMemoryPromptBlock(
+          { db },
+          {
+            agentId: params.agentId,
+            departmentId: params.departmentId,
+            workflowPackKey: params.workflowPackKey,
+            projectId: params.projectId,
+            taskTitle: params.taskTitle,
+            taskDescription: params.taskDescription,
+          },
+          params.taskLang,
+        ),
+      ),
+      Promise.resolve(buildAvailableSkillsPromptBlock(params.provider, params.projectId)),
+      Promise.resolve(loadPendingInterruptPrompts(db as any, params.taskId, params.sessionId)),
+      Promise.resolve(getRecentConversationContext(params.agentId)),
+      Promise.resolve(getTaskContinuationContext(params.taskId)),
+    ]);
+    return { rulesBlock, memoryBlock, skillsBlock, interruptPrompts, convCtx, continuationCtx };
+  }
+
+  async function startTaskExecutionForAgent(taskId: string, execAgent: any, deptId: string | null, deptName: string): Promise<void> {
     // Dependency blocking: check if all predecessor tasks are completed
     const incompletePredecessors = db
       .prepare(
@@ -157,8 +203,6 @@ export function createExecutionStartTaskTools(deps: CreateExecutionStartTaskTool
     const provider = execAgent.cli_provider || "claude";
     if (!["claude", "codex", "gemini", "opencode", "copilot", "antigravity", "api", "ollama"].includes(provider)) return;
     const executionSession = ensureTaskExecutionSession(taskId, execAgent.id, provider);
-    const pendingInterruptPrompts = loadPendingInterruptPrompts(db as any, taskId, executionSession.sessionId);
-    const interruptPromptBlock = buildInterruptPromptBlock(pendingInterruptPrompts);
 
     const taskData = db.prepare("SELECT * FROM tasks WHERE id = ?").get(taskId) as
       | {
@@ -255,8 +299,21 @@ export function createExecutionStartTaskTools(deps: CreateExecutionStartTaskTool
     const deptPromptRaw = deptId ? getDepartmentPromptForPack(db as any, deptId) : null;
     const deptPrompt = typeof deptPromptRaw === "string" ? deptPromptRaw.trim() : "";
     const deptPromptBlock = deptPrompt ? `[Department Shared Prompt]\n${deptPrompt}` : "";
-    const conversationCtx = getRecentConversationContext(execAgent.id);
-    const continuationCtx = getTaskContinuationContext(taskId);
+
+    const { rulesBlock, memoryBlock, skillsBlock: availableSkillsPromptBlock, interruptPrompts: pendingInterruptPrompts, convCtx: conversationCtx, continuationCtx } = await buildExecutionPayload({
+      taskId,
+      agentId: execAgent.id,
+      projectId: taskData.project_id ?? null,
+      departmentId: deptId ?? taskData.department_id ?? null,
+      workflowPackKey: taskData.workflow_pack_key,
+      provider,
+      sessionId: executionSession.sessionId,
+      taskTitle: taskData.title,
+      taskDescription: taskData.description,
+      taskLang,
+    });
+
+    const interruptPromptBlock = buildInterruptPromptBlock(pendingInterruptPrompts);
     const recentChanges = getRecentChanges(projPath, taskId);
     if (provider === "claude") {
       ensureClaudeMd(projPath, worktreePath);
@@ -291,28 +348,6 @@ export function createExecutionStartTaskTools(deps: CreateExecutionStartTaskTool
         ["上記タスクを丁寧に完了してください。必要に応じて継続要約と会話コンテキストを参照してください。"],
         ["请完整地完成上述任务。可按需参考连续执行摘要与会话上下文。"],
       ),
-      taskLang,
-    );
-    const availableSkillsPromptBlock = buildAvailableSkillsPromptBlock(provider, taskData.project_id);
-    const memoryBlock = buildMemoryPromptBlock(
-      { db },
-      {
-        agentId: execAgent.id,
-        departmentId: deptId ?? taskData.department_id ?? null,
-        workflowPackKey: taskData.workflow_pack_key,
-        projectId: taskData.project_id ?? null,
-        taskTitle: taskData.title,
-        taskDescription: taskData.description,
-      },
-      taskLang,
-    );
-    const rulesBlock = buildRulesPromptBlock(
-      db as any,
-      {
-        projectId: taskData.project_id ?? null,
-        agentId: execAgent.id,
-        departmentId: deptId ?? taskData.department_id ?? null,
-      },
       taskLang,
     );
     const spawnPrompt = buildTaskExecutionPrompt(

@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import type { ChildProcess } from "node:child_process";
+import logger from "../../../lib/logger";
 import type { DecryptedOAuthToken } from "./types.ts";
 import { createStreamTools } from "./stream-tools.ts";
 
@@ -374,7 +375,7 @@ export function createHttpAgentTools(deps: CreateHttpAgentToolsDeps) {
           const msg = normalizeStreamChunk(`[${agent}] Error: ${err.message}\n`);
           safeWrite(msg);
           broadcast("cli_output", { task_id: taskId, stream: "stderr", data: msg });
-          console.error(`[AgentDesk] HTTP agent error (${agent}, task ${taskId}): ${err.message}`);
+          logger.error({ err }, `[AgentDesk] HTTP agent error (${agent}, task ${taskId})`);
         } else {
           const msg = normalizeStreamChunk(`[${agent}] Aborted by user\n`);
           safeWrite(msg);

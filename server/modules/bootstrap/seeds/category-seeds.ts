@@ -1,4 +1,5 @@
 import type { DatabaseSync } from "node:sqlite";
+import logger from "../../../lib/logger.ts";
 
 type DbLike = Pick<DatabaseSync, "exec" | "prepare">;
 
@@ -215,9 +216,9 @@ export function seedCategories(db: DbLike): void {
         cat.deliverable_schema,
       );
     } catch (err) {
-      console.warn(`[AgentDesk] Skip seeding category "${cat.name}":`, err);
+      logger.warn({ err }, `[AgentDesk] Skip seeding category "${cat.name}"`);
     }
   }
 
-  console.log(`[AgentDesk] Seeded ${CATEGORY_SEEDS.length} default categories`);
+  logger.info(`[AgentDesk] Seeded ${CATEGORY_SEEDS.length} default categories`);
 }

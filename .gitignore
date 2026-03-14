@@ -45,7 +45,6 @@ docs/.pdca-*
 # IDE / Editor / AI
 .vscode/
 .idea/
-CLAUDE.md
 *.swp
 *.swo
 *~

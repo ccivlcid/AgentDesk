@@ -29,6 +29,7 @@ interface CreateTaskModalViewProps {
   formFeedback: FormFeedback | null;
   departments: Department[];
   filteredAgents: Agent[];
+  allAgents?: Agent[];
   projectSectionProps: ComponentProps<typeof ProjectSection>;
   overlaysProps: CreateTaskModalOverlaysProps;
   onOpenDraftModal: () => void;
@@ -47,6 +48,12 @@ interface CreateTaskModalViewProps {
   onLoadTemplate?: (templateId: string) => void;
   onSaveTemplate?: (name: string) => Promise<void>;
   onDeleteTemplate?: (templateId: string) => Promise<void>;
+  handoffEnabled?: boolean;
+  handoffAgentId?: string;
+  handoffCondition?: "always" | "on_success" | "on_fail";
+  onHandoffEnabledChange?: (enabled: boolean) => void;
+  onHandoffAgentIdChange?: (agentId: string) => void;
+  onHandoffConditionChange?: (condition: "always" | "on_success" | "on_fail") => void;
 }
 
 const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };
@@ -79,6 +86,7 @@ export default function CreateTaskModalView({
   formFeedback,
   departments,
   filteredAgents,
+  allAgents,
   projectSectionProps,
   overlaysProps,
   onOpenDraftModal,
@@ -94,6 +102,12 @@ export default function CreateTaskModalView({
   onLoadTemplate,
   onSaveTemplate,
   onDeleteTemplate,
+  handoffEnabled = false,
+  handoffAgentId = "",
+  handoffCondition = "on_success",
+  onHandoffEnabledChange,
+  onHandoffAgentIdChange,
+  onHandoffConditionChange,
 }: CreateTaskModalViewProps) {
   const [templateMenuOpen, setTemplateMenuOpen] = useState(false);
   const [saveTemplateName, setSaveTemplateName] = useState("");
@@ -230,7 +244,7 @@ export default function CreateTaskModalView({
                       style={{
                         ...mono, fontSize: "10px", padding: "3px 8px", borderRadius: 0,
                         background: !departmentId ? "var(--th-accent)" : "var(--th-bg-elevated)",
-                        color: !departmentId ? "#000" : "var(--th-text-muted)",
+                        color: !departmentId ? "var(--th-bg-primary)" : "var(--th-text-muted)",
                         border: `1px solid ${!departmentId ? "var(--th-accent)" : "var(--th-border)"}`,
                         cursor: "pointer",
                       }}
@@ -245,7 +259,7 @@ export default function CreateTaskModalView({
                         style={{
                           ...mono, fontSize: "10px", padding: "3px 8px", borderRadius: 0,
                           background: departmentId === d.id ? "var(--th-accent)" : "var(--th-bg-elevated)",
-                          color: departmentId === d.id ? "#000" : "var(--th-text-muted)",
+                          color: departmentId === d.id ? "var(--th-bg-primary)" : "var(--th-text-muted)",
                           border: `1px solid ${departmentId === d.id ? "var(--th-accent)" : "var(--th-border)"}`,
                           cursor: "pointer",
                         }}
@@ -290,9 +304,9 @@ export default function CreateTaskModalView({
                           padding: "5px 0",
                           fontSize: "11px",
                           borderRadius: 0,
-                          background: star <= priority ? "rgba(245,158,11,0.85)" : "var(--th-bg-elevated)",
-                          color: star <= priority ? "#000" : "var(--th-text-muted)",
-                          border: `1px solid ${star <= priority ? "rgba(245,158,11,0.6)" : "var(--th-border)"}`,
+                          background: star <= priority ? "var(--th-accent)" : "var(--th-bg-elevated)",
+                          color: star <= priority ? "var(--th-bg-primary)" : "var(--th-text-muted)",
+                          border: `1px solid ${star <= priority ? "var(--th-accent)" : "var(--th-border)"}`,
                           cursor: "pointer",
                         }}
                       >
@@ -334,7 +348,7 @@ export default function CreateTaskModalView({
                         gap: "8px",
                         padding: "7px 10px",
                         border: "1px solid var(--th-accent)",
-                        background: "rgba(245,158,11,0.06)",
+                        background: "var(--th-active-bg)",
                         fontSize: "12px",
                       }}
                     >
@@ -343,13 +357,13 @@ export default function CreateTaskModalView({
                       <span style={{
                         fontSize: "8px",
                         padding: "1px 4px",
-                        border: "1px solid rgba(245,158,11,0.35)",
-                        background: "rgba(245,158,11,0.08)",
-                        color: "#f59e0b",
+                        border: "1px solid var(--th-accent)",
+                        background: "var(--th-active-bg)",
+                        color: "var(--th-accent)",
                       }}>
                         {({ claude: "Claude Code", codex: "Codex CLI", gemini: "Gemini CLI", opencode: "OpenCode", copilot: "Copilot", antigravity: "Antigravity", cursor: "Cursor", ollama: "Ollama" } as Record<string, string>)[agent.cli_provider] ?? agent.cli_provider}
                       </span>
-                      <span style={{ fontSize: "9px", color: "#22c55e", marginLeft: "auto" }}>✓ {t({ ko: "배정됨", en: "assigned", ja: "割り当て済み", zh: "已分配" })}</span>
+                      <span style={{ fontSize: "9px", color: "var(--th-terminal-success)", marginLeft: "auto" }}>✓ {t({ ko: "배정됨", en: "assigned", ja: "割り当て済み", zh: "已分配" })}</span>
                     </div>
                   );
                 })() : (
@@ -372,6 +386,89 @@ export default function CreateTaskModalView({
                 <ProjectSection {...projectSectionProps} />
               </div>
 
+              {/* 완료 후 핸드오프 */}
+              <div style={{ borderTop: "1px solid var(--th-border)", paddingTop: "12px" }}>
+                <div className="flex items-center justify-between" style={{ marginBottom: handoffEnabled ? "8px" : 0 }}>
+                  <div style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                    {t({ ko: "완료 후 핸드오프", en: "HANDOFF ON COMPLETE", ja: "完了後ハンドオフ", zh: "完成后移交" })}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => onHandoffEnabledChange?.(!handoffEnabled)}
+                    style={{
+                      ...mono,
+                      fontSize: "9px",
+                      padding: "2px 8px",
+                      borderRadius: 0,
+                      border: `1px solid ${handoffEnabled ? "var(--th-accent)" : "var(--th-border)"}`,
+                      background: handoffEnabled ? "var(--th-accent)" : "var(--th-bg-elevated)",
+                      color: handoffEnabled ? "var(--th-bg-primary)" : "var(--th-text-muted)",
+                      cursor: "pointer",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    {handoffEnabled
+                      ? t({ ko: "ON", en: "ON", ja: "ON", zh: "ON" })
+                      : t({ ko: "OFF", en: "OFF", ja: "OFF", zh: "OFF" })}
+                  </button>
+                </div>
+                {handoffEnabled && (
+                  <div className="space-y-2">
+                    <div>
+                      <div style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "4px" }}>
+                        {t({ ko: "핸드오프 에이전트", en: "HANDOFF AGENT", ja: "ハンドオフエージェント", zh: "移交智能体" })}
+                      </div>
+                      <select
+                        value={handoffAgentId}
+                        onChange={(e) => onHandoffAgentIdChange?.(e.target.value)}
+                        style={{ ...inputBase }}
+                      >
+                        <option value="">
+                          {t({ ko: "에이전트 선택...", en: "Select agent...", ja: "エージェントを選択...", zh: "选择智能体..." })}
+                        </option>
+                        {(allAgents ?? filteredAgents).map((agent) => (
+                          <option key={agent.id} value={agent.id}>
+                            {agent.avatar_emoji} {locale === "ko" ? (agent.name_ko || agent.name) : agent.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <div style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "4px" }}>
+                        {t({ ko: "핸드오프 조건", en: "HANDOFF CONDITION", ja: "ハンドオフ条件", zh: "移交条件" })}
+                      </div>
+                      <div className="flex gap-0.5">
+                        {(["always", "on_success", "on_fail"] as const).map((cond) => (
+                          <button
+                            key={cond}
+                            type="button"
+                            onClick={() => onHandoffConditionChange?.(cond)}
+                            style={{
+                              flex: 1,
+                              ...mono,
+                              fontSize: "9px",
+                              padding: "4px 0",
+                              borderRadius: 0,
+                              border: `1px solid ${handoffCondition === cond ? "var(--th-accent)" : "var(--th-border)"}`,
+                              background: handoffCondition === cond ? "var(--th-accent)" : "var(--th-bg-elevated)",
+                              color: handoffCondition === cond ? "var(--th-bg-primary)" : "var(--th-text-muted)",
+                              cursor: "pointer",
+                              textTransform: "uppercase",
+                            }}
+                          >
+                            {cond === "always"
+                              ? t({ ko: "항상", en: "ALWAYS", ja: "常に", zh: "总是" })
+                              : cond === "on_success"
+                                ? t({ ko: "성공시", en: "ON SUCCESS", ja: "成功時", zh: "成功时" })
+                                : t({ ko: "실패시", en: "ON FAIL", ja: "失敗時", zh: "失败时" })}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
             </div>
 
             {/* 피드백 메시지 */}
@@ -383,9 +480,9 @@ export default function CreateTaskModalView({
                     fontSize: "11px",
                     padding: "6px 10px",
                     borderRadius: 0,
-                    border: formFeedback.tone === "error" ? "1px solid rgba(244,63,94,0.5)" : "1px solid rgba(6,182,212,0.4)",
-                    background: formFeedback.tone === "error" ? "rgba(244,63,94,0.08)" : "rgba(6,182,212,0.08)",
-                    color: formFeedback.tone === "error" ? "#fb7185" : "#7dd3fc",
+                    border: formFeedback.tone === "error" ? "1px solid var(--th-danger-border)" : "1px solid var(--th-border-accent)",
+                    background: formFeedback.tone === "error" ? "var(--th-danger-bg)" : "var(--th-active-bg)",
+                    color: formFeedback.tone === "error" ? "var(--th-danger-text)" : "var(--th-text-secondary)",
                   }}
                 >
                   {formFeedback.message}
@@ -420,7 +517,7 @@ export default function CreateTaskModalView({
                         setSavingTemplate(false);
                       }
                     }}
-                    style={{ ...mono, fontSize: "10px", padding: "3px 8px", borderRadius: 0, border: "1px solid rgba(34,197,94,0.4)", background: "rgba(34,197,94,0.08)", color: "#22c55e", cursor: "pointer" }}
+                    style={{ ...mono, fontSize: "10px", padding: "3px 8px", borderRadius: 0, border: "1px solid var(--th-terminal-success)", background: "var(--th-active-bg)", color: "var(--th-terminal-success)", cursor: "pointer" }}
                   >
                     {savingTemplate ? "..." : "SAVE"}
                   </button>
@@ -438,7 +535,7 @@ export default function CreateTaskModalView({
                 <button
                   type="submit"
                   disabled={!title.trim() || submitBusy}
-                  style={{ ...mono, fontSize: "11px", fontWeight: 700, padding: "5px 16px", borderRadius: 0, background: "var(--th-accent)", color: "#000", cursor: "pointer", opacity: !title.trim() || submitBusy ? 0.4 : 1 }}
+                  style={{ ...mono, fontSize: "11px", fontWeight: 700, padding: "5px 16px", borderRadius: 0, background: "var(--th-accent)", color: "var(--th-bg-primary)", cursor: "pointer", opacity: !title.trim() || submitBusy ? 0.4 : 1 }}
                 >
                   {submitBusy
                     ? t({ ko: "생성 중...", en: "CREATING...", ja: "作成中...", zh: "创建中..." })

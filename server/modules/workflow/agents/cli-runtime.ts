@@ -2,6 +2,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { spawn, type ChildProcess } from "node:child_process";
+import logger from "../../lib/logger";
 
 type CliRuntimeDeps = {
   db: any;
@@ -319,7 +320,7 @@ export function createCliRuntimeTools(deps: CliRuntimeDeps) {
       finished = true;
       clearRunTimers();
       detachOutputListeners();
-      console.error(`[AgentDesk] spawn error for ${provider} (task ${taskId}): ${err.message}`);
+      logger.error({ err }, `[AgentDesk] spawn error for ${provider} (task ${taskId})`);
       safeWrite(`\n[AgentDesk] SPAWN ERROR: ${err.message}\n`);
       safeEnd();
       activeProcesses.delete(taskId);

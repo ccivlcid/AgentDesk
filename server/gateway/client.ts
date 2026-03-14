@@ -5,6 +5,7 @@ import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { promisify } from "node:util";
 
+import logger from "../lib/logger.ts";
 import { DEFAULT_DB_PATH } from "../config/runtime.ts";
 import { decryptMessengerTokenForRuntime } from "../messenger/token-crypto.ts";
 import {
@@ -162,7 +163,7 @@ function readPersistedMessengerChannels(): PersistedMessengerChannels | null {
     }
     return parsed as PersistedMessengerChannels;
   } catch (err) {
-    console.warn(`[AgentDesk] failed to load messenger channels settings: ${String(err)}`);
+    logger.warn(`[AgentDesk] failed to load messenger channels settings: ${String(err)}`);
     return null;
   } finally {
     try {
@@ -949,7 +950,7 @@ function queueWake(params: { key: string; text: string; debounceMs?: number }) {
   }
 
   void sendMessengerWake(params.text).catch((err) => {
-    console.warn(`[AgentDesk] messenger notification failed (${params.key}): ${String(err)}`);
+    logger.warn(`[AgentDesk] messenger notification failed (${params.key}): ${String(err)}`);
   });
 }
 
@@ -1051,7 +1052,7 @@ export async function sendDeliverableFiles(
             await sendByChannel(channel, token, session.targetId, `${caption} (${sizeMB} MB)`);
           }
         } catch (err) {
-          console.warn(`[AgentDesk] deliverable file send failed (${channel}/${file.fileName}): ${String(err)}`);
+          logger.warn(`[AgentDesk] deliverable file send failed (${channel}/${file.fileName}): ${String(err)}`);
         }
       }
     }

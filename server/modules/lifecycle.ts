@@ -4,11 +4,14 @@ import type { WebSocket as WsSocket } from "ws";
 import fs from "node:fs";
 import path from "path";
 import { HOST, PKG_VERSION, PORT } from "../config/runtime.ts";
+import logger from "../lib/logger.ts";
 import { notifyTaskStatus } from "../gateway/client.ts";
 import { startDiscordReceiver } from "../messenger/discord-receiver.ts";
 import { startTelegramReceiver } from "../messenger/telegram-receiver.ts";
+import { startSlackReceiver } from "../messenger/slack-receiver.ts";
 import { registerGracefulShutdownHandlers } from "./lifecycle/register-graceful-shutdown.ts";
 import { appendTaskExecutionMetaUpdate, recordTaskExecutionEvent } from "./workflow/core/task-execution-meta.ts";
+import { TASK_STALLED_THRESHOLD_MS, TASK_STALLED_RECOVERY_THRESHOLD_MS } from "../db/runtime.ts";
 
 export function startLifecycle(ctx: RuntimeContext): void {
   const {
@@ -21,6 +24,8 @@ export function startLifecycle(ctx: RuntimeContext): void {
     app,
     appendTaskLog,
     broadcast,
+    handleClientMessage,
+    removeClient,
     clearTaskWorkflowState,
     db,
     dbPath,
@@ -336,7 +341,7 @@ export function startLifecycle(ctx: RuntimeContext): void {
     try {
       reconcileCrossDeptSubtasks();
     } catch (err) {
-      console.error("[AgentDesk] startup reconciliation failed:", err);
+      logger.error({ err }, "[AgentDesk] startup reconciliation failed");
     }
 
     recoverOrphanInProgressTasks("startup");
@@ -365,8 +370,6 @@ export function startLifecycle(ctx: RuntimeContext): void {
   }
 
   const TASK_HEARTBEAT_SWEEP_MS = 30_000;
-  const TASK_STALLED_THRESHOLD_MS = 90_000;
-  const TASK_STALLED_RECOVERY_THRESHOLD_MS = 180_000; // 3 min: auto-recover stalled → inbox
   const TASK_TIMEOUT_DEFAULT_MINUTES = 0; // 0 = disabled
 
   function updateRunningTaskHeartbeats(): void {
@@ -661,7 +664,7 @@ export function startLifecycle(ctx: RuntimeContext): void {
       .map(([name]) => name);
 
     if (authenticated.length === 0) {
-      console.log("[AgentDesk] Auto-assign skipped: no authenticated CLI providers");
+      logger.info("[AgentDesk] Auto-assign skipped: no authenticated CLI providers");
       return;
     }
 
@@ -685,10 +688,10 @@ export function startLifecycle(ctx: RuntimeContext): void {
 
       db.prepare("UPDATE agents SET cli_provider = ? WHERE id = ?").run(fallback, agent.id);
       broadcast("agent_status", db.prepare("SELECT * FROM agents WHERE id = ?").get(agent.id));
-      console.log(`[AgentDesk] Auto-assigned ${agent.name}: ${prov || "none"} → ${fallback}`);
+      logger.info(`[AgentDesk] Auto-assigned ${agent.name}: ${prov || "none"} → ${fallback}`);
       count++;
     }
-    if (count > 0) console.log(`[AgentDesk] Auto-assigned ${count} agent(s)`);
+    if (count > 0) logger.info({ count }, "[AgentDesk] Auto-assigned %d agent(s)");
   }
 
   // Run rotation every 60 seconds, and once on startup after 5s
@@ -705,16 +708,17 @@ export function startLifecycle(ctx: RuntimeContext): void {
   setTimeout(autoAssignAgentProviders, 4_000);
   const telegramReceiver = startTelegramReceiver({ db });
   const discordReceiver = startDiscordReceiver({ db });
+  const slackReceiver = startSlackReceiver({ db });
 
   // ---------------------------------------------------------------------------
   // Start HTTP server + WebSocket
   // ---------------------------------------------------------------------------
   const server = app.listen(PORT, HOST, () => {
-    console.log(`[AgentDesk] v${PKG_VERSION} listening on http://${HOST}:${PORT} (db: ${dbPath})`);
+    logger.info(`[AgentDesk] v${PKG_VERSION} listening on http://${HOST}:${PORT} (db: ${dbPath})`);
     if (isProduction) {
-      console.log(`[AgentDesk] mode: production (serving UI from ${distDir})`);
+      logger.info(`[AgentDesk] mode: production (serving UI from ${distDir})`);
     } else {
-      console.log(`[AgentDesk] mode: development (UI served by Vite on separate port)`);
+      logger.info(`[AgentDesk] mode: development (UI served by Vite on separate port)`);
     }
   });
 
@@ -729,10 +733,10 @@ export function startLifecycle(ctx: RuntimeContext): void {
         // Refresh if expiring within 5 minutes
         if (expiresAtMs < Date.now() + 5 * 60_000) {
           await refreshGoogleToken(cred);
-          console.log("[oauth] Background refresh: Antigravity token renewed");
+          logger.info("[oauth] Background refresh: Antigravity token renewed");
         }
       } catch (err) {
-        console.error("[oauth] Background refresh failed:", err instanceof Error ? err.message : err);
+        logger.error("[oauth] Background refresh failed: %s", err instanceof Error ? err.message : err);
       }
     },
     5 * 60 * 1000,
@@ -753,7 +757,7 @@ export function startLifecycle(ctx: RuntimeContext): void {
       return;
     }
     wsClients.add(ws);
-    console.log(`[AgentDesk] WebSocket client connected (total: ${wsClients.size})`);
+    logger.info({ total: wsClients.size }, "[AgentDesk] WebSocket client connected (total: %d)");
 
     // Send initial state to the newly connected client
     ws.send(
@@ -767,13 +771,17 @@ export function startLifecycle(ctx: RuntimeContext): void {
       }),
     );
 
+    ws.on("message", (data: Buffer | string) => {
+      handleClientMessage(ws, data.toString());
+    });
+
     ws.on("close", () => {
-      wsClients.delete(ws);
-      console.log(`[AgentDesk] WebSocket client disconnected (total: ${wsClients.size})`);
+      removeClient(ws);
+      logger.info({ total: wsClients.size }, "[AgentDesk] WebSocket client disconnected (total: %d)");
     });
 
     ws.on("error", () => {
-      wsClients.delete(ws);
+      removeClient(ws);
     });
   });
 
@@ -791,6 +799,7 @@ export function startLifecycle(ctx: RuntimeContext): void {
     onBeforeClose: () => {
       telegramReceiver.stop();
       discordReceiver.stop();
+      slackReceiver.stop();
     },
   });
 }

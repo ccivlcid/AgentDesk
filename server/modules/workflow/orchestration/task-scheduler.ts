@@ -10,6 +10,7 @@
  */
 
 import { randomUUID } from "node:crypto";
+import logger from "../../lib/logger";
 
 // ---------------------------------------------------------------------------
 // Lightweight cron expression parser
@@ -225,7 +226,7 @@ export function startTaskScheduler(deps: TaskSchedulerDeps): { stop: () => void 
         createTaskFromSchedule(schedule, now);
       } catch (err) {
         // Log error but don't crash the sweep
-        console.error(`[TaskScheduler] Error processing schedule ${schedule.id}:`, err);
+        logger.error({ err }, `[TaskScheduler] Error processing schedule ${schedule.id}`);
       }
     }
   }

@@ -2,6 +2,7 @@ import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import type { RuntimeContext } from "../../../../types/runtime-context.ts";
+import logger from "../../../../lib/logger";
 import { prettyStreamJson } from "../terminal/pretty-stream-json.ts";
 import { createTaskReportHelpers } from "./helpers.ts";
 
@@ -49,7 +50,7 @@ export function registerTaskReportRoutes(ctx: RuntimeContext): void {
       }));
       res.json({ ok: true, reports });
     } catch (err) {
-      console.error("[task-reports]", err);
+      logger.error({ err }, "[task-reports]");
       res.status(500).json({ ok: false, error: "Failed to fetch reports" });
     }
   });
@@ -257,7 +258,7 @@ export function registerTaskReportRoutes(ctx: RuntimeContext): void {
         team_reports: teamReports,
       });
     } catch (err) {
-      console.error("[task-reports/:id]", err);
+      logger.error({ err }, "[task-reports/:id]");
       res.status(500).json({ ok: false, error: "Failed to fetch report detail" });
     }
   });
@@ -301,7 +302,7 @@ export function registerTaskReportRoutes(ctx: RuntimeContext): void {
         updated_at: archive.updated_at,
       });
     } catch (err) {
-      console.error("[task-reports/:id/archive]", err);
+      logger.error({ err }, "[task-reports/:id/archive]");
       res.status(500).json({ ok: false, error: "Failed to archive consolidated report" });
     }
   });
@@ -424,13 +425,13 @@ export function registerTaskReportRoutes(ctx: RuntimeContext): void {
         const mime = mimeMap[ext] || "application/octet-stream";
         try {
           insertStmt.run(taskId, relFile.replace(/\\/g, "/"), path.basename(relFile), size, mime, now);
-          console.log(`[artifact-backfill] Inserted: ${path.basename(relFile)} for task ${taskId.substring(0, 8)}`);
+          logger.info(`[artifact-backfill] Inserted: ${path.basename(relFile)} for task ${taskId.substring(0, 8)}`);
         } catch (insertErr) {
-          console.error(`[artifact-backfill] Insert failed for ${relFile}:`, insertErr);
+          logger.error({ err: insertErr }, `[artifact-backfill] Insert failed for ${relFile}`);
         }
       }
     } catch (err) {
-      console.error(`[artifact-backfill] diff-tree failed for ${commitHash}:`, err);
+      logger.error({ err }, `[artifact-backfill] diff-tree failed for ${commitHash}`);
     }
   }
 
@@ -493,7 +494,7 @@ export function registerTaskReportRoutes(ctx: RuntimeContext): void {
       taskShortMap.set(t.id.substring(0, 8), t.id);
     }
 
-    console.log(`[artifact-backfill] Found ${tasksWithoutArtifacts.length} tasks without artifacts, ${mergeLog.split("\n").length} merge commits`);
+    logger.info(`[artifact-backfill] Found ${tasksWithoutArtifacts.length} tasks without artifacts, ${mergeLog.split("\n").length} merge commits`);
     const insertStmt = db.prepare(
       "INSERT OR IGNORE INTO task_artifacts (task_id, file_path, file_name, size, mime, created_at) VALUES (?, ?, ?, ?, ?, ?)",
     );
@@ -519,19 +520,19 @@ export function registerTaskReportRoutes(ctx: RuntimeContext): void {
 
       // Find child task merge commits (collaboration tasks)
       const childTasks = db.prepare("SELECT id FROM tasks WHERE source_task_id = ?").all(t.id) as Array<{ id: string }>;
-      console.log(`[artifact-backfill] Task ${t.id.slice(0,8)} has ${childTasks.length} children, checking merge commits`);
+      logger.info(`[artifact-backfill] Task ${t.id.slice(0,8)} has ${childTasks.length} children, checking merge commits`);
       for (const child of childTasks) {
         const childShort = child.id.substring(0, 8);
         for (const line of mergeLog.split("\n")) {
           if (!line.includes(childShort)) continue;
           const commitHash = line.split(" ")[0];
-          console.log(`[artifact-backfill] Found merge commit ${commitHash} for child ${childShort}`);
+          logger.info(`[artifact-backfill] Found merge commit ${commitHash} for child ${childShort}`);
           insertFilesFromCommit(commitHash!, projectPath, t.id, ARTIFACT_EXTS, ARTIFACT_MIME, insertStmt, now);
         }
       }
       // Check final count
       const finalCnt = (db.prepare("SELECT COUNT(*) as cnt FROM task_artifacts WHERE task_id = ?").get(t.id) as { cnt: number }).cnt;
-      console.log(`[artifact-backfill] Task ${t.id.slice(0,8)} final artifact count: ${finalCnt}`);
+      logger.info(`[artifact-backfill] Task ${t.id.slice(0,8)} final artifact count: ${finalCnt}`);
     }
   }
 
@@ -589,7 +590,7 @@ export function registerTaskReportRoutes(ctx: RuntimeContext): void {
       }));
       res.json({ ok: true, deliverables });
     } catch (err) {
-      console.error("[deliverables]", err);
+      logger.error({ err }, "[deliverables]");
       res.status(500).json({ ok: false, error: "Failed to fetch deliverables" });
     }
   });
@@ -819,7 +820,7 @@ export function registerTaskReportRoutes(ctx: RuntimeContext): void {
       artifacts.sort((a, b) => b.updatedAt - a.updatedAt);
       res.json({ ok: true, artifacts });
     } catch (err) {
-      console.error("[task-reports/:id/artifacts]", err);
+      logger.error({ err }, "[task-reports/:id/artifacts]");
       res.status(500).json({ ok: false, error: "Failed to list artifacts" });
     }
   });
@@ -862,7 +863,7 @@ export function registerTaskReportRoutes(ctx: RuntimeContext): void {
       const stream = fs.createReadStream(absPath);
       stream.pipe(res);
     } catch (err) {
-      console.error("[task-reports/:id/artifacts/download]", err);
+      logger.error({ err }, "[task-reports/:id/artifacts/download]");
       res.status(500).json({ ok: false, error: "Failed to serve artifact" });
     }
   });

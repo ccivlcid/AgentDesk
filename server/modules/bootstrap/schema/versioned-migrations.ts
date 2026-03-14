@@ -1,4 +1,5 @@
 import type { DatabaseSync } from "node:sqlite";
+import logger from "../../../lib/logger.ts";
 
 type DbLike = Pick<DatabaseSync, "exec" | "prepare">;
 
@@ -103,6 +104,31 @@ export const MIGRATIONS: Migration[] = [
       } catch { /* column may already exist */ }
     },
   },
+  {
+    id: "2026-03-14-005-task-token-cost",
+    up: (db) => {
+      try { db.exec("ALTER TABLE task_execution_events ADD COLUMN tokens_in INTEGER DEFAULT 0"); } catch { /* already exists */ }
+      try { db.exec("ALTER TABLE task_execution_events ADD COLUMN tokens_out INTEGER DEFAULT 0"); } catch { /* already exists */ }
+      try { db.exec("ALTER TABLE task_execution_events ADD COLUMN cost_usd REAL DEFAULT 0"); } catch { /* already exists */ }
+    },
+  },
+  {
+    id: "2026-03-14-007-task-handoff",
+    up: (db) => {
+      try { db.exec("ALTER TABLE tasks ADD COLUMN handoff_to_agent_id TEXT REFERENCES agents(id) ON DELETE SET NULL"); } catch { /* already exists */ }
+      try { db.exec("ALTER TABLE tasks ADD COLUMN handoff_condition TEXT CHECK(handoff_condition IN ('always', 'on_success', 'on_fail'))"); } catch { /* already exists */ }
+    },
+  },
+  {
+    id: "2026-03-14-008-watchdog-index",
+    up: (db) => {
+      // Composite index for watchdog queries: WHERE status='in_progress' AND execution_state IN ('running','stalled')
+      // Replaces full-table scans in markStalledInProgressTasks() and recoverStalledTasks()
+      db.exec(
+        "CREATE INDEX IF NOT EXISTS idx_tasks_status_execstate ON tasks(status, execution_state, last_heartbeat_at DESC)",
+      );
+    },
+  },
 ];
 
 const ENSURE_TABLE_SQL = `
@@ -135,7 +161,7 @@ export function runVersionedMigrations(db: DbLike): void {
       migration.up(db);
       insert.run(migration.id);
       db.exec("COMMIT");
-      console.log(`[db-migration] ✓ ${migration.id}`);
+      logger.info(`[db-migration] ✓ ${migration.id}`);
     } catch (err) {
       db.exec("ROLLBACK");
       throw new Error(`[db-migration] FAILED: ${migration.id} — ${String(err)}`);

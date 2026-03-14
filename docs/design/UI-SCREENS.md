@@ -1,7 +1,7 @@
 # AgentDesk — UI 전체 화면 & 모달 목록
 
-> **최종 업데이트:** 2026-03-13
-> 전체 메뉴 화면 13개 + 오버레이/모달/패널 36개 이상 기록
+> **최종 업데이트:** 2026-03-14 (문서 통합 업데이트)
+> 전체 메뉴 화면 15개 + 오버레이/모달/패널 36개 이상 기록
 > **디자인 참조:** `DESIGN.md` (CSS 변수), `AI-GUIDE.md` (개발 원칙)
 
 ---
@@ -37,7 +37,9 @@ Tasks
 
 Agents
   ├── Agents & Departments   (에이전트 & 부서)
-  └── Heartbeat Monitor      (현황 모니터)
+  ├── Heartbeat Monitor      (현황 모니터)
+  ├── Flow Graph             (플로우 그래프)        ← P2-1 ✅
+  └── Workflow Builder       (워크플로 빌더)        ← P3-2 ✅
 
 Library  [프로젝트 선택 필요]
   ├── Skills                 (스킬)
@@ -52,7 +54,7 @@ System
 
 ---
 
-## 1. 메인 화면 (13개)
+## 1. 메인 화면 (15개)
 
 ### Overview
 
@@ -142,9 +144,55 @@ System
 
 ---
 
+#### 1-8. Flow Graph (플로우 그래프) ✅ P2-1
+**파일:** `src/components/flow-graph/AgentFlowGraph.tsx`
+**view:** `"flow-graph"`
+
+에이전트 간 실시간 관계를 Custom SVG로 시각화.
+
+| 구성 요소 | 역할 |
+|---|---|
+| `useFlowLayout.ts` | 에이전트 배치 알고리즘 (관계 기반 좌표 계산) |
+| `useViewTransform.ts` | SVG 줌·팬 인터랙션 (마우스 휠, 드래그) |
+| `nodes/AgentNode.tsx` | 에이전트 노드 (상태 색상, 태스크 표시) |
+| `nodes/MeetingCluster.tsx` | 미팅 중 에이전트 클러스터 원형 배치 |
+| `edges/FlowEdge.tsx` | 베지어 곡선 엣지 (위임·서브에이전트·크로스부서·미팅) |
+
+기능:
+- 필터: 전체 / 작업중 / 미팅중
+- 줌 컨트롤 (−/+/맞춤) + 더블클릭 fitToView
+- 노드 호버 → 연결된 노드/엣지 하이라이트
+- 노드 클릭 → `onSelectAgent` 에이전트 상세 오픈
+
+---
+
+#### 1-9. Workflow Builder (워크플로 빌더) ✅ P3-2
+**파일:** `src/components/workflow-builder/WorkflowBuilder.tsx`
+**view:** `"workflow-builder"`
+**의존성:** `@xyflow/react` v12
+
+노드 기반 에이전트 파이프라인 시각적 설계 도구.
+
+| 노드 타입 | 파일 | 설명 |
+|---|---|---|
+| `trigger` | `nodes/WbTriggerNode.tsx` | 시작 트리거 (schedule/webhook/messenger/manual) |
+| `agent` | `nodes/WbAgentNode.tsx` | 에이전트 실행 스텝 |
+| `gate` | `nodes/WbGateNode.tsx` | 조건부 분기 (success/failure/timeout 핸들 분리) |
+| `condition` | `nodes/WbConditionNode.tsx` | true/false 조건 체크 |
+
+기능:
+- 좌측 노드 팔레트에서 클릭 → 캔버스에 추가
+- 노드 핸들에서 드래그 → 엣지 연결
+- ReactFlow Background(dots) + Controls(zoom/fit) + MiniMap
+- 워크플로 이름 인라인 편집
+- localStorage 자동 저장/불러오기
+- 초기 예제: "PR Review Pipeline" 프리뷰
+
+---
+
 ### Library (프로젝트 배정 에이전트 범위로 필터링됨)
 
-#### 1-8. Skills (스킬 라이브러리)
+#### 1-10. Skills (스킬 라이브러리)
 **파일:** `src/components/SkillsLibrary.tsx`
 **view:** `"skills"`
 
@@ -153,7 +201,7 @@ System
 
 ---
 
-#### 1-9. Agent Rules (에이전트 룰)
+#### 1-11. Agent Rules (에이전트 룰)
 **파일:** `src/components/AgentRulesLibrary.tsx`
 **view:** `"agent-rules"`
 
@@ -163,7 +211,7 @@ System
 
 ---
 
-#### 1-10. Memory (메모리)
+#### 1-12. Memory (메모리)
 **파일:** `src/components/MemoryLibrary.tsx`
 **view:** `"memory"`
 
@@ -173,7 +221,7 @@ System
 
 ---
 
-#### 1-11. Hooks (훅)
+#### 1-13. Hooks (훅)
 **파일:** `src/components/HooksLibrary.tsx`
 **view:** `"hooks"`
 
@@ -185,7 +233,7 @@ System
 
 ### System
 
-#### 1-12. CLI Usage (CLI 사용량)
+#### 1-14. CLI Usage (CLI 사용량)
 **파일:** `src/components/office-view/CliUsagePanel.tsx`
 **view:** `"cli-usage"`
 
@@ -195,7 +243,7 @@ System
 
 ---
 
-#### 1-13. Settings (설정)
+#### 1-15. Settings (설정)
 **파일:** `src/components/SettingsPanel.tsx`
 **view:** `"settings"`
 
@@ -479,7 +527,7 @@ System
 ```
 App.tsx
   └── AppOverlays.tsx  ← 36개 모달 전부 여기서 렌더링
-  └── AppMainLayout.tsx ← 13개 메인 화면 라우팅
+  └── AppMainLayout.tsx ← 15개 메인 화면 라우팅
 ```
 
 ### Lazy Loading
@@ -520,6 +568,8 @@ src/
 │   ├── scheduled-tasks/             # Scheduled Tasks
 │   ├── deliverables/                # Deliverables + TextPreviewModal
 │   ├── agent-manager/               # AgentFormModal, DepartmentFormModal
+│   ├── flow-graph/                  # AgentFlowGraph + useFlowLayout/useViewTransform + nodes/edges
+│   ├── workflow-builder/            # WorkflowBuilder (@xyflow/react) + nodes/
 │   ├── office-view/                 # HeartbeatPanel, CliUsagePanel
 │   ├── skills-library/              # Skills + 학습 모달
 │   ├── agent-rules/                 # Rules + 학습 모달

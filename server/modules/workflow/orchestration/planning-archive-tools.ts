@@ -1,3 +1,5 @@
+import logger from "../../lib/logger";
+
 type CreatePlanningArchiveToolsDeps = Record<string, any>;
 
 export function createPlanningArchiveTools(deps: CreatePlanningArchiveToolsDeps) {
@@ -317,7 +319,7 @@ export function createPlanningArchiveTools(deps: CreatePlanningArchiveToolsDeps)
       );
       broadcast("task_report", { task: { id: rootTaskId } });
     } catch (err) {
-      console.error("[AgentDesk] planning archive generation error:", err);
+      logger.error({ err }, "[AgentDesk] planning archive generation error");
     }
   }
 

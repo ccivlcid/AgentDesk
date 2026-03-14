@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import type { DatabaseSync, SQLInputValue } from "node:sqlite";
 import { randomUUID } from "node:crypto";
+import logger from "../../../lib/logger.ts";
 
 interface RegisterCategoryRoutesOptions {
   app: Express;
@@ -21,7 +22,7 @@ export function registerCategoryRoutes({ app, db, nowMs }: RegisterCategoryRoute
         .all();
       res.json({ categories: rows });
     } catch (err) {
-      console.error("[AgentDesk] GET /api/categories error:", err);
+      logger.error({ err }, "[AgentDesk] GET /api/categories error:");
       res.status(500).json({ error: "Failed to fetch categories" });
     }
   });
@@ -64,7 +65,7 @@ export function registerCategoryRoutes({ app, db, nowMs }: RegisterCategoryRoute
       const row = db.prepare(`SELECT ${CATEGORY_COLS} FROM categories WHERE id = ?`).get(id);
       res.status(201).json(row);
     } catch (err) {
-      console.error("[AgentDesk] POST /api/categories error:", err);
+      logger.error({ err }, "[AgentDesk] POST /api/categories error:");
       res.status(500).json({ error: "Failed to create category" });
     }
   });
@@ -96,7 +97,7 @@ export function registerCategoryRoutes({ app, db, nowMs }: RegisterCategoryRoute
       const row = db.prepare(`SELECT ${CATEGORY_COLS} FROM categories WHERE id = ?`).get(id);
       res.json(row);
     } catch (err) {
-      console.error("[AgentDesk] PATCH /api/categories/:id error:", err);
+      logger.error({ err }, "[AgentDesk] PATCH /api/categories/:id error:");
       res.status(500).json({ error: "Failed to update category" });
     }
   });
@@ -115,7 +116,7 @@ export function registerCategoryRoutes({ app, db, nowMs }: RegisterCategoryRoute
       db.prepare("DELETE FROM categories WHERE id = ?").run(id);
       res.status(204).end();
     } catch (err) {
-      console.error("[AgentDesk] DELETE /api/categories/:id error:", err);
+      logger.error({ err }, "[AgentDesk] DELETE /api/categories/:id error:");
       res.status(500).json({ error: "Failed to delete category" });
     }
   });
@@ -132,7 +133,7 @@ export function registerCategoryRoutes({ app, db, nowMs }: RegisterCategoryRoute
         .all(id);
       res.json({ versions: rows });
     } catch (err) {
-      console.error("[AgentDesk] GET /api/categories/:id/versions error:", err);
+      logger.error({ err }, "[AgentDesk] GET /api/categories/:id/versions error:");
       res.status(500).json({ error: "Failed to fetch versions" });
     }
   });
@@ -170,7 +171,7 @@ export function registerCategoryRoutes({ app, db, nowMs }: RegisterCategoryRoute
       const row = db.prepare(`SELECT ${CATEGORY_COLS} FROM categories WHERE id = ?`).get(newId);
       res.status(201).json(row);
     } catch (err) {
-      console.error("[AgentDesk] POST /api/categories/:id/clone error:", err);
+      logger.error({ err }, "[AgentDesk] POST /api/categories/:id/clone error:");
       res.status(500).json({ error: "Failed to clone category" });
     }
   });

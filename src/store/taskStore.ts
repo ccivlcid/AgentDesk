@@ -3,20 +3,23 @@ import type { Task, Message, CliStatusMap, SubTask, MeetingPresence, CrossDeptDe
 import type { TaskReportDetail } from "../api";
 import type { TaskPanelTab } from "../app/types";
 
+// SA<T>: setter가 값 직접 전달과 함수형 업데이트(prev => next) 둘 다 받을 수 있게 하는 유니온 타입.
+// React의 useState setter와 동일한 패턴으로, WebSocket 이벤트 핸들러에서
+// 이전 상태 기반 업데이트(예: 배열 append)를 stale closure 없이 처리할 수 있다.
 type SA<T> = T | ((prev: T) => T);
 const apply = <T>(prev: T, a: SA<T>): T => (typeof a === "function" ? (a as (p: T) => T)(prev) : a);
 
 interface TaskStore {
-  tasks: Task[];
-  messages: Message[];
-  cliStatus: CliStatusMap | null;
-  subtasks: SubTask[];
-  taskPanel: { taskId: string; tab: TaskPanelTab } | null;
-  taskReport: TaskReportDetail | null;
-  crossDeptDeliveries: CrossDeptDelivery[];
-  clientOfficeCalls: ClientOfficeCall[];
-  meetingPresence: MeetingPresence[];
-  decisionInboxItems: import("../components/chat/decision-inbox").DecisionInboxItem[];
+  tasks: Task[];                  // 전체 태스크 목록 (칸반 보드, 스케줄, 모니터링에 사용)
+  messages: Message[];            // 채팅 메시지 목록 (에이전트 채팅 패널)
+  cliStatus: CliStatusMap | null; // CLI 프로세스별 실행 상태 맵 (provider → status)
+  subtasks: SubTask[];            // 서브태스크 목록 (태스크 패널 하위 항목)
+  taskPanel: { taskId: string; tab: TaskPanelTab } | null; // 열린 태스크 패널 (터미널/미팅 분)
+  taskReport: TaskReportDetail | null;    // 태스크 완료 보고서 (보고서 뷰어 오버레이)
+  crossDeptDeliveries: CrossDeptDelivery[];  // 부서 간 산출물 전달 목록
+  clientOfficeCalls: ClientOfficeCall[];     // 클라이언트 오피스 통화 기록
+  meetingPresence: MeetingPresence[];        // 미팅 참여자 현황 (실시간 싱크)
+  decisionInboxItems: import("../components/chat/decision-inbox").DecisionInboxItem[]; // 결재 inbox
 
   setTasks: (a: SA<Task[]>) => void;
   setMessages: (a: SA<Message[]>) => void;

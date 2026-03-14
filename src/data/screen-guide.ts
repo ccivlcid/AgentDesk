@@ -114,6 +114,20 @@ const guides: Record<View, ScreenGuideEntry> = {
       { ko: "실행 중인 태스크 클릭 시 터미널로 이동", en: "Click a running task to open terminal", ja: "実行中タスクをクリックでターミナルへ", zh: "点击运行中任务可打开终端" },
     ],
   },
+  "flow-graph": {
+    title: { ko: "플로우 그래프", en: "Flow Graph", ja: "フローグラフ", zh: "流程图" },
+    description: {
+      ko: "에이전트 간 실시간 관계를 SVG 그래프로 시각화합니다. 위임·서브에이전트·크로스부서 전달·미팅 흐름을 한눈에 확인할 수 있습니다.",
+      en: "Visualize real-time relationships between agents as an SVG graph. See delegations, sub-agents, cross-dept deliveries, and meetings at a glance.",
+      ja: "エージェント間のリアルタイム関係をSVGグラフで可視化します。委任・サブエージェント・部署間配送・ミーティングの流れを一覧できます。",
+      zh: "以 SVG 图表可视化代理间的实时关系。一览委派、子代理、跨部门传递与会议流程。",
+    },
+    tips: [
+      { ko: "마우스 휠로 줌, 드래그로 팬, 더블클릭으로 전체 보기", en: "Scroll to zoom, drag to pan, double-click to fit view", ja: "スクロールでズーム、ドラッグでパン、ダブルクリックで全体表示", zh: "滚轮缩放，拖拽平移，双击适应视图" },
+      { ko: "노드 클릭 시 에이전트 상세 패널 열기", en: "Click a node to open agent detail panel", ja: "ノードをクリックでエージェント詳細パネルを開く", zh: "点击节点可打开代理详情面板" },
+      { ko: "필터로 전체·작업중·미팅중 에이전트만 표시", en: "Use filters to show all, working, or in-meeting agents", ja: "フィルターで全体・作業中・会議中のエージェントを表示", zh: "使用过滤器显示全部、工作中或会议中的代理" },
+    ],
+  },
   skills: {
     title: { ko: "스킬", en: "Skills", ja: "スキル", zh: "技能" },
     description: {

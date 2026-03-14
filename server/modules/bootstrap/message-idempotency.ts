@@ -1,5 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
 import type { DatabaseSync } from "node:sqlite";
+import logger from "../../lib/logger.ts";
 
 type DbLike = Pick<DatabaseSync, "prepare">;
 
@@ -159,7 +160,7 @@ export function createMessageIdempotencyTools(deps: MessageIdempotencyDeps) {
       try {
         const result = fn();
         if (attempt > 0) {
-          console.warn(`[AgentDesk] SQLite busy recovered: op=${operation}, retries=${attempt}`);
+          logger.warn(`[AgentDesk] SQLite busy recovered: op=${operation}, retries=${attempt}`);
         }
         return result;
       } catch (err) {
@@ -168,7 +169,7 @@ export function createMessageIdempotencyTools(deps: MessageIdempotencyDeps) {
           throw new StorageBusyError(operation, attempt + 1);
         }
         const waitMs = sqliteBusyBackoffDelayMs(attempt);
-        console.warn(
+        logger.warn(
           `[AgentDesk] SQLite busy: op=${operation}, attempt=${attempt + 1}/${SQLITE_BUSY_RETRY_MAX_ATTEMPTS + 1}, ` +
             `retry_in=${waitMs}ms`,
         );

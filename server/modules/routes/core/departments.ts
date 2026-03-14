@@ -1,3 +1,4 @@
+import logger from "../../../lib/logger.ts";
 import type { RuntimeContext } from "../../../types/runtime-context.ts";
 import { DEFAULT_WORKFLOW_PACK_KEY } from "../../workflow/packs/definitions.ts";
 import { getDepartmentForPack, parseWorkflowPackKeyInput } from "../../workflow/packs/department-scope.ts";
@@ -127,7 +128,7 @@ export function registerDepartmentRoutes(deps: DepartmentRouteDeps): void {
       broadcast("departments_changed", { workflow_pack_key: packKey });
       res.status(201).json({ department: dept });
     } catch (err) {
-      console.error("[departments] POST failed:", err);
+      logger.error({ err }, "[departments] POST failed:");
       res.status(500).json({ error: "internal_error" });
     }
   });
@@ -233,7 +234,7 @@ export function registerDepartmentRoutes(deps: DepartmentRouteDeps): void {
       broadcast("departments_changed", { workflow_pack_key: packKey });
       res.json({ department: dept });
     } catch (err) {
-      console.error("[departments] PATCH failed:", err);
+      logger.error({ err }, "[departments] PATCH failed:");
       res.status(500).json({ error: "internal_error" });
     }
   });
@@ -271,7 +272,7 @@ export function registerDepartmentRoutes(deps: DepartmentRouteDeps): void {
       broadcast("departments_changed", { workflow_pack_key: packKey });
       res.json({ ok: true });
     } catch (err) {
-      console.error("[departments] DELETE failed:", err);
+      logger.error({ err }, "[departments] DELETE failed:");
       res.status(500).json({ error: "internal_error" });
     }
   });
@@ -311,7 +312,7 @@ export function registerDepartmentRoutes(deps: DepartmentRouteDeps): void {
       broadcast("departments_changed", { workflow_pack_key: packKey });
       res.json({ ok: true });
     } catch (err) {
-      console.error("[departments] PATCH reorder failed:", err);
+      logger.error({ err }, "[departments] PATCH reorder failed:");
       res.status(500).json({ error: "internal_error" });
     }
   });

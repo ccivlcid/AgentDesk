@@ -54,19 +54,21 @@ describe("createWsHub", () => {
       send: vi.fn(),
     };
     hub.wsClients.add(wsOpen as unknown as WebSocket);
+    // Subscribe client to task so cli_output subscription filter passes
+    hub.handleClientMessage(wsOpen as unknown as WebSocket, JSON.stringify({ type: "subscribe_task", taskId: "t-1" }));
 
-    hub.broadcast("cli_output", { seq: 1 });
-    hub.broadcast("cli_output", { seq: 2 });
-    hub.broadcast("cli_output", { seq: 3 });
+    hub.broadcast("cli_output", { taskId: "t-1", seq: 1 });
+    hub.broadcast("cli_output", { taskId: "t-1", seq: 2 });
+    hub.broadcast("cli_output", { taskId: "t-1", seq: 3 });
 
     expect(wsOpen.send).toHaveBeenCalledTimes(1);
-    expect(parseMessage(String(wsOpen.send.mock.calls[0]?.[0])).payload).toEqual({ seq: 1 });
+    expect(parseMessage(String(wsOpen.send.mock.calls[0]?.[0])).payload).toEqual({ taskId: "t-1", seq: 1 });
 
     await vi.advanceTimersByTimeAsync(260);
 
     expect(wsOpen.send).toHaveBeenCalledTimes(3);
     const payloads = wsOpen.send.mock.calls.map((call) => parseMessage(String(call[0])).payload);
-    expect(payloads).toEqual([{ seq: 1 }, { seq: 2 }, { seq: 3 }]);
+    expect(payloads).toEqual([{ taskId: "t-1", seq: 1 }, { taskId: "t-1", seq: 2 }, { taskId: "t-1", seq: 3 }]);
   });
 
   it("batch queue cap(60)을 넘으면 가장 오래된 항목부터 버린다", async () => {
@@ -76,10 +78,12 @@ describe("createWsHub", () => {
       send: vi.fn(),
     };
     hub.wsClients.add(wsOpen as unknown as WebSocket);
+    // Subscribe client to task so cli_output subscription filter passes
+    hub.handleClientMessage(wsOpen as unknown as WebSocket, JSON.stringify({ type: "subscribe_task", taskId: "t-cap" }));
 
-    hub.broadcast("cli_output", { seq: 0 });
+    hub.broadcast("cli_output", { taskId: "t-cap", seq: 0 });
     for (let i = 1; i <= 80; i += 1) {
-      hub.broadcast("cli_output", { seq: i });
+      hub.broadcast("cli_output", { taskId: "t-cap", seq: i });
     }
 
     await vi.advanceTimersByTimeAsync(260);

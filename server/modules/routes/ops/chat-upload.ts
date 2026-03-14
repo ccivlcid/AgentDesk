@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import type { Request, Response } from "express";
+import logger from "../../../lib/logger.ts";
 import type { RuntimeContext } from "../../../types/runtime-context.ts";
 
 // ---------------------------------------------------------------------------
@@ -202,7 +203,7 @@ export function registerChatUploadRoutes(ctx: RuntimeContext): void {
       if (err?.message === "payload_too_large") {
         return res.status(413).json({ ok: false, error: "payload_too_large" });
       }
-      console.error("[chat-upload] upload error:", err);
+      logger.error({ err }, "[chat-upload] upload error:");
       return res.status(500).json({ ok: false, error: err?.message || String(err) });
     }
   });
@@ -255,7 +256,7 @@ export function registerChatUploadRoutes(ctx: RuntimeContext): void {
       const stream = fs.createReadStream(resolvedPath);
       stream.pipe(res);
     } catch (err: any) {
-      console.error("[chat-upload] download error:", err);
+      logger.error({ err }, "[chat-upload] download error:");
       return res.status(500).json({ ok: false, error: err?.message || String(err) });
     }
   });

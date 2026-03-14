@@ -3,6 +3,7 @@ import type { Task, MeetingMinute, TaskExecutionEvent, TaskExecutionState, TaskE
 import * as api from "../../api";
 import type { TerminalProgressHint, TerminalProgressHintsPayload, TerminalThinkingBlock } from "../../api";
 import { useI18n } from "../../i18n";
+import { useWebSocket } from "../../hooks/useWebSocket";
 import {
   TERMINAL_TASK_LOG_LIMIT,
   TERMINAL_TAIL_LINES,
@@ -62,6 +63,16 @@ export function useTerminalPanelData({
 
   const { t, locale } = useI18n();
   const tr = useCallback((ko: string, en: string, ja = en, zh = en) => t({ ko, en, ja, zh }), [t]);
+
+  // Subscribe to cli_output for this task when the panel is open.
+  // The server only forwards cli_output to clients that have subscribed to the taskId.
+  const { send: wsSend } = useWebSocket();
+  useEffect(() => {
+    wsSend({ type: "subscribe_task", taskId });
+    return () => {
+      wsSend({ type: "unsubscribe_task", taskId });
+    };
+  }, [taskId, wsSend]);
 
   const taskLogTimeFormatter = useMemo(
     () =>

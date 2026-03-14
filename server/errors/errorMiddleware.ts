@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import { ApiError } from "./ApiError.ts";
+import logger from "../lib/logger.ts";
 
 /**
  * Global Express error-handling middleware.
@@ -26,7 +27,7 @@ export function apiErrorHandler(
   }
 
   const message = err instanceof Error ? err.message : String(err);
-  console.error("[apiErrorHandler] Unhandled error:", message);
+  logger.error("[apiErrorHandler] Unhandled error: %s", message);
 
   res.status(500).json({
     ok: false,

@@ -66,21 +66,47 @@ AgentDesk is a **Project OS**: an operator cockpit for AI agents that run as CLI
 **Requirements:** Node.js ≥ 22, pnpm ≥ 10
 
 ```bash
+git clone <repo-url> && cd AgentDesk
 pnpm install
-cp .env.example .env
-pnpm setup
-pnpm dev
+cp .env.example .env      # 환경변수 설정 (SESSION_SECRET 필수)
+pnpm setup                # DB 초기화 + 마이그레이션
+pnpm dev                  # 프론트(8800) + API 서버(8790) 동시 시작
 ```
 
 Open **http://localhost:8800** in your browser.
 
+### 첫 에이전트 등록 흐름
+
+```
+1. Settings → API Provider 설정 (Claude / OpenAI / Gemini 등)
+2. Agents → 에이전트 생성 + 부서 배정
+3. Projects → 프로젝트 생성 + 에이전트 배정
+4. Library → Rules / Memory / Hooks 설정 (선택)
+5. Tasks → 태스크 생성 → 실행 → 터미널 패널에서 실시간 모니터링
+```
+
+### 주요 명령어
+
 | Command | Description |
 |---------|-------------|
-| `pnpm dev` | Start development server |
-| `pnpm build` | Production build |
-| `pnpm test` | Run tests |
-| `pnpm lint` | Lint |
-| `pnpm setup` | Initial setup |
+| `pnpm dev` | 개발 서버 시작 (프론트 + API) |
+| `pnpm build` | 프로덕션 빌드 (`tsc -b && vite build`) |
+| `pnpm test` | 전체 테스트 실행 (프론트 + 서버) |
+| `pnpm run test:web` | 프론트 테스트만 (Vitest) |
+| `pnpm run test:api` | 서버 테스트만 (Vitest) |
+| `pnpm lint` | 린트 검사 |
+| `pnpm lint:fix` | 린트 자동 수정 |
+| `pnpm setup` | DB 초기화 + 마이그레이션 |
+
+### 트러블슈팅
+
+| 증상 | 원인 | 해결 |
+|------|------|------|
+| 서버 시작 안 됨 | `.env` 누락 | `cp .env.example .env` 후 `SESSION_SECRET` 설정 |
+| DB 오류 | 마이그레이션 미실행 | `pnpm setup` 재실행 |
+| 포트 충돌 | 8790 / 8800 사용 중 | 프로세스 종료 후 재시작 |
+| 타입 오류 | 타입 불일치 | `tsc -b` 로 확인 |
+| 테스트 git 서명 오류 | GPG 서명 설정 | 테스트 내 `runGit(dir, ["config", "commit.gpgsign", "false"])` 추가 |
 
 ---
 

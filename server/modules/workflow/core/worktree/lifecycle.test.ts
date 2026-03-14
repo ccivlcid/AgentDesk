@@ -19,6 +19,7 @@ function initRepo(basePrefix: string): string {
   }
   runGit(dir, ["config", "user.name", "AgentDesk Test"]);
   runGit(dir, ["config", "user.email", "agentdesk-test@example.local"]);
+  runGit(dir, ["config", "commit.gpgsign", "false"]);
   fs.writeFileSync(path.join(dir, "README.md"), "seed\n", "utf8");
   runGit(dir, ["add", "."]);
   runGit(dir, ["commit", "-m", "seed"]);

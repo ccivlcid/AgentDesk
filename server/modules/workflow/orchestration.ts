@@ -7,6 +7,7 @@ import { spawn, execFile, execFileSync } from "node:child_process";
 import { randomUUID, createHash } from "node:crypto";
 import {
   CLI_OUTPUT_DEDUP_WINDOW_MS,
+  MAX_CONCURRENT_AGENTS,
   readNonNegativeIntEnv,
   REVIEW_MAX_MEMO_ITEMS_PER_DEPT,
   REVIEW_MAX_MEMO_ITEMS_PER_ROUND,
@@ -15,6 +16,8 @@ import {
   REVIEW_MAX_REVISION_SIGNALS_PER_ROUND,
   REVIEW_MAX_ROUNDS,
 } from "../../db/runtime.ts";
+import { createAgentQueue } from "./orchestration/agent-queue.ts";
+import logger from "../../lib/logger.ts";
 import {
   BUILTIN_GOOGLE_CLIENT_ID,
   BUILTIN_GOOGLE_CLIENT_SECRET,
@@ -244,6 +247,19 @@ export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrat
   const sendAgentMessage = (...args: any[]) => __ctx.sendAgentMessage(...args);
 
   // ---------------------------------------------------------------------------
+  // Agent execution FIFO queue (P2-3): limits concurrent agent executions
+  // ---------------------------------------------------------------------------
+  const agentQueue = createAgentQueue(MAX_CONCURRENT_AGENTS);
+  logger.info({ maxConcurrent: MAX_CONCURRENT_AGENTS }, "agent queue initialized");
+
+  function broadcastQueueStatus(): void {
+    const running = agentQueue.getRunningCount();
+    const queued = agentQueue.getQueueLength();
+    broadcast("queue_status", { running, queued, maxConcurrent: MAX_CONCURRENT_AGENTS });
+    logger.info({ running, queued }, "agent queue status");
+  }
+
+  // ---------------------------------------------------------------------------
   // Helpers: notifications, progress timers, Client notifications
   // ---------------------------------------------------------------------------
   const { insertNotification } = createNotificationHelper({ db, nowMs, broadcast });
@@ -446,7 +462,7 @@ export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrat
     await planningArchiveTools.archivePlanningConsolidatedReport(rootTaskId);
   }
 
-  const { startTaskExecutionForAgent } = createExecutionStartTaskTools({
+  const { startTaskExecutionForAgent: _rawStartTaskExecutionForAgent } = createExecutionStartTaskTools({
     nowMs,
     db,
     logsDir,
@@ -476,6 +492,15 @@ export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrat
     notifyClient,
     startProgressTimer,
   });
+
+  // Wrap raw function with FIFO queue to enforce MAX_CONCURRENT_AGENTS limit (P2-3)
+  function startTaskExecutionForAgent(taskId: string, execAgent: any, deptId: string | null, deptName: string): void {
+    agentQueue.enqueue(() => {
+      broadcastQueueStatus();
+      _rawStartTaskExecutionForAgent(taskId, execAgent, deptId, deptName);
+    });
+    broadcastQueueStatus();
+  }
 
   const workflowMeetingTools = initializeWorkflowMeetingTools(
     Object.assign(Object.create(__ctx), {
@@ -661,6 +686,8 @@ export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrat
   });
 
   function handleTaskRunComplete(taskId: string, exitCode: number): void {
+    agentQueue.onComplete();
+    broadcastQueueStatus();
     runCompleteHandler.handleTaskRunComplete(taskId, exitCode);
   }
 
@@ -754,6 +781,14 @@ export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrat
     },
   });
 
+  function getQueueStatus(): { running: number; queued: number; maxConcurrent: number } {
+    return {
+      running: agentQueue.getRunningCount(),
+      queued: agentQueue.getQueueLength(),
+      maxConcurrent: MAX_CONCURRENT_AGENTS,
+    };
+  }
+
   return {
     crossDeptNextCallbacks,
     subtaskDelegationCallbacks,
@@ -780,5 +815,6 @@ export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrat
     scheduleNextReviewRound,
     handleTaskRunComplete,
     finishReview,
+    getQueueStatus,
   };
 }

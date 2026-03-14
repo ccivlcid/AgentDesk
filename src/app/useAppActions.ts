@@ -128,6 +128,8 @@ export function useAppActions({
       project_id?: string;
       project_path?: string;
       assigned_agent_id?: string;
+      handoff_to_agent_id?: string | null;
+      handoff_condition?: "always" | "on_success" | "on_fail" | null;
     }) => {
       try {
         const taskId = await api.createTask(input as Parameters<typeof api.createTask>[0]);

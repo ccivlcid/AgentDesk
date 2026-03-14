@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
+import logger from "../../../../lib/logger";
 
 export type WorktreeInfo = {
   worktreePath: string;
@@ -56,7 +57,7 @@ export function createWorktreeLifecycleTools(deps: CreateWorktreeLifecycleToolsD
     // Check git availability first
     if (!isGitAvailable()) {
       appendTaskLog(taskId, "error", `Git is not installed or not in PATH. Cannot create worktree.`);
-      console.error(`[AgentDesk] Git not found in PATH for task ${shortId}`);
+      logger.error(`[AgentDesk] Git not found in PATH for task ${shortId}`);
       return false;
     }
 
@@ -78,7 +79,7 @@ export function createWorktreeLifecycleTools(deps: CreateWorktreeLifecycleToolsD
         `Git bootstrap skipped: '${projectPath}' appears to be an Electron app directory, not a project. ` +
           `Please set a valid project_path on the task or project.`,
       );
-      console.error(`[AgentDesk] Refusing git bootstrap in app dir for task ${shortId}: ${projectPath}`);
+      logger.error(`[AgentDesk] Refusing git bootstrap in app dir for task ${shortId}: ${projectPath}`);
       return false;
     }
 
@@ -169,14 +170,14 @@ export function createWorktreeLifecycleTools(deps: CreateWorktreeLifecycleToolsD
       }
 
       appendTaskLog(taskId, "system", "Git repository initialized automatically for worktree execution.");
-      console.log(`[AgentDesk] Auto-initialized git repo for task ${shortId} at ${projectPath}`);
+      logger.info(`[AgentDesk] Auto-initialized git repo for task ${shortId} at ${projectPath}`);
       return true;
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       const stderr = (err as any)?.stderr ? (err as any).stderr.toString().trim() : "";
       const detail = stderr ? `${msg} | stderr: ${stderr}` : msg;
       appendTaskLog(taskId, "error", `Git bootstrap failed: ${detail}`);
-      console.error(`[AgentDesk] Failed git bootstrap for task ${shortId}: ${detail}`);
+      logger.error(`[AgentDesk] Failed git bootstrap for task ${shortId}: ${detail}`);
       return false;
     }
   }
@@ -190,7 +191,7 @@ export function createWorktreeLifecycleTools(deps: CreateWorktreeLifecycleToolsD
         "system",
         `Git is not installed. Running in direct mode (no worktree isolation) at '${projectPath}'.`,
       );
-      console.log(
+      logger.info(
         `[AgentDesk] Git not available — direct mode for task ${shortId} at ${projectPath} (agent: ${agentName})`,
       );
       taskWorktrees.set(taskId, {
@@ -210,7 +211,7 @@ export function createWorktreeLifecycleTools(deps: CreateWorktreeLifecycleToolsD
         "system",
         `Git worktree bootstrap failed for '${projectPath}'. Falling back to direct mode (no isolation).`,
       );
-      console.log(
+      logger.info(
         `[AgentDesk] Worktree bootstrap failed — direct mode fallback for task ${shortId} at ${projectPath} (agent: ${agentName})`,
       );
       taskWorktrees.set(taskId, {
@@ -295,7 +296,7 @@ export function createWorktreeLifecycleTools(deps: CreateWorktreeLifecycleToolsD
           break;
         } catch (err: unknown) {
           const stderr = (err as any)?.stderr ? (err as any).stderr.toString().trim() : "";
-          console.error(
+          logger.error(
             `[AgentDesk] git worktree add failed for branch ${candidateBranch}: ${err instanceof Error ? err.message : String(err)}${stderr ? ` | stderr: ${stderr}` : ""}`,
           );
           lastError = err;
@@ -326,7 +327,7 @@ export function createWorktreeLifecycleTools(deps: CreateWorktreeLifecycleToolsD
       }
 
       taskWorktrees.set(taskId, { worktreePath: selectedWorktreePath, branchName: selectedBranch, projectPath });
-      console.log(
+      logger.info(
         `[AgentDesk] Created worktree for task ${shortId}: ${selectedWorktreePath} (branch: ${selectedBranch}, agent: ${agentName})`,
       );
       return selectedWorktreePath;
@@ -339,7 +340,7 @@ export function createWorktreeLifecycleTools(deps: CreateWorktreeLifecycleToolsD
         "error",
         `Worktree creation failed: ${detail}. Falling back to direct mode (no isolation).`,
       );
-      console.error(`[AgentDesk] Failed to create worktree for task ${shortId}: ${detail} — falling back to direct mode`);
+      logger.error(`[AgentDesk] Failed to create worktree for task ${shortId}: ${detail} — falling back to direct mode`);
       // Fall back to direct mode instead of blocking execution
       taskWorktrees.set(taskId, {
         worktreePath: projectPath,
@@ -358,7 +359,7 @@ export function createWorktreeLifecycleTools(deps: CreateWorktreeLifecycleToolsD
     // Direct mode: no worktree to clean up
     if (info.directMode) {
       taskWorktrees.delete(taskId);
-      console.log(`[AgentDesk] Direct mode cleanup for task ${taskId.slice(0, 8)} (no-op)`);
+      logger.info(`[AgentDesk] Direct mode cleanup for task ${taskId.slice(0, 8)} (no-op)`);
       return;
     }
 
@@ -371,7 +372,7 @@ export function createWorktreeLifecycleTools(deps: CreateWorktreeLifecycleToolsD
         timeout: 10000,
       });
     } catch {
-      console.warn(`[AgentDesk] git worktree remove failed for ${shortId}, falling back to manual cleanup`);
+      logger.warn(`[AgentDesk] git worktree remove failed for ${shortId}, falling back to manual cleanup`);
       try {
         if (fs.existsSync(info.worktreePath)) {
           fs.rmSync(info.worktreePath, { recursive: true, force: true });
@@ -389,11 +390,11 @@ export function createWorktreeLifecycleTools(deps: CreateWorktreeLifecycleToolsD
         timeout: 5000,
       });
     } catch {
-      console.warn(`[AgentDesk] Failed to delete branch ${info.branchName} — may need manual cleanup`);
+      logger.warn(`[AgentDesk] Failed to delete branch ${info.branchName} — may need manual cleanup`);
     }
 
     taskWorktrees.delete(taskId);
-    console.log(`[AgentDesk] Cleaned up worktree for task ${shortId}`);
+    logger.info(`[AgentDesk] Cleaned up worktree for task ${shortId}`);
   }
 
   return {

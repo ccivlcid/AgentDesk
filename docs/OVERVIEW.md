@@ -208,7 +208,92 @@ UIUX 모니터링               ████████████████
 
 ---
 
-## 7. 작업 목록 (2026-03-13 기준)
+## 7. 코드베이스 현황 스냅샷 (AI 에이전트용)
+
+> 이 섹션은 AI 에이전트가 작업 시작 전 코드 구조를 빠르게 파악하기 위한 참조 지도입니다.
+
+### 7-1. 프론트엔드 진입점
+
+| 파일 | 역할 |
+|---|---|
+| `src/App.tsx` | 루트 컴포넌트. Zustand 스토어 구독, WebSocket 연결, 이벤트 핸들러 정의 |
+| `src/app/AppMainLayout.tsx` | 뷰 라우팅 허브. `view` prop 값에 따라 각 화면 렌더링 |
+| `src/app/AppOverlays.tsx` | 모달·패널 오버레이 렌더링 (AgentDetail, TaskPanel 등) |
+| `src/components/Sidebar.tsx` | 좌측 네비게이션. `NAV_STRUCTURE` 배열로 메뉴 정의 |
+
+### 7-2. 현재 View 타입 전체 목록
+
+```typescript
+// src/app/types.ts
+export type View =
+  | "agents"            // 에이전트 & 부서
+  | "heartbeat"         // 현황 모니터
+  | "dashboard"         // 대시보드
+  | "project-types"     // 프로젝트 유형
+  | "cli-usage"         // CLI 사용량
+  | "tasks"             // 태스크 (기본)
+  | "tasks-board"       // 태스크 보드 (칸반)
+  | "tasks-scheduled"   // 스케줄 태스크
+  | "tasks-deliverables"// 산출물
+  | "skills"            // 스킬 라이브러리
+  | "agent-rules"       // 룰 라이브러리
+  | "memory"            // 메모리 라이브러리
+  | "hooks"             // 훅 라이브러리
+  | "settings";         // 설정
+// ⬆ "flow-graph" 아직 없음 — P2-1 작업 시 추가 필요
+```
+
+### 7-3. Zustand 스토어 구조
+
+| 스토어 파일 | 관리하는 상태 |
+|---|---|
+| `src/store/agentStore.ts` | `agents`, `departments`, `subAgents`, `selectedAgent` 등 |
+| `src/store/taskStore.ts` | `tasks`, `subtasks`, `crossDeptDeliveries`, `meetingPresence` 등 |
+| `src/store/projectStore.ts` | `projects`, `categories`, `currentProjectId`, `projectAgentIds` |
+| `src/store/uiStore.ts` | `view`, `loading`, `settings`, 각종 모달 열림 상태 |
+
+### 7-4. 핵심 타입 파일
+
+| 타입 | 파일 |
+|---|---|
+| `Agent`, `Department`, `Task`, `SubTask` | `src/types/index.ts` |
+| `SubAgent` | `src/types/index.ts` (line ~65) |
+| `MeetingPresence` | `src/types/index.ts` (line ~56) |
+| `CrossDeptDelivery` | `src/types/index.ts` (line ~72) |
+| `View`, `RuntimeOs`, `OAuthCallbackResult` | `src/app/types.ts` |
+
+### 7-5. AppMainLayout 현재 props (P2-1 통합 시 참고)
+
+현재 `AppMainLayout`에 **없는** props (Flow Graph 통합 시 추가 필요):
+- `subAgents: SubAgent[]` — agentStore에서 공급, App.tsx 250번째 줄 참고
+- `crossDeptDeliveries: CrossDeptDelivery[]` — taskStore에서 공급
+- `meetingPresence: MeetingPresence[]` — taskStore에서 공급
+
+현재 있는 관련 props:
+- `agents: Agent[]` ✅
+- `departments: Department[]` ✅
+- `tasks: Task[]` ✅
+- `projectAgentIds?: Set<string>` ✅ (AppMainLayout 내부 상태로 관리, line ~227)
+- `onSelectAgent: (agent: Agent) => void` ✅
+
+### 7-6. Sidebar 확장 포인트 (P2-1)
+
+```typescript
+// src/components/Sidebar.tsx — 수정 위치
+const NAV_STRUCTURE: NavEntry[] = [  // line ~24
+  ...
+  {
+    label: "agents-section",
+    children: [{ view: "agents" }, { view: "heartbeat" }],
+    //          ↑ 여기에 { view: "flow-graph" } 추가
+  },
+];
+const AGENTS_CHILDREN: View[] = ["agents", "heartbeat"]; // line ~51, "flow-graph" 추가
+```
+
+---
+
+## 8. 작업 목록 (2026-03-13 기준)
 
 > 우선순위: **P0** 즉시 | **P1** 1~2주 | **P2** 3~6주 | **P3** 장기
 
@@ -244,18 +329,12 @@ UIUX 모니터링               ████████████████
 
 ### 🟠 P1 — 단기 (1~2주)
 
-#### [P1-1] App.tsx 상태 관리 분리 — Zustand 도입
-- **파일:** `src/App.tsx` (현재 461줄, 46개 useState)
-- **문제:** prop drilling 3단계+, 에이전트 50+ 시 렌더 성능 저하 예상
-- **현황:** `zustand` v5.0.11 이미 설치됨. 스토어 파일만 작성하면 됨.
-- **작업:**
-  1. 스토어 파일 생성:
-     - `src/store/projectStore.ts` — selectedProject, projects, categories
-     - `src/store/agentStore.ts` — agents, departments, activeAgent
-     - `src/store/taskStore.ts` — tasks, taskBoard, scheduledTasks
-     - `src/store/uiStore.ts` — activeView, modals, toasts, commandPalette
-  2. App.tsx에서 해당 useState 제거 → 스토어로 교체
-  3. 하위 컴포넌트에서 props 대신 `useProjectStore()` 등 직접 구독
+#### ~~[P1-1] App.tsx 상태 관리 분리 — Zustand 도입~~ ✅ 완료 (2026-03-14)
+- **파일:** `src/store/agentStore.ts`, `src/store/taskStore.ts`, `src/store/projectStore.ts`, `src/store/uiStore.ts`
+- **완료 내용:**
+  1. 4개 Zustand 스토어 파일 생성 완료
+  2. App.tsx의 46개 useState 전량 제거 → 스토어 구독으로 교체 (349줄로 축소)
+  3. 모든 WebSocket 이벤트, 부트스트랩 데이터, 액션 핸들러가 스토어 setter 사용
 
 #### ~~[P1-2] WorkflowPackKey → category_id 브리지 연결~~ ✅ 완료 (2026-03-14)
 - **파일:** `versioned-migrations.ts`, `category-seeds.ts`, `task-pack-resolver.ts`, `tasks/crud.ts`, `src/types/index.ts`
@@ -289,139 +368,123 @@ UIUX 모니터링               ████████████████
 - **파일:** `server/modules/lifecycle.ts`, `server/security/auth.ts`
 - **현황:** WebSocket `onClose/onError` 핸들러에서 `wsClients.delete()` 구현됨. Rate Limiter 버킷은 5분 주기 sweep으로 stale 항목 자동 정리
 
-#### [P1-6] 구조화 로깅 도입 (pino)
-- **파일:** 전체 서버 (`console.log` 약 200+ 곳)
-- **문제:** console.log 난발, 프로덕션에서 로그 레벨 제어 불가
-- **작업:**
-  1. `pnpm add pino pino-pretty`
-  2. `server/lib/logger.ts` 생성 (레벨: debug/info/warn/error)
-  3. console.log → `logger.info()` 단계적 교체 (핵심 파일부터)
-  4. 프로덕션: JSON 출력 / 개발: pino-pretty 컬러 출력
+#### ~~[P1-6] 구조화 로깅 도입 (pino)~~ ✅
+- **파일:** `server/lib/logger.ts` (신규), 서버 전체 40+ 파일
+- **완료 내용:**
+  1. `pino` + `pino-pretty` 의존성 추가
+  2. `server/lib/logger.ts` — 환경별 로거 (dev: pino-pretty 컬러, prod: JSON, `LOG_LEVEL` 환경변수 지원)
+  3. 서버 전체 `console.log/warn/error` → `logger.info/warn/error` 교체 완료
+  4. 구조화 에러 로깅: `logger.error({ err }, "message")` 패턴으로 스택 트레이스 자동 직렬화
 
 ---
 
 ### 🟡 P2 — 중기 (3~6주)
 
-#### [P2-1] Agent Flow Graph 구현 🎯 핵심 기능
-- **설계 문서:** `docs/strategy/agent-flow-graph-design.md` (완성)
-- **목표:** 에이전트 간 관계·태스크 흐름을 실시간 SVG 그래프로 시각화
-- **작업:**
-  1. 디렉토리 생성: `src/components/flow-graph/`
-  2. `AgentFlowGraph.tsx` — SVG 렌더러, 줌/팬 (transform), 노드 클릭
-  3. `useFlowLayout.ts` — force-directed 레이아웃 알고리즘 (설계서 3.2절 참조)
-  4. `nodes/AgentNode.tsx` — macOS 스타일 노드 (상태별 색상, pulsing dot)
-  5. `nodes/TaskNode.tsx` — 태스크 노드 (진행률 바)
-  6. `edges/FlowEdge.tsx` — 방향성 엣지 (animated stroke for active)
-  7. WebSocket 구독 연결 (기존 `useWebSocket` 재사용)
-  8. 사이드바 메뉴 "Flow" 항목으로 진입점 추가
-- **예상 작업량:** 3~4주
+> **P2-2~P2-8 상세 설계서:** `docs/strategy/p2-tasks-design.md`
+> (파일 경로, 현재 상태, 구현 단계, 코드 예시 포함)
 
-#### [P2-2] 에이전트 실행 비용 추적
-- **관련 화면:** Dashboard, 에이전트 상세
-- **작업:**
-  1. `task_executions` 테이블에 `tokens_in`, `tokens_out`, `cost_usd` 컬럼 추가
-  2. 실행 완료 시 Claude/OpenAI 응답 헤더에서 토큰 수 파싱
-  3. 프론트: 에이전트 상세 화면에 "이번 달 비용" 뱃지 추가
-  4. Dashboard에 전체 비용 합산 위젯 추가
+#### ~~[P2-1] Agent Flow Graph 구현~~ ✅ 완료 (2026-03-14)
+- **구현 파일:** `src/components/flow-graph/` (AgentFlowGraph, useFlowLayout, AgentNode, MeetingCluster, FlowEdge)
+- **완료 내용:** SVG 실시간 에이전트 관계 시각화, 줌/팬, 노드 클릭, 미팅 클러스터, Sidebar "플로우 그래프 ◎" 메뉴 추가
 
-#### [P2-3] 동시 실행 제한 (FIFO 대기 큐)
-- **파일:** `server/modules/workflow/orchestration.ts`
-- **문제:** 20개+ 에이전트 동시 실행 시 자원 고갈 위험 (큐 없음)
-- **작업:**
-  1. `MAX_CONCURRENT_AGENTS` 환경 변수 추가 (기본값: 10)
-  2. FIFO 대기 큐 구현 (`server/modules/workflow/agent-queue.ts`)
-  3. 큐 대기 중 태스크는 `queued` 상태로 표시
-  4. Dashboard에 큐 길이 표시 위젯
+#### ~~[P2-2] 에이전트 실행 비용 추적~~ ✅ 완료 (2026-03-14)
+- **완료 내용:**
+  1. `task_execution_events` 테이블에 `tokens_in`, `tokens_out`, `cost_usd` 컬럼 추가 (migration `2026-03-14-005`)
+  2. `api-provider-tools.ts` — Anthropic SDK `response.usage` 파싱 후 DB 저장 (`COST_PER_INPUT_MTOK` / `COST_PER_OUTPUT_MTOK` 환경변수)
+  3. `GET /api/agents/:id/cost-summary`, `GET /api/cost-summary` API 추가
+  4. 에이전트 상세 "이번 달 비용" 뱃지 + Dashboard 총 비용 위젯
 
-#### [P2-4] spawn 시 DB 쿼리 배치화
-- **파일:** `server/modules/workflow/orchestration/execution-start-task.ts`
-- **문제:** 태스크 실행 시작마다 DB 6회 개별 조회 (Rules, Memory, Hooks, Skills, Agent, Project)
-- **작업:**
-  1. 단일 JOIN 쿼리로 통합 (또는 Promise.all 병렬화)
-  2. 페이로드 빌드 함수 분리 (`buildExecutionPayload()`)
-  3. 실행 전 preheat: 프로젝트 선택 시점에 미리 조회해 캐싱
+#### ~~[P2-3] 동시 실행 제한 (FIFO 대기 큐)~~ ✅ 완료 (2026-03-14)
+- **완료 내용:**
+  1. `server/modules/workflow/orchestration/agent-queue.ts` 신규 — FIFO 큐 모듈
+  2. `MAX_CONCURRENT_AGENTS` 환경변수 (기본값 10) — `server/db/runtime.ts`
+  3. `orchestration.ts` 통합 — enqueue 래핑 + onComplete 훅
+  4. `GET /api/queue-status` API + 헤더 큐 상태 카운터 (실행 중 N / 대기 M)
 
-#### [P2-5] 에이전트 타임라인 뷰
-- **목표:** 에이전트 상세 화면에 실행 이력을 타임라인 형태로 표시
-- **작업:**
-  1. `task_logs` 에서 타임스탬프 + 이벤트 타입 파싱
-  2. `AgentTimeline.tsx` 컴포넌트 — 수직 타임라인 (시간축, 이벤트 dot)
-  3. 이벤트 종류: task_start, hook_run, memory_save, skill_learn, task_done/fail
-  4. 에이전트 상세 모달 탭에 "Timeline" 탭 추가
+#### ~~[P2-4] spawn 시 DB 쿼리 배치화~~ ✅ 완료 (2026-03-14)
+- **완료 내용:**
+  1. `buildExecutionPayload()` 헬퍼 함수 추출
+  2. 6개 함수(`buildRulesPromptBlock`, `buildMemoryPromptBlock`, `buildAvailableSkillsPromptBlock`, `loadPendingInterruptPrompts`, `getRecentConversationContext`, `getTaskContinuationContext`) `Promise.all()` 병렬화
+  3. `startTaskExecutionForAgent` async 전환
 
-#### [P2-6] 태스크 핸드오프 (에이전트 → 에이전트)
-- **목표:** 한 에이전트가 완료한 태스크의 결과를 다른 에이전트에게 자동 전달
-- **작업:**
-  1. `tasks` 테이블에 `handoff_to_agent_id`, `handoff_condition` 컬럼 추가
-  2. 태스크 완료 시 핸드오프 조건 평가 → 후속 태스크 자동 생성
-  3. UI: 태스크 생성 폼에 "완료 후 핸드오프" 옵션 추가
-  4. Flow Graph에서 핸드오프 엣지 시각화
+#### ~~[P2-5] 에이전트 타임라인 뷰~~ ✅ 완료 (2026-03-14)
+- **완료 내용:**
+  1. `GET /api/agents/:id/timeline` API — `task_execution_events` 기반
+  2. `src/components/agent-detail/AgentTimeline.tsx` — 수직 타임라인, 이벤트 타입별 색상 dot
+  3. AgentDetail "Timeline" 탭 추가
 
-#### [P2-7] 페르소나 시스템 UI 완성
-- **현황:** PersonaCatalog, PersonaCard, PersonaBadge 구현됨 (80%)
-- **작업:**
-  1. 에이전트 상세 모달에 `PersonaDetailPanel.tsx` 추가
-  2. 페르소나 선택 시 "어떤 방식으로 생각하는가" 미리보기 카드 표시
-  3. 페르소나 적용 중인 에이전트에 배지 표시 (에이전트 목록)
+#### ~~[P2-6] 태스크 핸드오프 (에이전트 → 에이전트)~~ ✅ 완료 (2026-03-14)
+- **완료 내용:**
+  1. `tasks` 테이블에 `handoff_to_agent_id`, `handoff_condition` 컬럼 추가 (migration `2026-03-14-007`)
+  2. `run-complete-handler/core.ts` — 완료 시 핸드오프 조건 평가 → 후속 태스크 자동 생성
+  3. POST/PATCH `/api/tasks` 핸드오프 필드 지원
+  4. `CreateTaskModal` — "HANDOFF ON COMPLETE" 섹션 (토글 + 에이전트 선택 + 조건 선택)
 
-#### [P2-8] WebSocket broadcast 최적화
-- **파일:** `server/ws/hub.ts`
-- **문제:** 에이전트 50+ 동시 실행 시 개별 이벤트마다 모든 클라이언트에 broadcast
-- **작업:**
-  1. 100ms debounce 배치화 (현재 즉시 전송)
-  2. 구독 채널 분리: 클라이언트가 관심 있는 에이전트 ID만 구독
-  3. 대용량 stdout 청크 분할 전송 (현재 무제한)
+#### ~~[P2-7] 페르소나 시스템 UI 완성~~ ✅ 완료 (2026-03-14)
+- **완료 내용:**
+  1. `src/components/persona/PersonaDetailPanel.tsx` 신규 — 인물명·키워드·best_for·스타일 설명
+  2. AgentDetailTabContent — 카탈로그/직접편집 모드 전환 + persona_id 업데이트
+  3. AgentManager 에이전트 목록에 PersonaBadge 연동
+
+#### ~~[P2-8] WebSocket broadcast 최적화~~ ✅ 완료 (2026-03-14)
+- **완료 내용:**
+  1. `server/ws/hub.ts` — `cli_output` 4KB 청크 분할 전송
+  2. 태스크 채널 구독 분리 — `subscribe_task` / `unsubscribe_task` 메시지로 클라이언트별 구독 관리
+  3. `src/hooks/useWebSocket.ts` — `send()` 함수 추가
+  4. 터미널 패널 마운트/언마운트 시 자동 구독/해제
 
 ---
 
 ### 🔵 P3 — 장기 (3개월+)
 
-#### [P3-1] "더 큰 IDE" — Split-Pane Layout
-- **설계:** `docs/strategy/bigger-ide-vision.md` Phase 3
-- **작업:**
-  1. `pnpm add allotment` (또는 `react-resizable-panels`)
-  2. IDE처럼 패널 분할 레이아웃: Dashboard + Flow + Tasks + Logs 동시 표시
-  3. 패널 크기 사용자 설정 저장 (localStorage)
-  4. 단축키로 레이아웃 프리셋 전환 (⌘1~5)
+#### ~~[P3-1] "더 큰 IDE" — Split-Pane Layout~~ ✅ 완료 (2026-03-14)
+- **파일:** `src/hooks/useSplitPane.ts` (신규), `src/app/SplitPaneSecondary.tsx` (신규), `src/app/AppMainLayout.tsx`, `src/app/AppHeaderBar.tsx`
+- **완료 내용:**
+  1. 외부 라이브러리 없이 순수 CSS + 마우스 드래그 리사이즈 구현
+  2. 우측 보조 패널: Flow Graph ◎ / Heartbeat ♡ / Dashboard ▦ 탭 전환
+  3. 분할 비율 25~75% 드래그 조정, localStorage 자동 저장
+  4. 헤더 `⊟` 토글 버튼 (데스크톱 전용), `\` 키보드 단축키
+  5. 단축키 가이드에 `\` 항목 추가
 
-#### [P3-2] Visual Workflow Builder
+#### ~~[P3-2] Visual Workflow Builder~~ ✅ 완료 (2026-03-14)
 - **설계:** `docs/strategy/bigger-ide-vision.md` Phase 2
-- **작업:**
-  1. `pnpm add @xyflow/react`
-  2. 노드 기반 워크플로 UI: AgentNode, GateNode, TriggerNode, ConditionNode
-  3. 기존 workflow pack 백엔드와 연결
-  4. 드래그&드롭으로 에이전트 파이프라인 시각적 구성
+- **완료 내용:**
+  1. `pnpm add @xyflow/react` (v12.10.1) 설치
+  2. 노드 기반 워크플로 UI: `WbTriggerNode`, `WbAgentNode`, `WbGateNode`, `WbConditionNode` (4종)
+  3. `src/components/workflow-builder/WorkflowBuilder.tsx` — ReactFlow 캔버스, Background/Controls/MiniMap, 노드 팔레트
+  4. 드래그&드롭으로 에이전트 파이프라인 시각적 구성, 노드 간 엣지 연결
+  5. localStorage 자동 저장/불러오기, 워크플로 이름 편집
+  6. 사이드바 에이전트 섹션에 "workflow-builder" 뷰 추가, `g w` 키보드 단축키 등록
 
-#### [P3-3] Keyboard-First UX 완성
-- **설계:** `docs/strategy/bigger-ide-vision.md` Phase 3 + `docs/design/AI-GUIDE.md` 섹션 8
-- **작업:**
-  1. `g f` → Flow Graph 뷰, `g d` → Dashboard, `g t` → Tasks
-  2. `j/k` → 리스트 위아래 이동, `Enter` → 선택, `Esc` → 뒤로
-  3. `n` → 현재 화면 컨텍스트에 맞는 새 항목 생성
-  4. CommandPalette에 최근 실행 명령 히스토리 추가
+#### ~~[P3-3] Keyboard-First UX 완성~~ ✅ 완료 (2026-03-14)
+- **파일:** `src/app/AppMainLayout.tsx`, `src/components/KeyboardShortcutsGuide.tsx`
+- **완료 내용:**
+  1. `g + 키` vim-style 네비게이션: `g d` → Dashboard, `g t` → Task Board, `g a` → Agents, `g f` → Flow Graph, `g s` → Skills, `g m` → Memory, `g r` → Rules, `g h` → Hooks (1초 타임아웃 포함)
+  2. `n` → 커맨드 팔레트 오픈 (편집 중 제외)
+  3. KeyboardShortcutsGuide에 `g + 키` 섹션 추가 (i18n 4개국어)
 
-#### [P3-4] 테스트 커버리지 확대
-- **현황:** `src/i18n.test.ts`, `src/hooks/useWebSocket.test.ts` 정도만 존재
-- **작업:**
-  1. 핵심 백엔드 모듈 단위 테스트: `hook-executor`, `project-scoped-rules`, `persona-catalog`
-  2. API 통합 테스트 (`supertest`): 주요 엔드포인트 50개
-  3. 프론트 컴포넌트 테스트 (`@testing-library/react`): CommandPalette, AgentFlowGraph
-  4. CI 파이프라인 연동 (GitHub Actions): 머지 전 테스트 자동 실행
+#### ~~[P3-4] 테스트 커버리지 확대~~ ✅ 완료 (2026-03-14)
+- **완료 내용:**
+  1. 서버 logger 임포트 경로 수정: `hub.ts`, `hook-executor.ts`, `task-execution-meta.ts`, `worktree/lifecycle.ts`
+  2. 테스트 하네스 수정: `versioned-migrations.test.ts` makeDb() 누락 테이블 추가, `crud.workflow-pack-filter.test.ts` 누락 컬럼 추가
+  3. `hub.test.ts` cli_output 테스트에 taskId 구독 로직 추가 (subscription-filtered delivery 반영)
+  4. `worktree/lifecycle.test.ts` 임시 git repo에 `commit.gpgsign=false` 설정 (서명 서버 없는 환경 대응)
+  5. **결과: 서버 테스트 40개 파일, 181개 테스트 전부 통과 / 프론트 12개 파일, 43개 테스트 전부 통과**
 
-#### [P3-5] 이상 감지 인덱스 최적화
-- **파일:** `server/modules/lifecycle.ts`
-- **문제:** 현재 60초 주기로 전체 실행 중 태스크 풀스캔
-- **작업:**
-  1. `task_executions(status, started_at)` 복합 인덱스 추가
-  2. 풀스캔 → 인덱스 기반 최신 N개만 조회로 변경
-  3. stalled 감지 임계값 설정 가능하게 (현재 하드코딩 90초)
+#### ~~[P3-5] 이상 감지 인덱스 최적화~~ ✅ 완료 (2026-03-14)
+- **파일:** `server/modules/bootstrap/schema/versioned-migrations.ts`, `server/db/runtime.ts`, `server/modules/lifecycle.ts`
+- **완료 내용:**
+  1. migration `2026-03-14-008-watchdog-index`: `tasks(status, execution_state, last_heartbeat_at DESC)` 복합 인덱스 추가 — watchdog 쿼리 풀스캔 제거
+  2. `server/db/runtime.ts` — `TASK_STALLED_THRESHOLD_MS` / `TASK_STALLED_RECOVERY_THRESHOLD_MS` 환경변수 설정 가능하게 (기본값 90s / 180s, 최솟값 강제)
+  3. `lifecycle.ts` — 하드코딩 상수 → `db/runtime.ts` 임포트로 교체
 
-#### [P3-6] Slack 연동
-- **설계:** `docs/strategy/bigger-ide-vision.md`
-- **작업:**
-  1. `server/modules/messenger/slack-receiver.ts` 신규 구현
-  2. Slack Bot Token, Channel 설정 UI 추가
-  3. 기존 Telegram/Discord 패턴 재사용
+#### ~~[P3-6] Slack 연동~~ ✅ 완료 (2026-03-14)
+- **파일:** `server/messenger/slack-receiver.ts` (신규)
+- **완료 내용:**
+  1. `conversations.history` 폴링 방식 수신기 구현 (Discord 패턴 재사용)
+  2. Bot User OAuth Token(`xoxb-...`) 지원, 채널 ID 기반 라우팅
+  3. `lifecycle.ts` — `startSlackReceiver()` 등록, `onBeforeClose()` 정리
+  4. `GET /api/messenger/receiver/slack` 상태 엔드포인트 추가 (`core.ts`)
 
 ---
 
@@ -434,38 +497,39 @@ UIUX 모니터링               ████████████████
 | ~~P0-3~~ | ~~Rate Limiting~~ | 0.5일 | 🔴 보안 | ✅ 완료 |
 | ~~P0-4~~ | ~~WebSocket 연결 제한~~ | 0.5일 | 🔴 보안 | ✅ 완료 |
 | ~~P0-5~~ | ~~환경 변수 검증~~ | 0.5일 | 🔴 안정성 | ✅ 완료 |
-| **P1-1** | **Zustand 상태 관리** | **4일** | 성능·개발속도 | 🔨 진행 필요 |
+| ~~P1-1~~ | ~~Zustand 상태 관리~~ | 4일 | 성능·개발속도 | ✅ 완료 |
 | ~~P1-2~~ | ~~WorkflowPackKey → category_id 브리지~~ | 3일 | 코드 명확성 | ✅ 완료 |
 | ~~P1-3~~ | ~~메신저 재시도~~ | 1일 | 안정성 | ✅ 완료 |
 | ~~P1-4~~ | ~~DB 마이그레이션 버전~~ | 2일 | 안정성 | ✅ 완료 |
 | ~~P1-5~~ | ~~Map 메모리 누수~~ | 1일 | 안정성 | ✅ 완료 |
-| **P1-6** | **구조화 로깅 (pino)** | **2일** | 운영성 | 🔨 진행 필요 |
-| **P2-1** | **Agent Flow Graph** | **3~4주** | 🎯 핵심 비전 | 🔨 진행 필요 |
-| P2-2 | 실행 비용 추적 | 3일 | 사용성 | ⬜ 미시작 |
-| P2-3 | 동시 실행 큐 | 3일 | 확장성 | ⬜ 미시작 |
-| P2-4 | spawn DB 배치화 | 2일 | 성능 | ⬜ 미시작 |
-| P2-5 | 에이전트 타임라인 | 3일 | 시각화 | ⬜ 미시작 |
-| P2-6 | 태스크 핸드오프 | 4일 | 기능 확장 | ⬜ 미시작 |
-| P2-7 | 페르소나 UI 완성 | 2일 | UI 완성도 | ⬜ 미시작 |
-| P2-8 | WebSocket 최적화 | 2일 | 성능 | ⬜ 미시작 |
-| P3-1 | Split-Pane Layout | 3~4일 | IDE 비전 | ⬜ 미시작 |
-| P3-2 | Visual Workflow Builder | 3~4주 | IDE 비전 | ⬜ 미시작 |
-| P3-3 | Keyboard-First UX | 1주 | UX 완성도 | ⬜ 미시작 |
-| P3-4 | 테스트 커버리지 | 3~4주 | 품질 | ⬜ 미시작 |
-| P3-5 | 이상 감지 최적화 | 1일 | 성능 | ⬜ 미시작 |
-| P3-6 | Slack 연동 | 3일 | 기능 확장 | ⬜ 미시작 |
+| ~~P1-6~~ | ~~구조화 로깅 (pino)~~ | 2일 | 운영성 | ✅ 완료 |
+| ~~P2-1~~ | ~~Agent Flow Graph~~ | 3~4주 | 🎯 핵심 비전 | ✅ 완료 |
+| ~~P2-2~~ | ~~실행 비용 추적~~ | 3일 | 사용성 | ✅ 완료 |
+| ~~P2-3~~ | ~~동시 실행 큐~~ | 3일 | 확장성 | ✅ 완료 |
+| ~~P2-4~~ | ~~spawn DB 배치화~~ | 2일 | 성능 | ✅ 완료 |
+| ~~P2-5~~ | ~~에이전트 타임라인~~ | 3일 | 시각화 | ✅ 완료 |
+| ~~P2-6~~ | ~~태스크 핸드오프~~ | 4일 | 기능 확장 | ✅ 완료 |
+| ~~P2-7~~ | ~~페르소나 UI 완성~~ | 2일 | UI 완성도 | ✅ 완료 |
+| ~~P2-8~~ | ~~WebSocket 최적화~~ | 2일 | 성능 | ✅ 완료 |
+| ~~P3-1~~ | ~~Split-Pane Layout~~ | 3~4일 | IDE 비전 | ✅ 완료 |
+| ~~P3-2~~ | ~~Visual Workflow Builder~~ | 3~4주 | IDE 비전 | ✅ 완료 |
+| ~~P3-3~~ | ~~Keyboard-First UX~~ | 1주 | UX 완성도 | ✅ 완료 |
+| ~~P3-4~~ | ~~테스트 커버리지~~ | 3~4주 | 품질 | ✅ 완료 |
+| ~~P3-5~~ | ~~이상 감지 최적화~~ | 1일 | 성능 | ✅ 완료 |
+| ~~P3-6~~ | ~~Slack 연동~~ | 3일 | 기능 확장 | ✅ 완료 |
 
 
 
 ---
 
-## 8. 문서 지도
+## 9. 문서 지도
 
 | 문서 | 내용 |
 |---|---|
 | [`docs/OVERVIEW.md`](./OVERVIEW.md) | **지금 이 문서** — 전체 개요 |
 | [`docs/specs/api.md`](./specs/api.md) | REST API 전체 명세 |
 | [`docs/architecture/SYSTEM-STRUCTURE-MAP.md`](./architecture/SYSTEM-STRUCTURE-MAP.md) | 시스템 구조 맵 |
+| [`docs/architecture/schema-erd.md`](./architecture/schema-erd.md) | DB 스키마 ER 다이어그램 + 상태 머신 |
 | [`docs/architecture/ARCHITECTURE-AUDIT-2026-Q1.md`](./architecture/ARCHITECTURE-AUDIT-2026-Q1.md) | **종합 아키텍처 + 백엔드 감사** (FE/BE/보안/성능/로드맵) |
 | [`docs/strategy/agent-performance-audit.md`](./strategy/agent-performance-audit.md) | 에이전트 실행 성능 감사 + 로드맵 (Phase 1 완료) |
 | [`docs/strategy/bigger-ide-vision.md`](./strategy/bigger-ide-vision.md) | "더 큰 IDE" 전략 비전 |
@@ -476,7 +540,7 @@ UIUX 모니터링               ████████████████
 
 ---
 
-## 9. 빠른 시작
+## 10. 빠른 시작
 
 ```bash
 pnpm install

@@ -1,3 +1,4 @@
+import logger from "../../../lib/logger.ts";
 import type { DelegationOptions } from "./project-resolution.ts";
 import {
   detectProjectKindChoice,
@@ -71,7 +72,7 @@ export function createDirectChatHandlers(deps: DirectChatDeps) {
       const offlineMessage = buildCliFailureMessage(agent, lang, "offline");
       sendAgentMessage(agent, offlineMessage);
       void replyRuntime.relayReplyToMessenger(options, agent, offlineMessage).catch((err) => {
-        console.warn(`[messenger-reply] failed to relay offline message from ${agent.name}: ${String(err)}`);
+        logger.warn(`[messenger-reply] failed to relay offline message from ${agent.name}: ${String(err)}`);
       });
       return;
     }
@@ -97,7 +98,7 @@ export function createDirectChatHandlers(deps: DirectChatDeps) {
           );
           sendAgentMessage(agent, cancelMsg);
           void replyRuntime.relayReplyToMessenger(relayOptions, agent, cancelMsg).catch((err) => {
-            console.warn(`[messenger-reply] failed to relay pending-cancel message from ${agent.name}: ${String(err)}`);
+            logger.warn(`[messenger-reply] failed to relay pending-cancel message from ${agent.name}: ${String(err)}`);
           });
           return;
         }
@@ -226,7 +227,7 @@ export function createDirectChatHandlers(deps: DirectChatDeps) {
             }
             askKindAgain();
           })().catch((err) => {
-            console.warn(`[project-kind] async inference failed for ${agent.name}: ${String(err)}`);
+            logger.warn(`[project-kind] async inference failed for ${agent.name}: ${String(err)}`);
             askKindAgain();
           });
           return;
@@ -396,7 +397,7 @@ export function createDirectChatHandlers(deps: DirectChatDeps) {
             providedPath,
           );
           if (!binding) {
-            console.warn(
+            logger.warn(
               `[direct-chat] project create failed (see [project-binding] above). path="${providedPath}", name="${pendingBinding.newProjectName ?? ""}"`,
             );
             const askPathFail = pickL(
@@ -498,7 +499,7 @@ export function createDirectChatHandlers(deps: DirectChatDeps) {
         taskMessage = contextualTaskMessage;
       }
     }
-    console.log(
+    logger.info(
       `[scheduleAgentReply] useTaskFlow=${useTaskFlow}, messageType=${messageType}, msg="${ceoMessage.slice(0, 50)}", taskMsg="${taskMessage.slice(0, 50)}"`,
     );
     // 프로젝트 선택 요청: 태스크 실행(코드/업무 맥락)이 있을 때만 수행. 정보성 요청(확인해줘, 알려줘 등)은 direct-chat-intent-utils에서 태스크로 보지 않음.

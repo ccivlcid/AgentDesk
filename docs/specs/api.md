@@ -2,7 +2,7 @@
 
 This document defines a contributor-facing API baseline for AgentDesk.
 It is intentionally compact and focused on frequently used endpoints.
-Current baseline target: `v1.2.4` (local snapshot, 2026-03-12).
+Current baseline target: `v1.2.5` (local snapshot, 2026-03-14).
 
 ## Base
 
@@ -88,6 +88,7 @@ Runtime behavior highlights:
 | GET | `/api/messenger/sessions` | List runtime messenger sessions resolved from persisted settings |
 | GET | `/api/messenger/receiver/telegram` | Telegram webhook/poll receiver status |
 | GET | `/api/messenger/receiver/discord` | Discord polling receiver status |
+| GET | `/api/messenger/receiver/slack` | Slack polling receiver status (Bot Token `xoxb-...`) |
 | POST | `/api/messenger/discord/channels` | Discover accessible Discord text channels by Bot token |
 | POST | `/api/messenger/send` | Send message by `sessionKey` or (`channel` + `targetId`) |
 

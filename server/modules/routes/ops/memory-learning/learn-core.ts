@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
+import logger from "../../../../lib/logger.ts";
 import type { RuntimeContext } from "../../../../types/runtime-context.ts";
 import type { MemoryHistoryProvider, MemoryLearnJob, MemoryLearnProvider, MemoryLearnStatus } from "./types.ts";
 
@@ -182,7 +183,7 @@ export function createMemoryLearnCore(ctx: RuntimeContext) {
     try {
       recordMemoryLearnHistoryState(job, "queued");
     } catch (err) {
-      console.warn(`[memory-learn] failed to record queued history: ${String(err)}`);
+      logger.warn(`[memory-learn] failed to record queued history: ${String(err)}`);
     }
 
     setTimeout(() => {
@@ -192,7 +193,7 @@ export function createMemoryLearnCore(ctx: RuntimeContext) {
       try {
         recordMemoryLearnHistoryState(job, "running", { startedAt: job.startedAt });
       } catch (err) {
-        console.warn(`[memory-learn] failed to record running history: ${String(err)}`);
+        logger.warn(`[memory-learn] failed to record running history: ${String(err)}`);
       }
 
       const fileContent = `# ${memoryTitle}\n<!-- AgentDesk Memory: ${memoryId} | Category: ${category} | Priority: ${priority} -->\n\n${memoryContent}\n`;
@@ -237,7 +238,7 @@ export function createMemoryLearnCore(ctx: RuntimeContext) {
           completedAt: job.completedAt,
         });
       } catch (historyErr) {
-        console.warn(`[memory-learn] failed to record completion history: ${String(historyErr)}`);
+        logger.warn(`[memory-learn] failed to record completion history: ${String(historyErr)}`);
       }
       pruneMemoryLearnJobs();
     }, 0);

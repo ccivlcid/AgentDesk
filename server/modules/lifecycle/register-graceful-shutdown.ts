@@ -1,6 +1,7 @@
 import type { ChildProcess } from "node:child_process";
 import type { DatabaseSync } from "node:sqlite";
 import type { WebSocket as WsSocket, WebSocketServer } from "ws";
+import logger from "../../lib/logger.ts";
 
 interface RegisterGracefulShutdownHandlersOptions {
   activeProcesses: Map<string, ChildProcess>;
@@ -30,7 +31,7 @@ export function registerGracefulShutdownHandlers({
   onBeforeClose,
 }: RegisterGracefulShutdownHandlersOptions): void {
   function gracefulShutdown(signal: string): void {
-    console.log(`\n[AgentDesk] ${signal} received. Shutting down gracefully...`);
+    logger.info(`[AgentDesk] ${signal} received. Shutting down gracefully...`);
 
     try {
       onBeforeClose?.();
@@ -39,7 +40,7 @@ export function registerGracefulShutdownHandlers({
     }
 
     for (const [taskId, child] of activeProcesses) {
-      console.log(`[AgentDesk] Stopping process for task ${taskId} (pid: ${child.pid})`);
+      logger.info(`[AgentDesk] Stopping process for task ${taskId} (pid: ${child.pid})`);
       stopRequestedTasks.add(taskId);
       if (child.pid) {
         killPidTree(child.pid);
@@ -77,13 +78,13 @@ export function registerGracefulShutdownHandlers({
         } catch {
           /* ignore */
         }
-        console.log("[AgentDesk] Shutdown complete.");
+        logger.info("[AgentDesk] Shutdown complete.");
         process.exit(0);
       });
     });
 
     setTimeout(() => {
-      console.error("[AgentDesk] Forced exit after timeout.");
+      logger.error("[AgentDesk] Forced exit after timeout.");
       process.exit(1);
     }, 5000).unref();
   }

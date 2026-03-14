@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import type { ChildProcess } from "node:child_process";
 import { decryptSecret } from "../../../../oauth/helpers.ts";
+import logger from "../../../lib/logger";
 import type { ApiProviderRow } from "./types.ts";
 
 type DbLike = {
@@ -10,13 +11,21 @@ type DbLike = {
   };
 };
 
+type DbWriteLike = {
+  prepare: (sql: string) => {
+    get: (...args: any[]) => unknown;
+    run: (...args: any[]) => unknown;
+  };
+};
+
 type CreateApiProviderToolsDeps = {
-  db: DbLike;
+  db: DbLike & DbWriteLike;
   logsDir: string;
   activeProcesses: Map<string, ChildProcess>;
   broadcast: (event: string, payload: unknown) => void;
   normalizeStreamChunk: (raw: Buffer | string, opts?: { dropCliNoise?: boolean }) => string;
   handleTaskRunComplete: (taskId: string, exitCode: number) => void;
+  nowMs: () => number;
   createSafeLogStreamOps: (logStream: any) => {
     safeWrite: (text: string) => boolean;
     safeEnd: (onDone?: () => void) => void;
@@ -36,6 +45,9 @@ type CreateApiProviderToolsDeps = {
   ) => Promise<void>;
 };
 
+const COST_PER_INPUT_MTOK = parseFloat(process.env["COST_PER_INPUT_MTOK"] ?? "3");
+const COST_PER_OUTPUT_MTOK = parseFloat(process.env["COST_PER_OUTPUT_MTOK"] ?? "15");
+
 export function createApiProviderTools(deps: CreateApiProviderToolsDeps) {
   const {
     db,
@@ -44,6 +56,7 @@ export function createApiProviderTools(deps: CreateApiProviderToolsDeps) {
     broadcast,
     normalizeStreamChunk,
     handleTaskRunComplete,
+    nowMs,
     createSafeLogStreamOps,
     parseSSEStream,
     parseGeminiSSEStream,
@@ -54,9 +67,11 @@ export function createApiProviderTools(deps: CreateApiProviderToolsDeps) {
     signal: AbortSignal,
     safeWrite: (text: string) => boolean,
     taskId?: string,
-  ): Promise<void> {
+  ): Promise<{ inputTokens: number; outputTokens: number }> {
     const decoder = new TextDecoder();
     let buffer = "";
+    let inputTokens = 0;
+    let outputTokens = 0;
 
     const processLine = (trimmed: string) => {
       if (!trimmed || trimmed.startsWith(":")) return;
@@ -72,6 +87,14 @@ export function createApiProviderTools(deps: CreateApiProviderToolsDeps) {
             broadcast("cli_output", { task_id: taskId, stream: "stdout", data: text });
           }
         }
+        // Capture usage from message_start (input tokens) and message_delta (output tokens)
+        if (data.type === "message_start" && data.message?.usage) {
+          inputTokens = data.message.usage.input_tokens ?? 0;
+          outputTokens = data.message.usage.output_tokens ?? 0;
+        }
+        if (data.type === "message_delta" && data.usage) {
+          outputTokens = data.usage.output_tokens ?? outputTokens;
+        }
       } catch {
         /* ignore */
       }
@@ -85,6 +108,8 @@ export function createApiProviderTools(deps: CreateApiProviderToolsDeps) {
       for (const line of lines) processLine(line.trim());
     }
     if (buffer.trim()) processLine(buffer.trim());
+
+    return { inputTokens, outputTokens };
   }
 
   function getApiProviderById(providerId: string): ApiProviderRow | null {
@@ -228,12 +253,28 @@ export function createApiProviderTools(deps: CreateApiProviderToolsDeps) {
       throw new Error(`API provider '${provider.name}' error (${resp.status}): ${text}`);
     }
 
+    let inputTokens = 0;
+    let outputTokens = 0;
+
     if (provider.type === "anthropic") {
-      await parseAnthropicSSEStream(resp.body!, signal, safeWrite, taskId);
+      const usage = await parseAnthropicSSEStream(resp.body!, signal, safeWrite, taskId);
+      inputTokens = usage.inputTokens;
+      outputTokens = usage.outputTokens;
     } else if (provider.type === "google") {
       await parseGeminiSSEStream(resp.body!, signal, safeWrite, taskId);
     } else {
       await parseSSEStream(resp.body!, signal, safeWrite, taskId);
+    }
+
+    if (taskId && (inputTokens > 0 || outputTokens > 0)) {
+      const costUsd = (inputTokens * COST_PER_INPUT_MTOK + outputTokens * COST_PER_OUTPUT_MTOK) / 1_000_000;
+      try {
+        db.prepare(
+          "INSERT INTO task_execution_events (task_id, event_type, tokens_in, tokens_out, cost_usd, created_at) VALUES (?, 'api_completion', ?, ?, ?, ?)",
+        ).run(taskId, inputTokens, outputTokens, costUsd, nowMs());
+      } catch (err) {
+        logger.warn({ err, taskId }, "[api-provider] Failed to record token cost event");
+      }
     }
 
     safeWrite(`\n---\n[api:${provider.type}] Done.\n`);
@@ -287,7 +328,7 @@ export function createApiProviderTools(deps: CreateApiProviderToolsDeps) {
           const msg = normalizeStreamChunk(`[api] Error: ${err.message}\n`);
           safeWrite(msg);
           broadcast("cli_output", { task_id: taskId, stream: "stderr", data: msg });
-          console.error(`[AgentDesk] API provider agent error (task ${taskId}): ${err.message}`);
+          logger.error({ err }, `[AgentDesk] API provider agent error (task ${taskId})`);
         } else {
           const msg = normalizeStreamChunk(`[api] Aborted by user\n`);
           safeWrite(msg);

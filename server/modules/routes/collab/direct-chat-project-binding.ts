@@ -2,6 +2,7 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
+import logger from "../../../lib/logger.ts";
 import type { Lang } from "../../../types/lang.ts";
 import type { DelegationOptions } from "./project-resolution.ts";
 import { detectProjectKindChoice } from "./direct-chat-intent-utils.ts";
@@ -186,7 +187,7 @@ export async function inferProjectKindWithModel(
     });
     return parseProjectKindFromModelOutput(run.text || "");
   } catch (err) {
-    console.warn(`[project-kind] model inference failed for ${agent.name}: ${String(err)}`);
+    logger.warn(`[project-kind] model inference failed for ${agent.name}: ${String(err)}`);
     return null;
   }
 }
@@ -514,12 +515,12 @@ export function createProjectBindingFromNameAndPath(
   const isAbsolute =
     path.isAbsolute(normalizedPath) || isWindowsAbsolutePath(normalizedPath);
   if (!isAbsolute) {
-    console.warn(`${LOG_TAG} create failed: path is not absolute (input="${projectPathInput.slice(0, 80)}", normalized="${normalizedPath.slice(0, 80)}")`);
+    logger.warn(`${LOG_TAG} create failed: path is not absolute (input="${projectPathInput.slice(0, 80)}", normalized="${normalizedPath.slice(0, 80)}")`);
     return null;
   }
   if (!isAllowedProjectCreationPath(normalizedPath)) {
     const allowedRoots = parseAllowedProjectRootsFromEnv();
-    console.warn(
+    logger.warn(
       `${LOG_TAG} create failed: path not under allowed roots (path="${normalizedPath}", allowedRoots=[${allowedRoots.slice(0, 5).join(", ")}${allowedRoots.length > 5 ? " ..." : ""}])`,
     );
     return null;
@@ -541,11 +542,11 @@ export function createProjectBindingFromNameAndPath(
     try {
       fs.mkdirSync(normalizedPath, { recursive: true });
       if (!fs.statSync(normalizedPath).isDirectory()) {
-        console.warn(`${LOG_TAG} create failed: path exists but is not a directory (path="${normalizedPath}")`);
+        logger.warn(`${LOG_TAG} create failed: path exists but is not a directory (path="${normalizedPath}")`);
         return null;
       }
     } catch (err) {
-      console.warn(`${LOG_TAG} create failed: mkdir/stat error (path="${normalizedPath}")`, err);
+      logger.warn({ err }, `${LOG_TAG} create failed: mkdir/stat error (path="${normalizedPath}")`);
       return null;
     }
   }
@@ -565,7 +566,7 @@ export function createProjectBindingFromNameAndPath(
       )
       .run(projectId, projectName, normalizedPath, coreGoal, t, t, t);
   } catch (err) {
-    console.warn(`${LOG_TAG} create failed: DB insert error (path="${normalizedPath}")`, err);
+    logger.warn({ err }, `${LOG_TAG} create failed: DB insert error (path="${normalizedPath}")`);
     return null;
   }
 
