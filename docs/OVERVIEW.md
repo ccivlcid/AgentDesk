@@ -217,24 +217,27 @@ UIUX 모니터링               ████████████████
 | 파일 | 역할 |
 |---|---|
 | `src/App.tsx` | 루트 컴포넌트. Zustand 스토어 구독, WebSocket 연결, 이벤트 핸들러 정의 |
-| `src/app/AppMainLayout.tsx` | Dashboard 렌더링 + 3개 앱 창 오버레이 (Workflow/Library/Settings) |
+| `src/components/desktop/Desktop.tsx` | 바탕화면 루트 (메뉴바 + 아이콘 + 위젯 + Dock + 창 레이어) |
+| `src/components/desktop/widgets/` | 위젯 5종 (AgentsWidget, TasksWidget, AlertsWidget, CliCostWidget, FlowGraphWidget) |
+| `src/components/windows/` | 앱 창 5종 (Workflow, Library, Settings, Chat, AgentManager) |
 | `src/app/AppOverlays.tsx` | 36개 모달·패널 오버레이 렌더링 (AgentDetail, TerminalPanel 등) |
-| `src/components/Header.tsx` | 헤더. 프로젝트 선택 + ⚡📚⚙🔔 아이콘 (사이드바 없음) |
 
-### 7-2. 현재 View / WindowType 타입
+### 7-2. WindowType 타입
 
 ```typescript
-// src/app/types.ts
+// src/app/types.ts — macOS 바탕화면 OS 구조, View enum 없음
 
-// View: Dashboard 단일 화면
-export type View = "dashboard";
-
-// WindowType: 헤더 아이콘으로 여는 앱 창
+// WindowType: Dock 아이콘 또는 데스크톱 아이콘으로 여는 앱 창
 export type WindowType =
-  | "workflow"   // ⚡ Workflow Builder / Scheduled Tasks
-  | "library"    // 📚 Skills / Agent Rules / Memory / Hooks / Deliverables
-  | "settings"   // ⚙ General / API / OAuth / CLI / Gateway / Data / Project Types / Agents
-  | null;        // 창 닫힘
+  | "workflow"       // ⚡ Workflow Builder / Scheduled Tasks
+  | "library"        // 📚 Skills / Agent Rules / Memory / Hooks / Deliverables
+  | "settings"       // ⚙ General / API / OAuth / CLI / Gateway / Data / Project Types / Agents
+  | "chat"           // 💬 Direct / Group / Announcement
+  | "agent-manager"; // 👤 에이전트·부서 관리
+
+// uiStore
+openWindows: Set<WindowType>  // 동시에 여러 창 열기 가능
+widgetLayout: WidgetConfig[]  // 위젯 위치·크기·표시 여부 (localStorage 저장)
 ```
 
 ### 7-3. Zustand 스토어 구조
@@ -244,7 +247,7 @@ export type WindowType =
 | `src/store/agentStore.ts` | `agents`, `departments`, `subAgents`, `selectedAgent` 등 |
 | `src/store/taskStore.ts` | `tasks`, `subtasks`, `crossDeptDeliveries`, `meetingPresence` 등 |
 | `src/store/projectStore.ts` | `projects`, `categories`, `currentProjectId`, `projectAgentIds` |
-| `src/store/uiStore.ts` | `openWindow`, `selectedAgentId`, `openTaskId`, `loading`, `settings`, 각종 모달 열림 상태 |
+| `src/store/uiStore.ts` | `openWindows(Set)`, `widgetLayout`, `desktopIconLayout`, `selectedAgentId`, `openTaskId`, 모달 상태 |
 
 ### 7-4. 핵심 타입 파일
 
@@ -254,7 +257,7 @@ export type WindowType =
 | `SubAgent` | `src/types/index.ts` (line ~65) |
 | `MeetingPresence` | `src/types/index.ts` (line ~56) |
 | `CrossDeptDelivery` | `src/types/index.ts` (line ~72) |
-| `View`, `WindowType`, `RuntimeOs`, `OAuthCallbackResult` | `src/app/types.ts` |
+| `WindowType`, `WidgetConfig`, `RuntimeOs`, `OAuthCallbackResult` | `src/app/types.ts` |
 
 ### 7-5. AppMainLayout 현재 props
 
@@ -267,25 +270,28 @@ export type WindowType =
 - `projectAgentIds?: Set<string>` ✅
 - `onSelectAgent: (agent: Agent) => void` ✅
 
-### 7-6. 앱 내비게이션 구조 (사이드바 없음)
+### 7-6. 앱 내비게이션 구조 — macOS 바탕화면 OS
 
-**헤더 아이콘 3개:**
-- `⚡ Workflow` → WorkflowOverlay (탭: Workflow Builder / Scheduled Tasks)
-- `📚 Library` → LibraryOverlay (탭: Skills / Agent Rules / Memory / Hooks / Deliverables)
-- `⚙ Settings` → SettingsOverlay (탭: General / API / OAuth / CLI / Gateway / Data / Project Types / Agents)
+**데스크톱 아이콘 (클릭 → 창 열림):**
+- `👤 에이전트 설정` → AgentManagerWindow
+- `📁 프로젝트 생성` → ProjectCreateModal
+- `▶ 태스크 실행` → CreateTaskModal
+- `⚡ 워크플로 빌더` → WorkflowWindow (Builder 탭)
+- `📋 라이브러리` → LibraryWindow
+- `💬 채팅` → ChatWindow
 
-**Dashboard 드릴다운 (화면 이동 없이 패널/드로어):**
-- 에이전트 카드 클릭 → AgentDetail 슬라이드 패널 (우측)
-- 태스크 행 클릭 → TerminalPanel 드로어 (하단)
-- Flow Graph 토글 → 대시보드 내 뷰 전환
+**Dock (항상 고정, 클릭 → 앱 창):**
+- `⚡ Workflow` → WorkflowWindow (Workflow Builder / Scheduled Tasks)
+- `📚 Library` → LibraryWindow (Skills / Agent Rules / Memory / Hooks / Deliverables)
+- `⚙ Settings` → SettingsWindow (General / API / OAuth / CLI / Gateway / Data / Project Types / Agents)
+- `💬 Chat` → ChatWindow (Direct / Group / Announcement)
 
-**통합된 기능 (독립 화면 → 상위 요소로 흡수):**
-- `heartbeat` → Dashboard TeamPanel 카드
-- `tasks-board` / `tasks-deliverables` → Dashboard 패널 / Library 탭
-- `agents` → Settings > Agents 탭
-- `project-types` → Settings > Project Types 탭
-- `cli-usage` → Dashboard 위젯 + Settings > CLI 탭
-- `flow-graph` → Dashboard Flow Graph 토글 뷰
+**위젯 (사용자 추가·배치·리사이즈):**
+- `Agents 위젯` → Heartbeat Monitor 대체 (에이전트 클릭 → AgentDetail 패널)
+- `Tasks 위젯` → Task Board 대체 (태스크 클릭 → TerminalPanel 드로어)
+- `Alerts 위젯` → 요주의 항목 (클릭 → DecisionInboxModal)
+- `CLI Cost 위젯` → CLI Usage 대체
+- `Flow Graph 위젯` → Flow Graph 대체
 
 ---
 

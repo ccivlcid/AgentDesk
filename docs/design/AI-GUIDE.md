@@ -8,37 +8,41 @@
 
 ## 0. 작업 시작 전 — 코드베이스 진입점 맵
 
-### UI 구조 개요 (사이드바 없음)
+### UI 구조 개요 — macOS 바탕화면 OS
 
-AgentDesk는 **Dashboard 중심 구조**다. 사이드바가 없다. 화면 이동 대신 창·패널을 연다.
+AgentDesk는 **macOS 바탕화면 은유**로 설계된다. 사이드바가 없다.
 
 ```
-헤더: [프로젝트 선택]  ────────────  [⚡ Workflow][📚 Library][⚙ Settings][🔔]
-메인: Dashboard (항상 열려 있음)
-  └── Flow Graph 토글 뷰 (대시보드 내 전환)
-  └── AgentDetail 슬라이드 패널 (우측, 에이전트 카드 클릭)
-  └── TerminalPanel 드로어 (하단, 태스크 클릭)
-창:  Workflow 오버레이 (⚡ 클릭)  — Workflow Builder / Scheduled Tasks 탭
-창:  Library 오버레이 (📚 클릭)   — Skills / Rules / Memory / Hooks / Deliverables 탭
-창:  Settings 오버레이 (⚙ 클릭)  — General / API / OAuth / CLI / Gateway / Data / Project Types / Agents 탭
+메뉴바:  [AgentDesk] [▾ 프로젝트]          $2.14  🔔  14:32
+바탕화면:
+  [👤 에이전트설정] [📁 프로젝트생성] [▶ 태스크실행] [⚡ 워크플로] [📋 라이브러리] [💬 채팅]
+  ← 데스크톱 아이콘 (클릭 → 해당 창 열림)
+
+  ┌─ Agents 위젯 ─┐  ┌─ Tasks 위젯 ─┐  ← 사용자가 추가/배치/리사이즈
+  └───────────────┘  └──────────────┘
+  [+ 위젯 추가]
+
+Dock:   [⚡ Workflow] [📚 Library] [⚙ Settings] [💬 Chat]
+  ← 항상 고정, 클릭 → 앱 창 열림
 ```
 
-### 새 탭 추가 (Workflow/Library/Settings 창)
+### 새 위젯 추가
 
 | 순서 | 파일 | 수정 내용 |
 |---|---|---|
-| 1 | 컴포넌트 파일 | `src/components/` 하위에 탭 컴포넌트 생성 |
-| 2 | 해당 창 컴포넌트 | 탭 배열에 항목 추가 |
+| 1 | `src/components/desktop/widgets/` | 위젯 컴포넌트 생성 |
+| 2 | `src/components/desktop/WidgetPicker.tsx` | 위젯 목록에 추가 |
+| 3 | `src/store/uiStore.ts` | `widgetLayout` 타입 업데이트 |
 
-### 새 앱 창(오버레이) 추가 (헤더 아이콘 추가)
+### 새 Dock 앱 창 추가
 
 | 순서 | 파일 | 수정 내용 |
 |---|---|---|
 | 1 | `src/app/types.ts` | `WindowType` 유니온에 새 값 추가 |
-| 2 | `src/store/uiStore.ts` | `openWindow` 액션 업데이트 |
-| 3 | `src/components/Header.tsx` | 헤더 아이콘 버튼 추가 |
-| 4 | `src/app/AppMainLayout.tsx` | `{openWindow === "새창" && <컴포넌트 />}` 추가 |
-| 5 | 컴포넌트 파일 | `src/components/` 하위에 생성 |
+| 2 | `src/store/uiStore.ts` | `openWindows` 토글 액션 업데이트 |
+| 3 | `src/components/desktop/Dock.tsx` | 아이콘 추가 |
+| 4 | `src/components/windows/` | 앱 창 컴포넌트 생성 |
+| 5 | `src/components/desktop/Desktop.tsx` | 창 렌더링 블록 추가 |
 
 ### 주요 파일 역할 요약
 
@@ -46,18 +50,23 @@ AgentDesk는 **Dashboard 중심 구조**다. 사이드바가 없다. 화면 이�
 src/
 ├── App.tsx                      ← 루트: 스토어 구독 + WebSocket + 이벤트 핸들러
 ├── app/
-│   ├── types.ts                 ← View: "dashboard" 단일 / WindowType: "workflow"|"library"|"settings"|null
-│   ├── AppMainLayout.tsx        ← Dashboard 렌더 + 3개 창 오버레이
+│   ├── types.ts                 ← WindowType: "workflow"|"library"|"settings"|"chat"|"agent-manager"
 │   ├── AppOverlays.tsx          ← 36개 모달/패널 오버레이
 │   └── useRealtimeSync.ts       ← WebSocket 이벤트 → 스토어 업데이트
 ├── components/
-│   ├── Header.tsx               ← 헤더 (프로젝트 선택 + ⚡📚⚙🔔 아이콘)
-│   └── [컴포넌트들]
+│   ├── desktop/
+│   │   ├── Desktop.tsx          ← 바탕화면 루트
+│   │   ├── MenuBar.tsx          ← 상단 메뉴바
+│   │   ├── DesktopIcon.tsx      ← 데스크톱 아이콘
+│   │   ├── Dock.tsx             ← 하단 Dock
+│   │   ├── Widget.tsx           ← 위젯 컨테이너 (드래그/리사이즈)
+│   │   └── widgets/             ← AgentsWidget, TasksWidget, AlertsWidget, CliCostWidget, FlowGraphWidget
+│   └── windows/                 ← WorkflowWindow, LibraryWindow, SettingsWindow, ChatWindow, AgentManagerWindow
 ├── store/
 │   ├── agentStore.ts            ← agents, departments, subAgents, selectedAgent
 │   ├── taskStore.ts             ← tasks, subtasks, crossDeptDeliveries, meetingPresence
 │   ├── projectStore.ts          ← projects, categories, currentProjectId, projectAgentIds
-│   └── uiStore.ts               ← openWindow, selectedAgentId, openTaskId, 모달 열림 상태
+│   └── uiStore.ts               ← openWindows(Set), widgetLayout, desktopIconLayout, selectedAgentId, openTaskId
 └── types/
     └── index.ts                 ← Agent, Task, SubAgent, MeetingPresence, CrossDeptDelivery 등
 ```
@@ -65,17 +74,24 @@ src/
 ### 앱 내비게이션 구조 현황
 
 ```
-[헤더]
-  ⚡ Workflow → WorkflowOverlay (탭: Workflow Builder / Scheduled Tasks)
-  📚 Library  → LibraryOverlay  (탭: Skills / Agent Rules / Memory / Hooks / Deliverables)
-  ⚙ Settings  → SettingsOverlay (탭: General / API / OAuth / CLI / Gateway / Data / Project Types / Agents)
+[데스크톱 아이콘] 클릭
+  👤 에이전트 설정  → AgentManagerWindow
+  📁 프로젝트 생성  → ProjectCreateModal
+  ▶  태스크 실행   → CreateTaskModal
+  ⚡ 워크플로 빌더  → WorkflowWindow (Builder 탭)
+  📋 라이브러리    → LibraryWindow (Skills 탭)
+  💬 채팅         → ChatWindow
 
-[대시보드 드릴다운 패턴]
-  에이전트 카드 클릭 → AgentDetail 슬라이드 패널 (우측)
-  태스크 행 클릭    → TerminalPanel 드로어 (하단)
-  Flow Graph 토글   → 대시보드 내 뷰 전환 (화면 이동 없음)
-  + 버튼            → CreateTaskModal
-  알림 배너 클릭    → DecisionInboxModal
+[Dock] 클릭
+  ⚡ Workflow → WorkflowWindow (탭: Workflow Builder / Scheduled Tasks)
+  📚 Library  → LibraryWindow  (탭: Skills / Agent Rules / Memory / Hooks / Deliverables)
+  ⚙ Settings  → SettingsWindow (탭: General / API / OAuth / CLI / Gateway / Data / Project Types / Agents)
+  💬 Chat     → ChatWindow     (탭: Direct / Group / Announcement)
+
+[위젯] 드릴다운 (화면 이동 없음)
+  Agents 위젯 에이전트 클릭 → AgentDetail 슬라이드 패널 (우측)
+  Tasks 위젯 태스크 클릭    → TerminalPanel 드로어 (하단)
+  Alerts 위젯 항목 클릭     → DecisionInboxModal
 ```
 
 ---
