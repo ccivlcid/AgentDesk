@@ -1,7 +1,7 @@
 param(
   [string]$AgentsPath = "",
   [int]$Port = 0,
-  [string]$OpenClawConfig = "",
+  [string]$AgentDeskConfig = "",
   [switch]$Start
 )
 
@@ -41,22 +41,22 @@ if (-not (Test-Path ".env")) {
   Write-Host "[AgentDesk] Created .env from .env.example"
 }
 
-$resolvedOpenClaw = ""
-if ([string]::IsNullOrWhiteSpace($OpenClawConfig)) {
-  $defaultOpenClaw = Join-Path $HOME ".openclaw/openclaw.json"
-  if (Test-Path $defaultOpenClaw) {
-    $resolvedOpenClaw = (Resolve-Path $defaultOpenClaw).Path
+$resolvedAgentDeskConfig = ""
+if ([string]::IsNullOrWhiteSpace($AgentDeskConfig)) {
+  $defaultAgentDeskConfig = Join-Path $HOME ".agentdesk/agentdesk.json"
+  if (Test-Path $defaultAgentDeskConfig) {
+    $resolvedAgentDeskConfig = (Resolve-Path $defaultAgentDeskConfig).Path
   }
 } else {
-  $candidate = $OpenClawConfig
+  $candidate = $AgentDeskConfig
   if ($candidate.StartsWith("~")) {
     $candidate = $candidate.Replace("~", $HOME)
   }
   if (Test-Path $candidate) {
-    $resolvedOpenClaw = (Resolve-Path $candidate).Path
+    $resolvedAgentDeskConfig = (Resolve-Path $candidate).Path
   } else {
-    Write-Warning "[AgentDesk] OPENCLAW config not found at $candidate. Keeping path for later."
-    $resolvedOpenClaw = $candidate
+    Write-Warning "[AgentDesk] AgentDesk config not found at $candidate. Keeping path for later."
+    $resolvedAgentDeskConfig = $candidate
   }
 }
 
@@ -66,10 +66,10 @@ if ($Port -gt 0) {
   Remove-Item Env:CLAW_SETUP_PORT -ErrorAction SilentlyContinue
 }
 
-if ($resolvedOpenClaw) {
-  $env:CLAW_SETUP_OPENCLAW = $resolvedOpenClaw.Replace("\", "/")
+if ($resolvedAgentDeskConfig) {
+  $env:AGENTDESK_SETUP_CONFIG = $resolvedAgentDeskConfig.Replace("\", "/")
 } else {
-  Remove-Item Env:CLAW_SETUP_OPENCLAW -ErrorAction SilentlyContinue
+  Remove-Item Env:AGENTDESK_SETUP_CONFIG -ErrorAction SilentlyContinue
 }
 
 $envPatchScript = @'
@@ -121,11 +121,11 @@ if (port) {
   console.log(`[AgentDesk] Set PORT=${port}`);
 }
 
-const openclaw = process.env.CLAW_SETUP_OPENCLAW?.trim();
-if (openclaw) {
-  const normalized = openclaw.replace(/\\/g, "/");
-  upsert("OPENCLAW_CONFIG", `"${normalized}"`);
-  console.log(`[AgentDesk] Set OPENCLAW_CONFIG=${normalized}`);
+const agentdeskConfig = process.env.AGENTDESK_SETUP_CONFIG?.trim();
+if (agentdeskConfig) {
+  const normalized = agentdeskConfig.replace(/\\/g, "/");
+  upsert("AGENTDESK_CONFIG", `"${normalized}"`);
+  console.log(`[AgentDesk] Set AGENTDESK_CONFIG=${normalized}`);
 }
 
 fs.writeFileSync(envPath, content, "utf8");
@@ -133,7 +133,7 @@ fs.writeFileSync(envPath, content, "utf8");
 node -e $envPatchScript
 
 Remove-Item Env:CLAW_SETUP_PORT -ErrorAction SilentlyContinue
-Remove-Item Env:CLAW_SETUP_OPENCLAW -ErrorAction SilentlyContinue
+Remove-Item Env:AGENTDESK_SETUP_CONFIG -ErrorAction SilentlyContinue
 
 $portToUse = $Port
 if ($portToUse -le 0) {

@@ -76,7 +76,7 @@ describe("task report helpers document extraction", () => {
   it("PPT 보고서에서 HTML/PPTX 산출물을 모두 문서 목록에 포함한다", () => {
     const db = setupDb();
     dbs.push(db);
-    const tmpProject = fs.mkdtempSync(path.join(os.tmpdir(), "claw-report-docs-"));
+    const tmpProject = fs.mkdtempSync(path.join(os.tmpdir(), "agentdesk-report-docs-"));
     tempDirs.push(tmpProject);
 
     const reportDir = path.join(tmpProject, "docs", "reports");

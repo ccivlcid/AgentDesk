@@ -225,7 +225,7 @@ AgentDesk
 │   ├── generate-intro-ppt.mjs
 │   ├── migrate-custom-skills-canonical.mjs
 │   ├── openapi-contract.mjs
-│   ├── openclaw-setup.ps1
+│   ├── agentdesk-setup.ps1
 │   ├── preflight-public.sh
 │   ├── prepare-e2e-runtime.mjs
 │   ├── setup.mjs
