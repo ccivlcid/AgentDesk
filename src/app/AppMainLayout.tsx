@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode, lazy, Suspense } from "react";
+import { useSplitPane } from "../hooks/useSplitPane";
+const SplitPaneSecondary = lazy(() => import("./SplitPaneSecondary"));
 import { AnimatePresence, motion } from "framer-motion";
 import NotificationCenter from "../components/NotificationCenter";
 import Sidebar from "../components/Sidebar";
@@ -237,6 +239,8 @@ export default function AppMainLayout({
   const [projectAgentIds, setProjectAgentIds] = useState<Set<string>>(new Set());
   const prevProjectIdRef = useRef<string | null>(null);
   const [queueStatus, setQueueStatus] = useState<{ running: number; queued: number } | null>(null);
+
+  const { enabled: splitEnabled, secondaryView, splitPct, containerRef: splitContainerRef, toggle: toggleSplit, close: closeSplit, setSecondaryView, onDragStart: onSplitDragStart } = useSplitPane();
 
   useEffect(() => {
     return on("queue_status", (payload: unknown) => {
