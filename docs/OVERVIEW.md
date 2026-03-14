@@ -187,8 +187,8 @@ GET /api/agent-rules?project_id=<id>
 하트비트·이상 감지           █████████████████░░░ 85%
 스케줄링                    █████████████████░░░ 85%
 UIUX 모니터링               ████████████████░░░░ 80%
-페르소나 시스템              ████████████████░░░░ 80%  (백엔드 완성, FE 일부 미완)
-시각적 에이전트 그래프       ░░░░░░░░░░░░░░░░░░░░  0%  (설계 완성, 구현 미시작)
+페르소나 시스템              ████████████████████ 100% (완성)
+시각적 에이전트 그래프       ████████████████████ 100% (완성)
 ```
 
 ### 동시 실행 안전 한계
@@ -235,12 +235,13 @@ export type View =
   | "tasks-board"       // 태스크 보드 (칸반)
   | "tasks-scheduled"   // 스케줄 태스크
   | "tasks-deliverables"// 산출물
+  | "flow-graph"        // 에이전트 플로우 그래프 ✅
+  | "workflow-builder"  // 비주얼 워크플로 빌더 ✅
   | "skills"            // 스킬 라이브러리
   | "agent-rules"       // 룰 라이브러리
   | "memory"            // 메모리 라이브러리
   | "hooks"             // 훅 라이브러리
   | "settings";         // 설정
-// ⬆ "flow-graph" 아직 없음 — P2-1 작업 시 추가 필요
 ```
 
 ### 7-3. Zustand 스토어 구조
@@ -262,38 +263,27 @@ export type View =
 | `CrossDeptDelivery` | `src/types/index.ts` (line ~72) |
 | `View`, `RuntimeOs`, `OAuthCallbackResult` | `src/app/types.ts` |
 
-### 7-5. AppMainLayout 현재 props (P2-1 통합 시 참고)
+### 7-5. AppMainLayout 현재 props
 
-현재 `AppMainLayout`에 **없는** props (Flow Graph 통합 시 추가 필요):
-- `subAgents: SubAgent[]` — agentStore에서 공급, App.tsx 250번째 줄 참고
-- `crossDeptDeliveries: CrossDeptDelivery[]` — taskStore에서 공급
-- `meetingPresence: MeetingPresence[]` — taskStore에서 공급
-
-현재 있는 관련 props:
 - `agents: Agent[]` ✅
 - `departments: Department[]` ✅
 - `tasks: Task[]` ✅
-- `projectAgentIds?: Set<string>` ✅ (AppMainLayout 내부 상태로 관리, line ~227)
+- `subAgents: SubAgent[]` ✅
+- `crossDeptDeliveries: CrossDeptDelivery[]` ✅
+- `meetingPresence: MeetingPresence[]` ✅
+- `projectAgentIds?: Set<string>` ✅
 - `onSelectAgent: (agent: Agent) => void` ✅
 
-### 7-6. Sidebar 확장 포인트 (P2-1)
+### 7-6. Sidebar 현재 메뉴 구조
 
-```typescript
-// src/components/Sidebar.tsx — 수정 위치
-const NAV_STRUCTURE: NavEntry[] = [  // line ~24
-  ...
-  {
-    label: "agents-section",
-    children: [{ view: "agents" }, { view: "heartbeat" }],
-    //          ↑ 여기에 { view: "flow-graph" } 추가
-  },
-];
-const AGENTS_CHILDREN: View[] = ["agents", "heartbeat"]; // line ~51, "flow-graph" 추가
-```
+에이전트 섹션: `agents` / `heartbeat` / `flow-graph` / `workflow-builder`
+태스크 섹션: `tasks` / `tasks-board` / `tasks-scheduled` / `tasks-deliverables`
+라이브러리 섹션: `skills` / `agent-rules` / `memory` / `hooks`
+기타: `dashboard` / `project-types` / `cli-usage` / `settings`
 
 ---
 
-## 8. 작업 목록 (2026-03-13 기준)
+## 8. 작업 목록 (2026-03-14 기준)
 
 > 우선순위: **P0** 즉시 | **P1** 1~2주 | **P2** 3~6주 | **P3** 장기
 

@@ -20,6 +20,7 @@ const SettingsPanel     = lazy(() => import("../components/SettingsPanel"));
 const Deliverables      = lazy(() => import("../components/deliverables/Deliverables"));
 const AgentFlowGraph    = lazy(() => import("../components/flow-graph/AgentFlowGraph"));
 const WorkflowBuilder   = lazy(() => import("../components/workflow-builder/WorkflowBuilder"));
+const AgentRepl         = lazy(() => import("../components/AgentRepl"));
 import { I18nProvider, useI18n } from "../i18n";
 import type {
   Agent,
@@ -291,6 +292,7 @@ export default function AppMainLayout({
       m: "memory",
       r: "agent-rules",
       h: "hooks",
+      e: "agent-repl",
     };
     let gPending = false;
     let gTimer: ReturnType<typeof setTimeout> | null = null;
@@ -754,6 +756,21 @@ export default function AppMainLayout({
                       </div>
                     }>
                       <WorkflowBuilder />
+                    </Suspense>
+                  </div>
+                )}
+
+                {view === "agent-repl" && (
+                  <div className="flex-1 min-h-0 flex flex-col" style={{ position: "relative" }}>
+                    <Suspense fallback={
+                      <div className="flex items-center justify-center h-full font-mono text-xs" style={{ color: "var(--th-text-muted)" }}>
+                        loading...
+                      </div>
+                    }>
+                      <AgentRepl
+                        agents={agents}
+                        currentProject={currentProject ?? null}
+                      />
                     </Suspense>
                   </div>
                 )}

@@ -56,6 +56,7 @@ export default function KeyboardShortcutsGuide({ open, onClose }: KeyboardShortc
         { keys: ["g", "m"], desc: t({ ko: "메모리로 이동", en: "Go to Memory", ja: "メモリーへ", zh: "跳转至记忆" }) },
         { keys: ["g", "r"], desc: t({ ko: "룰로 이동", en: "Go to Rules", ja: "ルールへ", zh: "跳转至规则" }) },
         { keys: ["g", "h"], desc: t({ ko: "훅으로 이동", en: "Go to Hooks", ja: "フックへ", zh: "跳转至钩子" }) },
+        { keys: ["g", "e"], desc: t({ ko: "에이전트 REPL로 이동", en: "Go to Agent REPL", ja: "エージェント REPL へ", zh: "跳转至代理 REPL" }) },
       ],
     },
     {

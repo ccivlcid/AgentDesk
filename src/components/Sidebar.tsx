@@ -35,7 +35,7 @@ const NAV_STRUCTURE: NavEntry[] = [
     kind: "section",
     label: { ko: "에이전트", en: "agents", ja: "エージェント", zh: "代理" },
     id: "agents",
-    children: [{ view: "agents" }, { view: "heartbeat" }, { view: "flow-graph" }, { view: "workflow-builder" }],
+    children: [{ view: "agents" }, { view: "heartbeat" }, { view: "flow-graph" }, { view: "workflow-builder" }, { view: "agent-repl" }],
   },
   {
     kind: "section",
@@ -48,7 +48,7 @@ const NAV_STRUCTURE: NavEntry[] = [
   { kind: "item", view: "settings" },
 ];
 
-const AGENTS_CHILDREN: View[] = ["agents", "heartbeat", "flow-graph", "workflow-builder"];
+const AGENTS_CHILDREN: View[] = ["agents", "heartbeat", "flow-graph", "workflow-builder", "agent-repl"];
 const LIBRARY_CHILDREN: View[] = ["skills", "agent-rules", "memory", "hooks"];
 const TASKS_CHILDREN: View[] = ["tasks-board", "tasks-scheduled", "tasks-deliverables"];
 
@@ -79,6 +79,7 @@ export default function Sidebar({
     heartbeat: t({ ko: "현황 모니터", en: "heartbeat", ja: "稼働モニタ", zh: "心跳监控" }),
     "flow-graph": t({ ko: "플로우 그래프", en: "flow graph", ja: "フローグラフ", zh: "流程图" }),
     "workflow-builder": t({ ko: "워크플로 빌더", en: "workflow builder", ja: "ワークフロービルダー", zh: "工作流构建器" }),
+    "agent-repl": t({ ko: "에이전트 REPL", en: "agent repl", ja: "エージェント REPL", zh: "代理 REPL" }),
     skills: t({ ko: "스킬", en: "skills", ja: "スキル", zh: "技能" }),
     "agent-rules": t({ ko: "에이전트 룰", en: "agent rules", ja: "エージェントルール", zh: "代理规则" }),
     memory: t({ ko: "메모리", en: "memory", ja: "メモリ", zh: "记忆" }),
@@ -144,6 +145,7 @@ export default function Sidebar({
              view === "heartbeat" ? "♡" :
              view === "flow-graph" ? "◎" :
              view === "workflow-builder" ? "⬡" :
+             view === "agent-repl" ? ">" :
              view === "skills" ? "✦" :
              view === "agent-rules" ? "◈" :
              view === "memory" ? "◻" :
