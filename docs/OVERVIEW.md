@@ -329,18 +329,12 @@ const AGENTS_CHILDREN: View[] = ["agents", "heartbeat"]; // line ~51, "flow-grap
 
 ### 🟠 P1 — 단기 (1~2주)
 
-#### [P1-1] App.tsx 상태 관리 분리 — Zustand 도입
-- **파일:** `src/App.tsx` (현재 461줄, 46개 useState)
-- **문제:** prop drilling 3단계+, 에이전트 50+ 시 렌더 성능 저하 예상
-- **현황:** `zustand` v5.0.11 이미 설치됨. 스토어 파일만 작성하면 됨.
-- **작업:**
-  1. 스토어 파일 생성:
-     - `src/store/projectStore.ts` — selectedProject, projects, categories
-     - `src/store/agentStore.ts` — agents, departments, activeAgent
-     - `src/store/taskStore.ts` — tasks, taskBoard, scheduledTasks
-     - `src/store/uiStore.ts` — activeView, modals, toasts, commandPalette
-  2. App.tsx에서 해당 useState 제거 → 스토어로 교체
-  3. 하위 컴포넌트에서 props 대신 `useProjectStore()` 등 직접 구독
+#### ~~[P1-1] App.tsx 상태 관리 분리 — Zustand 도입~~ ✅ 완료 (2026-03-14)
+- **파일:** `src/store/agentStore.ts`, `src/store/taskStore.ts`, `src/store/projectStore.ts`, `src/store/uiStore.ts`
+- **완료 내용:**
+  1. 4개 Zustand 스토어 파일 생성 완료
+  2. App.tsx의 46개 useState 전량 제거 → 스토어 구독으로 교체 (349줄로 축소)
+  3. 모든 WebSocket 이벤트, 부트스트랩 데이터, 액션 핸들러가 스토어 setter 사용
 
 #### ~~[P1-2] WorkflowPackKey → category_id 브리지 연결~~ ✅ 완료 (2026-03-14)
 - **파일:** `versioned-migrations.ts`, `category-seeds.ts`, `task-pack-resolver.ts`, `tasks/crud.ts`, `src/types/index.ts`
@@ -459,13 +453,12 @@ const AGENTS_CHILDREN: View[] = ["agents", "heartbeat"]; // line ~51, "flow-grap
   3. 기존 workflow pack 백엔드와 연결
   4. 드래그&드롭으로 에이전트 파이프라인 시각적 구성
 
-#### [P3-3] Keyboard-First UX 완성
-- **설계:** `docs/strategy/bigger-ide-vision.md` Phase 3 + `docs/design/AI-GUIDE.md` 섹션 8
-- **작업:**
-  1. `g f` → Flow Graph 뷰, `g d` → Dashboard, `g t` → Tasks
-  2. `j/k` → 리스트 위아래 이동, `Enter` → 선택, `Esc` → 뒤로
-  3. `n` → 현재 화면 컨텍스트에 맞는 새 항목 생성
-  4. CommandPalette에 최근 실행 명령 히스토리 추가
+#### ~~[P3-3] Keyboard-First UX 완성~~ ✅ 완료 (2026-03-14)
+- **파일:** `src/app/AppMainLayout.tsx`, `src/components/KeyboardShortcutsGuide.tsx`
+- **완료 내용:**
+  1. `g + 키` vim-style 네비게이션: `g d` → Dashboard, `g t` → Task Board, `g a` → Agents, `g f` → Flow Graph, `g s` → Skills, `g m` → Memory, `g r` → Rules, `g h` → Hooks (1초 타임아웃 포함)
+  2. `n` → 커맨드 팔레트 오픈 (편집 중 제외)
+  3. KeyboardShortcutsGuide에 `g + 키` 섹션 추가 (i18n 4개국어)
 
 #### [P3-4] 테스트 커버리지 확대
 - **현황:** `src/i18n.test.ts`, `src/hooks/useWebSocket.test.ts` 정도만 존재
@@ -475,20 +468,20 @@ const AGENTS_CHILDREN: View[] = ["agents", "heartbeat"]; // line ~51, "flow-grap
   3. 프론트 컴포넌트 테스트 (`@testing-library/react`): CommandPalette, AgentFlowGraph
   4. CI 파이프라인 연동 (GitHub Actions): 머지 전 테스트 자동 실행
 
-#### [P3-5] 이상 감지 인덱스 최적화
-- **파일:** `server/modules/lifecycle.ts`
-- **문제:** 현재 60초 주기로 전체 실행 중 태스크 풀스캔
-- **작업:**
-  1. `task_executions(status, started_at)` 복합 인덱스 추가
-  2. 풀스캔 → 인덱스 기반 최신 N개만 조회로 변경
-  3. stalled 감지 임계값 설정 가능하게 (현재 하드코딩 90초)
+#### ~~[P3-5] 이상 감지 인덱스 최적화~~ ✅ 완료 (2026-03-14)
+- **파일:** `server/modules/bootstrap/schema/versioned-migrations.ts`, `server/db/runtime.ts`, `server/modules/lifecycle.ts`
+- **완료 내용:**
+  1. migration `2026-03-14-008-watchdog-index`: `tasks(status, execution_state, last_heartbeat_at DESC)` 복합 인덱스 추가 — watchdog 쿼리 풀스캔 제거
+  2. `server/db/runtime.ts` — `TASK_STALLED_THRESHOLD_MS` / `TASK_STALLED_RECOVERY_THRESHOLD_MS` 환경변수 설정 가능하게 (기본값 90s / 180s, 최솟값 강제)
+  3. `lifecycle.ts` — 하드코딩 상수 → `db/runtime.ts` 임포트로 교체
 
-#### [P3-6] Slack 연동
-- **설계:** `docs/strategy/bigger-ide-vision.md`
-- **작업:**
-  1. `server/modules/messenger/slack-receiver.ts` 신규 구현
-  2. Slack Bot Token, Channel 설정 UI 추가
-  3. 기존 Telegram/Discord 패턴 재사용
+#### ~~[P3-6] Slack 연동~~ ✅ 완료 (2026-03-14)
+- **파일:** `server/messenger/slack-receiver.ts` (신규)
+- **완료 내용:**
+  1. `conversations.history` 폴링 방식 수신기 구현 (Discord 패턴 재사용)
+  2. Bot User OAuth Token(`xoxb-...`) 지원, 채널 ID 기반 라우팅
+  3. `lifecycle.ts` — `startSlackReceiver()` 등록, `onBeforeClose()` 정리
+  4. `GET /api/messenger/receiver/slack` 상태 엔드포인트 추가 (`core.ts`)
 
 ---
 
@@ -501,7 +494,7 @@ const AGENTS_CHILDREN: View[] = ["agents", "heartbeat"]; // line ~51, "flow-grap
 | ~~P0-3~~ | ~~Rate Limiting~~ | 0.5일 | 🔴 보안 | ✅ 완료 |
 | ~~P0-4~~ | ~~WebSocket 연결 제한~~ | 0.5일 | 🔴 보안 | ✅ 완료 |
 | ~~P0-5~~ | ~~환경 변수 검증~~ | 0.5일 | 🔴 안정성 | ✅ 완료 |
-| **P1-1** | **Zustand 상태 관리** | **4일** | 성능·개발속도 | 🔨 진행 필요 |
+| ~~P1-1~~ | ~~Zustand 상태 관리~~ | 4일 | 성능·개발속도 | ✅ 완료 |
 | ~~P1-2~~ | ~~WorkflowPackKey → category_id 브리지~~ | 3일 | 코드 명확성 | ✅ 완료 |
 | ~~P1-3~~ | ~~메신저 재시도~~ | 1일 | 안정성 | ✅ 완료 |
 | ~~P1-4~~ | ~~DB 마이그레이션 버전~~ | 2일 | 안정성 | ✅ 완료 |
@@ -517,10 +510,10 @@ const AGENTS_CHILDREN: View[] = ["agents", "heartbeat"]; // line ~51, "flow-grap
 | ~~P2-8~~ | ~~WebSocket 최적화~~ | 2일 | 성능 | ✅ 완료 |
 | P3-1 | Split-Pane Layout | 3~4일 | IDE 비전 | ⬜ 미시작 |
 | P3-2 | Visual Workflow Builder | 3~4주 | IDE 비전 | ⬜ 미시작 |
-| P3-3 | Keyboard-First UX | 1주 | UX 완성도 | ⬜ 미시작 |
+| ~~P3-3~~ | ~~Keyboard-First UX~~ | 1주 | UX 완성도 | ✅ 완료 |
 | P3-4 | 테스트 커버리지 | 3~4주 | 품질 | ⬜ 미시작 |
-| P3-5 | 이상 감지 최적화 | 1일 | 성능 | ⬜ 미시작 |
-| P3-6 | Slack 연동 | 3일 | 기능 확장 | ⬜ 미시작 |
+| ~~P3-5~~ | ~~이상 감지 최적화~~ | 1일 | 성능 | ✅ 완료 |
+| ~~P3-6~~ | ~~Slack 연동~~ | 3일 | 기능 확장 | ✅ 완료 |
 
 
 

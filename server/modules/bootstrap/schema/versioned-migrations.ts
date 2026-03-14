@@ -119,6 +119,16 @@ export const MIGRATIONS: Migration[] = [
       try { db.exec("ALTER TABLE tasks ADD COLUMN handoff_condition TEXT CHECK(handoff_condition IN ('always', 'on_success', 'on_fail'))"); } catch { /* already exists */ }
     },
   },
+  {
+    id: "2026-03-14-008-watchdog-index",
+    up: (db) => {
+      // Composite index for watchdog queries: WHERE status='in_progress' AND execution_state IN ('running','stalled')
+      // Replaces full-table scans in markStalledInProgressTasks() and recoverStalledTasks()
+      db.exec(
+        "CREATE INDEX IF NOT EXISTS idx_tasks_status_execstate ON tasks(status, execution_state, last_heartbeat_at DESC)",
+      );
+    },
+  },
 ];
 
 const ENSURE_TABLE_SQL = `

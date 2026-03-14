@@ -275,6 +275,20 @@ export default function AppMainLayout({
       "7": "hooks",
       "8": "settings",
     };
+    // g-prefix vim-style navigation: g d, g t, g a, g f, g s, g m, g r, g h
+    const G_SHORTCUTS: Record<string, View> = {
+      d: "dashboard",
+      t: "tasks-board",
+      a: "agents",
+      f: "flow-graph",
+      s: "skills",
+      m: "memory",
+      r: "agent-rules",
+      h: "hooks",
+    };
+    let gPending = false;
+    let gTimer: ReturnType<typeof setTimeout> | null = null;
+
     const handler = (e: KeyboardEvent) => {
       // input/textarea 포커스 중 무시
       const tag = (e.target as HTMLElement)?.tagName;
@@ -294,15 +308,41 @@ export default function AppMainLayout({
         return;
       }
 
-      // ? — 단축키 가이드 (편집 중 제외)
-      if (!isEditing && !e.ctrlKey && !e.metaKey && e.key === "?") {
+      if (isEditing || e.ctrlKey || e.metaKey || e.altKey) return;
+
+      // g prefix: g d, g t, g a, g f, g s, g m, g r, g h
+      if (gPending) {
+        if (gTimer) { clearTimeout(gTimer); gTimer = null; }
+        gPending = false;
+        const target = G_SHORTCUTS[e.key.toLowerCase()];
+        if (target) { e.preventDefault(); setView(target); }
+        return;
+      }
+      if (e.key === "g") {
+        gPending = true;
+        gTimer = setTimeout(() => { gPending = false; }, 1000);
+        return;
+      }
+
+      // n — 커맨드 팔레트 열기 (새 태스크 단축키로 이어짐)
+      if (e.key === "n") {
+        e.preventDefault();
+        setCommandPaletteOpen(true);
+        return;
+      }
+
+      // ? — 단축키 가이드
+      if (e.key === "?") {
         e.preventDefault();
         setShortcutsGuideOpen((v) => !v);
         return;
       }
     };
     window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
+    return () => {
+      window.removeEventListener("keydown", handler);
+      if (gTimer) clearTimeout(gTimer);
+    };
   }, []);
 
   const handleAddToTeam = async (agentId: string) => {

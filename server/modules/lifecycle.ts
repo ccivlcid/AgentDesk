@@ -8,8 +8,10 @@ import logger from "../lib/logger.ts";
 import { notifyTaskStatus } from "../gateway/client.ts";
 import { startDiscordReceiver } from "../messenger/discord-receiver.ts";
 import { startTelegramReceiver } from "../messenger/telegram-receiver.ts";
+import { startSlackReceiver } from "../messenger/slack-receiver.ts";
 import { registerGracefulShutdownHandlers } from "./lifecycle/register-graceful-shutdown.ts";
 import { appendTaskExecutionMetaUpdate, recordTaskExecutionEvent } from "./workflow/core/task-execution-meta.ts";
+import { TASK_STALLED_THRESHOLD_MS, TASK_STALLED_RECOVERY_THRESHOLD_MS } from "../db/runtime.ts";
 
 export function startLifecycle(ctx: RuntimeContext): void {
   const {
@@ -368,8 +370,6 @@ export function startLifecycle(ctx: RuntimeContext): void {
   }
 
   const TASK_HEARTBEAT_SWEEP_MS = 30_000;
-  const TASK_STALLED_THRESHOLD_MS = 90_000;
-  const TASK_STALLED_RECOVERY_THRESHOLD_MS = 180_000; // 3 min: auto-recover stalled → inbox
   const TASK_TIMEOUT_DEFAULT_MINUTES = 0; // 0 = disabled
 
   function updateRunningTaskHeartbeats(): void {
@@ -708,6 +708,7 @@ export function startLifecycle(ctx: RuntimeContext): void {
   setTimeout(autoAssignAgentProviders, 4_000);
   const telegramReceiver = startTelegramReceiver({ db });
   const discordReceiver = startDiscordReceiver({ db });
+  const slackReceiver = startSlackReceiver({ db });
 
   // ---------------------------------------------------------------------------
   // Start HTTP server + WebSocket
@@ -798,6 +799,7 @@ export function startLifecycle(ctx: RuntimeContext): void {
     onBeforeClose: () => {
       telegramReceiver.stop();
       discordReceiver.stop();
+      slackReceiver.stop();
     },
   });
 }

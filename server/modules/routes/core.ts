@@ -14,6 +14,7 @@ import {
 } from "../../gateway/client.ts";
 import { isMessengerChannel, isNativeMessengerChannel } from "../../messenger/channels.ts";
 import { getTelegramReceiverStatus } from "../../messenger/telegram-receiver.ts";
+import { getSlackReceiverStatus } from "../../messenger/slack-receiver.ts";
 import {
   BUILTIN_GITHUB_CLIENT_ID,
   BUILTIN_GOOGLE_CLIENT_ID,
@@ -259,6 +260,14 @@ export function registerRoutesPartA(ctx: RuntimeContext): Record<string, never> 
   app.get("/api/messenger/receiver/discord", (_req, res) => {
     try {
       res.json({ ok: true, status: getDiscordReceiverStatus() });
+    } catch (err: any) {
+      res.status(500).json({ ok: false, error: err?.message || String(err) });
+    }
+  });
+
+  app.get("/api/messenger/receiver/slack", (_req, res) => {
+    try {
+      res.json({ ok: true, status: getSlackReceiverStatus() });
     } catch (err: any) {
       res.status(500).json({ ok: false, error: err?.message || String(err) });
     }
