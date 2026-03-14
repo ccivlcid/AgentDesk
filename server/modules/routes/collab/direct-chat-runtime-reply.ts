@@ -408,7 +408,7 @@ export function createDirectReplyRuntime(deps: DirectReplyRuntimeDeps) {
               }
             } catch (err: any) {
               oauthError = err?.message || String(err);
-              console.error(`[scheduleAgentReply:OAuth] Error for ${agent.name}:`, oauthError);
+              logger.error(`[scheduleAgentReply:OAuth] Error for ${agent.name}: %s`, oauthError);
             }
 
             const contentOnly = fullText
@@ -429,7 +429,7 @@ export function createDirectReplyRuntime(deps: DirectReplyRuntimeDeps) {
 
             insertStreamingMessage(msgId, agent, finalReply);
             void relayReplyToMessenger(options, agent, finalReply).catch((err) => {
-              console.warn(`[messenger-reply] failed to relay OAuth reply from ${agent.name}: ${String(err)}`);
+              logger.warn(`[messenger-reply] failed to relay OAuth reply from ${agent.name}: ${String(err)}`);
             });
             return;
           }
@@ -438,13 +438,13 @@ export function createDirectReplyRuntime(deps: DirectReplyRuntimeDeps) {
           const reply = normalizeAgentReply(deps.chooseSafeReply(run, built.lang, "direct", agent));
           deps.sendAgentMessage(agent, reply);
           void relayReplyToMessenger(options, agent, reply).catch((err) => {
-            console.warn(`[messenger-reply] failed to relay direct reply from ${agent.name}: ${String(err)}`);
+            logger.warn(`[messenger-reply] failed to relay direct reply from ${agent.name}: ${String(err)}`);
           });
         } finally {
           stopTyping();
         }
       })().catch((err) => {
-        console.warn(`[scheduleAgentReply] async generation failed for ${agent.name}: ${String(err)}`);
+        logger.warn(`[scheduleAgentReply] async generation failed for ${agent.name}: ${String(err)}`);
       });
     }, delay);
   }

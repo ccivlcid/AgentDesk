@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import sharp from "sharp";
+import logger from "../../../../lib/logger.ts";
 import type { RuntimeContext } from "../../../../types/runtime-context.ts";
 
 const AVATARS_DIR = path.join(process.cwd(), "public", "avatars");
@@ -46,7 +47,7 @@ export function registerAgentAvatarRoutes(ctx: RuntimeContext): void {
 
       return res.json({ ok: true, avatar_url });
     } catch (err) {
-      console.error("[avatar upload]", err);
+      logger.error({ err }, "[avatar upload] failed");
       return res.status(500).json({ error: "upload_failed" });
     }
   });
@@ -68,7 +69,7 @@ export function registerAgentAvatarRoutes(ctx: RuntimeContext): void {
       db.prepare("UPDATE agents SET avatar_url = NULL WHERE id = ?").run(agentId);
       return res.json({ ok: true });
     } catch (err) {
-      console.error("[avatar delete]", err);
+      logger.error({ err }, "[avatar delete] failed");
       return res.status(500).json({ error: "delete_failed" });
     }
   });

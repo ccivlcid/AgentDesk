@@ -6,6 +6,7 @@ import type { SQLInputValue } from "node:sqlite";
 import type { RuntimeContext } from "../../../../types/runtime-context.ts";
 import { getPersonaPrompt } from "../../../workflow/core/persona-catalog.ts";
 import { invalidateAgentPersonaCache } from "../../../workflow/core/character-persona.ts";
+import logger from "../../../../lib/logger.ts";
 
 const AGENTS_PROMPTS_DIR = join(dirname(fileURLToPath(import.meta.url)), "../../../../../prompts/agents");
 const PERSONAS_DIR = join(dirname(fileURLToPath(import.meta.url)), "../../../../../prompts/personas");
@@ -366,7 +367,7 @@ export function registerAgentCrudRoutes(ctx: RuntimeContext): void {
       }
       res.json({ ok: true, personality: text });
     } catch (err) {
-      console.error("[generate-persona] error:", err);
+      logger.error({ err }, "[generate-persona] error");
       res.status(500).json({ error: "generation_failed", message: String(err) });
     }
   });
@@ -509,7 +510,7 @@ export function registerAgentCrudRoutes(ctx: RuntimeContext): void {
       broadcast("agent_created", created);
       res.status(201).json({ ok: true, agent: created });
     } catch (err) {
-      console.error("[agents] POST failed:", err);
+      logger.error({ err }, "[agents] POST failed");
       res.status(500).json({ error: "internal_error" });
     }
   });
@@ -540,7 +541,7 @@ export function registerAgentCrudRoutes(ctx: RuntimeContext): void {
       broadcast("agent_deleted", { id });
       res.json({ ok: true, id });
     } catch (err) {
-      console.error("[agents] DELETE failed:", err);
+      logger.error({ err }, "[agents] DELETE failed");
       res.status(500).json({ error: "internal_error" });
     }
   });
@@ -751,7 +752,7 @@ export function registerAgentCrudRoutes(ctx: RuntimeContext): void {
         if (message.includes("no such column: acts_as_planning_leader")) {
           return res.status(400).json({ error: "planning_leader_flag_not_available" });
         }
-        console.error("[agents] planning leader conflict check failed:", err);
+        logger.error({ err }, "[agents] planning leader conflict check failed");
         return res.status(500).json({ error: "internal_error" });
       }
     }
@@ -818,7 +819,7 @@ export function registerAgentCrudRoutes(ctx: RuntimeContext): void {
       if (message.includes("no such column: acts_as_planning_leader")) {
         return res.status(400).json({ error: "planning_leader_flag_not_available" });
       }
-      console.error("[agents] planning leader update failed:", err);
+      logger.error({ err }, "[agents] planning leader update failed");
       return res.status(500).json({ error: "internal_error" });
     }
     } // end if (updates.length > 0)
