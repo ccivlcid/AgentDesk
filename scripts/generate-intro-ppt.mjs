@@ -103,7 +103,7 @@ function addTitle(slide, title, opts = {}) {
     bold: true,
     color: C.white,
   });
-  s.addText("Command Your AI Agent Empire\nfrom the Client Desk", {
+  s.addText("Command Your AI Agents\nfrom the Client Desk", {
     x: 0.8,
     y: 2.5,
     w: 8.5,
@@ -1259,7 +1259,7 @@ function addTitle(slide, title, opts = {}) {
     bold: true,
     color: C.white,
   });
-  s.addText("Command Your AI Agent Empire from the Client Desk", {
+  s.addText("Command Your AI Agents from the Client Desk", {
     x: 0.8,
     y: 2.4,
     w: 8.5,

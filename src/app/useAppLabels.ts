@@ -31,7 +31,7 @@ export function useAppLabels({
   });
   const loadingSubtitle = pickLang(uiLanguage, {
     ko: "AI 에이전트 제국을 준비하고 있습니다",
-    en: "Preparing your AI agent empire",
+    en: "Preparing your AI agents",
     ja: "AIエージェント帝国を準備しています",
     zh: "正在准备你的 AI 代理帝国",
   });

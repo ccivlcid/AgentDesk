@@ -94,8 +94,8 @@ AgentDesk
 │   │   ├── 필요-기능-분석.md
 │   │   ├── agent-persona-system.md
 │   │   ├── agentdesk-vs-openai-symphony.md
-│   │   ├── claw-empire-comparison.md
-│   │   ├── claw-empire-differentiation-plan.md
+│   │   ├── agentdesk-comparison.md
+│   │   ├── agentdesk-differentiation-plan.md
 │   │   ├── pack-identity-system.md
 │   │   └── ui-differentiation-strategy.md
 │   └── README.md
