@@ -26,6 +26,8 @@ interface CreateModalProps {
     assigned_agent_id?: string;
     workflow_pack_key?: string;
     workflow_meta_json?: string;
+    handoff_to_agent_id?: string | null;
+    handoff_condition?: "always" | "on_success" | "on_fail" | null;
   }) => void;
   onAssign: (taskId: string, agentId: string) => void;
   defaultProjectId?: string;
@@ -43,6 +45,9 @@ function CreateModal({ agents, departments, onClose, onCreate, onAssign, default
   const [taskType, setTaskType] = useState<TaskType>("general");
   const [priority, setPriority] = useState(3);
   const [assignAgentId, setAssignAgentId] = useState(defaultAgentId ?? "");
+  const [handoffEnabled, setHandoffEnabled] = useState(false);
+  const [handoffAgentId, setHandoffAgentId] = useState("");
+  const [handoffCondition, setHandoffCondition] = useState<"always" | "on_success" | "on_fail">("on_success");
   const [submitBusy, setSubmitBusy] = useState(false);
   const [submitWithoutProjectPromptOpen, setSubmitWithoutProjectPromptOpen] = useState(false);
   const [formFeedback, setFormFeedback] = useState<FormFeedback | null>(null);
@@ -171,12 +176,15 @@ function CreateModal({ agents, departments, onClose, onCreate, onAssign, default
   const wrappedOnCreate: typeof onCreate = useCallback(
     (input) => {
       const nonEmptyMeta = Object.fromEntries(Object.entries(packMeta).filter(([, v]) => v.trim()));
+      const handoffFields = handoffEnabled && handoffAgentId
+        ? { handoff_to_agent_id: handoffAgentId, handoff_condition: handoffCondition }
+        : { handoff_to_agent_id: null, handoff_condition: null };
       if (Object.keys(nonEmptyMeta).length > 0) {
-        return onCreate({ ...input, workflow_meta_json: JSON.stringify(nonEmptyMeta) });
+        return onCreate({ ...input, workflow_meta_json: JSON.stringify(nonEmptyMeta), ...handoffFields });
       }
-      return onCreate(input);
+      return onCreate({ ...input, ...handoffFields });
     },
-    [onCreate, packMeta],
+    [onCreate, packMeta, handoffEnabled, handoffAgentId, handoffCondition],
   );
 
   async function submitTask(options?: { allowCreateMissingPath?: boolean; allowWithoutProject?: boolean }) {
@@ -345,6 +353,7 @@ function CreateModal({ agents, departments, onClose, onCreate, onAssign, default
       formFeedback={formFeedback}
       departments={departmentsWithAgents}
       filteredAgents={filteredAgents}
+      allAgents={agents}
       projectSectionProps={projectSectionProps}
       overlaysProps={overlaysProps}
       onOpenDraftModal={() => {
@@ -382,6 +391,12 @@ function CreateModal({ agents, departments, onClose, onCreate, onAssign, default
       onLoadTemplate={handleLoadTemplate}
       onSaveTemplate={handleSaveTemplate}
       onDeleteTemplate={handleDeleteTemplate}
+      handoffEnabled={handoffEnabled}
+      handoffAgentId={handoffAgentId}
+      handoffCondition={handoffCondition}
+      onHandoffEnabledChange={setHandoffEnabled}
+      onHandoffAgentIdChange={setHandoffAgentId}
+      onHandoffConditionChange={setHandoffCondition}
     />
   );
 }

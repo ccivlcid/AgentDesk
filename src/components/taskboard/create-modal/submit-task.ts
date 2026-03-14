@@ -14,6 +14,8 @@ type CreateTaskHandler = (input: {
   assigned_agent_id?: string;
   workflow_pack_key?: WorkflowPackKey;
   workflow_meta_json?: string;
+  handoff_to_agent_id?: string | null;
+  handoff_condition?: "always" | "on_success" | "on_fail" | null;
 }) => void | Promise<void>;
 
 type ResolvePathHelperErrorMessage = (error: unknown, fallback: Record<Locale, string>) => string;

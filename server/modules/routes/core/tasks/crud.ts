@@ -202,14 +202,22 @@ export function registerTaskCrudRoutes(deps: TaskCrudRouteDeps): void {
       ? ((db.prepare("SELECT id FROM categories WHERE id = ? LIMIT 1").get(requestedCategoryId) as { id: string } | undefined)?.id ?? null)
       : null;
 
+    const handoffToAgentId = typeof (body as any).handoff_to_agent_id === "string" && (body as any).handoff_to_agent_id
+      ? (body as any).handoff_to_agent_id
+      : null;
+    const validHandoffConditions = ["always", "on_success", "on_fail"] as const;
+    const handoffCondition = validHandoffConditions.includes((body as any).handoff_condition)
+      ? (body as any).handoff_condition
+      : null;
+
     db.prepare(
       `
     INSERT INTO tasks (
       id, title, description, department_id, assigned_agent_id, project_id,
       status, priority, task_type, workflow_pack_key, workflow_meta_json, output_format,
-      project_path, base_branch, category_id, created_at, updated_at
+      project_path, base_branch, category_id, handoff_to_agent_id, handoff_condition, created_at, updated_at
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `,
     ).run(
       id,
@@ -236,6 +244,8 @@ export function registerTaskCrudRoutes(deps: TaskCrudRouteDeps): void {
       resolvedProjectPath,
       (body as any).base_branch ?? null,
       resolvedCategoryId,
+      handoffToAgentId,
+      handoffCondition,
       t,
       t,
     );
@@ -458,6 +468,8 @@ export function registerTaskCrudRoutes(deps: TaskCrudRouteDeps): void {
       "result",
       "hidden",
       "category_id",
+      "handoff_to_agent_id",
+      "handoff_condition",
     ];
 
     const updates: string[] = ["updated_at = ?"];

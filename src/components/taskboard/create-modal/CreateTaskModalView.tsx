@@ -29,6 +29,7 @@ interface CreateTaskModalViewProps {
   formFeedback: FormFeedback | null;
   departments: Department[];
   filteredAgents: Agent[];
+  allAgents?: Agent[];
   projectSectionProps: ComponentProps<typeof ProjectSection>;
   overlaysProps: CreateTaskModalOverlaysProps;
   onOpenDraftModal: () => void;
@@ -47,6 +48,12 @@ interface CreateTaskModalViewProps {
   onLoadTemplate?: (templateId: string) => void;
   onSaveTemplate?: (name: string) => Promise<void>;
   onDeleteTemplate?: (templateId: string) => Promise<void>;
+  handoffEnabled?: boolean;
+  handoffAgentId?: string;
+  handoffCondition?: "always" | "on_success" | "on_fail";
+  onHandoffEnabledChange?: (enabled: boolean) => void;
+  onHandoffAgentIdChange?: (agentId: string) => void;
+  onHandoffConditionChange?: (condition: "always" | "on_success" | "on_fail") => void;
 }
 
 const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };
@@ -79,6 +86,7 @@ export default function CreateTaskModalView({
   formFeedback,
   departments,
   filteredAgents,
+  allAgents,
   projectSectionProps,
   overlaysProps,
   onOpenDraftModal,
@@ -94,6 +102,12 @@ export default function CreateTaskModalView({
   onLoadTemplate,
   onSaveTemplate,
   onDeleteTemplate,
+  handoffEnabled = false,
+  handoffAgentId = "",
+  handoffCondition = "on_success",
+  onHandoffEnabledChange,
+  onHandoffAgentIdChange,
+  onHandoffConditionChange,
 }: CreateTaskModalViewProps) {
   const [templateMenuOpen, setTemplateMenuOpen] = useState(false);
   const [saveTemplateName, setSaveTemplateName] = useState("");
@@ -370,6 +384,89 @@ export default function CreateTaskModalView({
                   PROJECT
                 </div>
                 <ProjectSection {...projectSectionProps} />
+              </div>
+
+              {/* 완료 후 핸드오프 */}
+              <div style={{ borderTop: "1px solid var(--th-border)", paddingTop: "12px" }}>
+                <div className="flex items-center justify-between" style={{ marginBottom: handoffEnabled ? "8px" : 0 }}>
+                  <div style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                    {t({ ko: "완료 후 핸드오프", en: "HANDOFF ON COMPLETE", ja: "完了後ハンドオフ", zh: "完成后移交" })}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => onHandoffEnabledChange?.(!handoffEnabled)}
+                    style={{
+                      ...mono,
+                      fontSize: "9px",
+                      padding: "2px 8px",
+                      borderRadius: 0,
+                      border: `1px solid ${handoffEnabled ? "var(--th-accent)" : "var(--th-border)"}`,
+                      background: handoffEnabled ? "var(--th-accent)" : "var(--th-bg-elevated)",
+                      color: handoffEnabled ? "#000" : "var(--th-text-muted)",
+                      cursor: "pointer",
+                      textTransform: "uppercase",
+                    }}
+                  >
+                    {handoffEnabled
+                      ? t({ ko: "ON", en: "ON", ja: "ON", zh: "ON" })
+                      : t({ ko: "OFF", en: "OFF", ja: "OFF", zh: "OFF" })}
+                  </button>
+                </div>
+                {handoffEnabled && (
+                  <div className="space-y-2">
+                    <div>
+                      <div style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "4px" }}>
+                        {t({ ko: "핸드오프 에이전트", en: "HANDOFF AGENT", ja: "ハンドオフエージェント", zh: "移交智能体" })}
+                      </div>
+                      <select
+                        value={handoffAgentId}
+                        onChange={(e) => onHandoffAgentIdChange?.(e.target.value)}
+                        style={{ ...inputBase }}
+                      >
+                        <option value="">
+                          {t({ ko: "에이전트 선택...", en: "Select agent...", ja: "エージェントを選択...", zh: "选择智能体..." })}
+                        </option>
+                        {(allAgents ?? filteredAgents).map((agent) => (
+                          <option key={agent.id} value={agent.id}>
+                            {agent.avatar_emoji} {locale === "ko" ? (agent.name_ko || agent.name) : agent.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <div style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "4px" }}>
+                        {t({ ko: "핸드오프 조건", en: "HANDOFF CONDITION", ja: "ハンドオフ条件", zh: "移交条件" })}
+                      </div>
+                      <div className="flex gap-0.5">
+                        {(["always", "on_success", "on_fail"] as const).map((cond) => (
+                          <button
+                            key={cond}
+                            type="button"
+                            onClick={() => onHandoffConditionChange?.(cond)}
+                            style={{
+                              flex: 1,
+                              ...mono,
+                              fontSize: "9px",
+                              padding: "4px 0",
+                              borderRadius: 0,
+                              border: `1px solid ${handoffCondition === cond ? "var(--th-accent)" : "var(--th-border)"}`,
+                              background: handoffCondition === cond ? "var(--th-accent)" : "var(--th-bg-elevated)",
+                              color: handoffCondition === cond ? "#000" : "var(--th-text-muted)",
+                              cursor: "pointer",
+                              textTransform: "uppercase",
+                            }}
+                          >
+                            {cond === "always"
+                              ? t({ ko: "항상", en: "ALWAYS", ja: "常に", zh: "总是" })
+                              : cond === "on_success"
+                                ? t({ ko: "성공시", en: "ON SUCCESS", ja: "成功時", zh: "成功时" })
+                                : t({ ko: "실패시", en: "ON FAIL", ja: "失敗時", zh: "失败时" })}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
             </div>

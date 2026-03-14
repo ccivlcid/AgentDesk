@@ -163,6 +163,8 @@ export interface Task {
   subtask_done?: number;
   hidden?: number;
   category_id?: string | null;
+  handoff_to_agent_id?: string | null;
+  handoff_condition?: "always" | "on_success" | "on_fail" | null;
 }
 
 export interface TaskExecutionSummary {
