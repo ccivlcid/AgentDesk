@@ -5,6 +5,7 @@ import { useProjectStore } from "../../store/projectStore";
 
 const WorkflowBuilder = lazy(() => import("../workflow-builder/WorkflowBuilder"));
 const ScheduledTasksPanel = lazy(() => import("../scheduled-tasks/ScheduledTasksPanel"));
+const AgentCompositionBuilder = lazy(() => import("../agent-composition/AgentCompositionBuilder"));
 
 function Loading() {
   return (
@@ -41,6 +42,15 @@ export default function WorkflowWindow() {
           content: (
             <Suspense fallback={<Loading />}>
               <ScheduledTasksPanel agents={agents} currentProjectId={currentProjectId} />
+            </Suspense>
+          ),
+        },
+        {
+          id: "composition",
+          label: "Composition",
+          content: (
+            <Suspense fallback={<Loading />}>
+              <AgentCompositionBuilder />
             </Suspense>
           ),
         },

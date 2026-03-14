@@ -160,6 +160,25 @@ export const MIGRATIONS: Migration[] = [
       );
     },
   },
+  {
+    id: "2026-03-14-011-agent-composition-templates",
+    up: (db) => {
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS agent_composition_templates (
+          id          TEXT    PRIMARY KEY,
+          name        TEXT    NOT NULL,
+          description TEXT,
+          nodes_json  TEXT    NOT NULL DEFAULT '[]',
+          edges_json  TEXT    NOT NULL DEFAULT '[]',
+          created_at  INTEGER NOT NULL,
+          updated_at  INTEGER NOT NULL
+        )
+      `);
+      db.exec(
+        "CREATE INDEX IF NOT EXISTS idx_comp_templates_updated ON agent_composition_templates(updated_at DESC)",
+      );
+    },
+  },
 ];
 
 const ENSURE_TABLE_SQL = `
