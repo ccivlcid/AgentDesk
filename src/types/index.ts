@@ -162,6 +162,7 @@ export interface Task {
   subtask_total?: number;
   subtask_done?: number;
   hidden?: number;
+  category_id?: string | null;
 }
 
 export interface TaskExecutionSummary {

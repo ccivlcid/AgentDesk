@@ -197,14 +197,19 @@ export function registerTaskCrudRoutes(deps: TaskCrudRouteDeps): void {
       }
     }
 
+    const requestedCategoryId = normalizeTextField((body as any).category_id) || null;
+    const resolvedCategoryId: string | null = requestedCategoryId
+      ? ((db.prepare("SELECT id FROM categories WHERE id = ? LIMIT 1").get(requestedCategoryId) as { id: string } | undefined)?.id ?? null)
+      : null;
+
     db.prepare(
       `
     INSERT INTO tasks (
       id, title, description, department_id, assigned_agent_id, project_id,
       status, priority, task_type, workflow_pack_key, workflow_meta_json, output_format,
-      project_path, base_branch, created_at, updated_at
+      project_path, base_branch, category_id, created_at, updated_at
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `,
     ).run(
       id,
@@ -219,6 +224,7 @@ export function registerTaskCrudRoutes(deps: TaskCrudRouteDeps): void {
       resolveWorkflowPackKeyForTask({
         db: db as any,
         explicitPackKey: (body as any).workflow_pack_key,
+        categoryId: resolvedCategoryId,
         projectId: resolvedProjectId,
       }),
       typeof (body as any).workflow_meta_json === "string"
@@ -229,6 +235,7 @@ export function registerTaskCrudRoutes(deps: TaskCrudRouteDeps): void {
       typeof (body as any).output_format === "string" ? (body as any).output_format : null,
       resolvedProjectPath,
       (body as any).base_branch ?? null,
+      resolvedCategoryId,
       t,
       t,
     );
@@ -450,6 +457,7 @@ export function registerTaskCrudRoutes(deps: TaskCrudRouteDeps): void {
       "project_path",
       "result",
       "hidden",
+      "category_id",
     ];
 
     const updates: string[] = ["updated_at = ?"];

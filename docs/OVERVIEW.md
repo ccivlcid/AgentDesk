@@ -257,14 +257,24 @@ UIUX 모니터링               ████████████████
   2. App.tsx에서 해당 useState 제거 → 스토어로 교체
   3. 하위 컴포넌트에서 props 대신 `useProjectStore()` 등 직접 구독
 
-#### [P1-2] WorkflowPackKey 완전 제거
-- **파일:** 약 20개 파일 (grep: `workflow_pack_key`)
-- **문제:** "팩 = 실행 컨텍스트"인지 "카테고리 = 프로젝트 유형"인지 혼동 유발
-- **작업:**
-  1. DB 마이그레이션: `workflow_pack_key` → `category_id` (FK) 전환
-  2. API 응답에서 `workflow_pack_key` 필드 제거 (하위 호환 기간 2주)
-  3. 프론트엔드 타입 정의 업데이트 (`src/types/`)
-  4. `/api/workflow-packs` 엔드포인트 → `/api/categories` 로 리다이렉트 후 제거
+#### ~~[P1-2] WorkflowPackKey → category_id 브리지 연결~~ ✅ 완료 (2026-03-14)
+- **파일:** `versioned-migrations.ts`, `category-seeds.ts`, `task-pack-resolver.ts`, `tasks/crud.ts`, `src/types/index.ts`
+- **구현 내용:**
+  1. DB 마이그레이션 `2026-03-14-003`: `categories` 테이블에 `pack_key TEXT` 컬럼 추가, 기존 6개 카테고리에 팩키 매핑 적용
+  2. DB 마이그레이션 `2026-03-14-004`: `tasks` 테이블에 `category_id TEXT REFERENCES categories(id)` 추가
+  3. `resolveCategoryPackKey()` 함수 추가 — `category_id → categories.pack_key` 조회
+  4. `resolveWorkflowPackKeyForTask()` 우선순위 체인: explicit → **category** → sourceTask → projectDefault → fallback
+  5. POST `/api/tasks`에서 `category_id` 수신 → DB에서 검증 후 INSERT
+  6. PATCH `/api/tasks/:id`에서 `category_id` 허용
+  7. `Task` 인터페이스에 `category_id?: string | null` 추가
+- **카테고리 → 팩 매핑:**
+  - `cat_software_dev` → `development`
+  - `cat_marketing` → `asset_management`
+  - `cat_research` → `web_research_report`
+  - `cat_product_launch` → `development`
+  - `cat_content` → `novel`
+  - `cat_operations` → `report`
+- **하위 호환:** `workflow_pack_key` 컬럼 유지 (기존 데이터 보존), category 없는 태스크는 기존 방식 그대로 동작
 
 #### ~~[P1-3] 메신저 수신 재시도 로직~~ ✅ 완료 (2026-03-14)
 - **파일:** `server/messenger/telegram-receiver.ts`, `server/messenger/discord-receiver.ts`
@@ -425,7 +435,7 @@ UIUX 모니터링               ████████████████
 | ~~P0-4~~ | ~~WebSocket 연결 제한~~ | 0.5일 | 🔴 보안 | ✅ 완료 |
 | ~~P0-5~~ | ~~환경 변수 검증~~ | 0.5일 | 🔴 안정성 | ✅ 완료 |
 | **P1-1** | **Zustand 상태 관리** | **4일** | 성능·개발속도 | 🔨 진행 필요 |
-| **P1-2** | **WorkflowPackKey 제거** | **3일** | 코드 명확성 | 🔨 진행 필요 |
+| ~~P1-2~~ | ~~WorkflowPackKey → category_id 브리지~~ | 3일 | 코드 명확성 | ✅ 완료 |
 | ~~P1-3~~ | ~~메신저 재시도~~ | 1일 | 안정성 | ✅ 완료 |
 | ~~P1-4~~ | ~~DB 마이그레이션 버전~~ | 2일 | 안정성 | ✅ 완료 |
 | ~~P1-5~~ | ~~Map 메모리 누수~~ | 1일 | 안정성 | ✅ 완료 |

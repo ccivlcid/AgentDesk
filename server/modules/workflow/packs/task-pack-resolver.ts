@@ -30,17 +30,33 @@ export function resolveTaskPackKeyById(db: DbLike, taskId: string | null | undef
   return normalizePackKey(row?.workflow_pack_key);
 }
 
+export function resolveCategoryPackKey(db: DbLike, categoryId: string | null | undefined): WorkflowPackKey | null {
+  const id = normalizeText(categoryId);
+  if (!id) return null;
+  try {
+    const row = db.prepare("SELECT pack_key FROM categories WHERE id = ? LIMIT 1").get(id) as
+      | { pack_key?: unknown }
+      | undefined;
+    return normalizePackKey(row?.pack_key);
+  } catch {
+    // categories table or pack_key column may not exist in older DB versions.
+    return null;
+  }
+}
+
 export function resolveWorkflowPackKeyForTask(params: {
   db: DbLike;
   explicitPackKey?: unknown;
+  categoryId?: string | null;
   sourceTaskPackKey?: unknown;
   sourceTaskId?: string | null;
   projectId?: string | null;
   fallbackPackKey?: WorkflowPackKey;
 }): WorkflowPackKey {
-  const { db, explicitPackKey, sourceTaskPackKey, sourceTaskId, projectId, fallbackPackKey } = params;
+  const { db, explicitPackKey, categoryId, sourceTaskPackKey, sourceTaskId, projectId, fallbackPackKey } = params;
   return (
     normalizePackKey(explicitPackKey) ||
+    resolveCategoryPackKey(db, categoryId) ||
     normalizePackKey(sourceTaskPackKey) ||
     resolveTaskPackKeyById(db, sourceTaskId) ||
     resolveProjectDefaultPackKey(db, projectId) ||

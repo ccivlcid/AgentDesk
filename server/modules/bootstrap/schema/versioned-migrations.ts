@@ -66,6 +66,43 @@ export const MIGRATIONS: Migration[] = [
       } catch { /* column may already exist (added by task-schema-migrations) */ }
     },
   },
+  {
+    id: "2026-03-14-003-categories-pack-key",
+    up: (db) => {
+      // pack_key maps each category to its execution workflow pack.
+      // This bridges the project-type template system (categories) with the
+      // agent-selection / prompt-routing system (workflow_pack_key).
+      try {
+        db.exec("ALTER TABLE categories ADD COLUMN pack_key TEXT");
+      } catch { /* column may already exist */ }
+
+      // Seed pack_key for built-in categories.
+      const mappings: Array<[string, string]> = [
+        ["cat_software_dev",  "development"],
+        ["cat_marketing",     "asset_management"],
+        ["cat_research",      "web_research_report"],
+        ["cat_product_launch","development"],
+        ["cat_content",       "novel"],
+        ["cat_operations",    "report"],
+      ];
+      const stmt = db.prepare(
+        "UPDATE categories SET pack_key = ? WHERE id = ? AND pack_key IS NULL",
+      );
+      for (const [id, packKey] of mappings) {
+        stmt.run(packKey, id);
+      }
+    },
+  },
+  {
+    id: "2026-03-14-004-tasks-category-id",
+    up: (db) => {
+      // category_id on tasks allows pack_key to be resolved via the category's pack_key,
+      // giving the category system priority in workflow routing.
+      try {
+        db.exec("ALTER TABLE tasks ADD COLUMN category_id TEXT REFERENCES categories(id)");
+      } catch { /* column may already exist */ }
+    },
+  },
 ];
 
 const ENSURE_TABLE_SQL = `
