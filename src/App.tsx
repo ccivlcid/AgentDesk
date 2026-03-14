@@ -222,6 +222,9 @@ export default function App() {
       onProjectUpdated={(id, patch) => {
         setProjects((prev) => prev.map((p) => (p.id === id ? { ...p, ...patch } : p)));
       }}
+      subAgents={subAgents}
+      crossDeptDeliveries={crossDeptDeliveries}
+      meetingPresences={meetingPresence}
     >
       <AppOverlays
         showChat={showChat}

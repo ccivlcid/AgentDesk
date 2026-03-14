@@ -35,7 +35,7 @@ const NAV_STRUCTURE: NavEntry[] = [
     kind: "section",
     label: { ko: "에이전트", en: "agents", ja: "エージェント", zh: "代理" },
     id: "agents",
-    children: [{ view: "agents" }, { view: "heartbeat" }],
+    children: [{ view: "agents" }, { view: "heartbeat" }, { view: "flow-graph" }],
   },
   {
     kind: "section",
@@ -48,7 +48,7 @@ const NAV_STRUCTURE: NavEntry[] = [
   { kind: "item", view: "settings" },
 ];
 
-const AGENTS_CHILDREN: View[] = ["agents", "heartbeat"];
+const AGENTS_CHILDREN: View[] = ["agents", "heartbeat", "flow-graph"];
 const LIBRARY_CHILDREN: View[] = ["skills", "agent-rules", "memory", "hooks"];
 const TASKS_CHILDREN: View[] = ["tasks-board", "tasks-scheduled", "tasks-deliverables"];
 
@@ -77,6 +77,7 @@ export default function Sidebar({
   const navLabels: Record<string, string> = {
     agents: t({ ko: "에이전트 & 부서", en: "agents & depts", ja: "エージェント & 部署", zh: "代理 & 部门" }),
     heartbeat: t({ ko: "현황 모니터", en: "heartbeat", ja: "稼働モニタ", zh: "心跳监控" }),
+    "flow-graph": t({ ko: "플로우 그래프", en: "flow graph", ja: "フローグラフ", zh: "流程图" }),
     skills: t({ ko: "스킬", en: "skills", ja: "スキル", zh: "技能" }),
     "agent-rules": t({ ko: "에이전트 룰", en: "agent rules", ja: "エージェントルール", zh: "代理规则" }),
     memory: t({ ko: "메모리", en: "memory", ja: "メモリ", zh: "记忆" }),
@@ -140,6 +141,7 @@ export default function Sidebar({
              view === "tasks-deliverables" ? "↗" :
              view === "agents" ? "⊙" :
              view === "heartbeat" ? "♡" :
+             view === "flow-graph" ? "◎" :
              view === "skills" ? "✦" :
              view === "agent-rules" ? "◈" :
              view === "memory" ? "◻" :

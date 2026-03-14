@@ -16,6 +16,7 @@ const MemoryLibrary     = lazy(() => import("../components/MemoryLibrary"));
 const HooksLibrary      = lazy(() => import("../components/HooksLibrary"));
 const SettingsPanel     = lazy(() => import("../components/SettingsPanel"));
 const Deliverables      = lazy(() => import("../components/deliverables/Deliverables"));
+const AgentFlowGraph    = lazy(() => import("../components/flow-graph/AgentFlowGraph"));
 import { I18nProvider, useI18n } from "../i18n";
 import type {
   Agent,
@@ -28,6 +29,9 @@ import type {
   SubTask,
   Task,
   WSEventType,
+  SubAgent,
+  CrossDeptDelivery,
+  MeetingPresence,
 } from "../types";
 import type { UpdateStatus } from "../api";
 import type { OAuthCallbackResult, View } from "./types";
@@ -162,6 +166,9 @@ interface AppMainLayoutProps {
   onProjectCreate?: () => void;
   onProjectDelete?: (id: string) => void;
   onProjectUpdated?: (id: string, patch: { name: string; core_goal: string }) => void;
+  subAgents?: SubAgent[];
+  crossDeptDeliveries?: CrossDeptDelivery[];
+  meetingPresences?: MeetingPresence[];
   children?: ReactNode;
 }
 
@@ -219,6 +226,9 @@ export default function AppMainLayout({
   onProjectCreate,
   onProjectDelete,
   onProjectUpdated,
+  subAgents = [],
+  crossDeptDeliveries = [],
+  meetingPresences = [],
   children,
 }: AppMainLayoutProps) {
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
@@ -602,6 +612,27 @@ export default function AppMainLayout({
                 projectAgentIds={projectAgentIds.size > 0 ? projectAgentIds : undefined}
                 standalone
               />
+            )}
+
+            {view === "flow-graph" && (
+              <div className="flex-1 min-h-0 flex flex-col" style={{ position: "relative" }}>
+                <Suspense fallback={
+                  <div className="flex items-center justify-center h-full font-mono text-xs" style={{ color: "var(--th-text-muted)" }}>
+                    loading...
+                  </div>
+                }>
+                  <AgentFlowGraph
+                    agents={agents}
+                    departments={departments}
+                    tasks={tasks}
+                    subAgents={subAgents}
+                    crossDeptDeliveries={crossDeptDeliveries}
+                    meetingPresences={meetingPresences}
+                    projectAgentIds={projectAgentIds.size > 0 ? projectAgentIds : undefined}
+                    onSelectAgent={onSelectAgent}
+                  />
+                </Suspense>
+              </div>
             )}
 
             <Suspense fallback={

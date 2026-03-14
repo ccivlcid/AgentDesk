@@ -3,6 +3,7 @@ import type { RoomTheme } from "../types";
 export type View =
   | "agents"
   | "heartbeat"
+  | "flow-graph"
   | "dashboard"
   | "project-types"
   | "cli-usage"
