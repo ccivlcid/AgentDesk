@@ -19,6 +19,7 @@ const HooksLibrary      = lazy(() => import("../components/HooksLibrary"));
 const SettingsPanel     = lazy(() => import("../components/SettingsPanel"));
 const Deliverables      = lazy(() => import("../components/deliverables/Deliverables"));
 const AgentFlowGraph    = lazy(() => import("../components/flow-graph/AgentFlowGraph"));
+const WorkflowBuilder   = lazy(() => import("../components/workflow-builder/WorkflowBuilder"));
 import { I18nProvider, useI18n } from "../i18n";
 import type {
   Agent,
@@ -285,6 +286,7 @@ export default function AppMainLayout({
       t: "tasks-board",
       a: "agents",
       f: "flow-graph",
+      w: "workflow-builder",
       s: "skills",
       m: "memory",
       r: "agent-rules",
@@ -740,6 +742,18 @@ export default function AppMainLayout({
                         projectAgentIds={projectAgentIds.size > 0 ? projectAgentIds : undefined}
                         onSelectAgent={onSelectAgent}
                       />
+                    </Suspense>
+                  </div>
+                )}
+
+                {view === "workflow-builder" && (
+                  <div className="flex-1 min-h-0 flex flex-col" style={{ position: "relative" }}>
+                    <Suspense fallback={
+                      <div className="flex items-center justify-center h-full font-mono text-xs" style={{ color: "var(--th-text-muted)" }}>
+                        loading...
+                      </div>
+                    }>
+                      <WorkflowBuilder />
                     </Suspense>
                   </div>
                 )}

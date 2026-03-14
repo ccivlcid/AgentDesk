@@ -51,6 +51,7 @@ export default function KeyboardShortcutsGuide({ open, onClose }: KeyboardShortc
         { keys: ["g", "t"], desc: t({ ko: "태스크 보드로 이동", en: "Go to Task Board", ja: "タスクボードへ", zh: "跳转至任务板" }) },
         { keys: ["g", "a"], desc: t({ ko: "에이전트로 이동", en: "Go to Agents", ja: "エージェントへ", zh: "跳转至代理" }) },
         { keys: ["g", "f"], desc: t({ ko: "플로우 그래프로 이동", en: "Go to Flow Graph", ja: "フローグラフへ", zh: "跳转至流程图" }) },
+        { keys: ["g", "w"], desc: t({ ko: "워크플로 빌더로 이동", en: "Go to Workflow Builder", ja: "ワークフロービルダーへ", zh: "跳转至工作流构建器" }) },
         { keys: ["g", "s"], desc: t({ ko: "스킬로 이동", en: "Go to Skills", ja: "スキルへ", zh: "跳转至技能" }) },
         { keys: ["g", "m"], desc: t({ ko: "메모리로 이동", en: "Go to Memory", ja: "メモリーへ", zh: "跳转至记忆" }) },
         { keys: ["g", "r"], desc: t({ ko: "룰로 이동", en: "Go to Rules", ja: "ルールへ", zh: "跳转至规则" }) },

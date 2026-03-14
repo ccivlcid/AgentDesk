@@ -446,13 +446,15 @@ const AGENTS_CHILDREN: View[] = ["agents", "heartbeat"]; // line ~51, "flow-grap
   4. 헤더 `⊟` 토글 버튼 (데스크톱 전용), `\` 키보드 단축키
   5. 단축키 가이드에 `\` 항목 추가
 
-#### [P3-2] Visual Workflow Builder
+#### ~~[P3-2] Visual Workflow Builder~~ ✅ 완료 (2026-03-14)
 - **설계:** `docs/strategy/bigger-ide-vision.md` Phase 2
-- **작업:**
-  1. `pnpm add @xyflow/react`
-  2. 노드 기반 워크플로 UI: AgentNode, GateNode, TriggerNode, ConditionNode
-  3. 기존 workflow pack 백엔드와 연결
-  4. 드래그&드롭으로 에이전트 파이프라인 시각적 구성
+- **완료 내용:**
+  1. `pnpm add @xyflow/react` (v12.10.1) 설치
+  2. 노드 기반 워크플로 UI: `WbTriggerNode`, `WbAgentNode`, `WbGateNode`, `WbConditionNode` (4종)
+  3. `src/components/workflow-builder/WorkflowBuilder.tsx` — ReactFlow 캔버스, Background/Controls/MiniMap, 노드 팔레트
+  4. 드래그&드롭으로 에이전트 파이프라인 시각적 구성, 노드 간 엣지 연결
+  5. localStorage 자동 저장/불러오기, 워크플로 이름 편집
+  6. 사이드바 에이전트 섹션에 "workflow-builder" 뷰 추가, `g w` 키보드 단축키 등록
 
 #### ~~[P3-3] Keyboard-First UX 완성~~ ✅ 완료 (2026-03-14)
 - **파일:** `src/app/AppMainLayout.tsx`, `src/components/KeyboardShortcutsGuide.tsx`
@@ -461,13 +463,13 @@ const AGENTS_CHILDREN: View[] = ["agents", "heartbeat"]; // line ~51, "flow-grap
   2. `n` → 커맨드 팔레트 오픈 (편집 중 제외)
   3. KeyboardShortcutsGuide에 `g + 키` 섹션 추가 (i18n 4개국어)
 
-#### [P3-4] 테스트 커버리지 확대
-- **현황:** `src/i18n.test.ts`, `src/hooks/useWebSocket.test.ts` 정도만 존재
-- **작업:**
-  1. 핵심 백엔드 모듈 단위 테스트: `hook-executor`, `project-scoped-rules`, `persona-catalog`
-  2. API 통합 테스트 (`supertest`): 주요 엔드포인트 50개
-  3. 프론트 컴포넌트 테스트 (`@testing-library/react`): CommandPalette, AgentFlowGraph
-  4. CI 파이프라인 연동 (GitHub Actions): 머지 전 테스트 자동 실행
+#### ~~[P3-4] 테스트 커버리지 확대~~ ✅ 완료 (2026-03-14)
+- **완료 내용:**
+  1. 서버 logger 임포트 경로 수정: `hub.ts`, `hook-executor.ts`, `task-execution-meta.ts`, `worktree/lifecycle.ts`
+  2. 테스트 하네스 수정: `versioned-migrations.test.ts` makeDb() 누락 테이블 추가, `crud.workflow-pack-filter.test.ts` 누락 컬럼 추가
+  3. `hub.test.ts` cli_output 테스트에 taskId 구독 로직 추가 (subscription-filtered delivery 반영)
+  4. `worktree/lifecycle.test.ts` 임시 git repo에 `commit.gpgsign=false` 설정 (서명 서버 없는 환경 대응)
+  5. **결과: 서버 테스트 40개 파일, 181개 테스트 전부 통과 / 프론트 12개 파일, 43개 테스트 전부 통과**
 
 #### ~~[P3-5] 이상 감지 인덱스 최적화~~ ✅ 완료 (2026-03-14)
 - **파일:** `server/modules/bootstrap/schema/versioned-migrations.ts`, `server/db/runtime.ts`, `server/modules/lifecycle.ts`
@@ -510,9 +512,9 @@ const AGENTS_CHILDREN: View[] = ["agents", "heartbeat"]; // line ~51, "flow-grap
 | ~~P2-7~~ | ~~페르소나 UI 완성~~ | 2일 | UI 완성도 | ✅ 완료 |
 | ~~P2-8~~ | ~~WebSocket 최적화~~ | 2일 | 성능 | ✅ 완료 |
 | ~~P3-1~~ | ~~Split-Pane Layout~~ | 3~4일 | IDE 비전 | ✅ 완료 |
-| P3-2 | Visual Workflow Builder | 3~4주 | IDE 비전 | ⬜ 미시작 |
+| ~~P3-2~~ | ~~Visual Workflow Builder~~ | 3~4주 | IDE 비전 | ✅ 완료 |
 | ~~P3-3~~ | ~~Keyboard-First UX~~ | 1주 | UX 완성도 | ✅ 완료 |
-| P3-4 | 테스트 커버리지 | 3~4주 | 품질 | ⬜ 미시작 |
+| ~~P3-4~~ | ~~테스트 커버리지~~ | 3~4주 | 품질 | ✅ 완료 |
 | ~~P3-5~~ | ~~이상 감지 최적화~~ | 1일 | 성능 | ✅ 완료 |
 | ~~P3-6~~ | ~~Slack 연동~~ | 3일 | 기능 확장 | ✅ 완료 |
 

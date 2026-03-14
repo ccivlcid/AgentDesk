@@ -4,6 +4,7 @@ export type View =
   | "agents"
   | "heartbeat"
   | "flow-graph"
+  | "workflow-builder"
   | "dashboard"
   | "project-types"
   | "cli-usage"
