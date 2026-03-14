@@ -14,6 +14,7 @@ import type {
 import AgentAvatar from "./AgentAvatar";
 import AgentDetailTabContent from "./agent-detail/AgentDetailTabContent";
 import AgentChatTab from "./agent-detail/AgentChatTab";
+import AgentTimeline from "./agent-detail/AgentTimeline";
 import { CLI_LABELS, oauthAccountLabel, roleLabel, STATUS_CONFIG, statusLabel } from "./agent-detail/constants";
 import { useConfirm } from "./ui/ConfirmDialog";
 
@@ -56,7 +57,7 @@ export default function AgentDetail({
 }: AgentDetailProps) {
   const { t, language } = useI18n();
   const { confirm } = useConfirm();
-  const [tab, setTab] = useState<"info" | "tasks" | "alba" | "performance" | "chat">("info");
+  const [tab, setTab] = useState<"info" | "tasks" | "alba" | "performance" | "chat" | "timeline">("info");
   const [editingCli, setEditingCli] = useState(false);
   const [selectedCli, setSelectedCli] = useState(agent.cli_provider);
   const [selectedOAuthAccountId, setSelectedOAuthAccountId] = useState(agent.oauth_account_id ?? "");
@@ -716,6 +717,10 @@ export default function AgentDetail({
               key: "chat",
               label: t({ ko: "채팅", en: "Chat", ja: "チャット", zh: "聊天" }),
             },
+            {
+              key: "timeline",
+              label: t({ ko: "타임라인", en: "Timeline", ja: "タイムライン", zh: "时间线" }),
+            },
           ].map((tabItem) => (
             <button
               key={tabItem.key}
@@ -736,6 +741,8 @@ export default function AgentDetail({
         <div className="p-4 overflow-y-auto max-h-[40vh]">
           {tab === "chat" ? (
             <AgentChatTab agent={agent} />
+          ) : tab === "timeline" ? (
+            <AgentTimeline agentId={agent.id} t={t} />
           ) : (
             <AgentDetailTabContent
               tab={tab}
