@@ -1,7 +1,7 @@
 param(
   [string]$AgentsPath = "",
   [int]$Port = 0,
-  [string]$OpenClawConfig = "",
+  [string]$AgentDeskConfig = "",
   [switch]$Start
 )
 
@@ -12,7 +12,7 @@ $rootDir = Resolve-Path (Join-Path $scriptDir "..")
 Set-Location $rootDir
 
 if (!(Test-Path "package.json") -or !(Test-Path "scripts/setup.mjs")) {
-  throw "Run this script from the Claw-Empire repository."
+  throw "Run this script from the AgentDesk repository."
 }
 
 if (-not (Get-Command node -ErrorAction SilentlyContinue)) {
@@ -33,30 +33,30 @@ if (-not (Get-Command pnpm -ErrorAction SilentlyContinue)) {
   corepack prepare pnpm@latest --activate | Out-Null
 }
 
-Write-Host "[Claw-Empire] Installing dependencies..."
+Write-Host "[AgentDesk] Installing dependencies..."
 pnpm install
 
 if (-not (Test-Path ".env")) {
   Copy-Item ".env.example" ".env"
-  Write-Host "[Claw-Empire] Created .env from .env.example"
+  Write-Host "[AgentDesk] Created .env from .env.example"
 }
 
-$resolvedOpenClaw = ""
-if ([string]::IsNullOrWhiteSpace($OpenClawConfig)) {
-  $defaultOpenClaw = Join-Path $HOME ".openclaw/openclaw.json"
-  if (Test-Path $defaultOpenClaw) {
-    $resolvedOpenClaw = (Resolve-Path $defaultOpenClaw).Path
+$resolvedAgentDeskConfig = ""
+if ([string]::IsNullOrWhiteSpace($AgentDeskConfig)) {
+  $defaultAgentDeskConfig = Join-Path $HOME ".agentdesk/agentdesk.json"
+  if (Test-Path $defaultAgentDeskConfig) {
+    $resolvedAgentDeskConfig = (Resolve-Path $defaultAgentDeskConfig).Path
   }
 } else {
-  $candidate = $OpenClawConfig
+  $candidate = $AgentDeskConfig
   if ($candidate.StartsWith("~")) {
     $candidate = $candidate.Replace("~", $HOME)
   }
   if (Test-Path $candidate) {
-    $resolvedOpenClaw = (Resolve-Path $candidate).Path
+    $resolvedAgentDeskConfig = (Resolve-Path $candidate).Path
   } else {
-    Write-Warning "[Claw-Empire] OPENCLAW config not found at $candidate. Keeping path for later."
-    $resolvedOpenClaw = $candidate
+    Write-Warning "[AgentDesk] AgentDesk config not found at $candidate. Keeping path for later."
+    $resolvedAgentDeskConfig = $candidate
   }
 }
 
@@ -66,10 +66,10 @@ if ($Port -gt 0) {
   Remove-Item Env:CLAW_SETUP_PORT -ErrorAction SilentlyContinue
 }
 
-if ($resolvedOpenClaw) {
-  $env:CLAW_SETUP_OPENCLAW = $resolvedOpenClaw.Replace("\", "/")
+if ($resolvedAgentDeskConfig) {
+  $env:AGENTDESK_SETUP_CONFIG = $resolvedAgentDeskConfig.Replace("\", "/")
 } else {
-  Remove-Item Env:CLAW_SETUP_OPENCLAW -ErrorAction SilentlyContinue
+  Remove-Item Env:AGENTDESK_SETUP_CONFIG -ErrorAction SilentlyContinue
 }
 
 $envPatchScript = @'
@@ -105,27 +105,27 @@ const currentSecret = read("OAUTH_ENCRYPTION_SECRET");
 if (!currentSecret || currentSecret === "__CHANGE_ME__") {
   const generated = crypto.randomBytes(32).toString("hex");
   upsert("OAUTH_ENCRYPTION_SECRET", `"${generated}"`);
-  console.log("[Claw-Empire] Generated OAUTH_ENCRYPTION_SECRET");
+  console.log("[AgentDesk] Generated OAUTH_ENCRYPTION_SECRET");
 }
 
 const currentInboxSecret = read("INBOX_WEBHOOK_SECRET");
 if (!currentInboxSecret || currentInboxSecret === "__CHANGE_ME__") {
   const generatedInbox = crypto.randomBytes(32).toString("hex");
   upsert("INBOX_WEBHOOK_SECRET", `"${generatedInbox}"`);
-  console.log("[Claw-Empire] Generated INBOX_WEBHOOK_SECRET");
+  console.log("[AgentDesk] Generated INBOX_WEBHOOK_SECRET");
 }
 
 const port = process.env.CLAW_SETUP_PORT?.trim();
 if (port) {
   upsert("PORT", port);
-  console.log(`[Claw-Empire] Set PORT=${port}`);
+  console.log(`[AgentDesk] Set PORT=${port}`);
 }
 
-const openclaw = process.env.CLAW_SETUP_OPENCLAW?.trim();
-if (openclaw) {
-  const normalized = openclaw.replace(/\\/g, "/");
-  upsert("OPENCLAW_CONFIG", `"${normalized}"`);
-  console.log(`[Claw-Empire] Set OPENCLAW_CONFIG=${normalized}`);
+const agentdeskConfig = process.env.AGENTDESK_SETUP_CONFIG?.trim();
+if (agentdeskConfig) {
+  const normalized = agentdeskConfig.replace(/\\/g, "/");
+  upsert("AGENTDESK_CONFIG", `"${normalized}"`);
+  console.log(`[AgentDesk] Set AGENTDESK_CONFIG=${normalized}`);
 }
 
 fs.writeFileSync(envPath, content, "utf8");
@@ -133,7 +133,7 @@ fs.writeFileSync(envPath, content, "utf8");
 node -e $envPatchScript
 
 Remove-Item Env:CLAW_SETUP_PORT -ErrorAction SilentlyContinue
-Remove-Item Env:CLAW_SETUP_OPENCLAW -ErrorAction SilentlyContinue
+Remove-Item Env:AGENTDESK_SETUP_CONFIG -ErrorAction SilentlyContinue
 
 $portToUse = $Port
 if ($portToUse -le 0) {
@@ -154,16 +154,16 @@ if ($AgentsPath) {
   $setupArgs += @("--agents-path", $AgentsPath)
 }
 
-Write-Host "[Claw-Empire] Installing AGENTS.md orchestration rules..."
+Write-Host "[AgentDesk] Installing AGENTS.md orchestration rules..."
 & pnpm @setupArgs
 
 Write-Host ""
-Write-Host "[Claw-Empire] Setup complete."
+Write-Host "[AgentDesk] Setup complete."
 Write-Host "Frontend: http://127.0.0.1:8800"
 Write-Host "API:      http://127.0.0.1:$portToUse/healthz"
 
 if ($Start) {
-  Write-Host "[Claw-Empire] Starting development server..."
+  Write-Host "[AgentDesk] Starting development server..."
   pnpm dev:local
   exit $LASTEXITCODE
 }

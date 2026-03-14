@@ -90,7 +90,7 @@
 }
 
 /* ─── Custom Skill Classroom Animation ─── */
-@keyframes classroom-claw-write {
+@keyframes classroom-agentdesk-write {
   0% {
     transform: translateX(-50%) rotate(0deg);
   }
@@ -301,17 +301,17 @@
   animation: classroom-chalk-underline 1.5s 2.5s ease-out both;
 }
 
-.classroom-claw-teacher {
+.classroom-agentdesk-teacher {
   position: absolute;
   top: 46px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 10;
   filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5));
-  animation: classroom-claw-write 3s ease-in-out infinite;
+  animation: classroom-agentdesk-write 3s ease-in-out infinite;
 }
 
-.classroom-claw-teacher img {
+.classroom-agentdesk-teacher img {
   width: 64px;
   height: 64px;
   object-fit: contain;

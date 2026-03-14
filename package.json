@@ -1,7 +1,7 @@
 {
   "name": "agentdesk",
   "version": "2.0.1",
-  "description": "AgentDesk - AI Agent Office Simulator. Command your AI agent company from the CEO desk.",
+  "description": "AgentDesk - AI Agent Office Simulator. Command your AI agent company from the Client desk.",
   "type": "module",
   "main": "electron/main.cjs",
   "scripts": {

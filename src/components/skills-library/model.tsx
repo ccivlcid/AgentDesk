@@ -135,8 +135,8 @@ export function categorize(name: string, repo: string): string {
     n.includes("requesting") ||
     n.includes("receiving") ||
     n.includes("agentation") ||
-    n.includes("clawdirect") ||
-    n.includes("instaclaw") ||
+    n.includes("agentdeskdirect") ||
+    n.includes("instaagentdesk") ||
     n.includes("nblm") ||
     n.includes("context7")
   )

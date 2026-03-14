@@ -58,7 +58,7 @@ describe("buildDirectReplyPrompt", () => {
 
   it("includes character persona block when persona .md file exists", () => {
     mkdirSync(AGENTS_DIR, { recursive: true });
-    writeFileSync(testMdPath, "Playful design specialist. Call CEO '클라이언트님' and keep warm expressive tone.");
+    writeFileSync(testMdPath, "Playful design specialist. Call Client '클라이언트님' and keep warm expressive tone.");
     const tools = createTools();
     const agent = createAgent({ id: TEST_AGENT_ID });
     const built = tools.buildDirectReplyPrompt(agent, "Can you help me now?", "chat");

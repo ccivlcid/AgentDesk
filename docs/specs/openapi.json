@@ -2693,7 +2693,7 @@
               "example": {
                 "source": "telegram",
                 "text": "$Fix build failure on main",
-                "author": "CEO",
+                "author": "Client",
                 "project_id": "project_001",
                 "project_path": "/workspace/my-project",
                 "project_context": "Stabilize release pipeline"
@@ -2979,7 +2979,7 @@
                 "additionalProperties": true
               },
               "example": {
-                "ceoName": "CEO",
+                "ceoName": "Client",
                 "language": "ko"
               }
             }
@@ -5338,7 +5338,7 @@
                       "id": "123456789012345678",
                       "name": "ops-alert",
                       "guildId": "987654321098765432",
-                      "guildName": "Claw Empire",
+                      "guildName": "AgentDesk",
                       "type": 0
                     }
                   ]

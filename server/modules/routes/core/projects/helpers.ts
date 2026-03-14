@@ -370,7 +370,7 @@ export function createProjectRouteHelpers({ db, normalizeTextField }: CreateProj
     timeoutMs: number,
   ): Promise<{ path: string | null; cancelled: boolean; source: string }> {
     const ts = `${process.pid}-${Date.now()}`;
-    const resultFile = path.join(os.tmpdir(), `claw-pick-result-${ts}.txt`);
+    const resultFile = path.join(os.tmpdir(), `agentdesk-pick-result-${ts}.txt`);
     const escapedResultFile = resultFile.replace(/\\/g, "\\\\");
 
     // Shell.Application COM → WinForms 로딩 불필요, 즉시 다이얼로그 표시
@@ -409,8 +409,8 @@ export function createProjectRouteHelpers({ db, normalizeTextField }: CreateProj
     timeoutMs: number,
   ): Promise<{ path: string | null; cancelled: boolean; source: string }> {
     const ts = `${process.pid}-${Date.now()}`;
-    const resultFile = path.join(os.tmpdir(), `claw-pick-result-${ts}.txt`);
-    const scriptFile = path.join(os.tmpdir(), `claw-pick-${ts}.vbs`);
+    const resultFile = path.join(os.tmpdir(), `agentdesk-pick-result-${ts}.txt`);
+    const scriptFile = path.join(os.tmpdir(), `agentdesk-pick-${ts}.vbs`);
 
     const vbsScript = [
       "On Error Resume Next",
@@ -427,7 +427,7 @@ export function createProjectRouteHelpers({ db, normalizeTextField }: CreateProj
     ].join("\r\n");
 
     // BrowseForFolder는 동기 차단이므로 별도 helper가 다이얼로그를 포그라운드로 올림
-    const activatorFile = path.join(os.tmpdir(), `claw-pick-activate-${ts}.vbs`);
+    const activatorFile = path.join(os.tmpdir(), `agentdesk-pick-activate-${ts}.vbs`);
     const activatorScript = [
       "WScript.Sleep 400",
       'Set sh = CreateObject("WScript.Shell")',

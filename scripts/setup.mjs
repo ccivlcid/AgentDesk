@@ -3,7 +3,7 @@
 /**
  * AgentDesk setup script
  *
- * Prepends CEO directive + orchestration rules to the user's AGENTS.md.
+ * Prepends Client directive + orchestration rules to the user's AGENTS.md.
  * This is an UPDATE, not an OVERWRITE — existing content is preserved.
  *
  * Usage:
@@ -17,7 +17,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const TEMPLATE_PATH = path.join(__dirname, "..", "templates", "AGENTS-empire.md");
+const TEMPLATE_PATH = path.join(__dirname, "..", "templates", "AGENTS-agentdesk.md");
 const START_MARKER = "<!-- BEGIN agentdesk orchestration rules -->";
 const END_MARKER = "<!-- END agentdesk orchestration rules -->";
 

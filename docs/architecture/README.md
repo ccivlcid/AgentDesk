@@ -94,8 +94,8 @@ AgentDesk
 │   │   ├── 필요-기능-분석.md
 │   │   ├── agent-persona-system.md
 │   │   ├── agentdesk-vs-openai-symphony.md
-│   │   ├── claw-empire-comparison.md
-│   │   ├── claw-empire-differentiation-plan.md
+│   │   ├── agentdesk-comparison.md
+│   │   ├── agentdesk-differentiation-plan.md
 │   │   ├── pack-identity-system.md
 │   │   └── ui-differentiation-strategy.md
 │   └── README.md
@@ -225,7 +225,7 @@ AgentDesk
 │   ├── generate-intro-ppt.mjs
 │   ├── migrate-custom-skills-canonical.mjs
 │   ├── openapi-contract.mjs
-│   ├── openclaw-setup.ps1
+│   ├── agentdesk-setup.ps1
 │   ├── preflight-public.sh
 │   ├── prepare-e2e-runtime.mjs
 │   ├── setup.mjs
@@ -871,7 +871,7 @@ AgentDesk
 ├── tasks/
 │   └── todo.md
 ├── templates/
-│   └── AGENTS-empire.md
+│   └── AGENTS-agentdesk.md
 ├── tests/
 │   └── e2e/
 │       ├── ci-coverage-gap.spec.ts

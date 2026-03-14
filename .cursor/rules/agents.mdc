@@ -2,13 +2,13 @@
 description: Imported from AGENTS.md
 alwaysApply: true
 ---
-<!-- managed-by: climpire-library -->
+<!-- managed-by: agentdesk-library -->
 
-<!-- BEGIN hyperclaw orchestration rules -->
-# HyperClaw Orchestration Rules
+<!-- BEGIN agentdesk orchestration rules -->
+# AgentDesk Orchestration Rules
 
-> This section was added by HyperClaw setup (`pnpm setup`).
-> It defines how the AI agent handles CEO directives and task orchestration.
+> This section was added by AgentDesk setup (`pnpm setup`).
+> It defines how the AI agent handles Client directives and task orchestration.
 > Place this at the TOP of your AGENTS.md so it takes priority.
 
 ---
@@ -92,9 +92,9 @@ These rules are additive and do NOT delete existing orchestration rules below.
 
 ---
 
-## CEO Directive (`$` prefix)
+## Client Directive (`$` prefix)
 
-**Messages starting with `$` are HyperClaw CEO Directives.**
+**Messages starting with `$` are AgentDesk Client Directives.**
 
 When receiving a message that **starts with `$`**:
 
