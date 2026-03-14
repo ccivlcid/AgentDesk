@@ -1,4 +1,5 @@
 import type { DatabaseSync } from "node:sqlite";
+import logger from "../../../lib/logger.ts";
 
 type DbLike = Pick<DatabaseSync, "exec" | "prepare">;
 
@@ -135,7 +136,7 @@ export function runVersionedMigrations(db: DbLike): void {
       migration.up(db);
       insert.run(migration.id);
       db.exec("COMMIT");
-      console.log(`[db-migration] ✓ ${migration.id}`);
+      logger.info(`[db-migration] ✓ ${migration.id}`);
     } catch (err) {
       db.exec("ROLLBACK");
       throw new Error(`[db-migration] FAILED: ${migration.id} — ${String(err)}`);

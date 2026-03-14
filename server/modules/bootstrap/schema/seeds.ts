@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import type { DatabaseSync } from "node:sqlite";
 import { seedDefaultWorkflowPacks } from "./workflow-pack-seeds.ts";
 import { seedCategories } from "../seeds/category-seeds.ts";
+import logger from "../../../lib/logger.ts";
 
 const AGENTS_DIR = join(dirname(fileURLToPath(import.meta.url)), "../../../../prompts/agents");
 
@@ -45,7 +46,7 @@ export function applyDefaultSeeds(db: DbLike): void {
       5,
     );
     insertDept.run("operations", "Operations", "운영팀", "運営チーム", "运营组", "⚙️", "#10b981", 6);
-    console.log("[AgentDesk] Seeded default departments");
+    logger.info("[AgentDesk] Seeded default departments");
   }
 
   const agentCount = (db.prepare("SELECT COUNT(*) as cnt FROM agents").get() as { cnt: number }).cnt;
@@ -155,7 +156,7 @@ export function applyDefaultSeeds(db: DbLike): void {
       insertAgent.run(id, name, nameKo, dept, role, provider, emoji);
       writeAgentPersonaFile(id, persona);
     }
-    console.log("[AgentDesk] Seeded default agents");
+    logger.info("[AgentDesk] Seeded default agents");
   }
 
   // Seed default settings if none exist
@@ -201,7 +202,7 @@ export function applyDefaultSeeds(db: DbLike): void {
         }),
       );
       insertSetting.run("roomThemes", JSON.stringify(defaultRoomThemes));
-      console.log("[AgentDesk] Seeded default settings");
+      logger.info("[AgentDesk] Seeded default settings");
     }
 
     const hasLanguageSetting = db.prepare("SELECT 1 FROM settings WHERE key = 'language' LIMIT 1").get() as
@@ -319,7 +320,7 @@ export function applyDefaultSeeds(db: DbLike): void {
     try {
       db.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_departments_sort_order ON departments(sort_order)");
     } catch (err) {
-      console.warn("[AgentDesk] Failed to recreate idx_departments_sort_order:", err);
+      logger.warn({ err }, "[AgentDesk] Failed to recreate idx_departments_sort_order");
     }
 
     const insertAgentIfMissing = db.prepare(
@@ -395,7 +396,7 @@ export function applyDefaultSeeds(db: DbLike): void {
     for (const [name, nameKo, dept, role, provider, emoji, persona] of newAgents) {
       if (!existingNames.has(name)) {
         if (!existingDeptIds.has(dept)) {
-          console.warn(`[AgentDesk] Skip adding agent "${name}": missing department "${dept}"`);
+          logger.warn(`[AgentDesk] Skip adding agent "${name}": missing department "${dept}"`);
           continue;
         }
         try {
@@ -404,10 +405,10 @@ export function applyDefaultSeeds(db: DbLike): void {
           writeAgentPersonaFile(id, persona);
           added++;
         } catch (err) {
-          console.warn(`[AgentDesk] Skip adding agent "${name}":`, err);
+          logger.warn({ err }, `[AgentDesk] Skip adding agent "${name}"`);
         }
       }
     }
-    if (added > 0) console.log(`[AgentDesk] Added ${added} new agents`);
+    if (added > 0) logger.info({ added }, "[AgentDesk] Added %d new agents");
   }
 }

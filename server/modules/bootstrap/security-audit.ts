@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { createHash, randomUUID } from "node:crypto";
 import type { DatabaseSync } from "node:sqlite";
+import logger from "../../lib/logger.ts";
 
 export type MessageIngressAuditOutcome =
   | "accepted"
@@ -190,7 +191,7 @@ export function createSecurityAuditTools(deps: SecurityAuditDeps) {
         }
       }
     } catch (err) {
-      console.warn(`[AgentDesk] security audit chain bootstrap failed: ${String(err)}`);
+      logger.warn(`[AgentDesk] security audit chain bootstrap failed: ${String(err)}`);
     }
     return "GENESIS";
   }
@@ -261,7 +262,7 @@ export function createSecurityAuditTools(deps: SecurityAuditDeps) {
       recordMessageIngressAudit(input);
       return true;
     } catch (err) {
-      console.error(`[AgentDesk] security audit unavailable: ${String(err)}`);
+      logger.error(`[AgentDesk] security audit unavailable: ${String(err)}`);
       res.status(503).json({ error: "audit_log_unavailable", retryable: true });
       return false;
     }
@@ -282,7 +283,7 @@ export function createSecurityAuditTools(deps: SecurityAuditDeps) {
     try {
       await rollbackMessageInsertAfterAuditFailure(messageId);
     } catch (rollbackErr) {
-      console.error(
+      logger.error(
         `[AgentDesk] rollback after audit failure failed: message_id=${messageId}, ` + `${String(rollbackErr)}`,
       );
     }

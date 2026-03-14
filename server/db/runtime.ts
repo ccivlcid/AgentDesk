@@ -3,6 +3,7 @@ import path from "node:path";
 import { DatabaseSync } from "node:sqlite";
 
 import { DEFAULT_DB_PATH, LEGACY_DB_PATH, WRITABLE_DATA_DIR } from "../config/runtime.ts";
+import logger from "../lib/logger.ts";
 
 export function readNonNegativeIntEnv(name: string, fallback: number): number {
   const raw = process.env[name];
@@ -67,7 +68,7 @@ export function initializeDatabaseRuntime(): {
       const src = LEGACY_DB_PATH + suffix;
       if (fs.existsSync(src)) fs.renameSync(src, DEFAULT_DB_PATH + suffix);
     }
-    console.log("[AgentDesk] Migrated legacy database to agentdesk.sqlite");
+    logger.info("[AgentDesk] Migrated legacy database to agentdesk.sqlite");
   }
 
   const dbPath = process.env.DB_PATH ?? DEFAULT_DB_PATH;
@@ -80,13 +81,13 @@ export function initializeDatabaseRuntime(): {
   db.exec("PRAGMA journal_mode = WAL");
   db.exec(`PRAGMA busy_timeout = ${SQLITE_BUSY_TIMEOUT_MS}`);
   db.exec("PRAGMA foreign_keys = ON");
-  console.log(
+  logger.info(
     `[AgentDesk] SQLite write resilience: busy_timeout=${SQLITE_BUSY_TIMEOUT_MS}ms, ` +
       `retries=${SQLITE_BUSY_RETRY_MAX_ATTEMPTS}, ` +
       `backoff=${SQLITE_BUSY_RETRY_BASE_DELAY_MS}-${SQLITE_BUSY_RETRY_MAX_DELAY_MS}ms, ` +
       `jitter<=${SQLITE_BUSY_RETRY_JITTER_MS}ms`,
   );
-  console.log(
+  logger.info(
     `[AgentDesk] Review guardrails: max_rounds=${REVIEW_MAX_ROUNDS}, ` +
       `final_round=${REVIEW_FINAL_DECISION_ROUND}, ` +
       `remediation_requests=${REVIEW_MAX_REMEDIATION_REQUESTS}/task, ` +
@@ -95,11 +96,11 @@ export function initializeDatabaseRuntime(): {
       `memo_cap=${REVIEW_MAX_MEMO_ITEMS_PER_ROUND}/round, ` +
       `memo_cap_per_dept=${REVIEW_MAX_MEMO_ITEMS_PER_DEPT}`,
   );
-  console.log(
+  logger.info(
     `[AgentDesk] In-progress watchdog: grace=${IN_PROGRESS_ORPHAN_GRACE_MS}ms, ` +
       `sweep=${IN_PROGRESS_ORPHAN_SWEEP_MS}ms`,
   );
-  console.log(`[AgentDesk] Subtask delegation sweep: interval=${SUBTASK_DELEGATION_SWEEP_MS}ms`);
+  logger.info(`[AgentDesk] Subtask delegation sweep: interval=${SUBTASK_DELEGATION_SWEEP_MS}ms`);
 
   // 로그는 exe/실행 위치(cwd)에 쌓이도록, DB만 AppData 등 쓰기 전용 대비 경로 사용
   const logsDir = process.env.LOGS_DIR ?? path.join(process.cwd(), "logs");

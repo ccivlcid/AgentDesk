@@ -1,6 +1,7 @@
 import express from "express";
 import { WebSocketServer, WebSocket } from "ws";
 import type { BaseRuntimeContext, RuntimeContext } from "./types/runtime-context.ts";
+import logger from "./lib/logger.ts";
 
 import { DIST_DIR, IS_PRODUCTION } from "./config/runtime.ts";
 import {
@@ -57,7 +58,7 @@ export type { TaskCreationAuditInput } from "./modules/bootstrap/security-audit.
     warnings.push("API_AUTH_TOKEN is not set — using ephemeral random token (resets on every restart)");
   }
   for (const msg of warnings) {
-    console.warn(`[AgentDesk] ⚠️  ${msg}`);
+    logger.warn(`[AgentDesk] ⚠️  ${msg}`);
   }
 })();
 
