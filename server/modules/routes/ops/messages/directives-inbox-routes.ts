@@ -67,7 +67,7 @@ const buildAgentUpgradeRequiredPayload = () => {
   const installerPaths = {
     mac_linux: path.join(repoRoot, "scripts", "setup.sh"),
     windows_powershell: path.join(repoRoot, "scripts", "setup.ps1"),
-    agents_template: path.join(repoRoot, "templates", "AGENTS-empire.md"),
+    agents_template: path.join(repoRoot, "templates", "AGENTS-agentdesk.md"),
   };
   const agentsTargetPath = path.join(os.homedir(), ".agentdesk", "workspace", "AGENTS.md");
   const installCommands = {
@@ -90,7 +90,7 @@ const buildAgentUpgradeRequiredPayload = () => {
     message_ko: `AgentDesk AGENTS가 구버전입니다(HTTP 428). 설치 경로: ${installerPaths.mac_linux} (또는 ${installerPaths.windows_powershell}), 대상 AGENTS: ${agentsTargetPath}. 지금 제가 직접 설치해드릴까요?`,
     required_agent_rules_version: 2,
     required_action: "install_latest_agents_rules",
-    installer_files: ["scripts/setup.sh", "scripts/setup.ps1", "templates/AGENTS-empire.md"],
+    installer_files: ["scripts/setup.sh", "scripts/setup.ps1", "templates/AGENTS-agentdesk.md"],
     installer_absolute_paths: installerPaths,
     agents_target_path: agentsTargetPath,
     install_commands: installCommands,

@@ -871,7 +871,7 @@ AgentDesk
 ├── tasks/
 │   └── todo.md
 ├── templates/
-│   └── AGENTS-empire.md
+│   └── AGENTS-agentdesk.md
 ├── tests/
 │   └── e2e/
 │       ├── ci-coverage-gap.spec.ts
