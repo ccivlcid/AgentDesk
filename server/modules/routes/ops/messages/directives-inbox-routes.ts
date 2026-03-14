@@ -1,5 +1,6 @@
 import os from "node:os";
 import path from "node:path";
+import logger from "../../../../lib/logger.ts";
 import { INBOX_WEBHOOK_SECRET } from "../../../../config/runtime.ts";
 import { sendMessengerMessage, sendMessengerSessionMessage } from "../../../../gateway/client.ts";
 import {
@@ -517,7 +518,7 @@ export function registerDirectiveAndInboxRoutes(
       : null;
     const shouldRouteToSessionAgent = Boolean(sessionRoute && routedAgent);
     if (sessionRoute && !routedAgent) {
-      console.warn(
+      logger.warn(
         `[AgentDesk] inbox session route ignored: mapped agent not found (agent_id=${sessionRoute.agentId}, channel=${sessionRoute.channel}, target=${sessionRoute.targetId})`,
       );
     }

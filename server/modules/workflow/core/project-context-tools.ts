@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
+import logger from "../../lib/logger";
 import { createPromptSkillsHelper } from "./prompt-skills.ts";
 
 type DbLike = {
@@ -303,10 +304,10 @@ export function createProjectContextTools(deps: CreateProjectContextToolsDeps) {
         fs.mkdirSync(agentdeskDir, { recursive: true });
         fs.writeFileSync(contextPath, content, "utf8");
         fs.writeFileSync(metaPath, currentHead, "utf8");
-        console.log(`[AgentDesk] Generated project context: ${contextPath}`);
+        logger.info(`[AgentDesk] Generated project context: ${contextPath}`);
         return content;
       } catch (err) {
-        console.warn(`[AgentDesk] Failed to generate project context: ${err}`);
+        logger.warn(`[AgentDesk] Failed to generate project context: ${err}`);
       }
     }
 
@@ -468,13 +469,13 @@ export function createProjectContextTools(deps: CreateProjectContextToolsDeps) {
 
       fs.mkdirSync(agentdeskDir, { recursive: true });
       fs.writeFileSync(claudeMdSrc, content, "utf8");
-      console.log(`[AgentDesk] Generated CLAUDE.md: ${claudeMdSrc}`);
+      logger.info(`[AgentDesk] Generated CLAUDE.md: ${claudeMdSrc}`);
     }
 
     try {
       fs.copyFileSync(claudeMdSrc, claudeMdDst);
     } catch (err) {
-      console.warn(`[AgentDesk] Failed to copy CLAUDE.md to worktree: ${err}`);
+      logger.warn(`[AgentDesk] Failed to copy CLAUDE.md to worktree: ${err}`);
     }
   }
 

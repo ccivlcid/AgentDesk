@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import type { DatabaseSync, SQLInputValue } from "node:sqlite";
 import { randomUUID } from "node:crypto";
+import logger from "../../../lib/logger.ts";
 
 interface RegisterProjectDashboardRoutesOptions {
   app: Express;
@@ -92,7 +93,7 @@ function makeQuadrantRoutes<_T>(
         .all(projectId);
       res.json({ [resource]: rows });
     } catch (err) {
-      console.error(`[AgentDesk] GET /api/projects/:id/${resource} error:`, err);
+      logger.error({ err }, `[AgentDesk] GET /api/projects/:id/${resource} error:`);
       res.status(500).json({ error: `Failed to fetch ${resource}` });
     }
   });
@@ -122,7 +123,7 @@ function makeQuadrantRoutes<_T>(
       const row = db.prepare(`SELECT * FROM ${table} WHERE id = ?`).get(id);
       res.status(201).json(row);
     } catch (err) {
-      console.error(`[AgentDesk] POST /api/projects/:id/${resource} error:`, err);
+      logger.error({ err }, `[AgentDesk] POST /api/projects/:id/${resource} error:`);
       res.status(500).json({ error: `Failed to create ${resource.slice(0, -1)}` });
     }
   });
@@ -156,7 +157,7 @@ function makeQuadrantRoutes<_T>(
       const row = db.prepare(`SELECT * FROM ${table} WHERE id = ?`).get(itemId);
       res.json(row);
     } catch (err) {
-      console.error(`[AgentDesk] PATCH /api/projects/:id/${resource}/:itemId error:`, err);
+      logger.error({ err }, `[AgentDesk] PATCH /api/projects/:id/${resource}/:itemId error:`);
       res.status(500).json({ error: `Failed to update ${resource.slice(0, -1)}` });
     }
   });
@@ -172,7 +173,7 @@ function makeQuadrantRoutes<_T>(
       db.prepare(`DELETE FROM ${table} WHERE id = ?`).run(itemId);
       res.status(204).end();
     } catch (err) {
-      console.error(`[AgentDesk] DELETE /api/projects/:id/${resource}/:itemId error:`, err);
+      logger.error({ err }, `[AgentDesk] DELETE /api/projects/:id/${resource}/:itemId error:`);
       res.status(500).json({ error: `Failed to delete ${resource.slice(0, -1)}` });
     }
   });
@@ -238,7 +239,7 @@ export function registerProjectDashboardRoutes({
       const rows = db.prepare(sql).all(...params);
       res.json({ suggestions: rows });
     } catch (err) {
-      console.error("[AgentDesk] GET /api/outputs/suggestions error:", err);
+      logger.error({ err }, "[AgentDesk] GET /api/outputs/suggestions error:");
       res.status(500).json({ error: "Failed to fetch output suggestions" });
     }
   });
@@ -259,7 +260,7 @@ export function registerProjectDashboardRoutes({
         .all(projectId);
       res.json({ agents: rows });
     } catch (err) {
-      console.error("[AgentDesk] GET /api/projects/:id/agents error:", err);
+      logger.error({ err }, "[AgentDesk] GET /api/projects/:id/agents error:");
       res.status(500).json({ error: "Failed to fetch project agents" });
     }
   });
@@ -286,7 +287,7 @@ export function registerProjectDashboardRoutes({
 
       res.status(201).json({ project_id: projectId, agent_id: agentId });
     } catch (err) {
-      console.error("[AgentDesk] POST /api/projects/:id/agents error:", err);
+      logger.error({ err }, "[AgentDesk] POST /api/projects/:id/agents error:");
       res.status(500).json({ error: "Failed to add agent to project" });
     }
   });
@@ -300,7 +301,7 @@ export function registerProjectDashboardRoutes({
       ).run(projectId, agentId);
       res.status(204).end();
     } catch (err) {
-      console.error("[AgentDesk] DELETE /api/projects/:id/agents/:agentId error:", err);
+      logger.error({ err }, "[AgentDesk] DELETE /api/projects/:id/agents/:agentId error:");
       res.status(500).json({ error: "Failed to remove agent from project" });
     }
   });

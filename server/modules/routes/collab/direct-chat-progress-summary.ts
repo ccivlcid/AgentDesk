@@ -1,3 +1,4 @@
+import logger from "../../../lib/logger.ts";
 import { isMessengerChannel } from "../../../messenger/channels.ts";
 import type { Lang } from "../../../types/lang.ts";
 import type { DelegationOptions } from "./project-resolution.ts";
@@ -444,6 +445,6 @@ export function sendProjectProgressReply(
     deps.sendAgentMessage(agent, content);
     await deps.relayReplyToMessenger(options, agent, content);
   })().catch((err) => {
-    console.warn(`[project-progress] failed to send progress reply from ${agent.name}: ${String(err)}`);
+    logger.warn(`[project-progress] failed to send progress reply from ${agent.name}: ${String(err)}`);
   });
 }

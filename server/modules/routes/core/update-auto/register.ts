@@ -1,3 +1,4 @@
+import logger from "../../../../lib/logger.ts";
 import type { RuntimeContext } from "../../../../types/runtime-context.ts";
 import { PKG_VERSION } from "../../../../config/runtime.ts";
 import { isAuthenticated } from "../../../../security/auth.ts";
@@ -45,7 +46,7 @@ export function registerUpdateAutoRoutes(ctx: RuntimeContext): void {
   const parsedAutoUpdateChannel = parseAutoUpdateChannel(process.env.AUTO_UPDATE_CHANNEL);
   const AUTO_UPDATE_CHANNEL = parsedAutoUpdateChannel.channel;
   if (parsedAutoUpdateChannel.warning) {
-    console.warn(`[auto-update] ${parsedAutoUpdateChannel.warning}`);
+    logger.warn(`[auto-update] ${parsedAutoUpdateChannel.warning}`);
   }
   const AUTO_UPDATE_IDLE_ONLY = String(process.env.AUTO_UPDATE_IDLE_ONLY ?? "1").trim() !== "0";
   const AUTO_UPDATE_CHECK_INTERVAL_MS = Math.max(

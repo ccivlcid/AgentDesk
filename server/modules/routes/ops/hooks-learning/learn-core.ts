@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
+import logger from "../../../../lib/logger.ts";
 import type { RuntimeContext } from "../../../../types/runtime-context.ts";
 import type { HookHistoryProvider, HookLearnJob, HookLearnProvider, HookLearnStatus } from "./types.ts";
 
@@ -182,7 +183,7 @@ export function createHookLearnCore(ctx: RuntimeContext) {
     try {
       recordHookLearnHistoryState(job, "queued");
     } catch (err) {
-      console.warn(`[hook-learn] failed to record queued history: ${String(err)}`);
+      logger.warn(`[hook-learn] failed to record queued history: ${String(err)}`);
     }
 
     setTimeout(() => {
@@ -192,7 +193,7 @@ export function createHookLearnCore(ctx: RuntimeContext) {
       try {
         recordHookLearnHistoryState(job, "running", { startedAt: job.startedAt });
       } catch (err) {
-        console.warn(`[hook-learn] failed to record running history: ${String(err)}`);
+        logger.warn(`[hook-learn] failed to record running history: ${String(err)}`);
       }
 
       const fileContent = `# ${hookTitle}\n<!-- AgentDesk Hook: ${hookId} | Event: ${eventType} | Priority: ${priority} -->\n\nCommand: \`${hookCommand}\`\n`;
@@ -237,7 +238,7 @@ export function createHookLearnCore(ctx: RuntimeContext) {
           completedAt: job.completedAt,
         });
       } catch (historyErr) {
-        console.warn(`[hook-learn] failed to record completion history: ${String(historyErr)}`);
+        logger.warn(`[hook-learn] failed to record completion history: ${String(historyErr)}`);
       }
       pruneHookLearnJobs();
     }, 0);

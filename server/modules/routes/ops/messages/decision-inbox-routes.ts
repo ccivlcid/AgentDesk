@@ -1,3 +1,4 @@
+import logger from "../../../../lib/logger.ts";
 import type { RuntimeContext } from "../../../../types/runtime-context.ts";
 import { notifyDecisionInbox } from "../../../../gateway/client.ts";
 import type { AgentRow } from "../../shared/types.ts";
@@ -365,7 +366,7 @@ export function registerDecisionInboxRoutes(ctx: RuntimeContext): DecisionInboxR
         },
       });
     } catch (err) {
-      console.warn(`[decision-yolo] autopilot failed: ${String(err)}`);
+      logger.warn(`[decision-yolo] autopilot failed: ${String(err)}`);
     } finally {
       yoloAutopilotInFlight = false;
     }
@@ -385,7 +386,7 @@ export function registerDecisionInboxRoutes(ctx: RuntimeContext): DecisionInboxR
     const forceResend = forceRaw === "1" || forceRaw === "true" || forceRaw === "yes";
     const items = getDecisionInboxItems();
     void flushDecisionInboxMessengerNotices({ force: forceResend }).catch((err) => {
-      console.warn(`[decision-messenger] on-demand notice flush failed: ${String(err)}`);
+      logger.warn(`[decision-messenger] on-demand notice flush failed: ${String(err)}`);
     });
     res.json({ items });
   });

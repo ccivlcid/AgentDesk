@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import logger from "../../lib/logger";
 import { sendDeliverableFiles } from "../../../gateway/client.ts";
 import { resolveWorkflowPackKeyForTask } from "../packs/task-pack-resolver.ts";
 import { triggerWebhooks } from "../../routes/core/webhooks.ts";
@@ -180,7 +181,7 @@ export function createReportWorkflowTools(deps: CreateReportWorkflowToolsDeps) {
         });
       }
     } catch (reportErr) {
-      console.error("[AgentDesk] task_report broadcast error:", reportErr);
+      logger.error({ err: reportErr }, "[AgentDesk] task_report broadcast error");
     }
   }
 

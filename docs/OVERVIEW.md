@@ -289,14 +289,13 @@ UIUX 모니터링               ████████████████
 - **파일:** `server/modules/lifecycle.ts`, `server/security/auth.ts`
 - **현황:** WebSocket `onClose/onError` 핸들러에서 `wsClients.delete()` 구현됨. Rate Limiter 버킷은 5분 주기 sweep으로 stale 항목 자동 정리
 
-#### [P1-6] 구조화 로깅 도입 (pino)
-- **파일:** 전체 서버 (`console.log` 약 200+ 곳)
-- **문제:** console.log 난발, 프로덕션에서 로그 레벨 제어 불가
-- **작업:**
-  1. `pnpm add pino pino-pretty`
-  2. `server/lib/logger.ts` 생성 (레벨: debug/info/warn/error)
-  3. console.log → `logger.info()` 단계적 교체 (핵심 파일부터)
-  4. 프로덕션: JSON 출력 / 개발: pino-pretty 컬러 출력
+#### ~~[P1-6] 구조화 로깅 도입 (pino)~~ ✅
+- **파일:** `server/lib/logger.ts` (신규), 서버 전체 40+ 파일
+- **완료 내용:**
+  1. `pino` + `pino-pretty` 의존성 추가
+  2. `server/lib/logger.ts` — 환경별 로거 (dev: pino-pretty 컬러, prod: JSON, `LOG_LEVEL` 환경변수 지원)
+  3. 서버 전체 `console.log/warn/error` → `logger.info/warn/error` 교체 완료
+  4. 구조화 에러 로깅: `logger.error({ err }, "message")` 패턴으로 스택 트레이스 자동 직렬화
 
 ---
 
@@ -439,7 +438,7 @@ UIUX 모니터링               ████████████████
 | ~~P1-3~~ | ~~메신저 재시도~~ | 1일 | 안정성 | ✅ 완료 |
 | ~~P1-4~~ | ~~DB 마이그레이션 버전~~ | 2일 | 안정성 | ✅ 완료 |
 | ~~P1-5~~ | ~~Map 메모리 누수~~ | 1일 | 안정성 | ✅ 완료 |
-| **P1-6** | **구조화 로깅 (pino)** | **2일** | 운영성 | 🔨 진행 필요 |
+| ~~P1-6~~ | ~~구조화 로깅 (pino)~~ | 2일 | 운영성 | ✅ 완료 |
 | **P2-1** | **Agent Flow Graph** | **3~4주** | 🎯 핵심 비전 | 🔨 진행 필요 |
 | P2-2 | 실행 비용 추적 | 3일 | 사용성 | ⬜ 미시작 |
 | P2-3 | 동시 실행 큐 | 3일 | 확장성 | ⬜ 미시작 |

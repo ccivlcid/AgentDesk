@@ -3,6 +3,7 @@ import path from "node:path";
 import { spawn } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import type { RuntimeContext } from "../../../../types/runtime-context.ts";
+import logger from "../../../../lib/logger";
 import type { SkillHistoryProvider, SkillLearnJob, SkillLearnProvider, SkillLearnStatus } from "./types.ts";
 import {
   SKILL_HISTORY_PROVIDER_TO_AGENT,
@@ -299,7 +300,7 @@ export function createSkillLearnCore(ctx: RuntimeContext) {
     try {
       recordSkillLearnHistoryState(job, "queued");
     } catch (err) {
-      console.warn(`[skills.learn] failed to record queued history: ${String(err)}`);
+      logger.warn(`[skills.learn] failed to record queued history: ${String(err)}`);
     }
 
     setTimeout(() => {
@@ -309,7 +310,7 @@ export function createSkillLearnCore(ctx: RuntimeContext) {
       try {
         recordSkillLearnHistoryState(job, "running", { startedAt: job.startedAt });
       } catch (err) {
-        console.warn(`[skills.learn] failed to record running history: ${String(err)}`);
+        logger.warn(`[skills.learn] failed to record running history: ${String(err)}`);
       }
 
       let child;
@@ -333,7 +334,7 @@ export function createSkillLearnCore(ctx: RuntimeContext) {
             completedAt: job.completedAt,
           });
         } catch (historyErr) {
-          console.warn(`[skills.learn] failed to record spawn error history: ${String(historyErr)}`);
+          logger.warn(`[skills.learn] failed to record spawn error history: ${String(historyErr)}`);
         }
         pruneSkillLearnJobs();
         return;
@@ -360,7 +361,7 @@ export function createSkillLearnCore(ctx: RuntimeContext) {
             completedAt: job.completedAt,
           });
         } catch (historyErr) {
-          console.warn(`[skills.learn] failed to record error history: ${String(historyErr)}`);
+          logger.warn(`[skills.learn] failed to record error history: ${String(historyErr)}`);
         }
         pruneSkillLearnJobs();
       });
@@ -381,7 +382,7 @@ export function createSkillLearnCore(ctx: RuntimeContext) {
             completedAt: job.completedAt,
           });
         } catch (historyErr) {
-          console.warn(`[skills.learn] failed to record close history: ${String(historyErr)}`);
+          logger.warn(`[skills.learn] failed to record close history: ${String(historyErr)}`);
         }
         pruneSkillLearnJobs();
       });

@@ -1,5 +1,6 @@
 import { execFile } from "node:child_process";
 import path from "node:path";
+import logger from "../../../../lib/logger.ts";
 import type { RuntimeContext } from "../../../../types/runtime-context.ts";
 
 type SystemProcessInfo = {
@@ -213,7 +214,7 @@ export function registerAgentProcessInspectorRoutes(ctx: RuntimeContext): void {
 
       res.json({ ok: true, agents: result });
     } catch (err) {
-      console.error("[active-agents]", err);
+      logger.error({ err }, "[active-agents]");
       res.status(500).json({ ok: false, error: "Failed to fetch active agents" });
     }
   });
@@ -343,7 +344,7 @@ export function registerAgentProcessInspectorRoutes(ctx: RuntimeContext): void {
 
       res.json({ ok: true, processes: result });
     } catch (err) {
-      console.error("[cli-processes]", err);
+      logger.error({ err }, "[cli-processes]");
       res.status(500).json({ ok: false, error: "Failed to inspect CLI processes" });
     }
   });

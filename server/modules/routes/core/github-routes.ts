@@ -3,6 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import { spawn, execFileSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
+import logger from "../../../lib/logger.ts";
 import { decryptSecret } from "../../../oauth/helpers.ts";
 import type { RuntimeContext } from "../../../types/runtime-context.ts";
 
@@ -88,7 +89,7 @@ export function registerGitHubRoutes(deps: GitHubRouteDeps): void {
           }
         }
       } catch (probeErr) {
-        console.error("[GitHub Status] probe error:", probeErr);
+        logger.error({ err: probeErr }, "[GitHub Status] probe error:");
       }
     }
 

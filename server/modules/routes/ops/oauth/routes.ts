@@ -1,5 +1,6 @@
 import type { SQLInputValue } from "node:sqlite";
 import { randomUUID } from "node:crypto";
+import logger from "../../../../lib/logger.ts";
 import type { RuntimeContext } from "../../../../types/runtime-context.ts";
 import {
   BUILTIN_GITHUB_CLIENT_ID,
@@ -46,7 +47,7 @@ export function registerOAuthRoutes(ctx: RuntimeContext): void {
       const providers = await buildOAuthStatus();
       res.json({ storageReady: Boolean(OAUTH_ENCRYPTION_SECRET), providers });
     } catch (err) {
-      console.error("[oauth] Failed to build OAuth status:", err);
+      logger.error({ err }, "[oauth] Failed to build OAuth status:");
       res.status(500).json({ error: "Failed to build OAuth status" });
     }
   });
@@ -87,7 +88,7 @@ export function registerOAuthRoutes(ctx: RuntimeContext): void {
       res.redirect(result.redirectTo);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
-      console.error("[OAuth] GitHub/Copilot callback error:", msg);
+      logger.error("[OAuth] GitHub/Copilot callback error: %s", msg);
       const redirectUrl = new URL("/", OAUTH_BASE_URL);
       redirectUrl.searchParams.set("oauth_error", msg);
       res.redirect(redirectUrl.toString());
@@ -110,7 +111,7 @@ export function registerOAuthRoutes(ctx: RuntimeContext): void {
       res.redirect(result.redirectTo);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
-      console.error("[OAuth] Antigravity callback error:", msg);
+      logger.error("[OAuth] Antigravity callback error: %s", msg);
       const redirectUrl = new URL("/", OAUTH_BASE_URL);
       redirectUrl.searchParams.set("oauth_error", msg);
       res.redirect(redirectUrl.toString());
@@ -333,11 +334,11 @@ export function registerOAuthRoutes(ctx: RuntimeContext): void {
       const updatedRow = db.prepare("SELECT expires_at, updated_at FROM oauth_accounts WHERE id = ?").get(cred.id) as
         | { expires_at: number | null; updated_at: number }
         | undefined;
-      console.log("[oauth] Manual refresh: Antigravity token renewed");
+      logger.info("[oauth] Manual refresh: Antigravity token renewed");
       res.json({ ok: true, expires_at: updatedRow?.expires_at ?? null, refreshed_at: Date.now(), account_id: cred.id });
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      console.error("[oauth] Manual refresh failed for Antigravity:", msg);
+      logger.error("[oauth] Manual refresh failed for Antigravity: %s", msg);
       res.status(500).json({ error: msg });
     }
   });

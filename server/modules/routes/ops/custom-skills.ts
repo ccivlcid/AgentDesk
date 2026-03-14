@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
+import logger from "../../../lib/logger.ts";
 import type { RuntimeContext } from "../../../types/runtime-context.ts";
 
 const CUSTOM_SKILL_NAME_RE = /^[A-Za-z0-9_-]{1,80}$/;
@@ -108,7 +109,7 @@ export function registerCustomSkillRoutes(
             now,
           );
         } catch (dbErr) {
-          console.warn(`[skills/custom] failed to record history for ${provider}: ${String(dbErr)}`);
+          logger.warn(`[skills/custom] failed to record history for ${provider}: ${String(dbErr)}`);
         }
       }
 
@@ -120,7 +121,7 @@ export function registerCustomSkillRoutes(
         jobId,
       });
     } catch (err) {
-      console.error("[skills/custom]", err);
+      logger.error({ err }, "[skills/custom]");
       res.status(500).json({ ok: false, error: "Failed to save custom skill" });
     }
   });
@@ -170,7 +171,7 @@ export function registerCustomSkillRoutes(
       skills.sort((a, b) => b.createdAt - a.createdAt);
       res.json({ ok: true, skills });
     } catch (err) {
-      console.error("[skills/custom:list]", err);
+      logger.error({ err }, "[skills/custom:list]");
       res.status(500).json({ ok: false, error: "Failed to list custom skills" });
     }
   });
@@ -205,7 +206,7 @@ export function registerCustomSkillRoutes(
         },
       });
     } catch (err) {
-      console.error("[skills/custom:export]", err);
+      logger.error({ err }, "[skills/custom:export]");
       res.status(500).json({ ok: false, error: "Failed to export skill" });
     }
   });
@@ -265,7 +266,7 @@ export function registerCustomSkillRoutes(
             now, now, now, now,
           );
         } catch (dbErr) {
-          console.warn(`[skills/custom:import] failed to record history for ${provider}: ${String(dbErr)}`);
+          logger.warn(`[skills/custom:import] failed to record history for ${provider}: ${String(dbErr)}`);
         }
       }
 
@@ -276,7 +277,7 @@ export function registerCustomSkillRoutes(
         providers,
       });
     } catch (err) {
-      console.error("[skills/custom:import]", err);
+      logger.error({ err }, "[skills/custom:import]");
       res.status(500).json({ ok: false, error: "Failed to import skill" });
     }
   });
@@ -300,7 +301,7 @@ export function registerCustomSkillRoutes(
 
       res.json({ ok: true, skillName: parsedSkillName.inputName });
     } catch (err) {
-      console.error("[skills/custom:delete]", err);
+      logger.error({ err }, "[skills/custom:delete]");
       res.status(500).json({ ok: false, error: "Failed to delete custom skill" });
     }
   });

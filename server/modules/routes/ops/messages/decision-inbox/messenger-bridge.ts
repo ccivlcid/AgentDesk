@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import logger from "../../../../../lib/logger.ts";
 import { sendMessengerMessage, type MessengerChannel } from "../../../../../gateway/client.ts";
 import { isMessengerChannel } from "../../../../../messenger/channels.ts";
 import { resolveSourceChatRoute } from "../../../../../messenger/session-agent-routing.ts";
@@ -393,7 +394,7 @@ export function createDecisionInboxMessengerBridge(deps: DecisionBridgeDeps) {
         pruneDecisionCaches(t);
       } catch (err) {
         releaseDecisionNoticeReservation(reserved);
-        console.warn(
+        logger.warn(
           `[decision-messenger] failed to send decision notice (decision=${item.id}, channel=${route.channel}, target=${route.targetId}): ${String(err)}`,
         );
       }
@@ -475,7 +476,7 @@ export function createDecisionInboxMessengerBridge(deps: DecisionBridgeDeps) {
     const applied = applyDecisionReply(pendingDecision.id, replyBody);
     const ack = buildDecisionReplyAck(pendingDecision, selectedOptionNumber, applied.status, applied.payload);
     await sendMessengerMessage({ channel: route.channel, targetId: route.targetId, text: ack }).catch((err) => {
-      console.warn(
+      logger.warn(
         `[decision-messenger] failed to send decision reply ack (decision=${pendingDecision.id}, channel=${route.channel}, target=${route.targetId}): ${String(err)}`,
       );
     });
@@ -494,13 +495,13 @@ export function createDecisionInboxMessengerBridge(deps: DecisionBridgeDeps) {
   function startBackgroundNoticeSync(): void {
     const decisionNoticeTimer = setInterval(() => {
       void flushDecisionInboxMessengerNotices().catch((err) => {
-        console.warn(`[decision-messenger] background notice flush failed: ${String(err)}`);
+        logger.warn(`[decision-messenger] background notice flush failed: ${String(err)}`);
       });
     }, 5000);
     (decisionNoticeTimer as NodeJS.Timeout).unref?.();
     setTimeout(() => {
       void flushDecisionInboxMessengerNotices().catch((err) => {
-        console.warn(`[decision-messenger] initial notice flush failed: ${String(err)}`);
+        logger.warn(`[decision-messenger] initial notice flush failed: ${String(err)}`);
       });
     }, 1200);
   }

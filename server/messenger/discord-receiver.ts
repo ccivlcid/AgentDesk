@@ -1,4 +1,5 @@
 import type { DatabaseSync } from "node:sqlite";
+import logger from "../lib/logger.ts";
 import { INBOX_WEBHOOK_SECRET, OAUTH_BASE_HOST, PORT } from "../config/runtime.ts";
 import { buildMessengerSourceWithTokenHint, buildMessengerTokenKey } from "./token-hint.ts";
 import { decryptMessengerTokenForRuntime } from "./token-crypto.ts";
@@ -488,7 +489,7 @@ export function startDiscordReceiver(options: StartDiscordReceiverOptions): Rece
       await pollDiscordReceiverOnce({ db, status, fetchImpl });
     } catch (err) {
       status.lastError = err instanceof Error ? err.message : String(err);
-      console.warn(`[AgentDesk] discord receiver error: ${status.lastError}`);
+      logger.warn(`[AgentDesk] discord receiver error: ${status.lastError}`);
     } finally {
       busy = false;
       schedule(status.enabled ? DISCORD_ACTIVE_DELAY_MS : DISCORD_IDLE_DELAY_MS);

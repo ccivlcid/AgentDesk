@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import type { RuntimeContext } from "../../../../types/runtime-context.ts";
+import logger from "../../../../lib/logger";
 import type { RuleHistoryProvider, RuleLearnJob, RuleLearnProvider, RuleLearnStatus } from "./types.ts";
 
 export const RULE_LEARN_PROVIDER_TO_AGENT: Record<RuleLearnProvider, string> = {
@@ -182,7 +183,7 @@ export function createRuleLearnCore(ctx: RuntimeContext) {
     try {
       recordRuleLearnHistoryState(job, "queued");
     } catch (err) {
-      console.warn(`[rule-learn] failed to record queued history: ${String(err)}`);
+      logger.warn(`[rule-learn] failed to record queued history: ${String(err)}`);
     }
 
     setTimeout(() => {
@@ -192,7 +193,7 @@ export function createRuleLearnCore(ctx: RuntimeContext) {
       try {
         recordRuleLearnHistoryState(job, "running", { startedAt: job.startedAt });
       } catch (err) {
-        console.warn(`[rule-learn] failed to record running history: ${String(err)}`);
+        logger.warn(`[rule-learn] failed to record running history: ${String(err)}`);
       }
 
       const fileContent = `# ${ruleTitle}\n<!-- AgentDesk Rule: ${ruleId} | Category: ${category} | Priority: ${priority} -->\n\n${ruleContent}\n`;
@@ -238,7 +239,7 @@ export function createRuleLearnCore(ctx: RuntimeContext) {
         });
       } catch (historyErr) {
         const msg = String(historyErr);
-        console.warn(`[rule-learn] failed to record completion history: ${msg}`);
+        logger.warn(`[rule-learn] failed to record completion history: ${msg}`);
         job.error = (job.error ? `${job.error}; ` : "") + `history_save_failed: ${msg}`;
         if (job.status === "succeeded") job.status = "failed";
       }

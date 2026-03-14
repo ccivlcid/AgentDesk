@@ -341,7 +341,7 @@ export function createSecurityAuditTools(deps: SecurityAuditDeps) {
         nowMs(),
       );
     } catch (err) {
-      console.warn(`[AgentDesk] task creation audit failed: ${String(err)}`);
+      logger.warn(`[AgentDesk] task creation audit failed: ${String(err)}`);
     }
   }
 
@@ -349,7 +349,7 @@ export function createSecurityAuditTools(deps: SecurityAuditDeps) {
     try {
       db.prepare("UPDATE task_creation_audits SET completed = ? WHERE task_id = ?").run(completed ? 1 : 0, taskId);
     } catch (err) {
-      console.warn(`[AgentDesk] task creation audit completion update failed: ${String(err)}`);
+      logger.warn(`[AgentDesk] task creation audit completion update failed: ${String(err)}`);
     }
   }
 

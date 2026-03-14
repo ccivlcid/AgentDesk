@@ -1,6 +1,7 @@
 import type { RuntimeContext, RouteCollabExports } from "../../types/runtime-context.ts";
 import type { Lang } from "../../types/lang.ts";
 import { randomUUID } from "node:crypto";
+import logger from "../../lib/logger.ts";
 import { sendMessengerMessage, sendMessengerSessionMessage, type MessengerChannel } from "../../gateway/client.ts";
 import { isMessengerChannel } from "../../messenger/channels.ts";
 
@@ -447,11 +448,11 @@ export function registerRoutesPartB(ctx: RuntimeContext): RouteCollabExports {
         `,
           ).run(id, agent.id, receiverType, receiverId, content, messageType, null, t);
         } catch (fallbackErr) {
-          console.warn(`[sendAgentMessage] drop message after FK fallback failure: ${String(fallbackErr)}`);
+          logger.warn(`[sendAgentMessage] drop message after FK fallback failure: ${String(fallbackErr)}`);
           return;
         }
       } else {
-        console.warn(`[sendAgentMessage] drop message due to insert failure: ${String(err)}`);
+        logger.warn(`[sendAgentMessage] drop message due to insert failure: ${String(err)}`);
         return;
       }
     }
@@ -472,7 +473,7 @@ export function registerRoutesPartB(ctx: RuntimeContext): RouteCollabExports {
 
     if (shouldRelayTaskBroadcastToMessenger(messageType, receiverType, persistedTaskId)) {
       void relayTaskBroadcastToAssignedMessengerSessions(persistedTaskId, agent, messageType, content).catch((err) => {
-        console.warn(
+        logger.warn(
           `[messenger-relay] failed to relay task broadcast (task=${persistedTaskId}, type=${messageType}): ${String(err)}`,
         );
       });

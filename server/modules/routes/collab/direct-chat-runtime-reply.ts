@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
+import logger from "../../../lib/logger.ts";
 import {
   sendMessengerMessage,
   sendMessengerSessionMessage,
@@ -95,7 +96,7 @@ export function createDirectReplyRuntime(deps: DirectReplyRuntimeDeps) {
         });
       }
     }
-    console.log(`[messenger-reply] relayed ${chunks.length} chunk(s) to ${channel}:${targetId} via ${agent.name}`);
+    logger.info(`[messenger-reply] relayed ${chunks.length} chunk(s) to ${channel}:${targetId} via ${agent.name}`);
   }
 
   function startMessengerTypingHeartbeat(options: DelegationOptions, agent: AgentRow): () => void {
@@ -118,7 +119,7 @@ export function createDirectReplyRuntime(deps: DirectReplyRuntimeDeps) {
       void sender.catch((err) => {
         if (warned) return;
         warned = true;
-        console.warn(`[messenger-typing] failed for ${agent.name} on ${channel}:${targetId}: ${String(err)}`);
+        logger.warn(`[messenger-typing] failed for ${agent.name} on ${channel}:${targetId}: ${String(err)}`);
       });
     };
 
@@ -168,7 +169,7 @@ export function createDirectReplyRuntime(deps: DirectReplyRuntimeDeps) {
         if (firstLine && intro === firstLine) return fallback;
         return `${intro}\n${fallback}`;
       } catch (err) {
-        console.warn(`[persona-auto-reply] intro mode failed for ${agent.name}: ${String(err)}`);
+        logger.warn(`[persona-auto-reply] intro mode failed for ${agent.name}: ${String(err)}`);
         return fallback;
       }
     }
@@ -196,7 +197,7 @@ export function createDirectReplyRuntime(deps: DirectReplyRuntimeDeps) {
       const picked = normalizeAgentReply(deps.chooseSafeReply(run, lang, "direct", agent));
       if (picked) return picked;
     } catch (err) {
-      console.warn(`[persona-auto-reply] failed for ${agent.name}: ${String(err)}`);
+      logger.warn(`[persona-auto-reply] failed for ${agent.name}: ${String(err)}`);
     }
 
     return fallback;
@@ -227,7 +228,7 @@ export function createDirectReplyRuntime(deps: DirectReplyRuntimeDeps) {
       deps.sendAgentMessage(agent, content, messageType, "agent", null, taskId);
       await relayReplyToMessenger(options, agent, content);
     })().catch((err) => {
-      console.warn(`[persona-auto-reply] send failed for ${agent.name}: ${String(err)}`);
+      logger.warn(`[persona-auto-reply] send failed for ${agent.name}: ${String(err)}`);
     });
   }
 
@@ -277,7 +278,7 @@ export function createDirectReplyRuntime(deps: DirectReplyRuntimeDeps) {
 
           const built = deps.buildDirectReplyPrompt(agent, ceoMessage, messageType);
 
-          console.log(
+          logger.info(
             `[scheduleAgentReply] agent=${agent.name}, cli_provider=${agent.cli_provider}, api_provider_id=${agent.api_provider_id}, api_model=${agent.api_model}`,
           );
 
@@ -326,7 +327,7 @@ export function createDirectReplyRuntime(deps: DirectReplyRuntimeDeps) {
               }
             } catch (err: any) {
               apiError = err?.message || String(err);
-              console.error(`[scheduleAgentReply:API] Error for ${agent.name}:`, apiError);
+              logger.error(`[scheduleAgentReply:API] Error for ${agent.name}: %s`, apiError);
             }
 
             const contentOnly = fullText
@@ -346,7 +347,7 @@ export function createDirectReplyRuntime(deps: DirectReplyRuntimeDeps) {
 
             insertStreamingMessage(msgId, agent, finalReply);
             void relayReplyToMessenger(options, agent, finalReply).catch((err) => {
-              console.warn(`[messenger-reply] failed to relay API reply from ${agent.name}: ${String(err)}`);
+              logger.warn(`[messenger-reply] failed to relay API reply from ${agent.name}: ${String(err)}`);
             });
             return;
           }

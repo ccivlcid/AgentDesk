@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import type { ChildProcess } from "node:child_process";
 import { decryptSecret } from "../../../../oauth/helpers.ts";
+import logger from "../../../lib/logger";
 import type { ApiProviderRow } from "./types.ts";
 
 type DbLike = {
@@ -287,7 +288,7 @@ export function createApiProviderTools(deps: CreateApiProviderToolsDeps) {
           const msg = normalizeStreamChunk(`[api] Error: ${err.message}\n`);
           safeWrite(msg);
           broadcast("cli_output", { task_id: taskId, stream: "stderr", data: msg });
-          console.error(`[AgentDesk] API provider agent error (task ${taskId}): ${err.message}`);
+          logger.error({ err }, `[AgentDesk] API provider agent error (task ${taskId})`);
         } else {
           const msg = normalizeStreamChunk(`[api] Aborted by user\n`);
           safeWrite(msg);

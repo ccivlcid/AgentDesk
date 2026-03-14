@@ -1,4 +1,5 @@
 import type { DatabaseSync } from "node:sqlite";
+import logger from "../lib/logger.ts";
 import { INBOX_WEBHOOK_SECRET, OAUTH_BASE_HOST, PORT } from "../config/runtime.ts";
 import { buildMessengerSourceWithTokenHint, buildMessengerTokenKey } from "./token-hint.ts";
 import { decryptMessengerTokenForRuntime } from "./token-crypto.ts";
@@ -538,8 +539,8 @@ export function startTelegramReceiver(options: StartTelegramReceiverOptions): Re
         conflictPauseUntil = Date.now() + TELEGRAM_CONFLICT_BACKOFF_MS;
         status.enabled = false;
         if (!conflictWarnedInPause) {
-          console.warn(`[AgentDesk] telegram receiver paused: ${status.lastError}`);
-          console.warn(
+          logger.warn(`[AgentDesk] telegram receiver paused: ${status.lastError}`);
+          logger.warn(
             `[AgentDesk] telegram receiver hint: another bot instance is polling this token. retry in ${Math.round(
               TELEGRAM_CONFLICT_BACKOFF_MS / 1000,
             )}s`,
@@ -548,7 +549,7 @@ export function startTelegramReceiver(options: StartTelegramReceiverOptions): Re
         }
       } else {
         conflictWarnedInPause = false;
-        console.warn(`[AgentDesk] telegram receiver error: ${status.lastError}`);
+        logger.warn(`[AgentDesk] telegram receiver error: ${status.lastError}`);
       }
     } finally {
       busy = false;
