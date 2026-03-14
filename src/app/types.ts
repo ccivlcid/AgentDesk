@@ -5,7 +5,8 @@ export type WindowType =
   | "library"
   | "settings"
   | "chat"
-  | "agent-manager";
+  | "agent-manager"
+  | "repl";
 
 export type WidgetId =
   | "heartbeat"

@@ -1,8 +1,12 @@
-import { useState, lazy, Suspense, type ReactNode } from "react";
+import { useState, useEffect, useRef, lazy, Suspense, type ReactNode } from "react";
 import type { Project, Category, CompanySettings, WSEventType } from "../../types";
 import type { OAuthCallbackResult, ProjectMetaPayload } from "../../app/types";
 import { useUiStore } from "../../store/uiStore";
 import { useProjectStore } from "../../store/projectStore";
+import { useAgentStore } from "../../store/agentStore";
+import { useTaskStore } from "../../store/taskStore";
+import CommandPalette from "../CommandPalette";
+import KeyboardShortcutsGuide from "../KeyboardShortcutsGuide";
 import MenuBar from "./MenuBar";
 import DesktopIcon, { type DesktopIconDef } from "./DesktopIcon";
 import Widget from "./Widget";
@@ -17,6 +21,7 @@ import WorkflowWindow from "../windows/WorkflowWindow";
 import LibraryWindow from "../windows/LibraryWindow";
 import SettingsWindow from "../windows/SettingsWindow";
 import AgentManagerWindow from "../windows/AgentManagerWindow";
+import ReplWindow from "../windows/ReplWindow";
 import NotificationCenter from "../NotificationCenter";
 
 const ChatWindow = lazy(() => import("../windows/ChatWindow"));
@@ -82,22 +87,82 @@ export default function Desktop({
   const {
     openWindows,
     openWindow,
+    toggleWindow,
     widgetLayout,
   } = useUiStore();
 
   const { projects, categories, currentProjectId, setCurrentProjectId } = useProjectStore();
   const currentProject = projects.find((p) => p.id === currentProjectId) ?? null;
+  const { agents } = useAgentStore();
+  const { tasks } = useTaskStore();
 
   const [showWidgetPicker, setShowWidgetPicker] = useState(false);
+  const [showCommandPalette, setShowCommandPalette] = useState(false);
+  const [showShortcutsGuide, setShowShortcutsGuide] = useState(false);
+
+  // ── 키보드 단축키 ───────────────────────────────────────────────
+  const gPending = useRef(false);
+  const gTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    function handler(e: KeyboardEvent) {
+      const tag = (e.target as HTMLElement)?.tagName;
+      const isInput = tag === "INPUT" || tag === "TEXTAREA" || (e.target as HTMLElement)?.isContentEditable;
+
+      // Ctrl+Shift+K — CommandPalette
+      if (e.ctrlKey && e.shiftKey && e.key === "K") {
+        e.preventDefault();
+        setShowCommandPalette((v) => !v);
+        return;
+      }
+
+      if (isInput) return;
+
+      // ? — ShortcutsGuide
+      if (e.key === "?" && !e.ctrlKey && !e.metaKey) {
+        setShowShortcutsGuide((v) => !v);
+        return;
+      }
+
+      // g 코드 단축키
+      if (e.key === "g" && !e.ctrlKey && !e.metaKey) {
+        gPending.current = true;
+        if (gTimer.current) clearTimeout(gTimer.current);
+        gTimer.current = setTimeout(() => { gPending.current = false; }, 800);
+        return;
+      }
+
+      if (gPending.current) {
+        gPending.current = false;
+        if (gTimer.current) clearTimeout(gTimer.current);
+        const map: Record<string, () => void> = {
+          w: () => toggleWindow("workflow"),
+          l: () => toggleWindow("library"),
+          s: () => toggleWindow("settings"),
+          c: () => toggleWindow("chat"),
+          a: () => toggleWindow("agent-manager"),
+          e: () => toggleWindow("repl"),
+        };
+        map[e.key]?.();
+      }
+    }
+
+    window.addEventListener("keydown", handler);
+    return () => {
+      window.removeEventListener("keydown", handler);
+      if (gTimer.current) clearTimeout(gTimer.current);
+    };
+  }, [toggleWindow]);
 
   // 데스크톱 아이콘 정의
   const icons: DesktopIconDef[] = [
-    { id: "agent-manager", emoji: "👤", label: "에이전트 설정",  onClick: () => openWindow("agent-manager") },
+    { id: "agent-manager",  emoji: "👤", label: "에이전트 설정",  onClick: () => openWindow("agent-manager") },
     { id: "project-create", emoji: "📁", label: "프로젝트 생성", onClick: onProjectCreate },
     { id: "create-task",    emoji: "▶",  label: "태스크 실행",   onClick: onCreateTask },
     { id: "workflow",       emoji: "⚡", label: "워크플로 빌더", onClick: () => openWindow("workflow") },
     { id: "library",        emoji: "📋", label: "라이브러리",    onClick: () => openWindow("library") },
     { id: "chat",           emoji: "💬", label: "채팅",          onClick: () => openWindow("chat") },
+    { id: "repl",           emoji: ">_", label: "에이전트 REPL", onClick: () => openWindow("repl") },
   ];
 
   // 기본 아이콘 배치 (수평으로 배열)
@@ -207,6 +272,7 @@ export default function Desktop({
         />
       )}
       {openWindows.has("agent-manager") && <AgentManagerWindow onAgentsChange={onAgentsChange} />}
+      {openWindows.has("repl")          && <ReplWindow />}
       {openWindows.has("chat")          && (
         <Suspense fallback={null}>
           <ChatWindow
@@ -220,6 +286,35 @@ export default function Desktop({
 
       {/* 위젯 피커 */}
       {showWidgetPicker && <WidgetPicker onClose={() => setShowWidgetPicker(false)} />}
+
+      {/* CommandPalette */}
+      <CommandPalette
+        open={showCommandPalette}
+        onClose={() => setShowCommandPalette(false)}
+        agents={agents}
+        tasks={tasks}
+        projects={projects}
+        currentProject={currentProject}
+        onNavigate={(view) => {
+          setShowCommandPalette(false);
+          const viewWindowMap: Record<string, () => void> = {
+            "workflow-builder": () => openWindow("workflow"),
+            "skills":           () => openWindow("library"),
+            "agent-rules":      () => openWindow("library"),
+            "memory":           () => openWindow("library"),
+            "hooks":            () => openWindow("library"),
+            "settings":         () => openWindow("settings"),
+            "agents":           () => openWindow("agent-manager"),
+          };
+          viewWindowMap[view]?.();
+        }}
+        onCreateTask={() => { setShowCommandPalette(false); onCreateTask(); }}
+        onSelectProject={(p) => { setShowCommandPalette(false); setCurrentProjectId(p.id); }}
+        onOpenShortcutsGuide={() => { setShowCommandPalette(false); setShowShortcutsGuide(true); }}
+      />
+
+      {/* 단축키 가이드 */}
+      <KeyboardShortcutsGuide open={showShortcutsGuide} onClose={() => setShowShortcutsGuide(false)} />
 
       {/* 기존 오버레이/모달 (TaskPanel, DecisionInbox 등) */}
       {children}
