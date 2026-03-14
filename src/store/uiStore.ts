@@ -1,10 +1,41 @@
 import { create } from "zustand";
 import type { CompanySettings } from "../types";
-import type { OAuthCallbackResult, RuntimeOs, View } from "../app/types";
+import type { OAuthCallbackResult, RuntimeOs, View, WindowType, WidgetEntry, WidgetId } from "../app/types";
 import type { UpdateStatus } from "../api";
 import { detectBrowserLanguage } from "../i18n";
 import { UPDATE_BANNER_DISMISS_STORAGE_KEY } from "../app/constants";
 import { detectRuntimeOs, isForceUpdateBannerEnabled, mergeSettingsWithDefaults } from "../app/utils";
+
+const WIDGET_LAYOUT_KEY = "agentdesk_widget_layout";
+const DESKTOP_ICON_LAYOUT_KEY = "agentdesk_icon_layout";
+
+function loadWidgetLayout(): WidgetEntry[] {
+  try {
+    const raw = window.localStorage.getItem(WIDGET_LAYOUT_KEY);
+    if (raw) return JSON.parse(raw) as WidgetEntry[];
+  } catch { /* ignore */ }
+  // 기본 위젯 배치
+  return [
+    { id: "heartbeat", x: 40, y: 120, w: 420, h: 280 },
+    { id: "task-board", x: 500, y: 120, w: 420, h: 280 },
+  ];
+}
+
+function saveWidgetLayout(layout: WidgetEntry[]) {
+  try { window.localStorage.setItem(WIDGET_LAYOUT_KEY, JSON.stringify(layout)); } catch { /* ignore */ }
+}
+
+function loadDesktopIconLayout(): Record<string, { x: number; y: number }> {
+  try {
+    const raw = window.localStorage.getItem(DESKTOP_ICON_LAYOUT_KEY);
+    if (raw) return JSON.parse(raw) as Record<string, { x: number; y: number }>;
+  } catch { /* ignore */ }
+  return {};
+}
+
+function saveDesktopIconLayout(layout: Record<string, { x: number; y: number }>) {
+  try { window.localStorage.setItem(DESKTOP_ICON_LAYOUT_KEY, JSON.stringify(layout)); } catch { /* ignore */ }
+}
 
 type SA<T> = T | ((prev: T) => T);
 const apply = <T>(prev: T, a: SA<T>): T => (typeof a === "function" ? (a as (p: T) => T)(prev) : a);
@@ -15,6 +46,26 @@ function readDismissedVersion(): string {
 }
 
 interface UiStore {
+  // ── 데스크톱 OS 상태 ──────────────────────────────────────────────
+  openWindows: Set<WindowType>;
+  widgetLayout: WidgetEntry[];
+  desktopIconLayout: Record<string, { x: number; y: number }>;
+  selectedAgentId: string | null;
+  openTaskId: string | null;
+
+  toggleWindow: (w: WindowType) => void;
+  openWindow: (w: WindowType) => void;
+  closeWindow: (w: WindowType) => void;
+  setWidgetLayout: (layout: WidgetEntry[]) => void;
+  addWidget: (id: WidgetId) => void;
+  removeWidget: (id: WidgetId) => void;
+  updateWidgetPos: (id: WidgetId, x: number, y: number) => void;
+  updateWidgetSize: (id: WidgetId, w: number, h: number) => void;
+  setDesktopIconLayout: (layout: Record<string, { x: number; y: number }>) => void;
+  setSelectedAgentId: (id: string | null) => void;
+  setOpenTaskId: (id: string | null) => void;
+
+  // ── 기존 상태 ─────────────────────────────────────────────────────
   view: View;
   loading: boolean;
   settings: CompanySettings;
@@ -51,6 +102,52 @@ interface UiStore {
 }
 
 export const useUiStore = create<UiStore>()((set) => ({
+  // ── 데스크톱 OS 초기값 ────────────────────────────────────────────
+  openWindows: new Set<WindowType>(),
+  widgetLayout: loadWidgetLayout(),
+  desktopIconLayout: loadDesktopIconLayout(),
+  selectedAgentId: null,
+  openTaskId: null,
+
+  toggleWindow: (w) => set((s) => {
+    const next = new Set(s.openWindows);
+    if (next.has(w)) next.delete(w); else next.add(w);
+    return { openWindows: next };
+  }),
+  openWindow: (w) => set((s) => ({ openWindows: new Set([...s.openWindows, w]) })),
+  closeWindow: (w) => set((s) => {
+    const next = new Set(s.openWindows);
+    next.delete(w);
+    return { openWindows: next };
+  }),
+  setWidgetLayout: (layout) => { saveWidgetLayout(layout); set({ widgetLayout: layout }); },
+  addWidget: (id) => set((s) => {
+    if (s.widgetLayout.some((e) => e.id === id)) return s;
+    const entry: WidgetEntry = { id, x: 60, y: 140, w: 420, h: 280 };
+    const next = [...s.widgetLayout, entry];
+    saveWidgetLayout(next);
+    return { widgetLayout: next };
+  }),
+  removeWidget: (id) => set((s) => {
+    const next = s.widgetLayout.filter((e) => e.id !== id);
+    saveWidgetLayout(next);
+    return { widgetLayout: next };
+  }),
+  updateWidgetPos: (id, x, y) => set((s) => {
+    const next = s.widgetLayout.map((e) => e.id === id ? { ...e, x, y } : e);
+    saveWidgetLayout(next);
+    return { widgetLayout: next };
+  }),
+  updateWidgetSize: (id, w, h) => set((s) => {
+    const next = s.widgetLayout.map((e) => e.id === id ? { ...e, w, h } : e);
+    saveWidgetLayout(next);
+    return { widgetLayout: next };
+  }),
+  setDesktopIconLayout: (layout) => { saveDesktopIconLayout(layout); set({ desktopIconLayout: layout }); },
+  setSelectedAgentId: (id) => set({ selectedAgentId: id }),
+  setOpenTaskId: (id) => set({ openTaskId: id }),
+
+  // ── 기존 초기값 ───────────────────────────────────────────────────
   view: "dashboard",
   loading: true,
   settings: mergeSettingsWithDefaults({ language: detectBrowserLanguage() }),
