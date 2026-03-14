@@ -18,6 +18,7 @@ import {
 import "@xyflow/react/dist/style.css";
 import { useAgentStore } from "../../store/agentStore";
 import { useI18n } from "../../i18n";
+import AgentCompositionRunModal from "./AgentCompositionRunModal";
 import CompAgentNode, { type CompAgentNodeData } from "./nodes/CompAgentNode";
 import type { Agent, Department } from "../../types";
 
@@ -47,6 +48,7 @@ export default function AgentCompositionBuilder() {
   const [saved, setSaved] = useState(false);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [showTemplates, setShowTemplates] = useState(false);
+  const [showRunModal, setShowRunModal] = useState(false);
   const [agentSearch, setAgentSearch] = useState("");
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
 
@@ -301,6 +303,30 @@ export default function AgentCompositionBuilder() {
             {saved
               ? t({ ko: "저장됨 ✓", en: "Saved ✓", ja: "保存済み ✓", zh: "已保存 ✓" })
               : t({ ko: "저장", en: "Save", ja: "保存", zh: "保存" })}
+          </button>
+          <div style={{ width: 1, height: 20, background: "var(--th-border)", alignSelf: "center" }} />
+          <button
+            onClick={() => setShowRunModal(true)}
+            disabled={nodes.filter((n) => n.type === "comp_agent").length === 0}
+            style={{
+              fontFamily: mono,
+              fontSize: 10,
+              fontWeight: 700,
+              padding: "4px 12px",
+              background:
+                nodes.filter((n) => n.type === "comp_agent").length === 0
+                  ? "var(--th-border)"
+                  : "#10b981",
+              border: "none",
+              borderRadius: 5,
+              cursor:
+                nodes.filter((n) => n.type === "comp_agent").length === 0
+                  ? "not-allowed"
+                  : "pointer",
+              color: "#fff",
+            }}
+          >
+            ▶ {t({ ko: "실행", en: "Run", ja: "実行", zh: "运行" })}
           </button>
         </div>
       </div>
@@ -584,6 +610,16 @@ export default function AgentCompositionBuilder() {
           </ReactFlow>
         </div>
       </div>
+
+      {showRunModal && (
+        <AgentCompositionRunModal
+          nodes={nodes}
+          edges={edges}
+          templateName={templateName}
+          onClose={() => setShowRunModal(false)}
+          onSuccess={() => setShowRunModal(false)}
+        />
+      )}
     </div>
   );
 }
