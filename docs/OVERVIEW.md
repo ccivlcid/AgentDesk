@@ -217,31 +217,24 @@ UIUX 모니터링               ████████████████
 | 파일 | 역할 |
 |---|---|
 | `src/App.tsx` | 루트 컴포넌트. Zustand 스토어 구독, WebSocket 연결, 이벤트 핸들러 정의 |
-| `src/app/AppMainLayout.tsx` | 뷰 라우팅 허브. `view` prop 값에 따라 각 화면 렌더링 |
-| `src/app/AppOverlays.tsx` | 모달·패널 오버레이 렌더링 (AgentDetail, TaskPanel 등) |
-| `src/components/Sidebar.tsx` | 좌측 네비게이션. `NAV_STRUCTURE` 배열로 메뉴 정의 |
+| `src/app/AppMainLayout.tsx` | Dashboard 렌더링 + 3개 앱 창 오버레이 (Workflow/Library/Settings) |
+| `src/app/AppOverlays.tsx` | 36개 모달·패널 오버레이 렌더링 (AgentDetail, TerminalPanel 등) |
+| `src/components/Header.tsx` | 헤더. 프로젝트 선택 + ⚡📚⚙🔔 아이콘 (사이드바 없음) |
 
-### 7-2. 현재 View 타입 전체 목록
+### 7-2. 현재 View / WindowType 타입
 
 ```typescript
 // src/app/types.ts
-export type View =
-  | "agents"            // 에이전트 & 부서
-  | "heartbeat"         // 현황 모니터
-  | "dashboard"         // 대시보드
-  | "project-types"     // 프로젝트 유형
-  | "cli-usage"         // CLI 사용량
-  | "tasks"             // 태스크 (기본)
-  | "tasks-board"       // 태스크 보드 (칸반)
-  | "tasks-scheduled"   // 스케줄 태스크
-  | "tasks-deliverables"// 산출물
-  | "flow-graph"        // 에이전트 플로우 그래프 ✅
-  | "workflow-builder"  // 비주얼 워크플로 빌더 ✅
-  | "skills"            // 스킬 라이브러리
-  | "agent-rules"       // 룰 라이브러리
-  | "memory"            // 메모리 라이브러리
-  | "hooks"             // 훅 라이브러리
-  | "settings";         // 설정
+
+// View: Dashboard 단일 화면
+export type View = "dashboard";
+
+// WindowType: 헤더 아이콘으로 여는 앱 창
+export type WindowType =
+  | "workflow"   // ⚡ Workflow Builder / Scheduled Tasks
+  | "library"    // 📚 Skills / Agent Rules / Memory / Hooks / Deliverables
+  | "settings"   // ⚙ General / API / OAuth / CLI / Gateway / Data / Project Types / Agents
+  | null;        // 창 닫힘
 ```
 
 ### 7-3. Zustand 스토어 구조
@@ -251,7 +244,7 @@ export type View =
 | `src/store/agentStore.ts` | `agents`, `departments`, `subAgents`, `selectedAgent` 등 |
 | `src/store/taskStore.ts` | `tasks`, `subtasks`, `crossDeptDeliveries`, `meetingPresence` 등 |
 | `src/store/projectStore.ts` | `projects`, `categories`, `currentProjectId`, `projectAgentIds` |
-| `src/store/uiStore.ts` | `view`, `loading`, `settings`, 각종 모달 열림 상태 |
+| `src/store/uiStore.ts` | `openWindow`, `selectedAgentId`, `openTaskId`, `loading`, `settings`, 각종 모달 열림 상태 |
 
 ### 7-4. 핵심 타입 파일
 
@@ -261,7 +254,7 @@ export type View =
 | `SubAgent` | `src/types/index.ts` (line ~65) |
 | `MeetingPresence` | `src/types/index.ts` (line ~56) |
 | `CrossDeptDelivery` | `src/types/index.ts` (line ~72) |
-| `View`, `RuntimeOs`, `OAuthCallbackResult` | `src/app/types.ts` |
+| `View`, `WindowType`, `RuntimeOs`, `OAuthCallbackResult` | `src/app/types.ts` |
 
 ### 7-5. AppMainLayout 현재 props
 
@@ -274,12 +267,25 @@ export type View =
 - `projectAgentIds?: Set<string>` ✅
 - `onSelectAgent: (agent: Agent) => void` ✅
 
-### 7-6. Sidebar 현재 메뉴 구조
+### 7-6. 앱 내비게이션 구조 (사이드바 없음)
 
-에이전트 섹션: `agents` / `heartbeat` / `flow-graph` / `workflow-builder`
-태스크 섹션: `tasks` / `tasks-board` / `tasks-scheduled` / `tasks-deliverables`
-라이브러리 섹션: `skills` / `agent-rules` / `memory` / `hooks`
-기타: `dashboard` / `project-types` / `cli-usage` / `settings`
+**헤더 아이콘 3개:**
+- `⚡ Workflow` → WorkflowOverlay (탭: Workflow Builder / Scheduled Tasks)
+- `📚 Library` → LibraryOverlay (탭: Skills / Agent Rules / Memory / Hooks / Deliverables)
+- `⚙ Settings` → SettingsOverlay (탭: General / API / OAuth / CLI / Gateway / Data / Project Types / Agents)
+
+**Dashboard 드릴다운 (화면 이동 없이 패널/드로어):**
+- 에이전트 카드 클릭 → AgentDetail 슬라이드 패널 (우측)
+- 태스크 행 클릭 → TerminalPanel 드로어 (하단)
+- Flow Graph 토글 → 대시보드 내 뷰 전환
+
+**통합된 기능 (독립 화면 → 상위 요소로 흡수):**
+- `heartbeat` → Dashboard TeamPanel 카드
+- `tasks-board` / `tasks-deliverables` → Dashboard 패널 / Library 탭
+- `agents` → Settings > Agents 탭
+- `project-types` → Settings > Project Types 탭
+- `cli-usage` → Dashboard 위젯 + Settings > CLI 탭
+- `flow-graph` → Dashboard Flow Graph 토글 뷰
 
 ---
 
@@ -375,7 +381,7 @@ export type View =
 
 #### ~~[P2-1] Agent Flow Graph 구현~~ ✅ 완료 (2026-03-14)
 - **구현 파일:** `src/components/flow-graph/` (AgentFlowGraph, useFlowLayout, AgentNode, MeetingCluster, FlowEdge)
-- **완료 내용:** SVG 실시간 에이전트 관계 시각화, 줌/팬, 노드 클릭, 미팅 클러스터, Sidebar "플로우 그래프 ◎" 메뉴 추가
+- **완료 내용:** SVG 실시간 에이전트 관계 시각화, 줌/팬, 노드 클릭, 미팅 클러스터, Dashboard 내 토글 뷰로 통합
 
 #### ~~[P2-2] 에이전트 실행 비용 추적~~ ✅ 완료 (2026-03-14)
 - **완료 내용:**
@@ -444,7 +450,7 @@ export type View =
   3. `src/components/workflow-builder/WorkflowBuilder.tsx` — ReactFlow 캔버스, Background/Controls/MiniMap, 노드 팔레트
   4. 드래그&드롭으로 에이전트 파이프라인 시각적 구성, 노드 간 엣지 연결
   5. localStorage 자동 저장/불러오기, 워크플로 이름 편집
-  6. 사이드바 에이전트 섹션에 "workflow-builder" 뷰 추가, `g w` 키보드 단축키 등록
+  6. 헤더 Workflow 창 탭으로 통합, `g w` 키보드 단축키 등록
 
 #### ~~[P3-3] Keyboard-First UX 완성~~ ✅ 완료 (2026-03-14)
 - **파일:** `src/app/AppMainLayout.tsx`, `src/components/KeyboardShortcutsGuide.tsx`

@@ -8,26 +8,37 @@
 
 ## 0. 작업 시작 전 — 코드베이스 진입점 맵
 
-새 화면·컴포넌트를 추가할 때 반드시 수정해야 하는 파일 목록.
+### UI 구조 개요 (사이드바 없음)
 
-### 새 View 추가 시 필수 수정 파일
+AgentDesk는 **Dashboard 중심 구조**다. 사이드바가 없다. 화면 이동 대신 창·패널을 연다.
+
+```
+헤더: [프로젝트 선택]  ────────────  [⚡ Workflow][📚 Library][⚙ Settings][🔔]
+메인: Dashboard (항상 열려 있음)
+  └── Flow Graph 토글 뷰 (대시보드 내 전환)
+  └── AgentDetail 슬라이드 패널 (우측, 에이전트 카드 클릭)
+  └── TerminalPanel 드로어 (하단, 태스크 클릭)
+창:  Workflow 오버레이 (⚡ 클릭)  — Workflow Builder / Scheduled Tasks 탭
+창:  Library 오버레이 (📚 클릭)   — Skills / Rules / Memory / Hooks / Deliverables 탭
+창:  Settings 오버레이 (⚙ 클릭)  — General / API / OAuth / CLI / Gateway / Data / Project Types / Agents 탭
+```
+
+### 새 탭 추가 (Workflow/Library/Settings 창)
 
 | 순서 | 파일 | 수정 내용 |
 |---|---|---|
-| 1 | `src/app/types.ts` | `View` 타입에 새 값 추가 |
-| 2 | `src/components/Sidebar.tsx` | `NAV_STRUCTURE` 배열에 항목 추가, `navLabels` 추가, collapsed 아이콘 추가 |
-| 3 | `src/app/AppMainLayout.tsx` | `{view === "새뷰" && <컴포넌트 />}` 렌더링 블록 추가 |
-| 4 | 새 컴포넌트 파일 | `src/components/` 또는 해당 하위 디렉토리에 생성 |
+| 1 | 컴포넌트 파일 | `src/components/` 하위에 탭 컴포넌트 생성 |
+| 2 | 해당 창 컴포넌트 | 탭 배열에 항목 추가 |
 
-### 새 View에 추가 데이터(props)가 필요한 경우
+### 새 앱 창(오버레이) 추가 (헤더 아이콘 추가)
 
-```
-[Zustand 스토어] → App.tsx (구독) → AppMainLayout (prop 전달) → 컴포넌트
-```
-
-1. `src/app/AppMainLayout.tsx`의 `AppMainLayoutProps` 인터페이스에 prop 추가
-2. `src/app/AppMainLayout.tsx` 함수 파라미터에 추가
-3. `src/App.tsx`의 `<AppMainLayout ... />` 호출부에 값 전달
+| 순서 | 파일 | 수정 내용 |
+|---|---|---|
+| 1 | `src/app/types.ts` | `WindowType` 유니온에 새 값 추가 |
+| 2 | `src/store/uiStore.ts` | `openWindow` 액션 업데이트 |
+| 3 | `src/components/Header.tsx` | 헤더 아이콘 버튼 추가 |
+| 4 | `src/app/AppMainLayout.tsx` | `{openWindow === "새창" && <컴포넌트 />}` 추가 |
+| 5 | 컴포넌트 파일 | `src/components/` 하위에 생성 |
 
 ### 주요 파일 역할 요약
 
@@ -35,47 +46,36 @@
 src/
 ├── App.tsx                      ← 루트: 스토어 구독 + WebSocket + 이벤트 핸들러
 ├── app/
-│   ├── types.ts                 ← View 타입, TaskPanelTab, RuntimeOs 등
-│   ├── AppMainLayout.tsx        ← 뷰 라우터 (view prop → 화면 렌더)
-│   ├── AppOverlays.tsx          ← 모달/패널 오버레이
+│   ├── types.ts                 ← View: "dashboard" 단일 / WindowType: "workflow"|"library"|"settings"|null
+│   ├── AppMainLayout.tsx        ← Dashboard 렌더 + 3개 창 오버레이
+│   ├── AppOverlays.tsx          ← 36개 모달/패널 오버레이
 │   └── useRealtimeSync.ts       ← WebSocket 이벤트 → 스토어 업데이트
 ├── components/
-│   ├── Sidebar.tsx              ← 좌측 네비. NAV_STRUCTURE 배열로 메뉴 구성
-│   └── [화면별 컴포넌트]
+│   ├── Header.tsx               ← 헤더 (프로젝트 선택 + ⚡📚⚙🔔 아이콘)
+│   └── [컴포넌트들]
 ├── store/
 │   ├── agentStore.ts            ← agents, departments, subAgents, selectedAgent
 │   ├── taskStore.ts             ← tasks, subtasks, crossDeptDeliveries, meetingPresence
 │   ├── projectStore.ts          ← projects, categories, currentProjectId, projectAgentIds
-│   └── uiStore.ts               ← view, loading, settings, 모달 열림 상태
+│   └── uiStore.ts               ← openWindow, selectedAgentId, openTaskId, 모달 열림 상태
 └── types/
     └── index.ts                 ← Agent, Task, SubAgent, MeetingPresence, CrossDeptDelivery 등
 ```
 
-### Sidebar 메뉴 구조 현황
+### 앱 내비게이션 구조 현황
 
 ```
-대시보드 (dashboard)
-프로젝트 유형 (project-types)
-CLI 사용량 (cli-usage)
+[헤더]
+  ⚡ Workflow → WorkflowOverlay (탭: Workflow Builder / Scheduled Tasks)
+  📚 Library  → LibraryOverlay  (탭: Skills / Agent Rules / Memory / Hooks / Deliverables)
+  ⚙ Settings  → SettingsOverlay (탭: General / API / OAuth / CLI / Gateway / Data / Project Types / Agents)
 
-태스크
-  ├── 보드 (tasks-board)
-  ├── 스케줄 (tasks-scheduled)
-  └── 산출물 (tasks-deliverables)
-
-에이전트
-  ├── 에이전트 & 부서 (agents)
-  ├── 현황 모니터 (heartbeat)
-  ├── 플로우 그래프 (flow-graph)       ← ✅ P2-1 완료 (Custom SVG)
-  └── 워크플로 빌더 (workflow-builder)  ← ✅ P3-2 완료 (@xyflow/react)
-
-라이브러리
-  ├── 스킬 (skills)
-  ├── 룰 (agent-rules)
-  ├── 메모리 (memory)
-  └── 훅 (hooks)
-
-설정 (settings)
+[대시보드 드릴다운 패턴]
+  에이전트 카드 클릭 → AgentDetail 슬라이드 패널 (우측)
+  태스크 행 클릭    → TerminalPanel 드로어 (하단)
+  Flow Graph 토글   → 대시보드 내 뷰 전환 (화면 이동 없음)
+  + 버튼            → CreateTaskModal
+  알림 배너 클릭    → DecisionInboxModal
 ```
 
 ---
@@ -141,8 +141,8 @@ sans-serif: 금지
 
 | 시질 | 의미 | 사용처 |
 |------|------|--------|
-| `›` | 활성 항목 | 사이드바 active nav item |
-| `·` | 비활성 항목 | 사이드바 inactive nav item |
+| `›` | 활성 항목 | 헤더 아이콘 active, 탭 active |
+| `·` | 비활성 항목 | 헤더 아이콘 inactive, 탭 inactive |
 | `//` | 섹션 구분자 | FormField 라벨, 섹션 헤더 |
 | `$` | 프롬프트 | 터미널 출력, CLI 입력 |
 | `[action]` | 버튼 | 모든 버튼 텍스트 (UPPERCASE) |
@@ -185,7 +185,7 @@ style={{ borderRadius: 10, boxShadow: "0 20px 60px rgba(0,0,0,0.9)" }}
 </div>
 ```
 
-### 5-4. 글래스모피즘 (사이드바·헤더)
+### 5-4. 글래스모피즘 (헤더·앱 창)
 ```tsx
 style={{ backdropFilter: "blur(12px)", background: "var(--th-bg-sidebar)" }}
 ```
@@ -226,19 +226,12 @@ const label = t({ ko: "프로젝트를 선택하세요", en: "Select a project",
 |--------|------|
 | `Ctrl+Shift+K` | CommandPalette 열기 (z-index: 10100) |
 | `?` | 키보드 단축키 가이드 열기 |
-| `\` | 분할 뷰 토글 |
-| `n` | 커맨드 팔레트 열기 (새 태스크 입력창) |
-| `g d` | 대시보드로 이동 |
-| `g t` | 태스크 보드로 이동 |
-| `g a` | 에이전트로 이동 |
-| `g f` | 플로우 그래프로 이동 |
-| `g w` | 워크플로 빌더로 이동 |
-| `g s` | 스킬로 이동 |
-| `g m` | 메모리로 이동 |
-| `g r` | 룰로 이동 |
-| `g h` | 훅으로 이동 |
-| `Ctrl+1~8` | 뷰 직접 전환 (1=대시보드 … 8=설정) |
-| `Esc` | 모달 닫기 |
+| `\` | Flow Graph 토글 (대시보드 뷰 전환) |
+| `n` | 새 태스크 생성 (CreateTaskModal) |
+| `g w` | Workflow 창 열기/닫기 |
+| `g l` | Library 창 열기/닫기 |
+| `g s` | Settings 창 열기/닫기 |
+| `Esc` | 열린 창/모달 닫기 |
 | `Enter` / `⌘+Enter` | 폼 제출 |
 
 > **`g + 키`**: 첫 `g` 입력 후 1초 이내 두 번째 키 입력. 1초 초과 시 취소.
@@ -389,7 +382,7 @@ React + TypeScript + Tailwind CSS
 |------|------|
 | `docs/design/AI-GUIDE.md` | **지금 이 문서** — UI 개발 규칙 + 코드베이스 진입점 맵 |
 | `docs/design/DESIGN.md` | CSS 변수 전체 + 컴포넌트 구현 레퍼런스 |
-| `docs/design/UI-SCREENS.md` | 화면·모달 전체 목록 및 명세 (15개 메인 화면 + 36개 오버레이) |
+| `docs/design/UI-SCREENS.md` | 화면·모달 전체 목록 및 명세 (Dashboard + 3개 앱 창 + 36개 오버레이) |
 | `docs/strategy/agent-flow-graph-design.md` | Agent Flow Graph Custom SVG 구현 레퍼런스 (P2-1 완료) |
 | `docs/strategy/bigger-ide-vision.md` | "더 큰 IDE" 전략 로드맵 (Phase 1~3 전부 완료) |
 | `docs/OVERVIEW.md` | 전체 프로젝트 개요 + 코드베이스 현황 스냅샷 + 작업 목록 |

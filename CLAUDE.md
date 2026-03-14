@@ -38,20 +38,26 @@ pnpm build
 
 ## 3. 핵심 파일 지도
 
+**UI 구조:** 사이드바 없음. Dashboard(메인) + 3개 앱 창(Workflow/Library/Settings) + 슬라이드 패널.
+
 ```
 src/
 ├── App.tsx                      ← 루트: 스토어 구독 + WebSocket 연결
 ├── app/
-│   ├── types.ts                 ← View 타입 enum (화면 추가 시 여기 먼저)
-│   ├── AppMainLayout.tsx        ← 뷰 라우터: view prop → 화면 렌더
-│   └── AppOverlays.tsx          ← 모달/오버레이 집합
+│   ├── types.ts                 ← View: "dashboard" 단일 / WindowType: "workflow"|"library"|"settings"|null
+│   ├── AppMainLayout.tsx        ← Dashboard 렌더 + 3개 앱 창 오버레이
+│   └── AppOverlays.tsx          ← 모달/오버레이 집합 (36개)
 ├── components/
-│   └── Sidebar.tsx              ← 좌측 네비 (NAV_STRUCTURE 배열)
+│   ├── Header.tsx               ← 헤더 (프로젝트 선택 + ⚡📚⚙🔔 아이콘)
+│   ├── dashboard/               ← Dashboard2.tsx + 패널들
+│   ├── flow-graph/              ← AgentFlowGraph (대시보드 토글 뷰)
+│   ├── workflow-builder/        ← WorkflowBuilder (Workflow 창)
+│   └── settings/                ← Settings 창 탭들
 ├── store/
 │   ├── agentStore.ts            ← agents, departments
 │   ├── taskStore.ts             ← tasks, subtasks
 │   ├── projectStore.ts          ← projects, categories
-│   └── uiStore.ts               ← view, settings, 모달 상태
+│   └── uiStore.ts               ← openWindow, selectedAgentId, openTaskId, 모달 상태
 └── types/index.ts               ← Agent, Task, SubAgent 등 도메인 타입
 
 server/
@@ -68,18 +74,33 @@ server/
 
 ---
 
-## 4. 새 화면(View) 추가 순서
+## 4. UI 요소 추가 순서
 
-반드시 이 순서대로:
+### 4-1. 앱 창(Workflow/Library/Settings)에 탭 추가
 
 | # | 파일 | 할 일 |
 |---|------|--------|
-| 1 | `src/app/types.ts` | `View` 타입에 새 값 추가 |
-| 2 | `src/components/Sidebar.tsx` | `NAV_STRUCTURE`에 항목 추가, `navLabels` 추가, collapsed 아이콘 추가 |
-| 3 | `src/app/AppMainLayout.tsx` | `{view === "새뷰" && <컴포넌트 />}` 렌더 블록 추가 |
-| 4 | 컴포넌트 파일 | `src/components/` 하위에 생성 |
+| 1 | 컴포넌트 파일 | `src/components/` 하위에 탭 컴포넌트 생성 |
+| 2 | 해당 창 컴포넌트 | 탭 배열에 항목 추가 (`WorkflowOverlay`, `LibraryOverlay`, `SettingsOverlay`) |
 
-데이터가 필요하면: `Zustand 스토어 → App.tsx → AppMainLayout props → 컴포넌트`
+### 4-2. Dashboard에 새 패널 추가
+
+| # | 파일 | 할 일 |
+|---|------|--------|
+| 1 | 컴포넌트 파일 | `src/components/dashboard/` 하위에 생성 |
+| 2 | `Dashboard2.tsx` | 패널 import 후 레이아웃에 배치 |
+
+### 4-3. 새 앱 창(Overlay) 추가 (헤더 아이콘 추가)
+
+| # | 파일 | 할 일 |
+|---|------|--------|
+| 1 | `src/app/types.ts` | `WindowType` 유니온에 새 값 추가 |
+| 2 | `src/store/uiStore.ts` | `openWindow` 액션 업데이트 |
+| 3 | `src/components/Header.tsx` | 아이콘 버튼 추가 |
+| 4 | `src/app/AppMainLayout.tsx` | `{openWindow === "새창" && <컴포넌트 />}` 추가 |
+| 5 | 컴포넌트 파일 | `src/components/` 하위에 생성 |
+
+데이터가 필요하면: `Zustand 스토어 → uiStore.openWindow` 체인으로 전달
 
 ---
 
@@ -113,8 +134,9 @@ server/modules/workflow/core/worktree/*.ts   → "../../../../lib/logger" (4단�
 runGit(dir, ["config", "commit.gpgsign", "false"]);
 ```
 
-### 화면 추가 시 키보드 단축키
-`AppMainLayout.tsx`의 `g + key` 맵에 단축키 추가 후 `KeyboardShortcutsGuide.tsx`에도 항목 추가.
+### 앱 창 단축키
+`Header.tsx`의 단축키 맵 업데이트 후 `KeyboardShortcutsGuide.tsx`에도 항목 추가.
+현재 단축키: `g w` → Workflow 창 / `g l` → Library 창 / `g s` → Settings 창 / `Ctrl+Shift+K` → Command Palette
 
 ---
 
@@ -140,7 +162,7 @@ runGit(dir, ["config", "commit.gpgsign", "false"]);
 |------|------|
 | [`docs/OVERVIEW.md`](docs/OVERVIEW.md) | 전체 아키텍처 개요 + 우선순위 로드맵 |
 | [`docs/design/AI-GUIDE.md`](docs/design/AI-GUIDE.md) | **AI 개발자 디자인 원칙** (컴포넌트 패턴, 체크리스트) |
-| [`docs/design/UI-SCREENS.md`](docs/design/UI-SCREENS.md) | 전체 화면·모달 명세 (15개 메인 화면) |
+| [`docs/design/UI-SCREENS.md`](docs/design/UI-SCREENS.md) | 전체 화면·모달 명세 (Dashboard + 3개 앱 창) |
 | [`docs/design/DESIGN.md`](docs/design/DESIGN.md) | CSS 변수 전체 + 컴포넌트 스타일 규칙 |
 | [`docs/specs/api.md`](docs/specs/api.md) | REST API 전체 명세 (v1.2.5) |
 | [`docs/strategy/bigger-ide-vision.md`](docs/strategy/bigger-ide-vision.md) | "더 큰 IDE" 전략 (Phase 1~3 완료) |
