@@ -161,8 +161,8 @@ export function registerOpsSettingsStatsRoutes(ctx: RuntimeContext): void {
         upsert.run(key, typeof value === "string" ? value : JSON.stringify(value));
       }
       if (selectedOfficePackInPayload !== undefined) {
-        // resync=true: always re-sync profile→DB so settings-path edits are not lost after hydration
-        maybeHydratePackOnFirstSelection(selectedOfficePackInPayload, officePackProfilesInPayload, true);
+        // Only hydrate on first selection; already-hydrated packs are never re-injected.
+        maybeHydratePackOnFirstSelection(selectedOfficePackInPayload, officePackProfilesInPayload);
       }
     } catch (err: any) {
       const detail = err?.message || String(err);

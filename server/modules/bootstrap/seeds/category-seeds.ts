@@ -10,6 +10,7 @@ interface CategorySeed {
   description: string;
   icon: string;
   color: string;
+  pack_key: string;
   kpi_schema: string;
   risk_schema: string;
   gate_schema: string;
@@ -25,6 +26,7 @@ const CATEGORY_SEEDS: CategorySeed[] = [
     description: "개발 팀에서 제품을 만들 때 사용해요.",
     icon: "code-2",
     color: "#3b82f6",
+    pack_key: "development",
     kpi_schema: JSON.stringify([
       { key: "deploy_count", label: "배포 횟수", type: "number" },
       { key: "bug_rate", label: "버그 발생률 (%)", type: "percent" },
@@ -54,6 +56,7 @@ const CATEGORY_SEEDS: CategorySeed[] = [
     description: "브랜드 홍보나 캠페인을 기획할 때 사용해요.",
     icon: "megaphone",
     color: "#ec4899",
+    pack_key: "asset_management",
     kpi_schema: JSON.stringify([
       { key: "reach", label: "도달 수", type: "number" },
       { key: "conversion_rate", label: "전환율 (%)", type: "percent" },
@@ -81,6 +84,7 @@ const CATEGORY_SEEDS: CategorySeed[] = [
     description: "시장 조사나 데이터 분석 프로젝트에 사용해요.",
     icon: "search",
     color: "#8b5cf6",
+    pack_key: "web_research_report",
     kpi_schema: JSON.stringify([
       { key: "data_sources", label: "데이터 소스 수", type: "number" },
       { key: "accuracy", label: "분석 정확도 (%)", type: "percent" },
@@ -106,6 +110,7 @@ const CATEGORY_SEEDS: CategorySeed[] = [
     description: "신제품이나 서비스를 출시할 때 사용해요.",
     icon: "rocket",
     color: "#f97316",
+    pack_key: "development",
     kpi_schema: JSON.stringify([
       { key: "launch_date_met", label: "출시일 준수", type: "percent" },
       { key: "initial_sales", label: "초기 판매량", type: "number" },
@@ -135,6 +140,7 @@ const CATEGORY_SEEDS: CategorySeed[] = [
     description: "영상, 글, 디자인 등 콘텐츠를 만들 때 사용해요.",
     icon: "pen-tool",
     color: "#10b981",
+    pack_key: "novel",
     kpi_schema: JSON.stringify([
       { key: "pieces_produced", label: "제작 콘텐츠 수", type: "number" },
       { key: "engagement_rate", label: "참여율 (%)", type: "percent" },
@@ -160,6 +166,7 @@ const CATEGORY_SEEDS: CategorySeed[] = [
     description: "내부 운영 개선이나 프로세스 최적화 프로젝트에 사용해요.",
     icon: "settings",
     color: "#64748b",
+    pack_key: "report",
     kpi_schema: JSON.stringify([
       { key: "efficiency_gain", label: "효율 개선율 (%)", type: "percent" },
       { key: "cost_reduction", label: "비용 절감율 (%)", type: "percent" },
@@ -185,10 +192,10 @@ export function seedCategories(db: DbLike): void {
 
   const insert = db.prepare(`
     INSERT OR IGNORE INTO categories (
-      id, name, name_ko, slug, description, icon, color,
+      id, name, name_ko, slug, description, icon, color, pack_key,
       kpi_schema, risk_schema, gate_schema, deliverable_schema,
       is_template, owner_scope
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 'global')
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 'global')
   `);
 
   for (const cat of CATEGORY_SEEDS) {
@@ -201,6 +208,7 @@ export function seedCategories(db: DbLike): void {
         cat.description,
         cat.icon,
         cat.color,
+        cat.pack_key,
         cat.kpi_schema,
         cat.risk_schema,
         cat.gate_schema,

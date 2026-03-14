@@ -22,7 +22,7 @@ interface SettingsPanelProps {
   onRefreshCli: () => void;
   oauthResult?: OAuthCallbackResult | null;
   onOauthResultClear?: () => void;
-  /** 현재 오피스 팩 직원 (메신저 채팅 대화 직원 선택용) */
+  /** 현재 워크플로 팩 직원 (메신저 채팅 대화 직원 선택용) */
   managerAgents?: Agent[];
 }
 

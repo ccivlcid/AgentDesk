@@ -88,7 +88,6 @@ const AGENT_EQ_KNOWN_KEYS = new Set<string>([
   "cli_model",
   "cli_reasoning_level",
   "avatar_emoji",
-  "personality",
   "status",
   "current_task_id",
   "stats_tasks_done",
@@ -132,7 +131,6 @@ export function areAgentsEquivalent(a: Agent, b: Agent): boolean {
     (a.cli_model ?? null) === (b.cli_model ?? null) &&
     (a.cli_reasoning_level ?? null) === (b.cli_reasoning_level ?? null) &&
     a.avatar_emoji === b.avatar_emoji &&
-    (a.personality ?? null) === (b.personality ?? null) &&
     a.status === b.status &&
     (a.current_task_id ?? null) === (b.current_task_id ?? null) &&
     a.stats_tasks_done === b.stats_tasks_done &&

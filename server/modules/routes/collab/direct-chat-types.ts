@@ -8,7 +8,6 @@ export interface AgentRow {
   name_ko: string;
   role: string;
   acts_as_planning_leader?: number | null;
-  personality: string | null;
   status: string;
   department_id: string | null;
   current_task_id: string | null;
@@ -19,6 +18,7 @@ export interface AgentRow {
   api_model: string | null;
   cli_model: string | null;
   cli_reasoning_level: string | null;
+  persona_id?: string | null;
 }
 
 export type L10n = Record<Lang, string[]>;

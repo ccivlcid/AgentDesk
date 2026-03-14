@@ -8,7 +8,9 @@ import { appendTaskExecutionMetaUpdate } from "../../core/task-execution-meta.ts
 import { handleVideoArtifactSync } from "./video-artifact.ts";
 import { runAfterExitGates, applyVideoArtifactGateAfterSuccess } from "./gates.ts";
 import { runExtractLearnings } from "./learnings.ts";
+import { runExtractSkills } from "./skills.ts";
 import { applySuccessStateUpdate, applyFailureStateUpdate, buildStateUpdatesDeps } from "./state-updates.ts";
+import { executeHooks } from "../../core/hook-executor.ts";
 
 export type RunCompleteHandlerDeps = Record<string, unknown>;
 
@@ -119,12 +121,16 @@ export function createRunCompleteHandler(deps: RunCompleteHandlerDeps) {
 
     const isVideoPreprodTask = task.workflow_pack_key === "video_preprod";
     const isVideoFinalRenderTask = isVideoPreprodTask && /\[VIDEO_FINAL_RENDER\]/i.test(task.title);
+    // Collaboration child tasks (source_task_id set, not VIDEO_FINAL_RENDER) skip artifact sync.
+    const isVideoPreprodCollabChild = isVideoPreprodTask && !!task.source_task_id && !isVideoFinalRenderTask;
 
-    const artifactSync = handleVideoArtifactSync(taskId, task, {
-      db: db as { prepare: (sql: string) => { get: (...args: unknown[]) => unknown } },
-      taskWorktrees: taskWorktrees as Map<string, { worktreePath?: string; projectPath?: string }>,
-      appendTaskLog: appendTaskLog as (a: string, b: string, c: string) => void,
-    });
+    const artifactSync = (!isVideoPreprodTask || isVideoPreprodCollabChild)
+      ? { videoArtifactReady: false, videoArtifactSpec: { relativePath: "" } }
+      : handleVideoArtifactSync(taskId, task, {
+          db: db as { prepare: (sql: string) => { get: (...args: unknown[]) => unknown } },
+          taskWorktrees: taskWorktrees as Map<string, { worktreePath?: string; projectPath?: string }>,
+          appendTaskLog: appendTaskLog as (a: string, b: string, c: string) => void,
+        });
 
     const gatesResult = runAfterExitGates(
       taskId,
@@ -175,6 +181,32 @@ export function createRunCompleteHandler(deps: RunCompleteHandlerDeps) {
       logsDir: logsDir as string,
       appendTaskLog: appendTaskLog as (a: string, b: string, c: string) => void,
     });
+
+    try {
+      runExtractSkills(taskId, task, finalExitCode, result, {
+        db,
+        nowMs: nowMs as () => number,
+        logsDir: logsDir as string,
+        appendTaskLog: appendTaskLog as (a: string, b: string, c: string) => void,
+      });
+    } catch {
+      /* skill extraction must not block completion */
+    }
+
+    // Execute post-task hooks (parallel, fire-and-forget — must not block completion)
+    {
+      const hookEventType = finalExitCode === 0 ? "post-task" : "on-error";
+      const hookContext = {
+        projectId: task.project_id ?? null,
+        agentId: task.assigned_agent_id ?? null,
+        departmentId: task.department_id ?? null,
+        taskId,
+      };
+      Promise.all([
+        executeHooks(db as any, hookEventType, hookContext),
+        executeHooks(db as any, "on-complete", hookContext),
+      ]).catch(() => {/* hook failures must not block completion */});
+    }
 
     if (result) {
       const updates = ["result = ?"];

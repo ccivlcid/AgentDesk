@@ -1,7 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import SkillsLibrary from "./SkillsLibrary";
-import type { Agent } from "../types";
+import { ToastProvider } from "./ui/Toast";
+import type { Agent, Project } from "../types";
 import { getAvailableLearnedSkills, getCustomSkills, startSkillLearning, unlearnSkill } from "../api";
 
 vi.mock("../api", () => ({
@@ -97,6 +98,17 @@ function createStorageMock(initial: Record<string, string> = {}): Storage {
 
 const originalLocalStorage = window.localStorage;
 
+const TEST_PROJECT: Project = {
+  id: "proj-1",
+  name: "Test Project",
+  project_path: "/tmp/test",
+  core_goal: "Test",
+  assignment_mode: "auto",
+  last_used_at: null,
+  created_at: Date.now(),
+  updated_at: Date.now(),
+};
+
 const TEST_AGENT: Agent = {
   id: "a1",
   name: "Atlas",
@@ -140,7 +152,7 @@ describe("SkillsLibrary learning modal ESC close", () => {
         configurable: true,
       });
       const text = UI_TEXT[locale];
-      render(<SkillsLibrary agents={[TEST_AGENT]} />);
+      render(<ToastProvider><SkillsLibrary agents={[TEST_AGENT]} currentProject={TEST_PROJECT} /></ToastProvider>);
 
       await screen.findByRole("button", { name: exactText(text.learn) });
 
@@ -182,7 +194,7 @@ describe("SkillsLibrary learning modal ESC close", () => {
         error: null,
       });
 
-      render(<SkillsLibrary agents={[TEST_AGENT]} />);
+      render(<ToastProvider><SkillsLibrary agents={[TEST_AGENT]} currentProject={TEST_PROJECT} /></ToastProvider>);
 
       await screen.findByRole("button", { name: exactText(text.learn) });
 
@@ -222,7 +234,7 @@ describe("SkillsLibrary learning modal ESC close", () => {
       removed: 1,
     });
 
-    render(<SkillsLibrary agents={[TEST_AGENT]} />);
+    render(<ToastProvider><SkillsLibrary agents={[TEST_AGENT]} currentProject={TEST_PROJECT} /></ToastProvider>);
     // Skill is already learned, so the button shows "학습됨" instead of "학습"
     await screen.findByRole("button", { name: /^학습됨$/ });
     fireEvent.click(screen.getByRole("button", { name: /^학습됨$/ }));

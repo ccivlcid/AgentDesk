@@ -22,6 +22,7 @@ import { assertRuntimeFunctionsResolved, createDeferredRuntimeProxy } from "./mo
 import { ROUTE_RUNTIME_HELPER_KEYS } from "./modules/runtime-helper-keys.ts";
 import { startLifecycle } from "./modules/lifecycle.ts";
 import { registerApiRoutes } from "./modules/routes.ts";
+import { apiErrorHandler } from "./errors/errorMiddleware.ts";
 import { initializeWorkflow } from "./modules/workflow.ts";
 import {
   createReadSettingString,
@@ -40,8 +41,25 @@ import { applyBaseSchema } from "./modules/bootstrap/schema/base-schema.ts";
 import { initializeOAuthRuntime } from "./modules/bootstrap/schema/oauth-runtime.ts";
 import { applyTaskSchemaMigrations } from "./modules/bootstrap/schema/task-schema-migrations.ts";
 import { applyDefaultSeeds } from "./modules/bootstrap/schema/seeds.ts";
+import { runVersionedMigrations } from "./modules/bootstrap/schema/versioned-migrations.ts";
 
 export type { TaskCreationAuditInput } from "./modules/bootstrap/security-audit.ts";
+
+// ---------------------------------------------------------------------------
+// Startup environment validation
+// ---------------------------------------------------------------------------
+(function validateEnv() {
+  const warnings: string[] = [];
+  if (!process.env.OAUTH_ENCRYPTION_SECRET?.trim()) {
+    warnings.push("OAUTH_ENCRYPTION_SECRET is not set — OAuth token encryption unavailable");
+  }
+  if (!process.env.API_AUTH_TOKEN?.trim()) {
+    warnings.push("API_AUTH_TOKEN is not set — using ephemeral random token (resets on every restart)");
+  }
+  for (const msg of warnings) {
+    console.warn(`[AgentDesk] ⚠️  ${msg}`);
+  }
+})();
 
 const app = express();
 installSecurityMiddleware(app);
@@ -55,6 +73,7 @@ const readSettingString = createReadSettingString(db);
 
 applyTaskSchemaMigrations(db);
 applyBaseSchema(db);
+runVersionedMigrations(db);
 const oauthRuntime = initializeOAuthRuntime({ db, nowMs, runInTransaction });
 applyDefaultSeeds(db);
 
@@ -123,6 +142,9 @@ const runtimeProxy = createDeferredRuntimeProxy(runtimeContext);
 
 Object.assign(runtimeContext, initializeWorkflow(runtimeProxy as RuntimeContext));
 Object.assign(runtimeContext, registerApiRoutes(runtimeContext as RuntimeContext));
+
+// Global error handler — must be registered AFTER all routes
+app.use(apiErrorHandler);
 
 assertRuntimeFunctionsResolved(runtimeContext, ROUTE_RUNTIME_HELPER_KEYS, "route helper wiring");
 

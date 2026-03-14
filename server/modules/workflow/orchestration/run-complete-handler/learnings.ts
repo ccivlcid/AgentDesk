@@ -16,6 +16,7 @@ export type TaskForLearnings = {
   assigned_agent_id: string | null;
   department_id: string | null;
   workflow_pack_key: string | null;
+  project_id?: string | null;
 };
 
 /**
@@ -38,6 +39,7 @@ export function runExtractLearnings(
         agentId: task.assigned_agent_id,
         departmentId: task.department_id,
         workflowPackKey: task.workflow_pack_key,
+        projectId: task.project_id ?? null,
         exitCode: finalExitCode,
         result,
       },

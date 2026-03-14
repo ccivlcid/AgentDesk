@@ -97,6 +97,7 @@ function createDeps(db: DatabaseSync, logsDir = "/tmp") {
     prettyStreamJson: vi.fn((raw: string) => raw),
     getWorktreeDiffSummary: vi.fn(() => ""),
     hasVisibleDiffSummary: vi.fn(() => false),
+    insertNotification: vi.fn(),
   } as any;
 }
 

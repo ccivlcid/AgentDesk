@@ -366,6 +366,8 @@ export function startLifecycle(ctx: RuntimeContext): void {
 
   const TASK_HEARTBEAT_SWEEP_MS = 30_000;
   const TASK_STALLED_THRESHOLD_MS = 90_000;
+  const TASK_STALLED_RECOVERY_THRESHOLD_MS = 180_000; // 3 min: auto-recover stalled → inbox
+  const TASK_TIMEOUT_DEFAULT_MINUTES = 0; // 0 = disabled
 
   function updateRunningTaskHeartbeats(): void {
     const now = nowMs();
@@ -451,6 +453,176 @@ export function startLifecycle(ctx: RuntimeContext): void {
     }
   }
 
+  /**
+   * Auto-recover stalled tasks that have remained in stalled state beyond
+   * the recovery threshold. Moves them to inbox and resets the agent.
+   */
+  function recoverStalledTasks(): void {
+    const now = nowMs();
+    const rows = db
+      .prepare(
+        `SELECT id, title, assigned_agent_id, updated_at
+         FROM tasks
+         WHERE status = 'in_progress'
+           AND execution_state = 'stalled'`,
+      )
+      .all() as Array<{
+        id: string;
+        title: string;
+        assigned_agent_id: string | null;
+        updated_at: number | null;
+      }>;
+
+    for (const row of rows) {
+      const stalledSince = row.updated_at ?? 0;
+      if (stalledSince <= 0 || now - stalledSince < TASK_STALLED_RECOVERY_THRESHOLD_MS) continue;
+
+      const t = nowMs();
+      const updates = ["status = 'inbox'", "updated_at = ?"];
+      const params: unknown[] = [t];
+      appendTaskExecutionMetaUpdate(db as any, updates, params, {
+        execution_state: "failed",
+        retry_after: null,
+        execution_error_code: "stalled_auto_recovered",
+        execution_error_summary: "Task auto-recovered from stalled state after timeout",
+      });
+      params.push(row.id);
+      const move = db
+        .prepare(`UPDATE tasks SET ${updates.join(", ")} WHERE id = ? AND status = 'in_progress'`)
+        .run(...(params as any[])) as { changes?: number };
+      if ((move.changes ?? 0) === 0) continue;
+
+      recordTaskExecutionEvent(db as any, {
+        taskId: row.id,
+        eventType: "stalled_recovered",
+        fromState: "stalled",
+        toState: "failed",
+        summary: "Auto-recovered stalled task to inbox",
+        metadata: { stalled_recovery_threshold_ms: TASK_STALLED_RECOVERY_THRESHOLD_MS },
+        createdAt: t,
+      });
+
+      stopProgressTimer(row.id);
+      clearTaskWorkflowState(row.id);
+      endTaskExecutionSession(row.id, "stalled_auto_recovery");
+      appendTaskLog(row.id, "system", "Auto-recovered from stalled state → inbox (no heartbeat)");
+
+      // Reset the assigned agent back to idle
+      if (row.assigned_agent_id) {
+        db.prepare("UPDATE agents SET status = 'idle', current_task_id = NULL WHERE id = ? AND current_task_id = ?").run(
+          row.assigned_agent_id,
+          row.id,
+        );
+        const updatedAgent = db.prepare("SELECT * FROM agents WHERE id = ?").get(row.assigned_agent_id);
+        broadcast("agent_status", updatedAgent);
+      }
+
+      const updatedTask = db.prepare("SELECT * FROM tasks WHERE id = ?").get(row.id);
+      broadcast("task_update", updatedTask);
+      const lang = resolveLang(row.title);
+      notifyTaskStatus(row.id, row.title, "inbox", lang);
+      const msg =
+        lang === "en"
+          ? `[WATCHDOG] '${row.title}' stalled and was auto-recovered to inbox.`
+          : lang === "ja"
+            ? `[WATCHDOG] '${row.title}' がストール状態のため inbox に自動復旧しました。`
+            : lang === "zh"
+              ? `[WATCHDOG] '${row.title}' 停滞，已自动恢复到 inbox。`
+              : `[WATCHDOG] '${row.title}' 작업이 정체(stalled) 상태로 자동 복구되어 inbox로 이동했습니다.`;
+      notifyClient(msg, row.id);
+    }
+  }
+
+  /**
+   * Enforce per-task timeout: tasks running longer than their timeout_minutes
+   * are marked as timed out and moved to inbox.
+   */
+  function enforceTaskTimeouts(): void {
+    const now = nowMs();
+    const rows = db
+      .prepare(
+        `SELECT id, title, assigned_agent_id, started_at, timeout_minutes
+         FROM tasks
+         WHERE status = 'in_progress'
+           AND execution_state = 'running'
+           AND timeout_minutes > 0
+           AND started_at IS NOT NULL`,
+      )
+      .all() as Array<{
+        id: string;
+        title: string;
+        assigned_agent_id: string | null;
+        started_at: number;
+        timeout_minutes: number;
+      }>;
+
+    for (const row of rows) {
+      const timeoutMs = row.timeout_minutes * 60_000;
+      const elapsed = now - row.started_at;
+      if (elapsed < timeoutMs) continue;
+
+      if (activeProcesses.has(row.id)) {
+        const proc = activeProcesses.get(row.id);
+        const pid = typeof proc?.pid === "number" ? proc.pid : null;
+        if (pid && pid > 0) {
+          try { killPidTree(pid); } catch { /* best-effort */ }
+        }
+        activeProcesses.delete(row.id);
+      }
+
+      const t = nowMs();
+      const updates = ["status = 'inbox'", "updated_at = ?"];
+      const params: unknown[] = [t];
+      appendTaskExecutionMetaUpdate(db as any, updates, params, {
+        execution_state: "failed",
+        retry_after: null,
+        execution_error_code: "execution_timeout",
+        execution_error_summary: `Task exceeded timeout of ${row.timeout_minutes} minute(s)`,
+      });
+      params.push(row.id);
+      db.prepare(`UPDATE tasks SET ${updates.join(", ")} WHERE id = ? AND status = 'in_progress'`)
+        .run(...(params as any[]));
+
+      recordTaskExecutionEvent(db as any, {
+        taskId: row.id,
+        eventType: "run_timed_out",
+        fromState: "running",
+        toState: "failed",
+        summary: `Task timed out after ${row.timeout_minutes} minute(s)`,
+        metadata: { timeout_minutes: row.timeout_minutes, elapsed_ms: elapsed },
+        createdAt: t,
+      });
+
+      stopProgressTimer(row.id);
+      clearTaskWorkflowState(row.id);
+      endTaskExecutionSession(row.id, "execution_timeout");
+      appendTaskLog(row.id, "system", `Execution timed out after ${row.timeout_minutes} minute(s) → inbox`);
+
+      if (row.assigned_agent_id) {
+        db.prepare("UPDATE agents SET status = 'idle', current_task_id = NULL WHERE id = ? AND current_task_id = ?").run(
+          row.assigned_agent_id,
+          row.id,
+        );
+        const updatedAgent = db.prepare("SELECT * FROM agents WHERE id = ?").get(row.assigned_agent_id);
+        broadcast("agent_status", updatedAgent);
+      }
+
+      const updatedTask = db.prepare("SELECT * FROM tasks WHERE id = ?").get(row.id);
+      broadcast("task_update", updatedTask);
+      const lang = resolveLang(row.title);
+      notifyTaskStatus(row.id, row.title, "inbox", lang);
+      const msg =
+        lang === "en"
+          ? `[TIMEOUT] '${row.title}' exceeded ${row.timeout_minutes}m limit and was stopped.`
+          : lang === "ja"
+            ? `[TIMEOUT] '${row.title}' が ${row.timeout_minutes}分の制限を超過し停止されました。`
+            : lang === "zh"
+              ? `[TIMEOUT] '${row.title}' 超过 ${row.timeout_minutes} 分钟限制，已停止。`
+              : `[TIMEOUT] '${row.title}' 작업이 ${row.timeout_minutes}분 제한을 초과하여 중단되었습니다.`;
+      notifyClient(msg, row.id);
+    }
+  }
+
   function sweepPendingSubtaskDelegations(): void {
     const parents = db
       .prepare(
@@ -525,6 +697,8 @@ export function startLifecycle(ctx: RuntimeContext): void {
   setTimeout(recoverInterruptedWorkflowOnStartup, 3_000);
   setInterval(updateRunningTaskHeartbeats, TASK_HEARTBEAT_SWEEP_MS);
   setInterval(markStalledInProgressTasks, TASK_HEARTBEAT_SWEEP_MS);
+  setInterval(recoverStalledTasks, TASK_HEARTBEAT_SWEEP_MS);
+  setInterval(enforceTaskTimeouts, TASK_HEARTBEAT_SWEEP_MS);
   setInterval(() => recoverOrphanInProgressTasks("interval"), IN_PROGRESS_ORPHAN_SWEEP_MS);
   setTimeout(sweepPendingSubtaskDelegations, 4_000);
   setInterval(sweepPendingSubtaskDelegations, SUBTASK_DELEGATION_SWEEP_MS);
@@ -567,9 +741,15 @@ export function startLifecycle(ctx: RuntimeContext): void {
   // WebSocket server on same HTTP server
   const wss = new WebSocketServer({ server });
 
+  const MAX_WS_CLIENTS = 20;
+
   wss.on("connection", (ws: WsSocket, req: IncomingMessage) => {
     if (!isIncomingMessageOriginTrusted(req) || !isIncomingMessageAuthenticated(req)) {
       ws.close(1008, "unauthorized");
+      return;
+    }
+    if (wsClients.size >= MAX_WS_CLIENTS) {
+      ws.close(4008, "too_many_connections");
       return;
     }
     wsClients.add(ws);

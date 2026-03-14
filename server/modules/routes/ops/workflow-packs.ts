@@ -7,6 +7,7 @@ import {
   isWorkflowPackKey,
   type WorkflowPackKey,
 } from "../../workflow/packs/definitions.ts";
+import { loadAllPackConfigs } from "../../workflow/packs/execution-guidance.ts";
 
 type WorkflowPackRow = {
   key: string;
@@ -71,21 +72,19 @@ function classifyWorkflowPack(text: string): WorkflowRouteResult {
     scoreByPack.set(key, (scoreByPack.get(key) ?? 0) + delta);
   };
 
-  const matcher = (re: RegExp): boolean => re.test(normalized) || re.test(lower);
-
-  if (matcher(/(웹\s*서치|web\s*search|research|리서치|자료\s*조사|market\s*research|fact\s*check)/i))
-    addScore("web_research_report", 0.78);
-  if (matcher(/(보고서|리포트|brief|summary\s*report|status\s*report|executive\s*summary)/i)) addScore("report", 0.74);
-  if (matcher(/(소설|novel|fiction|chapter|스토리|세계관|시놉시스)/i)) addScore("novel", 0.76);
-  if (matcher(/(영상|video|콘티|storyboard|shot\s*list|샷리스트|script\s*for\s*video|릴스|쇼츠)/i))
-    addScore("video_preprod", 0.77);
-  if (matcher(/(역할\s*놀이|roleplay|rp\b|캐릭터\s*대화|in\s*character)/i)) addScore("roleplay", 0.79);
-  if (matcher(/(코드|개발|버그|테스트|fix|refactor|build|api|feature|deploy)/i)) addScore("development", 0.72);
-  if (matcher(/(투자|펀드|자산\s*운용|포트폴리오|수익률|리스크|배분|investment|portfolio|fund|asset\s*management|hedge|equity)/i))
-    addScore("asset_management", 0.78);
+  // Score each pack using routingKeywords loaded from its .md config
+  const allConfigs = loadAllPackConfigs();
+  for (const [packKey, config] of allConfigs) {
+    for (const keyword of config.routingKeywords) {
+      if (lower.includes(keyword.toLowerCase()) || normalized.includes(keyword)) {
+        addScore(packKey, 0.75);
+        break; // One keyword match per pack per text is enough for base score
+      }
+    }
+  }
 
   if (scoreByPack.size <= 0) {
-    addScore("development", 0.5);
+    addScore(DEFAULT_WORKFLOW_PACK_KEY, 0.5);
   }
 
   const sorted = Array.from(scoreByPack.entries())

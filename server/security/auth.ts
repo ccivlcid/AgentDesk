@@ -175,6 +175,44 @@ export function isIncomingMessageOriginTrusted(req: IncomingMessage): boolean {
   return isTrustedOrigin(origin);
 }
 
+// ---------------------------------------------------------------------------
+// In-process rate limiter (sliding window, no external dependency)
+// ---------------------------------------------------------------------------
+interface RateLimitBucket {
+  count: number;
+  windowStart: number;
+}
+const _rlStore = new Map<string, RateLimitBucket>();
+const RL_WINDOW_MS = 60_000;
+const RL_GENERAL_MAX = 300;  // general API: 300 req/min per IP
+const RL_TASK_RUN_MAX = 20;  // task execution: 20 req/min per IP
+
+// Sweep stale buckets every 5 minutes to prevent unbounded growth
+setInterval(() => {
+  const cutoff = Date.now() - RL_WINDOW_MS * 2;
+  for (const [key, bucket] of _rlStore) {
+    if (bucket.windowStart < cutoff) _rlStore.delete(key);
+  }
+}, 5 * 60_000).unref();
+
+function checkRateLimit(ip: string, suffix: string, limit: number): boolean {
+  const key = `${suffix}:${ip}`;
+  const now = Date.now();
+  const bucket = _rlStore.get(key);
+  if (!bucket || now - bucket.windowStart > RL_WINDOW_MS) {
+    _rlStore.set(key, { count: 1, windowStart: now });
+    return true;
+  }
+  bucket.count += 1;
+  return bucket.count <= limit;
+}
+
+function clientIp(req: Request): string {
+  const forwarded = req.header("x-forwarded-for");
+  if (forwarded) return forwarded.split(",")[0]?.trim() ?? "unknown";
+  return req.socket?.remoteAddress ?? "unknown";
+}
+
 export function installSecurityMiddleware(app: Express): void {
   const corsMiddleware = cors({
     origin(origin, callback) {
@@ -216,6 +254,25 @@ export function installSecurityMiddleware(app: Express): void {
       return res.status(401).json({ error: "unauthorized" });
     }
     issueSessionCookie(req, res);
+    return next();
+  });
+
+  // Rate limiting — applied after auth (authenticated requests only)
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    if (!req.path.startsWith("/api/")) return next();
+    const ip = clientIp(req);
+
+    // Tighter limit for task execution triggers
+    const isTaskRun =
+      req.method === "POST" &&
+      /^\/api\/tasks\/[^/]+\/run/.test(req.path);
+    const allowed = isTaskRun
+      ? checkRateLimit(ip, "task_run", RL_TASK_RUN_MAX)
+      : checkRateLimit(ip, "general", RL_GENERAL_MAX);
+
+    if (!allowed) {
+      return res.status(429).json({ error: "rate_limit_exceeded" });
+    }
     return next();
   });
 }

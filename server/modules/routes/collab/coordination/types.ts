@@ -3,7 +3,6 @@ export interface AgentRow {
   name: string;
   name_ko: string;
   role: string;
-  personality: string | null;
   status: string;
   department_id: string | null;
   current_task_id: string | null;
@@ -14,4 +13,5 @@ export interface AgentRow {
   api_model: string | null;
   cli_model: string | null;
   cli_reasoning_level: string | null;
+  persona_id?: string | null;
 }

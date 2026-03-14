@@ -1,4 +1,4 @@
-import { bootstrapSession, del, patch, post, request } from "./core";
+import { bootstrapSession, del, patch, post, put, request } from "./core";
 
 import type {
   Agent,
@@ -183,6 +183,15 @@ export async function generatePersona(data: {
 
 export async function deleteAgent(id: string): Promise<void> {
   await del(`/api/agents/${id}`);
+}
+
+export async function getAgentPersona(agentId: string): Promise<string> {
+  const j = (await request<{ agentId: string; text: string }>(`/api/agents/${agentId}/persona`));
+  return j.text ?? "";
+}
+
+export async function saveAgentPersona(agentId: string, text: string): Promise<void> {
+  await put(`/api/agents/${agentId}/persona`, { text });
 }
 
 export interface AgentPerformanceData {

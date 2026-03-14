@@ -1,7 +1,38 @@
 import { randomUUID } from "node:crypto";
+import { mkdirSync, readdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import type { SQLInputValue } from "node:sqlite";
 import type { RuntimeContext } from "../../../../types/runtime-context.ts";
-import { PERSONA_PROMPTS } from "../../../workflow/core/persona-catalog.ts";
+import { getPersonaPrompt } from "../../../workflow/core/persona-catalog.ts";
+import { invalidateAgentPersonaCache } from "../../../workflow/core/character-persona.ts";
+
+const AGENTS_PROMPTS_DIR = join(dirname(fileURLToPath(import.meta.url)), "../../../../../prompts/agents");
+const PERSONAS_DIR = join(dirname(fileURLToPath(import.meta.url)), "../../../../../prompts/personas");
+
+function getAgentPersonaFilePath(agentId: string): string {
+  return join(AGENTS_PROMPTS_DIR, `${agentId}.md`);
+}
+
+function readAgentPersonaFile(agentId: string): string | null {
+  try {
+    const content = readFileSync(getAgentPersonaFilePath(agentId), "utf-8").trim();
+    return content || null;
+  } catch {
+    return null;
+  }
+}
+
+function writeAgentPersonaFile(agentId: string, text: string): void {
+  mkdirSync(AGENTS_PROMPTS_DIR, { recursive: true });
+  writeFileSync(getAgentPersonaFilePath(agentId), text, "utf-8");
+}
+
+function deleteAgentPersonaFile(agentId: string): void {
+  try {
+    unlinkSync(getAgentPersonaFilePath(agentId));
+  } catch { /* file may not exist */ }
+}
 import type { MeetingReviewDecision } from "../../shared/types.ts";
 import {
   DEFAULT_WORKFLOW_PACK_KEY,
@@ -311,7 +342,6 @@ export function registerAgentCrudRoutes(ctx: RuntimeContext): void {
         name: "System",
         name_ko: "시스템",
         role: "senior" as const,
-        personality: null,
         status: "idle",
         department_id: null,
         current_task_id: null,
@@ -342,8 +372,37 @@ export function registerAgentCrudRoutes(ctx: RuntimeContext): void {
   });
 
   app.get("/api/personas", (_req, res) => {
-    const personas = Object.keys(PERSONA_PROMPTS).map((id) => ({ id, hasPrompt: true }));
+    // List all .md files in personas directory
+    let personas: Array<{ id: string; hasPrompt: boolean }> = [];
+    try {
+      const files = readdirSync(PERSONAS_DIR).filter((f) => f.endsWith(".md"));
+      personas = files.map((f) => ({ id: f.replace(/\.md$/, ""), hasPrompt: true }));
+    } catch { /* directory may not exist */ }
     res.json({ personas });
+  });
+
+  // ── Agent persona file endpoints ──
+  app.get("/api/agents/:id/persona", (req, res) => {
+    const id = String(req.params.id);
+    const text = readAgentPersonaFile(id);
+    res.json({ agentId: id, text: text ?? "" });
+  });
+
+  app.put("/api/agents/:id/persona", (req, res) => {
+    const id = String(req.params.id);
+    const existing = db.prepare("SELECT id FROM agents WHERE id = ?").get(id);
+    if (!existing) return res.status(404).json({ error: "not_found" });
+
+    const body = (req.body ?? {}) as Record<string, unknown>;
+    const text = typeof body.text === "string" ? body.text.trim() : "";
+
+    if (text) {
+      writeAgentPersonaFile(id, text);
+    } else {
+      deleteAgentPersonaFile(id);
+    }
+    invalidateAgentPersonaCache(id);
+    res.json({ ok: true, agentId: id });
   });
 
   app.post("/api/agents", (req, res) => {
@@ -383,15 +442,16 @@ export function registerAgentCrudRoutes(ctx: RuntimeContext): void {
         typeof body.avatar_emoji === "string" && body.avatar_emoji.trim() ? body.avatar_emoji.trim() : "🤖";
       const sprite_number =
         typeof body.sprite_number === "number" && body.sprite_number > 0 ? body.sprite_number : null;
-      const personality = typeof body.personality === "string" ? body.personality.trim() || null : null;
+      // personality field: write to .md file instead of DB
+      const personaText = typeof body.personality === "string" ? body.personality.trim() : "";
       const persona_id = typeof body.persona_id === "string" ? body.persona_id.trim() || null : null;
 
       const id = randomUUID();
       try {
         if (hasAgentWorkflowPackColumn) {
           db.prepare(
-            `INSERT INTO agents (id, name, name_ko, name_ja, name_zh, department_id, workflow_pack_key, role, cli_provider, avatar_emoji, sprite_number, personality, persona_id)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            `INSERT INTO agents (id, name, name_ko, name_ja, name_zh, department_id, workflow_pack_key, role, cli_provider, avatar_emoji, sprite_number, persona_id)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           ).run(
             id,
             name,
@@ -404,13 +464,12 @@ export function registerAgentCrudRoutes(ctx: RuntimeContext): void {
             cli_provider,
             avatar_emoji,
             sprite_number,
-            personality,
             persona_id,
           );
         } else {
           db.prepare(
-            `INSERT INTO agents (id, name, name_ko, name_ja, name_zh, department_id, role, cli_provider, avatar_emoji, sprite_number, personality, persona_id)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            `INSERT INTO agents (id, name, name_ko, name_ja, name_zh, department_id, role, cli_provider, avatar_emoji, sprite_number, persona_id)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           ).run(
             id,
             name,
@@ -422,7 +481,6 @@ export function registerAgentCrudRoutes(ctx: RuntimeContext): void {
             cli_provider,
             avatar_emoji,
             sprite_number,
-            personality,
             persona_id,
           );
         }
@@ -432,6 +490,11 @@ export function registerAgentCrudRoutes(ctx: RuntimeContext): void {
           return res.status(400).json({ error: "department_not_found" });
         }
         throw err;
+      }
+
+      // Write persona to .md file if provided
+      if (personaText) {
+        writeAgentPersonaFile(id, personaText);
       }
 
       const created = db
@@ -601,6 +664,10 @@ export function registerAgentCrudRoutes(ctx: RuntimeContext): void {
       }
     }
 
+    // Handle personality -> .md file (not a DB field anymore)
+    const personaTextUpdate = "personality" in body ? (typeof body.personality === "string" ? body.personality.trim() : null) : undefined;
+    delete body.personality;
+
     const allowedFields = [
       "name",
       "name_ko",
@@ -618,7 +685,6 @@ export function registerAgentCrudRoutes(ctx: RuntimeContext): void {
       "avatar_emoji",
       "avatar_url",
       "sprite_number",
-      "personality",
       "persona_id",
       "status",
       "current_task_id",
@@ -700,10 +766,11 @@ export function registerAgentCrudRoutes(ctx: RuntimeContext): void {
       }
     }
 
-    if (updates.length === 0) {
+    if (updates.length === 0 && personaTextUpdate === undefined) {
       return res.status(400).json({ error: "no_fields_to_update" });
     }
 
+    if (updates.length > 0) {
     try {
       runInTransaction(() => {
         if ("acts_as_planning_leader" in body && requestedPlanningLead) {
@@ -753,6 +820,17 @@ export function registerAgentCrudRoutes(ctx: RuntimeContext): void {
       }
       console.error("[agents] planning leader update failed:", err);
       return res.status(500).json({ error: "internal_error" });
+    }
+    } // end if (updates.length > 0)
+
+    // Write persona text to .md file if provided in PATCH body
+    if (personaTextUpdate !== undefined) {
+      if (personaTextUpdate) {
+        writeAgentPersonaFile(id, personaTextUpdate);
+      } else {
+        deleteAgentPersonaFile(id);
+      }
+      invalidateAgentPersonaCache(id);
     }
 
     const updated = db.prepare("SELECT * FROM agents WHERE id = ?").get(id);

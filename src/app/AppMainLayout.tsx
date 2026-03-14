@@ -224,7 +224,6 @@ export default function AppMainLayout({
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [shortcutsGuideOpen, setShortcutsGuideOpen] = useState(false);
   const [screenGuideOpen, setScreenGuideOpen] = useState(false);
-  // 현재 프로젝트 팀원 ID 세트 (WorkMap dim용)
   const [projectAgentIds, setProjectAgentIds] = useState<Set<string>>(new Set());
   const prevProjectIdRef = useRef<string | null>(null);
 

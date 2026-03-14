@@ -1,6 +1,12 @@
-import { describe, expect, it, vi } from "vitest";
+import { mkdirSync, unlinkSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { invalidateAgentPersonaCache } from "./character-persona.ts";
 import { createMeetingPromptTools } from "./meeting-prompt-tools.ts";
 import type { AgentRow } from "./conversation-types.ts";
+
+const AGENTS_DIR = join(dirname(fileURLToPath(import.meta.url)), "../../../../prompts/agents");
 
 function createAgent(overrides: Partial<AgentRow> = {}): AgentRow {
   return {
@@ -8,7 +14,6 @@ function createAgent(overrides: Partial<AgentRow> = {}): AgentRow {
     name: "DORO",
     name_ko: "도로롱",
     role: "junior",
-    personality: null,
     status: "idle",
     department_id: "design",
     current_task_id: null,
@@ -39,21 +44,33 @@ function createTools() {
 }
 
 describe("buildDirectReplyPrompt", () => {
-  it("includes character persona block when personality exists", () => {
+  const TEST_AGENT_ID = "agent-persona-test-001";
+  const testMdPath = join(AGENTS_DIR, `${TEST_AGENT_ID}.md`);
+
+  beforeEach(() => {
+    invalidateAgentPersonaCache(TEST_AGENT_ID);
+  });
+
+  afterEach(() => {
+    try { unlinkSync(testMdPath); } catch { /* ok */ }
+    invalidateAgentPersonaCache(TEST_AGENT_ID);
+  });
+
+  it("includes character persona block when persona .md file exists", () => {
+    mkdirSync(AGENTS_DIR, { recursive: true });
+    writeFileSync(testMdPath, "Playful design specialist. Call CEO '클라이언트님' and keep warm expressive tone.");
     const tools = createTools();
-    const agent = createAgent({
-      personality: "Playful design specialist. Call CEO '클라이언트님' and keep warm expressive tone.",
-    });
+    const agent = createAgent({ id: TEST_AGENT_ID });
     const built = tools.buildDirectReplyPrompt(agent, "Can you help me now?", "chat");
     expect(built.prompt).toContain("[Character Persona - Highest Priority]");
     expect(built.prompt).toContain("Playful design specialist");
-    expect(built.prompt).toContain("Stay in character consistently");
+    expect(built.prompt).toContain("THINK and REASON as this character would");
     expect(built.prompt).toContain("Keep the reply aligned with the Character Persona.");
   });
 
-  it("omits persona block when personality is empty", () => {
+  it("omits persona block when no persona file exists", () => {
     const tools = createTools();
-    const agent = createAgent({ personality: null });
+    const agent = createAgent({ id: "agent-no-persona-file-xyz" });
     const built = tools.buildDirectReplyPrompt(agent, "Can you help me now?", "chat");
     expect(built.prompt).not.toContain("[Character Persona - Highest Priority]");
     expect(built.prompt).not.toContain("Keep the reply aligned with the Character Persona.");

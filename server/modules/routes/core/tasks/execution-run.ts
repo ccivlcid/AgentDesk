@@ -4,7 +4,7 @@ import type { RuntimeContext } from "../../../../types/runtime-context.ts";
 import type { AgentRow } from "../../shared/types.ts";
 import { resolveConstrainedAgentScopeForTask, selectAutoAssignableAgentForTask } from "./execution-run-auto-assign.ts";
 import { appendTaskExecutionMetaUpdate, recordTaskExecutionEvent } from "../../../workflow/core/task-execution-meta.ts";
-import { buildWorkflowPackExecutionGuidance } from "../../../workflow/packs/execution-guidance.ts";
+import { buildWorkflowPackExecutionGuidance, loadPackConfig } from "../../../workflow/packs/execution-guidance.ts";
 import { resolveVideoArtifactSpecForTask } from "../../../workflow/packs/video-artifact.ts";
 import { ensureVideoPreprodRemotionBestPracticesSkill } from "../../../workflow/core/video-skill-bootstrap.ts";
 import { buildCharacterPersonaBlock } from "../../../workflow/core/character-persona.ts";
@@ -14,6 +14,9 @@ import {
   consumeInterruptPrompts,
   loadPendingInterruptPrompts,
 } from "../../../workflow/core/interrupt-injection-tools.ts";
+import { buildRulesPromptBlock } from "../../../workflow/core/project-scoped-rules.ts";
+import { buildMemoryPromptBlock } from "../../../workflow/orchestration/autonomous-memory.ts";
+import { executeHooks } from "../../../workflow/core/hook-executor.ts";
 
 export type TaskRunRouteDeps = Pick<
   RuntimeContext,
@@ -90,7 +93,7 @@ export function registerTaskRunRoute(deps: TaskRunRouteDeps): void {
     checkCostBlockExecution,
   } = deps;
 
-  app.post("/api/tasks/:id/run", (req, res) => {
+  app.post("/api/tasks/:id/run", async (req, res) => {
     const id = String(req.params.id);
     const task = db.prepare("SELECT * FROM tasks WHERE id = ?").get(id) as
       | {
@@ -247,7 +250,7 @@ export function registerTaskRunRoute(deps: TaskRunRouteDeps): void {
           api_model: string | null;
           cli_model: string | null;
           cli_reasoning_level: string | null;
-          personality: string | null;
+          persona_id: string | null;
           department_id: string | null;
           department_name: string | null;
           department_name_ko: string | null;
@@ -407,10 +410,12 @@ Whenever you complete a subtask, report it in this format:
     const modelConfig = getProviderModelConfig();
     const mainModel = agent.cli_model || modelConfig[provider]?.model || undefined;
     const subModel = modelConfig[provider]?.subModel || undefined;
+    // Pack reasoning level takes precedence over agent default; agent override beats pack
+    const packReasoningLevel = loadPackConfig(task.workflow_pack_key ?? "development").reasoningLevel;
     const mainReasoningLevel =
       provider === "codex"
-        ? agent.cli_reasoning_level || modelConfig[provider]?.reasoningLevel || undefined
-        : modelConfig[provider]?.reasoningLevel || undefined;
+        ? agent.cli_reasoning_level || packReasoningLevel || modelConfig[provider]?.reasoningLevel || undefined
+        : packReasoningLevel || modelConfig[provider]?.reasoningLevel || undefined;
     const subReasoningLevel = modelConfig[provider]?.subModelReasoningLevel || undefined;
     const subModelHint =
       subModel && (provider === "claude" || provider === "codex")
@@ -455,12 +460,43 @@ Whenever you complete a subtask, report it in this format:
       qaRulesJson,
     });
 
+    const rulesBlock = buildRulesPromptBlock(
+      db as any,
+      {
+        projectId: task.project_id ?? null,
+        agentId: agentId ?? null,
+        departmentId: agent.department_id ?? null,
+      },
+      taskLang,
+    );
+    const memoryBlock = buildMemoryPromptBlock(
+      { db },
+      {
+        agentId: agentId ?? null,
+        departmentId: agent.department_id ?? null,
+        workflowPackKey: task.workflow_pack_key,
+        projectId: task.project_id ?? null,
+        taskTitle: task.title,
+        taskDescription: task.description,
+      },
+      taskLang,
+    );
+
+    // Execute pre-task hooks (parallel, async)
+    await executeHooks(db as any, "pre-task", {
+      projectId: task.project_id ?? null,
+      agentId: agentId ?? null,
+      departmentId: agent.department_id ?? null,
+      taskId: id,
+      workingDirectory: agentCwd,
+    });
+
     const prompt = buildTaskExecutionPrompt(
       [
         (
           buildAvailableSkillsPromptBlock ||
           ((providerName: string) => `[Available Skills][provider=${providerName || "unknown"}][unavailable]`)
-        )(provider),
+        )(provider, task.project_id),
         `[Task Session] id=${executionSession.sessionId} owner=${executionSession.agentId} provider=${executionSession.provider}`,
         "This session is task-scoped. Keep continuity for this task only and do not cross-contaminate context from other projects.",
         projectStructureBlock,
@@ -473,11 +509,13 @@ Whenever you complete a subtask, report it in this format:
         conversationCtx,
         `\n---`,
         `Agent: ${agent.name} (${roleLabel}, ${agent.department_name || "Unassigned"})`,
-        buildCharacterPersonaBlock(agent.personality, (agent as any).persona_id),
+        buildCharacterPersonaBlock(agent.persona_id, agent.id),
         deptConstraint,
         departmentPromptBlock,
         `NOTE: You are working in an isolated Git worktree branch (agentdesk/${id.slice(0, 8)}). Commit your changes normally.`,
         interruptPromptBlock,
+        rulesBlock,
+        memoryBlock,
         subtaskInstruction,
         subModelHint,
         continuationInstruction,

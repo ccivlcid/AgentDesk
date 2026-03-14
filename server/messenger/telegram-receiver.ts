@@ -9,6 +9,8 @@ const TELEGRAM_ACTIVE_DELAY_MS = 1_500;
 const TELEGRAM_IDLE_DELAY_MS = 5_000;
 const TELEGRAM_POLL_TIMEOUT_SECONDS = 20;
 const TELEGRAM_CONFLICT_BACKOFF_MS = 90_000;
+const INBOX_FORWARD_MAX_RETRIES = 3;
+const INBOX_FORWARD_RETRY_BASE_MS = 2_000;
 
 type PersistedSession = {
   targetId?: unknown;
@@ -303,6 +305,30 @@ function isTelegramConflictError(message: string): boolean {
   );
 }
 
+async function forwardToInboxWithRetry(params: {
+  fetchImpl: typeof fetch;
+  body: string;
+  attempt?: number;
+}): Promise<void> {
+  const { fetchImpl, body } = params;
+  const attempt = params.attempt ?? 1;
+  const res = await fetchImpl(`http://${OAUTH_BASE_HOST}:${PORT}/api/inbox`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-inbox-secret": INBOX_WEBHOOK_SECRET,
+    },
+    body,
+  });
+  if (res.ok) return;
+  const detail = await res.text().catch(() => "");
+  const err = new Error(`inbox forward failed (${res.status})${detail ? `: ${detail}` : ""}`);
+  if (attempt >= INBOX_FORWARD_MAX_RETRIES) throw err;
+  const backoffMs = INBOX_FORWARD_RETRY_BASE_MS * 2 ** (attempt - 1);
+  await new Promise((resolve) => setTimeout(resolve, backoffMs));
+  return forwardToInboxWithRetry({ fetchImpl, body, attempt: attempt + 1 });
+}
+
 async function forwardTelegramUpdate(params: {
   update: TelegramUpdate;
   source: string;
@@ -337,25 +363,11 @@ async function forwardTelegramUpdate(params: {
       ? String(Math.trunc(message.message_id))
       : String(update.update_id ?? `${Date.now()}`);
   const author = buildAuthor(message);
-  const inboxRes = await fetchImpl(`http://${OAUTH_BASE_HOST}:${PORT}/api/inbox`, {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      "x-inbox-secret": INBOX_WEBHOOK_SECRET,
-    },
-    body: JSON.stringify({
-      source,
-      message_id: messageId,
-      author,
-      chat: `telegram:${chatId}`,
-      text,
-    }),
-  });
 
-  if (!inboxRes.ok) {
-    const detail = await inboxRes.text().catch(() => "");
-    throw new Error(`inbox forward failed (${inboxRes.status})${detail ? `: ${detail}` : ""}`);
-  }
+  await forwardToInboxWithRetry({
+    fetchImpl,
+    body: JSON.stringify({ source, message_id: messageId, author, chat: `telegram:${chatId}`, text }),
+  });
 
   return "forwarded";
 }

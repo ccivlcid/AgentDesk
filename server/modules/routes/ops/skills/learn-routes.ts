@@ -75,6 +75,9 @@ export function registerSkillLearnRoutes(ctx: RuntimeContext): {
       ? Math.min(Math.max(requestedLimit, 1), SKILL_LEARN_HISTORY_MAX_QUERY_LIMIT)
       : 50;
 
+    const rawProjectId = String(req.query.project_id ?? "").trim();
+    const projectId = rawProjectId || null;
+
     const where: string[] = [];
     const params: Array<string | number> = [];
     if (provider) {
@@ -84,6 +87,16 @@ export function registerSkillLearnRoutes(ctx: RuntimeContext): {
     if (status) {
       where.push("status = ?");
       params.push(status);
+    }
+    if (projectId) {
+      // project_id 필터: 해당 프로젝트에 배정된 에이전트의 스킬만 포함
+      where.push(`(
+        (scope_type = 'project' AND scope_id = ?)
+        OR (scope_type = 'agent' AND scope_id IN (SELECT agent_id FROM project_agents WHERE project_id = ?))
+        OR scope_type = 'global'
+        OR scope_type IS NULL
+      )`);
+      params.push(projectId, projectId);
     }
 
     const sql = `
@@ -146,11 +159,23 @@ export function registerSkillLearnRoutes(ctx: RuntimeContext): {
       ? Math.min(Math.max(requestedLimit, 1), SKILL_LEARN_HISTORY_MAX_QUERY_LIMIT)
       : 30;
 
+    const rawProjectId2 = String(req.query.project_id ?? "").trim();
+    const projectId2 = rawProjectId2 || null;
+
     const params: Array<string | number> = [];
     let whereClause = "status = 'succeeded'";
     if (provider) {
       whereClause += " AND provider = ?";
       params.push(provider);
+    }
+    if (projectId2) {
+      whereClause += ` AND (
+        (scope_type = 'project' AND scope_id = ?)
+        OR (scope_type = 'agent' AND scope_id IN (SELECT agent_id FROM project_agents WHERE project_id = ?))
+        OR scope_type = 'global'
+        OR scope_type IS NULL
+      )`;
+      params.push(projectId2, projectId2);
     }
     params.push(limit);
 

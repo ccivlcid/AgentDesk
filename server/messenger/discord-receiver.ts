@@ -8,6 +8,8 @@ const DISCORD_RECEIVER_CURSOR_KEY = "discordReceiverCursor";
 const DISCORD_ACTIVE_DELAY_MS = 2_500;
 const DISCORD_IDLE_DELAY_MS = 6_000;
 const DISCORD_FETCH_LIMIT = 50;
+const INBOX_FORWARD_MAX_RETRIES = 3;
+const INBOX_FORWARD_RETRY_BASE_MS = 2_000;
 
 type PersistedSession = {
   targetId?: unknown;
@@ -290,6 +292,30 @@ async function fetchDiscordMessages(params: {
   return Array.isArray(payload) ? payload : [];
 }
 
+async function forwardToInboxWithRetry(params: {
+  fetchImpl: typeof fetch;
+  body: string;
+  attempt?: number;
+}): Promise<void> {
+  const { fetchImpl, body } = params;
+  const attempt = params.attempt ?? 1;
+  const res = await fetchImpl(`http://${OAUTH_BASE_HOST}:${PORT}/api/inbox`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "x-inbox-secret": INBOX_WEBHOOK_SECRET,
+    },
+    body,
+  });
+  if (res.ok) return;
+  const detail = await res.text().catch(() => "");
+  const err = new Error(`discord inbox forward failed (${res.status})${detail ? `: ${detail}` : ""}`);
+  if (attempt >= INBOX_FORWARD_MAX_RETRIES) throw err;
+  const backoffMs = INBOX_FORWARD_RETRY_BASE_MS * 2 ** (attempt - 1);
+  await new Promise((resolve) => setTimeout(resolve, backoffMs));
+  return forwardToInboxWithRetry({ fetchImpl, body, attempt: attempt + 1 });
+}
+
 async function forwardDiscordMessage(params: {
   route: DiscordRoute;
   message: DiscordMessage;
@@ -309,12 +335,8 @@ async function forwardDiscordMessage(params: {
     return "skipped";
   }
 
-  const inboxRes = await fetchImpl(`http://${OAUTH_BASE_HOST}:${PORT}/api/inbox`, {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      "x-inbox-secret": INBOX_WEBHOOK_SECRET,
-    },
+  await forwardToInboxWithRetry({
+    fetchImpl,
     body: JSON.stringify({
       source: route.source,
       message_id: messageId,
@@ -323,11 +345,6 @@ async function forwardDiscordMessage(params: {
       text,
     }),
   });
-
-  if (!inboxRes.ok) {
-    const detail = await inboxRes.text().catch(() => "");
-    throw new Error(`discord inbox forward failed (${inboxRes.status})${detail ? `: ${detail}` : ""}`);
-  }
 
   return "forwarded";
 }

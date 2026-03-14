@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
-import type { Express, Request, Response } from "express";
+import type { Express, NextFunction, Request, Response } from "express";
 import type { DatabaseSync } from "node:sqlite";
+import { ApiError } from "../../../errors/ApiError.ts";
 
 interface WebhookRouteDeps {
   app: Express;
@@ -27,11 +28,11 @@ export function registerWebhookRoutes({ app, db, nowMs }: WebhookRouteDeps): voi
   });
 
   // POST /api/webhooks
-  app.post("/api/webhooks", (req: Request, res: Response) => {
+  app.post("/api/webhooks", (req: Request, res: Response, next: NextFunction) => {
+    try {
     const { name, url, events, secret } = req.body as Record<string, any>;
     if (!name?.trim() || !url?.trim()) {
-      res.status(400).json({ error: "name and url are required" });
-      return;
+      throw ApiError.badRequest("name_and_url_required", "name and url are required");
     }
     const eventsArr = Array.isArray(events) ? events : ["task_done"];
     const id = randomUUID();
@@ -41,15 +42,17 @@ export function registerWebhookRoutes({ app, db, nowMs }: WebhookRouteDeps): voi
        VALUES (?, ?, ?, ?, 1, ?, ?, ?)`,
     ).run(id, name.trim(), url.trim(), JSON.stringify(eventsArr), (secret?.trim() as string | undefined) ?? null, now, now);
     res.json({ ok: true, id });
+    } catch (err) { next(err); }
   });
 
   // PATCH /api/webhooks/:id
-  app.patch("/api/webhooks/:id", (req: Request, res: Response) => {
+  app.patch("/api/webhooks/:id", (req: Request, res: Response, next: NextFunction) => {
+    try {
     const { id } = req.params;
     const { name, url, events, enabled, secret } = req.body as Record<string, any>;
     const now = nowMs();
     const existing = db.prepare("SELECT * FROM webhooks WHERE id = ?").get(id as string) as any as WebhookRow | undefined;
-    if (!existing) { res.status(404).json({ error: "not found" }); return; }
+    if (!existing) { throw ApiError.notFound("webhook_not_found"); }
 
     const newName: string = name?.trim() ?? existing.name;
     const newUrl: string = url?.trim() ?? existing.url;
@@ -61,6 +64,7 @@ export function registerWebhookRoutes({ app, db, nowMs }: WebhookRouteDeps): voi
       `UPDATE webhooks SET name=?, url=?, events=?, enabled=?, secret=?, updated_at=? WHERE id=?`,
     ).run(newName as string, newUrl as string, JSON.stringify(newEvents) as string, newEnabled as number, newSecret as string | null, now as number, id as string);
     res.json({ ok: true });
+    } catch (err) { next(err); }
   });
 
   // DELETE /api/webhooks/:id
@@ -70,14 +74,16 @@ export function registerWebhookRoutes({ app, db, nowMs }: WebhookRouteDeps): voi
   });
 
   // POST /api/webhooks/:id/test — 테스트 발송
-  app.post("/api/webhooks/:id/test", async (req: Request, res: Response) => {
+  app.post("/api/webhooks/:id/test", async (req: Request, res: Response, next: NextFunction) => {
+    try {
     const row = db.prepare("SELECT * FROM webhooks WHERE id = ?").get(req.params.id as string) as any as WebhookRow | undefined;
-    if (!row) { res.status(404).json({ error: "not found" }); return; }
+    if (!row) { throw ApiError.notFound("webhook_not_found"); }
     const result = await sendWebhook(row.url, row.secret, "test", {
       message: "AgentDesk webhook test",
       timestamp: nowMs(),
     });
     res.json(result);
+    } catch (err) { next(err); }
   });
 }
 

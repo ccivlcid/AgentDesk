@@ -43,7 +43,7 @@ export interface Agent {
   avatar_emoji: string;
   avatar_url?: string | null;
   sprite_number?: number | null;
-  personality: string | null;
+  personality?: string | null;
   persona_id?: string | null;
   status: AgentStatus;
   current_task_id: string | null;
@@ -146,6 +146,7 @@ export interface Task {
   execution_error_code?: string | null;
   execution_error_summary?: string | null;
   resolved_workflow_contract_hash?: string | null;
+  timeout_minutes?: number;
   priority: number;
   task_type: TaskType;
   workflow_pack_key?: WorkflowPackKey;
@@ -161,6 +162,7 @@ export interface Task {
   subtask_total?: number;
   subtask_done?: number;
   hidden?: number;
+  category_id?: string | null;
 }
 
 export interface TaskExecutionSummary {
@@ -176,6 +178,7 @@ export interface TaskExecutionSummary {
   execution_error_code?: string | null;
   execution_error_summary?: string | null;
   resolved_workflow_contract_hash?: string | null;
+  timeout_minutes?: number;
   started_at?: number | null;
   completed_at?: number | null;
   updated_at?: number;
@@ -525,24 +528,6 @@ export interface MessengerChannelConfig {
 
 export type MessengerChannelsConfig = Record<MessengerChannelType, MessengerChannelConfig>;
 
-export interface OfficePackProfile {
-  departments: Department[];
-  agents: Agent[];
-  updated_at: number;
-}
-
-export type OfficePackProfiles = Partial<Record<string, OfficePackProfile>>;
-
-export interface CustomOfficePack {
-  key: string;
-  name: string;
-  name_ko: string;
-  icon: string;
-  color: string;
-  description: string;
-  created_at: number;
-}
-
 export interface CompanySettings {
   companyName: string;
   clientName: string;
@@ -558,10 +543,6 @@ export interface CompanySettings {
   providerModelConfig?: Record<string, ProviderModelConfig>;
   roomThemes?: Record<string, RoomTheme>;
   messengerChannels?: MessengerChannelsConfig;
-  officePackProfiles?: OfficePackProfiles;
-  officePackHydratedPacks?: string[];
-  customOfficePacks?: CustomOfficePack[];
-  hiddenBuiltinPackKeys?: string[];
 }
 
 // Agent Rules

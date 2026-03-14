@@ -860,7 +860,7 @@ function HeartbeatBody({
                 ? "직원 살펴보기(Heartbeat)는 선택한 직원의 프로젝트·태스크 상태를 주기적으로 자동으로 확인하는 기능입니다."
                 : "Heartbeat automatically checks on projects and tasks for selected staff at set intervals.",
               isKo
-                ? "오피스 팩을 선택한 뒤 ADD TO MONITOR 에서 직원을 추가하세요. 간격과 확인 항목을 설정할 수 있습니다."
+                ? "워크플로 팩을 선택한 뒤 ADD TO MONITOR 에서 직원을 추가하세요. 간격과 확인 항목을 설정할 수 있습니다."
                 : "Use ADD TO MONITOR to select staff. You can set the interval and which items to check.",
               isKo
                 ? "정상이면 로그만 남고, 문제가 있으면 알림 센터로 알림이 전송됩니다. [RUN]으로 수동 실행할 수 있습니다."
@@ -871,7 +871,7 @@ function HeartbeatBody({
               </div>
             ))}
             <div style={{ marginTop: 4, padding: "6px 10px", background: "rgba(245,158,11,0.06)", borderLeft: "2px solid rgba(245,158,11,0.4)", fontSize: "10px", color: "#fde68a" }}>
-              ! {isKo ? "현재 보이는 직원 목록은 선택한 오피스 팩에 따라 달라집니다." : "The staff list depends on the selected office pack."}
+              ! {isKo ? "현재 보이는 직원 목록은 선택한 워크플로 팩에 따라 달라집니다." : "The staff list depends on the selected workflow pack."}
             </div>
           </div>
         )}

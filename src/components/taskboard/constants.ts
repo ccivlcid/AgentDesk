@@ -4,7 +4,7 @@ import type { UiLanguage } from "../../i18n";
 export type Locale = UiLanguage;
 export type TFunction = (messages: Record<Locale, string>) => string;
 
-/** 오피스 팩 입력 필드 키 → 다국어 라벨. 매칭 없으면 snake_case → 공백 표시 */
+/** 워크플로 팩 입력 필드 키 → 다국어 라벨. 매칭 없으면 snake_case → 공백 표시 */
 export const PACK_FIELD_LABELS: Record<string, { ko: string; en: string; ja: string; zh: string }> = {
   // development
   project: { ko: "프로젝트", en: "Project", ja: "プロジェクト", zh: "项目" },
@@ -48,7 +48,7 @@ export const PACK_FIELD_LABELS: Record<string, { ko: string; en: string; ja: str
   portfolio_size: { ko: "포트폴리오 규모", en: "Portfolio Size", ja: "ポートフォリオ規模", zh: "组合规模" },
 };
 
-/** 오피스 팩 키 → 다국어 표시명 (섹션 제목 등) */
+/** 워크플로 팩 키 → 다국어 표시명 (섹션 제목 등) */
 export const PACK_DISPLAY_NAMES: Record<string, { ko: string; en: string; ja: string; zh: string }> = {
   development: { ko: "개발", en: "Development", ja: "開発", zh: "开发" },
   novel: { ko: "소설", en: "Novel", ja: "小説", zh: "小说" },

@@ -1,12 +1,14 @@
 # Docs
 
+> **시작점:** [`OVERVIEW.md`](./OVERVIEW.md) — AgentDesk가 무엇이고, 왜 만들어졌는지, 어떻게 동작하는지 한 문서에서 읽을 수 있다.
+
 ---
 
 ## 루트
 
 | 문서 | 설명 |
 |------|------|
-| [README.md](README.md) | 이 인덱스 |
+| [OVERVIEW.md](OVERVIEW.md) | **마스터 개요** — Project OS 컨셉, 에이전트 모니터링, 실행 파이프라인, 현재 상태, 로드맵 |
 
 ---
 
@@ -14,11 +16,9 @@
 
 | 문서 | 설명 |
 |------|------|
-| [DESIGN.md](design/DESIGN.md) | UI/UX 가이드 — 컴포넌트 패턴, 색·폰트·규칙 |
-| [design-system.md](design/design-system.md) | 디자인 시스템 — CSS 변수(`--th-*`), 다크/라이트 테마 |
-| [DESIGN_SKILLS.md](design/DESIGN_SKILLS.md) | 스킬 학습 히스토리·CLI 프롬프트 UI 스펙 |
-| [uiux_prompt.md](design/uiux_prompt.md) | UI/UX 프롬프트 |
-| AgentDesk_프로젝트소개.pptx | 프로젝트 소개 발표 자료 |
+| [DESIGN.md](design/DESIGN.md) | **UI 구현 레퍼런스** — CSS 변수 전체 + 컴포넌트 패턴 (macOS Hybrid, 색·폰트·규칙) |
+| [AI-GUIDE.md](design/AI-GUIDE.md) | **AI 개발자 가이드** — 디자인 원칙, 체크리스트, 컴포넌트 예시 코드 |
+| [UI-SCREENS.md](design/UI-SCREENS.md) | **화면·모달 목록** — 13개 메인 화면 + 36개 오버레이 상세 명세 |
 
 ---
 
@@ -26,16 +26,8 @@
 
 | 문서 | 설명 |
 |------|------|
-| [api.md](specs/api.md) | API 계약 — 엔드포인트, 인증, 메신저 |
-| [openapi.json](specs/openapi.json) | OpenAPI 정의 |
-
----
-
-## strategy/
-
-| 문서 | 설명 |
-|------|------|
-| [agent-persona-system.md](strategy/agent-persona-system.md) | 페르소나 에이전트 아키텍처, "방식 우선" UX |
+| [api.md](specs/api.md) | API 계약 — 엔드포인트, 인증, 메신저, Rules/Memory/Hooks `project_id` 필터 |
+| [openapi.json](specs/openapi.json) | OpenAPI 정의 (자동 생성) |
 
 ---
 
@@ -43,19 +35,20 @@
 
 | 문서 | 설명 |
 |------|------|
-| [README.md](architecture/README.md) | 시스템 개요, 프로젝트 트리, 의존성 다이어그램 |
-| [SYSTEM-STRUCTURE-MAP.md](architecture/SYSTEM-STRUCTURE-MAP.md) | 시스템 구조 맵 |
-| [ARCHITECTURE-AUDIT-2026-Q1.md](architecture/ARCHITECTURE-AUDIT-2026-Q1.md) | 2026 Q1 아키텍처 감사 |
-| org-chart.mmd, backend-dependencies.mmd, frontend-imports.mmd | 자동 생성 다이어그램 |
-| architecture.json, source-tree.txt | 자동 생성 리포트 (`npm run arch:map`으로 재생성) |
+| [ARCHITECTURE-AUDIT-2026-Q1.md](architecture/ARCHITECTURE-AUDIT-2026-Q1.md) | **종합 감사** — FE/BE/보안/DB·에러 처리·로드맵 (백엔드 감사 통합) |
+| [SYSTEM-STRUCTURE-MAP.md](architecture/SYSTEM-STRUCTURE-MAP.md) | 시스템 구조 맵 — Frontend·Backend·DB·실행 흐름 |
+| [README.md](architecture/README.md) | 프로젝트 트리 + 의존성 다이어그램 (자동 생성 — `npm run arch:map`) |
 
 ---
 
-## reference/
+## strategy/
 
 | 문서 | 설명 |
 |------|------|
-| [exe-packaging-plan.md](reference/exe-packaging-plan.md) | 실행 파일 패키징 계획 |
+| [agent-performance-audit.md](strategy/agent-performance-audit.md) | 에이전트 실행 성능 감사 — 병목 10개, Phase 1 완료 |
+| [bigger-ide-vision.md](strategy/bigger-ide-vision.md) | "더 큰 IDE" 전략 비전 |
+| [agent-flow-graph-design.md](strategy/agent-flow-graph-design.md) | Agent Flow Graph SVG 구현 설계 (구현 예정) |
+| [agent-persona-system.md](strategy/agent-persona-system.md) | 에이전트 페르소나 시스템 — 유명인 10명 카탈로그 |
 
 ---
 
@@ -64,7 +57,7 @@
 | 항목 | 설명 |
 |------|------|
 | AgentDesk-Analysis-Report.pptx | 분석 리포트 |
-| Sample_Slides/ | 슬라이드 샘플 (HTML → PPTX 빌드 스크립트 포함) |
+| Sample_Slides/ | 슬라이드 샘플 |
 
 ---
 

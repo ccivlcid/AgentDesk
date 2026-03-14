@@ -61,7 +61,7 @@ export function useAppBootstrapData({
   const fetchAll = useCallback(async () => {
     try {
       // Settings is loaded first because server-side /api/settings can trigger one-time
-      // office-pack hydration, and we want follow-up agent/department fetches to include it.
+      // workflow-pack hydration, and we want follow-up agent/department fetches to include it.
       const sett = await api.getSettings();
       const [depts, ags, libraryAgs, tks, sts, subs, presence, decisionItems, cats, projectsResult] = await Promise.all([
         api.getDepartments(),

@@ -30,8 +30,14 @@ import { appendCapped, areAgentsEquivalent } from "./utils";
 
 type SocketOn = (event: WSEventType, handler: (payload: unknown) => void) => () => void;
 
+/** When WebSocket is connected, reconciliation polls are infrequent (30s). */
+const WS_CONNECTED_POLL_INTERVAL_MS = 30_000;
+/** When WebSocket is disconnected, fall back to aggressive polling (5s). */
+const WS_DISCONNECTED_POLL_INTERVAL_MS = 5_000;
+
 interface UseRealtimeSyncParams {
   on: SocketOn;
+  connected: boolean;
   scheduleLiveSync: (delayMs?: number) => void;
   agentsRef: MutableRefObject<Agent[]>;
   tasksRef: MutableRefObject<Task[]>;
@@ -41,6 +47,7 @@ interface UseRealtimeSyncParams {
   codexThreadToSubAgentIdRef: MutableRefObject<Map<string, string>>;
   codexThreadBindingTsRef: MutableRefObject<Map<string, number>>;
   subAgentStreamTailRef: MutableRefObject<Map<string, string>>;
+  setTasks: Dispatch<SetStateAction<Task[]>>;
   setAgents: Dispatch<SetStateAction<Agent[]>>;
   setMessages: Dispatch<SetStateAction<Message[]>>;
   setUnreadAgentIds: Dispatch<SetStateAction<Set<string>>>;
@@ -63,6 +70,7 @@ interface UseRealtimeSyncParams {
 
 export function useRealtimeSync({
   on,
+  connected,
   scheduleLiveSync,
   agentsRef,
   tasksRef,
@@ -72,6 +80,7 @@ export function useRealtimeSync({
   codexThreadToSubAgentIdRef,
   codexThreadBindingTsRef,
   subAgentStreamTailRef,
+  setTasks,
   setAgents,
   setMessages,
   setUnreadAgentIds,
@@ -85,8 +94,25 @@ export function useRealtimeSync({
 }: UseRealtimeSyncParams): void {
   useEffect(() => {
     const unsubs = [
-      on("task_update", () => {
-        scheduleLiveSync(80);
+      on("task_update", (payload: unknown) => {
+        const taskPatch = payload as Task | null;
+        if (taskPatch && typeof taskPatch.id === "string") {
+          setTasks((prev) => {
+            const idx = prev.findIndex((t) => t.id === taskPatch.id);
+            if (idx < 0) {
+              // New task — append and trigger reconciliation for stats/decisions
+              scheduleLiveSync(200);
+              return [...prev, taskPatch];
+            }
+            const merged = { ...prev[idx], ...taskPatch };
+            if (JSON.stringify(prev[idx]) === JSON.stringify(merged)) return prev;
+            const next = [...prev];
+            next[idx] = merged;
+            return next;
+          });
+        } else {
+          scheduleLiveSync(80);
+        }
       }),
       on("agent_status", (payload: unknown) => {
         const p = payload as Agent & { subAgents?: SubAgent[] };
@@ -463,10 +489,14 @@ export function useRealtimeSync({
     return () => unsubs.forEach((fn) => fn());
   }, [on, scheduleLiveSync]);
 
+  // Adaptive polling: fast when WS disconnected, slow reconciliation when connected
   useEffect(() => {
     let timer: ReturnType<typeof setInterval>;
+    const intervalMs = connected
+      ? WS_CONNECTED_POLL_INTERVAL_MS
+      : WS_DISCONNECTED_POLL_INTERVAL_MS;
     function start() {
-      timer = setInterval(() => scheduleLiveSync(0), 5000);
+      timer = setInterval(() => scheduleLiveSync(0), intervalMs);
     }
     function handleVisibility() {
       clearInterval(timer);
@@ -481,5 +511,5 @@ export function useRealtimeSync({
       clearInterval(timer);
       document.removeEventListener("visibilitychange", handleVisibility);
     };
-  }, [scheduleLiveSync]);
+  }, [scheduleLiveSync, connected]);
 }

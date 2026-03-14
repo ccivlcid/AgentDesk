@@ -59,7 +59,7 @@ function createHarness(): { db: DatabaseSync; routes: Map<string, RouteHandler> 
       cli_reasoning_level TEXT,
       avatar_emoji TEXT NOT NULL DEFAULT '🤖',
       sprite_number INTEGER,
-      personality TEXT,
+      persona_id TEXT,
       status TEXT NOT NULL DEFAULT 'idle',
       current_task_id TEXT,
       stats_tasks_done INTEGER NOT NULL DEFAULT 0,
@@ -80,6 +80,10 @@ function createHarness(): { db: DatabaseSync; routes: Map<string, RouteHandler> 
     },
     patch(path: string, handler: RouteHandler) {
       routes.set(`PATCH ${path}`, handler);
+      return this;
+    },
+    put(path: string, handler: RouteHandler) {
+      routes.set(`PUT ${path}`, handler);
       return this;
     },
     delete(path: string, handler: RouteHandler) {
