@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { localeName, type UiLanguage } from "../../i18n";
 import type { Agent, Department, SubAgent, SubTask, Task } from "../../types";
 import { SUBTASK_STATUS_ICON, taskStatusLabel, taskTypeLabel, type TFunction } from "./constants";
@@ -37,23 +37,93 @@ export default function AgentDetailTabContent({
   onOpenTerminal,
 }: AgentDetailTabContentProps) {
   const [personaText, setPersonaText] = useState<string | null>(null);
+  const [isEditingPersona, setIsEditingPersona] = useState(false);
+  const [editDraft, setEditDraft] = useState("");
+  const [savingPersona, setSavingPersona] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     if (tab !== "info") return;
     setPersonaText(null);
+    setIsEditingPersona(false);
     api.getAgentPersona(agent.id).then((text) => setPersonaText(text || null)).catch(() => setPersonaText(null));
   }, [agent.id, tab]);
+
+  function startEditPersona() {
+    setEditDraft(personaText ?? "");
+    setIsEditingPersona(true);
+    setTimeout(() => textareaRef.current?.focus(), 0);
+  }
+
+  function cancelEditPersona() {
+    setIsEditingPersona(false);
+  }
+
+  async function savePersona() {
+    setSavingPersona(true);
+    try {
+      await api.saveAgentPersona(agent.id, editDraft);
+      setPersonaText(editDraft || null);
+      setIsEditingPersona(false);
+    } catch {
+      // keep editing on error
+    } finally {
+      setSavingPersona(false);
+    }
+  }
 
   if (tab === "info") {
     return (
       <div className="space-y-3">
         <div className="border rounded p-3" style={{ background: "var(--th-bg-surface)", borderColor: "var(--th-border)" }}>
-          <div className="text-xs mb-1" style={{ color: "var(--th-text-muted)" }}>
-            {t({ ko: "성격", en: "Personality", ja: "性格", zh: "性格" })}
+          <div className="flex items-center justify-between mb-1">
+            <div className="text-xs" style={{ color: "var(--th-text-muted)" }}>
+              {t({ ko: "페르소나", en: "Persona", ja: "ペルソナ", zh: "人格" })}
+            </div>
+            {!isEditingPersona && (
+              <button
+                onClick={startEditPersona}
+                className="text-[10px] px-1.5 py-0.5 font-mono transition-colors"
+                style={{ color: "var(--th-accent)", border: "1px solid rgba(6,182,212,0.3)", borderRadius: 4, background: "rgba(6,182,212,0.07)" }}
+              >
+                ✏️ {t({ ko: "편집", en: "Edit", ja: "編集", zh: "编辑" })}
+              </button>
+            )}
           </div>
-          <div className="text-sm" style={{ color: "var(--th-text-secondary)" }}>
-            {personaText ?? t({ ko: "설정 없음", en: "Not set", ja: "未設定", zh: "未设置" })}
-          </div>
+          {isEditingPersona ? (
+            <div className="space-y-2">
+              <textarea
+                ref={textareaRef}
+                value={editDraft}
+                onChange={(e) => setEditDraft(e.target.value)}
+                rows={6}
+                className="w-full text-xs font-mono resize-y p-2 outline-none"
+                style={{ background: "var(--th-bg-primary)", border: "1px solid var(--th-border)", borderRadius: 4, color: "var(--th-text-primary)" }}
+                placeholder={t({ ko: "페르소나를 입력하세요...", en: "Enter persona...", ja: "ペルソナを入力...", zh: "输入人格..." })}
+              />
+              <div className="flex gap-1.5 justify-end">
+                <button
+                  onClick={cancelEditPersona}
+                  className="text-[10px] px-2 py-1 font-mono"
+                  style={{ color: "var(--th-text-muted)", border: "1px solid var(--th-border)", borderRadius: 4 }}
+                >
+                  {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}
+                </button>
+                <button
+                  onClick={() => { void savePersona(); }}
+                  disabled={savingPersona}
+                  className="text-[10px] px-2 py-1 font-mono"
+                  style={{ background: "rgba(6,182,212,0.15)", border: "1px solid rgba(6,182,212,0.4)", borderRadius: 4, color: "#06b6d4", opacity: savingPersona ? 0.6 : 1 }}
+                >
+                  {savingPersona ? t({ ko: "저장중...", en: "Saving...", ja: "保存中...", zh: "保存中..." }) : t({ ko: "저장", en: "Save", ja: "保存", zh: "保存" })}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="text-sm whitespace-pre-wrap" style={{ color: "var(--th-text-secondary)" }}>
+              {personaText ?? <span style={{ color: "var(--th-text-muted)", fontStyle: "italic" }}>{t({ ko: "설정 없음", en: "Not set", ja: "未設定", zh: "未设置" })}</span>}
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-2 gap-2">

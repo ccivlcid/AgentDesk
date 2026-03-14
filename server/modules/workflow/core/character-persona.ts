@@ -6,8 +6,17 @@ const PROMPTS_DIR = join(dirname(fileURLToPath(import.meta.url)), "../../../../p
 const AGENTS_DIR = join(PROMPTS_DIR, "agents");
 const PERSONAS_DIR = join(PROMPTS_DIR, "personas");
 
+const CACHE_MAX = 200;
 const _agentCache = new Map<string, string | null>();
 const _personaCache = new Map<string, string | null>();
+
+function cachePut<K, V>(cache: Map<K, V>, key: K, value: V): void {
+  if (cache.size >= CACHE_MAX) {
+    // evict oldest entry
+    cache.delete(cache.keys().next().value as K);
+  }
+  cache.set(key, value);
+}
 
 function readPromptFile(filePath: string): string | null {
   try {
@@ -27,7 +36,7 @@ function loadPersonaFromFile(personaId: string): string | null {
   if (cached !== undefined) return cached;
 
   const text = readPromptFile(join(PERSONAS_DIR, `${personaId}.md`));
-  _personaCache.set(personaId, text);
+  cachePut(_personaCache, personaId, text);
   return text;
 }
 
@@ -41,7 +50,7 @@ function loadAgentPersonaFromFile(agentId: string): string | null {
   if (cached !== undefined) return cached;
 
   const text = readPromptFile(join(AGENTS_DIR, `${agentId}.md`));
-  _agentCache.set(agentId, text);
+  cachePut(_agentCache, agentId, text);
   return text;
 }
 

@@ -1017,6 +1017,92 @@
         }
       }
     },
+    "/api/agents/{id}/persona": {
+      "get": {
+        "tags": ["runtime"],
+        "summary": "Get agent persona",
+        "description": "Returns the persona text stored in server/prompts/agents/{id}.md",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Agent ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Agent persona text",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "agentId": { "type": "string" },
+                    "text": { "type": "string" }
+                  },
+                  "required": ["agentId", "text"]
+                },
+                "example": { "agentId": "abc123", "text": "You are a pragmatic senior engineer..." }
+              }
+            }
+          },
+          "404": { "description": "Agent not found" }
+        }
+      },
+      "put": {
+        "tags": ["runtime"],
+        "summary": "Save agent persona",
+        "description": "Writes persona text to server/prompts/agents/{id}.md and invalidates the in-process cache",
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Agent ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "text": { "type": "string", "description": "Persona markdown text" }
+                },
+                "required": ["text"]
+              },
+              "example": { "text": "You are a pragmatic senior engineer..." }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Persona saved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": { "type": "boolean" },
+                    "agentId": { "type": "string" }
+                  },
+                  "required": ["ok", "agentId"]
+                },
+                "example": { "ok": true, "agentId": "abc123" }
+              }
+            }
+          },
+          "400": { "description": "Bad request (missing text field)" },
+          "404": { "description": "Agent not found" }
+        }
+      }
+    },
     "/api/tasks": {
       "get": {
         "tags": ["tasks"],
