@@ -139,6 +139,269 @@ broadcast('task_update')
 
 ---
 
+### 2.5 워크플로우팩 & 프로젝트 생성 구조
+
+**파일:** `server/modules/workflow/packs/definitions.ts`, `server/modules/routes/core/projects.ts`
+
+프로젝트 생성 시 `default_pack_key`를 지정하며, 팩 설정은 `server/prompts/packs/{packKey}.md` 파일의 `<!-- pack-config -->` JSON 블록에서 로드된다.
+
+| 팩 키 | 용도 | 선호 부서 | 추론 수준 |
+|-------|------|-----------|----------|
+| `development` | 코드 개발·버그픽스 | dev, qa, planning | high |
+| `report` | 구조화 보고서 | planning, dev | high |
+| `web_research_report` | 웹 리서치·분석 | planning, dev | medium |
+| `novel` | 소설·창작 | creative | medium |
+| `video_preprod` | 영상 사전 제작 | creative, design | medium |
+| `roleplay` | 롤플레이 | creative | low |
+| `asset_management` | 투자·자산관리 | planning, finance | high |
+
+**프로젝트 생성 시 핵심 파라미터:**
+
+```typescript
+POST /api/projects
+{
+  name: string;
+  project_path: string;          // allowed roots 내 경로만 허용
+  core_goal: string;
+  default_pack_key?: WorkflowPackKey;
+  assignment_mode?: 'auto' | 'manual';  // 기본값: 'auto'
+  agent_ids?: string[];           // manual 모드 시 배정할 에이전트 목록
+}
+```
+
+**`assignment_mode` 동작 차이:**
+- `auto`: 태스크 실행 시마다 팩 선호도·역할·상태 기준으로 에이전트 자동 선별
+- `manual`: `project_agents` 테이블에 등록된 에이전트 풀 내에서만 자동 선별
+
+---
+
+### 2.6 에이전트 자동 선별 알고리즘
+
+**파일:** `server/modules/routes/core/tasks/execution-run-auto-assign.ts`
+
+`selectAutoAssignableAgentForTask()` 가 아래 단계를 순서대로 실행한다:
+
+```
+Step 1. 에이전트 풀 제약 해소 (resolveConstrainedAgentScopeForTask)
+    ├─ 워크플로우팩 프로필 기반 에이전트 목록
+    ├─ 프로젝트 manual 스코프 에이전트 목록
+    └─ 두 목록의 교집합 → 유효 후보 풀
+
+Step 2. 필터링
+    ├─ cli_provider 설정된 에이전트만
+    ├─ status = 'idle' OR 'break' (working 제외)
+    └─ current_task_id IS NULL (현재 진행 중인 태스크 없는 에이전트)
+
+Step 3. 정렬 (우선순위 순)
+    ① 팩 선호 부서 소속 여부 (preferredDepartments 순서)
+    ② 에이전트 상태: idle(1) > break(2)
+    ③ 에이전트 역할: senior(1) > team_leader(2) > junior(3) > intern(4)
+    ④ 완료 태스크 수 (적을수록 우선 — 로드 밸런싱)
+    ⑤ 생성 시간 (오래된 에이전트 우선 — FIFO)
+
+Step 4. 상위 후보 반환
+    └─ { packKey, agent: AutoAssignableAgent }
+```
+
+**OAuth 제공자 추가 검증:** `copilot`, `antigravity` 등 OAuth 기반 에이전트는 `oauth_accounts` 테이블의 토큰 유효성도 함께 검사.
+
+---
+
+### 2.7 특정 에이전트 직접 업무 지시
+
+**파일:** `server/modules/routes/core/tasks/execution-run.ts`, `server/modules/routes/collab/task-delegation.ts`
+
+특정 에이전트에게 업무를 지시하는 3가지 경로:
+
+#### 경로 ① — UI/API 직접 지정
+
+```typescript
+// 태스크 생성 시 assigned_agent_id 직접 설정
+POST /api/tasks
+{ "title": "...", "assigned_agent_id": "agent-001" }
+
+// 태스크 실행 시 agent_id 전달 (run body)
+POST /api/tasks/:id/run
+{ "agent_id": "agent-001" }
+```
+
+실행 시 스코프 검증:
+```
+assigned_agent_id 설정됨
+    │
+    ▼
+resolveConstrainedAgentScopeForTask() 호출
+    ├─ 스코프 통과 → 해당 에이전트로 실행
+    └─ 스코프 위반 → agentId 초기화 → auto-assign으로 전환
+```
+
+#### 경로 ② — 팀 리더 위임 (task-delegation)
+
+```
+클라이언트 지시 메시지
+    │
+    ▼
+팀 리더 acknowledgment (assigned_agent_id = teamLeader.id)
+    │
+    ▼
+findBestSubordinate() → 부하 에이전트 선정
+    │
+    ▼
+DB UPDATE tasks SET assigned_agent_id = subordinate.id
+sendAgentMessage(type: "task_assign", receiverId: subordinate.id)
+```
+
+#### 경로 ③ — 프로젝트 단위 고정 배치 (manual 모드)
+
+```sql
+-- 프로젝트를 manual 모드로 설정
+UPDATE projects SET assignment_mode = 'manual' WHERE id = ?
+
+-- 허용 에이전트 등록
+INSERT INTO project_agents (project_id, agent_id) VALUES (?, ?)
+```
+
+---
+
+### 2.8 업무 지시서 (프롬프트) 조립 구조
+
+**파일:** `server/modules/routes/core/tasks/execution-run.ts` (lines 494–527)
+**함수:** `buildTaskExecutionPrompt()`
+
+에이전트에게 전달되는 프롬프트는 최대 15개 블록의 순서 조립:
+
+```
+[Task Session]              ← sessionId, agentId, provider
+[Project Structure]         ← 코드베이스 디렉토리 요약 (첫 실행 시 생성)
+[Recent Changes]            ← 최근 git 변경 내역 (선택)
+[Task] {title}              ← task.title + task.description  ★ 핵심
+[Workflow Pack Rules]        ← 팩 별 실행 지침 (buildWorkflowPackExecutionGuidance)
+[Document Generation]        ← 출력 형식 가이드
+[Continuation Context]       ← 재실행 시 이전 체크리스트 미완 항목
+[Conversation Context]       ← 최근 대화 맥락
+Agent: {name} ({role})      ← 에이전트 정체성
+[Character Persona]          ← 페르소나 블록 (buildCharacterPersonaBlock)
+[Department Constraint]      ← 부서 제약 및 부서 프롬프트
+[Interrupt Injections]       ← 일시정지 태스크 재개 시 추가 지시
+[Project Rules]              ← 프로젝트·에이전트·부서·글로벌 규칙 (5분 TTL 캐시)
+[Agent Memory]               ← 관련 과거 기억 (5분 TTL 캐시)
+[Run Instruction]            ← 최종 실행 지침
+
+스코프 우선순위: project > agent > department > global
+```
+
+---
+
+### 2.9 에이전트 회의 시스템 (Review Consensus Meeting)
+
+**파일:** `server/modules/workflow/orchestration/meetings/review-consensus.ts`
+
+태스크 완료 후 `startReviewConsensusMeeting()` 가 자동 호출되며, 최대 3라운드의 합의 프로세스를 진행한다.
+
+**회의 단계별 역할:**
+
+| 라운드 | 단계명 | 참여자 | 역할 |
+|--------|--------|--------|------|
+| Round 1 | Parallel Remediation | 각 부서 리더 | 독립적 수정 제안 |
+| Round 2 | Merge Synthesis | 팀 리더들 | 피드백 취합 및 통합 |
+| Round 3 | Final Decision | 기획(planning) 리더 | 최종 승인/반려 |
+
+**회의 진행 흐름:**
+
+```
+callLeadersToClientOffice()          ← 에이전트 상태 → meeting
+    │
+    ▼
+for each 리더 에이전트 (async):
+    ① emitMeetingSpeech(agent, phase) → WebSocket broadcast
+    ② runAgentOneShot(agent, meetingPrompt)
+    ③ appendMeetingMinuteEntry(agent, content) → meeting_minute_entries
+    ④ 결정 수집: approve | revise | pending
+    │
+    ▼
+processReviewConsensusOutcome()
+    ├─ 전원/다수 approve  → finishReview(task) → status: 'done'
+    ├─ revise 요청 있음   → seedReviewRevisionSubtasks() → 수정 서브태스크 생성
+    └─ Round 3 초과       → 강제 승인 처리
+    │
+    ▼
+dismissLeadersFromClientOffice()     ← 에이전트 상태 → idle
+```
+
+**런타임 회의 상태 맵 (In-Memory):**
+
+| Map | 키 | 값 |
+|-----|----|----|
+| `meetingPhaseByAgent` | agentId | opening·feedback·summary·approval |
+| `meetingPresenceUntil` | agentId | 회의 종료 타임스탬프 |
+| `meetingSeatIndexByAgent` | agentId | 좌석 번호 (0~5, 최대 6인) |
+| `meetingReviewDecisionByAgent` | agentId | approve·revise·pending |
+| `meetingTaskIdByAgent` | agentId | 현재 회의 중인 taskId |
+
+> ⚠️ **[A15]** 위 5개 Map은 서버 재시작 시 초기화됨 → 진행 중 회의 세션 소실 위험
+
+---
+
+### 2.10 결과 도출 & 학습 메커니즘
+
+**파일:** `server/modules/workflow/orchestration/run-complete-handler.ts`
+
+에이전트 프로세스 종료(exit) 후 `handleTaskRunComplete(taskId, exitCode)` 가 순차 실행:
+
+```
+① 결과 저장
+   task.result = 로그 마지막 2,000자
+   task.status = 'review' (exit 0) | 'failed' (exit ≠ 0)
+
+② 아티팩트 동기화 (video_preprod)
+   └─ handleVideoArtifactSync() — 렌더링된 영상 파일 확인
+
+③ 출력 게이트 검증 (runAfterExitGates)
+   └─ 워크플로우팩 outputTemplate 섹션 존재 여부 확인
+
+④ 학습 추출 (runExtractLearnings)
+   └─ 에이전트 출력 JSON 파싱 → { type: 'learning', content } 형식
+   └─ memory_entries에 저장 → 다음 태스크 buildMemoryPromptBlock()으로 재사용
+
+⑤ 스킬 추출 (runExtractSkills)
+   └─ 새 도구·패턴 → skill_learning_history 저장
+
+⑥ 사용량 기록 (recordAgentUsage)
+   └─ 토큰 수, 실행 시간, 비용 → task_executions 업데이트
+
+⑦ Hooks 실행 (fire-and-forget, 병렬 async)
+   ├─ exit 0: executeHooks('post-task')
+   └─ exit ≠ 0: executeHooks('on-error')
+
+⑧ 알림
+   ├─ notifyClient()      → UI 토스트
+   ├─ sendAgentMessage()  → 메신저 (Discord/Telegram)
+   └─ insertNotification() → 감사 로그
+
+⑨ 워크트리 정리
+   └─ cleanupWorktree() — 격리된 git worktree 삭제
+```
+
+**태스크 상태 전이:**
+
+```
+inbox → planned → in_progress → review → done
+                            └──────────→ failed → (retry 카운터 증가)
+```
+
+**서브태스크 위임 (cross-department):**
+
+```
+부모 태스크 'review' 상태 도달
+    │
+    ▼
+processSubtaskDelegations()
+    ├─ 미완 외부 서브태스크 → 목표 부서별 일괄 묶음
+    └─ 부서별 순차 위임 → 각 부서 팀리더에게 배치 요청
+```
+
+---
+
 ## 3. 백엔드 엔진 강점
 
 ### 3-1. Deferred Runtime Proxy 패턴 — 우수

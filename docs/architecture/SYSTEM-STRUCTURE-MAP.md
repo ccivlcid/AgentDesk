@@ -120,6 +120,97 @@ npm run arch:map
 
 ---
 
+## 에이전트 선별 & 업무 지시 흐름
+
+```mermaid
+flowchart TD
+  A[POST /api/tasks/:id/run] --> B{assigned_agent_id\n설정 여부}
+
+  B -- "있음" --> C[resolveConstrainedAgentScopeForTask]
+  C --> D{스코프 검증}
+  D -- "통과" --> G[해당 에이전트 사용]
+  D -- "위반" --> E[agentId 초기화]
+  E --> F[selectAutoAssignableAgentForTask]
+
+  B -- "없음" --> F
+
+  F --> F1[Step 1: 에이전트 풀 제약 해소\n팩 선호 부서 ∩ 프로젝트 manual 스코프]
+  F1 --> F2[Step 2: 필터링\ncli_provider 설정 + idle/break + 현재 태스크 없음]
+  F2 --> F3[Step 3: 정렬\n부서 선호→상태→역할→완료수→생성시간]
+  F3 --> G
+
+  G --> H[buildTaskExecutionPrompt\n15개 블록 조립]
+  H --> I[pre-task Hooks 실행]
+  I --> J[child_process.spawn]
+  J --> K[stdout → WebSocket → Terminal]
+```
+
+## 업무 지시서 조립 구조 (프롬프트 블록)
+
+```mermaid
+flowchart LR
+  subgraph 프롬프트["buildTaskExecutionPrompt()"]
+    direction TB
+    B1["[Task Session] sessionId·agentId·provider"]
+    B2["[Project Structure] 코드베이스 요약"]
+    B3["[Task] title + description ★"]
+    B4["[Workflow Pack Rules] 팩별 실행 지침"]
+    B5["[Character Persona] 에이전트 페르소나"]
+    B6["[Project Rules] project>agent>dept>global"]
+    B7["[Agent Memory] 과거 기억 (5min TTL 캐시)"]
+    B8["[Run Instruction] 최종 실행 지침"]
+    B1 --> B2 --> B3 --> B4 --> B5 --> B6 --> B7 --> B8
+  end
+  프롬프트 --> Spawn["child_process.spawn(claude|codex|gemini...)"]
+```
+
+## 에이전트 회의 & 결과 도출 흐름
+
+```mermaid
+sequenceDiagram
+  participant Task as Task (in_progress)
+  participant RC as ReviewConsensus
+  participant L1 as 리더A
+  participant L2 as 리더B
+  participant DB as DB / meeting_minutes
+
+  Task->>RC: handleTaskRunComplete (exit 0)
+  RC->>RC: callLeadersToClientOffice()
+  RC->>L1: runAgentOneShot(meetingPrompt, round=1)
+  L1-->>DB: appendMeetingMinuteEntry(approve|revise)
+  RC->>L2: runAgentOneShot(meetingPrompt, round=1)
+  L2-->>DB: appendMeetingMinuteEntry(approve|revise)
+
+  RC->>RC: processReviewConsensusOutcome()
+  alt 전원/다수 approve
+    RC->>Task: status = 'done'
+  else revise 요청
+    RC->>Task: seedReviewRevisionSubtasks() → Round 2
+  else Round 3 초과
+    RC->>Task: 강제 승인 → status = 'done'
+  end
+  RC->>RC: dismissLeadersFromClientOffice()
+```
+
+## 결과 도출 파이프라인
+
+```mermaid
+flowchart TD
+  Exit[프로세스 종료 exit code] --> R1[task.result = 로그 마지막 2000자]
+  R1 --> R2[runAfterExitGates\n출력 게이트 검증]
+  R2 --> R3[runExtractLearnings\n인사이트 → memory_entries]
+  R3 --> R4[runExtractSkills\n스킬 → skill_learning_history]
+  R4 --> R5[recordAgentUsage\n토큰·비용 기록]
+  R5 --> R6{exit code}
+  R6 -- "0" --> R7[executeHooks post-task\ntask.status = review\nstartReviewConsensusMeeting]
+  R6 -- "≠ 0" --> R8[executeHooks on-error\ntask.status = failed\nretry 카운터 증가]
+  R7 --> R9[알림: UI 토스트 + 메신저]
+  R8 --> R9
+  R9 --> R10[cleanupWorktree]
+```
+
+---
+
 ## 2.0 데이터 모델 추가 (신규 테이블)
 
 Project OS 리뉴얼(2.0)에서 추가되는 DB 테이블 목록. 기존 `projects`, `agents`, `departments` 테이블은 유지하고 아래 테이블이 추가된다.
