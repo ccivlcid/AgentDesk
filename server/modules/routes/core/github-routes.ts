@@ -150,6 +150,9 @@ export function registerGitHubRoutes(deps: GitHubRouteDeps): void {
 
   app.get("/api/github/repos/:owner/:repo/branches", async (req, res) => {
     const pat = typeof req.headers["x-github-pat"] === "string" ? req.headers["x-github-pat"].trim() : null;
+    if (pat && (pat.length < 10 || pat.length > 256 || !/^[a-zA-Z0-9_]+$/.test(pat))) {
+      return res.status(400).json({ error: "invalid_pat_format" });
+    }
     const token = pat || getGitHubAccessToken();
     if (!token) return res.status(401).json({ error: "github_not_connected" });
     const { owner, repo } = req.params;
@@ -206,6 +209,9 @@ export function registerGitHubRoutes(deps: GitHubRouteDeps): void {
 
   app.post("/api/github/clone", (req, res) => {
     const pat = typeof req.headers["x-github-pat"] === "string" ? req.headers["x-github-pat"].trim() : null;
+    if (pat && (pat.length < 10 || pat.length > 256 || !/^[a-zA-Z0-9_]+$/.test(pat))) {
+      return res.status(400).json({ error: "invalid_pat_format" });
+    }
     const token = pat || getGitHubAccessToken();
     if (!token) return res.status(401).json({ error: "github_not_connected" });
     const { owner, repo, branch, target_path } = req.body ?? {};
@@ -216,6 +222,15 @@ export function registerGitHubRoutes(deps: GitHubRouteDeps): void {
     let targetPath = target_path?.trim() || defaultTarget;
     if (targetPath === "~") targetPath = os.homedir();
     else if (targetPath.startsWith("~/")) targetPath = path.join(os.homedir(), targetPath.slice(2));
+
+    // Security: resolve and ensure target is within home directory
+    const normalizedTarget = path.resolve(targetPath);
+    const homeDir = path.resolve(os.homedir());
+    const relToHome = path.relative(homeDir, normalizedTarget);
+    if (relToHome.startsWith("..") || path.isAbsolute(relToHome)) {
+      return res.status(400).json({ error: "target_path_must_be_within_home" });
+    }
+    targetPath = normalizedTarget;
 
     if (fs.existsSync(targetPath) && fs.existsSync(path.join(targetPath, ".git"))) {
       return res.json({ clone_id: null, already_exists: true, target_path: targetPath });

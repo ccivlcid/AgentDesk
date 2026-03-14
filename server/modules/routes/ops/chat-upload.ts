@@ -103,12 +103,13 @@ function parseMultipartFormData(body: Buffer, boundary: string): ParsedPart[] {
 // Helpers
 // ---------------------------------------------------------------------------
 
-/** Sanitize a filename: strip path separators and null bytes */
+/** Sanitize a filename: strip path separators, null bytes, and header-breaking characters */
 function sanitizeFileName(raw: string): string {
   return raw
     .replace(/[\\/]/g, "_")
     .replace(/\0/g, "")
     .replace(/\.\./g, "_")
+    .replace(/"/g, "_")
     .trim()
     .slice(0, 255);
 }

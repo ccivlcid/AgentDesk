@@ -654,7 +654,13 @@ export function registerTaskReportRoutes(ctx: RuntimeContext): void {
 
   function isPathSafe(base: string, target: string): boolean {
     const resolved = path.resolve(base, target);
-    return resolved.startsWith(path.resolve(base));
+    const rel = path.relative(path.resolve(base), resolved);
+    return !rel.startsWith("..") && !path.isAbsolute(rel);
+  }
+
+  function isUnderDir(absDir: string, absTarget: string): boolean {
+    const rel = path.relative(path.resolve(absDir), path.resolve(absTarget));
+    return !rel.startsWith("..") && !path.isAbsolute(rel);
   }
 
   /** Deliverable-worthy extensions (not source code) */
@@ -840,9 +846,9 @@ export function registerTaskReportRoutes(ctx: RuntimeContext): void {
       const absPath = path.resolve(effectiveRoot, relPath);
       // Security: must be under effectiveRoot or under cwdRoot or under .agentdesk-worktrees
       const worktreesRoot = path.join(cwdRoot, ".agentdesk-worktrees");
-      const isSafe = absPath.startsWith(path.resolve(effectiveRoot)) ||
-                     absPath.startsWith(path.resolve(cwdRoot)) ||
-                     absPath.startsWith(path.resolve(worktreesRoot));
+      const isSafe = isUnderDir(effectiveRoot, absPath) ||
+                     isUnderDir(cwdRoot, absPath) ||
+                     isUnderDir(worktreesRoot, absPath);
       if (!isSafe) {
         return res.status(403).json({ ok: false, error: "Path traversal not allowed" });
       }
