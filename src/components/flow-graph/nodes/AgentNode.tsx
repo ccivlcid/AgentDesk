@@ -110,7 +110,7 @@ export default function AgentNode({
               <span style={{
                 fontSize: 9,
                 background: deptColor,
-                color: "#fff",
+                color: "var(--th-bg-primary)",
                 borderRadius: 3,
                 padding: "1px 4px",
                 flexShrink: 0,

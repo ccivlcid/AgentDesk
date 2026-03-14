@@ -244,7 +244,7 @@ export default function CreateTaskModalView({
                       style={{
                         ...mono, fontSize: "10px", padding: "3px 8px", borderRadius: 0,
                         background: !departmentId ? "var(--th-accent)" : "var(--th-bg-elevated)",
-                        color: !departmentId ? "#000" : "var(--th-text-muted)",
+                        color: !departmentId ? "var(--th-bg-primary)" : "var(--th-text-muted)",
                         border: `1px solid ${!departmentId ? "var(--th-accent)" : "var(--th-border)"}`,
                         cursor: "pointer",
                       }}
@@ -259,7 +259,7 @@ export default function CreateTaskModalView({
                         style={{
                           ...mono, fontSize: "10px", padding: "3px 8px", borderRadius: 0,
                           background: departmentId === d.id ? "var(--th-accent)" : "var(--th-bg-elevated)",
-                          color: departmentId === d.id ? "#000" : "var(--th-text-muted)",
+                          color: departmentId === d.id ? "var(--th-bg-primary)" : "var(--th-text-muted)",
                           border: `1px solid ${departmentId === d.id ? "var(--th-accent)" : "var(--th-border)"}`,
                           cursor: "pointer",
                         }}
@@ -304,9 +304,9 @@ export default function CreateTaskModalView({
                           padding: "5px 0",
                           fontSize: "11px",
                           borderRadius: 0,
-                          background: star <= priority ? "rgba(245,158,11,0.85)" : "var(--th-bg-elevated)",
-                          color: star <= priority ? "#000" : "var(--th-text-muted)",
-                          border: `1px solid ${star <= priority ? "rgba(245,158,11,0.6)" : "var(--th-border)"}`,
+                          background: star <= priority ? "var(--th-accent)" : "var(--th-bg-elevated)",
+                          color: star <= priority ? "var(--th-bg-primary)" : "var(--th-text-muted)",
+                          border: `1px solid ${star <= priority ? "var(--th-accent)" : "var(--th-border)"}`,
                           cursor: "pointer",
                         }}
                       >
@@ -348,7 +348,7 @@ export default function CreateTaskModalView({
                         gap: "8px",
                         padding: "7px 10px",
                         border: "1px solid var(--th-accent)",
-                        background: "rgba(245,158,11,0.06)",
+                        background: "var(--th-active-bg)",
                         fontSize: "12px",
                       }}
                     >
@@ -357,13 +357,13 @@ export default function CreateTaskModalView({
                       <span style={{
                         fontSize: "8px",
                         padding: "1px 4px",
-                        border: "1px solid rgba(245,158,11,0.35)",
-                        background: "rgba(245,158,11,0.08)",
-                        color: "#f59e0b",
+                        border: "1px solid var(--th-accent)",
+                        background: "var(--th-active-bg)",
+                        color: "var(--th-accent)",
                       }}>
                         {({ claude: "Claude Code", codex: "Codex CLI", gemini: "Gemini CLI", opencode: "OpenCode", copilot: "Copilot", antigravity: "Antigravity", cursor: "Cursor", ollama: "Ollama" } as Record<string, string>)[agent.cli_provider] ?? agent.cli_provider}
                       </span>
-                      <span style={{ fontSize: "9px", color: "#22c55e", marginLeft: "auto" }}>✓ {t({ ko: "배정됨", en: "assigned", ja: "割り当て済み", zh: "已分配" })}</span>
+                      <span style={{ fontSize: "9px", color: "var(--th-terminal-success)", marginLeft: "auto" }}>✓ {t({ ko: "배정됨", en: "assigned", ja: "割り当て済み", zh: "已分配" })}</span>
                     </div>
                   );
                 })() : (
@@ -402,7 +402,7 @@ export default function CreateTaskModalView({
                       borderRadius: 0,
                       border: `1px solid ${handoffEnabled ? "var(--th-accent)" : "var(--th-border)"}`,
                       background: handoffEnabled ? "var(--th-accent)" : "var(--th-bg-elevated)",
-                      color: handoffEnabled ? "#000" : "var(--th-text-muted)",
+                      color: handoffEnabled ? "var(--th-bg-primary)" : "var(--th-text-muted)",
                       cursor: "pointer",
                       textTransform: "uppercase",
                     }}
@@ -451,7 +451,7 @@ export default function CreateTaskModalView({
                               borderRadius: 0,
                               border: `1px solid ${handoffCondition === cond ? "var(--th-accent)" : "var(--th-border)"}`,
                               background: handoffCondition === cond ? "var(--th-accent)" : "var(--th-bg-elevated)",
-                              color: handoffCondition === cond ? "#000" : "var(--th-text-muted)",
+                              color: handoffCondition === cond ? "var(--th-bg-primary)" : "var(--th-text-muted)",
                               cursor: "pointer",
                               textTransform: "uppercase",
                             }}
@@ -480,9 +480,9 @@ export default function CreateTaskModalView({
                     fontSize: "11px",
                     padding: "6px 10px",
                     borderRadius: 0,
-                    border: formFeedback.tone === "error" ? "1px solid rgba(244,63,94,0.5)" : "1px solid rgba(6,182,212,0.4)",
-                    background: formFeedback.tone === "error" ? "rgba(244,63,94,0.08)" : "rgba(6,182,212,0.08)",
-                    color: formFeedback.tone === "error" ? "#fb7185" : "#7dd3fc",
+                    border: formFeedback.tone === "error" ? "1px solid var(--th-danger-border)" : "1px solid var(--th-border-accent)",
+                    background: formFeedback.tone === "error" ? "var(--th-danger-bg)" : "var(--th-active-bg)",
+                    color: formFeedback.tone === "error" ? "var(--th-danger-text)" : "var(--th-text-secondary)",
                   }}
                 >
                   {formFeedback.message}
@@ -517,7 +517,7 @@ export default function CreateTaskModalView({
                         setSavingTemplate(false);
                       }
                     }}
-                    style={{ ...mono, fontSize: "10px", padding: "3px 8px", borderRadius: 0, border: "1px solid rgba(34,197,94,0.4)", background: "rgba(34,197,94,0.08)", color: "#22c55e", cursor: "pointer" }}
+                    style={{ ...mono, fontSize: "10px", padding: "3px 8px", borderRadius: 0, border: "1px solid var(--th-terminal-success)", background: "var(--th-active-bg)", color: "var(--th-terminal-success)", cursor: "pointer" }}
                   >
                     {savingTemplate ? "..." : "SAVE"}
                   </button>
@@ -535,7 +535,7 @@ export default function CreateTaskModalView({
                 <button
                   type="submit"
                   disabled={!title.trim() || submitBusy}
-                  style={{ ...mono, fontSize: "11px", fontWeight: 700, padding: "5px 16px", borderRadius: 0, background: "var(--th-accent)", color: "#000", cursor: "pointer", opacity: !title.trim() || submitBusy ? 0.4 : 1 }}
+                  style={{ ...mono, fontSize: "11px", fontWeight: 700, padding: "5px 16px", borderRadius: 0, background: "var(--th-accent)", color: "var(--th-bg-primary)", cursor: "pointer", opacity: !title.trim() || submitBusy ? 0.4 : 1 }}
                 >
                   {submitBusy
                     ? t({ ko: "생성 중...", en: "CREATING...", ja: "作成中...", zh: "创建中..." })
