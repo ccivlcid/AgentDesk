@@ -3,7 +3,7 @@
 /**
  * AgentDesk setup script
  *
- * Prepends CEO directive + orchestration rules to the user's AGENTS.md.
+ * Prepends Client directive + orchestration rules to the user's AGENTS.md.
  * This is an UPDATE, not an OVERWRITE — existing content is preserved.
  *
  * Usage:

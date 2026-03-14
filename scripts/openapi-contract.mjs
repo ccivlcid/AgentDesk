@@ -62,13 +62,13 @@ const REQUEST_EXAMPLE_OVERRIDES = {
   "POST /api/inbox": {
     source: "telegram",
     text: "$Fix build failure on main",
-    author: "CEO",
+    author: "Client",
     project_id: "project_001",
     project_path: "/workspace/my-project",
     project_context: "Stabilize release pipeline",
   },
   "PUT /api/settings": {
-    ceoName: "CEO",
+    ceoName: "Client",
     language: "ko",
   },
   "POST /api/projects": {

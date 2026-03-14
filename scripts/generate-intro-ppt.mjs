@@ -103,7 +103,7 @@ function addTitle(slide, title, opts = {}) {
     bold: true,
     color: C.white,
   });
-  s.addText("Command Your AI Agent Empire\nfrom the CEO Desk", {
+  s.addText("Command Your AI Agent Empire\nfrom the Client Desk", {
     x: 0.8,
     y: 2.5,
     w: 8.5,
@@ -150,7 +150,7 @@ function addTitle(slide, title, opts = {}) {
 
   const bullets = [
     ["What", "CLI AI 어시스턴트를 픽셀아트 가상 회사의 직원으로 변환하는 오피스 시뮬레이터"],
-    ["Why", "분산된 AI 도구를 통합 대시보드에서 관리, CEO로서 팀을 지휘"],
+    ["Why", "분산된 AI 도구를 통합 대시보드에서 관리, Client로서 팀을 지휘"],
     ["How", "React 19 + Express 5 + SQLite + WebSocket 기반 로컬 우선 아키텍처"],
     ["Scale", "6개 부서, 600+ 스킬, 6 CLI 프로바이더, 8 외부 API 프로바이더 지원"],
     ["Impact", "자율 에이전트 협업 → 태스크 자동 분배 → Git Worktree 격리 → 코드 리뷰 → 머지"],
@@ -295,7 +295,7 @@ function addTitle(slide, title, opts = {}) {
     {
       icon: "🏢",
       title: "Pixel-Art Office",
-      desc: "PixiJS 기반 6개 부서 시각화. 에이전트 걷기/작업/휴식 애니메이션. CEO 데스크 인터랙션.",
+      desc: "PixiJS 기반 6개 부서 시각화. 에이전트 걷기/작업/휴식 애니메이션. Client 데스크 인터랙션.",
       color: C.accent,
     },
     {
@@ -306,7 +306,7 @@ function addTitle(slide, title, opts = {}) {
     },
     {
       icon: "💬",
-      title: "CEO Chat & Directives",
+      title: "Client Chat & Directives",
       desc: "$-prefix 지시 시스템. 팀 리더 직접 대화. 전사 공지. AgentDesk 메신저 연동.",
       color: C.yellow,
     },
@@ -378,7 +378,7 @@ function addTitle(slide, title, opts = {}) {
     {
       icon: "🔀",
       title: "Git Worktree Isolation",
-      desc: "태스크별 독립 브랜치. 에이전트간 코드 충돌 방지. CEO 승인 후 머지.",
+      desc: "태스크별 독립 브랜치. 에이전트간 코드 충돌 방지. Client 승인 후 머지.",
       color: C.green,
     },
     {
@@ -834,7 +834,7 @@ function addTitle(slide, title, opts = {}) {
   const steps = [
     { num: "1", title: "Install", desc: "git clone & bash install.sh\npnpm install & setup", color: C.accent },
     { num: "2", title: "Configure", desc: "AI 프로바이더 선택\nOAuth & API 키 설정", color: C.green },
-    { num: "3", title: "Direct", desc: "CEO 지시 ($-prefix)\n또는 메신저에서 전송", color: C.yellow },
+    { num: "3", title: "Direct", desc: "Client 지시 ($-prefix)\n또는 메신저에서 전송", color: C.yellow },
     { num: "4", title: "Execute", desc: "에이전트 자율 실행\nGit Worktree 격리 작업", color: C.red },
     { num: "5", title: "Review", desc: "태스크 리뷰 & 승인\n코드 머지 & 보고서", color: C.accentLight },
   ];
@@ -924,7 +924,7 @@ function addTitle(slide, title, opts = {}) {
   const s = pptx.addSlide({ masterName: "MASTER" });
   addTitle(s, "AgentDesk Messenger Integration");
 
-  s.addText("외부 메신저를 통해 CEO 지시를 전달하고 실시간 태스크 업데이트를 수신합니다.", {
+  s.addText("외부 메신저를 통해 Client 지시를 전달하고 실시간 태스크 업데이트를 수신합니다.", {
     x: 0.5,
     y: 1.15,
     w: 9,
@@ -1259,7 +1259,7 @@ function addTitle(slide, title, opts = {}) {
     bold: true,
     color: C.white,
   });
-  s.addText("Command Your AI Agent Empire from the CEO Desk", {
+  s.addText("Command Your AI Agent Empire from the Client Desk", {
     x: 0.8,
     y: 2.4,
     w: 8.5,
