@@ -1,5 +1,5 @@
 import { WebSocket } from "ws";
-import logger from "../../lib/logger.ts";
+import logger from "../lib/logger.ts";
 
 const MAX_CLI_CHUNK = 4096; // 4KB per chunk for large stdout lines
 

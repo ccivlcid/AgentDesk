@@ -8,7 +8,7 @@
 
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
-import logger from "../../lib/logger";
+import logger from "../../../lib/logger";
 
 const execFileAsync = promisify(execFile);
 

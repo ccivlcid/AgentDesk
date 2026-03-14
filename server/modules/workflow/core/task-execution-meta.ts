@@ -1,5 +1,5 @@
 import type { DatabaseSync } from "node:sqlite";
-import logger from "../../lib/logger";
+import logger from "../../../lib/logger";
 
 type DbLike = Pick<DatabaseSync, "prepare">;
 
