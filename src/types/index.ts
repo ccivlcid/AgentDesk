@@ -460,6 +460,7 @@ export type WSEventType =
   | "chat_stream"
   | "task_report"
   | "notification"
+  | "queue_status"
   | "connected";
 
 export interface WSEvent {

@@ -252,6 +252,13 @@ export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrat
   const agentQueue = createAgentQueue(MAX_CONCURRENT_AGENTS);
   logger.info({ maxConcurrent: MAX_CONCURRENT_AGENTS }, "agent queue initialized");
 
+  function broadcastQueueStatus(): void {
+    const running = agentQueue.getRunningCount();
+    const queued = agentQueue.getQueueLength();
+    broadcast("queue_status", { running, queued, maxConcurrent: MAX_CONCURRENT_AGENTS });
+    logger.info({ running, queued }, "agent queue status");
+  }
+
   // ---------------------------------------------------------------------------
   // Helpers: notifications, progress timers, Client notifications
   // ---------------------------------------------------------------------------
@@ -455,7 +462,7 @@ export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrat
     await planningArchiveTools.archivePlanningConsolidatedReport(rootTaskId);
   }
 
-  const { startTaskExecutionForAgent } = createExecutionStartTaskTools({
+  const { startTaskExecutionForAgent: _rawStartTaskExecutionForAgent } = createExecutionStartTaskTools({
     nowMs,
     db,
     logsDir,
@@ -485,6 +492,15 @@ export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrat
     notifyClient,
     startProgressTimer,
   });
+
+  // Wrap raw function with FIFO queue to enforce MAX_CONCURRENT_AGENTS limit (P2-3)
+  function startTaskExecutionForAgent(taskId: string, execAgent: any, deptId: string | null, deptName: string): void {
+    agentQueue.enqueue(() => {
+      broadcastQueueStatus();
+      _rawStartTaskExecutionForAgent(taskId, execAgent, deptId, deptName);
+    });
+    broadcastQueueStatus();
+  }
 
   const workflowMeetingTools = initializeWorkflowMeetingTools(
     Object.assign(Object.create(__ctx), {
@@ -670,6 +686,8 @@ export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrat
   });
 
   function handleTaskRunComplete(taskId: string, exitCode: number): void {
+    agentQueue.onComplete();
+    broadcastQueueStatus();
     runCompleteHandler.handleTaskRunComplete(taskId, exitCode);
   }
 
@@ -763,6 +781,14 @@ export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrat
     },
   });
 
+  function getQueueStatus(): { running: number; queued: number; maxConcurrent: number } {
+    return {
+      running: agentQueue.getRunningCount(),
+      queued: agentQueue.getQueueLength(),
+      maxConcurrent: MAX_CONCURRENT_AGENTS,
+    };
+  }
+
   return {
     crossDeptNextCallbacks,
     subtaskDelegationCallbacks,
@@ -789,5 +815,6 @@ export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrat
     scheduleNextReviewRound,
     handleTaskRunComplete,
     finishReview,
+    getQueueStatus,
   };
 }

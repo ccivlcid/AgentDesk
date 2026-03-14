@@ -295,6 +295,7 @@ export interface WorkflowOrchestrationExports {
   startPlannedApprovalMeeting: (...args: any[]) => any;
   handleTaskRunComplete: (...args: any[]) => any;
   finishReview: (...args: any[]) => any;
+  getQueueStatus: () => { running: number; queued: number; maxConcurrent: number };
 }
 
 // ---------------------------------------------------------------------------

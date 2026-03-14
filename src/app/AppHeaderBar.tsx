@@ -14,6 +14,7 @@ interface AppHeaderBarProps {
   announcementLabel: string;
   groupChatLabel: string;
   notificationSlot?: ReactNode;
+  queueStatusSlot?: ReactNode;
   theme: "light" | "dark";
   mobileHeaderMenuOpen: boolean;
   onOpenMobileNav: () => void;
@@ -119,6 +120,7 @@ export default function AppHeaderBar({
   announcementLabel,
   groupChatLabel,
   notificationSlot,
+  queueStatusSlot,
   theme,
   mobileHeaderMenuOpen,
   onOpenMobileNav,
@@ -397,6 +399,8 @@ export default function AppHeaderBar({
         <span style={{ width: "1px", height: "16px", background: "var(--th-border)", margin: "0 2px", flexShrink: 0 }} className="hidden sm:block" />
 
         {notificationSlot}
+
+        {queueStatusSlot}
 
         {/* Screen guide (Help) — macOS Inspector style */}
         {onOpenScreenGuide && (

@@ -187,6 +187,7 @@ export function registerRoutesPartC(ctx: RuntimeContext): RouteOpsExports {
   const shouldTreatDirectChatAsTask = __ctx.shouldTreatDirectChatAsTask;
   const createDirectAgentTaskAndRun = __ctx.createDirectAgentTaskAndRun;
   const scheduleAgentReply = __ctx.scheduleAgentReply;
+  const getQueueStatus = __ctx.getQueueStatus;
 
   Object.assign(__ctx, registerOpsMessageRoutes(__ctx));
 
@@ -264,6 +265,13 @@ export function registerRoutesPartC(ctx: RuntimeContext): RouteOpsExports {
   registerScheduledTaskRoutes({ app, db, nowMs });
   registerVideoRenderRoutes({ app, broadcast, appendTaskLog });
   const { recordAgentUsage } = registerAgentUsageRoutes(__ctx);
+
+  // ---------------------------------------------------------------------------
+  // Queue status API (P2-3)
+  // ---------------------------------------------------------------------------
+  app.get("/api/queue-status", (_req, res) => {
+    res.json(getQueueStatus());
+  });
 
   return {
     prettyStreamJson,

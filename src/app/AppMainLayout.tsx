@@ -236,6 +236,16 @@ export default function AppMainLayout({
   const [screenGuideOpen, setScreenGuideOpen] = useState(false);
   const [projectAgentIds, setProjectAgentIds] = useState<Set<string>>(new Set());
   const prevProjectIdRef = useRef<string | null>(null);
+  const [queueStatus, setQueueStatus] = useState<{ running: number; queued: number } | null>(null);
+
+  useEffect(() => {
+    return on("queue_status", (payload: unknown) => {
+      const p = payload as { running: number; queued: number };
+      if (typeof p?.running === "number" && typeof p?.queued === "number") {
+        setQueueStatus({ running: p.running, queued: p.queued });
+      }
+    });
+  }, [on]);
 
   const refreshProjectAgents = (pid: string) => {
     import("../api/categories-dashboard").then(({ fetchProjectAgents }) =>
@@ -397,6 +407,45 @@ export default function AppMainLayout({
                   setView("tasks-board");
                 }}
               />
+            }
+            queueStatusSlot={
+              queueStatus && queueStatus.running > 0 ? (
+                <div
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "4px",
+                    padding: "3px 8px",
+                    border: "1px solid var(--th-border)",
+                    background: "transparent",
+                    fontFamily: "var(--th-font-mono)",
+                    fontSize: "10px",
+                    color: "var(--th-text-muted)",
+                    borderRadius: 6,
+                    whiteSpace: "nowrap",
+                  }}
+                  title={`실행 중 ${queueStatus.running} / 대기 ${queueStatus.queued}`}
+                  className="hidden sm:inline-flex"
+                >
+                  <span
+                    style={{
+                      display: "inline-block",
+                      width: "6px",
+                      height: "6px",
+                      borderRadius: "50%",
+                      background: "var(--th-accent)",
+                      flexShrink: 0,
+                      animation: "pulse 1.5s infinite",
+                    }}
+                  />
+                  <span>{queueStatus.running}</span>
+                  {queueStatus.queued > 0 && (
+                    <span style={{ color: "var(--th-text-muted)", opacity: 0.7 }}>
+                      +{queueStatus.queued}
+                    </span>
+                  )}
+                </div>
+              ) : null
             }
             theme={theme}
             mobileHeaderMenuOpen={mobileHeaderMenuOpen}
