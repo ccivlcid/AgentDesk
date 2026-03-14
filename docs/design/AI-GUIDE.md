@@ -2,7 +2,81 @@
 
 > **목적:** AI 에이전트가 AgentDesk UI를 개발·개선할 때 반드시 따라야 할 디자인 원칙
 > **참조:** `DESIGN.md` (CSS 변수 전체), `UI-SCREENS.md` (화면·모달 목록)
-> **갱신일:** 2026-03-13
+> **갱신일:** 2026-03-14
+
+---
+
+## 0. 작업 시작 전 — 코드베이스 진입점 맵
+
+새 화면·컴포넌트를 추가할 때 반드시 수정해야 하는 파일 목록.
+
+### 새 View 추가 시 필수 수정 파일
+
+| 순서 | 파일 | 수정 내용 |
+|---|---|---|
+| 1 | `src/app/types.ts` | `View` 타입에 새 값 추가 |
+| 2 | `src/components/Sidebar.tsx` | `NAV_STRUCTURE` 배열에 항목 추가, `navLabels` 추가, collapsed 아이콘 추가 |
+| 3 | `src/app/AppMainLayout.tsx` | `{view === "새뷰" && <컴포넌트 />}` 렌더링 블록 추가 |
+| 4 | 새 컴포넌트 파일 | `src/components/` 또는 해당 하위 디렉토리에 생성 |
+
+### 새 View에 추가 데이터(props)가 필요한 경우
+
+```
+[Zustand 스토어] → App.tsx (구독) → AppMainLayout (prop 전달) → 컴포넌트
+```
+
+1. `src/app/AppMainLayout.tsx`의 `AppMainLayoutProps` 인터페이스에 prop 추가
+2. `src/app/AppMainLayout.tsx` 함수 파라미터에 추가
+3. `src/App.tsx`의 `<AppMainLayout ... />` 호출부에 값 전달
+
+### 주요 파일 역할 요약
+
+```
+src/
+├── App.tsx                      ← 루트: 스토어 구독 + WebSocket + 이벤트 핸들러
+├── app/
+│   ├── types.ts                 ← View 타입, TaskPanelTab, RuntimeOs 등
+│   ├── AppMainLayout.tsx        ← 뷰 라우터 (view prop → 화면 렌더)
+│   ├── AppOverlays.tsx          ← 모달/패널 오버레이
+│   └── useRealtimeSync.ts       ← WebSocket 이벤트 → 스토어 업데이트
+├── components/
+│   ├── Sidebar.tsx              ← 좌측 네비. NAV_STRUCTURE 배열로 메뉴 구성
+│   └── [화면별 컴포넌트]
+├── store/
+│   ├── agentStore.ts            ← agents, departments, subAgents, selectedAgent
+│   ├── taskStore.ts             ← tasks, subtasks, crossDeptDeliveries, meetingPresence
+│   ├── projectStore.ts          ← projects, categories, currentProjectId, projectAgentIds
+│   └── uiStore.ts               ← view, loading, settings, 모달 열림 상태
+└── types/
+    └── index.ts                 ← Agent, Task, SubAgent, MeetingPresence, CrossDeptDelivery 등
+```
+
+### Sidebar 메뉴 구조 현황
+
+```
+대시보드 (dashboard)
+프로젝트 유형 (project-types)
+CLI 사용량 (cli-usage)
+
+태스크
+  ├── 태스크 (tasks)
+  ├── 보드 (tasks-board)
+  ├── 스케줄 (tasks-scheduled)
+  └── 산출물 (tasks-deliverables)
+
+에이전트
+  ├── 에이전트 & 부서 (agents)
+  └── 현황 모니터 (heartbeat)
+  // ← P2-1: 플로우 그래프 (flow-graph) 여기에 추가 예정
+
+라이브러리
+  ├── 스킬 (skills)
+  ├── 룰 (agent-rules)
+  ├── 메모리 (memory)
+  └── 훅 (hooks)
+
+설정 (settings)
+```
 
 ---
 
@@ -182,13 +256,16 @@ done:    "--th-terminal-success" // 초록
 
 ```
 React + TypeScript + Tailwind CSS
-상태 관리: useState (App.tsx) → Zustand 마이그레이션 예정
+상태 관리: Zustand (agentStore, taskStore, projectStore, uiStore)
 애니메이션: Framer Motion (과도한 모션 지양)
 아이콘: SVG inline (외부 아이콘 라이브러리 최소화)
+로깅: pino (서버측 구조화 로깅)
 ```
 
 | 문서 | 역할 |
 |------|------|
-| `DESIGN.md` | CSS 변수 전체 + 컴포넌트 구현 레퍼런스 |
-| `UI-SCREENS.md` | 13개 화면 + 36개 모달 전체 목록 및 명세 |
-| `agent-flow-graph-design.md` | Agent Flow Graph SVG 구현 설계 |
+| `docs/design/AI-GUIDE.md` | **지금 이 문서** — UI 개발 규칙 + 코드베이스 진입점 맵 |
+| `docs/design/DESIGN.md` | CSS 변수 전체 + 컴포넌트 구현 레퍼런스 |
+| `docs/design/UI-SCREENS.md` | 화면·모달 전체 목록 및 명세 |
+| `docs/strategy/agent-flow-graph-design.md` | Agent Flow Graph SVG 구현 설계 (P2-1) |
+| `docs/OVERVIEW.md` | 전체 프로젝트 개요 + 코드베이스 현황 스냅샷 + 작업 목록 |

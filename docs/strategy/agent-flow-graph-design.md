@@ -1,7 +1,50 @@
 # Agent Flow Graph — Custom SVG 구현 설계
 
 > **방식:** 외부 라이브러리 없이 Custom SVG + React로 구현
-> **갱신일:** 2026-03-12
+> **갱신일:** 2026-03-14
+
+---
+
+## 0. 작업 시작 전 필독 (AI 에이전트용)
+
+### 실제 타입 파일 위치
+
+| 타입 | 파일 | 주요 필드 |
+|---|---|---|
+| `Agent` | `src/types/index.ts` | `id, name, status, avatar_emoji, department_id` |
+| `Department` | `src/types/index.ts` | `id, name, color` |
+| `Task` | `src/types/index.ts` | `id, title, status, assigned_agent_id, project_id` |
+| `SubAgent` | `src/types/index.ts` (~line 65) | `id, parentAgentId, task, status` |
+| `MeetingPresence` | `src/types/index.ts` (~line 56) | `agent_id, phase, task_id, until` |
+| `CrossDeptDelivery` | `src/types/index.ts` (~line 72) | `id, fromAgentId, toAgentId` |
+
+### AppMainLayout props 주의사항
+
+현재 `src/app/AppMainLayout.tsx`에 **없는** props — 통합(Step 3) 시 직접 추가해야 함:
+
+```typescript
+// AppMainLayoutProps 인터페이스에 추가 필요
+subAgents: SubAgent[];
+crossDeptDeliveries: CrossDeptDelivery[];
+meetingPresence: MeetingPresence[];
+```
+
+이 데이터는 `App.tsx`에서 Zustand `agentStore` / `taskStore`로 이미 관리됨:
+- `subAgents` → `useAgentStore()` → `agentStore.ts`
+- `crossDeptDeliveries`, `meetingPresence` → `useTaskStore()` → `taskStore.ts`
+
+`App.tsx`의 `<AppMainLayout ... />` 호출부에도 props 전달 추가 필요.
+
+### `projectAgentIds` 위치 주의
+
+설계서 Step 3의 `projectAgentIds` prop은 **AppMainLayout 내부 상태**로 이미 관리 중:
+```typescript
+// src/app/AppMainLayout.tsx line ~227
+const [projectAgentIds, setProjectAgentIds] = useState<Set<string>>(new Set());
+```
+외부에서 prop으로 받지 않고 내부에서 직접 사용 가능. `AgentFlowGraph`에 그대로 전달하면 됨.
+
+---
 
 ---
 

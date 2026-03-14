@@ -208,7 +208,92 @@ UIUX 모니터링               ████████████████
 
 ---
 
-## 7. 작업 목록 (2026-03-13 기준)
+## 7. 코드베이스 현황 스냅샷 (AI 에이전트용)
+
+> 이 섹션은 AI 에이전트가 작업 시작 전 코드 구조를 빠르게 파악하기 위한 참조 지도입니다.
+
+### 7-1. 프론트엔드 진입점
+
+| 파일 | 역할 |
+|---|---|
+| `src/App.tsx` | 루트 컴포넌트. Zustand 스토어 구독, WebSocket 연결, 이벤트 핸들러 정의 |
+| `src/app/AppMainLayout.tsx` | 뷰 라우팅 허브. `view` prop 값에 따라 각 화면 렌더링 |
+| `src/app/AppOverlays.tsx` | 모달·패널 오버레이 렌더링 (AgentDetail, TaskPanel 등) |
+| `src/components/Sidebar.tsx` | 좌측 네비게이션. `NAV_STRUCTURE` 배열로 메뉴 정의 |
+
+### 7-2. 현재 View 타입 전체 목록
+
+```typescript
+// src/app/types.ts
+export type View =
+  | "agents"            // 에이전트 & 부서
+  | "heartbeat"         // 현황 모니터
+  | "dashboard"         // 대시보드
+  | "project-types"     // 프로젝트 유형
+  | "cli-usage"         // CLI 사용량
+  | "tasks"             // 태스크 (기본)
+  | "tasks-board"       // 태스크 보드 (칸반)
+  | "tasks-scheduled"   // 스케줄 태스크
+  | "tasks-deliverables"// 산출물
+  | "skills"            // 스킬 라이브러리
+  | "agent-rules"       // 룰 라이브러리
+  | "memory"            // 메모리 라이브러리
+  | "hooks"             // 훅 라이브러리
+  | "settings";         // 설정
+// ⬆ "flow-graph" 아직 없음 — P2-1 작업 시 추가 필요
+```
+
+### 7-3. Zustand 스토어 구조
+
+| 스토어 파일 | 관리하는 상태 |
+|---|---|
+| `src/store/agentStore.ts` | `agents`, `departments`, `subAgents`, `selectedAgent` 등 |
+| `src/store/taskStore.ts` | `tasks`, `subtasks`, `crossDeptDeliveries`, `meetingPresence` 등 |
+| `src/store/projectStore.ts` | `projects`, `categories`, `currentProjectId`, `projectAgentIds` |
+| `src/store/uiStore.ts` | `view`, `loading`, `settings`, 각종 모달 열림 상태 |
+
+### 7-4. 핵심 타입 파일
+
+| 타입 | 파일 |
+|---|---|
+| `Agent`, `Department`, `Task`, `SubTask` | `src/types/index.ts` |
+| `SubAgent` | `src/types/index.ts` (line ~65) |
+| `MeetingPresence` | `src/types/index.ts` (line ~56) |
+| `CrossDeptDelivery` | `src/types/index.ts` (line ~72) |
+| `View`, `RuntimeOs`, `OAuthCallbackResult` | `src/app/types.ts` |
+
+### 7-5. AppMainLayout 현재 props (P2-1 통합 시 참고)
+
+현재 `AppMainLayout`에 **없는** props (Flow Graph 통합 시 추가 필요):
+- `subAgents: SubAgent[]` — agentStore에서 공급, App.tsx 250번째 줄 참고
+- `crossDeptDeliveries: CrossDeptDelivery[]` — taskStore에서 공급
+- `meetingPresence: MeetingPresence[]` — taskStore에서 공급
+
+현재 있는 관련 props:
+- `agents: Agent[]` ✅
+- `departments: Department[]` ✅
+- `tasks: Task[]` ✅
+- `projectAgentIds?: Set<string>` ✅ (AppMainLayout 내부 상태로 관리, line ~227)
+- `onSelectAgent: (agent: Agent) => void` ✅
+
+### 7-6. Sidebar 확장 포인트 (P2-1)
+
+```typescript
+// src/components/Sidebar.tsx — 수정 위치
+const NAV_STRUCTURE: NavEntry[] = [  // line ~24
+  ...
+  {
+    label: "agents-section",
+    children: [{ view: "agents" }, { view: "heartbeat" }],
+    //          ↑ 여기에 { view: "flow-graph" } 추가
+  },
+];
+const AGENTS_CHILDREN: View[] = ["agents", "heartbeat"]; // line ~51, "flow-graph" 추가
+```
+
+---
+
+## 8. 작업 목록 (2026-03-13 기준)
 
 > 우선순위: **P0** 즉시 | **P1** 1~2주 | **P2** 3~6주 | **P3** 장기
 
@@ -458,7 +543,7 @@ UIUX 모니터링               ████████████████
 
 ---
 
-## 8. 문서 지도
+## 9. 문서 지도
 
 | 문서 | 내용 |
 |---|---|
@@ -475,7 +560,7 @@ UIUX 모니터링               ████████████████
 
 ---
 
-## 9. 빠른 시작
+## 10. 빠른 시작
 
 ```bash
 pnpm install
