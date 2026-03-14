@@ -11,13 +11,21 @@ type DbLike = {
   };
 };
 
+type DbWriteLike = {
+  prepare: (sql: string) => {
+    get: (...args: any[]) => unknown;
+    run: (...args: any[]) => unknown;
+  };
+};
+
 type CreateApiProviderToolsDeps = {
-  db: DbLike;
+  db: DbLike & DbWriteLike;
   logsDir: string;
   activeProcesses: Map<string, ChildProcess>;
   broadcast: (event: string, payload: unknown) => void;
   normalizeStreamChunk: (raw: Buffer | string, opts?: { dropCliNoise?: boolean }) => string;
   handleTaskRunComplete: (taskId: string, exitCode: number) => void;
+  nowMs: () => number;
   createSafeLogStreamOps: (logStream: any) => {
     safeWrite: (text: string) => boolean;
     safeEnd: (onDone?: () => void) => void;
@@ -37,6 +45,9 @@ type CreateApiProviderToolsDeps = {
   ) => Promise<void>;
 };
 
+const COST_PER_INPUT_MTOK = parseFloat(process.env["COST_PER_INPUT_MTOK"] ?? "3");
+const COST_PER_OUTPUT_MTOK = parseFloat(process.env["COST_PER_OUTPUT_MTOK"] ?? "15");
+
 export function createApiProviderTools(deps: CreateApiProviderToolsDeps) {
   const {
     db,
@@ -45,6 +56,7 @@ export function createApiProviderTools(deps: CreateApiProviderToolsDeps) {
     broadcast,
     normalizeStreamChunk,
     handleTaskRunComplete,
+    nowMs,
     createSafeLogStreamOps,
     parseSSEStream,
     parseGeminiSSEStream,
@@ -55,9 +67,11 @@ export function createApiProviderTools(deps: CreateApiProviderToolsDeps) {
     signal: AbortSignal,
     safeWrite: (text: string) => boolean,
     taskId?: string,
-  ): Promise<void> {
+  ): Promise<{ inputTokens: number; outputTokens: number }> {
     const decoder = new TextDecoder();
     let buffer = "";
+    let inputTokens = 0;
+    let outputTokens = 0;
 
     const processLine = (trimmed: string) => {
       if (!trimmed || trimmed.startsWith(":")) return;
@@ -73,6 +87,14 @@ export function createApiProviderTools(deps: CreateApiProviderToolsDeps) {
             broadcast("cli_output", { task_id: taskId, stream: "stdout", data: text });
           }
         }
+        // Capture usage from message_start (input tokens) and message_delta (output tokens)
+        if (data.type === "message_start" && data.message?.usage) {
+          inputTokens = data.message.usage.input_tokens ?? 0;
+          outputTokens = data.message.usage.output_tokens ?? 0;
+        }
+        if (data.type === "message_delta" && data.usage) {
+          outputTokens = data.usage.output_tokens ?? outputTokens;
+        }
       } catch {
         /* ignore */
       }
@@ -86,6 +108,8 @@ export function createApiProviderTools(deps: CreateApiProviderToolsDeps) {
       for (const line of lines) processLine(line.trim());
     }
     if (buffer.trim()) processLine(buffer.trim());
+
+    return { inputTokens, outputTokens };
   }
 
   function getApiProviderById(providerId: string): ApiProviderRow | null {

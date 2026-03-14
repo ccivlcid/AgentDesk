@@ -104,6 +104,14 @@ export const MIGRATIONS: Migration[] = [
       } catch { /* column may already exist */ }
     },
   },
+  {
+    id: "2026-03-14-004-task-token-cost",
+    up: (db) => {
+      try { db.exec("ALTER TABLE task_execution_events ADD COLUMN tokens_in INTEGER DEFAULT 0"); } catch { /* already exists */ }
+      try { db.exec("ALTER TABLE task_execution_events ADD COLUMN tokens_out INTEGER DEFAULT 0"); } catch { /* already exists */ }
+      try { db.exec("ALTER TABLE task_execution_events ADD COLUMN cost_usd REAL DEFAULT 0"); } catch { /* already exists */ }
+    },
+  },
 ];
 
 const ENSURE_TABLE_SQL = `
