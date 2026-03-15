@@ -426,44 +426,11 @@ export default function SettingsPanel({
         display: "flex",
         flexDirection: "column",
         gap: 0,
-        maxWidth: 720,
-        margin: "0 auto",
         width: "100%",
-        borderRadius: 10,
         overflow: "hidden",
-        background: "var(--th-bg-elevated)",
-        border: "1px solid var(--th-border)",
-        boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
+        background: "var(--th-bg-surface)",
       }}
     >
-      {/* CLI 헤더 — macOS 스타일 */}
-      <div
-        style={{
-          borderBottom: "1px solid var(--th-border)",
-          padding: "12px 18px",
-          background: "var(--th-bg-panel)",
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-          borderTopLeftRadius: 10,
-          borderTopRightRadius: 10,
-          backdropFilter: "blur(12px)",
-          WebkitBackdropFilter: "blur(12px)",
-        }}
-      >
-        {/* macOS 트래픽 라이트 (●●●) */}
-        <div className="flex flex-shrink-0 items-center gap-1.5">
-          <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#ff5f57" }} aria-hidden />
-          <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#ffbd2e" }} aria-hidden />
-          <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#27c93f" }} aria-hidden />
-        </div>
-        <span style={{ color: "var(--th-accent)", fontWeight: 700, fontSize: "11px" }}>$</span>
-        <span style={{ fontSize: "11px", color: "var(--th-text-secondary)" }}>agentdesk settings</span>
-        <span style={{ marginLeft: "auto", fontSize: "9px", color: "var(--th-text-muted)", opacity: 0.6 }}>
-          {t({ ko: "회사 정보 · CLI · OAuth · API · 채널", en: "company · CLI · OAuth · API · channel", ja: "会社・CLI・OAuth・API・チャネル", zh: "公司 · CLI · OAuth · API · 频道" })}
-        </span>
-      </div>
-
       <SettingsTabNav tab={tab} setTab={setTab} t={t} />
 
       <div
