@@ -8,6 +8,7 @@ export interface DesktopIconDef {
   emoji: string;
   label: string;
   onClick: () => void;
+  onContextMenu?: (e: React.MouseEvent) => void;
 }
 
 interface DesktopIconProps {
@@ -59,10 +60,19 @@ export default function DesktopIcon({ def, defaultX, defaultY }: DesktopIconProp
     if (!moved.current) def.onClick();
   }
 
+  function onContextMenuHandler(e: React.MouseEvent) {
+    if (def.onContextMenu) {
+      e.preventDefault();
+      e.stopPropagation();
+      def.onContextMenu(e);
+    }
+  }
+
   return (
     <div
       onMouseDown={onMouseDown}
       onClick={onClick}
+      onContextMenu={onContextMenuHandler}
       style={{
         position: "absolute",
         left: pos.x,

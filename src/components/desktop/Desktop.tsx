@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, lazy, Suspense, type ReactNode } from "react";
+import { useState, useEffect, useRef, lazy, Suspense, useCallback, type ReactNode } from "react";
 import type { Project, Category, CompanySettings, WSEventType } from "../../types";
 import type { OAuthCallbackResult, ProjectMetaPayload } from "../../app/types";
 import { useUiStore } from "../../store/uiStore";
@@ -18,6 +18,7 @@ import AlertsWidget from "./widgets/AlertsWidget";
 import CliCostWidget from "./widgets/CliCostWidget";
 import FlowGraphWidget from "./widgets/FlowGraphWidget";
 import WallpaperPicker from "./WallpaperPicker";
+import { deleteProject } from "../../api/organization-projects";
 import WorkflowWindow from "../windows/WorkflowWindow";
 import LibraryWindow from "../windows/LibraryWindow";
 import SettingsWindow from "../windows/SettingsWindow";
@@ -103,6 +104,16 @@ export default function Desktop({
   const [showShortcutsGuide, setShowShortcutsGuide] = useState(false);
   const [showWallpaperPicker, setShowWallpaperPicker] = useState(false);
   const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number } | null>(null);
+  const [projectCtxMenu, setProjectCtxMenu] = useState<{ x: number; y: number; projectId: string; projectName: string } | null>(null);
+
+  const { setProjects } = useProjectStore();
+
+  const handleDeleteProject = useCallback(async (projectId: string) => {
+    setProjectCtxMenu(null);
+    await deleteProject(projectId);
+    setProjects((prev) => prev.filter((p) => p.id !== projectId));
+    if (currentProjectId === projectId) setCurrentProjectId(null);
+  }, [currentProjectId, setCurrentProjectId, setProjects]);
 
   // ── 키보드 단축키 ───────────────────────────────────────────────
   const gPending = useRef(false);
@@ -189,7 +200,7 @@ export default function Desktop({
         e.preventDefault();
         setCtxMenu({ x: e.clientX, y: e.clientY });
       }}
-      onClick={() => setCtxMenu(null)}
+      onClick={() => { setCtxMenu(null); setProjectCtxMenu(null); }}
     >
       {/* 메뉴바 */}
       <MenuBar
@@ -215,7 +226,7 @@ export default function Desktop({
           overflow: "hidden",
         }}
       >
-        {/* 데스크톱 아이콘 */}
+        {/* 시스템 앱 아이콘 */}
         {icons.map((def) => {
           const defaultPos = DEFAULT_ICON_POSITIONS[def.id];
           return (
@@ -224,6 +235,28 @@ export default function Desktop({
               def={def}
               defaultX={defaultPos.x}
               defaultY={defaultPos.y}
+            />
+          );
+        })}
+
+        {/* 프로젝트 폴더 아이콘 */}
+        {projects.map((project, i) => {
+          const col = i % 8;
+          const row = Math.floor(i / 8);
+          const isActive = project.id === currentProjectId;
+          const def: DesktopIconDef = {
+            id: `project-${project.id}`,
+            emoji: isActive ? "📂" : "📁",
+            label: project.name,
+            onClick: () => setCurrentProjectId(project.id),
+            onContextMenu: (e) => setProjectCtxMenu({ x: e.clientX, y: e.clientY, projectId: project.id, projectName: project.name }),
+          };
+          return (
+            <DesktopIcon
+              key={def.id}
+              def={def}
+              defaultX={40 + col * 90}
+              defaultY={160 + row * 100}
             />
           );
         })}
@@ -299,6 +332,62 @@ export default function Desktop({
 
       {/* 배경화면 피커 */}
       {showWallpaperPicker && <WallpaperPicker onClose={() => setShowWallpaperPicker(false)} />}
+
+      {/* 프로젝트 아이콘 우클릭 메뉴 */}
+      {projectCtxMenu && (
+        <div
+          data-no-ctx="true"
+          style={{
+            position: "fixed",
+            left: projectCtxMenu.x,
+            top: projectCtxMenu.y,
+            zIndex: 2000,
+            background: "rgba(22,22,26,0.95)",
+            backdropFilter: "blur(20px)",
+            border: "1px solid rgba(255,255,255,0.10)",
+            borderRadius: 10,
+            padding: "4px 0",
+            minWidth: 180,
+            boxShadow: "0 16px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.06)",
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div style={{ padding: "6px 14px 6px", fontFamily: "var(--th-font-mono)", fontSize: 10, color: "rgba(255,255,255,0.35)", borderBottom: "1px solid rgba(255,255,255,0.07)", marginBottom: 4 }}>
+            📁 {projectCtxMenu.projectName}
+          </div>
+          {[
+            {
+              label: "프로젝트 전환",
+              icon: "↩",
+              action: () => { setCurrentProjectId(projectCtxMenu.projectId); setProjectCtxMenu(null); },
+            },
+            {
+              label: "프로젝트 삭제",
+              icon: "🗑",
+              danger: true,
+              action: () => handleDeleteProject(projectCtxMenu.projectId),
+            },
+          ].map(({ label, icon, danger, action }) => (
+            <button
+              key={label}
+              onClick={action}
+              style={{
+                display: "flex", alignItems: "center", gap: 10,
+                width: "100%", padding: "7px 14px",
+                background: "none", border: "none", cursor: "pointer",
+                fontFamily: "var(--th-font-mono)", fontSize: 12,
+                color: danger ? "#f87171" : "rgba(255,255,255,0.85)",
+                textAlign: "left",
+              }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = danger ? "rgba(248,113,113,0.12)" : "rgba(139,92,246,0.18)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "none"; }}
+            >
+              <span style={{ fontSize: 13 }}>{icon}</span>
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* 우클릭 컨텍스트 메뉴 */}
       {ctxMenu && (
