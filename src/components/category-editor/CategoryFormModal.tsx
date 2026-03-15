@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { Category } from "../../types";
 import { Modal, ModalHeader, ModalBody, ModalFooter, Button } from "../ui";
+import { useI18n } from "../../i18n";
 
 interface CategoryFormModalProps {
   initial?: Category | null;
@@ -32,6 +33,7 @@ const labelStyle: React.CSSProperties = {
 };
 
 export default function CategoryFormModal({ initial, onConfirm, onClose }: CategoryFormModalProps) {
+  const { t } = useI18n();
   const isEdit = !!initial;
 
   const [name, setName] = useState(initial?.name ?? "");
@@ -50,7 +52,7 @@ export default function CategoryFormModal({ initial, onConfirm, onClose }: Categ
       await onConfirm({ name: name.trim(), name_ko: nameKo.trim(), description: description.trim(), icon, color });
       onClose();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "저장 실패");
+      setError(e instanceof Error ? e.message : t({ ko: "저장 실패", en: "Save failed", ja: "保存失敗", zh: "保存失败" }));
     } finally {
       setSaving(false);
     }
@@ -59,7 +61,7 @@ export default function CategoryFormModal({ initial, onConfirm, onClose }: Categ
   return (
     <Modal open onClose={onClose} width="sm">
       <ModalHeader onClose={onClose}>
-        {isEdit ? "카테고리 편집" : "새 카테고리"}
+        {isEdit ? t({ ko: "카테고리 편집", en: "Edit Category", ja: "カテゴリ編集", zh: "编辑分类" }) : t({ ko: "새 카테고리", en: "New Category", ja: "新しいカテゴリ", zh: "新建分类" })}
       </ModalHeader>
 
       <ModalBody>
@@ -67,7 +69,7 @@ export default function CategoryFormModal({ initial, onConfirm, onClose }: Categ
           {/* 아이콘 + 색상 */}
           <div style={{ display: "flex", gap: "16px", alignItems: "flex-start" }}>
             <div>
-              <label style={labelStyle}>아이콘</label>
+              <label style={labelStyle}>{t({ ko: "아이콘", en: "Icon", ja: "アイコン", zh: "图标" })}</label>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", width: "144px" }}>
                 {PRESET_ICONS.map((ic) => (
                   <button
@@ -94,7 +96,7 @@ export default function CategoryFormModal({ initial, onConfirm, onClose }: Categ
             </div>
 
             <div>
-              <label style={labelStyle}>색상</label>
+              <label style={labelStyle}>{t({ ko: "색상", en: "Color", ja: "カラー", zh: "颜色" })}</label>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", width: "96px" }}>
                 {PRESET_COLORS.map((c) => (
                   <button
@@ -126,34 +128,34 @@ export default function CategoryFormModal({ initial, onConfirm, onClose }: Categ
 
           {/* 이름 필드 */}
           <div>
-            <label style={labelStyle}>이름 (영문)</label>
+            <label style={labelStyle}>{t({ ko: "이름 (영문)", en: "Name (English)", ja: "名前 (英語)", zh: "名称 (英文)" })}</label>
             <input
               autoFocus
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="예: Product Launch"
+              placeholder="e.g. Product Launch"
               style={inputStyle}
             />
           </div>
 
           <div>
-            <label style={labelStyle}>이름 (한국어)</label>
+            <label style={labelStyle}>{t({ ko: "이름 (한국어)", en: "Name (Korean)", ja: "名前 (韓国語)", zh: "名称 (韩文)" })}</label>
             <input
               type="text"
               value={nameKo}
               onChange={(e) => setNameKo(e.target.value)}
-              placeholder="예: 제품 출시"
+              placeholder={t({ ko: "예: 제품 출시", en: "e.g. 제품 출시", ja: "例: 제품 출시", zh: "例如: 제품 출시" })}
               style={inputStyle}
             />
           </div>
 
           <div>
-            <label style={labelStyle}>설명</label>
+            <label style={labelStyle}>{t({ ko: "설명", en: "Description", ja: "説明", zh: "描述" })}</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="카테고리 설명 (선택)"
+              placeholder={t({ ko: "카테고리 설명 (선택)", en: "Category description (optional)", ja: "カテゴリの説明 (任意)", zh: "分类描述 (可选)" })}
               rows={2}
               style={{ ...inputStyle, resize: "none" }}
             />
@@ -173,7 +175,7 @@ export default function CategoryFormModal({ initial, onConfirm, onClose }: Categ
             }}
           >
             <span style={{ fontSize: "16px" }}>{icon}</span>
-            <span style={{ color }}>{nameKo || name || "미리보기"}</span>
+            <span style={{ color }}>{nameKo || name || t({ ko: "미리보기", en: "Preview", ja: "プレビュー", zh: "预览" })}</span>
           </div>
 
           {error && (
@@ -183,14 +185,14 @@ export default function CategoryFormModal({ initial, onConfirm, onClose }: Categ
       </ModalBody>
 
       <ModalFooter>
-        <Button variant="ghost" size="sm" onClick={onClose}>취소</Button>
+        <Button variant="ghost" size="sm" onClick={onClose}>{t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}</Button>
         <Button
           variant="primary"
           size="sm"
           onClick={() => void handleSubmit()}
           disabled={!name.trim() || saving}
         >
-          {saving ? "저장 중…" : isEdit ? "저장" : "만들기"}
+          {saving ? t({ ko: "저장 중…", en: "Saving…", ja: "保存中…", zh: "保存中…" }) : isEdit ? t({ ko: "저장", en: "Save", ja: "保存", zh: "保存" }) : t({ ko: "만들기", en: "Create", ja: "作成", zh: "创建" })}
         </Button>
       </ModalFooter>
     </Modal>

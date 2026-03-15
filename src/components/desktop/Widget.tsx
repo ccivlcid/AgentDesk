@@ -1,6 +1,7 @@
 import { useRef, useState, type ReactNode } from "react";
 import type { WidgetId } from "../../app/types";
 import { useUiStore } from "../../store/uiStore";
+import { useI18n } from "../../i18n";
 
 const mono = "var(--th-font-mono)";
 
@@ -16,6 +17,7 @@ interface WidgetProps {
 
 export default function Widget({ id, title, x, y, w, h, children }: WidgetProps) {
   const { updateWidgetPos, updateWidgetSize, removeWidget } = useUiStore();
+  const { t } = useI18n();
   const [pos, setPos] = useState({ x, y });
   const [size, setSize] = useState({ w, h });
   const dragging = useRef(false);
@@ -118,7 +120,8 @@ export default function Widget({ id, title, x, y, w, h, children }: WidgetProps)
               width: 11, height: 11, borderRadius: "50%",
               background: "#ff5f57", border: "none", cursor: "pointer", padding: 0,
             }}
-            title="닫기"
+            title={t({ ko: "닫기", en: "Close", ja: "閉じる", zh: "关闭" })}
+            data-testid="widget-close-btn"
           />
           <div style={{ width: 11, height: 11, borderRadius: "50%", background: "var(--th-border)" }} />
           <div style={{ width: 11, height: 11, borderRadius: "50%", background: "var(--th-border)" }} />

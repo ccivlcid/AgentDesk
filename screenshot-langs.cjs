@@ -30,7 +30,7 @@ const LANGUAGES = [
   };
   const closeTopWindow = async () => {
     await page.evaluate(() => {
-      const btns = Array.from(document.querySelectorAll('button[title="닫기"]'));
+      const btns = Array.from(document.querySelectorAll('button[data-testid="window-close-btn"]'));
       if (btns.length > 0) btns[btns.length - 1].click();
     });
     await sleep(500);

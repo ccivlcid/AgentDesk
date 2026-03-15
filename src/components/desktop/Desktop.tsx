@@ -187,7 +187,7 @@ export default function Desktop({
       // Ctrl+ArrowUp — Mission Control
       if (e.ctrlKey && e.key === "ArrowUp") {
         e.preventDefault();
-        setMissionControlOpen((v) => !v);
+        setMissionControlOpen(!missionControlOpen);
         return;
       }
 

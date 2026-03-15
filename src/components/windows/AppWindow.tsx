@@ -1,6 +1,7 @@
 import { useRef, useState, type ReactNode } from "react";
 import type { WindowType } from "../../app/types";
 import { useUiStore } from "../../store/uiStore";
+import { useI18n } from "../../i18n";
 
 const mono = "var(--th-font-mono)";
 
@@ -50,6 +51,7 @@ export default function AppWindow({
   defaultY,
 }: AppWindowProps) {
   const { closeWindow } = useUiStore();
+  const { t } = useI18n();
   const [activeTab, setActiveTab] = useState(tabs?.[0]?.id ?? "");
 
   const fallbackX = defaultX ?? Math.max(40, (window.innerWidth - defaultWidth) / 2);
@@ -153,7 +155,8 @@ export default function AppWindow({
             onMouseDown={(e) => e.stopPropagation()}
             onClick={() => closeWindow(windowType)}
             style={{ width: 12, height: 12, borderRadius: "50%", background: "#ff5f57", border: "none", cursor: "pointer", padding: 0 }}
-            title="닫기"
+            title={t({ ko: "닫기", en: "Close", ja: "閉じる", zh: "关闭" })}
+            data-testid="window-close-btn"
           />
           <div style={{ width: 12, height: 12, borderRadius: "50%", background: "var(--th-border)" }} />
           <div style={{ width: 12, height: 12, borderRadius: "50%", background: "var(--th-border)" }} />

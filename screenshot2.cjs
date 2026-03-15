@@ -36,7 +36,7 @@ const OUT = '/home/user/AgentDesk/docs/screen';
   // Close the topmost AppWindow (clicking its 닫기 button)
   const closeTopWindow = async () => {
     await page.evaluate(() => {
-      const btns = Array.from(document.querySelectorAll('button[title="닫기"]'));
+      const btns = Array.from(document.querySelectorAll('button[data-testid="window-close-btn"]'));
       if (btns.length > 0) btns[btns.length - 1].click();
     });
     await sleep(500);
@@ -304,7 +304,7 @@ const OUT = '/home/user/AgentDesk/docs/screen';
   await pressEsc();
   await sleep(300);
   await page.evaluate(() => {
-    const btns = Array.from(document.querySelectorAll('button[title="닫기"]'));
+    const btns = Array.from(document.querySelectorAll('button[data-testid="window-close-btn"]'));
     if (btns.length > 0) btns[btns.length - 1].click();
   });
   await sleep(500);
@@ -322,7 +322,7 @@ const OUT = '/home/user/AgentDesk/docs/screen';
   await pressEsc();
   await sleep(300);
   await page.evaluate(() => {
-    const btns = Array.from(document.querySelectorAll('button[title="닫기"]'));
+    const btns = Array.from(document.querySelectorAll('button[data-testid="window-close-btn"]'));
     if (btns.length > 0) btns[btns.length - 1].click();
   });
   await sleep(500);

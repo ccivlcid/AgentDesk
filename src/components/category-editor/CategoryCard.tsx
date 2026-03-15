@@ -1,4 +1,5 @@
 import type { Category } from "../../types";
+import { useI18n } from "../../i18n";
 
 interface CategoryCardProps {
   category: Category;
@@ -9,6 +10,7 @@ interface CategoryCardProps {
 const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };
 
 export default function CategoryCard({ category, onEdit, onDelete }: CategoryCardProps) {
+  const { t } = useI18n();
   const label = category.name_ko ?? category.name;
   const isGlobal = category.owner_scope === "global";
   const slug = category.slug ?? category.name;
@@ -162,7 +164,7 @@ export default function CategoryCard({ category, onEdit, onDelete }: CategoryCar
         <button
           type="button"
           onClick={() => onEdit(category)}
-          title="편집"
+          title={t({ ko: "편집", en: "Edit", ja: "編集", zh: "编辑" })}
           style={{
             ...mono,
             fontSize: "10px",
@@ -192,7 +194,7 @@ export default function CategoryCard({ category, onEdit, onDelete }: CategoryCar
           <button
             type="button"
             onClick={() => onDelete(category.id)}
-            title="삭제"
+            title={t({ ko: "삭제", en: "Delete", ja: "削除", zh: "删除" })}
             style={{
               ...mono,
               fontSize: "10px",
