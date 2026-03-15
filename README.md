@@ -4,6 +4,8 @@
 
 AgentDesk brings a macOS-style desktop metaphor to AI agent orchestration — menubar, desktop icons, draggable widgets, Dock, and floating app windows, all in one dark terminal-inspired interface.
 
+> 🇰🇷 [한국어 README](README_ko.md)
+
 ---
 
 ## Screenshots
@@ -43,75 +45,7 @@ AgentDesk brings a macOS-style desktop metaphor to AI agent orchestration — me
 
 ## 🌍 Multi-Language Support
 
-AgentDesk supports **Korean · English · Japanese · Chinese** — all UI text adapts to the selected language.
-
-### Desktop & App Menu
-
-<table>
-  <tr>
-    <th>🇰🇷 한국어</th>
-    <th>🇺🇸 English</th>
-    <th>🇯🇵 日本語</th>
-    <th>🇨🇳 中文</th>
-  </tr>
-  <tr>
-    <td><img src="docs/screen/ko/02-app-menu.png" width="300" alt="KO App Menu"/></td>
-    <td><img src="docs/screen/en/02-app-menu.png" width="300" alt="EN App Menu"/></td>
-    <td><img src="docs/screen/ja/02-app-menu.png" width="300" alt="JA App Menu"/></td>
-    <td><img src="docs/screen/zh/02-app-menu.png" width="300" alt="ZH App Menu"/></td>
-  </tr>
-</table>
-
-### Widget Picker
-
-<table>
-  <tr>
-    <th>🇰🇷 한국어</th>
-    <th>🇺🇸 English</th>
-    <th>🇯🇵 日本語</th>
-    <th>🇨🇳 中文</th>
-  </tr>
-  <tr>
-    <td><img src="docs/screen/ko/03-widget-picker.png" width="300" alt="KO Widget Picker"/></td>
-    <td><img src="docs/screen/en/03-widget-picker.png" width="300" alt="EN Widget Picker"/></td>
-    <td><img src="docs/screen/ja/03-widget-picker.png" width="300" alt="JA Widget Picker"/></td>
-    <td><img src="docs/screen/zh/03-widget-picker.png" width="300" alt="ZH Widget Picker"/></td>
-  </tr>
-</table>
-
-### Mission Control
-
-<table>
-  <tr>
-    <th>🇰🇷 한국어</th>
-    <th>🇺🇸 English</th>
-    <th>🇯🇵 日本語</th>
-    <th>🇨🇳 中文</th>
-  </tr>
-  <tr>
-    <td><img src="docs/screen/ko/06-mission-control.png" width="300" alt="KO Mission Control"/></td>
-    <td><img src="docs/screen/en/06-mission-control.png" width="300" alt="EN Mission Control"/></td>
-    <td><img src="docs/screen/ja/06-mission-control.png" width="300" alt="JA Mission Control"/></td>
-    <td><img src="docs/screen/zh/06-mission-control.png" width="300" alt="ZH Mission Control"/></td>
-  </tr>
-</table>
-
-### Hire Agent Modal
-
-<table>
-  <tr>
-    <th>🇰🇷 한국어</th>
-    <th>🇺🇸 English</th>
-    <th>🇯🇵 日本語</th>
-    <th>🇨🇳 中文</th>
-  </tr>
-  <tr>
-    <td><img src="docs/screen/ko/08-agent-create.png" width="300" alt="KO Hire Agent"/></td>
-    <td><img src="docs/screen/en/08-agent-create.png" width="300" alt="EN Hire Agent"/></td>
-    <td><img src="docs/screen/ja/08-agent-create.png" width="300" alt="JA Hire Agent"/></td>
-    <td><img src="docs/screen/zh/08-agent-create.png" width="300" alt="ZH Hire Agent"/></td>
-  </tr>
-</table>
+AgentDesk supports **Korean · English · Japanese · Chinese** — all UI text adapts to the selected language. See [README_ko.md](README_ko.md) for the full Korean version with language comparison screenshots.
 
 ---
 
