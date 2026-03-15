@@ -8,6 +8,14 @@ import { detectRuntimeOs, isForceUpdateBannerEnabled, mergeSettingsWithDefaults 
 
 const WIDGET_LAYOUT_KEY = "agentdesk_widget_layout";
 const DESKTOP_ICON_LAYOUT_KEY = "agentdesk_icon_layout";
+const WALLPAPER_KEY = "agentdesk_wallpaper";
+
+function loadWallpaper(): string {
+  try { return window.localStorage.getItem(WALLPAPER_KEY) ?? "var(--th-bg-primary)"; } catch { return "var(--th-bg-primary)"; }
+}
+function saveWallpaper(css: string) {
+  try { window.localStorage.setItem(WALLPAPER_KEY, css); } catch { /* ignore */ }
+}
 
 function loadWidgetLayout(): WidgetEntry[] {
   try {
@@ -49,6 +57,7 @@ interface UiStore {
   desktopIconLayout: Record<string, { x: number; y: number }>;
   selectedAgentId: string | null;
   openTaskId: string | null;
+  wallpaper: string;
 
   toggleWindow: (w: WindowType) => void;
   openWindow: (w: WindowType) => void;
@@ -61,6 +70,7 @@ interface UiStore {
   setDesktopIconLayout: (layout: Record<string, { x: number; y: number }>) => void;
   setSelectedAgentId: (id: string | null) => void;
   setOpenTaskId: (id: string | null) => void;
+  setWallpaper: (css: string) => void;
 
   // ── 기존 상태 ─────────────────────────────────────────────────────
   view: View;
@@ -105,6 +115,7 @@ export const useUiStore = create<UiStore>()((set) => ({
   desktopIconLayout: loadDesktopIconLayout(),
   selectedAgentId: null,
   openTaskId: null,
+  wallpaper: loadWallpaper(),
 
   toggleWindow: (w) => set((s) => {
     const next = new Set(s.openWindows);
@@ -143,6 +154,7 @@ export const useUiStore = create<UiStore>()((set) => ({
   setDesktopIconLayout: (layout) => { saveDesktopIconLayout(layout); set({ desktopIconLayout: layout }); },
   setSelectedAgentId: (id) => set({ selectedAgentId: id }),
   setOpenTaskId: (id) => set({ openTaskId: id }),
+  setWallpaper: (css) => { saveWallpaper(css); set({ wallpaper: css }); },
 
   // ── 기존 초기값 ───────────────────────────────────────────────────
   view: "dashboard",

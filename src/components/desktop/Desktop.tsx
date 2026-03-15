@@ -17,7 +17,7 @@ import TasksWidget from "./widgets/TasksWidget";
 import AlertsWidget from "./widgets/AlertsWidget";
 import CliCostWidget from "./widgets/CliCostWidget";
 import FlowGraphWidget from "./widgets/FlowGraphWidget";
-import DesktopMascot from "./DesktopMascot";
+import WallpaperPicker from "./WallpaperPicker";
 import WorkflowWindow from "../windows/WorkflowWindow";
 import LibraryWindow from "../windows/LibraryWindow";
 import SettingsWindow from "../windows/SettingsWindow";
@@ -90,6 +90,7 @@ export default function Desktop({
     openWindow,
     toggleWindow,
     widgetLayout,
+    wallpaper,
   } = useUiStore();
 
   const { projects, categories, currentProjectId, setCurrentProjectId } = useProjectStore();
@@ -100,6 +101,8 @@ export default function Desktop({
   const [showWidgetPicker, setShowWidgetPicker] = useState(false);
   const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [showShortcutsGuide, setShowShortcutsGuide] = useState(false);
+  const [showWallpaperPicker, setShowWallpaperPicker] = useState(false);
+  const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number } | null>(null);
 
   // ── 키보드 단축키 ───────────────────────────────────────────────
   const gPending = useRef(false);
@@ -155,13 +158,12 @@ export default function Desktop({
     };
   }, [toggleWindow]);
 
-  // 데스크톱 아이콘 정의 (채팅은 Dock에서 제공)
+  // 데스크톱 아이콘 정의 (채팅·라이브러리는 Dock에서 제공)
   const icons: DesktopIconDef[] = [
     { id: "agent-manager",  emoji: "👤", label: "에이전트 설정",  onClick: () => openWindow("agent-manager") },
     { id: "project-create", emoji: "📁", label: "프로젝트 생성", onClick: onProjectCreate },
     { id: "create-task",    emoji: "▶",  label: "태스크 실행",   onClick: onCreateTask },
     { id: "workflow",       emoji: "⚡", label: "워크플로 빌더", onClick: () => openWindow("workflow") },
-    { id: "library",        emoji: "📋", label: "라이브러리",    onClick: () => openWindow("library") },
     { id: "repl",           emoji: ">_", label: "에이전트 REPL", onClick: () => openWindow("repl") },
   ];
 
@@ -176,10 +178,18 @@ export default function Desktop({
       style={{
         position: "fixed",
         inset: 0,
-        background: "var(--th-bg-primary)",
+        background: wallpaper,
         overflow: "hidden",
         fontFamily: "var(--th-font-mono)",
+        transition: "background 0.4s ease",
       }}
+      onContextMenu={(e) => {
+        const tag = (e.target as HTMLElement).closest("[data-no-ctx]");
+        if (tag) return;
+        e.preventDefault();
+        setCtxMenu({ x: e.clientX, y: e.clientY });
+      }}
+      onClick={() => setCtxMenu(null)}
     >
       {/* 메뉴바 */}
       <MenuBar
@@ -217,9 +227,6 @@ export default function Desktop({
             />
           );
         })}
-
-        {/* 중앙 마스코트 */}
-        <DesktopMascot />
 
         {/* 위젯들 */}
         {widgetLayout.map((entry) => (
@@ -289,6 +296,59 @@ export default function Desktop({
 
       {/* 위젯 피커 */}
       {showWidgetPicker && <WidgetPicker onClose={() => setShowWidgetPicker(false)} />}
+
+      {/* 배경화면 피커 */}
+      {showWallpaperPicker && <WallpaperPicker onClose={() => setShowWallpaperPicker(false)} />}
+
+      {/* 우클릭 컨텍스트 메뉴 */}
+      {ctxMenu && (
+        <div
+          data-no-ctx="true"
+          style={{
+            position: "fixed",
+            left: ctxMenu.x,
+            top: ctxMenu.y,
+            zIndex: 2000,
+            background: "rgba(22,22,26,0.95)",
+            backdropFilter: "blur(20px)",
+            border: "1px solid rgba(255,255,255,0.10)",
+            borderRadius: 10,
+            padding: "4px 0",
+            minWidth: 180,
+            boxShadow: "0 16px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.06)",
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {[
+            { label: "배경화면 변경", icon: "🖼", action: () => { setShowWallpaperPicker(true); setCtxMenu(null); } },
+            { label: "위젯 추가", icon: "＋", action: () => { setShowWidgetPicker(true); setCtxMenu(null); } },
+          ].map(({ label, icon, action }) => (
+            <button
+              key={label}
+              onClick={action}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                width: "100%",
+                padding: "7px 14px",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                fontFamily: "var(--th-font-mono)",
+                fontSize: 12,
+                color: "rgba(255,255,255,0.85)",
+                textAlign: "left",
+              }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(139,92,246,0.18)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "none"; }}
+            >
+              <span style={{ fontSize: 14 }}>{icon}</span>
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* CommandPalette */}
       <CommandPalette
