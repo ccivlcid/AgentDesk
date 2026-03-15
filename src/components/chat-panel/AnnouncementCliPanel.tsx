@@ -736,7 +736,7 @@ export default function AnnouncementCliPanel({
                 borderRadius: 8,
                 border: "none",
                 background: input.trim() || attachments.length > 0 ? "var(--th-accent)" : "var(--th-bg-surface)",
-                color: input.trim() || attachments.length > 0 ? "#000" : "var(--th-text-muted)",
+                color: input.trim() || attachments.length > 0 ? "var(--th-accent-text)" : "var(--th-text-muted)",
                 cursor: input.trim() || attachments.length > 0 ? "pointer" : "not-allowed",
                 flexShrink: 0,
                 transition: "all 0.15s",

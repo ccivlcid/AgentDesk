@@ -519,7 +519,7 @@ export default function AgentDetail({
                             void handleSaveCli();
                           }}
                           className="text-[10px] px-1.5 py-0.5 font-mono font-bold uppercase transition-colors disabled:opacity-50"
-                          style={{ borderRadius: 0, background: "var(--th-accent)", color: "#000" }}
+                          style={{ borderRadius: 0, background: "var(--th-accent)", color: "var(--th-accent-text)" }}
                         >
                           {savingCli ? "..." : t({ ko: "저장", en: "Save", ja: "保存", zh: "保存" })}
                         </button>

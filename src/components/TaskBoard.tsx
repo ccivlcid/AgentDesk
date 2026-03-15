@@ -364,14 +364,14 @@ export function TaskBoard({
   }, [filteredTasks]);
 
   const STATUS_CODE: Record<string, { code: string; color: string }> = {
-    inbox:        { code: "INBOX",  color: "#94a3b8" },
-    planned:      { code: "PLAN",   color: "#60a5fa" },
-    collaborating:{ code: "COLLAB", color: "#818cf8" },
-    in_progress:  { code: "WIP",    color: "#4ade80" },
-    review:       { code: "REV",    color: "#c084fc" },
-    done:         { code: "DONE",   color: "#6b7280" },
-    pending:      { code: "HOLD",   color: "#fb923c" },
-    cancelled:    { code: "VOID",   color: "#6b7280" },
+    inbox:        { code: "INBOX",  color: "var(--th-status-muted)" },
+    planned:      { code: "PLAN",   color: "var(--th-status-info)" },
+    collaborating:{ code: "COLLAB", color: "var(--th-status-purple)" },
+    in_progress:  { code: "WIP",    color: "var(--th-status-success)" },
+    review:       { code: "REV",    color: "var(--th-status-purple)" },
+    done:         { code: "DONE",   color: "var(--th-status-muted)" },
+    pending:      { code: "HOLD",   color: "var(--th-status-warning)" },
+    cancelled:    { code: "VOID",   color: "var(--th-status-muted)" },
   };
 
   const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };
@@ -415,10 +415,10 @@ export function TaskBoard({
           <span style={{ ...mono, fontSize: "11px", color: "var(--th-text-secondary)", whiteSpace: "nowrap" }}>
             task-queue list
             {currentProject && (
-              <span style={{ color: "var(--th-accent)" }}> --project=<span style={{ color: "#7dd3fc" }}>{currentProject.name}</span></span>
+              <span style={{ color: "var(--th-accent)" }}> --project=<span style={{ color: "var(--th-status-info)" }}>{currentProject.name}</span></span>
             )}
             {!showAllTasks && <span style={{ color: "var(--th-text-muted)" }}> --active</span>}
-            {activeFilterCount > 0 && <span style={{ color: "#fb923c" }}> --filter={activeFilterCount}</span>}
+            {activeFilterCount > 0 && <span style={{ color: "var(--th-status-warning)" }}> --filter={activeFilterCount}</span>}
           </span>
           <span style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", padding: "1px 5px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface)", borderRadius: 6 }}>
             {filteredTasks.length} {t({ ko: "건", en: "tasks", ja: "件", zh: "项" })}
@@ -438,7 +438,7 @@ export function TaskBoard({
                   ...mono, fontSize: "10px", fontWeight: 700,
                   padding: "3px 8px",
                   background: viewMode === mode ? "var(--th-accent)" : "transparent",
-                  color: viewMode === mode ? "#000" : "var(--th-text-muted)",
+                  color: viewMode === mode ? "var(--th-accent-text)" : "var(--th-text-muted)",
                   borderRight: i < 2 ? "1px solid var(--th-border)" : "none",
                   cursor: "pointer",
                   letterSpacing: "0.04em",
@@ -469,7 +469,7 @@ export function TaskBoard({
           <button
             type="button"
             onClick={() => setShowCreate(true)}
-            style={{ ...mono, fontSize: "11px", fontWeight: 700, padding: "3px 14px", borderRadius: 6, background: "var(--th-accent)", color: "#000", border: "none", cursor: "pointer", letterSpacing: "0.06em" }}
+            style={{ ...mono, fontSize: "11px", fontWeight: 700, padding: "3px 14px", borderRadius: 6, background: "var(--th-accent)", color: "var(--th-accent-text)", border: "none", cursor: "pointer", letterSpacing: "0.06em" }}
           >
             + {t({ ko: "새 업무", en: "NEW TASK", ja: "新規", zh: "新建" })}
           </button>
@@ -557,7 +557,7 @@ export function TaskBoard({
           <button
             type="button"
             onClick={() => setShowCreate(true)}
-            style={{ ...mono, fontSize: "11px", fontWeight: 700, padding: "5px 18px", borderRadius: 6, background: "var(--th-accent)", color: "#000", border: "none", cursor: "pointer" }}
+            style={{ ...mono, fontSize: "11px", fontWeight: 700, padding: "5px 18px", borderRadius: 6, background: "var(--th-accent)", color: "var(--th-accent-text)", border: "none", cursor: "pointer" }}
           >
             + {t({ ko: "첫 업무 만들기", en: "Create first task", ja: "最初のタスク作成", zh: "创建第一个任务" })}
           </button>

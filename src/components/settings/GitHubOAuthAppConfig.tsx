@@ -107,7 +107,7 @@ export default function GitHubOAuthAppConfig({ t }: { t: TFunction }) {
           />
           <button
             onClick={saveClientId}
-            className="shrink-0 px-3 py-1.5 text-[11px] font-mono font-medium transition" style={{ borderRadius: 0, background: "var(--th-accent)", color: "#000" }}
+            className="shrink-0 px-3 py-1.5 text-[11px] font-mono font-medium transition" style={{ borderRadius: 0, background: "var(--th-accent)", color: "var(--th-accent-text)" }}
           >
             {t({ ko: "저장", en: "Save", ja: "保存", zh: "保存" })}
           </button>

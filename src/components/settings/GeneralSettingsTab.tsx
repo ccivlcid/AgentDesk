@@ -197,7 +197,7 @@ export default function GeneralSettingsTab({ t, form, setForm, saved, onSave }: 
             padding: "5px 18px",
             borderRadius: 0,
             background: "var(--th-accent)",
-            color: "#000",
+            color: "var(--th-accent-text)",
             letterSpacing: "0.08em",
             cursor: "pointer",
             border: "none",

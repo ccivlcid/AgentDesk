@@ -63,7 +63,7 @@ export default function DepartmentsTab({
             onClick={onSaveOrder}
             disabled={reorderSaving}
             className="ml-auto px-4 py-1.5 text-sm font-medium font-mono transition-opacity hover:opacity-90 disabled:opacity-50"
-            style={{ borderRadius: 6, background: "var(--th-accent)", color: "#000" }}
+            style={{ borderRadius: 6, background: "var(--th-accent)", color: "var(--th-accent-text)" }}
           >
             {reorderSaving ? tr("저장 중...", "Saving...") : tr("순번 저장", "Save Order")}
           </button>

@@ -83,6 +83,7 @@
   /* ── 액센트 (Amber) ── */
   --th-accent: #f59e0b;
   --th-accent-dim: #d97706;
+  --th-accent-text: #000;
   --th-accent-glow: rgba(245, 158, 11, 0.12);
   --th-amber-glow: rgba(245, 158, 11, 0.15);
   --th-green-glow: rgba(63, 185, 80, 0.12);
@@ -111,6 +112,20 @@
   --th-terminal-success: #3fb950;
   --th-terminal-error: #f85149;
   --th-terminal-info: #58a6ff;
+
+  /* ── 상태 색상 (Status) ── */
+  --th-status-success: #22c55e;
+  --th-status-error: #ef4444;
+  --th-status-warning: #f59e0b;
+  --th-status-info: #3b82f6;
+  --th-status-cyan: #06b6d4;
+  --th-status-purple: #a855f7;
+  --th-status-muted: #64748b;
+
+  /* ── 메뉴바 ── */
+  --th-menubar-bg: rgba(12, 12, 12, 0.92);
+  --th-hover-overlay: rgba(255, 255, 255, 0.08);
+  --th-hover-overlay-subtle: rgba(255, 255, 255, 0.04);
 }
 
 /* ─── Light Theme: Cream Paper Terminal ─── */
@@ -148,6 +163,7 @@
   --th-input-border: #d4cfc6;
   --th-accent: #b45309;
   --th-accent-dim: #92400e;
+  --th-accent-text: #fff;
   --th-accent-glow: rgba(180, 83, 9, 0.08);
   --th-amber-glow: rgba(180, 83, 9, 0.1);
   --th-green-glow: rgba(26, 127, 55, 0.1);
@@ -168,6 +184,20 @@
   --th-terminal-success: #1a7f37;
   --th-terminal-error: #cf222e;
   --th-terminal-info: #0550ae;
+
+  /* ── 상태 색상 (Status) ── */
+  --th-status-success: #16a34a;
+  --th-status-error: #dc2626;
+  --th-status-warning: #d97706;
+  --th-status-info: #2563eb;
+  --th-status-cyan: #0891b2;
+  --th-status-purple: #7c3aed;
+  --th-status-muted: #64748b;
+
+  /* ── 메뉴바 ── */
+  --th-menubar-bg: rgba(240, 235, 226, 0.92);
+  --th-hover-overlay: rgba(0, 0, 0, 0.06);
+  --th-hover-overlay-subtle: rgba(0, 0, 0, 0.03);
 }
 
 html,

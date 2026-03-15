@@ -355,7 +355,7 @@ export default function ProjectInsightsPanel({
                   type="button"
                   onClick={() => void handleOpenTaskDetail(row.id)}
                   className="shrink-0 px-2 py-1 text-[11px] font-mono font-bold uppercase"
-                  style={{ borderRadius: 0, background: "var(--th-accent)", color: "#000" }}
+                  style={{ borderRadius: 0, background: "var(--th-accent)", color: "var(--th-accent-text)" }}
                 >
                   {t({ ko: "열람", en: "Open", ja: "表示", zh: "查看" })}
                 </button>

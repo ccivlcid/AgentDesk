@@ -527,7 +527,7 @@ export default function GatewaySettingsTab({
             <button
               onClick={openCreateModal}
               className="text-xs px-3 py-1 font-mono transition-colors"
-              style={{ borderRadius: 0, background: "var(--th-accent)", color: "#000" }}
+              style={{ borderRadius: 0, background: "var(--th-accent)", color: "var(--th-accent-text)" }}
             >
               + {t({ ko: "새 채팅 추가", en: "Add Chat", ja: "チャット追加", zh: "新增聊天" })}
             </button>
@@ -754,7 +754,7 @@ export default function GatewaySettingsTab({
           onClick={() => void handleSendMessage()}
           disabled={sending || !selectedChat || !sendText.trim() || !selectedChatTransportReady}
           className="px-4 py-2 text-sm font-medium font-mono uppercase tracking-wider transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          style={{ borderRadius: 0, background: "var(--th-accent)", color: "#000" }}
+          style={{ borderRadius: 0, background: "var(--th-accent)", color: "var(--th-accent-text)" }}
         >
           {sending
             ? t({ ko: "전송 중...", en: "Sending...", ja: "送信中...", zh: "发送中..." })

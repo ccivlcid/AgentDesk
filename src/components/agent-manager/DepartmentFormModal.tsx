@@ -359,7 +359,7 @@ export default function DepartmentFormModal({
             onClick={handleSave}
             disabled={saving || !form.name.trim()}
             className="flex-1 px-4 py-2.5 text-sm font-medium font-mono transition-all disabled:opacity-40"
-            style={{ borderRadius: 0, background: "var(--th-accent)", color: "#000" }}
+            style={{ borderRadius: 0, background: "var(--th-accent)", color: "var(--th-accent-text)" }}
           >
             {saving
               ? tr("처리 중...", "Saving...")

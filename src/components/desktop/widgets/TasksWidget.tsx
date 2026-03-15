@@ -5,12 +5,12 @@ import type { TaskStatus } from "../../../types";
 const mono = "var(--th-font-mono)";
 
 const STATUS_COLOR: Partial<Record<TaskStatus, string>> = {
-  in_progress:   "#22c55e",
-  pending:       "#64748b",
-  collaborating: "#06b6d4",
-  review:        "#f59e0b",
-  done:          "#3b82f6",
-  cancelled:     "#3f3f3f",
+  in_progress:   "var(--th-status-success)",
+  pending:       "var(--th-status-muted)",
+  collaborating: "var(--th-status-cyan)",
+  review:        "var(--th-status-warning)",
+  done:          "var(--th-status-info)",
+  cancelled:     "var(--th-text-muted)",
 };
 
 const STATUS_LABEL: Partial<Record<TaskStatus, string>> = {
@@ -43,9 +43,9 @@ export default function TasksWidget() {
         color: "var(--th-text-muted)",
         flexShrink: 0,
       }}>
-        <span style={{ color: "#22c55e" }}>{tasks.filter((t) => t.status === "in_progress").length} in progress</span>
+        <span style={{ color: "var(--th-status-success)" }}>{tasks.filter((t) => t.status === "in_progress").length} in progress</span>
         <span>{tasks.filter((t) => t.status === "pending").length} pending</span>
-        <span style={{ color: "#f59e0b" }}>{tasks.filter((t) => t.status === "review").length} review</span>
+        <span style={{ color: "var(--th-status-warning)" }}>{tasks.filter((t) => t.status === "review").length} review</span>
         <span style={{ flex: 1 }} />
         <span style={{ color: "var(--th-text-muted)" }}>{activeTasks.length} active</span>
       </div>

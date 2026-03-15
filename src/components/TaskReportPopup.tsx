@@ -688,7 +688,7 @@ export default function TaskReportPopup({ report, agents, departments, uiLanguag
             <button
               onClick={onClose}
               className="px-4 py-1.5 text-xs font-mono uppercase tracking-wide transition-all"
-              style={{ borderRadius: 0, background: "var(--th-accent)", color: "#000", border: "none" }}
+              style={{ borderRadius: 0, background: "var(--th-accent)", color: "var(--th-accent-text)", border: "none" }}
             >
               {t({ ko: "확인", en: "OK", ja: "OK", zh: "确认" })}
             </button>

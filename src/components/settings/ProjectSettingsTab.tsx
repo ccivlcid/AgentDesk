@@ -203,7 +203,7 @@ export default function ProjectSettingsTab({ project, categories, t, onUpdate, o
           style={{
             borderRadius: 0,
             background: isDirty && !saving ? "var(--th-accent)" : "var(--th-bg-elevated)",
-            color: isDirty && !saving ? "#000" : "var(--th-text-muted)",
+            color: isDirty && !saving ? "var(--th-accent-text)" : "var(--th-text-muted)",
             border: "1px solid transparent",
             opacity: saving ? 0.7 : 1,
             cursor: isDirty && !saving ? "pointer" : "not-allowed",

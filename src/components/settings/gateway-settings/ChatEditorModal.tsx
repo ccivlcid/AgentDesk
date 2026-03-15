@@ -353,7 +353,7 @@ export default function ChatEditorModal({
           <button
             onClick={handleSaveEditor}
             className="px-3 py-1.5 text-xs font-mono uppercase tracking-wide transition-colors"
-            style={{ borderRadius: 0, background: "var(--th-accent)", color: "#000" }}
+            style={{ borderRadius: 0, background: "var(--th-accent)", color: "var(--th-accent-text)" }}
           >
             {t({ ko: "확인", en: "Confirm", ja: "確認", zh: "确认" })}
           </button>

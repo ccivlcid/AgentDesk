@@ -118,7 +118,7 @@ export default function CreateTaskModalOverlays({
                 type="button"
                 onClick={onLoadSelectedRestoreDraft}
                 className="px-3 py-1.5 text-xs font-semibold font-mono uppercase tracking-wider transition hover:opacity-90"
-                style={{ borderRadius: 0, background: "var(--th-accent, #f59e0b)", color: "#000", border: "none" }}
+                style={{ borderRadius: 0, background: "var(--th-accent, #f59e0b)", color: "var(--th-accent-text)", border: "none" }}
               >
                 {t({ ko: "불러오기", en: "Load", ja: "読み込み", zh: "加载" })}
               </button>
@@ -178,7 +178,7 @@ export default function CreateTaskModalOverlays({
                 type="button"
                 onClick={onConfirmSubmitWithoutProject}
                 className="px-3 py-1.5 text-xs font-semibold font-mono uppercase tracking-wider transition hover:opacity-90"
-                style={{ borderRadius: 0, background: "var(--th-accent, #f59e0b)", color: "#000", border: "none" }}
+                style={{ borderRadius: 0, background: "var(--th-accent, #f59e0b)", color: "var(--th-accent-text)", border: "none" }}
               >
                 {t({ ko: "계속", en: "Continue", ja: "続行", zh: "继续" })}
               </button>
@@ -379,7 +379,7 @@ export default function CreateTaskModalOverlays({
                 disabled={!manualPathCurrent}
                 onClick={onSelectManualCurrentPath}
                 className="px-3 py-1.5 text-xs font-semibold font-mono uppercase tracking-wider transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
-                style={{ borderRadius: 0, background: "var(--th-accent, #f59e0b)", color: "#000", border: "none" }}
+                style={{ borderRadius: 0, background: "var(--th-accent, #f59e0b)", color: "var(--th-accent-text)", border: "none" }}
               >
                 {t({
                   ko: "현재 폴더 선택",
@@ -454,7 +454,7 @@ export default function CreateTaskModalOverlays({
                           type="button"
                           onClick={() => onLoadDraft(draft)}
                           className="px-2.5 py-1 text-xs font-semibold font-mono uppercase tracking-wider transition hover:opacity-90"
-                          style={{ borderRadius: 0, background: "var(--th-accent, #f59e0b)", color: "#000", border: "none" }}
+                          style={{ borderRadius: 0, background: "var(--th-accent, #f59e0b)", color: "var(--th-accent-text)", border: "none" }}
                         >
                           {t({ ko: "불러오기", en: "Load", ja: "読み込み", zh: "加载" })}
                         </button>

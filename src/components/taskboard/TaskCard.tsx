@@ -46,25 +46,25 @@ interface TaskCardProps {
 }
 
 const STATUS_LEFT_BORDER: Partial<Record<string, string>> = {
-  in_progress: "#22c55e",
-  review: "#a78bfa",
-  planned: "#f59e0b",
-  inbox: "#06b6d4",
-  collaborating: "#60a5fa",
-  done: "#30363d",
-  pending: "#f87171",
-  cancelled: "#6e7681",
+  in_progress: "var(--th-status-success)",
+  review: "var(--th-status-purple)",
+  planned: "var(--th-status-warning)",
+  inbox: "var(--th-status-cyan)",
+  collaborating: "var(--th-status-info)",
+  done: "var(--th-border-strong)",
+  pending: "var(--th-status-error)",
+  cancelled: "var(--th-status-muted)",
 };
 
 const EXECUTION_STATE_BADGES: Partial<Record<TaskExecutionState, { label: string; style: React.CSSProperties }>> = {
-  queued: { label: "Q", style: { background: "rgba(6,182,212,0.08)", color: "#7dd3fc", border: "1px solid rgba(6,182,212,0.18)" } },
-  running: { label: "RUN", style: { background: "rgba(34,197,94,0.08)", color: "#86efac", border: "1px solid rgba(34,197,94,0.18)" } },
-  awaiting_review: { label: "REV", style: { background: "rgba(167,139,250,0.08)", color: "#c4b5fd", border: "1px solid rgba(167,139,250,0.18)" } },
-  blocked: { label: "HOLD", style: { background: "rgba(251,191,36,0.08)", color: "#fcd34d", border: "1px solid rgba(251,191,36,0.18)" } },
-  stalled: { label: "STALL", style: { background: "rgba(244,63,94,0.1)", color: "#fda4af", border: "1px solid rgba(244,63,94,0.2)" } },
-  succeeded: { label: "OK", style: { background: "rgba(34,197,94,0.08)", color: "#86efac", border: "1px solid rgba(34,197,94,0.18)" } },
-  failed: { label: "ERR", style: { background: "rgba(244,63,94,0.1)", color: "#fda4af", border: "1px solid rgba(244,63,94,0.2)" } },
-  cancelled: { label: "STOP", style: { background: "rgba(110,118,129,0.14)", color: "#d1d5db", border: "1px solid rgba(110,118,129,0.2)" } },
+  queued: { label: "Q", style: { background: "rgba(6,182,212,0.08)", color: "var(--th-status-cyan)", border: "1px solid rgba(6,182,212,0.18)" } },
+  running: { label: "RUN", style: { background: "rgba(34,197,94,0.08)", color: "var(--th-status-success)", border: "1px solid rgba(34,197,94,0.18)" } },
+  awaiting_review: { label: "REV", style: { background: "rgba(167,139,250,0.08)", color: "var(--th-status-purple)", border: "1px solid rgba(167,139,250,0.18)" } },
+  blocked: { label: "HOLD", style: { background: "rgba(251,191,36,0.08)", color: "var(--th-status-warning)", border: "1px solid rgba(251,191,36,0.18)" } },
+  stalled: { label: "STALL", style: { background: "rgba(244,63,94,0.1)", color: "var(--th-status-error)", border: "1px solid rgba(244,63,94,0.2)" } },
+  succeeded: { label: "OK", style: { background: "rgba(34,197,94,0.08)", color: "var(--th-status-success)", border: "1px solid rgba(34,197,94,0.18)" } },
+  failed: { label: "ERR", style: { background: "rgba(244,63,94,0.1)", color: "var(--th-status-error)", border: "1px solid rgba(244,63,94,0.2)" } },
+  cancelled: { label: "STOP", style: { background: "rgba(110,118,129,0.14)", color: "var(--th-status-muted)", border: "1px solid rgba(110,118,129,0.2)" } },
 };
 
 export default function TaskCard({
@@ -220,7 +220,7 @@ export default function TaskCard({
       style={{
         background: "var(--th-bg-surface)",
         border: executionAlert ? "1px solid rgba(244,63,94,0.22)" : "1px solid var(--th-border)",
-        borderLeft: `3px solid ${executionAlert ? "#fb7185" : leftBorderColor}`,
+        borderLeft: `3px solid ${executionAlert ? "var(--th-status-error)" : leftBorderColor}`,
         borderRadius: 10,
         opacity: isHiddenTask ? 0.7 : 1,
         boxShadow: executionAlert
@@ -459,7 +459,7 @@ export default function TaskCard({
                     {subtask.delegated_task_id && subtask.status !== "done" && (
                       <span
                         className="shrink-0 text-[10px] font-mono"
-                        style={{ color: "#60a5fa" }}
+                        style={{ color: "var(--th-status-info)" }}
                         title={t({ ko: "위임됨", en: "Delegated", ja: "委任済み", zh: "已委派" })}
                       >
                         ↗
@@ -526,7 +526,7 @@ export default function TaskCard({
             onClick={() => onResumeTask!(task.id)}
             title={t({ ko: "작업 재개", en: "Resume task", ja: "タスク再開", zh: "恢复任务" })}
             className="flex flex-1 items-center justify-center gap-1 px-2 py-1.5 text-xs font-medium font-mono transition"
-            style={{ borderRadius: 6, background: "rgba(245,158,11,0.15)", color: "#f59e0b", border: "1px solid rgba(245,158,11,0.3)" }}
+            style={{ borderRadius: 6, background: "var(--th-accent-glow)", color: "var(--th-text-accent)", border: "1px solid var(--th-border-accent)" }}
           >
             ↩ {t({ ko: "재개", en: "Resume", ja: "再開", zh: "恢复" })}
           </button>
@@ -606,7 +606,7 @@ export default function TaskCard({
             onClick={() => onUnhideTask(task.id)}
             title={t({ ko: "숨긴 작업 복원", en: "Restore hidden task", ja: "非表示タスクを復元", zh: "恢复隐藏任务" })}
             className="flex items-center justify-center gap-1 px-2 py-1.5 text-xs font-medium font-mono transition-opacity hover:opacity-90"
-            style={{ background: "var(--th-accent, #f59e0b)", color: "#0f1117", borderRadius: 6 }}
+            style={{ background: "var(--th-accent, #f59e0b)", color: "var(--th-accent-text)", borderRadius: 6 }}
           >
             {t({ ko: "복원", en: "Restore", ja: "復元", zh: "恢复" })}
           </button>
@@ -709,7 +709,7 @@ export default function TaskCard({
                 className="flex items-center gap-1.5 text-[11px] transition-colors"
                 style={{ color: "var(--th-text-muted)" }}
               >
-                <span style={{ color: "#f59e0b", fontFamily: "var(--th-font-mono)" }}>{">"}_</span>
+                <span style={{ color: "var(--th-text-accent)", fontFamily: "var(--th-font-mono)" }}>{">"}_</span>
                 {t({ ko: "실행 로그", en: "Exec Log", ja: "実行ログ", zh: "执行日志" })}
                 <span className="ml-0.5">{showTerminalPreview ? "▲" : "▼"}</span>
               </button>
@@ -725,7 +725,7 @@ export default function TaskCard({
                     {task.status === "in_progress" && (
                       <span
                         className="ml-auto text-[9px] font-mono"
-                        style={{ color: "#3fb950", animation: "terminalCursorBlink 1s step-end infinite" }}
+                        style={{ color: "var(--th-status-success)", animation: "terminalCursorBlink 1s step-end infinite" }}
                       >
                         ● LIVE
                       </span>
@@ -808,7 +808,7 @@ export default function TaskCard({
                           {locale === "ko" && gate.gate_label_ko ? gate.gate_label_ko : gate.gate_label}
                         </span>
                         {isManual && (
-                          <span className="px-1 text-[9px] font-mono" style={{ background: "rgba(245,158,11,0.15)", color: "#f59e0b", borderRadius: 6 }}>
+                          <span className="px-1 text-[9px] font-mono" style={{ background: "var(--th-accent-glow)", color: "var(--th-text-accent)", borderRadius: 6 }}>
                             {t({ ko: "수동", en: "Manual", ja: "手動", zh: "手动" })}
                           </span>
                         )}

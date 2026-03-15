@@ -372,13 +372,13 @@ export default function HookFormModal({
               style={{
                 borderRadius: 0,
                 background: !canSubmit ? "var(--th-bg-surface-hover)" : "var(--th-accent)",
-                color: !canSubmit ? "var(--th-text-muted)" : "#000",
+                color: !canSubmit ? "var(--th-text-muted)" : "var(--th-accent-text)",
                 border: "none",
               }}
             >
               {submitting ? (
                 <>
-                  <span className="animate-spin w-3 h-3 border border-t-transparent" style={{ borderRadius: "50%", borderColor: "#000", borderTopColor: "transparent" }} />
+                  <span className="animate-spin w-3 h-3 border border-t-transparent" style={{ borderRadius: "50%", borderColor: "var(--th-accent-text)", borderTopColor: "transparent" }} />
                   {t({ ko: "\uC800\uC7A5\uC911...", en: "Saving...", ja: "\u4FDD\u5B58\u4E2D...", zh: "\u4FDD\u5B58\u4E2D..." })}
                 </>
               ) : isEditing ? (

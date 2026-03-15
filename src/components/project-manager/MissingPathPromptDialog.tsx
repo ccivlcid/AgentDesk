@@ -81,7 +81,7 @@ export default function MissingPathPromptDialog({
             disabled={!prompt.canCreate || saving}
             onClick={onConfirmCreate}
             className="px-3 py-1.5 text-xs font-semibold font-mono uppercase transition disabled:cursor-not-allowed disabled:opacity-40"
-            style={{ borderRadius: 0, background: "#10b981", color: "#000" }}
+            style={{ borderRadius: 0, background: "#10b981", color: "var(--th-accent-text)" }}
           >
             {t({ ko: "예", en: "Yes", ja: "はい", zh: "是" })}
           </button>

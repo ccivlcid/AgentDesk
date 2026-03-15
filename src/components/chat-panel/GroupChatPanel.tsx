@@ -412,7 +412,7 @@ export default function GroupChatPanel({ agents, initialAgentIds, onClose }: Gro
                     className="flex h-7 w-7 items-center justify-center transition disabled:opacity-30"
                     style={
                       input.trim() || attachments.length > 0
-                        ? { borderRadius: 0, background: "var(--th-accent)", color: "#000" }
+                        ? { borderRadius: 0, background: "var(--th-accent)", color: "var(--th-accent-text)" }
                         : { borderRadius: 0, background: "var(--th-bg-surface)", color: "var(--th-text-muted)", cursor: "not-allowed" }
                     }
                     title={tr("전송 (Ctrl+Enter)", "Send (Ctrl+Enter)")}

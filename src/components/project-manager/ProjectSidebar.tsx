@@ -73,7 +73,7 @@ export default function ProjectSidebar({
             type="button"
             onClick={startCreate}
             className="px-2.5 py-1 text-xs font-mono font-bold uppercase transition"
-            style={{ borderRadius: 0, background: "var(--th-accent)", color: "#000" }}
+            style={{ borderRadius: 0, background: "var(--th-accent)", color: "var(--th-accent-text)" }}
           >
             {t({ ko: "신규", en: "New", ja: "新規", zh: "新建" })}
           </button>

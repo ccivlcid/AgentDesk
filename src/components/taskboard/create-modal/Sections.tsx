@@ -33,7 +33,7 @@ export function PrioritySection({ priority, t, onPriorityChange }: PrioritySecti
             style={{
               borderRadius: 0,
               background: star <= priority ? "rgba(245,158,11,0.85)" : "var(--th-bg-primary)",
-              color: star <= priority ? "#000" : "var(--th-text-muted)",
+              color: star <= priority ? "var(--th-accent-text)" : "var(--th-text-muted)",
               border: `1px solid ${star <= priority ? "rgba(245,158,11,0.6)" : "var(--th-border)"}`,
             }}
           >
