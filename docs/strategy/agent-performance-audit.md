@@ -1,6 +1,6 @@
 # Agent Execution Performance Audit Report
 
-> Created: 2026-03-13 | Updated: 2026-03-15 (Phase 1 & 2 completion reflected)
+> Created: 2026-03-13 | Updated: 2026-03-15 (Phase 1·2·3 completion reflected)
 > Scope: Full agent execution pipeline (`server/modules/workflow/**`)
 > Trigger: Concern about performance degradation when multiple agents are registered and running simultaneously
 
@@ -69,12 +69,11 @@ An audit of **concurrent execution performance** when multiple agents are regist
 
 ### 🟡 P3 — Medium-Term Improvement (Medium)
 
-#### P3-A. 3 sequential queries per task during orphan task recovery
+#### ~~P3-A. 3 sequential queries per task during orphan task recovery~~ ✅ Completed (2026-03-15)
 
 - **File:** `server/modules/lifecycle.ts` (`recoverOrphanInProgressTasks`)
-- **Problem:** For each `in_progress` task N, runs 3 sequential queries + 1 fs call
-- **Impact:** 100 orphan tasks = 300 queries + 100 fs calls (occurs on server restart)
-- **Improvement Direction:** Batch log lookups into a single JOIN query; parallelize fs lookups with `Promise.all`
+- **Resolution:** Refactored into 5 phases — age pre-filter (in-memory), single batch `DISTINCT task_id` query for recent activity, sequential fs stat (only for DB-unfiltered tasks), single batch JOIN query for latest RUN logs, per-task recovery processing
+- **Effect:** For 100 orphan tasks: 300+ sequential queries → 3 batch queries + N fs calls (only for remaining candidates)
 
 ---
 
@@ -85,12 +84,11 @@ An audit of **concurrent execution performance** when multiple agents are regist
 
 ---
 
-#### P3-C. Task scheduler uses fixed 60-second polling
+#### ~~P3-C. Task scheduler uses fixed 60-second polling~~ ✅ Completed (2026-03-15)
 
 - **File:** `server/modules/workflow/orchestration/task-scheduler.ts`
-- **Problem:** `setInterval(sweep, 60_000)` — processes on a fixed 60-second interval regardless of load
-- **Impact:** Even immediate-execution schedules can be delayed by up to 60 seconds
-- **Improvement Direction:** Calculate dynamic timeout based on the earliest `next_run_at` schedule
+- **Resolution:** Replaced `setInterval(sweep, 60_000)` with dynamic `setTimeout` loop; `computeNextDelay()` queries `MIN(next_run_at)` from enabled schedules and sets timeout to `min(delta + 500ms, 60s)`; initial sweep starts after 5s
+- **Effect:** Scheduled tasks trigger within ~500ms of their `next_run_at` instead of up to 60s delay
 
 ---
 
@@ -114,11 +112,11 @@ An audit of **concurrent execution performance** when multiple agents are regist
 └──────────────────────────────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────────────────────────────┐
-│  Phase 3 — Partially Complete     Long-term operational stability     │
+│  Phase 3 — ✅ Completed (2026-03-15)  Long-term operational stability │
 ├──────────────────────────────────────────────────────────────────────┤
 │  ✅ P3-B  Anomaly detection index added (watchdog full scan removed)  │
-│  ⏳ P3-A  Orphan task recovery batching (pending)                    │
-│  ⏳ P3-C  Task scheduler dynamic timeout (pending)                   │
+│  ✅ P3-A  Orphan task recovery batching (3 batch queries total)       │
+│  ✅ P3-C  Task scheduler dynamic timeout (~500ms precision)           │
 └──────────────────────────────────────────────────────────────────────┘
 ```
 

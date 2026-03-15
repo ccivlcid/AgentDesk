@@ -182,25 +182,28 @@ export function startLifecycle(ctx: RuntimeContext): void {
     const isStartup = reason === "startup";
     const effectiveGraceMs = isStartup ? STARTUP_ORPHAN_GRACE_MS : IN_PROGRESS_ORPHAN_GRACE_MS;
     const effectiveActivityWindowMs = isStartup ? STARTUP_ORPHAN_RECENT_ACTIVITY_WINDOW_MS : ORPHAN_RECENT_ACTIVITY_WINDOW_MS;
-    const inProgressTasks = db
-      .prepare(
-        `
-    SELECT id, title, assigned_agent_id, created_at, started_at, updated_at
-    FROM tasks
-    WHERE status = 'in_progress'
-    ORDER BY updated_at ASC
-  `,
-      )
-      .all() as Array<{
+
+    type InProgressRow = {
       id: string;
       title: string;
       assigned_agent_id: string | null;
       created_at: number | null;
       started_at: number | null;
       updated_at: number | null;
-    }>;
+    };
+
+    const inProgressTasks = db
+      .prepare(
+        `SELECT id, title, assigned_agent_id, created_at, started_at, updated_at
+         FROM tasks WHERE status = 'in_progress' ORDER BY updated_at ASC`,
+      )
+      .all() as InProgressRow[];
 
     const now = nowMs();
+
+    // Phase 1: pre-filter — skip tasks with live processes; remove stale handles; check age
+    type Candidate = InProgressRow & { ageMs: number };
+    const ageCandidates: Candidate[] = [];
     for (const task of inProgressTasks) {
       const active = activeProcesses.get(task.id);
       if (active) {
@@ -209,55 +212,75 @@ export function startLifecycle(ctx: RuntimeContext): void {
           activeProcesses.delete(task.id);
           appendTaskLog(task.id, "system", `Recovery (${reason}): removed stale process handle (pid=${pid})`);
         } else {
-          continue;
+          continue; // process is alive — skip
         }
       }
-
       const lastTouchedAt = Math.max(task.updated_at ?? 0, task.started_at ?? 0, task.created_at ?? 0);
       const ageMs = lastTouchedAt > 0 ? Math.max(0, now - lastTouchedAt) : effectiveGraceMs + 1;
-      if (ageMs < effectiveGraceMs) continue;
+      if (ageMs >= effectiveGraceMs) ageCandidates.push({ ...task, ageMs });
+    }
 
-      // 추가 안전장치 1: task_logs 활동이 최근 윈도우 내에 있으면 아직 활성 상태로 간주
-      const recentLog = db
-        .prepare(
-          `
-      SELECT created_at FROM task_logs
-      WHERE task_id = ? AND created_at > ?
-      ORDER BY created_at DESC LIMIT 1
-    `,
-        )
-        .get(task.id, now - effectiveActivityWindowMs) as { created_at: number } | undefined;
-      if (recentLog) {
-        continue;
-      }
+    if (ageCandidates.length === 0) return;
 
-      // 추가 안전장치 2: 터미널 로그 파일이 최근까지 갱신됐다면 여전히 출력이 진행 중인 것으로 간주
-      // (예: 서버 리로드/재시작으로 in-memory process handle만 유실된 경우)
+    // Phase 2: batch DB query — recent log activity check for all age candidates at once
+    const ageIds = ageCandidates.map((t) => t.id);
+    const agePlaceholders = ageIds.map(() => "?").join(",");
+    const recentlyActiveIds = new Set<string>(
+      (
+        db
+          .prepare(
+            `SELECT DISTINCT task_id FROM task_logs
+             WHERE task_id IN (${agePlaceholders}) AND created_at > ?`,
+          )
+          .all(...ageIds, now - effectiveActivityWindowMs) as Array<{ task_id: string }>
+      ).map((r) => r.task_id),
+    );
+
+    // Phase 3: fs check (sequential) — only for tasks not filtered by DB activity
+    const fsCandidates: Candidate[] = [];
+    for (const task of ageCandidates) {
+      if (recentlyActiveIds.has(task.id)) continue; // has recent DB activity — skip
       try {
         const logPath = path.join(logsDir, `${task.id}.log`);
         const stat = fs.statSync(logPath);
         const logIdleMs = Math.max(0, now - Math.floor(stat.mtimeMs || 0));
-        if (logIdleMs <= effectiveActivityWindowMs) {
-          continue;
-        }
+        if (logIdleMs <= effectiveActivityWindowMs) continue; // log file recently active — skip
       } catch {
-        // 로그 파일이 없거나 접근 불가하면 기존 복구 로직 진행
+        // no log file or unreadable — proceed with recovery
       }
+      fsCandidates.push(task);
+    }
 
-      const latestRunLog = db
-        .prepare(
-          `
-      SELECT message
-      FROM task_logs
-      WHERE task_id = ?
-        AND kind = 'system'
-        AND (message LIKE 'RUN %' OR message LIKE 'Agent spawn failed:%')
-      ORDER BY created_at DESC
-      LIMIT 1
-    `,
-        )
-        .get(task.id) as { message: string } | undefined;
-      const latestRunMessage = latestRunLog?.message ?? "";
+    if (fsCandidates.length === 0) return;
+
+    // Phase 4: batch DB query — latest RUN/spawn log for all remaining candidates at once
+    const fsIds = fsCandidates.map((t) => t.id);
+    const fsPlaceholders = fsIds.map(() => "?").join(",");
+    const latestRunLogs = new Map<string, string>(
+      (
+        db
+          .prepare(
+            `SELECT l.task_id, l.message
+             FROM task_logs l
+             INNER JOIN (
+               SELECT task_id, MAX(created_at) AS max_ca
+               FROM task_logs
+               WHERE task_id IN (${fsPlaceholders})
+                 AND kind = 'system'
+                 AND (message LIKE 'RUN %' OR message LIKE 'Agent spawn failed:%')
+               GROUP BY task_id
+             ) m ON l.task_id = m.task_id AND l.created_at = m.max_ca
+             WHERE l.kind = 'system'
+               AND (l.message LIKE 'RUN %' OR l.message LIKE 'Agent spawn failed:%')`,
+          )
+          .all(...fsIds) as Array<{ task_id: string; message: string }>
+      ).map((r) => [r.task_id, r.message] as [string, string]),
+    );
+
+    // Phase 5: process each remaining candidate
+    for (const task of fsCandidates) {
+      const { ageMs } = task;
+      const latestRunMessage = latestRunLogs.get(task.id) ?? "";
 
       if (latestRunMessage.startsWith("RUN completed (exit code: 0)")) {
         appendTaskLog(
@@ -291,8 +314,9 @@ export function startLifecycle(ctx: RuntimeContext): void {
       params.push(task.id);
       const move = db
         .prepare(`UPDATE tasks SET ${updates.join(", ")} WHERE id = ? AND status = 'in_progress'`)
-        .run(...params) as { changes?: number };
+        .run(...(params as any[])) as { changes?: number };
       if ((move.changes ?? 0) === 0) continue;
+
       recordTaskExecutionEvent(db as any, {
         taskId: task.id,
         eventType: "orphan_recovered",
@@ -313,9 +337,7 @@ export function startLifecycle(ctx: RuntimeContext): void {
       );
 
       if (task.assigned_agent_id) {
-        db.prepare("UPDATE agents SET status = 'idle', current_task_id = NULL WHERE id = ?").run(
-          task.assigned_agent_id,
-        );
+        db.prepare("UPDATE agents SET status = 'idle', current_task_id = NULL WHERE id = ?").run(task.assigned_agent_id);
         const updatedAgent = db.prepare("SELECT * FROM agents WHERE id = ?").get(task.assigned_agent_id);
         broadcast("agent_status", updatedAgent);
       }
@@ -330,7 +352,7 @@ export function startLifecycle(ctx: RuntimeContext): void {
           : lang === "ja"
             ? `[WATCHDOG] '${task.title}' は in_progress でしたが実行プロセスが存在しないため inbox に復旧しました。`
             : lang === "zh"
-              ? `[WATCHDOG] '${task.title}' 处于 in_progress，但未发现执行进程，已恢复到 inbox。`
+              ? `[WATCHDOG] '${task.title}' 处于 in_progress，但未発見執行進程，已恢復到 inbox。`
               : `[WATCHDOG] '${task.title}' 작업이 in_progress 상태였지만 실행 프로세스가 없어 inbox로 복구했습니다.`;
       notifyClient(watchdogMessage, task.id);
     }

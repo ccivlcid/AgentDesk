@@ -178,25 +178,13 @@ export default function GroupChatPanel({ agents, initialAgentIds, onClose }: Gro
   const agentById = useMemo(() => new Map(agents.map((a) => [a.id, a])), [agents]);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-stretch justify-end">
-      <button
-        className="absolute inset-0"
-        style={{ background: "var(--th-modal-overlay)" }}
-        onClick={onClose}
-        aria-label={tr("닫기", "Close")}
-      />
-
-      <div
-        className="relative flex h-full w-full flex-col overflow-hidden sm:w-[680px]"
-        style={{
-          background: "var(--th-bg-base)",
-          borderLeft: "1px solid var(--th-border)",
-          fontFamily: "var(--th-font-mono)",
-          borderTopLeftRadius: 10,
-          borderBottomLeftRadius: 10,
-          boxShadow: "-4px 0 24px rgba(0,0,0,0.25)",
-        }}
-      >
+    <div
+      className="flex h-full w-full flex-col overflow-hidden"
+      style={{
+        background: "var(--th-bg-base)",
+        fontFamily: "var(--th-font-mono)",
+      }}
+    >
         <HeaderModalChrome
           macOSStyle={false}
           title={t({ ko: "그룹 채팅", en: "Group Chat", ja: "グループチャット", zh: "群聊" })}
@@ -448,6 +436,5 @@ export default function GroupChatPanel({ agents, initialAgentIds, onClose }: Gro
           </div>
         </div>
       </div>
-    </div>
   );
 }

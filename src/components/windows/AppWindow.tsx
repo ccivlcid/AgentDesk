@@ -39,6 +39,61 @@ interface AppWindowProps {
   defaultY?: number;
 }
 
+type ResizeDir = "n" | "s" | "e" | "w" | "ne" | "nw" | "se" | "sw";
+
+interface ResizeState {
+  dir: ResizeDir;
+  mx: number;
+  my: number;
+  ox: number;
+  oy: number;
+  ow: number;
+  oh: number;
+}
+
+const MIN_W = 400;
+const MIN_H = 300;
+
+function computeResize(
+  ev: MouseEvent,
+  s: ResizeState,
+): { x: number; y: number; w: number; h: number } {
+  const dx = ev.clientX - s.mx;
+  const dy = ev.clientY - s.my;
+  let x = s.ox, y = s.oy, w = s.ow, h = s.oh;
+
+  if (s.dir.includes("s")) {
+    h = Math.max(MIN_H, s.oh + dy);
+  }
+  if (s.dir.includes("n")) {
+    const rawH = s.oh - dy;
+    h = Math.max(MIN_H, rawH);
+    y = rawH >= MIN_H ? s.oy + dy : s.oy + (s.oh - MIN_H);
+    y = Math.max(44, y);
+  }
+  if (s.dir.includes("e")) {
+    w = Math.max(MIN_W, s.ow + dx);
+  }
+  if (s.dir.includes("w")) {
+    const rawW = s.ow - dx;
+    w = Math.max(MIN_W, rawW);
+    x = rawW >= MIN_W ? s.ox + dx : s.ox + (s.ow - MIN_W);
+    x = Math.max(0, x);
+  }
+
+  return { x, y, w, h };
+}
+
+const CURSOR: Record<ResizeDir, string> = {
+  n: "n-resize", s: "s-resize",
+  e: "e-resize", w: "w-resize",
+  ne: "ne-resize", nw: "nw-resize",
+  se: "se-resize", sw: "sw-resize",
+};
+
+const EDGE = 6;   // edge handle thickness
+const CORN = 14;  // corner handle size
+
 export default function AppWindow({
   windowType,
   title,
@@ -60,7 +115,7 @@ export default function AppWindow({
   const [pos, setPos] = useState({ x: saved.x, y: saved.y });
   const [size, setSize] = useState({ w: saved.w, h: saved.h });
   const dragStart = useRef<{ mx: number; my: number; ox: number; oy: number } | null>(null);
-  const resizeStart = useRef<{ mx: number; my: number; ow: number; oh: number } | null>(null);
+  const resizeState = useRef<ResizeState | null>(null);
 
   function onTitlebarMouseDown(e: React.MouseEvent) {
     if (e.button !== 0) return;
@@ -88,33 +143,48 @@ export default function AppWindow({
     window.addEventListener("mouseup", onUp);
   }
 
-  function onResizeMouseDown(e: React.MouseEvent) {
-    if (e.button !== 0) return;
-    e.preventDefault();
-    e.stopPropagation();
-    resizeStart.current = { mx: e.clientX, my: e.clientY, ow: size.w, oh: size.h };
+  function onResizeMouseDown(dir: ResizeDir) {
+    return (e: React.MouseEvent) => {
+      if (e.button !== 0) return;
+      e.preventDefault();
+      e.stopPropagation();
+      resizeState.current = {
+        dir,
+        mx: e.clientX, my: e.clientY,
+        ox: pos.x, oy: pos.y,
+        ow: size.w, oh: size.h,
+      };
 
-    function onMove(ev: MouseEvent) {
-      if (!resizeStart.current) return;
-      setSize({
-        w: Math.max(400, resizeStart.current.ow + ev.clientX - resizeStart.current.mx),
-        h: Math.max(300, resizeStart.current.oh + ev.clientY - resizeStart.current.my),
-      });
-    }
-    function onUp(ev: MouseEvent) {
-      if (!resizeStart.current) return;
-      const nw = Math.max(400, resizeStart.current.ow + ev.clientX - resizeStart.current.mx);
-      const nh = Math.max(300, resizeStart.current.oh + ev.clientY - resizeStart.current.my);
-      saveWinState(windowType, { x: pos.x, y: pos.y, w: nw, h: nh });
-      resizeStart.current = null;
-      window.removeEventListener("mousemove", onMove);
-      window.removeEventListener("mouseup", onUp);
-    }
-    window.addEventListener("mousemove", onMove);
-    window.addEventListener("mouseup", onUp);
+      function onMove(ev: MouseEvent) {
+        if (!resizeState.current) return;
+        const r = computeResize(ev, resizeState.current);
+        setPos({ x: r.x, y: r.y });
+        setSize({ w: r.w, h: r.h });
+      }
+      function onUp(ev: MouseEvent) {
+        if (!resizeState.current) return;
+        const r = computeResize(ev, resizeState.current);
+        setPos({ x: r.x, y: r.y });
+        setSize({ w: r.w, h: r.h });
+        saveWinState(windowType, { x: r.x, y: r.y, w: r.w, h: r.h });
+        resizeState.current = null;
+        window.removeEventListener("mousemove", onMove);
+        window.removeEventListener("mouseup", onUp);
+      }
+      window.addEventListener("mousemove", onMove);
+      window.addEventListener("mouseup", onUp);
+    };
   }
 
   const activeContent = tabs?.find((t) => t.id === activeTab)?.content ?? children;
+
+  // Shared style for resize handles
+  const edgeStyle = (dir: ResizeDir, style: React.CSSProperties): React.CSSProperties => ({
+    position: "absolute",
+    cursor: CURSOR[dir],
+    zIndex: 20,
+    ...style,
+  });
 
   return (
     <div
@@ -135,7 +205,7 @@ export default function AppWindow({
         boxShadow: "0 16px 48px var(--th-glass-shadow)",
       }}
     >
-      {/* 타이틀바 */}
+      {/* Titlebar */}
       <div
         onMouseDown={onTitlebarMouseDown}
         style={{
@@ -149,7 +219,7 @@ export default function AppWindow({
           gap: 8,
         }}
       >
-        {/* 트래픽 라이트 */}
+        {/* Traffic lights */}
         <div style={{ display: "flex", gap: 5 }}>
           <button
             onMouseDown={(e) => e.stopPropagation()}
@@ -166,7 +236,7 @@ export default function AppWindow({
         </span>
       </div>
 
-      {/* 탭 바 */}
+      {/* Tab bar */}
       {tabs && tabs.length > 0 && (
         <div style={{
           display: "flex",
@@ -198,32 +268,29 @@ export default function AppWindow({
         </div>
       )}
 
-      {/* 내용 */}
+      {/* Content */}
       <div style={{ flex: 1, overflow: "hidden", minHeight: 0 }}>
         {activeContent}
       </div>
 
-      {/* 리사이즈 핸들 */}
-      <div
-        onMouseDown={onResizeMouseDown}
-        style={{
-          position: "absolute",
-          bottom: 0,
-          right: 0,
-          width: 18,
-          height: 18,
-          cursor: "se-resize",
-          zIndex: 10,
-          display: "flex",
-          alignItems: "flex-end",
-          justifyContent: "flex-end",
-          padding: "3px",
-        }}
-      >
-        <svg width="9" height="9" viewBox="0 0 9 9" fill="none">
+      {/* ── Resize handles ── */}
+
+      {/* Corners */}
+      <div onMouseDown={onResizeMouseDown("nw")} style={edgeStyle("nw", { top: 0, left: 0, width: CORN, height: CORN })} />
+      <div onMouseDown={onResizeMouseDown("ne")} style={edgeStyle("ne", { top: 0, right: 0, width: CORN, height: CORN })} />
+      <div onMouseDown={onResizeMouseDown("sw")} style={edgeStyle("sw", { bottom: 0, left: 0, width: CORN, height: CORN })} />
+      <div onMouseDown={onResizeMouseDown("se")} style={edgeStyle("se", { bottom: 0, right: 0, width: CORN, height: CORN })}>
+        {/* SE grip icon */}
+        <svg width="9" height="9" viewBox="0 0 9 9" fill="none" style={{ position: "absolute", bottom: 3, right: 3 }}>
           <path d="M2 9L9 2M5 9L9 5" stroke="var(--th-border-strong)" strokeWidth="1.5" />
         </svg>
       </div>
+
+      {/* Edges (between corners) */}
+      <div onMouseDown={onResizeMouseDown("n")} style={edgeStyle("n", { top: 0, left: CORN, right: CORN, height: EDGE })} />
+      <div onMouseDown={onResizeMouseDown("s")} style={edgeStyle("s", { bottom: 0, left: CORN, right: CORN, height: EDGE })} />
+      <div onMouseDown={onResizeMouseDown("w")} style={edgeStyle("w", { top: CORN, bottom: CORN, left: 0, width: EDGE })} />
+      <div onMouseDown={onResizeMouseDown("e")} style={edgeStyle("e", { top: CORN, bottom: CORN, right: 0, width: EDGE })} />
     </div>
   );
 }

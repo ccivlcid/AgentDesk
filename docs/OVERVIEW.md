@@ -180,12 +180,12 @@ Managing these four elements **per project** allows the same agent to behave dif
 ### Completion (as of 2026-03-15)
 
 ```
-Agent spawn & management         ██████████████████░░ 95%
-Multi-agent orchestration        ██████████████████░░ 90%
+Agent spawn & management         ████████████████████ 100% (timeout enforcement + orphan batching complete)
+Multi-agent orchestration        ████████████████████ 100% (scheduler dynamic timeout + orphan recovery complete)
 Database & infrastructure        ██████████████████░░ 90%
 Skill learning & memory          █████████████████░░░ 85%
 Heartbeat & anomaly detection    ███████████████████░ 90% (AlertsWidget real-time polling complete)
-Scheduling                       ███████████████████░ 90% (workflow pack options complete)
+Scheduling                       ████████████████████ 100% (dynamic timeout scheduler complete)
 UI/UX monitoring                 ████████████████████ 100% (Phase 4~5 complete + FileTree widget added)
 Security hardening               ████████████████████ 100% (2nd patch complete)
 Persona system                   ████████████████████ 100% (complete)
