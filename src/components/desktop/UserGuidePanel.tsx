@@ -131,7 +131,7 @@ const CHAPTERS: Chapter[] = [
         body: "",
       },
       {
-        heading: "g + 키 — 앱 창 토글 (vim 스타일)",
+        heading: "g + 키 — 앱 창 토글 (VIM 스타일)",
         keys: [
           { keys: ["g", "w"], desc: "Workflow 창 토글" },
           { keys: ["g", "l"], desc: "Library 창 토글" },
@@ -194,15 +194,13 @@ interface UserGuidePanelProps {
 }
 
 const mono = "var(--th-font-mono)";
-const border = "var(--th-border)";
-const accent = "var(--th-accent)";
 
 const kbdStyle: React.CSSProperties = {
   fontFamily: mono,
   fontSize: 10,
   color: "var(--th-text-secondary)",
-  background: "var(--th-bg-base)",
-  border: `1px solid ${border}`,
+  background: "var(--th-bg-elevated)",
+  border: "1px solid var(--th-border)",
   borderRadius: 4,
   padding: "2px 6px",
   boxShadow: "0 1px 0 var(--th-border)",
@@ -237,7 +235,7 @@ export default function UserGuidePanel({ open, onClose, initialChapter }: UserGu
             position: "fixed",
             inset: 0,
             zIndex: 949,
-            background: "rgba(0,0,0,0.3)",
+            background: "var(--th-modal-overlay)",
           }}
         />
       )}
@@ -255,10 +253,10 @@ export default function UserGuidePanel({ open, onClose, initialChapter }: UserGu
           zIndex: 950,
           display: "flex",
           flexDirection: "column",
-          background: "rgba(14,14,18,0.97)",
+          background: "var(--th-panel-bg)",
           backdropFilter: "blur(20px)",
           WebkitBackdropFilter: "blur(20px)",
-          borderLeft: `1px solid ${border}`,
+          borderLeft: "1px solid var(--th-border)",
           transform: open ? "translateX(0)" : "translateX(480px)",
           transition: "transform 0.28s cubic-bezier(0.32,0,0.15,1)",
           fontFamily: mono,
@@ -272,8 +270,9 @@ export default function UserGuidePanel({ open, onClose, initialChapter }: UserGu
             gap: 10,
             padding: "0 16px",
             height: 44,
-            borderBottom: `1px solid ${border}`,
+            borderBottom: "1px solid var(--th-border)",
             flexShrink: 0,
+            background: "var(--th-bg-header)",
           }}
         >
           <button
@@ -293,7 +292,7 @@ export default function UserGuidePanel({ open, onClose, initialChapter }: UserGu
           <span style={{ fontSize: 12, fontWeight: 700, color: "var(--th-text-heading)", flex: 1 }}>
             AgentDesk 가이드
           </span>
-          <span style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>Esc</span>
+          <span style={{ fontSize: 10, color: "var(--th-text-muted)", fontFamily: mono }}>Esc</span>
         </div>
 
         {/* Body — 2단 */}
@@ -303,9 +302,10 @@ export default function UserGuidePanel({ open, onClose, initialChapter }: UserGu
             style={{
               width: 160,
               flexShrink: 0,
-              borderRight: `1px solid ${border}`,
+              borderRight: "1px solid var(--th-border)",
               overflowY: "auto",
               padding: "8px 0",
+              background: "var(--th-bg-sidebar)",
             }}
           >
             {CHAPTERS.map((c) => {
@@ -321,21 +321,21 @@ export default function UserGuidePanel({ open, onClose, initialChapter }: UserGu
                     gap: 8,
                     width: "100%",
                     padding: "8px 14px",
-                    background: active ? "rgba(245,158,11,0.12)" : "none",
+                    background: active ? "var(--th-accent-glow)" : "transparent",
                     border: "none",
-                    borderRight: active ? `2px solid ${accent}` : "2px solid transparent",
-                    color: active ? accent : "rgba(255,255,255,0.65)",
+                    borderRight: active ? "2px solid var(--th-accent)" : "2px solid transparent",
+                    color: active ? "var(--th-accent)" : "var(--th-text-secondary)",
                     fontFamily: mono,
                     fontSize: 12,
                     cursor: "pointer",
                     textAlign: "left",
-                    transition: "background 0.15s",
+                    transition: "background 0.15s, color 0.15s",
                   }}
                   onMouseEnter={(e) => {
-                    if (!active) (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.05)";
+                    if (!active) (e.currentTarget as HTMLButtonElement).style.background = "var(--th-bg-surface-hover)";
                   }}
                   onMouseLeave={(e) => {
-                    if (!active) (e.currentTarget as HTMLButtonElement).style.background = "none";
+                    if (!active) (e.currentTarget as HTMLButtonElement).style.background = "transparent";
                   }}
                 >
                   <span>{c.emoji}</span>
@@ -375,7 +375,7 @@ export default function UserGuidePanel({ open, onClose, initialChapter }: UserGu
                     fontWeight: 700,
                     letterSpacing: "0.08em",
                     textTransform: "uppercase",
-                    color: "rgba(255,255,255,0.4)",
+                    color: "var(--th-text-muted)",
                     fontFamily: mono,
                   }}
                 >
@@ -394,7 +394,7 @@ export default function UserGuidePanel({ open, onClose, initialChapter }: UserGu
                           justifyContent: "space-between",
                           padding: "5px 0",
                           gap: 12,
-                          borderBottom: `1px solid rgba(255,255,255,0.05)`,
+                          borderBottom: "1px solid var(--th-border)",
                         }}
                       >
                         <span style={{ fontSize: 11, color: "var(--th-text-secondary)", fontFamily: mono }}>
@@ -405,7 +405,7 @@ export default function UserGuidePanel({ open, onClose, initialChapter }: UserGu
                             <span key={i}>
                               <kbd style={kbdStyle}>{k}</kbd>
                               {i < keys.length - 1 && (
-                                <span style={{ fontFamily: mono, fontSize: 10, color: "rgba(255,255,255,0.3)", margin: "0 2px" }}>
+                                <span style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-muted)", margin: "0 2px" }}>
                                   +
                                 </span>
                               )}
@@ -424,7 +424,7 @@ export default function UserGuidePanel({ open, onClose, initialChapter }: UserGu
                       margin: 0,
                       fontSize: 12,
                       lineHeight: 1.75,
-                      color: "rgba(255,255,255,0.7)",
+                      color: "var(--th-text-secondary)",
                       fontFamily: mono,
                       whiteSpace: "pre-line",
                     }}

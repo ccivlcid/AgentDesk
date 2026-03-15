@@ -442,17 +442,17 @@ export default function Desktop({
             left: projectCtxMenu.x,
             top: projectCtxMenu.y,
             zIndex: 2000,
-            background: "rgba(22,22,26,0.95)",
+            background: "var(--th-panel-bg)",
             backdropFilter: "blur(20px)",
-            border: "1px solid rgba(255,255,255,0.10)",
+            border: "1px solid var(--th-border)",
             borderRadius: 10,
             padding: "4px 0",
             minWidth: 180,
-            boxShadow: "0 16px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.06)",
+            boxShadow: "0 16px 40px var(--th-glass-shadow)",
           }}
           onClick={(e) => e.stopPropagation()}
         >
-          <div style={{ padding: "6px 14px 6px", fontFamily: "var(--th-font-mono)", fontSize: 10, color: "rgba(255,255,255,0.35)", borderBottom: "1px solid rgba(255,255,255,0.07)", marginBottom: 4 }}>
+          <div style={{ padding: "6px 14px 6px", fontFamily: "var(--th-font-mono)", fontSize: 10, color: "var(--th-text-muted)", borderBottom: "1px solid var(--th-border)", marginBottom: 4 }}>
             📁 {projectCtxMenu.projectName}
           </div>
           {[
@@ -482,18 +482,18 @@ export default function Desktop({
                 width: "100%", padding: "7px 14px",
                 background: "none", border: "none", cursor: "pointer",
                 fontFamily: "var(--th-font-mono)", fontSize: 12,
-                color: danger ? "#f87171" : "rgba(255,255,255,0.85)",
+                color: danger ? "var(--th-danger-text)" : "var(--th-text-primary)",
                 textAlign: "left",
                 justifyContent: "space-between",
               }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = danger ? "rgba(248,113,113,0.12)" : "rgba(139,92,246,0.18)"; }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = danger ? "var(--th-danger-bg)" : "var(--th-accent-glow)"; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "none"; }}
             >
               <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <span style={{ fontSize: 13 }}>{icon}</span>
                 {label}
               </span>
-              {shortcut && <span style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>{shortcut}</span>}
+              {shortcut && <span style={{ fontSize: 10, color: "var(--th-text-muted)" }}>{shortcut}</span>}
             </button>
           ))}
         </div>
@@ -508,13 +508,13 @@ export default function Desktop({
             left: ctxMenu.x,
             top: ctxMenu.y,
             zIndex: 2000,
-            background: "rgba(22,22,26,0.95)",
+            background: "var(--th-panel-bg)",
             backdropFilter: "blur(20px)",
-            border: "1px solid rgba(255,255,255,0.10)",
+            border: "1px solid var(--th-border)",
             borderRadius: 10,
             padding: "4px 0",
             minWidth: 180,
-            boxShadow: "0 16px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.06)",
+            boxShadow: "0 16px 40px var(--th-glass-shadow)",
           }}
           onClick={(e) => e.stopPropagation()}
         >
@@ -536,10 +536,10 @@ export default function Desktop({
                 cursor: "pointer",
                 fontFamily: "var(--th-font-mono)",
                 fontSize: 12,
-                color: "rgba(255,255,255,0.85)",
+                color: "var(--th-text-primary)",
                 textAlign: "left",
               }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(139,92,246,0.18)"; }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--th-accent-glow)"; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "none"; }}
             >
               <span style={{ fontSize: 14 }}>{icon}</span>

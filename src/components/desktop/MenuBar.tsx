@@ -67,7 +67,7 @@ export default function MenuBar({
     border: "none",
     fontFamily: mono,
     fontSize: 12,
-    color: "rgba(255,255,255,0.82)",
+    color: "var(--th-text-primary)",
     cursor: "pointer",
     textAlign: "left",
     gap: 24,
@@ -75,7 +75,7 @@ export default function MenuBar({
   };
 
   const menuSepStyle: React.CSSProperties = {
-    borderTop: "1px solid rgba(255,255,255,0.07)",
+    borderTop: "1px solid var(--th-border)",
     margin: "4px 0",
   };
 
@@ -131,18 +131,18 @@ export default function MenuBar({
               top: "calc(100% + 6px)",
               left: 0,
               minWidth: 220,
-              background: "rgba(20,20,24,0.97)",
+              background: "var(--th-panel-bg)",
               backdropFilter: "blur(20px)",
               WebkitBackdropFilter: "blur(20px)",
-              border: "1px solid rgba(255,255,255,0.10)",
+              border: "1px solid var(--th-border)",
               borderRadius: 10,
-              boxShadow: "0 16px 48px rgba(0,0,0,0.6)",
+              boxShadow: "0 16px 48px var(--th-glass-shadow)",
               padding: "4px 0",
               zIndex: 2000,
             }}
           >
             {/* About */}
-            <div style={{ padding: "7px 14px 4px", fontFamily: mono, fontSize: 11, color: "rgba(255,255,255,0.4)" }}>
+            <div style={{ padding: "7px 14px 4px", fontFamily: mono, fontSize: 11, color: "var(--th-text-muted)" }}>
               AgentDesk v0.9
             </div>
             <div style={menuSepStyle} />
@@ -151,7 +151,7 @@ export default function MenuBar({
             <button
               style={menuItemStyle}
               onClick={() => menuAction(onOpenWallpaperPicker)}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(245,158,11,0.12)"; }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--th-accent-glow)"; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "none"; }}
             >
               <span>배경화면 변경...</span>
@@ -161,7 +161,7 @@ export default function MenuBar({
             <button
               style={menuItemStyle}
               onClick={() => menuAction(onOpenWidgetPicker)}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(245,158,11,0.12)"; }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--th-accent-glow)"; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "none"; }}
             >
               <span>위젯 추가...</span>
@@ -173,7 +173,7 @@ export default function MenuBar({
             <button
               style={menuItemStyle}
               onClick={() => menuAction(onOpenUserGuide)}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(245,158,11,0.12)"; }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--th-accent-glow)"; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "none"; }}
             >
               <span>📖 유저 가이드</span>
@@ -183,11 +183,11 @@ export default function MenuBar({
             <button
               style={menuItemStyle}
               onClick={() => menuAction(onOpenMissionControl)}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(245,158,11,0.12)"; }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--th-accent-glow)"; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "none"; }}
             >
               <span>Mission Control</span>
-              <span style={{ fontSize: 10, color: "rgba(255,255,255,0.35)" }}>Ctrl ↑</span>
+              <span style={{ fontSize: 10, color: "var(--th-text-muted)" }}>Ctrl ↑</span>
             </button>
           </div>
         )}
