@@ -28,12 +28,12 @@ export default function Dock({ onQuickTask }: DockProps) {
         display: "flex",
         alignItems: "flex-end",
         gap: 8,
-        background: "rgba(12,12,12,0.88)",
+        background: "var(--th-menubar-bg)",
         backdropFilter: "blur(16px)",
         border: "1px solid var(--th-border)",
         borderRadius: 18,
         padding: "8px 16px",
-        boxShadow: "0 8px 32px rgba(0,0,0,0.6)",
+        boxShadow: "0 8px 32px var(--th-glass-shadow)",
       }}
     >
       {DOCK_ITEMS.map((item) => {
@@ -57,7 +57,7 @@ export default function Dock({ onQuickTask }: DockProps) {
               minWidth: 52,
             }}
             onMouseEnter={(e) => {
-              if (!isOpen) (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.06)";
+              if (!isOpen) (e.currentTarget as HTMLButtonElement).style.background = "var(--th-hover-overlay)";
             }}
             onMouseLeave={(e) => {
               (e.currentTarget as HTMLButtonElement).style.background = isOpen ? "rgba(245,158,11,0.12)" : "none";

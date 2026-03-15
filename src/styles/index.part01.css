@@ -111,6 +111,11 @@
   --th-terminal-success: #3fb950;
   --th-terminal-error: #f85149;
   --th-terminal-info: #58a6ff;
+
+  /* ── 메뉴바 ── */
+  --th-menubar-bg: rgba(12, 12, 12, 0.92);
+  --th-hover-overlay: rgba(255, 255, 255, 0.08);
+  --th-hover-overlay-subtle: rgba(255, 255, 255, 0.04);
 }
 
 /* ─── Light Theme: Cream Paper Terminal ─── */
@@ -168,6 +173,11 @@
   --th-terminal-success: #1a7f37;
   --th-terminal-error: #cf222e;
   --th-terminal-info: #0550ae;
+
+  /* ── 메뉴바 ── */
+  --th-menubar-bg: rgba(240, 235, 226, 0.92);
+  --th-hover-overlay: rgba(0, 0, 0, 0.06);
+  --th-hover-overlay-subtle: rgba(0, 0, 0, 0.03);
 }
 
 html,

@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import type { Project, Category } from "../../types";
 import { useUiStore } from "../../store/uiStore";
 import { useI18n } from "../../i18n";
+import { useTheme } from "../../ThemeContext";
 import ProjectSelector from "../project-selector/ProjectSelector";
 
 const mono = "var(--th-font-mono)";
@@ -49,6 +50,7 @@ export default function MenuBar({
   const clockBtnRef = useRef<HTMLButtonElement>(null);
   const { openWindow } = useUiStore();
   const { t, locale } = useI18n();
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 1_000);
@@ -149,7 +151,7 @@ export default function MenuBar({
         right: 0,
         height: 44,
         zIndex: 1000,
-        background: "rgba(12,12,12,0.92)",
+        background: "var(--th-menubar-bg, rgba(12,12,12,0.92))",
         backdropFilter: "blur(12px)",
         borderBottom: "1px solid var(--th-border)",
         display: "flex",
@@ -165,7 +167,7 @@ export default function MenuBar({
         <button
           onClick={() => setAppMenuOpen((v) => !v)}
           style={{
-            background: appMenuOpen ? "rgba(255,255,255,0.08)" : "none",
+            background: appMenuOpen ? "var(--th-hover-overlay)" : "none",
             border: "none",
             color: "var(--th-accent)",
             fontFamily: mono,
@@ -221,6 +223,20 @@ export default function MenuBar({
               onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "none"; }}
             >
               <span>{t({ ko: "위젯 추가...", en: "Add Widget...", ja: "ウィジェット追加...", zh: "添加小组件..." })}</span>
+            </button>
+
+            {/* 다크/라이트 모드 전환 */}
+            <button
+              style={menuItemStyle}
+              onClick={() => menuAction(toggleTheme)}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--th-accent-glow)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "none"; }}
+            >
+              <span>{theme === "dark"
+                ? t({ ko: "라이트 모드", en: "Light Mode", ja: "ライトモード", zh: "浅色模式" })
+                : t({ ko: "다크 모드", en: "Dark Mode", ja: "ダークモード", zh: "深色模式" })
+              }</span>
+              <span style={{ fontSize: 12 }}>{theme === "dark" ? "\u2600" : "\u263D"}</span>
             </button>
 
             <div style={menuSepStyle} />
@@ -284,7 +300,7 @@ export default function MenuBar({
         onClick={onOpenCommandPalette}
         title={t({ ko: "검색  ⌘K", en: "Search  ⌘K", ja: "検索  ⌘K", zh: "搜索  ⌘K" })}
         style={{
-          background: "rgba(255,255,255,0.04)",
+          background: "var(--th-hover-overlay-subtle)",
           border: "1px solid var(--th-border)",
           borderRadius: 6,
           color: "var(--th-text-muted)",
@@ -341,7 +357,7 @@ export default function MenuBar({
         type="button"
         onClick={() => setClockOpen(v => !v)}
         style={{
-          background: clockOpen ? "rgba(255,255,255,0.08)" : "none",
+          background: clockOpen ? "var(--th-hover-overlay)" : "none",
           border: "none",
           color: "var(--th-text-secondary)",
           fontFamily: mono,
@@ -353,7 +369,7 @@ export default function MenuBar({
           textAlign: "right",
           transition: "background 0.15s",
         }}
-        onMouseEnter={e => { if (!clockOpen) (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.05)"; }}
+        onMouseEnter={e => { if (!clockOpen) (e.currentTarget as HTMLButtonElement).style.background = "var(--th-hover-overlay-subtle)"; }}
         onMouseLeave={e => { if (!clockOpen) (e.currentTarget as HTMLButtonElement).style.background = "none"; }}
       >
         {timeStr}
