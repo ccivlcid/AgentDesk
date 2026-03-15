@@ -292,7 +292,7 @@ export default function ChatComposer({
                       : isAnnouncementMode || mode === "task" ? "var(--th-accent)"
                       : mode === "report" ? "rgb(52,211,153)"
                       : "var(--th-accent)",
-                    color: "#000",
+                    color: "var(--th-accent-text)",
                   }
                 : { borderRadius: 0, background: "var(--th-bg-elevated)", color: "var(--th-text-muted)", cursor: "not-allowed" }
             }

@@ -362,7 +362,7 @@ export default function ChannelGuideModal({ t, onClose }: GuideModalProps) {
                 {/* Timeline */}
                 <div className="flex flex-col items-center">
                   <div
-                    className="w-6 h-6 flex items-center justify-center text-[10px] font-mono font-bold flex-shrink-0" style={{ borderRadius: "50%", color: "#000", backgroundColor: active.color + "CC" }}
+                    className="w-6 h-6 flex items-center justify-center text-[10px] font-mono font-bold flex-shrink-0" style={{ borderRadius: "50%", color: "var(--th-accent-text)", backgroundColor: active.color + "CC" }}
                   >
                     {i + 1}
                   </div>

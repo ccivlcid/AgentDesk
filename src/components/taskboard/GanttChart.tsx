@@ -305,7 +305,7 @@ export default function GanttChart({ tasks, agents, departments }: Props) {
                         left: "50%",
                         transform: "translateX(-50%)",
                         background: "var(--th-accent)",
-                        color: "#000",
+                        color: "var(--th-accent-text)",
                         borderRadius: "0 0 2px 2px",
                         letterSpacing: 0.5,
                       }}

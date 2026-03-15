@@ -121,7 +121,7 @@ export default function OAuthConnectedProvidersSection({
                   <button
                     onClick={() => onConnect(provider as OAuthConnectProvider)}
                     className="text-xs px-2.5 py-1 font-mono uppercase transition-colors"
-                    style={{ borderRadius: 0, background: "var(--th-accent)", color: "#000" }}
+                    style={{ borderRadius: 0, background: "var(--th-accent)", color: "var(--th-accent-text)" }}
                   >
                     {t({ ko: "재연결", en: "Reconnect", ja: "再接続", zh: "重新连接" })}
                   </button>

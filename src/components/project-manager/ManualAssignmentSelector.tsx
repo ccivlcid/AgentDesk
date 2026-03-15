@@ -60,7 +60,7 @@ export default function ManualAssignmentSelector({
                 style={{
                   borderRadius: 0,
                   background: assignmentMode === "auto" ? "var(--th-accent)" : "transparent",
-                  color: assignmentMode === "auto" ? "#000" : "var(--th-text-muted)",
+                  color: assignmentMode === "auto" ? "var(--th-accent-text)" : "var(--th-text-muted)",
                 }}
               >
                 {t({ ko: "자동 할당", en: "Auto", ja: "自動", zh: "自动" })}

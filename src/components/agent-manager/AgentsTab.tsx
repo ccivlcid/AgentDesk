@@ -27,7 +27,7 @@ interface AgentsTabProps {
 function StatusBadge({ status }: { status: string }) {
   if (status === "working") {
     return (
-      <span style={{ fontFamily: "var(--th-font-mono)", fontSize: "10px", color: "#22c55e" }}>● RUNNING</span>
+      <span style={{ fontFamily: "var(--th-font-mono)", fontSize: "10px", color: "var(--th-status-success)" }}>● RUNNING</span>
     );
   }
   if (status === "offline") {

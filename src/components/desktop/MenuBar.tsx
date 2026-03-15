@@ -480,7 +480,7 @@ export default function MenuBar({
                       color: day == null
                         ? "transparent"
                         : isToday
-                          ? "#000"
+                          ? "var(--th-accent-text)"
                           : isSun
                             ? "rgba(239,68,68,0.8)"
                             : isSat

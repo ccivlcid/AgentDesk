@@ -15,13 +15,13 @@ const TYPE_ICON: Record<string, string> = {
   system:           "·",
 };
 const TYPE_COLOR: Record<string, string> = {
-  task_complete:    "#22c55e",
-  task_error:       "#ef4444",
-  decision_created: "#f59e0b",
-  agent_error:      "#ef4444",
-  agent_anomaly:    "#f97316",
-  cost_alert:       "#a855f7",
-  heartbeat:        "#3b82f6",
+  task_complete:    "var(--th-status-success)",
+  task_error:       "var(--th-status-error)",
+  decision_created: "var(--th-status-warning)",
+  agent_error:      "var(--th-status-error)",
+  agent_anomaly:    "var(--th-status-warning)",
+  cost_alert:       "var(--th-status-purple)",
+  heartbeat:        "var(--th-status-info)",
   system:           "var(--th-text-muted)",
 };
 
@@ -66,7 +66,7 @@ export default function AlertsWidget() {
         flexShrink: 0,
         alignItems: "center",
       }}>
-        <span style={{ color: alertItems.length > 0 ? "#ef4444" : "#22c55e" }}>
+        <span style={{ color: alertItems.length > 0 ? "var(--th-status-error)" : "var(--th-status-success)" }}>
           {alertItems.length > 0 ? `⚠ ${alertItems.length} alert` : "✓ ok"}
         </span>
         {unread > 0 && (

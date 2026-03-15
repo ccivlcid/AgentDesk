@@ -205,7 +205,7 @@ export default function AgentChatTab({ agent }: AgentChatTabProps) {
             onClick={() => void handleSend()}
             disabled={!content.trim() || sending}
             className="px-3 py-1 text-[10px] font-mono font-bold transition disabled:opacity-40"
-            style={{ borderRadius: 0, background: "var(--th-accent)", color: "#000" }}
+            style={{ borderRadius: 0, background: "var(--th-accent)", color: "var(--th-accent-text)" }}
           >
             {sending ? tr("전송 중...", "sending...") : tr("전송 ↵", "SEND ↵")}
           </button>

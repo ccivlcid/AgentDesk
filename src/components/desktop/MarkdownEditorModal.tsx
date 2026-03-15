@@ -354,7 +354,7 @@ export default function MarkdownEditorModal({ onClose, defaultProjectName }: Mar
               fontFamily: mono,
               fontSize: 11,
               fontWeight: 700,
-              color: content.trim() || title.trim() ? "#000" : "var(--th-text-muted)",
+              color: content.trim() || title.trim() ? "var(--th-accent-text)" : "var(--th-text-muted)",
               cursor: content.trim() || title.trim() ? "pointer" : "not-allowed",
               opacity: content.trim() || title.trim() ? 1 : 0.5,
             }}

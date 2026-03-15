@@ -88,7 +88,7 @@ export default function OAuthConnectCards({
                     ) : (
                       <button
                         onClick={() => void onStartDeviceCodeFlow()}
-                        className="text-[11px] px-3 py-1 font-mono font-medium transition" style={{ borderRadius: 0, background: "var(--th-accent)", color: "#000" }}
+                        className="text-[11px] px-3 py-1 font-mono font-medium transition" style={{ borderRadius: 0, background: "var(--th-accent)", color: "var(--th-accent-text)" }}
                       >
                         {isConnected || isDetectedOnly
                           ? t({ ko: "계정 추가", en: "Add Account", ja: "アカウント追加", zh: "添加账号" })

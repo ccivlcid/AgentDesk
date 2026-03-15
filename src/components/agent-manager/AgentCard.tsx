@@ -96,7 +96,7 @@ export default function AgentCard({
             </span>
             <div className="flex items-center gap-1 shrink-0">
               {isProjectMember && (
-                <span className="text-[9px] px-1 py-0.5 rounded font-semibold" style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.25)" }}>
+                <span className="text-[9px] px-1 py-0.5 rounded font-semibold" style={{ background: "rgba(34,197,94,0.12)", color: "var(--th-status-success)", border: "1px solid rgba(34,197,94,0.25)" }}>
                   {tr("팀원", "MEMBER", "メンバー", "成员")}
                 </span>
               )}

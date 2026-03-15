@@ -68,7 +68,7 @@ export default function ManualAssignmentWarningDialog({
             type="button"
             onClick={() => onConfirm(warning)}
             className="px-3 py-1.5 text-xs font-semibold font-mono uppercase transition"
-            style={{ borderRadius: 0, background: "var(--th-accent)", color: "#000" }}
+            style={{ borderRadius: 0, background: "var(--th-accent)", color: "var(--th-accent-text)" }}
           >
             {t({ ko: "계속 저장", en: "Save Anyway", ja: "そのまま保存", zh: "仍然保存" })}
           </button>

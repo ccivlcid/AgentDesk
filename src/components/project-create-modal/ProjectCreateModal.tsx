@@ -487,7 +487,7 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onGi
                           background: isSelected ? "var(--th-accent)" : "transparent",
                           flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
                         }}>
-                          {isSelected && <span style={{ color: "#000", fontSize: "9px", fontWeight: 900, lineHeight: 1 }}>✓</span>}
+                          {isSelected && <span style={{ color: "var(--th-accent-text)", fontSize: "9px", fontWeight: 900, lineHeight: 1 }}>✓</span>}
                         </div>
                         <span style={{ fontSize: "1.1rem", flexShrink: 0 }}>{agent.avatar_emoji || "🤖"}</span>
                         <div className="flex-1 min-w-0">

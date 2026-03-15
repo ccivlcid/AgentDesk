@@ -61,7 +61,7 @@ export default function ApiSettingsTab({ t, localeTag, apiState }: ApiSettingsTa
                   setApiForm(DEFAULT_API_FORM);
                 }}
                 className="text-xs px-3 py-1 font-medium font-mono transition-colors"
-                style={{ borderRadius: 0, background: "var(--th-accent)", color: "#000" }}
+                style={{ borderRadius: 0, background: "var(--th-accent)", color: "var(--th-accent-text)" }}
               >
                 + {t({ ko: "추가", en: "Add", ja: "追加", zh: "添加" })}
               </button>
@@ -177,7 +177,7 @@ export default function ApiSettingsTab({ t, localeTag, apiState }: ApiSettingsTa
                 onClick={() => void handleApiProviderSave()}
                 disabled={apiSaving || !apiForm.name.trim() || !apiForm.base_url.trim()}
                 className="px-4 py-2 text-xs font-medium font-mono uppercase tracking-wider transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{ borderRadius: 0, background: "var(--th-accent)", color: "#000" }}
+                style={{ borderRadius: 0, background: "var(--th-accent)", color: "var(--th-accent-text)" }}
               >
                 {apiSaving
                   ? t({ ko: "저장 중...", en: "Saving...", ja: "保存中...", zh: "保存中..." })
