@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useUiStore } from "../../store/uiStore";
+import { useI18n } from "../../i18n";
 
 const mono = "var(--th-font-mono)";
 
@@ -23,6 +24,7 @@ interface Props {
 export default function WallpaperPicker({ onClose }: Props) {
   const { wallpaper, setWallpaper } = useUiStore();
   const [hovered, setHovered] = useState<string | null>(null);
+  const { t } = useI18n();
 
   return (
     <div
@@ -60,7 +62,7 @@ export default function WallpaperPicker({ onClose }: Props) {
             <div style={{ width: 12, height: 12, borderRadius: "50%", background: "var(--th-border)" }} />
           </div>
           <span style={{ fontFamily: mono, fontSize: 12, color: "var(--th-text-secondary)", marginLeft: 6 }}>
-            배경화면 설정
+            {t({ ko: "배경화면 설정", en: "Wallpaper Settings", ja: "壁紙設定", zh: "壁纸设置" })}
           </span>
         </div>
 

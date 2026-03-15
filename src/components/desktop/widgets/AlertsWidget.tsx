@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { fetchNotifications, type NotificationItem } from "../../../api/notifications";
+import { useI18n } from "../../../i18n";
 
 const mono = "var(--th-font-mono)";
 
@@ -28,6 +29,7 @@ export default function AlertsWidget() {
   const [items, setItems] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(true);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const { t } = useI18n();
 
   const load = () => {
     fetchNotifications({ limit: 30 })
@@ -78,7 +80,7 @@ export default function AlertsWidget() {
       <div style={{ flex: 1, overflow: "auto", padding: "4px 0" }}>
         {display.length === 0 ? (
           <div style={{ fontFamily: mono, fontSize: 11, color: "var(--th-text-muted)", padding: "20px", textAlign: "center" }}>
-            알림 없음
+            {t({ ko: "알림 없음", en: "No notifications", ja: "通知なし", zh: "无通知" })}
           </div>
         ) : (
           display.map((n) => (

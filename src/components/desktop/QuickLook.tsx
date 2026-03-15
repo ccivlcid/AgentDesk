@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import type { Project } from "../../types";
+import { useI18n } from "../../i18n";
 
 const mono = "var(--th-font-mono)";
 
@@ -14,6 +15,8 @@ function fmt(ts: number | null): string {
 }
 
 export default function QuickLook({ project, onClose }: QuickLookProps) {
+  const { t } = useI18n();
+
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") onClose();
@@ -69,7 +72,7 @@ export default function QuickLook({ project, onClose }: QuickLookProps) {
             <div style={{ width: 11, height: 11, borderRadius: "50%", background: "#2a2a2a" }} />
           </div>
           <span style={{ fontFamily: mono, fontSize: 11, color: "rgba(255,255,255,0.5)", marginLeft: 4 }}>
-            빠른 미리보기
+            {t({ ko: "빠른 미리보기", en: "Quick Look", ja: "クイックルック", zh: "快速预览" })}
           </span>
           <span style={{ fontFamily: mono, fontSize: 10, color: "rgba(255,255,255,0.25)", marginLeft: "auto" }}>
             esc
@@ -101,7 +104,7 @@ export default function QuickLook({ project, onClose }: QuickLookProps) {
                 {project.name}
               </div>
               <div style={{ fontFamily: mono, fontSize: 10, color: "rgba(255,255,255,0.35)" }}>
-                {project.project_path || "경로 없음"}
+                {project.project_path || t({ ko: "경로 없음", en: "No path", ja: "パスなし", zh: "无路径" })}
               </div>
             </div>
           </div>
@@ -112,11 +115,11 @@ export default function QuickLook({ project, onClose }: QuickLookProps) {
           {/* 상세 정보 */}
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {project.core_goal && (
-              <Row label="목표" value={project.core_goal} multiline />
+              <Row label={t({ ko: "목표", en: "Goal", ja: "目標", zh: "目标" })} value={project.core_goal} multiline />
             )}
-            <Row label="태스크" value={String(project.task_count ?? 0)} />
-            <Row label="마지막 사용" value={fmt(project.last_used_at)} />
-            <Row label="생성일" value={fmt(project.created_at)} />
+            <Row label={t({ ko: "태스크", en: "Tasks", ja: "タスク", zh: "任务" })} value={String(project.task_count ?? 0)} />
+            <Row label={t({ ko: "마지막 사용", en: "Last used", ja: "最終使用", zh: "最近使用" })} value={fmt(project.last_used_at)} />
+            <Row label={t({ ko: "생성일", en: "Created", ja: "作成日", zh: "创建日期" })} value={fmt(project.created_at)} />
             {project.github_repo && (
               <Row label="GitHub" value={project.github_repo} />
             )}
@@ -126,7 +129,7 @@ export default function QuickLook({ project, onClose }: QuickLookProps) {
           {agentIds.length > 0 && (
             <div style={{ marginTop: 16 }}>
               <div style={{ fontFamily: mono, fontSize: 9, color: "rgba(255,255,255,0.35)", letterSpacing: "0.08em", marginBottom: 8 }}>
-                배정된 에이전트 ({agentIds.length})
+                {t({ ko: "배정된 에이전트", en: "Assigned agents", ja: "割り当てエージェント", zh: "分配的代理" })} ({agentIds.length})
               </div>
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                 {agentIds.map((id) => (

@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { getCliUsage, type CliUsageEntry } from "../../../api/workflow-skills-subtasks";
+import { useI18n } from "../../../i18n";
 
 const mono = "var(--th-font-mono)";
 
 export default function CliCostWidget() {
   const [usage, setUsage] = useState<Record<string, CliUsageEntry> | null>(null);
   const [loading, setLoading] = useState(true);
+  const { t } = useI18n();
 
   useEffect(() => {
     getCliUsage().then((r) => {
@@ -40,7 +42,7 @@ export default function CliCostWidget() {
       <div style={{ flex: 1, overflow: "auto", padding: "4px 0" }}>
         {entries.length === 0 ? (
           <div style={{ fontFamily: mono, fontSize: 11, color: "var(--th-text-muted)", padding: "20px", textAlign: "center" }}>
-            데이터 없음
+            {t({ ko: "데이터 없음", en: "No data", ja: "データなし", zh: "无数据" })}
           </div>
         ) : (
           entries.map(([provider, entry]) => {

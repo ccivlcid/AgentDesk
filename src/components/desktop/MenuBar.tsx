@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { Project, Category } from "../../types";
 import { useUiStore } from "../../store/uiStore";
+import { useI18n } from "../../i18n";
 import ProjectSelector from "../project-selector/ProjectSelector";
 
 const mono = "var(--th-font-mono)";
@@ -38,6 +39,7 @@ export default function MenuBar({
   const [appMenuOpen, setAppMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const { openWindow } = useUiStore();
+  const { t } = useI18n();
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 10_000);
@@ -154,7 +156,7 @@ export default function MenuBar({
               onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--th-accent-glow)"; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "none"; }}
             >
-              <span>배경화면 변경...</span>
+              <span>{t({ ko: "배경화면 변경...", en: "Change Wallpaper...", ja: "壁紙を変更...", zh: "更换壁纸..." })}</span>
             </button>
 
             {/* 위젯 추가 */}
@@ -164,7 +166,7 @@ export default function MenuBar({
               onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--th-accent-glow)"; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "none"; }}
             >
-              <span>위젯 추가...</span>
+              <span>{t({ ko: "위젯 추가...", en: "Add Widget...", ja: "ウィジェット追加...", zh: "添加小组件..." })}</span>
             </button>
 
             <div style={menuSepStyle} />
@@ -176,7 +178,7 @@ export default function MenuBar({
               onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--th-accent-glow)"; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "none"; }}
             >
-              <span>📖 유저 가이드</span>
+              <span>📖 {t({ ko: "유저 가이드", en: "User Guide", ja: "ユーザーガイド", zh: "用户指南" })}</span>
             </button>
 
             {/* Mission Control */}

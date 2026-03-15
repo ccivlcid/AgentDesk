@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useProjectStore } from "../../../store/projectStore";
+import { useI18n } from "../../../i18n";
 
 const mono = "var(--th-font-mono)";
 
@@ -80,6 +81,7 @@ function TreeNode({ node, depth }: { node: FileTreeNode; depth: number }) {
 export default function FileTreeWidget() {
   const { projects, currentProjectId } = useProjectStore();
   const project = projects.find((p) => p.id === currentProjectId) ?? null;
+  const { t } = useI18n();
   const [tree, setTree] = useState<FileTreeNode[]>([]);
   const [root, setRoot] = useState<string>("");
   const [truncated, setTruncated] = useState(false);
@@ -135,13 +137,13 @@ export default function FileTreeWidget() {
       <div style={{ flex: 1, overflow: "auto", padding: "4px 0" }}>
         {!project && (
           <div style={{ fontFamily: mono, fontSize: 11, color: "var(--th-text-muted)", padding: "20px 12px", textAlign: "center" }}>
-            프로젝트를 선택하세요
+            {t({ ko: "프로젝트를 선택하세요", en: "Select a project", ja: "プロジェクトを選択", zh: "选择项目" })}
           </div>
         )}
         {project && error && (
           <div style={{ fontFamily: mono, fontSize: 11, color: "#ef4444", padding: "12px" }}>
-            {error === "path_not_found" ? "경로를 찾을 수 없음" :
-             error === "fetch_failed" ? "서버 연결 실패" : error}
+            {error === "path_not_found" ? t({ ko: "경로를 찾을 수 없음", en: "Path not found", ja: "パスが見つかりません", zh: "路径未找到" }) :
+             error === "fetch_failed" ? t({ ko: "서버 연결 실패", en: "Server connection failed", ja: "サーバー接続失敗", zh: "服务器连接失败" }) : error}
           </div>
         )}
         {project && !error && !loading && tree.length === 0 && (

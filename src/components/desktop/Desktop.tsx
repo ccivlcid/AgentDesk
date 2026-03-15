@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, lazy, Suspense, useCallback, type ReactNode } from "react";
+import { useI18n } from "../../i18n";
 import type { Project, Category, CompanySettings, WSEventType } from "../../types";
 import type { OAuthCallbackResult, ProjectMetaPayload } from "../../app/types";
 import { useUiStore } from "../../store/uiStore";
@@ -120,6 +121,7 @@ export default function Desktop({
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
 
   const { setProjects } = useProjectStore();
+  const { t } = useI18n();
 
   const handleDeleteProject = useCallback(async (projectId: string) => {
     setProjectCtxMenu(null);
@@ -245,11 +247,11 @@ export default function Desktop({
 
   // 데스크톱 아이콘 정의 (채팅·라이브러리는 Dock에서 제공)
   const icons: DesktopIconDef[] = [
-    { id: "agent-manager",  emoji: "👤", label: "에이전트 설정",  onClick: () => openWindow("agent-manager") },
-    { id: "project-create", emoji: "📁", label: "프로젝트 생성", onClick: onProjectCreate },
-    { id: "create-task",    emoji: "▶",  label: "태스크 실행",   onClick: onCreateTask },
-    { id: "workflow",       emoji: "⚡", label: "워크플로 빌더", onClick: () => openWindow("workflow") },
-    { id: "repl",           emoji: ">_", label: "에이전트 REPL", onClick: () => openWindow("repl") },
+    { id: "agent-manager",  emoji: "👤", label: t({ ko: "에이전트 설정",  en: "Agents",          ja: "エージェント設定",  zh: "代理设置" }),    onClick: () => openWindow("agent-manager") },
+    { id: "project-create", emoji: "📁", label: t({ ko: "프로젝트 생성", en: "New Project",      ja: "プロジェクト作成", zh: "新建项目" }),    onClick: onProjectCreate },
+    { id: "create-task",    emoji: "▶",  label: t({ ko: "태스크 실행",   en: "Run Task",        ja: "タスク実行",      zh: "运行任务" }),    onClick: onCreateTask },
+    { id: "workflow",       emoji: "⚡", label: t({ ko: "워크플로 빌더", en: "Workflow Builder", ja: "ワークフロー",    zh: "工作流构建器" }), onClick: () => openWindow("workflow") },
+    { id: "repl",           emoji: ">_", label: t({ ko: "에이전트 REPL", en: "Agent REPL",      ja: "エージェントREPL", zh: "代理REPL" }),   onClick: () => openWindow("repl") },
   ];
 
   // 기본 아이콘 배치 (수평으로 배열)
@@ -384,7 +386,7 @@ export default function Desktop({
           onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--th-accent)"; (e.currentTarget as HTMLButtonElement).style.color = "var(--th-accent)"; }}
           onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--th-border)"; (e.currentTarget as HTMLButtonElement).style.color = "var(--th-text-muted)"; }}
         >
-          + 위젯 추가
+          {t({ ko: "+ 위젯 추가", en: "+ Add Widget", ja: "+ ウィジェット追加", zh: "+ 添加小组件" })}
         </button>
       </div>
 
@@ -460,18 +462,18 @@ export default function Desktop({
           </div>
           {[
             {
-              label: "빠른 미리보기",
+              label: t({ ko: "빠른 미리보기", en: "Quick Look", ja: "クイックルック", zh: "快速预览" }),
               icon: "⌃",
               shortcut: "Space",
               action: () => { setSelectedProjectId(projectCtxMenu.projectId); setQuickLookProjectId(projectCtxMenu.projectId); setProjectCtxMenu(null); },
             },
             {
-              label: "프로젝트 전환",
+              label: t({ ko: "프로젝트 전환", en: "Switch Project", ja: "プロジェクト切替", zh: "切换项目" }),
               icon: "↩",
               action: () => { setCurrentProjectId(projectCtxMenu.projectId); setProjectCtxMenu(null); },
             },
             {
-              label: "프로젝트 삭제",
+              label: t({ ko: "프로젝트 삭제", en: "Delete Project", ja: "プロジェクト削除", zh: "删除项目" }),
               icon: "🗑",
               danger: true,
               action: () => handleDeleteProject(projectCtxMenu.projectId),

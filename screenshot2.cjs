@@ -12,7 +12,13 @@ const OUT = '/home/user/AgentDesk/docs/screen';
   });
   const page = await browser.newPage();
   await page.goto('http://localhost:8800', { waitUntil: 'networkidle2' });
-  await sleep(2000);
+  // Set language to English for all screenshots
+  await page.evaluate(() => {
+    localStorage.setItem('agentdesk.language', 'en');
+    localStorage.setItem('agentdesk.language.user_set', 'true');
+  });
+  await page.reload({ waitUntil: 'networkidle2' });
+  await sleep(1500);
 
   const shot = async (name) => {
     await page.screenshot({ path: path.join(OUT, name) });
@@ -282,7 +288,45 @@ const OUT = '/home/user/AgentDesk/docs/screen';
   await page.evaluate(() => {
     localStorage.setItem('agentdesk_widget_layout', JSON.stringify([]));
   });
+  await page.reload({ waitUntil: 'networkidle2' });
+  await sleep(1500);
+
+  // ── 37 Agent creation modal ───────────────────────────────────────────────
+  await openWindow('a');
+  await sleep(600);
+  await page.evaluate(() => {
+    const btns = Array.from(document.querySelectorAll('button'));
+    const btn = btns.find(b => b.textContent?.includes('HIRE') || b.textContent?.includes('신규 채용'));
+    if (btn) btn.click();
+  });
+  await sleep(800);
+  await shot('37-agent-create.png');
+  await pressEsc();
+  await sleep(300);
+  await page.evaluate(() => {
+    const btns = Array.from(document.querySelectorAll('button[title="닫기"]'));
+    if (btns.length > 0) btns[btns.length - 1].click();
+  });
+  await sleep(500);
+
+  // ── 38 Department creation modal ──────────────────────────────────────────
+  await openWindow('a');
+  await sleep(600);
+  await page.evaluate(() => {
+    const btns = Array.from(document.querySelectorAll('button'));
+    const btn = btns.find(b => b.textContent?.includes('ADD DEPT') || b.textContent?.includes('부서 추가'));
+    if (btn) btn.click();
+  });
+  await sleep(800);
+  await shot('38-dept-create.png');
+  await pressEsc();
+  await sleep(300);
+  await page.evaluate(() => {
+    const btns = Array.from(document.querySelectorAll('button[title="닫기"]'));
+    if (btns.length > 0) btns[btns.length - 1].click();
+  });
+  await sleep(500);
 
   await browser.close();
-  console.log('\nDone! Total: 36 screenshots');
+  console.log('\nDone! Total: 38 screenshots');
 })();

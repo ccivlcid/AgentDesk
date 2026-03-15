@@ -1,4 +1,5 @@
 import { useTaskStore } from "../../../store/taskStore";
+import { useI18n } from "../../../i18n";
 import type { TaskStatus } from "../../../types";
 
 const mono = "var(--th-font-mono)";
@@ -25,6 +26,7 @@ const ACTIVE_STATUSES: TaskStatus[] = ["in_progress", "pending", "collaborating"
 
 export default function TasksWidget() {
   const { tasks, setTaskPanel } = useTaskStore();
+  const { t } = useI18n();
 
   const activeTasks = tasks.filter((t) => ACTIVE_STATUSES.includes(t.status));
 
@@ -52,7 +54,7 @@ export default function TasksWidget() {
       <div style={{ flex: 1, overflow: "auto", padding: "4px 0" }}>
         {activeTasks.length === 0 ? (
           <div style={{ fontFamily: mono, fontSize: 11, color: "var(--th-text-muted)", padding: "20px", textAlign: "center" }}>
-            실행 중인 태스크 없음
+            {t({ ko: "실행 중인 태스크 없음", en: "No active tasks", ja: "アクティブなタスクなし", zh: "无活动任务" })}
           </div>
         ) : (
           activeTasks.map((task) => (

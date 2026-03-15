@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import type { WindowType, WidgetEntry } from "../../app/types";
+import { useI18n } from "../../i18n";
 
 const mono = "var(--th-font-mono)";
 
@@ -35,6 +36,8 @@ interface MissionControlProps {
 }
 
 export default function MissionControl({ openWindows, widgetLayout, onClose, onFocusWindow }: MissionControlProps) {
+  const { t } = useI18n();
+
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") onClose();
@@ -75,7 +78,7 @@ export default function MissionControl({ openWindows, widgetLayout, onClose, onF
             letterSpacing: "0.1em",
           }}
         >
-          MISSION CONTROL — ESC 또는 클릭으로 닫기
+          MISSION CONTROL — {t({ ko: "ESC 또는 클릭으로 닫기", en: "Press ESC or click to close", ja: "ESCまたはクリックで閉じる", zh: "按ESC或点击关闭" })}
         </div>
 
         <div
@@ -84,7 +87,7 @@ export default function MissionControl({ openWindows, widgetLayout, onClose, onF
         >
           {/* 열린 창 */}
           {windowList.length > 0 && (
-            <Section title="열린 창">
+            <Section title={t({ ko: "열린 창", en: "Open Windows", ja: "開いているウィンドウ", zh: "打开的窗口" })}>
               {windowList.map((w) => {
                 const meta = WINDOW_META[w];
                 return (
@@ -101,7 +104,7 @@ export default function MissionControl({ openWindows, widgetLayout, onClose, onF
 
           {/* 활성 위젯 */}
           {widgetList.length > 0 && (
-            <Section title="위젯">
+            <Section title={t({ ko: "위젯", en: "Widgets", ja: "ウィジェット", zh: "小组件" })}>
               {widgetList.map((entry) => {
                 const meta = WIDGET_META[entry.id] ?? { emoji: "📦", label: entry.id };
                 return (
@@ -127,7 +130,7 @@ export default function MissionControl({ openWindows, widgetLayout, onClose, onF
                 marginTop: 40,
               }}
             >
-              열린 창이나 위젯이 없습니다
+              {t({ ko: "열린 창이나 위젯이 없습니다", en: "No open windows or widgets", ja: "ウィンドウやウィジェットがありません", zh: "没有打开的窗口或小组件" })}
             </div>
           )}
         </div>
