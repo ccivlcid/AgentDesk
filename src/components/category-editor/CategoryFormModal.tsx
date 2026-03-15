@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { Category } from "../../types";
 import { Modal, ModalHeader, ModalBody, ModalFooter, Button } from "../ui";
 import { useI18n } from "../../i18n";
