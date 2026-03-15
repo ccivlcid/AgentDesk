@@ -1,5 +1,31 @@
 # Tasks
 
+## 2026-03-15 — 에이전트 조합 템플릿 드래그앤드롭 + Composition Run
+
+### Agent Composition Builder (Workflow → Composition 탭)
+
+- [x] **DB 마이그레이션** — `versioned-migrations.ts` — `agent_composition_templates` 테이블 + `idx_comp_templates_updated` 인덱스 (migration `2026-03-14-011`)
+- [x] **API 라우트** — `server/modules/routes/ops/composition-templates.ts` — CRUD `/api/composition-templates` (GET·POST·PUT·DELETE)
+- [x] **CompAgentNode** — `src/components/agent-composition/nodes/CompAgentNode.tsx` — 역할별 상단 보더 색상 (팀장=amber, 시니어=accent, 주니어=green), 이모지·이름·부서·provider 표시
+- [x] **AgentCompositionBuilder** — `src/components/agent-composition/AgentCompositionBuilder.tsx`
+  - 왼쪽 패널: 실제 에이전트 목록 부서별 그룹, 검색 필터, 드래그 소스 (`dataTransfer`)
+  - ReactFlow 캔버스: 드래그앤드롭으로 에이전트 노드 추가 (`screenToFlowPosition`), 핸들 연결
+  - 템플릿 드롭다운: DB POST/PUT 저장, 불러오기, 삭제
+- [x] **AgentCompositionRunModal** — `src/components/agent-composition/AgentCompositionRunModal.tsx`
+  - 프로젝트 선택 + 에이전트별 태스크 제목 편집
+  - 순차 `POST /api/tasks` → 에이전트별 태스크 생성 (assigned_agent_id, project_id)
+  - 엣지 방향(A→B) → `POST /api/tasks/:id/dependencies` 의존 관계 자동 연결
+  - 실시간 진행 로그 + 프로그레스 바 + 성공/오류 상태
+- [x] **WorkflowWindow Composition 탭** — `src/components/windows/WorkflowWindow.tsx` — Builder / Scheduled / Composition 3번째 탭 추가
+
+### 문서 업데이트
+
+- [x] `CLAUDE.md` — 핵심 파일 지도 업데이트 (agent-composition/, ops/composition-templates.ts, 단축키 전체 목록, API 버전 v1.2.6)
+- [x] `docs/OVERVIEW.md` — 완성도 업데이트 (에이전트 조합 템플릿 100%), 프론트엔드 진입점 + Dock 설명 반영
+- [x] `docs/specs/api.md` — v1.2.6, `/api/composition-templates` 섹션 추가 (요청·응답 스펙 포함)
+
+---
+
 ## 2026-03-14 — macOS 바탕화면 OS 구조 전환 (Phase 4)
 
 > 사이드바 제거 → MenuBar + 데스크톱 아이콘 + 위젯 + Dock + 앱 창 구조로 전면 전환

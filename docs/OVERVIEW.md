@@ -177,7 +177,7 @@ GET /api/agent-rules?project_id=<id>
 
 ## 6. 현재 시스템 상태
 
-### 완성도 (2026-03-14 기준)
+### 완성도 (2026-03-15 기준)
 
 ```
 에이전트 스폰·관리          ██████████████████░░ 95%
@@ -190,6 +190,7 @@ UIUX 모니터링               ████████████████
 보안 하드닝                 ████████████████████ 100% (2차 패치 완료)
 페르소나 시스템              ████████████████████ 100% (완성)
 시각적 에이전트 그래프       ████████████████████ 100% (완성)
+에이전트 조합 템플릿         ████████████████████ 100% (드래그앤드롭 + Run 완성)
 ```
 
 ### 동시 실행 안전 한계
@@ -220,7 +221,8 @@ UIUX 모니터링               ████████████████
 | `src/App.tsx` | 루트 컴포넌트. Zustand 스토어 구독, WebSocket 연결, 이벤트 핸들러 정의 |
 | `src/components/desktop/Desktop.tsx` | 바탕화면 루트 (메뉴바 + 아이콘 + 위젯 + Dock + 창 레이어) |
 | `src/components/desktop/widgets/` | 위젯 5종 (AgentsWidget, TasksWidget, AlertsWidget, CliCostWidget, FlowGraphWidget) |
-| `src/components/windows/` | 앱 창 5종 (Workflow, Library, Settings, Chat, AgentManager) |
+| `src/components/windows/` | 앱 창 6종 (Workflow, Library, Settings, Chat, AgentManager, Repl) |
+| `src/components/agent-composition/` | AgentCompositionBuilder (드래그앤드롭 조합), AgentCompositionRunModal (실행), CompAgentNode |
 | `src/app/AppOverlays.tsx` | 36개 모달·패널 오버레이 렌더링 (AgentDetail, TerminalPanel 등) |
 
 ### 7-2. WindowType 타입
@@ -230,7 +232,7 @@ UIUX 모니터링               ████████████████
 
 // WindowType: Dock 아이콘 또는 데스크톱 아이콘으로 여는 앱 창
 export type WindowType =
-  | "workflow"       // ⚡ Workflow Builder / Scheduled Tasks
+  | "workflow"       // ⚡ Workflow Builder / Scheduled Tasks / Agent Composition
   | "library"        // 📚 Skills / Agent Rules / Memory / Hooks / Deliverables
   | "settings"       // ⚙ General / API / OAuth / CLI / Gateway / Data / Project Types / Agents
   | "chat"           // 💬 Direct / Group / Announcement
@@ -279,13 +281,13 @@ widgetLayout: WidgetConfig[]  // 위젯 위치·크기·표시 여부 (localStor
 - `👤 에이전트 설정` → AgentManagerWindow (`g a`)
 - `📁 프로젝트 생성` → ProjectCreateModal
 - `▶ 태스크 실행` → CreateTaskModal
-- `⚡ 워크플로 빌더` → WorkflowWindow (`g w`)
+- `⚡ 워크플로 빌더` → WorkflowWindow (`g w`) — Builder / Scheduled / Composition 탭
 - `📋 라이브러리` → LibraryWindow (`g l`)
 - `💬 채팅` → ChatWindow (`g c`)
 - `>_ 에이전트 REPL` → ReplWindow (`g e`)
 
 **Dock (항상 고정, 클릭 → 앱 창):**
-- `⚡ Workflow` → WorkflowWindow (Workflow Builder / Scheduled Tasks)
+- `⚡ Workflow` → WorkflowWindow (Builder / Scheduled / **Composition** 탭)
 - `📚 Library` → LibraryWindow (Skills / Agent Rules / Memory / Hooks / Deliverables)
 - `⚙ Settings` → SettingsWindow (General / API / OAuth / CLI / Gateway / Data / Project Types / Agents)
 - `💬 Chat` → ChatWindow (Direct / Group / Announcement)

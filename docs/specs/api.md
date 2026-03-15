@@ -2,7 +2,7 @@
 
 This document defines a contributor-facing API baseline for AgentDesk.
 It is intentionally compact and focused on frequently used endpoints.
-Current baseline target: `v1.2.5` (local snapshot, 2026-03-14).
+Current baseline target: `v1.2.6` (local snapshot, 2026-03-15).
 
 ## Base
 
@@ -330,6 +330,54 @@ or
 두 엔드포인트 모두 `project_id` 파라미터 지원: 해당 프로젝트에 배정된 에이전트의 스킬만 반환 (project-scope + 소속 agent-scope + global).
 
 > **`project_id` 필터 동작 원리**: `project_agents` 테이블을 조인하여 프로젝트에 배정된 에이전트의 `scope_type='agent'` 항목만 포함. `scope_type='global'` 및 `scope_type='project' AND scope_id=<project_id>`도 함께 포함.
+
+---
+
+## 에이전트 조합 템플릿 (Composition Templates)
+
+에이전트 조합 캔버스(Workflow → Composition 탭)에서 저장·불러오기에 사용.
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| GET | `/api/composition-templates` | 전체 템플릿 목록 (updated_at DESC) |
+| POST | `/api/composition-templates` | 템플릿 생성 |
+| PUT | `/api/composition-templates/:id` | 템플릿 수정 |
+| DELETE | `/api/composition-templates/:id` | 템플릿 삭제 |
+
+### POST/PUT 요청 바디
+
+```json
+{
+  "name": "string (필수, max 120자)",
+  "description": "string (선택, max 400자)",
+  "nodes": [...],
+  "edges": [...]
+}
+```
+
+`nodes`와 `edges`는 `@xyflow/react` Node/Edge 배열 그대로 직렬화. DB에는 `nodes_json`, `edges_json` 컬럼으로 저장.
+
+### GET 응답
+
+```json
+{
+  "ok": true,
+  "templates": [
+    {
+      "id": "uuid",
+      "name": "string",
+      "description": "string",
+      "nodes_json": "[...]",
+      "edges_json": "[...]",
+      "created_at": 1741234567890,
+      "updated_at": 1741234567890
+    }
+  ]
+}
+```
+
+> **DB 테이블:** `agent_composition_templates` (migration `2026-03-14-011`)
+> **라우트 파일:** `server/modules/routes/ops/composition-templates.ts`
 
 ---
 

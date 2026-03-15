@@ -55,9 +55,10 @@ src/
 │   ├── windows/                 ← 앱 창 (WorkflowWindow, LibraryWindow, SettingsWindow, ChatWindow, AgentManagerWindow)
 │   ├── flow-graph/              ← AgentFlowGraph (FlowGraphWidget에서 재사용)
 │   ├── workflow-builder/        ← WorkflowBuilder (@xyflow/react)
+│   ├── agent-composition/       ← AgentCompositionBuilder + AgentCompositionRunModal + nodes/CompAgentNode
 │   └── settings/                ← Settings 창 탭들
 ├── app/
-│   ├── types.ts                 ← WindowType: "workflow"|"library"|"settings"|"chat"|"agent-manager"
+│   ├── types.ts                 ← WindowType: "workflow"|"library"|"settings"|"chat"|"agent-manager"|"repl"
 │   └── AppOverlays.tsx          ← 모달/오버레이 집합 (36개)
 ├── store/
 │   ├── agentStore.ts            ← agents, departments
@@ -73,6 +74,7 @@ server/
 ├── modules/
 │   ├── lifecycle.ts             ← 서비스 시작/종료 훅
 │   ├── routes/core.ts           ← REST API 라우트 등록
+│   ├── routes/ops/composition-templates.ts ← CRUD /api/composition-templates
 │   └── workflow/                ← 태스크 실행 엔진
 ├── ws/hub.ts                    ← WebSocket 브로드캐스트 허브
 └── messenger/                   ← Discord/Slack 수신기
@@ -151,7 +153,7 @@ runGit(dir, ["config", "commit.gpgsign", "false"]);
 
 ### 앱 창 단축키
 `Desktop.tsx`의 단축키 맵 업데이트 후 `KeyboardShortcutsGuide.tsx`에도 항목 추가.
-현재 단축키: `g w` → Workflow 창 / `g l` → Library 창 / `g s` → Settings 창 / `Ctrl+Shift+K` → Command Palette
+현재 단축키: `g w` → Workflow 창 / `g l` → Library 창 / `g s` → Settings 창 / `g c` → Chat 창 / `g a` → Agent Manager / `g e` → REPL / `Ctrl+Shift+K` → Command Palette
 
 ---
 
@@ -179,6 +181,6 @@ runGit(dir, ["config", "commit.gpgsign", "false"]);
 | [`docs/design/AI-GUIDE.md`](docs/design/AI-GUIDE.md) | **AI 개발자 디자인 원칙** (컴포넌트 패턴, 체크리스트) |
 | [`docs/design/UI-SCREENS.md`](docs/design/UI-SCREENS.md) | 전체 화면·모달 명세 (macOS 바탕화면 OS 구조) |
 | [`docs/design/DESIGN.md`](docs/design/DESIGN.md) | CSS 변수 전체 + 컴포넌트 스타일 규칙 |
-| [`docs/specs/api.md`](docs/specs/api.md) | REST API 전체 명세 (v1.2.5) |
+| [`docs/specs/api.md`](docs/specs/api.md) | REST API 전체 명세 (v1.2.6) |
 | [`docs/strategy/bigger-ide-vision.md`](docs/strategy/bigger-ide-vision.md) | "더 큰 IDE" 전략 (Phase 1~3 완료) |
 | [`tasks.md`](tasks.md) | 날짜별 완료 작업 기록 |
