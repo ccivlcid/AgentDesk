@@ -123,8 +123,6 @@ export default function Widget({ id, title, x, y, w, h, children }: WidgetProps)
             title={t({ ko: "닫기", en: "Close", ja: "閉じる", zh: "关闭" })}
             data-testid="widget-close-btn"
           />
-          <div style={{ width: 11, height: 11, borderRadius: "50%", background: "var(--th-border)" }} />
-          <div style={{ width: 11, height: 11, borderRadius: "50%", background: "var(--th-border)" }} />
         </div>
         <span style={{ fontFamily: mono, fontSize: 11, color: "var(--th-text-secondary)", flex: 1 }}>
           {title}

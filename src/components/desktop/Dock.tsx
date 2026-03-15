@@ -10,7 +10,11 @@ const DOCK_ITEMS: { id: WindowType; emoji: string; label: string }[] = [
   { id: "chat",          emoji: "💬", label: "Chat" },
 ];
 
-export default function Dock() {
+interface DockProps {
+  onQuickTask?: () => void;
+}
+
+export default function Dock({ onQuickTask }: DockProps) {
   const { openWindows, toggleWindow } = useUiStore();
 
   return (
@@ -70,6 +74,41 @@ export default function Dock() {
           </button>
         );
       })}
+
+      {/* 구분선 */}
+      <div style={{ width: 1, height: 36, background: "var(--th-border)", alignSelf: "center", margin: "0 4px" }} />
+
+      {/* 새 태스크 빠른 실행 버튼 */}
+      <button
+        onClick={onQuickTask}
+        title="New Task"
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 3,
+          background: "none",
+          border: "1px solid transparent",
+          borderRadius: 10,
+          padding: "6px 10px",
+          cursor: "pointer",
+          transition: "all 0.15s",
+          minWidth: 52,
+        }}
+        onMouseEnter={(e) => {
+          const el = e.currentTarget as HTMLButtonElement;
+          el.style.background = "rgba(245,158,11,0.10)";
+          el.style.borderColor = "var(--th-border-accent)";
+        }}
+        onMouseLeave={(e) => {
+          const el = e.currentTarget as HTMLButtonElement;
+          el.style.background = "none";
+          el.style.borderColor = "transparent";
+        }}
+      >
+        <span style={{ fontSize: 22, lineHeight: 1 }}>＋</span>
+        <span style={{ fontFamily: mono, fontSize: 9, color: "var(--th-text-muted)" }}>New Task</span>
+      </button>
     </div>
   );
 }

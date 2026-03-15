@@ -183,3 +183,13 @@ textarea.bg-slate-900\/60 {
   70%  { opacity: 1; transform: translateY(-14px); }
   100% { opacity: 0; transform: translateY(-20px); }
 }
+
+/* ── MenuBar agent pulse animation ──────────────────────────────── */
+@keyframes menubar-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.55; }
+}
+
+.menubar-pulse {
+  animation: menubar-pulse 1.8s ease-in-out infinite;
+}

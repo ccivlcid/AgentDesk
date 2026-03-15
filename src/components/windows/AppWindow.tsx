@@ -228,8 +228,6 @@ export default function AppWindow({
             title={t({ ko: "닫기", en: "Close", ja: "閉じる", zh: "关闭" })}
             data-testid="window-close-btn"
           />
-          <div style={{ width: 12, height: 12, borderRadius: "50%", background: "var(--th-border)" }} />
-          <div style={{ width: 12, height: 12, borderRadius: "50%", background: "var(--th-border)" }} />
         </div>
         <span style={{ fontFamily: mono, fontSize: 11, color: "var(--th-text-muted)" }}>
           {emoji} {title}
@@ -250,7 +248,7 @@ export default function AppWindow({
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               style={{
-                background: activeTab === tab.id ? "var(--th-accent-glow)" : "none",
+                background: "none",
                 border: "none",
                 borderBottom: activeTab === tab.id ? "2px solid var(--th-accent)" : "2px solid transparent",
                 padding: "6px 14px",

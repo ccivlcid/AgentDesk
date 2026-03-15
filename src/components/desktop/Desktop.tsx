@@ -109,6 +109,7 @@ export default function Desktop({
   const currentProject = projects.find((p) => p.id === currentProjectId) ?? null;
   const { agents } = useAgentStore();
   const { tasks } = useTaskStore();
+  const runningAgentCount = agents.filter((a) => a.status === "working").length;
 
   const [showWidgetPicker, setShowWidgetPicker] = useState(false);
   const [showCommandPalette, setShowCommandPalette] = useState(false);
@@ -298,6 +299,8 @@ export default function Desktop({
         onOpenWidgetPicker={() => setShowWidgetPicker(true)}
         onOpenMissionControl={() => setMissionControlOpen(true)}
         onOpenUserGuide={() => setShowUserGuide(true)}
+        onOpenCommandPalette={() => setShowCommandPalette(true)}
+        runningAgentCount={runningAgentCount}
       />
 
       {/* 바탕화면 영역 (메뉴바 아래, Dock 위) */}
@@ -391,7 +394,7 @@ export default function Desktop({
       </div>
 
       {/* Dock */}
-      <Dock />
+      <Dock onQuickTask={onCreateTask} />
 
       {/* 앱 창들 */}
       {openWindows.has("workflow")      && <WorkflowWindow />}

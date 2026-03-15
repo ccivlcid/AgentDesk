@@ -19,6 +19,8 @@ interface MenuBarProps {
   onOpenWidgetPicker?: () => void;
   onOpenMissionControl?: () => void;
   onOpenUserGuide?: () => void;
+  onOpenCommandPalette?: () => void;
+  runningAgentCount?: number;
 }
 
 export default function MenuBar({
@@ -34,6 +36,8 @@ export default function MenuBar({
   onOpenWidgetPicker,
   onOpenMissionControl,
   onOpenUserGuide,
+  onOpenCommandPalette,
+  runningAgentCount = 0,
 }: MenuBarProps) {
   const [now, setNow] = useState(() => new Date());
   const [appMenuOpen, setAppMenuOpen] = useState(false);
@@ -195,10 +199,10 @@ export default function MenuBar({
         )}
       </div>
 
-      {/* 연결 상태 */}
-      <span style={{ color: connected ? "#22c55e" : "#ef4444", fontSize: 10 }}>
-        {connected ? "●" : "○"}
-      </span>
+      {/* 연결 끊김 표시 (연결됐을 땐 숨김) */}
+      {!connected && (
+        <span style={{ color: "#ef4444", fontSize: 10 }} title="Server disconnected">○</span>
+      )}
 
       {/* 프로젝트 선택 */}
       <div style={{ flex: 1, maxWidth: 260 }}>
@@ -213,10 +217,57 @@ export default function MenuBar({
 
       <div style={{ flex: 1 }} />
 
+      {/* 에이전트 활동 펄스 */}
+      {runningAgentCount > 0 && (
+        <span
+          className="menubar-pulse"
+          style={{ fontSize: 10, color: "#22c55e", letterSpacing: 1 }}
+          title={`${runningAgentCount} agent(s) running`}
+        >
+          ● {runningAgentCount}
+        </span>
+      )}
+
+      {/* 검색 트리거 */}
+      <button
+        type="button"
+        onClick={onOpenCommandPalette}
+        title={t({ ko: "검색  ⌘K", en: "Search  ⌘K", ja: "検索  ⌘K", zh: "搜索  ⌘K" })}
+        style={{
+          background: "rgba(255,255,255,0.04)",
+          border: "1px solid var(--th-border)",
+          borderRadius: 6,
+          color: "var(--th-text-muted)",
+          fontFamily: mono,
+          fontSize: 11,
+          cursor: "pointer",
+          padding: "3px 10px",
+          display: "flex",
+          alignItems: "center",
+          gap: 6,
+          flexShrink: 0,
+          transition: "border-color 0.15s, color 0.15s",
+        }}
+        onMouseEnter={(e) => {
+          const el = e.currentTarget as HTMLButtonElement;
+          el.style.borderColor = "var(--th-accent)";
+          el.style.color = "var(--th-text-primary)";
+        }}
+        onMouseLeave={(e) => {
+          const el = e.currentTarget as HTMLButtonElement;
+          el.style.borderColor = "var(--th-border)";
+          el.style.color = "var(--th-text-muted)";
+        }}
+      >
+        🔍 {t({ ko: "검색", en: "Search", ja: "検索", zh: "搜索" })}
+        <span style={{ fontSize: 10, opacity: 0.6 }}>⌘K</span>
+      </button>
+
       {/* CLI 비용 */}
       {totalCostToday && (
         <button
           onClick={() => openWindow("settings")}
+          title={t({ ko: "→ 사용량 설정 보기", en: "→ View usage settings", ja: "→ 使用設定を見る", zh: "→ 查看使用设置" })}
           style={{
             background: "none",
             border: "none",
@@ -230,42 +281,6 @@ export default function MenuBar({
           ${totalCostToday}
         </button>
       )}
-
-      {/* 유저 가이드 ? 버튼 */}
-      <button
-        type="button"
-        onClick={onOpenUserGuide}
-        title="유저 가이드 (?)"
-        style={{
-          width: 20,
-          height: 20,
-          borderRadius: "50%",
-          border: "1px solid var(--th-border)",
-          background: "transparent",
-          color: "rgba(255,255,255,0.45)",
-          fontFamily: mono,
-          fontSize: 11,
-          fontWeight: 700,
-          cursor: "pointer",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flexShrink: 0,
-          transition: "background 0.15s, color 0.15s",
-        }}
-        onMouseEnter={(e) => {
-          const el = e.currentTarget as HTMLButtonElement;
-          el.style.background = "rgba(245,158,11,0.15)";
-          el.style.color = "var(--th-accent)";
-        }}
-        onMouseLeave={(e) => {
-          const el = e.currentTarget as HTMLButtonElement;
-          el.style.background = "transparent";
-          el.style.color = "rgba(255,255,255,0.45)";
-        }}
-      >
-        ?
-      </button>
 
       {/* 알림 */}
       {notificationSlot}
