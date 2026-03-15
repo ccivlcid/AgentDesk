@@ -269,11 +269,20 @@ const OUT = '/home/user/AgentDesk/docs/screen';
   await sleep(2000);
   await shot('35-widget-clicost.png');
 
+  // ── 36 File Tree widget ───────────────────────────────────────────────────
+  await page.evaluate(() => {
+    const layout = [{ id: 'file-tree', x: 80, y: 80, w: 420, h: 500 }];
+    localStorage.setItem('agentdesk_widget_layout', JSON.stringify(layout));
+  });
+  await page.reload({ waitUntil: 'networkidle2' });
+  await sleep(2000);
+  await shot('36-widget-filetree.png');
+
   // Restore empty widget layout
   await page.evaluate(() => {
     localStorage.setItem('agentdesk_widget_layout', JSON.stringify([]));
   });
 
   await browser.close();
-  console.log('\nDone! Total: 35 screenshots');
+  console.log('\nDone! Total: 36 screenshots');
 })();

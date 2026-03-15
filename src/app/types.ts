@@ -13,7 +13,8 @@ export type WidgetId =
   | "task-board"
   | "alerts"
   | "cli-usage"
-  | "flow-graph";
+  | "flow-graph"
+  | "file-tree";
 
 export interface WidgetEntry {
   id: WidgetId;

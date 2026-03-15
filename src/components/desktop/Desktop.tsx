@@ -18,6 +18,7 @@ import TasksWidget from "./widgets/TasksWidget";
 import AlertsWidget from "./widgets/AlertsWidget";
 import CliCostWidget from "./widgets/CliCostWidget";
 import FlowGraphWidget from "./widgets/FlowGraphWidget";
+import FileTreeWidget from "./widgets/FileTreeWidget";
 import WallpaperPicker from "./WallpaperPicker";
 import QuickLook from "./QuickLook";
 import MissionControl from "./MissionControl";
@@ -37,6 +38,7 @@ const WIDGET_LABELS: Record<string, string> = {
   alerts:      "Alerts",
   "cli-usage": "CLI Cost",
   "flow-graph": "Flow Graph",
+  "file-tree":  "File Tree",
 };
 
 function WidgetContent({ id }: { id: string }) {
@@ -46,6 +48,7 @@ function WidgetContent({ id }: { id: string }) {
     case "alerts":      return <AlertsWidget />;
     case "cli-usage":   return <CliCostWidget />;
     case "flow-graph":  return <FlowGraphWidget />;
+    case "file-tree":   return <FileTreeWidget />;
     default:            return null;
   }
 }

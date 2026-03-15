@@ -9,6 +9,7 @@ const WIDGET_DEFS: { id: WidgetId; emoji: string; label: string; desc: string }[
   { id: "alerts",     emoji: "🔔", label: "Alerts",    desc: "이상 감지 알림" },
   { id: "cli-usage",  emoji: "💰", label: "CLI Cost",  desc: "CLI 비용 요약" },
   { id: "flow-graph", emoji: "🕸", label: "Flow",      desc: "에이전트 플로우 그래프" },
+  { id: "file-tree",  emoji: "🗂", label: "File Tree", desc: "프로젝트 파일 트리" },
 ];
 
 interface WidgetPickerProps {
