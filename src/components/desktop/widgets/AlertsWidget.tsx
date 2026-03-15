@@ -4,17 +4,23 @@ import { fetchNotifications, type NotificationItem } from "../../../api/notifica
 const mono = "var(--th-font-mono)";
 
 const TYPE_ICON: Record<string, string> = {
-  task_complete:      "✓",
-  task_error:         "✕",
-  decision_created:   "?",
-  agent_error:        "⚠",
-  system:             "·",
+  task_complete:    "✓",
+  task_error:       "✕",
+  decision_created: "?",
+  agent_error:      "⚠",
+  agent_anomaly:    "⚡",
+  cost_alert:       "$",
+  heartbeat:        "♥",
+  system:           "·",
 };
 const TYPE_COLOR: Record<string, string> = {
   task_complete:    "#22c55e",
   task_error:       "#ef4444",
   decision_created: "#f59e0b",
   agent_error:      "#ef4444",
+  agent_anomaly:    "#f97316",
+  cost_alert:       "#a855f7",
+  heartbeat:        "#3b82f6",
   system:           "var(--th-text-muted)",
 };
 
@@ -40,7 +46,7 @@ export default function AlertsWidget() {
     };
   }, []);
 
-  const alertItems = items.filter((n) => n.type === "task_error" || n.type === "agent_error" || n.type === "decision_created");
+  const alertItems = items.filter((n) => n.type === "task_error" || n.type === "agent_error" || n.type === "decision_created" || n.type === "agent_anomaly" || n.type === "cost_alert");
   const display = alertItems.length > 0 ? alertItems : items.slice(0, 10);
   const unread = items.filter((n) => !n.read).length;
 
