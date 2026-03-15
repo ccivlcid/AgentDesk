@@ -120,58 +120,58 @@ npm run arch:map
 
 ---
 
-## 에이전트 선별 & 업무 지시 흐름
+## Agent Selection & Task Assignment Flow
 
 ```mermaid
 flowchart TD
-  A[POST /api/tasks/:id/run] --> B{assigned_agent_id\n설정 여부}
+  A[POST /api/tasks/:id/run] --> B{assigned_agent_id\nset?}
 
-  B -- "있음" --> C[resolveConstrainedAgentScopeForTask]
-  C --> D{스코프 검증}
-  D -- "통과" --> G[해당 에이전트 사용]
-  D -- "위반" --> E[agentId 초기화]
+  B -- "yes" --> C[resolveConstrainedAgentScopeForTask]
+  C --> D{scope validation}
+  D -- "pass" --> G[use assigned agent]
+  D -- "violation" --> E[clear agentId]
   E --> F[selectAutoAssignableAgentForTask]
 
-  B -- "없음" --> F
+  B -- "no" --> F
 
-  F --> F1[Step 1: 에이전트 풀 제약 해소\n팩 선호 부서 ∩ 프로젝트 manual 스코프]
-  F1 --> F2[Step 2: 필터링\ncli_provider 설정 + idle/break + 현재 태스크 없음]
-  F2 --> F3[Step 3: 정렬\n부서 선호→상태→역할→완료수→생성시간]
+  F --> F1[Step 1: Resolve agent pool constraints\npack preferred dept ∩ project manual scope]
+  F1 --> F2[Step 2: Filter\ncli_provider set + idle/break + no current task]
+  F2 --> F3[Step 3: Sort\ndept preference→status→role→completed count→created time]
   F3 --> G
 
-  G --> H[buildTaskExecutionPrompt\n15개 블록 조립]
-  H --> I[pre-task Hooks 실행]
+  G --> H[buildTaskExecutionPrompt\nassemble 15 blocks]
+  H --> I[run pre-task Hooks]
   I --> J[child_process.spawn]
   J --> K[stdout → WebSocket → Terminal]
 ```
 
-## 업무 지시서 조립 구조 (프롬프트 블록)
+## Task Instruction Assembly (Prompt Blocks)
 
 ```mermaid
 flowchart LR
-  subgraph 프롬프트["buildTaskExecutionPrompt()"]
+  subgraph Prompt["buildTaskExecutionPrompt()"]
     direction TB
     B1["[Task Session] sessionId·agentId·provider"]
-    B2["[Project Structure] 코드베이스 요약"]
+    B2["[Project Structure] codebase summary"]
     B3["[Task] title + description ★"]
-    B4["[Workflow Pack Rules] 팩별 실행 지침"]
-    B5["[Character Persona] 에이전트 페르소나"]
+    B4["[Workflow Pack Rules] per-pack execution guidance"]
+    B5["[Character Persona] agent persona"]
     B6["[Project Rules] project>agent>dept>global"]
-    B7["[Agent Memory] 과거 기억 (5min TTL 캐시)"]
-    B8["[Run Instruction] 최종 실행 지침"]
+    B7["[Agent Memory] past memories (5min TTL cache)"]
+    B8["[Run Instruction] final execution instruction"]
     B1 --> B2 --> B3 --> B4 --> B5 --> B6 --> B7 --> B8
   end
-  프롬프트 --> Spawn["child_process.spawn(claude|codex|gemini...)"]
+  Prompt --> Spawn["child_process.spawn(claude|codex|gemini...)"]
 ```
 
-## 에이전트 회의 & 결과 도출 흐름
+## Agent Meeting & Consensus Flow
 
 ```mermaid
 sequenceDiagram
   participant Task as Task (in_progress)
   participant RC as ReviewConsensus
-  participant L1 as 리더A
-  participant L2 as 리더B
+  participant L1 as LeaderA
+  participant L2 as LeaderB
   participant DB as DB / meeting_minutes
 
   Task->>RC: handleTaskRunComplete (exit 0)
@@ -182,59 +182,59 @@ sequenceDiagram
   L2-->>DB: appendMeetingMinuteEntry(approve|revise)
 
   RC->>RC: processReviewConsensusOutcome()
-  alt 전원/다수 approve
+  alt all/majority approve
     RC->>Task: status = 'done'
-  else revise 요청
+  else revise requested
     RC->>Task: seedReviewRevisionSubtasks() → Round 2
-  else Round 3 초과
-    RC->>Task: 강제 승인 → status = 'done'
+  else Round 3 exceeded
+    RC->>Task: force approve → status = 'done'
   end
   RC->>RC: dismissLeadersFromClientOffice()
 ```
 
-## 결과 도출 파이프라인
+## Outcome Pipeline
 
 ```mermaid
 flowchart TD
-  Exit[프로세스 종료 exit code] --> R1[task.result = 로그 마지막 2000자]
-  R1 --> R2[runAfterExitGates\n출력 게이트 검증]
-  R2 --> R3[runExtractLearnings\n인사이트 → memory_entries]
-  R3 --> R4[runExtractSkills\n스킬 → skill_learning_history]
-  R4 --> R5[recordAgentUsage\n토큰·비용 기록]
+  Exit[process exit code] --> R1[task.result = last 2000 chars of log]
+  R1 --> R2[runAfterExitGates\noutput gate validation]
+  R2 --> R3[runExtractLearnings\ninsights → memory_entries]
+  R3 --> R4[runExtractSkills\nskills → skill_learning_history]
+  R4 --> R5[recordAgentUsage\ntoken/cost recording]
   R5 --> R6{exit code}
   R6 -- "0" --> R7[executeHooks post-task\ntask.status = review\nstartReviewConsensusMeeting]
-  R6 -- "≠ 0" --> R8[executeHooks on-error\ntask.status = failed\nretry 카운터 증가]
-  R7 --> R9[알림: UI 토스트 + 메신저]
+  R6 -- "≠ 0" --> R8[executeHooks on-error\ntask.status = failed\nincrement retry counter]
+  R7 --> R9[notify: UI toast + messenger]
   R8 --> R9
   R9 --> R10[cleanupWorktree]
 ```
 
 ---
 
-## 2.0 데이터 모델 추가 (신규 테이블)
+## 2.0 Data Model Additions (New Tables)
 
-Project OS 리뉴얼(2.0)에서 추가되는 DB 테이블 목록. 기존 `projects`, `agents`, `departments` 테이블은 유지하고 아래 테이블이 추가된다.
+New DB tables added in the Project OS renewal (2.0). Existing `projects`, `agents`, and `departments` tables are retained; the tables below are added.
 
-| 테이블 | 용도 | 주요 컬럼 |
-|--------|------|-----------|
-| `categories` | 프로젝트 유형 정의 (카테고리) | `id`, `name`, `slug`, `description`, `icon`, `color`, `kpi_schema`, `risk_schema`, `gate_schema`, `deliverable_schema`, `is_template`, `version`, `owner_scope` |
-| `category_versions` | 카테고리 버전 이력 | `id`, `category_id`, `version`, `snapshot_json`, `created_at` |
-| `project_agents` | 프로젝트-에이전트 팀 연결 (junction) | `project_id`, `agent_id`, `added_at` |
-| `project_objectives` | 프로젝트 목표 | `id`, `project_id`, `title`, `description`, `status`, `order` |
-| `project_risks` | 프로젝트 리스크 | `id`, `project_id`, `title`, `severity`, `status`, `mitigation` |
-| `project_gates` | 프로젝트 검토 단계 | `id`, `project_id`, `title`, `status`, `due_date`, `criteria` |
-| `project_outputs` | 프로젝트 계획 결과물 (산출물 타입) | `id`, `project_id`, `title`, `type`, `status`, `url` |
+| Table | Purpose | Key Columns |
+|-------|---------|-------------|
+| `categories` | Project type definitions (categories) | `id`, `name`, `slug`, `description`, `icon`, `color`, `kpi_schema`, `risk_schema`, `gate_schema`, `deliverable_schema`, `is_template`, `version`, `owner_scope` |
+| `category_versions` | Category version history | `id`, `category_id`, `version`, `snapshot_json`, `created_at` |
+| `project_agents` | Project-agent team join table (junction) | `project_id`, `agent_id`, `added_at` |
+| `project_objectives` | Project objectives | `id`, `project_id`, `title`, `description`, `status`, `order` |
+| `project_risks` | Project risks | `id`, `project_id`, `title`, `severity`, `status`, `mitigation` |
+| `project_gates` | Project review stages | `id`, `project_id`, `title`, `status`, `due_date`, `criteria` |
+| `project_outputs` | Project planned deliverables (deliverable types) | `id`, `project_id`, `title`, `type`, `status`, `url` |
 
-> **주의**: `project_outputs`는 프로젝트 레벨 계획 산출물(PRD, API 명세 등).
-> 태스크 실행 결과 파일은 기존 `deliverables` / `task_reports` 테이블을 사용.
+> **Note**: `project_outputs` are project-level planned deliverables (PRDs, API specs, etc.).
+> Task execution result files use the existing `deliverables` / `task_reports` tables.
 
-`projects` 테이블에 추가되는 컬럼:
-- `category_id` — `categories.id` 참조
-- `category_version` — 생성 시 카테고리 버전 고정 (재현성)
-- `success_metric` — JSON (카테고리 `kpi_schema` 오버라이드)
+Columns added to the `projects` table:
+- `category_id` — references `categories.id`
+- `category_version` — category version pinned at creation time (for reproducibility)
+- `success_metric` — JSON (overrides category `kpi_schema`)
 - `risk_profile` — JSON
-- `required_gates` — JSON 배열
+- `required_gates` — JSON array
 - `deliverable_schema` — JSON
 
-상세 API: [specs/api.md §2.0 카테고리 & 프로젝트 팀](../specs/api.md)
-상세 UX: [design/UI-SCREENS.md](../design/UI-SCREENS.md)
+Detailed API: [specs/api.md §2.0 Categories & Project Teams](../specs/api.md)
+Detailed UX: [design/UI-SCREENS.md](../design/UI-SCREENS.md)
