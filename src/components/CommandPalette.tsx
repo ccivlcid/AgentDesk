@@ -212,11 +212,11 @@ export default function CommandPalette({
         tabIndex={-1}
         style={{
           width: "min(640px, 94vw)",
-          background: "rgba(18,18,24,0.97)",
+          background: "var(--th-panel-bg)",
           backdropFilter: "blur(32px) saturate(180%)",
-          border: "1px solid rgba(255,255,255,0.10)",
+          border: "1px solid var(--th-border)",
           borderRadius: 16,
-          boxShadow: "0 32px 80px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.07)",
+          boxShadow: "0 32px 80px var(--th-glass-shadow)",
           overflow: "hidden",
         }}
         onKeyDown={handleKeyDown}
@@ -228,7 +228,7 @@ export default function CommandPalette({
             alignItems: "center",
             gap: 14,
             padding: "0 20px",
-            borderBottom: `1px solid rgba(255,255,255,0.07)`,
+            borderBottom: "1px solid var(--th-border)",
             height: 64,
           }}
         >
@@ -256,14 +256,14 @@ export default function CommandPalette({
               minWidth: 0,
             }}
           />
-          <span style={{ ...mono, fontSize: "10px", color: muted, padding: "2px 6px", border: `1px solid rgba(255,255,255,0.12)`, borderRadius: 4, flexShrink: 0 }}>
+          <span style={{ ...mono, fontSize: "10px", color: muted, padding: "2px 6px", border: "1px solid var(--th-border)", borderRadius: 4, flexShrink: 0 }}>
             Esc
           </span>
         </div>
 
         {/* Current project context */}
         {currentProject && (
-          <div style={{ padding: "5px 20px", borderBottom: `1px solid rgba(255,255,255,0.05)`, display: "flex", alignItems: "center", gap: 6 }}>
+          <div style={{ padding: "5px 20px", borderBottom: "1px solid var(--th-border)", display: "flex", alignItems: "center", gap: 6 }}>
             <span style={{ ...mono, fontSize: "9px", color: muted }}>
               {t({ ko: "현재 프로젝트:", en: "project:", ja: "現在:", zh: "当前:" })}
             </span>
