@@ -21,10 +21,24 @@ const OUT = '/home/user/AgentDesk/docs/screen';
 
   const pressEsc = async () => { await page.keyboard.press('Escape'); await sleep(500); };
 
+  // Click desktop background to ensure focus is on body (not an input)
+  const focusDesktop = async () => {
+    await page.mouse.click(200, 400);
+    await sleep(200);
+  };
+
+  // Close the topmost AppWindow (clicking its 닫기 button)
+  const closeTopWindow = async () => {
+    await page.evaluate(() => {
+      const btns = Array.from(document.querySelectorAll('button[title="닫기"]'));
+      if (btns.length > 0) btns[btns.length - 1].click();
+    });
+    await sleep(500);
+  };
+
   // Click chapter in guide panel by title (not matching dock buttons)
   const clickChapter = async (title) => {
     await page.evaluate((t) => {
-      // Find buttons with exactly 2 child spans (emoji + title pattern)
       const btns = Array.from(document.querySelectorAll('button'));
       const btn = btns.find(b => {
         const spans = b.querySelectorAll('span');
@@ -36,46 +50,63 @@ const OUT = '/home/user/AgentDesk/docs/screen';
     await sleep(350);
   };
 
-  // 01 desktop
+  // Open window via g+key chord (ensure desktop has focus first)
+  const openWindow = async (key) => {
+    await focusDesktop();
+    await page.keyboard.press('g');
+    await sleep(80);
+    await page.keyboard.press(key);
+    await sleep(900);
+  };
+
+  // Click a tab by matching its inner span text (handles sigil + label pattern)
+  const clickTab = async (label) => {
+    await page.evaluate((l) => {
+      const btns = Array.from(document.querySelectorAll('button'));
+      const btn = btns.find(b => {
+        const spans = b.querySelectorAll('span');
+        return Array.from(spans).some(s => s.textContent?.trim() === l);
+      });
+      if (btn) btn.click();
+    }, label);
+    await sleep(400);
+  };
+
+  // ── 01 desktop ────────────────────────────────────────────────────────────
   await shot('01-desktop.png');
 
-  // 02 app menu
+  // ── 02 app menu ───────────────────────────────────────────────────────────
   await page.evaluate(() => Array.from(document.querySelectorAll('button')).find(b => b.textContent?.trim() === 'AgentDesk')?.click());
   await sleep(500);
   await shot('02-app-menu.png');
-  await pressEsc(); await page.mouse.click(400,400); await sleep(300);
+  await pressEsc(); await focusDesktop();
 
-  // 03 right-click context menu
+  // ── 03 right-click context menu ───────────────────────────────────────────
   await page.mouse.click(700, 400, { button: 'right' });
   await sleep(500);
   await shot('03-context-menu.png');
   await pressEsc(); await sleep(300);
 
-  // 04 wallpaper picker
+  // ── 04 wallpaper picker ───────────────────────────────────────────────────
   await page.evaluate(() => Array.from(document.querySelectorAll('button')).find(b => b.textContent?.trim() === 'AgentDesk')?.click());
   await sleep(400);
   await page.evaluate(() => Array.from(document.querySelectorAll('button')).find(b => b.textContent?.includes('배경화면'))?.click());
   await sleep(600);
   await shot('04-wallpaper-picker.png');
-  // Close via backdrop click (top-left, outside the centered modal)
   await page.mouse.click(50, 300);
   await sleep(400);
 
-  // 05 widget picker
+  // ── 05 widget picker ──────────────────────────────────────────────────────
   await page.evaluate(() => Array.from(document.querySelectorAll('button')).find(b => b.textContent?.trim() === 'AgentDesk')?.click());
   await sleep(400);
   await page.evaluate(() => Array.from(document.querySelectorAll('button')).find(b => b.textContent?.includes('위젯 추가'))?.click());
   await sleep(600);
   await shot('05-widget-picker.png');
-  // Close via backdrop click (top-left, outside centered modal)
   await page.mouse.click(50, 300);
-  await sleep(400);
+  await sleep(500);
 
-  // Verify widget picker closed
-  const pickerOpen = await page.evaluate(() => !!document.querySelector('button:not([disabled])')?.closest('[style*="inset: 0"]') || document.body.textContent?.includes('[닫기]'));
-  console.log('  widget picker still open?', pickerOpen);
-
-  // 06-10 user guide
+  // ── 06-10 user guide ──────────────────────────────────────────────────────
+  await focusDesktop();
   await page.evaluate(() => Array.from(document.querySelectorAll('button')).find(b => b.textContent?.trim() === '?')?.click());
   await sleep(600);
   await shot('06-guide-getting-started.png');
@@ -89,68 +120,110 @@ const OUT = '/home/user/AgentDesk/docs/screen';
   await clickChapter('단축키');
   await shot('09-guide-shortcuts.png');
 
-  await clickChapter('위젯');  // This now safely only finds guide buttons (2 spans)
+  await clickChapter('위젯');
   await shot('10-guide-widgets.png');
 
   await pressEsc();
   await sleep(400);
 
-  // 11 command palette (Ctrl+Shift+K)
-  await page.keyboard.down('Control'); await page.keyboard.down('Shift'); await page.keyboard.press('k');
-  await page.keyboard.up('Shift'); await page.keyboard.up('Control');
+  // ── 11 command palette (Ctrl+Shift+K) ─────────────────────────────────────
+  await focusDesktop();
+  await page.keyboard.down('Control');
+  await page.keyboard.down('Shift');
+  await page.keyboard.press('K');
+  await page.keyboard.up('Shift');
+  await page.keyboard.up('Control');
   await sleep(700);
   await shot('11-command-palette.png');
-  await pressEsc(); await sleep(400);
-
-  // 12-14 settings (g s)
-  await page.keyboard.press('g'); await sleep(80); await page.keyboard.press('s'); await sleep(900);
-  await shot('12-settings-general.png');
-  await page.evaluate(() => Array.from(document.querySelectorAll('button')).find(b => b.textContent?.trim() === 'CLI')?.click());
+  await pressEsc();
   await sleep(400);
+
+  // ── 12-14 Settings ────────────────────────────────────────────────────────
+  await openWindow('s');
+  await shot('12-settings-general.png');
+  await clickTab('CLI');
   await shot('13-settings-cli.png');
   await page.evaluate(() => Array.from(document.querySelectorAll('button')).find(b => b.textContent?.includes('OAUTH') || b.textContent?.includes('OAuth'))?.click());
   await sleep(400);
   await shot('14-settings-oauth.png');
+  await closeTopWindow();
 
-  // 15-17 library (g l)
-  await page.keyboard.press('g'); await sleep(80); await page.keyboard.press('l'); await sleep(900);
+  // ── 15-17 Library ─────────────────────────────────────────────────────────
+  await openWindow('l');
   await shot('15-library-skills.png');
-  await page.evaluate(() => Array.from(document.querySelectorAll('button')).find(b => b.textContent?.trim() === 'Rules')?.click());
-  await sleep(400);
+  await clickTab('Rules');
   await shot('16-library-rules.png');
-  await page.evaluate(() => Array.from(document.querySelectorAll('button')).find(b => b.textContent?.trim() === 'Memory')?.click());
-  await sleep(400);
+  await clickTab('Memory');
   await shot('17-library-memory.png');
+  await closeTopWindow();
 
-  // 18-20 workflow (g w)
-  await page.keyboard.press('g'); await sleep(80); await page.keyboard.press('w'); await sleep(900);
+  // ── 18-20 Workflow ────────────────────────────────────────────────────────
+  await openWindow('w');
   await shot('18-workflow-builder.png');
-  await page.evaluate(() => Array.from(document.querySelectorAll('button')).find(b => b.textContent?.trim() === 'Scheduled')?.click());
-  await sleep(400);
+  await clickTab('Scheduled');
   await shot('19-workflow-scheduled.png');
-  await page.evaluate(() => Array.from(document.querySelectorAll('button')).find(b => b.textContent?.trim() === 'Composition')?.click());
-  await sleep(400);
+  await clickTab('Composition');
   await shot('20-workflow-composition.png');
+  await closeTopWindow();
 
-  // 21-22 chat (g c)
-  await page.keyboard.press('g'); await sleep(80); await page.keyboard.press('c'); await sleep(900);
+  // ── 21-22 Chat ────────────────────────────────────────────────────────────
+  await openWindow('c');
   await shot('21-chat-direct.png');
-  await page.evaluate(() => Array.from(document.querySelectorAll('button')).find(b => b.textContent?.trim() === 'Group')?.click());
-  await sleep(400);
+  await clickTab('Group');
   await shot('22-chat-group.png');
+  await closeTopWindow();
 
-  // 23 agent manager (g a)
-  await page.keyboard.press('g'); await sleep(80); await page.keyboard.press('a'); await sleep(900);
+  // ── 23 Agent Manager ─────────────────────────────────────────────────────
+  await openWindow('a');
   await shot('23-agent-manager.png');
+  await closeTopWindow();
 
-  // 24 repl (g e)
-  await page.keyboard.press('g'); await sleep(80); await page.keyboard.press('e'); await sleep(900);
+  // ── 24 REPL ───────────────────────────────────────────────────────────────
+  await openWindow('e');
   await shot('24-repl.png');
+  await closeTopWindow();
 
-  // 25 mission control (Ctrl+Up)
-  await page.keyboard.down('Control'); await page.keyboard.press('ArrowUp'); await page.keyboard.up('Control');
+  // ── 25 Mission Control (Ctrl+Up) ──────────────────────────────────────────
+  await focusDesktop();
+  await page.keyboard.down('Control');
+  await page.keyboard.press('ArrowUp');
+  await page.keyboard.up('Control');
   await sleep(800);
   await shot('25-mission-control.png');
+  await pressEsc();
+  await sleep(400);
+
+  // ── 26 Agents widget (dashboard) ─────────────────────────────────────────
+  await page.evaluate(() => {
+    const layout = [{ id: 'heartbeat', x: 80, y: 80, w: 580, h: 480 }];
+    localStorage.setItem('agentdesk_widget_layout', JSON.stringify(layout));
+  });
+  await page.reload({ waitUntil: 'networkidle2' });
+  await sleep(2000);
+  await shot('26-widget-dashboard.png');
+
+  // ── 27 Task board widget ──────────────────────────────────────────────────
+  await page.evaluate(() => {
+    const layout = [{ id: 'task-board', x: 80, y: 80, w: 580, h: 480 }];
+    localStorage.setItem('agentdesk_widget_layout', JSON.stringify(layout));
+  });
+  await page.reload({ waitUntil: 'networkidle2' });
+  await sleep(2000);
+  await shot('27-widget-tasks.png');
+
+  // ── 28 Flow graph widget ──────────────────────────────────────────────────
+  await page.evaluate(() => {
+    const layout = [{ id: 'flow-graph', x: 80, y: 80, w: 600, h: 500 }];
+    localStorage.setItem('agentdesk_widget_layout', JSON.stringify(layout));
+  });
+  await page.reload({ waitUntil: 'networkidle2' });
+  await sleep(2000);
+  await shot('28-widget-graph.png');
+
+  // Restore empty widget layout
+  await page.evaluate(() => {
+    localStorage.setItem('agentdesk_widget_layout', JSON.stringify([]));
+  });
 
   await browser.close();
   console.log('Done!');

@@ -347,11 +347,11 @@ export default function AgentRepl({ agents, currentProject }: Props) {
           background: "var(--th-bg-surface)",
         }}
       >
-        {/* macOS 트래픽 라이트 */}
+        {/* 트래픽 라이트 장식 */}
         <div className="flex gap-1.5">
-          <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#ff5f57" }} />
-          <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#ffbd2e" }} />
-          <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#27c93f" }} />
+          <div style={{ width: 12, height: 12, borderRadius: "50%", background: "var(--th-accent)" }} />
+          <div style={{ width: 12, height: 12, borderRadius: "50%", background: "var(--th-border)" }} />
+          <div style={{ width: 12, height: 12, borderRadius: "50%", background: "var(--th-border)" }} />
         </div>
         <span style={{ fontSize: 11, fontWeight: 700, color: "var(--th-text-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
           {t({ ko: "에이전트 REPL", en: "Agent REPL", ja: "エージェント REPL", zh: "代理 REPL" })}

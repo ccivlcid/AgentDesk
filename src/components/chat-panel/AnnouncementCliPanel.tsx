@@ -238,17 +238,15 @@ export default function AnnouncementCliPanel({
             borderTopLeftRadius: 10,
           }}
         >
-          <div className="flex items-center gap-1.5">
-            <button
-              type="button"
-              onClick={onClose}
-              className="h-3 w-3 rounded-full border-0 transition-opacity hover:opacity-80"
-              style={{ background: "#ff5f56" }}
-              title={tr("닫기", "Close")}
-            />
-            <div className="h-3 w-3 rounded-full" style={{ background: "#ffbd2e" }} />
-            <div className="h-3 w-3 rounded-full" style={{ background: "#27c93f" }} />
-          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex h-6 w-6 items-center justify-center transition-opacity hover:opacity-70 flex-shrink-0"
+            style={{ borderRadius: 0, background: "transparent", border: "none", color: "var(--th-text-muted)", fontSize: 14, lineHeight: 1 }}
+            title={tr("닫기", "Close")}
+          >
+            ✕
+          </button>
 
           <div className="flex-1 min-w-0 flex items-center gap-2">
             <span className="text-[11px] font-bold shrink-0" style={{ color: "var(--th-accent)" }}>❯</span>

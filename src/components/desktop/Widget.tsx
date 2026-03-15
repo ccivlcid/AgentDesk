@@ -84,16 +84,16 @@ export default function Widget({ id, title, x, y, w, h, children }: WidgetProps)
         top: pos.y,
         width: size.w,
         height: size.h,
-        background: "rgba(38,38,42,0.78)",
+        background: "var(--th-panel-bg)",
         backdropFilter: "blur(24px) saturate(180%)",
         WebkitBackdropFilter: "blur(24px) saturate(180%)",
-        border: "1px solid rgba(255,255,255,0.10)",
+        border: "1px solid var(--th-border)",
         borderRadius: 12,
         display: "flex",
         flexDirection: "column",
         overflow: "hidden",
         zIndex: 20,
-        boxShadow: "0 12px 40px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06)",
+        boxShadow: "0 12px 40px var(--th-glass-shadow)",
       }}
     >
       {/* 타이틀바 */}
@@ -105,7 +105,7 @@ export default function Widget({ id, title, x, y, w, h, children }: WidgetProps)
           padding: "6px 10px",
           borderBottom: "1px solid var(--th-border)",
           cursor: "grab",
-          background: "rgba(255,255,255,0.04)",
+          background: "var(--th-glass-bg)",
           flexShrink: 0,
         }}
       >
@@ -120,8 +120,8 @@ export default function Widget({ id, title, x, y, w, h, children }: WidgetProps)
             }}
             title="닫기"
           />
-          <div style={{ width: 11, height: 11, borderRadius: "50%", background: "#2a2a2a" }} />
-          <div style={{ width: 11, height: 11, borderRadius: "50%", background: "#2a2a2a" }} />
+          <div style={{ width: 11, height: 11, borderRadius: "50%", background: "var(--th-border)" }} />
+          <div style={{ width: 11, height: 11, borderRadius: "50%", background: "var(--th-border)" }} />
         </div>
         <span style={{ fontFamily: mono, fontSize: 11, color: "var(--th-text-secondary)", flex: 1 }}>
           {title}
