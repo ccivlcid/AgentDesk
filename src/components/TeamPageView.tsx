@@ -128,12 +128,6 @@ export default function TeamPageView({
           WebkitBackdropFilter: "blur(12px)",
         }}
       >
-        {/* macOS 트래픽 라이트 (●●●) */}
-        <div className="flex flex-shrink-0 items-center gap-1.5">
-          <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#ff5f57" }} aria-hidden />
-          <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#ffbd2e" }} aria-hidden />
-          <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#27c93f" }} aria-hidden />
-        </div>
         <span style={{ color: "var(--th-accent)", fontWeight: 700, fontSize: "11px" }}>$</span>
         <span style={{ fontSize: "11px", color: "var(--th-text-muted)" }}>
           ls team/ --project=&quot;{currentProject.name}&quot;
