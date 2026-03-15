@@ -14,11 +14,8 @@ function loadWidgetLayout(): WidgetEntry[] {
     const raw = window.localStorage.getItem(WIDGET_LAYOUT_KEY);
     if (raw) return JSON.parse(raw) as WidgetEntry[];
   } catch { /* ignore */ }
-  // 기본 위젯 배치
-  return [
-    { id: "heartbeat", x: 40, y: 120, w: 420, h: 280 },
-    { id: "task-board", x: 500, y: 120, w: 420, h: 280 },
-  ];
+  // 기본: 빈 상태 (사용자가 직접 추가)
+  return [];
 }
 
 function saveWidgetLayout(layout: WidgetEntry[]) {

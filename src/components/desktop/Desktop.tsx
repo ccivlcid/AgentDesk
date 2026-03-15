@@ -154,14 +154,13 @@ export default function Desktop({
     };
   }, [toggleWindow]);
 
-  // 데스크톱 아이콘 정의
+  // 데스크톱 아이콘 정의 (채팅은 Dock에서 제공)
   const icons: DesktopIconDef[] = [
     { id: "agent-manager",  emoji: "👤", label: "에이전트 설정",  onClick: () => openWindow("agent-manager") },
     { id: "project-create", emoji: "📁", label: "프로젝트 생성", onClick: onProjectCreate },
     { id: "create-task",    emoji: "▶",  label: "태스크 실행",   onClick: onCreateTask },
     { id: "workflow",       emoji: "⚡", label: "워크플로 빌더", onClick: () => openWindow("workflow") },
     { id: "library",        emoji: "📋", label: "라이브러리",    onClick: () => openWindow("library") },
-    { id: "chat",           emoji: "💬", label: "채팅",          onClick: () => openWindow("chat") },
     { id: "repl",           emoji: ">_", label: "에이전트 REPL", onClick: () => openWindow("repl") },
   ];
 
@@ -217,6 +216,144 @@ export default function Desktop({
             />
           );
         })}
+
+        {/* macOS 스타일 시스템 가이드 */}
+        <div
+          style={{
+            position: "absolute",
+            top: 100,
+            left: 40,
+            right: 40,
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr 1fr",
+            gap: 14,
+            pointerEvents: "none",
+            zIndex: 1,
+          }}
+        >
+          {/* 카드 1: AgentDesk 소개 */}
+          <div style={{
+            background: "rgba(38,38,42,0.62)",
+            backdropFilter: "blur(20px) saturate(160%)",
+            WebkitBackdropFilter: "blur(20px) saturate(160%)",
+            border: "1px solid rgba(255,255,255,0.09)",
+            borderRadius: 14,
+            padding: "18px 20px",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.06)",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+              <span style={{ fontSize: 28 }}>🤖</span>
+              <div>
+                <div style={{ fontFamily: "var(--th-font-mono)", fontSize: 13, fontWeight: 600, color: "var(--th-text-primary)", letterSpacing: "0.02em" }}>AgentDesk</div>
+                <div style={{ fontFamily: "var(--th-font-mono)", fontSize: 10, color: "var(--th-accent)" }}>Developer OS v1.0</div>
+              </div>
+            </div>
+            <div style={{ fontFamily: "var(--th-font-mono)", fontSize: 11, color: "var(--th-text-secondary)", lineHeight: 1.7, marginBottom: 12 }}>
+              여러 AI 에이전트를 동시에 실행·모니터링·제어하는 개발자 OS입니다.
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+              {[
+                { icon: "⚡", text: "워크플로 빌더 — 에이전트 파이프라인 설계" },
+                { icon: "📚", text: "라이브러리 — 스킬·규칙·메모리 관리" },
+                { icon: "💬", text: "채팅 — 에이전트 직접 메시지" },
+                { icon: "⚙",  text: "설정 — 시스템 환경 구성" },
+              ].map(({ icon, text }) => (
+                <div key={text} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+                  <span style={{ fontSize: 12, flexShrink: 0, marginTop: 1 }}>{icon}</span>
+                  <span style={{ fontFamily: "var(--th-font-mono)", fontSize: 10, color: "var(--th-text-muted)", lineHeight: 1.5 }}>{text}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 카드 2: 키보드 단축키 */}
+          <div style={{
+            background: "rgba(38,38,42,0.62)",
+            backdropFilter: "blur(20px) saturate(160%)",
+            WebkitBackdropFilter: "blur(20px) saturate(160%)",
+            border: "1px solid rgba(255,255,255,0.09)",
+            borderRadius: 14,
+            padding: "18px 20px",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.06)",
+          }}>
+            <div style={{ fontFamily: "var(--th-font-mono)", fontSize: 11, color: "var(--th-text-muted)", marginBottom: 12, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+              ⌨  키보드 단축키
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+              {[
+                { key: "g  w",       desc: "Workflow 빌더" },
+                { key: "g  l",       desc: "Library" },
+                { key: "g  s",       desc: "Settings" },
+                { key: "g  c",       desc: "Chat" },
+                { key: "g  a",       desc: "Agent Manager" },
+                { key: "g  e",       desc: "REPL" },
+                { key: "Ctrl⇧K",    desc: "Command Palette" },
+                { key: "?",          desc: "단축키 가이드" },
+              ].map(({ key, desc }) => (
+                <div key={key} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                  <code style={{
+                    fontFamily: "var(--th-font-mono)",
+                    fontSize: 10,
+                    color: "var(--th-accent)",
+                    background: "rgba(245,158,11,0.10)",
+                    border: "1px solid rgba(245,158,11,0.20)",
+                    borderRadius: 4,
+                    padding: "1px 6px",
+                    whiteSpace: "nowrap",
+                  }}>{key}</code>
+                  <span style={{ fontFamily: "var(--th-font-mono)", fontSize: 10, color: "var(--th-text-secondary)", textAlign: "right" }}>{desc}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 카드 3: 데스크톱 & 위젯 */}
+          <div style={{
+            background: "rgba(38,38,42,0.62)",
+            backdropFilter: "blur(20px) saturate(160%)",
+            WebkitBackdropFilter: "blur(20px) saturate(160%)",
+            border: "1px solid rgba(255,255,255,0.09)",
+            borderRadius: 14,
+            padding: "18px 20px",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.06)",
+          }}>
+            <div style={{ fontFamily: "var(--th-font-mono)", fontSize: 11, color: "var(--th-text-muted)", marginBottom: 10, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+              🖥  데스크톱 아이콘
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 5, marginBottom: 14 }}>
+              {[
+                { icon: "👤", text: "에이전트 설정" },
+                { icon: "📁", text: "프로젝트 생성" },
+                { icon: "▶",  text: "태스크 실행" },
+                { icon: "⚡", text: "워크플로 빌더" },
+                { icon: "📋", text: "라이브러리" },
+                { icon: ">_", text: "에이전트 REPL" },
+              ].map(({ icon, text }) => (
+                <div key={text} style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <span style={{ fontSize: 12, flexShrink: 0, width: 18, textAlign: "center" }}>{icon}</span>
+                  <span style={{ fontFamily: "var(--th-font-mono)", fontSize: 10, color: "var(--th-text-secondary)" }}>{text}</span>
+                </div>
+              ))}
+            </div>
+            <div style={{ borderTop: "1px solid rgba(255,255,255,0.07)", paddingTop: 10 }}>
+              <div style={{ fontFamily: "var(--th-font-mono)", fontSize: 11, color: "var(--th-text-muted)", marginBottom: 7, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+                📦  위젯 (+ 위젯 추가)
+              </div>
+              {[
+                { icon: "💓", text: "Agents — 에이전트 상태" },
+                { icon: "📋", text: "Tasks — 태스크 목록" },
+                { icon: "🔔", text: "Alerts — 이상 감지" },
+                { icon: "💰", text: "CLI Cost — 비용 현황" },
+                { icon: "🕸", text: "Flow — 에이전트 그래프" },
+              ].map(({ icon, text }) => (
+                <div key={text} style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 4 }}>
+                  <span style={{ fontSize: 11, flexShrink: 0, width: 18, textAlign: "center" }}>{icon}</span>
+                  <span style={{ fontFamily: "var(--th-font-mono)", fontSize: 10, color: "var(--th-text-secondary)" }}>{text}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
 
         {/* 위젯들 */}
         {widgetLayout.map((entry) => (
