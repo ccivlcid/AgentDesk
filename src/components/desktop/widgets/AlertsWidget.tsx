@@ -1,75 +1,111 @@
-import { useEffect, useState } from "react";
-import { getHeartbeatLogs } from "../../../api/heartbeat";
-import type { HeartbeatLog } from "../../../api/heartbeat";
+import { useEffect, useRef, useState } from "react";
+import { fetchNotifications, type NotificationItem } from "../../../api/notifications";
 
 const mono = "var(--th-font-mono)";
 
+const TYPE_ICON: Record<string, string> = {
+  task_complete:      "✓",
+  task_error:         "✕",
+  decision_created:   "?",
+  agent_error:        "⚠",
+  system:             "·",
+};
+const TYPE_COLOR: Record<string, string> = {
+  task_complete:    "#22c55e",
+  task_error:       "#ef4444",
+  decision_created: "#f59e0b",
+  agent_error:      "#ef4444",
+  system:           "var(--th-text-muted)",
+};
+
 export default function AlertsWidget() {
-  const [logs, setLogs] = useState<HeartbeatLog[]>([]);
+  const [items, setItems] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const load = () => {
+    fetchNotifications({ limit: 30 })
+      .then((res) => {
+        setItems(res.notifications ?? []);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  };
 
   useEffect(() => {
-    setLoading(true);
-    getHeartbeatLogs().then((data) => {
-      setLogs(data.slice(0, 20));
-      setLoading(false);
-    }).catch(() => setLoading(false));
+    load();
+    intervalRef.current = setInterval(load, 30_000);
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
   }, []);
 
-  const alertLogs = logs.filter((l) => l.status !== "ok");
-  const display = alertLogs.length > 0 ? alertLogs : logs.slice(0, 8);
+  const alertItems = items.filter((n) => n.type === "task_error" || n.type === "agent_error" || n.type === "decision_created");
+  const display = alertItems.length > 0 ? alertItems : items.slice(0, 10);
+  const unread = items.filter((n) => !n.read).length;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
+      {/* 헤더 */}
       <div style={{
         display: "flex",
-        gap: 12,
+        gap: 10,
         padding: "6px 10px",
         borderBottom: "1px solid var(--th-border)",
         fontFamily: mono,
         fontSize: 10,
         color: "var(--th-text-muted)",
         flexShrink: 0,
+        alignItems: "center",
       }}>
-        <span style={{ color: alertLogs.length > 0 ? "#ef4444" : "#22c55e" }}>
-          {alertLogs.length > 0 ? `⚠ ${alertLogs.length} alert` : "✓ ok"}
+        <span style={{ color: alertItems.length > 0 ? "#ef4444" : "#22c55e" }}>
+          {alertItems.length > 0 ? `⚠ ${alertItems.length} alert` : "✓ ok"}
         </span>
+        {unread > 0 && (
+          <span style={{ color: "var(--th-accent)", fontSize: 9 }}>{unread} unread</span>
+        )}
         <span style={{ flex: 1 }} />
-        {loading && <span>loading...</span>}
+        {loading && <span style={{ opacity: 0.4 }}>…</span>}
       </div>
 
+      {/* 목록 */}
       <div style={{ flex: 1, overflow: "auto", padding: "4px 0" }}>
         {display.length === 0 ? (
           <div style={{ fontFamily: mono, fontSize: 11, color: "var(--th-text-muted)", padding: "20px", textAlign: "center" }}>
             알림 없음
           </div>
         ) : (
-          display.map((log) => (
+          display.map((n) => (
             <div
-              key={log.id}
+              key={n.id}
               style={{
                 display: "flex",
                 alignItems: "flex-start",
                 gap: 8,
                 padding: "5px 10px",
                 borderBottom: "1px solid rgba(255,255,255,0.03)",
+                background: !n.read ? "rgba(245,158,11,0.04)" : "none",
               }}
             >
-              <span style={{ fontSize: 10, color: log.status === "ok" ? "#22c55e" : log.status === "alert" ? "#f59e0b" : "#ef4444" }}>
-                {log.status === "ok" ? "✓" : log.status === "alert" ? "!" : "✕"}
+              <span style={{ fontSize: 10, color: TYPE_COLOR[n.type] ?? "var(--th-text-muted)", flexShrink: 0, marginTop: 1 }}>
+                {TYPE_ICON[n.type] ?? "·"}
               </span>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {log.agent_name || "system"}
+                <div style={{
+                  fontFamily: mono, fontSize: 10,
+                  color: !n.read ? "var(--th-text-primary)" : "var(--th-text-secondary)",
+                  overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                }}>
+                  {n.title}
                 </div>
-                {log.summary && (
-                  <div style={{ fontFamily: mono, fontSize: 9, color: "var(--th-text-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {log.summary}
+                {(n.agent_name || n.agent_name_ko) && (
+                  <div style={{ fontFamily: mono, fontSize: 9, color: "var(--th-text-muted)" }}>
+                    {n.agent_name_ko || n.agent_name}
                   </div>
                 )}
               </div>
               <span style={{ fontFamily: mono, fontSize: 9, color: "var(--th-text-muted)", flexShrink: 0 }}>
-                {new Date(log.created_at).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })}
+                {new Date(n.created_at).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })}
               </span>
             </div>
           ))
