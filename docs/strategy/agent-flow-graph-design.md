@@ -1,38 +1,40 @@
-# Agent Flow Graph — Custom SVG 구현 레퍼런스
+# Agent Flow Graph — Custom SVG Implementation Reference
 
-> **상태:** ✅ 구현 완료 (2026-03-14, P2-1)
-> **방식:** 외부 라이브러리 없이 Custom SVG + React로 구현
-> **갱신일:** 2026-03-14
+> **Status:** ✅ Implementation complete (2026-03-14, P2-1)
+> **Approach:** Custom SVG + React, no external libraries
+> **Updated:** 2026-03-14
 
 ---
 
-## 0. 구현 완료 현황
+## 0. Implementation Completion Summary
 
-### 파일 위치
+### File Locations
 
-| 파일 | 역할 |
+| File | Role |
 |---|---|
-| `src/components/flow-graph/AgentFlowGraph.tsx` | 메인 컴포넌트 (필터, SVG 캔버스, 컨트롤) |
-| `src/components/flow-graph/useFlowLayout.ts` | 레이아웃 알고리즘 (좌표 계산, 엣지 경로) |
-| `src/components/flow-graph/useViewTransform.ts` | 줌·팬 인터랙션 (SVG transform) |
-| `src/components/flow-graph/nodes/AgentNode.tsx` | 에이전트 노드 (foreignObject 기반) |
-| `src/components/flow-graph/nodes/MeetingCluster.tsx` | 미팅 클러스터 원형 배경 |
-| `src/components/flow-graph/edges/FlowEdge.tsx` | 베지어 곡선 엣지 |
-| `src/components/flow-graph/constants.ts` | NODE_WIDTH, NODE_HEIGHT, NODE_GAP 등 |
+| `src/components/flow-graph/AgentFlowGraph.tsx` | Main component (filters, SVG canvas, controls) |
+| `src/components/flow-graph/useFlowLayout.ts` | Layout algorithm (coordinate calculation, edge paths) |
+| `src/components/flow-graph/useViewTransform.ts` | Zoom/pan interaction (SVG transform) |
+| `src/components/flow-graph/nodes/AgentNode.tsx` | Agent node (foreignObject-based) |
+| `src/components/flow-graph/nodes/MeetingCluster.tsx` | Meeting cluster circular background |
+| `src/components/flow-graph/edges/FlowEdge.tsx` | Bezier curve edges |
+| `src/components/flow-graph/constants.ts` | NODE_WIDTH, NODE_HEIGHT, NODE_GAP, etc. |
 
-### 사이드바 통합 완료
+### Sidebar Integration Complete
 
-- `src/app/types.ts` — `View` 타입에 `"flow-graph"` 포함
-- `src/components/Sidebar.tsx` — 에이전트 섹션 하위에 등록
-- `src/app/AppMainLayout.tsx` — lazy import, `{view === "flow-graph"}` 렌더링
+> **Note:** The following references (`src/app/types.ts` View type, `src/components/Sidebar.tsx`, `src/app/AppMainLayout.tsx`) reflect the original sidebar-based architecture. The project has since migrated to a macOS desktop metaphor (Desktop + Dock + Widgets). The flow graph is now accessible via `src/components/desktop/widgets/FlowGraphWidget.tsx`.
+
+- `src/app/types.ts` — `"flow-graph"` included in `View` type
+- `src/components/Sidebar.tsx` — registered under the agents section
+- `src/app/AppMainLayout.tsx` — lazy import, renders with `{view === "flow-graph"}`
 
 ---
 
-## 0-구. 타입 파일 위치 (참조용)
+## 0-A. Type File Locations (Reference)
 
-### 실제 타입 파일 위치
+### Actual Type File Locations
 
-| 타입 | 파일 | 주요 필드 |
+| Type | File | Key Fields |
 |---|---|---|
 | `Agent` | `src/types/index.ts` | `id, name, status, avatar_emoji, department_id` |
 | `Department` | `src/types/index.ts` | `id, name, color` |
@@ -41,107 +43,107 @@
 | `MeetingPresence` | `src/types/index.ts` (~line 56) | `agent_id, phase, task_id, until` |
 | `CrossDeptDelivery` | `src/types/index.ts` (~line 72) | `id, fromAgentId, toAgentId` |
 
-### AppMainLayout props 주의사항
+### AppMainLayout Props Notes
 
-현재 `src/app/AppMainLayout.tsx`에 **없는** props — 통합(Step 3) 시 직접 추가해야 함:
+The following props are **not present** in `src/app/AppMainLayout.tsx` — they must be added directly during integration (Step 3):
 
 ```typescript
-// AppMainLayoutProps 인터페이스에 추가 필요
+// Add to AppMainLayoutProps interface
 subAgents: SubAgent[];
 crossDeptDeliveries: CrossDeptDelivery[];
 meetingPresence: MeetingPresence[];
 ```
 
-이 데이터는 `App.tsx`에서 Zustand `agentStore` / `taskStore`로 이미 관리됨:
+This data is already managed in `App.tsx` via Zustand `agentStore` / `taskStore`:
 - `subAgents` → `useAgentStore()` → `agentStore.ts`
 - `crossDeptDeliveries`, `meetingPresence` → `useTaskStore()` → `taskStore.ts`
 
-`App.tsx`의 `<AppMainLayout ... />` 호출부에도 props 전달 추가 필요.
+Also add prop passing to the `<AppMainLayout ... />` call in `App.tsx`.
 
-### `projectAgentIds` 위치 주의
+### `projectAgentIds` Location Note
 
-설계서 Step 3의 `projectAgentIds` prop은 **AppMainLayout 내부 상태**로 이미 관리 중:
+The `projectAgentIds` prop from design Step 3 is already managed as **internal state within AppMainLayout**:
 ```typescript
 // src/app/AppMainLayout.tsx line ~227
 const [projectAgentIds, setProjectAgentIds] = useState<Set<string>>(new Set());
 ```
-외부에서 prop으로 받지 않고 내부에서 직접 사용 가능. `AgentFlowGraph`에 그대로 전달하면 됨.
+No need to receive it as an external prop — it can be used internally and passed directly to `AgentFlowGraph`.
 
 ---
 
 ---
 
-## 1. 개요
+## 1. Overview
 
-**에이전트 간 실시간 관계**를 시각화하는 뷰.
-프로젝트에 배정된 에이전트를 중심으로, 누가 누구에게 일을 위임하고, 누가 리뷰하고, 누가 미팅 중인지를 한눈에 보여준다.
+A view that visualizes **real-time relationships between agents**.
+Centered on agents assigned to a project, it shows at a glance who is delegating work to whom, who is reviewing, and who is in a meeting.
 
-### 핵심 차별점 — 태스크 보드와 겹치지 않는다
+### Key Differentiator — No Overlap with the Task Board
 
-| | **태스크 보드 (TaskBoard)** | **플로우 그래프 (FlowGraph)** |
+| | **Task Board (TaskBoard)** | **Flow Graph (FlowGraph)** |
 |---|---|---|
-| **주인공** | 태스크 (카드) | 에이전트 (노드) |
-| **축** | 상태별 컬럼 (inbox→done) | 에이전트 간 관계 |
-| **보여주는 것** | "이 태스크가 지금 어떤 상태인가" | "이 에이전트가 지금 누구와 어떻게 일하는가" |
-| **엣지** | 없음 (DAG 뷰에서만 의존성) | 위임, 서브에이전트, 크로스부서 전달, 미팅 |
-| **시간축** | 없음 (칸반) / 있음 (간트) | 없음 — 현재 스냅샷 |
+| **Subject** | Tasks (cards) | Agents (nodes) |
+| **Axis** | Status columns (inbox → done) | Relationships between agents |
+| **Shows** | "What state is this task in right now?" | "Who is this agent working with and how?" |
+| **Edges** | None (dependencies only in DAG view) | Delegation, sub-agent, cross-dept delivery, meeting |
+| **Time axis** | None (kanban) / present (Gantt) | None — current snapshot |
 
-**Flow Graph가 보여주는 것:**
-1. **위임 관계**: 에이전트 A가 에이전트 B에게 서브태스크를 위임한 연결선
-2. **서브에이전트**: 부모 에이전트가 생성한 자식 에이전트 (Codex 스레드 등)
-3. **크로스 부서 전달**: `CrossDeptDelivery` — 부서 간 작업물 전달 화살표
-4. **미팅**: `MeetingPresence` — 현재 회의 참석 중인 에이전트 그룹
-5. **실시간 상태**: 각 에이전트의 idle/working/break/offline + 현재 태스크
+**What the Flow Graph shows:**
+1. **Delegation relationships**: Edge showing agent A delegating a subtask to agent B
+2. **Sub-agents**: Child agents spawned by a parent agent (Codex threads, etc.)
+3. **Cross-department delivery**: `CrossDeptDelivery` — arrows showing work deliverables transferred between departments
+4. **Meetings**: `MeetingPresence` — group of agents currently in a meeting
+5. **Real-time status**: idle/working/break/offline status + current task for each agent
 
-### 디자인 원칙
+### Design Principles
 
-- **에이전트가 주인공**: 프로젝트에 선택된 에이전트가 노드, 부서는 보조 라벨일 뿐
-- **macOS 하이브리드**: 노드 컨테이너는 `borderRadius: 10` + shadow, 내부 콘텐츠는 모노폰트
-- **실시간**: 기존 WebSocket 인프라(`agent_status`, `task_update`, `subtask_update`, `cross_dept_delivery`) 활용
-- **의존성 0**: SVG + React만 사용, 외부 그래프 라이브러리 없음
+- **Agents are the subject**: Agents selected for a project are nodes; departments are only auxiliary labels
+- **macOS hybrid**: Node containers use `borderRadius: 10` + shadow; inner content uses monospace font
+- **Real-time**: Leverages existing WebSocket infrastructure (`agent_status`, `task_update`, `subtask_update`, `cross_dept_delivery`)
+- **Zero dependencies**: SVG + React only, no external graph libraries
 
 ---
 
-## 2. 파일 구조
+## 2. File Structure
 
 ```
 src/components/flow-graph/
-├── AgentFlowGraph.tsx          ← 메인 컴포넌트 (SVG 컨테이너 + 줌/팬)
-├── useFlowLayout.ts            ← agents/relationships → 노드/엣지 좌표 계산
-├── useViewTransform.ts         ← 줌/팬/드래그 상태 관리 훅
+├── AgentFlowGraph.tsx          ← Main component (SVG container + zoom/pan)
+├── useFlowLayout.ts            ← agents/relationships → node/edge coordinate calculation
+├── useViewTransform.ts         ← zoom/pan/drag state management hook
 ├── nodes/
-│   ├── AgentNode.tsx           ← 에이전트 노드 렌더링 (foreignObject)
-│   └── MeetingCluster.tsx      ← 미팅 중인 에이전트 그룹 표시
+│   ├── AgentNode.tsx           ← Agent node rendering (foreignObject)
+│   └── MeetingCluster.tsx      ← Display group of agents in a meeting
 ├── edges/
-│   └── FlowEdge.tsx            ← 베지어 커브 엣지 렌더링
-└── constants.ts                ← 레이아웃 상수 (노드 크기, 간격 등)
+│   └── FlowEdge.tsx            ← Bezier curve edge rendering
+└── constants.ts                ← Layout constants (node sizes, spacing, etc.)
 ```
 
 ---
 
-## 3. 레이아웃 알고리즘
+## 3. Layout Algorithm
 
-### 3-1. 에이전트 중심 배치 (Force-Directed 유사)
+### 3-1. Agent-Centric Placement (Force-Directed Inspired)
 
-부서별 컬럼이 **아니라**, 에이전트 간 관계를 기반으로 배치한다.
+Placement is based on **agent relationships**, not department columns.
 
-**배치 규칙:**
-1. **프로젝트 팀 에이전트만** 노드로 표시 (전체 에이전트 X)
-2. **연결이 많은 에이전트**가 중심에 위치 (관계 가중치 기반)
-3. **미팅 참석자**는 임시로 클러스터링 (원형 배치)
-4. **서브에이전트**는 부모 노드 아래에 작게 붙음
-5. **부서 라벨**은 노드 옆에 작은 태그로만 표시
+**Placement rules:**
+1. Only **project team agents** are shown as nodes (not all agents)
+2. **Agents with more connections** are placed at the center (relationship weight-based)
+3. **Meeting attendees** are temporarily clustered (circular placement)
+4. **Sub-agents** appear small below the parent node
+5. **Department labels** are shown only as small tags next to nodes
 
 ```
                  ┌──────────┐
-                 │ PM-1     │ ◀── 기획
+                 │ PM-1     │ ◀── Planning
                  │ (meeting)│
                  └────┬─────┘
           delegate    │     review
         ┌─────────────┼──────────────┐
         ▼             │              ▼
   ┌──────────┐        │        ┌──────────┐
-  │ Dev-1    │ ◀─ 개발 │        │ QA-1     │ ◀── QA
+  │ Dev-1    │ ◀─ Dev │        │ QA-1     │ ◀── QA
   │ (working)│        │        │ (idle)   │
   └────┬─────┘        │        └──────────┘
        │ subtask      │
@@ -152,16 +154,16 @@ src/components/flow-graph/
   └──────────┘        │
 ```
 
-### 3-2. 좌표 계산 (useFlowLayout)
+### 3-2. Coordinate Calculation (useFlowLayout)
 
 ```typescript
 // constants.ts
 const NODE_WIDTH = 200;
 const NODE_HEIGHT = 72;
-const NODE_GAP = 40;            // 노드 간 최소 간격
-const MEETING_RADIUS = 120;     // 미팅 클러스터 반경
-const SUB_AGENT_OFFSET_Y = 20;  // 서브에이전트 Y 오프셋
-const SUB_AGENT_SCALE = 0.7;    // 서브에이전트 축소 비율
+const NODE_GAP = 40;            // Minimum spacing between nodes
+const MEETING_RADIUS = 120;     // Meeting cluster radius
+const SUB_AGENT_OFFSET_Y = 20;  // Sub-agent Y offset
+const SUB_AGENT_SCALE = 0.7;    // Sub-agent scale factor
 
 // useFlowLayout.ts
 interface FlowNode {
@@ -172,9 +174,9 @@ interface FlowNode {
   width: number;
   height: number;
   agent: Agent;
-  deptLabel: string;    // 부서 이름 (태그용)
-  deptColor: string;    // 부서 색상
-  inMeeting: boolean;   // 현재 미팅 중 여부
+  deptLabel: string;    // Department name (for tag)
+  deptColor: string;    // Department color
+  inMeeting: boolean;   // Whether currently in a meeting
 }
 
 interface FlowEdge {
@@ -183,13 +185,13 @@ interface FlowEdge {
   to: { nodeId: string; x: number; y: number };
   type: "delegation" | "sub-agent" | "cross_dept" | "meeting";
   label?: string;
-  animated?: boolean;   // working 상태일 때 활성 애니메이션
+  animated?: boolean;   // Active animation when in working state
 }
 
 interface MeetingCluster {
   id: string;
-  cx: number;           // 클러스터 중심 X
-  cy: number;           // 클러스터 중심 Y
+  cx: number;           // Cluster center X
+  cy: number;           // Cluster center Y
   radius: number;
   agentIds: string[];
   phase: "kickoff" | "review";
@@ -197,57 +199,57 @@ interface MeetingCluster {
 }
 ```
 
-### 3-3. 배치 알고리즘 (단순 계층형)
+### 3-3. Placement Algorithm (Simple Hierarchical)
 
-외부 라이브러리 없이 구현 가능한 단순 계층형 배치:
+A simple hierarchical layout implementable without external libraries:
 
 ```typescript
 function layoutAgents(agents: Agent[], relationships: Relationship[]): FlowNode[] {
-  // 1. 연결도(degree) 계산 — 위임/서브태스크/크로스부서 관계 수
-  // 2. degree가 가장 높은 에이전트를 중심 행(row 0)에 배치
-  // 3. 직접 연결된 에이전트를 다음 행에 배치
-  // 4. 미연결 에이전트는 최하단에 배치
-  // 5. 같은 행 내에서 X 좌표를 균등 분배
-  // 6. 미팅 중인 에이전트는 별도 클러스터로 이동
+  // 1. Calculate degree — number of delegation/subtask/cross-dept relationships
+  // 2. Place the agent with the highest degree in the center row (row 0)
+  // 3. Place directly connected agents in the next row
+  // 4. Place unconnected agents at the bottom
+  // 5. Distribute X coordinates evenly within the same row
+  // 6. Move agents currently in a meeting to a separate cluster
 }
 ```
 
-### 3-4. 관계 데이터 추출
+### 3-4. Relationship Data Extraction
 
-기존 데이터에서 에이전트 간 관계를 추출:
+Extract inter-agent relationships from existing data:
 
-| 소스 데이터 | 엣지 타입 | 의미 |
+| Source Data | Edge Type | Meaning |
 |---|---|---|
-| `SubTask` where `assigned_agent_id ≠ task's assigned_agent_id` | `delegation` | 에이전트 A → B로 서브태스크 위임 |
-| `SubAgent.parentAgentId → SubAgent.id` | `sub-agent` | 부모가 자식 에이전트 생성 |
-| `CrossDeptDelivery.fromAgentId → toAgentId` | `cross_dept` | 부서 간 작업물 전달 |
-| `MeetingPresence` 같은 `task_id` + `phase` | `meeting` | 같은 회의 참석자 연결 |
+| `SubTask` where `assigned_agent_id ≠ task's assigned_agent_id` | `delegation` | Agent A delegates a subtask to agent B |
+| `SubAgent.parentAgentId → SubAgent.id` | `sub-agent` | Parent spawns a child agent |
+| `CrossDeptDelivery.fromAgentId → toAgentId` | `cross_dept` | Work deliverable transferred between departments |
+| `MeetingPresence` with same `task_id` + `phase` | `meeting` | Attendees of the same meeting connected |
 
 ---
 
-## 4. SVG 컨테이너 (AgentFlowGraph.tsx)
+## 4. SVG Container (AgentFlowGraph.tsx)
 
-### 4-1. 줌/팬 (useViewTransform)
+### 4-1. Zoom/Pan (useViewTransform)
 
 ```typescript
 interface ViewTransform {
-  x: number;      // 팬 오프셋 X
-  y: number;      // 팬 오프셋 Y
-  scale: number;  // 줌 레벨 (0.3 ~ 2.0)
+  x: number;      // Pan offset X
+  y: number;      // Pan offset Y
+  scale: number;  // Zoom level (0.3 ~ 2.0)
 }
 
-// 마우스 휠 → 줌 (커서 위치 기준)
-// 마우스 드래그 → 팬
-// 더블클릭 → fit-to-view
+// Mouse wheel → zoom (relative to cursor position)
+// Mouse drag → pan
+// Double-click → fit-to-view
 ```
 
-SVG `<g>` 최상위에 `transform={`translate(${x}, ${y}) scale(${scale})`}` 적용.
+Apply `transform={`translate(${x}, ${y}) scale(${scale})`}` to the top-level SVG `<g>`.
 
-### 4-2. 렌더 구조
+### 4-2. Render Structure
 
 ```tsx
 <div style={{ position: "relative", width: "100%", height: "100%" }}>
-  {/* 컨트롤 오버레이 */}
+  {/* Control overlay */}
   <FlowControls
     onZoomIn={...} onZoomOut={...} onFit={...}
     filter={filter} onFilterChange={...}
@@ -263,16 +265,16 @@ SVG `<g>` 최상위에 `transform={`translate(${x}, ${y}) scale(${scale})`}` 적
     onMouseMove={handlePanMove}
     onMouseUp={handlePanEnd}
   >
-    <defs>{/* 화살표 마커 */}</defs>
+    <defs>{/* Arrow markers */}</defs>
 
     <g transform={`translate(${tx}, ${ty}) scale(${scale})`}>
-      {/* 레이어 1: 미팅 클러스터 배경 (원형 영역) */}
+      {/* Layer 1: Meeting cluster backgrounds (circular areas) */}
       {meetings.map(m => <MeetingCluster key={m.id} {...m} />)}
 
-      {/* 레이어 2: 엣지 */}
+      {/* Layer 2: Edges */}
       {edges.map(e => <FlowEdge key={e.id} {...e} />)}
 
-      {/* 레이어 3: 에이전트 노드 */}
+      {/* Layer 3: Agent nodes */}
       {nodes.map(n => <AgentNode key={n.id} {...n} onClick={onSelectAgent} />)}
     </g>
   </svg>
@@ -281,77 +283,77 @@ SVG `<g>` 최상위에 `transform={`translate(${x}, ${y}) scale(${scale})`}` 적
 
 ---
 
-## 5. 노드 디자인
+## 5. Node Design
 
-### 5-1. AgentNode (foreignObject 기반)
+### 5-1. AgentNode (foreignObject-based)
 
-`<foreignObject>`를 사용해 SVG 내부에 HTML/CSS를 렌더링.
-macOS 하이브리드 스타일(borderRadius, boxShadow)을 그대로 적용.
+Uses `<foreignObject>` to render HTML/CSS inside SVG.
+Applies macOS hybrid style (borderRadius, boxShadow) directly.
 
 ```
 ┌─────────────────────────┐  borderRadius: 10
-│ 😎 Dev-1          개발   │  아바타 + 이름 + 부서 태그
+│ 😎 Dev-1          Dev   │  Avatar + name + department tag
 │─────────────────────────│
-│ ● working  ██████░░░░░  │  상태 dot + 로드바
-│ 로그인 버그 수정         │  현재 태스크 (truncate)
+│ ● working  ██████░░░░░  │  Status dot + load bar
+│ Fix login bug            │  Current task (truncated)
 └─────────────────────────┘
 ```
 
-**부서는 작은 태그로만 표시** (노드 우상단, 부서 color 배경):
+**Department shown only as a small tag** (top-right of node, department color background):
 ```html
 <span style="fontSize: 9px, background: dept.color, borderRadius: 3px, padding: 1px 4px">
-  개발
+  Dev
 </span>
 ```
 
-**상태별 테두리:**
+**Border by status:**
 
-| 상태 | 테두리 색 | 효과 |
+| Status | Border Color | Effect |
 |---|---|---|
-| `idle` | `var(--th-border)` | 없음 |
-| `working` | `var(--th-accent)` | 앰버 glow (`boxShadow: 0 0 8px var(--th-accent-glow)`) |
-| `break` | `var(--th-text-muted)` | 없음 |
+| `idle` | `var(--th-border)` | None |
+| `working` | `var(--th-accent)` | Amber glow (`boxShadow: 0 0 8px var(--th-accent-glow)`) |
+| `break` | `var(--th-text-muted)` | None |
 | `offline` | `var(--th-danger-border)` | opacity: 0.5 |
 
-### 5-2. SubAgent 노드
+### 5-2. SubAgent Node
 
-부모 노드 아래에 작게 표시 (0.7x 스케일):
+Displayed small below the parent node (0.7x scale):
 
 ```
-  ┌──────────────────┐  부모 노드
+  ┌──────────────────┐  Parent node
   │ Dev-1  (working) │
   └────────┬─────────┘
            │ sub-agent
      ┌─────┴──────┐
-     │ thread-1   │  작은 노드 (0.7x)
+     │ thread-1   │  Small node (0.7x)
      │ (working)  │
      └────────────┘
 ```
 
 ### 5-3. MeetingCluster
 
-미팅 중인 에이전트들을 원형 영역으로 그룹:
+Groups agents in a meeting within a circular area:
 
 ```
       ╭─ ─ ─ ─ ─ ─ ─ ─╮
-      ╎   🤝 review     ╎  점선 원, 앰버 테두리
+      ╎   🤝 review     ╎  Dashed circle, amber border
       ╎                  ╎
-      ╎ [PM-1] [Dev-1]  ╎  참석 에이전트 노드
+      ╎ [PM-1] [Dev-1]  ╎  Attending agent nodes
       ╎    [QA-1]       ╎
       ╎                  ╎
       ╰─ ─ ─ ─ ─ ─ ─ ─╯
 ```
 
-- 점선 원 (`strokeDasharray: 6 4`)
-- 앰버 테두리 (미팅 활성)
-- 내부에 참석 에이전트 노드를 원형으로 배치
-- 미팅 종료 시 노드가 원래 위치로 돌아감 (애니메이션)
+- Dashed circle (`strokeDasharray: 6 4`)
+- Amber border (meeting active)
+- Attending agent nodes placed in a circular arrangement inside
+- When meeting ends, nodes animate back to their original positions
 
 ---
 
-## 6. 엣지 디자인
+## 6. Edge Design
 
-### 6-1. 베지어 커브
+### 6-1. Bezier Curve
 
 ```typescript
 function bezierPath(from: Point, to: Point): string {
@@ -361,7 +363,7 @@ function bezierPath(from: Point, to: Point): string {
 }
 ```
 
-### 6-2. 화살표 마커
+### 6-2. Arrow Markers
 
 ```tsx
 <defs>
@@ -376,18 +378,18 @@ function bezierPath(from: Point, to: Point): string {
 </defs>
 ```
 
-### 6-3. 엣지 스타일
+### 6-3. Edge Styles
 
-| 타입 | stroke | strokeWidth | strokeDasharray | marker | 의미 |
+| Type | stroke | strokeWidth | strokeDasharray | marker | Meaning |
 |---|---|---|---|---|---|
-| `delegation` | `var(--th-text-secondary)` | 1.5 | — | `arrow` | 서브태스크 위임 |
-| `sub-agent` | `var(--th-text-muted)` | 1 | `3 3` | `arrow` | 자식 에이전트 |
-| `cross_dept` | 부서 color | 2 | `8 4` | `arrow` | 부서 간 전달 |
-| `meeting` | `var(--th-accent)` | 1 | `4 4` | — | 미팅 참석 (양방향) |
+| `delegation` | `var(--th-text-secondary)` | 1.5 | — | `arrow` | Subtask delegation |
+| `sub-agent` | `var(--th-text-muted)` | 1 | `3 3` | `arrow` | Child agent |
+| `cross_dept` | dept color | 2 | `8 4` | `arrow` | Cross-department delivery |
+| `meeting` | `var(--th-accent)` | 1 | `4 4` | — | Meeting attendance (bidirectional) |
 
-### 6-4. 활성 엣지 애니메이션
+### 6-4. Active Edge Animation
 
-working 상태인 에이전트의 엣지에 흐르는 점 애니메이션:
+Flowing dot animation on edges of agents in working state:
 
 ```tsx
 {edge.animated && (
@@ -399,17 +401,17 @@ working 상태인 에이전트의 엣지에 흐르는 점 애니메이션:
 
 ---
 
-## 7. 인터랙션
+## 7. Interactions
 
-| 동작 | 처리 |
+| Action | Behavior |
 |---|---|
-| **노드 클릭** | `onSelectAgent(agent)` — 기존 에이전트 상세 패널 열기 |
-| **노드 호버** | 연결된 엣지 강조 + 미연결 노드 dim |
-| **엣지 호버** | 태스크 제목 툴팁 표시 |
-| **빈 영역 드래그** | 팬 |
-| **마우스 휠** | 줌 (커서 위치 기준) |
-| **더블클릭** | fit-to-view |
-| **Esc** | 선택 해제 |
+| **Node click** | `onSelectAgent(agent)` — opens existing agent detail panel |
+| **Node hover** | Highlights connected edges + dims unconnected nodes |
+| **Edge hover** | Shows task title tooltip |
+| **Drag empty area** | Pan |
+| **Mouse wheel** | Zoom (relative to cursor position) |
+| **Double-click** | Fit-to-view |
+| **Esc** | Deselect |
 
 ### 7-1. Fit-to-View
 
@@ -429,10 +431,10 @@ function fitToView(nodes: FlowNode[], svgRect: DOMRect): ViewTransform {
 
 ---
 
-## 8. 실시간 데이터 흐름
+## 8. Real-Time Data Flow
 
 ```
-WebSocket ──→ useRealtimeSync (기존, App.tsx)
+WebSocket ──→ useRealtimeSync (existing, App.tsx)
                     │
               agents[], tasks[], subAgents[],
               crossDeptDeliveries[], meetingPresences[]
@@ -441,14 +443,14 @@ WebSocket ──→ useRealtimeSync (기존, App.tsx)
                     │
               useFlowLayout(projectAgents, relationships)
                     │
-              { nodes, edges, meetings } ── useMemo로 캐싱
+              { nodes, edges, meetings } ── cached with useMemo
                     │
-              SVG 렌더링
+              SVG rendering
 ```
 
-**새 API 불필요.** 기존 props를 그대로 사용.
+**No new API required.** Uses existing props as-is.
 
-**핵심: 프로젝트 팀 에이전트만 표시**
+**Key: Only project team agents are displayed**
 ```typescript
 const projectAgents = useMemo(
   () => agents.filter(a => projectAgentIds?.has(a.id)),
@@ -458,7 +460,7 @@ const projectAgents = useMemo(
 
 ---
 
-## 9. 컨트롤 UI (SVG 위 HTML 오버레이)
+## 9. Control UI (HTML Overlay on SVG)
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -466,46 +468,46 @@ const projectAgents = useMemo(
 └─────────────────────────────────────────────────────────┘
 ```
 
-- 줌 인/아웃 버튼
-- Fit-to-view 리셋
-- 상태별 필터 (전체 / working만 / 미팅 중만)
-- **"프로젝트 팀만" 기본 ON** — 프로젝트 미선택 시 전체 에이전트 표시
+- Zoom in/out buttons
+- Fit-to-view reset
+- Status filter (all / working only / in meeting only)
+- **"Project team only" ON by default** — shows all agents when no project is selected
 
 ---
 
-## 10. 통합 단계
+## 10. Integration Steps
 
-### Step 1: View 타입 추가
+### Step 1: Add View Type
 ```typescript
 // src/app/types.ts
 export type View = ... | "flow-graph";
 ```
 
-### Step 2: 사이드바 추가
+### Step 2: Add to Sidebar
 ```typescript
 // src/components/Sidebar.tsx — NAV_STRUCTURE
-// "에이전트" 섹션의 children에 추가 (agents, heartbeat 다음)
+// Add to the children of the "Agents" section (after agents, heartbeat)
 { view: "flow-graph" }
 
-// AGENTS_CHILDREN 배열에도 추가
+// Also add to AGENTS_CHILDREN array
 const AGENTS_CHILDREN: View[] = ["agents", "heartbeat", "flow-graph"];
 
-// navLabels에 추가
+// Add to navLabels
 "flow-graph": t({ ko: "플로우 그래프", en: "flow graph", ja: "フローグラフ", zh: "流程图" }),
 
-// collapsed 아이콘 추가
+// Add collapsed icon
 view === "flow-graph" ? "◎" : ...
 ```
 
-**메뉴 위치: 에이전트 섹션**
+**Menu location: Agents section**
 ```
-에이전트
-  ├── 에이전트 & 부서    (agents)     ⊙
-  ├── 현황 모니터        (heartbeat)  ♡
-  └── 플로우 그래프      (flow-graph) ◎
+Agents
+  ├── Agents & Departments  (agents)     ⊙
+  ├── Status Monitor        (heartbeat)  ♡
+  └── Flow Graph            (flow-graph) ◎
 ```
 
-### Step 3: 레이아웃 렌더링
+### Step 3: Layout Rendering
 ```typescript
 // src/app/AppMainLayout.tsx
 {view === "flow-graph" && (
@@ -524,21 +526,21 @@ view === "flow-graph" ? "◎" : ...
 
 ---
 
-## 11. 성능 고려
+## 11. Performance Considerations
 
-| 항목 | 전략 |
+| Item | Strategy |
 |---|---|
-| 프로젝트 팀 기준 필터 | 전체 에이전트가 아닌 프로젝트 팀만 렌더 (보통 3~15명) |
-| 레이아웃 캐싱 | `useMemo` — deps: `[projectAgents, relationships]` |
-| foreignObject | 노드당 1개. 15명 이하면 성능 이슈 없음 |
-| 실시간 업데이트 | 에이전트 상태 변경 시 해당 노드만 리렌더 (React key 기반) |
-| 줌/팬 | SVG transform으로 처리, DOM 재계산 최소화 |
+| Project team filter | Renders only project team agents, not all agents (typically 3–15 members) |
+| Layout caching | `useMemo` — deps: `[projectAgents, relationships]` |
+| foreignObject | One per node. No performance issues with 15 or fewer members |
+| Real-time updates | Only the affected node re-renders on agent status change (React key-based) |
+| Zoom/pan | Handled via SVG transform, minimizing DOM recalculation |
 
 ---
 
-## 12. 향후 확장
+## 12. Future Extensions
 
-- **워크플로 빌더**: 편집 모드 추가 시 노드 드래그, 엣지 생성 기능 확장
-- **타임라인 뷰**: 같은 데이터로 시간축 기반 간트 차트 렌더링
-- **미팅 실황**: 미팅 phase 진행 상태를 실시간으로 클러스터 내에 표시
-- **활성 엣지 애니메이션**: 데이터 전달을 시각적으로 표현하는 흐르는 점
+- **Workflow builder**: Add edit mode with node drag and edge creation functionality
+- **Timeline view**: Render a time-axis Gantt chart using the same data
+- **Live meeting**: Show real-time meeting phase progress inside the cluster
+- **Active edge animation**: Flowing dots to visually represent data transfer
