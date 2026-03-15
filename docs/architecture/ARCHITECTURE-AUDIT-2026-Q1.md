@@ -1,720 +1,720 @@
-# AgentDesk 아키텍처 감사 보고서
+# AgentDesk Architecture Audit Report
 
-**작성일:** 2026-03-11 | **업데이트:** 2026-03-15
-**버전:** AgentDesk 2.0.1
-**분석 범위:** 프론트엔드 + 백엔드 + DB + 에이전트 실행 엔진
-**에이전트 실행 성능 감사:** 별도 문서 참조 (`docs/strategy/agent-performance-audit.md`)
-
----
-
-## 목차
-
-1. [종합 평가](#1-종합-평가)
-2. [현재 아키텍처 개요](#2-현재-아키텍처-개요)
-3. [백엔드 엔진 강점](#3-백엔드-엔진-강점)
-4. [문제점 분석](#4-문제점-분석)
-5. [아키텍처 개선 방향](#5-아키텍처-개선-방향)
-6. [플랫폼 로드맵](#6-플랫폼-로드맵)
-7. [즉시 처리 권고](#7-즉시-처리-권고)
-8. [부록 — 추가 발견사항](#8-부록--추가-발견사항)
+**Created:** 2026-03-11 | **Updated:** 2026-03-15
+**Version:** AgentDesk 2.0.1
+**Scope:** Frontend + Backend + DB + Agent Execution Engine
+**Agent Execution Performance Audit:** See separate document (`docs/strategy/agent-performance-audit.md`)
 
 ---
 
-## 1. 종합 평가
+## Table of Contents
+
+1. [Overall Assessment](#1-overall-assessment)
+2. [Current Architecture Overview](#2-current-architecture-overview)
+3. [Backend Engine Strengths](#3-backend-engine-strengths)
+4. [Issue Analysis](#4-issue-analysis)
+5. [Architecture Improvement Directions](#5-architecture-improvement-directions)
+6. [Platform Roadmap](#6-platform-roadmap)
+7. [Immediate Action Recommendations](#7-immediate-action-recommendations)
+8. [Appendix — Additional Findings](#8-appendix--additional-findings)
+
+---
+
+## 1. Overall Assessment
 
 ```
-백엔드 엔진 상태 (2026-03-15 기준)
+Backend Engine Status (as of 2026-03-15)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-아키텍처 설계         ████████████████████ 100%  ✅ Zustand 분리·에러 통일·동기화 단일화 완료
-보안                 ████████████████████ 100%  ✅ P0 보안 패치 전량 완료
-데이터베이스          ████████████████████ 100%  ✅ 인덱스·마이그레이션 버전 추적·TTL 캐시 완료
-에러 처리            ██████████████████░░  90%  ✅ ApiError 통일 완료 (CSRF 범위 확대 잔존)
-테스트 커버리지       ████████████████████ 100%  ✅ 서버 181개 + 프론트 43개 전부 통과
-코드 모듈화          ████████████████░░░░  80%  (거대 파일 일부 잔존)
+Architecture Design      ████████████████████ 100%  ✅ Zustand separation, error unification, sync consolidation complete
+Security                 ████████████████████ 100%  ✅ All P0 security patches complete
+Database                 ████████████████████ 100%  ✅ Indexes, migration version tracking, TTL cache complete
+Error Handling           ██████████████████░░  90%  ✅ ApiError unification complete (CSRF scope expansion remaining)
+Test Coverage            ████████████████████ 100%  ✅ Server 181 + Frontend 43 tests all passing
+Code Modularity          ████████████████░░░░  80%  (some large files remain)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-종합                 ████████████████████  ~95%
+Overall                  ████████████████████  ~95%
 ```
 
-**한마디**: 핵심 기능·보안·성능 모두 안정화 완료. 잔존 과제는 **거대 파일 분리**, **CSRF 범위 확대** 정도.
+**Summary:** Core functionality, security, and performance are all stabilized. Remaining tasks are **large file decomposition** and **CSRF scope expansion**.
 
 ---
 
-## 2. 현재 아키텍처 개요
+## 2. Current Architecture Overview
 
-### 2.1 전체 구조
+### 2.1 Overall Structure
 
 ```
 ┌─────────────────────────────────────────────────────────┐
 │              Browser / Electron (Desktop)               │
 ├─────────────────────────────────────────────────────────┤
 │  React 19 + TypeScript                                  │
-│  ├─ App.tsx          루트 컴포넌트 (Zustand 스토어 구독)  │
-│  ├─ Desktop.tsx      macOS 바탕화면 OS 루트              │
-│  ├─ api/             HTTP 클라이언트 레이어              │
-│  └─ hooks/           WebSocket + 폴링                   │
+│  ├─ App.tsx          Root component (Zustand store sub) │
+│  ├─ Desktop.tsx      macOS desktop OS root              │
+│  ├─ api/             HTTP client layer                  │
+│  └─ hooks/           WebSocket + polling                │
 └───────────────┬─────────────────────────────────────────┘
                 │  HTTP /api/* + WebSocket ws://
 ┌───────────────▼─────────────────────────────────────────┐
 │  Express 5 (Port 8790)                                  │
 │  ├─ routes/core/     agents, tasks, projects, categories│
 │  ├─ routes/ops/      memory, hooks, skills, terminal    │
-│  ├─ workflow/        프롬프트 빌드 + 실행 컨텍스트       │
-│  └─ gateway/client   외부 AI 제공자 통신                │
+│  ├─ workflow/        prompt build + execution context   │
+│  └─ gateway/client   external AI provider communication │
 └───────────────┬─────────────────────────────────────────┘
                 │
 ┌───────────────▼─────────────────────────────────────────┐
 │  SQLite (agentdesk.sqlite)                              │
-│  ├─ 기존: departments, agents, tasks, messages          │
+│  ├─ legacy: departments, agents, tasks, messages        │
 │  └─ 2.0: categories, projects, objectives/risks/gates   │
 └───────────────┬─────────────────────────────────────────┘
                 │
 ┌───────────────▼─────────────────────────────────────────┐
 │  Agent Execution Layer                                  │
-│  ├─ CLI 에이전트: child_process.spawn() (로컬)          │
-│  └─ API 에이전트: HTTP (Claude API, OpenAI 등)          │
+│  ├─ CLI agents: child_process.spawn() (local)           │
+│  └─ API agents: HTTP (Claude API, OpenAI, etc.)         │
 └─────────────────────────────────────────────────────────┘
 ```
 
-### 2.2 데이터 모델 계층
+### 2.2 Data Model Hierarchy
 
 ```
 Organization
-└── Department (부서)
-    └── Agent (에이전트)
+└── Department
+    └── Agent
         ├── cli_provider: claude | codex | gemini | api | ollama ...
         ├── persona_id: structured | creative | analytical ...
         └── role: team_leader | senior | junior | intern
 
-Category (프로젝트 타입 템플릿)
-└── Project (프로젝트)
-    ├── project_path (필수 — 에이전트 실행 경로)
-    ├── project_agents (팀 멤버)
-    ├── project_objectives (목표)
-    ├── project_risks (리스크)
-    ├── project_gates (검토 단계)
-    └── project_outputs (결과물)
+Category (project type template)
+└── Project
+    ├── project_path (required — agent execution path)
+    ├── project_agents (team members)
+    ├── project_objectives (objectives)
+    ├── project_risks (risks)
+    ├── project_gates (review stages)
+    └── project_outputs (deliverables)
 
-Task (태스크)
+Task
 ├── project_id → Project
 ├── assigned_agent_id → Agent
-└── execution_sessions (실행 기록)
+└── execution_sessions (execution history)
 ```
 
-### 2.3 에이전트 실행 흐름
+### 2.3 Agent Execution Flow
 
 ```
 POST /api/tasks/:id/run
         │
         ▼
-에이전트 할당 (auto-assign or direct)
+Agent assignment (auto-assign or direct)
         │
         ▼
-프롬프트 빌드
-├── 워크플로우 팩 가이던스
-├── 페르소나 블록
-├── 사용 가능한 스킬 목록
-└── 프로젝트 컨텍스트 (project_path, git 히스토리)
+Prompt build
+├── workflow pack guidance
+├── persona block
+├── available skills list
+└── project context (project_path, git history)
         │
         ▼
-실행 선택
-├── CLI: child_process.spawn() → stdout 스트리밍
-└── API: HTTP POST → 스트리밍 응답
+Execution selection
+├── CLI: child_process.spawn() → stdout streaming
+└── API: HTTP POST → streaming response
         │
         ▼
-appendTaskLog() → task_logs 테이블
+appendTaskLog() → task_logs table
 broadcast('cli_output') → WebSocket → TerminalPanel
         │
         ▼
-완료: task.status = 'done' | 'failed'
+Complete: task.status = 'done' | 'failed'
 broadcast('task_update')
 ```
 
-### 2.4 실시간 동기화 전략
+### 2.4 Real-Time Sync Strategy
 
-| 메커니즘 | 파일 | 용도 |
-|---------|------|------|
+| Mechanism | File | Purpose |
+|-----------|------|---------|
 | WebSocket (push) | `useRealtimeSync.ts` | task_update, cli_output, agent_status |
-| Polling (pull) | `usePolling.ts` | 상태 폴백 |
-| Live Sync Scheduler | `useLiveSyncScheduler.ts` | 주기적 전체 동기화 |
+| Polling (pull) | `usePolling.ts` | status fallback |
+| Live Sync Scheduler | `useLiveSyncScheduler.ts` | periodic full sync |
 
 ---
 
-### 2.5 워크플로우팩 & 프로젝트 생성 구조
+### 2.5 Workflow Pack & Project Creation Structure
 
-**파일:** `server/modules/workflow/packs/definitions.ts`, `server/modules/routes/core/projects.ts`
+**Files:** `server/modules/workflow/packs/definitions.ts`, `server/modules/routes/core/projects.ts`
 
-프로젝트 생성 시 `default_pack_key`를 지정하며, 팩 설정은 `server/prompts/packs/{packKey}.md` 파일의 `<!-- pack-config -->` JSON 블록에서 로드된다.
+When creating a project, a `default_pack_key` is specified. Pack configuration is loaded from the `<!-- pack-config -->` JSON block in `server/prompts/packs/{packKey}.md`.
 
-| 팩 키 | 용도 | 선호 부서 | 추론 수준 |
-|-------|------|-----------|----------|
-| `development` | 코드 개발·버그픽스 | dev, qa, planning | high |
-| `report` | 구조화 보고서 | planning, dev | high |
-| `web_research_report` | 웹 리서치·분석 | planning, dev | medium |
-| `novel` | 소설·창작 | creative | medium |
-| `video_preprod` | 영상 사전 제작 | creative, design | medium |
-| `roleplay` | 롤플레이 | creative | low |
-| `asset_management` | 투자·자산관리 | planning, finance | high |
+| Pack Key | Purpose | Preferred Departments | Reasoning Level |
+|----------|---------|----------------------|-----------------|
+| `development` | Code development & bug fixes | dev, qa, planning | high |
+| `report` | Structured reports | planning, dev | high |
+| `web_research_report` | Web research & analysis | planning, dev | medium |
+| `novel` | Fiction & creative writing | creative | medium |
+| `video_preprod` | Video pre-production | creative, design | medium |
+| `roleplay` | Roleplay | creative | low |
+| `asset_management` | Investment & asset management | planning, finance | high |
 
-**프로젝트 생성 시 핵심 파라미터:**
+**Key parameters for project creation:**
 
 ```typescript
 POST /api/projects
 {
   name: string;
-  project_path: string;          // allowed roots 내 경로만 허용
+  project_path: string;          // only paths within allowed roots
   core_goal: string;
   default_pack_key?: WorkflowPackKey;
-  assignment_mode?: 'auto' | 'manual';  // 기본값: 'auto'
-  agent_ids?: string[];           // manual 모드 시 배정할 에이전트 목록
+  assignment_mode?: 'auto' | 'manual';  // default: 'auto'
+  agent_ids?: string[];           // agents to assign in manual mode
 }
 ```
 
-**`assignment_mode` 동작 차이:**
-- `auto`: 태스크 실행 시마다 팩 선호도·역할·상태 기준으로 에이전트 자동 선별
-- `manual`: `project_agents` 테이블에 등록된 에이전트 풀 내에서만 자동 선별
+**`assignment_mode` behavior difference:**
+- `auto`: At each task execution, agents are automatically selected based on pack preference, role, and status
+- `manual`: Automatic selection is limited to agents registered in the `project_agents` table
 
 ---
 
-### 2.6 에이전트 자동 선별 알고리즘
+### 2.6 Agent Auto-Assignment Algorithm
 
-**파일:** `server/modules/routes/core/tasks/execution-run-auto-assign.ts`
+**File:** `server/modules/routes/core/tasks/execution-run-auto-assign.ts`
 
-`selectAutoAssignableAgentForTask()` 가 아래 단계를 순서대로 실행한다:
+`selectAutoAssignableAgentForTask()` executes the following steps in order:
 
 ```
-Step 1. 에이전트 풀 제약 해소 (resolveConstrainedAgentScopeForTask)
-    ├─ 워크플로우팩 프로필 기반 에이전트 목록
-    ├─ 프로젝트 manual 스코프 에이전트 목록
-    └─ 두 목록의 교집합 → 유효 후보 풀
+Step 1. Resolve agent pool constraints (resolveConstrainedAgentScopeForTask)
+    ├─ Agent list based on workflow pack profile
+    ├─ Agent list from project manual scope
+    └─ Intersection of both lists → valid candidate pool
 
-Step 2. 필터링
-    ├─ cli_provider 설정된 에이전트만
-    ├─ status = 'idle' OR 'break' (working 제외)
-    └─ current_task_id IS NULL (현재 진행 중인 태스크 없는 에이전트)
+Step 2. Filtering
+    ├─ Only agents with cli_provider configured
+    ├─ status = 'idle' OR 'break' (excluding 'working')
+    └─ current_task_id IS NULL (agents with no ongoing task)
 
-Step 3. 정렬 (우선순위 순)
-    ① 팩 선호 부서 소속 여부 (preferredDepartments 순서)
-    ② 에이전트 상태: idle(1) > break(2)
-    ③ 에이전트 역할: senior(1) > team_leader(2) > junior(3) > intern(4)
-    ④ 완료 태스크 수 (적을수록 우선 — 로드 밸런싱)
-    ⑤ 생성 시간 (오래된 에이전트 우선 — FIFO)
+Step 3. Sorting (in priority order)
+    ① Membership in pack preferred departments (by preferredDepartments order)
+    ② Agent status: idle(1) > break(2)
+    ③ Agent role: senior(1) > team_leader(2) > junior(3) > intern(4)
+    ④ Number of completed tasks (fewer = higher priority — load balancing)
+    ⑤ Creation time (older agents first — FIFO)
 
-Step 4. 상위 후보 반환
+Step 4. Return top candidate
     └─ { packKey, agent: AutoAssignableAgent }
 ```
 
-**OAuth 제공자 추가 검증:** `copilot`, `antigravity` 등 OAuth 기반 에이전트는 `oauth_accounts` 테이블의 토큰 유효성도 함께 검사.
+**OAuth provider additional validation:** OAuth-based agents such as `copilot` and `antigravity` also have their token validity checked in the `oauth_accounts` table.
 
 ---
 
-### 2.7 특정 에이전트 직접 업무 지시
+### 2.7 Direct Agent Task Assignment
 
-**파일:** `server/modules/routes/core/tasks/execution-run.ts`, `server/modules/routes/collab/task-delegation.ts`
+**Files:** `server/modules/routes/core/tasks/execution-run.ts`, `server/modules/routes/collab/task-delegation.ts`
 
-특정 에이전트에게 업무를 지시하는 3가지 경로:
+Three paths for assigning work to a specific agent:
 
-#### 경로 ① — UI/API 직접 지정
+#### Path 1 — UI/API Direct Assignment
 
 ```typescript
-// 태스크 생성 시 assigned_agent_id 직접 설정
+// Set assigned_agent_id directly when creating a task
 POST /api/tasks
 { "title": "...", "assigned_agent_id": "agent-001" }
 
-// 태스크 실행 시 agent_id 전달 (run body)
+// Pass agent_id when running a task (run body)
 POST /api/tasks/:id/run
 { "agent_id": "agent-001" }
 ```
 
-실행 시 스코프 검증:
+Scope validation at execution time:
 ```
-assigned_agent_id 설정됨
+assigned_agent_id is set
     │
     ▼
-resolveConstrainedAgentScopeForTask() 호출
-    ├─ 스코프 통과 → 해당 에이전트로 실행
-    └─ 스코프 위반 → agentId 초기화 → auto-assign으로 전환
+resolveConstrainedAgentScopeForTask() called
+    ├─ Scope passes → execute with that agent
+    └─ Scope violation → reset agentId → fall back to auto-assign
 ```
 
-#### 경로 ② — 팀 리더 위임 (task-delegation)
+#### Path 2 — Team Leader Delegation (task-delegation)
 
 ```
-클라이언트 지시 메시지
+Client instruction message
     │
     ▼
-팀 리더 acknowledgment (assigned_agent_id = teamLeader.id)
+Team leader acknowledgment (assigned_agent_id = teamLeader.id)
     │
     ▼
-findBestSubordinate() → 부하 에이전트 선정
+findBestSubordinate() → select subordinate agent
     │
     ▼
 DB UPDATE tasks SET assigned_agent_id = subordinate.id
 sendAgentMessage(type: "task_assign", receiverId: subordinate.id)
 ```
 
-#### 경로 ③ — 프로젝트 단위 고정 배치 (manual 모드)
+#### Path 3 — Project-Level Fixed Assignment (manual mode)
 
 ```sql
--- 프로젝트를 manual 모드로 설정
+-- Set project to manual mode
 UPDATE projects SET assignment_mode = 'manual' WHERE id = ?
 
--- 허용 에이전트 등록
+-- Register allowed agents
 INSERT INTO project_agents (project_id, agent_id) VALUES (?, ?)
 ```
 
 ---
 
-### 2.8 업무 지시서 (프롬프트) 조립 구조
+### 2.8 Task Brief (Prompt) Assembly Structure
 
-**파일:** `server/modules/routes/core/tasks/execution-run.ts` (lines 494–527)
-**함수:** `buildTaskExecutionPrompt()`
+**File:** `server/modules/routes/core/tasks/execution-run.ts` (lines 494–527)
+**Function:** `buildTaskExecutionPrompt()`
 
-에이전트에게 전달되는 프롬프트는 최대 15개 블록의 순서 조립:
+The prompt delivered to the agent is assembled in order from up to 15 blocks:
 
 ```
 [Task Session]              ← sessionId, agentId, provider
-[Project Structure]         ← 코드베이스 디렉토리 요약 (첫 실행 시 생성)
-[Recent Changes]            ← 최근 git 변경 내역 (선택)
-[Task] {title}              ← task.title + task.description  ★ 핵심
-[Workflow Pack Rules]        ← 팩 별 실행 지침 (buildWorkflowPackExecutionGuidance)
-[Document Generation]        ← 출력 형식 가이드
-[Continuation Context]       ← 재실행 시 이전 체크리스트 미완 항목
-[Conversation Context]       ← 최근 대화 맥락
-Agent: {name} ({role})      ← 에이전트 정체성
-[Character Persona]          ← 페르소나 블록 (buildCharacterPersonaBlock)
-[Department Constraint]      ← 부서 제약 및 부서 프롬프트
-[Interrupt Injections]       ← 일시정지 태스크 재개 시 추가 지시
-[Project Rules]              ← 프로젝트·에이전트·부서·글로벌 규칙 (5분 TTL 캐시)
-[Agent Memory]               ← 관련 과거 기억 (5분 TTL 캐시)
-[Run Instruction]            ← 최종 실행 지침
+[Project Structure]         ← codebase directory summary (generated on first run)
+[Recent Changes]            ← recent git changes (optional)
+[Task] {title}              ← task.title + task.description  ★ core
+[Workflow Pack Rules]        ← pack-specific execution guidance (buildWorkflowPackExecutionGuidance)
+[Document Generation]        ← output format guide
+[Continuation Context]       ← incomplete checklist items from previous run
+[Conversation Context]       ← recent conversation context
+Agent: {name} ({role})      ← agent identity
+[Character Persona]          ← persona block (buildCharacterPersonaBlock)
+[Department Constraint]      ← department constraints and department prompt
+[Interrupt Injections]       ← additional instructions when resuming a paused task
+[Project Rules]              ← project/agent/department/global rules (5-min TTL cache)
+[Agent Memory]               ← relevant past memories (5-min TTL cache)
+[Run Instruction]            ← final execution instruction
 
-스코프 우선순위: project > agent > department > global
+Scope priority: project > agent > department > global
 ```
 
 ---
 
-### 2.9 에이전트 회의 시스템 (Review Consensus Meeting)
+### 2.9 Agent Meeting System (Review Consensus Meeting)
 
-**파일:** `server/modules/workflow/orchestration/meetings/review-consensus.ts`
+**File:** `server/modules/workflow/orchestration/meetings/review-consensus.ts`
 
-태스크 완료 후 `startReviewConsensusMeeting()` 가 자동 호출되며, 최대 3라운드의 합의 프로세스를 진행한다.
+After task completion, `startReviewConsensusMeeting()` is automatically called and runs a consensus process of up to 3 rounds.
 
-**회의 단계별 역할:**
+**Roles per meeting phase:**
 
-| 라운드 | 단계명 | 참여자 | 역할 |
-|--------|--------|--------|------|
-| Round 1 | Parallel Remediation | 각 부서 리더 | 독립적 수정 제안 |
-| Round 2 | Merge Synthesis | 팀 리더들 | 피드백 취합 및 통합 |
-| Round 3 | Final Decision | 기획(planning) 리더 | 최종 승인/반려 |
+| Round | Phase Name | Participants | Role |
+|-------|-----------|--------------|------|
+| Round 1 | Parallel Remediation | Each department leader | Independent revision proposals |
+| Round 2 | Merge Synthesis | Team leaders | Collect and integrate feedback |
+| Round 3 | Final Decision | Planning leader | Final approval/rejection |
 
-**회의 진행 흐름:**
+**Meeting flow:**
 
 ```
-callLeadersToClientOffice()          ← 에이전트 상태 → meeting
+callLeadersToClientOffice()          ← agent status → meeting
     │
     ▼
-for each 리더 에이전트 (async):
+for each leader agent (async):
     ① emitMeetingSpeech(agent, phase) → WebSocket broadcast
     ② runAgentOneShot(agent, meetingPrompt)
     ③ appendMeetingMinuteEntry(agent, content) → meeting_minute_entries
-    ④ 결정 수집: approve | revise | pending
+    ④ collect decision: approve | revise | pending
     │
     ▼
 processReviewConsensusOutcome()
-    ├─ 전원/다수 approve  → finishReview(task) → status: 'done'
-    ├─ revise 요청 있음   → seedReviewRevisionSubtasks() → 수정 서브태스크 생성
-    └─ Round 3 초과       → 강제 승인 처리
+    ├─ all/majority approve  → finishReview(task) → status: 'done'
+    ├─ revise requested      → seedReviewRevisionSubtasks() → create revision subtasks
+    └─ Round 3 exceeded      → force approval
     │
     ▼
-dismissLeadersFromClientOffice()     ← 에이전트 상태 → idle
+dismissLeadersFromClientOffice()     ← agent status → idle
 ```
 
-**런타임 회의 상태 맵 (In-Memory):**
+**Runtime Meeting State Maps (In-Memory):**
 
-| Map | 키 | 값 |
-|-----|----|----|
+| Map | Key | Value |
+|-----|-----|-------|
 | `meetingPhaseByAgent` | agentId | opening·feedback·summary·approval |
-| `meetingPresenceUntil` | agentId | 회의 종료 타임스탬프 |
-| `meetingSeatIndexByAgent` | agentId | 좌석 번호 (0~5, 최대 6인) |
+| `meetingPresenceUntil` | agentId | meeting end timestamp |
+| `meetingSeatIndexByAgent` | agentId | seat number (0–5, max 6 participants) |
 | `meetingReviewDecisionByAgent` | agentId | approve·revise·pending |
-| `meetingTaskIdByAgent` | agentId | 현재 회의 중인 taskId |
+| `meetingTaskIdByAgent` | agentId | taskId of current meeting |
 
-> ⚠️ **[A15]** 위 5개 Map은 서버 재시작 시 초기화됨 → 진행 중 회의 세션 소실 위험
+> ⚠️ **[A15]** The 5 Maps above are reset on server restart → risk of losing in-progress meeting session state
 
 ---
 
-### 2.10 결과 도출 & 학습 메커니즘
+### 2.10 Outcome Derivation & Learning Mechanism
 
-**파일:** `server/modules/workflow/orchestration/run-complete-handler.ts`
+**File:** `server/modules/workflow/orchestration/run-complete-handler.ts`
 
-에이전트 프로세스 종료(exit) 후 `handleTaskRunComplete(taskId, exitCode)` 가 순차 실행:
+After agent process exit, `handleTaskRunComplete(taskId, exitCode)` executes sequentially:
 
 ```
-① 결과 저장
-   task.result = 로그 마지막 2,000자
+① Save result
+   task.result = last 2,000 characters of logs
    task.status = 'review' (exit 0) | 'failed' (exit ≠ 0)
 
-② 아티팩트 동기화 (video_preprod)
-   └─ handleVideoArtifactSync() — 렌더링된 영상 파일 확인
+② Artifact sync (video_preprod)
+   └─ handleVideoArtifactSync() — check rendered video files
 
-③ 출력 게이트 검증 (runAfterExitGates)
-   └─ 워크플로우팩 outputTemplate 섹션 존재 여부 확인
+③ Output gate validation (runAfterExitGates)
+   └─ Check if workflow pack outputTemplate section exists
 
-④ 학습 추출 (runExtractLearnings)
-   └─ 에이전트 출력 JSON 파싱 → { type: 'learning', content } 형식
-   └─ memory_entries에 저장 → 다음 태스크 buildMemoryPromptBlock()으로 재사용
+④ Learning extraction (runExtractLearnings)
+   └─ Parse agent output JSON → { type: 'learning', content } format
+   └─ Save to memory_entries → reused via buildMemoryPromptBlock() in next task
 
-⑤ 스킬 추출 (runExtractSkills)
-   └─ 새 도구·패턴 → skill_learning_history 저장
+⑤ Skill extraction (runExtractSkills)
+   └─ New tools/patterns → save to skill_learning_history
 
-⑥ 사용량 기록 (recordAgentUsage)
-   └─ 토큰 수, 실행 시간, 비용 → task_executions 업데이트
+⑥ Record usage (recordAgentUsage)
+   └─ Token count, execution time, cost → update task_executions
 
-⑦ Hooks 실행 (fire-and-forget, 병렬 async)
+⑦ Execute hooks (fire-and-forget, parallel async)
    ├─ exit 0: executeHooks('post-task')
    └─ exit ≠ 0: executeHooks('on-error')
 
-⑧ 알림
-   ├─ notifyClient()      → UI 토스트
-   ├─ sendAgentMessage()  → 메신저 (Discord/Telegram)
-   └─ insertNotification() → 감사 로그
+⑧ Notifications
+   ├─ notifyClient()      → UI toast
+   ├─ sendAgentMessage()  → messenger (Discord/Telegram)
+   └─ insertNotification() → audit log
 
-⑨ 워크트리 정리
-   └─ cleanupWorktree() — 격리된 git worktree 삭제
+⑨ Worktree cleanup
+   └─ cleanupWorktree() — delete isolated git worktree
 ```
 
-**태스크 상태 전이:**
+**Task status transitions:**
 
 ```
 inbox → planned → in_progress → review → done
-                            └──────────→ failed → (retry 카운터 증가)
+                            └──────────→ failed → (retry counter incremented)
 ```
 
-**서브태스크 위임 (cross-department):**
+**Subtask delegation (cross-department):**
 
 ```
-부모 태스크 'review' 상태 도달
+Parent task reaches 'review' status
     │
     ▼
 processSubtaskDelegations()
-    ├─ 미완 외부 서브태스크 → 목표 부서별 일괄 묶음
-    └─ 부서별 순차 위임 → 각 부서 팀리더에게 배치 요청
+    ├─ Incomplete external subtasks → grouped by target department
+    └─ Sequential delegation by department → batch request to each department team leader
 ```
 
 ---
 
-## 3. 백엔드 엔진 강점
+## 3. Backend Engine Strengths
 
-### 3-1. Deferred Runtime Proxy 패턴 — 우수
+### 3-1. Deferred Runtime Proxy Pattern — Excellent
 
 `server/modules/deferred-runtime.ts`
 
-- 초기화 시점에 아직 없는 함수를 Proxy로 지연 참조 → 순환 의존성 없이 모듈 간 크로스 참조 해결
-- 미해결 함수가 있으면 서버 시작 시점에 즉시 에러 발생 (`assertRuntimeFunctionsResolved()`)
-- 200개+ 함수의 지연 바인딩 + 검증을 깔끔하게 구현. **변경 불필요.**
+- Functions not yet available at initialization time are referenced lazily via Proxy → cross-module references resolved without circular dependencies
+- If any unresolved functions remain, an error is thrown immediately at server startup (`assertRuntimeFunctionsResolved()`)
+- Cleanly implements deferred binding + validation for 200+ functions. **No changes needed.**
 
-### 3-2. 보안 미들웨어 — 양호
+### 3-2. Security Middleware — Good
 
-`server/security/auth.ts` (222줄)
+`server/security/auth.ts` (222 lines)
 
-- `timingSafeEqual()` — 타이밍 공격 방지
-- CSRF 토큰: SHA-256 해시 기반 생성/검증 (execution-control.ts에 적용)
-- CORS: `isTrustedOrigin()` + 허용 도메인 리스트 + suffix 매칭
-- 쿠키: `HttpOnly`, `SameSite=Strict`, 조건부 `Secure`
-- 루프백 전용 접근 + Bearer 토큰 인증, WebSocket 연결 시 origin + 인증 검증
+- `timingSafeEqual()` — timing attack prevention
+- CSRF tokens: SHA-256 hash-based generation/validation (applied in execution-control.ts)
+- CORS: `isTrustedOrigin()` + allowed domain list + suffix matching
+- Cookies: `HttpOnly`, `SameSite=Strict`, conditional `Secure`
+- Loopback-only access + Bearer token authentication, origin + auth validation on WebSocket connection
 
-### 3-3. WebSocket Hub — 우수
+### 3-3. WebSocket Hub — Excellent
 
-`server/ws/hub.ts` (70줄)
+`server/ws/hub.ts` (70 lines)
 
-- 고빈도 이벤트 배칭 (cli_output: 250ms, subtask_update: 150ms)
-- `MAX_BATCH_QUEUE = 60` → 큐 오버플로 방지 (oldest 드롭)
-- 연결 해제 시 `wsClients.delete()` → 메모리 누수 방지. **변경 불필요.**
+- High-frequency event batching (cli_output: 250ms, subtask_update: 150ms)
+- `MAX_BATCH_QUEUE = 60` → queue overflow prevention (oldest dropped)
+- `wsClients.delete()` on disconnect → memory leak prevention. **No changes needed.**
 
-### 3-4. 라이프사이클 관리 — 우수
+### 3-4. Lifecycle Management — Excellent
 
-`server/modules/lifecycle.ts` (616줄)
+`server/modules/lifecycle.ts` (616 lines)
 
-- 고아 태스크 복구 (startup + interval 모드), 프로세스 PID 생존 확인
-- 로그 파일 mtime 확인 → 실제 출력 진행 중인지 판별
-- 하트비트 + stalled 감지 (90초 임계), 서브태스크 위임 큐 sweep
-- Graceful shutdown: 모든 프로세스 정리 + WebSocket 종료
+- Orphaned task recovery (startup + interval mode), process PID liveness check
+- Log file mtime check → determines if actual output is ongoing
+- Heartbeat + stalled detection (90-second threshold), subtask delegation queue sweep
+- Graceful shutdown: clean up all processes + close WebSocket connections
 
-### 3-5. SQLite 동시성 처리 — 양호
+### 3-5. SQLite Concurrency Handling — Good
 
-- `PRAGMA busy_timeout` + `withSqliteBusyRetry`: 지수 백오프 + 지터
-- `runInTransaction`: 트랜잭션 래퍼 (9개 파일에서 23회 사용)
-- 메시지 멱등성 보장 (`message-idempotency.ts`)
-
----
-
-## 4. 문제점 분석
-
-### 🔴 Critical — 확장성 한계
-
-#### ~~[A1] App.tsx 단일 상태 모노리스~~ ✅ 해결됨 (2026-03-14)
-
-**해결 내용:** 4개 Zustand 스토어 도입 (agentStore, taskStore, projectStore, uiStore). App.tsx의 46개 useState 전량 제거 → 스토어 구독으로 교체. 컴포넌트별 필요한 스토어만 구독하여 불필요한 리렌더 제거됨.
+- `PRAGMA busy_timeout` + `withSqliteBusyRetry`: exponential backoff + jitter
+- `runInTransaction`: transaction wrapper (used 23 times across 9 files)
+- Message idempotency guarantee (`message-idempotency.ts`)
 
 ---
 
-#### [A2] SQLite 단일 노드
+## 4. Issue Analysis
 
-**위치:** `server/db/runtime.ts`
+### 🔴 Critical — Scalability Limits
 
-**문제:**
-- 동시 쓰기 제한 (WAL 모드에서도 단일 writer)
-- 멀티 사용자/팀 협업 구조적으로 불가
-- DB 파일 직접 노출 (백업 전략 없음)
-- 수평 확장 불가능
+#### ~~[A1] App.tsx Single-State Monolith~~ ✅ Resolved (2026-03-14)
 
-**영향도:** 팀 단위 사용 시 즉시 한계 도달
+**Resolution:** Introduced 4 Zustand stores (agentStore, taskStore, projectStore, uiStore). All 46 useState calls in App.tsx removed → replaced with store subscriptions. Components subscribe only to the stores they need, eliminating unnecessary re-renders.
 
 ---
 
-#### [A3] 에이전트 실행 — 프로세스 직접 스폰
+#### [A2] SQLite Single Node
 
-**위치:** `server/modules/routes/core/agents/spawn.ts`, `execution-run.ts`
+**Location:** `server/db/runtime.ts`
 
-**문제:**
-- 에이전트 크래시 → task.status 영구 `"running"` 상태 잔존 가능
-- 재시도/타임아웃 메커니즘 없음
-- 여러 태스크 동시 실행 시 경합 조건 가능성
-- 프로세스 고아(orphan) 발생 시 정리 로직 미흡
+**Issues:**
+- Concurrent write limitation (single writer even in WAL mode)
+- Multi-user/team collaboration structurally impossible
+- Direct DB file exposure (no backup strategy)
+- Horizontal scaling not possible
 
-**영향도:** 장시간 운영 시 좀비 태스크 누적
+**Impact:** Immediate bottleneck when used by teams
 
 ---
 
-### 🟠 High — 개념적 부채
+#### [A3] Agent Execution — Direct Process Spawn
 
-#### [A4] WorkflowPackKey 잔존 (20개 파일)
+**Location:** `server/modules/routes/core/agents/spawn.ts`, `execution-run.ts`
 
-**현황:**
+**Issues:**
+- Agent crash → task.status can remain permanently stuck at `"running"`
+- No retry/timeout mechanism
+- Race conditions possible when running multiple tasks concurrently
+- Insufficient cleanup logic when process orphans occur
+
+**Impact:** Accumulation of zombie tasks over prolonged operation
+
+---
+
+### 🟠 High — Conceptual Debt
+
+#### [A4] WorkflowPackKey Remnants (20 files)
+
+**Current state:**
 ```
-Office Pack 제거 선언 (Phase 5 완료) ✓
-그러나 DB 필드/API 타입으로 WorkflowPackKey 잔존 (20개 파일)
-AgentManager: isIsolatedPack = false 하드코딩
-```
-
-**문제:**
-- "팩 = 실행 컨텍스트"인지 "카테고리 = 프로젝트 타입"인지 이중 모델 혼재
-- 신규 개발자 온보딩 시 혼란 유발
-- 향후 기능 추가 시 어느 쪽에 붙어야 할지 불명확
-
----
-
-#### [A5] 프로젝트 스코핑 — ✅ 해결됨 (2026-03-12)
-
-**구현 완료 현황:**
-```
-project_agents  ✓ DB ✓ 런타임  — 팀 멤버 관리 + auto-assign 필터 적용
-project_rules   ✓ DB ✓ 런타임  — scope_type='project' CHECK 제약 추가,
-                                  buildRulesPromptBlock()으로 프롬프트 주입
-project_memory  ✓ DB ✓ 런타임  — scope_type='project' CHECK 제약 추가,
-                                  searchRelevantMemories()에 projectId 필터 추가
-project_hooks   ✓ DB ✓ 런타임  — scope_type='project' CHECK 제약 추가,
-                                  executeHooks()로 pre-task/post-task/on-error/on-complete 실행
-project_skills  ✓ DB ✓ 런타임  — project_skills 테이블 신규 생성,
-                                  filterSkillsByProject() opt-out 모델로 필터링
+Office Pack removal declared (Phase 5 complete) ✓
+However WorkflowPackKey remains in DB fields/API types (20 files)
+AgentManager: isIsolatedPack = false hardcoded
 ```
 
-**해결된 문제:**
-- ~~에이전트가 프로젝트 A 태스크 실행 시, 프로젝트 B의 rules/memory/hooks/skills도 함께 적용됨~~ → 프로젝트 scope 필터링 적용
-- ~~UI에서 사용자가 `scope_type='project'`로 설정해도 런타임에서 무시됨~~ → DB CHECK + 런타임 모두 적용
-- 프로젝트가 독립된 실행 컨텍스트로 동작
+**Issues:**
+- Dual model confusion: "pack = execution context" vs "category = project type"
+- Causes confusion for new developer onboarding
+- Unclear where new features should attach
 
-**Scope 해상도 우선순위 (모든 기능 공통):**
+---
+
+#### [A5] Project Scoping — ✅ Resolved (2026-03-12)
+
+**Implementation status:**
+```
+project_agents  ✓ DB ✓ Runtime  — team member management + auto-assign filter applied
+project_rules   ✓ DB ✓ Runtime  — scope_type='project' CHECK constraint added,
+                                  injected into prompt via buildRulesPromptBlock()
+project_memory  ✓ DB ✓ Runtime  — scope_type='project' CHECK constraint added,
+                                  projectId filter added to searchRelevantMemories()
+project_hooks   ✓ DB ✓ Runtime  — scope_type='project' CHECK constraint added,
+                                  pre-task/post-task/on-error/on-complete executed via executeHooks()
+project_skills  ✓ DB ✓ Runtime  — project_skills table newly created,
+                                  filterSkillsByProject() opt-out model filtering
+```
+
+**Resolved issues:**
+- ~~When an agent runs a Project A task, Project B's rules/memory/hooks/skills were also applied~~ → project scope filtering applied
+- ~~Even when user sets scope_type='project' in UI, it was ignored at runtime~~ → DB CHECK + runtime both applied
+- Projects now operate as independent execution contexts
+
+**Scope resolution priority (common to all features):**
 ```
 project scope  > agent scope  > department scope  > global scope
-└── 동일 scope 내에서는 priority DESC 순
+└── within the same scope, ordered by priority DESC
 ```
 
-**구현 파일:**
-- `server/modules/bootstrap/schema/task-schema-migrations.ts` — scope_type CHECK 마이그레이션 + project_skills 테이블
-- `server/modules/workflow/core/project-scoped-rules.ts` — buildRulesPromptBlock() (신규)
-- `server/modules/workflow/core/hook-executor.ts` — executeHooks() (신규)
-- `server/modules/workflow/orchestration/autonomous-memory.ts` — projectId 파라미터 추가
-- `server/modules/workflow/core/prompt-skills.ts` — filterSkillsByProject() 추가
-- `server/modules/routes/core/tasks/execution-run.ts` — rules/memory/hooks/skills 연동
-- `server/modules/workflow/orchestration/execution-start-task.ts` — rules/memory/skills 연동
-- `server/modules/workflow/orchestration/run-complete-handler/core.ts` — post-task hooks 연동
+**Implementation files:**
+- `server/modules/bootstrap/schema/task-schema-migrations.ts` — scope_type CHECK migration + project_skills table
+- `server/modules/workflow/core/project-scoped-rules.ts` — buildRulesPromptBlock() (new)
+- `server/modules/workflow/core/hook-executor.ts` — executeHooks() (new)
+- `server/modules/workflow/orchestration/autonomous-memory.ts` — projectId parameter added
+- `server/modules/workflow/core/prompt-skills.ts` — filterSkillsByProject() added
+- `server/modules/routes/core/tasks/execution-run.ts` — rules/memory/hooks/skills integration
+- `server/modules/workflow/orchestration/execution-start-task.ts` — rules/memory/skills integration
+- `server/modules/workflow/orchestration/run-complete-handler/core.ts` — post-task hooks integration
 
 ---
 
-#### [A6] 실시간 동기화 전략 혼재
+#### [A6] Mixed Real-Time Sync Strategy
 
-**문제:**
-- WebSocket + Polling + LiveSyncScheduler 세 가지 동시 운용
-- 동일 데이터에 대해 여러 채널에서 업데이트 도착 시 경쟁 조건
-- 어느 채널이 정답인지 명확한 우선순위 정책 없음
+**Issues:**
+- Three simultaneous mechanisms: WebSocket + Polling + LiveSyncScheduler
+- Race conditions when updates arrive from multiple channels for the same data
+- No clear priority policy for which channel is authoritative
 
 ---
 
-### 🟡 Medium — 관찰가능성 부재
+### 🟡 Medium — Lack of Observability
 
-#### [A7] 에이전트 실행 블랙박스
+#### [A7] Agent Execution Black Box
 
-**현황:**
-- `task_logs` 테이블: raw stdout만 저장
-- 에이전트가 어떤 파일을 수정했는지, 어떤 명령어를 실행했는지 구조적으로 추적 불가
-- 에이전트 간 협업 흐름(task handoff) 가시성 없음
-- 실행 비용(토큰 × 가격) 집계 없음
+**Current state:**
+- `task_logs` table: stores raw stdout only
+- No structural tracking of which files agents modified or which commands they ran
+- No visibility into inter-agent collaboration flow (task handoff)
+- No aggregation of execution cost (tokens × price)
 
-#### [A8] 에러 처리 비일관성
+#### [A8] Inconsistent Error Handling
 
-**패턴:**
+**Pattern:**
 ```typescript
-// 현재 코드 전반에 이 패턴 다수
-someApi().catch(() => {})          // 에러 삼킴
-someApi().catch(console.error)     // 로그만, 사용자 피드백 없음
+// This pattern appears many times throughout the codebase
+someApi().catch(() => {})          // error swallowed
+someApi().catch(console.error)     // logged only, no user feedback
 ```
 
-- 백엔드 에러 응답 4가지 형식 혼재 (`{ ok, data }`, `{ error }`, `{ ok, error }`, raw data)
-- 에러 로그 집계 없음 (구조화 로거 미사용)
-- **프론트엔드는 `handleApiError` 유틸로 일관화됨** — 백엔드 응답 형식만 미표준화
+- 4 mixed formats for backend error responses (`{ ok, data }`, `{ error }`, `{ ok, error }`, raw data)
+- No error log aggregation (structured logger not used)
+- **Frontend is unified with `handleApiError` utility** — only backend response format is non-standard
 
 ---
 
-### 🔴 Critical — 보안
+### 🔴 Critical — Security
 
-#### ~~[A9] Rate Limiting 미구현~~ ✅ 해결됨
+#### ~~[A9] Rate Limiting Not Implemented~~ ✅ Resolved
 
-`server/security/auth.ts` — 인-프로세스 슬라이딩 윈도우 RL 구현. 일반 API: 300 req/min per IP, 태스크 실행: 20 req/min per IP.
+`server/security/auth.ts` — In-process sliding window rate limiter implemented. General API: 300 req/min per IP, task execution: 20 req/min per IP.
 
-#### ~~[A10] OAuth 키 파생 취약~~ ✅ 해결됨
+#### ~~[A10] Weak OAuth Key Derivation~~ ✅ Resolved
 
-`server/oauth/helpers.ts` — `oauthEncryptionKeyV2()`: PBKDF2-SHA256 (100k iterations) 구현 완료. v1/v2 하위 호환 지원.
+`server/oauth/helpers.ts` — `oauthEncryptionKeyV2()`: PBKDF2-SHA256 (100k iterations) implemented. Backward compatible with v1/v2.
 
-#### ~~[A11] 미팅 참여자 필터링 버그~~ ✅ 해결됨 (2026-03-14)
+#### ~~[A11] Meeting Participant Filtering Bug~~ ✅ Resolved (2026-03-14)
 
-`assignment_mode` 조건 제거 → 모든 모드에서 `project_agents` 테이블 기준 필터링 적용.
+`assignment_mode` condition removed → `project_agents` table-based filtering applied in all modes.
 
-#### ~~[A12] 환경 변수 시작 시 검증 없음~~ ✅ 해결됨
+#### ~~[A12] No Environment Variable Validation at Startup~~ ✅ Resolved
 
-`server/server-main.ts` — `validateEnv()` 함수로 서버 시작 시 필수 환경 변수 검증 후 경고 출력. OAuth 실제 사용 시 즉시 throw 처리.
+`server/server-main.ts` — `validateEnv()` function validates required environment variables at server startup and outputs warnings. Throws immediately when OAuth is actually used.
 
 ---
 
-### 🟠 High — 코드 부채
+### 🟠 High — Code Debt
 
-#### [A13] 거대 파일 문제
+#### [A13] Large File Problem
 
-| 파일 | LOC | 문제 |
-|------|-----|------|
-| `gateway/client.ts` | 1,083 | 게이트웨이+메신저+Discord API+RPC 혼재, retry 없음 |
-| `bootstrap/schema/task-schema-migrations.ts` | 1,180 | 마이그레이션 전체가 1파일, 버전 추적 없음 |
-| `workflow/orchestration/review-finalize-tools.ts` | 875 | 리뷰 완료 로직 단일 파일 |
-| `workflow/orchestration.ts` | 785 | 200개+ `__ctx` 변수 추출 패턴 반복 |
+| File | LOC | Issue |
+|------|-----|-------|
+| `gateway/client.ts` | 1,083 | Gateway + messenger + Discord API + RPC mixed, no retry |
+| `bootstrap/schema/task-schema-migrations.ts` | 1,180 | All migrations in 1 file, no version tracking |
+| `workflow/orchestration/review-finalize-tools.ts` | 875 | Review completion logic in single file |
+| `workflow/orchestration.ts` | 785 | `__ctx` variable extraction pattern repeated 200+ times |
 
-#### ~~[A14] WebSocket 연결 수 제한 없음~~ ✅ 해결됨
+#### ~~[A14] No WebSocket Connection Limit~~ ✅ Resolved
 
-`server/modules/lifecycle.ts` — `MAX_WS_CLIENTS = 20` 전역 제한. 초과 시 코드 `4008`으로 즉시 close.
+`server/modules/lifecycle.ts` — `MAX_WS_CLIENTS = 20` global limit. Immediately closes with code `4008` when exceeded.
 
-#### [A15] In-Memory Map 15개
+#### [A15] 15 In-Memory Maps
 
-`orchestration.ts`에서 15개 Map/Set이 서버 프로세스 메모리에 존재:
-- 서버 재시작 시 미팅/리뷰 세션 상태 전부 소실
-- 수평 확장 불가능
-- `reviewRoundState`, `taskExecutionSessions`, `meetingPresenceUntil` 등
+15 Maps/Sets exist in server process memory in `orchestration.ts`:
+- Meeting/review session state lost entirely on server restart
+- Horizontal scaling not possible
+- `reviewRoundState`, `taskExecutionSessions`, `meetingPresenceUntil`, etc.
 
-#### ~~[A16] 마이그레이션 버전 추적 없음~~ ✅ 해결됨
+#### ~~[A16] No Migration Version Tracking~~ ✅ Resolved
 
-`server/modules/bootstrap/schema/versioned-migrations.ts` — `schema_migrations` 테이블 + `runVersionedMigrations()` 구현. 버전 적용 여부 추적 및 중복 실행 방지.
+`server/modules/bootstrap/schema/versioned-migrations.ts` — `schema_migrations` table + `runVersionedMigrations()` implemented. Tracks which versions have been applied and prevents duplicate execution.
 
 ---
 
 ### 🟡 Medium
 
-#### ~~[A17] 메신저 재시도 없음~~ ✅ 해결됨 (2026-03-14)
+#### ~~[A17] No Messenger Retry~~ ✅ Resolved (2026-03-14)
 
-`server/messenger/` — `forwardToInboxWithRetry()` 헬퍼 추가. 최대 3회, 지수 백오프 (2s→4s→8s).
+`server/messenger/` — `forwardToInboxWithRetry()` helper added. Up to 3 retries with exponential backoff (2s→4s→8s).
 
-#### [A18] 동적 SQL 24곳
+#### [A18] Dynamic SQL in 24 Places
 
 ```typescript
 db.prepare(`UPDATE tasks SET ${updates.join(", ")} WHERE id = ?`).run(...params);
 ```
 
-현재는 컬럼명이 하드코딩되어 위험도 낮지만, 패턴이 24곳에 분산 → 실수 가능성.
+Currently low risk because column names are hardcoded, but the pattern is spread across 24 places → potential for mistakes.
 
-#### ~~[A19] 구조화 로깅 없음~~ ✅ 해결됨
+#### ~~[A19] No Structured Logging~~ ✅ Resolved
 
-`server/lib/logger.ts` — pino 도입. 환경별 로거 (dev: pino-pretty, prod: JSON). 서버 전체 40+ 파일의 `console.log/warn/error` → `logger.info/warn/error` 교체 완료.
+`server/lib/logger.ts` — pino introduced. Environment-specific logger (dev: pino-pretty, prod: JSON). Replaced `console.log/warn/error` → `logger.info/warn/error` across 40+ server files.
 
-#### ~~[A20] 테스트 커버리지 불균형~~ ✅ 해결됨
+#### ~~[A20] Uneven Test Coverage~~ ✅ Resolved
 
-서버 테스트 181개 + 프론트 테스트 43개 전부 통과. 주요 모듈(lifecycle, versioned-migrations, hub, gateway 등) 커버리지 대폭 확대.
+Server tests 181 + frontend tests 43, all passing. Test coverage significantly expanded for key modules (lifecycle, versioned-migrations, hub, gateway, etc.).
 
-테스트 없는 핵심 모듈:
-- `lifecycle.ts` (616줄) 🔴
-- `bootstrap/schema/` — DB 마이그레이션 🔴
+Core modules without tests:
+- `lifecycle.ts` (616 lines) 🔴
+- `bootstrap/schema/` — DB migrations 🔴
 - `oauth/` 🔴
-- `routes/core/tasks/execution-run.ts` (729줄) 🔴
-- `gateway/` (1,083줄 대비 테스트 1개) 🟠
+- `routes/core/tasks/execution-run.ts` (729 lines) 🔴
+- `gateway/` (1,083 lines vs 1 test) 🟠
 
-#### [A21] TypeScript `as any` 256개
+#### [A21] TypeScript `as any` — 256 Occurrences
 
-`runtimeContext: Record<string, any>` 설계가 원인. 모듈 경계 타입 안전성 취약.
-
----
-
-## 5. 아키텍처 개선 방향
-
-### ~~Phase A — 상태 관리 재설계~~ ✅ 완료 (2026-03-14)
-
-4개 Zustand 스토어 (agentStore, taskStore, projectStore, uiStore) 도입 완료. App.tsx의 46개 useState 전량 제거. 컴포넌트별 필요한 스토어만 구독하여 불필요한 리렌더 제거됨.
+`runtimeContext: Record<string, any>` design is the root cause. Weak type safety at module boundaries.
 
 ---
 
-### Phase B — 에이전트 실행 엔진 강화
+## 5. Architecture Improvement Directions
 
-**목표:** 직접 프로세스 스폰 → 상태 머신 + 실행 큐
+### ~~Phase A — State Management Redesign~~ ✅ Complete (2026-03-14)
+
+4 Zustand stores (agentStore, taskStore, projectStore, uiStore) introduced. All 46 useState calls in App.tsx removed. Components subscribe only to the stores they need, eliminating unnecessary re-renders.
+
+---
+
+### Phase B — Agent Execution Engine Hardening
+
+**Goal:** Direct process spawn → state machine + execution queue
 
 ```
-현재:
+Current:
 request → spawn() → WebSocket broadcast → done
 
-목표:
+Target:
 request → ExecutionQueue
               │
               ▼
-           Worker (상태 머신)
-           ├── QUEUED      대기열
-           ├── STARTING    프로세스 초기화
-           ├── RUNNING     실행 중 (heartbeat)
-           ├── PAUSED      일시정지
-           ├── DONE        완료
-           ├── FAILED      실패 (에러 + 재시도 여부)
-           └── TIMED_OUT   타임아웃 초과
+           Worker (state machine)
+           ├── QUEUED      waiting in queue
+           ├── STARTING    process initialization
+           ├── RUNNING     executing (heartbeat)
+           ├── PAUSED      paused
+           ├── DONE        completed
+           ├── FAILED      failed (error + retry decision)
+           └── TIMED_OUT   timeout exceeded
 ```
 
-**추가 구현 항목:**
-- `execution_sessions` 테이블 상태 머신 필드 추가
-- 태스크 단위 타임아웃 정책 설정 (`timeout_minutes`)
-- 에이전트 heartbeat (30초 간격) → 응답 없으면 FAILED 전환
-- 크래시 감지 → 자동 상태 복구 (`RUNNING` → `FAILED`)
-- 동시 실행 제한 (에이전트당 max 1 active task)
+**Additional implementation items:**
+- Add state machine fields to `execution_sessions` table
+- Per-task timeout policy configuration (`timeout_minutes`)
+- Agent heartbeat (30-second interval) → transition to FAILED if no response
+- Crash detection → automatic state recovery (`RUNNING` → `FAILED`)
+- Concurrent execution limit (max 1 active task per agent)
 
 ---
 
-### Phase C — 프로젝트 컨텍스트 완전 분리 (런타임 적용)
+### Phase C — Full Project Context Isolation (Runtime Application)
 
-**목표:** 프로젝트가 독립된 실행 컨텍스트 — DB는 준비됨, 런타임 적용이 핵심
+**Goal:** Project as an independent execution context — DB is ready, runtime application is the key
 
-**현재 DB 모델 (이미 구현됨):**
+**Current DB model (already implemented):**
 ```
-agent_rules, memory_entries, hook_entries 모두
+agent_rules, memory_entries, hook_entries all have
 scope_type = 'global' | 'department' | 'agent' | 'workflow_pack' | 'project'
-scope_id = 해당 scope의 참조 ID
-→ 별도 project_* 테이블 불필요, 기존 통합 스코프 모델 활용
+scope_id = reference ID of the corresponding scope
+→ Separate project_* tables not needed, use existing unified scope model
 ```
 
-**스킬만 DB 스키마 보강 필요:**
+**Only skills require DB schema enhancement:**
 ```sql
--- skill_learning_history에 프로젝트 스코프 추가
+-- Add project scope to skill_learning_history
 ALTER TABLE skill_learning_history ADD COLUMN project_id TEXT REFERENCES projects(id);
 
--- 프로젝트별 스킬 활성화/비활성화 관리
+-- Manage per-project skill activation/deactivation
 CREATE TABLE project_skills (
   project_id TEXT NOT NULL REFERENCES projects(id),
   skill_id TEXT NOT NULL,
@@ -723,11 +723,11 @@ CREATE TABLE project_skills (
 );
 ```
 
-**런타임 적용 — 4단계 구현:**
+**Runtime application — 4-step implementation:**
 
-**C-1. Rules 프롬프트 주입** (신규)
+**C-1. Rules Prompt Injection** (new)
 ```typescript
-// execution-start-task.ts에 추가
+// Add to execution-start-task.ts
 function buildRulesPromptBlock(db, projectId, agentId, deptId): string {
   // priority: project > agent > department > global
   const rules = db.prepare(`
@@ -751,19 +751,19 @@ function buildRulesPromptBlock(db, projectId, agentId, deptId): string {
 }
 ```
 
-**C-2. Memory 프로젝트 필터 추가** (기존 수정)
+**C-2. Memory Project Filter Addition** (existing modification)
 ```typescript
-// autonomous-memory.ts — searchRelevantMemories()에 projectId 파라미터 추가
+// autonomous-memory.ts — add projectId parameter to searchRelevantMemories()
 if (projectId) {
   scopeConditions.push("(scope_type = 'project' AND scope_id = ?)");
   scopeParams.push(projectId);
 }
-// execution-start-task.ts — buildMemoryPromptBlock() 호출 시 projectId 전달
+// execution-start-task.ts — pass projectId when calling buildMemoryPromptBlock()
 ```
 
-**C-3. Hooks 런타임 실행 엔진** (신규)
+**C-3. Hooks Runtime Execution Engine** (new)
 ```typescript
-// hook-executor.ts — 태스크 생명주기 이벤트에서 훅 실행
+// hook-executor.ts — execute hooks at task lifecycle events
 async function executeHooks(db, eventType, { projectId, agentId, deptId, taskId }) {
   const hooks = db.prepare(`
     SELECT command, working_directory, timeout_ms FROM hook_entries
@@ -777,32 +777,32 @@ async function executeHooks(db, eventType, { projectId, agentId, deptId, taskId 
   `).all(eventType, projectId, agentId, deptId);
   // child_process.execFile() with timeout
 }
-// execution-run.ts — pre-task, post-task, on-error 시점에서 호출
+// execution-run.ts — called at pre-task, post-task, on-error points
 ```
 
-**C-4. Skills 프로젝트 필터링** (기존 수정)
+**C-4. Skills Project Filtering** (existing modification)
 ```typescript
-// prompt-skills.ts — project_skills 테이블로 활성화된 스킬만 필터
+// prompt-skills.ts — filter only skills enabled via project_skills table
 function queryPromptSkillsByProject(db, provider, projectId): SkillBlock[] {
-  // project_skills.enabled = true인 것만 반환
-  // project_skills에 없는 스킬은 기본 활성화 (opt-out 모델)
+  // return only those with project_skills.enabled = true
+  // skills not in project_skills are enabled by default (opt-out model)
 }
 ```
 
-**에이전트 실행 시 컨텍스트 우선순위 (scope 해상도):**
+**Context priority during agent execution (scope resolution):**
 ```
 project scope  > agent scope  > department scope  > global scope
-└── 동일 scope 내에서는 priority DESC 순
-└── 같은 key/topic의 상위 scope 항목은 하위 scope에서 override 가능
+└── within the same scope, ordered by priority DESC
+└── items in higher scope with the same key/topic can override lower scope
 ```
 
 ---
 
-### Phase D — 관찰가능성 레이어
+### Phase D — Observability Layer
 
-**목표:** 에이전트 실행 내부를 구조적으로 추적
+**Goal:** Structurally track the internals of agent execution
 
-**AgentTrace 모델:**
+**AgentTrace model:**
 ```sql
 CREATE TABLE agent_traces (
   id TEXT PRIMARY KEY,
@@ -822,204 +822,204 @@ CREATE TABLE agent_traces (
 );
 ```
 
-**대시보드 추가 뷰 — 에이전트 타임라인:**
+**Dashboard additional view — Agent Timeline:**
 ```
-[프로젝트 타임라인]
+[Project Timeline]
   ── Alice (claude)
-     10:00  thinking      "분석 중..."
+     10:00  thinking      "Analyzing..."
      10:01  file_write    src/components/Button.tsx (+45 lines)
      10:02  git_commit    "feat: add Button component"
-     10:03  message       → Bob: "PR 리뷰 요청"
-     총: 3분 12초 | 2,341 토큰 | $0.023
+     10:03  message       → Bob: "PR review request"
+     Total: 3 min 12 sec | 2,341 tokens | $0.023
 
   ── Bob (codex)
-     10:04  thinking      "리뷰 중..."
+     10:04  thinking      "Reviewing..."
      ...
 ```
 
 ---
 
-### Phase E — 동기화 전략 단일화
+### Phase E — Sync Strategy Consolidation
 
-**목표:** WebSocket primary + HTTP fallback 구조
+**Goal:** WebSocket primary + HTTP fallback structure
 
 ```
-현재: WebSocket + Polling + LiveSyncScheduler (3중 채널)
+Current: WebSocket + Polling + LiveSyncScheduler (3 channels)
 
-목표:
+Target:
 Primary:  WebSocket (push)
-           └── 모든 실시간 이벤트 (task, agent, message, cli_output)
-Fallback: HTTP polling (30초 간격)
-           └── WebSocket 연결 끊김 감지 시에만 활성화
-Remove:   LiveSyncScheduler (WebSocket으로 흡수)
+           └── all real-time events (task, agent, message, cli_output)
+Fallback: HTTP polling (30-second interval)
+           └── only activated when WebSocket disconnection is detected
+Remove:   LiveSyncScheduler (absorbed into WebSocket)
 ```
 
-**이벤트 버전 관리:**
+**Event versioning:**
 ```typescript
-// 각 이벤트에 sequence number 추가
+// Add sequence number to each event
 { type: 'task_update', seq: 1042, payload: {...} }
-// 클라이언트: seq gap 감지 → 선택적 HTTP 재동기화
+// Client: detect seq gap → selective HTTP re-sync
 ```
 
 ---
 
-## 6. 플랫폼 로드맵
+## 6. Platform Roadmap
 
-### v2.1 — 안정화 (단기, ~4주)
+### v2.1 — Stabilization (Short-term, ~4 weeks)
 
-| 항목 | 설명 | 공수 |
-|------|------|------|
-| WorkflowPackKey 완전 제거 | `task.workflow_pack_key` → `task.context_hint` | 1일 |
-| ~~API 에러 핸들링 통일~~ | ✅ 구현 완료 — server/errors/ApiError.ts + errorMiddleware.ts + frontend handleApiError.ts 토스트 연동 | ~~2일~~ |
-| ~~동기화 전략 단일화~~ | ✅ 구현 완료 — WS task_update 직접 적용 + adaptive polling interval | ~~2일~~ |
-| project_path 검증 API | 서버에서 경로 존재 여부 확인 엔드포인트 | 1일 |
-| ~~실행 상태 정합성 보정~~ | ✅ 이미 구현됨 — `lifecycle.ts` recoverOrphanInProgressTasks() (startup 60s grace + 30s sweep + heartbeat) | ~~1일~~ |
-
----
-
-### v2.2 — 실행 엔진 강화 (중기, ~6주)
-
-| 항목 | 설명 | 공수 |
-|------|------|------|
-| ~~에이전트 실행 상태 머신~~ | ✅ 구현 완료 — stalled 자동 복구 + 상태 전이 검증 가드 + agent idle 리셋 | ~~3일~~ |
-| ~~실행 타임아웃 정책~~ | ✅ 구현 완료 — `timeout_minutes` 컬럼 + `enforceTaskTimeouts()` 30초 주기 검사 | ~~1일~~ |
-| ~~에이전트 heartbeat~~ | ✅ 이미 구현됨 — 30초 heartbeat + 90초 stalled 감지 + 180초 자동 복구 | ~~2일~~ |
-| 실행 비용 추적 | 토큰 × 가격 테이블 → 프로젝트별 비용 집계 | 2일 |
-| 동시 실행 제한 | 에이전트당 max 1 active task 강제 | 1일 |
+| Item | Description | Effort |
+|------|-------------|--------|
+| Complete WorkflowPackKey removal | `task.workflow_pack_key` → `task.context_hint` | 1 day |
+| ~~Unify API error handling~~ | ✅ Implemented — server/errors/ApiError.ts + errorMiddleware.ts + frontend handleApiError.ts toast integration | ~~2 days~~ |
+| ~~Sync strategy consolidation~~ | ✅ Implemented — WS task_update direct apply + adaptive polling interval | ~~2 days~~ |
+| project_path validation API | Endpoint to verify path existence on server | 1 day |
+| ~~Execution state consistency correction~~ | ✅ Already implemented — `lifecycle.ts` recoverOrphanInProgressTasks() (startup 60s grace + 30s sweep + heartbeat) | ~~1 day~~ |
 
 ---
 
-### v2.3 — Project OS 완성 (중기, ~8주)
+### v2.2 — Execution Engine Hardening (Medium-term, ~6 weeks)
 
-| 항목 | 설명 | 공수 |
-|------|------|------|
-| ~~C-1. Rules 프롬프트 주입~~ | ~~buildRulesPromptBlock() 신규 구현~~ ✅ 완료 | ~~2일~~ |
-| ~~C-2. Memory 프로젝트 필터~~ | ~~autonomous-memory.ts에 projectId 추가~~ ✅ 완료 | ~~1일~~ |
-| ~~C-3. Hooks 런타임 실행~~ | ~~hook-executor.ts 신규~~ ✅ 완료 | ~~3일~~ |
-| ~~C-4. Skills 프로젝트 스코핑~~ | ~~project_skills 테이블 + 필터링~~ ✅ 완료 | ~~2일~~ |
-| App.tsx → Zustand 분리 | 도메인별 스토어 4개 | 4일 |
-| 프로젝트 템플릿 | 카테고리 → objectives/gates 자동 생성 | 2일 |
-| 에이전트 타임라인 뷰 | AgentTrace 기반 실행 가시화 | 3일 |
-| 태스크 핸드오프 | A 완료 → B 자동 시작 (dependency chain) | 3일 |
+| Item | Description | Effort |
+|------|-------------|--------|
+| ~~Agent execution state machine~~ | ✅ Implemented — stalled auto-recovery + state transition validation guard + agent idle reset | ~~3 days~~ |
+| ~~Execution timeout policy~~ | ✅ Implemented — `timeout_minutes` column + `enforceTaskTimeouts()` 30-second interval check | ~~1 day~~ |
+| ~~Agent heartbeat~~ | ✅ Already implemented — 30s heartbeat + 90s stalled detection + 180s auto-recovery | ~~2 days~~ |
+| Execution cost tracking | Token × price table → per-project cost aggregation | 2 days |
+| Concurrent execution limit | Enforce max 1 active task per agent | 1 day |
 
 ---
 
-### v3.0 — 협업 & 멀티테넌트 (장기, ~3개월)
+### v2.3 — Project OS Completion (Medium-term, ~8 weeks)
 
-| 항목 | 설명 |
-|------|------|
-| SQLite → PostgreSQL | 다중 사용자, 동시성, 수평 확장 |
-| 팀 워크스페이스 | Organization → Teams → Projects 계층 |
-| AgentDesk API | 외부에서 에이전트 실행 트리거 (REST/Webhook) |
-| 에이전트 마켓플레이스 | 커뮤니티 에이전트 공유 + 설치 |
-| 웹 버전 분리 | Electron 없이 브라우저만으로 사용 |
-
----
-
-### v3.x — AI 인프라 플랫폼 (비전)
-
-| 항목 | 설명 |
-|------|------|
-| 오케스트레이션 DSL | `project.agents.filter(role='senior').run(task, parallel=true)` |
-| 실행 히스토리 기반 추천 | 과거 패턴으로 최적 에이전트 자동 배정 |
-| 멀티클라우드 라우팅 | Claude / GPT-4 / Gemini 동적 선택 (비용 + 성능 최적화) |
-| 자동 워크플로우 최적화 | 실행 패턴 학습 → 병렬화 제안 |
+| Item | Description | Effort |
+|------|-------------|--------|
+| ~~C-1. Rules prompt injection~~ | ~~New buildRulesPromptBlock() implementation~~ ✅ Complete | ~~2 days~~ |
+| ~~C-2. Memory project filter~~ | ~~Add projectId to autonomous-memory.ts~~ ✅ Complete | ~~1 day~~ |
+| ~~C-3. Hooks runtime execution~~ | ~~New hook-executor.ts~~ ✅ Complete | ~~3 days~~ |
+| ~~C-4. Skills project scoping~~ | ~~project_skills table + filtering~~ ✅ Complete | ~~2 days~~ |
+| App.tsx → Zustand separation | 4 domain-specific stores | 4 days |
+| Project templates | Category → auto-generate objectives/gates | 2 days |
+| Agent timeline view | Execution visualization based on AgentTrace | 3 days |
+| Task handoff | A completes → B auto-starts (dependency chain) | 3 days |
 
 ---
 
-## 7. 즉시 처리 권고
+### v3.0 — Collaboration & Multi-tenant (Long-term, ~3 months)
 
-### 완료된 P0 항목 (2026-03-14 기준)
-
-| 우선순위 | 항목 | 이슈 | 상태 |
-|---------|------|------|------|
-| ~~**P0**~~ | ~~미팅 참여자 필터링 버그~~ | [A11] `loadManualProjectAgentScope()` assignment_mode 조건 제거 | ✅ 완료 |
-| ~~**P0**~~ | ~~OAuth PBKDF2 전환~~ | [A10] `oauthEncryptionKeyV2()` PBKDF2-SHA256 100k iter 이미 구현 | ✅ 완료 |
-| ~~**P0**~~ | ~~Rate Limiting 추가~~ | [A9] `auth.ts` 인-프로세스 슬라이딩 윈도우 RL (300/20 req/min) 구현 | ✅ 완료 |
-| ~~**P0**~~ | ~~WS 연결 수 제한~~ | [A14] `lifecycle.ts` MAX_WS_CLIENTS=20, code 4008 | ✅ 완료 |
-| ~~**P0**~~ | ~~환경 변수 시작 검증~~ | [A12] `server-main.ts` validateEnv() + oauthEncryptionKeyV2 throw | ✅ 완료 |
-
-### ~~남은 P1 항목~~ — 모두 완료
-
-| 항목 | 이슈 | 상태 |
-|------|------|------|
-| ~~App.tsx → Zustand 분리~~ | [A1] 46개 useState → 4개 스토어 | ✅ 완료 |
-| ~~WorkflowPackKey → category_id 브리지~~ | [A4] category_id 연결 완료 | ✅ 완료 |
-| ~~구조화 로깅 (pino)~~ | [A19] 서버 전체 pino 전환 | ✅ 완료 |
-
-### ~~중기 P2 항목~~ — 모두 완료
-
-| 항목 | 상태 |
-|------|------|
-| ~~Agent Flow Graph 구현~~ | ✅ 완료 |
-| ~~실행 비용 추적~~ | ✅ 완료 |
-| ~~동시 실행 큐 (FIFO)~~ | ✅ 완료 |
-| ~~에이전트 타임라인 뷰~~ | ✅ 완료 |
-| ~~태스크 핸드오프~~ | ✅ 완료 |
-| ~~페르소나 UI 완성~~ | ✅ 완료 |
-
-### 완료된 항목 전체 목록
-
-| 항목 | 완료 시점 |
-|------|---------|
-| ~~미팅 참여자 필터링 버그~~ | ✅ 2026-03-14 — loadManualProjectAgentScope 수정 |
-| ~~메신저 inbox 재시도~~ | ✅ 2026-03-14 — forwardToInboxWithRetry (3회, 지수 백오프) |
-| ~~OAuth PBKDF2~~ | ✅ 이미 구현됨 — oauthEncryptionKeyV2 |
-| ~~Rate Limiting~~ | ✅ 이미 구현됨 — auth.ts 인-프로세스 RL |
-| ~~WS 연결 수 제한~~ | ✅ 이미 구현됨 — MAX_WS_CLIENTS=20 |
-| ~~환경 변수 검증~~ | ✅ 이미 구현됨 — validateEnv() |
-| ~~DB 마이그레이션 버전 추적~~ | ✅ 이미 구현됨 — versioned-migrations.ts |
-| ~~In-memory Map 누수~~ | ✅ 이미 구현됨 — onClose/onError delete + RL sweep |
-| ~~실행 상태 정합성 보정~~ | ✅ lifecycle.ts orphan recovery + heartbeat |
-| ~~API 에러 핸들링 통일~~ | ✅ ApiError class + global middleware + handleApiError |
-| ~~에이전트 실행 상태 머신~~ | ✅ stalled 자동복구 + timeout + 상태전이 검증 |
-| ~~동기화 전략 단일화~~ | ✅ task_update 직접 적용 + adaptive polling |
-| ~~프로젝트 스코핑 런타임 적용~~ | ✅ C-1~C-4 완료 (rules/memory/hooks/skills) |
+| Item | Description |
+|------|-------------|
+| SQLite → PostgreSQL | Multi-user, concurrency, horizontal scaling |
+| Team workspaces | Organization → Teams → Projects hierarchy |
+| AgentDesk API | External agent execution trigger (REST/Webhook) |
+| Agent marketplace | Community agent sharing + installation |
+| Standalone web version | Browser-only usage without Electron |
 
 ---
 
-## 8. 부록 — 추가 발견사항
+### v3.x — AI Infrastructure Platform (Vision)
 
-### B. 레이스 컨디션 위험
+| Item | Description |
+|------|-------------|
+| Orchestration DSL | `project.agents.filter(role='senior').run(task, parallel=true)` |
+| Execution history-based recommendations | Optimal agent assignment from past patterns |
+| Multi-cloud routing | Dynamic selection of Claude / GPT-4 / Gemini (cost + performance optimization) |
+| Automatic workflow optimization | Learn execution patterns → suggest parallelization |
 
-`lifecycle.ts`: SELECT 후 UPDATE가 원자적이지 않음. 서브태스크 위임 시 부모 태스크 상태 변경, 미팅 상태 동시 접근 등.
+---
 
-**권장:** 멀티스텝 상태 변경에 `runInTransaction()` 적용 확대 + optimistic locking (version 컬럼).
+## 7. Immediate Action Recommendations
 
-### C. 응답 형식 비일관성
+### Completed P0 Items (as of 2026-03-14)
+
+| Priority | Item | Issue | Status |
+|----------|------|-------|--------|
+| ~~**P0**~~ | ~~Meeting participant filtering bug~~ | [A11] `loadManualProjectAgentScope()` assignment_mode condition removed | ✅ Complete |
+| ~~**P0**~~ | ~~OAuth PBKDF2 migration~~ | [A10] `oauthEncryptionKeyV2()` PBKDF2-SHA256 100k iter already implemented | ✅ Complete |
+| ~~**P0**~~ | ~~Add rate limiting~~ | [A9] `auth.ts` in-process sliding window RL (300/20 req/min) implemented | ✅ Complete |
+| ~~**P0**~~ | ~~WS connection limit~~ | [A14] `lifecycle.ts` MAX_WS_CLIENTS=20, code 4008 | ✅ Complete |
+| ~~**P0**~~ | ~~Environment variable startup validation~~ | [A12] `server-main.ts` validateEnv() + oauthEncryptionKeyV2 throw | ✅ Complete |
+
+### ~~Remaining P1 Items~~ — All Complete
+
+| Item | Issue | Status |
+|------|-------|--------|
+| ~~App.tsx → Zustand separation~~ | [A1] 46 useState → 4 stores | ✅ Complete |
+| ~~WorkflowPackKey → category_id bridge~~ | [A4] category_id connection complete | ✅ Complete |
+| ~~Structured logging (pino)~~ | [A19] Full server pino migration | ✅ Complete |
+
+### ~~Medium-term P2 Items~~ — All Complete
+
+| Item | Status |
+|------|--------|
+| ~~Agent Flow Graph implementation~~ | ✅ Complete |
+| ~~Execution cost tracking~~ | ✅ Complete |
+| ~~Concurrent execution queue (FIFO)~~ | ✅ Complete |
+| ~~Agent timeline view~~ | ✅ Complete |
+| ~~Task handoff~~ | ✅ Complete |
+| ~~Persona UI completion~~ | ✅ Complete |
+
+### Complete List of Resolved Items
+
+| Item | Completion |
+|------|------------|
+| ~~Meeting participant filtering bug~~ | ✅ 2026-03-14 — loadManualProjectAgentScope fix |
+| ~~Messenger inbox retry~~ | ✅ 2026-03-14 — forwardToInboxWithRetry (3 retries, exponential backoff) |
+| ~~OAuth PBKDF2~~ | ✅ Already implemented — oauthEncryptionKeyV2 |
+| ~~Rate Limiting~~ | ✅ Already implemented — auth.ts in-process RL |
+| ~~WS connection limit~~ | ✅ Already implemented — MAX_WS_CLIENTS=20 |
+| ~~Environment variable validation~~ | ✅ Already implemented — validateEnv() |
+| ~~DB migration version tracking~~ | ✅ Already implemented — versioned-migrations.ts |
+| ~~In-memory Map leak~~ | ✅ Already implemented — onClose/onError delete + RL sweep |
+| ~~Execution state consistency correction~~ | ✅ lifecycle.ts orphan recovery + heartbeat |
+| ~~API error handling unification~~ | ✅ ApiError class + global middleware + handleApiError |
+| ~~Agent execution state machine~~ | ✅ stalled auto-recovery + timeout + state transition validation |
+| ~~Sync strategy consolidation~~ | ✅ task_update direct apply + adaptive polling |
+| ~~Project scoping runtime application~~ | ✅ C-1~C-4 complete (rules/memory/hooks/skills) |
+
+---
+
+## 8. Appendix — Additional Findings
+
+### B. Race Condition Risks
+
+`lifecycle.ts`: SELECT followed by UPDATE is not atomic. Parent task state changes during subtask delegation, concurrent meeting state access, etc.
+
+**Recommendation:** Expand use of `runInTransaction()` for multi-step state changes + optimistic locking (version column).
+
+### C. Inconsistent Response Formats
 
 ```typescript
 res.json({ agents })                           // raw
 res.status(201).json({ ok: true, agent })      // ok + data
 res.status(500).json({ ok: false, error })     // ok + error
-res.status(400).json({ error: "code" })        // error만
+res.status(400).json({ error: "code" })        // error only
 ```
 
-**권장 표준:** 성공 `{ data: T }`, 에러 `{ error: { code, message } }`.
+**Recommended standard:** Success `{ data: T }`, Error `{ error: { code, message } }`.
 
-### D. CSRF 검증 범위 불완전
+### D. Incomplete CSRF Validation Scope
 
-CSRF 검증은 `execution-control.ts:84~85`에만 적용됨.
-agents CRUD, projects, settings, memory, rules, hooks 미적용.
+CSRF validation is only applied in `execution-control.ts:84~85`.
+Not applied to: agents CRUD, projects, settings, memory, rules, hooks.
 
-### E. OpenAPI 스펙 동기화 문제
+### E. OpenAPI Spec Sync Issue
 
-100개+ 엔드포인트 중 25개만 문서화 (25% 커버리지). `pnpm openapi:sync` 명령 존재 → CI에서 검증 추가 권장.
+Only 25 of 100+ endpoints are documented (25% coverage). `pnpm openapi:sync` command exists → recommend adding CI validation.
 
-### F. 핵심 파일 참조
+### F. Key File Reference
 
-| 역할 | 경로 |
+| Role | Path |
 |------|------|
-| 앱 상태 관리 | `src/App.tsx` |
-| 비즈니스 로직 | `src/app/useAppActions.ts` |
-| 초기 데이터 로드 | `src/app/useAppBootstrapData.ts` |
-| 실시간 동기화 | `src/app/useRealtimeSync.ts` |
-| HTTP 레이어 | `src/api/core.ts` |
-| 에이전트 실행 | `server/modules/routes/core/tasks/execution-run.ts` |
-| 프로세스 스폰 | `server/modules/routes/core/agents/spawn.ts` |
-| DB 스키마 | `server/modules/bootstrap/schema/base-schema.ts` |
+| App state management | `src/App.tsx` |
+| Business logic | `src/app/useAppActions.ts` |
+| Initial data load | `src/app/useAppBootstrapData.ts` |
+| Real-time sync | `src/app/useRealtimeSync.ts` |
+| HTTP layer | `src/api/core.ts` |
+| Agent execution | `server/modules/routes/core/tasks/execution-run.ts` |
+| Process spawn | `server/modules/routes/core/agents/spawn.ts` |
+| DB schema | `server/modules/bootstrap/schema/base-schema.ts` |
 | WebSocket Hub | `server/ws/hub.ts` |
-| 라이프사이클 | `server/modules/lifecycle.ts` |
-| OAuth 키 | `server/oauth/helpers.ts` |
-| 미팅 리더 선택 | `server/modules/workflow/orchestration/meetings/leader-selection.ts` |
-| 타입 정의 | `src/types/index.ts` |
+| Lifecycle | `server/modules/lifecycle.ts` |
+| OAuth keys | `server/oauth/helpers.ts` |
+| Meeting leader selection | `server/modules/workflow/orchestration/meetings/leader-selection.ts` |
+| Type definitions | `src/types/index.ts` |
