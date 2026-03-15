@@ -463,7 +463,9 @@ export type WSEventType =
   | "task_report"
   | "notification"
   | "queue_status"
-  | "connected";
+  | "connected"
+  | "skill_learn_job_update"
+  | "memory_learn_job_update";
 
 export interface WSEvent {
   type: WSEventType;

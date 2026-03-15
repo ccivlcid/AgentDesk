@@ -224,12 +224,6 @@ export default function HeartbeatPanel({ language, agents = [], standalone = fal
     <div style={wrapperStyle}>
       {/* ── 헤더 ── */}
       <div style={headerStyle}>
-        {/* macOS 트래픽 라이트 (●●●) */}
-        <div className="flex flex-shrink-0 items-center gap-1.5">
-          <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#ff5f57" }} aria-hidden />
-          <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#ffbd2e" }} aria-hidden />
-          <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#27c93f" }} aria-hidden />
-        </div>
         <span style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.15em", color: "var(--th-text-muted)" }}>HEARTBEAT</span>
         <span style={{ color: "var(--th-border)", fontSize: "9px" }}>·</span>
         <span style={{ fontSize: "9px", color: "var(--th-text-muted)" }}>

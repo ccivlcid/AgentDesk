@@ -1,583 +1,659 @@
-# AgentDesk — UI 전체 화면 & 모달 목록
+# AgentDesk — UI Screens & Interaction Specification
 
-> **최종 업데이트:** 2026-03-14 (문서 통합 업데이트)
-> 전체 메뉴 화면 15개 + 오버레이/모달/패널 36개 이상 기록
-> **디자인 참조:** `DESIGN.md` (CSS 변수), `AI-GUIDE.md` (개발 원칙)
-
----
-
-## 디자인 철학 — macOS Hybrid
-
-모든 화면은 **이중 레이어 원칙**을 따른다:
-
-| 레이어 | 역할 | 스타일 |
-|--------|------|--------|
-| **Chrome** (컨테이너) | 패널·모달·카드·사이드바 | `borderRadius: 10`, `blur(12px)`, 트래픽 라이트 |
-| **Content** (내부) | 버튼·인풋·토스트·배지 | `borderRadius: 0`, `font-mono`, CLI sigil 언어 |
-
-- **사이드바:** `backdropFilter: blur(12px)` — macOS Finder 느낌의 글래스 네비게이션
-- **헤더:** `borderTopLeftRadius: 10`, blur + shadow — macOS 앱 바 스타일
-- **모달:** `borderRadius: 10`, 트래픽 라이트 장식 — macOS 창 느낌
-- **Brand color:** Amber `--th-accent` — live indicator, active nav, primary CTA
-- **전체 폰트:** `var(--th-font-mono)` (JetBrains Mono) — sans-serif 금지
+> **Last updated:** 2026-03-15 (6 macOS UX features added: Spotlight, Jiggle, QuickLook, MissionControl, Notification Slide Panel, App Menu)
+> Menu Bar + Desktop Icons + Widgets + Dock + App Windows structure
+> **Design reference:** `DESIGN.md` (CSS variables)
 
 ---
 
-## 사이드바 메뉴 구조
+## Design Philosophy — macOS Hybrid
+
+All screens follow the **dual-layer principle**:
+
+| Layer | Role | Style |
+|-------|------|-------|
+| **Chrome** (container) | Windows, widgets, cards, menu bar | `borderRadius: 10`, `blur(12px)`, traffic lights |
+| **Content** (inner) | Buttons, inputs, toasts, badges | `borderRadius: 0`, `font-mono`, CLI sigil language |
+
+- **Menu Bar:** `backdropFilter: blur(12px)` — macOS Menu Bar style
+- **App Windows:** `borderRadius: 10`, traffic light decorations — macOS window feel
+- **Widgets:** `borderRadius: 10`, blur — glass panel feel
+- **Brand color:** Amber `--th-accent` — live indicator, active state, primary CTA
+- **Global font:** `var(--th-font-mono)` (JetBrains Mono) — no sans-serif
+
+---
+
+## Overall Structure — macOS Desktop OS
+
+AgentDesk is designed using the macOS desktop metaphor. There is no sidebar.
 
 ```
-Overview
-  ├── Dashboard              (대시보드)
-  └── Project Types          (프로젝트 유형)
-
-Tasks
-  ├── Task Board             (태스크 보드)
-  ├── Scheduled Tasks        (예약 태스크)
-  └── Deliverables           (산출물)
-
-Agents
-  ├── Agents & Departments   (에이전트 & 부서)
-  ├── Heartbeat Monitor      (현황 모니터)
-  ├── Flow Graph             (플로우 그래프)        ← P2-1 ✅
-  └── Workflow Builder       (워크플로 빌더)        ← P3-2 ✅
-
-Library  [프로젝트 선택 필요]
-  ├── Skills                 (스킬)
-  ├── Agent Rules            (에이전트 룰)
-  ├── Memory                 (메모리)
-  └── Hooks                  (훅)
-
-System
-  ├── CLI Usage              (CLI 사용량)
-  └── Settings               (설정)
+┌─────────────────────────────────────────────────────────────────┐
+│  AgentDesk  [▾ Project]                    $2.14  🔔  14:32     │  ← Menu Bar
+├─────────────────────────────────────────────────────────────────┤
+│                                                                  │
+│  ┌──────┐  ┌──────┐  ┌──────┐  ┌──────┐  ┌──────┐  ┌──────┐  ┌──────┐  │
+│  │  👤  │  │  📁  │  │  ▶   │  │  ⚡  │  │  📋  │  │  💬  │  │  >_  │  │  ← Desktop Icons
+│  └──────┘  └──────┘  └──────┘  └──────┘  └──────┘  └──────┘  └──────┘  │
+│  Agent     Create    Run       Workflow   Library    Chat       Agent    │
+│  Settings  Project   Task      Builder                          REPL     │
+│                                                                  │
+│  ┌─ Agents ──── [─][×]┐   ┌─ Tasks ───── [─][×]┐              │
+│  │  (widget)           │   │  (widget)           │  ← Widgets  │
+│  └────────────────────┘   └────────────────────┘              │
+│                                                                  │
+│                    [+ Add Widget]                                │
+│                                                                  │
+├─────────────────────────────────────────────────────────────────┤
+│      ┌──────┐    ┌──────┐    ┌──────┐    ┌──────┐              │  ← Dock
+│      │  ⚡  │    │  📚  │    │  ⚙   │    │  💬  │              │
+│      └──────┘    └──────┘    └──────┘    └──────┘              │
+│     Workflow    Library    Settings     Chat                     │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 1. 메인 화면 (15개)
+## 1. Menu Bar
 
-### Overview
+**File:** `src/components/MenuBar.tsx`
 
-#### 1-1. Dashboard
-**파일:** `src/components/dashboard/Dashboard2.tsx`
-**view:** `"dashboard"`
+Always pinned to the top. Acts as the macOS Menu Bar.
 
-| 구성 요소 | 역할 |
-|---|---|
-| TeamPanel | 에이전트 팀 상태 카드 목록 |
-| AgentActivityPanel | 최근 에이전트 활동 피드 |
-| DashboardTaskList | 현재 프로젝트 태스크 요약 |
-| ProjectFileTree | 프로젝트 파일 트리 |
-| DashboardGuidePanel | 첫 사용자 가이드 |
+| Area | Element | Role |
+|------|---------|------|
+| Left | **AgentDesk button** | **App menu dropdown** (wallpaper/widgets/shortcuts/Mission Control) |
+| Center | Project selector dropdown | Switch current project |
+| Right | CLI cost summary | Today / this month cost |
+| Right | Notification bell 🔔 | **Slide panel** (320px, enters/exits from the right) |
+| Right | Clock | Current time |
 
-내장 모달: `CreateTaskModal`, `ProjectManagerModal`, `ProjectSettingsTab`
-
----
-
-#### 1-2. Project Types (프로젝트 유형 관리)
-**파일:** `src/components/settings/CategoriesTab.tsx`
-**view:** `"project-types"`
-
-- 프로젝트 카테고리(템플릿) 생성·수정·삭제
-- 내장 모달: `CategoryFormModal`
+**App Menu Items:**
+- About AgentDesk (version)
+- Change Wallpaper... → Open WallpaperPicker
+- Add Widget... → Open WidgetPicker
+- Keyboard Shortcuts → Open KeyboardShortcutsGuide
+- Mission Control (`Ctrl ↑`) → MissionControl overview
 
 ---
 
-### Tasks
+## 2. Desktop Icons
 
-#### 1-3. Task Board
-**파일:** `src/components/TaskBoard.tsx`
-**view:** `"tasks-board"`
+**File:** `src/components/desktop/DesktopIcon.tsx`
 
-| 컬럼 | 상태 |
-|---|---|
-| Pending | 대기 |
-| Working | 실행 중 |
-| Review | 리뷰 |
-| Done | 완료 |
-| Cancelled | 취소 |
+Placed on the desktop by default. Can be repositioned by dragging. Click to open the corresponding window/modal.
 
-추가 뷰: `FilterBar`, `DependencyGraph`, `GanttChart`
-내장 모달: `CreateTaskModal`, `BulkHideModal`, `DiffModal`
+**Jiggle Mode:** Long-press on empty desktop for 600ms → icons jiggle + red ✕ badge appears on project icons.
+Click ✕ to delete the project. Press Esc or click the desktop to exit.
 
----
+**System App Icons (non-deletable):**
 
-#### 1-4. Scheduled Tasks (예약 태스크)
-**파일:** `src/components/scheduled-tasks/ScheduledTasksPanel.tsx`
-**view:** `"tasks-scheduled"`
+| Icon | Label | Opens on Click |
+|------|-------|----------------|
+| 👤 | Agent Settings | AgentManager window |
+| 📁 | Create Project | ProjectCreateModal |
+| ▶ | Run Task | CreateTaskModal |
+| ⚡ | Workflow Builder | Workflow window |
+| >_ | Agent REPL | REPL window |
 
-- 반복·예약 실행 태스크 목록
-- 다음 실행 시간, 주기, 담당 에이전트 표시
+**Project Folder Icons (deletable: true):**
+- Active project: 📂, inactive: 📁
+- Click: Switch to that project + select it
+- Space (after selecting): Open Quick Look panel
+- Right-click: Quick preview / switch project / delete project
+- Click ✕ badge in Jiggle Mode: Delete immediately
 
----
-
-#### 1-5. Deliverables (산출물)
-**파일:** `src/components/deliverables/Deliverables.tsx`
-**view:** `"tasks-deliverables"`
-
-- 태스크에서 생성된 결과물 목록
-- 파일 형식별 필터, 다운로드
-- 내장 모달: `TextPreviewModal`
+> Right-click menu: Rename / Remove / Rearrange desktop
 
 ---
 
-### Agents
+## 3. Widget System
 
-#### 1-6. Agents & Departments (에이전트 & 부서)
-**파일:** `src/components/TeamPageView.tsx` → `AgentManager`
-**view:** `"agents"`
+**Files:** `src/components/desktop/Widget.tsx`, `src/components/desktop/WidgetPicker.tsx`
 
-- 에이전트 카드 그리드 (부서별 그룹)
-- 부서 드래그 순서 변경
-- 에이전트 상태 뱃지 (idle / running / error)
-- 내장 모달: `AgentFormModal`, `DepartmentFormModal`, `EmojiPicker`
+Users add widgets via the `[+ Add Widget]` button. Freely draggable, resizable, and closable.
+Multiple widgets can be placed simultaneously. Position/size is saved in localStorage.
 
----
+### Widget List
 
-#### 1-7. Heartbeat Monitor (현황 모니터)
-**파일:** `src/components/office-view/HeartbeatPanel.tsx`
-**view:** `"heartbeat"`
+#### 3-1. Agents Widget
+**File:** `src/components/desktop/widgets/AgentsWidget.tsx`
+**Replaces:** Legacy Heartbeat Monitor
 
-- 전체 에이전트 실시간 활동 대시보드
-- 하트비트 주기, 마지막 응답 시간
-- 이상 감지 (timeout / 무응답) 알림
+- Real-time agent status list (working/idle/error/review)
+- Click an agent row → AgentDetail slide panel (right)
+- Real-time updates via WebSocket `agent_status` events
 
----
+#### 3-2. Tasks Widget
+**File:** `src/components/desktop/widgets/TasksWidget.tsx`
+**Replaces:** Legacy Task Board
 
-#### 1-8. Flow Graph (플로우 그래프) ✅ P2-1
-**파일:** `src/components/flow-graph/AgentFlowGraph.tsx`
-**view:** `"flow-graph"`
+- List of running tasks (mini kanban view or list)
+- Click a task row → TerminalPanel drawer (bottom)
+- `[+ New Task]` button → CreateTaskModal
 
-에이전트 간 실시간 관계를 Custom SVG로 시각화.
+#### 3-3. Alerts Widget
+**File:** `src/components/desktop/widgets/AlertsWidget.tsx`
+**Replaces:** Legacy alert banners
 
-| 구성 요소 | 역할 |
-|---|---|
-| `useFlowLayout.ts` | 에이전트 배치 알고리즘 (관계 기반 좌표 계산) |
-| `useViewTransform.ts` | SVG 줌·팬 인터랙션 (마우스 휠, 드래그) |
-| `nodes/AgentNode.tsx` | 에이전트 노드 (상태 색상, 태스크 표시) |
-| `nodes/MeetingCluster.tsx` | 미팅 중 에이전트 클러스터 원형 배치 |
-| `edges/FlowEdge.tsx` | 베지어 곡선 엣지 (위임·서브에이전트·크로스부서·미팅) |
+- Items requiring attention: errors, pending approvals, timeouts
+- Click an item → DecisionInboxModal
 
-기능:
-- 필터: 전체 / 작업중 / 미팅중
-- 줌 컨트롤 (−/+/맞춤) + 더블클릭 fitToView
-- 노드 호버 → 연결된 노드/엣지 하이라이트
-- 노드 클릭 → `onSelectAgent` 에이전트 상세 오픈
+#### 3-4. CLI Cost Widget
+**File:** `src/components/desktop/widgets/CliCostWidget.tsx`
+**Replaces:** Legacy CLI Usage (summary)
 
----
+- Today / this month cost
+- Number of running CLI processes
+- Click → Settings window > CLI tab (details)
 
-#### 1-9. Workflow Builder (워크플로 빌더) ✅ P3-2
-**파일:** `src/components/workflow-builder/WorkflowBuilder.tsx`
-**view:** `"workflow-builder"`
-**의존성:** `@xyflow/react` v12
+#### 3-5. Flow Graph Widget
+**File:** `src/components/desktop/widgets/FlowGraphWidget.tsx`
+**Replaces:** Legacy Flow Graph
 
-노드 기반 에이전트 파이프라인 시각적 설계 도구.
-
-| 노드 타입 | 파일 | 설명 |
-|---|---|---|
-| `trigger` | `nodes/WbTriggerNode.tsx` | 시작 트리거 (schedule/webhook/messenger/manual) |
-| `agent` | `nodes/WbAgentNode.tsx` | 에이전트 실행 스텝 |
-| `gate` | `nodes/WbGateNode.tsx` | 조건부 분기 (success/failure/timeout 핸들 분리) |
-| `condition` | `nodes/WbConditionNode.tsx` | true/false 조건 체크 |
-
-기능:
-- 좌측 노드 팔레트에서 클릭 → 캔버스에 추가
-- 노드 핸들에서 드래그 → 엣지 연결
-- ReactFlow Background(dots) + Controls(zoom/fit) + MiniMap
-- 워크플로 이름 인라인 편집
-- localStorage 자동 저장/불러오기
-- 초기 예제: "PR Review Pipeline" 프리뷰
+- Mini SVG visualization of agent relationships (reuses `AgentFlowGraph`)
+- Zoom/pan, click node → AgentDetail panel
 
 ---
 
-### Library (프로젝트 배정 에이전트 범위로 필터링됨)
+## 4. Dock
 
-#### 1-10. Skills (스킬 라이브러리)
-**파일:** `src/components/SkillsLibrary.tsx`
-**view:** `"skills"`
+**File:** `src/components/desktop/Dock.tsx`
 
-- 에이전트가 학습한 명령·도구 목록 (provider/repo/agent 스코프)
-- 내장 모달: `CustomSkillModal`, `LearningModal`, `ClassroomOverlay`
+Always pinned to the bottom. 4 app icons.
 
----
+| Icon | App | Window Tabs |
+|------|-----|-------------|
+| ⚡ | Workflow | Workflow Builder / Scheduled Tasks |
+| 📚 | Library | Skills / Agent Rules / Memory / Hooks / Deliverables |
+| ⚙ | Settings | General / API / OAuth / CLI / Gateway / Data / Project Types / Agents |
+| 💬 | Chat | Direct / Group / Announcement |
 
-#### 1-11. Agent Rules (에이전트 룰)
-**파일:** `src/components/AgentRulesLibrary.tsx`
-**view:** `"agent-rules"`
-
-- 에이전트 행동 규칙 (global/dept/agent/project 스코프)
-- 프롬프트 우선순위 순으로 주입됨
-- 내장 모달: `RuleFormModal`, `RuleLearningModal`, `RuleHistoryPanel`
+- Click to open the corresponding app window (if already open, brings it to the front)
+- Running apps display an amber dot below their icon
 
 ---
 
-#### 1-12. Memory (메모리)
-**파일:** `src/components/MemoryLibrary.tsx`
-**view:** `"memory"`
+## 5. App Windows (opened by clicking the Dock)
 
-- 에이전트 기억 항목 (맥락·지식·경험)
-- 5분 TTL 캐시로 프롬프트 빌드 시 주입
-- 내장 모달: `MemoryFormModal`, `MemoryLearningModal`
+All windows use the **traffic lights + close button** style. Can be dragged to reposition.
+Multiple windows can be open simultaneously. Managed via `uiStore.openWindows: Set<WindowType>`.
 
----
+### 5-1. Workflow Window (⚡)
 
-#### 1-13. Hooks (훅)
-**파일:** `src/components/HooksLibrary.tsx`
-**view:** `"hooks"`
+**File:** `src/components/windows/WorkflowWindow.tsx`
 
-- 태스크 이벤트 트리거 스크립트 (pre/post/on-error)
-- 병렬 async 실행 (Phase 1 개선 완료)
-- 내장 모달: `HookFormModal`, `HookLearningModal`, `HookHistoryPanel`
+```
+[  Workflow Builder  |  Scheduled Tasks  |  Composition  ]
+```
 
----
+**Workflow Builder Tab**
+- **File:** `src/components/workflow-builder/WorkflowBuilder.tsx`
+- **Dependency:** `@xyflow/react` v12
+- Visual design of node-based agent pipelines
+- Node types: `trigger` / `agent` / `gate` / `condition`
+- Auto-saved to localStorage
 
-### System
+**Scheduled Tasks Tab**
+- **File:** `src/components/scheduled-tasks/ScheduledTasksPanel.tsx`
+- List of recurring and scheduled tasks
+- Displays next run time, frequency, and assigned agent
 
-#### 1-14. CLI Usage (CLI 사용량)
-**파일:** `src/components/office-view/CliUsagePanel.tsx`
-**view:** `"cli-usage"`
-
-- 에이전트별 토큰 소비량, 비용 추적
-- 실행 중인 CLI 프로세스 목록
-- 프로세스 강제 종료(Kill) 액션
-
----
-
-#### 1-15. Settings (설정)
-**파일:** `src/components/SettingsPanel.tsx`
-**view:** `"settings"`
-
-| 탭 | 내용 |
-|---|---|
-| General | 언어, 테마, 기본 설정 |
-| API | Provider·모델 설정 (Claude/OpenAI 등) |
-| OAuth | OAuth 디바이스 플로우 계정 연결 |
-| CLI | CLI 상태, 경로 |
-| Gateway | Telegram·Discord·Slack 메신저 연동 |
-| Data | DB 백업·초기화 |
+**Composition Tab** _(added 2026-03-15)_
+- **File:** `src/components/agent-composition/AgentCompositionBuilder.tsx`
+- **Dependency:** `@xyflow/react` v12
+- Drag-and-drop composition builder based on agent roles
+- Node: `CompAgentNode` — top border color differentiated by role
+- Run: `AgentCompositionRunModal` — creates multiple tasks including dependencies
+- Save/load templates: `/api/composition-templates` CRUD
 
 ---
 
-## 2. 오버레이 / 모달 / 패널 (36개)
+### 5-2. Library Window (📚)
 
-### 커뮤니케이션
+**File:** `src/components/windows/LibraryWindow.tsx`
+**Project context:** Filtered by the selected `project_id`
 
-#### 2-1. ChatPanel
-**파일:** `src/components/ChatPanel.tsx`
-**트리거:** 에이전트 선택 → "Open Chat"
+```
+[  Skills  |  Agent Rules  |  Memory  |  Hooks  |  Deliverables  ]
+```
 
-| 모드 | 설명 |
-|---|---|
-| Direct | 특정 에이전트 1:1 채팅 |
-| Announcement | 팀 전체 공지 |
-| Directive | 프로젝트 지시 (특정 프로젝트 배정 에이전트 대상) |
+**Skills Tab** — `src/components/SkillsLibrary.tsx`
+- Agent learning commands and tool list (provider/repo/agent scope)
+- Embedded modals: `CustomSkillModal`, `LearningModal`, `ClassroomOverlay`
 
-서브 패널: `ChatComposer`, `ChatMessageList`, `ChatPanelHeader`, `AnnouncementCliPanel`, `ProjectFlowDialog`
+**Agent Rules Tab** — `src/components/AgentRulesLibrary.tsx`
+- Agent behavior rules (global/dept/agent/project scope)
+- Embedded modals: `RuleFormModal`, `RuleLearningModal`, `RuleHistoryPanel`
 
----
+**Memory Tab** — `src/components/MemoryLibrary.tsx`
+- Agent memory entries, 5-minute TTL cache
+- Embedded modals: `MemoryFormModal`, `MemoryLearningModal`
 
-#### 2-2. GroupChatPanel
-**파일:** `src/components/chat-panel/GroupChatPanel.tsx`
-**트리거:** `onOpenGroupChat` / `onOpenGroupChatWithAgents`
+**Hooks Tab** — `src/components/HooksLibrary.tsx`
+- Task event trigger scripts (pre/post/on-error)
+- Embedded modals: `HookFormModal`, `HookLearningModal`, `HookHistoryPanel`
 
-- 복수 에이전트 그룹 대화
-- 에이전트 태그·멘션 지원
-
----
-
-#### 2-3. DecisionInboxModal
-**파일:** `src/components/DecisionInboxModal.tsx`
-**트리거:** 의사결정 알림 배지 클릭
-
-| 요청 유형 | 설명 |
-|---|---|
-| `project_review_ready` | 프로젝트 리뷰 완료, 승인 요청 |
-| `task_timeout_resume` | 태스크 타임아웃 — 계속/중단 선택 |
-| `review_round_pick` | 리뷰 라운드 선택 요청 |
-
-기능: 답변 옵션, 그룹 채팅 연결, followup 설정
+**Deliverables Tab** — `src/components/deliverables/Deliverables.tsx`
+- List of task output artifacts, filter and download by file type
+- Embedded modal: `TextPreviewModal`
 
 ---
 
-### 에이전트 관리
+### 5-3. Settings Window (⚙)
 
-#### 2-4. AgentDetail
-**파일:** `src/components/AgentDetail.tsx`
-**트리거:** 에이전트 카드 클릭 (우측 슬라이드 패널)
+**File:** `src/components/windows/SettingsWindow.tsx`
 
-| 탭 | 내용 |
-|---|---|
-| Info | 프로필, CLI Provider, 모델, OAuth 계정 선택 |
-| Tasks | 배정된 태스크 목록 |
-| Alba | 파트타임 작업 현황 |
-| Performance | 성과 지표 |
-| Chat | 1:1 채팅 |
+```
+[  General  |  API  |  OAuth  |  CLI  |  Gateway  |  Data  |  Project Types  |  Agents  ]
+```
 
-서브 컴포넌트: `AgentDetailTabContent`, `AgentChatTab`, `AgentPerformancePanel`
-기능: Planning Leader 역할 토글, CLI 모델 변경
-
----
-
-#### 2-5. AgentFormModal
-**파일:** `src/components/agent-manager/AgentFormModal.tsx`
-**트리거:** 에이전트 생성/수정 버튼
-
-- 에이전트 이름, 역할, 페르소나, 부서 설정
+| Tab | File | Content |
+|-----|------|---------|
+| General | `settings/GeneralTab.tsx` | Language, theme, default settings |
+| API | `settings/ApiTab.tsx` | Provider and model configuration |
+| OAuth | `settings/OAuthTab.tsx` | OAuth device flow account connection |
+| CLI | `settings/CliTab.tsx` | CLI status, path, usage details |
+| Gateway | `settings/gateway-settings/` | Telegram, Discord, Slack integration |
+| Data | `settings/DataTab.tsx` | DB backup and reset |
+| Project Types | `settings/CategoriesTab.tsx` | Project category management |
+| Agents | `TeamPageView.tsx` → `AgentManager` | Agent and department management |
 
 ---
 
-#### 2-6. DepartmentFormModal
-**파일:** `src/components/agent-manager/DepartmentFormModal.tsx`
-**트리거:** 부서 생성/수정 버튼
+### 5-4. Chat Window (💬)
 
-- 부서명, 이모지 픽커, 설명
+**File:** `src/components/windows/ChatWindow.tsx`
 
----
+```
+[  Direct  |  Group  |  Announcement  ]
+```
 
-#### 2-7. AgentStatusPanel
-**파일:** `src/components/AgentStatusPanel.tsx`
-**트리거:** `onOpenAgentStatus`
-
-- 실행 중인 CLI 프로세스 목록
-- Kill 프로세스, 태스크 중단
-- Idle CLI·스크립트 점검
+- **Direct:** 1:1 chat with a specific agent
+- **Group:** Group conversation with multiple agents (agent tags and mentions)
+- **Announcement:** Team-wide announcements
 
 ---
 
-### 태스크 관리
+### 5-5. AgentManager Window (👤 icon)
 
-#### 2-8. CreateTaskModal
-**파일:** `src/components/taskboard/CreateTaskModal.tsx`
-**트리거:** "+ 태스크 생성" 버튼
+**File:** `src/components/windows/AgentManagerWindow.tsx`
+**Trigger:** Click desktop icon 👤
 
-3단계 마법사:
-1. 프로젝트·경로 선택
-2. 태스크 정보 (제목, 설명, 워크플로우 팩)
-3. 에이전트 배정
-
-기능: 템플릿 지원, Form 피드백
+- Agent card grid (grouped by department)
+- Agent status badges (idle / working / error)
+- `[+ Agent]` `[+ Department]` buttons
+- Embedded modals: `AgentFormModal`, `DepartmentFormModal`
 
 ---
 
-#### 2-9. BulkHideModal
-**파일:** `src/components/taskboard/BulkHideModal.tsx`
-**트리거:** 보드 일괄 숨기기 버튼
+### 5-6. REPL Window (>_ icon)
 
-- done / pending / cancelled 상태별 태스크 일괄 숨김
+**File:** `src/components/windows/ReplWindow.tsx`
+**Trigger:** Click desktop icon `>_`
 
----
+An interactive shell for sending commands directly to an agent and receiving immediate responses, without creating a Task.
+Acts as macOS Terminal.app.
 
-#### 2-10. DiffModal
-**파일:** `src/components/taskboard/DiffModal.tsx`
-**트리거:** 태스크 변경 충돌 감지 시
+```
+┌─────────────────────────────────────────────────────┐
+│ ◉ ◎ ◎  Agent REPL            [▾ dev-01]   [─][×] │
+│ ──────────────────────────────────────────────────  │
+│ $ read src/auth/middleware.ts                        │
+│ > Reading file... (342 lines)                       │
+│ > Found: token expiry check missing on line 87      │
+│                                                      │
+│ $ fix the token expiry issue                        │
+│ > Applying fix to src/auth/middleware.ts            │
+│ > Done. Modified lines 87-93.                       │
+│                                                      │
+│ > _                                                  │
+│ ──────────────────────────────────────────────────  │
+│ [Select agent: dev-01 ▾]  [input_______________] [↵] │
+└─────────────────────────────────────────────────────┘
+```
 
-- 변경 사항 diff 뷰
-- Merge 또는 Discard 선택
-
----
-
-#### 2-11. TerminalPanel
-**파일:** `src/components/TerminalPanel.tsx`
-**트리거:** 태스크 카드 → 터미널 탭 또는 `onOpenTerminal`
-
-| 탭 | 내용 |
-|---|---|
-| Terminal | CLI stdout 실시간 스트리밍 |
-| Minutes | 회의록 (태스크 수행 중 생성) |
-
-기능:
-- Thinking Block 별도 섹션 표시 (Claude 추론 과정)
-- 로그 검색·필터
-- Intervention 섹션 (태스크 중 개입 가능)
-- Progress Hints 표시
-
----
-
-### 리포트 & 히스토리
-
-#### 2-12. TaskReportPopup
-**파일:** `src/components/TaskReportPopup.tsx`
-**트리거:** 완료 태스크 → 리포트 보기
-
-- Documents, Artifacts, Team 섹션
-- 페이지네이션
-- 아티팩트 다운로드
+Features:
+- Agent selector dropdown (list of running agents)
+- Enter command → execute immediately → stream results
+- Command history (↑↓ keys)
+- One-shot command execution without creating a Task
+- Real-time streaming via WebSocket `cli_output`
 
 ---
 
-#### 2-13. ReportHistory
-**파일:** `src/components/ReportHistory.tsx`
-**트리거:** `onOpenReportHistory`
+## 6. Slide Panels & Drawers
 
-- 전체 태스크 리포트 목록 (50개/페이지)
-- 검색·필터
+Opened as a layer on top of the desktop when clicking an item in a widget or icon window.
 
----
+### 6-1. AgentDetail Slide Panel
+**File:** `src/components/AgentDetail.tsx`
+**Trigger:** Click an agent row in the Agents widget / click a node in the Flow Graph widget
 
-### 프로젝트 관리
+Right-side slide. Tabs: Info / Tasks / Alba / Performance / Chat
 
-#### 2-14. ProjectCreateModal
-**파일:** `src/components/project-create-modal/ProjectCreateModal.tsx`
-**트리거:** 프로젝트 생성 버튼
+### 6-2. TerminalPanel Drawer
+**File:** `src/components/TerminalPanel.tsx`
+**Trigger:** Click a task row in the Tasks widget
 
-3단계 마법사:
-1. CategorySelectStep — 프로젝트 유형 선택
-2. 프로젝트 이름, 경로, 핵심 목표 입력
-3. 에이전트 팀 선택
-
-서브: `RecommendedSkillsSection`
+Bottom drawer. Tabs: Terminal (real-time stdout) / Minutes (meeting notes)
+Features: Thinking Block, log search/filter, Intervention input, Progress Hints
 
 ---
 
-#### 2-15. ProjectManagerModal
-**파일:** `src/components/ProjectManagerModal.tsx`
-**트리거:** 대시보드 → 프로젝트 관리
+## 7. Modals & Overlays (36)
 
-4개 서브 패널:
+Centrally rendered in `src/app/AppOverlays.tsx`. Can be triggered from any window or widget.
 
-| 패널 | 역할 |
-|---|---|
-| ProjectSidebar | 프로젝트 목록 |
-| ProjectEditorPanel | 목표·리스크·게이트·산출물 편집 |
-| ProjectInsightsPanel | 의사결정 이벤트, 태스크 히스토리 |
-| GitHubImportPanel | GitHub 저장소 임포트 |
+### Communication
 
----
+| # | Component | Trigger |
+|---|-----------|---------|
+| 7-1 | `ChatPanel` | AgentDetail > Chat tab |
+| 7-2 | `GroupChatPanel` | Chat window > Group tab |
+| 7-3 | `DecisionInboxModal` | Alerts widget click / notification bell |
 
-### Library 생성·학습 모달
+### Agent Management
 
-| # | 모달 | 파일 | 설명 |
-|---|---|---|---|
-| 2-16 | CustomSkillModal | `skills-library/CustomSkillModal.tsx` | 커스텀 스킬 생성 |
-| 2-17 | LearningModal (Skills) | `skills-library/LearningModal.tsx` | 실행에서 스킬 학습 |
-| 2-18 | ClassroomOverlay | `skills-library/ClassroomOverlay.tsx` | 스킬 교육 세션 |
-| 2-19 | RuleFormModal | `agent-rules/RuleFormModal.tsx` | 룰 생성·수정 |
-| 2-20 | RuleLearningModal | `agent-rules/RuleLearningModal.tsx` | 에이전트 행동에서 룰 제안 |
-| 2-21 | RuleHistoryPanel | `agent-rules/RuleHistoryPanel.tsx` | 룰 변경 히스토리 |
-| 2-22 | MemoryFormModal | `memory/MemoryFormModal.tsx` | 메모리 항목 생성·수정 |
-| 2-23 | MemoryLearningModal | `memory/MemoryLearningModal.tsx` | 태스크 실행에서 메모리 추출 |
-| 2-24 | HookFormModal | `hooks/HookFormModal.tsx` | 훅 생성·수정 |
-| 2-25 | HookLearningModal | `hooks/HookLearningModal.tsx` | 이벤트에서 훅 학습 |
-| 2-26 | HookHistoryPanel | `hooks/HookHistoryPanel.tsx` | 훅 실행 히스토리 |
+| # | Component | Trigger |
+|---|-----------|---------|
+| 7-4 | `AgentFormModal` | AgentManager window `[+ Agent]` |
+| 7-5 | `DepartmentFormModal` | AgentManager window `[+ Department]` |
+| 7-6 | `AgentStatusPanel` | Tasks widget → `onOpenAgentStatus` |
 
----
+### Task Management
 
-### 설정·연동
+| # | Component | Trigger |
+|---|-----------|---------|
+| 7-7 | `CreateTaskModal` | Desktop icon ▶ / Tasks widget `[+ New Task]` |
+| 7-8 | `BulkHideModal` | Tasks widget bulk hide |
+| 7-9 | `DiffModal` | On task change conflict detection |
 
-#### 2-27. CategoryFormModal
-**파일:** `src/components/category-editor/CategoryFormModal.tsx`
-- 프로젝트 유형 생성·수정
+### Reports
 
-#### 2-28. ChatEditorModal
-**파일:** `src/components/settings/gateway-settings/ChatEditorModal.tsx`
-- 메신저 채널 설정 편집
+| # | Component | Trigger |
+|---|-----------|---------|
+| 7-10 | `TaskReportPopup` | Click a completed task in the Tasks widget |
+| 7-11 | `ReportHistory` | `onOpenReportHistory` |
 
-#### 2-29. ChannelGuideModal
-**파일:** `src/components/settings/gateway-settings/ChannelGuideModal.tsx`
-- 채널 연동 가이드
+### Project Management
 
-#### 2-30. GitHubImportPanel
-**파일:** `src/components/GitHubImportPanel.tsx`
-- GitHub 저장소 임포트 마법사 (`GitHubImportWizard`, `GitHubDeviceConnect`)
+| # | Component | Trigger |
+|---|-----------|---------|
+| 7-12 | `ProjectCreateModal` | Desktop icon 📁 |
+| 7-13 | `ProjectManagerModal` | Menu bar project dropdown → Manage |
 
----
+### Library Create / Learn Modals
 
-### 글로벌 유틸리티
+| # | Modal | File | Access |
+|---|-------|------|--------|
+| 7-14 | CustomSkillModal | `skills-library/CustomSkillModal.tsx` | Library > Skills |
+| 7-15 | LearningModal (Skills) | `skills-library/LearningModal.tsx` | Library > Skills |
+| 7-16 | ClassroomOverlay | `skills-library/ClassroomOverlay.tsx` | Library > Skills |
+| 7-17 | RuleFormModal | `agent-rules/RuleFormModal.tsx` | Library > Agent Rules |
+| 7-18 | RuleLearningModal | `agent-rules/RuleLearningModal.tsx` | Library > Agent Rules |
+| 7-19 | RuleHistoryPanel | `agent-rules/RuleHistoryPanel.tsx` | Library > Agent Rules |
+| 7-20 | MemoryFormModal | `memory/MemoryFormModal.tsx` | Library > Memory |
+| 7-21 | MemoryLearningModal | `memory/MemoryLearningModal.tsx` | Library > Memory |
+| 7-22 | HookFormModal | `hooks/HookFormModal.tsx` | Library > Hooks |
+| 7-23 | HookLearningModal | `hooks/HookLearningModal.tsx` | Library > Hooks |
+| 7-24 | HookHistoryPanel | `hooks/HookHistoryPanel.tsx` | Library > Hooks |
 
-#### 2-31. CommandPalette
-**파일:** `src/components/CommandPalette.tsx`
-**트리거:** `Ctrl+Shift+K`
+### Settings & Integrations
 
-- 뷰 이동, 태스크 생성, 프로젝트 선택, 단축키 보기
+| # | Modal | File | Access |
+|---|-------|------|--------|
+| 7-25 | CategoryFormModal | `category-editor/CategoryFormModal.tsx` | Settings > Project Types |
+| 7-26 | ChatEditorModal | `settings/gateway-settings/ChatEditorModal.tsx` | Settings > Gateway |
+| 7-27 | ChannelGuideModal | `settings/gateway-settings/ChannelGuideModal.tsx` | Settings > Gateway |
+| 7-28 | GitHubImportPanel | `GitHubImportPanel.tsx` | ProjectManagerModal |
+| 7-29 | TextPreviewModal | `deliverables/TextPreviewModal.tsx` | Library > Deliverables |
 
-#### 2-32. KeyboardShortcutsGuide
-**파일:** `src/components/KeyboardShortcutsGuide.tsx`
-**트리거:** `?` 키
+### Global Utilities
 
-- Portal 렌더링으로 전체 단축키 표시
-
-#### 2-33. ScreenGuidePanel
-**파일:** `src/components/ScreenGuidePanel.tsx`
-**트리거:** 화면 우측 ? 아이콘
-
-- 현재 화면 맥락 도움말
-
-#### 2-34. NotificationCenter
-**파일:** `src/components/NotificationCenter.tsx`
-**트리거:** 알림 벨 아이콘
-
-- 실시간 알림 (타입별 필터, 읽음 처리, 태스크 이동)
-
-#### 2-35. ConfirmDialog
-**파일:** `src/components/ui/ConfirmDialog.tsx`
-- 삭제·경고 범용 확인 대화상자
-
-#### 2-36. TextPreviewModal
-**파일:** `src/components/deliverables/TextPreviewModal.tsx`
-- 산출물 텍스트 파일 미리보기
+| # | Component | Trigger |
+|---|-----------|---------|
+| 7-30 | `CommandPalette` | `Ctrl+Shift+K` |
+| 7-31 | `KeyboardShortcutsGuide` | `?` key |
+| 7-32 | `NotificationCenter` | Menu bar 🔔 |
+| 7-33 | `ConfirmDialog` | On delete or warning |
 
 ---
 
-## 3. 핵심 UI 아키텍처 패턴
+## 8. Legacy 14 Menu Items → New Location Mapping (all preserved)
 
-### 오버레이 중앙 관리
-모든 모달·오버레이는 `src/app/AppOverlays.tsx`에서 중앙 렌더링.
-상태는 `App.tsx`에서 관리 → 드릴다운으로 열기/닫기 콜백 전달.
+| Legacy Menu | New Location | How to Access |
+|-------------|-------------|---------------|
+| Dashboard | Desktop itself | Always visible |
+| Agents & Departments | Desktop icon 👤 | Click → AgentManager window |
+| Heartbeat Monitor | Agents widget | `[+ Add Widget]` → select Agents |
+| Flow Graph | Flow Graph widget | `[+ Add Widget]` → select Flow Graph |
+| Task Board | Tasks widget | `[+ Add Widget]` → select Tasks |
+| Scheduled Tasks | Dock ⚡ Workflow window tab | Workflow window → Scheduled tab |
+| Deliverables | Dock 📚 Library window tab | Library window → Deliverables tab |
+| Workflow Builder | Desktop icon ⚡ + Dock ⚡ | Both open the same window |
+| Skills | Dock 📚 Library window tab | Library window → Skills tab |
+| Agent Rules | Dock 📚 Library window tab | Library window → Rules tab |
+| Memory | Dock 📚 Library window tab | Library window → Memory tab |
+| Hooks | Dock 📚 Library window tab | Library window → Hooks tab |
+| CLI Usage | CLI Cost widget + Settings > CLI | Widget (summary) / Settings (details) |
+| Project Types | Dock ⚙ Settings window tab | Settings window → Project Types tab |
+| Settings | Dock ⚙ | Click → Settings window |
+
+---
+
+## 9. Core UI Architecture Patterns
+
+### App Structure
 
 ```
 App.tsx
-  └── AppOverlays.tsx  ← 36개 모달 전부 여기서 렌더링
-  └── AppMainLayout.tsx ← 15개 메인 화면 라우팅
+  └── Desktop.tsx              ← Desktop (menu bar + icons + widgets + Dock)
+        ├── MenuBar.tsx
+        ├── DesktopIcons.tsx
+        ├── WidgetLayer.tsx    ← Widget drag/resize layer
+        ├── Dock.tsx
+        └── WindowLayer.tsx   ← App window overlay layer
+              ├── WorkflowWindow.tsx
+              ├── LibraryWindow.tsx
+              ├── SettingsWindow.tsx
+              ├── ChatWindow.tsx
+              └── AgentManagerWindow.tsx
+  └── AppOverlays.tsx          ← Modal layer (highest z-index)
+  └── SlidePanels.tsx          ← AgentDetail, TerminalPanel layer
 ```
 
-### Lazy Loading
-Library 계열 및 Settings 컴포넌트는 `React.lazy + Suspense` 적용 (초기 번들 분리).
+### State Management
 
-### 프로젝트 컨텍스트 필터링
-Library 4개(Skills/Rules/Memory/Hooks)는 선택된 `project_id` 기반으로 서버에서 필터링:
+```typescript
+// uiStore.ts
+openWindows: Set<"workflow"|"library"|"settings"|"chat"|"agent-manager"|"repl">
+widgetLayout: WidgetConfig[]    // widget position, size, visibility
+desktopIconLayout: IconConfig[] // icon positions
+selectedAgentId: string | null  // AgentDetail panel
+openTaskId: string | null       // TerminalPanel drawer
+```
+
+### Window Management Pattern
+- Multiple windows can be open simultaneously
+- Even when windows are open, the desktop (widgets) continue to update in real time
+- Close window: `×` button or `Escape`
+
+### Widget Persistence
+Widget layout (position, size, list) is saved in `localStorage`.
+Supports different widget configurations per project.
+
+### Project Context Filtering
+Library tabs (Skills/Rules/Memory/Hooks) filter server data by the selected `project_id`:
 ```
 GET /api/agent-rules?project_id=<id>
-  → 해당 프로젝트 배정 에이전트의 룰만 반환
 ```
 
-### 실시간 업데이트 (WebSocket)
-| 이벤트 | 대상 화면 |
-|---|---|
-| `task_update` | TaskBoard, Dashboard |
-| `cli_output` | TerminalPanel |
-| `agent_status` | HeartbeatPanel, AgentStatusPanel |
-| `decision_request` | DecisionInboxModal |
+### Real-time WebSocket
 
-### 다국어 지원
-한국어·영어·일본어·중국어 4개 언어 지원.
+| Event | Updates |
+|-------|---------|
+| `agent_status` | Agents widget, Flow Graph widget |
+| `task_update` | Tasks widget, Alerts widget |
+| `cli_output` | TerminalPanel drawer |
+| `decision_request` | Alerts widget → DecisionInboxModal |
+
+### Internationalization
+Supports 4 languages: Korean, English, Japanese, Chinese.
 
 ---
 
-## 4. 파일 위치 빠른 참조
+## 10. Quick File Reference
 
 ```
 src/
-├── App.tsx                          # 루트 상태 관리
-├── app/
-│   ├── AppMainLayout.tsx            # 화면 라우팅
-│   └── AppOverlays.tsx              # 전체 모달 렌더링
+├── App.tsx
 ├── components/
-│   ├── Sidebar.tsx                  # 사이드바 메뉴
-│   ├── dashboard/                   # Dashboard
-│   ├── taskboard/                   # Task Board + 모달들
-│   ├── scheduled-tasks/             # Scheduled Tasks
-│   ├── deliverables/                # Deliverables + TextPreviewModal
+│   ├── desktop/
+│   │   ├── Desktop.tsx              # Desktop root
+│   │   ├── MenuBar.tsx              # Top menu bar
+│   │   ├── DesktopIcon.tsx          # Desktop icons
+│   │   ├── Dock.tsx                 # Bottom Dock
+│   │   ├── Widget.tsx               # Widget common container
+│   │   ├── WidgetPicker.tsx         # Widget add selection popup
+│   │   └── widgets/
+│   │       ├── AgentsWidget.tsx     # Replaces Heartbeat Monitor
+│   │       ├── TasksWidget.tsx      # Replaces Task Board
+│   │       ├── AlertsWidget.tsx     # Attention alerts
+│   │       ├── CliCostWidget.tsx    # Replaces CLI Usage
+│   │       └── FlowGraphWidget.tsx  # Replaces Flow Graph
+│   ├── windows/
+│   │   ├── WorkflowWindow.tsx       # ⚡ Dock app window
+│   │   ├── LibraryWindow.tsx        # 📚 Dock app window
+│   │   ├── SettingsWindow.tsx       # ⚙ Dock app window
+│   │   ├── ChatWindow.tsx           # 💬 Dock app window
+│   │   ├── AgentManagerWindow.tsx   # 👤 icon app window
+│   │   └── ReplWindow.tsx           # >_ icon app window (Agent REPL)
+│   ├── flow-graph/                  # AgentFlowGraph (reused in widget)
+│   ├── workflow-builder/            # WorkflowBuilder (@xyflow/react)
+│   ├── scheduled-tasks/             # ScheduledTasksPanel
+│   ├── taskboard/                   # CreateTaskModal, BulkHideModal
+│   ├── deliverables/                # Deliverables, TextPreviewModal
 │   ├── agent-manager/               # AgentFormModal, DepartmentFormModal
-│   ├── flow-graph/                  # AgentFlowGraph + useFlowLayout/useViewTransform + nodes/edges
-│   ├── workflow-builder/            # WorkflowBuilder (@xyflow/react) + nodes/
-│   ├── office-view/                 # HeartbeatPanel, CliUsagePanel
-│   ├── skills-library/              # Skills + 학습 모달
-│   ├── agent-rules/                 # Rules + 학습 모달
-│   ├── memory/                      # Memory + 학습 모달
-│   ├── hooks/                       # Hooks + 학습 모달
-│   ├── settings/                    # 설정 탭들
-│   ├── category-editor/             # CategoryFormModal
-│   ├── chat-panel/                  # GroupChatPanel
-│   ├── project-create-modal/        # ProjectCreateModal
-│   └── ui/                          # ConfirmDialog 등 공용 UI
+│   ├── skills-library/              # Skills + learning modals
+│   ├── agent-rules/                 # Rules + learning modals
+│   ├── memory/                      # Memory + learning modals
+│   ├── hooks/                       # Hooks + learning modals
+│   ├── settings/                    # Settings tabs
+│   └── ui/                          # Shared components (ConfirmDialog, etc.)
+└── store/
+    ├── uiStore.ts                   # openWindows, widgetLayout, desktopIconLayout, wallpaper, jiggleMode, missionControlOpen
+    ├── agentStore.ts
+    ├── taskStore.ts
+    └── projectStore.ts
 ```
+
+---
+
+## macOS UX Feature Specifications (6 features)
+
+### Feature 1 — Spotlight (Command Palette)
+
+**File:** `src/components/CommandPalette.tsx`
+
+| Item | Value |
+|------|-------|
+| Trigger | `Ctrl+Shift+K` or `Cmd+K` |
+| Size | 640px, centered |
+| Search input | Height 64px, font 18px, 🔍 icon |
+| Features | Search agents/tasks/projects/views, recent items, keyboard navigation |
+| Background | `rgba(0,0,0,0.55)` + `backdropFilter: blur(6px)` |
+| Close | Esc or click outside |
+
+---
+
+### Feature 2 — Icon Jiggle Mode
+
+**Files:** `src/components/desktop/DesktopIcon.tsx`, `src/store/uiStore.ts`
+
+| Item | Value |
+|------|-------|
+| Trigger | Long-press on empty desktop for 600ms |
+| State | `uiStore.jiggleMode: boolean` |
+| Animation | `@keyframes jiggle { 0%,100%{rotate(-2.5deg)} 50%{rotate(2.5deg)} }` |
+| Delete badge | Red ✕ circle (18px) at top-left of project icons; click to delete project |
+| System icons | Jiggle animation only, no ✕ (non-deletable) |
+| Exit | Esc key or click desktop |
+
+---
+
+### Feature 3 — Quick Look
+
+**File:** `src/components/desktop/QuickLook.tsx`
+
+| Item | Value |
+|------|-------|
+| Trigger | Click a project icon then press `Space`, or right-click → Quick Preview |
+| Size | 420px, fixed at screen center |
+| Content | Project name, core_goal, project_path, task_count, last_used_at, agent avatars |
+| Style | Glass panel `rgba(22,22,28,0.96)` + `blur(32px)` |
+| Close | Esc, close button, or click outside |
+
+---
+
+### Feature 4 — Mission Control
+
+**File:** `src/components/desktop/MissionControl.tsx`
+
+| Item | Value |
+|------|-------|
+| Trigger | `Ctrl+↑` or AgentDesk menu → Mission Control |
+| State | `uiStore.missionControlOpen: boolean` |
+| Content | Section 1: open window card grid / Section 2: active widget card grid |
+| Style | Full-screen overlay `rgba(0,0,0,0.65)` + `blur(8px)` + `@keyframes mcFadeIn` |
+| Card click | Activate that window + close Mission Control |
+| Close | Esc or click background |
+
+---
+
+### Feature 5 — Notification Center Slide Panel
+
+**File:** `src/components/NotificationCenter.tsx`
+
+| Item | Value |
+|------|-------|
+| Trigger | Click the bell icon in the menu bar |
+| Position | `position: fixed, top: 44px, right: 0, width: 320px, bottom: 80px` |
+| Enter animation | `translateX(0)` ← `translateX(320px)`, `transition: 0.28s cubic-bezier(0.4,0,0.2,1)` |
+| Background | `rgba(18,18,22,0.96)` + `backdropFilter: blur(20px)` |
+| Background overlay | Semi-transparent `rgba(0,0,0,0.3)`, click to close |
+| Features | Read/unread filter, type filter, browser push toggle, mark all as read |
+
+---
+
+### Feature 6 — MenuBar App Menu
+
+**File:** `src/components/desktop/MenuBar.tsx`
+
+| Item | Value |
+|------|-------|
+| Trigger | Click the "AgentDesk" button at the top-left of the menu bar |
+| State | `appMenuOpen: boolean` (local state) |
+| Dropdown position | `position: absolute, top: calc(100% + 6px), left: 0` |
+| Style | `rgba(20,20,24,0.97)` + `blur(20px)`, `borderRadius: 10` |
+| Items | About (version) / Change Wallpaper / Add Widget / Keyboard Shortcuts / Mission Control (Ctrl↑) |
+| Close | Select an item or click outside |
+
+---
+
+## Complete Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl+Shift+K` / `Cmd+K` | Spotlight (CommandPalette) |
+| `Ctrl+↑` | Mission Control |
+| `Space` (after selecting a project) | Quick Look |
+| `Esc` | Exit Jiggle / Close Quick Look / Close Mission Control |
+| Long-press empty screen 600ms | Enter Jiggle Mode |
+| `g w` | Toggle Workflow window |
+| `g l` | Toggle Library window |
+| `g s` | Toggle Settings window |
+| `g c` | Toggle Chat window |
+| `g a` | Toggle Agent Manager |
+| `g e` | Toggle REPL |
+| `?` | Keyboard shortcuts guide |

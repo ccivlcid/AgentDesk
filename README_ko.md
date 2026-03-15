@@ -1,200 +1,267 @@
 # AgentDesk
 
-> 📖 **전체 개요 문서:** [`docs/OVERVIEW.md`](./docs/OVERVIEW.md) — Project OS 컨셉, 에이전트 모니터링 아키텍처, 현재 상태, 로드맵
+> **여러 AI 에이전트를 동시에 실행·모니터링·제어하는 개발자 OS**
 
-**제품 요구사항 — 개요**
+AgentDesk는 macOS 바탕화면 은유를 AI 에이전트 오케스트레이션에 적용한 프로젝트 운영체제입니다.
+메뉴바, 데스크톱 아이콘, 드래그 가능한 위젯, Dock, 플로팅 앱 창으로 구성된 다크 터미널 인터페이스입니다.
 
-AgentDesk는 **프로젝트 OS**입니다. CLI 프로세스로 동작하는 AI 에이전트를 운영하는 콕핏이며, 프로젝트·태스크·에이전트 팀을 한곳에서 관리하고 메신저 연동을 제공합니다.
+> 🌐 [English README](README.md)
 
 ---
 
-## 컨셉
+## 스크린샷
 
-| 항목 | 설명 |
+<table>
+  <tr>
+    <td><img src="docs/screen/ko/01-desktop.png" width="420" alt="바탕화면"/><br/><sub>바탕화면</sub></td>
+    <td><img src="docs/screen/ko/04-agent-manager.png" width="420" alt="에이전트 매니저"/><br/><sub>에이전트 매니저</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screen/37-agent-create.png" width="420" alt="직원 등록"/><br/><sub>직원 등록</sub></td>
+    <td><img src="docs/screen/38-dept-create.png" width="420" alt="부서 등록"/><br/><sub>부서 등록</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screen/23-workflow-builder.png" width="420" alt="워크플로 빌더"/><br/><sub>워크플로 빌더</sub></td>
+    <td><img src="docs/screen/25-workflow-composition.png" width="420" alt="에이전트 컴포지션"/><br/><sub>에이전트 컴포지션</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screen/26-chat-direct.png" width="420" alt="다이렉트 채팅"/><br/><sub>다이렉트 채팅</sub></td>
+    <td><img src="docs/screen/27-chat-group.png" width="420" alt="그룹 방송 채팅"/><br/><sub>그룹 방송 채팅</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screen/ko/07-widget-agents.png" width="420" alt="에이전트 위젯"/><br/><sub>에이전트 위젯</sub></td>
+    <td><img src="docs/screen/34-widget-alerts.png" width="420" alt="알림 위젯"/><br/><sub>알림 위젯</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screen/ko/05-settings.png" width="420" alt="설정"/><br/><sub>설정</sub></td>
+    <td><img src="docs/screen/18-library-skills.png" width="420" alt="라이브러리 — Skills"/><br/><sub>라이브러리 — Skills</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screen/ko/06-mission-control.png" width="420" alt="미션 컨트롤"/><br/><sub>미션 컨트롤 (Ctrl+↑)</sub></td>
+    <td><img src="docs/screen/11-command-palette.png" width="420" alt="커맨드 팔레트"/><br/><sub>커맨드 팔레트 (Ctrl+Shift+K)</sub></td>
+  </tr>
+</table>
+
+---
+
+## AgentDesk란?
+
+AgentDesk는 AI 에이전트 팀을 위한 **프로젝트 운영체제**입니다. 로컬 웹앱으로 실행되며 다음을 지원합니다:
+
+- **AI 에이전트 생성·관리** — 페르소나, 역할, 부서, CLI 프로바이더, API 모델 설정
+- **워크플로 오케스트레이션** — 비주얼 빌더, 스케줄 태스크, 멀티 에이전트 컴포지션 파이프라인
+- **실시간 모니터링** — 하트비트 위젯, 태스크 보드, 알림 피드, 플로우 그래프, CLI 비용 추적
+- **에이전트와 채팅** — 다이렉트 메시지, 그룹 방송, Telegram/Discord/Slack 게이트웨이
+- **공유 지식 베이스** — Skills, Rules, Memory, Hooks, Deliverables 라이브러리
+- **모든 것을 제어** — macOS 스타일 데스크톱 (Spotlight 검색, 미션 컨트롤, Quick Look)
+
+---
+
+## 주요 기능
+
+### 🖥️ macOS 스타일 데스크톱 OS
+- 메뉴바 + 데스크톱 아이콘 + Dock + 플로팅 창
+- 드래그&드롭 아이콘 배치 + Jiggle Mode (600ms 롱프레스)
+- Quick Look (Space) — 프로젝트 빠른 미리보기
+- Mission Control (Ctrl+↑) — 모든 창·위젯 오버뷰
+- Spotlight 스타일 커맨드 팔레트 (Ctrl+Shift+K)
+- 10가지 그라데이션 배경화면 테마
+
+### 👤 에이전트·부서 관리
+- 커스텀 아바타, 페르소나, 역할 레벨(팀장/시니어/주니어/인턴)로 에이전트 채용
+- 공유 시스템 프롬프트를 가진 부서 단위 조직 구성
+- CLI 프로바이더(Claude, OpenAI, Gemini 등) 또는 API 모델 배정
+- 실시간 하트비트 모니터링
+
+### ⚡ 워크플로 자동화
+- 비주얼 드래그&드롭 워크플로 빌더
+- 크론 표현식 스케줄 태스크
+- 커스텀 노드 타입의 멀티 에이전트 컴포지션 파이프라인
+- 7가지 내장 워크플로 팩 (개발, 리서치, 소설, 보고서, 영상, 롤플레이, 에셋 관리)
+
+### 💬 멀티 에이전트 채팅
+- 개별 에이전트 다이렉트 메시지
+- 전체 에이전트 그룹 방송 채널
+- Telegram / Discord / Slack 게이트웨이 연동
+- 메신저 `$` 지시문 및 `!` 태스크 플로우
+
+### 📚 지식 라이브러리
+- **Skills** — 재사용 가능한 태스크 템플릿
+- **Rules** — 에이전트 행동 규칙·가이드라인
+- **Memory** — 지속적 에이전트 컨텍스트
+- **Hooks** — 이벤트 기반 자동화 스크립트
+- **Deliverables** — 산출물 아티팩트 추적
+
+### 📊 실시간 대시보드 위젯
+
+| 위젯 | 설명 |
 |------|------|
-| **한 줄 컨셉** | **내가 원하는 방식으로 일해서 결과물을 얻는다** — 클라이언트(나)가 프로젝트·태스크·에이전트를 정하고, 실행 흐름과 산출물을 한곳에서 관리한다. |
-| **디자인 컨셉** | **macOS 하이브리드** — macOS 네이티브 크롬(글래스모피즘, 라운드 코너, 트래픽 라이트) + 터미널 CLI 내부 콘텐츠(모노스페이스, 앰버 포인트). ⌘K 커맨드 팔레트, 키보드 우선. |
-| **슬로건 (KR)** | “어떤 팀이든 맞춤 설계하는 프로젝트 운영체제” |
-| **슬로건 (EN)** | A Project Operating System Tailored to Your Workflow |
+| 💓 에이전트 | 에이전트 상태 실시간 목록 (working / idle / offline) |
+| 📋 태스크 | 활성 태스크 보드 |
+| 🔔 알림 | 이상 감지·오류 알림 |
+| 💰 CLI 비용 | 토큰 사용량·속도 제한 추적 |
+| 🔀 플로우 그래프 | 에이전트 통신 흐름 그래프 |
+| 🗂 파일 트리 | 프로젝트 디렉토리 브라우저 |
 
 ---
 
-## 1. 제품 개요
+## 🌍 다국어 지원
 
-| 항목 | 설명 |
+언어 설정에 따라 모든 UI 텍스트가 자동으로 전환됩니다 — **한국어 · English · 日本語 · 中文**
+
+### 앱 메뉴
+
+<table>
+  <tr>
+    <th>🇰🇷 한국어</th>
+    <th>🇺🇸 English</th>
+    <th>🇯🇵 日本語</th>
+    <th>🇨🇳 中文</th>
+  </tr>
+  <tr>
+    <td><img src="docs/screen/ko/02-app-menu.png" width="300" alt="한국어 앱 메뉴"/></td>
+    <td><img src="docs/screen/en/02-app-menu.png" width="300" alt="English App Menu"/></td>
+    <td><img src="docs/screen/ja/02-app-menu.png" width="300" alt="日本語 アプリメニュー"/></td>
+    <td><img src="docs/screen/zh/02-app-menu.png" width="300" alt="中文 应用菜单"/></td>
+  </tr>
+</table>
+
+### 위젯 추가 피커
+
+<table>
+  <tr>
+    <th>🇰🇷 한국어</th>
+    <th>🇺🇸 English</th>
+    <th>🇯🇵 日本語</th>
+    <th>🇨🇳 中文</th>
+  </tr>
+  <tr>
+    <td><img src="docs/screen/ko/03-widget-picker.png" width="300" alt="한국어 위젯 피커"/></td>
+    <td><img src="docs/screen/en/03-widget-picker.png" width="300" alt="English Widget Picker"/></td>
+    <td><img src="docs/screen/ja/03-widget-picker.png" width="300" alt="日本語 ウィジェット"/></td>
+    <td><img src="docs/screen/zh/03-widget-picker.png" width="300" alt="中文 小组件"/></td>
+  </tr>
+</table>
+
+### 미션 컨트롤
+
+<table>
+  <tr>
+    <th>🇰🇷 한국어</th>
+    <th>🇺🇸 English</th>
+    <th>🇯🇵 日本語</th>
+    <th>🇨🇳 中文</th>
+  </tr>
+  <tr>
+    <td><img src="docs/screen/ko/06-mission-control.png" width="300" alt="한국어 미션 컨트롤"/></td>
+    <td><img src="docs/screen/en/06-mission-control.png" width="300" alt="English Mission Control"/></td>
+    <td><img src="docs/screen/ja/06-mission-control.png" width="300" alt="日本語 ミッションコントロール"/></td>
+    <td><img src="docs/screen/zh/06-mission-control.png" width="300" alt="中文 任务控制"/></td>
+  </tr>
+</table>
+
+### 직원 등록 모달
+
+<table>
+  <tr>
+    <th>🇰🇷 한국어</th>
+    <th>🇺🇸 English</th>
+    <th>🇯🇵 日本語</th>
+    <th>🇨🇳 中文</th>
+  </tr>
+  <tr>
+    <td><img src="docs/screen/ko/08-agent-create.png" width="300" alt="한국어 직원 등록"/></td>
+    <td><img src="docs/screen/en/08-agent-create.png" width="300" alt="English Hire Agent"/></td>
+    <td><img src="docs/screen/ja/08-agent-create.png" width="300" alt="日本語 エージェント採用"/></td>
+    <td><img src="docs/screen/zh/08-agent-create.png" width="300" alt="中文 招聘代理"/></td>
+  </tr>
+</table>
+
+---
+
+## 기술 스택
+
+| 영역 | 기술 |
 |------|------|
-| **비전** | 워크플로에 맞는 프로젝트 운영체제 — 목표, 리스크, 게이트, 산출물을 한 컨트롤 플레인에서 관리. |
-| **포지셔닝** | CLI 에이전트 관리 도구(k9s·lazygit 스타일), 일반 대시보드 아님. |
-| **기본** | 다크 테마, 모노 타이포, 키보드 우선(⌘K 커맨드 팔레트 등). |
+| 프론트엔드 | React 18 + TypeScript + Vite + Tailwind CSS |
+| 상태관리 | Zustand |
+| 플로우 다이어그램 | `@xyflow/react` v12 |
+| 백엔드 | Node.js + Express + tsx |
+| 데이터베이스 | SQLite (`better-sqlite3`) + 버전별 마이그레이션 |
+| 실시간 통신 | WebSocket |
+| 로깅 | pino |
+| 테스트 | Vitest (유닛 + 통합) + Playwright (E2E) |
+| 패키지 매니저 | pnpm |
+| 데스크톱 앱 | Electron (선택적 빌드) |
 
 ---
 
-## 2. 목표와 성공
+## 빠른 시작
 
-- **1차:** 운영자가 프로젝트를 만들고, 태스크를 에이전트에 배정하고, 실행(터미널 로그·리포트)을 앱 안에서 추적할 수 있다.
-- **2차:** 메신저 기반 지시(`$` / `!`) 및 의사결정 인박스 플로우; 프로젝트 단위 팀·대시보드 4분면(목표, 리스크, 게이트, 산출물).
-
----
-
-## 3. 대상 사용자
-
-- **1차:** 프로젝트를 실행하고 AI 에이전트를 조율하는 주체(팀장, PM, 소규모 조직 리더).
-- **사용 흐름:** 프로젝트 생성/선택 → 대시보드·태스크 보드·팀 → 에이전트 실행 → 리포트·산출물 확인.
-
----
-
-## 4. 범위 내(주요 기능)
-
-### 4-1. 사이드바 메뉴 (13개 화면)
-
-| 섹션 | 화면 | 아이콘 | 설명 |
-|------|------|--------|------|
-| **개요** | 대시보드 | `$` | 프로젝트 개요, 팀 패널, 에이전트 활동, 목표/리스크/게이트/산출물 4분면. 프로젝트 미선택 시 웰컴 + 시작 가이드. |
-| | 프로젝트 유형 | `◫` | 프로젝트 카테고리(개발, 마케팅, 리서치 등) 생성/편집/삭제. |
-| **업무** | 업무 보드 | `▤` | 8컬럼 칸반 보드 (inbox→done). 드래그&드롭, 필터링, 일괄 작업. 간트/DAG 뷰 전환. |
-| | 스케줄러 | `⏱` | CRON 기반 스케줄 태스크 관리. 스케줄 목록, 템플릿, 가이드 탭. |
-| | 산출물 | `↗` | 프로젝트 산출물/아티팩트 관리. 상태 필터(전체/완료/리뷰중), Git 연동. |
-| **에이전트** | 에이전트 & 부서 | `⊙` | 에이전트/부서 관리. 프로젝트 팀 vs 전체 조직 뷰 전환. 채용/편집/삭제. |
-| | 현황 모니터 | `♡` | htop 스타일 에이전트 모니터링. 로드바, 가동시간, 스톨/블록/실패 감지. |
-| **라이브러리** | 스킬 | `✦` | 스킬 관리 (프로젝트 필요). 그리드, 검색, 카테고리, 학습/삭제. |
-| | 에이전트 룰 | `◈` | 행동 규칙 관리 (프로젝트 필요). 규칙 생성, 학습, 히스토리. |
-| | 메모리 | `◻` | 메모리/컨텍스트 관리 (프로젝트 필요). 지식, 지시, 컨텍스트 항목. |
-| | 훅 | `⚡` | 이벤트 훅 관리 (프로젝트 필요). pre-task, post-task, project-completed. |
-| **시스템** | CLI 사용량 | `~` | 모델별 사용량, 프로바이더 상태, 트렌드 차트. |
-| | 설정 | `⚙` | 6개 탭: 일반, API 프로바이더, CLI 인증, OAuth, 게이트웨이, 데이터. |
-
-### 4-2. 오버레이/패널 (메뉴 외)
-
-| 화면 | 진입 방법 | 설명 |
-|------|-----------|------|
-| **커맨드 팔레트** | `⌘+Shift+K` | 화면 이동, 프로젝트 전환, 에이전트/태스크 검색. |
-| **의사결정 인박스** | 헤더 버튼 | 승인 대기 항목 목록. 리뷰, 타임아웃 재개, 승인 라운드 처리. |
-| **1:1 채팅** | 에이전트 클릭 | 에이전트와 대화. 태스크/공지/지시 모드. 파일 첨부, 검색. |
-| **그룹 채팅** | 헤더 버튼 | 다중 에이전트 그룹 대화. 에이전트 선택, 스트리밍 메시지. |
-| **에이전트 상세** | 에이전트 선택 | 프로필, 태스크, 서브에이전트, 성능, 채팅 탭. |
-| **터미널 패널** | 태스크 클릭 | 실행 로그 실시간 스트리밍. 일시정지/재개/개입. 생각 블록, OPS 상세. |
-| **회의록 패널** | 터미널 내 탭 | 회의 기록, 협업 정보. |
-| **태스크 리포트** | 태스크 완료 시 | 실행 결과 요약, 메트릭, 산출물, 타임라인. |
-| **리포트 히스토리** | 헤더 버튼 | 과거 태스크 실행 리포트 목록. |
-| **프로젝트 생성** | 헤더/대시보드 | 3단계 마법사: 유형 → 정보 → 에이전트 선택. |
-| **태스크 생성** | 업무 보드 | 태스크 양식, 템플릿, 드래프트 자동저장. |
-| **프로젝트 관리** | 대시보드 | 프로젝트 목록, 상세, 편집, 삭제, GitHub 임포트. |
-| **Diff 뷰어** | 태스크 상세 | Git diff 뷰, 머지/폐기 액션. |
-
-### 4-3. 메신저 연동
-
-| 채널 | 설명 |
-|------|------|
-| **Telegram** | 봇 연동, 인박스 웹훅, `$` 지시 · `!` 업무 플로우. |
-| **Discord** | 채널 자동 탐색, 에이전트 라우팅. |
-| **Slack** | 채널 연동 (구현 예정). |
-
-### 4-4. 키보드 단축키
-
-| 키 | 동작 |
-|----|------|
-| `⌘+Shift+K` | 커맨드 팔레트 |
-| `Ctrl+1~8` | 화면 전환 (대시보드, 업무, 에이전트, 스킬, 메모리, 룰, 훅, 설정) |
-| `?` | 단축키 가이드 |
-| `Esc` | 닫기/뒤로가기 |
-
----
-
-## 5. 프로젝트 생성 가이드
-
-### 생성 순서 (3단계)
-
-| 단계 | 항목 | 설명 |
-|------|------|------|
-| ① 유형 | 프로젝트 유형(카테고리) 선택 | 개발·리포트·영상 등 목적에 맞는 유형 선택 (건너뛸 수 있음) |
-| ② 정보 | 이름 · 경로 · 한 줄 목표 | 프로젝트 이름과 **로컬 폴더 경로**는 필수 |
-| ③ 에이전트 | 참여 직원(에이전트) 선택 | **1명 이상 필수** — 미선택 시 프로젝트 생성 불가 |
-
-### 에이전트 선택 규칙
-
-- **자동 선택**: ② → ③ 진입 시 프로젝트 **유형(카테고리) 기반**으로 관련 부서 우선순위에 맞게 자동 pre-select됨
-  - 선택 우선순위: 팀장(idle) → 팀장 → 시니어(idle) → 시니어 → 주니어 → 인턴
-  - 기획(Planning) 팀장은 **회의 쿼럼 보장**을 위해 항상 포함됨
-- **최소 인원**: **1명 이상** 선택해야 프로젝트가 생성됨
-- **권장 인원**: 태스크가 여러 부서에 위임될 경우 **부서당 최소 1명** 배치 권장
-  - 부서에 직원이 없으면 해당 부서 서브태스크는 `blocked` 처리되고 클라이언트에게 알림이 전송됨
-- **변경 가능**: 자동 선택 후 직접 추가/제거 가능; ALL(전체 선택) · CLEAR(전체 해제) 버튼 제공
-- **CLI 에이전트만 표시**: API 전용 에이전트는 목록에 나타나지 않음 (CLI provider 설정 필요)
-
-### 카테고리별 자동 배치 우선순위
-
-유형 선택 시 해당 프로젝트에 맞는 부서 순서로 직원이 자동 선택됩니다.
-
-| 카테고리 | 우선 배치 부서 순서 |
-|----------|-------------------|
-| **소프트웨어 개발** | 개발팀 → 품질관리팀 → 인프라보안팀 → 기획팀 → 운영팀 → 디자인팀 |
-| **마케팅 캠페인** | 디자인팀 → 기획팀 → 운영팀 → 개발팀 |
-| **리서치/분석** | 기획팀 → 개발팀 → 품질관리팀 → 운영팀 |
-| **제품 출시** | 기획팀 → 개발팀 → 품질관리팀 → 디자인팀 → 운영팀 → 인프라보안팀 |
-| **콘텐츠 제작** | 디자인팀 → 기획팀 → 운영팀 → 개발팀 |
-| **운영/프로세스** | 운영팀 → 기획팀 → 개발팀 → 품질관리팀 |
-
-> 유형을 선택하지 않으면 모든 부서에서 최적 직원 1명씩 균등하게 자동 선택됩니다.
-
-### 회의 최소 인원
-
-에이전트 간 회의(리뷰·계획·승인)가 열리려면 아래 조건이 필요합니다.
-
-| 구분 | 조건 | 미충족 시 |
-|------|------|-----------|
-| **최소 팀장** | **2명 이상** 팀장(team_leader)이 프로젝트에 배치되어야 함 | 회의 없이 자동 승인 처리 |
-| **기획 팀장 필수** | 기획팀(Planning) 팀장 1명 항상 포함 | 자동 선택 시 우선 포함됨 |
-| **최대 참석** | 1회 회의당 최대 6명 팀장 참석 | 초과분은 자동 제외 |
-
-> 팀장이 0명이면 회의 없이 자동 승인되므로, **최소 2개 부서에 팀장 1명씩** 배치를 권장합니다.
-
-### 주의사항
-
-> 프로젝트 생성 후 에이전트를 추가하려면 **프로젝트 관리 → 해당 프로젝트 편집** 에서 변경할 수 있습니다.
-> 배치된 에이전트 범위 밖의 부서에 서브태스크가 위임되면 자동으로 `blocked` 상태가 되며,
-> 클라이언트에게 어느 부서가 비어 있는지 알림이 전송됩니다.
-
----
-
-## 6. 범위 외(현재)
-
-- 멀티테넌트 SaaS, SSO, 모바일 전용 앱, 카테고리/스킬 공개 마켓플레이스.
-
----
-
-## 7. 요구사항 및 빠른 시작
-
-**요구사항:** Node.js ≥ 22, pnpm ≥ 10
+**필요 환경:** Node.js ≥ 22, pnpm ≥ 10
 
 ```bash
+git clone <repo-url> && cd AgentDesk
 pnpm install
-cp .env.example .env
-pnpm setup
-pnpm dev
+cp .env.example .env      # 환경변수 설정 (SESSION_SECRET 필수)
+pnpm setup                # DB 초기화 + 마이그레이션
+pnpm dev                  # 프론트(8800) + API 서버(8790) 동시 시작
 ```
 
-브라우저에서 **http://localhost:8800** 을 엽니다.
+브라우저에서 **http://localhost:8800** 접속
 
-| 명령 | 설명 |
-|------|------|
-| `pnpm dev` | 개발 서버 실행 |
+### 첫 에이전트 등록 흐름
+
+```
+1. Settings → API → API 프로바이더 추가 (Claude / OpenAI / Gemini 등)
+2. 에이전트 매니저 → 부서 추가 → 직원 채용
+3. 바탕화면 → 📁 프로젝트 생성 → 에이전트 배정
+4. 라이브러리 → Rules / Memory / Hooks 설정 (선택)
+5. 바탕화면 → ▶ 태스크 실행 → 터미널 패널에서 실시간 모니터링
+```
+
+### 주요 명령어
+
+| 명령어 | 설명 |
+|--------|------|
+| `pnpm dev` | 개발 서버 시작 (프론트 + API) |
 | `pnpm build` | 프로덕션 빌드 |
-| `pnpm test` | 테스트 실행 |
-| `pnpm lint` | 린트 |
-| `pnpm setup` | 초기 설정 |
+| `pnpm test` | 전체 테스트 실행 |
+| `pnpm run test:web` | 프론트 테스트만 (Vitest) |
+| `pnpm run test:api` | 서버 테스트만 (Vitest) |
+| `pnpm lint` | 린트 검사 |
+| `pnpm lint:fix` | 린트 자동 수정 |
+| `pnpm setup` | DB 마이그레이션 재실행 |
+
+### 키보드 단축키
+
+| 단축키 | 동작 |
+|--------|------|
+| `Ctrl+Shift+K` / `Cmd+K` | 커맨드 팔레트 |
+| `Ctrl+↑` | 미션 컨트롤 |
+| `g w` | 워크플로 창 토글 |
+| `g l` | 라이브러리 창 토글 |
+| `g s` | 설정 창 토글 |
+| `g c` | 채팅 창 토글 |
+| `g a` | 에이전트 매니저 토글 |
+| `g e` | REPL 토글 |
+| `Space` | Quick Look (아이콘 선택 후) |
+| `?` | 키보드 단축키 가이드 |
 
 ---
 
-## 8. 기술 스택
+## 문서
 
-- **프론트:** React 19, TypeScript, Vite, Tailwind CSS
-- **백엔드:** Express 5, SQLite, WebSocket
-- **테스트:** Vitest, Playwright
+| 문서 | 내용 |
+|------|------|
+| [`docs/OVERVIEW.md`](docs/OVERVIEW.md) | 아키텍처 개요 + 기능 완성도 로드맵 |
+| [`docs/architecture/ARCHITECTURE-AUDIT-2026-Q1.md`](docs/architecture/ARCHITECTURE-AUDIT-2026-Q1.md) | 아키텍처 & 백엔드 감사 보고서 |
+| [`docs/design/UI-SCREENS.md`](docs/design/UI-SCREENS.md) | 전체 화면·모달 명세 |
+| [`docs/design/DESIGN.md`](docs/design/DESIGN.md) | CSS 변수 + 컴포넌트 스타일 규칙 |
+| [`docs/specs/api.md`](docs/specs/api.md) | REST API 전체 명세 |
 
 ---
 
-## 9. 문서 및 라이선스
+## 라이선스
 
-- **문서:** [docs/README.md](docs/README.md) — 디자인, 스펙, 아키텍처, 전략.
-- **API:** [docs/specs/api.md](docs/specs/api.md); 서버 실행 시 Swagger UI `/api/docs`.
-- **라이선스:** Apache 2.0
+Apache 2.0

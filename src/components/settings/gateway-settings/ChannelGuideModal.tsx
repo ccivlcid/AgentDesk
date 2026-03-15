@@ -297,7 +297,7 @@ export default function ChannelGuideModal({ t, onClose }: GuideModalProps) {
         style={{ borderRadius: 10, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", boxShadow: "0 20px 50px rgba(0,0,0,0.4)" }}
         onClick={(e) => e.stopPropagation()}
       >
-        <HeaderModalChrome title={title} onClose={onClose} />
+        <HeaderModalChrome macOSStyle={false} title={title} onClose={onClose} />
         <p id="channel-guide-title" className="sr-only">{title}</p>
         <div className="flex-shrink-0 px-6 pb-3 text-xs font-mono" style={{ color: "var(--th-text-secondary)", borderBottom: "1px solid var(--th-border)" }}>
           {t({

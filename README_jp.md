@@ -1,100 +1,219 @@
 # AgentDesk
 
-**製品要件 — 概要**
+> **複数のAIエージェントを同時に実行・監視・制御する開発者向けOS**
 
-AgentDeskは**プロジェクトOS**です。CLIプロセスで動作するAIエージェントを運用するコックピットであり、プロジェクト・タスク・エージェントチームを一括管理し、メッセンジャー連携とピクセルオフィスビューを提供します。
+AgentDeskは、macOSデスクトップのメタファーをAIエージェントのオーケストレーションに適用したプロジェクト運用システムです。
+メニューバー、デスクトップアイコン、ドラッグ可能なウィジェット、Dock、フローティングアプリウィンドウを備えたダークターミナルインターフェースです。
 
----
-
-## コンセプト
-
-| 項目 | 説明 |
-|------|------|
-| **一言コンセプト** | **自分が望むやり方で仕事をして成果物を得る** — クライアント（自分）がプロジェクト・タスク・エージェントを決め、実行フローと成果物を一括管理する。 |
-| **デザインコンセプト** | **CLI管理ツール**の雰囲気（k9s・lazygit風）。ダークターミナル調、等幅フォント、⌘Kコマンドパレット。実行ビューはターミナル出力スタイル。 |
-| **スローガン (JP)** | ワークフローに合わせたプロジェクト運用OS |
-| **スローガン (EN)** | A Project Operating System Tailored to Your Workflow |
+> 🌐 [English README](README.md) · [한국어](README_ko.md) · [中文](README_zh.md)
 
 ---
 
-## 1. 製品概要
+## スクリーンショット
 
-| 項目 | 説明 |
-|------|------|
-| **ビジョン** | ワークフローに合わせたプロジェクト運用OS — 目標、リスク、ゲート、成果物を一つのコントロールプレーンで管理。 |
-| **ポジショニング** | CLIエージェント管理ツール（k9s・lazygitスタイル）。汎用ダッシュボードではない。 |
-| **デフォルト** | ダークテーマ、モノタイポ、キーボード優先（⌘Kコマンドパレット等）。 |
-
----
-
-## 2. 目標と成功
-
-- **一次:** 運用者がプロジェクトを作成し、タスクをエージェントに割り当て、実行（ターミナルログ・レポート）をアプリ内で追跡できる。
-- **二次:** メッセンジャーによる指示（`$` / `!`）と意思決定インボックスフロー。プロジェクト単位のチーム・ダッシュボード四象限（目標、リスク、ゲート、成果物）。
-
----
-
-## 3. 対象ユーザー
-
-- **一次:** プロジェクトを実行しAIエージェントを調整する主体（チームリード、PM、小規模組織リーダー）。
-- **利用フロー:** プロジェクト作成/選択 → ダッシュボード・タスクボード・チーム → エージェント実行 → レポート・成果物確認。
-
----
-
-## 4. スコープ内（主な機能）
-
-| 領域 | 説明 |
-|------|------|
-| **ダッシュボード** | プロジェクト概要、チームパネル、エージェント活動、Opsセクション。 |
-| **ワークマップ** | 部門・エージェントのピクセルアートオフィスビュー。 |
-| **タスク** | カンバンボード、スケジュールタスク、成果物。 |
-| **エージェント・チーム** | エージェント、部門、稼働モニタ。プロジェクトチーム割り当て。 |
-| **ライブラリ** | スキル、エージェントルール、メモリ、フック。 |
-| **CLI使用量** | 使用量・コストビュー。 |
-| **設定** | APIプロバイダー、OAuth、ゲートウェイ/メッセンジャー、データ等。 |
-| **メッセンジャー** | Telegram、Discord、Slack等。インボックスウェブフック。`$`指示・`!`業務フロー。 |
+<table>
+  <tr>
+    <td><img src="docs/screen/ja/01-desktop.png" width="420" alt="デスクトップ"/><br/><sub>デスクトップ</sub></td>
+    <td><img src="docs/screen/ja/04-agent-manager.png" width="420" alt="エージェントマネージャー"/><br/><sub>エージェントマネージャー</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screen/37-agent-create.png" width="420" alt="エージェント採用"/><br/><sub>エージェント採用</sub></td>
+    <td><img src="docs/screen/38-dept-create.png" width="420" alt="部署追加"/><br/><sub>部署追加</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screen/23-workflow-builder.png" width="420" alt="ワークフロービルダー"/><br/><sub>ワークフロービルダー</sub></td>
+    <td><img src="docs/screen/25-workflow-composition.png" width="420" alt="エージェントコンポジション"/><br/><sub>エージェントコンポジション</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screen/26-chat-direct.png" width="420" alt="ダイレクトチャット"/><br/><sub>ダイレクトチャット</sub></td>
+    <td><img src="docs/screen/27-chat-group.png" width="420" alt="グループ放送チャット"/><br/><sub>グループ放送チャット</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screen/ja/07-widget-agents.png" width="420" alt="エージェントウィジェット"/><br/><sub>エージェントウィジェット</sub></td>
+    <td><img src="docs/screen/34-widget-alerts.png" width="420" alt="アラートウィジェット"/><br/><sub>アラートウィジェット</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screen/ja/05-settings.png" width="420" alt="設定"/><br/><sub>設定</sub></td>
+    <td><img src="docs/screen/18-library-skills.png" width="420" alt="ライブラリ — Skills"/><br/><sub>ライブラリ — Skills</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screen/ja/06-mission-control.png" width="420" alt="ミッションコントロール"/><br/><sub>ミッションコントロール (Ctrl+↑)</sub></td>
+    <td><img src="docs/screen/11-command-palette.png" width="420" alt="コマンドパレット"/><br/><sub>コマンドパレット (Ctrl+Shift+K)</sub></td>
+  </tr>
+</table>
 
 ---
 
-## 5. スコープ外（現在）
+## AgentDeskとは？
 
-- マルチテナントSaaS、SSO、モバイル専用アプリ、カテゴリ/スキルの公開マーケットプレイス。
+AgentDeskはAIエージェントチームのための**プロジェクト運用システム**です。ローカルWebアプリとして動作し、以下を実現します：
+
+- **AIエージェントの作成・管理** — ペルソナ、役割、部署、CLIプロバイダー、APIモデルの設定
+- **ワークフローのオーケストレーション** — ビジュアルビルダー、スケジュールタスク、マルチエージェントコンポジションパイプライン
+- **リアルタイム監視** — ハートビートウィジェット、タスクボード、アラートフィード、フローグラフ、CLIコスト追跡
+- **エージェントとのチャット** — ダイレクトメッセージ、グループ放送、Telegram/Discord/Slackゲートウェイ
+- **共有ナレッジベース** — Skills、Rules、Memory、Hooks、Deliverablesライブラリ
+- **すべてをコントロール** — macOSスタイルデスクトップ（Spotlight検索、ミッションコントロール、クイックルック）
 
 ---
 
-## 6. 要件とクイックスタート
+## 主な機能
 
-**要件:** Node.js ≥ 22、pnpm ≥ 10
+### 🖥️ macOSスタイルデスクトップOS
+- メニューバー + デスクトップアイコン + Dock + フローティングウィンドウ
+- ドラッグ&ドロップのアイコン配置 + Jiggleモード（600msロングプレス）
+- クイックルック（Space）— プロジェクトのクイックプレビュー
+- ミッションコントロール（Ctrl+↑）— すべてのウィンドウ・ウィジェットの概要
+- Spotlightスタイルのコマンドパレット（Ctrl+Shift+K）
+- 10種類のグラデーション壁紙テーマ
+
+### 👤 エージェント・部署管理
+- カスタムアバター、ペルソナ、役職レベル（チームリーダー/シニア/ジュニア/インターン）でエージェントを採用
+- 共有システムプロンプトを持つ部署単位の組織構成
+- CLIプロバイダー（Claude、OpenAI、Geminiなど）またはAPIモデルの割り当て
+- リアルタイムハートビート監視
+
+### ⚡ ワークフロー自動化
+- ビジュアルドラッグ&ドロップワークフロービルダー
+- Cron式スケジュールタスク
+- カスタムノードタイプのマルチエージェントコンポジションパイプライン
+- 7種類の内蔵ワークフローパック（開発、リサーチ、小説、レポート、映像、ロールプレイ、アセット管理）
+
+### 💬 マルチエージェントチャット
+- 個別エージェントへのダイレクトメッセージ
+- 全エージェントへのグループ放送チャンネル
+- Telegram / Discord / Slackゲートウェイ連携
+- メッセンジャー `$` ディレクティブ・`!` タスクフロー
+
+### 📚 ナレッジライブラリ
+- **Skills** — 再利用可能なタスクテンプレート
+- **Rules** — エージェントの行動ルール・ガイドライン
+- **Memory** — 永続的なエージェントコンテキスト
+- **Hooks** — イベント駆動の自動化スクリプト
+- **Deliverables** — 成果物アーティファクトの追跡
+
+### 📊 リアルタイムダッシュボードウィジェット
+
+| ウィジェット | 説明 |
+|------------|------|
+| 💓 エージェント | エージェント状態のリアルタイム一覧 (working / idle / offline) |
+| 📋 タスク | アクティブタスクボード |
+| 🔔 アラート | 異常検知・エラー通知 |
+| 💰 CLIコスト | トークン使用量・レート制限の追跡 |
+| 🔀 フローグラフ | エージェント通信フローグラフ |
+| 🗂 ファイルツリー | プロジェクトディレクトリブラウザー |
+
+---
+
+## 🌍 多言語対応
+
+言語設定に応じてすべてのUIテキストが自動的に切り替わります — **한국어 · English · 日本語 · 中文**
+
+### アプリメニュー
+
+<table>
+  <tr>
+    <th>🇰🇷 한국어</th>
+    <th>🇺🇸 English</th>
+    <th>🇯🇵 日本語</th>
+    <th>🇨🇳 中文</th>
+  </tr>
+  <tr>
+    <td><img src="docs/screen/ko/02-app-menu.png" width="300"/></td>
+    <td><img src="docs/screen/en/02-app-menu.png" width="300"/></td>
+    <td><img src="docs/screen/ja/02-app-menu.png" width="300"/></td>
+    <td><img src="docs/screen/zh/02-app-menu.png" width="300"/></td>
+  </tr>
+</table>
+
+### ミッションコントロール
+
+<table>
+  <tr>
+    <th>🇰🇷 한국어</th>
+    <th>🇺🇸 English</th>
+    <th>🇯🇵 日本語</th>
+    <th>🇨🇳 中文</th>
+  </tr>
+  <tr>
+    <td><img src="docs/screen/ko/06-mission-control.png" width="300"/></td>
+    <td><img src="docs/screen/en/06-mission-control.png" width="300"/></td>
+    <td><img src="docs/screen/ja/06-mission-control.png" width="300"/></td>
+    <td><img src="docs/screen/zh/06-mission-control.png" width="300"/></td>
+  </tr>
+</table>
+
+---
+
+## 技術スタック
+
+| レイヤー | 技術 |
+|---------|------|
+| フロントエンド | React 18 + TypeScript + Vite + Tailwind CSS |
+| 状態管理 | Zustand |
+| フロー図 | `@xyflow/react` v12 |
+| バックエンド | Node.js + Express + tsx |
+| データベース | SQLite (`better-sqlite3`) + バージョン管理マイグレーション |
+| リアルタイム | WebSocket |
+| ロギング | pino |
+| テスト | Vitest (ユニット + 統合) + Playwright (E2E) |
+| パッケージマネージャー | pnpm |
+| デスクトップアプリ | Electron (オプション) |
+
+---
+
+## クイックスタート
+
+**必要環境:** Node.js ≥ 22, pnpm ≥ 10
 
 ```bash
+git clone <repo-url> && cd AgentDesk
 pnpm install
-cp .env.example .env
-pnpm setup
-pnpm dev
+cp .env.example .env      # 環境変数の設定 (SESSION_SECRET 必須)
+pnpm setup                # DB初期化 + マイグレーション
+pnpm dev                  # フロントエンド(8800) + APIサーバー(8790)
 ```
 
-ブラウザで **http://localhost:8800** を開いてください。
+ブラウザで **http://localhost:8800** にアクセス
 
-| コマンド | 説明 |
-|----------|------|
-| `pnpm dev` | 開発サーバー起動 |
-| `pnpm build` | 本番ビルド |
-| `pnpm test` | テスト実行 |
-| `pnpm lint` | リント |
-| `pnpm setup` | 初期セットアップ |
+### 最初のエージェント登録フロー
+
+```
+1. Settings → API → APIプロバイダーを追加 (Claude / OpenAI / Gemini)
+2. エージェントマネージャー → 部署追加 → エージェント採用
+3. デスクトップ → 📁 プロジェクト作成 → エージェントを割り当て
+4. ライブラリ → Rules / Memory / Hooks を設定 (オプション)
+5. デスクトップ → ▶ タスク実行 → ターミナルパネルでリアルタイム監視
+```
+
+### キーボードショートカット
+
+| ショートカット | 動作 |
+|--------------|------|
+| `Ctrl+Shift+K` / `Cmd+K` | コマンドパレット |
+| `Ctrl+↑` | ミッションコントロール |
+| `g w` | ワークフローウィンドウのトグル |
+| `g l` | ライブラリウィンドウのトグル |
+| `g s` | 設定ウィンドウのトグル |
+| `g c` | チャットウィンドウのトグル |
+| `g a` | エージェントマネージャーのトグル |
+| `g e` | REPLのトグル |
+| `Space` | クイックルック（アイコン選択後） |
+| `?` | キーボードショートカットガイド |
 
 ---
 
-## 7. 技術スタック
+## ドキュメント
 
-- **フロント:** React 19、TypeScript、Vite、Tailwind CSS、PixiJS
-- **バックエンド:** Express 5、SQLite、WebSocket
-- **テスト:** Vitest、Playwright
+| ドキュメント | 内容 |
+|------------|------|
+| [`docs/OVERVIEW.md`](docs/OVERVIEW.md) | アーキテクチャ概要 + 機能完成度ロードマップ |
+| [`docs/architecture/ARCHITECTURE-AUDIT-2026-Q1.md`](docs/architecture/ARCHITECTURE-AUDIT-2026-Q1.md) | アーキテクチャ & バックエンド監査レポート |
+| [`docs/design/UI-SCREENS.md`](docs/design/UI-SCREENS.md) | 全画面・モーダル仕様 |
+| [`docs/specs/api.md`](docs/specs/api.md) | REST API仕様 |
 
 ---
 
-## 8. ドキュメントとライセンス
+## ライセンス
 
-- **ドキュメント:** [docs/README.md](docs/README.md) — デザイン、スペック、アーキテクチャ、戦略。
-- **API:** [docs/specs/api.md](docs/specs/api.md)。サーバー起動時 Swagger UI `/api/docs`。
-- **ライセンス:** Apache 2.0
+Apache 2.0

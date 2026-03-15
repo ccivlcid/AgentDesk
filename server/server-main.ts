@@ -72,8 +72,8 @@ const isProduction = IS_PRODUCTION;
 const runInTransaction = createRunInTransaction(db);
 const readSettingString = createReadSettingString(db);
 
-applyTaskSchemaMigrations(db);
 applyBaseSchema(db);
+applyTaskSchemaMigrations(db);
 runVersionedMigrations(db);
 const oauthRuntime = initializeOAuthRuntime({ db, nowMs, runInTransaction });
 applyDefaultSeeds(db);

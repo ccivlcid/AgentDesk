@@ -83,8 +83,7 @@ export function sanitizeOAuthRedirect(raw: string | undefined): string {
     if (
       u.hostname === "localhost" ||
       u.hostname === "127.0.0.1" ||
-      u.hostname === "::1" ||
-      u.hostname.endsWith(".ts.net")
+      u.hostname === "::1"
     )
       return raw;
   } catch {

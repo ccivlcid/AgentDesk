@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   getAvailableLearnedSkills,
   getSkillDetail,
-  getSkillLearningJob,
   getSkills,
   startSkillLearning,
   unlearnSkill,
@@ -13,6 +12,7 @@ import {
   type SkillLearnProvider,
 } from "../../api";
 import type { Agent } from "../../types";
+import { useWebSocket } from "../../hooks/useWebSocket";
 import {
   categorize,
   formatInstalls,
@@ -26,6 +26,7 @@ import {
 import { useCustomSkillsState } from "./useCustomSkillsState";
 
 export function useSkillsLibraryState({ agents, localeTag, t }: { agents: Agent[]; localeTag: string; t: TFunction }) {
+  const { on: onWsEvent } = useWebSocket();
   const [skills, setSkills] = useState<Awaited<ReturnType<typeof getSkills>>>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -225,25 +226,14 @@ export function useSkillsLibraryState({ agents, localeTag, t }: { agents: Agent[
     if (!learnJob || (learnJob.status !== "queued" && learnJob.status !== "running")) {
       return;
     }
-    let cancelled = false;
-    const timer = window.setInterval(() => {
-      getSkillLearningJob(learnJob.id)
-        .then((job) => {
-          if (!cancelled) {
-            setLearnJob(job);
-          }
-        })
-        .catch((error: Error) => {
-          if (!cancelled) {
-            setLearnError(error.message);
-          }
-        });
-    }, 1500);
-    return () => {
-      cancelled = true;
-      window.clearInterval(timer);
-    };
-  }, [learnJob]);
+    const activeJobId = learnJob.id;
+    return onWsEvent("skill_learn_job_update", (payload) => {
+      const updated = payload as SkillLearnJob;
+      if (updated?.id === activeJobId) {
+        setLearnJob(updated);
+      }
+    });
+  }, [learnJob, onWsEvent]);
 
   useEffect(() => {
     if (!learnJob) return;

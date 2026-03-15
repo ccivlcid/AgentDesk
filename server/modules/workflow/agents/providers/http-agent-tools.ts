@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import type { ChildProcess } from "node:child_process";
-import logger from "../../../lib/logger";
+import logger from "../../../../lib/logger";
 import type { DecryptedOAuthToken } from "./types.ts";
 import { createStreamTools } from "./stream-tools.ts";
 

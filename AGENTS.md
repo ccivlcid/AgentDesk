@@ -198,6 +198,16 @@ try {
   // ignore
 }
 
+const home = os.homedir();
+for (const rel of [
+  "Projects/my-project/.env",
+  "projects/my-project/.env",
+  "Projects/my-project/.env.clone",
+  "projects/my-project/.env.clone",
+]) {
+  candidates.push(path.join(home, rel));
+}
+
 for (const file of [...new Set(candidates)]) {
   const secret = readSecret(file);
   if (!secret) continue;
@@ -258,30 +268,6 @@ The AgentDesk server detects the `$` prefix and automatically:
 - Existing project uses DB core goal; new project uses the directive text as core goal
 
 Without `$`, the message is treated as a general announcement.
-
----
-
-## Direct Task Request (`!` prefix)
-
-**Messages starting with `!` are treated as business tasks from the current chat session.**
-
-When receiving a message that **starts with `!`**:
-
-1. Strip the `!` prefix from the message content
-2. Treat it as a task request (same as `#` flow), NOT a general chat answer
-3. Ask for a project path if not provided in the message
-4. Register via `POST /api/inbox` and proceed with the task orchestration flow
-
-**Difference from `$`:**
-- `$` = Company-wide directive → team leader meeting → full agent delegation
-- `!` = Direct task in current chat session → single agent execution
-- No prefix = General information request → answer directly without task creation
-
-Example:
-```
-!네이버 금융 확인해줘   → task flow (strip "!", register as task)
-네이버 금융 확인해줘    → general answer in chat
-```
 
 ---
 
@@ -417,9 +403,7 @@ Agents must NOT create commits by default.
 
 ```bash
 # Health check
-curl http://127.0.0.1:8790/healthz
-
-# --- Tasks ---
+curl http://127.0.0.1:8790/api/health
 
 # List all tasks
 curl http://127.0.0.1:8790/api/tasks
@@ -427,13 +411,25 @@ curl http://127.0.0.1:8790/api/tasks
 # List tasks by status
 curl "http://127.0.0.1:8790/api/tasks?status=inbox"
 
+# Create task via inbox webhook
+curl -X POST http://127.0.0.1:8790/api/inbox \
+  -H 'content-type: application/json' \
+  -H "x-inbox-secret: $INBOX_SECRET_VALUE" \
+  -d '{"source":"telegram","text":"<message>"}'
+
+# Send Client directive ($ prefix included)
+curl -X POST http://127.0.0.1:8790/api/inbox \
+  -H 'content-type: application/json' \
+  -H "x-inbox-secret: $INBOX_SECRET_VALUE" \
+  -d '{"source":"telegram","text":"$<directive message>"}'
+
 # View task detail
 curl http://127.0.0.1:8790/api/tasks/<id>
 
-# Update task fields (project_path, handoff_to_agent_id, handoff_condition, etc.)
+# Update task fields
 curl -X PATCH http://127.0.0.1:8790/api/tasks/<id> \
   -H 'content-type: application/json' \
-  -d '{"project_path":"/workspace/project"}'
+  -d '{"project_path":"/workspace/my-project"}'
 
 # View terminal log
 curl "http://127.0.0.1:8790/api/tasks/<id>/terminal?lines=50"
@@ -449,78 +445,17 @@ curl -X POST http://127.0.0.1:8790/api/tasks/<id>/assign \
   -H 'content-type: application/json' \
   -d '{"agent_id":"<agent-id>"}'
 
-# --- Inbox / Directive ---
-
-# Create task via inbox webhook (source: telegram | discord | slack | whatsapp | googlechat)
-curl -X POST http://127.0.0.1:8790/api/inbox \
-  -H 'content-type: application/json' \
-  -H "x-inbox-secret: $INBOX_SECRET_VALUE" \
-  -d '{"source":"telegram","text":"<message>"}'
-
-# Send Client directive ($ prefix included) — with team leader meeting
-curl -X POST http://127.0.0.1:8790/api/inbox \
-  -H 'content-type: application/json' \
-  -H "x-inbox-secret: $INBOX_SECRET_VALUE" \
-  -d '{"source":"telegram","text":"$<directive message>","project_id":"<id>","project_path":"<path>","project_context":"<goal>"}'
-
-# Send Client directive — skip meeting
-curl -X POST http://127.0.0.1:8790/api/inbox \
-  -H 'content-type: application/json' \
-  -H "x-inbox-secret: $INBOX_SECRET_VALUE" \
-  -d '{"source":"telegram","text":"$<directive message>","skipPlannedMeeting":true,"project_id":"<id>","project_path":"<path>","project_context":"<goal>"}'
-
-# --- Agents ---
-
 # List agents
 curl http://127.0.0.1:8790/api/agents
-
-# Agent cost summary (this month)
-curl http://127.0.0.1:8790/api/agents/<id>/cost-summary
-
-# Agent activity timeline
-curl http://127.0.0.1:8790/api/agents/<id>/timeline
-
-# --- Projects ---
-
-# List projects
-curl http://127.0.0.1:8790/api/projects
-
-# Create project (category_id optional — defaults to Custom Blank)
-curl -X POST http://127.0.0.1:8790/api/projects \
-  -H 'content-type: application/json' \
-  -d '{"name":"<name>","project_path":"<path>","core_goal":"<goal>","category_id":"<category-id>"}'
-
-# --- Queue / Cost ---
-
-# Execution queue status (running / waiting count)
-curl http://127.0.0.1:8790/api/queue-status
-
-# Total cost summary (all agents, this month)
-curl http://127.0.0.1:8790/api/cost-summary
-
-# --- Messenger receivers ---
-
-# Telegram receiver status
-curl http://127.0.0.1:8790/api/messenger/receiver/telegram
-
-# Discord receiver status
-curl http://127.0.0.1:8790/api/messenger/receiver/discord
-
-# Slack receiver status (Bot Token xoxb-...)
-curl http://127.0.0.1:8790/api/messenger/receiver/slack
-
-# --- Personas ---
-
-# List agent persona catalog
-curl http://127.0.0.1:8790/api/personas
-
-# --- Org / Settings ---
 
 # List departments
 curl http://127.0.0.1:8790/api/departments
 
 # Get settings
 curl http://127.0.0.1:8790/api/settings
+
+# CLI provider status
+curl http://127.0.0.1:8790/api/cli-status
 ```
 
 ---
@@ -545,4 +480,6 @@ When processing `$` or `#` commands, the response to the user must be **minimal 
 ---
 
 <!-- END agentdesk orchestration rules -->
+
+
 

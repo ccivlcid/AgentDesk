@@ -110,11 +110,16 @@ export default function ScheduledTasksPanel({ agents = [], currentProjectId }: P
 
   const formRef = useRef<HTMLDivElement>(null);
 
-  const workflowPackOptions = useMemo(() => {
-    return [
-      { key: "", label: t({ ko: "없음", en: "None", ja: "なし", zh: "无" }) },
-    ];
-  }, [t]);
+  const workflowPackOptions = useMemo(() => [
+    { key: "", label: t({ ko: "없음", en: "None", ja: "なし", zh: "无" }) },
+    { key: "development", label: t({ ko: "개발", en: "Development", ja: "開発", zh: "开发" }) },
+    { key: "novel", label: t({ ko: "소설", en: "Novel", ja: "小説", zh: "小说" }) },
+    { key: "report", label: t({ ko: "리포트", en: "Report", ja: "レポート", zh: "报告" }) },
+    { key: "video_preprod", label: t({ ko: "영상 기획", en: "Video Pre-prod", ja: "動画制作", zh: "视频策划" }) },
+    { key: "web_research_report", label: t({ ko: "웹 리서치", en: "Web Research", ja: "Webリサーチ", zh: "网络研究" }) },
+    { key: "roleplay", label: t({ ko: "롤플레이", en: "Roleplay", ja: "ロールプレイ", zh: "角色扮演" }) },
+    { key: "asset_management", label: t({ ko: "에셋 관리", en: "Asset Management", ja: "アセット管理", zh: "资产管理" }) },
+  ], [t]);
 
   const refresh = useCallback(async () => {
     try {
@@ -313,12 +318,6 @@ export default function ScheduledTasksPanel({ agents = [], currentProjectId }: P
         }}
       >
         <div className="flex items-center gap-3">
-          {/* macOS 트래픽 라이트 (●●●) */}
-          <div className="flex flex-shrink-0 items-center gap-1.5">
-            <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#ff5f57" }} aria-hidden />
-            <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#ffbd2e" }} aria-hidden />
-            <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#27c93f" }} aria-hidden />
-          </div>
           <span style={{ fontFamily: "var(--th-font-mono)", fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", color: "var(--th-text-heading)", textTransform: "uppercase" }}>
             {tr("SCHEDULED TASKS", "SCHEDULED TASKS")}
           </span>

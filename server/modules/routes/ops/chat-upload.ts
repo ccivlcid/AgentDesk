@@ -103,12 +103,13 @@ function parseMultipartFormData(body: Buffer, boundary: string): ParsedPart[] {
 // Helpers
 // ---------------------------------------------------------------------------
 
-/** Sanitize a filename: strip path separators and null bytes */
+/** Sanitize a filename: strip path separators, null bytes, and header-breaking characters */
 function sanitizeFileName(raw: string): string {
   return raw
     .replace(/[\\/]/g, "_")
     .replace(/\0/g, "")
     .replace(/\.\./g, "_")
+    .replace(/"/g, "_")
     .trim()
     .slice(0, 255);
 }
@@ -236,11 +237,21 @@ export function registerChatUploadRoutes(ctx: RuntimeContext): void {
         return res.status(403).json({ ok: false, error: "access_denied" });
       }
 
-      if (!fs.existsSync(resolvedPath)) {
+      // Use try/statSync to atomically check existence and get stats,
+      // avoiding TOCTOU race between existsSync and statSync
+      let stat: fs.Stats;
+      try {
+        stat = fs.statSync(resolvedPath);
+      } catch {
         return res.status(404).json({ ok: false, error: "file_not_found" });
       }
 
-      const stat = fs.statSync(resolvedPath);
+      // Re-verify symlink target is still within uploadDir after stat
+      const realPath = fs.realpathSync(resolvedPath);
+      if (!realPath.startsWith(uploadDir + path.sep) && realPath !== uploadDir) {
+        return res.status(403).json({ ok: false, error: "access_denied" });
+      }
+
       const mime = guessMime(ext);
 
       // Set content disposition
@@ -253,7 +264,7 @@ export function registerChatUploadRoutes(ctx: RuntimeContext): void {
       );
       res.setHeader("Cache-Control", "private, max-age=86400");
 
-      const stream = fs.createReadStream(resolvedPath);
+      const stream = fs.createReadStream(realPath);
       stream.pipe(res);
     } catch (err: any) {
       logger.error({ err }, "[chat-upload] download error:");

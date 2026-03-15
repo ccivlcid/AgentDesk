@@ -1,12 +1,12 @@
-# AgentDesk — DB 스키마 ER 다이어그램
+# AgentDesk — DB Schema ER Diagram
 
-> SQLite (`better-sqlite3`), 타임스탬프는 Unix ms (`unixepoch()*1000`)
-> 마이그레이션: `server/modules/bootstrap/schema/versioned-migrations.ts`
-> 베이스 스키마: `server/modules/bootstrap/schema/base-schema.ts`
+> SQLite (`better-sqlite3`), timestamps are Unix ms (`unixepoch()*1000`)
+> Migrations: `server/modules/bootstrap/schema/versioned-migrations.ts`
+> Base schema: `server/modules/bootstrap/schema/base-schema.ts`
 
 ---
 
-## 핵심 엔티티 관계도
+## Core Entity Relationship Diagram
 
 ```mermaid
 erDiagram
@@ -155,79 +155,79 @@ erDiagram
         TEXT summary_markdown
     }
 
-    departments ||--o{ agents : "소속"
-    agents ||--o{ tasks : "담당"
-    projects ||--o{ tasks : "포함"
-    projects ||--o{ project_agents : "배정"
-    agents ||--o{ project_agents : "참여"
-    tasks ||--o{ subtasks : "하위"
-    tasks ||--o{ task_execution_events : "실행 이력"
-    tasks ||--o{ task_logs : "로그"
-    tasks ||--o{ meeting_minutes : "미팅"
-    meeting_minutes ||--o{ meeting_minute_entries : "발언"
-    agents ||--o{ meeting_minute_entries : "발언자"
-    workflow_packs ||--o{ pipeline_gates : "게이트"
-    tasks ||--o{ task_gate_results : "게이트 결과"
-    pipeline_gates ||--o{ task_gate_results : "적용"
-    tasks ||--|| task_report_archives : "보고서"
+    departments ||--o{ agents : "belongs to"
+    agents ||--o{ tasks : "assigned"
+    projects ||--o{ tasks : "contains"
+    projects ||--o{ project_agents : "assigned"
+    agents ||--o{ project_agents : "participates"
+    tasks ||--o{ subtasks : "child"
+    tasks ||--o{ task_execution_events : "execution history"
+    tasks ||--o{ task_logs : "logs"
+    tasks ||--o{ meeting_minutes : "meeting"
+    meeting_minutes ||--o{ meeting_minute_entries : "utterance"
+    agents ||--o{ meeting_minute_entries : "speaker"
+    workflow_packs ||--o{ pipeline_gates : "gates"
+    tasks ||--o{ task_gate_results : "gate results"
+    pipeline_gates ||--o{ task_gate_results : "applied"
+    tasks ||--|| task_report_archives : "report"
 ```
 
 ---
 
-## 테이블 그룹 요약
+## Table Group Summary
 
-### 조직 구조
-| 테이블 | 역할 |
-|--------|------|
-| `departments` | 팀/부서 (개발팀, 기획팀 등) |
-| `agents` | AI 에이전트 (역할·CLI 제공자·상태) |
-| `projects` | 프로젝트 (작업 경로, 목표) |
-| `project_agents` | 프로젝트-에이전트 N:M 연결 |
-| `categories` | 프로젝트 카테고리 (workflow_pack 매핑) |
-| `workflow_packs` | 워크플로 패키지 정의 |
+### Organizational Structure
+| Table | Role |
+|-------|------|
+| `departments` | Teams/departments (development, planning, etc.) |
+| `agents` | AI agents (role, CLI provider, status) |
+| `projects` | Projects (working path, goals) |
+| `project_agents` | Project-agent N:M join table |
+| `categories` | Project categories (workflow_pack mapping) |
+| `workflow_packs` | Workflow package definitions |
 
-### 태스크 실행
-| 테이블 | 역할 |
-|--------|------|
-| `tasks` | 태스크 (상태 머신: inbox → done) |
-| `subtasks` | 서브태스크 (에이전트가 런타임 생성) |
-| `task_execution_events` | 실행 상태 전환 이력 |
-| `task_logs` | 실행 로그 |
-| `task_interrupt_injections` | 실행 중 프롬프트 주입 (인터럽트) |
-| `task_report_archives` | 완료 보고서 아카이브 |
+### Task Execution
+| Table | Role |
+|-------|------|
+| `tasks` | Tasks (state machine: inbox → done) |
+| `subtasks` | Subtasks (created by agents at runtime) |
+| `task_execution_events` | Execution state transition history |
+| `task_logs` | Execution logs |
+| `task_interrupt_injections` | Runtime prompt injections (interrupts) |
+| `task_report_archives` | Completed report archives |
 
-### 미팅 & 협업
-| 테이블 | 역할 |
-|--------|------|
-| `meeting_minutes` | 미팅 회의록 (planned/review) |
-| `meeting_minute_entries` | 발언 내역 |
-| `review_revision_history` | 검토 수정 요청 이력 |
-| `messages` | 채팅 메시지 (에이전트↔클라이언트) |
+### Meetings & Collaboration
+| Table | Role |
+|-------|------|
+| `meeting_minutes` | Meeting minutes (planned/review) |
+| `meeting_minute_entries` | Utterance records |
+| `review_revision_history` | Review revision request history |
+| `messages` | Chat messages (agent ↔ client) |
 
-### 파이프라인 게이트
-| 테이블 | 역할 |
-|--------|------|
-| `pipeline_gates` | 워크플로별 품질 게이트 정의 |
-| `task_gate_results` | 태스크별 게이트 통과 결과 |
+### Pipeline Gates
+| Table | Role |
+|-------|------|
+| `pipeline_gates` | Quality gate definitions per workflow |
+| `task_gate_results` | Gate pass/fail results per task |
 
-### 인증 & 설정
-| 테이블 | 역할 |
-|--------|------|
-| `settings` | KV 설정 저장소 (API 키, 언어 등) |
-| `oauth_accounts` | OAuth 계정 (GitHub, Google 등) |
-| `oauth_credentials` | OAuth 자격증명 (암호화 저장) |
-| `oauth_states` | OAuth PKCE state 임시 저장 |
+### Auth & Settings
+| Table | Role |
+|-------|------|
+| `settings` | KV settings store (API keys, language, etc.) |
+| `oauth_accounts` | OAuth accounts (GitHub, Google, etc.) |
+| `oauth_credentials` | OAuth credentials (encrypted storage) |
+| `oauth_states` | OAuth PKCE state temporary storage |
 
 ---
 
-## 태스크 상태 머신
+## Task State Machine
 
 ```
-status (사용자 관점):
+status (user perspective):
   inbox → planned → collaborating → in_progress → review → done
-                                                         ↘ cancelled
+                                                        ↘ cancelled
 
-execution_state (엔진 관점):
+execution_state (engine perspective):
   queued → claiming → workspace_preparing → ready → running
          ↘ retry_backoff ↗              ↘ awaiting_review → succeeded
                                          ↘ blocked / stalled → recovering → running
@@ -236,12 +236,12 @@ execution_state (엔진 관점):
 
 ---
 
-## 주요 인덱스
+## Key Indexes
 
-| 인덱스 | 목적 |
-|--------|------|
-| `idx_tasks_status` | 칸반 보드 상태별 조회 |
-| `idx_tasks_agent` | 에이전트별 태스크 조회 |
-| `idx_tasks_execution_state` | 실행 엔진 큐 폴링 |
-| `idx_tasks_watchdog` | `(status, execution_state, last_heartbeat_at DESC)` — 이상 감지 (P3-5) |
-| `idx_subtasks_task` | 태스크별 서브태스크 조회 |
+| Index | Purpose |
+|-------|---------|
+| `idx_tasks_status` | Kanban board query by status |
+| `idx_tasks_agent` | Query tasks by agent |
+| `idx_tasks_execution_state` | Execution engine queue polling |
+| `idx_tasks_watchdog` | `(status, execution_state, last_heartbeat_at DESC)` — anomaly detection (P3-5) |
+| `idx_subtasks_task` | Query subtasks by task |

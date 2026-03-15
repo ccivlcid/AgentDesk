@@ -1,125 +1,200 @@
 # AgentDesk
 
-**Product Requirements — Overview**
+> **A Developer OS for managing, monitoring, and controlling multiple AI agents simultaneously.**
 
-AgentDesk is a **Project OS**: an operator cockpit for AI agents that run as CLI processes. You manage projects, tasks, and agent teams in one place, with messenger integration.
+AgentDesk brings a macOS-style desktop metaphor to AI agent orchestration — menubar, desktop icons, draggable widgets, Dock, and floating app windows, all in one dark terminal-inspired interface.
 
----
-
-## Concept
-
-| Item | Description |
-|------|-------------|
-| **One-liner** | **Work your way, get the results you need** — you (the client) define projects, tasks, and agents; manage execution flow and deliverables in one place. |
-| **Design concept** | **CLI management tool** feel (k9s, lazygit-style). Dark terminal tone, monospace, ⌘K command palette. Execution view uses terminal-output style. |
-| **Tagline (EN)** | A Project Operating System Tailored to Your Workflow |
-| **Tagline (KR)** | 어떤 팀이든 맞춤 설계하는 프로젝트 운영체제 |
+> 🇰🇷 [한국어](README_ko.md) · 🇯🇵 [日本語](README_jp.md) · 🇨🇳 [中文](README_zh.md)
 
 ---
 
-## 1. Product Overview
+## Screenshots
 
-| Item | Description |
-|------|-------------|
-| **Vision** | A project operating system tailored to your workflow — goals, risks, gates, and deliverables in one control plane. |
-| **Positioning** | CLI agent management tool (k9s/lazygit-style), not a generic dashboard. |
-| **Default** | Dark theme, mono typography, keyboard-first (e.g. ⌘K command palette). |
-
----
-
-## 2. Goals & Success
-
-- **Primary:** Operators can create projects, assign tasks to agents, and track execution (terminal logs, reports) without leaving the app.
-- **Secondary:** Messenger-driven directives (`$` / `!`) and decision-inbox flows; project-level team and dashboard quadrants (objectives, risks, gates, outputs).
-
----
-
-## 3. Target Users
-
-- **Primary:** People who run projects and coordinate AI agents (team leads, PMs, small-org leads).
-- **Usage:** Create/select project → dashboard/task board/team → run agents → review reports and deliverables.
-
----
-
-## 4. In Scope (Key Features)
-
-| Area | Description |
-|------|-------------|
-| **Dashboard** | Project overview, team panel, agent activity, ops sections. |
-| **Tasks** | Kanban board, scheduled tasks, deliverables. |
-| **Agents & Team** | Agents, departments, heartbeat monitor; project team assignment. |
-| **Library** | Skills, Agent Rules, Memory, Hooks. |
-| **CLI Usage** | Usage and cost views. |
-| **Settings** | API providers, OAuth, gateway/messenger, data, etc. |
-| **Messenger** | Telegram, Discord, Slack, etc.; inbox webhook; `$` directive / `!` task flows. |
+<table>
+  <tr>
+    <td><img src="docs/screen/01-desktop.png" width="420" alt="Desktop"/><br/><sub>Desktop</sub></td>
+    <td><img src="docs/screen/28-agent-manager.png" width="420" alt="Agent Manager"/><br/><sub>Agent Manager</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screen/37-agent-create.png" width="420" alt="Hire Agent"/><br/><sub>Hire Agent</sub></td>
+    <td><img src="docs/screen/38-dept-create.png" width="420" alt="Add Department"/><br/><sub>Add Department</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screen/23-workflow-builder.png" width="420" alt="Workflow Builder"/><br/><sub>Workflow Builder</sub></td>
+    <td><img src="docs/screen/25-workflow-composition.png" width="420" alt="Agent Composition"/><br/><sub>Agent Composition</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screen/26-chat-direct.png" width="420" alt="Direct Chat"/><br/><sub>Direct Chat</sub></td>
+    <td><img src="docs/screen/27-chat-group.png" width="420" alt="Group Chat"/><br/><sub>Group Broadcast Chat</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screen/31-widget-dashboard.png" width="420" alt="Agents Widget"/><br/><sub>Agents Widget</sub></td>
+    <td><img src="docs/screen/34-widget-alerts.png" width="420" alt="Alerts Widget"/><br/><sub>Alerts Widget</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screen/12-settings-general.png" width="420" alt="Settings"/><br/><sub>Settings</sub></td>
+    <td><img src="docs/screen/18-library-skills.png" width="420" alt="Library — Skills"/><br/><sub>Library — Skills</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/screen/30-mission-control.png" width="420" alt="Mission Control"/><br/><sub>Mission Control (Ctrl+↑)</sub></td>
+    <td><img src="docs/screen/11-command-palette.png" width="420" alt="Command Palette"/><br/><sub>Command Palette (Ctrl+Shift+K)</sub></td>
+  </tr>
+</table>
 
 ---
 
-## 5. Out of Scope (Current)
+## 🌍 Multi-Language Support
 
-- Multi-tenant SaaS; SSO; mobile-only app; public marketplace for categories/skills.
+AgentDesk supports **Korean · English · Japanese · Chinese** — all UI text adapts to the selected language. See [README_ko.md](README_ko.md) for the full Korean version with language comparison screenshots.
 
 ---
 
-## 6. Requirements & Quick Start
+## What is AgentDesk?
+
+AgentDesk is a **project operating system** for AI agent teams. It runs as a local web app and lets you:
+
+- **Create & manage AI agents** — define personas, roles, departments, CLI providers, and API models
+- **Orchestrate workflows** — visual builder, scheduled tasks, multi-agent composition pipelines
+- **Monitor in real-time** — heartbeat widgets, task boards, alert feeds, flow graphs, CLI cost tracking
+- **Chat with your agents** — direct messages, group broadcast, Telegram/Discord/Slack gateway
+- **Build a shared knowledge base** — Skills, Rules, Memory, Hooks, and Deliverables library
+- **Control everything** — macOS-style desktop with Spotlight search, Mission Control, Quick Look
+
+---
+
+## Key Features
+
+### 🖥️ macOS-Inspired Desktop OS
+- Menubar + desktop icons + Dock + floating windows
+- Drag & drop icon placement with Jiggle Mode
+- Quick Look (Space) for project previews
+- Mission Control overview (Ctrl+↑)
+- Spotlight-style command palette (Ctrl+Shift+K)
+- 10 animated wallpaper themes
+
+### 👤 Agent & Department Management
+- Hire agents with custom avatars, personas, and role levels (Team Leader / Senior / Junior / Intern)
+- Organize into departments with shared system prompts
+- Assign CLI providers (Claude, OpenAI, Gemini, etc.) or API models
+- Real-time heartbeat monitoring
+
+### ⚡ Workflow Automation
+- Visual drag-and-drop workflow builder
+- Scheduled tasks with cron expressions
+- Multi-agent composition pipelines with custom node types
+- 7 built-in workflow packs (development, research, novel, report, video, roleplay, asset management)
+
+### 💬 Multi-Agent Chat
+- Direct messaging to individual agents
+- Group broadcast channel to all agents
+- Telegram / Discord / Slack gateway integration
+- `$` directive and `!` task flows via messenger
+
+### 📚 Knowledge Library
+- **Skills** — reusable task templates
+- **Rules** — behavior constraints and guidelines
+- **Memory** — persistent agent context
+- **Hooks** — event-driven automation scripts
+- **Deliverables** — output artifact tracking
+
+### 📊 Real-Time Dashboard Widgets
+| Widget | Description |
+|--------|-------------|
+| 💓 Agents | Live agent status list (working / idle / offline) |
+| 📋 Tasks | Active task board |
+| 🔔 Alerts | Anomaly & error notifications |
+| 💰 CLI Cost | Token usage & rate limit tracking |
+| 🔀 Flow Graph | Agent communication flow graph |
+| 🗂 File Tree | Project directory browser |
+
+### 🌍 Multi-Language Support
+Korean · English · Japanese · Chinese (configured per user)
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Frontend | React 18 + TypeScript + Vite + Tailwind CSS |
+| State | Zustand |
+| Flow diagrams | `@xyflow/react` v12 |
+| Backend | Node.js + Express + tsx |
+| Database | SQLite (`better-sqlite3`) + versioned migrations |
+| Real-time | WebSocket |
+| Logging | pino |
+| Testing | Vitest (unit + integration) + Playwright (E2E) |
+| Package manager | pnpm |
+| Desktop (optional) | Electron |
+
+---
+
+## Quick Start
 
 **Requirements:** Node.js ≥ 22, pnpm ≥ 10
 
 ```bash
 git clone <repo-url> && cd AgentDesk
 pnpm install
-cp .env.example .env      # 환경변수 설정 (SESSION_SECRET 필수)
-pnpm setup                # DB 초기화 + 마이그레이션
-pnpm dev                  # 프론트(8800) + API 서버(8790) 동시 시작
+cp .env.example .env      # Set SESSION_SECRET (required)
+pnpm setup                # Initialize DB + run migrations
+pnpm dev                  # Frontend (8800) + API (8790)
 ```
 
 Open **http://localhost:8800** in your browser.
 
-### 첫 에이전트 등록 흐름
+### First Agent Setup
 
 ```
-1. Settings → API Provider 설정 (Claude / OpenAI / Gemini 등)
-2. Agents → 에이전트 생성 + 부서 배정
-3. Projects → 프로젝트 생성 + 에이전트 배정
-4. Library → Rules / Memory / Hooks 설정 (선택)
-5. Tasks → 태스크 생성 → 실행 → 터미널 패널에서 실시간 모니터링
+1. Settings → API → Add API Provider (Claude / OpenAI / Gemini)
+2. Agent Manager → Add Department → Hire Agent
+3. Desktop → 📁 New Project → assign agents
+4. Library → configure Rules / Memory / Hooks (optional)
+5. Desktop → ▶ Run Task → monitor via terminal panel
 ```
 
-### 주요 명령어
+### Key Commands
 
 | Command | Description |
 |---------|-------------|
-| `pnpm dev` | 개발 서버 시작 (프론트 + API) |
-| `pnpm build` | 프로덕션 빌드 (`tsc -b && vite build`) |
-| `pnpm test` | 전체 테스트 실행 (프론트 + 서버) |
-| `pnpm run test:web` | 프론트 테스트만 (Vitest) |
-| `pnpm run test:api` | 서버 테스트만 (Vitest) |
-| `pnpm lint` | 린트 검사 |
-| `pnpm lint:fix` | 린트 자동 수정 |
-| `pnpm setup` | DB 초기화 + 마이그레이션 |
+| `pnpm dev` | Start dev server (frontend + API) |
+| `pnpm build` | Production build |
+| `pnpm test` | Full test suite (frontend + server) |
+| `pnpm run test:web` | Frontend tests only (Vitest) |
+| `pnpm run test:api` | Server tests only (Vitest) |
+| `pnpm lint` | Lint check |
+| `pnpm lint:fix` | Auto-fix lint issues |
+| `pnpm setup` | Re-run DB migrations |
 
-### 트러블슈팅
+### Keyboard Shortcuts
 
-| 증상 | 원인 | 해결 |
-|------|------|------|
-| 서버 시작 안 됨 | `.env` 누락 | `cp .env.example .env` 후 `SESSION_SECRET` 설정 |
-| DB 오류 | 마이그레이션 미실행 | `pnpm setup` 재실행 |
-| 포트 충돌 | 8790 / 8800 사용 중 | 프로세스 종료 후 재시작 |
-| 타입 오류 | 타입 불일치 | `tsc -b` 로 확인 |
-| 테스트 git 서명 오류 | GPG 서명 설정 | 테스트 내 `runGit(dir, ["config", "commit.gpgsign", "false"])` 추가 |
-
----
-
-## 7. Tech Stack
-
-- **Frontend:** React 19, TypeScript, Vite, Tailwind CSS, PixiJS
-- **Backend:** Express 5, SQLite, WebSocket
-- **Testing:** Vitest, Playwright
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl+Shift+K` / `Cmd+K` | Command Palette |
+| `Ctrl+↑` | Mission Control |
+| `g w` | Toggle Workflow window |
+| `g l` | Toggle Library window |
+| `g s` | Toggle Settings window |
+| `g c` | Toggle Chat window |
+| `g a` | Toggle Agent Manager |
+| `g e` | Toggle REPL |
+| `Space` | Quick Look (when icon selected) |
+| `?` | Keyboard shortcuts guide |
 
 ---
 
-## 8. Docs & License
+## Documentation
 
-- **Docs:** [docs/README.md](docs/README.md) — design, specs, architecture, strategy.
-- **API:** [docs/specs/api.md](docs/specs/api.md); Swagger UI at `/api/docs` when server is running.
-- **License:** Apache 2.0
+| Document | Description |
+|----------|-------------|
+| [`docs/OVERVIEW.md`](docs/OVERVIEW.md) | Architecture overview + feature completion roadmap |
+| [`docs/architecture/ARCHITECTURE-AUDIT-2026-Q1.md`](docs/architecture/ARCHITECTURE-AUDIT-2026-Q1.md) | Architecture & backend audit report |
+| [`docs/design/UI-SCREENS.md`](docs/design/UI-SCREENS.md) | Full screen & modal specifications |
+| [`docs/design/DESIGN.md`](docs/design/DESIGN.md) | CSS variables + component style rules |
+| [`docs/specs/api.md`](docs/specs/api.md) | REST API specification |
+
+---
+
+## License
+
+Apache 2.0

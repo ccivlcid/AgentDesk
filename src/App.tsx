@@ -1,10 +1,10 @@
-import { useRef, useCallback, useEffect, useMemo } from "react";
+import { useRef, useCallback, useEffect, useMemo, useState } from "react";
 import { useWebSocket } from "./hooks/useWebSocket";
 import * as api from "./api";
 import { useTheme } from "./ThemeContext";
 import { useAppLabels } from "./app/useAppLabels";
 import AppLoadingScreen from "./app/AppLoadingScreen";
-import AppMainLayout from "./app/AppMainLayout";
+import Desktop from "./components/desktop/Desktop";
 import AppOverlays from "./app/AppOverlays";
 import ProjectCreateModal from "./components/project-create-modal/ProjectCreateModal";
 import CreateTaskModal from "./components/taskboard/CreateTaskModal";
@@ -160,6 +160,14 @@ export default function App() {
     view, settings, theme, runtimeOs, forceUpdateBanner, updateStatus, dismissedUpdateVersion,
   });
 
+  const [showCreateTask, setShowCreateTask] = useState(false);
+
+  // OAuth 콜백 시 settings 창 자동 열기
+  const { openWindow } = useUiStore();
+  useEffect(() => {
+    if (oauthResult) openWindow("settings");
+  }, [oauthResult]);
+
   // ── Render ───────────────────────────────────────────────────────────────
   if (loading) {
     return (
@@ -167,80 +175,21 @@ export default function App() {
     );
   }
 
-  const agentsForLibraries = libraryAgents.length > 0 ? libraryAgents : agents;
-
   return (
-    <AppMainLayout
+    <Desktop
       connected={connected}
       on={on}
-      view={view}
-      setView={setView}
-      departments={departments}
-      agents={agents}
-      libraryAgents={agentsForLibraries}
-      stats={stats}
-      tasks={tasks}
-      subtasks={subtasks}
-      settings={settings}
-      cliStatus={cliStatus}
-      oauthResult={oauthResult}
-      labels={labels}
-      mobileNavOpen={mobileNavOpen}
-      setMobileNavOpen={setMobileNavOpen}
-      mobileHeaderMenuOpen={mobileHeaderMenuOpen}
-      setMobileHeaderMenuOpen={setMobileHeaderMenuOpen}
-      theme={theme}
-      toggleTheme={toggleTheme}
-      decisionInboxLoading={decisionInboxLoading}
-      decisionInboxCount={decisionInboxItems.length}
-      unreadAgentIds={unreadAgentIds}
-      onSelectAgent={setSelectedAgent}
-      onSelectDepartment={(department) => {
-        const leader =
-          agents.find((a) => a.department_id === department.id && a.role === "team_leader") ??
-          (department.id === "planning"
-            ? agents.find((a) => a.role === "team_leader" && Number(a.acts_as_planning_leader ?? 0) === 1)
-            : undefined);
-        if (leader) actions.handleOpenChat(leader);
-      }}
-      onCreateTask={actions.handleCreateTask}
-      onUpdateTask={actions.handleUpdateTask}
-      onDeleteTask={actions.handleDeleteTask}
-      onAssignTask={actions.handleAssignTask}
-      onRunTask={actions.handleRunTask}
-      onStopTask={actions.handleStopTask}
-      onPauseTask={actions.handlePauseTask}
-      onResumeTask={actions.handleResumeTask}
-      onOpenTerminal={(taskId) => setTaskPanel({ taskId, tab: "terminal" })}
-      onOpenMeetingMinutes={(taskId) => setTaskPanel({ taskId, tab: "minutes" })}
-      onAgentsChange={actions.handleAgentsChange}
       onSaveSettings={actions.handleSaveSettings}
       onRefreshCli={actions.handleRefreshCli}
+      oauthResult={oauthResult}
       onOauthResultClear={() => setOauthResult(null)}
-      onOpenDecisionInbox={actions.handleOpenDecisionInbox}
-      onOpenAgentStatus={() => setShowAgentStatus(true)}
-      onOpenReportHistory={() => setShowReportHistory(true)}
-      onOpenAnnouncement={actions.handleOpenAnnouncement}
-      onOpenGroupChat={() => setShowGroupChat(true)}
-      onDismissAutoUpdateNotice={actions.handleDismissAutoUpdateNotice}
-      onDismissUpdate={() => {
-        setDismissedUpdateVersion(labels.effectiveUpdateStatus?.latest_version ?? "");
-      }}
-      projects={projects}
-      categories={categories}
-      currentProject={currentProject}
-      onProjectSelect={setCurrentProjectId}
+      onAgentsChange={actions.handleAgentsChange}
+      onSendMessage={actions.handleSendMessage}
+      onSendAnnouncement={actions.handleSendAnnouncement}
+      onSendDirective={actions.handleSendDirective}
+      onClearMessages={actions.handleClearMessages}
       onProjectCreate={() => setShowProjectCreate(true)}
-      onProjectDelete={(id) => {
-        setProjects((prev) => prev.filter((p) => p.id !== id));
-        if (currentProjectId === id) setCurrentProjectId(null);
-      }}
-      onProjectUpdated={(id, patch) => {
-        setProjects((prev) => prev.map((p) => (p.id === id ? { ...p, ...patch } : p)));
-      }}
-      subAgents={subAgents}
-      crossDeptDeliveries={crossDeptDeliveries}
-      meetingPresences={meetingPresence}
+      onCreateTask={() => setShowCreateTask(true)}
     >
       <AppOverlays
         showChat={showChat}
@@ -275,7 +224,7 @@ export default function App() {
         }}
         onAssignTaskFromAgentDetail={() => {
           setSelectedAgent(null);
-          setView("tasks-board");
+          setShowCreateTask(true);
         }}
         onOpenTerminalFromAgentDetail={(taskId) => {
           setSelectedAgent(null);
@@ -360,6 +309,23 @@ export default function App() {
           defaultProjectId={currentProject.id}
         />
       )}
-    </AppMainLayout>
+      {showCreateTask && (
+        <CreateTaskModal
+          agents={agents}
+          departments={departments}
+          onClose={() => setShowCreateTask(false)}
+          onCreate={(input) => {
+            void actions.handleCreateTask({
+              ...input,
+              project_id: currentProject?.id,
+              project_path: currentProject?.project_path ?? undefined,
+            });
+            setShowCreateTask(false);
+          }}
+          onAssign={async (taskId, agentId) => { await actions.handleAssignTask(taskId, agentId); }}
+          defaultProjectId={currentProject?.id}
+        />
+      )}
+    </Desktop>
   );
 }

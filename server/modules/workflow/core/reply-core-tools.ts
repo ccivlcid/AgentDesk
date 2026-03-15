@@ -117,7 +117,7 @@ export function createReplyCoreTools(deps: CreateReplyCoreToolsDeps) {
     cleaned = collapseRepeatedSentenceCycles(cleaned);
 
     if (opts.maxSentences && opts.maxSentences > 0) {
-      const sentences = cleaned
+      const sentences = (cleaned.length > 50000 ? cleaned.slice(0, 50000) : cleaned)
         .split(/(?<=[.!?。！？])\s+/)
         .map((s) => s.trim())
         .filter(Boolean);
@@ -134,7 +134,7 @@ export function createReplyCoreTools(deps: CreateReplyCoreToolsDeps) {
   }
 
   function collapseRepeatedSentenceCycles(text: string): string {
-    const sentences = text
+    const sentences = (text.length > 50000 ? text.slice(0, 50000) : text)
       .split(/(?<=[.!?。！？])\s+/)
       .map((s) => s.trim())
       .filter(Boolean);

@@ -2,7 +2,7 @@
 
 This document defines a contributor-facing API baseline for AgentDesk.
 It is intentionally compact and focused on frequently used endpoints.
-Current baseline target: `v1.2.5` (local snapshot, 2026-03-14).
+Current baseline target: `v1.2.6` (local snapshot, 2026-03-15).
 
 ## Base
 
@@ -74,10 +74,10 @@ Runtime behavior highlights:
 - Per-channel setup requirements differ (e.g., WhatsApp Cloud API token + phone number id, Google Chat webhook URL or `key|token`, Signal RPC base URL, macOS iMessage runtime).
 - New project creation path in direct-chat escalation is restricted by `PROJECT_PATH_ALLOWED_ROOTS`.
 
-**Direct chat / 메신저 접두사**
+**Direct chat / Messenger prefixes**
 
-- `$` — 전사 공지(Client Directive). Inbox 웹훅 등으로 `$`로 시작하는 메시지는 기획팀 소집·팀장 회의·태스크 배정 등 전사 지시 흐름으로 처리된다.
-- `!` — 일반 채팅 중 “업무”로 명시. 에이전트에게 보내는 메시지가 `!`로 시작하면 접두사는 제거한 뒤 업무(태스크 플로우)로 판단하며, 필요 시 프로젝트 선택을 요청한다. 예: `!네이버 금융 확인해줘` → 업무로 처리, `네이버 금융 확인해줘` → 정보 요청으로 일반 답변.
+- `$` — Company-wide directive (Client Directive). Messages starting with `$` via inbox webhook etc. are processed as company-wide instruction flows: planning team assembly, team lead meetings, task assignment, etc.
+- `!` — Explicit "work task" during general chat. Messages to an agent starting with `!` have the prefix stripped and are treated as work tasks (task flow); the agent will request project selection if needed. Example: `!Check Naver Finance` → processed as a task, `Check Naver Finance` → treated as an information request with a general reply.
 
 ## Core Endpoint Groups
 
@@ -208,147 +208,195 @@ or
 | GET | `/api/update-status` | Update status |
 | POST | `/api/update-auto-config` | Toggle auto update |
 
-### 2.0 카테고리 & 프로젝트 팀 (Phase 1–2 신규)
+### 2.0 Categories & Project Team (Phase 1–2 New Endpoints)
 
-> **2.0 리뉴얼** 에서 추가되는 엔드포인트. 구현: `server/modules/routes/core/categories.ts`, `project-dashboard.ts`.
+> **2.0 Renewal** endpoints. Implementation: `server/modules/routes/core/categories.ts`, `project-dashboard.ts`.
 
-#### Categories (프로젝트 유형)
-
-| Method | Path | Purpose |
-| --- | --- | --- |
-| GET | `/api/categories` | 카테고리 목록 (시스템 템플릿 + 사용자 정의) |
-| POST | `/api/categories` | 카테고리 생성 |
-| PATCH | `/api/categories/:id` | 카테고리 수정 (버전 자동 증가) |
-| DELETE | `/api/categories/:id` | 카테고리 삭제 (시스템 템플릿 불가) |
-| GET | `/api/categories/:id/versions` | 버전 이력 조회 |
-| POST | `/api/categories/:id/clone` | 카테고리 복제 |
-
-`GET /api/categories` 응답 필드: `id`, `name`, `slug`, `description`, `icon`, `color`, `kpi_schema`, `risk_schema`, `gate_schema`, `deliverable_schema`, `is_template`, `version`, `owner_scope`
-
-`PATCH /api/categories/:id` 동작:
-- 수정 시 `version` 자동 증가
-- 기존 프로젝트의 `category_version`은 변경되지 않음 (재현성 보장)
-
-#### Project Team (프로젝트 팀원)
+#### Categories (Project Types)
 
 | Method | Path | Purpose |
 | --- | --- | --- |
-| GET | `/api/projects/:id/agents` | 프로젝트 팀원 목록 |
-| POST | `/api/projects/:id/agents` | 팀원 추가 (`{ agent_id }`) |
-| DELETE | `/api/projects/:id/agents/:agentId` | 팀원 제거 |
+| GET | `/api/categories` | List categories (system templates + user-defined) |
+| POST | `/api/categories` | Create category |
+| PATCH | `/api/categories/:id` | Update category (auto-increments version) |
+| DELETE | `/api/categories/:id` | Delete category (system templates cannot be deleted) |
+| GET | `/api/categories/:id/versions` | Version history |
+| POST | `/api/categories/:id/clone` | Clone category |
 
-#### Project Dashboard Quadrants (대시보드 4분면)
+`GET /api/categories` response fields: `id`, `name`, `slug`, `description`, `icon`, `color`, `kpi_schema`, `risk_schema`, `gate_schema`, `deliverable_schema`, `is_template`, `version`, `owner_scope`
+
+`PATCH /api/categories/:id` behavior:
+- `version` is automatically incremented on update
+- Existing projects' `category_version` is not changed (ensures reproducibility)
+
+#### Project Team (Project Members)
 
 | Method | Path | Purpose |
 | --- | --- | --- |
-| GET | `/api/projects/:id/objectives` | 목표 목록 |
-| POST | `/api/projects/:id/objectives` | 목표 추가 |
-| PATCH | `/api/projects/:id/objectives/:objId` | 목표 수정 |
-| DELETE | `/api/projects/:id/objectives/:objId` | 목표 삭제 |
-| GET | `/api/projects/:id/risks` | 리스크 목록 |
-| POST | `/api/projects/:id/risks` | 리스크 추가 |
-| PATCH | `/api/projects/:id/risks/:riskId` | 리스크 수정 |
-| DELETE | `/api/projects/:id/risks/:riskId` | 리스크 삭제 |
-| GET | `/api/projects/:id/gates` | 검토 단계 목록 |
-| POST | `/api/projects/:id/gates` | 검토 단계 추가 |
-| PATCH | `/api/projects/:id/gates/:gateId` | 검토 단계 수정 (상태 포함) |
-| DELETE | `/api/projects/:id/gates/:gateId` | 검토 단계 삭제 |
-| GET | `/api/projects/:id/outputs` | 결과물 목록 |
-| POST | `/api/projects/:id/outputs` | 결과물 항목 추가 |
-| PATCH | `/api/projects/:id/outputs/:outputId` | 결과물 수정 |
-| DELETE | `/api/projects/:id/outputs/:outputId` | 결과물 삭제 |
+| GET | `/api/projects/:id/agents` | List project team members |
+| POST | `/api/projects/:id/agents` | Add team member (`{ agent_id }`) |
+| DELETE | `/api/projects/:id/agents/:agentId` | Remove team member |
 
-> **주의**: `/api/projects/:id/outputs`는 프로젝트 레벨의 계획된 산출물(PRD, API 명세서 등)이다.
-> 태스크 실행 결과물(파일, Git diff)은 기존 `/api/deliverables` 및 `/api/task-reports/:id/artifacts`를 사용한다.
+#### Project Dashboard Quadrants
 
-#### Projects 기존 엔드포인트 확장
+| Method | Path | Purpose |
+| --- | --- | --- |
+| GET | `/api/projects/:id/objectives` | List objectives |
+| POST | `/api/projects/:id/objectives` | Add objective |
+| PATCH | `/api/projects/:id/objectives/:objId` | Update objective |
+| DELETE | `/api/projects/:id/objectives/:objId` | Delete objective |
+| GET | `/api/projects/:id/risks` | List risks |
+| POST | `/api/projects/:id/risks` | Add risk |
+| PATCH | `/api/projects/:id/risks/:riskId` | Update risk |
+| DELETE | `/api/projects/:id/risks/:riskId` | Delete risk |
+| GET | `/api/projects/:id/gates` | List review gates |
+| POST | `/api/projects/:id/gates` | Add review gate |
+| PATCH | `/api/projects/:id/gates/:gateId` | Update review gate (including status) |
+| DELETE | `/api/projects/:id/gates/:gateId` | Delete review gate |
+| GET | `/api/projects/:id/outputs` | List outputs |
+| POST | `/api/projects/:id/outputs` | Add output item |
+| PATCH | `/api/projects/:id/outputs/:outputId` | Update output |
+| DELETE | `/api/projects/:id/outputs/:outputId` | Delete output |
 
-`POST /api/projects` 요청 바디에 2.0 필드 추가:
+> **Note**: `/api/projects/:id/outputs` represents project-level planned deliverables (PRD, API specs, etc.).
+> Task execution artifacts (files, Git diffs) use the existing `/api/deliverables` and `/api/task-reports/:id/artifacts`.
+
+#### Projects — Extended Existing Endpoints
+
+`POST /api/projects` request body with 2.0 fields:
 ```json
 {
   "name": "string",
-  "category_id": "string",       // 선택. 없으면 Custom Blank 적용
+  "category_id": "string",       // optional; defaults to Custom Blank if omitted
   "description": "string"
 }
 ```
 
-응답에 추가 필드: `category_id`, `category_version`, `success_metric`, `risk_profile`, `required_gates`, `deliverable_schema`
+Additional response fields: `category_id`, `category_version`, `success_metric`, `risk_profile`, `required_gates`, `deliverable_schema`
 
 ---
 
 ### Rules / Memory / Hooks
 
-에이전트 프롬프트에 자동 주입되는 룰·메모리·훅 관리 엔드포인트.
+Endpoints for managing rules, memory, and hooks that are automatically injected into agent prompts.
 
 #### Agent Rules
 
 | Method | Path | Purpose |
 | --- | --- | --- |
-| GET | `/api/agent-rules` | 룰 목록 |
-| POST | `/api/agent-rules` | 룰 생성 |
-| PATCH | `/api/agent-rules/:id` | 룰 수정/활성화 토글 |
-| DELETE | `/api/agent-rules/:id` | 룰 삭제 |
+| GET | `/api/agent-rules` | List rules |
+| POST | `/api/agent-rules` | Create rule |
+| PATCH | `/api/agent-rules/:id` | Update rule / toggle active |
+| DELETE | `/api/agent-rules/:id` | Delete rule |
 
-`GET /api/agent-rules` 쿼리 파라미터:
+`GET /api/agent-rules` query parameters:
 
-| 파라미터 | 설명 |
+| Parameter | Description |
 | --- | --- |
-| `project_id` | 해당 프로젝트에 배정된 에이전트의 룰만 반환 (project-scope + 소속 agent-scope + global). `scope_type`/`scope_id`보다 우선 적용 |
+| `project_id` | Returns only rules for agents assigned to the given project (project-scope + their agent-scope + global). Takes precedence over `scope_type`/`scope_id` |
 | `scope_type` | `global` \| `agent` \| `department` \| `workflow_pack` \| `project` |
-| `scope_id` | scope 대상 ID |
+| `scope_id` | ID of the scope target |
 | `enabled` | `1` \| `0` |
 
 #### Memory
 
 | Method | Path | Purpose |
 | --- | --- | --- |
-| GET | `/api/memory` | 메모리 목록 |
-| POST | `/api/memory` | 메모리 생성 |
-| PATCH | `/api/memory/:id` | 메모리 수정 |
-| DELETE | `/api/memory/:id` | 메모리 삭제 |
+| GET | `/api/memory` | List memory entries |
+| POST | `/api/memory` | Create memory entry |
+| PATCH | `/api/memory/:id` | Update memory entry |
+| DELETE | `/api/memory/:id` | Delete memory entry |
 
-`GET /api/memory` 쿼리 파라미터: `project_id`, `scope_type`, `scope_id`, `enabled` (Rules와 동일 동작)
+`GET /api/memory` query parameters: `project_id`, `scope_type`, `scope_id`, `enabled` (same behavior as Rules)
 
 #### Hooks
 
 | Method | Path | Purpose |
 | --- | --- | --- |
-| GET | `/api/hooks` | 훅 목록 |
-| POST | `/api/hooks` | 훅 생성 |
-| PATCH | `/api/hooks/:id` | 훅 수정 |
-| DELETE | `/api/hooks/:id` | 훅 삭제 |
+| GET | `/api/hooks` | List hooks |
+| POST | `/api/hooks` | Create hook |
+| PATCH | `/api/hooks/:id` | Update hook |
+| DELETE | `/api/hooks/:id` | Delete hook |
 
-`GET /api/hooks` 쿼리 파라미터: `project_id`, `event_type`, `scope_type`, `scope_id`, `enabled` (`project_id`는 Rules와 동일 동작)
+`GET /api/hooks` query parameters: `project_id`, `event_type`, `scope_type`, `scope_id`, `enabled` (`project_id` behaves the same as in Rules)
 
 #### Skills (History / Available)
 
 | Method | Path | Purpose |
 | --- | --- | --- |
-| GET | `/api/skills/history` | 스킬 학습 이력 |
-| GET | `/api/skills/available` | 학습 완료 스킬 목록 |
+| GET | `/api/skills/history` | Skill learning history |
+| GET | `/api/skills/available` | List learned skills |
 
-두 엔드포인트 모두 `project_id` 파라미터 지원: 해당 프로젝트에 배정된 에이전트의 스킬만 반환 (project-scope + 소속 agent-scope + global).
+Both endpoints support the `project_id` parameter: returns only skills for agents assigned to the given project (project-scope + their agent-scope + global).
 
-> **`project_id` 필터 동작 원리**: `project_agents` 테이블을 조인하여 프로젝트에 배정된 에이전트의 `scope_type='agent'` 항목만 포함. `scope_type='global'` 및 `scope_type='project' AND scope_id=<project_id>`도 함께 포함.
+> **`project_id` filter logic**: Joins the `project_agents` table to include only `scope_type='agent'` entries for agents assigned to the project. Also includes `scope_type='global'` and `scope_type='project' AND scope_id=<project_id>`.
 
 ---
 
-## 서버 전용·기타 엔드포인트 (본 문서 미수록)
+## Agent Composition Templates
 
-아래는 실제 서버에 등록되어 있으나 본 baseline에는 생략된 항목이다. 전체 목록은 `server/modules/routes/**/*.ts` 검색 참고.
+Used for saving and loading agent composition canvases (Workflow → Composition tab).
 
-- **에이전트:** `GET /api/agents/active`, `GET /api/agents/cli-processes`, `POST /api/agents/:id/spawn`, `POST/DELETE /api/agents/:id/avatar`
-- **태스크:** `GET /api/tasks/:id/execution`, `GET /api/tasks/:id/execution-events`, `GET /api/tasks/:id/dependencies`, `POST /api/tasks/:id/dependencies`, `DELETE /api/tasks/:id/dependencies/:depId`, `GET /api/tasks/:id/diff`, `POST /api/tasks/:id/merge`, `POST /api/tasks/:id/discard`, `POST /api/tasks/bulk-hide`
-- **프로젝트:** `GET /api/projects/:id`, `GET /api/projects/:id/burndown`, `GET /api/projects/path-browse`, `GET /api/projects/path-tree`, `GET /api/projects/:id/branches`, `GET /api/github/repos/:owner/:repo/branches`, `GET /api/github/clone/:cloneId`
-- **스킬:** `GET /api/skills/available`, `GET /api/skills/custom/:skillName/export`, `POST /api/skills/custom/import`
-- **기타:** `GET /api/agent-usage`, `GET /api/agent-usage/trends/daily`, `GET /api/agent-usage/:agentId`, `GET /api/decision-inbox` 등. task-reports, deliverables, pipeline-gates, webhooks, backup, notifications, task-templates, custom-packs, worktrees, cli-usage, cost-alerts, oauth 콜백·device 플로우, update-auto-status, update-apply 등은 서버 라우트 등록처 참조.
+| Method | Path | Purpose |
+| --- | --- | --- |
+| GET | `/api/composition-templates` | List all templates (ordered by updated_at DESC) |
+| POST | `/api/composition-templates` | Create template |
+| PUT | `/api/composition-templates/:id` | Update template |
+| DELETE | `/api/composition-templates/:id` | Delete template |
+
+### POST/PUT Request Body
+
+```json
+{
+  "name": "string (required, max 120 chars)",
+  "description": "string (optional, max 400 chars)",
+  "nodes": [...],
+  "edges": [...]
+}
+```
+
+`nodes` and `edges` are serialized directly as `@xyflow/react` Node/Edge arrays. Stored in DB as `nodes_json` and `edges_json` columns.
+
+### GET Response
+
+```json
+{
+  "ok": true,
+  "templates": [
+    {
+      "id": "uuid",
+      "name": "string",
+      "description": "string",
+      "nodes_json": "[...]",
+      "edges_json": "[...]",
+      "created_at": 1741234567890,
+      "updated_at": 1741234567890
+    }
+  ]
+}
+```
+
+> **DB table:** `agent_composition_templates` (migration `2026-03-14-011`)
+> **Route file:** `server/modules/routes/ops/composition-templates.ts`
+
+---
+
+## Server-Only / Other Endpoints (Not Covered Here)
+
+The following endpoints are registered on the server but omitted from this baseline. See `server/modules/routes/**/*.ts` for the full list.
+
+- **Agents:** `GET /api/agents/active`, `GET /api/agents/cli-processes`, `POST /api/agents/:id/spawn`, `POST/DELETE /api/agents/:id/avatar`
+- **Tasks:** `GET /api/tasks/:id/execution`, `GET /api/tasks/:id/execution-events`, `GET /api/tasks/:id/dependencies`, `POST /api/tasks/:id/dependencies`, `DELETE /api/tasks/:id/dependencies/:depId`, `GET /api/tasks/:id/diff`, `POST /api/tasks/:id/merge`, `POST /api/tasks/:id/discard`, `POST /api/tasks/bulk-hide`
+- **Projects:** `GET /api/projects/:id`, `GET /api/projects/:id/burndown`, `GET /api/projects/path-browse`, `GET /api/projects/path-tree`, `GET /api/projects/:id/branches`, `GET /api/github/repos/:owner/:repo/branches`, `GET /api/github/clone/:cloneId`
+- **Skills:** `GET /api/skills/available`, `GET /api/skills/custom/:skillName/export`, `POST /api/skills/custom/import`
+- **Other:** `GET /api/agent-usage`, `GET /api/agent-usage/trends/daily`, `GET /api/agent-usage/:agentId`, `GET /api/decision-inbox`, etc. task-reports, deliverables, pipeline-gates, webhooks, backup, notifications, task-templates, custom-packs, worktrees, cli-usage, cost-alerts, oauth callback/device flow, update-auto-status, update-apply, etc. — see server route registration files.
 
 ## OpenAPI
 
-- **스펙 파일:** `docs/specs/openapi.json`
-- **서빙:** 서버가 해당 파일을 읽어 `GET /api/openapi.json`으로 제공하며, Swagger UI는 `/api/docs`에서 제공.
-- **로드 경로:** 서버 코드 `server/modules/routes/ops/api-docs.ts`에서 `docs/specs/openapi.json`을 사용.
+- **Spec file:** `docs/specs/openapi.json`
+- **Serving:** The server reads this file and serves it at `GET /api/openapi.json`; Swagger UI is available at `/api/docs`.
+- **Load path:** Server code `server/modules/routes/ops/api-docs.ts` uses `docs/specs/openapi.json`.
 
 ## Known Follow-up
 
-- OpenAPI 스펙을 점진적으로 확장: auth/session, tasks/subtasks, inbox/directives, project/github, categories·project team·dashboard quadrants 등.
+- Incrementally expand the OpenAPI spec: auth/session, tasks/subtasks, inbox/directives, project/github, categories, project team, dashboard quadrants, etc.

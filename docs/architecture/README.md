@@ -8,7 +8,7 @@ Generated at: 2026-03-09T12:23:55.456Z
 npm run arch:map
 ```
 
-> **Note:** 생성된 Project Tree의 `docs/` 하위 목록은 스크립트 실행 시점 기준이며, 실제 문서 인덱스는 [docs/README.md](../README.md)를 참조하세요.
+> **Note:** The `docs/` subtree in the generated Project Tree reflects the state at script execution time. For the actual document index, refer to [docs/README.md](../README.md).
 
 ## System Overview
 
@@ -64,11 +64,10 @@ AgentDesk
 │   │   ├── README.md
 │   │   └── SYSTEM-STRUCTURE-MAP.md
 │   ├── design/
-│   │   ├── DESIGN.md                 ← CSS 변수 + 컴포넌트 패턴 (주요 참조 문서)
-│   │   ├── UI-SCREENS.md             ← 13개 화면 + 36개 모달 명세
-│   │   └── AI-GUIDE.md               ← AI 개발자용 디자인 원칙 + 체크리스트
+│   │   ├── DESIGN.md                 ← CSS variables + component patterns (primary reference doc)
+│   │   ├── UI-SCREENS.md             ← 13 screens + 36 modal specs
 │   ├── reference/
-│   │   └── (비어 있음 — exe-packaging-plan.md 제거됨)
+│   │   └── (empty — exe-packaging-plan.md removed)
 │   ├── reports/
 │   │   ├── Sample_Slides/
 │   │   │   ├── build-pptx.cjs
@@ -2349,7 +2348,7 @@ flowchart TB
 
 ## Sub-Agent Organization (from SQLite)
 
-> **2.0 (Project OS):** 실행 컨텍스트 최상단은 프로젝트(Project). 부서/에이전트는 프로젝트 하위 실행 단위.
+> **2.0 (Project OS):** The top-level execution context is the Project. Departments and agents are execution units under the project.
 
 ```mermaid
 flowchart TD

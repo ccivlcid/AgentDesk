@@ -250,8 +250,7 @@ export function registerApiProviderRoutes({ app, db, nowMs }: RegisterApiProvide
         signal: AbortSignal.timeout(15_000),
       });
       if (!resp.ok) {
-        const errBody = await resp.text().catch(() => "");
-        return res.json({ ok: false, status: resp.status, error: errBody.slice(0, 500) });
+        return res.json({ ok: false, status: resp.status, error: "upstream_api_error" });
       }
 
       const data = await resp.json();
@@ -264,9 +263,8 @@ export function registerApiProviderRoutes({ app, db, nowMs }: RegisterApiProvide
         id,
       );
       res.json({ ok: true, model_count: models.length, models });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      res.json({ ok: false, error: message });
+    } catch {
+      res.json({ ok: false, error: "fetch_failed" });
     }
   });
 
@@ -307,8 +305,7 @@ export function registerApiProviderRoutes({ app, db, nowMs }: RegisterApiProvide
       if (row.models_cache) {
         return res.json({ ok: true, models: cachedModels, cached: true, stale: true });
       }
-      const message = error instanceof Error ? error.message : String(error);
-      res.status(502).json({ error: message });
+      res.status(502).json({ error: "fetch_failed" });
     }
   });
 
@@ -330,9 +327,8 @@ export function registerApiProviderRoutes({ app, db, nowMs }: RegisterApiProvide
         modified_at: m.modified_at,
       }));
       res.json({ ok: true, available: true, models, model_count: models.length });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      res.json({ ok: true, available: false, error: message });
+    } catch {
+      res.json({ ok: true, available: false, error: "fetch_failed" });
     }
   });
 
@@ -359,9 +355,8 @@ export function registerApiProviderRoutes({ app, db, nowMs }: RegisterApiProvide
         "INSERT INTO api_providers (id, name, type, base_url, api_key_enc, enabled, models_cache, models_cached_at, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
       ).run(id, "Ollama (Local)", "ollama", "http://localhost:11434/v1", null, 1, JSON.stringify(models), now, now, now);
       res.json({ ok: true, id, models, model_count: models.length });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      res.status(502).json({ ok: false, error: message });
+    } catch {
+      res.status(502).json({ ok: false, error: "fetch_failed" });
     }
   });
 }

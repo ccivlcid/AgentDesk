@@ -1,7 +1,23 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useI18n } from "../i18n";
 import type { Agent, Task, Project } from "../types";
+
+const HISTORY_KEY = "cp_history_v1";
+const MAX_HISTORY = 6;
+
+function loadHistory(): string[] {
+  try {
+    return JSON.parse(localStorage.getItem(HISTORY_KEY) ?? "[]") as string[];
+  } catch {
+    return [];
+  }
+}
+
+function saveHistory(action: string): void {
+  const prev = loadHistory().filter((a) => a !== action);
+  localStorage.setItem(HISTORY_KEY, JSON.stringify([action, ...prev].slice(0, MAX_HISTORY)));
+}
 
 interface CommandPaletteProps {
   open: boolean;
@@ -47,12 +63,14 @@ export default function CommandPalette({
   const { t } = useI18n();
   const [query, setQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [history, setHistory] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (open) {
       setQuery("");
       setSelectedIndex(0);
+      setHistory(loadHistory());
       setTimeout(() => inputRef.current?.focus(), 50);
     }
   }, [open]);
@@ -70,6 +88,14 @@ export default function CommandPalette({
     { label: t({ ko: "훅", en: "Hooks", ja: "フック", zh: "钩子" }), icon: "⤷", shortcut: "H", action: "hooks" },
     { label: t({ ko: "설정", en: "Settings", ja: "設定", zh: "设置" }), icon: "⚙", shortcut: ",", action: "settings" },
   ];
+
+  // 히스토리 기반 최근 액션 (검색어 없을 때만)
+  const recentActions = !q
+    ? history
+        .map((h) => QUICK_ACTIONS.find((a) => a.action === h))
+        .filter((a): a is typeof QUICK_ACTIONS[number] => Boolean(a))
+        .slice(0, 3)
+    : [];
 
   const filteredActions = q
     ? QUICK_ACTIONS.filter((a) => a.label.toLowerCase().includes(q) || a.action.includes(q))
@@ -95,6 +121,7 @@ export default function CommandPalette({
     | { kind: "project"; project: Project };
 
   const items: Item[] = [
+    ...recentActions.map((a) => ({ kind: "action" as const, ...a, _recent: true })),
     ...filteredActions.map((a) => ({ kind: "action" as const, ...a })),
     ...filteredAgents.map((a) => ({ kind: "agent" as const, agent: a })),
     ...filteredTasks.map((t) => ({ kind: "task" as const, task: t })),
@@ -132,8 +159,9 @@ export default function CommandPalette({
     }
   };
 
-  const executeItem = (item: Item) => {
+  const executeItem = useCallback((item: Item) => {
     if (item.kind === "action") {
+      saveHistory(item.action);
       if (item.action === "new-task") {
         onCreateTask?.();
         onNavigate("tasks-board");
@@ -141,14 +169,17 @@ export default function CommandPalette({
         onNavigate(item.action);
       }
     } else if (item.kind === "agent") {
+      saveHistory(`agent:${item.agent.id}`);
       onNavigate("agents");
     } else if (item.kind === "task") {
+      saveHistory(`task:${item.task.id}`);
       onNavigate("tasks-board");
     } else if (item.kind === "project") {
+      saveHistory(`project:${item.project.id}`);
       onSelectProject?.(item.project);
     }
     onClose();
-  };
+  }, [onClose, onCreateTask, onNavigate, onSelectProject]);
 
   if (!open) return null;
 
@@ -166,11 +197,12 @@ export default function CommandPalette({
         position: "fixed",
         inset: 0,
         zIndex: 10100,
-        background: "var(--th-modal-overlay)",
+        background: "rgba(0,0,0,0.55)",
+        backdropFilter: "blur(6px)",
         display: "flex",
-        alignItems: "flex-start",
+        alignItems: "center",
         justifyContent: "center",
-        paddingTop: "12vh",
+        paddingBottom: "10vh",
       }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
@@ -179,74 +211,59 @@ export default function CommandPalette({
         aria-label="Command palette"
         tabIndex={-1}
         style={{
-          width: "min(600px, 92vw)",
-          background: "var(--th-bg-elevated)",
-          border: `1px solid ${border}`,
-          borderRadius: 10,
-          boxShadow: "0 16px 48px rgba(0,0,0,0.35)",
+          width: "min(640px, 94vw)",
+          background: "var(--th-panel-bg)",
+          backdropFilter: "blur(32px) saturate(180%)",
+          border: "1px solid var(--th-border)",
+          borderRadius: 16,
+          boxShadow: "0 32px 80px var(--th-glass-shadow)",
           overflow: "hidden",
         }}
         onKeyDown={handleKeyDown}
       >
-        {/* Header */}
+        {/* Header — Spotlight 스타일 대형 검색창 */}
         <div
           style={{
             display: "flex",
             alignItems: "center",
-            gap: 12,
-            padding: "12px 18px",
-            borderBottom: `1px solid ${border}`,
-            background: "var(--th-bg-panel)",
-            borderTopLeftRadius: 10,
-            borderTopRightRadius: 10,
+            gap: 14,
+            padding: "0 20px",
+            borderBottom: "1px solid var(--th-border)",
+            height: 64,
           }}
         >
-          <div className="flex flex-shrink-0 items-center gap-1.5">
-            <button
-              type="button"
-              onClick={onClose}
-              aria-label="Close"
-              className="h-3 w-3 flex-shrink-0 rounded-full border-0 transition-opacity hover:opacity-90"
-              style={{ background: "#ff5f57" }}
-            />
-            <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#ffbd2e" }} />
-            <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#27c93f" }} />
-          </div>
-          <div style={{ width: 1, height: 22, background: border, flexShrink: 0 }} />
-          {/* Search input */}
-          <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-            <span style={{ ...mono, color: accent, fontSize: "11px", fontWeight: 700, flexShrink: 0 }}>⌘</span>
-            <input
-              ref={inputRef}
-              value={query}
-              onChange={(e) => { setQuery(e.target.value); setSelectedIndex(0); }}
-              onKeyDown={(e) => {
-                if (["Escape", "ArrowDown", "ArrowUp", "Enter"].includes(e.key)) {
-                  e.stopPropagation();
-                  handleKeyDown(e as unknown as React.KeyboardEvent<HTMLDivElement>);
-                }
-              }}
-              placeholder={t({ ko: "태스크, 에이전트, 프로젝트, 뷰 검색...", en: "Search tasks, agents, projects, views...", ja: "タスク、エージェント、プロジェクト、ビューを検索...", zh: "搜索任务、代理、项目、视图..." })}
-              style={{
-                flex: 1,
-                background: "none",
-                border: "none",
-                outline: "none",
-                ...mono,
-                fontSize: "13px",
-                color: "var(--th-text-primary)",
-                minWidth: 0,
-              }}
-            />
-            <span style={{ ...mono, fontSize: "10px", color: muted, padding: "2px 6px", border: `1px solid ${border}`, flexShrink: 0 }}>
-              Esc
-            </span>
-          </div>
+          {/* 🔍 아이콘 */}
+          <span style={{ fontSize: 20, opacity: 0.5, flexShrink: 0 }}>🔍</span>
+          <input
+            ref={inputRef}
+            value={query}
+            onChange={(e) => { setQuery(e.target.value); setSelectedIndex(0); }}
+            onKeyDown={(e) => {
+              if (["Escape", "ArrowDown", "ArrowUp", "Enter"].includes(e.key)) {
+                e.stopPropagation();
+                handleKeyDown(e as unknown as React.KeyboardEvent<HTMLDivElement>);
+              }
+            }}
+            placeholder={t({ ko: "AgentDesk 검색...", en: "Search AgentDesk...", ja: "AgentDesk を検索...", zh: "搜索 AgentDesk..." })}
+            style={{
+              flex: 1,
+              background: "none",
+              border: "none",
+              outline: "none",
+              ...mono,
+              fontSize: "18px",
+              color: "var(--th-text-primary)",
+              minWidth: 0,
+            }}
+          />
+          <span style={{ ...mono, fontSize: "10px", color: muted, padding: "2px 6px", border: "1px solid var(--th-border)", borderRadius: 4, flexShrink: 0 }}>
+            Esc
+          </span>
         </div>
 
         {/* Current project context */}
         {currentProject && (
-          <div style={{ padding: "6px 16px", borderBottom: `1px solid ${border}`, background: "var(--th-bg-base)", display: "flex", alignItems: "center", gap: 6 }}>
+          <div style={{ padding: "5px 20px", borderBottom: "1px solid var(--th-border)", display: "flex", alignItems: "center", gap: 6 }}>
             <span style={{ ...mono, fontSize: "9px", color: muted }}>
               {t({ ko: "현재 프로젝트:", en: "project:", ja: "現在:", zh: "当前:" })}
             </span>
@@ -256,6 +273,41 @@ export default function CommandPalette({
 
         {/* Results */}
         <div style={{ maxHeight: "60vh", overflowY: "auto" }}>
+          {/* 최근 실행 */}
+          {recentActions.length > 0 && (
+            <div>
+              <div style={{ ...mono, fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", color: muted, padding: "8px 16px 4px", textTransform: "uppercase" }}>
+                {t({ ko: "최근 실행", en: "Recent", ja: "最近の実行", zh: "最近使用" })}
+              </div>
+              {recentActions.map((act) => {
+                const idx = flatIdx++;
+                const isSelected = idx === safeIndex;
+                return (
+                  <button
+                    key={`recent-${act.action}`}
+                    onClick={() => executeItem({ kind: "action", ...act })}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      width: "100%",
+                      padding: "7px 16px",
+                      background: isSelected ? "var(--th-bg-surface)" : "transparent",
+                      border: "none",
+                      borderLeft: isSelected ? `2px solid ${accent}` : "2px solid transparent",
+                      cursor: "pointer",
+                      gap: 10,
+                      color: isSelected ? "var(--th-text-heading)" : "var(--th-text-secondary)",
+                    }}
+                  >
+                    <span style={{ ...mono, fontSize: "0.75rem", width: 16, textAlign: "center", flexShrink: 0, opacity: 0.6 }}>↩</span>
+                    <span style={{ ...mono, fontSize: "0.8rem", flex: 1, textAlign: "left" }}>{act.label}</span>
+                    <span style={{ ...mono, fontSize: "0.65rem", color: muted }}>최근</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
           {/* Quick Actions / Views */}
           {filteredActions.length > 0 && (
             <div>

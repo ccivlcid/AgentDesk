@@ -192,7 +192,8 @@ export default function NotificationCenter({ on, onNavigateTask }: Props) {
     .filter((i) => !hideRead || !i.read);
 
   return (
-    <div className="relative inline-flex" ref={panelRef}>
+    <>
+      {/* 벨 버튼 */}
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -214,134 +215,163 @@ export default function NotificationCenter({ on, onNavigateTask }: Props) {
           </span>
         )}
       </button>
+
+      {/* 반투명 오버레이 */}
       {open && (
         <div
-          className="absolute right-0 top-full z-50 mt-2 w-[340px] max-h-[420px] overflow-hidden"
-          style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 399,
+            background: "rgba(0,0,0,0.3)",
+          }}
+          onClick={() => setOpen(false)}
+        />
+      )}
+
+      {/* 슬라이드 패널 */}
+      <div
+        ref={panelRef}
+        style={{
+          position: "fixed",
+          top: 44,
+          right: 0,
+          width: 320,
+          bottom: 80,
+          zIndex: 400,
+          background: "var(--th-panel-bg)",
+          backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)",
+          borderLeft: "1px solid var(--th-border)",
+          display: "flex",
+          flexDirection: "column",
+          transform: open ? "translateX(0)" : "translateX(320px)",
+          transition: "transform 0.28s cubic-bezier(0.4,0,0.2,1)",
+          pointerEvents: open ? "auto" : "none",
+        }}
+      >
+        <div
+          className="flex items-center justify-between gap-3 px-4 py-3"
+          style={{ borderBottom: "1px solid var(--th-border)" }}
         >
-          <div
-            className="flex items-center justify-between gap-3 px-4 py-3"
-            style={{ borderBottom: "1px solid var(--th-border)" }}
-          >
-            <span className="text-sm font-semibold" style={{ color: "var(--th-text-heading)" }}>
-              Notifications
-            </span>
-            <div className="flex items-center gap-2">
-              {typeof Notification !== "undefined" && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (Notification.permission === "granted") {
-                      setPushEnabled((v) => !v);
-                    } else if (Notification.permission !== "denied") {
-                      Notification.requestPermission().then((perm) => {
-                        setPushEnabled(perm === "granted");
-                      });
-                    }
-                  }}
-                  className="inline-flex h-8 w-8 items-center justify-center transition"
-                  style={{ borderRadius: 0, background: pushEnabled ? "var(--th-success, #22c55e)" : "var(--th-bg-elevated)", color: pushEnabled ? "#fff" : "var(--th-text-muted)", border: "1px solid var(--th-border)" }}
-                  title={pushEnabled ? "Browser push ON" : "Browser push OFF"}
-                  aria-label={pushEnabled ? "Disable browser notifications" : "Enable browser notifications"}
-                >
-                  {pushEnabled ? <IconBell /> : <IconBellOff />}
-                </button>
-              )}
+          <span className="text-sm font-semibold" style={{ color: "var(--th-text-heading)" }}>
+            Notifications
+          </span>
+          <div className="flex items-center gap-2">
+            {typeof Notification !== "undefined" && (
               <button
                 type="button"
-                onClick={() => setHideRead((v) => !v)}
-                className="inline-flex h-8 items-center justify-center px-2 text-[11px] font-medium transition"
-                style={{ borderRadius: 0, background: hideRead ? "var(--th-accent, #3b82f6)" : "var(--th-bg-elevated)", color: hideRead ? "#fff" : "var(--th-text-muted)", border: hideRead ? "none" : "1px solid var(--th-border)" }}
-                title={hideRead ? "Show all notifications" : "Hide read notifications"}
-              >
-                {hideRead ? "Unread" : "All"}
-              </button>
-              {unreadCount > 0 && (
-                <button
-                  type="button"
-                  onClick={handleMarkAllRead}
-                  className="text-xs font-medium px-2 py-1 transition"
-                  style={{ borderRadius: 0, color: "var(--th-text-link, var(--th-accent, #3b82f6))" }}
-                >
-                  Mark all read
-                </button>
-              )}
-            </div>
-          </div>
-          {/* Type filter */}
-          <div
-            className="flex items-center gap-1.5 px-3 py-2 overflow-x-auto"
-            style={{ borderBottom: "1px solid var(--th-border)" }}
-          >
-            {TYPE_FILTERS.map((f) => {
-              const active = typeFilter === f.key;
-              return (
-                <button
-                  key={f.key}
-                  type="button"
-                  onClick={() => setTypeFilter(f.key)}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium transition whitespace-nowrap"
-                  style={{ borderRadius: 0, background: active ? "var(--th-accent, #3b82f6)" : "var(--th-bg-elevated)", color: active ? "#fff" : "var(--th-text-secondary)", border: active ? "none" : "1px solid var(--th-border)" }}
-                >
-                  {f.icon}
-                  {f.label}
-                </button>
-              );
-            })}
-          </div>
-          <div className="overflow-y-auto" style={{ maxHeight: 330 }}>
-            {filteredItems.length === 0 && (
-              <div className="px-4 py-10 text-center text-sm" style={{ color: "var(--th-text-muted)" }}>
-                No notifications
-              </div>
-            )}
-            {filteredItems.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => handleItemClick(item)}
-                className="flex w-full items-start gap-3 px-4 py-3 text-left transition"
-                style={{
-                  borderBottom: "1px solid var(--th-border)",
-                  background: item.read ? "transparent" : "var(--th-bg-elevated)",
-                  color: "var(--th-text-primary)",
+                onClick={() => {
+                  if (Notification.permission === "granted") {
+                    setPushEnabled((v) => !v);
+                  } else if (Notification.permission !== "denied") {
+                    Notification.requestPermission().then((perm) => {
+                      setPushEnabled(perm === "granted");
+                    });
+                  }
                 }}
+                className="inline-flex h-8 w-8 items-center justify-center transition"
+                style={{ borderRadius: 0, background: pushEnabled ? "var(--th-success, #22c55e)" : "var(--th-bg-elevated)", color: pushEnabled ? "#fff" : "var(--th-text-muted)", border: "1px solid var(--th-border)" }}
+                title={pushEnabled ? "Browser push ON" : "Browser push OFF"}
+                aria-label={pushEnabled ? "Disable browser notifications" : "Enable browser notifications"}
               >
-                <span className="mt-0.5 flex-shrink-0" style={{ color: "var(--th-text-secondary)" }}>
-                  {TYPE_ICONS[item.type] ?? <IconPin />}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span
-                      className="truncate text-sm font-medium"
-                      style={{ color: item.read ? "var(--th-text-secondary)" : "var(--th-text-primary)" }}
-                    >
-                      {item.title}
-                    </span>
-                  </div>
-                  {item.body && (
-                    <p
-                      className="mt-0.5 line-clamp-2 text-xs"
-                      style={{ color: "var(--th-text-muted)" }}
-                    >
-                      {item.body}
-                    </p>
-                  )}
-                  <span className="mt-1 inline-block text-[10px]" style={{ color: "var(--th-text-muted)" }}>
-                    {timeAgo(item.created_at)}
-                  </span>
-                </div>
-                {!item.read && (
-                  <span
-                    className="mt-2.5 h-2 w-2 flex-shrink-0 rounded-full"
-                    style={{ background: "var(--th-accent, #3b82f6)" }}
-                  />
-                )}
+                {pushEnabled ? <IconBell /> : <IconBellOff />}
               </button>
-            ))}
+            )}
+            <button
+              type="button"
+              onClick={() => setHideRead((v) => !v)}
+              className="inline-flex h-8 items-center justify-center px-2 text-[11px] font-medium transition"
+              style={{ borderRadius: 0, background: hideRead ? "var(--th-accent, #3b82f6)" : "var(--th-bg-elevated)", color: hideRead ? "#fff" : "var(--th-text-muted)", border: hideRead ? "none" : "1px solid var(--th-border)" }}
+              title={hideRead ? "Show all notifications" : "Hide read notifications"}
+            >
+              {hideRead ? "Unread" : "All"}
+            </button>
+            {unreadCount > 0 && (
+              <button
+                type="button"
+                onClick={handleMarkAllRead}
+                className="text-xs font-medium px-2 py-1 transition"
+                style={{ borderRadius: 0, color: "var(--th-text-link, var(--th-accent, #3b82f6))" }}
+              >
+                Mark all read
+              </button>
+            )}
           </div>
         </div>
-      )}
-    </div>
+        {/* Type filter */}
+        <div
+          className="flex items-center gap-1.5 px-3 py-2 overflow-x-auto"
+          style={{ borderBottom: "1px solid var(--th-border)" }}
+        >
+          {TYPE_FILTERS.map((f) => {
+            const active = typeFilter === f.key;
+            return (
+              <button
+                key={f.key}
+                type="button"
+                onClick={() => setTypeFilter(f.key)}
+                className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-medium transition whitespace-nowrap"
+                style={{ borderRadius: 0, background: active ? "var(--th-accent, #3b82f6)" : "var(--th-bg-elevated)", color: active ? "#fff" : "var(--th-text-secondary)", border: active ? "none" : "1px solid var(--th-border)" }}
+              >
+                {f.icon}
+                {f.label}
+              </button>
+            );
+          })}
+        </div>
+        <div className="overflow-y-auto flex-1">
+          {filteredItems.length === 0 && (
+            <div className="px-4 py-10 text-center text-sm" style={{ color: "var(--th-text-muted)" }}>
+              No notifications
+            </div>
+          )}
+          {filteredItems.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => handleItemClick(item)}
+              className="flex w-full items-start gap-3 px-4 py-3 text-left transition"
+              style={{
+                borderBottom: "1px solid var(--th-border)",
+                background: item.read ? "transparent" : "var(--th-bg-elevated)",
+                color: "var(--th-text-primary)",
+              }}
+            >
+              <span className="mt-0.5 flex-shrink-0" style={{ color: "var(--th-text-secondary)" }}>
+                {TYPE_ICONS[item.type] ?? <IconPin />}
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <span
+                    className="truncate text-sm font-medium"
+                    style={{ color: item.read ? "var(--th-text-secondary)" : "var(--th-text-primary)" }}
+                  >
+                    {item.title}
+                  </span>
+                </div>
+                {item.body && (
+                  <p
+                    className="mt-0.5 line-clamp-2 text-xs"
+                    style={{ color: "var(--th-text-muted)" }}
+                  >
+                    {item.body}
+                  </p>
+                )}
+                <span className="mt-1 inline-block text-[10px]" style={{ color: "var(--th-text-muted)" }}>
+                  {timeAgo(item.created_at)}
+                </span>
+              </div>
+              {!item.read && (
+                <span
+                  className="mt-2.5 h-2 w-2 flex-shrink-0 rounded-full"
+                  style={{ background: "var(--th-accent, #3b82f6)" }}
+                />
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+    </>
   );
 }

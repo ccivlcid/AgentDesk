@@ -1,10 +1,35 @@
 import type { RoomTheme } from "../types";
 
+export type WindowType =
+  | "workflow"
+  | "library"
+  | "settings"
+  | "chat"
+  | "agent-manager"
+  | "repl";
+
+export type WidgetId =
+  | "heartbeat"
+  | "task-board"
+  | "alerts"
+  | "cli-usage"
+  | "flow-graph"
+  | "file-tree";
+
+export interface WidgetEntry {
+  id: WidgetId;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
 export type View =
   | "agents"
   | "heartbeat"
   | "flow-graph"
   | "workflow-builder"
+  | "agent-repl"
   | "dashboard"
   | "project-types"
   | "cli-usage"

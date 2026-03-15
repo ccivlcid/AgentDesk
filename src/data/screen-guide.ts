@@ -193,6 +193,34 @@ const guides: Record<View, ScreenGuideEntry> = {
       { ko: "새로고침으로 최신 집계 반영", en: "Refresh to get latest totals", ja: "更新で最新の集計を反映", zh: "刷新以获取最新统计" },
     ],
   },
+  "workflow-builder": {
+    title: { ko: "워크플로 빌더", en: "Workflow Builder", ja: "ワークフロービルダー", zh: "工作流构建器" },
+    description: {
+      ko: "노드 기반 UI로 에이전트 파이프라인을 시각적으로 설계합니다.",
+      en: "Visually design agent pipelines with a node-based UI.",
+      ja: "ノードベースUIでエージェントパイプラインを視覚的に設計します。",
+      zh: "使用节点式 UI 可视化设计代理流水线。",
+    },
+    tips: [
+      { ko: "왼쪽 팔레트에서 노드를 드래그하여 캔버스에 추가", en: "Drag nodes from the left palette onto the canvas", ja: "左パレットからノードをキャンバスにドラッグ", zh: "从左侧面板拖动节点到画布" },
+      { ko: "노드 핸들을 연결해 실행 흐름을 구성", en: "Connect node handles to define the execution flow", ja: "ノードハンドルを接続して実行フローを構成", zh: "连接节点端口定义执行流程" },
+      { ko: "워크플로 이름을 편집하고 저장하면 localStorage에 자동 보존", en: "Edit the workflow name and save — auto-persisted to localStorage", ja: "ワークフロー名を編集して保存するとlocalStorageに自動保存", zh: "编辑工作流名称并保存，自动持久化到 localStorage" },
+    ],
+  },
+  "agent-repl": {
+    title: { ko: "에이전트 REPL", en: "Agent REPL", ja: "エージェント REPL", zh: "代理 REPL" },
+    description: {
+      ko: "터미널 스타일로 에이전트에게 직접 태스크를 입력하고 즉시 실행합니다.",
+      en: "Send tasks directly to agents in a terminal-style REPL and execute them immediately.",
+      ja: "ターミナル形式でエージェントに直接タスクを送信し、即座に実行します。",
+      zh: "以终端方式直接向代理发送任务并立即执行。",
+    },
+    tips: [
+      { ko: "우측 드롭다운에서 대상 에이전트를 선택하거나 :use <이름> 으로 전환", en: "Select the target agent from the dropdown or type :use <name>", ja: "右上ドロップダウンまたは :use <名前> でエージェントを選択", zh: "从右侧下拉框选择代理，或输入 :use <名称> 切换" },
+      { ko: ":list 로 전체 에이전트 목록 및 상태 확인", en: ":list shows all agents and their status", ja: ":list で全エージェントと状態を確認", zh: ":list 查看所有代理及其状态" },
+      { ko: "↑/↓ 화살표 키로 이전 명령 히스토리 탐색", en: "Use ↑/↓ arrow keys to navigate command history", ja: "↑/↓キーでコマンド履歴を参照", zh: "使用 ↑/↓ 方向键浏览命令历史" },
+    ],
+  },
   settings: {
     title: { ko: "설정", en: "Settings", ja: "設定", zh: "设置" },
     description: {

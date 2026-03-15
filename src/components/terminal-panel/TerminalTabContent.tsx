@@ -396,6 +396,23 @@ export function TerminalTabContent({
 
   const parsedLines = isStructured ? parseCliText(text) : null;
 
+  // 검색어가 있을 때 structured 모드에서 매칭 줄만 표시
+  const visibleParsedLines = parsedLines && logSearch
+    ? parsedLines.filter((line) => {
+        const needle = logSearch.toLowerCase();
+        const raw = line.raw.toLowerCase();
+        if (raw.includes(needle)) return true;
+        if (line.text && line.text.toLowerCase().includes(needle)) return true;
+        if (line.toolName && line.toolName.toLowerCase().includes(needle)) return true;
+        if (line.toolInput) {
+          try {
+            if (JSON.stringify(line.toolInput).toLowerCase().includes(needle)) return true;
+          } catch { /* ignore */ }
+        }
+        return false;
+      })
+    : parsedLines;
+
   return (
     <>
       {showSearchBar && (
@@ -487,10 +504,15 @@ export function TerminalTabContent({
                 : tr("아직 터미널 출력이 없습니다", "No terminal output yet", "まだターミナル出力がありません", "暂无终端输出")}
             </div>
           </div>
-        ) : parsedLines ? (
+        ) : visibleParsedLines ? (
           /* ── Structured (JSON) 모드 ── */
           <div ref={preRef as unknown as React.RefObject<HTMLDivElement>} className="space-y-0.5">
-            {parsedLines.map((line, idx) => (
+            {logSearch && visibleParsedLines.length === 0 && (
+              <div style={{ color: "var(--th-text-muted)", fontFamily: "var(--th-font-mono)", fontSize: 11, padding: "8px 0" }}>
+                No matches for "{logSearch}"
+              </div>
+            )}
+            {visibleParsedLines.map((line, idx) => (
               <CliLineRow key={idx} line={line} search={logSearch} />
             ))}
           </div>

@@ -229,7 +229,7 @@ export default function AnnouncementCliPanel({
           boxShadow: "var(--th-glass-shadow)",
         }}
       >
-        {/* macOS 스타일 헤더 */}
+        {/* 채널 헤더 */}
         <div
           className="flex flex-shrink-0 items-center gap-3 px-4 py-3 select-none"
           style={{
@@ -238,18 +238,6 @@ export default function AnnouncementCliPanel({
             borderTopLeftRadius: 10,
           }}
         >
-          <div className="flex items-center gap-1.5">
-            <button
-              type="button"
-              onClick={onClose}
-              className="h-3 w-3 rounded-full border-0 transition-opacity hover:opacity-80"
-              style={{ background: "#ff5f56" }}
-              title={tr("닫기", "Close")}
-            />
-            <div className="h-3 w-3 rounded-full" style={{ background: "#ffbd2e" }} />
-            <div className="h-3 w-3 rounded-full" style={{ background: "#27c93f" }} />
-          </div>
-
           <div className="flex-1 min-w-0 flex items-center gap-2">
             <span className="text-[11px] font-bold shrink-0" style={{ color: "var(--th-accent)" }}>❯</span>
             <span className="text-[11px] font-bold truncate" style={{ color: "var(--th-text-heading)" }}>
