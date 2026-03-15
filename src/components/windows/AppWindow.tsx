@@ -122,7 +122,7 @@ export default function AppWindow({
         top: pos.y,
         width: size.w,
         height: size.h,
-        background: "rgba(18,18,18,0.96)",
+        background: "var(--th-bg-surface)",
         backdropFilter: "blur(20px)",
         border: "1px solid var(--th-border)",
         borderRadius: 10,
@@ -130,7 +130,7 @@ export default function AppWindow({
         flexDirection: "column",
         overflow: "hidden",
         zIndex: 200,
-        boxShadow: "0 16px 48px rgba(0,0,0,0.7)",
+        boxShadow: "0 16px 48px var(--th-glass-shadow)",
       }}
     >
       {/* 타이틀바 */}
@@ -142,7 +142,7 @@ export default function AppWindow({
           padding: "8px 12px",
           borderBottom: tabs ? "none" : "1px solid var(--th-border)",
           cursor: "grab",
-          background: "rgba(255,255,255,0.02)",
+          background: "var(--th-glass-bg)",
           flexShrink: 0,
           gap: 8,
         }}
@@ -155,8 +155,8 @@ export default function AppWindow({
             style={{ width: 12, height: 12, borderRadius: "50%", background: "#ff5f57", border: "none", cursor: "pointer", padding: 0 }}
             title="닫기"
           />
-          <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#2a2a2a" }} />
-          <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#2a2a2a" }} />
+          <div style={{ width: 12, height: 12, borderRadius: "50%", background: "var(--th-border)" }} />
+          <div style={{ width: 12, height: 12, borderRadius: "50%", background: "var(--th-border)" }} />
         </div>
         <span style={{ fontFamily: mono, fontSize: 11, color: "var(--th-text-muted)" }}>
           {emoji} {title}
@@ -168,7 +168,7 @@ export default function AppWindow({
         <div style={{
           display: "flex",
           borderBottom: "1px solid var(--th-border)",
-          background: "rgba(0,0,0,0.2)",
+          background: "var(--th-bg-sidebar)",
           flexShrink: 0,
           overflowX: "auto",
         }}>
@@ -177,7 +177,7 @@ export default function AppWindow({
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               style={{
-                background: activeTab === tab.id ? "rgba(245,158,11,0.08)" : "none",
+                background: activeTab === tab.id ? "var(--th-accent-glow)" : "none",
                 border: "none",
                 borderBottom: activeTab === tab.id ? "2px solid var(--th-accent)" : "2px solid transparent",
                 padding: "6px 14px",

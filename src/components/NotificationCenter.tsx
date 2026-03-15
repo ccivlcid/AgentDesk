@@ -239,10 +239,10 @@ export default function NotificationCenter({ on, onNavigateTask }: Props) {
           width: 320,
           bottom: 80,
           zIndex: 400,
-          background: "rgba(18,18,22,0.96)",
+          background: "var(--th-panel-bg)",
           backdropFilter: "blur(20px)",
           WebkitBackdropFilter: "blur(20px)",
-          borderLeft: "1px solid rgba(255,255,255,0.08)",
+          borderLeft: "1px solid var(--th-border)",
           display: "flex",
           flexDirection: "column",
           transform: open ? "translateX(0)" : "translateX(320px)",
@@ -252,7 +252,7 @@ export default function NotificationCenter({ on, onNavigateTask }: Props) {
       >
         <div
           className="flex items-center justify-between gap-3 px-4 py-3"
-          style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}
+          style={{ borderBottom: "1px solid var(--th-border)" }}
         >
           <span className="text-sm font-semibold" style={{ color: "var(--th-text-heading)" }}>
             Notifications
@@ -302,7 +302,7 @@ export default function NotificationCenter({ on, onNavigateTask }: Props) {
         {/* Type filter */}
         <div
           className="flex items-center gap-1.5 px-3 py-2 overflow-x-auto"
-          style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}
+          style={{ borderBottom: "1px solid var(--th-border)" }}
         >
           {TYPE_FILTERS.map((f) => {
             const active = typeFilter === f.key;
@@ -333,7 +333,7 @@ export default function NotificationCenter({ on, onNavigateTask }: Props) {
               onClick={() => handleItemClick(item)}
               className="flex w-full items-start gap-3 px-4 py-3 text-left transition"
               style={{
-                borderBottom: "1px solid rgba(255,255,255,0.05)",
+                borderBottom: "1px solid var(--th-border)",
                 background: item.read ? "transparent" : "var(--th-bg-elevated)",
                 color: "var(--th-text-primary)",
               }}

@@ -29,7 +29,7 @@ export default function WallpaperPicker({ onClose }: Props) {
       style={{
         position: "fixed",
         inset: 0,
-        background: "rgba(0,0,0,0.55)",
+        background: "var(--th-modal-overlay)",
         zIndex: 800,
         display: "flex",
         alignItems: "center",
@@ -39,13 +39,13 @@ export default function WallpaperPicker({ onClose }: Props) {
     >
       <div
         style={{
-          background: "rgba(22,22,26,0.95)",
+          background: "var(--th-panel-bg)",
           backdropFilter: "blur(24px)",
-          border: "1px solid rgba(255,255,255,0.10)",
+          border: "1px solid var(--th-border)",
           borderRadius: 16,
           padding: 24,
           width: 480,
-          boxShadow: "0 32px 64px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.07)",
+          boxShadow: "0 32px 64px var(--th-glass-shadow)",
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -56,10 +56,10 @@ export default function WallpaperPicker({ onClose }: Props) {
               onClick={onClose}
               style={{ width: 12, height: 12, borderRadius: "50%", background: "#ff5f57", border: "none", cursor: "pointer", padding: 0 }}
             />
-            <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#2a2a2a" }} />
-            <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#2a2a2a" }} />
+            <div style={{ width: 12, height: 12, borderRadius: "50%", background: "var(--th-border)" }} />
+            <div style={{ width: 12, height: 12, borderRadius: "50%", background: "var(--th-border)" }} />
           </div>
-          <span style={{ fontFamily: mono, fontSize: 12, color: "rgba(255,255,255,0.6)", marginLeft: 6 }}>
+          <span style={{ fontFamily: mono, fontSize: 12, color: "var(--th-text-secondary)", marginLeft: 6 }}>
             배경화면 설정
           </span>
         </div>
@@ -74,14 +74,14 @@ export default function WallpaperPicker({ onClose }: Props) {
               ? WALLPAPERS.find((w) => w.id === hovered)?.css ?? wallpaper
               : wallpaper,
             marginBottom: 18,
-            border: "1px solid rgba(255,255,255,0.08)",
+            border: "1px solid var(--th-border)",
             transition: "background 0.3s ease",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
           }}
         >
-          <span style={{ fontFamily: mono, fontSize: 10, color: "rgba(255,255,255,0.3)", letterSpacing: "0.12em" }}>
+          <span style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-muted)", letterSpacing: "0.12em" }}>
             PREVIEW
           </span>
         </div>
@@ -105,8 +105,8 @@ export default function WallpaperPicker({ onClose }: Props) {
                 style={{
                   padding: 0,
                   border: isSelected
-                    ? "2px solid rgba(139,92,246,0.9)"
-                    : "2px solid rgba(255,255,255,0.06)",
+                    ? "2px solid var(--th-accent)"
+                    : "2px solid var(--th-border)",
                   borderRadius: 8,
                   cursor: "pointer",
                   overflow: "hidden",
@@ -134,7 +134,7 @@ export default function WallpaperPicker({ onClose }: Props) {
                     }}>
                       <div style={{
                         width: 16, height: 16, borderRadius: "50%",
-                        background: "rgba(139,92,246,0.9)",
+                        background: "var(--th-accent)",
                         display: "flex", alignItems: "center", justifyContent: "center",
                       }}>
                         <span style={{ fontSize: 9, color: "white" }}>✓</span>
@@ -145,10 +145,10 @@ export default function WallpaperPicker({ onClose }: Props) {
                 <div style={{
                   fontFamily: mono,
                   fontSize: 9,
-                  color: isSelected ? "rgba(196,181,253,0.9)" : "rgba(255,255,255,0.4)",
+                  color: isSelected ? "var(--th-text-accent)" : "var(--th-text-muted)",
                   textAlign: "center",
                   padding: "4px 2px",
-                  background: "rgba(0,0,0,0.4)",
+                  background: "var(--th-bg-secondary)",
                 }}>
                   {w.name}
                 </div>
