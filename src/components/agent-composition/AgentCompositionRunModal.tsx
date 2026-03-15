@@ -62,42 +62,53 @@ export default function AgentCompositionRunModal({ nodes, edges, templateName, o
     setPhase("running");
     setProgress(0);
 
-    const nodeTaskMap: Record<string, string> = {}; // nodeId → taskId
-    const taskIds: string[] = [];
+    addLog(
+      t({ ko: `${items.length}개 태스크 동시 생성 중...`, en: `Creating ${items.length} tasks in parallel...`, ja: `${items.length}件のタスクを並列作成中...`, zh: `并行创建${items.length}个任务...` }),
+    );
 
-    // Step 1: Create tasks for each agent node
-    for (let i = 0; i < items.length; i++) {
-      const item = items[i];
-      addLog(
-        `[${i + 1}/${items.length}] ${item.emoji} ${item.name} → ${t({ ko: "태스크 생성 중", en: "creating task", ja: "タスク作成中", zh: "创建任务" })}...`,
-      );
-      try {
+    // Step 1: Create all tasks in parallel (independent of each other)
+    const results = await Promise.allSettled(
+      items.map((item) => {
         const body: Record<string, unknown> = {
           title: item.taskTitle,
           assigned_agent_id: item.agentId,
           status: "planned",
         };
         if (projectId) body.project_id = projectId;
-
-        const res = await fetch("/api/tasks", {
+        return fetch("/api/tasks", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
-        });
-        const data = await res.json();
-        if (!data.id) throw new Error("no id");
-        nodeTaskMap[item.nodeId] = data.id;
-        taskIds.push(data.id);
-        addLog(`  ✓ task ${data.id.slice(0, 8)}`);
-      } catch {
+        })
+          .then((r) => r.json())
+          .then((data) => {
+            if (!data.id) throw new Error("no id");
+            return { nodeId: item.nodeId, taskId: data.id as string, name: item.name, emoji: item.emoji };
+          });
+      }),
+    );
+
+    setProgress(50);
+    const nodeTaskMap: Record<string, string> = {};
+    const taskIds: string[] = [];
+    let hasError = false;
+    for (const result of results) {
+      if (result.status === "fulfilled") {
+        const { nodeId, taskId, name, emoji } = result.value;
+        nodeTaskMap[nodeId] = taskId;
+        taskIds.push(taskId);
+        addLog(`  ✓ ${emoji} ${name} → ${taskId.slice(0, 8)}`);
+      } else {
         addLog(`  ✗ ${t({ ko: "태스크 생성 실패", en: "failed to create task", ja: "タスク作成失敗", zh: "创建任务失败" })}`);
-        setPhase("error");
-        return;
+        hasError = true;
       }
-      setProgress(Math.round(((i + 1) / (items.length + edges.length)) * 100));
+    }
+    if (hasError) {
+      setPhase("error");
+      return;
     }
 
-    // Step 2: Create dependencies for each edge (source → target means target depends on source)
+    // Step 2: Create dependencies sequentially (target must exist before linking)
     const edgesWithDeps = edges.filter(
       (e) => e.source && e.target && nodeTaskMap[e.source] && nodeTaskMap[e.target],
     );
@@ -119,7 +130,7 @@ export default function AgentCompositionRunModal({ nodes, edges, templateName, o
         addLog(`  ✗ ${t({ ko: "의존 관계 설정 실패", en: "dependency failed", ja: "依存関係失敗", zh: "依赖设置失败" })}`);
         // non-fatal
       }
-      setProgress(Math.round(((items.length + i + 1) / (items.length + edgesWithDeps.length)) * 100));
+      setProgress(50 + Math.round(((i + 1) / edgesWithDeps.length) * 50));
     }
 
     addLog(
@@ -407,16 +418,16 @@ export default function AgentCompositionRunModal({ nodes, edges, templateName, o
               </button>
               <button
                 onClick={handleRun}
-                disabled={isBtnDisabled || items.length === 0}
+                disabled={isBtnDisabled}
                 style={{
                   fontFamily: mono,
                   fontSize: 11,
                   fontWeight: 700,
                   padding: "6px 18px",
-                  background: isBtnDisabled || items.length === 0 ? "var(--th-border)" : "var(--th-accent)",
+                  background: isBtnDisabled ? "var(--th-border)" : "var(--th-accent)",
                   border: "none",
                   borderRadius: 5,
-                  cursor: isBtnDisabled || items.length === 0 ? "not-allowed" : "pointer",
+                  cursor: isBtnDisabled ? "not-allowed" : "pointer",
                   color: "#fff",
                 }}
               >

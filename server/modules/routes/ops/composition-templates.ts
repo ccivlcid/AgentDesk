@@ -1,9 +1,10 @@
 import { randomUUID } from "node:crypto";
+import type { DatabaseSync, SQLInputValue } from "node:sqlite";
 import type { Express } from "express";
 
 interface Deps {
   app: Express;
-  db: any;
+  db: DatabaseSync;
   nowMs: () => number;
 }
 
@@ -50,7 +51,7 @@ export function registerCompositionTemplateRoutes({ app, db, nowMs }: Deps): voi
       const { id } = req.params;
       const { name, description, nodes, edges } = req.body ?? {};
       const fields: string[] = [];
-      const values: unknown[] = [];
+      const values: SQLInputValue[] = [];
       if (name !== undefined) {
         fields.push("name = ?");
         values.push(String(name).trim().slice(0, 120));

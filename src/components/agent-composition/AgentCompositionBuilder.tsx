@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ReactFlow,
   Background,
@@ -72,7 +72,7 @@ export default function AgentCompositionBuilder() {
   );
 
   // Build CompAgentNodeData from an Agent
-  function makeNodeData(agent: Agent): CompAgentNodeData {
+  const makeNodeData = useCallback((agent: Agent): CompAgentNodeData => {
     const dept = (departments as Department[]).find((d) => d.id === agent.department_id);
     return {
       agentId: agent.id,
@@ -82,7 +82,7 @@ export default function AgentCompositionBuilder() {
       deptName: dept?.name ?? "",
       provider: agent.cli_provider ?? "",
     };
-  }
+  }, [departments]);
 
   // Drag start: store agent id in dataTransfer
   function handleAgentDragStart(e: React.DragEvent, agent: Agent) {
@@ -114,8 +114,7 @@ export default function AgentCompositionBuilder() {
       };
       setNodes((nds) => [...nds, newNode]);
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [agents, departments, rfInstance, setNodes],
+    [agents, rfInstance, setNodes, makeNodeData],
   );
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -191,22 +190,32 @@ export default function AgentCompositionBuilder() {
     );
   }
 
+  // Whether canvas has any agent nodes (for Run button state)
+  const hasCompAgents = useMemo(() => nodes.some((n) => n.type === "comp_agent"), [nodes]);
+
   // Agent list — filter + group by department
-  const filteredAgents = agents.filter((a) => {
+  const filteredAgents = useMemo(() => {
     const q = agentSearch.toLowerCase();
-    return (
+    return agents.filter((a) =>
       !q ||
       a.name.toLowerCase().includes(q) ||
       (a.name_ko ?? "").toLowerCase().includes(q) ||
-      (a.role ?? "").includes(q)
+      (a.role ?? "").includes(q),
     );
-  });
+  }, [agents, agentSearch]);
 
-  const deptGroups = (departments as Department[]).map((d) => ({
-    dept: d,
-    agents: filteredAgents.filter((a) => a.department_id === d.id),
-  }));
-  const unassigned = filteredAgents.filter((a) => !a.department_id);
+  const deptGroups = useMemo(
+    () => (departments as Department[]).map((d) => ({
+      dept: d,
+      agents: filteredAgents.filter((a) => a.department_id === d.id),
+    })),
+    [departments, filteredAgents],
+  );
+
+  const unassigned = useMemo(
+    () => filteredAgents.filter((a) => !a.department_id),
+    [filteredAgents],
+  );
 
   return (
     <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", minHeight: 0 }}>
@@ -307,22 +316,16 @@ export default function AgentCompositionBuilder() {
           <div style={{ width: 1, height: 20, background: "var(--th-border)", alignSelf: "center" }} />
           <button
             onClick={() => setShowRunModal(true)}
-            disabled={nodes.filter((n) => n.type === "comp_agent").length === 0}
+            disabled={!hasCompAgents}
             style={{
               fontFamily: mono,
               fontSize: 10,
               fontWeight: 700,
               padding: "4px 12px",
-              background:
-                nodes.filter((n) => n.type === "comp_agent").length === 0
-                  ? "var(--th-border)"
-                  : "#10b981",
+              background: hasCompAgents ? "#10b981" : "var(--th-border)",
               border: "none",
               borderRadius: 5,
-              cursor:
-                nodes.filter((n) => n.type === "comp_agent").length === 0
-                  ? "not-allowed"
-                  : "pointer",
+              cursor: hasCompAgents ? "pointer" : "not-allowed",
               color: "#fff",
             }}
           >
