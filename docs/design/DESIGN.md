@@ -229,7 +229,7 @@ slate/gray 유틸리티가 `--th-*`로 재정의됨:
 
 - `border: 1px solid var(--th-border)` + `divide-y divide-[var(--th-border)]` 로 행 구분. 행 hover: `hover:bg-[var(--th-hover-bg)]`.
 
-### 4-9. Agent Flow Graph (`src/components/flow-graph/AgentFlowGraph.tsx`) — 구현 예정
+### 4-9. Agent Flow Graph (`src/components/flow-graph/AgentFlowGraph.tsx`) — 구현 완료
 
 - **구현:** Custom SVG + React (외부 라이브러리 없음).
 - **주인공:** 프로젝트 팀 에이전트 (부서가 아닌 에이전트 중심).

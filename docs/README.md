@@ -47,7 +47,7 @@
 |------|------|
 | [agent-performance-audit.md](strategy/agent-performance-audit.md) | 에이전트 실행 성능 감사 — 병목 10개, Phase 1 완료 |
 | [bigger-ide-vision.md](strategy/bigger-ide-vision.md) | "더 큰 IDE" 전략 비전 |
-| [agent-flow-graph-design.md](strategy/agent-flow-graph-design.md) | Agent Flow Graph SVG 구현 설계 (구현 예정) |
+| [agent-flow-graph-design.md](strategy/agent-flow-graph-design.md) | Agent Flow Graph SVG 구현 설계 (구현 완료) |
 | [agent-persona-system.md](strategy/agent-persona-system.md) | 에이전트 페르소나 시스템 — 유명인 10명 카탈로그 |
 
 ---

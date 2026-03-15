@@ -1,6 +1,6 @@
 # AgentDesk — UI 화면 & 인터랙션 명세
 
-> **최종 업데이트:** 2026-03-14 (macOS 바탕화면 OS 구조로 전면 개편)
+> **최종 업데이트:** 2026-03-15 (Composition 탭 추가, ReplWindow openWindows 반영)
 > 메뉴바 + 데스크톱 아이콘 + 위젯 + Dock + 앱 창 구조
 > **디자인 참조:** `DESIGN.md` (CSS 변수), `AI-GUIDE.md` (개발 원칙)
 
@@ -168,7 +168,7 @@ AgentDesk는 macOS 바탕화면 은유로 설계된다. 사이드바가 없다.
 **파일:** `src/components/windows/WorkflowWindow.tsx`
 
 ```
-[  Workflow Builder  |  Scheduled Tasks  ]
+[  Workflow Builder  |  Scheduled Tasks  |  Composition  ]
 ```
 
 **Workflow Builder 탭**
@@ -182,6 +182,14 @@ AgentDesk는 macOS 바탕화면 은유로 설계된다. 사이드바가 없다.
 - **파일:** `src/components/scheduled-tasks/ScheduledTasksPanel.tsx`
 - 반복·예약 실행 태스크 목록
 - 다음 실행 시간, 주기, 담당 에이전트 표시
+
+**Composition 탭** _(2026-03-15 추가)_
+- **파일:** `src/components/agent-composition/AgentCompositionBuilder.tsx`
+- **의존성:** `@xyflow/react` v12
+- 에이전트 역할(role) 기반 드래그-드롭 조합 빌더
+- 노드: `CompAgentNode` — role별 상단 테두리 색상 구분
+- 실행: `AgentCompositionRunModal` — 의존관계 포함 다중 태스크 생성
+- 템플릿 저장/불러오기: `/api/composition-templates` CRUD
 
 ---
 
@@ -443,7 +451,7 @@ App.tsx
 
 ```typescript
 // uiStore.ts
-openWindows: Set<"workflow"|"library"|"settings"|"chat"|"agent-manager">
+openWindows: Set<"workflow"|"library"|"settings"|"chat"|"agent-manager"|"repl">
 widgetLayout: WidgetConfig[]    // 위젯 위치·크기·표시 여부
 desktopIconLayout: IconConfig[] // 아이콘 위치
 selectedAgentId: string | null  // AgentDetail 패널
