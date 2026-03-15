@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import logger from "../../lib/logger";
+import logger from "../../../lib/logger";
 import { sendDeliverableFiles } from "../../../gateway/client.ts";
 import { resolveWorkflowPackKeyForTask } from "../packs/task-pack-resolver.ts";
 import { triggerWebhooks } from "../../routes/core/webhooks.ts";

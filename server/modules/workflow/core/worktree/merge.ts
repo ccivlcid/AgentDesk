@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import logger from "../../../lib/logger";
+import logger from "../../../../lib/logger";
 import { decryptSecret } from "../../../../oauth/helpers.ts";
 import type { WorktreeInfo } from "./lifecycle.ts";
 import {

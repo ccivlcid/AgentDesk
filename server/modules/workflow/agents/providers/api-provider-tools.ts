@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import type { ChildProcess } from "node:child_process";
 import { decryptSecret } from "../../../../oauth/helpers.ts";
-import logger from "../../../lib/logger";
+import logger from "../../../../lib/logger";
 import type { ApiProviderRow } from "./types.ts";
 
 type DbLike = {

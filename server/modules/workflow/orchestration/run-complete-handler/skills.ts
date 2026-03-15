@@ -9,7 +9,7 @@
 import { randomUUID } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-import { classifySkillCategory } from "../../routes/ops/custom-skills.ts";
+import { classifySkillCategory } from "../../../routes/ops/custom-skills.ts";
 
 interface ExtractSkillsDeps {
   db: any;
