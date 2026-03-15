@@ -144,7 +144,7 @@ function detectSkillLinkStateFromFilesystem(agent: string, candidates: string[])
 }
 
 export function createSkillLearnCore(ctx: RuntimeContext) {
-  const { db, execWithTimeout } = ctx;
+  const { db, execWithTimeout, broadcast } = ctx;
   const skillLearnJobs = new Map<string, SkillLearnJob>();
 
   function pruneSkillLearnJobs(now = Date.now()): void {
@@ -302,6 +302,7 @@ export function createSkillLearnCore(ctx: RuntimeContext) {
     } catch (err) {
       logger.warn(`[skills.learn] failed to record queued history: ${String(err)}`);
     }
+    try { broadcast("skill_learn_job_update", job); } catch { /* ignore */ }
 
     setTimeout(() => {
       job.status = "running";
@@ -312,6 +313,7 @@ export function createSkillLearnCore(ctx: RuntimeContext) {
       } catch (err) {
         logger.warn(`[skills.learn] failed to record running history: ${String(err)}`);
       }
+      try { broadcast("skill_learn_job_update", job); } catch { /* ignore */ }
 
       let child;
       try {
@@ -336,6 +338,7 @@ export function createSkillLearnCore(ctx: RuntimeContext) {
         } catch (historyErr) {
           logger.warn(`[skills.learn] failed to record spawn error history: ${String(historyErr)}`);
         }
+        try { broadcast("skill_learn_job_update", job); } catch { /* ignore */ }
         pruneSkillLearnJobs();
         return;
       }
@@ -344,9 +347,11 @@ export function createSkillLearnCore(ctx: RuntimeContext) {
       child.stderr?.setEncoding("utf8");
       child.stdout?.on("data", (chunk: string | Buffer) => {
         appendSkillLearnLogs(job, String(chunk));
+        try { broadcast("skill_learn_job_update", job); } catch { /* ignore */ }
       });
       child.stderr?.on("data", (chunk: string | Buffer) => {
         appendSkillLearnLogs(job, String(chunk));
+        try { broadcast("skill_learn_job_update", job); } catch { /* ignore */ }
       });
       child.on("error", (err: Error) => {
         job.status = "failed";
@@ -363,6 +368,7 @@ export function createSkillLearnCore(ctx: RuntimeContext) {
         } catch (historyErr) {
           logger.warn(`[skills.learn] failed to record error history: ${String(historyErr)}`);
         }
+        try { broadcast("skill_learn_job_update", job); } catch { /* ignore */ }
         pruneSkillLearnJobs();
       });
       child.on("close", (code: number | null, signal: NodeJS.Signals | null) => {
@@ -384,6 +390,7 @@ export function createSkillLearnCore(ctx: RuntimeContext) {
         } catch (historyErr) {
           logger.warn(`[skills.learn] failed to record close history: ${String(historyErr)}`);
         }
+        try { broadcast("skill_learn_job_update", job); } catch { /* ignore */ }
         pruneSkillLearnJobs();
       });
     }, 0);

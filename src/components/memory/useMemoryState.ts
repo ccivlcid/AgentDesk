@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { MemoryEntry, MemoryCategory, Department, Agent } from "../../types";
+import { useWebSocket } from "../../hooks/useWebSocket";
 import {
   getMemoryEntries,
   createMemoryEntry,
@@ -7,7 +8,6 @@ import {
   toggleMemoryEntry,
   deleteMemoryEntry,
   startMemoryLearning,
-  getMemoryLearningJob,
   getAvailableLearnedMemories,
   unlearnMemory,
   type MemoryFilters,
@@ -34,6 +34,7 @@ interface UseMemoryStateOptions {
 }
 
 export function useMemoryState({ agents, departments, t, filters }: UseMemoryStateOptions) {
+  const { on: onWsEvent } = useWebSocket();
   const [entries, setEntries] = useState<MemoryEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -308,16 +309,17 @@ export function useMemoryState({ agents, departments, t, filters }: UseMemorySta
     [learnInProgress],
   );
 
-  // ── Job polling ─────────────────────────────────────────────────
+  // ── Job real-time updates via WebSocket ─────────────────────────
   useEffect(() => {
     if (!learnJob || (learnJob.status !== "queued" && learnJob.status !== "running")) return;
-    const timer = window.setInterval(() => {
-      getMemoryLearningJob(learnJob.id)
-        .then(setLearnJob)
-        .catch(() => {});
-    }, 1500);
-    return () => window.clearInterval(timer);
-  }, [learnJob]);
+    const activeJobId = learnJob.id;
+    return onWsEvent("memory_learn_job_update", (payload) => {
+      const updated = payload as MemoryLearnJob;
+      if (updated?.id === activeJobId) {
+        setLearnJob(updated);
+      }
+    });
+  }, [learnJob, onWsEvent]);
 
   // Optimistic update: immediately reflect learned rows on success before server refetch
   useEffect(() => {

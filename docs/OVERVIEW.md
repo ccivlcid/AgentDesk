@@ -183,7 +183,7 @@ Managing these four elements **per project** allows the same agent to behave dif
 Agent spawn & management         ████████████████████ 100% (timeout enforcement + orphan batching complete)
 Multi-agent orchestration        ████████████████████ 100% (scheduler dynamic timeout + orphan recovery complete)
 Database & infrastructure        ██████████████████░░ 90%
-Skill learning & memory          █████████████████░░░ 85%
+Skill learning & memory          ████████████████████ 100% (WebSocket real-time streaming + auto-extraction complete)
 Heartbeat & anomaly detection    ███████████████████░ 90% (AlertsWidget real-time polling complete)
 Scheduling                       ████████████████████ 100% (dynamic timeout scheduler complete)
 UI/UX monitoring                 ████████████████████ 100% (Phase 4~5 complete + FileTree widget added)

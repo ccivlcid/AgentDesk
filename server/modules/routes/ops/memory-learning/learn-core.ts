@@ -62,7 +62,7 @@ function resolveAgentMemoryDir(agent: string): string | null {
 }
 
 export function createMemoryLearnCore(ctx: RuntimeContext) {
-  const { db } = ctx;
+  const { db, broadcast } = ctx;
   const memoryLearnJobs = new Map<string, MemoryLearnJob>();
 
   function pruneMemoryLearnJobs(now = Date.now()): void {
@@ -185,6 +185,7 @@ export function createMemoryLearnCore(ctx: RuntimeContext) {
     } catch (err) {
       logger.warn(`[memory-learn] failed to record queued history: ${String(err)}`);
     }
+    try { broadcast("memory_learn_job_update", job); } catch { /* ignore */ }
 
     setTimeout(() => {
       job.status = "running";
@@ -195,6 +196,7 @@ export function createMemoryLearnCore(ctx: RuntimeContext) {
       } catch (err) {
         logger.warn(`[memory-learn] failed to record running history: ${String(err)}`);
       }
+      try { broadcast("memory_learn_job_update", job); } catch { /* ignore */ }
 
       const fileContent = `# ${memoryTitle}\n<!-- AgentDesk Memory: ${memoryId} | Category: ${category} | Priority: ${priority} -->\n\n${memoryContent}\n`;
       const errors: string[] = [];
@@ -240,6 +242,7 @@ export function createMemoryLearnCore(ctx: RuntimeContext) {
       } catch (historyErr) {
         logger.warn(`[memory-learn] failed to record completion history: ${String(historyErr)}`);
       }
+      try { broadcast("memory_learn_job_update", job); } catch { /* ignore */ }
       pruneMemoryLearnJobs();
     }, 0);
 
