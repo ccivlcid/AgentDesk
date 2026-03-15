@@ -58,7 +58,7 @@ export default function ChatEditorModal({
         style={{ borderRadius: 10, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", boxShadow: "0 20px 50px rgba(0,0,0,0.4)" }}
         onClick={(e) => e.stopPropagation()}
       >
-        <HeaderModalChrome title={title} onClose={closeEditorModal} />
+        <HeaderModalChrome macOSStyle={false} title={title} onClose={closeEditorModal} />
         <div className="p-4 space-y-3 overflow-y-auto flex-1 min-h-0">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>

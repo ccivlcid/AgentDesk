@@ -198,6 +198,7 @@ export default function GroupChatPanel({ agents, initialAgentIds, onClose }: Gro
         }}
       >
         <HeaderModalChrome
+          macOSStyle={false}
           title={t({ ko: "그룹 채팅", en: "Group Chat", ja: "グループチャット", zh: "群聊" })}
           rightSlot={
             selectedIds.size > 0 ? (

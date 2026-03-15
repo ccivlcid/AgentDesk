@@ -94,7 +94,7 @@ export default function ApiAssignModal({ t, localeTag, apiState }: ApiAssignModa
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        <HeaderModalChrome title={title} onClose={() => setApiAssignTarget(null)} />
+        <HeaderModalChrome macOSStyle={false} title={title} onClose={() => setApiAssignTarget(null)} />
         <div className="border-b border-[var(--th-border)] bg-[var(--th-bg-panel)] px-4 py-2">
           <p className="truncate text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>{apiAssignTarget.model}</p>
         </div>
