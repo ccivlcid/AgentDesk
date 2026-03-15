@@ -108,11 +108,15 @@ export default function TerminalPanel({
           borderTopRightRadius: 10,
         }}
       >
-        <div className="flex flex-shrink-0 items-center gap-1.5">
-          <button type="button" onClick={onClose} aria-label="Close" className="h-3 w-3 flex-shrink-0 rounded-full border-0 transition-opacity hover:opacity-90" style={{ background: "#ff5f57" }} />
-          <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#ffbd2e" }} />
-          <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#27c93f" }} />
-        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close"
+          className="flex-shrink-0 transition-opacity hover:opacity-70"
+          style={{ background: "none", border: "none", cursor: "pointer", fontSize: "14px", lineHeight: 1, color: "var(--th-text-muted)", padding: "0 2px" }}
+        >
+          ✕
+        </button>
         <div style={{ width: 1, height: 22, background: "var(--th-border)", flexShrink: 0, margin: "0 2px" }} />
       {/* Header content */}
         <div className="flex items-center gap-2 flex-1 min-w-0">
