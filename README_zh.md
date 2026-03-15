@@ -207,7 +207,7 @@ pnpm dev                  # 前端(8800) + API服务器(8790)
 | 文档 | 内容 |
 |------|------|
 | [`docs/OVERVIEW.md`](docs/OVERVIEW.md) | 架构概述 + 功能完成度路线图 |
-| [`docs/design/AI-GUIDE.md`](docs/design/AI-GUIDE.md) | AI开发者设计原则 |
+| [`docs/architecture/ARCHITECTURE-AUDIT-2026-Q1.md`](docs/architecture/ARCHITECTURE-AUDIT-2026-Q1.md) | 架构与后端审计报告 |
 | [`docs/design/UI-SCREENS.md`](docs/design/UI-SCREENS.md) | 完整界面和模态框规范 |
 | [`docs/specs/api.md`](docs/specs/api.md) | REST API完整规范 |
 

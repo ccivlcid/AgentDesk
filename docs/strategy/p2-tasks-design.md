@@ -409,6 +409,5 @@ function broadcastCliOutput(taskId: string, line: string): void {
 
 - 마이그레이션 패턴: `server/modules/bootstrap/schema/versioned-migrations.ts`
 - DB 테이블 전체 목록: `server/modules/bootstrap/schema/base-schema.ts`
-- 서버 진입점 맵: `docs/design/AI-GUIDE.md` 섹션 11
-- 프론트 진입점 맵: `docs/design/AI-GUIDE.md` 섹션 0
-- 코드베이스 현황: `docs/OVERVIEW.md` 섹션 7
+- 서버 진입점 맵: `CLAUDE.md` 핵심 파일 지도 섹션
+- 코드베이스 현황: `docs/OVERVIEW.md` 섹션 2~6

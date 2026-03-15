@@ -2,7 +2,7 @@
 
 > **최종 업데이트:** 2026-03-15 (6개 macOS UX 기능 추가: Spotlight·Jiggle·QuickLook·MissionControl·알림슬라이드·앱메뉴)
 > 메뉴바 + 데스크톱 아이콘 + 위젯 + Dock + 앱 창 구조
-> **디자인 참조:** `DESIGN.md` (CSS 변수), `AI-GUIDE.md` (개발 원칙)
+> **디자인 참조:** `DESIGN.md` (CSS 변수)
 
 ---
 

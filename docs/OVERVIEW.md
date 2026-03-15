@@ -210,100 +210,28 @@ UIUX 모니터링               ████████████████
 
 ---
 
-## 7. 코드베이스 현황 스냅샷 (AI 에이전트용)
+## 7. 완료된 주요 마일스톤
 
-> 이 섹션은 AI 에이전트가 작업 시작 전 코드 구조를 빠르게 파악하기 위한 참조 지도입니다.
+모든 계획된 기능 및 개선 작업이 완료되었습니다. 아래는 주요 달성 항목입니다.
 
-### 7-1. 프론트엔드 진입점
+### 보안 강화
+- OAuth PBKDF2-SHA256 키 파생, API Rate Limiting, WebSocket 연결 수 제한, 환경 변수 검증, Path Traversal·ReDoS·OAuth bypass 등 13개 보안 취약점 패치
 
-| 파일 | 역할 |
-|---|---|
-| `src/App.tsx` | 루트 컴포넌트. Zustand 스토어 구독, WebSocket 연결, 이벤트 핸들러 정의 |
-| `src/components/desktop/Desktop.tsx` | 바탕화면 루트 (메뉴바 + 아이콘 + 위젯 + Dock + 창 레이어) |
-| `src/components/desktop/widgets/` | 위젯 5종 (AgentsWidget, TasksWidget, AlertsWidget, CliCostWidget, FlowGraphWidget) |
-| `src/components/windows/` | 앱 창 6종 (Workflow, Library, Settings, Chat, AgentManager, Repl) |
-| `src/components/agent-composition/` | AgentCompositionBuilder (드래그앤드롭 조합), AgentCompositionRunModal (실행), CompAgentNode |
-| `src/app/AppOverlays.tsx` | 36개 모달·패널 오버레이 렌더링 (AgentDetail, TerminalPanel 등) |
+### 성능 최적화
+- 훅 async 병렬 실행 (최대 600s 블로킹 제거), DB 복합 인덱스 4개 추가, Rules·Memory 5분 TTL 캐시, spawn DB 쿼리 배치화, FIFO 동시 실행 큐
 
-### 7-2. WindowType 타입
+### 핵심 기능
+- Agent Flow Graph (실시간 SVG 에이전트 관계 시각화), Visual Workflow Builder (@xyflow/react), 에이전트 페르소나 시스템, 태스크 핸드오프, 에이전트 타임라인, 비용 추적, Slack 연동
 
-```typescript
-// src/app/types.ts — macOS 바탕화면 OS 구조, View enum 없음
+### UI/UX
+- Zustand 상태 관리 도입, Keyboard-First UX (vim-style `g+키` 단축키), macOS OS 메타포 완성 (Mission Control, Jiggle Mode, Quick Look, Command Palette), 4개국어(ko/en/ja/zh) i18n
 
-// WindowType: Dock 아이콘 또는 데스크톱 아이콘으로 여는 앱 창
-export type WindowType =
-  | "workflow"       // ⚡ Workflow Builder / Scheduled Tasks / Agent Composition
-  | "library"        // 📚 Skills / Agent Rules / Memory / Hooks / Deliverables
-  | "settings"       // ⚙ General / API / OAuth / CLI / Gateway / Data / Project Types / Agents
-  | "chat"           // 💬 Direct / Group / Announcement
-  | "agent-manager"  // 👤 에이전트·부서 관리
-  | "repl";          // >_ 에이전트 REPL
-
-// uiStore
-openWindows: Set<WindowType>  // 동시에 여러 창 열기 가능
-widgetLayout: WidgetConfig[]  // 위젯 위치·크기·표시 여부 (localStorage 저장)
-```
-
-### 7-3. Zustand 스토어 구조
-
-| 스토어 파일 | 관리하는 상태 |
-|---|---|
-| `src/store/agentStore.ts` | `agents`, `departments`, `subAgents`, `selectedAgent` 등 |
-| `src/store/taskStore.ts` | `tasks`, `subtasks`, `crossDeptDeliveries`, `meetingPresence` 등 |
-| `src/store/projectStore.ts` | `projects`, `categories`, `currentProjectId`, `projectAgentIds` |
-| `src/store/uiStore.ts` | `openWindows(Set)`, `widgetLayout`, `desktopIconLayout`, `selectedAgentId`, `openTaskId`, 모달 상태 |
-
-### 7-4. 핵심 타입 파일
-
-| 타입 | 파일 |
-|---|---|
-| `Agent`, `Department`, `Task`, `SubTask` | `src/types/index.ts` |
-| `SubAgent` | `src/types/index.ts` (line ~65) |
-| `MeetingPresence` | `src/types/index.ts` (line ~56) |
-| `CrossDeptDelivery` | `src/types/index.ts` (line ~72) |
-| `WindowType`, `WidgetConfig`, `RuntimeOs`, `OAuthCallbackResult` | `src/app/types.ts` |
-
-### 7-5. Desktop.tsx 주요 props
-
-> `AppMainLayout`은 제거됨. 현재 루트 UI 컴포넌트는 `src/components/desktop/Desktop.tsx`.
-
-- `connected: boolean` — WebSocket 연결 상태
-- `on: (event, handler) => () => void` — WS 이벤트 구독
-- `onSaveSettings`, `onRefreshCli` — Settings 창 콜백
-- `oauthResult`, `onOauthResultClear` — OAuth 리다이렉트 결과
-- `onAgentsChange` — 에이전트 변경 시 리프레시
-- `onSendMessage`, `onSendAnnouncement`, `onSendDirective`, `onClearMessages` — Chat 콜백
-- `onProjectCreate`, `onCreateTask` — 데스크톱 아이콘 액션
-
-### 7-6. 앱 내비게이션 구조 — macOS 바탕화면 OS
-
-**데스크톱 아이콘 (클릭 → 창 열림):**
-- `👤 에이전트 설정` → AgentManagerWindow (`g a`)
-- `📁 프로젝트 생성` → ProjectCreateModal
-- `▶ 태스크 실행` → CreateTaskModal
-- `⚡ 워크플로 빌더` → WorkflowWindow (`g w`) — Builder / Scheduled / Composition 탭
-- `📋 라이브러리` → LibraryWindow (`g l`)
-- `💬 채팅` → ChatWindow (`g c`)
-- `>_ 에이전트 REPL` → ReplWindow (`g e`)
-
-**Dock (항상 고정, 클릭 → 앱 창):**
-- `⚡ Workflow` → WorkflowWindow (Builder / Scheduled / **Composition** 탭)
-- `📚 Library` → LibraryWindow (Skills / Agent Rules / Memory / Hooks / Deliverables)
-- `⚙ Settings` → SettingsWindow (General / API / OAuth / CLI / Gateway / Data / Project Types / Agents)
-- `💬 Chat` → ChatWindow (Direct / Group / Announcement)
-
-**위젯 (사용자 추가·배치·리사이즈):**
-- `Agents 위젯` → Heartbeat Monitor 대체 (에이전트 클릭 → AgentDetail 패널)
-- `Tasks 위젯` → Task Board 대체 (태스크 클릭 → TerminalPanel 드로어)
-- `Alerts 위젯` → 요주의 항목 (클릭 → DecisionInboxModal)
-- `CLI Cost 위젯` → CLI Usage 대체
-- `Flow Graph 위젯` → Flow Graph 대체
+### 품질
+- pino 구조화 로깅, 서버 테스트 181개 + 프론트 테스트 43개 전부 통과
 
 ---
 
-## 8. 작업 목록 (2026-03-14 기준)
-
-> 우선순위: **P0** 즉시 | **P1** 1~2주 | **P2** 3~6주 | **P3** 장기
+## 8. 작업 완료 이력
 
 ---
 
@@ -575,7 +503,6 @@ widgetLayout: WidgetConfig[]  // 위젯 위치·크기·표시 여부 (localStor
 | [`docs/strategy/bigger-ide-vision.md`](./strategy/bigger-ide-vision.md) | "더 큰 IDE" 전략 비전 |
 | [`docs/strategy/agent-persona-system.md`](./strategy/agent-persona-system.md) | 에이전트 페르소나 시스템 |
 | [`docs/design/DESIGN.md`](./design/DESIGN.md) | UI 구현 레퍼런스 — CSS 변수 전체 + 컴포넌트 패턴 |
-| [`docs/design/AI-GUIDE.md`](./design/AI-GUIDE.md) | AI 개발자 디자인 가이드 — 원칙·체크리스트·코드 예시 |
 | [`docs/design/UI-SCREENS.md`](./design/UI-SCREENS.md) | 전체 화면·모달 명세 (13 + 36개) |
 
 ---

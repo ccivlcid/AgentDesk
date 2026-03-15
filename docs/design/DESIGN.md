@@ -410,5 +410,4 @@ slate/gray 유틸리티가 `--th-*`로 재정의됨:
 ## 10. 관련 문서
 
 - **UI-SCREENS.md** — 전체 화면·모달 상세 명세 (13개 메인 화면 + 36개 오버레이).
-- **AI-GUIDE.md** — AI 개발자용 디자인 원칙 + UX 체크리스트.
 - **agent-flow-graph-design.md** — 에이전트 플로우 그래프 설계 (상세 SVG 명세).

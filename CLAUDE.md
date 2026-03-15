@@ -209,7 +209,7 @@ runGit(dir, ["config", "commit.gpgsign", "false"]);
 | 문서 | 내용 |
 |------|------|
 | [`docs/OVERVIEW.md`](docs/OVERVIEW.md) | 전체 아키텍처 개요 + 우선순위 로드맵 |
-| [`docs/design/AI-GUIDE.md`](docs/design/AI-GUIDE.md) | **AI 개발자 디자인 원칙** (컴포넌트 패턴, 체크리스트) |
+| [`docs/architecture/ARCHITECTURE-AUDIT-2026-Q1.md`](docs/architecture/ARCHITECTURE-AUDIT-2026-Q1.md) | 아키텍처 & 백엔드 감사 보고서 |
 | [`docs/design/UI-SCREENS.md`](docs/design/UI-SCREENS.md) | 전체 화면·모달 명세 (macOS 바탕화면 OS 구조) |
 | [`docs/design/DESIGN.md`](docs/design/DESIGN.md) | CSS 변수 전체 + 컴포넌트 스타일 규칙 |
 | [`docs/specs/api.md`](docs/specs/api.md) | REST API 전체 명세 (v1.2.6) |

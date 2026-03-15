@@ -66,7 +66,6 @@ AgentDesk
 │   ├── design/
 │   │   ├── DESIGN.md                 ← CSS 변수 + 컴포넌트 패턴 (주요 참조 문서)
 │   │   ├── UI-SCREENS.md             ← 13개 화면 + 36개 모달 명세
-│   │   └── AI-GUIDE.md               ← AI 개발자용 디자인 원칙 + 체크리스트
 │   ├── reference/
 │   │   └── (비어 있음 — exe-packaging-plan.md 제거됨)
 │   ├── reports/

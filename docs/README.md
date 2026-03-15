@@ -17,7 +17,6 @@
 | 문서 | 설명 |
 |------|------|
 | [DESIGN.md](design/DESIGN.md) | **UI 구현 레퍼런스** — CSS 변수 전체 + 컴포넌트 패턴 (macOS Hybrid, 색·폰트·규칙) |
-| [AI-GUIDE.md](design/AI-GUIDE.md) | **AI 개발자 가이드** — 디자인 원칙, 체크리스트, 컴포넌트 예시 코드 |
 | [UI-SCREENS.md](design/UI-SCREENS.md) | **화면·모달 목록** — 13개 메인 화면 + 36개 오버레이 상세 명세 |
 
 ---

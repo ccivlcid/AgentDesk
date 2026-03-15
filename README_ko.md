@@ -255,7 +255,7 @@ pnpm dev                  # 프론트(8800) + API 서버(8790) 동시 시작
 | 문서 | 내용 |
 |------|------|
 | [`docs/OVERVIEW.md`](docs/OVERVIEW.md) | 아키텍처 개요 + 기능 완성도 로드맵 |
-| [`docs/design/AI-GUIDE.md`](docs/design/AI-GUIDE.md) | AI 개발자 디자인 원칙 |
+| [`docs/architecture/ARCHITECTURE-AUDIT-2026-Q1.md`](docs/architecture/ARCHITECTURE-AUDIT-2026-Q1.md) | 아키텍처 & 백엔드 감사 보고서 |
 | [`docs/design/UI-SCREENS.md`](docs/design/UI-SCREENS.md) | 전체 화면·모달 명세 |
 | [`docs/design/DESIGN.md`](docs/design/DESIGN.md) | CSS 변수 + 컴포넌트 스타일 규칙 |
 | [`docs/specs/api.md`](docs/specs/api.md) | REST API 전체 명세 |

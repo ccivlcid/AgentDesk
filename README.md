@@ -188,7 +188,7 @@ Open **http://localhost:8800** in your browser.
 | Document | Description |
 |----------|-------------|
 | [`docs/OVERVIEW.md`](docs/OVERVIEW.md) | Architecture overview + feature completion roadmap |
-| [`docs/design/AI-GUIDE.md`](docs/design/AI-GUIDE.md) | AI developer design principles |
+| [`docs/architecture/ARCHITECTURE-AUDIT-2026-Q1.md`](docs/architecture/ARCHITECTURE-AUDIT-2026-Q1.md) | Architecture & backend audit report |
 | [`docs/design/UI-SCREENS.md`](docs/design/UI-SCREENS.md) | Full screen & modal specifications |
 | [`docs/design/DESIGN.md`](docs/design/DESIGN.md) | CSS variables + component style rules |
 | [`docs/specs/api.md`](docs/specs/api.md) | REST API specification |

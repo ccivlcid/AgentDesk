@@ -208,7 +208,7 @@ pnpm dev                  # フロントエンド(8800) + APIサーバー(8790)
 | ドキュメント | 内容 |
 |------------|------|
 | [`docs/OVERVIEW.md`](docs/OVERVIEW.md) | アーキテクチャ概要 + 機能完成度ロードマップ |
-| [`docs/design/AI-GUIDE.md`](docs/design/AI-GUIDE.md) | AI開発者向けデザイン原則 |
+| [`docs/architecture/ARCHITECTURE-AUDIT-2026-Q1.md`](docs/architecture/ARCHITECTURE-AUDIT-2026-Q1.md) | アーキテクチャ & バックエンド監査レポート |
 | [`docs/design/UI-SCREENS.md`](docs/design/UI-SCREENS.md) | 全画面・モーダル仕様 |
 | [`docs/specs/api.md`](docs/specs/api.md) | REST API仕様 |
 
