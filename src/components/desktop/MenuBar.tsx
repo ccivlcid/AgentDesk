@@ -17,7 +17,7 @@ interface MenuBarProps {
   onOpenWallpaperPicker?: () => void;
   onOpenWidgetPicker?: () => void;
   onOpenMissionControl?: () => void;
-  onOpenShortcuts?: () => void;
+  onOpenUserGuide?: () => void;
 }
 
 export default function MenuBar({
@@ -32,7 +32,7 @@ export default function MenuBar({
   onOpenWallpaperPicker,
   onOpenWidgetPicker,
   onOpenMissionControl,
-  onOpenShortcuts,
+  onOpenUserGuide,
 }: MenuBarProps) {
   const [now, setNow] = useState(() => new Date());
   const [appMenuOpen, setAppMenuOpen] = useState(false);
@@ -169,14 +169,14 @@ export default function MenuBar({
 
             <div style={menuSepStyle} />
 
-            {/* 키보드 단축키 */}
+            {/* 유저 가이드 */}
             <button
               style={menuItemStyle}
-              onClick={() => menuAction(onOpenShortcuts)}
+              onClick={() => menuAction(onOpenUserGuide)}
               onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(245,158,11,0.12)"; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "none"; }}
             >
-              <span>키보드 단축키</span>
+              <span>📖 유저 가이드</span>
             </button>
 
             {/* Mission Control */}
@@ -228,6 +228,42 @@ export default function MenuBar({
           ${totalCostToday}
         </button>
       )}
+
+      {/* 유저 가이드 ? 버튼 */}
+      <button
+        type="button"
+        onClick={onOpenUserGuide}
+        title="유저 가이드 (?)"
+        style={{
+          width: 20,
+          height: 20,
+          borderRadius: "50%",
+          border: "1px solid var(--th-border)",
+          background: "transparent",
+          color: "rgba(255,255,255,0.45)",
+          fontFamily: mono,
+          fontSize: 11,
+          fontWeight: 700,
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexShrink: 0,
+          transition: "background 0.15s, color 0.15s",
+        }}
+        onMouseEnter={(e) => {
+          const el = e.currentTarget as HTMLButtonElement;
+          el.style.background = "rgba(245,158,11,0.15)";
+          el.style.color = "var(--th-accent)";
+        }}
+        onMouseLeave={(e) => {
+          const el = e.currentTarget as HTMLButtonElement;
+          el.style.background = "transparent";
+          el.style.color = "rgba(255,255,255,0.45)";
+        }}
+      >
+        ?
+      </button>
 
       {/* 알림 */}
       {notificationSlot}

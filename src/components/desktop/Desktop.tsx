@@ -7,6 +7,7 @@ import { useAgentStore } from "../../store/agentStore";
 import { useTaskStore } from "../../store/taskStore";
 import CommandPalette from "../CommandPalette";
 import KeyboardShortcutsGuide from "../KeyboardShortcutsGuide";
+import UserGuidePanel from "./UserGuidePanel";
 import MenuBar from "./MenuBar";
 import DesktopIcon, { type DesktopIconDef } from "./DesktopIcon";
 import Widget from "./Widget";
@@ -108,6 +109,7 @@ export default function Desktop({
   const [showWidgetPicker, setShowWidgetPicker] = useState(false);
   const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [showShortcutsGuide, setShowShortcutsGuide] = useState(false);
+  const [showUserGuide, setShowUserGuide] = useState(false);
   const [showWallpaperPicker, setShowWallpaperPicker] = useState(false);
   const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number } | null>(null);
   const [projectCtxMenu, setProjectCtxMenu] = useState<{ x: number; y: number; projectId: string; projectName: string } | null>(null);
@@ -193,9 +195,9 @@ export default function Desktop({
         return;
       }
 
-      // ? — ShortcutsGuide
+      // ? — UserGuide
       if (e.key === "?" && !e.ctrlKey && !e.metaKey) {
-        setShowShortcutsGuide((v) => !v);
+        setShowUserGuide((v) => !v);
         return;
       }
 
@@ -290,7 +292,7 @@ export default function Desktop({
         onOpenWallpaperPicker={() => setShowWallpaperPicker(true)}
         onOpenWidgetPicker={() => setShowWidgetPicker(true)}
         onOpenMissionControl={() => setMissionControlOpen(true)}
-        onOpenShortcuts={() => setShowShortcutsGuide(true)}
+        onOpenUserGuide={() => setShowUserGuide(true)}
       />
 
       {/* 바탕화면 영역 (메뉴바 아래, Dock 위) */}
@@ -570,11 +572,11 @@ export default function Desktop({
         }}
         onCreateTask={() => { setShowCommandPalette(false); onCreateTask(); }}
         onSelectProject={(p) => { setShowCommandPalette(false); setCurrentProjectId(p.id); }}
-        onOpenShortcutsGuide={() => { setShowCommandPalette(false); setShowShortcutsGuide(true); }}
+        onOpenShortcutsGuide={() => { setShowCommandPalette(false); setShowUserGuide(true); }}
       />
 
-      {/* 단축키 가이드 */}
-      <KeyboardShortcutsGuide open={showShortcutsGuide} onClose={() => setShowShortcutsGuide(false)} />
+      {/* 유저 가이드 패널 */}
+      <UserGuidePanel open={showUserGuide} onClose={() => setShowUserGuide(false)} />
 
       {/* 기존 오버레이/모달 (TaskPanel, DecisionInbox 등) */}
       {children}
