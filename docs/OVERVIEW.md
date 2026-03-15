@@ -1,35 +1,35 @@
-# AgentDesk — 프로젝트 OS 개요
+# AgentDesk — Project OS Overview
 
-> **핵심 컨셉:** 다양한 AI 에이전트를 등록해 개발 작업을 수행할 때,
-> UI/UX를 통해 모든 과정을 실시간으로 모니터링하고 제어한다.
-
----
-
-## 1. 왜 AgentDesk인가
-
-### 근본 문제
-
-AI 에이전트가 여러 개 돌아갈 때:
-- 어떤 에이전트가 무슨 태스크를 하고 있는지 보이지 않는다
-- 룰·메모리·훅·스킬이 어디에 적용되는지 알 수 없다
-- 에이전트 간 협업 흐름을 추적할 수 없다
-- 문제가 생겨도 어디서 왜 생겼는지 파악하기 어렵다
-
-### AgentDesk의 답
-
-```
-에이전트는 CLI 프로세스다.
-프로젝트는 그 에이전트들이 일하는 OS다.
-UI/UX는 그 OS의 제어판이다.
-```
-
-개발자·팀 리드가 **여러 에이전트를 동시에 돌리면서**, 각 에이전트의 실행 상태, 출력, 의사결정, 협업 흐름을 **한 화면에서 실시간으로 모니터링**할 수 있게 한다.
+> **Core concept:** Register multiple AI agents to carry out development work,
+> and monitor and control every step of the process in real time through the UI/UX.
 
 ---
 
-## 2. Project OS 개념
+## 1. Why AgentDesk
 
-AgentDesk는 단순한 태스크 관리 툴이 아니라 **에이전트를 위한 운영체제**다.
+### The Problem
+
+When multiple AI agents are running simultaneously:
+- It is impossible to see which agent is working on which task
+- There is no way to know where rules, memory, hooks, and skills are being applied
+- Collaboration flow between agents cannot be tracked
+- When something goes wrong, it is difficult to identify where and why
+
+### AgentDesk's Answer
+
+```
+Agents are CLI processes.
+The project is the OS those agents work within.
+The UI/UX is the control panel for that OS.
+```
+
+AgentDesk lets developers and team leads **run multiple agents simultaneously** while **monitoring each agent's execution state, output, decision-making, and collaboration flow from a single screen in real time**.
+
+---
+
+## 2. Project OS Concept
+
+AgentDesk is not a simple task management tool — it is an **operating system for agents**.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -38,9 +38,9 @@ AgentDesk는 단순한 태스크 관리 툴이 아니라 **에이전트를 위�
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐       │
 │  │   PROJECT    │  │    AGENTS    │  │   LIBRARY    │       │
 │  │              │  │              │  │              │       │
-│  │ 목표·리스크   │  │ 에이전트 팀  │  │ Skills       │       │
-│  │ 게이트·산출물 │  │ 부서 구조    │  │ Rules        │       │
-│  │ 번다운 차트   │  │ 페르소나     │  │ Memory       │       │
+│  │ Goals·Risks  │  │ Agent Team   │  │ Skills       │       │
+│  │ Gates·Output │  │ Dept Struct  │  │ Rules        │       │
+│  │ Burndown     │  │ Personas     │  │ Memory       │       │
 │  │              │  │              │  │ Hooks        │       │
 │  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘       │
 │         │                 │                  │               │
@@ -49,465 +49,465 @@ AgentDesk는 단순한 태스크 관리 툴이 아니라 **에이전트를 위�
 │                    ┌──────▼───────┐                          │
 │                    │    TASKS     │                          │
 │                    │              │                          │
-│                    │ 태스크 보드   │                          │
-│                    │ 실행·스케줄   │                          │
-│                    │ 모니터 뷰    │                          │
+│                    │ Task Board   │                          │
+│                    │ Run·Schedule │                          │
+│                    │ Monitor View │                          │
 │                    └──────┬───────┘                          │
 │                           │                                  │
 │              ┌────────────▼────────────┐                     │
 │              │   MONITORING / UIUX     │                     │
 │              │                         │                     │
-│              │ 터미널 스트리밍          │                     │
-│              │ 에이전트 상태 실시간     │                     │
-│              │ CLI 사용량 추적          │                     │
-│              │ 이상 감지 알림          │                     │
+│              │ Terminal streaming      │                     │
+│              │ Agent status real-time  │                     │
+│              │ CLI usage tracking      │                     │
+│              │ Anomaly detection alerts│                     │
 │              └─────────────────────────┘                     │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### OS 계층 구조
+### OS Layer Hierarchy
 
 ```
 Organization
-  └── Department (부서 — 에이전트 그룹)
-        └── Agent (에이전트 — CLI 프로세스)
-              └── Task (태스크 — 실행 단위)
+  └── Department (agent group)
+        └── Agent (CLI process)
+              └── Task (execution unit)
 
-Category (프로젝트 유형 템플릿)
-  └── Project (프로젝트 — 작업 공간)
+Category (project type template)
+  └── Project (workspace)
         ├── Objectives / Risks / Gates / Outputs
-        └── project_agents (배정된 에이전트 팀)
+        └── project_agents (assigned agent team)
 ```
 
 ---
 
-## 3. 에이전트 모니터링 — UIUX가 보여주는 것
+## 3. Agent Monitoring — What the UI/UX Reveals
 
-AgentDesk의 핵심 가치는 **"보이지 않던 것을 보이게 만드는 UI"**다.
+The core value of AgentDesk is **"a UI that makes the invisible visible"**.
 
-### 실시간 모니터링 요소
+### Real-Time Monitoring Elements
 
-| 화면 | 모니터링 내용 |
+| View | What is monitored |
 |---|---|
-| **태스크 보드** | 전체 태스크 상태(대기/실행/완료/실패), 에이전트 배정 현황 |
-| **터미널 패널** | 에이전트 CLI 출력 실시간 스트리밍 (stdout) |
-| **에이전트 상세** | 현재 상태, 실행 중인 태스크, 스킬·룰·메모리 적용 현황 |
-| **현황 모니터** | 에이전트 전체 활동 대시보드, 이상 감지 |
-| **CLI 사용량** | 에이전트별 토큰 소비, 비용 추적 |
-| **태스크 리포트** | 완료된 태스크의 결과물·diff·로그 |
+| **Task Board** | Overall task status (pending/running/done/failed), agent assignment status |
+| **Terminal Panel** | Real-time streaming of agent CLI output (stdout) |
+| **Agent Detail** | Current state, running task, applied skills/rules/memory |
+| **Status Monitor** | Full agent activity dashboard, anomaly detection |
+| **CLI Usage** | Per-agent token consumption, cost tracking |
+| **Task Report** | Outputs, diffs, and logs for completed tasks |
 
-### 프로젝트 범위 Library 필터링
+### Project-Scoped Library Filtering
 
-에이전트를 프로젝트에 배정하면, 해당 프로젝트에서 보이는 스킬·룰·메모리·훅은 **그 프로젝트에 배정된 에이전트의 것만** 표시된다. 사용자가 "어떤 에이전트가 어떤 설정으로 돌아가는지"를 명확히 이해할 수 있다.
+When an agent is assigned to a project, the skills, rules, memory, and hooks visible within that project show **only those belonging to agents assigned to that project**. This lets users clearly understand "which agent is running with which configuration".
 
 ```
 GET /api/agent-rules?project_id=<id>
-  → 프로젝트 배정 에이전트의 룰 + 프로젝트 룰 + 글로벌 룰
-  (다른 프로젝트 에이전트의 룰은 보이지 않음)
+  → Rules for project-assigned agents + project rules + global rules
+  (rules for agents in other projects are not shown)
 ```
 
-동일하게 `/api/memory`, `/api/hooks`, `/api/skills/available`도 `project_id` 필터 적용.
+The same `project_id` filter applies to `/api/memory`, `/api/hooks`, and `/api/skills/available`.
 
 ---
 
-## 4. 에이전트 실행 파이프라인
+## 4. Agent Execution Pipeline
 
-사용자가 태스크를 실행하면 내부에서 일어나는 일:
+What happens internally when a user runs a task:
 
 ```
-사용자: "이 태스크 실행"
+User: "Run this task"
     │
     ▼
-① 에이전트 배정 (자동 또는 수동)
+① Agent assignment (automatic or manual)
     │
     ▼
-② 프롬프트 빌드
-   ├── 워크플로우 팩 가이던스 (role, 행동 방침)
-   ├── 페르소나 블록 (Jobs, Torvalds 등)
-   ├── Rules 주입  ←── 캐시 (5분 TTL)
-   ├── Memory 주입 ←── 캐시 (5분 TTL)
-   └── 사용 가능한 스킬 목록
+② Prompt build
+   ├── Workflow pack guidance (role, behavioral guidelines)
+   ├── Persona block (Jobs, Torvalds, etc.)
+   ├── Rules injection  ←── cache (5-min TTL)
+   ├── Memory injection ←── cache (5-min TTL)
+   └── List of available skills
     │
     ▼
-③ pre-task Hooks 실행 (병렬 async)
+③ pre-task Hooks execution (parallel async)
     │
     ▼
-④ CLI 프로세스 spawn (child_process)
-   → stdout 스트리밍 → WebSocket → 터미널 패널
+④ CLI process spawn (child_process)
+   → stdout streaming → WebSocket → terminal panel
     │
     ▼
-⑤ 완료 처리
-   ├── post-task / on-error Hooks (fire-and-forget 병렬)
-   ├── 스킬 학습 기록
-   ├── Memory 자동 추출·저장
+⑤ Completion handling
+   ├── post-task / on-error Hooks (fire-and-forget parallel)
+   ├── Skill learning record
+   ├── Memory auto-extraction and storage
    └── task.status = done | failed → broadcast
 ```
 
-### Library가 에이전트 프롬프트에 주입되는 방식
+### How the Library is Injected into Agent Prompts
 
 ```
-우선순위: project > agent > department > global
+Priority: project > agent > department > global
 
 [Agent Rules]
-  1. [project] 코드 리뷰 필수: PR 전 항상 테스트 실행
-  2. [agent]   TypeScript strict 모드 사용
-  3. [global]  한국어로 응답
+  1. [project] Code review required: always run tests before PR
+  2. [agent]   Use TypeScript strict mode
+  3. [global]  Respond in English
 
 [Agent Memory]
-  1. [context] 이전에 발견한 API 버그 패턴
-  2. [knowledge] 자주 사용하는 라이브러리 설정
+  1. [context] Previously discovered API bug patterns
+  2. [knowledge] Frequently used library configurations
 ```
 
 ---
 
-## 5. 핵심 구성 요소 — Library
+## 5. Core Components — Library
 
-에이전트의 행동을 정의하는 4가지 레고 블록:
+Four building blocks that define agent behavior:
 
-| 요소 | 역할 | 스코프 |
+| Element | Role | Scope |
 |---|---|---|
-| **Skills** | 에이전트가 학습한 도구·명령 모음 | provider/repo/agent |
-| **Rules** | 에이전트가 따라야 할 규칙 | global/dept/agent/project |
-| **Memory** | 에이전트가 기억하는 맥락·지식 | global/dept/agent/project |
-| **Hooks** | 태스크 이벤트에 자동 실행되는 스크립트 | global/dept/agent/project |
+| **Skills** | Tools and commands the agent has learned | provider/repo/agent |
+| **Rules** | Rules the agent must follow | global/dept/agent/project |
+| **Memory** | Context and knowledge the agent remembers | global/dept/agent/project |
+| **Hooks** | Scripts that run automatically on task events | global/dept/agent/project |
 
-이 4가지를 **프로젝트 단위**로 관리하면, 같은 에이전트도 프로젝트마다 다른 행동 방식을 가질 수 있다.
+Managing these four elements **per project** allows the same agent to behave differently depending on the project.
 
 ---
 
-## 6. 현재 시스템 상태
+## 6. Current System Status
 
-### 완성도 (2026-03-15 기준)
+### Completion (as of 2026-03-15)
 
 ```
-에이전트 스폰·관리          ██████████████████░░ 95%
-멀티에이전트 오케스트레이션  ██████████████████░░ 90%
-데이터베이스·인프라          ██████████████████░░ 90%
-스킬 학습·메모리             █████████████████░░░ 85%
-하트비트·이상 감지           ███████████████████░ 90% (AlertsWidget 실시간 폴링 완성)
-스케줄링                    ███████████████████░ 90% (워크플로 팩 옵션 완성)
-UIUX 모니터링               ████████████████████ 100% (Phase 4~5 완성 + FileTree 위젯 추가)
-보안 하드닝                 ████████████████████ 100% (2차 패치 완료)
-페르소나 시스템              ████████████████████ 100% (완성)
-시각적 에이전트 그래프       ████████████████████ 100% (완성)
-에이전트 조합 템플릿         ████████████████████ 100% (드래그앤드롭 + Run 완성)
+Agent spawn & management         ██████████████████░░ 95%
+Multi-agent orchestration        ██████████████████░░ 90%
+Database & infrastructure        ██████████████████░░ 90%
+Skill learning & memory          █████████████████░░░ 85%
+Heartbeat & anomaly detection    ███████████████████░ 90% (AlertsWidget real-time polling complete)
+Scheduling                       ███████████████████░ 90% (workflow pack options complete)
+UI/UX monitoring                 ████████████████████ 100% (Phase 4~5 complete + FileTree widget added)
+Security hardening               ████████████████████ 100% (2nd patch complete)
+Persona system                   ████████████████████ 100% (complete)
+Visual agent graph               ████████████████████ 100% (complete)
+Agent composition templates      ████████████████████ 100% (drag-and-drop + Run complete)
 ```
 
-### 동시 실행 안전 한계
+### Safe Concurrency Limits
 
-| 동시 에이전트 수 | Phase 1 전 | Phase 1 후 (현재) | Phase 2 후 |
+| Concurrent agents | Before Phase 1 | After Phase 1 (current) | After Phase 2 |
 |:-:|:-:|:-:|:-:|
-| 1~3개 | ✅ | ✅ | ✅ |
-| 5개 | ⚠️ 체감 지연 | ✅ | ✅ |
-| 10개 | ❌ 블로킹 위험 | ⚠️ 경미한 지연 | ✅ |
-| 20개+ | ❌ 자원 고갈 | ⚠️ 큐 없어 위험 | ✅ 큐 제어 |
+| 1–3 | ✅ | ✅ | ✅ |
+| 5 | ⚠️ noticeable lag | ✅ | ✅ |
+| 10 | ❌ blocking risk | ⚠️ minor lag | ✅ |
+| 20+ | ❌ resource exhaustion | ⚠️ no queue, risky | ✅ queue control |
 
-### Phase 1 성능 개선 완료 (2026-03-13)
+### Phase 1 Performance Improvements Complete (2026-03-13)
 
-- **훅 병렬 실행**: `execFileSync` → `execFileAsync + Promise.all` (최대 600s 블로킹 제거)
-- **DB 복합 인덱스 4개 추가**: enabled+scope 필터 풀스캔 해소
-- **Rules·Memory 5분 TTL 캐시**: 동일 프로젝트 10개 태스크 동시 시작 시 DB 재조회 제거
+- **Parallel hook execution**: `execFileSync` → `execFileAsync + Promise.all` (up to 600s blocking eliminated)
+- **4 composite DB indexes added**: full-scan on enabled+scope filter eliminated
+- **Rules & Memory 5-min TTL cache**: DB re-queries eliminated when 10 tasks start simultaneously in the same project
 
 ---
 
-## 7. 완료된 주요 마일스톤
+## 7. Completed Major Milestones
 
-모든 계획된 기능 및 개선 작업이 완료되었습니다. 아래는 주요 달성 항목입니다.
+All planned features and improvement tasks have been completed. Key achievements are listed below.
 
-### 보안 강화
-- OAuth PBKDF2-SHA256 키 파생, API Rate Limiting, WebSocket 연결 수 제한, 환경 변수 검증, Path Traversal·ReDoS·OAuth bypass 등 13개 보안 취약점 패치
+### Security Hardening
+- OAuth PBKDF2-SHA256 key derivation, API rate limiting, WebSocket connection limit, environment variable validation, and 13 security vulnerability patches including path traversal, ReDoS, and OAuth bypass
 
-### 성능 최적화
-- 훅 async 병렬 실행 (최대 600s 블로킹 제거), DB 복합 인덱스 4개 추가, Rules·Memory 5분 TTL 캐시, spawn DB 쿼리 배치화, FIFO 동시 실행 큐
+### Performance Optimization
+- Hook async parallel execution (up to 600s blocking eliminated), 4 composite DB indexes added, Rules & Memory 5-min TTL cache, spawn DB query batching, FIFO concurrent execution queue
 
-### 핵심 기능
-- Agent Flow Graph (실시간 SVG 에이전트 관계 시각화), Visual Workflow Builder (@xyflow/react), 에이전트 페르소나 시스템, 태스크 핸드오프, 에이전트 타임라인, 비용 추적, Slack 연동
+### Core Features
+- Agent Flow Graph (real-time SVG agent relationship visualization), Visual Workflow Builder (@xyflow/react), agent persona system, task handoff, agent timeline, cost tracking, Slack integration
 
 ### UI/UX
-- Zustand 상태 관리 도입, Keyboard-First UX (vim-style `g+키` 단축키), macOS OS 메타포 완성 (Mission Control, Jiggle Mode, Quick Look, Command Palette), 4개국어(ko/en/ja/zh) i18n
+- Zustand state management introduced, Keyboard-First UX (vim-style `g+key` shortcuts), macOS OS metaphor complete (Mission Control, Jiggle Mode, Quick Look, Command Palette), i18n for 4 languages (ko/en/ja/zh)
 
-### 품질
-- pino 구조화 로깅, 서버 테스트 181개 + 프론트 테스트 43개 전부 통과
-
----
-
-## 8. 작업 완료 이력
+### Quality
+- pino structured logging, 181 server tests + 43 frontend tests all passing
 
 ---
 
-### 🔴 P0 — 즉시 처리 (버그·보안)
-
-#### ~~[P0-1] 미팅 참여자 필터링 버그~~ ✅ 완료 (2026-03-14)
-- **파일:** `server/modules/routes/core/tasks/execution-run-auto-assign.ts`
-- **수정 내용:** `loadManualProjectAgentScope()`의 `assignment_mode !== "manual"` 조건 제거 → 모든 모드에서 `project_agents` 테이블 기반 에이전트 풀 제한 적용
-- **효과:** auto 모드 프로젝트에서도 미배정 에이전트의 태스크/리뷰 참여 차단
-
-#### ~~[P0-2] OAuth 비밀번호 해싱 취약~~ ✅ 이미 완료
-- **파일:** `server/oauth/helpers.ts`
-- **현황:** PBKDF2-SHA256 (100k iterations) 방식의 v2 키 이미 구현됨. `encryptSecret()`은 v2 전용, `decryptSecret()`은 v1/v2 하위 호환 지원
-
-#### ~~[P0-3] API Rate Limiting 전무~~ ✅ 이미 완료
-- **파일:** `server/security/auth.ts`
-- **현황:** 인-프로세스 슬라이딩 윈도우 Rate Limiter 구현됨
-  - 일반 API: 300 req/min per IP
-  - 태스크 실행 트리거 (`POST /tasks/:id/run`): 20 req/min per IP
-  - 5분 주기 stale 버킷 sweep으로 메모리 누수 방지
-
-#### ~~[P0-4] WebSocket 연결 수 무제한~~ ✅ 이미 완료
-- **파일:** `server/modules/lifecycle.ts`
-- **현황:** `MAX_WS_CLIENTS = 20` 전역 제한 구현됨. 초과 시 코드 `4008` 즉시 close
-
-#### ~~[P0-5] 환경 변수 시작 시 검증 누락~~ ✅ 이미 완료
-- **파일:** `server/server-main.ts`
-- **현황:** `validateEnv()` 함수로 서버 시작 시 OAUTH_ENCRYPTION_SECRET, API_AUTH_TOKEN 검증 후 경고 출력. OAuth 실제 사용 시 `oauthEncryptionKeyV2()`에서 throw로 즉시 실패 처리
+## 8. Completion History
 
 ---
 
-### 🟠 P1 — 단기 (1~2주)
+### 🔴 P0 — Immediate (bugs & security)
 
-#### ~~[P1-1] App.tsx 상태 관리 분리 — Zustand 도입~~ ✅ 완료 (2026-03-14)
-- **파일:** `src/store/agentStore.ts`, `src/store/taskStore.ts`, `src/store/projectStore.ts`, `src/store/uiStore.ts`
-- **완료 내용:**
-  1. 4개 Zustand 스토어 파일 생성 완료
-  2. App.tsx의 46개 useState 전량 제거 → 스토어 구독으로 교체 (349줄로 축소)
-  3. 모든 WebSocket 이벤트, 부트스트랩 데이터, 액션 핸들러가 스토어 setter 사용
+#### ~~[P0-1] Meeting participant filtering bug~~ ✅ Done (2026-03-14)
+- **File:** `server/modules/routes/core/tasks/execution-run-auto-assign.ts`
+- **Fix:** Removed `assignment_mode !== "manual"` condition from `loadManualProjectAgentScope()` → agent pool restriction via `project_agents` table now applies in all modes
+- **Effect:** Prevents unassigned agents from participating in tasks/reviews even in auto-mode projects
 
-#### ~~[P1-2] WorkflowPackKey → category_id 브리지 연결~~ ✅ 완료 (2026-03-14)
-- **파일:** `versioned-migrations.ts`, `category-seeds.ts`, `task-pack-resolver.ts`, `tasks/crud.ts`, `src/types/index.ts`
-- **구현 내용:**
-  1. DB 마이그레이션 `2026-03-14-003`: `categories` 테이블에 `pack_key TEXT` 컬럼 추가, 기존 6개 카테고리에 팩키 매핑 적용
-  2. DB 마이그레이션 `2026-03-14-004`: `tasks` 테이블에 `category_id TEXT REFERENCES categories(id)` 추가
-  3. `resolveCategoryPackKey()` 함수 추가 — `category_id → categories.pack_key` 조회
-  4. `resolveWorkflowPackKeyForTask()` 우선순위 체인: explicit → **category** → sourceTask → projectDefault → fallback
-  5. POST `/api/tasks`에서 `category_id` 수신 → DB에서 검증 후 INSERT
-  6. PATCH `/api/tasks/:id`에서 `category_id` 허용
-  7. `Task` 인터페이스에 `category_id?: string | null` 추가
-- **카테고리 → 팩 매핑:**
+#### ~~[P0-2] OAuth password hashing vulnerability~~ ✅ Already complete
+- **File:** `server/oauth/helpers.ts`
+- **Status:** PBKDF2-SHA256 (100k iterations) v2 key already implemented. `encryptSecret()` is v2-only; `decryptSecret()` supports v1/v2 backward compatibility
+
+#### ~~[P0-3] No API rate limiting~~ ✅ Already complete
+- **File:** `server/security/auth.ts`
+- **Status:** In-process sliding-window rate limiter implemented
+  - General API: 300 req/min per IP
+  - Task execution trigger (`POST /tasks/:id/run`): 20 req/min per IP
+  - Stale bucket sweep every 5 minutes to prevent memory leaks
+
+#### ~~[P0-4] Unlimited WebSocket connections~~ ✅ Already complete
+- **File:** `server/modules/lifecycle.ts`
+- **Status:** `MAX_WS_CLIENTS = 20` global limit implemented. Exceeding connections are immediately closed with code `4008`
+
+#### ~~[P0-5] No environment variable validation at startup~~ ✅ Already complete
+- **File:** `server/server-main.ts`
+- **Status:** `validateEnv()` validates OAUTH_ENCRYPTION_SECRET and API_AUTH_TOKEN at server startup and prints warnings. When OAuth is actually used, `oauthEncryptionKeyV2()` throws immediately on failure
+
+---
+
+### 🟠 P1 — Short-term (1–2 weeks)
+
+#### ~~[P1-1] App.tsx state management separation — Zustand~~ ✅ Done (2026-03-14)
+- **Files:** `src/store/agentStore.ts`, `src/store/taskStore.ts`, `src/store/projectStore.ts`, `src/store/uiStore.ts`
+- **Completed:**
+  1. 4 Zustand store files created
+  2. All 46 useState calls removed from App.tsx → replaced with store subscriptions (reduced to 349 lines)
+  3. All WebSocket events, bootstrap data, and action handlers use store setters
+
+#### ~~[P1-2] WorkflowPackKey → category_id bridge~~ ✅ Done (2026-03-14)
+- **Files:** `versioned-migrations.ts`, `category-seeds.ts`, `task-pack-resolver.ts`, `tasks/crud.ts`, `src/types/index.ts`
+- **Implemented:**
+  1. DB migration `2026-03-14-003`: added `pack_key TEXT` column to `categories` table, pack key mappings applied to 6 existing categories
+  2. DB migration `2026-03-14-004`: added `category_id TEXT REFERENCES categories(id)` to `tasks` table
+  3. Added `resolveCategoryPackKey()` function — looks up `category_id → categories.pack_key`
+  4. `resolveWorkflowPackKeyForTask()` priority chain: explicit → **category** → sourceTask → projectDefault → fallback
+  5. POST `/api/tasks` accepts `category_id` → validated from DB before INSERT
+  6. PATCH `/api/tasks/:id` allows `category_id`
+  7. Added `category_id?: string | null` to the `Task` interface
+- **Category → pack mappings:**
   - `cat_software_dev` → `development`
   - `cat_marketing` → `asset_management`
   - `cat_research` → `web_research_report`
   - `cat_product_launch` → `development`
   - `cat_content` → `novel`
   - `cat_operations` → `report`
-- **하위 호환:** `workflow_pack_key` 컬럼 유지 (기존 데이터 보존), category 없는 태스크는 기존 방식 그대로 동작
+- **Backward compatibility:** `workflow_pack_key` column retained (existing data preserved); tasks without a category continue to work as before
 
-#### ~~[P1-3] 메신저 수신 재시도 로직~~ ✅ 완료 (2026-03-14)
-- **파일:** `server/messenger/telegram-receiver.ts`, `server/messenger/discord-receiver.ts`
-- **수정 내용:** `forwardToInboxWithRetry()` 헬퍼 추가 (최대 3회, 지수 백오프: 2s→4s→8s)
-- **효과:** inbox 전달 일시 실패 시 자동 재시도, 영구 메시지 손실 방지
+#### ~~[P1-3] Messenger receive retry logic~~ ✅ Done (2026-03-14)
+- **Files:** `server/messenger/telegram-receiver.ts`, `server/messenger/discord-receiver.ts`
+- **Fix:** Added `forwardToInboxWithRetry()` helper (up to 3 retries, exponential backoff: 2s→4s→8s)
+- **Effect:** Automatic retry on transient inbox delivery failures, preventing permanent message loss
 
-#### ~~[P1-4] DB 마이그레이션 버전 추적~~ ✅ 이미 완료
-- **파일:** `server/modules/bootstrap/schema/versioned-migrations.ts`
-- **현황:** `schema_migrations` 테이블 + `runVersionedMigrations()` 이미 구현됨. 버전 적용 여부 추적 및 중복 실행 방지
+#### ~~[P1-4] DB migration version tracking~~ ✅ Already complete
+- **File:** `server/modules/bootstrap/schema/versioned-migrations.ts`
+- **Status:** `schema_migrations` table + `runVersionedMigrations()` already implemented. Tracks which versions have been applied and prevents duplicate execution
 
-#### ~~[P1-5] In-Memory Map 메모리 누수 방지~~ ✅ 이미 완료
-- **파일:** `server/modules/lifecycle.ts`, `server/security/auth.ts`
-- **현황:** WebSocket `onClose/onError` 핸들러에서 `wsClients.delete()` 구현됨. Rate Limiter 버킷은 5분 주기 sweep으로 stale 항목 자동 정리
+#### ~~[P1-5] In-memory map memory leak prevention~~ ✅ Already complete
+- **Files:** `server/modules/lifecycle.ts`, `server/security/auth.ts`
+- **Status:** `wsClients.delete()` implemented in WebSocket `onClose/onError` handlers. Rate limiter buckets are automatically cleaned up by a 5-minute periodic sweep
 
-#### ~~[P1-6] 구조화 로깅 도입 (pino)~~ ✅
-- **파일:** `server/lib/logger.ts` (신규), 서버 전체 40+ 파일
-- **완료 내용:**
-  1. `pino` + `pino-pretty` 의존성 추가
-  2. `server/lib/logger.ts` — 환경별 로거 (dev: pino-pretty 컬러, prod: JSON, `LOG_LEVEL` 환경변수 지원)
-  3. 서버 전체 `console.log/warn/error` → `logger.info/warn/error` 교체 완료
-  4. 구조화 에러 로깅: `logger.error({ err }, "message")` 패턴으로 스택 트레이스 자동 직렬화
-
----
-
-### 🟡 P2 — 중기 (3~6주)
-
-> **P2-2~P2-8 상세 설계서:** `docs/strategy/p2-tasks-design.md`
-> (파일 경로, 현재 상태, 구현 단계, 코드 예시 포함)
-
-#### ~~[P2-1] Agent Flow Graph 구현~~ ✅ 완료 (2026-03-14)
-- **구현 파일:** `src/components/flow-graph/` (AgentFlowGraph, useFlowLayout, AgentNode, MeetingCluster, FlowEdge)
-- **완료 내용:** SVG 실시간 에이전트 관계 시각화, 줌/팬, 노드 클릭, 미팅 클러스터, Dashboard 내 토글 뷰로 통합
-
-#### ~~[P2-2] 에이전트 실행 비용 추적~~ ✅ 완료 (2026-03-14)
-- **완료 내용:**
-  1. `task_execution_events` 테이블에 `tokens_in`, `tokens_out`, `cost_usd` 컬럼 추가 (migration `2026-03-14-005`)
-  2. `api-provider-tools.ts` — Anthropic SDK `response.usage` 파싱 후 DB 저장 (`COST_PER_INPUT_MTOK` / `COST_PER_OUTPUT_MTOK` 환경변수)
-  3. `GET /api/agents/:id/cost-summary`, `GET /api/cost-summary` API 추가
-  4. 에이전트 상세 "이번 달 비용" 뱃지 + Dashboard 총 비용 위젯
-
-#### ~~[P2-3] 동시 실행 제한 (FIFO 대기 큐)~~ ✅ 완료 (2026-03-14)
-- **완료 내용:**
-  1. `server/modules/workflow/orchestration/agent-queue.ts` 신규 — FIFO 큐 모듈
-  2. `MAX_CONCURRENT_AGENTS` 환경변수 (기본값 10) — `server/db/runtime.ts`
-  3. `orchestration.ts` 통합 — enqueue 래핑 + onComplete 훅
-  4. `GET /api/queue-status` API + 헤더 큐 상태 카운터 (실행 중 N / 대기 M)
-
-#### ~~[P2-4] spawn 시 DB 쿼리 배치화~~ ✅ 완료 (2026-03-14)
-- **완료 내용:**
-  1. `buildExecutionPayload()` 헬퍼 함수 추출
-  2. 6개 함수(`buildRulesPromptBlock`, `buildMemoryPromptBlock`, `buildAvailableSkillsPromptBlock`, `loadPendingInterruptPrompts`, `getRecentConversationContext`, `getTaskContinuationContext`) `Promise.all()` 병렬화
-  3. `startTaskExecutionForAgent` async 전환
-
-#### ~~[P2-5] 에이전트 타임라인 뷰~~ ✅ 완료 (2026-03-14)
-- **완료 내용:**
-  1. `GET /api/agents/:id/timeline` API — `task_execution_events` 기반
-  2. `src/components/agent-detail/AgentTimeline.tsx` — 수직 타임라인, 이벤트 타입별 색상 dot
-  3. AgentDetail "Timeline" 탭 추가
-
-#### ~~[P2-6] 태스크 핸드오프 (에이전트 → 에이전트)~~ ✅ 완료 (2026-03-14)
-- **완료 내용:**
-  1. `tasks` 테이블에 `handoff_to_agent_id`, `handoff_condition` 컬럼 추가 (migration `2026-03-14-007`)
-  2. `run-complete-handler/core.ts` — 완료 시 핸드오프 조건 평가 → 후속 태스크 자동 생성
-  3. POST/PATCH `/api/tasks` 핸드오프 필드 지원
-  4. `CreateTaskModal` — "HANDOFF ON COMPLETE" 섹션 (토글 + 에이전트 선택 + 조건 선택)
-
-#### ~~[P2-7] 페르소나 시스템 UI 완성~~ ✅ 완료 (2026-03-14)
-- **완료 내용:**
-  1. `src/components/persona/PersonaDetailPanel.tsx` 신규 — 인물명·키워드·best_for·스타일 설명
-  2. AgentDetailTabContent — 카탈로그/직접편집 모드 전환 + persona_id 업데이트
-  3. AgentManager 에이전트 목록에 PersonaBadge 연동
-
-#### ~~[P2-8] WebSocket broadcast 최적화~~ ✅ 완료 (2026-03-14)
-- **완료 내용:**
-  1. `server/ws/hub.ts` — `cli_output` 4KB 청크 분할 전송
-  2. 태스크 채널 구독 분리 — `subscribe_task` / `unsubscribe_task` 메시지로 클라이언트별 구독 관리
-  3. `src/hooks/useWebSocket.ts` — `send()` 함수 추가
-  4. 터미널 패널 마운트/언마운트 시 자동 구독/해제
+#### ~~[P1-6] Structured logging (pino)~~ ✅ Done
+- **Files:** `server/lib/logger.ts` (new), 40+ server files
+- **Completed:**
+  1. Added `pino` + `pino-pretty` dependencies
+  2. `server/lib/logger.ts` — environment-aware logger (dev: pino-pretty colors, prod: JSON, supports `LOG_LEVEL` env var)
+  3. All `console.log/warn/error` across the server replaced with `logger.info/warn/error`
+  4. Structured error logging: `logger.error({ err }, "message")` pattern for automatic stack trace serialization
 
 ---
 
-### 🔵 P3 — 장기 (3개월+)
+### 🟡 P2 — Medium-term (3–6 weeks)
 
-#### ~~[P3-1] "더 큰 IDE" — Split-Pane Layout~~ ✅ 완료 (2026-03-14)
-- **파일:** `src/hooks/useSplitPane.ts` (신규), `src/app/SplitPaneSecondary.tsx` (신규), `src/app/AppMainLayout.tsx`, `src/app/AppHeaderBar.tsx`
-- **완료 내용:**
-  1. 외부 라이브러리 없이 순수 CSS + 마우스 드래그 리사이즈 구현
-  2. 우측 보조 패널: Flow Graph ◎ / Heartbeat ♡ / Dashboard ▦ 탭 전환
-  3. 분할 비율 25~75% 드래그 조정, localStorage 자동 저장
-  4. 헤더 `⊟` 토글 버튼 (데스크톱 전용), `\` 키보드 단축키
-  5. 단축키 가이드에 `\` 항목 추가
+> **P2-2~P2-8 detailed design:** `docs/strategy/p2-tasks-design.md`
+> (file paths, current state, implementation steps, code examples)
 
-#### ~~[P3-2] Visual Workflow Builder~~ ✅ 완료 (2026-03-14)
-- **설계:** `docs/strategy/bigger-ide-vision.md` Phase 2
-- **완료 내용:**
-  1. `pnpm add @xyflow/react` (v12.10.1) 설치
-  2. 노드 기반 워크플로 UI: `WbTriggerNode`, `WbAgentNode`, `WbGateNode`, `WbConditionNode` (4종)
-  3. `src/components/workflow-builder/WorkflowBuilder.tsx` — ReactFlow 캔버스, Background/Controls/MiniMap, 노드 팔레트
-  4. 드래그&드롭으로 에이전트 파이프라인 시각적 구성, 노드 간 엣지 연결
-  5. localStorage 자동 저장/불러오기, 워크플로 이름 편집
-  6. 헤더 Workflow 창 탭으로 통합, `g w` 키보드 단축키 등록
+#### ~~[P2-1] Agent Flow Graph implementation~~ ✅ Done (2026-03-14)
+- **Files:** `src/components/flow-graph/` (AgentFlowGraph, useFlowLayout, AgentNode, MeetingCluster, FlowEdge)
+- **Completed:** Real-time SVG agent relationship visualization, zoom/pan, node click, meeting clusters, integrated as a toggle view in Dashboard
 
-#### ~~[P3-3] Keyboard-First UX 완성~~ ✅ 완료 (2026-03-14)
-- **파일:** `src/app/AppMainLayout.tsx`, `src/components/KeyboardShortcutsGuide.tsx`
-- **완료 내용:**
-  1. `g + 키` vim-style 네비게이션: `g d` → Dashboard, `g t` → Task Board, `g a` → Agents, `g f` → Flow Graph, `g s` → Skills, `g m` → Memory, `g r` → Rules, `g h` → Hooks (1초 타임아웃 포함)
-  2. `n` → 커맨드 팔레트 오픈 (편집 중 제외)
-  3. KeyboardShortcutsGuide에 `g + 키` 섹션 추가 (i18n 4개국어)
+#### ~~[P2-2] Agent execution cost tracking~~ ✅ Done (2026-03-14)
+- **Completed:**
+  1. Added `tokens_in`, `tokens_out`, `cost_usd` columns to `task_execution_events` table (migration `2026-03-14-005`)
+  2. `api-provider-tools.ts` — parses Anthropic SDK `response.usage` and saves to DB (`COST_PER_INPUT_MTOK` / `COST_PER_OUTPUT_MTOK` env vars)
+  3. Added `GET /api/agents/:id/cost-summary` and `GET /api/cost-summary` APIs
+  4. "This month's cost" badge in agent detail + total cost widget in Dashboard
 
-#### ~~[P3-4] 테스트 커버리지 확대~~ ✅ 완료 (2026-03-14)
-- **완료 내용:**
-  1. 서버 logger 임포트 경로 수정: `hub.ts`, `hook-executor.ts`, `task-execution-meta.ts`, `worktree/lifecycle.ts`
-  2. 테스트 하네스 수정: `versioned-migrations.test.ts` makeDb() 누락 테이블 추가, `crud.workflow-pack-filter.test.ts` 누락 컬럼 추가
-  3. `hub.test.ts` cli_output 테스트에 taskId 구독 로직 추가 (subscription-filtered delivery 반영)
-  4. `worktree/lifecycle.test.ts` 임시 git repo에 `commit.gpgsign=false` 설정 (서명 서버 없는 환경 대응)
-  5. **결과: 서버 테스트 40개 파일, 181개 테스트 전부 통과 / 프론트 12개 파일, 43개 테스트 전부 통과**
+#### ~~[P2-3] Concurrent execution limit (FIFO queue)~~ ✅ Done (2026-03-14)
+- **Completed:**
+  1. `server/modules/workflow/orchestration/agent-queue.ts` (new) — FIFO queue module
+  2. `MAX_CONCURRENT_AGENTS` env var (default 10) — `server/db/runtime.ts`
+  3. Integrated into `orchestration.ts` — enqueue wrapper + onComplete hook
+  4. `GET /api/queue-status` API + header queue status counter (running N / queued M)
 
-#### ~~[P3-5] 이상 감지 인덱스 최적화~~ ✅ 완료 (2026-03-14)
-- **파일:** `server/modules/bootstrap/schema/versioned-migrations.ts`, `server/db/runtime.ts`, `server/modules/lifecycle.ts`
-- **완료 내용:**
-  1. migration `2026-03-14-008-watchdog-index`: `tasks(status, execution_state, last_heartbeat_at DESC)` 복합 인덱스 추가 — watchdog 쿼리 풀스캔 제거
-  2. `server/db/runtime.ts` — `TASK_STALLED_THRESHOLD_MS` / `TASK_STALLED_RECOVERY_THRESHOLD_MS` 환경변수 설정 가능하게 (기본값 90s / 180s, 최솟값 강제)
-  3. `lifecycle.ts` — 하드코딩 상수 → `db/runtime.ts` 임포트로 교체
+#### ~~[P2-4] Spawn DB query batching~~ ✅ Done (2026-03-14)
+- **Completed:**
+  1. Extracted `buildExecutionPayload()` helper function
+  2. Parallelized 6 functions (`buildRulesPromptBlock`, `buildMemoryPromptBlock`, `buildAvailableSkillsPromptBlock`, `loadPendingInterruptPrompts`, `getRecentConversationContext`, `getTaskContinuationContext`) with `Promise.all()`
+  3. `startTaskExecutionForAgent` converted to async
 
-#### ~~[P3-6] Slack 연동~~ ✅ 완료 (2026-03-14)
-- **파일:** `server/messenger/slack-receiver.ts` (신규)
-- **완료 내용:**
-  1. `conversations.history` 폴링 방식 수신기 구현 (Discord 패턴 재사용)
-  2. Bot User OAuth Token(`xoxb-...`) 지원, 채널 ID 기반 라우팅
-  3. `lifecycle.ts` — `startSlackReceiver()` 등록, `onBeforeClose()` 정리
-  4. `GET /api/messenger/receiver/slack` 상태 엔드포인트 추가 (`core.ts`)
+#### ~~[P2-5] Agent timeline view~~ ✅ Done (2026-03-14)
+- **Completed:**
+  1. `GET /api/agents/:id/timeline` API — based on `task_execution_events`
+  2. `src/components/agent-detail/AgentTimeline.tsx` — vertical timeline, color-coded dots per event type
+  3. Added "Timeline" tab to AgentDetail
+
+#### ~~[P2-6] Task handoff (agent → agent)~~ ✅ Done (2026-03-14)
+- **Completed:**
+  1. Added `handoff_to_agent_id`, `handoff_condition` columns to `tasks` table (migration `2026-03-14-007`)
+  2. `run-complete-handler/core.ts` — evaluates handoff condition on completion → automatically creates follow-up task
+  3. POST/PATCH `/api/tasks` supports handoff fields
+  4. `CreateTaskModal` — "HANDOFF ON COMPLETE" section (toggle + agent select + condition select)
+
+#### ~~[P2-7] Persona system UI completion~~ ✅ Done (2026-03-14)
+- **Completed:**
+  1. `src/components/persona/PersonaDetailPanel.tsx` (new) — name, keywords, best_for, style description
+  2. AgentDetailTabContent — catalog/direct-edit mode toggle + persona_id update
+  3. PersonaBadge integrated into AgentManager agent list
+
+#### ~~[P2-8] WebSocket broadcast optimization~~ ✅ Done (2026-03-14)
+- **Completed:**
+  1. `server/ws/hub.ts` — `cli_output` split into 4KB chunks for transmission
+  2. Per-task channel subscription — client subscription management via `subscribe_task` / `unsubscribe_task` messages
+  3. `src/hooks/useWebSocket.ts` — added `send()` function
+  4. Automatic subscribe/unsubscribe on terminal panel mount/unmount
+
+---
+
+### 🔵 P3 — Long-term (3+ months)
+
+#### ~~[P3-1] "Bigger IDE" — Split-Pane Layout~~ ✅ Done (2026-03-14)
+- **Files:** `src/hooks/useSplitPane.ts` (new), `src/app/SplitPaneSecondary.tsx` (new), `src/app/AppMainLayout.tsx`, `src/app/AppHeaderBar.tsx`
+- **Completed:**
+  1. Pure CSS + mouse drag resize implemented without external libraries
+  2. Right secondary panel: Flow Graph ◎ / Heartbeat ♡ / Dashboard ▦ tab switching
+  3. Split ratio 25–75% drag adjustment, auto-saved to localStorage
+  4. Header `⊟` toggle button (desktop only), `\` keyboard shortcut
+  5. Added `\` entry to keyboard shortcuts guide
+
+#### ~~[P3-2] Visual Workflow Builder~~ ✅ Done (2026-03-14)
+- **Design:** `docs/strategy/bigger-ide-vision.md` Phase 2
+- **Completed:**
+  1. Installed `pnpm add @xyflow/react` (v12.10.1)
+  2. Node-based workflow UI: `WbTriggerNode`, `WbAgentNode`, `WbGateNode`, `WbConditionNode` (4 types)
+  3. `src/components/workflow-builder/WorkflowBuilder.tsx` — ReactFlow canvas, Background/Controls/MiniMap, node palette
+  4. Drag & drop visual composition of agent pipelines, edge connections between nodes
+  5. Auto save/load to localStorage, workflow name editing
+  6. Integrated as Workflow window tab in header, `g w` keyboard shortcut registered
+
+#### ~~[P3-3] Keyboard-First UX completion~~ ✅ Done (2026-03-14)
+- **Files:** `src/app/AppMainLayout.tsx`, `src/components/KeyboardShortcutsGuide.tsx`
+- **Completed:**
+  1. `g + key` vim-style navigation: `g d` → Dashboard, `g t` → Task Board, `g a` → Agents, `g f` → Flow Graph, `g s` → Skills, `g m` → Memory, `g r` → Rules, `g h` → Hooks (1-second timeout)
+  2. `n` → opens command palette (except when editing)
+  3. Added `g + key` section to KeyboardShortcutsGuide (i18n 4 languages)
+
+#### ~~[P3-4] Test coverage expansion~~ ✅ Done (2026-03-14)
+- **Completed:**
+  1. Fixed server logger import paths: `hub.ts`, `hook-executor.ts`, `task-execution-meta.ts`, `worktree/lifecycle.ts`
+  2. Fixed test harnesses: added missing tables to `versioned-migrations.test.ts` makeDb(), added missing columns to `crud.workflow-pack-filter.test.ts`
+  3. Added taskId subscription logic to `hub.test.ts` cli_output tests (reflecting subscription-filtered delivery)
+  4. Added `commit.gpgsign=false` to temporary git repos in `worktree/lifecycle.test.ts` (for environments without a signing server)
+  5. **Result: 181 tests across 40 server test files all passing / 43 tests across 12 frontend test files all passing**
+
+#### ~~[P3-5] Anomaly detection index optimization~~ ✅ Done (2026-03-14)
+- **Files:** `server/modules/bootstrap/schema/versioned-migrations.ts`, `server/db/runtime.ts`, `server/modules/lifecycle.ts`
+- **Completed:**
+  1. Migration `2026-03-14-008-watchdog-index`: added composite index `tasks(status, execution_state, last_heartbeat_at DESC)` — eliminates full-scan on watchdog queries
+  2. `server/db/runtime.ts` — `TASK_STALLED_THRESHOLD_MS` / `TASK_STALLED_RECOVERY_THRESHOLD_MS` now configurable via env vars (defaults 90s / 180s, minimums enforced)
+  3. `lifecycle.ts` — hardcoded constants replaced with imports from `db/runtime.ts`
+
+#### ~~[P3-6] Slack integration~~ ✅ Done (2026-03-14)
+- **File:** `server/messenger/slack-receiver.ts` (new)
+- **Completed:**
+  1. `conversations.history` polling-based receiver implemented (reusing Discord pattern)
+  2. Bot User OAuth Token (`xoxb-...`) support, channel ID-based routing
+  3. `lifecycle.ts` — `startSlackReceiver()` registered, `onBeforeClose()` cleanup
+  4. Added `GET /api/messenger/receiver/slack` status endpoint (`core.ts`)
 
 ---
 
 ---
 
-### 🔐 보안 패치 (2026-03-14)
+### 🔐 Security Patches (2026-03-14)
 
-#### 1차 패치
+#### Patch Round 1
 
-| # | 취약점 | 심각도 | 파일 | 상태 |
+| # | Vulnerability | Severity | File | Status |
 |---|--------|--------|------|------|
-| S1 | 경로 탐색(Path Traversal) | 🔴 높음 | `task-reports/routes.ts` | ✅ 완료 |
-| S2 | GitHub PAT 검증 우회 | 🔴 높음 | `github-routes.ts` | ✅ 완료 |
-| S3 | git clone 경로 탈출 | 🔴 높음 | `github-routes.ts` | ✅ 완료 |
-| S4 | OAuth `.ts.net` 리다이렉트 bypass | 🔴 높음 | `oauth/helpers.ts` | ✅ 완료 |
-| S5 | Content-Disposition 파일명 인젝션 | 🟡 중간 | `chat-upload.ts` | ✅ 완료 |
-| S6 | Prompt Injection (projectPath) | 🟡 중간 | `api-provider-tools.ts` | ✅ 완료 |
-| S7 | ReDoS (lookbehind 정규식) | 🟡 중간 | `reply-core-tools.ts`, `messenger-notice-format.ts` | ✅ 완료 |
-| S8 | TOCTOU 파일 읽기 경쟁 조건 | 🟡 중간 | `chat-upload.ts` | ✅ 완료 |
-| S9 | 파일 쓰기 비원자성 | 🟢 낮음 | `custom-skills.ts` | ✅ 완료 |
+| S1 | Path Traversal | 🔴 High | `task-reports/routes.ts` | ✅ Done |
+| S2 | GitHub PAT validation bypass | 🔴 High | `github-routes.ts` | ✅ Done |
+| S3 | git clone path escape | 🔴 High | `github-routes.ts` | ✅ Done |
+| S4 | OAuth `.ts.net` redirect bypass | 🔴 High | `oauth/helpers.ts` | ✅ Done |
+| S5 | Content-Disposition filename injection | 🟡 Medium | `chat-upload.ts` | ✅ Done |
+| S6 | Prompt Injection (projectPath) | 🟡 Medium | `api-provider-tools.ts` | ✅ Done |
+| S7 | ReDoS (lookbehind regex) | 🟡 Medium | `reply-core-tools.ts`, `messenger-notice-format.ts` | ✅ Done |
+| S8 | TOCTOU file read race condition | 🟡 Medium | `chat-upload.ts` | ✅ Done |
+| S9 | Non-atomic file writes | 🟢 Low | `custom-skills.ts` | ✅ Done |
 
-#### 2차 패치
+#### Patch Round 2
 
-| # | 취약점 | 심각도 | 파일 | 상태 |
+| # | Vulnerability | Severity | File | Status |
 |---|--------|--------|------|------|
-| S10 | 에러 메시지 정보노출 (update API) | 🔴 높음 | `register.ts` | ✅ 완료 |
-| S11 | 에러 메시지 정보노출 (GitHub API) | 🔴 높음 | `github-routes.ts` | ✅ 완료 |
-| S12 | git clone stderr WS 브로드캐스트 | 🔴 높음 | `github-routes.ts` | ✅ 완료 |
-| S13 | 에러 메시지 정보노출 (API Providers) | 🟡 중간 | `api-providers.ts` | ✅ 완료 |
+| S10 | Error message information disclosure (update API) | 🔴 High | `register.ts` | ✅ Done |
+| S11 | Error message information disclosure (GitHub API) | 🔴 High | `github-routes.ts` | ✅ Done |
+| S12 | git clone stderr WS broadcast | 🔴 High | `github-routes.ts` | ✅ Done |
+| S13 | Error message information disclosure (API Providers) | 🟡 Medium | `api-providers.ts` | ✅ Done |
 
 ---
 
-### 📊 우선순위 요약 (2026-03-14 기준)
+### 📊 Priority Summary (as of 2026-03-14)
 
-| 코드 | 작업 | 예상 기간 | 임팩트 | 상태 |
+| Code | Task | Est. Duration | Impact | Status |
 |------|------|---------|--------|------|
-| ~~P0-1~~ | ~~미팅 참여자 필터링 버그~~ | 0.5일 | 🔴 P0 버그 | ✅ 완료 |
-| ~~P0-2~~ | ~~OAuth 해싱 취약~~ | 1일 | 🔴 보안 | ✅ 완료 |
-| ~~P0-3~~ | ~~Rate Limiting~~ | 0.5일 | 🔴 보안 | ✅ 완료 |
-| ~~P0-4~~ | ~~WebSocket 연결 제한~~ | 0.5일 | 🔴 보안 | ✅ 완료 |
-| ~~P0-5~~ | ~~환경 변수 검증~~ | 0.5일 | 🔴 안정성 | ✅ 완료 |
-| ~~P1-1~~ | ~~Zustand 상태 관리~~ | 4일 | 성능·개발속도 | ✅ 완료 |
-| ~~P1-2~~ | ~~WorkflowPackKey → category_id 브리지~~ | 3일 | 코드 명확성 | ✅ 완료 |
-| ~~P1-3~~ | ~~메신저 재시도~~ | 1일 | 안정성 | ✅ 완료 |
-| ~~P1-4~~ | ~~DB 마이그레이션 버전~~ | 2일 | 안정성 | ✅ 완료 |
-| ~~P1-5~~ | ~~Map 메모리 누수~~ | 1일 | 안정성 | ✅ 완료 |
-| ~~P1-6~~ | ~~구조화 로깅 (pino)~~ | 2일 | 운영성 | ✅ 완료 |
-| ~~P2-1~~ | ~~Agent Flow Graph~~ | 3~4주 | 🎯 핵심 비전 | ✅ 완료 |
-| ~~P2-2~~ | ~~실행 비용 추적~~ | 3일 | 사용성 | ✅ 완료 |
-| ~~P2-3~~ | ~~동시 실행 큐~~ | 3일 | 확장성 | ✅ 완료 |
-| ~~P2-4~~ | ~~spawn DB 배치화~~ | 2일 | 성능 | ✅ 완료 |
-| ~~P2-5~~ | ~~에이전트 타임라인~~ | 3일 | 시각화 | ✅ 완료 |
-| ~~P2-6~~ | ~~태스크 핸드오프~~ | 4일 | 기능 확장 | ✅ 완료 |
-| ~~P2-7~~ | ~~페르소나 UI 완성~~ | 2일 | UI 완성도 | ✅ 완료 |
-| ~~P2-8~~ | ~~WebSocket 최적화~~ | 2일 | 성능 | ✅ 완료 |
-| ~~P3-1~~ | ~~Split-Pane Layout~~ | 3~4일 | IDE 비전 | ✅ 완료 |
-| ~~P3-2~~ | ~~Visual Workflow Builder~~ | 3~4주 | IDE 비전 | ✅ 완료 |
-| ~~P3-3~~ | ~~Keyboard-First UX~~ | 1주 | UX 완성도 | ✅ 완료 |
-| ~~P3-4~~ | ~~테스트 커버리지~~ | 3~4주 | 품질 | ✅ 완료 |
-| ~~P3-5~~ | ~~이상 감지 최적화~~ | 1일 | 성능 | ✅ 완료 |
-| ~~P3-6~~ | ~~Slack 연동~~ | 3일 | 기능 확장 | ✅ 완료 |
-| ~~S1~9~~ | ~~보안 패치 1차 (경로탐색·OAuth·ReDoS 등)~~ | 1일 | 🔴 보안 | ✅ 완료 |
-| ~~S10~13~~ | ~~보안 패치 2차 (에러 정보노출·stderr 브로드캐스트)~~ | 0.5일 | 🔴 보안 | ✅ 완료 |
-| ~~Ph5~~ | ~~Phase 5 (ReplWindow·단축키·CommandPalette)~~ | 1일 | UI 완성도 | ✅ 완료 |
+| ~~P0-1~~ | ~~Meeting participant filtering bug~~ | 0.5d | 🔴 P0 bug | ✅ Done |
+| ~~P0-2~~ | ~~OAuth hashing vulnerability~~ | 1d | 🔴 Security | ✅ Done |
+| ~~P0-3~~ | ~~Rate limiting~~ | 0.5d | 🔴 Security | ✅ Done |
+| ~~P0-4~~ | ~~WebSocket connection limit~~ | 0.5d | 🔴 Security | ✅ Done |
+| ~~P0-5~~ | ~~Environment variable validation~~ | 0.5d | 🔴 Stability | ✅ Done |
+| ~~P1-1~~ | ~~Zustand state management~~ | 4d | Perf & dev velocity | ✅ Done |
+| ~~P1-2~~ | ~~WorkflowPackKey → category_id bridge~~ | 3d | Code clarity | ✅ Done |
+| ~~P1-3~~ | ~~Messenger retry~~ | 1d | Stability | ✅ Done |
+| ~~P1-4~~ | ~~DB migration versioning~~ | 2d | Stability | ✅ Done |
+| ~~P1-5~~ | ~~Map memory leak~~ | 1d | Stability | ✅ Done |
+| ~~P1-6~~ | ~~Structured logging (pino)~~ | 2d | Operability | ✅ Done |
+| ~~P2-1~~ | ~~Agent Flow Graph~~ | 3–4w | 🎯 Core vision | ✅ Done |
+| ~~P2-2~~ | ~~Execution cost tracking~~ | 3d | Usability | ✅ Done |
+| ~~P2-3~~ | ~~Concurrent execution queue~~ | 3d | Scalability | ✅ Done |
+| ~~P2-4~~ | ~~Spawn DB batching~~ | 2d | Performance | ✅ Done |
+| ~~P2-5~~ | ~~Agent timeline~~ | 3d | Visualization | ✅ Done |
+| ~~P2-6~~ | ~~Task handoff~~ | 4d | Feature expansion | ✅ Done |
+| ~~P2-7~~ | ~~Persona UI completion~~ | 2d | UI completeness | ✅ Done |
+| ~~P2-8~~ | ~~WebSocket optimization~~ | 2d | Performance | ✅ Done |
+| ~~P3-1~~ | ~~Split-Pane Layout~~ | 3–4d | IDE vision | ✅ Done |
+| ~~P3-2~~ | ~~Visual Workflow Builder~~ | 3–4w | IDE vision | ✅ Done |
+| ~~P3-3~~ | ~~Keyboard-First UX~~ | 1w | UX completeness | ✅ Done |
+| ~~P3-4~~ | ~~Test coverage~~ | 3–4w | Quality | ✅ Done |
+| ~~P3-5~~ | ~~Anomaly detection optimization~~ | 1d | Performance | ✅ Done |
+| ~~P3-6~~ | ~~Slack integration~~ | 3d | Feature expansion | ✅ Done |
+| ~~S1~9~~ | ~~Security patch round 1 (path traversal, OAuth, ReDoS, etc.)~~ | 1d | 🔴 Security | ✅ Done |
+| ~~S10~13~~ | ~~Security patch round 2 (error disclosure, stderr broadcast)~~ | 0.5d | 🔴 Security | ✅ Done |
+| ~~Ph5~~ | ~~Phase 5 (ReplWindow, shortcuts, CommandPalette)~~ | 1d | UI completeness | ✅ Done |
 
 
 
 ---
 
-## 9. 문서 지도
+## 9. Document Map
 
-| 문서 | 내용 |
+| Document | Contents |
 |---|---|
-| [`docs/OVERVIEW.md`](./OVERVIEW.md) | **지금 이 문서** — 전체 개요 |
-| [`docs/specs/api.md`](./specs/api.md) | REST API 전체 명세 |
-| [`docs/architecture/SYSTEM-STRUCTURE-MAP.md`](./architecture/SYSTEM-STRUCTURE-MAP.md) | 시스템 구조 맵 |
-| [`docs/architecture/schema-erd.md`](./architecture/schema-erd.md) | DB 스키마 ER 다이어그램 + 상태 머신 |
-| [`docs/architecture/ARCHITECTURE-AUDIT-2026-Q1.md`](./architecture/ARCHITECTURE-AUDIT-2026-Q1.md) | **종합 아키텍처 + 백엔드 감사** (FE/BE/보안/성능/로드맵) |
-| [`docs/strategy/agent-performance-audit.md`](./strategy/agent-performance-audit.md) | 에이전트 실행 성능 감사 + 로드맵 (Phase 1 완료) |
-| [`docs/strategy/bigger-ide-vision.md`](./strategy/bigger-ide-vision.md) | "더 큰 IDE" 전략 비전 |
-| [`docs/strategy/agent-persona-system.md`](./strategy/agent-persona-system.md) | 에이전트 페르소나 시스템 |
-| [`docs/design/DESIGN.md`](./design/DESIGN.md) | UI 구현 레퍼런스 — CSS 변수 전체 + 컴포넌트 패턴 |
-| [`docs/design/UI-SCREENS.md`](./design/UI-SCREENS.md) | 전체 화면·모달 명세 (13 + 36개) |
+| [`docs/OVERVIEW.md`](./OVERVIEW.md) | **This document** — full overview |
+| [`docs/specs/api.md`](./specs/api.md) | Full REST API specification |
+| [`docs/architecture/SYSTEM-STRUCTURE-MAP.md`](./architecture/SYSTEM-STRUCTURE-MAP.md) | System structure map |
+| [`docs/architecture/schema-erd.md`](./architecture/schema-erd.md) | DB schema ER diagram + state machines |
+| [`docs/architecture/ARCHITECTURE-AUDIT-2026-Q1.md`](./architecture/ARCHITECTURE-AUDIT-2026-Q1.md) | **Comprehensive architecture + backend audit** (FE/BE/security/performance/roadmap) |
+| [`docs/strategy/agent-performance-audit.md`](./strategy/agent-performance-audit.md) | Agent execution performance audit + roadmap (Phase 1 complete) |
+| [`docs/strategy/bigger-ide-vision.md`](./strategy/bigger-ide-vision.md) | "Bigger IDE" strategic vision |
+| [`docs/strategy/agent-persona-system.md`](./strategy/agent-persona-system.md) | Agent persona system |
+| [`docs/design/DESIGN.md`](./design/DESIGN.md) | UI implementation reference — full CSS variables + component patterns |
+| [`docs/design/UI-SCREENS.md`](./design/UI-SCREENS.md) | Full screen & modal specification (13 + 36) |
 
 ---
 
-## 10. 빠른 시작
+## 10. Quick Start
 
 ```bash
 pnpm install
@@ -517,12 +517,12 @@ pnpm dev
 # → http://localhost:8800
 ```
 
-### 첫 에이전트 등록 흐름
+### First Agent Registration Flow
 
 ```
-1. Settings → API Provider 설정 (Claude / OpenAI / 등)
-2. Agents → 에이전트 생성 + 페르소나 설정
-3. Projects → 프로젝트 생성 + 에이전트 배정
-4. Library → 프로젝트용 Rules / Memory / Hooks 설정
-5. Tasks → 태스크 생성 → 실행 → 터미널 패널에서 실시간 모니터링
+1. Settings → Configure API Provider (Claude / OpenAI / etc.)
+2. Agents → Create agent + configure persona
+3. Projects → Create project + assign agents
+4. Library → Configure Rules / Memory / Hooks for the project
+5. Tasks → Create task → Run → monitor in real time from the terminal panel
 ```
