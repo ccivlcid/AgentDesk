@@ -4,7 +4,7 @@
 
 AgentDesk brings a macOS-style desktop metaphor to AI agent orchestration — menubar, desktop icons, draggable widgets, Dock, and floating app windows, all in one dark terminal-inspired interface.
 
-> 🇰🇷 [한국어 README](README_ko.md)
+> 🇰🇷 [한국어](README_ko.md) · 🇯🇵 [日本語](README_jp.md) · 🇨🇳 [中文](README_zh.md)
 
 ---
 
