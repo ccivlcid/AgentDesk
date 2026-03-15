@@ -18,6 +18,8 @@ import AlertsWidget from "./widgets/AlertsWidget";
 import CliCostWidget from "./widgets/CliCostWidget";
 import FlowGraphWidget from "./widgets/FlowGraphWidget";
 import WallpaperPicker from "./WallpaperPicker";
+import QuickLook from "./QuickLook";
+import MissionControl from "./MissionControl";
 import { deleteProject } from "../../api/organization-projects";
 import WorkflowWindow from "../windows/WorkflowWindow";
 import LibraryWindow from "../windows/LibraryWindow";
@@ -92,6 +94,10 @@ export default function Desktop({
     toggleWindow,
     widgetLayout,
     wallpaper,
+    jiggleMode,
+    setJiggleMode,
+    missionControlOpen,
+    setMissionControlOpen,
   } = useUiStore();
 
   const { projects, categories, currentProjectId, setCurrentProjectId } = useProjectStore();
@@ -105,6 +111,8 @@ export default function Desktop({
   const [showWallpaperPicker, setShowWallpaperPicker] = useState(false);
   const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number } | null>(null);
   const [projectCtxMenu, setProjectCtxMenu] = useState<{ x: number; y: number; projectId: string; projectName: string } | null>(null);
+  const [quickLookProjectId, setQuickLookProjectId] = useState<string | null>(null);
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
 
   const { setProjects } = useProjectStore();
 
@@ -115,6 +123,37 @@ export default function Desktop({
     if (currentProjectId === projectId) setCurrentProjectId(null);
   }, [currentProjectId, setCurrentProjectId, setProjects]);
 
+  // ── 롱프레스 Jiggle Mode ────────────────────────────────────────
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressMoved = useRef(false);
+  const longPressStartPos = useRef({ x: 0, y: 0 });
+
+  function onDesktopMouseDown(e: React.MouseEvent) {
+    // 아이콘/위젯 위에서는 무시
+    if ((e.target as HTMLElement).closest("[data-no-ctx]") ||
+        (e.target as HTMLElement) !== e.currentTarget) return;
+    if (e.button !== 0) return;
+    longPressMoved.current = false;
+    longPressStartPos.current = { x: e.clientX, y: e.clientY };
+    if (longPressTimer.current) clearTimeout(longPressTimer.current);
+    longPressTimer.current = setTimeout(() => {
+      if (!longPressMoved.current) setJiggleMode(true);
+    }, 600);
+  }
+
+  function onDesktopMouseMove(e: React.MouseEvent) {
+    const dx = e.clientX - longPressStartPos.current.x;
+    const dy = e.clientY - longPressStartPos.current.y;
+    if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
+      longPressMoved.current = true;
+      if (longPressTimer.current) clearTimeout(longPressTimer.current);
+    }
+  }
+
+  function onDesktopMouseUp() {
+    if (longPressTimer.current) clearTimeout(longPressTimer.current);
+  }
+
   // ── 키보드 단축키 ───────────────────────────────────────────────
   const gPending = useRef(false);
   const gTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -124,14 +163,35 @@ export default function Desktop({
       const tag = (e.target as HTMLElement)?.tagName;
       const isInput = tag === "INPUT" || tag === "TEXTAREA" || (e.target as HTMLElement)?.isContentEditable;
 
-      // Ctrl+Shift+K — CommandPalette
-      if (e.ctrlKey && e.shiftKey && e.key === "K") {
+      // Esc — jiggle 해제, quickLook 닫기
+      if (e.key === "Escape") {
+        if (jiggleMode) { setJiggleMode(false); return; }
+        if (quickLookProjectId) { setQuickLookProjectId(null); return; }
+        if (missionControlOpen) { setMissionControlOpen(false); return; }
+      }
+
+      // Ctrl+Shift+K or Cmd+K — CommandPalette
+      if ((e.ctrlKey && e.shiftKey && e.key === "K") || (e.metaKey && e.key === "k")) {
         e.preventDefault();
         setShowCommandPalette((v) => !v);
         return;
       }
 
+      // Ctrl+ArrowUp — Mission Control
+      if (e.ctrlKey && e.key === "ArrowUp") {
+        e.preventDefault();
+        setMissionControlOpen((v) => !v);
+        return;
+      }
+
       if (isInput) return;
+
+      // Space — Quick Look on selected project
+      if (e.key === " " && selectedProjectId) {
+        e.preventDefault();
+        setQuickLookProjectId(selectedProjectId);
+        return;
+      }
 
       // ? — ShortcutsGuide
       if (e.key === "?" && !e.ctrlKey && !e.metaKey) {
@@ -167,7 +227,16 @@ export default function Desktop({
       window.removeEventListener("keydown", handler);
       if (gTimer.current) clearTimeout(gTimer.current);
     };
-  }, [toggleWindow]);
+  }, [toggleWindow, jiggleMode, setJiggleMode, missionControlOpen, setMissionControlOpen, quickLookProjectId, selectedProjectId]);
+
+  // jiggle 모드에서 바탕화면 클릭 시 해제
+  function onDesktopClick(e: React.MouseEvent) {
+    setCtxMenu(null);
+    setProjectCtxMenu(null);
+    if (jiggleMode && e.target === e.currentTarget) {
+      setJiggleMode(false);
+    }
+  }
 
   // 데스크톱 아이콘 정의 (채팅·라이브러리는 Dock에서 제공)
   const icons: DesktopIconDef[] = [
@@ -183,6 +252,8 @@ export default function Desktop({
     acc[def.id] = { x: 40 + i * 90, y: 60 };
     return acc;
   }, {});
+
+  const quickLookProject = quickLookProjectId ? projects.find((p) => p.id === quickLookProjectId) ?? null : null;
 
   return (
     <div
@@ -200,7 +271,10 @@ export default function Desktop({
         e.preventDefault();
         setCtxMenu({ x: e.clientX, y: e.clientY });
       }}
-      onClick={() => { setCtxMenu(null); setProjectCtxMenu(null); }}
+      onClick={onDesktopClick}
+      onMouseDown={onDesktopMouseDown}
+      onMouseMove={onDesktopMouseMove}
+      onMouseUp={onDesktopMouseUp}
     >
       {/* 메뉴바 */}
       <MenuBar
@@ -213,6 +287,10 @@ export default function Desktop({
         notificationSlot={
           <NotificationCenter on={on} />
         }
+        onOpenWallpaperPicker={() => setShowWallpaperPicker(true)}
+        onOpenWidgetPicker={() => setShowWidgetPicker(true)}
+        onOpenMissionControl={() => setMissionControlOpen(true)}
+        onOpenShortcuts={() => setShowShortcutsGuide(true)}
       />
 
       {/* 바탕화면 영역 (메뉴바 아래, Dock 위) */}
@@ -248,7 +326,12 @@ export default function Desktop({
             id: `project-${project.id}`,
             emoji: isActive ? "📂" : "📁",
             label: project.name,
-            onClick: () => setCurrentProjectId(project.id),
+            deletable: true,
+            onDelete: () => handleDeleteProject(project.id),
+            onClick: () => {
+              setCurrentProjectId(project.id);
+              setSelectedProjectId(project.id);
+            },
             onContextMenu: (e) => setProjectCtxMenu({ x: e.clientX, y: e.clientY, projectId: project.id, projectName: project.name }),
           };
           return (
@@ -333,6 +416,21 @@ export default function Desktop({
       {/* 배경화면 피커 */}
       {showWallpaperPicker && <WallpaperPicker onClose={() => setShowWallpaperPicker(false)} />}
 
+      {/* Quick Look */}
+      {quickLookProject && (
+        <QuickLook project={quickLookProject} onClose={() => setQuickLookProjectId(null)} />
+      )}
+
+      {/* Mission Control */}
+      {missionControlOpen && (
+        <MissionControl
+          openWindows={openWindows}
+          widgetLayout={widgetLayout}
+          onClose={() => setMissionControlOpen(false)}
+          onFocusWindow={(w) => { openWindow(w); setMissionControlOpen(false); }}
+        />
+      )}
+
       {/* 프로젝트 아이콘 우클릭 메뉴 */}
       {projectCtxMenu && (
         <div
@@ -357,6 +455,12 @@ export default function Desktop({
           </div>
           {[
             {
+              label: "빠른 미리보기",
+              icon: "⌃",
+              shortcut: "Space",
+              action: () => { setSelectedProjectId(projectCtxMenu.projectId); setQuickLookProjectId(projectCtxMenu.projectId); setProjectCtxMenu(null); },
+            },
+            {
               label: "프로젝트 전환",
               icon: "↩",
               action: () => { setCurrentProjectId(projectCtxMenu.projectId); setProjectCtxMenu(null); },
@@ -367,7 +471,7 @@ export default function Desktop({
               danger: true,
               action: () => handleDeleteProject(projectCtxMenu.projectId),
             },
-          ].map(({ label, icon, danger, action }) => (
+          ].map(({ label, icon, shortcut, danger, action }) => (
             <button
               key={label}
               onClick={action}
@@ -378,12 +482,16 @@ export default function Desktop({
                 fontFamily: "var(--th-font-mono)", fontSize: 12,
                 color: danger ? "#f87171" : "rgba(255,255,255,0.85)",
                 textAlign: "left",
+                justifyContent: "space-between",
               }}
               onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = danger ? "rgba(248,113,113,0.12)" : "rgba(139,92,246,0.18)"; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "none"; }}
             >
-              <span style={{ fontSize: 13 }}>{icon}</span>
-              {label}
+              <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontSize: 13 }}>{icon}</span>
+                {label}
+              </span>
+              {shortcut && <span style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>{shortcut}</span>}
             </button>
           ))}
         </div>

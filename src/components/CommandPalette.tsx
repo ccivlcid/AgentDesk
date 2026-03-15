@@ -197,11 +197,12 @@ export default function CommandPalette({
         position: "fixed",
         inset: 0,
         zIndex: 10100,
-        background: "var(--th-modal-overlay)",
+        background: "rgba(0,0,0,0.55)",
+        backdropFilter: "blur(6px)",
         display: "flex",
-        alignItems: "flex-start",
+        alignItems: "center",
         justifyContent: "center",
-        paddingTop: "12vh",
+        paddingBottom: "10vh",
       }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
@@ -210,74 +211,59 @@ export default function CommandPalette({
         aria-label="Command palette"
         tabIndex={-1}
         style={{
-          width: "min(600px, 92vw)",
-          background: "var(--th-bg-elevated)",
-          border: `1px solid ${border}`,
-          borderRadius: 10,
-          boxShadow: "0 16px 48px rgba(0,0,0,0.35)",
+          width: "min(640px, 94vw)",
+          background: "rgba(18,18,24,0.97)",
+          backdropFilter: "blur(32px) saturate(180%)",
+          border: "1px solid rgba(255,255,255,0.10)",
+          borderRadius: 16,
+          boxShadow: "0 32px 80px rgba(0,0,0,0.65), inset 0 1px 0 rgba(255,255,255,0.07)",
           overflow: "hidden",
         }}
         onKeyDown={handleKeyDown}
       >
-        {/* Header */}
+        {/* Header — Spotlight 스타일 대형 검색창 */}
         <div
           style={{
             display: "flex",
             alignItems: "center",
-            gap: 12,
-            padding: "12px 18px",
-            borderBottom: `1px solid ${border}`,
-            background: "var(--th-bg-panel)",
-            borderTopLeftRadius: 10,
-            borderTopRightRadius: 10,
+            gap: 14,
+            padding: "0 20px",
+            borderBottom: `1px solid rgba(255,255,255,0.07)`,
+            height: 64,
           }}
         >
-          <div className="flex flex-shrink-0 items-center gap-1.5">
-            <button
-              type="button"
-              onClick={onClose}
-              aria-label="Close"
-              className="h-3 w-3 flex-shrink-0 rounded-full border-0 transition-opacity hover:opacity-90"
-              style={{ background: "#ff5f57" }}
-            />
-            <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#ffbd2e" }} />
-            <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#27c93f" }} />
-          </div>
-          <div style={{ width: 1, height: 22, background: border, flexShrink: 0 }} />
-          {/* Search input */}
-          <div style={{ flex: 1, display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-            <span style={{ ...mono, color: accent, fontSize: "11px", fontWeight: 700, flexShrink: 0 }}>⌘</span>
-            <input
-              ref={inputRef}
-              value={query}
-              onChange={(e) => { setQuery(e.target.value); setSelectedIndex(0); }}
-              onKeyDown={(e) => {
-                if (["Escape", "ArrowDown", "ArrowUp", "Enter"].includes(e.key)) {
-                  e.stopPropagation();
-                  handleKeyDown(e as unknown as React.KeyboardEvent<HTMLDivElement>);
-                }
-              }}
-              placeholder={t({ ko: "태스크, 에이전트, 프로젝트, 뷰 검색...", en: "Search tasks, agents, projects, views...", ja: "タスク、エージェント、プロジェクト、ビューを検索...", zh: "搜索任务、代理、项目、视图..." })}
-              style={{
-                flex: 1,
-                background: "none",
-                border: "none",
-                outline: "none",
-                ...mono,
-                fontSize: "13px",
-                color: "var(--th-text-primary)",
-                minWidth: 0,
-              }}
-            />
-            <span style={{ ...mono, fontSize: "10px", color: muted, padding: "2px 6px", border: `1px solid ${border}`, flexShrink: 0 }}>
-              Esc
-            </span>
-          </div>
+          {/* 🔍 아이콘 */}
+          <span style={{ fontSize: 20, opacity: 0.5, flexShrink: 0 }}>🔍</span>
+          <input
+            ref={inputRef}
+            value={query}
+            onChange={(e) => { setQuery(e.target.value); setSelectedIndex(0); }}
+            onKeyDown={(e) => {
+              if (["Escape", "ArrowDown", "ArrowUp", "Enter"].includes(e.key)) {
+                e.stopPropagation();
+                handleKeyDown(e as unknown as React.KeyboardEvent<HTMLDivElement>);
+              }
+            }}
+            placeholder={t({ ko: "AgentDesk 검색...", en: "Search AgentDesk...", ja: "AgentDesk を検索...", zh: "搜索 AgentDesk..." })}
+            style={{
+              flex: 1,
+              background: "none",
+              border: "none",
+              outline: "none",
+              ...mono,
+              fontSize: "18px",
+              color: "var(--th-text-primary)",
+              minWidth: 0,
+            }}
+          />
+          <span style={{ ...mono, fontSize: "10px", color: muted, padding: "2px 6px", border: `1px solid rgba(255,255,255,0.12)`, borderRadius: 4, flexShrink: 0 }}>
+            Esc
+          </span>
         </div>
 
         {/* Current project context */}
         {currentProject && (
-          <div style={{ padding: "6px 16px", borderBottom: `1px solid ${border}`, background: "var(--th-bg-base)", display: "flex", alignItems: "center", gap: 6 }}>
+          <div style={{ padding: "5px 20px", borderBottom: `1px solid rgba(255,255,255,0.05)`, display: "flex", alignItems: "center", gap: 6 }}>
             <span style={{ ...mono, fontSize: "9px", color: muted }}>
               {t({ ko: "현재 프로젝트:", en: "project:", ja: "現在:", zh: "当前:" })}
             </span>

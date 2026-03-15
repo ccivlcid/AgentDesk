@@ -1,6 +1,6 @@
 # AgentDesk — UI 화면 & 인터랙션 명세
 
-> **최종 업데이트:** 2026-03-15 (Composition 탭 추가, ReplWindow openWindows 반영)
+> **최종 업데이트:** 2026-03-15 (6개 macOS UX 기능 추가: Spotlight·Jiggle·QuickLook·MissionControl·알림슬라이드·앱메뉴)
 > 메뉴바 + 데스크톱 아이콘 + 위젯 + Dock + 앱 창 구조
 > **디자인 참조:** `DESIGN.md` (CSS 변수), `AI-GUIDE.md` (개발 원칙)
 
@@ -62,11 +62,20 @@ AgentDesk는 macOS 바탕화면 은유로 설계된다. 사이드바가 없다.
 
 | 영역 | 구성 요소 | 역할 |
 |------|-----------|------|
-| 좌측 | AgentDesk 로고 | 홈(바탕화면) 복귀 |
+| 영역 | 구성 요소 | 역할 |
+|------|-----------|------|
+| 좌측 | **AgentDesk 버튼** | **앱 메뉴 드롭다운** (배경화면/위젯/단축키/Mission Control) |
 | 중앙 | 프로젝트 선택 드롭다운 | 현재 프로젝트 전환 |
 | 우측 | CLI 비용 요약 | 오늘 / 이번 달 비용 |
-| 우측 | 알림 벨 🔔 | NotificationCenter 열기 |
+| 우측 | 알림 벨 🔔 | **슬라이드 패널** (320px 우측에서 진입·퇴장) |
 | 우측 | 시각 | 현재 시간 |
+
+**앱 메뉴 항목:**
+- About AgentDesk (버전)
+- 배경화면 변경... → WallpaperPicker 열기
+- 위젯 추가... → WidgetPicker 열기
+- 키보드 단축키 → KeyboardShortcutsGuide 열기
+- Mission Control (`Ctrl ↑`) → MissionControl 오버뷰
 
 ---
 
@@ -74,18 +83,27 @@ AgentDesk는 macOS 바탕화면 은유로 설계된다. 사이드바가 없다.
 
 **파일:** `src/components/desktop/DesktopIcon.tsx`
 
-바탕화면에 기본 배치. 드래그로 위치 변경 가능.
-더블클릭 또는 클릭으로 해당 창/모달을 연다.
+바탕화면에 기본 배치. 드래그로 위치 변경 가능. 클릭으로 해당 창/모달을 연다.
 
-| 아이콘 | 레이블 | 클릭 시 열리는 것 | 대응하는 기존 기능 |
-|--------|--------|-------------------|-------------------|
-| 👤 | 에이전트 설정 | AgentManager 창 | Agents & Departments |
-| 📁 | 프로젝트 생성 | ProjectCreateModal | 프로젝트 생성 마법사 |
-| ▶ | 태스크 실행 | CreateTaskModal | 태스크 생성 |
-| ⚡ | 워크플로 빌더 | Workflow 창 (Builder 탭) | Workflow Builder |
-| 📋 | 라이브러리 | Library 창 (Skills 탭) | Library |
-| 💬 | 채팅 | Chat 창 | ChatPanel |
-| >_ | 에이전트 REPL | REPL 창 | (신규 — 직접 명령 실행) |
+**Jiggle Mode:** 빈 바탕화면 600ms 롱프레스 → 아이콘 흔들림 + 프로젝트 아이콘에 빨간 ✕ 배지 표시.
+✕ 클릭 시 프로젝트 삭제. Esc 또는 바탕화면 클릭으로 해제.
+
+**시스템 앱 아이콘 (삭제 불가):**
+
+| 아이콘 | 레이블 | 클릭 시 열리는 것 |
+|--------|--------|-------------------|
+| 👤 | 에이전트 설정 | AgentManager 창 |
+| 📁 | 프로젝트 생성 | ProjectCreateModal |
+| ▶ | 태스크 실행 | CreateTaskModal |
+| ⚡ | 워크플로 빌더 | Workflow 창 |
+| >_ | 에이전트 REPL | REPL 창 |
+
+**프로젝트 폴더 아이콘 (deletable: true):**
+- 활성 프로젝트: 📂, 비활성: 📁
+- 클릭: 해당 프로젝트로 전환 + 선택
+- Space (선택 후): Quick Look 패널 열기
+- 우클릭: 빠른 미리보기 / 프로젝트 전환 / 프로젝트 삭제
+- Jiggle 모드에서 ✕ 배지 클릭: 즉시 삭제
 
 > 우클릭 메뉴: 이름 변경 / 제거 / 바탕화면 재배열
 
@@ -526,8 +544,118 @@ src/
 │   ├── settings/                    # Settings 탭들
 │   └── ui/                          # ConfirmDialog 등 공용
 └── store/
-    ├── uiStore.ts                   # openWindows, widgetLayout, desktopIconLayout
+    ├── uiStore.ts                   # openWindows, widgetLayout, desktopIconLayout, wallpaper, jiggleMode, missionControlOpen
     ├── agentStore.ts
     ├── taskStore.ts
     └── projectStore.ts
 ```
+
+---
+
+## macOS UX 기능 명세 (6가지)
+
+### Feature 1 — Spotlight 고도화
+
+**파일:** `src/components/CommandPalette.tsx`
+
+| 항목 | 값 |
+|------|-----|
+| 진입 | `Ctrl+Shift+K` 또는 `Cmd+K` |
+| 크기 | 640px 중앙 정렬 |
+| 검색창 | 높이 64px, 폰트 18px, 🔍 아이콘 |
+| 기능 | 에이전트/태스크/프로젝트/뷰 검색, 최근 실행, 단축키 네비게이션 |
+| 배경 | `rgba(0,0,0,0.55)` + `backdropFilter: blur(6px)` |
+| 닫기 | Esc 또는 바깥 클릭 |
+
+---
+
+### Feature 2 — 아이콘 흔들기 (Jiggle Mode)
+
+**파일:** `src/components/desktop/DesktopIcon.tsx`, `src/store/uiStore.ts`
+
+| 항목 | 값 |
+|------|-----|
+| 진입 | 빈 바탕화면 600ms 롱프레스 |
+| 상태 | `uiStore.jiggleMode: boolean` |
+| 애니메이션 | `@keyframes jiggle { 0%,100%{rotate(-2.5deg)} 50%{rotate(2.5deg)} }` |
+| 삭제 배지 | 프로젝트 아이콘 좌상단 빨간 ✕ 원형 (18px), 클릭 시 프로젝트 삭제 |
+| 시스템 아이콘 | jiggle 애니메이션만, ✕ 없음 (삭제 불가) |
+| 해제 | Esc 키 또는 바탕화면 클릭 |
+
+---
+
+### Feature 3 — Quick Look (빠른 미리보기)
+
+**파일:** `src/components/desktop/QuickLook.tsx`
+
+| 항목 | 값 |
+|------|-----|
+| 진입 | 프로젝트 아이콘 클릭 후 `Space` 또는 우클릭 → 빠른 미리보기 |
+| 크기 | 420px, 화면 중앙 고정 |
+| 내용 | 프로젝트명, core_goal, project_path, task_count, last_used_at, 에이전트 아바타 |
+| 스타일 | 글래스 패널 `rgba(22,22,28,0.96)` + `blur(32px)` |
+| 닫기 | Esc, 닫기 버튼, 바깥 클릭 |
+
+---
+
+### Feature 4 — Mission Control
+
+**파일:** `src/components/desktop/MissionControl.tsx`
+
+| 항목 | 값 |
+|------|-----|
+| 진입 | `Ctrl+↑` 또는 AgentDesk 메뉴 → Mission Control |
+| 상태 | `uiStore.missionControlOpen: boolean` |
+| 내용 | 섹션 1: 열린 창 카드 그리드 / 섹션 2: 활성 위젯 카드 그리드 |
+| 스타일 | 전체화면 오버레이 `rgba(0,0,0,0.65)` + `blur(8px)` + `@keyframes mcFadeIn` |
+| 카드 클릭 | 해당 창 활성화 + Mission Control 닫기 |
+| 닫기 | Esc, 배경 클릭 |
+
+---
+
+### Feature 5 — 알림 센터 슬라이드 패널
+
+**파일:** `src/components/NotificationCenter.tsx`
+
+| 항목 | 값 |
+|------|-----|
+| 진입 | 메뉴바 벨 아이콘 클릭 |
+| 위치 | `position: fixed, top: 44px, right: 0, width: 320px, bottom: 80px` |
+| 진입 애니메이션 | `translateX(0)` ← `translateX(320px)`, `transition: 0.28s cubic-bezier(0.4,0,0.2,1)` |
+| 배경 | `rgba(18,18,22,0.96)` + `backdropFilter: blur(20px)` |
+| 배경 오버레이 | 반투명 `rgba(0,0,0,0.3)`, 클릭 시 닫힘 |
+| 기능 | 읽음/안읽음 필터, 타입 필터, 브라우저 푸시 토글, 전체 읽음 처리 |
+
+---
+
+### Feature 6 — MenuBar 앱 메뉴
+
+**파일:** `src/components/desktop/MenuBar.tsx`
+
+| 항목 | 값 |
+|------|-----|
+| 진입 | 메뉴바 좌상단 "AgentDesk" 버튼 클릭 |
+| 상태 | `appMenuOpen: boolean` (로컬 state) |
+| 드롭다운 위치 | `position: absolute, top: calc(100% + 6px), left: 0` |
+| 스타일 | `rgba(20,20,24,0.97)` + `blur(20px)`, `borderRadius: 10` |
+| 항목 | About(버전) / 배경화면 변경 / 위젯 추가 / 키보드 단축키 / Mission Control(Ctrl↑) |
+| 닫기 | 항목 선택 또는 바깥 클릭 |
+
+---
+
+## 단축키 전체 목록
+
+| 단축키 | 동작 |
+|--------|------|
+| `Ctrl+Shift+K` / `Cmd+K` | Spotlight (CommandPalette) |
+| `Ctrl+↑` | Mission Control |
+| `Space` (프로젝트 선택 후) | Quick Look |
+| `Esc` | Jiggle 해제 / Quick Look 닫기 / Mission Control 닫기 |
+| 빈 화면 600ms 롱프레스 | Jiggle Mode 진입 |
+| `g w` | Workflow 창 토글 |
+| `g l` | Library 창 토글 |
+| `g s` | Settings 창 토글 |
+| `g c` | Chat 창 토글 |
+| `g a` | Agent Manager 토글 |
+| `g e` | REPL 토글 |
+| `?` | 단축키 가이드 |

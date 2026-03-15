@@ -3,12 +3,21 @@ import { useUiStore } from "../../store/uiStore";
 
 const mono = "var(--th-font-mono)";
 
+const JIGGLE_STYLE = `
+@keyframes jiggle {
+  0%,100% { transform: rotate(-2.5deg) scale(1.02); }
+  50%     { transform: rotate(2.5deg)  scale(1.02); }
+}
+`;
+
 export interface DesktopIconDef {
   id: string;
   emoji: string;
   label: string;
   onClick: () => void;
   onContextMenu?: (e: React.MouseEvent) => void;
+  deletable?: boolean;
+  onDelete?: () => void;
 }
 
 interface DesktopIconProps {
@@ -18,7 +27,7 @@ interface DesktopIconProps {
 }
 
 export default function DesktopIcon({ def, defaultX, defaultY }: DesktopIconProps) {
-  const { desktopIconLayout, setDesktopIconLayout } = useUiStore();
+  const { desktopIconLayout, setDesktopIconLayout, jiggleMode } = useUiStore();
   const saved = desktopIconLayout[def.id];
   const [pos, setPos] = useState({ x: saved?.x ?? defaultX, y: saved?.y ?? defaultY });
   const [dragging, setDragging] = useState(false);
@@ -68,57 +77,94 @@ export default function DesktopIcon({ def, defaultX, defaultY }: DesktopIconProp
     }
   }
 
+  const isJiggling = jiggleMode;
+
   return (
-    <div
-      onMouseDown={onMouseDown}
-      onClick={onClick}
-      onContextMenu={onContextMenuHandler}
-      style={{
-        position: "absolute",
-        left: pos.x,
-        top: pos.y,
-        width: 72,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        gap: 4,
-        cursor: dragging ? "grabbing" : "pointer",
-        userSelect: "none",
-        zIndex: dragging ? 100 : 10,
-      }}
-    >
+    <>
+      <style>{JIGGLE_STYLE}</style>
       <div
+        onMouseDown={onMouseDown}
+        onClick={onClick}
+        onContextMenu={onContextMenuHandler}
         style={{
-          width: 56,
-          height: 56,
-          background: "rgba(255,255,255,0.04)",
-          border: "1px solid var(--th-border)",
-          borderRadius: 12,
+          position: "absolute",
+          left: pos.x,
+          top: pos.y,
+          width: 72,
           display: "flex",
+          flexDirection: "column",
           alignItems: "center",
-          justifyContent: "center",
-          fontSize: 26,
-          transition: dragging ? "none" : "background 0.15s",
+          gap: 4,
+          cursor: dragging ? "grabbing" : "pointer",
+          userSelect: "none",
+          zIndex: dragging ? 100 : 10,
+          animation: isJiggling ? "jiggle 0.18s ease-in-out infinite alternate" : "none",
         }}
-        onMouseEnter={(e) => { if (!dragging) (e.currentTarget as HTMLDivElement).style.background = "rgba(245,158,11,0.12)"; }}
-        onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.background = "rgba(255,255,255,0.04)"; }}
       >
-        {def.emoji}
+        {/* 삭제 배지 — jiggle 모드에서 deletable 아이콘에만 표시 */}
+        {isJiggling && def.deletable && def.onDelete && (
+          <div
+            onClick={(e) => {
+              e.stopPropagation();
+              def.onDelete!();
+            }}
+            style={{
+              position: "absolute",
+              top: -6,
+              left: -6,
+              width: 18,
+              height: 18,
+              borderRadius: "50%",
+              background: "#ff3b30",
+              border: "2px solid rgba(0,0,0,0.5)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 11,
+              color: "white",
+              fontWeight: "bold",
+              zIndex: 200,
+              cursor: "pointer",
+              lineHeight: 1,
+            }}
+          >
+            ✕
+          </div>
+        )}
+
+        <div
+          style={{
+            width: 56,
+            height: 56,
+            background: "rgba(255,255,255,0.04)",
+            border: "1px solid var(--th-border)",
+            borderRadius: 12,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 26,
+            transition: dragging ? "none" : "background 0.15s",
+          }}
+          onMouseEnter={(e) => { if (!dragging) (e.currentTarget as HTMLDivElement).style.background = "rgba(245,158,11,0.12)"; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.background = "rgba(255,255,255,0.04)"; }}
+        >
+          {def.emoji}
+        </div>
+        <span
+          style={{
+            fontFamily: mono,
+            fontSize: 10,
+            color: "var(--th-text-secondary)",
+            textAlign: "center",
+            lineHeight: 1.3,
+            textShadow: "0 1px 4px rgba(0,0,0,0.8)",
+            maxWidth: 72,
+            wordBreak: "keep-all",
+          }}
+        >
+          {def.label}
+        </span>
       </div>
-      <span
-        style={{
-          fontFamily: mono,
-          fontSize: 10,
-          color: "var(--th-text-secondary)",
-          textAlign: "center",
-          lineHeight: 1.3,
-          textShadow: "0 1px 4px rgba(0,0,0,0.8)",
-          maxWidth: 72,
-          wordBreak: "keep-all",
-        }}
-      >
-        {def.label}
-      </span>
-    </div>
+    </>
   );
 }

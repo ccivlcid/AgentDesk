@@ -68,9 +68,14 @@ interface UiStore {
   updateWidgetPos: (id: WidgetId, x: number, y: number) => void;
   updateWidgetSize: (id: WidgetId, w: number, h: number) => void;
   setDesktopIconLayout: (layout: Record<string, { x: number; y: number }>) => void;
+  jiggleMode: boolean;
+  missionControlOpen: boolean;
+
   setSelectedAgentId: (id: string | null) => void;
   setOpenTaskId: (id: string | null) => void;
   setWallpaper: (css: string) => void;
+  setJiggleMode: (v: boolean) => void;
+  setMissionControlOpen: (v: boolean) => void;
 
   // ── 기존 상태 ─────────────────────────────────────────────────────
   view: View;
@@ -151,10 +156,15 @@ export const useUiStore = create<UiStore>()((set) => ({
     saveWidgetLayout(next);
     return { widgetLayout: next };
   }),
+  jiggleMode: false,
+  missionControlOpen: false,
+
   setDesktopIconLayout: (layout) => { saveDesktopIconLayout(layout); set({ desktopIconLayout: layout }); },
   setSelectedAgentId: (id) => set({ selectedAgentId: id }),
   setOpenTaskId: (id) => set({ openTaskId: id }),
   setWallpaper: (css) => { saveWallpaper(css); set({ wallpaper: css }); },
+  setJiggleMode: (v) => set({ jiggleMode: v }),
+  setMissionControlOpen: (v) => set({ missionControlOpen: v }),
 
   // ── 기존 초기값 ───────────────────────────────────────────────────
   view: "dashboard",

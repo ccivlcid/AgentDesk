@@ -46,11 +46,14 @@ src/
 ├── App.tsx                      ← 루트: 스토어 구독 + WebSocket 연결
 ├── components/
 │   ├── desktop/
-│   │   ├── Desktop.tsx          ← 바탕화면 루트
-│   │   ├── MenuBar.tsx          ← 상단 메뉴바 (로고·프로젝트·비용·알림·시각)
-│   │   ├── DesktopIcon.tsx      ← 데스크톱 아이콘 (드래그 가능)
+│   │   ├── Desktop.tsx          ← 바탕화면 루트 (단축키·jiggle·QuickLook·MissionControl)
+│   │   ├── MenuBar.tsx          ← 상단 메뉴바 (로고·앱메뉴·프로젝트·비용·알림·시각)
+│   │   ├── DesktopIcon.tsx      ← 데스크톱 아이콘 (드래그·jiggle·✕ 삭제 배지)
 │   │   ├── Dock.tsx             ← 하단 Dock (⚡📚⚙💬)
 │   │   ├── Widget.tsx           ← 위젯 공통 컨테이너 (드래그·리사이즈)
+│   │   ├── QuickLook.tsx        ← 프로젝트 빠른 미리보기 패널 (Space 키)
+│   │   ├── MissionControl.tsx   ← 모든 창·위젯 오버뷰 (Ctrl+↑)
+│   │   ├── WallpaperPicker.tsx  ← 배경화면 선택 (10가지 그라데이션)
 │   │   └── widgets/             ← AgentsWidget, TasksWidget, AlertsWidget, CliCostWidget, FlowGraphWidget
 │   ├── windows/                 ← 앱 창 (WorkflowWindow, LibraryWindow, SettingsWindow, ChatWindow, AgentManagerWindow)
 │   ├── flow-graph/              ← AgentFlowGraph (FlowGraphWidget에서 재사용)
@@ -64,7 +67,7 @@ src/
 │   ├── agentStore.ts            ← agents, departments
 │   ├── taskStore.ts             ← tasks, subtasks
 │   ├── projectStore.ts          ← projects, categories
-│   └── uiStore.ts               ← openWindows(Set), widgetLayout, desktopIconLayout, selectedAgentId, openTaskId
+│   └── uiStore.ts               ← openWindows(Set), widgetLayout, desktopIconLayout, wallpaper, jiggleMode, missionControlOpen
 └── types/index.ts               ← Agent, Task, SubAgent 등 도메인 타입
 
 server/
@@ -121,6 +124,19 @@ server/
 
 ---
 
+## 4-5. macOS UX 기능 목록
+
+| 기능 | 진입 방법 | 구현 위치 |
+|------|-----------|-----------|
+| **Spotlight 검색** | `Ctrl+Shift+K` 또는 `Cmd+K` | `CommandPalette.tsx` (640px 중앙, 🔍 아이콘) |
+| **Jiggle Mode** | 빈 바탕화면 600ms 롱프레스 | `Desktop.tsx` + `DesktopIcon.tsx` |
+| **Quick Look** | 프로젝트 선택 후 `Space` 또는 우클릭 → 빠른 미리보기 | `QuickLook.tsx` |
+| **Mission Control** | `Ctrl+↑` 또는 AgentDesk 메뉴 | `MissionControl.tsx` |
+| **알림 슬라이드 패널** | 벨 아이콘 클릭 | `NotificationCenter.tsx` (320px 우측 슬라이드) |
+| **앱 메뉴** | "AgentDesk" 텍스트 클릭 | `MenuBar.tsx` (배경화면/위젯/단축키/Mission Control) |
+
+---
+
 ## 5. 새 API 엔드포인트 추가 순서
 
 1. `server/modules/routes/core.ts` 또는 해당 서브라우터에 라우트 추가
@@ -153,7 +169,22 @@ runGit(dir, ["config", "commit.gpgsign", "false"]);
 
 ### 앱 창 단축키
 `Desktop.tsx`의 단축키 맵 업데이트 후 `KeyboardShortcutsGuide.tsx`에도 항목 추가.
-현재 단축키: `g w` → Workflow 창 / `g l` → Library 창 / `g s` → Settings 창 / `g c` → Chat 창 / `g a` → Agent Manager / `g e` → REPL / `Ctrl+Shift+K` → Command Palette
+현재 단축키:
+
+| 단축키 | 동작 |
+|--------|------|
+| `Ctrl+Shift+K` / `Cmd+K` | Command Palette (Spotlight) |
+| `Ctrl+↑` | Mission Control |
+| `g w` | Workflow 창 토글 |
+| `g l` | Library 창 토글 |
+| `g s` | Settings 창 토글 |
+| `g c` | Chat 창 토글 |
+| `g a` | Agent Manager 토글 |
+| `g e` | REPL 토글 |
+| `Space` (아이콘 선택 후) | Quick Look 열기 |
+| `Esc` | Jiggle 해제 / Quick Look 닫기 / Mission Control 닫기 |
+| 빈 화면 600ms 롱프레스 | Jiggle Mode ON |
+| `?` | 단축키 가이드 |
 
 ---
 
