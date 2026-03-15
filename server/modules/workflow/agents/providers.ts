@@ -131,6 +131,7 @@ export function initializeWorkflowAgentProviders(ctx: RuntimeContext): any {
     broadcast,
     normalizeStreamChunk,
     handleTaskRunComplete,
+    nowMs,
     createSafeLogStreamOps,
     parseSSEStream,
     parseGeminiSSEStream,

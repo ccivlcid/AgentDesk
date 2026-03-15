@@ -8,18 +8,12 @@ import type { ApiProviderRow } from "./types.ts";
 type DbLike = {
   prepare: (sql: string) => {
     get: (...args: any[]) => unknown;
-  };
-};
-
-type DbWriteLike = {
-  prepare: (sql: string) => {
-    get: (...args: any[]) => unknown;
     run: (...args: any[]) => unknown;
   };
 };
 
 type CreateApiProviderToolsDeps = {
-  db: DbLike & DbWriteLike;
+  db: DbLike;
   logsDir: string;
   activeProcesses: Map<string, ChildProcess>;
   broadcast: (event: string, payload: unknown) => void;

@@ -190,6 +190,8 @@ export default function App() {
       onClearMessages={actions.handleClearMessages}
       onProjectCreate={() => setShowProjectCreate(true)}
       onCreateTask={() => setShowCreateTask(true)}
+      onOpenDecisionInbox={() => { setShowDecisionInbox(true); void actions.loadDecisionInbox(); }}
+      onOpenReportHistory={() => { /* handled by openWindows["reports"] */ }}
     >
       <AppOverlays
         showChat={showChat}
@@ -251,8 +253,8 @@ export default function App() {
         onCloseTaskPanel={() => setTaskPanel(null)}
         taskReport={taskReport}
         onCloseTaskReport={() => setTaskReport(null)}
-        showReportHistory={showReportHistory}
-        onCloseReportHistory={() => setShowReportHistory(false)}
+        showReportHistory={false}
+        onCloseReportHistory={() => { /* no-op */ }}
         showAgentStatus={showAgentStatus}
         onCloseAgentStatus={() => setShowAgentStatus(false)}
         showGroupChat={showGroupChat}
@@ -288,6 +290,17 @@ export default function App() {
               })
               .catch((err) => console.error("Project create failed:", err))
               .finally(() => setProjectCreateBusy(false));
+          }}
+          onGitHubComplete={(projectId) => {
+            import("./api/organization-projects").then(({ getProjectDetail }) => {
+              getProjectDetail(projectId)
+                .then((detail) => {
+                  setProjects((prev) => [...prev, detail.project]);
+                  setCurrentProjectId(detail.project.id);
+                  setShowProjectCreate(false);
+                })
+                .catch((err) => console.error("GitHub project fetch failed:", err));
+            });
           }}
           onClose={() => setShowProjectCreate(false)}
         />

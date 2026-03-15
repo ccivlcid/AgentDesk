@@ -1,7 +1,7 @@
 import { useRef, useState, type ReactNode } from "react";
 import type { WindowType } from "../../app/types";
 import { useUiStore } from "../../store/uiStore";
-import { useI18n } from "../../i18n";
+import TrafficLights from "../desktop/TrafficLights";
 
 const mono = "var(--th-font-mono)";
 
@@ -106,7 +106,6 @@ export default function AppWindow({
   defaultY,
 }: AppWindowProps) {
   const { closeWindow } = useUiStore();
-  const { t } = useI18n();
   const [activeTab, setActiveTab] = useState(tabs?.[0]?.id ?? "");
 
   const fallbackX = defaultX ?? Math.max(40, (window.innerWidth - defaultWidth) / 2);
@@ -114,6 +113,22 @@ export default function AppWindow({
   const saved = loadWinState(windowType, { x: fallbackX, y: fallbackY, w: defaultWidth, h: defaultHeight });
   const [pos, setPos] = useState({ x: saved.x, y: saved.y });
   const [size, setSize] = useState({ w: saved.w, h: saved.h });
+  const [maximized, setMaximized] = useState(false);
+  const preMaxRef = useRef<{ x: number; y: number; w: number; h: number } | null>(null);
+
+  function handleMaximize() {
+    if (!maximized) {
+      preMaxRef.current = { x: pos.x, y: pos.y, w: size.w, h: size.h };
+      setPos({ x: 0, y: 44 });
+      setSize({ w: window.innerWidth, h: window.innerHeight - 44 });
+      setMaximized(true);
+    } else {
+      const prev = preMaxRef.current ?? { x: fallbackX, y: fallbackY, w: defaultWidth, h: defaultHeight };
+      setPos({ x: prev.x, y: prev.y });
+      setSize({ w: prev.w, h: prev.h });
+      setMaximized(false);
+    }
+  }
   const dragStart = useRef<{ mx: number; my: number; ox: number; oy: number } | null>(null);
   const resizeState = useRef<ResizeState | null>(null);
 
@@ -220,15 +235,10 @@ export default function AppWindow({
         }}
       >
         {/* Traffic lights */}
-        <div style={{ display: "flex", gap: 5 }}>
-          <button
-            onMouseDown={(e) => e.stopPropagation()}
-            onClick={() => closeWindow(windowType)}
-            style={{ width: 12, height: 12, borderRadius: "50%", background: "#ff5f57", border: "none", cursor: "pointer", padding: 0 }}
-            title={t({ ko: "닫기", en: "Close", ja: "閉じる", zh: "关闭" })}
-            data-testid="window-close-btn"
-          />
-        </div>
+        <TrafficLights
+          onClose={() => closeWindow(windowType)}
+          onMaximize={handleMaximize}
+        />
         <span style={{ fontFamily: mono, fontSize: 11, color: "var(--th-text-muted)" }}>
           {emoji} {title}
         </span>
@@ -267,7 +277,7 @@ export default function AppWindow({
       )}
 
       {/* Content */}
-      <div style={{ flex: 1, overflow: "hidden", minHeight: 0 }}>
+      <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden", minHeight: 0 }}>
         {activeContent}
       </div>
 

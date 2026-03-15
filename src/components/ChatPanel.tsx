@@ -49,6 +49,7 @@ interface ChatPanelProps {
   ) => void;
   onClearMessages?: (agentId?: string) => void;
   onClose: () => void;
+  embedded?: boolean;
 }
 
 export function ChatPanel({
@@ -61,6 +62,7 @@ export function ChatPanel({
   onSendDirective,
   onClearMessages,
   onClose,
+  embedded = false,
 }: ChatPanelProps) {
   const [input, setInput] = useState("");
   const [attachments, setAttachments] = useState<File[]>([]);
@@ -503,6 +505,7 @@ export function ChatPanel({
         onClearMessages={onClearMessages ? () => onClearMessages(undefined) : undefined}
         onSearchToggle={handleSearchToggle}
         onSearchChange={setSearchQuery}
+        embedded={embedded}
       />
     );
   }

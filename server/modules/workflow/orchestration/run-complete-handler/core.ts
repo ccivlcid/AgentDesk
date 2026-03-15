@@ -128,7 +128,11 @@ export function createRunCompleteHandler(deps: RunCompleteHandlerDeps) {
     const isVideoPreprodCollabChild = isVideoPreprodTask && !!task.source_task_id && !isVideoFinalRenderTask;
 
     const artifactSync = (!isVideoPreprodTask || isVideoPreprodCollabChild)
-      ? { videoArtifactReady: false, videoArtifactSpec: { relativePath: "" } }
+      ? {
+          videoArtifactReady: false,
+          videoArtifactSpec: { fileName: "", relativePath: "", legacyRelativePath: "" },
+          projectCandidates: [],
+        }
       : handleVideoArtifactSync(taskId, task, {
           db: db as { prepare: (sql: string) => { get: (...args: unknown[]) => unknown } },
           taskWorktrees: taskWorktrees as Map<string, { worktreePath?: string; projectPath?: string }>,

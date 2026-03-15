@@ -171,8 +171,7 @@ function buildSlackConfig(db: DatabaseSync): SlackReceiverConfig {
   if (!slack) return { hasToken: false, hasSession: false, routes: [] };
 
   const rawToken = (slack as PersistedSlackChannel).token;
-  const tokenKey = buildMessengerTokenKey("slack", "token");
-  const decrypted = decryptMessengerTokenForRuntime(rawToken, tokenKey);
+  const decrypted = decryptMessengerTokenForRuntime("slack", rawToken);
   const token = normalizeSlackToken(decrypted);
   if (!token) return { hasToken: false, hasSession: false, routes: [] };
 
@@ -189,7 +188,7 @@ function buildSlackConfig(db: DatabaseSync): SlackReceiverConfig {
     if (!channelId) continue;
 
     const routeKey = buildMessengerTokenKey("slack", channelId);
-    const source = buildMessengerSourceWithTokenHint("slack", channelId, token);
+    const source = buildMessengerSourceWithTokenHint("slack", routeKey);
     routes.push({ routeKey, token, source, channelId });
   }
 

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useI18n } from "../i18n";
 import type { Agent, Task, Project } from "../types";
+import TrafficLights from "./desktop/TrafficLights";
 
 const HISTORY_KEY = "cp_history_v1";
 const MAX_HISTORY = 6;
@@ -32,20 +33,12 @@ interface CommandPaletteProps {
   onOpenShortcutsGuide?: () => void;
 }
 
-const STATUS_ICON: Record<string, string> = {
-  working: "●",
-  running: "●",
-  idle: "○",
-  offline: "─",
-  error: "✕",
-};
-
-const STATUS_COLOR: Record<string, string> = {
-  working: "#22c55e",
-  running: "#22c55e",
-  idle: "#6e7681",
-  offline: "#6e7681",
-  error: "#ef4444",
+const STATUS_DOT: Record<string, { color: string; label: string }> = {
+  working:  { color: "#30d158", label: "working" },
+  running:  { color: "#30d158", label: "running" },
+  idle:     { color: "#636366", label: "idle" },
+  offline:  { color: "#636366", label: "offline" },
+  error:    { color: "#ff453a", label: "error" },
 };
 
 export default function CommandPalette({
@@ -78,18 +71,17 @@ export default function CommandPalette({
   const q = query.toLowerCase().trim();
 
   const QUICK_ACTIONS = [
-    { label: t({ ko: "새 태스크 만들기", en: "New Task", ja: "新しいタスク", zh: "新建任务" }), icon: "+", shortcut: "N", action: "new-task" },
-    { label: t({ ko: "대시보드", en: "Dashboard", ja: "ダッシュボード", zh: "仪表板" }), icon: "▦", shortcut: "D", action: "dashboard" },
-    { label: t({ ko: "태스크 보드", en: "Task Board", ja: "タスクボード", zh: "任务板" }), icon: "≡", shortcut: "T", action: "tasks-board" },
-    { label: t({ ko: "에이전트 관리", en: "Agents", ja: "エージェント", zh: "代理管理" }), icon: "◎", shortcut: "A", action: "agents" },
-    { label: t({ ko: "스킬 라이브러리", en: "Skills", ja: "スキル", zh: "技能库" }), icon: "⬡", shortcut: "S", action: "skills" },
-    { label: t({ ko: "메모리", en: "Memory", ja: "メモリー", zh: "记忆" }), icon: "◈", shortcut: "M", action: "memory" },
-    { label: t({ ko: "에이전트 룰", en: "Agent Rules", ja: "エージェントルール", zh: "代理规则" }), icon: "⊞", shortcut: "R", action: "agent-rules" },
-    { label: t({ ko: "훅", en: "Hooks", ja: "フック", zh: "钩子" }), icon: "⤷", shortcut: "H", action: "hooks" },
-    { label: t({ ko: "설정", en: "Settings", ja: "設定", zh: "设置" }), icon: "⚙", shortcut: ",", action: "settings" },
+    { label: t({ ko: "새 태스크 만들기", en: "New Task", ja: "新しいタスク", zh: "新建任务" }), icon: "＋", bg: "#0a84ff", action: "new-task" },
+    { label: t({ ko: "대시보드", en: "Dashboard", ja: "ダッシュボード", zh: "仪表板" }), icon: "▦", bg: "#636366", action: "dashboard" },
+    { label: t({ ko: "태스크 보드", en: "Task Board", ja: "タスクボード", zh: "任务板" }), icon: "≡", bg: "#30d158", action: "tasks-board" },
+    { label: t({ ko: "에이전트 관리", en: "Agents", ja: "エージェント", zh: "代理管理" }), icon: "◎", bg: "#ff9f0a", action: "agents" },
+    { label: t({ ko: "스킬 라이브러리", en: "Skills", ja: "スキル", zh: "技能库" }), icon: "⬡", bg: "#bf5af2", action: "skills" },
+    { label: t({ ko: "메모리", en: "Memory", ja: "メモリー", zh: "记忆" }), icon: "◈", bg: "#ff375f", action: "memory" },
+    { label: t({ ko: "에이전트 룰", en: "Agent Rules", ja: "エージェントルール", zh: "代理规则" }), icon: "⊞", bg: "#ffd60a", action: "agent-rules" },
+    { label: t({ ko: "훅", en: "Hooks", ja: "フック", zh: "钩子" }), icon: "⤷", bg: "#32ade6", action: "hooks" },
+    { label: t({ ko: "설정", en: "Settings", ja: "設定", zh: "设置" }), icon: "⚙", bg: "#636366", action: "settings" },
   ];
 
-  // 히스토리 기반 최근 액션 (검색어 없을 때만)
   const recentActions = !q
     ? history
         .map((h) => QUICK_ACTIONS.find((a) => a.action === h))
@@ -113,15 +105,14 @@ export default function CommandPalette({
     ? projects.filter((p) => p.name.toLowerCase().includes(q) || p.project_path?.toLowerCase().includes(q)).slice(0, 5)
     : projects.filter((p) => p.id !== currentProject?.id).slice(0, 4);
 
-  // Flat list for keyboard navigation
   type Item =
-    | { kind: "action"; label: string; icon: string; shortcut?: string; action: string }
+    | { kind: "action"; label: string; icon: string; bg: string; action: string }
     | { kind: "agent"; agent: Agent }
     | { kind: "task"; task: Task }
     | { kind: "project"; project: Project };
 
   const items: Item[] = [
-    ...recentActions.map((a) => ({ kind: "action" as const, ...a, _recent: true })),
+    ...recentActions.map((a) => ({ kind: "action" as const, ...a })),
     ...filteredActions.map((a) => ({ kind: "action" as const, ...a })),
     ...filteredAgents.map((a) => ({ kind: "agent" as const, agent: a })),
     ...filteredTasks.map((t) => ({ kind: "task" as const, task: t })),
@@ -130,7 +121,6 @@ export default function CommandPalette({
 
   const safeIndex = items.length > 0 ? Math.min(selectedIndex, items.length - 1) : 0;
 
-  // letter shortcut map (input이 비어있을 때만 동작)
   const SHORTCUT_MAP: Record<string, string> = {
     n: "new-task", d: "dashboard", t: "tasks-board",
     a: "agents", s: "skills", m: "memory",
@@ -148,12 +138,11 @@ export default function CommandPalette({
       executeItem(item);
       return;
     }
-    // input이 비어있을 때 letter shortcut 실행
     if (query === "" && !e.ctrlKey && !e.metaKey && !e.altKey) {
       const action = SHORTCUT_MAP[e.key.toLowerCase()];
       if (action) {
         e.preventDefault();
-        executeItem({ kind: "action", label: "", icon: "", action });
+        executeItem({ kind: "action", label: "", icon: "", bg: "", action });
         return;
       }
     }
@@ -183,12 +172,88 @@ export default function CommandPalette({
 
   if (!open) return null;
 
-  const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };
-  const muted = "var(--th-text-muted)";
-  const border = "var(--th-border)";
-  const accent = "var(--th-accent)";
-
   let flatIdx = 0;
+
+  // macOS row renderer
+  function Row({ item, idx, children }: { item: Item; idx: number; children: React.ReactNode }) {
+    const isSelected = idx === safeIndex;
+    return (
+      <button
+        onClick={() => executeItem(item)}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          width: "100%",
+          padding: "0 10px",
+          height: 44,
+          background: "none",
+          border: "none",
+          cursor: "pointer",
+          gap: 10,
+          position: "relative",
+        }}
+      >
+        {isSelected && (
+          <span
+            style={{
+              position: "absolute",
+              inset: "2px 6px",
+              borderRadius: 8,
+              background: "rgba(10,132,255,0.55)",
+              backdropFilter: "blur(4px)",
+              pointerEvents: "none",
+            }}
+          />
+        )}
+        {children}
+      </button>
+    );
+  }
+
+  function IconBox({ icon, bg }: { icon: string; bg: string }) {
+    return (
+      <span
+        style={{
+          width: 28,
+          height: 28,
+          borderRadius: 7,
+          background: bg,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: 13,
+          flexShrink: 0,
+          position: "relative",
+          zIndex: 1,
+          boxShadow: "0 1px 3px rgba(0,0,0,0.35)",
+        }}
+      >
+        {icon}
+      </span>
+    );
+  }
+
+  function SectionHeader({ label }: { label: string }) {
+    return (
+      <div
+        style={{
+          fontSize: 11,
+          fontWeight: 600,
+          letterSpacing: "0.04em",
+          color: "rgba(235,235,245,0.3)",
+          padding: "10px 16px 4px",
+          fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif",
+          textTransform: "uppercase",
+        }}
+      >
+        {label}
+      </div>
+    );
+  }
+
+  const sf: React.CSSProperties = {
+    fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif",
+  };
 
   return createPortal(
     <div
@@ -197,43 +262,63 @@ export default function CommandPalette({
         position: "fixed",
         inset: 0,
         zIndex: 10100,
-        background: "rgba(0,0,0,0.55)",
-        backdropFilter: "blur(6px)",
+        background: "rgba(0,0,0,0.45)",
+        backdropFilter: "blur(8px)",
+        WebkitBackdropFilter: "blur(8px)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        paddingBottom: "10vh",
+        paddingBottom: "12vh",
       }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div
         role="dialog"
-        aria-label="Command palette"
+        aria-label="Spotlight"
         tabIndex={-1}
         style={{
-          width: "min(640px, 94vw)",
-          background: "var(--th-panel-bg)",
-          backdropFilter: "blur(32px) saturate(180%)",
-          border: "1px solid var(--th-border)",
-          borderRadius: 16,
-          boxShadow: "0 32px 80px var(--th-glass-shadow)",
+          width: "min(680px, 92vw)",
+          background: "rgba(30,30,32,0.88)",
+          backdropFilter: "blur(48px) saturate(200%)",
+          WebkitBackdropFilter: "blur(48px) saturate(200%)",
+          border: "1px solid rgba(255,255,255,0.1)",
+          borderRadius: 18,
+          boxShadow: "0 40px 120px rgba(0,0,0,0.7), 0 0 0 0.5px rgba(255,255,255,0.05) inset",
           overflow: "hidden",
         }}
         onKeyDown={handleKeyDown}
       >
-        {/* Header — Spotlight 스타일 대형 검색창 */}
+        {/* ── Traffic Lights 타이틀바 ── */}
         <div
           style={{
             display: "flex",
             alignItems: "center",
-            gap: 14,
-            padding: "0 20px",
-            borderBottom: "1px solid var(--th-border)",
-            height: 64,
+            padding: "10px 14px 6px",
           }}
         >
-          {/* 🔍 아이콘 */}
-          <span style={{ fontSize: 20, opacity: 0.5, flexShrink: 0 }}>🔍</span>
+          <TrafficLights onClose={onClose} />
+        </div>
+
+        {/* ── 검색 입력창 ── */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            padding: "0 18px",
+            height: 56,
+            borderBottom: items.length > 0 || currentProject
+              ? "1px solid rgba(255,255,255,0.07)"
+              : "none",
+          }}
+        >
+          <svg
+            width="20" height="20" viewBox="0 0 20 20" fill="none"
+            style={{ flexShrink: 0, opacity: 0.45 }}
+          >
+            <circle cx="8.5" cy="8.5" r="5.75" stroke="rgba(235,235,245,0.9)" strokeWidth="1.8" />
+            <line x1="12.9" y1="12.9" x2="17.5" y2="17.5" stroke="rgba(235,235,245,0.9)" strokeWidth="1.8" strokeLinecap="round" />
+          </svg>
           <input
             ref={inputRef}
             value={query}
@@ -250,248 +335,290 @@ export default function CommandPalette({
               background: "none",
               border: "none",
               outline: "none",
-              ...mono,
-              fontSize: "18px",
-              color: "var(--th-text-primary)",
+              ...sf,
+              fontSize: 22,
+              fontWeight: 300,
+              color: "rgba(235,235,245,0.95)",
               minWidth: 0,
+              letterSpacing: "-0.01em",
             }}
           />
-          <span style={{ ...mono, fontSize: "10px", color: muted, padding: "2px 6px", border: "1px solid var(--th-border)", borderRadius: 4, flexShrink: 0 }}>
-            Esc
-          </span>
+          {query ? (
+            <button
+              type="button"
+              onClick={() => setQuery("")}
+              style={{
+                width: 20, height: 20, borderRadius: "50%",
+                background: "rgba(255,255,255,0.12)",
+                border: "none", cursor: "pointer",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                color: "rgba(235,235,245,0.6)", fontSize: 12, flexShrink: 0,
+              }}
+            >
+              ✕
+            </button>
+          ) : (
+            <kbd
+              style={{
+                ...sf,
+                fontSize: 11,
+                color: "rgba(235,235,245,0.3)",
+                background: "rgba(255,255,255,0.06)",
+                border: "1px solid rgba(255,255,255,0.1)",
+                borderRadius: 5,
+                padding: "2px 7px",
+                flexShrink: 0,
+              }}
+            >
+              Esc
+            </kbd>
+          )}
         </div>
 
-        {/* Current project context */}
+        {/* ── 현재 프로젝트 컨텍스트 ── */}
         {currentProject && (
-          <div style={{ padding: "5px 20px", borderBottom: "1px solid var(--th-border)", display: "flex", alignItems: "center", gap: 6 }}>
-            <span style={{ ...mono, fontSize: "9px", color: muted }}>
-              {t({ ko: "현재 프로젝트:", en: "project:", ja: "現在:", zh: "当前:" })}
+          <div
+            style={{
+              padding: "5px 18px",
+              borderBottom: "1px solid rgba(255,255,255,0.07)",
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+            }}
+          >
+            <span style={{ ...sf, fontSize: 11, color: "rgba(235,235,245,0.3)" }}>
+              {t({ ko: "현재 프로젝트", en: "Project", ja: "現在", zh: "当前" })}
             </span>
-            <span style={{ ...mono, fontSize: "10px", color: accent, fontWeight: 600 }}>{currentProject.name}</span>
+            <span style={{ fontSize: 10, color: "rgba(235,235,245,0.2)" }}>›</span>
+            <span style={{ ...sf, fontSize: 11, color: "#0a84ff", fontWeight: 600 }}>{currentProject.name}</span>
           </div>
         )}
 
-        {/* Results */}
-        <div style={{ maxHeight: "60vh", overflowY: "auto" }}>
+        {/* ── 결과 목록 ── */}
+        <div style={{ maxHeight: "58vh", overflowY: "auto", paddingBottom: 8 }}>
+
           {/* 최근 실행 */}
           {recentActions.length > 0 && (
             <div>
-              <div style={{ ...mono, fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", color: muted, padding: "8px 16px 4px", textTransform: "uppercase" }}>
-                {t({ ko: "최근 실행", en: "Recent", ja: "最近の実行", zh: "最近使用" })}
-              </div>
+              <SectionHeader label={t({ ko: "최근 실행", en: "Recent", ja: "最近", zh: "最近" })} />
               {recentActions.map((act) => {
                 const idx = flatIdx++;
-                const isSelected = idx === safeIndex;
+                const isSel = idx === safeIndex;
                 return (
-                  <button
-                    key={`recent-${act.action}`}
-                    onClick={() => executeItem({ kind: "action", ...act })}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      width: "100%",
-                      padding: "7px 16px",
-                      background: isSelected ? "var(--th-bg-surface)" : "transparent",
-                      border: "none",
-                      borderLeft: isSelected ? `2px solid ${accent}` : "2px solid transparent",
-                      cursor: "pointer",
-                      gap: 10,
-                      color: isSelected ? "var(--th-text-heading)" : "var(--th-text-secondary)",
-                    }}
-                  >
-                    <span style={{ ...mono, fontSize: "0.75rem", width: 16, textAlign: "center", flexShrink: 0, opacity: 0.6 }}>↩</span>
-                    <span style={{ ...mono, fontSize: "0.8rem", flex: 1, textAlign: "left" }}>{act.label}</span>
-                    <span style={{ ...mono, fontSize: "0.65rem", color: muted }}>최근</span>
-                  </button>
+                  <Row key={`recent-${act.action}`} item={{ kind: "action", ...act }} idx={idx}>
+                    <IconBox icon="↩" bg="rgba(255,255,255,0.1)" />
+                    <span style={{ ...sf, fontSize: 14, color: isSel ? "#fff" : "rgba(235,235,245,0.75)", flex: 1, textAlign: "left", position: "relative", zIndex: 1 }}>
+                      {act.label}
+                    </span>
+                    <span style={{ ...sf, fontSize: 10, color: "rgba(235,235,245,0.3)", position: "relative", zIndex: 1 }}>
+                      {t({ ko: "최근", en: "recent", ja: "最近", zh: "最近" })}
+                    </span>
+                  </Row>
                 );
               })}
             </div>
           )}
 
-          {/* Quick Actions / Views */}
+          {/* Quick Actions */}
           {filteredActions.length > 0 && (
             <div>
-              <div style={{ ...mono, fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", color: muted, padding: "8px 16px 4px", textTransform: "uppercase" }}>
-                {q ? t({ ko: "뷰 / 액션", en: "Views / Actions", ja: "ビュー / アクション", zh: "视图 / 操作" })
-                   : t({ ko: "빠른 이동", en: "Quick Navigation", ja: "クイックナビ", zh: "快速导航" })}
-              </div>
+              <SectionHeader label={q
+                ? t({ ko: "뷰 / 액션", en: "Actions", ja: "アクション", zh: "操作" })
+                : t({ ko: "빠른 이동", en: "Navigation", ja: "ナビ", zh: "导航" })}
+              />
               {filteredActions.map((act) => {
                 const idx = flatIdx++;
-                const isSelected = idx === safeIndex;
+                const isSel = idx === safeIndex;
                 return (
-                  <button
-                    key={act.action}
-                    onClick={() => executeItem({ kind: "action", ...act })}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      width: "100%",
-                      padding: "8px 16px",
-                      background: isSelected ? "var(--th-bg-surface)" : "transparent",
-                      border: "none",
-                      borderLeft: isSelected ? `2px solid ${accent}` : "2px solid transparent",
-                      cursor: "pointer",
-                      gap: 10,
-                      color: isSelected ? "var(--th-text-heading)" : "var(--th-text-secondary)",
-                    }}
-                  >
-                    <span style={{ ...mono, fontSize: "0.85rem", width: 16, textAlign: "center", flexShrink: 0 }}>{act.icon}</span>
-                    <span style={{ ...mono, fontSize: "0.8rem", flex: 1, textAlign: "left" }}>{act.label}</span>
-                    {act.shortcut && (
-                      <span style={{ ...mono, fontSize: "0.65rem", color: muted, padding: "1px 5px", border: `1px solid ${border}`, flexShrink: 0 }}>{act.shortcut}</span>
-                    )}
-                  </button>
+                  <Row key={act.action} item={{ kind: "action", ...act }} idx={idx}>
+                    <IconBox icon={act.icon} bg={act.bg} />
+                    <span style={{ ...sf, fontSize: 14, color: isSel ? "#fff" : "rgba(235,235,245,0.82)", flex: 1, textAlign: "left", position: "relative", zIndex: 1 }}>
+                      {act.label}
+                    </span>
+                  </Row>
                 );
               })}
             </div>
           )}
 
-          {/* Projects */}
+          {/* 프로젝트 */}
           {filteredProjects.length > 0 && (
             <div>
-              <div style={{ ...mono, fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", color: muted, padding: "8px 16px 4px", textTransform: "uppercase" }}>
-                {t({ ko: "프로젝트 전환", en: "Switch Project", ja: "プロジェクト切替", zh: "切换项目" })}
-              </div>
+              <SectionHeader label={t({ ko: "프로젝트 전환", en: "Projects", ja: "プロジェクト", zh: "项目" })} />
               {filteredProjects.map((project) => {
                 const idx = flatIdx++;
-                const isSelected = idx === safeIndex;
+                const isSel = idx === safeIndex;
                 return (
-                  <button
-                    key={project.id}
-                    onClick={() => executeItem({ kind: "project", project })}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      width: "100%",
-                      padding: "8px 16px",
-                      background: isSelected ? "var(--th-bg-surface)" : "transparent",
-                      border: "none",
-                      borderLeft: isSelected ? `2px solid ${accent}` : "2px solid transparent",
-                      cursor: "pointer",
-                      gap: 10,
-                      color: isSelected ? "var(--th-text-heading)" : "var(--th-text-secondary)",
-                    }}
-                  >
-                    <span style={{ ...mono, fontSize: "0.85rem", width: 16, textAlign: "center", flexShrink: 0 }}>◇</span>
-                    <span style={{ ...mono, fontSize: "0.8rem", flex: 1, textAlign: "left" }}>{project.name}</span>
-                    {project.project_path && (
-                      <span style={{ ...mono, fontSize: "0.65rem", color: muted, maxWidth: 160, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {project.project_path}
-                      </span>
-                    )}
-                  </button>
+                  <Row key={project.id} item={{ kind: "project", project }} idx={idx}>
+                    <IconBox icon="📁" bg="rgba(255,255,255,0.06)" />
+                    <div style={{ flex: 1, textAlign: "left", overflow: "hidden", position: "relative", zIndex: 1 }}>
+                      <div style={{ ...sf, fontSize: 14, color: isSel ? "#fff" : "rgba(235,235,245,0.82)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {project.name}
+                      </div>
+                      {project.project_path && (
+                        <div style={{ ...sf, fontSize: 11, color: "rgba(235,235,245,0.3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 1 }}>
+                          {project.project_path}
+                        </div>
+                      )}
+                    </div>
+                  </Row>
                 );
               })}
             </div>
           )}
 
-          {/* Agents */}
+          {/* 에이전트 */}
           {filteredAgents.length > 0 && (
             <div>
-              <div style={{ ...mono, fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", color: muted, padding: "8px 16px 4px", textTransform: "uppercase" }}>
-                {t({ ko: "에이전트", en: "Agents", ja: "エージェント", zh: "代理" })}
-              </div>
+              <SectionHeader label={t({ ko: "에이전트", en: "Agents", ja: "エージェント", zh: "代理" })} />
               {filteredAgents.map((agent) => {
                 const idx = flatIdx++;
-                const isSelected = idx === safeIndex;
-                const statusKey = agent.status ?? "idle";
+                const isSel = idx === safeIndex;
+                const dot = STATUS_DOT[agent.status] ?? STATUS_DOT.idle;
                 return (
-                  <button
-                    key={agent.id}
-                    onClick={() => executeItem({ kind: "agent", agent })}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      width: "100%",
-                      padding: "8px 16px",
-                      background: isSelected ? "var(--th-bg-surface)" : "transparent",
-                      border: "none",
-                      borderLeft: isSelected ? `2px solid ${accent}` : "2px solid transparent",
-                      cursor: "pointer",
-                      gap: 10,
-                      color: isSelected ? "var(--th-text-heading)" : "var(--th-text-secondary)",
-                    }}
-                  >
-                    <span style={{ fontSize: "1rem", flexShrink: 0 }}>{agent.avatar_emoji ?? "🤖"}</span>
-                    <span style={{ ...mono, fontSize: "0.8rem", flex: 1, textAlign: "left" }}>{agent.name}</span>
-                    <span style={{ ...mono, fontSize: "0.7rem", color: STATUS_COLOR[statusKey] ?? muted, flexShrink: 0 }}>
-                      {STATUS_ICON[statusKey] ?? "○"} {statusKey.toUpperCase()}
+                  <Row key={agent.id} item={{ kind: "agent", agent }} idx={idx}>
+                    <span
+                      style={{
+                        width: 28, height: 28, borderRadius: 7,
+                        background: "rgba(255,255,255,0.06)",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        fontSize: 16, flexShrink: 0, position: "relative", zIndex: 1,
+                      }}
+                    >
+                      {agent.avatar_emoji ?? "🤖"}
                     </span>
-                  </button>
+                    <span style={{ ...sf, fontSize: 14, color: isSel ? "#fff" : "rgba(235,235,245,0.82)", flex: 1, textAlign: "left", position: "relative", zIndex: 1 }}>
+                      {agent.name}
+                    </span>
+                    <span
+                      style={{
+                        display: "flex", alignItems: "center", gap: 4,
+                        position: "relative", zIndex: 1,
+                      }}
+                    >
+                      <span style={{ width: 7, height: 7, borderRadius: "50%", background: dot.color, display: "inline-block" }} />
+                      <span style={{ ...sf, fontSize: 11, color: "rgba(235,235,245,0.35)", textTransform: "uppercase" }}>{dot.label}</span>
+                    </span>
+                  </Row>
                 );
               })}
             </div>
           )}
 
-          {/* Tasks */}
+          {/* 태스크 */}
           {filteredTasks.length > 0 && (
             <div>
-              <div style={{ ...mono, fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", color: muted, padding: "8px 16px 4px", textTransform: "uppercase" }}>
-                {q ? t({ ko: "태스크", en: "Tasks", ja: "タスク", zh: "任务" })
-                   : t({ ko: "진행중 태스크", en: "In-Progress Tasks", ja: "進行中タスク", zh: "进行中任务" })}
-              </div>
+              <SectionHeader label={q
+                ? t({ ko: "태스크", en: "Tasks", ja: "タスク", zh: "任务" })
+                : t({ ko: "진행중 태스크", en: "In Progress", ja: "進行中", zh: "进行中" })}
+              />
               {filteredTasks.map((task) => {
                 const idx = flatIdx++;
-                const isSelected = idx === safeIndex;
+                const isSel = idx === safeIndex;
                 return (
-                  <button
-                    key={task.id}
-                    onClick={() => executeItem({ kind: "task", task })}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      width: "100%",
-                      padding: "8px 16px",
-                      background: isSelected ? "var(--th-bg-surface)" : "transparent",
-                      border: "none",
-                      borderLeft: isSelected ? `2px solid ${accent}` : "2px solid transparent",
-                      cursor: "pointer",
-                      gap: 10,
-                      color: isSelected ? "var(--th-text-heading)" : "var(--th-text-secondary)",
-                    }}
-                  >
-                    <span style={{ ...mono, fontSize: "0.7rem", color: muted, minWidth: 46, flexShrink: 0 }}>#{task.id}</span>
-                    <span style={{ ...mono, fontSize: "0.8rem", flex: 1, textAlign: "left", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{task.title}</span>
-                    <span style={{ ...mono, fontSize: "0.65rem", color: muted, padding: "1px 5px", border: `1px solid ${border}`, flexShrink: 0 }}>
+                  <Row key={task.id} item={{ kind: "task", task }} idx={idx}>
+                    <span
+                      style={{
+                        width: 28, height: 28, borderRadius: 7,
+                        background: "rgba(48,209,88,0.15)",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        fontSize: 12, flexShrink: 0, position: "relative", zIndex: 1,
+                        color: "#30d158", fontFamily: "var(--th-font-mono)", fontWeight: 700,
+                      }}
+                    >
+                      #{task.id}
+                    </span>
+                    <span style={{ ...sf, fontSize: 14, color: isSel ? "#fff" : "rgba(235,235,245,0.82)", flex: 1, textAlign: "left", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", position: "relative", zIndex: 1 }}>
+                      {task.title}
+                    </span>
+                    <span
+                      style={{
+                        ...sf, fontSize: 10,
+                        color: "rgba(235,235,245,0.3)",
+                        background: "rgba(255,255,255,0.07)",
+                        borderRadius: 5,
+                        padding: "2px 7px",
+                        flexShrink: 0,
+                        position: "relative", zIndex: 1,
+                      }}
+                    >
                       {task.status?.replace("_", " ").toUpperCase()}
                     </span>
-                  </button>
+                  </Row>
                 );
               })}
             </div>
           )}
 
-          {items.length === 0 && (
-            <div style={{ padding: "24px 16px", textAlign: "center", ...mono, fontSize: "0.8rem", color: muted }}>
+          {/* 결과 없음 */}
+          {items.length === 0 && query && (
+            <div
+              style={{
+                padding: "32px 16px",
+                textAlign: "center",
+                ...sf,
+                fontSize: 14,
+                color: "rgba(235,235,245,0.3)",
+              }}
+            >
               {t({ ko: `"${query}"에 대한 결과 없음`, en: `No results for "${query}"`, ja: `"${query}"の結果なし`, zh: `"${query}"没有结果` })}
             </div>
           )}
+        </div>
 
-          {/* Footer */}
-          <div style={{ borderTop: `1px solid ${border}`, padding: "6px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", background: "var(--th-bg-base)" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              {[
-                { key: "↑↓", label: t({ ko: "이동", en: "navigate", ja: "移動", zh: "导航" }) },
-                { key: "↵", label: t({ ko: "선택", en: "select", ja: "選択", zh: "选择" }) },
-                { key: "Esc", label: t({ ko: "닫기", en: "close", ja: "閉じる", zh: "关闭" }) },
-              ].map(({ key, label }) => (
-                <span key={key} style={{ ...mono, fontSize: "10px", color: muted, display: "flex", alignItems: "center", gap: 4 }}>
-                  <span style={{ padding: "1px 5px", border: `1px solid ${border}` }}>{key}</span>
-                  {label}
-                </span>
-              ))}
-            </div>
-            {onOpenShortcutsGuide && (
-              <button
-                type="button"
-                onClick={() => { onClose(); onOpenShortcutsGuide(); }}
-                style={{ ...mono, fontSize: "10px", color: muted, background: "transparent", border: `1px solid ${border}`, borderRadius: 4, padding: "2px 8px", cursor: "pointer" }}
-                className="hover:!text-[var(--th-text-secondary)] hover:!border-[var(--th-border-strong)]"
-              >
-                ? {t({ ko: "단축키 가이드", en: "Shortcuts Guide", ja: "ショートカットガイド", zh: "快捷键指南" })}
-              </button>
-            )}
+        {/* ── Footer ── */}
+        <div
+          style={{
+            borderTop: "1px solid rgba(255,255,255,0.07)",
+            padding: "7px 16px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            background: "rgba(0,0,0,0.2)",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            {[
+              { key: "↑↓", label: t({ ko: "이동", en: "navigate", ja: "移動", zh: "导航" }) },
+              { key: "↵", label: t({ ko: "선택", en: "select", ja: "選択", zh: "选择" }) },
+              { key: "Esc", label: t({ ko: "닫기", en: "close", ja: "閉じる", zh: "关闭" }) },
+            ].map(({ key, label }) => (
+              <span key={key} style={{ ...sf, fontSize: 11, color: "rgba(235,235,245,0.25)", display: "flex", alignItems: "center", gap: 5 }}>
+                <kbd
+                  style={{
+                    background: "rgba(255,255,255,0.07)",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    borderRadius: 4,
+                    padding: "1px 5px",
+                    fontSize: 10,
+                    color: "rgba(235,235,245,0.4)",
+                    fontFamily: "inherit",
+                  }}
+                >
+                  {key}
+                </kbd>
+                {label}
+              </span>
+            ))}
           </div>
+          {onOpenShortcutsGuide && (
+            <button
+              type="button"
+              onClick={() => { onClose(); onOpenShortcutsGuide(); }}
+              style={{
+                ...sf,
+                fontSize: 11,
+                color: "rgba(235,235,245,0.3)",
+                background: "rgba(255,255,255,0.06)",
+                border: "1px solid rgba(255,255,255,0.09)",
+                borderRadius: 5,
+                padding: "2px 9px",
+                cursor: "pointer",
+              }}
+            >
+              ? {t({ ko: "단축키", en: "Shortcuts", ja: "ショートカット", zh: "快捷键" })}
+            </button>
+          )}
         </div>
       </div>
     </div>,

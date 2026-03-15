@@ -4,6 +4,7 @@ import type { RuntimeContext } from "../../../../types/runtime-context.ts";
 import type { AgentRow } from "../../shared/types.ts";
 import { resolveConstrainedAgentScopeForTask, selectAutoAssignableAgentForTask } from "./execution-run-auto-assign.ts";
 import { appendTaskExecutionMetaUpdate, recordTaskExecutionEvent } from "../../../workflow/core/task-execution-meta.ts";
+import { isWorkflowPackKey } from "../../../workflow/packs/definitions.ts";
 import { buildWorkflowPackExecutionGuidance, loadPackConfig } from "../../../workflow/packs/execution-guidance.ts";
 import { resolveVideoArtifactSpecForTask } from "../../../workflow/packs/video-artifact.ts";
 import { ensureVideoPreprodRemotionBestPracticesSkill } from "../../../workflow/core/video-skill-bootstrap.ts";
@@ -411,7 +412,8 @@ Whenever you complete a subtask, report it in this format:
     const mainModel = agent.cli_model || modelConfig[provider]?.model || undefined;
     const subModel = modelConfig[provider]?.subModel || undefined;
     // Pack reasoning level takes precedence over agent default; agent override beats pack
-    const packReasoningLevel = loadPackConfig(task.workflow_pack_key ?? "development").reasoningLevel;
+    const packKey = task.workflow_pack_key ?? "development";
+    const packReasoningLevel = loadPackConfig(isWorkflowPackKey(packKey) ? packKey : "development").reasoningLevel;
     const mainReasoningLevel =
       provider === "codex"
         ? agent.cli_reasoning_level || packReasoningLevel || modelConfig[provider]?.reasoningLevel || undefined

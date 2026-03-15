@@ -39,6 +39,7 @@ export default function SettingsPanel({
   const { t, locale: localeTag } = useI18n(form.language);
   const { confirm } = useConfirm();
   const [saved, setSaved] = useState(false);
+  const isMounted = useRef(false);
   const [tab, setTab] = useState<SettingsTab>(oauthResult ? "oauth" : "general");
 
   const [oauthStatus, setOauthStatus] = useState<OAuthStatus | null>(null);
@@ -116,6 +117,13 @@ export default function SettingsPanel({
   }, [onRefreshCli]);
 
   useEffect(() => {
+    if (!isMounted.current) {
+      // 마운트 최초 1회: form만 초기화, localStorage 언어는 건드리지 않음
+      isMounted.current = true;
+      setForm(settings as LocalSettings);
+      return;
+    }
+    // settings가 실제로 변경됐을 때(저장 후 서버 반영 등)만 localStorage 동기화
     setForm(settings as LocalSettings);
     const syncedLocale = normalizeLanguage((settings as LocalSettings).language);
     window.localStorage.setItem(LANGUAGE_STORAGE_KEY, syncedLocale);

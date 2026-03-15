@@ -21,6 +21,8 @@ import CliCostWidget from "./widgets/CliCostWidget";
 import FlowGraphWidget from "./widgets/FlowGraphWidget";
 import FileTreeWidget from "./widgets/FileTreeWidget";
 import WallpaperPicker from "./WallpaperPicker";
+import MarkdownEditorModal from "./MarkdownEditorModal";
+import ReportWindow from "../windows/ReportWindow";
 import QuickLook from "./QuickLook";
 import MissionControl from "./MissionControl";
 import { deleteProject } from "../../api/organization-projects";
@@ -74,6 +76,8 @@ interface DesktopProps {
   onClearMessages: (agentId?: string) => Promise<void>;
   onProjectCreate: () => void;
   onCreateTask: () => void;
+  onOpenDecisionInbox: () => void;
+  onOpenReportHistory: () => void;
   children?: ReactNode;
 }
 
@@ -91,6 +95,8 @@ export default function Desktop({
   onClearMessages,
   onProjectCreate,
   onCreateTask,
+  onOpenDecisionInbox,
+  onOpenReportHistory,
   children,
 }: DesktopProps) {
   const {
@@ -98,17 +104,23 @@ export default function Desktop({
     openWindow,
     toggleWindow,
     widgetLayout,
+    addWidget,
+    widgetIcons,
+    removeWidgetIcon,
     wallpaper,
     jiggleMode,
     setJiggleMode,
     missionControlOpen,
     setMissionControlOpen,
+    setDesktopIconLayout,
+    unreadReportCount,
+    clearUnreadReportCount,
   } = useUiStore();
 
   const { projects, categories, currentProjectId, setCurrentProjectId } = useProjectStore();
   const currentProject = projects.find((p) => p.id === currentProjectId) ?? null;
   const { agents } = useAgentStore();
-  const { tasks } = useTaskStore();
+  const { tasks, decisionInboxItems } = useTaskStore();
   const runningAgentCount = agents.filter((a) => a.status === "working").length;
 
   const [showWidgetPicker, setShowWidgetPicker] = useState(false);
@@ -117,12 +129,64 @@ export default function Desktop({
   const [showUserGuide, setShowUserGuide] = useState(false);
   const [showWallpaperPicker, setShowWallpaperPicker] = useState(false);
   const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number } | null>(null);
+  const [showMarkdownEditor, setShowMarkdownEditor] = useState(false);
   const [projectCtxMenu, setProjectCtxMenu] = useState<{ x: number; y: number; projectId: string; projectName: string } | null>(null);
   const [quickLookProjectId, setQuickLookProjectId] = useState<string | null>(null);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
 
   const { setProjects } = useProjectStore();
-  const { t } = useI18n();
+  const { t, language } = useI18n();
+
+  // ── 아이콘 정렬 헬퍼 ────────────────────────────────────────────
+  const ICON_GRID_X = 88;
+  const ICON_GRID_Y = 92;
+
+  function arrangeIcons(sortedSystemIds: string[], sortedProjectIds: string[]) {
+    const newLayout: Record<string, { x: number; y: number }> = {};
+    const rightX = Math.max(window.innerWidth - 100, 900);
+    sortedSystemIds.forEach((id, i) => {
+      newLayout[id] = { x: rightX, y: 60 + i * ICON_GRID_Y };
+    });
+    sortedProjectIds.forEach((id, i) => {
+      const col = i % 9;
+      const row = Math.floor(i / 9);
+      newLayout[id] = { x: 24 + col * ICON_GRID_X, y: 60 + row * ICON_GRID_Y };
+    });
+    setDesktopIconLayout(newLayout);
+  }
+
+  function sortByName() {
+    const sortedSystem = [...icons, ...widgetIconDefs]
+      .sort((a, b) => a.label.localeCompare(b.label))
+      .map((d) => d.id);
+    const sortedProjects = [...projects]
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map((p) => `project-${p.id}`);
+    arrangeIcons(sortedSystem, sortedProjects);
+  }
+
+  function sortByDefault() {
+    const systemIds = [...icons, ...widgetIconDefs].map((d) => d.id);
+    const projectIds = projects.map((p) => `project-${p.id}`);
+    arrangeIcons(systemIds, projectIds);
+  }
+
+  function snapToGrid() {
+    const current = useUiStore.getState().desktopIconLayout;
+    const snapped: Record<string, { x: number; y: number }> = {};
+    for (const [id, pos] of Object.entries(current)) {
+      snapped[id] = {
+        x: Math.round(pos.x / ICON_GRID_X) * ICON_GRID_X,
+        y: Math.round(pos.y / ICON_GRID_Y) * ICON_GRID_Y,
+      };
+    }
+    setDesktopIconLayout({ ...current, ...snapped });
+  }
+
+  // Reports 창이 열리면 뱃지 초기화
+  useEffect(() => {
+    if (openWindows.has("reports")) clearUnreadReportCount();
+  }, [openWindows, clearUnreadReportCount]);
 
   const handleDeleteProject = useCallback(async (projectId: string) => {
     setProjectCtxMenu(null);
@@ -248,16 +312,38 @@ export default function Desktop({
 
   // 데스크톱 아이콘 정의 (채팅·라이브러리는 Dock에서 제공)
   const icons: DesktopIconDef[] = [
-    { id: "agent-manager",  emoji: "👤", label: t({ ko: "에이전트 설정",  en: "Agents",          ja: "エージェント設定",  zh: "代理设置" }),    onClick: () => openWindow("agent-manager") },
-    { id: "project-create", emoji: "📁", label: t({ ko: "프로젝트 생성", en: "New Project",      ja: "プロジェクト作成", zh: "新建项目" }),    onClick: onProjectCreate },
-    { id: "create-task",    emoji: "▶",  label: t({ ko: "태스크 실행",   en: "Run Task",        ja: "タスク実行",      zh: "运行任务" }),    onClick: onCreateTask },
-    { id: "workflow",       emoji: "⚡", label: t({ ko: "워크플로 빌더", en: "Workflow Builder", ja: "ワークフロー",    zh: "工作流构建器" }), onClick: () => openWindow("workflow") },
-    { id: "repl",           emoji: ">_", label: t({ ko: "에이전트 REPL", en: "Agent REPL",      ja: "エージェントREPL", zh: "代理REPL" }),   onClick: () => openWindow("repl") },
+    { id: "agent-manager",    emoji: "👤", label: t({ ko: "에이전트 설정",  en: "Agents",          ja: "エージェント設定",  zh: "代理设置" }),    onClick: () => openWindow("agent-manager") },
+    { id: "project-create",   emoji: "📁", label: t({ ko: "프로젝트 생성", en: "New Project",      ja: "プロジェクト作成", zh: "新建项目" }),    onClick: onProjectCreate },
+    { id: "create-task",      emoji: "▶",  label: t({ ko: "태스크 실행",   en: "Run Task",        ja: "タスク実行",      zh: "运行任务" }),    onClick: onCreateTask },
+    { id: "workflow",         emoji: "⚡", label: t({ ko: "워크플로 빌더", en: "Workflow Builder", ja: "ワークフロー",    zh: "工作流构建器" }), onClick: () => openWindow("workflow") },
+    { id: "repl",             emoji: ">_", label: t({ ko: "에이전트 REPL", en: "Agent REPL",      ja: "エージェントREPL", zh: "代理REPL" }),   onClick: () => openWindow("repl") },
+    { id: "decision-inbox",   emoji: "📥", label: t({ ko: "의사결정",      en: "Decisions",       ja: "意思決定",        zh: "决策" }),        onClick: onOpenDecisionInbox,          badge: decisionInboxItems.length || undefined },
+    { id: "report-history",   emoji: "📊", label: t({ ko: "보고서",        en: "Reports",         ja: "レポート",        zh: "报告" }),        onClick: () => { clearUnreadReportCount(); toggleWindow("reports"); }, badge: unreadReportCount || undefined },
   ];
 
-  // 기본 아이콘 배치 (수평으로 배열)
-  const DEFAULT_ICON_POSITIONS = icons.reduce<Record<string, { x: number; y: number }>>((acc, def, i) => {
-    acc[def.id] = { x: 40 + i * 90, y: 60 };
+  // widgetIcons → 바탕화면 앱 아이콘 (클릭 시 위젯 창 오픈, jiggle 모드에서 삭제 가능)
+  const widgetIconDefs: DesktopIconDef[] = widgetIcons.map((id) => {
+    const meta = WIDGET_LABELS[id] ?? id;
+    const emojiMap: Record<string, string> = {
+      heartbeat: "💓", "task-board": "📋", alerts: "🔔",
+      "cli-usage": "💰", "flow-graph": "🕸", "file-tree": "🗂",
+    };
+    return {
+      id: `widget-icon-${id}`,
+      emoji: emojiMap[id] ?? "🔲",
+      label: meta,
+      deletable: true,
+      onDelete: () => removeWidgetIcon(id),
+      onClick: () => addWidget(id),
+    };
+  });
+
+  const allIcons = [...icons, ...widgetIconDefs];
+
+  // 기본 아이콘 배치 — 시스템/위젯 아이콘은 우측 세로 열, macOS 스타일
+  const colX = Math.max(window.innerWidth - 100, 900);
+  const DEFAULT_ICON_POSITIONS = allIcons.reduce<Record<string, { x: number; y: number }>>((acc, def, i) => {
+    acc[def.id] = { x: colX, y: 60 + i * 92 };
     return acc;
   }, {});
 
@@ -293,7 +379,7 @@ export default function Desktop({
         onProjectCreate={onProjectCreate}
         connected={connected}
         notificationSlot={
-          <NotificationCenter on={on} />
+          <NotificationCenter on={on} onOpenDecisionInbox={onOpenDecisionInbox} />
         }
         onOpenWallpaperPicker={() => setShowWallpaperPicker(true)}
         onOpenWidgetPicker={() => setShowWidgetPicker(true)}
@@ -314,8 +400,8 @@ export default function Desktop({
           overflow: "hidden",
         }}
       >
-        {/* 시스템 앱 아이콘 */}
-        {icons.map((def) => {
+        {/* 시스템 앱 아이콘 + 위젯 아이콘 */}
+        {allIcons.map((def) => {
           const defaultPos = DEFAULT_ICON_POSITIONS[def.id];
           return (
             <DesktopIcon
@@ -327,10 +413,10 @@ export default function Desktop({
           );
         })}
 
-        {/* 프로젝트 폴더 아이콘 */}
+        {/* 프로젝트 폴더 아이콘 — 좌측 상단 그리드 */}
         {projects.map((project, i) => {
-          const col = i % 8;
-          const row = Math.floor(i / 8);
+          const col = i % 9;
+          const row = Math.floor(i / 9);
           const isActive = project.id === currentProjectId;
           const def: DesktopIconDef = {
             id: `project-${project.id}`,
@@ -348,8 +434,8 @@ export default function Desktop({
             <DesktopIcon
               key={def.id}
               def={def}
-              defaultX={40 + col * 90}
-              defaultY={160 + row * 100}
+              defaultX={24 + col * 88}
+              defaultY={60 + row * 96}
             />
           );
         })}
@@ -364,6 +450,7 @@ export default function Desktop({
             y={entry.y}
             w={entry.w}
             h={entry.h}
+            defaultPopped={widgetIcons.includes(entry.id)}
           >
             <WidgetContent id={entry.id} />
           </Widget>
@@ -409,6 +496,7 @@ export default function Desktop({
       )}
       {openWindows.has("agent-manager") && <AgentManagerWindow onAgentsChange={onAgentsChange} />}
       {openWindows.has("repl")          && <ReplWindow />}
+      {openWindows.has("reports")       && <ReportWindow />}
       {openWindows.has("chat")          && (
         <Suspense fallback={null}>
           <ChatWindow
@@ -425,6 +513,14 @@ export default function Desktop({
 
       {/* 배경화면 피커 */}
       {showWallpaperPicker && <WallpaperPicker onClose={() => setShowWallpaperPicker(false)} />}
+
+      {/* 마크다운 에디터 */}
+      {showMarkdownEditor && (
+        <MarkdownEditorModal
+          onClose={() => setShowMarkdownEditor(false)}
+          defaultProjectName={currentProject?.name}
+        />
+      )}
 
       {/* Quick Look */}
       {quickLookProject && (
@@ -526,26 +622,52 @@ export default function Desktop({
           }}
           onClick={(e) => e.stopPropagation()}
         >
+          {/* 보기 / 정렬 섹션 */}
+          <div style={{ padding: "3px 12px 2px", fontSize: 10, color: "var(--th-text-muted)", fontFamily: "var(--th-font-mono)", letterSpacing: "0.06em" }}>
+            {language === "en" ? "ARRANGE" : "정렬 방식"}
+          </div>
           {[
-            { label: "배경화면 변경", icon: "🖼", action: () => { setShowWallpaperPicker(true); setCtxMenu(null); } },
-            { label: "위젯 추가", icon: "＋", action: () => { setShowWidgetPicker(true); setCtxMenu(null); } },
+            { label: language === "en" ? "Sort by Name" : "이름순 정렬", icon: "Az", action: () => { sortByName(); setCtxMenu(null); } },
+            { label: language === "en" ? "Sort by Default" : "기본 순서로 정렬", icon: "↺", action: () => { sortByDefault(); setCtxMenu(null); } },
+            { label: language === "en" ? "Snap to Grid" : "격자에 맞추기", icon: "⊞", action: () => { snapToGrid(); setCtxMenu(null); } },
           ].map(({ label, icon, action }) => (
             <button
               key={label}
               onClick={action}
               style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                width: "100%",
-                padding: "7px 14px",
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                fontFamily: "var(--th-font-mono)",
-                fontSize: 12,
-                color: "var(--th-text-primary)",
-                textAlign: "left",
+                display: "flex", alignItems: "center", gap: 10,
+                width: "100%", padding: "6px 14px",
+                background: "none", border: "none", cursor: "pointer",
+                fontFamily: "var(--th-font-mono)", fontSize: 12,
+                color: "var(--th-text-primary)", textAlign: "left",
+              }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--th-accent-glow)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "none"; }}
+            >
+              <span style={{ fontSize: 11, fontWeight: 600, minWidth: 16, textAlign: "center", opacity: 0.8 }}>{icon}</span>
+              {label}
+            </button>
+          ))}
+          <div style={{ margin: "4px 12px", borderTop: "1px solid var(--th-border)" }} />
+          {/* 기타 */}
+          <div style={{ padding: "3px 12px 2px", fontSize: 10, color: "var(--th-text-muted)", fontFamily: "var(--th-font-mono)", letterSpacing: "0.06em" }}>
+            {language === "en" ? "DESKTOP" : "바탕화면"}
+          </div>
+          {[
+            { label: language === "en" ? "Change Wallpaper" : "배경화면 변경", icon: "🖼", action: () => { setShowWallpaperPicker(true); setCtxMenu(null); } },
+            { label: language === "en" ? "Add Widget" : "위젯 추가", icon: "＋", action: () => { setShowWidgetPicker(true); setCtxMenu(null); } },
+            { label: language === "en" ? "New Markdown Doc" : "마크다운 문서 만들기", icon: "📝", action: () => { setShowMarkdownEditor(true); setCtxMenu(null); } },
+            { label: language === "en" ? "Reset Icon Positions" : "아이콘 위치 초기화", icon: "⌖", action: () => { setDesktopIconLayout({}); setCtxMenu(null); } },
+          ].map(({ label, icon, action }) => (
+            <button
+              key={label}
+              onClick={action}
+              style={{
+                display: "flex", alignItems: "center", gap: 10,
+                width: "100%", padding: "6px 14px",
+                background: "none", border: "none", cursor: "pointer",
+                fontFamily: "var(--th-font-mono)", fontSize: 12,
+                color: "var(--th-text-primary)", textAlign: "left",
               }}
               onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--th-accent-glow)"; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "none"; }}

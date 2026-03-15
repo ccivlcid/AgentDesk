@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import type { Project, Category } from "../../types";
 import { useUiStore } from "../../store/uiStore";
 import { useI18n } from "../../i18n";
@@ -41,12 +42,16 @@ export default function MenuBar({
 }: MenuBarProps) {
   const [now, setNow] = useState(() => new Date());
   const [appMenuOpen, setAppMenuOpen] = useState(false);
+  const [clockOpen, setClockOpen] = useState(false);
+  const [calMonth, setCalMonth] = useState(() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1); });
   const menuRef = useRef<HTMLDivElement>(null);
+  const clockRef = useRef<HTMLDivElement>(null);
+  const clockBtnRef = useRef<HTMLButtonElement>(null);
   const { openWindow } = useUiStore();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
 
   useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), 10_000);
+    const id = setInterval(() => setNow(new Date()), 1_000);
     return () => clearInterval(id);
   }, []);
 
@@ -61,7 +66,52 @@ export default function MenuBar({
     return () => document.removeEventListener("mousedown", handleClick);
   }, [appMenuOpen]);
 
-  const timeStr = now.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" });
+  useEffect(() => {
+    if (!clockOpen) return;
+    function handleClick(e: MouseEvent) {
+      if (
+        clockRef.current && !clockRef.current.contains(e.target as Node) &&
+        clockBtnRef.current && !clockBtnRef.current.contains(e.target as Node)
+      ) {
+        setClockOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [clockOpen]);
+
+  const timeStr = now.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" });
+  const timeStrFull = now.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  // 요일 배열: 해당 locale의 short 요일, 일요일부터 시작
+  const DOW = Array.from({ length: 7 }, (_, i) =>
+    new Date(2023, 0, 1 + i).toLocaleDateString(locale, { weekday: "short" }),
+  );
+  // 일요일이 index 0이 되도록 정렬 (2023-01-01은 일요일)
+  // DOW[0]=Sun, DOW[1]=Mon ... DOW[6]=Sat (already correct)
+
+  function buildCalendarDays(base: Date): (number | null)[] {
+    const year = base.getFullYear();
+    const month = base.getMonth();
+    const firstDow = new Date(year, month, 1).getDay();
+    const lastDay = new Date(year, month + 1, 0).getDate();
+    const cells: (number | null)[] = Array(firstDow).fill(null);
+    for (let d = 1; d <= lastDay; d++) cells.push(d);
+    while (cells.length % 7 !== 0) cells.push(null);
+    return cells;
+  }
+
+  const calDays = buildCalendarDays(calMonth);
+  const todayYear = now.getFullYear();
+  const todayMonth = now.getMonth();
+  const todayDate = now.getDate();
+  const isCurrentMonth = calMonth.getFullYear() === todayYear && calMonth.getMonth() === todayMonth;
+
+  function prevMonth() { setCalMonth(d => new Date(d.getFullYear(), d.getMonth() - 1, 1)); }
+  function nextMonth() { setCalMonth(d => new Date(d.getFullYear(), d.getMonth() + 1, 1)); }
+  function goToday() {
+    const d = new Date();
+    setCalMonth(new Date(d.getFullYear(), d.getMonth(), 1));
+  }
 
   const menuItemStyle: React.CSSProperties = {
     display: "flex",
@@ -285,10 +335,177 @@ export default function MenuBar({
       {/* 알림 */}
       {notificationSlot}
 
-      {/* 시각 */}
-      <span style={{ color: "var(--th-text-secondary)", fontSize: 11, minWidth: 40, textAlign: "right" }}>
+      {/* 시각 — 클릭하면 달력 패널 */}
+      <button
+        ref={clockBtnRef}
+        type="button"
+        onClick={() => setClockOpen(v => !v)}
+        style={{
+          background: clockOpen ? "rgba(255,255,255,0.08)" : "none",
+          border: "none",
+          color: "var(--th-text-secondary)",
+          fontFamily: mono,
+          fontSize: 11,
+          cursor: "pointer",
+          padding: "2px 8px",
+          borderRadius: 6,
+          minWidth: 40,
+          textAlign: "right",
+          transition: "background 0.15s",
+        }}
+        onMouseEnter={e => { if (!clockOpen) (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.05)"; }}
+        onMouseLeave={e => { if (!clockOpen) (e.currentTarget as HTMLButtonElement).style.background = "none"; }}
+      >
         {timeStr}
-      </span>
+      </button>
+
+      {/* 달력 / 시계 패널 */}
+      {clockOpen && createPortal(
+        <div
+          ref={clockRef}
+          style={{
+            position: "fixed",
+            top: 50,
+            right: 12,
+            width: 280,
+            background: "var(--th-panel-bg, rgba(18,18,18,0.96))",
+            backdropFilter: "blur(24px)",
+            WebkitBackdropFilter: "blur(24px)",
+            border: "1px solid var(--th-border)",
+            borderRadius: 12,
+            boxShadow: "0 24px 56px rgba(0,0,0,0.5)",
+            zIndex: 2000,
+            overflow: "hidden",
+            fontFamily: mono,
+          }}
+        >
+          {/* 시간 헤더 */}
+          <div style={{
+            padding: "20px 20px 14px",
+            borderBottom: "1px solid var(--th-border)",
+            background: "rgba(245,158,11,0.04)",
+          }}>
+            <div style={{ fontSize: 36, fontWeight: 700, color: "var(--th-text-heading)", letterSpacing: "-1px", lineHeight: 1 }}>
+              {timeStrFull}
+            </div>
+            <div style={{ fontSize: 12, color: "var(--th-text-muted)", marginTop: 6 }}>
+              {now.toLocaleDateString(locale, { year: "numeric", month: "long", day: "numeric", weekday: "long" })}
+            </div>
+          </div>
+
+          {/* 달력 */}
+          <div style={{ padding: "12px 16px 16px" }}>
+            {/* 월 네비게이션 */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+              <button
+                type="button"
+                onClick={prevMonth}
+                style={{ background: "none", border: "none", color: "var(--th-text-muted)", cursor: "pointer", fontSize: 14, padding: "2px 6px", borderRadius: 4 }}
+                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = "var(--th-accent)"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = "var(--th-text-muted)"; }}
+              >‹</button>
+
+              <button
+                type="button"
+                onClick={goToday}
+                style={{
+                  background: "none", border: "none",
+                  color: isCurrentMonth ? "var(--th-accent)" : "var(--th-text-primary)",
+                  fontFamily: mono, fontSize: 12, fontWeight: 700,
+                  cursor: "pointer", padding: "2px 8px", borderRadius: 4,
+                  letterSpacing: "0.05em",
+                }}
+              >
+                {calMonth.toLocaleDateString(locale, { year: "numeric", month: "long" })}
+              </button>
+
+              <button
+                type="button"
+                onClick={nextMonth}
+                style={{ background: "none", border: "none", color: "var(--th-text-muted)", cursor: "pointer", fontSize: 14, padding: "2px 6px", borderRadius: 4 }}
+                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = "var(--th-accent)"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = "var(--th-text-muted)"; }}
+              >›</button>
+            </div>
+
+            {/* 요일 헤더 */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", marginBottom: 4 }}>
+              {DOW.map((d, i) => (
+                <div key={d} style={{
+                  textAlign: "center",
+                  fontSize: 10,
+                  fontWeight: 700,
+                  padding: "2px 0",
+                  color: i === 0 ? "#ef4444" : i === 6 ? "#60a5fa" : "var(--th-text-muted)",
+                  letterSpacing: "0.05em",
+                }}>
+                  {d}
+                </div>
+              ))}
+            </div>
+
+            {/* 날짜 그리드 */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 1 }}>
+              {calDays.map((day, idx) => {
+                const isToday = isCurrentMonth && day === todayDate;
+                const colIdx = idx % 7;
+                const isSun = colIdx === 0;
+                const isSat = colIdx === 6;
+                return (
+                  <div
+                    key={idx}
+                    style={{
+                      textAlign: "center",
+                      fontSize: 11,
+                      padding: "4px 0",
+                      borderRadius: 6,
+                      fontWeight: isToday ? 800 : 400,
+                      background: isToday ? "var(--th-accent)" : "transparent",
+                      color: day == null
+                        ? "transparent"
+                        : isToday
+                          ? "#000"
+                          : isSun
+                            ? "rgba(239,68,68,0.8)"
+                            : isSat
+                              ? "rgba(96,165,250,0.8)"
+                              : "var(--th-text-secondary)",
+                      cursor: day != null ? "default" : "default",
+                    }}
+                  >
+                    {day ?? ""}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* 오늘로 이동 버튼 */}
+            {!isCurrentMonth && (
+              <button
+                type="button"
+                onClick={goToday}
+                style={{
+                  marginTop: 10,
+                  width: "100%",
+                  background: "rgba(245,158,11,0.08)",
+                  border: "1px solid rgba(245,158,11,0.25)",
+                  borderRadius: 6,
+                  color: "var(--th-accent)",
+                  fontFamily: mono,
+                  fontSize: 10,
+                  fontWeight: 700,
+                  cursor: "pointer",
+                  padding: "5px 0",
+                  letterSpacing: "0.08em",
+                }}
+              >
+                {t({ ko: "오늘로", en: "Today", ja: "今日へ", zh: "今天" })}
+              </button>
+            )}
+          </div>
+        </div>,
+        document.body,
+      )}
     </div>
   );
 }

@@ -62,6 +62,7 @@ export default function ChatWindow({
                 onSendDirective={onSendDirective}
                 onClearMessages={onClearMessages}
                 onClose={() => closeWindow("chat")}
+                embedded
               />
             </Suspense>
           ),

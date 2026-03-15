@@ -15,7 +15,6 @@ interface UseViewTransformReturn {
   handlePanStart: (e: React.MouseEvent<SVGSVGElement>) => void;
   handlePanMove: (e: React.MouseEvent<SVGSVGElement>) => void;
   handlePanEnd: () => void;
-  handleDoubleClick: (e: React.MouseEvent<SVGSVGElement>) => void;
   zoomIn: () => void;
   zoomOut: () => void;
   fitToView: (nodes: FlowNode[]) => void;
@@ -79,12 +78,6 @@ export function useViewTransform(): UseViewTransformReturn {
   const handlePanEnd = useCallback(() => {
     isPanningRef.current = false;
     setIsPanning(false);
-  }, []);
-
-  const handleDoubleClick = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
-    const target = e.target as SVGElement;
-    if (target.closest("foreignObject")) return;
-    // Trigger fit-to-view via external call — handled in AgentFlowGraph
   }, []);
 
   const zoomIn = useCallback(() => {
@@ -152,7 +145,6 @@ export function useViewTransform(): UseViewTransformReturn {
     handlePanStart,
     handlePanMove,
     handlePanEnd,
-    handleDoubleClick,
     zoomIn,
     zoomOut,
     fitToView,

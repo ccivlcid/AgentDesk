@@ -4,16 +4,18 @@ import { Modal, ModalHeader, ModalBody, ModalFooter, Button, Input, FormField } 
 import ManualPathPickerDialog from "../project-manager/ManualPathPickerDialog";
 import { useProjectManagerPathTools } from "../project-manager/useProjectManagerPathTools";
 import CategorySelectStep from "./CategorySelectStep";
+import GitHubImportPanel from "../GitHubImportPanel";
 import { useI18n } from "../../i18n";
 
 interface ProjectCreateModalProps {
   categories: Category[];
   agents: Agent[];
   onConfirm: (params: { name: string; categoryId: string | null; project_path: string; core_goal?: string; agentIds: string[] }) => void;
+  onGitHubComplete?: (projectId: string) => void;
   onClose: () => void;
 }
 
-type Step = "category" | "info" | "agent";
+type Step = "category" | "info" | "agent" | "github";
 
 const CLI_PROVIDERS = new Set(["claude", "codex", "gemini", "opencode", "copilot", "antigravity", "cursor", "ollama"]);
 
@@ -39,7 +41,7 @@ const PROVIDER_LABEL: Record<string, string> = {
   ollama: "Ollama",
 };
 
-export default function ProjectCreateModal({ categories, agents, onConfirm, onClose }: ProjectCreateModalProps) {
+export default function ProjectCreateModal({ categories, agents, onConfirm, onGitHubComplete, onClose }: ProjectCreateModalProps) {
   const [step, setStep] = useState<Step>("category");
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [projectName, setProjectName] = useState("");
@@ -191,11 +193,13 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onCl
 
   const categoryDisplayName = (cat: Category) => language === "ko" ? cat.name_ko ?? cat.name : cat.name;
 
-  const STEPS: { key: Step; label: string }[] = [
-    { key: "category", label: t({ ko: "① 유형", en: "① Type", ja: "① タイプ", zh: "① 类型" }) },
-    { key: "info", label: t({ ko: "② 정보", en: "② Info", ja: "② 情報", zh: "② 信息" }) },
-    { key: "agent", label: t({ ko: "③ 에이전트", en: "③ Agents", ja: "③ エージェント", zh: "③ 代理" }) },
-  ];
+  const STEPS: { key: Step; label: string }[] = step === "github"
+    ? [{ key: "github", label: "GitHub Import" }]
+    : [
+        { key: "category", label: t({ ko: "① 유형", en: "① Type", ja: "① タイプ", zh: "① 类型" }) },
+        { key: "info", label: t({ ko: "② 정보", en: "② Info", ja: "② 情報", zh: "② 信息" }) },
+        { key: "agent", label: t({ ko: "③ 에이전트", en: "③ Agents", ja: "③ エージェント", zh: "③ 代理" }) },
+      ];
 
   const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };
 
@@ -214,6 +218,7 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onCl
               type="button"
               onClick={() => {
                 if (s.key === "agent" && !canConfirmInfo) return;
+                if (s.key === "github") return;
                 if (s.key !== "category") setStep(s.key);
                 else setStep("category");
               }}
@@ -230,9 +235,29 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onCl
               {s.label}
             </button>
           ))}
+          {step === "github" && (
+            <button
+              type="button"
+              onClick={() => setStep("category")}
+              className="ml-auto px-2 py-1 text-[10px] font-mono"
+              style={{ color: "var(--th-text-muted)" }}
+            >
+              ← {t({ ko: "일반 생성으로", en: "Normal create", ja: "通常作成へ", zh: "普通创建" })}
+            </button>
+          )}
         </div>
 
         <ModalBody>
+          {/* ── STEP: GitHub 임포트 ── */}
+          {step === "github" && (
+            <GitHubImportPanel
+              onComplete={({ projectId }) => {
+                onGitHubComplete?.(projectId);
+              }}
+              onCancel={() => setStep("category")}
+            />
+          )}
+
           {/* ── STEP 1: 유형 선택 ── */}
           {step === "category" && (
             <>
@@ -244,6 +269,34 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onCl
                 selectedId={selectedCategoryId}
                 onSelect={handleCategorySelect}
               />
+              {/* GitHub 임포트 진입 */}
+              <div className="mt-4 pt-4" style={{ borderTop: "1px solid var(--th-border)" }}>
+                <button
+                  type="button"
+                  onClick={() => setStep("github")}
+                  className="w-full flex items-center gap-3 px-4 py-3 transition-colors"
+                  style={{
+                    ...mono,
+                    fontSize: "12px",
+                    border: "1px solid var(--th-border)",
+                    background: "rgba(255,255,255,0.02)",
+                    color: "var(--th-text-secondary)",
+                    cursor: "pointer",
+                    borderRadius: 0,
+                  }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--th-accent)"; (e.currentTarget as HTMLButtonElement).style.color = "var(--th-accent)"; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--th-border)"; (e.currentTarget as HTMLButtonElement).style.color = "var(--th-text-secondary)"; }}
+                >
+                  <span style={{ fontSize: "18px" }}>🐙</span>
+                  <div style={{ textAlign: "left" }}>
+                    <div style={{ fontWeight: 700 }}>{t({ ko: "GitHub에서 가져오기", en: "Import from GitHub", ja: "GitHubからインポート", zh: "从 GitHub 导入" })}</div>
+                    <div style={{ fontSize: "10px", color: "var(--th-text-muted)", marginTop: 2 }}>
+                      {t({ ko: "리포지토리 클론 후 자동 프로젝트 생성", en: "Clone a repo and auto-create project", ja: "リポジトリをクローンして自動作成", zh: "克隆仓库并自动创建项目" })}
+                    </div>
+                  </div>
+                  <span style={{ marginLeft: "auto", fontSize: "14px", color: "var(--th-text-muted)" }}>→</span>
+                </button>
+              </div>
             </>
           )}
 
@@ -490,7 +543,7 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onCl
         </ModalBody>
 
         <ModalFooter className="justify-between">
-          {step === "category" ? (
+          {step === "github" ? null : step === "category" ? (
             <Button variant="ghost" size="sm" onClick={() => { setSelectedCategoryId(null); setStep("info"); }}>
               {t({ ko: "유형 없이 시작하기", en: "Start without type", ja: "タイプなしで開始", zh: "不选类型继续" })}
             </Button>
@@ -504,7 +557,7 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onCl
             </Button>
           )}
 
-          {step === "category" ? (
+          {step === "github" ? null : step === "category" ? (
             <div className="flex items-center gap-3">
               {!selectedCategoryId && (
                 <span style={{ ...mono, fontSize: "10px", color: "var(--th-text-muted)" }}>

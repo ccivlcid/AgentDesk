@@ -1,4 +1,4 @@
-import { useI18n } from "../../../i18n";
+import { useI18n, localeName } from "../../../i18n";
 import type { FlowNode } from "../useFlowLayout";
 import type { Task } from "../../../types";
 
@@ -23,7 +23,7 @@ export default function AgentNode({
   onMouseEnter,
   onMouseLeave,
 }: AgentNodeProps) {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const { agent, x, y, width, height, deptLabel, deptColor, type } = node;
 
   const currentTask = agent.current_task_id
@@ -49,7 +49,6 @@ export default function AgentNode({
     : "0 2px 8px rgba(0,0,0,0.18)";
 
   const opacity = dimmed ? 0.35 : isOffline ? 0.5 : 1;
-  const scale = type === "sub-agent" ? 0.7 : 1;
 
   const statusLabel = {
     idle: t({ ko: "대기중", en: "idle", ja: "待機", zh: "空闲" }),
@@ -62,7 +61,7 @@ export default function AgentNode({
 
   return (
     <g
-      transform={`translate(${x}, ${y}) scale(${scale})`}
+      transform={`translate(${x}, ${y})`}
       style={{ cursor: "pointer" }}
       onClick={() => onClick?.(agent.id)}
       onMouseEnter={() => onMouseEnter?.(agent.id)}
@@ -104,7 +103,7 @@ export default function AgentNode({
               textOverflow: "ellipsis",
               whiteSpace: "nowrap",
             }}>
-              {agent.name}
+              {localeName(language, agent)}
             </span>
             {deptLabel && (
               <span style={{

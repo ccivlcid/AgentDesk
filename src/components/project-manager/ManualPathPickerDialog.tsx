@@ -1,3 +1,4 @@
+import { createPortal } from "react-dom";
 import type { ManualPathEntry, ProjectI18nTranslate } from "./types";
 
 interface ManualPathPickerDialogProps {
@@ -29,7 +30,7 @@ export default function ManualPathPickerDialog({
 }: ManualPathPickerDialogProps) {
   if (!open) return null;
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4" onClick={onClose}>
       <div
         className="w-full max-w-2xl overflow-hidden"
@@ -151,6 +152,7 @@ export default function ManualPathPickerDialog({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

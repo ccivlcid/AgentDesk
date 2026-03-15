@@ -15,7 +15,19 @@ export const WALLPAPERS: { id: string; name: string; css: string }[] = [
   { id: "ocean",     name: "Ocean",     css: "linear-gradient(145deg, #030712 0%, #0c1a3d 40%, #1e3a5f 100%)" },
   { id: "rose",      name: "Rose",      css: "linear-gradient(145deg, #1a0a1a 0%, #4a1942 40%, #9d174d 100%)" },
   { id: "slate",     name: "Slate",     css: "linear-gradient(145deg, #020617 0%, #0f172a 50%, #1e293b 100%)" },
+  { id: "light",     name: "Light",     css: "linear-gradient(145deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%)" },
+  { id: "sky",       name: "Sky",       css: "linear-gradient(145deg, #eff6ff 0%, #dbeafe 45%, #bfdbfe 100%)" },
+  { id: "cream",     name: "Cream",     css: "linear-gradient(145deg, #fffbeb 0%, #fef3c7 45%, #fde68a 100%)" },
+  { id: "mint",      name: "Mint",      css: "linear-gradient(145deg, #f0fdf4 0%, #dcfce7 45%, #bbf7d0 100%)" },
+  { id: "blush",     name: "Blush",     css: "linear-gradient(145deg, #fff1f2 0%, #ffe4e6 45%, #fecdd3 100%)" },
 ];
+
+const LIGHT_IDS = new Set(["light", "sky", "cream", "mint", "blush"]);
+
+/** wallpaper CSS 값이 라이트 배경인지 반환 */
+export function isLightWallpaper(css: string): boolean {
+  return WALLPAPERS.some((w) => LIGHT_IDS.has(w.id) && w.css === css);
+}
 
 interface Props {
   onClose: () => void;

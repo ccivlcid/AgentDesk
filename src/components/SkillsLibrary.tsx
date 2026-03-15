@@ -81,16 +81,8 @@ export default function SkillsLibrary({ agents, currentProject }: SkillsLibraryP
   }
 
   return (
-    <div
-      style={{
-        borderRadius: 10,
-        overflow: "hidden",
-        background: "var(--th-bg-elevated)",
-        border: "1px solid var(--th-border)",
-        boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
-      }}
-    >
-      <div className="space-y-4" style={{ background: "var(--th-bg-primary)" }}>
+    <div style={{ background: "var(--th-bg-primary)" }}>
+      <div className="space-y-4">
       <SkillsHeader
         t={t}
         skillsCount={vm.skills.length}

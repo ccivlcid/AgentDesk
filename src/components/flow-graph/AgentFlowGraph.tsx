@@ -104,7 +104,7 @@ export default function AgentFlowGraph({
   const isEmpty = nodes.length === 0;
 
   return (
-    <div style={{ position: "relative", width: "100%", height: "100%", minHeight: 400 }}>
+    <div style={{ position: "relative", width: "100%", height: "100%" }}>
       {/* Controls overlay */}
       <div style={{
         position: "absolute",

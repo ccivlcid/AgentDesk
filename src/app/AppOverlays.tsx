@@ -5,7 +5,6 @@ import DecisionInboxModal from "../components/DecisionInboxModal";
 import AgentDetail from "../components/AgentDetail";
 import TerminalPanel from "../components/TerminalPanel";
 import TaskReportPopup from "../components/TaskReportPopup";
-import ReportHistory from "../components/ReportHistory";
 import AgentStatusPanel from "../components/AgentStatusPanel";
 import type { DecisionInboxItem } from "../components/chat/decision-inbox";
 import type { Agent, Department, Message, SubAgent, SubTask, Task } from "../types";
@@ -199,14 +198,6 @@ export default function AppOverlays({
         />
       )}
 
-      {showReportHistory && (
-        <ReportHistory
-          agents={agents}
-          departments={departments}
-          uiLanguage={uiLanguage}
-          onClose={onCloseReportHistory}
-        />
-      )}
 
       {showAgentStatus && <AgentStatusPanel agents={agents} uiLanguage={uiLanguage} onClose={onCloseAgentStatus} />}
 

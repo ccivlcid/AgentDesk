@@ -7,6 +7,7 @@ import { UPDATE_BANNER_DISMISS_STORAGE_KEY } from "../app/constants";
 import { detectRuntimeOs, isForceUpdateBannerEnabled, mergeSettingsWithDefaults } from "../app/utils";
 
 const WIDGET_LAYOUT_KEY = "agentdesk_widget_layout";
+const WIDGET_ICONS_KEY = "agentdesk_widget_icons";
 const DESKTOP_ICON_LAYOUT_KEY = "agentdesk_icon_layout";
 const WALLPAPER_KEY = "agentdesk_wallpaper";
 
@@ -28,6 +29,18 @@ function loadWidgetLayout(): WidgetEntry[] {
 
 function saveWidgetLayout(layout: WidgetEntry[]) {
   try { window.localStorage.setItem(WIDGET_LAYOUT_KEY, JSON.stringify(layout)); } catch { /* ignore */ }
+}
+
+function loadWidgetIcons(): WidgetId[] {
+  try {
+    const raw = window.localStorage.getItem(WIDGET_ICONS_KEY);
+    if (raw) return JSON.parse(raw) as WidgetId[];
+  } catch { /* ignore */ }
+  return [];
+}
+
+function saveWidgetIcons(ids: WidgetId[]) {
+  try { window.localStorage.setItem(WIDGET_ICONS_KEY, JSON.stringify(ids)); } catch { /* ignore */ }
 }
 
 function loadDesktopIconLayout(): Record<string, { x: number; y: number }> {
@@ -67,6 +80,9 @@ interface UiStore {
   removeWidget: (id: WidgetId) => void;
   updateWidgetPos: (id: WidgetId, x: number, y: number) => void;
   updateWidgetSize: (id: WidgetId, w: number, h: number) => void;
+  widgetIcons: WidgetId[];
+  addWidgetIcon: (id: WidgetId) => void;
+  removeWidgetIcon: (id: WidgetId) => void;
   setDesktopIconLayout: (layout: Record<string, { x: number; y: number }>) => void;
   jiggleMode: boolean;
   missionControlOpen: boolean;
@@ -82,6 +98,7 @@ interface UiStore {
   loading: boolean;
   settings: CompanySettings;
   oauthResult: OAuthCallbackResult | null;
+  unreadReportCount: number;
   showReportHistory: boolean;
   showAgentStatus: boolean;
   showGroupChat: boolean;
@@ -100,6 +117,8 @@ interface UiStore {
   setLoading: (a: SA<boolean>) => void;
   setSettings: (a: SA<CompanySettings>) => void;
   setOauthResult: (a: SA<OAuthCallbackResult | null>) => void;
+  incUnreadReportCount: () => void;
+  clearUnreadReportCount: () => void;
   setShowReportHistory: (a: SA<boolean>) => void;
   setShowAgentStatus: (a: SA<boolean>) => void;
   setShowGroupChat: (a: SA<boolean>) => void;
@@ -136,7 +155,8 @@ export const useUiStore = create<UiStore>()((set) => ({
   setWidgetLayout: (layout) => { saveWidgetLayout(layout); set({ widgetLayout: layout }); },
   addWidget: (id) => set((s) => {
     if (s.widgetLayout.some((e) => e.id === id)) return s;
-    const entry: WidgetEntry = { id, x: 60, y: 140, w: 420, h: 280 };
+    const offset = s.widgetLayout.length * 30;
+    const entry: WidgetEntry = { id, x: 60 + offset, y: 140 + offset, w: 420, h: 280 };
     const next = [...s.widgetLayout, entry];
     saveWidgetLayout(next);
     return { widgetLayout: next };
@@ -159,6 +179,19 @@ export const useUiStore = create<UiStore>()((set) => ({
   jiggleMode: false,
   missionControlOpen: false,
 
+  widgetIcons: loadWidgetIcons(),
+  addWidgetIcon: (id) => set((s) => {
+    if (s.widgetIcons.includes(id)) return s;
+    const next = [...s.widgetIcons, id];
+    saveWidgetIcons(next);
+    return { widgetIcons: next };
+  }),
+  removeWidgetIcon: (id) => set((s) => {
+    const next = s.widgetIcons.filter((i) => i !== id);
+    saveWidgetIcons(next);
+    return { widgetIcons: next };
+  }),
+
   setDesktopIconLayout: (layout) => { saveDesktopIconLayout(layout); set({ desktopIconLayout: layout }); },
   setSelectedAgentId: (id) => set({ selectedAgentId: id }),
   setOpenTaskId: (id) => set({ openTaskId: id }),
@@ -171,6 +204,7 @@ export const useUiStore = create<UiStore>()((set) => ({
   loading: true,
   settings: mergeSettingsWithDefaults({ language: detectBrowserLanguage() }),
   oauthResult: null,
+  unreadReportCount: 0,
   showReportHistory: false,
   showAgentStatus: false,
   showGroupChat: false,
@@ -189,6 +223,8 @@ export const useUiStore = create<UiStore>()((set) => ({
   setLoading: (a) => set((s) => ({ loading: apply(s.loading, a) })),
   setSettings: (a) => set((s) => ({ settings: apply(s.settings, a) })),
   setOauthResult: (a) => set((s) => ({ oauthResult: apply(s.oauthResult, a) })),
+  incUnreadReportCount: () => set((s) => ({ unreadReportCount: s.unreadReportCount + 1 })),
+  clearUnreadReportCount: () => set({ unreadReportCount: 0 }),
   setShowReportHistory: (a) => set((s) => ({ showReportHistory: apply(s.showReportHistory, a) })),
   setShowAgentStatus: (a) => set((s) => ({ showAgentStatus: apply(s.showAgentStatus, a) })),
   setShowGroupChat: (a) => set((s) => ({ showGroupChat: apply(s.showGroupChat, a) })),

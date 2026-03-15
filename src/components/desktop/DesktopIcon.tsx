@@ -1,7 +1,6 @@
 import { useRef, useState } from "react";
 import { useUiStore } from "../../store/uiStore";
-
-const mono = "var(--th-font-mono)";
+import { isLightWallpaper } from "./WallpaperPicker";
 
 const JIGGLE_STYLE = `
 @keyframes jiggle {
@@ -18,6 +17,7 @@ export interface DesktopIconDef {
   onContextMenu?: (e: React.MouseEvent) => void;
   deletable?: boolean;
   onDelete?: () => void;
+  badge?: number;
 }
 
 interface DesktopIconProps {
@@ -27,10 +27,13 @@ interface DesktopIconProps {
 }
 
 export default function DesktopIcon({ def, defaultX, defaultY }: DesktopIconProps) {
-  const { desktopIconLayout, setDesktopIconLayout, jiggleMode } = useUiStore();
+  const { desktopIconLayout, setDesktopIconLayout, jiggleMode, wallpaper } = useUiStore();
+  const light = isLightWallpaper(wallpaper);
+
   const saved = desktopIconLayout[def.id];
   const [pos, setPos] = useState({ x: saved?.x ?? defaultX, y: saved?.y ?? defaultY });
   const [dragging, setDragging] = useState(false);
+  const [hovered, setHovered] = useState(false);
   const dragStart = useRef<{ mx: number; my: number; ox: number; oy: number } | null>(null);
   const moved = useRef(false);
 
@@ -77,15 +80,39 @@ export default function DesktopIcon({ def, defaultX, defaultY }: DesktopIconProp
     }
   }
 
-  const isJiggling = jiggleMode;
+  // ── 모드별 토큰 ───────────────────────────────────────────────────
+  const iconBg = light
+    ? hovered ? "rgba(255,255,255,0.92)" : "rgba(255,255,255,0.65)"
+    : hovered ? "rgba(255,255,255,0.16)" : "rgba(255,255,255,0.09)";
+
+  const iconBorder = light
+    ? "1px solid rgba(0,0,0,0.08)"
+    : "1px solid rgba(255,255,255,0.12)";
+
+  const iconShadow = light
+    ? "0 2px 8px rgba(0,0,0,0.10), 0 1px 2px rgba(0,0,0,0.06)"
+    : "0 2px 12px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08)";
+
+  const labelColor = light ? "rgba(0,0,0,0.82)" : "rgba(255,255,255,0.95)";
+
+  const labelBg = light
+    ? "rgba(255,255,255,0.72)"
+    : "rgba(0,0,0,0.48)";
+
+  const labelShadow = light
+    ? "none"
+    : "none"; // pill bg가 충분한 대비를 줌
 
   return (
     <>
       <style>{JIGGLE_STYLE}</style>
       <div
+        data-no-ctx
         onMouseDown={onMouseDown}
         onClick={onClick}
         onContextMenu={onContextMenuHandler}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
         style={{
           position: "absolute",
           left: pos.x,
@@ -94,20 +121,17 @@ export default function DesktopIcon({ def, defaultX, defaultY }: DesktopIconProp
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          gap: 4,
+          gap: 5,
           cursor: dragging ? "grabbing" : "pointer",
           userSelect: "none",
           zIndex: dragging ? 100 : 10,
-          animation: isJiggling ? "jiggle 0.18s ease-in-out infinite alternate" : "none",
+          animation: jiggleMode ? "jiggle 0.18s ease-in-out infinite alternate" : "none",
         }}
       >
-        {/* 삭제 배지 — jiggle 모드에서 deletable 아이콘에만 표시 */}
-        {isJiggling && def.deletable && def.onDelete && (
+        {/* 삭제 배지 */}
+        {jiggleMode && def.deletable && def.onDelete && (
           <div
-            onClick={(e) => {
-              e.stopPropagation();
-              def.onDelete!();
-            }}
+            onClick={(e) => { e.stopPropagation(); def.onDelete!(); }}
             style={{
               position: "absolute",
               top: -6,
@@ -132,34 +156,74 @@ export default function DesktopIcon({ def, defaultX, defaultY }: DesktopIconProp
           </div>
         )}
 
+        {/* 알림 뱃지 */}
+        {!jiggleMode && def.badge != null && def.badge > 0 && (
+          <div
+            style={{
+              position: "absolute",
+              top: -5,
+              right: 2,
+              minWidth: 16,
+              height: 16,
+              borderRadius: 8,
+              background: "#ff3b30",
+              border: "2px solid rgba(0,0,0,0.6)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 9,
+              fontWeight: 700,
+              color: "white",
+              fontFamily: "-apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+              padding: "0 3px",
+              zIndex: 150,
+              pointerEvents: "none",
+              letterSpacing: 0,
+            }}
+          >
+            {def.badge > 99 ? "99+" : def.badge}
+          </div>
+        )}
+
+        {/* 아이콘 박스 */}
         <div
           style={{
             width: 56,
             height: 56,
-            background: "rgba(255,255,255,0.04)",
-            border: "1px solid var(--th-border)",
-            borderRadius: 12,
+            background: iconBg,
+            border: iconBorder,
+            borderRadius: 14,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             fontSize: 26,
-            transition: dragging ? "none" : "background 0.15s",
+            backdropFilter: "blur(20px) saturate(160%)",
+            WebkitBackdropFilter: "blur(20px) saturate(160%)",
+            boxShadow: iconShadow,
+            transition: dragging ? "none" : "background 0.12s, box-shadow 0.12s",
+            transform: hovered && !dragging ? "scale(1.06)" : "scale(1)",
           }}
-          onMouseEnter={(e) => { if (!dragging) (e.currentTarget as HTMLDivElement).style.background = "rgba(245,158,11,0.12)"; }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.background = "rgba(255,255,255,0.04)"; }}
         >
           {def.emoji}
         </div>
+
+        {/* 레이블 */}
         <span
           style={{
-            fontFamily: mono,
-            fontSize: 10,
-            color: "var(--th-text-secondary)",
+            fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif",
+            fontSize: 11,
+            fontWeight: 500,
+            color: labelColor,
             textAlign: "center",
-            lineHeight: 1.3,
-            textShadow: "0 1px 4px rgba(0,0,0,0.8)",
+            lineHeight: 1.25,
             maxWidth: 72,
             wordBreak: "keep-all",
+            background: labelBg,
+            backdropFilter: "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)",
+            borderRadius: 4,
+            padding: "2px 6px",
+            textShadow: labelShadow,
           }}
         >
           {def.label}

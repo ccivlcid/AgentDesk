@@ -82,11 +82,7 @@ export default function Deliverables({ agents, currentProject }: DeliverablesPro
         display: "flex",
         flexDirection: "column",
         gap: 0,
-        borderRadius: 10,
-        overflow: "hidden",
-        background: "var(--th-bg-elevated)",
-        border: "1px solid var(--th-border)",
-        boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
+        background: "var(--th-bg-primary)",
       }}
     >
       {/* ── 터미널 헤더 (설정과 동일 macOS) ── */}

@@ -14,6 +14,7 @@ type NotifType = NotificationItem["type"] | "all";
 interface Props {
   on: SocketOn;
   onNavigateTask?: (taskId: string) => void;
+  onOpenDecisionInbox?: () => void;
 }
 
 function timeAgo(ts: number): string {
@@ -118,7 +119,7 @@ function showBrowserNotification(n: NotificationItem): void {
   }
 }
 
-export default function NotificationCenter({ on, onNavigateTask }: Props) {
+export default function NotificationCenter({ on, onNavigateTask, onOpenDecisionInbox }: Props) {
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -180,6 +181,11 @@ export default function NotificationCenter({ on, onNavigateTask }: Props) {
       markNotificationRead(item.id).catch(() => {});
       setItems((prev) => prev.map((i) => (i.id === item.id ? { ...i, read: 1 } : i)));
       setUnreadCount((c) => Math.max(0, c - 1));
+    }
+    if (item.type === "decision_created" && onOpenDecisionInbox) {
+      onOpenDecisionInbox();
+      setOpen(false);
+      return;
     }
     if (item.task_id && onNavigateTask) {
       onNavigateTask(item.task_id);

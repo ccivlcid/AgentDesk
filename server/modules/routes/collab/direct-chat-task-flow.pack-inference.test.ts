@@ -89,7 +89,6 @@ describe("direct-chat task flow pack inference", () => {
           name: "Rian",
           name_ko: "리안",
           role: "team_leader",
-          personality: null,
           status: "idle",
           department_id: "planning",
           current_task_id: null,

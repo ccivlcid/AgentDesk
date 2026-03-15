@@ -1,4 +1,5 @@
 import { useEffect, type Dispatch, type MutableRefObject, type SetStateAction } from "react";
+import { useUiStore } from "../store/uiStore";
 import type { TaskReportDetail } from "../api";
 import * as api from "../api";
 import type {
@@ -92,6 +93,8 @@ export function useRealtimeSync({
   setSubAgents,
   setStreamingMessage,
 }: UseRealtimeSyncParams): void {
+  const incUnreadReportCount = useUiStore((s) => s.incUnreadReportCount);
+
   useEffect(() => {
     const unsubs = [
       on("task_update", (payload: unknown) => {
@@ -186,6 +189,10 @@ export function useRealtimeSync({
       on("task_report", (payload: unknown) => {
         const p = payload as { task?: { id?: string } } | null;
         const reportTaskId = typeof p?.task?.id === "string" ? p.task.id : null;
+        // Reports 창이 닫혀 있을 때만 뱃지 카운트 증가
+        if (!useUiStore.getState().openWindows.has("reports")) {
+          incUnreadReportCount();
+        }
         if (!reportTaskId) {
           setTaskReport(payload as TaskReportDetail);
           return;

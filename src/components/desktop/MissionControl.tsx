@@ -11,6 +11,7 @@ const WINDOW_META: Record<WindowType, { emoji: string; label: string }> = {
   chat: { emoji: "💬", label: "Chat" },
   "agent-manager": { emoji: "👤", label: "Agent Manager" },
   repl: { emoji: ">_", label: "REPL" },
+  reports: { emoji: "📊", label: "Reports" },
 };
 
 const WIDGET_META: Record<string, { emoji: string; label: string }> = {

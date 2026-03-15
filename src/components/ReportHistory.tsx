@@ -5,13 +5,10 @@ import type { UiLanguage } from "../i18n";
 import { pickLang } from "../i18n";
 import { getTaskReports, getTaskReportDetail } from "../api";
 import TaskReportPopup from "./TaskReportPopup";
-import HeaderModalChrome from "./ui/HeaderModalChrome";
-
 interface ReportHistoryProps {
   agents: Agent[];
   departments: Department[];
   uiLanguage: UiLanguage;
-  onClose: () => void;
 }
 
 const PAGE_SIZE = 50;
@@ -39,7 +36,7 @@ function projectNameFromSummary(report: TaskReportSummary): string {
   return trimmed.split(/[\\/]/).pop() || "general";
 }
 
-export default function ReportHistory({ agents, departments, uiLanguage, onClose }: ReportHistoryProps) {
+export default function ReportHistory({ agents, departments, uiLanguage }: ReportHistoryProps) {
   const t = (text: { ko: string; en: string; ja?: string; zh?: string }) => pickLang(uiLanguage, text);
   const [reports, setReports] = useState<TaskReportSummary[]>([]);
   const [loading, setLoading] = useState(true);
@@ -85,6 +82,8 @@ export default function ReportHistory({ agents, departments, uiLanguage, onClose
     }
   };
 
+  void departments;
+
   if (detail) {
     return (
       <TaskReportPopup
@@ -97,32 +96,11 @@ export default function ReportHistory({ agents, departments, uiLanguage, onClose
     );
   }
 
-  void departments;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-stretch justify-end">
-      <button
-        className="absolute inset-0"
-        style={{ background: "var(--th-modal-overlay)" }}
-        onClick={onClose}
-        aria-label="Close"
-      />
-
-      <div
-        className="relative flex h-full w-full flex-col overflow-hidden sm:w-[640px]"
-        style={{
-          background: "var(--th-bg-base)",
-          borderLeft: "1px solid var(--th-border)",
-          fontFamily: "var(--th-font-mono)",
-          borderTopLeftRadius: 10,
-          borderBottomLeftRadius: 10,
-          boxShadow: "var(--th-glass-shadow)",
-        }}
-      >
-        <HeaderModalChrome
-          title={t({ ko: "보고서 내역", en: "Report History", ja: "レポート履歴", zh: "报告历史" })}
-          onClose={onClose}
-        />
+    <div
+      className="flex h-full w-full flex-col overflow-hidden"
+      style={{ fontFamily: "var(--th-font-mono)" }}
+    >
 
         <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3" style={{ fontFamily: "var(--th-font-mono)" }}>
           <div className="mb-3 flex items-center gap-2 text-xs">
@@ -294,7 +272,6 @@ export default function ReportHistory({ agents, departments, uiLanguage, onClose
             </div>
           )}
         </div>
-      </div>
     </div>
   );
 }

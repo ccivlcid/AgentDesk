@@ -654,5 +654,4 @@ export const DEFAULT_SETTINGS: CompanySettings = {
     signal: { token: "", sessions: [], receiveEnabled: false },
     imessage: { token: "", sessions: [], receiveEnabled: false },
   },
-  officePackProfiles: {},
 };
