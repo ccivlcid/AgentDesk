@@ -17,6 +17,7 @@ function setupDb(): DatabaseSync {
       priority INTEGER NOT NULL,
       task_type TEXT NOT NULL,
       workflow_pack_key TEXT NOT NULL,
+      context_hint TEXT,
       project_path TEXT,
       created_at INTEGER NOT NULL,
       updated_at INTEGER NOT NULL

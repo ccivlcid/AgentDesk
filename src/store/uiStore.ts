@@ -9,6 +9,7 @@ import { detectRuntimeOs, isForceUpdateBannerEnabled, mergeSettingsWithDefaults 
 const WIDGET_LAYOUT_KEY = "agentdesk_widget_layout";
 const WIDGET_ICONS_KEY = "agentdesk_widget_icons";
 const DESKTOP_ICON_LAYOUT_KEY = "agentdesk_icon_layout";
+const DESKTOP_ICON_LABELS_KEY = "agentdesk_icon_labels";
 const WALLPAPER_KEY = "agentdesk_wallpaper";
 
 function loadWallpaper(): string {
@@ -55,6 +56,18 @@ function saveDesktopIconLayout(layout: Record<string, { x: number; y: number }>)
   try { window.localStorage.setItem(DESKTOP_ICON_LAYOUT_KEY, JSON.stringify(layout)); } catch { /* ignore */ }
 }
 
+function loadDesktopIconLabels(): Record<string, string> {
+  try {
+    const raw = window.localStorage.getItem(DESKTOP_ICON_LABELS_KEY);
+    if (raw) return JSON.parse(raw) as Record<string, string>;
+  } catch { /* ignore */ }
+  return {};
+}
+
+function saveDesktopIconLabels(labels: Record<string, string>) {
+  try { window.localStorage.setItem(DESKTOP_ICON_LABELS_KEY, JSON.stringify(labels)); } catch { /* ignore */ }
+}
+
 type SA<T> = T | ((prev: T) => T);
 const apply = <T>(prev: T, a: SA<T>): T => (typeof a === "function" ? (a as (p: T) => T)(prev) : a);
 
@@ -84,6 +97,8 @@ interface UiStore {
   addWidgetIcon: (id: WidgetId) => void;
   removeWidgetIcon: (id: WidgetId) => void;
   setDesktopIconLayout: (layout: Record<string, { x: number; y: number }>) => void;
+  desktopIconLabels: Record<string, string>;
+  setDesktopIconLabel: (id: string, label: string) => void;
   jiggleMode: boolean;
   missionControlOpen: boolean;
 
@@ -92,6 +107,11 @@ interface UiStore {
   setWallpaper: (css: string) => void;
   setJiggleMode: (v: boolean) => void;
   setMissionControlOpen: (v: boolean) => void;
+
+  // ── Custom Feature Apps ───────────────────────────────────────────
+  openCustomApps: Set<string>;
+  openCustomApp: (id: string) => void;
+  closeCustomApp: (id: string) => void;
 
   // ── 기존 상태 ─────────────────────────────────────────────────────
   view: View;
@@ -137,6 +157,7 @@ export const useUiStore = create<UiStore>()((set) => ({
   openWindows: new Set<WindowType>(),
   widgetLayout: loadWidgetLayout(),
   desktopIconLayout: loadDesktopIconLayout(),
+  desktopIconLabels: loadDesktopIconLabels(),
   selectedAgentId: null,
   openTaskId: null,
   wallpaper: loadWallpaper(),
@@ -176,6 +197,15 @@ export const useUiStore = create<UiStore>()((set) => ({
     saveWidgetLayout(next);
     return { widgetLayout: next };
   }),
+  // ── Custom Feature Apps ────────────────────────────────────────────
+  openCustomApps: new Set<string>(),
+  openCustomApp: (id) => set((s) => ({ openCustomApps: new Set([...s.openCustomApps, id]) })),
+  closeCustomApp: (id) => set((s) => {
+    const next = new Set(s.openCustomApps);
+    next.delete(id);
+    return { openCustomApps: next };
+  }),
+
   jiggleMode: false,
   missionControlOpen: false,
 
@@ -193,6 +223,13 @@ export const useUiStore = create<UiStore>()((set) => ({
   }),
 
   setDesktopIconLayout: (layout) => { saveDesktopIconLayout(layout); set({ desktopIconLayout: layout }); },
+  setDesktopIconLabel: (id, label) => set((s) => {
+    const next = { ...s.desktopIconLabels };
+    if (label.trim()) next[id] = label.trim();
+    else delete next[id];
+    saveDesktopIconLabels(next);
+    return { desktopIconLabels: next };
+  }),
   setSelectedAgentId: (id) => set({ selectedAgentId: id }),
   setOpenTaskId: (id) => set({ openTaskId: id }),
   setWallpaper: (css) => { saveWallpaper(css); set({ wallpaper: css }); },

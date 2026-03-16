@@ -524,6 +524,7 @@ export function ChatPanel({
         visibleMessagesLength={visibleMessages.length}
         onClearMessages={onClearMessages}
         onClose={onClose}
+        embedded={embedded}
         searchOpen={searchOpen}
         searchQuery={searchQuery}
         searchResultCount={displayMessages.length}

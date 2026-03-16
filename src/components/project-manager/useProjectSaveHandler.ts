@@ -24,6 +24,7 @@ interface UseProjectSaveHandlerParams {
   setSelectedProjectId: Dispatch<SetStateAction<string | null>>;
   setEditingProjectId: Dispatch<SetStateAction<string | null>>;
   setIsCreating: Dispatch<SetStateAction<boolean>>;
+  onAfterCreate?: (projectId: string) => Promise<void>;
   t: ProjectI18nTranslate;
 }
 
@@ -47,6 +48,7 @@ export function useProjectSaveHandler({
   setSelectedProjectId,
   setEditingProjectId,
   setIsCreating,
+  onAfterCreate,
   t,
 }: UseProjectSaveHandlerParams) {
   return useCallback(
@@ -136,6 +138,7 @@ export function useProjectSaveHandler({
             agent_ids: assignmentMode === "manual" ? Array.from(selectedAgentIds) : [],
           });
           setSelectedProjectId(created.id);
+          if (onAfterCreate) await onAfterCreate(created.id);
         }
         await loadProjects(1, search);
         setEditingProjectId(null);
@@ -210,6 +213,7 @@ export function useProjectSaveHandler({
       getManualAssignmentWarning,
       loadProjects,
       name,
+      onAfterCreate,
       pathTools,
       projectPath,
       saving,

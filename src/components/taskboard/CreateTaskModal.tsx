@@ -25,6 +25,7 @@ interface CreateModalProps {
     project_path?: string;
     assigned_agent_id?: string;
     workflow_pack_key?: string;
+    context_hint?: string;
     workflow_meta_json?: string;
     handoff_to_agent_id?: string | null;
     handoff_condition?: "always" | "on_success" | "on_fail" | null;

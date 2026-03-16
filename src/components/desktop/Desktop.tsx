@@ -20,6 +20,8 @@ import AlertsWidget from "./widgets/AlertsWidget";
 import CliCostWidget from "./widgets/CliCostWidget";
 import FlowGraphWidget from "./widgets/FlowGraphWidget";
 import FileTreeWidget from "./widgets/FileTreeWidget";
+import CustomFeatureWidget from "./widgets/CustomFeatureWidget";
+import CustomFeatureWindow from "../windows/CustomFeatureWindow";
 import WallpaperPicker from "./WallpaperPicker";
 import MarkdownEditorModal from "./MarkdownEditorModal";
 import ReportWindow from "../windows/ReportWindow";
@@ -45,6 +47,7 @@ const WIDGET_LABELS: Record<string, string> = {
 };
 
 function WidgetContent({ id }: { id: string }) {
+  if (id.startsWith("custom:")) return <CustomFeatureWidget featureId={id.slice(7)} />;
   switch (id) {
     case "heartbeat":   return <AgentsWidget />;
     case "task-board":  return <TasksWidget />;
@@ -115,6 +118,8 @@ export default function Desktop({
     setDesktopIconLayout,
     unreadReportCount,
     clearUnreadReportCount,
+    openCustomApps,
+    closeCustomApp,
   } = useUiStore();
 
   const { projects, categories, currentProjectId, setCurrentProjectId } = useProjectStore();
@@ -497,6 +502,9 @@ export default function Desktop({
       {openWindows.has("agent-manager") && <AgentManagerWindow onAgentsChange={onAgentsChange} />}
       {openWindows.has("repl")          && <ReplWindow />}
       {openWindows.has("reports")       && <ReportWindow />}
+      {[...openCustomApps].map((id) => (
+        <CustomFeatureWindow key={id} featureId={id} onClose={() => closeCustomApp(id)} />
+      ))}
       {openWindows.has("chat")          && (
         <Suspense fallback={null}>
           <ChatWindow

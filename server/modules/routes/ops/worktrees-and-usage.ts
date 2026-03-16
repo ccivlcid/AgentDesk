@@ -396,5 +396,77 @@ export function registerWorktreeAndUsageRoutes(ctx: RuntimeContext): {
     });
   });
 
+  // GET /api/projects/:id/cost-summary — 프로젝트별 비용 집계
+  app.get("/api/projects/:id/cost-summary", (req, res) => {
+    const projectId = String(req.params.id);
+    const monthStart = getMonthStartMs();
+
+    try {
+      const totalRow = db.prepare(
+        `SELECT
+           COALESCE(SUM(e.cost_usd), 0)           AS totalUsd,
+           COALESCE(SUM(e.tokens_in), 0)           AS totalTokensIn,
+           COALESCE(SUM(e.tokens_out), 0)          AS totalTokensOut,
+           COALESCE(SUM(e.tokens_in+e.tokens_out), 0) AS totalTokens
+         FROM task_execution_events e
+         JOIN tasks t ON t.id = e.task_id
+         WHERE t.project_id = ?`,
+      ).get(projectId) as { totalUsd: number; totalTokensIn: number; totalTokensOut: number; totalTokens: number };
+
+      const monthRow = db.prepare(
+        `SELECT
+           COALESCE(SUM(e.cost_usd), 0)           AS thisMonthUsd,
+           COALESCE(SUM(e.tokens_in+e.tokens_out), 0) AS thisMonthTokens
+         FROM task_execution_events e
+         JOIN tasks t ON t.id = e.task_id
+         WHERE t.project_id = ?
+           AND e.created_at >= ?`,
+      ).get(projectId, monthStart) as { thisMonthUsd: number; thisMonthTokens: number };
+
+      const agentRows = db.prepare(
+        `SELECT
+           t.assigned_agent_id                      AS agentId,
+           a.name                                    AS agentName,
+           COALESCE(SUM(e.cost_usd), 0)             AS totalUsd,
+           COALESCE(SUM(e.tokens_in+e.tokens_out), 0) AS totalTokens,
+           COUNT(DISTINCT e.task_id)                AS taskCount
+         FROM task_execution_events e
+         JOIN tasks t ON t.id = e.task_id
+         LEFT JOIN agents a ON a.id = t.assigned_agent_id
+         WHERE t.project_id = ?
+           AND t.assigned_agent_id IS NOT NULL
+         GROUP BY t.assigned_agent_id
+         ORDER BY totalUsd DESC`,
+      ).all(projectId) as Array<{ agentId: string; agentName: string; totalUsd: number; totalTokens: number; taskCount: number }>;
+
+      const packRows = db.prepare(
+        `SELECT
+           COALESCE(t.context_hint, t.workflow_pack_key, 'development') AS packKey,
+           COALESCE(SUM(e.cost_usd), 0)             AS totalUsd,
+           COUNT(DISTINCT e.task_id)                AS taskCount
+         FROM task_execution_events e
+         JOIN tasks t ON t.id = e.task_id
+         WHERE t.project_id = ?
+         GROUP BY COALESCE(t.context_hint, t.workflow_pack_key, 'development')
+         ORDER BY totalUsd DESC`,
+      ).all(projectId) as Array<{ packKey: string; totalUsd: number; taskCount: number }>;
+
+      res.json({
+        ok: true,
+        projectId,
+        totalUsd: totalRow.totalUsd ?? 0,
+        totalTokens: totalRow.totalTokens ?? 0,
+        totalTokensIn: totalRow.totalTokensIn ?? 0,
+        totalTokensOut: totalRow.totalTokensOut ?? 0,
+        thisMonthUsd: monthRow.thisMonthUsd ?? 0,
+        thisMonthTokens: monthRow.thisMonthTokens ?? 0,
+        agentBreakdown: agentRows,
+        packBreakdown: packRows,
+      });
+    } catch {
+      res.status(500).json({ ok: false, error: "Failed to fetch project cost summary" });
+    }
+  });
+
   return { refreshCliUsageData, checkCostBlockExecution };
 }

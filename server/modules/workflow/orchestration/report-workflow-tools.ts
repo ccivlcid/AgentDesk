@@ -387,7 +387,7 @@ export function createReportWorkflowTools(deps: CreateReportWorkflowToolsDeps) {
     const t = nowMs();
     const designWorkflowPackKey = resolveWorkflowPackKeyForTask({
       db: db as any,
-      sourceTaskPackKey: task.workflow_pack_key,
+      sourceTaskPackKey: (task as any).context_hint ?? task.workflow_pack_key,
       sourceTaskId: task.id,
       projectId: task.project_id ?? null,
       fallbackPackKey: "report",
@@ -416,8 +416,8 @@ export function createReportWorkflowTools(deps: CreateReportWorkflowToolsDeps) {
 
     db.prepare(
       `
-  INSERT INTO tasks (id, title, description, department_id, assigned_agent_id, project_id, status, priority, task_type, workflow_pack_key, project_path, source_task_id, created_at, updated_at)
-  VALUES (?, ?, ?, 'design', ?, ?, 'planned', 1, 'design', ?, ?, ?, ?, ?)
+  INSERT INTO tasks (id, title, description, department_id, assigned_agent_id, project_id, status, priority, task_type, workflow_pack_key, context_hint, project_path, source_task_id, created_at, updated_at)
+  VALUES (?, ?, ?, 'design', ?, ?, 'planned', 1, 'design', ?, ?, ?, ?, ?, ?)
 `,
     ).run(
       childTaskId,
@@ -425,6 +425,7 @@ export function createReportWorkflowTools(deps: CreateReportWorkflowToolsDeps) {
       designDescription,
       designAgent.id,
       task.project_id ?? null,
+      designWorkflowPackKey,
       designWorkflowPackKey,
       task.project_path ?? null,
       task.id,

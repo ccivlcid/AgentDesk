@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
+import TrafficLights from "../desktop/TrafficLights";
 
 export type ModalWidth = "sm" | "md" | "lg" | "xl" | "full";
 
@@ -134,17 +135,7 @@ export function ModalHeader({ children, subtitle, onClose, macOSStyle = true }: 
       }}
     >
       {macOSStyle && onClose && (
-        <div className="flex flex-shrink-0 items-center gap-1.5">
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close"
-            className="h-3 w-3 flex-shrink-0 rounded-full border-0 transition-opacity hover:opacity-90"
-            style={{ background: "#ff5f57" }}
-          />
-          <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#ffbd2e" }} />
-          <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#27c93f" }} />
-        </div>
+        <TrafficLights onClose={onClose} />
       )}
       <div className="flex min-w-0 flex-1 flex-col">
         <h2

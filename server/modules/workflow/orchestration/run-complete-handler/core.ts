@@ -22,6 +22,7 @@ type TaskRow = {
   description: string | null;
   status: string;
   workflow_pack_key: string | null;
+  context_hint?: string | null;
   project_id: string | null;
   project_path: string | null;
   source_task_id: string | null;
@@ -122,7 +123,8 @@ export function createRunCompleteHandler(deps: RunCompleteHandlerDeps) {
       /* ignore */
     }
 
-    const isVideoPreprodTask = task.workflow_pack_key === "video_preprod";
+    const effectivePackKey = task.context_hint ?? task.workflow_pack_key;
+    const isVideoPreprodTask = effectivePackKey === "video_preprod";
     const isVideoFinalRenderTask = isVideoPreprodTask && /\[VIDEO_FINAL_RENDER\]/i.test(task.title);
     // Collaboration child tasks (source_task_id set, not VIDEO_FINAL_RENDER) skip artifact sync.
     const isVideoPreprodCollabChild = isVideoPreprodTask && !!task.source_task_id && !isVideoFinalRenderTask;
@@ -141,7 +143,7 @@ export function createRunCompleteHandler(deps: RunCompleteHandlerDeps) {
 
     const gatesResult = runAfterExitGates(
       taskId,
-      { title: task.title, workflow_pack_key: task.workflow_pack_key },
+      { title: task.title, workflow_pack_key: effectivePackKey },
       result,
       finalExitCode,
       artifactSync,

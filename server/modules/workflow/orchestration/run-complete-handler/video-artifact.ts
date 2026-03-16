@@ -36,6 +36,7 @@ export function handleVideoArtifactSync(
     project_path: string | null;
     department_id: string | null;
     workflow_pack_key: string | null;
+    context_hint?: string | null;
   },
   deps: VideoArtifactSyncDeps,
 ): VideoArtifactSyncResult {
@@ -44,7 +45,7 @@ export function handleVideoArtifactSync(
     project_id: task.project_id,
     project_path: task.project_path,
     department_id: task.department_id,
-    workflow_pack_key: task.workflow_pack_key,
+    workflow_pack_key: task.context_hint ?? task.workflow_pack_key,
   });
   const candidateRelativePaths = resolveVideoArtifactRelativeCandidates(videoArtifactSpec);
   const wtInfo = taskWorktrees.get(taskId) as { worktreePath?: string; projectPath?: string } | undefined;

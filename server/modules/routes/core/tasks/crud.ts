@@ -77,8 +77,11 @@ export function registerTaskCrudRoutes(deps: TaskCrudRouteDeps): void {
     const agentFilter = firstQueryValue(req.query.agent_id);
     const projectFilter = firstQueryValue(req.query.project_id);
     const workflowPackFilter = normalizeTextField(firstQueryValue(req.query.workflow_pack_key));
+    const contextHintFilter = normalizeTextField(firstQueryValue(req.query.context_hint));
+    // Accept either query param; context_hint takes precedence
+    const effectivePackFilter = contextHintFilter || workflowPackFilter;
 
-    if (workflowPackFilter && !isWorkflowPackKey(workflowPackFilter)) {
+    if (effectivePackFilter && !isWorkflowPackKey(effectivePackFilter)) {
       return res.status(400).json({ error: "invalid_workflow_pack_key" });
     }
 
@@ -101,9 +104,9 @@ export function registerTaskCrudRoutes(deps: TaskCrudRouteDeps): void {
       conditions.push("t.project_id = ?");
       params.push(projectFilter);
     }
-    if (workflowPackFilter) {
-      conditions.push("t.workflow_pack_key = ?");
-      params.push(workflowPackFilter);
+    if (effectivePackFilter) {
+      conditions.push("COALESCE(t.context_hint, t.workflow_pack_key) = ?");
+      params.push(effectivePackFilter);
     }
 
     const where = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
@@ -210,14 +213,20 @@ export function registerTaskCrudRoutes(deps: TaskCrudRouteDeps): void {
       ? (body as any).handoff_condition
       : null;
 
+    const resolvedPackKey = resolveWorkflowPackKeyForTask({
+      db: db as any,
+      explicitPackKey: (body as any).workflow_pack_key ?? (body as any).context_hint,
+      categoryId: resolvedCategoryId,
+      projectId: resolvedProjectId,
+    });
     db.prepare(
       `
     INSERT INTO tasks (
       id, title, description, department_id, assigned_agent_id, project_id,
-      status, priority, task_type, workflow_pack_key, workflow_meta_json, output_format,
+      status, priority, task_type, workflow_pack_key, context_hint, workflow_meta_json, output_format,
       project_path, base_branch, category_id, handoff_to_agent_id, handoff_condition, created_at, updated_at
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `,
     ).run(
       id,
@@ -229,12 +238,8 @@ export function registerTaskCrudRoutes(deps: TaskCrudRouteDeps): void {
       (body as any).status ?? "inbox",
       (body as any).priority ?? 0,
       (body as any).task_type ?? "general",
-      resolveWorkflowPackKeyForTask({
-        db: db as any,
-        explicitPackKey: (body as any).workflow_pack_key,
-        categoryId: resolvedCategoryId,
-        projectId: resolvedProjectId,
-      }),
+      resolvedPackKey,
+      resolvedPackKey,
       typeof (body as any).workflow_meta_json === "string"
         ? (body as any).workflow_meta_json
         : (body as any).workflow_meta_json
@@ -432,12 +437,18 @@ export function registerTaskCrudRoutes(deps: TaskCrudRouteDeps): void {
     if (!existing) return res.status(404).json({ error: "not_found" });
 
     const body = { ...(req.body ?? {}) } as Record<string, unknown>;
+    // Accept context_hint as an alias for workflow_pack_key
+    if ("context_hint" in body && !("workflow_pack_key" in body)) {
+      body.workflow_pack_key = body.context_hint;
+    }
     if ("workflow_pack_key" in body) {
       const workflowPackKey = normalizeTextField(body.workflow_pack_key);
       if (!workflowPackKey || !isWorkflowPackKey(workflowPackKey)) {
         return res.status(400).json({ error: "invalid_workflow_pack_key" });
       }
       body.workflow_pack_key = workflowPackKey;
+      // Keep context_hint in sync with workflow_pack_key
+      body.context_hint = workflowPackKey;
     }
     if ("workflow_meta_json" in body) {
       const rawWorkflowMeta = body.workflow_meta_json;
@@ -462,6 +473,7 @@ export function registerTaskCrudRoutes(deps: TaskCrudRouteDeps): void {
       "priority",
       "task_type",
       "workflow_pack_key",
+      "context_hint",
       "workflow_meta_json",
       "output_format",
       "project_path",

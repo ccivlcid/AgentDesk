@@ -214,7 +214,7 @@ export function createSubtaskRoutingTools(deps: SubtaskRoutingDeps) {
     try {
       const task = db
         .prepare(
-          "SELECT title, description, project_path, assigned_agent_id, department_id, project_id, workflow_pack_key FROM tasks WHERE id = ?",
+          "SELECT title, description, project_path, assigned_agent_id, department_id, project_id, workflow_pack_key, context_hint FROM tasks WHERE id = ?",
         )
         .get(taskId) as
         | {
@@ -225,12 +225,13 @@ export function createSubtaskRoutingTools(deps: SubtaskRoutingDeps) {
             department_id: string | null;
             project_id: string | null;
             workflow_pack_key: string | null;
+            context_hint?: string | null;
           }
         | undefined;
       if (!task) return;
       const constrainedAgentIds = resolveConstrainedAgentScopeForTask(db as any, {
         project_id: task.project_id,
-        workflow_pack_key: task.workflow_pack_key,
+        workflow_pack_key: task.context_hint ?? task.workflow_pack_key,
         department_id: task.department_id ?? ownerDeptId,
       });
       const planningLeader = findTeamLeader("planning", constrainedAgentIds);

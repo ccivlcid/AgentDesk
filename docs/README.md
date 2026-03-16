@@ -9,6 +9,7 @@
 | Document | Description |
 |------|------|
 | [OVERVIEW.md](OVERVIEW.md) | **Master overview** — Project OS concept, agent monitoring, execution pipeline, current status, roadmap |
+| [progress.md](progress.md) | **Development progress** — Latest work log, completed items, next candidates |
 
 ---
 
@@ -40,6 +41,14 @@
 
 ---
 
+## features/
+
+| Document | Description |
+|------|------|
+| [custom-widget-platform.md](features/custom-widget-platform.md) | Custom Widget Platform — spec + Phase 1~5 implementation summary (complete) |
+
+---
+
 ## strategy/
 
 | Document | Description |
@@ -47,7 +56,6 @@
 | [agent-performance-audit.md](strategy/agent-performance-audit.md) | Agent execution performance audit — 10 bottlenecks, Phase 1 complete |
 | [bigger-ide-vision.md](strategy/bigger-ide-vision.md) | "Bigger IDE" strategic vision |
 | [agent-flow-graph-design.md](strategy/agent-flow-graph-design.md) | Agent Flow Graph SVG implementation design (implementation complete) |
-| [agent-persona-system.md](strategy/agent-persona-system.md) | Agent persona system — catalog of 10 notable personas |
 
 ---
 

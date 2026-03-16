@@ -40,6 +40,7 @@ function createTaskCrudHarness(): { db: DatabaseSync; routes: Map<string, RouteH
       priority INTEGER NOT NULL,
       task_type TEXT NOT NULL,
       workflow_pack_key TEXT NOT NULL DEFAULT 'development',
+      context_hint TEXT,
       workflow_meta_json TEXT,
       output_format TEXT,
       project_path TEXT,

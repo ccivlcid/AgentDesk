@@ -18,7 +18,7 @@ export default function ManualAssignmentWarningDialog({
   if (!warning) return null;
 
   return (
-    <div className="fixed inset-0 z-[61] flex items-center justify-center bg-black/70 p-4" onClick={onCancel}>
+    <div className="fixed inset-0 z-[1200] flex items-center justify-center bg-black/70 p-4" onClick={onCancel}>
       <div
         className="w-full max-w-lg overflow-hidden"
         style={{ borderRadius: 0, border: "1px solid rgba(245,158,11,0.4)", background: "var(--th-bg-surface)" }}

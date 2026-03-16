@@ -16,7 +16,8 @@ export type WidgetId =
   | "alerts"
   | "cli-usage"
   | "flow-graph"
-  | "file-tree";
+  | "file-tree"
+  | `custom:${string}`;
 
 export interface WidgetEntry {
   id: WidgetId;

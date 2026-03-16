@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useCallback } from "react";
 import { useUiStore } from "../../store/uiStore";
 import { isLightWallpaper } from "./WallpaperPicker";
 
@@ -27,15 +27,35 @@ interface DesktopIconProps {
 }
 
 export default function DesktopIcon({ def, defaultX, defaultY }: DesktopIconProps) {
-  const { desktopIconLayout, setDesktopIconLayout, jiggleMode, wallpaper } = useUiStore();
+  const { desktopIconLayout, setDesktopIconLayout, desktopIconLabels, setDesktopIconLabel, jiggleMode, wallpaper } = useUiStore();
   const light = isLightWallpaper(wallpaper);
 
   const saved = desktopIconLayout[def.id];
   const [pos, setPos] = useState({ x: saved?.x ?? defaultX, y: saved?.y ?? defaultY });
   const [dragging, setDragging] = useState(false);
   const [hovered, setHovered] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [editValue, setEditValue] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
   const dragStart = useRef<{ mx: number; my: number; ox: number; oy: number } | null>(null);
   const moved = useRef(false);
+
+  const displayLabel = desktopIconLabels[def.id] ?? def.label;
+
+  const startEdit = useCallback(() => {
+    setEditValue(displayLabel);
+    setEditing(true);
+    setTimeout(() => { inputRef.current?.select(); }, 0);
+  }, [displayLabel]);
+
+  const commitEdit = useCallback(() => {
+    setEditing(false);
+    setDesktopIconLabel(def.id, editValue);
+  }, [def.id, editValue, setDesktopIconLabel]);
+
+  const cancelEdit = useCallback(() => {
+    setEditing(false);
+  }, []);
 
   function onMouseDown(e: React.MouseEvent) {
     if (e.button !== 0) return;
@@ -70,6 +90,11 @@ export default function DesktopIcon({ def, defaultX, defaultY }: DesktopIconProp
 
   function onClick() {
     if (!moved.current) def.onClick();
+  }
+
+  function onDoubleClick(e: React.MouseEvent) {
+    e.stopPropagation();
+    if (!moved.current) startEdit();
   }
 
   function onContextMenuHandler(e: React.MouseEvent) {
@@ -139,7 +164,7 @@ export default function DesktopIcon({ def, defaultX, defaultY }: DesktopIconProp
               width: 18,
               height: 18,
               borderRadius: "50%",
-              background: "#ff3b30",
+              background: "var(--th-danger, #ff3b30)",
               border: "2px solid rgba(0,0,0,0.5)",
               display: "flex",
               alignItems: "center",
@@ -166,7 +191,7 @@ export default function DesktopIcon({ def, defaultX, defaultY }: DesktopIconProp
               minWidth: 16,
               height: 16,
               borderRadius: 8,
-              background: "#ff3b30",
+              background: "var(--th-danger, #ff3b30)",
               border: "2px solid rgba(0,0,0,0.6)",
               display: "flex",
               alignItems: "center",
@@ -208,26 +233,59 @@ export default function DesktopIcon({ def, defaultX, defaultY }: DesktopIconProp
         </div>
 
         {/* 레이블 */}
-        <span
-          style={{
-            fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif",
-            fontSize: 11,
-            fontWeight: 500,
-            color: labelColor,
-            textAlign: "center",
-            lineHeight: 1.25,
-            maxWidth: 72,
-            wordBreak: "keep-all",
-            background: labelBg,
-            backdropFilter: "blur(12px)",
-            WebkitBackdropFilter: "blur(12px)",
-            borderRadius: 4,
-            padding: "2px 6px",
-            textShadow: labelShadow,
-          }}
-        >
-          {def.label}
-        </span>
+        {editing ? (
+          <input
+            ref={inputRef}
+            value={editValue}
+            onChange={(e) => setEditValue(e.target.value)}
+            onBlur={commitEdit}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") { e.preventDefault(); commitEdit(); }
+              if (e.key === "Escape") { e.preventDefault(); cancelEdit(); }
+            }}
+            onClick={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
+            style={{
+              fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif",
+              fontSize: 11,
+              fontWeight: 500,
+              color: labelColor,
+              textAlign: "center",
+              width: 72,
+              background: labelBg,
+              backdropFilter: "blur(12px)",
+              WebkitBackdropFilter: "blur(12px)",
+              borderRadius: 4,
+              padding: "2px 6px",
+              border: "1px solid var(--th-accent, #f59e0b)",
+              outline: "none",
+              lineHeight: 1.25,
+            }}
+            autoFocus
+          />
+        ) : (
+          <span
+            onDoubleClick={onDoubleClick}
+            style={{
+              fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif",
+              fontSize: 11,
+              fontWeight: 500,
+              color: labelColor,
+              textAlign: "center",
+              lineHeight: 1.25,
+              maxWidth: 72,
+              wordBreak: "keep-all",
+              background: labelBg,
+              backdropFilter: "blur(12px)",
+              WebkitBackdropFilter: "blur(12px)",
+              borderRadius: 4,
+              padding: "2px 6px",
+              textShadow: labelShadow,
+            }}
+          >
+            {displayLabel}
+          </span>
+        )}
       </div>
     </>
   );

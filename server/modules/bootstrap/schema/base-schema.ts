@@ -106,6 +106,7 @@ CREATE TABLE IF NOT EXISTS tasks (
   priority INTEGER DEFAULT 0,
   task_type TEXT DEFAULT 'general' CHECK(task_type IN ('general','development','design','analysis','presentation','documentation')),
   workflow_pack_key TEXT NOT NULL DEFAULT 'development',
+  context_hint TEXT NOT NULL DEFAULT 'development',
   workflow_meta_json TEXT,
   output_format TEXT,
   project_path TEXT,

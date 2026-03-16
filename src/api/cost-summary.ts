@@ -31,3 +31,33 @@ export async function getGlobalCostSummary(): Promise<GlobalCostSummary> {
     agentBreakdown: data.agentBreakdown ?? [],
   };
 }
+
+export interface ProjectCostSummary {
+  projectId: string;
+  totalUsd: number;
+  totalTokens: number;
+  totalTokensIn: number;
+  totalTokensOut: number;
+  thisMonthUsd: number;
+  thisMonthTokens: number;
+  agentBreakdown: Array<{ agentId: string; agentName: string; totalUsd: number; totalTokens: number; taskCount: number }>;
+  packBreakdown: Array<{ packKey: string; totalUsd: number; taskCount: number }>;
+}
+
+export async function getProjectCostSummary(projectId: string): Promise<ProjectCostSummary> {
+  const BASE_API = "http://127.0.0.1:8790";
+  const res = await fetch(`${BASE_API}/api/projects/${projectId}/cost-summary`);
+  if (!res.ok) throw new Error(`Failed to fetch project cost summary: ${res.status}`);
+  const data = await res.json();
+  return {
+    projectId: data.projectId ?? projectId,
+    totalUsd: data.totalUsd ?? 0,
+    totalTokens: data.totalTokens ?? 0,
+    totalTokensIn: data.totalTokensIn ?? 0,
+    totalTokensOut: data.totalTokensOut ?? 0,
+    thisMonthUsd: data.thisMonthUsd ?? 0,
+    thisMonthTokens: data.thisMonthTokens ?? 0,
+    agentBreakdown: data.agentBreakdown ?? [],
+    packBreakdown: data.packBreakdown ?? [],
+  };
+}

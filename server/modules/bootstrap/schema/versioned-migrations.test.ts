@@ -48,6 +48,37 @@ function makeDb(): DatabaseSync {
       agent_id TEXT NOT NULL,
       PRIMARY KEY (project_id, agent_id)
     );
+    CREATE TABLE IF NOT EXISTS hook_entries (
+      id TEXT PRIMARY KEY,
+      enabled INTEGER NOT NULL DEFAULT 1,
+      event_type TEXT NOT NULL DEFAULT '',
+      scope_type TEXT NOT NULL DEFAULT 'global',
+      scope_id TEXT
+    );
+    CREATE TABLE IF NOT EXISTS agent_rules (
+      id TEXT PRIMARY KEY,
+      enabled INTEGER NOT NULL DEFAULT 1,
+      scope_type TEXT NOT NULL DEFAULT 'global',
+      scope_id TEXT,
+      priority INTEGER NOT NULL DEFAULT 0
+    );
+    CREATE TABLE IF NOT EXISTS memory_entries (
+      id TEXT PRIMARY KEY,
+      enabled INTEGER NOT NULL DEFAULT 1,
+      scope_type TEXT NOT NULL DEFAULT 'global',
+      scope_id TEXT,
+      priority INTEGER NOT NULL DEFAULT 0
+    );
+    CREATE TABLE IF NOT EXISTS agent_usage_logs (
+      id TEXT PRIMARY KEY,
+      agent_id TEXT NOT NULL,
+      exit_code INTEGER,
+      created_at INTEGER NOT NULL DEFAULT (unixepoch()*1000)
+    );
+    CREATE TABLE IF NOT EXISTS skill_learning_history (
+      id TEXT PRIMARY KEY,
+      category TEXT
+    );
   `);
   return db;
 }

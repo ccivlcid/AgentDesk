@@ -177,20 +177,22 @@ Managing these four elements **per project** allows the same agent to behave dif
 
 ## 6. Current System Status
 
-### Completion (as of 2026-03-15)
+### Completion (as of 2026-03-16)
 
 ```
 Agent spawn & management         ████████████████████ 100% (timeout enforcement + orphan batching complete)
 Multi-agent orchestration        ████████████████████ 100% (scheduler dynamic timeout + orphan recovery complete)
-Database & infrastructure        ██████████████████░░ 90%
+Database & infrastructure        ████████████████████ 100% (versioned migrations + project templates)
 Skill learning & memory          ████████████████████ 100% (WebSocket real-time streaming + auto-extraction complete)
-Heartbeat & anomaly detection    ███████████████████░ 90% (AlertsWidget real-time polling complete)
+Heartbeat & anomaly detection    ███████████████████░ 95% (AlertsWidget real-time polling complete)
 Scheduling                       ████████████████████ 100% (dynamic timeout scheduler complete)
-UI/UX monitoring                 ████████████████████ 100% (Phase 4~5 complete + FileTree widget added)
+UI/UX monitoring                 ████████████████████ 100% (macOS UX complete + Custom Widget Platform)
 Security hardening               ████████████████████ 100% (2nd patch complete)
 Persona system                   ████████████████████ 100% (complete)
 Visual agent graph               ████████████████████ 100% (complete)
 Agent composition templates      ████████████████████ 100% (drag-and-drop + Run complete)
+Custom Widget Platform           ████████████████████ 100% (Phase 1~5 complete — template + AI + esbuild bundle)
+Project management               ████████████████████ 100% (cost summary + templates + burndown complete)
 ```
 
 ### Safe Concurrency Limits
@@ -225,9 +227,16 @@ All planned features and improvement tasks have been completed. Key achievements
 
 ### UI/UX
 - Zustand state management introduced, Keyboard-First UX (vim-style `g+key` shortcuts), macOS OS metaphor complete (Mission Control, Jiggle Mode, Quick Look, Command Palette), i18n for 4 languages (ko/en/ja/zh)
+- **Custom Widget Platform**: No-code widget/app creation via templates (7 types) or AI natural language → esbuild TSX→IIFE bundle → sandbox iframe rendering
+- **macOS UX polish**: TrafficLights on all panels, desktop icon inline rename (double-click), macOS-style dialogs with rounded corners
 
 ### Quality
-- pino structured logging, 181 server tests + 43 frontend tests all passing
+- pino structured logging, 186 server tests + 43 frontend tests all passing
+
+### Project Management
+- **Cost summary**: `GET /api/projects/:id/cost-summary` — per-project USD cost, token in/out, agent breakdown, workflow breakdown; displayed in `ProjectInsightsPanel`
+- **Project templates**: 4 built-in templates (Web App, Research Report, Video Production, Data Analysis) auto-seed objectives + gates on project creation
+- **`context_hint` refactoring**: `workflow_pack_key → context_hint` dual-write migration across 16+ server files
 
 ---
 
@@ -494,16 +503,17 @@ All planned features and improvement tasks have been completed. Key achievements
 
 | Document | Contents |
 |---|---|
-| [`docs/OVERVIEW.md`](./OVERVIEW.md) | **This document** — full overview |
+| [`docs/OVERVIEW.md`](./OVERVIEW.md) | **This document** — full overview + completion history |
+| [`docs/progress.md`](./progress.md) | Development progress tracker (latest work log) |
 | [`docs/specs/api.md`](./specs/api.md) | Full REST API specification |
 | [`docs/architecture/SYSTEM-STRUCTURE-MAP.md`](./architecture/SYSTEM-STRUCTURE-MAP.md) | System structure map |
 | [`docs/architecture/schema-erd.md`](./architecture/schema-erd.md) | DB schema ER diagram + state machines |
-| [`docs/architecture/ARCHITECTURE-AUDIT-2026-Q1.md`](./architecture/ARCHITECTURE-AUDIT-2026-Q1.md) | **Comprehensive architecture + backend audit** (FE/BE/security/performance/roadmap) |
-| [`docs/strategy/agent-performance-audit.md`](./strategy/agent-performance-audit.md) | Agent execution performance audit + roadmap (Phase 1 complete) |
+| [`docs/architecture/ARCHITECTURE-AUDIT-2026-Q1.md`](./architecture/ARCHITECTURE-AUDIT-2026-Q1.md) | Comprehensive architecture + backend audit |
+| [`docs/strategy/agent-performance-audit.md`](./strategy/agent-performance-audit.md) | Agent execution performance audit |
 | [`docs/strategy/bigger-ide-vision.md`](./strategy/bigger-ide-vision.md) | "Bigger IDE" strategic vision |
-| [`docs/strategy/agent-persona-system.md`](./strategy/agent-persona-system.md) | Agent persona system |
-| [`docs/design/DESIGN.md`](./design/DESIGN.md) | UI implementation reference — full CSS variables + component patterns |
-| [`docs/design/UI-SCREENS.md`](./design/UI-SCREENS.md) | Full screen & modal specification (13 + 36) |
+| [`docs/features/custom-widget-platform.md`](./features/custom-widget-platform.md) | Custom Widget Platform — spec + implementation summary |
+| [`docs/design/DESIGN.md`](./design/DESIGN.md) | UI CSS variables + component patterns |
+| [`docs/design/UI-SCREENS.md`](./design/UI-SCREENS.md) | Full screen & modal specification |
 
 ---
 

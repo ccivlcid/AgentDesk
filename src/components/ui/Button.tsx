@@ -37,8 +37,8 @@ const VARIANT_STYLES: Record<ButtonVariant, React.CSSProperties> = {
   },
   danger: {
     background: "transparent",
-    border: "1px solid rgba(248,81,73,0.35)",
-    color: "#f85149",
+    border: "1px solid var(--th-danger-border)",
+    color: "var(--th-danger-text)",
     fontWeight: 500,
   },
 };
@@ -47,7 +47,7 @@ const HOVER_CLASS: Record<ButtonVariant, string> = {
   primary: "hover:!bg-[var(--th-accent)] hover:!text-black hover:!border-[var(--th-accent)]",
   secondary: "hover:!bg-[var(--th-hover-bg)] hover:!text-[var(--th-text)] hover:!border-[var(--th-border-strong)]",
   ghost: "hover:!bg-[var(--th-hover-bg)] hover:!text-[var(--th-text-secondary)]",
-  danger: "hover:!bg-[rgba(248,81,73,0.08)] hover:!border-[rgba(248,81,73,0.5)]",
+  danger: "hover:!bg-[var(--th-danger-bg)] hover:!border-[var(--th-danger-border)]",
 };
 
 /**

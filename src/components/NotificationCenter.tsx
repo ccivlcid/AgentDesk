@@ -6,6 +6,7 @@ import {
   markAllNotificationsRead,
 } from "../api/notifications";
 import type { WSEventType } from "../types";
+import TrafficLights from "./desktop/TrafficLights";
 
 type SocketOn = (event: WSEventType, handler: (payload: unknown) => void) => () => void;
 
@@ -245,10 +246,11 @@ export default function NotificationCenter({ on, onNavigateTask, onOpenDecisionI
           width: 320,
           bottom: 80,
           zIndex: 400,
-          background: "var(--th-panel-bg)",
+          background: "var(--th-bg-surface)",
           backdropFilter: "blur(20px)",
           WebkitBackdropFilter: "blur(20px)",
-          borderLeft: "1px solid var(--th-border)",
+          borderLeft: "1px solid var(--th-border-strong)",
+          borderTopLeftRadius: 10,
           display: "flex",
           flexDirection: "column",
           transform: open ? "translateX(0)" : "translateX(320px)",
@@ -256,14 +258,16 @@ export default function NotificationCenter({ on, onNavigateTask, onOpenDecisionI
           pointerEvents: open ? "auto" : "none",
         }}
       >
+        {/* macOS 타이틀바 */}
         <div
-          className="flex items-center justify-between gap-3 px-4 py-3"
-          style={{ borderBottom: "1px solid var(--th-border)" }}
+          className="flex items-center gap-3 px-3 py-2"
+          style={{ borderBottom: "1px solid var(--th-border)", background: "var(--th-glass-bg)", minHeight: 40, flexShrink: 0, borderTopLeftRadius: 10 }}
         >
-          <span className="text-sm font-semibold" style={{ color: "var(--th-text-heading)" }}>
-            Notifications
+          <TrafficLights onClose={() => setOpen(false)} />
+          <span className="text-xs font-semibold tracking-wide flex-1" style={{ color: "var(--th-text-heading)", fontFamily: "var(--th-font-mono)" }}>
+            🔔 Notifications{unreadCount > 0 && <span style={{ marginLeft: 6, fontSize: 10, color: "var(--th-accent)" }}>({unreadCount})</span>}
           </span>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             {typeof Notification !== "undefined" && (
               <button
                 type="button"
@@ -276,10 +280,9 @@ export default function NotificationCenter({ on, onNavigateTask, onOpenDecisionI
                     });
                   }
                 }}
-                className="inline-flex h-8 w-8 items-center justify-center transition"
-                style={{ borderRadius: 0, background: pushEnabled ? "var(--th-success, #22c55e)" : "var(--th-bg-elevated)", color: pushEnabled ? "#fff" : "var(--th-text-muted)", border: "1px solid var(--th-border)" }}
+                className="inline-flex h-7 w-7 items-center justify-center transition"
+                style={{ borderRadius: 0, background: pushEnabled ? "var(--th-green-glow)" : "var(--th-bg-elevated)", color: pushEnabled ? "var(--th-success, #22c55e)" : "var(--th-text-muted)", border: "1px solid var(--th-border)" }}
                 title={pushEnabled ? "Browser push ON" : "Browser push OFF"}
-                aria-label={pushEnabled ? "Disable browser notifications" : "Enable browser notifications"}
               >
                 {pushEnabled ? <IconBell /> : <IconBellOff />}
               </button>
@@ -287,9 +290,8 @@ export default function NotificationCenter({ on, onNavigateTask, onOpenDecisionI
             <button
               type="button"
               onClick={() => setHideRead((v) => !v)}
-              className="inline-flex h-8 items-center justify-center px-2 text-[11px] font-medium transition"
-              style={{ borderRadius: 0, background: hideRead ? "var(--th-accent, #3b82f6)" : "var(--th-bg-elevated)", color: hideRead ? "#fff" : "var(--th-text-muted)", border: hideRead ? "none" : "1px solid var(--th-border)" }}
-              title={hideRead ? "Show all notifications" : "Hide read notifications"}
+              className="inline-flex h-7 items-center justify-center px-2 text-[10px] font-mono transition"
+              style={{ borderRadius: 0, background: hideRead ? "rgba(245,158,11,0.15)" : "var(--th-bg-elevated)", color: hideRead ? "var(--th-accent)" : "var(--th-text-muted)", border: "1px solid var(--th-border)" }}
             >
               {hideRead ? "Unread" : "All"}
             </button>
@@ -297,10 +299,10 @@ export default function NotificationCenter({ on, onNavigateTask, onOpenDecisionI
               <button
                 type="button"
                 onClick={handleMarkAllRead}
-                className="text-xs font-medium px-2 py-1 transition"
-                style={{ borderRadius: 0, color: "var(--th-text-link, var(--th-accent, #3b82f6))" }}
+                className="inline-flex h-7 items-center justify-center px-2 text-[10px] font-mono transition"
+                style={{ borderRadius: 0, color: "var(--th-text-muted)", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}
               >
-                Mark all read
+                ✓ all
               </button>
             )}
           </div>
@@ -308,7 +310,7 @@ export default function NotificationCenter({ on, onNavigateTask, onOpenDecisionI
         {/* Type filter */}
         <div
           className="flex items-center gap-1.5 px-3 py-2 overflow-x-auto"
-          style={{ borderBottom: "1px solid var(--th-border)" }}
+          style={{ borderBottom: "1px solid var(--th-border)", flexShrink: 0 }}
         >
           {TYPE_FILTERS.map((f) => {
             const active = typeFilter === f.key;

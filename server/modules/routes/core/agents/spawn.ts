@@ -84,6 +84,7 @@ export function registerAgentSpawnRoute(ctx: RuntimeContext): void {
           title: string;
           description: string | null;
           workflow_pack_key: string | null;
+          context_hint?: string | null;
           project_id: string | null;
           department_id: string | null;
           project_path: string | null;
@@ -92,10 +93,11 @@ export function registerAgentSpawnRoute(ctx: RuntimeContext): void {
     if (!task) {
       return res.status(400).json({ error: "task_not_found" });
     }
+    const effectivePackKey = task.context_hint ?? task.workflow_pack_key;
     ensureVideoPreprodRemotionBestPracticesSkill({
       db: db as any,
       nowMs,
-      workflowPackKey: task.workflow_pack_key,
+      workflowPackKey: effectivePackKey,
       provider,
       taskId,
       appendTaskLog,
@@ -136,15 +138,15 @@ export function registerAgentSpawnRoute(ctx: RuntimeContext): void {
     const departmentPrompt = normalizeTextField(agent.department_prompt);
     const departmentPromptBlock = departmentPrompt ? `[Department Shared Prompt]\n${departmentPrompt}` : "";
     const videoArtifactSpec =
-      task.workflow_pack_key === "video_preprod"
+      effectivePackKey === "video_preprod"
         ? resolveVideoArtifactSpecForTask(db as any, {
             project_id: task.project_id,
             project_path: task.project_path,
             department_id: task.department_id,
-            workflow_pack_key: task.workflow_pack_key,
+            workflow_pack_key: effectivePackKey,
           })
         : null;
-    const workflowPackGuidance = buildWorkflowPackExecutionGuidance(task.workflow_pack_key, taskLang, {
+    const workflowPackGuidance = buildWorkflowPackExecutionGuidance(effectivePackKey, taskLang, {
       videoArtifactRelativePath: videoArtifactSpec?.relativePath,
     });
 

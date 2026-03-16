@@ -1,5 +1,6 @@
 import type { Dispatch, SetStateAction } from "react";
 import { isApiRequestError, pickProjectPathNative, type ProjectDetailResponse } from "../../api";
+import type { ProjectTemplate } from "../../api/organization-projects";
 import { type Agent, type AssignmentMode, type Department, type Project } from "../../types";
 import type {
   FormFeedback,
@@ -60,6 +61,8 @@ interface ProjectEditorPanelProps {
   onCancelEdit: () => void;
   onStartEditSelected: () => void;
   onDelete: () => void;
+  templates?: ProjectTemplate[];
+  onApplyTemplate?: (template: ProjectTemplate) => void;
 }
 
 
@@ -113,9 +116,32 @@ export default function ProjectEditorPanel({
   onCancelEdit,
   onStartEditSelected,
   onDelete,
+  templates = [],
+  onApplyTemplate,
 }: ProjectEditorPanelProps) {
   return (
     <div className="min-w-0 space-y-3 p-4" style={{ border: "1px solid var(--th-border)", borderRadius: 0, background: "var(--th-bg-surface)" }}>
+      {isCreating && templates.length > 0 && onApplyTemplate && (
+        <div>
+          <p className="mb-1.5 text-[11px] font-mono uppercase" style={{ color: "var(--th-text-muted)" }}>
+            {t({ ko: "템플릿으로 시작", en: "Start from Template", ja: "テンプレートから開始", zh: "从模板开始" })}
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {templates.map((tpl) => (
+              <button
+                key={tpl.id}
+                type="button"
+                onClick={() => onApplyTemplate(tpl)}
+                title={tpl.description ?? tpl.name}
+                className="px-2.5 py-1 text-[11px] font-mono font-medium transition"
+                style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
+              >
+                {tpl.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
       <label className="block text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
         {t({ ko: "프로젝트 이름", en: "Project Name", ja: "プロジェクト名", zh: "项目名称" })}
         <input

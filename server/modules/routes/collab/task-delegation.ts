@@ -173,8 +173,8 @@ export function createTaskDelegationHandler(deps: TaskDelegationDeps) {
       }
       db.prepare(
         `
-      INSERT INTO tasks (id, title, description, department_id, assigned_agent_id, project_id, status, priority, task_type, workflow_pack_key, project_path, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, 'planned', 1, 'general', ?, ?, ?, ?)
+      INSERT INTO tasks (id, title, description, department_id, assigned_agent_id, project_id, status, priority, task_type, workflow_pack_key, context_hint, project_path, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, 'planned', 1, 'general', ?, ?, ?, ?, ?)
     `,
       ).run(
         taskId,
@@ -183,6 +183,7 @@ export function createTaskDelegationHandler(deps: TaskDelegationDeps) {
         leaderDeptId,
         teamLeader.id,
         selectedProject.id,
+        workflowPackKey,
         workflowPackKey,
         detectedPath,
         t,

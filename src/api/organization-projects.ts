@@ -214,6 +214,7 @@ export interface AgentPerformanceData {
     completed_at: number | null;
     department_id: string | null;
     workflow_pack_key: string | null;
+    context_hint?: string | null;
   }>;
   by_pack: Array<{ pack: string; cnt: number; done_cnt: number }>;
 }
@@ -256,13 +257,15 @@ export async function getTasks(filters?: {
   agent_id?: string;
   project_id?: string;
   workflow_pack_key?: WorkflowPackKey;
+  context_hint?: string;
 }): Promise<Task[]> {
   const params = new URLSearchParams();
   if (filters?.status) params.set("status", filters.status);
   if (filters?.department_id) params.set("department_id", filters.department_id);
   if (filters?.agent_id) params.set("agent_id", filters.agent_id);
   if (filters?.project_id) params.set("project_id", filters.project_id);
-  if (filters?.workflow_pack_key) params.set("workflow_pack_key", filters.workflow_pack_key);
+  if (filters?.context_hint) params.set("context_hint", filters.context_hint);
+  else if (filters?.workflow_pack_key) params.set("workflow_pack_key", filters.workflow_pack_key);
   const q = params.toString();
   const j = await request<{ tasks: Task[] }>(`/api/tasks${q ? "?" + q : ""}`);
   return j.tasks;
@@ -295,12 +298,18 @@ export async function createTask(input: {
   project_path?: string;
   assigned_agent_id?: string;
   workflow_pack_key?: WorkflowPackKey;
+  context_hint?: string;
   workflow_meta_json?: Record<string, unknown> | string;
   output_format?: string;
   handoff_to_agent_id?: string | null;
   handoff_condition?: "always" | "on_success" | "on_fail" | null;
 }): Promise<string> {
-  const j = (await post("/api/tasks", input)) as { id: string };
+  // dual-write: send context_hint = workflow_pack_key if not explicitly provided
+  const payload = { ...input };
+  if (payload.workflow_pack_key && !payload.context_hint) {
+    payload.context_hint = payload.workflow_pack_key;
+  }
+  const j = (await post("/api/tasks", payload)) as { id: string };
   return j.id;
 }
 
@@ -318,6 +327,7 @@ export async function updateTask(
       | "project_id"
       | "project_path"
       | "workflow_pack_key"
+      | "context_hint"
       | "workflow_meta_json"
       | "output_format"
       | "hidden"
@@ -579,4 +589,69 @@ export async function getProjectFileTree(projectPath: string): Promise<ProjectFi
     `/api/projects/path-tree?${sp.toString()}`,
   );
   return { root: j.root, tree: j.tree ?? [], truncated: Boolean(j.truncated) };
+}
+
+// ── Project Templates ─────────────────────────────────────────────────────────
+
+export interface ProjectTemplateObjective {
+  id: string;
+  template_id: string;
+  title: string;
+  description: string | null;
+  order_index: number;
+}
+
+export interface ProjectTemplateGate {
+  id: string;
+  template_id: string;
+  title: string;
+  description: string | null;
+  gate_type: string;
+  order_index: number;
+}
+
+export interface ProjectTemplate {
+  id: string;
+  name: string;
+  description: string | null;
+  category: string;
+  default_pack_key: string;
+  core_goal_template: string;
+  is_builtin: boolean;
+  created_at: number;
+  updated_at: number;
+  objectives: ProjectTemplateObjective[];
+  gates: ProjectTemplateGate[];
+}
+
+export async function getProjectTemplates(): Promise<ProjectTemplate[]> {
+  const j = await request<{ ok: boolean; templates: ProjectTemplate[] }>("/api/project-templates");
+  return j.templates ?? [];
+}
+
+export async function createProjectTemplate(input: {
+  name: string;
+  description?: string;
+  category?: string;
+  default_pack_key?: string;
+  core_goal_template?: string;
+  objectives?: Array<{ title: string; description?: string }>;
+  gates?: Array<{ title: string; description?: string; gate_type?: string }>;
+}): Promise<{ id: string }> {
+  return post("/api/project-templates", input) as Promise<{ ok: boolean; id: string }>;
+}
+
+export async function deleteProjectTemplate(templateId: string): Promise<void> {
+  await del(`/api/project-templates/${templateId}`);
+}
+
+export async function applyProjectTemplate(
+  projectId: string,
+  templateId: string,
+): Promise<{ objectives_created: number; gates_created: number }> {
+  return post(`/api/projects/${projectId}/apply-template/${templateId}`) as Promise<{
+    ok: boolean;
+    objectives_created: number;
+    gates_created: number;
+  }>;
 }

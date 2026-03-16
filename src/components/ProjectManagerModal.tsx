@@ -12,6 +12,7 @@ import {
   type ProjectTaskHistoryItem,
   type TaskReportDetail,
 } from "../api";
+import { applyProjectTemplate, getProjectTemplates, type ProjectTemplate } from "../api/organization-projects";
 import { useI18n } from "../i18n";
 import GitHubImportPanel from "./GitHubImportPanel";
 import TaskReportPopup from "./TaskReportPopup";
@@ -59,6 +60,8 @@ export default function ProjectManagerModal({ agents, departments = [], onClose,
 
   const [defaultPackKey, setDefaultPackKey] = useState<string>("development");
   const [assignmentMode, setAssignmentMode] = useState<AssignmentMode>("auto");
+  const [templates, setTemplates] = useState<ProjectTemplate[]>([]);
+  const [pendingTemplateId, setPendingTemplateId] = useState<string | null>(null);
   const [selectedAgentIds, setSelectedAgentIds] = useState<Set<string>>(new Set());
   const [agentFilterDept, setAgentFilterDept] = useState<string>("all");
   const [manualAssignmentWarning, setManualAssignmentWarning] = useState<ManualAssignmentWarning | null>(null);
@@ -109,6 +112,7 @@ export default function ProjectManagerModal({ agents, departments = [], onClose,
 
   useEffect(() => {
     void loadProjects(1, search);
+    getProjectTemplates().then(setTemplates).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -238,6 +242,12 @@ export default function ProjectManagerModal({ agents, departments = [], onClose,
     pathTools.resetPathHelperState();
   }, [pathTools, viewedProject]);
 
+  const handleApplyTemplate = useCallback((tpl: ProjectTemplate) => {
+    setCoreGoal(tpl.core_goal_template);
+    setDefaultPackKey(tpl.default_pack_key);
+    setPendingTemplateId(tpl.id);
+  }, []);
+
   const handleSave = useProjectSaveHandler({
     canSave,
     saving,
@@ -258,6 +268,17 @@ export default function ProjectManagerModal({ agents, departments = [], onClose,
     setSelectedProjectId,
     setEditingProjectId,
     setIsCreating,
+    onAfterCreate: pendingTemplateId
+      ? async (projectId) => {
+          try {
+            await applyProjectTemplate(projectId, pendingTemplateId);
+          } catch (err) {
+            console.error("Failed to apply template:", err);
+          } finally {
+            setPendingTemplateId(null);
+          }
+        }
+      : undefined,
     t: t as ProjectI18nTranslate,
   });
 
@@ -461,6 +482,8 @@ export default function ProjectManagerModal({ agents, departments = [], onClose,
                   onDelete={() => {
                     void handleDelete();
                   }}
+                  templates={templates}
+                  onApplyTemplate={handleApplyTemplate}
                 />
 
                 <ProjectInsightsPanel

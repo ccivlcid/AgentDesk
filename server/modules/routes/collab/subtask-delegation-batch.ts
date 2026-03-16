@@ -144,7 +144,7 @@ export function createSubtaskDelegationBatch(deps: BatchDeps) {
 
   function getConstrainedAgentIds(parentTask: ParentTaskRow, targetDeptId: string | null): string[] | null {
     return resolveConstrainedAgentScopeForTask(db as any, {
-      workflow_pack_key: parentTask.workflow_pack_key ?? null,
+      workflow_pack_key: (parentTask.context_hint ?? parentTask.workflow_pack_key) ?? null,
       department_id: targetDeptId ?? parentTask.department_id ?? null,
       project_id: parentTask.project_id,
     });
@@ -194,7 +194,7 @@ export function createSubtaskDelegationBatch(deps: BatchDeps) {
     }
 
     const targetDeptId = subtasks[0].target_department_id!;
-    const targetDeptName = getDeptName(targetDeptId, parentTask.workflow_pack_key ?? null);
+    const targetDeptName = getDeptName(targetDeptId, (parentTask.context_hint ?? parentTask.workflow_pack_key) ?? null);
     const subtaskIds = subtasks.map((st) => st.id);
     const firstTitle = subtasks[0].title;
     const batchTitle = subtasks.length > 1 ? `${firstTitle} +${subtasks.length - 1}` : firstTitle;
@@ -336,20 +336,20 @@ export function createSubtaskDelegationBatch(deps: BatchDeps) {
         l,
         pickL,
         lang,
-        sourceDeptName: getDeptName(parentTask.department_id ?? "", parentTask.workflow_pack_key ?? null),
+        sourceDeptName: getDeptName(parentTask.department_id ?? "", (parentTask.context_hint ?? parentTask.workflow_pack_key) ?? null),
         parentSummary: parentTask.description || parentTask.title,
         delegatedChecklist,
       });
       const delegatedWorkflowPackKey = resolveWorkflowPackKeyForTask({
         db: db as any,
-        sourceTaskPackKey: parentTask.workflow_pack_key,
+        sourceTaskPackKey: parentTask.context_hint ?? parentTask.workflow_pack_key,
         sourceTaskId: parentTask.id,
         projectId: parentTask.project_id,
       });
       db.prepare(
         `
-    INSERT INTO tasks (id, title, description, department_id, project_id, status, priority, task_type, workflow_pack_key, project_path, source_task_id, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, 'planned', 1, 'general', ?, ?, ?, ?, ?)
+    INSERT INTO tasks (id, title, description, department_id, project_id, status, priority, task_type, workflow_pack_key, context_hint, project_path, source_task_id, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, 'planned', 1, 'general', ?, ?, ?, ?, ?, ?)
   `,
       ).run(
         delegatedTaskId,
@@ -357,6 +357,7 @@ export function createSubtaskDelegationBatch(deps: BatchDeps) {
         delegatedDescription,
         targetDeptId,
         parentTask.project_id ?? null,
+        delegatedWorkflowPackKey,
         delegatedWorkflowPackKey,
         parentTask.project_path,
         parentTask.id,
@@ -470,7 +471,7 @@ export function createSubtaskDelegationBatch(deps: BatchDeps) {
           ensureVideoPreprodRemotionBestPracticesSkill({
             db: db as any,
             nowMs,
-            workflowPackKey: parentTask.workflow_pack_key ?? null,
+            workflowPackKey: (parentTask.context_hint ?? parentTask.workflow_pack_key) ?? null,
             provider: execProvider,
             taskId: delegatedTaskId,
             appendTaskLog,
@@ -503,7 +504,7 @@ export function createSubtaskDelegationBatch(deps: BatchDeps) {
               const wtPath = path.join(projPath, ".agentdesk-worktrees", shortId);
               if (fs.existsSync(wtPath)) {
                 const deptLabel = sib.target_department_id
-                  ? getDeptName(sib.target_department_id, parentTask.workflow_pack_key)
+                  ? getDeptName(sib.target_department_id, parentTask.context_hint ?? parentTask.workflow_pack_key)
                   : "unknown";
                 validSiblings.push(`- [${deptLabel}] ${wtPath}`);
               }

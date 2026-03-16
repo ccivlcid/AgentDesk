@@ -105,6 +105,7 @@ export function registerTaskRunRoute(deps: TaskRunRouteDeps): void {
           department_id: string | null;
           project_id: string | null;
           workflow_pack_key: string | null;
+          context_hint?: string | null;
           project_path: string | null;
           status: string;
         }
@@ -184,10 +185,11 @@ export function registerTaskRunRoute(deps: TaskRunRouteDeps): void {
       });
     }
 
+    const effectivePackKey = (task as any).context_hint ?? (task as any).workflow_pack_key;
     let agentId = task.assigned_agent_id || (req.body?.agent_id as string | undefined);
     if (agentId) {
       const constrainedAgentIds = resolveConstrainedAgentScopeForTask(db as any, {
-        workflow_pack_key: task.workflow_pack_key,
+        workflow_pack_key: effectivePackKey,
         department_id: task.department_id,
         project_id: task.project_id,
       });
@@ -206,7 +208,7 @@ export function registerTaskRunRoute(deps: TaskRunRouteDeps): void {
     }
     if (!agentId) {
       const autoSelected = selectAutoAssignableAgentForTask(db as any, {
-        workflow_pack_key: task.workflow_pack_key,
+        workflow_pack_key: effectivePackKey,
         department_id: task.department_id,
         project_id: task.project_id,
       });
@@ -280,7 +282,7 @@ export function registerTaskRunRoute(deps: TaskRunRouteDeps): void {
     ensureVideoPreprodRemotionBestPracticesSkill({
       db: db as any,
       nowMs,
-      workflowPackKey: task.workflow_pack_key,
+      workflowPackKey: effectivePackKey,
       provider,
       taskId: id,
       appendTaskLog,
@@ -412,7 +414,7 @@ Whenever you complete a subtask, report it in this format:
     const mainModel = agent.cli_model || modelConfig[provider]?.model || undefined;
     const subModel = modelConfig[provider]?.subModel || undefined;
     // Pack reasoning level takes precedence over agent default; agent override beats pack
-    const packKey = task.workflow_pack_key ?? "development";
+    const packKey = effectivePackKey ?? "development";
     const packReasoningLevel = loadPackConfig(isWorkflowPackKey(packKey) ? packKey : "development").reasoningLevel;
     const mainReasoningLevel =
       provider === "codex"
@@ -441,23 +443,23 @@ Whenever you complete a subtask, report it in this format:
       taskLang,
     );
     const videoArtifactSpec =
-      task.workflow_pack_key === "video_preprod"
+      effectivePackKey === "video_preprod"
         ? resolveVideoArtifactSpecForTask(db as any, {
             project_id: task.project_id,
             project_path: task.project_path,
             department_id: task.department_id,
-            workflow_pack_key: task.workflow_pack_key,
+            workflow_pack_key: effectivePackKey,
           })
         : null;
     // Load QA rules from DB for the pack
     let qaRulesJson: string | null = null;
-    if (task.workflow_pack_key) {
-      const packRow = db.prepare("SELECT qa_rules_json FROM workflow_packs WHERE key = ?").get(task.workflow_pack_key) as
+    if (effectivePackKey) {
+      const packRow = db.prepare("SELECT qa_rules_json FROM workflow_packs WHERE key = ?").get(effectivePackKey) as
         | { qa_rules_json: string }
         | undefined;
       if (packRow) qaRulesJson = packRow.qa_rules_json;
     }
-    const workflowPackGuidance = buildWorkflowPackExecutionGuidance(task.workflow_pack_key, taskLang, {
+    const workflowPackGuidance = buildWorkflowPackExecutionGuidance(effectivePackKey, taskLang, {
       videoArtifactRelativePath: videoArtifactSpec?.relativePath,
       qaRulesJson,
     });
@@ -476,7 +478,7 @@ Whenever you complete a subtask, report it in this format:
       {
         agentId: agentId ?? null,
         departmentId: agent.department_id ?? null,
-        workflowPackKey: task.workflow_pack_key,
+        workflowPackKey: effectivePackKey,
         projectId: task.project_id ?? null,
         taskTitle: task.title,
         taskDescription: task.description,

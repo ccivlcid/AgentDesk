@@ -1,5 +1,6 @@
 import { createPortal } from "react-dom";
 import type { ManualPathEntry, ProjectI18nTranslate } from "./types";
+import TrafficLights from "../desktop/TrafficLights";
 
 interface ManualPathPickerDialogProps {
   open: boolean;
@@ -14,6 +15,8 @@ interface ManualPathPickerDialogProps {
   onLoadEntries: (targetPath?: string) => Promise<void>;
   onSelectCurrent: () => void;
 }
+
+const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };
 
 export default function ManualPathPickerDialog({
   open,
@@ -31,125 +34,160 @@ export default function ManualPathPickerDialog({
   if (!open) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-[1200] flex items-center justify-center"
+      style={{ background: "var(--th-modal-overlay)", backdropFilter: "blur(3px)" }}
+      onClick={onClose}
+    >
       <div
-        className="w-full max-w-2xl overflow-hidden"
-        style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}
+        className="flex w-full max-w-2xl flex-col overflow-hidden"
+        style={{
+          borderRadius: 10,
+          border: "1px solid var(--th-border-strong)",
+          background: "var(--th-bg-elevated)",
+          boxShadow: "0 20px 50px rgba(0,0,0,0.5)",
+          maxHeight: "calc(100dvh - 4rem)",
+        }}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: "1px solid var(--th-border)", borderLeft: "3px solid var(--th-accent)" }}>
-          <h3 className="text-xs font-bold uppercase tracking-widest" style={{ color: "var(--th-text-heading)", fontFamily: "var(--th-font-mono)" }}>
-            {t({
-              ko: "앱 내 폴더 탐색",
-              en: "In-App Folder Browser",
-              ja: "アプリ内フォルダ閲覧",
-              zh: "应用内文件夹浏览",
-            })}
-          </h3>
+        {/* macOS title bar */}
+        <div
+          className="flex flex-shrink-0 items-center gap-3 py-2 pl-3 pr-4"
+          style={{
+            borderBottom: "1px solid var(--th-border)",
+            background: "var(--th-glass-bg)",
+            borderTopLeftRadius: 10,
+            borderTopRightRadius: 10,
+            minHeight: 40,
+          }}
+        >
+          <TrafficLights onClose={onClose} />
+          <span style={{ ...mono, fontSize: 12, fontWeight: 600, color: "var(--th-text-heading)", letterSpacing: "0.02em" }}>
+            📁 {t({ ko: "폴더 탐색", en: "Folder Browser", ja: "フォルダ閲覧", zh: "文件夹浏览" })}
+          </span>
+        </div>
+
+        {/* Toolbar: current path + nav buttons */}
+        <div
+          className="flex flex-shrink-0 items-center gap-2 px-4 py-2"
+          style={{ borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-panel)" }}
+        >
           <button
             type="button"
-            onClick={onClose}
-            className="px-2 py-1 text-xs font-mono transition"
-            style={{ borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-muted)", background: "transparent" }}
+            disabled={!manualPathParent || manualPathLoading}
+            onClick={() => { if (!manualPathParent) return; void onLoadEntries(manualPathParent); }}
+            title={t({ ko: "상위 폴더", en: "Up", ja: "上位フォルダ", zh: "上级目录" })}
+            className="disabled:cursor-not-allowed disabled:opacity-35 transition-opacity hover:opacity-75"
+            style={{ ...mono, fontSize: 14, lineHeight: 1, background: "none", border: "none", color: "var(--th-text-secondary)", cursor: "pointer", padding: "2px 4px" }}
           >
-            ✕
+            ←
           </button>
+          <button
+            type="button"
+            disabled={manualPathLoading}
+            onClick={() => void onLoadEntries(manualPathCurrent || undefined)}
+            title={t({ ko: "새로고침", en: "Refresh", ja: "更新", zh: "刷新" })}
+            className="disabled:cursor-not-allowed disabled:opacity-35 transition-opacity hover:opacity-75"
+            style={{ ...mono, fontSize: 13, lineHeight: 1, background: "none", border: "none", color: "var(--th-text-secondary)", cursor: "pointer", padding: "2px 4px" }}
+          >
+            ↺
+          </button>
+          <div
+            className="flex-1 truncate px-2 py-1"
+            style={{
+              ...mono,
+              fontSize: 11,
+              color: "var(--th-text-primary)",
+              background: "var(--th-bg-elevated)",
+              border: "1px solid var(--th-border)",
+              borderRadius: 4,
+            }}
+          >
+            {manualPathCurrent || "—"}
+          </div>
         </div>
-        <div className="space-y-3 px-4 py-4">
-          <div className="px-3 py-2" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
-            <p className="text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>
-              {t({ ko: "현재 위치", en: "Current Location", ja: "現在位置", zh: "当前位置" })}
-            </p>
-            <p className="break-all text-xs font-mono" style={{ color: "var(--th-text-primary)" }}>{manualPathCurrent || "-"}</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              disabled={!manualPathParent || manualPathLoading}
-              onClick={() => {
-                if (!manualPathParent) return;
-                void onLoadEntries(manualPathParent);
-              }}
-              className="px-2.5 py-1 text-xs font-semibold font-mono transition disabled:cursor-not-allowed disabled:opacity-40"
-              style={{ borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
-            >
-              {t({ ko: "상위 폴더", en: "Up", ja: "上位フォルダ", zh: "上级目录" })}
-            </button>
-            <button
-              type="button"
-              disabled={manualPathLoading}
-              onClick={() => void onLoadEntries(manualPathCurrent || undefined)}
-              className="px-2.5 py-1 text-xs font-semibold font-mono transition disabled:cursor-not-allowed disabled:opacity-40"
-              style={{ borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
-            >
-              {t({ ko: "새로고침", en: "Refresh", ja: "更新", zh: "刷新" })}
-            </button>
-          </div>
-          <div className="max-h-[45dvh] overflow-y-auto" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
-            {manualPathLoading ? (
-              <p className="px-3 py-2 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
-                {t({
-                  ko: "폴더 목록을 불러오는 중...",
-                  en: "Loading directories...",
-                  ja: "フォルダ一覧を読み込み中...",
-                  zh: "正在加载目录...",
-                })}
+
+        {/* File list */}
+        <div className="flex-1 min-h-0 overflow-y-auto" style={{ background: "var(--th-bg-elevated)" }}>
+          {manualPathLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <p style={{ ...mono, fontSize: 11, color: "var(--th-text-muted)" }}>
+                {t({ ko: "불러오는 중...", en: "Loading...", ja: "読み込み中...", zh: "加载中..." })}
               </p>
-            ) : manualPathError ? (
-              <p className="px-3 py-2 text-xs text-rose-300">{manualPathError}</p>
-            ) : manualPathEntries.length === 0 ? (
-              <p className="px-3 py-2 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
-                {t({
-                  ko: "선택 가능한 하위 폴더가 없습니다.",
-                  en: "No selectable subdirectories.",
-                  ja: "選択可能なサブディレクトリがありません。",
-                  zh: "没有可选的子目录。",
-                })}
+            </div>
+          ) : manualPathError ? (
+            <div className="px-4 py-3">
+              <p style={{ ...mono, fontSize: 11, color: "var(--th-danger-text, #f87171)" }}>{manualPathError}</p>
+            </div>
+          ) : manualPathEntries.length === 0 ? (
+            <div className="flex items-center justify-center py-12">
+              <p style={{ ...mono, fontSize: 11, color: "var(--th-text-muted)" }}>
+                {t({ ko: "하위 폴더가 없습니다", en: "No subdirectories", ja: "サブフォルダなし", zh: "无子目录" })}
               </p>
-            ) : (
-              manualPathEntries.map((entry) => (
-                <button
-                  key={entry.path}
-                  type="button"
-                  onClick={() => void onLoadEntries(entry.path)}
-                  className="w-full px-3 py-2 text-left transition"
-                  style={{ borderBottom: "1px solid var(--th-border)" }}
-                >
-                  <p className="text-xs font-semibold font-mono" style={{ color: "var(--th-text-primary)" }}>{entry.name}</p>
-                  <p className="truncate text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>{entry.path}</p>
-                </button>
-              ))
-            )}
-          </div>
+            </div>
+          ) : (
+            manualPathEntries.map((entry, i) => (
+              <button
+                key={entry.path}
+                type="button"
+                onClick={() => void onLoadEntries(entry.path)}
+                className="w-full text-left transition-colors hover:bg-[var(--th-hover-bg)]"
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                  padding: "7px 16px",
+                  borderBottom: i < manualPathEntries.length - 1 ? "1px solid var(--th-border)" : "none",
+                }}
+              >
+                <span style={{ fontSize: 14, lineHeight: 1, flexShrink: 0 }}>📁</span>
+                <span style={{ ...mono, fontSize: 12, color: "var(--th-text-primary)", fontWeight: 500 }}>{entry.name}</span>
+                <span className="ml-auto truncate" style={{ ...mono, fontSize: 10, color: "var(--th-text-muted)" }}>{entry.path}</span>
+              </button>
+            ))
+          )}
           {manualPathTruncated && (
-            <p className="text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>
-              {t({
-                ko: "항목이 많아 상위 300개 폴더만 표시했습니다.",
-                en: "Only the first 300 directories are shown.",
-                ja: "項目数が多いため先頭300件のみ表示しています。",
-                zh: "目录过多，仅显示前300个。",
-              })}
+            <p className="px-4 py-2" style={{ ...mono, fontSize: 10, color: "var(--th-text-muted)", borderTop: "1px solid var(--th-border)" }}>
+              {t({ ko: "상위 300개만 표시", en: "Showing first 300 entries", ja: "先頭300件のみ表示", zh: "仅显示前300项" })}
             </p>
           )}
         </div>
-        <div className="flex justify-end gap-2 px-4 py-3" style={{ borderTop: "1px solid var(--th-border)" }}>
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-3 py-1.5 text-xs font-semibold font-mono transition"
-            style={{ borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
-          >
-            {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}
-          </button>
-          <button
-            type="button"
-            disabled={!manualPathCurrent}
-            onClick={onSelectCurrent}
-            className="px-3 py-1.5 text-xs font-semibold font-mono uppercase transition disabled:cursor-not-allowed disabled:opacity-40"
-            style={{ borderRadius: 0, background: "var(--th-accent)", color: "var(--th-accent-text)" }}
-          >
-            {t({ ko: "현재 폴더 선택", en: "Select Current Folder", ja: "現在フォルダを選択", zh: "选择当前文件夹" })}
-          </button>
+
+        {/* Footer */}
+        <div
+          className="flex flex-shrink-0 items-center justify-between px-4 py-3"
+          style={{ borderTop: "1px solid var(--th-border)", background: "var(--th-bg-panel)" }}
+        >
+          <p style={{ ...mono, fontSize: 10, color: "var(--th-text-muted)" }}>
+            {t({ ko: "선택할 폴더로 이동 후 아래 버튼을 누르세요", en: "Navigate to folder, then confirm", ja: "フォルダに移動して確認", zh: "导航到文件夹后确认" })}
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              style={{ ...mono, fontSize: 11, padding: "5px 12px", borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-muted)", cursor: "pointer" }}
+            >
+              {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}
+            </button>
+            <button
+              type="button"
+              disabled={!manualPathCurrent}
+              onClick={onSelectCurrent}
+              style={{
+                ...mono,
+                fontSize: 11,
+                fontWeight: 700,
+                padding: "5px 14px",
+                borderRadius: 0,
+                background: "var(--th-accent)",
+                color: "var(--th-accent-text, var(--th-bg-primary))",
+                cursor: "pointer",
+                opacity: manualPathCurrent ? 1 : 0.4,
+              }}
+            >
+              {t({ ko: "이 폴더 선택 ↵", en: "Select ↵", ja: "選択 ↵", zh: "选择 ↵" })}
+            </button>
+          </div>
         </div>
       </div>
     </div>,

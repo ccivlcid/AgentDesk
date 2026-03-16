@@ -199,8 +199,8 @@ export default function CommandPalette({
               position: "absolute",
               inset: "2px 6px",
               borderRadius: 8,
-              background: "rgba(10,132,255,0.55)",
-              backdropFilter: "blur(4px)",
+              background: "var(--th-hover-bg)",
+              border: "1px solid var(--th-border)",
               pointerEvents: "none",
             }}
           />
@@ -240,7 +240,7 @@ export default function CommandPalette({
           fontSize: 11,
           fontWeight: 600,
           letterSpacing: "0.04em",
-          color: "rgba(235,235,245,0.3)",
+          color: "var(--th-text-muted)",
           padding: "10px 16px 4px",
           fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif",
           textTransform: "uppercase",
@@ -262,7 +262,7 @@ export default function CommandPalette({
         position: "fixed",
         inset: 0,
         zIndex: 10100,
-        background: "rgba(0,0,0,0.45)",
+        background: "var(--th-modal-overlay)",
         backdropFilter: "blur(8px)",
         WebkitBackdropFilter: "blur(8px)",
         display: "flex",
@@ -278,12 +278,12 @@ export default function CommandPalette({
         tabIndex={-1}
         style={{
           width: "min(680px, 92vw)",
-          background: "rgba(30,30,32,0.88)",
+          background: "var(--th-bg-elevated)",
           backdropFilter: "blur(48px) saturate(200%)",
           WebkitBackdropFilter: "blur(48px) saturate(200%)",
-          border: "1px solid rgba(255,255,255,0.1)",
+          border: "1px solid var(--th-border-strong)",
           borderRadius: 18,
-          boxShadow: "0 40px 120px rgba(0,0,0,0.7), 0 0 0 0.5px rgba(255,255,255,0.05) inset",
+          boxShadow: "0 40px 120px rgba(0,0,0,0.5), var(--th-glass-shadow)",
           overflow: "hidden",
         }}
         onKeyDown={handleKeyDown}
@@ -308,16 +308,16 @@ export default function CommandPalette({
             padding: "0 18px",
             height: 56,
             borderBottom: items.length > 0 || currentProject
-              ? "1px solid rgba(255,255,255,0.07)"
+              ? "1px solid var(--th-border)"
               : "none",
           }}
         >
           <svg
             width="20" height="20" viewBox="0 0 20 20" fill="none"
-            style={{ flexShrink: 0, opacity: 0.45 }}
+            style={{ flexShrink: 0, color: "var(--th-text-muted)" }}
           >
-            <circle cx="8.5" cy="8.5" r="5.75" stroke="rgba(235,235,245,0.9)" strokeWidth="1.8" />
-            <line x1="12.9" y1="12.9" x2="17.5" y2="17.5" stroke="rgba(235,235,245,0.9)" strokeWidth="1.8" strokeLinecap="round" />
+            <circle cx="8.5" cy="8.5" r="5.75" stroke="currentColor" strokeWidth="1.8" />
+            <line x1="12.9" y1="12.9" x2="17.5" y2="17.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
           </svg>
           <input
             ref={inputRef}
@@ -338,7 +338,7 @@ export default function CommandPalette({
               ...sf,
               fontSize: 22,
               fontWeight: 300,
-              color: "rgba(235,235,245,0.95)",
+              color: "var(--th-text-primary)",
               minWidth: 0,
               letterSpacing: "-0.01em",
             }}
@@ -349,10 +349,10 @@ export default function CommandPalette({
               onClick={() => setQuery("")}
               style={{
                 width: 20, height: 20, borderRadius: "50%",
-                background: "rgba(255,255,255,0.12)",
+                background: "var(--th-hover-bg)",
                 border: "none", cursor: "pointer",
                 display: "flex", alignItems: "center", justifyContent: "center",
-                color: "rgba(235,235,245,0.6)", fontSize: 12, flexShrink: 0,
+                color: "var(--th-text-muted)", fontSize: 12, flexShrink: 0,
               }}
             >
               ✕
@@ -362,9 +362,9 @@ export default function CommandPalette({
               style={{
                 ...sf,
                 fontSize: 11,
-                color: "rgba(235,235,245,0.3)",
-                background: "rgba(255,255,255,0.06)",
-                border: "1px solid rgba(255,255,255,0.1)",
+                color: "var(--th-text-muted)",
+                background: "var(--th-bg-panel)",
+                border: "1px solid var(--th-border)",
                 borderRadius: 5,
                 padding: "2px 7px",
                 flexShrink: 0,
@@ -380,17 +380,17 @@ export default function CommandPalette({
           <div
             style={{
               padding: "5px 18px",
-              borderBottom: "1px solid rgba(255,255,255,0.07)",
+              borderBottom: "1px solid var(--th-border)",
               display: "flex",
               alignItems: "center",
               gap: 6,
             }}
           >
-            <span style={{ ...sf, fontSize: 11, color: "rgba(235,235,245,0.3)" }}>
+            <span style={{ ...sf, fontSize: 11, color: "var(--th-text-muted)" }}>
               {t({ ko: "현재 프로젝트", en: "Project", ja: "現在", zh: "当前" })}
             </span>
-            <span style={{ fontSize: 10, color: "rgba(235,235,245,0.2)" }}>›</span>
-            <span style={{ ...sf, fontSize: 11, color: "#0a84ff", fontWeight: 600 }}>{currentProject.name}</span>
+            <span style={{ fontSize: 10, color: "var(--th-text-muted)" }}>›</span>
+            <span style={{ ...sf, fontSize: 11, color: "var(--th-accent)", fontWeight: 600 }}>{currentProject.name}</span>
           </div>
         )}
 
@@ -406,11 +406,11 @@ export default function CommandPalette({
                 const isSel = idx === safeIndex;
                 return (
                   <Row key={`recent-${act.action}`} item={{ kind: "action", ...act }} idx={idx}>
-                    <IconBox icon="↩" bg="rgba(255,255,255,0.1)" />
-                    <span style={{ ...sf, fontSize: 14, color: isSel ? "#fff" : "rgba(235,235,245,0.75)", flex: 1, textAlign: "left", position: "relative", zIndex: 1 }}>
+                    <IconBox icon="↩" bg="var(--th-bg-panel)" />
+                    <span style={{ ...sf, fontSize: 14, color: isSel ? "var(--th-text-heading)" : "var(--th-text-secondary)", flex: 1, textAlign: "left", position: "relative", zIndex: 1 }}>
                       {act.label}
                     </span>
-                    <span style={{ ...sf, fontSize: 10, color: "rgba(235,235,245,0.3)", position: "relative", zIndex: 1 }}>
+                    <span style={{ ...sf, fontSize: 10, color: "var(--th-text-muted)", position: "relative", zIndex: 1 }}>
                       {t({ ko: "최근", en: "recent", ja: "最近", zh: "最近" })}
                     </span>
                   </Row>
@@ -432,7 +432,7 @@ export default function CommandPalette({
                 return (
                   <Row key={act.action} item={{ kind: "action", ...act }} idx={idx}>
                     <IconBox icon={act.icon} bg={act.bg} />
-                    <span style={{ ...sf, fontSize: 14, color: isSel ? "#fff" : "rgba(235,235,245,0.82)", flex: 1, textAlign: "left", position: "relative", zIndex: 1 }}>
+                    <span style={{ ...sf, fontSize: 14, color: isSel ? "var(--th-text-heading)" : "var(--th-text-primary)", flex: 1, textAlign: "left", position: "relative", zIndex: 1 }}>
                       {act.label}
                     </span>
                   </Row>
@@ -450,13 +450,13 @@ export default function CommandPalette({
                 const isSel = idx === safeIndex;
                 return (
                   <Row key={project.id} item={{ kind: "project", project }} idx={idx}>
-                    <IconBox icon="📁" bg="rgba(255,255,255,0.06)" />
+                    <IconBox icon="📁" bg="var(--th-bg-panel)" />
                     <div style={{ flex: 1, textAlign: "left", overflow: "hidden", position: "relative", zIndex: 1 }}>
-                      <div style={{ ...sf, fontSize: 14, color: isSel ? "#fff" : "rgba(235,235,245,0.82)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      <div style={{ ...sf, fontSize: 14, color: isSel ? "var(--th-text-heading)" : "var(--th-text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {project.name}
                       </div>
                       {project.project_path && (
-                        <div style={{ ...sf, fontSize: 11, color: "rgba(235,235,245,0.3)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 1 }}>
+                        <div style={{ ...sf, fontSize: 11, color: "var(--th-text-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 1 }}>
                           {project.project_path}
                         </div>
                       )}
@@ -480,14 +480,14 @@ export default function CommandPalette({
                     <span
                       style={{
                         width: 28, height: 28, borderRadius: 7,
-                        background: "rgba(255,255,255,0.06)",
+                        background: "var(--th-bg-panel)",
                         display: "flex", alignItems: "center", justifyContent: "center",
                         fontSize: 16, flexShrink: 0, position: "relative", zIndex: 1,
                       }}
                     >
                       {agent.avatar_emoji ?? "🤖"}
                     </span>
-                    <span style={{ ...sf, fontSize: 14, color: isSel ? "#fff" : "rgba(235,235,245,0.82)", flex: 1, textAlign: "left", position: "relative", zIndex: 1 }}>
+                    <span style={{ ...sf, fontSize: 14, color: isSel ? "var(--th-text-heading)" : "var(--th-text-primary)", flex: 1, textAlign: "left", position: "relative", zIndex: 1 }}>
                       {agent.name}
                     </span>
                     <span
@@ -497,7 +497,7 @@ export default function CommandPalette({
                       }}
                     >
                       <span style={{ width: 7, height: 7, borderRadius: "50%", background: dot.color, display: "inline-block" }} />
-                      <span style={{ ...sf, fontSize: 11, color: "rgba(235,235,245,0.35)", textTransform: "uppercase" }}>{dot.label}</span>
+                      <span style={{ ...sf, fontSize: 11, color: "var(--th-text-muted)", textTransform: "uppercase" }}>{dot.label}</span>
                     </span>
                   </Row>
                 );
@@ -528,14 +528,14 @@ export default function CommandPalette({
                     >
                       #{task.id}
                     </span>
-                    <span style={{ ...sf, fontSize: 14, color: isSel ? "#fff" : "rgba(235,235,245,0.82)", flex: 1, textAlign: "left", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", position: "relative", zIndex: 1 }}>
+                    <span style={{ ...sf, fontSize: 14, color: isSel ? "var(--th-text-heading)" : "var(--th-text-primary)", flex: 1, textAlign: "left", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", position: "relative", zIndex: 1 }}>
                       {task.title}
                     </span>
                     <span
                       style={{
                         ...sf, fontSize: 10,
-                        color: "rgba(235,235,245,0.3)",
-                        background: "rgba(255,255,255,0.07)",
+                        color: "var(--th-text-muted)",
+                        background: "var(--th-bg-panel)",
                         borderRadius: 5,
                         padding: "2px 7px",
                         flexShrink: 0,
@@ -558,7 +558,7 @@ export default function CommandPalette({
                 textAlign: "center",
                 ...sf,
                 fontSize: 14,
-                color: "rgba(235,235,245,0.3)",
+                color: "var(--th-text-muted)",
               }}
             >
               {t({ ko: `"${query}"에 대한 결과 없음`, en: `No results for "${query}"`, ja: `"${query}"の結果なし`, zh: `"${query}"没有结果` })}
@@ -569,12 +569,12 @@ export default function CommandPalette({
         {/* ── Footer ── */}
         <div
           style={{
-            borderTop: "1px solid rgba(255,255,255,0.07)",
+            borderTop: "1px solid var(--th-border)",
             padding: "7px 16px",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
-            background: "rgba(0,0,0,0.2)",
+            background: "var(--th-bg-panel)",
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
@@ -583,15 +583,15 @@ export default function CommandPalette({
               { key: "↵", label: t({ ko: "선택", en: "select", ja: "選択", zh: "选择" }) },
               { key: "Esc", label: t({ ko: "닫기", en: "close", ja: "閉じる", zh: "关闭" }) },
             ].map(({ key, label }) => (
-              <span key={key} style={{ ...sf, fontSize: 11, color: "rgba(235,235,245,0.25)", display: "flex", alignItems: "center", gap: 5 }}>
+              <span key={key} style={{ ...sf, fontSize: 11, color: "var(--th-text-muted)", display: "flex", alignItems: "center", gap: 5 }}>
                 <kbd
                   style={{
-                    background: "rgba(255,255,255,0.07)",
-                    border: "1px solid rgba(255,255,255,0.1)",
+                    background: "var(--th-bg-elevated)",
+                    border: "1px solid var(--th-border)",
                     borderRadius: 4,
                     padding: "1px 5px",
                     fontSize: 10,
-                    color: "rgba(235,235,245,0.4)",
+                    color: "var(--th-text-muted)",
                     fontFamily: "inherit",
                   }}
                 >
@@ -608,9 +608,9 @@ export default function CommandPalette({
               style={{
                 ...sf,
                 fontSize: 11,
-                color: "rgba(235,235,245,0.3)",
-                background: "rgba(255,255,255,0.06)",
-                border: "1px solid rgba(255,255,255,0.09)",
+                color: "var(--th-text-muted)",
+                background: "var(--th-bg-elevated)",
+                border: "1px solid var(--th-border)",
                 borderRadius: 5,
                 padding: "2px 9px",
                 cursor: "pointer",

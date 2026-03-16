@@ -94,9 +94,12 @@
   --th-focus-ring-shadow: rgba(245, 158, 11, 0.3);
 
   /* ── 위험 상태 ── */
+  --th-danger: #f85149;
   --th-danger-bg: rgba(248, 81, 73, 0.1);
   --th-danger-border: #f85149;
   --th-danger-text: #f85149;
+  --th-success: #22c55e;
+  --th-info: #60a5fa;
 
   /* ── FM 어트리뷰트 색상 ── */
   --th-attr-elite: #22c55e;
@@ -170,9 +173,12 @@
   --th-red-glow: rgba(207, 34, 46, 0.08);
   --th-focus-ring: #b45309;
   --th-focus-ring-shadow: rgba(180, 83, 9, 0.25);
+  --th-danger: #cf222e;
   --th-danger-bg: #fff0ee;
   --th-danger-border: #cf222e;
   --th-danger-text: #cf222e;
+  --th-success: #16a34a;
+  --th-info: #2563eb;
   --th-attr-elite: #1a7f37;
   --th-attr-good:  #2da44e;
   --th-attr-avg:   #9a6700;

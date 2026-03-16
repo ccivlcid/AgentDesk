@@ -267,7 +267,7 @@ export default function MenuBar({
 
       {/* 연결 끊김 표시 (연결됐을 땐 숨김) */}
       {!connected && (
-        <span style={{ color: "#ef4444", fontSize: 10 }} title="Server disconnected">○</span>
+        <span style={{ color: "var(--th-danger, #ef4444)", fontSize: 10 }} title="Server disconnected">○</span>
       )}
 
       {/* 프로젝트 선택 */}
@@ -287,7 +287,7 @@ export default function MenuBar({
       {runningAgentCount > 0 && (
         <span
           className="menubar-pulse"
-          style={{ fontSize: 10, color: "#22c55e", letterSpacing: 1 }}
+          style={{ fontSize: 10, color: "var(--th-success, #22c55e)", letterSpacing: 1 }}
           title={`${runningAgentCount} agent(s) running`}
         >
           ● {runningAgentCount}
@@ -399,7 +399,7 @@ export default function MenuBar({
           <div style={{
             padding: "20px 20px 14px",
             borderBottom: "1px solid var(--th-border)",
-            background: "rgba(245,158,11,0.04)",
+            background: "var(--th-accent-glow)",
           }}>
             <div style={{ fontSize: 36, fontWeight: 700, color: "var(--th-text-heading)", letterSpacing: "-1px", lineHeight: 1 }}>
               {timeStrFull}
@@ -452,7 +452,7 @@ export default function MenuBar({
                   fontSize: 10,
                   fontWeight: 700,
                   padding: "2px 0",
-                  color: i === 0 ? "#ef4444" : i === 6 ? "#60a5fa" : "var(--th-text-muted)",
+                  color: i === 0 ? "var(--th-danger, #ef4444)" : i === 6 ? "var(--th-info, #60a5fa)" : "var(--th-text-muted)",
                   letterSpacing: "0.05em",
                 }}>
                   {d}
@@ -482,9 +482,9 @@ export default function MenuBar({
                         : isToday
                           ? "var(--th-accent-text)"
                           : isSun
-                            ? "rgba(239,68,68,0.8)"
+                            ? "var(--th-danger, #ef4444)"
                             : isSat
-                              ? "rgba(96,165,250,0.8)"
+                              ? "var(--th-info, #60a5fa)"
                               : "var(--th-text-secondary)",
                       cursor: day != null ? "default" : "default",
                     }}
@@ -503,8 +503,8 @@ export default function MenuBar({
                 style={{
                   marginTop: 10,
                   width: "100%",
-                  background: "rgba(245,158,11,0.08)",
-                  border: "1px solid rgba(245,158,11,0.25)",
+                  background: "var(--th-accent-glow)",
+                  border: "1px solid var(--th-accent-border)",
                   borderRadius: 6,
                   color: "var(--th-accent)",
                   fontFamily: mono,

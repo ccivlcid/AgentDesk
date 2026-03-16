@@ -136,6 +136,7 @@ export interface ParentTaskRow {
   project_path: string | null;
   department_id?: string | null;
   workflow_pack_key?: string | null;
+  context_hint?: string | null;
 }
 
 /** Department row lookup */

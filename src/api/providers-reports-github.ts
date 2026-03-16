@@ -305,6 +305,7 @@ export interface DeliverableItem {
   started_at: number | null;
   output_format?: string | null;
   workflow_pack_key?: string | null;
+  context_hint?: string | null;
   agent_name: string;
   agent_name_ko: string;
   agent_role: string;

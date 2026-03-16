@@ -1,8 +1,9 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import AppWindow from "./AppWindow";
 import { useUiStore } from "../../store/uiStore";
 import { useAgentStore } from "../../store/agentStore";
 import { useTaskStore } from "../../store/taskStore";
+import * as api from "../../api";
 
 const SettingsPanel = lazy(() => import("../SettingsPanel"));
 
@@ -28,8 +29,14 @@ export default function SettingsWindow({
   onOauthResultClear,
 }: SettingsWindowProps) {
   const { settings } = useUiStore();
-  const { cliStatus } = useTaskStore();
+  const { cliStatus, setCliStatus } = useTaskStore();
   const { agents } = useAgentStore();
+
+  useEffect(() => {
+    if (!cliStatus) {
+      api.getCliStatus(true).then(setCliStatus).catch(console.error);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <AppWindow

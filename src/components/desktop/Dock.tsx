@@ -48,7 +48,7 @@ export default function Dock({ onQuickTask }: DockProps) {
               flexDirection: "column",
               alignItems: "center",
               gap: 3,
-              background: isOpen ? "rgba(245,158,11,0.12)" : "none",
+              background: isOpen ? "var(--th-accent-glow)" : "none",
               border: `1px solid ${isOpen ? "var(--th-border-accent)" : "transparent"}`,
               borderRadius: 10,
               padding: "6px 10px",
@@ -60,7 +60,7 @@ export default function Dock({ onQuickTask }: DockProps) {
               if (!isOpen) (e.currentTarget as HTMLButtonElement).style.background = "var(--th-hover-overlay)";
             }}
             onMouseLeave={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.background = isOpen ? "rgba(245,158,11,0.12)" : "none";
+              (e.currentTarget as HTMLButtonElement).style.background = isOpen ? "var(--th-accent-glow)" : "none";
             }}
           >
             <span style={{ fontSize: 22 }}>{item.emoji}</span>
@@ -97,7 +97,7 @@ export default function Dock({ onQuickTask }: DockProps) {
         }}
         onMouseEnter={(e) => {
           const el = e.currentTarget as HTMLButtonElement;
-          el.style.background = "rgba(245,158,11,0.10)";
+          el.style.background = "var(--th-accent-glow)";
           el.style.borderColor = "var(--th-border-accent)";
         }}
         onMouseLeave={(e) => {

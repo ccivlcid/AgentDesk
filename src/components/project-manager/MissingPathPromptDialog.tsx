@@ -18,7 +18,7 @@ export default function MissingPathPromptDialog({
   if (!prompt) return null;
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4" onClick={onCancel}>
+    <div className="fixed inset-0 z-[1200] flex items-center justify-center bg-black/70 p-4" onClick={onCancel}>
       <div
         className="w-full max-w-lg overflow-hidden"
         style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}

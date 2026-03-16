@@ -79,8 +79,8 @@ export function createDirectTaskFlow(deps: TaskFlowDeps) {
     deps.db
       .prepare(
         `
-    INSERT INTO tasks (id, title, description, department_id, assigned_agent_id, project_id, status, priority, task_type, workflow_pack_key, project_path, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, 'planned', 5, 'general', ?, ?, ?, ?)
+    INSERT INTO tasks (id, title, description, department_id, assigned_agent_id, project_id, status, priority, task_type, workflow_pack_key, context_hint, project_path, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, 'planned', 5, 'general', ?, ?, ?, ?, ?)
   `,
       )
       .run(
@@ -90,6 +90,7 @@ export function createDirectTaskFlow(deps: TaskFlowDeps) {
         deptId,
         agent.id,
         selectedProject.id,
+        workflowPackKey,
         workflowPackKey,
         detectedPath,
         t,

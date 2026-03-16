@@ -1,6 +1,7 @@
 import AgentAvatar from "../AgentAvatar";
 import type { Agent } from "../../types";
 import { useConfirm } from "../ui/ConfirmDialog";
+import TrafficLights from "../desktop/TrafficLights";
 
 type Tr = (ko: string, en: string, ja?: string, zh?: string) => string;
 
@@ -16,6 +17,7 @@ interface ChatPanelHeaderProps {
   visibleMessagesLength: number;
   onClearMessages?: (agentId?: string) => void;
   onClose: () => void;
+  embedded?: boolean;
   searchOpen: boolean;
   searchQuery: string;
   searchResultCount: number;
@@ -35,6 +37,7 @@ export default function ChatPanelHeader({
   visibleMessagesLength,
   onClearMessages,
   onClose,
+  embedded = false,
   searchOpen,
   searchQuery,
   searchResultCount,
@@ -68,11 +71,13 @@ export default function ChatPanelHeader({
       <div
         className="chat-header flex flex-shrink-0 items-center gap-3 px-4 py-2.5"
         style={{
-          background: "var(--th-bg-panel)",
+          background: "var(--th-glass-bg)",
           borderBottom: "1px solid var(--th-border)",
           fontFamily: "var(--th-font-mono)",
+          minHeight: 40,
         }}
       >
+        {!embedded && <TrafficLights onClose={onClose} />}
         {selectedAgent ? (
           <>
             <div className="relative flex-shrink-0">
@@ -159,21 +164,6 @@ export default function ChatPanelHeader({
             </button>
           )}
 
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex h-7 w-7 flex-shrink-0 items-center justify-center transition-colors hover:!border-[var(--th-border-strong)] hover:!text-[var(--th-text)] hover:!bg-[var(--th-hover-bg)]"
-            style={{
-              border: "1px solid var(--th-border)",
-              borderRadius: 0,
-              color: "var(--th-text-muted)",
-              fontFamily: "var(--th-font-mono)",
-              fontSize: "12px",
-            }}
-            aria-label={tr("닫기", "Close", "閉じる", "关闭")}
-          >
-            ✕
-          </button>
         </div>
       </div>
 

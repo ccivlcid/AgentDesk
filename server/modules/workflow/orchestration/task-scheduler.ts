@@ -307,9 +307,9 @@ export function startTaskScheduler(deps: TaskSchedulerDeps): { stop: () => void 
     const status = schedule.auto_run && schedule.assigned_agent_id ? "inbox" : "inbox";
     db.prepare(
       `INSERT INTO tasks (id, title, description, department_id, assigned_agent_id, project_id,
-        status, priority, task_type, workflow_pack_key, workflow_meta_json,
+        status, priority, task_type, workflow_pack_key, context_hint, workflow_meta_json,
         project_path, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     ).run(
       taskId,
       fullTitle,
@@ -320,6 +320,7 @@ export function startTaskScheduler(deps: TaskSchedulerDeps): { stop: () => void 
       status,
       priority,
       taskType,
+      workflowPackKey,
       workflowPackKey,
       workflowMetaJson,
       projectPath,
