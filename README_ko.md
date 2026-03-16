@@ -13,12 +13,12 @@ AgentDesk는 macOS 바탕화면 은유를 AI 에이전트 오케스트레이션�
 
 <table>
   <tr>
-    <td><img src="docs/screen/ko/01-desktop.png" width="420" alt="바탕화면"/><br/><sub>바탕화면</sub></td>
-    <td><img src="docs/screen/ko/04-agent-manager.png" width="420" alt="에이전트 매니저"/><br/><sub>에이전트 매니저</sub></td>
+    <td><img src="docs/screen/01-desktop.png" width="420" alt="바탕화면"/><br/><sub>바탕화면</sub></td>
+    <td><img src="docs/screen/28-agent-manager.png" width="420" alt="에이전트 매니저"/><br/><sub>에이전트 매니저</sub></td>
   </tr>
   <tr>
     <td><img src="docs/screen/37-agent-create.png" width="420" alt="직원 등록"/><br/><sub>직원 등록</sub></td>
-    <td><img src="docs/screen/38-dept-create.png" width="420" alt="부서 등록"/><br/><sub>부서 등록</sub></td>
+    <td><img src="docs/screen/37-agent-create.png" width="420" alt="부서 등록"/><br/><sub>부서 등록</sub></td>
   </tr>
   <tr>
     <td><img src="docs/screen/23-workflow-builder.png" width="420" alt="워크플로 빌더"/><br/><sub>워크플로 빌더</sub></td>
@@ -29,15 +29,15 @@ AgentDesk는 macOS 바탕화면 은유를 AI 에이전트 오케스트레이션�
     <td><img src="docs/screen/27-chat-group.png" width="420" alt="그룹 방송 채팅"/><br/><sub>그룹 방송 채팅</sub></td>
   </tr>
   <tr>
-    <td><img src="docs/screen/ko/07-widget-agents.png" width="420" alt="에이전트 위젯"/><br/><sub>에이전트 위젯</sub></td>
-    <td><img src="docs/screen/34-widget-alerts.png" width="420" alt="알림 위젯"/><br/><sub>알림 위젯</sub></td>
+    <td><img src="docs/screen/31-widget-dashboard.png" width="420" alt="에이전트 위젯"/><br/><sub>에이전트 위젯</sub></td>
+    <td><img src="docs/screen/31-widget-dashboard.png" width="420" alt="알림 위젯"/><br/><sub>알림 위젯</sub></td>
   </tr>
   <tr>
-    <td><img src="docs/screen/ko/05-settings.png" width="420" alt="설정"/><br/><sub>설정</sub></td>
+    <td><img src="docs/screen/12-settings-general.png" width="420" alt="설정"/><br/><sub>설정</sub></td>
     <td><img src="docs/screen/18-library-skills.png" width="420" alt="라이브러리 — Skills"/><br/><sub>라이브러리 — Skills</sub></td>
   </tr>
   <tr>
-    <td><img src="docs/screen/ko/06-mission-control.png" width="420" alt="미션 컨트롤"/><br/><sub>미션 컨트롤 (Ctrl+↑)</sub></td>
+    <td><img src="docs/screen/30-mission-control.png" width="420" alt="미션 컨트롤"/><br/><sub>미션 컨트롤 (Ctrl+↑)</sub></td>
     <td><img src="docs/screen/11-command-palette.png" width="420" alt="커맨드 팔레트"/><br/><sub>커맨드 팔레트 (Ctrl+Shift+K)</sub></td>
   </tr>
 </table>
@@ -148,10 +148,10 @@ AgentDesk는 AI 에이전트 팀을 위한 **프로젝트 운영체제**입니�
     <th>🇨🇳 中文</th>
   </tr>
   <tr>
-    <td><img src="docs/screen/ko/02-app-menu.png" width="300" alt="한국어 앱 메뉴"/></td>
-    <td><img src="docs/screen/en/02-app-menu.png" width="300" alt="English App Menu"/></td>
-    <td><img src="docs/screen/ja/02-app-menu.png" width="300" alt="日本語 アプリメニュー"/></td>
-    <td><img src="docs/screen/zh/02-app-menu.png" width="300" alt="中文 应用菜单"/></td>
+    <td><img src="docs/screen/02-app-menu.png" width="300" alt="한국어 앱 메뉴"/></td>
+    <td><img src="docs/screen/02-app-menu.png" width="300" alt="English App Menu"/></td>
+    <td><img src="docs/screen/02-app-menu.png" width="300" alt="日本語 アプリメニュー"/></td>
+    <td><img src="docs/screen/02-app-menu.png" width="300" alt="中文 应用菜单"/></td>
   </tr>
 </table>
 
@@ -165,10 +165,10 @@ AgentDesk는 AI 에이전트 팀을 위한 **프로젝트 운영체제**입니�
     <th>🇨🇳 中文</th>
   </tr>
   <tr>
-    <td><img src="docs/screen/ko/03-widget-picker.png" width="300" alt="한국어 위젯 피커"/></td>
-    <td><img src="docs/screen/en/03-widget-picker.png" width="300" alt="English Widget Picker"/></td>
-    <td><img src="docs/screen/ja/03-widget-picker.png" width="300" alt="日本語 ウィジェット"/></td>
-    <td><img src="docs/screen/zh/03-widget-picker.png" width="300" alt="中文 小组件"/></td>
+    <td><img src="docs/screen/05-widget-picker.png" width="300" alt="한국어 위젯 피커"/></td>
+    <td><img src="docs/screen/05-widget-picker.png" width="300" alt="English Widget Picker"/></td>
+    <td><img src="docs/screen/05-widget-picker.png" width="300" alt="日本語 ウィジェット"/></td>
+    <td><img src="docs/screen/05-widget-picker.png" width="300" alt="中文 小组件"/></td>
   </tr>
 </table>
 
@@ -182,10 +182,10 @@ AgentDesk는 AI 에이전트 팀을 위한 **프로젝트 운영체제**입니�
     <th>🇨🇳 中文</th>
   </tr>
   <tr>
-    <td><img src="docs/screen/ko/06-mission-control.png" width="300" alt="한국어 미션 컨트롤"/></td>
-    <td><img src="docs/screen/en/06-mission-control.png" width="300" alt="English Mission Control"/></td>
-    <td><img src="docs/screen/ja/06-mission-control.png" width="300" alt="日本語 ミッションコントロール"/></td>
-    <td><img src="docs/screen/zh/06-mission-control.png" width="300" alt="中文 任务控制"/></td>
+    <td><img src="docs/screen/30-mission-control.png" width="300" alt="한국어 미션 컨트롤"/></td>
+    <td><img src="docs/screen/30-mission-control.png" width="300" alt="English Mission Control"/></td>
+    <td><img src="docs/screen/30-mission-control.png" width="300" alt="日本語 ミッションコントロール"/></td>
+    <td><img src="docs/screen/30-mission-control.png" width="300" alt="中文 任务控制"/></td>
   </tr>
 </table>
 
@@ -199,10 +199,10 @@ AgentDesk는 AI 에이전트 팀을 위한 **프로젝트 운영체제**입니�
     <th>🇨🇳 中文</th>
   </tr>
   <tr>
-    <td><img src="docs/screen/ko/08-agent-create.png" width="300" alt="한국어 직원 등록"/></td>
-    <td><img src="docs/screen/en/08-agent-create.png" width="300" alt="English Hire Agent"/></td>
-    <td><img src="docs/screen/ja/08-agent-create.png" width="300" alt="日本語 エージェント採用"/></td>
-    <td><img src="docs/screen/zh/08-agent-create.png" width="300" alt="中文 招聘代理"/></td>
+    <td><img src="docs/screen/37-agent-create.png" width="300" alt="한국어 직원 등록"/></td>
+    <td><img src="docs/screen/37-agent-create.png" width="300" alt="English Hire Agent"/></td>
+    <td><img src="docs/screen/37-agent-create.png" width="300" alt="日本語 エージェント採用"/></td>
+    <td><img src="docs/screen/37-agent-create.png" width="300" alt="中文 招聘代理"/></td>
   </tr>
 </table>
 

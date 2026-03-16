@@ -12,12 +12,12 @@ AgentDesk将macOS桌面隐喻应用于AI代理编排——菜单栏、桌面图�
 
 <table>
   <tr>
-    <td><img src="docs/screen/zh/01-desktop.png" width="420" alt="桌面"/><br/><sub>桌面</sub></td>
-    <td><img src="docs/screen/zh/04-agent-manager.png" width="420" alt="代理管理器"/><br/><sub>代理管理器</sub></td>
+    <td><img src="docs/screen/01-desktop.png" width="420" alt="桌面"/><br/><sub>桌面</sub></td>
+    <td><img src="docs/screen/28-agent-manager.png" width="420" alt="代理管理器"/><br/><sub>代理管理器</sub></td>
   </tr>
   <tr>
     <td><img src="docs/screen/37-agent-create.png" width="420" alt="招聘代理"/><br/><sub>招聘代理</sub></td>
-    <td><img src="docs/screen/38-dept-create.png" width="420" alt="添加部门"/><br/><sub>添加部门</sub></td>
+    <td><img src="docs/screen/37-agent-create.png" width="420" alt="添加部门"/><br/><sub>添加部门</sub></td>
   </tr>
   <tr>
     <td><img src="docs/screen/23-workflow-builder.png" width="420" alt="工作流构建器"/><br/><sub>工作流构建器</sub></td>
@@ -28,15 +28,15 @@ AgentDesk将macOS桌面隐喻应用于AI代理编排——菜单栏、桌面图�
     <td><img src="docs/screen/27-chat-group.png" width="420" alt="群组广播聊天"/><br/><sub>群组广播聊天</sub></td>
   </tr>
   <tr>
-    <td><img src="docs/screen/zh/07-widget-agents.png" width="420" alt="代理小组件"/><br/><sub>代理小组件</sub></td>
-    <td><img src="docs/screen/34-widget-alerts.png" width="420" alt="警报小组件"/><br/><sub>警报小组件</sub></td>
+    <td><img src="docs/screen/31-widget-dashboard.png" width="420" alt="代理小组件"/><br/><sub>代理小组件</sub></td>
+    <td><img src="docs/screen/31-widget-dashboard.png" width="420" alt="警报小组件"/><br/><sub>警报小组件</sub></td>
   </tr>
   <tr>
-    <td><img src="docs/screen/zh/05-settings.png" width="420" alt="设置"/><br/><sub>设置</sub></td>
+    <td><img src="docs/screen/12-settings-general.png" width="420" alt="设置"/><br/><sub>设置</sub></td>
     <td><img src="docs/screen/18-library-skills.png" width="420" alt="库 — Skills"/><br/><sub>库 — Skills</sub></td>
   </tr>
   <tr>
-    <td><img src="docs/screen/zh/06-mission-control.png" width="420" alt="任务控制"/><br/><sub>任务控制 (Ctrl+↑)</sub></td>
+    <td><img src="docs/screen/30-mission-control.png" width="420" alt="任务控制"/><br/><sub>任务控制 (Ctrl+↑)</sub></td>
     <td><img src="docs/screen/11-command-palette.png" width="420" alt="命令面板"/><br/><sub>命令面板 (Ctrl+Shift+K)</sub></td>
   </tr>
 </table>
@@ -147,10 +147,10 @@ AgentDesk是面向AI代理团队的**项目操作系统**。作为本地Web应�
     <th>🇨🇳 中文</th>
   </tr>
   <tr>
-    <td><img src="docs/screen/ko/02-app-menu.png" width="300"/></td>
-    <td><img src="docs/screen/en/02-app-menu.png" width="300"/></td>
-    <td><img src="docs/screen/ja/02-app-menu.png" width="300"/></td>
-    <td><img src="docs/screen/zh/02-app-menu.png" width="300"/></td>
+    <td><img src="docs/screen/02-app-menu.png" width="300"/></td>
+    <td><img src="docs/screen/02-app-menu.png" width="300"/></td>
+    <td><img src="docs/screen/02-app-menu.png" width="300"/></td>
+    <td><img src="docs/screen/02-app-menu.png" width="300"/></td>
   </tr>
 </table>
 
@@ -164,10 +164,10 @@ AgentDesk是面向AI代理团队的**项目操作系统**。作为本地Web应�
     <th>🇨🇳 中文</th>
   </tr>
   <tr>
-    <td><img src="docs/screen/ko/06-mission-control.png" width="300"/></td>
-    <td><img src="docs/screen/en/06-mission-control.png" width="300"/></td>
-    <td><img src="docs/screen/ja/06-mission-control.png" width="300"/></td>
-    <td><img src="docs/screen/zh/06-mission-control.png" width="300"/></td>
+    <td><img src="docs/screen/30-mission-control.png" width="300"/></td>
+    <td><img src="docs/screen/30-mission-control.png" width="300"/></td>
+    <td><img src="docs/screen/30-mission-control.png" width="300"/></td>
+    <td><img src="docs/screen/30-mission-control.png" width="300"/></td>
   </tr>
 </table>
 

@@ -13,12 +13,12 @@ AgentDeskは、macOSデスクトップのメタファーをAIエージェント�
 
 <table>
   <tr>
-    <td><img src="docs/screen/ja/01-desktop.png" width="420" alt="デスクトップ"/><br/><sub>デスクトップ</sub></td>
-    <td><img src="docs/screen/ja/04-agent-manager.png" width="420" alt="エージェントマネージャー"/><br/><sub>エージェントマネージャー</sub></td>
+    <td><img src="docs/screen/01-desktop.png" width="420" alt="デスクトップ"/><br/><sub>デスクトップ</sub></td>
+    <td><img src="docs/screen/28-agent-manager.png" width="420" alt="エージェントマネージャー"/><br/><sub>エージェントマネージャー</sub></td>
   </tr>
   <tr>
     <td><img src="docs/screen/37-agent-create.png" width="420" alt="エージェント採用"/><br/><sub>エージェント採用</sub></td>
-    <td><img src="docs/screen/38-dept-create.png" width="420" alt="部署追加"/><br/><sub>部署追加</sub></td>
+    <td><img src="docs/screen/37-agent-create.png" width="420" alt="部署追加"/><br/><sub>部署追加</sub></td>
   </tr>
   <tr>
     <td><img src="docs/screen/23-workflow-builder.png" width="420" alt="ワークフロービルダー"/><br/><sub>ワークフロービルダー</sub></td>
@@ -29,15 +29,15 @@ AgentDeskは、macOSデスクトップのメタファーをAIエージェント�
     <td><img src="docs/screen/27-chat-group.png" width="420" alt="グループ放送チャット"/><br/><sub>グループ放送チャット</sub></td>
   </tr>
   <tr>
-    <td><img src="docs/screen/ja/07-widget-agents.png" width="420" alt="エージェントウィジェット"/><br/><sub>エージェントウィジェット</sub></td>
-    <td><img src="docs/screen/34-widget-alerts.png" width="420" alt="アラートウィジェット"/><br/><sub>アラートウィジェット</sub></td>
+    <td><img src="docs/screen/31-widget-dashboard.png" width="420" alt="エージェントウィジェット"/><br/><sub>エージェントウィジェット</sub></td>
+    <td><img src="docs/screen/31-widget-dashboard.png" width="420" alt="アラートウィジェット"/><br/><sub>アラートウィジェット</sub></td>
   </tr>
   <tr>
-    <td><img src="docs/screen/ja/05-settings.png" width="420" alt="設定"/><br/><sub>設定</sub></td>
+    <td><img src="docs/screen/12-settings-general.png" width="420" alt="設定"/><br/><sub>設定</sub></td>
     <td><img src="docs/screen/18-library-skills.png" width="420" alt="ライブラリ — Skills"/><br/><sub>ライブラリ — Skills</sub></td>
   </tr>
   <tr>
-    <td><img src="docs/screen/ja/06-mission-control.png" width="420" alt="ミッションコントロール"/><br/><sub>ミッションコントロール (Ctrl+↑)</sub></td>
+    <td><img src="docs/screen/30-mission-control.png" width="420" alt="ミッションコントロール"/><br/><sub>ミッションコントロール (Ctrl+↑)</sub></td>
     <td><img src="docs/screen/11-command-palette.png" width="420" alt="コマンドパレット"/><br/><sub>コマンドパレット (Ctrl+Shift+K)</sub></td>
   </tr>
 </table>
@@ -148,10 +148,10 @@ AgentDeskはAIエージェントチームのための**プロジェクト運用�
     <th>🇨🇳 中文</th>
   </tr>
   <tr>
-    <td><img src="docs/screen/ko/02-app-menu.png" width="300"/></td>
-    <td><img src="docs/screen/en/02-app-menu.png" width="300"/></td>
-    <td><img src="docs/screen/ja/02-app-menu.png" width="300"/></td>
-    <td><img src="docs/screen/zh/02-app-menu.png" width="300"/></td>
+    <td><img src="docs/screen/02-app-menu.png" width="300"/></td>
+    <td><img src="docs/screen/02-app-menu.png" width="300"/></td>
+    <td><img src="docs/screen/02-app-menu.png" width="300"/></td>
+    <td><img src="docs/screen/02-app-menu.png" width="300"/></td>
   </tr>
 </table>
 
@@ -165,10 +165,10 @@ AgentDeskはAIエージェントチームのための**プロジェクト運用�
     <th>🇨🇳 中文</th>
   </tr>
   <tr>
-    <td><img src="docs/screen/ko/06-mission-control.png" width="300"/></td>
-    <td><img src="docs/screen/en/06-mission-control.png" width="300"/></td>
-    <td><img src="docs/screen/ja/06-mission-control.png" width="300"/></td>
-    <td><img src="docs/screen/zh/06-mission-control.png" width="300"/></td>
+    <td><img src="docs/screen/30-mission-control.png" width="300"/></td>
+    <td><img src="docs/screen/30-mission-control.png" width="300"/></td>
+    <td><img src="docs/screen/30-mission-control.png" width="300"/></td>
+    <td><img src="docs/screen/30-mission-control.png" width="300"/></td>
   </tr>
 </table>
 

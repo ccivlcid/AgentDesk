@@ -268,40 +268,51 @@ export default function AppWindow({
             {title}
           </span>
         </div>
-
-        {/* Tabs — inline pill style inside titlebar (right side) */}
-        {tabs && tabs.length > 0 && (
-          <div
-            style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", display: "flex", gap: 2, zIndex: 2 }}
-            onMouseDown={(e) => e.stopPropagation()}
-          >
-            {tabs.map((tab) => {
-              const active = activeTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  style={{
-                    padding: "4px 11px",
-                    fontSize: 11,
-                    fontFamily: mono,
-                    fontWeight: active ? 600 : 400,
-                    background: active ? "var(--th-accent)" : "var(--th-bg-elevated)",
-                    color: active ? "#fff" : "var(--th-text-muted)",
-                    border: active ? "none" : "1px solid var(--th-border)",
-                    borderRadius: 6,
-                    cursor: "pointer",
-                    transition: "background 0.15s, color 0.15s",
-                    lineHeight: 1.4,
-                  }}
-                >
-                  {tab.label}
-                </button>
-              );
-            })}
-          </div>
-        )}
       </div>
+
+      {/* ── Tab bar (탭이 있을 때만) ── */}
+      {tabs && tabs.length > 0 && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 2,
+            padding: "0 14px",
+            height: 36,
+            background: "var(--th-glass-bg)",
+            borderBottom: "1px solid var(--th-border)",
+            flexShrink: 0,
+            overflowX: "auto",
+          }}
+        >
+          {tabs.map((tab) => {
+            const active = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                style={{
+                  padding: "4px 12px",
+                  fontSize: 11,
+                  fontFamily: mono,
+                  fontWeight: active ? 600 : 400,
+                  background: active ? "var(--th-accent)" : "transparent",
+                  color: active ? "#fff" : "var(--th-text-muted)",
+                  border: "none",
+                  borderRadius: 6,
+                  cursor: "pointer",
+                  transition: "background 0.15s, color 0.15s",
+                  lineHeight: 1.4,
+                  whiteSpace: "nowrap",
+                  flexShrink: 0,
+                }}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {/* Content */}
       <div style={{ flex: 1, minHeight: 0, position: "relative", overflow: "hidden" }}>

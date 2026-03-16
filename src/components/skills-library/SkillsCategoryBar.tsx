@@ -29,8 +29,8 @@ export default function SkillsCategoryBar({
               className="px-3 py-1.5 text-xs font-medium font-mono border transition-all"
               style={{
                 borderRadius: 6,
-                background: isActive ? "rgba(251,191,36,0.1)" : "var(--th-bg-elevated)",
-                borderColor: isActive ? "rgba(251,191,36,0.5)" : "var(--th-border)",
+                background: isActive ? "var(--th-accent-glow)" : "var(--th-bg-elevated)",
+                borderColor: isActive ? "var(--th-accent-border)" : "var(--th-border)",
                 color: isActive ? "var(--th-accent)" : "var(--th-text-secondary)",
               }}
             >

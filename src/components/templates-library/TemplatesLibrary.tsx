@@ -92,7 +92,7 @@ function ProjectTemplateCard({
         {tpl.is_builtin ? (
           <span style={{ ...mono, fontSize: 8, fontWeight: 700, padding: "1px 5px", border: "1px solid var(--th-border)", color: "var(--th-text-muted)", background: "var(--th-bg-elevated)", letterSpacing: "0.08em", flexShrink: 0 }}>BUILT-IN</span>
         ) : (
-          <span style={{ ...mono, fontSize: 8, fontWeight: 700, padding: "1px 5px", border: "1px solid rgba(245,158,11,0.4)", color: "var(--th-accent)", background: "rgba(245,158,11,0.08)", letterSpacing: "0.08em", flexShrink: 0 }}>CUSTOM</span>
+          <span style={{ ...mono, fontSize: 8, fontWeight: 700, padding: "1px 5px", border: "1px solid var(--th-accent-border)", color: "var(--th-accent)", background: "var(--th-accent-glow)", letterSpacing: "0.08em", flexShrink: 0 }}>CUSTOM</span>
         )}
         <span style={{ ...mono, fontSize: 11, fontWeight: 700, color: "var(--th-text-primary)", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{tpl.name}</span>
         <span style={{ ...mono, fontSize: 9, color: "var(--th-text-muted)", flexShrink: 0, marginRight: 8 }}>{catLabel}</span>
@@ -104,7 +104,7 @@ function ProjectTemplateCard({
             type="button"
             onClick={(e) => { e.stopPropagation(); onDelete(tpl.id); }}
             disabled={deleting}
-            style={{ ...mono, fontSize: 9, padding: "2px 6px", border: "1px solid rgba(239,68,68,0.35)", background: "rgba(239,68,68,0.08)", color: "#f87171", cursor: "pointer", flexShrink: 0 }}
+            style={{ ...mono, fontSize: 9, padding: "2px 6px", border: "1px solid var(--th-danger-border)", background: "var(--th-danger-bg)", color: "var(--th-danger)", cursor: "pointer", flexShrink: 0 }}
           >
             {isKo ? "삭제" : "Delete"}
           </button>
@@ -226,7 +226,7 @@ function NewTemplateForm({
               style={{ ...inputStyle, flex: 1 }}
             />
             {form.objectives.length > 1 && (
-              <button type="button" onClick={() => setField("objectives", form.objectives.filter((_, j) => j !== i))} style={{ ...mono, fontSize: 9, padding: "2px 6px", border: "1px solid rgba(239,68,68,0.3)", background: "transparent", color: "#f87171", cursor: "pointer", borderRadius: 3, flexShrink: 0 }}>✕</button>
+              <button type="button" onClick={() => setField("objectives", form.objectives.filter((_, j) => j !== i))} style={{ ...mono, fontSize: 9, padding: "2px 6px", border: "1px solid var(--th-danger-border)", background: "transparent", color: "var(--th-danger)", cursor: "pointer", borderRadius: 3, flexShrink: 0 }}>✕</button>
             )}
           </div>
         ))}
@@ -261,7 +261,7 @@ function NewTemplateForm({
               placeholder={isKo ? "게이트 제목..." : "Gate title..."}
               style={{ ...inputStyle, flex: 1 }}
             />
-            <button type="button" onClick={() => setField("gates", form.gates.filter((_, j) => j !== i))} style={{ ...mono, fontSize: 9, padding: "2px 6px", border: "1px solid rgba(239,68,68,0.3)", background: "transparent", color: "#f87171", cursor: "pointer", borderRadius: 3, flexShrink: 0 }}>✕</button>
+            <button type="button" onClick={() => setField("gates", form.gates.filter((_, j) => j !== i))} style={{ ...mono, fontSize: 9, padding: "2px 6px", border: "1px solid var(--th-danger-border)", background: "transparent", color: "var(--th-danger)", cursor: "pointer", borderRadius: 3, flexShrink: 0 }}>✕</button>
           </div>
         ))}
       </div>
@@ -271,7 +271,7 @@ function NewTemplateForm({
         <button type="button" onClick={onCancel} style={{ ...mono, fontSize: 10, padding: "4px 12px", border: "1px solid var(--th-border)", background: "transparent", color: "var(--th-text-muted)", cursor: "pointer", borderRadius: 4 }}>
           {isKo ? "취소" : "Cancel"}
         </button>
-        <button type="submit" disabled={saving || !form.name.trim()} style={{ ...mono, fontSize: 10, fontWeight: 700, padding: "4px 12px", border: "1px solid rgba(245,158,11,0.4)", background: saving ? "transparent" : "rgba(245,158,11,0.12)", color: saving ? "var(--th-text-muted)" : "var(--th-accent)", cursor: saving ? "not-allowed" : "pointer", borderRadius: 4 }}>
+        <button type="submit" disabled={saving || !form.name.trim()} style={{ ...mono, fontSize: 10, fontWeight: 700, padding: "4px 12px", border: "1px solid var(--th-accent-border)", background: saving ? "transparent" : "var(--th-accent-glow)", color: saving ? "var(--th-text-muted)" : "var(--th-accent)", cursor: saving ? "not-allowed" : "pointer", borderRadius: 4 }}>
           {saving ? "..." : isKo ? "저장" : "Save"}
         </button>
       </div>
@@ -364,8 +364,8 @@ export default function TemplatesLibrary() {
             onClick={() => setActiveTab(tab)}
             style={{
               ...mono, fontSize: 9, fontWeight: 700, padding: "2px 10px", borderRadius: 4,
-              border: `1px solid ${activeTab === tab ? "rgba(245,158,11,0.5)" : "var(--th-border)"}`,
-              background: activeTab === tab ? "rgba(245,158,11,0.08)" : "transparent",
+              border: `1px solid ${activeTab === tab ? "var(--th-accent-border)" : "var(--th-border)"}`,
+              background: activeTab === tab ? "var(--th-accent-glow)" : "transparent",
               color: activeTab === tab ? "var(--th-accent)" : "var(--th-text-muted)",
               cursor: "pointer", letterSpacing: "0.06em",
             }}
@@ -394,7 +394,7 @@ export default function TemplatesLibrary() {
                 <button
                   type="button"
                   onClick={() => setShowCreateForm(true)}
-                  style={{ ...mono, fontSize: 9, fontWeight: 700, padding: "2px 8px", border: "1px solid rgba(245,158,11,0.4)", background: "rgba(245,158,11,0.08)", color: "var(--th-accent)", cursor: "pointer", borderRadius: 3 }}
+                  style={{ ...mono, fontSize: 9, fontWeight: 700, padding: "2px 8px", border: "1px solid var(--th-accent-border)", background: "var(--th-accent-glow)", color: "var(--th-accent)", cursor: "pointer", borderRadius: 3 }}
                 >
                   + {isKo ? "새 템플릿" : "New Template"}
                 </button>
@@ -454,7 +454,7 @@ export default function TemplatesLibrary() {
                       type="button"
                       onClick={() => { void handleDeleteTaskTemplate(tpl.id); }}
                       disabled={deletingId === tpl.id}
-                      style={{ ...mono, fontSize: 9, padding: "2px 6px", border: "1px solid rgba(239,68,68,0.35)", background: "rgba(239,68,68,0.08)", color: "#f87171", cursor: "pointer", flexShrink: 0, width: 52 }}
+                      style={{ ...mono, fontSize: 9, padding: "2px 6px", border: "1px solid var(--th-danger-border)", background: "var(--th-danger-bg)", color: "var(--th-danger)", cursor: "pointer", flexShrink: 0, width: 52 }}
                     >
                       {isKo ? "삭제" : "Delete"}
                     </button>

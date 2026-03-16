@@ -17,7 +17,7 @@ AgentDesk brings a macOS-style desktop metaphor to AI agent orchestration — me
   </tr>
   <tr>
     <td><img src="docs/screen/37-agent-create.png" width="420" alt="Hire Agent"/><br/><sub>Hire Agent</sub></td>
-    <td><img src="docs/screen/38-dept-create.png" width="420" alt="Add Department"/><br/><sub>Add Department</sub></td>
+    <td><img src="docs/screen/37-agent-create.png" width="420" alt="Add Department"/><br/><sub>Add Department</sub></td>
   </tr>
   <tr>
     <td><img src="docs/screen/23-workflow-builder.png" width="420" alt="Workflow Builder"/><br/><sub>Workflow Builder</sub></td>
@@ -29,7 +29,7 @@ AgentDesk brings a macOS-style desktop metaphor to AI agent orchestration — me
   </tr>
   <tr>
     <td><img src="docs/screen/31-widget-dashboard.png" width="420" alt="Agents Widget"/><br/><sub>Agents Widget</sub></td>
-    <td><img src="docs/screen/34-widget-alerts.png" width="420" alt="Alerts Widget"/><br/><sub>Alerts Widget</sub></td>
+    <td><img src="docs/screen/31-widget-dashboard.png" width="420" alt="Alerts Widget"/><br/><sub>Alerts Widget</sub></td>
   </tr>
   <tr>
     <td><img src="docs/screen/12-settings-general.png" width="420" alt="Settings"/><br/><sub>Settings</sub></td>

@@ -147,7 +147,7 @@ export default function Deliverables({ agents, currentProject }: DeliverablesPro
         </span>
         {!loading && (
           <span style={{ marginLeft: "auto", fontSize: "9px", color: "var(--th-text-muted)", opacity: 0.6 }}>
-            <span style={{ color: "#4ade80" }}>{doneCnt} done</span>
+            <span style={{ color: "var(--th-success)" }}>{doneCnt} done</span>
             {reviewCnt > 0 && <> · <span style={{ color: "var(--th-accent)" }}>{reviewCnt} review</span></>}
             {" "}· {items.length} total
           </span>
@@ -188,8 +188,8 @@ export default function Deliverables({ agents, currentProject }: DeliverablesPro
             onClick={() => setStatusFilter(f.key)}
             style={{
               ...mono, fontSize: "9px", fontWeight: 700, padding: "2px 8px", borderRadius: 4,
-              border: `1px solid ${statusFilter === f.key ? "rgba(245,158,11,0.5)" : "var(--th-border)"}`,
-              background: statusFilter === f.key ? "rgba(245,158,11,0.08)" : "transparent",
+              border: `1px solid ${statusFilter === f.key ? "var(--th-accent-border)" : "var(--th-border)"}`,
+              background: statusFilter === f.key ? "var(--th-accent-glow)" : "transparent",
               color: statusFilter === f.key ? "var(--th-accent)" : "var(--th-text-muted)",
               cursor: "pointer", letterSpacing: "0.06em",
             }}
@@ -202,9 +202,9 @@ export default function Deliverables({ agents, currentProject }: DeliverablesPro
               onClick={() => setShowAllProjects((v) => !v)}
               style={{
                 ...mono, fontSize: "9px", fontWeight: 700, padding: "2px 8px", borderRadius: 4,
-                border: `1px solid ${showAllProjects ? "rgba(99,102,241,0.5)" : "var(--th-border)"}`,
-                background: showAllProjects ? "rgba(99,102,241,0.08)" : "transparent",
-                color: showAllProjects ? "#818cf8" : "var(--th-text-muted)",
+                border: `1px solid ${showAllProjects ? "var(--th-info)" : "var(--th-border)"}`,
+                background: showAllProjects ? "rgba(96,165,250,0.08)" : "transparent",
+                color: showAllProjects ? "var(--th-info)" : "var(--th-text-muted)",
                 cursor: "pointer",
               }}
             >
