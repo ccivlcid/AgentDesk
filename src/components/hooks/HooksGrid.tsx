@@ -21,6 +21,7 @@ interface HooksGridProps {
   learnedRepresentatives: Map<HookHistoryProvider, Agent | null>;
   agents: Agent[];
   onOpenLearningModal: (hook: HookEntry) => void;
+  emptyMessage?: string;
 }
 
 function formatRelativeTime(timestampMs: number, t: TFunction): string {
@@ -43,6 +44,14 @@ function formatRelativeTime(timestampMs: number, t: TFunction): string {
   return t({ ko: "\uBC29\uAE08", en: "just now", ja: "\u305F\u3063\u305F\u4ECA", zh: "\u521A\u521A" });
 }
 
+const SCOPE_BADGES: Record<string, { icon: string; color: string }> = {
+  global:        { icon: "🌐", color: "#3b82f6" },
+  project:       { icon: "📋", color: "#8b5cf6" },
+  agent:         { icon: "🤖", color: "#f59e0b" },
+  department:    { icon: "🏢", color: "#10b981" },
+  workflow_pack: { icon: "📦", color: "#6366f1" },
+};
+
 export default function HooksGrid({
   t,
   filtered,
@@ -54,25 +63,17 @@ export default function HooksGrid({
   learnedRepresentatives,
   agents,
   onOpenLearningModal,
+  emptyMessage,
 }: HooksGridProps) {
   if (filtered.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 gap-3">
-        <div className="text-4xl">{"\u{1F517}"}</div>
-        <div className="text-sm font-mono" style={{ color: "var(--th-text-muted)" }}>
-          {t({
-            ko: "\uB4F1\uB85D\uB41C \uD6C5\uC774 \uC5C6\uC2B5\uB2C8\uB2E4",
-            en: "No hooks registered",
-            ja: "\u767B\u9332\u6E08\u307F\u306E\u30D5\u30C3\u30AF\u304C\u3042\u308A\u307E\u305B\u3093",
-            zh: "\u6682\u65E0\u5DF2\u6CE8\u518C\u7684\u94A9\u5B50",
-          })}
-        </div>
+      <div className="flex flex-col items-center justify-center py-8 gap-2">
         <div className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
-          {t({
-            ko: "\uC0C1\uB2E8\uC758 '\uD6C5 \uCD94\uAC00' \uBC84\uD2BC\uC73C\uB85C \uC0C8 \uD6C5\uC744 \uB9CC\uB4E4\uC5B4\uBCF4\uC138\uC694",
-            en: "Click 'Add Hook' above to create a new hook",
-            ja: "\u4E0A\u306E\u300C\u30D5\u30C3\u30AF\u8FFD\u52A0\u300D\u30DC\u30BF\u30F3\u3067\u65B0\u3057\u3044\u30D5\u30C3\u30AF\u3092\u4F5C\u6210\u3057\u3066\u304F\u3060\u3055\u3044",
-            zh: "\u70B9\u51FB\u4E0A\u65B9\u7684\u300C\u6DFB\u52A0\u94A9\u5B50\u300D\u6309\u94AE\u521B\u5EFA\u65B0\u94A9\u5B50",
+          {emptyMessage ?? t({
+            ko: "등록된 훅이 없습니다",
+            en: "No hooks registered",
+            ja: "登録済みのフックがありません",
+            zh: "暂无已注册的钩子",
           })}
         </div>
       </div>
@@ -138,6 +139,15 @@ export default function HooksGrid({
             {/* Footer: tags + actions */}
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                {/* Scope badge */}
+                {hook.scope_type && hook.scope_type !== "global" && (() => {
+                  const sb = SCOPE_BADGES[hook.scope_type];
+                  return sb ? (
+                    <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-mono border" style={{ borderRadius: 0, background: `${sb.color}18`, color: sb.color, borderColor: `${sb.color}44` }}>
+                      {sb.icon} {hook.scope_type}
+                    </span>
+                  ) : null;
+                })()}
                 {/* Event type badge */}
                 <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-medium font-mono border ${etColor}`} style={{ borderRadius: 0 }}>
                   {eventTypeLabel(hook.event_type, t)}

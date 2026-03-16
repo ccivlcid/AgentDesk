@@ -12,6 +12,7 @@ import { startSlackReceiver } from "../messenger/slack-receiver.ts";
 import { registerGracefulShutdownHandlers } from "./lifecycle/register-graceful-shutdown.ts";
 import { appendTaskExecutionMetaUpdate, recordTaskExecutionEvent } from "./workflow/core/task-execution-meta.ts";
 import { TASK_STALLED_THRESHOLD_MS, TASK_STALLED_RECOVERY_THRESHOLD_MS } from "../db/runtime.ts";
+import { startWorkflowScheduler } from "./workflow/workflow-scheduler.ts";
 
 export function startLifecycle(ctx: RuntimeContext): void {
   const {
@@ -824,6 +825,8 @@ export function startLifecycle(ctx: RuntimeContext): void {
     });
   });
 
+  const stopWorkflowScheduler = startWorkflowScheduler(db, nowMs);
+
   registerGracefulShutdownHandlers({
     activeProcesses,
     stopRequestedTasks,
@@ -836,6 +839,7 @@ export function startLifecycle(ctx: RuntimeContext): void {
     wss,
     server,
     onBeforeClose: () => {
+      stopWorkflowScheduler();
       telegramReceiver.stop();
       discordReceiver.stop();
       slackReceiver.stop();

@@ -184,8 +184,8 @@ Agent spawn & management         ███████████████�
 Multi-agent orchestration        ████████████████████ 100% (scheduler dynamic timeout + orphan recovery complete)
 Database & infrastructure        ████████████████████ 100% (versioned migrations + project templates)
 Skill learning & memory          ████████████████████ 100% (WebSocket real-time streaming + auto-extraction complete)
-Heartbeat & anomaly detection    ███████████████████░ 95% (AlertsWidget real-time polling complete)
-Scheduling                       ████████████████████ 100% (dynamic timeout scheduler complete)
+Heartbeat & anomaly detection    ████████████████████ 100% (AlertsWidget real-time polling complete)
+Workflow cron scheduling         ████████████████████ 100% (per-workflow cron scheduler + WbScheduleModal complete)
 UI/UX monitoring                 ████████████████████ 100% (macOS UX complete + Custom Widget Platform)
 Security hardening               ████████████████████ 100% (2nd patch complete)
 Persona system                   ████████████████████ 100% (complete)
@@ -193,6 +193,8 @@ Visual agent graph               ███████████████�
 Agent composition templates      ████████████████████ 100% (drag-and-drop + Run complete)
 Custom Widget Platform           ████████████████████ 100% (Phase 1~5 complete — template + AI + esbuild bundle)
 Project management               ████████████████████ 100% (cost summary + templates + burndown complete)
+Analytics & performance          ████████████████████ 100% (AgentPerformanceDashboard + Data Export complete)
+Notification center              ████████████████████ 100% (date groups + hover actions + type filter badges)
 ```
 
 ### Safe Concurrency Limits
@@ -229,6 +231,25 @@ All planned features and improvement tasks have been completed. Key achievements
 - Zustand state management introduced, Keyboard-First UX (vim-style `g+key` shortcuts), macOS OS metaphor complete (Mission Control, Jiggle Mode, Quick Look, Command Palette), i18n for 4 languages (ko/en/ja/zh)
 - **Custom Widget Platform**: No-code widget/app creation via templates (7 types) or AI natural language → esbuild TSX→IIFE bundle → sandbox iframe rendering
 - **macOS UX polish**: TrafficLights on all panels, desktop icon inline rename (double-click), macOS-style dialogs with rounded corners
+
+### Analytics & Export
+- **Agent Performance Dashboard** (`src/components/performance/AgentPerformanceDashboard.tsx`): success rate badges, status stack bars (done/review/in_progress/cancelled), daily sparklines; project + days filter, sort by total/done/rate/speed; Library → Performance tab
+- **Data Export** (`src/components/export/ExportModal.tsx` + `server/modules/routes/ops/data-export.ts`): tasks/deliverables/agents/costs → CSV (UTF-8 BOM, Excel-compatible) or JSON; project/status/date-range filters; triggered from AgentDesk app menu
+- **Backend**: `GET /api/export?type=&format=&project_id=&since=&until=` — toCsv() helper with BOM prefix, Content-Disposition attachment, duration_ms column
+
+### Workflow Cron Scheduling
+- **Cron parser** (`server/modules/workflow/cron-utils.ts`): pure 5-field cron without external deps — `parseCronField`, `nextCronRunAfter`, `validateCron`
+- **Workflow scheduler daemon** (`server/modules/workflow/workflow-scheduler.ts`): `startWorkflowScheduler(db)` → `setInterval(60s)` tick, fires agent-node tasks when `next_run_at <= now`, advances schedule
+- **DB table** (`workflow_schedules`): migration `2026-03-17-001`, indexed on `next_run_at`
+- **REST API** (`server/modules/routes/ops/workflow-schedules.ts`): CRUD for `GET/POST/PUT/DELETE /api/workflow-schedules`
+- **UI** (`src/components/workflow-builder/WbScheduleModal.tsx`): 6 cron presets, custom cron input, schedule list with toggle/delete, ⏰ toolbar button in WorkflowBuilder
+
+### Notification Center (Improved)
+- **Date bucket grouping**: Today / Yesterday / Older sections with per-section unread counts
+- **Hover quick-actions**: mark-read ✓ + delete × with CSS opacity transition, slide-out animation on delete
+- **Per-type unread badges**: filter chips now show count of unread notifications per type
+- **Bulk clear read**: "Clear N read" link + 🗑 button in title bar
+- **Default behavior**: `hideRead` defaults to `false` (shows all notifications)
 
 ### Quality
 - pino structured logging, 186 server tests + 43 frontend tests all passing
@@ -494,6 +515,10 @@ All planned features and improvement tasks have been completed. Key achievements
 | ~~S1~9~~ | ~~Security patch round 1 (path traversal, OAuth, ReDoS, etc.)~~ | 1d | 🔴 Security | ✅ Done |
 | ~~S10~13~~ | ~~Security patch round 2 (error disclosure, stderr broadcast)~~ | 0.5d | 🔴 Security | ✅ Done |
 | ~~Ph5~~ | ~~Phase 5 (ReplWindow, shortcuts, CommandPalette)~~ | 1d | UI completeness | ✅ Done |
+| ~~Ph14~~ | ~~Workflow cron scheduler + WbScheduleModal~~ | 2d | Automation | ✅ Done |
+| ~~Ph15~~ | ~~Agent Performance Dashboard~~ | 2d | Analytics | ✅ Done |
+| ~~Ph16~~ | ~~Data Export (CSV/JSON)~~ | 1d | Analytics | ✅ Done |
+| ~~Ph17~~ | ~~Notification Center improvements~~ | 1d | UX polish | ✅ Done |
 
 
 

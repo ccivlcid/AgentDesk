@@ -21,25 +21,8 @@ export default function HooksLibrary({ agents, departments, currentProject }: Ho
     agents,
     departments,
     t,
-    filters: currentProject ? { scope_type: "project", scope_id: currentProject.id } : undefined,
+    filters: undefined, // Load all hooks; scope filtering handled client-side
   });
-
-  // 프로젝트 미선택
-  if (!currentProject) {
-    return (
-      <div className="flex items-center justify-center py-24">
-        <div className="text-center font-mono">
-          <div className="text-3xl mb-3" style={{ opacity: 0.4 }}>&#x1F3A3;</div>
-          <p className="text-sm font-medium mb-1" style={{ color: "var(--th-text-secondary)" }}>
-            {t({ ko: "프로젝트를 선택하세요", en: "Select a project", ja: "プロジェクトを選択してください", zh: "请选择项目" })}
-          </p>
-          <p className="text-xs" style={{ color: "var(--th-text-muted)" }}>
-            {t({ ko: "헤더에서 프로젝트를 선택하면 해당 프로젝트의 훅을 관리할 수 있습니다.", en: "Select a project in the header to manage its hooks.", ja: "ヘッダーでプロジェクトを選択して、フックを管理できます。", zh: "在标题栏选择项目以管理其钩子。" })}
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   if (vm.loading) {
     return (
@@ -75,6 +58,15 @@ export default function HooksLibrary({ agents, departments, currentProject }: Ho
     );
   }
 
+  // Separate global vs project hooks for display
+  const globalHooks = vm.filtered.filter((h) => h.scope_type === "global");
+  const projectHooks = currentProject
+    ? vm.filtered.filter((h) => h.scope_type === "project" && h.scope_id === currentProject.id)
+    : [];
+  const otherHooks = vm.filtered.filter(
+    (h) => h.scope_type !== "global" && !(h.scope_type === "project" && h.scope_id === currentProject?.id),
+  );
+
   return (
     <div style={{ background: "var(--th-bg-primary)" }}>
       <div className="space-y-4">
@@ -104,27 +96,68 @@ export default function HooksLibrary({ agents, departments, currentProject }: Ho
           onRefreshHistory={vm.bumpHistoryRefreshToken}
         />
 
-        <HooksGrid
-          t={t}
-          filtered={vm.filtered}
-          onToggle={vm.handleToggleHook}
-          onEdit={vm.openEditModal}
-          onDelete={vm.handleDeleteHook}
-          deletingHookId={vm.deletingHookId}
-          learnedProvidersByHook={vm.learnedProvidersByHook}
-          learnedRepresentatives={vm.learnedRepresentatives}
-          agents={agents}
-          onOpenLearningModal={vm.openLearningModal}
-        />
+        {/* Project-scoped hooks */}
+        {currentProject && (
+          <div>
+            <div className="px-1 pb-2 text-xs font-mono uppercase tracking-wider" style={{ color: "var(--th-text-muted)" }}>
+              📋 {t({ ko: `'${currentProject.name}' 프로젝트 훅`, en: `'${currentProject.name}' Project Hooks`, ja: `'${currentProject.name}' プロジェクトフック`, zh: `'${currentProject.name}' 项目钩子` })} ({projectHooks.length})
+            </div>
+            <HooksGrid
+              t={t}
+              filtered={projectHooks}
+              onToggle={vm.handleToggleHook}
+              onEdit={vm.openEditModal}
+              onDelete={vm.handleDeleteHook}
+              deletingHookId={vm.deletingHookId}
+              learnedProvidersByHook={vm.learnedProvidersByHook}
+              learnedRepresentatives={vm.learnedRepresentatives}
+              agents={agents}
+              onOpenLearningModal={vm.openLearningModal}
+              emptyMessage={t({ ko: "이 프로젝트의 훅이 없습니다", en: "No hooks for this project", ja: "このプロジェクトのフックがありません", zh: "此项目暂无钩子" })}
+            />
+          </div>
+        )}
 
-        <div className="text-center text-xs font-mono py-4" style={{ color: "var(--th-text-muted)" }}>
-          {t({
-            ko: `'${currentProject.name}' 프로젝트 전용 훅`,
-            en: `Hooks for '${currentProject.name}' project`,
-            ja: `'${currentProject.name}' プロジェクト専用フック`,
-            zh: `'${currentProject.name}' 项目专用钩子`,
-          })}
+        {/* Global hooks */}
+        <div>
+          <div className="px-1 pb-2 text-xs font-mono uppercase tracking-wider" style={{ color: "var(--th-text-muted)" }}>
+            🌐 {t({ ko: "글로벌 훅", en: "Global Hooks", ja: "グローバルフック", zh: "全局钩子" })} ({globalHooks.length})
+          </div>
+          <HooksGrid
+            t={t}
+            filtered={globalHooks}
+            onToggle={vm.handleToggleHook}
+            onEdit={vm.openEditModal}
+            onDelete={vm.handleDeleteHook}
+            deletingHookId={vm.deletingHookId}
+            learnedProvidersByHook={vm.learnedProvidersByHook}
+            learnedRepresentatives={vm.learnedRepresentatives}
+            agents={agents}
+            onOpenLearningModal={vm.openLearningModal}
+            emptyMessage={t({ ko: "글로벌 훅이 없습니다 — '+ Add Hook'으로 추가하세요", en: "No global hooks — click '+ Add Hook' to create one", ja: "グローバルフックがありません", zh: "暂无全局钩子" })}
+          />
         </div>
+
+        {/* Other scoped hooks (agent/department/workflow) */}
+        {otherHooks.length > 0 && (
+          <div>
+            <div className="px-1 pb-2 text-xs font-mono uppercase tracking-wider" style={{ color: "var(--th-text-muted)" }}>
+              🔧 {t({ ko: "기타 훅", en: "Other Hooks", ja: "その他のフック", zh: "其他钩子" })} ({otherHooks.length})
+            </div>
+            <HooksGrid
+              t={t}
+              filtered={otherHooks}
+              onToggle={vm.handleToggleHook}
+              onEdit={vm.openEditModal}
+              onDelete={vm.handleDeleteHook}
+              deletingHookId={vm.deletingHookId}
+              learnedProvidersByHook={vm.learnedProvidersByHook}
+              learnedRepresentatives={vm.learnedRepresentatives}
+              agents={agents}
+              onOpenLearningModal={vm.openLearningModal}
+            />
+          </div>
+        )}
       </div>
 
       <HookFormModal
@@ -136,7 +169,7 @@ export default function HooksLibrary({ agents, departments, currentProject }: Ho
         submitting={vm.formSubmitting}
         error={vm.formError}
         onClose={vm.closeFormModal}
-        scopeOverride={{ scope_type: "project", scope_id: currentProject.id }}
+        defaultProjectId={currentProject?.id}
         onCreate={(input) => { void vm.handleCreateHook(input); }}
         onUpdate={(id, input) => { void vm.handleUpdateHook(id, input); }}
       />

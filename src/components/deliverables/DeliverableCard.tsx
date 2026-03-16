@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import type React from "react";
 import { useI18n } from "../../i18n";
 import type { DeliverableItem, TaskArtifact } from "../../api";
-import { getTaskArtifactsZipUrl } from "../../api/providers-reports-github";
+import { getTaskArtifactsZipUrl, uploadTaskArtifacts } from "../../api/providers-reports-github";
 import type { Agent } from "../../types";
 import AgentAvatar from "../AgentAvatar";
 import ArtifactList from "./ArtifactList";
@@ -15,6 +15,7 @@ interface DeliverableCardProps {
   artifacts: TaskArtifact[] | null;
   agent: Agent | null;
   agents: Agent[];
+  onArtifactsUploaded?: (taskId: string, newArtifacts: TaskArtifact[]) => void;
 }
 
 const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };
@@ -59,10 +60,12 @@ function CliSection({ label, open, onToggle, action, children }: {
   );
 }
 
-export default function DeliverableCard({ report, artifacts, agent, agents }: DeliverableCardProps) {
+export default function DeliverableCard({ report, artifacts, agent, agents, onArtifactsUploaded }: DeliverableCardProps) {
   const { t, locale } = useI18n();
   const [previewArtifact, setPreviewArtifact] = useState<TaskArtifact | null>(null);
   const [expanded, setExpanded] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const uploadInputRef = useRef<HTMLInputElement>(null);
   const [sectionOpen, setSectionOpen] = useState<Record<string, boolean>>({
     result: false, collaborators: false, artifacts: false, git: false,
   });
@@ -81,6 +84,22 @@ export default function DeliverableCard({ report, artifacts, agent, agents }: De
   const statusLabel = isDone
     ? t({ ko: "완료", en: "DONE",   ja: "完了",     zh: "完成" })
     : t({ ko: "리뷰", en: "REVIEW", ja: "レビュー", zh: "审核" });
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    if (files.length === 0) return;
+    e.target.value = "";
+    setUploading(true);
+    try {
+      const newArtifacts = await uploadTaskArtifacts(report.id, files);
+      onArtifactsUploaded?.(report.id, newArtifacts);
+      setSectionOpen((prev) => ({ ...prev, artifacts: true }));
+    } catch {
+      // silently ignore — no toast dependency here
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const hasArtifacts = artifacts && artifacts.length > 0;
   const totalSize = artifacts ? artifacts.reduce((s, a) => s + a.size, 0) : 0;
@@ -181,6 +200,7 @@ export default function DeliverableCard({ report, artifacts, agent, agents }: De
             />
 
             {/* ARTIFACT FILES */}
+            <input ref={uploadInputRef} type="file" multiple className="hidden" onChange={(e) => { void handleUpload(e); }} />
             {artifacts === null ? (
               <CliSection
                 label={t({ ko: "ARTIFACT FILES", en: "ARTIFACT FILES", ja: "成果物ファイル", zh: "产出文件" })}
@@ -189,31 +209,41 @@ export default function DeliverableCard({ report, artifacts, agent, agents }: De
               >
                 <div style={{ ...mono, padding: "8px 14px", fontSize: "10px", color: "var(--th-text-muted)" }}>loading…</div>
               </CliSection>
-            ) : artifacts.length > 0 ? (
+            ) : (
               <CliSection
-                label={`ARTIFACT FILES  (${artifacts.length})  ${formatSize(totalSize)}`}
+                label={artifacts.length > 0 ? `ARTIFACT FILES  (${artifacts.length})  ${formatSize(totalSize)}` : t({ ko: "ARTIFACT FILES", en: "ARTIFACT FILES", ja: "成果物ファイル", zh: "产出文件" })}
                 open={!!sectionOpen.artifacts}
                 onToggle={() => toggleSection("artifacts")}
                 action={
-                  <a
-                    href={getTaskArtifactsZipUrl(report.id)}
-                    download
-                    style={{ ...mono, fontSize: "9px", fontWeight: 700, padding: "2px 8px", border: "1px solid rgba(245,158,11,0.4)", background: "rgba(245,158,11,0.08)", color: "var(--th-accent)", textDecoration: "none", letterSpacing: "0.04em" }}
-                    title={t({ ko: "전체 ZIP 다운로드", en: "Download all as ZIP", ja: "全てZIPでDL", zh: "全部下载ZIP" })}
-                  >
-                    ↓ ZIP
-                  </a>
+                  <div style={{ display: "flex", gap: 4 }}>
+                    <button
+                      onClick={() => uploadInputRef.current?.click()}
+                      disabled={uploading}
+                      style={{ ...mono, fontSize: "9px", fontWeight: 700, padding: "2px 8px", border: "1px solid var(--th-border)", background: uploading ? "var(--th-bg-elevated)" : "transparent", color: uploading ? "var(--th-text-muted)" : "var(--th-text-secondary)", cursor: uploading ? "not-allowed" : "pointer", letterSpacing: "0.04em" }}
+                      title={t({ ko: "파일 업로드", en: "Upload files", ja: "ファイルアップロード", zh: "上传文件" })}
+                    >
+                      {uploading ? "…" : "↑ Upload"}
+                    </button>
+                    {artifacts.length > 0 && (
+                      <a
+                        href={getTaskArtifactsZipUrl(report.id)}
+                        download
+                        style={{ ...mono, fontSize: "9px", fontWeight: 700, padding: "2px 8px", border: "1px solid rgba(245,158,11,0.4)", background: "rgba(245,158,11,0.08)", color: "var(--th-accent)", textDecoration: "none", letterSpacing: "0.04em" }}
+                        title={t({ ko: "전체 ZIP 다운로드", en: "Download all as ZIP", ja: "全てZIPでDL", zh: "全部下载ZIP" })}
+                      >
+                        ↓ ZIP
+                      </a>
+                    )}
+                  </div>
                 }
               >
-                <ArtifactList taskId={report.id} artifacts={artifacts} onPreview={setPreviewArtifact} />
-              </CliSection>
-            ) : (
-              <CliSection
-                label={t({ ko: "ARTIFACT FILES", en: "ARTIFACT FILES", ja: "成果物ファイル", zh: "产出文件" })}
-                open={!!sectionOpen.artifacts}
-                onToggle={() => toggleSection("artifacts")}
-              >
-                <div style={{ ...mono, padding: "8px 14px", fontSize: "10px", color: "var(--th-text-muted)", opacity: 0.4 }}>— no files —</div>
+                {artifacts.length === 0 ? (
+                  <div style={{ ...mono, padding: "8px 14px", fontSize: "10px", color: "var(--th-text-muted)", opacity: 0.4 }}>
+                    {t({ ko: "파일 없음 — ↑ Upload로 추가하세요", en: "No files — click ↑ Upload to add", ja: "ファイルなし — ↑ Uploadで追加", zh: "无文件 — 点击 ↑ Upload 添加" })}
+                  </div>
+                ) : (
+                  <ArtifactList taskId={report.id} artifacts={artifacts} onPreview={setPreviewArtifact} />
+                )}
               </CliSection>
             )}
 

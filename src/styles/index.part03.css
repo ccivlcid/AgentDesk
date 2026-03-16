@@ -1691,27 +1691,27 @@
 .boot-line {
   font-size: 0.8125rem;
   line-height: 1.8;
-  color: #e8e8e8;
+  color: rgba(255,255,255,0.85);
 }
 .boot-line-prompt {
-  color: #f59e0b;
+  color: var(--th-accent, #f59e0b);
 }
 .boot-line-ok {
-  color: #22c55e;
+  color: var(--th-success, #22c55e);
 }
 .boot-line-title {
-  color: #f0f0f0;
+  color: rgba(255,255,255,0.95);
   font-size: 1.125rem;
   font-weight: 700;
   letter-spacing: 0.05em;
   margin-bottom: 4px;
 }
 .boot-line-divider {
-  color: #333333;
+  color: rgba(255,255,255,0.18);
   letter-spacing: -0.05em;
 }
 .boot-line-ready {
-  color: #f59e0b;
+  color: var(--th-accent, #f59e0b);
   font-weight: 600;
 }
 

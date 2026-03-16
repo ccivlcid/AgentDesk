@@ -80,19 +80,19 @@ function CliLine({ msg, agents, locale, getAgentName }: CliLineProps) {
 
   const VARIANTS: Record<LineVariant, VariantStyle> = {
     directive: {
-      accentBar: "#ef4444",
-      bg: "rgba(239,68,68,0.06)",
+      accentBar: "var(--th-danger, #ef4444)",
+      bg: "var(--th-red-glow)",
       badge: "DIRECTIVE",
-      badgeBg: "rgba(239,68,68,0.15)",
-      badgeColor: "#f87171",
+      badgeBg: "var(--th-red-glow)",
+      badgeColor: "var(--th-danger-text)",
       label: "DIRECTIVE",
       contentColor: "var(--th-text-primary)",
     },
     "client-announce": {
       accentBar: "var(--th-accent)",
-      bg: "rgba(245,158,11,0.06)",
+      bg: "var(--th-accent-glow)",
       badge: "📢",
-      badgeBg: "rgba(245,158,11,0.15)",
+      badgeBg: "var(--th-amber-glow)",
       badgeColor: "var(--th-accent)",
       label: "공지",
       contentColor: "var(--th-text-primary)",
@@ -101,17 +101,17 @@ function CliLine({ msg, agents, locale, getAgentName }: CliLineProps) {
       accentBar: "var(--th-accent)",
       bg: "transparent",
       badge: "Client",
-      badgeBg: "rgba(245,158,11,0.1)",
+      badgeBg: "var(--th-accent-glow)",
       badgeColor: "var(--th-accent)",
       label: "Client",
       contentColor: "var(--th-text-primary)",
     },
     agent: {
-      accentBar: "#22c55e",
-      bg: "rgba(34,197,94,0.04)",
+      accentBar: "var(--th-success, #22c55e)",
+      bg: "var(--th-green-glow)",
       badge: "▸",
-      badgeBg: "rgba(34,197,94,0.12)",
-      badgeColor: "#4ade80",
+      badgeBg: "var(--th-green-glow)",
+      badgeColor: "var(--th-success, #4ade80)",
       label: agentName,
       contentColor: "var(--th-text-primary)",
     },
@@ -343,7 +343,7 @@ export default function AnnouncementCliPanel({
                   border: "1px solid",
                   borderColor: searchOpen ? "var(--th-accent)" : "var(--th-border)",
                   borderRadius: 6,
-                  background: searchOpen ? "rgba(245,158,11,0.1)" : "transparent",
+                  background: searchOpen ? "var(--th-accent-glow)" : "transparent",
                   color: searchOpen ? "var(--th-accent)" : "var(--th-text-muted)",
                   cursor: "pointer",
                   transition: "all 0.15s",
@@ -374,7 +374,7 @@ export default function AnnouncementCliPanel({
                     cursor: "pointer",
                     transition: "all 0.15s",
                   }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = "#ef4444"; (e.currentTarget as HTMLButtonElement).style.color = "#ef4444"; }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--th-danger, #ef4444)"; (e.currentTarget as HTMLButtonElement).style.color = "var(--th-danger, #ef4444)"; }}
                   onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--th-border)"; (e.currentTarget as HTMLButtonElement).style.color = "var(--th-text-muted)"; }}
                 >
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 12, height: 12 }}>
@@ -466,8 +466,8 @@ export default function AnnouncementCliPanel({
                   width: 56,
                   height: 56,
                   borderRadius: 14,
-                  background: "rgba(245,158,11,0.08)",
-                  border: "1px solid rgba(245,158,11,0.2)",
+                  background: "var(--th-accent-glow)",
+                  border: "1px solid var(--th-accent-border)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -513,10 +513,10 @@ export default function AnnouncementCliPanel({
                   style={{
                     display: "flex",
                     borderBottom: "1px solid var(--th-border)",
-                    background: "rgba(34,197,94,0.04)",
+                    background: "var(--th-green-glow)",
                   }}
                 >
-                  <div style={{ width: 3, flexShrink: 0, background: "#22c55e", opacity: 0.8 }} />
+                  <div style={{ width: 3, flexShrink: 0, background: "var(--th-success, #22c55e)", opacity: 0.8 }} />
                   <div style={{ flex: 1, padding: "10px 14px", fontFamily: "var(--th-font-mono)", fontSize: 12 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
                       <span
@@ -525,8 +525,8 @@ export default function AnnouncementCliPanel({
                           fontWeight: 700,
                           padding: "1px 6px",
                           borderRadius: 4,
-                          background: "rgba(34,197,94,0.12)",
-                          color: "#4ade80",
+                          background: "var(--th-green-glow)",
+                          color: "var(--th-success, #4ade80)",
                           letterSpacing: "0.06em",
                         }}
                       >
@@ -537,8 +537,8 @@ export default function AnnouncementCliPanel({
                           fontSize: 9,
                           padding: "1px 5px",
                           borderRadius: 3,
-                          background: "rgba(34,197,94,0.08)",
-                          color: "#4ade80",
+                          background: "var(--th-green-glow)",
+                          color: "var(--th-success, #4ade80)",
                           letterSpacing: "0.1em",
                         }}
                       >

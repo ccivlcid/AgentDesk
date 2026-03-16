@@ -10,6 +10,8 @@ import type { Agent, Project } from "../../types";
 import DeliverableCard from "./DeliverableCard";
 import { useToast } from "../ui";
 
+type SortBy = "date" | "title" | "agent" | "project";
+
 interface DeliverablesProps {
   agents: Agent[];
   currentProject?: Project | null;
@@ -27,6 +29,9 @@ export default function Deliverables({ agents, currentProject }: DeliverablesPro
   const [artifacts, setArtifacts] = useState<Record<string, TaskArtifact[]>>({});
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState<SortBy>("date");
+  const [showAllProjects, setShowAllProjects] = useState(!currentProject);
 
   const fetchItems = useCallback(async () => {
     try {
@@ -55,10 +60,46 @@ export default function Deliverables({ agents, currentProject }: DeliverablesPro
     }
   }, [items, artifacts]);
 
+  const handleArtifactsUploaded = useCallback((taskId: string, newArtifacts: TaskArtifact[]) => {
+    setArtifacts((prev) => ({ ...prev, [taskId]: [...(prev[taskId] ?? []), ...newArtifacts] }));
+  }, []);
+
   const filtered = useMemo(() => {
-    if (statusFilter === "all") return items;
-    return items.filter((r) => r.status === statusFilter);
-  }, [items, statusFilter]);
+    let result = items;
+
+    // Project filter
+    if (currentProject && !showAllProjects) {
+      result = result.filter((i) => i.project_id === currentProject.id);
+    }
+
+    // Status filter
+    if (statusFilter !== "all") {
+      result = result.filter((r) => r.status === statusFilter);
+    }
+
+    // Search filter
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      result = result.filter((i) =>
+        i.title.toLowerCase().includes(q) ||
+        i.agent_name.toLowerCase().includes(q) ||
+        (i.project_name?.toLowerCase().includes(q) ?? false) ||
+        (i.context_hint?.toLowerCase().includes(q) ?? false),
+      );
+    }
+
+    // Sort
+    if (sortBy === "title") {
+      result = [...result].sort((a, b) => a.title.localeCompare(b.title));
+    } else if (sortBy === "agent") {
+      result = [...result].sort((a, b) => a.agent_name.localeCompare(b.agent_name));
+    } else if (sortBy === "project") {
+      result = [...result].sort((a, b) => (a.project_name ?? "").localeCompare(b.project_name ?? ""));
+    }
+    // "date" is default server order (completed_at DESC)
+
+    return result;
+  }, [items, statusFilter, search, sortBy, currentProject, showAllProjects]);
 
   const agentMap = useMemo(() => {
     const m = new Map<string, Agent>();
@@ -113,45 +154,69 @@ export default function Deliverables({ agents, currentProject }: DeliverablesPro
         )}
       </div>
 
-      {/* ── 필터 + 리프레시 ── */}
-      <div style={{ borderBottom: "1px solid var(--th-border)", padding: "5px 12px", background: "var(--th-bg-primary)", display: "flex", alignItems: "center", gap: 4 }}>
+      {/* ── 검색 + 정렬 바 ── */}
+      <div style={{ borderBottom: "1px solid var(--th-border)", padding: "6px 12px", background: "var(--th-bg-primary)", display: "flex", alignItems: "center", gap: 6 }}>
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder={t({ ko: "검색 (제목, 에이전트, 프로젝트...)", en: "Search (title, agent, project...)", ja: "検索...", zh: "搜索..." })}
+          style={{ ...mono, flex: 1, fontSize: "10px", padding: "3px 8px", background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)", borderRadius: 4, color: "var(--th-text)", outline: "none" }}
+        />
+        <select
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value as SortBy)}
+          style={{ ...mono, fontSize: "9px", padding: "3px 6px", background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)", borderRadius: 4, color: "var(--th-text-muted)", outline: "none", cursor: "pointer" }}
+        >
+          <option value="date">{t({ ko: "날짜순", en: "By Date", ja: "日付順", zh: "按日期" })}</option>
+          <option value="title">{t({ ko: "제목순", en: "By Title", ja: "タイトル順", zh: "按标题" })}</option>
+          <option value="agent">{t({ ko: "에이전트순", en: "By Agent", ja: "エージェント順", zh: "按代理" })}</option>
+          <option value="project">{t({ ko: "프로젝트순", en: "By Project", ja: "プロジェクト順", zh: "按项目" })}</option>
+        </select>
+        <button
+          onClick={() => { setArtifacts({}); void fetchItems(); }}
+          style={{ ...mono, fontSize: "10px", padding: "3px 8px", borderRadius: 4, border: "1px solid var(--th-border)", background: "transparent", color: "var(--th-text-muted)", cursor: "pointer" }}
+          title={t({ ko: "새로고침", en: "Refresh", ja: "更新", zh: "刷新" })}
+        >↻</button>
+      </div>
+
+      {/* ── 필터 바 ── */}
+      <div style={{ borderBottom: "1px solid var(--th-border)", padding: "4px 12px", background: "var(--th-bg-primary)", display: "flex", alignItems: "center", gap: 4 }}>
         {FILTERS.map((f) => (
           <button
             key={f.key}
             onClick={() => setStatusFilter(f.key)}
             style={{
-              ...mono,
-              fontSize: "9px",
-              fontWeight: 700,
-              padding: "3px 10px",
-              borderRadius: 6,
+              ...mono, fontSize: "9px", fontWeight: 700, padding: "2px 8px", borderRadius: 4,
               border: `1px solid ${statusFilter === f.key ? "rgba(245,158,11,0.5)" : "var(--th-border)"}`,
               background: statusFilter === f.key ? "rgba(245,158,11,0.08)" : "transparent",
               color: statusFilter === f.key ? "var(--th-accent)" : "var(--th-text-muted)",
-              cursor: "pointer",
-              letterSpacing: "0.06em",
+              cursor: "pointer", letterSpacing: "0.06em",
             }}
-          >
-            {f.label}
-          </button>
+          >{f.label}</button>
         ))}
-        <button
-          onClick={() => { setArtifacts({}); void fetchItems(); }}
-          style={{
-            ...mono,
-            marginLeft: "auto",
-            fontSize: "10px",
-            padding: "3px 10px",
-            borderRadius: 6,
-            border: "1px solid var(--th-border)",
-            background: "transparent",
-            color: "var(--th-text-muted)",
-            cursor: "pointer",
-          }}
-          title={t({ ko: "새로고침", en: "Refresh", ja: "更新", zh: "刷新" })}
-        >
-          ↻
-        </button>
+        {currentProject && (
+          <>
+            <div style={{ width: 1, height: 12, background: "var(--th-border)", margin: "0 4px" }} />
+            <button
+              onClick={() => setShowAllProjects((v) => !v)}
+              style={{
+                ...mono, fontSize: "9px", fontWeight: 700, padding: "2px 8px", borderRadius: 4,
+                border: `1px solid ${showAllProjects ? "rgba(99,102,241,0.5)" : "var(--th-border)"}`,
+                background: showAllProjects ? "rgba(99,102,241,0.08)" : "transparent",
+                color: showAllProjects ? "#818cf8" : "var(--th-text-muted)",
+                cursor: "pointer",
+              }}
+            >
+              {showAllProjects
+                ? t({ ko: "전체 프로젝트", en: "All Projects", ja: "全プロジェクト", zh: "所有项目" })
+                : t({ ko: `${currentProject.name}만`, en: `${currentProject.name} only`, ja: `${currentProject.name}のみ`, zh: `仅${currentProject.name}` })}
+            </button>
+          </>
+        )}
+        <span style={{ ...mono, marginLeft: "auto", fontSize: "9px", color: "var(--th-text-muted)", opacity: 0.5 }}>
+          {filtered.length} / {items.length}
+        </span>
       </div>
 
       {/* ── 컨텐츠 영역 (설정과 동일 패딩) ── */}
@@ -194,6 +259,7 @@ export default function Deliverables({ agents, currentProject }: DeliverablesPro
               artifacts={artifacts[report.id] ?? null}
               agent={report.assigned_agent_id ? agentMap.get(report.assigned_agent_id) ?? null : null}
               agents={agents}
+              onArtifactsUploaded={handleArtifactsUploaded}
             />
           ))}
         </div>

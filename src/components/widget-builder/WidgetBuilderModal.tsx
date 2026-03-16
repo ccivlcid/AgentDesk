@@ -4,6 +4,7 @@ import { FEATURE_TEMPLATES, TEMPLATE_CATEGORY_LABELS, type FeatureTemplate } fro
 import type { CustomFeature, CustomFeatureConfig, CustomFeatureType } from "../../types";
 import { createCustomFeature, getCustomFeature } from "../../api/custom-features";
 import { useI18n } from "../../i18n";
+import { useAgentStore } from "../../store/agentStore";
 import CustomFeatureRenderer from "./CustomFeatureRenderer";
 import StepAiGenerate from "./steps/StepAiGenerate";
 
@@ -21,6 +22,7 @@ type Step = "method" | "template-select" | "params" | "preview" | "ai-generate";
 export default function WidgetBuilderModal({ open, onClose, onCreated }: Props) {
   const { language } = useI18n();
   const isKo = language === "ko";
+  const agents = useAgentStore((s) => s.agents);
 
   const [step, setStep] = useState<Step>("method");
   const [selectedTemplate, setSelectedTemplate] = useState<FeatureTemplate | null>(null);
@@ -317,60 +319,107 @@ export default function WidgetBuilderModal({ open, onClose, onCreated }: Props) 
 
             {/* 템플릿별 파라미터 */}
             {selectedTemplate.params.length > 0 && (
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-3">
                 <div style={{ ...mono, fontSize: 10, color: "var(--th-text-muted)", borderBottom: "1px solid var(--th-border)", paddingBottom: 6 }}>
                   {isKo ? "템플릿 설정" : "Template Options"}
                 </div>
-                {selectedTemplate.params.map((p) => (
-                  <div key={p.key} className="flex flex-col gap-1">
-                    <label style={{ ...mono, fontSize: 10, color: "var(--th-text-muted)" }}>
-                      {isKo ? p.label_ko : p.label_en}
-                      {p.required && <span style={{ color: "var(--th-accent)" }}> *</span>}
-                    </label>
-                    {p.type === "toggle" ? (
-                      <button
-                        onClick={() => setParams((prev) => ({ ...prev, [p.key]: !prev[p.key] }))}
-                        style={{
-                          ...mono, fontSize: 10, width: 60, padding: "4px 8px", textAlign: "center",
-                          border: "1px solid",
-                          borderColor: params[p.key] ? "var(--th-border-accent)" : "var(--th-border)",
-                          borderRadius: 4,
-                          background: params[p.key] ? "rgba(245,158,11,0.15)" : "transparent",
-                          color: params[p.key] ? "var(--th-accent)" : "var(--th-text-muted)",
-                          cursor: "pointer",
-                        }}
-                      >
-                        {params[p.key] ? "ON" : "OFF"}
-                      </button>
-                    ) : p.type === "select" ? (
-                      <select
-                        value={String(params[p.key] ?? p.defaultValue ?? "")}
-                        onChange={(e) => setParams((prev) => ({ ...prev, [p.key]: e.target.value }))}
-                        style={{ ...mono, fontSize: 11, padding: "5px 8px", background: "var(--th-bg-panel)", border: "1px solid var(--th-border)", borderRadius: 4, color: "var(--th-text-primary)", outline: "none" }}
-                      >
-                        {p.options?.map((o) => (
-                          <option key={String(o.value)} value={String(o.value)}>
-                            {isKo ? o.label_ko : o.label_en}
-                          </option>
-                        ))}
-                      </select>
-                    ) : p.type === "number" ? (
-                      <input
-                        type="number"
-                        value={String(params[p.key] ?? p.defaultValue ?? "")}
-                        onChange={(e) => setParams((prev) => ({ ...prev, [p.key]: Number(e.target.value) }))}
-                        style={{ ...mono, fontSize: 11, padding: "5px 8px", background: "var(--th-bg-panel)", border: "1px solid var(--th-border)", borderRadius: 4, color: "var(--th-text-primary)", outline: "none", width: 100 }}
-                      />
-                    ) : (
-                      <textarea
-                        value={String(params[p.key] ?? p.defaultValue ?? "")}
-                        onChange={(e) => setParams((prev) => ({ ...prev, [p.key]: e.target.value }))}
-                        rows={3}
-                        style={{ ...mono, fontSize: 11, padding: "5px 8px", background: "var(--th-bg-panel)", border: "1px solid var(--th-border)", borderRadius: 4, color: "var(--th-text-primary)", outline: "none", resize: "vertical" }}
-                      />
-                    )}
-                  </div>
-                ))}
+                {selectedTemplate.params.map((p) => {
+                  const inputStyle: React.CSSProperties = { ...mono, fontSize: 11, padding: "5px 8px", background: "var(--th-bg-panel)", border: "1px solid var(--th-border)", borderRadius: 4, color: "var(--th-text-primary)", outline: "none", width: "100%" };
+                  const isOn = !!params[p.key];
+                  return (
+                    <div key={p.key} className="flex flex-col gap-1">
+                      <label style={{ ...mono, fontSize: 10, color: "var(--th-text-muted)" }}>
+                        {isKo ? p.label_ko : p.label_en}
+                        {p.required && <span style={{ color: "var(--th-accent)" }}> *</span>}
+                      </label>
+                      {p.type === "toggle" ? (
+                        <button
+                          type="button"
+                          onClick={() => setParams((prev) => ({ ...prev, [p.key]: !prev[p.key] }))}
+                          style={{
+                            display: "inline-flex", alignItems: "center", gap: 8,
+                            background: "none", border: "none", cursor: "pointer", padding: 0,
+                          }}
+                        >
+                          {/* visual switch */}
+                          <span style={{
+                            display: "inline-block", width: 36, height: 20, borderRadius: 10,
+                            background: isOn ? "rgba(245,158,11,0.8)" : "var(--th-bg-elevated)",
+                            border: `1px solid ${isOn ? "var(--th-accent)" : "var(--th-border)"}`,
+                            position: "relative", transition: "background 0.15s",
+                            flexShrink: 0,
+                          }}>
+                            <span style={{
+                              position: "absolute", top: 2, left: isOn ? 17 : 2, width: 14, height: 14,
+                              borderRadius: "50%", background: isOn ? "#fff" : "var(--th-text-muted)",
+                              transition: "left 0.15s",
+                            }} />
+                          </span>
+                          <span style={{ ...mono, fontSize: 10, color: isOn ? "var(--th-accent)" : "var(--th-text-muted)" }}>
+                            {isOn ? "ON" : "OFF"}
+                          </span>
+                        </button>
+                      ) : p.type === "select" ? (
+                        <select
+                          value={String(params[p.key] ?? p.defaultValue ?? "")}
+                          onChange={(e) => setParams((prev) => ({ ...prev, [p.key]: e.target.value }))}
+                          style={inputStyle}
+                        >
+                          {p.options?.map((o) => (
+                            <option key={String(o.value)} value={String(o.value)}>
+                              {isKo ? o.label_ko : o.label_en}
+                            </option>
+                          ))}
+                        </select>
+                      ) : p.type === "number" ? (
+                        <input
+                          type="number"
+                          value={String(params[p.key] ?? p.defaultValue ?? "")}
+                          onChange={(e) => setParams((prev) => ({ ...prev, [p.key]: Number(e.target.value) }))}
+                          min={p.min}
+                          max={p.max}
+                          step={p.step}
+                          placeholder={p.placeholder}
+                          style={inputStyle}
+                        />
+                      ) : p.type === "agent" ? (
+                        <select
+                          value={String(params[p.key] ?? "")}
+                          onChange={(e) => setParams((prev) => ({ ...prev, [p.key]: e.target.value }))}
+                          style={inputStyle}
+                        >
+                          <option value="">{isKo ? "에이전트 선택..." : "Select agent..."}</option>
+                          {agents.map((a) => (
+                            <option key={a.id} value={a.id}>
+                              {isKo ? (a.name_ko || a.name) : (a.name || a.name_ko)}
+                            </option>
+                          ))}
+                        </select>
+                      ) : p.multiline ? (
+                        <textarea
+                          value={String(params[p.key] ?? p.defaultValue ?? "")}
+                          onChange={(e) => setParams((prev) => ({ ...prev, [p.key]: e.target.value }))}
+                          rows={4}
+                          placeholder={p.placeholder}
+                          style={{ ...inputStyle, resize: "vertical" }}
+                        />
+                      ) : (
+                        <input
+                          type="text"
+                          value={String(params[p.key] ?? p.defaultValue ?? "")}
+                          onChange={(e) => setParams((prev) => ({ ...prev, [p.key]: e.target.value }))}
+                          placeholder={p.placeholder}
+                          style={inputStyle}
+                        />
+                      )}
+                      {p.hint && (
+                        <span style={{ ...mono, fontSize: 9, color: "var(--th-text-muted)", opacity: 0.6, lineHeight: 1.4 }}>
+                          {p.hint}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>

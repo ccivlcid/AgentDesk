@@ -3,6 +3,7 @@ import AppWindow from "./AppWindow";
 import { useAgentStore } from "../../store/agentStore";
 import { useTaskStore } from "../../store/taskStore";
 import { useUiStore } from "../../store/uiStore";
+import { useProjectStore } from "../../store/projectStore";
 import type { ProjectMetaPayload } from "../../app/types";
 
 const ChatPanel = lazy(() => import("../ChatPanel").then((m) => ({ default: m.ChatPanel })));
@@ -38,6 +39,12 @@ export default function ChatWindow({
   const { agents, chatAgent, streamingMessage } = useAgentStore();
   const { messages } = useTaskStore();
   const { closeWindow } = useUiStore();
+  const { currentProjectId, projectAgentIds, projectAgentsLoaded } = useProjectStore();
+
+  // 현재 프로젝트에 배정된 에이전트만 필터링 (프로젝트 미선택 또는 로딩 전이면 전체)
+  const projectAgents = currentProjectId && projectAgentsLoaded && projectAgentIds.size > 0
+    ? agents.filter((a) => projectAgentIds.has(a.id))
+    : agents;
 
   return (
     <AppWindow
@@ -73,7 +80,7 @@ export default function ChatWindow({
           content: (
             <Suspense fallback={<Loading />}>
               <GroupChatPanel
-                agents={agents}
+                agents={projectAgents}
                 onClose={() => closeWindow("chat")}
               />
             </Suspense>

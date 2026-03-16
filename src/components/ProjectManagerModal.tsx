@@ -488,6 +488,7 @@ export default function ProjectManagerModal({ agents, departments = [], onClose,
 
                 <ProjectInsightsPanel
                   t={t as ProjectI18nTranslate}
+                  language={language}
                   selectedProject={selectedProject}
                   loadingDetail={loadingDetail}
                   isCreating={isCreating}

@@ -135,6 +135,16 @@ erDiagram
         INTEGER enabled
     }
 
+    workflow_schedules {
+        TEXT id PK
+        TEXT template_id FK
+        TEXT cron_expr
+        INTEGER enabled
+        INTEGER last_run_at
+        INTEGER next_run_at
+        INTEGER created_at
+    }
+
     pipeline_gates {
         INTEGER id PK
         TEXT workflow_pack_key FK
@@ -170,6 +180,7 @@ erDiagram
     tasks ||--o{ task_gate_results : "gate results"
     pipeline_gates ||--o{ task_gate_results : "applied"
     tasks ||--|| task_report_archives : "report"
+    workflow_packs ||--o{ workflow_schedules : "scheduled"
 ```
 
 ---
@@ -210,6 +221,11 @@ erDiagram
 | `pipeline_gates` | Quality gate definitions per workflow |
 | `task_gate_results` | Gate pass/fail results per task |
 
+### Workflow Scheduling (v1.3.0)
+| Table | Role |
+|-------|------|
+| `workflow_schedules` | Cron schedules per workflow template (migration `2026-03-17-001`) |
+
 ### Auth & Settings
 | Table | Role |
 |-------|------|
@@ -245,3 +261,5 @@ execution_state (engine perspective):
 | `idx_tasks_execution_state` | Execution engine queue polling |
 | `idx_tasks_watchdog` | `(status, execution_state, last_heartbeat_at DESC)` — anomaly detection (P3-5) |
 | `idx_subtasks_task` | Query subtasks by task |
+| `idx_workflow_schedules_next_run` | `(next_run_at)` — scheduler tick polling |
+| `idx_workflow_schedules_template` | `(template_id)` — per-template list |

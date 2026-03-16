@@ -363,6 +363,24 @@ export const MIGRATIONS: Migration[] = [
       }
     },
   },
+  {
+    id: "2026-03-17-001-workflow-schedules",
+    up: (db) => {
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS workflow_schedules (
+          id            TEXT    PRIMARY KEY,
+          template_id   TEXT    NOT NULL REFERENCES agent_composition_templates(id) ON DELETE CASCADE,
+          cron_expr     TEXT    NOT NULL,
+          enabled       INTEGER NOT NULL DEFAULT 1,
+          last_run_at   INTEGER,
+          next_run_at   INTEGER,
+          created_at    INTEGER NOT NULL
+        )
+      `);
+      db.exec("CREATE INDEX IF NOT EXISTS idx_wf_schedules_next_run ON workflow_schedules(next_run_at)");
+      db.exec("CREATE INDEX IF NOT EXISTS idx_wf_schedules_template ON workflow_schedules(template_id)");
+    },
+  },
 ];
 
 const ENSURE_TABLE_SQL = `

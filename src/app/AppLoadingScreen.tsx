@@ -1,6 +1,17 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { I18nProvider } from "../i18n";
+import { WALLPAPERS, isLightWallpaper } from "../components/desktop/WallpaperPicker";
+
+const WALLPAPER_KEY = "agentdesk_wallpaper";
+
+function getSavedWallpaper(): string {
+  try {
+    return localStorage.getItem(WALLPAPER_KEY) ?? WALLPAPERS[0].css;
+  } catch {
+    return WALLPAPERS[0].css;
+  }
+}
 
 interface AppLoadingScreenProps {
   language: string;
@@ -31,6 +42,9 @@ const lineVariants = {
 
 export default function AppLoadingScreen({ language, title, subtitle }: AppLoadingScreenProps) {
   const [showSubtitle, setShowSubtitle] = useState(false);
+  const savedWallpaper = getSavedWallpaper();
+  const isLight = isLightWallpaper(savedWallpaper);
+  const isImage = savedWallpaper.startsWith('url("');
 
   useEffect(() => {
     const t = setTimeout(() => setShowSubtitle(true), BOOT_LINES.length * 130 + 200);
@@ -41,9 +55,24 @@ export default function AppLoadingScreen({ language, title, subtitle }: AppLoadi
     <I18nProvider language={language}>
       <div
         className="h-screen flex items-center justify-center"
-        style={{ background: "#0c0c0c" }}
+        style={{
+          background: savedWallpaper,
+          backgroundSize: isImage ? "cover" : undefined,
+          backgroundPosition: isImage ? "center" : undefined,
+        }}
       >
-        <div style={{ minWidth: 320 }}>
+        <div
+          style={{
+            minWidth: 340,
+            padding: "28px 32px",
+            borderRadius: 14,
+            background: isLight ? "rgba(0,0,0,0.55)" : "rgba(0,0,0,0.62)",
+            backdropFilter: "blur(20px)",
+            WebkitBackdropFilter: "blur(20px)",
+            border: isLight ? "1px solid rgba(0,0,0,0.12)" : "1px solid rgba(255,255,255,0.08)",
+            boxShadow: "0 16px 48px rgba(0,0,0,0.4)",
+          }}
+        >
           <motion.div
             variants={containerVariants}
             initial="hidden"
@@ -80,7 +109,7 @@ export default function AppLoadingScreen({ language, title, subtitle }: AppLoadi
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.15, ease: "linear" }}
                 className="boot-line"
-                style={{ marginTop: 16, color: "var(--th-text-muted)", fontSize: "0.75rem" }}
+                style={{ marginTop: 16, color: "rgba(255,255,255,0.45)", fontSize: "0.75rem" }}
               >
                 {subtitle}
               </motion.div>

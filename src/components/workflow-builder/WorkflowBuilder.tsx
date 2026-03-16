@@ -20,6 +20,9 @@ import WbTriggerNode, { type TriggerNodeData } from "./nodes/WbTriggerNode";
 import WbAgentNode, { type AgentNodeData } from "./nodes/WbAgentNode";
 import WbGateNode, { type GateNodeData } from "./nodes/WbGateNode";
 import WbConditionNode, { type ConditionNodeData } from "./nodes/WbConditionNode";
+import WbNodeEditPanel from "./WbNodeEditPanel";
+import WbRunModal from "./WbRunModal";
+import WbScheduleModal from "./WbScheduleModal";
 
 const NODE_TYPES: NodeTypes = {
   trigger: WbTriggerNode,
@@ -80,6 +83,17 @@ type Template = {
   updated_at: number;
 };
 
+function formatRelative(ts: number): string {
+  const diff = Date.now() - ts;
+  const m = Math.floor(diff / 60000);
+  const h = Math.floor(m / 60);
+  const d = Math.floor(h / 24);
+  if (d > 0) return `${d}d ago`;
+  if (h > 0) return `${h}h ago`;
+  if (m > 0) return `${m}m ago`;
+  return "just now";
+}
+
 type PaletteItem = {
   type: "trigger" | "agent" | "gate" | "condition";
   label: string;
@@ -90,13 +104,19 @@ type PaletteItem = {
 
 export default function WorkflowBuilder() {
   const { t } = useI18n();
-  const [nodes, setNodes, onNodesChange] = useNodesState(loadSaved()?.nodes ?? INITIAL_NODES);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(loadSaved()?.edges ?? INITIAL_EDGES);
+  const _initial = loadSaved();
+  const [nodes, setNodes, onNodesChange] = useNodesState(_initial?.nodes ?? INITIAL_NODES);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(_initial?.edges ?? INITIAL_EDGES);
   const [saved, setSaved] = useState(false);
-  const [workflowName, setWorkflowName] = useState(loadSaved()?.name ?? "PR Review Pipeline");
-  const [currentId, setCurrentId] = useState<string | null>(null);
+  const [dirty, setDirty] = useState(false);
+  const [workflowName, setWorkflowName] = useState(_initial?.name ?? "PR Review Pipeline");
+  const [currentId, setCurrentId] = useState<string | null>(_initial?.currentId ?? null);
   const [templates, setTemplates] = useState<Template[]>([]);
   const [showTemplates, setShowTemplates] = useState(false);
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [showRunModal, setShowRunModal] = useState(false);
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [confirmNew, setConfirmNew] = useState(false);
 
   const mono = "var(--th-font-mono)";
 
@@ -110,6 +130,12 @@ export default function WorkflowBuilder() {
 
   useEffect(() => { loadTemplates(); }, [loadTemplates]);
 
+  // Auto-save to localStorage when nodes/edges/name/currentId change
+  useEffect(() => {
+    localStorage.setItem(LS_KEY, JSON.stringify({ name: workflowName, nodes, edges, currentId }));
+    setDirty(true);
+  }, [nodes, edges, workflowName, currentId]);
+
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge({ ...params, animated: false }, eds)),
     [setEdges],
@@ -117,8 +143,6 @@ export default function WorkflowBuilder() {
 
   // Save (create or update)
   const handleSave = useCallback(async () => {
-    const state = { name: workflowName, nodes, edges };
-    localStorage.setItem(LS_KEY, JSON.stringify(state));
     try {
       if (currentId) {
         await fetch(`${API}/${currentId}`, {
@@ -136,17 +160,30 @@ export default function WorkflowBuilder() {
         if (data.id) setCurrentId(data.id);
       }
       setSaved(true);
+      setDirty(false);
       setTimeout(() => setSaved(false), 2000);
       loadTemplates();
     } catch { /* non-fatal */ }
   }, [workflowName, nodes, edges, currentId, loadTemplates]);
 
-  // New workflow
+  // New workflow — confirm if dirty
   const handleNew = useCallback(() => {
+    if (dirty) { setConfirmNew(true); return; }
     setNodes(INITIAL_NODES);
     setEdges(INITIAL_EDGES);
     setWorkflowName(t({ ko: "새 워크플로", en: "New Workflow", ja: "新しいワークフロー", zh: "新工作流" }));
     setCurrentId(null);
+    setDirty(false);
+    localStorage.removeItem(LS_KEY);
+  }, [dirty, setNodes, setEdges, t]);
+
+  const handleConfirmNew = useCallback(() => {
+    setNodes(INITIAL_NODES);
+    setEdges(INITIAL_EDGES);
+    setWorkflowName(t({ ko: "새 워크플로", en: "New Workflow", ja: "新しいワークフロー", zh: "新工作流" }));
+    setCurrentId(null);
+    setDirty(false);
+    setConfirmNew(false);
     localStorage.removeItem(LS_KEY);
   }, [setNodes, setEdges, t]);
 
@@ -157,6 +194,7 @@ export default function WorkflowBuilder() {
       setEdges(JSON.parse(tpl.edges_json) as Edge[]);
       setWorkflowName(tpl.name);
       setCurrentId(tpl.id);
+      setDirty(false);
       setShowTemplates(false);
     } catch { /* ignore parse errors */ }
   }, [setNodes, setEdges]);
@@ -170,6 +208,16 @@ export default function WorkflowBuilder() {
       loadTemplates();
     } catch { /* ignore */ }
   }, [currentId, handleNew, loadTemplates]);
+
+  const handleUpdateNodeData = useCallback((id: string, patch: Record<string, unknown>) => {
+    setNodes((nds) => nds.map((n) => n.id === id ? { ...n, data: { ...n.data, ...patch } } : n));
+  }, [setNodes]);
+
+  const handleDeleteNode = useCallback((id: string) => {
+    setNodes((nds) => nds.filter((n) => n.id !== id));
+    setEdges((eds) => eds.filter((e) => e.source !== id && e.target !== id));
+    setSelectedNodeId(null);
+  }, [setNodes, setEdges]);
 
   const handleAddNode = useCallback((item: PaletteItem) => {
     const id = `${item.type}-${Date.now()}`;
@@ -253,6 +301,9 @@ export default function WorkflowBuilder() {
             #{currentId.slice(0, 8)}
           </span>
         )}
+        {dirty && !saved && (
+          <span style={{ fontFamily: mono, fontSize: 9, color: "var(--th-accent)", opacity: 0.7 }}>●</span>
+        )}
 
         <div style={{ marginLeft: "auto", display: "flex", gap: 6 }}>
           {/* Templates */}
@@ -298,6 +349,33 @@ export default function WorkflowBuilder() {
                 ? t({ ko: "업데이트", en: "Update", ja: "更新", zh: "更新" })
                 : t({ ko: "저장", en: "Save", ja: "保存", zh: "保存" })}
           </button>
+
+          {/* Schedule — only when workflow is saved */}
+          {currentId && (
+            <button
+              onClick={() => setShowScheduleModal(true)}
+              title={t({ ko: "스케줄 설정", en: "Schedule", ja: "スケジュール", zh: "调度" })}
+              style={{
+                fontFamily: mono, fontSize: 10, padding: "4px 10px",
+                background: "transparent", border: "1px solid var(--th-border)",
+                borderRadius: 5, cursor: "pointer", color: "var(--th-text-muted)",
+              }}
+            >
+              ⏰
+            </button>
+          )}
+
+          {/* Run */}
+          <button
+            onClick={() => setShowRunModal(true)}
+            style={{
+              fontFamily: mono, fontSize: 10, padding: "4px 12px",
+              background: "#10b981", border: "none", borderRadius: 5, cursor: "pointer",
+              color: "#fff", fontWeight: 700,
+            }}
+          >
+            ▶ {t({ ko: "실행", en: "Run", ja: "実行", zh: "运行" })}
+          </button>
         </div>
       </div>
 
@@ -319,34 +397,40 @@ export default function WorkflowBuilder() {
               {t({ ko: "저장된 워크플로 없음", en: "No saved workflows", ja: "保存済みワークフローなし", zh: "没有保存的工作流" })}
             </span>
           ) : (
-            templates.map((tpl) => (
-              <div
-                key={tpl.id}
-                onClick={() => handleLoadTemplate(tpl)}
-                style={{
-                  display: "flex", alignItems: "center", gap: 6,
-                  padding: "4px 10px",
-                  background: tpl.id === currentId ? "var(--th-active-bg)" : "var(--th-bg-elevated)",
-                  border: `1px solid ${tpl.id === currentId ? "var(--th-accent)" : "var(--th-border)"}`,
-                  borderRadius: 6, cursor: "pointer",
-                  fontFamily: mono, fontSize: 11, color: "var(--th-text)",
-                }}
-                className="hover:border-[var(--th-accent)]"
-              >
-                <span>{tpl.name}</span>
-                <button
-                  onClick={(e) => { void handleDelete(tpl.id, e); }}
+            templates.map((tpl) => {
+              let nodeCount = 0;
+              try { nodeCount = (JSON.parse(tpl.nodes_json) as unknown[]).length; } catch { /* ignore */ }
+              return (
+                <div
+                  key={tpl.id}
+                  onClick={() => handleLoadTemplate(tpl)}
                   style={{
-                    background: "none", border: "none", cursor: "pointer",
-                    color: "var(--th-text-muted)", fontSize: 14, padding: 0, lineHeight: 1,
+                    display: "flex", alignItems: "center", gap: 6,
+                    padding: "5px 10px",
+                    background: tpl.id === currentId ? "var(--th-active-bg)" : "var(--th-bg-elevated)",
+                    border: `1px solid ${tpl.id === currentId ? "var(--th-accent)" : "var(--th-border)"}`,
+                    borderRadius: 6, cursor: "pointer",
+                    fontFamily: mono,
                   }}
-                  title={t({ ko: "삭제", en: "Delete", ja: "削除", zh: "删除" })}
-                  className="hover:!text-red-400"
+                  className="hover:border-[var(--th-accent)]"
                 >
-                  ×
-                </button>
-              </div>
-            ))
+                  <span style={{ fontSize: 11, color: "var(--th-text)", fontWeight: tpl.id === currentId ? 700 : 400 }}>{tpl.name}</span>
+                  <span style={{ fontSize: 9, color: "var(--th-text-muted)", marginLeft: 2 }}>{nodeCount} nodes</span>
+                  <span style={{ fontSize: 9, color: "var(--th-text-muted)" }}>· {formatRelative(tpl.updated_at)}</span>
+                  <button
+                    onClick={(e) => { void handleDelete(tpl.id, e); }}
+                    style={{
+                      background: "none", border: "none", cursor: "pointer",
+                      color: "var(--th-text-muted)", fontSize: 14, padding: "0 0 0 4px", lineHeight: 1, marginLeft: "auto",
+                    }}
+                    title={t({ ko: "삭제", en: "Delete", ja: "削除", zh: "删除" })}
+                    className="hover:!text-red-400"
+                  >
+                    ×
+                  </button>
+                </div>
+              );
+            })
           )}
         </div>
       )}
@@ -408,6 +492,8 @@ export default function WorkflowBuilder() {
               animated: false,
             }}
             style={{ background: "var(--th-bg-primary)" }}
+            onNodeClick={(_, node) => setSelectedNodeId(node.id)}
+            onPaneClick={() => setSelectedNodeId(null)}
           >
             <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="var(--th-border)" />
             <Controls
@@ -434,25 +520,94 @@ export default function WorkflowBuilder() {
                 borderRadius: 5, padding: "3px 10px", pointerEvents: "none",
               }}>
                 {t({
-                  ko: "노드를 드래그하여 이동 · 핸들에서 드래그하여 연결",
-                  en: "Drag nodes to move · Drag from handles to connect",
-                  ja: "ノードをドラッグして移動 · ハンドルからドラッグして接続",
-                  zh: "拖动节点移动 · 从连接点拖动连接",
+                  ko: "노드를 드래그하여 이동 · 핸들에서 드래그하여 연결 · 클릭하여 편집",
+                  en: "Drag nodes to move · Drag from handles to connect · Click to edit",
+                  ja: "ノードをドラッグして移動 · ハンドルからドラッグして接続 · クリックして編集",
+                  zh: "拖动节点移动 · 从连接点拖动连接 · 点击编辑",
                 })}
               </div>
             </Panel>
           </ReactFlow>
         </div>
+
+        {/* Node Edit Panel (right side) */}
+        {selectedNodeId && (() => {
+          const selNode = nodes.find((n) => n.id === selectedNodeId);
+          return selNode ? (
+            <WbNodeEditPanel
+              node={selNode}
+              onUpdate={handleUpdateNodeData}
+              onDelete={handleDeleteNode}
+            />
+          ) : null;
+        })()}
       </div>
+
+      {showRunModal && (
+        <WbRunModal
+          nodes={nodes}
+          edges={edges}
+          workflowName={workflowName}
+          onClose={() => setShowRunModal(false)}
+          onSuccess={() => setShowRunModal(false)}
+        />
+      )}
+
+      {showScheduleModal && currentId && (
+        <WbScheduleModal
+          templateId={currentId}
+          workflowName={workflowName}
+          onClose={() => setShowScheduleModal(false)}
+        />
+      )}
+
+      {/* Confirm New dialog */}
+      {confirmNew && (
+        <div style={{
+          position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 1000,
+          display: "flex", alignItems: "center", justifyContent: "center",
+        }}>
+          <div style={{
+            fontFamily: mono, background: "var(--th-bg-panel)", border: "1px solid var(--th-border)",
+            borderRadius: 8, padding: "20px 24px", width: 320, display: "flex", flexDirection: "column", gap: 12,
+          }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: "var(--th-text-primary)" }}>
+              {t({ ko: "미저장 변경사항", en: "Unsaved changes", ja: "未保存の変更", zh: "未保存的更改" })}
+            </div>
+            <div style={{ fontSize: 11, color: "var(--th-text-muted)", lineHeight: 1.6 }}>
+              {t({
+                ko: "현재 워크플로의 변경사항이 저장되지 않았습니다. 새 워크플로를 시작하면 변경사항이 사라집니다.",
+                en: "The current workflow has unsaved changes. Starting a new workflow will discard them.",
+                ja: "現在のワークフローに未保存の変更があります。新規作成すると破棄されます。",
+                zh: "当前工作流有未保存的更改，新建将丢弃这些更改。",
+              })}
+            </div>
+            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+              <button
+                onClick={() => setConfirmNew(false)}
+                style={{ fontFamily: mono, fontSize: 10, padding: "4px 12px", border: "1px solid var(--th-border)", background: "transparent", color: "var(--th-text-muted)", cursor: "pointer", borderRadius: 4 }}
+              >
+                {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}
+              </button>
+              <button
+                onClick={handleConfirmNew}
+                style={{ fontFamily: mono, fontSize: 10, fontWeight: 700, padding: "4px 12px", border: "1px solid rgba(239,68,68,0.4)", background: "rgba(239,68,68,0.12)", color: "#f87171", cursor: "pointer", borderRadius: 4 }}
+              >
+                {t({ ko: "변경사항 버리고 새로 만들기", en: "Discard & New", ja: "破棄して新規作成", zh: "放弃并新建" })}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-function loadSaved(): { name: string; nodes: Node[]; edges: Edge[] } | null {
+function loadSaved(): { name: string; nodes: Node[]; edges: Edge[]; currentId: string | null } | null {
   try {
     const raw = localStorage.getItem(LS_KEY);
     if (!raw) return null;
-    return JSON.parse(raw) as { name: string; nodes: Node[]; edges: Edge[] };
+    return JSON.parse(raw) as { name: string; nodes: Node[]; edges: Edge[]; currentId: string | null };
   } catch {
     return null;
   }

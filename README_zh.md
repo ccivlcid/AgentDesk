@@ -51,7 +51,8 @@ AgentDesk是面向AI代理团队的**项目操作系统**。作为本地Web应�
 - **工作流编排** — 可视化构建器、定时任务、多代理组合管道
 - **实时监控** — 心跳小组件、任务看板、警报推送、流程图、CLI成本追踪
 - **与代理聊天** — 直接消息、群组广播、Telegram/Discord/Slack网关
-- **共享知识库** — Skills、Rules、Memory、Hooks、Deliverables库
+- **共享知识库** — Skills、Rules、Memory、Hooks、Deliverables、Templates库
+- **分析与导出** — 代理绩效仪表盘、CSV/JSON数据导出、成本分析
 - **全面控制** — macOS风格桌面（Spotlight搜索、任务控制、快速预览）
 
 ---
@@ -73,10 +74,17 @@ AgentDesk是面向AI代理团队的**项目操作系统**。作为本地Web应�
 - 实时心跳监控
 
 ### ⚡ 工作流自动化
-- 可视化拖放工作流构建器
-- Cron表达式定时任务
+- 可视化拖放工作流构建器 + 节点编辑面板
+- **Cron调度器** — 为每个工作流设置定时计划（⏰按钮，6种预设）
 - 自定义节点类型的多代理组合管道
 - 7种内置工作流包（开发、研究、小说、报告、视频、角色扮演、资产管理）
+- 自动保存 + 变更标记 + 放弃前确认
+
+### 🧩 自定义小组件平台
+- **小组件构建器** — 从7种内置模板创建自定义仪表盘小组件
+- **AI生成** — 用自然语言描述小组件，通过esbuild + 沙盒iframe自动生成TSX小组件
+- 参数类型：文本、数字、开关、选择、代理选择器
+- 保存、管理并添加自定义小组件到Dock
 
 ### 💬 多代理聊天
 - 对单个代理的直接消息
@@ -86,10 +94,30 @@ AgentDesk是面向AI代理团队的**项目操作系统**。作为本地Web应�
 
 ### 📚 知识库
 - **Skills** — 可复用的任务模板
-- **Rules** — 代理行为约束和指导方针
+- **Rules** — 代理行为约束和指导方针（Global/Project/Agent/Dept范围）
 - **Memory** — 持久化代理上下文
 - **Hooks** — 事件驱动自动化脚本
-- **Deliverables** — 输出成果物追踪
+- **Deliverables** — 输出成果物追踪（搜索·排序·上传）
+- **Templates** — 项目模板（4种内置 + 自定义）+ 任务模板库
+- **Performance** — 代理成功率、平均完成时间、趋势迷你图
+
+### 📊 分析与导出
+- **代理绩效仪表盘** — 成功率徽章、状态堆叠条、每日迷你图；按项目/周期筛选，排序
+- **数据导出** — 任务/成果物/代理/成本 → CSV（UTF-8 BOM，Excel兼容）或JSON；项目·状态·日期筛选；从"AgentDesk"菜单一键导出
+- **项目成本汇总** — 总成本、本月、按代理和工作流细分
+
+### 🗂 项目仪表盘
+- 带圆形SVG进度指示器 + 状态（活跃/已完成/已取消）的目标管理
+- 审查门控：状态（待定/进行中/通过/失败）+ 标准 + 截止日期
+- 内联创建/编辑/删除
+- 预填目标和门控的项目模板
+
+### 🔔 通知中心
+- 320px右侧滑出面板（macOS红绿灯按钮）
+- 日期分组（今天/昨天/更早）+ 每组未读数
+- 悬停快速操作：标记已读 ✓ + 逐条删除
+- 按类型筛选（完成/错误/决策/警报/信息）+ 未读徽章
+- 批量清除已读通知
 
 ### 📊 实时仪表盘小组件
 
@@ -101,6 +129,7 @@ AgentDesk是面向AI代理团队的**项目操作系统**。作为本地Web应�
 | 💰 CLI成本 | Token使用量和速率限制追踪 |
 | 🔀 流程图 | 代理通信流程图 |
 | 🗂 文件树 | 项目目录浏览器 |
+| 🧩 自定义 | AI生成或基于模板的自定义小组件 |
 
 ---
 
@@ -148,7 +177,7 @@ AgentDesk是面向AI代理团队的**项目操作系统**。作为本地Web应�
 
 | 层 | 技术 |
 |----|------|
-| 前端 | React 18 + TypeScript + Vite + Tailwind CSS |
+| 前端 | React 19 + TypeScript + Vite + Tailwind CSS |
 | 状态管理 | Zustand |
 | 流程图 | `@xyflow/react` v12 |
 | 后端 | Node.js + Express + tsx |
@@ -206,10 +235,12 @@ pnpm dev                  # 前端(8800) + API服务器(8790)
 
 | 文档 | 内容 |
 |------|------|
-| [`docs/OVERVIEW.md`](docs/OVERVIEW.md) | 架构概述 + 功能完成度路线图 |
+| [`docs/OVERVIEW.md`](docs/OVERVIEW.md) | 架构概述 + 已完成功能列表 |
 | [`docs/architecture/ARCHITECTURE-AUDIT-2026-Q1.md`](docs/architecture/ARCHITECTURE-AUDIT-2026-Q1.md) | 架构与后端审计报告 |
 | [`docs/design/UI-SCREENS.md`](docs/design/UI-SCREENS.md) | 完整界面和模态框规范 |
-| [`docs/specs/api.md`](docs/specs/api.md) | REST API完整规范 |
+| [`docs/design/DESIGN.md`](docs/design/DESIGN.md) | CSS变量 + 组件样式规则 |
+| [`docs/specs/api.md`](docs/specs/api.md) | REST API完整规范 (v1.3.0) |
+| [`docs/progress.md`](docs/progress.md) | 开发进度日志 |
 
 ---
 

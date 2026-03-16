@@ -2,7 +2,7 @@
 
 This document defines a contributor-facing API baseline for AgentDesk.
 It is intentionally compact and focused on frequently used endpoints.
-Current baseline target: `v1.2.6` (local snapshot, 2026-03-15).
+Current baseline target: `v1.3.0` (local snapshot, 2026-03-16).
 
 ## Base
 
@@ -378,6 +378,119 @@ Used for saving and loading agent composition canvases (Workflow → Composition
 
 > **DB table:** `agent_composition_templates` (migration `2026-03-14-011`)
 > **Route file:** `server/modules/routes/ops/composition-templates.ts`
+
+---
+
+## Workflow Schedules (v1.3.0)
+
+Cron-based scheduling for workflow templates. Each schedule fires agent-node tasks when `next_run_at <= now`.
+
+> **Route file:** `server/modules/routes/ops/workflow-schedules.ts`
+> **DB table:** `workflow_schedules` (migration `2026-03-17-001`)
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| GET | `/api/workflow-schedules` | List schedules (optional `?template_id=`) |
+| POST | `/api/workflow-schedules` | Create schedule |
+| PUT | `/api/workflow-schedules/:id` | Update schedule (toggle enabled or change cron) |
+| DELETE | `/api/workflow-schedules/:id` | Delete schedule |
+
+`POST /api/workflow-schedules` request body:
+```json
+{
+  "template_id": "uuid",
+  "cron_expr": "0 9 * * 1-5",
+  "enabled": true
+}
+```
+
+`GET /api/workflow-schedules` response:
+```json
+{
+  "ok": true,
+  "schedules": [
+    {
+      "id": "uuid",
+      "template_id": "uuid",
+      "template_name": "string",
+      "cron_expr": "*/5 * * * *",
+      "enabled": 1,
+      "last_run_at": 1741234567890,
+      "next_run_at": 1741234567890,
+      "created_at": 1741234567890
+    }
+  ]
+}
+```
+
+Supported cron fields: minute (0–59), hour (0–23), day-of-month (1–31), month (1–12), day-of-week (0–7, 0=7=Sunday). Supports `*`, `*/step`, `a-b`, and literals.
+
+---
+
+## Agent Performance (v1.3.0)
+
+> **Route file:** `server/modules/routes/ops/agent-performance.ts`
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| GET | `/api/agents/performance` | Aggregated performance stats per agent |
+
+`GET /api/agents/performance` query parameters:
+
+| Parameter | Description |
+| --- | --- |
+| `project_id` | Filter to project-assigned agents |
+| `days` | Lookback window in days (default 30) |
+
+Response shape per agent:
+```json
+{
+  "agents": [
+    {
+      "id": "uuid",
+      "name": "string",
+      "avatar_emoji": "🤖",
+      "total": 42,
+      "done": 35,
+      "cancelled": 2,
+      "failed_exec": 1,
+      "in_progress": 2,
+      "review": 1,
+      "planned": 1,
+      "success_rate": 0.875,
+      "avg_duration_ms": 120000,
+      "trend": [3, 5, 4, 6, 5, 4, 8],
+      "day_labels": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+    }
+  ]
+}
+```
+
+---
+
+## Data Export (v1.3.0)
+
+> **Route file:** `server/modules/routes/ops/data-export.ts`
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| GET | `/api/export` | Download data as CSV or JSON |
+
+`GET /api/export` query parameters:
+
+| Parameter | Values | Description |
+| --- | --- | --- |
+| `type` | `tasks` \| `deliverables` \| `agents` \| `costs` | Data type to export |
+| `format` | `csv` \| `json` | Output format (default `csv`) |
+| `project_id` | uuid | Filter by project |
+| `status` | task status | Filter tasks by status |
+| `since` | ms timestamp | Start of date range |
+| `until` | ms timestamp | End of date range |
+
+- CSV output includes UTF-8 BOM prefix (`\uFEFF`) for Excel compatibility
+- Response header: `Content-Disposition: attachment; filename="<type>-<date>.<ext>"`
+- Tasks export includes `duration_ms` column (completed_at − started_at)
+- Costs export reads from `cli_usage_cache` table
 
 ---
 

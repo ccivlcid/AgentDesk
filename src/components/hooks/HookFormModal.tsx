@@ -22,7 +22,8 @@ interface HookFormModalProps {
   onClose: () => void;
   onCreate: (input: CreateHookInput) => void;
   onUpdate: (id: string, input: UpdateHookInput) => void;
-  scopeOverride?: { scope_type: HookScopeType; scope_id?: string };
+  /** When set, pre-selects "project" scope and provides this project id as default */
+  defaultProjectId?: string;
 }
 
 export default function HookFormModal({
@@ -34,7 +35,7 @@ export default function HookFormModal({
   submitting,
   error,
   onClose,
-  scopeOverride,
+  defaultProjectId,
   onCreate,
   onUpdate,
 }: HookFormModalProps) {
@@ -46,6 +47,8 @@ export default function HookFormModal({
   const [description, setDescription] = useState("");
   const [command, setCommand] = useState("");
   const [eventType, setEventType] = useState<HookEventType>("pre-task");
+  const [scopeType, setScopeType] = useState<HookScopeType>("global");
+  const [scopeId, setScopeId] = useState<string>("");
   const [workingDirectory, setWorkingDirectory] = useState("");
   const [timeoutMs, setTimeoutMs] = useState(30000);
   const [priority, setPriority] = useState(50);
@@ -63,6 +66,8 @@ export default function HookFormModal({
       setDescription(editingHook.description);
       setCommand(editingHook.command);
       setEventType(editingHook.event_type);
+      setScopeType(editingHook.scope_type);
+      setScopeId(editingHook.scope_id ?? "");
       setWorkingDirectory(editingHook.working_directory);
       setTimeoutMs(editingHook.timeout_ms);
       setPriority(editingHook.priority);
@@ -74,12 +79,14 @@ export default function HookFormModal({
       setDescription("");
       setCommand("");
       setEventType("pre-task");
+      setScopeType(defaultProjectId ? "project" : "global");
+      setScopeId(defaultProjectId ?? "");
       setWorkingDirectory("");
       setTimeoutMs(30000);
       setPriority(50);
       setFileName("");
     }
-  }, [editingHook, show]);
+  }, [editingHook, show, defaultProjectId]);
 
   if (!show) return null;
 
@@ -98,8 +105,8 @@ export default function HookFormModal({
       event_type: eventType,
       working_directory: workingDirectory.trim(),
       timeout_ms: timeoutMs,
-      scope_type: scopeOverride?.scope_type ?? ("global" as const),
-      scope_id: scopeOverride?.scope_id,
+      scope_type: scopeType,
+      scope_id: scopeType !== "global" && scopeId ? scopeId : undefined,
       priority,
     };
 
@@ -264,6 +271,57 @@ export default function HookFormModal({
                   {command.length > 500 && "..."}
                 </pre>
               </div>
+            )}
+          </div>
+
+          {/* Scope Type */}
+          <div>
+            <label className="block text-xs mb-1.5 font-mono" style={{ color: "var(--th-text-muted)" }}>
+              {t({ ko: "범위 (Scope)", en: "Scope", ja: "スコープ", zh: "范围" })}
+            </label>
+            <div className="flex flex-wrap gap-2 mb-2">
+              {([
+                { value: "global",        icon: "🌐", label: { ko: "글로벌",   en: "Global",   ja: "グローバル", zh: "全局"   } },
+                { value: "project",       icon: "📋", label: { ko: "프로젝트", en: "Project",   ja: "プロジェクト", zh: "项目" } },
+                { value: "agent",         icon: "🤖", label: { ko: "에이전트", en: "Agent",     ja: "エージェント", zh: "代理" } },
+                { value: "department",    icon: "🏢", label: { ko: "부서",     en: "Department", ja: "部署",       zh: "部门" } },
+                { value: "workflow_pack", icon: "📦", label: { ko: "워크플로", en: "Workflow",  ja: "ワークフロー", zh: "工作流" } },
+              ] as const).map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => {
+                    setScopeType(opt.value as HookScopeType);
+                    if (opt.value === "global") setScopeId("");
+                    if (opt.value === "project" && defaultProjectId) setScopeId(defaultProjectId);
+                  }}
+                  className="px-2.5 py-1.5 text-xs font-mono border transition-all"
+                  style={{
+                    borderRadius: 0,
+                    background: scopeType === opt.value ? "rgba(245,158,11,0.15)" : "var(--th-bg-surface-hover)",
+                    color: scopeType === opt.value ? "var(--th-accent)" : "var(--th-text-muted)",
+                    border: scopeType === opt.value ? "1px solid rgba(245,158,11,0.4)" : "1px solid var(--th-border)",
+                  }}
+                >
+                  {opt.icon} {t(opt.label)}
+                </button>
+              ))}
+            </div>
+            {/* Scope ID input for non-global */}
+            {scopeType !== "global" && (
+              <input
+                type="text"
+                value={scopeId}
+                onChange={(e) => setScopeId(e.target.value)}
+                placeholder={
+                  scopeType === "project" ? (defaultProjectId ?? t({ ko: "프로젝트 ID", en: "Project ID", ja: "プロジェクトID", zh: "项目ID" })) :
+                  scopeType === "agent" ? t({ ko: "에이전트 ID", en: "Agent ID", ja: "エージェントID", zh: "代理ID" }) :
+                  scopeType === "department" ? t({ ko: "부서 ID", en: "Department ID", ja: "部署ID", zh: "部门ID" }) :
+                  t({ ko: "워크플로 팩 키", en: "Workflow Pack Key", ja: "ワークフローパックキー", zh: "工作流包键" })
+                }
+                className="w-full px-3 py-2 text-sm focus:outline-none font-mono"
+                style={{ borderRadius: 0, background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)" }}
+              />
             )}
           </div>
 

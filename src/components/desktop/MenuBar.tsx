@@ -22,6 +22,7 @@ interface MenuBarProps {
   onOpenMissionControl?: () => void;
   onOpenUserGuide?: () => void;
   onOpenCommandPalette?: () => void;
+  onOpenExportModal?: () => void;
   runningAgentCount?: number;
 }
 
@@ -39,6 +40,7 @@ export default function MenuBar({
   onOpenMissionControl,
   onOpenUserGuide,
   onOpenCommandPalette,
+  onOpenExportModal,
   runningAgentCount = 0,
 }: MenuBarProps) {
   const [now, setNow] = useState(() => new Date());
@@ -249,6 +251,16 @@ export default function MenuBar({
               onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "none"; }}
             >
               <span>📖 {t({ ko: "유저 가이드", en: "User Guide", ja: "ユーザーガイド", zh: "用户指南" })}</span>
+            </button>
+
+            {/* 데이터 내보내기 */}
+            <button
+              style={menuItemStyle}
+              onClick={() => menuAction(onOpenExportModal)}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--th-accent-glow)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "none"; }}
+            >
+              <span>↓ {t({ ko: "데이터 내보내기...", en: "Export Data...", ja: "データエクスポート...", zh: "导出数据..." })}</span>
             </button>
 
             {/* Mission Control */}

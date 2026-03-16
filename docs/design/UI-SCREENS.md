@@ -622,7 +622,8 @@ src/
 | Enter animation | `translateX(0)` ← `translateX(320px)`, `transition: 0.28s cubic-bezier(0.4,0,0.2,1)` |
 | Background | `rgba(18,18,22,0.96)` + `backdropFilter: blur(20px)` |
 | Background overlay | Semi-transparent `rgba(0,0,0,0.3)`, click to close |
-| Features | Read/unread filter, type filter, browser push toggle, mark all as read |
+| Features | Date groups (Today/Yesterday/Older), per-section unread counts, hover quick-actions (mark-read ✓, delete ×), type filter badges with unread counts, bulk "Clear N read" link, `hideRead` defaults to false |
+| Delete animation | `translateX(320px)` + `opacity: 0`, `transition: 0.25s` |
 
 ---
 
@@ -636,7 +637,7 @@ src/
 | State | `appMenuOpen: boolean` (local state) |
 | Dropdown position | `position: absolute, top: calc(100% + 6px), left: 0` |
 | Style | `rgba(20,20,24,0.97)` + `blur(20px)`, `borderRadius: 10` |
-| Items | About (version) / Change Wallpaper / Add Widget / Keyboard Shortcuts / Mission Control (Ctrl↑) |
+| Items | About (version) / Change Wallpaper / Add Widget / Keyboard Shortcuts / ↓ Export Data / Mission Control (Ctrl↑) |
 | Close | Select an item or click outside |
 
 ---
@@ -657,3 +658,56 @@ src/
 | `g a` | Toggle Agent Manager |
 | `g e` | Toggle REPL |
 | `?` | Keyboard shortcuts guide |
+
+---
+
+## New Modals / Panels (v1.3.0)
+
+### WbScheduleModal — Workflow Cron Scheduler
+
+**File:** `src/components/workflow-builder/WbScheduleModal.tsx`
+
+| Item | Value |
+|------|-------|
+| Trigger | ⏰ toolbar button in WorkflowBuilder (only when a template is loaded) |
+| Props | `templateId: string`, `workflowName: string`, `onClose: () => void` |
+| Width | 560px centered modal, `backdrop-blur(20px)` |
+| Preset chips | 6 cron presets: every 5 min / hourly / daily 9am / midnight / Mon 9am / weekdays 9am |
+| Custom input | Raw cron expression field with validation error display |
+| Schedule list | Shows `cron_expr` (amber monospace), enabled badge (green/gray), next/last run timestamps |
+| Row actions | Toggle (⏸/▶) to enable/disable, × to delete |
+| API calls | `GET/POST/PUT/DELETE /api/workflow-schedules` |
+
+---
+
+### AgentPerformanceDashboard — Library → Performance Tab
+
+**File:** `src/components/performance/AgentPerformanceDashboard.tsx`
+
+| Item | Value |
+|------|-------|
+| Location | Library window → Performance tab |
+| Filters | Project dropdown, days selector (7/14/30/60/90) |
+| Sort buttons | Total / Done / Rate / Speed |
+| Summary bar | Total agents, total tasks, completed tasks, overall success rate |
+| Agent card | Emoji avatar, name, success rate badge (green ≥80% / amber ≥50% / red <50%), task counts grid, daily sparkline (SVG polyline) |
+| Status bar | Stacked horizontal bar (done=green, review=amber, in_progress=blue, cancelled=muted) |
+| Sparkline | SVG 60×28px, `polyline` + circles for data points |
+| API call | `GET /api/agents/performance?project_id=&days=` |
+
+---
+
+### ExportModal — Data Export
+
+**File:** `src/components/export/ExportModal.tsx`
+
+| Item | Value |
+|------|-------|
+| Trigger | AgentDesk app menu → "↓ 데이터 내보내기 / Export Data..." |
+| Width | 640px centered modal |
+| Export types | 2×2 card grid: Tasks / Deliverables / Agents / Costs (icons + descriptions) |
+| Format toggle | CSV / JSON toggle buttons |
+| Filters | Project dropdown, status (tasks only), from/until date inputs |
+| Download | Creates `<a download>` element, programmatic click, auto-cleanup via `URL.revokeObjectURL` |
+| Footer | Selected type + format summary line |
+| API call | `GET /api/export?type=&format=&project_id=&since=&until=` |

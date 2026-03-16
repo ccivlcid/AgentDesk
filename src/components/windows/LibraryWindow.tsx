@@ -8,6 +8,8 @@ const AgentRulesLibrary = lazy(() => import("../AgentRulesLibrary"));
 const MemoryLibrary     = lazy(() => import("../MemoryLibrary"));
 const HooksLibrary      = lazy(() => import("../HooksLibrary"));
 const Deliverables      = lazy(() => import("../deliverables/Deliverables"));
+const TemplatesLibrary         = lazy(() => import("../templates-library/TemplatesLibrary"));
+const AgentPerformanceDashboard = lazy(() => import("../performance/AgentPerformanceDashboard"));
 
 function Loading() {
   return (
@@ -19,9 +21,14 @@ function Loading() {
 
 export default function LibraryWindow() {
   const { agents, libraryAgents, departments } = useAgentStore();
-  const { currentProjectId, projects } = useProjectStore();
+  const { currentProjectId, projects, projectAgentIds, projectAgentsLoaded } = useProjectStore();
   const currentProject = projects.find((p) => p.id === currentProjectId) ?? null;
-  const libAgents = libraryAgents.length > 0 ? libraryAgents : agents;
+  const allAgents = libraryAgents.length > 0 ? libraryAgents : agents;
+
+  // 현재 프로젝트에 배정된 에이전트만 필터링
+  const libAgents = currentProjectId && projectAgentsLoaded && projectAgentIds.size > 0
+    ? allAgents.filter((a) => projectAgentIds.has(a.id))
+    : allAgents;
 
   return (
     <AppWindow
@@ -73,6 +80,24 @@ export default function LibraryWindow() {
           content: (
             <Suspense fallback={<Loading />}>
               <Deliverables agents={libAgents} currentProject={currentProject} />
+            </Suspense>
+          ),
+        },
+        {
+          id: "templates",
+          label: "Templates",
+          content: (
+            <Suspense fallback={<Loading />}>
+              <TemplatesLibrary />
+            </Suspense>
+          ),
+        },
+        {
+          id: "performance",
+          label: "Performance",
+          content: (
+            <Suspense fallback={<Loading />}>
+              <AgentPerformanceDashboard />
             </Suspense>
           ),
         },

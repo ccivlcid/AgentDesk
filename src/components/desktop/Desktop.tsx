@@ -23,10 +23,12 @@ import FileTreeWidget from "./widgets/FileTreeWidget";
 import CustomFeatureWidget from "./widgets/CustomFeatureWidget";
 import CustomFeatureWindow from "../windows/CustomFeatureWindow";
 import WallpaperPicker from "./WallpaperPicker";
+import ExportModal from "../export/ExportModal";
 import MarkdownEditorModal from "./MarkdownEditorModal";
 import ReportWindow from "../windows/ReportWindow";
 import QuickLook from "./QuickLook";
 import MissionControl from "./MissionControl";
+import ProjectFolderWindow from "./ProjectFolderWindow";
 import { deleteProject } from "../../api/organization-projects";
 import WorkflowWindow from "../windows/WorkflowWindow";
 import LibraryWindow from "../windows/LibraryWindow";
@@ -135,9 +137,11 @@ export default function Desktop({
   const [showWallpaperPicker, setShowWallpaperPicker] = useState(false);
   const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number } | null>(null);
   const [showMarkdownEditor, setShowMarkdownEditor] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
   const [projectCtxMenu, setProjectCtxMenu] = useState<{ x: number; y: number; projectId: string; projectName: string } | null>(null);
   const [quickLookProjectId, setQuickLookProjectId] = useState<string | null>(null);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+  const [openProjectWindowIds, setOpenProjectWindowIds] = useState<Set<string>>(new Set());
 
   const { setProjects } = useProjectStore();
   const { t, language } = useI18n();
@@ -199,6 +203,7 @@ export default function Desktop({
     await deleteProject(projectId);
     setProjects((prev) => prev.filter((p) => p.id !== projectId));
     if (currentProjectId === projectId) setCurrentProjectId(null);
+    setOpenProjectWindowIds((prev) => { const next = new Set(prev); next.delete(projectId); return next; });
   }, [currentProjectId, setCurrentProjectId, setProjects]);
 
   // ── 롱프레스 Jiggle Mode ────────────────────────────────────────
@@ -391,6 +396,7 @@ export default function Desktop({
         onOpenMissionControl={() => setMissionControlOpen(true)}
         onOpenUserGuide={() => setShowUserGuide(true)}
         onOpenCommandPalette={() => setShowCommandPalette(true)}
+        onOpenExportModal={() => setShowExportModal(true)}
         runningAgentCount={runningAgentCount}
       />
 
@@ -432,6 +438,7 @@ export default function Desktop({
             onClick: () => {
               setCurrentProjectId(project.id);
               setSelectedProjectId(project.id);
+              setOpenProjectWindowIds((prev) => new Set([...prev, project.id]));
             },
             onContextMenu: (e) => setProjectCtxMenu({ x: e.clientX, y: e.clientY, projectId: project.id, projectName: project.name }),
           };
@@ -522,6 +529,9 @@ export default function Desktop({
       {/* 배경화면 피커 */}
       {showWallpaperPicker && <WallpaperPicker onClose={() => setShowWallpaperPicker(false)} />}
 
+      {/* 데이터 내보내기 */}
+      {showExportModal && <ExportModal onClose={() => setShowExportModal(false)} />}
+
       {/* 마크다운 에디터 */}
       {showMarkdownEditor && (
         <MarkdownEditorModal
@@ -534,6 +544,25 @@ export default function Desktop({
       {quickLookProject && (
         <QuickLook project={quickLookProject} onClose={() => setQuickLookProjectId(null)} />
       )}
+
+      {/* 프로젝트 폴더 창 */}
+      {[...openProjectWindowIds].map((pid, i) => {
+        const proj = projects.find((p) => p.id === pid);
+        if (!proj) return null;
+        return (
+          <ProjectFolderWindow
+            key={pid}
+            project={proj}
+            tasks={tasks}
+            agents={agents}
+            onClose={() => setOpenProjectWindowIds((prev) => { const next = new Set(prev); next.delete(pid); return next; })}
+            onSelectProject={(id) => { setCurrentProjectId(id); }}
+            onDeleteProject={handleDeleteProject}
+            initialX={160 + i * 30}
+            initialY={80 + i * 30}
+          />
+        );
+      })}
 
       {/* Mission Control */}
       {missionControlOpen && (
@@ -568,6 +597,11 @@ export default function Desktop({
             📁 {projectCtxMenu.projectName}
           </div>
           {[
+            {
+              label: t({ ko: "열기", en: "Open", ja: "開く", zh: "打开" }),
+              icon: "📂",
+              action: () => { setOpenProjectWindowIds((prev) => new Set([...prev, projectCtxMenu.projectId])); setCurrentProjectId(projectCtxMenu.projectId); setProjectCtxMenu(null); },
+            },
             {
               label: t({ ko: "빠른 미리보기", en: "Quick Look", ja: "クイックルック", zh: "快速预览" }),
               icon: "⌃",

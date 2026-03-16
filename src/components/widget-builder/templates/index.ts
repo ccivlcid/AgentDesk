@@ -4,10 +4,18 @@ export interface TemplateParam {
   key: string;
   label_ko: string;
   label_en: string;
-  type: "text" | "select" | "toggle" | "number";
+  type: "text" | "select" | "toggle" | "number" | "agent";
   defaultValue?: unknown;
   options?: Array<{ value: unknown; label_ko: string; label_en: string }>;
   required?: boolean;
+  placeholder?: string;
+  hint?: string;
+  /** text type: false (default) → single-line input, true → textarea */
+  multiline?: boolean;
+  /** number type constraints */
+  min?: number;
+  max?: number;
+  step?: number;
 }
 
 export interface FeatureTemplate {
@@ -57,10 +65,11 @@ export const FEATURE_TEMPLATES: FeatureTemplate[] = [
     params: [
       {
         key: "agentId",
-        label_ko: "모니터링할 에이전트 ID",
-        label_en: "Agent ID to monitor",
-        type: "text",
+        label_ko: "모니터링할 에이전트",
+        label_en: "Agent to monitor",
+        type: "agent",
         required: true,
+        hint: "선택한 에이전트의 실시간 상태가 위젯에 표시됩니다 / Real-time status of the selected agent",
       },
     ],
   },
@@ -88,6 +97,10 @@ export const FEATURE_TEMPLATES: FeatureTemplate[] = [
         label_en: "Target count",
         type: "number",
         defaultValue: 10,
+        min: 1,
+        max: 999,
+        step: 1,
+        hint: "하루 목표 완료 태스크 수 / Daily target completion count",
       },
     ],
   },
@@ -171,6 +184,9 @@ export const FEATURE_TEMPLATES: FeatureTemplate[] = [
         type: "text",
         defaultValue: "## 공지\n내용을 입력하세요.",
         required: true,
+        multiline: true,
+        placeholder: "## 제목\n내용을 입력하세요...",
+        hint: "Markdown 형식 지원 (# 제목, **굵게**, - 목록) / Markdown supported",
       },
     ],
   },

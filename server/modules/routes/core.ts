@@ -46,6 +46,9 @@ import { registerCategoryRoutes } from "./core/categories.ts";
 import { registerProjectDashboardRoutes } from "./core/project-dashboard.ts";
 import { registerPersonaRoutes } from "./core/personas.ts";
 import { registerCompositionTemplateRoutes } from "./ops/composition-templates.ts";
+import { registerWorkflowScheduleRoutes } from "./ops/workflow-schedules.ts";
+import { registerAgentPerformanceRoutes } from "./ops/agent-performance.ts";
+import { registerDataExportRoutes } from "./ops/data-export.ts";
 import type { AgentRow, MeetingMinuteEntryRow, MeetingMinutesRow, MeetingReviewDecision } from "./shared/types.ts";
 import { getDiscordReceiverStatus } from "../../messenger/discord-receiver.ts";
 
@@ -407,6 +410,9 @@ export function registerRoutesPartA(ctx: RuntimeContext): Record<string, never> 
   registerProjectDashboardRoutes({ app, db, nowMs });
   registerPersonaRoutes({ app });
   registerCompositionTemplateRoutes({ app, db, nowMs });
+  registerWorkflowScheduleRoutes({ app, db, nowMs });
+  registerAgentPerformanceRoutes({ app, db, nowMs });
+  registerDataExportRoutes({ app, db });
 
   // ---------------------------------------------------------------------------
   // SubTask endpoints

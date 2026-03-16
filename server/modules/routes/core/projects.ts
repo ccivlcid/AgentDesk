@@ -3,6 +3,7 @@ import type { DatabaseSync, SQLInputValue } from "node:sqlite";
 import { randomUUID } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
+import { spawn } from "node:child_process";
 import { getAssignedAgentIdsByProjectIds } from "../shared/project-assignments.ts";
 import { createProjectRouteHelpers } from "./projects/helpers.ts";
 import { DEFAULT_WORKFLOW_PACK_KEY, isWorkflowPackKey } from "../../workflow/packs/definitions.ts";
@@ -258,6 +259,60 @@ export function registerProjectRoutes({
 
     const tree = walkDir(normalized, 1);
     res.json({ ok: true, root: normalized, tree, truncated });
+  });
+
+  // ── File content reader ──────────────────────────────────────────────────
+  app.get("/api/projects/file-content", (req, res) => {
+    const MAX_BYTES = 512 * 1024; // 512 KB
+    const TEXT_EXTENSIONS = new Set([
+      "ts","tsx","js","jsx","mjs","cjs","json","jsonc","yaml","yml","toml",
+      "md","mdx","txt","env","gitignore","prettierrc","eslintrc","editorconfig",
+      "sh","bash","zsh","fish","py","rb","go","rs","java","cs","cpp","c","h",
+      "html","htm","css","scss","sass","less","svelte","vue","astro",
+      "sql","prisma","graphql","gql","xml","csv","log","lock","ini","cfg","conf",
+    ]);
+    const rawPath = firstQueryValue(req.query.path);
+    if (!rawPath) return res.status(400).json({ error: "path_required" });
+    const filePath = path.resolve(rawPath);
+    if (!isPathInsideAllowedRoots(filePath)) {
+      return res.status(403).json({ error: "path_outside_allowed_roots" });
+    }
+    try {
+      const stat = fs.statSync(filePath);
+      if (!stat.isFile()) return res.status(400).json({ error: "not_a_file" });
+      const ext = path.extname(filePath).replace(".", "").toLowerCase();
+      if (!TEXT_EXTENSIONS.has(ext) && ext !== "") {
+        return res.status(415).json({ error: "binary_or_unsupported", ext });
+      }
+      const sizeBytes = stat.size;
+      if (sizeBytes > MAX_BYTES) {
+        const preview = Buffer.alloc(MAX_BYTES);
+        const fd = fs.openSync(filePath, "r");
+        fs.readSync(fd, preview, 0, MAX_BYTES, 0);
+        fs.closeSync(fd);
+        return res.json({ ok: true, content: preview.toString("utf8"), truncated: true, size_bytes: sizeBytes });
+      }
+      const content = fs.readFileSync(filePath, "utf8");
+      return res.json({ ok: true, content, truncated: false, size_bytes: sizeBytes });
+    } catch {
+      return res.status(404).json({ error: "file_not_found" });
+    }
+  });
+
+  // ── Open path with OS default app ────────────────────────────────────────
+  app.post("/api/projects/open-path", (req, res) => {
+    const targetPath: unknown = (req.body ?? {}).path;
+    if (typeof targetPath !== "string" || !targetPath) return res.status(400).json({ error: "path_required" });
+    const resolved = path.resolve(targetPath);
+    if (!isPathInsideAllowedRoots(resolved)) {
+      return res.status(403).json({ error: "path_outside_allowed_roots" });
+    }
+    try { fs.accessSync(resolved); } catch { return res.status(404).json({ error: "path_not_found" }); }
+    const platform = process.platform;
+    const cmd = platform === "darwin" ? "open" : platform === "win32" ? "explorer" : "xdg-open";
+    const args = platform === "win32" ? [resolved] : [resolved];
+    spawn(cmd, args, { detached: true, stdio: "ignore" }).unref();
+    return res.json({ ok: true });
   });
 
   app.post("/api/projects", (req, res) => {

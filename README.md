@@ -54,10 +54,11 @@ AgentDesk supports **Korean · English · Japanese · Chinese** — all UI text 
 AgentDesk is a **project operating system** for AI agent teams. It runs as a local web app and lets you:
 
 - **Create & manage AI agents** — define personas, roles, departments, CLI providers, and API models
-- **Orchestrate workflows** — visual builder, scheduled tasks, multi-agent composition pipelines
+- **Orchestrate workflows** — visual builder, cron-scheduled runs, multi-agent composition pipelines
 - **Monitor in real-time** — heartbeat widgets, task boards, alert feeds, flow graphs, CLI cost tracking
 - **Chat with your agents** — direct messages, group broadcast, Telegram/Discord/Slack gateway
-- **Build a shared knowledge base** — Skills, Rules, Memory, Hooks, and Deliverables library
+- **Build a shared knowledge base** — Skills, Rules, Memory, Hooks, Deliverables, and Templates library
+- **Analyze & export** — agent performance dashboard, data export (CSV/JSON), cost summaries
 - **Control everything** — macOS-style desktop with Spotlight search, Mission Control, Quick Look
 
 ---
@@ -66,10 +67,10 @@ AgentDesk is a **project operating system** for AI agent teams. It runs as a loc
 
 ### 🖥️ macOS-Inspired Desktop OS
 - Menubar + desktop icons + Dock + floating windows
-- Drag & drop icon placement with Jiggle Mode
+- Drag & drop icon placement with Jiggle Mode (600ms long-press)
 - Quick Look (Space) for project previews
 - Mission Control overview (Ctrl+↑)
-- Spotlight-style command palette (Ctrl+Shift+K)
+- Spotlight-style command palette (Ctrl+Shift+K) — searches tasks, deliverables, hooks, and workflows
 - 10 animated wallpaper themes
 
 ### 👤 Agent & Department Management
@@ -79,10 +80,17 @@ AgentDesk is a **project operating system** for AI agent teams. It runs as a loc
 - Real-time heartbeat monitoring
 
 ### ⚡ Workflow Automation
-- Visual drag-and-drop workflow builder
-- Scheduled tasks with cron expressions
+- Visual drag-and-drop workflow builder with node edit panel
+- **Cron-based scheduler** — set per-workflow schedules (⏰ button, presets included)
 - Multi-agent composition pipelines with custom node types
 - 7 built-in workflow packs (development, research, novel, report, video, roleplay, asset management)
+- Auto-save + dirty-flag indicator + confirm-before-discard
+
+### 🧩 Custom Widget Platform
+- **Widget Builder** — create custom dashboard widgets from 7 built-in templates
+- **AI generation** — describe a widget in plain text, get a working TSX widget via esbuild + sandbox iframe
+- Parameter types: text, number, toggle (visual), select, agent picker
+- Save, manage, and dock custom widgets alongside built-in ones
 
 ### 💬 Multi-Agent Chat
 - Direct messaging to individual agents
@@ -94,8 +102,21 @@ AgentDesk is a **project operating system** for AI agent teams. It runs as a loc
 - **Skills** — reusable task templates
 - **Rules** — behavior constraints and guidelines
 - **Memory** — persistent agent context
-- **Hooks** — event-driven automation scripts
-- **Deliverables** — output artifact tracking
+- **Hooks** — event-driven automation scripts (Global / Project / Agent / Department scopes)
+- **Deliverables** — output artifact tracking with search, sort, upload
+- **Templates** — project templates (4 built-in + custom) and task template library
+- **Performance** — per-agent success rate, avg completion time, trend sparklines
+
+### 📊 Analytics & Export
+- **Agent Performance Dashboard** — success rate badges, status stack bars, daily sparklines; filter by project/period, sort by total/done/rate/speed
+- **Data Export** — tasks / deliverables / agents / costs → CSV (UTF-8 BOM, Excel-compatible) or JSON; filter by project, status, date range; one-click from "AgentDesk" menu
+- **Project cost summary** — total cost, this month, breakdown by agent and workflow
+
+### 🗂 Project Dashboard
+- Objectives with circular SVG progress indicator + status (Active/Completed/Cancelled)
+- Review gates with status (Pending/In Progress/Passed/Failed) + criteria + due date
+- Inline create/edit/delete for both sections
+- Project templates with pre-filled objectives and gates
 
 ### 📊 Real-Time Dashboard Widgets
 | Widget | Description |
@@ -106,9 +127,14 @@ AgentDesk is a **project operating system** for AI agent teams. It runs as a loc
 | 💰 CLI Cost | Token usage & rate limit tracking |
 | 🔀 Flow Graph | Agent communication flow graph |
 | 🗂 File Tree | Project directory browser |
+| 🧩 Custom | AI-generated or template-based custom widgets |
 
-### 🌍 Multi-Language Support
-Korean · English · Japanese · Chinese (configured per user)
+### 🔔 Notification Center
+- Slide-in panel (320px right) with macOS traffic lights
+- Date groups (Today / Yesterday / Older) with unread counts per section
+- Hover quick-actions: mark read ✓ + delete per notification
+- Filter by type (Done / Error / Decision / Alert / Info) with per-type badges
+- Clear all read, browser push toggle
 
 ---
 
@@ -116,7 +142,7 @@ Korean · English · Japanese · Chinese (configured per user)
 
 | Layer | Technology |
 |-------|-----------|
-| Frontend | React 18 + TypeScript + Vite + Tailwind CSS |
+| Frontend | React 19 + TypeScript + Vite + Tailwind CSS |
 | State | Zustand |
 | Flow diagrams | `@xyflow/react` v12 |
 | Backend | Node.js + Express + tsx |
@@ -170,7 +196,7 @@ Open **http://localhost:8800** in your browser.
 
 | Shortcut | Action |
 |----------|--------|
-| `Ctrl+Shift+K` / `Cmd+K` | Command Palette |
+| `Ctrl+Shift+K` / `Cmd+K` | Command Palette (global search) |
 | `Ctrl+↑` | Mission Control |
 | `g w` | Toggle Workflow window |
 | `g l` | Toggle Library window |
@@ -187,11 +213,12 @@ Open **http://localhost:8800** in your browser.
 
 | Document | Description |
 |----------|-------------|
-| [`docs/OVERVIEW.md`](docs/OVERVIEW.md) | Architecture overview + feature completion roadmap |
+| [`docs/OVERVIEW.md`](docs/OVERVIEW.md) | Architecture overview + completed feature list |
 | [`docs/architecture/ARCHITECTURE-AUDIT-2026-Q1.md`](docs/architecture/ARCHITECTURE-AUDIT-2026-Q1.md) | Architecture & backend audit report |
 | [`docs/design/UI-SCREENS.md`](docs/design/UI-SCREENS.md) | Full screen & modal specifications |
 | [`docs/design/DESIGN.md`](docs/design/DESIGN.md) | CSS variables + component style rules |
-| [`docs/specs/api.md`](docs/specs/api.md) | REST API specification |
+| [`docs/specs/api.md`](docs/specs/api.md) | REST API specification (v1.3.0) |
+| [`docs/progress.md`](docs/progress.md) | Development progress log |
 
 ---
 

@@ -57,8 +57,10 @@ src/
 │   │   └── widgets/             ← AgentsWidget, TasksWidget, AlertsWidget, CliCostWidget, FlowGraphWidget
 │   ├── windows/                 ← App windows (WorkflowWindow, LibraryWindow, SettingsWindow, ChatWindow, AgentManagerWindow)
 │   ├── flow-graph/              ← AgentFlowGraph (reused in FlowGraphWidget)
-│   ├── workflow-builder/        ← WorkflowBuilder (@xyflow/react)
+│   ├── workflow-builder/        ← WorkflowBuilder (@xyflow/react) + WbScheduleModal (cron)
 │   ├── agent-composition/       ← AgentCompositionBuilder + AgentCompositionRunModal + nodes/CompAgentNode
+│   ├── performance/             ← AgentPerformanceDashboard (Library → Performance tab)
+│   ├── export/                  ← ExportModal (triggered from AgentDesk app menu)
 │   └── settings/                ← Settings window tabs
 ├── app/
 │   ├── types.ts                 ← WindowType: "workflow"|"library"|"settings"|"chat"|"agent-manager"|"repl"
@@ -78,7 +80,12 @@ server/
 │   ├── lifecycle.ts             ← Service start/stop hooks
 │   ├── routes/core.ts           ← REST API route registration
 │   ├── routes/ops/composition-templates.ts ← CRUD /api/composition-templates
+│   ├── routes/ops/workflow-schedules.ts    ← CRUD /api/workflow-schedules (cron)
+│   ├── routes/ops/agent-performance.ts    ← GET /api/agents/performance
+│   ├── routes/ops/data-export.ts          ← GET /api/export (CSV/JSON download)
 │   └── workflow/                ← Task execution engine
+│       ├── cron-utils.ts        ← 5-field cron parser (no external deps)
+│       └── workflow-scheduler.ts ← Cron scheduler daemon (60s tick)
 ├── ws/hub.ts                    ← WebSocket broadcast hub
 └── messenger/                   ← Discord/Slack receivers
 ```
@@ -212,5 +219,6 @@ Current shortcuts:
 | [`docs/architecture/ARCHITECTURE-AUDIT-2026-Q1.md`](docs/architecture/ARCHITECTURE-AUDIT-2026-Q1.md) | Architecture & backend audit report |
 | [`docs/design/UI-SCREENS.md`](docs/design/UI-SCREENS.md) | Full screen & modal specifications (macOS desktop OS structure) |
 | [`docs/design/DESIGN.md`](docs/design/DESIGN.md) | CSS variables + component style rules |
-| [`docs/specs/api.md`](docs/specs/api.md) | REST API full specification (v1.2.6) |
+| [`docs/specs/api.md`](docs/specs/api.md) | REST API full specification (v1.3.0) |
 | [`docs/strategy/bigger-ide-vision.md`](docs/strategy/bigger-ide-vision.md) | "Bigger IDE" strategy (Phase 1–3 complete) |
+| [`docs/progress.md`](docs/progress.md) | Development progress log |

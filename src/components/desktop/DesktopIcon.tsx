@@ -153,8 +153,8 @@ export default function DesktopIcon({ def, defaultX, defaultY }: DesktopIconProp
           animation: jiggleMode ? "jiggle 0.18s ease-in-out infinite alternate" : "none",
         }}
       >
-        {/* 삭제 배지 */}
-        {jiggleMode && def.deletable && def.onDelete && (
+        {/* 삭제 배지 — jiggle 모드에서만 표시 (실수 삭제 방지) */}
+        {def.deletable && def.onDelete && jiggleMode && (
           <div
             onClick={(e) => { e.stopPropagation(); def.onDelete!(); }}
             style={{
@@ -175,6 +175,7 @@ export default function DesktopIcon({ def, defaultX, defaultY }: DesktopIconProp
               zIndex: 200,
               cursor: "pointer",
               lineHeight: 1,
+              opacity: 1,
             }}
           >
             ✕

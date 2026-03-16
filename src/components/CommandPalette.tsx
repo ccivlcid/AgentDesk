@@ -1,8 +1,12 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useI18n } from "../i18n";
-import type { Agent, Task, Project } from "../types";
+import type { Agent, Task, Project, HookEntry } from "../types";
+import { getDeliverables, type DeliverableItem } from "../api/providers-reports-github";
+import { getHooks } from "../api/hooks";
 import TrafficLights from "./desktop/TrafficLights";
+
+type WfTemplate = { id: string; name: string; nodes_json: string; updated_at: number };
 
 const HISTORY_KEY = "cp_history_v1";
 const MAX_HISTORY = 6;
@@ -59,12 +63,30 @@ export default function CommandPalette({
   const [history, setHistory] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Lazy-loaded global data
+  const [deliverables, setDeliverables] = useState<DeliverableItem[]>([]);
+  const [hooks, setHooks] = useState<HookEntry[]>([]);
+  const [workflows, setWorkflows] = useState<WfTemplate[]>([]);
+  const lazyLoaded = useRef(false);
+
   useEffect(() => {
     if (open) {
       setQuery("");
       setSelectedIndex(0);
       setHistory(loadHistory());
       setTimeout(() => inputRef.current?.focus(), 50);
+      // Fetch extended data once per open session
+      if (!lazyLoaded.current) {
+        lazyLoaded.current = true;
+        getDeliverables().then(setDeliverables).catch(() => {});
+        getHooks().then(setHooks).catch(() => {});
+        fetch("/api/composition-templates")
+          .then((r) => r.json())
+          .then((d: { templates?: WfTemplate[] }) => setWorkflows(d.templates ?? []))
+          .catch(() => {});
+      }
+    } else {
+      lazyLoaded.current = false;
     }
   }, [open]);
 
@@ -105,18 +127,44 @@ export default function CommandPalette({
     ? projects.filter((p) => p.name.toLowerCase().includes(q) || p.project_path?.toLowerCase().includes(q)).slice(0, 5)
     : projects.filter((p) => p.id !== currentProject?.id).slice(0, 4);
 
+  const filteredDeliverables = q
+    ? deliverables.filter((d) =>
+        d.title.toLowerCase().includes(q) ||
+        d.agent_name?.toLowerCase().includes(q) ||
+        d.project_name?.toLowerCase().includes(q),
+      ).slice(0, 5)
+    : [];
+
+  const filteredHooks = q
+    ? hooks.filter((h) =>
+        h.title.toLowerCase().includes(q) ||
+        h.description?.toLowerCase().includes(q) ||
+        h.command.toLowerCase().includes(q),
+      ).slice(0, 5)
+    : [];
+
+  const filteredWorkflows = q
+    ? workflows.filter((w) => w.name.toLowerCase().includes(q)).slice(0, 4)
+    : workflows.slice(0, 3);
+
   type Item =
     | { kind: "action"; label: string; icon: string; bg: string; action: string }
     | { kind: "agent"; agent: Agent }
     | { kind: "task"; task: Task }
-    | { kind: "project"; project: Project };
+    | { kind: "project"; project: Project }
+    | { kind: "deliverable"; item: DeliverableItem }
+    | { kind: "hook"; hook: HookEntry }
+    | { kind: "workflow"; wf: WfTemplate };
 
   const items: Item[] = [
     ...recentActions.map((a) => ({ kind: "action" as const, ...a })),
     ...filteredActions.map((a) => ({ kind: "action" as const, ...a })),
+    ...filteredProjects.map((p) => ({ kind: "project" as const, project: p })),
     ...filteredAgents.map((a) => ({ kind: "agent" as const, agent: a })),
     ...filteredTasks.map((t) => ({ kind: "task" as const, task: t })),
-    ...filteredProjects.map((p) => ({ kind: "project" as const, project: p })),
+    ...filteredDeliverables.map((d) => ({ kind: "deliverable" as const, item: d })),
+    ...filteredHooks.map((h) => ({ kind: "hook" as const, hook: h })),
+    ...filteredWorkflows.map((w) => ({ kind: "workflow" as const, wf: w })),
   ];
 
   const safeIndex = items.length > 0 ? Math.min(selectedIndex, items.length - 1) : 0;
@@ -166,6 +214,15 @@ export default function CommandPalette({
     } else if (item.kind === "project") {
       saveHistory(`project:${item.project.id}`);
       onSelectProject?.(item.project);
+    } else if (item.kind === "deliverable") {
+      saveHistory(`deliverable:${item.item.id}`);
+      onNavigate("deliverables");
+    } else if (item.kind === "hook") {
+      saveHistory(`hook:${item.hook.id}`);
+      onNavigate("hooks");
+    } else if (item.kind === "workflow") {
+      saveHistory(`workflow:${item.wf.id}`);
+      onNavigate("workflow");
     }
     onClose();
   }, [onClose, onCreateTask, onNavigate, onSelectProject]);
@@ -544,6 +601,77 @@ export default function CommandPalette({
                     >
                       {task.status?.replace("_", " ").toUpperCase()}
                     </span>
+                  </Row>
+                );
+              })}
+            </div>
+          )}
+
+          {/* 산출물 */}
+          {filteredDeliverables.length > 0 && (
+            <div>
+              <SectionHeader label={t({ ko: "산출물", en: "Deliverables", ja: "成果物", zh: "产出物" })} />
+              {filteredDeliverables.map((d) => {
+                const idx = flatIdx++;
+                const isSel = idx === safeIndex;
+                const isDone = d.status === "done";
+                return (
+                  <Row key={d.id} item={{ kind: "deliverable", item: d }} idx={idx}>
+                    <span style={{ width: 28, height: 28, borderRadius: 7, background: isDone ? "rgba(74,222,128,0.15)" : "rgba(245,158,11,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, flexShrink: 0, position: "relative", zIndex: 1 }}>
+                      {isDone ? "✓" : "◎"}
+                    </span>
+                    <div style={{ flex: 1, textAlign: "left", overflow: "hidden", position: "relative", zIndex: 1 }}>
+                      <div style={{ ...sf, fontSize: 14, color: isSel ? "var(--th-text-heading)" : "var(--th-text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.title}</div>
+                      {d.agent_name && <div style={{ ...sf, fontSize: 11, color: "var(--th-text-muted)", marginTop: 1 }}>{d.agent_name}{d.project_name ? ` · ${d.project_name}` : ""}</div>}
+                    </div>
+                    <span style={{ ...sf, fontSize: 10, color: isDone ? "#4ade80" : "var(--th-accent)", background: "var(--th-bg-panel)", borderRadius: 5, padding: "2px 7px", flexShrink: 0, position: "relative", zIndex: 1, textTransform: "uppercase" }}>
+                      {d.status}
+                    </span>
+                  </Row>
+                );
+              })}
+            </div>
+          )}
+
+          {/* 훅 */}
+          {filteredHooks.length > 0 && (
+            <div>
+              <SectionHeader label={t({ ko: "훅", en: "Hooks", ja: "フック", zh: "钩子" })} />
+              {filteredHooks.map((h) => {
+                const idx = flatIdx++;
+                const isSel = idx === safeIndex;
+                return (
+                  <Row key={h.id} item={{ kind: "hook", hook: h }} idx={idx}>
+                    <IconBox icon="⤷" bg="#32ade6" />
+                    <div style={{ flex: 1, textAlign: "left", overflow: "hidden", position: "relative", zIndex: 1 }}>
+                      <div style={{ ...sf, fontSize: 14, color: isSel ? "var(--th-text-heading)" : "var(--th-text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{h.title}</div>
+                      <div style={{ ...sf, fontSize: 11, color: "var(--th-text-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 1, fontFamily: "var(--th-font-mono)" }}>{h.command}</div>
+                    </div>
+                    <span style={{ ...sf, fontSize: 10, color: "var(--th-text-muted)", background: "var(--th-bg-panel)", borderRadius: 5, padding: "2px 7px", flexShrink: 0, position: "relative", zIndex: 1 }}>
+                      {h.event_type}
+                    </span>
+                  </Row>
+                );
+              })}
+            </div>
+          )}
+
+          {/* 워크플로 */}
+          {filteredWorkflows.length > 0 && (
+            <div>
+              <SectionHeader label={t({ ko: "저장된 워크플로", en: "Workflows", ja: "ワークフロー", zh: "工作流" })} />
+              {filteredWorkflows.map((wf) => {
+                const idx = flatIdx++;
+                const isSel = idx === safeIndex;
+                let nodeCount = 0;
+                try { nodeCount = (JSON.parse(wf.nodes_json) as unknown[]).length; } catch { /* ignore */ }
+                return (
+                  <Row key={wf.id} item={{ kind: "workflow", wf }} idx={idx}>
+                    <IconBox icon="⬡" bg="#8b5cf6" />
+                    <div style={{ flex: 1, textAlign: "left", overflow: "hidden", position: "relative", zIndex: 1 }}>
+                      <div style={{ ...sf, fontSize: 14, color: isSel ? "var(--th-text-heading)" : "var(--th-text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{wf.name}</div>
+                      <div style={{ ...sf, fontSize: 11, color: "var(--th-text-muted)", marginTop: 1 }}>{nodeCount} nodes</div>
+                    </div>
                   </Row>
                 );
               })}

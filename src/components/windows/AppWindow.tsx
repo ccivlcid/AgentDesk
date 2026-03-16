@@ -229,73 +229,81 @@ export default function AppWindow({
         width: size.w,
         height: size.h,
         background: "var(--th-bg-surface)",
-        backdropFilter: "blur(20px)",
-        border: "1px solid var(--th-border)",
-        borderRadius: 10,
+        backdropFilter: "blur(24px)",
+        WebkitBackdropFilter: "blur(24px)",
+        border: "1px solid var(--th-border-strong)",
+        borderRadius: 12,
         display: "flex",
         flexDirection: "column",
         overflow: "hidden",
         zIndex: 200,
-        boxShadow: "0 16px 48px var(--th-glass-shadow)",
+        boxShadow: "0 20px 60px rgba(0,0,0,0.5), 0 0 0 0.5px rgba(255,255,255,0.06) inset",
       }}
     >
-      {/* Titlebar */}
+      {/* ── macOS unified titlebar ── */}
       <div
         onMouseDown={onTitlebarMouseDown}
         style={{
+          position: "relative",
           display: "flex",
           alignItems: "center",
-          padding: "8px 12px",
-          borderBottom: tabs ? "none" : "1px solid var(--th-border)",
-          cursor: "grab",
+          height: 44,
+          padding: "0 14px",
           background: "var(--th-glass-bg)",
+          borderBottom: "1px solid var(--th-border)",
+          cursor: "grab",
           flexShrink: 0,
-          gap: 8,
+          userSelect: "none",
         }}
       >
-        {/* Traffic lights */}
-        <TrafficLights
-          onClose={handleClose}
-          onMaximize={handleMaximize}
-        />
-        <span style={{ fontFamily: mono, fontSize: 11, color: "var(--th-text-muted)" }}>
-          {emoji} {title}
-        </span>
+        {/* Traffic lights — absolute left */}
+        <div style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", zIndex: 2 }}>
+          <TrafficLights onClose={handleClose} onMaximize={handleMaximize} />
+        </div>
+
+        {/* Title — centered */}
+        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, pointerEvents: "none" }}>
+          <span style={{ fontSize: 13 }}>{emoji}</span>
+          <span style={{ fontFamily: mono, fontSize: 12, fontWeight: 600, color: "var(--th-text-heading)", letterSpacing: "0.01em" }}>
+            {title}
+          </span>
+        </div>
+
+        {/* Tabs — inline pill style inside titlebar (right side) */}
+        {tabs && tabs.length > 0 && (
+          <div
+            style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", display: "flex", gap: 2, zIndex: 2 }}
+            onMouseDown={(e) => e.stopPropagation()}
+          >
+            {tabs.map((tab) => {
+              const active = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  style={{
+                    padding: "4px 11px",
+                    fontSize: 11,
+                    fontFamily: mono,
+                    fontWeight: active ? 600 : 400,
+                    background: active ? "var(--th-accent)" : "var(--th-bg-elevated)",
+                    color: active ? "#fff" : "var(--th-text-muted)",
+                    border: active ? "none" : "1px solid var(--th-border)",
+                    borderRadius: 6,
+                    cursor: "pointer",
+                    transition: "background 0.15s, color 0.15s",
+                    lineHeight: 1.4,
+                  }}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
 
-      {/* Tab bar */}
-      {tabs && tabs.length > 0 && (
-        <div style={{
-          display: "flex",
-          borderBottom: "1px solid var(--th-border)",
-          background: "var(--th-bg-sidebar)",
-          flexShrink: 0,
-          overflowX: "auto",
-        }}>
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              style={{
-                background: "none",
-                border: "none",
-                borderBottom: activeTab === tab.id ? "2px solid var(--th-accent)" : "2px solid transparent",
-                padding: "6px 14px",
-                fontFamily: mono,
-                fontSize: 11,
-                color: activeTab === tab.id ? "var(--th-accent)" : "var(--th-text-muted)",
-                cursor: "pointer",
-                whiteSpace: "nowrap",
-                transition: "color 0.15s",
-              }}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* Content — 스크롤 컨테이너 */}
+      {/* Content */}
       <div style={{ flex: 1, minHeight: 0, position: "relative", overflow: "hidden" }}>
         <div style={{ position: "absolute", inset: 0, overflowY: "auto", overflowX: "hidden" }}>
           {activeContent}
