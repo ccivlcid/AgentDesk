@@ -15,6 +15,8 @@ interface TaskReportPopupProps {
   departments: Department[];
   uiLanguage: UiLanguage;
   onClose: () => void;
+  /** AppWindow 내부 인라인 렌더 (전체화면 오버레이 없음) */
+  inline?: boolean;
 }
 
 const DOCUMENTS_PER_PAGE = 3;
@@ -49,7 +51,7 @@ function statusStyle(status: string): React.CSSProperties {
   return { background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" };
 }
 
-export default function TaskReportPopup({ report, agents, departments, uiLanguage, onClose }: TaskReportPopupProps) {
+export default function TaskReportPopup({ report, agents, departments, uiLanguage, onClose, inline = false }: TaskReportPopupProps) {
   const t = (text: { ko: string; en: string; ja?: string; zh?: string }) => pickLang(uiLanguage, text);
 
   const [currentReport, setCurrentReport] = useState<TaskReportDetail>(report);
@@ -556,24 +558,19 @@ export default function TaskReportPopup({ report, agents, departments, uiLanguag
     zh: "任务完成报告",
   });
 
-  return (
+  const inner = (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center"
-      style={{ background: "var(--th-modal-overlay)" }}
-      onClick={onClose}
+      className={inline ? "flex h-full w-full flex-col overflow-hidden" : "relative mx-4 flex w-full max-w-4xl flex-col overflow-hidden"}
+      style={inline ? {} : {
+        borderRadius: 10,
+        border: "1px solid var(--th-border)",
+        background: "var(--th-bg-elevated)",
+        maxHeight: "90vh",
+        boxShadow: "0 20px 50px rgba(0,0,0,0.4)",
+      }}
+      onClick={inline ? undefined : (e) => e.stopPropagation()}
     >
-      <div
-        className="relative mx-4 flex w-full max-w-4xl flex-col overflow-hidden"
-        style={{
-          borderRadius: 10,
-          border: "1px solid var(--th-border)",
-          background: "var(--th-bg-elevated)",
-          maxHeight: "90vh",
-          boxShadow: "0 20px 50px rgba(0,0,0,0.4)",
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <HeaderModalChrome title={reportTitle} onClose={onClose} />
+      {!inline && <HeaderModalChrome title={reportTitle} onClose={onClose} />}
         <div className="flex flex-wrap items-center gap-2 border-b border-[var(--th-border)] bg-[var(--th-bg-panel)] px-4 py-2.5">
           <span className="px-2 py-0.5 text-xs font-mono" style={{ borderRadius: 6, background: "var(--th-green-glow)", color: "var(--th-attr-elite)" }}>
             {projectName}
@@ -656,7 +653,7 @@ export default function TaskReportPopup({ report, agents, departments, uiLanguag
           </div>
         </div>
 
-        <div className="max-h-[68vh] overflow-y-auto px-6 py-4">
+        <div className={inline ? "flex-1 overflow-y-auto px-6 py-4 min-h-0" : "max-h-[68vh] overflow-y-auto px-6 py-4"}>
           {activeTab === "planning" ? (
             renderPlanningSummary()
           ) : activeTab === "artifacts" ? (
@@ -685,16 +682,37 @@ export default function TaskReportPopup({ report, agents, departments, uiLanguag
                 zh: `${teamReports.length} 个团队报告`,
               })}
             </span>
-            <button
-              onClick={onClose}
-              className="px-4 py-1.5 text-xs font-mono uppercase tracking-wide transition-all"
-              style={{ borderRadius: 0, background: "var(--th-accent)", color: "var(--th-accent-text)", border: "none" }}
-            >
-              {t({ ko: "확인", en: "OK", ja: "OK", zh: "确认" })}
-            </button>
+            {inline ? (
+              <button
+                onClick={onClose}
+                className="px-3 py-1.5 text-xs font-mono transition-all hover:opacity-80"
+                style={{ borderRadius: 6, background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)", border: "1px solid var(--th-border)" }}
+              >
+                ← {t({ ko: "목록으로", en: "Back to list", ja: "一覧へ", zh: "返回列表" })}
+              </button>
+            ) : (
+              <button
+                onClick={onClose}
+                className="px-4 py-1.5 text-xs font-mono uppercase tracking-wide transition-all"
+                style={{ borderRadius: 0, background: "var(--th-accent)", color: "var(--th-accent-text)", border: "none" }}
+              >
+                {t({ ko: "확인", en: "OK", ja: "OK", zh: "确认" })}
+              </button>
+            )}
           </div>
         </div>
-      </div>
+    </div>
+  );
+
+  if (inline) return inner;
+
+  return (
+    <div
+      className="fixed inset-0 flex items-center justify-center"
+      style={{ background: "var(--th-modal-overlay)", backdropFilter: "blur(3px)", zIndex: 1100 }}
+      onClick={onClose}
+    >
+      {inner}
     </div>
   );
 }

@@ -9,8 +9,13 @@ const AgentRepl = lazy(() => import("../AgentRepl"));
 export default function ReplWindow() {
   const { t } = useI18n();
   const { agents } = useAgentStore();
-  const { projects, currentProjectId } = useProjectStore();
+  const { projects, currentProjectId, projectAgentIds, projectAgentsLoaded } = useProjectStore();
   const currentProject = projects.find((p) => p.id === currentProjectId) ?? null;
+
+  // 프로젝트가 선택돼있고 에이전트 목록이 로드됐으면 프로젝트 에이전트만, 아니면 전체
+  const filteredAgents = currentProject && projectAgentsLoaded && projectAgentIds.size > 0
+    ? agents.filter((a) => projectAgentIds.has(a.id))
+    : agents;
 
   return (
     <AppWindow
@@ -26,7 +31,7 @@ export default function ReplWindow() {
             loading...
           </div>
         }>
-          <AgentRepl agents={agents} currentProject={currentProject} />
+          <AgentRepl agents={filteredAgents} currentProject={currentProject} />
         </Suspense>
       </div>
     </AppWindow>

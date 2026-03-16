@@ -37,6 +37,8 @@ interface AppWindowProps {
   defaultHeight?: number;
   defaultX?: number;
   defaultY?: number;
+  /** Override default closeWindow(windowType) behavior for the traffic-lights red button */
+  onClose?: () => void;
 }
 
 type ResizeDir = "n" | "s" | "e" | "w" | "ne" | "nw" | "se" | "sw";
@@ -53,6 +55,8 @@ interface ResizeState {
 
 const MIN_W = 400;
 const MIN_H = 300;
+const MENUBAR_H = 44;   // top menu bar height
+const DOCK_CLEARANCE = 88; // dock height + bottom margin
 
 function computeResize(
   ev: MouseEvent,
@@ -104,13 +108,22 @@ export default function AppWindow({
   defaultHeight = 560,
   defaultX,
   defaultY,
+  onClose,
 }: AppWindowProps) {
   const { closeWindow } = useUiStore();
+  const handleClose = onClose ?? (() => closeWindow(windowType));
   const [activeTab, setActiveTab] = useState(tabs?.[0]?.id ?? "");
 
   const fallbackX = defaultX ?? Math.max(40, (window.innerWidth - defaultWidth) / 2);
-  const fallbackY = defaultY ?? Math.max(60, (window.innerHeight - defaultHeight) / 3);
-  const saved = loadWinState(windowType, { x: fallbackX, y: fallbackY, w: defaultWidth, h: defaultHeight });
+  const availH = window.innerHeight - MENUBAR_H - DOCK_CLEARANCE;
+  const safeH = Math.min(defaultHeight, availH);
+  const fallbackY = defaultY ?? Math.max(MENUBAR_H, (window.innerHeight - safeH) / 3);
+  const raw = loadWinState(windowType, { x: fallbackX, y: fallbackY, w: defaultWidth, h: safeH });
+  // 저장된 위치가 Dock 영역을 침범하면 보정
+  const saved = {
+    ...raw,
+    h: Math.min(raw.h, window.innerHeight - DOCK_CLEARANCE - raw.y),
+  };
   const [pos, setPos] = useState({ x: saved.x, y: saved.y });
   const [size, setSize] = useState({ w: saved.w, h: saved.h });
   const [maximized, setMaximized] = useState(false);
@@ -119,8 +132,8 @@ export default function AppWindow({
   function handleMaximize() {
     if (!maximized) {
       preMaxRef.current = { x: pos.x, y: pos.y, w: size.w, h: size.h };
-      setPos({ x: 0, y: 44 });
-      setSize({ w: window.innerWidth, h: window.innerHeight - 44 });
+      setPos({ x: 0, y: MENUBAR_H });
+      setSize({ w: window.innerWidth, h: window.innerHeight - MENUBAR_H - DOCK_CLEARANCE });
       setMaximized(true);
     } else {
       const prev = preMaxRef.current ?? { x: fallbackX, y: fallbackY, w: defaultWidth, h: defaultHeight };
@@ -139,15 +152,17 @@ export default function AppWindow({
 
     function onMove(ev: MouseEvent) {
       if (!dragStart.current) return;
+      const maxY = window.innerHeight - DOCK_CLEARANCE - 40;
       setPos({
         x: Math.max(0, dragStart.current.ox + ev.clientX - dragStart.current.mx),
-        y: Math.max(44, dragStart.current.oy + ev.clientY - dragStart.current.my),
+        y: Math.min(maxY, Math.max(MENUBAR_H, dragStart.current.oy + ev.clientY - dragStart.current.my)),
       });
     }
     function onUp(ev: MouseEvent) {
       if (!dragStart.current) return;
+      const maxY = window.innerHeight - DOCK_CLEARANCE - 40;
       const nx = Math.max(0, dragStart.current.ox + ev.clientX - dragStart.current.mx);
-      const ny = Math.max(44, dragStart.current.oy + ev.clientY - dragStart.current.my);
+      const ny = Math.min(maxY, Math.max(MENUBAR_H, dragStart.current.oy + ev.clientY - dragStart.current.my));
       setPos({ x: nx, y: ny });
       saveWinState(windowType, { x: nx, y: ny, w: size.w, h: size.h });
       dragStart.current = null;
@@ -170,15 +185,19 @@ export default function AppWindow({
         ow: size.w, oh: size.h,
       };
 
+      function clampResize(r: { x: number; y: number; w: number; h: number }) {
+        const maxH = window.innerHeight - DOCK_CLEARANCE - r.y;
+        return { ...r, h: Math.min(r.h, maxH) };
+      }
       function onMove(ev: MouseEvent) {
         if (!resizeState.current) return;
-        const r = computeResize(ev, resizeState.current);
+        const r = clampResize(computeResize(ev, resizeState.current));
         setPos({ x: r.x, y: r.y });
         setSize({ w: r.w, h: r.h });
       }
       function onUp(ev: MouseEvent) {
         if (!resizeState.current) return;
-        const r = computeResize(ev, resizeState.current);
+        const r = clampResize(computeResize(ev, resizeState.current));
         setPos({ x: r.x, y: r.y });
         setSize({ w: r.w, h: r.h });
         saveWinState(windowType, { x: r.x, y: r.y, w: r.w, h: r.h });
@@ -236,7 +255,7 @@ export default function AppWindow({
       >
         {/* Traffic lights */}
         <TrafficLights
-          onClose={() => closeWindow(windowType)}
+          onClose={handleClose}
           onMaximize={handleMaximize}
         />
         <span style={{ fontFamily: mono, fontSize: 11, color: "var(--th-text-muted)" }}>
@@ -276,9 +295,11 @@ export default function AppWindow({
         </div>
       )}
 
-      {/* Content */}
-      <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden", minHeight: 0 }}>
-        {activeContent}
+      {/* Content — 스크롤 컨테이너 */}
+      <div style={{ flex: 1, minHeight: 0, position: "relative", overflow: "hidden" }}>
+        <div style={{ position: "absolute", inset: 0, overflowY: "auto", overflowX: "hidden" }}>
+          {activeContent}
+        </div>
       </div>
 
       {/* ── Resize handles ── */}

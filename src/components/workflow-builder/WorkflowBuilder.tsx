@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   ReactFlow,
   Background,
@@ -28,36 +28,38 @@ const NODE_TYPES: NodeTypes = {
   condition: WbConditionNode,
 };
 
+const API = "/api/composition-templates";
+
 const INITIAL_NODES: Node[] = [
   {
     id: "trigger-1",
     type: "trigger",
-    position: { x: 300, y: 40 },
+    position: { x: 320, y: 40 },
     data: { label: "PR Created", triggerType: "webhook" } satisfies TriggerNodeData,
   },
   {
     id: "agent-1",
     type: "agent",
-    position: { x: 240, y: 160 },
-    data: { label: "Code Review", agentName: "reviewer", emoji: "⊙", skill: "code-review" } satisfies AgentNodeData,
+    position: { x: 260, y: 200 },
+    data: { label: "Code Review", emoji: "⊙", skill: "code-review" } satisfies AgentNodeData,
   },
   {
     id: "gate-1",
     type: "gate",
-    position: { x: 240, y: 300 },
+    position: { x: 260, y: 400 },
     data: { label: "Review Result", branches: ["success", "failure"] } satisfies GateNodeData,
   },
   {
     id: "agent-2",
     type: "agent",
-    position: { x: 440, y: 420 },
-    data: { label: "Merge", agentName: "merger", emoji: "↗" } satisfies AgentNodeData,
+    position: { x: 480, y: 570 },
+    data: { label: "Merge", emoji: "↗" } satisfies AgentNodeData,
   },
   {
     id: "agent-3",
     type: "agent",
-    position: { x: 80, y: 420 },
-    data: { label: "Fix Issues", agentName: "dev", emoji: "⊙", skill: "development" } satisfies AgentNodeData,
+    position: { x: 40, y: 570 },
+    data: { label: "Fix Issues", emoji: "⊙", skill: "development" } satisfies AgentNodeData,
   },
 ];
 
@@ -68,7 +70,15 @@ const INITIAL_EDGES: Edge[] = [
   { id: "e4", source: "gate-1", sourceHandle: "failure", target: "agent-3", label: "fail", style: { stroke: "#ef4444" }, labelStyle: { fontFamily: "var(--th-font-mono)", fontSize: 10 } },
 ];
 
-const LS_KEY = "agentdesk_workflow_builder";
+const LS_KEY = "agentdesk_workflow_builder_v2";
+
+type Template = {
+  id: string;
+  name: string;
+  nodes_json: string;
+  edges_json: string;
+  updated_at: number;
+};
 
 type PaletteItem = {
   type: "trigger" | "agent" | "gate" | "condition";
@@ -84,37 +94,96 @@ export default function WorkflowBuilder() {
   const [edges, setEdges, onEdgesChange] = useEdgesState(loadSaved()?.edges ?? INITIAL_EDGES);
   const [saved, setSaved] = useState(false);
   const [workflowName, setWorkflowName] = useState(loadSaved()?.name ?? "PR Review Pipeline");
+  const [currentId, setCurrentId] = useState<string | null>(null);
+  const [templates, setTemplates] = useState<Template[]>([]);
+  const [showTemplates, setShowTemplates] = useState(false);
 
   const mono = "var(--th-font-mono)";
+
+  // Load templates from server
+  const loadTemplates = useCallback(() => {
+    fetch(API)
+      .then((r) => r.json())
+      .then((d) => setTemplates(d.templates ?? []))
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => { loadTemplates(); }, [loadTemplates]);
 
   const onConnect = useCallback(
     (params: Connection) => setEdges((eds) => addEdge({ ...params, animated: false }, eds)),
     [setEdges],
   );
 
-  const handleSave = useCallback(() => {
+  // Save (create or update)
+  const handleSave = useCallback(async () => {
     const state = { name: workflowName, nodes, edges };
     localStorage.setItem(LS_KEY, JSON.stringify(state));
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
-  }, [workflowName, nodes, edges]);
+    try {
+      if (currentId) {
+        await fetch(`${API}/${currentId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: workflowName, nodes, edges }),
+        });
+      } else {
+        const res = await fetch(API, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: workflowName, nodes, edges }),
+        });
+        const data = await res.json() as { id?: string };
+        if (data.id) setCurrentId(data.id);
+      }
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+      loadTemplates();
+    } catch { /* non-fatal */ }
+  }, [workflowName, nodes, edges, currentId, loadTemplates]);
 
-  const handleReset = useCallback(() => {
+  // New workflow
+  const handleNew = useCallback(() => {
     setNodes(INITIAL_NODES);
     setEdges(INITIAL_EDGES);
-    setWorkflowName("PR Review Pipeline");
+    setWorkflowName(t({ ko: "새 워크플로", en: "New Workflow", ja: "新しいワークフロー", zh: "新工作流" }));
+    setCurrentId(null);
     localStorage.removeItem(LS_KEY);
+  }, [setNodes, setEdges, t]);
+
+  // Load template
+  const handleLoadTemplate = useCallback((tpl: Template) => {
+    try {
+      setNodes(JSON.parse(tpl.nodes_json) as Node[]);
+      setEdges(JSON.parse(tpl.edges_json) as Edge[]);
+      setWorkflowName(tpl.name);
+      setCurrentId(tpl.id);
+      setShowTemplates(false);
+    } catch { /* ignore parse errors */ }
   }, [setNodes, setEdges]);
+
+  // Delete template
+  const handleDelete = useCallback(async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await fetch(`${API}/${id}`, { method: "DELETE" });
+      if (currentId === id) handleNew();
+      loadTemplates();
+    } catch { /* ignore */ }
+  }, [currentId, handleNew, loadTemplates]);
 
   const handleAddNode = useCallback((item: PaletteItem) => {
     const id = `${item.type}-${Date.now()}`;
-    const newNode: Node = {
-      id,
-      type: item.type,
-      position: { x: 200 + Math.random() * 200, y: 200 + Math.random() * 200 },
-      data: { ...item.defaultData },
-    };
-    setNodes((nds) => [...nds, newNode]);
+    setNodes((nds) => {
+      const col = nds.length % 3;
+      const row = Math.floor(nds.length / 3);
+      const newNode: Node = {
+        id,
+        type: item.type,
+        position: { x: 160 + col * 220, y: 100 + row * 200 },
+        data: { ...item.defaultData },
+      };
+      return [...nds, newNode];
+    });
   }, [setNodes]);
 
   const paletteItems: PaletteItem[] = [
@@ -176,47 +245,111 @@ export default function WorkflowBuilder() {
             background: "transparent",
             border: "none",
             outline: "none",
-            minWidth: 120,
+            minWidth: 140,
           }}
         />
+        {currentId && (
+          <span style={{ fontFamily: mono, fontSize: 9, color: "var(--th-text-muted)" }}>
+            #{currentId.slice(0, 8)}
+          </span>
+        )}
+
         <div style={{ marginLeft: "auto", display: "flex", gap: 6 }}>
+          {/* Templates */}
           <button
-            onClick={handleReset}
+            onClick={() => setShowTemplates((v) => !v)}
             style={{
-              fontFamily: mono,
-              fontSize: 10,
-              padding: "4px 10px",
-              background: "transparent",
-              border: "1px solid var(--th-border)",
-              borderRadius: 5,
-              cursor: "pointer",
-              color: "var(--th-text-muted)",
+              fontFamily: mono, fontSize: 10, padding: "4px 10px",
+              background: showTemplates ? "var(--th-active-bg)" : "transparent",
+              border: "1px solid var(--th-border)", borderRadius: 5, cursor: "pointer",
+              color: showTemplates ? "var(--th-accent)" : "var(--th-text-muted)",
+            }}
+          >
+            {t({ ko: "불러오기", en: "Templates", ja: "テンプレート", zh: "模板" })} ({templates.length})
+          </button>
+
+          {/* New */}
+          <button
+            onClick={handleNew}
+            style={{
+              fontFamily: mono, fontSize: 10, padding: "4px 10px",
+              background: "transparent", border: "1px solid var(--th-border)",
+              borderRadius: 5, cursor: "pointer", color: "var(--th-text-muted)",
             }}
             className="hover:bg-[var(--th-hover-bg)] hover:!text-[var(--th-text)]"
           >
-            {t({ ko: "초기화", en: "Reset", ja: "リセット", zh: "重置" })}
+            {t({ ko: "+ 신규", en: "+ New", ja: "+ 新規", zh: "+ 新建" })}
           </button>
+
+          {/* Save */}
           <button
-            onClick={handleSave}
+            onClick={() => { void handleSave(); }}
             style={{
-              fontFamily: mono,
-              fontSize: 10,
-              padding: "4px 10px",
+              fontFamily: mono, fontSize: 10, padding: "4px 10px",
               background: saved ? "#10b98122" : "var(--th-accent)",
-              border: "none",
-              borderRadius: 5,
-              cursor: "pointer",
+              border: "none", borderRadius: 5, cursor: "pointer",
               color: saved ? "#10b981" : "#fff",
-              fontWeight: 600,
-              transition: "background 0.2s",
+              fontWeight: 600, transition: "background 0.2s",
             }}
           >
             {saved
               ? t({ ko: "저장됨 ✓", en: "Saved ✓", ja: "保存済み ✓", zh: "已保存 ✓" })
-              : t({ ko: "저장", en: "Save", ja: "保存", zh: "保存" })}
+              : currentId
+                ? t({ ko: "업데이트", en: "Update", ja: "更新", zh: "更新" })
+                : t({ ko: "저장", en: "Save", ja: "保存", zh: "保存" })}
           </button>
         </div>
       </div>
+
+      {/* Templates dropdown */}
+      {showTemplates && (
+        <div style={{
+          background: "var(--th-bg-panel)",
+          borderBottom: "1px solid var(--th-border)",
+          padding: "8px 16px",
+          display: "flex",
+          gap: 8,
+          flexWrap: "wrap",
+          maxHeight: 130,
+          overflowY: "auto",
+          flexShrink: 0,
+        }}>
+          {templates.length === 0 ? (
+            <span style={{ fontFamily: mono, fontSize: 11, color: "var(--th-text-muted)" }}>
+              {t({ ko: "저장된 워크플로 없음", en: "No saved workflows", ja: "保存済みワークフローなし", zh: "没有保存的工作流" })}
+            </span>
+          ) : (
+            templates.map((tpl) => (
+              <div
+                key={tpl.id}
+                onClick={() => handleLoadTemplate(tpl)}
+                style={{
+                  display: "flex", alignItems: "center", gap: 6,
+                  padding: "4px 10px",
+                  background: tpl.id === currentId ? "var(--th-active-bg)" : "var(--th-bg-elevated)",
+                  border: `1px solid ${tpl.id === currentId ? "var(--th-accent)" : "var(--th-border)"}`,
+                  borderRadius: 6, cursor: "pointer",
+                  fontFamily: mono, fontSize: 11, color: "var(--th-text)",
+                }}
+                className="hover:border-[var(--th-accent)]"
+              >
+                <span>{tpl.name}</span>
+                <button
+                  onClick={(e) => { void handleDelete(tpl.id, e); }}
+                  style={{
+                    background: "none", border: "none", cursor: "pointer",
+                    color: "var(--th-text-muted)", fontSize: 14, padding: 0, lineHeight: 1,
+                  }}
+                  title={t({ ko: "삭제", en: "Delete", ja: "削除", zh: "删除" })}
+                  className="hover:!text-red-400"
+                >
+                  ×
+                </button>
+              </div>
+            ))
+          )}
+        </div>
+      )}
 
       {/* Canvas area */}
       <div style={{ flex: 1, minHeight: 0, display: "flex" }}>
@@ -241,18 +374,12 @@ export default function WorkflowBuilder() {
               onClick={() => handleAddNode(item)}
               title={t({ ko: "클릭해서 추가", en: "Click to add", ja: "クリックして追加", zh: "点击添加" })}
               style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                gap: 4,
-                padding: "8px 4px",
+                display: "flex", flexDirection: "column", alignItems: "center",
+                gap: 4, padding: "8px 4px",
                 background: "var(--th-bg-elevated)",
                 border: `1px solid var(--th-border)`,
                 borderTop: `2px solid ${typeof item.color === "string" && item.color.startsWith("var") ? "var(--th-accent)" : item.color}`,
-                borderRadius: 6,
-                cursor: "pointer",
-                fontFamily: mono,
-                transition: "box-shadow 0.1s",
+                borderRadius: 6, cursor: "pointer", fontFamily: mono, transition: "box-shadow 0.1s",
               }}
               className="hover:shadow-md hover:border-[var(--th-accent)]"
             >
@@ -282,12 +409,7 @@ export default function WorkflowBuilder() {
             }}
             style={{ background: "var(--th-bg-primary)" }}
           >
-            <Background
-              variant={BackgroundVariant.Dots}
-              gap={20}
-              size={1}
-              color="var(--th-border)"
-            />
+            <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="var(--th-border)" />
             <Controls
               style={{
                 fontFamily: "var(--th-font-mono)",
@@ -305,18 +427,11 @@ export default function WorkflowBuilder() {
               nodeColor="var(--th-accent)"
               maskColor="var(--th-modal-overlay)"
             />
-
-            {/* Help hint */}
             <Panel position="bottom-center">
               <div style={{
-                fontFamily: mono,
-                fontSize: 10,
-                color: "var(--th-text-muted)",
-                background: "var(--th-bg-panel)",
-                border: "1px solid var(--th-border)",
-                borderRadius: 5,
-                padding: "3px 10px",
-                pointerEvents: "none",
+                fontFamily: mono, fontSize: 10, color: "var(--th-text-muted)",
+                background: "var(--th-bg-panel)", border: "1px solid var(--th-border)",
+                borderRadius: 5, padding: "3px 10px", pointerEvents: "none",
               }}>
                 {t({
                   ko: "노드를 드래그하여 이동 · 핸들에서 드래그하여 연결",

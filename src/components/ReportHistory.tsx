@@ -92,6 +92,7 @@ export default function ReportHistory({ agents, departments, uiLanguage }: Repor
         departments={departments}
         uiLanguage={uiLanguage}
         onClose={() => setDetail(null)}
+        inline
       />
     );
   }

@@ -54,7 +54,8 @@ export default function BulkHideModal({ tasks, hiddenTaskIds, onClose, onApply }
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+      className="fixed inset-0 flex items-center justify-center"
+      style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(3px)", zIndex: 1100 }}
       onClick={(event) => event.target === event.currentTarget && onClose()}
     >
       <div className="w-full max-w-sm p-5 shadow-2xl overflow-hidden" style={{ borderRadius: 10, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", boxShadow: "0 20px 50px rgba(0,0,0,0.4)" }}>

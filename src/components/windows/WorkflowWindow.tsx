@@ -17,7 +17,11 @@ function Loading() {
 
 export default function WorkflowWindow() {
   const { agents } = useAgentStore();
-  const { currentProjectId } = useProjectStore();
+  const { currentProjectId, projectAgentIds, projectAgentsLoaded } = useProjectStore();
+
+  const filteredAgents = currentProjectId && projectAgentsLoaded && projectAgentIds.size > 0
+    ? agents.filter((a) => projectAgentIds.has(a.id))
+    : agents;
 
   return (
     <AppWindow
@@ -41,7 +45,7 @@ export default function WorkflowWindow() {
           label: "Scheduled",
           content: (
             <Suspense fallback={<Loading />}>
-              <ScheduledTasksPanel agents={agents} currentProjectId={currentProjectId} />
+              <ScheduledTasksPanel agents={filteredAgents} currentProjectId={currentProjectId} />
             </Suspense>
           ),
         },

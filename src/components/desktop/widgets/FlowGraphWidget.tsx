@@ -1,12 +1,18 @@
 import { lazy, Suspense } from "react";
 import { useAgentStore } from "../../../store/agentStore";
 import { useTaskStore } from "../../../store/taskStore";
+import { useProjectStore } from "../../../store/projectStore";
 
 const AgentFlowGraph = lazy(() => import("../../flow-graph/AgentFlowGraph"));
 
 export default function FlowGraphWidget() {
   const { agents, departments, subAgents } = useAgentStore();
   const { tasks, crossDeptDeliveries, meetingPresence } = useTaskStore();
+  const { projectAgentIds, projectAgentsLoaded, currentProjectId } = useProjectStore();
+
+  const filteredAgents = currentProjectId && projectAgentsLoaded && projectAgentIds.size > 0
+    ? agents.filter((a) => projectAgentIds.has(a.id))
+    : agents;
 
   return (
     <div style={{ width: "100%", height: "100%", overflow: "hidden" }}>
@@ -16,7 +22,7 @@ export default function FlowGraphWidget() {
         </div>
       }>
         <AgentFlowGraph
-          agents={agents}
+          agents={filteredAgents}
           departments={departments}
           tasks={tasks}
           subAgents={subAgents}

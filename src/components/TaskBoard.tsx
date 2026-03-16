@@ -20,6 +20,7 @@ import { useConfirm } from "./ui/ConfirmDialog";
 import ProjectManagerModal from "./ProjectManagerModal";
 import BulkHideModal from "./taskboard/BulkHideModal";
 import CreateTaskModal from "./taskboard/CreateTaskModal";
+import AppWindow from "./windows/AppWindow";
 import FilterBar from "./taskboard/FilterBar";
 import DependencyGraph from "./taskboard/DependencyGraph";
 import GanttChart from "./taskboard/GanttChart";
@@ -824,14 +825,23 @@ export function TaskBoard({
       )}
 
       {showCreate && (
-        <CreateTaskModal
-          agents={projectManagerAgents ?? agents}
-          departments={departments}
+        <AppWindow
+          windowType="create-task"
+          title="New Task"
+          emoji="✚"
+          defaultWidth={520}
+          defaultHeight={700}
           onClose={() => setShowCreate(false)}
-          onCreate={onCreateTask}
-          onAssign={onAssignTask}
-          defaultProjectId={currentProject?.id}
-        />
+        >
+          <CreateTaskModal
+            agents={projectManagerAgents ?? agents}
+            departments={departments}
+            onClose={() => setShowCreate(false)}
+            onCreate={onCreateTask}
+            onAssign={onAssignTask}
+            defaultProjectId={currentProject?.id}
+          />
+        </AppWindow>
       )}
 
       {showProjectManager && (

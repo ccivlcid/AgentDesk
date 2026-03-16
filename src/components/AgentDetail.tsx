@@ -325,7 +325,7 @@ export default function AgentDetail({
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
+    <div className="fixed inset-0 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.7)", backdropFilter: "blur(3px)", zIndex: 1100 }}>
       <div className="w-[calc(100vw-1.5rem)] max-w-[480px] max-h-[85vh] overflow-hidden rounded border shadow-2xl" style={{ background: "var(--th-bg-elevated)", borderColor: "var(--th-border-strong)" }}>
         <div
           className="relative px-6 py-5"

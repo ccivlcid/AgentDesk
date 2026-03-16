@@ -7,7 +7,8 @@ export type WindowType =
   | "chat"
   | "agent-manager"
   | "repl"
-  | "reports";
+  | "reports"
+  | "create-task";
 
 export type WidgetId =
   | "heartbeat"

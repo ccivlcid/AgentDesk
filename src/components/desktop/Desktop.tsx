@@ -143,14 +143,15 @@ export default function Desktop({
 
   function arrangeIcons(sortedSystemIds: string[], sortedProjectIds: string[]) {
     const newLayout: Record<string, { x: number; y: number }> = {};
-    const rightX = Math.max(window.innerWidth - 100, 900);
+    // 시스템 아이콘: 좌측 가로 한 줄
     sortedSystemIds.forEach((id, i) => {
-      newLayout[id] = { x: rightX, y: 60 + i * ICON_GRID_Y };
+      newLayout[id] = { x: 24 + i * ICON_GRID_X, y: 60 };
     });
+    // 프로젝트 아이콘: 그 아래 그리드
     sortedProjectIds.forEach((id, i) => {
       const col = i % 9;
       const row = Math.floor(i / 9);
-      newLayout[id] = { x: 24 + col * ICON_GRID_X, y: 60 + row * ICON_GRID_Y };
+      newLayout[id] = { x: 24 + col * ICON_GRID_X, y: 60 + ICON_GRID_Y + row * ICON_GRID_Y };
     });
     setDesktopIconLayout(newLayout);
   }
@@ -340,10 +341,9 @@ export default function Desktop({
 
   const allIcons = [...icons, ...widgetIconDefs];
 
-  // 기본 아이콘 배치 — 시스템/위젯 아이콘은 우측 세로 열, macOS 스타일
-  const colX = Math.max(window.innerWidth - 100, 900);
+  // 기본 아이콘 배치 — 좌측 가로 한 줄
   const DEFAULT_ICON_POSITIONS = allIcons.reduce<Record<string, { x: number; y: number }>>((acc, def, i) => {
-    acc[def.id] = { x: colX, y: 60 + i * 92 };
+    acc[def.id] = { x: 24 + i * ICON_GRID_X, y: 60 };
     return acc;
   }, {});
 
@@ -434,8 +434,8 @@ export default function Desktop({
             <DesktopIcon
               key={def.id}
               def={def}
-              defaultX={24 + col * 88}
-              defaultY={60 + row * 96}
+              defaultX={24 + col * ICON_GRID_X}
+              defaultY={60 + ICON_GRID_Y + row * ICON_GRID_Y}
             />
           );
         })}

@@ -759,7 +759,7 @@ export default function AnnouncementCliPanel({
   if (embedded) return panelContent;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-stretch justify-end">
+    <div className="fixed inset-0 flex items-stretch justify-end" style={{ zIndex: 1100 }}>
       <button
         type="button"
         className="absolute inset-0"

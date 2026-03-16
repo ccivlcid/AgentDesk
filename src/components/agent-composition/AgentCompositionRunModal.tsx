@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import type { Node, Edge } from "@xyflow/react";
 import { useProjectStore } from "../../store/projectStore";
+import { useTaskStore } from "../../store/taskStore";
 import { useI18n } from "../../i18n";
 import type { CompAgentNodeData } from "./nodes/CompAgentNode";
 
@@ -28,6 +29,7 @@ const mono = "var(--th-font-mono)";
 export default function AgentCompositionRunModal({ nodes, edges, templateName, onClose, onSuccess }: Props) {
   const { t } = useI18n();
   const { projects, currentProjectId } = useProjectStore();
+  const { tasks } = useTaskStore();
 
   const agentNodes = nodes.filter((n) => n.type === "comp_agent");
 
@@ -350,21 +352,70 @@ export default function AgentCompositionRunModal({ nodes, edges, templateName, o
               </div>
 
               {phase === "done" && (
-                <div
-                  style={{
-                    marginTop: 10,
-                    padding: "8px 12px",
-                    background: "#10b98122",
-                    border: "1px solid #10b98155",
-                    borderRadius: 5,
-                    fontFamily: mono,
-                    fontSize: 11,
-                    color: "#10b981",
-                  }}
-                >
-                  ✅ {createdIds.length}{" "}
-                  {t({ ko: "개 태스크가 생성되었습니다", en: "tasks created successfully", ja: "件のタスクが作成されました", zh: "个任务已成功创建" })}
-                </div>
+                <>
+                  <div
+                    style={{
+                      marginTop: 10,
+                      padding: "8px 12px",
+                      background: "#10b98122",
+                      border: "1px solid #10b98155",
+                      borderRadius: 5,
+                      fontFamily: mono,
+                      fontSize: 11,
+                      color: "#10b981",
+                    }}
+                  >
+                    ✅ {createdIds.length}{" "}
+                    {t({ ko: "개 태스크가 생성되었습니다", en: "tasks created successfully", ja: "件のタスクが作成されました", zh: "个任务已成功创建" })}
+                  </div>
+
+                  {/* Live execution monitor */}
+                  <div style={{ marginTop: 12 }}>
+                    <div style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-muted)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>
+                      {t({ ko: "실시간 실행 현황", en: "Live Execution Status", ja: "リアルタイム実行状況", zh: "实时执行状态" })}
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                      {items.map((item) => {
+                        const liveTask = tasks.find((tk) => createdIds.includes(tk.id) && tk.assigned_agent_id === item.agentId);
+                        const status = liveTask?.status ?? "planned";
+                        const statusColor =
+                          status === "done" ? "#22c55e" :
+                          status === "in_progress" || status === "collaborating" ? "var(--th-accent)" :
+                          status === "review" ? "#8b5cf6" :
+                          status === "cancelled" ? "var(--th-danger-border)" :
+                          "var(--th-text-muted)";
+                        const statusDot =
+                          status === "done" ? "✓" :
+                          status === "in_progress" || status === "collaborating" ? "▶" :
+                          status === "review" ? "◎" :
+                          status === "cancelled" ? "✗" :
+                          "·";
+                        return (
+                          <div
+                            key={item.nodeId}
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 8,
+                              padding: "5px 8px",
+                              background: "var(--th-bg-elevated)",
+                              border: "1px solid var(--th-border)",
+                              borderRadius: 5,
+                            }}
+                          >
+                            <span style={{ fontSize: 14, flexShrink: 0 }}>{item.emoji}</span>
+                            <span style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text)", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                              {item.name}
+                            </span>
+                            <span style={{ fontFamily: mono, fontSize: 10, color: statusColor, fontWeight: 600, flexShrink: 0 }}>
+                              {statusDot} {status}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </>
               )}
 
               {phase === "error" && (

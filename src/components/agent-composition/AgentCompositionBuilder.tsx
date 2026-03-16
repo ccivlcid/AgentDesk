@@ -17,6 +17,7 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { useAgentStore } from "../../store/agentStore";
+import { useProjectStore } from "../../store/projectStore";
 import { useI18n } from "../../i18n";
 import AgentCompositionRunModal from "./AgentCompositionRunModal";
 import CompAgentNode, { type CompAgentNodeData } from "./nodes/CompAgentNode";
@@ -37,6 +38,7 @@ type Template = {
 export default function AgentCompositionBuilder() {
   const { t } = useI18n();
   const { agents, departments } = useAgentStore();
+  const { currentProjectId, projectAgentIds, projectAgentsLoaded } = useProjectStore();
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   const [rfInstance, setRfInstance] = useState<ReactFlowInstance | null>(null);
@@ -193,16 +195,23 @@ export default function AgentCompositionBuilder() {
   // Whether canvas has any agent nodes (for Run button state)
   const hasCompAgents = useMemo(() => nodes.some((n) => n.type === "comp_agent"), [nodes]);
 
-  // Agent list — filter + group by department
+  // Agent list — project filter first, then search
+  const projectAgents = useMemo(
+    () => currentProjectId && projectAgentsLoaded && projectAgentIds.size > 0
+      ? agents.filter((a) => projectAgentIds.has(a.id))
+      : agents,
+    [agents, currentProjectId, projectAgentIds, projectAgentsLoaded],
+  );
+
   const filteredAgents = useMemo(() => {
     const q = agentSearch.toLowerCase();
-    return agents.filter((a) =>
+    return projectAgents.filter((a) =>
       !q ||
       a.name.toLowerCase().includes(q) ||
       (a.name_ko ?? "").toLowerCase().includes(q) ||
       (a.role ?? "").includes(q),
     );
-  }, [agents, agentSearch]);
+  }, [projectAgents, agentSearch]);
 
   const deptGroups = useMemo(
     () => (departments as Department[]).map((d) => ({

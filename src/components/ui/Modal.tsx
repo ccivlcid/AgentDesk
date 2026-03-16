@@ -84,8 +84,8 @@ export default function Modal({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center"
-      style={{ background: "var(--th-modal-overlay)", fontFamily: mono }}
+      className="fixed inset-0 flex items-center justify-center"
+      style={{ background: "var(--th-modal-overlay)", backdropFilter: "blur(3px)", fontFamily: mono, zIndex: 1100 }}
       onClick={persistent ? undefined : (e) => { if (e.target === e.currentTarget) onClose(); }}
       role="presentation"
     >

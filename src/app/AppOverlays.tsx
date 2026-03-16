@@ -199,7 +199,7 @@ export default function AppOverlays({
       )}
 
 
-      {showAgentStatus && <AgentStatusPanel agents={agents} uiLanguage={uiLanguage} onClose={onCloseAgentStatus} />}
+      {showAgentStatus && <AgentStatusPanel agents={groupChatAgents} uiLanguage={uiLanguage} onClose={onCloseAgentStatus} />}
 
     </>
   );

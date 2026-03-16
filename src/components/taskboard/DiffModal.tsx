@@ -106,8 +106,8 @@ function DiffModal({ taskId, onClose }: DiffModalProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center"
-      style={{ background: "var(--th-modal-overlay)" }}
+      className="fixed inset-0 flex items-center justify-center"
+      style={{ background: "var(--th-modal-overlay)", backdropFilter: "blur(3px)", zIndex: 1100 }}
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <div className="flex max-h-[85vh] w-full max-w-4xl flex-col overflow-hidden" style={{ borderRadius: 10, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", boxShadow: "0 20px 50px rgba(0,0,0,0.4)" }}>

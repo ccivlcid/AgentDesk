@@ -1,19 +1,43 @@
-import { type NodeProps, Handle, Position } from "@xyflow/react";
+import { type NodeProps, Handle, Position, useReactFlow } from "@xyflow/react";
 import { useI18n } from "../../../i18n";
+import { useAgentStore } from "../../../store/agentStore";
+import { useProjectStore } from "../../../store/projectStore";
 
 export type AgentNodeData = {
   label: string;
+  agentId?: string;
   agentName?: string;
   skill?: string;
   provider?: string;
   emoji?: string;
 };
 
-export default function WbAgentNode({ data, selected }: NodeProps) {
+export default function WbAgentNode({ id, data, selected }: NodeProps) {
   const { t } = useI18n();
+  const { updateNodeData } = useReactFlow();
+  const { agents } = useAgentStore();
+  const { currentProjectId, projectAgentIds, projectAgentsLoaded } = useProjectStore();
+
   const d = data as AgentNodeData;
   const mono = "var(--th-font-mono)";
   const accent = "var(--th-accent)";
+
+  const availableAgents = currentProjectId && projectAgentsLoaded && projectAgentIds.size > 0
+    ? agents.filter((a) => projectAgentIds.has(a.id))
+    : agents;
+
+  const handleAgentChange = (agentId: string) => {
+    const agent = agents.find((a) => a.id === agentId);
+    if (agent) {
+      updateNodeData(id, {
+        agentId,
+        agentName: agent.name,
+        emoji: agent.avatar_emoji,
+      });
+    } else {
+      updateNodeData(id, { agentId: "", agentName: "", emoji: "⊙" });
+    }
+  };
 
   return (
     <div
@@ -55,14 +79,36 @@ export default function WbAgentNode({ data, selected }: NodeProps) {
 
       {/* Body */}
       <div style={{ padding: "6px 10px 8px" }}>
-        <div style={{ fontSize: 12, fontWeight: 600, color: "var(--th-text-heading)" }}>
+        <div style={{ fontSize: 12, fontWeight: 600, color: "var(--th-text-heading)", marginBottom: 5 }}>
           {d.label || t({ ko: "에이전트 스텝", en: "Agent Step", ja: "エージェントステップ", zh: "代理步骤" })}
         </div>
-        {d.agentName && (
-          <div style={{ fontSize: 10, color: "var(--th-text-muted)", marginTop: 2 }}>
-            @{d.agentName}
-          </div>
-        )}
+
+        {/* Agent selector */}
+        <select
+          value={d.agentId ?? ""}
+          onChange={(e) => handleAgentChange(e.target.value)}
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            width: "100%",
+            fontFamily: mono,
+            fontSize: 10,
+            padding: "3px 6px",
+            background: "var(--th-bg-panel)",
+            border: "1px solid var(--th-border)",
+            borderRadius: 4,
+            color: d.agentId ? "var(--th-text)" : "var(--th-text-muted)",
+            outline: "none",
+            cursor: "pointer",
+          }}
+        >
+          <option value="">— {t({ ko: "에이전트 선택", en: "select agent", ja: "エージェント選択", zh: "选择代理" })} —</option>
+          {availableAgents.map((a) => (
+            <option key={a.id} value={a.id}>
+              {a.avatar_emoji} {a.name}
+            </option>
+          ))}
+        </select>
+
         {d.skill && (
           <div style={{
             display: "inline-block",

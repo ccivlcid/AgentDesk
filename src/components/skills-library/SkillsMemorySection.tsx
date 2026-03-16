@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { Agent } from "../../types";
 import SkillHistoryPanel from "../SkillHistoryPanel";
 import type { TFunction } from "./model";
@@ -15,22 +16,44 @@ export default function SkillsMemorySection({
   historyRefreshToken,
   onRefreshHistory,
 }: SkillsMemorySectionProps) {
+  const [collapsed, setCollapsed] = useState(false);
+
   return (
-    <div className="p-3" style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
-      <div className="mb-2 flex items-center justify-between">
-        <div className="text-sm font-semibold font-mono" style={{ color: "var(--th-text-heading)" }}>
-          {t({ ko: "학습 메모리", en: "Learning Memory", ja: "学習メモリ", zh: "学习记忆" })}
+    <div style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", overflow: "hidden" }}>
+      <button
+        type="button"
+        onClick={() => setCollapsed((v) => !v)}
+        className="w-full flex items-center justify-between px-3 py-2.5 transition-colors"
+        style={{
+          background: "none", border: "none",
+          borderBottom: collapsed ? "none" : "1px solid var(--th-border)",
+          cursor: "pointer", textAlign: "left",
+        }}
+        onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.03)"; }}
+        onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "none"; }}
+      >
+        <div className="flex items-center gap-2">
+          <span style={{ fontSize: 9, color: "var(--th-text-muted)", transition: "transform 0.18s", display: "inline-block", transform: collapsed ? "rotate(-90deg)" : "rotate(0deg)" }}>▾</span>
+          <span className="text-sm font-semibold font-mono" style={{ color: "var(--th-text-heading)" }}>
+            {t({ ko: "학습 메모리", en: "Learning Memory", ja: "学習メモリ", zh: "学习记忆" })}
+          </span>
         </div>
-        <div className="text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>
-          {t({ ko: "CLI별 스킬 이력", en: "Per-CLI skill history", ja: "CLI別スキル履歴", zh: "按 CLI 的技能记录" })}
+        <span className="text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>
+          {collapsed
+            ? t({ ko: "펼치기", en: "Expand", ja: "展開", zh: "展开" })
+            : t({ ko: "CLI별 스킬 이력", en: "Per-CLI skill history", ja: "CLI別スキル履歴", zh: "按 CLI 的技能记录" })}
+        </span>
+      </button>
+      {!collapsed && (
+        <div className="p-3">
+          <SkillHistoryPanel
+            agents={agents}
+            refreshToken={historyRefreshToken}
+            onLearningDataChanged={onRefreshHistory}
+            className="h-[380px]"
+          />
         </div>
-      </div>
-      <SkillHistoryPanel
-        agents={agents}
-        refreshToken={historyRefreshToken}
-        onLearningDataChanged={onRefreshHistory}
-        className="h-[380px]"
-      />
+      )}
     </div>
   );
 }

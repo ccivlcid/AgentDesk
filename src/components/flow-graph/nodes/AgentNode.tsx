@@ -33,7 +33,10 @@ export default function AgentNode({
   const isWorking = agent.status === "working";
   const isOffline = agent.status === "offline";
 
+  const isTaskDone = currentTask?.status === "done";
+
   const borderColor = (() => {
+    if (isTaskDone) return "#22c55e";
     switch (agent.status) {
       case "working": return "var(--th-accent)";
       case "break": return "var(--th-text-muted)";
@@ -42,7 +45,9 @@ export default function AgentNode({
     }
   })();
 
-  const boxShadow = isWorking
+  const boxShadow = isTaskDone
+    ? "0 0 8px #22c55e44"
+    : isWorking
     ? "0 0 8px var(--th-accent-glow)"
     : selected
     ? "0 0 6px var(--th-accent)"
@@ -50,12 +55,14 @@ export default function AgentNode({
 
   const opacity = dimmed ? 0.35 : isOffline ? 0.5 : 1;
 
-  const statusLabel = {
-    idle: t({ ko: "대기중", en: "idle", ja: "待機", zh: "空闲" }),
-    working: t({ ko: "작업중", en: "working", ja: "作業中", zh: "工作中" }),
-    break: t({ ko: "휴식", en: "break", ja: "休憩", zh: "休息" }),
-    offline: t({ ko: "오프라인", en: "offline", ja: "オフライン", zh: "离线" }),
-  }[agent.status];
+  const statusLabel = isTaskDone
+    ? t({ ko: "완료", en: "done", ja: "完了", zh: "已完成" })
+    : {
+      idle: t({ ko: "대기중", en: "idle", ja: "待機", zh: "空闲" }),
+      working: t({ ko: "작업중", en: "working", ja: "作業中", zh: "工作中" }),
+      break: t({ ko: "휴식", en: "break", ja: "休憩", zh: "休息" }),
+      offline: t({ ko: "오프라인", en: "offline", ja: "オフライン", zh: "离线" }),
+    }[agent.status];
 
   const mono = "var(--th-font-mono)";
 
@@ -155,8 +162,8 @@ export default function AgentNode({
             <span style={{
               fontFamily: mono,
               fontSize: 10,
-              color: isWorking ? "var(--th-accent)" : "var(--th-text-muted)",
-              fontWeight: isWorking ? 600 : 400,
+              color: isTaskDone ? "#22c55e" : isWorking ? "var(--th-accent)" : "var(--th-text-muted)",
+              fontWeight: isTaskDone || isWorking ? 600 : 400,
               flexShrink: 0,
             }}>
               {statusLabel}
@@ -173,14 +180,14 @@ export default function AgentNode({
             <span style={{
               fontFamily: mono,
               fontSize: 10,
-              color: "var(--th-text-muted)",
+              color: isTaskDone ? "#22c55e" : "var(--th-text-muted)",
               display: "block",
               overflow: "hidden",
               textOverflow: "ellipsis",
               whiteSpace: "nowrap",
             }}>
               {currentTask
-                ? currentTask.title
+                ? (isTaskDone ? `✓ ${currentTask.title}` : currentTask.title)
                 : t({ ko: "태스크 없음", en: "no task", ja: "タスクなし", zh: "无任务" })}
             </span>
           </div>

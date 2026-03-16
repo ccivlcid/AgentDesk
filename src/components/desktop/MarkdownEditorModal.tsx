@@ -266,7 +266,6 @@ export default function MarkdownEditorModal({ onClose, defaultProjectName }: Mar
                 fontSize: 14,
                 lineHeight: 1.75,
               }}
-              // eslint-disable-next-line react/no-danger
               dangerouslySetInnerHTML={{ __html: renderMarkdown(content) || `<p style="color:var(--th-text-muted); font-style:italic">${t({ ko: "미리볼 내용이 없습니다", en: "Nothing to preview", ja: "プレビューなし", zh: "暂无预览内容" })}</p>` }}
             />
           ) : (

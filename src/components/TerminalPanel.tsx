@@ -95,6 +95,7 @@ export default function TerminalPanel({
         border: "1px solid var(--th-border)",
         borderRadius: 10,
         overflow: "hidden",
+        zIndex: 1100,
       }}
     >
       {/* macOS 스타일 헤더 */}

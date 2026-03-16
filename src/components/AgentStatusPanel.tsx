@@ -121,8 +121,8 @@ export default function AgentStatusPanel({ agents, uiLanguage, onClose }: AgentS
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center"
-      style={{ background: "var(--th-modal-overlay)" }}
+      className="fixed inset-0 flex items-center justify-center"
+      style={{ background: "var(--th-modal-overlay)", backdropFilter: "blur(3px)", zIndex: 1100 }}
       onClick={onClose}
     >
       <div
@@ -229,7 +229,7 @@ export default function AgentStatusPanel({ agents, uiLanguage, onClose }: AgentS
               <p style={{ ...mono, fontSize: "10px", color: "var(--th-text-muted)", opacity: 0.5, marginTop: 4 }}>— 0 processes —</p>
             </div>
           ) : (
-            activeAgents.map((ag, idx) => {
+            activeAgents.filter((ag) => agents.some((a) => a.id === ag.id)).map((ag, idx) => {
               const fullAgent = agents.find((a) => a.id === ag.id);
               const agentName = localeName(uiLanguage, ag);
               const deptName = localeName(uiLanguage, { name: ag.dept_name, name_ko: ag.dept_name_ko });

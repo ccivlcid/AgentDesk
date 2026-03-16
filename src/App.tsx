@@ -8,6 +8,7 @@ import Desktop from "./components/desktop/Desktop";
 import AppOverlays from "./app/AppOverlays";
 import ProjectCreateModal from "./components/project-create-modal/ProjectCreateModal";
 import CreateTaskModal from "./components/taskboard/CreateTaskModal";
+import AppWindow from "./components/windows/AppWindow";
 import { useAppActions } from "./app/useAppActions";
 import { useActiveMeetingTaskId } from "./app/useActiveMeetingTaskId";
 import { useUpdateStatusPolling } from "./app/useUpdateStatusPolling";
@@ -306,38 +307,56 @@ export default function App() {
         />
       )}
       {showCreateTaskAfterCreate && currentProject && (
-        <CreateTaskModal
-          agents={agents}
-          departments={departments}
+        <AppWindow
+          windowType="create-task"
+          title="New Task"
+          emoji="✚"
+          defaultWidth={520}
+          defaultHeight={700}
           onClose={() => setShowCreateTaskAfterCreate(false)}
-          onCreate={(input) => {
-            void actions.handleCreateTask({
-              ...input,
-              project_id: currentProject.id,
-              project_path: currentProject.project_path ?? undefined,
-            });
-            setShowCreateTaskAfterCreate(false);
-          }}
-          onAssign={async (taskId, agentId) => { await actions.handleAssignTask(taskId, agentId); }}
-          defaultProjectId={currentProject.id}
-        />
+        >
+          <CreateTaskModal
+            agents={agents}
+            departments={departments}
+            onClose={() => setShowCreateTaskAfterCreate(false)}
+            onCreate={(input) => {
+              void actions.handleCreateTask({
+                ...input,
+                project_id: currentProject.id,
+                project_path: currentProject.project_path ?? undefined,
+              });
+              setShowCreateTaskAfterCreate(false);
+            }}
+            onAssign={async (taskId, agentId) => { await actions.handleAssignTask(taskId, agentId); }}
+            defaultProjectId={currentProject.id}
+          />
+        </AppWindow>
       )}
       {showCreateTask && (
-        <CreateTaskModal
-          agents={agents}
-          departments={departments}
+        <AppWindow
+          windowType="create-task"
+          title="New Task"
+          emoji="✚"
+          defaultWidth={520}
+          defaultHeight={700}
           onClose={() => setShowCreateTask(false)}
-          onCreate={(input) => {
-            void actions.handleCreateTask({
-              ...input,
-              project_id: currentProject?.id,
-              project_path: currentProject?.project_path ?? undefined,
-            });
-            setShowCreateTask(false);
-          }}
-          onAssign={async (taskId, agentId) => { await actions.handleAssignTask(taskId, agentId); }}
-          defaultProjectId={currentProject?.id}
-        />
+        >
+          <CreateTaskModal
+            agents={agents}
+            departments={departments}
+            onClose={() => setShowCreateTask(false)}
+            onCreate={(input) => {
+              void actions.handleCreateTask({
+                ...input,
+                project_id: currentProject?.id,
+                project_path: currentProject?.project_path ?? undefined,
+              });
+              setShowCreateTask(false);
+            }}
+            onAssign={async (taskId, agentId) => { await actions.handleAssignTask(taskId, agentId); }}
+            defaultProjectId={currentProject?.id}
+          />
+        </AppWindow>
       )}
     </Desktop>
   );

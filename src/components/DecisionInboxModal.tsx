@@ -165,8 +165,8 @@ export default function DecisionInboxModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center"
-      style={{ background: "var(--th-modal-overlay)" }}
+      className="fixed inset-0 flex items-center justify-center"
+      style={{ background: "var(--th-modal-overlay)", backdropFilter: "blur(3px)", zIndex: 1100 }}
       onClick={onClose}
     >
       <div

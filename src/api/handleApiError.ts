@@ -1,5 +1,6 @@
 import { isApiRequestError } from "./core";
-import type { ToastVariant } from "../components/ui/Toast";
+
+export type ToastVariant = "success" | "error" | "warning" | "info";
 
 /**
  * User-facing messages for known API error codes.
