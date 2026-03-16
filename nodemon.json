@@ -1,0 +1,15 @@
+{
+  "watch": ["server"],
+  "ext": "ts",
+  "exec": "tsx server/index.ts",
+  "ignore": [
+    "server/**/*.test.ts",
+    "server/**/*.spec.ts",
+    "**/node_modules/**",
+    "**/.git/**",
+    "**/*.log",
+    "**/.tsbuildinfo"
+  ],
+  "delay": "1500",
+  "verbose": false
+}

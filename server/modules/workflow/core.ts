@@ -230,7 +230,7 @@ export function initializeWorkflowPartA(ctx: RuntimeContext): WorkflowCoreExport
   // ---------------------------------------------------------------------------
   // WebSocket setup
   // ---------------------------------------------------------------------------
-  const { wsClients, broadcast } = createWsHub(nowMs);
+  const { wsClients, broadcast, handleClientMessage, removeClient } = createWsHub(nowMs);
 
   // ---------------------------------------------------------------------------
   // CLI spawn helpers (ported from agentdesk-kanban)
@@ -317,6 +317,8 @@ export function initializeWorkflowPartA(ctx: RuntimeContext): WorkflowCoreExport
   return {
     wsClients,
     broadcast,
+    handleClientMessage,
+    removeClient,
     activeProcesses,
     stopRequestedTasks,
     stopRequestModeByTask,

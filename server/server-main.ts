@@ -47,6 +47,19 @@ import { runVersionedMigrations } from "./modules/bootstrap/schema/versioned-mig
 export type { TaskCreationAuditInput } from "./modules/bootstrap/security-audit.ts";
 
 // ---------------------------------------------------------------------------
+// Log unhandled errors so we know why the API process exited (e.g. no more [api] logs)
+// ---------------------------------------------------------------------------
+(function registerProcessErrorHandlers() {
+  process.on("uncaughtException", (err) => {
+    logger.error({ err }, "[AgentDesk] uncaughtException — API process will exit");
+    process.exitCode = 1;
+  });
+  process.on("unhandledRejection", (reason, promise) => {
+    logger.error({ reason, promise }, "[AgentDesk] unhandledRejection — API process may exit");
+  });
+})();
+
+// ---------------------------------------------------------------------------
 // Startup environment validation
 // ---------------------------------------------------------------------------
 (function validateEnv() {

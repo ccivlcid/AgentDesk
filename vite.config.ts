@@ -14,15 +14,19 @@ type ProxyLike = {
     listener: (err: NodeJS.ErrnoException, req: IncomingMessage, res: ProxyErrorResponse) => void,
   ): void;
   on(event: "proxyReqWs", listener: (proxyReq: unknown, req: IncomingMessage, socket: Socket) => void): void;
+  removeAllListeners?(event: string): void;
 };
 
 const isServerResponse = (res: ProxyErrorResponse): res is ServerResponse<IncomingMessage> => {
   return typeof (res as ServerResponse<IncomingMessage>).writeHead === "function";
 };
 
-const silenceEpipe = (proxy: ProxyLike) => {
+/** API(8790) 미기동/재시작 시 ECONNREFUSED 등 프록시 에러 로그를 찍지 않고 502만 반환 */
+const silenceProxyErrors = (proxy: ProxyLike) => {
+  if (typeof proxy.removeAllListeners === "function") {
+    proxy.removeAllListeners("error");
+  }
   proxy.on("error", (err: NodeJS.ErrnoException, _req, res) => {
-    if (err.code === "EPIPE" || err.code === "ECONNRESET") return;
     if (res && isServerResponse(res) && !res.headersSent) {
       res.writeHead(502);
       res.end();
@@ -64,12 +68,12 @@ export default defineConfig({
     proxy: {
       "/api": {
         target: apiTarget,
-        configure: silenceEpipe,
+        configure: silenceProxyErrors,
       },
       "/ws": {
         target: wsTarget,
         ws: true,
-        configure: silenceEpipe,
+        configure: silenceProxyErrors,
       },
     },
   },

@@ -179,8 +179,10 @@ export interface WorkflowCoreExports {
   TASK_RUN_IDLE_TIMEOUT_MS: number;
   TASK_RUN_HARD_TIMEOUT_MS: number;
 
-  // Functions (broadcast has a known signature from ws/hub.ts)
+  // Functions (broadcast / handleClientMessage / removeClient from ws/hub.ts)
   broadcast(type: string, payload: unknown): void;
+  handleClientMessage: (ws: WebSocket, raw: string) => void;
+  removeClient: (ws: WebSocket) => void;
   createWorktree: (...args: any[]) => any;
   mergeWorktree: (...args: any[]) => any;
   mergeToDevAndCreatePR: (...args: any[]) => any;

@@ -29,6 +29,8 @@ export function initializeWorkflow(
     analyzeSubtaskDepartment: runtime.analyzeSubtaskDepartment,
     appendTaskLog: runtime.appendTaskLog,
     broadcast: runtime.broadcast,
+    handleClientMessage: runtime.handleClientMessage,
+    removeClient: runtime.removeClient,
     buildCliFailureMessage: runtime.buildCliFailureMessage,
     buildDirectReplyPrompt: runtime.buildDirectReplyPrompt,
     buildTaskExecutionPrompt: runtime.buildTaskExecutionPrompt,
