@@ -447,6 +447,10 @@ export function useRealtimeSync({
           }
         }
       }),
+      on("meeting_minutes_update", (_payload: unknown) => {
+        // Trigger a live sync so any open meeting minutes panel refreshes immediately
+        scheduleLiveSync(100);
+      }),
       on("chat_stream", (payload: unknown) => {
         const p = payload as {
           phase: "start" | "delta" | "end";

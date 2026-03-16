@@ -43,6 +43,14 @@ export default function FlowEdge({ edge, highlighted, dimmed }: FlowEdgeProps) {
           markerEnd: undefined as string | undefined,
           markerStart: undefined as string | undefined,
         };
+      case "collab":
+        return {
+          stroke: "var(--th-text-muted)",
+          strokeWidth: 1,
+          strokeDasharray: "2 5",
+          markerEnd: undefined as string | undefined,
+          markerStart: undefined as string | undefined,
+        };
     }
   })();
 

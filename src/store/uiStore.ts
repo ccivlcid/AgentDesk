@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type { CompanySettings } from "../types";
 import type { OAuthCallbackResult, RuntimeOs, View, WindowType, WidgetEntry, WidgetId } from "../app/types";
+import type { SettingsTab } from "../components/settings/types";
 import type { UpdateStatus } from "../api";
 import { detectBrowserLanguage } from "../i18n";
 import { UPDATE_BANNER_DISMISS_STORAGE_KEY } from "../app/constants";
@@ -85,6 +86,8 @@ interface UiStore {
   openTaskId: string | null;
   wallpaper: string;
 
+  settingsInitialTab: SettingsTab | null;
+  openSettings: (tab?: SettingsTab) => void;
   toggleWindow: (w: WindowType) => void;
   openWindow: (w: WindowType) => void;
   closeWindow: (w: WindowType) => void;
@@ -155,6 +158,11 @@ interface UiStore {
 export const useUiStore = create<UiStore>()((set) => ({
   // ── 데스크톱 OS 초기값 ────────────────────────────────────────────
   openWindows: new Set<WindowType>(),
+  settingsInitialTab: null,
+  openSettings: (tab) => set((s) => ({
+    openWindows: new Set([...s.openWindows, "settings" as WindowType]),
+    settingsInitialTab: tab ?? null,
+  })),
   widgetLayout: loadWidgetLayout(),
   desktopIconLayout: loadDesktopIconLayout(),
   desktopIconLabels: loadDesktopIconLabels(),

@@ -746,7 +746,7 @@
   font-weight: 700;
   letter-spacing: 0.8px;
   color: var(--th-text-muted);
-  background: rgba(255,255,255,0.04);
+  background: var(--th-hover-overlay-subtle);
   border: 1px solid var(--th-border);
   padding: 1px 6px;
 }
@@ -931,7 +931,7 @@
 .pack-hud__bar-wrap {
   width: 60px;
   height: 4px;
-  background: rgba(255,255,255,0.08);
+  background: var(--th-border);
   border-radius: 1px;
   overflow: hidden;
   flex-shrink: 0;

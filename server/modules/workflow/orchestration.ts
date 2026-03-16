@@ -683,6 +683,14 @@ export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrat
     getWorktreeDiffSummary,
     hasVisibleDiffSummary,
     insertNotification,
+    startTaskExecutionForAgent: (taskId: string, agentId: string) => {
+      const agent = db.prepare("SELECT * FROM agents WHERE id = ?").get(agentId) as { department_id?: string | null } | null;
+      if (!agent) return;
+      const deptRow = agent.department_id
+        ? (db.prepare("SELECT id, name FROM departments WHERE id = ?").get(agent.department_id) as { id: string; name: string } | null)
+        : null;
+      startTaskExecutionForAgent(taskId, agent, deptRow?.id ?? null, deptRow?.name ?? "");
+    },
   });
 
   function handleTaskRunComplete(taskId: string, exitCode: number): void {

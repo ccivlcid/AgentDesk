@@ -294,8 +294,8 @@ export default function AnnouncementCliPanel({
               borderLeft: "3px solid var(--th-accent)",
             }}
           >
-            {/* Traffic Lights */}
-            <TrafficLights onClose={onClose} />
+            {/* Traffic Lights — 독립 오버레이 모드에서만 표시 */}
+            {!embedded && <TrafficLights onClose={onClose} />}
 
             {/* 아이콘 + 제목 */}
             <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 0 }}>

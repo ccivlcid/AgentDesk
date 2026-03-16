@@ -28,7 +28,16 @@ export default function TasksWidget() {
   const { tasks, setTaskPanel } = useTaskStore();
   const { t } = useI18n();
 
-  const activeTasks = tasks.filter((t) => ACTIVE_STATUSES.includes(t.status));
+  const activeTasks = tasks.filter((task) => ACTIVE_STATUSES.includes(task.status));
+
+  const STATUS_TEXT: Partial<Record<TaskStatus, string>> = {
+    in_progress:   t({ ko: "진행 중", en: "in progress",   ja: "進行中",   zh: "进行中" }),
+    pending:       t({ ko: "대기",   en: "pending",        ja: "待機",     zh: "待处理" }),
+    collaborating: t({ ko: "협업",   en: "collaborating",  ja: "コラボ",   zh: "协作中" }),
+    review:        t({ ko: "검토",   en: "review",         ja: "レビュー", zh: "审查中" }),
+    done:          t({ ko: "완료",   en: "done",           ja: "完了",     zh: "已完成" }),
+    cancelled:     t({ ko: "취소",   en: "cancelled",      ja: "キャンセル", zh: "已取消" }),
+  };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
@@ -43,11 +52,11 @@ export default function TasksWidget() {
         color: "var(--th-text-muted)",
         flexShrink: 0,
       }}>
-        <span style={{ color: "var(--th-status-success)" }}>{tasks.filter((t) => t.status === "in_progress").length} in progress</span>
-        <span>{tasks.filter((t) => t.status === "pending").length} pending</span>
-        <span style={{ color: "var(--th-status-warning)" }}>{tasks.filter((t) => t.status === "review").length} review</span>
+        <span style={{ color: "var(--th-status-success)" }}>{tasks.filter((task) => task.status === "in_progress").length} {STATUS_TEXT.in_progress}</span>
+        <span>{tasks.filter((task) => task.status === "pending").length} {STATUS_TEXT.pending}</span>
+        <span style={{ color: "var(--th-status-warning)" }}>{tasks.filter((task) => task.status === "review").length} {STATUS_TEXT.review}</span>
         <span style={{ flex: 1 }} />
-        <span style={{ color: "var(--th-text-muted)" }}>{activeTasks.length} active</span>
+        <span style={{ color: "var(--th-text-muted)" }}>{activeTasks.length} {t({ ko: "활성", en: "active", ja: "アクティブ", zh: "活动" })}</span>
       </div>
 
       {/* 태스크 목록 */}
@@ -63,16 +72,16 @@ export default function TasksWidget() {
               onClick={() => setTaskPanel({ taskId: task.id, tab: "terminal" })}
               style={{
                 display: "flex",
-                alignItems: "flex-start",
+                alignItems: "center",
                 gap: 8,
                 padding: "5px 10px",
                 cursor: "pointer",
                 transition: "background 0.1s",
               }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.background = "rgba(255,255,255,0.04)"; }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.background = "var(--th-hover-overlay-subtle)"; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.background = "none"; }}
             >
-              <span style={{ fontFamily: mono, fontSize: 13, color: STATUS_COLOR[task.status] ?? "#64748b", lineHeight: 1.4 }}>
+              <span style={{ fontFamily: mono, fontSize: 13, color: STATUS_COLOR[task.status] ?? "var(--th-text-muted)", lineHeight: 1.4 }}>
                 {STATUS_LABEL[task.status] ?? "○"}
               </span>
               <div style={{ flex: 1, minWidth: 0 }}>
@@ -85,9 +94,29 @@ export default function TasksWidget() {
                   </div>
                 )}
               </div>
-              <span style={{ fontFamily: mono, fontSize: 9, color: STATUS_COLOR[task.status] ?? "#64748b", flexShrink: 0 }}>
-                {task.status}
+              <span style={{ fontFamily: mono, fontSize: 9, color: STATUS_COLOR[task.status] ?? "var(--th-text-muted)", flexShrink: 0 }}>
+                {STATUS_TEXT[task.status] ?? task.status}
               </span>
+              <button
+                onClick={(e) => { e.stopPropagation(); setTaskPanel({ taskId: task.id, tab: "minutes" }); }}
+                title={t({ ko: "회의록 보기", en: "View meeting minutes", ja: "会議録", zh: "会议纪要" })}
+                style={{
+                  flexShrink: 0,
+                  background: "none",
+                  border: "1px solid var(--th-border)",
+                  borderRadius: 3,
+                  padding: "1px 5px",
+                  cursor: "pointer",
+                  fontFamily: mono,
+                  fontSize: 9,
+                  color: "var(--th-text-muted)",
+                  lineHeight: 1.4,
+                }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "var(--th-text)"; (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--th-text-muted)"; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "var(--th-text-muted)"; (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--th-border)"; }}
+              >
+                {t({ ko: "회의록", en: "min", ja: "議事録", zh: "纪要" })}
+              </button>
             </div>
           ))
         )}

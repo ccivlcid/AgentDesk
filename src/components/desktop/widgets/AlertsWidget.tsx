@@ -67,10 +67,12 @@ export default function AlertsWidget() {
         alignItems: "center",
       }}>
         <span style={{ color: alertItems.length > 0 ? "var(--th-status-error)" : "var(--th-status-success)" }}>
-          {alertItems.length > 0 ? `⚠ ${alertItems.length} alert` : "✓ ok"}
+          {alertItems.length > 0
+            ? `⚠ ${alertItems.length} ${t({ ko: "알림", en: "alert", ja: "アラート", zh: "警告" })}`
+            : `✓ ${t({ ko: "정상", en: "ok", ja: "正常", zh: "正常" })}`}
         </span>
         {unread > 0 && (
-          <span style={{ color: "var(--th-accent)", fontSize: 9 }}>{unread} unread</span>
+          <span style={{ color: "var(--th-accent)", fontSize: 9 }}>{unread} {t({ ko: "읽지 않음", en: "unread", ja: "未読", zh: "未读" })}</span>
         )}
         <span style={{ flex: 1 }} />
         {loading && <span style={{ opacity: 0.4 }}>…</span>}
@@ -91,7 +93,7 @@ export default function AlertsWidget() {
                 alignItems: "flex-start",
                 gap: 8,
                 padding: "5px 10px",
-                borderBottom: "1px solid rgba(255,255,255,0.03)",
+                borderBottom: "1px solid var(--th-border)",
                 background: !n.read ? "rgba(245,158,11,0.04)" : "none",
               }}
             >

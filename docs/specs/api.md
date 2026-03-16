@@ -2,7 +2,7 @@
 
 This document defines a contributor-facing API baseline for AgentDesk.
 It is intentionally compact and focused on frequently used endpoints.
-Current baseline target: `v1.3.0` (local snapshot, 2026-03-16).
+Current baseline target: `v1.4.0` (local snapshot, 2026-03-16).
 
 ## Base
 
@@ -202,11 +202,31 @@ or
 | GET | `/api/projects/path-check` | Validate project path |
 | GET | `/api/projects/path-suggestions` | Suggested paths |
 | POST | `/api/projects/path-native-picker` | Native path picker |
+| GET | `/api/projects/:id/cost-summary` | Per-project cost aggregation |
+| GET | `/api/agents/:id/cost-summary` | Per-agent cost aggregation |
+| GET | `/api/cost-summary` | Company-wide cost aggregation |
+| GET | `/api/project-templates` | List project templates |
+| POST | `/api/project-templates` | Create project template |
+| DELETE | `/api/project-templates/:templateId` | Delete project template |
+| POST | `/api/projects/:id/apply-template/:templateId` | Apply a template to a project |
 | GET | `/api/github/status` | GitHub integration status |
 | GET | `/api/github/repos` | Repositories |
 | POST | `/api/github/clone` | Clone repository |
 | GET | `/api/update-status` | Update status |
 | POST | `/api/update-auto-config` | Toggle auto update |
+
+`GET /api/projects/:id/cost-summary` response shape:
+```json
+{
+  "project_id": "uuid",
+  "total_input_tokens": 12000,
+  "total_output_tokens": 4800,
+  "total_cost_usd": 0.042,
+  "by_agent": [
+    { "agent_id": "uuid", "agent_name": "string", "cost_usd": 0.012 }
+  ]
+}
+```
 
 ### 2.0 Categories & Project Team (Phase 1–2 New Endpoints)
 
@@ -499,7 +519,19 @@ Response shape per agent:
 The following endpoints are registered on the server but omitted from this baseline. See `server/modules/routes/**/*.ts` for the full list.
 
 - **Agents:** `GET /api/agents/active`, `GET /api/agents/cli-processes`, `POST /api/agents/:id/spawn`, `POST/DELETE /api/agents/:id/avatar`
-- **Tasks:** `GET /api/tasks/:id/execution`, `GET /api/tasks/:id/execution-events`, `GET /api/tasks/:id/dependencies`, `POST /api/tasks/:id/dependencies`, `DELETE /api/tasks/:id/dependencies/:depId`, `GET /api/tasks/:id/diff`, `POST /api/tasks/:id/merge`, `POST /api/tasks/:id/discard`, `POST /api/tasks/bulk-hide`
+- **Tasks:** `GET /api/tasks/:id/execution`, `GET /api/tasks/:id/execution-events`, `GET /api/tasks/:id/dependencies`, `POST /api/tasks/:id/dependencies` (see below), `DELETE /api/tasks/:id/dependencies/:depId`, `GET /api/tasks/:id/diff`, `POST /api/tasks/:id/merge`, `POST /api/tasks/:id/discard`, `POST /api/tasks/bulk-hide`
+
+`POST /api/tasks/:id/dependencies` request body:
+```json
+{
+  "depends_on_task_id": "uuid",
+  "gate_condition": "success",
+  "gate_branch": "true"
+}
+```
+- `gate_condition` (optional): Expression evaluated when the upstream task completes. Supported values: `success` / `exit_code == 0`, `failure` / `exit_code != 0`, `result contains "keyword"`. Defaults to pass-through (always true) if omitted.
+- `gate_branch` (optional): `"true"` | `"false"` — which condition-node branch this dependency follows. Used by the Workflow Builder when routing through a Condition node.
+- If gate condition evaluates to false at runtime, the downstream task is set to `cancelled`.
 - **Projects:** `GET /api/projects/:id`, `GET /api/projects/:id/burndown`, `GET /api/projects/path-browse`, `GET /api/projects/path-tree`, `GET /api/projects/:id/branches`, `GET /api/github/repos/:owner/:repo/branches`, `GET /api/github/clone/:cloneId`
 - **Skills:** `GET /api/skills/available`, `GET /api/skills/custom/:skillName/export`, `POST /api/skills/custom/import`
 - **Other:** `GET /api/agent-usage`, `GET /api/agent-usage/trends/daily`, `GET /api/agent-usage/:agentId`, `GET /api/decision-inbox`, etc. task-reports, deliverables, pipeline-gates, webhooks, backup, notifications, task-templates, custom-packs, worktrees, cli-usage, cost-alerts, oauth callback/device flow, update-auto-status, update-apply, etc. — see server route registration files.
@@ -509,6 +541,110 @@ The following endpoints are registered on the server but omitted from this basel
 - **Spec file:** `docs/specs/openapi.json`
 - **Serving:** The server reads this file and serves it at `GET /api/openapi.json`; Swagger UI is available at `/api/docs`.
 - **Load path:** Server code `server/modules/routes/ops/api-docs.ts` uses `docs/specs/openapi.json`.
+
+## Local LLM Manager API
+
+Base prefix: `/api/local-llm`
+
+### Backends
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/local-llm/backends` | List all backends with status (Ollama, LM Studio, llama.cpp, Jan) |
+| `POST` | `/api/local-llm/backends/:name/start` | Start backend (Ollama only; LM Studio returns `manual:true`) |
+| `POST` | `/api/local-llm/backends/:name/stop` | Stop backend (Ollama only) |
+| `POST` | `/api/local-llm/backends/:name/restart` | Restart backend (Ollama only) |
+
+**BackendInfo response shape:**
+```json
+{
+  "name": "ollama",
+  "label": "Ollama",
+  "installed": true,
+  "version": "0.3.4",
+  "running": true,
+  "port": 11434,
+  "base_url": "http://localhost:11434/v1",
+  "model_count": 3
+}
+```
+
+### Models
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/local-llm/models` | List installed models (from Ollama) |
+| `GET` | `/api/local-llm/models/gallery` | Gallery of 20 recommended models |
+| `POST` | `/api/local-llm/models/pull` | Pull (download) a model; progress broadcast via WS `local_llm_pull_progress` |
+| `DELETE` | `/api/local-llm/models/:name` | Delete an installed model |
+| `POST` | `/api/local-llm/sync` | Sync Ollama model list → `local_llm_models` DB table |
+
+**Pull request body:** `{ "model_name": "llama3.2:3b", "backend": "ollama" }`
+
+**WS broadcast `local_llm_pull_progress`:**
+```json
+{ "model": "llama3.2:3b", "status": "downloading|done|error", "percent": 42 }
+```
+
+### Providers (Agent Integration)
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/local-llm/providers` | List all local LLM models as provider options (Ollama + LM Studio) |
+| `POST` | `/api/local-llm/providers/test` | Ping a backend to check if it's running |
+| `POST` | `/api/local-llm/setup-provider` | Auto-register Ollama or LM Studio as an `api_providers` entry |
+
+`POST /api/local-llm/setup-provider` request body:
+```json
+{ "backend": "ollama" }
+```
+or
+```json
+{ "backend": "lmstudio" }
+```
+
+- Looks up an existing `api_providers` row by `base_url` (Ollama: `http://localhost:11434/v1`, LM Studio: `http://localhost:1234/v1`).
+- If none found, pings the backend; on success creates a new entry in `api_providers` with `type: "ollama"` or `type: "custom"` respectively.
+- Response: `{ "ok": true, "provider_id": "<uuid>" }`
+- On failure (backend not reachable): `{ "ok": false, "error": "backend_not_reachable" }`
+
+### Metrics & Monitoring
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/local-llm/metrics` | Current GPU/RAM/inference snapshot |
+| `GET` | `/api/local-llm/metrics/history?limit=50` | Recent inference log rows (joined with agent names) |
+| `GET` | `/api/local-llm/metrics/stats` | Per-model aggregates (total tokens, avg t/s, avg latency) |
+| `POST` | `/api/local-llm/log` | Record inference event (internal use) |
+
+**Metrics snapshot shape:**
+```json
+{
+  "gpu": { "name": "RTX 4090", "vram_total_bytes": ..., "vram_used_bytes": ..., "utilization_percent": 42 },
+  "ram": { "total_bytes": ..., "used_bytes": ..., "utilization_percent": 68 },
+  "inference": { "active_model": "llama3.2:3b", "tokens_per_second": 28.4 },
+  "collected_at": 1710000000000
+}
+```
+
+Metrics are also pushed via WebSocket every 5 seconds as `local_llm_metrics`.
+
+### Settings
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/local-llm/settings` | Get backend settings (host, port, auto_start) |
+| `PATCH` | `/api/local-llm/settings/:name` | Update settings for a backend (e.g. `ollama`) |
+
+### Inference Logging (Phase 20)
+
+When an agent executes a task via a local LLM provider (`api_provider_id` set, type = `ollama`/`lmstudio`/`openai`), completion stats are automatically recorded:
+- Token counts extracted from OpenAI-compatible SSE `usage` field
+- `latency_ms` measured from request start to stream end
+- `tokens_per_second` derived from completion tokens ÷ latency
+- Stored in `local_llm_inference_log` table, visible in Monitor tab
+
+---
 
 ## Known Follow-up
 

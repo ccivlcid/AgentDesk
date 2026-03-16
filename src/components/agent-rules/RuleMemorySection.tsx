@@ -32,7 +32,7 @@ export default function RuleMemorySection({
           borderBottom: collapsed ? "none" : "1px solid var(--th-border)",
           cursor: "pointer", textAlign: "left",
         }}
-        onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.03)"; }}
+        onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--th-hover-overlay-subtle)"; }}
         onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "none"; }}
       >
         <div className="flex items-center gap-2">

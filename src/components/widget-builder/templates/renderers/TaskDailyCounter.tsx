@@ -16,7 +16,7 @@ export default function TaskDailyCounter({ config }: { config: CustomFeatureConf
   }, []);
 
   const count = tasks.filter(
-    (t) => t.status === "completed" && t.updated_at >= todayStart,
+    (t) => t.status === "done" && t.updated_at >= todayStart,
   ).length;
 
   const pct = showTarget && target > 0 ? Math.min(100, Math.round((count / target) * 100)) : null;

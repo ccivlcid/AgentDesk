@@ -11,6 +11,11 @@ import KeyboardShortcutsGuide from "../KeyboardShortcutsGuide";
 import UserGuidePanel from "./UserGuidePanel";
 import MenuBar from "./MenuBar";
 import DesktopIcon, { type DesktopIconDef } from "./DesktopIcon";
+import {
+  IconAgents, IconNewProject, IconRunTask, IconWorkflow, IconRepl,
+  IconDecisions, IconReports, IconFolder,
+  IconHeartbeat, IconTaskBoard, IconAlerts, IconCliCost, IconFlowGraph, IconFileTree, IconLocalLlm,
+} from "./DesktopIcons";
 import Widget from "./Widget";
 import Dock from "./Dock";
 import WidgetPicker from "./WidgetPicker";
@@ -21,6 +26,7 @@ import CliCostWidget from "./widgets/CliCostWidget";
 import FlowGraphWidget from "./widgets/FlowGraphWidget";
 import FileTreeWidget from "./widgets/FileTreeWidget";
 import CustomFeatureWidget from "./widgets/CustomFeatureWidget";
+import LocalLlmWidget from "./widgets/LocalLlmWidget";
 import CustomFeatureWindow from "../windows/CustomFeatureWindow";
 import WallpaperPicker from "./WallpaperPicker";
 import ExportModal from "../export/ExportModal";
@@ -39,14 +45,6 @@ import NotificationCenter from "../NotificationCenter";
 
 const ChatWindow = lazy(() => import("../windows/ChatWindow"));
 
-const WIDGET_LABELS: Record<string, string> = {
-  heartbeat:   "Agents",
-  "task-board": "Tasks",
-  alerts:      "Alerts",
-  "cli-usage": "CLI Cost",
-  "flow-graph": "Flow Graph",
-  "file-tree":  "File Tree",
-};
 
 function WidgetContent({ id }: { id: string }) {
   if (id.startsWith("custom:")) return <CustomFeatureWidget featureId={id.slice(7)} />;
@@ -57,6 +55,7 @@ function WidgetContent({ id }: { id: string }) {
     case "cli-usage":   return <CliCostWidget />;
     case "flow-graph":  return <FlowGraphWidget />;
     case "file-tree":   return <FileTreeWidget />;
+    case "local-llm":   return <LocalLlmWidget />;
     default:            return null;
   }
 }
@@ -145,6 +144,16 @@ export default function Desktop({
 
   const { setProjects } = useProjectStore();
   const { t, language } = useI18n();
+
+  const widgetLabels: Record<string, string> = {
+    heartbeat:    t({ ko: "에이전트",  en: "Agents",     ja: "エージェント", zh: "代理" }),
+    "task-board": t({ ko: "태스크",    en: "Tasks",      ja: "タスク",      zh: "任务" }),
+    alerts:       t({ ko: "알림",      en: "Alerts",     ja: "アラート",    zh: "通知" }),
+    "cli-usage":  t({ ko: "CLI 비용", en: "CLI Cost",   ja: "CLIコスト",  zh: "CLI成本" }),
+    "flow-graph": t({ ko: "플로 그래프", en: "Flow Graph", ja: "フローグラフ", zh: "流图" }),
+    "file-tree":  t({ ko: "파일 트리", en: "File Tree",  ja: "ファイルツリー", zh: "文件树" }),
+    "local-llm":  t({ ko: "로컬 LLM", en: "Local LLM",  ja: "ローカルLLM", zh: "本地LLM" }),
+  };
 
   // ── 아이콘 정렬 헬퍼 ────────────────────────────────────────────
   const ICON_GRID_X = 88;
@@ -323,29 +332,44 @@ export default function Desktop({
 
   // 데스크톱 아이콘 정의 (채팅·라이브러리는 Dock에서 제공)
   const icons: DesktopIconDef[] = [
-    { id: "agent-manager",    emoji: "👤", label: t({ ko: "에이전트 설정",  en: "Agents",          ja: "エージェント設定",  zh: "代理设置" }),    onClick: () => openWindow("agent-manager") },
-    { id: "project-create",   emoji: "📁", label: t({ ko: "프로젝트 생성", en: "New Project",      ja: "プロジェクト作成", zh: "新建项目" }),    onClick: onProjectCreate },
-    { id: "create-task",      emoji: "▶",  label: t({ ko: "태스크 실행",   en: "Run Task",        ja: "タスク実行",      zh: "运行任务" }),    onClick: onCreateTask },
-    { id: "workflow",         emoji: "⚡", label: t({ ko: "워크플로 빌더", en: "Workflow Builder", ja: "ワークフロー",    zh: "工作流构建器" }), onClick: () => openWindow("workflow") },
-    { id: "repl",             emoji: ">_", label: t({ ko: "에이전트 REPL", en: "Agent REPL",      ja: "エージェントREPL", zh: "代理REPL" }),   onClick: () => openWindow("repl") },
-    { id: "decision-inbox",   emoji: "📥", label: t({ ko: "의사결정",      en: "Decisions",       ja: "意思決定",        zh: "决策" }),        onClick: onOpenDecisionInbox,          badge: decisionInboxItems.length || undefined },
-    { id: "report-history",   emoji: "📊", label: t({ ko: "보고서",        en: "Reports",         ja: "レポート",        zh: "报告" }),        onClick: () => { clearUnreadReportCount(); toggleWindow("reports"); }, badge: unreadReportCount || undefined },
+    { id: "agent-manager",    icon: (c) => <IconAgents color={c} />,     label: t({ ko: "에이전트 설정",  en: "Agents",          ja: "エージェント設定",  zh: "代理设置" }),    onClick: () => openWindow("agent-manager"), accentColor: "#5e5ce6" },
+    { id: "project-create",   icon: (c) => <IconNewProject color={c} />, label: t({ ko: "프로젝트 생성", en: "New Project",      ja: "プロジェクト作成", zh: "新建项目" }),    onClick: onProjectCreate,                   accentColor: "#30d158" },
+    { id: "create-task",      icon: (c) => <IconRunTask color={c} />,    label: t({ ko: "태스크 실행",   en: "Run Task",        ja: "タスク실행",      zh: "运行任务" }),    onClick: onCreateTask,                      accentColor: "#ff9f0a" },
+    { id: "workflow",         icon: (c) => <IconWorkflow color={c} />,   label: t({ ko: "워크플로 빌더", en: "Workflow Builder", ja: "ワークフロー",    zh: "工作流构建器" }), onClick: () => openWindow("workflow"),      accentColor: "#007aff" },
+    { id: "repl",             icon: (c) => <IconRepl color={c} />,       label: t({ ko: "에이전트 REPL", en: "Agent REPL",      ja: "エージェントREPL", zh: "代理REPL" }),   onClick: () => openWindow("repl"),          accentColor: "#32ade6" },
+    { id: "decision-inbox",   icon: (c) => <IconDecisions color={c} />,  label: t({ ko: "의사결정",      en: "Decisions",       ja: "意思決定",        zh: "决策" }),        onClick: onOpenDecisionInbox,               accentColor: "#ff453a", badge: decisionInboxItems.length || undefined },
+    { id: "report-history",   icon: (c) => <IconReports color={c} />,    label: t({ ko: "보고서",        en: "Reports",         ja: "レポート",        zh: "报告" }),        onClick: () => { clearUnreadReportCount(); toggleWindow("reports"); }, accentColor: "#64d2ff", badge: unreadReportCount || undefined },
   ];
 
   // widgetIcons → 바탕화면 앱 아이콘 (클릭 시 위젯 창 오픈, jiggle 모드에서 삭제 가능)
+  const widgetIconFnMap: Record<string, (c: string) => React.ReactNode> = {
+    heartbeat:    (c) => <IconHeartbeat color={c} />,
+    "task-board": (c) => <IconTaskBoard color={c} />,
+    alerts:       (c) => <IconAlerts color={c} />,
+    "cli-usage":  (c) => <IconCliCost color={c} />,
+    "flow-graph": (c) => <IconFlowGraph color={c} />,
+    "file-tree":  (c) => <IconFileTree color={c} />,
+    "local-llm":  (c) => <IconLocalLlm color={c} />,
+  };
+  const widgetIconAccentMap: Record<string, string> = {
+    heartbeat:    "#5e5ce6",
+    "task-board": "#007aff",
+    alerts:       "#ff453a",
+    "cli-usage":  "#32ade6",
+    "flow-graph": "#30d158",
+    "file-tree":  "#f59e0b",
+    "local-llm":  "#bf5af2",
+  };
   const widgetIconDefs: DesktopIconDef[] = widgetIcons.map((id) => {
-    const meta = WIDGET_LABELS[id] ?? id;
-    const emojiMap: Record<string, string> = {
-      heartbeat: "💓", "task-board": "📋", alerts: "🔔",
-      "cli-usage": "💰", "flow-graph": "🕸", "file-tree": "🗂",
-    };
+    const meta = widgetLabels[id] ?? id;
     return {
       id: `widget-icon-${id}`,
-      emoji: emojiMap[id] ?? "🔲",
+      icon: widgetIconFnMap[id] ?? ((c) => <IconTaskBoard color={c} />),
       label: meta,
       deletable: true,
       onDelete: () => removeWidgetIcon(id),
       onClick: () => addWidget(id),
+      accentColor: widgetIconAccentMap[id],
     };
   });
 
@@ -431,9 +455,10 @@ export default function Desktop({
           const isActive = project.id === currentProjectId;
           const def: DesktopIconDef = {
             id: `project-${project.id}`,
-            emoji: isActive ? "📂" : "📁",
+            icon: (c) => <IconFolder color={c} open={isActive} />,
             label: project.name,
             deletable: true,
+            accentColor: isActive ? "#f59e0b" : "#636366",
             onDelete: () => handleDeleteProject(project.id),
             onClick: () => {
               setCurrentProjectId(project.id);
@@ -457,7 +482,7 @@ export default function Desktop({
           <Widget
             key={entry.id}
             id={entry.id}
-            title={WIDGET_LABELS[entry.id] ?? entry.id}
+            title={widgetLabels[entry.id] ?? entry.id}
             x={entry.x}
             y={entry.y}
             w={entry.w}
@@ -476,7 +501,7 @@ export default function Desktop({
             bottom: 16,
             left: "50%",
             transform: "translateX(-50%)",
-            background: "rgba(255,255,255,0.04)",
+            background: "var(--th-hover-overlay-subtle)",
             border: "1px dashed var(--th-border)",
             borderRadius: 8,
             padding: "6px 16px",
@@ -666,12 +691,12 @@ export default function Desktop({
         >
           {/* 보기 / 정렬 섹션 */}
           <div style={{ padding: "3px 12px 2px", fontSize: 10, color: "var(--th-text-muted)", fontFamily: "var(--th-font-mono)", letterSpacing: "0.06em" }}>
-            {language === "en" ? "ARRANGE" : "정렬 방식"}
+            {t({ ko: "정렬 방식", en: "ARRANGE", ja: "並べ替え", zh: "排列方式" })}
           </div>
           {[
-            { label: language === "en" ? "Sort by Name" : "이름순 정렬", icon: "Az", action: () => { sortByName(); setCtxMenu(null); } },
-            { label: language === "en" ? "Sort by Default" : "기본 순서로 정렬", icon: "↺", action: () => { sortByDefault(); setCtxMenu(null); } },
-            { label: language === "en" ? "Snap to Grid" : "격자에 맞추기", icon: "⊞", action: () => { snapToGrid(); setCtxMenu(null); } },
+            { label: t({ ko: "이름순 정렬",     en: "Sort by Name",    ja: "名前順で並べ替え", zh: "按名称排序" }), icon: "Az", action: () => { sortByName(); setCtxMenu(null); } },
+            { label: t({ ko: "기본 순서로 정렬", en: "Sort by Default", ja: "デフォルト順",     zh: "默认排序" }), icon: "↺", action: () => { sortByDefault(); setCtxMenu(null); } },
+            { label: t({ ko: "격자에 맞추기",   en: "Snap to Grid",   ja: "グリッドに合わせる", zh: "对齐网格" }), icon: "⊞", action: () => { snapToGrid(); setCtxMenu(null); } },
           ].map(({ label, icon, action }) => (
             <button
               key={label}
@@ -693,13 +718,13 @@ export default function Desktop({
           <div style={{ margin: "4px 12px", borderTop: "1px solid var(--th-border)" }} />
           {/* 기타 */}
           <div style={{ padding: "3px 12px 2px", fontSize: 10, color: "var(--th-text-muted)", fontFamily: "var(--th-font-mono)", letterSpacing: "0.06em" }}>
-            {language === "en" ? "DESKTOP" : "바탕화면"}
+            {t({ ko: "바탕화면", en: "DESKTOP", ja: "デスクトップ", zh: "桌面" })}
           </div>
           {[
-            { label: language === "en" ? "Change Wallpaper" : "배경화면 변경", icon: "🖼", action: () => { setShowWallpaperPicker(true); setCtxMenu(null); } },
-            { label: language === "en" ? "Add Widget" : "위젯 추가", icon: "＋", action: () => { setShowWidgetPicker(true); setCtxMenu(null); } },
-            { label: language === "en" ? "New Markdown Doc" : "마크다운 문서 만들기", icon: "📝", action: () => { setShowMarkdownEditor(true); setCtxMenu(null); } },
-            { label: language === "en" ? "Reset Icon Positions" : "아이콘 위치 초기화", icon: "⌖", action: () => { setDesktopIconLayout({}); setCtxMenu(null); } },
+            { label: t({ ko: "배경화면 변경",        en: "Change Wallpaper",     ja: "壁紙を変更",         zh: "更换壁纸" }),     icon: "🖼", action: () => { setShowWallpaperPicker(true); setCtxMenu(null); } },
+            { label: t({ ko: "위젯 추가",            en: "Add Widget",           ja: "ウィジェット追加",   zh: "添加小组件" }),   icon: "＋", action: () => { setShowWidgetPicker(true); setCtxMenu(null); } },
+            { label: t({ ko: "마크다운 문서 만들기", en: "New Markdown Doc",     ja: "Markdownドキュメント", zh: "新建Markdown文档" }), icon: "📝", action: () => { setShowMarkdownEditor(true); setCtxMenu(null); } },
+            { label: t({ ko: "아이콘 위치 초기화",   en: "Reset Icon Positions", ja: "アイコン位置をリセット", zh: "重置图标位置" }), icon: "⌖", action: () => { setDesktopIconLayout({}); setCtxMenu(null); } },
           ].map(({ label, icon, action }) => (
             <button
               key={label}

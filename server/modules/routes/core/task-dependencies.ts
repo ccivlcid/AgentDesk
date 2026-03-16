@@ -50,7 +50,11 @@ export function registerTaskDependencyRoutes({ app, db, nowMs }: TaskDepsRouteDe
   app.post("/api/tasks/:id/dependencies", (req: Request, res: Response, next: NextFunction) => {
     try {
       const taskId = req.params.id as string;
-      const { depends_on_task_id } = req.body as { depends_on_task_id?: string };
+      const { depends_on_task_id, gate_condition, gate_branch } = req.body as {
+        depends_on_task_id?: string;
+        gate_condition?: string;
+        gate_branch?: "true" | "false";
+      };
 
       if (!depends_on_task_id || typeof depends_on_task_id !== "string") {
         throw ApiError.badRequest("depends_on_task_id_required", "depends_on_task_id is required");
@@ -77,9 +81,11 @@ export function registerTaskDependencyRoutes({ app, db, nowMs }: TaskDepsRouteDe
         throw ApiError.badRequest("circular_dependency", "This would create a circular dependency");
       }
 
+      const gc = gate_condition && typeof gate_condition === "string" ? gate_condition.trim() : null;
+      const gb = gate_branch === "true" || gate_branch === "false" ? gate_branch : null;
       db.prepare(
-        "INSERT OR IGNORE INTO task_dependencies (task_id, depends_on_task_id, created_at) VALUES (?, ?, ?)",
-      ).run(taskId, depends_on_task_id, nowMs());
+        "INSERT OR IGNORE INTO task_dependencies (task_id, depends_on_task_id, gate_condition, gate_branch, created_at) VALUES (?, ?, ?, ?, ?)",
+      ).run(taskId, depends_on_task_id, gc, gb, nowMs());
 
       res.status(201).json({ ok: true });
     } catch (err) {

@@ -279,7 +279,7 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onGi
                     ...mono,
                     fontSize: "12px",
                     border: "1px solid var(--th-border)",
-                    background: "rgba(255,255,255,0.02)",
+                    background: "var(--th-hover-overlay-subtle)",
                     color: "var(--th-text-secondary)",
                     cursor: "pointer",
                     borderRadius: 0,

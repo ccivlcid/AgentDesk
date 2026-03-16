@@ -4,6 +4,7 @@ import type { ChildProcess } from "node:child_process";
 import { decryptSecret } from "../../../../oauth/helpers.ts";
 import logger from "../../../../lib/logger";
 import type { ApiProviderRow } from "./types.ts";
+import type { InferenceLogEntry } from "../../../local-llm/inference-logger.ts";
 
 type DbLike = {
   prepare: (sql: string) => {
@@ -30,13 +31,15 @@ type CreateApiProviderToolsDeps = {
     signal: AbortSignal,
     safeWrite: (text: string) => boolean,
     taskId?: string,
-  ) => Promise<void>;
+  ) => Promise<{ inputTokens: number; outputTokens: number }>;
   parseGeminiSSEStream: (
     body: ReadableStream<Uint8Array>,
     signal: AbortSignal,
     safeWrite: (text: string) => boolean,
     taskId?: string,
   ) => Promise<void>;
+  /** Optional: called after each local LLM inference to record metrics */
+  logInference?: (entry: InferenceLogEntry) => void;
 };
 
 const COST_PER_INPUT_MTOK = parseFloat(process.env["COST_PER_INPUT_MTOK"] ?? "3");
@@ -54,6 +57,7 @@ export function createApiProviderTools(deps: CreateApiProviderToolsDeps) {
     createSafeLogStreamOps,
     parseSSEStream,
     parseGeminiSSEStream,
+    logInference,
   } = deps;
 
   async function parseAnthropicSSEStream(
@@ -215,6 +219,7 @@ export function createApiProviderTools(deps: CreateApiProviderToolsDeps) {
     apiProviderId?: string | null,
     apiModel?: string | null,
     safeWriteOverride?: (text: string) => boolean,
+    agentId?: string | null,
   ): Promise<void> {
     const safeWrite = safeWriteOverride ?? createSafeLogStreamOps(logStream).safeWrite;
 
@@ -236,6 +241,7 @@ export function createApiProviderTools(deps: CreateApiProviderToolsDeps) {
     if (taskId) broadcast("cli_output", { task_id: taskId, stream: "stderr", data: header });
 
     const req = buildApiProviderRequest(provider, model, prompt, projectPath);
+    const startedAt = Date.now();
 
     const resp = await fetch(req.url, {
       method: "POST",
@@ -259,8 +265,13 @@ export function createApiProviderTools(deps: CreateApiProviderToolsDeps) {
     } else if (provider.type === "google") {
       await parseGeminiSSEStream(resp.body!, signal, safeWrite, taskId);
     } else {
-      await parseSSEStream(resp.body!, signal, safeWrite, taskId);
+      // OpenAI-compatible (ollama, lmstudio, openai, openrouter, etc.)
+      const usage = await parseSSEStream(resp.body!, signal, safeWrite, taskId);
+      inputTokens = usage.inputTokens;
+      outputTokens = usage.outputTokens;
     }
+
+    const latencyMs = Date.now() - startedAt;
 
     if (taskId && (inputTokens > 0 || outputTokens > 0)) {
       const costUsd = (inputTokens * COST_PER_INPUT_MTOK + outputTokens * COST_PER_OUTPUT_MTOK) / 1_000_000;
@@ -273,6 +284,24 @@ export function createApiProviderTools(deps: CreateApiProviderToolsDeps) {
       }
     }
 
+    // Record inference to local_llm_inference_log (for Monitor tab)
+    if (logInference && provider.type !== "anthropic" && provider.type !== "google") {
+      // Detect LM Studio by its default port (1234) since it's registered as type "openai"
+      const isLmStudio = provider.base_url.includes(":1234");
+      const backend = provider.type === "ollama" ? "ollama" : isLmStudio ? "lmstudio" : provider.type;
+      const tps = outputTokens > 0 && latencyMs > 0 ? (outputTokens / (latencyMs / 1000)) : null;
+      logInference({
+        backend,
+        model_name: model,
+        agent_id: agentId ?? null,
+        task_id: taskId ?? null,
+        prompt_tokens: inputTokens || null,
+        completion_tokens: outputTokens || null,
+        tokens_per_second: tps,
+        latency_ms: latencyMs,
+      });
+    }
+
     safeWrite(`\n---\n[api:${provider.type}] Done.\n`);
     if (taskId) {
       broadcast("cli_output", { task_id: taskId, stream: "stderr", data: `\n---\n[api:${provider.type}] Done.\n` });
@@ -283,6 +312,7 @@ export function createApiProviderTools(deps: CreateApiProviderToolsDeps) {
     taskId: string,
     apiProviderId: string | null,
     apiModel: string | null,
+    agentId: string | null,
     prompt: string,
     projectPath: string,
     logPath: string,
@@ -317,6 +347,7 @@ export function createApiProviderTools(deps: CreateApiProviderToolsDeps) {
           apiProviderId,
           apiModel,
           safeWrite,
+          agentId,
         );
       } catch (err: any) {
         exitCode = 1;

@@ -38,7 +38,7 @@ export default function AgentDeptStatus({ config }: { config: CustomFeatureConfi
       {byDept.map((d) => {
         if (!d) return null;
         return (
-          <div key={d.dept.id} className="flex items-center gap-2 px-2 py-1.5" style={{ borderRadius: 4, background: "rgba(255,255,255,0.03)", border: "1px solid var(--th-border)" }}>
+          <div key={d.dept.id} className="flex items-center gap-2 px-2 py-1.5" style={{ borderRadius: 4, background: "var(--th-hover-overlay-subtle)", border: "1px solid var(--th-border)" }}>
             <span style={{ ...mono, fontSize: 10, flex: 1, color: "var(--th-text-primary)", fontWeight: 600 }}>{d.dept.name}</span>
             <span style={{ ...mono, fontSize: 10, color: STATUS_COLOR.working }}>{d.working}▶</span>
             <span style={{ ...mono, fontSize: 10, color: STATUS_COLOR.idle }}>{d.idle}○</span>

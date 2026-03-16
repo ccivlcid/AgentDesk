@@ -222,3 +222,5 @@ Current shortcuts:
 | [`docs/specs/api.md`](docs/specs/api.md) | REST API full specification (v1.3.0) |
 | [`docs/strategy/bigger-ide-vision.md`](docs/strategy/bigger-ide-vision.md) | "Bigger IDE" strategy (Phase 1–3 complete) |
 | [`docs/progress.md`](docs/progress.md) | Development progress log |
+| [`docs/bugs/PIPELINE-AUDIT-2026-03-16.md`](docs/bugs/PIPELINE-AUDIT-2026-03-16.md) | **Known bugs — execution pipeline (BUG-01~06): read before touching execution-run.ts / stream-tools.ts** |
+| [`docs/bugs/UI-AUDIT-2026-03-16.md`](docs/bugs/UI-AUDIT-2026-03-16.md) | **Known bugs — Workflow Builder (WB-01~03) · Flow Graph (FG-01~03): read before touching these features** |

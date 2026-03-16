@@ -197,6 +197,31 @@ Analytics & performance          ███████████████�
 Notification center              ████████████████████ 100% (date groups + hover actions + type filter badges)
 ```
 
+### Known Bugs (2026-03-16 Pipeline Audit)
+
+> 상세 수정 지침: **`docs/bugs/PIPELINE-AUDIT-2026-03-16.md`**
+
+| Code | Severity | File | Issue | Status |
+|------|----------|------|-------|--------|
+| BUG-01 | 🔴 P0 | `server/modules/routes/core/tasks/execution-run.ts` | `buildTaskExecutionPrompt()` 호출에 try-catch 없음 — 내부 예외 시 서버 hang | ⬜ Open |
+| BUG-02 | 🟡 P1 | `server/modules/workflow/agents/providers/stream-tools.ts` | `subtask_done` 정규식이 따옴표 포함 제목 파싱 실패 | ⬜ Open |
+| BUG-03 | 🔵 P2 | `src/components/AgentManager.tsx` | 에이전트 저장 실패 시 UI 에러 표시 없음 | ⬜ Open |
+| BUG-04 | 🔵 P2 | `src/components/AgentManager.tsx` | 아바타 업로드/삭제 실패 silent | ⬜ Open |
+| BUG-05 | 🔵 P2 | `server/modules/lifecycle.ts` | 메신저 수신자 시작 실패 시 예외처리 없음 | ⬜ Open |
+| BUG-06 | 🟡 P1 | `server/modules/workflow/agents/providers/stream-tools.ts` | 스트림 버퍼 2KB 고정 → 장문 응답에서 서브태스크 손실 | ⬜ Open |
+
+> UI 기능 감사 (Workflow Builder · REPL · Flow Graph): **`docs/bugs/UI-AUDIT-2026-03-16.md`**
+
+| Code | Severity | File | Issue | Status |
+|------|----------|------|-------|--------|
+| WB-01 | ❌ 미구현 | `src/components/workflow-builder/WbRunModal.tsx` | Condition 노드 조건 평가 없음 — 항상 모든 하위 에이전트 실행 | ⬜ Open |
+| WB-02 | 🟡 P1 | `src/components/workflow-builder/WbRunModal.tsx` | 의존성 설정 실패 시 롤백 없음 — 고아 Task 생성 | ⬜ Open |
+| WB-03 | 🔵 P2 | `src/components/workflow-builder/WbRunModal.tsx` | Trigger 타입 정보 Task에 미전달 | ⬜ Open |
+| FG-01 | ❌ TODO | `src/components/flow-graph/useFlowLayout.ts` | Delegation 엣지 명시적 TODO — SubTask 데이터 미전달 | ⬜ Open |
+| FG-02 | 🟡 P1 | `src/components/desktop/widgets/FlowGraphWidget.tsx` | 노드 클릭 → 에이전트 상세 패널 콜백 미연결 | ⬜ Open |
+| FG-03 | 🔵 P2 | `src/components/flow-graph/useFlowLayout.ts` | 50+ 에이전트 시 3열 고정 레이아웃 극단 축소 | ⬜ Open |
+| REPL | ✅ | — | Agent REPL 전체 정상 동작 (버그 없음) | ✅ OK |
+
 ### Safe Concurrency Limits
 
 | Concurrent agents | Before Phase 1 | After Phase 1 (current) | After Phase 2 |
@@ -530,6 +555,7 @@ All planned features and improvement tasks have been completed. Key achievements
 |---|---|
 | [`docs/OVERVIEW.md`](./OVERVIEW.md) | **This document** — full overview + completion history |
 | [`docs/progress.md`](./progress.md) | Development progress tracker (latest work log) |
+| [`docs/bugs/PIPELINE-AUDIT-2026-03-16.md`](./bugs/PIPELINE-AUDIT-2026-03-16.md) | **Pipeline audit — 6 bugs with exact fix instructions (AI-ready)** |
 | [`docs/specs/api.md`](./specs/api.md) | Full REST API specification |
 | [`docs/architecture/SYSTEM-STRUCTURE-MAP.md`](./architecture/SYSTEM-STRUCTURE-MAP.md) | System structure map |
 | [`docs/architecture/schema-erd.md`](./architecture/schema-erd.md) | DB schema ER diagram + state machines |
@@ -537,6 +563,8 @@ All planned features and improvement tasks have been completed. Key achievements
 | [`docs/strategy/agent-performance-audit.md`](./strategy/agent-performance-audit.md) | Agent execution performance audit |
 | [`docs/strategy/bigger-ide-vision.md`](./strategy/bigger-ide-vision.md) | "Bigger IDE" strategic vision |
 | [`docs/features/custom-widget-platform.md`](./features/custom-widget-platform.md) | Custom Widget Platform — spec + implementation summary |
+| [`docs/features/local-llm-manager.md`](./features/local-llm-manager.md) | Local LLM Manager — 기획 문서 (Ollama 연동, 모델 관리, 에이전트 연결) |
+| [`docs/features/knowledge-base-integrations.md`](./features/knowledge-base-integrations.md) | Knowledge Base Integrations — Notion / Obsidian / NotebookLM 연결 기획 |
 | [`docs/design/DESIGN.md`](./design/DESIGN.md) | UI CSS variables + component patterns |
 | [`docs/design/UI-SCREENS.md`](./design/UI-SCREENS.md) | Full screen & modal specification |
 

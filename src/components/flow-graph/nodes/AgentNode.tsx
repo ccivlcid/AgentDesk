@@ -36,7 +36,7 @@ export default function AgentNode({
   const isTaskDone = currentTask?.status === "done";
 
   const borderColor = (() => {
-    if (isTaskDone) return "#22c55e";
+    if (isTaskDone) return "var(--th-success, #22c55e)";
     switch (agent.status) {
       case "working": return "var(--th-accent)";
       case "break": return "var(--th-text-muted)";
@@ -46,7 +46,7 @@ export default function AgentNode({
   })();
 
   const boxShadow = isTaskDone
-    ? "0 0 8px #22c55e44"
+    ? "0 0 8px rgba(34,197,94,0.27)"
     : isWorking
     ? "0 0 8px var(--th-accent-glow)"
     : selected
@@ -162,7 +162,7 @@ export default function AgentNode({
             <span style={{
               fontFamily: mono,
               fontSize: 10,
-              color: isTaskDone ? "#22c55e" : isWorking ? "var(--th-accent)" : "var(--th-text-muted)",
+              color: isTaskDone ? "var(--th-success, #22c55e)" : isWorking ? "var(--th-accent)" : "var(--th-text-muted)",
               fontWeight: isTaskDone || isWorking ? 600 : 400,
               flexShrink: 0,
             }}>
@@ -180,7 +180,7 @@ export default function AgentNode({
             <span style={{
               fontFamily: mono,
               fontSize: 10,
-              color: isTaskDone ? "#22c55e" : "var(--th-text-muted)",
+              color: isTaskDone ? "var(--th-success, #22c55e)" : "var(--th-text-muted)",
               display: "block",
               overflow: "hidden",
               textOverflow: "ellipsis",

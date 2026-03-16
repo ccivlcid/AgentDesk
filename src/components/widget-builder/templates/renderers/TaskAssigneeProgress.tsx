@@ -12,7 +12,7 @@ export default function TaskAssigneeProgress({ config: _ }: { config: CustomFeat
     .map((a) => {
       const mine = tasks.filter((t) => t.assigned_agent_id === a.id);
       const inProgress = mine.filter((t) => t.status === "in_progress").length;
-      const done = mine.filter((t) => t.status === "completed").length;
+      const done = mine.filter((t) => t.status === "done").length;
       return { agent: a, inProgress, done, total: mine.length };
     })
     .filter((r) => r.total > 0)

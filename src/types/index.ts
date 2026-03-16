@@ -466,7 +466,8 @@ export type WSEventType =
   | "queue_status"
   | "connected"
   | "skill_learn_job_update"
-  | "memory_learn_job_update";
+  | "memory_learn_job_update"
+  | "meeting_minutes_update";
 
 export interface WSEvent {
   type: WSEventType;

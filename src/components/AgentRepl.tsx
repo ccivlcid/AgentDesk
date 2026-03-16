@@ -272,6 +272,7 @@ export default function AgentRepl({ agents, currentProject }: Props) {
         title: trimmed,
         assigned_agent_id: agent.id,
         project_id: currentProject?.id,
+        project_path: currentProject?.project_path,
       });
       await assignTask(taskId, agent.id);
       await runTask(taskId);

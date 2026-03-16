@@ -42,7 +42,7 @@ export function createStreamTools(deps: CreateStreamToolsDeps) {
     }
 
     // Detect completion: {"subtask_done": "..."}
-    const doneMatch = accum.buf.match(/\{"subtask_done"\s*:\s*"(.+?)"\}/);
+    const doneMatch = accum.buf.match(/\{"subtask_done"\s*:\s*"([^"\\]*(?:\\.[^"\\]*)*)"\}/);
     if (doneMatch) {
       const doneTitle = doneMatch[1];
       const sub = db
@@ -52,9 +52,9 @@ export function createStreamTools(deps: CreateStreamToolsDeps) {
       accum.buf = accum.buf.slice(accum.buf.indexOf(doneMatch[0]) + doneMatch[0].length);
     }
 
-    // Prevent unbounded growth: keep only last 2KB
-    if (accum.buf.length > 2048) {
-      accum.buf = accum.buf.slice(-1024);
+    // Prevent unbounded growth: keep only last 8KB
+    if (accum.buf.length > 8192) {
+      accum.buf = accum.buf.slice(-4096);
     }
   }
 
@@ -91,16 +91,18 @@ export function createStreamTools(deps: CreateStreamToolsDeps) {
     return { safeWrite, safeEnd, isClosed };
   }
 
-  // Parse OpenAI-compatible SSE stream (for Copilot)
+  // Parse OpenAI-compatible SSE stream (for Copilot / local LLM)
   async function parseSSEStream(
     body: ReadableStream<Uint8Array>,
     signal: AbortSignal,
     safeWrite: (text: string) => boolean,
     taskId?: string,
-  ): Promise<void> {
+  ): Promise<{ inputTokens: number; outputTokens: number }> {
     const decoder = new TextDecoder();
     let buffer = "";
     const subtaskAccum = { buf: "" };
+    let inputTokens = 0;
+    let outputTokens = 0;
 
     const processLine = (trimmed: string) => {
       if (!trimmed || trimmed.startsWith(":")) return;
@@ -108,6 +110,11 @@ export function createStreamTools(deps: CreateStreamToolsDeps) {
       if (trimmed === "data: [DONE]") return;
       try {
         const data = JSON.parse(trimmed.slice(6));
+        // Capture usage info (present in final chunk for most OpenAI-compatible servers)
+        if (data.usage) {
+          inputTokens = data.usage.prompt_tokens ?? inputTokens;
+          outputTokens = data.usage.completion_tokens ?? outputTokens;
+        }
         const delta = data.choices?.[0]?.delta;
         if (delta?.content) {
           const text = normalizeStreamChunk(delta.content);
@@ -131,6 +138,8 @@ export function createStreamTools(deps: CreateStreamToolsDeps) {
       for (const line of lines) processLine(line.trim());
     }
     if (buffer.trim()) processLine(buffer.trim());
+
+    return { inputTokens, outputTokens };
   }
 
   // Parse Gemini/Antigravity SSE stream

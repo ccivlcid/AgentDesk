@@ -2,20 +2,23 @@ import { useEffect, useState } from "react";
 import type { WidgetId } from "../../app/types";
 import type { CustomFeature, CustomFeatureType } from "../../types";
 import { useUiStore } from "../../store/uiStore";
+import { useTheme } from "../../ThemeContext";
 import { useI18n } from "../../i18n";
 import { listCustomFeatures, deleteCustomFeature } from "../../api/custom-features";
 import WidgetBuilderModal from "../widget-builder/WidgetBuilderModal";
 import TrafficLights from "./TrafficLights";
+import { IconHeartbeat, IconTaskBoard, IconAlerts, IconCliCost, IconFlowGraph, IconFileTree, IconLocalLlm } from "./DesktopIcons";
 
 const mono = "var(--th-font-mono)";
 
-const WIDGET_IDS: { id: WidgetId; emoji: string; label: string }[] = [
-  { id: "heartbeat",  emoji: "💓", label: "Agents" },
-  { id: "task-board", emoji: "📋", label: "Tasks" },
-  { id: "alerts",     emoji: "🔔", label: "Alerts" },
-  { id: "cli-usage",  emoji: "💰", label: "CLI Cost" },
-  { id: "flow-graph", emoji: "🕸",  label: "Flow" },
-  { id: "file-tree",  emoji: "🗂",  label: "File Tree" },
+const WIDGET_IDS: { id: WidgetId; icon: (color: string) => React.ReactNode; label: string }[] = [
+  { id: "heartbeat",  icon: (c) => <IconHeartbeat color={c} />,  label: "Agents" },
+  { id: "task-board", icon: (c) => <IconTaskBoard color={c} />,  label: "Tasks" },
+  { id: "alerts",     icon: (c) => <IconAlerts color={c} />,     label: "Alerts" },
+  { id: "cli-usage",  icon: (c) => <IconCliCost color={c} />,    label: "CLI Cost" },
+  { id: "flow-graph", icon: (c) => <IconFlowGraph color={c} />,  label: "Flow" },
+  { id: "file-tree",  icon: (c) => <IconFileTree color={c} />,   label: "File Tree" },
+  { id: "local-llm",  icon: (c) => <IconLocalLlm color={c} />,   label: "Local LLM" },
 ];
 
 interface WidgetPickerProps {
@@ -26,6 +29,9 @@ export default function WidgetPicker({ onClose }: WidgetPickerProps) {
   const { widgetLayout, addWidget, widgetIcons, addWidgetIcon, openCustomApp } = useUiStore();
   const activeWidgetIds = new Set(widgetLayout.map((e) => e.id));
   const { t, language } = useI18n();
+  const { theme } = useTheme();
+  const isLight = theme === "light";
+  const iconColor = isLight ? "rgba(0,0,0,0.62)" : "rgba(255,255,255,0.55)";
   const isKo = language === "ko";
 
   const [customFeatures, setCustomFeatures] = useState<CustomFeature[]>([]);
@@ -52,12 +58,14 @@ export default function WidgetPicker({ onClose }: WidgetPickerProps) {
 
   const WIDGET_DEFS = WIDGET_IDS.map((w) => ({
     ...w,
+    iconNode: w.icon(iconColor),
     desc: w.id === "heartbeat"  ? t({ ko: "에이전트 상태 실시간 목록", en: "Live agent status list", ja: "エージェント状態リスト", zh: "代理状态实时列表" }) :
           w.id === "task-board" ? t({ ko: "실행 중인 태스크 목록", en: "Active task list", ja: "アクティブタスク一覧", zh: "活动任务列表" }) :
           w.id === "alerts"     ? t({ ko: "이상 감지 알림", en: "Anomaly alerts", ja: "異常検知アラート", zh: "异常检测警报" }) :
           w.id === "cli-usage"  ? t({ ko: "CLI 비용 요약", en: "CLI cost summary", ja: "CLIコスト概要", zh: "CLI成本摘要" }) :
           w.id === "flow-graph" ? t({ ko: "에이전트 플로우 그래프", en: "Agent flow graph", ja: "エージェントフローグラフ", zh: "代理流程图" }) :
-          t({ ko: "프로젝트 파일 트리", en: "Project file tree", ja: "プロジェクトファイルツリー", zh: "项目文件树" }),
+          w.id === "file-tree"  ? t({ ko: "프로젝트 파일 트리", en: "Project file tree", ja: "プロジェクトファイルツリー", zh: "项目文件树" }) :
+          t({ ko: "로컬 LLM 상태 모니터", en: "Local LLM status monitor", ja: "ローカルLLMモニター", zh: "本地LLM状态监控" }),
   }));
 
   return (
@@ -90,18 +98,18 @@ export default function WidgetPicker({ onClose }: WidgetPickerProps) {
               const widgetActive = activeWidgetIds.has(w.id);
               const iconActive = widgetIcons.includes(w.id);
               return (
-                <div key={w.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", background: "rgba(255,255,255,0.03)", border: "1px solid var(--th-border)", borderRadius: 6 }}>
-                  <span style={{ fontSize: 18, flexShrink: 0 }}>{w.emoji}</span>
+                <div key={w.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", background: "var(--th-hover-overlay-subtle)", border: "1px solid var(--th-border)", borderRadius: 6 }}>
+                  <span style={{ flexShrink: 0, display: "flex", alignItems: "center" }}>{w.iconNode}</span>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontFamily: mono, fontSize: 12, color: "var(--th-text-primary)" }}>{w.label}</div>
                     <div style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-muted)" }}>{w.desc}</div>
                   </div>
                   <button onClick={() => { if (!widgetActive) { addWidget(w.id); onClose(); } }} disabled={widgetActive}
-                    style={{ padding: "3px 8px", background: widgetActive ? "rgba(245,158,11,0.15)" : "rgba(255,255,255,0.05)", border: `1px solid ${widgetActive ? "var(--th-border-accent)" : "var(--th-border)"}`, borderRadius: 4, fontFamily: mono, fontSize: 10, color: widgetActive ? "var(--th-text-accent)" : "var(--th-text-secondary)", cursor: widgetActive ? "default" : "pointer", flexShrink: 0, whiteSpace: "nowrap" }}>
+                    style={{ padding: "3px 8px", background: widgetActive ? "rgba(245,158,11,0.15)" : "var(--th-hover-overlay)", border: `1px solid ${widgetActive ? "var(--th-border-accent)" : "var(--th-border)"}`, borderRadius: 4, fontFamily: mono, fontSize: 10, color: widgetActive ? "var(--th-text-accent)" : "var(--th-text-secondary)", cursor: widgetActive ? "default" : "pointer", flexShrink: 0, whiteSpace: "nowrap" }}>
                     {widgetActive ? "위젯 ✓" : "위젯"}
                   </button>
                   <button onClick={() => { if (!iconActive) { addWidgetIcon(w.id); onClose(); } }} disabled={iconActive}
-                    style={{ padding: "3px 8px", background: iconActive ? "rgba(10,132,255,0.15)" : "rgba(255,255,255,0.05)", border: `1px solid ${iconActive ? "rgba(10,132,255,0.5)" : "var(--th-border)"}`, borderRadius: 4, fontFamily: mono, fontSize: 10, color: iconActive ? "#0a84ff" : "var(--th-text-secondary)", cursor: iconActive ? "default" : "pointer", flexShrink: 0, whiteSpace: "nowrap" }}>
+                    style={{ padding: "3px 8px", background: iconActive ? "rgba(10,132,255,0.15)" : "var(--th-hover-overlay)", border: `1px solid ${iconActive ? "rgba(10,132,255,0.5)" : "var(--th-border)"}`, borderRadius: 4, fontFamily: mono, fontSize: 10, color: iconActive ? "#0a84ff" : "var(--th-text-secondary)", cursor: iconActive ? "default" : "pointer", flexShrink: 0, whiteSpace: "nowrap" }}>
                     {iconActive ? "아이콘 ✓" : "아이콘"}
                   </button>
                 </div>
@@ -130,7 +138,7 @@ export default function WidgetPicker({ onClose }: WidgetPickerProps) {
                   const widgetId = `custom:${f.id}` as WidgetId;
                   const widgetActive = activeWidgetIds.has(widgetId);
                   return (
-                    <div key={f.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 10px", background: "rgba(255,255,255,0.02)", border: "1px solid var(--th-border)", borderRadius: 6 }}>
+                    <div key={f.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 10px", background: "var(--th-hover-overlay-subtle)", border: "1px solid var(--th-border)", borderRadius: 6 }}>
                       <span style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-muted)", padding: "1px 5px", border: "1px solid var(--th-border)", borderRadius: 3 }}>
                         {f.source === "ai" ? "AI" : isKo ? "템플릿" : "tpl"}
                       </span>
@@ -139,13 +147,13 @@ export default function WidgetPicker({ onClose }: WidgetPickerProps) {
                         <button
                           onClick={() => { if (!widgetActive) { addWidget(widgetId); onClose(); } }}
                           disabled={widgetActive}
-                          style={{ padding: "2px 8px", background: widgetActive ? "rgba(245,158,11,0.15)" : "rgba(255,255,255,0.05)", border: `1px solid ${widgetActive ? "var(--th-border-accent)" : "var(--th-border)"}`, borderRadius: 4, fontFamily: mono, fontSize: 10, color: widgetActive ? "var(--th-text-accent)" : "var(--th-text-secondary)", cursor: widgetActive ? "default" : "pointer", flexShrink: 0 }}>
+                          style={{ padding: "2px 8px", background: widgetActive ? "rgba(245,158,11,0.15)" : "var(--th-hover-overlay)", border: `1px solid ${widgetActive ? "var(--th-border-accent)" : "var(--th-border)"}`, borderRadius: 4, fontFamily: mono, fontSize: 10, color: widgetActive ? "var(--th-text-accent)" : "var(--th-text-secondary)", cursor: widgetActive ? "default" : "pointer", flexShrink: 0 }}>
                           {widgetActive ? "✓" : isKo ? "위젯" : "widget"}
                         </button>
                       ) : (
                         <button
                           onClick={() => { openCustomApp(f.id); onClose(); }}
-                          style={{ padding: "2px 8px", background: "rgba(255,255,255,0.05)", border: "1px solid var(--th-border)", borderRadius: 4, fontFamily: mono, fontSize: 10, color: "var(--th-text-secondary)", cursor: "pointer", flexShrink: 0 }}>
+                          style={{ padding: "2px 8px", background: "var(--th-hover-overlay)", border: "1px solid var(--th-border)", borderRadius: 4, fontFamily: mono, fontSize: 10, color: "var(--th-text-secondary)", cursor: "pointer", flexShrink: 0 }}>
                           {isKo ? "열기" : "open"}
                         </button>
                       )}

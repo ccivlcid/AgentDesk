@@ -17,6 +17,8 @@ export interface FormData {
   department_id: string;
   role: import("../../types").AgentRole;
   cli_provider: import("../../types").CliProvider;
+  api_provider_id: string | null;
+  api_model: string | null;
   avatar_emoji: string;
   avatar_url?: string | null;
   pendingAvatarDataUrl?: string | null;

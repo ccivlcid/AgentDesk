@@ -33,7 +33,7 @@ function TreeNode({ node, depth }: { node: FileTreeNode; depth: number }) {
             overflow: "hidden",
             textOverflow: "ellipsis",
           }}
-          onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.background = "rgba(255,255,255,0.05)"; }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.background = "var(--th-hover-overlay-subtle)"; }}
           onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.background = "none"; }}
         >
           <span style={{ opacity: 0.5, fontSize: 9, width: 10, flexShrink: 0 }}>{open ? "▾" : "▸"}</span>
@@ -141,7 +141,7 @@ export default function FileTreeWidget() {
           </div>
         )}
         {project && error && (
-          <div style={{ fontFamily: mono, fontSize: 11, color: "#ef4444", padding: "12px" }}>
+          <div style={{ fontFamily: mono, fontSize: 11, color: "var(--th-danger, #ef4444)", padding: "12px" }}>
             {error === "path_not_found" ? t({ ko: "경로를 찾을 수 없음", en: "Path not found", ja: "パスが見つかりません", zh: "路径未找到" }) :
              error === "fetch_failed" ? t({ ko: "서버 연결 실패", en: "Server connection failed", ja: "サーバー接続失敗", zh: "服务器连接失败" }) : error}
           </div>

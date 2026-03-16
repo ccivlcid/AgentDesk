@@ -275,7 +275,9 @@ export function registerTaskRunRoute(deps: TaskRunRouteDeps): void {
         .json({ error: "agent_busy", message: `${agent.name} is already working on another task.` });
     }
 
-    const provider = agent.cli_provider || "claude";
+    // If agent has an API provider configured (local LLM / external API), always route to "api"
+    // regardless of cli_provider setting.
+    const provider = agent.api_provider_id ? "api" : (agent.cli_provider || "claude");
     if (!["claude", "codex", "gemini", "opencode", "copilot", "antigravity", "api"].includes(provider)) {
       return res.status(400).json({ error: "unsupported_provider", provider });
     }
@@ -495,40 +497,49 @@ Whenever you complete a subtask, report it in this format:
       workingDirectory: agentCwd,
     });
 
-    const prompt = buildTaskExecutionPrompt(
-      [
-        (
-          buildAvailableSkillsPromptBlock ||
-          ((providerName: string) => `[Available Skills][provider=${providerName || "unknown"}][unavailable]`)
-        )(provider, task.project_id),
-        `[Task Session] id=${executionSession.sessionId} owner=${executionSession.agentId} provider=${executionSession.provider}`,
-        "This session is task-scoped. Keep continuity for this task only and do not cross-contaminate context from other projects.",
-        projectStructureBlock,
-        recentChanges ? `[Recent Changes]\n${recentChanges}` : "",
-        `[Task] ${task.title}`,
-        task.description ? `\n${task.description}` : "",
-        workflowPackGuidance ? `\n[Workflow Pack Execution Rules]\n${workflowPackGuidance}` : "",
-        buildDocumentGenerationGuidance(task.title, task.description, taskLang),
-        continuationCtx,
-        conversationCtx,
-        `\n---`,
-        `Agent: ${agent.name} (${roleLabel}, ${agent.department_name || "Unassigned"})`,
-        buildCharacterPersonaBlock(agent.persona_id, agent.id),
-        deptConstraint,
-        departmentPromptBlock,
-        `NOTE: You are working in an isolated Git worktree branch (agentdesk/${id.slice(0, 8)}). Commit your changes normally.`,
-        interruptPromptBlock,
-        rulesBlock,
-        memoryBlock,
-        subtaskInstruction,
-        subModelHint,
-        continuationInstruction,
-        runInstruction,
-      ],
-      {
-        allowWarningFix: hasExplicitWarningFixRequest(task.title, task.description),
-      },
-    );
+    let prompt: string;
+    try {
+      prompt = buildTaskExecutionPrompt(
+        [
+          (
+            buildAvailableSkillsPromptBlock ||
+            ((providerName: string) => `[Available Skills][provider=${providerName || "unknown"}][unavailable]`)
+          )(provider, task.project_id),
+          `[Task Session] id=${executionSession.sessionId} owner=${executionSession.agentId} provider=${executionSession.provider}`,
+          "This session is task-scoped. Keep continuity for this task only and do not cross-contaminate context from other projects.",
+          projectStructureBlock,
+          recentChanges ? `[Recent Changes]\n${recentChanges}` : "",
+          `[Task] ${task.title}`,
+          task.description ? `\n${task.description}` : "",
+          workflowPackGuidance ? `\n[Workflow Pack Execution Rules]\n${workflowPackGuidance}` : "",
+          buildDocumentGenerationGuidance(task.title, task.description, taskLang),
+          continuationCtx,
+          conversationCtx,
+          `\n---`,
+          `Agent: ${agent.name} (${roleLabel}, ${agent.department_name || "Unassigned"})`,
+          buildCharacterPersonaBlock(agent.persona_id, agent.id),
+          deptConstraint,
+          departmentPromptBlock,
+          `NOTE: You are working in an isolated Git worktree branch (agentdesk/${id.slice(0, 8)}). Commit your changes normally.`,
+          interruptPromptBlock,
+          rulesBlock,
+          memoryBlock,
+          subtaskInstruction,
+          subModelHint,
+          continuationInstruction,
+          runInstruction,
+        ],
+        {
+          allowWarningFix: hasExplicitWarningFixRequest(task.title, task.description),
+        },
+      );
+    } catch (err) {
+      const errMsg = err instanceof Error ? err.message : String(err);
+      appendTaskLog(id, "error", `Prompt build failed: ${errMsg}`);
+      db.prepare("UPDATE tasks SET status = 'inbox', updated_at = ? WHERE id = ?").run(nowMs(), id);
+      broadcast("task_update", db.prepare("SELECT * FROM tasks WHERE id = ?").get(id));
+      return res.status(500).json({ error: "prompt_build_failed", message: errMsg });
+    }
 
     if (pendingInterruptPrompts.length > 0) {
       consumeInterruptPrompts(
@@ -616,6 +627,7 @@ Whenever you complete a subtask, report it in this format:
         id,
         agent.api_provider_id ?? null,
         agent.api_model ?? null,
+        agentId,
         prompt,
         agentCwd,
         logPath,

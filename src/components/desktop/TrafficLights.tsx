@@ -39,7 +39,7 @@ export default function TrafficLights({ onClose, onMinimize, onMaximize }: Traff
               width: 12,
               height: 12,
               borderRadius: "50%",
-              background: active ? color : "rgba(255,255,255,0.12)",
+              background: active ? color : "var(--th-border-strong, rgba(128,128,128,0.3))",
               border: "none",
               cursor: active ? "pointer" : "default",
               padding: 0,

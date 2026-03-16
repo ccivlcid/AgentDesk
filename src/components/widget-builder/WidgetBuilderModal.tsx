@@ -153,7 +153,7 @@ export default function WidgetBuilderModal({ open, onClose, onCreated }: Props) 
               <button
                 onClick={() => setStep("template-select")}
                 className="flex flex-col items-center gap-2 p-5 transition-colors"
-                style={{ border: "1px solid var(--th-border)", borderRadius: 8, background: "rgba(255,255,255,0.03)", cursor: "pointer", minWidth: 140 }}
+                style={{ border: "1px solid var(--th-border)", borderRadius: 8, background: "var(--th-hover-overlay-subtle)", cursor: "pointer", minWidth: 140 }}
                 onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--th-border-strong)"; }}
                 onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--th-border)"; }}
               >
@@ -164,7 +164,7 @@ export default function WidgetBuilderModal({ open, onClose, onCreated }: Props) 
               <button
                 onClick={() => { setMethod("ai"); setStep("ai-generate"); }}
                 className="flex flex-col items-center gap-2 p-5 transition-colors"
-                style={{ border: "1px solid var(--th-border)", borderRadius: 8, background: "rgba(255,255,255,0.02)", cursor: "pointer", minWidth: 140 }}
+                style={{ border: "1px solid var(--th-border)", borderRadius: 8, background: "var(--th-hover-overlay-subtle)", cursor: "pointer", minWidth: 140 }}
                 onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--th-border-strong)"; }}
                 onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--th-border)"; }}
               >
@@ -209,9 +209,9 @@ export default function WidgetBuilderModal({ open, onClose, onCreated }: Props) 
                   key={tpl.id}
                   onClick={() => selectTemplate(tpl)}
                   className="flex items-start gap-3 p-3 text-left transition-colors"
-                  style={{ border: "1px solid var(--th-border)", borderRadius: 6, background: "rgba(255,255,255,0.02)", cursor: "pointer" }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.05)"; }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "rgba(255,255,255,0.02)"; }}
+                  style={{ border: "1px solid var(--th-border)", borderRadius: 6, background: "var(--th-hover-overlay-subtle)", cursor: "pointer" }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--th-hover-overlay)"; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--th-hover-overlay-subtle)"; }}
                 >
                   <span style={{ fontSize: 20, flexShrink: 0 }}>{tpl.emoji}</span>
                   <div className="min-w-0">
@@ -233,7 +233,7 @@ export default function WidgetBuilderModal({ open, onClose, onCreated }: Props) 
           <StepAiGenerate
             isKo={isKo}
             featureType={featureType}
-            config={{ refresh, theme: "dark", sizePreset, params }}
+            config={{ refresh, theme: "default", sizePreset, params }}
             onGenerated={handleAiGenerated}
           />
         )}
@@ -241,7 +241,7 @@ export default function WidgetBuilderModal({ open, onClose, onCreated }: Props) 
         {/* ── Step 3: 파라미터 설정 ── */}
         {step === "params" && selectedTemplate && (
           <div className="flex flex-col gap-4">
-            <div className="flex items-center gap-3 p-3" style={{ background: "rgba(255,255,255,0.03)", borderRadius: 6, border: "1px solid var(--th-border)" }}>
+            <div className="flex items-center gap-3 p-3" style={{ background: "var(--th-hover-overlay-subtle)", borderRadius: 6, border: "1px solid var(--th-border)" }}>
               <span style={{ fontSize: 24 }}>{selectedTemplate.emoji}</span>
               <div>
                 <div style={{ ...mono, fontSize: 12, fontWeight: 700, color: "var(--th-text-heading)" }}>{isKo ? selectedTemplate.name_ko : selectedTemplate.name_en}</div>
@@ -293,7 +293,7 @@ export default function WidgetBuilderModal({ open, onClose, onCreated }: Props) 
                         border: "1px solid",
                         borderColor: sizePreset === s ? "var(--th-border-strong)" : "var(--th-border)",
                         borderRadius: 4,
-                        background: sizePreset === s ? "rgba(255,255,255,0.08)" : "transparent",
+                        background: sizePreset === s ? "var(--th-hover-overlay)" : "transparent",
                         color: sizePreset === s ? "var(--th-text-primary)" : "var(--th-text-muted)",
                         cursor: "pointer",
                       }}

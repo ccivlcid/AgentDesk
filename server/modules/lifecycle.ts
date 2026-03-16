@@ -13,6 +13,8 @@ import { registerGracefulShutdownHandlers } from "./lifecycle/register-graceful-
 import { appendTaskExecutionMetaUpdate, recordTaskExecutionEvent } from "./workflow/core/task-execution-meta.ts";
 import { TASK_STALLED_THRESHOLD_MS, TASK_STALLED_RECOVERY_THRESHOLD_MS } from "../db/runtime.ts";
 import { startWorkflowScheduler } from "./workflow/workflow-scheduler.ts";
+import { startOllama, getOllamaRunning } from "./local-llm/backend-manager.ts";
+import { startMetricsPoller } from "./local-llm/metrics-collector.ts";
 
 export function startLifecycle(ctx: RuntimeContext): void {
   const {
@@ -746,9 +748,39 @@ export function startLifecycle(ctx: RuntimeContext): void {
   setTimeout(sweepPendingSubtaskDelegations, 4_000);
   setInterval(sweepPendingSubtaskDelegations, SUBTASK_DELEGATION_SWEEP_MS);
   setTimeout(autoAssignAgentProviders, 4_000);
-  const telegramReceiver = startTelegramReceiver({ db });
-  const discordReceiver = startDiscordReceiver({ db });
-  const slackReceiver = startSlackReceiver({ db });
+  const noopReceiver = { stop: () => {} };
+  let telegramReceiver = noopReceiver;
+  let discordReceiver = noopReceiver;
+  let slackReceiver = noopReceiver;
+  try { telegramReceiver = startTelegramReceiver({ db }); } catch (err) { logger.warn({ err }, "[messenger] Telegram receiver failed to start"); }
+  try { discordReceiver = startDiscordReceiver({ db }); } catch (err) { logger.warn({ err }, "[messenger] Discord receiver failed to start"); }
+  try { slackReceiver = startSlackReceiver({ db }); } catch (err) { logger.warn({ err }, "[messenger] Slack receiver failed to start"); }
+
+  // ---------------------------------------------------------------------------
+  // Local LLM — auto-start Ollama + metrics poller
+  // ---------------------------------------------------------------------------
+  setTimeout(async () => {
+    try {
+      const row = db.prepare("SELECT auto_start, port FROM local_llm_backends WHERE name='ollama'").get() as
+        | { auto_start: number; port: number }
+        | undefined;
+      const autoStart = row?.auto_start ?? 1; // default: on
+      const port = row?.port ?? 11434;
+      if (autoStart && !(await getOllamaRunning(port))) {
+        const result = await startOllama();
+        if (result.ok) {
+          logger.info("[local-llm] Ollama auto-started");
+          broadcast("local_llm_status", { backend: "ollama", running: true });
+        } else {
+          logger.debug(`[local-llm] Ollama auto-start skipped: ${result.error}`);
+        }
+      }
+    } catch (err) {
+      logger.debug({ err }, "[local-llm] auto-start check error");
+    }
+  }, 5_000);
+
+  startMetricsPoller(broadcast);
 
   // ---------------------------------------------------------------------------
   // Start HTTP server + WebSocket

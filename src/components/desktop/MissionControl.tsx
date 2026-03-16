@@ -13,6 +13,7 @@ const WINDOW_META: Record<WindowType, { emoji: string; label: string }> = {
   repl: { emoji: ">_", label: "REPL" },
   reports: { emoji: "📊", label: "Reports" },
   "create-task": { emoji: "✚", label: "New Task" },
+  "llm-guide": { emoji: "📖", label: "LLM Guide" },
 };
 
 const WIDGET_META: Record<string, { emoji: string; label: string }> = {
@@ -170,8 +171,8 @@ function Card({ emoji, label, onClick }: { emoji: string; label: string; onClick
       style={{
         width: 110,
         height: 90,
-        background: "rgba(255,255,255,0.06)",
-        border: "1px solid rgba(255,255,255,0.10)",
+        background: "rgba(255,255,255,0.08)",
+        border: "1px solid rgba(255,255,255,0.12)",
         borderRadius: 12,
         display: "flex",
         flexDirection: "column",
@@ -183,16 +184,16 @@ function Card({ emoji, label, onClick }: { emoji: string; label: string; onClick
         fontFamily: mono,
       }}
       onMouseEnter={(e) => {
-        (e.currentTarget as HTMLButtonElement).style.background = "rgba(245,158,11,0.15)";
+        (e.currentTarget as HTMLButtonElement).style.background = "rgba(245,158,11,0.22)";
         (e.currentTarget as HTMLButtonElement).style.transform = "scale(1.05)";
       }}
       onMouseLeave={(e) => {
-        (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.06)";
+        (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.08)";
         (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)";
       }}
     >
       <span style={{ fontSize: 24 }}>{emoji}</span>
-      <span style={{ fontSize: 10, color: "rgba(255,255,255,0.6)" }}>{label}</span>
+      <span style={{ fontSize: 10, color: "rgba(255,255,255,0.75)" }}>{label}</span>
     </button>
   );
 }

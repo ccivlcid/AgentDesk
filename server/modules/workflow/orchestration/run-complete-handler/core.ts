@@ -334,6 +334,100 @@ export function createRunCompleteHandler(deps: RunCompleteHandlerDeps) {
     if (finalExitCode === 0) applySuccessStateUpdate(taskId, task, finalExitCode, result, t, stateDeps);
     else applyFailureStateUpdate(taskId, task, finalExitCode, result, t, stateDeps);
 
+    // Gate condition evaluation: cancel downstream tasks whose gate branch doesn't match
+    {
+      type GateDep = { task_id: string; gate_condition: string | null; gate_branch: string | null };
+      const gateDeps = (db as { prepare: (s: string) => { all: (...a: unknown[]) => GateDep[] } })
+        .prepare(`SELECT task_id, gate_condition, gate_branch
+                  FROM task_dependencies
+                  WHERE depends_on_task_id = ? AND gate_condition IS NOT NULL`)
+        .all(taskId);
+
+      if (gateDeps.length > 0) {
+        function evalGateCondition(expr: string, code: number, output: string | null): boolean {
+          const e = expr.toLowerCase().trim();
+          if (e === "success" || e === "exit_code == 0" || e === "exit_code=0" || e === "exit_code === 0") return code === 0;
+          if (e === "failure" || e === "exit_code != 0" || e === "exit_code<>0" || e === "exit_code !== 0") return code !== 0;
+          const containsMatch = e.match(/^result\s+(?:contains|includes)\s+"([^"]+)"$/);
+          if (containsMatch) return (output ?? "").toLowerCase().includes(containsMatch[1].toLowerCase());
+          return true; // unknown expression → permissive
+        }
+
+        for (const dep of gateDeps) {
+          const depCondTrue = evalGateCondition(dep.gate_condition!, finalExitCode, result);
+          const expectedBranch = dep.gate_branch === "false" ? false : true;
+          const gatePass = depCondTrue === expectedBranch;
+          if (!gatePass) {
+            try {
+              const now = (nowMs as () => number)();
+              (db as { prepare: (s: string) => { run: (...a: unknown[]) => void } })
+                .prepare("UPDATE tasks SET status = 'cancelled', updated_at = ? WHERE id = ? AND status NOT IN ('done','in_progress','cancelled')")
+                .run(now, dep.task_id);
+              const cancelledTask = (db as { prepare: (s: string) => { get: (...a: unknown[]) => unknown } })
+                .prepare("SELECT * FROM tasks WHERE id = ?").get(dep.task_id);
+              (broadcast as (e: string, p: unknown) => void)("task_update", cancelledTask);
+              (appendTaskLog as (a: string, b: string, c: string) => void)(
+                taskId, "system",
+                `Gate condition "${dep.gate_condition}" evaluated ${depCondTrue} — downstream task ${dep.task_id} cancelled (expected branch: ${dep.gate_branch})`
+              );
+            } catch { /* gate evaluation must not block completion */ }
+          }
+        }
+      }
+    }
+
+    // Auto-start dependent tasks whose all upstream deps are now 'done'
+    {
+      const autoStartFn = deps.startTaskExecutionForAgent as ((taskId: string, agentId: string) => void) | undefined;
+      if (autoStartFn && finalExitCode === 0) {
+        type DepRow = { task_id: string };
+        const downstreamDeps = (db as { prepare: (s: string) => { all: (...a: unknown[]) => DepRow[] } })
+          .prepare(`SELECT task_id FROM task_dependencies WHERE depends_on_task_id = ?`)
+          .all(taskId);
+
+        for (const { task_id: downId } of downstreamDeps) {
+          try {
+            type AllDepsRow = { total: number; done_count: number };
+            const allDeps = (db as { prepare: (s: string) => { get: (...a: unknown[]) => AllDepsRow } })
+              .prepare(`
+                SELECT COUNT(*) as total,
+                       SUM(CASE WHEN t.status = 'done' THEN 1 ELSE 0 END) as done_count
+                FROM task_dependencies td
+                JOIN tasks t ON t.id = td.depends_on_task_id
+                WHERE td.task_id = ?`)
+              .get(downId);
+
+            if (!allDeps || allDeps.total === 0 || allDeps.done_count < allDeps.total) continue;
+
+            type DownTask = { status: string; assigned_agent_id: string | null };
+            const downTask = (db as { prepare: (s: string) => { get: (...a: unknown[]) => DownTask | undefined } })
+              .prepare(`SELECT status, assigned_agent_id FROM tasks WHERE id = ?`)
+              .get(downId);
+
+            if (!downTask || downTask.status !== "planned" || !downTask.assigned_agent_id) continue;
+
+            // Move to inbox, then start
+            (db as { prepare: (s: string) => { run: (...a: unknown[]) => void } })
+              .prepare(`UPDATE tasks SET status = 'inbox', updated_at = ? WHERE id = ?`)
+              .run((nowMs as () => number)(), downId);
+
+            const updatedTask = (db as { prepare: (s: string) => { get: (...a: unknown[]) => unknown } })
+              .prepare("SELECT * FROM tasks WHERE id = ?")
+              .get(downId);
+            (broadcast as (e: string, p: unknown) => void)("task_update", updatedTask);
+            (appendTaskLog as (a: string, b: string, c: string) => void)(
+              downId, "system",
+              `All ${allDeps.total} upstream dependencies completed — auto-starting task`,
+            );
+
+            autoStartFn(downId, downTask.assigned_agent_id);
+          } catch {
+            /* auto-start failure must not block completion */
+          }
+        }
+      }
+    }
+
     // Task handoff: auto-create a follow-up task for another agent on completion
     if (task?.handoff_to_agent_id) {
       const condition = task.handoff_condition ?? "on_success";

@@ -588,7 +588,7 @@ export function TaskBoard({
                   border: isDragOver ? `1px solid ${sc?.color ?? "var(--th-border)"}` : "1px solid var(--th-border)",
                   borderRadius: 10,
                   overflow: "hidden",
-                  background: isDragOver ? "rgba(255,255,255,0.02)" : "var(--th-bg-surface)",
+                  background: isDragOver ? "var(--th-hover-overlay-subtle)" : "var(--th-bg-surface)",
                   outline: isDragOver ? `1px solid ${sc?.color ?? "transparent"}` : "none",
                   boxShadow: isDragOver ? `0 8px 24px rgba(0,0,0,0.12)` : "0 2px 12px rgba(0,0,0,0.06)",
                 }}

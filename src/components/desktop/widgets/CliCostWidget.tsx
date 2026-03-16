@@ -32,10 +32,10 @@ export default function CliCostWidget() {
         fontSize: 11,
         flexShrink: 0,
       }}>
-        <span style={{ color: "var(--th-status-success)" }}>{totalActive} active</span>
-        {totalError > 0 && <span style={{ color: "var(--th-status-error)" }}>{totalError} error</span>}
+        <span style={{ color: "var(--th-status-success)" }}>{totalActive} {t({ ko: "활성", en: "active", ja: "アクティブ", zh: "活动" })}</span>
+        {totalError > 0 && <span style={{ color: "var(--th-status-error)" }}>{totalError} {t({ ko: "오류", en: "error", ja: "エラー", zh: "错误" })}</span>}
         <span style={{ flex: 1 }} />
-        {loading && <span style={{ fontSize: 9, color: "var(--th-text-muted)" }}>loading...</span>}
+        {loading && <span style={{ fontSize: 9, color: "var(--th-text-muted)" }}>{t({ ko: "로딩 중...", en: "loading...", ja: "読み込み中...", zh: "加载中..." })}</span>}
       </div>
 
       {/* 에이전트별 내역 */}

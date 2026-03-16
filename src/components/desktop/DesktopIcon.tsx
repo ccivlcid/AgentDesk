@@ -1,5 +1,6 @@
 import { useRef, useState, useCallback } from "react";
 import { useUiStore } from "../../store/uiStore";
+import { useTheme } from "../../ThemeContext";
 import { isLightWallpaper } from "./WallpaperPicker";
 
 const JIGGLE_STYLE = `
@@ -11,13 +12,15 @@ const JIGGLE_STYLE = `
 
 export interface DesktopIconDef {
   id: string;
-  emoji: string;
+  icon: (color: string) => React.ReactNode;
   label: string;
   onClick: () => void;
   onContextMenu?: (e: React.MouseEvent) => void;
   deletable?: boolean;
   onDelete?: () => void;
   badge?: number;
+  /** macOS 스타일 아이콘 배경 accent 색상 (예: "#5e5ce6"). 없으면 glass 기본값 사용 */
+  accentColor?: string;
 }
 
 interface DesktopIconProps {
@@ -28,7 +31,9 @@ interface DesktopIconProps {
 
 export default function DesktopIcon({ def, defaultX, defaultY }: DesktopIconProps) {
   const { desktopIconLayout, setDesktopIconLayout, desktopIconLabels, setDesktopIconLabel, jiggleMode, wallpaper } = useUiStore();
-  const light = isLightWallpaper(wallpaper);
+  const { theme } = useTheme();
+  // light = 라이트 테마이거나 라이트 배경화면인 경우
+  const light = theme === "light" || isLightWallpaper(wallpaper);
 
   const saved = desktopIconLayout[def.id];
   const [pos, setPos] = useState({ x: saved?.x ?? defaultX, y: saved?.y ?? defaultY });
@@ -106,17 +111,30 @@ export default function DesktopIcon({ def, defaultX, defaultY }: DesktopIconProp
   }
 
   // ── 모드별 토큰 ───────────────────────────────────────────────────
-  const iconBg = light
-    ? hovered ? "rgba(255,255,255,0.92)" : "rgba(255,255,255,0.65)"
-    : hovered ? "rgba(255,255,255,0.16)" : "rgba(255,255,255,0.09)";
+  const { accentColor } = def;
 
-  const iconBorder = light
-    ? "1px solid rgba(0,0,0,0.08)"
-    : "1px solid rgba(255,255,255,0.12)";
+  // accentColor가 있으면 macOS 컬러 아이콘 스타일, 없으면 glass 기본값
+  const iconBg = accentColor
+    ? hovered
+      ? `${accentColor}ee`   // hover: 거의 불투명
+      : `${accentColor}cc`   // 기본: 살짝 투명 (macOS 아이콘 느낌)
+    : light
+      ? hovered ? "rgba(255,255,255,0.92)" : "rgba(255,255,255,0.65)"
+      : hovered ? "rgba(255,255,255,0.16)" : "rgba(255,255,255,0.09)";
 
-  const iconShadow = light
-    ? "0 2px 8px rgba(0,0,0,0.10), 0 1px 2px rgba(0,0,0,0.06)"
-    : "0 2px 12px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08)";
+  const iconBorder = accentColor
+    ? `1px solid ${accentColor}55`
+    : light
+      ? "1px solid rgba(0,0,0,0.08)"
+      : "1px solid rgba(255,255,255,0.12)";
+
+  const iconShadow = accentColor
+    ? hovered
+      ? `0 4px 16px ${accentColor}88, 0 1px 4px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.25)`
+      : `0 2px 10px ${accentColor}55, 0 1px 3px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.2)`
+    : light
+      ? "0 2px 8px rgba(0,0,0,0.10), 0 1px 2px rgba(0,0,0,0.06)"
+      : "0 2px 12px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08)";
 
   const labelColor = light ? "rgba(0,0,0,0.82)" : "rgba(255,255,255,0.95)";
 
@@ -222,7 +240,6 @@ export default function DesktopIcon({ def, defaultX, defaultY }: DesktopIconProp
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            fontSize: 26,
             backdropFilter: "blur(20px) saturate(160%)",
             WebkitBackdropFilter: "blur(20px) saturate(160%)",
             boxShadow: iconShadow,
@@ -230,7 +247,13 @@ export default function DesktopIcon({ def, defaultX, defaultY }: DesktopIconProp
             transform: hovered && !dragging ? "scale(1.06)" : "scale(1)",
           }}
         >
-          {def.emoji}
+          {def.icon(
+            accentColor
+              ? "rgba(255,255,255,0.95)"   // 컬러 배경 위 → 흰색 아이콘
+              : light
+                ? "rgba(0,0,0,0.72)"       // 밝은 배경 → 어두운 아이콘
+                : "rgba(255,255,255,0.88)" // 어두운 배경 → 밝은 아이콘
+          )}
         </div>
 
         {/* 레이블 */}

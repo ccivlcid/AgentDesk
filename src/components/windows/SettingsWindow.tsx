@@ -4,13 +4,15 @@ import { useUiStore } from "../../store/uiStore";
 import { useAgentStore } from "../../store/agentStore";
 import { useTaskStore } from "../../store/taskStore";
 import * as api from "../../api";
+import { useI18n } from "../../i18n";
 
 const SettingsPanel = lazy(() => import("../SettingsPanel"));
 
 function Loading() {
+  const { t } = useI18n();
   return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", fontFamily: "var(--th-font-mono)", fontSize: 11, color: "var(--th-text-muted)" }}>
-      loading...
+      {t({ ko: "로딩 중...", en: "loading...", ja: "読み込み中...", zh: "加载中..." })}
     </div>
   );
 }
@@ -28,9 +30,10 @@ export default function SettingsWindow({
   oauthResult,
   onOauthResultClear,
 }: SettingsWindowProps) {
-  const { settings } = useUiStore();
+  const { settings, settingsInitialTab } = useUiStore();
   const { cliStatus, setCliStatus } = useTaskStore();
   const { agents } = useAgentStore();
+  const { t } = useI18n();
 
   useEffect(() => {
     if (!cliStatus) {
@@ -41,12 +44,12 @@ export default function SettingsWindow({
   return (
     <AppWindow
       windowType="settings"
-      title="Settings"
+      title={t({ ko: "설정", en: "Settings", ja: "設定", zh: "设置" })}
       emoji="⚙"
       defaultWidth={820}
       defaultHeight={600}
     >
-      <div style={{ height: "100%", overflow: "hidden" }}>
+      <div style={{ height: "100%", overflow: "hidden", display: "flex", flexDirection: "column" }}>
         <Suspense fallback={<Loading />}>
           <SettingsPanel
             settings={settings}
@@ -56,6 +59,7 @@ export default function SettingsWindow({
             oauthResult={oauthResult}
             onOauthResultClear={onOauthResultClear}
             managerAgents={agents}
+            initialTab={settingsInitialTab}
           />
         </Suspense>
       </div>

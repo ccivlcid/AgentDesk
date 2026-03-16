@@ -37,7 +37,7 @@ export default function AgentSingleMonitor({ config }: { config: CustomFeatureCo
         </div>
       </div>
       {currentTask ? (
-        <div style={{ ...mono, fontSize: 10, color: "var(--th-text-muted)", background: "rgba(255,255,255,0.03)", padding: "8px 10px", borderRadius: 4, border: "1px solid var(--th-border)" }}>
+        <div style={{ ...mono, fontSize: 10, color: "var(--th-text-muted)", background: "var(--th-hover-overlay-subtle)", padding: "8px 10px", borderRadius: 4, border: "1px solid var(--th-border)" }}>
           <div style={{ fontSize: 9, color: "var(--th-accent)", marginBottom: 4 }}>현재 태스크</div>
           <div style={{ color: "var(--th-text-primary)" }} className="truncate">{currentTask.title}</div>
         </div>

@@ -10,6 +10,7 @@ import GatewaySettingsTab from "./settings/GatewaySettingsTab";
 import GeneralSettingsTab from "./settings/GeneralSettingsTab";
 import OAuthSettingsTab from "./settings/OAuthSettingsTab";
 import DataSettingsTab from "./settings/DataSettingsTab";
+import LocalLlmSettingsTab from "./local-llm/LocalLlmSettingsTab";
 import SettingsTabNav from "./settings/SettingsTabNav";
 import { useConfirm } from "./ui/ConfirmDialog";
 import type { AccountDraftMap, AccountDraftPatch, LocalSettings, SettingsTab } from "./settings/types";
@@ -24,6 +25,8 @@ interface SettingsPanelProps {
   onOauthResultClear?: () => void;
   /** 현재 워크플로 팩 직원 (메신저 채팅 대화 직원 선택용) */
   managerAgents?: Agent[];
+  /** 열릴 때 포커스할 초기 탭 */
+  initialTab?: SettingsTab | null;
 }
 
 export default function SettingsPanel({
@@ -34,13 +37,14 @@ export default function SettingsPanel({
   oauthResult,
   onOauthResultClear,
   managerAgents,
+  initialTab,
 }: SettingsPanelProps) {
   const [form, setForm] = useState<LocalSettings>(settings as LocalSettings);
   const { t, locale: localeTag } = useI18n(form.language);
   const { confirm } = useConfirm();
   const [saved, setSaved] = useState(false);
   const isMounted = useRef(false);
-  const [tab, setTab] = useState<SettingsTab>(oauthResult ? "oauth" : "general");
+  const [tab, setTab] = useState<SettingsTab>(initialTab ?? (oauthResult ? "oauth" : "general"));
 
   const [oauthStatus, setOauthStatus] = useState<OAuthStatus | null>(null);
   const [oauthLoading, setOauthLoading] = useState(false);
@@ -508,6 +512,8 @@ export default function SettingsPanel({
       )}
 
       {tab === "data" && <DataSettingsTab t={t} />}
+
+      {tab === "local-llm" && <LocalLlmSettingsTab />}
       </div>
     </div>
   );

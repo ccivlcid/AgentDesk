@@ -3,6 +3,7 @@ import type { Node, Edge } from "@xyflow/react";
 import { useProjectStore } from "../../store/projectStore";
 import { useTaskStore } from "../../store/taskStore";
 import { useI18n } from "../../i18n";
+import { runTask } from "../../api/organization-projects";
 
 type RunItem = {
   nodeId: string;
@@ -25,41 +26,74 @@ type Phase = "config" | "running" | "done" | "error";
 
 const mono = "var(--th-font-mono)";
 
-/** Resolve agent→agent dependencies, traversing through gate/condition/trigger nodes. */
-function resolveAgentDeps(agentIds: Set<string>, edges: Edge[]): Array<{ from: string; to: string }> {
-  const outMap: Record<string, string[]> = {};
+type AgentDep = {
+  from: string;
+  to: string;
+  gateCondition?: string;
+  gateBranch?: "true" | "false";
+};
+
+/** Resolve agent→agent dependencies, traversing through gate/condition/trigger nodes.
+ *  Captures condition expression + branch when a Condition node is in the path. */
+function resolveAgentDeps(agentIds: Set<string>, nodes: Node[], edges: Edge[]): AgentDep[] {
+  const nodeMap = new Map(nodes.map((n) => [n.id, n]));
+  const outEdgeMap: Record<string, Edge[]> = {};
   for (const e of edges) {
-    if (!outMap[e.source]) outMap[e.source] = [];
-    outMap[e.source].push(e.target);
+    if (!outEdgeMap[e.source]) outEdgeMap[e.source] = [];
+    outEdgeMap[e.source].push(e);
   }
-  const deps: Array<{ from: string; to: string }> = [];
+
+  const deps: AgentDep[] = [];
+
   for (const srcId of agentIds) {
+    type State = { nodeId: string; gateCondition?: string; gateBranch?: "true" | "false" };
     const visited = new Set<string>();
-    const queue = [srcId];
+    const queue: State[] = [{ nodeId: srcId }];
+
     while (queue.length > 0) {
-      const curr = queue.shift()!;
-      if (visited.has(curr)) continue;
-      visited.add(curr);
-      for (const next of outMap[curr] ?? []) {
-        if (agentIds.has(next)) {
-          deps.push({ from: srcId, to: next });
+      const { nodeId, gateCondition, gateBranch } = queue.shift()!;
+      if (visited.has(nodeId)) continue;
+      visited.add(nodeId);
+
+      for (const edge of outEdgeMap[nodeId] ?? []) {
+        const nextId = edge.target;
+        const currentNode = nodeMap.get(nodeId);
+        let nextGateCondition = gateCondition;
+        let nextGateBranch = gateBranch;
+
+        // When leaving a Condition node, capture its expression and the edge's branch handle
+        if (currentNode?.type === "condition") {
+          const condData = currentNode.data as Record<string, unknown>;
+          const expr = typeof condData.expression === "string" ? condData.expression.trim() : undefined;
+          nextGateCondition = expr || undefined;
+          nextGateBranch = edge.sourceHandle === "false" ? "false" : "true";
+        }
+
+        if (agentIds.has(nextId)) {
+          deps.push({
+            from: srcId,
+            to: nextId,
+            ...(nextGateCondition ? { gateCondition: nextGateCondition, gateBranch: nextGateBranch ?? "true" } : {}),
+          });
         } else {
-          queue.push(next);
+          queue.push({ nodeId: nextId, gateCondition: nextGateCondition, gateBranch: nextGateBranch });
         }
       }
     }
   }
+
   return deps;
 }
 
 export default function WbRunModal({ nodes, edges, workflowName, onClose, onSuccess }: Props) {
   const { t } = useI18n();
   const { projects, currentProjectId } = useProjectStore();
+  const currentProject = projects.find((p) => p.id === (currentProjectId ?? "")) ?? null;
   const { tasks } = useTaskStore();
 
   const agentNodes = nodes.filter((n) => n.type === "agent");
   const agentIdSet = new Set(agentNodes.map((n) => n.id));
-  const agentDeps = resolveAgentDeps(agentIdSet, edges);
+  const agentDeps = resolveAgentDeps(agentIdSet, nodes, edges);
 
   const [items, setItems] = useState<RunItem[]>(() =>
     agentNodes.map((n) => {
@@ -93,6 +127,10 @@ export default function WbRunModal({ nodes, edges, workflowName, onClose, onSucc
     setPhase("running");
     setProgress(0);
 
+    // WB-03: extract trigger node type as context_hint
+    const triggerNode = nodes.find((n) => n.type === "trigger");
+    const contextHint = (triggerNode?.data as Record<string, unknown>)?.triggerType as string | undefined;
+
     addLog(t({ ko: `${validItems.length}개 태스크 생성 중...`, en: `Creating ${validItems.length} tasks...`, ja: `${validItems.length}件のタスクを作成中...`, zh: `正在创建${validItems.length}个任务...` }));
 
     const results = await Promise.allSettled(
@@ -104,6 +142,9 @@ export default function WbRunModal({ nodes, edges, workflowName, onClose, onSucc
         };
         if (item.instruction) body.description = item.instruction;
         if (projectId) body.project_id = projectId;
+        if (contextHint) body.context_hint = contextHint;
+        const selectedProject = projects.find((p) => p.id === projectId) ?? currentProject;
+        if (selectedProject?.project_path) body.project_path = selectedProject.project_path;
         return fetch("/api/tasks", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -138,27 +179,65 @@ export default function WbRunModal({ nodes, edges, workflowName, onClose, onSucc
 
     // Set up dependencies
     const depsToLink = agentDeps.filter((d) => nodeTaskMap[d.from] && nodeTaskMap[d.to]);
+    let hasDepError = false;
     for (let i = 0; i < depsToLink.length; i++) {
       const dep = depsToLink[i];
       addLog(`🔗 ${nodeTaskMap[dep.from].slice(0, 8)} → ${nodeTaskMap[dep.to].slice(0, 8)}`);
       try {
-        await fetch(`/api/tasks/${nodeTaskMap[dep.to]}/dependencies`, {
+        const depBody: Record<string, unknown> = { depends_on_task_id: nodeTaskMap[dep.from] };
+        if (dep.gateCondition) {
+          depBody.gate_condition = dep.gateCondition;
+          depBody.gate_branch = dep.gateBranch ?? "true";
+        }
+        const r = await fetch(`/api/tasks/${nodeTaskMap[dep.to]}/dependencies`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ depends_on_task_id: nodeTaskMap[dep.from] }),
+          body: JSON.stringify(depBody),
         });
+        if (!r.ok) throw new Error(`status ${r.status}`);
         addLog("  ✓");
       } catch {
         addLog(`  ✗ ${t({ ko: "의존 관계 설정 실패", en: "dependency failed", ja: "依存関係失敗", zh: "依赖设置失败" })}`);
+        hasDepError = true;
       }
       setProgress(50 + Math.round(((i + 1) / Math.max(depsToLink.length, 1)) * 50));
     }
 
+    // WB-02: rollback if any dependency failed
+    if (hasDepError) {
+      addLog(`\n${t({ ko: "⚠ 의존 관계 설정 실패 — 생성된 태스크를 정리합니다...", en: "⚠ Dependency setup failed — rolling back created tasks...", ja: "⚠ 依存関係設定失敗 — 作成済みタスクをロールバック中...", zh: "⚠ 依赖设置失败 — 正在回滚已创建的任务..." })}`);
+      await Promise.allSettled(
+        taskIds.map((id) => fetch(`/api/tasks/${id}`, { method: "DELETE" }))
+      );
+      setPhase("error");
+      return;
+    }
+
     addLog(`\n✅ ${t({ ko: `${taskIds.length}개 태스크 생성 완료`, en: `${taskIds.length} tasks created`, ja: `${taskIds.length}件のタスクを作成`, zh: `已创建${taskIds.length}个任务` })}`);
     setCreatedIds(taskIds);
+
+    // Auto-start root tasks (those with no incoming dependencies from other workflow tasks)
+    const depTargetNodeIds = new Set(agentDeps.map((d) => d.to));
+    const rootItems = validItems.filter((it) => !depTargetNodeIds.has(it.nodeId));
+    if (rootItems.length > 0) {
+      addLog(`\n${t({ ko: `▶ 루트 태스크 ${rootItems.length}개 자동 시작...`, en: `▶ Auto-starting ${rootItems.length} root task(s)...`, ja: `▶ ルートタスク${rootItems.length}件を自動開始...`, zh: `▶ 自动启动${rootItems.length}个根任务...` })}`);
+      await Promise.allSettled(
+        rootItems.map(async (item) => {
+          const taskId = nodeTaskMap[item.nodeId];
+          if (!taskId) return;
+          try {
+            await runTask(taskId);
+            addLog(`  ▶ ${item.emoji} ${item.agentName}`);
+          } catch {
+            addLog(`  ✗ ${item.emoji} ${item.agentName} — ${t({ ko: "시작 실패", en: "start failed", ja: "開始失敗", zh: "启动失败" })}`);
+          }
+        }),
+      );
+    }
+
     setPhase("done");
     onSuccess(taskIds);
-  }, [items, agentDeps, projectId, t, onSuccess]);
+  }, [items, agentDeps, projectId, nodes, t, onSuccess]);
 
   const canRun = items.some((it) => it.agentId && it.taskTitle.trim()) && phase !== "running";
 

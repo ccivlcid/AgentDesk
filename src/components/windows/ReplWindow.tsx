@@ -28,7 +28,7 @@ export default function ReplWindow() {
       <div style={{ height: "100%", overflow: "hidden" }}>
         <Suspense fallback={
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", fontFamily: "var(--th-font-mono)", fontSize: 11, color: "var(--th-text-muted)" }}>
-            loading...
+            {t({ ko: "로딩 중...", en: "loading...", ja: "読み込み中...", zh: "加载中..." })}
           </div>
         }>
           <AgentRepl agents={filteredAgents} currentProject={currentProject} />

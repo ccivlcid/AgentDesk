@@ -20,7 +20,7 @@ export interface FlowEdge {
   id: string;
   from: { nodeId: string; x: number; y: number };
   to: { nodeId: string; x: number; y: number };
-  type: "delegation" | "sub-agent" | "cross_dept" | "meeting";
+  type: "delegation" | "sub-agent" | "cross_dept" | "meeting" | "collab";
   label?: string;
   animated?: boolean;
   path: string;
@@ -104,8 +104,14 @@ export function useFlowLayout({
     // Sort non-meeting agents by degree descending
     const sorted = [...nonMeetingAgents].sort((a, b) => (degreeMap.get(b.id) ?? 0) - (degreeMap.get(a.id) ?? 0));
 
-    // Group into rows (max 3 per row)
-    const COLS = Math.min(3, sorted.length);
+    // Group into rows (dynamic columns based on agent count)
+    const COLS = (() => {
+      const n = sorted.length;
+      if (n <= 6) return Math.min(3, n);
+      if (n <= 20) return 4;
+      if (n <= 40) return 5;
+      return 6;
+    })();
     const rows: Agent[][] = [];
     for (let i = 0; i < sorted.length; i += COLS) {
       rows.push(sorted.slice(i, i + COLS));
@@ -314,13 +320,64 @@ export function useFlowLayout({
       }
     }
 
-    // Delegation edges via subtasks
+    // Delegation edges via task handoff (task.handoff_to_agent_id)
+    const delegationEdgeSet = new Set<string>();
     for (const task of tasks) {
-      if (!task.assigned_agent_id) continue;
-      // Find agents who have subtasks assigned to a different agent
-      // We need SubTask data — but SubTask is not passed in directly.
-      // Skipping delegation edges based on SubTask for now;
-      // CrossDeptDelivery covers cross-dept flows.
+      if (!task.assigned_agent_id || !task.handoff_to_agent_id) continue;
+      if (task.assigned_agent_id === task.handoff_to_agent_id) continue;
+      const fromPos = agentPositions.get(task.assigned_agent_id);
+      const toPos = agentPositions.get(task.handoff_to_agent_id);
+      if (!fromPos || !toPos) continue;
+      const edgeId = `delegation-${task.assigned_agent_id}-${task.handoff_to_agent_id}`;
+      if (delegationEdgeSet.has(edgeId)) continue;
+      delegationEdgeSet.add(edgeId);
+      const from = { x: fromPos.x + NODE_WIDTH / 2, y: fromPos.y };
+      const to = { x: toPos.x - NODE_WIDTH / 2, y: toPos.y };
+      edges.push({
+        id: edgeId,
+        from: { nodeId: task.assigned_agent_id, x: from.x, y: from.y },
+        to: { nodeId: task.handoff_to_agent_id, x: to.x, y: to.y },
+        type: "delegation",
+        animated: task.status === "in_progress" || task.status === "done",
+        path: bezierPath(from, to),
+      });
+    }
+
+    // Collaboration edges: agents with concurrent in_progress tasks in the same project
+    const collabEdgeSet = new Set<string>();
+    const projectActiveAgents = new Map<string, string[]>();
+    for (const task of tasks) {
+      if (!task.project_id || !task.assigned_agent_id) continue;
+      if (task.status !== "in_progress" && task.status !== "collaborating") continue;
+      if (!agentPositions.has(task.assigned_agent_id)) continue;
+      if (!projectActiveAgents.has(task.project_id)) projectActiveAgents.set(task.project_id, []);
+      projectActiveAgents.get(task.project_id)!.push(task.assigned_agent_id);
+    }
+    for (const [, agentIds] of projectActiveAgents) {
+      const unique = [...new Set(agentIds)];
+      if (unique.length < 2) continue;
+      for (let i = 0; i < unique.length; i++) {
+        for (let j = i + 1; j < unique.length; j++) {
+          const a = unique[i], b = unique[j];
+          const edgeId = [a, b].sort().join("-collab-");
+          if (collabEdgeSet.has(edgeId)) continue;
+          // Skip if already connected by delegation
+          if (delegationEdgeSet.has(`delegation-${a}-${b}`) || delegationEdgeSet.has(`delegation-${b}-${a}`)) continue;
+          collabEdgeSet.add(edgeId);
+          const fromPos = agentPositions.get(a)!;
+          const toPos = agentPositions.get(b)!;
+          const from = { x: fromPos.x, y: fromPos.y + NODE_HEIGHT / 2 };
+          const to = { x: toPos.x, y: toPos.y - NODE_HEIGHT / 2 };
+          edges.push({
+            id: edgeId,
+            from: { nodeId: a, x: from.x, y: from.y },
+            to: { nodeId: b, x: to.x, y: to.y },
+            type: "collab",
+            animated: false,
+            path: bezierPath(from, to),
+          });
+        }
+      }
     }
 
     return { nodes, edges, meetings };

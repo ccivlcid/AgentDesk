@@ -237,7 +237,7 @@ export default function AppWindow({
         flexDirection: "column",
         overflow: "hidden",
         zIndex: 200,
-        boxShadow: "0 20px 60px rgba(0,0,0,0.5), 0 0 0 0.5px rgba(255,255,255,0.06) inset",
+        boxShadow: "0 20px 60px var(--th-glass-shadow), 0 0 0 0.5px var(--th-glass-border) inset",
       }}
     >
       {/* ── macOS unified titlebar ── */}
@@ -297,7 +297,7 @@ export default function AppWindow({
                   fontFamily: mono,
                   fontWeight: active ? 600 : 400,
                   background: active ? "var(--th-accent)" : "transparent",
-                  color: active ? "#fff" : "var(--th-text-muted)",
+                  color: active ? "var(--th-accent-text)" : "var(--th-text-muted)",
                   border: "none",
                   borderRadius: 6,
                   cursor: "pointer",

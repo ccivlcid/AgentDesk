@@ -58,6 +58,8 @@ export const BLANK: FormData = {
   department_id: "",
   role: "junior",
   cli_provider: "claude",
+  api_provider_id: null,
+  api_model: null,
   avatar_emoji: "🤖",
   avatar_url: null,
   pendingAvatarDataUrl: null,

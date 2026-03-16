@@ -15,7 +15,7 @@ export default function AgentManagerWindow({ onAgentsChange }: AgentManagerWindo
     <AppWindow
       windowType="agent-manager"
       title={t({ ko: "에이전트 설정", en: "Agent Manager", ja: "エージェント設定", zh: "代理管理" })}
-      emoji="👤"
+      emoji="◉"
       defaultWidth={860}
       defaultHeight={600}
     >

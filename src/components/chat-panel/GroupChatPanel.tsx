@@ -34,6 +34,56 @@ const AGENT_STATUS_DOT: Record<string, string> = {
   offline: "var(--th-danger, #ef4444)",
 };
 
+type ChatMode = "chat" | "task" | "urgent";
+type Priority = "high" | "normal" | "low";
+
+const PRIORITY_COLOR: Record<Priority, string> = {
+  high:   "var(--th-danger)",
+  normal: "var(--th-accent)",
+  low:    "var(--th-success)",
+};
+const PRIORITY_LABEL: Record<Priority, { ko: string; en: string }> = {
+  high:   { ko: "높음", en: "High" },
+  normal: { ko: "보통", en: "Normal" },
+  low:    { ko: "낮음", en: "Low" },
+};
+
+// 메시지 content에서 모드 prefix 파싱
+// 포맷: [TASK:<deadline>:<priority>]\n 또는 [URGENT]\n
+function parseModePrefix(content: string): { mode: ChatMode; deadline?: string; priority?: Priority; body: string } {
+  const taskMatch = content.match(/^\[TASK:([^:]*):([^\]]*)\]\n?([\s\S]*)$/);
+  if (taskMatch) {
+    return {
+      mode: "task",
+      deadline: taskMatch[1] || undefined,
+      priority: (taskMatch[2] as Priority) || "normal",
+      body: taskMatch[3] ?? "",
+    };
+  }
+  if (content.startsWith("[URGENT]\n") || content === "[URGENT]") {
+    return { mode: "urgent", body: content.replace(/^\[URGENT\]\n?/, "") };
+  }
+  return { mode: "chat", body: content };
+}
+
+// SVG icons
+const IconChat = () => (
+  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" style={{ width: 12, height: 12 }}>
+    <path d="M2 5a2 2 0 012-2h12a2 2 0 012 2v7a2 2 0 01-2 2H7l-4 3V5z" />
+  </svg>
+);
+const IconTask = () => (
+  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" style={{ width: 12, height: 12 }}>
+    <rect x="4" y="2" width="12" height="16" rx="2" />
+    <path d="M8 7h4M8 10h4M8 13h2" />
+  </svg>
+);
+const IconUrgent = () => (
+  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" style={{ width: 12, height: 12 }}>
+    <path d="M11.5 2L4 11h7l-2.5 7L18 9h-7l.5-7z" />
+  </svg>
+);
+
 interface GroupChatPanelProps {
   agents: Agent[];
   initialAgentIds?: string[];
@@ -57,6 +107,9 @@ export default function GroupChatPanel({ agents, initialAgentIds, onClose }: Gro
   const [sentOk, setSentOk]           = useState(false);
   const [attachments, setAttachments] = useState<File[]>([]);
   const [uploading, setUploading]     = useState(false);
+  const [chatMode, setChatMode]       = useState<ChatMode>("chat");
+  const [deadline, setDeadline]       = useState("");
+  const [priority, setPriority]       = useState<Priority>("normal");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const bottomRef    = useRef<HTMLDivElement>(null);
   const textareaRef  = useRef<HTMLTextAreaElement>(null);
@@ -141,13 +194,24 @@ export default function GroupChatPanel({ agents, initialAgentIds, onClose }: Gro
         finally { setUploading(false); }
         setAttachments([]);
       }
-      const content = prefix + trimmed;
+
+      // 모드 prefix 삽입
+      let modePrefix = "";
+      if (chatMode === "task") {
+        modePrefix = `[TASK:${deadline}:${priority}]\n`;
+      } else if (chatMode === "urgent") {
+        modePrefix = "[URGENT]\n";
+      }
+
+      const content = modePrefix + prefix + trimmed;
       if (!content.trim()) return;
       for (const agentId of selectedIds) {
-        await sendMessage({ receiver_type: "agent", receiver_id: agentId, content, message_type: "chat" });
+        await sendMessage({ receiver_type: "agent", receiver_id: agentId, content, message_type: chatMode === "task" ? "task_assign" : chatMode === "urgent" ? "directive" : "chat" });
       }
       setSentOk(true);
       setInput("");
+      setDeadline("");
+      setPriority("normal");
       textareaRef.current?.focus();
       await Promise.all(Array.from(selectedIds).map((id) => fetchForAgent(id)));
     } catch (err) {
@@ -156,7 +220,7 @@ export default function GroupChatPanel({ agents, initialAgentIds, onClose }: Gro
       setSending(false);
       setTimeout(() => setSentOk(false), 2000);
     }
-  }, [input, attachments, sending, selectedIds, fetchForAgent, tr]);
+  }, [input, attachments, sending, selectedIds, fetchForAgent, tr, chatMode, deadline, priority]);
 
   const filteredAgents = agents.filter((a) => {
     if (!search) return true;
@@ -350,7 +414,9 @@ export default function GroupChatPanel({ agents, initialAgentIds, onClose }: Gro
           <div style={{ flex: 1, overflowY: "auto", padding: "12px 0" }}>
             {selectedIds.size === 0 ? (
               <div style={{ height: "100%", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10, color: "var(--th-text-muted)" }}>
-                <span style={{ fontSize: 32, opacity: 0.2 }}>💬</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 36, height: 36, opacity: 0.2 }}>
+                  <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+                </svg>
                 <span style={{ fontSize: 12 }}>{tr("왼쪽에서 에이전트를 선택하세요", "Select agents on the left")}</span>
               </div>
             ) : mergedMessages.length === 0 ? (
@@ -367,6 +433,10 @@ export default function GroupChatPanel({ agents, initialAgentIds, onClose }: Gro
                   : msg.sender_agent ? getAgentName(msg.sender_agent) : forName;
                 const timeStr = new Date(msg.created_at).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" });
 
+                const parsed = parseModePrefix(msg.content);
+                const isUrgent = parsed.mode === "urgent";
+                const isTask   = parsed.mode === "task";
+
                 return (
                   <div
                     key={`${msg.id}:${msg._forAgentId}`}
@@ -381,7 +451,11 @@ export default function GroupChatPanel({ agents, initialAgentIds, onClose }: Gro
                     {/* Avatar */}
                     {!isCeo && (
                       <div style={{ width: 28, height: 28, borderRadius: "50%", background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, flexShrink: 0, marginBottom: 2 }}>
-                        {forAgent?.avatar_emoji ?? "🤖"}
+                        {forAgent?.avatar_emoji ?? (
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: 14, height: 14, opacity: 0.5 }}>
+                            <circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
+                          </svg>
+                        )}
                       </div>
                     )}
 
@@ -390,18 +464,42 @@ export default function GroupChatPanel({ agents, initialAgentIds, onClose }: Gro
                       {!isCeo && (
                         <span style={{ fontSize: 10, color: "var(--th-text-muted)", paddingLeft: 4 }}>{senderName} → {forName}</span>
                       )}
+
+                      {/* 모드 뱃지 */}
+                      {isCeo && (isTask || isUrgent) && (
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, paddingRight: 4, marginBottom: 1 }}>
+                          {isUrgent && (
+                            <span style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 9, fontFamily: "var(--th-font-mono)", fontWeight: 700, color: "var(--th-danger)", letterSpacing: "0.06em" }}>
+                              <IconUrgent /> {isKo ? "긴급" : "URGENT"}
+                            </span>
+                          )}
+                          {isTask && (
+                            <span style={{ display: "flex", alignItems: "center", gap: 3, fontSize: 9, fontFamily: "var(--th-font-mono)", fontWeight: 700, color: "var(--th-accent)", letterSpacing: "0.06em" }}>
+                              <IconTask /> {isKo ? "업무지시" : "TASK"}
+                              {parsed.deadline && <span style={{ color: "var(--th-text-muted)", fontWeight: 400 }}>· {parsed.deadline}</span>}
+                              {parsed.priority && parsed.priority !== "normal" && (
+                                <span style={{ color: PRIORITY_COLOR[parsed.priority], fontWeight: 700 }}>· {isKo ? PRIORITY_LABEL[parsed.priority].ko : PRIORITY_LABEL[parsed.priority].en}</span>
+                              )}
+                            </span>
+                          )}
+                        </div>
+                      )}
+
                       <div style={{
                         padding: "8px 12px",
                         borderRadius: isCeo ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
-                        background: isCeo ? "var(--th-accent)" : "var(--th-bg-elevated)",
+                        background: isCeo
+                          ? isUrgent ? "var(--th-danger)" : "var(--th-accent)"
+                          : "var(--th-bg-elevated)",
                         color: isCeo ? "#fff" : "var(--th-text-primary)",
                         fontSize: 12,
                         lineHeight: 1.5,
                         whiteSpace: "pre-wrap",
                         wordBreak: "break-word",
-                        border: isCeo ? "none" : "1px solid var(--th-border)",
+                        border: isCeo ? "none" : `1px solid ${isUrgent ? "var(--th-danger)" : "var(--th-border)"}`,
+                        borderLeft: !isCeo && isUrgent ? "3px solid var(--th-danger)" : undefined,
                       }}>
-                        {msg.content}
+                        {parsed.body || msg.content}
                       </div>
                       <span style={{ fontSize: 10, color: "var(--th-text-muted)", paddingLeft: isCeo ? 0 : 4, paddingRight: isCeo ? 4 : 0 }}>
                         {timeStr}
@@ -418,11 +516,88 @@ export default function GroupChatPanel({ agents, initialAgentIds, onClose }: Gro
           <div
             style={{
               flexShrink: 0,
-              borderTop: "1px solid var(--th-border)",
+              borderTop: `1px solid ${chatMode === "urgent" ? "var(--th-danger)" : "var(--th-border)"}`,
               background: "var(--th-bg-elevated)",
               padding: "10px 14px",
+              transition: "border-color 0.2s",
             }}
           >
+            {/* ── 모드 선택 바 ── */}
+            <div style={{ display: "flex", gap: 4, marginBottom: 8 }}>
+              {(["chat", "task", "urgent"] as ChatMode[]).map((m) => {
+                const active = chatMode === m;
+                const modeColor = m === "urgent" ? "var(--th-danger)" : m === "task" ? "var(--th-accent)" : "var(--th-text-muted)";
+                const labels = { chat: { ko: "일반", en: "Chat" }, task: { ko: "업무지시", en: "Task" }, urgent: { ko: "긴급", en: "Urgent" } };
+                return (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => setChatMode(m)}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 5,
+                      padding: "3px 9px",
+                      borderRadius: 5,
+                      border: `1px solid ${active ? modeColor : "var(--th-border)"}`,
+                      background: active ? (m === "urgent" ? "var(--th-danger-bg)" : m === "task" ? "var(--th-accent-glow)" : "var(--th-bg-surface)") : "transparent",
+                      color: active ? modeColor : "var(--th-text-muted)",
+                      fontFamily: "var(--th-font-mono)",
+                      fontSize: 10,
+                      fontWeight: active ? 600 : 400,
+                      cursor: "pointer",
+                      transition: "all 0.15s",
+                      letterSpacing: "0.02em",
+                    }}
+                  >
+                    <span style={{ color: active ? modeColor : "var(--th-text-muted)", display: "flex" }}>
+                      {m === "chat" ? <IconChat /> : m === "task" ? <IconTask /> : <IconUrgent />}
+                    </span>
+                    {isKo ? labels[m].ko : labels[m].en}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* ── 업무지시 추가 필드 ── */}
+            {chatMode === "task" && (
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8, padding: "7px 10px", background: "var(--th-bg-surface)", border: "1px solid var(--th-accent-border)", borderRadius: 7 }}>
+                <span style={{ fontSize: 10, color: "var(--th-text-muted)", fontFamily: "var(--th-font-mono)", flexShrink: 0 }}>
+                  {isKo ? "마감" : "Due"}
+                </span>
+                <input
+                  type="date"
+                  value={deadline}
+                  onChange={(e) => setDeadline(e.target.value)}
+                  style={{ fontSize: 10, fontFamily: "var(--th-font-mono)", background: "transparent", border: "none", outline: "none", color: "var(--th-text-primary)", cursor: "pointer" }}
+                />
+                <div style={{ width: 1, height: 14, background: "var(--th-border)", flexShrink: 0 }} />
+                <span style={{ fontSize: 10, color: "var(--th-text-muted)", fontFamily: "var(--th-font-mono)", flexShrink: 0 }}>
+                  {isKo ? "우선순위" : "Priority"}
+                </span>
+                <div style={{ display: "flex", gap: 4 }}>
+                  {(["high", "normal", "low"] as Priority[]).map((p) => (
+                    <button
+                      key={p}
+                      type="button"
+                      onClick={() => setPriority(p)}
+                      style={{
+                        padding: "2px 7px",
+                        borderRadius: 4,
+                        border: `1px solid ${priority === p ? PRIORITY_COLOR[p] : "var(--th-border)"}`,
+                        background: priority === p ? "transparent" : "transparent",
+                        color: priority === p ? PRIORITY_COLOR[p] : "var(--th-text-muted)",
+                        fontFamily: "var(--th-font-mono)",
+                        fontSize: 9,
+                        fontWeight: priority === p ? 700 : 400,
+                        cursor: "pointer",
+                        transition: "all 0.12s",
+                      }}
+                    >
+                      {isKo ? PRIORITY_LABEL[p].ko : PRIORITY_LABEL[p].en}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             <input
               ref={fileInputRef}
               type="file"
@@ -452,9 +627,10 @@ export default function GroupChatPanel({ agents, initialAgentIds, onClose }: Gro
               alignItems: "flex-end",
               gap: 8,
               background: "var(--th-bg-surface)",
-              border: "1px solid var(--th-border)",
+              border: `1px solid ${chatMode === "urgent" ? "var(--th-danger)" : chatMode === "task" ? "var(--th-accent-border)" : "var(--th-border)"}`,
               borderRadius: 22,
               padding: "4px 6px 4px 14px",
+              transition: "border-color 0.2s",
             }}>
               {/* Attach button */}
               <button

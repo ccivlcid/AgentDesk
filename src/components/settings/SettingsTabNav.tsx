@@ -16,7 +16,8 @@ const TAB_ITEMS: Array<{
   { key: "oauth",   label: (t) => t({ ko: "OAUTH",  en: "OAUTH",   ja: "OAUTH",   zh: "OAUTH"  }), sigil: "⇄" },
   { key: "api",     label: (t) => t({ ko: "API",    en: "API",     ja: "API",     zh: "API"    }), sigil: "⌁" },
   { key: "gateway", label: (t) => t({ ko: "채널",   en: "CHANNEL", ja: "チャンネル", zh: "频道" }), sigil: "⌘" },
-  { key: "data",    label: (t) => t({ ko: "데이터", en: "DATA",    ja: "データ",   zh: "数据"   }), sigil: "▦" },
+  { key: "data",    label: (t) => t({ ko: "데이터",    en: "DATA",      ja: "データ",    zh: "数据"    }), sigil: "▦" },
+  { key: "local-llm", label: (t) => t({ ko: "로컬 LLM", en: "LOCAL LLM", ja: "ローカルLLM", zh: "本地LLM" }), sigil: "⌬" },
 ];
 
 const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };
@@ -59,7 +60,7 @@ export default function SettingsTabNav({ tab, setTab, t }: SettingsTabNavProps) 
             onMouseEnter={(e) => {
               if (!isActive) {
                 e.currentTarget.style.color = "var(--th-text-secondary)";
-                e.currentTarget.style.background = "var(--th-hover-bg, rgba(255,255,255,0.04))";
+                e.currentTarget.style.background = "var(--th-hover-overlay-subtle)";
               }
             }}
             onMouseLeave={(e) => {

@@ -33,6 +33,7 @@ export default function AgentManager({
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState<FormData>({ ...BLANK });
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const [showDeptModal, setShowDeptModal] = useState(false);
@@ -97,6 +98,8 @@ export default function AgentManager({
         department_id: agent.department_id || "",
         role: agent.role,
         cli_provider: agent.cli_provider,
+        api_provider_id: agent.api_provider_id ?? null,
+        api_model: agent.api_model ?? null,
         avatar_emoji: agent.avatar_emoji,
         avatar_url: agent.avatar_url ?? null,
         pendingAvatarDataUrl: null,
@@ -117,6 +120,7 @@ export default function AgentManager({
   const handleSave = useCallback(async () => {
     if (!form.name.trim()) return;
     setSaving(true);
+    setSaveError(null);
     try {
       const departmentId = form.department_id.trim();
       const basePayload = {
@@ -126,6 +130,8 @@ export default function AgentManager({
         name_zh: form.name_zh.trim(),
         role: form.role,
         cli_provider: form.cli_provider,
+        api_provider_id: form.api_provider_id || null,
+        api_model: form.api_model?.trim() || null,
         avatar_emoji: form.avatar_emoji || "🤖",
         sprite_number: form.sprite_number,
         personality: form.personality.trim() || null,
@@ -162,7 +168,9 @@ export default function AgentManager({
 
       closeModal();
     } catch (err) {
-      console.error("Save failed:", err);
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error("Save failed:", msg);
+      setSaveError(msg);
     } finally {
       setSaving(false);
     }
@@ -484,6 +492,7 @@ export default function AgentManager({
           departments={departments}
           isEdit={!!modalAgent}
           saving={saving}
+          saveError={saveError}
           onSave={handleSave}
           onClose={closeModal}
         />

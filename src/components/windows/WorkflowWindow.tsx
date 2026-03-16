@@ -2,15 +2,17 @@ import { lazy, Suspense } from "react";
 import AppWindow from "./AppWindow";
 import { useAgentStore } from "../../store/agentStore";
 import { useProjectStore } from "../../store/projectStore";
+import { useI18n } from "../../i18n";
 
 const WorkflowBuilder = lazy(() => import("../workflow-builder/WorkflowBuilder"));
 const ScheduledTasksPanel = lazy(() => import("../scheduled-tasks/ScheduledTasksPanel"));
 const AgentCompositionBuilder = lazy(() => import("../agent-composition/AgentCompositionBuilder"));
 
 function Loading() {
+  const { t } = useI18n();
   return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", fontFamily: "var(--th-font-mono)", fontSize: 11, color: "var(--th-text-muted)" }}>
-      loading...
+      {t({ ko: "로딩 중...", en: "loading...", ja: "読み込み中...", zh: "加载中..." })}
     </div>
   );
 }
@@ -18,6 +20,7 @@ function Loading() {
 export default function WorkflowWindow() {
   const { agents } = useAgentStore();
   const { currentProjectId, projectAgentIds, projectAgentsLoaded } = useProjectStore();
+  const { t } = useI18n();
 
   const filteredAgents = currentProjectId && projectAgentsLoaded && projectAgentIds.size > 0
     ? agents.filter((a) => projectAgentIds.has(a.id))
@@ -26,14 +29,14 @@ export default function WorkflowWindow() {
   return (
     <AppWindow
       windowType="workflow"
-      title="Workflow"
+      title={t({ ko: "워크플로", en: "Workflow", ja: "ワークフロー", zh: "工作流" })}
       emoji="⚡"
       defaultWidth={900}
       defaultHeight={620}
       tabs={[
         {
           id: "builder",
-          label: "Builder",
+          label: t({ ko: "빌더", en: "Builder", ja: "ビルダー", zh: "构建器" }),
           content: (
             <Suspense fallback={<Loading />}>
               <WorkflowBuilder />
@@ -42,7 +45,7 @@ export default function WorkflowWindow() {
         },
         {
           id: "scheduled",
-          label: "Scheduled",
+          label: t({ ko: "스케줄", en: "Scheduled", ja: "スケジュール", zh: "计划任务" }),
           content: (
             <Suspense fallback={<Loading />}>
               <ScheduledTasksPanel agents={filteredAgents} currentProjectId={currentProjectId} />
@@ -51,7 +54,7 @@ export default function WorkflowWindow() {
         },
         {
           id: "composition",
-          label: "Composition",
+          label: t({ ko: "컴포지션", en: "Composition", ja: "コンポジション", zh: "组合" }),
           content: (
             <Suspense fallback={<Loading />}>
               <AgentCompositionBuilder />

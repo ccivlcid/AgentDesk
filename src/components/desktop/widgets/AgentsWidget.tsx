@@ -6,23 +6,29 @@ import type { AgentStatus } from "../../../types";
 const mono = "var(--th-font-mono)";
 
 const STATUS_COLOR: Record<AgentStatus, string> = {
-  working: "#22c55e",
-  idle:    "#64748b",
-  break:   "#f59e0b",
-  offline: "#3f3f3f",
-};
-
-const STATUS_LABEL: Record<AgentStatus, string> = {
-  working: "working",
-  idle:    "idle",
-  break:   "break",
-  offline: "off",
+  working: "var(--th-success, #22c55e)",
+  idle:    "var(--th-text-muted, #64748b)",
+  break:   "var(--th-accent, #f59e0b)",
+  offline: "var(--th-text-disabled, #3f3f3f)",
 };
 
 export default function AgentsWidget() {
   const { agents } = useAgentStore();
   const { openWindow } = useUiStore();
   const { t } = useI18n();
+
+  const STATUS_LABEL: Record<AgentStatus, string> = {
+    working: t({ ko: "작업 중", en: "working", ja: "作業中",   zh: "工作中" }),
+    idle:    t({ ko: "대기",   en: "idle",    ja: "待機",     zh: "空闲" }),
+    break:   t({ ko: "휴식",   en: "break",   ja: "休憩",     zh: "休息" }),
+    offline: t({ ko: "오프",   en: "off",     ja: "オフ",     zh: "离线" }),
+  };
+
+  const STATUS_SUMMARY_LABEL: Record<string, string> = {
+    working: t({ ko: "작업 중", en: "working", ja: "作業中", zh: "工作中" }),
+    idle:    t({ ko: "대기",   en: "idle",    ja: "待機",   zh: "空闲" }),
+    offline: t({ ko: "오프",   en: "offline", ja: "オフ",   zh: "离线" }),
+  };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
@@ -41,7 +47,7 @@ export default function AgentsWidget() {
           const count = agents.filter((a) => a.status === s).length;
           return (
             <span key={s} style={{ color: STATUS_COLOR[s] }}>
-              {count} {s}
+              {count} {STATUS_SUMMARY_LABEL[s] ?? s}
             </span>
           );
         })}
@@ -72,7 +78,7 @@ export default function AgentsWidget() {
                 cursor: "pointer",
                 transition: "background 0.1s",
               }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.background = "rgba(255,255,255,0.04)"; }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.background = "var(--th-hover-overlay-subtle)"; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.background = "none"; }}
             >
               <span style={{ fontSize: 16 }}>{agent.avatar_emoji || "🤖"}</span>

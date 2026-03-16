@@ -207,8 +207,8 @@ export default function WallpaperPicker({ onClose }: Props) {
         >
           <span style={{
             fontFamily: mono, fontSize: 10, letterSpacing: "0.12em",
-            color: "rgba(255,255,255,0.55)",
-            textShadow: "0 1px 4px rgba(0,0,0,0.6)",
+            color: "rgba(255,255,255,0.85)",
+            textShadow: "0 1px 6px rgba(0,0,0,0.8)",
           }}>
             PREVIEW
           </span>

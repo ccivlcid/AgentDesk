@@ -92,7 +92,7 @@ export default function OAuthSettingsTab({
             ? { borderRadius: 0, background: "rgba(52,211,153,0.1)", border: "1px solid rgba(52,211,153,0.3)", color: "rgb(167,243,208)" }
             : { borderRadius: 0, background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.3)", color: "var(--th-accent)" }}
         >
-          <span>{oauthStatus.storageReady ? "🔒" : "⚠️"}</span>
+          <span>{oauthStatus.storageReady ? "▣" : "▲"}</span>
           <span>
             {oauthStatus.storageReady
               ? t({

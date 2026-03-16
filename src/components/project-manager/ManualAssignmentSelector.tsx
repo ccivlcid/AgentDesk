@@ -183,7 +183,7 @@ export default function ManualAssignmentSelector({
                         )}
                         <span
                           className="ml-auto px-1.5 py-0.5 text-[10px] font-mono"
-                          style={{ borderRadius: 0, color: "var(--th-text-muted)", background: "rgba(255,255,255,0.05)" }}
+                          style={{ borderRadius: 0, color: "var(--th-text-muted)", background: "var(--th-hover-overlay)" }}
                         >
                           {agent.role === "team_leader"
                             ? language === "ko"

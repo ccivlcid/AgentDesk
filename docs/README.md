@@ -46,6 +46,7 @@
 | Document | Description |
 |------|------|
 | [custom-widget-platform.md](features/custom-widget-platform.md) | Custom Widget Platform — spec + Phase 1~5 implementation summary (complete) |
+| [knowledge-base-integrations.md](features/knowledge-base-integrations.md) | Knowledge Base Integrations — Notion / Obsidian / NotebookLM 연결 기획 (미구현) |
 
 ---
 

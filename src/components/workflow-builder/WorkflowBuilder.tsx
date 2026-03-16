@@ -549,7 +549,7 @@ export default function WorkflowBuilder() {
           edges={edges}
           workflowName={workflowName}
           onClose={() => setShowRunModal(false)}
-          onSuccess={() => setShowRunModal(false)}
+          onSuccess={() => { /* keep modal open to show live execution status — user closes manually */ }}
         />
       )}
 

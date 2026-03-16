@@ -207,7 +207,7 @@ export default function ChannelGuideModal({ t, onClose }: GuideModalProps) {
     },
     {
       channel: "signal",
-      icon: "🔒",
+      icon: "▣",
       color: "#3A76F0",
       tokenLabel: t({ ko: "Signal API 인증 정보", en: "Signal API Credentials", ja: "Signal API認証情報", zh: "Signal API凭证" }),
       targetLabel: t({

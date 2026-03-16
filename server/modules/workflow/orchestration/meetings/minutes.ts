@@ -71,6 +71,7 @@ export function createMeetingMinutesTools(deps: MeetingMinutesDeps) {
     VALUES (?, ?, ?, ?, ?, 'in_progress', ?, ?)
   `,
     ).run(meetingId, taskId, meetingType, round, title, t, t);
+    broadcast("meeting_minutes_update", { task_id: taskId, meeting_id: meetingId, phase: "started" });
     return meetingId;
   }
 
@@ -106,6 +107,10 @@ export function createMeetingMinutesTools(deps: MeetingMinutesDeps) {
 
   function finishMeetingMinutes(meetingId: string, status: "completed" | "revision_requested" | "failed"): void {
     db.prepare("UPDATE meeting_minutes SET status = ?, completed_at = ? WHERE id = ?").run(status, nowMs(), meetingId);
+    const row = db.prepare("SELECT task_id FROM meeting_minutes WHERE id = ?").get(meetingId) as { task_id: string } | undefined;
+    if (row?.task_id) {
+      broadcast("meeting_minutes_update", { task_id: row.task_id, meeting_id: meetingId, phase: "completed", status });
+    }
   }
 
   function normalizeRevisionMemoNote(note: string): string {

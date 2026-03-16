@@ -239,7 +239,7 @@ export default function ApiSettingsTab({ t, localeTag, apiState }: ApiSettingsTa
                       <span className="text-[10px] px-1.5 py-0.5 font-mono uppercase flex-shrink-0" style={{ borderRadius: 0, background: "var(--th-bg-surface-hover)", color: "var(--th-text-muted)" }}>
                         {provider.type}
                       </span>
-                      {provider.has_api_key && <span className="text-[10px] text-emerald-400 flex-shrink-0">🔑</span>}
+                      {provider.has_api_key && <span className="text-[10px] text-emerald-400 flex-shrink-0">◆</span>}
                     </div>
                     <div className="flex items-center gap-1.5 flex-shrink-0">
                       <button

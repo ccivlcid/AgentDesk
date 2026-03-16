@@ -43,12 +43,12 @@ export default function QuickLook({ project, onClose }: QuickLookProps) {
         onClick={(e) => e.stopPropagation()}
         style={{
           width: 420,
-          background: "rgba(22,22,28,0.96)",
+          background: "var(--th-bg-elevated)",
           backdropFilter: "blur(32px) saturate(180%)",
           WebkitBackdropFilter: "blur(32px) saturate(180%)",
-          border: "1px solid rgba(255,255,255,0.10)",
+          border: "1px solid var(--th-border-strong)",
           borderRadius: 16,
-          boxShadow: "0 32px 64px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.07)",
+          boxShadow: "0 32px 64px var(--th-glass-shadow), inset 0 1px 0 var(--th-glass-highlight)",
           overflow: "hidden",
         }}
       >
@@ -59,8 +59,8 @@ export default function QuickLook({ project, onClose }: QuickLookProps) {
             alignItems: "center",
             gap: 8,
             padding: "10px 14px",
-            borderBottom: "1px solid rgba(255,255,255,0.07)",
-            background: "rgba(255,255,255,0.03)",
+            borderBottom: "1px solid var(--th-border)",
+            background: "var(--th-glass-bg)",
           }}
         >
           <div style={{ display: "flex", gap: 5 }}>
@@ -71,10 +71,10 @@ export default function QuickLook({ project, onClose }: QuickLookProps) {
             <div style={{ width: 11, height: 11, borderRadius: "50%", background: "#2a2a2a" }} />
             <div style={{ width: 11, height: 11, borderRadius: "50%", background: "#2a2a2a" }} />
           </div>
-          <span style={{ fontFamily: mono, fontSize: 11, color: "rgba(255,255,255,0.5)", marginLeft: 4 }}>
+          <span style={{ fontFamily: mono, fontSize: 11, color: "var(--th-text-secondary)", marginLeft: 4 }}>
             {t({ ko: "빠른 미리보기", en: "Quick Look", ja: "クイックルック", zh: "快速预览" })}
           </span>
-          <span style={{ fontFamily: mono, fontSize: 10, color: "rgba(255,255,255,0.25)", marginLeft: "auto" }}>
+          <span style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-muted)", marginLeft: "auto" }}>
             esc
           </span>
         </div>
@@ -100,17 +100,17 @@ export default function QuickLook({ project, onClose }: QuickLookProps) {
               📂
             </div>
             <div>
-              <div style={{ fontFamily: mono, fontSize: 15, color: "rgba(255,255,255,0.9)", fontWeight: 600, marginBottom: 4 }}>
+              <div style={{ fontFamily: mono, fontSize: 15, color: "var(--th-text-primary)", fontWeight: 600, marginBottom: 4 }}>
                 {project.name}
               </div>
-              <div style={{ fontFamily: mono, fontSize: 10, color: "rgba(255,255,255,0.35)" }}>
-                {project.project_path || t({ ko: "경로 없음", en: "No path", ja: "パスなし", zh: "无路径" })}
+              <div style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-muted)" }}>
+                {project.project_path || t({ ko: "경로 없음", en: "No path", ja: "パ스なし", zh: "무路径" })}
               </div>
             </div>
           </div>
 
           {/* 구분선 */}
-          <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", marginBottom: 14 }} />
+          <div style={{ borderTop: "1px solid var(--th-border)", marginBottom: 14 }} />
 
           {/* 상세 정보 */}
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -128,7 +128,7 @@ export default function QuickLook({ project, onClose }: QuickLookProps) {
           {/* 에이전트 아바타 */}
           {agentIds.length > 0 && (
             <div style={{ marginTop: 16 }}>
-              <div style={{ fontFamily: mono, fontSize: 9, color: "rgba(255,255,255,0.35)", letterSpacing: "0.08em", marginBottom: 8 }}>
+              <div style={{ fontFamily: mono, fontSize: 9, color: "var(--th-text-muted)", letterSpacing: "0.08em", marginBottom: 8 }}>
                 {t({ ko: "배정된 에이전트", en: "Assigned agents", ja: "割り当てエージェント", zh: "分配的代理" })} ({agentIds.length})
               </div>
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
@@ -140,14 +140,14 @@ export default function QuickLook({ project, onClose }: QuickLookProps) {
                       width: 28,
                       height: 28,
                       borderRadius: "50%",
-                      background: "rgba(139,92,246,0.25)",
-                      border: "1px solid rgba(139,92,246,0.4)",
+                      background: "var(--th-accent-glow)",
+                      border: "1px solid var(--th-border-accent)",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                       fontFamily: mono,
                       fontSize: 9,
-                      color: "rgba(196,181,253,0.9)",
+                      color: "var(--th-accent)",
                     }}
                   >
                     {id.slice(0, 2).toUpperCase()}
@@ -169,7 +169,7 @@ function Row({ label, value, multiline }: { label: string; value: string; multil
         style={{
           fontFamily: mono,
           fontSize: 10,
-          color: "rgba(255,255,255,0.35)",
+          color: "var(--th-text-muted)",
           minWidth: 72,
           flexShrink: 0,
           paddingTop: multiline ? 1 : 0,
@@ -181,7 +181,7 @@ function Row({ label, value, multiline }: { label: string; value: string; multil
         style={{
           fontFamily: mono,
           fontSize: 11,
-          color: "rgba(255,255,255,0.75)",
+          color: "var(--th-text-primary)",
           lineHeight: 1.5,
         }}
       >

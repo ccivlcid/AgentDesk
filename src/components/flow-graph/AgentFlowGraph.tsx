@@ -384,6 +384,12 @@ export default function AgentFlowGraph({
           </svg>
           <span>{t({ ko: "미팅", en: "meeting", ja: "ミーティング", zh: "会议" })}</span>
         </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <svg width="24" height="8">
+            <line x1="0" y1="4" x2="24" y2="4" stroke="var(--th-text-muted)" strokeWidth="1" strokeDasharray="2 5" />
+          </svg>
+          <span>{t({ ko: "협업", en: "collab", ja: "コラボ", zh: "协作" })}</span>
+        </div>
       </div>
     </div>
   );

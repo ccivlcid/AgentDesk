@@ -364,6 +364,65 @@ export const MIGRATIONS: Migration[] = [
     },
   },
   {
+    id: "2026-03-17-000-local-llm",
+    up: (db) => {
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS local_llm_backends (
+          name       TEXT PRIMARY KEY,
+          installed  INTEGER NOT NULL DEFAULT 0,
+          version    TEXT,
+          host       TEXT NOT NULL DEFAULT 'localhost',
+          port       INTEGER NOT NULL DEFAULT 11434,
+          auto_start INTEGER NOT NULL DEFAULT 1,
+          created_at INTEGER NOT NULL DEFAULT (unixepoch()*1000),
+          updated_at INTEGER NOT NULL DEFAULT (unixepoch()*1000)
+        )
+      `);
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS local_llm_models (
+          id             TEXT PRIMARY KEY,
+          backend        TEXT NOT NULL,
+          name           TEXT NOT NULL,
+          display_name   TEXT,
+          size_bytes     INTEGER,
+          context_length INTEGER,
+          notes          TEXT,
+          pinned         INTEGER NOT NULL DEFAULT 0,
+          created_at     INTEGER NOT NULL DEFAULT (unixepoch()*1000),
+          updated_at     INTEGER NOT NULL DEFAULT (unixepoch()*1000),
+          UNIQUE(backend, name)
+        )
+      `);
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS local_llm_inference_log (
+          id                INTEGER PRIMARY KEY AUTOINCREMENT,
+          backend           TEXT NOT NULL,
+          model_name        TEXT NOT NULL,
+          agent_id          TEXT REFERENCES agents(id),
+          task_id           TEXT REFERENCES tasks(id),
+          prompt_tokens     INTEGER,
+          completion_tokens INTEGER,
+          tokens_per_second REAL,
+          latency_ms        INTEGER,
+          created_at        INTEGER NOT NULL DEFAULT (unixepoch()*1000)
+        )
+      `);
+      db.exec("CREATE INDEX IF NOT EXISTS idx_llm_log_model ON local_llm_inference_log(model_name, created_at DESC)");
+      db.exec("CREATE INDEX IF NOT EXISTS idx_llm_log_agent ON local_llm_inference_log(agent_id, created_at DESC)");
+      try { db.exec("ALTER TABLE agents ADD COLUMN local_llm_backend TEXT"); } catch { /* already exists */ }
+      try { db.exec("ALTER TABLE agents ADD COLUMN local_llm_model TEXT"); } catch { /* already exists */ }
+    },
+  },
+  {
+    id: "2026-03-16-004-task-deps-gate-condition",
+    up: (db) => {
+      // gate_condition: expression string from a Condition node in WorkflowBuilder
+      // gate_branch: which outcome branch ("true"/"false") this dependency follows
+      try { db.exec("ALTER TABLE task_dependencies ADD COLUMN gate_condition TEXT"); } catch { /* already exists */ }
+      try { db.exec("ALTER TABLE task_dependencies ADD COLUMN gate_branch TEXT CHECK(gate_branch IN ('true','false'))"); } catch { /* already exists */ }
+    },
+  },
+  {
     id: "2026-03-17-001-workflow-schedules",
     up: (db) => {
       db.exec(`

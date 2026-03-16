@@ -319,7 +319,7 @@ export default function MarkdownEditorModal({ onClose, defaultProjectName }: Mar
           <div style={{ flex: 1 }} />
 
           {saved && (
-            <span style={{ fontSize: 10, color: "#22c55e" }}>
+            <span style={{ fontSize: 10, color: "var(--th-success, #22c55e)" }}>
               ✓ {t({ ko: "저장됨", en: "Saved", ja: "保存済み", zh: "已保存" })}
             </span>
           )}
