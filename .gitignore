@@ -32,11 +32,9 @@ id_ed25519
 credentials.json
 secrets*.json
 
-# Local reports/worktrees
-docs/reports/*
-!docs/reports/Sample_Slides/
-!docs/reports/Sample_Slides/**
-!docs/reports/PPT_Sample.pptx
+# Local reports/worktrees (docs/reports/ is tracked; exclude large media only)
+docs/reports/**/*.mp4
+docs/reports/**/*.webm
 docs/.bkit-*
 docs/.pdca-*
 .agentdesk-worktrees/
