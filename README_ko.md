@@ -9,6 +9,18 @@ AgentDesk는 macOS 바탕화면 은유를 AI 에이전트 오케스트레이션�
 
 ---
 
+## 🎬 프로젝트 소개 자료
+
+| 형식 | 파일 | 설명 |
+|------|------|------|
+| 🎥 영상 | [`docs/reports/AgentDesk-Introduction.mp4`](docs/reports/AgentDesk-Introduction.mp4) | 96초 소개 영상 (1920×1080, H.264) — Remotion으로 렌더링한 10장면 워크스루 |
+| 📊 프레젠테이션 | [`docs/reports/AgentDesk-Introduction.pptx`](docs/reports/AgentDesk-Introduction.pptx) | 10슬라이드 PowerPoint — 아키텍처·기능·개발 현황 |
+| 🌐 HTML 슬라이드 | [`docs/reports/AgentDesk-Introduction.html`](docs/reports/AgentDesk-Introduction.html) | 인터랙티브 슬라이드덱 (한국어/영어 전환) — 브라우저에서 바로 열기 |
+
+> **팁:** HTML 파일을 브라우저에서 직접 열면 키보드 방향키(← →)로 탐색하고 KO/EN 버튼으로 언어를 전환할 수 있습니다.
+
+---
+
 ## 스크린샷
 
 <table>
@@ -287,6 +299,8 @@ pnpm dev                  # 프론트(8800) + API 서버(8790) 동시 시작
 | [`docs/architecture/ARCHITECTURE-AUDIT-2026-Q1.md`](docs/architecture/ARCHITECTURE-AUDIT-2026-Q1.md) | 아키텍처 & 백엔드 감사 보고서 |
 | [`docs/design/UI-SCREENS.md`](docs/design/UI-SCREENS.md) | 전체 화면·모달 명세 |
 | [`docs/design/DESIGN.md`](docs/design/DESIGN.md) | CSS 변수 + 컴포넌트 스타일 규칙 |
+| [`docs/reports/AgentDesk-Introduction.pptx`](docs/reports/AgentDesk-Introduction.pptx) | 프로젝트 소개 PPT (10슬라이드) |
+| [`docs/reports/AgentDesk-Introduction.mp4`](docs/reports/AgentDesk-Introduction.mp4) | 프로젝트 소개 영상 (96초) |
 | [`docs/specs/api.md`](docs/specs/api.md) | REST API 전체 명세 (v1.3.0) |
 | [`docs/progress.md`](docs/progress.md) | 개발 진행 로그 |
 

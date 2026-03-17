@@ -181,6 +181,7 @@ function Breadcrumbs({ path: p, onNavigate }: { path: string; onNavigate: (p: st
 // ─── Main widget ──────────────────────────────────────────────────────────────
 
 export default function FileTreeWidget() {
+  const { t } = useI18n();
   const [currentPath, setCurrentPath] = useState<string>("");
   const [result, setResult] = useState<BrowseResult | null>(null);
   const [loading, setLoading] = useState(false);
@@ -205,7 +206,7 @@ export default function FileTreeWidget() {
     fetch(url, { signal: ctrl.signal })
       .then((r) => r.json())
       .then((data: BrowseResult) => {
-        if (!data.ok) { setError(data.error ?? "오류"); setLoading(false); return; }
+        if (!data.ok) { setError(data.error ?? t({ ko: "오류", en: "Error", ja: "エラー", zh: "错误" })); setLoading(false); return; }
         setResult(data);
         setCurrentPath(data.current_path ?? "");
         setHistory((prev) => {
@@ -213,9 +214,9 @@ export default function FileTreeWidget() {
           return [...prev, targetPath];
         });
       })
-      .catch((e) => { if (e.name !== "AbortError") setError("서버 연결 실패"); })
+      .catch((e) => { if (e.name !== "AbortError") setError(t({ ko: "서버 연결 실패", en: "Connection failed", ja: "サーバー接続失敗", zh: "服务器连接失败" })); })
       .finally(() => setLoading(false));
-  }, []);
+  }, [t]);
 
   // Initial load: Windows → drives, Unix → home
   useEffect(() => { navigate(""); }, [navigate]);
@@ -334,14 +335,14 @@ export default function FileTreeWidget() {
         {/* Empty state */}
         {!error && !loading && filtered.length === 0 && (
           <div style={{ padding: "20px 12px", textAlign: "center", color: "var(--th-text-muted)", fontSize: 10 }}>
-            {search ? "일치하는 항목 없음" : "빈 폴더"}
+            {search ? t({ ko: "일치하는 항목 없음", en: "No matches", ja: "一致する項目なし", zh: "无匹配项" }) : t({ ko: "빈 폴더", en: "Empty folder", ja: "空のフォルダ", zh: "空文件夹" })}
           </div>
         )}
 
         {/* Root drives (Windows) */}
         {!error && result?.is_root && (
           <div style={{ padding: "4px 0" }}>
-            <SectionHeader label="드라이브" count={entries.length} />
+            <SectionHeader label={t({ ko: "드라이브", en: "Drives", ja: "ドライブ", zh: "驱动器" })} count={entries.length} />
             {entries.map((entry) => (
               <EntryRow
                 key={entry.path}
@@ -358,7 +359,7 @@ export default function FileTreeWidget() {
           <div style={{ padding: "2px 0 8px" }}>
             {folders.length > 0 && (
               <>
-                <SectionHeader label="폴더" count={folders.length} />
+                <SectionHeader label={t({ ko: "폴더", en: "Folders", ja: "フォルダ", zh: "文件夹" })} count={folders.length} />
                 {folders.map((entry) => (
                   <EntryRow key={entry.path} entry={entry} onNavigate={navigate} />
                 ))}
@@ -366,7 +367,7 @@ export default function FileTreeWidget() {
             )}
             {files.length > 0 && (
               <>
-                <SectionHeader label="파일" count={files.length} />
+                <SectionHeader label={t({ ko: "파일", en: "Files", ja: "ファイル", zh: "文件" })} count={files.length} />
                 {files.map((entry) => (
                   <EntryRow key={entry.path} entry={entry} onNavigate={navigate} />
                 ))}

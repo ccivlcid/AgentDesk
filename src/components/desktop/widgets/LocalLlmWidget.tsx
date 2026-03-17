@@ -71,7 +71,7 @@ export default function LocalLlmWidget() {
       }}>
         <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.06em",
           textTransform: "uppercase", color: "var(--th-text-muted)" }}>
-          {t({ ko: "로컬 LLM", en: "Local LLM" })}
+          {t({ ko: "로컬 LLM", en: "Local LLM", ja: "ローカルLLM", zh: "本地LLM" })}
         </span>
         <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
           <span style={{
@@ -84,10 +84,10 @@ export default function LocalLlmWidget() {
             color: loading ? "var(--th-text-muted)" : anyRunning ? "var(--th-success, #3fb950)" : "var(--th-text-muted)",
           }}>
             {loading
-              ? t({ ko: "확인 중...", en: "Checking..." })
+              ? t({ ko: "확인 중...", en: "Checking...", ja: "確認中...", zh: "检查中..." })
               : anyRunning
-                ? t({ ko: `${runningBackends.length}개 실행 중`, en: `${runningBackends.length} running` })
-                : t({ ko: "중지됨", en: "Stopped" })}
+                ? t({ ko: `${runningBackends.length}개 실행 중`, en: `${runningBackends.length} running`, ja: `${runningBackends.length}個 実行中`, zh: `${runningBackends.length} 个运行中` })
+                : t({ ko: "중지됨", en: "Stopped", ja: "停止中", zh: "已停止" })}
           </span>
         </div>
       </div>
@@ -101,11 +101,11 @@ export default function LocalLlmWidget() {
         ) : !anyInstalled ? (
           /* Nothing installed */
           <div style={{ color: "var(--th-text-muted)", fontSize: 11, lineHeight: 1.7 }}>
-            <div>{t({ ko: "설치된 백엔드가 없습니다.", en: "No backends installed." })}</div>
+            <div>{t({ ko: "설치된 백엔드가 없습니다.", en: "No backends installed.", ja: "バックエンドがインストールされていません。", zh: "未安装后端。" })}</div>
             <button type="button" onClick={goToSettings}
               style={{ background: "none", border: "none", color: "var(--th-accent)",
                 fontFamily: mono, fontSize: 11, cursor: "pointer", padding: 0, marginTop: 4 }}>
-              {t({ ko: "설정하기 →", en: "Open settings →" })}
+              {t({ ko: "설정하기 →", en: "Open settings →", ja: "設定を開く →", zh: "打开设置 →" })}
             </button>
           </div>
         ) : (
@@ -124,29 +124,29 @@ export default function LocalLlmWidget() {
             {activeModel ? (
               <div>
                 <div style={{ fontSize: 10, color: "var(--th-text-muted)", letterSpacing: "0.04em", marginBottom: 2 }}>
-                  {t({ ko: "활성 모델", en: "Active model" })}
+                  {t({ ko: "활성 모델", en: "Active model", ja: "アクティブモデル", zh: "活动模型" })}
                 </div>
                 <div style={{ fontSize: 12, fontWeight: 600, color: "var(--th-text-primary)",
                   overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   {activeModel.name}
                 </div>
                 <div style={{ fontSize: 10, color: "#3fb950", marginTop: 1 }}>
-                  {activeModel.size_label} · {t({ ko: "추론 중", en: "Inferencing" })}
+                  {activeModel.size_label} · {t({ ko: "추론 중", en: "Inferencing", ja: "推論中", zh: "推理中" })}
                 </div>
               </div>
             ) : totalModels === 0 ? (
               <div style={{ fontSize: 10, color: "var(--th-text-muted)", lineHeight: 1.6 }}>
-                {t({ ko: "설치된 모델 없음.", en: "No models installed." })}
+                {t({ ko: "설치된 모델 없음.", en: "No models installed.", ja: "インストールされたモデルなし。", zh: "未安装模型。" })}
               </div>
             ) : (
               <Row
-                label={t({ ko: "모델", en: "Models" })}
-                value={t({ ko: `${totalModels}개 설치됨`, en: `${totalModels} installed` })}
+                label={t({ ko: "모델", en: "Models", ja: "モデル", zh: "模型" })}
+                value={t({ ko: `${totalModels}개 설치됨`, en: `${totalModels} installed`, ja: `${totalModels}個インストール済み`, zh: `已安装 ${totalModels} 个` })}
               />
             )}
 
             {/* Stats */}
-            <Row label={t({ ko: "디스크", en: "Disk" })} value={diskLabel} />
+            <Row label={t({ ko: "디스크", en: "Disk", ja: "ディスク", zh: "磁盘" })} value={diskLabel} />
           </>
         )}
       </div>
@@ -158,7 +158,7 @@ export default function LocalLlmWidget() {
           style={{ background: "none", border: "none", color: "var(--th-accent)",
             fontFamily: mono, fontSize: 10, cursor: loading ? "default" : "pointer", padding: 0,
             letterSpacing: "0.04em", opacity: loading ? 0.4 : 1 }}>
-          {t({ ko: "관리 →", en: "Manage →" })}
+          {t({ ko: "관리 →", en: "Manage →", ja: "管理 →", zh: "管理 →" })}
         </button>
       </div>
     </div>
@@ -167,7 +167,7 @@ export default function LocalLlmWidget() {
 
 function BackendRow({ backend, t }: {
   backend: BackendInfo;
-  t: (v: { ko: string; en: string }) => string;
+  t: (v: { ko: string; en: string; ja: string; zh: string }) => string;
 }) {
   const label: Record<string, string> = {
     ollama: "Ollama",
@@ -189,10 +189,10 @@ function BackendRow({ backend, t }: {
       </div>
       <span style={{ fontSize: 10, color: "var(--th-text-muted)" }}>
         {!backend.installed
-          ? t({ ko: "미설치", en: "not installed" })
+          ? t({ ko: "미설치", en: "not installed", ja: "未インストール", zh: "未安装" })
           : backend.running
-            ? t({ ko: `모델 ${backend.model_count}개`, en: `${backend.model_count} models` })
-            : t({ ko: "중지됨", en: "stopped" })}
+            ? t({ ko: `모델 ${backend.model_count}개`, en: `${backend.model_count} models`, ja: `モデル ${backend.model_count}個`, zh: `${backend.model_count} 个模型` })
+            : t({ ko: "중지됨", en: "stopped", ja: "停止中", zh: "已停止" })}
       </span>
     </div>
   );

@@ -44,17 +44,27 @@ const DEFAULTS: Record<string, Partial<BackendSettings>> = {
   lmstudio: { host: "localhost", port: 1234,  auto_start: 0 },
 };
 
-const BACKEND_META: Array<{ name: string; label: string; desc: { ko: string; en: string }; supportsAutoStart: boolean }> = [
+const BACKEND_META: Array<{ name: string; label: string; desc: { ko: string; en: string; ja: string; zh: string }; supportsAutoStart: boolean }> = [
   {
     name: "ollama",
     label: "Ollama",
-    desc: { ko: "경량 로컬 추론 서버. AgentDesk에서 시작/중지 가능.", en: "Lightweight local inference server. Can be started/stopped by AgentDesk." },
+    desc: {
+      ko: "경량 로컬 추론 서버. AgentDesk에서 시작/중지 가능.",
+      en: "Lightweight local inference server. Can be started/stopped by AgentDesk.",
+      ja: "軽量ローカル推論サーバー。AgentDesk から起動/停止できます。",
+      zh: "轻量级本地推理服务器，AgentDesk 可启动/停止。",
+    },
     supportsAutoStart: true,
   },
   {
     name: "lmstudio",
     label: "LM Studio",
-    desc: { ko: "GUI 데스크탑 앱. AgentDesk에서 시작/중지 불가 — 수동 실행 필요.", en: "GUI desktop app. Cannot be started/stopped by AgentDesk — must be run manually." },
+    desc: {
+      ko: "GUI 데스크탑 앱. AgentDesk에서 시작/중지 불가 — 수동 실행 필요.",
+      en: "GUI desktop app. Cannot be started/stopped by AgentDesk — must be run manually.",
+      ja: "GUI デスクトップアプリ。AgentDesk での起動/停止は不可 — 手動で実行してください。",
+      zh: "GUI 桌面应用，AgentDesk 无法启动/停止 — 需手动运行。",
+    },
     supportsAutoStart: false,
   },
 ];
@@ -98,7 +108,7 @@ function BackendSettingsCard({
         {/* Host */}
         <div>
           <label style={LABEL_STYLE}>
-            {t({ ko: "호스트", en: "HOST" })}
+            {t({ ko: "호스트", en: "HOST", ja: "ホスト", zh: "主机" })}
           </label>
           <input
             type="text"
@@ -112,7 +122,7 @@ function BackendSettingsCard({
         {/* Port */}
         <div>
           <label style={LABEL_STYLE}>
-            {t({ ko: "포트", en: "PORT" })}
+            {t({ ko: "포트", en: "PORT", ja: "ポート", zh: "端口" })}
           </label>
           <input
             type="number"
@@ -129,7 +139,7 @@ function BackendSettingsCard({
       {meta.supportsAutoStart && (
         <div style={{ marginBottom: 16 }}>
           <label style={LABEL_STYLE}>
-            {t({ ko: "자동 시작", en: "AUTO-START" })}
+            {t({ ko: "자동 시작", en: "AUTO-START", ja: "自動起動", zh: "自动启动" })}
           </label>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <button
@@ -151,11 +161,11 @@ function BackendSettingsCard({
               }}
             >
               {settings.auto_start === 1
-                ? t({ ko: "켜짐", en: "On" })
-                : t({ ko: "꺼짐", en: "Off" })}
+                ? t({ ko: "켜짐", en: "On", ja: "オン", zh: "开启" })
+                : t({ ko: "꺼짐", en: "Off", ja: "オフ", zh: "关闭" })}
             </button>
             <span style={{ ...mono, fontSize: 11, color: "var(--th-text-secondary)" }}>
-              {t({ ko: "AgentDesk 시작 시 자동 실행", en: "Start automatically when AgentDesk launches" })}
+              {t({ ko: "AgentDesk 시작 시 자동 실행", en: "Start automatically when AgentDesk launches", ja: "AgentDesk 起動時に自動実行", zh: "AgentDesk 启动时自动运行" })}
             </span>
           </div>
         </div>
@@ -169,7 +179,7 @@ function BackendSettingsCard({
         border: "1px solid var(--th-border)",
         marginBottom: 14,
       }}>
-        {t({ ko: "API 주소:", en: "API URL:" })} http://{settings.host}:{settings.port}/v1
+        {t({ ko: "API 주소:", en: "API URL:", ja: "API URL:", zh: "API 地址:" })} http://{settings.host}:{settings.port}/v1
       </div>
 
       {/* Save */}
@@ -191,10 +201,10 @@ function BackendSettingsCard({
         }}
       >
         {saving
-          ? t({ ko: "저장 중...", en: "SAVING..." })
+          ? t({ ko: "저장 중...", en: "SAVING...", ja: "保存中...", zh: "保存中..." })
           : saved
-            ? t({ ko: "✓ 저장됨", en: "✓ SAVED" })
-            : t({ ko: "저장", en: "SAVE" })}
+            ? t({ ko: "✓ 저장됨", en: "✓ SAVED", ja: "✓ 保存済み", zh: "✓ 已保存" })
+            : t({ ko: "저장", en: "SAVE", ja: "保存", zh: "保存" })}
       </button>
     </div>
   );
@@ -253,7 +263,7 @@ export default function AdvancedSettingsPanel() {
     <div>
       <div style={{ ...mono, fontSize: 10, fontWeight: 700, letterSpacing: "0.06em",
         textTransform: "uppercase", color: "var(--th-text-muted)", marginBottom: 14 }}>
-        {t({ ko: "// 백엔드 설정", en: "// BACKEND SETTINGS" })}
+        {t({ ko: "// 백엔드 설정", en: "// BACKEND SETTINGS", ja: "// バックエンド設定", zh: "// 后端设置" })}
       </div>
 
       {BACKEND_META.map((meta) => (
@@ -269,7 +279,7 @@ export default function AdvancedSettingsPanel() {
       ))}
 
       <div style={{ ...mono, fontSize: 10, color: "var(--th-text-muted)", marginTop: 4, lineHeight: 1.8 }}>
-        {t({ ko: "변경 사항은 AgentDesk 재시작 후 적용됩니다.", en: "Changes take effect on next AgentDesk restart." })}
+        {t({ ko: "변경 사항은 AgentDesk 재시작 후 적용됩니다.", en: "Changes take effect on next AgentDesk restart.", ja: "変更は AgentDesk の再起動後に反映されます。", zh: "更改将在 AgentDesk 重启后生效。" })}
       </div>
     </div>
   );

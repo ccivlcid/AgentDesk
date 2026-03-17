@@ -8,6 +8,18 @@ AgentDesk brings a macOS-style desktop metaphor to AI agent orchestration — me
 
 ---
 
+## 🎬 Project Introduction Materials
+
+| Format | File | Description |
+|--------|------|-------------|
+| 🎥 Video | [`docs/reports/AgentDesk-Introduction.mp4`](docs/reports/AgentDesk-Introduction.mp4) | 96-second intro video (1920×1080, H.264) — 10-scene walkthrough rendered with Remotion |
+| 📊 Presentation | [`docs/reports/AgentDesk-Introduction.pptx`](docs/reports/AgentDesk-Introduction.pptx) | 10-slide PowerPoint deck — architecture, features, status |
+| 🌐 HTML Slides | [`docs/reports/AgentDesk-Introduction.html`](docs/reports/AgentDesk-Introduction.html) | Interactive slide deck (KO/EN toggle) — open in browser |
+
+> **Tip:** Open the HTML file directly in any browser for an interactive slide presentation with keyboard navigation (← →) and KO/EN language toggle.
+
+---
+
 ## Screenshots
 
 <table>
@@ -217,8 +229,10 @@ Open **http://localhost:8800** in your browser.
 | [`docs/architecture/ARCHITECTURE-AUDIT-2026-Q1.md`](docs/architecture/ARCHITECTURE-AUDIT-2026-Q1.md) | Architecture & backend audit report |
 | [`docs/design/UI-SCREENS.md`](docs/design/UI-SCREENS.md) | Full screen & modal specifications |
 | [`docs/design/DESIGN.md`](docs/design/DESIGN.md) | CSS variables + component style rules |
-| [`docs/specs/api.md`](docs/specs/api.md) | REST API specification (v1.3.0) |
+| [`docs/specs/api.md`](docs/specs/api.md) | REST API specification (v1.6.0) |
 | [`docs/progress.md`](docs/progress.md) | Development progress log |
+| [`docs/reports/AgentDesk-Introduction.pptx`](docs/reports/AgentDesk-Introduction.pptx) | Project introduction deck (10 slides) |
+| [`docs/reports/AgentDesk-Introduction.mp4`](docs/reports/AgentDesk-Introduction.mp4) | Project introduction video (96 sec) |
 
 ---
 

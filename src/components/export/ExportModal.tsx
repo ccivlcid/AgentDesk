@@ -183,7 +183,7 @@ export default function ExportModal({ onClose }: Props) {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 18px", borderTop: "1px solid var(--th-border)", flexShrink: 0 }}>
           <div style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-muted)" }}>
             {EXPORT_TYPES.find((e) => e.id === exportType)?.icon}{" "}
-            {t({ ko: EXPORT_TYPES.find((e) => e.id === exportType)?.labelKo ?? "", en: EXPORT_TYPES.find((e) => e.id === exportType)?.labelEn ?? "" })}
+            {t({ ko: EXPORT_TYPES.find((e) => e.id === exportType)?.labelKo ?? "", en: EXPORT_TYPES.find((e) => e.id === exportType)?.labelEn ?? "", ja: EXPORT_TYPES.find((e) => e.id === exportType)?.labelEn ?? "", zh: EXPORT_TYPES.find((e) => e.id === exportType)?.labelEn ?? "" })}
             {" · "}{format.toUpperCase()}
           </div>
           <div style={{ display: "flex", gap: 8 }}>

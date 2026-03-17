@@ -8,6 +8,16 @@ AgentDesk将macOS桌面隐喻应用于AI代理编排——菜单栏、桌面图�
 
 ---
 
+## 🎬 项目介绍资料
+
+| 格式 | 文件 | 说明 |
+|------|------|------|
+| 🎥 视频 | [`docs/reports/AgentDesk-Introduction.mp4`](docs/reports/AgentDesk-Introduction.mp4) | 96秒介绍视频 (1920×1080, H.264) — 使用 Remotion 渲染的10个场景 |
+| 📊 演示文稿 | [`docs/reports/AgentDesk-Introduction.pptx`](docs/reports/AgentDesk-Introduction.pptx) | 10张幻灯片 PowerPoint — 架构、功能、开发状态 |
+| 🌐 HTML幻灯片 | [`docs/reports/AgentDesk-Introduction.html`](docs/reports/AgentDesk-Introduction.html) | 交互式幻灯片 (KO/EN切换) — 直接在浏览器中打开 |
+
+---
+
 ## 截图
 
 <table>

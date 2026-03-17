@@ -9,6 +9,16 @@ AgentDeskは、macOSデスクトップのメタファーをAIエージェント�
 
 ---
 
+## 🎬 プロジェクト紹介資料
+
+| 形式 | ファイル | 説明 |
+|------|------|------|
+| 🎥 動画 | [`docs/reports/AgentDesk-Introduction.mp4`](docs/reports/AgentDesk-Introduction.mp4) | 96秒の紹介動画 (1920×1080, H.264) — Remotionでレンダリングした10シーン |
+| 📊 プレゼン | [`docs/reports/AgentDesk-Introduction.pptx`](docs/reports/AgentDesk-Introduction.pptx) | 10スライドのPowerPointデッキ — アーキテクチャ・機能・開発状況 |
+| 🌐 HTMLスライド | [`docs/reports/AgentDesk-Introduction.html`](docs/reports/AgentDesk-Introduction.html) | インタラクティブスライド (KO/EN切替) — ブラウザで直接開く |
+
+---
+
 ## スクリーンショット
 
 <table>

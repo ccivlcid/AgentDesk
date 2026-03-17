@@ -284,13 +284,13 @@ export default function AgentDetail({
           const existingLeaderName = String(
             details.existing_leader?.name_ko ||
               details.existing_leader?.name ||
-              t({ ko: "기존 리더", en: "current leader" }),
+              t({ ko: "기존 리더", en: "current leader", ja: "現在のリーダー", zh: "当前负责人" }),
           ).trim();
           const confirmed = await confirm({
-            title: "Change Leader?",
-            message: `${existingLeaderName} is already the leader. Change leader?`,
-            confirmLabel: "Confirm",
-            cancelLabel: "Cancel",
+            title: t({ ko: "리더 변경", en: "Change Leader?", ja: "リーダーを変更しますか？", zh: "更改负责人？" }),
+            message: t({ ko: `${existingLeaderName}이(가) 이미 리더입니다. 변경하시겠습니까?`, en: `${existingLeaderName} is already the leader. Change leader?`, ja: `${existingLeaderName} はすでにリーダーです。変更しますか？`, zh: `${existingLeaderName} 已是负责人，是否更改？` }),
+            confirmLabel: t({ ko: "변경", en: "Confirm", ja: "変更", zh: "确认" }),
+            cancelLabel: t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" }),
             variant: "default",
           });
           if (confirmed) {
