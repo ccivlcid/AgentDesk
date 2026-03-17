@@ -107,7 +107,7 @@ function KbSourcesSection({
 
           {!notionConnected && !obsidianConnected && !loading && (
             <div style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-muted)" }}>
-              {tr("설정 → HARNESS에서 Notion/Obsidian을 먼저 연결하세요.", "Connect Notion/Obsidian first in Settings → HARNESS.")}
+              {tr("설정 → SYNAPSE에서 Notion/Obsidian을 먼저 연결하세요.", "Connect Notion/Obsidian first in Settings → SYNAPSE.")}
             </div>
           )}
 
@@ -215,7 +215,7 @@ export default function AgentFormModal({
     } finally {
       setGeneratingPersona(false);
     }
-  }, [form, isKo, generatingPersona, setForm]);
+  }, [form, isKo, generatingPersona, setForm, showToast, t]);
 
   const selectStyle: React.CSSProperties = {
     background: "var(--th-input-bg)",

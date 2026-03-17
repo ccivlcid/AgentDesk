@@ -179,7 +179,7 @@ function StatusBadge({ connected }: { connected: boolean }) {
         flexShrink: 0,
         display: "inline-block",
       }} />
-      {connected ? "Connected" : "Disconnected"}
+      {connected ? tl("연결됨", "Connected", "接続済み", "已连接") : tl("미연결", "Disconnected", "未接続", "未连接")}
     </span>
   );
 }
@@ -370,14 +370,6 @@ function NotionTab() {
   const [query, setQuery] = useState("");
   const [loadingPages, setLoadingPages] = useState(false);
 
-  useEffect(() => {
-    getNotionInfo().then((info) => {
-      setConnected(info.connected);
-      if (info.workspace_name) setWorkspaceName(info.workspace_name);
-      if (info.connected) loadPages("");
-    }).catch(() => {});
-  }, []);
-
   const loadPages = useCallback(async (q: string) => {
     setLoadingPages(true);
     try {
@@ -389,6 +381,14 @@ function NotionTab() {
       setLoadingPages(false);
     }
   }, []);
+
+  useEffect(() => {
+    getNotionInfo().then((info) => {
+      setConnected(info.connected);
+      if (info.workspace_name) setWorkspaceName(info.workspace_name);
+      if (info.connected) loadPages("");
+    }).catch(() => {});
+  }, [loadPages]);
 
   const handleConnect = async () => {
     if (!token.trim()) return;

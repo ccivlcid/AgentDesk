@@ -81,7 +81,7 @@ export function useAgentRulesState({ agents, departments, t, filters }: UseAgent
     } finally {
       setLoading(false);
     }
-  }, [filters?.scope_type, filters?.scope_id, filters?.category, filters?.enabled]);
+  }, [filters]);
 
   useEffect(() => {
     void loadRules();
@@ -161,7 +161,7 @@ export function useAgentRulesState({ agents, departments, t, filters }: UseAgent
       created_at: learnJob.createdAt,
       updated_at: now,
     }));
-  }, [learnJob?.id, learnJob?.status, learnJob?.ruleId, learnJob?.ruleTitle, learnJob?.providers, learnJob?.command, learnJob?.startedAt, learnJob?.completedAt, learnJob?.createdAt]);
+  }, [learnJob]);
 
   const preferKoreanName = true;
 
@@ -336,7 +336,7 @@ export function useAgentRulesState({ agents, departments, t, filters }: UseAgent
     setUnlearningProviders([]);
     setUnlearnEffects({});
     setSquadAgentIds([]);
-  }, [learnJob?.status]);
+  }, [learnJob, learnInProgress]);
 
   const toggleProvider = useCallback(
     (provider: RuleLearnProvider) => {
@@ -365,7 +365,7 @@ export function useAgentRulesState({ agents, departments, t, filters }: UseAgent
       cancelled = true;
       window.clearInterval(timer);
     };
-  }, [learnJob]);
+  }, [learnJob, learnJob?.id, learnJob?.status]);
 
   // 학습 성공 시 낙관적 업데이트: learnedRows에 즉시 반영해 카드/모달이 바로 "학습됨" 표시
   useEffect(() => {
@@ -383,7 +383,7 @@ export function useAgentRulesState({ agents, departments, t, filters }: UseAgent
       if (added.length === 0) return prev;
       return [...added, ...prev].sort((a, b) => b.learned_at - a.learned_at);
     });
-  }, [learnJob?.id, learnJob?.status, learnJob?.ruleId, learnJob?.ruleTitle, learnJob?.providers, learnJob?.completedAt]);
+  }, [learnJob, learnJob?.id, learnJob?.status, learnJob?.ruleId, learnJob?.ruleTitle, learnJob?.providers, learnJob?.completedAt]);
 
   // Bump history on job completion so 학습 메모리 refetch (즉시 + 지연 1회로 저장 반영 보장)
   useEffect(() => {
@@ -393,7 +393,7 @@ export function useAgentRulesState({ agents, departments, t, filters }: UseAgent
       setHistoryRefreshToken((t) => t + 1);
     }, 1200);
     return () => window.clearTimeout(id);
-  }, [learnJob?.id, learnJob?.status]);
+  }, [learnJob, learnJob?.id, learnJob?.status]);
 
   // ── Start learning ──────────────────────────────────────────────
   const handleStartLearning = useCallback(async () => {
@@ -458,8 +458,9 @@ export function useAgentRulesState({ agents, departments, t, filters }: UseAgent
 
   // Cleanup timers
   useEffect(() => {
+    const timers = unlearnEffectTimersRef.current;
     return () => {
-      for (const timerId of Object.values(unlearnEffectTimersRef.current)) {
+      for (const timerId of Object.values(timers)) {
         if (typeof timerId === "number") window.clearTimeout(timerId);
       }
     };

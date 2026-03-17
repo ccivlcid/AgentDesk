@@ -3,6 +3,8 @@ import type { CustomFeature } from "../../../types";
 import { getCustomFeature } from "../../../api/custom-features";
 import CustomFeatureRenderer from "../../widget-builder/CustomFeatureRenderer";
 
+const REFRESH_MS: Record<string, number> = { "5s": 5000, "30s": 30000, "1m": 60000, "5m": 300000 };
+
 export default function CustomFeatureWidget({ featureId }: { featureId: string }) {
   const [feature, setFeature] = useState<CustomFeature | null>(null);
   const [error, setError] = useState(false);
@@ -12,6 +14,14 @@ export default function CustomFeatureWidget({ featureId }: { featureId: string }
       .then(setFeature)
       .catch(() => setError(true));
   }, [featureId]);
+
+  const interval = feature ? (REFRESH_MS[feature.config.refresh] ?? 0) : 0;
+
+  useEffect(() => {
+    if (!interval) return;
+    const id = setInterval(() => getCustomFeature(featureId).then(setFeature).catch(() => {}), interval);
+    return () => clearInterval(id);
+  }, [featureId, interval]);
 
   if (error) {
     return (
@@ -28,16 +38,6 @@ export default function CustomFeatureWidget({ featureId }: { featureId: string }
       </div>
     );
   }
-
-  // 새로고침 주기 자동 처리
-  const refreshMs: Record<string, number> = { "5s": 5000, "30s": 30000, "1m": 60000, "5m": 300000 };
-  const interval = refreshMs[feature.config.refresh];
-
-  useEffect(() => {
-    if (!interval) return;
-    const id = setInterval(() => getCustomFeature(featureId).then(setFeature).catch(() => {}), interval);
-    return () => clearInterval(id);
-  }, [featureId, interval]);
 
   return <CustomFeatureRenderer feature={feature} />;
 }

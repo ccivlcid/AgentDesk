@@ -55,7 +55,7 @@ export default function ProviderSelector({ providerId, model, width, height, qua
         onChange({ providerId: first.id, model: first.models[0] ?? "" });
       }
     }).catch(() => {});
-  }, []);
+  }, [onChange, providerId]);
 
   if (providers.length === 0) {
     return (

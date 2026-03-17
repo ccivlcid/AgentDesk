@@ -1,4 +1,4 @@
-import { request, post } from "./core";
+import { post, request } from "./core";
 
 export interface VideoRenderJob {
   id: string;

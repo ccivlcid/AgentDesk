@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, lazy, Suspense, useCallback, type ReactNode } from "react";
 import { useI18n } from "../../i18n";
-import type { Project, Category, CompanySettings, WSEventType } from "../../types";
+import type { Project, Category, CompanySettings, WSEventType , ProjectFolder } from "../../types";
 import type { OAuthCallbackResult, ProjectMetaPayload } from "../../app/types";
 import { useUiStore } from "../../store/uiStore";
 import { useProjectStore } from "../../store/projectStore";
@@ -44,12 +44,11 @@ import NewFolderModal from "./NewFolderModal";
 import FolderWindow from "../windows/FolderWindow";
 import { deleteProject, createProject } from "../../api/organization-projects";
 import { getProjectFolders, createProjectFolder, addProjectToFolder, deleteProjectFolder, updateProjectFolder } from "../../api/project-folders";
-import type { ProjectFolder } from "../../types";
 import WorkflowWindow from "../windows/WorkflowWindow";
 import LibraryWindow from "../windows/LibraryWindow";
 import SettingsWindow from "../windows/SettingsWindow";
 import AgentManagerWindow from "../windows/AgentManagerWindow";
-import ReplWindow from "../windows/ReplWindow";
+import CliWindow from "../windows/CliWindow";
 import TaskBoardWindow from "../windows/TaskBoardWindow";
 import SynapseWindow from "../windows/SynapseWindow";
 import ImageStudioWindow from "../windows/ImageStudioWindow";
@@ -155,6 +154,7 @@ export default function Desktop({
     openFolders,
     openFolder,
     closeFolder,
+    openCli,
   } = useUiStore();
 
   const { projects, categories, currentProjectId, setCurrentProjectId } = useProjectStore();
@@ -190,13 +190,14 @@ export default function Desktop({
   const { t, language } = useI18n();
 
   const widgetLabels: Record<string, string> = {
-    heartbeat:    t({ ko: "에이전트",  en: "Agents",     ja: "エージェント", zh: "代理" }),
-    "task-board": t({ ko: "태스크",    en: "Tasks",      ja: "タスク",      zh: "任务" }),
-    alerts:       t({ ko: "알림",      en: "Alerts",     ja: "アラート",    zh: "通知" }),
-    "cli-usage":  t({ ko: "CLI 비용", en: "CLI Cost",   ja: "CLIコスト",  zh: "CLI成本" }),
-    "flow-graph": t({ ko: "플로 그래프", en: "Flow Graph", ja: "フローグラフ", zh: "流图" }),
-    "file-tree":  t({ ko: "파일 트리", en: "File Tree",  ja: "ファイルツリー", zh: "文件树" }),
-    "local-llm": t({ ko: "로컬 LLM", en: "Local LLM", ja: "ローカルLLM", zh: "本地LLM" }),
+    heartbeat:    t({ ko: "에이전트",     en: "Agents",        ja: "エージェント",           zh: "代理"    }),
+    "task-board": t({ ko: "태스크",       en: "Tasks",         ja: "タスク",                zh: "任务"    }),
+    alerts:       t({ ko: "알림",         en: "Alerts",        ja: "アラート",              zh: "警报"    }),
+    "cli-usage":  t({ ko: "CLI 비용",     en: "CLI Cost",      ja: "CLIコスト",             zh: "CLI成本" }),
+    "flow-graph": t({ ko: "플로우 그래프", en: "Flow Graph",    ja: "フローグラフ",           zh: "流程图"  }),
+    "file-tree":  t({ ko: "파일 탐색기",  en: "File Explorer", ja: "ファイルエクスプローラー", zh: "文件管理" }),
+    "local-llm":  t({ ko: "로컬 LLM",    en: "Local LLM",     ja: "ローカルLLM",            zh: "本地LLM" }),
+    synapse:      t({ ko: "시냅스",       en: "Synapse",       ja: "シナプス",               zh: "知识库"  }),
   };
 
   // ── 아이콘 정렬 헬퍼 ────────────────────────────────────────────
@@ -377,7 +378,7 @@ export default function Desktop({
           s: () => toggleWindow("settings"),
           c: () => toggleWindow("chat"),
           a: () => toggleWindow("agent-manager"),
-          e: () => toggleWindow("repl"),
+          e: () => openCli(),
           i: () => toggleWindow("image-studio"),
         };
         map[e.key]?.();
@@ -389,7 +390,7 @@ export default function Desktop({
       window.removeEventListener("keydown", handler);
       if (gTimer.current) clearTimeout(gTimer.current);
     };
-  }, [toggleWindow, jiggleMode, setJiggleMode, missionControlOpen, setMissionControlOpen, quickLookProjectId, selectedProjectId, selectedAgentId, setSelectedAgentId]);
+  }, [toggleWindow, openCli, jiggleMode, setJiggleMode, missionControlOpen, setMissionControlOpen, quickLookProjectId, selectedProjectId, selectedAgentId, setSelectedAgentId]);
 
   // jiggle 모드에서 바탕화면 클릭 시 해제
   function onDesktopClick(e: React.MouseEvent) {
@@ -403,8 +404,8 @@ export default function Desktop({
   // 데스크톱 아이콘 정의 (채팅·라이브러리는 Dock에서 제공)
   const icons: DesktopIconDef[] = [
     { id: "agent-manager",  icon: (c) => <IconAgents color={c} />,      label: t({ ko: "에이전트 설정",    en: "Agents",         ja: "エージェント設定",  zh: "代理设置" }),   onClick: () => openWindow("agent-manager"), accentColor: "#5e5ce6" },
-    { id: "repl",           icon: (c) => <IconRepl color={c} />,        label: t({ ko: "에이전트 REPL",   en: "Agent REPL",     ja: "エージェントREPL", zh: "代理REPL" }),   onClick: () => openWindow("repl"),          accentColor: "#32ade6" },
-    { id: "image-studio",   icon: (c) => <IconImageStudio color={c} />, label: t({ ko: "Image Studio",    en: "Image Studio",   ja: "イメージスタジオ", zh: "图像工作室" }),  onClick: () => openWindow("image-studio"),  accentColor: "#ec4899" },
+    { id: "cli",            icon: (c) => <IconRepl color={c} />,        label: t({ ko: "Agent CLI",       en: "Agent CLI",      ja: "Agent CLI",       zh: "Agent CLI" }),  onClick: () => openCli(),                   accentColor: "#32ade6" },
+    { id: "image-studio",   icon: (c) => <IconImageStudio color={c} />, label: t({ ko: "이미지 스튜디오", en: "Image Studio",   ja: "イメージスタジオ", zh: "图像工作室" }),  onClick: () => openWindow("image-studio"),  accentColor: "#ec4899" },
     { id: "decision-inbox", icon: (c) => <IconDecisions color={c} />,   label: t({ ko: "의사결정",         en: "Decisions",      ja: "意思決定",        zh: "决策" }),       onClick: onOpenDecisionInbox,               accentColor: "#ff453a", badge: decisionInboxItems.length || undefined },
     { id: "report-history", icon: (c) => <IconReports color={c} />,     label: t({ ko: "보고서",           en: "Reports",        ja: "レポート",        zh: "报告" }),       onClick: () => { clearUnreadReportCount(); toggleWindow("reports"); }, accentColor: "#64d2ff", badge: unreadReportCount || undefined },
   ];
@@ -696,7 +697,7 @@ export default function Desktop({
         />
       )}
       {openWindows.has("agent-manager") && <AgentManagerWindow onAgentsChange={onAgentsChange} createTrigger={agentManagerCreateCount} />}
-      {openWindows.has("repl")          && <ReplWindow />}
+      {openWindows.has("cli")           && <CliWindow />}
       {openWindows.has("reports")       && <ReportWindow />}
       {[...openCustomApps].map((id) => (
         <CustomFeatureWindow key={id} featureId={id} onClose={() => closeCustomApp(id)} />

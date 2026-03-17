@@ -96,7 +96,7 @@ interface GroupChatPanelProps {
 export default function GroupChatPanel({ agents, initialAgentIds, onClose }: GroupChatPanelProps) {
   const { t, locale } = useI18n();
   const isKo = locale.startsWith("ko");
-  const tr = (ko: string, en: string) => t({ ko, en, ja: en, zh: en });
+  const tr = useCallback((ko: string, en: string) => t({ ko, en, ja: en, zh: en }), [t]);
 
   const [search, setSearch]     = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(

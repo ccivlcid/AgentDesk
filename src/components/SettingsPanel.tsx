@@ -15,6 +15,8 @@ import SettingsTabNav from "./settings/SettingsTabNav";
 import { useConfirm } from "./ui/ConfirmDialog";
 import type { AccountDraftMap, AccountDraftPatch, LocalSettings, SettingsTab } from "./settings/types";
 import { useApiProvidersState } from "./settings/useApiProvidersState";
+import { startCliInstall, pollCliInstall } from "../api/cli-install";
+import type { CliInstallJob } from "../api/cli-install";
 
 interface SettingsPanelProps {
   settings: CompanySettings;
@@ -58,6 +60,9 @@ export default function SettingsPanel({
 
   const [cliModels, setCliModels] = useState<Record<string, CliModelInfo[]> | null>(null);
   const [cliModelsLoading, setCliModelsLoading] = useState(false);
+
+  const [installJobs, setInstallJobs] = useState<Record<string, CliInstallJob | null>>({});
+  const installPollers = useRef<Record<string, ReturnType<typeof setInterval>>>({});
 
   const [deviceCode, setDeviceCode] = useState<DeviceCodeStart | null>(null);
   const [deviceStatus, setDeviceStatus] = useState<string | null>(null);
@@ -119,6 +124,33 @@ export default function SettingsPanel({
       .catch(console.error)
       .finally(() => setCliModelsLoading(false));
   }, [onRefreshCli]);
+
+  const handleInstall = useCallback((provider: string) => {
+    setInstallJobs((prev) => ({ ...prev, [provider]: { status: "running", logs: [], exitCode: null } }));
+    startCliInstall(provider)
+      .then((jobId) => {
+        const timer = setInterval(async () => {
+          try {
+            const job = await pollCliInstall(jobId);
+            setInstallJobs((prev) => ({ ...prev, [provider]: job }));
+            if (job.status !== "running") {
+              clearInterval(installPollers.current[provider]);
+              delete installPollers.current[provider];
+              if (job.status === "success") {
+                setTimeout(() => refreshCliTab(), 1000);
+              }
+            }
+          } catch {
+            clearInterval(installPollers.current[provider]);
+            delete installPollers.current[provider];
+          }
+        }, 500);
+        installPollers.current[provider] = timer;
+      })
+      .catch(() => {
+        setInstallJobs((prev) => ({ ...prev, [provider]: { status: "failed", logs: ["Failed to start install"], exitCode: 1 } }));
+      });
+  }, [refreshCliTab]);
 
   useEffect(() => {
     if (!isMounted.current) {
@@ -463,6 +495,8 @@ export default function SettingsPanel({
           setForm={setForm}
           persistSettings={persistSettings}
           onRefresh={refreshCliTab}
+          onInstall={handleInstall}
+          installJobs={installJobs}
         />
       )}
 

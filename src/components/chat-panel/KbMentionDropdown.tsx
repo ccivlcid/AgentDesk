@@ -9,6 +9,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { KbSourceRef, NotionPage, ObsidianNote } from "../../api/synapse";
 import { searchNotionPages, searchObsidianFiles, getNotionInfo, getObsidianInfo } from "../../api/synapse";
+import { useI18n } from "../../i18n";
 
 interface KbMentionDropdownProps {
   mentionTarget: "notion" | "obsidian" | null;
@@ -20,6 +21,7 @@ interface KbMentionDropdownProps {
 const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };
 
 export default function KbMentionDropdown({ mentionTarget, query, onSelect, onClose }: KbMentionDropdownProps) {
+  const { t } = useI18n();
   const [items, setItems] = useState<KbSourceRef[]>([]);
   const [loading, setLoading] = useState(false);
   const [connected, setConnected] = useState(true);
@@ -121,7 +123,7 @@ export default function KbMentionDropdown({ mentionTarget, query, onSelect, onCl
         background: "var(--th-bg-surface)",
       }}>
         <span>{icon}</span>
-        <span>{label} 검색</span>
+        <span>{label} {t({ ko: "검색", en: "Search", ja: "検索", zh: "搜索" })}</span>
         {query && <span style={{ color: "var(--th-accent)" }}>"{query}"</span>}
         <button
           onMouseDown={(e) => { e.preventDefault(); onClose(); }}
@@ -134,15 +136,17 @@ export default function KbMentionDropdown({ mentionTarget, query, onSelect, onCl
       {/* 결과 목록 */}
       {!connected ? (
         <div style={{ ...mono, fontSize: 10, padding: "8px 10px", color: "var(--th-text-muted)" }}>
-          {mentionTarget === "notion" ? "Notion이 연결되지 않았습니다. Settings → Synapse에서 연결하세요." : "Obsidian이 연결되지 않았습니다. Settings → Synapse에서 연결하세요."}
+          {mentionTarget === "notion"
+            ? t({ ko: "Notion이 연결되지 않았습니다. Settings → Synapse에서 연결하세요.", en: "Notion not connected. Connect in Settings → Synapse.", ja: "Notionが接続されていません。設定 → Synapseで接続してください。", zh: "Notion未连接。请在设置 → Synapse中连接。" })
+            : t({ ko: "Obsidian이 연결되지 않았습니다. Settings → Synapse에서 연결하세요.", en: "Obsidian not connected. Connect in Settings → Synapse.", ja: "Obsidianが接続されていません。設定 → Synapseで接続してください。", zh: "Obsidian未连接。请在设置 → Synapse中连接。" })}
         </div>
       ) : loading ? (
         <div style={{ ...mono, fontSize: 10, padding: "8px 10px", color: "var(--th-text-muted)" }}>
-          검색 중...
+          {t({ ko: "검색 중...", en: "Searching...", ja: "検索中...", zh: "搜索中..." })}
         </div>
       ) : items.length === 0 ? (
         <div style={{ ...mono, fontSize: 10, padding: "8px 10px", color: "var(--th-text-muted)" }}>
-          결과 없음
+          {t({ ko: "결과 없음", en: "No results", ja: "結果なし", zh: "无结果" })}
         </div>
       ) : (
         items.map((item, idx) => (

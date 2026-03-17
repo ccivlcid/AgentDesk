@@ -2,14 +2,14 @@ import type { TaskReportDetail } from "../api";
 import { ChatPanel } from "../components/ChatPanel";
 import GroupChatPanel from "../components/chat-panel/GroupChatPanel";
 import DecisionInboxModal from "../components/DecisionInboxModal";
-import AgentDetail from "../components/AgentDetail";
 import TerminalPanel from "../components/TerminalPanel";
 import TaskReportPopup from "../components/TaskReportPopup";
 import AgentStatusPanel from "../components/AgentStatusPanel";
 import type { DecisionInboxItem } from "../components/chat/decision-inbox";
-import type { Agent, Department, Message, SubAgent, SubTask, Task } from "../types";
+import type { Agent, Message, Task } from "../types";
 import type { UiLanguage } from "../i18n";
 import type { ProjectMetaPayload, TaskPanelTab } from "./types";
+import { useAgentStore } from "../store/agentStore";
 
 interface AppOverlaysProps {
   showChat: boolean;
@@ -48,17 +48,8 @@ interface AppOverlaysProps {
     payloadInput?: { note?: string; selected_option_numbers?: number[] },
   ) => Promise<void>;
   onOpenDecisionChat: (agentId: string) => void;
-  selectedAgent: Agent | null;
-  departments: Department[];
-  tasks: Task[];
-  subAgents: SubAgent[];
-  subtasks: SubTask[];
-  onCloseSelectedAgent: () => void;
-  onChatFromAgentDetail: (agent: Agent) => void;
-  onAssignTaskFromAgentDetail: () => void;
-  onOpenTerminalFromAgentDetail: (taskId: string) => void;
-  onAgentUpdated: () => void;
   taskPanel: { taskId: string; tab: TaskPanelTab } | null;
+  tasks: Task[];
   onCloseTaskPanel: () => void;
   taskReport: TaskReportDetail | null;
   onCloseTaskReport: () => void;
@@ -93,22 +84,13 @@ export default function AppOverlays({
   onRefreshDecisionInbox,
   onReplyDecisionOption,
   onOpenDecisionChat,
-  selectedAgent,
-  departments,
-  tasks,
-  subAgents,
-  subtasks,
-  onCloseSelectedAgent,
-  onChatFromAgentDetail,
-  onAssignTaskFromAgentDetail,
-  onOpenTerminalFromAgentDetail,
-  onAgentUpdated,
   taskPanel,
+  tasks,
   onCloseTaskPanel,
   taskReport,
   onCloseTaskReport,
-  showReportHistory,
-  onCloseReportHistory,
+  showReportHistory: _showReportHistory,
+  onCloseReportHistory: _onCloseReportHistory,
   showAgentStatus,
   onCloseAgentStatus,
   showGroupChat,
@@ -116,6 +98,8 @@ export default function AppOverlays({
   onCloseGroupChat,
   onOpenGroupChatWithAgents,
 }: AppOverlaysProps) {
+  const { departments } = useAgentStore();
+
   return (
     <>
       {showGroupChat && (
@@ -156,23 +140,6 @@ export default function AppOverlays({
         />
       )}
 
-      {selectedAgent && (
-        <AgentDetail
-          agent={selectedAgent}
-          agents={agents}
-          department={departments.find((d) => d.id === selectedAgent.department_id)}
-          departments={departments}
-          tasks={tasks}
-          subAgents={subAgents}
-          subtasks={subtasks}
-          onClose={onCloseSelectedAgent}
-          onChat={onChatFromAgentDetail}
-          onAssignTask={onAssignTaskFromAgentDetail}
-          onOpenTerminal={onOpenTerminalFromAgentDetail}
-          onAgentUpdated={onAgentUpdated}
-        />
-      )}
-
       {taskPanel && (
         <TerminalPanel
           taskId={taskPanel.taskId}
@@ -198,9 +165,7 @@ export default function AppOverlays({
         />
       )}
 
-
       {showAgentStatus && <AgentStatusPanel agents={groupChatAgents} uiLanguage={uiLanguage} onClose={onCloseAgentStatus} />}
-
     </>
   );
 }

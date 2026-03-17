@@ -78,7 +78,7 @@ export function useHooksState({ agents, departments, t, filters }: UseHooksState
     } finally {
       setLoading(false);
     }
-  }, [filters?.scope_type, filters?.scope_id, filters?.event_type, filters?.enabled]);
+  }, [filters]);
 
   useEffect(() => {
     void loadHooks();
@@ -338,7 +338,7 @@ export function useHooksState({ agents, departments, t, filters }: UseHooksState
       if (added.length === 0) return prev;
       return [...added, ...prev].sort((a, b) => b.learned_at - a.learned_at);
     });
-  }, [learnJob?.id, learnJob?.status, learnJob?.hookId, learnJob?.hookTitle, learnJob?.providers, learnJob?.completedAt]);
+  }, [learnJob, learnJob?.id, learnJob?.status, learnJob?.hookId, learnJob?.hookTitle, learnJob?.providers, learnJob?.completedAt]);
 
   // Bump history on job completion (immediate + delayed to ensure server storage is reflected)
   useEffect(() => {
@@ -348,7 +348,7 @@ export function useHooksState({ agents, departments, t, filters }: UseHooksState
       setHistoryRefreshToken((t) => t + 1);
     }, 1200);
     return () => window.clearTimeout(id);
-  }, [learnJob?.id, learnJob?.status]);
+  }, [learnJob, learnJob?.id, learnJob?.status]);
 
   // ── Start learning ────────────────────────────────────────────────
   const handleStartLearning = useCallback(async () => {
@@ -429,8 +429,9 @@ export function useHooksState({ agents, departments, t, filters }: UseHooksState
 
   // Cleanup timers
   useEffect(() => {
+    const timers = unlearnEffectTimersRef.current;
     return () => {
-      for (const timerId of Object.values(unlearnEffectTimersRef.current)) {
+      for (const timerId of Object.values(timers)) {
         if (typeof timerId === "number") window.clearTimeout(timerId);
       }
     };

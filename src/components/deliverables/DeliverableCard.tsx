@@ -66,7 +66,7 @@ export default function DeliverableCard({ report, artifacts, agent, agents, onAr
   const [previewArtifact, setPreviewArtifact] = useState<TaskArtifact | null>(null);
   const [expanded, setExpanded] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [showSynapseExport, setShowHarnessExport] = useState(false);
+  const [showSynapseExport, setShowSynapseExport] = useState(false);
   const uploadInputRef = useRef<HTMLInputElement>(null);
   const [sectionOpen, setSectionOpen] = useState<Record<string, boolean>>({
     result: false, collaborators: false, artifacts: false, git: false,
@@ -178,7 +178,7 @@ export default function DeliverableCard({ report, artifacts, agent, agents, onAr
                 <span style={{ fontSize: "9px", color: "var(--th-border)" }}>|</span>
                 <button
                   type="button"
-                  onClick={() => setShowHarnessExport(true)}
+                  onClick={() => setShowSynapseExport(true)}
                   style={{ ...mono, fontSize: "9px", fontWeight: 700, color: "var(--th-accent)", background: "none", border: "none", cursor: "pointer", padding: 0, letterSpacing: "0.04em" }}
                   title="Notion / Obsidian으로 내보내기"
                 >
@@ -282,7 +282,7 @@ export default function DeliverableCard({ report, artifacts, agent, agents, onAr
         <SynapseExportModal
           title={report.title}
           content={report.result ?? ""}
-          onClose={() => setShowHarnessExport(false)}
+          onClose={() => setShowSynapseExport(false)}
         />
       )}
     </>

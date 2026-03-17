@@ -63,7 +63,7 @@ src/
 │   ├── export/                  ← ExportModal (triggered from AgentDesk app menu)
 │   └── settings/                ← Settings window tabs
 ├── app/
-│   ├── types.ts                 ← WindowType: "workflow"|"library"|"settings"|"chat"|"agent-manager"|"repl"
+│   ├── types.ts                 ← WindowType: "workflow"|"library"|"settings"|"chat"|"agent-manager"|"cli"
 │   └── AppOverlays.tsx          ← Modal/overlay collection (36 total)
 ├── store/
 │   ├── agentStore.ts            ← agents, departments
@@ -187,7 +187,7 @@ Current shortcuts:
 | `g s` | Toggle Settings window |
 | `g c` | Toggle Chat window |
 | `g a` | Toggle Agent Manager |
-| `g e` | Toggle REPL |
+| `g e` | Toggle CLI (Agent CLI) |
 | `Space` (with icon selected) | Open Quick Look |
 | `Esc` | Exit Jiggle / Close Quick Look / Close Mission Control |
 | 600ms long-press on empty screen | Jiggle Mode ON |
@@ -261,10 +261,6 @@ When adding a new field to the task creation form, follow this full chain:
 | [`docs/architecture/ARCHITECTURE-AUDIT-2026-Q1.md`](docs/architecture/ARCHITECTURE-AUDIT-2026-Q1.md) | Architecture & backend audit report |
 | [`docs/design/UI-SCREENS.md`](docs/design/UI-SCREENS.md) | Full screen & modal specifications (macOS desktop OS structure) |
 | [`docs/design/DESIGN.md`](docs/design/DESIGN.md) | CSS variables + component style rules |
-| [`docs/specs/api.md`](docs/specs/api.md) | REST API full specification (v1.3.0) |
+| [`docs/specs/api.md`](docs/specs/api.md) | REST API full specification (v1.6.0) |
 | [`docs/strategy/bigger-ide-vision.md`](docs/strategy/bigger-ide-vision.md) | "Bigger IDE" strategy (Phase 1–3 complete) |
 | [`docs/progress.md`](docs/progress.md) | Development progress log |
-| [`docs/bugs/PIPELINE-AUDIT-2026-03-16.md`](docs/bugs/PIPELINE-AUDIT-2026-03-16.md) | **Known bugs — execution pipeline (BUG-01~06): read before touching execution-run.ts / stream-tools.ts** |
-| [`docs/bugs/UI-AUDIT-2026-03-16.md`](docs/bugs/UI-AUDIT-2026-03-16.md) | **Known bugs — Workflow Builder (WB-01~03) · Flow Graph (FG-01~03): read before touching these features** |
-| [`docs/features/figma-integration.md`](docs/features/figma-integration.md) | Figma 연동 스펙 — API key 등록 · 태스크 URL 첨부 · 에이전트 컨텍스트 주입 전체 흐름 |
-| [`docs/features/design-workflow-template.md`](docs/features/design-workflow-template.md) | Design 워크플로우 템플릿 스펙 — 4단계 노드 체인 · JSON 스키마 · 구현 체크리스트 |

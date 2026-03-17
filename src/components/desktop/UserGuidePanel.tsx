@@ -89,7 +89,7 @@ function getChapters(t: T): Chapter[] {
             { icon: "▶", label: t({ ko: "태스크 실행", en: "Run Task", ja: "タスク実行", zh: "运行任务" }), desc: t({ ko: "즉시 태스크 생성", en: "Create task instantly", ja: "即時タスク作成", zh: "立即创建任务" }) },
             { icon: "⚡", label: t({ ko: "워크플로", en: "Workflow", ja: "ワークフロー", zh: "工作流" }), desc: t({ ko: "파이프라인 빌더", en: "Pipeline builder", ja: "パイプライン編集", zh: "流水线构建" }) },
             { icon: "📊", label: t({ ko: "보고서", en: "Reports", ja: "レポート", zh: "报告" }), desc: t({ ko: "성과·실행 이력", en: "Performance & run history", ja: "パフォーマンス履歴", zh: "性能和运行历史" }) },
-            { icon: "🧪", label: t({ ko: "Harness", en: "Harness", ja: "Harness", zh: "Harness" }), desc: t({ ko: "에이전트 테스트·벤치마크", en: "Agent test & benchmark", ja: "エージェントテスト", zh: "代理测试和基准" }) },
+            { icon: "⇄", label: t({ ko: "Synapse", en: "Synapse", ja: "Synapse", zh: "Synapse" }), desc: t({ ko: "에이전트 테스트·벤치마크", en: "Agent test & benchmark", ja: "エージェントテスト", zh: "代理测试和基准" }) },
           ],
         },
         {

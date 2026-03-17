@@ -397,7 +397,7 @@ export default function GatewaySettingsTab({
     }
   };
 
-  const loadAgents = async () => {
+  const loadAgents = useCallback(async () => {
     if (managerAgents) return; // project agents provided externally
     setAgentsLoading(true);
     try {
@@ -408,11 +408,11 @@ export default function GatewaySettingsTab({
     } finally {
       setAgentsLoading(false);
     }
-  };
+  }, [managerAgents]);
 
   useEffect(() => {
     void loadAgents();
-  }, []);
+  }, [loadAgents]);
 
   useEffect(() => {
     if (!editor.open || editor.channel !== "discord") {

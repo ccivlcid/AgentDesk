@@ -35,7 +35,7 @@ export default function TeamPageView({
   useEffect(() => {
     if (currentProject) setTopTab("project");
     else setTopTab("org");
-  }, [currentProject?.id]);
+  }, [currentProject]);
 
   const [teamAgentIds, setTeamAgentIds] = useState<Set<string>>(new Set());
   const [loadingTeam, setLoadingTeam] = useState(false);
@@ -50,7 +50,7 @@ export default function TeamPageView({
     } finally {
       setLoadingTeam(false);
     }
-  }, [currentProject?.id]);
+  }, [currentProject]);
 
   useEffect(() => {
     if (topTab === "project" && currentProject) {

@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback, type KeyboardEvent, type RefObject, type DragEvent } from "react";
+import { useRef, useState, useCallback, useEffect, type KeyboardEvent, type RefObject, type DragEvent } from "react";
 import type { Agent } from "../../types";
 import type { KbSourceRef } from "../../api/synapse";
 import ChatModeHint from "./ChatModeHint";
@@ -70,6 +70,12 @@ export default function ChatComposer({
 }: ChatComposerProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dragCounterRef = useRef(0);
+  const [rejectionMsg, setRejectionMsg] = useState<string | null>(null);
+  const rejectionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => () => {
+    if (rejectionTimerRef.current) clearTimeout(rejectionTimerRef.current);
+  }, []);
 
   // @mention 상태
   const [mentionTarget, setMentionTarget] = useState<"notion" | "obsidian" | null>(null);
@@ -109,16 +115,26 @@ export default function ChatComposer({
 
   const addFiles = (incoming: FileList | File[]) => {
     const newFiles: File[] = [];
+    let rejectedSize = 0;
+    let rejectedCount = 0;
     const arr = Array.from(incoming);
     for (const file of arr) {
-      if (file.size > MAX_FILE_SIZE) continue;
-      if (attachments.length + newFiles.length >= MAX_FILES) break;
+      if (file.size > MAX_FILE_SIZE) { rejectedSize++; continue; }
+      if (attachments.length + newFiles.length >= MAX_FILES) { rejectedCount++; continue; }
       // Avoid duplicates by name+size
       const isDup = attachments.some((f) => f.name === file.name && f.size === file.size);
       if (!isDup) newFiles.push(file);
     }
     if (newFiles.length > 0) {
       onAttachmentsChange([...attachments, ...newFiles]);
+    }
+    if (rejectedSize > 0 || rejectedCount > 0) {
+      const msgs: string[] = [];
+      if (rejectedSize > 0) msgs.push(tr(`${rejectedSize}개 파일이 10MB 초과`, `${rejectedSize} file(s) exceed 10MB`));
+      if (rejectedCount > 0) msgs.push(tr(`최대 ${MAX_FILES}개 초과`, `Max ${MAX_FILES} files`));
+      setRejectionMsg(msgs.join(" · "));
+      if (rejectionTimerRef.current) clearTimeout(rejectionTimerRef.current);
+      rejectionTimerRef.current = setTimeout(() => setRejectionMsg(null), 3000);
     }
   };
 
@@ -250,6 +266,14 @@ export default function ChatComposer({
               </button>
             </div>
           ))}
+        </div>
+      )}
+
+      {rejectionMsg && (
+        <div className="flex-shrink-0 px-4 pb-1">
+          <span className="text-xs font-mono" style={{ color: "#f87171" }}>
+            ⚠ {rejectionMsg}
+          </span>
         </div>
       )}
 

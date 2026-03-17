@@ -4,22 +4,6 @@ import { useI18n } from "../../i18n";
 
 const mono = "var(--th-font-mono)";
 
-const WINDOW_META: Record<WindowType, { emoji: string; label: string }> = {
-  workflow: { emoji: "⚡", label: "Workflow" },
-  library: { emoji: "📚", label: "Library" },
-  settings: { emoji: "⚙️", label: "Settings" },
-  chat: { emoji: "💬", label: "Chat" },
-  "agent-manager": { emoji: "👤", label: "Agent Manager" },
-  repl: { emoji: ">_", label: "REPL" },
-  reports: { emoji: "📊", label: "Reports" },
-  tasks: { emoji: "▦", label: "Board" },
-  "create-task": { emoji: "✚", label: "New Task" },
-  "llm-guide": { emoji: "📖", label: "LLM Guide" },
-  "synapse":       { emoji: "⇄",  label: "Synapse" },
-  "image-studio":  { emoji: "🖼",  label: "Image Studio" },
-  "folder":        { emoji: "📁",  label: "Folder" },
-};
-
 const WIDGET_META: Record<string, { emoji: string; label: string }> = {
   heartbeat: { emoji: "💓", label: "Agents" },
   "task-board": { emoji: "📋", label: "Tasks" },
@@ -44,6 +28,22 @@ interface MissionControlProps {
 
 export default function MissionControl({ openWindows, widgetLayout, onClose, onFocusWindow }: MissionControlProps) {
   const { t } = useI18n();
+
+  const WINDOW_META: Record<WindowType, { emoji: string; label: string }> = {
+    workflow:        { emoji: "⚡",  label: t({ ko: "워크플로",        en: "Workflow",       ja: "ワークフロー",     zh: "工作流" }) },
+    library:         { emoji: "📚",  label: t({ ko: "라이브러리",      en: "Library",        ja: "ライブラリ",       zh: "库" }) },
+    settings:        { emoji: "⚙️", label: t({ ko: "설정",            en: "Settings",       ja: "設定",            zh: "设置" }) },
+    chat:            { emoji: "💬",  label: t({ ko: "채팅",            en: "Chat",           ja: "チャット",         zh: "聊天" }) },
+    "agent-manager": { emoji: "👤",  label: t({ ko: "에이전트 설정",   en: "Agent Manager",  ja: "エージェント設定", zh: "代理设置" }) },
+    cli:             { emoji: ">_", label: t({ ko: "Agent CLI",       en: "CLI",            ja: "Agent CLI",       zh: "Agent CLI" }) },
+    reports:         { emoji: "📊",  label: t({ ko: "보고서",          en: "Reports",        ja: "レポート",         zh: "报告" }) },
+    tasks:           { emoji: "▦",  label: t({ ko: "태스크 보드",     en: "Board",          ja: "タスクボード",     zh: "任务板" }) },
+    "create-task":   { emoji: "✚",  label: t({ ko: "새 태스크",       en: "New Task",       ja: "新しいタスク",     zh: "新任务" }) },
+    "llm-guide":     { emoji: "📖",  label: t({ ko: "LLM 가이드",     en: "LLM Guide",      ja: "LLMガイド",        zh: "LLM指南" }) },
+    synapse:         { emoji: "⇄",  label: t({ ko: "시냅스",          en: "Synapse",        ja: "シナプス",         zh: "知识库" }) },
+    "image-studio":  { emoji: "🖼",  label: t({ ko: "이미지 스튜디오", en: "Image Studio",   ja: "イメージスタジオ", zh: "图像工作室" }) },
+    folder:          { emoji: "📁",  label: t({ ko: "폴더",            en: "Folder",         ja: "フォルダ",         zh: "文件夹" }) },
+  };
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {

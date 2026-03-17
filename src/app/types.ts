@@ -6,7 +6,7 @@ export type WindowType =
   | "settings"
   | "chat"
   | "agent-manager"
-  | "repl"
+  | "cli"
   | "reports"
   | "tasks"
   | "create-task"

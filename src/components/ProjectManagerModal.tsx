@@ -118,7 +118,7 @@ export default function ProjectManagerModal({ agents, departments = [], onClose,
   useEffect(() => {
     void loadProjects(1, search);
     getProjectTemplates().then(setTemplates).catch(() => {});
-  }, []);
+  }, [loadProjects, search]);
 
   useEffect(() => {
     if (!selectedProjectId) {
@@ -332,7 +332,7 @@ export default function ProjectManagerModal({ agents, departments = [], onClose,
     } catch (err) {
       console.error("Failed to delete project:", err);
     }
-  }, [loadProjects, search, selectedProject, startCreate, t]);
+  }, [loadProjects, search, selectedProject, startCreate, t, confirm]);
 
   const handleAddSource = useCallback(async (sourceProjectId: string) => {
     if (!selectedProjectId) return;

@@ -201,7 +201,7 @@ export default function ChatMessageList({
         }));
       }
     }
-  }, [visibleMessages.length, virtualizer]);
+  }, [visibleMessages, visibleMessages.length, virtualizer]);
 
   // Scroll to bottom during streaming
   useEffect(() => {

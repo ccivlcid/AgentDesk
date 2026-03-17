@@ -1,12 +1,99 @@
 # AgentDesk — 개발 진행 현황
 
-> 마지막 업데이트: 2026-03-22 (Phase 17 완료 — 프로젝트 폴더 시스템)
+> 마지막 업데이트: 2026-03-22 (Phase 18 완료, Figma·Design Workflow 구현 확인)
+
+---
+
+## ✅ Figma 연동 (완료)
+
+태스크 생성 시 Figma URL 첨부 → 에이전트 실행 시 컨텍스트 자동 주입.
+
+| 항목 | 내용 |
+|------|------|
+| DB | `2026-03-20-001-tasks-figma-url` (`tasks.figma_url`), `2026-03-20-002-projects-figma-url` (`projects.figma_url`) |
+| 서버 | `server/modules/figma/context-fetcher.ts` — Figma REST API 호출, `buildFigmaContextBlock()` |
+| 실행 주입 | `execution-run.ts` — `figmaContextBlock`을 에이전트 프롬프트에 자동 주입 |
+| 프론트엔드 | `FigmaUrlSection.tsx` — 태스크 생성 모달 Figma URL 입력·파싱·미리보기 |
+| 인증 | Figma API 토큰을 `synapse_connections` 테이블(platform='figma')에 저장 |
+| Settings UI | `SynapseSettingsTab.tsx` → Figma 서브탭 — Personal Access Token 입력, 연결/해제, 가이드 텍스트 |
+
+---
+
+## ✅ Design Workflow Template (완료)
+
+Figma 디자인 파일 기반 4단계 에이전트 워크플로우 템플릿.
+
+| 항목 | 내용 |
+|------|------|
+| 프리셋 | `src/components/workflow-builder/presets/design-workflow.ts` — 4노드 체인 (Design Analysis → Component Design → Implementation → Code Review) |
+| 템플릿 피커 | `TemplatePickerModal.tsx` — 카테고리 필터, `figma_required: true` 시 Figma URL 입력 필드 |
+| 실행 | `WbRunModal.tsx` — Figma URL을 첫 번째 에이전트 태스크에 주입, 의존성 체인 자동 생성 |
+| DB | `2026-03-20-003-category-design` 마이그레이션으로 design 카테고리 시딩 |
+
+---
+
+## ✅ Phase 18 — Agent CLI (완료)
+
+REPL → CLI 명칭 전환 + Agent Shell 패러다임 도입.
+에이전트별 전용 CLI 세션, Claude Code 스타일 지속 컨텍스트, 3곳 진입점.
+
+| Step | 내용 | 상태 |
+|------|------|------|
+| 1 | REPL → CLI 명칭 전환 (WindowType `"repl"→"cli"`, MissionControl, Dock 아이콘, 바탕화면 아이콘) | ✅ |
+| 2 | `uiStore.openCli(agentId?)` + `cliInitialAgentId` + `CliWindow.tsx` | ✅ |
+| 3 | `AgentCli.tsx` — CliSession Map + 셸 프롬프트 `[agent @ project] $` + `:switch`/`:status`/`:history`/`:reset` | ✅ |
+| 4 | 에이전트 진입점 3곳: AgentDetailPanel `>_` 버튼, AgentsWidget hover `>_` 버튼, Flow Graph 노드 우클릭 "CLI 열기" | ✅ |
+
+### CLI 설치 기능 (Settings → CLI 탭)
+- `server/modules/routes/ops/cli-install.ts` — POST/GET 엔드포인트, npm install -g 실행
+- `src/api/cli-install.ts` + `SettingsPanel.tsx` 폴링 로직
+- `CliSettingsTab.tsx` — 미설치 시 `[npm install]` 버튼 + 실시간 로그 스트림
+
+---
+
+## ✅ Synapse — 지식 베이스 연동 (완료)
+
+Notion·Obsidian 외부 지식 베이스를 AgentDesk에 연결하고, 에이전트 태스크 실행 시 컨텍스트 자동 주입.
+
+| 항목 | 내용 |
+|------|------|
+| 서버 | `server/modules/synapse/` — `context-fetcher.ts`, `notion-client.ts`, `notion-poller.ts`, `obsidian-client.ts`, `obsidian-watcher.ts`, `rule-engine.ts` |
+| API | `server/modules/routes/ops/synapse.ts` — Synapse 연결 설정·문서 검색·컨텍스트 fetch 엔드포인트 |
+| 프론트엔드 | `SynapseWindow.tsx`, `SynapseWidget.tsx`, `SynapseSettingsTab.tsx`, `SynapseExportModal.tsx` |
+| 채팅 연동 | `KbMentionDropdown.tsx` — `@notion`, `@obsidian` 멘션으로 문서 검색·첨부 |
+| 태스크 | `CreateTaskModal` → `KbTaskSourcesSection` — 태스크 생성 시 지식 소스 첨부 |
+| API 라우트 | `GET /api/synapse/*` — 연결 상태, 문서 목록, 컨텍스트 fetch |
+
+---
+
+## ✅ Synapse 리네임 + Agent Detail 통합 (완료)
+
+### Harness → Synapse 잔존 참조 수정
+- `AgentFormModal.tsx`: "Settings → HARNESS" → "Settings → SYNAPSE"
+- `DeliverableCard.tsx`: `setShowHarnessExport` → `setShowSynapseExport` (3곳)
+- `SynapseExportModal.tsx`: 주석 "Harness Export Modal" → "Synapse Export Modal"
+- `obsidian-client.ts`: 주석 "Harness — Obsidian client" → "Synapse — Obsidian client"
+- `UserGuidePanel.tsx`: 가이드 패널 "Harness" 항목 → "Synapse" (아이콘 🧪 → ⇄)
+
+### Agent Detail 시스템 통합 (2.C)
+두 개의 병렬 Agent Detail 시스템을 `AgentDetailPanel.tsx` 하나로 통합.
+
+**Before:**
+- `AgentDetailPanel.tsx` — compact 440px popup, 섹션 뷰만 (skills/rules/memories/cost)
+- `AgentDetail.tsx` — AppOverlays에서 `selectedAgent`로 트리거, 6탭 full view (info/tasks/alba/performance/chat/timeline)
+
+**After:**
+- `AgentDetailPanel.tsx` — 640px popup, **4탭 통합 뷰**:
+  - **Overview**: AgentDetailHeader + AgentDetailCurrentTask + AgentDetailSections
+  - **Tasks**: 에이전트 태스크 목록 (클릭 → TerminalPanel)
+  - **Chat**: AgentChatTab (에이전트와 1:1 채팅)
+  - **Timeline**: AgentTimeline (이벤트 히스토리)
+- `AppOverlays.tsx`: `AgentDetail` 제거, `selectedAgent` 관련 props 전체 제거
+- `App.tsx`: `selectedAgent`/`setSelectedAgent` 사용 제거
 
 ---
 
 ## ✅ Phase 17 — Project Folders (완료)
-
-> 스펙 문서: [`docs/features/project-folders.md`](features/project-folders.md)
 
 프로젝트를 폴더 컨테이너로 묶고, 폴더 이동 시 디스크 경로도 함께 변경하는 시스템.
 
@@ -24,8 +111,6 @@
 ---
 
 ## ✅ Phase 16 — Cross-Project Handoff (완료)
-
-> 스펙 문서: [`docs/features/cross-project-handoff.md`](features/cross-project-handoff.md)
 
 프로젝트 유형 간 결과물 연결 시스템.
 디자인·리서치 완료 결과물을 소프트웨어·콘텐츠 프로젝트에서 가져다 쓰는 핸드오프 흐름.
@@ -118,8 +203,13 @@
 
 | Phase | 내용 | 완료일 |
 |-------|------|--------|
+| Phase 18 | Agent CLI — REPL→CLI 전환, CliSession Map, 에이전트 진입점 3곳 (Panel·Widget·FlowGraph) | 2026-03-22 |
+| Figma 연동 | 태스크 URL 첨부, Figma REST API 컨텍스트 fetch, 실행 시 자동 주입 | 2026-03-20 |
+| Design Workflow | 4단계 에이전트 체인 템플릿, TemplatePickerModal, Figma URL 주입 | 2026-03-20 |
+| Phase 17 | Project Folders — 폴더 컨테이너, 디스크 이동, FolderWindow | 2026-03-22 |
 | Phase 16 | Cross-Project Handoff — 결과물 체크리스트 + 소스 연결 + 컨텍스트 자동 주입 | 2026-03-21 |
 | Phase 15 | Image Studio — 위젯 + 앱 윈도우 (txt2img·inpaint, 갤러리, 태스크 연동) | 2026-03-21 |
+| Phase 20 | Local LLM Manager — Ollama·LM Studio·llama.cpp·Jan 백엔드, 추론 로깅, 하드웨어 호환성 | 2026-03-19 |
 | Phase 13 | FM2024 Overhaul — 모든 tsx → `--th-*` CSS 변수 전환 | 2026-03-14 |
 | Phase 14 | MED Features — lazy loading, 채팅 검색/핀, 태스크 일괄, 성과 히스토리 | 2026-03-14 |
 | P0~P3 + Security | 전체 로드맵 완료 (상세: `docs/OVERVIEW.md` 섹션 8) | 2026-03-14 |
@@ -141,15 +231,13 @@
 | BUG-05 | 🔵 P2 | 메신저 수신자 시작 실패 silent | `lifecycle.ts` | ✅ 수정완료 |
 | BUG-06 | 🟡 P1 | 스트림 버퍼 2KB 제한 (서브태스크 손실) | `stream-tools.ts` | ✅ 수정완료 |
 
-> 수정 상세 지침 → **`docs/bugs/PIPELINE-AUDIT-2026-03-16.md`**
-
 ---
 
-## 2026-03-16 UI 기능 감사 (Workflow Builder · REPL · Flow Graph) ✅
+## 2026-03-16 UI 기능 감사 (Workflow Builder · Agent CLI · Flow Graph) ✅
 
-소스코드 직접 분석 결과. 상세 → `docs/bugs/UI-AUDIT-2026-03-16.md`
+소스코드 직접 분석 결과. 전체 수정 완료.
 
-### Agent REPL
+### Agent CLI (구 REPL)
 **✅ 완전 정상 동작 — 버그 없음**
 - 명령어 파싱, Task 생성/실행, WebSocket 스트리밍, `:inject` 프롬프트 주입 모두 실제 API 연동 완비
 
@@ -170,8 +258,6 @@
 | FG-01 | ❌ TODO | Delegation 엣지 명시적 TODO (SubTask 데이터 미전달) | `useFlowLayout.ts` | ✅ 수정 완료 |
 | FG-02 | 🟡 P1 | 노드 클릭 시 에이전트 상세 패널 미연결 | `FlowGraphWidget.tsx` | ✅ 수정 완료 |
 | FG-03 | 🔵 P2 | 50+ 에이전트 시 3열 고정으로 레이아웃 극단 축소 | `useFlowLayout.ts` | ✅ 수정 완료 |
-
-> 수정 상세 지침 → **`docs/bugs/UI-AUDIT-2026-03-16.md`**
 
 ---
 
@@ -418,8 +504,6 @@
 
 ## Local LLM Manager — Phase 1 ✅ (2026-03-16)
 
-> 문서: `docs/features/local-llm-manager.md`
-
 ### DB 마이그레이션 (`2026-03-17-000-local-llm`)
 - `local_llm_backends`, `local_llm_models`, `local_llm_inference_log` 테이블 생성
 - `agents` ALTER: `local_llm_backend`, `local_llm_model` 컬럼 추가
@@ -490,7 +574,7 @@
 
 | 코드 | 내용 | 파일 | 상태 |
 |------|------|------|------|
-| E2E-01 | REPL createTask에 `project_path` 누락 (git worktree가 서버 cwd 사용) | `AgentRepl.tsx` | ✅ 수정 |
+| E2E-01 | CLI createTask에 `project_path` 누락 (git worktree가 서버 cwd 사용) | `AgentCli.tsx` | ✅ 수정 |
 | E2E-02 | FlowGraphWidget이 `projectAgentIds` prop을 AgentFlowGraph에 전달 안 함 | `FlowGraphWidget.tsx` | ✅ 수정 |
 | E2E-03 | 플로 그래프 - 같은 프로젝트 동시 실행 에이전트 간 협업 엣지 없음 | `useFlowLayout.ts`, `FlowEdge.tsx`, `AgentFlowGraph.tsx` | ✅ 수정 |
 | E2E-04 | Meeting Minutes 생성 시 WS 이벤트 없음 (패널 닫히면 알림 불가) | `minutes.ts`, `useRealtimeSync.ts`, `types/index.ts` | ✅ 수정 |
@@ -499,7 +583,7 @@
 | E2E-07 | WbRunModal에 `project_path` 누락 | `WbRunModal.tsx` | ✅ 수정 |
 
 ### 수정 내용 요약
-- **REPL**: `createTask`에 `project_path: currentProject?.project_path` 추가 → git worktree가 올바른 프로젝트 경로 사용
+- **Agent CLI**: `createTask`에 `project_path: currentProject?.project_path` 추가 → git worktree가 올바른 프로젝트 경로 사용
 - **Flow Graph**: `projectAgentIds` prop 전달 + 신규 `"collab"` 엣지 타입(같은 프로젝트 동시 실행 에이전트 간 점선 표시)
 - **Meeting Minutes**: `beginMeetingMinutes`/`finishMeetingMinutes`에서 `meeting_minutes_update` WS 브로드캐스트 → 클라이언트 즉시 리싱크
 - **Workflow Builder 실행**: 루트 태스크(의존성 없는 노드)를 생성 후 자동 `POST /api/tasks/:id/run` 호출, 모달이 실행 상태를 보여주는 동안 유지
@@ -795,10 +879,14 @@
 | 문서 | 상태 |
 |------|------|
 | `docs/OVERVIEW.md` | ✅ 최신 (2026-03-19 업데이트) |
+| `docs/features/agent-cli.md` | 🔜 Phase 18 스펙 (2026-03-22 작성) |
 | `docs/features/image-studio.md` | ✅ 최신 (Phase 15 완료 반영) |
 | `docs/features/synapse.md` | ✅ 최신 (Synapse Phase 1~5 전체) |
 | `docs/features/local-llm-manager.md` | ✅ 최신 |
+| `docs/features/figma-integration.md` | ✅ 참조용 (구현 완료) |
+| `docs/features/design-workflow-template.md` | 📋 계획 중 |
 | `docs/specs/api.md` | ✅ 최신 (v1.6.0 — Phase 16 엔드포인트 추가) |
+| `docs/strategy/bigger-ide-vision.md` | ✅ 전략 문서 (참조용 유지) |
 | `docs/architecture/` | 참조용 유지 |
 | `docs/design/DESIGN.md`, `UI-SCREENS.md` | 참조용 유지 |
 
@@ -810,3 +898,7 @@
 - `docs/features/agent-detail-panel.md` — 구현 완료, progress.md에 통합 (2026-03-20)
 - `docs/features/custom-widget-platform.md` — 구현 완료, progress.md에 통합 (2026-03-20)
 - `docs/features/cross-project-handoff.md` — 구현 완료 (Phase 16), progress.md에 통합 (2026-03-21)
+- `docs/features/project-folders.md` — 구현 완료 (Phase 17), progress.md에 통합 (2026-03-22)
+- `docs/strategy/agent-flow-graph-design.md` — 구현 완료 (P2-1, 2026-03-14), 참조 불필요
+- `docs/bugs/PIPELINE-AUDIT-2026-03-16.md` — BUG-01~06 전체 수정 완료, 이력만 progress.md에 유지
+- `docs/bugs/UI-AUDIT-2026-03-16.md` — WB-01~03, FG-01~03 전체 수정 완료, 이력만 progress.md에 유지

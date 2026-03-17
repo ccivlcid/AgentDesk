@@ -11,15 +11,15 @@ import { IconHeartbeat, IconTaskBoard, IconAlerts, IconCliCost, IconFlowGraph, I
 
 const mono = "var(--th-font-mono)";
 
-const WIDGET_IDS: { id: WidgetId; icon: (color: string) => React.ReactNode; label: string }[] = [
-  { id: "heartbeat",  icon: (c) => <IconHeartbeat color={c} />,  label: "Agents" },
-  { id: "task-board", icon: (c) => <IconTaskBoard color={c} />,  label: "Tasks" },
-  { id: "alerts",     icon: (c) => <IconAlerts color={c} />,     label: "Alerts" },
-  { id: "cli-usage",  icon: (c) => <IconCliCost color={c} />,    label: "CLI Cost" },
-  { id: "flow-graph", icon: (c) => <IconFlowGraph color={c} />,  label: "Flow" },
-  { id: "file-tree",  icon: (c) => <IconFileTree color={c} />,   label: "File Explorer" },
-  { id: "local-llm",  icon: (c) => <IconLocalLlm color={c} />,   label: "Local LLM" },
-  { id: "synapse", icon: (c) => <IconDockSynapse color={c} />, label: "Synapse" },
+const WIDGET_ICON_FNS: { id: WidgetId; icon: (color: string) => React.ReactNode }[] = [
+  { id: "heartbeat",  icon: (c) => <IconHeartbeat color={c} /> },
+  { id: "task-board", icon: (c) => <IconTaskBoard color={c} /> },
+  { id: "alerts",     icon: (c) => <IconAlerts color={c} /> },
+  { id: "cli-usage",  icon: (c) => <IconCliCost color={c} /> },
+  { id: "flow-graph", icon: (c) => <IconFlowGraph color={c} /> },
+  { id: "file-tree",  icon: (c) => <IconFileTree color={c} /> },
+  { id: "local-llm",  icon: (c) => <IconLocalLlm color={c} /> },
+  { id: "synapse",    icon: (c) => <IconDockSynapse color={c} /> },
 ];
 
 interface WidgetPickerProps {
@@ -66,8 +66,20 @@ export default function WidgetPicker({ onClose }: WidgetPickerProps) {
     }
   }
 
-  const WIDGET_DEFS = WIDGET_IDS.map((w) => ({
+  const WIDGET_LABEL: Record<string, string> = {
+    heartbeat:    t({ ko: "에이전트",     en: "Agents",        ja: "エージェント",       zh: "代理"     }),
+    "task-board": t({ ko: "태스크",       en: "Tasks",         ja: "タスク",            zh: "任务"     }),
+    alerts:       t({ ko: "알림",         en: "Alerts",        ja: "アラート",           zh: "警报"     }),
+    "cli-usage":  t({ ko: "CLI 비용",     en: "CLI Cost",      ja: "CLIコスト",          zh: "CLI成本"  }),
+    "flow-graph": t({ ko: "플로우 그래프", en: "Flow Graph",    ja: "フローグラフ",       zh: "流程图"   }),
+    "file-tree":  t({ ko: "파일 탐색기",  en: "File Explorer", ja: "ファイルエクスプローラー", zh: "文件管理" }),
+    "local-llm":  t({ ko: "로컬 LLM",    en: "Local LLM",     ja: "ローカルLLM",        zh: "本地LLM"  }),
+    synapse:      t({ ko: "시냅스",       en: "Synapse",       ja: "シナプス",           zh: "知识库"   }),
+  };
+
+  const WIDGET_DEFS = WIDGET_ICON_FNS.map((w) => ({
     ...w,
+    label: WIDGET_LABEL[w.id] ?? w.id,
     iconNode: w.icon(iconColor),
     desc: w.id === "heartbeat"  ? t({ ko: "에이전트 상태 실시간 목록", en: "Live agent status list", ja: "エージェント状態リスト", zh: "代理状态实时列表" }) :
           w.id === "task-board" ? t({ ko: "실행 중인 태스크 목록", en: "Active task list", ja: "アクティブタスク一覧", zh: "活动任务列表" }) :
@@ -75,7 +87,7 @@ export default function WidgetPicker({ onClose }: WidgetPickerProps) {
           w.id === "cli-usage"  ? t({ ko: "CLI 비용 요약", en: "CLI cost summary", ja: "CLIコスト概要", zh: "CLI成本摘要" }) :
           w.id === "flow-graph" ? t({ ko: "에이전트 플로우 그래프", en: "Agent flow graph", ja: "エージェントフローグラフ", zh: "代理流程图" }) :
           w.id === "file-tree"  ? t({ ko: "PC 파일 탐색기", en: "PC file explorer", ja: "PCファイルエクスプローラー", zh: "PC文件浏览器" }) :
-          w.id === "synapse" ? t({ ko: "지식 베이스 연결 현황", en: "Knowledge base connections", ja: "知識ベース接続状況", zh: "知识库连接状态" }) :
+          w.id === "synapse"    ? t({ ko: "지식 베이스 연결 현황", en: "Knowledge base connections", ja: "知識ベース接続状況", zh: "知识库连接状态" }) :
           t({ ko: "로컬 LLM 상태 모니터", en: "Local LLM status monitor", ja: "ローカルLLMモニター", zh: "本地LLM状态监控" }),
   }));
 

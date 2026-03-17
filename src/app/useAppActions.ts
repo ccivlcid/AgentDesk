@@ -90,7 +90,7 @@ export function useAppActions({
         handleApiError(error, showToast, { context: "Send message failed" });
       }
     },
-    [setMessages],
+    [setMessages, showToast],
   );
 
   const handleSendAnnouncement = useCallback(async (content: string) => {
@@ -99,7 +99,7 @@ export function useAppActions({
     } catch (error) {
       handleApiError(error, showToast, { context: "Announcement failed" });
     }
-  }, []);
+  }, [showToast]);
 
   const handleSendDirective = useCallback(async (content: string, projectMeta?: ProjectMetaPayload) => {
     try {
@@ -116,7 +116,7 @@ export function useAppActions({
     } catch (error) {
       handleApiError(error, showToast, { context: "Directive failed" });
     }
-  }, []);
+  }, [showToast]);
 
   const handleCreateTask = useCallback(
     async (input: {
@@ -146,7 +146,7 @@ export function useAppActions({
         handleApiError(error, showToast, { context: "Create task failed" });
       }
     },
-    [setTasks, setStats],
+    [setTasks, setStats, showToast],
   );
 
   const handleUpdateTask = useCallback(
@@ -210,7 +210,7 @@ export function useAppActions({
         handleApiError(error, showToast, { context: "Delete task failed" });
       }
     },
-    [setTasks],
+    [setTasks, showToast],
   );
 
   const refreshTasksAndAgents = useCallback(async () => {
@@ -228,7 +228,7 @@ export function useAppActions({
         handleApiError(error, showToast, { context: "Assign task failed" });
       }
     },
-    [refreshTasksAndAgents],
+    [refreshTasksAndAgents, showToast],
   );
 
   const handleRunTask = useCallback(
@@ -245,7 +245,7 @@ export function useAppActions({
         }
       }
     },
-    [refreshTasksAndAgents],
+    [refreshTasksAndAgents, showToast],
   );
 
   const handleStopTask = useCallback(
@@ -257,7 +257,7 @@ export function useAppActions({
         handleApiError(error, showToast, { context: "Stop task failed" });
       }
     },
-    [refreshTasksAndAgents],
+    [refreshTasksAndAgents, showToast],
   );
 
   const handlePauseTask = useCallback(
@@ -269,7 +269,7 @@ export function useAppActions({
         handleApiError(error, showToast, { context: "Pause task failed" });
       }
     },
-    [refreshTasksAndAgents],
+    [refreshTasksAndAgents, showToast],
   );
 
   const handleResumeTask = useCallback(
@@ -281,7 +281,7 @@ export function useAppActions({
         handleApiError(error, showToast, { context: "Resume task failed" });
       }
     },
-    [refreshTasksAndAgents],
+    [refreshTasksAndAgents, showToast],
   );
 
   const handleSaveSettings = useCallback(
@@ -315,7 +315,7 @@ export function useAppActions({
         handleApiError(error, showToast, { context: "Save settings failed" });
       }
     },
-    [settings, setSettings, setStats],
+    [settings, setSettings, showToast],
   );
 
   const handleDismissAutoUpdateNotice = useCallback(async () => {
@@ -364,7 +364,7 @@ export function useAppActions({
     } finally {
       setDecisionInboxLoading(false);
     }
-  }, [agents, settings.language, setDecisionInboxLoading, setDecisionInboxItems]);
+  }, [agents, settings.language, setDecisionInboxLoading, setDecisionInboxItems, showToast]);
 
   const handleOpenDecisionInbox = useCallback(() => {
     setShowDecisionInbox(true);
@@ -389,7 +389,7 @@ export function useAppActions({
       setShowDecisionInbox(false);
       handleOpenChat(matchedAgent);
     },
-    [agents, settings.language, setShowDecisionInbox, handleOpenChat],
+    [agents, settings.language, setShowDecisionInbox, handleOpenChat, showToast],
   );
 
   const handleReplyDecisionOption = useCallback(
@@ -491,7 +491,7 @@ export function useAppActions({
         setDecisionReplyBusyKey((prev) => (prev === busyKey ? null : prev));
       }
     },
-    [settings.language, setDecisionReplyBusyKey, setDecisionInboxItems, scheduleLiveSync, loadDecisionInbox],
+    [settings.language, setDecisionReplyBusyKey, setDecisionInboxItems, scheduleLiveSync, loadDecisionInbox, showToast],
   );
 
   const handleAgentsChange = useCallback(() => {
@@ -521,7 +521,7 @@ export function useAppActions({
         handleApiError(error, showToast, { context: "Clear messages failed" });
       }
     },
-    [setMessages],
+    [setMessages, showToast],
   );
 
   return {

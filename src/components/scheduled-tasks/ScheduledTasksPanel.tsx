@@ -156,7 +156,7 @@ export default function ScheduledTasksPanel({ agents = [], currentProjectId }: P
       );
     }, 300);
     return () => clearTimeout(timer);
-  }, [formCron, locale]);
+  }, [formCron, locale, language]);
 
   // ── Schedule helpers ──
   function resetForm() {

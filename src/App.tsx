@@ -30,9 +30,9 @@ export default function App() {
   // ── Agent store ──────────────────────────────────────────────────────────
   const {
     departments, agents, libraryAgents, subAgents, stats,
-    selectedAgent, chatAgent, showChat, unreadAgentIds, streamingMessage,
+    chatAgent, showChat, unreadAgentIds, streamingMessage,
     setDepartments, setAgents, setLibraryAgents, setSubAgents, setStats,
-    setSelectedAgent, setChatAgent, setShowChat, setUnreadAgentIds, setStreamingMessage,
+    setChatAgent, setShowChat, setUnreadAgentIds, setStreamingMessage,
   } = useAgentStore();
 
   // ── Task store ───────────────────────────────────────────────────────────
@@ -83,7 +83,7 @@ export default function App() {
         })
         .catch(() => { setProjectAgentsLoaded(true); }),
     );
-  }, [currentProjectId]);
+  }, [currentProjectId, setProjectAgentIds, setProjectAgentsLoaded]);
 
   const projectAgents = useMemo(() => {
     if (!currentProjectId) return agents;
@@ -167,7 +167,7 @@ export default function App() {
   const { openWindow } = useUiStore();
   useEffect(() => {
     if (oauthResult) openWindow("settings");
-  }, [oauthResult]);
+  }, [oauthResult, openWindow]);
 
   // ── Render ───────────────────────────────────────────────────────────────
   if (loading) {
@@ -215,42 +215,8 @@ export default function App() {
         onRefreshDecisionInbox={() => { void actions.loadDecisionInbox(); }}
         onReplyDecisionOption={actions.handleReplyDecisionOption}
         onOpenDecisionChat={actions.handleOpenDecisionChat}
-        selectedAgent={selectedAgent}
-        departments={departments}
-        tasks={tasks}
-        subAgents={subAgents}
-        subtasks={subtasks}
-        onCloseSelectedAgent={() => setSelectedAgent(null)}
-        onChatFromAgentDetail={(agent) => {
-          setSelectedAgent(null);
-          actions.handleOpenChat(agent);
-        }}
-        onAssignTaskFromAgentDetail={() => {
-          setSelectedAgent(null);
-          setShowCreateTask(true);
-        }}
-        onOpenTerminalFromAgentDetail={(taskId) => {
-          setSelectedAgent(null);
-          setTaskPanel({ taskId, tab: "terminal" });
-        }}
-        onAgentUpdated={() => {
-          api.getSettings()
-            .then(async (raw) => {
-              const nextSettings = mergeSettingsWithDefaults(raw);
-              const [nextAgents, nextLibrary] = await Promise.all([
-                api.getAgents({ includeSeed: false }),
-                api.getAgents({ includeSeed: true }),
-              ]);
-              setAgents(nextAgents);
-              setLibraryAgents(nextLibrary);
-              setSettings(nextSettings);
-              if (!selectedAgent) return;
-              const found = nextAgents.find((a) => a.id === selectedAgent.id);
-              if (found) setSelectedAgent(found);
-            })
-            .catch(console.error);
-        }}
         taskPanel={taskPanel}
+        tasks={tasks}
         onCloseTaskPanel={() => setTaskPanel(null)}
         taskReport={taskReport}
         onCloseTaskReport={() => setTaskReport(null)}

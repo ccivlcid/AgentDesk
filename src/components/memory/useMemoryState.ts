@@ -79,7 +79,7 @@ export function useMemoryState({ agents, departments, t, filters }: UseMemorySta
     } finally {
       setLoading(false);
     }
-  }, [filters?.scope_type, filters?.scope_id, filters?.category, filters?.enabled]);
+  }, [filters]);
 
   useEffect(() => {
     void loadEntries();
@@ -337,7 +337,7 @@ export function useMemoryState({ agents, departments, t, filters }: UseMemorySta
       if (added.length === 0) return prev;
       return [...added, ...prev].sort((a, b) => b.learned_at - a.learned_at);
     });
-  }, [learnJob?.id, learnJob?.status, learnJob?.memoryId, learnJob?.memoryTitle, learnJob?.providers, learnJob?.completedAt]);
+  }, [learnJob, learnJob?.id, learnJob?.status, learnJob?.memoryId, learnJob?.memoryTitle, learnJob?.providers, learnJob?.completedAt]);
 
   // Bump history on job completion (immediate + delayed to ensure server storage is reflected)
   useEffect(() => {
@@ -347,7 +347,7 @@ export function useMemoryState({ agents, departments, t, filters }: UseMemorySta
       setHistoryRefreshToken((t) => t + 1);
     }, 1200);
     return () => window.clearTimeout(id);
-  }, [learnJob?.id, learnJob?.status]);
+  }, [learnJob, learnJob?.id, learnJob?.status]);
 
   // ── Start learning ──────────────────────────────────────────────
   const handleStartLearning = useCallback(async () => {
@@ -428,8 +428,9 @@ export function useMemoryState({ agents, departments, t, filters }: UseMemorySta
 
   // Cleanup timers
   useEffect(() => {
+    const timers = unlearnEffectTimersRef.current;
     return () => {
-      for (const timerId of Object.values(unlearnEffectTimersRef.current)) {
+      for (const timerId of Object.values(timers)) {
         if (typeof timerId === "number") window.clearTimeout(timerId);
       }
     };

@@ -318,7 +318,7 @@ export function registerTaskReportRoutes(ctx: RuntimeContext): void {
     );
     // Remove remaining bare worktree absolute paths
     cleaned = cleaned.replace(
-      /[A-Za-z]:[\\\/][^\s]*?\.agentdesk-worktrees[\\\/][^\s)}\]"]*/g,
+      /[A-Za-z]:[/\\][^\s]*?\.agentdesk-worktrees[/\\][^\s)}[\]"]*/g,
       "",
     );
     // Clean up resulting empty list items like "- \n" or "- :"

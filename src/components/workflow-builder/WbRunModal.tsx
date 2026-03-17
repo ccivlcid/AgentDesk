@@ -243,7 +243,7 @@ export default function WbRunModal({ nodes, edges, workflowName, figmaUrl = "", 
 
     setPhase("done");
     onSuccess(taskIds);
-  }, [items, agentDeps, projectId, nodes, t, onSuccess]);
+  }, [items, agentDeps, projectId, nodes, t, onSuccess, currentProject, figmaUrl, projects]);
 
   const canRun = items.some((it) => it.agentId && it.taskTitle.trim()) && phase !== "running";
 

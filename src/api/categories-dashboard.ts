@@ -1,4 +1,4 @@
-import type { Category, ProjectObjective, ProjectRisk, ProjectGate, ProjectOutput, Persona } from "../types";
+import type { Category, Persona, ProjectGate, ProjectObjective, ProjectOutput, ProjectRisk } from "../types";
 
 const BASE = "/api";
 

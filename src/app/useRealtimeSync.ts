@@ -498,6 +498,7 @@ export function useRealtimeSync({
       }),
     ];
     return () => unsubs.forEach((fn) => fn());
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [on, scheduleLiveSync]);
 
   // Adaptive polling: fast when WS disconnected, slow reconciliation when connected

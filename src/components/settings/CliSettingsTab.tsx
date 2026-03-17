@@ -1,5 +1,33 @@
+import { useRef, useEffect } from "react";
 import { CLI_INFO } from "./constants";
 import type { CliSettingsTabProps } from "./types";
+
+function InstallLogPanel({ logs }: { logs: string[] }) {
+  const ref = useRef<HTMLPreElement>(null);
+  useEffect(() => {
+    if (ref.current) ref.current.scrollTop = ref.current.scrollHeight;
+  }, [logs]);
+  return (
+    <pre
+      ref={ref}
+      style={{
+        fontFamily: "var(--th-font-mono)",
+        fontSize: "9px",
+        color: "var(--th-text-muted)",
+        background: "var(--th-bg-elevated)",
+        border: "1px solid var(--th-border)",
+        padding: "4px 6px",
+        maxHeight: 100,
+        overflowY: "auto",
+        whiteSpace: "pre-wrap",
+        wordBreak: "break-all",
+        margin: 0,
+      }}
+    >
+      {logs.join("\n")}
+    </pre>
+  );
+}
 
 export default function CliSettingsTab({
   t,
@@ -10,6 +38,8 @@ export default function CliSettingsTab({
   setForm,
   persistSettings,
   onRefresh,
+  onInstall,
+  installJobs,
 }: CliSettingsTabProps) {
   return (
     <section
@@ -99,6 +129,49 @@ export default function CliSettingsTab({
                       )}
                     </div>
                   </div>
+
+                  {!status.installed && (() => {
+                    const job = installJobs[provider];
+                    const isRunning = job?.status === "running";
+                    const isDone = job?.status === "success" || job?.status === "failed";
+                    return (
+                      <div className="pl-0 sm:pl-8 space-y-1">
+                        <button
+                          type="button"
+                          disabled={isRunning}
+                          onClick={() => onInstall(provider)}
+                          className="transition-colors hover:opacity-80 disabled:opacity-50"
+                          style={{
+                            fontFamily: "var(--th-font-mono)",
+                            fontSize: "10px",
+                            color: isRunning ? "var(--th-text-muted)" : "var(--th-accent)",
+                            border: "1px solid var(--th-accent)",
+                            padding: "2px 8px",
+                            borderRadius: 0,
+                            background: "transparent",
+                            cursor: isRunning ? "default" : "pointer",
+                          }}
+                        >
+                          {isRunning
+                            ? t({ ko: "설치 중...", en: "Installing...", ja: "インストール中...", zh: "安装中..." })
+                            : t({ ko: "npm 설치", en: "npm install", ja: "npmインストール", zh: "npm安装" })}
+                        </button>
+                        {isDone && job?.status === "failed" && (
+                          <div className="text-xs font-mono" style={{ color: "#f87171" }}>
+                            {t({ ko: "설치 실패", en: "Install failed", ja: "インストール失敗", zh: "安装失败" })}
+                          </div>
+                        )}
+                        {isDone && job?.status === "success" && (
+                          <div className="text-xs font-mono" style={{ color: "#4ade80" }}>
+                            {t({ ko: "설치 완료", en: "Installed!", ja: "インストール完了!", zh: "安装完成!" })}
+                          </div>
+                        )}
+                        {job && job.logs.length > 0 && (
+                          <InstallLogPanel logs={job.logs} />
+                        )}
+                      </div>
+                    );
+                  })()}
 
                   {showModelSection && (
                     <div className="space-y-1.5 pl-0 sm:pl-8">
@@ -281,10 +354,10 @@ export default function CliSettingsTab({
 
       <p className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
         {t({
-          ko: "각 에이전트의 CLI 도구는 오피스에서 에이전트 클릭 후 변경할 수 있습니다. Copilot/Antigravity 모델은 OAuth 탭에서 설정합니다.",
-          en: "Each agent's CLI tool can be changed in Office by clicking an agent. Configure Copilot/Antigravity models in OAuth tab.",
-          ja: "各エージェントの CLI ツールは Office でエージェントをクリックして変更できます。Copilot/Antigravity のモデルは OAuth タブで設定してください。",
-          zh: "每个代理的 CLI 工具可在 Office 中点击代理后修改。Copilot/Antigravity 模型请在 OAuth 页签配置。",
+          ko: "각 에이전트의 CLI 도구는 에이전트 매니저에서 에이전트 클릭 후 변경할 수 있습니다. Copilot/Antigravity 모델은 OAuth 탭에서 설정합니다.",
+          en: "Each agent's CLI tool can be changed in Agent Manager by clicking an agent. Configure Copilot/Antigravity models in OAuth tab.",
+          ja: "各エージェントの CLI ツールはエージェントマネージャーでエージェントをクリックして変更できます。Copilot/Antigravity のモデルは OAuth タブで設定してください。",
+          zh: "每个代理的 CLI 工具可在代理管理器中点击代理后修改。Copilot/Antigravity 模型请在 OAuth 页签配置。",
         })}
       </p>
     </section>

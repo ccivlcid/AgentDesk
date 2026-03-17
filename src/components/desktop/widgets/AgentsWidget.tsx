@@ -16,7 +16,7 @@ const STATUS_COLOR: Record<AgentStatus, string> = {
 export default function AgentsWidget() {
   const { agents } = useAgentStore();
   const { currentProjectId, projectAgentIds, projectAgentsLoaded } = useProjectStore();
-  const { openWindow, selectedAgentId, setSelectedAgentId } = useUiStore();
+  const { openWindow, selectedAgentId, setSelectedAgentId, openCli } = useUiStore();
 
   const visibleAgents = currentProjectId && projectAgentsLoaded
     ? agents.filter((a) => projectAgentIds.has(a.id))
@@ -87,8 +87,18 @@ export default function AgentsWidget() {
                 transition: "background 0.1s",
                 background: selectedAgentId === agent.id ? "var(--th-accent-glow)" : undefined,
               }}
-              onMouseEnter={(e) => { if (selectedAgentId !== agent.id) (e.currentTarget as HTMLDivElement).style.background = "var(--th-hover-overlay-subtle)"; }}
-              onMouseLeave={(e) => { if (selectedAgentId !== agent.id) (e.currentTarget as HTMLDivElement).style.background = "none"; }}
+              onMouseEnter={(e) => {
+                const el = e.currentTarget as HTMLDivElement;
+                if (selectedAgentId !== agent.id) el.style.background = "var(--th-hover-overlay-subtle)";
+                const btn = el.querySelector<HTMLButtonElement>(".cli-btn");
+                if (btn) btn.style.opacity = "1";
+              }}
+              onMouseLeave={(e) => {
+                const el = e.currentTarget as HTMLDivElement;
+                if (selectedAgentId !== agent.id) el.style.background = "none";
+                const btn = el.querySelector<HTMLButtonElement>(".cli-btn");
+                if (btn) btn.style.opacity = "0";
+              }}
             >
               <span style={{ fontSize: 16 }}>{agent.avatar_emoji || "🤖"}</span>
               <div style={{ flex: 1, minWidth: 0 }}>
@@ -104,6 +114,27 @@ export default function AgentsWidget() {
               <span style={{ fontFamily: mono, fontSize: 9, color: STATUS_COLOR[agent.status] }}>
                 {STATUS_LABEL[agent.status]}
               </span>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); openCli(agent.id); }}
+                title={t({ ko: "CLI 열기", en: "Open CLI", ja: "CLI を開く", zh: "打开 CLI" })}
+                className="cli-btn"
+                style={{
+                  fontFamily: mono,
+                  fontSize: 9,
+                  background: "none",
+                  border: "1px solid rgba(50,173,230,0.3)",
+                  borderRadius: 3,
+                  color: "#32ade6",
+                  padding: "1px 4px",
+                  cursor: "pointer",
+                  opacity: 0,
+                  transition: "opacity 0.15s",
+                  flexShrink: 0,
+                }}
+              >
+                &gt;_
+              </button>
             </div>
           ))
         )}

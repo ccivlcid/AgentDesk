@@ -1,4 +1,5 @@
-import { useEffect, useCallback, useState, type MouseEvent } from "react";
+import { useEffect, useCallback, useState, useRef, type MouseEvent } from "react";
+import { createPortal } from "react-dom";
 import { useI18n } from "../../i18n";
 import type { Agent, Department, Task, SubAgent, CrossDeptDelivery, MeetingPresence } from "../../types";
 import { useFlowLayout } from "./useFlowLayout";
@@ -6,6 +7,7 @@ import { useViewTransform } from "./useViewTransform";
 import AgentNode from "./nodes/AgentNode";
 import MeetingCluster from "./nodes/MeetingCluster";
 import FlowEdge from "./edges/FlowEdge";
+import { useUiStore } from "../../store/uiStore";
 
 interface AgentFlowGraphProps {
   agents: Agent[];
@@ -31,9 +33,12 @@ export default function AgentFlowGraph({
   onSelectAgent,
 }: AgentFlowGraphProps) {
   const { t } = useI18n();
+  const { openCli } = useUiStore();
   const [filter, setFilter] = useState<FilterType>("all");
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [ctxMenu, setCtxMenu] = useState<{ agentId: string; x: number; y: number } | null>(null);
+  const ctxMenuRef = useRef<HTMLDivElement>(null);
 
   const { nodes, edges, meetings } = useFlowLayout({
     agents,
@@ -65,16 +70,28 @@ export default function AgentFlowGraph({
       const timer = setTimeout(() => fitToView(nodes), 100);
       return () => clearTimeout(timer);
     }
-  }, [nodes.length, fitToView]);
+  }, [nodes, nodes.length, fitToView]);
 
-  // Esc key to deselect
+  // Esc key to deselect / close context menu
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setSelectedNodeId(null);
+      if (e.key === "Escape") { setSelectedNodeId(null); setCtxMenu(null); }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, []);
+
+  // Click outside to close context menu
+  useEffect(() => {
+    if (!ctxMenu) return;
+    const handler = (e: globalThis.MouseEvent) => {
+      if (ctxMenuRef.current && !ctxMenuRef.current.contains(e.target as Node)) {
+        setCtxMenu(null);
+      }
+    };
+    window.addEventListener("mousedown", handler);
+    return () => window.removeEventListener("mousedown", handler);
+  }, [ctxMenu]);
 
   const handleNodeClick = useCallback((agentId: string) => {
     setSelectedNodeId(agentId);
@@ -311,6 +328,7 @@ export default function AgentFlowGraph({
                 onClick={handleNodeClick}
                 onMouseEnter={setHoveredNodeId}
                 onMouseLeave={() => setHoveredNodeId(null)}
+                onContextMenu={(agentId, x, y) => setCtxMenu({ agentId, x, y })}
               />
             );
           })}
@@ -342,6 +360,52 @@ export default function AgentFlowGraph({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Context menu */}
+      {ctxMenu && createPortal(
+        <div
+          ref={ctxMenuRef}
+          style={{
+            position: "fixed",
+            top: ctxMenu.y,
+            left: ctxMenu.x,
+            zIndex: 9000,
+            background: "var(--th-bg-elevated)",
+            border: "1px solid var(--th-border)",
+            borderRadius: 7,
+            boxShadow: "0 8px 24px rgba(0,0,0,0.32)",
+            padding: "4px 0",
+            minWidth: 140,
+            fontFamily: mono,
+            fontSize: 11,
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => { openCli(ctxMenu.agentId); setCtxMenu(null); }}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              width: "100%",
+              padding: "7px 14px",
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              fontFamily: mono,
+              fontSize: 11,
+              color: "#32ade6",
+              textAlign: "left",
+            }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--th-hover-bg)"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "none"; }}
+          >
+            <span style={{ fontSize: 12, lineHeight: 1 }}>&gt;_</span>
+            {t({ ko: "CLI 열기", en: "Open CLI", ja: "CLIを開く", zh: "打开 CLI" })}
+          </button>
+        </div>,
+        document.body,
       )}
 
       {/* Legend */}

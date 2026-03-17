@@ -48,7 +48,7 @@ export function registerTaskTerminalRoutes(ctx: RuntimeContext): void {
     const raw = fs.readFileSync(filePath, "utf8");
     const parts = raw.split(/\r?\n/);
     const tail = parts.slice(Math.max(0, parts.length - lines)).join("\n");
-    let text = pretty ? prettyStreamJson(tail, { includeReasoning: false }) : tail;
+    const text = pretty ? prettyStreamJson(tail, { includeReasoning: false }) : tail;
     let progressHints: ReturnType<typeof buildTerminalProgressHints> | null = null;
     let thinkingBlocks: ReturnType<typeof extractThinkingBlocks> | null = null;
     if (hasStructuredJsonLines(tail)) {

@@ -168,7 +168,7 @@ export function TaskBoard({
     getProjects({ page_size: 200 })
       .then((res) => setProjects(res.projects.map((p) => ({ id: p.id, name: p.name }))))
       .catch(() => { showToast("Failed to load projects.", "error"); });
-  }, []);
+  }, [showToast]);
 
   // Sync project filter when sidebar project selection changes
   useEffect(() => {

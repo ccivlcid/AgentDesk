@@ -349,7 +349,7 @@ async function forwardTelegramUpdate(params: {
     return "skipped";
   }
 
-  let text = normalizeText(message.text) || normalizeText(message.caption);
+  const text = normalizeText(message.text) || normalizeText(message.caption);
   if (!text) {
     return "skipped";
   }

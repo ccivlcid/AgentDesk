@@ -82,7 +82,7 @@ export default function GanttChart({ tasks, agents, departments }: Props) {
     const start = minStart - 86_400_000;
     const end = maxEnd + 86_400_000;
     return { start, end, days: Math.max(daysBetween(start, end), 1) };
-  }, [chartTasks]);
+  }, [chartTasks, nowMs]);
 
   // Column width based on zoom
   const colWidth = zoom === "day" ? 40 : zoom === "week" ? 24 : 12;

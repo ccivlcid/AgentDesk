@@ -1,6 +1,6 @@
-import { request, post, patch, del } from "./core";
+import { del, patch, post, request } from "./core";
 
-import type { MemoryEntry, MemoryCategory, MemoryScopeType } from "../types";
+import type { MemoryCategory, MemoryEntry, MemoryScopeType } from "../types";
 
 export type { MemoryEntry };
 

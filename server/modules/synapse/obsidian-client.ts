@@ -1,5 +1,5 @@
 /**
- * Harness — Obsidian client
+ * Synapse — Obsidian client
  * Mode A: Local filesystem (readdir + fs.readFile)
  * Mode B: Obsidian Local REST API Plugin (http://localhost:27123)
  */

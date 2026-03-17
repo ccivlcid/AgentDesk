@@ -321,6 +321,7 @@ export default function AgentDetail({
       onAgentUpdated,
       savingPlanningLead,
       t,
+      confirm,
     ],
   );
 

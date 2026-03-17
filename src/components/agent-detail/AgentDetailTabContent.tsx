@@ -60,7 +60,7 @@ export default function AgentDetailTabContent({
     api.getAgentPersona(agent.id).then((text) => setPersonaText(text || null)).catch(() => setPersonaText(null));
     api.getAgentCostSummary(agent.id).then((s) => setCostSummary(s)).catch(() => setCostSummary(null));
     fetchPersonas().then((ps) => setPersonas(ps)).catch(() => setPersonas([]));
-  }, [agent.id, tab]);
+  }, [agent.id, agent.persona_id, tab]);
 
   function startEditPersona() {
     setEditDraft(personaText ?? "");

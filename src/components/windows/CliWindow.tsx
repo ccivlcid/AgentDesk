@@ -1,18 +1,25 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import AppWindow from "./AppWindow";
 import { useAgentStore } from "../../store/agentStore";
 import { useProjectStore } from "../../store/projectStore";
+import { useUiStore } from "../../store/uiStore";
 import { useI18n } from "../../i18n";
 
-const AgentRepl = lazy(() => import("../AgentRepl"));
+const AgentCli = lazy(() => import("../AgentCli"));
 
-export default function ReplWindow() {
+export default function CliWindow() {
   const { t } = useI18n();
   const { agents } = useAgentStore();
   const { projects, currentProjectId, projectAgentIds, projectAgentsLoaded } = useProjectStore();
+  const { cliInitialAgentId, clearCliInitialAgentId } = useUiStore();
+
+  // Clear stale initialAgentId after this mount consumes it
+  useEffect(() => {
+    if (cliInitialAgentId) clearCliInitialAgentId();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const currentProject = projects.find((p) => p.id === currentProjectId) ?? null;
 
-  // 프로젝트가 선택돼있고 에이전트 목록이 로드됐으면 프로젝트 에이전트만, 아니면 전체
   const filteredAgents = currentProject && projectAgentsLoaded && projectAgentIds.size > 0
     ? agents.filter((a) => projectAgentIds.has(a.id))
     : agents;
@@ -35,7 +42,7 @@ export default function ReplWindow() {
             {t({ ko: "로딩 중...", en: "loading...", ja: "読み込み中...", zh: "加载中..." })}
           </div>
         }>
-          <AgentRepl agents={filteredAgents} currentProject={currentProject} />
+          <AgentCli agents={filteredAgents} currentProject={currentProject} initialAgentId={cliInitialAgentId} />
         </Suspense>
       </div>
     </AppWindow>

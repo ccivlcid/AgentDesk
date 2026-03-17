@@ -96,7 +96,7 @@ export function initializeCollabCoordination(ctx: RuntimeContext): any {
     }
 
     // 1b. Explicit absolute path in message (Windows: C:\path\to\project)
-    const winAbsMatch = message.match(/(?:^|\s)([A-Za-z]:[\\\/][\w.\\/ -]+)/);
+    const winAbsMatch = message.match(/(?:^|\s)([A-Za-z]:[/\\][\w./\\ -]+)/);
     if (winAbsMatch) {
       const p = winAbsMatch[1].replace(/[\\/]+$/, ""); // trim trailing slashes
       if (isDirectorySafe(p)) return p;

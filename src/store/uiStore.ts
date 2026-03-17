@@ -116,6 +116,11 @@ interface UiStore {
   setJiggleMode: (v: boolean) => void;
   setMissionControlOpen: (v: boolean) => void;
 
+  // ── Agent CLI ─────────────────────────────────────────────────────
+  cliInitialAgentId: string | null;
+  openCli: (agentId?: string) => void;
+  clearCliInitialAgentId: () => void;
+
   // ── Project Folders ───────────────────────────────────────────────
   openFolders: Set<string>;
   openFolder: (id: string) => void;
@@ -169,10 +174,16 @@ export const useUiStore = create<UiStore>()((set) => ({
   // ── 데스크톱 OS 초기값 ────────────────────────────────────────────
   openWindows: new Set<WindowType>(),
   settingsInitialTab: null,
+  cliInitialAgentId: null,
   openSettings: (tab) => set((s) => ({
     openWindows: new Set([...s.openWindows, "settings" as WindowType]),
     settingsInitialTab: tab ?? null,
   })),
+  openCli: (agentId) => set((s) => ({
+    openWindows: new Set([...s.openWindows, "cli" as WindowType]),
+    cliInitialAgentId: agentId ?? null,
+  })),
+  clearCliInitialAgentId: () => set({ cliInitialAgentId: null }),
   widgetLayout: loadWidgetLayout(),
   desktopIconLayout: loadDesktopIconLayout(),
   desktopIconLabels: loadDesktopIconLabels(),

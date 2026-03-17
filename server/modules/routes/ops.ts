@@ -32,6 +32,7 @@ import { registerLocalLlmRoutes } from "./ops/local-llm.ts";
 import { registerSynapseRoutes } from "./ops/synapse.ts";
 import { registerImageStudioRoutes } from "./ops/image-studio.ts";
 import { registerProjectFolderRoutes } from "./ops/project-folders.ts";
+import { registerCliInstallRoutes } from "./ops/cli-install.ts";
 
 export function registerRoutesPartC(ctx: RuntimeContext): RouteOpsExports {
   const __ctx: RuntimeContext = ctx;
@@ -275,6 +276,7 @@ export function registerRoutesPartC(ctx: RuntimeContext): RouteOpsExports {
   registerSynapseRoutes({ app, db });
   registerImageStudioRoutes({ app, db, broadcast });
   registerProjectFolderRoutes({ app, db, nowMs });
+  registerCliInstallRoutes({ app });
 
   // ---------------------------------------------------------------------------
   // Queue status API (P2-3)

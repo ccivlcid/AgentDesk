@@ -11,6 +11,7 @@ interface AgentNodeProps {
   onClick?: (agentId: string) => void;
   onMouseEnter?: (agentId: string) => void;
   onMouseLeave?: () => void;
+  onContextMenu?: (agentId: string, x: number, y: number) => void;
 }
 
 export default function AgentNode({
@@ -22,6 +23,7 @@ export default function AgentNode({
   onClick,
   onMouseEnter,
   onMouseLeave,
+  onContextMenu,
 }: AgentNodeProps) {
   const { t, language } = useI18n();
   const { agent, x, y, width, height, deptLabel, deptColor, type } = node;
@@ -202,6 +204,10 @@ export default function AgentNode({
         onClick={() => onClick?.(agent.id)}
         onMouseEnter={() => onMouseEnter?.(agent.id)}
         onMouseLeave={() => onMouseLeave?.()}
+        onContextMenu={(e) => {
+          e.preventDefault();
+          onContextMenu?.(agent.id, e.clientX, e.clientY);
+        }}
       />
     </g>
   );

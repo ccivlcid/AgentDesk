@@ -148,6 +148,7 @@ export function createApiProviderTools(deps: CreateApiProviderToolsDeps) {
     const apiKey = provider.api_key_enc ? decryptSecret(provider.api_key_enc) : "";
     const baseUrl = normalizeApiBaseUrl(provider.base_url);
     // Sanitize projectPath to prevent prompt injection via CRLF or control characters
+    // eslint-disable-next-line no-control-regex
     const safeProjectPath = projectPath.replace(/[\r\n\t\x00-\x1f\x7f]/g, " ").trim().slice(0, 512);
 
     if (provider.type === "anthropic") {

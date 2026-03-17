@@ -802,6 +802,114 @@ Cross-project source linking. Completed deliverables from source projects are in
 
 ---
 
+## Synapse API (Knowledge Base)
+
+Base prefix: `/api/synapse`
+
+Connects external knowledge bases (Notion, Obsidian, NotebookLM, Figma) to AgentDesk. Credentials stored in `synapse_connections` table.
+
+### Connections
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/synapse/connections` | List all connected platforms (secrets stripped) |
+| `DELETE` | `/api/synapse/connections/:platform` | Disconnect a platform |
+
+### Notion
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/api/synapse/notion/connect` | Connect with OAuth token (`{ token }`) |
+| `GET` | `/api/synapse/notion/info` | Workspace info (name, icon) |
+| `GET` | `/api/synapse/notion/pages?q=` | Search pages by title |
+| `GET` | `/api/synapse/notion/page/:id/content` | Fetch page content as markdown |
+
+### Obsidian
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/api/synapse/obsidian/validate` | Validate vault path (`{ vault_path }`) |
+| `POST` | `/api/synapse/obsidian/connect` | Connect vault (filesystem or REST API plugin) |
+| `POST` | `/api/synapse/obsidian/ping-rest` | Ping Obsidian REST API plugin |
+| `GET` | `/api/synapse/obsidian/info` | Vault info (path, file count) |
+| `GET` | `/api/synapse/obsidian/files?q=` | List / search vault files |
+| `GET` | `/api/synapse/obsidian/file?path=` | Read a vault file as markdown |
+
+### Export
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/api/synapse/export/notion` | Export deliverable content to a Notion page |
+| `POST` | `/api/synapse/export/obsidian` | Write deliverable content to an Obsidian vault file |
+
+### Figma
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/api/synapse/figma/connect` | Connect with Personal Access Token (`{ token }`) |
+| `GET` | `/api/synapse/figma/info` | Figma connection status + token user info |
+
+### NotebookLM Snapshots
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/synapse/notebooklm/snapshots` | List saved NotebookLM summaries |
+| `POST` | `/api/synapse/notebooklm/snapshots` | Save a new summary (`{ title, content }`) |
+| `DELETE` | `/api/synapse/notebooklm/snapshots/:id` | Delete a snapshot |
+
+### Context Fetch
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/api/synapse/context` | Fetch KB context block for given sources (used internally at task execution) |
+
+**Request body:**
+```json
+{ "sources": [{ "platform": "notion", "ref": "page_id" }, { "platform": "obsidian", "ref": "path/to/file.md" }] }
+```
+
+### Automation Rules
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/synapse/rules` | List automation rules |
+| `POST` | `/api/synapse/rules` | Create rule (`{ name, source, trigger_json, condition_json, action_json }`) |
+| `PUT` | `/api/synapse/rules/:id` | Update rule |
+| `DELETE` | `/api/synapse/rules/:id` | Delete rule |
+
+---
+
+## Project Folders API (Phase 17)
+
+Base prefix: `/api/project-folders`
+
+Groups projects into folder containers. Folder move optionally renames the directory on disk.
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/project-folders` | List all folders (with project count) |
+| `POST` | `/api/project-folders` | Create folder (`{ name, base_path?, color? }`) |
+| `PATCH` | `/api/project-folders/:id` | Rename/recolor folder |
+| `DELETE` | `/api/project-folders/:id` | Delete folder (projects unlinked, not deleted) |
+| `POST` | `/api/project-folders/:id/projects` | Add a project to folder (`{ project_id }`) |
+| `DELETE` | `/api/project-folders/:id/projects/:projectId` | Remove project from folder |
+
+**Folder response shape:**
+```json
+{
+  "id": "folder_uuid",
+  "name": "2026 Projects",
+  "base_path": "/home/user/projects",
+  "color": "#f59e0b",
+  "project_count": 3,
+  "created_at": 1710000000000
+}
+```
+
+**Disk move behavior:** When a project is added to a folder with `base_path`, `fs.renameSync` is attempted. On failure, DB is updated and `{ moved_on_disk: false }` is returned (non-fatal).
+
+---
+
 ## Known Follow-up
 
 - Incrementally expand the OpenAPI spec: auth/session, tasks/subtasks, inbox/directives, project/github, categories, project team, dashboard quadrants, etc.

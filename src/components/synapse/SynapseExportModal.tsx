@@ -1,5 +1,5 @@
 /**
- * Harness Export Modal — deliverable를 Notion/Obsidian으로 내보내기 (Phase 2)
+ * Synapse Export Modal — deliverable를 Notion/Obsidian으로 내보내기 (Phase 2)
  */
 import { useState, useEffect } from "react";
 import {

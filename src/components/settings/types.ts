@@ -1,6 +1,7 @@
 import type { Dispatch, SetStateAction } from "react";
 import type { ApiProvider, ApiProviderType, DeviceCodeStart, OAuthConnectProvider, OAuthStatus } from "../../api";
 import type { UiLanguage } from "../../i18n";
+import type { CliInstallJob } from "../../api/cli-install";
 import type {
   Agent,
   CliModelInfo,
@@ -57,6 +58,8 @@ export interface CliSettingsTabProps {
   setForm: SetLocalSettings;
   persistSettings: (next: LocalSettings) => void;
   onRefresh: () => void;
+  onInstall: (provider: string) => void;
+  installJobs: Record<string, CliInstallJob | null>;
 }
 
 export interface OAuthCommonProps {

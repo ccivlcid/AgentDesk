@@ -238,18 +238,18 @@ export function useTerminalPanelData({
   const hasInterruptProof = Boolean(interruptProof?.session_id && interruptProof?.control_token);
   const canAttemptInterrupt = hasAssignedAgent || hasInterruptProof;
 
-  async function fetchInterruptProofNow() {
+  const fetchInterruptProofNow = useCallback(async () => {
     const latest = await api.getTerminal(taskId, TERMINAL_TAIL_LINES, true, TERMINAL_TASK_LOG_LIMIT);
     if (!latest.ok) return null;
     setInterruptProof(latest.interrupt ?? null);
     return latest.interrupt ?? null;
-  }
+  }, [taskId]);
 
-  async function fetchInterruptProofWithRetry(maxAttempts = 4): Promise<{
+  const fetchInterruptProofWithRetry = useCallback(async (maxAttempts = 4): Promise<{
     session_id: string;
     control_token: string;
     requires_csrf: boolean;
-  } | null> {
+  } | null> => {
     for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
       const proof = await fetchInterruptProofNow();
       if (proof?.session_id && proof.control_token) return proof;
@@ -258,7 +258,7 @@ export function useTerminalPanelData({
       }
     }
     return null;
-  }
+  }, [fetchInterruptProofNow]);
 
   const handlePauseOnly = useCallback(async () => {
     try {
@@ -393,6 +393,7 @@ export function useTerminalPanelData({
     hasAssignedAgent,
     fetchTerminal,
     tr,
+    fetchInterruptProofWithRetry,
   ]);
 
   const handleResumeOnly = useCallback(async () => {

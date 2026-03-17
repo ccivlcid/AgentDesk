@@ -9,6 +9,8 @@ import { useTheme } from "../../ThemeContext";
 import AgentDetailHeader from "./AgentDetailHeader";
 import AgentDetailCurrentTask from "./AgentDetailCurrentTask";
 import AgentDetailSections from "./AgentDetailSections";
+import AgentChatTab from "./AgentChatTab";
+import AgentTimeline from "./AgentTimeline";
 
 export interface AgentDetailData {
   skills: Array<{ id: string; name: string; description?: string }>;
@@ -18,14 +20,24 @@ export interface AgentDetailData {
   cost: { thisMonthUsd: number; thisMonthTokens: number; totalTokens: number } | null;
 }
 
+type TabKey = "overview" | "tasks" | "chat" | "timeline";
+
+const TABS: { key: TabKey; ko: string; en: string; ja: string; zh: string }[] = [
+  { key: "overview", ko: "개요",    en: "Overview",  ja: "概要",     zh: "概览"   },
+  { key: "tasks",    ko: "업무",    en: "Tasks",     ja: "タスク",   zh: "任务"   },
+  { key: "chat",     ko: "채팅",    en: "Chat",      ja: "チャット", zh: "聊天"   },
+  { key: "timeline", ko: "타임라인", en: "Timeline",  ja: "タイムライン", zh: "时间线" },
+];
+
 export default function AgentDetailPanel() {
-  const { selectedAgentId, setSelectedAgentId } = useUiStore();
+  const { selectedAgentId, setSelectedAgentId, openCli } = useUiStore();
   const { agents, departments } = useAgentStore();
   const { tasks, setTaskPanel } = useTaskStore();
   const { t } = useI18n();
   const { theme } = useTheme();
   const isLight = theme === "light";
 
+  const [activeTab, setActiveTab] = useState<TabKey>("overview");
   const [data, setData] = useState<AgentDetailData>({
     skills: [], rules: [], memories: [], recentTasks: [], cost: null,
   });
@@ -34,12 +46,14 @@ export default function AgentDetailPanel() {
   const agent = agents.find((a) => a.id === selectedAgentId) ?? null;
   const department = agent?.department_id ? departments.find((d) => d.id === agent.department_id) ?? null : null;
   const currentTask = agent?.current_task_id ? tasks.find((tk) => tk.id === agent.current_task_id) ?? null : null;
+  const agentTasks = agent ? tasks.filter((tk) => tk.assigned_agent_id === agent.id) : [];
 
   const prevIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!selectedAgentId || selectedAgentId === prevIdRef.current) return;
     prevIdRef.current = selectedAgentId;
+    setActiveTab("overview");
     setLoading(true);
     setData({ skills: [], rules: [], memories: [], recentTasks: [], cost: null });
 
@@ -101,10 +115,12 @@ export default function AgentDetailPanel() {
     overlayBg:    "rgba(0,0,0,0.25)",
     overlayBlur:  "blur(4px)",
     titleText:    "rgba(0,0,0,0.35)",
+    tabActive:    "rgba(0,0,0,0.85)",
+    tabInactive:  "rgba(0,0,0,0.35)",
+    tabBorder:    "rgba(0,0,0,0.07)",
     dot0:         "#ff5f57",
     dot1:         "#febc2e",
     dot2:         "#28c840",
-    dotInactive:  "rgba(0,0,0,0.12)",
     escBg:        "rgba(0,0,0,0.05)",
     escBorder:    "rgba(0,0,0,0.08)",
     escColor:     "rgba(0,0,0,0.35)",
@@ -112,6 +128,10 @@ export default function AgentDetailPanel() {
     escHoverColor:"rgba(0,0,0,0.7)",
     logBg:        "rgba(48,209,88,0.1)",
     logBorder:    "rgba(48,209,88,0.25)",
+    taskBg:       "rgba(0,0,0,0.03)",
+    taskBorder:   "rgba(0,0,0,0.06)",
+    taskText:     "rgba(0,0,0,0.6)",
+    taskMuted:    "rgba(0,0,0,0.35)",
   } : {
     bg:           "rgba(13,15,22,0.96)",
     border:       "rgba(255,255,255,0.1)",
@@ -122,10 +142,12 @@ export default function AgentDetailPanel() {
     overlayBg:    "rgba(0,0,0,0.55)",
     overlayBlur:  "blur(8px)",
     titleText:    "rgba(255,255,255,0.3)",
+    tabActive:    "rgba(255,255,255,0.88)",
+    tabInactive:  "rgba(255,255,255,0.32)",
+    tabBorder:    "rgba(255,255,255,0.07)",
     dot0:         "#ff5f57",
     dot1:         "#febc2e",
     dot2:         "#28c840",
-    dotInactive:  "rgba(255,255,255,0.12)",
     escBg:        "rgba(255,255,255,0.05)",
     escBorder:    "rgba(255,255,255,0.09)",
     escColor:     "rgba(255,255,255,0.35)",
@@ -133,6 +155,20 @@ export default function AgentDetailPanel() {
     escHoverColor:"rgba(255,255,255,0.7)",
     logBg:        "rgba(48,209,88,0.12)",
     logBorder:    "rgba(48,209,88,0.25)",
+    taskBg:       "rgba(255,255,255,0.03)",
+    taskBorder:   "rgba(255,255,255,0.07)",
+    taskText:     "rgba(255,255,255,0.7)",
+    taskMuted:    "rgba(255,255,255,0.3)",
+  };
+
+  const mono = "var(--th-font-mono, monospace)";
+
+  const STATUS_COLOR: Record<string, string> = {
+    done: "#30d158",
+    in_progress: "var(--th-accent)",
+    pending: tk.taskMuted,
+    failed: "#ff453a",
+    cancelled: tk.taskMuted,
   };
 
   return createPortal(
@@ -177,8 +213,8 @@ export default function AgentDetailPanel() {
             style={{
               position: "relative",
               zIndex: 1,
-              width: 440,
-              maxHeight: "calc(100dvh - 100px)",
+              width: 640,
+              maxHeight: "calc(100dvh - 80px)",
               display: "flex",
               flexDirection: "column",
               background: tk.bg,
@@ -218,7 +254,7 @@ export default function AgentDetailPanel() {
 
               <span style={{
                 flex: 1,
-                fontFamily: "var(--th-font-mono, monospace)",
+                fontFamily: mono,
                 fontSize: 11,
                 color: tk.titleText,
                 letterSpacing: "0.06em",
@@ -229,6 +265,30 @@ export default function AgentDetailPanel() {
                   : t({ ko: "에이전트 상세", en: "Agent Detail", ja: "エージェント詳細", zh: "代理详情" })}
               </span>
 
+              {/* CLI 버튼 */}
+              {agent && (
+                <button
+                  type="button"
+                  onClick={() => { openCli(agent.id); close(); }}
+                  title={t({ ko: "Agent CLI 열기", en: "Open Agent CLI", ja: "Agent CLI を開く", zh: "打开 Agent CLI" })}
+                  style={{
+                    fontFamily: mono,
+                    fontSize: 10,
+                    background: "rgba(50,173,230,0.10)",
+                    border: "1px solid rgba(50,173,230,0.25)",
+                    borderRadius: 5,
+                    color: "#32ade6",
+                    padding: "2px 8px",
+                    cursor: "pointer",
+                    letterSpacing: "0.04em",
+                  }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(50,173,230,0.22)"; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(50,173,230,0.10)"; }}
+                >
+                  &gt;_
+                </button>
+              )}
+
               {/* 로그 버튼 — 실행 중 태스크가 있을 때만 */}
               {currentTask && (
                 <button
@@ -236,7 +296,7 @@ export default function AgentDetailPanel() {
                   onClick={openTerminal}
                   title={t({ ko: "실시간 로그 보기", en: "View live log", ja: "ライブログ", zh: "查看日志" })}
                   style={{
-                    fontFamily: "var(--th-font-mono, monospace)",
+                    fontFamily: mono,
                     fontSize: 10,
                     background: tk.logBg,
                     border: `1px solid ${tk.logBorder}`,
@@ -261,7 +321,7 @@ export default function AgentDetailPanel() {
                 type="button"
                 onClick={close}
                 style={{
-                  fontFamily: "var(--th-font-mono, monospace)",
+                  fontFamily: mono,
                   fontSize: 10,
                   background: tk.escBg,
                   border: `1px solid ${tk.escBorder}`,
@@ -284,25 +344,105 @@ export default function AgentDetailPanel() {
               </button>
             </div>
 
+            {/* 탭 바 */}
+            <div style={{
+              display: "flex",
+              borderBottom: `1px solid ${tk.tabBorder}`,
+              background: tk.headerBg,
+              flexShrink: 0,
+              padding: "0 14px",
+            }}>
+              {TABS.map((tab) => (
+                <button
+                  key={tab.key}
+                  type="button"
+                  onClick={() => setActiveTab(tab.key)}
+                  style={{
+                    fontFamily: mono,
+                    fontSize: 10,
+                    fontWeight: activeTab === tab.key ? 700 : 400,
+                    letterSpacing: "0.07em",
+                    padding: "8px 12px",
+                    background: "transparent",
+                    border: "none",
+                    borderBottom: `2px solid ${activeTab === tab.key ? "var(--th-accent)" : "transparent"}`,
+                    color: activeTab === tab.key ? "var(--th-accent)" : tk.tabInactive,
+                    cursor: "pointer",
+                    transition: "color 0.12s",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {t({ ko: tab.ko, en: tab.en, ja: tab.ja, zh: tab.zh })}
+                </button>
+              ))}
+            </div>
+
             {/* 본문 */}
             <div style={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
               {!agent ? (
                 <div style={{
                   display: "flex", alignItems: "center", justifyContent: "center",
                   height: 160,
-                  fontFamily: "var(--th-font-mono, monospace)",
+                  fontFamily: mono,
                   fontSize: 11,
                   color: isLight ? "rgba(0,0,0,0.3)" : "rgba(255,255,255,0.25)",
                 }}>
                   {t({ ko: "에이전트를 선택하세요", en: "Select an agent", ja: "エージェントを選択", zh: "选择代理" })}
                 </div>
-              ) : (
+              ) : activeTab === "overview" ? (
                 <>
                   <AgentDetailHeader agent={agent} department={department} isLight={isLight} />
                   <AgentDetailCurrentTask task={currentTask} onOpenTerminal={openTerminal} isLight={isLight} />
                   <AgentDetailSections data={data} loading={loading} isLight={isLight} />
                 </>
-              )}
+              ) : activeTab === "tasks" ? (
+                <div style={{ padding: "12px 16px" }}>
+                  {agentTasks.length === 0 ? (
+                    <div style={{ fontFamily: mono, fontSize: 11, color: tk.taskMuted, textAlign: "center", paddingTop: 40 }}>
+                      {t({ ko: "할당된 업무 없음", en: "No tasks assigned", ja: "タスクなし", zh: "无任务" })}
+                    </div>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                      {agentTasks.map((task) => (
+                        <div
+                          key={task.id}
+                          style={{
+                            background: tk.taskBg,
+                            border: `1px solid ${tk.taskBorder}`,
+                            borderRadius: 8,
+                            padding: "10px 12px",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 10,
+                            cursor: "pointer",
+                          }}
+                          onClick={() => {
+                            setTaskPanel({ taskId: task.id, tab: "terminal" });
+                            close();
+                          }}
+                        >
+                          <span style={{
+                            width: 7, height: 7, borderRadius: "50%", flexShrink: 0,
+                            background: STATUS_COLOR[task.status] ?? tk.taskMuted,
+                          }} />
+                          <span style={{ fontFamily: mono, fontSize: 11, color: tk.taskText, flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            {task.title}
+                          </span>
+                          <span style={{ fontFamily: mono, fontSize: 9, color: tk.taskMuted, flexShrink: 0, letterSpacing: "0.06em" }}>
+                            {task.status.toUpperCase()}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : activeTab === "chat" ? (
+                <AgentChatTab agent={agent} />
+              ) : activeTab === "timeline" ? (
+                <div style={{ padding: "4px 0" }}>
+                  <AgentTimeline agentId={agent.id} t={t} />
+                </div>
+              ) : null}
             </div>
           </motion.div>
         </div>

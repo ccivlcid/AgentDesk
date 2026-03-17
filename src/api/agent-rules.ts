@@ -1,4 +1,4 @@
-import { request, post, patch, del } from "./core";
+import { del, patch, post, request } from "./core";
 
 import type { AgentRule, AgentRuleCategory, AgentRuleScopeType } from "../types";
 

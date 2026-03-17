@@ -55,7 +55,7 @@ export default function AgentTimeline({ agentId, t }: AgentTimelineProps) {
         setError(t({ ko: "타임라인을 불러오지 못했습니다", en: "Failed to load timeline", ja: "タイムラインの読み込みに失敗しました", zh: "无法加载时间线" }));
         setLoading(false);
       });
-  }, [agentId]);
+  }, [agentId, t]);
 
   if (loading) {
     return (

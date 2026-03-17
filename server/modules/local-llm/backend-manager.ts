@@ -48,7 +48,7 @@ export async function getOllamaRunning(port = 11434): Promise<boolean> {
 export async function detectLlamaCpp(): Promise<{ installed: boolean; version: string | null }> {
   try {
     const { stdout } = await execAsync("llama-server --version", { timeout: 4000 });
-    const match = stdout.match(/version[: ]+(\S+)/i) ?? stdout.match(/(\d+\.\d+[\.\d]*)/);
+    const match = stdout.match(/version[: ]+(\S+)/i) ?? stdout.match(/(\d+\.\d+[.\d]*)/);
     return { installed: true, version: match?.[1] ?? "detected" };
   } catch { /* not in PATH */ }
   // Fallback: llama-cli (older builds)

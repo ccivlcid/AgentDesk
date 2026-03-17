@@ -85,7 +85,7 @@ export function ChatPanel({
   const { t, locale } = useI18n();
   const isKorean = locale.startsWith("ko");
 
-  const tr = (ko: string, en: string, ja = en, zh = en) => t({ ko, en, ja, zh });
+  const tr = useCallback((ko: string, en: string, ja = en, zh = en) => t({ ko, en, ja, zh }), [t]);
 
   const getAgentName = (agent: Agent | null | undefined) => {
     if (!agent) return "";
@@ -133,7 +133,7 @@ export function ChatPanel({
     } else if (mode === "announcement") {
       setMode("task");
     }
-  }, [selectedAgent]);
+  }, [selectedAgent, mode]);
 
   const isDirectiveMode = input.trimStart().startsWith("$");
   const [pendingSend, setPendingSend] = useState<PendingSendAction | null>(null);
@@ -237,7 +237,7 @@ export function ChatPanel({
     setExistingProjectError("");
     setSelectedProject(picked);
     setProjectFlowStep("confirm");
-  }, [existingProjectInput, resolveExistingProjectSelection]);
+  }, [existingProjectInput, resolveExistingProjectSelection, tr]);
 
   const handleChooseExistingProject = useCallback(() => {
     setProjectFlowStep("existing");
@@ -483,7 +483,7 @@ export function ChatPanel({
       const next = new Set(prev);
       if (next.has(msgId)) next.delete(msgId);
       else next.add(msgId);
-      try { localStorage.setItem(`agentdesk_pinned_${agentKey}`, JSON.stringify([...next])); } catch {}
+      try { localStorage.setItem(`agentdesk_pinned_${agentKey}`, JSON.stringify([...next])); } catch { /* ignore */ }
       return next;
     });
   }, [selectedAgent?.id]);

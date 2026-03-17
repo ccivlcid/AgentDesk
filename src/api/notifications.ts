@@ -1,4 +1,4 @@
-import { request, post, del } from "./core";
+import { del, post, request } from "./core";
 
 export interface NotificationItem {
   id: string;

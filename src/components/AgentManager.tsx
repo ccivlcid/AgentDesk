@@ -127,7 +127,7 @@ export default function AgentManager({
       });
       setShowModal(true);
     },
-    [agents],
+    [],
   );
 
   const closeModal = useCallback(() => {
@@ -196,9 +196,7 @@ export default function AgentManager({
       setSaving(false);
     }
   }, [
-    agents,
     closeModal,
-    departments,
     form,
     modalAgent,
     onAgentsChange,
