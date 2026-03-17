@@ -2,6 +2,7 @@
  * File Explorer Widget — PC filesystem browser (read-only, like macOS Finder)
  */
 import { useEffect, useRef, useState, useCallback } from "react";
+import { useI18n } from "../../../i18n";
 
 const mono = "var(--th-font-mono)";
 const IS_WIN = navigator.platform.startsWith("Win") || navigator.userAgent.includes("Windows");

@@ -167,7 +167,7 @@ export function TaskBoard({
   useEffect(() => {
     getProjects({ page_size: 200 })
       .then((res) => setProjects(res.projects.map((p) => ({ id: p.id, name: p.name }))))
-      .catch(() => { showToast("Failed to load projects.", "error"); });
+      .catch(() => { showToast(t({ ko: "프로젝트 불러오기에 실패했습니다", en: "Failed to load projects", ja: "プロジェクトの読み込みに失敗しました", zh: "加载项目失败" }), "error"); });
   }, [showToast]);
 
   // Sync project filter when sidebar project selection changes

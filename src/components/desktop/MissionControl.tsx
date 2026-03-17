@@ -4,14 +4,6 @@ import { useI18n } from "../../i18n";
 
 const mono = "var(--th-font-mono)";
 
-const WIDGET_META: Record<string, { emoji: string; label: string }> = {
-  heartbeat: { emoji: "💓", label: "Agents" },
-  "task-board": { emoji: "📋", label: "Tasks" },
-  alerts: { emoji: "🔔", label: "Alerts" },
-  "cli-usage": { emoji: "💰", label: "CLI Cost" },
-  "flow-graph": { emoji: "🔀", label: "Flow Graph" },
-};
-
 const FADE_STYLE = `
 @keyframes mcFadeIn {
   from { opacity: 0; transform: scale(0.96); }
@@ -28,6 +20,14 @@ interface MissionControlProps {
 
 export default function MissionControl({ openWindows, widgetLayout, onClose, onFocusWindow }: MissionControlProps) {
   const { t } = useI18n();
+
+  const WIDGET_META: Record<string, { emoji: string; label: string }> = {
+    heartbeat:    { emoji: "💓", label: t({ ko: "에이전트",     en: "Agents",      ja: "エージェント",   zh: "代理"   }) },
+    "task-board": { emoji: "📋", label: t({ ko: "태스크",       en: "Tasks",       ja: "タスク",        zh: "任务"   }) },
+    alerts:       { emoji: "🔔", label: t({ ko: "알림",         en: "Alerts",      ja: "アラート",      zh: "警报"   }) },
+    "cli-usage":  { emoji: "💰", label: t({ ko: "CLI 비용",     en: "CLI Cost",    ja: "CLIコスト",     zh: "CLI成本" }) },
+    "flow-graph": { emoji: "🔀", label: t({ ko: "플로우 그래프", en: "Flow Graph",  ja: "フローグラフ",  zh: "流程图"  }) },
+  };
 
   const WINDOW_META: Record<WindowType, { emoji: string; label: string }> = {
     workflow:        { emoji: "⚡",  label: t({ ko: "워크플로",        en: "Workflow",       ja: "ワークフロー",     zh: "工作流" }) },

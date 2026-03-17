@@ -270,7 +270,7 @@ export default function MenuBar({
               onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--th-accent-glow)"; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "none"; }}
             >
-              <span>Mission Control</span>
+              <span>{t({ ko: "미션 컨트롤", en: "Mission Control", ja: "ミッションコントロール", zh: "调度中心" })}</span>
               <span style={{ fontSize: 10, color: "var(--th-text-muted)" }}>Ctrl ↑</span>
             </button>
           </div>
@@ -279,7 +279,7 @@ export default function MenuBar({
 
       {/* 연결 끊김 표시 (연결됐을 땐 숨김) */}
       {!connected && (
-        <span style={{ color: "var(--th-danger, #ef4444)", fontSize: 10 }} title="Server disconnected">○</span>
+        <span style={{ color: "var(--th-danger, #ef4444)", fontSize: 10 }} title={t({ ko: "서버 연결 끊김", en: "Server disconnected", ja: "サーバー切断", zh: "服务器断开" })}>○</span>
       )}
 
       {/* 프로젝트 선택 */}

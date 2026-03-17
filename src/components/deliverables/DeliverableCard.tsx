@@ -172,15 +172,15 @@ export default function DeliverableCard({ report, artifacts, agent, agents, onAr
               <span style={{ ...mono, fontSize: "9px", color: "var(--th-accent)", fontWeight: 700 }}>$</span>
               <span style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)" }}>cat report/{report.id.slice(0, 8)}</span>
               <div style={{ marginLeft: "auto", display: "flex", gap: 8, alignItems: "center" }}>
-                <button type="button" onClick={expandAll}   style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", background: "none", border: "none", cursor: "pointer", padding: 0 }}>expand all</button>
+                <button type="button" onClick={expandAll}   style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", background: "none", border: "none", cursor: "pointer", padding: 0 }}>{t({ ko: "모두 펼치기", en: "expand all", ja: "すべて展開", zh: "展开全部" })}</button>
                 <span style={{ fontSize: "9px", color: "var(--th-border)" }}>|</span>
-                <button type="button" onClick={collapseAll} style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", background: "none", border: "none", cursor: "pointer", padding: 0 }}>collapse all</button>
+                <button type="button" onClick={collapseAll} style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", background: "none", border: "none", cursor: "pointer", padding: 0 }}>{t({ ko: "모두 접기", en: "collapse all", ja: "すべて折りたたむ", zh: "折叠全部" })}</button>
                 <span style={{ fontSize: "9px", color: "var(--th-border)" }}>|</span>
                 <button
                   type="button"
                   onClick={() => setShowSynapseExport(true)}
                   style={{ ...mono, fontSize: "9px", fontWeight: 700, color: "var(--th-accent)", background: "none", border: "none", cursor: "pointer", padding: 0, letterSpacing: "0.04em" }}
-                  title="Notion / Obsidian으로 내보내기"
+                  title={t({ ko: "Notion / Obsidian으로 내보내기", en: "Export to Notion / Obsidian", ja: "Notion / Obsidianにエクスポート", zh: "导出到 Notion / Obsidian" })}
                 >
                   ⇄ export
                 </button>

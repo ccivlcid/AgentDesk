@@ -147,7 +147,7 @@ export default function DecisionInboxModal({
     const optionNumber = selected[0] ?? pickOptions[0]?.number;
     if (!optionNumber) return;
     if (selected.length <= 0 && !extraNote) {
-      showToast("Pick at least one option or enter an extra note.", "warning");
+      showToast(t({ ko: "옵션을 선택하거나 추가 의견을 입력하세요", en: "Pick at least one option or enter an extra note", ja: "オプションを選択するか、補足コメントを入力してください", zh: "请选择至少一个选项或输入备注" }), "warning");
       return;
     }
     onReplyOption(item, optionNumber, { selected_option_numbers: selected, ...(extraNote ? { note: extraNote } : {}) });
