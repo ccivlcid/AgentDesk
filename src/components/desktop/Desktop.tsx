@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, lazy, Suspense, useCallback, type ReactNode } from "react";
 import { useI18n } from "../../i18n";
+import { useToast } from "../ui/Toast";
 import type { Project, Category, CompanySettings, WSEventType , ProjectFolder } from "../../types";
 import type { OAuthCallbackResult, ProjectMetaPayload } from "../../app/types";
 import { useUiStore } from "../../store/uiStore";
@@ -188,6 +189,7 @@ export default function Desktop({
 
   const { setProjects } = useProjectStore();
   const { t, language } = useI18n();
+  const { showToast } = useToast();
 
   const widgetLabels: Record<string, string> = {
     heartbeat:    t({ ko: "에이전트",     en: "Agents",        ja: "エージェント",           zh: "代理"    }),
@@ -576,7 +578,9 @@ export default function Desktop({
                 if (name?.trim()) {
                   updateProjectFolder(f.id, { name: name.trim() }).then((updated) => {
                     setFolders((prev) => prev.map((x) => x.id === f.id ? { ...x, ...updated } : x));
-                  }).catch(() => {});
+                  }).catch(() => {
+                    showToast(t({ ko: "폴더 이름 변경에 실패했습니다", en: "Failed to rename folder", ja: "フォルダ名の変更に失敗しました", zh: "重命名文件夹失败" }), "error");
+                  });
                 }
               }}
               onDelete={(f) => {
@@ -585,14 +589,18 @@ export default function Desktop({
                   setFolders((prev) => prev.filter((x) => x.id !== f.id));
                   setProjects((prev) => prev.map((p) => p.folder_id === f.id ? { ...p, folder_id: null } : p));
                   closeFolder(f.id);
-                }).catch(() => {});
+                }).catch(() => {
+                  showToast(t({ ko: "폴더 삭제에 실패했습니다", en: "Failed to delete folder", ja: "フォルダの削除に失敗しました", zh: "删除文件夹失败" }), "error");
+                });
               }}
               onColorChange={(f) => {
                 const color = window.prompt(t({ ko: "색상 (hex, 예: #f59e0b)", en: "Color (hex, e.g. #3b82f6)", ja: "カラー (hex, 例: #f59e0b)", zh: "颜色 (hex, 如: #22c55e)" }), f.color);
                 if (color?.trim()) {
                   updateProjectFolder(f.id, { color: color.trim() }).then((updated) => {
                     setFolders((prev) => prev.map((x) => x.id === f.id ? { ...x, ...updated } : x));
-                  }).catch(() => {});
+                  }).catch(() => {
+                    showToast(t({ ko: "폴더 색상 변경에 실패했습니다", en: "Failed to update folder color", ja: "フォルダカラーの変更に失敗しました", zh: "更新文件夹颜色失败" }), "error");
+                  });
                 }
               }}
             />
