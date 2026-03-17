@@ -91,7 +91,7 @@ The core value of AgentDesk is **"a UI that makes the invisible visible"**.
 |---|---|
 | **Task Board** | Overall task status (pending/running/done/failed), agent assignment status |
 | **Terminal Panel** | Real-time streaming of agent CLI output (stdout) |
-| **Agent Detail** | Current state, running task, applied skills/rules/memory |
+| **Agent Detail** | Current state, running task, applied skills/rules/memory — right slide panel (`docs/features/agent-detail-panel.md`) |
 | **Status Monitor** | Full agent activity dashboard, anomaly detection |
 | **CLI Usage** | Per-agent token consumption, cost tracking |
 | **Task Report** | Outputs, diffs, and logs for completed tasks |
@@ -177,7 +177,7 @@ Managing these four elements **per project** allows the same agent to behave dif
 
 ## 6. Current System Status
 
-### Completion (as of 2026-03-16)
+### Completion (as of 2026-03-19)
 
 ```
 Agent spawn & management         ████████████████████ 100% (timeout enforcement + orphan batching complete)
@@ -189,37 +189,42 @@ Workflow cron scheduling         ███████████████�
 UI/UX monitoring                 ████████████████████ 100% (macOS UX complete + Custom Widget Platform)
 Security hardening               ████████████████████ 100% (2nd patch complete)
 Persona system                   ████████████████████ 100% (complete)
-Visual agent graph               ████████████████████ 100% (complete)
+Visual agent graph               ████████████████████ 100% (delegation edges + agent detail panel complete)
 Agent composition templates      ████████████████████ 100% (drag-and-drop + Run complete)
 Custom Widget Platform           ████████████████████ 100% (Phase 1~5 complete — template + AI + esbuild bundle)
 Project management               ████████████████████ 100% (cost summary + templates + burndown complete)
 Analytics & performance          ████████████████████ 100% (AgentPerformanceDashboard + Data Export complete)
 Notification center              ████████████████████ 100% (date groups + hover actions + type filter badges)
+Local LLM manager                ████████████████████ 100% (Ollama + LM Studio + llama.cpp + Jan, Phase 1~5 complete)
+Knowledge base (Synapse)         ████████████████████ 100% (Notion + Obsidian + NotebookLM, Phase 1~5 complete)
+Task Board window                ████████████████████ 100% (TaskBoardWindow standalone app + Dock integration)
+Agent detail panel               ████████████████████ 100% (right-slide inspector, skills/rules/memory/tasks/cost)
+Bug fixes (pipeline + UI audit)  ████████████████████ 100% (BUG-01~06, WB-01~03, FG-01~03 all resolved)
 ```
 
-### Known Bugs (2026-03-16 Pipeline Audit)
+### Known Bugs (2026-03-16 Pipeline Audit) — 전체 수정 완료
 
 > 상세 수정 지침: **`docs/bugs/PIPELINE-AUDIT-2026-03-16.md`**
 
 | Code | Severity | File | Issue | Status |
 |------|----------|------|-------|--------|
-| BUG-01 | 🔴 P0 | `server/modules/routes/core/tasks/execution-run.ts` | `buildTaskExecutionPrompt()` 호출에 try-catch 없음 — 내부 예외 시 서버 hang | ⬜ Open |
-| BUG-02 | 🟡 P1 | `server/modules/workflow/agents/providers/stream-tools.ts` | `subtask_done` 정규식이 따옴표 포함 제목 파싱 실패 | ⬜ Open |
-| BUG-03 | 🔵 P2 | `src/components/AgentManager.tsx` | 에이전트 저장 실패 시 UI 에러 표시 없음 | ⬜ Open |
-| BUG-04 | 🔵 P2 | `src/components/AgentManager.tsx` | 아바타 업로드/삭제 실패 silent | ⬜ Open |
-| BUG-05 | 🔵 P2 | `server/modules/lifecycle.ts` | 메신저 수신자 시작 실패 시 예외처리 없음 | ⬜ Open |
-| BUG-06 | 🟡 P1 | `server/modules/workflow/agents/providers/stream-tools.ts` | 스트림 버퍼 2KB 고정 → 장문 응답에서 서브태스크 손실 | ⬜ Open |
+| BUG-01 | 🔴 P0 | `server/modules/routes/core/tasks/execution-run.ts` | `buildTaskExecutionPrompt()` 호출에 try-catch 없음 — 내부 예외 시 서버 hang | ✅ Done |
+| BUG-02 | 🟡 P1 | `server/modules/workflow/agents/providers/stream-tools.ts` | `subtask_done` 정규식이 따옴표 포함 제목 파싱 실패 | ✅ Done |
+| BUG-03 | 🔵 P2 | `src/components/AgentManager.tsx` | 에이전트 저장 실패 시 UI 에러 표시 없음 | ✅ Done |
+| BUG-04 | 🔵 P2 | `src/components/AgentManager.tsx` | 아바타 업로드/삭제 실패 silent | ✅ Done |
+| BUG-05 | 🔵 P2 | `server/modules/lifecycle.ts` | 메신저 수신자 시작 실패 시 예외처리 없음 | ✅ Done |
+| BUG-06 | 🟡 P1 | `server/modules/workflow/agents/providers/stream-tools.ts` | 스트림 버퍼 2KB 고정 → 장문 응답에서 서브태스크 손실 (8KB로 확장) | ✅ Done |
 
 > UI 기능 감사 (Workflow Builder · REPL · Flow Graph): **`docs/bugs/UI-AUDIT-2026-03-16.md`**
 
 | Code | Severity | File | Issue | Status |
 |------|----------|------|-------|--------|
-| WB-01 | ❌ 미구현 | `src/components/workflow-builder/WbRunModal.tsx` | Condition 노드 조건 평가 없음 — 항상 모든 하위 에이전트 실행 | ⬜ Open |
-| WB-02 | 🟡 P1 | `src/components/workflow-builder/WbRunModal.tsx` | 의존성 설정 실패 시 롤백 없음 — 고아 Task 생성 | ⬜ Open |
-| WB-03 | 🔵 P2 | `src/components/workflow-builder/WbRunModal.tsx` | Trigger 타입 정보 Task에 미전달 | ⬜ Open |
-| FG-01 | ❌ TODO | `src/components/flow-graph/useFlowLayout.ts` | Delegation 엣지 명시적 TODO — SubTask 데이터 미전달 | ⬜ Open |
-| FG-02 | 🟡 P1 | `src/components/desktop/widgets/FlowGraphWidget.tsx` | 노드 클릭 → 에이전트 상세 패널 콜백 미연결 | ⬜ Open |
-| FG-03 | 🔵 P2 | `src/components/flow-graph/useFlowLayout.ts` | 50+ 에이전트 시 3열 고정 레이아웃 극단 축소 | ⬜ Open |
+| WB-01 | ❌ 미구현 | `src/components/workflow-builder/WbRunModal.tsx` | Condition 노드 조건 평가 없음 — 항상 모든 하위 에이전트 실행 | ✅ Done |
+| WB-02 | 🟡 P1 | `src/components/workflow-builder/WbRunModal.tsx` | 의존성 설정 실패 시 롤백 없음 — 고아 Task 생성 | ✅ Done |
+| WB-03 | 🔵 P2 | `src/components/workflow-builder/WbRunModal.tsx` | Trigger 타입 정보 Task에 미전달 | ✅ Done |
+| FG-01 | ❌ TODO | `src/components/flow-graph/useFlowLayout.ts` | Delegation 엣지 명시적 TODO — SubTask 데이터 미전달 | ✅ Done |
+| FG-02 | 🟡 P1 | `src/components/desktop/widgets/FlowGraphWidget.tsx` | 노드 클릭 → 에이전트 상세 패널 콜백 미연결 | ✅ Done |
+| FG-03 | 🔵 P2 | `src/components/flow-graph/useFlowLayout.ts` | 50+ 에이전트 시 3열 고정 레이아웃 극단 축소 | ✅ Done |
 | REPL | ✅ | — | Agent REPL 전체 정상 동작 (버그 없음) | ✅ OK |
 
 ### Safe Concurrency Limits
@@ -564,7 +569,8 @@ All planned features and improvement tasks have been completed. Key achievements
 | [`docs/strategy/bigger-ide-vision.md`](./strategy/bigger-ide-vision.md) | "Bigger IDE" strategic vision |
 | [`docs/features/custom-widget-platform.md`](./features/custom-widget-platform.md) | Custom Widget Platform — spec + implementation summary |
 | [`docs/features/local-llm-manager.md`](./features/local-llm-manager.md) | Local LLM Manager — 기획 문서 (Ollama 연동, 모델 관리, 에이전트 연결) |
-| [`docs/features/knowledge-base-integrations.md`](./features/knowledge-base-integrations.md) | Knowledge Base Integrations — Notion / Obsidian / NotebookLM 연결 기획 |
+| [`docs/features/synapse.md`](./features/synapse.md) | Synapse (지식베이스) — Notion / Obsidian / NotebookLM 연결 기획 (서버: `server/modules/synapse/`) |
+| [`docs/features/agent-detail-panel.md`](./features/agent-detail-panel.md) | 에이전트 상세 패널 — 우측 슬라이드 인스펙터 설계 |
 | [`docs/design/DESIGN.md`](./design/DESIGN.md) | UI CSS variables + component patterns |
 | [`docs/design/UI-SCREENS.md`](./design/UI-SCREENS.md) | Full screen & modal specification |
 

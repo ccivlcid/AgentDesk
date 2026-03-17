@@ -23,6 +23,8 @@ import WbConditionNode, { type ConditionNodeData } from "./nodes/WbConditionNode
 import WbNodeEditPanel from "./WbNodeEditPanel";
 import WbRunModal from "./WbRunModal";
 import WbScheduleModal from "./WbScheduleModal";
+import TemplatePickerModal from "./TemplatePickerModal";
+import type { BuiltinPreset } from "./presets/design-workflow";
 
 const NODE_TYPES: NodeTypes = {
   trigger: WbTriggerNode,
@@ -116,6 +118,8 @@ export default function WorkflowBuilder() {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [showRunModal, setShowRunModal] = useState(false);
   const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [showTemplatePicker, setShowTemplatePicker] = useState(false);
+  const [workflowFigmaUrl, setWorkflowFigmaUrl] = useState("");
   const [confirmNew, setConfirmNew] = useState(false);
 
   const mono = "var(--th-font-mono)";
@@ -186,6 +190,18 @@ export default function WorkflowBuilder() {
     setConfirmNew(false);
     localStorage.removeItem(LS_KEY);
   }, [setNodes, setEdges, t]);
+
+  // Load builtin preset
+  const handleLoadPreset = useCallback((preset: BuiltinPreset, figmaUrl: string) => {
+    setNodes(preset.nodes as Node[]);
+    setEdges(preset.edges as Edge[]);
+    setWorkflowName(preset.name_ko);
+    setCurrentId(null);
+    setDirty(false);
+    setWorkflowFigmaUrl(figmaUrl);
+    setShowTemplatePicker(false);
+    localStorage.removeItem(LS_KEY);
+  }, [setNodes, setEdges]);
 
   // Load template
   const handleLoadTemplate = useCallback((tpl: Template) => {
@@ -306,7 +322,20 @@ export default function WorkflowBuilder() {
         )}
 
         <div style={{ marginLeft: "auto", display: "flex", gap: 6 }}>
-          {/* Templates */}
+          {/* Preset Templates */}
+          <button
+            onClick={() => setShowTemplatePicker(true)}
+            style={{
+              fontFamily: mono, fontSize: 10, padding: "4px 10px",
+              background: "transparent",
+              border: "1px solid var(--th-border)", borderRadius: 5, cursor: "pointer",
+              color: "var(--th-text-muted)",
+            }}
+          >
+            {t({ ko: "// 템플릿으로 시작", en: "// Presets", ja: "// プリセット", zh: "// 预设" })}
+          </button>
+
+          {/* Saved Templates */}
           <button
             onClick={() => setShowTemplates((v) => !v)}
             style={{
@@ -548,6 +577,7 @@ export default function WorkflowBuilder() {
           nodes={nodes}
           edges={edges}
           workflowName={workflowName}
+          figmaUrl={workflowFigmaUrl}
           onClose={() => setShowRunModal(false)}
           onSuccess={() => { /* keep modal open to show live execution status — user closes manually */ }}
         />
@@ -558,6 +588,13 @@ export default function WorkflowBuilder() {
           templateId={currentId}
           workflowName={workflowName}
           onClose={() => setShowScheduleModal(false)}
+        />
+      )}
+
+      {showTemplatePicker && (
+        <TemplatePickerModal
+          onSelect={handleLoadPreset}
+          onClose={() => setShowTemplatePicker(false)}
         />
       )}
 

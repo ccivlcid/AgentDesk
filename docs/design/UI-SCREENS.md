@@ -327,10 +327,25 @@ Features:
 Opened as a layer on top of the desktop when clicking an item in a widget or icon window.
 
 ### 6-1. AgentDetail Slide Panel
-**File:** `src/components/AgentDetail.tsx`
-**Trigger:** Click an agent row in the Agents widget / click a node in the Flow Graph widget
+**File:** `src/components/agent-detail/AgentDetailPanel.tsx` _(구현 예정)_
+**Design doc:** `docs/features/agent-detail-panel.md`
+**Trigger:**
+- AgentsWidget 에이전트 행 클릭
+- FlowGraph Widget 에이전트 노드 클릭
+- AgentManager 에이전트 카드 클릭 (선택사항)
 
-Right-side slide. Tabs: Info / Tasks / Alba / Performance / Chat
+**위치:** `position: fixed`, 우측 슬라이드, 메뉴바(28px) ~ Dock(48px), 너비 360px, `z-index: 300`
+**애니메이션:** `translateX(360px → 0)` 200ms ease-out / 닫기 160ms ease-in
+**상태:** `uiStore.selectedAgentId` (이미 존재) — 같은 에이전트 재클릭 시 토글 닫기, ESC 닫기
+
+**섹션 구성 (단일 스크롤, 탭 없음):**
+1. **헤더** — 아바타, 이름, 역할, 상태 뱃지, CLI 프로바이더, 부서
+2. **현재 태스크** — 제목, 경과 시간, 터미널 바로가기 (`current_task_id` 없으면 숨김)
+3. **스킬** — `/api/skills/available?agent_id=` (뱃지 3개 + 초과 시 +N)
+4. **규칙** — `/api/agent-rules?agent_id=&limit=5` (scope 뱃지)
+5. **메모리** — `/api/memory?agent_id=&limit=5`
+6. **최근 태스크** — `/api/tasks?agent_id=&limit=3` (✓/✗ 상태)
+7. **오늘 비용** — `/api/agents/:id/cost-summary` (토큰 수, USD, 성공률)
 
 ### 6-2. TerminalPanel Drawer
 **File:** `src/components/TerminalPanel.tsx`

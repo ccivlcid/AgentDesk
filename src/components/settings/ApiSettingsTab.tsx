@@ -18,6 +18,8 @@ export default function ApiSettingsTab({ t, localeTag, apiState }: ApiSettingsTa
     apiForm,
     apiSaving,
     apiTesting,
+    apiDeleting,
+    apiToggling,
     apiTestResult,
     apiModelsExpanded,
     setApiAddMode,
@@ -260,7 +262,8 @@ export default function ApiSettingsTab({ t, localeTag, apiState }: ApiSettingsTa
                       </button>
                       <button
                         onClick={() => void handleApiProviderToggle(provider.id, provider.enabled)}
-                        className="text-[10px] px-2 py-1 font-mono transition-colors"
+                        disabled={apiToggling === provider.id}
+                        className="text-[10px] px-2 py-1 font-mono transition-colors disabled:opacity-50"
                         style={{
                           borderRadius: 0,
                           background: provider.enabled ? "rgba(245,158,11,0.12)" : "rgba(16,185,129,0.12)",
@@ -268,16 +271,17 @@ export default function ApiSettingsTab({ t, localeTag, apiState }: ApiSettingsTa
                           color: provider.enabled ? "#fbbf24" : "#34d399",
                         }}
                       >
-                        {provider.enabled
+                        {apiToggling === provider.id ? "..." : provider.enabled
                           ? t({ ko: "비활성화", en: "Disable", ja: "無効化", zh: "禁用" })
                           : t({ ko: "활성화", en: "Enable", ja: "有効化", zh: "启用" })}
                       </button>
                       <button
                         onClick={() => void handleApiProviderDelete(provider.id)}
-                        className="text-[10px] px-2 py-1 font-mono text-red-400 transition-colors"
+                        disabled={apiDeleting === provider.id}
+                        className="text-[10px] px-2 py-1 font-mono text-red-400 transition-colors disabled:opacity-50"
                         style={{ borderRadius: 0, background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.3)" }}
                       >
-                        {t({ ko: "삭제", en: "Delete", ja: "削除", zh: "删除" })}
+                        {apiDeleting === provider.id ? "..." : t({ ko: "삭제", en: "Delete", ja: "削除", zh: "删除" })}
                       </button>
                     </div>
                   </div>

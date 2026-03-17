@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 import { useUiStore } from "../../store/uiStore";
 import { useTheme } from "../../ThemeContext";
 import { isLightWallpaper } from "./WallpaperPicker";
@@ -21,6 +21,10 @@ export interface DesktopIconDef {
   badge?: number;
   /** macOS 스타일 아이콘 배경 accent 색상 (예: "#5e5ce6"). 없으면 glass 기본값 사용 */
   accentColor?: string;
+  /** 설정 시 이 아이콘은 HTML5 드래그 가능한 문서 아이콘 (docId = pendingDoc.id) */
+  docId?: string;
+  /** 설정 시 이 아이콘은 문서 드롭 대상 (프로젝트 폴더) */
+  onDropDoc?: (docId: string) => void;
 }
 
 interface DesktopIconProps {
@@ -38,7 +42,15 @@ export default function DesktopIcon({ def, defaultX, defaultY }: DesktopIconProp
   const saved = desktopIconLayout[def.id];
   const [pos, setPos] = useState({ x: saved?.x ?? defaultX, y: saved?.y ?? defaultY });
   const [dragging, setDragging] = useState(false);
+
+  // store에서 외부(정렬/스냅)로 layout이 바뀌면 로컬 pos 동기화
+  useEffect(() => {
+    if (dragging) return;
+    const entry = desktopIconLayout[def.id];
+    if (entry) setPos({ x: entry.x, y: entry.y });
+  }, [desktopIconLayout, def.id, dragging]);
   const [hovered, setHovered] = useState(false);
+  const [dropTarget, setDropTarget] = useState(false); // 문서 드래그 오버 중인 폴더
   const [editing, setEditing] = useState(false);
   const [editValue, setEditValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -64,6 +76,8 @@ export default function DesktopIcon({ def, defaultX, defaultY }: DesktopIconProp
 
   function onMouseDown(e: React.MouseEvent) {
     if (e.button !== 0) return;
+    // 문서 아이콘은 HTML5 drag를 사용 → 마우스 기반 repositioning 스킵
+    if (def.docId) return;
     e.preventDefault();
     moved.current = false;
     dragStart.current = { mx: e.clientX, my: e.clientY, ox: pos.x, oy: pos.y };
@@ -151,6 +165,19 @@ export default function DesktopIcon({ def, defaultX, defaultY }: DesktopIconProp
       <style>{JIGGLE_STYLE}</style>
       <div
         data-no-ctx
+        draggable={!!def.docId}
+        onDragStart={def.docId ? (e) => {
+          e.dataTransfer.setData("application/agentdesk-doc", def.docId!);
+          e.dataTransfer.effectAllowed = "move";
+        } : undefined}
+        onDragOver={def.onDropDoc ? (e) => { e.preventDefault(); e.dataTransfer.dropEffect = "move"; setDropTarget(true); } : undefined}
+        onDragLeave={def.onDropDoc ? () => setDropTarget(false) : undefined}
+        onDrop={def.onDropDoc ? (e) => {
+          e.preventDefault();
+          setDropTarget(false);
+          const docId = e.dataTransfer.getData("application/agentdesk-doc");
+          if (docId) def.onDropDoc!(docId);
+        } : undefined}
         onMouseDown={onMouseDown}
         onClick={onClick}
         onContextMenu={onContextMenuHandler}
@@ -234,17 +261,17 @@ export default function DesktopIcon({ def, defaultX, defaultY }: DesktopIconProp
           style={{
             width: 56,
             height: 56,
-            background: iconBg,
-            border: iconBorder,
+            background: dropTarget ? "rgba(245,158,11,0.30)" : iconBg,
+            border: dropTarget ? "2px solid var(--th-accent)" : iconBorder,
             borderRadius: 14,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             backdropFilter: "blur(20px) saturate(160%)",
             WebkitBackdropFilter: "blur(20px) saturate(160%)",
-            boxShadow: iconShadow,
-            transition: dragging ? "none" : "background 0.12s, box-shadow 0.12s",
-            transform: hovered && !dragging ? "scale(1.06)" : "scale(1)",
+            boxShadow: dropTarget ? `0 0 0 3px var(--th-accent)44` : iconShadow,
+            transition: "background 0.12s, box-shadow 0.12s, border 0.12s",
+            transform: (hovered || dropTarget) && !dragging ? "scale(1.08)" : "scale(1)",
           }}
         >
           {def.icon(

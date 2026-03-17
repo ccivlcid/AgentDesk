@@ -29,6 +29,9 @@ import { registerScheduledTaskRoutes } from "./ops/scheduled-tasks.ts";
 import { registerVideoRenderRoutes } from "./ops/video-render.ts";
 import { registerCustomFeatureRoutes } from "./ops/custom-features.ts";
 import { registerLocalLlmRoutes } from "./ops/local-llm.ts";
+import { registerSynapseRoutes } from "./ops/synapse.ts";
+import { registerImageStudioRoutes } from "./ops/image-studio.ts";
+import { registerProjectFolderRoutes } from "./ops/project-folders.ts";
 
 export function registerRoutesPartC(ctx: RuntimeContext): RouteOpsExports {
   const __ctx: RuntimeContext = ctx;
@@ -269,6 +272,9 @@ export function registerRoutesPartC(ctx: RuntimeContext): RouteOpsExports {
   const { recordAgentUsage } = registerAgentUsageRoutes(__ctx);
   registerCustomFeatureRoutes({ app, db, nowMs });
   registerLocalLlmRoutes({ app, db, broadcast });
+  registerSynapseRoutes({ app, db });
+  registerImageStudioRoutes({ app, db, broadcast });
+  registerProjectFolderRoutes({ app, db, nowMs });
 
   // ---------------------------------------------------------------------------
   // Queue status API (P2-3)

@@ -690,6 +690,7 @@ export function registerAgentCrudRoutes(ctx: RuntimeContext): void {
       "status",
       "current_task_id",
       "acts_as_planning_leader",
+      "kb_default_sources",
     ];
     const forcePlanningLeadOverride =
       body.force_planning_leader_override === true ||

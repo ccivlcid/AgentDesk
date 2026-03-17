@@ -10,7 +10,6 @@ import type { WSEventType } from "../types";
 import TrafficLights from "./desktop/TrafficLights";
 
 type SocketOn = (event: WSEventType, handler: (payload: unknown) => void) => () => void;
-
 type NotifType = NotificationItem["type"] | "all";
 
 interface Props {
@@ -19,12 +18,16 @@ interface Props {
   onOpenDecisionInbox?: () => void;
 }
 
+const mono = "var(--th-font-mono)";
+
+// ─── Utils ────────────────────────────────────────────────────────────────────
+
 function timeAgo(ts: number): string {
   const diff = Date.now() - ts;
-  if (diff < 60_000) return "just now";
-  if (diff < 3_600_000) return `${Math.floor(diff / 60_000)}m ago`;
-  if (diff < 86_400_000) return `${Math.floor(diff / 3_600_000)}h ago`;
-  return `${Math.floor(diff / 86_400_000)}d ago`;
+  if (diff < 60_000) return "방금";
+  if (diff < 3_600_000) return `${Math.floor(diff / 60_000)}분 전`;
+  if (diff < 86_400_000) return `${Math.floor(diff / 3_600_000)}시간 전`;
+  return `${Math.floor(diff / 86_400_000)}일 전`;
 }
 
 function dateBucket(ts: number): "today" | "yesterday" | "older" {
@@ -37,119 +40,107 @@ function dateBucket(ts: number): "today" | "yesterday" | "older" {
   return "older";
 }
 
-const BUCKET_LABELS = { today: "Today", yesterday: "Yesterday", older: "Older" };
+const BUCKET_LABELS = { today: "오늘", yesterday: "어제", older: "이전" };
 
-const iconSize = 16;
-const iconClass = "shrink-0";
+// ─── Icons ────────────────────────────────────────────────────────────────────
 
-const IconBell = () => (
-  <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={iconClass}>
+const SZ = 14;
+
+const IconBell = ({ size = SZ }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
     <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
     <path d="M13.73 21a2 2 0 0 1-3.46 0" />
   </svg>
 );
-const IconBellOff = () => (
-  <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={iconClass}>
-    <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-    <path d="M18.63 13A17.69 17.69 0 0 0 18 8a6 6 0 0 0-9-5.63" />
-    <path d="M6 18H6.01" />
-    <path d="M3 3l18 18" />
+const IconBellOff = ({ size = SZ }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M13.73 21a2 2 0 0 1-3.46 0" /><path d="M18.63 13A17.69 17.69 0 0 0 18 8a6 6 0 0 0-9-5.63" /><path d="M6 18H6.01" /><path d="M3 3l18 18" />
   </svg>
 );
-const IconCheck = () => (
-  <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={iconClass}>
+const IconCheck = ({ size = SZ }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M20 6 9 17l-5-5" />
   </svg>
 );
-const IconX = () => (
-  <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={iconClass}>
+const IconX = ({ size = SZ }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M18 6 6 18M6 6l12 12" />
   </svg>
 );
-const IconInbox = () => (
-  <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={iconClass}>
-    <path d="M22 12h-6l-2 3h-4l-2-3H2" />
+const IconInbox = ({ size = SZ }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M22 12h-6l-2 3h-4l-2-3H2" /><path d="M5.47 5.19 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.47-6.81A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.77 1.19z" />
   </svg>
 );
-const IconAlert = () => (
-  <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={iconClass}>
-    <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-    <path d="M12 9v4M12 17h.01" />
+const IconAlert = ({ size = SZ }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><path d="M12 9v4M12 17h.01" />
   </svg>
 );
-const IconInfo = () => (
-  <svg width={iconSize} height={iconSize} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={iconClass}>
-    <circle cx="12" cy="12" r="10" />
-    <path d="M12 16v-4M12 8h.01" />
+const IconInfo = ({ size = SZ }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" />
   </svg>
 );
 const IconTrash = () => (
-  <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="3 6 5 6 21 6" />
-    <path d="M19 6l-1 14H6L5 6" />
-    <path d="M10 11v6M14 11v6" />
-    <path d="M9 6V4h6v2" />
+  <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14H6L5 6" /><path d="M10 11v6M14 11v6" /><path d="M9 6V4h6v2" />
   </svg>
 );
 
+// ─── Type config ──────────────────────────────────────────────────────────────
+
 const TYPE_ICONS: Record<string, ReactNode> = {
-  task_complete: <IconCheck />,
-  task_error:    <IconX />,
+  task_complete:    <IconCheck />,
+  task_error:       <IconX />,
   decision_created: <IconInbox />,
-  agent_error:   <IconAlert />,
-  system:        <IconInfo />,
-  cost_alert:    <IconAlert />,
-  agent_anomaly: <IconAlert />,
+  agent_error:      <IconAlert />,
+  system:           <IconInfo />,
+  cost_alert:       <IconAlert />,
+  agent_anomaly:    <IconAlert />,
 };
 
 const TYPE_COLORS: Record<string, string> = {
-  task_complete: "#10b981",
-  task_error:    "#ef4444",
-  agent_error:   "#f59e0b",
-  cost_alert:    "#f59e0b",
-  agent_anomaly: "#f59e0b",
-  decision_created: "#3b82f6",
-  system:        "var(--th-text-muted)",
+  task_complete:    "#30d158",
+  task_error:       "#ff453a",
+  agent_error:      "#ff9f0a",
+  cost_alert:       "#ff9f0a",
+  agent_anomaly:    "#ff9f0a",
+  decision_created: "#0a84ff",
+  system:           "var(--th-text-muted)",
+};
+
+const TYPE_BG: Record<string, string> = {
+  task_complete:    "rgba(48,209,88,0.08)",
+  task_error:       "rgba(255,69,58,0.08)",
+  agent_error:      "rgba(255,159,10,0.08)",
+  cost_alert:       "rgba(255,159,10,0.08)",
+  agent_anomaly:    "rgba(255,159,10,0.08)",
+  decision_created: "rgba(10,132,255,0.08)",
+  system:           "rgba(120,120,128,0.06)",
 };
 
 const TYPE_FILTERS: Array<{ key: NotifType; label: string; icon: ReactNode | null }> = [
-  { key: "all",              label: "All",      icon: null },
-  { key: "task_complete",    label: "Done",     icon: <IconCheck /> },
-  { key: "task_error",       label: "Error",    icon: <IconX /> },
-  { key: "decision_created", label: "Decision", icon: <IconInbox /> },
-  { key: "agent_error",      label: "Alert",    icon: <IconAlert /> },
-  { key: "system",           label: "Info",     icon: <IconInfo /> },
+  { key: "all",              label: "전체",    icon: null },
+  { key: "task_complete",    label: "완료",    icon: <IconCheck size={11} /> },
+  { key: "task_error",       label: "오류",    icon: <IconX size={11} /> },
+  { key: "decision_created", label: "결정",    icon: <IconInbox size={11} /> },
+  { key: "agent_error",      label: "경고",    icon: <IconAlert size={11} /> },
+  { key: "system",           label: "정보",    icon: <IconInfo size={11} /> },
 ];
 
-const TYPE_LABEL: Record<string, string> = {
-  task_complete: "Task",
-  task_error: "Error",
-  decision_created: "Decision",
-  agent_error: "Alert",
-  system: "Info",
-};
-
 function showBrowserNotification(n: NotificationItem): void {
-  if (typeof Notification === "undefined") return;
-  if (Notification.permission !== "granted") return;
-  const prefix = TYPE_LABEL[n.type] ?? "Notification";
+  if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
   try {
-    const notif = new Notification(`${prefix}: ${n.title}`, {
-      body: n.body ?? undefined,
-      tag: n.id,
-      silent: false,
-    });
+    const notif = new Notification(n.title, { body: n.body ?? undefined, tag: n.id, silent: false });
     notif.onclick = () => { window.focus(); notif.close(); };
   } catch { /* ignore */ }
 }
 
-/** Single notification row with hover quick-actions */
+// ─── Notification row ─────────────────────────────────────────────────────────
+
 function NotifRow({
-  item,
-  isNew,
-  onClick,
-  onMarkRead,
-  onDelete,
+  item, isNew, onClick, onMarkRead, onDelete,
 }: {
   item: NotificationItem;
   isNew: boolean;
@@ -162,85 +153,140 @@ function NotifRow({
 
   const handleDelete = (e: React.MouseEvent) => {
     setExiting(true);
-    setTimeout(() => onDelete(e), 220);
+    setTimeout(() => onDelete(e), 200);
   };
 
-  const iconColor = TYPE_COLORS[item.type] ?? "var(--th-text-muted)";
+  const color = TYPE_COLORS[item.type] ?? "var(--th-text-muted)";
+  const bg = TYPE_BG[item.type] ?? "transparent";
 
   return (
     <div
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
-        borderBottom: "1px solid var(--th-border)",
-        background: item.read ? "transparent" : "var(--th-bg-elevated)",
-        transform: exiting ? "translateX(320px)" : isNew ? undefined : undefined,
+        margin: "3px 8px",
+        borderRadius: 8,
+        background: hovered
+          ? (item.read ? "var(--th-hover-overlay)" : bg)
+          : (item.read ? "transparent" : bg),
+        border: `1px solid ${item.read ? "transparent" : `${color}22`}`,
+        transform: exiting ? "translateX(340px) scale(0.95)" : isNew ? "scale(1.01)" : "none",
         opacity: exiting ? 0 : 1,
-        transition: exiting ? "transform 0.22s ease-in, opacity 0.22s" : "background 0.15s",
+        transition: exiting
+          ? "transform 0.2s ease-in, opacity 0.2s"
+          : "background 0.12s, transform 0.15s, border-color 0.12s",
         position: "relative",
+        overflow: "hidden",
       }}
     >
-      {/* Main clickable area */}
+      {/* Left accent bar for unread */}
+      {!item.read && (
+        <div style={{
+          position: "absolute", left: 0, top: 6, bottom: 6,
+          width: 3, borderRadius: "0 3px 3px 0",
+          background: color,
+        }} />
+      )}
+
       <button
         type="button"
         onClick={onClick}
-        className="flex w-full items-start gap-3 px-4 py-3 text-left transition"
-        style={{ background: "none", border: "none", cursor: "pointer", paddingRight: hovered ? 72 : 16 }}
+        style={{
+          display: "flex", width: "100%", alignItems: "flex-start",
+          gap: 10, padding: "10px 12px 10px 14px",
+          background: "none", border: "none", cursor: "pointer",
+          paddingRight: hovered ? 72 : 12,
+          transition: "padding-right 0.1s",
+        }}
       >
-        <span className="mt-0.5 flex-shrink-0" style={{ color: iconColor }}>
+        {/* Type icon */}
+        <span style={{
+          marginTop: 1, flexShrink: 0,
+          width: 26, height: 26, borderRadius: 7,
+          background: `${color}18`,
+          border: `1px solid ${color}30`,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          color,
+        }}>
           {TYPE_ICONS[item.type] ?? <IconInfo />}
         </span>
-        <div className="min-w-0 flex-1">
-          <span
-            className="block truncate text-sm font-medium"
-            style={{ color: item.read ? "var(--th-text-secondary)" : "var(--th-text-primary)", fontFamily: "var(--th-font-mono)", fontSize: 11 }}
-          >
+
+        {/* Content */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{
+            fontFamily: mono, fontSize: 11, fontWeight: item.read ? 400 : 600,
+            color: item.read ? "var(--th-text-secondary)" : "var(--th-text-primary)",
+            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+            lineHeight: 1.4,
+          }}>
             {item.title}
-          </span>
+          </div>
           {item.body && (
-            <p className="mt-0.5 line-clamp-2 text-xs" style={{ color: "var(--th-text-muted)", fontFamily: "var(--th-font-mono)", fontSize: 10 }}>
+            <div style={{
+              fontFamily: mono, fontSize: 10,
+              color: "var(--th-text-muted)",
+              marginTop: 2, lineHeight: 1.5,
+              display: "-webkit-box", WebkitLineClamp: 2,
+              WebkitBoxOrient: "vertical", overflow: "hidden",
+            }}>
               {item.body}
-            </p>
+            </div>
           )}
-          <div className="mt-1 flex items-center gap-2">
-            <span className="text-[10px]" style={{ color: "var(--th-text-muted)", fontFamily: "var(--th-font-mono)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 4 }}>
+            <span style={{ fontFamily: mono, fontSize: 9, color: "var(--th-text-muted)" }}>
               {timeAgo(item.created_at)}
             </span>
             {item.agent_name && (
-              <span className="text-[10px]" style={{ color: "var(--th-text-muted)", fontFamily: "var(--th-font-mono)" }}>
+              <span style={{ fontFamily: mono, fontSize: 9, color: "var(--th-text-muted)" }}>
                 · {item.agent_avatar ?? ""} {item.agent_name}
               </span>
             )}
           </div>
         </div>
+
+        {/* Unread dot */}
         {!item.read && (
-          <span className="mt-2.5 h-2 w-2 flex-shrink-0 rounded-full" style={{ background: "var(--th-accent)" }} />
+          <span style={{
+            marginTop: 6, flexShrink: 0,
+            width: 7, height: 7, borderRadius: "50%",
+            background: color,
+            boxShadow: `0 0 5px ${color}`,
+          }} />
         )}
       </button>
 
-      {/* Hover quick-actions */}
-      <div
-        style={{
-          position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)",
-          display: "flex", gap: 4, opacity: hovered ? 1 : 0, pointerEvents: hovered ? "auto" : "none",
-          transition: "opacity 0.15s",
-        }}
-      >
+      {/* Hover actions */}
+      <div style={{
+        position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)",
+        display: "flex", gap: 4,
+        opacity: hovered ? 1 : 0, pointerEvents: hovered ? "auto" : "none",
+        transition: "opacity 0.12s",
+      }}>
         {!item.read && (
           <button
             type="button"
             onClick={onMarkRead}
-            title="Mark read"
-            style={{ width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center", background: "var(--th-bg-panel)", border: "1px solid var(--th-border)", borderRadius: 4, cursor: "pointer", color: "#10b981" }}
+            title="읽음 표시"
+            style={{
+              width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center",
+              background: "rgba(48,209,88,0.1)",
+              border: "1px solid rgba(48,209,88,0.3)",
+              borderRadius: 6, cursor: "pointer", color: "#30d158",
+            }}
           >
-            <IconCheck />
+            <IconCheck size={12} />
           </button>
         )}
         <button
           type="button"
           onClick={handleDelete}
-          title="Delete"
-          style={{ width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center", background: "var(--th-bg-panel)", border: "1px solid var(--th-border)", borderRadius: 4, cursor: "pointer", color: "#ef4444" }}
+          title="삭제"
+          style={{
+            width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center",
+            background: "rgba(255,69,58,0.1)",
+            border: "1px solid rgba(255,69,58,0.3)",
+            borderRadius: 6, cursor: "pointer", color: "#ff453a",
+          }}
         >
           <IconTrash />
         </button>
@@ -248,6 +294,8 @@ function NotifRow({
     </div>
   );
 }
+
+// ─── Main component ───────────────────────────────────────────────────────────
 
 export default function NotificationCenter({ on, onNavigateTask, onOpenDecisionInbox }: Props) {
   const [open, setOpen] = useState(false);
@@ -297,10 +345,7 @@ export default function NotificationCenter({ on, onNavigateTask, onOpenDecisionI
 
   const handleMarkAllRead = () => {
     markAllNotificationsRead()
-      .then(() => {
-        setItems((prev) => prev.map((i) => ({ ...i, read: 1 })));
-        setUnreadCount(0);
-      })
+      .then(() => { setItems((prev) => prev.map((i) => ({ ...i, read: 1 }))); setUnreadCount(0); })
       .catch(() => {});
   };
 
@@ -317,12 +362,8 @@ export default function NotificationCenter({ on, onNavigateTask, onOpenDecisionI
       setItems((prev) => prev.map((i) => (i.id === item.id ? { ...i, read: 1 } : i)));
       setUnreadCount((c) => Math.max(0, c - 1));
     }
-    if (item.type === "decision_created" && onOpenDecisionInbox) {
-      onOpenDecisionInbox(); setOpen(false); return;
-    }
-    if (item.task_id && onNavigateTask) {
-      onNavigateTask(item.task_id); setOpen(false);
-    }
+    if (item.type === "decision_created" && onOpenDecisionInbox) { onOpenDecisionInbox(); setOpen(false); return; }
+    if (item.task_id && onNavigateTask) { onNavigateTask(item.task_id); setOpen(false); }
   };
 
   const handleMarkRead = (item: NotificationItem, e: React.MouseEvent) => {
@@ -344,7 +385,6 @@ export default function NotificationCenter({ on, onNavigateTask, onOpenDecisionI
   const filtered = (typeFilter === "all" ? items : items.filter((i) => i.type === typeFilter))
     .filter((i) => !hideRead || !i.read);
 
-  // Group by date bucket
   const groups: Array<{ bucket: "today" | "yesterday" | "older"; items: NotificationItem[] }> = [];
   for (const item of filtered) {
     const b = dateBucket(item.created_at);
@@ -357,58 +397,117 @@ export default function NotificationCenter({ on, onNavigateTask, onOpenDecisionI
 
   return (
     <>
-      {/* Bell button */}
+      {/* ── Bell button ── */}
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="header-action-btn header-action-btn-secondary relative inline-flex h-9 min-w-[2.25rem] items-center justify-center px-2 sm:px-2.5"
-        style={{ border: "1px solid var(--th-border)", background: "var(--th-bg-surface)", color: "var(--th-text-secondary)" }}
-        aria-label="Notifications"
+        style={{
+          position: "relative",
+          display: "inline-flex", alignItems: "center", justifyContent: "center",
+          height: 32, minWidth: 32, padding: "0 8px",
+          background: open ? "var(--th-hover-overlay)" : "transparent",
+          border: `1px solid ${open ? "var(--th-border)" : "transparent"}`,
+          borderRadius: 8,
+          color: unreadCount > 0 ? "var(--th-accent)" : "var(--th-text-secondary)",
+          cursor: "pointer",
+          transition: "background 0.12s, border-color 0.12s, color 0.12s",
+        }}
+        onMouseEnter={(e) => {
+          if (!open) {
+            e.currentTarget.style.background = "var(--th-hover-overlay)";
+            e.currentTarget.style.borderColor = "var(--th-border)";
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (!open) {
+            e.currentTarget.style.background = "transparent";
+            e.currentTarget.style.borderColor = "transparent";
+          }
+        }}
+        aria-label="알림"
       >
-        <IconBell />
+        <IconBell size={16} />
         {unreadCount > 0 && (
-          <span
-            className="absolute -top-0.5 -right-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[10px] font-bold leading-none text-white"
-            style={{ background: "var(--th-danger, #ef4444)" }}
-          >
+          <span style={{
+            position: "absolute", top: -2, right: -2,
+            minWidth: 16, height: 16,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            borderRadius: 8, padding: "0 4px",
+            background: "#ff453a",
+            fontSize: 9, fontWeight: 700, color: "#fff",
+            fontFamily: mono,
+            lineHeight: 1,
+            boxShadow: "0 0 0 2px var(--th-bg-primary)",
+          }}>
             {unreadCount > 99 ? "99+" : unreadCount}
           </span>
         )}
       </button>
 
-      {/* Backdrop */}
+      {/* ── Backdrop ── */}
       {open && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 399, background: "rgba(0,0,0,0.3)" }} onClick={() => setOpen(false)} />
+        <div
+          style={{ position: "fixed", inset: 0, zIndex: 399, background: "rgba(0,0,0,0.25)" }}
+          onClick={() => setOpen(false)}
+        />
       )}
 
-      {/* Slide panel */}
+      {/* ── Slide panel ── */}
       <div
         ref={panelRef}
         style={{
-          position: "fixed", top: 44, right: 0, width: 320, bottom: 80, zIndex: 400,
-          background: "var(--th-bg-surface)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)",
-          borderLeft: "1px solid var(--th-border-strong)", borderTopLeftRadius: 10,
+          position: "fixed", top: 44, right: 0, width: 340, bottom: 80,
+          zIndex: 400,
+          background: "var(--th-bg-surface)",
+          backdropFilter: "blur(28px) saturate(160%)",
+          WebkitBackdropFilter: "blur(28px) saturate(160%)",
+          borderLeft: "1px solid var(--th-border-strong)",
+          borderTopLeftRadius: 12,
           display: "flex", flexDirection: "column",
-          transform: open ? "translateX(0)" : "translateX(320px)",
-          transition: "transform 0.28s cubic-bezier(0.4,0,0.2,1)",
+          transform: open ? "translateX(0)" : "translateX(340px)",
+          transition: "transform 0.26s cubic-bezier(0.32, 0, 0.15, 1)",
           pointerEvents: open ? "auto" : "none",
+          boxShadow: open ? "-8px 0 32px rgba(0,0,0,0.3)" : "none",
         }}
       >
-        {/* macOS titlebar */}
-        <div
-          className="flex items-center gap-3 px-3 py-2"
-          style={{ borderBottom: "1px solid var(--th-border)", background: "var(--th-glass-bg)", minHeight: 40, flexShrink: 0, borderTopLeftRadius: 10 }}
-        >
+        {/* ── Titlebar ── */}
+        <div style={{
+          display: "flex", alignItems: "center",
+          padding: "0 14px",
+          height: 44,
+          background: "var(--th-glass-bg)",
+          borderBottom: "1px solid var(--th-border)",
+          borderTopLeftRadius: 12,
+          flexShrink: 0,
+          gap: 10,
+        }}>
           <TrafficLights onClose={() => setOpen(false)} />
-          <span className="text-xs font-semibold tracking-wide flex-1" style={{ color: "var(--th-text-heading)", fontFamily: "var(--th-font-mono)" }}>
-            🔔 Notifications{unreadCount > 0 && <span style={{ marginLeft: 6, fontSize: 10, color: "var(--th-accent)" }}>({unreadCount})</span>}
-          </span>
-          <div className="flex items-center gap-1">
+
+          <div style={{ display: "flex", alignItems: "center", gap: 6, flex: 1 }}>
+            <span style={{ color: "var(--th-text-muted)", display: "flex" }}><IconBell size={13} /></span>
+            <span style={{ fontFamily: mono, fontSize: 12, fontWeight: 600, color: "var(--th-text-heading)" }}>
+              알림
+            </span>
+            {unreadCount > 0 && (
+              <span style={{
+                fontFamily: mono, fontSize: 10, fontWeight: 700,
+                padding: "1px 7px", borderRadius: 20,
+                background: "rgba(255,69,58,0.12)",
+                border: "1px solid rgba(255,69,58,0.3)",
+                color: "#ff453a",
+              }}>
+                {unreadCount}
+              </span>
+            )}
+          </div>
+
+          {/* Actions */}
+          <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
             {/* Browser push toggle */}
             {typeof Notification !== "undefined" && (
               <button
                 type="button"
-                title={pushEnabled ? "Browser push ON" : "Browser push OFF"}
+                title={pushEnabled ? "브라우저 알림 ON" : "브라우저 알림 OFF"}
                 onClick={() => {
                   if (Notification.permission === "granted") {
                     setPushEnabled((v) => !v);
@@ -416,33 +515,37 @@ export default function NotificationCenter({ on, onNavigateTask, onOpenDecisionI
                     void Notification.requestPermission().then((p) => setPushEnabled(p === "granted"));
                   }
                 }}
-                className="inline-flex h-7 w-7 items-center justify-center transition"
-                style={{ borderRadius: 0, background: pushEnabled ? "var(--th-green-glow)" : "var(--th-bg-elevated)", color: pushEnabled ? "var(--th-success, #22c55e)" : "var(--th-text-muted)", border: "1px solid var(--th-border)" }}
+                style={{
+                  width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center",
+                  borderRadius: 7,
+                  background: pushEnabled ? "rgba(48,209,88,0.12)" : "var(--th-hover-overlay)",
+                  border: `1px solid ${pushEnabled ? "rgba(48,209,88,0.3)" : "var(--th-border)"}`,
+                  color: pushEnabled ? "#30d158" : "var(--th-text-muted)",
+                  cursor: "pointer",
+                  transition: "background 0.12s",
+                }}
               >
-                {pushEnabled ? <IconBell /> : <IconBellOff />}
+                {pushEnabled ? <IconBell size={12} /> : <IconBellOff size={12} />}
               </button>
             )}
-
-            {/* Hide read toggle */}
-            <button
-              type="button"
-              onClick={() => setHideRead((v) => !v)}
-              className="inline-flex h-7 items-center justify-center px-2 text-[10px] font-mono transition"
-              style={{ borderRadius: 0, background: hideRead ? "rgba(245,158,11,0.15)" : "var(--th-bg-elevated)", color: hideRead ? "var(--th-accent)" : "var(--th-text-muted)", border: "1px solid var(--th-border)" }}
-            >
-              {hideRead ? "Unread" : "All"}
-            </button>
 
             {/* Mark all read */}
             {unreadCount > 0 && (
               <button
                 type="button"
-                title="Mark all read"
                 onClick={handleMarkAllRead}
-                className="inline-flex h-7 items-center justify-center px-2 text-[10px] font-mono transition"
-                style={{ borderRadius: 0, color: "#10b981", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}
+                title="모두 읽음"
+                style={{
+                  height: 28, padding: "0 9px",
+                  borderRadius: 7,
+                  background: "rgba(48,209,88,0.1)",
+                  border: "1px solid rgba(48,209,88,0.25)",
+                  fontFamily: mono, fontSize: 10, fontWeight: 600,
+                  color: "#30d158", cursor: "pointer",
+                  whiteSpace: "nowrap",
+                }}
               >
-                ✓ all
+                모두 읽음
               </button>
             )}
 
@@ -450,10 +553,15 @@ export default function NotificationCenter({ on, onNavigateTask, onOpenDecisionI
             {readCount > 0 && (
               <button
                 type="button"
-                title="Delete all read"
                 onClick={handleClearRead}
-                className="inline-flex h-7 w-7 items-center justify-center transition"
-                style={{ borderRadius: 0, color: "#ef4444", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}
+                title="읽은 항목 삭제"
+                style={{
+                  width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center",
+                  borderRadius: 7,
+                  background: "rgba(255,69,58,0.1)",
+                  border: "1px solid rgba(255,69,58,0.25)",
+                  color: "#ff453a", cursor: "pointer",
+                }}
               >
                 <IconTrash />
               </button>
@@ -461,50 +569,109 @@ export default function NotificationCenter({ on, onNavigateTask, onOpenDecisionI
           </div>
         </div>
 
-        {/* Type filter chips */}
-        <div
-          className="flex items-center gap-1 px-3 py-2 overflow-x-auto"
-          style={{ borderBottom: "1px solid var(--th-border)", flexShrink: 0 }}
-        >
+        {/* ── Filter chips ── */}
+        <div style={{
+          display: "flex", alignItems: "center", gap: 5,
+          padding: "8px 12px",
+          borderBottom: "1px solid var(--th-border)",
+          flexShrink: 0, overflowX: "auto",
+        }}>
           {TYPE_FILTERS.map((f) => {
             const active = typeFilter === f.key;
-            const count = f.key === "all" ? items.filter((i) => !i.read).length : items.filter((i) => i.type === f.key && !i.read).length;
+            const count = f.key === "all"
+              ? items.filter((i) => !i.read).length
+              : items.filter((i) => i.type === f.key && !i.read).length;
             return (
               <button
                 key={f.key}
                 type="button"
                 onClick={() => setTypeFilter(f.key)}
-                className="inline-flex items-center gap-1 px-2 py-1 text-[10px] font-medium transition whitespace-nowrap"
-                style={{ borderRadius: 0, background: active ? "var(--th-accent)" : "var(--th-bg-elevated)", color: active ? "#fff" : "var(--th-text-secondary)", border: active ? "none" : "1px solid var(--th-border)" }}
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 4,
+                  padding: "4px 10px",
+                  borderRadius: 20,
+                  background: active ? "var(--th-accent)" : "var(--th-hover-overlay)",
+                  border: `1px solid ${active ? "transparent" : "var(--th-border)"}`,
+                  fontFamily: mono, fontSize: 10, fontWeight: active ? 600 : 400,
+                  color: active ? "#fff" : "var(--th-text-secondary)",
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
+                  flexShrink: 0,
+                  transition: "background 0.12s, color 0.12s",
+                }}
               >
                 {f.icon}
                 {f.label}
                 {count > 0 && (
-                  <span style={{ background: active ? "rgba(255,255,255,0.25)" : "var(--th-border)", borderRadius: 8, padding: "0 4px", minWidth: 14, textAlign: "center" }}>
+                  <span style={{
+                    background: active ? "rgba(255,255,255,0.25)" : "rgba(255,69,58,0.2)",
+                    color: active ? "#fff" : "#ff453a",
+                    borderRadius: 10, padding: "0 4px",
+                    fontSize: 9, fontWeight: 700, minWidth: 14, textAlign: "center",
+                  }}>
                     {count}
                   </span>
                 )}
               </button>
             );
           })}
+
+          <div style={{ flex: 1 }} />
+
+          {/* Hide read toggle */}
+          <button
+            type="button"
+            onClick={() => setHideRead((v) => !v)}
+            style={{
+              height: 26, padding: "0 10px",
+              borderRadius: 20,
+              background: hideRead ? "rgba(245,158,11,0.12)" : "transparent",
+              border: `1px solid ${hideRead ? "rgba(245,158,11,0.3)" : "var(--th-border)"}`,
+              fontFamily: mono, fontSize: 10,
+              color: hideRead ? "var(--th-accent)" : "var(--th-text-muted)",
+              cursor: "pointer",
+              flexShrink: 0,
+              whiteSpace: "nowrap",
+            }}
+          >
+            {hideRead ? "미읽음만" : "전체"}
+          </button>
         </div>
 
-        {/* Notification list with date groups */}
-        <div className="overflow-y-auto flex-1">
+        {/* ── Notification list ── */}
+        <div style={{ flex: 1, overflowY: "auto", paddingTop: 4, paddingBottom: 4 }}>
           {groups.length === 0 && (
-            <div className="px-4 py-10 text-center text-sm" style={{ color: "var(--th-text-muted)", fontFamily: "var(--th-font-mono)", fontSize: 11 }}>
-              {hideRead ? "No unread notifications" : "No notifications"}
+            <div style={{
+              display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+              height: 160, gap: 10,
+            }}>
+              <span style={{ color: "var(--th-text-muted)", opacity: 0.4 }}><IconBell size={28} /></span>
+              <span style={{ fontFamily: mono, fontSize: 11, color: "var(--th-text-muted)" }}>
+                {hideRead ? "미읽은 알림 없음" : "알림 없음"}
+              </span>
             </div>
           )}
 
           {groups.map(({ bucket, items: groupItems }) => (
             <div key={bucket}>
               {/* Date section header */}
-              <div style={{ padding: "6px 16px 4px", fontFamily: "var(--th-font-mono)", fontSize: 9, color: "var(--th-text-muted)", textTransform: "uppercase", letterSpacing: "0.1em", background: "var(--th-bg-panel)", borderBottom: "1px solid var(--th-border)", position: "sticky", top: 0, zIndex: 1 }}>
+              <div style={{
+                padding: "8px 16px 5px",
+                fontFamily: mono, fontSize: 9,
+                color: "var(--th-text-muted)",
+                textTransform: "uppercase",
+                letterSpacing: "0.08em",
+                position: "sticky", top: 0, zIndex: 1,
+                background: "var(--th-bg-surface)",
+                display: "flex", alignItems: "center", gap: 8,
+              }}>
                 {BUCKET_LABELS[bucket]}
-                <span style={{ marginLeft: 6, color: "var(--th-border)" }}>
-                  {groupItems.filter((i) => !i.read).length > 0 && `${groupItems.filter((i) => !i.read).length} unread`}
-                </span>
+                <div style={{ flex: 1, height: 1, background: "var(--th-border)" }} />
+                {groupItems.filter((i) => !i.read).length > 0 && (
+                  <span style={{ color: "var(--th-accent)", fontWeight: 600 }}>
+                    {groupItems.filter((i) => !i.read).length}
+                  </span>
+                )}
               </div>
 
               {groupItems.map((item) => (
@@ -521,19 +688,31 @@ export default function NotificationCenter({ on, onNavigateTask, onOpenDecisionI
           ))}
         </div>
 
-        {/* Footer summary */}
+        {/* ── Footer ── */}
         {items.length > 0 && (
-          <div style={{ padding: "6px 14px", borderTop: "1px solid var(--th-border)", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <span style={{ fontFamily: "var(--th-font-mono)", fontSize: 10, color: "var(--th-text-muted)" }}>
-              {items.length} total · {unreadCount} unread
+          <div style={{
+            padding: "7px 14px",
+            borderTop: "1px solid var(--th-border)",
+            flexShrink: 0,
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+          }}>
+            <span style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-muted)" }}>
+              총 {items.length}개 · 미읽음 {unreadCount}개
             </span>
             {readCount > 0 && (
               <button
                 type="button"
                 onClick={handleClearRead}
-                style={{ fontFamily: "var(--th-font-mono)", fontSize: 10, color: "#ef444499", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                style={{
+                  fontFamily: mono, fontSize: 10,
+                  color: "rgba(255,69,58,0.6)",
+                  background: "none", border: "none",
+                  cursor: "pointer", padding: 0,
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.color = "#ff453a"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(255,69,58,0.6)"; }}
               >
-                Clear {readCount} read
+                읽은 알림 {readCount}개 삭제
               </button>
             )}
           </div>

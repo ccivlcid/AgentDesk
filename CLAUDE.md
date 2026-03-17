@@ -195,6 +195,48 @@ Current shortcuts:
 
 ---
 
+## 6-B. DB Migration Checklist
+
+Use this checklist every time you add a DB column or table:
+
+1. **APPEND only** to `server/modules/bootstrap/schema/versioned-migrations.ts`
+2. **ID format**: `YYYY-MM-DD-NNN-short-description` (zero-padded, chronological)
+3. **Last known ID**: `2026-03-19-000-rename-harness-to-synapse` → next: `2026-03-19-001-*` or `2026-03-20-001-*`
+4. Wrap each DDL in `try { ... } catch { /* already exists */ }` for idempotency
+5. NEVER change or remove existing entries
+
+```typescript
+// Template
+{
+  id: "YYYY-MM-DD-NNN-description",
+  up: (db) => {
+    try {
+      db.exec("ALTER TABLE foo ADD COLUMN bar TEXT");
+    } catch { /* already exists */ }
+  },
+},
+```
+
+---
+
+## 6-C. CreateTaskModal Extension Guide
+
+When adding a new field to the task creation form, follow this full chain:
+
+| # | File | Change |
+|---|------|--------|
+| 1 | `src/components/taskboard/constants.ts` | Add field to `CreateTaskDraft` type |
+| 2 | `src/components/taskboard/CreateTaskModal.tsx` | Add `useState`, pass to `onCreate` |
+| 3 | `src/components/taskboard/create-modal/CreateTaskModalView.tsx` | Add UI input element |
+| 4 | `src/components/taskboard/create-modal/useDraftState.ts` | Include field in draft save/restore |
+| 5 | `server/modules/routes/core/tasks/crud.ts` | Read field in create/update handler |
+| 6 | `server/modules/bootstrap/schema/versioned-migrations.ts` | Add DB column migration |
+| 7 | `src/api/tasks.ts` | Include field in API request type |
+
+**Reference**: `kb_context_sources` field (Synapse integration) is the canonical example of this pattern.
+
+---
+
 ## 7. Tech Stack
 
 | Area | Technology |
@@ -224,3 +266,5 @@ Current shortcuts:
 | [`docs/progress.md`](docs/progress.md) | Development progress log |
 | [`docs/bugs/PIPELINE-AUDIT-2026-03-16.md`](docs/bugs/PIPELINE-AUDIT-2026-03-16.md) | **Known bugs — execution pipeline (BUG-01~06): read before touching execution-run.ts / stream-tools.ts** |
 | [`docs/bugs/UI-AUDIT-2026-03-16.md`](docs/bugs/UI-AUDIT-2026-03-16.md) | **Known bugs — Workflow Builder (WB-01~03) · Flow Graph (FG-01~03): read before touching these features** |
+| [`docs/features/figma-integration.md`](docs/features/figma-integration.md) | Figma 연동 스펙 — API key 등록 · 태스크 URL 첨부 · 에이전트 컨텍스트 주입 전체 흐름 |
+| [`docs/features/design-workflow-template.md`](docs/features/design-workflow-template.md) | Design 워크플로우 템플릿 스펙 — 4단계 노드 체인 · JSON 스키마 · 구현 체크리스트 |

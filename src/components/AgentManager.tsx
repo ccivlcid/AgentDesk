@@ -15,15 +15,21 @@ export default function AgentManager({
   departments,
   onAgentsChange,
   projectAgentIds,
+  createTrigger,
 }: AgentManagerProps) {
   const { t, locale } = useI18n();
   const isKo = locale.startsWith("ko");
   const tr = (ko: string, en: string, ja?: string, zh?: string) => t({ ko, en, ja: ja ?? en, zh: zh ?? en });
 
   const [personas, setPersonas] = useState<Persona[]>([]);
+  const [personasLoading, setPersonasLoading] = useState(true);
 
   useEffect(() => {
-    fetchPersonas().then((ps) => setPersonas(ps)).catch(() => setPersonas([]));
+    setPersonasLoading(true);
+    fetchPersonas()
+      .then((ps) => setPersonas(ps))
+      .catch(() => setPersonas([]))
+      .finally(() => setPersonasLoading(false));
   }, []);
 
   const [subTab, setSubTab] = useState<"agents" | "departments">("agents");
@@ -82,6 +88,11 @@ export default function AgentManager({
     setShowModal(true);
   }, [deptTab, departments]);
 
+  // Dock "새 에이전트" 버튼: createTrigger가 증가할 때마다 채용 모달 즉시 열기
+  useEffect(() => {
+    if (createTrigger && createTrigger > 0) openCreate();
+  }, [createTrigger]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const openEdit = useCallback(
     async (agent: Agent) => {
       setModalAgent(agent);
@@ -106,6 +117,13 @@ export default function AgentManager({
         sprite_number: agent.sprite_number ?? null,
         personality: personaText,
         persona_id: agent.persona_id || undefined,
+        kb_default_sources: (() => {
+          try {
+            return (agent as any).kb_default_sources
+              ? JSON.parse((agent as any).kb_default_sources)
+              : undefined;
+          } catch { return undefined; }
+        })(),
       });
       setShowModal(true);
     },
@@ -136,6 +154,9 @@ export default function AgentManager({
         sprite_number: form.sprite_number,
         personality: form.personality.trim() || null,
         persona_id: form.persona_id || null,
+        kb_default_sources: form.kb_default_sources && form.kb_default_sources.length > 0
+          ? JSON.stringify(form.kb_default_sources)
+          : null,
       };
       let savedAgentId: string | undefined = modalAgent?.id;
       if (modalAgent) {
@@ -443,6 +464,7 @@ export default function AgentManager({
           agents={agents}
           departments={departments}
           personas={personas}
+          personasLoading={personasLoading}
           projectAgentIds={projectAgentIds}
           deptTab={deptTab}
           setDeptTab={setDeptTab}

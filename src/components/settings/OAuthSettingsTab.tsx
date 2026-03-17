@@ -112,7 +112,11 @@ export default function OAuthSettingsTab({
       )}
 
       {oauthLoading ? (
-        <div className="text-center py-8 text-sm font-mono" style={{ color: "var(--th-text-muted)" }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, padding: "32px 0", fontFamily: "var(--th-font-mono)", fontSize: 11, color: "var(--th-text-muted)" }}>
+          <svg className="animate-spin" width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+            <circle cx="12" cy="12" r="10" strokeOpacity={0.2} />
+            <path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" />
+          </svg>
           {t({ ko: "로딩 중...", en: "Loading...", ja: "読み込み中...", zh: "加载中..." })}
         </div>
       ) : oauthStatus ? (

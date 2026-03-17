@@ -1,0 +1,313 @@
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { AnimatePresence, motion } from "framer-motion";
+import { useUiStore } from "../../store/uiStore";
+import { useAgentStore } from "../../store/agentStore";
+import { useTaskStore } from "../../store/taskStore";
+import { useI18n } from "../../i18n";
+import { useTheme } from "../../ThemeContext";
+import AgentDetailHeader from "./AgentDetailHeader";
+import AgentDetailCurrentTask from "./AgentDetailCurrentTask";
+import AgentDetailSections from "./AgentDetailSections";
+
+export interface AgentDetailData {
+  skills: Array<{ id: string; name: string; description?: string }>;
+  rules: Array<{ id: string; title: string; scope: string; enabled: boolean }>;
+  memories: Array<{ id: string; title: string; created_at?: number }>;
+  recentTasks: Array<{ id: string; title: string; status: string; completed_at?: number }>;
+  cost: { thisMonthUsd: number; thisMonthTokens: number; totalTokens: number } | null;
+}
+
+export default function AgentDetailPanel() {
+  const { selectedAgentId, setSelectedAgentId } = useUiStore();
+  const { agents, departments } = useAgentStore();
+  const { tasks, setTaskPanel } = useTaskStore();
+  const { t } = useI18n();
+  const { theme } = useTheme();
+  const isLight = theme === "light";
+
+  const [data, setData] = useState<AgentDetailData>({
+    skills: [], rules: [], memories: [], recentTasks: [], cost: null,
+  });
+  const [loading, setLoading] = useState(false);
+
+  const agent = agents.find((a) => a.id === selectedAgentId) ?? null;
+  const department = agent?.department_id ? departments.find((d) => d.id === agent.department_id) ?? null : null;
+  const currentTask = agent?.current_task_id ? tasks.find((tk) => tk.id === agent.current_task_id) ?? null : null;
+
+  const prevIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!selectedAgentId || selectedAgentId === prevIdRef.current) return;
+    prevIdRef.current = selectedAgentId;
+    setLoading(true);
+    setData({ skills: [], rules: [], memories: [], recentTasks: [], cost: null });
+
+    Promise.allSettled([
+      fetch(`/api/skills/available?agent_id=${selectedAgentId}`).then((r) => r.json()),
+      fetch(`/api/agent-rules?scope_type=agent&scope_id=${selectedAgentId}&limit=5`).then((r) => r.json()),
+      fetch(`/api/memory?scope_type=agent&scope_id=${selectedAgentId}&limit=5`).then((r) => r.json()),
+      fetch(`/api/tasks?agent_id=${selectedAgentId}&limit=3`).then((r) => r.json()),
+      fetch(`/api/agents/${selectedAgentId}/cost-summary`).then((r) => r.json()),
+    ]).then(([skills, rules, memories, recentTasks, cost]) => {
+      const rawRules = rules.status === "fulfilled"
+        ? (Array.isArray(rules.value) ? rules.value : (rules.value?.rules ?? []))
+        : [];
+      const rawCost = cost.status === "fulfilled" && cost.value?.ok ? cost.value : null;
+      setData({
+        skills:      skills.status === "fulfilled"
+          ? (Array.isArray(skills.value) ? skills.value : (skills.value?.skills ?? []))
+          : [],
+        rules:       rawRules.map((r: Record<string, unknown>) => ({
+          id:      r.id as string,
+          title:   (r.title as string) ?? "",
+          scope:   (r.scope_type as string) ?? "",
+          enabled: !!r.enabled,
+        })),
+        memories:    memories.status === "fulfilled"
+          ? (Array.isArray(memories.value) ? memories.value : (memories.value?.memories ?? []))
+          : [],
+        recentTasks: recentTasks.status === "fulfilled"
+          ? (Array.isArray(recentTasks.value) ? recentTasks.value : (recentTasks.value?.tasks ?? []))
+          : [],
+        cost: rawCost
+          ? { thisMonthUsd: rawCost.thisMonthUsd ?? 0, thisMonthTokens: rawCost.thisMonthTokens ?? 0, totalTokens: rawCost.totalTokens ?? 0 }
+          : null,
+      });
+    }).finally(() => setLoading(false));
+  }, [selectedAgentId]);
+
+  useEffect(() => {
+    if (!selectedAgentId) prevIdRef.current = null;
+  }, [selectedAgentId]);
+
+  const close = () => setSelectedAgentId(null);
+
+  const openTerminal = () => {
+    if (currentTask) {
+      setTaskPanel({ taskId: currentTask.id, tab: "terminal" });
+      close();
+    }
+  };
+
+  // ── 테마 토큰 ──────────────────────────────────────────────────────────
+  const tk = isLight ? {
+    bg:           "rgba(252,252,253,0.94)",
+    border:       "rgba(0,0,0,0.09)",
+    headerBg:     "rgba(246,247,248,0.95)",
+    headerBorder: "rgba(0,0,0,0.07)",
+    shadow:       "0 24px 80px rgba(0,0,0,0.18), 0 4px 16px rgba(0,0,0,0.10), 0 0 0 0.5px rgba(0,0,0,0.06)",
+    backdrop:     "blur(40px) saturate(200%)",
+    overlayBg:    "rgba(0,0,0,0.25)",
+    overlayBlur:  "blur(4px)",
+    titleText:    "rgba(0,0,0,0.35)",
+    dot0:         "#ff5f57",
+    dot1:         "#febc2e",
+    dot2:         "#28c840",
+    dotInactive:  "rgba(0,0,0,0.12)",
+    escBg:        "rgba(0,0,0,0.05)",
+    escBorder:    "rgba(0,0,0,0.08)",
+    escColor:     "rgba(0,0,0,0.35)",
+    escHoverBg:   "rgba(0,0,0,0.09)",
+    escHoverColor:"rgba(0,0,0,0.7)",
+    logBg:        "rgba(48,209,88,0.1)",
+    logBorder:    "rgba(48,209,88,0.25)",
+  } : {
+    bg:           "rgba(13,15,22,0.96)",
+    border:       "rgba(255,255,255,0.1)",
+    headerBg:     "rgba(255,255,255,0.025)",
+    headerBorder: "rgba(255,255,255,0.07)",
+    shadow:       "0 24px 80px rgba(0,0,0,0.7), 0 4px 16px rgba(0,0,0,0.4), 0 0 0 0.5px rgba(255,255,255,0.04) inset",
+    backdrop:     "blur(40px) saturate(180%)",
+    overlayBg:    "rgba(0,0,0,0.55)",
+    overlayBlur:  "blur(8px)",
+    titleText:    "rgba(255,255,255,0.3)",
+    dot0:         "#ff5f57",
+    dot1:         "#febc2e",
+    dot2:         "#28c840",
+    dotInactive:  "rgba(255,255,255,0.12)",
+    escBg:        "rgba(255,255,255,0.05)",
+    escBorder:    "rgba(255,255,255,0.09)",
+    escColor:     "rgba(255,255,255,0.35)",
+    escHoverBg:   "rgba(255,255,255,0.1)",
+    escHoverColor:"rgba(255,255,255,0.7)",
+    logBg:        "rgba(48,209,88,0.12)",
+    logBorder:    "rgba(48,209,88,0.25)",
+  };
+
+  return createPortal(
+    <AnimatePresence>
+      {selectedAgentId && (
+        <div
+          key="agent-detail-root"
+          data-no-ctx="true"
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 500,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          {/* 백드롭 */}
+          <motion.div
+            key="backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.16 }}
+            onClick={close}
+            style={{
+              position: "absolute",
+              inset: 0,
+              background: tk.overlayBg,
+              backdropFilter: tk.overlayBlur,
+              WebkitBackdropFilter: tk.overlayBlur,
+            }}
+          />
+
+          {/* 카드 */}
+          <motion.div
+            key="card"
+            initial={{ opacity: 0, scale: 0.94 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.94 }}
+            transition={{ duration: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
+            style={{
+              position: "relative",
+              zIndex: 1,
+              width: 440,
+              maxHeight: "calc(100dvh - 100px)",
+              display: "flex",
+              flexDirection: "column",
+              background: tk.bg,
+              backdropFilter: tk.backdrop,
+              WebkitBackdropFilter: tk.backdrop,
+              border: `1px solid ${tk.border}`,
+              borderRadius: 16,
+              boxShadow: tk.shadow,
+              overflow: "hidden",
+            }}
+          >
+            {/* 타이틀바 */}
+            <div style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              padding: "11px 14px",
+              borderBottom: `1px solid ${tk.headerBorder}`,
+              flexShrink: 0,
+              background: tk.headerBg,
+            }}>
+              {/* 신호등 */}
+              <div style={{ display: "flex", gap: 6, marginRight: 4 }}>
+                {([tk.dot0, tk.dot1, tk.dot2] as const).map((c, i) => (
+                  <div
+                    key={i}
+                    onClick={i === 0 ? close : undefined}
+                    style={{
+                      width: 12, height: 12, borderRadius: "50%",
+                      background: c,
+                      cursor: i === 0 ? "pointer" : "default",
+                      boxShadow: `0 0 0 0.5px rgba(0,0,0,0.3)`,
+                    }}
+                  />
+                ))}
+              </div>
+
+              <span style={{
+                flex: 1,
+                fontFamily: "var(--th-font-mono, monospace)",
+                fontSize: 11,
+                color: tk.titleText,
+                letterSpacing: "0.06em",
+                userSelect: "none",
+              }}>
+                {agent
+                  ? `${agent.avatar_emoji ?? "🤖"} ${agent.name_ko || agent.name}`
+                  : t({ ko: "에이전트 상세", en: "Agent Detail", ja: "エージェント詳細", zh: "代理详情" })}
+              </span>
+
+              {/* 로그 버튼 — 실행 중 태스크가 있을 때만 */}
+              {currentTask && (
+                <button
+                  type="button"
+                  onClick={openTerminal}
+                  title={t({ ko: "실시간 로그 보기", en: "View live log", ja: "ライブログ", zh: "查看日志" })}
+                  style={{
+                    fontFamily: "var(--th-font-mono, monospace)",
+                    fontSize: 10,
+                    background: tk.logBg,
+                    border: `1px solid ${tk.logBorder}`,
+                    borderRadius: 5,
+                    color: "#30d158",
+                    padding: "2px 8px",
+                    cursor: "pointer",
+                    letterSpacing: "0.04em",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 4,
+                  }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(48,209,88,0.22)"; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = tk.logBg; }}
+                >
+                  <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#30d158", display: "inline-block", animation: "pulse 1.5s infinite" }} />
+                  {t({ ko: "로그", en: "log", ja: "ログ", zh: "日志" })}
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={close}
+                style={{
+                  fontFamily: "var(--th-font-mono, monospace)",
+                  fontSize: 10,
+                  background: tk.escBg,
+                  border: `1px solid ${tk.escBorder}`,
+                  borderRadius: 5,
+                  color: tk.escColor,
+                  padding: "2px 8px",
+                  cursor: "pointer",
+                  lineHeight: "16px",
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLButtonElement).style.background = tk.escHoverBg;
+                  (e.currentTarget as HTMLButtonElement).style.color = tk.escHoverColor;
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLButtonElement).style.background = tk.escBg;
+                  (e.currentTarget as HTMLButtonElement).style.color = tk.escColor;
+                }}
+              >
+                esc
+              </button>
+            </div>
+
+            {/* 본문 */}
+            <div style={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
+              {!agent ? (
+                <div style={{
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  height: 160,
+                  fontFamily: "var(--th-font-mono, monospace)",
+                  fontSize: 11,
+                  color: isLight ? "rgba(0,0,0,0.3)" : "rgba(255,255,255,0.25)",
+                }}>
+                  {t({ ko: "에이전트를 선택하세요", en: "Select an agent", ja: "エージェントを選択", zh: "选择代理" })}
+                </div>
+              ) : (
+                <>
+                  <AgentDetailHeader agent={agent} department={department} isLight={isLight} />
+                  <AgentDetailCurrentTask task={currentTask} onOpenTerminal={openTerminal} isLight={isLight} />
+                  <AgentDetailSections data={data} loading={loading} isLight={isLight} />
+                </>
+              )}
+            </div>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>,
+    document.body,
+  );
+}

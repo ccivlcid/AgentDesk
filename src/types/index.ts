@@ -310,6 +310,7 @@ export interface Project {
   created_at: number;
   updated_at: number;
   github_repo?: string | null;
+  figma_url?: string | null;
   // 2.0 fields
   category_id?: string | null;
   category_version?: number | null;
@@ -317,6 +318,64 @@ export interface Project {
   risk_profile?: string | null;
   required_gates?: string | null;
   deliverable_schema?: string | null;
+  folder_id?: string | null;
+}
+
+export interface ProjectSource {
+  id: string;
+  source_project_id: string;
+  source_project_name: string;
+  source_category_id: string | null;
+  source_category_name: string | null;
+  source_category_color: string | null;
+  label: string | null;
+  sort_order: number;
+  checked_count: number;
+  total_count: number;
+  checked_deliverables: Array<{ key: string; label: string; note: string | null }>;
+}
+
+export interface ProjectSourcesResponse {
+  ok: boolean;
+  sources: ProjectSource[];
+}
+
+export interface ProjectDeliverableItem {
+  key: string;
+  label: string;
+  type: string;
+  checked: boolean;
+  checked_at: number | null;
+  note: string | null;
+}
+
+export interface ProjectDeliverablesResponse {
+  ok: boolean;
+  items: ProjectDeliverableItem[];
+}
+
+export interface ProjectFolder {
+  id: string;
+  name: string;
+  base_path: string;
+  color: string;
+  icon: string | null;
+  sort_order: number;
+  created_at: number;
+  updated_at: number;
+  projects: Array<{
+    id: string;
+    name: string;
+    project_path: string;
+    category_id: string | null;
+  }>;
+}
+
+export interface ProjectFolderMoveResult {
+  ok: boolean;
+  new_path: string;
+  moved_on_disk: boolean;
+  already_in_folder?: boolean;
 }
 
 export interface TaskLog {

@@ -7,13 +7,14 @@ const mono = "var(--th-font-mono)";
 export default function CliCostWidget() {
   const [usage, setUsage] = useState<Record<string, CliUsageEntry> | null>(null);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
   const { t } = useI18n();
 
   useEffect(() => {
     getCliUsage().then((r) => {
       if (r.ok) setUsage(r.usage);
       setLoading(false);
-    }).catch(() => setLoading(false));
+    }).catch(() => { setFetchError(true); setLoading(false); });
   }, []);
 
   const entries = usage ? Object.entries(usage) : [];
@@ -40,7 +41,11 @@ export default function CliCostWidget() {
 
       {/* 에이전트별 내역 */}
       <div style={{ flex: 1, overflow: "auto", padding: "4px 0" }}>
-        {entries.length === 0 ? (
+        {fetchError ? (
+          <div style={{ fontFamily: mono, fontSize: 11, color: "var(--th-danger, #ef4444)", padding: "20px", textAlign: "center" }}>
+            {t({ ko: "서버 연결 실패", en: "Server unreachable", ja: "サーバー接続失敗", zh: "服务器连接失败" })}
+          </div>
+        ) : entries.length === 0 ? (
           <div style={{ fontFamily: mono, fontSize: 11, color: "var(--th-text-muted)", padding: "20px", textAlign: "center" }}>
             {t({ ko: "데이터 없음", en: "No data", ja: "データなし", zh: "无数据" })}
           </div>

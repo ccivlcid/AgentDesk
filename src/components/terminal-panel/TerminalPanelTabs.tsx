@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 
 export interface TerminalPanelTabsProps {
   activeTab: "terminal" | "minutes";
@@ -7,46 +7,63 @@ export interface TerminalPanelTabsProps {
   children?: ReactNode;
 }
 
-/**
- * Tab buttons (Terminal | Minutes) and optional content wrapper.
- * Use children to render tab content below or elsewhere.
- */
-export function TerminalPanelTabs({ activeTab, setActiveTab, tr, children }: TerminalPanelTabsProps) {
+const mono = "var(--th-font-mono)";
+
+export function TerminalPanelTabs({ activeTab, setActiveTab, tr }: TerminalPanelTabsProps) {
   return (
-    <>
-      <div
-        className="inline-flex overflow-hidden w-fit"
-        style={{ borderRadius: 0, border: "1px solid var(--th-border)" }}
-      >
-        {(["terminal", "minutes"] as const).map((tabKey) => {
-          const isActive = activeTab === tabKey;
-          const label = tabKey === "terminal"
-            ? tr("TERMINAL", "TERMINAL", "ターミナル", "终端")
-            : tr("MINUTES", "MINUTES", "会議録", "会议纪要");
-          return (
-            <button
-              key={tabKey}
-              type="button"
-              onClick={() => setActiveTab(tabKey)}
-              style={{
-                fontFamily: "var(--th-font-mono)",
-                fontSize: "10px",
-                letterSpacing: "0.06em",
-                padding: "2px 8px",
-                background: isActive ? "rgba(6,182,212,0.15)" : "var(--th-bg-surface)",
-                color: isActive ? "#7dd3fc" : "var(--th-text-muted)",
-                border: "none",
-                borderRight: "1px solid var(--th-border)",
-                cursor: "pointer",
-                transition: "background 0.1s, color 0.1s",
-              }}
-            >
-              {label}
-            </button>
-          );
-        })}
-      </div>
-      {children != null ? children : null}
-    </>
+    <div style={{
+      display: "inline-flex",
+      borderRadius: 7,
+      border: "1px solid var(--th-border)",
+      background: "var(--th-bg-surface)",
+      overflow: "hidden",
+      flexShrink: 0,
+    }}>
+      {(["terminal", "minutes"] as const).map((tabKey) => {
+        const isActive = activeTab === tabKey;
+        const label = tabKey === "terminal"
+          ? tr("터미널", "Terminal", "ターミナル", "终端")
+          : tr("회의록", "Minutes", "会議録", "会议纪要");
+        return (
+          <TabBtn
+            key={tabKey}
+            label={label}
+            active={isActive}
+            onClick={() => setActiveTab(tabKey)}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+function TabBtn({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        fontFamily: mono,
+        fontSize: 10,
+        fontWeight: active ? 700 : 500,
+        letterSpacing: "0.04em",
+        padding: "3px 10px",
+        border: "none",
+        background: active
+          ? "var(--th-accent)"
+          : hovered ? "var(--th-hover-overlay)" : "transparent",
+        color: active
+          ? "var(--th-accent-text, #000)"
+          : hovered ? "var(--th-text-primary)" : "var(--th-text-muted)",
+        cursor: "pointer",
+        transition: "background 0.1s, color 0.1s",
+        borderRadius: active ? 6 : 0,
+      }}
+    >
+      {label}
+    </button>
   );
 }

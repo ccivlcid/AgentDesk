@@ -43,6 +43,7 @@ export default function KeyboardShortcutsGuide({ open, onClose }: KeyboardShortc
         { keys: ["g", "c"], desc: t({ ko: "Chat 창 토글", en: "Toggle Chat window", ja: "Chatウィンドウ切替", zh: "切换 Chat 窗口" }) },
         { keys: ["g", "a"], desc: t({ ko: "에이전트 설정 창 토글", en: "Toggle Agent Manager window", ja: "エージェント設定切替", zh: "切换代理管理窗口" }) },
         { keys: ["g", "e"], desc: t({ ko: "에이전트 REPL 창 토글", en: "Toggle Agent REPL window", ja: "エージェントREPL切替", zh: "切换代理 REPL 窗口" }) },
+        { keys: ["g", "i"], desc: t({ ko: "Image Studio 창 토글", en: "Toggle Image Studio window", ja: "Image Studio切替", zh: "切换图像工作室窗口" }) },
       ],
     },
     {

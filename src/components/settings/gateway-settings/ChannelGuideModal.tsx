@@ -309,6 +309,7 @@ export default function ChannelGuideModal({ t, onClose }: GuideModalProps) {
         </div>
         <div className="flex-shrink-0 px-6 pt-4 pb-2 flex items-center justify-end md:hidden">
           <button
+            type="button"
             onClick={onClose}
             className="w-7 h-7 flex items-center justify-center transition"
             style={{ borderRadius: 6, color: "var(--th-text-secondary)" }}
@@ -390,6 +391,7 @@ export default function ChannelGuideModal({ t, onClose }: GuideModalProps) {
         {/* Footer */}
         <div className="flex-shrink-0 px-6 py-3 flex justify-end" style={{ borderTop: "1px solid var(--th-border)" }}>
           <button
+            type="button"
             onClick={onClose}
             className="px-4 py-1.5 text-xs font-mono transition" style={{ borderRadius: 0, background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)", border: "1px solid var(--th-border)" }}
           >

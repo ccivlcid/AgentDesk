@@ -219,14 +219,24 @@ export function registerTaskCrudRoutes(deps: TaskCrudRouteDeps): void {
       categoryId: resolvedCategoryId,
       projectId: resolvedProjectId,
     });
+    const kbContextSources = (body as any).kb_context_sources
+      ? (typeof (body as any).kb_context_sources === "string"
+          ? (body as any).kb_context_sources
+          : JSON.stringify((body as any).kb_context_sources))
+      : null;
+    const figmaUrl = typeof (body as any).figma_url === "string" && (body as any).figma_url
+      ? (body as any).figma_url
+      : null;
+
     db.prepare(
       `
     INSERT INTO tasks (
       id, title, description, department_id, assigned_agent_id, project_id,
       status, priority, task_type, workflow_pack_key, context_hint, workflow_meta_json, output_format,
-      project_path, base_branch, category_id, handoff_to_agent_id, handoff_condition, created_at, updated_at
+      project_path, base_branch, category_id, handoff_to_agent_id, handoff_condition,
+      kb_context_sources, figma_url, created_at, updated_at
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `,
     ).run(
       id,
@@ -251,6 +261,8 @@ export function registerTaskCrudRoutes(deps: TaskCrudRouteDeps): void {
       resolvedCategoryId,
       handoffToAgentId,
       handoffCondition,
+      kbContextSources,
+      figmaUrl,
       t,
       t,
     );
@@ -617,5 +629,47 @@ export function registerTaskCrudRoutes(deps: TaskCrudRouteDeps): void {
 
     broadcast("task_update", { id, deleted: true });
     res.json({ ok: true });
+  });
+
+  // ---------------------------------------------------------------------------
+  // GET /api/tasks/:id/meeting-minutes
+  // ---------------------------------------------------------------------------
+  app.get("/api/tasks/:id/meeting-minutes", (req, res) => {
+    const { id } = req.params as { id: string };
+    try {
+      const minutes = db
+        .prepare(
+          `SELECT id, task_id, meeting_type, round, title, status, started_at, completed_at, created_at
+           FROM meeting_minutes WHERE task_id = ? ORDER BY round ASC, started_at ASC`,
+        )
+        .all(id) as MeetingMinutesRow[];
+
+      const entries = db
+        .prepare(
+          `SELECT e.id, e.meeting_id, e.seq, e.speaker_agent_id, e.speaker_name,
+                  e.department_name, e.role_label, e.message_type, e.content, e.created_at
+           FROM meeting_minute_entries e
+           INNER JOIN meeting_minutes m ON e.meeting_id = m.id
+           WHERE m.task_id = ?
+           ORDER BY e.meeting_id, e.seq ASC`,
+        )
+        .all(id) as MeetingMinuteEntryRow[];
+
+      const entriesByMeeting = new Map<string, MeetingMinuteEntryRow[]>();
+      for (const entry of entries) {
+        const list = entriesByMeeting.get(entry.meeting_id) ?? [];
+        list.push(entry);
+        entriesByMeeting.set(entry.meeting_id, list);
+      }
+
+      const meetings = minutes.map((m) => ({
+        ...m,
+        entries: entriesByMeeting.get(m.id) ?? [],
+      }));
+
+      res.json({ ok: true, meetings });
+    } catch (err: any) {
+      res.status(500).json({ ok: false, error: err?.message || String(err) });
+    }
   });
 }

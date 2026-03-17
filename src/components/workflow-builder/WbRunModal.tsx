@@ -18,6 +18,7 @@ type Props = {
   nodes: Node[];
   edges: Edge[];
   workflowName: string;
+  figmaUrl?: string;
   onClose: () => void;
   onSuccess: (taskIds: string[]) => void;
 };
@@ -85,7 +86,7 @@ function resolveAgentDeps(agentIds: Set<string>, nodes: Node[], edges: Edge[]): 
   return deps;
 }
 
-export default function WbRunModal({ nodes, edges, workflowName, onClose, onSuccess }: Props) {
+export default function WbRunModal({ nodes, edges, workflowName, figmaUrl = "", onClose, onSuccess }: Props) {
   const { t } = useI18n();
   const { projects, currentProjectId } = useProjectStore();
   const currentProject = projects.find((p) => p.id === (currentProjectId ?? "")) ?? null;
@@ -133,6 +134,9 @@ export default function WbRunModal({ nodes, edges, workflowName, onClose, onSucc
 
     addLog(t({ ko: `${validItems.length}개 태스크 생성 중...`, en: `Creating ${validItems.length} tasks...`, ja: `${validItems.length}件のタスクを作成中...`, zh: `正在创建${validItems.length}个任务...` }));
 
+    // First agent node ID (for figma_url injection)
+    const firstAgentNodeId = validItems[0]?.nodeId;
+
     const results = await Promise.allSettled(
       validItems.map((item) => {
         const body: Record<string, unknown> = {
@@ -145,6 +149,8 @@ export default function WbRunModal({ nodes, edges, workflowName, onClose, onSucc
         if (contextHint) body.context_hint = contextHint;
         const selectedProject = projects.find((p) => p.id === projectId) ?? currentProject;
         if (selectedProject?.project_path) body.project_path = selectedProject.project_path;
+        // Inject figma_url into the first agent node's task
+        if (figmaUrl && item.nodeId === firstAgentNodeId) body.figma_url = figmaUrl;
         return fetch("/api/tasks", {
           method: "POST",
           headers: { "Content-Type": "application/json" },

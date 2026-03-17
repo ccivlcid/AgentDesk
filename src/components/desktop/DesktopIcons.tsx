@@ -177,7 +177,31 @@ export function IconLocalLlm({ color }: IconProps) {
   );
 }
 
+export function IconMarkdownDoc({ color }: IconProps) {
+  return (
+    <svg viewBox="0 0 28 28" fill="none" stroke={color} strokeWidth={S} strokeLinecap="round" strokeLinejoin="round" width={26} height={26}>
+      <path d="M6 3h11l5 5v17a1 1 0 01-1 1H6a1 1 0 01-1-1V4a1 1 0 011-1z" />
+      <path d="M17 3v5h5" />
+      <line x1="9" y1="13" x2="19" y2="13" />
+      <line x1="9" y1="17" x2="15" y2="17" />
+      <path d="M9 21h3l2-3 2 3h1" strokeWidth={1.4} />
+    </svg>
+  );
+}
+
 // ── Dock icons ────────────────────────────────────────────────────────────────
+
+export function IconDockTasks({ color }: IconProps) {
+  return (
+    <svg viewBox="0 0 28 28" fill="none" stroke={color} strokeWidth={S} strokeLinecap="round" strokeLinejoin="round" width={22} height={22}>
+      <rect x="4" y="5" width="20" height="18" rx="2.5" />
+      <line x1="4" y1="10" x2="24" y2="10" />
+      <path d="M9 14.5l2 2 4-4" />
+      <line x1="17" y1="14.5" x2="20" y2="14.5" />
+      <line x1="9" y1="19" x2="20" y2="19" />
+    </svg>
+  );
+}
 
 export function IconDockWorkflow({ color }: IconProps) {
   return (
@@ -217,3 +241,104 @@ export function IconDockChat({ color }: IconProps) {
     </svg>
   );
 }
+
+export function IconDockSynapse({ color }: IconProps) {
+  return (
+    <svg viewBox="0 0 28 28" fill="none" stroke={color} strokeWidth={S} strokeLinecap="round" strokeLinejoin="round" width={22} height={22}>
+      <rect x="4" y="6" width="8" height="6" rx="1.5" />
+      <rect x="16" y="16" width="8" height="6" rx="1.5" />
+      <path d="M8 12v4h12v-4" />
+      <line x1="14" y1="9" x2="20" y2="9" strokeDasharray="2 2" />
+      <line x1="8" y1="19" x2="14" y2="19" strokeDasharray="2 2" />
+    </svg>
+  );
+}
+
+// ── Project category icons ────────────────────────────────────────────────────
+
+/** cat_software_dev — 코드 brackets */
+export function IconProjectSoftware({ color }: IconProps) {
+  return (
+    <svg viewBox="0 0 28 28" fill="none" stroke={color} strokeWidth={S} strokeLinecap="round" strokeLinejoin="round" width={26} height={26}>
+      <polyline points="9,8 4,14 9,20" />
+      <polyline points="19,8 24,14 19,20" />
+      <line x1="16" y1="7" x2="12" y2="21" />
+    </svg>
+  );
+}
+
+/** cat_marketing — 메가폰 */
+export function IconProjectMarketing({ color }: IconProps) {
+  return (
+    <svg viewBox="0 0 28 28" fill="none" stroke={color} strokeWidth={S} strokeLinecap="round" strokeLinejoin="round" width={26} height={26}>
+      <path d="M5 11v6h4l7 5V6L9 11z" />
+      <path d="M21 11c1.1.9 1.8 2.3 1.8 3.7 0 1.4-.7 2.8-1.8 3.7" />
+      <line x1="9" y1="17" x2="9" y2="22" />
+    </svg>
+  );
+}
+
+/** cat_research — 돋보기 */
+export function IconProjectResearch({ color }: IconProps) {
+  return (
+    <svg viewBox="0 0 28 28" fill="none" stroke={color} strokeWidth={S} strokeLinecap="round" strokeLinejoin="round" width={26} height={26}>
+      <circle cx="12" cy="12" r="7" />
+      <line x1="17.5" y1="17.5" x2="24" y2="24" />
+    </svg>
+  );
+}
+
+/** cat_product_launch — 로켓 */
+export function IconProjectProduct({ color }: IconProps) {
+  return (
+    <svg viewBox="0 0 28 28" fill="none" stroke={color} strokeWidth={S} strokeLinecap="round" strokeLinejoin="round" width={26} height={26}>
+      <path d="M14 4c0 0 5 2 5 9l-5 2-5-2c0-7 5-9 5-9z" />
+      <path d="M9 13l-3 5h16l-3-5" />
+      <line x1="14" y1="18" x2="14" y2="24" />
+    </svg>
+  );
+}
+
+/** cat_content — 문서 + 펜 */
+export function IconProjectContent({ color }: IconProps) {
+  return (
+    <svg viewBox="0 0 28 28" fill="none" stroke={color} strokeWidth={S} strokeLinecap="round" strokeLinejoin="round" width={26} height={26}>
+      <path d="M6 4h11l5 5v15H6z" />
+      <polyline points="17,4 17,9 22,9" />
+      <line x1="10" y1="14" x2="18" y2="14" />
+      <line x1="10" y1="18" x2="15" y2="18" />
+    </svg>
+  );
+}
+
+/** cat_operations — 기어 */
+export function IconProjectOperations({ color }: IconProps) {
+  return (
+    <svg viewBox="0 0 28 28" fill="none" stroke={color} strokeWidth={S} strokeLinecap="round" strokeLinejoin="round" width={26} height={26}>
+      <circle cx="14" cy="14" r="3.5" />
+      <path d="M14 4v3M14 21v3M4 14h3M21 14h3M7.05 7.05l2.12 2.12M18.83 18.83l2.12 2.12M7.05 20.95l2.12-2.12M18.83 9.17l2.12-2.12" />
+    </svg>
+  );
+}
+
+/** cat_design — 펜 툴 */
+export function IconProjectDesign({ color }: IconProps) {
+  return (
+    <svg viewBox="0 0 28 28" fill="none" stroke={color} strokeWidth={S} strokeLinecap="round" strokeLinejoin="round" width={26} height={26}>
+      <path d="M4 24l4-4 10-10-4-4L4 16z" />
+      <path d="M14 6l4-2 6 6-2 4" />
+      <circle cx="8" cy="20" r="1.5" fill={color} stroke="none" />
+    </svg>
+  );
+}
+
+export function IconImageStudio({ color }: IconProps) {
+  return (
+    <svg viewBox="0 0 28 28" fill="none" stroke={color} strokeWidth={S} strokeLinecap="round" strokeLinejoin="round" width={26} height={26}>
+      <rect x="3" y="5" width="22" height="18" rx="2.5" />
+      <circle cx="9.5" cy="11" r="2" />
+      <polyline points="3,22 10,15 14,19 18,14 25,22" />
+    </svg>
+  );
+}
+

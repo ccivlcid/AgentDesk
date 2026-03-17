@@ -13,7 +13,11 @@ const GroupChatPanel = lazy(() => import("../chat-panel/GroupChatPanel"));
 function Loading() {
   const { t } = useI18n();
   return (
-    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", fontFamily: "var(--th-font-mono)", fontSize: 11, color: "var(--th-text-muted)" }}>
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", gap: 10, fontFamily: "var(--th-font-mono)", fontSize: 11, color: "var(--th-text-muted)" }}>
+      <svg className="animate-spin" width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+        <circle cx="12" cy="12" r="10" strokeOpacity={0.2} />
+        <path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" />
+      </svg>
       {t({ ko: "로딩 중...", en: "loading...", ja: "読み込み中...", zh: "加载中..." })}
     </div>
   );
@@ -59,13 +63,22 @@ export default function ChatWindow({
       tabs={[
         {
           id: "direct",
-          label: t({ ko: "다이렉트", en: "Direct", ja: "ダイレクト", zh: "直接" }),
+          label: (
+            <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" width={13} height={13}>
+                <path d="M14 2H2a1 1 0 00-1 1v8a1 1 0 001 1h3l3 2 3-2h3a1 1 0 001-1V3a1 1 0 00-1-1z" />
+                <line x1="5" y1="6" x2="11" y2="6" />
+                <line x1="5" y1="9" x2="9" y2="9" />
+              </svg>
+              {t({ ko: "공지", en: "Broadcast", ja: "告知", zh: "广播" })}
+            </span>
+          ),
           content: (
             <Suspense fallback={<Loading />}>
               <ChatPanel
                 selectedAgent={chatAgent}
                 messages={messages}
-                agents={agents}
+                agents={projectAgents}
                 streamingMessage={streamingMessage}
                 onSendMessage={onSendMessage}
                 onSendAnnouncement={onSendAnnouncement}
@@ -79,7 +92,16 @@ export default function ChatWindow({
         },
         {
           id: "group",
-          label: t({ ko: "그룹", en: "Group", ja: "グループ", zh: "群组" }),
+          label: (
+            <span style={{ display: "flex", alignItems: "center", gap: 5 }}>
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" width={13} height={13}>
+                <circle cx="5" cy="5" r="2" />
+                <circle cx="11" cy="5" r="2" />
+                <path d="M1 14c0-2.2 1.8-4 4-4h6c2.2 0 4 1.8 4 4" />
+              </svg>
+              {t({ ko: "단톡방", en: "Group Chat", ja: "グループ", zh: "群聊" })}
+            </span>
+          ),
           content: (
             <Suspense fallback={<Loading />}>
               <GroupChatPanel

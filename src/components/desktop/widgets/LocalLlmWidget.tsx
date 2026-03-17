@@ -26,9 +26,11 @@ export default function LocalLlmWidget() {
   const [models, setModels] = useState<LocalModel[]>([]);
   const [diskLabel, setDiskLabel] = useState<string>("—");
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(false);
 
   const load = useCallback(async () => {
     try {
+      setFetchError(false);
       const [backRes, modelRes] = await Promise.all([
         fetch("/api/local-llm/backends").then((r) => r.json()),
         fetch("/api/local-llm/models").then((r) => r.json()),
@@ -38,7 +40,7 @@ export default function LocalLlmWidget() {
         setModels(modelRes.models as LocalModel[]);
         setDiskLabel(modelRes.disk_used_label ?? "—");
       }
-    } catch { /* service unreachable */ }
+    } catch { setFetchError(true); }
     finally { setLoading(false); }
   }, []);
 
@@ -91,8 +93,12 @@ export default function LocalLlmWidget() {
       </div>
 
       {/* Body */}
-      <div style={{ flex: 1, padding: "10px", overflow: "hidden", display: "flex", flexDirection: "column", gap: 8 }}>
-        {loading ? null : !anyInstalled ? (
+      <div style={{ flex: 1, padding: "10px", overflowY: "auto", display: "flex", flexDirection: "column", gap: 8 }}>
+        {loading ? null : fetchError ? (
+          <div style={{ color: "var(--th-danger, #ef4444)", fontSize: 10, lineHeight: 1.7 }}>
+            {t({ ko: "서버 연결 실패", en: "Server unreachable", ja: "サーバー接続失敗", zh: "服务器连接失败" })}
+          </div>
+        ) : !anyInstalled ? (
           /* Nothing installed */
           <div style={{ color: "var(--th-text-muted)", fontSize: 11, lineHeight: 1.7 }}>
             <div>{t({ ko: "설치된 백엔드가 없습니다.", en: "No backends installed." })}</div>
@@ -148,10 +154,10 @@ export default function LocalLlmWidget() {
       {/* Footer */}
       <div style={{ padding: "5px 10px", borderTop: "1px solid var(--th-border)",
         display: "flex", justifyContent: "flex-end", flexShrink: 0 }}>
-        <button type="button" onClick={goToSettings}
+        <button type="button" onClick={goToSettings} disabled={loading}
           style={{ background: "none", border: "none", color: "var(--th-accent)",
-            fontFamily: mono, fontSize: 10, cursor: "pointer", padding: 0,
-            letterSpacing: "0.04em" }}>
+            fontFamily: mono, fontSize: 10, cursor: loading ? "default" : "pointer", padding: 0,
+            letterSpacing: "0.04em", opacity: loading ? 0.4 : 1 }}>
           {t({ ko: "관리 →", en: "Manage →" })}
         </button>
       </div>

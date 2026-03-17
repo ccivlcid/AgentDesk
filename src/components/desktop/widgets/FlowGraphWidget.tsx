@@ -11,16 +11,15 @@ export default function FlowGraphWidget() {
   const { agents, departments, subAgents } = useAgentStore();
   const { tasks, crossDeptDeliveries, meetingPresence } = useTaskStore();
   const { projectAgentIds, projectAgentsLoaded, currentProjectId } = useProjectStore();
-  const { setSelectedAgentId, openWindow } = useUiStore();
+  const { selectedAgentId, setSelectedAgentId } = useUiStore();
 
   const filteredAgents = currentProjectId && projectAgentsLoaded && projectAgentIds.size > 0
     ? agents.filter((a) => projectAgentIds.has(a.id))
     : agents;
 
   const handleSelectAgent = useCallback((agent: Agent) => {
-    setSelectedAgentId(agent.id);
-    openWindow("agent-manager");
-  }, [setSelectedAgentId, openWindow]);
+    setSelectedAgentId(selectedAgentId === agent.id ? null : agent.id);
+  }, [selectedAgentId, setSelectedAgentId]);
 
   return (
     <div style={{ width: "100%", height: "100%", overflow: "hidden" }}>

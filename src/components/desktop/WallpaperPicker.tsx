@@ -114,7 +114,7 @@ export default function WallpaperPicker({ onClose }: Props) {
       setWallpaper(css);
       onClose();
     } catch {
-      /* ignore */
+      setSizeWarning(t({ ko: "이미지를 처리할 수 없습니다", en: "Could not process image", ja: "画像を処理できません", zh: "无法处理图片" }));
     } finally {
       setProcessing(false);
       e.target.value = "";
@@ -141,7 +141,7 @@ export default function WallpaperPicker({ onClose }: Props) {
       setProcessing(true);
       imageFileToWallpaperCss(file)
         .then((css) => { setWallpaper(css); onClose(); })
-        .catch(() => {})
+        .catch(() => setSizeWarning(t({ ko: "이미지를 처리할 수 없습니다", en: "Could not process image", ja: "画像を処理できません", zh: "无法处理图片" })))
         .finally(() => setProcessing(false));
     }
   }
@@ -177,6 +177,7 @@ export default function WallpaperPicker({ onClose }: Props) {
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
           <div style={{ display: "flex", gap: 5 }}>
             <button
+              type="button"
               onClick={onClose}
               style={{ width: 12, height: 12, borderRadius: "50%", background: "#ff5f57", border: "none", cursor: "pointer", padding: 0 }}
             />
@@ -223,6 +224,7 @@ export default function WallpaperPicker({ onClose }: Props) {
             const isSelected = !isCustom && wallpaper === w.css;
             return (
               <button
+                type="button"
                 key={w.id}
                 onClick={() => { setWallpaper(w.css); onClose(); }}
                 onMouseEnter={() => setHovered(w.id)}
@@ -276,6 +278,7 @@ export default function WallpaperPicker({ onClose }: Props) {
                 {t({ ko: "커스텀 배경 적용됨", en: "Custom wallpaper active", ja: "カスタム壁紙が適用中", zh: "自定义壁纸已应用" })}
               </span>
               <button
+                type="button"
                 onClick={() => { setWallpaper(WALLPAPERS[0].css); }}
                 style={{ fontFamily: mono, fontSize: 10, color: "var(--th-danger, #ef4444)", background: "none", border: "none", cursor: "pointer", padding: "2px 6px" }}
               >
@@ -320,7 +323,7 @@ export default function WallpaperPicker({ onClose }: Props) {
                   {t({ ko: "클릭하거나 이미지를 드래그하세요", en: "Click or drag an image here", ja: "クリックまたは画像をドラッグ", zh: "点击或拖拽图片到此处" })}
                 </div>
                 <div style={{ fontFamily: mono, fontSize: 9, color: "var(--th-text-muted)" }}>
-                  PNG · JPG · WEBP · AVIF · GIF (애니메이션 지원)
+                  PNG · JPG · WEBP · AVIF · GIF ({t({ ko: "애니메이션 지원", en: "animation supported", ja: "アニメーション対応", zh: "支持动画" })})
                 </div>
               </>
             )}
@@ -359,6 +362,7 @@ export default function WallpaperPicker({ onClose }: Props) {
               )}
             </div>
             <button
+              type="button"
               onClick={handleUrlApply}
               style={{
                 padding: "8px 14px",

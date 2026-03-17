@@ -8,8 +8,12 @@ export type WindowType =
   | "agent-manager"
   | "repl"
   | "reports"
+  | "tasks"
   | "create-task"
-  | "llm-guide";
+  | "llm-guide"
+  | "synapse"
+  | "image-studio"
+  | "folder";
 
 export type WidgetId =
   | "heartbeat"
@@ -19,6 +23,7 @@ export type WidgetId =
   | "flow-graph"
   | "file-tree"
   | "local-llm"
+  | "synapse"
   | `custom:${string}`;
 
 export interface WidgetEntry {

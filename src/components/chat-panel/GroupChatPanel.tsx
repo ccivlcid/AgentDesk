@@ -3,6 +3,9 @@ import type { Agent, Message } from "../../types";
 import { getMessages, sendMessage } from "../../api";
 import { uploadChatFiles } from "../../api/messaging-runtime-oauth";
 import { useI18n } from "../../i18n";
+import type { KbSourceRef } from "../../api/synapse";
+import { fetchSynapseContext } from "../../api/synapse";
+import KbMentionDropdown from "./KbMentionDropdown";
 
 const MAX_CONTENT = 2000;
 const MAX_FILES = 5;
@@ -42,10 +45,10 @@ const PRIORITY_COLOR: Record<Priority, string> = {
   normal: "var(--th-accent)",
   low:    "var(--th-success)",
 };
-const PRIORITY_LABEL: Record<Priority, { ko: string; en: string }> = {
-  high:   { ko: "높음", en: "High" },
-  normal: { ko: "보통", en: "Normal" },
-  low:    { ko: "낮음", en: "Low" },
+const PRIORITY_LABEL: Record<Priority, { ko: string; en: string; ja: string; zh: string }> = {
+  high:   { ko: "높음", en: "High",   ja: "高",   zh: "高" },
+  normal: { ko: "보통", en: "Normal", ja: "普通", zh: "普通" },
+  low:    { ko: "낮음", en: "Low",    ja: "低",   zh: "低" },
 };
 
 // 메시지 content에서 모드 prefix 파싱
@@ -108,6 +111,9 @@ export default function GroupChatPanel({ agents, initialAgentIds, onClose }: Gro
   const [attachments, setAttachments] = useState<File[]>([]);
   const [uploading, setUploading]     = useState(false);
   const [chatMode, setChatMode]       = useState<ChatMode>("chat");
+  const [kbSources, setKbSources]     = useState<KbSourceRef[]>([]);
+  const [mentionTarget, setMentionTarget] = useState<"notion" | "obsidian" | null>(null);
+  const [mentionQuery, setMentionQuery]   = useState("");
   const [deadline, setDeadline]       = useState("");
   const [priority, setPriority]       = useState<Priority>("normal");
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -195,6 +201,19 @@ export default function GroupChatPanel({ agents, initialAgentIds, onClose }: Gro
         setAttachments([]);
       }
 
+      // KB 컨텍스트 fetch
+      let kbPrefix = "";
+      if (kbSources.length > 0) {
+        try {
+          const kbContent = await fetchSynapseContext(kbSources);
+          if (kbContent) {
+            const labels = kbSources.map((s) => (s.type === "notion_page" ? `📘 ${s.label ?? s.id}` : `📓 ${s.label ?? s.id}`)).join(", ");
+            kbPrefix = `[첨부 지식 베이스: ${labels}]\n\n${kbContent}\n\n---\n`;
+          }
+        } catch { /* non-fatal */ }
+        setKbSources([]);
+      }
+
       // 모드 prefix 삽입
       let modePrefix = "";
       if (chatMode === "task") {
@@ -203,7 +222,7 @@ export default function GroupChatPanel({ agents, initialAgentIds, onClose }: Gro
         modePrefix = "[URGENT]\n";
       }
 
-      const content = modePrefix + prefix + trimmed;
+      const content = modePrefix + kbPrefix + prefix + trimmed;
       if (!content.trim()) return;
       for (const agentId of selectedIds) {
         await sendMessage({ receiver_type: "agent", receiver_id: agentId, content, message_type: chatMode === "task" ? "task_assign" : chatMode === "urgent" ? "directive" : "chat" });
@@ -220,7 +239,7 @@ export default function GroupChatPanel({ agents, initialAgentIds, onClose }: Gro
       setSending(false);
       setTimeout(() => setSentOk(false), 2000);
     }
-  }, [input, attachments, sending, selectedIds, fetchForAgent, tr, chatMode, deadline, priority]);
+  }, [input, attachments, kbSources, sending, selectedIds, fetchForAgent, tr, chatMode, deadline, priority]);
 
   const filteredAgents = agents.filter((a) => {
     if (!search) return true;
@@ -478,7 +497,7 @@ export default function GroupChatPanel({ agents, initialAgentIds, onClose }: Gro
                               <IconTask /> {isKo ? "업무지시" : "TASK"}
                               {parsed.deadline && <span style={{ color: "var(--th-text-muted)", fontWeight: 400 }}>· {parsed.deadline}</span>}
                               {parsed.priority && parsed.priority !== "normal" && (
-                                <span style={{ color: PRIORITY_COLOR[parsed.priority], fontWeight: 700 }}>· {isKo ? PRIORITY_LABEL[parsed.priority].ko : PRIORITY_LABEL[parsed.priority].en}</span>
+                                <span style={{ color: PRIORITY_COLOR[parsed.priority], fontWeight: 700 }}>· {t(PRIORITY_LABEL[parsed.priority])}</span>
                               )}
                             </span>
                           )}
@@ -592,7 +611,7 @@ export default function GroupChatPanel({ agents, initialAgentIds, onClose }: Gro
                         transition: "all 0.12s",
                       }}
                     >
-                      {isKo ? PRIORITY_LABEL[p].ko : PRIORITY_LABEL[p].en}
+                      {t(PRIORITY_LABEL[p])}
                     </button>
                   ))}
                 </div>
@@ -606,6 +625,19 @@ export default function GroupChatPanel({ agents, initialAgentIds, onClose }: Gro
               style={{ display: "none" }}
               onChange={(e) => { if (e.target.files) { addFiles(e.target.files); e.target.value = ""; } }}
             />
+
+            {/* KB Source badges */}
+            {kbSources.length > 0 && (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 8 }}>
+                {kbSources.map((src) => (
+                  <div key={src.id} style={{ display: "flex", alignItems: "center", gap: 4, padding: "2px 8px", background: "rgba(245,158,11,0.08)", border: "1px solid var(--th-accent)", borderRadius: 12, fontSize: 10, color: "var(--th-accent)", fontFamily: "var(--th-font-mono)" }}>
+                    <span>{src.type === "notion_page" ? "📘" : "📓"}</span>
+                    <span style={{ maxWidth: 100, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{src.label ?? src.id}</span>
+                    <button type="button" onClick={() => setKbSources((p) => p.filter((s) => s.id !== src.id))} style={{ color: "var(--th-accent)", background: "none", border: "none", cursor: "pointer", lineHeight: 1, padding: 0, opacity: 0.7 }}>✕</button>
+                  </div>
+                ))}
+              </div>
+            )}
 
             {/* Attachments */}
             {attachments.length > 0 && (
@@ -622,6 +654,25 @@ export default function GroupChatPanel({ agents, initialAgentIds, onClose }: Gro
             )}
 
             {/* Input row */}
+            <div style={{ position: "relative" }}>
+              {mentionTarget && (
+                <KbMentionDropdown
+                  mentionTarget={mentionTarget}
+                  query={mentionQuery}
+                  onSelect={(ref) => {
+                    const cleaned = input.replace(/@(notion|obsidian)\s*[^\n@]*$/i, "").trimEnd();
+                    setInput(cleaned);
+                    setMentionTarget(null);
+                    setMentionQuery("");
+                    if (!kbSources.some((s) => s.id === ref.id)) {
+                      setKbSources((prev) => [...prev, ref]);
+                    }
+                    textareaRef.current?.focus();
+                  }}
+                  onClose={() => { setMentionTarget(null); setMentionQuery(""); }}
+                />
+              )}
+            </div>
             <div style={{
               display: "flex",
               alignItems: "flex-end",
@@ -659,7 +710,18 @@ export default function GroupChatPanel({ agents, initialAgentIds, onClose }: Gro
               <textarea
                 ref={textareaRef}
                 value={input}
-                onChange={(e) => setInput(e.target.value.slice(0, MAX_CONTENT))}
+                onChange={(e) => {
+                  const val = e.target.value.slice(0, MAX_CONTENT);
+                  setInput(val);
+                  const match = val.match(/@(notion|obsidian)\s*([^\n@]*)$/i);
+                  if (match) {
+                    setMentionTarget(match[1].toLowerCase() as "notion" | "obsidian");
+                    setMentionQuery(match[2].trim());
+                  } else {
+                    setMentionTarget(null);
+                    setMentionQuery("");
+                  }
+                }}
                 onKeyDown={(e) => {
                   if ((e.ctrlKey || e.metaKey) && e.key === "Enter" && !sending && selectedIds.size > 0) {
                     e.preventDefault();

@@ -5,9 +5,10 @@ import { useI18n } from "../../i18n";
 
 interface AgentManagerWindowProps {
   onAgentsChange: () => void;
+  createTrigger?: number;
 }
 
-export default function AgentManagerWindow({ onAgentsChange }: AgentManagerWindowProps) {
+export default function AgentManagerWindow({ onAgentsChange, createTrigger }: AgentManagerWindowProps) {
   const { agents, departments } = useAgentStore();
   const { t } = useI18n();
 
@@ -24,6 +25,7 @@ export default function AgentManagerWindow({ onAgentsChange }: AgentManagerWindo
           agents={agents}
           departments={departments}
           onAgentsChange={onAgentsChange}
+          createTrigger={createTrigger}
         />
       </div>
     </AppWindow>

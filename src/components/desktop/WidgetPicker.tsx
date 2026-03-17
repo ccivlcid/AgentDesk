@@ -7,7 +7,7 @@ import { useI18n } from "../../i18n";
 import { listCustomFeatures, deleteCustomFeature } from "../../api/custom-features";
 import WidgetBuilderModal from "../widget-builder/WidgetBuilderModal";
 import TrafficLights from "./TrafficLights";
-import { IconHeartbeat, IconTaskBoard, IconAlerts, IconCliCost, IconFlowGraph, IconFileTree, IconLocalLlm } from "./DesktopIcons";
+import { IconHeartbeat, IconTaskBoard, IconAlerts, IconCliCost, IconFlowGraph, IconFileTree, IconLocalLlm, IconDockSynapse } from "./DesktopIcons";
 
 const mono = "var(--th-font-mono)";
 
@@ -17,8 +17,9 @@ const WIDGET_IDS: { id: WidgetId; icon: (color: string) => React.ReactNode; labe
   { id: "alerts",     icon: (c) => <IconAlerts color={c} />,     label: "Alerts" },
   { id: "cli-usage",  icon: (c) => <IconCliCost color={c} />,    label: "CLI Cost" },
   { id: "flow-graph", icon: (c) => <IconFlowGraph color={c} />,  label: "Flow" },
-  { id: "file-tree",  icon: (c) => <IconFileTree color={c} />,   label: "File Tree" },
+  { id: "file-tree",  icon: (c) => <IconFileTree color={c} />,   label: "File Explorer" },
   { id: "local-llm",  icon: (c) => <IconLocalLlm color={c} />,   label: "Local LLM" },
+  { id: "synapse", icon: (c) => <IconDockSynapse color={c} />, label: "Synapse" },
 ];
 
 interface WidgetPickerProps {
@@ -38,11 +39,11 @@ export default function WidgetPicker({ onClose }: WidgetPickerProps) {
   const [builderOpen, setBuilderOpen] = useState(false);
 
   useEffect(() => {
-    listCustomFeatures().then(setCustomFeatures).catch(() => {});
+    listCustomFeatures().then(setCustomFeatures).catch(() => setCustomFeatures([]));
   }, []);
 
   function handleCustomCreated(id: string, type: CustomFeatureType) {
-    listCustomFeatures().then(setCustomFeatures).catch(() => {});
+    listCustomFeatures().then(setCustomFeatures).catch(() => setCustomFeatures([]));
     if (type === "widget") {
       addWidget(`custom:${id}` as WidgetId);
     } else {
@@ -51,9 +52,18 @@ export default function WidgetPicker({ onClose }: WidgetPickerProps) {
     onClose();
   }
 
+  const [deleting, setDeleting] = useState<string | null>(null);
+
   async function handleDeleteCustom(id: string) {
-    await deleteCustomFeature(id).catch(() => {});
-    setCustomFeatures((prev) => prev.filter((f) => f.id !== id));
+    setDeleting(id);
+    try {
+      await deleteCustomFeature(id);
+      setCustomFeatures((prev) => prev.filter((f) => f.id !== id));
+    } catch {
+      // silent — item remains in list
+    } finally {
+      setDeleting(null);
+    }
   }
 
   const WIDGET_DEFS = WIDGET_IDS.map((w) => ({
@@ -64,7 +74,8 @@ export default function WidgetPicker({ onClose }: WidgetPickerProps) {
           w.id === "alerts"     ? t({ ko: "이상 감지 알림", en: "Anomaly alerts", ja: "異常検知アラート", zh: "异常检测警报" }) :
           w.id === "cli-usage"  ? t({ ko: "CLI 비용 요약", en: "CLI cost summary", ja: "CLIコスト概要", zh: "CLI成本摘要" }) :
           w.id === "flow-graph" ? t({ ko: "에이전트 플로우 그래프", en: "Agent flow graph", ja: "エージェントフローグラフ", zh: "代理流程图" }) :
-          w.id === "file-tree"  ? t({ ko: "프로젝트 파일 트리", en: "Project file tree", ja: "プロジェクトファイルツリー", zh: "项目文件树" }) :
+          w.id === "file-tree"  ? t({ ko: "PC 파일 탐색기", en: "PC file explorer", ja: "PCファイルエクスプローラー", zh: "PC文件浏览器" }) :
+          w.id === "synapse" ? t({ ko: "지식 베이스 연결 현황", en: "Knowledge base connections", ja: "知識ベース接続状況", zh: "知识库连接状态" }) :
           t({ ko: "로컬 LLM 상태 모니터", en: "Local LLM status monitor", ja: "ローカルLLMモニター", zh: "本地LLM状态监控" }),
   }));
 
@@ -104,13 +115,13 @@ export default function WidgetPicker({ onClose }: WidgetPickerProps) {
                     <div style={{ fontFamily: mono, fontSize: 12, color: "var(--th-text-primary)" }}>{w.label}</div>
                     <div style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-muted)" }}>{w.desc}</div>
                   </div>
-                  <button onClick={() => { if (!widgetActive) { addWidget(w.id); onClose(); } }} disabled={widgetActive}
+                  <button type="button" onClick={() => { if (!widgetActive) { addWidget(w.id); onClose(); } }} disabled={widgetActive}
                     style={{ padding: "3px 8px", background: widgetActive ? "rgba(245,158,11,0.15)" : "var(--th-hover-overlay)", border: `1px solid ${widgetActive ? "var(--th-border-accent)" : "var(--th-border)"}`, borderRadius: 4, fontFamily: mono, fontSize: 10, color: widgetActive ? "var(--th-text-accent)" : "var(--th-text-secondary)", cursor: widgetActive ? "default" : "pointer", flexShrink: 0, whiteSpace: "nowrap" }}>
-                    {widgetActive ? "위젯 ✓" : "위젯"}
+                    {widgetActive ? t({ ko: "위젯 ✓", en: "widget ✓", ja: "ウィジェット ✓", zh: "小组件 ✓" }) : t({ ko: "위젯", en: "widget", ja: "ウィジェット", zh: "小组件" })}
                   </button>
-                  <button onClick={() => { if (!iconActive) { addWidgetIcon(w.id); onClose(); } }} disabled={iconActive}
+                  <button type="button" onClick={() => { if (!iconActive) { addWidgetIcon(w.id); onClose(); } }} disabled={iconActive}
                     style={{ padding: "3px 8px", background: iconActive ? "rgba(10,132,255,0.15)" : "var(--th-hover-overlay)", border: `1px solid ${iconActive ? "rgba(10,132,255,0.5)" : "var(--th-border)"}`, borderRadius: 4, fontFamily: mono, fontSize: 10, color: iconActive ? "#0a84ff" : "var(--th-text-secondary)", cursor: iconActive ? "default" : "pointer", flexShrink: 0, whiteSpace: "nowrap" }}>
-                    {iconActive ? "아이콘 ✓" : "아이콘"}
+                    {iconActive ? t({ ko: "아이콘 ✓", en: "icon ✓", ja: "アイコン ✓", zh: "图标 ✓" }) : t({ ko: "아이콘", en: "icon", ja: "アイコン", zh: "图标" })}
                   </button>
                 </div>
               );
@@ -120,15 +131,16 @@ export default function WidgetPicker({ onClose }: WidgetPickerProps) {
           {/* 커스텀 기능 섹션 */}
           <div style={{ borderTop: "1px solid var(--th-border)", marginTop: 14, paddingTop: 14 }}>
             <div style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-muted)", marginBottom: 8, letterSpacing: "0.08em" }}>
-              {isKo ? "✦ 내 커스텀 기능" : "✦ MY CUSTOM FEATURES"}
+              {t({ ko: "✦ 내 커스텀 기능", en: "✦ MY CUSTOM FEATURES", ja: "✦ マイ機能", zh: "✦ 我的自定义功能" })}
             </div>
 
             {/* 새 기능 만들기 버튼 */}
             <button
+              type="button"
               onClick={() => setBuilderOpen(true)}
               style={{ width: "100%", padding: "8px 12px", border: "1px dashed var(--th-border-accent)", borderRadius: 6, background: "rgba(245,158,11,0.05)", fontFamily: mono, fontSize: 11, color: "var(--th-accent)", cursor: "pointer", marginBottom: 8 }}
             >
-              + {isKo ? "새 기능 만들기" : "Create New Feature"}
+              + {t({ ko: "새 기능 만들기", en: "Create New Feature", ja: "新しい機能を作る", zh: "新建功能" })}
             </button>
 
             {/* 커스텀 기능 목록 */}
@@ -140,27 +152,31 @@ export default function WidgetPicker({ onClose }: WidgetPickerProps) {
                   return (
                     <div key={f.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 10px", background: "var(--th-hover-overlay-subtle)", border: "1px solid var(--th-border)", borderRadius: 6 }}>
                       <span style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-muted)", padding: "1px 5px", border: "1px solid var(--th-border)", borderRadius: 3 }}>
-                        {f.source === "ai" ? "AI" : isKo ? "템플릿" : "tpl"}
+                        {f.source === "ai" ? "AI" : t({ ko: "템플릿", en: "tpl", ja: "テンプレ", zh: "模板" })}
                       </span>
                       <span style={{ fontFamily: mono, fontSize: 11, color: "var(--th-text-primary)", flex: 1, minWidth: 0 }} className="truncate">{f.name}</span>
                       {f.type === "widget" ? (
                         <button
+                          type="button"
                           onClick={() => { if (!widgetActive) { addWidget(widgetId); onClose(); } }}
                           disabled={widgetActive}
                           style={{ padding: "2px 8px", background: widgetActive ? "rgba(245,158,11,0.15)" : "var(--th-hover-overlay)", border: `1px solid ${widgetActive ? "var(--th-border-accent)" : "var(--th-border)"}`, borderRadius: 4, fontFamily: mono, fontSize: 10, color: widgetActive ? "var(--th-text-accent)" : "var(--th-text-secondary)", cursor: widgetActive ? "default" : "pointer", flexShrink: 0 }}>
-                          {widgetActive ? "✓" : isKo ? "위젯" : "widget"}
+                          {widgetActive ? "✓" : t({ ko: "위젯", en: "widget", ja: "ウィジェット", zh: "小组件" })}
                         </button>
                       ) : (
                         <button
+                          type="button"
                           onClick={() => { openCustomApp(f.id); onClose(); }}
                           style={{ padding: "2px 8px", background: "var(--th-hover-overlay)", border: "1px solid var(--th-border)", borderRadius: 4, fontFamily: mono, fontSize: 10, color: "var(--th-text-secondary)", cursor: "pointer", flexShrink: 0 }}>
-                          {isKo ? "열기" : "open"}
+                          {t({ ko: "열기", en: "open", ja: "開く", zh: "打开" })}
                         </button>
                       )}
                       <button
+                        type="button"
                         onClick={() => handleDeleteCustom(f.id)}
-                        style={{ padding: "2px 6px", background: "transparent", border: "1px solid var(--th-danger-border)", borderRadius: 4, fontFamily: mono, fontSize: 10, color: "var(--th-danger-text)", cursor: "pointer", flexShrink: 0 }}>
-                        ✕
+                        disabled={deleting === f.id}
+                        style={{ padding: "2px 6px", background: "transparent", border: "1px solid var(--th-danger-border)", borderRadius: 4, fontFamily: mono, fontSize: 10, color: "var(--th-danger-text)", cursor: deleting === f.id ? "default" : "pointer", flexShrink: 0, opacity: deleting === f.id ? 0.5 : 1 }}>
+                        {deleting === f.id ? "…" : "✕"}
                       </button>
                     </div>
                   );
@@ -170,7 +186,7 @@ export default function WidgetPicker({ onClose }: WidgetPickerProps) {
 
             {customFeatures.length === 0 && (
               <div style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-muted)", textAlign: "center", padding: "8px 0" }}>
-                {isKo ? "아직 만든 기능이 없습니다" : "No custom features yet"}
+                {t({ ko: "아직 만든 기능이 없습니다", en: "No custom features yet", ja: "まだ機能がありません", zh: "还没有自定义功能" })}
               </div>
             )}
           </div>

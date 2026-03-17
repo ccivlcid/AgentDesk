@@ -18,6 +18,7 @@ interface UseProjectSaveHandlerParams {
   editingProjectId: string | null;
   name: string;
   coreGoal: string;
+  figmaUrl: string;
   selectedAgentIds: Set<string>;
   loadProjects: (targetPage: number, keyword: string) => Promise<void>;
   search: string;
@@ -42,6 +43,7 @@ export function useProjectSaveHandler({
   editingProjectId,
   name,
   coreGoal,
+  figmaUrl,
   selectedAgentIds,
   loadProjects,
   search,
@@ -121,6 +123,7 @@ export function useProjectSaveHandler({
             name: name.trim(),
             project_path: savePath,
             core_goal: coreGoal.trim(),
+            figma_url: figmaUrl.trim() || null,
             default_pack_key: defaultPackKey as import("../../types").WorkflowPackKey,
             create_path_if_missing: createPathIfMissing,
             assignment_mode: assignmentMode,
@@ -132,6 +135,7 @@ export function useProjectSaveHandler({
             name: name.trim(),
             project_path: savePath,
             core_goal: coreGoal.trim(),
+            figma_url: figmaUrl.trim() || null,
             default_pack_key: defaultPackKey as import("../../types").WorkflowPackKey,
             create_path_if_missing: createPathIfMissing,
             assignment_mode: assignmentMode,
@@ -210,6 +214,7 @@ export function useProjectSaveHandler({
       coreGoal,
       defaultPackKey,
       editingProjectId,
+      figmaUrl,
       getManualAssignmentWarning,
       loadProjects,
       name,

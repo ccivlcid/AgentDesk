@@ -1,4 +1,5 @@
 import { useAgentStore } from "../../../store/agentStore";
+import { useProjectStore } from "../../../store/projectStore";
 import { useUiStore } from "../../../store/uiStore";
 import { useI18n } from "../../../i18n";
 import type { AgentStatus } from "../../../types";
@@ -14,7 +15,12 @@ const STATUS_COLOR: Record<AgentStatus, string> = {
 
 export default function AgentsWidget() {
   const { agents } = useAgentStore();
-  const { openWindow } = useUiStore();
+  const { currentProjectId, projectAgentIds, projectAgentsLoaded } = useProjectStore();
+  const { openWindow, selectedAgentId, setSelectedAgentId } = useUiStore();
+
+  const visibleAgents = currentProjectId && projectAgentsLoaded
+    ? agents.filter((a) => projectAgentIds.has(a.id))
+    : agents;
   const { t } = useI18n();
 
   const STATUS_LABEL: Record<AgentStatus, string> = {
@@ -44,7 +50,7 @@ export default function AgentsWidget() {
         flexShrink: 0,
       }}>
         {(["working", "idle", "offline"] as AgentStatus[]).map((s) => {
-          const count = agents.filter((a) => a.status === s).length;
+          const count = visibleAgents.filter((a) => a.status === s).length;
           return (
             <span key={s} style={{ color: STATUS_COLOR[s] }}>
               {count} {STATUS_SUMMARY_LABEL[s] ?? s}
@@ -53,6 +59,7 @@ export default function AgentsWidget() {
         })}
         <span style={{ flex: 1 }} />
         <button
+          type="button"
           onClick={() => openWindow("agent-manager")}
           style={{ background: "none", border: "none", color: "var(--th-accent)", fontSize: 10, fontFamily: mono, cursor: "pointer" }}
         >
@@ -62,14 +69,15 @@ export default function AgentsWidget() {
 
       {/* 에이전트 목록 */}
       <div style={{ flex: 1, overflow: "auto", padding: "4px 0" }}>
-        {agents.length === 0 ? (
+        {visibleAgents.length === 0 ? (
           <div style={{ fontFamily: mono, fontSize: 11, color: "var(--th-text-muted)", padding: "20px", textAlign: "center" }}>
             {t({ ko: "에이전트 없음", en: "No agents", ja: "エージェントなし", zh: "无代理" })}
           </div>
         ) : (
-          agents.map((agent) => (
+          visibleAgents.map((agent) => (
             <div
               key={agent.id}
+              onClick={() => setSelectedAgentId(selectedAgentId === agent.id ? null : agent.id)}
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -77,9 +85,10 @@ export default function AgentsWidget() {
                 padding: "4px 10px",
                 cursor: "pointer",
                 transition: "background 0.1s",
+                background: selectedAgentId === agent.id ? "var(--th-accent-glow)" : undefined,
               }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.background = "var(--th-hover-overlay-subtle)"; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.background = "none"; }}
+              onMouseEnter={(e) => { if (selectedAgentId !== agent.id) (e.currentTarget as HTMLDivElement).style.background = "var(--th-hover-overlay-subtle)"; }}
+              onMouseLeave={(e) => { if (selectedAgentId !== agent.id) (e.currentTarget as HTMLDivElement).style.background = "none"; }}
             >
               <span style={{ fontSize: 16 }}>{agent.avatar_emoji || "🤖"}</span>
               <div style={{ flex: 1, minWidth: 0 }}>

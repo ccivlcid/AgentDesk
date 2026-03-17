@@ -10,6 +10,7 @@ interface AgentsTabProps {
   agents: Agent[];
   departments: Department[];
   personas?: Persona[];
+  personasLoading?: boolean;
   projectAgentIds?: Set<string>;
   deptTab: string;
   setDeptTab: (deptId: string) => void;
@@ -46,6 +47,7 @@ export default function AgentsTab({
   agents,
   departments,
   personas = [],
+  personasLoading = false,
   projectAgentIds,
   deptTab,
   setDeptTab,
@@ -216,8 +218,9 @@ export default function AgentsTab({
                           TEAM
                         </span>
                       )}
-                      {agent.persona_id && personaMap.has(agent.persona_id) && (
-                        <PersonaBadge persona={personaMap.get(agent.persona_id)!} size="sm" />
+                      {agent.persona_id && (personasLoading
+                        ? <span style={{ width: 40, height: 16, background: "rgba(255,255,255,0.06)", borderRadius: 2, display: "inline-block" }} />
+                        : personaMap.has(agent.persona_id) && <PersonaBadge persona={personaMap.get(agent.persona_id)!} size="sm" />
                       )}
                       <span className="flex-1" />
                       {agent.cli_provider && (

@@ -2,7 +2,7 @@
 
 This document defines a contributor-facing API baseline for AgentDesk.
 It is intentionally compact and focused on frequently used endpoints.
-Current baseline target: `v1.4.0` (local snapshot, 2026-03-16).
+Current baseline target: `v1.6.0` (local snapshot, 2026-03-21).
 
 ## Base
 
@@ -643,6 +643,162 @@ When an agent executes a task via a local LLM provider (`api_provider_id` set, t
 - `latency_ms` measured from request start to stream end
 - `tokens_per_second` derived from completion tokens ÷ latency
 - Stored in `local_llm_inference_log` table, visible in Monitor tab
+
+---
+
+---
+
+## Image Studio API
+
+Base path: `/api/image-studio`
+
+Image generation routes backed by the user's configured API providers (`api_providers` table). Providers must have `enabled = 1` and a valid encrypted API key.
+
+### Providers
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/image-studio/providers` | List all enabled providers with image-capable models |
+
+**Response:**
+```json
+{
+  "ok": true,
+  "providers": [
+    { "id": "uuid", "name": "OpenAI", "type": "openai", "base_url": "...", "models": ["dall-e-3", "dall-e-2"] }
+  ]
+}
+```
+
+Models are filtered from `models_cache` by image keywords (dall-e, flux, stable-diffusion, sdxl, etc.). Falls back to `TYPE_DEFAULT_MODELS` if cache is empty.
+
+### Generate
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/api/image-studio/generate` | Generate an image |
+
+**Request body:**
+```json
+{
+  "api_provider_id": "uuid",
+  "model": "dall-e-3",
+  "prompt": "a cat on a moon",
+  "width": 1024,
+  "height": 1024,
+  "quality": "standard",
+  "style": "vivid",
+  "mode": "txt2img",
+  "inputImageB64": "data:image/png;base64,...",
+  "maskB64": "data:image/png;base64,...",
+  "task_id": "task_abc"
+}
+```
+
+- `mode`: `"txt2img"` (default) | `"inpaint"`
+- `inputImageB64` / `maskB64`: required for `inpaint` mode (base64 PNG, data-URL prefix optional)
+- `task_id`: optional — links image to a task (visible in TaskCard)
+- On success, broadcasts `image_studio_done` WebSocket event
+
+**Response:** `{ ok, id, provider, model, prompt, revisedPrompt?, width, height, createdAt }`
+
+### Gallery
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/image-studio/gallery` | Paginated image list |
+| `GET` | `/api/image-studio/image/:id` | Serve image file (`?thumb=1` for thumbnail) |
+| `GET` | `/api/image-studio/task/:taskId/images` | Images linked to a specific task |
+| `DELETE` | `/api/image-studio/gallery/:id` | Delete image (file + DB row) |
+
+**Gallery query params:** `limit` (max 100), `offset`, `provider`, `search` (prompt LIKE)
+
+**Gallery item shape:**
+```json
+{
+  "id": "img_...", "provider": "OpenAI", "model": "dall-e-3",
+  "prompt": "...", "width": 1024, "height": 1024,
+  "createdAt": 1710000000000, "metadata": { "revisedPrompt": "..." }
+}
+```
+
+**Image file endpoint:** Streams the PNG/JPEG file directly with `Cache-Control: public, max-age=86400`.
+
+---
+
+---
+
+## Project Deliverables (Phase 16-A)
+
+Base path: `/api/projects/:id`
+
+Results checklist per project category. Checks are stored in `project_deliverable_checks` and matched against completed tasks automatically.
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/projects/:id/deliverables` | List deliverable items with check state + auto-match |
+| `PUT` | `/api/projects/:id/deliverables/:key` | Toggle check + optional note |
+
+**GET response:**
+```json
+{
+  "items": [
+    {
+      "key": "design_spec",
+      "label": "디자인 명세서",
+      "type": "document",
+      "checked": true,
+      "checked_at": 1710000000000,
+      "note": "./docs/design-spec.md",
+      "auto_matched_task_id": null,
+      "auto_matched_task_title": null
+    }
+  ],
+  "checked_count": 2,
+  "total_count": 3
+}
+```
+
+**PUT body:** `{ "checked": true, "note": "optional file path or URL" }`
+
+---
+
+## Project Sources (Phase 16-B)
+
+Base path: `/api/projects/:id`
+
+Cross-project source linking. Completed deliverables from source projects are injected as context blocks when a task executes.
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/projects/:id/sources` | List source projects with deliverable counts |
+| `POST` | `/api/projects/:id/sources` | Add a source project |
+| `DELETE` | `/api/projects/:id/sources/:sourceId` | Remove a source |
+
+**POST body:** `{ "source_project_id": "uuid", "label": "optional label" }`
+
+**POST validation:** Self-reference forbidden · Circular reference forbidden · Max 5 sources.
+
+**GET source item shape:**
+```json
+{
+  "id": "link_uuid",
+  "source_project_id": "proj_uuid",
+  "source_project_name": "쇼핑몰 UI 디자인",
+  "source_category_id": "cat_design",
+  "source_category_name": "디자인 & Figma",
+  "source_category_color": "#c084fc",
+  "label": null,
+  "sort_order": 0,
+  "checked_count": 2,
+  "total_count": 3,
+  "checked_deliverables": [
+    { "key": "design_spec", "label": "디자인 명세서", "note": "./docs/design-spec.md" }
+  ]
+}
+```
+
+**Context injection:** On task execution, `source-context-fetcher.ts` builds a markdown block from all checked deliverables of all source projects and prepends it to the agent prompt.
 
 ---
 

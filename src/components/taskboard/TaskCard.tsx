@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { Agent, Department, SubTask, Task, TaskExecutionState, TaskStatus } from "../../types";
 import { useI18n } from "../../i18n";
 import { useConfirm } from "../ui";
@@ -17,8 +17,8 @@ import {
 import { addTaskDependency, getTaskDependencies, removeTaskDependency, type TaskDependencyItem } from "../../api/task-dependencies";
 import { getTaskGates, evaluateTaskGate, type TaskGateResult } from "../../api/pipeline-gates";
 import { PersonaBadge } from "../agent-persona/PersonaBadge";
-import * as api from "../../api";
-import type { TaskLogEntry } from "../terminal-panel/model";
+import { getTaskImages, getImageUrl, type ImageGenerationItem } from "../../api/image-studio";
+import { useUiStore } from "../../store/uiStore";
 
 interface TaskCardProps {
   task: Task;
@@ -133,9 +133,9 @@ export default function TaskCard({
   const [depError, setDepError] = useState<string | null>(null);
   const [showGates, setShowGates] = useState(false);
   const [gateResults, setGateResults] = useState<TaskGateResult[]>([]);
-  const [showTerminalPreview, setShowTerminalPreview] = useState(false);
-  const [terminalLogs, setTerminalLogs] = useState<TaskLogEntry[]>([]);
-  const terminalPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [showImages, setShowImages] = useState(false);
+  const [taskImages, setTaskImages] = useState<ImageGenerationItem[]>([]);
+  const openWindow = useUiStore((s) => s.openWindow);
 
   const loadDeps = useCallback(async () => {
     try {
@@ -159,28 +159,11 @@ export default function TaskCard({
     if (showGates) void loadGates();
   }, [showGates, loadGates]);
 
-  const fetchTerminalPreview = useCallback(async () => {
-    try {
-      const res = await api.getTerminal(task.id, 20, false, 8);
-      if (res.ok && res.task_logs && res.task_logs.length > 0) {
-        setTerminalLogs(res.task_logs.slice(-8));
-      }
-    } catch { /* ignore */ }
-  }, [task.id]);
-
   useEffect(() => {
-    if (!showTerminalPreview) {
-      if (terminalPollRef.current) clearInterval(terminalPollRef.current);
-      return;
+    if (showImages) {
+      getTaskImages(task.id).then(setTaskImages).catch(() => {});
     }
-    void fetchTerminalPreview();
-    if (task.status === "in_progress") {
-      terminalPollRef.current = setInterval(() => void fetchTerminalPreview(), 3000);
-    }
-    return () => {
-      if (terminalPollRef.current) clearInterval(terminalPollRef.current);
-    };
-  }, [showTerminalPreview, task.status, fetchTerminalPreview]);
+  }, [showImages, task.id]);
 
   const subtaskTotal = task.subtask_total ?? taskSubtasks.length;
   const subtaskDoneCount = taskSubtasks.filter((s) => s.status === "done").length;
@@ -216,16 +199,17 @@ export default function TaskCard({
 
   return (
     <div
-      className={`group task-card-hover overflow-hidden ${cardCollapsed ? "p-2" : "p-4"} transition-all duration-200`}
+      className={`group task-card-hover overflow-hidden ${cardCollapsed ? "p-2" : "p-3.5"} transition-all duration-200`}
       style={{
         background: "var(--th-bg-surface)",
         border: executionAlert ? "1px solid rgba(244,63,94,0.22)" : "1px solid var(--th-border)",
         borderLeft: `3px solid ${executionAlert ? "var(--th-status-error)" : leftBorderColor}`,
-        borderRadius: 10,
+        borderRadius: 12,
         opacity: isHiddenTask ? 0.7 : 1,
         boxShadow: executionAlert
-          ? "inset 0 0 0 1px rgba(244,63,94,0.06), 0 2px 8px rgba(0,0,0,0.06)"
-          : "0 2px 8px rgba(0,0,0,0.06)",
+          ? "inset 0 0 0 1px rgba(244,63,94,0.06), 0 1px 4px rgba(0,0,0,0.08), 0 4px 12px rgba(244,63,94,0.06)"
+          : "0 1px 4px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04)",
+        transition: "box-shadow 0.15s, border-color 0.15s",
       }}
     >
       {/* 제목 행 — 접기 아이콘 클릭: 카드 접기/펼치기, 제목 클릭(펼침 시): 설명 2줄↔전체 */}
@@ -267,12 +251,12 @@ export default function TaskCard({
       {!cardCollapsed && (
         <>
       {task.description && (
-        <p className={`mb-4 text-xs ${expanded ? "" : "line-clamp-2"}`} style={{ color: "var(--th-text-muted)", lineHeight: 1.55 }}>
+        <p className={`mb-3 text-xs ${expanded ? "" : "line-clamp-2"}`} style={{ color: "var(--th-text-muted)", lineHeight: 1.55 }}>
           {task.description}
         </p>
       )}
 
-      <div className="mb-4 flex flex-wrap items-center gap-2">
+      <div className="mb-3 flex flex-wrap items-center gap-2">
         <span className={`px-2 py-0.5 text-xs font-medium font-mono ${typeBadge.color}`} style={{ borderRadius: 6 }}>{typeBadge.label}</span>
         {isHiddenTask && (
           <span
@@ -301,83 +285,81 @@ export default function TaskCard({
         )}
       </div>
 
-      {/* 상태 · 담당자 블록 */}
-      <div className="mb-4 rounded-lg px-3 py-2.5" style={{ background: "var(--th-bg-primary)", border: "1px solid var(--th-border)" }}>
-        <div className="mb-2">
-          <select
-            value={task.status}
-            onChange={(event) => onUpdateTask(task.id, { status: event.target.value as TaskStatus })}
-            className="w-full outline-none"
-            style={{
-              border: "1px solid var(--th-border)",
-              borderRadius: 6,
-              background: "var(--th-bg-surface)",
-              color: "var(--th-text-primary)",
-              fontFamily: "var(--th-font-mono)",
-              fontSize: "0.75rem",
-              padding: "0.35rem 0.5rem",
-              transition: "border-color 0.1s linear",
-            }}
-          >
-            {STATUS_OPTIONS.map((status) => (
-              <option key={status} value={status}>
-                {taskStatusLabel(status as TaskStatus, t)}
-              </option>
-            ))}
-          </select>
-        </div>
+      {/* 상태 · 담당자 블록 — macOS refined */}
+      <div className="mb-3 flex flex-col gap-1.5">
+        <select
+          value={task.status}
+          onChange={(event) => onUpdateTask(task.id, { status: event.target.value as TaskStatus })}
+          className="w-full outline-none"
+          style={{
+            border: "1px solid var(--th-border)",
+            borderRadius: 8,
+            background: "var(--th-bg-elevated)",
+            color: "var(--th-text-primary)",
+            fontFamily: "var(--th-font-mono)",
+            fontSize: "0.72rem",
+            padding: "0.3rem 0.5rem",
+            transition: "border-color 0.12s",
+          }}
+        >
+          {STATUS_OPTIONS.map((status) => (
+            <option key={status} value={status}>
+              {taskStatusLabel(status as TaskStatus, t)}
+            </option>
+          ))}
+        </select>
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-1.5 min-w-0">
             {assignedAgent && assignedLabel ? (
               <>
-                <AgentAvatar agent={assignedAgent} agents={agents} size={20} />
-                <span className="text-xs truncate" style={{ color: "var(--th-text-secondary)" }}>{assignedLabel}</span>
+                <AgentAvatar agent={assignedAgent} agents={agents} size={18} />
+                <span className="text-[11px] truncate" style={{ color: "var(--th-text-secondary)" }}>{assignedLabel}</span>
                 {assignedAgent.persona_id && <PersonaBadge personaId={assignedAgent.persona_id} size="sm" />}
               </>
             ) : assignedLabel ? (
-              <span className="text-xs truncate" style={{ color: "var(--th-text-secondary)" }}>{assignedLabel}</span>
+              <span className="text-[11px] truncate" style={{ color: "var(--th-text-secondary)" }}>{assignedLabel}</span>
             ) : (
-              <span className="text-xs" style={{ color: "var(--th-text-muted)" }}>
+              <span className="text-[11px]" style={{ color: "var(--th-text-muted)" }}>
                 {t({ ko: "미배정", en: "Unassigned", ja: "未割り当て", zh: "未分配" })}
               </span>
             )}
           </div>
           <span className="text-[10px] flex-shrink-0 tabular-nums" style={{ color: "var(--th-text-muted)" }}>{timeAgo(task.created_at, localeTag)}</span>
         </div>
-        <div className={`mt-2 transition-all ${agentWarning ? "ring-2 ring-red-500 animate-[shake_0.4s_ease-in-out]" : ""}`}>
+        <div className={`transition-all ${agentWarning ? "ring-2 ring-red-500 animate-[shake_0.4s_ease-in-out]" : ""}`}>
           <AgentSelect
-          agents={agents}
-          departments={departments}
-          value={task.assigned_agent_id ?? ""}
-          placeholder={
-            assignedAgent || !assignedLabel
-              ? undefined
-              : t({
-                  ko: `배정됨(숨김): ${assignedLabel}`,
-                  en: `Assigned (hidden): ${assignedLabel}`,
-                  ja: `割り当て済み(非表示): ${assignedLabel}`,
-                  zh: `已分配（隐藏）: ${assignedLabel}`,
-                })
-          }
-          onChange={(agentId) => {
-            setAgentWarning(false);
-            if (agentId) {
-              onAssignTask(task.id, agentId);
-            } else {
-              onUpdateTask(task.id, { assigned_agent_id: null });
+            agents={agents}
+            departments={departments}
+            value={task.assigned_agent_id ?? ""}
+            placeholder={
+              assignedAgent || !assignedLabel
+                ? undefined
+                : t({
+                    ko: `배정됨(숨김): ${assignedLabel}`,
+                    en: `Assigned (hidden): ${assignedLabel}`,
+                    ja: `割り当て済み(非表示): ${assignedLabel}`,
+                    zh: `已分配（隐藏）: ${assignedLabel}`,
+                  })
             }
-          }}
-        />
-        {agentWarning && (
-          <p className="mt-1 text-xs font-medium animate-[shake_0.4s_ease-in-out]" style={{ color: "rgb(253,164,175)" }}>
-            {t({
-              ko: "담당자를 배정해주세요!",
-              en: "Please assign an agent!",
-              ja: "担当者を割り当ててください！",
-              zh: "请分配负责人！",
-            })}
-          </p>
-        )}
+            onChange={(agentId) => {
+              setAgentWarning(false);
+              if (agentId) {
+                onAssignTask(task.id, agentId);
+              } else {
+                onUpdateTask(task.id, { assigned_agent_id: null });
+              }
+            }}
+          />
+          {agentWarning && (
+            <p className="mt-1 text-xs font-medium animate-[shake_0.4s_ease-in-out]" style={{ color: "rgb(253,164,175)" }}>
+              {t({
+                ko: "담당자를 배정해주세요!",
+                en: "Please assign an agent!",
+                ja: "担当者を割り当ててください！",
+                zh: "请分配负责人！",
+              })}
+            </p>
+          )}
         </div>
       </div>
 
@@ -422,7 +404,7 @@ export default function TaskCard({
             {subtaskDoneCount > 0 && <span style={{ color: "rgb(52,211,153)" }}>✓ {subtaskDoneCount}</span>}
             {subtaskInProgressCount > 0 && <span style={{ color: "var(--th-accent)" }}>⚡ {subtaskInProgressCount}</span>}
             {subtaskBlockedCount > 0 && <span style={{ color: "rgb(253,164,175)" }}>✖ {subtaskBlockedCount}</span>}
-            {subtaskPendingCount > 0 && <span style={{ color: "var(--th-text-muted)" }}>· {subtaskPendingCount} pending</span>}
+            {subtaskPendingCount > 0 && <span style={{ color: "var(--th-text-muted)" }}>· {subtaskPendingCount} {t({ ko: "대기", en: "pending", ja: "待機", zh: "待处理" })}</span>}
           </div>
 
           {/* Subtask rows */}
@@ -482,8 +464,12 @@ export default function TaskCard({
         </div>
       )}
 
-      {/* 액션 툴바 */}
-      <div className="flex flex-wrap items-center gap-2 pt-3 mt-3">
+      {/* 액션 툴바 — macOS refined */}
+      <div
+        className="flex flex-wrap items-center gap-1.5 pt-3 mt-2"
+        style={{ borderTop: "1px solid var(--th-border)" }}
+      >
+        {/* Primary action group */}
         {canRun && (
           <button
             onClick={() => {
@@ -495,8 +481,8 @@ export default function TaskCard({
               onRunTask(task.id);
             }}
             title={t({ ko: "작업 실행", en: "Run task", ja: "タスク実行", zh: "运行任务" })}
-            className="flex flex-1 items-center justify-center gap-1 bg-green-700 px-2 py-1.5 text-xs font-medium font-mono text-white transition hover:bg-green-600"
-            style={{ borderRadius: 6 }}
+            className="flex flex-1 items-center justify-center gap-1 text-xs font-medium font-mono text-white"
+            style={{ background: "rgba(34,197,94,0.85)", borderRadius: 8, padding: "5px 10px", border: "1px solid rgba(34,197,94,0.4)", transition: "background 0.12s" }}
           >
             ▶ {t({ ko: "실행", en: "Run", ja: "実行", zh: "运行" })}
           </button>
@@ -505,8 +491,8 @@ export default function TaskCard({
           <button
             onClick={() => onPauseTask!(task.id)}
             title={t({ ko: "작업 일시중지", en: "Pause task", ja: "タスク一時停止", zh: "暂停任务" })}
-            className="flex flex-1 items-center justify-center gap-1 bg-orange-700 px-2 py-1.5 text-xs font-medium font-mono text-white transition hover:bg-orange-600"
-            style={{ borderRadius: 6 }}
+            className="flex flex-1 items-center justify-center gap-1 text-xs font-medium font-mono text-white"
+            style={{ background: "rgba(234,88,12,0.8)", borderRadius: 8, padding: "5px 10px", border: "1px solid rgba(234,88,12,0.35)", transition: "background 0.12s" }}
           >
             ⏸ {t({ ko: "일시중지", en: "Pause", ja: "一時停止", zh: "暂停" })}
           </button>
@@ -515,112 +501,96 @@ export default function TaskCard({
           <button
             onClick={() => void handleStopTask()}
             title={t({ ko: "작업 중지", en: "Cancel task", ja: "タスク停止", zh: "取消任务" })}
-            className="flex items-center justify-center gap-1 bg-red-800 px-2 py-1.5 text-xs font-medium font-mono text-white transition hover:bg-red-700"
-            style={{ borderRadius: 6 }}
+            className="flex items-center justify-center gap-1 text-xs font-medium font-mono"
+            style={{ background: "rgba(185,28,28,0.7)", color: "white", borderRadius: 8, padding: "5px 10px", border: "1px solid rgba(185,28,28,0.35)", transition: "background 0.12s" }}
           >
-            ⏹ {t({ ko: "중지", en: "Cancel", ja: "キャンセル", zh: "取消" })}
+            ⏹ {t({ ko: "중지", en: "Stop", ja: "停止", zh: "停止" })}
           </button>
         )}
         {canResume && (
           <button
             onClick={() => onResumeTask!(task.id)}
             title={t({ ko: "작업 재개", en: "Resume task", ja: "タスク再開", zh: "恢复任务" })}
-            className="flex flex-1 items-center justify-center gap-1 px-2 py-1.5 text-xs font-medium font-mono transition"
-            style={{ borderRadius: 6, background: "var(--th-accent-glow)", color: "var(--th-text-accent)", border: "1px solid var(--th-border-accent)" }}
+            className="flex flex-1 items-center justify-center gap-1 text-xs font-medium font-mono"
+            style={{ borderRadius: 8, padding: "5px 10px", background: "var(--th-accent-glow)", color: "var(--th-text-accent)", border: "1px solid var(--th-border-accent)", transition: "opacity 0.12s" }}
           >
             ↩ {t({ ko: "재개", en: "Resume", ja: "再開", zh: "恢复" })}
           </button>
         )}
-        {(task.status === "in_progress" ||
-          task.status === "review" ||
-          task.status === "done" ||
-          task.status === "pending") &&
-          onOpenTerminal && (
+
+        {/* Secondary actions — compact icon group */}
+        <div className="ml-auto flex items-center gap-1">
+          {(task.status === "in_progress" ||
+            task.status === "review" ||
+            task.status === "done" ||
+            task.status === "pending") &&
+            onOpenTerminal && (
+              <button
+                onClick={() => onOpenTerminal(task.id)}
+                title={t({ ko: "터미널 출력 보기", en: "View terminal output", ja: "ターミナル出力を見る", zh: "查看终端输出" })}
+                className="flex items-center justify-center"
+                style={{ background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)", borderRadius: 7, padding: "4px 7px", border: "1px solid var(--th-border)", fontSize: "0.8rem", transition: "background 0.1s" }}
+              >
+                &#128421;
+              </button>
+            )}
+          {(task.status === "planned" ||
+            task.status === "collaborating" ||
+            task.status === "in_progress" ||
+            task.status === "review" ||
+            task.status === "done" ||
+            task.status === "pending") &&
+            onOpenMeetingMinutes && (
+              <button
+                onClick={() => onOpenMeetingMinutes(task.id)}
+                title={t({ ko: "회의록 보기", en: "View meeting minutes", ja: "会議録を見る", zh: "查看会议纪要" })}
+                className="flex items-center justify-center"
+                style={{ background: "rgba(8,145,178,0.12)", color: "rgb(103,232,249)", borderRadius: 7, padding: "4px 7px", border: "1px solid rgba(8,145,178,0.25)", fontSize: "0.8rem", transition: "background 0.1s" }}
+              >
+                📝
+              </button>
+            )}
+          {task.status === "review" && (
             <button
-              onClick={() => onOpenTerminal(task.id)}
-              title={t({
-                ko: "터미널 출력 보기",
-                en: "View terminal output",
-                ja: "ターミナル出力を見る",
-                zh: "查看终端输出",
-              })}
-              className="flex items-center justify-center px-2 py-1.5 text-xs font-mono transition"
-              style={{ background: "var(--th-bg-surface-hover)", color: "var(--th-text-secondary)", borderRadius: 6 }}
+              onClick={() => setShowDiff(true)}
+              title={t({ ko: "변경사항 보기 (Git diff)", en: "View changes (Git diff)", ja: "変更を見る (Git diff)", zh: "查看更改 (Git diff)" })}
+              className="flex items-center justify-center text-[10px] font-medium font-mono"
+              style={{ background: "rgba(126,34,206,0.15)", color: "rgb(196,181,253)", borderRadius: 7, padding: "4px 8px", border: "1px solid rgba(126,34,206,0.3)", transition: "background 0.1s" }}
             >
-              &#128421;
+              {t({ ko: "Diff", en: "Diff", ja: "差分", zh: "差异" })}
             </button>
           )}
-        {(task.status === "planned" ||
-          task.status === "collaborating" ||
-          task.status === "in_progress" ||
-          task.status === "review" ||
-          task.status === "done" ||
-          task.status === "pending") &&
-          onOpenMeetingMinutes && (
+          {canHideTask && !isHiddenTask && onHideTask && (
             <button
-              onClick={() => onOpenMeetingMinutes(task.id)}
-              title={t({
-                ko: "회의록 보기",
-                en: "View meeting minutes",
-                ja: "会議録を見る",
-                zh: "查看会议纪要",
-              })}
-              className="flex items-center justify-center bg-cyan-800/70 px-2 py-1.5 text-xs font-mono text-cyan-200 transition hover:bg-cyan-700 hover:text-white"
-              style={{ borderRadius: 6 }}
+              onClick={() => onHideTask(task.id)}
+              title={t({ ko: "완료/보류/취소 작업 숨기기", en: "Hide done/pending/cancelled task", ja: "完了/保留/キャンセルのタスクを非表示", zh: "隐藏已完成/待处理/已取消任务" })}
+              className="flex items-center justify-center text-[10px] font-medium font-mono"
+              style={{ background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)", borderRadius: 7, padding: "4px 8px", border: "1px solid var(--th-border)", transition: "opacity 0.1s" }}
             >
-              📝
+              {t({ ko: "숨김", en: "Hide", ja: "非表示", zh: "隐藏" })}
             </button>
           )}
-        {task.status === "review" && (
-          <button
-            onClick={() => setShowDiff(true)}
-            title={t({
-              ko: "변경사항 보기 (Git diff)",
-              en: "View changes (Git diff)",
-              ja: "変更を見る (Git diff)",
-              zh: "查看更改 (Git diff)",
-            })}
-            className="flex items-center justify-center gap-1 bg-purple-800 px-2 py-1.5 text-xs font-medium font-mono text-purple-200 transition hover:bg-purple-700"
-            style={{ borderRadius: 6 }}
-          >
-            {t({ ko: "Diff", en: "Diff", ja: "差分", zh: "差异" })}
-          </button>
-        )}
-        {canHideTask && !isHiddenTask && onHideTask && (
-          <button
-            onClick={() => onHideTask(task.id)}
-            title={t({
-              ko: "완료/보류/취소 작업 숨기기",
-              en: "Hide done/pending/cancelled task",
-              ja: "完了/保留/キャンセルのタスクを非表示",
-              zh: "隐藏已完成/待处理/已取消任务",
-            })}
-            className="flex items-center justify-center gap-1 px-2 py-1.5 text-xs font-medium font-mono transition-opacity hover:opacity-90"
-            style={{ background: "var(--th-bg-surface-hover)", color: "var(--th-text-secondary)", borderRadius: 6 }}
-          >
-            {t({ ko: "숨김", en: "Hide", ja: "非表示", zh: "隐藏" })}
-          </button>
-        )}
-        {canHideTask && !!isHiddenTask && onUnhideTask && (
-          <button
-            onClick={() => onUnhideTask(task.id)}
-            title={t({ ko: "숨긴 작업 복원", en: "Restore hidden task", ja: "非表示タスクを復元", zh: "恢复隐藏任务" })}
-            className="flex items-center justify-center gap-1 px-2 py-1.5 text-xs font-medium font-mono transition-opacity hover:opacity-90"
-            style={{ background: "var(--th-accent, #f59e0b)", color: "var(--th-accent-text)", borderRadius: 6 }}
-          >
-            {t({ ko: "복원", en: "Restore", ja: "復元", zh: "恢复" })}
-          </button>
-        )}
-        {canDelete && (
-          <button
-            onClick={() => void handleDeleteTask()}
-            title={t({ ko: "작업 삭제", en: "Delete task", ja: "タスク削除", zh: "删除任务" })}
-            className="flex items-center justify-center bg-red-900/60 px-2 py-1.5 text-xs font-mono text-red-400 transition hover:bg-red-800 hover:text-red-300"
-            style={{ borderRadius: 6 }}
-          >
-            🗑
-          </button>
-        )}
+          {canHideTask && !!isHiddenTask && onUnhideTask && (
+            <button
+              onClick={() => onUnhideTask(task.id)}
+              title={t({ ko: "숨긴 작업 복원", en: "Restore hidden task", ja: "非表示タスクを復元", zh: "恢复隐藏任务" })}
+              className="flex items-center justify-center text-[10px] font-medium font-mono"
+              style={{ background: "var(--th-accent, #f59e0b)", color: "var(--th-accent-text)", borderRadius: 7, padding: "4px 8px", transition: "opacity 0.1s" }}
+            >
+              {t({ ko: "복원", en: "Restore", ja: "復元", zh: "恢复" })}
+            </button>
+          )}
+          {canDelete && (
+            <button
+              onClick={() => void handleDeleteTask()}
+              title={t({ ko: "작업 삭제", en: "Delete task", ja: "タスク削除", zh: "删除任务" })}
+              className="flex items-center justify-center"
+              style={{ background: "rgba(127,29,29,0.4)", color: "rgb(252,165,165)", borderRadius: 7, padding: "4px 7px", border: "1px solid rgba(127,29,29,0.35)", fontSize: "0.8rem", transition: "background 0.1s" }}
+            >
+              🗑
+            </button>
+          )}
+        </div>
       </div>
         </>
       )}
@@ -697,63 +667,6 @@ export default function TaskCard({
                 >+</button>
               </div>
               {depError && <p className="text-[10px] text-red-400">{depError}</p>}
-            </div>
-          )}
-
-          {/* Inline terminal log preview */}
-          {(task.status === "in_progress" || task.status === "review" || task.status === "done" || task.status === "pending") && (
-            <div className="mt-2 border-t pt-2" style={{ borderColor: "var(--th-border)" }}>
-              <button
-                type="button"
-                onClick={() => setShowTerminalPreview((v) => !v)}
-                className="flex items-center gap-1.5 text-[11px] transition-colors"
-                style={{ color: "var(--th-text-muted)" }}
-              >
-                <span style={{ color: "var(--th-text-accent)", fontFamily: "var(--th-font-mono)" }}>{">"}_</span>
-                {t({ ko: "실행 로그", en: "Exec Log", ja: "実行ログ", zh: "执行日志" })}
-                <span className="ml-0.5">{showTerminalPreview ? "▲" : "▼"}</span>
-              </button>
-              {showTerminalPreview && (
-                <div className="terminal-zone mt-2" style={{ borderRadius: 8 }}>
-                  <div className="terminal-zone-titlebar">
-                    <span className="terminal-zone-dot terminal-zone-dot-red" />
-                    <span className="terminal-zone-dot terminal-zone-dot-amber" style={{ marginLeft: 4 }} />
-                    <span className="terminal-zone-dot terminal-zone-dot-green" style={{ marginLeft: 4 }} />
-                    <span className="terminal-zone-title">
-                      {t({ ko: "실행 로그 미리보기", en: "execution log preview", ja: "実行ログプレビュー", zh: "执行日志预览" })}
-                    </span>
-                    {task.status === "in_progress" && (
-                      <span
-                        className="ml-auto text-[9px] font-mono"
-                        style={{ color: "var(--th-status-success)", animation: "terminalCursorBlink 1s step-end infinite" }}
-                      >
-                        ● LIVE
-                      </span>
-                    )}
-                  </div>
-                  <div className="terminal-zone-output" style={{ fontSize: "0.7rem", padding: "8px 12px", maxHeight: "120px", overflowY: "auto" }}>
-                    {terminalLogs.length === 0 ? (
-                      <p className="terminal-zone-muted">
-                        {t({ ko: "로그 없음", en: "No log entries", ja: "ログなし", zh: "无日志" })}
-                      </p>
-                    ) : (
-                      terminalLogs.map((log) => {
-                        const lineClass =
-                          log.kind === "error" ? "terminal-zone-error" :
-                          log.kind === "system" ? "terminal-zone-info" :
-                          log.kind === "success" ? "terminal-zone-success" :
-                          "terminal-zone-prompt";
-                        const time = new Date(log.created_at * 1000).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-                        return (
-                          <p key={log.id} className={lineClass} style={{ margin: 0, whiteSpace: "pre-wrap", wordBreak: "break-all" }}>
-                            <span style={{ opacity: 0.5 }}>{time} </span>{log.message}
-                          </p>
-                        );
-                      })
-                    )}
-                  </div>
-                </div>
-              )}
             </div>
           )}
 
@@ -852,6 +765,77 @@ export default function TaskCard({
                     </div>
                   );
                 })}
+              </div>
+            )}
+          </div>
+
+          {/* Generated Images section */}
+          <div className="mt-2 border-t pt-2" style={{ borderColor: "var(--th-border)" }}>
+            <button
+              type="button"
+              onClick={() => setShowImages((v) => !v)}
+              className="flex items-center gap-1.5 text-[11px] transition-colors"
+              style={{ color: "var(--th-text-muted)" }}
+            >
+              <svg width="11" height="11" viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="1" y="2" width="16" height="14" rx="2" />
+                <circle cx="5.5" cy="7" r="1.5" />
+                <polyline points="1,14 6,9 9,12 12,9 17,14" />
+              </svg>
+              {t({ ko: "생성 이미지", en: "Generated Images", ja: "生成画像", zh: "生成图像" })}
+              {taskImages.length > 0 && (
+                <span className="px-1.5 text-[10px] font-mono" style={{ borderRadius: 6, background: "rgba(236,72,153,0.15)", color: "#ec4899" }}>
+                  {taskImages.length}
+                </span>
+              )}
+              <span className="ml-0.5">{showImages ? "▲" : "▼"}</span>
+            </button>
+
+            {showImages && (
+              <div className="mt-2">
+                {taskImages.length === 0 ? (
+                  <div className="flex items-center gap-2">
+                    <p className="text-[11px]" style={{ color: "var(--th-text-muted)" }}>
+                      {t({ ko: "연동된 이미지 없음", en: "No images linked", ja: "画像なし", zh: "无关联图像" })}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => openWindow("image-studio")}
+                      className="text-[10px] font-mono px-2 py-0.5"
+                      style={{ borderRadius: 6, border: "1px solid var(--th-border-accent)", color: "var(--th-accent)", background: "rgba(245,158,11,0.08)", cursor: "pointer" }}
+                    >
+                      {t({ ko: "Image Studio 열기", en: "Open Image Studio", ja: "Image Studioを開く", zh: "打开图像工作室" })}
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <div className="grid gap-1.5" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
+                      {taskImages.map((img) => (
+                        <div
+                          key={img.id}
+                          className="relative overflow-hidden"
+                          style={{ borderRadius: 6, border: "1px solid var(--th-border)", aspectRatio: "1", cursor: "pointer" }}
+                          onClick={() => openWindow("image-studio")}
+                          title={img.prompt}
+                        >
+                          <img
+                            src={getImageUrl(img.id, true)}
+                            alt={img.prompt}
+                            style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => openWindow("image-studio")}
+                      className="mt-1.5 w-full text-[10px] font-mono py-1"
+                      style={{ borderRadius: 6, border: "1px solid var(--th-border)", color: "var(--th-text-muted)", background: "transparent", cursor: "pointer" }}
+                    >
+                      {t({ ko: "Image Studio에서 더 보기 →", en: "View in Image Studio →", ja: "Image Studioで表示 →", zh: "在图像工作室查看 →" })}
+                    </button>
+                  </>
+                )}
               </div>
             )}
           </div>

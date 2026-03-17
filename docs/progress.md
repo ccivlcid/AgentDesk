@@ -1,6 +1,116 @@
 # AgentDesk — 개발 진행 현황
 
-> 마지막 업데이트: 2026-03-17
+> 마지막 업데이트: 2026-03-22 (Phase 17 완료 — 프로젝트 폴더 시스템)
+
+---
+
+## ✅ Phase 17 — Project Folders (완료)
+
+> 스펙 문서: [`docs/features/project-folders.md`](features/project-folders.md)
+
+프로젝트를 폴더 컨테이너로 묶고, 폴더 이동 시 디스크 경로도 함께 변경하는 시스템.
+
+| 항목 | 내용 |
+|------|------|
+| DB | `project_folders` 테이블 (2026-03-22-001), `projects.folder_id` FK (2026-03-22-002) |
+| API | GET/POST/PATCH/DELETE `/api/project-folders` + POST/DELETE `/api/project-folders/:id/projects` |
+| 디스크 이동 | `fs.renameSync` (non-fatal — 실패 시 DB만 업데이트, `moved_on_disk: false` 반환) |
+| Frontend | `ProjectFolder` 타입, `src/api/project-folders.ts`, `uiStore.openFolders` |
+| UI | `FolderDesktopIcon.tsx` (SVG 적층 폴더 아이콘 + 배지 + 컨텍스트 메뉴) |
+| UI | `NewFolderModal.tsx` (2단계: 이름 → base_path + 색상 선택) |
+| UI | `FolderWindow.tsx` (폴더 내 프로젝트 그리드 + 추가/꺼내기) |
+| Desktop | 폴더 아이콘 별도 영역 렌더링, 우클릭 "폴더로 이동" 서브메뉴, 폴더 drop 이벤트 |
+
+---
+
+## ✅ Phase 16 — Cross-Project Handoff (완료)
+
+> 스펙 문서: [`docs/features/cross-project-handoff.md`](features/cross-project-handoff.md)
+
+프로젝트 유형 간 결과물 연결 시스템.
+디자인·리서치 완료 결과물을 소프트웨어·콘텐츠 프로젝트에서 가져다 쓰는 핸드오프 흐름.
+
+| Phase | 내용 | 상태 |
+|-------|------|------|
+| 16-A | 결과물 체크리스트 (DB + API + ProjectInsightsPanel UI) | ✅ 완료 |
+| 16-B | 크로스 프로젝트 소스 연결 (DB + API + ProjectEditorPanel UI) | ✅ 완료 |
+| 16-C | 태스크 실행 시 소스 결과물 컨텍스트 자동 주입 (execution-run.ts) | ✅ 완료 |
+
+### Phase 16-B·C 구현 내용
+
+**백엔드**
+- DB 마이그레이션 `2026-03-21-002-project-sources`: `project_sources` 테이블 (순환참조 방지, max 5개 제한)
+- `GET /api/projects/:id/sources`: 소스 목록 + 각 소스 결과물 체크 수 포함
+- `POST /api/projects/:id/sources`: 소스 추가 (순환참조·자기참조·max 5개 검증)
+- `DELETE /api/projects/:id/sources/:sourceId`: 소스 제거
+- `server/modules/projects/source-context-fetcher.ts` (신규): `buildSourceContextBlock()` — 태스크 실행 시 연결된 소스 프로젝트의 완료 결과물을 텍스트 블록으로 변환
+- `execution-run.ts`: `sourceContextBlock` 프롬프트 주입 (kbContextBlock 다음, figmaContextBlock 앞)
+
+**프론트엔드**
+- `src/types/index.ts`: `ProjectSource`, `ProjectSourcesResponse` 타입 추가
+- `src/api/organization-projects.ts`: `getProjectSources`, `addProjectSource`, `removeProjectSource` API 함수 추가
+- `ProjectEditorPanel.tsx`: `ProjectSourcesSection` 컴포넌트 (소스 목록 + 추가 드롭다운 + 제거 버튼)
+- `ProjectManagerModal.tsx`: sources 상태 관리 + fetch + `handleAddSource`/`handleRemoveSource` 핸들러
+
+### Phase 16-A 구현 내용
+
+**백엔드**
+- DB 마이그레이션 `2026-03-21-001-project-deliverable-checks`: `project_deliverable_checks` 테이블 (id, project_id, key, label, checked, checked_at, note, created_at, updated_at)
+- `GET /api/projects/:id/deliverables`: 카테고리 `deliverable_schema` + DB 체크 상태 병합 반환
+- `PUT /api/projects/:id/deliverables/:key`: 체크 토글 (UPSERT)
+
+**프론트엔드**
+- `src/types/index.ts`: `ProjectDeliverableItem`, `ProjectDeliverablesResponse` 타입 추가
+- `src/api/organization-projects.ts`: `getProjectDeliverables`, `updateProjectDeliverable` API 함수 추가
+- `ProjectInsightsPanel.tsx`: `DeliverableChecklistSection` 컴포넌트 추가 — 진행률 바 + 체크박스 목록
+
+---
+
+## ✅ Phase 15 — Image Studio (완료)
+
+> 구현 문서: [`docs/features/image-studio.md`](features/image-studio.md)
+
+| Phase | 내용 | 상태 |
+|-------|------|------|
+| 15-A | DB 마이그레이션 + 백엔드 기반 (api_providers 연동) | ✅ 완료 |
+| 15-B | 바탕화면 아이콘 + GenerateTab (txt2img) | ✅ 완료 |
+| 15-C | Inpaint 모드 + MaskCanvas + 이미지 업로드 | ✅ 완료 |
+| 15-D | GalleryTab + 태스크 연동 (TaskCard 첨부 이미지) | ✅ 완료 |
+
+### 구현 내용
+
+**백엔드**
+- DB migration `2026-03-19-001-image-generations`: `image_generations` 테이블 (id, provider, model, prompt, width, height, file_path, thumb_path, metadata, task_id, created_at)
+- DB migration `2026-03-20-005-image-generations-task-id`: `task_id` 컬럼 + 인덱스
+- `server/modules/image-studio/image-service.ts`: 이미지 파일 저장/썸네일 생성 (sharp)
+- `server/modules/image-studio/providers/openai.ts`: txt2img (`/v1/images/generations`), inpaint (`/v1/images/edits`) — api_providers `api_key_enc` 복호화 사용
+- `server/modules/routes/ops/image-studio.ts`: 5개 엔드포인트 등록
+
+**API 엔드포인트**
+- `GET /api/image-studio/providers` — 활성 프로바이더 + 이미지 모델 목록
+- `POST /api/image-studio/generate` — 이미지 생성 (mode: txt2img | inpaint, task_id 옵션)
+- `GET /api/image-studio/gallery` — 전체 갤러리 (페이지네이션, 프롬프트 검색)
+- `GET /api/image-studio/image/:id` — 이미지 파일 스트리밍 (?thumb=1)
+- `GET /api/image-studio/task/:taskId/images` — 태스크 연동 이미지 목록
+- `DELETE /api/image-studio/gallery/:id` — 이미지 + DB 삭제
+
+**프론트엔드**
+- `src/components/windows/ImageStudioWindow.tsx`: Generate / Gallery 탭, ? 가이드 패널
+- `src/components/image-studio/GenerateTab.tsx`: Photoshop형 레이아웃 (240px 좌측 패널 + 캔버스 + 상태바), 2모드 (Text/Inpaint), 태스크 연동 선택기
+- `src/components/image-studio/MaskCanvas.tsx`: 브러시 마스크 편집 (흰색=변경)
+- `src/components/image-studio/GalleryTab.tsx`: auto-fill 그리드, 우측 상세 패널
+- 바탕화면 아이콘 `IconImageStudio` + 단축키 `g i`
+- 프로젝트 카테고리별 전용 SVG 아이콘 (소프트웨어·마케팅·리서치·제품·콘텐츠·운영·디자인)
+- 바탕화면 우클릭 → **"새 폴더"** 인라인 생성 (이름 입력 → Enter/blur 확인, Escape 취소)
+
+**태스크 연동**
+- GenerateTab 좌측 "태스크 연동" 섹션: 선택 시 태스크 제목+설명으로 프롬프트 자동 채움
+- 생성 시 `task_id` 저장 → TaskCard 하단 "Generated Images" 섹션 (썸네일 3열 그리드)
+- 이미지 없을 때 "Open Image Studio" 버튼 표시
+
+**이미지 업로드 UX**
+- 파일 클릭 선택 또는 드래그 앤 드롭
+- 업로드 시 실제 해상도 감지 → 가장 가까운 지원 사이즈 자동 설정
 
 ---
 
@@ -8,9 +118,10 @@
 
 | Phase | 내용 | 완료일 |
 |-------|------|--------|
+| Phase 16 | Cross-Project Handoff — 결과물 체크리스트 + 소스 연결 + 컨텍스트 자동 주입 | 2026-03-21 |
+| Phase 15 | Image Studio — 위젯 + 앱 윈도우 (txt2img·inpaint, 갤러리, 태스크 연동) | 2026-03-21 |
 | Phase 13 | FM2024 Overhaul — 모든 tsx → `--th-*` CSS 변수 전환 | 2026-03-14 |
 | Phase 14 | MED Features — lazy loading, 채팅 검색/핀, 태스크 일괄, 성과 히스토리 | 2026-03-14 |
-| Phase 19 | Office View v2 — 5-zone 재설계, 12개 신규 컴포넌트 | 2026-03-15 |
 | P0~P3 + Security | 전체 로드맵 완료 (상세: `docs/OVERVIEW.md` 섹션 8) | 2026-03-14 |
 
 ---
@@ -400,6 +511,59 @@
   - 행 클릭 → 터미널 탭 (기존 동작 유지)
   - `회의록` 버튼 클릭 → MINUTES 탭으로 바로 열림 (`stopPropagation`으로 행 클릭과 분리)
 
+## 2026-03-18 UX 개선 ✅
+
+### Dock & 바탕화면 아이콘 정리
+- **중복 아이콘 제거**: 바탕화면에서 Workflow Builder, 새 태스크, 프로젝트 생성 아이콘 제거 (Dock에 이미 존재)
+- **Dock "+" 범용 추가 버튼**: 기존 단일 버튼 → 팝업 메뉴로 교체
+  - 새 태스크 (orange) / 새 프로젝트 (green) / 새 에이전트 (purple) 3가지 항목
+  - 바깥 클릭 시 닫힘, 항목별 accent 색상 hover 효과
+- **새 에이전트 → 직원채용창 바로 열기**: `createTrigger` 카운터 패턴
+  - `AgentManagerProps.createTrigger?: number` 추가
+  - `AgentManager.tsx`: `useEffect`로 값 변경 시 즉시 `openCreate()` 호출
+  - `AgentManagerWindow.tsx`: `createTrigger` prop 수신 → `AgentManager`에 전달
+  - `Desktop.tsx`: `agentManagerCreateCount` state + Dock `onCreateAgent` 에서 increment + `openWindow`
+
+### 에이전트 하트비트 위젯 — 프로젝트 필터
+- **`AgentsWidget.tsx`**: `useProjectStore`로 `currentProjectId` / `projectAgentIds` / `projectAgentsLoaded` 구독
+  - 프로젝트 선택 시 해당 프로젝트 소속 에이전트만 표시 (카운트 요약 포함)
+  - 프로젝트 미선택 시 전체 에이전트 표시
+
+### 채팅 창 — 프로젝트 필터 + 탭 레이블 개선
+- **`ChatWindow.tsx`**: 다이렉트 탭(`ChatPanel`)에 `projectAgents` 전달 (기존 전체 `agents` → 필터링)
+  - 그룹 탭은 이미 `projectAgents` 사용 중
+- **탭 레이블 변경**: "다이렉트" → "공지" (Broadcast), "그룹" → "단톡방" (Group Chat)
+  - SVG 아이콘 추가 (말풍선 + 줄 / 두 사람)
+  - `AppWindowTab.label` 타입 `string` → `ReactNode`로 확장
+- **`AnnouncementCliPanel.tsx`**: `📢` 이모지 → SVG 스피커 아이콘으로 교체 (헤더, 빈 상태, 메시지 배지)
+
+### 바탕화면 아이콘 정렬 기능 수정
+- **`DesktopIcon.tsx`**: `useState` 초기화 문제 수정
+  - 외부(정렬/스냅) 에서 `setDesktopIconLayout` 호출 시 로컬 `pos` state가 갱신 안 되던 버그 수정
+  - `useEffect`로 `desktopIconLayout[def.id]` 변경 감지 → `dragging` 중이 아닐 때 `pos` 동기화
+  - 결과: "이름순 정렬", "기본 순서로 정렬", "격자에 맞추기" 모두 정상 작동
+
+### 마크다운 문서 → 프로젝트 폴더 드래그 앤 드롭
+- **전체 흐름**: 에디터에서 작성 → 바탕화면 아이콘으로 저장 → 프로젝트 폴더 아이콘에 드래그 → 실제 파일 저장
+- **`uiStore.ts`**: `pendingDocs` 배열 + `addPendingDoc` / `removePendingDoc` 액션 추가
+- **`MarkdownEditorModal.tsx`**: "바탕화면에 저장" 버튼 추가
+  - 클릭 시 `addPendingDoc` → 바탕화면에 문서 아이콘 생성 후 모달 닫힘
+  - 기존 "다운로드 .md" 버튼 유지
+- **`DesktopIconDef`**: `docId?: string` (HTML5 drag 소스), `onDropDoc?: (docId: string) => void` (드롭 대상) 필드 추가
+- **`DesktopIcon.tsx`**: HTML5 drag/drop 이벤트 처리
+  - `docId` 아이콘: `draggable`, `onDragStart` (dataTransfer에 doc ID 기록)
+  - `onDropDoc` 아이콘: `onDragOver` / `onDragLeave` / `onDrop` — 드롭 오버 시 amber 하이라이트
+  - `docId` 아이콘은 기존 마우스 기반 repositioning 드래그 스킵 (충돌 방지)
+- **`DesktopIcons.tsx`**: `IconMarkdownDoc` SVG 아이콘 추가 (파일 + 접힌 모서리 + 텍스트 라인)
+- **`Desktop.tsx`**: `pendingDocs` 렌더링 + `handleDropDocToProject` 콜백
+  - 프로젝트 폴더 아이콘에 `onDropDoc` 연결
+  - 드롭 시 `POST /api/projects/save-file` 호출 → 성공 시 `removePendingDoc`
+- **`server/modules/routes/core/projects.ts`**: `POST /api/projects/save-file` 엔드포인트 추가
+  - `{ project_path, filename, content }` → `fs.writeFileSync`로 실제 파일 저장
+  - 파일명 path separator 제거 (보안), `isPathInsideAllowedRoots` 검증
+
+---
+
 ## Local LLM Manager — Phase 4 (UX 완성) ✅ (2026-03-17)
 
 ### 탭 간 중복 제거
@@ -429,10 +593,200 @@
 
 ---
 
-## 현재 미완성 / 다음 후보
+## 2026-03-19 Local LLM Phase 5 — llama.cpp · Jan 백엔드 감지 ✅
 
-- ~~에이전트 편집 모달에 로컬 모델 provider 선택 UI 연결~~ ✅ 완료 (2026-03-16)
-- llama.cpp / Jan 백엔드 실행 감지 (향후 Phase 4 예정)
+### 신규 클라이언트 모듈
+- **`server/modules/local-llm/llamacpp-client.ts`** (신규):
+  - `ping()` — `/health` 1차 시도 (llama.cpp 네이티브 엔드포인트), `/v1/models` 폴백
+  - `listModels()` — OpenAI compat `/v1/models`
+  - `getHealth()` — `{ status, slots_idle, slots_processing }` 반환
+- **`server/modules/local-llm/jan-client.ts`** (신규):
+  - `ping()` — `/v1/models` HTTP 핑 (포트 1337)
+  - `listModels()` — Jan API OpenAI compat 모델 목록
+
+### backend-manager.ts 업데이트
+- `detectLlamaCpp()` — `llama-server --version` → 없으면 `llama-cli --version` 폴백
+- `detectJan()` — 플랫폼별 설치 경로 확인 (Windows `%LOCALAPPDATA%\Programs\Jan`, macOS `/Applications/Jan.app`)
+- `getAllBackendsStatus()`:
+  - 4개 백엔드 병렬 HTTP ping + 모델 카운트 fetch
+  - llamacpp/jan `installed` 필드: 바이너리 감지 OR HTTP ping 결과
+
+### REST API 업데이트 (`local-llm.ts`)
+- `start/stop/restart` — llamacpp/jan 수동 조작 안내 메시지 반환
+- `GET /api/local-llm/providers` — llamacpp(port 8080) / Jan(port 1337) 모델 목록 포함
+
+### UI 업데이트 (`BackendCard.tsx`)
+- `isGuiBackend` 확장: `lmstudio || jan` (Jan도 GUI 앱으로 동일 처리)
+- `isLlamaCpp` 분기 추가:
+  - **Running**: 초록 상태 표시 + 모델 카운트
+  - **Installed, not running**: 실행 명령어 코드블록 표시
+  - **Not installed**: GitHub 릴리스 링크 + 설치 안내
+- Jan: `isJan` 분기로 LM Studio와 동일 패턴이지만 Jan 전용 문구 (API Server 설정 안내)
+- "향후 릴리스에서 지원 예정" 메시지 제거
+
+---
+
+## 2026-03-19 Synapse Phase 5 — 채팅 @멘션 ✅
+
+### @notion / @obsidian 인라인 검색 드롭다운
+- **`src/components/chat-panel/KbMentionDropdown.tsx`** (신규):
+  - `@notion` / `@obsidian` + 쿼리 패턴 감지 시 textarea 위에 absolute 드롭다운
+  - 200ms debounce 후 Notion 페이지 / Obsidian 파일 검색 (최대 8개)
+  - ↑↓ 키보드 내비게이션, Enter 선택, Esc 닫기
+  - 미연결 시 "Settings → Synapse에서 연결하세요" 안내
+- **`src/components/chat-panel/ChatComposer.tsx`**:
+  - `kbSources?: KbSourceRef[]` + `onKbSourcesChange?` props 추가
+  - `@notion`/`@obsidian` 패턴 감지 → `KbMentionDropdown` 렌더링
+  - 선택 시 trigger 텍스트 제거 + KB 소스 배지 추가 (amber 스타일)
+  - 배지 ✕ 클릭으로 제거
+- **`src/components/chat-panel/GroupChatPanel.tsx`**:
+  - `kbSources` 상태 + `KbMentionDropdown` 연결
+  - 전송 시 `fetchSynapseContext()` 호출 → `[첨부 지식 베이스: ...]` prefix 삽입
+  - KB 소스 배지 표시 (파일 첨부 배지와 동일 위치)
+- **`src/components/ChatPanel.tsx`** (1:1 채팅):
+  - `kbSources` 상태 + `ChatComposer`에 props 전달
+  - 전송 시 KB 컨텍스트 content에 prepend
+
+---
+
+## 2026-03-19 Synapse Phase 3 & 4 ✅
+
+### Phase 3 — 자동화 규칙 엔진
+- **DB migration** `2026-03-18-001-synapse-rules`: `synapse_rules` 테이블 + 인덱스
+- **`server/modules/synapse/rule-engine.ts`** (신규): 규칙 매칭, rate-limit(60s), `create_task` 액션, `{{filename}}`/`{{path}}`/`{{title}}` 템플릿
+- **`server/modules/synapse/obsidian-watcher.ts`** (신규): `fs.watch()` — `.md` 파일 변경 감지, 5분 주기 볼트 재감지
+- **`server/modules/synapse/notion-poller.ts`** (신규): 30초 주기 Notion 변경 감지
+- **`server/modules/routes/ops/synapse.ts`**: `GET/POST/PUT/DELETE /api/synapse/rules` CRUD 추가
+- **`server/modules/lifecycle.ts`**: `startObsidianWatcher` + `startNotionPoller` 시작·종료 훅 추가
+- **`src/api/synapse.ts`**: `SynapseRule` 타입 + CRUD 함수 추가
+- **`src/components/synapse/SynapsePanel.tsx`**: RULES 탭 전체 UI — 목록 ON/OFF 토글, 인라인 생성 폼
+
+### Phase 4 — 에이전트 KB 컨텍스트 주입
+- **DB migration** `2026-03-18-002-synapse-kb-sources`: `agents.kb_default_sources` + `tasks.kb_context_sources` 컬럼 추가
+- **`server/modules/synapse/context-fetcher.ts`** (신규): `fetchKbContextBlock` (Notion/Obsidian/NotebookLM 소스 병합, MAX 20000자), `buildKbContextBlock` (태스크+에이전트 소스 합산)
+- **`server/modules/routes/core/tasks/execution-run.ts`**: 태스크 실행 전 `buildKbContextBlock` 호출 → 프롬프트에 `[Knowledge Base Context]` 블록 주입
+- **`server/modules/routes/core/tasks/crud.ts`**: 태스크 생성 시 `kb_context_sources` 저장
+- **`server/modules/routes/core/agents/crud.ts`**: `allowedFields`에 `kb_default_sources` 추가
+- **`server/modules/routes/ops/synapse.ts`**: `POST /api/synapse/context` 엔드포인트 추가
+- **`src/api/synapse.ts`**: `KbSourceRef` + `fetchSynapseContext()` 추가
+- **`src/components/agent-manager/AgentFormModal.tsx`**: `KbSourcesSection` 컴포넌트 — Notion 페이지 / Obsidian 파일 선택 UI
+- **`src/components/AgentManager.tsx`**: 저장 시 `kb_default_sources` JSON 직렬화, 불러올 때 파싱
+- **`src/components/taskboard/create-modal/KbTaskSourcesSection.tsx`** (신규): 태스크 생성 모달 KB 소스 첨부 섹션
+- **`src/components/taskboard/CreateTaskModal.tsx`**: `kbSources` 상태 + `wrappedOnCreate`에 `kb_context_sources` 포함
+
+---
+
+## 2026-03-19 TaskBoard · Terminal 개선 ✅
+
+### Terminal Panel — 회의록 탭 수정
+- **`server/modules/routes/core/tasks/crud.ts`**: `GET /api/tasks/:id/meeting-minutes` 엔드포인트 추가 (미구현으로 인한 404 버그 수정)
+- **`server/modules/routes/ops/terminal/routes.ts`**: `pretty=true`일 때 progress hints·thinking blocks 계산이 건너뛰어지던 버그 수정 (pretty 처리와 분리)
+- **`useTerminalPanelData.ts`**: `pretty=false`로 변경 → 도구 호출 로그가 원본 JSONL 그대로 전달됨
+
+### Terminal Panel — 도구 실행 표시 (macOS 스타일)
+- **`ProgressHintsStrip.tsx`**: 전면 재작성
+  - glassmorphism 배경 (`backdrop-filter: blur(20px)`)
+  - 펄스 green dot + 도구 뱃지 (아이콘 + 이름, 도구별 색상)
+  - 최근 힌트 pill 트레일 (✓ ok / ⚠ error / › active), `isLight` 대응
+- **`TerminalTabContent.tsx`**: 도구 호출 카드 렌더러 전면 재작성
+  - `parseCliLines()` → 멀티블록 파싱 (tool_use가 text 뒤에 오는 경우 누락 버그 수정)
+  - `stream_event` 라인 → `_streamDelta` 집계, 최종 결과 있으면 스트림 제거
+  - `ToolCard`: 좌측 accent bar (도구별 색상), chevron 토글, `ToolInputBlock` (bash/파일/검색/JSON 분기)
+  - 최종 결과 완료 배너: circle check 아이콘, 비용/소요시간 표시
+  - `isLight` threading → 라이트모드 가독성 수정
+
+### TaskBoard — i18n 완성
+- **`TaskBoard.tsx`**: `STATUS_CODE` 코드 `t()` 번역 (한/영/일/중)
+- **컬럼 헤더**: `sc.code` → `taskStatusLabel()` 로 완전 번역 적용
+- **Batch 버튼**: `STOP` / `HIDE` / `DEL` → `t()` 번역
+- **AppWindow 제목**: `"New Task"` → `t({ko:"새 업무",...})`
+- **`TaskCard.tsx`**: 서브태스크 `"pending"` 텍스트 번역
+
+### TaskBoard — macOS UI 개선
+- **`TaskCard.tsx`**:
+  - 카드 컨테이너: `borderRadius: 12`, 다층 shadow, hover `transition`
+  - Status/Agent 블록: 짙은 `bg-primary` 박스 → 투명 레이아웃 (select + 에이전트 행 분리)
+  - 액션 버튼: 주요 액션은 pill형, 보조 버튼은 compact icon group (오른쪽 정렬)
+  - 인라인 실행 로그 섹션 제거 (불필요한 UI)
+  - 관련 dead state/effect/import 정리 (`showTerminalPreview`, `terminalLogs`, `terminalPollRef`, `fetchTerminalPreview`)
+
+### TaskBoard — 컬럼 스크롤 수정
+- **`TaskBoard.tsx`**:
+  - `DroppableColumn` 내부 div에 `min-h-0` 추가 → flex chain 높이 전달 수정
+  - 컬럼 div: `sm:min-h-0` 추가
+  - 카드 목록 body: Tailwind `sm:` 클래스 → inline `style={{ flex:1, minHeight:0, overflowY:"auto" }}` 교체 → 컬럼별 독립 스크롤 정상 동작
+
+---
+
+## 2026-03-19 에이전트 상세 패널 ✅
+
+### Agent Detail Panel (우측 슬라이드 인스펙터)
+- **`src/components/agent-detail/AgentDetailPanel.tsx`** (신규): 패널 컨테이너
+  - `position: fixed`, `top: 28px`, `right: 0`, `bottom: 48px`, `width: 360px`, `z-index: 300`
+  - CSS transition 애니메이션: 열기 200ms ease-out / 닫기 160ms ease-in
+  - `selectedAgentId` 변경 시 5개 API 병렬 fetch (skills/rules/memory/tasks/cost-summary)
+  - TrafficLights + ESC ✕ 타이틀바
+- **`src/components/agent-detail/AgentDetailHeader.tsx`** (신규): 헤더 섹션
+  - 아바타 이모지 (32px), 이름(name_ko), 역할 뱃지, 상태 dot, CLI 모델, 부서명
+- **`src/components/agent-detail/AgentDetailCurrentTask.tsx`** (신규): 현재 태스크 섹션
+  - `agent.current_task_id` → taskStore 조회, 시작 시각 상대시간 표시
+  - 태스크 없으면 "No active task" 표시
+- **`src/components/agent-detail/AgentDetailSections.tsx`** (신규): 스킬/규칙/메모리/최근태스크/비용 섹션
+  - 각 섹션 `// section-name` 레이블 패턴
+  - 로딩 중 스켈레톤 표시, 데이터 없으면 섹션 숨김
+  - 규칙 scope 배지 색상 구분 (project=amber / agent=blue / global=green)
+- **`src/components/desktop/Desktop.tsx`**:
+  - `AgentDetailPanel` 조건부 렌더 추가
+  - ESC 핸들러에 `selectedAgentId` 닫기 조건 추가
+- **`src/components/desktop/widgets/AgentsWidget.tsx`**:
+  - 에이전트 행 클릭 → `setSelectedAgentId` 토글 연결
+  - 선택된 행 `background: var(--th-accent-glow)` 하이라이트
+- **`src/components/desktop/widgets/FlowGraphWidget.tsx`**:
+  - `handleSelectAgent`에서 `openWindow("agent-manager")` 제거 → `selectedAgentId` 토글만 남김
+
+---
+
+## 전체 개발 우선순위
+
+> 마지막 업데이트: 2026-03-19
+
+| 순위 | 항목 | 설명 | 상태 |
+|------|------|------|------|
+| ~~🥇 1~~ | ~~**TaskBoard 뷰 연결**~~ | ~~`TaskBoard.tsx` 코드 존재, 앱에 렌더링만 추가하면 됨~~ | ✅ 완료 (TaskBoardWindow.tsx로 연결됨) |
+| ~~🥇 1~~ | ~~**Synapse Phase 1**~~ | ~~Notion + Obsidian 읽기 연결 — 독립 Dock 앱 창, 에이전트 컨텍스트 주입~~ | ✅ 완료 |
+| ~~—~~ | ~~**Synapse Phase 2~4**~~ | ~~산출물 내보내기 / 문서 변경 트리거 / KB 컨텍스트 주입~~ | ✅ 완료 |
+| ~~🥇 1~~ | ~~**Local LLM Phase 5**~~ | ~~llama.cpp / Jan 백엔드 실행 감지~~ | ✅ 완료 |
+| ~~🥇 1~~ | ~~**UI/UX 전반 polish**~~ | ~~각 창 스크롤·반응형·i18n 누락·접근성 개선~~ | ✅ 완료 (2026-03-19) |
+| ~~🥇 1~~ | ~~**에이전트 상세 패널**~~ | ~~AgentsWidget/FlowGraph 클릭 → 우측 슬라이드 인스펙터 패널~~ | ✅ 완료 (2026-03-19) |
+
+> Synapse 문서: `docs/features/synapse.md`
+> 에이전트 상세 패널 설계: `docs/features/agent-detail-panel.md`
+
+---
+
+## 2026-03-19 소스코드 감사 — 문서 동기화 ✅
+
+소스코드 직접 분석으로 아래 사항 확인 및 문서 갱신:
+
+### 버그 전체 수정 확인
+- **BUG-01~06** (pipeline audit): 모두 소스코드에서 수정 확인 → OVERVIEW.md 상태 `⬜ Open` → `✅ Done` 일괄 갱신
+- **WB-01~03** (Workflow Builder): 모두 수정 확인
+- **FG-01~03** (Flow Graph): 모두 수정 확인
+
+### Synapse 모듈 확인
+- `server/modules/synapse/` 가 유일한 지식베이스 모듈 (notion-client, obsidian-client, context-fetcher, rule-engine, obsidian-watcher, notion-poller)
+- `server/modules/routes/ops/synapse.ts` + `server/modules/lifecycle.ts` 에서 synapse import
+- 프론트엔드: `src/api/synapse.ts`, `src/components/synapse/` 사용 중
+
+### Dead code 정리 완료
+- **`src/components/windows/HarnessWindow.tsx`**: 삭제 완료 (SynapseWindow.tsx와 동일한 dead code)
+
+### 현재 활성 아키텍처 확인
+| 창 타입 | WindowType | 렌더링 | Dock |
+|---------|-----------|--------|------|
+| Task Board | `"tasks"` | ✅ Desktop.tsx | ✅ Dock.tsx |
+| Synapse (지식베이스) | `"synapse"` | ✅ Desktop.tsx | ✅ Dock.tsx |
+| HarnessWindow | — | ✅ 삭제됨 (dead code 제거) | — |
 
 ---
 
@@ -440,13 +794,19 @@
 
 | 문서 | 상태 |
 |------|------|
-| `docs/OVERVIEW.md` | ✅ 최신 (2026-03-16 업데이트) |
-| `docs/features/custom-widget-platform.md` | ✅ 완료 표시 |
-| `docs/specs/api.md` | ✅ 최신 (v1.4.0 — project-templates, cost-summary, local-llm setup-provider, gate deps 반영) |
+| `docs/OVERVIEW.md` | ✅ 최신 (2026-03-19 업데이트) |
+| `docs/features/image-studio.md` | ✅ 최신 (Phase 15 완료 반영) |
+| `docs/features/synapse.md` | ✅ 최신 (Synapse Phase 1~5 전체) |
+| `docs/features/local-llm-manager.md` | ✅ 최신 |
+| `docs/specs/api.md` | ✅ 최신 (v1.6.0 — Phase 16 엔드포인트 추가) |
 | `docs/architecture/` | 참조용 유지 |
 | `docs/design/DESIGN.md`, `UI-SCREENS.md` | 참조용 유지 |
 
-### 삭제된 문서 (2026-03-16)
+### 삭제된 문서
 - `docs/strategy/p2-tasks-design.md` — P2 작업 전체 완료, 구현 지침 불필요
-- `docs/strategy/agent-persona-system.md` — 2026-03-08 폐기 결정, 기능 구현 완료
+- `docs/strategy/agent-persona-system.md` — 2026-03-08 폐기 결정
 - `docs/features/custom-widget-platform-tech-spec.md` — 구현 완료, 기획서에 통합
+- `docs/features/knowledge-base-integrations.md` — Harness(synapse)로 통합
+- `docs/features/agent-detail-panel.md` — 구현 완료, progress.md에 통합 (2026-03-20)
+- `docs/features/custom-widget-platform.md` — 구현 완료, progress.md에 통합 (2026-03-20)
+- `docs/features/cross-project-handoff.md` — 구현 완료 (Phase 16), progress.md에 통합 (2026-03-21)

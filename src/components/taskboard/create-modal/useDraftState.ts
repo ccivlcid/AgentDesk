@@ -13,6 +13,7 @@ interface DraftFormState {
   projectQuery: string;
   createNewProjectMode: boolean;
   newProjectPath: string;
+  figmaUrl: string;
 }
 
 interface UseDraftStateParams {
@@ -70,6 +71,7 @@ export function useDraftState({ localeTag, submitBusy, formState, applyFormState
       projectQuery: formState.projectQuery,
       createNewProjectMode: formState.createNewProjectMode,
       newProjectPath: formState.newProjectPath,
+      figmaUrl: formState.figmaUrl,
       updatedAt: Date.now(),
     };
 

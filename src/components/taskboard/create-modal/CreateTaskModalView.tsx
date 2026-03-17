@@ -1,4 +1,4 @@
-import { useState, type ComponentProps, type FormEventHandler } from "react";
+import { useState, type ComponentProps, type FormEventHandler, type ReactNode } from "react";
 import type { Agent, Department, TaskType } from "../../../types";
 import type { WorkflowPackConfig } from "../../../api/workflow-skills-subtasks";
 import type { TaskTemplate } from "../../../api/task-templates";
@@ -53,6 +53,8 @@ interface CreateTaskModalViewProps {
   onHandoffEnabledChange?: (enabled: boolean) => void;
   onHandoffAgentIdChange?: (agentId: string) => void;
   onHandoffConditionChange?: (condition: "always" | "on_success" | "on_fail") => void;
+  kbSection?: ReactNode;
+  figmaSection?: ReactNode;
 }
 
 const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };
@@ -107,6 +109,8 @@ export default function CreateTaskModalView({
   onHandoffEnabledChange,
   onHandoffAgentIdChange,
   onHandoffConditionChange,
+  kbSection,
+  figmaSection,
 }: CreateTaskModalViewProps) {
   const [templateMenuOpen, setTemplateMenuOpen] = useState(false);
   const [saveTemplateName, setSaveTemplateName] = useState("");
@@ -449,6 +453,12 @@ export default function CreateTaskModalView({
               </div>
 
             </div>
+
+            {/* Figma Design URL */}
+            {figmaSection}
+
+            {/* KB Sources */}
+            {kbSection}
 
             {/* 피드백 메시지 */}
             {formFeedback && (

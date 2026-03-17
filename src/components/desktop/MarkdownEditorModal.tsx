@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import TrafficLights from "./TrafficLights";
 import { useI18n } from "../../i18n";
+import { useUiStore } from "../../store/uiStore";
 
 interface MarkdownEditorModalProps {
   onClose: () => void;
@@ -10,10 +11,12 @@ interface MarkdownEditorModalProps {
 
 export default function MarkdownEditorModal({ onClose, defaultProjectName }: MarkdownEditorModalProps) {
   const { t } = useI18n();
+  const { addPendingDoc } = useUiStore();
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [preview, setPreview] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [savedToDesktop, setSavedToDesktop] = useState(false);
   const titleRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -39,6 +42,13 @@ export default function MarkdownEditorModal({ onClose, defaultProjectName }: Mar
       .replace(/\n\n/g, "</p><p>")
       .replace(/^(?!<[hbucpo])/gm, "")
       .replace(/(.+)(?!\n<)/g, (m) => m.startsWith("<") ? m : `<p>${m}</p>`);
+  }
+
+  function handleSaveToDesktop() {
+    if (!content.trim() && !title.trim()) return;
+    addPendingDoc({ title: title.trim() || t({ ko: "문서", en: "document", ja: "文書", zh: "文档" }), content: (title.trim() ? `# ${title.trim()}\n\n` : "") + content });
+    setSavedToDesktop(true);
+    setTimeout(() => { setSavedToDesktop(false); onClose(); }, 800);
   }
 
   function handleDownload() {
@@ -323,6 +333,11 @@ export default function MarkdownEditorModal({ onClose, defaultProjectName }: Mar
               ✓ {t({ ko: "저장됨", en: "Saved", ja: "保存済み", zh: "已保存" })}
             </span>
           )}
+          {savedToDesktop && (
+            <span style={{ fontSize: 10, color: "var(--th-accent)" }}>
+              ✓ {t({ ko: "바탕화면에 추가됨", en: "Added to desktop", ja: "デスクトップに追加", zh: "已添加到桌面" })}
+            </span>
+          )}
 
           <button
             type="button"
@@ -341,6 +356,32 @@ export default function MarkdownEditorModal({ onClose, defaultProjectName }: Mar
             {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}
           </button>
 
+          <button
+            type="button"
+            onClick={handleSaveToDesktop}
+            disabled={!content.trim() && !title.trim()}
+            style={{
+              background: content.trim() || title.trim() ? "var(--th-bg-elevated)" : "var(--th-bg-elevated)",
+              border: `1px solid ${content.trim() || title.trim() ? "var(--th-accent)" : "var(--th-border)"}`,
+              borderRadius: 6,
+              padding: "4px 14px",
+              fontFamily: mono,
+              fontSize: 11,
+              fontWeight: 600,
+              color: content.trim() || title.trim() ? "var(--th-accent)" : "var(--th-text-muted)",
+              cursor: content.trim() || title.trim() ? "pointer" : "not-allowed",
+              opacity: content.trim() || title.trim() ? 1 : 0.5,
+              display: "flex",
+              alignItems: "center",
+              gap: 5,
+            }}
+          >
+            <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" width={11} height={11}>
+              <rect x="1" y="1" width="12" height="12" rx="2" />
+              <path d="M4 7h6M7 4v6" />
+            </svg>
+            {t({ ko: "바탕화면에 저장", en: "Save to Desktop", ja: "デスクトップに保存", zh: "保存到桌面" })}
+          </button>
           <button
             type="button"
             onClick={handleDownload}

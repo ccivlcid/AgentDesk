@@ -7,8 +7,8 @@
   "scripts": {
     "migrate:v1.0.5": "node scripts/auto-apply-v1.0.5.mjs",
     "migrate:custom-skills": "node scripts/migrate-custom-skills-canonical.mjs",
-    "predev": "node scripts/auto-apply-v1.0.5.mjs",
-    "predev:local": "node scripts/auto-apply-v1.0.5.mjs",
+    "predev": "node scripts/auto-apply-v1.0.5.mjs && node scripts/kill-port.mjs",
+    "predev:local": "node scripts/auto-apply-v1.0.5.mjs && node scripts/kill-port.mjs",
     "predev:e2e": "node scripts/auto-apply-v1.0.5.mjs",
     "predev:tailscale": "node scripts/auto-apply-v1.0.5.mjs",
     "prestart": "node scripts/auto-apply-v1.0.5.mjs && node scripts/ensure-remotion-runtime.mjs",

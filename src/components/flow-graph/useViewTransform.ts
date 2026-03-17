@@ -52,7 +52,7 @@ export function useViewTransform(): UseViewTransformReturn {
     if (e.button !== 0) return;
     // Only pan on SVG background (not on nodes)
     const target = e.target as SVGElement;
-    if (target.closest("foreignObject")) return;
+    if (target.closest("[data-node]")) return;
     isPanningRef.current = true;
     setIsPanning(true);
     panStartRef.current = {

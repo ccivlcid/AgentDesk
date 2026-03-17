@@ -14,6 +14,8 @@ import {
 import { createOllamaClient } from "../../local-llm/ollama-client.ts";
 import { collectMetrics } from "../../local-llm/metrics-collector.ts";
 import { createLmStudioClient } from "../../local-llm/lmstudio-client.ts";
+import { createLlamaCppClient } from "../../local-llm/llamacpp-client.ts";
+import { createJanClient } from "../../local-llm/jan-client.ts";
 import { createInferenceLogger } from "../../local-llm/inference-logger.ts";
 
 interface Deps {
@@ -44,6 +46,12 @@ export function registerLocalLlmRoutes({ app, db, broadcast }: Deps): void {
     if (name === "lmstudio") {
       return res.json({ ok: true, manual: true, message: "LM Studio is a desktop app — start it manually and enable the local server." });
     }
+    if (name === "jan") {
+      return res.json({ ok: true, manual: true, message: "Jan is a desktop app — start it manually and enable the API Server in Jan settings." });
+    }
+    if (name === "llamacpp") {
+      return res.json({ ok: true, manual: true, message: "llama.cpp server must be started manually. Run: llama-server -m <model.gguf> --port 8080" });
+    }
     if (name !== "ollama") {
       return res.status(400).json({ ok: false, error: `Backend "${name}" start not supported` });
     }
@@ -60,6 +68,12 @@ export function registerLocalLlmRoutes({ app, db, broadcast }: Deps): void {
     if (name === "lmstudio") {
       return res.json({ ok: true, manual: true, message: "LM Studio is a desktop app — stop it manually from the system tray." });
     }
+    if (name === "jan") {
+      return res.json({ ok: true, manual: true, message: "Jan is a desktop app — stop it manually." });
+    }
+    if (name === "llamacpp") {
+      return res.json({ ok: true, manual: true, message: "Stop the llama-server process manually (Ctrl+C or task manager)." });
+    }
     if (name !== "ollama") {
       return res.status(400).json({ ok: false, error: `Backend "${name}" stop not supported` });
     }
@@ -75,6 +89,12 @@ export function registerLocalLlmRoutes({ app, db, broadcast }: Deps): void {
     const { name } = req.params as { name: string };
     if (name === "lmstudio") {
       return res.json({ ok: true, manual: true, message: "LM Studio is a desktop app — restart it manually." });
+    }
+    if (name === "jan") {
+      return res.json({ ok: true, manual: true, message: "Jan is a desktop app — restart it manually." });
+    }
+    if (name === "llamacpp") {
+      return res.json({ ok: true, manual: true, message: "Restart the llama-server process manually." });
     }
     if (name !== "ollama") {
       return res.status(400).json({ ok: false, error: `Backend "${name}" restart not supported` });
@@ -229,6 +249,62 @@ export function registerLocalLlmRoutes({ app, db, broadcast }: Deps): void {
         }
       }
     } catch { /* lm studio not running */ }
+
+    // llama.cpp server providers
+    try {
+      const llamaClient = createLlamaCppClient("http://localhost:8080");
+      const alive = await llamaClient.ping();
+      if (alive) {
+        const models = await llamaClient.listModels();
+        if (models.length > 0) {
+          for (const m of models) {
+            providers.push({
+              id: `llamacpp::${m.id}`,
+              label: m.id,
+              group: "llama.cpp",
+              backend: "llamacpp",
+              model: m.id,
+              base_url: "http://localhost:8080/v1",
+              running: true,
+              free: true,
+            });
+          }
+        } else {
+          // Server running but no /v1/models endpoint — expose generic entry
+          providers.push({
+            id: "llamacpp::server",
+            label: "llama.cpp server",
+            group: "llama.cpp",
+            backend: "llamacpp",
+            model: "",
+            base_url: "http://localhost:8080/v1",
+            running: true,
+            free: true,
+          });
+        }
+      }
+    } catch { /* llamacpp not running */ }
+
+    // Jan providers
+    try {
+      const janClient = createJanClient("http://localhost:1337");
+      const alive = await janClient.ping();
+      if (alive) {
+        const models = await janClient.listModels();
+        for (const m of models) {
+          providers.push({
+            id: `jan::${m.id}`,
+            label: m.id,
+            group: "Jan",
+            backend: "jan",
+            model: m.id,
+            base_url: "http://localhost:1337/v1",
+            running: true,
+            free: true,
+          });
+        }
+      }
+    } catch { /* jan not running */ }
 
     res.json({ ok: true, providers });
   });

@@ -9,6 +9,7 @@ import ArtifactList from "./ArtifactList";
 import CollaboratorSection from "./CollaboratorSection";
 import GitSection from "./GitSection";
 import TextPreviewModal from "./TextPreviewModal";
+import SynapseExportModal from "../synapse/SynapseExportModal";
 
 interface DeliverableCardProps {
   report: DeliverableItem;
@@ -65,6 +66,7 @@ export default function DeliverableCard({ report, artifacts, agent, agents, onAr
   const [previewArtifact, setPreviewArtifact] = useState<TaskArtifact | null>(null);
   const [expanded, setExpanded] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [showSynapseExport, setShowHarnessExport] = useState(false);
   const uploadInputRef = useRef<HTMLInputElement>(null);
   const [sectionOpen, setSectionOpen] = useState<Record<string, boolean>>({
     result: false, collaborators: false, artifacts: false, git: false,
@@ -169,10 +171,19 @@ export default function DeliverableCard({ report, artifacts, agent, agents, onAr
             <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 14px", borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-primary)" }}>
               <span style={{ ...mono, fontSize: "9px", color: "var(--th-accent)", fontWeight: 700 }}>$</span>
               <span style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)" }}>cat report/{report.id.slice(0, 8)}</span>
-              <div style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
+              <div style={{ marginLeft: "auto", display: "flex", gap: 8, alignItems: "center" }}>
                 <button type="button" onClick={expandAll}   style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", background: "none", border: "none", cursor: "pointer", padding: 0 }}>expand all</button>
                 <span style={{ fontSize: "9px", color: "var(--th-border)" }}>|</span>
                 <button type="button" onClick={collapseAll} style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", background: "none", border: "none", cursor: "pointer", padding: 0 }}>collapse all</button>
+                <span style={{ fontSize: "9px", color: "var(--th-border)" }}>|</span>
+                <button
+                  type="button"
+                  onClick={() => setShowHarnessExport(true)}
+                  style={{ ...mono, fontSize: "9px", fontWeight: 700, color: "var(--th-accent)", background: "none", border: "none", cursor: "pointer", padding: 0, letterSpacing: "0.04em" }}
+                  title="Notion / Obsidian으로 내보내기"
+                >
+                  ⇄ export
+                </button>
               </div>
             </div>
 
@@ -264,6 +275,14 @@ export default function DeliverableCard({ report, artifacts, agent, agents, onAr
           taskId={report.id}
           artifact={previewArtifact}
           onClose={() => setPreviewArtifact(null)}
+        />
+      )}
+
+      {showSynapseExport && (
+        <SynapseExportModal
+          title={report.title}
+          content={report.result ?? ""}
+          onClose={() => setShowHarnessExport(false)}
         />
       )}
     </>

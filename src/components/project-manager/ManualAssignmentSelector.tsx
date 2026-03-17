@@ -186,21 +186,13 @@ export default function ManualAssignmentSelector({
                           style={{ borderRadius: 0, color: "var(--th-text-muted)", background: "var(--th-hover-overlay)" }}
                         >
                           {agent.role === "team_leader"
-                            ? language === "ko"
-                              ? "팀장"
-                              : "Leader"
+                            ? t({ ko: "팀장", en: "Leader", ja: "チームリーダー", zh: "队长" })
                             : agent.role === "senior"
-                              ? language === "ko"
-                                ? "시니어"
-                                : "Senior"
+                              ? t({ ko: "시니어", en: "Senior", ja: "シニア", zh: "高级" })
                               : agent.role === "junior"
-                                ? language === "ko"
-                                  ? "주니어"
-                                  : "Junior"
+                                ? t({ ko: "주니어", en: "Junior", ja: "ジュニア", zh: "初级" })
                                 : agent.role === "intern"
-                                  ? language === "ko"
-                                    ? "인턴"
-                                    : "Intern"
+                                  ? t({ ko: "인턴", en: "Intern", ja: "インターン", zh: "实习" })
                                   : ""}
                         </span>
                       </label>

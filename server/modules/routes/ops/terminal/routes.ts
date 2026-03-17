@@ -48,22 +48,14 @@ export function registerTaskTerminalRoutes(ctx: RuntimeContext): void {
     const raw = fs.readFileSync(filePath, "utf8");
     const parts = raw.split(/\r?\n/);
     const tail = parts.slice(Math.max(0, parts.length - lines)).join("\n");
-    let text = tail;
+    let text = pretty ? prettyStreamJson(tail, { includeReasoning: false }) : tail;
     let progressHints: ReturnType<typeof buildTerminalProgressHints> | null = null;
     let thinkingBlocks: ReturnType<typeof extractThinkingBlocks> | null = null;
-    if (pretty) {
-      const parsed = prettyStreamJson(tail, { includeReasoning: false });
-      text = parsed;
-      if (hasStructuredJsonLines(tail)) {
-        const hints = buildTerminalProgressHints(tail);
-        if (hints.hints.length > 0) {
-          progressHints = hints;
-        }
-        const thinking = extractThinkingBlocks(tail);
-        if (thinking.length > 0) {
-          thinkingBlocks = thinking;
-        }
-      }
+    if (hasStructuredJsonLines(tail)) {
+      const hints = buildTerminalProgressHints(tail);
+      if (hints.hints.length > 0) progressHints = hints;
+      const thinking = extractThinkingBlocks(tail);
+      if (thinking.length > 0) thinkingBlocks = thinking;
     }
 
     const taskLogs = db

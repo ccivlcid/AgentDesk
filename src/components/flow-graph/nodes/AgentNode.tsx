@@ -69,10 +69,7 @@ export default function AgentNode({
   return (
     <g
       transform={`translate(${x}, ${y})`}
-      style={{ cursor: "pointer" }}
-      onClick={() => onClick?.(agent.id)}
-      onMouseEnter={() => onMouseEnter?.(agent.id)}
-      onMouseLeave={() => onMouseLeave?.()}
+      data-node="true"
     >
       <foreignObject x={0} y={0} width={width} height={height} style={{ opacity }}>
         <div
@@ -193,6 +190,19 @@ export default function AgentNode({
           </div>
         </div>
       </foreignObject>
+
+      {/* 투명 SVG rect — 순수 SVG 요소라 클릭 이벤트가 100% 안정적으로 동작 */}
+      <rect
+        x={0}
+        y={0}
+        width={width}
+        height={height}
+        fill="transparent"
+        style={{ cursor: "pointer" }}
+        onClick={() => onClick?.(agent.id)}
+        onMouseEnter={() => onMouseEnter?.(agent.id)}
+        onMouseLeave={() => onMouseLeave?.()}
+      />
     </g>
   );
 }

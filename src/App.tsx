@@ -267,7 +267,7 @@ export default function App() {
         <ProjectCreateModal
           categories={categories}
           agents={agents}
-          onConfirm={({ name, categoryId, project_path, core_goal, agentIds }) => {
+          onConfirm={({ name, categoryId, project_path, core_goal, agentIds, figma_url }) => {
             if (projectCreateBusy) return;
             setProjectCreateBusy(true);
             const cat = categories.find((c) => c.id === categoryId);
@@ -277,6 +277,7 @@ export default function App() {
               project_path: project_path ?? "",
               core_goal: resolvedGoal,
               category_id: categoryId ?? undefined,
+              figma_url: figma_url ?? undefined,
               create_path_if_missing: true,
             })
               .then(async (newProject) => {

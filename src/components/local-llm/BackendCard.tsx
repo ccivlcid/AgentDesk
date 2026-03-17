@@ -87,7 +87,7 @@ export default function BackendCard({ backend, onStart, onStop, onRestart }: Bac
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: backend.label + " (Local)",
-          type: backend.name === "lmstudio" ? "openai" : backend.name,
+          type: backend.name === "ollama" ? "ollama" : "openai",
           base_url: backend.base_url,
         }),
       });
@@ -110,7 +110,9 @@ export default function BackendCard({ backend, onStart, onStop, onRestart }: Bac
 
   const isOllama = backend.name === "ollama";
   const isLmStudio = backend.name === "lmstudio";
-  const isGuiBackend = isLmStudio; // GUI apps: can detect but not start/stop
+  const isJan = backend.name === "jan";
+  const isLlamaCpp = backend.name === "llamacpp";
+  const isGuiBackend = isLmStudio || isJan; // GUI apps: can detect but not start/stop
 
   const BACKEND_DESC: Record<string, string> = {
     ollama:   t({ ko: "가장 쉬운 로컬 모델 실행기.", en: "Lightweight local model runner. Easiest to install.", ja: "最も簡単なローカルモデルランナー。", zh: "轻量级本地模型运行器，最易安装。" }),
@@ -172,20 +174,72 @@ export default function BackendCard({ backend, onStart, onStop, onRestart }: Bac
 
       {/* Actions */}
       {isGuiBackend ? (
-        /* LM Studio — GUI app: no start/stop, just status + register */
+        /* LM Studio / Jan — GUI apps: no start/stop, just status + register */
         <div style={{ marginTop: 10 }}>
           {!backend.running ? (
             <div style={{ fontSize: 11, color: "var(--th-text-muted)", lineHeight: 1.8 }}>
               <div style={{ color: "var(--th-text-secondary)", marginBottom: 4 }}>
-                {t({ ko: "LM Studio가 실행되고 있지 않습니다.", en: "LM Studio is not running.", ja: "LM Studioが起動していません。", zh: "LM Studio未运行。" })}
+                {isJan
+                  ? t({ ko: "Jan이 실행되고 있지 않습니다.", en: "Jan is not running.", ja: "Janが起動していません。", zh: "Jan未运行。" })
+                  : t({ ko: "LM Studio가 실행되고 있지 않습니다.", en: "LM Studio is not running.", ja: "LM Studioが起動していません。", zh: "LM Studio未运行。" })
+                }
               </div>
               <div>
-                {t({ ko: "LM Studio 앱을 실행한 후 서버를 켜세요.", en: "Launch the LM Studio app and enable the local server.", ja: "LM Studioアプリを起動し、ローカルサーバーをオンにしてください。", zh: "启动LM Studio应用并开启本地服务器。" })}
+                {isJan
+                  ? t({ ko: "Jan 앱을 실행한 후 Settings → API Server를 켜세요.", en: "Launch Jan and enable the API Server in Settings.", ja: "Janアプリを起動し、設定でAPIサーバーをオンにしてください。", zh: "启动Jan并在设置中开启API服务器。" })
+                  : t({ ko: "LM Studio 앱을 실행한 후 서버를 켜세요.", en: "Launch the LM Studio app and enable the local server.", ja: "LM Studioアプリを起動し、ローカルサーバーをオンにしてください。", zh: "启动LM Studio应用并开启本地服务器。" })
+                }
               </div>
             </div>
           ) : (
             <div style={{ fontSize: 11, color: "#3fb950" }}>
-              {t({ ko: `✓ LM Studio 실행 중 — 모델 ${backend.model_count}개 로드됨`, en: `✓ LM Studio running — ${backend.model_count} model(s) loaded`, ja: `✓ LM Studio起動中 — ${backend.model_count}個のモデルロード済み`, zh: `✓ LM Studio运行中 — ${backend.model_count}个模型已加载` })}
+              {isJan
+                ? t({ ko: `✓ Jan 실행 중 — 모델 ${backend.model_count}개 로드됨`, en: `✓ Jan running — ${backend.model_count} model(s) loaded`, ja: `✓ Jan起動中 — ${backend.model_count}個のモデルロード済み`, zh: `✓ Jan运行中 — ${backend.model_count}个模型已加载` })
+                : t({ ko: `✓ LM Studio 실행 중 — 모델 ${backend.model_count}개 로드됨`, en: `✓ LM Studio running — ${backend.model_count} model(s) loaded`, ja: `✓ LM Studio起動中 — ${backend.model_count}個のモデルロード済み`, zh: `✓ LM Studio运行中 — ${backend.model_count}个模型已加载` })
+              }
+            </div>
+          )}
+        </div>
+      ) : isLlamaCpp ? (
+        /* llama.cpp — CLI tool, user must start manually */
+        <div style={{ marginTop: 10 }}>
+          {backend.running ? (
+            <div style={{ fontSize: 11, color: "#3fb950" }}>
+              {t({ ko: `✓ llama-server 실행 중 — 포트 ${backend.port}`, en: `✓ llama-server running on port ${backend.port}`, ja: `✓ llama-server起動中 — ポート${backend.port}`, zh: `✓ llama-server运行中 — 端口${backend.port}` })}
+              {backend.model_count > 0 && (
+                <span style={{ color: "var(--th-text-secondary)", marginLeft: 8 }}>
+                  {t({ ko: `모델 ${backend.model_count}개`, en: `${backend.model_count} model(s)`, ja: `${backend.model_count}モデル`, zh: `${backend.model_count}个模型` })}
+                </span>
+              )}
+            </div>
+          ) : backend.installed ? (
+            <div style={{ fontSize: 11, color: "var(--th-text-muted)", lineHeight: 1.8 }}>
+              <div style={{ color: "var(--th-text-secondary)", marginBottom: 4 }}>
+                {t({ ko: "llama-server가 실행되고 있지 않습니다.", en: "llama-server is not running.", ja: "llama-serverが起動していません。", zh: "llama-server未运行。" })}
+              </div>
+              <div style={{ fontFamily: "var(--th-font-mono)", fontSize: 10, background: "var(--th-bg-surface)", padding: "4px 8px", borderRadius: 4, color: "var(--th-accent)", marginBottom: 2 }}>
+                llama-server -m &lt;model.gguf&gt; --port 8080 --host 0.0.0.0
+              </div>
+              <div style={{ color: "var(--th-text-muted)", fontSize: 10 }}>
+                {t({ ko: "위 명령어로 서버를 시작한 뒤 새로고침하세요.", en: "Start the server with the command above, then refresh.", ja: "上記コマンドでサーバーを起動し、更新してください。", zh: "使用上述命令启动服务器，然后刷新。" })}
+              </div>
+            </div>
+          ) : (
+            <div style={{ fontSize: 11, color: "var(--th-text-muted)", lineHeight: 1.8 }}>
+              <div style={{ color: "var(--th-text-secondary)", marginBottom: 4 }}>
+                {t({ ko: "llama.cpp가 이 머신에서 감지되지 않습니다.", en: "llama.cpp was not detected on this machine.", ja: "このマシンでllama.cppが検出されませんでした。", zh: "未在此机器上检测到llama.cpp。" })}
+              </div>
+              <div>
+                {t({ ko: "1. ", en: "1. ", ja: "1. ", zh: "1. " })}
+                <a href="https://github.com/ggerganov/llama.cpp/releases" target="_blank" rel="noopener noreferrer"
+                  style={{ color: "var(--th-accent)", textDecoration: "none" }}>
+                  github.com/ggerganov/llama.cpp
+                </a>
+                {t({ ko: "에서 최신 릴리스를 다운로드하세요.", en: " — download the latest release.", ja: "から最新リリースをダウンロードしてください。", zh: " — 下载最新版本。" })}
+              </div>
+              <div>
+                {t({ ko: "2. llama-server를 PATH에 추가하거나 직접 실행하세요.", en: "2. Add llama-server to PATH or run it directly.", ja: "2. llama-serverをPATHに追加するか直接実行してください。", zh: "2. 将llama-server添加到PATH或直接运行。" })}
+              </div>
             </div>
           )}
         </div>
@@ -261,13 +315,7 @@ export default function BackendCard({ backend, onStart, onStop, onRestart }: Bac
             </div>
           )}
         </div>
-      ) : (
-        /* llamacpp / jan — truly unsupported */
-        <div style={{ marginTop: 10, fontSize: 11, color: "var(--th-text-muted)",
-          padding: "6px 10px", border: "1px solid var(--th-border)", borderRadius: 0 }}>
-          {t({ ko: "향후 릴리스에서 지원 예정입니다.", en: "Support coming in a future release.", ja: "将来のリリースでサポート予定です。", zh: "将在未来版本中支持。" })}
-        </div>
-      )}
+      ) : null}
 
       {/* Register as API Provider — shown when running */}
       {backend.running && (

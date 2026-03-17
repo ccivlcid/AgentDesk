@@ -100,6 +100,8 @@ export interface ApiStateBundle {
   apiForm: ApiFormState;
   apiSaving: boolean;
   apiTesting: string | null;
+  apiDeleting: string | null;
+  apiToggling: string | null;
   apiTestResult: ApiTestResultMap;
   apiModelsExpanded: Record<string, boolean>;
   apiAssignTarget: ApiAssignTarget | null;

@@ -130,6 +130,7 @@ export function useAppActions({
       assigned_agent_id?: string;
       handoff_to_agent_id?: string | null;
       handoff_condition?: "always" | "on_success" | "on_fail" | null;
+      kb_context_sources?: string | null;
     }) => {
       try {
         const taskId = await api.createTask(input as Parameters<typeof api.createTask>[0]);

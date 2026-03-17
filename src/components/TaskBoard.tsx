@@ -85,7 +85,7 @@ function DroppableColumn({
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: `column-${status}`, data: { status } });
   return (
-    <div ref={setNodeRef} className="flex flex-1 flex-col">
+    <div ref={setNodeRef} className="flex flex-1 flex-col min-h-0">
       {children(isOver)}
     </div>
   );
@@ -366,14 +366,14 @@ export function TaskBoard({
   }, [filteredTasks]);
 
   const STATUS_CODE: Record<string, { code: string; color: string }> = {
-    inbox:        { code: "INBOX",  color: "var(--th-status-muted)" },
-    planned:      { code: "PLAN",   color: "var(--th-status-info)" },
-    collaborating:{ code: "COLLAB", color: "var(--th-status-purple)" },
-    in_progress:  { code: "WIP",    color: "var(--th-status-success)" },
-    review:       { code: "REV",    color: "var(--th-status-purple)" },
-    done:         { code: "DONE",   color: "var(--th-status-muted)" },
-    pending:      { code: "HOLD",   color: "var(--th-status-warning)" },
-    cancelled:    { code: "VOID",   color: "var(--th-status-muted)" },
+    inbox:        { code: t({ ko: "수신", en: "INBOX",  ja: "受信", zh: "收件" }), color: "var(--th-status-muted)" },
+    planned:      { code: t({ ko: "계획", en: "PLAN",   ja: "計画", zh: "计划" }), color: "var(--th-status-info)" },
+    collaborating:{ code: t({ ko: "협업", en: "COLLAB", ja: "協働", zh: "协作" }), color: "var(--th-status-purple)" },
+    in_progress:  { code: t({ ko: "진행", en: "WIP",    ja: "進行", zh: "进行" }), color: "var(--th-status-success)" },
+    review:       { code: t({ ko: "검토", en: "REV",    ja: "レビュー", zh: "审核" }), color: "var(--th-status-purple)" },
+    done:         { code: t({ ko: "완료", en: "DONE",   ja: "完了", zh: "完成" }), color: "var(--th-status-muted)" },
+    pending:      { code: t({ ko: "보류", en: "HOLD",   ja: "保留", zh: "待处理" }), color: "var(--th-status-warning)" },
+    cancelled:    { code: t({ ko: "취소", en: "VOID",   ja: "中止", zh: "取消" }), color: "var(--th-status-muted)" },
   };
 
   const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };
@@ -581,7 +581,7 @@ export function TaskBoard({
             return (
               <div
                 key={column.status}
-                className={`taskboard-column flex flex-col transition-all duration-200 ${
+                className={`taskboard-column flex flex-col transition-all duration-200 sm:min-h-0 ${
                   isCollapsed ? "w-full sm:w-12 sm:flex-shrink-0" : "w-full sm:w-72 sm:flex-shrink-0"
                 }`}
                 style={{
@@ -607,9 +607,9 @@ export function TaskBoard({
                   {!isCollapsed && (
                     <span
                       className="flex-1 min-w-0 truncate"
-                      style={{ ...mono, fontSize: "10px", fontWeight: 700, letterSpacing: "0.08em", color: sc?.color ?? "var(--th-text-heading)" }}
+                      style={{ ...mono, fontSize: "10px", fontWeight: 700, letterSpacing: "0.06em", color: sc?.color ?? "var(--th-text-heading)" }}
                     >
-                      {sc?.code ?? column.status.toUpperCase()}
+                      {taskStatusLabel(column.status as TaskStatus, t)}
                     </span>
                   )}
                   <span
@@ -643,7 +643,7 @@ export function TaskBoard({
                           className="text-sm sm:[writing-mode:vertical-lr] sm:rotate-180 font-medium tracking-wider select-none whitespace-nowrap overflow-hidden text-ellipsis max-w-full sm:max-w-none sm:max-h-full"
                           style={{ ...mono, fontSize: "9px", color: sc?.color ?? "var(--th-text-muted)", letterSpacing: "0.1em" }}
                         >
-                          {sc?.code ?? column.status.toUpperCase()}
+                          {taskStatusLabel(column.status as TaskStatus, t)}
                         </span>
                       </button>
                     )}
@@ -652,7 +652,7 @@ export function TaskBoard({
                   /* Expanded body */
                   <DroppableColumn status={column.status}>
                     {(isOver) => (
-                      <div className="flex flex-col gap-2 p-2 sm:flex-1 sm:overflow-y-auto">
+                      <div className="flex flex-col gap-2 p-2" style={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
                         {columnTasks.length === 0 ? (
                           <div
                             className="flex min-h-24 flex-col items-center justify-center py-6 sm:flex-1 transition-colors"
@@ -773,7 +773,7 @@ export function TaskBoard({
               disabled={selectedTaskIds.size === 0}
               style={{ ...mono, fontSize: "9px", fontWeight: 700, padding: "2px 8px", borderRadius: 6, border: "1px solid rgba(251,191,36,0.4)", color: "var(--th-accent)", background: "rgba(251,191,36,0.06)", cursor: "pointer", opacity: selectedTaskIds.size === 0 ? 0.3 : 1 }}
             >
-              STOP
+              {t({ ko: "중지", en: "STOP", ja: "停止", zh: "停止" })}
             </button>
             <button
               type="button"
@@ -781,7 +781,7 @@ export function TaskBoard({
               disabled={selectedTaskIds.size === 0}
               style={{ ...mono, fontSize: "9px", fontWeight: 700, padding: "2px 8px", borderRadius: 6, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent", cursor: "pointer", opacity: selectedTaskIds.size === 0 ? 0.3 : 1 }}
             >
-              HIDE
+              {t({ ko: "숨김", en: "HIDE", ja: "非表示", zh: "隐藏" })}
             </button>
             <button
               type="button"
@@ -789,7 +789,7 @@ export function TaskBoard({
               disabled={selectedTaskIds.size === 0}
               style={{ ...mono, fontSize: "9px", fontWeight: 700, padding: "2px 8px", borderRadius: 6, border: "1px solid rgba(244,63,94,0.4)", color: "rgb(253,164,175)", background: "rgba(244,63,94,0.06)", cursor: "pointer", opacity: selectedTaskIds.size === 0 ? 0.3 : 1 }}
             >
-              DEL
+              {t({ ko: "삭제", en: "DEL", ja: "削除", zh: "删除" })}
             </button>
             </div>
           </div>
@@ -828,7 +828,7 @@ export function TaskBoard({
       {showCreate && (
         <AppWindow
           windowType="create-task"
-          title="New Task"
+          title={t({ ko: "새 업무", en: "New Task", ja: "新規タスク", zh: "新建任务" })}
           emoji="✚"
           defaultWidth={520}
           defaultHeight={700}

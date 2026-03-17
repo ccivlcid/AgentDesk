@@ -1,6 +1,8 @@
-import { useRef, type KeyboardEvent, type RefObject, type DragEvent } from "react";
+import { useRef, useState, useCallback, type KeyboardEvent, type RefObject, type DragEvent } from "react";
 import type { Agent } from "../../types";
+import type { KbSourceRef } from "../../api/synapse";
 import ChatModeHint from "./ChatModeHint";
+import KbMentionDropdown from "./KbMentionDropdown";
 
 type ChatMode = "chat" | "task" | "announcement" | "report";
 type Tr = (ko: string, en: string, ja?: string, zh?: string) => string;
@@ -44,6 +46,8 @@ interface ChatComposerProps {
   onInputChange: (value: string) => void;
   onSend: () => void;
   onKeyDown: (event: KeyboardEvent<HTMLTextAreaElement>) => void;
+  kbSources?: KbSourceRef[];
+  onKbSourcesChange?: (sources: KbSourceRef[]) => void;
 }
 
 export default function ChatComposer({
@@ -61,9 +65,47 @@ export default function ChatComposer({
   onInputChange,
   onSend,
   onKeyDown,
+  kbSources = [],
+  onKbSourcesChange,
 }: ChatComposerProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dragCounterRef = useRef(0);
+
+  // @mention 상태
+  const [mentionTarget, setMentionTarget] = useState<"notion" | "obsidian" | null>(null);
+  const [mentionQuery, setMentionQuery] = useState("");
+
+  // 입력 변경 시 @notion / @obsidian 패턴 감지
+  const handleInputChange = useCallback((value: string) => {
+    onInputChange(value);
+    // 커서 위치 기준으로 패턴 감지: 라인 끝 또는 문자열 끝의 @notion/@obsidian [query]
+    const match = value.match(/@(notion|obsidian)\s*([^\n@]*)$/i);
+    if (match) {
+      setMentionTarget(match[1].toLowerCase() as "notion" | "obsidian");
+      setMentionQuery(match[2].trim());
+    } else {
+      setMentionTarget(null);
+      setMentionQuery("");
+    }
+  }, [onInputChange]);
+
+  // 드롭다운에서 소스 선택
+  const handleMentionSelect = useCallback((ref: KbSourceRef) => {
+    // input에서 @notion/obsidian 트리거 텍스트 제거
+    const cleaned = input.replace(/@(notion|obsidian)\s*[^\n@]*$/i, "").trimEnd();
+    onInputChange(cleaned);
+    setMentionTarget(null);
+    setMentionQuery("");
+    // 중복 방지 후 추가
+    if (!kbSources.some((s) => s.id === ref.id)) {
+      onKbSourcesChange?.([...kbSources, ref]);
+    }
+    textareaRef.current?.focus();
+  }, [input, kbSources, onInputChange, onKbSourcesChange, textareaRef]);
+
+  const removeKbSource = useCallback((id: string) => {
+    onKbSourcesChange?.(kbSources.filter((s) => s.id !== id));
+  }, [kbSources, onKbSourcesChange]);
 
   const addFiles = (incoming: FileList | File[]) => {
     const newFiles: File[] = [];
@@ -158,6 +200,32 @@ export default function ChatComposer({
 
       <ChatModeHint mode={mode} isDirectiveMode={isDirectiveMode} tr={tr} />
 
+      {/* KB Source badges */}
+      {kbSources.length > 0 && (
+        <div className="flex flex-shrink-0 flex-wrap gap-1.5 px-4 pb-1">
+          {kbSources.map((src) => (
+            <div
+              key={src.id}
+              className="flex items-center gap-1 px-2 py-1 text-xs font-mono"
+              style={{ borderRadius: 0, border: "1px solid var(--th-accent)", background: "rgba(245,158,11,0.08)", color: "var(--th-accent)" }}
+            >
+              <span>{src.type === "notion_page" ? "📘" : "📓"}</span>
+              <span className="max-w-[120px] truncate">{src.label ?? src.id}</span>
+              <button
+                onClick={() => removeKbSource(src.id)}
+                className="ml-0.5 transition"
+                style={{ color: "var(--th-accent)", opacity: 0.7 }}
+                aria-label="Remove KB source"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5">
+                  <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
+                </svg>
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Attachment chips */}
       {attachments.length > 0 && (
         <div className="flex flex-shrink-0 flex-wrap gap-1.5 px-4 pb-1">
@@ -195,6 +263,14 @@ export default function ChatComposer({
       />
 
       <div className="flex-shrink-0 px-4 pb-4 pt-2">
+        <div style={{ position: "relative" }}>
+          <KbMentionDropdown
+            mentionTarget={mentionTarget}
+            query={mentionQuery}
+            onSelect={handleMentionSelect}
+            onClose={() => { setMentionTarget(null); setMentionQuery(""); }}
+          />
+        </div>
         <div
           onDragEnter={handleDragEnter}
           onDragLeave={handleDragLeave}
@@ -233,7 +309,7 @@ export default function ChatComposer({
           <textarea
             ref={textareaRef}
             value={input}
-            onChange={(e) => onInputChange(e.target.value)}
+            onChange={(e) => handleInputChange(e.target.value)}
             onKeyDown={onKeyDown}
             placeholder={
               isAnnouncementMode

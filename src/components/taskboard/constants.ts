@@ -76,6 +76,7 @@ export type CreateTaskDraft = {
   projectQuery: string;
   createNewProjectMode: boolean;
   newProjectPath: string;
+  figmaUrl: string;
   updatedAt: number;
 };
 
@@ -143,6 +144,7 @@ export function loadCreateTaskDrafts(): CreateTaskDraft[] {
           projectQuery: typeof r.projectQuery === "string" ? r.projectQuery : "",
           createNewProjectMode: Boolean(r.createNewProjectMode),
           newProjectPath: typeof r.newProjectPath === "string" ? r.newProjectPath : "",
+          figmaUrl: typeof r.figmaUrl === "string" ? r.figmaUrl : "",
           updatedAt: typeof r.updatedAt === "number" ? r.updatedAt : Date.now(),
         } satisfies CreateTaskDraft;
       })

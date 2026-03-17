@@ -315,6 +315,26 @@ export function registerProjectRoutes({
     return res.json({ ok: true });
   });
 
+  // ── Save file into project path ────────────────────────────────────────
+  app.post("/api/projects/save-file", (req, res) => {
+    const body = req.body ?? {};
+    const projectPath: unknown = body.project_path;
+    const filename: unknown = body.filename;
+    const content: unknown = body.content;
+    if (typeof projectPath !== "string" || !projectPath) return res.status(400).json({ error: "project_path_required" });
+    if (typeof filename !== "string" || !filename) return res.status(400).json({ error: "filename_required" });
+    if (typeof content !== "string") return res.status(400).json({ error: "content_required" });
+    // sanitize: strip path separators from filename
+    const safeName = path.basename(filename).replace(/[/\\]/g, "");
+    if (!safeName) return res.status(400).json({ error: "invalid_filename" });
+    const resolvedDir = path.resolve(projectPath);
+    if (!isPathInsideAllowedRoots(resolvedDir)) return res.status(403).json({ error: "path_outside_allowed_roots" });
+    try { fs.mkdirSync(resolvedDir, { recursive: true }); } catch { /* ignore */ }
+    const dest = path.join(resolvedDir, safeName);
+    fs.writeFileSync(dest, content, "utf-8");
+    return res.json({ ok: true, path: dest });
+  });
+
   app.post("/api/projects", (req, res) => {
     const body = req.body ?? {};
     const name = normalizeTextField(body.name);
@@ -359,6 +379,7 @@ export function registerProjectRoutes({
     }
 
     const githubRepo = typeof body.github_repo === "string" ? body.github_repo.trim() || null : null;
+    const figmaUrl = typeof body.figma_url === "string" ? body.figma_url.trim() || null : null;
     const categoryId = typeof body.category_id === "string" ? body.category_id.trim() || null : null;
     const assignmentMode = body.assignment_mode === "manual" ? "manual" : "auto";
     const requestedDefaultPackKey = normalizeTextField(body.default_pack_key);
@@ -381,11 +402,11 @@ export function registerProjectRoutes({
       db.prepare(
         `
       INSERT INTO projects (
-        id, name, project_path, core_goal, default_pack_key, assignment_mode, category_id, last_used_at, created_at, updated_at, github_repo
+        id, name, project_path, core_goal, default_pack_key, assignment_mode, category_id, last_used_at, created_at, updated_at, github_repo, figma_url
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `,
-      ).run(id, name, projectPath, coreGoal, defaultPackKey, assignmentMode, categoryId, t, t, t, githubRepo);
+      ).run(id, name, projectPath, coreGoal, defaultPackKey, assignmentMode, categoryId, t, t, t, githubRepo, figmaUrl);
 
       if (assignmentMode === "manual" && agentIds.length > 0) {
         const insertPA = db.prepare("INSERT INTO project_agents (project_id, agent_id, created_at) VALUES (?, ?, ?)");
@@ -466,6 +487,11 @@ export function registerProjectRoutes({
     if ("github_repo" in body) {
       const value = typeof body.github_repo === "string" ? body.github_repo.trim() || null : null;
       updates.push("github_repo = ?");
+      params.push(value);
+    }
+    if ("figma_url" in body) {
+      const value = typeof body.figma_url === "string" ? body.figma_url.trim() || null : null;
+      updates.push("figma_url = ?");
       params.push(value);
     }
     if ("assignment_mode" in body) {
@@ -679,6 +705,119 @@ export function registerProjectRoutes({
     res.json({ ok: true, burndown });
   });
 
+  // ── Project Sources ───────────────────────────────────────────────────────────
+
+  app.get("/api/projects/:id/sources", (req, res) => {
+    const id = String(req.params.id);
+    const project = db.prepare("SELECT id FROM projects WHERE id = ?").get(id);
+    if (!project) return res.status(404).json({ error: "not_found" });
+
+    const rows = db.prepare(`
+      SELECT
+        ps.id,
+        ps.source_project_id,
+        ps.label,
+        ps.sort_order,
+        p.name AS source_project_name,
+        p.category_id AS source_category_id,
+        c.name AS source_category_name,
+        c.name_ko AS source_category_name_ko,
+        c.color AS source_category_color
+      FROM project_sources ps
+      JOIN projects p ON p.id = ps.source_project_id
+      LEFT JOIN categories c ON c.id = p.category_id
+      WHERE ps.project_id = ?
+      ORDER BY ps.sort_order ASC, ps.created_at ASC
+    `).all(id) as Array<{
+      id: string;
+      source_project_id: string;
+      label: string | null;
+      sort_order: number;
+      source_project_name: string;
+      source_category_id: string | null;
+      source_category_name: string | null;
+      source_category_name_ko: string | null;
+      source_category_color: string | null;
+    }>;
+
+    // For each source, get deliverable check counts
+    const sources = rows.map((row) => {
+      const checks = db.prepare(`
+        SELECT checked FROM project_deliverable_checks WHERE project_id = ?
+      `).all(row.source_project_id) as Array<{ checked: number }>;
+
+      const total = checks.length;
+      const checked_count = checks.filter((c) => c.checked === 1).length;
+      const checked_deliverables = (db.prepare(`
+        SELECT key, label, note FROM project_deliverable_checks
+        WHERE project_id = ? AND checked = 1 ORDER BY checked_at ASC
+      `).all(row.source_project_id) as Array<{ key: string; label: string; note: string | null }>);
+
+      return {
+        id: row.id,
+        source_project_id: row.source_project_id,
+        source_project_name: row.source_project_name,
+        source_category_id: row.source_category_id,
+        source_category_name: row.source_category_name_ko ?? row.source_category_name,
+        source_category_color: row.source_category_color,
+        label: row.label,
+        sort_order: row.sort_order,
+        checked_count,
+        total_count: total,
+        checked_deliverables,
+      };
+    });
+
+    res.json({ ok: true, sources });
+  });
+
+  app.post("/api/projects/:id/sources", (req, res) => {
+    const id = String(req.params.id);
+    const project = db.prepare("SELECT id FROM projects WHERE id = ?").get(id);
+    if (!project) return res.status(404).json({ error: "not_found" });
+
+    const body = req.body ?? {};
+    const sourceProjectId = typeof body.source_project_id === "string" ? body.source_project_id.trim() : "";
+    const label = typeof body.label === "string" ? body.label.trim() || null : null;
+
+    if (!sourceProjectId) return res.status(400).json({ error: "source_project_id_required" });
+    if (sourceProjectId === id) return res.status(400).json({ error: "circular_self_reference" });
+
+    // Check that source project exists
+    const sourceProject = db.prepare("SELECT id FROM projects WHERE id = ?").get(sourceProjectId);
+    if (!sourceProject) return res.status(404).json({ error: "source_project_not_found" });
+
+    // Circular reference check: if sourceProject already has id as a source
+    const circular = db.prepare(
+      "SELECT id FROM project_sources WHERE project_id = ? AND source_project_id = ?"
+    ).get(sourceProjectId, id);
+    if (circular) return res.status(400).json({ error: "circular_reference" });
+
+    // Max 5 sources
+    const count = (db.prepare("SELECT COUNT(*) AS cnt FROM project_sources WHERE project_id = ?").get(id) as { cnt: number }).cnt;
+    if (count >= 5) return res.status(400).json({ error: "max_sources_reached" });
+
+    const t = nowMs();
+    try {
+      db.prepare(
+        "INSERT INTO project_sources (project_id, source_project_id, label, sort_order, created_at) VALUES (?, ?, ?, ?, ?)"
+      ).run(id, sourceProjectId, label, count, t);
+    } catch {
+      return res.status(409).json({ error: "already_linked" });
+    }
+
+    res.json({ ok: true });
+  });
+
+  app.delete("/api/projects/:id/sources/:sourceId", (req, res) => {
+    const id = String(req.params.id);
+    const sourceId = String(req.params.sourceId);
+    const row = db.prepare("SELECT id FROM project_sources WHERE id = ? AND project_id = ?").get(sourceId, id);
+    if (!row) return res.status(404).json({ error: "not_found" });
+    db.prepare("DELETE FROM project_sources WHERE id = ?").run(sourceId);
+    res.json({ ok: true });
+  });
+
   // ── Project Templates ────────────────────────────────────────────────────────
 
   app.get("/api/project-templates", (_req, res) => {
@@ -752,6 +891,77 @@ export function registerProjectRoutes({
     if (tpl.is_builtin) return res.status(403).json({ ok: false, error: "builtin_protected" });
     db.prepare("DELETE FROM project_templates WHERE id = ?").run(templateId);
     res.json({ ok: true });
+  });
+
+  // ── Deliverable Checks ───────────────────────────────────────────────────────
+
+  app.get("/api/projects/:id/deliverables", (req, res) => {
+    const id = String(req.params.id);
+    const project = db.prepare("SELECT id, category_id FROM projects WHERE id = ?").get(id) as
+      | { id: string; category_id: string | null }
+      | undefined;
+    if (!project) return res.status(404).json({ error: "not_found" });
+
+    // Get deliverable_schema from category
+    let schema: Array<{ key: string; label: string; type?: string }> = [];
+    if (project.category_id) {
+      const cat = db
+        .prepare("SELECT deliverable_schema FROM categories WHERE id = ?")
+        .get(project.category_id) as { deliverable_schema: string | null } | undefined;
+      if (cat?.deliverable_schema) {
+        try {
+          schema = JSON.parse(cat.deliverable_schema);
+        } catch { /* ignore */ }
+      }
+    }
+
+    // Get existing checks
+    const checks = db
+      .prepare("SELECT key, label, checked, checked_at, note FROM project_deliverable_checks WHERE project_id = ?")
+      .all(id) as Array<{ key: string; label: string; checked: number; checked_at: number | null; note: string | null }>;
+
+    const checkMap = new Map(checks.map((c) => [c.key, c]));
+
+    // Merge schema with existing checks
+    const items = schema.map((s) => {
+      const existing = checkMap.get(s.key);
+      return {
+        key: s.key,
+        label: s.label,
+        type: s.type ?? "document",
+        checked: existing ? Boolean(existing.checked) : false,
+        checked_at: existing?.checked_at ?? null,
+        note: existing?.note ?? null,
+      };
+    });
+
+    res.json({ ok: true, items });
+  });
+
+  app.put("/api/projects/:id/deliverables/:key", (req, res) => {
+    const id = String(req.params.id);
+    const key = String(req.params.key);
+    const project = db.prepare("SELECT id FROM projects WHERE id = ?").get(id);
+    if (!project) return res.status(404).json({ error: "not_found" });
+
+    const body = req.body ?? {};
+    const checked = body.checked === true || body.checked === 1 ? 1 : 0;
+    const note = typeof body.note === "string" ? body.note.trim() || null : null;
+    const label = typeof body.label === "string" ? body.label.trim() : key;
+    const t = nowMs();
+    const checkedAt = checked ? t : null;
+
+    db.prepare(`
+      INSERT INTO project_deliverable_checks (project_id, key, label, checked, checked_at, note, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(project_id, key) DO UPDATE SET
+        checked    = excluded.checked,
+        checked_at = excluded.checked_at,
+        note       = excluded.note,
+        updated_at = excluded.updated_at
+    `).run(id, key, label, checked, checkedAt, note, t, t);
+
+    res.json({ ok: true, key, checked: Boolean(checked), checked_at: checkedAt, note });
   });
 
   app.post("/api/projects/:projectId/apply-template/:templateId", (req, res) => {

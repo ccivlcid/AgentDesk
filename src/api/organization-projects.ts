@@ -303,6 +303,8 @@ export async function createTask(input: {
   output_format?: string;
   handoff_to_agent_id?: string | null;
   handoff_condition?: "always" | "on_success" | "on_fail" | null;
+  kb_context_sources?: string | null;
+  figma_url?: string | null;
 }): Promise<string> {
   // dual-write: send context_hint = workflow_pack_key if not explicitly provided
   const payload = { ...input };
@@ -466,6 +468,7 @@ export async function createProject(input: {
   name: string;
   project_path: string;
   core_goal: string;
+  figma_url?: string | null;
   default_pack_key?: WorkflowPackKey;
   create_path_if_missing?: boolean;
   github_repo?: string;
@@ -479,6 +482,7 @@ export async function createProject(input: {
 export async function updateProject(
   id: string,
   patchData: Partial<Pick<Project, "name" | "project_path" | "core_goal" | "default_pack_key">> & {
+    figma_url?: string | null;
     create_path_if_missing?: boolean;
     github_repo?: string | null;
     assignment_mode?: "auto" | "manual";
@@ -653,5 +657,72 @@ export async function applyProjectTemplate(
     ok: boolean;
     objectives_created: number;
     gates_created: number;
+  }>;
+}
+
+// ── Deliverable Checks ────────────────────────────────────────────────────────
+
+export interface ProjectDeliverableItem {
+  key: string;
+  label: string;
+  type: string;
+  checked: boolean;
+  checked_at: number | null;
+  note: string | null;
+}
+
+// ── Project Sources ────────────────────────────────────────────────────────────
+
+export interface ProjectSource {
+  id: string;
+  source_project_id: string;
+  source_project_name: string;
+  source_category_id: string | null;
+  source_category_name: string | null;
+  source_category_color: string | null;
+  label: string | null;
+  sort_order: number;
+  checked_count: number;
+  total_count: number;
+  checked_deliverables: Array<{ key: string; label: string; note: string | null }>;
+}
+
+export async function getProjectSources(projectId: string): Promise<ProjectSource[]> {
+  const j = await request<{ ok: boolean; sources: ProjectSource[] }>(
+    `/api/projects/${projectId}/sources`,
+  );
+  return j.sources ?? [];
+}
+
+export async function addProjectSource(
+  projectId: string,
+  sourceProjectId: string,
+  label?: string,
+): Promise<void> {
+  await post(`/api/projects/${projectId}/sources`, { source_project_id: sourceProjectId, label: label ?? null });
+}
+
+export async function removeProjectSource(projectId: string, sourceId: string): Promise<void> {
+  await del(`/api/projects/${projectId}/sources/${sourceId}`);
+}
+
+export async function getProjectDeliverables(projectId: string): Promise<ProjectDeliverableItem[]> {
+  const j = await request<{ ok: boolean; items: ProjectDeliverableItem[] }>(
+    `/api/projects/${projectId}/deliverables`,
+  );
+  return j.items ?? [];
+}
+
+export async function updateProjectDeliverable(
+  projectId: string,
+  key: string,
+  data: { checked: boolean; note?: string | null; label?: string },
+): Promise<{ key: string; checked: boolean; checked_at: number | null; note: string | null }> {
+  return put(`/api/projects/${projectId}/deliverables/${encodeURIComponent(key)}`, data) as Promise<{
+    ok: boolean;
+    key: string;
+    checked: boolean;
+    checked_at: number | null;
+    note: string | null;
   }>;
 }

@@ -18,6 +18,9 @@ import {
 import { buildRulesPromptBlock } from "../../../workflow/core/project-scoped-rules.ts";
 import { buildMemoryPromptBlock } from "../../../workflow/orchestration/autonomous-memory.ts";
 import { executeHooks } from "../../../workflow/core/hook-executor.ts";
+import { buildKbContextBlock } from "../../../synapse/context-fetcher.ts";
+import { buildFigmaContextBlock } from "../../../figma/context-fetcher.ts";
+import { buildSourceContextBlock } from "../../../projects/source-context-fetcher.ts";
 
 export type TaskRunRouteDeps = Pick<
   RuntimeContext,
@@ -488,6 +491,30 @@ Whenever you complete a subtask, report it in this format:
       taskLang,
     );
 
+    // KB context block: fetch Notion/Obsidian/Snapshot content for this task+agent
+    let kbContextBlock = "";
+    try {
+      kbContextBlock = await buildKbContextBlock(db as any, id, agentId ?? null);
+    } catch {
+      // non-fatal: proceed without KB context
+    }
+
+    // Figma design context block: fetch node metadata for tasks with figma_url
+    let figmaContextBlock = "";
+    try {
+      figmaContextBlock = await buildFigmaContextBlock(db as any, id);
+    } catch {
+      // non-fatal: proceed without Figma context
+    }
+
+    // Source project context block: inject completed deliverables from linked source projects
+    let sourceContextBlock = "";
+    try {
+      sourceContextBlock = (await buildSourceContextBlock(db as any, id)) ?? "";
+    } catch {
+      // non-fatal: proceed without source context
+    }
+
     // Execute pre-task hooks (parallel, async)
     await executeHooks(db as any, "pre-task", {
       projectId: task.project_id ?? null,
@@ -522,6 +549,9 @@ Whenever you complete a subtask, report it in this format:
           departmentPromptBlock,
           `NOTE: You are working in an isolated Git worktree branch (agentdesk/${id.slice(0, 8)}). Commit your changes normally.`,
           interruptPromptBlock,
+          kbContextBlock,
+          sourceContextBlock,
+          figmaContextBlock,
           rulesBlock,
           memoryBlock,
           subtaskInstruction,

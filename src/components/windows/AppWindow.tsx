@@ -1,4 +1,4 @@
-import { useRef, useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode, type FC } from "react";
 import type { WindowType } from "../../app/types";
 import { useUiStore } from "../../store/uiStore";
 import TrafficLights from "../desktop/TrafficLights";
@@ -23,14 +23,14 @@ function saveWinState(wt: WindowType, state: WindowState) {
 
 export interface AppWindowTab {
   id: string;
-  label: string;
+  label: ReactNode;
   content: ReactNode;
 }
 
 interface AppWindowProps {
   windowType: WindowType;
   title: string;
-  emoji: string;
+  emoji: ReactNode;
   tabs?: AppWindowTab[];
   children?: ReactNode;
   defaultWidth?: number;
@@ -263,7 +263,7 @@ export default function AppWindow({
 
         {/* Title — centered */}
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, pointerEvents: "none" }}>
-          <span style={{ fontSize: 13 }}>{emoji}</span>
+          <span style={{ display: "flex", alignItems: "center", fontSize: 13 }}>{emoji}</span>
           <span style={{ fontFamily: mono, fontSize: 12, fontWeight: 600, color: "var(--th-text-heading)", letterSpacing: "0.01em" }}>
             {title}
           </span>

@@ -440,6 +440,273 @@ export const MIGRATIONS: Migration[] = [
       db.exec("CREATE INDEX IF NOT EXISTS idx_wf_schedules_template ON workflow_schedules(template_id)");
     },
   },
+  {
+    id: "2026-03-18-000-harness",
+    up: (db) => {
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS harness_connections (
+          platform    TEXT PRIMARY KEY,
+          status      TEXT NOT NULL DEFAULT 'disconnected',
+          config_json TEXT,
+          created_at  INTEGER NOT NULL DEFAULT (unixepoch()*1000),
+          updated_at  INTEGER NOT NULL DEFAULT (unixepoch()*1000)
+        )
+      `);
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS harness_snapshots (
+          id         TEXT PRIMARY KEY,
+          name       TEXT NOT NULL,
+          content    TEXT NOT NULL,
+          source     TEXT,
+          created_at INTEGER NOT NULL DEFAULT (unixepoch()*1000)
+        )
+      `);
+    },
+  },
+  {
+    id: "2026-03-18-001-harness-rules",
+    up: (db) => {
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS harness_rules (
+          id            TEXT PRIMARY KEY,
+          name          TEXT NOT NULL,
+          enabled       INTEGER NOT NULL DEFAULT 1,
+          source        TEXT NOT NULL CHECK(source IN ('obsidian','notion')),
+          trigger_json  TEXT NOT NULL DEFAULT '{}',
+          condition_json TEXT NOT NULL DEFAULT '{}',
+          action_json   TEXT NOT NULL DEFAULT '{}',
+          last_fired_at INTEGER,
+          created_at    INTEGER NOT NULL DEFAULT (unixepoch()*1000),
+          updated_at    INTEGER NOT NULL DEFAULT (unixepoch()*1000)
+        )
+      `);
+      db.exec("CREATE INDEX IF NOT EXISTS idx_harness_rules_source ON harness_rules(source, enabled)");
+    },
+  },
+  {
+    id: "2026-03-18-002-harness-kb-sources",
+    up: (db) => {
+      // agents: default KB sources injected into every task prompt
+      try { db.exec("ALTER TABLE agents ADD COLUMN kb_default_sources TEXT"); } catch { /* already exists */ }
+      // tasks: per-task KB sources attached at creation
+      try { db.exec("ALTER TABLE tasks ADD COLUMN kb_context_sources TEXT"); } catch { /* already exists */ }
+    },
+  },
+  {
+    id: "2026-03-19-000-rename-harness-to-synapse",
+    up: (db) => {
+      // Rename harness_* tables to synapse_* to align with module naming
+      try { db.exec("ALTER TABLE harness_connections RENAME TO synapse_connections"); } catch { /* already renamed or doesn't exist */ }
+      try { db.exec("ALTER TABLE harness_snapshots RENAME TO synapse_snapshots"); } catch { /* already renamed or doesn't exist */ }
+      try { db.exec("ALTER TABLE harness_rules RENAME TO synapse_rules"); } catch { /* already renamed or doesn't exist */ }
+      // Recreate index under new table name
+      try { db.exec("DROP INDEX IF EXISTS idx_harness_rules_source"); } catch { /* ignore */ }
+      try { db.exec("CREATE INDEX IF NOT EXISTS idx_synapse_rules_source ON synapse_rules(source, enabled)"); } catch { /* already exists */ }
+    },
+  },
+  {
+    id: "2026-03-19-001-image-generations",
+    up: (db) => {
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS image_generations (
+          id          TEXT    PRIMARY KEY,
+          provider    TEXT    NOT NULL,
+          model       TEXT    NOT NULL,
+          prompt      TEXT    NOT NULL,
+          neg_prompt  TEXT,
+          width       INTEGER NOT NULL DEFAULT 1024,
+          height      INTEGER NOT NULL DEFAULT 1024,
+          steps       INTEGER,
+          seed        INTEGER,
+          file_path   TEXT    NOT NULL,
+          thumb_path  TEXT,
+          metadata    TEXT,
+          created_at  INTEGER NOT NULL DEFAULT (unixepoch()*1000)
+        )
+      `);
+      db.exec(
+        "CREATE INDEX IF NOT EXISTS idx_image_generations_created ON image_generations(created_at DESC)",
+      );
+    },
+  },
+  {
+    id: "2026-03-20-001-tasks-figma-url",
+    up: (db) => {
+      try {
+        db.exec("ALTER TABLE tasks ADD COLUMN figma_url TEXT");
+      } catch { /* already exists */ }
+    },
+  },
+  {
+    id: "2026-03-20-002-projects-figma-url",
+    up: (db) => {
+      try {
+        db.exec("ALTER TABLE projects ADD COLUMN figma_url TEXT");
+      } catch { /* already exists */ }
+    },
+  },
+  {
+    id: "2026-03-20-003-category-design",
+    up: (db) => {
+      const existing = db.prepare("SELECT id FROM categories WHERE id = 'cat_design'").get();
+      if (!existing) {
+        const now = Date.now();
+        db.prepare(`
+          INSERT INTO categories (
+            id, name, name_ko, description, icon, color, slug,
+            kpi_schema, risk_schema, gate_schema, deliverable_schema,
+            pack_key, created_at, updated_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).run(
+          "cat_design", "Design & Figma", "디자인 & Figma",
+          "Figma 디자인을 코드로 연결할 때 사용해요. 컴포넌트 분석, 코드 생성, 리뷰를 지원해요.",
+          "pen-tool", "#f24e1e", "design",
+          JSON.stringify([
+            { key: "components_built",  label: "컴포넌트 구현 수",   type: "number"  },
+            { key: "design_accuracy",   label: "디자인 일치율 (%)",  type: "percent" },
+            { key: "accessibility",     label: "접근성 점수 (%)",    type: "percent" },
+          ]),
+          JSON.stringify([
+            { key: "design_drift",      label: "디자인 불일치",      severity: "high"   },
+            { key: "component_drift",   label: "컴포넌트 드리프트",   severity: "medium" },
+            { key: "accessibility_gap", label: "접근성 미흡",         severity: "medium" },
+          ]),
+          JSON.stringify([
+            { key: "design_review",     label: "디자인 검토",         sort_order: 1 },
+            { key: "component_review",  label: "컴포넌트 코드 리뷰",  sort_order: 2 },
+            { key: "handoff_approval",  label: "핸드오프 승인",       sort_order: 3 },
+          ]),
+          JSON.stringify([
+            { key: "design_spec",       label: "디자인 명세서",       type: "document" },
+            { key: "component_code",    label: "컴포넌트 코드",       type: "spec"     },
+            { key: "design_review_report", label: "디자인 검토 보고서", type: "report" },
+          ]),
+          "development", now, now,
+        );
+      }
+    },
+  },
+  {
+    id: "2026-03-20-004-category-design-schemas",
+    up: (db) => {
+      // 빈 스키마로 INSERT된 기존 cat_design 레코드에 올바른 스키마 채우기
+      db.prepare(`
+        UPDATE categories SET
+          kpi_schema        = ?,
+          risk_schema       = ?,
+          gate_schema       = ?,
+          deliverable_schema = ?
+        WHERE id = 'cat_design'
+          AND (kpi_schema = '[]' OR kpi_schema IS NULL)
+      `).run(
+        JSON.stringify([
+          { key: "components_built", label: "컴포넌트 구현 수",  type: "number"  },
+          { key: "design_accuracy",  label: "디자인 일치율 (%)", type: "percent" },
+          { key: "accessibility",    label: "접근성 점수 (%)",   type: "percent" },
+        ]),
+        JSON.stringify([
+          { key: "design_drift",      label: "디자인 불일치",    severity: "high"   },
+          { key: "component_drift",   label: "컴포넌트 드리프트", severity: "medium" },
+          { key: "accessibility_gap", label: "접근성 미흡",       severity: "medium" },
+        ]),
+        JSON.stringify([
+          { key: "design_review",    label: "디자인 검토",        sort_order: 1 },
+          { key: "component_review", label: "컴포넌트 코드 리뷰", sort_order: 2 },
+          { key: "handoff_approval", label: "핸드오프 승인",      sort_order: 3 },
+        ]),
+        JSON.stringify([
+          { key: "design_spec",          label: "디자인 명세서",     type: "document" },
+          { key: "component_code",       label: "컴포넌트 코드",     type: "spec"     },
+          { key: "design_review_report", label: "디자인 검토 보고서", type: "report"  },
+        ]),
+      );
+    },
+  },
+  {
+    id: "2026-03-20-005-category-design-desc-ko",
+    up: (db) => {
+      db.prepare(
+        "UPDATE categories SET description = ? WHERE id = 'cat_design' AND description = ?",
+      ).run(
+        "Figma 디자인을 코드로 연결할 때 사용해요. 컴포넌트 분석, 코드 생성, 리뷰를 지원해요.",
+        "Figma design-to-code: design analysis, component building, code review",
+      );
+    },
+  },
+  {
+    id: "2026-03-20-005-image-generations-task-id",
+    up: (db) => {
+      try {
+        db.exec("ALTER TABLE image_generations ADD COLUMN task_id TEXT");
+      } catch { /* already exists */ }
+      try {
+        db.exec("CREATE INDEX IF NOT EXISTS idx_image_generations_task ON image_generations(task_id)");
+      } catch { /* already exists */ }
+    },
+  },
+  {
+    id: "2026-03-21-001-project-deliverable-checks",
+    up: (db) => {
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS project_deliverable_checks (
+          id          TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(8)))),
+          project_id  TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+          key         TEXT NOT NULL,
+          label       TEXT NOT NULL,
+          checked     INTEGER NOT NULL DEFAULT 0 CHECK(checked IN (0,1)),
+          checked_at  INTEGER,
+          note        TEXT,
+          created_at  INTEGER DEFAULT (unixepoch()*1000),
+          updated_at  INTEGER DEFAULT (unixepoch()*1000),
+          UNIQUE(project_id, key)
+        )
+      `);
+      db.exec(`CREATE INDEX IF NOT EXISTS idx_deliverable_checks_project ON project_deliverable_checks(project_id)`);
+    },
+  },
+  {
+    id: "2026-03-21-002-project-sources",
+    up: (db) => {
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS project_sources (
+          id                TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(8)))),
+          project_id        TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+          source_project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+          label             TEXT,
+          sort_order        INTEGER DEFAULT 0,
+          created_at        INTEGER DEFAULT (unixepoch()*1000),
+          UNIQUE(project_id, source_project_id)
+        )
+      `);
+      db.exec(`CREATE INDEX IF NOT EXISTS idx_project_sources_project ON project_sources(project_id)`);
+    },
+  },
+  {
+    id: "2026-03-22-001-project-folders",
+    up: (db) => {
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS project_folders (
+          id          TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(16)))),
+          name        TEXT NOT NULL,
+          base_path   TEXT NOT NULL,
+          color       TEXT NOT NULL DEFAULT '#f59e0b',
+          icon        TEXT,
+          sort_order  INTEGER NOT NULL DEFAULT 0,
+          created_at  INTEGER NOT NULL DEFAULT (unixepoch()*1000),
+          updated_at  INTEGER NOT NULL DEFAULT (unixepoch()*1000)
+        )
+      `);
+    },
+  },
+  {
+    id: "2026-03-22-002-projects-folder-id",
+    up: (db) => {
+      try {
+        db.exec(`ALTER TABLE projects ADD COLUMN folder_id TEXT REFERENCES project_folders(id) ON DELETE SET NULL`);
+      } catch { /* already exists */ }
+      db.exec(`CREATE INDEX IF NOT EXISTS idx_projects_folder_id ON projects(folder_id)`);
+    },
+  },
 ];
 
 const ENSURE_TABLE_SQL = `

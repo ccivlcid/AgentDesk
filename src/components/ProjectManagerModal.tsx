@@ -12,7 +12,8 @@ import {
   type ProjectTaskHistoryItem,
   type TaskReportDetail,
 } from "../api";
-import { applyProjectTemplate, getProjectTemplates, type ProjectTemplate } from "../api/organization-projects";
+import { applyProjectTemplate, getProjectTemplates, getProjectSources, addProjectSource, removeProjectSource, type ProjectTemplate, type ProjectSource } from "../api/organization-projects";
+import { getFigmaInfo } from "../api/synapse";
 import { useI18n } from "../i18n";
 import GitHubImportPanel from "./GitHubImportPanel";
 import TaskReportPopup from "./TaskReportPopup";
@@ -55,6 +56,8 @@ export default function ProjectManagerModal({ agents, departments = [], onClose,
   const [name, setName] = useState("");
   const [projectPath, setProjectPath] = useState("");
   const [coreGoal, setCoreGoal] = useState("");
+  const [figmaUrl, setFigmaUrl] = useState("");
+  const [figmaConnected, setFigmaConnected] = useState<boolean | null>(null);
   const [saving, setSaving] = useState(false);
   const [reportDetail, setReportDetail] = useState<TaskReportDetail | null>(null);
 
@@ -65,6 +68,8 @@ export default function ProjectManagerModal({ agents, departments = [], onClose,
   const [selectedAgentIds, setSelectedAgentIds] = useState<Set<string>>(new Set());
   const [agentFilterDept, setAgentFilterDept] = useState<string>("all");
   const [manualAssignmentWarning, setManualAssignmentWarning] = useState<ManualAssignmentWarning | null>(null);
+  const [sources, setSources] = useState<ProjectSource[]>([]);
+  const [sourcesLoading, setSourcesLoading] = useState(false);
 
   /** 직원이 한 명이라도 있는 부서만 직원 필터 드롭다운에 표시 */
   const departmentsWithAgents = useMemo(() => {
@@ -118,6 +123,7 @@ export default function ProjectManagerModal({ agents, departments = [], onClose,
   useEffect(() => {
     if (!selectedProjectId) {
       setDetail(null);
+      setSources([]);
       return;
     }
     setLoadingDetail(true);
@@ -128,15 +134,27 @@ export default function ProjectManagerModal({ agents, departments = [], onClose,
           setName(res.project.name);
           setProjectPath(res.project.project_path);
           setCoreGoal(res.project.core_goal);
+          setFigmaUrl(res.project.figma_url ?? "");
           setAssignmentMode(res.project.assignment_mode || "auto");
           setDefaultPackKey(res.project.default_pack_key || "development");
           setSelectedAgentIds(new Set(res.project.assigned_agent_ids || []));
+          if (res.project.category_id === "cat_design") {
+            setFigmaConnected(null);
+            getFigmaInfo().then((info) => setFigmaConnected(info.connected)).catch(() => setFigmaConnected(false));
+          }
         }
       })
       .catch((err) => {
         console.error("Failed to load project detail:", err);
       })
       .finally(() => setLoadingDetail(false));
+
+    // Load sources for the selected project
+    setSourcesLoading(true);
+    getProjectSources(selectedProjectId)
+      .then(setSources)
+      .catch(() => setSources([]))
+      .finally(() => setSourcesLoading(false));
   }, [selectedProjectId, editingProjectId, isCreating]);
 
   const getManualAssignmentWarning = useCallback((): ManualAssignmentWarning["reason"] | null => {
@@ -221,6 +239,7 @@ export default function ProjectManagerModal({ agents, departments = [], onClose,
     setName("");
     setProjectPath("");
     setCoreGoal("");
+    setFigmaUrl("");
     setDefaultPackKey("development");
     setAssignmentMode("auto");
     setSelectedAgentIds(new Set());
@@ -235,7 +254,12 @@ export default function ProjectManagerModal({ agents, departments = [], onClose,
     setName(viewedProject.name);
     setProjectPath(viewedProject.project_path);
     setCoreGoal(viewedProject.core_goal);
+    setFigmaUrl(viewedProject.figma_url ?? "");
     setDefaultPackKey(viewedProject.default_pack_key || "development");
+    if (viewedProject.category_id === "cat_design") {
+      setFigmaConnected(null);
+      getFigmaInfo().then((info) => setFigmaConnected(info.connected)).catch(() => setFigmaConnected(false));
+    }
     setAssignmentMode(viewedProject.assignment_mode || "auto");
     setSelectedAgentIds(new Set(viewedProject.assigned_agent_ids || []));
     setManualAssignmentWarning(null);
@@ -262,6 +286,7 @@ export default function ProjectManagerModal({ agents, departments = [], onClose,
     editingProjectId,
     name,
     coreGoal,
+    figmaUrl,
     selectedAgentIds,
     loadProjects,
     search,
@@ -308,6 +333,19 @@ export default function ProjectManagerModal({ agents, departments = [], onClose,
       console.error("Failed to delete project:", err);
     }
   }, [loadProjects, search, selectedProject, startCreate, t]);
+
+  const handleAddSource = useCallback(async (sourceProjectId: string) => {
+    if (!selectedProjectId) return;
+    await addProjectSource(selectedProjectId, sourceProjectId);
+    const updated = await getProjectSources(selectedProjectId);
+    setSources(updated);
+  }, [selectedProjectId]);
+
+  const handleRemoveSource = useCallback(async (sourceId: string) => {
+    if (!selectedProjectId) return;
+    await removeProjectSource(selectedProjectId, sourceId);
+    setSources((prev) => prev.filter((s) => s.id !== sourceId));
+  }, [selectedProjectId]);
 
   const handleOpenTaskDetail = useCallback(async (taskId: string) => {
     try {
@@ -431,6 +469,10 @@ export default function ProjectManagerModal({ agents, departments = [], onClose,
                   setProjectPath={setProjectPath}
                   coreGoal={coreGoal}
                   setCoreGoal={setCoreGoal}
+                  showFigmaField={viewedProject?.category_id === "cat_design"}
+                  figmaConnected={figmaConnected}
+                  figmaUrl={figmaUrl}
+                  setFigmaUrl={setFigmaUrl}
                   saving={saving}
                   canSave={canSave}
                   pathToolsVisible={pathToolsVisible}
@@ -475,6 +517,7 @@ export default function ProjectManagerModal({ agents, departments = [], onClose,
                       setName(viewedProject.name);
                       setProjectPath(viewedProject.project_path);
                       setCoreGoal(viewedProject.core_goal);
+                      setFigmaUrl(viewedProject.figma_url ?? "");
                       setDefaultPackKey(viewedProject.default_pack_key || "development");
                     }
                   }}
@@ -484,6 +527,11 @@ export default function ProjectManagerModal({ agents, departments = [], onClose,
                   }}
                   templates={templates}
                   onApplyTemplate={handleApplyTemplate}
+                  sources={sources}
+                  sourcesLoading={sourcesLoading}
+                  allProjects={projects}
+                  onAddSource={handleAddSource}
+                  onRemoveSource={handleRemoveSource}
                 />
 
                 <ProjectInsightsPanel

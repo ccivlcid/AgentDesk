@@ -1,4 +1,4 @@
-# Knowledge Base Integrations — 기획 문서
+# Synapse — 기획 문서
 
 > 작성일: 2026-03-16
 > 상태: 📋 기획 완료 (미구현)
@@ -43,14 +43,14 @@ AgentDesk OS 안에서 **Notion, Obsidian, Google NotebookLM 세 가지 외부 �
 
 | 진입 방법 | 경로 |
 |----------|------|
-| Dock → Settings → "Connections" 탭 | 메인 연결 관리 화면 |
+| Dock → ⇄ Synapse 아이콘 | 메인 연결 관리 창 (독립 앱 창) |
 | 태스크 생성 모달 → "지식 베이스 첨부..." | 태스크에 문서 컨텍스트 붙이기 |
 | 에이전트 편집 모달 → "지식 소스" 섹션 | 에이전트 기본 지식 소스 설정 |
 | 채팅 → `@notion`, `@obsidian` 멘션 | 채팅 중 문서 검색·첨부 |
 
 ---
 
-### 4-2. Settings → Connections 탭 전체 구조
+### 4-2. Synapse 앱 창 전체 구조
 
 Settings 탭 네비게이션은 기존 `SettingsTabNav.tsx`의 스타일 그대로 따른다.
 탭 버튼: `borderRadius: "6px 6px 0 0"`, 활성 시 `borderBottom: "2px solid var(--th-accent)"`.
@@ -60,7 +60,7 @@ Settings 탭 네비게이션은 기존 `SettingsTabNav.tsx`의 스타일 그대�
 │  ⚙ Settings                                     🔴🟡🟢        │  ← macOS traffic lights
 │  ─────────────────────────────────────────────────────────   │  ← AppWindow titlebar
 │                                                              │
-│  ⚙ GENERAL  $CLI  ⇄OAUTH  ⌁API  ⌘CHANNEL  ◈CONN  ▦DATA     │  ← SettingsTabNav (기존 스타일)
+│  ⚙ GENERAL  $CLI  ⇄OAUTH  ⌁API  ⌘CHANNEL  ▦DATA         │  ← SettingsTabNav (Synapse 탭 제거됨)
 │  ─────────────────────────────────────────────────────────   │     밑줄 탭, amber 활성
 │                                                              │
 │  // NOTION  // OBSIDIAN  // NOTEBOOKLM  // RULES            │  ← 서브탭 (동일 스타일)
@@ -361,7 +361,7 @@ background: "transparent"
 ## 5. 디자인 시스템 명세
 
 > AgentDesk의 **dual-layer 원칙**, **JetBrains Mono 전용 폰트**, **Amber 브랜드 컬러**,
-> **터미널 언어**를 Knowledge Base Integrations 전체에 일관되게 적용한다.
+> **터미널 언어**를 Synapse 전체에 일관되게 적용한다.
 > 참조: `docs/design/DESIGN.md`, `docs/design/UI-SCREENS.md`
 
 ---
@@ -424,7 +424,7 @@ Obsidian  →  #7c3aed (로고용만, 아이콘 한정)
 ### 5-3. macOS Hybrid 핵심 패턴
 
 AgentDesk의 "macOS Hybrid" 스타일은 **macOS 윈도우 크롬 + 터미널 언어 컨텐츠**의 조합이다.
-Connections 탭 전체에서 아래 세 가지 패턴을 일관되게 사용한다.
+Synapse 창 전체에서 아래 세 가지 패턴을 일관되게 사용한다.
 
 #### // 섹션 레이블 패턴
 
@@ -786,10 +786,10 @@ GET /v1/databases/:id/query (filter: last_edited_time > lastPollTime)
 
 ## 7. DB 스키마
 
-### 신규 테이블: `kb_connections`
+### 신규 테이블: `synapse_connections`
 
 ```sql
-CREATE TABLE kb_connections (
+CREATE TABLE synapse_connections (
   id           TEXT PRIMARY KEY,          -- UUID
   platform     TEXT NOT NULL,             -- "notion" | "obsidian" | "notebooklm"
   name         TEXT,                      -- 사용자 지정 이름 (예: "My Team Notion")
@@ -809,7 +809,7 @@ CREATE TABLE kb_connections (
 ```sql
 CREATE TABLE kb_indexed_documents (
   id              TEXT PRIMARY KEY,          -- UUID
-  connection_id   TEXT NOT NULL REFERENCES kb_connections(id) ON DELETE CASCADE,
+  connection_id   TEXT NOT NULL REFERENCES synapse_connections(id) ON DELETE CASCADE,
   external_id     TEXT NOT NULL,             -- Notion page ID / Obsidian path / snapshot ID
   title           TEXT NOT NULL,
   doc_type        TEXT NOT NULL,             -- "page" | "database" | "note" | "snapshot"
@@ -1101,7 +1101,7 @@ src/components/
 
 ## 10. Settings 탭 연결 방법 (기존 파일 수정 목록)
 
-Connections 탭을 기존 Settings 시스템에 연결하기 위해 수정이 필요한 파일은 4개다.
+Synapse는 Settings 탭에서 제거되어 Dock 전용 앱 창으로 운영된다. (SynapseWindow.tsx)
 
 ---
 

@@ -11,6 +11,8 @@ import ChatMessageList from "./chat-panel/ChatMessageList";
 import ChatPanelHeader from "./chat-panel/ChatPanelHeader";
 import AnnouncementCliPanel from "./chat-panel/AnnouncementCliPanel";
 import { useDecisionReplyHandlers } from "./chat-panel/useDecisionReply";
+import type { KbSourceRef } from "../api/synapse";
+import { fetchSynapseContext } from "../api/synapse";
 import {
   ROLE_LABELS,
   STATUS_COLORS,
@@ -66,6 +68,7 @@ export function ChatPanel({
 }: ChatPanelProps) {
   const [input, setInput] = useState("");
   const [attachments, setAttachments] = useState<File[]>([]);
+  const [kbSources, setKbSources] = useState<KbSourceRef[]>([]);
   const [mode, setMode] = useState<ChatMode>(selectedAgent ? "task" : "announcement");
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -359,8 +362,21 @@ export function ChatPanel({
       setAttachments([]);
     }
 
+    // KB context
+    let kbPrefix = "";
+    if (kbSources.length > 0) {
+      try {
+        const kbContent = await fetchSynapseContext(kbSources);
+        if (kbContent) {
+          const labels = kbSources.map((s) => (s.type === "notion_page" ? `📘 ${s.label ?? s.id}` : `📓 ${s.label ?? s.id}`)).join(", ");
+          kbPrefix = `[첨부 지식 베이스: ${labels}]\n\n${kbContent}\n\n---\n`;
+        }
+      } catch { /* non-fatal */ }
+      setKbSources([]);
+    }
+
     const attachmentPrefix = formatAttachmentPrefix(uploaded);
-    const contentWithAttachments = attachmentPrefix + trimmed;
+    const contentWithAttachments = kbPrefix + attachmentPrefix + trimmed;
 
     if (!contentWithAttachments.trim()) return;
 
@@ -633,6 +649,8 @@ export function ChatPanel({
         onInputChange={setInput}
         onSend={() => void handleSend()}
         onKeyDown={handleKeyDown}
+        kbSources={kbSources}
+        onKbSourcesChange={setKbSources}
       />
     </div>
   );

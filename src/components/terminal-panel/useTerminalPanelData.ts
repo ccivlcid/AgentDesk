@@ -98,7 +98,7 @@ export function useTerminalPanelData({
 
   const fetchTerminal = useCallback(async () => {
     try {
-      const res = await api.getTerminal(taskId, TERMINAL_TAIL_LINES, true, TERMINAL_TASK_LOG_LIMIT);
+      const res = await api.getTerminal(taskId, TERMINAL_TAIL_LINES, false, TERMINAL_TASK_LOG_LIMIT);
       if (res.ok) {
         setLogPath(res.path);
         if (res.task_logs) {
@@ -150,6 +150,12 @@ export function useTerminalPanelData({
       // ignore
     }
   }, [taskId]);
+
+  // 패널 오픈 시(또는 taskId 변경 시) 회의록 1회 선행 로드
+  // → "Minutes" 탭 전환 즉시 데이터가 준비되어 탭이 바로 보임
+  useEffect(() => {
+    void fetchMeetingMinutes();
+  }, [fetchMeetingMinutes]);
 
   useEffect(() => {
     const fn = activeTab === "terminal" ? fetchTerminal : fetchMeetingMinutes;
@@ -539,7 +545,8 @@ export function useTerminalPanelData({
     URL.revokeObjectURL(url);
   }, [text, taskId]);
 
-  const shouldShowProgressHints = activeTab === "terminal" && Boolean(progressHints && progressHints.hints.length > 0);
+  const isTaskActive = task?.status === "in_progress";
+  const shouldShowProgressHints = activeTab === "terminal" && isTaskActive && Boolean(progressHints && progressHints.hints.length > 0);
   const latestHint =
     shouldShowProgressHints && progressHints && progressHints.hints.length > 0
       ? progressHints.hints[progressHints.hints.length - 1]

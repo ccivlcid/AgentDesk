@@ -15,6 +15,8 @@ import { TASK_STALLED_THRESHOLD_MS, TASK_STALLED_RECOVERY_THRESHOLD_MS } from ".
 import { startWorkflowScheduler } from "./workflow/workflow-scheduler.ts";
 import { startOllama, getOllamaRunning } from "./local-llm/backend-manager.ts";
 import { startMetricsPoller } from "./local-llm/metrics-collector.ts";
+import { startObsidianWatcher } from "./synapse/obsidian-watcher.ts";
+import { startNotionPoller } from "./synapse/notion-poller.ts";
 
 export function startLifecycle(ctx: RuntimeContext): void {
   const {
@@ -771,9 +773,8 @@ export function startLifecycle(ctx: RuntimeContext): void {
         if (result.ok) {
           logger.info("[local-llm] Ollama auto-started");
           broadcast("local_llm_status", { backend: "ollama", running: true });
-        } else {
-          logger.debug(`[local-llm] Ollama auto-start skipped: ${result.error}`);
         }
+        // not installed or failed → silent, no log needed
       }
     } catch (err) {
       logger.debug({ err }, "[local-llm] auto-start check error");
@@ -781,6 +782,12 @@ export function startLifecycle(ctx: RuntimeContext): void {
   }, 5_000);
 
   startMetricsPoller(broadcast);
+
+  // ---------------------------------------------------------------------------
+  // Synapse — file watcher + Notion poller
+  // ---------------------------------------------------------------------------
+  const obsidianWatcher = startObsidianWatcher(db, broadcast);
+  const notionPoller = startNotionPoller(db, broadcast);
 
   // ---------------------------------------------------------------------------
   // Start HTTP server + WebSocket
@@ -792,6 +799,18 @@ export function startLifecycle(ctx: RuntimeContext): void {
     } else {
       logger.info(`[AgentDesk] mode: development (UI served by Vite on separate port)`);
     }
+  });
+
+  server.on("error", (err: NodeJS.ErrnoException) => {
+    if (err.code === "EADDRINUSE") {
+      logger.error(
+        `[AgentDesk] Port ${PORT} is already in use. ` +
+        `Kill the existing process (e.g. taskkill /F /IM node.exe) and restart.`,
+      );
+    } else {
+      logger.error({ err }, "[AgentDesk] HTTP server error");
+    }
+    process.exit(1);
   });
 
   // Background token refresh: check every 5 minutes for tokens expiring within 5 minutes
@@ -872,6 +891,8 @@ export function startLifecycle(ctx: RuntimeContext): void {
     server,
     onBeforeClose: () => {
       stopWorkflowScheduler();
+      obsidianWatcher.stop();
+      notionPoller.stop();
       telegramReceiver.stop();
       discordReceiver.stop();
       slackReceiver.stop();

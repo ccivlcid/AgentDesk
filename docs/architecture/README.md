@@ -721,7 +721,6 @@ AgentDesk
 │   │   │   ├── MemoryScopeBar.tsx
 │   │   │   ├── model.tsx
 │   │   │   └── useMemoryState.ts
-│   │   ├── office-view/
 │   │   │   ├── CliUsagePanel.tsx
 │   │   │   ├── HeartbeatGuideModal.tsx
 │   │   │   ├── HeartbeatPanel.tsx
@@ -1090,12 +1089,6 @@ flowchart LR
   N178["src/components/memory/MemoryScopeBar.tsx"]
   N179["src/components/memory/model.tsx"]
   N180["src/components/memory/useMemoryState.ts"]
-  N183["src/components/office-view/CliUsagePanel.tsx"]
-  N184["src/components/office-view/HeartbeatGuideModal.tsx"]
-  N185["src/components/office-view/HeartbeatPanel.tsx"]
-  N186["src/components/office-view/UsageTrendChart.tsx"]
-  N187["src/components/office-view/cli-locale.ts"]
-  N188["src/components/office-view/useCliUsage.ts"]
   N242["src/components/project-manager/BurndownChart.tsx"]
   N243["src/components/project-manager/ManualAssignmentSelector.tsx"]
   N244["src/components/project-manager/ManualAssignmentWarningDialog.tsx"]

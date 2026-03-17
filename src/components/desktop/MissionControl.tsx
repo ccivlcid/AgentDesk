@@ -12,8 +12,12 @@ const WINDOW_META: Record<WindowType, { emoji: string; label: string }> = {
   "agent-manager": { emoji: "👤", label: "Agent Manager" },
   repl: { emoji: ">_", label: "REPL" },
   reports: { emoji: "📊", label: "Reports" },
+  tasks: { emoji: "▦", label: "Board" },
   "create-task": { emoji: "✚", label: "New Task" },
   "llm-guide": { emoji: "📖", label: "LLM Guide" },
+  "synapse":       { emoji: "⇄",  label: "Synapse" },
+  "image-studio":  { emoji: "🖼",  label: "Image Studio" },
+  "folder":        { emoji: "📁",  label: "Folder" },
 };
 
 const WIDGET_META: Record<string, { emoji: string; label: string }> = {

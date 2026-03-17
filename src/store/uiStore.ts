@@ -102,6 +102,11 @@ interface UiStore {
   setDesktopIconLayout: (layout: Record<string, { x: number; y: number }>) => void;
   desktopIconLabels: Record<string, string>;
   setDesktopIconLabel: (id: string, label: string) => void;
+
+  // ── 바탕화면 문서 아이콘 ──────────────────────────────────────────
+  pendingDocs: Array<{ id: string; title: string; content: string }>;
+  addPendingDoc: (doc: { title: string; content: string }) => void;
+  removePendingDoc: (id: string) => void;
   jiggleMode: boolean;
   missionControlOpen: boolean;
 
@@ -110,6 +115,11 @@ interface UiStore {
   setWallpaper: (css: string) => void;
   setJiggleMode: (v: boolean) => void;
   setMissionControlOpen: (v: boolean) => void;
+
+  // ── Project Folders ───────────────────────────────────────────────
+  openFolders: Set<string>;
+  openFolder: (id: string) => void;
+  closeFolder: (id: string) => void;
 
   // ── Custom Feature Apps ───────────────────────────────────────────
   openCustomApps: Set<string>;
@@ -166,6 +176,7 @@ export const useUiStore = create<UiStore>()((set) => ({
   widgetLayout: loadWidgetLayout(),
   desktopIconLayout: loadDesktopIconLayout(),
   desktopIconLabels: loadDesktopIconLabels(),
+  pendingDocs: [],
   selectedAgentId: null,
   openTaskId: null,
   wallpaper: loadWallpaper(),
@@ -205,6 +216,15 @@ export const useUiStore = create<UiStore>()((set) => ({
     saveWidgetLayout(next);
     return { widgetLayout: next };
   }),
+  // ── Project Folders ────────────────────────────────────────────────
+  openFolders: new Set<string>(),
+  openFolder: (id) => set((s) => ({ openFolders: new Set([...s.openFolders, id]) })),
+  closeFolder: (id) => set((s) => {
+    const next = new Set(s.openFolders);
+    next.delete(id);
+    return { openFolders: next };
+  }),
+
   // ── Custom Feature Apps ────────────────────────────────────────────
   openCustomApps: new Set<string>(),
   openCustomApp: (id) => set((s) => ({ openCustomApps: new Set([...s.openCustomApps, id]) })),
@@ -238,6 +258,11 @@ export const useUiStore = create<UiStore>()((set) => ({
     saveDesktopIconLabels(next);
     return { desktopIconLabels: next };
   }),
+  addPendingDoc: ({ title, content }) => set((s) => ({
+    pendingDocs: [...s.pendingDocs, { id: crypto.randomUUID(), title, content }],
+  })),
+  removePendingDoc: (id) => set((s) => ({ pendingDocs: s.pendingDocs.filter((d) => d.id !== id) })),
+
   setSelectedAgentId: (id) => set({ selectedAgentId: id }),
   setOpenTaskId: (id) => set({ openTaskId: id }),
   setWallpaper: (css) => { saveWallpaper(css); set({ wallpaper: css }); },

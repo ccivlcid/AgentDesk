@@ -10,6 +10,9 @@ import { submitTaskWithProjectHandling } from "./create-modal/submit-task";
 import { useDraftState } from "./create-modal/useDraftState";
 import { usePathHelperMessages } from "./create-modal/usePathHelperMessages";
 import { useProjectPickerState } from "./create-modal/useProjectPickerState";
+import type { KbSourceRef } from "../../api/synapse";
+import { KbTaskSourcesSection } from "./create-modal/KbTaskSourcesSection";
+import { FigmaUrlSection } from "./create-modal/FigmaUrlSection";
 
 interface CreateModalProps {
   agents: Agent[];
@@ -29,6 +32,7 @@ interface CreateModalProps {
     workflow_meta_json?: string;
     handoff_to_agent_id?: string | null;
     handoff_condition?: "always" | "on_success" | "on_fail" | null;
+    kb_context_sources?: string | null;
   }) => void;
   onAssign: (taskId: string, agentId: string) => void;
   defaultProjectId?: string;
@@ -49,6 +53,8 @@ function CreateModal({ agents, departments, onClose, onCreate, onAssign, default
   const [handoffEnabled, setHandoffEnabled] = useState(false);
   const [handoffAgentId, setHandoffAgentId] = useState("");
   const [handoffCondition, setHandoffCondition] = useState<"always" | "on_success" | "on_fail">("on_success");
+  const [kbSources, setKbSources] = useState<KbSourceRef[]>([]);
+  const [figmaUrl, setFigmaUrl] = useState("");
   const [submitBusy, setSubmitBusy] = useState(false);
   const [submitWithoutProjectPromptOpen, setSubmitWithoutProjectPromptOpen] = useState(false);
   const [formFeedback, setFormFeedback] = useState<FormFeedback | null>(null);
@@ -136,6 +142,7 @@ function CreateModal({ agents, departments, onClose, onCreate, onAssign, default
       projectPicker.setNewProjectPath(draft.newProjectPath);
       projectPicker.setProjectDropdownOpen(false);
       projectPicker.setProjectActiveIndex(-1);
+      setFigmaUrl(draft.figmaUrl ?? "");
     },
     [projectPicker],
   );
@@ -169,6 +176,7 @@ function CreateModal({ agents, departments, onClose, onCreate, onAssign, default
       projectQuery: projectPicker.projectQuery,
       createNewProjectMode: projectPicker.createNewProjectMode,
       newProjectPath: projectPicker.newProjectPath,
+      figmaUrl,
     },
     applyFormState: applyFormStateFromDraft,
     onClose,
@@ -180,12 +188,14 @@ function CreateModal({ agents, departments, onClose, onCreate, onAssign, default
       const handoffFields = handoffEnabled && handoffAgentId
         ? { handoff_to_agent_id: handoffAgentId, handoff_condition: handoffCondition }
         : { handoff_to_agent_id: null, handoff_condition: null };
+      const kbField = kbSources.length > 0 ? { kb_context_sources: JSON.stringify(kbSources) } : {};
+      const figmaField = figmaUrl.trim() ? { figma_url: figmaUrl.trim() } : {};
       if (Object.keys(nonEmptyMeta).length > 0) {
-        return onCreate({ ...input, workflow_meta_json: JSON.stringify(nonEmptyMeta), ...handoffFields });
+        return onCreate({ ...input, workflow_meta_json: JSON.stringify(nonEmptyMeta), ...handoffFields, ...kbField, ...figmaField });
       }
-      return onCreate({ ...input, ...handoffFields });
+      return onCreate({ ...input, ...handoffFields, ...kbField, ...figmaField });
     },
-    [onCreate, packMeta, handoffEnabled, handoffAgentId, handoffCondition],
+    [onCreate, packMeta, handoffEnabled, handoffAgentId, handoffCondition, kbSources, figmaUrl],
   );
 
   async function submitTask(options?: { allowCreateMissingPath?: boolean; allowWithoutProject?: boolean }) {
@@ -398,6 +408,8 @@ function CreateModal({ agents, departments, onClose, onCreate, onAssign, default
       onHandoffEnabledChange={setHandoffEnabled}
       onHandoffAgentIdChange={setHandoffAgentId}
       onHandoffConditionChange={setHandoffCondition}
+      figmaSection={<FigmaUrlSection figmaUrl={figmaUrl} onChange={setFigmaUrl} t={t} />}
+      kbSection={<KbTaskSourcesSection sources={kbSources} onChange={setKbSources} t={t} />}
     />
   );
 }

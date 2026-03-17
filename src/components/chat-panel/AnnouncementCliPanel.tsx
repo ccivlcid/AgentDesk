@@ -91,7 +91,7 @@ function CliLine({ msg, agents, locale, getAgentName }: CliLineProps) {
     "client-announce": {
       accentBar: "var(--th-accent)",
       bg: "var(--th-accent-glow)",
-      badge: "📢",
+      badge: "ANNOUNCE",
       badgeBg: "var(--th-amber-glow)",
       badgeColor: "var(--th-accent)",
       label: "공지",
@@ -155,7 +155,7 @@ function CliLine({ msg, agents, locale, getAgentName }: CliLineProps) {
               flexShrink: 0,
             }}
           >
-            {variant === "agent" ? agentName || v.badge : v.badge === "📢" ? "📢 공지" : v.label}
+            {variant === "agent" ? agentName || v.badge : v.badge === "ANNOUNCE" ? "공지" : v.label}
           </span>
           <span style={{ flex: 1 }} />
           <span style={{ fontSize: 10, color: "var(--th-text-muted)" }}>{time}</span>
@@ -299,7 +299,11 @@ export default function AnnouncementCliPanel({
 
             {/* 아이콘 + 제목 */}
             <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 0 }}>
-              <span style={{ fontSize: 16 }}>📢</span>
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" width={18} height={18} style={{ color: "var(--th-accent)", flexShrink: 0 }}>
+                <path d="M3 7v6h3l5 4V3L6 7H3z" />
+                <path d="M15.5 7.5a4 4 0 010 5" />
+                <path d="M17.5 5.5a7 7 0 010 9" />
+              </svg>
               <div style={{ minWidth: 0 }}>
                 <div
                   style={{
@@ -474,7 +478,11 @@ export default function AnnouncementCliPanel({
                   fontSize: 24,
                 }}
               >
-                📢
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" width={28} height={28} style={{ color: "var(--th-accent)" }}>
+                  <path d="M3 8v8h4l6 5V3L7 8H3z" />
+                  <path d="M18 8.5a5 5 0 010 7" />
+                  <path d="M20.5 6a9 9 0 010 12" />
+                </svg>
               </div>
               <div>
                 <div style={{ fontSize: 13, fontWeight: 700, color: "var(--th-text-secondary)", marginBottom: 6 }}>

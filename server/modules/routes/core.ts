@@ -49,6 +49,7 @@ import { registerCompositionTemplateRoutes } from "./ops/composition-templates.t
 import { registerWorkflowScheduleRoutes } from "./ops/workflow-schedules.ts";
 import { registerAgentPerformanceRoutes } from "./ops/agent-performance.ts";
 import { registerDataExportRoutes } from "./ops/data-export.ts";
+import { registerFilesystemRoutes } from "./ops/filesystem.ts";
 import type { AgentRow, MeetingMinuteEntryRow, MeetingMinutesRow, MeetingReviewDecision } from "./shared/types.ts";
 import { getDiscordReceiverStatus } from "../../messenger/discord-receiver.ts";
 
@@ -413,6 +414,7 @@ export function registerRoutesPartA(ctx: RuntimeContext): Record<string, never> 
   registerWorkflowScheduleRoutes({ app, db, nowMs });
   registerAgentPerformanceRoutes({ app, db, nowMs });
   registerDataExportRoutes({ app, db });
+  registerFilesystemRoutes({ app });
 
   // ---------------------------------------------------------------------------
   // SubTask endpoints

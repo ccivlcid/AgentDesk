@@ -19,6 +19,8 @@ export function useApiProvidersState({ tab, t }: { tab: SettingsTab; t: TFunctio
   const [apiForm, setApiForm] = useState<ApiFormState>(DEFAULT_API_FORM);
   const [apiSaving, setApiSaving] = useState(false);
   const [apiTesting, setApiTesting] = useState<string | null>(null);
+  const [apiDeleting, setApiDeleting] = useState<string | null>(null);
+  const [apiToggling, setApiToggling] = useState<string | null>(null);
   const [apiTestResult, setApiTestResult] = useState<Record<string, { ok: boolean; msg: string }>>({});
   const [apiModelsExpanded, setApiModelsExpanded] = useState<Record<string, boolean>>({});
   const [apiAssignTarget, setApiAssignTarget] = useState<ApiAssignTarget | null>(null);
@@ -79,11 +81,14 @@ export function useApiProvidersState({ tab, t }: { tab: SettingsTab; t: TFunctio
 
   const handleApiProviderDelete = useCallback(
     async (id: string) => {
+      setApiDeleting(id);
       try {
         await api.deleteApiProvider(id);
         await loadApiProviders();
       } catch (error) {
         console.error("API provider delete failed:", error);
+      } finally {
+        setApiDeleting(null);
       }
     },
     [loadApiProviders],
@@ -117,11 +122,14 @@ export function useApiProvidersState({ tab, t }: { tab: SettingsTab; t: TFunctio
 
   const handleApiProviderToggle = useCallback(
     async (id: string, enabled: boolean) => {
+      setApiToggling(id);
       try {
         await api.updateApiProvider(id, { enabled: !enabled });
         await loadApiProviders();
       } catch (error) {
         console.error("API provider toggle failed:", error);
+      } finally {
+        setApiToggling(null);
       }
     },
     [loadApiProviders],
@@ -188,6 +196,8 @@ export function useApiProvidersState({ tab, t }: { tab: SettingsTab; t: TFunctio
     apiForm,
     apiSaving,
     apiTesting,
+    apiDeleting,
+    apiToggling,
     apiTestResult,
     apiModelsExpanded,
     apiAssignTarget,
