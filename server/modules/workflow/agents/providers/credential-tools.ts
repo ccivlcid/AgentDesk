@@ -45,11 +45,36 @@ export function createCredentialTools() {
       }
     }
     const home = os.homedir();
+    // ~/.claude/.credentials.json (primary cross-platform path)
     try {
       const credsPath = path.join(home, ".claude", ".credentials.json");
       if (fs.existsSync(credsPath)) {
         const j = JSON.parse(fs.readFileSync(credsPath, "utf8"));
         if (j?.claudeAiOauth?.accessToken) return j.claudeAiOauth.accessToken;
+      }
+    } catch {
+      /* ignore */
+    }
+    // ~/.claude/credentials.json (without dot — some versions)
+    try {
+      const credsPath2 = path.join(home, ".claude", "credentials.json");
+      if (fs.existsSync(credsPath2)) {
+        const j = JSON.parse(fs.readFileSync(credsPath2, "utf8"));
+        if (j?.claudeAiOauth?.accessToken) return j.claudeAiOauth.accessToken;
+        if (j?.accessToken) return j.accessToken;
+      }
+    } catch {
+      /* ignore */
+    }
+    // ~/.claude.json oauthAccount (newer Claude Code versions store token here on Windows)
+    try {
+      const claudeJsonPath = path.join(home, ".claude.json");
+      if (fs.existsSync(claudeJsonPath)) {
+        const j = JSON.parse(fs.readFileSync(claudeJsonPath, "utf8"));
+        if (j?.oauthAccount?.accessToken) return j.oauthAccount.accessToken;
+        if (j?.claudeAiOauth?.accessToken) return j.claudeAiOauth.accessToken;
+        if (j?.session?.accessToken) return j.session.accessToken;
+        if (j?.accessToken) return j.accessToken;
       }
     } catch {
       /* ignore */

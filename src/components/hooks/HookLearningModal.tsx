@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { HookHistoryProvider, HookLearnProvider } from "../../api/hooks";
 import type { Agent, HookEntry } from "../../types";
 import AgentAvatar from "../AgentAvatar";
+import FloatingWindow from "../skills-library/FloatingWindow";
 import {
   hookProviderLabel,
   roleLabel,
@@ -113,35 +114,15 @@ export default function HookLearningModal({
   if (!learningHook) return null;
 
   return (
-    <div className="skills-learn-modal fixed inset-0 z-[80] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.75)" }}>
-      <div className="skills-learn-modal-card w-full max-w-3xl max-h-[90vh] overflow-hidden shadow-2xl" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
-        <div className="flex items-start justify-between gap-4 px-5 py-4" style={{ borderBottom: "1px solid var(--th-border)" }}>
-          <div>
-            <h3 className="text-base font-semibold font-mono" style={{ color: "var(--th-text-heading)" }}>
-              {t({
-                ko: "\uD6C5 \uD559\uC2B5 \uC2A4\uCFFC\uB4DC",
-                en: "Hook Learning Squad",
-                ja: "\u30D5\u30C3\u30AF\u5B66\u7FD2\u30B9\u30AF\u30EF\u30C3\u30C9",
-                zh: "\u94A9\u5B50\u5B66\u4E60\u5C0F\u961F",
-              })}
-            </h3>
-            <div className="mt-1 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
-              {learningHook.title} &middot; {eventTypeLabel(learningHook.event_type, t)}
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            disabled={learnInProgress}
-            className={`px-2.5 py-1 text-xs font-mono transition-all ${learnInProgress ? "cursor-not-allowed opacity-40" : ""}`}
-            style={{ borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
-          >
-            {learnInProgress
-              ? t({ ko: "\uD559\uC2B5\uC911", en: "Running", ja: "\u5B9F\u884C\u4E2D", zh: "\u8FDB\u884C\u4E2D" })
-              : t({ ko: "\uB2EB\uAE30", en: "Close", ja: "\u9589\u3058\u308B", zh: "\u5173\u95ED" })}
-          </button>
-        </div>
-
-        <div className="space-y-4 overflow-y-auto px-5 py-4 max-h-[calc(90vh-72px)]">
+    <FloatingWindow
+      title={t({ ko: "훅 학습 스쿼드", en: "Hook Learning Squad", ja: "フック学習スクワッド", zh: "钩子学习小队" })}
+      subtitle={`${learningHook.title} · ${eventTypeLabel(learningHook.event_type, t)}`}
+      onClose={onClose}
+      disableClose={learnInProgress}
+      closeBtnLabel={learnInProgress ? t({ ko: "학습중", en: "Running", ja: "実行中", zh: "进行中" }) : undefined}
+      defaultWidth={760}
+    >
+        <div className="space-y-4 overflow-y-auto px-5 py-4">
           {/* Hook command preview — terminal style */}
           <div className="px-3 py-2" style={{ borderRadius: 0, border: "1px solid rgba(52,211,153,0.25)", background: "var(--th-terminal-bg)" }}>
             <div className="text-[11px] text-emerald-200">
@@ -524,7 +505,6 @@ export default function HookLearningModal({
             </button>
           </div>
         </div>
-      </div>
-    </div>
+    </FloatingWindow>
   );
 }

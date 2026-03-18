@@ -21,6 +21,7 @@ interface HooksGridProps {
   learnedRepresentatives: Map<HookHistoryProvider, Agent | null>;
   agents: Agent[];
   onOpenLearningModal: (hook: HookEntry) => void;
+  onOpenCreateModal: () => void;
   emptyMessage?: string;
 }
 
@@ -63,19 +64,42 @@ export default function HooksGrid({
   learnedRepresentatives,
   agents,
   onOpenLearningModal,
+  onOpenCreateModal,
   emptyMessage,
 }: HooksGridProps) {
   if (filtered.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-8 gap-2">
-        <div className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
-          {emptyMessage ?? t({
-            ko: "등록된 훅이 없습니다",
-            en: "No hooks registered",
-            ja: "登録済みのフックがありません",
-            zh: "暂无已注册的钩子",
-          })}
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+        <button
+          onClick={onOpenCreateModal}
+          className="flex flex-col items-center justify-center gap-2 p-8 transition-all group"
+          style={{
+            borderRadius: 0,
+            border: "1px dashed var(--th-border)",
+            background: "transparent",
+            cursor: "pointer",
+            minHeight: 120,
+          }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(245,158,11,0.5)";
+            (e.currentTarget as HTMLButtonElement).style.background = "rgba(245,158,11,0.04)";
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--th-border)";
+            (e.currentTarget as HTMLButtonElement).style.background = "transparent";
+          }}
+        >
+          <span className="text-2xl transition-transform group-hover:scale-110" style={{ opacity: 0.35 }}>🪝</span>
+          <span className="text-xs font-mono font-medium" style={{ color: "var(--th-text-muted)" }}>
+            {emptyMessage ?? t({ ko: "등록된 훅이 없습니다", en: "No hooks registered", ja: "登録済みのフックがありません", zh: "暂无已注册的钩子" })}
+          </span>
+          <span
+            className="flex items-center gap-1 px-3 py-1 text-xs font-mono font-medium transition-all"
+            style={{ borderRadius: 6, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
+          >
+            + {t({ ko: "Add Hook", en: "Add Hook", ja: "Add Hook", zh: "Add Hook" })}
+          </span>
+        </button>
       </div>
     );
   }
@@ -238,6 +262,32 @@ export default function HooksGrid({
           </div>
         );
       })}
+
+      {/* Add Hook 타일 */}
+      <button
+        onClick={onOpenCreateModal}
+        className="flex flex-col items-center justify-center gap-2 p-6 transition-all group"
+        style={{
+          borderRadius: 0,
+          border: "1px dashed var(--th-border)",
+          background: "transparent",
+          cursor: "pointer",
+          minHeight: 80,
+        }}
+        onMouseEnter={(e) => {
+          (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(245,158,11,0.5)";
+          (e.currentTarget as HTMLButtonElement).style.background = "rgba(245,158,11,0.04)";
+        }}
+        onMouseLeave={(e) => {
+          (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--th-border)";
+          (e.currentTarget as HTMLButtonElement).style.background = "transparent";
+        }}
+      >
+        <span className="text-lg transition-transform group-hover:scale-110" style={{ opacity: 0.3 }}>＋</span>
+        <span className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
+          {t({ ko: "새 훅 추가", en: "Add Hook", ja: "フック追加", zh: "添加钩子" })}
+        </span>
+      </button>
     </div>
   );
 }

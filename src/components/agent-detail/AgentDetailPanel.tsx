@@ -57,8 +57,9 @@ export default function AgentDetailPanel() {
     setLoading(true);
     setData({ skills: [], rules: [], memories: [], recentTasks: [], cost: null });
 
+    const providerParam = agent?.cli_provider ? `&provider=${encodeURIComponent(agent.cli_provider)}` : "";
     Promise.allSettled([
-      fetch(`/api/skills/available?agent_id=${selectedAgentId}`).then((r) => r.json()),
+      fetch(`/api/skills/available?limit=10${providerParam}`).then((r) => r.json()),
       fetch(`/api/agent-rules?scope_type=agent&scope_id=${selectedAgentId}&limit=5`).then((r) => r.json()),
       fetch(`/api/memory?scope_type=agent&scope_id=${selectedAgentId}&limit=5`).then((r) => r.json()),
       fetch(`/api/tasks?agent_id=${selectedAgentId}&limit=3`).then((r) => r.json()),

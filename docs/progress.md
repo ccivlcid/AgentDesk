@@ -1,12 +1,53 @@
 # AgentDesk — 개발 진행 현황
 
-> 마지막 업데이트: 2026-03-23 (CLI 하이브리드 실행 Phase A~E + 보고서 자동 저장 + 산출물 자동 체크 완료 + 새업무-Agent CLI 전체 흐름 문서화)
+> 마지막 업데이트: 2026-03-19 (Hooks 프로젝트 전용 필터 + FloatingWindow 전환 + hook_entries project scope 마이그레이션 + 기본 훅 5개 시딩)
+
+---
+
+## ✅ 기본 훅 5개 시딩 + hook_entries project scope 마이그레이션 (2026-03-19)
+
+### DB 마이그레이션
+
+| 마이그레이션 ID | 내용 |
+|---------------|------|
+| `2026-03-23-001-hook-entries-project-scope` | `hook_entries.scope_type` CHECK 제약에 `'project'` 추가 (테이블 재생성) |
+
+### 기본 훅 시딩 (`server/modules/bootstrap/seeds/hook-seeds.ts`)
+
+DB가 비어있을 때 자동 시딩. 전역(global) 스코프 5개:
+
+| ID | 이벤트 | 이름 |
+|----|--------|------|
+| `hook-default-001` | `pre-task` | Log task start — 태스크 시작 시 타임스탬프 stdout 출력 |
+| `hook-default-002` | `post-task` | Log task completion — `./logs/task-history.log` 파일 추가 기록 |
+| `hook-default-003` | `on-error` | Error alert — stderr에 에러 경고 출력 |
+| `hook-default-004` | `on-complete` | Completion summary — 워크플로 완료 요약 한 줄 출력 |
+| `hook-default-005` | `pre-task` | Environment health check — `ANTHROPIC_API_KEY` 환경변수 존재 확인 |
+
+**변경 파일**: `server/modules/bootstrap/seeds/hook-seeds.ts`(신규), `schema/seeds.ts`, `schema/versioned-migrations.ts`
+
+---
+
+## ✅ Hooks 프로젝트 전용 필터 + FloatingWindow 범위 고정 UI (2026-03-19)
+
+Skills · Rules · Memory와 동일하게 훅도 프로젝트 선택 시 해당 프로젝트 훅만 표시.
+
+| 항목 | 내용 |
+|------|------|
+| **HooksLibrary** | `useMemo` → `{ scope_type: "project", scope_id: currentProject.id }` 필터 → `useHooksState(filters)` 전달 |
+| **프로젝트 미선택 empty state** | `🪝 프로젝트를 선택하세요` 안내 화면 |
+| **단일 그리드** | 기존 3섹션(프로젝트/전역/기타) → 프로젝트 전용 단일 `HooksGrid` |
+| **HookFormModal 범위 고정** | `defaultProjectId` 있을 때 스코프 셀렉터 숨김 → `📋 프로젝트 훅 (범위 고정)` 뱃지 표시 |
+| **submit 강제 적용** | `effectiveScopeType = "project"`, `effectiveScopeId = defaultProjectId` — 범위 변조 불가 |
+| **하단 프로젝트 레이블** | `'${currentProject.name}' 프로젝트 전용 훅` (4개 언어) |
+
+**변경 파일**: `HooksLibrary.tsx`, `hooks/HookFormModal.tsx`
 
 ---
 
 ## ✅ CLI 하이브리드 실행 아키텍처 (Phase A~E 완료)
 
-> 전략 문서: [`docs/strategy/cli-hybrid-execution.md`](strategy/cli-hybrid-execution.md)
+> 전략 문서: ~~`docs/strategy/cli-hybrid-execution.md`~~ (구현 완료 후 통합 삭제)
 
 ### 핵심 개념
 
@@ -55,6 +96,54 @@ startTaskExecution
 - CliWindow: providerModelConfig 연동, 자동 실행, 프로젝트 폴더 cwd ✅
 - 새 업무 창: CLI 실행 버튼, 프로젝트 에이전트 필터 ✅
 - ManualPathPickerDialog: 폴더 생성 기능 ✅
+
+---
+
+## ✅ CliWindow UX 고도화 (2026-03-19)
+
+`AgentCli` 컴포넌트를 제거하고 `CliWindow`를 전면 재설계.
+
+| 항목 | 내용 |
+|------|------|
+| **에이전트 피커 화면** | `lockedAgentId`/`cliInitialAgentId` 없이 열릴 때 에이전트 그리드 표시 → 선택 후 터미널 전환 |
+| **에이전트별 독립 창** | `openCliWindow(agentId)` → `uiStore.openCliAgentIds` Set 관리 → Desktop에서 `<CliWindow agentId=... />` 독립 렌더 |
+| **select 에이전트 변경** | 현재 창 에이전트와 다른 에이전트 선택 → 자동으로 새 독립 창 열기, 현재 창 select 복원 |
+| **자유 모드 안내 모달** | `activeTask` 없을 때(자유 모드) Portal로 안내 모달 표시 — 기능 비교표 포함, "오늘 하루 안 보기" localStorage 지원 |
+| **planning 완료 배너** | `cliPlanReadyIds`에 등록된 에이전트 → 6초 자동 소멸 배너 (`📋 기획 완료 — .agentdesk-task.md에 실행 계획이 준비됐습니다`) |
+| **에이전트 프로젝트 경로 fetch** | `agentPathLoaded` 플래그로 경로 로드 완료 후 XTerminal 렌더 (타이밍 안전) |
+| **buildCliCmd** | `providerModelConfig` 반영 → `claude --model <model>`, `codex -m <model>` 등 실제 실행 명령 구성 |
+| **▶ 실행 버튼** | `lockedAgentId` 창: 같은 에이전트 → 재실행, 다른 에이전트 → 새 창 / 범용 창: 최초 실행 에이전트 기준 분기 |
+
+**변경 파일**: `CliWindow.tsx`, `uiStore.ts`, `Desktop.tsx`
+
+---
+
+## ✅ LibraryGuideWindow + QuickCreateAgentModal (2026-03-19)
+
+| 항목 | 내용 |
+|------|------|
+| **LibraryGuideWindow** | 라이브러리 창 우상단 `?` 버튼 → `toggleWindow("library-guide")` → `screen-guide.ts` library 엔트리 렌더 |
+| **QuickCreateAgentModal** | Dock `+` 팝업 메뉴 → "새 에이전트 만들기" → `AgentFormModal` 래퍼 (경량 모달, `onCreated` → `onAgentsChange` 콜백) |
+
+**변경 파일**: `LibraryGuideWindow.tsx`(신규), `QuickCreateAgentModal.tsx`(신규), `LibraryWindow.tsx`, `Desktop.tsx`, `Dock.tsx`
+
+---
+
+## ✅ 라이브러리 모달 FloatingWindow 전환 완료 (2026-03-19)
+
+모든 라이브러리 탭의 Form/Learning 모달을 `FloatingWindow`로 통일.
+
+| 탭 | FormModal | LearningModal |
+|----|-----------|---------------|
+| Skills | `FloatingWindow` ✅ | `FloatingWindow` ✅ |
+| Rules | `FloatingWindow` ✅ | — |
+| Memory | `FloatingWindow` ✅ | — |
+| **Hooks** | `FloatingWindow` ✅ (이번 작업) | `FloatingWindow` ✅ (이번 작업) |
+
+- `HookFormModal`: `createPortal` + `HeaderModalChrome` → `FloatingWindow` 전환
+- `HookLearningModal`: 고정 오버레이 div → `FloatingWindow` (disableClose + closeBtnLabel 지원)
+
+**변경 파일**: `hooks/HookFormModal.tsx`, `hooks/HookLearningModal.tsx`
 
 ---
 

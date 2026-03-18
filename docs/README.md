@@ -8,8 +8,8 @@
 
 | Document | Description |
 |----------|-------------|
-| [OVERVIEW.md](OVERVIEW.md) | **Master overview** — Project OS concept, agent monitoring, execution pipeline, current status |
-| [progress.md](progress.md) | **Development progress** — Latest work log, completed items, next candidates |
+| [OVERVIEW.md](OVERVIEW.md) | **Master overview** — Project OS concept, agent monitoring, execution pipeline, completion history |
+| [progress.md](progress.md) | **Development progress** — Latest work log, completed items, per-phase implementation details |
 
 ---
 
@@ -18,7 +18,7 @@
 | Document | Description |
 |----------|-------------|
 | [DESIGN.md](design/DESIGN.md) | **UI implementation reference** — Full CSS variables + component patterns |
-| [UI-SCREENS.md](design/UI-SCREENS.md) | **Screen & modal list** — 13 main screens + 36 overlay specifications |
+| [UI-SCREENS.md](design/UI-SCREENS.md) | **Screen & modal list** — Main screens + overlay specifications |
 
 ---
 
@@ -34,24 +34,13 @@
 
 | Document | Description |
 |----------|-------------|
-| [ARCHITECTURE-AUDIT-2026-Q1.md](architecture/ARCHITECTURE-AUDIT-2026-Q1.md) | Comprehensive FE/BE/security/DB audit |
-| [SYSTEM-STRUCTURE-MAP.md](architecture/SYSTEM-STRUCTURE-MAP.md) | System structure map |
-
----
-
----
-
-## strategy/
-
-| Document | Description |
-|----------|-------------|
-| [bigger-ide-vision.md](strategy/bigger-ide-vision.md) | "Bigger IDE" strategic vision |
-| [agent-performance-audit.md](strategy/agent-performance-audit.md) | Agent execution performance audit |
+| [ARCHITECTURE-AUDIT-2026-Q1.md](architecture/ARCHITECTURE-AUDIT-2026-Q1.md) | Comprehensive FE/BE/security/DB audit (2026-Q1, all issues resolved) |
+| [schema-erd.md](architecture/schema-erd.md) | DB schema ER diagram + state machines |
 
 ---
 
 ## Rules
 
 - **Links:** Use relative paths only.
-- **features/**: 구현 완료 문서만 유지. 구현 상세가 progress.md에 충분하면 별도 문서 불필요.
-- **삭제 기준:** 구현 완료 + progress.md에 통합된 스펙 문서는 제거.
+- **Deletion criteria:** Completed strategy/spec docs are removed once content is consolidated into `progress.md` or `OVERVIEW.md`.
+- **Removed:** `strategy/bigger-ide-vision.md`, `strategy/agent-performance-audit.md`, `strategy/cli-hybrid-execution.md`, `architecture/SYSTEM-STRUCTURE-MAP.md` — all implementation complete, content merged.

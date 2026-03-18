@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { createPortal } from "react-dom";
 import { useToast } from "../ui";
-import HeaderModalChrome from "../ui/HeaderModalChrome";
+import FloatingWindow from "../skills-library/FloatingWindow";
 import type { HookEntry, HookEventType, HookScopeType, Agent, Department } from "../../types";
 import type { CreateHookInput, UpdateHookInput } from "../../api/hooks";
 import {
@@ -22,7 +21,7 @@ interface HookFormModalProps {
   onClose: () => void;
   onCreate: (input: CreateHookInput) => void;
   onUpdate: (id: string, input: UpdateHookInput) => void;
-  /** When set, pre-selects "project" scope and provides this project id as default */
+  /** When set, locks scope to "project" and hides the scope selector */
   defaultProjectId?: string;
 }
 
@@ -95,18 +94,22 @@ export default function HookFormModal({
   const handleSubmit = () => {
     if (!canSubmit || submitting) return;
 
+    const effectiveScopeType = defaultProjectId ? "project" : scopeType;
+    const effectiveScopeId   = defaultProjectId ?? (scopeType !== "global" && scopeId ? scopeId : undefined);
+
+    const trimmed = title.trim();
     const base = {
-      title: title.trim(),
-      title_ko: titleKo.trim(),
-      title_ja: titleJa.trim(),
-      title_zh: titleZh.trim(),
+      title: trimmed,
+      title_ko: titleKo.trim() || trimmed,
+      title_ja: titleJa.trim() || trimmed,
+      title_zh: titleZh.trim() || trimmed,
       description: description.trim(),
       command: command.trim(),
       event_type: eventType,
       working_directory: workingDirectory.trim(),
       timeout_ms: timeoutMs,
-      scope_type: scopeType,
-      scope_id: scopeType !== "global" && scopeId ? scopeId : undefined,
+      scope_type: effectiveScopeType as HookScopeType,
+      scope_id: effectiveScopeId,
       priority,
     };
 
@@ -121,50 +124,28 @@ export default function HookFormModal({
     ? t({ ko: "훅 수정", en: "Edit Hook", ja: "フック編集", zh: "编辑钩子" })
     : t({ ko: "새 훅 추가", en: "Add New Hook", ja: "新しいフック追加", zh: "添加新钩子" });
 
-  return createPortal(
-    <div className="skills-learn-modal fixed inset-0 z-[80] flex items-center justify-center p-4" style={{ background: "var(--th-modal-overlay)" }} onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div
-        className="skills-learn-modal-card w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col"
-        style={{ borderRadius: 10, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", boxShadow: "0 20px 50px rgba(0,0,0,0.4)" }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <HeaderModalChrome title={modalTitle} onClose={onClose} />
-        {/* Body */}
-        <div className="space-y-4 overflow-y-auto px-5 py-4 flex-1 min-h-0 max-h-[calc(90vh-80px)]">
+  return (
+    <FloatingWindow
+      title={modalTitle}
+      subtitle={t({ ko: "이벤트 타입·범위·명령어를 설정하세요", en: "Set event type, scope, and command", ja: "イベントタイプ・スコープ・コマンドを設定", zh: "设置事件类型、范围与命令" })}
+      onClose={onClose}
+      defaultWidth={520}
+    >
+        <div className="space-y-4 overflow-y-auto px-5 py-4">
           {/* Title */}
           <div>
             <label className="block text-xs mb-1.5 font-mono" style={{ color: "var(--th-text-muted)" }}>
-              {t({ ko: "\uD6C5 \uC81C\uBAA9 (\uC601\uBB38)", en: "Hook Title (EN)", ja: "\u30D5\u30C3\u30AF\u30BF\u30A4\u30C8\u30EB\uFF08\u82F1\u8A9E\uFF09", zh: "\u94A9\u5B50\u6807\u9898\uFF08\u82F1\u6587\uFF09" })} *
+              {t({ ko: "훅 제목", en: "Hook Title", ja: "フックタイトル", zh: "钩子标题" })} *
             </label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder={t({
-                ko: "\uC608: Run linting before task",
+                ko: "예: 태스크 전 린팅 실행",
                 en: "e.g. Run linting before task",
-                ja: "\u4F8B: Run linting before task",
-                zh: "\u4F8B\u5982: Run linting before task",
-              })}
-              className="w-full px-3 py-2 text-sm focus:outline-none"
-              style={{ borderRadius: 0, background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)" }}
-            />
-          </div>
-
-          {/* Title KO */}
-          <div>
-            <label className="block text-xs mb-1.5 font-mono" style={{ color: "var(--th-text-muted)" }}>
-              {t({ ko: "\uD6C5 \uC81C\uBAA9 (\uD55C\uAD6D\uC5B4)", en: "Hook Title (KO)", ja: "\u30D5\u30C3\u30AF\u30BF\u30A4\u30C8\u30EB\uFF08\u97D3\u56FD\u8A9E\uFF09", zh: "\u94A9\u5B50\u6807\u9898\uFF08\u97E9\u6587\uFF09" })}
-            </label>
-            <input
-              type="text"
-              value={titleKo}
-              onChange={(e) => setTitleKo(e.target.value)}
-              placeholder={t({
-                ko: "\uC608: \uD0DC\uC2A4\uD06C \uC804 \uB9B0\uD305 \uC2E4\uD589",
-                en: "e.g. \uD0DC\uC2A4\uD06C \uC804 \uB9B0\uD305 \uC2E4\uD589",
-                ja: "\u4F8B: \uD0DC\uC2A4\uD06C \uC804 \uB9B0\uD305 \uC2E4\uD589",
-                zh: "\u4F8B\u5982: \uD0DC\uC2A4\uD06C \uC804 \uB9B0\uD305 \uC2E4\uD589",
+                ja: "例: タスク前にリントを実行",
+                zh: "例如: 任务前运行 lint",
               })}
               className="w-full px-3 py-2 text-sm focus:outline-none"
               style={{ borderRadius: 0, background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)" }}
@@ -275,55 +256,63 @@ export default function HookFormModal({
           </div>
 
           {/* Scope Type */}
-          <div>
-            <label className="block text-xs mb-1.5 font-mono" style={{ color: "var(--th-text-muted)" }}>
-              {t({ ko: "범위 (Scope)", en: "Scope", ja: "スコープ", zh: "范围" })}
-            </label>
-            <div className="flex flex-wrap gap-2 mb-2">
-              {([
-                { value: "global",        icon: "🌐", label: { ko: "글로벌",   en: "Global",   ja: "グローバル", zh: "全局"   } },
-                { value: "project",       icon: "📋", label: { ko: "프로젝트", en: "Project",   ja: "プロジェクト", zh: "项目" } },
-                { value: "agent",         icon: "🤖", label: { ko: "에이전트", en: "Agent",     ja: "エージェント", zh: "代理" } },
-                { value: "department",    icon: "🏢", label: { ko: "부서",     en: "Department", ja: "部署",       zh: "部门" } },
-                { value: "workflow_pack", icon: "📦", label: { ko: "워크플로", en: "Workflow",  ja: "ワークフロー", zh: "工作流" } },
-              ] as const).map((opt) => (
-                <button
-                  key={opt.value}
-                  type="button"
-                  onClick={() => {
-                    setScopeType(opt.value as HookScopeType);
-                    if (opt.value === "global") setScopeId("");
-                    if (opt.value === "project" && defaultProjectId) setScopeId(defaultProjectId);
-                  }}
-                  className="px-2.5 py-1.5 text-xs font-mono border transition-all"
-                  style={{
-                    borderRadius: 0,
-                    background: scopeType === opt.value ? "rgba(245,158,11,0.15)" : "var(--th-bg-surface-hover)",
-                    color: scopeType === opt.value ? "var(--th-accent)" : "var(--th-text-muted)",
-                    border: scopeType === opt.value ? "1px solid rgba(245,158,11,0.4)" : "1px solid var(--th-border)",
-                  }}
-                >
-                  {opt.icon} {t(opt.label)}
-                </button>
-              ))}
+          {defaultProjectId ? (
+            <div className="flex items-center gap-2 px-3 py-2 text-xs font-mono" style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: 0 }}>
+              <span>📋</span>
+              <span style={{ color: "var(--th-accent)" }}>
+                {t({ ko: "프로젝트 훅 (범위 고정)", en: "Project hook (scope locked)", ja: "プロジェクトフック（スコープ固定）", zh: "项目钩子（范围锁定）" })}
+              </span>
             </div>
-            {/* Scope ID input for non-global */}
-            {scopeType !== "global" && (
-              <input
-                type="text"
-                value={scopeId}
-                onChange={(e) => setScopeId(e.target.value)}
-                placeholder={
-                  scopeType === "project" ? (defaultProjectId ?? t({ ko: "프로젝트 ID", en: "Project ID", ja: "プロジェクトID", zh: "项目ID" })) :
-                  scopeType === "agent" ? t({ ko: "에이전트 ID", en: "Agent ID", ja: "エージェントID", zh: "代理ID" }) :
-                  scopeType === "department" ? t({ ko: "부서 ID", en: "Department ID", ja: "部署ID", zh: "部门ID" }) :
-                  t({ ko: "워크플로 팩 키", en: "Workflow Pack Key", ja: "ワークフローパックキー", zh: "工作流包键" })
-                }
-                className="w-full px-3 py-2 text-sm focus:outline-none font-mono"
-                style={{ borderRadius: 0, background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)" }}
-              />
-            )}
-          </div>
+          ) : (
+            <div>
+              <label className="block text-xs mb-1.5 font-mono" style={{ color: "var(--th-text-muted)" }}>
+                {t({ ko: "범위 (Scope)", en: "Scope", ja: "スコープ", zh: "范围" })}
+              </label>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {([
+                  { value: "global",        icon: "🌐", label: { ko: "글로벌",   en: "Global",   ja: "グローバル", zh: "全局"   } },
+                  { value: "project",       icon: "📋", label: { ko: "프로젝트", en: "Project",   ja: "プロジェクト", zh: "项目" } },
+                  { value: "agent",         icon: "🤖", label: { ko: "에이전트", en: "Agent",     ja: "エージェント", zh: "代理" } },
+                  { value: "department",    icon: "🏢", label: { ko: "부서",     en: "Department", ja: "部署",       zh: "部门" } },
+                  { value: "workflow_pack", icon: "📦", label: { ko: "워크플로", en: "Workflow",  ja: "ワークフロー", zh: "工作流" } },
+                ] as const).map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => {
+                      setScopeType(opt.value as HookScopeType);
+                      if (opt.value === "global") setScopeId("");
+                    }}
+                    className="px-2.5 py-1.5 text-xs font-mono border transition-all"
+                    style={{
+                      borderRadius: 0,
+                      background: scopeType === opt.value ? "rgba(245,158,11,0.15)" : "var(--th-bg-surface-hover)",
+                      color: scopeType === opt.value ? "var(--th-accent)" : "var(--th-text-muted)",
+                      border: scopeType === opt.value ? "1px solid rgba(245,158,11,0.4)" : "1px solid var(--th-border)",
+                    }}
+                  >
+                    {opt.icon} {t(opt.label)}
+                  </button>
+                ))}
+              </div>
+              {/* Scope ID input for non-global */}
+              {scopeType !== "global" && (
+                <input
+                  type="text"
+                  value={scopeId}
+                  onChange={(e) => setScopeId(e.target.value)}
+                  placeholder={
+                    scopeType === "project" ? t({ ko: "프로젝트 ID", en: "Project ID", ja: "プロジェクトID", zh: "项目ID" }) :
+                    scopeType === "agent" ? t({ ko: "에이전트 ID", en: "Agent ID", ja: "エージェントID", zh: "代理ID" }) :
+                    scopeType === "department" ? t({ ko: "부서 ID", en: "Department ID", ja: "部署ID", zh: "部门ID" }) :
+                    t({ ko: "워크플로 팩 키", en: "Workflow Pack Key", ja: "ワークフローパックキー", zh: "工作流包键" })
+                  }
+                  className="w-full px-3 py-2 text-sm focus:outline-none font-mono"
+                  style={{ borderRadius: 0, background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)" }}
+                />
+              )}
+            </div>
+          )}
 
           {/* Event Type */}
           <div>
@@ -447,8 +436,6 @@ export default function HookFormModal({
             </button>
           </div>
         </div>
-      </div>
-    </div>,
-    document.body,
+    </FloatingWindow>
   );
 }

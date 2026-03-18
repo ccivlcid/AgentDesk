@@ -257,7 +257,7 @@ Managing these four elements **per project** allows the same agent to behave dif
 
 ## 6. Current System Status
 
-### Completion (as of 2026-03-22)
+### Completion (as of 2026-03-19)
 
 ```
 Agent spawn & management         ████████████████████ 100% (timeout enforcement + orphan batching complete)
@@ -285,6 +285,9 @@ Project Folders                  ███████████████�
 Agent CLI                        ████████████████████ 100% (실제 PTY 터미널 + 에이전트 셀렉트 + CLI 자동 실행, Phase 18+)
 Figma Integration                ████████████████████ 100% (task URL attach + context fetch + prompt injection)
 Bug fixes (pipeline + UI audit)  ████████████████████ 100% (BUG-01~06, WB-01~03, FG-01~03 all resolved)
+Hooks project-scope filter       ████████████████████ 100% (project-only filter + FloatingWindow scope lock UI, 2026-03-19)
+Default hook seeds               ████████████████████ 100% (5 global hooks seeded on fresh install, 2026-03-19)
+hook_entries project scope       ████████████████████ 100% (DB migration 2026-03-23-001, project scope_type added)
 ```
 
 ### Known Bugs (2026-03-16 Pipeline Audit) — 전체 수정 완료
@@ -409,6 +412,36 @@ All planned features and improvement tasks have been completed. Key achievements
 ---
 
 ## 8. Completion History
+
+> Full per-task implementation details are in `docs/progress.md`. Summary only below.
+
+### All Tasks Complete — Summary
+
+| Category | Items | Status |
+|----------|-------|--------|
+| 🔴 P0 — Security & Critical Bugs | P0-1~5 (participant filter, OAuth, rate limit, WS limit, env validation) | ✅ All Done |
+| 🟠 P1 — Short-term | P1-1~6 (Zustand, pack key bridge, messenger retry, DB migrations, memory leak, pino) | ✅ All Done |
+| 🟡 P2 — Medium-term | P2-1~8 (Flow Graph, cost tracking, FIFO queue, DB batching, timeline, handoff, persona, WS opt) | ✅ All Done |
+| 🔵 P3 — Long-term | P3-1~6 (Split-Pane, Workflow Builder, Keyboard UX, tests, anomaly index, Slack) | ✅ All Done |
+| 🔐 Security Patches | S1~S13 (path traversal, OAuth bypass, ReDoS, error disclosure, stderr broadcast) | ✅ All Done |
+| 📦 Feature Phases | Ph5, Ph13~18, Figma, CLI hybrid A~E, Image Studio, Folders, Hooks filter | ✅ All Done |
+
+### Key Milestone Dates
+
+| Date | Milestone |
+|------|-----------|
+| 2026-03-14 | All P0/P1/P2/P3 tasks + security patches S1~S13 complete |
+| 2026-03-14 | Zustand, Flow Graph, Workflow Builder, Cost tracking, Timeline, Persona all live |
+| 2026-03-15 | Architecture audit complete (ARCHITECTURE-AUDIT-2026-Q1.md) |
+| 2026-03-16 | Pipeline audit BUG-01~06, WB-01~03, FG-01~03 all resolved |
+| 2026-03-17 | Workflow cron scheduling + WbScheduleModal complete |
+| 2026-03-20 | Figma integration + Design Workflow Template complete |
+| 2026-03-22 | Project Folders (Phase 17) complete |
+| 2026-03-23 | CLI hybrid execution Phase A~E complete; PTY terminal live |
+| 2026-03-19 | CliWindow UX overhaul + LibraryGuideWindow + QuickCreateAgentModal |
+| 2026-03-19 | Hooks: project-only filter + FloatingWindow + scope lock + 5 default seeds |
+
+---
 
 ---
 
@@ -676,17 +709,15 @@ All planned features and improvement tasks have been completed. Key achievements
 | Document | Contents |
 |---|---|
 | [`docs/OVERVIEW.md`](./OVERVIEW.md) | **This document** — full overview + completion history |
-| [`docs/progress.md`](./progress.md) | Development progress tracker — detailed work log (Phase 15–18, Figma, bug fixes) |
+| [`docs/progress.md`](./progress.md) | Development progress tracker — detailed work log (all phases, bug fixes, recent work) |
 | [`docs/specs/api.md`](./specs/api.md) | Full REST API specification (v1.6.0) |
-| [`docs/architecture/SYSTEM-STRUCTURE-MAP.md`](./architecture/SYSTEM-STRUCTURE-MAP.md) | System structure map |
 | [`docs/architecture/schema-erd.md`](./architecture/schema-erd.md) | DB schema ER diagram + state machines |
-| [`docs/architecture/ARCHITECTURE-AUDIT-2026-Q1.md`](./architecture/ARCHITECTURE-AUDIT-2026-Q1.md) | Comprehensive architecture + backend audit |
-| [`docs/strategy/agent-performance-audit.md`](./strategy/agent-performance-audit.md) | Agent execution performance audit |
-| [`docs/strategy/bigger-ide-vision.md`](./strategy/bigger-ide-vision.md) | "Bigger IDE" strategic vision |
+| [`docs/architecture/ARCHITECTURE-AUDIT-2026-Q1.md`](./architecture/ARCHITECTURE-AUDIT-2026-Q1.md) | Comprehensive architecture + backend audit (2026-Q1) |
 | [`docs/design/DESIGN.md`](./design/DESIGN.md) | UI CSS variables + component patterns |
 | [`docs/design/UI-SCREENS.md`](./design/UI-SCREENS.md) | Full screen & modal specification |
 
-> **Note:** Feature implementation details (Custom Widget Platform, Local LLM, Synapse, Image Studio, Agent Detail Panel, Project Folders, Cross-Project Handoff, Figma Integration) are consolidated in `docs/progress.md`. Individual feature spec files have been removed after implementation completion.
+> **Removed docs (all implementation complete, content consolidated into progress.md / OVERVIEW.md):**
+> `strategy/bigger-ide-vision.md`, `strategy/agent-performance-audit.md`, `strategy/cli-hybrid-execution.md`, `architecture/SYSTEM-STRUCTURE-MAP.md`
 
 ---
 

@@ -226,6 +226,15 @@ erDiagram
 |-------|------|
 | `workflow_schedules` | Cron schedules per workflow template (migration `2026-03-17-001`) |
 
+### Library (Agent Behavior Configuration)
+| Table | Role | scope_type values |
+|-------|------|-------------------|
+| `hook_entries` | Pre/post-task scripts (event hooks) | global \| department \| agent \| workflow_pack \| **project** (migration `2026-03-23-001`) |
+| `agent_rules` | Behavioral rules injected into prompts | global \| department \| agent \| project |
+| `memory_entries` | Agent memory / context snippets | global \| department \| agent \| project (migration `2026-03-23-002`) |
+| `agent_skills` | Learned skills (markdown) per agent/provider | — |
+| `hook_learning_history` | Skill learning job records | — |
+
 ### Auth & Settings
 | Table | Role |
 |-------|------|

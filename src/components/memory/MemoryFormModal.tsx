@@ -74,11 +74,12 @@ export default function MemoryFormModal({
   const handleSubmit = () => {
     if (!canSubmit || submitting) return;
 
+    const trimmed = title.trim();
     const base = {
-      title: title.trim(),
-      title_ko: titleKo.trim(),
-      title_ja: titleJa.trim(),
-      title_zh: titleZh.trim(),
+      title: trimmed,
+      title_ko: titleKo.trim() || trimmed,
+      title_ja: titleJa.trim() || trimmed,
+      title_zh: titleZh.trim() || trimmed,
       description: description.trim(),
       content: content.trim(),
       category,
@@ -112,40 +113,20 @@ export default function MemoryFormModal({
       defaultWidth={500}
     >
       <div className="space-y-4 px-5 py-4">
-        {/* Title EN */}
+        {/* Title */}
         <div>
           <label className="block text-xs font-mono mb-1.5" style={{ color: "var(--th-text-muted)" }}>
-            {t({ ko: "제목 (영문)", en: "Title (EN)", ja: "タイトル（英語）", zh: "标题（英文）" })} *
+            {t({ ko: "제목", en: "Title", ja: "タイトル", zh: "标题" })} *
           </label>
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder={t({
-              ko: "예: Project Architecture Overview",
-              en: "e.g. Project Architecture Overview",
-              ja: "例: Project Architecture Overview",
-              zh: "例如: Project Architecture Overview",
-            })}
-            className="w-full px-3 py-2 text-sm font-mono focus:outline-none"
-            style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
-          />
-        </div>
-
-        {/* Title KO */}
-        <div>
-          <label className="block text-xs font-mono mb-1.5" style={{ color: "var(--th-text-muted)" }}>
-            {t({ ko: "제목 (한국어)", en: "Title (KO)", ja: "タイトル（韓国語）", zh: "标题（韩文）" })}
-          </label>
-          <input
-            type="text"
-            value={titleKo}
-            onChange={(e) => setTitleKo(e.target.value)}
-            placeholder={t({
               ko: "예: 프로젝트 아키텍처 개요",
-              en: "e.g. 프로젝트 아키텍처 개요",
-              ja: "例: 프로젝트 아키텍처 개요",
-              zh: "例如: 프로젝트 아키텍처 개요",
+              en: "e.g. Project Architecture Overview",
+              ja: "例: プロジェクトアーキテクチャ概要",
+              zh: "例如: 项目架构概览",
             })}
             className="w-full px-3 py-2 text-sm font-mono focus:outline-none"
             style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}

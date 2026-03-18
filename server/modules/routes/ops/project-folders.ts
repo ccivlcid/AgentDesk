@@ -171,15 +171,53 @@ export function registerProjectFolderRoutes({ app, db, nowMs }: RegisterProjectF
     }
   });
 
-  // DELETE /api/project-folders/:id/projects/:projectId  (remove from folder, keep path)
+  // DELETE /api/project-folders/:id/projects/:projectId  (eject from folder — moves project dir outside)
   app.delete("/api/project-folders/:id/projects/:projectId", (req, res) => {
     try {
       const { id: folderId, projectId } = req.params;
-      const result = db
-        .prepare("UPDATE projects SET folder_id = NULL WHERE id = ? AND folder_id = ?")
-        .run(projectId, folderId) as { changes: number };
-      if (result.changes === 0) return res.status(404).json({ error: "project_not_in_folder" });
-      res.json({ ok: true });
+
+      const folder = db
+        .prepare("SELECT id, base_path FROM project_folders WHERE id = ?")
+        .get(folderId) as { id: string; base_path: string } | undefined;
+      if (!folder) return res.status(404).json({ error: "folder_not_found" });
+
+      const project = db
+        .prepare("SELECT id, project_path, folder_id FROM projects WHERE id = ?")
+        .get(projectId) as { id: string; project_path: string; folder_id: string | null } | undefined;
+      if (!project) return res.status(404).json({ error: "project_not_found" });
+      if (project.folder_id !== folderId) return res.status(404).json({ error: "project_not_in_folder" });
+
+      let movedOnDisk = false;
+      let newPath = project.project_path;
+
+      // Move project dir to parent of folder.base_path if it currently lives inside it
+      const normalizedProjectPath = path.normalize(project.project_path);
+      const normalizedBasePath = path.normalize(folder.base_path);
+      if (normalizedProjectPath.startsWith(normalizedBasePath + path.sep) ||
+          normalizedProjectPath.startsWith(normalizedBasePath + "/")) {
+        const dirName = path.basename(project.project_path);
+        const parentDir = path.dirname(folder.base_path);
+        const targetPath = path.join(parentDir, dirName);
+        try {
+          const srcExists = fs.existsSync(project.project_path);
+          const dstFree = !fs.existsSync(targetPath);
+          if (srcExists && dstFree) {
+            fs.renameSync(project.project_path, targetPath);
+            newPath = targetPath;
+            movedOnDisk = true;
+          } else {
+            logger.warn({ src: project.project_path, dst: targetPath, srcExists, dstFree },
+              "[project-folders] eject disk move skipped");
+          }
+        } catch (moveErr) {
+          logger.warn({ moveErr }, "[project-folders] eject fs.renameSync failed — DB-only update");
+        }
+      }
+
+      db.prepare("UPDATE projects SET folder_id = NULL, project_path = ? WHERE id = ?")
+        .run(newPath, projectId);
+
+      res.json({ ok: true, new_path: newPath, moved_on_disk: movedOnDisk });
     } catch (err) {
       logger.error({ err }, "[project-folders] DELETE /:id/projects/:projectId error");
       res.status(500).json({ error: "internal_error" });

@@ -2,6 +2,7 @@ import { useRef, useState, useCallback, useEffect } from "react";
 import { useUiStore } from "../../store/uiStore";
 import { useTheme } from "../../ThemeContext";
 import { isLightWallpaper } from "./WallpaperPicker";
+import { snapToFreeCell } from "./snapToFreeCell";
 
 const JIGGLE_STYLE = `
 @keyframes jiggle {
@@ -99,10 +100,12 @@ export default function DesktopIcon({ def, defaultX, defaultY, isSelected = fals
 
     function onUp(ev: MouseEvent) {
       if (!dragStart.current) return;
-      const nx = dragStart.current.ox + (ev.clientX - dragStart.current.mx);
-      const ny = dragStart.current.oy + (ev.clientY - dragStart.current.my);
-      setPos({ x: nx, y: ny });
-      setDesktopIconLayout({ ...useUiStore.getState().desktopIconLayout, [def.id]: { x: nx, y: ny } });
+      const rawX = dragStart.current.ox + (ev.clientX - dragStart.current.mx);
+      const rawY = dragStart.current.oy + (ev.clientY - dragStart.current.my);
+      const current = useUiStore.getState().desktopIconLayout;
+      const { x, y } = snapToFreeCell(rawX, rawY, def.id, current);
+      setPos({ x, y });
+      setDesktopIconLayout({ ...current, [def.id]: { x, y } });
       dragStart.current = null;
       setDragging(false);
       window.removeEventListener("mousemove", onMove);

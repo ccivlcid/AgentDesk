@@ -2,7 +2,8 @@
 
 This document defines a contributor-facing API baseline for AgentDesk.
 It is intentionally compact and focused on frequently used endpoints.
-Current baseline target: `v1.6.0` (local snapshot, 2026-03-21).
+Current baseline target: `v1.6.1` (local snapshot, 2026-03-19).
+> **v1.6.1 changes:** `hook_entries.scope_type` now accepts `'project'` (migration `2026-03-23-001`). `/api/hooks` accepts `scope_type=project&scope_id=<project_id>` filter.
 
 ## Base
 

@@ -7,6 +7,7 @@ import { seedDefaultWorkflowPacks } from "./workflow-pack-seeds.ts";
 import { seedCategories } from "../seeds/category-seeds.ts";
 import { seedDefaultRules } from "../seeds/rule-seeds.ts";
 import { seedDefaultMemories } from "../seeds/memory-seeds.ts";
+import { seedDefaultHooks } from "../seeds/hook-seeds.ts";
 import logger from "../../../lib/logger.ts";
 
 const AGENTS_DIR = join(dirname(fileURLToPath(import.meta.url)), "../../../../prompts/agents");
@@ -27,6 +28,7 @@ export function applyDefaultSeeds(db: DbLike): void {
   seedCategories(db);
   seedDefaultRules(db);
   seedDefaultMemories(db);
+  seedDefaultHooks(db);
 
   const deptCount = (db.prepare("SELECT COUNT(*) as cnt FROM departments").get() as { cnt: number }).cnt;
 

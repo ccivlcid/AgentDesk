@@ -9,6 +9,7 @@ import { useWebSocket } from "../../hooks/useWebSocket";
 import { useI18n } from "../../i18n";
 import * as api from "../../api";
 import { cliCompleteTask } from "../../api/organization-projects";
+import { refreshCliUsage } from "../../api/workflow-skills-subtasks";
 import type { CliProvider, ProviderModelConfig } from "../../types";
 
 const XTerminal = lazy(() => import("../terminal/XTerminal"));
@@ -66,7 +67,7 @@ export default function CliWindow({ agentId: lockedAgentId, onClose }: Props) {
   const { tasks } = useTaskStore();
   const { projects, currentProjectId, projectAgentIds, projectAgentsLoaded } = useProjectStore();
   const { cliInitialAgentId, clearCliInitialAgentId, openCliWindow, cliPlanReadyIds, clearCliPlanReady } = useUiStore();
-  const { send } = useWebSocket();
+  const { send, on } = useWebSocket();
 
   // ── 에이전트 선택 단계 (lockedAgentId / cliInitialAgentId 없을 때만 표시) ──
   const needsPicker = !lockedAgentId && !cliInitialAgentId;
@@ -114,6 +115,46 @@ export default function CliWindow({ agentId: lockedAgentId, onClose }: Props) {
       .catch(() => { /* 로드 실패 시 기본값(모델 없음) 유지 */ });
   }, []);
 
+  const currentProject = projects.find((p) => p.id === currentProjectId) ?? null;
+  const filteredAgents =
+    currentProject && projectAgentsLoaded && projectAgentIds.size > 0
+      ? agents.filter((a) => projectAgentIds.has(a.id))
+      : agents;
+
+  // PTY 세션 — 프로젝트 전환 시 새 세션
+  const [sessionId, setSessionId] = useState(makePtyId);
+  const prevProjectIdRef = useRef(currentProjectId);
+  useEffect(() => {
+    if (prevProjectIdRef.current !== currentProjectId) {
+      prevProjectIdRef.current = currentProjectId;
+      setSessionId(makePtyId());
+    }
+  }, [currentProjectId]);
+
+  // PTY 세션 종료 시 CLI usage 갱신 (비용 앱에 반영)
+  useEffect(() => {
+    return on("pty_exit", () => {
+      // 약간 딜레이 후 refresh (CLI 도구가 사용량 기록 완료 대기)
+      setTimeout(() => { void refreshCliUsage(); }, 1500);
+    });
+  }, [on]);
+
+  // 선택된 에이전트
+  const [selectedAgentId, setSelectedAgentId] = useState<string>(() => {
+    if (lockedAgentId) return lockedAgentId;
+    if (cliInitialAgentId) return cliInitialAgentId;
+    return ""; // picker에서 선택
+  });
+
+  // 일반 창: cliInitialAgentId 소비
+  useEffect(() => {
+    if (!lockedAgentId && cliInitialAgentId) {
+      setSelectedAgentId(cliInitialAgentId);
+      clearCliInitialAgentId();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // 에이전트 프로젝트 경로 fetch — lockedAgent 또는 picker에서 선택한 에이전트
   const [agentProjectPath, setAgentProjectPath] = useState<string | null>(null);
   const [agentPathLoaded, setAgentPathLoaded] = useState(false);
@@ -135,39 +176,8 @@ export default function CliWindow({ agentId: lockedAgentId, onClose }: Props) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lockedAgentId, selectedAgentId, pickerDone]);
 
-  const currentProject = projects.find((p) => p.id === currentProjectId) ?? null;
   // 실제 사용할 작업 디렉토리: 에이전트 프로젝트 경로 → 현재 선택 프로젝트 경로 순으로 fallback
   const effectiveCwd = agentProjectPath ?? currentProject?.project_path ?? undefined;
-  const filteredAgents =
-    currentProject && projectAgentsLoaded && projectAgentIds.size > 0
-      ? agents.filter((a) => projectAgentIds.has(a.id))
-      : agents;
-
-  // PTY 세션 — 프로젝트 전환 시 새 세션
-  const [sessionId, setSessionId] = useState(makePtyId);
-  const prevProjectIdRef = useRef(currentProjectId);
-  useEffect(() => {
-    if (prevProjectIdRef.current !== currentProjectId) {
-      prevProjectIdRef.current = currentProjectId;
-      setSessionId(makePtyId());
-    }
-  }, [currentProjectId]);
-
-  // 선택된 에이전트
-  const [selectedAgentId, setSelectedAgentId] = useState<string>(() => {
-    if (lockedAgentId) return lockedAgentId;
-    if (cliInitialAgentId) return cliInitialAgentId;
-    return ""; // picker에서 선택
-  });
-
-  // 일반 창: cliInitialAgentId 소비
-  useEffect(() => {
-    if (!lockedAgentId && cliInitialAgentId) {
-      setSelectedAgentId(cliInitialAgentId);
-      clearCliInitialAgentId();
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   // picker에서 에이전트 선택 후 터미널로 전환
   function handlePickAgent(id: string) {

@@ -55,6 +55,7 @@ import FlowGraphWindow from "../windows/FlowGraphWindow";
 import GitImportWindow from "../windows/GitImportWindow";
 import NotificationCenter from "../NotificationCenter";
 import AgentDetailPanel from "../agent-detail/AgentDetailPanel";
+import { ICON_GRID_X, ICON_GRID_Y } from "./snapToFreeCell";
 
 const ChatWindow = lazy(() => import("../windows/ChatWindow"));
 
@@ -188,8 +189,7 @@ export default function Desktop({
   const { showToast } = useToast();
 
   // ── 아이콘 정렬 헬퍼 ────────────────────────────────────────────
-  const ICON_GRID_X = 88;
-  const ICON_GRID_Y = 92;
+  // ICON_GRID_X / ICON_GRID_Y imported from snapToFreeCell.ts
 
   function arrangeIcons(sortedSystemIds: string[], sortedProjectIds: string[]) {
     const newLayout: Record<string, { x: number; y: number }> = {};
@@ -879,6 +879,18 @@ export default function Desktop({
           allProjects={projects}
           onClose={() => closeFolder(folder.id)}
           onFolderUpdate={(updated) => setFolders((prev) => prev.map((f) => f.id === updated.id ? updated : f))}
+          onProjectCreated={(newProject) => {
+            setProjects((prev) => [...prev, newProject]);
+          }}
+          onProjectPathChanged={(projectId, newPath) => {
+            setProjects((prev) => prev.map((p) => p.id === projectId ? { ...p, project_path: newPath } : p));
+          }}
+          onProjectEjected={(projectId) => {
+            setProjects((prev) => prev.map((p) => p.id === projectId ? { ...p, folder_id: null } : p));
+          }}
+          onProjectAdded={(projectId, newPath) => {
+            setProjects((prev) => prev.map((p) => p.id === projectId ? { ...p, folder_id: folder.id, project_path: newPath } : p));
+          }}
         />
       ))}
 

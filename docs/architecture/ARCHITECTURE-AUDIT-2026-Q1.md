@@ -1,9 +1,10 @@
 # AgentDesk Architecture Audit Report
 
-**Created:** 2026-03-11 | **Updated:** 2026-03-15
-**Version:** AgentDesk 2.0.1
+**Created:** 2026-03-11 | **Updated:** 2026-03-19
+**Version:** AgentDesk 2.1.0
 **Scope:** Frontend + Backend + DB + Agent Execution Engine
-**Agent Execution Performance Audit:** See separate document (`docs/strategy/agent-performance-audit.md`)
+**Note:** All issues identified in this audit have been resolved. See `docs/progress.md` for implementation details.
+**Performance Audit:** Findings consolidated here (separate `agent-performance-audit.md` removed — all items resolved).
 
 ---
 

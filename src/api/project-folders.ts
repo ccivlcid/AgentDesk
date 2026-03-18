@@ -1,5 +1,27 @@
 import { del, patch, post, request } from "./core";
 
+export interface FsEntry {
+  name: string;
+  path: string;
+  type: "file" | "dir";
+  size: number;
+  modified: number;
+  ext: string;
+}
+
+export interface FsBrowseResult {
+  ok: boolean;
+  current_path: string;
+  parent_path: string | null;
+  is_root: boolean;
+  entries: FsEntry[];
+  truncated: boolean;
+}
+
+export async function fsBrowse(dirPath: string): Promise<FsBrowseResult> {
+  return request<FsBrowseResult>(`/api/fs/browse?path=${encodeURIComponent(dirPath)}`);
+}
+
 import type { ProjectFolder, ProjectFolderMoveResult } from "../types";
 
 export async function getProjectFolders(): Promise<ProjectFolder[]> {
@@ -41,6 +63,6 @@ export async function addProjectToFolder(
 export async function removeProjectFromFolder(
   folderId: string,
   projectId: string,
-): Promise<{ ok: boolean }> {
-  return del(`/api/project-folders/${folderId}/projects/${projectId}`) as Promise<{ ok: boolean }>;
+): Promise<{ ok: boolean; new_path: string; moved_on_disk: boolean }> {
+  return del(`/api/project-folders/${folderId}/projects/${projectId}`) as Promise<{ ok: boolean; new_path: string; moved_on_disk: boolean }>;
 }

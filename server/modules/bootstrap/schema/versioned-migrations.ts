@@ -716,6 +716,46 @@ export const MIGRATIONS: Migration[] = [
     },
   },
   {
+    id: "2026-03-23-001-hook-entries-project-scope",
+    up: (db) => {
+      // Add 'project' to hook_entries scope_type CHECK constraint.
+      // SQLite does not support ALTER TABLE ... MODIFY COLUMN, so recreate the table.
+      try {
+        db.exec(`
+          CREATE TABLE IF NOT EXISTS hook_entries_v2 (
+            id TEXT PRIMARY KEY,
+            title TEXT NOT NULL,
+            title_ko TEXT NOT NULL DEFAULT '',
+            title_ja TEXT NOT NULL DEFAULT '',
+            title_zh TEXT NOT NULL DEFAULT '',
+            description TEXT NOT NULL DEFAULT '',
+            command TEXT NOT NULL,
+            event_type TEXT NOT NULL DEFAULT 'pre-task'
+              CHECK(event_type IN ('pre-task','post-task','on-error','on-complete','on-status-change','on-start')),
+            working_directory TEXT NOT NULL DEFAULT '',
+            timeout_ms INTEGER NOT NULL DEFAULT 30000,
+            scope_type TEXT NOT NULL DEFAULT 'global'
+              CHECK(scope_type IN ('global','department','agent','workflow_pack','project')),
+            scope_id TEXT,
+            priority INTEGER NOT NULL DEFAULT 50,
+            enabled INTEGER NOT NULL DEFAULT 1,
+            execution_count INTEGER NOT NULL DEFAULT 0,
+            last_executed_at INTEGER,
+            created_at INTEGER DEFAULT (unixepoch()*1000),
+            updated_at INTEGER DEFAULT (unixepoch()*1000)
+          )
+        `);
+        db.exec(`INSERT INTO hook_entries_v2 SELECT * FROM hook_entries`);
+        db.exec(`DROP TABLE hook_entries`);
+        db.exec(`ALTER TABLE hook_entries_v2 RENAME TO hook_entries`);
+        db.exec(`CREATE INDEX IF NOT EXISTS idx_hook_entries_scope ON hook_entries(scope_type, scope_id)`);
+        db.exec(`CREATE INDEX IF NOT EXISTS idx_hook_entries_event_type ON hook_entries(event_type)`);
+        db.exec(`CREATE INDEX IF NOT EXISTS idx_hook_entries_enabled ON hook_entries(enabled, priority DESC)`);
+        db.exec(`CREATE INDEX IF NOT EXISTS idx_hook_entries_enabled_event ON hook_entries(enabled, event_type, scope_type, scope_id)`);
+      } catch { /* already updated or table absent */ }
+    },
+  },
+  {
     id: "2026-03-23-002-memory-entries-project-scope",
     up: (db) => {
       // Add 'project' to memory_entries scope_type CHECK constraint.

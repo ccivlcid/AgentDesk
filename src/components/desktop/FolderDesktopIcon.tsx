@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { useUiStore } from "../../store/uiStore";
 import { useI18n } from "../../i18n";
+import { snapToFreeCell } from "./snapToFreeCell";
 import type { ProjectFolder } from "../../types";
 
 interface FolderDesktopIconProps {
@@ -85,10 +86,12 @@ export default function FolderDesktopIcon({
 
     function onUp(ev: MouseEvent) {
       if (!dragStart.current) return;
-      const nx = dragStart.current.ox + (ev.clientX - dragStart.current.mx);
-      const ny = dragStart.current.oy + (ev.clientY - dragStart.current.my);
-      setPos({ x: nx, y: ny });
-      setDesktopIconLayout({ ...useUiStore.getState().desktopIconLayout, [iconId]: { x: nx, y: ny } });
+      const rawX = dragStart.current.ox + (ev.clientX - dragStart.current.mx);
+      const rawY = dragStart.current.oy + (ev.clientY - dragStart.current.my);
+      const current = useUiStore.getState().desktopIconLayout;
+      const { x, y } = snapToFreeCell(rawX, rawY, iconId, current);
+      setPos({ x, y });
+      setDesktopIconLayout({ ...current, [iconId]: { x, y } });
       dragStart.current = null;
       setDragging(false);
       window.removeEventListener("mousemove", onMove);
@@ -102,11 +105,8 @@ export default function FolderDesktopIcon({
   const handleClick = useCallback(() => {
     if (moved.current) return;
     onSelect?.();
-  }, [onSelect]);
-
-  const handleDoubleClick = useCallback(() => {
-    if (!moved.current) openFolder(folder.id);
-  }, [folder.id, openFolder]);
+    openFolder(folder.id);
+  }, [folder.id, onSelect, openFolder]);
 
   const handleContextMenu = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -137,7 +137,6 @@ export default function FolderDesktopIcon({
     >
       <div
         onClick={handleClick}
-        onDoubleClick={handleDoubleClick}
         onContextMenu={handleContextMenu}
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
