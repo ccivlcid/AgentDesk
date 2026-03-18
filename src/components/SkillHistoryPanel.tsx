@@ -11,19 +11,20 @@ import { type Agent } from "../types";
 import AgentAvatar from "./AgentAvatar";
 import {
   HISTORY_PREVIEW_COUNT,
-  PROVIDER_ORDER,
   learningRowKey,
   normalizeSkillLabel,
-  pickRepresentativeForProvider,
   providerLabel,
   relativeTime,
   statusClass,
   statusLabel,
 } from "./skill-history/utils";
+import type { TFunction } from "./skills-library/model";
 
 type UnlearnEffect = "pot" | "hammer";
 
 interface SkillHistoryPanelProps {
+  t: TFunction;
+  localeTag?: string;
   agents: Agent[];
   refreshToken?: number;
   className?: string;
@@ -31,13 +32,16 @@ interface SkillHistoryPanelProps {
 }
 
 export default function SkillHistoryPanel({
+  t,
+  localeTag = "en",
   agents,
   refreshToken = 0,
   className = "",
   onLearningDataChanged,
 }: SkillHistoryPanelProps) {
   const [tab, setTab] = useState<"history" | "available">("history");
-  const [providerFilter, setProviderFilter] = useState<"all" | SkillHistoryProvider>("all");
+  const [agentFilters, setAgentFilters] = useState<Set<string>>(new Set()); // empty = all
+  const [filterDropdownOpen, setFilterDropdownOpen] = useState(false);
   const [historyRows, setHistoryRows] = useState<SkillLearningHistoryEntry[]>([]);
   const [availableRows, setAvailableRows] = useState<LearnedSkillEntry[]>([]);
   const [retentionDays, setRetentionDays] = useState<number>(180);
@@ -53,35 +57,50 @@ export default function SkillHistoryPanel({
   } | null>(null);
   const unlearnEffectTimersRef = useRef<Partial<Record<string, number>>>({});
   const centerBonkTimerRef = useRef<number | null>(null);
+  const filterDropdownRef = useRef<HTMLDivElement | null>(null);
 
-  const representatives = useMemo(() => {
-    const out = new Map<SkillHistoryProvider, Agent | null>();
-    for (const provider of PROVIDER_ORDER) {
-      out.set(provider, pickRepresentativeForProvider(agents, provider));
+  function agentDisplayName(agent: Agent): string {
+    if (localeTag.startsWith("ko")) return agent.name_ko || agent.name;
+    if (localeTag.startsWith("ja")) return (agent as Agent & { name_ja?: string | null }).name_ja || agent.name;
+    if (localeTag.startsWith("zh")) return (agent as Agent & { name_zh?: string | null }).name_zh || agent.name;
+    return agent.name;
+  }
+
+  // cli_provider 있는 에이전트만
+  const agentsWithProvider = useMemo(
+    () => agents.filter((a) => a.cli_provider),
+    [agents],
+  );
+
+  // provider → agent[] 맵
+  const agentsByProvider = useMemo(() => {
+    const out = new Map<SkillHistoryProvider, Agent[]>();
+    for (const agent of agentsWithProvider) {
+      const p = agent.cli_provider as SkillHistoryProvider;
+      if (!out.has(p)) out.set(p, []);
+      out.get(p)!.push(agent);
     }
     return out;
-  }, [agents]);
+  }, [agentsWithProvider]);
 
-  const activeProviders = useMemo(() => {
-    const fromRows = new Set<SkillHistoryProvider>();
-    for (const row of historyRows) fromRows.add(row.provider);
-    for (const row of availableRows) fromRows.add(row.provider);
-    for (const provider of PROVIDER_ORDER) {
-      if (representatives.get(provider)) {
-        fromRows.add(provider);
-      }
+  // 선택된 에이전트들의 provider set (empty = all)
+  const selectedProviderSet = useMemo(() => {
+    if (agentFilters.size === 0) return null;
+    const providers = new Set<SkillHistoryProvider>();
+    for (const agentId of agentFilters) {
+      const agent = agents.find((a) => a.id === agentId);
+      if (agent?.cli_provider) providers.add(agent.cli_provider as SkillHistoryProvider);
     }
-    return PROVIDER_ORDER.filter((provider) => fromRows.has(provider));
-  }, [availableRows, historyRows, representatives]);
+    return providers;
+  }, [agentFilters, agents]);
 
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const provider = providerFilter === "all" ? undefined : providerFilter;
       const [historyData, availableData] = await Promise.all([
-        getSkillLearningHistory({ provider, limit: 80 }),
-        getAvailableLearnedSkills({ provider, limit: 30 }),
+        getSkillLearningHistory({ limit: 200 }),
+        getAvailableLearnedSkills({ limit: 200 }),
       ]);
       setHistoryRows(historyData.history);
       setAvailableRows(availableData);
@@ -93,7 +112,7 @@ export default function SkillHistoryPanel({
     } finally {
       setLoading(false);
     }
-  }, [providerFilter]);
+  }, []);
 
   useEffect(() => {
     void load();
@@ -108,7 +127,7 @@ export default function SkillHistoryPanel({
 
   useEffect(() => {
     setHistoryExpanded(false);
-  }, [providerFilter, tab]);
+  }, [tab]);
 
   useEffect(() => {
     const timers = unlearnEffectTimersRef.current;
@@ -124,12 +143,40 @@ export default function SkillHistoryPanel({
     };
   }, []);
 
+  // 드롭다운 외부 클릭 닫기
+  useEffect(() => {
+    if (!filterDropdownOpen) return;
+    function handleClickOutside(e: MouseEvent) {
+      if (filterDropdownRef.current && !filterDropdownRef.current.contains(e.target as Node)) {
+        setFilterDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [filterDropdownOpen]);
+
+  function toggleAgentFilter(agentId: string) {
+    setAgentFilters((prev) => {
+      const next = new Set(prev);
+      if (next.has(agentId)) next.delete(agentId);
+      else next.add(agentId);
+      return next;
+    });
+    setHistoryExpanded(false);
+  }
+
+  function clearAgentFilters() {
+    setAgentFilters(new Set());
+    setHistoryExpanded(false);
+  }
+
   function triggerUnlearnEffect(rowKey: string, provider: SkillHistoryProvider) {
     const effect: UnlearnEffect = Math.random() < 0.5 ? "pot" : "hammer";
     setUnlearnEffects((prev) => ({ ...prev, [rowKey]: effect }));
+    const providerAgents = agentsByProvider.get(provider) ?? [];
     setCenterBonk({
       provider,
-      agent: representatives.get(provider) ?? null,
+      agent: providerAgents[0] ?? null,
     });
     if (typeof centerBonkTimerRef.current === "number") {
       window.clearTimeout(centerBonkTimerRef.current);
@@ -187,12 +234,29 @@ export default function SkillHistoryPanel({
     }
   }
 
-  const visibleHistoryRows = useMemo(() => {
-    if (historyExpanded) return historyRows;
-    return historyRows.slice(0, HISTORY_PREVIEW_COUNT);
-  }, [historyExpanded, historyRows]);
+  // 클라이언트 사이드 필터
+  const filteredHistoryRows = useMemo(() => {
+    if (!selectedProviderSet) return historyRows;
+    return historyRows.filter((row) => selectedProviderSet.has(row.provider));
+  }, [historyRows, selectedProviderSet]);
 
-  const hiddenHistoryCount = Math.max(0, historyRows.length - HISTORY_PREVIEW_COUNT);
+  const filteredAvailableRows = useMemo(() => {
+    if (!selectedProviderSet) return availableRows;
+    return availableRows.filter((row) => selectedProviderSet.has(row.provider));
+  }, [availableRows, selectedProviderSet]);
+
+  const visibleHistoryRows = useMemo(() => {
+    if (historyExpanded) return filteredHistoryRows;
+    return filteredHistoryRows.slice(0, HISTORY_PREVIEW_COUNT);
+  }, [historyExpanded, filteredHistoryRows]);
+
+  const hiddenHistoryCount = Math.max(0, filteredHistoryRows.length - HISTORY_PREVIEW_COUNT);
+
+  const filterLabel = agentFilters.size === 0
+    ? t({ ko: "전체 에이전트", en: "All agents", ja: "全エージェント", zh: "全部代理" })
+    : agentFilters.size === 1
+      ? (() => { const a = agents.find((ag) => ag.id === [...agentFilters][0]); return a ? agentDisplayName(a) : t({ ko: "1명 선택", en: "1 selected", ja: "1名選択", zh: "已选1名" }); })()
+      : t({ ko: `${agentFilters.size}명 선택`, en: `${agentFilters.size} selected`, ja: `${agentFilters.size}名選択`, zh: `已选${agentFilters.size}名` });
 
   return (
     <div
@@ -209,7 +273,7 @@ export default function SkillHistoryPanel({
               ? { borderRadius: 0, border: "1px solid var(--th-border-strong)", background: "var(--th-border-strong)", color: "var(--th-text-primary)" }
               : { borderRadius: 0, border: "1px solid transparent", color: "var(--th-text-muted)", background: "transparent" }}
           >
-            Learning History
+            {t({ ko: "학습 이력", en: "Learning History", ja: "学習履歴", zh: "学习历史" })}
           </button>
           <button
             type="button"
@@ -219,7 +283,7 @@ export default function SkillHistoryPanel({
               ? { borderRadius: 0, border: "1px solid var(--th-border-strong)", background: "var(--th-border-strong)", color: "var(--th-text-primary)" }
               : { borderRadius: 0, border: "1px solid transparent", color: "var(--th-text-muted)", background: "transparent" }}
           >
-            Available Skills
+            {t({ ko: "보유 스킬", en: "Available Skills", ja: "保有スキル", zh: "可用技能" })}
           </button>
         </div>
         <button
@@ -228,42 +292,128 @@ export default function SkillHistoryPanel({
           className="px-2 py-1 text-[11px] font-mono transition-all"
           style={{ borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
         >
-          Refresh
+          {t({ ko: "새로고침", en: "Refresh", ja: "更新", zh: "刷新" })}
         </button>
       </div>
 
-      <div className="flex items-center gap-1 overflow-x-auto px-3 py-2">
-        <button
-          type="button"
-          onClick={() => setProviderFilter("all")}
-          className="px-2 py-1 text-[10px] font-mono transition-all"
-          style={providerFilter === "all"
-            ? { borderRadius: 0, border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.1)", color: "var(--th-accent)" }
-            : { borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-muted)", background: "transparent" }}
-        >
-          All
-        </button>
-        {activeProviders.map((provider) => (
+      {/* 멀티셀렉트 드롭다운 */}
+      <div className="flex items-center gap-2 px-3 py-2" style={{ borderBottom: "1px solid var(--th-border)" }}>
+        <div className="relative" ref={filterDropdownRef}>
           <button
-            key={provider}
             type="button"
-            onClick={() => setProviderFilter(provider)}
-            className="px-2 py-1 text-[10px] font-mono transition-all"
-            style={providerFilter === provider
-              ? { borderRadius: 0, border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.1)", color: "var(--th-accent)" }
-              : { borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-muted)", background: "transparent" }}
+            onClick={() => setFilterDropdownOpen((v) => !v)}
+            className="flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-mono transition-all"
+            style={{
+              borderRadius: 0,
+              border: agentFilters.size > 0
+                ? "1px solid rgba(251,191,36,0.5)"
+                : "1px solid var(--th-border)",
+              background: agentFilters.size > 0
+                ? "rgba(251,191,36,0.08)"
+                : "var(--th-bg-primary)",
+              color: agentFilters.size > 0 ? "var(--th-accent)" : "var(--th-text-secondary)",
+              minWidth: 130,
+            }}
           >
-            {providerLabel(provider)}
+            <span className="flex-1 text-left truncate">{filterLabel}</span>
+            <span style={{ fontSize: 8, opacity: 0.6 }}>{filterDropdownOpen ? "▲" : "▼"}</span>
           </button>
-        ))}
+
+          {filterDropdownOpen && (
+            <div
+              className="absolute left-0 top-full z-50 mt-1 py-1 shadow-xl"
+              style={{
+                borderRadius: 0,
+                border: "1px solid var(--th-border-strong)",
+                background: "var(--th-bg-elevated)",
+                minWidth: 200,
+                maxHeight: 240,
+                overflowY: "auto",
+              }}
+            >
+              {/* All 옵션 */}
+              <button
+                type="button"
+                onClick={clearAgentFilters}
+                className="w-full flex items-center gap-2 px-3 py-1.5 text-[11px] font-mono transition-all text-left"
+                style={{
+                  background: agentFilters.size === 0 ? "rgba(251,191,36,0.1)" : "transparent",
+                  color: agentFilters.size === 0 ? "var(--th-accent)" : "var(--th-text-secondary)",
+                  border: "none",
+                }}
+              >
+                <span
+                  className="flex items-center justify-center shrink-0"
+                  style={{
+                    width: 14, height: 14, borderRadius: 0,
+                    border: agentFilters.size === 0
+                      ? "1px solid var(--th-accent)"
+                      : "1px solid var(--th-border-strong)",
+                    background: agentFilters.size === 0 ? "var(--th-accent)" : "transparent",
+                    fontSize: 9, color: "#000",
+                  }}
+                >
+                  {agentFilters.size === 0 ? "✓" : ""}
+                </span>
+                {t({ ko: "전체 에이전트", en: "All agents", ja: "全エージェント", zh: "全部代理" })}
+              </button>
+
+              <div style={{ height: 1, background: "var(--th-border)", margin: "2px 0" }} />
+
+              {agentsWithProvider.map((agent) => {
+                const checked = agentFilters.has(agent.id);
+                return (
+                  <button
+                    key={agent.id}
+                    type="button"
+                    onClick={() => toggleAgentFilter(agent.id)}
+                    className="w-full flex items-center gap-2 px-3 py-1.5 text-[11px] font-mono transition-all text-left"
+                    style={{
+                      background: checked ? "rgba(251,191,36,0.08)" : "transparent",
+                      color: checked ? "var(--th-accent)" : "var(--th-text-secondary)",
+                      border: "none",
+                    }}
+                  >
+                    <span
+                      className="flex items-center justify-center shrink-0"
+                      style={{
+                        width: 14, height: 14, borderRadius: 0,
+                        border: checked
+                          ? "1px solid var(--th-accent)"
+                          : "1px solid var(--th-border-strong)",
+                        background: checked ? "var(--th-accent)" : "transparent",
+                        fontSize: 9, color: "#000",
+                      }}
+                    >
+                      {checked ? "✓" : ""}
+                    </span>
+                    <AgentAvatar agent={agent} agents={agents} size={16} rounded="sm" />
+                    <span className="truncate">{agentDisplayName(agent)}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+        {agentFilters.size > 0 && (
+          <button
+            type="button"
+            onClick={clearAgentFilters}
+            className="px-1.5 py-0.5 text-[10px] font-mono transition-all"
+            style={{ borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-muted)", background: "transparent" }}
+          >
+            ✕ {t({ ko: "초기화", en: "clear", ja: "クリア", zh: "清除" })}
+          </button>
+        )}
+        <span className="text-[10px] font-mono ml-auto" style={{ color: "var(--th-text-muted)" }}>
+          {t({ ko: `보존 ${retentionDays}일`, en: `Retention: ${retentionDays}d`, ja: `保存期間 ${retentionDays}日`, zh: `保留 ${retentionDays}天` })}
+        </span>
       </div>
 
-      <div className="px-3 pb-2 text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>Retention: {retentionDays} days</div>
-
-      <div className="min-h-0 flex-1 space-y-2 overflow-y-auto px-3 pb-3">
+      <div className="min-h-0 flex-1 space-y-2 overflow-y-auto px-3 py-3">
         {loading && historyRows.length === 0 && availableRows.length === 0 && (
           <div className="px-3 py-6 text-center text-xs font-mono" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-muted)" }}>
-            Loading memory records...
+            {t({ ko: "학습 기록 로딩중...", en: "Loading memory records...", ja: "記録を読み込み中...", zh: "加载记录中..." })}
           </div>
         )}
 
@@ -278,15 +428,15 @@ export default function SkillHistoryPanel({
           </div>
         )}
 
-        {tab === "history" && historyRows.length === 0 && !loading && !error && (
+        {tab === "history" && filteredHistoryRows.length === 0 && !loading && !error && (
           <div className="px-3 py-6 text-center text-xs font-mono" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-muted)" }}>
-            No learning history yet.
+            {t({ ko: "학습 이력이 없습니다", en: "No learning history yet.", ja: "学習履歴がありません", zh: "暂无学习记录" })}
           </div>
         )}
 
         {tab === "history" &&
           visibleHistoryRows.map((row) => {
-            const agent = representatives.get(row.provider) ?? null;
+            const rowAgents = agentsByProvider.get(row.provider) ?? [];
             const label = normalizeSkillLabel(row);
             const eventAt = row.run_completed_at ?? row.updated_at ?? row.created_at;
             const rowKey = learningRowKey(row);
@@ -310,18 +460,35 @@ export default function SkillHistoryPanel({
                 </div>
                 <div className="skill-history-meta mt-2 flex items-center justify-between gap-2 text-[10px] font-mono" style={{ color: "var(--th-text-secondary)" }}>
                   <div className="flex min-w-0 items-center gap-2">
-                    <div
-                      className={`relative h-5 w-5 overflow-hidden ${unlearnEffect ? "unlearn-avatar-hit" : ""}`}
-                      style={{ borderRadius: 0, background: "var(--th-bg-primary)" }}
-                    >
-                      <AgentAvatar agent={agent ?? undefined} agents={agents} size={20} rounded="xl" />
-                      {unlearnEffect === "pot" && <span className="unlearn-pot-drop-sm">🪴</span>}
-                      {unlearnEffect === "hammer" && <span className="unlearn-hammer-swing-sm">🔨</span>}
-                      {unlearnEffect && <span className="unlearn-hit-text-sm">Bonk!</span>}
-                    </div>
+                    {rowAgents.length > 0 ? (
+                      <div className={`flex items-center gap-0.5 ${unlearnEffect ? "unlearn-avatar-hit" : ""}`}>
+                        {rowAgents.slice(0, 5).map((a) => (
+                          <div key={a.id} className="h-5 w-5 overflow-hidden shrink-0" style={{ borderRadius: 0, background: "var(--th-bg-primary)" }}>
+                            <AgentAvatar agent={a} agents={agents} size={20} rounded="xl" />
+                          </div>
+                        ))}
+                        {rowAgents.length > 5 && (
+                          <span className="text-[9px] font-mono ml-0.5" style={{ color: "var(--th-text-muted)" }}>+{rowAgents.length - 5}</span>
+                        )}
+                        {unlearnEffect === "pot" && <span className="unlearn-pot-drop-sm">🪴</span>}
+                        {unlearnEffect === "hammer" && <span className="unlearn-hammer-swing-sm">🔨</span>}
+                        {unlearnEffect && <span className="unlearn-hit-text-sm">{t({ ko: "깡~", en: "Bonk!", ja: "ゴン!", zh: "咣~" })}</span>}
+                      </div>
+                    ) : (
+                      <div className={`relative h-5 w-5 overflow-hidden ${unlearnEffect ? "unlearn-avatar-hit" : ""}`} style={{ borderRadius: 0, background: "var(--th-bg-primary)" }}>
+                        <AgentAvatar agent={undefined} agents={agents} size={20} rounded="xl" />
+                        {unlearnEffect === "pot" && <span className="unlearn-pot-drop-sm">🪴</span>}
+                        {unlearnEffect === "hammer" && <span className="unlearn-hammer-swing-sm">🔨</span>}
+                        {unlearnEffect && <span className="unlearn-hit-text-sm">{t({ ko: "깡~", en: "Bonk!", ja: "ゴン!", zh: "咣~" })}</span>}
+                      </div>
+                    )}
                     <span className="truncate">
                       {providerLabel(row.provider)}
-                      {agent ? ` · ${agent.name}` : ""}
+                      {rowAgents.length === 1
+                        ? ` · ${agentDisplayName(rowAgents[0]!)}`
+                        : rowAgents.length > 1
+                          ? ` · ${rowAgents.map((a) => agentDisplayName(a)).join(", ")}`
+                          : ""}
                     </span>
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
@@ -335,7 +502,9 @@ export default function SkillHistoryPanel({
                           ? { borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-muted)", background: "transparent", cursor: "not-allowed" }
                           : { borderRadius: 0, border: "1px solid rgba(244,63,94,0.35)", color: "rgb(253,164,175)", background: "rgba(244,63,94,0.1)" }}
                       >
-                        {isUnlearning ? "Unlearning..." : "Unlearn"}
+                        {isUnlearning
+                          ? t({ ko: "취소중...", en: "Unlearning...", ja: "取消中...", zh: "取消中..." })
+                          : t({ ko: "학습 취소", en: "Unlearn", ja: "学習取消", zh: "取消学习" })}
                       </button>
                     )}
                     <span className="skill-history-time font-mono" style={{ color: "var(--th-text-muted)" }}>{relativeTime(eventAt)}</span>
@@ -354,20 +523,22 @@ export default function SkillHistoryPanel({
               className="px-2.5 py-1 text-[11px] font-mono transition-all"
               style={{ borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
             >
-              {historyExpanded ? "Show less" : `Show ${hiddenHistoryCount} more`}
+              {historyExpanded
+              ? t({ ko: "접기", en: "Show less", ja: "折りたたむ", zh: "收起" })
+              : t({ ko: `${hiddenHistoryCount}개 더 보기`, en: `Show ${hiddenHistoryCount} more`, ja: `${hiddenHistoryCount}件を表示`, zh: `显示${hiddenHistoryCount}条` })}
             </button>
           </div>
         )}
 
-        {tab === "available" && availableRows.length === 0 && !loading && !error && (
+        {tab === "available" && filteredAvailableRows.length === 0 && !loading && !error && (
           <div className="px-3 py-6 text-center text-xs font-mono" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-muted)" }}>
-            No available skills.
+            {t({ ko: "보유 스킬이 없습니다", en: "No available skills.", ja: "保有スキルがありません", zh: "暂无可用技能" })}
           </div>
         )}
 
         {tab === "available" &&
-          availableRows.map((row) => {
-            const agent = representatives.get(row.provider) ?? null;
+          filteredAvailableRows.map((row) => {
+            const rowAgents = agentsByProvider.get(row.provider) ?? [];
             const label = normalizeSkillLabel(row);
             const rowKey = learningRowKey(row);
             const isUnlearning = unlearningKeys.includes(rowKey);
@@ -382,18 +553,35 @@ export default function SkillHistoryPanel({
                 <div className="mt-0.5 truncate text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>{row.repo}</div>
                 <div className="skill-history-meta mt-2 flex items-center justify-between gap-2 text-[10px] font-mono" style={{ color: "var(--th-text-secondary)" }}>
                   <div className="flex min-w-0 items-center gap-2">
-                    <div
-                      className={`relative h-5 w-5 overflow-hidden ${unlearnEffect ? "unlearn-avatar-hit" : ""}`}
-                      style={{ borderRadius: 0, background: "var(--th-bg-primary)" }}
-                    >
-                      <AgentAvatar agent={agent ?? undefined} agents={agents} size={20} rounded="xl" />
-                      {unlearnEffect === "pot" && <span className="unlearn-pot-drop-sm">🪴</span>}
-                      {unlearnEffect === "hammer" && <span className="unlearn-hammer-swing-sm">🔨</span>}
-                      {unlearnEffect && <span className="unlearn-hit-text-sm">Bonk!</span>}
-                    </div>
+                    {rowAgents.length > 0 ? (
+                      <div className={`flex items-center gap-0.5 ${unlearnEffect ? "unlearn-avatar-hit" : ""}`}>
+                        {rowAgents.slice(0, 5).map((a) => (
+                          <div key={a.id} className="h-5 w-5 overflow-hidden shrink-0" style={{ borderRadius: 0, background: "var(--th-bg-primary)" }}>
+                            <AgentAvatar agent={a} agents={agents} size={20} rounded="xl" />
+                          </div>
+                        ))}
+                        {rowAgents.length > 5 && (
+                          <span className="text-[9px] font-mono ml-0.5" style={{ color: "var(--th-text-muted)" }}>+{rowAgents.length - 5}</span>
+                        )}
+                        {unlearnEffect === "pot" && <span className="unlearn-pot-drop-sm">🪴</span>}
+                        {unlearnEffect === "hammer" && <span className="unlearn-hammer-swing-sm">🔨</span>}
+                        {unlearnEffect && <span className="unlearn-hit-text-sm">{t({ ko: "깡~", en: "Bonk!", ja: "ゴン!", zh: "咣~" })}</span>}
+                      </div>
+                    ) : (
+                      <div className={`relative h-5 w-5 overflow-hidden ${unlearnEffect ? "unlearn-avatar-hit" : ""}`} style={{ borderRadius: 0, background: "var(--th-bg-primary)" }}>
+                        <AgentAvatar agent={undefined} agents={agents} size={20} rounded="xl" />
+                        {unlearnEffect === "pot" && <span className="unlearn-pot-drop-sm">🪴</span>}
+                        {unlearnEffect === "hammer" && <span className="unlearn-hammer-swing-sm">🔨</span>}
+                        {unlearnEffect && <span className="unlearn-hit-text-sm">{t({ ko: "깡~", en: "Bonk!", ja: "ゴン!", zh: "咣~" })}</span>}
+                      </div>
+                    )}
                     <span className="truncate">
                       {providerLabel(row.provider)}
-                      {agent ? ` · ${agent.name}` : ""}
+                      {rowAgents.length === 1
+                        ? ` · ${agentDisplayName(rowAgents[0]!)}`
+                        : rowAgents.length > 1
+                          ? ` · ${rowAgents.map((a) => agentDisplayName(a)).join(", ")}`
+                          : ""}
                     </span>
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
@@ -406,7 +594,9 @@ export default function SkillHistoryPanel({
                         ? { borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-muted)", background: "transparent", cursor: "not-allowed" }
                         : { borderRadius: 0, border: "1px solid rgba(244,63,94,0.35)", color: "rgb(253,164,175)", background: "rgba(244,63,94,0.1)" }}
                     >
-                      {isUnlearning ? "Unlearning..." : "Unlearn"}
+                      {isUnlearning
+                        ? t({ ko: "취소중...", en: "Unlearning...", ja: "取消中...", zh: "取消中..." })
+                        : t({ ko: "학습 취소", en: "Unlearn", ja: "学習取消", zh: "取消学习" })}
                     </button>
                     <span className="skill-history-time font-mono" style={{ color: "var(--th-text-muted)" }}>{relativeTime(row.learned_at)}</span>
                   </div>
@@ -423,7 +613,7 @@ export default function SkillHistoryPanel({
                 <AgentAvatar agent={centerBonk.agent ?? undefined} agents={agents} size={80} rounded="xl" />
               </div>
               <span className="unlearn-hammer-swing-center">🔨</span>
-              <span className="unlearn-hit-text-center">Bonk!</span>
+              <span className="unlearn-hit-text-center">{t({ ko: "깡~", en: "Bonk!", ja: "ゴン!", zh: "咣~" })}</span>
             </div>
             <div className="skill-history-center-label mt-2 text-center text-xs font-medium font-mono" style={{ color: "rgb(254,205,211)" }}>
               {providerLabel(centerBonk.provider)}

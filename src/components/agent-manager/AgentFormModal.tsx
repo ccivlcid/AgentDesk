@@ -425,6 +425,31 @@ export default function AgentFormModal({
               </div>
             </div>
 
+            {/* Planning Phase Toggle — CLI 인터랙티브 전용 */}
+            {["claude", "cursor", "codex", "gemini"].includes(form.cli_provider) && (
+              <div className="mb-4">
+                <label className="block text-xs mb-1.5 font-medium" style={{ color: "var(--th-text-secondary)" }}>
+                  {tr("기획 회의 단계", "Planning Phase")}
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setForm({ ...form, enable_planning_phase: form.enable_planning_phase === 0 ? 1 : 0 })}
+                  className="flex items-center gap-2 text-xs font-mono px-3 py-1.5 border transition-all"
+                  style={{
+                    borderRadius: 6,
+                    ...(form.enable_planning_phase !== 0
+                      ? { background: "var(--th-accent-glow)", color: "var(--th-accent)", borderColor: "var(--th-border-accent)" }
+                      : { borderColor: "var(--th-input-border)", color: "var(--th-text-muted)" }),
+                  }}
+                >
+                  <span style={{ fontSize: 10 }}>{form.enable_planning_phase !== 0 ? "●" : "○"}</span>
+                  {form.enable_planning_phase !== 0
+                    ? tr("활성화 — 실행 전 플래닝 에이전트 자동 실행", "Enabled — auto-run planning agent before CLI")
+                    : tr("비활성화 — CLI 바로 실행", "Disabled — open CLI immediately")}
+                </button>
+              </div>
+            )}
+
             {/* API Provider (Local LLM / 외부 API) */}
             <div className="mb-4">
               <label className="block text-xs mb-1.5 font-medium" style={{ color: "var(--th-text-secondary)" }}>

@@ -17,26 +17,15 @@ export type WindowType =
   | "create-agent"
   | "create-department"
   | "library-guide"
-  | "user-guide";
-
-export type WidgetId =
-  | "heartbeat"
-  | "task-board"
+  | "user-guide"
+  | "file-tree"
   | "alerts"
   | "cli-usage"
-  | "flow-graph"
-  | "file-tree"
   | "local-llm"
-  | "synapse"
-  | `custom:${string}`;
+  | "feature-builder"
+  | "flow-graph"
+  | "git-import";
 
-export interface WidgetEntry {
-  id: WidgetId;
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-}
 
 export type View =
   | "agents"

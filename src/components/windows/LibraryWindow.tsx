@@ -34,8 +34,8 @@ export default function LibraryWindow() {
   const { toggleWindow } = useUiStore();
   const allAgents = libraryAgents.length > 0 ? libraryAgents : agents;
 
-  // 현재 프로젝트에 배정된 에이전트만 필터링
-  const libAgents = currentProjectId && projectAgentsLoaded && projectAgentIds.size > 0
+  // 현재 프로젝트에 배정된 에이전트만 필터링 (프로젝트가 선택되면 프로젝트 에이전트만 표시)
+  const libAgents = currentProjectId && projectAgentsLoaded
     ? allAgents.filter((a) => projectAgentIds.has(a.id))
     : allAgents;
 

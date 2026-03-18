@@ -258,8 +258,13 @@ export function createRunCompleteHandler(deps: RunCompleteHandlerDeps) {
           .prepare("UPDATE agents SET stats_tasks_done = stats_tasks_done + 1, stats_xp = stats_xp + 10 WHERE id = ?")
           .run(task.assigned_agent_id);
       }
-      const agent = (db as { prepare: (s: string) => { get: (...a: unknown[]) => unknown } }).prepare("SELECT * FROM agents WHERE id = ?").get(task.assigned_agent_id);
+      const agent = (db as { prepare: (s: string) => { get: (...a: unknown[]) => unknown } }).prepare("SELECT * FROM agents WHERE id = ?").get(task.assigned_agent_id) as { cli_provider?: string | null } | undefined;
       (broadcast as (e: string, p: unknown) => void)("agent_status", agent);
+      // Signal frontend to close the CLI window for this agent once the task is complete
+      const CLI_INTERACTIVE_PROVIDERS = new Set(["claude", "cursor", "codex", "gemini"]);
+      if (agent && CLI_INTERACTIVE_PROVIDERS.has(agent.cli_provider ?? "")) {
+        (broadcast as (e: string, p: unknown) => void)("close_cli", { agent_id: task.assigned_agent_id, task_id: taskId });
+      }
     }
 
     if (finalExitCode === 0 && task) {

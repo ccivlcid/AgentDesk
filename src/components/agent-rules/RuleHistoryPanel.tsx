@@ -10,13 +10,11 @@ import {
 import type { Agent } from "../../types";
 import AgentAvatar from "../AgentAvatar";
 import {
-  RULE_LEARNED_PROVIDER_ORDER,
   ruleProviderLabel,
   ruleStatusLabel,
   ruleStatusClass,
   ruleRelativeTime,
   ruleLearningRowKey,
-  pickRepresentativeForProvider,
   type TFunction,
   type UnlearnEffect,
 } from "./model";
@@ -25,6 +23,7 @@ const HISTORY_PREVIEW_COUNT = 3;
 
 interface RuleHistoryPanelProps {
   t: TFunction;
+  localeTag?: string;
   agents: Agent[];
   refreshToken?: number;
   className?: string;
@@ -35,6 +34,7 @@ interface RuleHistoryPanelProps {
 
 export default function RuleHistoryPanel({
   t,
+  localeTag = "en",
   agents,
   refreshToken = 0,
   className = "",
@@ -42,7 +42,8 @@ export default function RuleHistoryPanel({
   optimisticHistoryRows = [],
 }: RuleHistoryPanelProps) {
   const [tab, setTab] = useState<"history" | "available">("history");
-  const [providerFilter, setProviderFilter] = useState<"all" | RuleHistoryProvider>("all");
+  const [agentFilters, setAgentFilters] = useState<Set<string>>(new Set());
+  const [filterDropdownOpen, setFilterDropdownOpen] = useState(false);
   const [historyRows, setHistoryRows] = useState<RuleLearningHistoryEntry[]>([]);
   const [availableRows, setAvailableRows] = useState<LearnedRuleEntry[]>([]);
   const [historyExpanded, setHistoryExpanded] = useState(false);
@@ -57,39 +58,48 @@ export default function RuleHistoryPanel({
   } | null>(null);
   const unlearnEffectTimersRef = useRef<Partial<Record<string, number>>>({});
   const centerBonkTimerRef = useRef<number | null>(null);
+  const filterDropdownRef = useRef<HTMLDivElement | null>(null);
 
-  const representatives = useMemo(() => {
-    const out = new Map<RuleHistoryProvider, Agent | null>();
-    for (const provider of RULE_LEARNED_PROVIDER_ORDER) {
-      out.set(provider, pickRepresentativeForProvider(agents, provider));
+  const agentsWithProvider = useMemo(() => agents.filter((a) => a.cli_provider), [agents]);
+
+  const agentsByProvider = useMemo(() => {
+    const out = new Map<RuleHistoryProvider, Agent[]>();
+    for (const agent of agentsWithProvider) {
+      const p = agent.cli_provider as RuleHistoryProvider;
+      if (!out.has(p)) out.set(p, []);
+      out.get(p)!.push(agent);
     }
     return out;
-  }, [agents]);
+  }, [agentsWithProvider]);
 
-  const activeProviders = useMemo(() => {
-    const fromRows = new Set<RuleHistoryProvider>();
-    for (const row of historyRows) fromRows.add(row.provider);
-    for (const row of availableRows) fromRows.add(row.provider);
-    for (const provider of RULE_LEARNED_PROVIDER_ORDER) {
-      if (representatives.get(provider)) {
-        fromRows.add(provider);
-      }
+  const selectedProviderSet = useMemo(() => {
+    if (agentFilters.size === 0) return null;
+    const providers = new Set<RuleHistoryProvider>();
+    for (const agentId of agentFilters) {
+      const agent = agents.find((a) => a.id === agentId);
+      if (agent?.cli_provider) providers.add(agent.cli_provider as RuleHistoryProvider);
     }
-    return RULE_LEARNED_PROVIDER_ORDER.filter((provider) => fromRows.has(provider));
-  }, [availableRows, historyRows, representatives]);
+    return providers;
+  }, [agentFilters, agents]);
+
+  function agentDisplayName(agent: Agent): string {
+    if (localeTag.startsWith("ko")) return agent.name_ko || agent.name;
+    if (localeTag.startsWith("ja")) return (agent as Agent & { name_ja?: string | null }).name_ja || agent.name;
+    if (localeTag.startsWith("zh")) return (agent as Agent & { name_zh?: string | null }).name_zh || agent.name;
+    return agent.name;
+  }
 
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const provider = providerFilter === "all" ? undefined : providerFilter;
       const [historyData, availableData] = await Promise.all([
-        getRuleLearningHistory({ provider, limit: 80 }).catch((err) => {
+        getRuleLearningHistory({ limit: 200 }).catch((err) => {
           const msg = err instanceof Error ? err.message : String(err);
           if (/not_found|404/.test(msg)) return { history: [] as RuleLearningHistoryEntry[], retentionDays: 180 };
           throw err;
         }),
-        getAvailableLearnedRules({ provider, limit: 30 }).catch((err) => {
+        getAvailableLearnedRules({ limit: 200 }).catch((err) => {
           const msg = err instanceof Error ? err.message : String(err);
           if (/not_found|404/.test(msg)) return [] as LearnedRuleEntry[];
           throw err;
@@ -102,7 +112,7 @@ export default function RuleHistoryPanel({
     } finally {
       setLoading(false);
     }
-  }, [providerFilter]);
+  }, []);
 
   useEffect(() => {
     void load();
@@ -110,7 +120,7 @@ export default function RuleHistoryPanel({
 
   useEffect(() => {
     setHistoryExpanded(false);
-  }, [providerFilter, tab]);
+  }, [tab]);
 
   useEffect(() => {
     const timers = unlearnEffectTimersRef.current;
@@ -124,12 +134,39 @@ export default function RuleHistoryPanel({
     };
   }, []);
 
+  useEffect(() => {
+    if (!filterDropdownOpen) return;
+    function handleClickOutside(e: MouseEvent) {
+      if (filterDropdownRef.current && !filterDropdownRef.current.contains(e.target as Node)) {
+        setFilterDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [filterDropdownOpen]);
+
+  function toggleAgentFilter(agentId: string) {
+    setAgentFilters((prev) => {
+      const next = new Set(prev);
+      if (next.has(agentId)) next.delete(agentId);
+      else next.add(agentId);
+      return next;
+    });
+    setHistoryExpanded(false);
+  }
+
+  function clearAgentFilters() {
+    setAgentFilters(new Set());
+    setHistoryExpanded(false);
+  }
+
   function triggerUnlearnEffect(rowKey: string, provider: RuleHistoryProvider) {
     const effect: UnlearnEffect = Math.random() < 0.5 ? "pot" : "hammer";
     setUnlearnEffects((prev) => ({ ...prev, [rowKey]: effect }));
+    const providerAgents = agentsByProvider.get(provider) ?? [];
     setCenterBonk({
       provider,
-      agent: representatives.get(provider) ?? null,
+      agent: providerAgents[0] ?? null,
     });
     if (typeof centerBonkTimerRef.current === "number") {
       window.clearTimeout(centerBonkTimerRef.current);
@@ -181,18 +218,31 @@ export default function RuleHistoryPanel({
     }
   }
 
-  const displayHistoryRows = useMemo(() => {
+  const filteredHistoryRows = useMemo(() => {
     const optKeys = new Set(optimisticHistoryRows.map((r) => `${r.job_id}:${r.provider}`));
     const fromApi = historyRows.filter((r) => !optKeys.has(`${r.job_id}:${r.provider}`));
-    return [...optimisticHistoryRows, ...fromApi];
-  }, [optimisticHistoryRows, historyRows]);
+    const all = [...optimisticHistoryRows, ...fromApi];
+    if (!selectedProviderSet) return all;
+    return all.filter((r) => selectedProviderSet.has(r.provider));
+  }, [optimisticHistoryRows, historyRows, selectedProviderSet]);
+
+  const filteredAvailableRows = useMemo(() => {
+    if (!selectedProviderSet) return availableRows;
+    return availableRows.filter((r) => selectedProviderSet.has(r.provider));
+  }, [availableRows, selectedProviderSet]);
 
   const visibleHistoryRows = useMemo(() => {
-    if (historyExpanded) return displayHistoryRows;
-    return displayHistoryRows.slice(0, HISTORY_PREVIEW_COUNT);
-  }, [historyExpanded, displayHistoryRows]);
+    if (historyExpanded) return filteredHistoryRows;
+    return filteredHistoryRows.slice(0, HISTORY_PREVIEW_COUNT);
+  }, [historyExpanded, filteredHistoryRows]);
 
-  const hiddenHistoryCount = Math.max(0, displayHistoryRows.length - HISTORY_PREVIEW_COUNT);
+  const hiddenHistoryCount = Math.max(0, filteredHistoryRows.length - HISTORY_PREVIEW_COUNT);
+
+  const filterLabel = agentFilters.size === 0
+    ? t({ ko: "전체 에이전트", en: "All agents", ja: "全エージェント", zh: "全部代理" })
+    : agentFilters.size === 1
+      ? (() => { const a = agents.find((ag) => ag.id === [...agentFilters][0]); return a ? agentDisplayName(a) : t({ ko: "1명 선택", en: "1 selected", ja: "1名選択", zh: "已选1名" }); })()
+      : t({ ko: `${agentFilters.size}명 선택`, en: `${agentFilters.size} selected`, ja: `${agentFilters.size}名選択`, zh: `已选${agentFilters.size}名` });
 
   return (
     <div
@@ -238,36 +288,66 @@ export default function RuleHistoryPanel({
         </button>
       </div>
 
-      <div className="flex items-center gap-1 overflow-x-auto px-3 py-2">
-        <button
-          type="button"
-          onClick={() => setProviderFilter("all")}
-          className="px-2 py-1 text-[10px] font-mono transition-all"
-          style={{
-            borderRadius: 0,
-            border: `1px solid ${providerFilter === "all" ? "rgba(251,191,36,0.5)" : "var(--th-border)"}`,
-            background: providerFilter === "all" ? "rgba(251,191,36,0.1)" : "transparent",
-            color: providerFilter === "all" ? "var(--th-accent)" : "var(--th-text-muted)",
-          }}
-        >
-          All
-        </button>
-        {activeProviders.map((provider) => (
+      <div className="flex items-center gap-2 px-3 py-2" style={{ borderBottom: "1px solid var(--th-border)" }}>
+        <div className="relative" ref={filterDropdownRef}>
           <button
-            key={provider}
             type="button"
-            onClick={() => setProviderFilter(provider)}
-            className="px-2 py-1 text-[10px] font-mono transition-all"
+            onClick={() => setFilterDropdownOpen((v) => !v)}
+            className="flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-mono transition-all"
             style={{
               borderRadius: 0,
-              border: `1px solid ${providerFilter === provider ? "rgba(251,191,36,0.5)" : "var(--th-border)"}`,
-              background: providerFilter === provider ? "rgba(251,191,36,0.1)" : "transparent",
-              color: providerFilter === provider ? "var(--th-accent)" : "var(--th-text-muted)",
+              border: agentFilters.size > 0 ? "1px solid rgba(251,191,36,0.5)" : "1px solid var(--th-border)",
+              background: agentFilters.size > 0 ? "rgba(251,191,36,0.08)" : "var(--th-bg-primary)",
+              color: agentFilters.size > 0 ? "var(--th-accent)" : "var(--th-text-secondary)",
+              minWidth: 130,
             }}
           >
-            {ruleProviderLabel(provider)}
+            <span className="flex-1 text-left truncate">{filterLabel}</span>
+            <span style={{ fontSize: 8, opacity: 0.6 }}>{filterDropdownOpen ? "▲" : "▼"}</span>
           </button>
-        ))}
+          {filterDropdownOpen && (
+            <div
+              className="absolute left-0 top-full z-50 mt-1 py-1 shadow-xl"
+              style={{ borderRadius: 0, border: "1px solid var(--th-border-strong)", background: "var(--th-bg-elevated)", minWidth: 200, maxHeight: 240, overflowY: "auto" }}
+            >
+              <button
+                type="button"
+                onClick={clearAgentFilters}
+                className="w-full flex items-center gap-2 px-3 py-1.5 text-[11px] font-mono text-left"
+                style={{ background: agentFilters.size === 0 ? "rgba(251,191,36,0.1)" : "transparent", color: agentFilters.size === 0 ? "var(--th-accent)" : "var(--th-text-secondary)", border: "none" }}
+              >
+                <span className="flex items-center justify-center shrink-0" style={{ width: 14, height: 14, borderRadius: 0, border: agentFilters.size === 0 ? "1px solid var(--th-accent)" : "1px solid var(--th-border-strong)", background: agentFilters.size === 0 ? "var(--th-accent)" : "transparent", fontSize: 9, color: "#000" }}>
+                  {agentFilters.size === 0 ? "✓" : ""}
+                </span>
+                {t({ ko: "전체 에이전트", en: "All agents", ja: "全エージェント", zh: "全部代理" })}
+              </button>
+              <div style={{ height: 1, background: "var(--th-border)", margin: "2px 0" }} />
+              {agentsWithProvider.map((agent) => {
+                const checked = agentFilters.has(agent.id);
+                return (
+                  <button
+                    key={agent.id}
+                    type="button"
+                    onClick={() => toggleAgentFilter(agent.id)}
+                    className="w-full flex items-center gap-2 px-3 py-1.5 text-[11px] font-mono text-left"
+                    style={{ background: checked ? "rgba(251,191,36,0.08)" : "transparent", color: checked ? "var(--th-accent)" : "var(--th-text-secondary)", border: "none" }}
+                  >
+                    <span className="flex items-center justify-center shrink-0" style={{ width: 14, height: 14, borderRadius: 0, border: checked ? "1px solid var(--th-accent)" : "1px solid var(--th-border-strong)", background: checked ? "var(--th-accent)" : "transparent", fontSize: 9, color: "#000" }}>
+                      {checked ? "✓" : ""}
+                    </span>
+                    <AgentAvatar agent={agent} agents={agents} size={16} rounded="sm" />
+                    <span className="truncate">{agentDisplayName(agent)}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+        {agentFilters.size > 0 && (
+          <button type="button" onClick={clearAgentFilters} className="px-1.5 py-0.5 text-[10px] font-mono" style={{ borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-muted)", background: "transparent" }}>
+            ✕ {t({ ko: "초기화", en: "clear", ja: "クリア", zh: "清除" })}
+          </button>
+        )}
       </div>
 
       <div className="min-h-0 flex-1 space-y-2 overflow-y-auto px-3 pb-3">
@@ -288,7 +368,7 @@ export default function RuleHistoryPanel({
           </div>
         )}
 
-        {tab === "history" && displayHistoryRows.length === 0 && !loading && !error && (
+        {tab === "history" && filteredHistoryRows.length === 0 && !loading && !error && (
           <div className="px-3 py-6 text-center text-xs font-mono" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-muted)" }}>
             {t({ ko: "학습 이력이 없습니다", en: "No learning history yet.", ja: "学習履歴がありません", zh: "暂无学习记录" })}
           </div>
@@ -296,7 +376,7 @@ export default function RuleHistoryPanel({
 
         {tab === "history" &&
           visibleHistoryRows.map((row) => {
-            const agent = representatives.get(row.provider) ?? null;
+            const rowAgents = agentsByProvider.get(row.provider) ?? [];
             const label = row.rule_label || row.rule_id;
             const eventAt = row.run_completed_at ?? row.updated_at ?? row.created_at;
             const rowKey = ruleLearningRowKey(row);
@@ -315,23 +395,34 @@ export default function RuleHistoryPanel({
                     <div className="mt-0.5 truncate text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>{row.rule_id}</div>
                   </div>
                   <span className={`px-1.5 py-0.5 text-[10px] font-mono ${ruleStatusClass(row.status)}`} style={{ borderRadius: 0 }}>
-                    {ruleStatusLabel(row.status)}
+                    {ruleStatusLabel(row.status, t)}
                   </span>
                 </div>
                 <div className="skill-history-meta mt-2 flex items-center justify-between gap-2 text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
                   <div className="flex min-w-0 items-center gap-2">
-                    <div
-                      className={`relative h-5 w-5 overflow-hidden ${unlearnEffect ? "unlearn-avatar-hit" : ""}`}
-                      style={{ borderRadius: 0, background: "var(--th-bg-primary)" }}
-                    >
-                      <AgentAvatar agent={agent ?? undefined} agents={agents} size={20} rounded="xl" />
-                      {unlearnEffect === "pot" && <span className="unlearn-pot-drop-sm">🪴</span>}
-                      {unlearnEffect === "hammer" && <span className="unlearn-hammer-swing-sm">🔨</span>}
-                      {unlearnEffect && <span className="unlearn-hit-text-sm">Bonk!</span>}
-                    </div>
+                    {rowAgents.length > 0 ? (
+                      <div className={`flex items-center gap-0.5 ${unlearnEffect ? "unlearn-avatar-hit" : ""}`}>
+                        {rowAgents.slice(0, 5).map((a) => (
+                          <div key={a.id} className="h-5 w-5 overflow-hidden shrink-0" style={{ borderRadius: 0, background: "var(--th-bg-primary)" }}>
+                            <AgentAvatar agent={a} agents={agents} size={20} rounded="xl" />
+                          </div>
+                        ))}
+                        {rowAgents.length > 5 && <span className="text-[9px] font-mono ml-0.5" style={{ color: "var(--th-text-muted)" }}>+{rowAgents.length - 5}</span>}
+                        {unlearnEffect === "pot" && <span className="unlearn-pot-drop-sm">🪴</span>}
+                        {unlearnEffect === "hammer" && <span className="unlearn-hammer-swing-sm">🔨</span>}
+                        {unlearnEffect && <span className="unlearn-hit-text-sm">{t({ ko: "깡~", en: "Bonk!", ja: "ゴン!", zh: "咣~" })}</span>}
+                      </div>
+                    ) : (
+                      <div className={`relative h-5 w-5 overflow-hidden ${unlearnEffect ? "unlearn-avatar-hit" : ""}`} style={{ borderRadius: 0, background: "var(--th-bg-primary)" }}>
+                        <AgentAvatar agent={undefined} agents={agents} size={20} rounded="xl" />
+                        {unlearnEffect === "pot" && <span className="unlearn-pot-drop-sm">🪴</span>}
+                        {unlearnEffect === "hammer" && <span className="unlearn-hammer-swing-sm">🔨</span>}
+                        {unlearnEffect && <span className="unlearn-hit-text-sm">{t({ ko: "깡~", en: "Bonk!", ja: "ゴン!", zh: "咣~" })}</span>}
+                      </div>
+                    )}
                     <span className="truncate">
                       {ruleProviderLabel(row.provider)}
-                      {agent ? ` · ${agent.name}` : ""}
+                      {rowAgents.length === 1 ? ` · ${agentDisplayName(rowAgents[0]!)}` : rowAgents.length > 1 ? ` · ${rowAgents.map((a) => agentDisplayName(a)).join(", ")}` : ""}
                     </span>
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
@@ -353,7 +444,7 @@ export default function RuleHistoryPanel({
                           : t({ ko: "학습 취소", en: "Unlearn", ja: "学習取消", zh: "取消学习" })}
                       </button>
                     )}
-                    <span className="skill-history-time" style={{ color: "var(--th-text-muted)" }}>{ruleRelativeTime(eventAt)}</span>
+                    <span className="skill-history-time" style={{ color: "var(--th-text-muted)" }}>{ruleRelativeTime(eventAt, localeTag)}</span>
                   </div>
                 </div>
                 {row.error && <div className="mt-1 break-words text-[10px] text-rose-300">{row.error}</div>}
@@ -381,15 +472,15 @@ export default function RuleHistoryPanel({
           </div>
         )}
 
-        {tab === "available" && availableRows.length === 0 && !loading && !error && (
+        {tab === "available" && filteredAvailableRows.length === 0 && !loading && !error && (
           <div className="px-3 py-6 text-center text-xs font-mono" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-muted)" }}>
             {t({ ko: "사용 가능한 룰이 없습니다", en: "No available rules.", ja: "利用可能なルールがありません", zh: "暂无可用规则" })}
           </div>
         )}
 
         {tab === "available" &&
-          availableRows.map((row) => {
-            const agent = representatives.get(row.provider) ?? null;
+          filteredAvailableRows.map((row) => {
+            const rowAgents = agentsByProvider.get(row.provider) ?? [];
             const label = row.rule_label || row.rule_id;
             const rowKey = ruleLearningRowKey(row);
             const isUnlearning = unlearningKeys.includes(rowKey);
@@ -404,18 +495,29 @@ export default function RuleHistoryPanel({
                 <div className="mt-0.5 truncate text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>{row.rule_id}</div>
                 <div className="skill-history-meta mt-2 flex items-center justify-between gap-2 text-[10px] font-mono" style={{ color: "var(--th-text-secondary)" }}>
                   <div className="flex min-w-0 items-center gap-2">
-                    <div
-                      className={`relative h-5 w-5 overflow-hidden ${unlearnEffect ? "unlearn-avatar-hit" : ""}`}
-                      style={{ borderRadius: 0, background: "var(--th-bg-primary)" }}
-                    >
-                      <AgentAvatar agent={agent ?? undefined} agents={agents} size={20} rounded="xl" />
-                      {unlearnEffect === "pot" && <span className="unlearn-pot-drop-sm">🪴</span>}
-                      {unlearnEffect === "hammer" && <span className="unlearn-hammer-swing-sm">🔨</span>}
-                      {unlearnEffect && <span className="unlearn-hit-text-sm">Bonk!</span>}
-                    </div>
+                    {rowAgents.length > 0 ? (
+                      <div className={`flex items-center gap-0.5 ${unlearnEffect ? "unlearn-avatar-hit" : ""}`}>
+                        {rowAgents.slice(0, 5).map((a) => (
+                          <div key={a.id} className="h-5 w-5 overflow-hidden shrink-0" style={{ borderRadius: 0, background: "var(--th-bg-primary)" }}>
+                            <AgentAvatar agent={a} agents={agents} size={20} rounded="xl" />
+                          </div>
+                        ))}
+                        {rowAgents.length > 5 && <span className="text-[9px] font-mono ml-0.5" style={{ color: "var(--th-text-muted)" }}>+{rowAgents.length - 5}</span>}
+                        {unlearnEffect === "pot" && <span className="unlearn-pot-drop-sm">🪴</span>}
+                        {unlearnEffect === "hammer" && <span className="unlearn-hammer-swing-sm">🔨</span>}
+                        {unlearnEffect && <span className="unlearn-hit-text-sm">{t({ ko: "깡~", en: "Bonk!", ja: "ゴン!", zh: "咣~" })}</span>}
+                      </div>
+                    ) : (
+                      <div className={`relative h-5 w-5 overflow-hidden ${unlearnEffect ? "unlearn-avatar-hit" : ""}`} style={{ borderRadius: 0, background: "var(--th-bg-primary)" }}>
+                        <AgentAvatar agent={undefined} agents={agents} size={20} rounded="xl" />
+                        {unlearnEffect === "pot" && <span className="unlearn-pot-drop-sm">🪴</span>}
+                        {unlearnEffect === "hammer" && <span className="unlearn-hammer-swing-sm">🔨</span>}
+                        {unlearnEffect && <span className="unlearn-hit-text-sm">{t({ ko: "깡~", en: "Bonk!", ja: "ゴン!", zh: "咣~" })}</span>}
+                      </div>
+                    )}
                     <span className="truncate">
                       {ruleProviderLabel(row.provider)}
-                      {agent ? ` · ${agent.name}` : ""}
+                      {rowAgents.length === 1 ? ` · ${agentDisplayName(rowAgents[0]!)}` : rowAgents.length > 1 ? ` · ${rowAgents.map((a) => agentDisplayName(a)).join(", ")}` : ""}
                     </span>
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
@@ -430,9 +532,9 @@ export default function RuleHistoryPanel({
                     >
                       {isUnlearning
                         ? t({ ko: "취소중...", en: "Unlearning...", ja: "取消中...", zh: "取消中..." })
-                        : t({ ko: "학습 취소", en: "Unlearn", ja: "学습取消", zh: "取消学习" })}
+                        : t({ ko: "학습 취소", en: "Unlearn", ja: "学習取消", zh: "取消学习" })}
                     </button>
-                    <span className="skill-history-time font-mono" style={{ color: "var(--th-text-muted)" }}>{ruleRelativeTime(row.learned_at)}</span>
+                    <span className="skill-history-time font-mono" style={{ color: "var(--th-text-muted)" }}>{ruleRelativeTime(row.learned_at, localeTag)}</span>
                   </div>
                 </div>
               </div>
@@ -448,7 +550,7 @@ export default function RuleHistoryPanel({
                 <AgentAvatar agent={centerBonk.agent ?? undefined} agents={agents} size={80} rounded="xl" />
               </div>
               <span className="unlearn-hammer-swing-center">🔨</span>
-              <span className="unlearn-hit-text-center">Bonk!</span>
+              <span className="unlearn-hit-text-center">{t({ ko: "깡~", en: "Bonk!", ja: "ゴン!", zh: "咣~" })}</span>
             </div>
             <div className="skill-history-center-label mt-2 text-center text-xs font-medium font-mono" style={{ color: "rgb(254,205,211)" }}>
               {ruleProviderLabel(centerBonk.provider)}

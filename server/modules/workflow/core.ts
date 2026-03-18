@@ -221,6 +221,7 @@ export function initializeWorkflowPartA(ctx: RuntimeContext): WorkflowCoreExport
     generateProjectContext,
     getRecentChanges,
     ensureClaudeMd,
+    injectTaskContext,
   } = createProjectContextTools({
     db: db as any,
     isGitRepo,
@@ -230,7 +231,7 @@ export function initializeWorkflowPartA(ctx: RuntimeContext): WorkflowCoreExport
   // ---------------------------------------------------------------------------
   // WebSocket setup
   // ---------------------------------------------------------------------------
-  const { wsClients, broadcast, handleClientMessage, removeClient } = createWsHub(nowMs);
+  const { wsClients, broadcast, handleClientMessage, removeClient } = createWsHub(nowMs, appendTaskLog);
 
   // ---------------------------------------------------------------------------
   // CLI spawn helpers (ported from agentdesk-kanban)
@@ -337,6 +338,7 @@ export function initializeWorkflowPartA(ctx: RuntimeContext): WorkflowCoreExport
     generateProjectContext,
     getRecentChanges,
     ensureClaudeMd,
+    injectTaskContext,
     buildAgentArgs,
     shouldSkipDuplicateCliOutput,
     clearCliOutputDedup,

@@ -40,7 +40,7 @@ export function useSkillsLibraryState({ agents, localeTag, t }: { agents: Agent[
   const tooltipRef = useRef<HTMLDivElement | null>(null);
 
   const [learningSkill, setLearningSkill] = useState<CategorizedSkill | null>(null);
-  const [selectedProviders, setSelectedProviders] = useState<SkillLearnProvider[]>([]);
+  const [selectedAgentIds, setSelectedAgentIds] = useState<string[]>([]);
   const [learnJob, setLearnJob] = useState<SkillLearnJob | null>(null);
   const [learnSubmitting, setLearnSubmitting] = useState(false);
   const [learnError, setLearnError] = useState<string | null>(null);
@@ -49,7 +49,6 @@ export function useSkillsLibraryState({ agents, localeTag, t }: { agents: Agent[
   const [unlearnEffects, setUnlearnEffects] = useState<Partial<Record<SkillLearnProvider, UnlearnEffect>>>({});
   const [historyRefreshToken, setHistoryRefreshToken] = useState(0);
   const [learnedRows, setLearnedRows] = useState<LearnedSkillEntry[]>([]);
-  const [squadAgentIds, setSquadAgentIds] = useState<string[]>([]);
   const unlearnEffectTimersRef = useRef<Partial<Record<SkillLearnProvider, number>>>({});
 
   const representatives = useMemo(
@@ -61,10 +60,15 @@ export function useSkillsLibraryState({ agents, localeTag, t }: { agents: Agent[
     [agents],
   );
 
-  const defaultSelectedProviders = useMemo(
-    () => representatives.filter((row) => row.agent).map((row) => row.provider),
-    [representatives],
-  );
+  const defaultSelectedProviders = useMemo(() => {
+    const providers = new Set<SkillLearnProvider>();
+    for (const agent of agents) {
+      if (agent.cli_provider) {
+        providers.add(agent.cli_provider as SkillLearnProvider);
+      }
+    }
+    return Array.from(providers);
+  }, [agents]);
 
   const bumpHistoryRefreshToken = useCallback(() => {
     setHistoryRefreshToken((prev) => prev + 1);
@@ -76,10 +80,12 @@ export function useSkillsLibraryState({ agents, localeTag, t }: { agents: Agent[
     onHistoryChanged: bumpHistoryRefreshToken,
   });
 
+  // provider → 해당 provider를 가진 모든 에이전트 목록
   const learnedRepresentatives = useMemo(() => {
-    const out = new Map<SkillHistoryProvider, Agent | null>();
+    const out = new Map<SkillHistoryProvider, Agent[]>();
     for (const provider of LEARNED_PROVIDER_ORDER) {
-      out.set(provider, pickRepresentativeForProvider(agents, provider));
+      const list = agents.filter((a) => a.cli_provider === provider);
+      out.set(provider, list);
     }
     return out;
   }, [agents]);
@@ -248,29 +254,30 @@ export function useSkillsLibraryState({ agents, localeTag, t }: { agents: Agent[
       const detailId = skill.skillId || skill.name;
       const key = `${skill.repo}/${detailId}`;
       const learnedProviders = new Set(learnedProvidersBySkill.get(key) ?? []);
-      const initialSelection = defaultSelectedProviders.filter((provider) => !learnedProviders.has(provider));
+      // 아직 학습되지 않은 provider를 가진 에이전트를 기본 선택
+      const initialAgentIds = agents
+        .filter((a) => a.cli_provider && !learnedProviders.has(a.cli_provider as SkillLearnProvider))
+        .map((a) => a.id);
       setLearningSkill(skill);
-      setSelectedProviders(initialSelection);
+      setSelectedAgentIds(initialAgentIds);
       setLearnJob(null);
       setLearnError(null);
       setUnlearnError(null);
       setUnlearningProviders([]);
       setUnlearnEffects({});
-      setSquadAgentIds([]);
     },
-    [defaultSelectedProviders, learnedProvidersBySkill],
+    [agents, learnedProvidersBySkill],
   );
 
   const closeLearningModal = useCallback(() => {
     if (learnInProgressRef.current) return;
     setLearningSkill(null);
-    setSelectedProviders([]);
+    setSelectedAgentIds([]);
     setLearnJob(null);
     setLearnError(null);
     setUnlearnError(null);
     setUnlearningProviders([]);
     setUnlearnEffects({});
-    setSquadAgentIds([]);
   }, []);
 
   useEffect(() => {
@@ -285,25 +292,34 @@ export function useSkillsLibraryState({ agents, localeTag, t }: { agents: Agent[
     };
   }, [closeLearningModal, learningSkill]);
 
-  const toggleProvider = useCallback(
-    (provider: SkillLearnProvider) => {
+  const toggleAgent = useCallback(
+    (agentId: string) => {
       if (learnInProgress) return;
-      setSelectedProviders((prev) =>
-        prev.includes(provider) ? prev.filter((item) => item !== provider) : [...prev, provider],
+      setSelectedAgentIds((prev) =>
+        prev.includes(agentId) ? prev.filter((id) => id !== agentId) : [...prev, agentId],
       );
     },
     [learnInProgress],
   );
 
   const handleStartLearning = useCallback(async () => {
-    if (!learningSkill || selectedProviders.length === 0 || learnSubmitting || learnInProgress) return;
+    if (!learningSkill || selectedAgentIds.length === 0 || learnSubmitting || learnInProgress) return;
+    // 선택된 에이전트들의 cli_provider에서 중복 제거하여 providers 목록 생성
+    const providers = [
+      ...new Set(
+        agents
+          .filter((a) => selectedAgentIds.includes(a.id) && a.cli_provider)
+          .map((a) => a.cli_provider as SkillLearnProvider),
+      ),
+    ];
+    if (providers.length === 0) return;
     setLearnSubmitting(true);
     setLearnError(null);
     try {
       const job = await startSkillLearning({
         repo: learningSkill.repo,
         skillId: learningSkill.skillId || learningSkill.name,
-        providers: selectedProviders,
+        providers,
       });
       setLearnJob(job);
     } catch (error) {
@@ -312,7 +328,7 @@ export function useSkillsLibraryState({ agents, localeTag, t }: { agents: Agent[
     } finally {
       setLearnSubmitting(false);
     }
-  }, [learnInProgress, learningSkill, learnSubmitting, selectedProviders]);
+  }, [agents, learnInProgress, learningSkill, learnSubmitting, selectedAgentIds]);
 
   const triggerUnlearnEffect = useCallback((provider: SkillLearnProvider) => {
     const effect: UnlearnEffect = Math.random() < 0.5 ? "pot" : "hammer";
@@ -358,22 +374,6 @@ export function useSkillsLibraryState({ agents, localeTag, t }: { agents: Agent[
     [learnInProgress, learningSkill, triggerUnlearnEffect, unlearningProviders],
   );
 
-  const addAgentToSquad = useCallback(
-    (agentId: string) => {
-      setSquadAgentIds((prev) => (prev.includes(agentId) ? prev : [...prev, agentId]));
-      const agent = agents.find((a) => a.id === agentId);
-      if (agent?.cli_provider) {
-        const provider = agent.cli_provider as SkillLearnProvider;
-        setSelectedProviders((prev) => (prev.includes(provider) ? prev : [...prev, provider]));
-      }
-    },
-    [agents],
-  );
-
-  const removeAgentFromSquad = useCallback((agentId: string) => {
-    setSquadAgentIds((prev) => prev.filter((id) => id !== agentId));
-  }, []);
-
   const handleCopy = useCallback((skill: CategorizedSkill) => {
     const cmd = `npx skills add ${skill.repo}`;
     navigator.clipboard.writeText(cmd).then(() => {
@@ -399,7 +399,7 @@ export function useSkillsLibraryState({ agents, localeTag, t }: { agents: Agent[
     hoverTimerRef,
     tooltipRef,
     learningSkill,
-    selectedProviders,
+    selectedAgentIds,
     learnJob,
     learnSubmitting,
     learnError,
@@ -443,12 +443,9 @@ export function useSkillsLibraryState({ agents, localeTag, t }: { agents: Agent[
     loadSkills,
     openLearningModal,
     closeLearningModal,
-    toggleProvider,
+    toggleAgent,
     handleStartLearning,
     handleUnlearnProvider,
     handleCopy,
-    squadAgentIds,
-    addAgentToSquad,
-    removeAgentFromSquad,
   };
 }

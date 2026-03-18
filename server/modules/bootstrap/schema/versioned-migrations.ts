@@ -707,6 +707,50 @@ export const MIGRATIONS: Migration[] = [
       db.exec(`CREATE INDEX IF NOT EXISTS idx_projects_folder_id ON projects(folder_id)`);
     },
   },
+  {
+    id: "2026-03-23-001-agents-enable-planning-phase",
+    up: (db) => {
+      try {
+        db.exec(`ALTER TABLE agents ADD COLUMN enable_planning_phase INTEGER NOT NULL DEFAULT 1`);
+      } catch { /* already exists */ }
+    },
+  },
+  {
+    id: "2026-03-23-002-memory-entries-project-scope",
+    up: (db) => {
+      // Add 'project' to memory_entries scope_type CHECK constraint.
+      // SQLite does not support ALTER TABLE ... MODIFY COLUMN, so recreate the table.
+      try {
+        db.exec(`
+          CREATE TABLE IF NOT EXISTS memory_entries_v2 (
+            id TEXT PRIMARY KEY,
+            title TEXT NOT NULL,
+            title_ko TEXT NOT NULL DEFAULT '',
+            title_ja TEXT NOT NULL DEFAULT '',
+            title_zh TEXT NOT NULL DEFAULT '',
+            description TEXT NOT NULL DEFAULT '',
+            content TEXT NOT NULL,
+            category TEXT NOT NULL DEFAULT 'context'
+              CHECK(category IN ('context','preference','convention','knowledge','instruction','reference')),
+            scope_type TEXT NOT NULL DEFAULT 'global'
+              CHECK(scope_type IN ('global','department','agent','workflow_pack','project')),
+            scope_id TEXT,
+            priority INTEGER NOT NULL DEFAULT 50,
+            enabled INTEGER NOT NULL DEFAULT 1,
+            created_at INTEGER DEFAULT (unixepoch()*1000),
+            updated_at INTEGER DEFAULT (unixepoch()*1000)
+          )
+        `);
+        db.exec(`INSERT INTO memory_entries_v2 SELECT * FROM memory_entries`);
+        db.exec(`DROP TABLE memory_entries`);
+        db.exec(`ALTER TABLE memory_entries_v2 RENAME TO memory_entries`);
+        db.exec(`CREATE INDEX IF NOT EXISTS idx_memory_entries_scope ON memory_entries(scope_type, scope_id)`);
+        db.exec(`CREATE INDEX IF NOT EXISTS idx_memory_entries_category ON memory_entries(category)`);
+        db.exec(`CREATE INDEX IF NOT EXISTS idx_memory_entries_enabled ON memory_entries(enabled, priority DESC)`);
+        db.exec(`CREATE INDEX IF NOT EXISTS idx_memory_entries_enabled_scope ON memory_entries(enabled, scope_type, scope_id, priority DESC)`);
+      } catch { /* already updated or table absent */ }
+    },
+  },
 ];
 
 const ENSURE_TABLE_SQL = `

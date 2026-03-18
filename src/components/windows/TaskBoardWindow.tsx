@@ -4,7 +4,6 @@ import { useAgentStore } from "../../store/agentStore";
 import { useProjectStore } from "../../store/projectStore";
 import { useUiStore } from "../../store/uiStore";
 import {
-  createTask,
   updateTask,
   deleteTask,
   assignTask,
@@ -30,11 +29,6 @@ export default function TaskBoardWindow() {
   const projectAgents = currentProject && projectAgentsLoaded && projectAgentIds.size > 0
     ? agents.filter((a) => projectAgentIds.has(a.id))
     : undefined;
-
-  const handleCreateTask: React.ComponentProps<typeof TaskBoard>["onCreateTask"] = useCallback(async (input) => {
-    await createTask(input as Parameters<typeof createTask>[0]);
-    // WS realtime sync updates the task store automatically
-  }, []);
 
   const handleUpdateTask = useCallback(async (id: string, data: Partial<Task>) => {
     await updateTask(id, data);
@@ -119,7 +113,6 @@ export default function TaskBoardWindow() {
         departments={departments}
         subtasks={subtasks}
         currentProject={currentProject}
-        onCreateTask={handleCreateTask}
         onUpdateTask={handleUpdateTask}
         onDeleteTask={handleDeleteTask}
         onAssignTask={handleAssignTask}

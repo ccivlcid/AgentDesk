@@ -1,14 +1,12 @@
 import { create } from "zustand";
 import type { CompanySettings } from "../types";
-import type { OAuthCallbackResult, RuntimeOs, View, WindowType, WidgetEntry, WidgetId } from "../app/types";
+import type { OAuthCallbackResult, RuntimeOs, View, WindowType } from "../app/types";
 import type { SettingsTab } from "../components/settings/types";
 import type { UpdateStatus } from "../api";
 import { detectBrowserLanguage } from "../i18n";
 import { UPDATE_BANNER_DISMISS_STORAGE_KEY } from "../app/constants";
 import { detectRuntimeOs, isForceUpdateBannerEnabled, mergeSettingsWithDefaults } from "../app/utils";
 
-const WIDGET_LAYOUT_KEY = "agentdesk_widget_layout";
-const WIDGET_ICONS_KEY = "agentdesk_widget_icons";
 const DESKTOP_ICON_LAYOUT_KEY = "agentdesk_icon_layout";
 const DESKTOP_ICON_LABELS_KEY = "agentdesk_icon_labels";
 const WALLPAPER_KEY = "agentdesk_wallpaper";
@@ -20,30 +18,6 @@ function saveWallpaper(css: string) {
   try { window.localStorage.setItem(WALLPAPER_KEY, css); } catch { /* ignore */ }
 }
 
-function loadWidgetLayout(): WidgetEntry[] {
-  try {
-    const raw = window.localStorage.getItem(WIDGET_LAYOUT_KEY);
-    if (raw) return JSON.parse(raw) as WidgetEntry[];
-  } catch { /* ignore */ }
-  // 기본: 빈 상태 (사용자가 직접 추가)
-  return [];
-}
-
-function saveWidgetLayout(layout: WidgetEntry[]) {
-  try { window.localStorage.setItem(WIDGET_LAYOUT_KEY, JSON.stringify(layout)); } catch { /* ignore */ }
-}
-
-function loadWidgetIcons(): WidgetId[] {
-  try {
-    const raw = window.localStorage.getItem(WIDGET_ICONS_KEY);
-    if (raw) return JSON.parse(raw) as WidgetId[];
-  } catch { /* ignore */ }
-  return [];
-}
-
-function saveWidgetIcons(ids: WidgetId[]) {
-  try { window.localStorage.setItem(WIDGET_ICONS_KEY, JSON.stringify(ids)); } catch { /* ignore */ }
-}
 
 function loadDesktopIconLayout(): Record<string, { x: number; y: number }> {
   try {
@@ -80,7 +54,6 @@ function readDismissedVersion(): string {
 interface UiStore {
   // ── 데스크톱 OS 상태 ──────────────────────────────────────────────
   openWindows: Set<WindowType>;
-  widgetLayout: WidgetEntry[];
   desktopIconLayout: Record<string, { x: number; y: number }>;
   selectedAgentId: string | null;
   openTaskId: string | null;
@@ -91,14 +64,6 @@ interface UiStore {
   toggleWindow: (w: WindowType) => void;
   openWindow: (w: WindowType) => void;
   closeWindow: (w: WindowType) => void;
-  setWidgetLayout: (layout: WidgetEntry[]) => void;
-  addWidget: (id: WidgetId) => void;
-  removeWidget: (id: WidgetId) => void;
-  updateWidgetPos: (id: WidgetId, x: number, y: number) => void;
-  updateWidgetSize: (id: WidgetId, w: number, h: number) => void;
-  widgetIcons: WidgetId[];
-  addWidgetIcon: (id: WidgetId) => void;
-  removeWidgetIcon: (id: WidgetId) => void;
   setDesktopIconLayout: (layout: Record<string, { x: number; y: number }>) => void;
   desktopIconLabels: Record<string, string>;
   setDesktopIconLabel: (id: string, label: string) => void;
@@ -131,6 +96,10 @@ interface UiStore {
   openCliAgentIds: Set<string>;
   openCliWindow: (agentId: string) => void;
   closeCliWindow: (agentId: string) => void;
+  // planning phase 완료 후 auto_open_cli 시 배너 표시용
+  cliPlanReadyIds: Set<string>;
+  setCliPlanReady: (agentId: string) => void;
+  clearCliPlanReady: (agentId: string) => void;
 
   // ── Project Folders ───────────────────────────────────────────────
   openFolders: Set<string>;
@@ -141,6 +110,8 @@ interface UiStore {
   openCustomApps: Set<string>;
   openCustomApp: (id: string) => void;
   closeCustomApp: (id: string) => void;
+  customFeaturesTick: number;
+  bumpCustomFeaturesTick: () => void;
 
   // ── 기존 상태 ─────────────────────────────────────────────────────
   view: View;
@@ -204,7 +175,13 @@ export const useUiStore = create<UiStore>()((set) => ({
     next.delete(agentId);
     return { openCliAgentIds: next };
   }),
-  widgetLayout: loadWidgetLayout(),
+  cliPlanReadyIds: new Set<string>(),
+  setCliPlanReady: (agentId) => set((s) => ({ cliPlanReadyIds: new Set([...s.cliPlanReadyIds, agentId]) })),
+  clearCliPlanReady: (agentId) => set((s) => {
+    const next = new Set(s.cliPlanReadyIds);
+    next.delete(agentId);
+    return { cliPlanReadyIds: next };
+  }),
   desktopIconLayout: loadDesktopIconLayout(),
   desktopIconLabels: loadDesktopIconLabels(),
   pendingDocs: [],
@@ -236,30 +213,6 @@ export const useUiStore = create<UiStore>()((set) => ({
     const minimized = new Set(s.minimizedWindows); minimized.delete(w);
     return { openWindows: next, minimizedWindows: minimized, windowFocusOrder: s.windowFocusOrder.filter((x) => x !== w) };
   }),
-  setWidgetLayout: (layout) => { saveWidgetLayout(layout); set({ widgetLayout: layout }); },
-  addWidget: (id) => set((s) => {
-    if (s.widgetLayout.some((e) => e.id === id)) return s;
-    const offset = s.widgetLayout.length * 30;
-    const entry: WidgetEntry = { id, x: 60 + offset, y: 140 + offset, w: 420, h: 280 };
-    const next = [...s.widgetLayout, entry];
-    saveWidgetLayout(next);
-    return { widgetLayout: next };
-  }),
-  removeWidget: (id) => set((s) => {
-    const next = s.widgetLayout.filter((e) => e.id !== id);
-    saveWidgetLayout(next);
-    return { widgetLayout: next };
-  }),
-  updateWidgetPos: (id, x, y) => set((s) => {
-    const next = s.widgetLayout.map((e) => e.id === id ? { ...e, x, y } : e);
-    saveWidgetLayout(next);
-    return { widgetLayout: next };
-  }),
-  updateWidgetSize: (id, w, h) => set((s) => {
-    const next = s.widgetLayout.map((e) => e.id === id ? { ...e, w, h } : e);
-    saveWidgetLayout(next);
-    return { widgetLayout: next };
-  }),
   // ── Project Folders ────────────────────────────────────────────────
   openFolders: new Set<string>(),
   openFolder: (id) => set((s) => ({ openFolders: new Set([...s.openFolders, id]) })),
@@ -277,24 +230,13 @@ export const useUiStore = create<UiStore>()((set) => ({
     next.delete(id);
     return { openCustomApps: next };
   }),
+  customFeaturesTick: 0,
+  bumpCustomFeaturesTick: () => set((s) => ({ customFeaturesTick: s.customFeaturesTick + 1 })),
 
   jiggleMode: false,
   missionControlOpen: false,
   windowFocusOrder: [],
   minimizedWindows: new Set<WindowType>(),
-
-  widgetIcons: loadWidgetIcons(),
-  addWidgetIcon: (id) => set((s) => {
-    if (s.widgetIcons.includes(id)) return s;
-    const next = [...s.widgetIcons, id];
-    saveWidgetIcons(next);
-    return { widgetIcons: next };
-  }),
-  removeWidgetIcon: (id) => set((s) => {
-    const next = s.widgetIcons.filter((i) => i !== id);
-    saveWidgetIcons(next);
-    return { widgetIcons: next };
-  }),
 
   setDesktopIconLayout: (layout) => { saveDesktopIconLayout(layout); set({ desktopIconLayout: layout }); },
   setDesktopIconLabel: (id, label) => set((s) => {

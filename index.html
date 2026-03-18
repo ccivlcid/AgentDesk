@@ -5,8 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AgentDesk - AI Agent Office Simulator</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <script>
+    try {
+      var wp = localStorage.getItem("agentdesk_wallpaper");
+      if (wp) document.documentElement.style.setProperty("--_preload-bg", wp);
+    } catch(e) {}
+  </script>
   </head>
-  <body class="bg-slate-900 text-white">
+  <body class="text-white" style="background: var(--_preload-bg, #0f1117);">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

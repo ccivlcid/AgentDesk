@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useI18n } from "../i18n";
 import type { Agent, Department, Project } from "../types";
 import AgentRulesCategoryBar from "./agent-rules/AgentRulesCategoryBar";
@@ -17,11 +18,16 @@ interface AgentRulesLibraryProps {
 export default function AgentRulesLibrary({ agents, departments, currentProject }: AgentRulesLibraryProps) {
   const { t, locale: localeTag } = useI18n();
 
+  const filters = useMemo(
+    () => currentProject ? { scope_type: "project" as const, scope_id: currentProject.id } : undefined,
+    [currentProject?.id],
+  );
+
   const vm = useAgentRulesState({
     agents,
     departments,
     t,
-    filters: currentProject ? { scope_type: "project", scope_id: currentProject.id } : undefined,
+    filters,
   });
 
   // 프로젝트 미선택
@@ -99,6 +105,7 @@ export default function AgentRulesLibrary({ agents, departments, currentProject 
 
         <RuleMemorySection
           t={t}
+          localeTag={localeTag}
           agents={agents}
           historyRefreshToken={vm.historyRefreshToken}
           onRefreshHistory={vm.bumpHistoryRefreshToken}
@@ -122,8 +129,6 @@ export default function AgentRulesLibrary({ agents, departments, currentProject 
           t={t}
           show={vm.showFormModal}
           editingRule={vm.editingRule}
-          agents={agents}
-          departments={departments}
           submitting={vm.formSubmitting}
           error={vm.formError}
           onClose={vm.closeFormModal}

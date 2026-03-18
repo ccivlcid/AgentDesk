@@ -128,6 +128,7 @@ export default function AgentManager({
               : undefined;
           } catch { return undefined; }
         })(),
+        enable_planning_phase: agent.enable_planning_phase ?? 1,
       });
       setShowModal(true);
     },
@@ -161,6 +162,7 @@ export default function AgentManager({
         kb_default_sources: form.kb_default_sources && form.kb_default_sources.length > 0
           ? JSON.stringify(form.kb_default_sources)
           : null,
+        enable_planning_phase: form.enable_planning_phase ?? 1,
       };
       let savedAgentId: string | undefined = modalAgent?.id;
       if (modalAgent) {

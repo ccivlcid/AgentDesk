@@ -4,7 +4,7 @@ import { Modal, ModalHeader, ModalBody, ModalFooter, Button, Input, FormField } 
 import ManualPathPickerDialog from "../project-manager/ManualPathPickerDialog";
 import { useProjectManagerPathTools } from "../project-manager/useProjectManagerPathTools";
 import CategorySelectStep from "./CategorySelectStep";
-import GitHubImportPanel from "../GitHubImportPanel";
+import GitImportPanel from "../git-import/GitImportPanel";
 import { useI18n } from "../../i18n";
 import { getFigmaInfo } from "../../api/synapse";
 import { useUiStore } from "../../store/uiStore";
@@ -206,7 +206,7 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onGi
   const categoryDisplayName = (cat: Category) => language === "ko" ? cat.name_ko ?? cat.name : cat.name;
 
   const STEPS: { key: Step; label: string }[] = step === "github"
-    ? [{ key: "github", label: "GitHub Import" }]
+    ? [{ key: "github", label: "Git Import" }]
     : [
         { key: "category", label: t({ ko: "① 유형", en: "① Type", ja: "① タイプ", zh: "① 类型" }) },
         { key: "info", label: t({ ko: "② 정보", en: "② Info", ja: "② 情報", zh: "② 信息" }) },
@@ -262,7 +262,7 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onGi
         <ModalBody>
           {/* ── STEP: GitHub 임포트 ── */}
           {step === "github" && (
-            <GitHubImportPanel
+            <GitImportPanel
               onComplete={({ projectId }) => {
                 onGitHubComplete?.(projectId);
               }}
@@ -299,11 +299,11 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onGi
                   onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--th-accent)"; (e.currentTarget as HTMLButtonElement).style.color = "var(--th-accent)"; }}
                   onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--th-border)"; (e.currentTarget as HTMLButtonElement).style.color = "var(--th-text-secondary)"; }}
                 >
-                  <span style={{ fontSize: "18px" }}>🐙</span>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M6 9v6M9 6h6a3 3 0 010 6h-6"/></svg>
                   <div style={{ textAlign: "left" }}>
-                    <div style={{ fontWeight: 700 }}>{t({ ko: "GitHub에서 가져오기", en: "Import from GitHub", ja: "GitHubからインポート", zh: "从 GitHub 导入" })}</div>
+                    <div style={{ fontWeight: 700 }}>{t({ ko: "Git 저장소 가져오기", en: "Import from Git", ja: "Gitリポジトリのインポート", zh: "从 Git 导入" })}</div>
                     <div style={{ fontSize: "10px", color: "var(--th-text-muted)", marginTop: 2 }}>
-                      {t({ ko: "리포지토리 클론 후 자동 프로젝트 생성", en: "Clone a repo and auto-create project", ja: "リポジトリをクローンして自動作成", zh: "克隆仓库并自动创建项目" })}
+                      {t({ ko: "GitHub · GitLab — URL로 클론 후 프로젝트 자동 생성", en: "GitHub · GitLab — clone by URL and auto-create project", ja: "GitHub · GitLab — URLでクローンして自動作成", zh: "GitHub · GitLab — 通过 URL 克隆并自动创建项目" })}
                     </div>
                   </div>
                   <span style={{ marginLeft: "auto", fontSize: "14px", color: "var(--th-text-muted)" }}>→</span>

@@ -94,6 +94,9 @@ export function useRealtimeSync({
   setStreamingMessage,
 }: UseRealtimeSyncParams): void {
   const incUnreadReportCount = useUiStore((s) => s.incUnreadReportCount);
+  const openCliWindow = useUiStore((s) => s.openCliWindow);
+  const closeCliWindow = useUiStore((s) => s.closeCliWindow);
+  const setCliPlanReady = useUiStore((s) => s.setCliPlanReady);
 
   useEffect(() => {
     const unsubs = [
@@ -450,6 +453,17 @@ export function useRealtimeSync({
       on("meeting_minutes_update", (_payload: unknown) => {
         // Trigger a live sync so any open meeting minutes panel refreshes immediately
         scheduleLiveSync(100);
+      }),
+      on("auto_open_cli", (payload: unknown) => {
+        const p = payload as { agent_id?: string; from_planning?: boolean };
+        if (p.agent_id) {
+          openCliWindow(p.agent_id);
+          if (p.from_planning) setCliPlanReady(p.agent_id);
+        }
+      }),
+      on("close_cli", (payload: unknown) => {
+        const p = payload as { agent_id?: string };
+        if (p.agent_id) closeCliWindow(p.agent_id);
       }),
       on("chat_stream", (payload: unknown) => {
         const p = payload as {

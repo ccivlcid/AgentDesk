@@ -63,7 +63,8 @@ describe("SkillHistoryPanel unlearn", () => {
       removed: 1,
     });
 
-    render(<SkillHistoryPanel agents={[TEST_AGENT]} onLearningDataChanged={onLearningDataChanged} />);
+    const t = (s: { ko: string; en: string; ja: string; zh: string }) => s.en;
+    render(<SkillHistoryPanel t={t} agents={[TEST_AGENT]} onLearningDataChanged={onLearningDataChanged} />);
 
     fireEvent.click(await screen.findByRole("button", { name: "Available Skills" }));
     fireEvent.click(await screen.findByRole("button", { name: "Unlearn" }));

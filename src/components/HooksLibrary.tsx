@@ -91,6 +91,7 @@ export default function HooksLibrary({ agents, departments, currentProject }: Ho
 
         <HookMemorySection
           t={t}
+          localeTag={localeTag}
           agents={agents}
           historyRefreshToken={vm.historyRefreshToken}
           onRefreshHistory={vm.bumpHistoryRefreshToken}

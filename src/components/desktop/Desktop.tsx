@@ -17,22 +17,13 @@ import {
   IconDecisions, IconReports, IconFolder,
   IconProjectSoftware, IconProjectMarketing, IconProjectResearch,
   IconProjectProduct, IconProjectContent, IconProjectOperations, IconProjectDesign,
-  IconHeartbeat, IconTaskBoard, IconAlerts, IconCliCost, IconFlowGraph, IconFileTree, IconLocalLlm,
   IconMarkdownDoc, IconImageStudio,
+  IconHeartbeat, IconTaskBoard, IconAlerts, IconCliCost, IconFlowGraph, IconFileTree, IconLocalLlm, IconAgentGraph,
 } from "./DesktopIcons";
-import Widget from "./Widget";
 import Dock from "./Dock";
-import WidgetPicker from "./WidgetPicker";
-import AgentsWidget from "./widgets/AgentsWidget";
-import TasksWidget from "./widgets/TasksWidget";
-import AlertsWidget from "./widgets/AlertsWidget";
-import CliCostWidget from "./widgets/CliCostWidget";
-import FlowGraphWidget from "./widgets/FlowGraphWidget";
-import FileTreeWidget from "./widgets/FileTreeWidget";
-import CustomFeatureWidget from "./widgets/CustomFeatureWidget";
-import LocalLlmWidget from "./widgets/LocalLlmWidget";
-import SynapseWidget from "./widgets/SynapseWidget";
 import CustomFeatureWindow from "../windows/CustomFeatureWindow";
+import { listCustomFeatures, deleteCustomFeature } from "../../api/custom-features";
+import type { CustomFeature } from "../../types";
 import WallpaperPicker from "./WallpaperPicker";
 import ExportModal from "../export/ExportModal";
 import MarkdownEditorModal from "./MarkdownEditorModal";
@@ -55,26 +46,17 @@ import CliWindow from "../windows/CliWindow";
 import TaskBoardWindow from "../windows/TaskBoardWindow";
 import SynapseWindow from "../windows/SynapseWindow";
 import ImageStudioWindow from "../windows/ImageStudioWindow";
+import FileTreeWindow from "../windows/FileTreeWindow";
+import AlertsWindow from "../windows/AlertsWindow";
+import CliCostWindow from "../windows/CliCostWindow";
+import LocalLlmWindow from "../windows/LocalLlmWindow";
+import FeatureBuilderWindow from "../windows/FeatureBuilderWindow";
+import FlowGraphWindow from "../windows/FlowGraphWindow";
+import GitImportWindow from "../windows/GitImportWindow";
 import NotificationCenter from "../NotificationCenter";
 import AgentDetailPanel from "../agent-detail/AgentDetailPanel";
 
 const ChatWindow = lazy(() => import("../windows/ChatWindow"));
-
-
-function WidgetContent({ id }: { id: string }) {
-  if (id.startsWith("custom:")) return <CustomFeatureWidget featureId={id.slice(7)} />;
-  switch (id) {
-    case "heartbeat":   return <AgentsWidget />;
-    case "task-board":  return <TasksWidget />;
-    case "alerts":      return <AlertsWidget />;
-    case "cli-usage":   return <CliCostWidget />;
-    case "flow-graph":  return <FlowGraphWidget />;
-    case "file-tree":   return <FileTreeWidget />;
-    case "local-llm":   return <LocalLlmWidget />;
-    case "synapse":  return <SynapseWidget />;
-    default:         return null;
-  }
-}
 
 interface DesktopProps {
   connected: boolean;
@@ -94,8 +76,8 @@ interface DesktopProps {
   onSendAnnouncement: (content: string) => Promise<void>;
   onSendDirective: (content: string, projectMeta?: ProjectMetaPayload) => Promise<void>;
   onClearMessages: (agentId?: string) => Promise<void>;
-  onProjectCreate: () => void;
   onCreateTask: () => void;
+  onProjectCreate: () => void;
   onOpenDecisionInbox: () => void;
   onOpenReportHistory: () => void;
   children?: ReactNode;
@@ -126,8 +108,8 @@ export default function Desktop({
   onSendAnnouncement,
   onSendDirective,
   onClearMessages,
-  onProjectCreate,
   onCreateTask,
+  onProjectCreate,
   onOpenDecisionInbox,
   onOpenReportHistory,
   children,
@@ -136,10 +118,6 @@ export default function Desktop({
     openWindows,
     openWindow,
     toggleWindow,
-    widgetLayout,
-    addWidget,
-    widgetIcons,
-    removeWidgetIcon,
     wallpaper,
     jiggleMode,
     setJiggleMode,
@@ -149,7 +127,9 @@ export default function Desktop({
     unreadReportCount,
     clearUnreadReportCount,
     openCustomApps,
+    openCustomApp,
     closeCustomApp,
+    customFeaturesTick,
     pendingDocs,
     removePendingDoc,
     selectedAgentId,
@@ -171,7 +151,6 @@ export default function Desktop({
 
   const [agentManagerCreateCount, setAgentManagerCreateCount] = useState(0);
   const [showQuickCreateAgent, setShowQuickCreateAgent] = useState(false);
-  const [showWidgetPicker, setShowWidgetPicker] = useState(false);
   const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [showShortcutsGuide, setShowShortcutsGuide] = useState(false);
   const [showWallpaperPicker, setShowWallpaperPicker] = useState(false);
@@ -179,6 +158,7 @@ export default function Desktop({
   const [showMarkdownEditor, setShowMarkdownEditor] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const [projectCtxMenu, setProjectCtxMenu] = useState<{ x: number; y: number; projectId: string; projectName: string } | null>(null);
+  const [cfCtxMenu, setCfCtxMenu] = useState<{ x: number; y: number; featureId: string; featureName: string } | null>(null);
   const [quickLookProjectId, setQuickLookProjectId] = useState<string | null>(null);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [openProjectWindowIds, setOpenProjectWindowIds] = useState<Set<string>>(new Set());
@@ -197,6 +177,7 @@ export default function Desktop({
   const newFolderCreating = useRef(false);
   const newFolderInputRef = useRef<HTMLInputElement>(null);
   const [folders, setFolders] = useState<ProjectFolder[]>([]);
+  const [customFeatures, setCustomFeatures] = useState<CustomFeature[]>([]);
   const [newFolderModalOpen, setNewFolderModalOpen] = useState(false);
   const [newFolderPreName, setNewFolderPreName] = useState("");
   const [dragOverFolderId, setDragOverFolderId] = useState<string | null>(null);
@@ -205,17 +186,6 @@ export default function Desktop({
   const { setProjects } = useProjectStore();
   const { t, language } = useI18n();
   const { showToast } = useToast();
-
-  const widgetLabels: Record<string, string> = {
-    heartbeat:    t({ ko: "에이전트",     en: "Agents",        ja: "エージェント",           zh: "代理"    }),
-    "task-board": t({ ko: "태스크",       en: "Tasks",         ja: "タスク",                zh: "任务"    }),
-    alerts:       t({ ko: "알림",         en: "Alerts",        ja: "アラート",              zh: "警报"    }),
-    "cli-usage":  t({ ko: "CLI 비용",     en: "CLI Cost",      ja: "CLIコスト",             zh: "CLI成本" }),
-    "flow-graph": t({ ko: "플로우 그래프", en: "Flow Graph",    ja: "フローグラフ",           zh: "流程图"  }),
-    "file-tree":  t({ ko: "파일 탐색기",  en: "File Explorer", ja: "ファイルエクスプローラー", zh: "文件管理" }),
-    "local-llm":  t({ ko: "로컬 LLM",    en: "Local LLM",     ja: "ローカルLLM",            zh: "本地LLM" }),
-    synapse:      t({ ko: "시냅스",       en: "Synapse",       ja: "シナプス",               zh: "知识库"  }),
-  };
 
   // ── 아이콘 정렬 헬퍼 ────────────────────────────────────────────
   const ICON_GRID_X = 88;
@@ -237,7 +207,7 @@ export default function Desktop({
   }
 
   function sortByName() {
-    const sortedSystem = [...icons, ...widgetIconDefs]
+    const sortedSystem = [...icons]
       .sort((a, b) => a.label.localeCompare(b.label))
       .map((d) => d.id);
     const sortedProjects = [...projects]
@@ -247,7 +217,7 @@ export default function Desktop({
   }
 
   function sortByDefault() {
-    const systemIds = [...icons, ...widgetIconDefs].map((d) => d.id);
+    const systemIds = [...icons].map((d) => d.id);
     const projectIds = projects.map((p) => `project-${p.id}`);
     arrangeIcons(systemIds, projectIds);
   }
@@ -280,6 +250,10 @@ export default function Desktop({
   useEffect(() => {
     getProjectFolders().then(setFolders).catch(() => {});
   }, []);
+
+  useEffect(() => {
+    listCustomFeatures().then((list) => setCustomFeatures(list.filter((f) => f.status === "active"))).catch(() => {});
+  }, [customFeaturesTick]);
 
   const handleDropDocToProject = useCallback(async (docId: string, project: { id: string; project_path: string; name: string }) => {
     const doc = useUiStore.getState().pendingDocs.find((d) => d.id === docId);
@@ -387,9 +361,6 @@ export default function Desktop({
             } else if (id.startsWith("doc-")) {
               const docId = id.replace("doc-", "");
               removePendingDoc(docId);
-            } else if (id.startsWith("widget-icon-")) {
-              const wId = id.replace("widget-icon-", "");
-              removeWidgetIcon(wId as Parameters<typeof removeWidgetIcon>[0]);
             }
           });
           setSelectedIconIds(new Set());
@@ -461,12 +432,13 @@ export default function Desktop({
       window.removeEventListener("keydown", handler);
       if (gTimer.current) clearTimeout(gTimer.current);
     };
-  }, [toggleWindow, openCli, jiggleMode, setJiggleMode, missionControlOpen, setMissionControlOpen, quickLookProjectId, selectedProjectId, selectedAgentId, setSelectedAgentId, selectedIconIds, handleDeleteProject, removePendingDoc, removeWidgetIcon]);
+  }, [toggleWindow, openCli, jiggleMode, setJiggleMode, missionControlOpen, setMissionControlOpen, quickLookProjectId, selectedProjectId, selectedAgentId, setSelectedAgentId, selectedIconIds, handleDeleteProject, removePendingDoc]);
 
   // jiggle 모드에서 바탕화면 클릭 시 해제
   function onDesktopClick(e: React.MouseEvent) {
     setCtxMenu(null);
     setProjectCtxMenu(null);
+    setCfCtxMenu(null);
     if (jiggleMode && e.target === e.currentTarget) {
       setJiggleMode(false);
     }
@@ -547,50 +519,72 @@ export default function Desktop({
 
   // 데스크톱 아이콘 정의 (채팅·라이브러리는 Dock에서 제공)
   const icons: DesktopIconDef[] = [
+    // ── 기존 앱 ──────────────────────────────────────────────────
     { id: "agent-manager",  icon: (c) => <IconAgents color={c} />,      label: t({ ko: "에이전트 설정",    en: "Agents",         ja: "エージェント設定",  zh: "代理设置" }),   onClick: () => openWindow("agent-manager"), accentColor: "#5e5ce6" },
     { id: "cli",            icon: (c) => <IconRepl color={c} />,        label: t({ ko: "Agent CLI",       en: "Agent CLI",      ja: "Agent CLI",       zh: "Agent CLI" }),  onClick: () => openCli(),                   accentColor: "#32ade6" },
     { id: "image-studio",   icon: (c) => <IconImageStudio color={c} />, label: t({ ko: "이미지 스튜디오", en: "Image Studio",   ja: "イメージスタジオ", zh: "图像工作室" }),  onClick: () => openWindow("image-studio"),  accentColor: "#ec4899" },
     { id: "decision-inbox", icon: (c) => <IconDecisions color={c} />,   label: t({ ko: "의사결정",         en: "Decisions",      ja: "意思決定",        zh: "决策" }),       onClick: onOpenDecisionInbox,               accentColor: "#ff453a", badge: decisionInboxItems.length || undefined },
     { id: "report-history", icon: (c) => <IconReports color={c} />,     label: t({ ko: "보고서",           en: "Reports",        ja: "レポート",        zh: "报告" }),       onClick: () => { clearUnreadReportCount(); toggleWindow("reports"); }, accentColor: "#64d2ff", badge: unreadReportCount || undefined },
+    // ── 구 위젯 → 앱 ─────────────────────────────────────────────
+    { id: "flow-graph-app", icon: (c) => <IconAgentGraph color={c} />,  label: t({ ko: "에이전트 그래프",  en: "Agent Graph",    ja: "エージェントグラフ", zh: "代理图" }),     onClick: () => openWindow("flow-graph"),    accentColor: "#06b6d4" },
+    { id: "synapse-app",    icon: (c) => <IconHeartbeat color={c} />,   label: t({ ko: "시냅스",           en: "Synapse",        ja: "シナプス",        zh: "知识库" }),      onClick: () => openWindow("synapse"),       accentColor: "#bf5af2" },
+    { id: "file-tree-app",  icon: (c) => <IconFileTree color={c} />,    label: t({ ko: "파일 탐색기",      en: "File Explorer",  ja: "ファイルエクスプローラー", zh: "文件管理" }), onClick: () => openWindow("file-tree"),    accentColor: "#f59e0b" },
+    { id: "alerts-app",     icon: (c) => <IconAlerts color={c} />,      label: t({ ko: "알림",             en: "Alerts",         ja: "アラート",        zh: "警报" }),        onClick: () => openWindow("alerts"),        accentColor: "#ff453a" },
+    { id: "cli-cost-app",   icon: (c) => <IconCliCost color={c} />,     label: t({ ko: "CLI 비용",         en: "CLI Cost",       ja: "CLIコスト",       zh: "CLI成本" }),     onClick: () => openWindow("cli-usage"),     accentColor: "#32ade6" },
+    { id: "local-llm-app",  icon: (c) => <IconLocalLlm color={c} />,    label: t({ ko: "로컬 LLM",         en: "Local LLM",      ja: "ローカルLLM",      zh: "本地LLM" }),     onClick: () => openWindow("local-llm"),     accentColor: "#bf5af2" },
   ];
 
-  // widgetIcons → 바탕화면 앱 아이콘 (클릭 시 위젯 창 오픈, jiggle 모드에서 삭제 가능)
-  const widgetIconFnMap: Record<string, (c: string) => React.ReactNode> = {
-    heartbeat:    (c) => <IconHeartbeat color={c} />,
-    "task-board": (c) => <IconTaskBoard color={c} />,
-    alerts:       (c) => <IconAlerts color={c} />,
-    "cli-usage":  (c) => <IconCliCost color={c} />,
-    "flow-graph": (c) => <IconFlowGraph color={c} />,
-    "file-tree":  (c) => <IconFileTree color={c} />,
-    "local-llm": (c) => <IconLocalLlm color={c} />,
-  };
-  const widgetIconAccentMap: Record<string, string> = {
-    heartbeat:    "#5e5ce6",
-    "task-board": "#007aff",
-    alerts:       "#ff453a",
-    "cli-usage":  "#32ade6",
-    "flow-graph": "#30d158",
-    "file-tree":  "#f59e0b",
-    "local-llm": "#bf5af2",
-  };
-  const widgetIconDefs: DesktopIconDef[] = widgetIcons.map((id) => {
-    const meta = widgetLabels[id] ?? id;
-    return {
-      id: `widget-icon-${id}`,
-      icon: widgetIconFnMap[id] ?? ((c) => <IconTaskBoard color={c} />),
-      label: meta,
-      deletable: true,
-      onDelete: () => removeWidgetIcon(id),
-      onClick: () => addWidget(id),
-      accentColor: widgetIconAccentMap[id],
-    };
-  });
+  function getCustomFeatureIcon(templateId: string | null | undefined, color: string): React.ReactNode {
+    const S = 1.5;
+    const base = { fill: "none", stroke: color, strokeWidth: S, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
+    switch (templateId) {
+      case "agent-dept-status":
+        return <svg width="26" height="26" viewBox="0 0 20 20" fill="none"><rect x="3" y="8" width="14" height="9" rx="1.5" {...base}/><rect x="7" y="3" width="6" height="5" rx="1" {...base}/><line x1="7" y1="12" x2="7" y2="14" {...base}/><line x1="10" y1="12" x2="10" y2="14" {...base}/><line x1="13" y1="12" x2="13" y2="14" {...base}/></svg>;
+      case "agent-single-monitor":
+        return <svg width="26" height="26" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="9" r="5" {...base}/><circle cx="10" cy="9" r="2" fill={color} stroke="none" opacity="0.5"/><line x1="14" y1="13" x2="17" y2="16" {...base}/></svg>;
+      case "task-daily-counter":
+        return <svg width="26" height="26" viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="14" height="14" rx="2.5" {...base}/><path d="M7 10L9.2 12.5L13 7.5" {...base}/></svg>;
+      case "task-assignee-progress":
+        return <svg width="26" height="26" viewBox="0 0 20 20" fill="none"><rect x="3" y="13" width="3" height="4" rx="1" fill={color} stroke="none" opacity="0.4"/><rect x="8.5" y="9" width="3" height="8" rx="1" fill={color} stroke="none" opacity="0.7"/><rect x="14" y="5" width="3" height="12" rx="1" fill={color} stroke="none"/></svg>;
+      case "notification-filter-feed":
+        return <svg width="26" height="26" viewBox="0 0 20 20" fill="none"><path d="M10 3C7.24 3 5 5.24 5 8v4l-1.5 2h13L15 12V8c0-2.76-2.24-5-5-5z" {...base}/><path d="M8.5 15.5a1.5 1.5 0 003 0" {...base}/></svg>;
+      case "cli-cost-summary":
+        return <svg width="26" height="26" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" {...base}/><path d="M10 6v1.5M10 12.5V14M7.5 8.5C7.5 7.67 8.17 7 9 7h2a1.5 1.5 0 010 3H9a1.5 1.5 0 000 3h2a1.5 1.5 0 010 3H9c-.83 0-1.5-.67-1.5-1.5" {...base}/></svg>;
+      case "memo-board":
+        return <svg width="26" height="26" viewBox="0 0 20 20" fill="none"><rect x="4" y="3" width="12" height="14" rx="2" {...base}/><line x1="7" y1="7.5" x2="13" y2="7.5" {...base}/><line x1="7" y1="10" x2="13" y2="10" {...base}/><line x1="7" y1="12.5" x2="10.5" y2="12.5" {...base}/></svg>;
+      default:
+        return <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z" stroke={color} strokeWidth="1.4" strokeLinejoin="round" fill="none"/></svg>;
+    }
+  }
 
-  const allIcons = [...icons, ...widgetIconDefs];
+  const customFeatureIcons: DesktopIconDef[] = customFeatures.map((f) => ({
+    id: `cf-${f.id}`,
+    icon: (c: string) => getCustomFeatureIcon(f.template_id, c),
+    label: f.name,
+    onClick: () => openCustomApp(f.id),
+    accentColor: "#f59e0b",
+    deletable: true,
+    onContextMenu: (e: React.MouseEvent) => {
+      e.preventDefault();
+      setCfCtxMenu({ x: e.clientX, y: e.clientY, featureId: f.id, featureName: f.name });
+    },
+    onDelete: () => {
+      closeCustomApp(f.id);
+      deleteCustomFeature(f.id)
+        .then(() => listCustomFeatures())
+        .then((list) => setCustomFeatures(list.filter((cf) => cf.status === "active")))
+        .catch(console.error);
+    },
+  }));
 
-  // 기본 아이콘 배치 — 좌측 가로 한 줄
+  const allIcons = [...icons, ...customFeatureIcons];
+
+  // 기본 아이콘 배치 — 한 줄에 최대 6개, 넘치면 다음 줄
+  const ICONS_PER_ROW = 6;
   const DEFAULT_ICON_POSITIONS = allIcons.reduce<Record<string, { x: number; y: number }>>((acc, def, i) => {
-    acc[def.id] = { x: 24 + i * ICON_GRID_X, y: 60 };
+    const col = i % ICONS_PER_ROW;
+    const row = Math.floor(i / ICONS_PER_ROW);
+    acc[def.id] = { x: 24 + col * ICON_GRID_X, y: 60 + row * ICON_GRID_Y };
     return acc;
   }, {});
 
@@ -649,7 +643,6 @@ export default function Desktop({
           <NotificationCenter on={on} onOpenDecisionInbox={onOpenDecisionInbox} />
         }
         onOpenWallpaperPicker={() => setShowWallpaperPicker(true)}
-        onOpenWidgetPicker={() => setShowWidgetPicker(true)}
         onOpenMissionControl={() => setMissionControlOpen(true)}
         onOpenUserGuide={() => toggleWindow("user-guide")}
         onOpenCommandPalette={() => setShowCommandPalette(true)}
@@ -726,17 +719,13 @@ export default function Desktop({
 
         {/* 폴더 아이콘 영역 */}
         {folders.map((folder, i) => (
-          <div
-            key={folder.id}
-            data-no-ctx="true"
-            style={{
-              position: "absolute",
-              left: 24 + i * ICON_GRID_X,
-              top: 60 + ICON_GRID_Y * 2,
-            }}
-          >
             <FolderDesktopIcon
+              key={folder.id}
               folder={folder}
+              defaultX={24 + i * ICON_GRID_X}
+              defaultY={60 + ICON_GRID_Y * 2}
+              isSelected={selectedIconIds.has(`folder-${folder.id}`)}
+              onSelect={() => setSelectedIconIds(new Set([`folder-${folder.id}`]))}
               isDragOver={dragOverFolderId === folder.id}
               onDragOver={(e) => { e.preventDefault(); setDragOverFolderId(folder.id); }}
               onDragLeave={() => setDragOverFolderId(null)}
@@ -787,7 +776,6 @@ export default function Desktop({
                 }
               }}
             />
-          </div>
         ))}
 
         {/* 프로젝트 아이콘 — 폴더에 속하지 않은 것만 */}
@@ -828,44 +816,6 @@ export default function Desktop({
           );
         })}
 
-        {/* 위젯들 */}
-        {widgetLayout.map((entry) => (
-          <Widget
-            key={entry.id}
-            id={entry.id}
-            title={widgetLabels[entry.id] ?? entry.id}
-            x={entry.x}
-            y={entry.y}
-            w={entry.w}
-            h={entry.h}
-            defaultPopped={widgetIcons.includes(entry.id)}
-          >
-            <WidgetContent id={entry.id} />
-          </Widget>
-        ))}
-
-        {/* 위젯 추가 버튼 */}
-        <button
-          onClick={() => setShowWidgetPicker(true)}
-          style={{
-            position: "absolute",
-            bottom: 16,
-            left: "50%",
-            transform: "translateX(-50%)",
-            background: "var(--th-hover-overlay-subtle)",
-            border: "1px dashed var(--th-border)",
-            borderRadius: 8,
-            padding: "6px 16px",
-            fontFamily: "var(--th-font-mono)",
-            fontSize: 11,
-            color: "var(--th-text-muted)",
-            cursor: "pointer",
-          }}
-          onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--th-accent)"; (e.currentTarget as HTMLButtonElement).style.color = "var(--th-accent)"; }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--th-border)"; (e.currentTarget as HTMLButtonElement).style.color = "var(--th-text-muted)"; }}
-        >
-          {t({ ko: "+ 위젯 추가", en: "+ Add Widget", ja: "+ ウィジェット追加", zh: "+ 添加小组件" })}
-        </button>
       </div>
 
       {/* Dock */}
@@ -873,12 +823,17 @@ export default function Desktop({
         onCreateTask={onCreateTask}
         onCreateProject={onProjectCreate}
         onCreateAgent={() => setShowQuickCreateAgent(true)}
+        onCreateFeature={() => openWindow("feature-builder")}
       />
 
       {/* 앱 창들 */}
       {openWindows.has("tasks")         && <TaskBoardWindow />}
       {openWindows.has("synapse")       && <SynapseWindow />}
       {openWindows.has("image-studio")  && <ImageStudioWindow />}
+      {openWindows.has("file-tree")     && <FileTreeWindow />}
+      {openWindows.has("alerts")        && <AlertsWindow />}
+      {openWindows.has("cli-usage")     && <CliCostWindow />}
+      {openWindows.has("local-llm")     && <LocalLlmWindow />}
       {openWindows.has("workflow")      && <WorkflowWindow />}
       {openWindows.has("library")       && <LibraryWindow />}
       {openWindows.has("library-guide") && <LibraryGuideWindow />}
@@ -946,14 +901,16 @@ export default function Desktop({
         />
       )}
 
-      {/* 위젯 피커 */}
-      {showWidgetPicker && <WidgetPicker onClose={() => setShowWidgetPicker(false)} />}
-
       {/* 배경화면 피커 */}
       {showWallpaperPicker && <WallpaperPicker onClose={() => setShowWallpaperPicker(false)} />}
 
       {/* 데이터 내보내기 */}
       {showExportModal && <ExportModal onClose={() => setShowExportModal(false)} />}
+
+      {/* 새 기능 만들기 */}
+      {openWindows.has("feature-builder") && <FeatureBuilderWindow />}
+      {openWindows.has("flow-graph")     && <FlowGraphWindow />}
+      {openWindows.has("git-import")     && <GitImportWindow />}
 
       {/* 마크다운 에디터 */}
       {showMarkdownEditor && (
@@ -991,7 +948,6 @@ export default function Desktop({
       {missionControlOpen && (
         <MissionControl
           openWindows={openWindows}
-          widgetLayout={widgetLayout}
           onClose={() => setMissionControlOpen(false)}
           onFocusWindow={(w) => { openWindow(w); setMissionControlOpen(false); }}
         />
@@ -1107,6 +1063,73 @@ export default function Desktop({
         </div>
       )}
 
+      {/* Custom Feature 우클릭 컨텍스트 메뉴 */}
+      {cfCtxMenu && (
+        <div
+          data-no-ctx="true"
+          style={{
+            position: "fixed",
+            left: cfCtxMenu.x,
+            top: cfCtxMenu.y,
+            zIndex: 2000,
+            background: "var(--th-panel-bg)",
+            backdropFilter: "blur(20px)",
+            border: "1px solid var(--th-border)",
+            borderRadius: 10,
+            padding: "4px 0",
+            minWidth: 180,
+            boxShadow: "0 16px 40px var(--th-glass-shadow)",
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div style={{ padding: "6px 14px 6px", fontFamily: "var(--th-font-mono)", fontSize: 10, color: "var(--th-text-muted)", borderBottom: "1px solid var(--th-border)", marginBottom: 4 }}>
+            ✦ {cfCtxMenu.featureName}
+          </div>
+          {[
+            {
+              label: t({ ko: "열기", en: "Open", ja: "開く", zh: "打开" }),
+              icon: "▶",
+              danger: false,
+              action: () => { openCustomApp(cfCtxMenu.featureId); setCfCtxMenu(null); },
+            },
+            {
+              label: t({ ko: "삭제", en: "Delete", ja: "削除", zh: "删除" }),
+              icon: "🗑",
+              danger: true,
+              action: () => {
+                const { featureId } = cfCtxMenu;
+                setCfCtxMenu(null);
+                closeCustomApp(featureId);
+                deleteCustomFeature(featureId)
+                  .then(() => listCustomFeatures())
+                  .then((list) => setCustomFeatures(list.filter((cf) => cf.status === "active")))
+                  .catch(console.error);
+              },
+            },
+          ].map(({ label, icon, danger, action }) => (
+            <button
+              key={label}
+              onClick={action}
+              style={{
+                display: "flex", alignItems: "center", gap: 10,
+                width: "100%", padding: "7px 14px",
+                background: "none", border: "none", cursor: "pointer",
+                fontFamily: "var(--th-font-mono)", fontSize: 12,
+                color: danger ? "var(--th-danger-text)" : "var(--th-text-primary)",
+                textAlign: "left",
+              }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = danger ? "var(--th-danger-bg)" : "var(--th-accent-glow)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "none"; }}
+            >
+              <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ fontSize: 13 }}>{icon}</span>
+                {label}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* 우클릭 컨텍스트 메뉴 */}
       {ctxMenu && (
         <div
@@ -1159,8 +1182,7 @@ export default function Desktop({
           </div>
           {[
             { label: t({ ko: "배경화면 변경",        en: "Change Wallpaper",     ja: "壁紙を変更",         zh: "更换壁纸" }),     icon: "🖼", action: () => { setShowWallpaperPicker(true); setCtxMenu(null); } },
-            { label: t({ ko: "위젯 추가",            en: "Add Widget",           ja: "ウィジェット追加",   zh: "添加小组件" }),   icon: "＋", action: () => { setShowWidgetPicker(true); setCtxMenu(null); } },
-            { label: t({ ko: "새 폴더",               en: "New Folder",           ja: "新規フォルダ",          zh: "新建文件夹" }),           icon: "📁", action: () => { setNewFolderPos({ x: ctxMenu!.x, y: ctxMenu!.y }); setNewFolderName(""); setCtxMenu(null); } },
+{ label: t({ ko: "새 폴더",               en: "New Folder",           ja: "新規フォルダ",          zh: "新建文件夹" }),           icon: "📁", action: () => { setNewFolderPos({ x: ctxMenu!.x, y: ctxMenu!.y }); setNewFolderName(""); setCtxMenu(null); } },
             { label: t({ ko: "마크다운 문서 만들기", en: "New Markdown Doc",     ja: "Markdownドキュメント", zh: "新建Markdown文档" }), icon: "📝", action: () => { setShowMarkdownEditor(true); setCtxMenu(null); } },
             { label: t({ ko: "아이콘 위치 초기화",   en: "Reset Icon Positions", ja: "アイコン位置をリセット", zh: "重置图标位置" }), icon: "⌖", action: () => { setDesktopIconLayout({}); setCtxMenu(null); } },
           ].map(({ label, icon, action }) => (

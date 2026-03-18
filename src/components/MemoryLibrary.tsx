@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useI18n } from "../i18n";
 import type { Agent, Department, Project } from "../types";
 import MemoryCategoryBar from "./memory/MemoryCategoryBar";
@@ -17,12 +18,12 @@ interface MemoryLibraryProps {
 export default function MemoryLibrary({ agents, departments, currentProject }: MemoryLibraryProps) {
   const { t, locale: localeTag } = useI18n();
 
-  const vm = useMemoryState({
-    agents,
-    departments,
-    t,
-    filters: currentProject ? { scope_type: "project", scope_id: currentProject.id } : undefined,
-  });
+  const filters = useMemo(
+    () => (currentProject ? { scope_type: "project" as const, scope_id: currentProject.id } : undefined),
+    [currentProject?.id],
+  );
+
+  const vm = useMemoryState({ agents, departments, t, filters });
 
   // 프로젝트 미선택
   if (!currentProject) {
@@ -99,6 +100,7 @@ export default function MemoryLibrary({ agents, departments, currentProject }: M
 
         <MemoryMemorySection
           t={t}
+          localeTag={localeTag}
           agents={agents}
           historyRefreshToken={vm.historyRefreshToken}
           onRefreshHistory={vm.bumpHistoryRefreshToken}

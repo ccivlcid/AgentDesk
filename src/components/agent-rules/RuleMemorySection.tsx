@@ -6,6 +6,7 @@ import type { TFunction } from "./model";
 
 interface RuleMemorySectionProps {
   t: TFunction;
+  localeTag?: string;
   agents: Agent[];
   historyRefreshToken: number;
   onRefreshHistory: () => void;
@@ -14,6 +15,7 @@ interface RuleMemorySectionProps {
 
 export default function RuleMemorySection({
   t,
+  localeTag = "en",
   agents,
   historyRefreshToken,
   onRefreshHistory,
@@ -51,6 +53,7 @@ export default function RuleMemorySection({
         <div className="p-3">
           <RuleHistoryPanel
             t={t}
+            localeTag={localeTag}
             agents={agents}
             refreshToken={historyRefreshToken}
             onLearningDataChanged={onRefreshHistory}

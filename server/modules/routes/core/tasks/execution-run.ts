@@ -37,6 +37,7 @@ export type TaskRunRouteDeps = Pick<
   | "generateProjectContext"
   | "getRecentChanges"
   | "ensureClaudeMd"
+  | "injectTaskContext"
   | "getDeptRoleConstraint"
   | "normalizeTextField"
   | "getRecentConversationContext"
@@ -75,6 +76,7 @@ export function registerTaskRunRoute(deps: TaskRunRouteDeps): void {
     generateProjectContext,
     getRecentChanges,
     ensureClaudeMd,
+    injectTaskContext,
     getDeptRoleConstraint,
     normalizeTextField,
     getRecentConversationContext,

@@ -1,7 +1,7 @@
 # AgentDesk — UI Screens & Interaction Specification
 
 > **Last updated:** 2026-03-23 (Terminal Window: 실제 PTY 터미널 + 에이전트 셀렉트 + CLI 자동 실행으로 전면 교체)
-> Menu Bar + Desktop Icons + Widgets + Dock + App Windows structure
+> Menu Bar + Desktop Icons + Dock + App Windows structure
 > **Design reference:** `DESIGN.md` (CSS variables)
 
 ---
@@ -38,12 +38,6 @@ AgentDesk is designed using the macOS desktop metaphor. There is no sidebar.
 │  Agent     Create    Run       Workflow   Library    Chat       Agent    │
 │  Settings  Project   Task      Builder                          REPL     │
 │                                                                  │
-│  ┌─ Agents ──── [─][×]┐   ┌─ Tasks ───── [─][×]┐              │
-│  │  (widget)           │   │  (widget)           │  ← Widgets  │
-│  └────────────────────┘   └────────────────────┘              │
-│                                                                  │
-│                    [+ Add Widget]                                │
-│                                                                  │
 ├─────────────────────────────────────────────────────────────────┤
 │      ┌──────┐    ┌──────┐    ┌──────┐    ┌──────┐              │  ← Dock
 │      │  ⚡  │    │  📚  │    │  ⚙   │    │  💬  │              │
@@ -62,7 +56,7 @@ Always pinned to the top. Acts as the macOS Menu Bar.
 
 | Area | Element | Role |
 |------|---------|------|
-| Left | **AgentDesk button** | **App menu dropdown** (wallpaper/widgets/shortcuts/Mission Control) |
+| Left | **AgentDesk button** | **App menu dropdown** (wallpaper/shortcuts/Mission Control) |
 | Center | Project selector dropdown | Switch current project |
 | Right | CLI cost summary | Today / this month cost |
 | Right | Notification bell 🔔 | **Slide panel** (320px, enters/exits from the right) |
@@ -71,7 +65,6 @@ Always pinned to the top. Acts as the macOS Menu Bar.
 **App Menu Items:**
 - About AgentDesk (version)
 - Change Wallpaper... → Open WallpaperPicker
-- Add Widget... → Open WidgetPicker
 - Keyboard Shortcuts → Open KeyboardShortcutsGuide
 - Mission Control (`Ctrl ↑`) → MissionControl overview
 
@@ -107,56 +100,7 @@ Click ✕ to delete the project. Press Esc or click the desktop to exit.
 
 ---
 
-## 3. Widget System
-
-**Files:** `src/components/desktop/Widget.tsx`, `src/components/desktop/WidgetPicker.tsx`
-
-Users add widgets via the `[+ Add Widget]` button. Freely draggable, resizable, and closable.
-Multiple widgets can be placed simultaneously. Position/size is saved in localStorage.
-
-### Widget List
-
-#### 3-1. Agents Widget
-**File:** `src/components/desktop/widgets/AgentsWidget.tsx`
-**Replaces:** Legacy Heartbeat Monitor
-
-- Real-time agent status list (working/idle/error/review)
-- Click an agent row → AgentDetail slide panel (right)
-- Real-time updates via WebSocket `agent_status` events
-
-#### 3-2. Tasks Widget
-**File:** `src/components/desktop/widgets/TasksWidget.tsx`
-**Replaces:** Legacy Task Board
-
-- List of running tasks (mini kanban view or list)
-- Click a task row → TerminalPanel drawer (bottom)
-- `[+ New Task]` button → CreateTaskModal
-
-#### 3-3. Alerts Widget
-**File:** `src/components/desktop/widgets/AlertsWidget.tsx`
-**Replaces:** Legacy alert banners
-
-- Items requiring attention: errors, pending approvals, timeouts
-- Click an item → DecisionInboxModal
-
-#### 3-4. CLI Cost Widget
-**File:** `src/components/desktop/widgets/CliCostWidget.tsx`
-**Replaces:** Legacy CLI Usage (summary)
-
-- Today / this month cost
-- Number of running CLI processes
-- Click → Settings window > CLI tab (details)
-
-#### 3-5. Flow Graph Widget
-**File:** `src/components/desktop/widgets/FlowGraphWidget.tsx`
-**Replaces:** Legacy Flow Graph
-
-- Mini SVG visualization of agent relationships (reuses `AgentFlowGraph`)
-- Zoom/pan, click node → AgentDetail panel
-
----
-
-## 4. Dock
+## 3. Dock
 
 **File:** `src/components/desktop/Dock.tsx`
 
@@ -174,7 +118,7 @@ Always pinned to the bottom. 4 app icons.
 
 ---
 
-## 5. App Windows (opened by clicking the Dock)
+## 4. App Windows (opened by clicking the Dock)
 
 All windows use the **traffic lights + close button** style. Can be dragged to reposition.
 Multiple windows can be open simultaneously. Managed via `uiStore.openWindows: Set<WindowType>`.
@@ -338,17 +282,16 @@ Multiple windows can be open simultaneously. Managed via `uiStore.openWindows: S
 
 ---
 
-## 6. Slide Panels & Drawers
+## 5. Slide Panels & Drawers
 
-Opened as a layer on top of the desktop when clicking an item in a widget or icon window.
+Opened as a layer on top of the desktop when clicking an item in an app window or desktop icon.
 
 ### 6-1. AgentDetail Slide Panel
 **File:** `src/components/agent-detail/AgentDetailPanel.tsx` _(구현 예정)_
 **Design doc:** `docs/features/agent-detail-panel.md`
 **Trigger:**
-- AgentsWidget 에이전트 행 클릭
-- FlowGraph Widget 에이전트 노드 클릭
-- AgentManager 에이전트 카드 클릭 (선택사항)
+- AgentManager 에이전트 카드 클릭
+- Flow Graph 에이전트 노드 클릭
 
 **위치:** `position: fixed`, 우측 슬라이드, 메뉴바(28px) ~ Dock(48px), 너비 360px, `z-index: 300`
 **애니메이션:** `translateX(360px → 0)` 200ms ease-out / 닫기 160ms ease-in
@@ -365,14 +308,14 @@ Opened as a layer on top of the desktop when clicking an item in a widget or ico
 
 ### 6-2. TerminalPanel Drawer
 **File:** `src/components/TerminalPanel.tsx`
-**Trigger:** Click a task row in the Tasks widget
+**Trigger:** Click a task row in the Task Board window
 
 Bottom drawer. Tabs: Terminal (real-time stdout) / Minutes (meeting notes)
 Features: Thinking Block, log search/filter, Intervention input, Progress Hints
 
 ---
 
-## 7. Modals & Overlays (36)
+## 6. Modals & Overlays (36)
 
 Centrally rendered in `src/app/AppOverlays.tsx`. Can be triggered from any window or widget.
 
@@ -382,7 +325,7 @@ Centrally rendered in `src/app/AppOverlays.tsx`. Can be triggered from any windo
 |---|-----------|---------|
 | 7-1 | `ChatPanel` | AgentDetail > Chat tab |
 | 7-2 | `GroupChatPanel` | Chat window > Group tab |
-| 7-3 | `DecisionInboxModal` | Alerts widget click / notification bell |
+| 7-3 | `DecisionInboxModal` | Notification bell / alerts |
 
 ### Agent Management
 
@@ -390,21 +333,21 @@ Centrally rendered in `src/app/AppOverlays.tsx`. Can be triggered from any windo
 |---|-----------|---------|
 | 7-4 | `AgentFormModal` | AgentManager window `[+ Agent]` |
 | 7-5 | `DepartmentFormModal` | AgentManager window `[+ Department]` |
-| 7-6 | `AgentStatusPanel` | Tasks widget → `onOpenAgentStatus` |
+| 7-6 | `AgentStatusPanel` | Task Board → `onOpenAgentStatus` |
 
 ### Task Management
 
 | # | Component | Trigger |
 |---|-----------|---------|
-| 7-7 | `CreateTaskModal` | Desktop icon ▶ / Tasks widget `[+ New Task]` |
-| 7-8 | `BulkHideModal` | Tasks widget bulk hide |
+| 7-7 | `CreateTaskModal` | Desktop icon ▶ / Task Board `[+ New Task]` |
+| 7-8 | `BulkHideModal` | Task Board bulk hide |
 | 7-9 | `DiffModal` | On task change conflict detection |
 
 ### Reports
 
 | # | Component | Trigger |
 |---|-----------|---------|
-| 7-10 | `TaskReportPopup` | Click a completed task in the Tasks widget |
+| 7-10 | `TaskReportPopup` | Click a completed task in the Task Board |
 | 7-11 | `ReportHistory` | `onOpenReportHistory` |
 
 ### Project Management
@@ -451,15 +394,15 @@ Centrally rendered in `src/app/AppOverlays.tsx`. Can be triggered from any windo
 
 ---
 
-## 8. Legacy 14 Menu Items → New Location Mapping (all preserved)
+## 7. Legacy 14 Menu Items → New Location Mapping (all preserved)
 
 | Legacy Menu | New Location | How to Access |
 |-------------|-------------|---------------|
 | Dashboard | Desktop itself | Always visible |
 | Agents & Departments | Desktop icon 👤 | Click → AgentManager window |
-| Heartbeat Monitor | Agents widget | `[+ Add Widget]` → select Agents |
-| Flow Graph | Flow Graph widget | `[+ Add Widget]` → select Flow Graph |
-| Task Board | Tasks widget | `[+ Add Widget]` → select Tasks |
+| Heartbeat Monitor | AgentManager window | Click 👤 desktop icon |
+| Flow Graph | Workflow window | Dock ⚡ → Workflow window |
+| Task Board | Task Board window | Dock → Tasks window |
 | Scheduled Tasks | Dock ⚡ Workflow window tab | Workflow window → Scheduled tab |
 | Deliverables | Dock 📚 Library window tab | Library window → Deliverables tab |
 | Workflow Builder | Desktop icon ⚡ + Dock ⚡ | Both open the same window |
@@ -467,22 +410,21 @@ Centrally rendered in `src/app/AppOverlays.tsx`. Can be triggered from any windo
 | Agent Rules | Dock 📚 Library window tab | Library window → Rules tab |
 | Memory | Dock 📚 Library window tab | Library window → Memory tab |
 | Hooks | Dock 📚 Library window tab | Library window → Hooks tab |
-| CLI Usage | CLI Cost widget + Settings > CLI | Widget (summary) / Settings (details) |
+| CLI Usage | Settings > CLI | Settings window → CLI tab |
 | Project Types | Dock ⚙ Settings window tab | Settings window → Project Types tab |
 | Settings | Dock ⚙ | Click → Settings window |
 
 ---
 
-## 9. Core UI Architecture Patterns
+## 8. Core UI Architecture Patterns
 
 ### App Structure
 
 ```
 App.tsx
-  └── Desktop.tsx              ← Desktop (menu bar + icons + widgets + Dock)
+  └── Desktop.tsx              ← Desktop (menu bar + icons + Dock)
         ├── MenuBar.tsx
         ├── DesktopIcons.tsx
-        ├── WidgetLayer.tsx    ← Widget drag/resize layer
         ├── Dock.tsx
         └── WindowLayer.tsx   ← App window overlay layer
               ├── WorkflowWindow.tsx
@@ -499,7 +441,6 @@ App.tsx
 ```typescript
 // uiStore.ts
 openWindows: Set<"workflow"|"library"|"settings"|"chat"|"agent-manager"|"repl">
-widgetLayout: WidgetConfig[]    // widget position, size, visibility
 desktopIconLayout: IconConfig[] // icon positions
 selectedAgentId: string | null  // AgentDetail panel
 openTaskId: string | null       // TerminalPanel drawer
@@ -507,12 +448,7 @@ openTaskId: string | null       // TerminalPanel drawer
 
 ### Window Management Pattern
 - Multiple windows can be open simultaneously
-- Even when windows are open, the desktop (widgets) continue to update in real time
 - Close window: `×` button or `Escape`
-
-### Widget Persistence
-Widget layout (position, size, list) is saved in `localStorage`.
-Supports different widget configurations per project.
 
 ### Project Context Filtering
 Library tabs (Skills/Rules/Memory/Hooks) filter server data by the selected `project_id`:
@@ -524,17 +460,17 @@ GET /api/agent-rules?project_id=<id>
 
 | Event | Updates |
 |-------|---------|
-| `agent_status` | Agents widget, Flow Graph widget |
-| `task_update` | Tasks widget, Alerts widget |
+| `agent_status` | AgentManager window, Flow Graph |
+| `task_update` | Task Board window |
 | `cli_output` | TerminalPanel drawer |
-| `decision_request` | Alerts widget → DecisionInboxModal |
+| `decision_request` | DecisionInboxModal |
 
 ### Internationalization
 Supports 4 languages: Korean, English, Japanese, Chinese.
 
 ---
 
-## 10. Quick File Reference
+## 9. Quick File Reference
 
 ```
 src/
@@ -544,23 +480,15 @@ src/
 │   │   ├── Desktop.tsx              # Desktop root
 │   │   ├── MenuBar.tsx              # Top menu bar
 │   │   ├── DesktopIcon.tsx          # Desktop icons
-│   │   ├── Dock.tsx                 # Bottom Dock
-│   │   ├── Widget.tsx               # Widget common container
-│   │   ├── WidgetPicker.tsx         # Widget add selection popup
-│   │   └── widgets/
-│   │       ├── AgentsWidget.tsx     # Replaces Heartbeat Monitor
-│   │       ├── TasksWidget.tsx      # Replaces Task Board
-│   │       ├── AlertsWidget.tsx     # Attention alerts
-│   │       ├── CliCostWidget.tsx    # Replaces CLI Usage
-│   │       └── FlowGraphWidget.tsx  # Replaces Flow Graph
+│   │   └── Dock.tsx                 # Bottom Dock
 │   ├── windows/
 │   │   ├── WorkflowWindow.tsx       # ⚡ Dock app window
 │   │   ├── LibraryWindow.tsx        # 📚 Dock app window
 │   │   ├── SettingsWindow.tsx       # ⚙ Dock app window
 │   │   ├── ChatWindow.tsx           # 💬 Dock app window
 │   │   ├── AgentManagerWindow.tsx   # 👤 icon app window
-│   │   └── ReplWindow.tsx           # >_ icon app window (Agent REPL)
-│   ├── flow-graph/                  # AgentFlowGraph (reused in widget)
+│   │   └── CliWindow.tsx            # >_ icon app window (Agent CLI)
+│   ├── flow-graph/                  # AgentFlowGraph
 │   ├── workflow-builder/            # WorkflowBuilder (@xyflow/react)
 │   ├── scheduled-tasks/             # ScheduledTasksPanel
 │   ├── taskboard/                   # CreateTaskModal, BulkHideModal
@@ -573,7 +501,7 @@ src/
 │   ├── settings/                    # Settings tabs
 │   └── ui/                          # Shared components (ConfirmDialog, etc.)
 └── store/
-    ├── uiStore.ts                   # openWindows, widgetLayout, desktopIconLayout, wallpaper, jiggleMode, missionControlOpen
+    ├── uiStore.ts                   # openWindows, desktopIconLayout, wallpaper, jiggleMode, missionControlOpen
     ├── agentStore.ts
     ├── taskStore.ts
     └── projectStore.ts
@@ -635,7 +563,7 @@ src/
 |------|-------|
 | Trigger | `Ctrl+↑` or AgentDesk menu → Mission Control |
 | State | `uiStore.missionControlOpen: boolean` |
-| Content | Section 1: open window card grid / Section 2: active widget card grid |
+| Content | Open window card grid |
 | Style | Full-screen overlay `rgba(0,0,0,0.65)` + `blur(8px)` + `@keyframes mcFadeIn` |
 | Card click | Activate that window + close Mission Control |
 | Close | Esc or click background |
@@ -668,7 +596,7 @@ src/
 | State | `appMenuOpen: boolean` (local state) |
 | Dropdown position | `position: absolute, top: calc(100% + 6px), left: 0` |
 | Style | `rgba(20,20,24,0.97)` + `blur(20px)`, `borderRadius: 10` |
-| Items | About (version) / Change Wallpaper / Add Widget / Keyboard Shortcuts / ↓ Export Data / Mission Control (Ctrl↑) |
+| Items | About (version) / Change Wallpaper / Keyboard Shortcuts / ↓ Export Data / Mission Control (Ctrl↑) |
 | Close | Select an item or click outside |
 
 ---

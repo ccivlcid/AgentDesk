@@ -45,6 +45,7 @@ export type TaskExecutionControlRouteDeps = Pick<
   | "isTaskWorkflowInterrupted"
   | "startTaskExecutionForAgent"
   | "randomDelay"
+  | "handleTaskRunComplete"
 >;
 
 export function registerTaskExecutionControlRoutes(deps: TaskExecutionControlRouteDeps): void {
@@ -78,6 +79,7 @@ export function registerTaskExecutionControlRoutes(deps: TaskExecutionControlRou
     isTaskWorkflowInterrupted,
     startTaskExecutionForAgent,
     randomDelay,
+    handleTaskRunComplete,
   } = deps;
 
   function requireCsrfGuard(req: { method?: string; header(name: string): string | undefined }, res: any): boolean {
@@ -626,5 +628,24 @@ export function registerTaskExecutionControlRoutes(deps: TaskExecutionControlRou
       auto_resumed: autoResumed,
       session_id: existingSession?.sessionId ?? null,
     });
+  });
+
+  // CLI interactive mode: agent signals task completion via API call
+  // Used when CLAUDE.md injects `curl POST /api/tasks/:id/cli-complete` at end of task
+  // or when user clicks the "완료" button in CliWindow.
+  app.post("/api/tasks/:id/cli-complete", (req, res) => {
+    const id = String(req.params.id);
+    const task = db.prepare("SELECT id, title, status, assigned_agent_id FROM tasks WHERE id = ?").get(id) as
+      | { id: string; title: string; status: string; assigned_agent_id: string | null }
+      | undefined;
+    if (!task) return res.status(404).json({ error: "not_found" });
+    if (task.status !== "in_progress") {
+      return res.status(400).json({ error: "invalid_status", message: `Task status is '${task.status}', not 'in_progress'` });
+    }
+    const exitCode = Number(req.body?.exit_code ?? 0);
+    appendTaskLog(id, "system", `CLI interactive mode: cli-complete signal received (exit_code=${exitCode})`);
+    // Trigger the same completion flow as headless CLI agents
+    (handleTaskRunComplete as (taskId: string, exitCode: number) => void)(id, exitCode);
+    res.json({ ok: true, task_id: id, exit_code: exitCode });
   });
 }

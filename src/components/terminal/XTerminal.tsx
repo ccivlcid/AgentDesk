@@ -8,16 +8,21 @@ import "@xterm/xterm/css/xterm.css";
 interface XTerminalProps {
   sessionId: string;
   cwd?: string;
+  taskId?: string;
+  initialCommand?: string; // PTY ready 후 자동 실행할 명령어 (cd + cli cmd)
   onExit?: (code: number) => void;
 }
 
-export default function XTerminal({ sessionId, cwd, onExit }: XTerminalProps) {
+export default function XTerminal({ sessionId, cwd, taskId, initialCommand, onExit }: XTerminalProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const termRef = useRef<Terminal | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
-  const readyRef = useRef(false);       // PTY session confirmed ready
-  const termOpenRef = useRef(false);    // xterm.js UI opened
-  const ptyRequestedRef = useRef(false); // pty_create already sent
+  const readyRef = useRef(false);           // PTY session confirmed ready
+  const termOpenRef = useRef(false);        // xterm.js UI opened
+  const ptyRequestedRef = useRef(false);    // pty_create already sent
+  const hasRunInitialRef = useRef(false);   // initialCommand already sent
+  const initialCommandRef = useRef<string | undefined>(initialCommand);
+  initialCommandRef.current = initialCommand;
 
   const { on, send, connected } = useWebSocket();
 
@@ -89,6 +94,7 @@ export default function XTerminal({ sessionId, cwd, onExit }: XTerminalProps) {
       termOpenRef.current = false;
       readyRef.current = false;
       ptyRequestedRef.current = false;
+      hasRunInitialRef.current = false;
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId]);
@@ -100,7 +106,7 @@ export default function XTerminal({ sessionId, cwd, onExit }: XTerminalProps) {
     const term = termRef.current;
     const cols = term?.cols ?? 120;
     const rows = term?.rows ?? 30;
-    sendPty("pty_create", { cwd, cols, rows });
+    sendPty("pty_create", { cwd, cols, rows, ...(taskId ? { taskId } : {}) });
   }, [connected, sendPty, cwd]);
 
   // ── WebSocket 메시지 핸들러 ────────────────────────────────────────────────
@@ -110,6 +116,11 @@ export default function XTerminal({ sessionId, cwd, onExit }: XTerminalProps) {
       if (p.id !== sessionId) return;
       readyRef.current = true;
       termRef.current?.focus();
+      // PTY ready 직후 initialCommand 실행 (같은 WS 연결로 전송)
+      if (!hasRunInitialRef.current && initialCommandRef.current) {
+        hasRunInitialRef.current = true;
+        sendPty("pty_input", { data: initialCommandRef.current });
+      }
     });
 
     const offOutput = on("pty_output", (payload) => {
@@ -128,6 +139,14 @@ export default function XTerminal({ sessionId, cwd, onExit }: XTerminalProps) {
 
     return () => { offReady(); offOutput(); offExit(); };
   }, [on, sessionId, onExit]);
+
+  // initialCommand가 PTY ready 이후에 늦게 세팅되는 경우 처리
+  // (예: agents가 비동기 로드된 후 initialCommand가 계산될 때)
+  useEffect(() => {
+    if (!initialCommand || hasRunInitialRef.current || !readyRef.current) return;
+    hasRunInitialRef.current = true;
+    sendPty("pty_input", { data: initialCommand });
+  }, [initialCommand, sendPty]);
 
   return (
     <div

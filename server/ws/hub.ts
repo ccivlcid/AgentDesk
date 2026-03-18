@@ -4,7 +4,16 @@ import { createPtyManager } from "../modules/pty/pty-manager.ts";
 
 const MAX_CLI_CHUNK = 4096; // 4KB per chunk for large stdout lines
 
-export function createWsHub(nowMs: () => number): {
+/** Strip ANSI escape sequences from PTY output before writing to task logs. */
+function stripAnsi(str: string): string {
+  // eslint-disable-next-line no-control-regex
+  return str.replace(/\x1b\[[0-9;?]*[A-Za-z]/g, "").replace(/\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)/g, "").replace(/\x1b[()][A-Z0-9]/g, "").replace(/\r/g, "");
+}
+
+export function createWsHub(
+  nowMs: () => number,
+  appendTaskLog?: (taskId: string | null, kind: string, message: string) => void,
+): {
   wsClients: Set<WebSocket>;
   broadcast: (type: string, payload: unknown) => void;
   handleClientMessage: (ws: WebSocket, raw: string) => void;
@@ -33,7 +42,12 @@ export function createWsHub(nowMs: () => number): {
   }
 
   // PTY session manager — real shell sessions per client
-  const ptyManager = createPtyManager(sendRawToClient);
+  // When a session is linked to a taskId, stripped PTY output is forwarded to task logs.
+  const ptyManager = createPtyManager(sendRawToClient, (taskId, rawData) => {
+    if (!appendTaskLog) return;
+    const stripped = stripAnsi(rawData).replace(/\n{3,}/g, "\n\n").trim();
+    if (stripped) appendTaskLog(taskId, "agent", stripped);
+  });
 
   // Batched broadcast for high-frequency streaming event types.
   // Collects payloads during a cooldown window, then flushes them all.
@@ -196,6 +210,7 @@ export function createWsHub(nowMs: () => number): {
         cols: msg.cols as number | undefined,
         rows: msg.rows as number | undefined,
         shell: msg.shell as string | undefined,
+        taskId: msg.taskId as string | undefined,
       });
       sendRawToClient(ws, "pty_ready", { id });
     } else if (type === "pty_input") {

@@ -143,6 +143,86 @@ User: "Run this task"
    └── task.status = done | failed → broadcast
 ```
 
+---
+
+## 4-A. New Task → Agent CLI — Full Flow
+
+End-to-end flow when creating a task and running it via Agent CLI:
+
+```
+  [Desktop Icon / Dock +]
+          │
+          ▼
+  CreateTaskModal
+  (프로젝트 · 에이전트 · 설명 입력)
+          │
+          ▼
+  POST /api/tasks  →  DB: tasks INSERT  (status = "pending")
+          │
+  WebSocket broadcast: task_created → taskStore / TaskBoard
+          │
+          ▼
+  Agent Queue (task-scheduler.ts / execution-start-task.ts)
+  에이전트 선택 + worktree 생성  →  status = "running"
+          │
+    ┌─────┴─────────────────────────┐
+    ▼                               ▼
+[Phase E: Planning]          [Agent CLI Window]
+헤드리스 planningAgent        CliWindow.tsx
+.agentdesk-task.md 생성        │
+(goals · curl 완료 명령)        ├─ send("pty_create", { sessionId })
+          │                    │       ↓
+          └──► broadcast       │  server/modules/pty/  (PTY 생성)
+           auto_open_cli ──────►       ↓
+                               │  pty_ready 이벤트
+                               │  on("pty_ready") → runAgentCli()
+                               │  (2000ms fallback 포함)
+                               │       ↓
+                               │  XTerminal (xterm.js)
+                               │  buildCliCmd() → claude / codex / gemini …
+                               │
+                               ▼
+                         에이전트 작업 수행
+                         (코드 변경 · API 호출 등)
+                               │
+                               ▼
+                    POST /api/tasks/:id/cli-complete
+                    (에이전트 자동 호출 or 사용자 완료 버튼)
+                               │
+                               ▼
+                    run-complete-handler.ts
+                    status = "review" → "done"
+                               │
+              ┌────────────────┼────────────────┐
+              ▼                ▼                ▼
+   ① autoSaveTaskReport  ② autoCheckDelivs  ③ emitTaskReportEvent
+   task_report_archives  project_deliverable  → Reports Window
+   마크다운 자동 저장      _checks 자동 체크     보고서 즉시 전달
+   (lang 설정 반영)       (lang 설정 반영)
+              │
+   WebSocket broadcast: task_done → TaskBoard / NotificationCenter
+```
+
+### Window Roles in This Flow
+
+| Window | Role |
+|--------|------|
+| 📋 **CreateTaskModal** | Task creation entry — project · agent · description |
+| ▦  **TaskBoard** | Task status monitor (pending → running → done) |
+| 🕸️ **Agent Graph** | Real-time visualization of agent↔task connections (desktop app) |
+| ⚡ **Workflow Builder** | Multi-task automation pipeline design & execution |
+| >_ **Agent CLI** | PTY terminal — runs Claude/Codex/Gemini; pty_ready auto-fires command |
+| 📊 **Reports** | Completed task report archive viewer |
+| 🔔 **Notifications** | Task completion & anomaly alerts |
+
+### Auto Post-processing (on task done)
+
+| Step | Function | Target |
+|------|----------|--------|
+| ① | `autoSaveTaskReport` | `task_report_archives` — markdown summary, language-aware |
+| ② | `autoCheckProjectDeliverables` | `project_deliverable_checks` — keyword match auto-check |
+| ③ | `emitTaskReportEvent` | Frontend receives archive on first API call |
+
 ### How the Library is Injected into Agent Prompts
 
 ```
@@ -184,14 +264,14 @@ Agent spawn & management         ███████████████�
 Multi-agent orchestration        ████████████████████ 100% (scheduler dynamic timeout + orphan recovery complete)
 Database & infrastructure        ████████████████████ 100% (versioned migrations + project templates)
 Skill learning & memory          ████████████████████ 100% (WebSocket real-time streaming + auto-extraction complete)
-Heartbeat & anomaly detection    ████████████████████ 100% (AlertsWidget real-time polling complete)
+Heartbeat & anomaly detection    ████████████████████ 100% (anomaly detection + real-time polling complete)
 Workflow cron scheduling         ████████████████████ 100% (per-workflow cron scheduler + WbScheduleModal complete)
-UI/UX monitoring                 ████████████████████ 100% (macOS UX complete + Custom Widget Platform)
+UI/UX monitoring                 ████████████████████ 100% (macOS UX complete)
 Security hardening               ████████████████████ 100% (2nd patch complete)
 Persona system                   ████████████████████ 100% (complete)
 Visual agent graph               ████████████████████ 100% (delegation edges + agent detail panel complete)
 Agent composition templates      ████████████████████ 100% (drag-and-drop + Run complete)
-Custom Widget Platform           ████████████████████ 100% (Phase 1~5 complete — template + AI + esbuild bundle)
+Custom Feature Platform          ████████████████████ 100% (Phase 1~5 complete — template + AI + esbuild bundle)
 Project management               ████████████████████ 100% (cost summary + templates + folders + cross-project handoff)
 Analytics & performance          ████████████████████ 100% (AgentPerformanceDashboard + Data Export complete)
 Notification center              ████████████████████ 100% (date groups + hover actions + type filter badges)
@@ -228,7 +308,7 @@ Bug fixes (pipeline + UI audit)  ███████████████�
 | WB-02 | 🟡 P1 | `src/components/workflow-builder/WbRunModal.tsx` | 의존성 설정 실패 시 롤백 없음 — 고아 Task 생성 | ✅ Done |
 | WB-03 | 🔵 P2 | `src/components/workflow-builder/WbRunModal.tsx` | Trigger 타입 정보 Task에 미전달 | ✅ Done |
 | FG-01 | ❌ TODO | `src/components/flow-graph/useFlowLayout.ts` | Delegation 엣지 명시적 TODO — SubTask 데이터 미전달 | ✅ Done |
-| FG-02 | 🟡 P1 | `src/components/desktop/widgets/FlowGraphWidget.tsx` | 노드 클릭 → 에이전트 상세 패널 콜백 미연결 | ✅ Done |
+| FG-02 | 🟡 P1 | `src/components/flow-graph/AgentFlowGraph.tsx` | 노드 클릭 → 에이전트 상세 패널 콜백 미연결 | ✅ Done |
 | FG-03 | 🔵 P2 | `src/components/flow-graph/useFlowLayout.ts` | 50+ 에이전트 시 3열 고정 레이아웃 극단 축소 | ✅ Done |
 | REPL | ✅ | — | Agent REPL 전체 정상 동작 (버그 없음) | ✅ OK |
 
@@ -264,7 +344,7 @@ All planned features and improvement tasks have been completed. Key achievements
 
 ### UI/UX
 - Zustand state management introduced, Keyboard-First UX (vim-style `g+key` shortcuts), macOS OS metaphor complete (Mission Control, Jiggle Mode, Quick Look, Command Palette), i18n for 4 languages (ko/en/ja/zh)
-- **Custom Widget Platform**: No-code widget/app creation via templates (7 types) or AI natural language → esbuild TSX→IIFE bundle → sandbox iframe rendering
+- **Custom Feature Platform**: No-code feature/app creation via templates (7 types) or AI natural language → esbuild TSX→IIFE bundle → sandbox iframe rendering
 - **macOS UX polish**: TrafficLights on all panels, desktop icon inline rename (double-click), macOS-style dialogs with rounded corners
 
 ### Analytics & Export
@@ -305,7 +385,7 @@ All planned features and improvement tasks have been completed. Key achievements
 ### Agent CLI (Phase 18)
 - **REPL → CLI rename**: `WindowType "repl"→"cli"`, Dock icon, desktop icon, MissionControl label all updated
 - **CliSession Map**: per-agent shell sessions, `[agent @ project] $` prompt, `:switch`/`:status`/`:history`/`:reset` commands
-- **3 entry points**: AgentDetailPanel `>_` button, AgentsWidget hover `>_`, FlowGraph node right-click "Open CLI"
+- **Entry points**: AgentDetailPanel `>_` button, FlowGraph node right-click "Open CLI"
 
 ### Figma Integration
 - **Task attach**: Figma URL field in CreateTaskModal, parsed + previewed in `FigmaUrlSection.tsx`

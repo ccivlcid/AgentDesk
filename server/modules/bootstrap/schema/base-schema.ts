@@ -483,7 +483,7 @@ CREATE TABLE IF NOT EXISTS memory_entries (
   category TEXT NOT NULL DEFAULT 'context'
     CHECK(category IN ('context','preference','convention','knowledge','instruction','reference')),
   scope_type TEXT NOT NULL DEFAULT 'global'
-    CHECK(scope_type IN ('global','department','agent','workflow_pack')),
+    CHECK(scope_type IN ('global','department','agent','workflow_pack','project')),
   scope_id TEXT,
   priority INTEGER NOT NULL DEFAULT 50,
   enabled INTEGER NOT NULL DEFAULT 1,

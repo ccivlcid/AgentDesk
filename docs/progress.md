@@ -1,10 +1,10 @@
 # AgentDesk — 개발 진행 현황
 
-> 마지막 업데이트: 2026-03-23 (CLI 하이브리드 실행 전략 문서화)
+> 마지막 업데이트: 2026-03-23 (CLI 하이브리드 실행 Phase A~E + 보고서 자동 저장 + 산출물 자동 체크 완료 + 새업무-Agent CLI 전체 흐름 문서화)
 
 ---
 
-## 📋 CLI 하이브리드 실행 아키텍처 (문서화 완료, 구현 예정)
+## ✅ CLI 하이브리드 실행 아키텍처 (Phase A~E 완료)
 
 > 전략 문서: [`docs/strategy/cli-hybrid-execution.md`](strategy/cli-hybrid-execution.md)
 
@@ -27,21 +27,81 @@
 
 | Phase | 내용 | 상태 |
 |-------|------|------|
-| A | PTY 출력 → 태스크 로그 연결 (터미널 보기 활성화) | 📋 예정 |
-| B | `POST /api/tasks/:id/cli-complete` 완료 감지 API 추가 | 📋 예정 |
-| C | 태스크 시작 시 CliWindow 자동 오픈 + 완료 버튼 | 📋 예정 |
-| D | CLAUDE.md / .cursorrules / GEMINI.md 컨텍스트 파일 자동 생성 | 📋 예정 |
-| E | CLI 실행 전 기획 회의 단계 추가 (선택적) | 📋 예정 |
+| A | PTY 출력 → 태스크 로그 연결 (pty-manager taskId 연결, ANSI 스트립) | ✅ 완료 |
+| B | `POST /api/tasks/:id/cli-complete` 완료 감지 API | ✅ 완료 |
+| C | `auto_open_cli` / `close_cli` WS 이벤트 + CliWindow 자동 오픈 + 완료 버튼 | ✅ 완료 |
+| D | `.agentdesk-task.md` 컨텍스트 파일 자동 생성 (태스크 정보 + curl 완료 명령) | ✅ 완료 |
+| D+ | CLAUDE.md → `.agentdesk-task.md` 참조 블록 자동 주입 (에이전트 자동 발견) | ✅ 완료 |
+| E | CLI 실행 전 기획 회의 단계 추가 (헤드리스 플래닝 에이전트 → auto_open_cli) | ✅ 완료 |
+| E+ | `enable_planning_phase` 토글 — 에이전트 설정에서 planning on/off | ✅ 완료 |
+| E+ | CliWindow planning 완료 배너 — `from_planning` 플래그로 자동 표시, 6초 후 소멸 | ✅ 완료 |
 
 ### 완료 감지 전략
 1. **API 호출** (주요): 에이전트가 CLAUDE.md 지시에 따라 `POST /api/tasks/:id/cli-complete` 호출
 2. **완료 버튼** (fallback): CliWindow 하단 버튼으로 사용자가 수동 완료 처리
 3. **PTY 종료** (비대화형 전용): 프로세스 종료 = 완료
 
+### Phase E 기획 회의 플로우 (CLI 인터랙티브)
+```
+startTaskExecution
+  └─ spawnCliAgent(planningPrompt)   ← 헤드리스, 코드 변경 금지
+       └─ on("close") → .agentdesk-task.md에 ## Plan 섹션 추가됨
+            └─ broadcast("auto_open_cli") → CliWindow 자동 오픈
+                 └─ 사용자가 인터랙티브 터미널에서 직접 실행
+                      └─ POST /api/tasks/:id/cli-complete → handleTaskRunComplete
+```
+
 ### 관련 완료 작업
 - CliWindow: providerModelConfig 연동, 자동 실행, 프로젝트 폴더 cwd ✅
 - 새 업무 창: CLI 실행 버튼, 프로젝트 에이전트 필터 ✅
 - ManualPathPickerDialog: 폴더 생성 기능 ✅
+
+---
+
+## ✅ 새업무 → Agent CLI 전체 흐름 (2026-03-23 문서화)
+
+> 상세: `docs/OVERVIEW.md` §4-A
+
+### 흐름 요약
+
+```
+CreateTaskModal
+  → POST /api/tasks (status: pending)
+  → Agent Queue → worktree 생성 (status: running)
+  → [Phase E] Planning Agent → .agentdesk-task.md 생성
+  → broadcast auto_open_cli → CliWindow 자동 오픈
+  → pty_create → server/modules/pty/ → pty_ready 이벤트
+  → on("pty_ready") → runAgentCli()  ← 2000ms fallback
+  → XTerminal: claude / codex / gemini … 자동 실행
+  → POST /api/tasks/:id/cli-complete
+  → run-complete-handler.ts
+      ├─ ① autoSaveTaskReport       → task_report_archives (lang 반영)
+      ├─ ② autoCheckDeliverables    → project_deliverable_checks (lang 반영)
+      └─ ③ emitTaskReportEvent      → Reports Window 즉시 반영
+  → WebSocket task_done → TaskBoard / NotificationCenter
+```
+
+### 각 창의 역할
+
+| 창 | 역할 |
+|----|------|
+| ▦ TaskBoard | 전체 태스크 상태 모니터링 (pending→running→done) |
+| 🕸️ Agent Graph | 에이전트↔태스크 연결 실시간 시각화 (데스크탑 앱) |
+| ⚡ Workflow Builder | 다중 태스크 자동화 파이프라인 설계·실행 |
+| >_ Agent CLI | PTY 터미널 — pty_ready 이벤트로 CLI 자동 실행 |
+| 📊 Reports | 완료 태스크 보고서 아카이브 열람 |
+| 🔔 Notifications | 태스크 완료·이상 알림 |
+
+### 자동 후처리 (task done 시)
+
+| 순서 | 함수 | 대상 테이블 |
+|------|------|------------|
+| ① | `autoSaveTaskReport` | `task_report_archives` |
+| ② | `autoCheckProjectDeliverables` | `project_deliverable_checks` |
+| ③ | `emitTaskReportEvent` | 프론트엔드 보고서 즉시 전달 |
+
+- 언어: `resolveLang(taskTitle)` → ko / en / ja / zh 자동 판단
+- ①②는 try/catch — 실패해도 ③ 블록 안 함
 
 ---
 
@@ -54,7 +114,7 @@
 | **창 최소화 (노란 버튼)** | opacity/scale 트랜지션, Dock 점 색상으로 상태 표시, 클릭 복원, 타이틀바 더블클릭도 최소화 |
 | **커서 수정** | 타이틀바는 `default`, 제목 드래그 영역만 `grab` |
 | **Cmd+W / Ctrl+W** | 최상단(포커스된) 창 닫기 |
-| **Delete/Backspace** | 선택된 아이콘 삭제 (프로젝트·doc·위젯아이콘) |
+| **Delete/Backspace** | 선택된 아이콘 삭제 (프로젝트·doc 아이콘) |
 | **Enter** | 선택된 프로젝트 창 열기 |
 | **F2** | 선택된 프로젝트 이름 변경 트리거 |
 | **러버밴드 다중 선택** | 빈 바탕 드래그 → 파란 사각형으로 여러 아이콘 선택 |
@@ -126,7 +186,7 @@ REPL → CLI 명칭 전환 + Agent Shell 패러다임 도입.
 | 1 | REPL → CLI 명칭 전환 (WindowType `"repl"→"cli"`, MissionControl, Dock 아이콘, 바탕화면 아이콘) | ✅ |
 | 2 | `uiStore.openCli(agentId?)` + `cliInitialAgentId` + `CliWindow.tsx` | ✅ |
 | 3 | `AgentCli.tsx` — CliSession Map + 셸 프롬프트 `[agent @ project] $` + `:switch`/`:status`/`:history`/`:reset` | ✅ |
-| 4 | 에이전트 진입점 3곳: AgentDetailPanel `>_` 버튼, AgentsWidget hover `>_` 버튼, Flow Graph 노드 우클릭 "CLI 열기" | ✅ |
+| 4 | 에이전트 진입점: AgentDetailPanel `>_` 버튼, Flow Graph 노드 우클릭 "CLI 열기" | ✅ |
 
 ### CLI 설치 기능 (Settings → CLI 탭)
 - `server/modules/routes/ops/cli-install.ts` — POST/GET 엔드포인트, npm install -g 실행
@@ -287,12 +347,12 @@ Notion·Obsidian 외부 지식 베이스를 AgentDesk에 연결하고, 에이전
 
 | Phase | 내용 | 완료일 |
 |-------|------|--------|
-| Phase 18 | Agent CLI — REPL→CLI 전환, CliSession Map, 에이전트 진입점 3곳 (Panel·Widget·FlowGraph) | 2026-03-22 |
+| Phase 18 | Agent CLI — REPL→CLI 전환, CliSession Map, 에이전트 진입점 (Panel·FlowGraph) | 2026-03-22 |
 | Figma 연동 | 태스크 URL 첨부, Figma REST API 컨텍스트 fetch, 실행 시 자동 주입 | 2026-03-20 |
 | Design Workflow | 4단계 에이전트 체인 템플릿, TemplatePickerModal, Figma URL 주입 | 2026-03-20 |
 | Phase 17 | Project Folders — 폴더 컨테이너, 디스크 이동, FolderWindow | 2026-03-22 |
 | Phase 16 | Cross-Project Handoff — 결과물 체크리스트 + 소스 연결 + 컨텍스트 자동 주입 | 2026-03-21 |
-| Phase 15 | Image Studio — 위젯 + 앱 윈도우 (txt2img·inpaint, 갤러리, 태스크 연동) | 2026-03-21 |
+| Phase 15 | Image Studio — 앱 윈도우 (txt2img·inpaint, 갤러리, 태스크 연동) | 2026-03-21 |
 | Phase 20 | Local LLM Manager — Ollama·LM Studio·llama.cpp·Jan 백엔드, 추론 로깅, 하드웨어 호환성 | 2026-03-19 |
 | Phase 13 | FM2024 Overhaul — 모든 tsx → `--th-*` CSS 변수 전환 | 2026-03-14 |
 | Phase 14 | MED Features — lazy loading, 채팅 검색/핀, 태스크 일괄, 성과 히스토리 | 2026-03-14 |
@@ -340,17 +400,17 @@ Notion·Obsidian 외부 지식 베이스를 AgentDesk에 연결하고, 에이전
 | 코드 | 심각도 | 내용 | 파일 | 상태 |
 |------|--------|------|------|------|
 | FG-01 | ❌ TODO | Delegation 엣지 명시적 TODO (SubTask 데이터 미전달) | `useFlowLayout.ts` | ✅ 수정 완료 |
-| FG-02 | 🟡 P1 | 노드 클릭 시 에이전트 상세 패널 미연결 | `FlowGraphWidget.tsx` | ✅ 수정 완료 |
+| FG-02 | 🟡 P1 | 노드 클릭 시 에이전트 상세 패널 미연결 | `AgentFlowGraph.tsx` | ✅ 수정 완료 |
 | FG-03 | 🔵 P2 | 50+ 에이전트 시 3열 고정으로 레이아웃 극단 축소 | `useFlowLayout.ts` | ✅ 수정 완료 |
 
 ---
 
 ## 2026-03-16 작업 완료 목록
 
-### Custom Widget Platform (Phase 1~5) ✅
+### Custom Feature Platform (Phase 1~5) ✅
 - **Phase 1**: `custom_features` DB 테이블 + CRUD API
-- **Phase 2**: 템플릿 7종 + `WidgetBuilderModal` 4단계 스텝
-- **Phase 3**: `CustomFeatureRenderer` / `CustomFeatureWidget` / `CustomFeatureWindow` + WidgetPicker/Dock 통합
+- **Phase 2**: 템플릿 7종 + `FeatureBuilderModal` 4단계 스텝
+- **Phase 3**: `CustomFeatureRenderer` / `CustomFeatureWindow` + Dock 통합
 - **Phase 4**: AI 생성 파이프라인 — `defaultProvider` 연동, 안전성 검증, `StepAiGenerate` 폴링 UI
 - **Phase 5**: esbuild TSX→IIFE 번들 + sandbox iframe 렌더러(`AiBundleRenderer`)
 
@@ -478,9 +538,9 @@ Notion·Obsidian 외부 지식 베이스를 AgentDesk에 연결하고, 에이전
 
 ---
 
-### Custom Widget 파라미터 UI 세분화 ✅
+### Custom Feature 파라미터 UI 세분화 ✅
 - **`templates/index.ts`**: `TemplateParam`에 신규 필드 추가 — `placeholder`, `hint`, `min`, `max`, `step`, `multiline`, `"agent"` 타입
-- **`WidgetBuilderModal.tsx`**: 파라미터 렌더링 전면 개선
+- **`FeatureBuilderModal.tsx`**: 파라미터 렌더링 전면 개선
   - `toggle` → 비주얼 슬라이더 스위치 (animate, knob 포함)
   - `text` → `multiline: true` 시 `<textarea>`, 기본은 `<input type="text">`
   - `number` → `min`/`max`/`step` 속성 + 전폭 입력
@@ -659,7 +719,7 @@ Notion·Obsidian 외부 지식 베이스를 AgentDesk에 연결하고, 에이전
 | 코드 | 내용 | 파일 | 상태 |
 |------|------|------|------|
 | E2E-01 | CLI createTask에 `project_path` 누락 (git worktree가 서버 cwd 사용) | `AgentCli.tsx` | ✅ 수정 |
-| E2E-02 | FlowGraphWidget이 `projectAgentIds` prop을 AgentFlowGraph에 전달 안 함 | `FlowGraphWidget.tsx` | ✅ 수정 |
+| E2E-02 | FlowGraph가 `projectAgentIds` prop을 AgentFlowGraph에 전달 안 함 | `AgentFlowGraph.tsx` | ✅ 수정 |
 | E2E-03 | 플로 그래프 - 같은 프로젝트 동시 실행 에이전트 간 협업 엣지 없음 | `useFlowLayout.ts`, `FlowEdge.tsx`, `AgentFlowGraph.tsx` | ✅ 수정 |
 | E2E-04 | Meeting Minutes 생성 시 WS 이벤트 없음 (패널 닫히면 알림 불가) | `minutes.ts`, `useRealtimeSync.ts`, `types/index.ts` | ✅ 수정 |
 | E2E-05 | **WbRunModal이 태스크만 생성하고 실행 안 함** (워크플로 실행이 실제로 동작 안 됨) | `WbRunModal.tsx`, `WorkflowBuilder.tsx` | ✅ 수정 |
@@ -673,9 +733,9 @@ Notion·Obsidian 외부 지식 베이스를 AgentDesk에 연결하고, 에이전
 - **Workflow Builder 실행**: 루트 태스크(의존성 없는 노드)를 생성 후 자동 `POST /api/tasks/:id/run` 호출, 모달이 실행 상태를 보여주는 동안 유지
 - **순차 실행 체인**: `run-complete-handler/core.ts`에서 태스크 완료(exit 0) 시 `task_dependencies` 테이블 조회 → 모든 upstream이 `done`이면 downstream 태스크를 `inbox`로 전환 후 자동 시작
 
-### Tasks 위젯 — 회의록 바로가기 버튼 ✅
-- **문제**: `TaskBoard.tsx`가 앱에 렌더링되지 않아 `onOpenMeetingMinutes` 버튼 진입 불가. `TasksWidget`은 클릭 시 항상 터미널 탭만 열림
-- **수정**: `TasksWidget.tsx` 각 태스크 행 우측에 `회의록` / `min` 버튼 추가
+### Task Board — 회의록 바로가기 버튼 ✅
+- **문제**: `TaskBoard.tsx`가 앱에 렌더링되지 않아 `onOpenMeetingMinutes` 버튼 진입 불가
+- **수정**: Task Board 각 태스크 행 우측에 `회의록` / `min` 버튼 추가
   - 행 클릭 → 터미널 탭 (기존 동작 유지)
   - `회의록` 버튼 클릭 → MINUTES 탭으로 바로 열림 (`stopPropagation`으로 행 클릭과 분리)
 
@@ -692,8 +752,8 @@ Notion·Obsidian 외부 지식 베이스를 AgentDesk에 연결하고, 에이전
   - `AgentManagerWindow.tsx`: `createTrigger` prop 수신 → `AgentManager`에 전달
   - `Desktop.tsx`: `agentManagerCreateCount` state + Dock `onCreateAgent` 에서 increment + `openWindow`
 
-### 에이전트 하트비트 위젯 — 프로젝트 필터
-- **`AgentsWidget.tsx`**: `useProjectStore`로 `currentProjectId` / `projectAgentIds` / `projectAgentsLoaded` 구독
+### AgentManager — 프로젝트 필터
+- **`AgentManager.tsx`**: `useProjectStore`로 `currentProjectId` / `projectAgentIds` / `projectAgentsLoaded` 구독
   - 프로젝트 선택 시 해당 프로젝트 소속 에이전트만 표시 (카운트 요약 포함)
   - 프로젝트 미선택 시 전체 에이전트 표시
 
@@ -906,10 +966,7 @@ Notion·Obsidian 외부 지식 베이스를 AgentDesk에 연결하고, 에이전
 - **`src/components/desktop/Desktop.tsx`**:
   - `AgentDetailPanel` 조건부 렌더 추가
   - ESC 핸들러에 `selectedAgentId` 닫기 조건 추가
-- **`src/components/desktop/widgets/AgentsWidget.tsx`**:
-  - 에이전트 행 클릭 → `setSelectedAgentId` 토글 연결
-  - 선택된 행 `background: var(--th-accent-glow)` 하이라이트
-- **`src/components/desktop/widgets/FlowGraphWidget.tsx`**:
+- **`src/components/flow-graph/AgentFlowGraph.tsx`**:
   - `handleSelectAgent`에서 `openWindow("agent-manager")` 제거 → `selectedAgentId` 토글만 남김
 
 ---
@@ -925,7 +982,7 @@ Notion·Obsidian 외부 지식 베이스를 AgentDesk에 연결하고, 에이전
 | ~~—~~ | ~~**Synapse Phase 2~4**~~ | ~~산출물 내보내기 / 문서 변경 트리거 / KB 컨텍스트 주입~~ | ✅ 완료 |
 | ~~🥇 1~~ | ~~**Local LLM Phase 5**~~ | ~~llama.cpp / Jan 백엔드 실행 감지~~ | ✅ 완료 |
 | ~~🥇 1~~ | ~~**UI/UX 전반 polish**~~ | ~~각 창 스크롤·반응형·i18n 누락·접근성 개선~~ | ✅ 완료 (2026-03-19) |
-| ~~🥇 1~~ | ~~**에이전트 상세 패널**~~ | ~~AgentsWidget/FlowGraph 클릭 → 우측 슬라이드 인스펙터 패널~~ | ✅ 완료 (2026-03-19) |
+| ~~🥇 1~~ | ~~**에이전트 상세 패널**~~ | ~~FlowGraph 클릭 → 우측 슬라이드 인스펙터 패널~~ | ✅ 완료 (2026-03-19) |
 
 > Synapse 문서: `docs/features/synapse.md`
 > 에이전트 상세 패널 설계: `docs/features/agent-detail-panel.md`
@@ -977,10 +1034,10 @@ Notion·Obsidian 외부 지식 베이스를 AgentDesk에 연결하고, 에이전
 ### 삭제된 문서
 - `docs/strategy/p2-tasks-design.md` — P2 작업 전체 완료, 구현 지침 불필요
 - `docs/strategy/agent-persona-system.md` — 2026-03-08 폐기 결정
-- `docs/features/custom-widget-platform-tech-spec.md` — 구현 완료, 기획서에 통합
+- `docs/features/custom-feature-platform-tech-spec.md` — 구현 완료, 기획서에 통합
 - `docs/features/knowledge-base-integrations.md` — Harness(synapse)로 통합
 - `docs/features/agent-detail-panel.md` — 구현 완료, progress.md에 통합 (2026-03-20)
-- `docs/features/custom-widget-platform.md` — 구현 완료, progress.md에 통합 (2026-03-20)
+- `docs/features/custom-feature-platform.md` — 구현 완료, progress.md에 통합 (2026-03-20)
 - `docs/features/cross-project-handoff.md` — 구현 완료 (Phase 16), progress.md에 통합 (2026-03-21)
 - `docs/features/project-folders.md` — 구현 완료 (Phase 17), progress.md에 통합 (2026-03-22)
 - `docs/strategy/agent-flow-graph-design.md` — 구현 완료 (P2-1, 2026-03-14), 참조 불필요

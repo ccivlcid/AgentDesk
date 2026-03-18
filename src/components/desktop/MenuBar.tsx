@@ -18,7 +18,6 @@ interface MenuBarProps {
   totalCostToday?: string;
   notificationSlot?: React.ReactNode;
   onOpenWallpaperPicker?: () => void;
-  onOpenWidgetPicker?: () => void;
   onOpenMissionControl?: () => void;
   onOpenUserGuide?: () => void;
   onOpenCommandPalette?: () => void;
@@ -36,7 +35,6 @@ export default function MenuBar({
   totalCostToday,
   notificationSlot,
   onOpenWallpaperPicker,
-  onOpenWidgetPicker,
   onOpenMissionControl,
   onOpenUserGuide,
   onOpenCommandPalette,
@@ -215,16 +213,6 @@ export default function MenuBar({
               onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "none"; }}
             >
               <span>{t({ ko: "배경화면 변경...", en: "Change Wallpaper...", ja: "壁紙を変更...", zh: "更换壁纸..." })}</span>
-            </button>
-
-            {/* 위젯 추가 */}
-            <button
-              style={menuItemStyle}
-              onClick={() => menuAction(onOpenWidgetPicker)}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--th-accent-glow)"; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "none"; }}
-            >
-              <span>{t({ ko: "위젯 추가...", en: "Add Widget...", ja: "ウィジェット追加...", zh: "添加小组件..." })}</span>
             </button>
 
             {/* 다크/라이트 모드 전환 */}

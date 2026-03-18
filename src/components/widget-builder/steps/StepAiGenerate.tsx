@@ -134,7 +134,7 @@ export default function StepAiGenerate({ isKo, featureType, config, onGenerated 
             opacity: prompt.trim() ? 1 : 0.6,
           }}
         >
-          {isKo ? "✦ AI에게 생성 요청" : "✦ Generate with AI"}
+          {isKo ? "AI에게 생성 요청" : "Generate with AI"}
         </button>
       )}
 
@@ -169,7 +169,7 @@ export default function StepAiGenerate({ isKo, featureType, config, onGenerated 
 
       {status === "done" && (
         <div style={{ ...mono, fontSize: 11, color: "var(--th-attr-elite)", padding: "10px 12px", background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.3)", borderRadius: 6, textAlign: "center" }}>
-          ✓ {isKo ? "생성 완료! 미리보기로 이동합니다..." : "Done! Moving to preview..."}
+          {isKo ? "생성 완료! 미리보기로 이동합니다..." : "Done! Moving to preview..."}
         </div>
       )}
 

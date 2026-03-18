@@ -85,6 +85,7 @@ export function registerRoutesPartA(ctx: RuntimeContext): Record<string, never> 
   const detectAllCli = __ctx.detectAllCli;
   const endTaskExecutionSession = __ctx.endTaskExecutionSession;
   const ensureClaudeMd = __ctx.ensureClaudeMd;
+  const injectTaskContext = __ctx.injectTaskContext;
   const ensureOAuthActiveAccount = __ctx.ensureOAuthActiveAccount;
   const ensureTaskExecutionSession = __ctx.ensureTaskExecutionSession;
   const execWithTimeout = __ctx.execWithTimeout;
@@ -450,6 +451,7 @@ export function registerRoutesPartA(ctx: RuntimeContext): Record<string, never> 
     generateProjectContext,
     getRecentChanges,
     ensureClaudeMd,
+    injectTaskContext,
     getDeptRoleConstraint,
     normalizeTextField,
     getRecentConversationContext,

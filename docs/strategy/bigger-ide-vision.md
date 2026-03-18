@@ -60,7 +60,7 @@ A strategy document for how AgentDesk will fulfill the **"Bigger IDE"** vision K
 - **Layout**: Relationship-based auto-placement, meeting cluster circular arrangement
 - **Interaction**: Zoom/pan, node hover highlight, click → agent detail, double-click fitToView
 - **Filters**: All / Working / In Meeting
-- **Location**: Desktop widget (`FlowGraphWidget`) and Workflow window (`g w` shortcut)
+- **Location**: Workflow window (`g w` shortcut)
 
 **Details**: `docs/strategy/agent-flow-graph-design.md`
 

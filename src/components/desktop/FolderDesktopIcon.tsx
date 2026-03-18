@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { useUiStore } from "../../store/uiStore";
 import { useI18n } from "../../i18n";
 import type { ProjectFolder } from "../../types";
@@ -12,6 +12,10 @@ interface FolderDesktopIconProps {
   onRename: (folder: ProjectFolder) => void;
   onDelete: (folder: ProjectFolder) => void;
   onColorChange: (folder: ProjectFolder) => void;
+  defaultX: number;
+  defaultY: number;
+  isSelected?: boolean;
+  onSelect?: () => void;
 }
 
 function FolderStackIcon({ color, size = 64 }: { color: string; size?: number }) {
@@ -36,24 +40,73 @@ export default function FolderDesktopIcon({
   onRename,
   onDelete,
   onColorChange,
+  defaultX,
+  defaultY,
+  isSelected = false,
+  onSelect,
 }: FolderDesktopIconProps) {
-  const { openFolder } = useUiStore();
+  const { openFolder, desktopIconLayout, setDesktopIconLayout } = useUiStore();
   const { t } = useI18n();
   const [ctxOpen, setCtxOpen] = useState(false);
   const [ctxPos, setCtxPos] = useState({ x: 0, y: 0 });
-  const [clickTimer, setClickTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
+  const [dragging, setDragging] = useState(false);
+
+  const iconId = `folder-${folder.id}`;
+  const saved = desktopIconLayout[iconId];
+  const [pos, setPos] = useState({ x: saved?.x ?? defaultX, y: saved?.y ?? defaultY });
+  const dragStart = useRef<{ mx: number; my: number; ox: number; oy: number } | null>(null);
+  const moved = useRef(false);
+
+  useEffect(() => {
+    if (dragging) return;
+    const entry = desktopIconLayout[iconId];
+    if (entry) {
+      setPos({ x: entry.x, y: entry.y });
+    } else {
+      setPos({ x: defaultX, y: defaultY });
+    }
+  }, [desktopIconLayout, iconId, dragging, defaultX, defaultY]);
+
+  function onMouseDown(e: React.MouseEvent) {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    moved.current = false;
+    dragStart.current = { mx: e.clientX, my: e.clientY, ox: pos.x, oy: pos.y };
+    setDragging(true);
+    onSelect?.();
+
+    function onMove(ev: MouseEvent) {
+      if (!dragStart.current) return;
+      const dx = ev.clientX - dragStart.current.mx;
+      const dy = ev.clientY - dragStart.current.my;
+      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) moved.current = true;
+      setPos({ x: dragStart.current.ox + dx, y: dragStart.current.oy + dy });
+    }
+
+    function onUp(ev: MouseEvent) {
+      if (!dragStart.current) return;
+      const nx = dragStart.current.ox + (ev.clientX - dragStart.current.mx);
+      const ny = dragStart.current.oy + (ev.clientY - dragStart.current.my);
+      setPos({ x: nx, y: ny });
+      setDesktopIconLayout({ ...useUiStore.getState().desktopIconLayout, [iconId]: { x: nx, y: ny } });
+      dragStart.current = null;
+      setDragging(false);
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    }
+
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+  }
 
   const handleClick = useCallback(() => {
-    if (clickTimer) {
-      clearTimeout(clickTimer);
-      setClickTimer(null);
-      // double-click
-      openFolder(folder.id);
-    } else {
-      const t = setTimeout(() => setClickTimer(null), 280);
-      setClickTimer(t);
-    }
-  }, [clickTimer, folder.id, openFolder]);
+    if (moved.current) return;
+    onSelect?.();
+  }, [onSelect]);
+
+  const handleDoubleClick = useCallback(() => {
+    if (!moved.current) openFolder(folder.id);
+  }, [folder.id, openFolder]);
 
   const handleContextMenu = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -66,9 +119,25 @@ export default function FolderDesktopIcon({
   const overflow = projectCount > 5 ? projectCount - 5 : 0;
 
   return (
-    <div style={{ position: "relative", display: "inline-flex", flexDirection: "column", alignItems: "center", gap: 4, userSelect: "none" }}>
+    <div
+      data-no-ctx="true"
+      onMouseDown={onMouseDown}
+      style={{
+        position: "absolute",
+        left: pos.x,
+        top: pos.y,
+        display: "inline-flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: 4,
+        userSelect: "none",
+        cursor: dragging ? "grabbing" : "pointer",
+        zIndex: dragging ? 100 : 10,
+      }}
+    >
       <div
         onClick={handleClick}
+        onDoubleClick={handleDoubleClick}
         onContextMenu={handleContextMenu}
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
@@ -77,9 +146,15 @@ export default function FolderDesktopIcon({
           position: "relative",
           cursor: "pointer",
           padding: 4,
-          borderRadius: 0,
-          boxShadow: isDragOver ? `0 0 0 3px ${folder.color}` : "none",
-          background: isDragOver ? `${folder.color}18` : "transparent",
+          borderRadius: 8,
+          boxShadow: isSelected && isDragOver
+            ? `0 0 0 3px rgba(0,122,255,0.6), 0 0 0 5px ${folder.color}`
+            : isSelected
+              ? "0 0 0 3px rgba(0,122,255,0.6)"
+              : isDragOver ? `0 0 0 3px ${folder.color}` : "none",
+          background: isSelected
+            ? "rgba(0,122,255,0.12)"
+            : isDragOver ? `${folder.color}18` : "transparent",
           transition: "box-shadow 0.15s, background 0.15s",
         }}
       >

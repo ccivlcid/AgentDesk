@@ -13,6 +13,7 @@ import { readYoloModeEnabled } from "../../routes/ops/messages/decision-inbox/yo
 import { reconcileVideoRenderDelegationState } from "./video-render-delegation-state.ts";
 import type { CountRow } from "../../routes/shared/types.ts";
 import { appendTaskExecutionMetaUpdate, recordTaskExecutionEvent } from "../core/task-execution-meta.ts";
+import { autoSaveTaskReport, autoCheckProjectDeliverables } from "./run-complete-handler/auto-completions.ts";
 
 type CreateReviewFinalizeToolsDeps = Record<string, any>;
 
@@ -793,6 +794,40 @@ export function createReviewFinalizeTools(deps: CreateReviewFinalizeToolsDeps) {
       refreshCliUsageData()
         .then((usage: unknown) => broadcast("cli_usage_update", usage))
         .catch(() => {});
+      // ── 자동 후처리 (best-effort, 완료 흐름 블로킹 안 함) ──────────────────
+      // emitTaskReportEvent 전에 실행해야 frontend가 첫 로드 시 archive를 포함함
+      {
+        const autoCompletionDeps = {
+          db,
+          nowMs,
+          logsDir,
+          lang: lang as "ko" | "en" | "ja" | "zh",
+          appendTaskLog,
+          prettyStreamJson: deps.prettyStreamJson,
+          getWorktreeDiffSummary: deps.getWorktreeDiffSummary,
+          taskWorktrees,
+        };
+        const taskForAuto = {
+          id: taskId,
+          title: taskTitle,
+          description: (currentTask as any).description ?? null,
+          project_id: (currentTask as any).project_id ?? null,
+          project_path: (currentTask as any).project_path ?? null,
+          workflow_pack_key: (currentTask as any).workflow_pack_key ?? null,
+          assigned_agent_id: (currentTask as any).assigned_agent_id ?? null,
+          source_task_id: (currentTask as any).source_task_id ?? null,
+          started_at: (currentTask as any).started_at ?? null,
+          completed_at: t,
+          result: (currentTask as any).result ?? null,
+        };
+        // 1. 보고서 자동 저장 (sub-task는 별도로 parent에서 처리되므로 skip)
+        if (!taskForAuto.source_task_id) {
+          autoSaveTaskReport(taskId, taskForAuto, autoCompletionDeps);
+        }
+        // 2. 프로젝트 산출물 체크리스트 자동 체크
+        autoCheckProjectDeliverables(taskId, taskForAuto, autoCompletionDeps);
+      }
+
       const deferTaskReport = shouldDeferTaskReportUntilPlanningArchive(currentTask);
       if (deferTaskReport) {
         appendTaskLog(taskId, "system", "Task report popup deferred until planning consolidated archive is ready");

@@ -3,7 +3,7 @@ import type { Agent, CliModelInfo, CliStatusMap, CompanySettings } from "../type
 import * as api from "../api";
 import type { DeviceCodeStart, OAuthConnectProvider, OAuthStatus } from "../api";
 import type { OAuthCallbackResult } from "../App";
-import { LANGUAGE_STORAGE_KEY, normalizeLanguage, useI18n } from "../i18n";
+import { LANGUAGE_STORAGE_KEY, LANGUAGE_USER_SET_STORAGE_KEY, normalizeLanguage, useI18n } from "../i18n";
 import ApiSettingsTab from "./settings/ApiSettingsTab";
 import CliSettingsTab from "./settings/CliSettingsTab";
 import GatewaySettingsTab from "./settings/GatewaySettingsTab";
@@ -220,6 +220,7 @@ export default function SettingsPanel({
   function handleSave() {
     const nextLocale = normalizeLanguage(form.language);
     window.localStorage.setItem(LANGUAGE_STORAGE_KEY, nextLocale);
+    window.localStorage.setItem(LANGUAGE_USER_SET_STORAGE_KEY, "1");
     window.dispatchEvent(new Event("agentdesk-language-change"));
     persistSettings(form);
     setSaved(true);

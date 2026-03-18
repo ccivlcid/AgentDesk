@@ -1,15 +1,13 @@
 import { useState, useEffect, useRef } from "react";
-import type { AgentRule, AgentRuleCategory, AgentRuleScopeType, Agent, Department } from "../../types";
+import type { AgentRule, AgentRuleCategory, AgentRuleScopeType } from "../../types";
 import type { CreateAgentRuleInput, UpdateAgentRuleInput } from "../../api/agent-rules";
 import { RULE_CATEGORIES, categoryLabel, type TFunction } from "./model";
-import { Modal, ModalHeader, ModalBody, ModalFooter, Button, Input, Textarea, FormField, useToast } from "../ui";
+import FloatingWindow from "../skills-library/FloatingWindow";
 
 interface RuleFormModalProps {
   t: TFunction;
   show: boolean;
   editingRule: AgentRule | null;
-  agents: Agent[];
-  departments: Department[];
   submitting: boolean;
   error: string | null;
   onClose: () => void;
@@ -22,8 +20,6 @@ export default function RuleFormModal({
   t,
   show,
   editingRule,
-  agents,
-  departments,
   submitting,
   error,
   onClose,
@@ -31,16 +27,10 @@ export default function RuleFormModal({
   onUpdate,
   scopeOverride,
 }: RuleFormModalProps) {
-  const { showToast } = useToast();
   const [title, setTitle] = useState("");
-  const [titleKo, setTitleKo] = useState("");
-  const [titleJa, setTitleJa] = useState("");
-  const [titleZh, setTitleZh] = useState("");
-  const [description, setDescription] = useState("");
   const [ruleContent, setRuleContent] = useState("");
-  const [category, setCategory] = useState<AgentRuleCategory>("general");
-  const [priority, setPriority] = useState(50);
   const [fileName, setFileName] = useState("");
+  const [category, setCategory] = useState<AgentRuleCategory>("general");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isEditing = !!editingRule;
@@ -48,44 +38,35 @@ export default function RuleFormModal({
   useEffect(() => {
     if (editingRule) {
       setTitle(editingRule.title);
-      setTitleKo(editingRule.title_ko);
-      setTitleJa(editingRule.title_ja);
-      setTitleZh(editingRule.title_zh);
-      setDescription(editingRule.description);
       setRuleContent(editingRule.rule_content);
       setCategory(editingRule.category);
-      setPriority(editingRule.priority);
+      setFileName("");
     } else {
       setTitle("");
-      setTitleKo("");
-      setTitleJa("");
-      setTitleZh("");
-      setDescription("");
       setRuleContent("");
       setCategory("general");
-      setPriority(50);
       setFileName("");
     }
   }, [editingRule, show]);
+
+  if (!show) return null;
 
   const canSubmit = title.trim() && ruleContent.trim();
 
   const handleSubmit = () => {
     if (!canSubmit || submitting) return;
-
     const base = {
       title: title.trim(),
-      title_ko: titleKo.trim(),
-      title_ja: titleJa.trim(),
-      title_zh: titleZh.trim(),
-      description: description.trim(),
+      title_ko: "",
+      title_ja: "",
+      title_zh: "",
+      description: "",
       rule_content: ruleContent.trim(),
       category,
       scope_type: scopeOverride?.scope_type ?? ("global" as const),
       scope_id: scopeOverride?.scope_id,
-      priority,
+      priority: 50,
     };
-
     if (isEditing) {
       onUpdate(editingRule.id, base);
     } else {
@@ -93,27 +74,28 @@ export default function RuleFormModal({
     }
   };
 
-  const selectStyle: React.CSSProperties = {
-    borderRadius: 0,
-    background: "var(--th-input-bg)",
-    border: "1px solid var(--th-input-border)",
-    color: "var(--th-text-secondary)",
-  };
-
   return (
-    <Modal open={show} onClose={onClose} width="md">
-      <ModalHeader onClose={onClose}>
-        {isEditing
-          ? t({ ko: "룰 수정", en: "Edit Rule", ja: "ルール編集", zh: "编辑规则" })
-          : t({ ko: "새 룰 추가", en: "Add New Rule", ja: "新しいルール追加", zh: "添加新规则" })}
-      </ModalHeader>
-
-      <ModalBody className="space-y-4">
-        <FormField
-          label={t({ ko: "룰 제목 (영문)", en: "Rule Title (EN)", ja: "ルールタイトル（英語）", zh: "规则标题（英文）" })}
-          required
-        >
-          <Input
+    <FloatingWindow
+      title={isEditing
+        ? t({ ko: "룰 수정", en: "Edit Rule", ja: "ルール編集", zh: "编辑规则" })
+        : t({ ko: "새 룰 추가", en: "Add New Rule", ja: "新しいルール追加", zh: "添加新规则" })}
+      subtitle={t({
+        ko: "규칙 제목과 md 파일을 첨부하세요",
+        en: "Enter a title and attach an md file",
+        ja: "タイトルを入力してmdファイルを添付してください",
+        zh: "输入标题并附加md文件",
+      })}
+      onClose={onClose}
+      disableClose={submitting}
+      defaultWidth={480}
+    >
+      <div className="space-y-4 px-5 py-4">
+        <div>
+          <label className="block text-xs font-mono mb-1.5" style={{ color: "var(--th-text-muted)" }}>
+            {t({ ko: "제목", en: "Title", ja: "タイトル", zh: "标题" })} *
+          </label>
+          <input
+            type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder={t({
@@ -122,108 +104,69 @@ export default function RuleFormModal({
               ja: "例: Always write tests first",
               zh: "例如: Always write tests first",
             })}
+            className="w-full px-3 py-2 text-sm font-mono focus:outline-none"
+            style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
           />
-        </FormField>
-
-        <FormField
-          label={t({ ko: "룰 제목 (한국어)", en: "Rule Title (KO)", ja: "ルールタイトル（韓国語）", zh: "规则标题（韩文）" })}
-        >
-          <Input
-            value={titleKo}
-            onChange={(e) => setTitleKo(e.target.value)}
-            placeholder={t({
-              ko: "예: 항상 테스트를 먼저 작성",
-              en: "e.g. 항상 테스트를 먼저 작성",
-              ja: "例: 항상 테스트를 먼저 작성",
-              zh: "例如: 항상 테스트를 먼저 작성",
-            })}
-          />
-        </FormField>
-
-        <FormField label={t({ ko: "설명", en: "Description", ja: "説明", zh: "描述" })}>
-          <Textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows={2}
-            placeholder={t({
-              ko: "이 룰이 왜 필요한지 간단히 설명해주세요",
-              en: "Briefly explain why this rule is needed",
-              ja: "このルールが必要な理由を簡単に説明してください",
-              zh: "简要说明此规则的必要性",
-            })}
-          />
-        </FormField>
+        </div>
 
         <div>
-          <FormField
-            label={t({ ko: "룰 내용", en: "Rule Content", ja: "ルール内容", zh: "规则内容" })}
-            required
+          <label className="block text-xs font-mono mb-1.5" style={{ color: "var(--th-text-muted)" }}>
+            {t({ ko: "카테고리", en: "Category", ja: "カテゴリ", zh: "分类" })}
+          </label>
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value as AgentRuleCategory)}
+            className="w-full px-3 py-2 text-sm font-mono outline-none"
+            style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
           >
-            <Textarea
-              value={ruleContent}
-              onChange={(e) => setRuleContent(e.target.value)}
-              rows={4}
-              style={{ fontFamily: "var(--th-font-mono)" }}
-              placeholder={t({
-                ko: "에이전트에게 전달될 실제 규칙 텍스트를 입력하세요",
-                en: "Enter the actual rule text that will be delivered to agents",
-                ja: "エージェントに伝えられる実際のルールテキストを入力してください",
-                zh: "输入将传达给代理的实际规则文本",
-              })}
+            {RULE_CATEGORIES.map((cat) => (
+              <option key={cat} value={cat}>
+                {categoryLabel(cat, t)}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-xs font-mono mb-1.5" style={{ color: "var(--th-text-muted)" }}>
+            {t({ ko: "규칙 파일", en: "Rule File", ja: "ルールファイル", zh: "规则文件" })} *
+          </label>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="flex items-center gap-1.5 px-3 py-2 text-xs font-mono transition"
+              style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
+            >
+              <span>📎</span>
+              {t({ ko: "파일 선택", en: "Choose File", ja: "ファイル選択", zh: "选择文件" })}
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".md,.txt,.markdown,.rule,.prompt"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                setFileName(file.name);
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                  const text = ev.target?.result;
+                  if (typeof text === "string") setRuleContent(text);
+                };
+                reader.readAsText(file);
+                e.target.value = "";
+              }}
+              className="hidden"
             />
-          </FormField>
-          <div className="flex items-center justify-between mt-1.5">
-            <div className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
-              {t({
-                ko: "이 텍스트가 에이전트 프롬프트에 주입됩니다",
-                en: "This text will be injected into agent prompts",
-                ja: "このテキストがエージェントのプロンプトに注入されます",
-                zh: "此文本将注入到代理提示中",
-              })}
-            </div>
-            <div className="flex items-center gap-2">
-              <Button variant="secondary" size="sm" onClick={() => fileInputRef.current?.click()}>
-                {t({ ko: "파일에서 불러오기", en: "Load from file", ja: "ファイルから読込", zh: "从文件加载" })}
-              </Button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".md,.txt,.markdown,.json,.yaml,.yml,.toml,.xml,.csv,.rule,.prompt"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (!file) return;
-                  if (file.size > 512_000) {
-                    showToast(t({
-                      ko: "파일 크기가 너무 큽니다 (최대 512KB)",
-                      en: "File too large (max 512KB)",
-                      ja: "ファイルサイズが大きすぎます（最大512KB）",
-                      zh: "文件过大（最大512KB）",
-                    }), "warning");
-                    return;
-                  }
-                  const reader = new FileReader();
-                  reader.onload = (ev) => {
-                    const text = ev.target?.result;
-                    if (typeof text === "string") {
-                      setRuleContent(text);
-                      setFileName(file.name);
-                    }
-                  };
-                  reader.readAsText(file);
-                  e.target.value = "";
-                }}
-                className="hidden"
-              />
-              {fileName && (
-                <span className="text-[10px] truncate max-w-[140px]" style={{ color: "var(--th-attr-elite)" }}>
-                  {fileName}
-                </span>
-              )}
-            </div>
+            {fileName && (
+              <span className="text-xs font-mono truncate max-w-[200px]" style={{ color: "var(--th-text-primary)" }}>
+                📄 {fileName}
+              </span>
+            )}
           </div>
-          {fileName && ruleContent && (
-            <div className="mt-2 p-2 max-h-24 overflow-y-auto" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-terminal-bg)" }}>
-              <pre className="text-[10px] whitespace-pre-wrap break-all font-mono" style={{ color: "var(--th-text-muted)" }}>
+          {ruleContent && (
+            <div className="mt-2 p-2 max-h-32 overflow-y-auto" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-terminal-bg)" }}>
+              <pre className="text-[10px] font-mono whitespace-pre-wrap break-all" style={{ color: "var(--th-text-muted)" }}>
                 {ruleContent.slice(0, 500)}
                 {ruleContent.length > 500 && "..."}
               </pre>
@@ -231,54 +174,40 @@ export default function RuleFormModal({
           )}
         </div>
 
-        {/* Category + Priority Row */}
-        <div className="grid grid-cols-2 gap-3">
-          <FormField label={t({ ko: "카테고리", en: "Category", ja: "カテゴリ", zh: "分类" })}>
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value as AgentRuleCategory)}
-              className="w-full px-3 py-2 text-sm outline-none"
-              style={selectStyle}
-            >
-              {RULE_CATEGORIES.map((cat) => (
-                <option key={cat} value={cat}>
-                  {categoryLabel(cat, t)}
-                </option>
-              ))}
-            </select>
-          </FormField>
-
-          <FormField label={`${t({ ko: "우선순위", en: "Priority", ja: "優先順位", zh: "优先级" })} (1-100)`}>
-            <Input
-              type="number"
-              min={1}
-              max={100}
-              value={priority}
-              onChange={(e) => setPriority(Math.max(1, Math.min(100, Number(e.target.value) || 50)))}
-            />
-          </FormField>
-        </div>
-
-        {/* Error */}
         {error && (
-          <div className="text-[11px] px-3 py-2" style={{ borderRadius: 0, background: "var(--th-danger-bg)", border: "1px solid var(--th-danger-border)", color: "var(--th-danger-text)" }}>
+          <div className="text-[11px] font-mono px-3 py-2" style={{ borderRadius: 0, border: "1px solid rgba(244,63,94,0.35)", background: "rgba(244,63,94,0.1)", color: "rgb(253,164,175)" }}>
             {error}
           </div>
         )}
-      </ModalBody>
 
-      <ModalFooter>
-        <Button variant="secondary" size="sm" onClick={onClose} disabled={submitting}>
-          {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}
-        </Button>
-        <Button variant="primary" size="sm" onClick={handleSubmit} disabled={!canSubmit || submitting}>
-          {submitting
-            ? t({ ko: "저장중...", en: "Saving...", ja: "保存中...", zh: "保存中..." })
-            : isEditing
+        <div className="flex justify-end gap-2 pb-2">
+          <button
+            onClick={onClose}
+            disabled={submitting}
+            className="px-3 py-1.5 text-xs font-mono transition"
+            style={{ borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
+          >
+            {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={!canSubmit || submitting}
+            className="px-4 py-1.5 text-xs font-mono border transition flex items-center gap-1.5"
+            style={!canSubmit
+              ? { borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-muted)", cursor: "not-allowed" }
+              : { borderRadius: 0, border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.15)", color: "var(--th-text-primary)" }}
+          >
+            {submitting ? (
+              <>
+                <span className="animate-spin w-3 h-3 border border-t-transparent" style={{ borderRadius: "50%", borderColor: "var(--th-accent)", borderTopColor: "transparent" }} />
+                {t({ ko: "저장중...", en: "Saving...", ja: "保存中...", zh: "保存中..." })}
+              </>
+            ) : isEditing
               ? t({ ko: "룰 수정", en: "Update Rule", ja: "ルール更新", zh: "更新规则" })
               : t({ ko: "룰 추가", en: "Add Rule", ja: "ルール追加", zh: "添加规则" })}
-        </Button>
-      </ModalFooter>
-    </Modal>
+          </button>
+        </div>
+      </div>
+    </FloatingWindow>
   );
 }

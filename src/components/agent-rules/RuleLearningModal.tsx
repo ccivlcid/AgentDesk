@@ -180,7 +180,7 @@ export default function RuleLearningModal({
               const unlearnEffect = unlearnEffects[row.provider];
               const isHitAnimating = !!unlearnEffect;
               const displayName = row.agent
-                ? preferKoreanName
+                ? localeTag.startsWith("ko")
                   ? row.agent.name_ko || row.agent.name
                   : row.agent.name || row.agent.name_ko
                 : t({ ko: "배치된 인원 없음", en: "No assigned member", ja: "担当メンバーなし", zh: "暂无成员" });
@@ -304,7 +304,7 @@ export default function RuleLearningModal({
                 const agentProvider = agent.cli_provider as RuleLearnProvider | undefined;
                 const isProviderSelected = agentProvider ? selectedProviders.includes(agentProvider) : false;
                 const isAnimating = learnInProgress && isProviderSelected;
-                const displayName = preferKoreanName
+                const displayName = localeTag.startsWith("ko")
                   ? agent.name_ko || agent.name
                   : agent.name || agent.name_ko;
 

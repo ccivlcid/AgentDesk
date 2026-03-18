@@ -30,6 +30,7 @@ type CreateExecutionStartTaskToolsDeps = {
   getTaskContinuationContext: RuntimeContext["getTaskContinuationContext"];
   getRecentChanges: RuntimeContext["getRecentChanges"];
   ensureClaudeMd: RuntimeContext["ensureClaudeMd"];
+  injectTaskContext: RuntimeContext["injectTaskContext"];
   pickL: RuntimeContext["pickL"];
   l: RuntimeContext["l"];
   buildAvailableSkillsPromptBlock: RuntimeContext["buildAvailableSkillsPromptBlock"];
@@ -62,6 +63,7 @@ export function createExecutionStartTaskTools(deps: CreateExecutionStartTaskTool
     getTaskContinuationContext,
     getRecentChanges,
     ensureClaudeMd,
+    injectTaskContext,
     pickL,
     l,
     buildAvailableSkillsPromptBlock,
@@ -318,6 +320,19 @@ export function createExecutionStartTaskTools(deps: CreateExecutionStartTaskTool
     if (provider === "claude") {
       ensureClaudeMd(projPath, worktreePath);
     }
+    // CLI interactive providers: inject .agentdesk-task.md so the agent
+    // knows what task it is on and how to signal completion.
+    const CLI_INTERACTIVE_PROVIDERS_INJECT = new Set(["claude", "cursor", "codex", "gemini"]);
+    if (CLI_INTERACTIVE_PROVIDERS_INJECT.has(provider)) {
+      const personaBlock = buildCharacterPersonaBlock(execAgent.persona_id, execAgent.id);
+      injectTaskContext({
+        worktreePath,
+        taskId,
+        taskTitle: taskData.title,
+        taskDescription: taskData.description,
+        personaBlock: personaBlock || undefined,
+      });
+    }
     const continuationInstruction = continuationCtx
       ? pickL(
           l(
@@ -441,18 +456,57 @@ export function createExecutionStartTaskTools(deps: CreateExecutionStartTaskTool
         provider === "codex"
           ? execAgent.cli_reasoning_level || modelConfig[provider]?.reasoningLevel || undefined
           : modelConfig[provider]?.reasoningLevel || undefined;
-      const child = spawnCliAgent(
-        taskId,
-        provider,
-        spawnPrompt,
-        agentCwd,
-        logFilePath,
-        modelForProvider,
-        reasoningLevel,
-      );
-      child.on("close", (code: number | null) => {
-        handleTaskRunComplete(taskId, code ?? 1);
-      });
+
+      const CLI_INTERACTIVE_PROVIDERS = new Set(["claude", "cursor", "codex", "gemini"]);
+      const planningEnabled = execAgent.enable_planning_phase !== 0; // default 1 (enabled)
+      if (CLI_INTERACTIVE_PROVIDERS.has(provider) && planningEnabled) {
+        // Phase E: Run a headless planning agent first to build a step-by-step plan,
+        // then open the CLI window for the user to execute interactively.
+        // handleTaskRunComplete is NOT called here — completion comes via
+        // POST /api/tasks/:id/cli-complete or the "완료" button in CliWindow.
+        const planningPrompt = buildTaskExecutionPrompt([
+          "[Planning Mode — DO NOT execute code changes yet]",
+          `Task: ${taskData.title}`,
+          taskData.description ? `Description:\n${taskData.description}` : "",
+          "",
+          "Analyze this task carefully and create a concrete step-by-step implementation plan.",
+          "Append your plan as a \"## Plan\" section to the file .agentdesk-task.md in the current directory.",
+          "Format each step as a checkbox: - [ ] step description",
+          "After writing the plan to .agentdesk-task.md, exit immediately without making any other code changes.",
+        ]);
+        appendTaskLog(taskId, "system", `Phase E: starting planning agent (provider=${provider})`);
+        const planningChild = spawnCliAgent(
+          taskId,
+          provider,
+          planningPrompt,
+          agentCwd,
+          logFilePath,
+          modelForProvider,
+          reasoningLevel,
+        );
+        planningChild.on("close", () => {
+          appendTaskLog(taskId, "system", "Phase E: planning complete — opening CLI window");
+          broadcast("auto_open_cli", { agent_id: execAgent.id, task_id: taskId, from_planning: true });
+        });
+      } else if (CLI_INTERACTIVE_PROVIDERS.has(provider)) {
+        // planning 비활성화 — 바로 CLI 창 오픈
+        appendTaskLog(taskId, "system", `RUN cli-interactive (planning disabled, provider=${provider})`);
+        broadcast("auto_open_cli", { agent_id: execAgent.id, task_id: taskId });
+      } else {
+        // Headless CLI providers (opencode, etc.)
+        const child = spawnCliAgent(
+          taskId,
+          provider,
+          spawnPrompt,
+          agentCwd,
+          logFilePath,
+          modelForProvider,
+          reasoningLevel,
+        );
+        child.on("close", (code: number | null) => {
+          handleTaskRunComplete(taskId, code ?? 1);
+        });
+      }
     }
 
     const worktreeNote = pickL(

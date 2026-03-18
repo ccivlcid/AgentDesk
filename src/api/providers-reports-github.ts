@@ -449,6 +449,23 @@ export async function getCloneStatus(cloneId: string): Promise<CloneStatus> {
   return request<CloneStatus>(`/api/github/clone/${cloneId}`);
 }
 
+export async function cloneGitLabRepo(input: {
+  repo_url: string;
+  token: string;
+  branch?: string;
+  target_path?: string;
+}): Promise<{ clone_id: string | null; already_exists?: boolean; target_path: string }> {
+  return request<{ clone_id: string | null; already_exists?: boolean; target_path: string }>("/api/gitlab/clone", {
+    method: "POST",
+    body: JSON.stringify(input),
+    headers: { "Content-Type": "application/json" },
+  });
+}
+
+export async function getGitLabCloneStatus(cloneId: string): Promise<CloneStatus> {
+  return request<CloneStatus>(`/api/gitlab/clone/${cloneId}`);
+}
+
 export async function getProjectBranches(
   projectId: string,
 ): Promise<{ branches: string[]; current_branch: string | null }> {

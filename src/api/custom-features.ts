@@ -5,10 +5,8 @@ import type {
   CustomFeatureType,
 } from "../types";
 
-const BASE = "http://127.0.0.1:8790";
-
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, {
+  const res = await fetch(path, {
     headers: { "Content-Type": "application/json" },
     ...init,
   });

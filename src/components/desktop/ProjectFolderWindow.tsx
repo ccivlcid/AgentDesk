@@ -1,7 +1,9 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import type { Project, Agent, Task, TaskStatus } from "../../types";
 import type { TaskReportDetail } from "../../api/providers-reports-github";
-import { getTaskReportDetail } from "../../api/providers-reports-github";
+import { getTaskReportDetail, cloneGitHubRepo, cloneGitLabRepo, getCloneStatus, getGitLabCloneStatus } from "../../api/providers-reports-github";
+import { useProjectStore } from "../../store/projectStore";
+import { useI18n } from "../../i18n";
 import TrafficLights from "./TrafficLights";
 
 interface Props {
@@ -15,7 +17,7 @@ interface Props {
   initialY?: number;
 }
 
-type Tab = "files" | "tasks" | "agents" | "info";
+type Tab = "files" | "tasks" | "agents" | "details" | "git";
 
 const STATUS_COLORS: Record<TaskStatus, string> = {
   inbox:         "var(--th-text-muted)",
@@ -80,6 +82,9 @@ export default function ProjectFolderWindow({
   initialY = 80,
 }: Props) {
   const [tab, setTab] = useState<Tab>("files");
+  const { t } = useI18n();
+  const { currentProjectId, setCurrentProjectId } = useProjectStore();
+  const isActive = currentProjectId === project.id;
   const [pos, setPos] = useState({ x: initialX, y: initialY });
   const [size, setSize] = useState({ w: 860, h: 560 });
   const dragging = useRef(false);
@@ -143,11 +148,15 @@ export default function ProjectFolderWindow({
     resizeStart.current = { x: e.clientX, y: e.clientY, w: size.w, h: size.h };
   }, [size]);
 
+  const activeTasks  = projectTasks.filter((t) => t.status === "in_progress" || t.status === "collaborating");
+  const doneTasks    = projectTasks.filter((t) => t.status === "done");
+
   const TABS: { id: Tab; label: string; count?: number }[] = [
-    { id: "files",  label: "Files" },
-    { id: "tasks",  label: "Tasks",  count: projectTasks.length },
-    { id: "agents", label: "Agents", count: projectAgents.length },
-    { id: "info",   label: "Info" },
+    { id: "files",   label: t({ ko: "파일",    en: "Files",   ja: "ファイル", zh: "文件" }) },
+    { id: "tasks",   label: t({ ko: "태스크",  en: "Tasks",   ja: "タスク",   zh: "任务" }),  count: projectTasks.length },
+    { id: "agents",  label: t({ ko: "에이전트", en: "Agents", ja: "エージェント", zh: "代理" }), count: projectAgents.length },
+    { id: "details", label: t({ ko: "상세",    en: "Details", ja: "詳細",     zh: "详情" }) },
+    { id: "git",     label: t({ ko: "Git",     en: "Git",     ja: "Git",      zh: "Git" }) },
   ];
 
   return (
@@ -195,16 +204,40 @@ export default function ProjectFolderWindow({
         <span style={{ fontSize: 12, fontWeight: 600, color: "var(--th-text-heading)", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {project.name}
         </span>
-        <div style={{ display: "flex", gap: 5 }} onMouseDown={(e) => e.stopPropagation()}>
-          <button
-            type="button"
-            onClick={() => onSelectProject(project.id)}
-            style={{ fontSize: 10, padding: "3px 8px", background: "var(--th-accent-glow)", border: "1px solid var(--th-accent-border)", borderRadius: 4, color: "var(--th-accent)", cursor: "pointer", fontFamily: "var(--th-font-mono)" }}
-          >
-            Switch
-          </button>
-          <DeleteProjectButton projectName={project.name} onConfirm={() => { onDeleteProject(project.id); onClose(); }} />
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }} onMouseDown={(e) => e.stopPropagation()}>
+          {isActive ? (
+            <span style={{ fontSize: 10, padding: "3px 8px", borderRadius: 20, background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.3)", color: "#22c55e", fontFamily: "var(--th-font-mono)", display: "flex", alignItems: "center", gap: 4 }}>
+              <span style={{ fontSize: 7 }}>◉</span> {t({ ko: "활성", en: "Active", ja: "アクティブ", zh: "活跃" })}
+            </span>
+          ) : (
+            <button
+              type="button"
+              onClick={() => { onSelectProject(project.id); setCurrentProjectId(project.id); }}
+              style={{ fontSize: 10, padding: "3px 10px", background: "var(--th-accent-glow)", border: "1px solid var(--th-accent-border)", borderRadius: 4, color: "var(--th-accent)", cursor: "pointer", fontFamily: "var(--th-font-mono)" }}
+            >
+              ▶ {t({ ko: "활성화", en: "Activate", ja: "起動", zh: "激活" })}
+            </button>
+          )}
         </div>
+      </div>
+
+      {/* Stats bar */}
+      <div style={{ display: "flex", alignItems: "center", gap: 0, height: 30, borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-primary)", flexShrink: 0, padding: "0 16px" }}>
+        <StatPill icon="▦" value={`${activeTasks.length} ${t({ ko: "실행중", en: "running", ja: "実行中", zh: "运行中" })}`} color={activeTasks.length > 0 ? "var(--th-success, #22c55e)" : "var(--th-text-muted)"} />
+        <Divider />
+        <StatPill icon="✓" value={`${doneTasks.length} ${t({ ko: "완료", en: "done", ja: "完了", zh: "完成" })}`} color="var(--th-text-muted)" />
+        <Divider />
+        <StatPill icon="👤" value={`${projectAgents.length} ${t({ ko: "에이전트", en: "agents", ja: "エージェント", zh: "代理" })}`} color="var(--th-text-muted)" />
+        <Divider />
+        <StatPill icon="🕐" value={project.last_used_at ? timeAgo(project.last_used_at) : t({ ko: "없음", en: "never", ja: "なし", zh: "无" })} color="var(--th-text-muted)" />
+        {project.project_path && (
+          <>
+            <Divider />
+            <span style={{ fontSize: 10, color: "var(--th-text-muted)", fontFamily: "var(--th-font-mono)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 260 }}>
+              {project.project_path}
+            </span>
+          </>
+        )}
       </div>
 
       {/* Tab bar */}
@@ -242,10 +275,11 @@ export default function ProjectFolderWindow({
 
       {/* Content */}
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-        {tab === "files"  && <FilesTab projectPath={project.project_path} projectName={project.name} />}
-        {tab === "tasks"  && <TasksTab tasks={projectTasks} statusCounts={statusCounts} allAgents={agents} />}
-        {tab === "agents" && <AgentsTab agents={projectAgents} projectTasks={projectTasks} />}
-        {tab === "info"   && <InfoTab project={project} taskCount={projectTasks.length} agentCount={projectAgents.length} onDelete={() => { onDeleteProject(project.id); onClose(); }} />}
+        {tab === "files"   && <FilesTab projectPath={project.project_path} projectName={project.name} />}
+        {tab === "tasks"   && <TasksTab tasks={projectTasks} statusCounts={statusCounts} allAgents={agents} />}
+        {tab === "agents"  && <AgentsTab agents={projectAgents} projectTasks={projectTasks} />}
+        {tab === "details" && <DetailsTab project={project} taskCount={projectTasks.length} agentCount={projectAgents.length} onDelete={() => { onDeleteProject(project.id); onClose(); }} />}
+        {tab === "git"     && <GitTab project={project} />}
       </div>
 
       {/* Resize handle */}
@@ -362,6 +396,7 @@ function FileNode({
 }
 
 function FilesTab({ projectPath, projectName }: { projectPath: string | null; projectName: string }) {
+  const { t } = useI18n();
   const [tree, setTree] = useState<FileTreeNode[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -433,7 +468,7 @@ function FilesTab({ projectPath, projectName }: { projectPath: string | null; pr
   if (!projectPath) {
     return (
       <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--th-text-muted)", fontSize: 12 }}>
-        No project path configured
+        {t({ ko: "프로젝트 경로가 설정되지 않았습니다", en: "No project path configured", ja: "プロジェクトパス未設定", zh: "未配置项目路径" })}
       </div>
     );
   }
@@ -451,10 +486,10 @@ function FilesTab({ projectPath, projectName }: { projectPath: string | null; pr
           📁 {projectName}
         </div>
         <div style={{ flex: 1, overflowY: "auto", padding: "4px 0" }}>
-          {loading && <div style={{ padding: "20px 12px", textAlign: "center", fontSize: 11, color: "var(--th-text-muted)" }}>loading...</div>}
+          {loading && <div style={{ padding: "20px 12px", textAlign: "center", fontSize: 11, color: "var(--th-text-muted)" }}>{t({ ko: "로딩중...", en: "loading...", ja: "読み込み中...", zh: "加载中..." })}</div>}
           {error && <div style={{ padding: "12px", fontSize: 11, color: "var(--th-danger, #ef4444)" }}>{error}</div>}
           {!loading && !error && tree.length === 0 && (
-            <div style={{ padding: "20px 12px", textAlign: "center", fontSize: 11, color: "var(--th-text-muted)" }}>Empty directory</div>
+            <div style={{ padding: "20px 12px", textAlign: "center", fontSize: 11, color: "var(--th-text-muted)" }}>{t({ ko: "빈 디렉토리", en: "Empty directory", ja: "空のディレクトリ", zh: "空目录" })}</div>
           )}
           {tree.map((node, i) => (
             <FileNode key={i} node={node} depth={0} selectedPath={selectedFile?.path ?? null} onSelect={handleSelectFile} />
@@ -473,13 +508,13 @@ function FilesTab({ projectPath, projectName }: { projectPath: string | null; pr
               </span>
               {fileTruncated && (
                 <span style={{ fontSize: 10, color: "var(--th-accent)", padding: "1px 6px", borderRadius: 3, border: "1px solid var(--th-accent-border)", background: "var(--th-accent-glow)" }}>
-                  truncated
+                  {t({ ko: "잘림", en: "truncated", ja: "省略", zh: "截断" })}
                 </span>
               )}
               {isRunnable && (
                 <ToolbarBtn
                   icon="▶"
-                  label="Run"
+                  label={t({ ko: "실행", en: "Run", ja: "実行", zh: "运行" })}
                   color="var(--th-success, #22c55e)"
                   bg="var(--th-green-glow, rgba(34,197,94,0.1))"
                   border="rgba(34,197,94,0.3)"
@@ -489,7 +524,7 @@ function FilesTab({ projectPath, projectName }: { projectPath: string | null; pr
               )}
               <ToolbarBtn
                 icon="↗"
-                label={openSuccess ? "Opened!" : "Open"}
+                label={openSuccess ? t({ ko: "열렸습니다!", en: "Opened!", ja: "開きました!", zh: "已打开!" }) : t({ ko: "열기", en: "Open", ja: "開く", zh: "打开" })}
                 color={openSuccess ? "var(--th-success, #22c55e)" : "var(--th-accent)"}
                 bg="var(--th-accent-glow)"
                 border="var(--th-accent-border)"
@@ -501,7 +536,7 @@ function FilesTab({ projectPath, projectName }: { projectPath: string | null; pr
             {/* Content area */}
             <div style={{ flex: 1, overflowY: "auto", padding: "12px 16px" }}>
               {fileLoading && (
-                <div style={{ color: "var(--th-text-muted)", fontSize: 12 }}>loading...</div>
+                <div style={{ color: "var(--th-text-muted)", fontSize: 12 }}>{t({ ko: "로딩중...", en: "loading...", ja: "読み込み中...", zh: "加载中..." })}</div>
               )}
               {!fileLoading && isImage && (
                 <img
@@ -538,7 +573,7 @@ function FilesTab({ projectPath, projectName }: { projectPath: string | null; pr
         ) : (
           <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "var(--th-text-muted)", gap: 8 }}>
             <span style={{ fontSize: 32, opacity: 0.3 }}>📄</span>
-            <span style={{ fontSize: 12 }}>Select a file to preview</span>
+            <span style={{ fontSize: 12 }}>{t({ ko: "파일을 선택하면 미리봅니다", en: "Select a file to preview", ja: "ファイルを選択してプレビュー", zh: "选择文件以预览" })}</span>
           </div>
         )}
       </div>
@@ -574,6 +609,7 @@ function buildRunCommand(fileName: string, filePath: string): string {
 // ── Tasks Tab (split-pane) ────────────────────────────────────────────────────
 
 function TasksTab({ tasks, statusCounts, allAgents }: { tasks: Task[]; statusCounts: Record<string, number>; allAgents: Agent[] }) {
+  const { t } = useI18n();
   const [filter, setFilter]         = useState<TaskStatus | "all">("all");
   const [search, setSearch]         = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -591,7 +627,7 @@ function TasksTab({ tasks, statusCounts, allAgents }: { tasks: Task[]; statusCou
     <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
       {/* Filter bar */}
       <div style={{ display: "flex", gap: 6, padding: "7px 12px", flexShrink: 0, borderBottom: "1px solid var(--th-border)", flexWrap: "wrap", rowGap: 4 }}>
-        <FilterBtn active={filter === "all"} onClick={() => setFilter("all")}>All ({tasks.length})</FilterBtn>
+        <FilterBtn active={filter === "all"} onClick={() => setFilter("all")}>{t({ ko: "전체", en: "All", ja: "全て", zh: "全部" })} ({tasks.length})</FilterBtn>
         {activeStatuses.map((s) => (
           <FilterBtn key={s} active={filter === s} onClick={() => setFilter(s)}>
             <span style={{ color: STATUS_COLORS[s], fontSize: 7 }}>●</span>
@@ -600,7 +636,7 @@ function TasksTab({ tasks, statusCounts, allAgents }: { tasks: Task[]; statusCou
         ))}
         <input
           type="text"
-          placeholder="search..."
+          placeholder={t({ ko: "검색...", en: "search...", ja: "検索...", zh: "搜索..." })}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           style={{ marginLeft: "auto", fontSize: 10, padding: "3px 8px", borderRadius: 4, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)", fontFamily: "var(--th-font-mono)", outline: "none", width: 110 }}
@@ -612,7 +648,7 @@ function TasksTab({ tasks, statusCounts, allAgents }: { tasks: Task[]; statusCou
         {/* Left: task list */}
         <div style={{ width: 240, flexShrink: 0, overflowY: "auto", borderRight: "1px solid var(--th-border)" }}>
           {visible.length === 0 && (
-            <div style={{ padding: "32px 12px", textAlign: "center", color: "var(--th-text-muted)", fontSize: 11 }}>No tasks</div>
+            <div style={{ padding: "32px 12px", textAlign: "center", color: "var(--th-text-muted)", fontSize: 11 }}>{t({ ko: "태스크 없음", en: "No tasks", ja: "タスクなし", zh: "无任务" })}</div>
           )}
           {visible.map((task) => {
             const isSelected = task.id === (selectedTask?.id);
@@ -665,7 +701,7 @@ function TasksTab({ tasks, statusCounts, allAgents }: { tasks: Task[]; statusCou
         <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
           {selectedTask
             ? <TaskPreview task={selectedTask} allAgents={allAgents} />
-            : <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--th-text-muted)", fontSize: 12 }}>Select a task</div>
+            : <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--th-text-muted)", fontSize: 12 }}>{t({ ko: "태스크를 선택하세요", en: "Select a task", ja: "タスクを選択", zh: "选择任务" })}</div>
           }
         </div>
       </div>
@@ -676,6 +712,7 @@ function TasksTab({ tasks, statusCounts, allAgents }: { tasks: Task[]; statusCou
 // ── Task Preview (right pane) ─────────────────────────────────────────────────
 
 function TaskPreview({ task, allAgents }: { task: Task; allAgents: Agent[] }) {
+  const { t } = useI18n();
   const [report, setReport]     = useState<TaskReportDetail | null>(null);
   const [loading, setLoading]   = useState(false);
   const [reportTab, setReportTab] = useState<"result" | "logs" | "subtasks">("result");
@@ -727,9 +764,9 @@ function TaskPreview({ task, allAgents }: { task: Task; allAgents: Agent[] }) {
 
         {/* Meta row */}
         <div style={{ display: "flex", gap: 16, marginTop: 10, fontSize: 10, color: "var(--th-text-muted)" }}>
-          <span>Created: {fmtTime(task.created_at)}</span>
-          {task.started_at && <span>Started: {fmtTime(task.started_at)}</span>}
-          {task.completed_at && <span>Done: {fmtTime(task.completed_at)}</span>}
+          <span>{t({ ko: "생성:", en: "Created:", ja: "作成:", zh: "创建:" })} {fmtTime(task.created_at)}</span>
+          {task.started_at && <span>{t({ ko: "시작:", en: "Started:", ja: "開始:", zh: "开始:" })} {fmtTime(task.started_at)}</span>}
+          {task.completed_at && <span>{t({ ko: "완료:", en: "Done:", ja: "完了:", zh: "完成:" })} {fmtTime(task.completed_at)}</span>}
         </div>
       </div>
 
@@ -760,18 +797,20 @@ function DonePreview({
   setReportTab: (t: "result" | "logs" | "subtasks") => void;
   task: Task;
 }) {
+  const { t } = useI18n();
+
   if (loading) {
     return (
       <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--th-text-muted)", fontSize: 12 }}>
-        <span style={{ animation: "pulse 1s infinite" }}>loading report...</span>
+        <span style={{ animation: "pulse 1s infinite" }}>{t({ ko: "리포트 로딩중...", en: "loading report...", ja: "レポート読み込み中...", zh: "加载报告..." })}</span>
       </div>
     );
   }
 
   const RTABS: { id: "result" | "logs" | "subtasks"; label: string }[] = [
-    { id: "result",   label: "Result" },
-    { id: "logs",     label: `Logs (${report?.logs?.length ?? 0})` },
-    { id: "subtasks", label: `Subtasks (${report?.subtasks?.length ?? 0})` },
+    { id: "result",   label: t({ ko: "결과", en: "Result", ja: "結果", zh: "结果" }) },
+    { id: "logs",     label: `${t({ ko: "로그", en: "Logs", ja: "ログ", zh: "日志" })} (${report?.logs?.length ?? 0})` },
+    { id: "subtasks", label: `${t({ ko: "서브태스크", en: "Subtasks", ja: "サブタスク", zh: "子任务" })} (${report?.subtasks?.length ?? 0})` },
   ];
 
   return (
@@ -824,8 +863,10 @@ function ResultPane({ report, task }: { report: TaskReportDetail | null; task: T
     task.result ||
     null;
 
+  const { t } = useI18n();
+
   if (!content) {
-    return <div style={{ color: "var(--th-text-muted)", fontSize: 12 }}>No result content</div>;
+    return <div style={{ color: "var(--th-text-muted)", fontSize: 12 }}>{t({ ko: "결과 없음", en: "No result content", ja: "結果なし", zh: "无结果内容" })}</div>;
   }
 
   return (
@@ -846,7 +887,8 @@ function ResultPane({ report, task }: { report: TaskReportDetail | null; task: T
 }
 
 function LogsPane({ logs }: { logs: Array<{ kind: string; message: string; created_at: number }> }) {
-  if (logs.length === 0) return <div style={{ color: "var(--th-text-muted)", fontSize: 12 }}>No logs</div>;
+  const { t } = useI18n();
+  if (logs.length === 0) return <div style={{ color: "var(--th-text-muted)", fontSize: 12 }}>{t({ ko: "로그 없음", en: "No logs", ja: "ログなし", zh: "无日志" })}</div>;
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
       {logs.map((log, i) => (
@@ -861,7 +903,8 @@ function LogsPane({ logs }: { logs: Array<{ kind: string; message: string; creat
 }
 
 function SubtasksPane({ subtasks }: { subtasks: Array<{ id: string; title: string; status: string; agent_name: string; completed_at: number | null }> }) {
-  if (subtasks.length === 0) return <div style={{ color: "var(--th-text-muted)", fontSize: 12 }}>No subtasks</div>;
+  const { t } = useI18n();
+  if (subtasks.length === 0) return <div style={{ color: "var(--th-text-muted)", fontSize: 12 }}>{t({ ko: "서브태스크 없음", en: "No subtasks", ja: "サブタスクなし", zh: "无子任务" })}</div>;
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
       {subtasks.map((st) => (
@@ -880,10 +923,11 @@ function SubtasksPane({ subtasks }: { subtasks: Array<{ id: string; title: strin
 // ── Running preview ───────────────────────────────────────────────────────────
 
 function RunningPreview({ task }: { task: Task }) {
+  const { t } = useI18n();
   const [, setTick] = useState(0);
   useEffect(() => {
-    const t = setInterval(() => setTick((v) => v + 1), 3000);
-    return () => clearInterval(t);
+    const interval = setInterval(() => setTick((v) => v + 1), 3000);
+    return () => clearInterval(interval);
   }, []);
 
   return (
@@ -892,7 +936,7 @@ function RunningPreview({ task }: { task: Task }) {
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
         <span style={{ width: 8, height: 8, borderRadius: "50%", background: "var(--th-success, #22c55e)", display: "inline-block", animation: "pulse 1.5s infinite" }} />
         <span style={{ fontSize: 12, color: "var(--th-success, #22c55e)", fontWeight: 600 }}>
-          Running
+          {t({ ko: "실행중", en: "Running", ja: "実行中", zh: "运行中" })}
           {task.execution_state && ` — ${task.execution_state.replace(/_/g, " ")}`}
         </span>
       </div>
@@ -903,13 +947,13 @@ function RunningPreview({ task }: { task: Task }) {
       )}
       {task.last_output_at && (
         <div style={{ fontSize: 10, color: "var(--th-text-muted)" }}>
-          Last output: {timeAgo(task.last_output_at)}
+          {t({ ko: "마지막 출력:", en: "Last output:", ja: "最終出力:", zh: "最后输出:" })} {timeAgo(task.last_output_at)}
         </div>
       )}
       {task.subtask_total != null && task.subtask_total > 0 && (
         <div>
           <div style={{ fontSize: 10, color: "var(--th-text-muted)", marginBottom: 6 }}>
-            Subtasks: {task.subtask_done ?? 0} / {task.subtask_total}
+            {t({ ko: "서브태스크:", en: "Subtasks:", ja: "サブタスク:", zh: "子任务:" })} {task.subtask_done ?? 0} / {task.subtask_total}
           </div>
           <div style={{ height: 4, borderRadius: 2, background: "var(--th-bg-elevated)", overflow: "hidden" }}>
             <div style={{
@@ -971,10 +1015,11 @@ function MetaChip({ label, value }: { label: string; value: string }) {
 // ── Agents Tab ────────────────────────────────────────────────────────────────
 
 function AgentsTab({ agents, projectTasks }: { agents: Agent[]; projectTasks: Task[] }) {
+  const { t } = useI18n();
   if (agents.length === 0) {
     return (
       <div style={{ padding: "40px 16px", textAlign: "center", color: "var(--th-text-muted)", fontSize: 12 }}>
-        No agents assigned to this project
+        {t({ ko: "이 프로젝트에 배정된 에이전트가 없습니다", en: "No agents assigned to this project", ja: "エージェント未割当", zh: "无代理分配至此项目" })}
       </div>
     );
   }
@@ -999,12 +1044,12 @@ function AgentsTab({ agents, projectTasks }: { agents: Agent[]; projectTasks: Ta
                 </span>
               </div>
               <div style={{ fontSize: 10, color: "var(--th-text-muted)", marginTop: 2 }}>
-                {agent.role} · {activeTasks.length > 0 ? `${activeTasks.length} active` : "idle"} · {doneTasks.length} done
+                {agent.role} · {activeTasks.length > 0 ? `${activeTasks.length} ${t({ ko: "활성", en: "active", ja: "アクティブ", zh: "活跃" })}` : t({ ko: "유휴", en: "idle", ja: "待機", zh: "空闲" })} · {doneTasks.length} {t({ ko: "완료", en: "done", ja: "完了", zh: "完成" })}
               </div>
             </div>
             <div style={{ textAlign: "right", flexShrink: 0 }}>
               <div style={{ fontSize: 18, fontWeight: 700, color: "var(--th-text-heading)", lineHeight: 1 }}>{agentTasks.length}</div>
-              <div style={{ fontSize: 9, color: "var(--th-text-muted)", marginTop: 2 }}>tasks</div>
+              <div style={{ fontSize: 9, color: "var(--th-text-muted)", marginTop: 2 }}>{t({ ko: "태스크", en: "tasks", ja: "タスク", zh: "任务" })}</div>
             </div>
           </div>
         );
@@ -1013,20 +1058,21 @@ function AgentsTab({ agents, projectTasks }: { agents: Agent[]; projectTasks: Ta
   );
 }
 
-// ── Info Tab ──────────────────────────────────────────────────────────────────
+// ── Details Tab ───────────────────────────────────────────────────────────────
 
-function InfoTab({ project, taskCount, agentCount, onDelete }: { project: Project; taskCount: number; agentCount: number; onDelete: () => void }) {
+function DetailsTab({ project, taskCount, agentCount, onDelete }: { project: Project; taskCount: number; agentCount: number; onDelete: () => void }) {
+  const { t } = useI18n();
   const rows: Array<{ label: string; value: string | number | null | undefined; multiline?: boolean }> = [
-    { label: "Name",        value: project.name },
-    { label: "Path",        value: project.project_path || "—" },
-    { label: "Goal",        value: project.core_goal || "—", multiline: true },
-    { label: "Tasks",       value: taskCount },
-    { label: "Agents",      value: agentCount },
-    { label: "Created",     value: project.created_at ? new Date(project.created_at).toLocaleDateString() : "—" },
-    { label: "Last used",   value: project.last_used_at ? timeAgo(project.last_used_at) : "—" },
-    { label: "GitHub",      value: project.github_repo || "—" },
-    { label: "Risk",        value: project.risk_profile || "—" },
-    { label: "Success KPI", value: project.success_metric || "—", multiline: true },
+    { label: t({ ko: "이름",        en: "Name",        ja: "名前",         zh: "名称" }),        value: project.name },
+    { label: t({ ko: "경로",        en: "Path",        ja: "パス",         zh: "路径" }),        value: project.project_path || "—" },
+    { label: t({ ko: "목표",        en: "Goal",        ja: "目標",         zh: "目标" }),        value: project.core_goal || "—", multiline: true },
+    { label: t({ ko: "태스크",      en: "Tasks",       ja: "タスク",        zh: "任务" }),       value: taskCount },
+    { label: t({ ko: "에이전트",    en: "Agents",      ja: "エージェント",   zh: "代理" }),      value: agentCount },
+    { label: t({ ko: "생성일",      en: "Created",     ja: "作成日",        zh: "创建日期" }),    value: project.created_at ? new Date(project.created_at).toLocaleDateString() : "—" },
+    { label: t({ ko: "마지막 사용", en: "Last used",   ja: "最終使用",       zh: "最后使用" }),   value: project.last_used_at ? timeAgo(project.last_used_at) : "—" },
+    { label: t({ ko: "깃허브",      en: "GitHub",      ja: "GitHub",        zh: "GitHub" }),     value: project.github_repo || "—" },
+    { label: t({ ko: "리스크",      en: "Risk",        ja: "リスク",        zh: "风险" }),        value: project.risk_profile || "—" },
+    { label: t({ ko: "성공 KPI",    en: "Success KPI", ja: "成功KPI",       zh: "成功KPI" }),    value: project.success_metric || "—", multiline: true },
   ];
 
   return (
@@ -1042,10 +1088,10 @@ function InfoTab({ project, taskCount, agentCount, onDelete }: { project: Projec
 
       {/* 위험 구역 */}
       <div style={{ margin: "20px 16px 12px", padding: "14px 16px", borderRadius: 8, border: "1px solid var(--th-danger-border, rgba(239,68,68,0.3))", background: "var(--th-danger-bg, rgba(239,68,68,0.06))" }}>
-        <div style={{ fontSize: 11, fontWeight: 600, color: "var(--th-danger-text, #f85149)", marginBottom: 8 }}>Danger Zone</div>
+        <div style={{ fontSize: 11, fontWeight: 600, color: "var(--th-danger-text, #f85149)", marginBottom: 8 }}>{t({ ko: "위험 구역", en: "Danger Zone", ja: "危険ゾーン", zh: "危险区域" })}</div>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
           <span style={{ fontSize: 11, color: "var(--th-text-muted)" }}>
-            이 프로젝트를 삭제합니다. 되돌릴 수 없습니다.
+            {t({ ko: "이 프로젝트를 삭제합니다. 되돌릴 수 없습니다.", en: "This action permanently deletes the project.", ja: "このプロジェクトを削除します。元に戻せません。", zh: "此操作将永久删除该项目。" })}
           </span>
           <DeleteProjectButton projectName={project.name} onConfirm={onDelete} />
         </div>
@@ -1055,6 +1101,18 @@ function InfoTab({ project, taskCount, agentCount, onDelete }: { project: Projec
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
+
+function StatPill({ icon, value, color }: { icon: string; value: string; color: string }) {
+  return (
+    <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 10, color, fontFamily: "var(--th-font-mono)", whiteSpace: "nowrap" }}>
+      <span style={{ fontSize: 10 }}>{icon}</span>{value}
+    </span>
+  );
+}
+
+function Divider() {
+  return <span style={{ width: 1, height: 12, background: "var(--th-border)", margin: "0 10px", flexShrink: 0 }} />;
+}
 
 function FilterBtn({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
@@ -1081,27 +1139,28 @@ function FilterBtn({ active, onClick, children }: { active: boolean; onClick: ()
 }
 
 function DeleteProjectButton({ projectName, onConfirm }: { projectName: string; onConfirm: () => void }) {
+  const { t } = useI18n();
   const [confirming, setConfirming] = useState(false);
 
   if (confirming) {
     return (
       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
         <span style={{ fontSize: 10, color: "var(--th-danger-text, #f85149)", fontFamily: "var(--th-font-mono)" }}>
-          &ldquo;{projectName}&rdquo; 삭제?
+          &ldquo;{projectName}&rdquo; {t({ ko: "삭제?", en: "Delete?", ja: "削除?", zh: "删除?" })}
         </span>
         <button
           type="button"
           onClick={onConfirm}
           style={{ fontSize: 10, padding: "3px 10px", borderRadius: 4, background: "var(--th-danger, #ef4444)", border: "none", color: "#fff", cursor: "pointer", fontFamily: "var(--th-font-mono)", fontWeight: 600 }}
         >
-          삭제
+          {t({ ko: "삭제", en: "Delete", ja: "削除", zh: "删除" })}
         </button>
         <button
           type="button"
           onClick={() => setConfirming(false)}
           style={{ fontSize: 10, padding: "3px 8px", borderRadius: 4, background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)", color: "var(--th-text-muted)", cursor: "pointer", fontFamily: "var(--th-font-mono)" }}
         >
-          취소
+          {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}
         </button>
       </div>
     );
@@ -1113,7 +1172,250 @@ function DeleteProjectButton({ projectName, onConfirm }: { projectName: string; 
       onClick={() => setConfirming(true)}
       style={{ fontSize: 10, padding: "3px 10px", borderRadius: 4, background: "var(--th-danger-bg, rgba(239,68,68,0.08))", border: "1px solid var(--th-danger-border, rgba(239,68,68,0.3))", color: "var(--th-danger-text, #f85149)", cursor: "pointer", fontFamily: "var(--th-font-mono)", flexShrink: 0 }}
     >
-      🗑 Delete Project
+      🗑 {t({ ko: "프로젝트 삭제", en: "Delete Project", ja: "プロジェクト削除", zh: "删除项目" })}
     </button>
+  );
+}
+
+// ── GitTab ────────────────────────────────────────────────────────────────────
+type GitProvider = "github" | "gitlab";
+type CloneStep = "idle" | "cloning" | "done" | "error";
+
+function GitTab({ project }: { project: Project }) {
+  const { t } = useI18n();
+  const mono = "var(--th-font-mono)";
+
+  const [provider, setProvider] = useState<GitProvider>("github");
+
+  // GitHub
+  const [ghUrl, setGhUrl]       = useState("");
+  const [ghToken, setGhToken]   = useState("");
+  const [ghBranch, setGhBranch] = useState("");
+
+  // GitLab
+  const [glUrl, setGlUrl]       = useState("");
+  const [glToken, setGlToken]   = useState("");
+  const [glBranch, setGlBranch] = useState("");
+
+  const [step, setStep]     = useState<CloneStep>("idle");
+  const [progress, setProgress] = useState(0);
+  const [errorMsg, setErrorMsg] = useState("");
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const stopPoll = () => { if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; } };
+
+  function parseGitHubOwnerRepo(url: string): { owner: string; repo: string } | null {
+    const m = url.trim().replace(/\.git$/, "").match(/github\.com[/:]([^/]+)\/([^/]+)/);
+    return m ? { owner: m[1], repo: m[2] } : null;
+  }
+
+  async function handleClone() {
+    setStep("cloning");
+    setProgress(5);
+    setErrorMsg("");
+    try {
+      let cloneId: string;
+      if (provider === "github") {
+        const parsed = parseGitHubOwnerRepo(ghUrl);
+        if (!parsed) throw new Error(t({ ko: "GitHub URL 형식이 잘못되었습니다.", en: "Invalid GitHub URL format.", ja: "GitHub URLの形式が正しくありません。", zh: "GitHub URL 格式无效。" }));
+        const res = await cloneGitHubRepo({
+          owner: parsed.owner,
+          repo: parsed.repo,
+          branch: ghBranch.trim() || undefined,
+          target_path: project.project_path,
+          pat: ghToken.trim() || undefined,
+        });
+        if (res.already_exists) { setStep("done"); return; }
+        cloneId = res.clone_id!;
+      } else {
+        const res = await cloneGitLabRepo({
+          repo_url: glUrl.trim(),
+          token: glToken.trim(),
+          branch: glBranch.trim() || undefined,
+          target_path: project.project_path,
+        });
+        if (res.already_exists) { setStep("done"); return; }
+        cloneId = res.clone_id!;
+      }
+
+      pollRef.current = setInterval(async () => {
+        try {
+          const status = provider === "github"
+            ? await getCloneStatus(cloneId)
+            : await getGitLabCloneStatus(cloneId);
+          setProgress(status.progress ?? 0);
+          if (status.status === "done") {
+            stopPoll(); setProgress(100); setStep("done");
+          } else if (status.status === "error") {
+            stopPoll();
+            setErrorMsg(status.error ?? t({ ko: "클론 실패", en: "Clone failed", ja: "クローン失敗", zh: "克隆失败" }));
+            setStep("error");
+          }
+        } catch { /* 무시 */ }
+      }, 1500);
+    } catch (e) {
+      setErrorMsg(e instanceof Error ? e.message : String(e));
+      setStep("error");
+    }
+  }
+
+  const ghReady = ghUrl.trim().length > 0;
+  const glReady = glUrl.trim().length > 0 && glToken.trim().length > 0;
+  const canClone = provider === "github" ? ghReady : glReady;
+
+  const s: React.CSSProperties = { fontFamily: mono };
+  const inputStyle: React.CSSProperties = {
+    ...s, fontSize: 11, padding: "6px 10px",
+    background: "var(--th-bg-panel)", border: "1px solid var(--th-border)",
+    borderRadius: 6, color: "var(--th-text-primary)", outline: "none", width: "100%",
+  };
+
+  if (step === "cloning") {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", gap: 16 }}>
+        <div style={{ ...s, fontSize: 13, fontWeight: 700, color: "var(--th-text-heading)" }}>
+          {t({ ko: "클론 중...", en: "Cloning...", ja: "クローン中...", zh: "正在克隆..." })}
+        </div>
+        <div style={{ width: 280, height: 6, borderRadius: 3, background: "var(--th-border)", overflow: "hidden" }}>
+          <div style={{ height: "100%", width: `${progress}%`, background: "var(--th-accent)", transition: "width 0.4s ease", borderRadius: 3 }} />
+        </div>
+        <div style={{ ...s, fontSize: 10, color: "var(--th-text-muted)" }}>{progress}%</div>
+      </div>
+    );
+  }
+
+  if (step === "done") {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", gap: 12 }}>
+        <svg width="44" height="44" viewBox="0 0 44 44" fill="none"><circle cx="22" cy="22" r="19" stroke="#30d158" strokeWidth="2" fill="none" opacity="0.2"/><path d="M13 22L19 28L31 16" stroke="#30d158" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        <div style={{ ...s, fontSize: 13, fontWeight: 700, color: "var(--th-text-heading)" }}>
+          {t({ ko: "완료!", en: "Done!", ja: "完了!", zh: "完成!" })}
+        </div>
+        <div style={{ ...s, fontSize: 10, color: "var(--th-text-muted)" }}>{project.project_path}</div>
+        <button onClick={() => { setStep("idle"); setProgress(0); }} style={{ ...s, fontSize: 11, padding: "5px 16px", borderRadius: 6, border: "1px solid var(--th-border)", background: "transparent", color: "var(--th-text-muted)", cursor: "pointer" }}>
+          {t({ ko: "다시 가져오기", en: "Import again", ja: "再インポート", zh: "重新导入" })}
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ padding: "16px 20px", display: "flex", flexDirection: "column", gap: 16, height: "100%", overflowY: "auto" }}>
+      {/* 설명 */}
+      <div style={{ ...s, fontSize: 11, color: "var(--th-text-muted)", padding: "8px 12px", background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.2)", borderRadius: 6 }}>
+        {t({
+          ko: `저장소를 이 프로젝트 경로(${project.project_path})로 클론합니다.`,
+          en: `Clone a repository into this project path (${project.project_path}).`,
+          ja: `リポジトリをこのプロジェクトパス(${project.project_path})にクローンします。`,
+          zh: `将仓库克隆到此项目路径（${project.project_path}）。`,
+        })}
+      </div>
+
+      {/* 에러 */}
+      {step === "error" && (
+        <div style={{ ...s, fontSize: 11, color: "var(--th-danger-text)", padding: "8px 12px", background: "var(--th-danger-bg)", border: "1px solid var(--th-danger-border)", borderRadius: 6 }}>
+          {errorMsg}
+        </div>
+      )}
+
+      {/* 플랫폼 선택 */}
+      <div style={{ display: "flex", gap: 8 }}>
+        {(["github", "gitlab"] as GitProvider[]).map((p) => {
+          const active = provider === p;
+          const isGh = p === "github";
+          const color      = isGh ? "var(--th-text-heading)" : "#fc6d26";
+          const activeBg   = isGh ? "var(--th-hover-overlay-subtle)" : "rgba(252,109,38,0.1)";
+          const activeBorder = isGh ? "var(--th-border-strong)" : "rgba(252,109,38,0.5)";
+          return (
+            <button
+              key={p}
+              type="button"
+              onClick={() => setProvider(p)}
+              style={{
+                ...s, fontSize: 11, fontWeight: active ? 700 : 500,
+                padding: "6px 16px", borderRadius: 6,
+                border: `1px solid ${active ? activeBorder : "var(--th-border)"}`,
+                background: active ? activeBg : "transparent",
+                color: active ? color : "var(--th-text-muted)",
+                cursor: "pointer", transition: "all 0.12s",
+              }}
+            >
+              {p === "github" ? "GitHub" : "GitLab"}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* GitHub 입력 */}
+      {provider === "github" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <div>
+            <div style={{ ...s, fontSize: 10, color: "var(--th-text-muted)", marginBottom: 4, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+              {t({ ko: "저장소 URL", en: "Repository URL", ja: "リポジトリURL", zh: "仓库 URL" })}
+            </div>
+            <input value={ghUrl} onChange={(e) => setGhUrl(e.target.value)} placeholder="https://github.com/owner/repo" style={inputStyle} />
+          </div>
+          <div style={{ display: "flex", gap: 10 }}>
+            <div style={{ flex: 2 }}>
+              <div style={{ ...s, fontSize: 10, color: "var(--th-text-muted)", marginBottom: 4, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                Personal Access Token <span style={{ opacity: 0.6 }}>({t({ ko: "선택", en: "optional", ja: "任意", zh: "可选" })})</span>
+              </div>
+              <input value={ghToken} onChange={(e) => setGhToken(e.target.value)} type="password" placeholder="ghp_..." style={inputStyle} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ ...s, fontSize: 10, color: "var(--th-text-muted)", marginBottom: 4, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                {t({ ko: "브랜치", en: "Branch", ja: "ブランチ", zh: "分支" })} <span style={{ opacity: 0.6 }}>({t({ ko: "선택", en: "optional", ja: "任意", zh: "可选" })})</span>
+              </div>
+              <input value={ghBranch} onChange={(e) => setGhBranch(e.target.value)} placeholder="main" style={inputStyle} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* GitLab 입력 */}
+      {provider === "gitlab" && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <div>
+            <div style={{ ...s, fontSize: 10, color: "var(--th-text-muted)", marginBottom: 4, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+              {t({ ko: "저장소 URL", en: "Repository URL", ja: "リポジトリURL", zh: "仓库 URL" })}
+            </div>
+            <input value={glUrl} onChange={(e) => setGlUrl(e.target.value)} placeholder="https://gitlab.com/username/repo" style={inputStyle} />
+          </div>
+          <div style={{ display: "flex", gap: 10 }}>
+            <div style={{ flex: 2 }}>
+              <div style={{ ...s, fontSize: 10, color: "var(--th-text-muted)", marginBottom: 4, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                Personal Access Token
+              </div>
+              <input value={glToken} onChange={(e) => setGlToken(e.target.value)} type="password" placeholder="glpat-xxxxxxxxxxxxxxxxxxxx" style={inputStyle} />
+              <div style={{ ...s, fontSize: 9, color: "var(--th-text-muted)", marginTop: 4, opacity: 0.7 }}>
+                {t({ ko: "read_repository 스코프 필요", en: "Requires read_repository scope", ja: "read_repositoryスコープが必要", zh: "需要 read_repository 权限" })}
+              </div>
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ ...s, fontSize: 10, color: "var(--th-text-muted)", marginBottom: 4, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                {t({ ko: "브랜치", en: "Branch", ja: "ブランチ", zh: "分支" })} <span style={{ opacity: 0.6 }}>({t({ ko: "선택", en: "optional", ja: "任意", zh: "可选" })})</span>
+              </div>
+              <input value={glBranch} onChange={(e) => setGlBranch(e.target.value)} placeholder="main" style={inputStyle} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 클론 버튼 */}
+      <button
+        type="button"
+        onClick={handleClone}
+        disabled={!canClone}
+        style={{
+          ...s, fontSize: 12, fontWeight: 700, padding: "9px 0", borderRadius: 6, border: "none",
+          background: canClone ? "var(--th-accent)" : "rgba(245,158,11,0.2)",
+          color: canClone ? "#000" : "var(--th-text-muted)",
+          cursor: canClone ? "pointer" : "not-allowed",
+          marginTop: 4,
+        }}
+      >
+        {t({ ko: "저장소 클론", en: "Clone Repository", ja: "リポジトリをクローン", zh: "克隆仓库" })}
+      </button>
+    </div>
   );
 }

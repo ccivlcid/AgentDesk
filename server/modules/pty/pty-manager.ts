@@ -7,6 +7,7 @@ const nodePty = require("node-pty") as typeof import("node-pty");
 import { WebSocket } from "ws";
 import logger from "../../lib/logger.ts";
 import os from "node:os";
+import fs from "node:fs";
 
 export interface PtySession {
   id: string;
@@ -14,6 +15,7 @@ export interface PtySession {
   ownerWs: WebSocket;
   cwd: string;
   shell: string;
+  taskId?: string; // linked task — PTY output is forwarded to task logs
 }
 
 function getDefaultShell(): string {
@@ -25,15 +27,17 @@ function getDefaultShell(): string {
 
 export function createPtyManager(
   sendRawToClient: (ws: WebSocket, type: string, payload: unknown) => void,
+  onTaskData?: (taskId: string, data: string) => void,
 ) {
   const sessions = new Map<string, PtySession>();
 
   function createSession(
     ws: WebSocket,
-    opts: { id: string; cwd?: string; cols?: number; rows?: number; shell?: string },
+    opts: { id: string; cwd?: string; cols?: number; rows?: number; shell?: string; taskId?: string },
   ): PtySession {
     const shell = opts.shell || getDefaultShell();
-    const cwd = opts.cwd || os.homedir();
+    const rawCwd = opts.cwd || os.homedir();
+    const cwd = (rawCwd && fs.existsSync(rawCwd)) ? rawCwd : os.homedir();
     const cols = opts.cols ?? 120;
     const rows = opts.rows ?? 30;
 
@@ -54,12 +58,15 @@ export function createPtyManager(
       } as Record<string, string>,
     });
 
-    const session: PtySession = { id: opts.id, pty: ptyProcess, ownerWs: ws, cwd, shell };
+    const session: PtySession = { id: opts.id, pty: ptyProcess, ownerWs: ws, cwd, shell, taskId: opts.taskId };
     sessions.set(opts.id, session);
 
     ptyProcess.onData((data: string) => {
       if (ws.readyState === WebSocket.OPEN) {
         sendRawToClient(ws, "pty_output", { id: opts.id, data });
+      }
+      if (opts.taskId && onTaskData) {
+        onTaskData(opts.taskId, data);
       }
     });
 

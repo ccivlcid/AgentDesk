@@ -276,10 +276,10 @@ export default function App() {
       {showCreateTaskAfterCreate && currentProject && (
         <AppWindow
           windowType="create-task"
-          title="New Task"
+          title="새 업무"
           emoji="✚"
           defaultWidth={520}
-          defaultHeight={700}
+          defaultHeight={660}
           onClose={() => setShowCreateTaskAfterCreate(false)}
         >
           <CreateTaskModal
@@ -302,10 +302,10 @@ export default function App() {
       {showCreateTask && (
         <AppWindow
           windowType="create-task"
-          title="New Task"
+          title="새 업무"
           emoji="✚"
           defaultWidth={520}
-          defaultHeight={700}
+          defaultHeight={660}
           onClose={() => setShowCreateTask(false)}
         >
           <CreateTaskModal

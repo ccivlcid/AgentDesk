@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import type { WindowType, WidgetEntry } from "../../app/types";
+import type { WindowType } from "../../app/types";
 import { useI18n } from "../../i18n";
 
 const mono = "var(--th-font-mono)";
@@ -13,21 +13,12 @@ const FADE_STYLE = `
 
 interface MissionControlProps {
   openWindows: Set<WindowType>;
-  widgetLayout: WidgetEntry[];
   onClose: () => void;
   onFocusWindow: (w: WindowType) => void;
 }
 
-export default function MissionControl({ openWindows, widgetLayout, onClose, onFocusWindow }: MissionControlProps) {
+export default function MissionControl({ openWindows, onClose, onFocusWindow }: MissionControlProps) {
   const { t } = useI18n();
-
-  const WIDGET_META: Record<string, { emoji: string; label: string }> = {
-    heartbeat:    { emoji: "💓", label: t({ ko: "에이전트",     en: "Agents",      ja: "エージェント",   zh: "代理"   }) },
-    "task-board": { emoji: "📋", label: t({ ko: "태스크",       en: "Tasks",       ja: "タスク",        zh: "任务"   }) },
-    alerts:       { emoji: "🔔", label: t({ ko: "알림",         en: "Alerts",      ja: "アラート",      zh: "警报"   }) },
-    "cli-usage":  { emoji: "💰", label: t({ ko: "CLI 비용",     en: "CLI Cost",    ja: "CLIコスト",     zh: "CLI成本" }) },
-    "flow-graph": { emoji: "🔀", label: t({ ko: "플로우 그래프", en: "Flow Graph",  ja: "フローグラフ",  zh: "流程图"  }) },
-  };
 
   const WINDOW_META: Record<WindowType, { emoji: string; label: string }> = {
     workflow:        { emoji: "⚡",  label: t({ ko: "워크플로",        en: "Workflow",       ja: "ワークフロー",     zh: "工作流" }) },
@@ -47,6 +38,13 @@ export default function MissionControl({ openWindows, widgetLayout, onClose, onF
     "create-department": { emoji: "🏢", label: t({ ko: "신규 부서 추가",    en: "Add Department", ja: "部署追加",         zh: "添加部门" }) },
     "library-guide":     { emoji: "📚", label: t({ ko: "라이브러리 가이드", en: "Library Guide",  ja: "ライブラリガイド", zh: "库指南" }) },
     "user-guide":        { emoji: "📖", label: t({ ko: "사용자 가이드",     en: "User Guide",     ja: "ユーザーガイド",   zh: "用户指南" }) },
+    "file-tree":         { emoji: "📁", label: t({ ko: "파일 탐색기",       en: "File Explorer",  ja: "ファイルエクスプローラー", zh: "文件管理" }) },
+    "alerts":            { emoji: "🔔", label: t({ ko: "알림",             en: "Alerts",         ja: "アラート",              zh: "警报" }) },
+    "cli-usage":         { emoji: "💰", label: t({ ko: "CLI 비용",         en: "CLI Cost",       ja: "CLIコスト",             zh: "CLI成本" }) },
+    "local-llm":         { emoji: "🧠", label: t({ ko: "로컬 LLM",         en: "Local LLM",      ja: "ローカルLLM",            zh: "本地LLM" }) },
+    "feature-builder":   { emoji: "✦",  label: t({ ko: "새 기능 만들기",   en: "New Feature",    ja: "新機能作成",              zh: "新建功能" }) },
+    "flow-graph":        { emoji: "🕸️", label: t({ ko: "에이전트 그래프",  en: "Agent Graph",    ja: "エージェントグラフ",        zh: "代理图" }) },
+    "git-import":        { emoji: "⬆️", label: t({ ko: "Git 가져오기",     en: "Git Import",     ja: "Gitインポート",              zh: "Git导入" }) },
   };
 
   useEffect(() => {
@@ -58,7 +56,6 @@ export default function MissionControl({ openWindows, widgetLayout, onClose, onF
   }, [onClose]);
 
   const windowList = Array.from(openWindows);
-  const widgetList = widgetLayout;
 
   return (
     <>
@@ -113,25 +110,8 @@ export default function MissionControl({ openWindows, widgetLayout, onClose, onF
             </Section>
           )}
 
-          {/* 활성 위젯 */}
-          {widgetList.length > 0 && (
-            <Section title={t({ ko: "위젯", en: "Widgets", ja: "ウィジェット", zh: "小组件" })}>
-              {widgetList.map((entry) => {
-                const meta = WIDGET_META[entry.id] ?? { emoji: "📦", label: entry.id };
-                return (
-                  <Card
-                    key={entry.id}
-                    emoji={meta.emoji}
-                    label={meta.label}
-                    onClick={onClose}
-                  />
-                );
-              })}
-            </Section>
-          )}
-
           {/* 아무것도 없을 때 */}
-          {windowList.length === 0 && widgetList.length === 0 && (
+          {windowList.length === 0 && (
             <div
               style={{
                 textAlign: "center",
@@ -141,7 +121,7 @@ export default function MissionControl({ openWindows, widgetLayout, onClose, onF
                 marginTop: 40,
               }}
             >
-              {t({ ko: "열린 창이나 위젯이 없습니다", en: "No open windows or widgets", ja: "ウィンドウやウィジェットがありません", zh: "没有打开的窗口或小组件" })}
+              {t({ ko: "열린 창이 없습니다", en: "No open windows", ja: "ウィンドウがありません", zh: "没有打开的窗口" })}
             </div>
           )}
         </div>

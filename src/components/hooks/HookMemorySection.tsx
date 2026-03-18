@@ -5,6 +5,7 @@ import type { TFunction } from "./model";
 
 interface HookMemorySectionProps {
   t: TFunction;
+  localeTag?: string;
   agents: Agent[];
   historyRefreshToken: number;
   onRefreshHistory: () => void;
@@ -12,6 +13,7 @@ interface HookMemorySectionProps {
 
 export default function HookMemorySection({
   t,
+  localeTag = "en",
   agents,
   historyRefreshToken,
   onRefreshHistory,
@@ -48,6 +50,7 @@ export default function HookMemorySection({
         <div className="p-3">
           <HookHistoryPanel
             t={t}
+            localeTag={localeTag}
             agents={agents}
             refreshToken={historyRefreshToken}
             onLearningDataChanged={onRefreshHistory}

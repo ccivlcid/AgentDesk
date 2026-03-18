@@ -5,6 +5,7 @@ import type { TFunction } from "./model";
 
 interface MemoryMemorySectionProps {
   t: TFunction;
+  localeTag?: string;
   agents: Agent[];
   historyRefreshToken: number;
   onRefreshHistory: () => void;
@@ -12,6 +13,7 @@ interface MemoryMemorySectionProps {
 
 export default function MemoryMemorySection({
   t,
+  localeTag = "en",
   agents,
   historyRefreshToken,
   onRefreshHistory,
@@ -63,6 +65,7 @@ export default function MemoryMemorySection({
         <div className="p-3">
           <MemoryHistoryPanel
             t={t}
+            localeTag={localeTag}
             agents={agents}
             refreshToken={historyRefreshToken}
             onLearningDataChanged={onRefreshHistory}

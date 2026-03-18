@@ -40,6 +40,7 @@ export interface Agent {
   api_model?: string | null;
   cli_model?: string | null;
   cli_reasoning_level?: string | null;
+  enable_planning_phase?: number | null;
   avatar_emoji: string;
   avatar_url?: string | null;
   sprite_number?: number | null;
@@ -529,7 +530,9 @@ export type WSEventType =
   | "meeting_minutes_update"
   | "pty_ready"
   | "pty_output"
-  | "pty_exit";
+  | "pty_exit"
+  | "auto_open_cli"
+  | "close_cli";
 
 export interface WSEvent {
   type: WSEventType;

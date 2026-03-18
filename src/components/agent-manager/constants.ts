@@ -65,6 +65,7 @@ export const BLANK: FormData = {
   pendingAvatarDataUrl: null,
   sprite_number: null,
   personality: "",
+  enable_planning_phase: 1,
 };
 
 export const DEPT_COLORS = [

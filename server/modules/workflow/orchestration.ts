@@ -104,6 +104,7 @@ export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrat
   const createWorktree = __ctx.createWorktree;
   const detectAllCli = __ctx.detectAllCli;
   const ensureClaudeMd = __ctx.ensureClaudeMd;
+  const injectTaskContext = __ctx.injectTaskContext;
   const execWithTimeout = __ctx.execWithTimeout;
   const fetchClaudeUsage = __ctx.fetchClaudeUsage;
   const fetchCodexUsage = __ctx.fetchCodexUsage;
@@ -478,6 +479,7 @@ export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrat
     getTaskContinuationContext,
     getRecentChanges,
     ensureClaudeMd,
+    injectTaskContext,
     pickL,
     l,
     buildAvailableSkillsPromptBlock,

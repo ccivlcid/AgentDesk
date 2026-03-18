@@ -33,10 +33,10 @@ export default function AgentRulesHeader({
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           <span style={{ fontFamily: "var(--th-font-mono)", fontSize: "11px", fontWeight: 700, letterSpacing: "0.1em", color: "var(--th-text-heading)", textTransform: "uppercase" }}>
-            AGENT RULES
+            {t({ ko: "에이전트 규칙", en: "AGENT RULES", ja: "エージェントルール", zh: "代理规则" })}
           </span>
           <span style={{ fontFamily: "var(--th-font-mono)", fontSize: "11px", color: "var(--th-text-muted)" }}>
-            · {rulesCount} rules
+            · {rulesCount} {t({ ko: "개", en: "rules", ja: "件", zh: "条" })}
           </span>
         </div>
         <button
@@ -45,7 +45,7 @@ export default function AgentRulesHeader({
           style={{ borderRadius: 6, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)", fontFamily: "var(--th-font-mono)" }}
           title={t({ ko: "새 룰 추가", en: "Add new rule", ja: "新しいルールを追加", zh: "添加新规则" })}
         >
-          + {t({ ko: "Add Rule", en: "Add Rule", ja: "Add Rule", zh: "Add Rule" })}
+          + {t({ ko: "룰 추가", en: "Add Rule", ja: "ルール追加", zh: "添加规则" })}
         </button>
       </div>
 

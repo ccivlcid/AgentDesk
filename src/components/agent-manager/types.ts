@@ -29,6 +29,7 @@ export interface FormData {
   personality: string;
   persona_id?: string;
   kb_default_sources?: KbSourceRef[];
+  enable_planning_phase?: number;
 }
 
 export interface DeptForm {

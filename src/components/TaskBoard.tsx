@@ -99,18 +99,6 @@ interface TaskBoardProps {
   projectManagerAgents?: Agent[];
   departments: Department[];
   subtasks: SubTask[];
-  onCreateTask: (input: {
-    title: string;
-    description?: string;
-    department_id?: string;
-    task_type?: string;
-    priority?: number;
-    project_id?: string;
-    project_path?: string;
-    assigned_agent_id?: string;
-    workflow_pack_key?: string;
-    context_hint?: string;
-  }) => void;
   onUpdateTask: (id: string, data: Partial<Task>) => void;
   onDeleteTask: (id: string) => void;
   onAssignTask: (taskId: string, agentId: string) => void;
@@ -132,7 +120,6 @@ export function TaskBoard({
   projectManagerAgents,
   departments,
   subtasks,
-  onCreateTask,
   onUpdateTask,
   onDeleteTask,
   onAssignTask,
@@ -151,7 +138,6 @@ export function TaskBoard({
   const { showToast } = useToast();
   const packVocab = { task: t({ ko: "업무", en: "Task", ja: "タスク", zh: "任务" }), tasks: t({ ko: "업무", en: "Tasks", ja: "タスク", zh: "任务" }) };
   const [viewMode, setViewMode] = useState<"board" | "gantt" | "dag">("board");
-  const [showCreate, setShowCreate] = useState(false);
   const [showProjectManager, setShowProjectManager] = useState(false);
   const [showBulkHideModal, setShowBulkHideModal] = useState(false);
   const [filterDept, setFilterDept] = useState("");
@@ -460,21 +446,6 @@ export function TaskBoard({
           <button type="button" onClick={() => setShowBulkHideModal(true)} style={btnBase}>
             {t({ ko: "숨김", en: "HIDE", ja: "非表示", zh: "隐藏" })}
           </button>
-          <button type="button" onClick={() => setShowProjectManager(true)} style={btnBase}>
-            {t({ ko: "프로젝트", en: "PROJ", ja: "PJ", zh: "项目" })}
-          </button>
-          {onProjectCreate && (
-            <button type="button" onClick={onProjectCreate} style={btnBase}>
-              + {t({ ko: "새 프로젝트", en: "NEW PROJ", ja: "新規PJ", zh: "新项目" })}
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={() => setShowCreate(true)}
-            style={{ ...mono, fontSize: "11px", fontWeight: 700, padding: "3px 14px", borderRadius: 6, background: "var(--th-accent)", color: "var(--th-accent-text)", border: "none", cursor: "pointer", letterSpacing: "0.06em" }}
-          >
-            + {t({ ko: "새 업무", en: "NEW TASK", ja: "新規", zh: "新建" })}
-          </button>
         </div>
       </div>
 
@@ -553,16 +524,9 @@ export function TaskBoard({
           <p style={{ ...mono, fontSize: "10px", color: "var(--th-text-muted)", marginBottom: 4 }}>
             <span style={{ color: "var(--th-accent)" }}>$</span> task-queue list --project={currentProject?.name ?? "?"} <span className="animate-pulse">▌</span>
           </p>
-          <p style={{ ...mono, fontSize: "11px", color: "var(--th-text-secondary)", marginBottom: 16 }}>
+          <p style={{ ...mono, fontSize: "11px", color: "var(--th-text-secondary)" }}>
             {t({ ko: "아직 업무가 없습니다.", en: "No tasks yet.", ja: "タスクなし", zh: "暂无任务" })}
           </p>
-          <button
-            type="button"
-            onClick={() => setShowCreate(true)}
-            style={{ ...mono, fontSize: "11px", fontWeight: 700, padding: "5px 18px", borderRadius: 6, background: "var(--th-accent)", color: "var(--th-accent-text)", border: "none", cursor: "pointer" }}
-          >
-            + {t({ ko: "첫 업무 만들기", en: "Create first task", ja: "最初のタスク作成", zh: "创建第一个任务" })}
-          </button>
         </div>
       ) : (
       <DndContext
@@ -825,25 +789,6 @@ export function TaskBoard({
       </DndContext>
       )}
 
-      {showCreate && (
-        <AppWindow
-          windowType="create-task"
-          title={t({ ko: "새 업무", en: "New Task", ja: "新規タスク", zh: "新建任务" })}
-          emoji="✚"
-          defaultWidth={520}
-          defaultHeight={700}
-          onClose={() => setShowCreate(false)}
-        >
-          <CreateTaskModal
-            agents={projectManagerAgents ?? agents}
-            departments={departments}
-            onClose={() => setShowCreate(false)}
-            onCreate={onCreateTask}
-            onAssign={onAssignTask}
-            defaultProjectId={currentProject?.id}
-          />
-        </AppWindow>
-      )}
 
       {showProjectManager && (
         <ProjectManagerModal

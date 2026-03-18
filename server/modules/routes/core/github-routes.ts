@@ -301,6 +301,93 @@ export function registerGitHubRoutes(deps: GitHubRouteDeps): void {
     res.json({ clone_id: req.params.cloneId, ...entry });
   });
 
+  // ── GitLab clone ─────────────────────────────────────────────────────────────
+  app.post("/api/gitlab/clone", (req, res) => {
+    const { repo_url, token, branch, target_path } = req.body ?? {};
+    if (!repo_url || typeof repo_url !== "string") {
+      return res.status(400).json({ error: "repo_url_required" });
+    }
+
+    // Build authenticated clone URL: inject token into HTTPS URL
+    let cloneUrl: string;
+    try {
+      const raw = repo_url.trim().replace(/\.git$/, "") + ".git";
+      const u = new URL(raw);
+      u.username = "oauth2";
+      u.password = encodeURIComponent(token ?? "");
+      cloneUrl = u.toString();
+    } catch {
+      return res.status(400).json({ error: "invalid_repo_url" });
+    }
+
+    const repoName = repo_url.trim().split("/").pop()?.replace(/\.git$/, "") ?? "repo";
+    const defaultTarget = path.join(os.homedir(), "Projects", repoName);
+    let targetPath = (typeof target_path === "string" ? target_path.trim() : "") || defaultTarget;
+    if (targetPath === "~") targetPath = os.homedir();
+    else if (targetPath.startsWith("~/")) targetPath = path.join(os.homedir(), targetPath.slice(2));
+
+    const normalizedTarget = path.resolve(targetPath);
+    const homeDir = path.resolve(os.homedir());
+    const relToHome = path.relative(homeDir, normalizedTarget);
+    if (relToHome.startsWith("..") || path.isAbsolute(relToHome)) {
+      return res.status(400).json({ error: "target_path_must_be_within_home" });
+    }
+    targetPath = normalizedTarget;
+
+    if (fs.existsSync(targetPath) && fs.existsSync(path.join(targetPath, ".git"))) {
+      return res.json({ clone_id: null, already_exists: true, target_path: targetPath });
+    }
+
+    const cloneId = randomUUID();
+    activeClones.set(cloneId, { status: "cloning", progress: 0, targetPath, repoFullName: repoName });
+
+    const args = ["clone", "--progress"];
+    if (branch) args.push("--branch", branch, "--single-branch");
+    args.push(cloneUrl, targetPath);
+
+    const child = spawn("git", args, { stdio: ["ignore", "pipe", "pipe"] });
+    let stderrBuf = "";
+
+    child.stderr?.on("data", (chunk: Buffer) => {
+      stderrBuf += chunk.toString();
+      const match = stderrBuf.match(/Receiving objects:\s+(\d+)%/);
+      const resolveMatch = stderrBuf.match(/Resolving deltas:\s+(\d+)%/);
+      let pct = 0;
+      if (resolveMatch) pct = 50 + Math.floor(parseInt(resolveMatch[1], 10) / 2);
+      else if (match) pct = Math.floor(parseInt(match[1], 10) / 2);
+      const entry = activeClones.get(cloneId);
+      if (entry) { entry.progress = pct; activeClones.set(cloneId, entry); }
+      broadcast("clone_progress", { clone_id: cloneId, progress: pct, status: "cloning" });
+    });
+
+    child.on("close", (code) => {
+      const entry = activeClones.get(cloneId);
+      if (!entry) return;
+      if (code === 0) {
+        entry.status = "done"; entry.progress = 100;
+        broadcast("clone_progress", { clone_id: cloneId, progress: 100, status: "done" });
+      } else {
+        entry.status = "error"; entry.error = `git clone exited with code ${code}`;
+        broadcast("clone_progress", { clone_id: cloneId, progress: 0, status: "error", error: entry.error });
+      }
+      activeClones.set(cloneId, entry);
+    });
+
+    child.on("error", () => {
+      const entry = activeClones.get(cloneId);
+      if (entry) { entry.status = "error"; entry.error = "git_spawn_failed"; activeClones.set(cloneId, entry); }
+      broadcast("clone_progress", { clone_id: cloneId, progress: 0, status: "error", error: "git_spawn_failed" });
+    });
+
+    res.json({ clone_id: cloneId, target_path: targetPath });
+  });
+
+  app.get("/api/gitlab/clone/:cloneId", (req, res) => {
+    const entry = activeClones.get(req.params.cloneId);
+    if (!entry) return res.status(404).json({ error: "clone_not_found" });
+    res.json({ clone_id: req.params.cloneId, ...entry });
+  });
+
   app.get("/api/projects/:id/branches", (req, res) => {
     const project = db.prepare("SELECT id, project_path FROM projects WHERE id = ?").get(req.params.id) as
       | { id: string; project_path: string }

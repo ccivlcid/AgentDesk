@@ -10,7 +10,7 @@
 - **Theme:** Dark by default, light optional. macOS app-style outer chrome + terminal-style inner content.
 - **Font:** Global `body` uses `var(--th-font-mono)` (JetBrains Mono). Headings/headers also use mono.
 - **Border Radius (Dual-layer):**
-  - Chrome (containers): `borderRadius: 10` — panels, modals, cards, widgets, app windows.
+  - Chrome (containers): `borderRadius: 10` — panels, modals, cards, app windows.
   - Content (inner elements): `borderRadius: 0` — buttons, inputs, toasts, list items.
   - Avatars & status dots: `borderRadius: 50%`.
 - **Glassmorphism:** `backdropFilter: blur(12px)` applied to menu bar, Dock, and app window headers.
@@ -218,13 +218,6 @@ slate/gray utilities are remapped to `--th-*` variables:
 - **Style:** Icon box `borderRadius: 10`, `blur(8px)`, `border: 1px solid var(--th-border)`.
 - **Label:** 12px text below icon, `var(--th-font-mono)`.
 
-### 4-7c. Widget (`src/components/desktop/Widget.tsx`)
-
-- **Structure:** Freely positioned on the desktop. Supports drag, resize, minimize, and close.
-- **Chrome:** `borderRadius: 10`, `backdropFilter: blur(10px)`, `border: 1px solid var(--th-border)`.
-- **Header:** Widget title (left) + minimize `[─]` + close `[×]` buttons (right).
-- **Widget list:** AgentsWidget / TasksWidget / AlertsWidget / CliCostWidget / FlowGraphWidget.
-
 ### 4-8. List Pattern
 
 - `border: 1px solid var(--th-border)` + `divide-y divide-[var(--th-border)]` for row separators. Row hover: `hover:bg-[var(--th-hover-bg)]`.
@@ -239,13 +232,13 @@ slate/gray utilities are remapped to `--th-*` variables:
 - **Meeting cluster:** Circular area, amber dashed border, grouped attendee agents.
 - **Interactions:** Zoom/pan (mouse wheel/drag), node click → agent detail, fit-to-view.
 - **Difference from task board:** Task board is "task status"-centric; flow graph is "agent relationship"-centric.
-- **Access:** Desktop widget (FlowGraph widget) or `[Graph]` toggle inside the Agents widget.
+- **Access:** Workflow window (`g w` shortcut) or `[Graph]` toggle inside the AgentManager window.
 - Detailed design: `docs/strategy/agent-flow-graph-design.md`.
 
 ### 4-10. CommandPalette (`src/components/CommandPalette.tsx`)
 
 - Triggered by `⌘+Shift+K`. z-index: 10100.
-- Open app windows (Workflow/Library/Settings), switch projects, search agents/tasks, add widgets.
+- Open app windows (Workflow/Library/Settings), switch projects, search agents/tasks.
 - Fuzzy search + keyboard navigation (arrow keys, Enter, Esc).
 
 ### 4-11. Chat Panel (`src/components/chat-panel/`)
@@ -273,12 +266,11 @@ slate/gray utilities are remapped to `--th-*` variables:
 - **Menu Bar:** `--th-bg-header`, `backdropFilter: blur(12px)`, pinned to top. `MenuBar.tsx`
   - Elements: AgentDesk logo, project selector, CLI cost summary, notification bell 🔔, clock.
 - **Desktop:** `--th-bg-primary` background. `Desktop.tsx`
-  - Desktop icon area (top), freely arranged widget area (center).
+  - Desktop icon area.
 - **Dock:** `--th-bg-sidebar`, `backdropFilter: blur(12px)`, pinned to bottom. `Dock.tsx`
   - 4 app icons (⚡📚⚙💬), amber dot for running apps.
 - **App Windows:** `--th-bg-elevated`, `borderRadius: 10`, `boxShadow: 0 20px 60px rgba(0,0,0,0.9)`. `windows/*.tsx`
   - Window header: traffic lights + window title + tab bar.
-- **Widgets:** `--th-bg-card`, `borderRadius: 10`, `backdropFilter: blur(10px)`. `Widget.tsx`
 
 ---
 
@@ -314,16 +306,6 @@ slate/gray utilities are remapped to `--th-*` variables:
 | 📋 | Library | LibraryWindow (Skills tab) | `skills` |
 | 💬 | Chat | ChatWindow | — |
 | >_ | Agent REPL | ReplWindow | (new) |
-
-### Widgets (5 types, user-selectable)
-
-| Widget | Component | Legacy View ID |
-|--------|-----------|---------------|
-| Agents Widget | `AgentsWidget.tsx` | `heartbeat` |
-| Tasks Widget | `TasksWidget.tsx` | `tasks-board` |
-| Alerts Widget | `AlertsWidget.tsx` | — |
-| CLI Cost Widget | `CliCostWidget.tsx` | `cli-usage` |
-| Flow Graph Widget | `FlowGraphWidget.tsx` | `flow-graph` |
 
 ### Dock App Windows (4)
 

@@ -342,3 +342,21 @@ export function IconImageStudio({ color }: IconProps) {
   );
 }
 
+export function IconAgentGraph({ color }: IconProps) {
+  return (
+    <svg viewBox="0 0 28 28" fill="none" stroke={color} strokeWidth={S} strokeLinecap="round" strokeLinejoin="round" width={26} height={26}>
+      {/* 엣지 */}
+      <line x1="14" y1="5" x2="6" y2="14" />
+      <line x1="14" y1="5" x2="22" y2="14" />
+      <line x1="6" y1="14" x2="14" y2="23" />
+      <line x1="22" y1="14" x2="14" y2="23" />
+      <line x1="6" y1="14" x2="22" y2="14" />
+      {/* 노드 */}
+      <circle cx="14" cy="5" r="2.5" fill={color} stroke="none" />
+      <circle cx="6" cy="14" r="2.5" fill={color} stroke="none" />
+      <circle cx="22" cy="14" r="2.5" fill={color} stroke="none" />
+      <circle cx="14" cy="23" r="2.5" fill={color} stroke="none" />
+    </svg>
+  );
+}
+

@@ -638,6 +638,17 @@ export function registerAgentCrudRoutes(ctx: RuntimeContext): void {
       }
     }
 
+    if ("enable_planning_phase" in body) {
+      const raw = body.enable_planning_phase;
+      if (raw === true || raw === 1 || raw === "1") {
+        body.enable_planning_phase = 1;
+      } else if (raw === false || raw === 0 || raw === "0" || raw === null || raw === "" || raw === undefined) {
+        body.enable_planning_phase = 0;
+      } else {
+        return res.status(400).json({ error: "invalid_enable_planning_phase" });
+      }
+    }
+
     const requestedPackKey = parseWorkflowPackKey(body.workflow_pack_key);
     if ("workflow_pack_key" in body) {
       if (!requestedPackKey) {
@@ -690,6 +701,7 @@ export function registerAgentCrudRoutes(ctx: RuntimeContext): void {
       "status",
       "current_task_id",
       "acts_as_planning_leader",
+      "enable_planning_phase",
       "kb_default_sources",
     ];
     const forcePlanningLeadOverride =

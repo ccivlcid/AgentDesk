@@ -5,6 +5,7 @@ import type { TFunction } from "./model";
 
 interface SkillsMemorySectionProps {
   t: TFunction;
+  localeTag: string;
   agents: Agent[];
   historyRefreshToken: number;
   onRefreshHistory: () => void;
@@ -12,6 +13,7 @@ interface SkillsMemorySectionProps {
 
 export default function SkillsMemorySection({
   t,
+  localeTag,
   agents,
   historyRefreshToken,
   onRefreshHistory,
@@ -47,6 +49,8 @@ export default function SkillsMemorySection({
       {!collapsed && (
         <div className="p-3">
           <SkillHistoryPanel
+            t={t}
+            localeTag={localeTag}
             agents={agents}
             refreshToken={historyRefreshToken}
             onLearningDataChanged={onRefreshHistory}

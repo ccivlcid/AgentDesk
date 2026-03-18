@@ -329,6 +329,7 @@ function createDeps(seed?: {
     isTaskWorkflowInterrupted: () => false,
     startTaskExecutionForAgent,
     randomDelay,
+    handleTaskRunComplete: vi.fn(),
   };
 
   return {

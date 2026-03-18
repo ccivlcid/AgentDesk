@@ -8,7 +8,7 @@
 ## 1. Project Summary
 
 **AgentDesk** = A developer OS for running, monitoring, and controlling multiple AI agents simultaneously.
-macOS desktop metaphor — menu bar + desktop icons + widgets + Dock + app windows.
+macOS desktop metaphor — menu bar + desktop icons + Dock + app windows.
 Electron + React(Vite) frontend + Express/tsx backend + SQLite(better-sqlite3).
 
 ---
@@ -39,7 +39,7 @@ pnpm build
 
 ## 3. Core File Map
 
-**UI structure:** No sidebar. macOS desktop OS — menu bar + desktop icons + widgets + Dock + app windows.
+**UI structure:** No sidebar. macOS desktop OS — menu bar + desktop icons + Dock + app windows.
 
 ```
 src/
@@ -51,12 +51,9 @@ src/
 │   │   ├── DesktopIcon.tsx      ← Desktop icons (drag · jiggle · ✕ delete badge · inline rename)
 │   │   ├── FolderDesktopIcon.tsx ← Project folder icons (drag · drop · context menu)
 │   │   ├── Dock.tsx             ← Bottom Dock (+ popup menu · Synapse · Tasks · Library · Settings · Chat)
-│   │   ├── Widget.tsx           ← Widget common container (drag · resize)
 │   │   ├── QuickLook.tsx        ← Project quick-preview panel (Space key)
-│   │   ├── MissionControl.tsx   ← All windows/widgets overview (Ctrl+↑)
-│   │   ├── WallpaperPicker.tsx  ← Wallpaper selector (10 gradients)
-│   │   └── widgets/             ← AgentsWidget, TasksWidget, AlertsWidget, CliCostWidget, FlowGraphWidget,
-│   │                               LocalLlmWidget, SynapseWidget, ImageStudioWidget
+│   │   ├── MissionControl.tsx   ← All windows overview (Ctrl+↑)
+│   │   └── WallpaperPicker.tsx  ← Wallpaper selector (10 gradients)
 │   ├── windows/                 ← App windows:
 │   │                               WorkflowWindow, LibraryWindow, SettingsWindow, ChatWindow,
 │   │                               AgentManagerWindow, TaskBoardWindow, SynapseWindow,
@@ -79,7 +76,7 @@ src/
 │   ├── agentStore.ts            ← agents, departments
 │   ├── taskStore.ts             ← tasks, subtasks
 │   ├── projectStore.ts          ← projects, categories
-│   └── uiStore.ts               ← openWindows(Set), widgetLayout, desktopIconLayout, wallpaper, jiggleMode, missionControlOpen
+│   └── uiStore.ts               ← openWindows(Set), desktopIconLayout, wallpaper, jiggleMode, missionControlOpen
 └── types/index.ts               ← Agent, Task, SubAgent and other domain types
 
 server/
@@ -113,15 +110,7 @@ server/
 
 ## 4. Adding UI Elements
 
-### 4-1. Add a new widget
-
-| # | File | Action |
-|---|------|--------|
-| 1 | `src/components/desktop/widgets/` | Create new widget component |
-| 2 | `src/components/desktop/WidgetPicker.tsx` | Add entry to widget list |
-| 3 | `src/store/uiStore.ts` | Add new widget ID to `widgetLayout` type |
-
-### 4-2. Add a new desktop icon
+### 4-1. Add a new desktop icon
 
 | # | File | Action |
 |---|------|--------|
@@ -129,14 +118,14 @@ server/
 | 2 | `src/components/desktop/Desktop.tsx` | Add icon entry (label, icon, onClick) |
 | 3 | `src/store/uiStore.ts` | Add window open action |
 
-### 4-3. Add a tab to a Dock app window
+### 4-2. Add a tab to a Dock app window
 
 | # | File | Action |
 |---|------|--------|
 | 1 | Tab component | Create under `src/components/` |
 | 2 | Corresponding window file | `src/components/windows/` → add to tabs array |
 
-### 4-4. Add a new Dock app
+### 4-3. Add a new Dock app
 
 | # | File | Action |
 |---|------|--------|
@@ -159,7 +148,7 @@ To pass data: use `Zustand store → uiStore.openWindows` chain.
 | **Quick Look** | Select project + `Space` or right-click → Quick Preview | `QuickLook.tsx` |
 | **Mission Control** | `Ctrl+↑` or AgentDesk menu | `MissionControl.tsx` |
 | **Notification Slide Panel** | Bell icon click | `NotificationCenter.tsx` (320px right slide) |
-| **App Menu** | Click "AgentDesk" text | `MenuBar.tsx` (wallpaper / widgets / shortcuts / Mission Control) |
+| **App Menu** | Click "AgentDesk" text | `MenuBar.tsx` (wallpaper / shortcuts / Mission Control) |
 
 ---
 

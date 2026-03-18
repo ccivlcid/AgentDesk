@@ -195,6 +195,7 @@ export interface WorkflowCoreExports {
   generateProjectContext: (...args: any[]) => any;
   getRecentChanges: (...args: any[]) => any;
   ensureClaudeMd: (...args: any[]) => any;
+  injectTaskContext: (...args: any[]) => any;
   buildAgentArgs: (...args: any[]) => any;
   shouldSkipDuplicateCliOutput: (...args: any[]) => any;
   clearCliOutputDedup: (...args: any[]) => any;

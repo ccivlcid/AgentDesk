@@ -4,7 +4,7 @@ import type { Dispatch, MutableRefObject, SetStateAction } from "react";
 import * as api from "../api";
 import { fetchCategories } from "../api/categories-dashboard";
 import type { DecisionInboxItem } from "../components/chat/decision-inbox";
-import { detectBrowserLanguage } from "../i18n";
+import { detectBrowserLanguage, normalizeLanguage } from "../i18n";
 import type { Agent, Category, CompanySettings, CompanyStats, Department, MeetingPresence, Project, SubTask, Task } from "../types";
 import { DEFAULT_SETTINGS } from "../types";
 import { ROOM_THEMES_STORAGE_KEY } from "./constants";
@@ -85,9 +85,14 @@ export function useAppBootstrapData({
       const mergedSettings = mergeSettingsWithDefaults(sett);
       const autoDetectedLanguage = detectBrowserLanguage();
       const storedClientLanguage = readStoredClientLanguage();
+      // 사용자가 명시적으로 언어를 설정한 경우 → localStorage 값 우선
+      // 서버가 기본값(en)을 반환해도 덮어쓰지 않음
+      const userPinnedLanguage = isUserLanguagePinned() && storedClientLanguage ? normalizeLanguage(storedClientLanguage) : null;
       const shouldAutoAssignLanguage =
         !isUserLanguagePinned() && !storedClientLanguage && mergedSettings.language === DEFAULT_SETTINGS.language;
-      const nextSettings = shouldAutoAssignLanguage
+      const nextSettings = userPinnedLanguage
+        ? { ...mergedSettings, language: userPinnedLanguage }
+        : shouldAutoAssignLanguage
         ? { ...mergedSettings, language: autoDetectedLanguage }
         : mergedSettings;
 

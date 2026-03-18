@@ -133,6 +133,7 @@ export async function updateAgent(
       | "api_model"
       | "cli_model"
       | "cli_reasoning_level"
+      | "enable_planning_phase"
       | "avatar_emoji"
       | "sprite_number"
       | "personality"
@@ -357,6 +358,10 @@ export async function runTask(id: string): Promise<void> {
 
 export async function stopTask(id: string): Promise<void> {
   await post(`/api/tasks/${id}/stop`, { mode: "cancel" });
+}
+
+export async function cliCompleteTask(id: string, exitCode = 0): Promise<void> {
+  await post(`/api/tasks/${id}/cli-complete`, { exit_code: exitCode });
 }
 
 export async function pauseTask(id: string): Promise<{

@@ -104,6 +104,7 @@ export default function SkillsLibrary({ agents, currentProject }: SkillsLibraryP
 
       <SkillsMemorySection
         t={t}
+        localeTag={localeTag}
         agents={agents}
         historyRefreshToken={vm.historyRefreshToken}
         onRefreshHistory={() => vm.setHistoryRefreshToken((prev) => prev + 1)}
@@ -134,8 +135,7 @@ export default function SkillsLibrary({ agents, currentProject }: SkillsLibraryP
         agents={agents}
         learningSkill={vm.learningSkill}
         learnInProgress={vm.learnInProgress}
-        selectedProviders={vm.selectedProviders}
-        representatives={vm.representatives}
+        selectedAgentIds={vm.selectedAgentIds}
         preferKoreanName={vm.preferKoreanName}
         modalLearnedProviders={vm.modalLearnedProviders}
         unlearningProviders={vm.unlearningProviders}
@@ -146,16 +146,13 @@ export default function SkillsLibrary({ agents, currentProject }: SkillsLibraryP
         learnSubmitting={vm.learnSubmitting}
         defaultSelectedProviders={vm.defaultSelectedProviders}
         onClose={vm.closeLearningModal}
-        onToggleProvider={vm.toggleProvider}
+        onToggleAgent={vm.toggleAgent}
         onUnlearnProvider={(provider) => {
           void vm.handleUnlearnProvider(provider);
         }}
         onStartLearning={() => {
           void vm.handleStartLearning();
         }}
-        squadAgentIds={vm.squadAgentIds}
-        onAddAgent={vm.addAgentToSquad}
-        onRemoveAgent={vm.removeAgentFromSquad}
       />
 
       <CustomSkillSection
@@ -179,20 +176,15 @@ export default function SkillsLibrary({ agents, currentProject }: SkillsLibraryP
       <CustomSkillModal
         t={t}
         show={vm.showCustomModal}
-        agents={agents}
-        representatives={vm.representatives}
-        preferKoreanName={vm.preferKoreanName}
         customSkillName={vm.customSkillName}
         setCustomSkillName={vm.setCustomSkillName}
         customSkillContent={vm.customSkillContent}
         customSkillFileName={vm.customSkillFileName}
-        customSkillProviders={vm.customSkillProviders}
         customSkillSubmitting={vm.customSkillSubmitting}
         customSkillError={vm.customSkillError}
         customFileInputRef={vm.customFileInputRef}
         onClose={vm.closeCustomSkillModal}
         onFileSelect={vm.handleCustomFileSelect}
-        onToggleProvider={vm.toggleCustomProvider}
         onSubmit={() => {
           void vm.handleCustomSkillSubmit();
         }}

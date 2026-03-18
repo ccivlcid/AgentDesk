@@ -1211,106 +1211,28 @@ function RulesTab() {
 }
 
 // ─── Main Component ────────────────────────────────────────────────────────────
-export default function SynapseSettingsTab() {
-  const [subTab, setSubTab] = useState<SubTab>("notion");
-  const [helpOpen, setHelpOpen] = useState(false);
+export type { SubTab };
 
-  const SUB_TABS: Array<{ key: SubTab; label: string }> = [
-    { key: "notion",      label: "Notion" },
-    { key: "obsidian",    label: "Obsidian" },
-    { key: "notebooklm",  label: "NotebookLM" },
-    { key: "figma",       label: "Figma" },
-    { key: "rules",       label: "Rules" },
-  ];
+interface SynapseSettingsTabProps {
+  activeTab: SubTab;
+  showHelp?: boolean;
+  onHideHelp?: () => void;
+}
 
+export default function SynapseSettingsTab({ activeTab, showHelp, onHideHelp }: SynapseSettingsTabProps) {
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", position: "relative" }}>
-      {/* 서브탭 네비게이션 */}
-      <div style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 2,
-        borderBottom: "1px solid var(--th-border)",
-        marginBottom: 16,
-        paddingBottom: 0,
-      }}>
-        <div style={{ display: "flex", flex: 1, gap: 2 }}>
-          {SUB_TABS.map((t) => {
-            const active = subTab === t.key;
-            return (
-              <button
-                key={t.key}
-                type="button"
-                onClick={() => setSubTab(t.key)}
-                style={{
-                  ...base,
-                  fontSize: 11,
-                  fontWeight: active ? 600 : 400,
-                  padding: "7px 14px",
-                  background: "transparent",
-                  color: active ? "var(--th-accent)" : "var(--th-text-muted)",
-                  border: "none",
-                  borderBottom: `2px solid ${active ? "var(--th-accent)" : "transparent"}`,
-                  cursor: "pointer",
-                  transition: "color 0.12s",
-                  borderRadius: 0,
-                  marginBottom: -1,
-                }}
-                onMouseEnter={(e) => { if (!active) e.currentTarget.style.color = "var(--th-text-secondary)"; }}
-                onMouseLeave={(e) => { if (!active) e.currentTarget.style.color = "var(--th-text-muted)"; }}
-              >
-                {t.label}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* ? 도움말 버튼 */}
-        <button
-          type="button"
-          onClick={() => setHelpOpen(true)}
-          title={tl("도움말", "Help")}
-          style={{
-            width: 24, height: 24,
-            borderRadius: "50%",
-            border: "1px solid var(--th-border)",
-            background: "var(--th-hover-overlay)",
-            color: "var(--th-text-muted)",
-            fontFamily: mono,
-            fontSize: 11,
-            fontWeight: 700,
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flexShrink: 0,
-            marginBottom: 4,
-            transition: "border-color 0.12s, color 0.12s",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.borderColor = "rgba(10,132,255,0.4)";
-            e.currentTarget.style.color = "#0a84ff";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.borderColor = "var(--th-border)";
-            e.currentTarget.style.color = "var(--th-text-muted)";
-          }}
-        >
-          ?
-        </button>
-      </div>
-
       {/* 콘텐츠 */}
       <div style={{ flex: 1, overflowY: "auto" }}>
-        {subTab === "notion"     && <NotionTab />}
-        {subTab === "obsidian"   && <ObsidianTab />}
-        {subTab === "notebooklm" && <NotebookLMTab />}
-        {subTab === "figma"      && <FigmaTab />}
-        {subTab === "rules"      && <RulesTab />}
+        {activeTab === "notion"     && <NotionTab />}
+        {activeTab === "obsidian"   && <ObsidianTab />}
+        {activeTab === "notebooklm" && <NotebookLMTab />}
+        {activeTab === "figma"      && <FigmaTab />}
+        {activeTab === "rules"      && <RulesTab />}
       </div>
 
       {/* 도움말 패널 */}
-      {helpOpen && <HelpPanel tab={subTab} onClose={() => setHelpOpen(false)} />}
+      {showHelp && <HelpPanel tab={activeTab} onClose={() => onHideHelp?.()} />}
     </div>
   );
 }

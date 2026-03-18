@@ -21,7 +21,7 @@ interface SkillsGridProps {
   agents: Agent[];
   filtered: CategorizedSkill[];
   learnedProvidersBySkill: Map<string, SkillHistoryProvider[]>;
-  learnedRepresentatives: Map<SkillHistoryProvider, Agent | null>;
+  learnedRepresentatives: Map<SkillHistoryProvider, Agent[]>;
   hoveredSkill: string | null;
   setHoveredSkill: (key: string | null) => void;
   detailCache: Record<string, SkillDetail | "loading" | "error">;
@@ -84,28 +84,32 @@ export default function SkillsGrid({
                   </div>
                 </div>
 
-                {learnedProvidersForCard.length > 0 && (
-                  <div className="grid w-[64px] shrink-0 grid-cols-2 gap-1 p-1" style={{ borderRadius: 0, border: "1px solid rgba(16,185,129,0.25)", background: "rgba(16,185,129,0.05)" }}>
-                    {learnedProvidersForCard.map((provider) => {
-                      const agent = learnedRepresentatives.get(provider) ?? null;
-                      return (
+                {learnedProvidersForCard.length > 0 && (() => {
+                  // 학습한 모든 에이전트 (provider당 여러명 가능)
+                  const learnedAgents = learnedProvidersForCard.flatMap(
+                    (provider) => learnedRepresentatives.get(provider) ?? []
+                  );
+                  if (learnedAgents.length === 0) return null;
+                  return (
+                    <div className="flex shrink-0 flex-wrap gap-0.5 p-1" style={{ borderRadius: 0, border: "1px solid rgba(16,185,129,0.25)", background: "rgba(16,185,129,0.05)", maxWidth: 72 }}>
+                      {learnedAgents.slice(0, 6).map((agent) => (
                         <span
-                          key={`${detailKey}-${provider}`}
-                          className="inline-flex h-5 w-6 items-center justify-center gap-0.5 border border-emerald-500/20"
-                          style={{ borderRadius: 0, background: "rgba(15,17,23,0.7)" }}
-                          title={`${learnedProviderLabel(provider)}${agent ? ` · ${agent.name}` : ""}`}
+                          key={`${detailKey}-${agent.id}`}
+                          className="inline-block overflow-hidden"
+                          style={{ borderRadius: "3px", background: "rgba(15,17,23,0.8)", width: 14, height: 14 }}
+                          title={`${agent.cli_provider ? learnedProviderLabel(agent.cli_provider as SkillHistoryProvider) : ""} · ${agent.name}`}
                         >
-                          <span className="flex h-2.5 w-2.5 items-center justify-center">
-                            {cliProviderIcon(provider)}
-                          </span>
-                          <span className="h-2.5 w-2.5 overflow-hidden" style={{ borderRadius: "3px", background: "rgba(15,17,23,0.8)" }}>
-                            <AgentAvatar agent={agent ?? undefined} agents={agents} size={10} rounded="xl" />
-                          </span>
+                          <AgentAvatar agent={agent} agents={agents} size={14} rounded="xl" />
                         </span>
-                      );
-                    })}
-                  </div>
-                )}
+                      ))}
+                      {learnedAgents.length > 6 && (
+                        <span className="text-[8px] font-mono" style={{ color: "var(--th-text-muted)", lineHeight: "14px" }}>
+                          +{learnedAgents.length - 6}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
 
               <div className="flex items-center justify-between gap-2">

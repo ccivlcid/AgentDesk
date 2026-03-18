@@ -1,6 +1,8 @@
 import { useRef, useState } from "react";
 import type { WindowType } from "../../app/types";
 import { useUiStore } from "../../store/uiStore";
+import { useAgentStore } from "../../store/agentStore";
+import { useTaskStore } from "../../store/taskStore";
 import { useTheme } from "../../ThemeContext";
 import { useI18n } from "../../i18n";
 import { IconDockWorkflow, IconDockLibrary, IconDockSettings, IconDockChat, IconDockTasks } from "./DesktopIcons";
@@ -11,27 +13,30 @@ interface DockProps {
   onCreateTask?: () => void;
   onCreateProject?: () => void;
   onCreateAgent?: () => void;
-  /** @deprecated use onCreateTask */
-  onQuickTask?: () => void;
+  onCreateFeature?: () => void;
 }
 
-export default function Dock({ onCreateTask, onCreateProject, onCreateAgent, onQuickTask }: DockProps) {
+export default function Dock({ onCreateTask, onCreateProject, onCreateAgent, onCreateFeature }: DockProps) {
   const { openWindows, toggleWindow, minimizedWindows, restoreWindow } = useUiStore();
+  const { agents } = useAgentStore();
+  const { tasks } = useTaskStore();
   const { theme } = useTheme();
   const { t } = useI18n();
   const isLight = theme === "light";
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  const handleTask = onCreateTask ?? onQuickTask;
+  const workingAgentCount = agents.filter((a) => a.status === "working").length;
+  const activeTaskCount = tasks.filter((t) => ["in_progress", "collaborating", "review"].includes(t.status)).length;
 
-  const DOCK_ITEMS: Array<{ id: WindowType; icon: (c: string) => React.ReactNode; label: string; accentColor: string; gradient: string }> = [
+  const DOCK_ITEMS: Array<{ id: WindowType; icon: (c: string) => React.ReactNode; label: string; accentColor: string; gradient: string; badge?: number }> = [
     {
       id: "tasks",
       icon: (c) => <IconDockTasks color={c} />,
-      label: t({ ko: "보드", en: "Board", ja: "ボード", zh: "看板" }),
+      label: t({ ko: "업무보드", en: "Board", ja: "タスクボード", zh: "工作看板" }),
       accentColor: "#ff9f0a",
       gradient: "linear-gradient(145deg, #ffb340 0%, #ff9f0a 60%, #e8820a 100%)",
+      badge: activeTaskCount || undefined,
     },
     {
       id: "workflow",
@@ -65,7 +70,7 @@ export default function Dock({ onCreateTask, onCreateProject, onCreateAgent, onQ
 
   const CREATE_ITEMS = [
     {
-      label: t({ ko: "새 태스크", en: "New Task", ja: "新規タスク", zh: "新任务" }),
+      label: t({ ko: "새 업무", en: "New Task", ja: "新規タスク", zh: "新任务" }),
       accentColor: "#ff9f0a",
       icon: (
         <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" width={16} height={16}>
@@ -74,7 +79,7 @@ export default function Dock({ onCreateTask, onCreateProject, onCreateAgent, onQ
           <line x1="6" y1="11" x2="12" y2="11" />
         </svg>
       ),
-      onClick: () => { setMenuOpen(false); handleTask?.(); },
+      onClick: () => { setMenuOpen(false); onCreateTask?.(); },
     },
     {
       label: t({ ko: "새 프로젝트", en: "New Project", ja: "新規プロジェクト", zh: "新建项目" }),
@@ -100,6 +105,16 @@ export default function Dock({ onCreateTask, onCreateProject, onCreateAgent, onQ
         </svg>
       ),
       onClick: () => { setMenuOpen(false); onCreateAgent?.(); },
+    },
+    {
+      label: t({ ko: "새 기능", en: "New Feature", ja: "新規機能", zh: "新功能" }),
+      accentColor: "#30d158",
+      icon: (
+        <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" width={16} height={16}>
+          <path d="M9 2l1.8 3.6L15 6.3l-3 2.9.7 4.1L9 11.4l-3.7 1.9.7-4.1-3-2.9 4.2-.7z" />
+        </svg>
+      ),
+      onClick: () => { setMenuOpen(false); onCreateFeature?.(); },
     },
   ];
 
@@ -140,6 +155,7 @@ export default function Dock({ onCreateTask, onCreateProject, onCreateAgent, onQ
             gradient={item.gradient}
             icon={item.icon}
             isLight={isLight}
+            badge={item.badge}
             onClick={() => {
               if (isMinimized) restoreWindow(item.id);
               else toggleWindow(item.id);
@@ -268,6 +284,7 @@ function DockButton({
   gradient,
   icon,
   isLight,
+  badge,
   onClick,
 }: {
   label: string;
@@ -277,6 +294,7 @@ function DockButton({
   gradient: string;
   icon: (color: string) => React.ReactNode;
   isLight: boolean;
+  badge?: number;
   onClick?: () => void;
 }) {
   const [hovered, setHovered] = useState(false);
@@ -356,6 +374,29 @@ function DockButton({
           }}
         />
         {icon("rgba(255,255,255,0.95)")}
+        {badge != null && badge > 0 && (
+          <div style={{
+            position: "absolute",
+            top: -4,
+            right: -4,
+            minWidth: 16,
+            height: 16,
+            borderRadius: 8,
+            background: "#ff453a",
+            color: "#fff",
+            fontSize: 9,
+            fontFamily: "var(--th-font-mono)",
+            fontWeight: 700,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "0 3px",
+            border: "1.5px solid rgba(0,0,0,0.25)",
+            pointerEvents: "none",
+          }}>
+            {badge > 99 ? "99+" : badge}
+          </div>
+        )}
       </button>
 
       {/* 실행중/최소화 표시 점 */}

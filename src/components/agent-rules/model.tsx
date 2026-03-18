@@ -114,11 +114,11 @@ export function ruleLearnedProviderLabel(provider: RuleHistoryProvider): string 
   return ruleProviderLabel(provider);
 }
 
-export function ruleStatusLabel(status: string): string {
-  if (status === "queued") return "Queued";
-  if (status === "running") return "Running";
-  if (status === "succeeded") return "Succeeded";
-  return "Failed";
+export function ruleStatusLabel(status: string, t: TFunction): string {
+  if (status === "queued") return t({ ko: "대기중", en: "Queued", ja: "待機中", zh: "排队中" });
+  if (status === "running") return t({ ko: "실행중", en: "Running", ja: "実行中", zh: "运行中" });
+  if (status === "succeeded") return t({ ko: "완료", en: "Succeeded", ja: "完了", zh: "成功" });
+  return t({ ko: "실패", en: "Failed", ja: "失敗", zh: "失败" });
 }
 
 export function ruleStatusClass(status: string): string {
@@ -128,20 +128,24 @@ export function ruleStatusClass(status: string): string {
   return "border-rose-400/40 bg-rose-500/10 text-rose-300";
 }
 
-export function ruleRelativeTime(timestamp: number | null | undefined): string {
+export function ruleRelativeTime(timestamp: number | null | undefined, localeTag = "en"): string {
   if (!timestamp || !Number.isFinite(timestamp)) return "-";
-  const diffSec = Math.max(0, Math.floor((Date.now() - timestamp) / 1000));
-  if (diffSec < 60) return `${diffSec}s ago`;
-  const diffMin = Math.floor(diffSec / 60);
-  if (diffMin < 60) return `${diffMin}m ago`;
-  const diffHour = Math.floor(diffMin / 60);
-  if (diffHour < 24) return `${diffHour}h ago`;
-  const diffDay = Math.floor(diffHour / 24);
-  if (diffDay < 30) return `${diffDay}d ago`;
-  const diffMonth = Math.floor(diffDay / 30);
-  if (diffMonth < 12) return `${diffMonth}mo ago`;
-  const diffYear = Math.floor(diffMonth / 12);
-  return `${diffYear}y ago`;
+  try {
+    const rtf = new Intl.RelativeTimeFormat(localeTag, { numeric: "auto" });
+    const diffSec = Math.max(0, Math.floor((Date.now() - timestamp) / 1000));
+    if (diffSec < 60) return rtf.format(-diffSec, "second");
+    const diffMin = Math.floor(diffSec / 60);
+    if (diffMin < 60) return rtf.format(-diffMin, "minute");
+    const diffHour = Math.floor(diffMin / 60);
+    if (diffHour < 24) return rtf.format(-diffHour, "hour");
+    const diffDay = Math.floor(diffHour / 24);
+    if (diffDay < 30) return rtf.format(-diffDay, "day");
+    const diffMonth = Math.floor(diffDay / 30);
+    if (diffMonth < 12) return rtf.format(-diffMonth, "month");
+    return rtf.format(-Math.floor(diffMonth / 12), "year");
+  } catch {
+    return "-";
+  }
 }
 
 export function ruleLearningRowKey(row: { provider: RuleHistoryProvider; rule_id: string }): string {
