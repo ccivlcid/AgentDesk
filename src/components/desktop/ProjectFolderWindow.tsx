@@ -87,8 +87,20 @@ export default function ProjectFolderWindow({
   const resizing = useRef(false);
   const resizeStart = useRef({ x: 0, y: 0, w: 0, h: 0 });
 
+  // 마운트 시 API에서 신선한 에이전트 목록을 가져옴 (스토어 캐시 무효화 대응)
+  const [assignedAgentIds, setAssignedAgentIds] = useState<Set<string>>(
+    new Set(project.assigned_agent_ids ?? []),
+  );
+  useEffect(() => {
+    fetch(`/api/projects/${project.id}/agents`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((data: { agents: Array<{ id: string }> } | null) => {
+        if (data?.agents) setAssignedAgentIds(new Set(data.agents.map((a) => a.id)));
+      })
+      .catch(() => { /* 실패 시 prop 값 유지 */ });
+  }, [project.id]);
+
   const projectTasks = tasks.filter((t) => t.project_id === project.id && !t.hidden);
-  const assignedAgentIds = new Set(project.assigned_agent_ids ?? []);
   const projectAgents = assignedAgentIds.size > 0
     ? agents.filter((a) => assignedAgentIds.has(a.id))
     : [];

@@ -48,23 +48,33 @@ src/
 │   ├── desktop/
 │   │   ├── Desktop.tsx          ← Desktop root (shortcuts · jiggle · QuickLook · MissionControl)
 │   │   ├── MenuBar.tsx          ← Top menu bar (logo · app menu · project · cost · notifications · clock)
-│   │   ├── DesktopIcon.tsx      ← Desktop icons (drag · jiggle · ✕ delete badge)
-│   │   ├── Dock.tsx             ← Bottom Dock (⚡📚⚙💬)
+│   │   ├── DesktopIcon.tsx      ← Desktop icons (drag · jiggle · ✕ delete badge · inline rename)
+│   │   ├── FolderDesktopIcon.tsx ← Project folder icons (drag · drop · context menu)
+│   │   ├── Dock.tsx             ← Bottom Dock (+ popup menu · Synapse · Tasks · Library · Settings · Chat)
 │   │   ├── Widget.tsx           ← Widget common container (drag · resize)
 │   │   ├── QuickLook.tsx        ← Project quick-preview panel (Space key)
 │   │   ├── MissionControl.tsx   ← All windows/widgets overview (Ctrl+↑)
 │   │   ├── WallpaperPicker.tsx  ← Wallpaper selector (10 gradients)
-│   │   └── widgets/             ← AgentsWidget, TasksWidget, AlertsWidget, CliCostWidget, FlowGraphWidget
-│   ├── windows/                 ← App windows (WorkflowWindow, LibraryWindow, SettingsWindow, ChatWindow, AgentManagerWindow)
+│   │   └── widgets/             ← AgentsWidget, TasksWidget, AlertsWidget, CliCostWidget, FlowGraphWidget,
+│   │                               LocalLlmWidget, SynapseWidget, ImageStudioWidget
+│   ├── windows/                 ← App windows:
+│   │                               WorkflowWindow, LibraryWindow, SettingsWindow, ChatWindow,
+│   │                               AgentManagerWindow, TaskBoardWindow, SynapseWindow,
+│   │                               ImageStudioWindow, FolderWindow, CliWindow (Agent CLI)
+│   ├── agent-detail/            ← AgentDetailPanel (right-slide inspector · 4 tabs)
 │   ├── flow-graph/              ← AgentFlowGraph (reused in FlowGraphWidget)
 │   ├── workflow-builder/        ← WorkflowBuilder (@xyflow/react) + WbScheduleModal (cron)
 │   ├── agent-composition/       ← AgentCompositionBuilder + AgentCompositionRunModal + nodes/CompAgentNode
+│   ├── image-studio/            ← GenerateTab, GalleryTab, MaskCanvas, ProviderSelector
+│   ├── synapse/                 ← SynapsePanel (Notion · Obsidian · rules)
+│   ├── local-llm/               ← BackendsPanel, ModelsPanel, MetricsPanel, AdvancedSettingsPanel
 │   ├── performance/             ← AgentPerformanceDashboard (Library → Performance tab)
 │   ├── export/                  ← ExportModal (triggered from AgentDesk app menu)
 │   └── settings/                ← Settings window tabs
 ├── app/
-│   ├── types.ts                 ← WindowType: "workflow"|"library"|"settings"|"chat"|"agent-manager"|"cli"
-│   └── AppOverlays.tsx          ← Modal/overlay collection (36 total)
+│   ├── types.ts                 ← WindowType: "workflow"|"library"|"settings"|"chat"|"agent-manager"
+│   │                                           |"cli"|"tasks"|"synapse"|"image-studio"|"reports"
+│   └── AppOverlays.tsx          ← Modal/overlay collection
 ├── store/
 │   ├── agentStore.ts            ← agents, departments
 │   ├── taskStore.ts             ← tasks, subtasks
@@ -77,12 +87,21 @@ server/
 ├── lib/logger.ts                ← pino logger (note: import path depth varies by file location)
 ├── db/runtime.ts                ← DB connection + env variable constants
 ├── modules/
-│   ├── lifecycle.ts             ← Service start/stop hooks
+│   ├── lifecycle.ts             ← Service start/stop hooks (synapse watchers, LLM metrics, workflow scheduler)
 │   ├── routes/core.ts           ← REST API route registration
 │   ├── routes/ops/composition-templates.ts ← CRUD /api/composition-templates
 │   ├── routes/ops/workflow-schedules.ts    ← CRUD /api/workflow-schedules (cron)
 │   ├── routes/ops/agent-performance.ts    ← GET /api/agents/performance
 │   ├── routes/ops/data-export.ts          ← GET /api/export (CSV/JSON download)
+│   ├── routes/ops/image-studio.ts         ← Image Studio API (generate · gallery · stream)
+│   ├── routes/ops/synapse.ts              ← Synapse API (connections · rules · context)
+│   ├── routes/ops/local-llm.ts            ← Local LLM API (backends · models · metrics)
+│   ├── routes/ops/filesystem.ts           ← Filesystem API (project file save)
+│   ├── image-studio/            ← image-service.ts · providers/openai.ts
+│   ├── synapse/                 ← context-fetcher, notion-client, obsidian-client, rule-engine,
+│   │                               notion-poller, obsidian-watcher
+│   ├── local-llm/               ← backend-manager, ollama-client, lmstudio-client,
+│   │                               llamacpp-client, jan-client, inference-logger, metrics-collector
 │   └── workflow/                ← Task execution engine
 │       ├── cron-utils.ts        ← 5-field cron parser (no external deps)
 │       └── workflow-scheduler.ts ← Cron scheduler daemon (60s tick)
@@ -188,6 +207,7 @@ Current shortcuts:
 | `g c` | Toggle Chat window |
 | `g a` | Toggle Agent Manager |
 | `g e` | Toggle CLI (Agent CLI) |
+| `g i` | Toggle Image Studio |
 | `Space` (with icon selected) | Open Quick Look |
 | `Esc` | Exit Jiggle / Close Quick Look / Close Mission Control |
 | 600ms long-press on empty screen | Jiggle Mode ON |
@@ -201,7 +221,7 @@ Use this checklist every time you add a DB column or table:
 
 1. **APPEND only** to `server/modules/bootstrap/schema/versioned-migrations.ts`
 2. **ID format**: `YYYY-MM-DD-NNN-short-description` (zero-padded, chronological)
-3. **Last known ID**: `2026-03-19-000-rename-harness-to-synapse` → next: `2026-03-19-001-*` or `2026-03-20-001-*`
+3. **Last known ID**: `2026-03-22-002-projects-folder-id` → next: `2026-03-22-003-*` or `2026-03-23-001-*`
 4. Wrap each DDL in `try { ... } catch { /* already exists */ }` for idempotency
 5. NEVER change or remove existing entries
 

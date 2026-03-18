@@ -1,6 +1,7 @@
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
+import zlib from "node:zlib";
 import type { RuntimeContext } from "../../../../types/runtime-context.ts";
 import logger from "../../../../lib/logger";
 import { prettyStreamJson } from "../terminal/pretty-stream-json.ts";
@@ -871,6 +872,147 @@ export function registerTaskReportRoutes(ctx: RuntimeContext): void {
     } catch (err) {
       logger.error({ err }, "[task-reports/:id/artifacts/download]");
       res.status(500).json({ ok: false, error: "Failed to serve artifact" });
+    }
+  });
+
+  /* ── ZIP download: all artifacts for a task ── */
+  app.get("/api/task-reports/:taskId/artifacts/zip", (req, res) => {
+    const { taskId } = req.params;
+    try {
+      const projectPath = resolveTaskProjectPath(taskId);
+      const cwdRoot = process.cwd();
+      const effectiveRoot = projectPath || cwdRoot;
+
+      // Gather artifact paths from DB
+      const dbRows = db
+        .prepare("SELECT file_path, file_name FROM task_artifacts WHERE task_id = ? ORDER BY created_at DESC")
+        .all(taskId) as Array<{ file_path: string; file_name: string }>;
+
+      if (dbRows.length === 0) {
+        return res.status(404).json({ ok: false, error: "No artifacts found" });
+      }
+
+      // Build list of { absPath, entryName } only for files that exist
+      const worktreesRoot = path.join(cwdRoot, ".agentdesk-worktrees");
+      const entries: Array<{ absPath: string; entryName: string }> = [];
+      for (const row of dbRows) {
+        const absPath = path.resolve(effectiveRoot, row.file_path);
+        const isSafe = isUnderDir(effectiveRoot, absPath) ||
+                       isUnderDir(cwdRoot, absPath) ||
+                       isUnderDir(worktreesRoot, absPath);
+        if (!isSafe) continue;
+        if (!fs.existsSync(absPath) || !fs.statSync(absPath).isFile()) continue;
+        entries.push({ absPath, entryName: row.file_name });
+      }
+
+      if (entries.length === 0) {
+        return res.status(404).json({ ok: false, error: "No artifact files found on disk" });
+      }
+
+      // Build ZIP in memory using pure Node.js (no extra deps)
+      // ZIP format: local file entries + central directory + end-of-central-directory
+      function u32le(n: number): Buffer {
+        const b = Buffer.alloc(4);
+        b.writeUInt32LE(n, 0);
+        return b;
+      }
+      function u16le(n: number): Buffer {
+        const b = Buffer.alloc(2);
+        b.writeUInt16LE(n, 0);
+        return b;
+      }
+
+      const localHeaders: Buffer[] = [];
+      const centralDirs: Buffer[] = [];
+      let offset = 0;
+
+      for (const { absPath, entryName } of entries) {
+        const data = fs.readFileSync(absPath);
+        const compressed = zlib.deflateRawSync(data, { level: 6 });
+        const use = compressed.length < data.length ? compressed : data;
+        const method = compressed.length < data.length ? 8 : 0; // 8=DEFLATE, 0=STORE
+
+        // CRC-32
+        let crc = 0xffffffff;
+        for (const byte of data) {
+          crc ^= byte;
+          for (let i = 0; i < 8; i++) {
+            crc = (crc >>> 1) ^ (crc & 1 ? 0xedb88320 : 0);
+          }
+        }
+        crc = (crc ^ 0xffffffff) >>> 0;
+
+        const nameBytes = Buffer.from(entryName, "utf8");
+        const nameLen = nameBytes.length;
+        const now = new Date();
+        const dosTime = ((now.getHours() << 11) | (now.getMinutes() << 5) | (now.getSeconds() >> 1)) & 0xffff;
+        const dosDate = (((now.getFullYear() - 1980) << 9) | ((now.getMonth() + 1) << 5) | now.getDate()) & 0xffff;
+
+        // Local file header
+        const local = Buffer.concat([
+          Buffer.from([0x50, 0x4b, 0x03, 0x04]), // signature
+          u16le(20),        // version needed
+          u16le(0),         // flags
+          u16le(method),    // compression
+          u16le(dosTime),   // mod time
+          u16le(dosDate),   // mod date
+          u32le(crc),       // crc32
+          u32le(use.length),// compressed size
+          u32le(data.length),// uncompressed size
+          u16le(nameLen),   // filename length
+          u16le(0),         // extra length
+          nameBytes,
+          use,
+        ]);
+        localHeaders.push(local);
+
+        // Central directory record
+        const central = Buffer.concat([
+          Buffer.from([0x50, 0x4b, 0x01, 0x02]), // signature
+          u16le(20),        // version made by
+          u16le(20),        // version needed
+          u16le(0),         // flags
+          u16le(method),
+          u16le(dosTime),
+          u16le(dosDate),
+          u32le(crc),
+          u32le(use.length),
+          u32le(data.length),
+          u16le(nameLen),
+          u16le(0),         // extra length
+          u16le(0),         // comment length
+          u16le(0),         // disk start
+          u16le(0),         // internal attrs
+          u32le(0),         // external attrs
+          u32le(offset),    // local header offset
+          nameBytes,
+        ]);
+        centralDirs.push(central);
+        offset += local.length;
+      }
+
+      const centralBuf = Buffer.concat(centralDirs);
+      const endRecord = Buffer.concat([
+        Buffer.from([0x50, 0x4b, 0x05, 0x06]), // signature
+        u16le(0),                               // disk number
+        u16le(0),                               // start disk
+        u16le(entries.length),                  // entries on disk
+        u16le(entries.length),                  // total entries
+        u32le(centralBuf.length),               // central dir size
+        u32le(offset),                          // central dir offset
+        u16le(0),                               // comment length
+      ]);
+
+      const zipBuf = Buffer.concat([...localHeaders, centralBuf, endRecord]);
+      const safeName = `artifacts-${taskId.slice(0, 8)}.zip`;
+
+      res.setHeader("Content-Type", "application/zip");
+      res.setHeader("Content-Disposition", `attachment; filename="${safeName}"`);
+      res.setHeader("Content-Length", zipBuf.length);
+      res.send(zipBuf);
+    } catch (err) {
+      logger.error({ err }, "[task-reports/:id/artifacts/zip]");
+      res.status(500).json({ ok: false, error: "Failed to create ZIP" });
     }
   });
 }

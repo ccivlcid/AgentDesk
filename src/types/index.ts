@@ -526,7 +526,10 @@ export type WSEventType =
   | "connected"
   | "skill_learn_job_update"
   | "memory_learn_job_update"
-  | "meeting_minutes_update";
+  | "meeting_minutes_update"
+  | "pty_ready"
+  | "pty_output"
+  | "pty_exit";
 
 export interface WSEvent {
   type: WSEventType;

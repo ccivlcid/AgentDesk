@@ -1,10 +1,10 @@
 /**
- * UserGuidePanel — AgentDesk 유저 가이드 (우측 슬라이드 패널)
+ * UserGuidePanel — AgentDesk 유저 가이드 (AppWindow 일반창)
  * 챕터별 구성, 검색, callout 박스, 인라인 코드, 단축키 카드
  */
-import { useEffect, useState, useMemo } from "react";
-import { createPortal } from "react-dom";
+import { useState, useMemo } from "react";
 import { useI18n } from "../../i18n";
+import AppWindow from "../windows/AppWindow";
 
 const mono = "var(--th-font-mono)";
 
@@ -618,7 +618,7 @@ function CalloutBox({ type, text }: Callout) {
     }}>
       <span style={{ fontSize: 13, lineHeight: 1, flexShrink: 0, marginTop: 1 }}>{colors.icon}</span>
       <div>
-        <span style={{ fontFamily: mono, fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", color: colors.text, marginRight: 6 }}>
+        <span style={{ fontFamily: mono, fontSize: 10, fontWeight: 700, letterSpacing: "0.06em", color: colors.text, marginRight: 6 }}>
           {colors.label}
         </span>
         <span style={{ fontFamily: mono, fontSize: 11, color: "var(--th-text-secondary)", lineHeight: 1.5 }}>
@@ -653,29 +653,10 @@ function FeatureGrid({ features }: { features: { icon: string; label: string; de
 
 // ─── Main panel ───────────────────────────────────────────────────────────────
 
-interface UserGuidePanelProps {
-  open: boolean;
-  onClose: () => void;
-  initialChapter?: string;
-}
-
-export default function UserGuidePanel({ open, onClose, initialChapter }: UserGuidePanelProps) {
+export default function UserGuidePanel() {
   const { t } = useI18n();
-  const [selectedId, setSelectedId] = useState(initialChapter ?? "getting-started");
+  const [selectedId, setSelectedId] = useState("getting-started");
   const [search, setSearch] = useState("");
-
-  useEffect(() => {
-    if (initialChapter) setSelectedId(initialChapter);
-  }, [initialChapter]);
-
-  useEffect(() => {
-    if (!open) return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [open, onClose]);
 
   const chapters = useMemo(() => getChapters(t), [t]);
   const chapter = chapters.find((c) => c.id === selectedId) ?? chapters[0];
@@ -693,224 +674,171 @@ export default function UserGuidePanel({ open, onClose, initialChapter }: UserGu
     );
   }, [chapters, search]);
 
-  const panel = (
-    <>
-      {open && (
-        <div
-          onClick={onClose}
-          style={{ position: "fixed", inset: 0, zIndex: 949, background: "var(--th-modal-overlay)" }}
-        />
-      )}
+  return (
+    <AppWindow
+      windowType="user-guide"
+      title={t({ ko: "AgentDesk 사용 가이드", en: "AgentDesk User Guide", ja: "AgentDeskユーザーガイド", zh: "AgentDesk用户指南" })}
+      emoji="📖"
+      defaultWidth={660}
+      defaultHeight={580}
+    >
+      {/* ── Body (sidebar + content) ── */}
+      <div style={{ display: "flex", height: "100%", overflow: "hidden" }}>
 
-      <div
-        role="dialog"
-        aria-label={t({ ko: "AgentDesk 유저 가이드", en: "AgentDesk User Guide", ja: "AgentDeskユーザーガイド", zh: "AgentDesk用户指南" })}
-        style={{
-          position: "fixed",
-          top: 44,
-          right: 0,
-          bottom: 0,
-          width: 520,
-          zIndex: 950,
-          display: "flex",
-          flexDirection: "column",
-          background: "var(--th-panel-bg)",
-          backdropFilter: "blur(24px)",
-          WebkitBackdropFilter: "blur(24px)",
-          borderLeft: "1px solid var(--th-border)",
-          transform: open ? "translateX(0)" : "translateX(520px)",
-          transition: "transform 0.28s cubic-bezier(0.32,0,0.15,1)",
-          fontFamily: mono,
-        }}
-      >
-        {/* ── Header ── */}
+        {/* ── Sidebar ── */}
         <div style={{
-          display: "flex", alignItems: "center", gap: 10,
-          padding: "0 16px", height: 44,
-          borderBottom: "1px solid var(--th-border)",
-          flexShrink: 0,
-          background: "var(--th-bg-header)",
+          width: 168, flexShrink: 0,
+          borderRight: "1px solid var(--th-border)",
+          display: "flex", flexDirection: "column",
+          background: "var(--th-bg-sidebar)",
         }}>
-          <button
-            type="button"
-            onClick={onClose}
-            style={{ width: 12, height: 12, borderRadius: "50%", background: "#ff5f57", border: "none", cursor: "pointer", flexShrink: 0 }}
-          />
-          <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#ffbd2e", flexShrink: 0 }} />
-          <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#27c93f", flexShrink: 0 }} />
+          {/* Search */}
+          <div style={{ padding: "8px 8px 6px", borderBottom: "1px solid var(--th-border)", flexShrink: 0 }}>
+            <div style={{ position: "relative" }}>
+              <svg viewBox="0 0 16 16" fill="none" stroke="var(--th-text-muted)" strokeWidth={1.5}
+                width={10} height={10}
+                style={{ position: "absolute", left: 7, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}
+              >
+                <circle cx="6.5" cy="6.5" r="4.5" /><line x1="10.5" y1="10.5" x2="14" y2="14" />
+              </svg>
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder={t({ ko: "검색...", en: "Search...", ja: "検索...", zh: "搜索..." })}
+                style={{
+                  width: "100%", boxSizing: "border-box",
+                  fontFamily: mono, fontSize: 10,
+                  padding: "5px 8px 5px 22px",
+                  background: "var(--th-hover-overlay-subtle)",
+                  border: "1px solid var(--th-border)",
+                  borderRadius: 5,
+                  color: "var(--th-text-primary)",
+                  outline: "none",
+                }}
+                onFocus={(e) => { e.currentTarget.style.borderColor = "rgba(10,132,255,0.5)"; }}
+                onBlur={(e) => { e.currentTarget.style.borderColor = "var(--th-border)"; }}
+              />
+            </div>
+          </div>
 
-          <span style={{ fontSize: 12, fontWeight: 700, color: "var(--th-text-heading)", flex: 1, marginLeft: 2 }}>
-            {t({ ko: "AgentDesk 사용 가이드", en: "AgentDesk User Guide", ja: "AgentDeskユーザーガイド", zh: "AgentDesk用户指南" })}
-          </span>
-          <kbd style={kbdStyle}>Esc</kbd>
+          {/* Chapter list */}
+          <div style={{ flex: 1, overflowY: "auto", padding: "6px 0" }}>
+            {filteredChapters.length === 0 && (
+              <div style={{ padding: "12px 14px", fontSize: 10, color: "var(--th-text-muted)", textAlign: "center" }}>
+                {t({ ko: "결과 없음", en: "No results", ja: "結果なし", zh: "无结果" })}
+              </div>
+            )}
+            {filteredChapters.map((c) => {
+              const active = c.id === selectedId;
+              return (
+                <ChapterBtn
+                  key={c.id}
+                  color={c.color}
+                  icon={c.icon}
+                  title={c.title}
+                  active={active}
+                  onClick={() => { setSelectedId(c.id); setSearch(""); }}
+                />
+              );
+            })}
+          </div>
+
+          {/* Footer version tag */}
+          <div style={{
+            padding: "6px 12px",
+            borderTop: "1px solid var(--th-border)",
+            display: "flex", alignItems: "center", gap: 6, flexShrink: 0,
+          }}>
+            <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#30d158", boxShadow: "0 0 4px #30d158" }} />
+            <span style={{ fontSize: 10, color: "var(--th-text-muted)", fontFamily: mono }}>AgentDesk v0.9</span>
+          </div>
         </div>
 
-        {/* ── Body (sidebar + content) ── */}
-        <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
-
-          {/* ── Sidebar ── */}
-          <div style={{
-            width: 168, flexShrink: 0,
-            borderRight: "1px solid var(--th-border)",
-            display: "flex", flexDirection: "column",
-            background: "var(--th-bg-sidebar)",
-          }}>
-            {/* Search */}
-            <div style={{ padding: "8px 8px 6px", borderBottom: "1px solid var(--th-border)", flexShrink: 0 }}>
-              <div style={{ position: "relative" }}>
-                <svg viewBox="0 0 16 16" fill="none" stroke="var(--th-text-muted)" strokeWidth={1.5}
-                  width={10} height={10}
-                  style={{ position: "absolute", left: 7, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }}
-                >
-                  <circle cx="6.5" cy="6.5" r="4.5" /><line x1="10.5" y1="10.5" x2="14" y2="14" />
-                </svg>
-                <input
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder={t({ ko: "검색...", en: "Search...", ja: "検索...", zh: "搜索..." })}
-                  style={{
-                    width: "100%", boxSizing: "border-box",
-                    fontFamily: mono, fontSize: 10,
-                    padding: "5px 8px 5px 22px",
-                    background: "var(--th-hover-overlay-subtle)",
-                    border: "1px solid var(--th-border)",
-                    borderRadius: 5,
-                    color: "var(--th-text-primary)",
-                    outline: "none",
-                  }}
-                  onFocus={(e) => { e.currentTarget.style.borderColor = "rgba(10,132,255,0.5)"; }}
-                  onBlur={(e) => { e.currentTarget.style.borderColor = "var(--th-border)"; }}
-                />
-              </div>
+        {/* ── Content ── */}
+        <div style={{ flex: 1, overflowY: "auto", padding: "22px 22px 40px" }}>
+          {/* Chapter heading */}
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
+            <div style={{
+              width: 32, height: 32,
+              borderRadius: 8,
+              background: `${chapter.color}18`,
+              border: `1px solid ${chapter.color}44`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 16, flexShrink: 0,
+            }}>
+              {chapter.icon}
             </div>
+            <h2 style={{
+              margin: 0, fontSize: 15, fontWeight: 700,
+              color: "var(--th-text-heading)", fontFamily: mono,
+            }}>
+              {chapter.title}
+            </h2>
+          </div>
 
-            {/* Chapter list */}
-            <div style={{ flex: 1, overflowY: "auto", padding: "6px 0" }}>
-              {filteredChapters.length === 0 && (
-                <div style={{ padding: "12px 14px", fontSize: 10, color: "var(--th-text-muted)", textAlign: "center" }}>
-                  {t({ ko: "결과 없음", en: "No results", ja: "結果なし", zh: "无结果" })}
+          {/* Sections */}
+          {chapter.sections.map((sec, si) => (
+            <div key={si} style={{ marginBottom: 28 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                <div style={{ width: 3, height: 14, borderRadius: 2, background: chapter.color, flexShrink: 0 }} />
+                <h3 style={{
+                  margin: 0, fontSize: 12, fontWeight: 600,
+                  letterSpacing: "0.01em",
+                  color: "var(--th-text-primary)", fontFamily: mono,
+                }}>
+                  {sec.heading}
+                </h3>
+              </div>
+
+              {sec.keys && sec.keys.length > 0 && (
+                <div style={{
+                  border: "1px solid var(--th-border)",
+                  borderRadius: 7, overflow: "hidden",
+                  marginBottom: sec.body ? 12 : 0,
+                }}>
+                  {sec.keys.map(({ keys, desc }, ki) => (
+                    <div key={ki} style={{
+                      display: "flex", alignItems: "center", justifyContent: "space-between",
+                      padding: "7px 12px", gap: 12,
+                      background: ki % 2 === 0 ? "transparent" : "var(--th-hover-overlay-subtle)",
+                      borderBottom: ki < (sec.keys?.length ?? 0) - 1 ? "1px solid var(--th-border)" : "none",
+                    }}>
+                      <span style={{ fontSize: 11, color: "var(--th-text-secondary)", fontFamily: mono, flex: 1, minWidth: 0 }}>{desc}</span>
+                      <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
+                        {keys.map((k, i) => (
+                          <span key={i}>
+                            <kbd style={kbdStyle}>{k}</kbd>
+                            {i < keys.length - 1 && (
+                              <span style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-muted)", margin: "0 2px" }}>+</span>
+                            )}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
-              {filteredChapters.map((c) => {
-                const active = c.id === selectedId;
-                return (
-                  <ChapterBtn
-                    key={c.id}
-                    color={c.color}
-                    icon={c.icon}
-                    title={c.title}
-                    active={active}
-                    onClick={() => { setSelectedId(c.id); setSearch(""); }}
-                  />
-                );
-              })}
+
+              {sec.features && <FeatureGrid features={sec.features} />}
+
+              {sec.body && (
+                <p style={{
+                  margin: 0, fontSize: 12, lineHeight: 1.75,
+                  color: "var(--th-text-secondary)",
+                  fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif",
+                  whiteSpace: "pre-line",
+                }}>
+                  {sec.body}
+                </p>
+              )}
+
+              {sec.callout && <CalloutBox {...sec.callout} />}
             </div>
-
-            {/* Footer version tag */}
-            <div style={{
-              padding: "6px 12px",
-              borderTop: "1px solid var(--th-border)",
-              display: "flex", alignItems: "center", gap: 6, flexShrink: 0,
-            }}>
-              <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#30d158", boxShadow: "0 0 4px #30d158" }} />
-              <span style={{ fontSize: 9, color: "var(--th-text-muted)", fontFamily: mono }}>AgentDesk v2</span>
-            </div>
-          </div>
-
-          {/* ── Content ── */}
-          <div style={{ flex: 1, overflowY: "auto", padding: "22px 22px 40px" }}>
-            {/* Chapter heading */}
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
-              <div style={{
-                width: 32, height: 32,
-                borderRadius: 8,
-                background: `${chapter.color}18`,
-                border: `1px solid ${chapter.color}44`,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: 16, flexShrink: 0,
-              }}>
-                {chapter.icon}
-              </div>
-              <h2 style={{
-                margin: 0, fontSize: 15, fontWeight: 700,
-                color: "var(--th-text-heading)", fontFamily: mono,
-              }}>
-                {chapter.title}
-              </h2>
-            </div>
-
-            {/* Sections */}
-            {chapter.sections.map((sec, si) => (
-              <div key={si} style={{ marginBottom: 28 }}>
-                {/* Section heading */}
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-                  <div style={{ width: 3, height: 14, borderRadius: 2, background: chapter.color, flexShrink: 0 }} />
-                  <h3 style={{
-                    margin: 0, fontSize: 11, fontWeight: 700,
-                    letterSpacing: "0.06em", textTransform: "uppercase",
-                    color: "var(--th-text-muted)", fontFamily: mono,
-                  }}>
-                    {sec.heading}
-                  </h3>
-                </div>
-
-                {/* Keyboard shortcut rows */}
-                {sec.keys && sec.keys.length > 0 && (
-                  <div style={{
-                    border: "1px solid var(--th-border)",
-                    borderRadius: 7, overflow: "hidden",
-                    marginBottom: sec.body ? 12 : 0,
-                  }}>
-                    {sec.keys.map(({ keys, desc }, ki) => (
-                      <div key={ki} style={{
-                        display: "flex", alignItems: "center", justifyContent: "space-between",
-                        padding: "7px 12px", gap: 12,
-                        background: ki % 2 === 0 ? "transparent" : "var(--th-hover-overlay-subtle)",
-                        borderBottom: ki < (sec.keys?.length ?? 0) - 1 ? "1px solid var(--th-border)" : "none",
-                      }}>
-                        <span style={{ fontSize: 11, color: "var(--th-text-secondary)", fontFamily: mono, flex: 1, minWidth: 0 }}>
-                          {desc}
-                        </span>
-                        <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
-                          {keys.map((k, i) => (
-                            <span key={i}>
-                              <kbd style={kbdStyle}>{k}</kbd>
-                              {i < keys.length - 1 && (
-                                <span style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-muted)", margin: "0 2px" }}>+</span>
-                              )}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* Feature grid */}
-                {sec.features && <FeatureGrid features={sec.features} />}
-
-                {/* Body text */}
-                {sec.body && (
-                  <p style={{
-                    margin: 0, fontSize: 12, lineHeight: 1.75,
-                    color: "var(--th-text-secondary)", fontFamily: mono,
-                    whiteSpace: "pre-line",
-                  }}>
-                    {sec.body}
-                  </p>
-                )}
-
-                {/* Callout box */}
-                {sec.callout && <CalloutBox {...sec.callout} />}
-              </div>
-            ))}
-          </div>
+          ))}
         </div>
       </div>
-    </>
+    </AppWindow>
   );
-
-  return createPortal(panel, document.body);
 }
 
 // ─── ChapterBtn ───────────────────────────────────────────────────────────────

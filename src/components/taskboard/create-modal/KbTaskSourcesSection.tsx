@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import type { KbSourceRef, NotionPage, ObsidianNote } from "../../../api/synapse";
 import { getNotionInfo, getObsidianInfo, searchNotionPages, searchObsidianFiles } from "../../../api/synapse";
+import { useUiStore } from "../../../store/uiStore";
 import type { TFunction } from "../constants";
 
 const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };
@@ -13,6 +14,7 @@ interface KbTaskSourcesSectionProps {
 
 export function KbTaskSourcesSection({ sources, onChange, t }: KbTaskSourcesSectionProps) {
   const [open, setOpen] = useState(false);
+  const { toggleWindow } = useUiStore();
   const [notionPages, setNotionPages] = useState<NotionPage[]>([]);
   const [obsidianFiles, setObsidianFiles] = useState<ObsidianNote[]>([]);
   const [notionConnected, setNotionConnected] = useState(false);
@@ -175,8 +177,17 @@ export function KbTaskSourcesSection({ sources, onChange, t }: KbTaskSourcesSect
               )}
 
               {!notionConnected && !obsidianConnected && (
-                <div style={{ ...mono, fontSize: "10px", color: "var(--th-text-muted)", padding: "4px 0" }}>
-                  {t({ ko: "Notion/Obsidian 연결 후 사용 가능합니다.", en: "Connect Notion/Obsidian in Settings → Synapse.", ja: "Notion/ObsidianをSynapseで接続してください。", zh: "请在设置→Synapse中连接Notion/Obsidian。" })}
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ ...mono, fontSize: "10px", color: "var(--th-text-muted)" }}>
+                    {t({ ko: "Notion/Obsidian 미연결", en: "Notion/Obsidian not connected", ja: "Notion/Obsidian未接続", zh: "未连接Notion/Obsidian" })}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => toggleWindow("synapse")}
+                    style={{ ...mono, fontSize: "9px", padding: "2px 8px", borderRadius: 0, border: "1px solid var(--th-accent)", background: "transparent", color: "var(--th-accent)", cursor: "pointer" }}
+                  >
+                    {t({ ko: "설정으로 이동 →", en: "Go to Settings →", ja: "設定へ →", zh: "前往设置 →" })}
+                  </button>
                 </div>
               )}
             </>

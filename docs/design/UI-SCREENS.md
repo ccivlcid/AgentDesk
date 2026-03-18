@@ -1,6 +1,6 @@
 # AgentDesk — UI Screens & Interaction Specification
 
-> **Last updated:** 2026-03-15 (6 macOS UX features added: Spotlight, Jiggle, QuickLook, MissionControl, Notification Slide Panel, App Menu)
+> **Last updated:** 2026-03-23 (Terminal Window: 실제 PTY 터미널 + 에이전트 셀렉트 + CLI 자동 실행으로 전면 교체)
 > Menu Bar + Desktop Icons + Widgets + Dock + App Windows structure
 > **Design reference:** `DESIGN.md` (CSS variables)
 
@@ -94,7 +94,7 @@ Click ✕ to delete the project. Press Esc or click the desktop to exit.
 | 📁 | Create Project | ProjectCreateModal |
 | ▶ | Run Task | CreateTaskModal |
 | ⚡ | Workflow Builder | Workflow window |
-| >_ | Agent REPL | REPL window |
+| >_ | Terminal | PTY Terminal window |
 
 **Project Folder Icons (deletable: true):**
 - Active project: 📂, inactive: 📁
@@ -287,38 +287,54 @@ Multiple windows can be open simultaneously. Managed via `uiStore.openWindows: S
 
 ---
 
-### 5-6. REPL Window (>_ icon)
+### 5-6. Terminal Window (>_ icon)
 
-**File:** `src/components/windows/ReplWindow.tsx`
-**Trigger:** Click desktop icon `>_`
+**File:** `src/components/windows/CliWindow.tsx`
+**Trigger:** Click desktop icon `>_`, Dock `>_` 버튼, `g e` 단축키
 
-An interactive shell for sending commands directly to an agent and receiving immediate responses, without creating a Task.
-Acts as macOS Terminal.app.
+실제 PTY(node-pty) 기반 셸 터미널. 에이전트 선택 시 해당 CLI를 자동 실행.
 
 ```
-┌─────────────────────────────────────────────────────┐
-│ ◉ ◎ ◎  Agent REPL            [▾ dev-01]   [─][×] │
-│ ──────────────────────────────────────────────────  │
-│ $ read src/auth/middleware.ts                        │
-│ > Reading file... (342 lines)                       │
-│ > Found: token expiry check missing on line 87      │
+┌──────────────────────────────────────────────────────┐
+│ ◉ ◎ ◎  Terminal                          [─][×]    │
+│ ─────────────────────────────────────────────────── │
 │                                                      │
-│ $ fix the token expiry issue                        │
-│ > Applying fix to src/auth/middleware.ts            │
-│ > Done. Modified lines 87-93.                       │
+│  Windows PowerShell / bash (실제 PTY 세션)           │
 │                                                      │
-│ > _                                                  │
-│ ──────────────────────────────────────────────────  │
-│ [Select agent: dev-01 ▾]  [input_______________] [↵] │
-└─────────────────────────────────────────────────────┘
+│  C:\project\my-app> claude                          │
+│  ╔═══════════════════════════════════════╗           │
+│  ║  Claude Code  v1.x.x                 ║           │
+│  ║  ...                                 ║           │
+│  ╚═══════════════════════════════════════╝           │
+│  >                                                   │
+│                                                      │
+│ ─────────────────────────────────────────────────── │
+│ ● [🤖 dev-01 · claude  ▾]  [▶ 실행]  📁 my-app · claude │
+└──────────────────────────────────────────────────────┘
 ```
 
-Features:
-- Agent selector dropdown (list of running agents)
-- Enter command → execute immediately → stream results
-- Command history (↑↓ keys)
-- One-shot command execution without creating a Task
-- Real-time streaming via WebSocket `cli_output`
+**하단 에이전트 셀렉트 바:**
+- 상태 dot (초록=idle / 황=working / 회색=offline)
+- `<select>` 드롭다운 — `🤖 이름 · cli명령어` 형식
+- 에이전트 선택 시 자동 실행 순서:
+  1. `cd "<project_path>"` (프로젝트 설정 시)
+  2. `cli_provider` 매핑 명령어 실행
+- ▶ 재실행 버튼 — 동일 세션에서 CLI 재기동
+- api / ollama 타입은 버튼 비활성
+
+**cli_provider → 실행 명령어:**
+| provider | command |
+|----------|---------|
+| claude | `claude` |
+| codex | `codex` |
+| gemini | `gemini` |
+| opencode | `opencode` |
+| copilot | `copilot` |
+| cursor | `cursor .` |
+| antigravity | `antigravity` |
+| api / ollama | (없음) |
+
+**프로젝트 전환:** 새 PTY 세션 자동 생성 (`cwd` = 새 프로젝트 `project_path`)
 
 ---
 

@@ -1,6 +1,90 @@
 # AgentDesk — 개발 진행 현황
 
-> 마지막 업데이트: 2026-03-22 (Phase 18 완료, Figma·Design Workflow 구현 확인)
+> 마지막 업데이트: 2026-03-23 (CLI 하이브리드 실행 전략 문서화)
+
+---
+
+## 📋 CLI 하이브리드 실행 아키텍처 (문서화 완료, 구현 예정)
+
+> 전략 문서: [`docs/strategy/cli-hybrid-execution.md`](strategy/cli-hybrid-execution.md)
+
+### 핵심 개념
+
+```
+기획 회의 (내부 엔진) → CLI 실행 (인터랙티브 PTY) → 리뷰/완료 (내부 엔진)
+```
+
+### 실행 모드 분기
+
+| cli_provider | 실행 모드 | 변경 |
+|-------------|---------|------|
+| claude / cursor / codex / gemini | CLI 인터랙티브 (PTY 터미널, 사용자가 봄) | 🆕 신규 |
+| opencode | 헤드리스 spawnCliAgent (기존 유지) | — |
+| api / ollama | 내부 엔진 launchApiProviderAgent (기존 유지) | — |
+| copilot / antigravity | 내부 엔진 launchHttpAgent (기존 유지) | — |
+
+### 구현 단계 (우선순위 순)
+
+| Phase | 내용 | 상태 |
+|-------|------|------|
+| A | PTY 출력 → 태스크 로그 연결 (터미널 보기 활성화) | 📋 예정 |
+| B | `POST /api/tasks/:id/cli-complete` 완료 감지 API 추가 | 📋 예정 |
+| C | 태스크 시작 시 CliWindow 자동 오픈 + 완료 버튼 | 📋 예정 |
+| D | CLAUDE.md / .cursorrules / GEMINI.md 컨텍스트 파일 자동 생성 | 📋 예정 |
+| E | CLI 실행 전 기획 회의 단계 추가 (선택적) | 📋 예정 |
+
+### 완료 감지 전략
+1. **API 호출** (주요): 에이전트가 CLAUDE.md 지시에 따라 `POST /api/tasks/:id/cli-complete` 호출
+2. **완료 버튼** (fallback): CliWindow 하단 버튼으로 사용자가 수동 완료 처리
+3. **PTY 종료** (비대화형 전용): 프로세스 종료 = 완료
+
+### 관련 완료 작업
+- CliWindow: providerModelConfig 연동, 자동 실행, 프로젝트 폴더 cwd ✅
+- 새 업무 창: CLI 실행 버튼, 프로젝트 에이전트 필터 ✅
+- ManualPathPickerDialog: 폴더 생성 기능 ✅
+
+---
+
+## ✅ macOS UX 편의성 고도화 (완료)
+
+| 기능 | 설명 |
+|------|------|
+| **창 z-index 포커스** | 클릭 시 해당 창이 앞으로 올라옴 (`windowFocusOrder` 배열로 관리) |
+| **창 입장 애니메이션** | `winOpen` keyframe — opacity 0→1, scale 0.96→1, 18ms |
+| **창 최소화 (노란 버튼)** | opacity/scale 트랜지션, Dock 점 색상으로 상태 표시, 클릭 복원, 타이틀바 더블클릭도 최소화 |
+| **커서 수정** | 타이틀바는 `default`, 제목 드래그 영역만 `grab` |
+| **Cmd+W / Ctrl+W** | 최상단(포커스된) 창 닫기 |
+| **Delete/Backspace** | 선택된 아이콘 삭제 (프로젝트·doc·위젯아이콘) |
+| **Enter** | 선택된 프로젝트 창 열기 |
+| **F2** | 선택된 프로젝트 이름 변경 트리거 |
+| **러버밴드 다중 선택** | 빈 바탕 드래그 → 파란 사각형으로 여러 아이콘 선택 |
+| **아이콘 선택 하이라이트** | 선택된 아이콘에 파란 테두리 + 반투명 배경 |
+
+**변경 파일**: `uiStore.ts`, `AppWindow.tsx`, `Desktop.tsx`, `DesktopIcon.tsx`, `Dock.tsx`
+
+---
+
+## ✅ Agent CLI — 실제 PTY 터미널 + 에이전트 셀렉트 (완료)
+
+> 업데이트: 2026-03-23 (실제 PTY 터미널 CliWindow 전면 교체, 에이전트 셀렉트 + CLI 자동 실행)
+
+---
+
+## ✅ Agent CLI — 실제 PTY 터미널 + 에이전트 셀렉트 (완료)
+
+`CliWindow`를 실제 PTY 기반 터미널로 전면 교체하고, 하단 에이전트 셀렉트 바 추가.
+
+| 항목 | 내용 |
+|------|------|
+| 패키지 | `node-pty ^1.1.0` (win32-x64 prebuild 포함), `@xterm/xterm ^6.0.0`, `addon-fit`, `addon-web-links` |
+| 백엔드 | `server/modules/pty/pty-manager.ts` — PTY 세션 생성·입력·리사이즈·소멸 관리 |
+| WebSocket | `server/ws/hub.ts` — `pty_create/input/resize/destroy` ↔ `pty_output/ready/exit` 처리 |
+| 프론트엔드 | `src/components/terminal/XTerminal.tsx` — xterm.js PTY 래퍼 |
+| CliWindow | `src/components/windows/CliWindow.tsx` — XTerminal + 하단 에이전트 셀렉트 바 |
+| 프로젝트 컨텍스트 | 현재 프로젝트 `project_path` → PTY `cwd` 자동 전달, 프로젝트 전환 시 새 세션 |
+| 에이전트 셀렉트 | 하단 `<select>` 드롭다운 — 에이전트 선택 시 `cd <project_path>` + CLI 명령어 자동 실행 |
+| CLI 자동 실행 | `cli_provider` 매핑: `claude`→`claude`, `codex`→`codex`, `gemini`→`gemini`, `opencode`→`opencode`, `cursor`→`cursor .` 등 |
+| 재실행 버튼 | ▶ 버튼 — 동일 세션에서 CLI 재기동 |
 
 ---
 

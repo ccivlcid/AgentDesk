@@ -24,3 +24,14 @@ export async function getAgentTimeline(agentId: string): Promise<TimelineEvent[]
   const data = await res.json();
   return Array.isArray(data) ? data : [];
 }
+
+export async function getAgentProjectPath(agentId: string): Promise<string | null> {
+  try {
+    const res = await fetch(`${BASE}/api/agents/${agentId}/project-path`);
+    if (!res.ok) return null;
+    const data = await res.json() as { ok: boolean; project_path: string | null };
+    return data.project_path ?? null;
+  } catch {
+    return null;
+  }
+}

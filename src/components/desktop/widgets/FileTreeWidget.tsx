@@ -86,6 +86,15 @@ function IconRefresh() {
   );
 }
 
+function IconNewFolder() {
+  return (
+    <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M2 7a2 2 0 0 1 2-2h4.586a1 1 0 0 1 .707.293L11 7h9a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7z" />
+      <line x1="15" y1="13" x2="15" y2="19" /><line x1="12" y1="16" x2="18" y2="16" />
+    </svg>
+  );
+}
+
 // ─── Extension colors & labels ────────────────────────────────────────────────
 
 const EXT_COLORS: Record<string, string> = {
@@ -190,6 +199,12 @@ export default function FileTreeWidget() {
   const [search, setSearch] = useState("");
   const abortRef = useRef<AbortController | null>(null);
 
+  // 폴더 생성 상태
+  const [creating, setCreating] = useState(false);
+  const [newFolderName, setNewFolderName] = useState("");
+  const [createError, setCreateError] = useState<string | null>(null);
+  const newFolderInputRef = useRef<HTMLInputElement>(null);
+
   const navigate = useCallback((targetPath: string) => {
     if (abortRef.current) abortRef.current.abort();
     const ctrl = new AbortController();
@@ -220,6 +235,47 @@ export default function FileTreeWidget() {
 
   // Initial load: Windows → drives, Unix → home
   useEffect(() => { navigate(""); }, [navigate]);
+
+  // 폴더 생성 input 자동 포커스
+  useEffect(() => {
+    if (creating) setTimeout(() => newFolderInputRef.current?.focus(), 50);
+  }, [creating]);
+
+  const handleStartCreate = () => {
+    if (!currentPath || result?.is_root) return;
+    setCreating(true);
+    setNewFolderName("");
+    setCreateError(null);
+  };
+
+  const handleConfirmCreate = async () => {
+    const name = newFolderName.trim();
+    if (!name) { setCreating(false); return; }
+    setCreateError(null);
+    try {
+      const res = await fetch("/api/fs/mkdir", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ parent_path: currentPath, name }),
+      });
+      const data = await res.json() as { ok: boolean; error?: string };
+      if (!data.ok) {
+        setCreateError(data.error === "already_exists" ? t({ ko: "이미 존재합니다", en: "Already exists", ja: "既に存在します", zh: "已存在" }) : (data.error ?? "error"));
+        return;
+      }
+      setCreating(false);
+      setNewFolderName("");
+      navigate(currentPath); // 새로고침
+    } catch {
+      setCreateError(t({ ko: "생성 실패", en: "Failed", ja: "作成失敗", zh: "创建失败" }));
+    }
+  };
+
+  const handleCancelCreate = () => {
+    setCreating(false);
+    setNewFolderName("");
+    setCreateError(null);
+  };
 
   const goUp = () => {
     if (result?.parent_path != null) navigate(result.parent_path);
@@ -259,6 +315,13 @@ export default function FileTreeWidget() {
         </NavBtn>
         <NavBtn onClick={() => navigate(currentPath)} title="새로고침">
           <IconRefresh />
+        </NavBtn>
+        <NavBtn
+          onClick={handleStartCreate}
+          disabled={!currentPath || !!result?.is_root}
+          title={t({ ko: "새 폴더", en: "New Folder", ja: "新規フォルダ", zh: "新建文件夹" })}
+        >
+          <IconNewFolder />
         </NavBtn>
 
         {/* Breadcrumbs */}
@@ -351,6 +414,52 @@ export default function FileTreeWidget() {
                 onNavigate={navigate}
               />
             ))}
+          </div>
+        )}
+
+        {/* 인라인 새 폴더 입력 */}
+        {creating && (
+          <div style={{ padding: "4px 10px", borderBottom: "1px solid var(--th-border)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{ flexShrink: 0, display: "flex", alignItems: "center", width: 16 }}>
+                <IconFolder color="#ff9f0a" />
+              </span>
+              <input
+                ref={newFolderInputRef}
+                value={newFolderName}
+                onChange={(e) => { setNewFolderName(e.target.value); setCreateError(null); }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleConfirmCreate();
+                  if (e.key === "Escape") handleCancelCreate();
+                }}
+                placeholder={t({ ko: "폴더 이름...", en: "Folder name...", ja: "フォルダ名...", zh: "文件夹名称..." })}
+                style={{
+                  flex: 1, minWidth: 0,
+                  fontFamily: mono, fontSize: 11,
+                  background: "var(--th-input-bg)",
+                  border: `1px solid ${createError ? "#ff453a" : "rgba(10,132,255,0.6)"}`,
+                  borderRadius: 4,
+                  color: "var(--th-text-primary)",
+                  padding: "3px 6px",
+                  outline: "none",
+                }}
+              />
+              <button
+                type="button"
+                onClick={handleConfirmCreate}
+                style={{ fontFamily: mono, fontSize: 10, color: "var(--th-accent)", background: "none", border: "none", cursor: "pointer", flexShrink: 0 }}
+              >✓</button>
+              <button
+                type="button"
+                onClick={handleCancelCreate}
+                style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-muted)", background: "none", border: "none", cursor: "pointer", flexShrink: 0 }}
+              >✕</button>
+            </div>
+            {createError && (
+              <div style={{ fontFamily: mono, fontSize: 9, color: "#ff453a", marginTop: 3, paddingLeft: 22 }}>
+                {createError}
+              </div>
+            )}
           </div>
         )}
 

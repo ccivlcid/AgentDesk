@@ -1,5 +1,6 @@
 import { WebSocket } from "ws";
 import logger from "../lib/logger.ts";
+import { createPtyManager } from "../modules/pty/pty-manager.ts";
 
 const MAX_CLI_CHUNK = 4096; // 4KB per chunk for large stdout lines
 
@@ -30,6 +31,9 @@ export function createWsHub(nowMs: () => number): {
       ws.send(JSON.stringify({ type, payload, ts: nowMs() }));
     }
   }
+
+  // PTY session manager — real shell sessions per client
+  const ptyManager = createPtyManager(sendRawToClient);
 
   // Batched broadcast for high-frequency streaming event types.
   // Collects payloads during a cooldown window, then flushes them all.
@@ -146,37 +150,68 @@ export function createWsHub(nowMs: () => number): {
     batches.set(type, entry);
   }
 
-  // Handle incoming client control messages for task channel subscriptions.
+  // Handle incoming client control messages for task channel subscriptions and PTY sessions.
   // Supported message types:
   //   { type: "subscribe_task",   taskId: "<id>" }  — start receiving cli_output for taskId
   //   { type: "unsubscribe_task", taskId: "<id>" }  — stop  receiving cli_output for taskId
+  //   { type: "pty_create",  id, cwd?, cols?, rows?, shell? } — spawn a new PTY session
+  //   { type: "pty_input",   id, data }             — send input to PTY
+  //   { type: "pty_resize",  id, cols, rows }        — resize PTY
+  //   { type: "pty_destroy", id }                    — kill PTY session
   function handleClientMessage(ws: WebSocket, raw: string): void {
-    let msg: { type?: string; taskId?: string };
+    let msg: Record<string, unknown>;
     try {
-      msg = JSON.parse(raw) as { type?: string; taskId?: string };
+      msg = JSON.parse(raw) as Record<string, unknown>;
     } catch {
       return; // ignore malformed messages
     }
 
-    const { type, taskId } = msg;
-    if (!type || !taskId || typeof taskId !== "string") return;
+    const type = msg.type as string | undefined;
+    if (!type) return;
 
-    if (type === "subscribe_task") {
+    // Task subscription messages
+    const taskId = msg.taskId as string | undefined;
+    if (type === "subscribe_task" && taskId) {
       if (!taskSubscriptions.has(ws)) {
         taskSubscriptions.set(ws, new Set());
       }
       taskSubscriptions.get(ws)!.add(taskId);
       logger.debug({ taskId }, "[ws] client subscribed to task cli_output");
-    } else if (type === "unsubscribe_task") {
+      return;
+    }
+    if (type === "unsubscribe_task" && taskId) {
       taskSubscriptions.get(ws)?.delete(taskId);
       logger.debug({ taskId }, "[ws] client unsubscribed from task cli_output");
+      return;
+    }
+
+    // PTY messages
+    const id = msg.id as string | undefined;
+    if (!id) return;
+
+    if (type === "pty_create") {
+      ptyManager.createSession(ws, {
+        id,
+        cwd: msg.cwd as string | undefined,
+        cols: msg.cols as number | undefined,
+        rows: msg.rows as number | undefined,
+        shell: msg.shell as string | undefined,
+      });
+      sendRawToClient(ws, "pty_ready", { id });
+    } else if (type === "pty_input") {
+      ptyManager.writeToSession(id, msg.data as string);
+    } else if (type === "pty_resize") {
+      ptyManager.resizeSession(id, msg.cols as number, msg.rows as number);
+    } else if (type === "pty_destroy") {
+      ptyManager.destroySession(id);
     }
   }
 
-  // Clean up subscription state when a client disconnects.
+  // Clean up subscription state and PTY sessions when a client disconnects.
   function removeClient(ws: WebSocket): void {
     wsClients.delete(ws);
     taskSubscriptions.delete(ws);
+    ptyManager.destroySessionsForClient(ws);
   }
 
   return { wsClients, broadcast, handleClientMessage, removeClient };

@@ -43,6 +43,10 @@ export default function MissionControl({ openWindows, widgetLayout, onClose, onF
     synapse:         { emoji: "⇄",  label: t({ ko: "시냅스",          en: "Synapse",        ja: "シナプス",         zh: "知识库" }) },
     "image-studio":  { emoji: "🖼",  label: t({ ko: "이미지 스튜디오", en: "Image Studio",   ja: "イメージスタジオ", zh: "图像工作室" }) },
     folder:          { emoji: "📁",  label: t({ ko: "폴더",            en: "Folder",         ja: "フォルダ",         zh: "文件夹" }) },
+    "create-agent":      { emoji: "👤", label: t({ ko: "신규 직원 채용",    en: "Hire Agent",     ja: "エージェント採用", zh: "招聘员工" }) },
+    "create-department": { emoji: "🏢", label: t({ ko: "신규 부서 추가",    en: "Add Department", ja: "部署追加",         zh: "添加部门" }) },
+    "library-guide":     { emoji: "📚", label: t({ ko: "라이브러리 가이드", en: "Library Guide",  ja: "ライブラリガイド", zh: "库指南" }) },
+    "user-guide":        { emoji: "📖", label: t({ ko: "사용자 가이드",     en: "User Guide",     ja: "ユーザーガイド",   zh: "用户指南" }) },
   };
 
   useEffect(() => {

@@ -3,6 +3,13 @@ import type { WindowType } from "../../app/types";
 import { useUiStore } from "../../store/uiStore";
 import TrafficLights from "../desktop/TrafficLights";
 
+const WIN_OPEN_ANIM = `
+@keyframes winOpen {
+  from { opacity: 0; transform: scale(0.96) translateY(-6px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0);    }
+}
+`;
+
 const mono = "var(--th-font-mono)";
 
 const LS_KEY = (wt: WindowType) => `agentdesk_win_${wt}`;
@@ -39,6 +46,8 @@ interface AppWindowProps {
   defaultY?: number;
   /** Override default closeWindow(windowType) behavior for the traffic-lights red button */
   onClose?: () => void;
+  /** Extra actions rendered in the title bar right side (e.g. ? help button) */
+  headerActions?: ReactNode;
 }
 
 type ResizeDir = "n" | "s" | "e" | "w" | "ne" | "nw" | "se" | "sw";
@@ -109,9 +118,14 @@ export default function AppWindow({
   defaultX,
   defaultY,
   onClose,
+  headerActions,
 }: AppWindowProps) {
-  const { closeWindow } = useUiStore();
+  const { closeWindow, windowFocusOrder, bringWindowToFront, minimizedWindows, minimizeWindow } = useUiStore();
   const handleClose = onClose ?? (() => closeWindow(windowType));
+  const handleMinimize = () => minimizeWindow(windowType);
+  const isMinimized = minimizedWindows.has(windowType);
+  const focusIdx = windowFocusOrder.indexOf(windowType);
+  const zIndex = 200 + Math.max(0, focusIdx) * 2;
   const [activeTab, setActiveTab] = useState(tabs?.[0]?.id ?? "");
 
   const fallbackX = defaultX ?? Math.max(40, (window.innerWidth - defaultWidth) / 2);
@@ -221,7 +235,10 @@ export default function AppWindow({
   });
 
   return (
+    <>
+      <style>{WIN_OPEN_ANIM}</style>
     <div
+      onMouseDown={() => bringWindowToFront(windowType)}
       style={{
         position: "fixed",
         left: pos.x,
@@ -236,13 +253,19 @@ export default function AppWindow({
         display: "flex",
         flexDirection: "column",
         overflow: "hidden",
-        zIndex: 200,
+        zIndex,
         boxShadow: "0 20px 60px var(--th-glass-shadow), 0 0 0 0.5px var(--th-glass-border) inset",
+        opacity: isMinimized ? 0 : 1,
+        transform: isMinimized ? "scale(0.88) translateY(12px)" : "scale(1)",
+        pointerEvents: isMinimized ? "none" : "all",
+        transition: "opacity 0.2s ease, transform 0.2s ease",
+        animation: "winOpen 0.18s ease",
       }}
     >
       {/* ── macOS unified titlebar ── */}
       <div
         onMouseDown={onTitlebarMouseDown}
+        onDoubleClick={handleMinimize}
         style={{
           position: "relative",
           display: "flex",
@@ -251,23 +274,30 @@ export default function AppWindow({
           padding: "0 14px",
           background: "var(--th-glass-bg)",
           borderBottom: "1px solid var(--th-border)",
-          cursor: "grab",
+          cursor: "default",
           flexShrink: 0,
           userSelect: "none",
         }}
       >
         {/* Traffic lights — absolute left */}
         <div style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", zIndex: 2 }}>
-          <TrafficLights onClose={handleClose} onMaximize={handleMaximize} />
+          <TrafficLights onClose={handleClose} onMinimize={handleMinimize} onMaximize={handleMaximize} />
         </div>
 
-        {/* Title — centered */}
-        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, pointerEvents: "none" }}>
+        {/* Title — centered (drag area) */}
+        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, pointerEvents: "none", cursor: "grab" }}>
           <span style={{ display: "flex", alignItems: "center", fontSize: 13 }}>{emoji}</span>
           <span style={{ fontFamily: mono, fontSize: 12, fontWeight: 600, color: "var(--th-text-heading)", letterSpacing: "0.01em" }}>
             {title}
           </span>
         </div>
+
+        {/* Right side actions */}
+        {headerActions && (
+          <div style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", zIndex: 2, display: "flex", alignItems: "center", gap: 4 }}>
+            {headerActions}
+          </div>
+        )}
       </div>
 
       {/* ── Tab bar (탭이 있을 때만) ── */}
@@ -340,5 +370,6 @@ export default function AppWindow({
       <div onMouseDown={onResizeMouseDown("w")} style={edgeStyle("w", { top: CORN, bottom: CORN, left: 0, width: EDGE })} />
       <div onMouseDown={onResizeMouseDown("e")} style={edgeStyle("e", { top: CORN, bottom: CORN, right: 0, width: EDGE })} />
     </div>
+    </>
   );
 }

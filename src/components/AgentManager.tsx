@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type DragEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent } from "react";
 import type { Agent, Department, Persona } from "../types";
 import { useI18n } from "../i18n";
 import * as api from "../api";
@@ -88,9 +88,13 @@ export default function AgentManager({
     setShowModal(true);
   }, [deptTab, departments]);
 
-  // Dock "새 에이전트" 버튼: createTrigger가 증가할 때마다 채용 모달 즉시 열기
+  // Dock "새 에이전트" 버튼: createTrigger가 마운트 시점보다 증가할 때만 채용 모달 열기
+  const prevTriggerRef = useRef(createTrigger ?? 0);
   useEffect(() => {
-    if (createTrigger && createTrigger > 0) openCreate();
+    if (createTrigger && createTrigger > prevTriggerRef.current) {
+      prevTriggerRef.current = createTrigger;
+      openCreate();
+    }
   }, [createTrigger]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const openEdit = useCallback(
@@ -515,6 +519,7 @@ export default function AgentManager({
           saveError={saveError}
           onSave={handleSave}
           onClose={closeModal}
+          asWindow={true}
         />
       )}
 

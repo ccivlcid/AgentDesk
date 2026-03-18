@@ -283,7 +283,7 @@ export default function App() {
           onClose={() => setShowCreateTaskAfterCreate(false)}
         >
           <CreateTaskModal
-            agents={agents}
+            agents={projectAgents}
             departments={departments}
             onClose={() => setShowCreateTaskAfterCreate(false)}
             onCreate={(input) => {
@@ -309,7 +309,7 @@ export default function App() {
           onClose={() => setShowCreateTask(false)}
         >
           <CreateTaskModal
-            agents={agents}
+            agents={projectAgents}
             departments={departments}
             onClose={() => setShowCreateTask(false)}
             onCreate={(input) => {

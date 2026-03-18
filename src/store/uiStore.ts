@@ -110,6 +110,13 @@ interface UiStore {
   jiggleMode: boolean;
   missionControlOpen: boolean;
 
+  // ── 창 포커스 / 최소화 ────────────────────────────────────────────
+  windowFocusOrder: WindowType[];
+  minimizedWindows: Set<WindowType>;
+  bringWindowToFront: (w: WindowType) => void;
+  minimizeWindow: (w: WindowType) => void;
+  restoreWindow: (w: WindowType) => void;
+
   setSelectedAgentId: (id: string | null) => void;
   setOpenTaskId: (id: string | null) => void;
   setWallpaper: (css: string) => void;
@@ -120,6 +127,10 @@ interface UiStore {
   cliInitialAgentId: string | null;
   openCli: (agentId?: string) => void;
   clearCliInitialAgentId: () => void;
+  // 에이전트별 독립 CLI 창 (agentId → 각자 별도 CliWindow)
+  openCliAgentIds: Set<string>;
+  openCliWindow: (agentId: string) => void;
+  closeCliWindow: (agentId: string) => void;
 
   // ── Project Folders ───────────────────────────────────────────────
   openFolders: Set<string>;
@@ -177,13 +188,22 @@ export const useUiStore = create<UiStore>()((set) => ({
   cliInitialAgentId: null,
   openSettings: (tab) => set((s) => ({
     openWindows: new Set([...s.openWindows, "settings" as WindowType]),
+    windowFocusOrder: [...s.windowFocusOrder.filter((x) => x !== "settings"), "settings"],
     settingsInitialTab: tab ?? null,
   })),
   openCli: (agentId) => set((s) => ({
     openWindows: new Set([...s.openWindows, "cli" as WindowType]),
+    windowFocusOrder: [...s.windowFocusOrder.filter((x) => x !== "cli"), "cli"],
     cliInitialAgentId: agentId ?? null,
   })),
   clearCliInitialAgentId: () => set({ cliInitialAgentId: null }),
+  openCliAgentIds: new Set<string>(),
+  openCliWindow: (agentId) => set((s) => ({ openCliAgentIds: new Set([...s.openCliAgentIds, agentId]) })),
+  closeCliWindow: (agentId) => set((s) => {
+    const next = new Set(s.openCliAgentIds);
+    next.delete(agentId);
+    return { openCliAgentIds: next };
+  }),
   widgetLayout: loadWidgetLayout(),
   desktopIconLayout: loadDesktopIconLayout(),
   desktopIconLabels: loadDesktopIconLabels(),
@@ -194,14 +214,27 @@ export const useUiStore = create<UiStore>()((set) => ({
 
   toggleWindow: (w) => set((s) => {
     const next = new Set(s.openWindows);
-    if (next.has(w)) next.delete(w); else next.add(w);
-    return { openWindows: next };
+    let focusOrder = [...s.windowFocusOrder];
+    if (next.has(w)) {
+      next.delete(w);
+      focusOrder = focusOrder.filter((x) => x !== w);
+      const minimized = new Set(s.minimizedWindows); minimized.delete(w);
+      return { openWindows: next, windowFocusOrder: focusOrder, minimizedWindows: minimized };
+    } else {
+      next.add(w);
+      focusOrder = [...focusOrder.filter((x) => x !== w), w];
+      return { openWindows: next, windowFocusOrder: focusOrder };
+    }
   }),
-  openWindow: (w) => set((s) => ({ openWindows: new Set([...s.openWindows, w]) })),
+  openWindow: (w) => set((s) => {
+    const focusOrder = [...s.windowFocusOrder.filter((x) => x !== w), w];
+    return { openWindows: new Set([...s.openWindows, w]), windowFocusOrder: focusOrder };
+  }),
   closeWindow: (w) => set((s) => {
     const next = new Set(s.openWindows);
     next.delete(w);
-    return { openWindows: next };
+    const minimized = new Set(s.minimizedWindows); minimized.delete(w);
+    return { openWindows: next, minimizedWindows: minimized, windowFocusOrder: s.windowFocusOrder.filter((x) => x !== w) };
   }),
   setWidgetLayout: (layout) => { saveWidgetLayout(layout); set({ widgetLayout: layout }); },
   addWidget: (id) => set((s) => {
@@ -247,6 +280,8 @@ export const useUiStore = create<UiStore>()((set) => ({
 
   jiggleMode: false,
   missionControlOpen: false,
+  windowFocusOrder: [],
+  minimizedWindows: new Set<WindowType>(),
 
   widgetIcons: loadWidgetIcons(),
   addWidgetIcon: (id) => set((s) => {
@@ -279,6 +314,16 @@ export const useUiStore = create<UiStore>()((set) => ({
   setWallpaper: (css) => { saveWallpaper(css); set({ wallpaper: css }); },
   setJiggleMode: (v) => set({ jiggleMode: v }),
   setMissionControlOpen: (v) => set({ missionControlOpen: v }),
+  bringWindowToFront: (w) => set((s) => ({
+    windowFocusOrder: [...s.windowFocusOrder.filter((x) => x !== w), w],
+  })),
+  minimizeWindow: (w) => set((s) => ({
+    minimizedWindows: new Set([...s.minimizedWindows, w]),
+  })),
+  restoreWindow: (w) => set((s) => {
+    const minimized = new Set(s.minimizedWindows); minimized.delete(w);
+    return { minimizedWindows: minimized, windowFocusOrder: [...s.windowFocusOrder.filter((x) => x !== w), w] };
+  }),
 
   // ── 기존 초기값 ───────────────────────────────────────────────────
   view: "dashboard",

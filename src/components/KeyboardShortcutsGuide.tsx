@@ -28,43 +28,55 @@ export default function KeyboardShortcutsGuide({ open, onClose }: KeyboardShortc
 
   const sections = [
     {
-      title: t({ ko: "전역 단축키", en: "Global Shortcuts", ja: "グローバルショートカット", zh: "全局快捷键" }),
+      title: t({ ko: "전역", en: "Global", ja: "グローバル", zh: "全局" }),
       rows: [
-        { keys: ["Ctrl", "Shift", "K"], desc: t({ ko: "커맨드 팔레트 열기", en: "Open command palette", ja: "コマンドパレットを開く", zh: "打开命令面板" }) },
-        { keys: ["?"], desc: t({ ko: "이 단축키 가이드", en: "Show this shortcuts guide", ja: "このショートカットガイド", zh: "显示快捷键指南" }) },
+        { keys: ["Ctrl", "Shift", "K"], desc: t({ ko: "커맨드 팔레트", en: "Command Palette", ja: "コマンドパレット", zh: "命令面板" }) },
+        { keys: ["Ctrl", "↑"], desc: t({ ko: "Mission Control", en: "Mission Control", ja: "ミッションコントロール", zh: "Mission Control" }) },
+        { keys: ["?"], desc: t({ ko: "단축키 가이드", en: "Shortcuts guide", ja: "ショートカットガイド", zh: "快捷键指南" }) },
       ],
     },
     {
-      title: t({ ko: "g + 키 앱 창 토글 (vim 스타일)", en: "g + key Window Toggle (vim-style)", ja: "g + キーウィンドウ切替（vim スタイル）", zh: "g 前缀窗口切换（vim 风格）" }),
+      title: t({ ko: "창 관리", en: "Window Management", ja: "ウィンドウ管理", zh: "窗口管理" }),
       rows: [
-        { keys: ["g", "w"], desc: t({ ko: "Workflow 창 토글", en: "Toggle Workflow window", ja: "Workflowウィンドウ切替", zh: "切换 Workflow 窗口" }) },
-        { keys: ["g", "l"], desc: t({ ko: "Library 창 토글", en: "Toggle Library window", ja: "Libraryウィンドウ切替", zh: "切换 Library 窗口" }) },
-        { keys: ["g", "s"], desc: t({ ko: "Settings 창 토글", en: "Toggle Settings window", ja: "Settingsウィンドウ切替", zh: "切换 Settings 窗口" }) },
-        { keys: ["g", "c"], desc: t({ ko: "Chat 창 토글", en: "Toggle Chat window", ja: "Chatウィンドウ切替", zh: "切换 Chat 窗口" }) },
-        { keys: ["g", "a"], desc: t({ ko: "에이전트 설정 창 토글", en: "Toggle Agent Manager window", ja: "エージェント設定切替", zh: "切换代理管理窗口" }) },
-        { keys: ["g", "e"], desc: t({ ko: "Agent CLI 창 토글", en: "Toggle Agent CLI window", ja: "Agent CLI切替", zh: "切换 Agent CLI 窗口" }) },
-        { keys: ["g", "i"], desc: t({ ko: "Image Studio 창 토글", en: "Toggle Image Studio window", ja: "Image Studio切替", zh: "切换图像工作室窗口" }) },
+        { keys: ["Ctrl", "W"], desc: t({ ko: "현재 창 닫기", en: "Close focused window", ja: "ウィンドウを閉じる", zh: "关闭当前窗口" }) },
+        { keys: ["—"], desc: t({ ko: "노란 버튼 — 최소화 / 타이틀바 더블클릭", en: "Yellow button or double-click titlebar — Minimize", ja: "黄ボタン or タイトルバーダブルクリック — 最小化", zh: "黄色按钮 或 双击标题栏 — 最小化" }) },
+        { keys: ["—"], desc: t({ ko: "초록 버튼 — 최대화 / 복원", en: "Green button — Maximize / Restore", ja: "緑ボタン — 最大化 / 復元", zh: "绿色按钮 — 最大化 / 还原" }) },
+      ],
+    },
+    {
+      title: t({ ko: "바탕화면 아이콘", en: "Desktop Icons", ja: "デスクトップアイコン", zh: "桌面图标" }),
+      rows: [
+        { keys: ["클릭"], desc: t({ ko: "아이콘 선택", en: "Select icon", ja: "アイコンを選択", zh: "选择图标" }) },
+        { keys: ["드래그"], desc: t({ ko: "러버밴드 다중 선택", en: "Rubber band multi-select", ja: "ラバーバンド複数選択", zh: "框选多个图标" }) },
+        { keys: ["Enter"], desc: t({ ko: "선택된 프로젝트 열기", en: "Open selected project", ja: "選択プロジェクトを開く", zh: "打开选中项目" }) },
+        { keys: ["Delete"], desc: t({ ko: "선택된 아이콘 삭제", en: "Delete selected icon(s)", ja: "選択アイコンを削除", zh: "删除选中图标" }) },
+        { keys: ["F2"], desc: t({ ko: "선택된 아이콘 이름 변경", en: "Rename selected icon", ja: "選択アイコンの名前変更", zh: "重命名选中图标" }) },
+        { keys: ["Space"], desc: t({ ko: "Quick Look (프로젝트 미리보기)", en: "Quick Look preview", ja: "クイックルック", zh: "快速预览" }) },
+        { keys: ["더블클릭"], desc: t({ ko: "아이콘 이름 변경", en: "Rename icon", ja: "アイコン名変更", zh: "重命名图标" }) },
+        { keys: ["600ms 꾹"], desc: t({ ko: "Jiggle Mode — 아이콘 삭제 모드", en: "Jiggle Mode — delete mode", ja: "Jiggleモード", zh: "Jiggle模式（删除模式）" }) },
+        { keys: ["Esc"], desc: t({ ko: "Jiggle Mode 해제", en: "Exit Jiggle Mode", ja: "Jiggleモード解除", zh: "退出Jiggle模式" }) },
+      ],
+    },
+    {
+      title: t({ ko: "앱 창 열기 (g + 키)", en: "Open Windows (g + key)", ja: "ウィンドウを開く (g + キー)", zh: "打开窗口 (g + 键)" }),
+      rows: [
+        { keys: ["g", "w"], desc: "Workflow" },
+        { keys: ["g", "l"], desc: "Library" },
+        { keys: ["g", "s"], desc: "Settings" },
+        { keys: ["g", "c"], desc: "Chat" },
+        { keys: ["g", "a"], desc: t({ ko: "에이전트 설정", en: "Agent Manager", ja: "エージェント設定", zh: "代理管理" }) },
+        { keys: ["g", "e"], desc: "Agent CLI" },
+        { keys: ["g", "i"], desc: "Image Studio" },
       ],
     },
     {
       title: t({ ko: "커맨드 팔레트 내", en: "In Command Palette", ja: "コマンドパレット内", zh: "命令面板内" }),
       rows: [
-        { keys: ["↑", "↓"], desc: t({ ko: "항목 이동", en: "Navigate items", ja: "項目移動", zh: "导航项目" }) },
-        { keys: ["↵"], desc: t({ ko: "선택 / 실행", en: "Select / Execute", ja: "選択 / 実行", zh: "选择 / 执行" }) },
+        { keys: ["↑", "↓"], desc: t({ ko: "항목 이동", en: "Navigate items", ja: "項目移動", zh: "导航" }) },
+        { keys: ["↵"], desc: t({ ko: "실행", en: "Execute", ja: "実行", zh: "执行" }) },
+        { keys: ["N"], desc: t({ ko: "새 태스크", en: "New Task", ja: "新規タスク", zh: "新任务" }) },
+        { keys: [","], desc: t({ ko: "설정 열기", en: "Open Settings", ja: "設定を開く", zh: "打开设置" }) },
         { keys: ["Esc"], desc: t({ ko: "닫기", en: "Close", ja: "閉じる", zh: "关闭" }) },
-        { keys: ["N"], desc: t({ ko: "(빈 검색) 새 태스크", en: "(empty) New Task", ja: "(空) 新しいタスク", zh: "(空) 新建任务" }) },
-        { keys: ["D"], desc: t({ ko: "(빈 검색) 대시보드", en: "(empty) Dashboard", ja: "(空) ダッシュボード", zh: "(空) 仪表板" }) },
-        { keys: ["T"], desc: t({ ko: "(빈 검색) 태스크 보드", en: "(empty) Task Board", ja: "(空) タスクボード", zh: "(空) 任务板" }) },
-        { keys: ["A"], desc: t({ ko: "(빈 검색) 에이전트", en: "(empty) Agents", ja: "(空) エージェント", zh: "(空) 代理" }) },
-        { keys: ["S"], desc: t({ ko: "(빈 검색) 스킬", en: "(empty) Skills", ja: "(空) スキル", zh: "(空) 技能" }) },
-        { keys: ["M"], desc: t({ ko: "(빈 검색) 메모리", en: "(empty) Memory", ja: "(空) メモリー", zh: "(空) 记忆" }) },
-        { keys: [","], desc: t({ ko: "(빈 검색) 설정", en: "(empty) Settings", ja: "(空) 設定", zh: "(空) 设置" }) },
-      ],
-    },
-    {
-      title: t({ ko: "태스크 보드", en: "Task Board", ja: "タスクボード", zh: "任务板" }),
-      rows: [
-        { keys: ["Esc"], desc: t({ ko: "모달 / 팝업 닫기", en: "Close modal / popup", ja: "モーダルを閉じる", zh: "关闭模态框" }) },
       ],
     },
   ];
@@ -137,7 +149,7 @@ export default function KeyboardShortcutsGuide({ open, onClose }: KeyboardShortc
         <div style={{ overflowY: "auto", flex: 1 }}>
           {sections.map((section) => (
             <div key={section.title} style={{ padding: "12px 0" }}>
-              <div style={{ ...mono, fontSize: "9px", fontWeight: 700, letterSpacing: "0.1em", color: muted, padding: "0 18px 8px", textTransform: "uppercase" }}>
+              <div style={{ ...mono, fontSize: "10px", fontWeight: 700, letterSpacing: "0.08em", color: muted, padding: "0 18px 8px", textTransform: "uppercase" }}>
                 {section.title}
               </div>
               {section.rows.map(({ keys, desc }) => (
@@ -162,7 +174,7 @@ export default function KeyboardShortcutsGuide({ open, onClose }: KeyboardShortc
                           color: "var(--th-text-secondary)",
                           background: "var(--th-bg-base)",
                           border: `1px solid ${border}`,
-                          borderRadius: 4,
+                          borderRadius: 5,
                           padding: "2px 6px",
                           boxShadow: "0 1px 0 var(--th-border)",
                           display: "inline-block",

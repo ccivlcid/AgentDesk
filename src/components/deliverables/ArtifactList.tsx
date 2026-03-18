@@ -145,7 +145,7 @@ export default function ArtifactList({ taskId, artifacts, onPreview }: ArtifactL
                     onMouseEnter={(e) => { e.currentTarget.style.color = "var(--th-accent)"; }}
                     onMouseLeave={(e) => { e.currentTarget.style.color = "var(--th-text-muted)"; }}
                   >
-                    VIEW
+                    {t({ ko: "보기", en: "VIEW", ja: "表示", zh: "查看" })}
                   </button>
                 )}
                 {isHtml && (
@@ -155,7 +155,7 @@ export default function ArtifactList({ taskId, artifacts, onPreview }: ArtifactL
                     rel="noreferrer"
                     style={{ ...mono, fontSize: "9px", fontWeight: 700, padding: "0 10px", minHeight: 38, display: "flex", alignItems: "center", background: "rgba(167,139,250,0.08)", borderRight: "1px solid var(--th-border)", color: "rgb(196,181,253)", textDecoration: "none", letterSpacing: "0.04em" }}
                   >
-                    OPEN
+                    {t({ ko: "열기", en: "OPEN", ja: "開く", zh: "打开" })}
                   </a>
                 )}
                 <a
@@ -166,7 +166,7 @@ export default function ArtifactList({ taskId, artifacts, onPreview }: ArtifactL
                   onMouseLeave={(e) => { e.currentTarget.style.color = "var(--th-text-muted)"; }}
                   title={t({ ko: "다운로드", en: "Download", ja: "ダウンロード", zh: "下载" })}
                 >
-                  ↓ DL
+                  ↓ {t({ ko: "DL", en: "DL", ja: "DL", zh: "下载" })}
                 </a>
               </div>
             </div>

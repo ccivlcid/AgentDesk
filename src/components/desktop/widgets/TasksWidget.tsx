@@ -48,7 +48,7 @@ export default function TasksWidget() {
         padding: "6px 10px",
         borderBottom: "1px solid var(--th-border)",
         fontFamily: mono,
-        fontSize: 10,
+        fontSize: 11,
         color: "var(--th-text-muted)",
         flexShrink: 0,
       }}>
@@ -78,8 +78,18 @@ export default function TasksWidget() {
                 cursor: "pointer",
                 transition: "background 0.1s",
               }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.background = "var(--th-hover-overlay-subtle)"; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.background = "none"; }}
+              onMouseEnter={(e) => {
+                const el = e.currentTarget as HTMLDivElement;
+                el.style.background = "var(--th-hover-overlay-subtle)";
+                const btn = el.querySelector<HTMLButtonElement>(".min-btn");
+                if (btn) btn.style.opacity = "1";
+              }}
+              onMouseLeave={(e) => {
+                const el = e.currentTarget as HTMLDivElement;
+                el.style.background = "none";
+                const btn = el.querySelector<HTMLButtonElement>(".min-btn");
+                if (btn) btn.style.opacity = "0";
+              }}
             >
               <span style={{ fontFamily: mono, fontSize: 13, color: STATUS_COLOR[task.status] ?? "var(--th-text-muted)", lineHeight: 1.4 }}>
                 {STATUS_LABEL[task.status] ?? "○"}
@@ -89,31 +99,32 @@ export default function TasksWidget() {
                   {task.title}
                 </div>
                 {task.assigned_agent && (
-                  <div style={{ fontFamily: mono, fontSize: 9, color: "var(--th-text-muted)" }}>
-                    → {task.assigned_agent.name_ko || task.assigned_agent.name}
+                  <div style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-muted)" }}>
+                    {task.assigned_agent.name_ko || task.assigned_agent.name}
                   </div>
                 )}
               </div>
-              <span style={{ fontFamily: mono, fontSize: 9, color: STATUS_COLOR[task.status] ?? "var(--th-text-muted)", flexShrink: 0 }}>
+              <span style={{ fontFamily: mono, fontSize: 10, color: STATUS_COLOR[task.status] ?? "var(--th-text-muted)", flexShrink: 0 }}>
                 {STATUS_TEXT[task.status] ?? task.status}
               </span>
               <button
                 onClick={(e) => { e.stopPropagation(); setTaskPanel({ taskId: task.id, tab: "minutes" }); }}
                 title={t({ ko: "회의록 보기", en: "View meeting minutes", ja: "会議録", zh: "会议纪要" })}
+                className="min-btn"
                 style={{
                   flexShrink: 0,
                   background: "none",
                   border: "1px solid var(--th-border)",
-                  borderRadius: 3,
-                  padding: "1px 5px",
+                  borderRadius: 4,
+                  padding: "2px 6px",
                   cursor: "pointer",
                   fontFamily: mono,
-                  fontSize: 9,
+                  fontSize: 10,
                   color: "var(--th-text-muted)",
                   lineHeight: 1.4,
+                  opacity: 0,
+                  transition: "opacity 0.15s",
                 }}
-                onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "var(--th-text)"; (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--th-text-muted)"; }}
-                onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.color = "var(--th-text-muted)"; (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--th-border)"; }}
               >
                 {t({ ko: "회의록", en: "min", ja: "議事録", zh: "纪要" })}
               </button>

@@ -53,8 +53,7 @@ export default function GettingStartedGuidePanel() {
           <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#ffbd2e" }} />
           <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#27c93f" }} />
         </div>
-        <span style={{ color: "var(--th-accent)", fontWeight: 700, fontSize: "11px" }}>$</span>
-        <span style={{ fontSize: "11px", color: "var(--th-text-secondary)" }}>cat getting-started.md</span>
+        <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--th-text-heading)" }}>{t(entry.title)}</span>
         <span
           style={{
             marginLeft: "auto",
@@ -105,16 +104,21 @@ export default function GettingStartedGuidePanel() {
         >
           {stepsLabel}
         </div>
-        <ol
-          style={{
-            margin: 0,
-            paddingLeft: "20px",
-            listStyle: "decimal",
-          }}
-        >
+        <ol style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 8 }}>
           {entry.tips.map((tip, i) => (
-            <li key={i} style={{ marginBottom: 10 }}>
-              {t(tip)}
+            <li key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+              <span style={{
+                flexShrink: 0,
+                width: 20, height: 20,
+                borderRadius: "50%",
+                background: "var(--th-accent)",
+                color: "#000",
+                fontWeight: 700,
+                fontSize: 10,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                marginTop: 1,
+              }}>{i + 1}</span>
+              <span style={{ fontSize: 12, lineHeight: 1.55, color: "var(--th-text-secondary)" }}>{t(tip)}</span>
             </li>
           ))}
         </ol>

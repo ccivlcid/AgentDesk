@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import type { NotificationItem } from "../api/notifications";
 import {
   fetchNotifications,
@@ -395,59 +396,12 @@ export default function NotificationCenter({ on, onNavigateTask, onOpenDecisionI
 
   const readCount = items.filter((i) => i.read).length;
 
-  return (
+  const portalContent = (
     <>
-      {/* ── Bell button ── */}
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        style={{
-          position: "relative",
-          display: "inline-flex", alignItems: "center", justifyContent: "center",
-          height: 32, minWidth: 32, padding: "0 8px",
-          background: open ? "var(--th-hover-overlay)" : "transparent",
-          border: `1px solid ${open ? "var(--th-border)" : "transparent"}`,
-          borderRadius: 8,
-          color: unreadCount > 0 ? "var(--th-accent)" : "var(--th-text-secondary)",
-          cursor: "pointer",
-          transition: "background 0.12s, border-color 0.12s, color 0.12s",
-        }}
-        onMouseEnter={(e) => {
-          if (!open) {
-            e.currentTarget.style.background = "var(--th-hover-overlay)";
-            e.currentTarget.style.borderColor = "var(--th-border)";
-          }
-        }}
-        onMouseLeave={(e) => {
-          if (!open) {
-            e.currentTarget.style.background = "transparent";
-            e.currentTarget.style.borderColor = "transparent";
-          }
-        }}
-        aria-label="알림"
-      >
-        <IconBell size={16} />
-        {unreadCount > 0 && (
-          <span style={{
-            position: "absolute", top: -2, right: -2,
-            minWidth: 16, height: 16,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            borderRadius: 8, padding: "0 4px",
-            background: "#ff453a",
-            fontSize: 9, fontWeight: 700, color: "#fff",
-            fontFamily: mono,
-            lineHeight: 1,
-            boxShadow: "0 0 0 2px var(--th-bg-primary)",
-          }}>
-            {unreadCount > 99 ? "99+" : unreadCount}
-          </span>
-        )}
-      </button>
-
       {/* ── Backdrop ── */}
       {open && (
         <div
-          style={{ position: "fixed", inset: 0, zIndex: 399, background: "rgba(0,0,0,0.25)" }}
+          style={{ position: "fixed", inset: 0, zIndex: 949, background: "rgba(0,0,0,0.25)" }}
           onClick={() => setOpen(false)}
         />
       )}
@@ -456,8 +410,8 @@ export default function NotificationCenter({ on, onNavigateTask, onOpenDecisionI
       <div
         ref={panelRef}
         style={{
-          position: "fixed", top: 44, right: 0, width: 340, bottom: 80,
-          zIndex: 400,
+          position: "fixed", top: 44, right: 0, width: 340, bottom: 48,
+          zIndex: 950,
           background: "var(--th-bg-surface)",
           backdropFilter: "blur(28px) saturate(160%)",
           WebkitBackdropFilter: "blur(28px) saturate(160%)",
@@ -718,6 +672,60 @@ export default function NotificationCenter({ on, onNavigateTask, onOpenDecisionI
           </div>
         )}
       </div>
+    </>
+  );
+
+  return (
+    <>
+      {/* ── Bell button (MenuBar 안에 렌더) ── */}
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        style={{
+          position: "relative",
+          display: "inline-flex", alignItems: "center", justifyContent: "center",
+          height: 32, minWidth: 32, padding: "0 8px",
+          background: open ? "var(--th-hover-overlay)" : "transparent",
+          border: `1px solid ${open ? "var(--th-border)" : "transparent"}`,
+          borderRadius: 8,
+          color: unreadCount > 0 ? "var(--th-accent)" : "var(--th-text-secondary)",
+          cursor: "pointer",
+          transition: "background 0.12s, border-color 0.12s, color 0.12s",
+        }}
+        onMouseEnter={(e) => {
+          if (!open) {
+            e.currentTarget.style.background = "var(--th-hover-overlay)";
+            e.currentTarget.style.borderColor = "var(--th-border)";
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (!open) {
+            e.currentTarget.style.background = "transparent";
+            e.currentTarget.style.borderColor = "transparent";
+          }
+        }}
+        aria-label="알림"
+      >
+        <IconBell size={16} />
+        {unreadCount > 0 && (
+          <span style={{
+            position: "absolute", top: -2, right: -2,
+            minWidth: 16, height: 16,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            borderRadius: 8, padding: "0 4px",
+            background: "#ff453a",
+            fontSize: 9, fontWeight: 700, color: "#fff",
+            fontFamily: mono,
+            lineHeight: 1,
+            boxShadow: "0 0 0 2px var(--th-bg-primary)",
+          }}>
+            {unreadCount > 99 ? "99+" : unreadCount}
+          </span>
+        )}
+      </button>
+
+      {/* ── Backdrop + Panel: document.body에 portal로 마운트 ── */}
+      {createPortal(portalContent, document.body)}
     </>
   );
 }

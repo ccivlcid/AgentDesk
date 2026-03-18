@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { getFigmaInfo } from "../../../api/synapse";
+import { useUiStore } from "../../../store/uiStore";
 import type { TFunction } from "../constants";
 
 interface FigmaUrlSectionProps {
@@ -20,6 +22,12 @@ function isValidFigmaUrl(url: string): boolean {
 
 export function FigmaUrlSection({ figmaUrl, onChange, t }: FigmaUrlSectionProps) {
   const [open, setOpen] = useState(false);
+  const [connected, setConnected] = useState<boolean | null>(null);
+  const { toggleWindow } = useUiStore();
+
+  useEffect(() => {
+    getFigmaInfo().then((info) => setConnected(info.connected)).catch(() => setConnected(false));
+  }, []);
 
   const fileKey = figmaUrl ? parseFigmaFileKey(figmaUrl) : null;
   const isValid = figmaUrl ? isValidFigmaUrl(figmaUrl) : false;
@@ -74,51 +82,58 @@ export function FigmaUrlSection({ figmaUrl, onChange, t }: FigmaUrlSectionProps)
 
       {open && (
         <div style={{ paddingBottom: 10 }}>
-          <input
-            type="url"
-            placeholder="https://www.figma.com/design/..."
-            value={figmaUrl}
-            onChange={(e) => onChange(e.target.value)}
-            style={{
-              ...mono,
-              width: "100%", fontSize: "10px",
-              padding: "5px 8px",
-              background: "var(--th-bg-elevated)",
-              border: `1px solid ${figmaUrl && !isValid ? "#ff453a" : "var(--th-border)"}`,
-              borderRadius: 0,
-              color: "var(--th-text-primary)",
-              outline: "none",
-              boxSizing: "border-box",
-            }}
-          />
-          {/* 파싱 결과 미리보기 */}
-          {figmaUrl && isValid && fileKey && (
-            <div style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", marginTop: 4 }}>
-              ✓ file: {fileKey}
+          {connected === false ? (
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ ...mono, fontSize: "10px", color: "var(--th-text-muted)" }}>
+                {t({ ko: "Figma 연결이 필요합니다", en: "Figma not connected", ja: "Figma未接続", zh: "未连接Figma" })}
+              </span>
+              <button
+                type="button"
+                onClick={() => toggleWindow("synapse")}
+                style={{ ...mono, fontSize: "9px", padding: "2px 8px", borderRadius: 0, border: "1px solid var(--th-accent)", background: "transparent", color: "var(--th-accent)", cursor: "pointer" }}
+              >
+                {t({ ko: "설정으로 이동 →", en: "Go to Settings →", ja: "設定へ →", zh: "前往设置 →" })}
+              </button>
             </div>
-          )}
-          {/* 잘못된 URL 경고 */}
-          {figmaUrl && !isValid && (
-            <div style={{ ...mono, fontSize: "9px", color: "#ff453a", marginTop: 4 }}>
-              {t({ ko: "올바른 Figma URL이 아닙니다", en: "Not a valid Figma URL", ja: "有効なFigma URLではありません", zh: "不是有效的Figma URL" })}
-            </div>
-          )}
-          {/* URL 지우기 버튼 */}
-          {hasUrl && (
-            <button
-              type="button"
-              onClick={() => onChange("")}
-              style={{
-                ...mono, fontSize: "9px", marginTop: 6,
-                padding: "1px 6px", borderRadius: 0,
-                border: "1px solid var(--th-border)",
-                background: "transparent",
-                color: "var(--th-text-muted)",
-                cursor: "pointer",
-              }}
-            >
-              {t({ ko: "지우기", en: "Clear", ja: "クリア", zh: "清除" })}
-            </button>
+          ) : (
+            <>
+              <input
+                type="url"
+                placeholder="https://www.figma.com/design/..."
+                value={figmaUrl}
+                onChange={(e) => onChange(e.target.value)}
+                style={{
+                  ...mono,
+                  width: "100%", fontSize: "10px",
+                  padding: "5px 8px",
+                  background: "var(--th-bg-elevated)",
+                  border: `1px solid ${figmaUrl && !isValid ? "#ff453a" : "var(--th-border)"}`,
+                  borderRadius: 0,
+                  color: "var(--th-text-primary)",
+                  outline: "none",
+                  boxSizing: "border-box",
+                }}
+              />
+              {figmaUrl && isValid && fileKey && (
+                <div style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", marginTop: 4 }}>
+                  ✓ file: {fileKey}
+                </div>
+              )}
+              {figmaUrl && !isValid && (
+                <div style={{ ...mono, fontSize: "9px", color: "#ff453a", marginTop: 4 }}>
+                  {t({ ko: "올바른 Figma URL이 아닙니다", en: "Not a valid Figma URL", ja: "有効なFigma URLではありません", zh: "不是有效的Figma URL" })}
+                </div>
+              )}
+              {hasUrl && (
+                <button
+                  type="button"
+                  onClick={() => onChange("")}
+                  style={{ ...mono, fontSize: "9px", marginTop: 6, padding: "1px 6px", borderRadius: 0, border: "1px solid var(--th-border)", background: "transparent", color: "var(--th-text-muted)", cursor: "pointer" }}
+                >
+                  {t({ ko: "지우기", en: "Clear", ja: "クリア", zh: "清除" })}
+                </button>
+              )}
+            </>
           )}
         </div>
       )}

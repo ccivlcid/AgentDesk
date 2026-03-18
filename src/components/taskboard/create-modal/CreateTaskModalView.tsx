@@ -55,6 +55,7 @@ interface CreateTaskModalViewProps {
   onHandoffConditionChange?: (condition: "always" | "on_success" | "on_fail") => void;
   kbSection?: ReactNode;
   figmaSection?: ReactNode;
+  onSubmitWithCli?: () => void;
 }
 
 const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };
@@ -111,6 +112,7 @@ export default function CreateTaskModalView({
   onHandoffConditionChange,
   kbSection,
   figmaSection,
+  onSubmitWithCli,
 }: CreateTaskModalViewProps) {
   const [templateMenuOpen, setTemplateMenuOpen] = useState(false);
   const [saveTemplateName, setSaveTemplateName] = useState("");
@@ -524,11 +526,12 @@ export default function CreateTaskModalView({
                 <button
                   type="submit"
                   disabled={!title.trim() || submitBusy}
+                  onClick={assignAgentId && onSubmitWithCli ? (e) => { e.preventDefault(); onSubmitWithCli(); } : undefined}
                   style={{ ...mono, fontSize: "11px", fontWeight: 700, padding: "5px 16px", borderRadius: 0, background: "var(--th-accent)", color: "var(--th-bg-primary)", cursor: "pointer", opacity: !title.trim() || submitBusy ? 0.4 : 1 }}
                 >
                   {submitBusy
                     ? t({ ko: "생성 중...", en: "CREATING...", ja: "作成中...", zh: "创建中..." })
-                    : t({ ko: "업무 만들기 ↵", en: "CREATE ↵", ja: "作成 ↵", zh: "创建 ↵" })}
+                    : t({ ko: "CLI 실행 ▶", en: "RUN CLI ▶", ja: "CLI実行 ▶", zh: "运行CLI ▶" })}
                 </button>
               </div>
             </div>

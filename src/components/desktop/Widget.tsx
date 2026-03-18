@@ -5,8 +5,8 @@ import TrafficLights from "./TrafficLights";
 
 const mono = "var(--th-font-mono)";
 
-const POP_W = 800;
-const POP_H = 560;
+const EXP_W = 800;
+const EXP_H = 560;
 const MIN_W = 320;
 const MIN_H = 200;
 
@@ -23,36 +23,26 @@ interface WidgetProps {
 
 export default function Widget({ id, title, x, y, w, h, defaultPopped = false, children }: WidgetProps) {
   const { updateWidgetPos, updateWidgetSize, removeWidget } = useUiStore();
-  const [pos, setPos] = useState(() =>
-    defaultPopped
-      ? { x: Math.max(0, (window.innerWidth - POP_W) / 2), y: Math.max(44, (window.innerHeight - POP_H) / 3) }
-      : { x, y }
-  );
-  const [size, setSize] = useState(() => defaultPopped ? { w: POP_W, h: POP_H } : { w, h });
-  const [popped, setPopped] = useState(defaultPopped);
-  // saved widget pos/size to restore when popping back in
-  const widgetSnapshot = useRef<{ pos: typeof pos; size: typeof size } | null>(null);
+
+  const [pos, setPos] = useState({ x, y });
+  const [size, setSize] = useState({ w, h });
+  const [expanded, setExpanded] = useState(defaultPopped);
+  const snapshot = useRef<{ pos: typeof pos; size: typeof size } | null>(null);
   const dragStart = useRef<{ mx: number; my: number; ox: number; oy: number } | null>(null);
   const resizeStart = useRef<{ mx: number; my: number; ow: number; oh: number } | null>(null);
 
-  function handlePopToggle() {
-    if (!popped) {
-      // save current widget state, expand to window
-      widgetSnapshot.current = { pos: { ...pos }, size: { ...size } };
-      setPos({
-        x: Math.max(0, (window.innerWidth - POP_W) / 2),
-        y: Math.max(44, (window.innerHeight - POP_H) / 3),
-      });
-      setSize({ w: POP_W, h: POP_H });
-      setPopped(true);
+  function handleExpand() {
+    if (!expanded) {
+      snapshot.current = { pos: { ...pos }, size: { ...size } };
+      const nx = Math.max(0, (window.innerWidth - EXP_W) / 2);
+      const ny = Math.max(44, (window.innerHeight - EXP_H) / 3);
+      setPos({ x: nx, y: ny });
+      setSize({ w: EXP_W, h: EXP_H });
+      setExpanded(true);
     } else {
-      // restore saved widget state
-      const snap = widgetSnapshot.current;
-      if (snap) {
-        setPos(snap.pos);
-        setSize(snap.size);
-      }
-      setPopped(false);
+      const snap = snapshot.current;
+      if (snap) { setPos(snap.pos); setSize(snap.size); }
+      setExpanded(false);
     }
   }
 
@@ -63,16 +53,17 @@ export default function Widget({ id, title, x, y, w, h, defaultPopped = false, c
 
     function onMove(ev: MouseEvent) {
       if (!dragStart.current) return;
-      const nx = dragStart.current.ox + ev.clientX - dragStart.current.mx;
-      const ny = dragStart.current.oy + ev.clientY - dragStart.current.my;
-      setPos({ x: Math.max(0, nx), y: Math.max(44, ny) });
+      setPos({
+        x: Math.max(0, dragStart.current.ox + ev.clientX - dragStart.current.mx),
+        y: Math.max(44, dragStart.current.oy + ev.clientY - dragStart.current.my),
+      });
     }
     function onUp(ev: MouseEvent) {
       if (!dragStart.current) return;
       const nx = Math.max(0, dragStart.current.ox + ev.clientX - dragStart.current.mx);
       const ny = Math.max(44, dragStart.current.oy + ev.clientY - dragStart.current.my);
       setPos({ x: nx, y: ny });
-      if (!popped) updateWidgetPos(id, nx, ny);
+      updateWidgetPos(id, nx, ny);
       dragStart.current = null;
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("mouseup", onUp);
@@ -89,16 +80,17 @@ export default function Widget({ id, title, x, y, w, h, defaultPopped = false, c
 
     function onMove(ev: MouseEvent) {
       if (!resizeStart.current) return;
-      const nw = Math.max(MIN_W, resizeStart.current.ow + ev.clientX - resizeStart.current.mx);
-      const nh = Math.max(MIN_H, resizeStart.current.oh + ev.clientY - resizeStart.current.my);
-      setSize({ w: nw, h: nh });
+      setSize({
+        w: Math.max(MIN_W, resizeStart.current.ow + ev.clientX - resizeStart.current.mx),
+        h: Math.max(MIN_H, resizeStart.current.oh + ev.clientY - resizeStart.current.my),
+      });
     }
     function onUp(ev: MouseEvent) {
       if (!resizeStart.current) return;
       const nw = Math.max(MIN_W, resizeStart.current.ow + ev.clientX - resizeStart.current.mx);
       const nh = Math.max(MIN_H, resizeStart.current.oh + ev.clientY - resizeStart.current.my);
       setSize({ w: nw, h: nh });
-      if (!popped) updateWidgetSize(id, nw, nh);
+      updateWidgetSize(id, nw, nh);
       resizeStart.current = null;
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("mouseup", onUp);
@@ -110,24 +102,24 @@ export default function Widget({ id, title, x, y, w, h, defaultPopped = false, c
   return (
     <div
       style={{
-        position: popped ? "fixed" : "absolute",
+        position: "absolute",
         left: pos.x,
         top: pos.y,
         width: size.w,
         height: size.h,
-        background: popped ? "var(--th-bg-surface)" : "var(--th-panel-bg)",
+        background: "var(--th-panel-bg)",
         backdropFilter: "blur(24px) saturate(180%)",
         WebkitBackdropFilter: "blur(24px) saturate(180%)",
         border: "1px solid var(--th-border)",
-        borderRadius: popped ? 10 : 12,
+        borderRadius: 12,
         display: "flex",
         flexDirection: "column",
         overflow: "hidden",
-        zIndex: popped ? 200 : 20,
-        boxShadow: popped
-          ? "0 16px 48px var(--th-glass-shadow)"
+        zIndex: expanded ? 150 : 20,
+        boxShadow: expanded
+          ? "0 20px 60px var(--th-glass-shadow)"
           : "0 12px 40px var(--th-glass-shadow)",
-        transition: "box-shadow 0.15s",
+        transition: "box-shadow 0.15s, z-index 0s",
       }}
     >
       {/* 타이틀바 */}
@@ -136,7 +128,7 @@ export default function Widget({ id, title, x, y, w, h, defaultPopped = false, c
         style={{
           display: "flex",
           alignItems: "center",
-          padding: popped ? "8px 12px" : "6px 10px",
+          padding: "7px 10px",
           borderBottom: "1px solid var(--th-border)",
           cursor: "grab",
           background: "var(--th-glass-bg)",
@@ -146,16 +138,11 @@ export default function Widget({ id, title, x, y, w, h, defaultPopped = false, c
       >
         <TrafficLights
           onClose={() => removeWidget(id)}
-          onMaximize={handlePopToggle}
+          onMaximize={handleExpand}
         />
-        <span style={{ fontFamily: mono, fontSize: 11, color: "var(--th-text-secondary)", flex: 1 }}>
+        <span style={{ fontFamily: mono, fontSize: 12, fontWeight: 600, color: "var(--th-text-heading)", flex: 1 }}>
           {title}
         </span>
-        {popped && (
-          <span style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-muted)", opacity: 0.5 }}>
-            ⊞ widget
-          </span>
-        )}
       </div>
 
       {/* 내용 */}

@@ -3,6 +3,7 @@ import AppWindow from "./AppWindow";
 import { useAgentStore } from "../../store/agentStore";
 import { useProjectStore } from "../../store/projectStore";
 import { useI18n } from "../../i18n";
+import { useUiStore } from "../../store/uiStore";
 
 const SkillsLibrary     = lazy(() => import("../SkillsLibrary"));
 const AgentRulesLibrary = lazy(() => import("../AgentRulesLibrary"));
@@ -30,6 +31,7 @@ export default function LibraryWindow() {
   const { currentProjectId, projects, projectAgentIds, projectAgentsLoaded } = useProjectStore();
   const { t } = useI18n();
   const currentProject = projects.find((p) => p.id === currentProjectId) ?? null;
+  const { toggleWindow } = useUiStore();
   const allAgents = libraryAgents.length > 0 ? libraryAgents : agents;
 
   // 현재 프로젝트에 배정된 에이전트만 필터링
@@ -37,13 +39,52 @@ export default function LibraryWindow() {
     ? allAgents.filter((a) => projectAgentIds.has(a.id))
     : allAgents;
 
+  const helpButton = (
+    <button
+      type="button"
+      onClick={() => toggleWindow("library-guide")}
+      title={t({ ko: "도움말", en: "Help", ja: "ヘルプ", zh: "帮助" })}
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        width: 22,
+        height: 22,
+        border: "1px solid var(--th-border)",
+        borderRadius: "50%",
+        background: "transparent",
+        color: "var(--th-text-muted)",
+        fontFamily: "var(--th-font-mono)",
+        fontSize: 11,
+        fontWeight: 700,
+        cursor: "pointer",
+        lineHeight: 1,
+        transition: "color 0.15s, border-color 0.15s, background 0.15s",
+      }}
+      onMouseEnter={(e) => {
+        (e.currentTarget as HTMLButtonElement).style.color = "var(--th-accent)";
+        (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--th-accent)";
+        (e.currentTarget as HTMLButtonElement).style.background = "var(--th-accent-glow)";
+      }}
+      onMouseLeave={(e) => {
+        (e.currentTarget as HTMLButtonElement).style.color = "var(--th-text-muted)";
+        (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--th-border)";
+        (e.currentTarget as HTMLButtonElement).style.background = "transparent";
+      }}
+    >
+      ?
+    </button>
+  );
+
   return (
+    <>
     <AppWindow
       windowType="library"
       title={t({ ko: "라이브러리", en: "Library", ja: "ライブラリ", zh: "库" })}
       emoji="📚"
       defaultWidth={860}
       defaultHeight={600}
+      headerActions={helpButton}
       tabs={[
         {
           id: "skills",
@@ -110,5 +151,7 @@ export default function LibraryWindow() {
         },
       ]}
     />
+    </>
   );
 }
+

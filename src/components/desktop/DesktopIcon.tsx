@@ -31,9 +31,10 @@ interface DesktopIconProps {
   def: DesktopIconDef;
   defaultX: number;
   defaultY: number;
+  isSelected?: boolean;
 }
 
-export default function DesktopIcon({ def, defaultX, defaultY }: DesktopIconProps) {
+export default function DesktopIcon({ def, defaultX, defaultY, isSelected = false }: DesktopIconProps) {
   const { desktopIconLayout, setDesktopIconLayout, desktopIconLabels, setDesktopIconLabel, jiggleMode, wallpaper } = useUiStore();
   const { theme } = useTheme();
   // light = 라이트 테마이거나 라이트 배경화면인 경우
@@ -44,11 +45,16 @@ export default function DesktopIcon({ def, defaultX, defaultY }: DesktopIconProp
   const [dragging, setDragging] = useState(false);
 
   // store에서 외부(정렬/스냅)로 layout이 바뀌면 로컬 pos 동기화
+  // 저장된 위치가 없으면 defaultX/Y 변경도 반영 (프로젝트 추가/삭제 시 인덱스 이동)
   useEffect(() => {
     if (dragging) return;
     const entry = desktopIconLayout[def.id];
-    if (entry) setPos({ x: entry.x, y: entry.y });
-  }, [desktopIconLayout, def.id, dragging]);
+    if (entry) {
+      setPos({ x: entry.x, y: entry.y });
+    } else {
+      setPos({ x: defaultX, y: defaultY });
+    }
+  }, [desktopIconLayout, def.id, dragging, defaultX, defaultY]);
   const [hovered, setHovered] = useState(false);
   const [dropTarget, setDropTarget] = useState(false); // 문서 드래그 오버 중인 폴더
   const [editing, setEditing] = useState(false);
@@ -262,14 +268,22 @@ export default function DesktopIcon({ def, defaultX, defaultY }: DesktopIconProp
             width: 56,
             height: 56,
             background: dropTarget ? "rgba(245,158,11,0.30)" : iconBg,
-            border: dropTarget ? "2px solid var(--th-accent)" : iconBorder,
+            border: dropTarget
+              ? "2px solid var(--th-accent)"
+              : isSelected
+                ? "2px solid rgba(0,122,255,0.85)"
+                : iconBorder,
             borderRadius: 14,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             backdropFilter: "blur(20px) saturate(160%)",
             WebkitBackdropFilter: "blur(20px) saturate(160%)",
-            boxShadow: dropTarget ? `0 0 0 3px var(--th-accent)44` : iconShadow,
+            boxShadow: dropTarget
+              ? `0 0 0 3px var(--th-accent)44`
+              : isSelected
+                ? `0 0 0 3px rgba(0,122,255,0.25), ${iconShadow}`
+                : iconShadow,
             transition: "background 0.12s, box-shadow 0.12s, border 0.12s",
             transform: (hovered || dropTarget) && !dragging ? "scale(1.08)" : "scale(1)",
           }}
@@ -282,6 +296,17 @@ export default function DesktopIcon({ def, defaultX, defaultY }: DesktopIconProp
                 : "rgba(255,255,255,0.88)" // 어두운 배경 → 밝은 아이콘
           )}
         </div>
+
+        {/* 선택 배경 (label 위) */}
+        {isSelected && !editing && (
+          <div style={{
+            position: "absolute", inset: -4,
+            background: "rgba(0,122,255,0.12)",
+            borderRadius: 16,
+            pointerEvents: "none",
+            zIndex: -1,
+          }} />
+        )}
 
         {/* 레이블 */}
         {editing ? (

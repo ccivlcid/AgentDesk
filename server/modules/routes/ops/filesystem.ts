@@ -116,4 +116,41 @@ export function registerFilesystemRoutes({ app }: { app: Express }): void {
       truncated,
     });
   });
+
+  /**
+   * POST /api/fs/mkdir
+   * Body: { parent_path: string, name: string }
+   * Creates a new directory inside parent_path.
+   */
+  app.post("/api/fs/mkdir", (req: Request, res: Response) => {
+    const { parent_path, name } = req.body as { parent_path?: unknown; name?: unknown };
+
+    if (typeof parent_path !== "string" || !parent_path.trim()) {
+      return res.status(400).json({ ok: false, error: "invalid_parent_path" });
+    }
+    if (typeof name !== "string" || !name.trim()) {
+      return res.status(400).json({ ok: false, error: "invalid_name" });
+    }
+
+    // Reject path-traversal attempts in the folder name
+    const safeName = path.basename(name.trim());
+    if (!safeName || safeName === "." || safeName === "..") {
+      return res.status(400).json({ ok: false, error: "invalid_name" });
+    }
+
+    const targetPath = path.join(path.normalize(parent_path.trim()), safeName);
+
+    if (fs.existsSync(targetPath)) {
+      return res.status(409).json({ ok: false, error: "already_exists" });
+    }
+
+    try {
+      fs.mkdirSync(targetPath, { recursive: false });
+      logger.info({ targetPath }, "[fs-mkdir] created");
+      return res.json({ ok: true, path: targetPath });
+    } catch (err) {
+      logger.warn({ err, targetPath }, "[fs-mkdir] failed");
+      return res.status(403).json({ ok: false, error: "access_denied" });
+    }
+  });
 }

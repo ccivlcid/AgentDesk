@@ -193,7 +193,7 @@ export function IconMarkdownDoc({ color }: IconProps) {
 
 export function IconDockTasks({ color }: IconProps) {
   return (
-    <svg viewBox="0 0 28 28" fill="none" stroke={color} strokeWidth={S} strokeLinecap="round" strokeLinejoin="round" width={22} height={22}>
+    <svg viewBox="0 0 28 28" fill="none" stroke={color} strokeWidth={S} strokeLinecap="round" strokeLinejoin="round" width={26} height={26}>
       <rect x="4" y="5" width="20" height="18" rx="2.5" />
       <line x1="4" y1="10" x2="24" y2="10" />
       <path d="M9 14.5l2 2 4-4" />
@@ -205,7 +205,7 @@ export function IconDockTasks({ color }: IconProps) {
 
 export function IconDockWorkflow({ color }: IconProps) {
   return (
-    <svg viewBox="0 0 28 28" fill="none" stroke={color} strokeWidth={S} strokeLinecap="round" strokeLinejoin="round" width={22} height={22}>
+    <svg viewBox="0 0 28 28" fill="none" stroke={color} strokeWidth={S} strokeLinecap="round" strokeLinejoin="round" width={26} height={26}>
       <path d="M14 4v6M14 4l-3 3M14 4l3 3" />
       <path d="M14 10c0 4-5 5-5 9h10c0-4-5-5-5-9z" />
       <line x1="10" y1="22" x2="18" y2="22" />
@@ -215,7 +215,7 @@ export function IconDockWorkflow({ color }: IconProps) {
 
 export function IconDockLibrary({ color }: IconProps) {
   return (
-    <svg viewBox="0 0 28 28" fill="none" stroke={color} strokeWidth={S} strokeLinecap="round" strokeLinejoin="round" width={22} height={22}>
+    <svg viewBox="0 0 28 28" fill="none" stroke={color} strokeWidth={S} strokeLinecap="round" strokeLinejoin="round" width={26} height={26}>
       <rect x="4" y="5" width="4" height="18" rx="1" />
       <rect x="10" y="5" width="4" height="18" rx="1" />
       <path d="M17 5.5l4 17" strokeLinecap="round" />
@@ -225,7 +225,7 @@ export function IconDockLibrary({ color }: IconProps) {
 
 export function IconDockSettings({ color }: IconProps) {
   return (
-    <svg viewBox="0 0 28 28" fill="none" stroke={color} strokeWidth={S} strokeLinecap="round" strokeLinejoin="round" width={22} height={22}>
+    <svg viewBox="0 0 28 28" fill="none" stroke={color} strokeWidth={S} strokeLinecap="round" strokeLinejoin="round" width={26} height={26}>
       <circle cx="14" cy="14" r="3" />
       <path d="M14 4v3M14 21v3M4 14h3M21 14h3M6.4 6.4l2.1 2.1M19.5 19.5l2.1 2.1M6.4 21.6l2.1-2.1M19.5 8.5l2.1-2.1" />
     </svg>
@@ -234,7 +234,7 @@ export function IconDockSettings({ color }: IconProps) {
 
 export function IconDockChat({ color }: IconProps) {
   return (
-    <svg viewBox="0 0 28 28" fill="none" stroke={color} strokeWidth={S} strokeLinecap="round" strokeLinejoin="round" width={22} height={22}>
+    <svg viewBox="0 0 28 28" fill="none" stroke={color} strokeWidth={S} strokeLinecap="round" strokeLinejoin="round" width={26} height={26}>
       <path d="M4 6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H8l-4 4V6z" />
       <line x1="9" y1="11" x2="19" y2="11" />
       <line x1="9" y1="15" x2="15" y2="15" />

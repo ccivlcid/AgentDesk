@@ -61,7 +61,7 @@ export default function AlertsWidget() {
         padding: "6px 10px",
         borderBottom: "1px solid var(--th-border)",
         fontFamily: mono,
-        fontSize: 10,
+        fontSize: 11,
         color: "var(--th-text-muted)",
         flexShrink: 0,
         alignItems: "center",
@@ -72,7 +72,7 @@ export default function AlertsWidget() {
             : `✓ ${t({ ko: "정상", en: "ok", ja: "正常", zh: "正常" })}`}
         </span>
         {unread > 0 && (
-          <span style={{ color: "var(--th-accent)", fontSize: 9 }}>{unread} {t({ ko: "읽지 않음", en: "unread", ja: "未読", zh: "未读" })}</span>
+          <span style={{ color: "var(--th-accent)", fontSize: 10 }}>{unread} {t({ ko: "읽지 않음", en: "unread", ja: "未読", zh: "未读" })}</span>
         )}
         <span style={{ flex: 1 }} />
         {loading && <span style={{ opacity: 0.4 }}>…</span>}
@@ -92,9 +92,8 @@ export default function AlertsWidget() {
                 display: "flex",
                 alignItems: "flex-start",
                 gap: 8,
-                padding: "5px 10px",
-                borderBottom: "1px solid var(--th-border)",
-                background: !n.read ? "rgba(245,158,11,0.04)" : "none",
+                padding: "6px 10px",
+                background: !n.read ? "rgba(245,158,11,0.05)" : "none",
               }}
             >
               <span style={{ fontSize: 10, color: TYPE_COLOR[n.type] ?? "var(--th-text-muted)", flexShrink: 0, marginTop: 1 }}>
@@ -102,19 +101,19 @@ export default function AlertsWidget() {
               </span>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{
-                  fontFamily: mono, fontSize: 10,
+                  fontFamily: mono, fontSize: 11,
                   color: !n.read ? "var(--th-text-primary)" : "var(--th-text-secondary)",
                   overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                 }}>
                   {n.title}
                 </div>
                 {(n.agent_name || n.agent_name_ko) && (
-                  <div style={{ fontFamily: mono, fontSize: 9, color: "var(--th-text-muted)" }}>
+                  <div style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-muted)" }}>
                     {n.agent_name_ko || n.agent_name}
                   </div>
                 )}
               </div>
-              <span style={{ fontFamily: mono, fontSize: 9, color: "var(--th-text-muted)", flexShrink: 0 }}>
+              <span style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-muted)", flexShrink: 0 }}>
                 {new Date(n.created_at).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })}
               </span>
             </div>

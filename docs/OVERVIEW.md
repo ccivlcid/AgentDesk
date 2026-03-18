@@ -91,7 +91,7 @@ The core value of AgentDesk is **"a UI that makes the invisible visible"**.
 |---|---|
 | **Task Board** | Overall task status (pending/running/done/failed), agent assignment status |
 | **Terminal Panel** | Real-time streaming of agent CLI output (stdout) |
-| **Agent Detail** | Current state, running task, applied skills/rules/memory — right slide panel (`docs/features/agent-detail-panel.md`) |
+| **Agent Detail** | Current state, running task, applied skills/rules/memory — right slide panel (360px, 4 tabs: Overview/Tasks/Chat/Timeline) |
 | **Status Monitor** | Full agent activity dashboard, anomaly detection |
 | **CLI Usage** | Per-agent token consumption, cost tracking |
 | **Task Report** | Outputs, diffs, and logs for completed tasks |
@@ -177,7 +177,7 @@ Managing these four elements **per project** allows the same agent to behave dif
 
 ## 6. Current System Status
 
-### Completion (as of 2026-03-19)
+### Completion (as of 2026-03-22)
 
 ```
 Agent spawn & management         ████████████████████ 100% (timeout enforcement + orphan batching complete)
@@ -192,19 +192,24 @@ Persona system                   ███████████████�
 Visual agent graph               ████████████████████ 100% (delegation edges + agent detail panel complete)
 Agent composition templates      ████████████████████ 100% (drag-and-drop + Run complete)
 Custom Widget Platform           ████████████████████ 100% (Phase 1~5 complete — template + AI + esbuild bundle)
-Project management               ████████████████████ 100% (cost summary + templates + burndown complete)
+Project management               ████████████████████ 100% (cost summary + templates + folders + cross-project handoff)
 Analytics & performance          ████████████████████ 100% (AgentPerformanceDashboard + Data Export complete)
 Notification center              ████████████████████ 100% (date groups + hover actions + type filter badges)
 Local LLM manager                ████████████████████ 100% (Ollama + LM Studio + llama.cpp + Jan, Phase 1~5 complete)
 Knowledge base (Synapse)         ████████████████████ 100% (Notion + Obsidian + NotebookLM, Phase 1~5 complete)
 Task Board window                ████████████████████ 100% (TaskBoardWindow standalone app + Dock integration)
 Agent detail panel               ████████████████████ 100% (right-slide inspector, skills/rules/memory/tasks/cost)
+Image Studio                     ████████████████████ 100% (txt2img · inpaint · gallery · task link, Phase 15 complete)
+Cross-Project Handoff            ████████████████████ 100% (deliverable checklist + source context injection, Phase 16)
+Project Folders                  ████████████████████ 100% (folder container + disk move + FolderWindow, Phase 17)
+Agent CLI                        ████████████████████ 100% (실제 PTY 터미널 + 에이전트 셀렉트 + CLI 자동 실행, Phase 18+)
+Figma Integration                ████████████████████ 100% (task URL attach + context fetch + prompt injection)
 Bug fixes (pipeline + UI audit)  ████████████████████ 100% (BUG-01~06, WB-01~03, FG-01~03 all resolved)
 ```
 
 ### Known Bugs (2026-03-16 Pipeline Audit) — 전체 수정 완료
 
-> 상세 수정 지침: **`docs/bugs/PIPELINE-AUDIT-2026-03-16.md`**
+> 상세 수정 이력: **`docs/progress.md` → "2026-03-16 실행 파이프라인 감사" 섹션**
 
 | Code | Severity | File | Issue | Status |
 |------|----------|------|-------|--------|
@@ -215,7 +220,7 @@ Bug fixes (pipeline + UI audit)  ███████████████�
 | BUG-05 | 🔵 P2 | `server/modules/lifecycle.ts` | 메신저 수신자 시작 실패 시 예외처리 없음 | ✅ Done |
 | BUG-06 | 🟡 P1 | `server/modules/workflow/agents/providers/stream-tools.ts` | 스트림 버퍼 2KB 고정 → 장문 응답에서 서브태스크 손실 (8KB로 확장) | ✅ Done |
 
-> UI 기능 감사 (Workflow Builder · REPL · Flow Graph): **`docs/bugs/UI-AUDIT-2026-03-16.md`**
+> UI 기능 감사 이력 (Workflow Builder · Agent CLI · Flow Graph): **`docs/progress.md` → "2026-03-16 UI 기능 감사" 섹션**
 
 | Code | Severity | File | Issue | Status |
 |------|----------|------|-------|--------|
@@ -280,6 +285,38 @@ All planned features and improvement tasks have been completed. Key achievements
 - **Per-type unread badges**: filter chips now show count of unread notifications per type
 - **Bulk clear read**: "Clear N read" link + 🗑 button in title bar
 - **Default behavior**: `hideRead` defaults to `false` (shows all notifications)
+
+### Image Studio (Phase 15)
+- **txt2img + inpaint**: DALL-E 3/2 via `api_providers` encrypted key, Photoshop-style layout (240px panel + canvas), MaskCanvas brush editor
+- **Gallery**: auto-fill grid, right detail panel, prompt search, provider filter, download/delete
+- **Task integration**: link generation to tasks, TaskCard "Generated Images" section (3-col thumbnail grid)
+- **API**: `POST /api/image-studio/generate`, `GET /api/image-studio/gallery`, image streaming, `GET /api/image-studio/task/:id/images`
+
+### Cross-Project Handoff (Phase 16)
+- **Deliverable checklist**: `project_deliverable_checks` table, progress bar + checkbox UI in ProjectInsightsPanel
+- **Source linking**: `project_sources` table (max 5, circular-ref guard), ProjectEditorPanel source dropdown
+- **Context injection**: `buildSourceContextBlock()` — completed deliverables from source projects auto-injected into task prompt (`execution-run.ts`)
+
+### Project Folders (Phase 17)
+- **Folder container**: `project_folders` table, `FolderDesktopIcon` (stacked SVG + badge + context menu), `FolderWindow` (project grid + add/eject)
+- **Disk move**: `fs.renameSync` on folder rename (non-fatal, returns `moved_on_disk` flag)
+- **Desktop**: right-click "Move to Folder" submenu, drag-to-folder drop event
+
+### Agent CLI (Phase 18)
+- **REPL → CLI rename**: `WindowType "repl"→"cli"`, Dock icon, desktop icon, MissionControl label all updated
+- **CliSession Map**: per-agent shell sessions, `[agent @ project] $` prompt, `:switch`/`:status`/`:history`/`:reset` commands
+- **3 entry points**: AgentDetailPanel `>_` button, AgentsWidget hover `>_`, FlowGraph node right-click "Open CLI"
+
+### Figma Integration
+- **Task attach**: Figma URL field in CreateTaskModal, parsed + previewed in `FigmaUrlSection.tsx`
+- **Context fetch**: `server/modules/figma/context-fetcher.ts` — Figma REST API → `buildFigmaContextBlock()`
+- **Prompt injection**: `execution-run.ts` auto-injects Figma context block when task has `figma_url`
+- **Auth**: Figma PAT stored in `synapse_connections` (platform='figma'), managed in Settings → Synapse
+
+### Design Workflow Template
+- **4-node chain**: Design Analysis → Component Design → Implementation → Code Review
+- **Template picker**: `TemplatePickerModal.tsx` with `figma_required: true` Figma URL field
+- **Run**: `WbRunModal.tsx` injects Figma URL into first agent task, auto-creates dependency chain
 
 ### Quality
 - pino structured logging, 186 server tests + 43 frontend tests all passing
@@ -559,20 +596,17 @@ All planned features and improvement tasks have been completed. Key achievements
 | Document | Contents |
 |---|---|
 | [`docs/OVERVIEW.md`](./OVERVIEW.md) | **This document** — full overview + completion history |
-| [`docs/progress.md`](./progress.md) | Development progress tracker (latest work log) |
-| [`docs/bugs/PIPELINE-AUDIT-2026-03-16.md`](./bugs/PIPELINE-AUDIT-2026-03-16.md) | **Pipeline audit — 6 bugs with exact fix instructions (AI-ready)** |
-| [`docs/specs/api.md`](./specs/api.md) | Full REST API specification |
+| [`docs/progress.md`](./progress.md) | Development progress tracker — detailed work log (Phase 15–18, Figma, bug fixes) |
+| [`docs/specs/api.md`](./specs/api.md) | Full REST API specification (v1.6.0) |
 | [`docs/architecture/SYSTEM-STRUCTURE-MAP.md`](./architecture/SYSTEM-STRUCTURE-MAP.md) | System structure map |
 | [`docs/architecture/schema-erd.md`](./architecture/schema-erd.md) | DB schema ER diagram + state machines |
 | [`docs/architecture/ARCHITECTURE-AUDIT-2026-Q1.md`](./architecture/ARCHITECTURE-AUDIT-2026-Q1.md) | Comprehensive architecture + backend audit |
 | [`docs/strategy/agent-performance-audit.md`](./strategy/agent-performance-audit.md) | Agent execution performance audit |
 | [`docs/strategy/bigger-ide-vision.md`](./strategy/bigger-ide-vision.md) | "Bigger IDE" strategic vision |
-| [`docs/features/custom-widget-platform.md`](./features/custom-widget-platform.md) | Custom Widget Platform — spec + implementation summary |
-| [`docs/features/local-llm-manager.md`](./features/local-llm-manager.md) | Local LLM Manager — 기획 문서 (Ollama 연동, 모델 관리, 에이전트 연결) |
-| [`docs/features/synapse.md`](./features/synapse.md) | Synapse (지식베이스) — Notion / Obsidian / NotebookLM 연결 기획 (서버: `server/modules/synapse/`) |
-| [`docs/features/agent-detail-panel.md`](./features/agent-detail-panel.md) | 에이전트 상세 패널 — 우측 슬라이드 인스펙터 설계 |
 | [`docs/design/DESIGN.md`](./design/DESIGN.md) | UI CSS variables + component patterns |
 | [`docs/design/UI-SCREENS.md`](./design/UI-SCREENS.md) | Full screen & modal specification |
+
+> **Note:** Feature implementation details (Custom Widget Platform, Local LLM, Synapse, Image Studio, Agent Detail Panel, Project Folders, Cross-Project Handoff, Figma Integration) are consolidated in `docs/progress.md`. Individual feature spec files have been removed after implementation completion.
 
 ---
 

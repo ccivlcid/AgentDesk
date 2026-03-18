@@ -45,7 +45,7 @@ export default function AgentsWidget() {
         padding: "6px 10px",
         borderBottom: "1px solid var(--th-border)",
         fontFamily: mono,
-        fontSize: 10,
+        fontSize: 11,
         color: "var(--th-text-muted)",
         flexShrink: 0,
       }}>
@@ -102,16 +102,11 @@ export default function AgentsWidget() {
             >
               <span style={{ fontSize: 16 }}>{agent.avatar_emoji || "🤖"}</span>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontFamily: mono, fontSize: 11, color: "var(--th-text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                <div style={{ fontFamily: mono, fontSize: 12, color: "var(--th-text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   {agent.name_ko || agent.name}
                 </div>
-                {agent.current_task_id && (
-                  <div style={{ fontFamily: mono, fontSize: 9, color: "var(--th-text-muted)" }}>
-                    task: {agent.current_task_id.slice(0, 8)}…
-                  </div>
-                )}
               </div>
-              <span style={{ fontFamily: mono, fontSize: 9, color: STATUS_COLOR[agent.status] }}>
+              <span style={{ fontFamily: mono, fontSize: 10, color: STATUS_COLOR[agent.status] }}>
                 {STATUS_LABEL[agent.status]}
               </span>
               <button
@@ -121,12 +116,12 @@ export default function AgentsWidget() {
                 className="cli-btn"
                 style={{
                   fontFamily: mono,
-                  fontSize: 9,
+                  fontSize: 10,
                   background: "none",
-                  border: "1px solid rgba(50,173,230,0.3)",
-                  borderRadius: 3,
+                  border: "1px solid rgba(50,173,230,0.35)",
+                  borderRadius: 4,
                   color: "#32ade6",
-                  padding: "1px 4px",
+                  padding: "2px 6px",
                   cursor: "pointer",
                   opacity: 0,
                   transition: "opacity 0.15s",

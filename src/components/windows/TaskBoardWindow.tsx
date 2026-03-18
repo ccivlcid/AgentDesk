@@ -22,11 +22,14 @@ import type { Task } from "../../types";
 export default function TaskBoardWindow() {
   const { tasks, subtasks, setTasks, setTaskPanel } = useTaskStore();
   const { agents, departments } = useAgentStore();
-  const { projects, currentProjectId } = useProjectStore();
+  const { projects, currentProjectId, projectAgentIds, projectAgentsLoaded } = useProjectStore();
   const { closeWindow } = useUiStore();
   const { t } = useI18n();
 
   const currentProject = projects.find((p) => p.id === currentProjectId) ?? null;
+  const projectAgents = currentProject && projectAgentsLoaded && projectAgentIds.size > 0
+    ? agents.filter((a) => projectAgentIds.has(a.id))
+    : undefined;
 
   const handleCreateTask: React.ComponentProps<typeof TaskBoard>["onCreateTask"] = useCallback(async (input) => {
     await createTask(input as Parameters<typeof createTask>[0]);
@@ -112,6 +115,7 @@ export default function TaskBoardWindow() {
       <TaskBoard
         tasks={tasks}
         agents={agents}
+        projectManagerAgents={projectAgents}
         departments={departments}
         subtasks={subtasks}
         currentProject={currentProject}

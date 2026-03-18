@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import AppWindow from "../windows/AppWindow";
 import type { Department } from "../../types";
 import { useI18n } from "../../i18n";
 import { useToast } from "../ui";
-import HeaderModalChrome from "../ui/HeaderModalChrome";
 import * as api from "../../api";
 import { DEPT_BLANK, DEPT_COLORS } from "./constants";
 import EmojiPicker from "./EmojiPicker";
@@ -62,8 +63,6 @@ export default function DepartmentFormModal({
   const { showToast } = useToast();
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const overlayRef = useRef<HTMLDivElement>(null);
-
   // sort_order 기반 다음 순번 계산
   const nextSortOrder = (() => {
     const orders = departments.map((d) => d.sort_order).filter((n) => typeof n === "number" && !isNaN(n));
@@ -200,26 +199,19 @@ export default function DepartmentFormModal({
 
   const title = isEdit ? tr("부서 정보 수정", "Edit Department") : tr("신규 부서 추가", "Add Department");
 
-  return (
-    <div
-      ref={overlayRef}
-      className="fixed inset-0 flex items-center justify-center p-4"
-      style={{ background: "var(--th-modal-overlay)", backdropFilter: "blur(3px)", zIndex: 1100 }}
-      onClick={(e) => {
-        if (e.target === overlayRef.current) onClose();
-      }}
+  return createPortal(
+    <AppWindow
+      windowType="create-department"
+      title={title}
+      emoji="🏢"
+      defaultWidth={520}
+      defaultHeight={620}
+      defaultX={Math.max(0, Math.round((window.innerWidth - 520) / 2))}
+      defaultY={Math.max(44, Math.round((window.innerHeight - 620) / 2))}
+      onClose={onClose}
     >
-      <div
-        className="flex w-full max-w-lg flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200 max-h-[85vh]"
-        style={{
-          borderRadius: 10,
-          background: "var(--th-bg-elevated)",
-          border: "1px solid var(--th-border)",
-          boxShadow: "0 20px 50px rgba(0,0,0,0.4)",
-        }}
-      >
-        <HeaderModalChrome title={title} onClose={onClose} />
-        <div className="flex-1 overflow-y-auto p-6 space-y-4">
+      <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+        <div className="flex-1 overflow-y-auto p-6 space-y-4" style={{ fontFamily: "var(--th-font-mono)" }}>
           {/* 아이콘 + 영문이름 */}
           <div className="flex items-start gap-3">
             <div>
@@ -354,7 +346,7 @@ export default function DepartmentFormModal({
         </div>
 
         {/* Actions */}
-        <div className="flex flex-shrink-0 items-center gap-2 px-6 pb-6 pt-4" style={{ borderTop: "1px solid var(--th-border)" }}>
+        <div className="flex flex-shrink-0 items-center gap-2 px-6 py-4" style={{ borderTop: "1px solid var(--th-border)" }}>
           <button
             onClick={handleSave}
             disabled={saving || !form.name.trim()}
@@ -404,6 +396,7 @@ export default function DepartmentFormModal({
           </button>
         </div>
       </div>
-    </div>
+    </AppWindow>,
+    document.body,
   );
 }

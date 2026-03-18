@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import type { Department } from "../../types";
 import { localeName, useI18n } from "../../i18n";
 import * as api from "../../api";
@@ -8,6 +9,7 @@ import type { FormData } from "./types";
 import { PersonaCatalog } from "../agent-persona/PersonaCatalog";
 import { getPersonaById } from "../../data/personas";
 import { Modal, ModalHeader, ModalBody, ModalFooter, Button, Input, Textarea, useToast } from "../ui";
+import AppWindow from "../windows/AppWindow";
 import { getNotionInfo, getObsidianInfo, searchNotionPages, searchObsidianFiles } from "../../api/synapse";
 import type { KbSourceRef, NotionPage, ObsidianNote } from "../../api/synapse";
 
@@ -165,6 +167,7 @@ export default function AgentFormModal({
   saveError,
   onSave,
   onClose,
+  asWindow = false,
 }: {
   isKo: boolean;
   locale: string;
@@ -177,6 +180,8 @@ export default function AgentFormModal({
   saveError?: string | null;
   onSave: () => void;
   onClose: () => void;
+  /** true이면 Modal 대신 독립 AppWindow로 렌더 */
+  asWindow?: boolean;
 }) {
   const { t } = useI18n();
   const { showToast } = useToast();
@@ -233,14 +238,9 @@ export default function AgentFormModal({
     color: "var(--th-text-muted)",
   };
 
-  return (
-    <Modal open onClose={onClose} width="lg">
-      <ModalHeader onClose={onClose}>
-        {isEdit ? tr("직원 정보 수정", "Edit Agent") : tr("신규 직원 채용", "Hire New Agent")}
-      </ModalHeader>
-
-      <ModalBody>
-        <div className="space-y-5">
+  const title = isEdit ? tr("직원 정보 수정", "Edit Agent") : tr("신규 직원 채용", "Hire New Agent");
+  const formFields = (
+    <div className="space-y-5">
           {/* ── 기본 정보 ── */}
           <div>
             <div className="mb-3 pb-1" style={{ borderBottom: "1px solid var(--th-border)" }}>
@@ -657,31 +657,63 @@ export default function AgentFormModal({
               tr={tr}
             />
           </div>
-        </div>
-      </ModalBody>
+    </div>
+  );
+  const footerButtons = (
+    <>
+      {saveError && (
+        <p style={{ color: "var(--th-error, #ef4444)", fontSize: 12, flex: "1 1 100%", margin: "0 0 6px" }}>
+          {saveError}
+        </p>
+      )}
+      <Button variant="secondary" onClick={onClose}>
+        {tr("취소", "Cancel")}
+      </Button>
+      <Button
+        variant="primary"
+        onClick={onSave}
+        disabled={saving || !form.name.trim()}
+        className="flex-1"
+      >
+        {saving
+          ? tr("처리 중...", "Saving...")
+          : isEdit
+            ? tr("변경사항 저장", "Save Changes")
+            : tr("채용 확정", "Confirm Hire")}
+      </Button>
+    </>
+  );
 
-      <ModalFooter>
-        {saveError && (
-          <p style={{ color: "var(--th-error, #ef4444)", fontSize: 12, flex: "1 1 100%", margin: "0 0 6px" }}>
-            {saveError}
-          </p>
-        )}
-        <Button variant="secondary" onClick={onClose}>
-          {tr("취소", "Cancel")}
-        </Button>
-        <Button
-          variant="primary"
-          onClick={onSave}
-          disabled={saving || !form.name.trim()}
-          className="flex-1"
-        >
-          {saving
-            ? tr("처리 중...", "Saving...")
-            : isEdit
-              ? tr("변경사항 저장", "Save Changes")
-              : tr("채용 확정", "Confirm Hire")}
-        </Button>
-      </ModalFooter>
+  if (asWindow) {
+    return createPortal(
+      <AppWindow
+        windowType="create-agent"
+        title={title}
+        emoji="👤"
+        defaultWidth={720}
+        defaultHeight={680}
+        defaultX={Math.max(0, Math.round((window.innerWidth - 720) / 2))}
+        defaultY={Math.max(44, Math.round((window.innerHeight - 680) / 2))}
+        onClose={onClose}
+      >
+        <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+          <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px", fontFamily: "var(--th-font-mono)" }}>
+            {formFields}
+          </div>
+          <div style={{ borderTop: "1px solid var(--th-border)", padding: "10px 16px", display: "flex", alignItems: "center", justifyContent: "flex-end", flexWrap: "wrap", gap: 8, flexShrink: 0, fontFamily: "var(--th-font-mono)", background: "var(--th-bg-surface)" }}>
+            {footerButtons}
+          </div>
+        </div>
+      </AppWindow>,
+      document.body,
+    );
+  }
+
+  return (
+    <Modal open onClose={onClose} width="lg">
+      <ModalHeader onClose={onClose}>{title}</ModalHeader>
+      <ModalBody>{formFields}</ModalBody>
+      <ModalFooter>{footerButtons}</ModalFooter>
     </Modal>
   );
 }

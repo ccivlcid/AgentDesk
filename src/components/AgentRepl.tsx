@@ -60,6 +60,34 @@ export default function AgentRepl({ agents, currentProject }: Props) {
     runningTaskIdRef.current = runningTaskId;
   }, [runningTaskId]);
 
+  // 프로젝트 전환 시 에이전트 + 엔트리 리셋
+  const prevProjectIdRef = useRef<string | undefined | null>(currentProject?.id);
+  useEffect(() => {
+    const prev = prevProjectIdRef.current;
+    const cur = currentProject?.id;
+    if (prev === cur) return;
+    prevProjectIdRef.current = cur;
+
+    // 프로젝트가 실제로 바뀐 경우에만 처리
+    const idle = agents.find((a) => a.status === "idle") ?? agents[0];
+    setSelectedAgentId(idle?.id ?? "");
+    setRunningTaskId(null);
+    runningTaskIdRef.current = null;
+    const projectName = currentProject?.name ?? t({ ko: "전체", en: "All", ja: "全体", zh: "全部" });
+    setEntries([{
+      id: crypto.randomUUID(),
+      kind: "info",
+      text: t({
+        ko: `[프로젝트 전환] ${projectName}\n:list 로 에이전트 목록, :help 로 도움말`,
+        en: `[Project switched] ${projectName}\n:list for agents, :help for commands`,
+        ja: `[プロジェクト切替] ${projectName}\n:list でエージェント一覧, :help でコマンド`,
+        zh: `[项目切换] ${projectName}\n:list 查看代理, :help 查看命令`,
+      }),
+      timestamp: new Date(),
+    }]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentProject?.id]);
+
   // 에이전트 미선택 시 첫 번째 idle 에이전트로 기본 설정
   useEffect(() => {
     if (!selectedAgentId && agents.length > 0) {
@@ -351,6 +379,11 @@ export default function AgentRepl({ agents, currentProject }: Props) {
         <span style={{ fontSize: 11, fontWeight: 700, color: "var(--th-text-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>
           {t({ ko: "에이전트 REPL", en: "Agent REPL", ja: "エージェント REPL", zh: "代理 REPL" })}
         </span>
+        {currentProject && (
+          <span style={{ fontSize: 10, color: "var(--th-accent)", fontWeight: 600, marginLeft: 2 }}>
+            @ {currentProject.name}
+          </span>
+        )}
         {/* 실행 중 표시 */}
         {runningTaskId && (
           <div style={{ display: "flex", alignItems: "center", gap: 5 }}>

@@ -147,9 +147,9 @@ export default function Deliverables({ agents, currentProject }: DeliverablesPro
         </span>
         {!loading && (
           <span style={{ marginLeft: "auto", fontSize: "9px", color: "var(--th-text-muted)", opacity: 0.6 }}>
-            <span style={{ color: "var(--th-success)" }}>{doneCnt} done</span>
-            {reviewCnt > 0 && <> · <span style={{ color: "var(--th-accent)" }}>{reviewCnt} review</span></>}
-            {" "}· {items.length} total
+            <span style={{ color: "var(--th-success)" }}>{doneCnt} {t({ ko: "완료", en: "done", ja: "完了", zh: "完成" })}</span>
+            {reviewCnt > 0 && <> · <span style={{ color: "var(--th-accent)" }}>{reviewCnt} {t({ ko: "검토중", en: "review", ja: "レビュー中", zh: "审核中" })}</span></>}
+            {" "}· {items.length} {t({ ko: "전체", en: "total", ja: "合計", zh: "总計" })}
           </span>
         )}
       </div>
@@ -224,11 +224,11 @@ export default function Deliverables({ agents, currentProject }: DeliverablesPro
       {/* ── 컬럼 헤더 ── */}
       {!loading && filtered.length > 0 && (
         <div style={{ display: "flex", alignItems: "center", padding: "4px 14px", background: "var(--th-bg-primary)", borderBottom: "1px solid var(--th-border)", gap: 8 }}>
-          <span style={{ fontSize: "8px", fontWeight: 700, letterSpacing: "0.1em", color: "var(--th-text-muted)", width: 44, flexShrink: 0 }}>STATUS</span>
-          <span style={{ fontSize: "8px", fontWeight: 700, letterSpacing: "0.1em", color: "var(--th-text-muted)", flex: 1 }}>TITLE</span>
-          <span style={{ fontSize: "8px", fontWeight: 700, letterSpacing: "0.1em", color: "var(--th-text-muted)", width: 130, flexShrink: 0 }}>AGENT</span>
-          <span style={{ fontSize: "8px", fontWeight: 700, letterSpacing: "0.1em", color: "var(--th-text-muted)", width: 120, flexShrink: 0 }}>COMPLETED</span>
-          <span style={{ fontSize: "8px", fontWeight: 700, letterSpacing: "0.1em", color: "var(--th-text-muted)", width: 80, flexShrink: 0 }}>FILES</span>
+          <span style={{ fontSize: "8px", fontWeight: 700, letterSpacing: "0.1em", color: "var(--th-text-muted)", width: 44, flexShrink: 0 }}>{t({ ko: "상태", en: "STATUS", ja: "状態", zh: "状态" })}</span>
+          <span style={{ fontSize: "8px", fontWeight: 700, letterSpacing: "0.1em", color: "var(--th-text-muted)", flex: 1 }}>{t({ ko: "제목", en: "TITLE", ja: "タイトル", zh: "标题" })}</span>
+          <span style={{ fontSize: "8px", fontWeight: 700, letterSpacing: "0.1em", color: "var(--th-text-muted)", width: 130, flexShrink: 0 }}>{t({ ko: "에이전트", en: "AGENT", ja: "エージェント", zh: "代理" })}</span>
+          <span style={{ fontSize: "8px", fontWeight: 700, letterSpacing: "0.1em", color: "var(--th-text-muted)", width: 120, flexShrink: 0 }}>{t({ ko: "완료일시", en: "COMPLETED", ja: "完了日時", zh: "完成时间" })}</span>
+          <span style={{ fontSize: "8px", fontWeight: 700, letterSpacing: "0.1em", color: "var(--th-text-muted)", width: 80, flexShrink: 0 }}>{t({ ko: "파일", en: "FILES", ja: "ファイル", zh: "文件" })}</span>
         </div>
       )}
 
@@ -269,7 +269,7 @@ export default function Deliverables({ agents, currentProject }: DeliverablesPro
       {!loading && (
         <div style={{ borderTop: "1px solid var(--th-border)", padding: "5px 16px", background: "var(--th-bg-primary)" }}>
           <span style={{ fontSize: "9px", color: "var(--th-text-muted)", opacity: 0.4 }}>
-            $ {filtered.length} entries{statusFilter !== "all" ? ` (filtered: ${statusFilter})` : ""}
+            $ {filtered.length} {t({ ko: "건", en: "entries", ja: "件", zh: "条" })}{statusFilter !== "all" ? ` (${t({ ko: "필터", en: "filtered", ja: "フィルタ", zh: "过滤" })}: ${statusFilter})` : ""}
           </span>
         </div>
       )}

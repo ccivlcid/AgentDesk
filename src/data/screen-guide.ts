@@ -235,6 +235,24 @@ const guides: Record<View, ScreenGuideEntry> = {
       { ko: "게이트웨이에서 Telegram·Discord 채널 설정", en: "Configure Telegram/Discord channels in Gateway", ja: "ゲートウェイでTelegram・Discordチャンネルを設定", zh: "在网关中配置 Telegram、Discord 频道" },
     ],
   },
+  library: {
+    title: { ko: "라이브러리", en: "Library", ja: "ライブラリ", zh: "库" },
+    description: {
+      ko: "에이전트에게 부여할 스킬·규칙·메모리·훅과 산출물·템플릿·성과 정보를 한곳에서 관리합니다.",
+      en: "Manage skills, rules, memory, hooks, deliverables, templates, and performance data all in one place.",
+      ja: "スキル・ルール・メモリ・フック・成果物・テンプレート・実績情報をまとめて管理します。",
+      zh: "在一处管理技能、规则、记忆、钩子、产出物、模板与绩效数据。",
+    },
+    tips: [
+      { ko: "【스킬】에이전트에게 코드 리뷰·개발·분석 등 스킬 추가 및 학습(Learn) 가능", en: "【Skills】Add or learn skills (code review, development, analysis, etc.) for agents", ja: "【スキル】コードレビュー・開発・分析などのスキルをエージェントに追加・学習", zh: "【技能】为代理添加或学习代码审查、开发、分析等技能" },
+      { ko: "【규칙】글로벌·부서·에이전트별 행동 지침 설정 — 에이전트 실행 시 프롬프트에 자동 주입", en: "【Rules】Set behavior instructions globally, per dept, or per agent — auto-injected at runtime", ja: "【ルール】グローバル・部門・エージェントごとに行動指針を設定 — 実行時に自動注入", zh: "【规则】按全局、部门或代理设置行为指导——运行时自动注入" },
+      { ko: "【메모리】에이전트가 참조할 키-값 정보 저장 (범위별 관리)", en: "【Memory】Store key-value info agents can reference, scoped by global / dept / agent", ja: "【メモリ】エージェントが参照するキー・値情報を保存（範囲別管理）", zh: "【记忆】存储代理可引用的键值信息，按全局/部门/代理分范围管理" },
+      { ko: "【훅】태스크 시작·완료 등 이벤트에 URL 호출 등 자동 동작 등록", en: "【Hooks】Register automatic actions (URL calls, etc.) triggered by task start, completion, etc.", ja: "【フック】タスク開始・完了などのイベントにURL呼び出しなどの自動動作を登録", zh: "【钩子】为任务开始、完成等事件注册自动动作（如 URL 调用）" },
+      { ko: "【산출물】완료된 태스크의 결과물·파일 확인 및 ZIP 다운로드", en: "【Deliverables】View results and files from completed tasks, download as ZIP", ja: "【成果物】完了タスクの結果・ファイルを確認、ZIP一括ダウンロード", zh: "【产出物】查看已完成任务的结果与文件，支持 ZIP 批量下载" },
+      { ko: "【템플릿】프로젝트·태스크 재사용 틀 저장 및 관리 (빌트인 + 커스텀)", en: "【Templates】Save and manage reusable project/task templates (built-in + custom)", ja: "【テンプレート】プロジェクト・タスクの再利用テンプレートを保存・管理（組み込み＋カスタム）", zh: "【模板】保存并管理可复用的项目/任务模板（内置 + 自定义）" },
+      { ko: "【성과】에이전트별 완료 태스크 수·소요 시간·성공률 등 통계 확인", en: "【Performance】View stats per agent: tasks completed, time spent, success rate, etc.", ja: "【実績】エージェントごとの完了タスク数・所要時間・成功率などの統計を確認", zh: "【绩效】查看每个代理的完成任务数、耗时、成功率等统计数据" },
+    ],
+  },
 };
 
 /** 프로젝트 없을 때 대시보드용 "시작하기" 가이드 (전체 흐름 안내) */

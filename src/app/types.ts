@@ -13,7 +13,11 @@ export type WindowType =
   | "llm-guide"
   | "synapse"
   | "image-studio"
-  | "folder";
+  | "folder"
+  | "create-agent"
+  | "create-department"
+  | "library-guide"
+  | "user-guide";
 
 export type WidgetId =
   | "heartbeat"
@@ -51,7 +55,8 @@ export type View =
   | "agent-rules"
   | "memory"
   | "hooks"
-  | "settings";
+  | "settings"
+  | "library";
 export type TaskPanelTab = "terminal" | "minutes";
 export type RuntimeOs = "windows" | "mac" | "linux" | "unknown";
 

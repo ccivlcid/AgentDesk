@@ -47,8 +47,10 @@ import { deleteProject, createProject } from "../../api/organization-projects";
 import { getProjectFolders, createProjectFolder, addProjectToFolder, deleteProjectFolder, updateProjectFolder } from "../../api/project-folders";
 import WorkflowWindow from "../windows/WorkflowWindow";
 import LibraryWindow from "../windows/LibraryWindow";
+import LibraryGuideWindow from "../windows/LibraryGuideWindow";
 import SettingsWindow from "../windows/SettingsWindow";
 import AgentManagerWindow from "../windows/AgentManagerWindow";
+import QuickCreateAgentModal from "../agent-manager/QuickCreateAgentModal";
 import CliWindow from "../windows/CliWindow";
 import TaskBoardWindow from "../windows/TaskBoardWindow";
 import SynapseWindow from "../windows/SynapseWindow";
@@ -156,6 +158,9 @@ export default function Desktop({
     openFolder,
     closeFolder,
     openCli,
+    openCliAgentIds,
+    closeCliWindow,
+    desktopIconLayout,
   } = useUiStore();
 
   const { projects, categories, currentProjectId, setCurrentProjectId } = useProjectStore();
@@ -165,10 +170,10 @@ export default function Desktop({
   const runningAgentCount = agents.filter((a) => a.status === "working").length;
 
   const [agentManagerCreateCount, setAgentManagerCreateCount] = useState(0);
+  const [showQuickCreateAgent, setShowQuickCreateAgent] = useState(false);
   const [showWidgetPicker, setShowWidgetPicker] = useState(false);
   const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [showShortcutsGuide, setShowShortcutsGuide] = useState(false);
-  const [showUserGuide, setShowUserGuide] = useState(false);
   const [showWallpaperPicker, setShowWallpaperPicker] = useState(false);
   const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number } | null>(null);
   const [showMarkdownEditor, setShowMarkdownEditor] = useState(false);
@@ -177,6 +182,16 @@ export default function Desktop({
   const [quickLookProjectId, setQuickLookProjectId] = useState<string | null>(null);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [openProjectWindowIds, setOpenProjectWindowIds] = useState<Set<string>>(new Set());
+
+  // ── 아이콘 다중 선택 + 러버밴드 ───────────────────────────────────
+  const [selectedIconIds, setSelectedIconIds] = useState<Set<string>>(new Set());
+  const [selectionRect, setSelectionRect] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
+  const selectionStart = useRef<{ x: number; y: number } | null>(null);
+  const selectionRectLive = useRef<{ x: number; y: number; w: number; h: number } | null>(null);
+  const justFinishedRubberBand = useRef(false);
+  // 아이콘 위치 맵 (러버밴드 히트 테스트용)
+  const iconPositionsRef = useRef<Map<string, { x: number; y: number }>>(new Map());
+
   const [newFolderPos, setNewFolderPos] = useState<{ x: number; y: number } | null>(null);
   const [newFolderName, setNewFolderName] = useState("");
   const newFolderCreating = useRef(false);
@@ -348,7 +363,61 @@ export default function Desktop({
         return;
       }
 
+      // Cmd+W / Ctrl+W — 최상단 창 닫기
+      if ((e.ctrlKey || e.metaKey) && e.key === "w") {
+        e.preventDefault();
+        const { windowFocusOrder, closeWindow: cw } = useUiStore.getState();
+        const top = windowFocusOrder[windowFocusOrder.length - 1];
+        if (top) cw(top);
+        return;
+      }
+
       if (isInput) return;
+
+      // Delete / Backspace — 선택된 삭제 가능 아이콘 삭제
+      if (e.key === "Delete" || e.key === "Backspace") {
+        const ids = useUiStore.getState().desktopIconLayout;
+        void ids; // suppress lint
+        const sel = [...selectedIconIds];
+        if (sel.length > 0) {
+          sel.forEach((id) => {
+            if (id.startsWith("project-")) {
+              const projId = id.replace("project-", "");
+              handleDeleteProject(projId);
+            } else if (id.startsWith("doc-")) {
+              const docId = id.replace("doc-", "");
+              removePendingDoc(docId);
+            } else if (id.startsWith("widget-icon-")) {
+              const wId = id.replace("widget-icon-", "");
+              removeWidgetIcon(wId as Parameters<typeof removeWidgetIcon>[0]);
+            }
+          });
+          setSelectedIconIds(new Set());
+          return;
+        }
+        // 단일 프로젝트 선택된 경우
+        if (selectedProjectId) {
+          handleDeleteProject(selectedProjectId);
+          setSelectedProjectId(null);
+          return;
+        }
+      }
+
+      // Enter — 선택된 프로젝트 열기
+      if (e.key === "Enter" && selectedProjectId) {
+        e.preventDefault();
+        setOpenProjectWindowIds((prev) => new Set([...prev, selectedProjectId]));
+        return;
+      }
+
+      // F2 — 선택된 아이콘 이름 변경 (DesktopIcon의 rename trigger)
+      if (e.key === "F2" && selectedProjectId) {
+        e.preventDefault();
+        // DesktopIcon 컴포넌트가 data-icon-id 속성으로 찾아 rename dispatch
+        const el = document.querySelector(`[data-icon-id="project-${selectedProjectId}"]`) as HTMLElement | null;
+        el?.dispatchEvent(new CustomEvent("agentdesk:rename", { bubbles: true }));
+        return;
+      }
 
       // Space — Quick Look on selected project
       if (e.key === " " && selectedProjectId) {
@@ -359,7 +428,7 @@ export default function Desktop({
 
       // ? — UserGuide
       if (e.key === "?" && !e.ctrlKey && !e.metaKey) {
-        setShowUserGuide((v) => !v);
+        toggleWindow("user-guide");
         return;
       }
 
@@ -392,7 +461,7 @@ export default function Desktop({
       window.removeEventListener("keydown", handler);
       if (gTimer.current) clearTimeout(gTimer.current);
     };
-  }, [toggleWindow, openCli, jiggleMode, setJiggleMode, missionControlOpen, setMissionControlOpen, quickLookProjectId, selectedProjectId, selectedAgentId, setSelectedAgentId]);
+  }, [toggleWindow, openCli, jiggleMode, setJiggleMode, missionControlOpen, setMissionControlOpen, quickLookProjectId, selectedProjectId, selectedAgentId, setSelectedAgentId, selectedIconIds, handleDeleteProject, removePendingDoc, removeWidgetIcon]);
 
   // jiggle 모드에서 바탕화면 클릭 시 해제
   function onDesktopClick(e: React.MouseEvent) {
@@ -401,6 +470,79 @@ export default function Desktop({
     if (jiggleMode && e.target === e.currentTarget) {
       setJiggleMode(false);
     }
+  }
+
+  // ── 러버밴드 선택 (내부 콘텐츠 div 전용) ───────────────────────────
+  function onContentMouseDown(e: React.MouseEvent<HTMLDivElement>) {
+    if (e.button !== 0) return;
+    if (e.target !== e.currentTarget) return; // 빈 배경에서만
+
+    // 선택 초기화 (기존 선택 지우기)
+    if (!e.shiftKey && !e.metaKey && !e.ctrlKey) {
+      setSelectedIconIds(new Set());
+    }
+
+    selectionStart.current = { x: e.clientX, y: e.clientY - 44 };
+    selectionRectLive.current = null;
+
+    function onMove(ev: MouseEvent) {
+      if (!selectionStart.current) return;
+      const sx = selectionStart.current.x;
+      const sy = selectionStart.current.y;
+      const cx = ev.clientX;
+      const cy = ev.clientY - 44;
+      const dx = Math.abs(cx - sx);
+      const dy = Math.abs(cy - sy);
+      if (dx < 4 && dy < 4) return;
+
+      const rect = {
+        x: Math.min(sx, cx),
+        y: Math.min(sy, cy),
+        w: Math.abs(cx - sx),
+        h: Math.abs(cy - sy),
+      };
+      selectionRectLive.current = rect;
+      setSelectionRect({ ...rect });
+    }
+
+    function onUp() {
+      const rect = selectionRectLive.current;
+      if (rect && (rect.w > 4 || rect.h > 4)) {
+        const layout = useUiStore.getState().desktopIconLayout;
+        const newSel = new Set<string>();
+        iconPositionsRef.current.forEach((pos, id) => {
+          const p = layout[id] ?? pos;
+          const inRect =
+            p.x < rect.x + rect.w &&
+            p.x + 72 > rect.x &&
+            p.y < rect.y + rect.h &&
+            p.y + 80 > rect.y;
+          if (inRect) newSel.add(id);
+        });
+        if (newSel.size > 0) {
+          justFinishedRubberBand.current = true;
+          setSelectedIconIds(newSel);
+        }
+      }
+      setSelectionRect(null);
+      selectionRectLive.current = null;
+      selectionStart.current = null;
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    }
+
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+  }
+
+  function onContentClick(e: React.MouseEvent<HTMLDivElement>) {
+    if (e.target !== e.currentTarget) return;
+    if (justFinishedRubberBand.current) {
+      justFinishedRubberBand.current = false;
+      return;
+    }
+    setSelectedIconIds(new Set());
+    setSelectedProjectId(null);
   }
 
   // 데스크톱 아이콘 정의 (채팅·라이브러리는 Dock에서 제공)
@@ -454,6 +596,26 @@ export default function Desktop({
 
   const quickLookProject = quickLookProjectId ? projects.find((p) => p.id === quickLookProjectId) ?? null : null;
 
+  // 러버밴드 히트 테스트용 아이콘 위치 맵 갱신
+  useEffect(() => {
+    const map = new Map<string, { x: number; y: number }>();
+    allIcons.forEach((def, i) => {
+      map.set(def.id, DEFAULT_ICON_POSITIONS[def.id] ?? { x: 24 + i * ICON_GRID_X, y: 60 });
+    });
+    pendingDocs.forEach((doc, i) => {
+      map.set(`doc-${doc.id}`, { x: 24 + i * ICON_GRID_X, y: 60 + ICON_GRID_Y * 3 + ICON_GRID_Y });
+    });
+    folders.forEach((folder, i) => {
+      map.set(`folder-${folder.id}`, { x: 24 + i * ICON_GRID_X, y: 60 + ICON_GRID_Y * 2 });
+    });
+    projects.filter((p) => !p.folder_id).forEach((project, i) => {
+      const col = i % 9; const row = Math.floor(i / 9);
+      map.set(`project-${project.id}`, { x: 24 + col * ICON_GRID_X, y: 60 + ICON_GRID_Y + row * ICON_GRID_Y });
+    });
+    iconPositionsRef.current = map;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allIcons.length, pendingDocs.length, folders.length, projects.length, desktopIconLayout]);
+
   return (
     <div
       style={{
@@ -489,7 +651,7 @@ export default function Desktop({
         onOpenWallpaperPicker={() => setShowWallpaperPicker(true)}
         onOpenWidgetPicker={() => setShowWidgetPicker(true)}
         onOpenMissionControl={() => setMissionControlOpen(true)}
-        onOpenUserGuide={() => setShowUserGuide(true)}
+        onOpenUserGuide={() => toggleWindow("user-guide")}
         onOpenCommandPalette={() => setShowCommandPalette(true)}
         onOpenExportModal={() => setShowExportModal(true)}
         runningAgentCount={runningAgentCount}
@@ -497,6 +659,8 @@ export default function Desktop({
 
       {/* 바탕화면 영역 (메뉴바 아래, Dock 위) */}
       <div
+        onMouseDown={onContentMouseDown}
+        onClick={onContentClick}
         style={{
           position: "absolute",
           top: 44,
@@ -506,6 +670,23 @@ export default function Desktop({
           overflow: "hidden",
         }}
       >
+        {/* 러버밴드 선택 사각형 */}
+        {selectionRect && (
+          <div
+            style={{
+              position: "absolute",
+              left: selectionRect.x,
+              top: selectionRect.y,
+              width: selectionRect.w,
+              height: selectionRect.h,
+              border: "1px solid rgba(0,122,255,0.75)",
+              background: "rgba(0,122,255,0.10)",
+              borderRadius: 3,
+              pointerEvents: "none",
+              zIndex: 50,
+            }}
+          />
+        )}
         {/* 시스템 앱 아이콘 + 위젯 아이콘 */}
         {allIcons.map((def) => {
           const defaultPos = DEFAULT_ICON_POSITIONS[def.id];
@@ -515,6 +696,7 @@ export default function Desktop({
               def={def}
               defaultX={defaultPos.x}
               defaultY={defaultPos.y}
+              isSelected={selectedIconIds.has(def.id)}
             />
           );
         })}
@@ -537,6 +719,7 @@ export default function Desktop({
               def={def}
               defaultX={24 + i * ICON_GRID_X}
               defaultY={60 + ICON_GRID_Y * 3 + ICON_GRID_Y}
+              isSelected={selectedIconIds.has(def.id)}
             />
           );
         })}
@@ -629,6 +812,7 @@ export default function Desktop({
             onClick: () => {
               setCurrentProjectId(project.id);
               setSelectedProjectId(project.id);
+              setSelectedIconIds(new Set([`project-${project.id}`]));
               setOpenProjectWindowIds((prev) => new Set([...prev, project.id]));
             },
             onContextMenu: (e) => setProjectCtxMenu({ x: e.clientX, y: e.clientY, projectId: project.id, projectName: project.name }),
@@ -639,6 +823,7 @@ export default function Desktop({
               def={def}
               defaultX={24 + col * ICON_GRID_X}
               defaultY={60 + ICON_GRID_Y + row * ICON_GRID_Y}
+              isSelected={selectedIconIds.has(`project-${project.id}`)}
             />
           );
         })}
@@ -687,7 +872,7 @@ export default function Desktop({
       <Dock
         onCreateTask={onCreateTask}
         onCreateProject={onProjectCreate}
-        onCreateAgent={() => { setAgentManagerCreateCount((c) => c + 1); openWindow("agent-manager"); }}
+        onCreateAgent={() => setShowQuickCreateAgent(true)}
       />
 
       {/* 앱 창들 */}
@@ -696,6 +881,7 @@ export default function Desktop({
       {openWindows.has("image-studio")  && <ImageStudioWindow />}
       {openWindows.has("workflow")      && <WorkflowWindow />}
       {openWindows.has("library")       && <LibraryWindow />}
+      {openWindows.has("library-guide") && <LibraryGuideWindow />}
       {openWindows.has("settings")      && (
         <SettingsWindow
           onSaveSettings={onSaveSettings}
@@ -705,7 +891,16 @@ export default function Desktop({
         />
       )}
       {openWindows.has("agent-manager") && <AgentManagerWindow onAgentsChange={onAgentsChange} createTrigger={agentManagerCreateCount} />}
+      {showQuickCreateAgent && (
+        <QuickCreateAgentModal
+          onClose={() => setShowQuickCreateAgent(false)}
+          onCreated={onAgentsChange}
+        />
+      )}
       {openWindows.has("cli")           && <CliWindow />}
+      {[...openCliAgentIds].map((agentId) => (
+        <CliWindow key={`cli-agent-${agentId}`} agentId={agentId} onClose={() => closeCliWindow(agentId)} />
+      ))}
       {openWindows.has("reports")       && <ReportWindow />}
       {[...openCustomApps].map((id) => (
         <CustomFeatureWindow key={id} featureId={id} onClose={() => closeCustomApp(id)} />
@@ -1080,11 +1275,11 @@ export default function Desktop({
         }}
         onCreateTask={() => { setShowCommandPalette(false); onCreateTask(); }}
         onSelectProject={(p) => { setShowCommandPalette(false); setCurrentProjectId(p.id); }}
-        onOpenShortcutsGuide={() => { setShowCommandPalette(false); setShowUserGuide(true); }}
+        onOpenShortcutsGuide={() => { setShowCommandPalette(false); toggleWindow("user-guide"); }}
       />
 
       {/* 유저 가이드 패널 */}
-      <UserGuidePanel open={showUserGuide} onClose={() => setShowUserGuide(false)} />
+      {openWindows.has("user-guide") && <UserGuidePanel />}
 
       {/* 에이전트 상세 패널 */}
       <AgentDetailPanel />

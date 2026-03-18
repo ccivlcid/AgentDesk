@@ -910,4 +910,20 @@ export function registerAgentCrudRoutes(ctx: RuntimeContext): void {
       by_pack: byPack,
     });
   });
+
+  // ---------------------------------------------------------------------------
+  // Agent Project Path — 에이전트가 속한 첫 번째 프로젝트의 project_path 반환
+  // ---------------------------------------------------------------------------
+  app.get("/api/agents/:id/project-path", (req, res) => {
+    const { id } = req.params;
+    const row = db
+      .prepare(
+        `SELECT p.project_path FROM projects p
+         JOIN project_agents pa ON pa.project_id = p.id
+         WHERE pa.agent_id = ? AND p.project_path IS NOT NULL AND p.project_path != ''
+         ORDER BY pa.created_at ASC LIMIT 1`,
+      )
+      .get(id) as { project_path: string } | undefined;
+    res.json({ ok: true, project_path: row?.project_path ?? null });
+  });
 }

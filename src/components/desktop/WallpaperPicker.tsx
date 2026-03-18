@@ -1,6 +1,33 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useUiStore } from "../../store/uiStore";
 import { useI18n } from "../../i18n";
+
+type FitMode = "cover" | "contain" | "center" | "stretch" | "tile";
+
+const FIT_CSS: Record<FitMode, string> = {
+  cover:   "center/cover no-repeat",
+  contain: "center/contain no-repeat",
+  center:  "center/auto no-repeat",
+  stretch: "center/100% 100% no-repeat",
+  tile:    "left top/auto repeat",
+};
+
+function extractImageUrl(css: string): string {
+  const m = css.match(/^url\("([^"]+)"\)/);
+  return m ? m[1] : "";
+}
+
+function buildImageCss(url: string, fit: FitMode): string {
+  return `url("${url}") ${FIT_CSS[fit]}`;
+}
+
+function detectFitMode(css: string): FitMode {
+  if (css.includes("cover"))     return "cover";
+  if (css.includes("contain"))   return "contain";
+  if (css.includes("100% 100%")) return "stretch";
+  if (css.includes("repeat"))    return "tile";
+  return "center";
+}
 
 const mono = "var(--th-font-mono)";
 
@@ -33,37 +60,32 @@ export function isLightWallpaper(css: string): boolean {
  *  - GIF: 원본 base64 그대로 (애니메이션 유지)
  *  - 그 외: canvas로 1920×1080 이하 리사이즈 + JPEG 압축
  */
-function imageFileToWallpaperCss(file: File): Promise<string> {
+function imageFileToWallpaperCss(file: File, fit: FitMode = "cover"): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onerror = reject;
 
-    // GIF는 canvas 변환 없이 원본 그대로 사용 (애니메이션 보존)
     if (file.type === "image/gif") {
       reader.onload = (e) => {
         const dataUrl = e.target!.result as string;
-        resolve(`url("${dataUrl}") center/cover no-repeat`);
+        resolve(buildImageCss(dataUrl, fit));
       };
       reader.readAsDataURL(file);
       return;
     }
 
-    // PNG / JPG / WEBP / AVIF → canvas 리사이즈 + JPEG 압축
     reader.onload = (e) => {
       const img = new Image();
       img.onload = () => {
         const MAX_W = 1920;
         const MAX_H = 1080;
         const scale = Math.min(1, MAX_W / img.width, MAX_H / img.height);
-        const w = Math.round(img.width * scale);
-        const h = Math.round(img.height * scale);
         const canvas = document.createElement("canvas");
-        canvas.width = w;
-        canvas.height = h;
-        const ctx = canvas.getContext("2d")!;
-        ctx.drawImage(img, 0, 0, w, h);
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
         const dataUrl = canvas.toDataURL("image/jpeg", 0.82);
-        resolve(`url("${dataUrl}") center/cover no-repeat`);
+        resolve(buildImageCss(dataUrl, fit));
       };
       img.onerror = reject;
       img.src = e.target!.result as string;
@@ -88,10 +110,21 @@ export default function WallpaperPicker({ onClose }: Props) {
   const [urlError, setUrlError] = useState("");
   const [processing, setProcessing] = useState(false);
   const [sizeWarning, setSizeWarning] = useState("");
+  const [fitMode, setFitMode] = useState<FitMode>(() =>
+    isImageWallpaper(wallpaper) ? detectFitMode(wallpaper) : "cover"
+  );
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { t } = useI18n();
 
   const isCustom = isImageWallpaper(wallpaper);
+
+  // 현재 커스텀 이미지의 fit 모드가 바뀌면 즉시 반영
+  useEffect(() => {
+    if (!isCustom) return;
+    const url = extractImageUrl(wallpaper);
+    if (url) setWallpaper(buildImageCss(url, fitMode));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fitMode]);
 
   // 미리보기: hovered 그라디언트 → 현재 wallpaper
   const previewBg = hovered
@@ -110,7 +143,7 @@ export default function WallpaperPicker({ onClose }: Props) {
     }
     setProcessing(true);
     try {
-      const css = await imageFileToWallpaperCss(file);
+      const css = await imageFileToWallpaperCss(file, fitMode);
       setWallpaper(css);
       onClose();
     } catch {
@@ -130,7 +163,7 @@ export default function WallpaperPicker({ onClose }: Props) {
       return;
     }
     setUrlError("");
-    setWallpaper(`url("${trimmed}") center/cover no-repeat`);
+    setWallpaper(buildImageCss(trimmed, fitMode));
     onClose();
   }
 
@@ -139,7 +172,7 @@ export default function WallpaperPicker({ onClose }: Props) {
     const file = e.dataTransfer.files?.[0];
     if (file?.type.startsWith("image/")) {
       setProcessing(true);
-      imageFileToWallpaperCss(file)
+      imageFileToWallpaperCss(file, fitMode)
         .then((css) => { setWallpaper(css); onClose(); })
         .catch(() => setSizeWarning(t({ ko: "이미지를 처리할 수 없습니다", en: "Could not process image", ja: "画像を処理できません", zh: "无法处理图片" })))
         .finally(() => setProcessing(false));
@@ -286,6 +319,51 @@ export default function WallpaperPicker({ onClose }: Props) {
               </button>
             </div>
           )}
+
+          {/* 표시 방식 선택 */}
+          <div style={{ marginBottom: 12 }}>
+            <div style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-muted)", letterSpacing: "0.06em", marginBottom: 6 }}>
+              {t({ ko: "표시 방식", en: "Display Mode", ja: "表示方式", zh: "显示方式" })}
+            </div>
+            <div style={{ display: "flex", gap: 6 }}>
+              {(
+                [
+                  { id: "cover",   label: t({ ko: "꽉 채움", en: "Cover",   ja: "カバー",   zh: "填充" }),   icon: "⬛" },
+                  { id: "contain", label: t({ ko: "전체 보기", en: "Contain", ja: "収める",   zh: "适应" }),   icon: "🔲" },
+                  { id: "center",  label: t({ ko: "원본",    en: "Center",  ja: "原寸中央", zh: "居中" }),   icon: "⊡" },
+                  { id: "stretch", label: t({ ko: "늘이기",  en: "Stretch", ja: "拡張",     zh: "拉伸" }),   icon: "⟺" },
+                  { id: "tile",    label: t({ ko: "바둑판",  en: "Tile",    ja: "タイル",   zh: "平铺" }),   icon: "⊞" },
+                ] as { id: FitMode; label: string; icon: string }[]
+              ).map(({ id, label, icon }) => {
+                const active = fitMode === id;
+                return (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => setFitMode(id)}
+                    style={{
+                      flex: 1,
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      gap: 3,
+                      padding: "6px 4px",
+                      background: active ? "var(--th-accent)" : "var(--th-bg-elevated)",
+                      border: active ? "1px solid var(--th-accent)" : "1px solid var(--th-border)",
+                      borderRadius: 7,
+                      cursor: "pointer",
+                      transition: "background 0.12s, border-color 0.12s",
+                    }}
+                  >
+                    <span style={{ fontSize: 13, lineHeight: 1 }}>{icon}</span>
+                    <span style={{ fontFamily: mono, fontSize: 9, color: active ? "white" : "var(--th-text-muted)", lineHeight: 1 }}>
+                      {label}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
           {/* 드래그 앤 드롭 / 파일 선택 영역 */}
           <div

@@ -16,7 +16,7 @@ interface DockProps {
 }
 
 export default function Dock({ onCreateTask, onCreateProject, onCreateAgent, onQuickTask }: DockProps) {
-  const { openWindows, toggleWindow } = useUiStore();
+  const { openWindows, toggleWindow, minimizedWindows, restoreWindow } = useUiStore();
   const { theme } = useTheme();
   const { t } = useI18n();
   const isLight = theme === "light";
@@ -25,12 +25,42 @@ export default function Dock({ onCreateTask, onCreateProject, onCreateAgent, onQ
 
   const handleTask = onCreateTask ?? onQuickTask;
 
-  const DOCK_ITEMS: Array<{ id: WindowType; icon: (c: string) => React.ReactNode; label: string; accentColor: string }> = [
-    { id: "tasks",    icon: (c) => <IconDockTasks color={c} />,    label: t({ ko: "보드",       en: "Board",    ja: "ボード",      zh: "看板" }),    accentColor: "#ff9f0a" },
-    { id: "workflow", icon: (c) => <IconDockWorkflow color={c} />, label: t({ ko: "워크플로",   en: "Workflow", ja: "ワークフロー", zh: "工作流" }),  accentColor: "#007aff" },
-    { id: "library",  icon: (c) => <IconDockLibrary color={c} />,  label: t({ ko: "라이브러리", en: "Library",  ja: "ライブラリ",  zh: "库" }),      accentColor: "#30d158" },
-    { id: "settings", icon: (c) => <IconDockSettings color={c} />, label: t({ ko: "설정",       en: "Settings", ja: "設定",        zh: "设置" }),    accentColor: "#636366" },
-    { id: "chat",     icon: (c) => <IconDockChat color={c} />,     label: t({ ko: "채팅",       en: "Chat",     ja: "チャット",    zh: "聊天" }),    accentColor: "#5e5ce6" },
+  const DOCK_ITEMS: Array<{ id: WindowType; icon: (c: string) => React.ReactNode; label: string; accentColor: string; gradient: string }> = [
+    {
+      id: "tasks",
+      icon: (c) => <IconDockTasks color={c} />,
+      label: t({ ko: "보드", en: "Board", ja: "ボード", zh: "看板" }),
+      accentColor: "#ff9f0a",
+      gradient: "linear-gradient(145deg, #ffb340 0%, #ff9f0a 60%, #e8820a 100%)",
+    },
+    {
+      id: "workflow",
+      icon: (c) => <IconDockWorkflow color={c} />,
+      label: t({ ko: "워크플로", en: "Workflow", ja: "ワークフロー", zh: "工作流" }),
+      accentColor: "#007aff",
+      gradient: "linear-gradient(145deg, #409cff 0%, #007aff 60%, #0056cc 100%)",
+    },
+    {
+      id: "library",
+      icon: (c) => <IconDockLibrary color={c} />,
+      label: t({ ko: "라이브러리", en: "Library", ja: "ライブラリ", zh: "库" }),
+      accentColor: "#30d158",
+      gradient: "linear-gradient(145deg, #60e080 0%, #30d158 60%, #25a244 100%)",
+    },
+    {
+      id: "settings",
+      icon: (c) => <IconDockSettings color={c} />,
+      label: t({ ko: "설정", en: "Settings", ja: "設定", zh: "设置" }),
+      accentColor: "#8e8e93",
+      gradient: "linear-gradient(145deg, #aeaeb2 0%, #8e8e93 60%, #6c6c70 100%)",
+    },
+    {
+      id: "chat",
+      icon: (c) => <IconDockChat color={c} />,
+      label: t({ ko: "채팅", en: "Chat", ja: "チャット", zh: "聊天" }),
+      accentColor: "#5e5ce6",
+      gradient: "linear-gradient(145deg, #7d7aff 0%, #5e5ce6 60%, #4a48c2 100%)",
+    },
   ];
 
   const CREATE_ITEMS = [
@@ -77,39 +107,56 @@ export default function Dock({ onCreateTask, onCreateProject, onCreateAgent, onQ
     <div
       style={{
         position: "fixed",
-        bottom: 12,
+        bottom: 10,
         left: "50%",
         transform: "translateX(-50%)",
         zIndex: 1000,
         display: "flex",
         alignItems: "flex-end",
-        gap: 6,
-        background: "var(--th-menubar-bg)",
-        backdropFilter: "blur(20px) saturate(180%)",
-        WebkitBackdropFilter: "blur(20px) saturate(180%)",
-        border: "1px solid var(--th-border)",
-        borderRadius: 20,
-        padding: "8px 14px",
-        boxShadow: "0 8px 32px var(--th-glass-shadow)",
+        gap: 8,
+        background: isLight
+          ? "rgba(255,255,255,0.72)"
+          : "rgba(30,30,36,0.72)",
+        backdropFilter: "blur(32px) saturate(200%)",
+        WebkitBackdropFilter: "blur(32px) saturate(200%)",
+        border: isLight
+          ? "1px solid rgba(255,255,255,0.9)"
+          : "1px solid rgba(255,255,255,0.12)",
+        borderRadius: 22,
+        padding: "10px 16px 8px",
+        boxShadow: "0 8px 40px rgba(0,0,0,0.35), 0 1px 0 rgba(255,255,255,0.06) inset",
       }}
     >
       {DOCK_ITEMS.map((item) => {
         const isOpen = openWindows.has(item.id);
+        const isMinimized = minimizedWindows.has(item.id);
         return (
           <DockButton
             key={item.id}
             label={item.label}
             isOpen={isOpen}
+            isMinimized={isMinimized}
             accentColor={item.accentColor}
+            gradient={item.gradient}
             icon={item.icon}
             isLight={isLight}
-            onClick={() => toggleWindow(item.id)}
+            onClick={() => {
+              if (isMinimized) restoreWindow(item.id);
+              else toggleWindow(item.id);
+            }}
           />
         );
       })}
 
       {/* 구분선 */}
-      <div style={{ width: 1, height: 32, background: "var(--th-border)", alignSelf: "center", margin: "0 6px" }} />
+      <div style={{
+        width: 1,
+        height: 36,
+        background: isLight ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.14)",
+        alignSelf: "center",
+        margin: "0 4px",
+        flexShrink: 0,
+      }} />
 
       {/* + 추가 버튼 */}
       <div ref={menuRef} style={{ position: "relative" }}>
@@ -118,10 +165,11 @@ export default function Dock({ onCreateTask, onCreateProject, onCreateAgent, onQ
           isOpen={menuOpen}
           isLight={isLight}
           accentColor="#ff9f0a"
+          gradient="linear-gradient(145deg, #ffb340 0%, #ff9f0a 60%, #e8820a 100%)"
           icon={(c) => (
-            <svg viewBox="0 0 22 22" fill="none" stroke={c} strokeWidth={1.8} strokeLinecap="round" width={22} height={22}>
-              <line x1="11" y1="4" x2="11" y2="18" />
-              <line x1="4" y1="11" x2="18" y2="11" />
+            <svg viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth={2} strokeLinecap="round" width={24} height={24}>
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
             </svg>
           )}
           onClick={() => setMenuOpen((v) => !v)}
@@ -137,31 +185,34 @@ export default function Dock({ onCreateTask, onCreateProject, onCreateAgent, onQ
             />
             <div style={{
               position: "absolute",
-              bottom: "calc(100% + 10px)",
+              bottom: "calc(100% + 12px)",
               left: "50%",
               transform: "translateX(-50%)",
-              zIndex: 1000,
-              background: "var(--th-menubar-bg)",
-              backdropFilter: "blur(20px) saturate(180%)",
-              WebkitBackdropFilter: "blur(20px) saturate(180%)",
-              border: "1px solid var(--th-border)",
+              zIndex: 1001,
+              background: isLight ? "rgba(255,255,255,0.85)" : "rgba(30,30,36,0.88)",
+              backdropFilter: "blur(24px) saturate(180%)",
+              WebkitBackdropFilter: "blur(24px) saturate(180%)",
+              border: isLight ? "1px solid rgba(0,0,0,0.1)" : "1px solid rgba(255,255,255,0.12)",
               borderRadius: 14,
               padding: "6px",
-              boxShadow: "0 8px 32px var(--th-glass-shadow)",
+              boxShadow: "0 12px 40px rgba(0,0,0,0.3)",
               display: "flex",
               flexDirection: "column",
               gap: 2,
-              minWidth: 160,
+              minWidth: 168,
             }}>
               {/* 아래 화살표 */}
               <div style={{
                 position: "absolute",
-                bottom: -5, left: "50%",
+                bottom: -5,
+                left: "50%",
                 transform: "translateX(-50%) rotate(45deg)",
-                width: 10, height: 10,
-                background: "var(--th-menubar-bg)",
-                border: "1px solid var(--th-border)",
-                borderTop: "none", borderLeft: "none",
+                width: 10,
+                height: 10,
+                background: isLight ? "rgba(255,255,255,0.85)" : "rgba(30,30,36,0.88)",
+                border: isLight ? "1px solid rgba(0,0,0,0.1)" : "1px solid rgba(255,255,255,0.12)",
+                borderTop: "none",
+                borderLeft: "none",
               }} />
 
               {CREATE_ITEMS.map((item) => (
@@ -212,73 +263,117 @@ export default function Dock({ onCreateTask, onCreateProject, onCreateAgent, onQ
 function DockButton({
   label,
   isOpen,
+  isMinimized = false,
   accentColor,
+  gradient,
   icon,
   isLight,
   onClick,
 }: {
   label: string;
   isOpen: boolean;
+  isMinimized?: boolean;
   accentColor: string;
+  gradient: string;
   icon: (color: string) => React.ReactNode;
   isLight: boolean;
   onClick?: () => void;
 }) {
-  const iconColor = isOpen
-    ? "rgba(255,255,255,0.95)"
-    : isLight ? "rgba(0,0,0,0.72)" : "rgba(255,255,255,0.70)";
-  const bgOpen = `${accentColor}dd`;
-  const bgHover = isLight ? `${accentColor}33` : `${accentColor}55`;
+  const [hovered, setHovered] = useState(false);
 
   return (
-    <button
-      onClick={onClick}
-      title={label}
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        gap: 4,
-        background: isOpen ? bgOpen : "transparent",
-        border: `1px solid ${isOpen ? `${accentColor}88` : "transparent"}`,
-        borderRadius: 12,
-        padding: "7px 11px",
-        cursor: "pointer",
-        transition: "all 0.15s ease",
-        minWidth: 50,
-        boxShadow: isOpen ? `0 2px 12px ${accentColor}44` : "none",
-      }}
-      onMouseEnter={(e) => {
-        const el = e.currentTarget as HTMLButtonElement;
-        if (!isOpen) {
-          el.style.background = bgHover;
-          el.style.borderColor = `${accentColor}44`;
-        }
-        el.style.transform = "translateY(-2px) scale(1.05)";
-      }}
-      onMouseLeave={(e) => {
-        const el = e.currentTarget as HTMLButtonElement;
-        el.style.background = isOpen ? bgOpen : "transparent";
-        el.style.borderColor = isOpen ? `${accentColor}88` : "transparent";
-        el.style.transform = "";
-      }}
-    >
-      {icon(iconColor)}
-      <span style={{
-        fontFamily: mono,
-        fontSize: 9,
-        color: isOpen ? "rgba(255,255,255,0.9)" : "var(--th-text-muted)",
-        letterSpacing: "0.02em",
-      }}>
-        {label}
-      </span>
-      {isOpen && (
-        <div style={{
-          width: 4, height: 4, borderRadius: "50%",
-          background: isLight ? "rgba(0,0,0,0.45)" : "rgba(255,255,255,0.8)",
-          marginTop: -2,
-        }} />
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 5, position: "relative" }}>
+      {/* 툴팁 */}
+      {hovered && (
+        <div
+          style={{
+            position: "absolute",
+            bottom: "calc(100% + 10px)",
+            left: "50%",
+            transform: "translateX(-50%)",
+            background: isLight ? "rgba(30,30,30,0.82)" : "rgba(20,20,20,0.88)",
+            backdropFilter: "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)",
+            color: "rgba(255,255,255,0.92)",
+            fontFamily: mono,
+            fontSize: 11,
+            fontWeight: 500,
+            padding: "4px 10px",
+            borderRadius: 7,
+            whiteSpace: "nowrap",
+            pointerEvents: "none",
+            zIndex: 10,
+            border: "1px solid rgba(255,255,255,0.10)",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.25)",
+          }}
+        >
+          {label}
+        </div>
       )}
-    </button>
+
+      {/* Squircle 아이콘 버튼 */}
+      <button
+        type="button"
+        onClick={onClick}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        style={{
+          width: 52,
+          height: 52,
+          borderRadius: 14,
+          background: gradient,
+          border: `1px solid rgba(255,255,255,${isOpen ? "0.28" : "0.14"})`,
+          cursor: "pointer",
+          padding: 0,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          boxShadow: isOpen
+            ? `0 6px 24px ${accentColor}55, 0 2px 6px rgba(0,0,0,0.38), inset 0 1px 0 rgba(255,255,255,0.22)`
+            : `0 3px 12px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.14)`,
+          transform: hovered
+            ? "scale(1.28) translateY(-8px)"
+            : isOpen
+            ? "scale(1.06)"
+            : "scale(1)",
+          transition: "transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.15s ease",
+          outline: "none",
+          position: "relative",
+          flexShrink: 0,
+        }}
+      >
+        {/* 아이콘 위 광택 레이어 */}
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            right: 0,
+            height: "50%",
+            borderRadius: "14px 14px 0 0",
+            background: "linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0) 100%)",
+            pointerEvents: "none",
+          }}
+        />
+        {icon("rgba(255,255,255,0.95)")}
+      </button>
+
+      {/* 실행중/최소화 표시 점 */}
+      <div
+        style={{
+          width: 4,
+          height: 4,
+          borderRadius: "50%",
+          background: isMinimized
+            ? accentColor + "99"   // 최소화: accent 반투명
+            : isOpen
+              ? isLight ? "rgba(0,0,0,0.48)" : "rgba(255,255,255,0.82)"
+              : "transparent",
+          border: isMinimized ? `1px solid ${accentColor}` : "none",
+          transition: "background 0.15s",
+          flexShrink: 0,
+        }}
+      />
+    </div>
   );
 }

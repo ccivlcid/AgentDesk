@@ -1,4 +1,5 @@
 import { createPortal } from "react-dom";
+import { useEffect, useRef, useState } from "react";
 import type { ManualPathEntry, ProjectI18nTranslate } from "./types";
 import TrafficLights from "../desktop/TrafficLights";
 
@@ -31,6 +32,53 @@ export default function ManualPathPickerDialog({
   onLoadEntries,
   onSelectCurrent,
 }: ManualPathPickerDialogProps) {
+  const [creating, setCreating] = useState(false);
+  const [newFolderName, setNewFolderName] = useState("");
+  const [createError, setCreateError] = useState<string | null>(null);
+  const [createBusy, setCreateBusy] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (creating) setTimeout(() => inputRef.current?.focus(), 50);
+  }, [creating]);
+
+  const handleConfirmCreate = async () => {
+    const name = newFolderName.trim();
+    if (!name || !manualPathCurrent) { setCreating(false); return; }
+    setCreateBusy(true);
+    setCreateError(null);
+    try {
+      const res = await fetch("/api/fs/mkdir", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ parent_path: manualPathCurrent, name }),
+      });
+      const data = await res.json() as { ok: boolean; error?: string };
+      if (!data.ok) {
+        setCreateError(
+          data.error === "already_exists"
+            ? t({ ko: "이미 존재합니다", en: "Already exists", ja: "既に存在します", zh: "已存在" })
+            : (data.error ?? "error"),
+        );
+        setCreateBusy(false);
+        return;
+      }
+      setCreating(false);
+      setNewFolderName("");
+      await onLoadEntries(manualPathCurrent);
+    } catch {
+      setCreateError(t({ ko: "생성 실패", en: "Failed", ja: "作成失敗", zh: "创建失败" }));
+    } finally {
+      setCreateBusy(false);
+    }
+  };
+
+  const handleCancelCreate = () => {
+    setCreating(false);
+    setNewFolderName("");
+    setCreateError(null);
+  };
+
   if (!open) return null;
 
   return createPortal(
@@ -105,10 +153,52 @@ export default function ManualPathPickerDialog({
           >
             {manualPathCurrent || "—"}
           </div>
+          <button
+            type="button"
+            disabled={!manualPathCurrent || manualPathLoading}
+            onClick={() => { setCreating(true); setNewFolderName(""); setCreateError(null); }}
+            title={t({ ko: "새 폴더 만들기", en: "New Folder", ja: "新規フォルダ", zh: "新建文件夹" })}
+            className="disabled:cursor-not-allowed disabled:opacity-35 transition-opacity hover:opacity-75"
+            style={{ ...mono, fontSize: 13, lineHeight: 1, background: "none", border: "none", color: "var(--th-text-secondary)", cursor: "pointer", padding: "2px 6px" }}
+          >
+            📁+
+          </button>
         </div>
 
         {/* File list */}
         <div className="flex-1 min-h-0 overflow-y-auto" style={{ background: "var(--th-bg-elevated)" }}>
+          {creating && (
+            <div style={{ padding: "6px 12px", borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-panel)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <span style={{ fontSize: 14, flexShrink: 0 }}>📁</span>
+                <input
+                  ref={inputRef}
+                  value={newFolderName}
+                  onChange={(e) => setNewFolderName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") void handleConfirmCreate();
+                    if (e.key === "Escape") handleCancelCreate();
+                  }}
+                  placeholder={t({ ko: "폴더 이름", en: "Folder name", ja: "フォルダ名", zh: "文件夹名称" })}
+                  style={{ ...mono, flex: 1, fontSize: 12, padding: "3px 8px", background: "var(--th-bg-elevated)", border: "1px solid var(--th-accent)", borderRadius: 4, color: "var(--th-text-primary)", outline: "none" }}
+                />
+                <button
+                  type="button"
+                  onClick={() => void handleConfirmCreate()}
+                  disabled={createBusy || !newFolderName.trim()}
+                  style={{ ...mono, fontSize: 12, padding: "3px 8px", background: "var(--th-accent)", color: "var(--th-accent-text, var(--th-bg-primary))", border: "none", borderRadius: 4, cursor: "pointer", opacity: createBusy || !newFolderName.trim() ? 0.4 : 1 }}
+                >✓</button>
+                <button
+                  type="button"
+                  onClick={handleCancelCreate}
+                  style={{ ...mono, fontSize: 12, padding: "3px 8px", background: "none", border: "1px solid var(--th-border)", borderRadius: 4, color: "var(--th-text-muted)", cursor: "pointer" }}
+                >✕</button>
+              </div>
+              {createError && (
+                <p style={{ ...mono, fontSize: 10, color: "var(--th-danger-text, #f87171)", marginTop: 4 }}>{createError}</p>
+              )}
+            </div>
+          )}
           {manualPathLoading ? (
             <div className="flex items-center justify-center py-12">
               <p style={{ ...mono, fontSize: 11, color: "var(--th-text-muted)" }}>
