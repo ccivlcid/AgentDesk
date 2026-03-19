@@ -281,11 +281,42 @@ export function createUsageCliTools(deps: CreateUsageCliToolsDeps) {
     });
   }
 
+  /** Windows: PATH에 npm global bin이 없어도 직접 경로 확인으로 보완 */
+  function winFallbackExists(binaryName: string): boolean {
+    if (process.platform !== "win32") return false;
+    const candidates: string[] = [];
+    // %APPDATA%\npm\name.cmd  (npm 기본 global bin)
+    if (process.env.APPDATA)
+      candidates.push(path.join(process.env.APPDATA, "npm", `${binaryName}.cmd`));
+    // %USERPROFILE%\AppData\Roaming\npm\name.cmd
+    if (process.env.USERPROFILE)
+      candidates.push(path.join(process.env.USERPROFILE, "AppData", "Roaming", "npm", `${binaryName}.cmd`));
+    // npm prefix from common locations
+    candidates.push(path.join(os.homedir(), "AppData", "Roaming", "npm", `${binaryName}.cmd`));
+    // nvm-windows style: %APPDATA%\nvm\v*/name.cmd
+    const nvmDir = process.env.NVM_HOME ?? path.join(os.homedir(), "AppData", "Roaming", "nvm");
+    if (fs.existsSync(nvmDir)) {
+      try {
+        for (const ver of fs.readdirSync(nvmDir)) {
+          candidates.push(path.join(nvmDir, ver, `${binaryName}.cmd`));
+        }
+      } catch { /* ignore */ }
+    }
+    return candidates.some((c) => { try { return fs.existsSync(c); } catch { return false; } });
+  }
+
   async function detectCliTool(tool: CliToolDef): Promise<CliToolStatus> {
     const whichCmd = process.platform === "win32" ? "where" : "which";
+    let foundByPath = false;
     try {
-      await execWithTimeout(whichCmd, [tool.name], 1500);
+      // Windows: where 명령 타임아웃을 더 길게 (PATH 검색 느릴 수 있음)
+      await execWithTimeout(whichCmd, [tool.name], process.platform === "win32" ? 3000 : 1500);
+      foundByPath = true;
     } catch {
+      // PATH에서 못 찾았어도 Windows에서는 known 경로 직접 확인
+      foundByPath = winFallbackExists(tool.name);
+    }
+    if (!foundByPath) {
       return { installed: false, version: null, authenticated: false, authHint: tool.authHint };
     }
 

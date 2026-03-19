@@ -1,7 +1,7 @@
 /**
  * Place a dragged icon at the drop position.
- * If no other icon overlaps there, use the position as-is.
- * If there is an overlap, spiral outward to find the nearest free spot.
+ * Drop position is first snapped to the nearest grid cell.
+ * If the snapped cell is free, use it. Otherwise spiral outward.
  */
 
 export const ICON_GRID_X = 88;
@@ -10,9 +10,21 @@ export const ICON_GRID_Y = 92;
 /** Minimum y so icons don't slide under the menu bar */
 const MIN_Y = 48;
 
+/** Grid origin — all cells are multiples of the grid size from this point */
+const GRID_ORIGIN_X = 24;
+const GRID_ORIGIN_Y = 60;
+
 /** Collision radius — icons closer than this (in each axis) are considered overlapping */
 const COLLISION_W = ICON_GRID_X - 8;
 const COLLISION_H = ICON_GRID_Y - 8;
+
+/** Snap a raw coordinate to the nearest grid cell */
+function snapX(x: number): number {
+  return GRID_ORIGIN_X + Math.round((x - GRID_ORIGIN_X) / ICON_GRID_X) * ICON_GRID_X;
+}
+function snapY(y: number): number {
+  return GRID_ORIGIN_Y + Math.round((y - GRID_ORIGIN_Y) / ICON_GRID_Y) * ICON_GRID_Y;
+}
 
 function overlapsAny(
   x: number,
@@ -33,26 +45,26 @@ export function snapToFreeCell(
   selfId: string,
   layout: Record<string, { x: number; y: number }>,
 ): { x: number; y: number } {
-  const x0 = Math.max(0, dropX);
-  const y0 = Math.max(MIN_Y, dropY);
+  // Snap drop position to nearest grid cell first
+  const x0 = Math.max(GRID_ORIGIN_X, snapX(dropX));
+  const y0 = Math.max(MIN_Y, snapY(dropY));
 
-  // If no overlap at drop position, place exactly there
+  // If snapped cell is free, place there
   if (!overlapsAny(x0, y0, selfId, layout)) {
     return { x: x0, y: y0 };
   }
 
   // Overlap detected — search outward in a grid-step spiral for nearest free cell
   for (let radius = 1; radius <= 20; radius++) {
-    const step = Math.min(ICON_GRID_X, ICON_GRID_Y);
     const candidates: Array<{ x: number; y: number }> = [];
 
     for (let i = -radius; i <= radius; i++) {
-      candidates.push({ x: x0 + i * step, y: y0 - radius * step });
-      candidates.push({ x: x0 + i * step, y: y0 + radius * step });
+      candidates.push({ x: x0 + i * ICON_GRID_X, y: y0 - radius * ICON_GRID_Y });
+      candidates.push({ x: x0 + i * ICON_GRID_X, y: y0 + radius * ICON_GRID_Y });
     }
     for (let i = -radius + 1; i < radius; i++) {
-      candidates.push({ x: x0 - radius * step, y: y0 + i * step });
-      candidates.push({ x: x0 + radius * step, y: y0 + i * step });
+      candidates.push({ x: x0 - radius * ICON_GRID_X, y: y0 + i * ICON_GRID_Y });
+      candidates.push({ x: x0 + radius * ICON_GRID_X, y: y0 + i * ICON_GRID_Y });
     }
 
     // Sort by distance to the original drop point
@@ -63,13 +75,13 @@ export function snapToFreeCell(
     });
 
     for (const c of candidates) {
-      if (c.x < 0 || c.y < MIN_Y) continue;
+      if (c.x < GRID_ORIGIN_X || c.y < MIN_Y) continue;
       if (!overlapsAny(c.x, c.y, selfId, layout)) {
         return c;
       }
     }
   }
 
-  // Fallback: return drop position even if overlapping
+  // Fallback: return snapped position even if overlapping
   return { x: x0, y: y0 };
 }

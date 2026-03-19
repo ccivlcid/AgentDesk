@@ -1,6 +1,98 @@
 # AgentDesk — 개발 진행 현황
 
-> 마지막 업데이트: 2026-03-19 (Hooks 프로젝트 전용 필터 + FloatingWindow 전환 + hook_entries project scope 마이그레이션 + 기본 훅 5개 시딩)
+> 마지막 업데이트: 2026-03-19 (AI 기능 빌더 개선 + AgentFlowGraph 비주얼 개선 + TaskCard AgentSelect 제거 + 바탕화면 드래그 그리드 스냅)
+
+---
+
+## ✅ AI 기능 빌더 개선 (2026-03-19)
+
+### 변경 파일
+
+| 파일 | 변경 내용 |
+|------|----------|
+| `server/modules/routes/ops/custom-features-ai.ts` | SYSTEM_PROMPT 전면 개선 — API 스키마·예시 컴포넌트·규칙 상세화 |
+| `src/components/widget-builder/steps/StepAiGenerate.tsx` | 빠른 프롬프트 칩·API 참조 패널·placeholder 개선 |
+
+### 개선 상세
+
+#### 서버 SYSTEM_PROMPT
+- **API 스키마 전체 포함**: `/api/agents`·`/api/tasks`·`/api/departments`·`/api/projects`·`/api/agents/performance`·`/api/notifications` 응답 타입 상세 명시
+- **데이터 페칭 패턴**: `useState`·`useCallback`·`useEffect`·`setInterval` 구조 예시 제공
+- **예시 컴포넌트 (few-shot)**: 완성된 working 에이전트 카드 위젯 예시 첨부
+- **출력 형식 엄격화**: 코드 블록만 반환, 컴포넌트명·props 시그니처 고정
+- **로딩/에러/빈 상태 필수화**: 모든 상태 처리 요구 명시
+
+#### 프론트엔드 StepAiGenerate
+- **빠른 프롬프트 칩**: 클릭 시 textarea에 바로 입력되는 6가지 예시 버튼
+- **API 참조 토글 패널**: "API ref ▼" 버튼 → 사용 가능한 API 경로·응답 필드 한눈에 확인
+- **placeholder 개선**: 단순 예시 → 좋은 프롬프트 작성법 + 구체적 예시
+- **UX 소폭 개선**: 생성 버튼 `⚡` 아이콘, 완료 `✓` 표시, 힌트 문구 추가
+
+---
+
+## ✅ AgentFlowGraph 비주얼 개선 (2026-03-19)
+
+### 변경 파일
+
+| 파일 | 변경 내용 |
+|------|----------|
+| `src/components/flow-graph/nodes/AgentNode.tsx` | 부서 컬러 accent bar, working glow, 빈 태스크 점선, 노드 상태별 색상 강화 |
+| `src/components/flow-graph/edges/FlowEdge.tsx` | delegation·cross_dept 엣지 animated 도트 활성화, 엣지별 두께·색상 강화 |
+| `src/components/flow-graph/AgentFlowGraph.tsx` | 배경 도트 그리드 패턴, 범례 도트 표시 추가, SVG 마커 개선 |
+
+### 개선 상세
+
+#### AgentNode
+- **부서 컬러 accent bar**: 카드 상단 3px 가로 바 — 부서 소속을 색으로 즉시 인식
+- **working 상태 배경 glow**: 부서 컬러 6% 배경 + 컬러 박스 섀도우 → 실행 중인 에이전트 즉시 구분
+- **빈 태스크 표시**: `"no task"` 텍스트 제거 → 회색 점선으로 대체 (노이즈 제거)
+- **태스크 표시 접두사**: 실행 중 `▸ title`, 완료 `✓ title`
+- **status dot 개선**: working 시 pulse ring 색상을 부서 컬러와 일치
+- **selected 링**: 선택 노드에 2px accent 링 + 강한 shadow
+
+#### FlowEdge
+- **delegation**: amber 실선 2px + 흐름 도트 (1.8s) — 위임 관계 즉시 시각화
+- **cross_dept**: 부서 컬러 2.5px 대시 + 흐름 도트 (2.4s) — 부서간 전달 표시
+- **sub-agent**: 회색 1px 점선 (변경 없음)
+- **meeting**: 보라 1px 점선 (amber → #a78bfa 변경)
+- **collab**: 회색 1px 점선 (변경 없음)
+
+#### AgentFlowGraph (캔버스)
+- **배경 도트 그리드**: 24px 간격 dot pattern — 공간감 및 노드 위치 인식 향상
+- **범례 개선**: 각 엣지 타입에 실제 흐름 도트 표시, backdrop-blur 적용
+- **SVG 마커**: `arrow-secondary` 추가, refX 미세 조정
+
+---
+
+## ✅ TaskCard AgentSelect 제거 (2026-03-19)
+
+### 변경 파일
+
+| 파일 | 변경 내용 |
+|------|----------|
+| `src/components/taskboard/TaskCard.tsx` | `AgentSelect` 드롭다운 완전 제거 → 읽기 전용 에이전트 표시로 교체 |
+
+### 상세
+- 모든 상태의 태스크 카드에서 에이전트 변경 불가
+- `in_progress` 카드: 녹색 배경 + `RUNNING` 레이블
+- 일반 카드: 에이전트 아바타 + 이름 표시 전용
+- 에이전트 배정은 태스크 **생성 시**에만 가능
+
+---
+
+## ✅ 바탕화면 아이콘 그리드 스냅 (2026-03-19)
+
+### 변경 파일
+
+| 파일 | 변경 내용 |
+|------|----------|
+| `src/components/desktop/snapToFreeCell.ts` | 드롭 위치를 먼저 그리드 셀(88×92px)에 정렬 후 충돌 검사 |
+| `src/components/desktop/Desktop.tsx` | `snapToGrid()` 오리진 `(24, 60)` 기준 통일 |
+
+### 상세
+- 드래그 후 놓으면 가장 가까운 그리드 셀에 자동 정렬
+- 인접 셀이 비어있으면 바로 붙여서 배치 가능
+- "격자에 맞추기" 컨텍스트 메뉴도 동일 오리진 기준 동작
 
 ---
 

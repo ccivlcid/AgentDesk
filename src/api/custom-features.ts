@@ -54,6 +54,26 @@ export async function deleteCustomFeature(id: string): Promise<void> {
   await req(`/api/custom-features/${id}`, { method: "DELETE" });
 }
 
+export async function githubImport(payload: {
+  url: string;
+  name: string;
+}): Promise<{ feature_id: string }> {
+  return req<{ ok: boolean; feature_id: string }>("/api/custom-features/github-import", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function githubRepoImport(payload: {
+  url: string;
+  name: string;
+}): Promise<{ feature_id: string }> {
+  return req<{ ok: boolean; feature_id: string }>("/api/custom-features/github-repo-import", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
 export async function triggerAiGenerate(payload: {
   prompt: string;
   type: CustomFeatureType;

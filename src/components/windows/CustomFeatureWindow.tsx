@@ -13,7 +13,10 @@ interface Props {
 
 export default function CustomFeatureWindow({ featureId, onClose }: Props) {
   const [feature, setFeature] = useState<CustomFeature | null>(null);
-  const [pos, setPos] = useState({ x: 120 + Math.random() * 80, y: 80 + Math.random() * 60 });
+  const [pos, setPos] = useState(() => ({
+    x: Math.max(20, (window.innerWidth - 560) / 2),
+    y: Math.max(44, (window.innerHeight - 440) / 3),
+  }));
   const [size] = useState({ w: 560, h: 440 });
   const [dragging, setDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ dx: 0, dy: 0 });

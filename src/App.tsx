@@ -285,6 +285,7 @@ export default function App() {
           <CreateTaskModal
             agents={projectAgents}
             departments={departments}
+            categories={categories}
             onClose={() => setShowCreateTaskAfterCreate(false)}
             onCreate={(input) => {
               void actions.handleCreateTask({
@@ -311,6 +312,7 @@ export default function App() {
           <CreateTaskModal
             agents={projectAgents}
             departments={departments}
+            categories={categories}
             onClose={() => setShowCreateTask(false)}
             onCreate={(input) => {
               void actions.handleCreateTask({

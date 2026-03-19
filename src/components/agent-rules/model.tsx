@@ -21,7 +21,7 @@ export const CATEGORY_ICONS: Record<string, string> = {
   All: "📋",
   coding: "💻",
   communication: "💬",
-  quality: "✅",
+  quality: "✓",
   execution: "⚡",
   security: "🔒",
   workflow: "🔄",

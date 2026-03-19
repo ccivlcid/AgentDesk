@@ -23,6 +23,8 @@ interface MenuBarProps {
   onOpenCommandPalette?: () => void;
   onOpenExportModal?: () => void;
   runningAgentCount?: number;
+  yoloMode?: boolean;
+  onToggleYoloMode?: () => void;
 }
 
 export default function MenuBar({
@@ -40,6 +42,8 @@ export default function MenuBar({
   onOpenCommandPalette,
   onOpenExportModal,
   runningAgentCount = 0,
+  yoloMode,
+  onToggleYoloMode,
 }: MenuBarProps) {
   const [now, setNow] = useState(() => new Date());
   const [appMenuOpen, setAppMenuOpen] = useState(false);
@@ -292,6 +296,34 @@ export default function MenuBar({
         >
           ● {runningAgentCount}
         </span>
+      )}
+
+      {/* 자율 진행(Yolo) 모드 표시 + 토글 */}
+      {onToggleYoloMode !== undefined && (
+        <button
+          type="button"
+          onClick={onToggleYoloMode}
+          title={yoloMode
+            ? t({ ko: "자율 진행 켜짐 — 클릭하여 끄기", en: "Autonomous mode ON — click to disable", ja: "自律実行 ON — クリックで無効化", zh: "自主模式开启 — 点击关闭" })
+            : t({ ko: "자율 진행 꺼짐 — 클릭하여 켜기", en: "Autonomous mode OFF — click to enable", ja: "自律実行 OFF — クリックで有効化", zh: "自主模式关闭 — 点击开启" })
+          }
+          style={{
+            background: yoloMode ? "rgba(245,158,11,0.15)" : "transparent",
+            border: `1px solid ${yoloMode ? "var(--th-accent)" : "var(--th-border)"}`,
+            borderRadius: 5,
+            color: yoloMode ? "var(--th-accent)" : "var(--th-text-muted)",
+            fontFamily: mono,
+            fontSize: 10,
+            fontWeight: yoloMode ? 700 : 400,
+            cursor: "pointer",
+            padding: "2px 7px",
+            letterSpacing: yoloMode ? "0.08em" : "0.04em",
+            flexShrink: 0,
+            transition: "all 0.15s",
+          }}
+        >
+          {yoloMode ? "AUTO" : "AUTO"}
+        </button>
       )}
 
       {/* 검색 트리거 */}

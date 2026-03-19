@@ -17,7 +17,7 @@ interface Props {
   initialY?: number;
 }
 
-type Tab = "files" | "tasks" | "agents" | "details" | "git";
+type Tab = "files" | "tasks" | "agents" | "details" | "git" | "terminal";
 
 const STATUS_COLORS: Record<TaskStatus, string> = {
   inbox:         "var(--th-text-muted)",
@@ -152,11 +152,12 @@ export default function ProjectFolderWindow({
   const doneTasks    = projectTasks.filter((t) => t.status === "done");
 
   const TABS: { id: Tab; label: string; count?: number }[] = [
-    { id: "files",   label: t({ ko: "파일",    en: "Files",   ja: "ファイル", zh: "文件" }) },
-    { id: "tasks",   label: t({ ko: "태스크",  en: "Tasks",   ja: "タスク",   zh: "任务" }),  count: projectTasks.length },
-    { id: "agents",  label: t({ ko: "에이전트", en: "Agents", ja: "エージェント", zh: "代理" }), count: projectAgents.length },
-    { id: "details", label: t({ ko: "상세",    en: "Details", ja: "詳細",     zh: "详情" }) },
-    { id: "git",     label: t({ ko: "Git",     en: "Git",     ja: "Git",      zh: "Git" }) },
+    { id: "files",    label: t({ ko: "파일",    en: "Files",    ja: "ファイル",       zh: "文件" }) },
+    { id: "tasks",    label: t({ ko: "태스크",  en: "Tasks",    ja: "タスク",         zh: "任务" }), count: projectTasks.length },
+    { id: "agents",   label: t({ ko: "에이전트", en: "Agents",  ja: "エージェント",   zh: "代理" }), count: projectAgents.length },
+    { id: "terminal", label: t({ ko: "터미널",  en: "Terminal", ja: "ターミナル",     zh: "终端" }) },
+    { id: "details",  label: t({ ko: "상세",    en: "Details",  ja: "詳細",           zh: "详情" }) },
+    { id: "git",      label: t({ ko: "Git",     en: "Git",      ja: "Git",            zh: "Git" }) },
   ];
 
   return (
@@ -275,11 +276,12 @@ export default function ProjectFolderWindow({
 
       {/* Content */}
       <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-        {tab === "files"   && <FilesTab projectPath={project.project_path} projectName={project.name} />}
-        {tab === "tasks"   && <TasksTab tasks={projectTasks} statusCounts={statusCounts} allAgents={agents} />}
-        {tab === "agents"  && <AgentsTab agents={projectAgents} projectTasks={projectTasks} />}
-        {tab === "details" && <DetailsTab project={project} taskCount={projectTasks.length} agentCount={projectAgents.length} onDelete={() => { onDeleteProject(project.id); onClose(); }} />}
-        {tab === "git"     && <GitTab project={project} />}
+        {tab === "files"    && <FilesTab projectPath={project.project_path} projectName={project.name} />}
+        {tab === "tasks"    && <TasksTab tasks={projectTasks} statusCounts={statusCounts} allAgents={agents} />}
+        {tab === "agents"   && <AgentsTab agents={projectAgents} projectTasks={projectTasks} />}
+        {tab === "terminal" && <TerminalTab projectPath={project.project_path} projectName={project.name} />}
+        {tab === "details"  && <DetailsTab project={project} taskCount={projectTasks.length} agentCount={projectAgents.length} onDelete={() => { onDeleteProject(project.id); onClose(); }} />}
+        {tab === "git"      && <GitTab project={project} />}
       </div>
 
       {/* Resize handle */}
@@ -1174,6 +1176,375 @@ function DeleteProjectButton({ projectName, onConfirm }: { projectName: string; 
     >
       🗑 {t({ ko: "프로젝트 삭제", en: "Delete Project", ja: "プロジェクト削除", zh: "删除项目" })}
     </button>
+  );
+}
+
+// ── TerminalTab ───────────────────────────────────────────────────────────────
+
+interface ProjectRunInfo {
+  type: string;
+  icon: string;
+  color: string;
+  sections: Array<{
+    title: string;
+    commands: Array<{ label: string; cmd: string; description?: string }>;
+  }>;
+}
+
+function detectProjectType(rootFiles: Set<string>, pkgJson: Record<string, unknown> | null): ProjectRunInfo | null {
+  const has = (f: string) => rootFiles.has(f);
+
+  if (has("package.json")) {
+    const scripts = (pkgJson?.scripts ?? {}) as Record<string, string>;
+    const mgr = has("pnpm-lock.yaml") ? "pnpm" : has("yarn.lock") ? "yarn" : "npm";
+    const devCmd = scripts["dev"] ? `${mgr} run dev` : scripts["start"] ? `${mgr} start` : null;
+    return {
+      type: "Node.js / JavaScript",
+      icon: "⬡",
+      color: "#f7df1e",
+      sections: [
+        {
+          title: "의존성 설치",
+          commands: [{ label: "install", cmd: `${mgr} install`, description: "node_modules 설치" }],
+        },
+        {
+          title: "개발 서버 실행",
+          commands: [
+            ...(devCmd ? [{ label: "dev", cmd: devCmd, description: "개발 모드 (hot reload)" }] : []),
+            ...(scripts["build"] ? [{ label: "build", cmd: `${mgr} run build`, description: "프로덕션 빌드" }] : []),
+            ...(scripts["test"] ? [{ label: "test", cmd: `${mgr} test`, description: "테스트 실행" }] : []),
+            ...(scripts["lint"] ? [{ label: "lint", cmd: `${mgr} run lint`, description: "코드 린트" }] : []),
+          ],
+        },
+      ],
+    };
+  }
+
+  if (has("pyproject.toml") || has("requirements.txt") || has("setup.py") || has("setup.cfg")) {
+    const hasFastapi = has("main.py") || has("app.py");
+    return {
+      type: "Python",
+      icon: "🐍",
+      color: "#3572A5",
+      sections: [
+        {
+          title: "환경 설정",
+          commands: [
+            { label: "venv 생성", cmd: "python -m venv venv", description: "가상환경 생성" },
+            { label: "venv 활성화 (Win)", cmd: ".\\venv\\Scripts\\activate" },
+            { label: "deps 설치", cmd: has("requirements.txt") ? "pip install -r requirements.txt" : "pip install -e .", description: "패키지 설치" },
+          ],
+        },
+        {
+          title: "실행",
+          commands: [
+            ...(has("main.py") ? [{ label: "main.py", cmd: "python main.py" }] : []),
+            ...(has("app.py") ? [{ label: "app.py", cmd: "python app.py" }] : []),
+            ...(hasFastapi ? [{ label: "FastAPI dev", cmd: "uvicorn main:app --reload", description: "FastAPI 개발 서버" }] : []),
+            ...(has("manage.py") ? [{ label: "Django dev", cmd: "python manage.py runserver" }] : []),
+          ],
+        },
+      ],
+    };
+  }
+
+  if (has("Cargo.toml")) {
+    return {
+      type: "Rust",
+      icon: "🦀",
+      color: "#dea584",
+      sections: [
+        {
+          title: "빌드 & 실행",
+          commands: [
+            { label: "run", cmd: "cargo run", description: "빌드 후 실행" },
+            { label: "build", cmd: "cargo build --release", description: "릴리즈 빌드" },
+            { label: "test", cmd: "cargo test" },
+            { label: "check", cmd: "cargo check" },
+          ],
+        },
+      ],
+    };
+  }
+
+  if (has("go.mod")) {
+    return {
+      type: "Go",
+      icon: "🐹",
+      color: "#00ADD8",
+      sections: [
+        {
+          title: "실행",
+          commands: [
+            { label: "run", cmd: "go run .", description: "현재 디렉토리 실행" },
+            { label: "build", cmd: "go build -o app .", description: "바이너리 빌드" },
+            { label: "test", cmd: "go test ./..." },
+            { label: "mod tidy", cmd: "go mod tidy" },
+          ],
+        },
+      ],
+    };
+  }
+
+  if (has("docker-compose.yml") || has("docker-compose.yaml")) {
+    return {
+      type: "Docker Compose",
+      icon: "🐳",
+      color: "#2496ED",
+      sections: [
+        {
+          title: "Docker Compose",
+          commands: [
+            { label: "up", cmd: "docker-compose up", description: "컨테이너 시작" },
+            { label: "up -d", cmd: "docker-compose up -d", description: "백그라운드 실행" },
+            { label: "down", cmd: "docker-compose down" },
+            { label: "logs", cmd: "docker-compose logs -f" },
+          ],
+        },
+      ],
+    };
+  }
+
+  if (has("pom.xml")) {
+    return {
+      type: "Java (Maven)",
+      icon: "☕",
+      color: "#b07219",
+      sections: [
+        {
+          title: "빌드 & 실행",
+          commands: [
+            { label: "compile", cmd: "mvn compile", description: "소스 컴파일" },
+            { label: "package", cmd: "mvn package", description: "JAR/WAR 빌드" },
+            { label: "spring-boot run", cmd: "mvn spring-boot:run", description: "Spring Boot 실행" },
+            { label: "test", cmd: "mvn test" },
+            { label: "clean install", cmd: "mvn clean install", description: "클린 빌드" },
+          ],
+        },
+      ],
+    };
+  }
+
+  if (has("build.gradle") || has("build.gradle.kts")) {
+    const wrapper = has("gradlew");
+    const g = wrapper ? ".\\gradlew" : "gradle";
+    return {
+      type: "Java (Gradle)",
+      icon: "☕",
+      color: "#b07219",
+      sections: [
+        {
+          title: "빌드 & 실행",
+          commands: [
+            { label: "build", cmd: `${g} build`, description: "프로젝트 빌드" },
+            { label: "bootRun", cmd: `${g} bootRun`, description: "Spring Boot 실행" },
+            { label: "run", cmd: `${g} run`, description: "애플리케이션 실행" },
+            { label: "test", cmd: `${g} test` },
+            { label: "clean", cmd: `${g} clean` },
+          ],
+        },
+      ],
+    };
+  }
+
+  if (has("Makefile")) {
+    return {
+      type: "Make",
+      icon: "⚙",
+      color: "#6e7681",
+      sections: [
+        {
+          title: "Make",
+          commands: [
+            { label: "make", cmd: "make", description: "기본 타겟 실행" },
+            { label: "make build", cmd: "make build" },
+            { label: "make test", cmd: "make test" },
+            { label: "make clean", cmd: "make clean" },
+          ],
+        },
+      ],
+    };
+  }
+
+  return null;
+}
+
+function TerminalTab({ projectPath, projectName }: { projectPath: string | null; projectName: string }) {
+  const { t } = useI18n();
+  const [runInfo, setRunInfo] = useState<ProjectRunInfo | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [opened, setOpened] = useState(false);
+  const [copied, setCopied] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!projectPath) return;
+    setLoading(true);
+    fetch(`/api/projects/path-tree?path=${encodeURIComponent(projectPath)}&depth=1`)
+      .then((r) => r.json())
+      .then(async (data) => {
+        if (!data.ok) return;
+        const rootFiles = new Set<string>(
+          (data.tree ?? []).map((n: { name: string }) => n.name),
+        );
+        let pkgJson: Record<string, unknown> | null = null;
+        if (rootFiles.has("package.json")) {
+          try {
+            const pr = await fetch(`/api/projects/file-content?path=${encodeURIComponent(projectPath + "/package.json")}`);
+            const pd = await pr.json();
+            if (pd.ok) pkgJson = JSON.parse(pd.content);
+          } catch { /* ignore */ }
+        }
+        setRunInfo(detectProjectType(rootFiles, pkgJson));
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [projectPath]);
+
+  const handleOpenTerminal = () => {
+    if (!projectPath) return;
+    fetch("/api/projects/open-terminal", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ path: projectPath }),
+    }).then(() => {
+      setOpened(true);
+      setTimeout(() => setOpened(false), 2000);
+    }).catch(() => {});
+  };
+
+  const handleCopy = (cmd: string) => {
+    navigator.clipboard.writeText(cmd).catch(() => {});
+    setCopied(cmd);
+    setTimeout(() => setCopied(null), 1500);
+  };
+
+  const mono = "var(--th-font-mono)";
+
+  if (!projectPath) {
+    return (
+      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--th-text-muted)", fontSize: 12, fontFamily: mono }}>
+        {t({ ko: "프로젝트 경로가 설정되지 않았습니다", en: "No project path configured", ja: "パス未設定", zh: "未配置项目路径" })}
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
+
+      {/* ── Open Terminal 버튼 (상단 고정) ── */}
+      <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--th-border)", flexShrink: 0, background: "var(--th-bg-elevated)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 10, color: "var(--th-text-muted)", fontFamily: mono, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              📁 {projectPath}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={handleOpenTerminal}
+            style={{
+              display: "flex", alignItems: "center", gap: 6,
+              fontSize: 12, fontWeight: 700, padding: "7px 16px",
+              background: opened ? "rgba(34,197,94,0.15)" : "var(--th-accent)",
+              border: `1px solid ${opened ? "rgba(34,197,94,0.4)" : "transparent"}`,
+              borderRadius: 6,
+              color: opened ? "#22c55e" : "#000",
+              cursor: "pointer",
+              fontFamily: mono,
+              transition: "all 0.15s",
+              flexShrink: 0,
+            }}
+          >
+            <span style={{ fontSize: 13 }}>{">"}_</span>
+            {opened
+              ? t({ ko: "터미널 열림!", en: "Terminal opened!", ja: "ターミナル起動!", zh: "终端已打开!" })
+              : t({ ko: "터미널 열기", en: "Open Terminal", ja: "ターミナルを開く", zh: "打开终端" })}
+          </button>
+        </div>
+      </div>
+
+      {/* ── 프로젝트 타입 감지 결과 ── */}
+      <div style={{ flex: 1, overflowY: "auto", padding: "14px 16px", display: "flex", flexDirection: "column", gap: 16 }}>
+        {loading && (
+          <div style={{ color: "var(--th-text-muted)", fontSize: 11, fontFamily: mono }}>
+            {t({ ko: "프로젝트 분석 중...", en: "Analyzing project...", ja: "解析中...", zh: "分析中..." })}
+          </div>
+        )}
+
+        {!loading && runInfo && (
+          <>
+            {/* 프로젝트 타입 배지 */}
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 20 }}>{runInfo.icon}</span>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: runInfo.color, fontFamily: mono }}>{runInfo.type}</div>
+                <div style={{ fontSize: 10, color: "var(--th-text-muted)", fontFamily: mono }}>{projectName}</div>
+              </div>
+            </div>
+
+            {/* 섹션별 명령어 */}
+            {runInfo.sections.map((section) => (
+              <div key={section.title}>
+                <div style={{ fontSize: 10, color: "var(--th-text-muted)", fontFamily: mono, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>
+                  {section.title}
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                  {section.commands.map((c) => (
+                    <div
+                      key={c.cmd}
+                      style={{
+                        display: "flex", alignItems: "center", gap: 10,
+                        padding: "8px 12px", borderRadius: 6,
+                        background: "var(--th-bg-elevated)",
+                        border: "1px solid var(--th-border)",
+                      }}
+                    >
+                      <code style={{ flex: 1, fontSize: 12, fontFamily: mono, color: "var(--th-text-primary)", background: "none" }}>
+                        {c.cmd}
+                      </code>
+                      {c.description && (
+                        <span style={{ fontSize: 10, color: "var(--th-text-muted)", fontFamily: mono, flexShrink: 0 }}>
+                          {c.description}
+                        </span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => handleCopy(c.cmd)}
+                        style={{
+                          fontSize: 10, padding: "2px 8px", borderRadius: 4,
+                          background: copied === c.cmd ? "rgba(34,197,94,0.12)" : "var(--th-bg-surface)",
+                          border: `1px solid ${copied === c.cmd ? "rgba(34,197,94,0.3)" : "var(--th-border)"}`,
+                          color: copied === c.cmd ? "#22c55e" : "var(--th-text-muted)",
+                          cursor: "pointer", fontFamily: mono, flexShrink: 0,
+                        }}
+                      >
+                        {copied === c.cmd ? "✓" : t({ ko: "복사", en: "Copy", ja: "コピー", zh: "复制" })}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </>
+        )}
+
+        {!loading && !runInfo && (
+          <div style={{ padding: "20px 0", display: "flex", flexDirection: "column", gap: 12 }}>
+            <div style={{ fontSize: 11, color: "var(--th-text-secondary)", fontFamily: mono }}>
+              {t({
+                ko: "프로젝트 타입을 자동으로 감지하지 못했습니다.\n터미널을 열고 직접 명령어를 입력하세요.",
+                en: "Could not auto-detect project type.\nOpen a terminal and enter commands manually.",
+                ja: "プロジェクトタイプを自動検出できませんでした。\nターミナルを開いて手動でコマンドを入力してください。",
+                zh: "无法自动检测项目类型。\n请打开终端并手动输入命令。",
+              })}
+            </div>
+            <div style={{ fontSize: 10, color: "var(--th-text-muted)", fontFamily: mono, lineHeight: 1.8 }}>
+              {t({ ko: "지원 타입: Node.js, Python, Rust, Go, Java (Maven/Gradle), Docker, Make", en: "Supported: Node.js, Python, Rust, Go, Java (Maven/Gradle), Docker, Make", ja: "対応: Node.js, Python, Rust, Go, Java (Maven/Gradle), Docker, Make", zh: "支持: Node.js, Python, Rust, Go, Java (Maven/Gradle), Docker, Make" })}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
 

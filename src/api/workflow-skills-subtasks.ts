@@ -61,6 +61,25 @@ export async function refreshCliUsage(): Promise<{ ok: boolean; usage: Record<st
   return post("/api/cli-usage/refresh") as Promise<{ ok: boolean; usage: Record<string, CliUsageEntry> }>;
 }
 
+// Agent Usage (per-agent run stats)
+export interface AgentUsageRow {
+  agent_id: string;
+  agent_name: string;
+  agent_name_ko: string | null;
+  avatar_emoji: string | null;
+  provider: string;
+  run_count: number;
+  total_duration_ms: number;
+  total_log_bytes: number;
+  success_count: number;
+  failure_count: number;
+}
+
+export async function getAgentUsage(since?: number): Promise<{ ok: boolean; usage: AgentUsageRow[] }> {
+  const qs = since ? `?since=${since}` : "";
+  return request<{ ok: boolean; usage: AgentUsageRow[] }>(`/api/agent-usage${qs}`);
+}
+
 // Skills
 export interface SkillEntry {
   rank: number;

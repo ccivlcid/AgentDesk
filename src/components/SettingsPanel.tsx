@@ -137,7 +137,8 @@ export default function SettingsPanel({
               clearInterval(installPollers.current[provider]);
               delete installPollers.current[provider];
               if (job.status === "success") {
-                setTimeout(() => refreshCliTab(), 1000);
+                // npm이 파일 쓰기를 완료할 때까지 여유를 주고 감지 재시도
+                setTimeout(() => refreshCliTab(), 2500);
               }
             }
           } catch {

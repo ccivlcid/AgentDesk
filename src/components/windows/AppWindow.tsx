@@ -67,6 +67,24 @@ const MIN_H = 300;
 const MENUBAR_H = 44;   // top menu bar height
 const DOCK_CLEARANCE = 88; // dock height + bottom margin
 
+// ── macOS-style cascade positioning ─────────────────────────────────────────
+// Each unseen window opens 28px right+down from the previous one, wrapping
+// after 9 steps (exactly like macOS Finder).
+let _cascadeStep = 0;
+const CASCADE_STEP = 28;
+const CASCADE_WRAP = 9;
+
+function takeCascadeStep(): number {
+  const step = _cascadeStep;
+  _cascadeStep = (_cascadeStep + 1) % CASCADE_WRAP;
+  return step;
+}
+
+/** Returns true if this windowType has a saved position in localStorage */
+function hasSavedState(wt: WindowType): boolean {
+  try { return !!window.localStorage.getItem(LS_KEY(wt)); } catch { return false; }
+}
+
 function computeResize(
   ev: MouseEvent,
   s: ResizeState,
@@ -128,16 +146,42 @@ export default function AppWindow({
   const zIndex = 200 + Math.max(0, focusIdx) * 2;
   const [activeTab, setActiveTab] = useState(tabs?.[0]?.id ?? "");
 
-  const fallbackX = defaultX ?? Math.max(40, (window.innerWidth - defaultWidth) / 2);
+  // ── Viewport-proportional sizes (never exceed 90% of available space) ──────
   const availH = window.innerHeight - MENUBAR_H - DOCK_CLEARANCE;
-  const safeH = Math.min(defaultHeight, availH);
-  const fallbackY = defaultY ?? Math.max(MENUBAR_H, (window.innerHeight - safeH) / 3);
-  const raw = loadWinState(windowType, { x: fallbackX, y: fallbackY, w: defaultWidth, h: safeH });
-  // 저장된 위치가 Dock 영역을 침범하면 보정
-  const saved = {
-    ...raw,
-    h: Math.min(raw.h, window.innerHeight - DOCK_CLEARANCE - raw.y),
-  };
+  const safeW = Math.max(MIN_W, Math.min(defaultWidth, Math.floor(window.innerWidth * 0.90)));
+  const safeH = Math.max(MIN_H, Math.min(defaultHeight, Math.floor(availH * 0.90)));
+
+  // ── Cascade or center position ───────────────────────────────────────────
+  // If the window has never been opened: cascade (macOS-style diagonal offset).
+  // If it has been opened before: use saved position (user may have moved it).
+  // If an explicit defaultX/Y is provided: honor it.
+  let fallbackX: number;
+  let fallbackY: number;
+  if (defaultX !== undefined) {
+    fallbackX = defaultX;
+    fallbackY = defaultY ?? Math.max(MENUBAR_H, (window.innerHeight - safeH) / 3);
+  } else if (hasSavedState(windowType)) {
+    // Saved state will be loaded below; these are only used as the fallback
+    fallbackX = Math.max(40, (window.innerWidth - safeW) / 2);
+    fallbackY = Math.max(MENUBAR_H, (window.innerHeight - safeH) / 3);
+  } else {
+    // First-ever open → cascade from top-left area
+    const step = takeCascadeStep();
+    const cx = 80 + step * CASCADE_STEP;
+    const cy = MENUBAR_H + 20 + step * CASCADE_STEP;
+    // Clamp so window stays fully on screen
+    fallbackX = Math.max(20, Math.min(cx, window.innerWidth - safeW - 20));
+    fallbackY = Math.max(MENUBAR_H, Math.min(cy, window.innerHeight - DOCK_CLEARANCE - safeH - 20));
+  }
+
+  const raw = loadWinState(windowType, { x: fallbackX, y: fallbackY, w: safeW, h: safeH });
+
+  // ── Sanitize saved state: clamp to current viewport in case screen changed ─
+  const clampedX = Math.max(0, Math.min(raw.x, window.innerWidth - MIN_W));
+  const clampedY = Math.max(MENUBAR_H, Math.min(raw.y, window.innerHeight - DOCK_CLEARANCE - MIN_H));
+  const clampedW = Math.max(MIN_W, Math.min(raw.w, window.innerWidth));
+  const clampedH = Math.max(MIN_H, Math.min(raw.h, window.innerHeight - DOCK_CLEARANCE - clampedY));
+  const saved = { x: clampedX, y: clampedY, w: clampedW, h: clampedH };
   const [pos, setPos] = useState({ x: saved.x, y: saved.y });
   const [size, setSize] = useState({ w: saved.w, h: saved.h });
   const [maximized, setMaximized] = useState(false);

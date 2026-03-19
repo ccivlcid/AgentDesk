@@ -3,7 +3,6 @@ import type { Agent, Department, SubTask, Task, TaskExecutionState, TaskStatus }
 import { useI18n } from "../../i18n";
 import { useConfirm } from "../ui";
 import AgentAvatar from "../AgentAvatar";
-import AgentSelect from "../AgentSelect";
 import DiffModal from "./DiffModal";
 import {
   getTaskTypeBadge,
@@ -126,7 +125,6 @@ export default function TaskCard({
   const [expanded, setExpanded] = useState(false);
   const [showDiff, setShowDiff] = useState(false);
   const [showSubtasks, setShowSubtasks] = useState(false);
-  const [agentWarning, setAgentWarning] = useState(false);
   const [showDeps, setShowDeps] = useState(false);
   const [depPredecessors, setDepPredecessors] = useState<TaskDependencyItem[]>([]);
   const [depInput, setDepInput] = useState("");
@@ -190,29 +188,32 @@ export default function TaskCard({
   const typeBadge = getTaskTypeBadge(task.task_type, t);
   const executionBadge = task.execution_state ? EXECUTION_STATE_BADGES[task.execution_state] : null;
 
+  const isInProgress = task.status === "in_progress";
   const canRun = task.status === "planned" || task.status === "inbox";
-  const canStop = task.status === "in_progress";
-  const canPause = task.status === "in_progress" && !!onPauseTask;
+  const canStop = isInProgress;
+  const canPause = isInProgress && !!onPauseTask;
   const canResume = (task.status === "pending" || task.status === "cancelled") && !!onResumeTask;
-  const canDelete = task.status !== "in_progress";
+  const canDelete = !isInProgress;
   const canHideTask = isHideableStatus(task.status);
 
   return (
     <div
       className={`group task-card-hover overflow-hidden ${cardCollapsed ? "p-2" : "p-3.5"} transition-all duration-200`}
       style={{
-        background: "var(--th-bg-surface)",
-        border: executionAlert ? "1px solid rgba(244,63,94,0.22)" : "1px solid var(--th-border)",
+        background: isInProgress ? "var(--th-bg-surface)" : "var(--th-bg-surface)",
+        border: executionAlert ? "1px solid rgba(244,63,94,0.22)" : isInProgress ? "1px solid rgba(34,197,94,0.18)" : "1px solid var(--th-border)",
         borderLeft: `3px solid ${executionAlert ? "var(--th-status-error)" : leftBorderColor}`,
         borderRadius: 12,
         opacity: isHiddenTask ? 0.7 : 1,
         boxShadow: executionAlert
           ? "inset 0 0 0 1px rgba(244,63,94,0.06), 0 1px 4px rgba(0,0,0,0.08), 0 4px 12px rgba(244,63,94,0.06)"
+          : isInProgress
+          ? "0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(34,197,94,0.08)"
           : "0 1px 4px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04)",
         transition: "box-shadow 0.15s, border-color 0.15s",
       }}
     >
-      {/* 제목 행 — 접기 아이콘 클릭: 카드 접기/펼치기, 제목 클릭(펼침 시): 설명 2줄↔전체 */}
+      {/* 제목 행 */}
       <div className="flex flex-nowrap items-center justify-between gap-2 min-h-[1.5rem]">
         <div className="flex min-w-0 flex-1 items-center gap-2 flex-nowrap">
           <button
@@ -225,6 +226,13 @@ export default function TaskCard({
           >
             {cardCollapsed ? "▸" : "▾"}
           </button>
+          {/* Running pulse dot */}
+          {isInProgress && (
+            <span
+              className="shrink-0 animate-pulse"
+              style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--th-status-success)", display: "inline-block", flexShrink: 0 }}
+            />
+          )}
           {cardCollapsed ? (
             <span className="min-w-0 truncate text-sm font-semibold leading-snug" style={{ color: "var(--th-text-heading)" }}>
               {task.title}
@@ -285,80 +293,60 @@ export default function TaskCard({
         )}
       </div>
 
-      {/* 상태 · 담당자 블록 — macOS refined */}
-      <div className="mb-3 flex flex-col gap-1.5">
-        <select
-          value={task.status}
-          onChange={(event) => onUpdateTask(task.id, { status: event.target.value as TaskStatus })}
-          className="w-full outline-none"
+      {/* 상태 · 담당자 블록 */}
+      <div className="mb-3 flex flex-col gap-2">
+        {/* Status row */}
+        <div className="flex items-center gap-2">
+          <select
+            value={task.status}
+            onChange={(event) => onUpdateTask(task.id, { status: event.target.value as TaskStatus })}
+            disabled={isInProgress}
+            className="flex-1 outline-none"
+            style={{
+              border: "1px solid var(--th-border)",
+              borderRadius: 7,
+              background: isInProgress ? "transparent" : "var(--th-bg-elevated)",
+              color: isInProgress ? "var(--th-text-muted)" : "var(--th-text-primary)",
+              fontFamily: "var(--th-font-mono)",
+              fontSize: "0.72rem",
+              padding: "0.28rem 0.5rem",
+              cursor: isInProgress ? "default" : "pointer",
+              opacity: isInProgress ? 0.6 : 1,
+            }}
+          >
+            {STATUS_OPTIONS.map((status) => (
+              <option key={status} value={status}>
+                {taskStatusLabel(status as TaskStatus, t)}
+              </option>
+            ))}
+          </select>
+          <span className="text-[10px] flex-shrink-0 tabular-nums" style={{ color: "var(--th-text-muted)" }}>
+            {timeAgo(task.created_at, localeTag)}
+          </span>
+        </div>
+
+        {/* Agent — 읽기 전용 표시 */}
+        <div
+          className="flex items-center gap-2 px-2.5 py-1.5"
           style={{
-            border: "1px solid var(--th-border)",
-            borderRadius: 8,
-            background: "var(--th-bg-elevated)",
-            color: "var(--th-text-primary)",
-            fontFamily: "var(--th-font-mono)",
-            fontSize: "0.72rem",
-            padding: "0.3rem 0.5rem",
-            transition: "border-color 0.12s",
+            background: isInProgress ? "rgba(34,197,94,0.06)" : "var(--th-bg-elevated)",
+            border: isInProgress ? "1px solid rgba(34,197,94,0.18)" : "1px solid var(--th-border)",
+            borderRadius: 7,
           }}
         >
-          {STATUS_OPTIONS.map((status) => (
-            <option key={status} value={status}>
-              {taskStatusLabel(status as TaskStatus, t)}
-            </option>
-          ))}
-        </select>
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-1.5 min-w-0">
-            {assignedAgent && assignedLabel ? (
-              <>
-                <AgentAvatar agent={assignedAgent} agents={agents} size={18} />
-                <span className="text-[11px] truncate" style={{ color: "var(--th-text-secondary)" }}>{assignedLabel}</span>
-                {assignedAgent.persona_id && <PersonaBadge personaId={assignedAgent.persona_id} size="sm" />}
-              </>
-            ) : assignedLabel ? (
-              <span className="text-[11px] truncate" style={{ color: "var(--th-text-secondary)" }}>{assignedLabel}</span>
-            ) : (
-              <span className="text-[11px]" style={{ color: "var(--th-text-muted)" }}>
-                {t({ ko: "미배정", en: "Unassigned", ja: "未割り当て", zh: "未分配" })}
-              </span>
-            )}
-          </div>
-          <span className="text-[10px] flex-shrink-0 tabular-nums" style={{ color: "var(--th-text-muted)" }}>{timeAgo(task.created_at, localeTag)}</span>
-        </div>
-        <div className={`transition-all ${agentWarning ? "ring-2 ring-red-500 animate-[shake_0.4s_ease-in-out]" : ""}`}>
-          <AgentSelect
-            agents={agents}
-            departments={departments}
-            value={task.assigned_agent_id ?? ""}
-            placeholder={
-              assignedAgent || !assignedLabel
-                ? undefined
-                : t({
-                    ko: `배정됨(숨김): ${assignedLabel}`,
-                    en: `Assigned (hidden): ${assignedLabel}`,
-                    ja: `割り当て済み(非表示): ${assignedLabel}`,
-                    zh: `已分配（隐藏）: ${assignedLabel}`,
-                  })
-            }
-            onChange={(agentId) => {
-              setAgentWarning(false);
-              if (agentId) {
-                onAssignTask(task.id, agentId);
-              } else {
-                onUpdateTask(task.id, { assigned_agent_id: null });
-              }
-            }}
-          />
-          {agentWarning && (
-            <p className="mt-1 text-xs font-medium animate-[shake_0.4s_ease-in-out]" style={{ color: "rgb(253,164,175)" }}>
-              {t({
-                ko: "담당자를 배정해주세요!",
-                en: "Please assign an agent!",
-                ja: "担当者を割り当ててください！",
-                zh: "请分配负责人！",
-              })}
-            </p>
+          {assignedAgent ? (
+            <AgentAvatar agent={assignedAgent} agents={agents} size={18} />
+          ) : (
+            <span style={{ fontSize: "0.75rem", color: "var(--th-text-muted)" }}>—</span>
+          )}
+          <span className="flex-1 min-w-0 truncate text-[11px] font-mono" style={{ color: assignedLabel ? "var(--th-text-secondary)" : "var(--th-text-muted)" }}>
+            {assignedLabel ?? t({ ko: "미배정", en: "Unassigned", ja: "未割り当て", zh: "未分配" })}
+          </span>
+          {assignedAgent?.persona_id && <PersonaBadge personaId={assignedAgent.persona_id} size="sm" />}
+          {isInProgress && (
+            <span className="font-mono text-[9px] flex-shrink-0" style={{ color: "rgba(34,197,94,0.85)" }}>
+              RUNNING
+            </span>
           )}
         </div>
       </div>
@@ -473,11 +461,6 @@ export default function TaskCard({
         {canRun && (
           <button
             onClick={() => {
-              if (!task.assigned_agent_id) {
-                setAgentWarning(true);
-                setTimeout(() => setAgentWarning(false), 3000);
-                return;
-              }
               onRunTask(task.id);
             }}
             title={t({ ko: "작업 실행", en: "Run task", ja: "タスク実行", zh: "运行任务" })}
@@ -704,9 +687,9 @@ export default function TaskCard({
                   </p>
                 )}
                 {gateResults.map((gate) => {
-                  const statusIcon = gate.status === "passed" ? "✅" :
-                    gate.status === "failed" ? "❌" :
-                    gate.status === "skipped" ? "⏭️" : "⏳";
+                  const statusIcon = gate.status === "passed" ? "✓" :
+                    gate.status === "failed" ? "✗" :
+                    gate.status === "skipped" ? "↷" : "·";
                   const isManual = gate.gate_type === "manual";
                   const isPending = gate.status === "pending";
                   return (

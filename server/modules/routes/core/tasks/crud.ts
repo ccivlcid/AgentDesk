@@ -7,6 +7,7 @@ import type { RuntimeContext } from "../../../../types/runtime-context.ts";
 import type { MeetingMinuteEntryRow, MeetingMinutesRow } from "../../shared/types.ts";
 import { isWorkflowPackKey } from "../../../workflow/packs/definitions.ts";
 import { resolveWorkflowPackKeyForTask } from "../../../workflow/packs/task-pack-resolver.ts";
+import { selectAutoAssignableAgentForTask } from "./execution-run-auto-assign.ts";
 import { recordTaskExecutionEvent, taskExecutionEventsTableExists } from "../../../workflow/core/task-execution-meta.ts";
 
 export type TaskCrudRouteDeps = Pick<
@@ -283,6 +284,23 @@ export function registerTaskCrudRoutes(deps: TaskCrudRouteDeps): void {
 
     if (resolvedProjectId) {
       db.prepare("UPDATE projects SET last_used_at = ?, updated_at = ? WHERE id = ?").run(t, t, resolvedProjectId);
+    }
+
+    // 자동 배정: assigned_agent_id 없이 생성된 태스크에 프로젝트 에이전트 자동 선택
+    const requestedAgentId = normalizeTextField((body as any).assigned_agent_id);
+    if (!requestedAgentId && resolvedProjectId) {
+      const autoAssignRow = db.prepare("SELECT value FROM settings WHERE key = 'autoAssign'").get() as
+        | { value: string } | undefined;
+      if (autoAssignRow && autoAssignRow.value !== "false") {
+        const result = selectAutoAssignableAgentForTask(db as any, {
+          workflow_pack_key: resolvedPackKey,
+          project_id: resolvedProjectId,
+        });
+        if (result) {
+          db.prepare("UPDATE tasks SET assigned_agent_id = ?, updated_at = ? WHERE id = ?")
+            .run(result.agent.id, t, id);
+        }
+      }
     }
 
     appendTaskLog(id, "system", `Task created: ${title}`);

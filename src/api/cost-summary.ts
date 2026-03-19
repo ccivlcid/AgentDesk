@@ -45,8 +45,7 @@ export interface ProjectCostSummary {
 }
 
 export async function getProjectCostSummary(projectId: string): Promise<ProjectCostSummary> {
-  const BASE_API = "http://127.0.0.1:8790";
-  const res = await fetch(`${BASE_API}/api/projects/${projectId}/cost-summary`);
+  const res = await fetch(`/api/projects/${projectId}/cost-summary`);
   if (!res.ok) throw new Error(`Failed to fetch project cost summary: ${res.status}`);
   const data = await res.json();
   return {

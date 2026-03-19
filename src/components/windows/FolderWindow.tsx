@@ -256,7 +256,7 @@ function MergeTab({ folder, onProjectCreated }: {
   function toggleProject(id: string) {
     setSelectedIds((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) { next.delete(id); } else { next.add(id); }
       return next;
     });
   }
@@ -348,10 +348,9 @@ function MergeTab({ folder, onProjectCreated }: {
           { label: { ko: "프로젝트 이름", en: "Project name", ja: "プロジェクト名", zh: "项目名称" }, value: name, set: setName, multiline: false },
           { label: { ko: "프로젝트 경로", en: "Project path", ja: "プロジェクトパス", zh: "项目路径" }, value: projectPath, set: setProjectPath, multiline: false },
         ].map(({ label, value, set }) => {
-          const { t: tInner } = useI18n();
           return (
-            <div key={tInner(label)}>
-              <label style={{ fontSize: 9, color: "var(--th-text-muted)", display: "block", marginBottom: 4 }}>{tInner(label)} *</label>
+            <div key={t(label)}>
+              <label style={{ fontSize: 9, color: "var(--th-text-muted)", display: "block", marginBottom: 4 }}>{t(label)} *</label>
               <input type="text" value={value} onChange={(e) => set(e.target.value)}
                 style={{ width: "100%", boxSizing: "border-box", background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)", fontFamily: "var(--th-font-mono)", fontSize: 11, padding: "6px 8px", outline: "none" }}
                 onFocus={(e) => (e.currentTarget.style.borderColor = "var(--th-accent)")}
@@ -385,8 +384,18 @@ function MergeTab({ folder, onProjectCreated }: {
 
 // ─── FolderWindow ─────────────────────────────────────────────────────────────
 
-const WIN_DEFAULTS = { x: 200, y: 100, w: 680, h: 520 };
+const WIN_W = 680;
+const WIN_H = 520;
 type Tab = "projects" | "tree" | "merge";
+
+function folderWindowDefaults() {
+  return {
+    x: Math.max(20, (window.innerWidth - WIN_W) / 2),
+    y: Math.max(44, (window.innerHeight - WIN_H) / 3),
+    w: WIN_W,
+    h: WIN_H,
+  };
+}
 
 export default function FolderWindow({
   folder, allProjects, onClose, onFolderUpdate, onProjectCreated, onProjectPathChanged,
@@ -395,7 +404,7 @@ export default function FolderWindow({
   const { t } = useI18n();
   const { closeFolder } = useUiStore();
   const { setCurrentProjectId } = useProjectStore();
-  const [pos, setPos] = useState(WIN_DEFAULTS);
+  const [pos, setPos] = useState(folderWindowDefaults);
   const [dragging, setDragging] = useState(false);
   const dragOffset = useRef({ x: 0, y: 0 });
   const [pickerOpen, setPickerOpen] = useState(false);

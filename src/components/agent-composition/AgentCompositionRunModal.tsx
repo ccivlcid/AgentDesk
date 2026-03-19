@@ -136,7 +136,7 @@ export default function AgentCompositionRunModal({ nodes, edges, templateName, o
     }
 
     addLog(
-      `\n✅ ${t({ ko: `${taskIds.length}개 태스크 생성 완료`, en: `${taskIds.length} tasks created`, ja: `${taskIds.length}件のタスクを作成`, zh: `已创建${taskIds.length}个任务` })}`,
+      `\n✓ ${t({ ko: `${taskIds.length}개 태스크 생성 완료`, en: `${taskIds.length} tasks created`, ja: `${taskIds.length}件のタスクを作成`, zh: `已创建${taskIds.length}个任务` })}`,
     );
     setCreatedIds(taskIds);
     setPhase("done");
@@ -365,7 +365,7 @@ export default function AgentCompositionRunModal({ nodes, edges, templateName, o
                       color: "#10b981",
                     }}
                   >
-                    ✅ {createdIds.length}{" "}
+                    ✓ {createdIds.length}{" "}
                     {t({ ko: "개 태스크가 생성되었습니다", en: "tasks created successfully", ja: "件のタスクが作成されました", zh: "个任务已成功创建" })}
                   </div>
 

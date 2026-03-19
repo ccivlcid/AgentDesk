@@ -11,26 +11,33 @@ interface GeneralSettingsTabProps {
 
 interface ToggleSettingCardProps {
   label: string;
+  description?: string;
   checked: boolean;
   onToggle: () => void;
-  title?: string;
 }
 
-function ToggleSettingCard({ label, checked, onToggle, title }: ToggleSettingCardProps) {
+function ToggleSettingCard({ label, description, checked, onToggle }: ToggleSettingCardProps) {
   return (
     <div
-      className="flex items-center justify-between gap-3 px-3 py-2"
+      className="flex items-start justify-between gap-3 px-3 py-2.5"
       style={{ border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", borderRadius: 6 }}
     >
-      <span className="text-xs font-mono" style={{ color: "var(--th-text-secondary)" }} title={title}>
-        {label}
-      </span>
+      <div className="flex flex-col gap-0.5 min-w-0">
+        <span className="text-xs font-mono" style={{ color: "var(--th-text-secondary)" }}>
+          {label}
+        </span>
+        {description && (
+          <span className="text-[10px] font-mono leading-snug" style={{ color: "var(--th-text-muted)" }}>
+            {description}
+          </span>
+        )}
+      </div>
       <button
         type="button"
         aria-pressed={checked}
         aria-label={label}
         onClick={onToggle}
-        className="flex-shrink-0 font-mono text-[11px] transition-colors"
+        className="flex-shrink-0 font-mono text-[11px] transition-colors mt-0.5"
         style={{
           borderRadius: 6,
           border: `1px solid ${checked ? "var(--th-accent)" : "var(--th-border)"}`,
@@ -41,7 +48,6 @@ function ToggleSettingCard({ label, checked, onToggle, title }: ToggleSettingCar
           textAlign: "center",
           cursor: "pointer",
         }}
-        title={title}
       >
         {checked ? "ON" : "OFF"}
       </button>
@@ -134,47 +140,36 @@ export default function GeneralSettingsTab({ t, form, setForm, saved, onSave }: 
             <div className="grid grid-cols-1 gap-1.5 md:grid-cols-2">
               <ToggleSettingCard
                 label={t({ ko: "자동 배정", en: "AUTO ASSIGN", ja: "自動割当", zh: "自动分配" })}
+                description={t({
+                  ko: "시작 시 미인증 에이전트의 CLI 프로바이더를 인증된 기본 프로바이더로 자동 교체합니다.",
+                  en: "On startup, reassigns unauthenticated agents to the default authenticated CLI provider.",
+                  ja: "起動時に未認証エージェントの CLI プロバイダーを認証済みのデフォルトに自動切替します。",
+                  zh: "启动时将未认证代理的 CLI 提供商自动替换为已认证的默认提供商。",
+                })}
                 checked={form.autoAssign}
                 onToggle={() => setForm({ ...form, autoAssign: !form.autoAssign })}
-                title={t({
-                  ko: "새 태스크를 에이전트에게 자동으로 배정합니다.",
-                  en: "Automatically assign new tasks to agents.",
-                  ja: "新しいタスクをエージェントに自動的に割り当てます。",
-                  zh: "自动将新任务分配给代理。",
-                })}
               />
               <ToggleSettingCard
                 label={t({ ko: "자율 진행", en: "AUTONOMOUS", ja: "自律実行", zh: "自主推进" })}
+                description={t({
+                  ko: "에이전트가 중간 결정을 사람 확인 없이 자동으로 처리합니다.",
+                  en: "Agents auto-approve decision steps without waiting for human input.",
+                  ja: "エージェントが意思決定を人の確認なしに自動処理します。",
+                  zh: "代理自动处理决策步骤，无需人工确认。",
+                })}
                 checked={form.yoloMode === true}
                 onToggle={() => setForm({ ...form, yoloMode: !(form.yoloMode === true) })}
-                title={t({
-                  ko: "켜면 에이전트가 인간 확인 없이 의사결정을 자동으로 진행합니다.",
-                  en: "When enabled, agents proceed through decision steps automatically without human confirmation.",
-                  ja: "有効にすると、エージェントが人の確認なしに意思決定を自動的に進めます。",
-                  zh: "启用后，代理无需人工确认即可自动推进决策步骤。",
-                })}
               />
               <ToggleSettingCard
                 label={t({ ko: "자동 업데이트", en: "AUTO UPDATE", ja: "自動更新", zh: "自动更新" })}
+                description={t({
+                  ko: "AgentDesk 서버가 새 버전을 감지하면 자동으로 업데이트합니다.",
+                  en: "Server automatically updates when a new version is detected.",
+                  ja: "新しいバージョンを検出するとサーバーが自動更新します。",
+                  zh: "检测到新版本时服务器自动更新。",
+                })}
                 checked={form.autoUpdateEnabled}
                 onToggle={() => setForm({ ...form, autoUpdateEnabled: !form.autoUpdateEnabled })}
-                title={t({
-                  ko: "서버 전체 자동 업데이트 루프를 켜거나 끕니다.",
-                  en: "Enable or disable auto-update loop for the whole server.",
-                  ja: "サーバー全体の自動更新ループを有効/無効にします。",
-                  zh: "启用或禁用整个服务器的自动更新循环。",
-                })}
-              />
-              <ToggleSettingCard
-                label={t({ ko: "OAuth 자동 전환", en: "OAUTH AUTO SWAP", ja: "OAuth 自動切替", zh: "OAuth 自动切换" })}
-                checked={form.oauthAutoSwap !== false}
-                onToggle={() => setForm({ ...form, oauthAutoSwap: !(form.oauthAutoSwap !== false) })}
-                title={t({
-                  ko: "실패/한도 시 다음 OAuth 계정으로 자동 전환",
-                  en: "Auto-switch to next OAuth account on failures/limits",
-                  ja: "失敗/上限時に次の OAuth アカウントへ自動切替",
-                  zh: "失败/额度限制时自动切换到下一个 OAuth 账号",
-                })}
               />
             </div>
           </div>

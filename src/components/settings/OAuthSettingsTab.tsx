@@ -111,6 +111,47 @@ export default function OAuthSettingsTab({
         </div>
       )}
 
+      {/* OAuth 자동 전환 토글 */}
+      <div
+        className="flex items-center justify-between gap-3 px-3 py-2"
+        style={{ border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", borderRadius: 6 }}
+      >
+        <span
+          className="text-xs font-mono"
+          style={{ color: "var(--th-text-secondary)" }}
+          title={t({
+            ko: "실패/한도 시 다음 OAuth 계정으로 자동 전환",
+            en: "Auto-switch to next OAuth account on failures/limits",
+            ja: "失敗/上限時に次の OAuth アカウントへ自動切替",
+            zh: "失败/额度限制时自动切换到下一个 OAuth 账号",
+          })}
+        >
+          {t({ ko: "OAuth 자동 전환", en: "OAUTH AUTO SWAP", ja: "OAuth 自動切替", zh: "OAuth 自动切换" })}
+        </span>
+        <button
+          type="button"
+          aria-pressed={form.oauthAutoSwap !== false}
+          onClick={() => {
+            const next = { ...form, oauthAutoSwap: !(form.oauthAutoSwap !== false) };
+            setForm(next);
+            persistSettings(next);
+          }}
+          className="flex-shrink-0 font-mono text-[11px] transition-colors"
+          style={{
+            borderRadius: 6,
+            border: `1px solid ${form.oauthAutoSwap !== false ? "var(--th-accent)" : "var(--th-border)"}`,
+            background: form.oauthAutoSwap !== false ? "rgba(245,158,11,0.12)" : "var(--th-bg-surface)",
+            color: form.oauthAutoSwap !== false ? "var(--th-accent)" : "var(--th-text-muted)",
+            padding: "2px 8px",
+            minWidth: "3rem",
+            textAlign: "center",
+            cursor: "pointer",
+          }}
+        >
+          {form.oauthAutoSwap !== false ? "ON" : "OFF"}
+        </button>
+      </div>
+
       {oauthLoading ? (
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, padding: "32px 0", fontFamily: "var(--th-font-mono)", fontSize: 11, color: "var(--th-text-muted)" }}>
           <svg className="animate-spin" width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>

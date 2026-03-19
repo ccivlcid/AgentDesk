@@ -566,7 +566,7 @@ export default function CliWindow({ agentId: lockedAgentId, onClose }: Props) {
             }}
           >
             {filteredAgents.length === 0 ? (
-              <option value="">에이전트 없음</option>
+              <option value="">{t({ ko: "에이전트 없음", en: "No agents", ja: "エージェントなし", zh: "无代理" })}</option>
             ) : (
               filteredAgents.map((agent) => (
                 <option key={agent.id} value={agent.id}>
@@ -583,10 +583,10 @@ export default function CliWindow({ agentId: lockedAgentId, onClose }: Props) {
             disabled={!selectedAgent}
             title={
               lockedAgentId && selectedAgentId !== lockedAgentId
-                ? `${selectedAgent?.name} 새 터미널 창 열기`
+                ? t({ ko: `${selectedAgent?.name} 새 터미널 창 열기`, en: `Open new terminal for ${selectedAgent?.name}`, ja: `${selectedAgent?.name} 新しいターミナルを開く`, zh: `为${selectedAgent?.name}打开新终端` })
                 : selectedAgent && CLI_BASE[selectedAgent.cli_provider]
-                ? `${buildCliCmd(selectedAgent.cli_provider, providerModelConfig[selectedAgent.cli_provider])} 실행`
-                : "CLI 없음"
+                ? t({ ko: `${buildCliCmd(selectedAgent.cli_provider, providerModelConfig[selectedAgent.cli_provider])} 실행`, en: `Run ${buildCliCmd(selectedAgent.cli_provider, providerModelConfig[selectedAgent.cli_provider])}`, ja: `${buildCliCmd(selectedAgent.cli_provider, providerModelConfig[selectedAgent.cli_provider])} 実行`, zh: `运行 ${buildCliCmd(selectedAgent.cli_provider, providerModelConfig[selectedAgent.cli_provider])}` })
+                : t({ ko: "CLI 없음", en: "No CLI", ja: "CLIなし", zh: "无CLI" })
             }
             style={{
               display: "flex",
@@ -604,7 +604,9 @@ export default function CliWindow({ agentId: lockedAgentId, onClose }: Props) {
               whiteSpace: "nowrap",
             }}
           >
-            {lockedAgentId && selectedAgentId !== lockedAgentId ? "▶ 새 창" : "▶ 실행"}
+            {lockedAgentId && selectedAgentId !== lockedAgentId
+              ? t({ ko: "▶ 새 창", en: "▶ New", ja: "▶ 新窓", zh: "▶ 新窗" })
+              : t({ ko: "▶ 실행", en: "▶ Run", ja: "▶ 実行", zh: "▶ 运行" })}
           </button>
 
           {/* 완료 버튼: 잠긴 에이전트가 진행 중인 태스크가 있을 때만 표시 */}

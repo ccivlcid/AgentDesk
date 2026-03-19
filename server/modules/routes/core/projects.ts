@@ -315,6 +315,36 @@ export function registerProjectRoutes({
     return res.json({ ok: true });
   });
 
+  // ── Open terminal at project path ────────────────────────────────────────
+  app.post("/api/projects/open-terminal", (req, res) => {
+    const targetPath: unknown = (req.body ?? {}).path;
+    if (typeof targetPath !== "string" || !targetPath) return res.status(400).json({ error: "path_required" });
+    const resolved = path.resolve(targetPath);
+    if (!isPathInsideAllowedRoots(resolved)) return res.status(403).json({ error: "path_outside_allowed_roots" });
+    try { fs.accessSync(resolved); } catch { return res.status(404).json({ error: "path_not_found" }); }
+
+    const platform = process.platform;
+    try {
+      if (platform === "win32") {
+        // Try Windows Terminal first, fall back to cmd
+        spawn("cmd.exe", ["/c", "start", "cmd.exe", "/K", `cd /d "${resolved}"`], {
+          detached: true, stdio: "ignore", shell: false,
+        }).unref();
+      } else if (platform === "darwin") {
+        spawn("open", ["-a", "Terminal", resolved], { detached: true, stdio: "ignore" }).unref();
+      } else {
+        // Linux — try common terminal emulators in order
+        const terms = ["gnome-terminal", "xterm", "konsole", "x-terminal-emulator"];
+        const term = terms[0];
+        spawn(term, ["--working-directory", resolved], { detached: true, stdio: "ignore" }).unref();
+      }
+      return res.json({ ok: true });
+    } catch (err) {
+      console.warn("[open-terminal] failed to spawn terminal", err);
+      return res.status(500).json({ error: "spawn_failed" });
+    }
+  });
+
   // ── Save file into project path ────────────────────────────────────────
   app.post("/api/projects/save-file", (req, res) => {
     const body = req.body ?? {};

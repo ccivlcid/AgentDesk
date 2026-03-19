@@ -188,9 +188,6 @@ const CATEGORY_SEEDS: CategorySeed[] = [
 ];
 
 export function seedCategories(db: DbLike): void {
-  const existing = (db.prepare("SELECT COUNT(*) as cnt FROM categories").get() as { cnt: number }).cnt;
-  if (existing > 0) return;
-
   const insert = db.prepare(`
     INSERT OR IGNORE INTO categories (
       id, name, name_ko, slug, description, icon, color, pack_key,
@@ -220,5 +217,5 @@ export function seedCategories(db: DbLike): void {
     }
   }
 
-  logger.info(`[AgentDesk] Seeded ${CATEGORY_SEEDS.length} default categories`);
+  logger.info(`[AgentDesk] Ensured ${CATEGORY_SEEDS.length} default categories`);
 }

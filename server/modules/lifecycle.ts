@@ -693,51 +693,6 @@ export function startLifecycle(ctx: RuntimeContext): void {
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // Auto-assign agent providers on startup
-  // ---------------------------------------------------------------------------
-  async function autoAssignAgentProviders(): Promise<void> {
-    const autoAssignRow = db.prepare("SELECT value FROM settings WHERE key = 'autoAssign'").get() as
-      | { value: string }
-      | undefined;
-    if (!autoAssignRow || autoAssignRow.value === "false") return;
-
-    const cliStatus = (await detectAllCli()) as Record<string, { installed?: boolean; authenticated?: boolean }>;
-    const authenticated = Object.entries(cliStatus)
-      .filter(([, s]) => s.installed && s.authenticated)
-      .map(([name]) => name);
-
-    if (authenticated.length === 0) {
-      logger.info("[AgentDesk] Auto-assign skipped: no authenticated CLI providers");
-      return;
-    }
-
-    const dpRow = db.prepare("SELECT value FROM settings WHERE key = 'defaultProvider'").get() as
-      | { value: string }
-      | undefined;
-    const defaultProv = dpRow?.value?.replace(/"/g, "") || "claude";
-    const fallback = authenticated.includes(defaultProv) ? defaultProv : authenticated[0];
-
-    const agents = db.prepare("SELECT id, name, cli_provider FROM agents").all() as Array<{
-      id: string;
-      name: string;
-      cli_provider: string | null;
-    }>;
-
-    let count = 0;
-    for (const agent of agents) {
-      const prov = agent.cli_provider || "";
-      if (prov === "copilot" || prov === "antigravity" || prov === "api") continue;
-      if (authenticated.includes(prov)) continue;
-
-      db.prepare("UPDATE agents SET cli_provider = ? WHERE id = ?").run(fallback, agent.id);
-      broadcast("agent_status", db.prepare("SELECT * FROM agents WHERE id = ?").get(agent.id));
-      logger.info(`[AgentDesk] Auto-assigned ${agent.name}: ${prov || "none"} → ${fallback}`);
-      count++;
-    }
-    if (count > 0) logger.info({ count }, "[AgentDesk] Auto-assigned %d agent(s)");
-  }
-
   // Run rotation every 60 seconds, and once on startup after 5s
   setTimeout(rotateBreaks, 5_000);
   setInterval(rotateBreaks, 60_000);
@@ -749,7 +704,6 @@ export function startLifecycle(ctx: RuntimeContext): void {
   setInterval(() => recoverOrphanInProgressTasks("interval"), IN_PROGRESS_ORPHAN_SWEEP_MS);
   setTimeout(sweepPendingSubtaskDelegations, 4_000);
   setInterval(sweepPendingSubtaskDelegations, SUBTASK_DELEGATION_SWEEP_MS);
-  setTimeout(autoAssignAgentProviders, 4_000);
   const noopReceiver = { stop: () => {} };
   let telegramReceiver = noopReceiver;
   let discordReceiver = noopReceiver;

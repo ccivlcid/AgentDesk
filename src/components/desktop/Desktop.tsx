@@ -142,6 +142,8 @@ export default function Desktop({
     openCliAgentIds,
     closeCliWindow,
     desktopIconLayout,
+    settings,
+    setSettings,
   } = useUiStore();
 
   const { projects, categories, currentProjectId, setCurrentProjectId } = useProjectStore();
@@ -149,6 +151,13 @@ export default function Desktop({
   const { agents } = useAgentStore();
   const { tasks, decisionInboxItems } = useTaskStore();
   const runningAgentCount = agents.filter((a) => a.status === "working").length;
+
+  const handleToggleYoloMode = useCallback(() => {
+    const next = !(settings.yoloMode === true);
+    const updated = { ...settings, yoloMode: next };
+    setSettings(updated);
+    void onSaveSettings(updated);
+  }, [settings, setSettings, onSaveSettings]);
 
   const [agentManagerCreateCount, setAgentManagerCreateCount] = useState(0);
   const [showQuickCreateAgent, setShowQuickCreateAgent] = useState(false);
@@ -227,8 +236,8 @@ export default function Desktop({
     const snapped: Record<string, { x: number; y: number }> = {};
     for (const [id, pos] of Object.entries(current)) {
       snapped[id] = {
-        x: Math.round(pos.x / ICON_GRID_X) * ICON_GRID_X,
-        y: Math.round(pos.y / ICON_GRID_Y) * ICON_GRID_Y,
+        x: 24 + Math.round((pos.x - 24) / ICON_GRID_X) * ICON_GRID_X,
+        y: 60 + Math.round((pos.y - 60) / ICON_GRID_Y) * ICON_GRID_Y,
       };
     }
     setDesktopIconLayout({ ...current, ...snapped });
@@ -521,7 +530,7 @@ export default function Desktop({
   const icons: DesktopIconDef[] = [
     // ── 기존 앱 ──────────────────────────────────────────────────
     { id: "agent-manager",  icon: (c) => <IconAgents color={c} />,      label: t({ ko: "에이전트 설정",    en: "Agents",         ja: "エージェント設定",  zh: "代理设置" }),   onClick: () => openWindow("agent-manager"), accentColor: "#5e5ce6" },
-    { id: "cli",            icon: (c) => <IconRepl color={c} />,        label: t({ ko: "Agent CLI",       en: "Agent CLI",      ja: "Agent CLI",       zh: "Agent CLI" }),  onClick: () => openCli(),                   accentColor: "#32ade6" },
+    { id: "cli",            icon: (c) => <IconRepl color={c} />,        label: t({ ko: "에이전트 CLI",    en: "Agent CLI",      ja: "エージェントCLI", zh: "代理CLI" }),     onClick: () => openCli(),                   accentColor: "#32ade6" },
     { id: "image-studio",   icon: (c) => <IconImageStudio color={c} />, label: t({ ko: "이미지 스튜디오", en: "Image Studio",   ja: "イメージスタジオ", zh: "图像工作室" }),  onClick: () => openWindow("image-studio"),  accentColor: "#ec4899" },
     { id: "decision-inbox", icon: (c) => <IconDecisions color={c} />,   label: t({ ko: "의사결정",         en: "Decisions",      ja: "意思決定",        zh: "决策" }),       onClick: onOpenDecisionInbox,               accentColor: "#ff453a", badge: decisionInboxItems.length || undefined },
     { id: "report-history", icon: (c) => <IconReports color={c} />,     label: t({ ko: "보고서",           en: "Reports",        ja: "レポート",        zh: "报告" }),       onClick: () => { clearUnreadReportCount(); toggleWindow("reports"); }, accentColor: "#64d2ff", badge: unreadReportCount || undefined },
@@ -559,7 +568,10 @@ export default function Desktop({
 
   const customFeatureIcons: DesktopIconDef[] = customFeatures.map((f) => ({
     id: `cf-${f.id}`,
-    icon: (c: string) => getCustomFeatureIcon(f.template_id, c),
+    icon: (c: string) =>
+      f.icon_svg
+        ? <div style={{ width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center", color: c }} dangerouslySetInnerHTML={{ __html: f.icon_svg }} />
+        : getCustomFeatureIcon(f.template_id, c),
     label: f.name,
     onClick: () => openCustomApp(f.id),
     accentColor: "#f59e0b",
@@ -648,6 +660,8 @@ export default function Desktop({
         onOpenCommandPalette={() => setShowCommandPalette(true)}
         onOpenExportModal={() => setShowExportModal(true)}
         runningAgentCount={runningAgentCount}
+        yoloMode={settings.yoloMode === true}
+        onToggleYoloMode={handleToggleYoloMode}
       />
 
       {/* 바탕화면 영역 (메뉴바 아래, Dock 위) */}
@@ -950,8 +964,8 @@ export default function Desktop({
             onClose={() => setOpenProjectWindowIds((prev) => { const next = new Set(prev); next.delete(pid); return next; })}
             onSelectProject={(id) => { setCurrentProjectId(id); }}
             onDeleteProject={handleDeleteProject}
-            initialX={160 + i * 30}
-            initialY={80 + i * 30}
+            initialX={Math.max(20, (window.innerWidth - 720) / 2) + i * 28}
+            initialY={Math.max(44, (window.innerHeight - 540) / 3) + i * 28}
           />
         );
       })}

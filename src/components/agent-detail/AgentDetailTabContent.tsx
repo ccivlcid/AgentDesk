@@ -417,7 +417,7 @@ export default function AgentDetailTabContent({
               </div>
               <div className="text-xs mt-0.5 font-mono" style={{ color: "var(--th-text-muted)" }}>
                 {subAgent.status === "working"
-                  ? `🔨 ${t({ ko: "작업중...", en: "Working...", ja: "作業中...", zh: "工作中..." })}`
+                  ? `▶ ${t({ ko: "작업중...", en: "Working...", ja: "作業中...", zh: "工작中..." })}`
                   : `✅ ${t({ ko: "완료", en: "Done", ja: "完了", zh: "완成" })}`}
               </div>
             </div>

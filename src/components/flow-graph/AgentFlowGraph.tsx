@@ -266,30 +266,30 @@ export default function AgentFlowGraph({
         onDoubleClick={handleSvgDoubleClick}
       >
         <defs>
+          {/* Dot grid pattern */}
+          <pattern id="dot-grid" x="0" y="0" width="24" height="24" patternUnits="userSpaceOnUse">
+            <circle cx="1" cy="1" r="1" fill="var(--th-border)" opacity="0.5" />
+          </pattern>
+
           {/* Arrow markers */}
-          <marker
-            id="arrow"
-            viewBox="0 0 10 6"
-            refX="10"
-            refY="3"
-            markerWidth="8"
-            markerHeight="6"
-            orient="auto-start-reverse"
-          >
+          <marker id="arrow" viewBox="0 0 10 6" refX="9" refY="3" markerWidth="7" markerHeight="6" orient="auto-start-reverse">
             <path d="M 0 0 L 10 3 L 0 6 z" fill="var(--th-text-muted)" />
           </marker>
-          <marker
-            id="arrow-accent"
-            viewBox="0 0 10 6"
-            refX="10"
-            refY="3"
-            markerWidth="8"
-            markerHeight="6"
-            orient="auto-start-reverse"
-          >
+          <marker id="arrow-accent" viewBox="0 0 10 6" refX="9" refY="3" markerWidth="7" markerHeight="6" orient="auto-start-reverse">
             <path d="M 0 0 L 10 3 L 0 6 z" fill="var(--th-accent)" />
           </marker>
+          <marker id="arrow-secondary" viewBox="0 0 10 6" refX="9" refY="3" markerWidth="7" markerHeight="6" orient="auto-start-reverse">
+            <path d="M 0 0 L 10 3 L 0 6 z" fill="var(--th-text-secondary)" />
+          </marker>
         </defs>
+
+        {/* 배경 도트 그리드 */}
+        <rect
+          width="100%"
+          height="100%"
+          fill="url(#dot-grid)"
+          style={{ pointerEvents: "none" }}
+        />
 
         <g transform={`translate(${transform.x}, ${transform.y}) scale(${transform.scale})`}>
           {/* Layer 1: Meeting cluster backgrounds */}
@@ -415,45 +415,35 @@ export default function AgentFlowGraph({
         right: 12,
         background: "var(--th-bg-panel)",
         border: "1px solid var(--th-border)",
-        borderRadius: 6,
+        borderRadius: 7,
         padding: "8px 12px",
         fontFamily: mono,
         fontSize: 10,
         color: "var(--th-text-muted)",
         display: "flex",
         flexDirection: "column",
-        gap: 4,
+        gap: 5,
+        backdropFilter: "blur(8px)",
+        WebkitBackdropFilter: "blur(8px)",
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <svg width="24" height="8">
-            <line x1="0" y1="4" x2="24" y2="4" stroke="var(--th-text-muted)" strokeWidth="1" strokeDasharray="3 3" />
-          </svg>
-          <span>{t({ ko: "서브에이전트", en: "sub-agent", ja: "サブエージェント", zh: "子代理" })}</span>
+        <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.08em", color: "var(--th-text-muted)", marginBottom: 2, opacity: 0.6 }}>
+          LEGEND
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <svg width="24" height="8">
-            <line x1="0" y1="4" x2="24" y2="4" stroke="var(--th-text-secondary)" strokeWidth="1.5" />
-          </svg>
-          <span>{t({ ko: "위임", en: "delegation", ja: "委任", zh: "委派" })}</span>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <svg width="24" height="8">
-            <line x1="0" y1="4" x2="24" y2="4" stroke="var(--th-accent)" strokeWidth="2" strokeDasharray="8 4" />
-          </svg>
-          <span>{t({ ko: "부서간 전달", en: "cross-dept", ja: "部署間", zh: "跨部门" })}</span>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <svg width="24" height="8">
-            <line x1="0" y1="4" x2="24" y2="4" stroke="var(--th-accent)" strokeWidth="1" strokeDasharray="4 4" />
-          </svg>
-          <span>{t({ ko: "미팅", en: "meeting", ja: "ミーティング", zh: "会议" })}</span>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <svg width="24" height="8">
-            <line x1="0" y1="4" x2="24" y2="4" stroke="var(--th-text-muted)" strokeWidth="1" strokeDasharray="2 5" />
-          </svg>
-          <span>{t({ ko: "협업", en: "collab", ja: "コラボ", zh: "协作" })}</span>
-        </div>
+        {[
+          { stroke: "var(--th-accent)", w: 2, dash: undefined, dot: true,  label: t({ ko: "위임", en: "delegation", ja: "委任", zh: "委派" }) },
+          { stroke: "var(--th-text-muted)", w: 1, dash: "3 3", dot: false, label: t({ ko: "서브에이전트", en: "sub-agent", ja: "サブエージェント", zh: "子代理" }) },
+          { stroke: "var(--th-text-secondary)", w: 2.5, dash: "8 4", dot: true, label: t({ ko: "부서간 전달", en: "cross-dept", ja: "部署間", zh: "跨部门" }) },
+          { stroke: "#a78bfa", w: 1, dash: "4 4", dot: false, label: t({ ko: "미팅", en: "meeting", ja: "ミーティング", zh: "会议" }) },
+          { stroke: "var(--th-text-muted)", w: 1, dash: "2 6", dot: false, label: t({ ko: "협업", en: "collab", ja: "コラボ", zh: "协作" }) },
+        ].map(({ stroke, w, dash, dot, label }) => (
+          <div key={label} style={{ display: "flex", alignItems: "center", gap: 7 }}>
+            <svg width="28" height="10" style={{ flexShrink: 0 }}>
+              <line x1="2" y1="5" x2="26" y2="5" stroke={stroke} strokeWidth={w} strokeDasharray={dash} strokeLinecap="round" />
+              {dot && <circle cx="14" cy="5" r="2.5" fill={stroke} opacity="0.9" />}
+            </svg>
+            <span>{label}</span>
+          </div>
+        ))}
       </div>
     </div>
   );

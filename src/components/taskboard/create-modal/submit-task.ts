@@ -23,7 +23,6 @@ type ResolvePathHelperErrorMessage = (error: unknown, fallback: Record<Locale, s
 
 type SubmitTaskOptions = {
   allowCreateMissingPath?: boolean;
-  allowWithoutProject?: boolean;
 };
 
 interface SubmitTaskContext {
@@ -64,7 +63,6 @@ export async function submitTaskWithProjectHandling(
   options: SubmitTaskOptions = {},
 ): Promise<void> {
   const allowCreateMissingPath = options.allowCreateMissingPath ?? false;
-  const allowWithoutProject = options.allowWithoutProject ?? false;
   const {
     title,
     description,
@@ -339,8 +337,16 @@ export async function submitTaskWithProjectHandling(
     }
   }
 
-  if (!resolvedProject && !allowWithoutProject) {
-    setSubmitWithoutProjectPromptOpen(true);
+  if (!resolvedProject) {
+    setFormFeedback({
+      tone: "error",
+      message: t({
+        ko: "프로젝트를 선택해주세요. 업무는 반드시 프로젝트에 연결되어야 합니다.",
+        en: "Please select a project. Tasks must be linked to a project.",
+        ja: "プロジェクトを選択してください。タスクはプロジェクトに紐付ける必要があります。",
+        zh: "请选择项目。任务必须关联到项目。",
+      }),
+    });
     return;
   }
 

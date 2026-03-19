@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { Agent, Department, TaskType } from "../../types";
+import type { Agent, Category, Department, TaskType } from "../../types";
 import type { WorkflowPackConfig } from "../../api/workflow-skills-subtasks";
 import { getTaskTemplates, createTaskTemplate, deleteTaskTemplate, type TaskTemplate } from "../../api/task-templates";
+import { createProject } from "../../api/organization-projects";
 import { useI18n } from "../../i18n";
 import { type CreateTaskDraft, type FormFeedback } from "./constants";
 import type { CreateTaskModalOverlaysProps } from "./create-modal/overlay-types";
@@ -14,10 +15,12 @@ import type { KbSourceRef } from "../../api/synapse";
 import { KbTaskSourcesSection } from "./create-modal/KbTaskSourcesSection";
 import { FigmaUrlSection } from "./create-modal/FigmaUrlSection";
 import { useUiStore } from "../../store/uiStore";
+import ProjectCreateModal from "../project-create-modal/ProjectCreateModal";
 
 interface CreateModalProps {
   agents: Agent[];
   departments: Department[];
+  categories?: Category[];
   onClose: () => void;
   onCreate: (input: {
     title: string;
@@ -40,7 +43,7 @@ interface CreateModalProps {
   defaultAgentId?: string;
 }
 
-function CreateModal({ agents, departments, onClose, onCreate, onAssign, defaultProjectId, defaultAgentId }: CreateModalProps) {
+function CreateModal({ agents, departments, categories = [], onClose, onCreate, onAssign, defaultProjectId, defaultAgentId }: CreateModalProps) {
   void onAssign;
   const { t, language: locale, locale: localeTag } = useI18n();
   const { openCliWindow } = useUiStore();
@@ -60,6 +63,7 @@ function CreateModal({ agents, departments, onClose, onCreate, onAssign, default
   const [figmaUrl, setFigmaUrl] = useState("");
   const [submitBusy, setSubmitBusy] = useState(false);
   const [submitWithoutProjectPromptOpen, setSubmitWithoutProjectPromptOpen] = useState(false);
+  const [embeddedNewProjectOpen, setEmbeddedNewProjectOpen] = useState(false);
   const [formFeedback, setFormFeedback] = useState<FormFeedback | null>(null);
   const [templates, setTemplates] = useState<TaskTemplate[]>([]);
 
@@ -288,7 +292,7 @@ function CreateModal({ agents, departments, onClose, onCreate, onAssign, default
     onToggleProjectDropdown: projectPicker.handleToggleProjectDropdown,
     onSelectProject: projectPicker.selectProject,
     onProjectHover: projectPicker.handleProjectHover,
-    onEnableCreateNewProject: projectPicker.handleEnableCreateNewProject,
+    onEnableCreateNewProject: () => setEmbeddedNewProjectOpen(true),
     onNewProjectPathChange: projectPicker.handleNewProjectPathChange,
     onOpenManualPathBrowser: projectPicker.handleOpenManualPathBrowser,
     onTogglePathSuggestions: projectPicker.handleTogglePathSuggestions,
@@ -326,10 +330,7 @@ function CreateModal({ agents, departments, onClose, onCreate, onAssign, default
       setRestorePromptOpen(false);
     },
     onCloseSubmitWithoutProjectPrompt: () => setSubmitWithoutProjectPromptOpen(false),
-    onConfirmSubmitWithoutProject: () => {
-      setSubmitWithoutProjectPromptOpen(false);
-      void submitTask({ allowWithoutProject: true });
-    },
+    onConfirmSubmitWithoutProject: () => { setSubmitWithoutProjectPromptOpen(false); },
     onCloseMissingPathPrompt: () => projectPicker.setMissingPathPrompt(null),
     onConfirmCreateMissingPath: () => {
       projectPicker.setMissingPathPrompt(null);
@@ -359,7 +360,41 @@ function CreateModal({ agents, departments, onClose, onCreate, onAssign, default
     onClearDrafts: clearDrafts,
   };
 
+  const handleEmbeddedProjectConfirm = useCallback(
+    async ({ name, categoryId, project_path, core_goal, agentIds, figma_url }: {
+      name: string; categoryId: string | null; project_path: string;
+      core_goal?: string; agentIds: string[]; figma_url?: string | null;
+    }) => {
+      try {
+        const newProject = await createProject({
+          name,
+          project_path,
+          core_goal: core_goal ?? name,
+          figma_url: figma_url ?? null,
+          agent_ids: agentIds,
+        });
+        projectPicker.setProjects((prev) =>
+          prev.some((p) => p.id === newProject.id) ? prev : [newProject, ...prev],
+        );
+        projectPicker.selectProject(newProject);
+        setEmbeddedNewProjectOpen(false);
+      } catch {
+        // 오류는 ProjectCreateModal 내부에서 처리되므로 무시
+      }
+    },
+    [projectPicker],
+  );
+
   return (
+    <>
+    {embeddedNewProjectOpen && (
+      <ProjectCreateModal
+        categories={categories}
+        agents={agents}
+        onConfirm={handleEmbeddedProjectConfirm}
+        onClose={() => setEmbeddedNewProjectOpen(false)}
+      />
+    )}
     <CreateTaskModalView
       t={t}
       locale={locale}
@@ -424,6 +459,7 @@ function CreateModal({ agents, departments, onClose, onCreate, onAssign, default
       kbSection={<KbTaskSourcesSection sources={kbSources} onChange={setKbSources} t={t} />}
       onSubmitWithCli={handleSubmitWithCli}
     />
+    </>
   );
 }
 

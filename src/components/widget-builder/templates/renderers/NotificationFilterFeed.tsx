@@ -21,21 +21,31 @@ const TYPE_ICON: Record<string, string> = {
 
 export default function NotificationFilterFeed({ config }: { config: CustomFeatureConfig }) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [fetchError, setFetchError] = useState(false);
   const filterType = (config.params?.types as string | undefined) ?? "task_error";
 
   useEffect(() => {
+    setFetchError(false);
     const load = () =>
-      fetch("http://127.0.0.1:8790/api/notifications?limit=30")
+      fetch("/api/notifications?limit=30")
         .then((r) => r.json())
         .then((j) => {
           const all: Notification[] = j.notifications ?? [];
           setNotifications(all.filter((n) => n.type === filterType));
         })
-        .catch(() => {});
+        .catch(() => setFetchError(true));
     load();
     const id = setInterval(load, 5000);
     return () => clearInterval(id);
   }, [filterType]);
+
+  if (fetchError) {
+    return (
+      <div className="flex items-center justify-center h-full" style={{ ...mono, fontSize: 10, color: "var(--th-danger-text)" }}>
+        API 연결 실패
+      </div>
+    );
+  }
 
   if (notifications.length === 0) {
     return (

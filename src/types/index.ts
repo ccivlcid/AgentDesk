@@ -711,6 +711,8 @@ export interface CustomFeature {
   config: CustomFeatureConfig;
   status: CustomFeatureStatus;
   error_msg: string | null;
+  icon_svg?: string | null;
+  progress_log?: string | null;
   created_at: number;
   updated_at: number;
 }

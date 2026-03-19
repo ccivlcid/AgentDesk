@@ -1,4 +1,5 @@
 import { build as esbuild } from "esbuild";
+import { spawn } from "node:child_process";
 import { decryptSecret } from "../../../oauth/helpers.ts";
 import logger from "../../../lib/logger.ts";
 import type { DatabaseSync } from "node:sqlite";
@@ -47,12 +48,33 @@ function findApiProvider(db: DbLike, cliProvider: string): ApiProviderRow | null
       .get() as ApiProviderRow | undefined) ?? null;
   }
 
-  if (!targetType) return null;
-
   // 2. 타입이 일치하는 첫 번째 enabled provider
+  if (targetType) {
+    const matched = (db
+      .prepare("SELECT * FROM api_providers WHERE type = ? AND enabled = 1 ORDER BY created_at ASC LIMIT 1")
+      .get(targetType) as ApiProviderRow | undefined) ?? null;
+    if (matched) return matched;
+  }
+
+  // 3. 폴백: 어떤 enabled provider든 사용 (타입 무관)
   return (db
-    .prepare("SELECT * FROM api_providers WHERE type = ? AND enabled = 1 ORDER BY created_at ASC LIMIT 1")
-    .get(targetType) as ApiProviderRow | undefined) ?? null;
+    .prepare("SELECT * FROM api_providers WHERE enabled = 1 ORDER BY created_at ASC LIMIT 1")
+    .get() as ApiProviderRow | undefined) ?? null;
+}
+
+/** 진행 로그를 DB에 한 줄 추가 */
+function appendLog(db: DbLike, featureId: string, msg: string, nowMs: () => number): void {
+  try {
+    const row = db.prepare("SELECT progress_log FROM custom_features WHERE id = ?").get(featureId) as
+      | { progress_log: string | null }
+      | undefined;
+    const ts = new Date().toTimeString().slice(0, 8); // HH:MM:SS
+    const line = `[${ts}] ${msg}`;
+    const updated = row?.progress_log ? `${row.progress_log}\n${line}` : line;
+    db.prepare("UPDATE custom_features SET progress_log = ?, updated_at = ? WHERE id = ?")
+      .run(updated, nowMs(), featureId);
+    logger.info(`[feature] ${featureId}: ${msg}`);
+  } catch { /* ignore */ }
 }
 
 /** 모델 결정: models_cache 첫 번째 or provider 타입별 기본값 */
@@ -230,22 +252,459 @@ function extractCodeBlock(text: string): string {
   return text.trim();
 }
 
-/** AgentDesk 위젯 컴포넌트 생성용 시스템 프롬프트 */
-const SYSTEM_PROMPT = `You are a React component generator for AgentDesk, a developer OS for managing AI agents.
+/** 응답 텍스트에서 SVG 아이콘 + TSX 컴포넌트 두 블록 추출 */
+function extractSvgAndCode(text: string): { svg: string | null; code: string } {
+  const svgMatch = text.match(/```svg\s*\n?([\s\S]+?)```/);
+  const codeMatch = text.match(/```(?:tsx?|jsx?|react?)\s*\n?([\s\S]+?)```/);
+  return {
+    svg: svgMatch ? svgMatch[1].trim() : null,
+    code: codeMatch ? codeMatch[1].trim() : extractCodeBlock(text),
+  };
+}
 
-Rules you MUST follow:
-- Return ONLY a single React TypeScript component, no other text
-- Wrap all code in a single \`\`\`tsx code block
-- Component name: CustomFeatureWidget (exported as default)
+/** AgentDesk 위젯 컴포넌트 생성용 시스템 프롬프트 */
+const SYSTEM_PROMPT = `You are an expert React component generator for AgentDesk — a developer OS for running, monitoring, and controlling multiple AI agents simultaneously.
+
+## OUTPUT FORMAT (strict)
+- Return ONLY a single \`\`\`tsx code block — no prose, no explanations, no comments outside the block
+- Component name must be exactly: CustomFeatureWidget (default export)
+- Props signature (do not change): { config: { refresh: string; theme: string; sizePreset: string; params?: Record<string, unknown> } }
+
+## STYLE RULES (mandatory)
+- Font: always set fontFamily: "var(--th-font-mono)" on root element
+- The component MUST fill its container: style={{ width:"100%", height:"100%", display:"flex", flexDirection:"column" }}
+- Use ONLY these CSS variables (dark terminal theme):
+  - var(--th-bg-elevated)   — card/widget background
+  - var(--th-bg-panel)      — inner panel / input background
+  - var(--th-border)        — default border (rgba white ~8%)
+  - var(--th-text-primary)  — main text
+  - var(--th-text-muted)    — secondary / dim text
+  - var(--th-text-heading)  — bright headings
+  - var(--th-accent)        — amber #f59e0b — use for highlights, active states, primary buttons
+  - var(--th-attr-elite)    — green #22c55e — use for success, done, healthy states
+  - var(--th-danger-text)   — red — use for errors, offline, critical
+- Inline styles preferred; minimal Tailwind only for flex/grid layout helpers (flex, gap-2, etc.)
+- No global CSS, no <style> tags
+
+## HOOKS
+- Use React.useState, React.useEffect, React.useMemo, React.useCallback — no external libraries
+- Declare all hooks unconditionally at top of function body
+- Auto-refresh: parse config.refresh ("30s", "1m", "5m") and setInterval accordingly
+
+## AVAILABLE DATA APIs (fetch-only, /api/* paths)
+
+### Agents
+GET /api/agents
+Response: { agents: Array<{
+  id: string; name: string; name_en?: string; name_ja?: string; name_zh?: string;
+  avatar_emoji: string; status: "idle"|"working"|"break"|"offline";
+  department_id: string | null; current_task_id: string | null;
+  role?: string; skills?: string[];
+}> }
+
+### Tasks
+GET /api/tasks
+Response: { tasks: Array<{
+  id: string; title: string;
+  status: "backlog"|"todo"|"in_progress"|"done"|"blocked";
+  priority: "low"|"medium"|"high"|"critical";
+  assigned_agent_id: string | null; project_id: string | null;
+  created_at: number; updated_at: number;
+}> }
+
+### Departments
+GET /api/departments
+Response: { departments: Array<{
+  id: string; name: string; color: string; agent_count?: number;
+}> }
+
+### Projects
+GET /api/projects
+Response: { projects: Array<{
+  id: string; name: string; status: string; category_id?: string;
+  core_goal?: string; project_path?: string;
+}> }
+
+### Agent Performance
+GET /api/agents/performance
+Response: { data: Array<{
+  agent_id: string; agent_name: string; tasks_done: number;
+  avg_duration_ms: number; success_rate: number;
+}> }
+
+### Notifications
+GET /api/notifications
+Response: { notifications: Array<{
+  id: string; type: "info"|"warning"|"error"|"success";
+  title: string; message: string; created_at: number; read: boolean;
+}> }
+
+## DATA FETCHING PATTERN
+\`\`\`tsx
+const [data, setData] = React.useState(null);
+const [loading, setLoading] = React.useState(true);
+const [error, setError] = React.useState(null);
+
+const load = React.useCallback(async () => {
+  try {
+    setLoading(true);
+    const res = await fetch("/api/agents");
+    const j = await res.json();
+    setData(j.agents);
+  } catch(e) { setError(String(e)); }
+  finally { setLoading(false); }
+}, []);
+
+React.useEffect(() => {
+  load();
+  const ms = config.refresh === "1m" ? 60000 : config.refresh === "5m" ? 300000 : 30000;
+  const t = setInterval(load, ms);
+  return () => clearInterval(t);
+}, [load]);
+\`\`\`
+
+## LOADING / ERROR STATES (always implement)
+- Loading: show a spinner or "Loading..." text in accent color
+- Error: show error message in danger color with a retry button
+- Empty: show a clear empty-state message
+
+## SECURITY RULES (hard limits)
+- No eval(), new Function(), require(), import(), document.write(), window.location=, localStorage.clear()
+- fetch() calls ONLY to /api/* paths — no external URLs
+
+## EXAMPLE WIDGET — use this as structural reference:
+\`\`\`tsx
+export default function CustomFeatureWidget({ config }: { config: { refresh: string; theme: string; sizePreset: string; params?: Record<string, unknown> } }) {
+  const [agents, setAgents] = React.useState<any[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  const load = React.useCallback(async () => {
+    try {
+      const r = await fetch("/api/agents");
+      const j = await r.json();
+      setAgents(j.agents ?? []);
+    } catch { /* ignore */ }
+    finally { setLoading(false); }
+  }, []);
+
+  React.useEffect(() => {
+    load();
+    const ms = config.refresh === "1m" ? 60000 : 30000;
+    const t = setInterval(load, ms);
+    return () => clearInterval(t);
+  }, [load]);
+
+  const working = agents.filter(a => a.status === "working");
+
+  return (
+    <div style={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", fontFamily: "var(--th-font-mono)", background: "var(--th-bg-elevated)", padding: 16, gap: 12 }}>
+      <div style={{ fontSize: 11, fontWeight: 700, color: "var(--th-text-muted)", letterSpacing: "0.08em" }}>
+        WORKING AGENTS ({working.length})
+      </div>
+      {loading ? (
+        <div style={{ color: "var(--th-accent)", fontSize: 12 }}>Loading...</div>
+      ) : working.map(a => (
+        <div key={a.id} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", background: "var(--th-bg-panel)", border: "1px solid var(--th-border)", borderRadius: 6 }}>
+          <span style={{ fontSize: 18 }}>{a.avatar_emoji}</span>
+          <span style={{ flex: 1, fontSize: 12, color: "var(--th-text-primary)" }}>{a.name}</span>
+          <span style={{ fontSize: 10, color: "var(--th-attr-elite)", fontWeight: 700 }}>WORKING</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+\`\`\`
+
+Now generate a NEW component matching the user's request. Follow all rules above exactly.`;
+
+/**
+ * GitHub URL → raw 콘텐츠 URL 변환
+ * 지원 형식:
+ *   https://github.com/user/repo/blob/branch/path/to/file.tsx
+ *   https://github.com/user/repo/raw/branch/path/to/file.tsx
+ *   https://raw.githubusercontent.com/user/repo/branch/path/to/file.tsx
+ *   https://gist.github.com/user/gistId
+ *   https://gist.githubusercontent.com/user/gistId/raw/...
+ */
+function toRawUrl(inputUrl: string): string {
+  try {
+    const u = new URL(inputUrl);
+
+    // 이미 raw URL
+    if (u.hostname === "raw.githubusercontent.com" || u.hostname === "gist.githubusercontent.com") {
+      return inputUrl;
+    }
+
+    // gist.github.com — raw 변환
+    if (u.hostname === "gist.github.com") {
+      const parts = u.pathname.split("/").filter(Boolean); // [user, gistId]
+      if (parts.length >= 2) {
+        return `https://gist.githubusercontent.com/${parts[0]}/${parts[1]}/raw`;
+      }
+    }
+
+    // github.com/user/repo/blob/branch/path → raw
+    if (u.hostname === "github.com") {
+      // /blob/ → /raw/ 치환으로도 되지만 raw.githubusercontent 형식이 더 안정적
+      const path = u.pathname.replace(/^\//, "");
+      // e.g. user/repo/blob/main/foo.tsx  OR  user/repo/raw/main/foo.tsx
+      const m = path.match(/^([^/]+)\/([^/]+)\/(blob|raw)\/(.+)$/);
+      if (m) {
+        const [, user, repo, , rest] = m;
+        return `https://raw.githubusercontent.com/${user}/${repo}/${rest}`;
+      }
+    }
+
+    // 변환 불가 → 그대로 반환 (fetch 시 실패)
+    return inputUrl;
+  } catch {
+    return inputUrl;
+  }
+}
+
+/** GitHub URL에서 위젯 코드를 가져와 컴파일하고 저장 */
+export async function runGithubImport(
+  db: DbLike,
+  featureId: string,
+  githubUrl: string,
+  nowMs: () => number,
+): Promise<void> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 30_000);
+
+  try {
+    const rawUrl = toRawUrl(githubUrl);
+    logger.info(`[github-import] fetching feature=${featureId} url=${rawUrl}`);
+
+    const resp = await fetch(rawUrl, {
+      headers: { "User-Agent": "AgentDesk/1.0" },
+      signal: controller.signal,
+    });
+
+    if (!resp.ok) {
+      throw new Error(`GitHub fetch failed: HTTP ${resp.status} — ${rawUrl}`);
+    }
+
+    const contentType = resp.headers.get("content-type") ?? "";
+    // 바이너리·HTML 등 거부
+    if (contentType.includes("text/html")) {
+      throw new Error("URL이 HTML 페이지를 반환했습니다. raw 파일 URL을 사용하세요.");
+    }
+
+    const code = (await resp.text()).trim();
+    if (!code) throw new Error("빈 파일입니다.");
+
+    // 코드 블록 래퍼가 있으면 제거
+    const cleaned = extractCodeBlock(code);
+
+    const blocked = validateBundle(cleaned);
+    if (blocked) {
+      db.prepare("UPDATE custom_features SET status = ?, error_msg = ?, updated_at = ? WHERE id = ?")
+        .run("error", `Safety check failed: ${blocked}`, nowMs(), featureId);
+      return;
+    }
+
+    logger.info(`[github-import] compiling feature=${featureId}`);
+    const iife = await compileToIife(cleaned);
+
+    db.prepare("UPDATE custom_features SET bundle = ?, status = ?, error_msg = NULL, updated_at = ? WHERE id = ?")
+      .run(iife, "active", nowMs(), featureId);
+
+    logger.info(`[github-import] done feature=${featureId}`);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    logger.error(`[github-import] error feature=${featureId}: ${msg}`);
+    db.prepare("UPDATE custom_features SET status = ?, error_msg = ?, updated_at = ? WHERE id = ?")
+      .run("error", msg.slice(0, 400), nowMs(), featureId);
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+// ─── GitHub Repo Import ──────────────────────────────────────────────────────
+
+/** github.com/user/repo URL에서 user, repo 추출 */
+function parseGithubRepo(repoUrl: string): { user: string; repo: string } | null {
+  try {
+    const u = new URL(repoUrl);
+    if (u.hostname !== "github.com") return null;
+    const parts = u.pathname.replace(/^\//, "").split("/").filter(Boolean);
+    if (parts.length < 2) return null;
+    return { user: parts[0], repo: parts[1].replace(/\.git$/, "") };
+  } catch { return null; }
+}
+
+/** GitHub raw URL로 텍스트 파일 fetch (없으면 null) */
+async function fetchGithubRaw(user: string, repo: string, filePath: string, signal: AbortSignal): Promise<string | null> {
+  for (const branch of ["main", "master", "HEAD"]) {
+    try {
+      const url = `https://raw.githubusercontent.com/${user}/${repo}/${branch}/${filePath}`;
+      const r = await fetch(url, { headers: { "User-Agent": "AgentDesk/1.0" }, signal });
+      if (r.ok) return await r.text();
+    } catch { /* 다음 branch 시도 */ }
+  }
+  return null;
+}
+
+/** npm 패키지 임시 설치 (--no-save) */
+function installNpmPackage(pkgName: string): Promise<void> {
+  return new Promise((resolve) => {
+    const isWin = process.platform === "win32";
+    const child = spawn("npm", ["install", "--no-save", pkgName], { shell: isWin, stdio: "ignore" });
+    child.on("close", () => resolve()); // 성공·실패 무관하게 진행
+    child.on("error", () => resolve());
+    setTimeout(() => { try { child.kill(); } catch { /* ignore */ } resolve(); }, 30_000);
+  });
+}
+
+/** GitHub 레포를 읽어 AI로 위젯 생성 */
+export async function runGithubRepoImport(
+  db: DbLike,
+  featureId: string,
+  repoUrl: string,
+  nowMs: () => number,
+): Promise<void> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 120_000); // 2분
+
+  try {
+    const parsed = parseGithubRepo(repoUrl);
+    if (!parsed) throw new Error("유효한 GitHub 레포 URL이 아닙니다.");
+    const { user, repo } = parsed;
+
+    appendLog(db, featureId, `레포 분석 시작: ${user}/${repo}`, nowMs);
+
+    // README + package.json 병렬 fetch
+    appendLog(db, featureId, "README.md · package.json 가져오는 중...", nowMs);
+    const [readme, pkgJsonText] = await Promise.all([
+      fetchGithubRaw(user, repo, "README.md", controller.signal),
+      fetchGithubRaw(user, repo, "package.json", controller.signal),
+    ]);
+
+    if (!readme) throw new Error("README.md를 찾을 수 없습니다. 공개 레포인지 확인해주세요.");
+    appendLog(db, featureId, `README.md 완료 (${readme.length.toLocaleString()} chars)`, nowMs);
+
+    // npm 패키지 이름 파악
+    let npmName: string | null = null;
+    let pkgDescription = "";
+    if (pkgJsonText) {
+      try {
+        const pkg = JSON.parse(pkgJsonText) as Record<string, unknown>;
+        npmName = typeof pkg.name === "string" ? pkg.name : null;
+        pkgDescription = typeof pkg.description === "string" ? pkg.description : "";
+      } catch { /* ignore */ }
+    }
+
+    if (npmName) {
+      appendLog(db, featureId, `npm 패키지 발견: ${npmName}${pkgDescription ? ` — ${pkgDescription}` : ""}`, nowMs);
+      appendLog(db, featureId, `npm install --no-save ${npmName} ...`, nowMs);
+      await installNpmPackage(npmName);
+      appendLog(db, featureId, `npm install 완료`, nowMs);
+    } else {
+      appendLog(db, featureId, "package.json 없음 — npm 설치 생략", nowMs);
+    }
+
+    // provider 조회
+    const cliProvider = readDefaultProvider(db);
+    const provider = findApiProvider(db, cliProvider);
+    if (!provider) throw new Error(
+      `API 프로바이더가 설정되지 않았습니다. Settings → API Providers에서 API 키를 추가해주세요.`,
+    );
+
+    const model = resolveModel(provider);
+    appendLog(db, featureId, `AI 호출 중: ${provider.name} / ${model}`, nowMs);
+
+    // AI 프롬프트 구성
+    const readmeTruncated = readme.slice(0, 3000) + (readme.length > 3000 ? "\n...(truncated)" : "");
+    const userPrompt = [
+      `GitHub Repository: ${repoUrl}`,
+      npmName ? `NPM Package: ${npmName}` : "",
+      pkgDescription ? `Description: ${pkgDescription}` : "",
+      "",
+      "README:",
+      readmeTruncated,
+      "",
+      npmName
+        ? `Create a CustomFeatureWidget that imports and uses the '${npmName}' npm package.\nThe package is pre-installed — you can use: import ${toPascalCase(repo)} from '${npmName}';`
+        : "Create a CustomFeatureWidget that demonstrates or integrates the concept/functionality from this repository.",
+    ].filter(Boolean).join("\n");
+
+    const raw = await callProvider(provider, model, SYSTEM_PROMPT_REPO, userPrompt, controller.signal);
+    appendLog(db, featureId, "AI 응답 완료 — SVG 아이콘 + TSX 파싱 중...", nowMs);
+
+    const { svg, code } = extractSvgAndCode(raw);
+
+    const blocked = validateBundle(code);
+    if (blocked) throw new Error(`Safety check failed: ${blocked}`);
+
+    appendLog(db, featureId, "esbuild 번들 컴파일 중...", nowMs);
+    const iife = await compileToIife(code);
+
+    db.prepare("UPDATE custom_features SET bundle = ?, icon_svg = ?, status = ?, error_msg = NULL, updated_at = ? WHERE id = ?")
+      .run(iife, svg ?? null, "active", nowMs(), featureId);
+
+    appendLog(db, featureId, "✓ 완료! 앱이 데스크톱에 추가됩니다.", nowMs);
+    logger.info(`[github-repo] done feature=${featureId}`);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    logger.error(`[github-repo] error feature=${featureId}: ${msg}`);
+    db.prepare("UPDATE custom_features SET status = ?, error_msg = ?, updated_at = ? WHERE id = ?")
+      .run("error", msg.slice(0, 400), nowMs(), featureId);
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+/** repo 이름 → PascalCase (import 이름용) */
+function toPascalCase(s: string): string {
+  return s.replace(/[-_](.)/g, (_, c: string) => c.toUpperCase())
+    .replace(/^(.)/, (_, c: string) => c.toUpperCase());
+}
+
+/** GitHub 레포 임포트용 시스템 프롬프트 */
+const SYSTEM_PROMPT_REPO = `You are an expert React component generator for AgentDesk — a developer OS for running AI agents.
+
+## OUTPUT FORMAT (strict)
+Return EXACTLY two code blocks in this order — nothing else:
+
+1. An SVG icon block:
+\`\`\`svg
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- simple, recognizable icon representing the library's purpose -->
+  <!-- use stroke="currentColor" so the color is themeable -->
+</svg>
+\`\`\`
+
+2. A TSX component block:
+\`\`\`tsx
+// full component code here
+\`\`\`
+
+No prose, no other text, no explanations outside the two blocks.
+
+## COMPONENT RULES
+- Component name: CustomFeatureWidget (default export)
 - Props: { config: { refresh: string; theme: string; sizePreset: string; params?: Record<string, unknown> } }
-- Use only React hooks (useState, useEffect, useMemo) — no external libraries
-- CSS: use only these CSS variables: var(--th-bg-elevated), var(--th-bg-panel), var(--th-border), var(--th-text-primary), var(--th-text-muted), var(--th-text-heading), var(--th-accent), var(--th-attr-elite)
-- Font: style={{ fontFamily: "var(--th-font-mono)" }}
-- Data fetching: fetch() calls to /api/* paths only (e.g. /api/agents, /api/tasks, /api/notifications)
-- The component fills its container (h-full w-full flex flex-col)
-- Use Tailwind CSS utility classes for layout
-- No eval(), no require(), no import(), no window.location changes
-- Keep it simple and focused on the requested feature`;
+- You CAN use static import statements for npm packages that are pre-installed:
+  Example: import Defuddle from 'defuddle';
+- Do NOT use dynamic import() — use static imports at the top of the file
+- If the library does DOM manipulation, use it inside useEffect with a ref
+
+## STYLE (mandatory)
+- fontFamily: "var(--th-font-mono)" on root
+- Fill container: width:"100%", height:"100%", display:"flex", flexDirection:"column"
+- CSS variables: var(--th-bg-elevated), var(--th-bg-panel), var(--th-border), var(--th-text-primary), var(--th-text-muted), var(--th-text-heading), var(--th-accent) #f59e0b, var(--th-attr-elite) #22c55e, var(--th-danger-text)
+
+## HOOKS
+- useState, useEffect, useMemo, useCallback — no other hooks or external libraries except the specified npm package
+
+## AVAILABLE AGENTDESK APIs (fetch /api/*)
+- GET /api/agents → { agents: [{id, name, status, avatar_emoji, department_id, current_task_id}] }
+- GET /api/tasks → { tasks: [{id, title, status, priority, assigned_agent_id}] }
+
+## SECURITY
+- No eval(), new Function(), require(), import(), document.write(), window.location=, localStorage.clear()
+- fetch() only to /api/* paths`;
 
 /** 백그라운드 AI 생성 실행 (async, fire-and-forget) */
 export async function runAiGeneration(
@@ -262,30 +721,37 @@ export async function runAiGeneration(
     const provider = findApiProvider(db, cliProvider);
 
     if (!provider) {
+      const errMsg = "API 프로바이더가 설정되지 않았습니다. Settings → API Providers에서 API 키를 추가해주세요.";
+      appendLog(db, featureId, `✗ ${errMsg}`, nowMs);
       db.prepare("UPDATE custom_features SET status = ?, error_msg = ?, updated_at = ? WHERE id = ?")
-        .run("error", `No API provider configured for '${cliProvider}'. Please add one in Settings → API Providers.`, nowMs(), featureId);
+        .run("error", errMsg, nowMs(), featureId);
       return;
     }
 
     const model = resolveModel(provider);
+    appendLog(db, featureId, `AI 호출 중: ${provider.name} / ${model}`, nowMs);
     logger.info(`[custom-feature-ai] generating feature=${featureId} provider=${provider.name} model=${model}`);
 
     const raw = await callProvider(provider, model, SYSTEM_PROMPT, userPrompt, controller.signal);
+    appendLog(db, featureId, "AI 응답 완료 — 코드 파싱 중...", nowMs);
     const code = extractCodeBlock(raw);
 
     const blocked = validateBundle(code);
     if (blocked) {
+      appendLog(db, featureId, `✗ Safety check: ${blocked}`, nowMs);
       db.prepare("UPDATE custom_features SET status = ?, error_msg = ?, updated_at = ? WHERE id = ?")
         .run("error", `Safety check failed: ${blocked}`, nowMs(), featureId);
       return;
     }
 
+    appendLog(db, featureId, "esbuild 번들 컴파일 중...", nowMs);
     logger.info(`[custom-feature-ai] compiling feature=${featureId}`);
     const iife = await compileToIife(code);
 
     db.prepare("UPDATE custom_features SET bundle = ?, status = ?, error_msg = NULL, updated_at = ? WHERE id = ?")
       .run(iife, "active", nowMs(), featureId);
 
+    appendLog(db, featureId, "✓ 완료!", nowMs);
     logger.info(`[custom-feature-ai] done feature=${featureId}`);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);

@@ -9,8 +9,12 @@ const S = 1.6; // strokeWidth
 export function IconAgents({ color }: IconProps) {
   return (
     <svg viewBox="0 0 28 28" fill="none" stroke={color} strokeWidth={S} strokeLinecap="round" strokeLinejoin="round" width={26} height={26}>
-      <circle cx="14" cy="9" r="4.5" />
-      <path d="M5 23c0-4.97 4.03-9 9-9s9 4.03 9 9" />
+      {/* 뒤쪽 에이전트 (보조) */}
+      <circle cx="20.5" cy="10" r="3.5" strokeOpacity={0.4} />
+      <path d="M14 23c.5-3.8 3.4-6.5 6.5-7" strokeOpacity={0.4} />
+      {/* 앞쪽 에이전트 (주) */}
+      <circle cx="11" cy="9" r="4" />
+      <path d="M3 23c0-4.42 3.58-8 8-8s8 3.58 8 8" />
     </svg>
   );
 }
@@ -56,12 +60,13 @@ export function IconRepl({ color }: IconProps) {
 }
 
 export function IconDecisions({ color }: IconProps) {
+  // 플로우차트 결정 다이아몬드: 의사결정 지점 표현
   return (
     <svg viewBox="0 0 28 28" fill="none" stroke={color} strokeWidth={S} strokeLinecap="round" strokeLinejoin="round" width={26} height={26}>
-      <path d="M4 18h20l-3-8H7z" />
-      <path d="M4 18v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2" />
-      <path d="M10 22v-4h8v4" />
-      <line x1="10" y1="14" x2="18" y2="14" />
+      {/* 다이아몬드 (결정 기호) */}
+      <path d="M14 4L25 14L14 24L3 14Z" />
+      {/* 내부 체크 (승인 대기) */}
+      <path d="M10.5 14l2.5 2.5 4.5-4.5" />
     </svg>
   );
 }
@@ -95,9 +100,18 @@ export function IconFolder({ color, open = false }: IconProps & { open?: boolean
 // ── Widget icons ─────────────────────────────────────────────────────────────
 
 export function IconHeartbeat({ color }: IconProps) {
+  // Synapse: 두 지식소스(Notion·Obsidian)가 중앙 노드로 수렴하는 모양
   return (
     <svg viewBox="0 0 28 28" fill="none" stroke={color} strokeWidth={S} strokeLinecap="round" strokeLinejoin="round" width={26} height={26}>
-      <polyline points="3,14 8,14 10,8 13,20 16,11 18,14 25,14" />
+      {/* 왼쪽 지식소스 박스 */}
+      <rect x="2" y="4" width="9" height="7" rx="1.5" />
+      {/* 오른쪽 지식소스 박스 */}
+      <rect x="17" y="4" width="9" height="7" rx="1.5" />
+      {/* 중앙 시냅스 노드로 수렴 */}
+      <path d="M6.5 11L14 20" />
+      <path d="M21.5 11L14 20" />
+      {/* 중앙 노드 */}
+      <circle cx="14" cy="23" r="2.5" fill={color} fillOpacity={0.35} />
     </svg>
   );
 }
@@ -124,11 +138,14 @@ export function IconAlerts({ color }: IconProps) {
 }
 
 export function IconCliCost({ color }: IconProps) {
+  // CLI 비용: 터미널 프레임 안에 $ 달러 기호로 비용 표현
   return (
     <svg viewBox="0 0 28 28" fill="none" stroke={color} strokeWidth={S} strokeLinecap="round" strokeLinejoin="round" width={26} height={26}>
       <rect x="3" y="5" width="22" height="18" rx="3" />
-      <path d="M7 11l3 3-3 3" />
-      <line x1="13" y1="17" x2="19" y2="17" />
+      {/* 수직선 (달러 기호 기둥) */}
+      <line x1="14" y1="9" x2="14" y2="19" />
+      {/* $ 물결 (위→아래 S자 곡선) */}
+      <path d="M11 11.5c0-.9.7-1.5 3-1.5s3 .6 3 1.5c0 .8-.7 1.2-3 1.5s-3 .9-3 1.5c0 .9.7 1.5 3 1.5s3-.6 3-1.5" />
     </svg>
   );
 }

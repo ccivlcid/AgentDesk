@@ -7,13 +7,15 @@ interface UsageItem { provider: string; utilization: number; window: string }
 
 export default function CliCostSummary({ config }: { config: CustomFeatureConfig }) {
   const [items, setItems] = useState<UsageItem[]>([]);
+  const [fetchError, setFetchError] = useState(false);
   const period = (config.params?.period as string | undefined) ?? "today";
 
   useEffect(() => {
-    fetch("http://127.0.0.1:8790/api/workflow-skills-subtasks")
+    setFetchError(false);
+    fetch("/api/workflow-skills-subtasks")
       .then((r) => r.json())
       .then((j) => setItems(j.usageItems ?? []))
-      .catch(() => {});
+      .catch(() => setFetchError(true));
   }, [period]);
 
   const label = period === "week" ? "이번 주" : "오늘";
@@ -21,7 +23,9 @@ export default function CliCostSummary({ config }: { config: CustomFeatureConfig
   return (
     <div className="flex flex-col gap-2 p-3 h-full">
       <div style={{ ...mono, fontSize: 9, color: "var(--th-text-muted)", letterSpacing: "0.08em" }}>CLI COST · {label.toUpperCase()}</div>
-      {items.length === 0 ? (
+      {fetchError ? (
+        <div style={{ ...mono, fontSize: 10, color: "var(--th-danger-text)" }}>API 연결 실패</div>
+      ) : items.length === 0 ? (
         <div style={{ ...mono, fontSize: 11, color: "var(--th-text-muted)" }}>데이터 없음</div>
       ) : (
         items.map((item, i) => {

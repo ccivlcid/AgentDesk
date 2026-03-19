@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { DatabaseSync } from "node:sqlite";
 import type { Express } from "express";
-import { runAiGeneration } from "./custom-features-ai.ts";
+import { runAiGeneration, runGithubImport, runGithubRepoImport } from "./custom-features-ai.ts";
 
 interface Deps {
   app: Express;
@@ -26,7 +26,7 @@ export function registerCustomFeatureRoutes({ app, db, nowMs }: Deps): void {
     try {
       const rows = db
         .prepare(
-          `SELECT id, name, type, source, template_id, config, status, error_msg, created_at, updated_at
+          `SELECT id, name, type, source, template_id, config, status, error_msg, icon_svg, created_at, updated_at
            FROM custom_features
            ORDER BY updated_at DESC`,
         )
@@ -42,7 +42,7 @@ export function registerCustomFeatureRoutes({ app, db, nowMs }: Deps): void {
     try {
       const row = db
         .prepare(
-          `SELECT id, name, type, source, template_id, config, status, error_msg, created_at, updated_at
+          `SELECT id, name, type, source, template_id, config, status, error_msg, icon_svg, progress_log, created_at, updated_at
            FROM custom_features WHERE id = ?`,
         )
         .get(req.params.id) as Record<string, unknown> | undefined;
@@ -243,6 +243,62 @@ html,body{width:100%;height:100%;background:var(--th-bg-elevated);color:var(--th
       res.json({ ok: true, feature_id: id });
     } catch {
       res.status(500).json({ ok: false, error: "Failed to start AI generation" });
+    }
+  });
+
+  // POST /api/custom-features/github-import — GitHub URL로 위젯 임포트
+  // 1. GitHub URL → raw 콘텐츠 fetch
+  // 2. validateBundle + compileToIife
+  // 3. DB 저장 → feature_id 반환 (폴링 없음 — 동기 처리)
+  app.post("/api/custom-features/github-import", (req, res) => {
+    try {
+      const { url, name } = req.body ?? {};
+      const trimmedUrl = String(url ?? "").trim();
+      if (!trimmedUrl) return res.status(400).json({ ok: false, error: "url required" });
+
+      const id = randomUUID();
+      const now = nowMs();
+      const trimmedName = String(name ?? "").trim().slice(0, 40) || "GitHub 위젯";
+
+      db.prepare(
+        `INSERT INTO custom_features (id, name, type, source, config, status, created_at, updated_at)
+         VALUES (?, ?, 'widget', 'ai', '{}', 'draft', ?, ?)`,
+      ).run(id, trimmedName, now, now);
+
+      // 백그라운드 실행
+      void runGithubImport(db, id, trimmedUrl, nowMs);
+
+      res.json({ ok: true, feature_id: id });
+    } catch {
+      res.status(500).json({ ok: false, error: "Failed to start GitHub import" });
+    }
+  });
+
+  // POST /api/custom-features/github-repo-import — GitHub 레포 URL로 앱 생성 (AI)
+  // 1. README + package.json fetch → npm install
+  // 2. AI로 컴포넌트 + SVG 아이콘 생성
+  // 3. DB 저장 → feature_id 반환 (폴링 방식)
+  app.post("/api/custom-features/github-repo-import", (req, res) => {
+    try {
+      const { url, name } = req.body ?? {};
+      const trimmedUrl = String(url ?? "").trim();
+      if (!trimmedUrl) return res.status(400).json({ ok: false, error: "url required" });
+
+      const id = randomUUID();
+      const now = nowMs();
+      const trimmedName = String(name ?? "").trim().slice(0, 40) || "GitHub 앱";
+
+      db.prepare(
+        `INSERT INTO custom_features (id, name, type, source, config, status, created_at, updated_at)
+         VALUES (?, ?, 'app', 'ai', '{}', 'draft', ?, ?)`,
+      ).run(id, trimmedName, now, now);
+
+      // 백그라운드 실행
+      void runGithubRepoImport(db, id, trimmedUrl, nowMs);
+
+      res.json({ ok: true, feature_id: id });
+    } catch {
+      res.status(500).json({ ok: false, error: "Failed to start GitHub repo import" });
     }
   });
 }

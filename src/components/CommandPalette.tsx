@@ -618,7 +618,7 @@ export default function CommandPalette({
                 return (
                   <Row key={d.id} item={{ kind: "deliverable", item: d }} idx={idx}>
                     <span style={{ width: 28, height: 28, borderRadius: 7, background: isDone ? "rgba(74,222,128,0.15)" : "rgba(245,158,11,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, flexShrink: 0, position: "relative", zIndex: 1 }}>
-                      {isDone ? "✓" : "◎"}
+                      {isDone ? "✓" : "·"}
                     </span>
                     <div style={{ flex: 1, textAlign: "left", overflow: "hidden", position: "relative", zIndex: 1 }}>
                       <div style={{ ...sf, fontSize: 14, color: isSel ? "var(--th-text-heading)" : "var(--th-text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.title}</div>

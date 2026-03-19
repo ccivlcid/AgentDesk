@@ -8,6 +8,7 @@ import { useAgentStore } from "../../store/agentStore";
 import { useUiStore } from "../../store/uiStore";
 import CustomFeatureRenderer from "../widget-builder/CustomFeatureRenderer";
 import StepAiGenerate from "../widget-builder/steps/StepAiGenerate";
+import StepGithubImport from "../widget-builder/steps/StepGithubImport";
 
 const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };
 const SIZE_PRESETS = { sm: { w: 320, h: 240 }, md: { w: 420, h: 280 }, lg: { w: 560, h: 360 } };
@@ -64,7 +65,7 @@ const TEMPLATE_ICONS: Record<string, React.ReactNode> = {
   ),
 };
 
-type Step = "method" | "template-select" | "params" | "preview" | "ai-generate";
+type Step = "method" | "template-select" | "params" | "preview" | "ai-generate" | "github-import";
 
 function FeatureBuilderContent() {
   const { language } = useI18n();
@@ -80,8 +81,9 @@ function FeatureBuilderContent() {
   const [refresh, setRefresh] = useState<CustomFeatureConfig["refresh"]>("30s");
   const [saving, setSaving] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string>("all");
-  const [method, setMethod] = useState<"template" | "ai">("template");
+  const [method, setMethod] = useState<"template" | "ai" | "github">("template");
   const [aiFeature, setAiFeature] = useState<CustomFeature | null>(null);
+  const [githubFeature, setGithubFeature] = useState<CustomFeature | null>(null);
   const [saved, setSaved] = useState(false);
 
   function reset() {
@@ -95,6 +97,7 @@ function FeatureBuilderContent() {
     setActiveCategory("all");
     setMethod("template");
     setAiFeature(null);
+    setGithubFeature(null);
     setSaved(false);
   }
 
@@ -112,7 +115,7 @@ function FeatureBuilderContent() {
   async function handleSave() {
     setSaving(true);
     try {
-      if (method === "ai" && aiFeature) {
+      if ((method === "ai" && aiFeature) || (method === "github" && githubFeature)) {
         setSaved(true);
         bumpCustomFeaturesTick();
         return;
@@ -151,7 +154,21 @@ function FeatureBuilderContent() {
     }
   }
 
-  const previewFeature: CustomFeature | null = method === "ai" && aiFeature
+  async function handleGithubImported(featureId: string) {
+    try {
+      const feature = await getCustomFeature(featureId);
+      setGithubFeature(feature);
+      setName(feature.name);
+      setStep("preview");
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  const previewFeature: CustomFeature | null =
+    method === "github" && githubFeature
+    ? githubFeature
+    : method === "ai" && aiFeature
     ? aiFeature
     : selectedTemplate
     ? {
@@ -205,6 +222,7 @@ function FeatureBuilderContent() {
           {step === "template-select" && (isKo ? "템플릿 선택" : "Select Template")}
           {step === "params" && (isKo ? "옵션 설정" : "Configure Options")}
           {step === "ai-generate" && (isKo ? "AI로 생성" : "Generate with AI")}
+          {step === "github-import" && (isKo ? "GitHub에서 가져오기" : "Import from GitHub")}
           {step === "preview" && (isKo ? "미리보기 & 등록" : "Preview & Register")}
         </div>
       </div>
@@ -218,15 +236,15 @@ function FeatureBuilderContent() {
             <p style={{ ...mono, fontSize: 11, color: "var(--th-text-muted)", textAlign: "center" }}>
               {isKo ? "어떻게 만드시겠어요?" : "How would you like to create it?"}
             </p>
-            <div style={{ display: "flex", gap: 16 }}>
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
               <button
                 onClick={() => setStep("template-select")}
-                style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, padding: 20, border: "1px solid var(--th-border)", borderRadius: 8, background: "var(--th-hover-overlay-subtle)", cursor: "pointer", minWidth: 140 }}
+                style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, padding: 20, border: "1px solid var(--th-border)", borderRadius: 8, background: "var(--th-hover-overlay-subtle)", cursor: "pointer", minWidth: 130 }}
                 onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--th-border-strong)"; }}
                 onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--th-border)"; }}
               >
                 <span style={{ color: "var(--th-text-secondary)" }}>
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
                     <rect x="3" y="3" width="8" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.4" fill="none"/>
                     <rect x="13" y="3" width="8" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.4" fill="none"/>
                     <rect x="3" y="13" width="8" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.4" fill="none"/>
@@ -238,12 +256,12 @@ function FeatureBuilderContent() {
               </button>
               <button
                 onClick={() => { setMethod("ai"); setStep("ai-generate"); }}
-                style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, padding: 20, border: "1px solid var(--th-border)", borderRadius: 8, background: "var(--th-hover-overlay-subtle)", cursor: "pointer", minWidth: 140 }}
+                style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, padding: 20, border: "1px solid var(--th-border)", borderRadius: 8, background: "var(--th-hover-overlay-subtle)", cursor: "pointer", minWidth: 130 }}
                 onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--th-border-strong)"; }}
                 onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--th-border)"; }}
               >
                 <span style={{ color: "var(--th-accent)" }}>
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
                     <path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" fill="none"/>
                     <circle cx="4" cy="4" r="1.2" fill="currentColor" opacity="0.4"/>
                     <circle cx="20" cy="20" r="1.2" fill="currentColor" opacity="0.4"/>
@@ -251,6 +269,21 @@ function FeatureBuilderContent() {
                 </span>
                 <span style={{ ...mono, fontSize: 12, fontWeight: 700, color: "var(--th-text-heading)" }}>{isKo ? "AI에게" : "Ask AI"}</span>
                 <span style={{ ...mono, fontSize: 10, color: "var(--th-text-muted)", textAlign: "center" }}>{isKo ? "자연어로 기능 생성" : "Generate from natural language"}</span>
+              </button>
+              <button
+                onClick={() => { setMethod("github"); setStep("github-import"); }}
+                style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, padding: 20, border: "1px solid var(--th-border)", borderRadius: 8, background: "var(--th-hover-overlay-subtle)", cursor: "pointer", minWidth: 130 }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--th-border-strong)"; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--th-border)"; }}
+              >
+                <span style={{ color: "var(--th-text-secondary)" }}>
+                  {/* GitHub 아이콘 */}
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.604-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.464-1.11-1.464-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.092-.646.35-1.086.636-1.336-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.202 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z" fill="currentColor" opacity="0.85"/>
+                  </svg>
+                </span>
+                <span style={{ ...mono, fontSize: 12, fontWeight: 700, color: "var(--th-text-heading)" }}>{isKo ? "GitHub에서" : "From GitHub"}</span>
+                <span style={{ ...mono, fontSize: 10, color: "var(--th-text-muted)", textAlign: "center" }}>{isKo ? "URL로 직접 설치" : "Install from URL"}</span>
               </button>
             </div>
           </div>
@@ -309,6 +342,14 @@ function FeatureBuilderContent() {
             featureType="app"
             config={{ refresh, theme: "default", sizePreset, params }}
             onGenerated={handleAiGenerated}
+          />
+        )}
+
+        {/* Step GitHub: URL로 임포트 */}
+        {step === "github-import" && (
+          <StepGithubImport
+            isKo={isKo}
+            onGenerated={handleGithubImported}
           />
         )}
 

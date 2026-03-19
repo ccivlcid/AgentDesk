@@ -354,7 +354,7 @@ export default function DecisionInboxModal({
                           if (item.options.length === 0) {
                             return (
                               <p style={{ ...mono, fontSize: "10px", color: "var(--th-text-muted)", padding: "6px 0" }}>
-                                ⏳ {t({ ko: "기획팀장 의견 취합중...", en: "Planning lead is consolidating opinions...", ja: "企画リードが意見集約中...", zh: "规划负责人汇总意见中..." })}
+                                · {t({ ko: "기획팀장 의견 취합중...", en: "Planning lead is consolidating opinions...", ja: "企画リードが意見集約中...", zh: "规划负责人汇总意见中..." })}
                               </p>
                             );
                           }
@@ -464,7 +464,7 @@ export default function DecisionInboxModal({
                         </div>
                       ) : (
                         <p style={{ ...mono, fontSize: "10px", color: "var(--th-text-muted)", padding: "4px 0" }}>
-                          ⏳ {item.kind === "project_review_ready"
+                          · {item.kind === "project_review_ready"
                             ? t({ ko: "기획팀장 의견 취합중...", en: "Planning lead is consolidating...", ja: "企画リードが集約中...", zh: "规划负责人汇总中..." })
                             : t({ ko: "선택지 준비 중...", en: "Options being prepared...", ja: "選択肢準備中...", zh: "正在准备选项..." })}
                         </p>

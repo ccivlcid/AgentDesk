@@ -756,6 +756,22 @@ export const MIGRATIONS: Migration[] = [
     },
   },
   {
+    id: "2026-03-24-001-custom-features-icon-svg",
+    up: (db) => {
+      try {
+        db.exec("ALTER TABLE custom_features ADD COLUMN icon_svg TEXT");
+      } catch { /* already exists */ }
+    },
+  },
+  {
+    id: "2026-03-24-002-custom-features-progress-log",
+    up: (db) => {
+      try {
+        db.exec("ALTER TABLE custom_features ADD COLUMN progress_log TEXT");
+      } catch { /* already exists */ }
+    },
+  },
+  {
     id: "2026-03-23-002-memory-entries-project-scope",
     up: (db) => {
       // Add 'project' to memory_entries scope_type CHECK constraint.
