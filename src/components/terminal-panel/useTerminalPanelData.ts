@@ -66,13 +66,14 @@ export function useTerminalPanelData({
 
   // Subscribe to cli_output for this task when the panel is open.
   // The server only forwards cli_output to clients that have subscribed to the taskId.
-  const { send: wsSend } = useWebSocket();
+  const { send: wsSend, on: wsOn } = useWebSocket();
   useEffect(() => {
     wsSend({ type: "subscribe_task", taskId });
     return () => {
       wsSend({ type: "unsubscribe_task", taskId });
     };
   }, [taskId, wsSend]);
+
 
   const taskLogTimeFormatter = useMemo(
     () =>
@@ -156,6 +157,16 @@ export function useTerminalPanelData({
   useEffect(() => {
     void fetchMeetingMinutes();
   }, [fetchMeetingMinutes]);
+
+  // 회의록 업데이트 WS 이벤트 수신 시 즉시 refresh (폴링 대기 없이)
+  useEffect(() => {
+    return wsOn("meeting_minutes_update", (payload: unknown) => {
+      const p = payload as { task_id?: string } | null;
+      if (!p?.task_id || p.task_id === taskId) {
+        void fetchMeetingMinutes();
+      }
+    });
+  }, [wsOn, taskId, fetchMeetingMinutes]);
 
   useEffect(() => {
     const fn = activeTab === "terminal" ? fetchTerminal : fetchMeetingMinutes;

@@ -150,14 +150,18 @@ function TrashIcon({ t, count, onClick }: {
 }
 
 type TrashedProject = { id: string; name: string; project_path: string; core_goal: string; category_id: string | null; deletedAt: number };
+type TrashedFeature = { id: string; name: string; icon_svg: string | null; deletedAt: number };
 
-function TrashModal({ t, items, onClose, onRestore, onDelete, onEmpty }: {
+function TrashModal({ t, items, features, onClose, onRestore, onDelete, onRestoreFeature, onDeleteFeature, onEmpty }: {
   t: ReturnType<typeof import("../../i18n").useI18n>["t"];
   items: TrashedProject[];
+  features: TrashedFeature[];
   onClose: () => void;
   onRestore: (item: TrashedProject) => Promise<void>;
   onDelete: (item: TrashedProject) => void;
-  onEmpty: () => void;
+  onRestoreFeature: (f: TrashedFeature) => void;
+  onDeleteFeature: (f: TrashedFeature) => Promise<void>;
+  onEmpty: () => Promise<void>;
 }) {
   const mono = { fontFamily: "var(--th-font-mono)" };
   const fmt = (ts: number) => new Date(ts).toLocaleDateString();
@@ -200,10 +204,10 @@ function TrashModal({ t, items, onClose, onRestore, onDelete, onEmpty }: {
             {t({ ko: "휴지통", en: "Trash", ja: "ゴミ箱", zh: "垃圾桶" })}
           </span>
           <span style={{ ...mono, fontSize: 10, color: "var(--th-text-muted)", marginLeft: "auto" }}>
-            {items.length} {t({ ko: "항목", en: "items", ja: "項目", zh: "项" })}
+            {items.length + features.length} {t({ ko: "항목", en: "items", ja: "項目", zh: "项" })}
           </span>
-          {items.length > 0 && (
-            <button onClick={onEmpty} style={{
+          {(items.length + features.length) > 0 && (
+            <button onClick={() => void onEmpty()} style={{
               ...mono, fontSize: 10, padding: "3px 10px", borderRadius: 4, cursor: "pointer",
               border: "1px solid rgba(255,59,48,0.4)", background: "rgba(255,59,48,0.08)",
               color: "#ff3b30",
@@ -215,7 +219,7 @@ function TrashModal({ t, items, onClose, onRestore, onDelete, onEmpty }: {
 
         {/* 목록 */}
         <div style={{ flex: 1, overflowY: "auto", padding: "8px 0" }}>
-          {items.length === 0 ? (
+          {items.length + features.length === 0 ? (
             <div style={{
               display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
               height: 160, gap: 10,
@@ -225,45 +229,84 @@ function TrashModal({ t, items, onClose, onRestore, onDelete, onEmpty }: {
                 {t({ ko: "휴지통이 비어 있습니다", en: "Trash is empty", ja: "ゴミ箱は空です", zh: "垃圾桶为空" })}
               </span>
             </div>
-          ) : [...items].sort((a, b) => b.deletedAt - a.deletedAt).map((item) => (
-            <div key={item.id} style={{
-              display: "flex", alignItems: "center", gap: 12,
-              padding: "9px 16px",
-              borderBottom: "1px solid var(--th-border)",
-            }}>
-              <span style={{ fontSize: 18, flexShrink: 0 }}>📁</span>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ ...mono, fontSize: 12, fontWeight: 600, color: "var(--th-text-primary)",
-                  overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {item.name}
+          ) : (
+            // 프로젝트 + 피처 통합, deletedAt 역순
+            [...items.map((d) => ({ kind: "project" as const, deletedAt: d.deletedAt, data: d })),
+             ...features.map((d) => ({ kind: "feature" as const, deletedAt: d.deletedAt, data: d }))]
+              .sort((a, b) => b.deletedAt - a.deletedAt)
+              .map((entry) => entry.kind === "project" ? (
+                <div key={entry.data.id} style={{
+                  display: "flex", alignItems: "center", gap: 12,
+                  padding: "9px 16px",
+                  borderBottom: "1px solid var(--th-border)",
+                }}>
+                  <span style={{ fontSize: 18, flexShrink: 0 }}>📁</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ ...mono, fontSize: 12, fontWeight: 600, color: "var(--th-text-primary)",
+                      overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {entry.data.name}
+                    </div>
+                    <div style={{ ...mono, fontSize: 9, color: "var(--th-text-muted)", marginTop: 2,
+                      overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {(entry.data as TrashedProject).project_path}
+                    </div>
+                  </div>
+                  <span style={{ ...mono, fontSize: 9, color: "var(--th-text-muted)", flexShrink: 0 }}>{fmt(entry.deletedAt)}</span>
+                  <button onClick={() => void onRestore(entry.data as TrashedProject)} style={{
+                    ...mono, fontSize: 10, padding: "3px 9px", borderRadius: 4, cursor: "pointer",
+                    border: "1px solid var(--th-border)", background: "transparent",
+                    color: "var(--th-text-secondary)", flexShrink: 0,
+                  }}
+                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "#22c55e"; (e.currentTarget as HTMLElement).style.color = "#22c55e"; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--th-border)"; (e.currentTarget as HTMLElement).style.color = "var(--th-text-secondary)"; }}
+                  >
+                    {t({ ko: "복원", en: "Restore", ja: "復元", zh: "还原" })}
+                  </button>
+                  <button onClick={() => onDelete(entry.data as TrashedProject)} style={{
+                    ...mono, fontSize: 10, padding: "3px 9px", borderRadius: 4, cursor: "pointer",
+                    border: "1px solid rgba(255,59,48,0.3)", background: "transparent",
+                    color: "#ff3b30", flexShrink: 0,
+                  }}>✕</button>
                 </div>
-                <div style={{ ...mono, fontSize: 9, color: "var(--th-text-muted)", marginTop: 2,
-                  overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {item.project_path}
-                </div>
-              </div>
-              <span style={{ ...mono, fontSize: 9, color: "var(--th-text-muted)", flexShrink: 0 }}>
-                {fmt(item.deletedAt)}
-              </span>
-              <button onClick={() => void onRestore(item)} style={{
-                ...mono, fontSize: 10, padding: "3px 9px", borderRadius: 4, cursor: "pointer",
-                border: "1px solid var(--th-border)", background: "transparent",
-                color: "var(--th-text-secondary)", flexShrink: 0,
-              }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "#22c55e"; (e.currentTarget as HTMLElement).style.color = "#22c55e"; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--th-border)"; (e.currentTarget as HTMLElement).style.color = "var(--th-text-secondary)"; }}
-              >
-                {t({ ko: "복원", en: "Restore", ja: "復元", zh: "还原" })}
-              </button>
-              <button onClick={() => onDelete(item)} style={{
-                ...mono, fontSize: 10, padding: "3px 9px", borderRadius: 4, cursor: "pointer",
-                border: "1px solid rgba(255,59,48,0.3)", background: "transparent",
-                color: "#ff3b30", flexShrink: 0,
-              }}>
-                ✕
-              </button>
-            </div>
-          ))}
+              ) : (() => {
+                const f = entry.data as TrashedFeature;
+                return (
+                  <div key={f.id} style={{
+                    display: "flex", alignItems: "center", gap: 12,
+                    padding: "9px 16px",
+                    borderBottom: "1px solid var(--th-border)",
+                  }}>
+                    {f.icon_svg
+                      ? <span style={{ width: 22, height: 22, flexShrink: 0 }} dangerouslySetInnerHTML={{ __html: f.icon_svg }} />
+                      : <span style={{ fontSize: 18, flexShrink: 0 }}>🔧</span>
+                    }
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ ...mono, fontSize: 12, fontWeight: 600, color: "var(--th-text-primary)",
+                        overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {f.name}
+                      </div>
+                      <div style={{ ...mono, fontSize: 9, color: "var(--th-text-muted)", marginTop: 2 }}>App</div>
+                    </div>
+                    <span style={{ ...mono, fontSize: 9, color: "var(--th-text-muted)", flexShrink: 0 }}>{fmt(entry.deletedAt)}</span>
+                    <button onClick={() => onRestoreFeature(f)} style={{
+                      ...mono, fontSize: 10, padding: "3px 9px", borderRadius: 4, cursor: "pointer",
+                      border: "1px solid var(--th-border)", background: "transparent",
+                      color: "var(--th-text-secondary)", flexShrink: 0,
+                    }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "#22c55e"; (e.currentTarget as HTMLElement).style.color = "#22c55e"; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--th-border)"; (e.currentTarget as HTMLElement).style.color = "var(--th-text-secondary)"; }}
+                    >
+                      {t({ ko: "복원", en: "Restore", ja: "復元", zh: "还原" })}
+                    </button>
+                    <button onClick={() => void onDeleteFeature(f)} style={{
+                      ...mono, fontSize: 10, padding: "3px 9px", borderRadius: 4, cursor: "pointer",
+                      border: "1px solid rgba(255,59,48,0.3)", background: "transparent",
+                      color: "#ff3b30", flexShrink: 0,
+                    }}>✕</button>
+                  </div>
+                );
+              })())
+          )}
         </div>
       </div>
     </div>
@@ -487,6 +530,9 @@ export default function Desktop({
     addToTrash,
     removeFromTrash,
     emptyTrash,
+    trashedFeatures,
+    addFeatureToTrash,
+    removeFeatureFromTrash,
   } = useUiStore();
 
   const { projects, categories, currentProjectId, setCurrentProjectId } = useProjectStore();
@@ -939,23 +985,29 @@ export default function Desktop({
     },
     onDelete: () => {
       closeCustomApp(f.id);
-      deleteCustomFeature(f.id)
-        .then(() => listCustomFeatures())
-        .then((list) => setCustomFeatures(list.filter((cf) => cf.status === "active" || f.status === "pending_install")))
-        .catch(console.error);
+      addFeatureToTrash({ id: f.id, name: f.name, icon_svg: f.icon_svg ?? null });
+      setCustomFeatures((prev) => prev.filter((cf) => cf.id !== f.id));
     },
   }));
 
   const allIcons = [...icons, ...customFeatureIcons];
 
-  // 기본 아이콘 배치 — 한 줄에 최대 6개, 넘치면 다음 줄
+  // 기본 아이콘 배치 — 시스템 아이콘과 커스텀 피처 아이콘을 분리해 배치
+  // 레이아웃: y=60(row0) 시스템, y=152(row1) 시스템, y=244(row2) 폴더,
+  //           y=336(row3) 커스텀 피처 전용 (폴더·프로젝트와 겹치지 않음)
   const ICONS_PER_ROW = 6;
-  const DEFAULT_ICON_POSITIONS = allIcons.reduce<Record<string, { x: number; y: number }>>((acc, def, i) => {
+  const CF_START_ROW = 3; // 커스텀 피처 아이콘 시작 row (y = 60 + 3*92 = 336)
+  const DEFAULT_ICON_POSITIONS: Record<string, { x: number; y: number }> = {};
+  icons.forEach((def, i) => {
     const col = i % ICONS_PER_ROW;
     const row = Math.floor(i / ICONS_PER_ROW);
-    acc[def.id] = { x: 24 + col * ICON_GRID_X, y: 60 + row * ICON_GRID_Y };
-    return acc;
-  }, {});
+    DEFAULT_ICON_POSITIONS[def.id] = { x: 24 + col * ICON_GRID_X, y: 60 + row * ICON_GRID_Y };
+  });
+  customFeatureIcons.forEach((def, i) => {
+    const col = i % ICONS_PER_ROW;
+    const row = Math.floor(i / ICONS_PER_ROW);
+    DEFAULT_ICON_POSITIONS[def.id] = { x: 24 + col * ICON_GRID_X, y: 60 + (CF_START_ROW + row) * ICON_GRID_Y };
+  });
 
   const quickLookProject = quickLookProjectId ? projects.find((p) => p.id === quickLookProjectId) ?? null : null;
 
@@ -1494,13 +1546,12 @@ export default function Desktop({
               icon: "🗑",
               danger: true,
               action: () => {
-                const { featureId } = cfCtxMenu;
+                const { featureId, featureName } = cfCtxMenu;
                 setCfCtxMenu(null);
                 closeCustomApp(featureId);
-                deleteCustomFeature(featureId)
-                  .then(() => listCustomFeatures())
-                  .then((list) => setCustomFeatures(list.filter((cf) => cf.status === "active" || cf.status === "pending_install")))
-                  .catch(console.error);
+                const feat = customFeatures.find((cf) => cf.id === featureId);
+                addFeatureToTrash({ id: featureId, name: featureName, icon_svg: feat?.icon_svg ?? null });
+                setCustomFeatures((prev) => prev.filter((cf) => cf.id !== featureId));
               },
             },
           ].map(({ label, icon, danger, action }) => (
@@ -1723,6 +1774,7 @@ export default function Desktop({
         <TrashModal
           t={t}
           items={trashedProjects}
+          features={trashedFeatures}
           onClose={() => setShowTrash(false)}
           onRestore={async (item) => {
             removeFromTrash(item.id);
@@ -1735,7 +1787,22 @@ export default function Desktop({
             }
           }}
           onDelete={(item) => removeFromTrash(item.id)}
-          onEmpty={() => emptyTrash()}
+          onRestoreFeature={(f) => {
+            removeFeatureFromTrash(f.id);
+            listCustomFeatures()
+              .then((list) => setCustomFeatures(list.filter((cf) => cf.status === "active" || cf.status === "pending_install")))
+              .catch(() => {});
+          }}
+          onDeleteFeature={async (f) => {
+            removeFeatureFromTrash(f.id);
+            await deleteCustomFeature(f.id).catch(() => {});
+          }}
+          onEmpty={async () => {
+            for (const f of trashedFeatures) {
+              await deleteCustomFeature(f.id).catch(() => {});
+            }
+            emptyTrash();
+          }}
         />
       )}
 

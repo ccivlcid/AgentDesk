@@ -8,9 +8,9 @@ import logger from "../../../lib/logger.ts";
 import type { DatabaseSync } from "node:sqlite";
 
 /** feature 소스 저장 루트 */
-const FEATURE_DIR = join(process.cwd(), "feature");
-const GITHUB_DIR  = join(FEATURE_DIR, "github");
-const AI_DIR      = join(FEATURE_DIR, "ai");
+export const FEATURE_DIR = join(process.cwd(), "feature");
+export const GITHUB_DIR  = join(FEATURE_DIR, "github");
+export const AI_DIR      = join(FEATURE_DIR, "ai");
 
 function ensureDir(dir: string) {
   mkdirSync(dir, { recursive: true });
@@ -830,26 +830,32 @@ export async function runGithubRepoImport(
   }
 }
 
-/** Usage 추출용 시스템 프롬프트 */
-const SYSTEM_PROMPT_USAGE = `You are a technical documentation extractor. Read the README and extract usage information as JSON.
+/** README 분석용 시스템 프롬프트 — 타입 판단 + 사용법 추출 */
+const SYSTEM_PROMPT_USAGE = `You are a technical documentation analyzer. Read the README and package.json info, then output JSON.
 
 Output ONLY a JSON code block:
 \`\`\`json
 {
-  "description": "one sentence description of what this library/tool does",
+  "type": "web-app",
+  "description": "one sentence description",
+  "dev_cmd": "npm run dev",
   "install_cmd": "npm install package-name",
   "commands": [
-    { "cmd": "npx package-name parse https://example.com", "desc": "Parse a URL" },
     { "cmd": "npx package-name --help", "desc": "Show help" }
   ]
 }
 \`\`\`
 
-Rules:
+Rules for "type":
+- "web-app": has a browser UI (React/Vue/Next/Vite app, dashboard, visual tool). README shows screenshots, mentions "open browser", "localhost", "dev server".
+- "library": npm package to import in code. README shows import statements, API docs.
+- "cli": command-line tool. README shows terminal commands, flags, options.
+
+Rules for other fields:
 - description: max 100 chars, plain English
-- install_cmd: the npm install command
-- commands: 3-6 most important commands/examples from the README
-- For CLI tools include npx commands; for libraries include import/usage examples as "cmd" field
+- dev_cmd: the exact command to start the dev server (e.g. "npm run dev", "npm start"). Only for web-app; use null for library/cli.
+- install_cmd: the npm install command (null if not applicable)
+- commands: 3-6 key examples from README. Empty array for web-app.
 - No prose, no other output`;
 
 /** 응답에서 JSON 블록 추출 */
@@ -859,14 +865,20 @@ function extractJsonBlock(text: string): Record<string, unknown> | null {
   try { return JSON.parse(m[1].trim()) as Record<string, unknown>; } catch { return null; }
 }
 
-/** web-app 레포의 로컬 npm install (repo dir에 직접 설치) */
+/** web-app 레포의 패키지 설치 (lockfile에 따라 pnpm/yarn/npm 자동 선택) */
 function runNpmInstallInDir(dir: string): Promise<void> {
   return new Promise((resolve) => {
     const isWin = process.platform === "win32";
-    const child = spawn("npm", ["install"], { cwd: dir, shell: isWin, stdio: "ignore" });
+    // lockfile로 패키지 매니저 감지
+    let pm = "npm";
+    if (existsSync(join(dir, "pnpm-lock.yaml"))) pm = "pnpm";
+    else if (existsSync(join(dir, "yarn.lock"))) pm = "yarn";
+    const args = pm === "yarn" ? ["install"] : ["install", "--include=dev"];
+    logger.info(`[install] ${pm} ${args.join(" ")} in ${dir}`);
+    const child = spawn(pm, args, { cwd: dir, shell: isWin, stdio: "inherit" });
     child.on("close", () => resolve());
     child.on("error", () => resolve());
-    setTimeout(() => { try { child.kill(); } catch { /* ignore */ } resolve(); }, 180_000);
+    setTimeout(() => { try { child.kill(); } catch { /* ignore */ } resolve(); }, 300_000);
   });
 }
 
@@ -951,112 +963,82 @@ async function compileFromRepo(
 
     let npmName = "";
     let pkgDescription = "";
-    let scripts: Record<string, string> = {};
-    let hasBin = false;
 
     if (pkgJsonText) {
       try {
         const pkg = JSON.parse(pkgJsonText) as Record<string, unknown>;
         npmName        = typeof pkg.name        === "string" ? pkg.name        : "";
         pkgDescription = typeof pkg.description === "string" ? pkg.description : "";
-        scripts        = (pkg.scripts && typeof pkg.scripts === "object") ? pkg.scripts as Record<string, string> : {};
-        hasBin         = !!pkg.bin;
       } catch { /* ignore */ }
     }
 
-    // 레포 타입 감지: dev/start 스크립트가 웹 번들러를 포함하면 web-app
-    const devScript = scripts.dev || scripts.start || "";
-    const isWebApp = !!(devScript && (
-      devScript.includes("vite") || devScript.includes("react-scripts") ||
-      devScript.includes("next") || devScript.includes("webpack") ||
-      devScript.includes("parcel") || devScript.includes("serve")
-    ));
+    if (!readme) throw new Error("README.md를 찾을 수 없습니다.");
 
-    if (isWebApp) {
-      // Web-app 경로: npm install → dev 실행 정보 저장
-      appendLog(db, featureId, "npm install 중 (잠시 기다려 주세요)...", nowMs);
+    // AI로 README 분석 — 타입 판단 + 사용법 추출 한 번에
+    appendLog(db, featureId, "README 분석 중 (AI)...", nowMs);
+
+    const readmeTruncated = readme.slice(0, 4000) + (readme.length > 4000 ? "\n...(truncated)" : "");
+    const analysisPrompt = [
+      npmName        ? `Package: ${npmName}`        : "",
+      pkgDescription ? `Description: ${pkgDescription}` : "",
+      pkgJsonText    ? `package.json scripts: ${JSON.stringify(JSON.parse(pkgJsonText || "{}").scripts ?? {})}` : "",
+      "",
+      "README:",
+      readmeTruncated,
+    ].filter(Boolean).join("\n");
+
+    const cliProvider = readDefaultProvider(db);
+    const provider    = findApiProvider(db, cliProvider);
+
+    let repoType: "web-app" | "library" | "cli" = "library";
+    let description  = pkgDescription || npmName || "GitHub 레포";
+    let devCmd       = "npm run dev";
+    let installCmd   = npmName ? `npm install ${npmName}` : "";
+    let commands: Array<{ cmd: string; desc: string }> = [];
+
+    try {
+      const raw = provider
+        ? await callProvider(provider, resolveModel(provider), SYSTEM_PROMPT_USAGE, analysisPrompt, controller.signal)
+        : await callClaudeCli(SYSTEM_PROMPT_USAGE, analysisPrompt, controller.signal);
+      const parsed = extractJsonBlock(raw);
+      if (parsed) {
+        if (parsed.type === "web-app" || parsed.type === "library" || parsed.type === "cli") repoType = parsed.type;
+        if (typeof parsed.description === "string") description = parsed.description;
+        if (typeof parsed.dev_cmd     === "string") devCmd      = parsed.dev_cmd;
+        if (typeof parsed.install_cmd === "string") installCmd  = parsed.install_cmd;
+        if (Array.isArray(parsed.commands))         commands    = parsed.commands as Array<{ cmd: string; desc: string }>;
+      }
+    } catch (e) {
+      logger.warn(`[compile-repo] AI analysis failed feature=${featureId}: ${e}`);
+      // README 코드 블록에서 폴백 파싱
+      const codeBlocks = readme.matchAll(/```(?:bash|sh|shell|cmd)?\s*\n([\s\S]+?)```/g);
+      let idx = 0;
+      for (const m of codeBlocks) {
+        if (idx >= 5) break;
+        const cmd = m[1].trim().split("\n")[0].trim();
+        if (cmd && cmd.length < 120) { commands.push({ cmd, desc: "" }); idx++; }
+      }
+    }
+
+    if (repoType === "web-app") {
+      // Web-app: npm install 후 dev_cmd 저장
+      appendLog(db, featureId, `웹 앱으로 판단됨. npm install 중...`, nowMs);
       await runNpmInstallInDir(repoDir);
       appendLog(db, featureId, "npm install 완료", nowMs);
 
-      const actualDevCmd = scripts.dev ? "npm run dev" : "npm start";
-      const firstLine = readme
-        ? readme.split("\n").find((l) => l.trim() && !l.startsWith("#"))?.trim() ?? ""
-        : "";
-      const description = pkgDescription || firstLine.slice(0, 100);
-
-      const config = JSON.stringify({
-        type: "web-app",
-        repo_dir: repoDir,
-        dev_cmd: actualDevCmd,
-        build_cmd: scripts.build ? "npm run build" : null,
-        description,
-        npm_name: npmName,
-      });
+      const config = JSON.stringify({ type: "web-app", repo_dir: repoDir, dev_cmd: devCmd, description, npm_name: npmName });
       db.prepare("UPDATE custom_features SET config = ?, status = 'active', error_msg = NULL, bundle = NULL, updated_at = ? WHERE id = ?")
         .run(config, nowMs(), featureId);
-      appendLog(db, featureId, `✓ 준비 완료! [Start] 버튼으로 앱을 실행하세요. (${actualDevCmd})`, nowMs);
-      logger.info(`[compile-repo] web-app ready feature=${featureId} cmd=${actualDevCmd}`);
+      appendLog(db, featureId, `✓ 준비 완료! [실행] 버튼으로 앱을 시작하세요. (${devCmd})`, nowMs);
+      logger.info(`[compile-repo] web-app ready feature=${featureId} cmd=${devCmd}`);
 
     } else {
-      // Library/CLI 경로: AI로 사용법 추출
-      if (!readme) throw new Error("README.md를 찾을 수 없습니다.");
-
-      appendLog(db, featureId, "AI 사용법 추출 중...", nowMs);
-
-      const readmeTruncated = readme.slice(0, 4000) + (readme.length > 4000 ? "\n...(truncated)" : "");
-      const usagePrompt = [
-        npmName        ? `Package: ${npmName}` : "",
-        pkgDescription ? `Description: ${pkgDescription}` : "",
-        hasBin         ? "Type: CLI tool (has bin entry)" : "Type: library",
-        "",
-        "README:",
-        readmeTruncated,
-      ].filter(Boolean).join("\n");
-
-      const cliProvider = readDefaultProvider(db);
-      const provider    = findApiProvider(db, cliProvider);
-
-      let usageDescription = pkgDescription || npmName || "GitHub 라이브러리";
-      let installCmd       = npmName ? `npm install ${npmName}` : "";
-      let commands: Array<{ cmd: string; desc: string }> = [];
-
-      try {
-        const raw = provider
-          ? await callProvider(provider, resolveModel(provider), SYSTEM_PROMPT_USAGE, usagePrompt, controller.signal)
-          : await callClaudeCli(SYSTEM_PROMPT_USAGE, usagePrompt, controller.signal);
-        const parsed = extractJsonBlock(raw);
-        if (parsed) {
-          if (typeof parsed.description === "string") usageDescription = parsed.description;
-          if (typeof parsed.install_cmd === "string") installCmd = parsed.install_cmd;
-          if (Array.isArray(parsed.commands)) commands = parsed.commands as Array<{ cmd: string; desc: string }>;
-        }
-      } catch (e) {
-        logger.warn(`[compile-repo] AI usage extraction failed feature=${featureId}: ${e}`);
-        // README에서 코드 블록을 직접 파싱 (폴백)
-        const codeBlocks = readme.matchAll(/```(?:bash|sh|shell|cmd)?\s*\n([\s\S]+?)```/g);
-        let idx = 0;
-        for (const m of codeBlocks) {
-          if (idx >= 5) break;
-          const cmd = m[1].trim().split("\n")[0].trim();
-          if (cmd && cmd.length < 120) {
-            commands.push({ cmd, desc: "" });
-            idx++;
-          }
-        }
-      }
-
-      const config = JSON.stringify({
-        type: "cli-usage",
-        repo_dir: repoDir,
-        npm_name: npmName,
-        description: usageDescription,
-        install_cmd: installCmd,
-        commands,
-      });
+      // Library / CLI: 사용법 저장
+      const config = JSON.stringify({ type: "cli-usage", repo_dir: repoDir, npm_name: npmName, description, install_cmd: installCmd, commands });
       db.prepare("UPDATE custom_features SET config = ?, status = 'active', error_msg = NULL, bundle = NULL, updated_at = ? WHERE id = ?")
         .run(config, nowMs(), featureId);
-      appendLog(db, featureId, "✓ 사용법 준비 완료!", nowMs);
-      logger.info(`[compile-repo] cli-usage ready feature=${featureId} cmds=${commands.length}`);
+      appendLog(db, featureId, `✓ ${repoType === "cli" ? "CLI 도구" : "라이브러리"} 분석 완료!`, nowMs);
+      logger.info(`[compile-repo] ${repoType} ready feature=${featureId} cmds=${commands.length}`);
     }
 
   } catch (err) {

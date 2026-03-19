@@ -80,6 +80,9 @@ interface UiStore {
   addToTrash: (project: { id: string; name: string; project_path: string; core_goal: string; category_id: string | null }) => void;
   removeFromTrash: (id: string) => void;
   emptyTrash: () => void;
+  trashedFeatures: Array<{ id: string; name: string; icon_svg: string | null; deletedAt: number }>;
+  addFeatureToTrash: (f: { id: string; name: string; icon_svg: string | null }) => void;
+  removeFeatureFromTrash: (id: string) => void;
 
   // ── 창 포커스 / 최소화 ────────────────────────────────────────────
   windowFocusOrder: WindowType[];
@@ -218,8 +221,20 @@ export const useUiStore = create<UiStore>()((set) => ({
   }),
   emptyTrash: () => {
     try { window.localStorage.setItem("agentdesk_trash", "[]"); } catch { /* ignore */ }
-    set({ trashedProjects: [] });
+    try { window.localStorage.setItem("agentdesk_trash_features", "[]"); } catch { /* ignore */ }
+    set({ trashedProjects: [], trashedFeatures: [] });
   },
+  trashedFeatures: (() => { try { return JSON.parse(window.localStorage.getItem("agentdesk_trash_features") ?? "[]"); } catch { return []; } })(),
+  addFeatureToTrash: (f) => set((s) => {
+    const next = [...s.trashedFeatures.filter((x) => x.id !== f.id), { ...f, deletedAt: Date.now() }];
+    try { window.localStorage.setItem("agentdesk_trash_features", JSON.stringify(next)); } catch { /* ignore */ }
+    return { trashedFeatures: next };
+  }),
+  removeFeatureFromTrash: (id) => set((s) => {
+    const next = s.trashedFeatures.filter((x) => x.id !== id);
+    try { window.localStorage.setItem("agentdesk_trash_features", JSON.stringify(next)); } catch { /* ignore */ }
+    return { trashedFeatures: next };
+  }),
   selectedAgentId: null,
   openTaskId: null,
   wallpaper: loadWallpaper(),

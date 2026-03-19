@@ -1,6 +1,54 @@
 # AgentDesk — 개발 진행 현황
 
-> 마지막 업데이트: 2026-03-19 (GitHub 레포 임포트 리디자인 + 커스텀 기능 npm 설치 버그 수정 + 프로젝트 앱 태스크 스크롤바 수정)
+> 마지막 업데이트: 2026-03-19 (GitHub 레포 앱 실행 버그 수정 + 휴지통 시스템 + 문서 통합)
+
+---
+
+## ✅ GitHub 레포 앱 — 실행 버그 수정 + 휴지통 시스템 (2026-03-19)
+
+### 배경
+GitHub 레포 임포트 2단계 흐름 구현 후 실제 dev 서버 실행이 동작하지 않는 버그 6건 수정.
+바탕화면 앱 삭제 시 휴지통으로 이동, 휴지통 비우기 시 파일까지 영구 삭제하는 시스템 추가.
+
+### 버그 수정
+
+| 코드 | 파일 | 내용 | 수정 |
+|------|------|------|------|
+| FX-01 | `custom-features-ai.ts` | ANSI 이스케이프 코드가 포트 감지 regex 방해 | `line.replace(/\x1B\[[0-9;]*m/g, "")` 후 regex 적용 |
+| FX-02 | `custom-features-ai.ts` | pnpm regex가 "run" 캡처 ("pnpm run dev" → "run") | `/(?:(?:pnpm\|yarn)(?:\s+run)?\|npm(?:\s+run)?)\s+(\S+)/` 로 수정 |
+| FX-03 | `custom-features-ai.ts` | `--port` 미포함 script에 포트 미주입 | `vite/next dev/nuxt dev` 패턴별 `--port` 주입 로직 추가 |
+| FX-04 | `custom-features.ts` | `onclick="startDev()"` IIFE 스코프 문제 (silent fail) | IIFE 끝에 `window.startDev=startDev; window.stopDev=stopDev;` 추가 |
+| FX-05 | `custom-features.ts` | 폴링이 `j.running`으로 ready 판단 → 포트 미확인 시 "실행 중" 표시 | `j.ready && j.port` 조건으로 변경 |
+| FX-06 | `custom-features.ts` | Windows에서 `child.kill()` 이 vite 자식 프로세스 미종료 | `taskkill /F /T /PID <pid>` (win32 분기) 사용 |
+| FX-07 | `AiBundleRenderer.tsx` | sandbox에 `allow-popups` 미포함 → `target="_blank"` 링크 차단 | `allow-popups allow-popups-to-escape-sandbox` 추가 |
+
+### 신규 기능 — 서버 프로세스 관리
+
+| 항목 | 내용 |
+|------|------|
+| `killDevServer(id)` | 단일 dev 서버 종료 (win32: taskkill /F /T, 기타: SIGTERM) |
+| `killAllDevServers()` | 전체 dev 서버 종료 |
+| `process.on("SIGINT/SIGTERM")` | 서버 종료 시 자동 전체 종료 |
+| `POST /api/custom-features/stop-all-dev` | 즉시 전체 dev 서버 포트 킬 엔드포인트 |
+
+### 신규 기능 — 휴지통 시스템
+
+| 단계 | 동작 |
+|------|------|
+| 아이콘 삭제 (우클릭 또는 Delete 키) | DB 유지, `addFeatureToTrash()` (localStorage `agentdesk_trash_features`) → 바탕화면에서 숨김 |
+| 휴지통에서 복원 | `removeFeatureFromTrash()` → 바탕화면 아이콘 재표시 |
+| 휴지통 비우기 | `DELETE /api/custom-features/:id` → DB 삭제 + repo_dir `rmSync` + AI tsx `unlinkSync` + github 파일 `readdirSync` 필터 삭제 |
+| 프로젝트 항목과 통합 | TrashModal에 프로젝트·기능 혼합, `deletedAt` 기준 정렬 |
+
+### 변경 파일
+
+| 파일 | 변경 내용 |
+|------|----------|
+| `server/modules/routes/ops/custom-features-ai.ts` | ANSI 제거, pnpm regex, --port 주입, ready 플래그, `run-dev` 포트 폴링 |
+| `server/modules/routes/ops/custom-features.ts` | IIFE window 노출, 폴링 ready 조건, killDevServer/killAllDevServers, stop-all-dev 엔드포인트, DELETE 파일 정리, `rmSync/readdirSync/unlinkSync` import 추가 |
+| `src/components/widget-builder/AiBundleRenderer.tsx` | sandbox에 `allow-popups allow-popups-to-escape-sandbox` 추가 |
+| `src/store/uiStore.ts` | `trashedFeatures` 상태 + `addFeatureToTrash/removeFeatureFromTrash/emptyTrash` 액션 (localStorage 영속) |
+| `src/components/desktop/Desktop.tsx` | 아이콘 삭제 → `addFeatureToTrash` 변경, TrashModal에 features props 연결, 비우기 async 핸들러 |
 
 ---
 

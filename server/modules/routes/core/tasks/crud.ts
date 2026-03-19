@@ -435,32 +435,6 @@ export function registerTaskCrudRoutes(deps: TaskCrudRouteDeps): void {
     res.json({ events });
   });
 
-  app.get("/api/tasks/:id/meeting-minutes", (req, res) => {
-    const id = String(req.params.id);
-    const task = db.prepare("SELECT id, source_task_id FROM tasks WHERE id = ?").get(id) as
-      | { id: string; source_task_id: string | null }
-      | undefined;
-    if (!task) return res.status(404).json({ error: "not_found" });
-
-    const taskIds = [id];
-    if (task.source_task_id) taskIds.push(task.source_task_id);
-
-    const meetings = db
-      .prepare(
-        `SELECT * FROM meeting_minutes WHERE task_id IN (${taskIds.map(() => "?").join(",")}) ORDER BY started_at DESC, round DESC`,
-      )
-      .all(...taskIds) as unknown as MeetingMinutesRow[];
-
-    const data = meetings.map((meeting) => {
-      const entries = db
-        .prepare("SELECT * FROM meeting_minute_entries WHERE meeting_id = ? ORDER BY seq ASC, id ASC")
-        .all(meeting.id) as unknown as MeetingMinuteEntryRow[];
-      return { ...meeting, entries };
-    });
-
-    res.json({ meetings: data });
-  });
-
   app.patch("/api/tasks/:id", (req, res) => {
     const id = String(req.params.id);
     const existing = db.prepare("SELECT * FROM tasks WHERE id = ?").get(id);
@@ -655,12 +629,21 @@ export function registerTaskCrudRoutes(deps: TaskCrudRouteDeps): void {
   app.get("/api/tasks/:id/meeting-minutes", (req, res) => {
     const { id } = req.params as { id: string };
     try {
+      // source_task_id 포함: 서브태스크에서 부모 태스크 회의록도 조회
+      const task = db.prepare("SELECT source_task_id FROM tasks WHERE id = ?").get(id) as
+        | { source_task_id: string | null }
+        | undefined;
+      const taskIds = [id];
+      if (task?.source_task_id) taskIds.push(task.source_task_id);
+
+      const inClause = taskIds.map(() => "?").join(",");
+
       const minutes = db
         .prepare(
           `SELECT id, task_id, meeting_type, round, title, status, started_at, completed_at, created_at
-           FROM meeting_minutes WHERE task_id = ? ORDER BY round ASC, started_at ASC`,
+           FROM meeting_minutes WHERE task_id IN (${inClause}) ORDER BY round ASC, started_at ASC`,
         )
-        .all(id) as MeetingMinutesRow[];
+        .all(...taskIds) as MeetingMinutesRow[];
 
       const entries = db
         .prepare(
@@ -668,10 +651,10 @@ export function registerTaskCrudRoutes(deps: TaskCrudRouteDeps): void {
                   e.department_name, e.role_label, e.message_type, e.content, e.created_at
            FROM meeting_minute_entries e
            INNER JOIN meeting_minutes m ON e.meeting_id = m.id
-           WHERE m.task_id = ?
-           ORDER BY e.meeting_id, e.seq ASC`,
+           WHERE m.task_id IN (${inClause})
+           ORDER BY m.round ASC, m.started_at ASC, e.seq ASC`,
         )
-        .all(id) as MeetingMinuteEntryRow[];
+        .all(...taskIds) as MeetingMinuteEntryRow[];
 
       const entriesByMeeting = new Map<string, MeetingMinuteEntryRow[]>();
       for (const entry of entries) {

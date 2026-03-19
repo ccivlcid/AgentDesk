@@ -180,6 +180,33 @@ esbuild `resolveDir = FEATURE_DIR` 로 설정 → `feature/node_modules/` 우선
 - AI 생성 tsx: `feature/ai/<featureId>.tsx`
 - 패키지 설치 위치: `feature/node_modules/`
 
+**앱 분류 (`compileFromRepo`)**:
+- `"web-app"`: `run-dev` 엔드포인트로 실제 dev 서버 실행 → iframe 포트 포워딩
+- `"library"` / `"cli"`: AI가 위젯 tsx 직접 생성 → esbuild 번들 → iframe 렌더링
+
+**dev 서버 실행 (`run-dev` / `custom-features-ai.ts`)**:
+- `j.running` vs `j.ready`: 프로세스 spawn 직후 `running=true`지만 `ready`는 Vite가 localhost URL 출력할 때만 `true`. 폴링 UI는 반드시 `j.ready && j.port` 조건 사용.
+- ANSI 코드 제거: Vite 출력에 `\x1B[32m...\x1B[0m` 이스케이프 코드가 포함됨. 포트 감지 전 `line.replace(/\x1B\[[0-9;]*m/g, "")` 먼저 적용.
+- pnpm regex: `pnpm run dev` 에서 script 이름 추출은 `/(?:(?:pnpm|yarn)(?:\s+run)?|npm(?:\s+run)?)\s+(\S+)/` 사용. `npm run` regex는 "run"을 캡처해서 틀림.
+- Windows 프로세스 트리 종료: `child.kill()` 은 cmd.exe 셸만 종료하고 자식 vite 프로세스는 남김. 반드시 `taskkill /F /T /PID <pid>` (win32만) 사용.
+
+**IIFE 전역 스코프**:
+iframe에 주입하는 HTML에서 `onclick="startDev()"` 같은 속성은 전역 스코프를 사용.
+함수가 `(function(){...})()` IIFE 안에 있으면 onclick에서 접근 불가.
+IIFE 끝에 `window.startDev = startDev;` 명시적 노출 필요.
+
+**iframe sandbox allow-popups**:
+`sandbox="allow-scripts allow-same-origin"` 만 있으면 iframe 내부에서 `target="_blank"` 링크가 완전히 차단됨.
+외부 링크가 필요한 앱에는 `allow-popups allow-popups-to-escape-sandbox` 추가 필수.
+
+**Custom Features 삭제 → 휴지통 → 파일 정리**:
+- 아이콘 우클릭 삭제: DB는 유지하고 `addFeatureToTrash()` (localStorage) → 바탕화면에서만 숨김 (복원 가능)
+- 휴지통 비우기: `DELETE /api/custom-features/:id` 호출 → DB 삭제 + 파일 정리
+  - `config.repo_dir` → `rmSync` (recursive, force)
+  - `feature/ai/<id>.tsx` → `unlinkSync`
+  - `feature/github/<id>-*` 파일 → `readdirSync` + 접두사 필터 후 `unlinkSync`
+- `POST /api/custom-features/stop-all-dev`: 서버 종료 전 또는 즉시 호출 → 모든 dev 서버 포트 종료
+
 ---
 
 ### logger import path depth
