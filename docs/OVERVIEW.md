@@ -290,6 +290,7 @@ Default hook seeds               ███████████████�
 hook_entries project scope       ████████████████████ 100% (DB migration 2026-03-23-001, project scope_type added)
 Custom Features dev execution    ████████████████████ 100% (ANSI/pnpm/port/IIFE/ready/taskkill 버그 6건 수정, 2026-03-19)
 Custom Features trash system     ████████████████████ 100% (휴지통 → 복원/영구삭제 + 파일 정리, 2026-03-19)
+macOS UX Improvements (MX-01~07) ░░░░░░░░░░░░░░░░░░░░   0% (스펙 완료, 구현 대기 — docs/design/MACOS-UX-IMPROVEMENTS.md)
 ```
 
 ### Known Bugs (2026-03-16 Pipeline Audit) — 전체 수정 완료
@@ -458,6 +459,7 @@ All planned features and improvement tasks have been completed. Key achievements
 | [`docs/architecture/ARCHITECTURE-AUDIT-2026-Q1.md`](./architecture/ARCHITECTURE-AUDIT-2026-Q1.md) | Comprehensive architecture + backend audit (2026-Q1) |
 | [`docs/design/DESIGN.md`](./design/DESIGN.md) | UI CSS variables + component patterns |
 | [`docs/design/UI-SCREENS.md`](./design/UI-SCREENS.md) | Full screen & modal specification |
+| [`docs/design/MACOS-UX-IMPROVEMENTS.md`](./design/MACOS-UX-IMPROVEMENTS.md) | macOS UX 개선 스펙 (MX-01~07: 리사이즈·토스트·Cmd+Tab·스냅·배지·전체화면·컨텍스트메뉴) |
 
 > **Removed docs (all implementation complete, content consolidated into progress.md / OVERVIEW.md):**
 > `strategy/bigger-ide-vision.md`, `strategy/agent-performance-audit.md`, `strategy/cli-hybrid-execution.md`, `architecture/SYSTEM-STRUCTURE-MAP.md`

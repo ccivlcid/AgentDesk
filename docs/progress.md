@@ -1,6 +1,22 @@
 # AgentDesk — 개발 진행 현황
 
-> 마지막 업데이트: 2026-03-19 (GitHub 레포 앱 실행 버그 수정 + 휴지통 시스템 + 문서 통합)
+> 마지막 업데이트: 2026-03-20 (macOS UX Improvements 스펙 문서화)
+
+---
+
+## 🔜 macOS UX Improvements — 7개 기능 (2026-03-20 스펙 완료)
+
+> 상세 스펙: [`docs/design/MACOS-UX-IMPROVEMENTS.md`](design/MACOS-UX-IMPROVEMENTS.md)
+
+| 코드 | 기능 | 우선순위 | 상태 |
+|------|------|----------|------|
+| MX-01 | 창 엣지 리사이즈 (right·bottom·corner·left·top) | 🔴 P1 | 🔜 대기 |
+| MX-02 | 알림 배너 Toast (우상단 슬라이드인, 4종 타입) | 🔴 P1 | 🔜 대기 |
+| MX-03 | Cmd+Tab 앱 전환기 | 🟡 P2 | 🔜 대기 |
+| MX-04 | 창 스냅 / 반반 타일링 (엣지 드래그 미리보기) | 🟡 P2 | 🔜 대기 |
+| MX-05 | Dock 배지 (실행 중·미읽은 알림·실패 수) | 🟡 P2 | 🔜 대기 |
+| MX-06 | 초록 버튼 전체화면 토글 | 🔵 P3 | 🔜 대기 |
+| MX-07 | 컨텍스트 메뉴 polish (키보드·위치보정·스타일) | 🔵 P3 | 🔜 대기 |
 
 ---
 
