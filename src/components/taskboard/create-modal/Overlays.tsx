@@ -33,6 +33,7 @@ export default function CreateTaskModalOverlays({
   onManualPathRefresh,
   onOpenManualPathEntry,
   onSelectManualCurrentPath,
+  onOpenDraftModal,
   onCloseDraftModal,
   onLoadDraft,
   onDeleteDraft,
@@ -81,47 +82,71 @@ export default function CreateTaskModalOverlays({
                 {restoreCandidates.map((draft) => {
                   const isSelected = selectedRestoreDraftId === draft.id;
                   return (
-                    <button
+                    <div
                       key={draft.id}
-                      type="button"
-                      onClick={() => onSelectRestoreDraft(draft.id)}
-                      className="w-full border px-3 py-2 text-left transition hover:opacity-80"
+                      className="flex items-stretch border"
                       style={{ borderRadius: 0, borderColor: isSelected ? "rgba(245,158,11,0.5)" : "var(--th-border)", background: isSelected ? "rgba(245,158,11,0.08)" : "var(--th-bg-primary)" }}
                     >
-                      <p className="truncate text-xs font-bold font-mono" style={{ color: "var(--th-text-primary)" }}>
-                        {draft.title ||
-                          t({
-                            ko: "(제목 없음)",
-                            en: "(Untitled)",
-                            ja: "(無題)",
-                            zh: "（无标题）",
-                          })}
-                      </p>
-                      <p className="mt-0.5 text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
-                        {formatDraftTimestamp(draft.updatedAt)} · {timeAgo(draft.updatedAt, localeTag)}
-                      </p>
-                    </button>
+                      <button
+                        type="button"
+                        onClick={() => onSelectRestoreDraft(draft.id)}
+                        className="flex-1 px-3 py-2 text-left transition hover:opacity-80"
+                        style={{ background: "transparent", border: "none" }}
+                      >
+                        <p className="truncate text-xs font-bold font-mono" style={{ color: "var(--th-text-primary)" }}>
+                          {draft.title ||
+                            t({
+                              ko: "(제목 없음)",
+                              en: "(Untitled)",
+                              ja: "(無題)",
+                              zh: "（无标题）",
+                            })}
+                        </p>
+                        <p className="mt-0.5 text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
+                          {formatDraftTimestamp(draft.updatedAt)} · {timeAgo(draft.updatedAt, localeTag)}
+                        </p>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onDeleteDraft(draft.id)}
+                        className="px-2 text-xs font-mono transition hover:opacity-80"
+                        style={{ background: "transparent", border: "none", borderLeft: "1px solid var(--th-border)", color: "#f87171", cursor: "pointer", flexShrink: 0 }}
+                        title={t({ ko: "삭제", en: "Delete", ja: "削除", zh: "删除" })}
+                      >
+                        ✕
+                      </button>
+                    </div>
                   );
                 })}
               </div>
             </div>
-            <div className="flex justify-end gap-2 px-4 py-3" style={{ borderTop: "1px solid var(--th-border)" }}>
+            <div className="flex items-center justify-between gap-2 px-4 py-3" style={{ borderTop: "1px solid var(--th-border)" }}>
               <button
                 type="button"
-                onClick={onCloseRestorePrompt}
-                className="border px-3 py-1.5 text-xs font-semibold font-mono transition hover:opacity-80"
-                style={{ borderRadius: 0, borderColor: "var(--th-border)", color: "var(--th-text-secondary)", background: "var(--th-bg-primary)" }}
+                onClick={() => { onCloseRestorePrompt(); onOpenDraftModal(); }}
+                className="text-[10px] font-mono transition hover:opacity-80"
+                style={{ background: "none", border: "none", color: "var(--th-text-muted)", cursor: "pointer", padding: 0, textDecoration: "underline" }}
               >
-                {t({ ko: "새로 작성", en: "Start Fresh", ja: "新規作成", zh: "重新填写" })}
+                {t({ ko: "전체 보기 / 관리", en: "View all / Manage", ja: "すべて表示 / 管理", zh: "查看全部 / 管理" })}
               </button>
-              <button
-                type="button"
-                onClick={onLoadSelectedRestoreDraft}
-                className="px-3 py-1.5 text-xs font-semibold font-mono uppercase tracking-wider transition hover:opacity-90"
-                style={{ borderRadius: 0, background: "var(--th-accent, #f59e0b)", color: "var(--th-accent-text)", border: "none" }}
-              >
-                {t({ ko: "불러오기", en: "Load", ja: "読み込み", zh: "加载" })}
-              </button>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={onCloseRestorePrompt}
+                  className="border px-3 py-1.5 text-xs font-semibold font-mono transition hover:opacity-80"
+                  style={{ borderRadius: 0, borderColor: "var(--th-border)", color: "var(--th-text-secondary)", background: "var(--th-bg-primary)" }}
+                >
+                  {t({ ko: "새로 작성", en: "Start Fresh", ja: "新規作成", zh: "重新填写" })}
+                </button>
+                <button
+                  type="button"
+                  onClick={onLoadSelectedRestoreDraft}
+                  className="px-3 py-1.5 text-xs font-semibold font-mono uppercase tracking-wider transition hover:opacity-90"
+                  style={{ borderRadius: 0, background: "var(--th-accent, #f59e0b)", color: "var(--th-accent-text)", border: "none" }}
+                >
+                  {t({ ko: "불러오기", en: "Load", ja: "読み込み", zh: "加载" })}
+                </button>
+              </div>
             </div>
           </div>
         </div>

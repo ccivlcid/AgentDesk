@@ -626,7 +626,7 @@ function TasksTab({ tasks, statusCounts, allAgents }: { tasks: Task[]; statusCou
   const selectedTask = visible.find((t) => t.id === selectedId) ?? visible[0] ?? null;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
+    <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0, overflow: "hidden" }}>
       {/* Filter bar */}
       <div style={{ display: "flex", gap: 6, padding: "7px 12px", flexShrink: 0, borderBottom: "1px solid var(--th-border)", flexWrap: "wrap", rowGap: 4 }}>
         <FilterBtn active={filter === "all"} onClick={() => setFilter("all")}>{t({ ko: "전체", en: "All", ja: "全て", zh: "全部" })} ({tasks.length})</FilterBtn>

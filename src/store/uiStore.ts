@@ -75,6 +75,12 @@ interface UiStore {
   jiggleMode: boolean;
   missionControlOpen: boolean;
 
+  // ── 휴지통 ────────────────────────────────────────────────────────
+  trashedProjects: Array<{ id: string; name: string; project_path: string; core_goal: string; category_id: string | null; deletedAt: number }>;
+  addToTrash: (project: { id: string; name: string; project_path: string; core_goal: string; category_id: string | null }) => void;
+  removeFromTrash: (id: string) => void;
+  emptyTrash: () => void;
+
   // ── 창 포커스 / 최소화 ────────────────────────────────────────────
   windowFocusOrder: WindowType[];
   minimizedWindows: Set<WindowType>;
@@ -94,8 +100,10 @@ interface UiStore {
   clearCliInitialAgentId: () => void;
   // 에이전트별 독립 CLI 창 (agentId → 각자 별도 CliWindow)
   openCliAgentIds: Set<string>;
-  openCliWindow: (agentId: string) => void;
+  openCliWindow: (agentId: string, initialPrompt?: string) => void;
   closeCliWindow: (agentId: string) => void;
+  cliInitialPrompts: Map<string, string>;
+  clearCliInitialPrompt: (agentId: string) => void;
   // planning phase 완료 후 auto_open_cli 시 배너 표시용
   cliPlanReadyIds: Set<string>;
   setCliPlanReady: (agentId: string) => void;
@@ -169,11 +177,23 @@ export const useUiStore = create<UiStore>()((set) => ({
   })),
   clearCliInitialAgentId: () => set({ cliInitialAgentId: null }),
   openCliAgentIds: new Set<string>(),
-  openCliWindow: (agentId) => set((s) => ({ openCliAgentIds: new Set([...s.openCliAgentIds, agentId]) })),
+  cliInitialPrompts: new Map<string, string>(),
+  openCliWindow: (agentId, initialPrompt) => set((s) => {
+    const prompts = new Map(s.cliInitialPrompts);
+    if (initialPrompt) prompts.set(agentId, initialPrompt);
+    return { openCliAgentIds: new Set([...s.openCliAgentIds, agentId]), cliInitialPrompts: prompts };
+  }),
   closeCliWindow: (agentId) => set((s) => {
     const next = new Set(s.openCliAgentIds);
     next.delete(agentId);
-    return { openCliAgentIds: next };
+    const prompts = new Map(s.cliInitialPrompts);
+    prompts.delete(agentId);
+    return { openCliAgentIds: next, cliInitialPrompts: prompts };
+  }),
+  clearCliInitialPrompt: (agentId) => set((s) => {
+    const prompts = new Map(s.cliInitialPrompts);
+    prompts.delete(agentId);
+    return { cliInitialPrompts: prompts };
   }),
   cliPlanReadyIds: new Set<string>(),
   setCliPlanReady: (agentId) => set((s) => ({ cliPlanReadyIds: new Set([...s.cliPlanReadyIds, agentId]) })),
@@ -185,6 +205,21 @@ export const useUiStore = create<UiStore>()((set) => ({
   desktopIconLayout: loadDesktopIconLayout(),
   desktopIconLabels: loadDesktopIconLabels(),
   pendingDocs: [],
+  trashedProjects: (() => { try { return JSON.parse(window.localStorage.getItem("agentdesk_trash") ?? "[]"); } catch { return []; } })(),
+  addToTrash: (project) => set((s) => {
+    const next = [...s.trashedProjects.filter((p) => p.id !== project.id), { ...project, deletedAt: Date.now() }];
+    try { window.localStorage.setItem("agentdesk_trash", JSON.stringify(next)); } catch { /* ignore */ }
+    return { trashedProjects: next };
+  }),
+  removeFromTrash: (id) => set((s) => {
+    const next = s.trashedProjects.filter((p) => p.id !== id);
+    try { window.localStorage.setItem("agentdesk_trash", JSON.stringify(next)); } catch { /* ignore */ }
+    return { trashedProjects: next };
+  }),
+  emptyTrash: () => {
+    try { window.localStorage.setItem("agentdesk_trash", "[]"); } catch { /* ignore */ }
+    set({ trashedProjects: [] });
+  },
   selectedAgentId: null,
   openTaskId: null,
   wallpaper: loadWallpaper(),

@@ -7,6 +7,7 @@ import { useI18n } from "../../i18n";
 const WorkflowBuilder = lazy(() => import("../workflow-builder/WorkflowBuilder"));
 const ScheduledTasksPanel = lazy(() => import("../scheduled-tasks/ScheduledTasksPanel"));
 const AgentCompositionBuilder = lazy(() => import("../agent-composition/AgentCompositionBuilder"));
+const LiveWorkflowPanel = lazy(() => import("../workflow-builder/LiveWorkflowPanel"));
 
 function Loading() {
   const { t } = useI18n();
@@ -38,6 +39,15 @@ export default function WorkflowWindow() {
       defaultWidth={900}
       defaultHeight={620}
       tabs={[
+        {
+          id: "live",
+          label: t({ ko: "실행 중", en: "Live", ja: "実行中", zh: "运行中" }),
+          content: (
+            <Suspense fallback={<Loading />}>
+              <LiveWorkflowPanel />
+            </Suspense>
+          ),
+        },
         {
           id: "builder",
           label: t({ ko: "빌더", en: "Builder", ja: "ビルダー", zh: "构建器" }),

@@ -55,8 +55,8 @@ export default function StepGithubImport({ isKo, onGenerated }: Props) {
   const urlValid = isValidGithubUrl(trimmed);
   const urlMode: UrlMode = urlValid ? detectUrlMode(trimmed) : "file";
   const isDisabled = status === "polling" || status === "done";
-  const timeoutMs = urlMode === "repo" ? 300_000 : 30_000;
-  const timeoutLabel = urlMode === "repo" ? (isKo ? "5분" : "5 minutes") : (isKo ? "30초" : "30 seconds");
+  const timeoutMs = urlMode === "repo" ? 120_000 : 30_000;
+  const timeoutLabel = urlMode === "repo" ? (isKo ? "2분" : "2 minutes") : (isKo ? "30초" : "30 seconds");
 
   useEffect(() => {
     if (status !== "polling" && status !== "pending") return;
@@ -153,7 +153,7 @@ export default function StepGithubImport({ isKo, onGenerated }: Props) {
             fontWeight: 700,
           }}>
             {urlMode === "repo"
-              ? (isKo ? "레포 URL — AI가 앱 + 아이콘 생성" : "Repo URL — AI generates app + icon")
+              ? (isKo ? "레포 URL — 다운로드 후 앱 생성" : "Repo URL — download & create app")
               : (isKo ? "파일 URL — 직접 설치" : "File URL — direct install")}
           </span>
         )}
@@ -187,7 +187,7 @@ export default function StepGithubImport({ isKo, onGenerated }: Props) {
           }}
         >
           {urlMode === "repo"
-            ? (isKo ? "⚡ AI로 앱 생성" : "⚡ Generate App with AI")
+            ? (isKo ? "⬇ 다운로드" : "⬇ Download")
             : (isKo ? "⬇ 가져오기" : "⬇ Import")}
         </button>
       )}
@@ -201,7 +201,7 @@ export default function StepGithubImport({ isKo, onGenerated }: Props) {
               {status === "pending"
                 ? (isKo ? "요청 중..." : "Sending request...")
                 : urlMode === "repo"
-                  ? (isKo ? "AI가 앱을 생성하는 중..." : "AI is generating the app...")
+                  ? (isKo ? "다운로드 중..." : "Downloading...")
                   : (isKo ? "파일을 가져와 컴파일 중..." : "Fetching and compiling...")}
             </div>
             {urlMode === "repo" && status === "polling" && (

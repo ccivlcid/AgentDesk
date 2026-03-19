@@ -46,8 +46,6 @@ interface CreateModalProps {
 function CreateModal({ agents, departments, categories = [], onClose, onCreate, onAssign, defaultProjectId, defaultAgentId }: CreateModalProps) {
   void onAssign;
   const { t, language: locale, locale: localeTag } = useI18n();
-  const { openCliWindow } = useUiStore();
-  const openCliAfterCreateRef = useRef(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [packConfig, setPackConfig] = useState<WorkflowPackConfig | null>(null);
@@ -197,16 +195,11 @@ function CreateModal({ agents, departments, categories = [], onClose, onCreate, 
         : { handoff_to_agent_id: null, handoff_condition: null };
       const kbField = kbSources.length > 0 ? { kb_context_sources: JSON.stringify(kbSources) } : {};
       const figmaField = figmaUrl.trim() ? { figma_url: figmaUrl.trim() } : {};
-      const shouldOpenCli = openCliAfterCreateRef.current;
-      const cliAgentId = assignAgentId;
-      openCliAfterCreateRef.current = false;
-      const result = Object.keys(nonEmptyMeta).length > 0
+      return Object.keys(nonEmptyMeta).length > 0
         ? onCreate({ ...input, workflow_meta_json: JSON.stringify(nonEmptyMeta), ...handoffFields, ...kbField, ...figmaField })
         : onCreate({ ...input, ...handoffFields, ...kbField, ...figmaField });
-      if (shouldOpenCli && cliAgentId) openCliWindow(cliAgentId);
-      return result;
     },
-    [onCreate, packMeta, handoffEnabled, handoffAgentId, handoffCondition, kbSources, figmaUrl, assignAgentId, openCliWindow],
+    [onCreate, packMeta, handoffEnabled, handoffAgentId, handoffCondition, kbSources, figmaUrl],
   );
 
   async function submitTask(options?: { allowCreateMissingPath?: boolean; allowWithoutProject?: boolean }) {
@@ -249,11 +242,6 @@ function CreateModal({ agents, departments, categories = [], onClose, onCreate, 
 
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    void submitTask();
-  }
-
-  function handleSubmitWithCli() {
-    openCliAfterCreateRef.current = true;
     void submitTask();
   }
 
@@ -351,6 +339,7 @@ function CreateModal({ agents, departments, categories = [], onClose, onCreate, 
       projectPicker.setMissingPathPrompt(null);
       projectPicker.setManualPathPickerOpen(false);
     },
+    onOpenDraftModal: () => { setRestorePromptOpen(false); setDraftModalOpen(true); },
     onCloseDraftModal: () => setDraftModalOpen(false),
     onLoadDraft: (draft) => {
       applyDraft(draft);
@@ -457,7 +446,6 @@ function CreateModal({ agents, departments, categories = [], onClose, onCreate, 
       onHandoffConditionChange={setHandoffCondition}
       figmaSection={<FigmaUrlSection figmaUrl={figmaUrl} onChange={setFigmaUrl} t={t} />}
       kbSection={<KbTaskSourcesSection sources={kbSources} onChange={setKbSources} t={t} />}
-      onSubmitWithCli={handleSubmitWithCli}
     />
     </>
   );

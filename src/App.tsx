@@ -293,7 +293,6 @@ export default function App() {
                 project_id: currentProject.id,
                 project_path: currentProject.project_path ?? undefined,
               });
-              setShowCreateTaskAfterCreate(false);
             }}
             onAssign={async (taskId, agentId) => { await actions.handleAssignTask(taskId, agentId); }}
             defaultProjectId={currentProject.id}
@@ -320,7 +319,6 @@ export default function App() {
                 project_id: currentProject?.id,
                 project_path: currentProject?.project_path ?? undefined,
               });
-              setShowCreateTask(false);
             }}
             onAssign={async (taskId, agentId) => { await actions.handleAssignTask(taskId, agentId); }}
             defaultProjectId={currentProject?.id}

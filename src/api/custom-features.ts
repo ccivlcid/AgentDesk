@@ -85,3 +85,15 @@ export async function triggerAiGenerate(payload: {
     body: JSON.stringify(payload),
   });
 }
+
+export async function runDevServer(id: string): Promise<{ port: number }> {
+  return req<{ ok: boolean; port: number }>(`/api/custom-features/${id}/run-dev`, { method: "POST" });
+}
+
+export async function stopDevServer(id: string): Promise<void> {
+  await req(`/api/custom-features/${id}/stop-dev`, { method: "POST" });
+}
+
+export async function getDevStatus(id: string): Promise<{ running: boolean; port: number | null }> {
+  return req<{ ok: boolean; running: boolean; port: number | null }>(`/api/custom-features/${id}/dev-status`);
+}

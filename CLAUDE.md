@@ -162,6 +162,26 @@ To pass data: use `Zustand store → uiStore.openWindows` chain.
 
 ## 6. Common Mistakes & Gotchas
 
+### Custom Features — GitHub 레포 임포트 2단계 흐름
+
+**Phase 1 (다운로드)** — `runGithubRepoImport`
+- git clone → AI SVG 아이콘 생성 → `status = 'pending_install'`, `config.repo_dir` 저장
+- 창 자동 닫힘, 바탕화면 아이콘 즉시 생성
+
+**Phase 2 (첫 클릭 설치)** — `compileFromRepo`
+- `config.repo_dir` 확인 → README 읽기 → npm 패키지 설치 → AI 위젯 tsx 생성 → esbuild 컴파일 → `status = 'active'`
+
+**npm 패키지 설치**: `npm install --no-save pkg` 는 pnpm 프로젝트에서 실패함.
+대신 `npm install --prefix feature --no-save pkg` 사용 → `feature/node_modules/` 에 격리 설치.
+esbuild `resolveDir = FEATURE_DIR` 로 설정 → `feature/node_modules/` 우선, 상위 `node_modules/` (react 등) 폴백.
+
+**파일 경로 규칙**:
+- 클론 위치: `feature/github/<user>-<repo>/`
+- AI 생성 tsx: `feature/ai/<featureId>.tsx`
+- 패키지 설치 위치: `feature/node_modules/`
+
+---
+
 ### logger import path depth
 When importing `server/lib/logger.ts`, the number of `../` varies by file depth:
 

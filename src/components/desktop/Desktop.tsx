@@ -85,13 +85,19 @@ interface DesktopProps {
   children?: ReactNode;
 }
 
-function TrashIcon({ t }: { t: ReturnType<typeof import("../../i18n").useI18n>["t"] }) {
+function TrashIcon({ t, count, onClick }: {
+  t: ReturnType<typeof import("../../i18n").useI18n>["t"];
+  count: number;
+  onClick: () => void;
+}) {
   const [hov, setHov] = useState(false);
+  const full = count > 0;
   return (
     <div
       data-no-ctx="true"
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
+      onClick={onClick}
       style={{
         position: "absolute",
         right: 24,
@@ -100,31 +106,318 @@ function TrashIcon({ t }: { t: ReturnType<typeof import("../../i18n").useI18n>["
         flexDirection: "column",
         alignItems: "center",
         gap: 5,
-        cursor: "default",
+        cursor: "pointer",
         userSelect: "none",
         zIndex: 10,
         transform: hov ? "scale(1.06)" : "scale(1)",
         transition: "transform 0.12s",
       }}
     >
-      <div style={{
-        width: 56, height: 56,
-        display: "flex", alignItems: "center", justifyContent: "center",
-        borderRadius: 12,
-        background: hov ? "rgba(255,59,48,0.1)" : "rgba(128,128,128,0.08)",
-        border: `1px solid ${hov ? "rgba(255,59,48,0.3)" : "rgba(128,128,128,0.15)"}`,
-        transition: "background 0.15s, border 0.15s",
-      }}>
-        <IconTrash color={hov ? "#ff3b30" : "var(--th-text-muted)"} />
+      <div style={{ position: "relative" }}>
+        <div style={{
+          width: 56, height: 56,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          borderRadius: 12,
+          background: hov ? "rgba(255,59,48,0.12)" : full ? "rgba(255,59,48,0.06)" : "rgba(128,128,128,0.08)",
+          border: `1px solid ${hov ? "rgba(255,59,48,0.4)" : full ? "rgba(255,59,48,0.2)" : "rgba(128,128,128,0.15)"}`,
+          transition: "background 0.15s, border 0.15s",
+        }}>
+          <IconTrash color={hov || full ? "#ff3b30" : "var(--th-text-muted)"} />
+        </div>
+        {full && (
+          <div style={{
+            position: "absolute", top: -4, right: -4,
+            minWidth: 16, height: 16, borderRadius: 8,
+            background: "#ff3b30", border: "1.5px solid var(--th-bg-base)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontFamily: "var(--th-font-mono)", fontSize: 9, fontWeight: 700,
+            color: "#fff", paddingInline: 3,
+          }}>
+            {count}
+          </div>
+        )}
       </div>
       <span style={{
         fontFamily: "var(--th-font-mono)", fontSize: 10,
-        color: hov ? "#ff3b30" : "var(--th-text-secondary)",
+        color: hov || full ? "#ff3b30" : "var(--th-text-secondary)",
         transition: "color 0.15s",
         textShadow: "0 1px 3px rgba(0,0,0,0.5)",
       }}>
         {t({ ko: "휴지통", en: "Trash", ja: "ゴミ箱", zh: "垃圾桶" })}
       </span>
+    </div>
+  );
+}
+
+type TrashedProject = { id: string; name: string; project_path: string; core_goal: string; category_id: string | null; deletedAt: number };
+
+function TrashModal({ t, items, onClose, onRestore, onDelete, onEmpty }: {
+  t: ReturnType<typeof import("../../i18n").useI18n>["t"];
+  items: TrashedProject[];
+  onClose: () => void;
+  onRestore: (item: TrashedProject) => Promise<void>;
+  onDelete: (item: TrashedProject) => void;
+  onEmpty: () => void;
+}) {
+  const mono = { fontFamily: "var(--th-font-mono)" };
+  const fmt = (ts: number) => new Date(ts).toLocaleDateString();
+
+  return (
+    <div
+      data-no-ctx="true"
+      style={{
+        position: "fixed", inset: 0, zIndex: 3100,
+        background: "var(--th-modal-overlay)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+      }}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div style={{
+        width: "min(520px, 92vw)",
+        maxHeight: "70vh",
+        background: "var(--th-bg-elevated)",
+        border: "1px solid var(--th-border)",
+        borderRadius: 12,
+        boxShadow: "0 20px 60px rgba(0,0,0,0.4)",
+        display: "flex", flexDirection: "column",
+        overflow: "hidden",
+      }}>
+        {/* 헤더 */}
+        <div style={{
+          display: "flex", alignItems: "center", gap: 10,
+          padding: "12px 16px",
+          borderBottom: "1px solid var(--th-border)",
+          background: "var(--th-bg-panel)",
+          flexShrink: 0,
+        }}>
+          <div style={{ display: "flex", gap: 6 }}>
+            <button onClick={onClose} style={{ width: 12, height: 12, borderRadius: "50%", background: "#ff5f57", border: "none", cursor: "pointer" }} />
+            <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#ffbd2e" }} />
+            <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#27c93f" }} />
+          </div>
+          <IconTrash color="var(--th-text-secondary)" />
+          <span style={{ ...mono, fontSize: 12, fontWeight: 600, color: "var(--th-text-heading)" }}>
+            {t({ ko: "휴지통", en: "Trash", ja: "ゴミ箱", zh: "垃圾桶" })}
+          </span>
+          <span style={{ ...mono, fontSize: 10, color: "var(--th-text-muted)", marginLeft: "auto" }}>
+            {items.length} {t({ ko: "항목", en: "items", ja: "項目", zh: "项" })}
+          </span>
+          {items.length > 0 && (
+            <button onClick={onEmpty} style={{
+              ...mono, fontSize: 10, padding: "3px 10px", borderRadius: 4, cursor: "pointer",
+              border: "1px solid rgba(255,59,48,0.4)", background: "rgba(255,59,48,0.08)",
+              color: "#ff3b30",
+            }}>
+              {t({ ko: "모두 삭제", en: "Empty Trash", ja: "すべて削除", zh: "清空垃圾桶" })}
+            </button>
+          )}
+        </div>
+
+        {/* 목록 */}
+        <div style={{ flex: 1, overflowY: "auto", padding: "8px 0" }}>
+          {items.length === 0 ? (
+            <div style={{
+              display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+              height: 160, gap: 10,
+            }}>
+              <IconTrash color="var(--th-text-muted)" />
+              <span style={{ ...mono, fontSize: 12, color: "var(--th-text-muted)" }}>
+                {t({ ko: "휴지통이 비어 있습니다", en: "Trash is empty", ja: "ゴミ箱は空です", zh: "垃圾桶为空" })}
+              </span>
+            </div>
+          ) : [...items].sort((a, b) => b.deletedAt - a.deletedAt).map((item) => (
+            <div key={item.id} style={{
+              display: "flex", alignItems: "center", gap: 12,
+              padding: "9px 16px",
+              borderBottom: "1px solid var(--th-border)",
+            }}>
+              <span style={{ fontSize: 18, flexShrink: 0 }}>📁</span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ ...mono, fontSize: 12, fontWeight: 600, color: "var(--th-text-primary)",
+                  overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {item.name}
+                </div>
+                <div style={{ ...mono, fontSize: 9, color: "var(--th-text-muted)", marginTop: 2,
+                  overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {item.project_path}
+                </div>
+              </div>
+              <span style={{ ...mono, fontSize: 9, color: "var(--th-text-muted)", flexShrink: 0 }}>
+                {fmt(item.deletedAt)}
+              </span>
+              <button onClick={() => void onRestore(item)} style={{
+                ...mono, fontSize: 10, padding: "3px 9px", borderRadius: 4, cursor: "pointer",
+                border: "1px solid var(--th-border)", background: "transparent",
+                color: "var(--th-text-secondary)", flexShrink: 0,
+              }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "#22c55e"; (e.currentTarget as HTMLElement).style.color = "#22c55e"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "var(--th-border)"; (e.currentTarget as HTMLElement).style.color = "var(--th-text-secondary)"; }}
+              >
+                {t({ ko: "복원", en: "Restore", ja: "復元", zh: "还原" })}
+              </button>
+              <button onClick={() => onDelete(item)} style={{
+                ...mono, fontSize: 10, padding: "3px 9px", borderRadius: 4, cursor: "pointer",
+                border: "1px solid rgba(255,59,48,0.3)", background: "transparent",
+                color: "#ff3b30", flexShrink: 0,
+              }}>
+                ✕
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function buildRunPrompt(projectName: string, projectPath: string): string {
+  return `아래 GitHub 프로젝트를 설치하고 실행해주세요.
+
+프로젝트: ${projectName}
+경로: ${projectPath}
+
+다음 순서로 진행해주세요:
+1. cd "${projectPath}" 로 이동
+2. 프로젝트 타입 감지 (ls 또는 dir로 파일 목록 확인)
+   - package.json → Node.js (npm install → npm start 또는 npm run dev)
+   - requirements.txt / pyproject.toml → Python (pip install -r requirements.txt 또는 uv sync → python main.py)
+   - Cargo.toml → Rust (cargo build → cargo run)
+   - go.mod → Go (go mod tidy → go run .)
+   - pom.xml → Java/Maven (mvn install → mvn exec:java)
+   - build.gradle → Java/Gradle (gradle build → gradle run)
+   - Makefile → make install → make run (또는 make)
+3. 의존성 설치
+4. 애플리케이션 실행
+5. 오류 발생 시 진단 후 재시도`;
+}
+
+function RunProjectModal({ t, info, agents, onClose, onRun }: {
+  t: ReturnType<typeof import("../../i18n").useI18n>["t"];
+  info: { projectId: string; projectName: string; projectPath: string };
+  agents: import("../../types").Agent[];
+  onClose: () => void;
+  onRun: (agentId: string) => void;
+}) {
+  const mono = { fontFamily: "var(--th-font-mono)" };
+  const [selectedAgentId, setSelectedAgentId] = useState(agents[0]?.id ?? "");
+
+  const availableAgents = agents.filter((a) => a.status !== "working");
+
+  return (
+    <div
+      data-no-ctx="true"
+      style={{
+        position: "fixed", inset: 0, zIndex: 3200,
+        background: "var(--th-modal-overlay)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+      }}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <div style={{
+        width: "min(480px, 92vw)",
+        background: "var(--th-bg-elevated)",
+        border: "1px solid var(--th-border)",
+        borderRadius: 12,
+        boxShadow: "0 20px 60px rgba(0,0,0,0.4)",
+        overflow: "hidden",
+      }}>
+        {/* 헤더 */}
+        <div style={{
+          display: "flex", alignItems: "center", gap: 10,
+          padding: "12px 16px",
+          borderBottom: "1px solid var(--th-border)",
+          background: "var(--th-bg-panel)",
+        }}>
+          <div style={{ display: "flex", gap: 6 }}>
+            <button onClick={onClose} style={{ width: 12, height: 12, borderRadius: "50%", background: "#ff5f57", border: "none", cursor: "pointer" }} />
+            <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#ffbd2e" }} />
+            <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#27c93f" }} />
+          </div>
+          <span style={{ ...mono, fontSize: 12, fontWeight: 700, color: "#22c55e" }}>▶</span>
+          <span style={{ ...mono, fontSize: 12, fontWeight: 600, color: "var(--th-text-heading)" }}>
+            {t({ ko: "앱 실행", en: "Run App", ja: "アプリ実行", zh: "运行应用" })}
+          </span>
+        </div>
+
+        {/* 본문 */}
+        <div style={{ padding: "18px 20px", display: "flex", flexDirection: "column", gap: 16 }}>
+          {/* 프로젝트 정보 */}
+          <div style={{
+            padding: "12px 14px", borderRadius: 8,
+            background: "var(--th-bg-panel)", border: "1px solid var(--th-border)",
+          }}>
+            <div style={{ ...mono, fontSize: 13, fontWeight: 700, color: "var(--th-text-heading)", marginBottom: 4 }}>
+              📁 {info.projectName}
+            </div>
+            <div style={{ ...mono, fontSize: 10, color: "var(--th-text-secondary)", wordBreak: "break-all" }}>
+              {info.projectPath}
+            </div>
+          </div>
+
+          {/* 실행 설명 */}
+          <div style={{ ...mono, fontSize: 11, color: "var(--th-text-secondary)", lineHeight: 1.6 }}>
+            {t({
+              ko: "AI 에이전트가 프로젝트 타입을 감지하고 자동으로 의존성을 설치한 뒤 실행합니다.",
+              en: "An AI agent will detect the project type, install dependencies, and run the application automatically.",
+              ja: "AIエージェントがプロジェクトタイプを検出し、依存関係をインストールして実行します。",
+              zh: "AI代理将检测项目类型，自动安装依赖并运行应用。",
+            })}
+          </div>
+
+          {/* 에이전트 선택 */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <div style={{ ...mono, fontSize: 10, color: "var(--th-text-muted)", letterSpacing: "0.08em" }}>
+              {t({ ko: "실행할 에이전트", en: "AGENT", ja: "エージェント", zh: "代理" })}
+            </div>
+            {availableAgents.length === 0 ? (
+              <div style={{ ...mono, fontSize: 11, color: "#f59e0b", padding: "8px 12px",
+                background: "rgba(245,158,11,0.08)", borderRadius: 6, border: "1px solid rgba(245,158,11,0.2)" }}>
+                {t({ ko: "사용 가능한 에이전트가 없습니다 (모두 작업 중)", en: "No available agents (all are working)", ja: "利用可能なエージェントなし", zh: "没有可用代理" })}
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 4, maxHeight: 160, overflowY: "auto" }}>
+                {availableAgents.map((a) => (
+                  <button key={a.id} type="button"
+                    onClick={() => setSelectedAgentId(a.id)}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 10,
+                      padding: "8px 12px", borderRadius: 6, cursor: "pointer", textAlign: "left",
+                      border: `1px solid ${selectedAgentId === a.id ? "#22c55e" : "var(--th-border)"}`,
+                      background: selectedAgentId === a.id ? "rgba(34,197,94,0.08)" : "transparent",
+                    }}>
+                    <span style={{ fontSize: 16 }}>{a.avatar_emoji}</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ ...mono, fontSize: 11, fontWeight: 600, color: "var(--th-text-primary)" }}>{a.name}</div>
+                      <div style={{ ...mono, fontSize: 9, color: "var(--th-text-muted)" }}>{a.role}</div>
+                    </div>
+                    {selectedAgentId === a.id && <span style={{ color: "#22c55e", fontSize: 11 }}>✓</span>}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* 버튼 */}
+          <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+            <button onClick={onClose} style={{
+              ...mono, fontSize: 11, padding: "7px 16px", borderRadius: 6, cursor: "pointer",
+              border: "1px solid var(--th-border)", background: "transparent", color: "var(--th-text-secondary)",
+            }}>
+              {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}
+            </button>
+            <button
+              disabled={!selectedAgentId || availableAgents.length === 0}
+              onClick={() => { if (selectedAgentId) onRun(selectedAgentId); }}
+              style={{
+                ...mono, fontSize: 11, padding: "7px 20px", borderRadius: 6, cursor: selectedAgentId ? "pointer" : "not-allowed",
+                border: "1px solid #22c55e", background: "#22c55e", color: "#000", fontWeight: 700,
+                opacity: selectedAgentId ? 1 : 0.4,
+              }}>
+              ▶ {t({ ko: "실행", en: "Run", ja: "実行", zh: "运行" })}
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -185,10 +478,15 @@ export default function Desktop({
     closeFolder,
     openCli,
     openCliAgentIds,
+    openCliWindow,
     closeCliWindow,
     desktopIconLayout,
     settings,
     setSettings,
+    trashedProjects,
+    addToTrash,
+    removeFromTrash,
+    emptyTrash,
   } = useUiStore();
 
   const { projects, categories, currentProjectId, setCurrentProjectId } = useProjectStore();
@@ -204,6 +502,8 @@ export default function Desktop({
     void onSaveSettings(updated);
   }, [settings, setSettings, onSaveSettings]);
 
+  const [showTrash, setShowTrash] = useState(false);
+  const [runProjectInfo, setRunProjectInfo] = useState<{ projectId: string; projectName: string; projectPath: string } | null>(null);
   const [agentManagerCreateCount, setAgentManagerCreateCount] = useState(0);
   const [showQuickCreateAgent, setShowQuickCreateAgent] = useState(false);
   const [showCommandPalette, setShowCommandPalette] = useState(false);
@@ -323,11 +623,13 @@ export default function Desktop({
 
   const handleDeleteProject = useCallback(async (projectId: string) => {
     setProjectCtxMenu(null);
+    const proj = useProjectStore.getState().projects.find((p) => p.id === projectId);
+    if (proj) addToTrash({ id: proj.id, name: proj.name, project_path: proj.project_path, core_goal: proj.core_goal, category_id: proj.category_id ?? null });
     await deleteProject(projectId);
     setProjects((prev) => prev.filter((p) => p.id !== projectId));
     if (currentProjectId === projectId) setCurrentProjectId(null);
     setOpenProjectWindowIds((prev) => { const next = new Set(prev); next.delete(projectId); return next; });
-  }, [currentProjectId, setCurrentProjectId, setProjects]);
+  }, [currentProjectId, setCurrentProjectId, setProjects, addToTrash]);
 
   // ── 롱프레스 Jiggle Mode ────────────────────────────────────────
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -848,7 +1150,7 @@ export default function Desktop({
         ))}
 
         {/* 휴지통 — 우하단 고정 */}
-        <TrashIcon t={t} />
+        <TrashIcon t={t} count={trashedProjects.length} onClick={() => setShowTrash(true)} />
 
         {/* 프로젝트 아이콘 — 폴더에 속하지 않은 것만 */}
         {projects.filter((p) => !p.folder_id).map((project, i) => {
@@ -856,7 +1158,7 @@ export default function Desktop({
           const row = Math.floor(i / 9);
           const isActive = project.id === currentProjectId;
           const category = categories.find((c) => c.id === project.category_id);
-          const catColor = category?.color ?? (isActive ? "#f59e0b" : "#636366");
+          const catColor = category?.color ?? "#4a5568";
           const accentColor = isActive ? catColor : catColor + "99";
           const ProjectIcon = getCategoryIcon(project.category_id);
           const def: DesktopIconDef = {
@@ -1062,6 +1364,16 @@ export default function Desktop({
           </div>
           {[
             {
+              label: t({ ko: "▶ 앱 실행", en: "▶ Run App", ja: "▶ 実行", zh: "▶ 运行应用" }),
+              icon: "▶",
+              accent: true,
+              action: () => {
+                const proj = projects.find((p) => p.id === projectCtxMenu.projectId);
+                if (proj) setRunProjectInfo({ projectId: proj.id, projectName: proj.name, projectPath: proj.project_path });
+                setProjectCtxMenu(null);
+              },
+            },
+            {
               label: t({ ko: "열기", en: "Open", ja: "開く", zh: "打开" }),
               icon: "📂",
               action: () => { setOpenProjectWindowIds((prev) => new Set([...prev, projectCtxMenu.projectId])); setCurrentProjectId(projectCtxMenu.projectId); setProjectCtxMenu(null); },
@@ -1083,7 +1395,7 @@ export default function Desktop({
               danger: true,
               action: () => handleDeleteProject(projectCtxMenu.projectId),
             },
-          ].map(({ label, icon, shortcut, danger, action }) => (
+          ].map(({ label, icon, shortcut, danger, accent, action }) => (
             <button
               key={label}
               onClick={action}
@@ -1092,15 +1404,15 @@ export default function Desktop({
                 width: "100%", padding: "7px 14px",
                 background: "none", border: "none", cursor: "pointer",
                 fontFamily: "var(--th-font-mono)", fontSize: 12,
-                color: danger ? "var(--th-danger-text)" : "var(--th-text-primary)",
+                color: danger ? "var(--th-danger-text)" : accent ? "#22c55e" : "var(--th-text-primary)",
                 textAlign: "left",
                 justifyContent: "space-between",
               }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = danger ? "var(--th-danger-bg)" : "var(--th-accent-glow)"; }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = danger ? "var(--th-danger-bg)" : accent ? "rgba(34,197,94,0.1)" : "var(--th-accent-glow)"; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "none"; }}
             >
               <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{ fontSize: 13 }}>{icon}</span>
+                <span style={{ fontSize: 11 }}>{icon}</span>
                 {label}
               </span>
               {shortcut && <span style={{ fontSize: 10, color: "var(--th-text-muted)" }}>{shortcut}</span>}
@@ -1390,6 +1702,42 @@ export default function Desktop({
 
       {/* 에이전트 상세 패널 */}
       <AgentDetailPanel />
+
+      {/* 앱 실행 모달 */}
+      {runProjectInfo && (
+        <RunProjectModal
+          t={t}
+          info={runProjectInfo}
+          agents={agents}
+          onClose={() => setRunProjectInfo(null)}
+          onRun={(agentId) => {
+            const prompt = buildRunPrompt(runProjectInfo.projectName, runProjectInfo.projectPath);
+            openCliWindow(agentId, prompt);
+            setRunProjectInfo(null);
+          }}
+        />
+      )}
+
+      {/* 휴지통 모달 */}
+      {showTrash && (
+        <TrashModal
+          t={t}
+          items={trashedProjects}
+          onClose={() => setShowTrash(false)}
+          onRestore={async (item) => {
+            removeFromTrash(item.id);
+            try {
+              const proj = await createProject({ name: item.name, project_path: item.project_path, core_goal: item.core_goal, create_path_if_missing: false });
+              setProjects((prev) => [...prev, proj]);
+              showToast(t({ ko: `"${item.name}" 복원됨`, en: `"${item.name}" restored`, ja: `"${item.name}" を復元`, zh: `"${item.name}" 已还原` }), "success");
+            } catch {
+              showToast(t({ ko: "복원 실패", en: "Restore failed", ja: "復元失敗", zh: "还原失败" }), "error");
+            }
+          }}
+          onDelete={(item) => removeFromTrash(item.id)}
+          onEmpty={() => emptyTrash()}
+        />
+      )}
 
       {/* 기존 오버레이/모달 (TaskPanel, DecisionInbox 등) */}
       {children}

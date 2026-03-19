@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { CustomFeature } from "../../types";
 import { getCustomFeature } from "../../api/custom-features";
 import CustomFeatureRenderer from "../widget-builder/CustomFeatureRenderer";
@@ -18,9 +18,10 @@ export default function CustomFeatureWindow({ featureId, initialFeature, onClose
     x: Math.max(20, (window.innerWidth - 560) / 2),
     y: Math.max(44, (window.innerHeight - 440) / 3),
   }));
-  const [size] = useState({ w: 560, h: 440 });
+  const [size, setSize] = useState({ w: 560, h: 440 });
   const [dragging, setDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ dx: 0, dy: 0 });
+  const resizeRef = useRef<{ startX: number; startY: number; startW: number; startH: number } | null>(null);
 
   useEffect(() => {
     if (!initialFeature) {
@@ -42,6 +43,28 @@ export default function CustomFeatureWindow({ featureId, initialFeature, onClose
     window.addEventListener("mouseup", onUp);
     return () => { window.removeEventListener("mousemove", onMove); window.removeEventListener("mouseup", onUp); };
   }, [dragging, dragOffset]);
+
+  function handleResizeMouseDown(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    resizeRef.current = { startX: e.clientX, startY: e.clientY, startW: size.w, startH: size.h };
+    const onMove = (ev: MouseEvent) => {
+      if (!resizeRef.current) return;
+      const dw = ev.clientX - resizeRef.current.startX;
+      const dh = ev.clientY - resizeRef.current.startY;
+      setSize({
+        w: Math.max(320, resizeRef.current.startW + dw),
+        h: Math.max(240, resizeRef.current.startH + dh),
+      });
+    };
+    const onUp = () => {
+      resizeRef.current = null;
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+  }
 
   return (
     <div
@@ -88,7 +111,7 @@ export default function CustomFeatureWindow({ featureId, initialFeature, onClose
       </div>
 
       {/* Content */}
-      <div style={{ flex: 1, overflow: "hidden" }}>
+      <div style={{ flex: 1, overflow: "hidden", minHeight: 0 }}>
         {feature ? (
           <CustomFeatureRenderer feature={feature} />
         ) : (
@@ -96,6 +119,30 @@ export default function CustomFeatureWindow({ featureId, initialFeature, onClose
             <span className="animate-pulse">▌</span>
           </div>
         )}
+      </div>
+
+      {/* Resize handle */}
+      <div
+        onMouseDown={handleResizeMouseDown}
+        style={{
+          position: "absolute",
+          right: 0,
+          bottom: 0,
+          width: 16,
+          height: 16,
+          cursor: "se-resize",
+          display: "flex",
+          alignItems: "flex-end",
+          justifyContent: "flex-end",
+          padding: "3px 3px",
+          color: "var(--th-text-muted)",
+          fontSize: 10,
+          userSelect: "none",
+          lineHeight: 1,
+          opacity: 0.5,
+        }}
+      >
+        ◢
       </div>
     </div>
   );

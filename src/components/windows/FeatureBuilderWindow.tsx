@@ -72,6 +72,7 @@ function FeatureBuilderContent() {
   const isKo = language === "ko";
   const agents = useAgentStore((s) => s.agents);
   const bumpCustomFeaturesTick = useUiStore((s) => s.bumpCustomFeaturesTick);
+  const closeWindow = useUiStore((s) => s.closeWindow);
 
   const [step, setStep] = useState<Step>("method");
   const [selectedTemplate, setSelectedTemplate] = useState<FeatureTemplate | null>(null);
@@ -154,15 +155,10 @@ function FeatureBuilderContent() {
     }
   }
 
-  async function handleGithubImported(featureId: string) {
-    try {
-      const feature = await getCustomFeature(featureId);
-      setGithubFeature(feature);
-      setName(feature.name);
-      setStep("preview");
-    } catch (e) {
-      console.error(e);
-    }
+  function handleGithubImported(_featureId: string) {
+    // 바탕화면 아이콘 갱신 후 창 닫기 — 확인/미리보기 없음
+    bumpCustomFeaturesTick();
+    closeWindow("feature-builder");
   }
 
   const previewFeature: CustomFeature | null =

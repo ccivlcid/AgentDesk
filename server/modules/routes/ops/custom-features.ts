@@ -1,9 +1,14 @@
 import { randomUUID } from "node:crypto";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { spawn } from "node:child_process";
+import type { ChildProcess } from "node:child_process";
 import type { DatabaseSync } from "node:sqlite";
 import type { Express } from "express";
 import { runAiGeneration, runGithubImport, runGithubRepoImport, compileFeature } from "./custom-features-ai.ts";
+
+/** 실행 중인 web-app dev 서버 추적 */
+const devServers = new Map<string, { port: number; proc: ChildProcess }>();
 
 const TEMPLATE_DIR = join(process.cwd(), "feature", "template");
 
@@ -358,5 +363,75 @@ ${isError
     } catch {
       res.status(500).json({ ok: false, error: "Failed to start GitHub repo import" });
     }
+  });
+
+  // POST /api/custom-features/:id/run-dev — web-app 개발 서버 시작
+  app.post("/api/custom-features/:id/run-dev", (req, res) => {
+    const { id } = req.params;
+    const existing = devServers.get(id);
+    if (existing) {
+      return res.json({ ok: true, port: existing.port });
+    }
+    try {
+      const row = db.prepare("SELECT config FROM custom_features WHERE id = ?").get(id) as
+        | { config: string | null } | undefined;
+      if (!row) return res.status(404).json({ ok: false, error: "Not found" });
+      let cfg: Record<string, unknown> = {};
+      try { cfg = JSON.parse(row.config ?? "{}") as Record<string, unknown>; } catch { /* ignore */ }
+      if (cfg.type !== "web-app" || typeof cfg.repo_dir !== "string") {
+        return res.status(400).json({ ok: false, error: "Not a web-app feature" });
+      }
+      const repoDir  = cfg.repo_dir as string;
+      const devCmd   = typeof cfg.dev_cmd === "string" ? cfg.dev_cmd : "npm run dev";
+      const [cmd, ...args] = devCmd.split(" ");
+      const isWin = process.platform === "win32";
+      const child = spawn(cmd, args, { cwd: repoDir, shell: isWin, stdio: ["ignore", "pipe", "pipe"] });
+      let responded = false;
+
+      const tryExtractPort = (text: string) => {
+        const m = text.match(/localhost:(\d{4,5})/i) ?? text.match(/:(\d{4,5})/);
+        if (m) {
+          const p = parseInt(m[1], 10);
+          if (!responded) {
+            responded = true;
+            devServers.set(id, { port: p, proc: child });
+            res.json({ ok: true, port: p });
+          }
+        }
+      };
+      child.stdout?.on("data", (d: Buffer) => tryExtractPort(d.toString()));
+      child.stderr?.on("data", (d: Buffer) => tryExtractPort(d.toString()));
+      child.on("close", () => devServers.delete(id));
+      child.on("error", (e: Error) => {
+        devServers.delete(id);
+        if (!responded) { responded = true; res.status(500).json({ ok: false, error: e.message }); }
+      });
+      // 30초 안에 포트 감지 안 되면 기본 포트 5173 사용
+      setTimeout(() => {
+        if (!responded) {
+          responded = true;
+          devServers.set(id, { port: 5173, proc: child });
+          res.json({ ok: true, port: 5173 });
+        }
+      }, 30_000);
+    } catch (e) {
+      res.status(500).json({ ok: false, error: String(e) });
+    }
+  });
+
+  // POST /api/custom-features/:id/stop-dev — web-app 개발 서버 중지
+  app.post("/api/custom-features/:id/stop-dev", (req, res) => {
+    const existing = devServers.get(req.params.id);
+    if (existing) {
+      try { existing.proc.kill(); } catch { /* ignore */ }
+      devServers.delete(req.params.id);
+    }
+    res.json({ ok: true });
+  });
+
+  // GET /api/custom-features/:id/dev-status — dev 서버 실행 여부 확인
+  app.get("/api/custom-features/:id/dev-status", (req, res) => {
+    const existing = devServers.get(req.params.id);
+    res.json({ ok: true, running: !!existing, port: existing?.port ?? null });
   });
 }

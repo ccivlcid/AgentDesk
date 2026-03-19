@@ -32,6 +32,7 @@ export interface CreateTaskModalOverlaysProps {
   onManualPathRefresh: () => void;
   onOpenManualPathEntry: (path: string) => void;
   onSelectManualCurrentPath: () => void;
+  onOpenDraftModal: () => void;
   onCloseDraftModal: () => void;
   onLoadDraft: (draft: CreateTaskDraft) => void;
   onDeleteDraft: (draftId: string) => void;

@@ -55,7 +55,6 @@ interface CreateTaskModalViewProps {
   onHandoffConditionChange?: (condition: "always" | "on_success" | "on_fail") => void;
   kbSection?: ReactNode;
   figmaSection?: ReactNode;
-  onSubmitWithCli?: () => void;
 }
 
 const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };
@@ -107,7 +106,6 @@ export default function CreateTaskModalView({
   onHandoffConditionChange,
   kbSection,
   figmaSection,
-  onSubmitWithCli,
 }: CreateTaskModalViewProps) {
   void createNewProjectMode;
 
@@ -413,7 +411,6 @@ export default function CreateTaskModalView({
             <button
               type="submit"
               disabled={!title.trim() || submitBusy}
-              onClick={assignAgentId && onSubmitWithCli ? (e) => { e.preventDefault(); onSubmitWithCli(); } : undefined}
               style={{
                 ...mono,
                 fontSize: 12,
@@ -430,7 +427,7 @@ export default function CreateTaskModalView({
             >
               {submitBusy
                 ? t({ ko: "생성 중...", en: "Creating...", ja: "作成中...", zh: "创建中..." })
-                : "RUN CLI ▶"}
+                : t({ ko: "등록하기", en: "Create", ja: "登録", zh: "创建" })}
             </button>
           </div>
         </form>

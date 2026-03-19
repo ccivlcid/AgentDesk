@@ -51,6 +51,7 @@ export default function GitHubImportPanel({ onComplete, onCancel }: GitHubImport
   const [cloneError, setCloneError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const cloneResultPathRef = useRef<string | null>(null);
 
   const refreshGitHubStatus = useCallback(() => {
     setStatusLoading(true);
@@ -209,8 +210,11 @@ export default function GitHubImportPanel({ onComplete, onCancel }: GitHubImport
       });
 
       if (result.already_exists) {
+        // already_exists: useEffect가 처리 (이중 createProject 방지)
+        cloneResultPathRef.current = result.target_path ?? resolvedPath;
         setCloneStatus("done");
         setCloneProgress(100);
+        return;
       } else if (result.clone_id) {
         const cloneId = result.clone_id;
         pollRef.current = setInterval(async () => {
@@ -249,15 +253,16 @@ export default function GitHubImportPanel({ onComplete, onCancel }: GitHubImport
 
   useEffect(() => {
     if (cloneStatus !== "done" || !creating || !selectedRepo || !selectedBranch) return;
-    const resolvedPath = targetPath.startsWith("~/") ? targetPath : targetPath;
+    const finalPath = cloneResultPathRef.current ?? targetPath;
+    cloneResultPathRef.current = null;
     createProject({
       name: projectName.trim() || selectedRepo.name,
-      project_path: resolvedPath,
+      project_path: finalPath,
       core_goal: coreGoal.trim() || `GitHub: ${selectedRepo.full_name} (${selectedBranch})`,
       github_repo: selectedRepo.full_name,
     })
       .then((project) => {
-        onComplete({ projectId: project.id, projectPath: resolvedPath, branch: selectedBranch });
+        onComplete({ projectId: project.id, projectPath: finalPath, branch: selectedBranch });
       })
       .catch((error: unknown) => {
         setCloneError(error instanceof Error ? error.message : String(error));

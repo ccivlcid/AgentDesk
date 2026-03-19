@@ -55,6 +55,7 @@ function makePtyId() {
   return `pty-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+
 interface Props {
   /** 에이전트별 독립 창일 때 agentId 전달. 없으면 일반 범용 터미널 */
   agentId?: string;
@@ -66,7 +67,7 @@ export default function CliWindow({ agentId: lockedAgentId, onClose }: Props) {
   const { agents } = useAgentStore();
   const { tasks } = useTaskStore();
   const { projects, currentProjectId, projectAgentIds, projectAgentsLoaded } = useProjectStore();
-  const { cliInitialAgentId, clearCliInitialAgentId, openCliWindow, cliPlanReadyIds, clearCliPlanReady } = useUiStore();
+  const { cliInitialAgentId, clearCliInitialAgentId, openCliWindow, cliPlanReadyIds, clearCliPlanReady, cliInitialPrompts, clearCliInitialPrompt } = useUiStore();
   const { send, on } = useWebSocket();
 
   // ── 에이전트 선택 단계 (lockedAgentId / cliInitialAgentId 없을 때만 표시) ──
@@ -196,6 +197,19 @@ export default function CliWindow({ agentId: lockedAgentId, onClose }: Props) {
   const dropdownAgent = filteredAgents.find((a) => a.id === dropdownAgentId)
     ?? agents.find((a) => a.id === dropdownAgentId);
 
+  // initialPrompt — 첫 렌더 시 캡처 후 store 정리
+  const initialPromptRef = useRef<string | null>(
+    (() => {
+      const agentId = lockedAgentId ?? activeAgentId;
+      return agentId ? (cliInitialPrompts.get(agentId) ?? null) : null;
+    })(),
+  );
+  useEffect(() => {
+    const agentId = lockedAgentId ?? activeAgentId;
+    if (agentId && cliInitialPrompts.has(agentId)) clearCliInitialPrompt(agentId);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // XTerminal에 전달할 초기 실행 명령어 — activeAgentId 기준
   const initialCommand = useMemo(() => {
     const agentId = lockedAgentId ?? activeAgentId;
@@ -206,7 +220,9 @@ export default function CliWindow({ agentId: lockedAgentId, onClose }: Props) {
     const parts: string[] = [];
     if (effectiveCwd) parts.push(`cd "${effectiveCwd}"\r`);
     parts.push(`${cmd}\r`);
+    if (initialPromptRef.current) parts.push(`${initialPromptRef.current}\r`);
     return parts.join("");
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lockedAgentId, activeAgentId, agents, effectiveCwd, providerModelConfig]);
 
   // ▶ 새 창 버튼 — 드롭다운에서 선택한 에이전트로 새 창

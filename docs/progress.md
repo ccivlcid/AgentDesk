@@ -1,6 +1,65 @@
 # AgentDesk — 개발 진행 현황
 
-> 마지막 업데이트: 2026-03-19 (AI 기능 빌더 개선 + AgentFlowGraph 비주얼 개선 + TaskCard AgentSelect 제거 + 바탕화면 드래그 그리드 스냅)
+> 마지막 업데이트: 2026-03-19 (GitHub 레포 임포트 리디자인 + 커스텀 기능 npm 설치 버그 수정 + 프로젝트 앱 태스크 스크롤바 수정)
+
+---
+
+## ✅ GitHub 레포 임포트 — 2단계 흐름으로 리디자인 (2026-03-19)
+
+### 배경
+기존: GitHub 레포 URL 입력 → AI가 위젯 tsx + SVG 아이콘 모두 생성 (최대 5분 대기) → "완료" 팝업 → 등록하기 버튼
+신규: 다운로드(빠름) → 바탕화면 아이콘 즉시 생성 → 아이콘 클릭 시 설치
+
+### 변경 파일
+
+| 파일 | 변경 내용 |
+|------|----------|
+| `server/modules/routes/ops/custom-features-ai.ts` | `runGithubRepoImport` 간소화, `compileFromRepo` 신설, `SYSTEM_PROMPT_ICON` 신설, `installNpmPackages` 수정, `compileToIife` resolveDir 수정 |
+| `src/components/windows/FeatureBuilderWindow.tsx` | `handleGithubImported` → preview 이동 대신 창 닫기 + 바탕화면 갱신 |
+| `src/components/widget-builder/steps/StepGithubImport.tsx` | 버튼/상태 텍스트 수정, 타임아웃 2분으로 단축 |
+
+### Phase 1 — 다운로드 (`runGithubRepoImport`, ~30초)
+1. `git clone --depth=1 https://github.com/user/repo` → `feature/github/<user>-<repo>/`
+2. README 읽기 (500자)
+3. AI → SVG 아이콘만 생성 (`SYSTEM_PROMPT_ICON`)
+4. DB: `status = 'pending_install'`, `config = { repo_dir }` 저장
+5. 창 자동 닫힘 → 바탕화면에 앱 아이콘 즉시 등장 (↓ 뱃지 표시)
+- 확인 팝업 없음, 등록하기 버튼 없음
+
+### Phase 2 — 설치 (`compileFromRepo`, 앱 첫 클릭 시)
+1. `config.repo_dir` 에서 클론 경로 확인
+2. README + package.json 읽기
+3. npm 패키지 확인 → `npm install --prefix feature --no-save <pkg>` (격리 설치)
+4. AI가 README 전체 분석 → `SYSTEM_PROMPT_REPO` 기반 위젯 tsx 생성
+5. esbuild 컴파일 → `status = 'active'` → 앱 실행
+- 실패 시 `pending_install` 유지 → 재시도 버튼 표시
+
+### Phase 3 — 이후 실행 (즉시)
+- `status = 'active'` + 번들 캐시 → 바로 실행
+
+### npm 설치 버그 수정
+- 기존: `npm install --no-save pkg` → pnpm 프로젝트에서 `Cannot read properties of null` 에러
+- 수정: `npm install --prefix feature --no-save pkg` → `feature/node_modules/` 에 격리 설치
+- esbuild `resolveDir`: `process.cwd()` → `FEATURE_DIR` 로 변경
+  - `feature/node_modules/` 우선 탐색 → 없으면 상위 프로젝트 `node_modules/` 폴백 (react 등)
+
+---
+
+## ✅ 프로젝트 앱 태스크 목록 스크롤바 수정 (2026-03-19)
+
+### 변경 파일
+
+| 파일 | 변경 내용 |
+|------|----------|
+| `src/components/desktop/ProjectFolderWindow.tsx` | `TasksTab` 루트 div: `height: "100%"` → `flex: 1, minHeight: 0` |
+
+### 원인
+`height: "100%"` 는 flex 자식에서 신뢰성이 낮음. flex column 컨테이너 안에서 `height: 100%` 는 부모의 definite height가 없으면 동작 불안정 → `overflowY: auto` 가 스크롤바를 생성하지 못함.
+
+### 수정
+`flex: 1, minHeight: 0` 패턴 적용 — flex 컨테이너에서 가용 공간을 확실히 차지하고, `min-height: auto` 기본값을 0으로 오버라이드하여 overflow 제약이 제대로 동작하도록 함.
+
+---
 
 ---
 

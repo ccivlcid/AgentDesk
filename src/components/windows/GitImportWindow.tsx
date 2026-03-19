@@ -24,7 +24,7 @@ function GitIcon() {
 export default function GitImportWindow() {
   const { t } = useI18n();
   const [provider, setProvider] = useState<Provider>("github");
-  const { setProjects, setCurrentProjectId } = useProjectStore();
+  const { setProjects } = useProjectStore();
   const { closeWindow } = useUiStore();
 
   async function handleComplete(projectId: string) {
@@ -34,7 +34,7 @@ export default function GitImportWindow() {
         const exists = prev.some((p) => p.id === projectId);
         return exists ? prev.map((p) => p.id === projectId ? detail.project : p) : [...prev, detail.project];
       });
-      setCurrentProjectId(projectId);
+      // 자동으로 현재 프로젝트로 전환하지 않음 (실행 방지)
     } catch { /* 무시 */ }
     closeWindow("git-import");
   }

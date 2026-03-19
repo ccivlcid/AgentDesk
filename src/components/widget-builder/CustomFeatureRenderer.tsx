@@ -1,5 +1,7 @@
 import type { CustomFeature } from "../../types";
 import AiBundleRenderer from "./AiBundleRenderer";
+import RepoCliUsageView from "./RepoCliUsageView";
+import RepoWebAppView from "./RepoWebAppView";
 import AgentDeptStatus from "./templates/renderers/AgentDeptStatus";
 import AgentSingleMonitor from "./templates/renderers/AgentSingleMonitor";
 import TaskDailyCounter from "./templates/renderers/TaskDailyCounter";
@@ -27,6 +29,18 @@ export default function CustomFeatureRenderer({ feature }: { feature: CustomFeat
         <span className="animate-pulse" style={{ ...mono, fontSize: 12, color: "var(--th-text-muted)" }}>생성 중...</span>
       </div>
     );
+  }
+
+  // GitHub 레포 임포트: config.type으로 렌더러 분기
+  const cfgAny = feature.config as unknown as Record<string, unknown>;
+  const cfgType = cfgAny?.type;
+  if (cfgType === "cli-usage") {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return <RepoCliUsageView config={feature.config as any} />;
+  }
+  if (cfgType === "web-app") {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return <RepoWebAppView featureId={feature.id} config={feature.config as any} />;
   }
 
   // AI 생성 기능: bundle이 IIFE JS로 컴파일돼 있음 → iframe으로 렌더링

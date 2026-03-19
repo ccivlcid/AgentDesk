@@ -255,7 +255,8 @@ root.render(React.createElement(CustomFeatureWidget, {
 }));
 `;
   const buildOpts = {
-    stdin: { contents: wrapper, loader: "tsx" as const, resolveDir: process.cwd() },
+    // resolveDir을 FEATURE_DIR로 설정 → feature/node_modules/ 우선 탐색, 없으면 상위 node_modules/ 폴백
+    stdin: { contents: wrapper, loader: "tsx" as const, resolveDir: FEATURE_DIR },
     bundle: true,
     format: "iife" as const,
     platform: "browser" as const,
@@ -343,6 +344,14 @@ function extractSvgAndCode(text: string): { svg: string | null; code: string } {
     svg: svgMatch ? svgMatch[1].trim() : null,
     code: codeMatch ? codeMatch[1].trim() : extractCodeBlock(text),
   };
+}
+
+function extractSvg(text: string): string | null {
+  const m = text.match(/```svg\s*\n?([\s\S]+?)```/);
+  if (m) return m[1].trim();
+  // fallback: bare <svg ...> block
+  const bare = text.match(/(<svg[\s\S]+?<\/svg>)/i);
+  return bare ? bare[1].trim() : null;
 }
 
 /** AgentDesk 위젯 컴포넌트 생성용 시스템 프롬프트 */
@@ -635,12 +644,16 @@ async function fetchGithubRaw(user: string, repo: string, filePath: string, sign
   return null;
 }
 
-/** npm 패키지 임시 설치 (--no-save, 여러 패키지 지원) */
+/** npm 패키지 설치 — feature/node_modules/ 에 격리 설치 (--prefix, 프로젝트 package.json 미수정) */
 function installNpmPackages(pkgNames: string[]): Promise<void> {
   if (pkgNames.length === 0) return Promise.resolve();
+  ensureDir(FEATURE_DIR);
   return new Promise((resolve) => {
     const isWin = process.platform === "win32";
-    const child = spawn("npm", ["install", "--no-save", ...pkgNames], { shell: isWin, stdio: "ignore" });
+    const child = spawn(
+      "npm", ["install", "--prefix", FEATURE_DIR, "--no-save", ...pkgNames],
+      { shell: isWin, stdio: "ignore" },
+    );
     child.on("close", () => resolve());
     child.on("error", () => resolve());
     setTimeout(() => { try { child.kill(); } catch { /* ignore */ } resolve(); }, 90_000);
@@ -725,7 +738,20 @@ async function callClaudeCli(systemPrompt: string, userPrompt: string, signal: A
   });
 }
 
-/** GitHub 레포를 읽어 AI로 위젯 생성 */
+/** SVG 아이콘 전용 시스템 프롬프트 */
+const SYSTEM_PROMPT_ICON = `You are an icon designer. Return ONLY a single SVG code block representing the given library or repository.
+
+Output format (strict):
+\`\`\`svg
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- simple, recognizable icon -->
+  <!-- use stroke="currentColor" so the color is themeable -->
+</svg>
+\`\`\`
+
+No prose, no explanations, nothing else.`;
+
+/** GitHub 레포 다운로드 — Phase 1: git clone + SVG 아이콘만 생성, pending_install 설정 */
 export async function runGithubRepoImport(
   db: DbLike,
   featureId: string,
@@ -733,115 +759,67 @@ export async function runGithubRepoImport(
   nowMs: () => number,
 ): Promise<void> {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 300_000); // 5분
+  const timeout = setTimeout(() => controller.abort(), 120_000); // 2분
 
   try {
     const parsed = parseGithubRepo(repoUrl);
     if (!parsed) throw new Error("유효한 GitHub 레포 URL이 아닙니다.");
     const { user, repo } = parsed;
 
-    appendLog(db, featureId, `레포 클론 시작: ${user}/${repo}`, nowMs);
-
-    // feature/github/<user>-<repo>/ 에 git clone
+    // git clone → feature/github/<user>-<repo>/
     ensureDir(GITHUB_DIR);
     const repoDir = join(GITHUB_DIR, `${user}-${repo}`);
 
     if (existsSync(repoDir)) {
-      appendLog(db, featureId, `기존 클론 재사용: feature/github/${user}-${repo}/`, nowMs);
+      appendLog(db, featureId, `기존 클론 재사용: ${user}/${repo}`, nowMs);
     } else {
-      appendLog(db, featureId, `git clone --depth=1 https://github.com/${user}/${repo} ...`, nowMs);
+      appendLog(db, featureId, `다운로드 중: ${user}/${repo}...`, nowMs);
       await gitClone(`https://github.com/${user}/${repo}`, repoDir, controller.signal);
-      appendLog(db, featureId, `클론 완료 → feature/github/${user}-${repo}/`, nowMs);
+      appendLog(db, featureId, `다운로드 완료`, nowMs);
     }
 
-    // 클론된 디렉토리에서 파일 직접 읽기
+    // README + package.json 읽기 (아이콘 생성용)
     const readmePath = join(repoDir, "README.md");
     const pkgPath    = join(repoDir, "package.json");
     const readme     = existsSync(readmePath) ? readFileSync(readmePath, "utf-8") : null;
     const pkgJsonText = existsSync(pkgPath)   ? readFileSync(pkgPath, "utf-8")   : null;
 
-    if (!readme) throw new Error("README.md를 찾을 수 없습니다.");
-    appendLog(db, featureId, `README.md 읽기 완료 (${readme.length.toLocaleString()} chars)`, nowMs);
-
-    // npm 패키지 이름 파악
-    let npmName: string | null = null;
+    let npmName = "";
     let pkgDescription = "";
     if (pkgJsonText) {
       try {
         const pkg = JSON.parse(pkgJsonText) as Record<string, unknown>;
-        npmName = typeof pkg.name === "string" ? pkg.name : null;
+        npmName = typeof pkg.name === "string" ? pkg.name : "";
         pkgDescription = typeof pkg.description === "string" ? pkg.description : "";
       } catch { /* ignore */ }
     }
 
-    if (npmName) {
-      appendLog(db, featureId, `npm 패키지: ${npmName}${pkgDescription ? ` — ${pkgDescription}` : ""}`, nowMs);
-      appendLog(db, featureId, `npm install --no-save ${npmName} ...`, nowMs);
-      await installNpmPackages([npmName]);
-      appendLog(db, featureId, "npm install 완료", nowMs);
-    } else {
-      appendLog(db, featureId, "package.json 없음 — npm 설치 생략", nowMs);
-    }
-
-    // provider 조회 (없으면 Claude CLI 폴백)
-    const cliProvider = readDefaultProvider(db);
-    const provider = findApiProvider(db, cliProvider);
-    const providerLabel = provider
-      ? `${provider.name} / ${resolveModel(provider)}`
-      : `claude CLI 폴백 (Settings > API Providers에 키 없음 — defaultProvider: ${cliProvider})`;
-    appendLog(db, featureId, `AI 호출 중: ${providerLabel}`, nowMs);
-
-    // AI 프롬프트 구성
-    const readmeTruncated = readme.slice(0, 3000) + (readme.length > 3000 ? "\n...(truncated)" : "");
-    const userPrompt = [
-      `GitHub Repository: ${repoUrl}`,
-      npmName ? `NPM Package: ${npmName}` : "",
+    // AI로 SVG 아이콘만 생성 (실패해도 클론은 성공으로 처리)
+    appendLog(db, featureId, "아이콘 생성 중...", nowMs);
+    const iconPrompt = [
+      `Repository: ${repoUrl}`,
+      npmName      ? `Package: ${npmName}`           : "",
       pkgDescription ? `Description: ${pkgDescription}` : "",
-      "",
-      "README:",
-      readmeTruncated,
-      "",
-      npmName
-        ? `Create a CustomFeatureWidget that imports and uses the '${npmName}' npm package.\nThe package is pre-installed — you can use: import ${toPascalCase(repo)} from '${npmName}';`
-        : "Create a CustomFeatureWidget that demonstrates or integrates the concept/functionality from this repository.",
+      readme       ? `README (first 400 chars):\n${readme.slice(0, 400)}` : "",
     ].filter(Boolean).join("\n");
 
-    const raw = provider
-      ? await callProvider(provider, resolveModel(provider), SYSTEM_PROMPT_REPO, userPrompt, controller.signal)
-      : await callClaudeCli(SYSTEM_PROMPT_REPO, userPrompt, controller.signal);
+    const cliProvider = readDefaultProvider(db);
+    const provider    = findApiProvider(db, cliProvider);
+    let svg: string | null = null;
+    try {
+      const raw = provider
+        ? await callProvider(provider, resolveModel(provider), SYSTEM_PROMPT_ICON, iconPrompt, controller.signal)
+        : await callClaudeCli(SYSTEM_PROMPT_ICON, iconPrompt, controller.signal);
+      svg = extractSvg(raw);
+    } catch { /* 아이콘 실패해도 진행 */ }
 
-    appendLog(db, featureId, "AI 응답 완료 — SVG 아이콘 + TSX 파싱 중...", nowMs);
+    // config에 repo_dir 저장 → compileFeature가 첫 실행 시 코드베이스 분석에 사용
+    const config = JSON.stringify({ repo_dir: repoDir });
+    db.prepare("UPDATE custom_features SET icon_svg = ?, config = ?, status = 'pending_install', error_msg = NULL, updated_at = ? WHERE id = ?")
+      .run(svg ?? null, config, nowMs(), featureId);
 
-    let { svg, code } = extractSvgAndCode(raw);
-    // 코드 블록이 없으면 1회 재시도
-    try { assertValidCode(code); } catch {
-      appendLog(db, featureId, "코드 블록 없음 — AI 재시도 중...", nowMs);
-      const raw2 = provider
-        ? await callProvider(provider, resolveModel(provider), SYSTEM_PROMPT_REPO, userPrompt, controller.signal)
-        : await callClaudeCli(SYSTEM_PROMPT_REPO, userPrompt, controller.signal);
-      const extracted2 = extractSvgAndCode(raw2);
-      svg = extracted2.svg ?? svg;
-      code = extracted2.code;
-      assertValidCode(code); // 재시도도 실패하면 여기서 throw
-    }
-
-    // AI 생성 widget.tsx를 두 곳에 저장:
-    // 1. 레포 디렉토리 (소스 보존)
-    // 2. feature/ai/<featureId>.tsx (컴파일 시 표준 경로)
-    saveSource(join(repoDir, "widget.tsx"), code);
-    ensureDir(AI_DIR);
-    saveSource(join(AI_DIR, `${featureId}.tsx`), code);
-    appendLog(db, featureId, "소스 저장 완료 → 앱이 바탕화면에 추가됩니다.", nowMs);
-
-    const blocked = validateBundle(code);
-    if (blocked) throw new Error(`Safety check failed: ${blocked}`);
-
-    // 컴파일은 앱 첫 실행 시 수행 (pending_install)
-    db.prepare("UPDATE custom_features SET icon_svg = ?, status = 'pending_install', error_msg = NULL, updated_at = ? WHERE id = ?")
-      .run(svg ?? null, nowMs(), featureId);
-
-    appendLog(db, featureId, "✓ 다운로드 완료! 바탕화면 앱을 열면 설치됩니다.", nowMs);
-    logger.info(`[github-repo] done feature=${featureId}`);
+    appendLog(db, featureId, "✓ 다운로드 완료! 앱 아이콘을 클릭하면 설치됩니다.", nowMs);
+    logger.info(`[github-repo] downloaded feature=${featureId} repoDir=${repoDir}`);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     logger.error(`[github-repo] error feature=${featureId}: ${msg}`);
@@ -852,56 +830,45 @@ export async function runGithubRepoImport(
   }
 }
 
-/** repo 이름 → PascalCase (import 이름용) */
-function toPascalCase(s: string): string {
-  return s.replace(/[-_](.)/g, (_, c: string) => c.toUpperCase())
-    .replace(/^(.)/, (_, c: string) => c.toUpperCase());
+/** Usage 추출용 시스템 프롬프트 */
+const SYSTEM_PROMPT_USAGE = `You are a technical documentation extractor. Read the README and extract usage information as JSON.
+
+Output ONLY a JSON code block:
+\`\`\`json
+{
+  "description": "one sentence description of what this library/tool does",
+  "install_cmd": "npm install package-name",
+  "commands": [
+    { "cmd": "npx package-name parse https://example.com", "desc": "Parse a URL" },
+    { "cmd": "npx package-name --help", "desc": "Show help" }
+  ]
+}
+\`\`\`
+
+Rules:
+- description: max 100 chars, plain English
+- install_cmd: the npm install command
+- commands: 3-6 most important commands/examples from the README
+- For CLI tools include npx commands; for libraries include import/usage examples as "cmd" field
+- No prose, no other output`;
+
+/** 응답에서 JSON 블록 추출 */
+function extractJsonBlock(text: string): Record<string, unknown> | null {
+  const m = text.match(/```json\s*\n?([\s\S]+?)```/);
+  if (!m) return null;
+  try { return JSON.parse(m[1].trim()) as Record<string, unknown>; } catch { return null; }
 }
 
-/** GitHub 레포 임포트용 시스템 프롬프트 */
-const SYSTEM_PROMPT_REPO = `You are an expert React component generator for AgentDesk — a developer OS for running AI agents.
-
-## OUTPUT FORMAT (strict)
-Return EXACTLY two code blocks in this order — nothing else:
-
-1. An SVG icon block:
-\`\`\`svg
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
-  <!-- simple, recognizable icon representing the library's purpose -->
-  <!-- use stroke="currentColor" so the color is themeable -->
-</svg>
-\`\`\`
-
-2. A TSX component block:
-\`\`\`tsx
-// full component code here
-\`\`\`
-
-No prose, no other text, no explanations outside the two blocks.
-
-## COMPONENT RULES
-- Component name: CustomFeatureWidget (default export)
-- Props: { config: { refresh: string; theme: string; sizePreset: string; params?: Record<string, unknown> } }
-- You CAN use static import statements for npm packages that are pre-installed:
-  Example: import Defuddle from 'defuddle';
-- Do NOT use dynamic import() — use static imports at the top of the file
-- If the library does DOM manipulation, use it inside useEffect with a ref
-
-## STYLE (mandatory)
-- fontFamily: "var(--th-font-mono)" on root
-- Fill container: width:"100%", height:"100%", display:"flex", flexDirection:"column"
-- CSS variables: var(--th-bg-elevated), var(--th-bg-panel), var(--th-border), var(--th-text-primary), var(--th-text-muted), var(--th-text-heading), var(--th-accent) #f59e0b, var(--th-attr-elite) #22c55e, var(--th-danger-text)
-
-## HOOKS
-- useState, useEffect, useMemo, useCallback — no other hooks or external libraries except the specified npm package
-
-## AVAILABLE AGENTDESK APIs (fetch /api/*)
-- GET /api/agents → { agents: [{id, name, status, avatar_emoji, department_id, current_task_id}] }
-- GET /api/tasks → { tasks: [{id, title, status, priority, assigned_agent_id}] }
-
-## SECURITY
-- No eval(), new Function(), require(), import(), document.write(), window.location=, localStorage.clear()
-- fetch() only to /api/* paths`;
+/** web-app 레포의 로컬 npm install (repo dir에 직접 설치) */
+function runNpmInstallInDir(dir: string): Promise<void> {
+  return new Promise((resolve) => {
+    const isWin = process.platform === "win32";
+    const child = spawn("npm", ["install"], { cwd: dir, shell: isWin, stdio: "ignore" });
+    child.on("close", () => resolve());
+    child.on("error", () => resolve());
+    setTimeout(() => { try { child.kill(); } catch { /* ignore */ } resolve(); }, 180_000);
+  });
+}
 
 /** pending_install 앱을 컴파일해 bundle 저장 (앱 첫 실행 시 호출) */
 export async function compileFeature(
@@ -909,18 +876,32 @@ export async function compileFeature(
   featureId: string,
   nowMs: () => number,
 ): Promise<void> {
+  const row = db.prepare("SELECT status, config FROM custom_features WHERE id = ?").get(featureId) as
+    | { status: string; config: string | null } | undefined;
+  if (!row) return;
+  if (row.status === "active" || row.status === "draft") return;
+
+  // repo_dir이 있으면 코드베이스 분석 후 컴파일 (GitHub 레포 임포트 경로)
+  let repoDir: string | null = null;
+  try {
+    const cfg = JSON.parse(row.config ?? "{}") as Record<string, unknown>;
+    if (typeof cfg.repo_dir === "string" && existsSync(cfg.repo_dir)) {
+      repoDir = cfg.repo_dir;
+    }
+  } catch { /* ignore */ }
+
+  if (repoDir) {
+    return compileFromRepo(db, featureId, repoDir, nowMs);
+  }
+
+  // 기존 경로: feature/ai/<featureId>.tsx 직접 컴파일
   const srcPath = join(AI_DIR, `${featureId}.tsx`);
   if (!existsSync(srcPath)) {
     db.prepare("UPDATE custom_features SET status = 'error', error_msg = ?, updated_at = ? WHERE id = ?")
       .run("소스 파일을 찾을 수 없습니다: " + srcPath, nowMs(), featureId);
     return;
   }
-  // 이미 컴파일 중이면 중복 실행 방지
-  const row = db.prepare("SELECT status FROM custom_features WHERE id = ?").get(featureId) as
-    | { status: string } | undefined;
-  if (row?.status === "active" || row?.status === "draft") return;
 
-  // 재시도: draft로 전환 + error_msg 초기화
   db.prepare("UPDATE custom_features SET status = 'draft', error_msg = NULL, bundle = NULL, updated_at = ? WHERE id = ?")
     .run(nowMs(), featureId);
 
@@ -929,7 +910,6 @@ export async function compileFeature(
     const blocked = validateBundle(code);
     if (blocked) throw new Error(`Safety check failed: ${blocked}`);
 
-    // 소스에서 npm 패키지 추출 → 컴파일 전 재설치 (서버 재시작 후에도 안전)
     const npmPkgs = extractNpmImports(code);
     if (npmPkgs.length > 0) {
       logger.info(`[compile] npm install --no-save ${npmPkgs.join(" ")}`);
@@ -943,9 +923,149 @@ export async function compileFeature(
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     logger.error(`[compile] error feature=${featureId}: ${msg}`);
-    // 실패해도 pending_install 유지 — 아이콘이 사라지지 않고 렌더 페이지에서 재시도 가능
     db.prepare("UPDATE custom_features SET status = 'pending_install', error_msg = ?, updated_at = ? WHERE id = ?")
       .run(msg.slice(0, 400), nowMs(), featureId);
+  }
+}
+
+/** GitHub 레포에서 레포 타입을 분석해 실행/사용법 저장 (앱 첫 클릭 시) */
+async function compileFromRepo(
+  db: DbLike,
+  featureId: string,
+  repoDir: string,
+  nowMs: () => number,
+): Promise<void> {
+  db.prepare("UPDATE custom_features SET status = 'draft', error_msg = NULL, bundle = NULL, updated_at = ? WHERE id = ?")
+    .run(nowMs(), featureId);
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 180_000); // 3분
+
+  try {
+    appendLog(db, featureId, "레포 분석 중...", nowMs);
+
+    const readmePath  = join(repoDir, "README.md");
+    const pkgPath     = join(repoDir, "package.json");
+    const readme      = existsSync(readmePath) ? readFileSync(readmePath, "utf-8") : null;
+    const pkgJsonText = existsSync(pkgPath)    ? readFileSync(pkgPath, "utf-8")    : null;
+
+    let npmName = "";
+    let pkgDescription = "";
+    let scripts: Record<string, string> = {};
+    let hasBin = false;
+
+    if (pkgJsonText) {
+      try {
+        const pkg = JSON.parse(pkgJsonText) as Record<string, unknown>;
+        npmName        = typeof pkg.name        === "string" ? pkg.name        : "";
+        pkgDescription = typeof pkg.description === "string" ? pkg.description : "";
+        scripts        = (pkg.scripts && typeof pkg.scripts === "object") ? pkg.scripts as Record<string, string> : {};
+        hasBin         = !!pkg.bin;
+      } catch { /* ignore */ }
+    }
+
+    // 레포 타입 감지: dev/start 스크립트가 웹 번들러를 포함하면 web-app
+    const devScript = scripts.dev || scripts.start || "";
+    const isWebApp = !!(devScript && (
+      devScript.includes("vite") || devScript.includes("react-scripts") ||
+      devScript.includes("next") || devScript.includes("webpack") ||
+      devScript.includes("parcel") || devScript.includes("serve")
+    ));
+
+    if (isWebApp) {
+      // Web-app 경로: npm install → dev 실행 정보 저장
+      appendLog(db, featureId, "npm install 중 (잠시 기다려 주세요)...", nowMs);
+      await runNpmInstallInDir(repoDir);
+      appendLog(db, featureId, "npm install 완료", nowMs);
+
+      const actualDevCmd = scripts.dev ? "npm run dev" : "npm start";
+      const firstLine = readme
+        ? readme.split("\n").find((l) => l.trim() && !l.startsWith("#"))?.trim() ?? ""
+        : "";
+      const description = pkgDescription || firstLine.slice(0, 100);
+
+      const config = JSON.stringify({
+        type: "web-app",
+        repo_dir: repoDir,
+        dev_cmd: actualDevCmd,
+        build_cmd: scripts.build ? "npm run build" : null,
+        description,
+        npm_name: npmName,
+      });
+      db.prepare("UPDATE custom_features SET config = ?, status = 'active', error_msg = NULL, bundle = NULL, updated_at = ? WHERE id = ?")
+        .run(config, nowMs(), featureId);
+      appendLog(db, featureId, `✓ 준비 완료! [Start] 버튼으로 앱을 실행하세요. (${actualDevCmd})`, nowMs);
+      logger.info(`[compile-repo] web-app ready feature=${featureId} cmd=${actualDevCmd}`);
+
+    } else {
+      // Library/CLI 경로: AI로 사용법 추출
+      if (!readme) throw new Error("README.md를 찾을 수 없습니다.");
+
+      appendLog(db, featureId, "AI 사용법 추출 중...", nowMs);
+
+      const readmeTruncated = readme.slice(0, 4000) + (readme.length > 4000 ? "\n...(truncated)" : "");
+      const usagePrompt = [
+        npmName        ? `Package: ${npmName}` : "",
+        pkgDescription ? `Description: ${pkgDescription}` : "",
+        hasBin         ? "Type: CLI tool (has bin entry)" : "Type: library",
+        "",
+        "README:",
+        readmeTruncated,
+      ].filter(Boolean).join("\n");
+
+      const cliProvider = readDefaultProvider(db);
+      const provider    = findApiProvider(db, cliProvider);
+
+      let usageDescription = pkgDescription || npmName || "GitHub 라이브러리";
+      let installCmd       = npmName ? `npm install ${npmName}` : "";
+      let commands: Array<{ cmd: string; desc: string }> = [];
+
+      try {
+        const raw = provider
+          ? await callProvider(provider, resolveModel(provider), SYSTEM_PROMPT_USAGE, usagePrompt, controller.signal)
+          : await callClaudeCli(SYSTEM_PROMPT_USAGE, usagePrompt, controller.signal);
+        const parsed = extractJsonBlock(raw);
+        if (parsed) {
+          if (typeof parsed.description === "string") usageDescription = parsed.description;
+          if (typeof parsed.install_cmd === "string") installCmd = parsed.install_cmd;
+          if (Array.isArray(parsed.commands)) commands = parsed.commands as Array<{ cmd: string; desc: string }>;
+        }
+      } catch (e) {
+        logger.warn(`[compile-repo] AI usage extraction failed feature=${featureId}: ${e}`);
+        // README에서 코드 블록을 직접 파싱 (폴백)
+        const codeBlocks = readme.matchAll(/```(?:bash|sh|shell|cmd)?\s*\n([\s\S]+?)```/g);
+        let idx = 0;
+        for (const m of codeBlocks) {
+          if (idx >= 5) break;
+          const cmd = m[1].trim().split("\n")[0].trim();
+          if (cmd && cmd.length < 120) {
+            commands.push({ cmd, desc: "" });
+            idx++;
+          }
+        }
+      }
+
+      const config = JSON.stringify({
+        type: "cli-usage",
+        repo_dir: repoDir,
+        npm_name: npmName,
+        description: usageDescription,
+        install_cmd: installCmd,
+        commands,
+      });
+      db.prepare("UPDATE custom_features SET config = ?, status = 'active', error_msg = NULL, bundle = NULL, updated_at = ? WHERE id = ?")
+        .run(config, nowMs(), featureId);
+      appendLog(db, featureId, "✓ 사용법 준비 완료!", nowMs);
+      logger.info(`[compile-repo] cli-usage ready feature=${featureId} cmds=${commands.length}`);
+    }
+
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    logger.error(`[compile-repo] error feature=${featureId}: ${msg}`);
+    db.prepare("UPDATE custom_features SET status = 'pending_install', error_msg = ?, updated_at = ? WHERE id = ?")
+      .run(msg.slice(0, 400), nowMs(), featureId);
+  } finally {
+    clearTimeout(timeout);
   }
 }
 
