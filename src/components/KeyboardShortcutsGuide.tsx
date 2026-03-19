@@ -67,6 +67,7 @@ export default function KeyboardShortcutsGuide({ open, onClose }: KeyboardShortc
         { keys: ["g", "a"], desc: t({ ko: "에이전트 설정", en: "Agent Manager", ja: "エージェント設定", zh: "代理管理" }) },
         { keys: ["g", "e"], desc: "Agent CLI" },
         { keys: ["g", "i"], desc: "Image Studio" },
+        { keys: ["g", "d"], desc: t({ ko: "대시보드", en: "Dashboard", ja: "ダッシュボード", zh: "控制台" }) },
       ],
     },
     {

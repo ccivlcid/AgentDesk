@@ -55,8 +55,8 @@ export default function StepGithubImport({ isKo, onGenerated }: Props) {
   const urlValid = isValidGithubUrl(trimmed);
   const urlMode: UrlMode = urlValid ? detectUrlMode(trimmed) : "file";
   const isDisabled = status === "polling" || status === "done";
-  const timeoutMs = urlMode === "repo" ? 120_000 : 30_000;
-  const timeoutLabel = urlMode === "repo" ? (isKo ? "2분" : "2 minutes") : (isKo ? "30초" : "30 seconds");
+  const timeoutMs = urlMode === "repo" ? 300_000 : 30_000;
+  const timeoutLabel = urlMode === "repo" ? (isKo ? "5분" : "5 minutes") : (isKo ? "30초" : "30 seconds");
 
   useEffect(() => {
     if (status !== "polling" && status !== "pending") return;
@@ -84,7 +84,7 @@ export default function StepGithubImport({ isKo, onGenerated }: Props) {
           setProgressLog(lines);
           setTimeout(() => logEndRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
         }
-        if (feature.status === "active") { setStatus("done"); onGenerated(id); }
+        if (feature.status === "active" || feature.status === "pending_install") { setStatus("done"); onGenerated(id); }
         else if (feature.status === "error") { setStatus("error"); setErrorMsg(feature.error_msg ?? (isKo ? "알 수 없는 오류" : "Unknown error")); }
       } catch { /* ignore */ }
     }, 2000);
@@ -213,20 +213,22 @@ export default function StepGithubImport({ isKo, onGenerated }: Props) {
           {/* 터미널 로그 패널 */}
           {progressLog.length > 0 && (
             <div style={{
-              ...mono, fontSize: 10, lineHeight: 1.8,
-              background: "rgba(0,0,0,0.35)", border: "1px solid var(--th-border)",
-              borderRadius: 5, padding: "8px 12px",
-              maxHeight: 180, overflowY: "auto",
-              color: "var(--th-text-muted)",
+              ...mono, fontSize: 10.5, lineHeight: 1.75,
+              background: "#0d1117", border: "1px solid #30363d",
+              borderRadius: 6, padding: "10px 14px",
+              maxHeight: 200, overflowY: "auto",
             }}>
               {progressLog.map((line, i) => {
-                const isDone = line.includes("✓");
-                const isErr = line.includes("✗");
-                const isAi = line.includes("AI 호출") || line.includes("AI 응답");
-                const color = isDone ? "var(--th-attr-elite)" : isErr ? "var(--th-danger-text)" : isAi ? "var(--th-accent)" : undefined;
+                const ts = line.match(/^\[[\d:]+\]/)?.[0] ?? "";
+                const rest = ts ? line.slice(ts.length + 1) : line;
+                const isDone = rest.startsWith("✓");
+                const isErr  = rest.startsWith("✗");
+                const isAi   = rest.startsWith("AI 호출") || rest.startsWith("AI 응답");
+                const textColor = isDone ? "#3fb950" : isErr ? "#f85149" : isAi ? "#d29922" : "#c9d1d9";
                 return (
-                  <div key={i} style={{ color, whiteSpace: "pre-wrap", wordBreak: "break-all" }}>
-                    {line}
+                  <div key={i} style={{ display: "flex", gap: 6, wordBreak: "break-all" }}>
+                    {ts && <span style={{ color: "#484f58", flexShrink: 0 }}>{ts}</span>}
+                    <span style={{ color: textColor }}>{rest}</span>
                   </div>
                 );
               })}
@@ -254,7 +256,7 @@ export default function StepGithubImport({ isKo, onGenerated }: Props) {
       {status === "done" && (
         <div style={{ ...mono, fontSize: 11, color: "var(--th-attr-elite)", padding: "10px 12px", background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.3)", borderRadius: 6, textAlign: "center" }}>
           {urlMode === "repo"
-            ? (isKo ? "✓ 앱 생성 완료!" : "✓ App created!")
+            ? (isKo ? "✓ 다운로드 완료! 바탕화면 앱을 열면 설치됩니다." : "✓ Downloaded! Open the desktop app to install.")
             : (isKo ? "✓ 가져오기 완료!" : "✓ Imported!")}
         </div>
       )}

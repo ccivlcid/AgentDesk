@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import type { CustomFeatureConfig, CustomFeatureType } from "../../../types";
+import type { CustomFeatureConfig } from "../../../types";
 import { triggerAiGenerate, getCustomFeature } from "../../../api/custom-features";
 
 const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };
@@ -8,7 +8,7 @@ type GenerateStatus = "idle" | "pending" | "polling" | "done" | "error";
 
 interface Props {
   isKo: boolean;
-  featureType: CustomFeatureType;
+  featureType?: "app";
   config: CustomFeatureConfig;
   onGenerated: (featureId: string) => void;
 }
@@ -127,7 +127,7 @@ export default function StepAiGenerate({ isKo, featureType, config, onGenerated 
     try {
       const { feature_id } = await triggerAiGenerate({
         prompt: trimmed,
-        type: featureType,
+        type: featureType ?? "app",
         name: name.trim() || (isKo ? "AI 생성 기능" : "AI Generated Feature"),
         config,
       });
@@ -277,18 +277,24 @@ export default function StepAiGenerate({ isKo, featureType, config, onGenerated 
           </div>
           {progressLog.length > 0 && (
             <div style={{
-              ...mono, fontSize: 10, lineHeight: 1.8,
-              background: "rgba(0,0,0,0.35)", border: "1px solid var(--th-border)",
-              borderRadius: 5, padding: "8px 12px",
-              maxHeight: 140, overflowY: "auto",
-              color: "var(--th-text-muted)",
+              ...mono, fontSize: 10.5, lineHeight: 1.75,
+              background: "#0d1117", border: "1px solid #30363d",
+              borderRadius: 6, padding: "10px 14px",
+              maxHeight: 160, overflowY: "auto",
             }}>
               {progressLog.map((line, i) => {
-                const isDone = line.includes("✓");
-                const isErr = line.includes("✗");
-                const isAi = line.includes("AI 호출") || line.includes("AI 응답");
-                const color = isDone ? "var(--th-attr-elite)" : isErr ? "var(--th-danger-text)" : isAi ? "var(--th-accent)" : undefined;
-                return <div key={i} style={{ color, whiteSpace: "pre-wrap", wordBreak: "break-all" }}>{line}</div>;
+                const ts = line.match(/^\[[\d:]+\]/)?.[0] ?? "";
+                const rest = ts ? line.slice(ts.length + 1) : line;
+                const isDone = rest.startsWith("✓");
+                const isErr  = rest.startsWith("✗");
+                const isAi   = rest.startsWith("AI 호출") || rest.startsWith("AI 응답");
+                const textColor = isDone ? "#3fb950" : isErr ? "#f85149" : isAi ? "#d29922" : "#c9d1d9";
+                return (
+                  <div key={i} style={{ display: "flex", gap: 6, wordBreak: "break-all" }}>
+                    {ts && <span style={{ color: "#484f58", flexShrink: 0 }}>{ts}</span>}
+                    <span style={{ color: textColor }}>{rest}</span>
+                  </div>
+                );
               })}
               <div ref={logEndRef} />
             </div>

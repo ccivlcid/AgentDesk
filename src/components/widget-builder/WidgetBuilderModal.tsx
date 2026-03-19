@@ -1,7 +1,7 @@
 import { useState } from "react";
 import Modal, { ModalHeader, ModalBody, ModalFooter } from "../ui/Modal";
 import { FEATURE_TEMPLATES, TEMPLATE_CATEGORY_LABELS, type FeatureTemplate } from "./templates";
-import type { CustomFeature, CustomFeatureConfig, CustomFeatureType } from "../../types";
+import type { CustomFeature, CustomFeatureConfig } from "../../types";
 import { createCustomFeature, getCustomFeature } from "../../api/custom-features";
 import { useI18n } from "../../i18n";
 import { useAgentStore } from "../../store/agentStore";
@@ -14,7 +14,7 @@ const SIZE_PRESETS = { sm: { w: 320, h: 240 }, md: { w: 420, h: 280 }, lg: { w: 
 interface Props {
   open: boolean;
   onClose: () => void;
-  onCreated: (id: string, type: CustomFeatureType) => void;
+  onCreated: (id: string) => void;
 }
 
 type Step = "method" | "template-select" | "params" | "preview" | "ai-generate";
@@ -28,7 +28,7 @@ export default function WidgetBuilderModal({ open, onClose, onCreated }: Props) 
   const [selectedTemplate, setSelectedTemplate] = useState<FeatureTemplate | null>(null);
   const [params, setParams] = useState<Record<string, unknown>>({});
   const [name, setName] = useState("");
-  const [featureType, setFeatureType] = useState<CustomFeatureType>("widget");
+  const featureType = "app" as const;
   const [sizePreset, setSizePreset] = useState<"sm" | "md" | "lg">("md");
   const [refresh, setRefresh] = useState<CustomFeatureConfig["refresh"]>("30s");
   const [saving, setSaving] = useState(false);
@@ -41,7 +41,6 @@ export default function WidgetBuilderModal({ open, onClose, onCreated }: Props) 
     setSelectedTemplate(null);
     setParams({});
     setName("");
-    setFeatureType("widget");
     setSizePreset("md");
     setRefresh("30s");
     setSaving(false);
@@ -61,7 +60,6 @@ export default function WidgetBuilderModal({ open, onClose, onCreated }: Props) 
     setSelectedTemplate(tpl);
     setParams(defaultParams);
     setName(isKo ? tpl.name_ko : tpl.name_en);
-    setFeatureType(tpl.defaultType);
     setRefresh(tpl.defaultConfig.refresh);
     setSizePreset(tpl.defaultConfig.sizePreset);
     setStep("params");
@@ -71,7 +69,7 @@ export default function WidgetBuilderModal({ open, onClose, onCreated }: Props) 
     setSaving(true);
     try {
       if (method === "ai" && aiFeature) {
-        onCreated(aiFeature.id, aiFeature.type as CustomFeatureType);
+        onCreated(aiFeature.id);
         handleClose();
         return;
       }
@@ -89,7 +87,7 @@ export default function WidgetBuilderModal({ open, onClose, onCreated }: Props) 
         template_id: selectedTemplate.id,
         config,
       });
-      onCreated(id, featureType);
+      onCreated(id);
       handleClose();
     } catch (e) {
       console.error(e);
@@ -103,7 +101,6 @@ export default function WidgetBuilderModal({ open, onClose, onCreated }: Props) 
       const feature = await getCustomFeature(featureId);
       setAiFeature(feature);
       setName(feature.name);
-      setFeatureType(feature.type as CustomFeatureType);
       setStep("preview");
     } catch (e) {
       console.error(e);
@@ -258,28 +255,6 @@ export default function WidgetBuilderModal({ open, onClose, onCreated }: Props) 
                   onChange={(e) => setName(e.target.value.slice(0, 40))}
                   style={{ ...mono, fontSize: 11, padding: "5px 8px", background: "var(--th-bg-panel)", border: "1px solid var(--th-border)", borderRadius: 4, color: "var(--th-text-primary)", outline: "none" }}
                 />
-              </div>
-              <div className="flex flex-col gap-1">
-                <label style={{ ...mono, fontSize: 10, color: "var(--th-text-muted)" }}>{isKo ? "결과물" : "Output"}</label>
-                <div className="flex gap-1">
-                  {(["widget", "app"] as const).map((t) => (
-                    <button
-                      key={t}
-                      onClick={() => setFeatureType(t)}
-                      style={{
-                        ...mono, fontSize: 10, flex: 1, padding: "4px 0",
-                        border: "1px solid",
-                        borderColor: featureType === t ? "var(--th-border-accent)" : "var(--th-border)",
-                        borderRadius: 4,
-                        background: featureType === t ? "rgba(245,158,11,0.15)" : "transparent",
-                        color: featureType === t ? "var(--th-accent)" : "var(--th-text-muted)",
-                        cursor: "pointer",
-                      }}
-                    >
-                      {t === "widget" ? (isKo ? "위젯" : "Widget") : (isKo ? "앱 창" : "App")}
-                    </button>
-                  ))}
-                </div>
               </div>
               <div className="flex flex-col gap-1">
                 <label style={{ ...mono, fontSize: 10, color: "var(--th-text-muted)" }}>{isKo ? "크기" : "Size"}</label>
@@ -448,7 +423,7 @@ export default function WidgetBuilderModal({ open, onClose, onCreated }: Props) 
               </div>
             </div>
             <div style={{ ...mono, fontSize: 10, color: "var(--th-text-muted)", textAlign: "center" }}>
-              {isKo ? `${featureType === "widget" ? "위젯" : "앱 창"}으로 등록됩니다` : `Will be registered as ${featureType === "widget" ? "widget" : "app window"}`}
+              {isKo ? "앱으로 등록됩니다" : "Will be registered as an app"}
             </div>
           </div>
         )}

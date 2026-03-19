@@ -45,6 +45,7 @@ export default function MissionControl({ openWindows, onClose, onFocusWindow }: 
     "feature-builder":   { emoji: "✦",  label: t({ ko: "새 기능 만들기",   en: "New Feature",    ja: "新機能作成",              zh: "新建功能" }) },
     "flow-graph":        { emoji: "🕸️", label: t({ ko: "에이전트 그래프",  en: "Agent Graph",    ja: "エージェントグラフ",        zh: "代理图" }) },
     "git-import":        { emoji: "⬆️", label: t({ ko: "Git 가져오기",     en: "Git Import",     ja: "Gitインポート",              zh: "Git导入" }) },
+    "dashboard":         { emoji: "◈",  label: t({ ko: "대시보드",          en: "Dashboard",      ja: "ダッシュボード",              zh: "控制台" }) },
   };
 
   useEffect(() => {

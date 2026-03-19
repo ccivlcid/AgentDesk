@@ -688,9 +688,9 @@ export interface HookEntry {
 }
 
 // ── Custom Feature Platform ───────────────────────────────────────────────────
-export type CustomFeatureType = "widget" | "app";
+export type CustomFeatureType = "app";
 export type CustomFeatureSource = "template" | "ai";
-export type CustomFeatureStatus = "active" | "draft" | "error";
+export type CustomFeatureStatus = "active" | "draft" | "pending_install" | "error";
 export type CustomFeatureTheme = "default" | "accent" | "success" | "warning";
 export type CustomFeatureRefresh = "manual" | "5s" | "30s" | "1m" | "5m";
 export type CustomFeatureSizePreset = "sm" | "md" | "lg";

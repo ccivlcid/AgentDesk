@@ -8,11 +8,12 @@ const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };
 
 interface Props {
   featureId: string;
+  initialFeature?: CustomFeature;
   onClose: () => void;
 }
 
-export default function CustomFeatureWindow({ featureId, onClose }: Props) {
-  const [feature, setFeature] = useState<CustomFeature | null>(null);
+export default function CustomFeatureWindow({ featureId, initialFeature, onClose }: Props) {
+  const [feature, setFeature] = useState<CustomFeature | null>(initialFeature ?? null);
   const [pos, setPos] = useState(() => ({
     x: Math.max(20, (window.innerWidth - 560) / 2),
     y: Math.max(44, (window.innerHeight - 440) / 3),
@@ -22,8 +23,10 @@ export default function CustomFeatureWindow({ featureId, onClose }: Props) {
   const [dragOffset, setDragOffset] = useState({ dx: 0, dy: 0 });
 
   useEffect(() => {
-    getCustomFeature(featureId).then(setFeature).catch(() => {});
-  }, [featureId]);
+    if (!initialFeature) {
+      getCustomFeature(featureId).then(setFeature).catch(() => {});
+    }
+  }, [featureId, initialFeature]);
 
   function handleTitleMouseDown(e: React.MouseEvent) {
     if (e.button !== 0) return;

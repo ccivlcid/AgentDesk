@@ -1,8 +1,24 @@
 import { build as esbuild } from "esbuild";
 import { spawn } from "node:child_process";
+import { mkdirSync, writeFileSync, readFileSync, existsSync, unlinkSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { decryptSecret } from "../../../oauth/helpers.ts";
 import logger from "../../../lib/logger.ts";
 import type { DatabaseSync } from "node:sqlite";
+
+/** feature 소스 저장 루트 */
+const FEATURE_DIR = join(process.cwd(), "feature");
+const GITHUB_DIR  = join(FEATURE_DIR, "github");
+const AI_DIR      = join(FEATURE_DIR, "ai");
+
+function ensureDir(dir: string) {
+  mkdirSync(dir, { recursive: true });
+}
+
+function saveSource(path: string, content: string) {
+  try { writeFileSync(path, content, "utf-8"); } catch { /* ignore */ }
+}
 
 type DbLike = Pick<DatabaseSync, "prepare">;
 
@@ -21,9 +37,14 @@ interface ApiProviderRow {
 /** CliProvider → ApiProviderType 매핑 */
 const CLI_TO_API_TYPE: Record<string, ApiProviderType> = {
   claude:      "anthropic",
+  "claude-code": "anthropic",
+  cursor:      "anthropic",   // Cursor uses Claude/GPT — prefer Anthropic key
+  windsurf:    "anthropic",
   codex:       "openai",
+  "codex-cli": "openai",
   opencode:    "openai",
   gemini:      "google",
+  "gemini-cli": "google",
   copilot:     "openai",
   antigravity: "google",
   ollama:      "ollama",
@@ -233,23 +254,85 @@ root.render(React.createElement(CustomFeatureWidget, {
   config: (typeof window !== 'undefined' && window.__agdConfig) ? window.__agdConfig : {}
 }));
 `;
-  const result = await esbuild({
-    stdin: { contents: wrapper, loader: "tsx", resolveDir: process.cwd() },
+  const buildOpts = {
+    stdin: { contents: wrapper, loader: "tsx" as const, resolveDir: process.cwd() },
     bundle: true,
-    format: "iife",
-    platform: "browser",
+    format: "iife" as const,
+    platform: "browser" as const,
     write: false,
     define: { "process.env.NODE_ENV": '"production"' },
-    logLevel: "silent",
-  });
-  return result.outputFiles[0].text;
+    logLevel: "silent" as const,
+  };
+
+  // Helper: extract readable error details from esbuild BuildFailure
+  function extractBuildErrors(err: unknown): { details: string; unresolved: string[] } {
+    const buildErr = err as { errors?: Array<{ text: string; location?: { line?: number } }> };
+    const errors = buildErr.errors ?? [];
+    const details = errors.slice(0, 3).map((e) => {
+      const loc = e.location ? ` (line ${e.location.line})` : "";
+      return `${e.text}${loc}`;
+    }).join(" | ");
+    // Collect "Could not resolve 'pkg'" package names
+    const unresolved = errors
+      .map((e) => e.text.match(/Could not resolve ['"]([^'"]+)['"]/)?.[1])
+      .filter((x): x is string => !!x);
+    return { details: details || String(err), unresolved };
+  }
+
+  try {
+    const result = await esbuild(buildOpts);
+    return result.outputFiles![0].text;
+  } catch (err) {
+    const { details, unresolved } = extractBuildErrors(err);
+
+    // Retry: remove unresolvable import lines anywhere in wrapper + inject empty stubs
+    if (unresolved.length > 0) {
+      let wrapperWithStubs = wrapper;
+      for (const pkg of unresolved) {
+        // Remove: import Foo from 'pkg'  /  import { Foo } from 'pkg'  /  import 'pkg'
+        const escaped = pkg.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        wrapperWithStubs = wrapperWithStubs.replace(
+          new RegExp(`^import\\s[^;]*?from\\s+['"]${escaped}['"];?\\s*$`, "gm"),
+          `// [stub] import from '${pkg}' removed`,
+        );
+        // Also stub the identifier so runtime doesn't crash
+        const stubName = pkg.replace(/[^a-zA-Z0-9_$]/g, "_");
+        wrapperWithStubs += `\nif(typeof ${stubName}==="undefined"){var ${stubName}=new Proxy({},{get:()=>()=>null});}\n`;
+      }
+      try {
+        const retryResult = await esbuild({ ...buildOpts, stdin: { ...buildOpts.stdin, contents: wrapperWithStubs } });
+        logger.warn(`[compileToIife] retried without: ${unresolved.join(", ")}`);
+        return retryResult.outputFiles![0].text;
+      } catch { /* fall through to throw original error */ }
+    }
+
+    throw new Error(`esbuild: ${details}`);
+  }
 }
 
 /** 응답 텍스트에서 ```tsx?``` 코드 블록 추출 */
 function extractCodeBlock(text: string): string {
   const m = text.match(/```(?:tsx?|jsx?|react)?\s*\n?([\s\S]+?)```/);
   if (m) return m[1].trim();
+  // No fenced block — return raw text (caller must validate)
   return text.trim();
+}
+
+/** 추출된 코드가 실제 JS/TS 코드인지 기본 검증 */
+function assertValidCode(code: string): void {
+  const first = code.trimStart();
+  const validStarters = [
+    /^import\b/,
+    /^export\s+(default\s+)?(function|class|const|async)/,
+    /^(const|let|var|function|class)\b/,
+    /^\/\//,        // comment
+    /^\/\*/,        // block comment
+    /^"use /,       // "use strict" etc
+  ];
+  if (!validStarters.some((re) => re.test(first))) {
+    const preview = first.slice(0, 80).replace(/\n/g, " ");
+    throw new Error(`AI가 코드 블록을 반환하지 않았습니다. 응답 시작: "${preview}..."`);
+  }
 }
 
 /** 응답 텍스트에서 SVG 아이콘 + TSX 컴포넌트 두 블록 추출 */
@@ -486,7 +569,6 @@ export async function runGithubImport(
     }
 
     const contentType = resp.headers.get("content-type") ?? "";
-    // 바이너리·HTML 등 거부
     if (contentType.includes("text/html")) {
       throw new Error("URL이 HTML 페이지를 반환했습니다. raw 파일 URL을 사용하세요.");
     }
@@ -494,8 +576,15 @@ export async function runGithubImport(
     const code = (await resp.text()).trim();
     if (!code) throw new Error("빈 파일입니다.");
 
-    // 코드 블록 래퍼가 있으면 제거
     const cleaned = extractCodeBlock(code);
+    assertValidCode(cleaned);
+
+    // feature/github/<featureId>.tsx 에 소스 저장
+    ensureDir(GITHUB_DIR);
+    const urlFilename = githubUrl.split("/").filter(Boolean).pop()?.replace(/[^a-zA-Z0-9._-]/g, "_") || "widget.tsx";
+    const srcPath = join(GITHUB_DIR, `${featureId}-${urlFilename}`);
+    saveSource(srcPath, cleaned);
+    logger.info(`[github-import] saved source: ${srcPath}`);
 
     const blocked = validateBundle(cleaned);
     if (blocked) {
@@ -546,14 +635,93 @@ async function fetchGithubRaw(user: string, repo: string, filePath: string, sign
   return null;
 }
 
-/** npm 패키지 임시 설치 (--no-save) */
-function installNpmPackage(pkgName: string): Promise<void> {
+/** npm 패키지 임시 설치 (--no-save, 여러 패키지 지원) */
+function installNpmPackages(pkgNames: string[]): Promise<void> {
+  if (pkgNames.length === 0) return Promise.resolve();
   return new Promise((resolve) => {
     const isWin = process.platform === "win32";
-    const child = spawn("npm", ["install", "--no-save", pkgName], { shell: isWin, stdio: "ignore" });
-    child.on("close", () => resolve()); // 성공·실패 무관하게 진행
+    const child = spawn("npm", ["install", "--no-save", ...pkgNames], { shell: isWin, stdio: "ignore" });
+    child.on("close", () => resolve());
     child.on("error", () => resolve());
-    setTimeout(() => { try { child.kill(); } catch { /* ignore */ } resolve(); }, 30_000);
+    setTimeout(() => { try { child.kill(); } catch { /* ignore */ } resolve(); }, 90_000);
+  });
+}
+
+/** source code에서 npm 패키지 import 이름 추출 (relative/node-builtin 제외) */
+function extractNpmImports(code: string): string[] {
+  const importRe = /^\s*import\s+(?:[^'"]*?\s+from\s+)?['"]([^'"]+)['"]/gm;
+  const SKIP = new Set(["react", "react-dom", "react-dom/client", "react/jsx-runtime"]);
+  const pkgs = new Set<string>();
+  let m: RegExpExecArray | null;
+  while ((m = importRe.exec(code)) !== null) {
+    const spec = m[1];
+    if (spec.startsWith(".") || spec.startsWith("/") || spec.startsWith("node:")) continue;
+    if (SKIP.has(spec)) continue;
+    // scoped: @scope/pkg → 두 세그먼트, 일반: pkg → 첫 세그먼트
+    const pkg = spec.startsWith("@") ? spec.split("/").slice(0, 2).join("/") : spec.split("/")[0];
+    pkgs.add(pkg);
+  }
+  return [...pkgs];
+}
+
+/** git clone --depth=1 */
+function gitClone(repoUrl: string, destDir: string, signal: AbortSignal): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const isWin = process.platform === "win32";
+    const child = spawn(
+      "git", ["clone", "--depth=1", "--single-branch", repoUrl, destDir],
+      { shell: isWin, stdio: ["ignore", "pipe", "pipe"] },
+    );
+    let errOut = "";
+    child.stderr?.on("data", (d: Buffer) => { errOut += d.toString(); });
+    child.on("close", (code) => {
+      if (code === 0) resolve();
+      else reject(new Error(`git clone 실패 (exit ${code}): ${errOut.slice(0, 200)}`));
+    });
+    child.on("error", (e: Error) => reject(new Error(`git 실행 실패: ${e.message}`)));
+    signal.addEventListener("abort", () => { try { child.kill(); } catch { /* ignore */ } });
+    setTimeout(() => { try { child.kill(); } catch { /* ignore */ } reject(new Error("git clone 타임아웃 (60초)")); }, 60_000);
+  });
+}
+
+/** API provider가 없을 때 Claude Code CLI로 폴백 호출
+ *  임시 파일 + 셸 리다이렉션(< tmpfile)으로 전달 — Windows CLI 인수 길이 제한 우회
+ */
+async function callClaudeCli(systemPrompt: string, userPrompt: string, signal: AbortSignal): Promise<string> {
+  const combined = `${systemPrompt}\n\n---\n\n${userPrompt}`;
+
+  // 임시 파일에 프롬프트 저장
+  const tmpFile = join(tmpdir(), `agd-${Date.now()}.txt`);
+  writeFileSync(tmpFile, combined, "utf-8");
+
+  // 셸 리다이렉션으로 stdin 전달: claude -p < tmpfile
+  // shell: true 로 < 리다이렉션 사용, stdio["ignore"] — 셸이 파일을 stdin으로 넘김
+  const shellCmd = `claude -p < "${tmpFile.replace(/\\/g, "/")}"`;
+
+  return new Promise((resolve, reject) => {
+    const child = spawn(shellCmd, [], {
+      shell: true,
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+
+    let out = "";
+    let err = "";
+    child.stdout?.on("data", (d: Buffer) => { out += d.toString(); });
+    child.stderr?.on("data", (d: Buffer) => { err += d.toString(); });
+    child.on("close", (code, sig) => {
+      try { unlinkSync(tmpFile); } catch { /* ignore */ }
+      if (code === 0 && out.trim()) resolve(out.trim());
+      else reject(new Error(
+        sig        ? `claude CLI 시그널 종료: ${sig}` :
+        code !== 0 ? `claude CLI 오류 (exit ${code}): ${err.slice(0, 400)}` :
+                     "claude CLI 응답이 비어있습니다.",
+      ));
+    });
+    child.on("error", (e: Error) => {
+      try { unlinkSync(tmpFile); } catch { /* ignore */ }
+      reject(new Error(`claude CLI 실행 실패: ${e.message}`));
+    });
+    signal.addEventListener("abort", () => { try { child.kill(); } catch { /* ignore */ } });
   });
 }
 
@@ -565,24 +733,35 @@ export async function runGithubRepoImport(
   nowMs: () => number,
 ): Promise<void> {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 120_000); // 2분
+  const timeout = setTimeout(() => controller.abort(), 300_000); // 5분
 
   try {
     const parsed = parseGithubRepo(repoUrl);
     if (!parsed) throw new Error("유효한 GitHub 레포 URL이 아닙니다.");
     const { user, repo } = parsed;
 
-    appendLog(db, featureId, `레포 분석 시작: ${user}/${repo}`, nowMs);
+    appendLog(db, featureId, `레포 클론 시작: ${user}/${repo}`, nowMs);
 
-    // README + package.json 병렬 fetch
-    appendLog(db, featureId, "README.md · package.json 가져오는 중...", nowMs);
-    const [readme, pkgJsonText] = await Promise.all([
-      fetchGithubRaw(user, repo, "README.md", controller.signal),
-      fetchGithubRaw(user, repo, "package.json", controller.signal),
-    ]);
+    // feature/github/<user>-<repo>/ 에 git clone
+    ensureDir(GITHUB_DIR);
+    const repoDir = join(GITHUB_DIR, `${user}-${repo}`);
 
-    if (!readme) throw new Error("README.md를 찾을 수 없습니다. 공개 레포인지 확인해주세요.");
-    appendLog(db, featureId, `README.md 완료 (${readme.length.toLocaleString()} chars)`, nowMs);
+    if (existsSync(repoDir)) {
+      appendLog(db, featureId, `기존 클론 재사용: feature/github/${user}-${repo}/`, nowMs);
+    } else {
+      appendLog(db, featureId, `git clone --depth=1 https://github.com/${user}/${repo} ...`, nowMs);
+      await gitClone(`https://github.com/${user}/${repo}`, repoDir, controller.signal);
+      appendLog(db, featureId, `클론 완료 → feature/github/${user}-${repo}/`, nowMs);
+    }
+
+    // 클론된 디렉토리에서 파일 직접 읽기
+    const readmePath = join(repoDir, "README.md");
+    const pkgPath    = join(repoDir, "package.json");
+    const readme     = existsSync(readmePath) ? readFileSync(readmePath, "utf-8") : null;
+    const pkgJsonText = existsSync(pkgPath)   ? readFileSync(pkgPath, "utf-8")   : null;
+
+    if (!readme) throw new Error("README.md를 찾을 수 없습니다.");
+    appendLog(db, featureId, `README.md 읽기 완료 (${readme.length.toLocaleString()} chars)`, nowMs);
 
     // npm 패키지 이름 파악
     let npmName: string | null = null;
@@ -596,23 +775,21 @@ export async function runGithubRepoImport(
     }
 
     if (npmName) {
-      appendLog(db, featureId, `npm 패키지 발견: ${npmName}${pkgDescription ? ` — ${pkgDescription}` : ""}`, nowMs);
+      appendLog(db, featureId, `npm 패키지: ${npmName}${pkgDescription ? ` — ${pkgDescription}` : ""}`, nowMs);
       appendLog(db, featureId, `npm install --no-save ${npmName} ...`, nowMs);
-      await installNpmPackage(npmName);
-      appendLog(db, featureId, `npm install 완료`, nowMs);
+      await installNpmPackages([npmName]);
+      appendLog(db, featureId, "npm install 완료", nowMs);
     } else {
       appendLog(db, featureId, "package.json 없음 — npm 설치 생략", nowMs);
     }
 
-    // provider 조회
+    // provider 조회 (없으면 Claude CLI 폴백)
     const cliProvider = readDefaultProvider(db);
     const provider = findApiProvider(db, cliProvider);
-    if (!provider) throw new Error(
-      `API 프로바이더가 설정되지 않았습니다. Settings → API Providers에서 API 키를 추가해주세요.`,
-    );
-
-    const model = resolveModel(provider);
-    appendLog(db, featureId, `AI 호출 중: ${provider.name} / ${model}`, nowMs);
+    const providerLabel = provider
+      ? `${provider.name} / ${resolveModel(provider)}`
+      : `claude CLI 폴백 (Settings > API Providers에 키 없음 — defaultProvider: ${cliProvider})`;
+    appendLog(db, featureId, `AI 호출 중: ${providerLabel}`, nowMs);
 
     // AI 프롬프트 구성
     const readmeTruncated = readme.slice(0, 3000) + (readme.length > 3000 ? "\n...(truncated)" : "");
@@ -629,21 +806,41 @@ export async function runGithubRepoImport(
         : "Create a CustomFeatureWidget that demonstrates or integrates the concept/functionality from this repository.",
     ].filter(Boolean).join("\n");
 
-    const raw = await callProvider(provider, model, SYSTEM_PROMPT_REPO, userPrompt, controller.signal);
+    const raw = provider
+      ? await callProvider(provider, resolveModel(provider), SYSTEM_PROMPT_REPO, userPrompt, controller.signal)
+      : await callClaudeCli(SYSTEM_PROMPT_REPO, userPrompt, controller.signal);
+
     appendLog(db, featureId, "AI 응답 완료 — SVG 아이콘 + TSX 파싱 중...", nowMs);
 
-    const { svg, code } = extractSvgAndCode(raw);
+    let { svg, code } = extractSvgAndCode(raw);
+    // 코드 블록이 없으면 1회 재시도
+    try { assertValidCode(code); } catch {
+      appendLog(db, featureId, "코드 블록 없음 — AI 재시도 중...", nowMs);
+      const raw2 = provider
+        ? await callProvider(provider, resolveModel(provider), SYSTEM_PROMPT_REPO, userPrompt, controller.signal)
+        : await callClaudeCli(SYSTEM_PROMPT_REPO, userPrompt, controller.signal);
+      const extracted2 = extractSvgAndCode(raw2);
+      svg = extracted2.svg ?? svg;
+      code = extracted2.code;
+      assertValidCode(code); // 재시도도 실패하면 여기서 throw
+    }
+
+    // AI 생성 widget.tsx를 두 곳에 저장:
+    // 1. 레포 디렉토리 (소스 보존)
+    // 2. feature/ai/<featureId>.tsx (컴파일 시 표준 경로)
+    saveSource(join(repoDir, "widget.tsx"), code);
+    ensureDir(AI_DIR);
+    saveSource(join(AI_DIR, `${featureId}.tsx`), code);
+    appendLog(db, featureId, "소스 저장 완료 → 앱이 바탕화면에 추가됩니다.", nowMs);
 
     const blocked = validateBundle(code);
     if (blocked) throw new Error(`Safety check failed: ${blocked}`);
 
-    appendLog(db, featureId, "esbuild 번들 컴파일 중...", nowMs);
-    const iife = await compileToIife(code);
+    // 컴파일은 앱 첫 실행 시 수행 (pending_install)
+    db.prepare("UPDATE custom_features SET icon_svg = ?, status = 'pending_install', error_msg = NULL, updated_at = ? WHERE id = ?")
+      .run(svg ?? null, nowMs(), featureId);
 
-    db.prepare("UPDATE custom_features SET bundle = ?, icon_svg = ?, status = ?, error_msg = NULL, updated_at = ? WHERE id = ?")
-      .run(iife, svg ?? null, "active", nowMs(), featureId);
-
-    appendLog(db, featureId, "✓ 완료! 앱이 데스크톱에 추가됩니다.", nowMs);
+    appendLog(db, featureId, "✓ 다운로드 완료! 바탕화면 앱을 열면 설치됩니다.", nowMs);
     logger.info(`[github-repo] done feature=${featureId}`);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
@@ -706,6 +903,52 @@ No prose, no other text, no explanations outside the two blocks.
 - No eval(), new Function(), require(), import(), document.write(), window.location=, localStorage.clear()
 - fetch() only to /api/* paths`;
 
+/** pending_install 앱을 컴파일해 bundle 저장 (앱 첫 실행 시 호출) */
+export async function compileFeature(
+  db: DbLike,
+  featureId: string,
+  nowMs: () => number,
+): Promise<void> {
+  const srcPath = join(AI_DIR, `${featureId}.tsx`);
+  if (!existsSync(srcPath)) {
+    db.prepare("UPDATE custom_features SET status = 'error', error_msg = ?, updated_at = ? WHERE id = ?")
+      .run("소스 파일을 찾을 수 없습니다: " + srcPath, nowMs(), featureId);
+    return;
+  }
+  // 이미 컴파일 중이면 중복 실행 방지
+  const row = db.prepare("SELECT status FROM custom_features WHERE id = ?").get(featureId) as
+    | { status: string } | undefined;
+  if (row?.status === "active" || row?.status === "draft") return;
+
+  // 재시도: draft로 전환 + error_msg 초기화
+  db.prepare("UPDATE custom_features SET status = 'draft', error_msg = NULL, bundle = NULL, updated_at = ? WHERE id = ?")
+    .run(nowMs(), featureId);
+
+  try {
+    const code = readFileSync(srcPath, "utf-8");
+    const blocked = validateBundle(code);
+    if (blocked) throw new Error(`Safety check failed: ${blocked}`);
+
+    // 소스에서 npm 패키지 추출 → 컴파일 전 재설치 (서버 재시작 후에도 안전)
+    const npmPkgs = extractNpmImports(code);
+    if (npmPkgs.length > 0) {
+      logger.info(`[compile] npm install --no-save ${npmPkgs.join(" ")}`);
+      await installNpmPackages(npmPkgs);
+    }
+
+    const iife = await compileToIife(code);
+    db.prepare("UPDATE custom_features SET bundle = ?, status = 'active', error_msg = NULL, updated_at = ? WHERE id = ?")
+      .run(iife, nowMs(), featureId);
+    logger.info(`[compile] done feature=${featureId}`);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    logger.error(`[compile] error feature=${featureId}: ${msg}`);
+    // 실패해도 pending_install 유지 — 아이콘이 사라지지 않고 렌더 페이지에서 재시도 가능
+    db.prepare("UPDATE custom_features SET status = 'pending_install', error_msg = ?, updated_at = ? WHERE id = ?")
+      .run(msg.slice(0, 400), nowMs(), featureId);
+  }
+}
+
 /** 백그라운드 AI 생성 실행 (async, fire-and-forget) */
 export async function runAiGeneration(
   db: DbLike,
@@ -720,21 +963,31 @@ export async function runAiGeneration(
     const cliProvider = readDefaultProvider(db);
     const provider = findApiProvider(db, cliProvider);
 
-    if (!provider) {
-      const errMsg = "API 프로바이더가 설정되지 않았습니다. Settings → API Providers에서 API 키를 추가해주세요.";
-      appendLog(db, featureId, `✗ ${errMsg}`, nowMs);
-      db.prepare("UPDATE custom_features SET status = ?, error_msg = ?, updated_at = ? WHERE id = ?")
-        .run("error", errMsg, nowMs(), featureId);
-      return;
+    const providerLabel = provider
+      ? `${provider.name} / ${resolveModel(provider)}`
+      : `claude CLI 폴백 (Settings > API Providers에 키 없음 — defaultProvider: ${cliProvider})`;
+    appendLog(db, featureId, `AI 호출 중: ${providerLabel}`, nowMs);
+    logger.info(`[custom-feature-ai] generating feature=${featureId} provider=${providerLabel}`);
+
+    const raw = provider
+      ? await callProvider(provider, resolveModel(provider), SYSTEM_PROMPT, userPrompt, controller.signal)
+      : await callClaudeCli(SYSTEM_PROMPT, userPrompt, controller.signal);
+    appendLog(db, featureId, "AI 응답 완료 — 코드 파싱 중...", nowMs);
+    let code = extractCodeBlock(raw);
+    // 코드 블록이 없으면 1회 재시도
+    try { assertValidCode(code); } catch {
+      appendLog(db, featureId, "코드 블록 없음 — AI 재시도 중...", nowMs);
+      const raw2 = provider
+        ? await callProvider(provider, resolveModel(provider), SYSTEM_PROMPT, userPrompt, controller.signal)
+        : await callClaudeCli(SYSTEM_PROMPT, userPrompt, controller.signal);
+      code = extractCodeBlock(raw2);
+      assertValidCode(code);
     }
 
-    const model = resolveModel(provider);
-    appendLog(db, featureId, `AI 호출 중: ${provider.name} / ${model}`, nowMs);
-    logger.info(`[custom-feature-ai] generating feature=${featureId} provider=${provider.name} model=${model}`);
-
-    const raw = await callProvider(provider, model, SYSTEM_PROMPT, userPrompt, controller.signal);
-    appendLog(db, featureId, "AI 응답 완료 — 코드 파싱 중...", nowMs);
-    const code = extractCodeBlock(raw);
+    // feature/ai/<featureId>.tsx 에 소스 저장
+    ensureDir(AI_DIR);
+    saveSource(join(AI_DIR, `${featureId}.tsx`), code);
+    appendLog(db, featureId, `소스 저장: feature/ai/${featureId}.tsx`, nowMs);
 
     const blocked = validateBundle(code);
     if (blocked) {
@@ -746,7 +999,14 @@ export async function runAiGeneration(
 
     appendLog(db, featureId, "esbuild 번들 컴파일 중...", nowMs);
     logger.info(`[custom-feature-ai] compiling feature=${featureId}`);
-    const iife = await compileToIife(code);
+    let iife: string;
+    try {
+      iife = await compileToIife(code);
+    } catch (buildErr) {
+      const buildMsg = buildErr instanceof Error ? buildErr.message : String(buildErr);
+      appendLog(db, featureId, `✗ 컴파일 실패: ${buildMsg}`, nowMs);
+      throw buildErr;
+    }
 
     db.prepare("UPDATE custom_features SET bundle = ?, status = ?, error_msg = NULL, updated_at = ? WHERE id = ?")
       .run(iife, "active", nowMs(), featureId);

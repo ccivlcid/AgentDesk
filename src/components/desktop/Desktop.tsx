@@ -18,7 +18,7 @@ import {
   IconProjectSoftware, IconProjectMarketing, IconProjectResearch,
   IconProjectProduct, IconProjectContent, IconProjectOperations, IconProjectDesign,
   IconMarkdownDoc, IconImageStudio,
-  IconHeartbeat, IconTaskBoard, IconAlerts, IconCliCost, IconFlowGraph, IconFileTree, IconLocalLlm, IconAgentGraph,
+  IconHeartbeat, IconTaskBoard, IconAlerts, IconCliCost, IconFlowGraph, IconFileTree, IconLocalLlm, IconAgentGraph, IconDashboard, IconTrash,
 } from "./DesktopIcons";
 import Dock from "./Dock";
 import CustomFeatureWindow from "../windows/CustomFeatureWindow";
@@ -52,6 +52,7 @@ import CliCostWindow from "../windows/CliCostWindow";
 import LocalLlmWindow from "../windows/LocalLlmWindow";
 import FeatureBuilderWindow from "../windows/FeatureBuilderWindow";
 import FlowGraphWindow from "../windows/FlowGraphWindow";
+import DashboardWindow from "../windows/DashboardWindow";
 import GitImportWindow from "../windows/GitImportWindow";
 import NotificationCenter from "../NotificationCenter";
 import AgentDetailPanel from "../agent-detail/AgentDetailPanel";
@@ -82,6 +83,50 @@ interface DesktopProps {
   onOpenDecisionInbox: () => void;
   onOpenReportHistory: () => void;
   children?: ReactNode;
+}
+
+function TrashIcon({ t }: { t: ReturnType<typeof import("../../i18n").useI18n>["t"] }) {
+  const [hov, setHov] = useState(false);
+  return (
+    <div
+      data-no-ctx="true"
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        position: "absolute",
+        right: 24,
+        bottom: 8,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        gap: 5,
+        cursor: "default",
+        userSelect: "none",
+        zIndex: 10,
+        transform: hov ? "scale(1.06)" : "scale(1)",
+        transition: "transform 0.12s",
+      }}
+    >
+      <div style={{
+        width: 56, height: 56,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        borderRadius: 12,
+        background: hov ? "rgba(255,59,48,0.1)" : "rgba(128,128,128,0.08)",
+        border: `1px solid ${hov ? "rgba(255,59,48,0.3)" : "rgba(128,128,128,0.15)"}`,
+        transition: "background 0.15s, border 0.15s",
+      }}>
+        <IconTrash color={hov ? "#ff3b30" : "var(--th-text-muted)"} />
+      </div>
+      <span style={{
+        fontFamily: "var(--th-font-mono)", fontSize: 10,
+        color: hov ? "#ff3b30" : "var(--th-text-secondary)",
+        transition: "color 0.15s",
+        textShadow: "0 1px 3px rgba(0,0,0,0.5)",
+      }}>
+        {t({ ko: "휴지통", en: "Trash", ja: "ゴミ箱", zh: "垃圾桶" })}
+      </span>
+    </div>
+  );
 }
 
 function getCategoryIcon(categoryId?: string | null) {
@@ -261,7 +306,7 @@ export default function Desktop({
   }, []);
 
   useEffect(() => {
-    listCustomFeatures().then((list) => setCustomFeatures(list.filter((f) => f.status === "active"))).catch(() => {});
+    listCustomFeatures().then((list) => setCustomFeatures(list.filter((f) => f.status === "active" || f.status === "pending_install"))).catch(() => {});
   }, [customFeaturesTick]);
 
   const handleDropDocToProject = useCallback(async (docId: string, project: { id: string; project_path: string; name: string }) => {
@@ -431,6 +476,7 @@ export default function Desktop({
           a: () => toggleWindow("agent-manager"),
           e: () => openCli(),
           i: () => toggleWindow("image-studio"),
+          d: () => toggleWindow("dashboard"),
         };
         map[e.key]?.();
       }
@@ -529,6 +575,7 @@ export default function Desktop({
   // 데스크톱 아이콘 정의 (채팅·라이브러리는 Dock에서 제공)
   const icons: DesktopIconDef[] = [
     // ── 기존 앱 ──────────────────────────────────────────────────
+    { id: "dashboard-app",  icon: (c) => <IconDashboard color={c} />,  label: t({ ko: "대시보드",       en: "Dashboard",      ja: "ダッシュボード",   zh: "控制台" }),      onClick: () => openWindow("dashboard"),     accentColor: "#06b6d4" },
     { id: "agent-manager",  icon: (c) => <IconAgents color={c} />,      label: t({ ko: "에이전트 설정",    en: "Agents",         ja: "エージェント設定",  zh: "代理设置" }),   onClick: () => openWindow("agent-manager"), accentColor: "#5e5ce6" },
     { id: "cli",            icon: (c) => <IconRepl color={c} />,        label: t({ ko: "에이전트 CLI",    en: "Agent CLI",      ja: "エージェントCLI", zh: "代理CLI" }),     onClick: () => openCli(),                   accentColor: "#32ade6" },
     { id: "image-studio",   icon: (c) => <IconImageStudio color={c} />, label: t({ ko: "이미지 스튜디오", en: "Image Studio",   ja: "イメージスタジオ", zh: "图像工作室" }),  onClick: () => openWindow("image-studio"),  accentColor: "#ec4899" },
@@ -568,10 +615,18 @@ export default function Desktop({
 
   const customFeatureIcons: DesktopIconDef[] = customFeatures.map((f) => ({
     id: `cf-${f.id}`,
-    icon: (c: string) =>
-      f.icon_svg
-        ? <div style={{ width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center", color: c }} dangerouslySetInnerHTML={{ __html: f.icon_svg }} />
-        : getCustomFeatureIcon(f.template_id, c),
+    icon: (c: string) => (
+      <div style={{ position: "relative", width: 26, height: 26 }}>
+        {f.icon_svg
+          ? <div style={{ width: 26, height: 26, display: "flex", alignItems: "center", justifyContent: "center", color: c }} dangerouslySetInnerHTML={{ __html: f.icon_svg }} />
+          : getCustomFeatureIcon(f.template_id, c)}
+        {f.status === "pending_install" && (
+          <div style={{ position: "absolute", bottom: -2, right: -2, width: 10, height: 10, borderRadius: "50%", background: "#f59e0b", border: "1.5px solid #0f1117", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <span style={{ fontSize: 6, color: "#000", fontWeight: 900, lineHeight: 1 }}>↓</span>
+          </div>
+        )}
+      </div>
+    ),
     label: f.name,
     onClick: () => openCustomApp(f.id),
     accentColor: "#f59e0b",
@@ -584,7 +639,7 @@ export default function Desktop({
       closeCustomApp(f.id);
       deleteCustomFeature(f.id)
         .then(() => listCustomFeatures())
-        .then((list) => setCustomFeatures(list.filter((cf) => cf.status === "active")))
+        .then((list) => setCustomFeatures(list.filter((cf) => cf.status === "active" || f.status === "pending_install")))
         .catch(console.error);
     },
   }));
@@ -792,6 +847,9 @@ export default function Desktop({
             />
         ))}
 
+        {/* 휴지통 — 우하단 고정 */}
+        <TrashIcon t={t} />
+
         {/* 프로젝트 아이콘 — 폴더에 속하지 않은 것만 */}
         {projects.filter((p) => !p.folder_id).map((project, i) => {
           const col = i % 9;
@@ -841,6 +899,7 @@ export default function Desktop({
       />
 
       {/* 앱 창들 */}
+      {openWindows.has("dashboard")      && <DashboardWindow />}
       {openWindows.has("tasks")         && <TaskBoardWindow />}
       {openWindows.has("synapse")       && <SynapseWindow />}
       {openWindows.has("image-studio")  && <ImageStudioWindow />}
@@ -872,7 +931,7 @@ export default function Desktop({
       ))}
       {openWindows.has("reports")       && <ReportWindow />}
       {[...openCustomApps].map((id) => (
-        <CustomFeatureWindow key={id} featureId={id} onClose={() => closeCustomApp(id)} />
+        <CustomFeatureWindow key={id} featureId={id} initialFeature={customFeatures.find((f) => f.id === id)} onClose={() => closeCustomApp(id)} />
       ))}
       {openWindows.has("chat")          && (
         <Suspense fallback={null}>
@@ -1128,7 +1187,7 @@ export default function Desktop({
                 closeCustomApp(featureId);
                 deleteCustomFeature(featureId)
                   .then(() => listCustomFeatures())
-                  .then((list) => setCustomFeatures(list.filter((cf) => cf.status === "active")))
+                  .then((list) => setCustomFeatures(list.filter((cf) => cf.status === "active" || cf.status === "pending_install")))
                   .catch(console.error);
               },
             },

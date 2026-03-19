@@ -199,7 +199,7 @@ export default function AgentNode({
             </span>
           </div>
 
-          {/* Current task */}
+          {/* Current task + provider */}
           <div style={{
             padding: "0 8px 5px",
             flex: 1,
@@ -207,29 +207,47 @@ export default function AgentNode({
             overflow: "hidden",
             display: "flex",
             alignItems: "center",
+            justifyContent: "space-between",
+            gap: 4,
           }}>
-            {currentTask ? (
+            <div style={{ flex: 1, minWidth: 0 }}>
+              {currentTask ? (
+                <span style={{
+                  fontFamily: mono,
+                  fontSize: 10,
+                  color: isTaskDone ? "#22c55e" : isWorking ? "var(--th-text-secondary)" : "var(--th-text-muted)",
+                  display: "block",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}>
+                  {isTaskDone ? `✓ ${currentTask.title}` : `▸ ${currentTask.title}`}
+                </span>
+              ) : (
+                <svg width="100%" height="2" style={{ opacity: 0.2, display: "block" }}>
+                  <line x1="0" y1="1" x2="100%" y2="1"
+                    stroke="var(--th-text-muted)"
+                    strokeWidth="1.5"
+                    strokeDasharray="4 4"
+                  />
+                </svg>
+              )}
+            </div>
+            {!isSubAgent && agent.cli_provider && (
               <span style={{
                 fontFamily: mono,
-                fontSize: 10,
-                color: isTaskDone ? "#22c55e" : isWorking ? "var(--th-text-secondary)" : "var(--th-text-muted)",
-                display: "block",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-                fontStyle: isTaskDone ? "normal" : "normal",
+                fontSize: 8,
+                color: "var(--th-text-muted)",
+                background: "var(--th-bg-elevated)",
+                border: "1px solid var(--th-border)",
+                borderRadius: 3,
+                padding: "1px 4px",
+                flexShrink: 0,
+                letterSpacing: "0.04em",
+                opacity: 0.7,
               }}>
-                {isTaskDone ? `✓ ${currentTask.title}` : `▸ ${currentTask.title}`}
+                {agent.cli_provider.slice(0, 3).toUpperCase()}
               </span>
-            ) : (
-              /* 태스크 없음 — 점선 */
-              <svg width="100%" height="2" style={{ opacity: 0.25 }}>
-                <line x1="0" y1="1" x2="100%" y2="1"
-                  stroke="var(--th-text-muted)"
-                  strokeWidth="1.5"
-                  strokeDasharray="4 4"
-                />
-              </svg>
             )}
           </div>
         </div>

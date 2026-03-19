@@ -139,134 +139,89 @@ export default function CliWindow({ agentId: lockedAgentId, onClose }: Props) {
     });
   }, [on]);
 
-  // 선택된 에이전트
-  const [selectedAgentId, setSelectedAgentId] = useState<string>(() => {
+  // activeAgentId: 현재 창에서 실행 중인 에이전트 (터미널/경로에 영향, 변경 안 됨)
+  const [activeAgentId, setActiveAgentId] = useState<string>(() => {
     if (lockedAgentId) return lockedAgentId;
     if (cliInitialAgentId) return cliInitialAgentId;
-    return ""; // picker에서 선택
+    return "";
+  });
+
+  // dropdownAgentId: 하단 셀렉트 박스 선택값 (새 창 열기용, 현재 터미널에 영향 없음)
+  const [dropdownAgentId, setDropdownAgentId] = useState<string>(() => {
+    if (lockedAgentId) return lockedAgentId;
+    if (cliInitialAgentId) return cliInitialAgentId;
+    return "";
   });
 
   // 일반 창: cliInitialAgentId 소비
   useEffect(() => {
     if (!lockedAgentId && cliInitialAgentId) {
-      setSelectedAgentId(cliInitialAgentId);
+      setActiveAgentId(cliInitialAgentId);
+      setDropdownAgentId(cliInitialAgentId);
       clearCliInitialAgentId();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // 에이전트 프로젝트 경로 fetch — lockedAgent 또는 picker에서 선택한 에이전트
+  // 에이전트 프로젝트 경로 fetch — activeAgentId 기준 (드롭다운 변경에 반응하지 않음)
   const [agentProjectPath, setAgentProjectPath] = useState<string | null>(null);
   const [agentPathLoaded, setAgentPathLoaded] = useState(false);
   const pathFetchedForRef = useRef<string>("");
 
   useEffect(() => {
-    // picker가 아직 안 끝났으면 대기
-    const agentId = lockedAgentId ?? (pickerDone ? selectedAgentId : undefined);
+    const agentId = lockedAgentId ?? (pickerDone ? activeAgentId : undefined);
     if (!agentId) return;
-    // 동일 agentId는 한 번만 fetch
     if (pathFetchedForRef.current === agentId) return;
     pathFetchedForRef.current = agentId;
     setAgentProjectPath(null);
     setAgentPathLoaded(false);
     api.getAgentProjectPath(agentId)
       .then((path) => { if (path) setAgentProjectPath(path); })
-      .catch(() => { /* 실패 시 currentProject fallback */ })
+      .catch(() => {})
       .finally(() => setAgentPathLoaded(true));
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lockedAgentId, selectedAgentId, pickerDone]);
+  }, [lockedAgentId, activeAgentId, pickerDone]);
 
-  // 실제 사용할 작업 디렉토리: 에이전트 프로젝트 경로 → 현재 선택 프로젝트 경로 순으로 fallback
   const effectiveCwd = agentProjectPath ?? currentProject?.project_path ?? undefined;
 
   // picker에서 에이전트 선택 후 터미널로 전환
   function handlePickAgent(id: string) {
-    setSelectedAgentId(id);
+    setActiveAgentId(id);
+    setDropdownAgentId(id);
     setPickerDone(true);
   }
 
-  // 필터 에이전트가 바뀌어도 현재 선택 유지 (picker 완료 후에만)
-  useEffect(() => {
-    if (!pickerDone) return;
-    if (!filteredAgents.find((a) => a.id === selectedAgentId)) {
-      const pick = filteredAgents.find((a) => a.status === "idle") ?? filteredAgents[0];
-      if (pick) setSelectedAgentId(pick.id);
-    }
-  }, [filteredAgents, selectedAgentId, pickerDone]);
+  const activeAgent = filteredAgents.find((a) => a.id === activeAgentId)
+    ?? agents.find((a) => a.id === activeAgentId);
+  const dropdownAgent = filteredAgents.find((a) => a.id === dropdownAgentId)
+    ?? agents.find((a) => a.id === dropdownAgentId);
 
-  const selectedAgent = filteredAgents.find((a) => a.id === selectedAgentId)
-    ?? agents.find((a) => a.id === selectedAgentId); // lockedAgent가 필터 밖일 수도 있음
-
-  // XTerminal에 전달할 초기 실행 명령어 (PTY ready 직후 자동 실행)
-  // XTerminal이 자신의 WS 연결로 전송 → 타이밍 문제 없음
-  // launchedAgentIdRef: 이 터미널에서 최초 실행된 에이전트 ID (새창 분기 기준)
-  const launchedAgentIdRef = useRef<string>("");
+  // XTerminal에 전달할 초기 실행 명령어 — activeAgentId 기준
   const initialCommand = useMemo(() => {
-    const agentId = lockedAgentId ?? selectedAgentId;
+    const agentId = lockedAgentId ?? activeAgentId;
     if (!agentId) return undefined;
     const agent = agents.find((a) => a.id === agentId);
     if (!agent) return undefined;
-    // 최초 실행 에이전트만 기록 (이후 변경은 새창으로 열리므로 업데이트 안 함)
-    if (!launchedAgentIdRef.current) launchedAgentIdRef.current = agentId;
     const cmd = buildCliCmd(agent.cli_provider, providerModelConfig[agent.cli_provider]);
     const parts: string[] = [];
     if (effectiveCwd) parts.push(`cd "${effectiveCwd}"\r`);
     parts.push(`${cmd}\r`);
     return parts.join("");
-  }, [lockedAgentId, selectedAgentId, agents, effectiveCwd, providerModelConfig]);
+  }, [lockedAgentId, activeAgentId, agents, effectiveCwd, providerModelConfig]);
 
-  // CLI 명령어 재실행 (▶ 버튼용)
-  const runAgentCli = useCallback(
-    (id: string) => {
-      const agent = agents.find((a) => a.id === id);
-      if (!agent) return;
-      const cmd = buildCliCmd(agent.cli_provider, providerModelConfig[agent.cli_provider]);
-      if (effectiveCwd) {
-        send({ type: "pty_input", id: sessionId, data: `cd "${effectiveCwd}"\r` });
-      }
-      send({ type: "pty_input", id: sessionId, data: `${cmd}\r` });
-    },
-    [agents, effectiveCwd, sessionId, send, providerModelConfig],
-  );
-
-  // select 변경 핸들러
-  function handleSelectChange(e: React.ChangeEvent<HTMLSelectElement>) {
-    const id = e.target.value;
-    setSelectedAgentId(id);
-  }
-
-  // ▶ 실행 버튼
+  // ▶ 새 창 버튼 — 드롭다운에서 선택한 에이전트로 새 창
   function handleRun() {
-    if (!selectedAgent) return;
-
-    if (lockedAgentId) {
-      // 에이전트별 창: 다른 에이전트 선택 → 새 창 열기, 현재 창 select 복원
-      if (selectedAgentId !== lockedAgentId) {
-        openCliWindow(selectedAgentId);
-        setSelectedAgentId(lockedAgentId);
-        return;
-      }
-      // 같은 에이전트 → 현재 창에서 재실행
-      runAgentCli(selectedAgentId);
-    } else {
-      // 범용 창: 최초 실행 에이전트와 다르면 새 창, 같으면 현재 창에서 재실행
-      if (selectedAgentId !== launchedAgentIdRef.current) {
-        openCliWindow(selectedAgentId);
-        // 원래 창의 select는 최초 실행 에이전트로 복원
-        setSelectedAgentId(launchedAgentIdRef.current);
-      } else {
-        runAgentCli(selectedAgentId);
-      }
-    }
+    if (!dropdownAgent) return;
+    openCliWindow(dropdownAgentId);
   }
 
   const dotColor =
-    selectedAgent?.status === "working" ? "#f59e0b"
-    : selectedAgent?.status === "idle"   ? "#22c55e"
+    activeAgent?.status === "working" ? "#f59e0b"
+    : activeAgent?.status === "idle"   ? "#22c55e"
     : "#64748b";
 
-  const windowTitle = selectedAgent && (lockedAgentId || pickerDone)
-    ? `${selectedAgent.avatar_emoji} ${selectedAgent.name}`
+  const windowTitle = activeAgent && (lockedAgentId || pickerDone)
+    ? `${activeAgent.avatar_emoji} ${activeAgent.name}`
     : t({ ko: "Terminal", en: "Terminal", ja: "Terminal", zh: "Terminal" });
 
   const rows = [
@@ -543,15 +498,15 @@ export default function CliWindow({ agentId: lockedAgentId, onClose }: Props) {
             minHeight: 38,
           }}
         >
-          {/* 상태 dot */}
-          {selectedAgent && (
+          {/* 상태 dot — 현재 창 에이전트 기준 */}
+          {activeAgent && (
             <span style={{ width: 7, height: 7, borderRadius: "50%", background: dotColor, flexShrink: 0, transition: "background 0.2s" }} />
           )}
 
-          {/* 에이전트 select */}
+          {/* 에이전트 select — 새 창 열기용 */}
           <select
-            value={selectedAgentId}
-            onChange={handleSelectChange}
+            value={dropdownAgentId}
+            onChange={(e) => setDropdownAgentId(e.target.value)}
             style={{
               background: "var(--th-bg-primary)",
               color: "var(--th-text-primary)",
@@ -580,13 +535,10 @@ export default function CliWindow({ agentId: lockedAgentId, onClose }: Props) {
           {/* ▶ 실행 / 새 창 버튼 */}
           <button
             onClick={handleRun}
-            disabled={!selectedAgent}
-            title={
-              lockedAgentId && selectedAgentId !== lockedAgentId
-                ? t({ ko: `${selectedAgent?.name} 새 터미널 창 열기`, en: `Open new terminal for ${selectedAgent?.name}`, ja: `${selectedAgent?.name} 新しいターミナルを開く`, zh: `为${selectedAgent?.name}打开新终端` })
-                : selectedAgent && CLI_BASE[selectedAgent.cli_provider]
-                ? t({ ko: `${buildCliCmd(selectedAgent.cli_provider, providerModelConfig[selectedAgent.cli_provider])} 실행`, en: `Run ${buildCliCmd(selectedAgent.cli_provider, providerModelConfig[selectedAgent.cli_provider])}`, ja: `${buildCliCmd(selectedAgent.cli_provider, providerModelConfig[selectedAgent.cli_provider])} 実行`, zh: `运行 ${buildCliCmd(selectedAgent.cli_provider, providerModelConfig[selectedAgent.cli_provider])}` })
-                : t({ ko: "CLI 없음", en: "No CLI", ja: "CLIなし", zh: "无CLI" })
+            disabled={!dropdownAgent}
+            title={dropdownAgent
+              ? t({ ko: `${dropdownAgent.name} 새 터미널 창 열기`, en: `Open new terminal for ${dropdownAgent.name}`, ja: `${dropdownAgent.name} 新しいターミナルを開く`, zh: `为${dropdownAgent.name}打开新终端` })
+              : t({ ko: "에이전트 없음", en: "No agent", ja: "エージェントなし", zh: "无代理" })
             }
             style={{
               display: "flex",
@@ -596,17 +548,15 @@ export default function CliWindow({ agentId: lockedAgentId, onClose }: Props) {
               borderRadius: 5,
               border: "1px solid var(--th-border)",
               background: "transparent",
-              color: selectedAgent ? "var(--th-accent)" : "var(--th-text-muted)",
+              color: dropdownAgent ? "var(--th-accent)" : "var(--th-text-muted)",
               fontSize: 12,
               fontFamily: "var(--th-font-mono)",
-              cursor: selectedAgent ? "pointer" : "default",
-              opacity: selectedAgent ? 1 : 0.4,
+              cursor: dropdownAgent ? "pointer" : "default",
+              opacity: dropdownAgent ? 1 : 0.4,
               whiteSpace: "nowrap",
             }}
           >
-            {lockedAgentId && selectedAgentId !== lockedAgentId
-              ? t({ ko: "▶ 새 창", en: "▶ New", ja: "▶ 新窓", zh: "▶ 新窗" })
-              : t({ ko: "▶ 실행", en: "▶ Run", ja: "▶ 実行", zh: "▶ 运行" })}
+            {t({ ko: "▶ 새 창", en: "▶ New Window", ja: "▶ 新窓", zh: "▶ 新窗" })}
           </button>
 
           {/* 완료 버튼: 잠긴 에이전트가 진행 중인 태스크가 있을 때만 표시 */}

@@ -40,7 +40,7 @@ export const FEATURE_TEMPLATES: FeatureTemplate[] = [
     name_en: "Department Status Summary",
     desc_ko: "부서별 에이전트 상태(작업 중/대기/오프라인)를 집계해서 표시",
     desc_en: "Aggregate agent status per department (working/idle/offline)",
-    defaultType: "widget",
+    defaultType: "app",
     defaultConfig: { refresh: "30s", theme: "default", sizePreset: "md" },
     params: [
       {
@@ -60,7 +60,7 @@ export const FEATURE_TEMPLATES: FeatureTemplate[] = [
     name_en: "Single Agent Monitor",
     desc_ko: "특정 에이전트의 상태, 현재 태스크, 최근 활동을 실시간으로 표시",
     desc_en: "Real-time status, current task, and recent activity for one agent",
-    defaultType: "widget",
+    defaultType: "app",
     defaultConfig: { refresh: "5s", theme: "default", sizePreset: "sm" },
     params: [
       {
@@ -81,7 +81,7 @@ export const FEATURE_TEMPLATES: FeatureTemplate[] = [
     name_en: "Today's Completion Counter",
     desc_ko: "오늘 완료된 태스크 수를 큰 숫자로 표시",
     desc_en: "Display today's completed task count as a big number",
-    defaultType: "widget",
+    defaultType: "app",
     defaultConfig: { refresh: "30s", theme: "success", sizePreset: "sm" },
     params: [
       {
@@ -112,7 +112,7 @@ export const FEATURE_TEMPLATES: FeatureTemplate[] = [
     name_en: "Assignee Progress Board",
     desc_ko: "에이전트별 진행 중 / 완료 태스크 수를 바 형태로 표시",
     desc_en: "Bar-style view of in-progress and completed tasks per agent",
-    defaultType: "widget",
+    defaultType: "app",
     defaultConfig: { refresh: "30s", theme: "default", sizePreset: "md" },
     params: [],
   },
@@ -124,7 +124,7 @@ export const FEATURE_TEMPLATES: FeatureTemplate[] = [
     name_en: "Filtered Notification Feed",
     desc_ko: "특정 타입의 알림만 선택해서 표시하는 피드",
     desc_en: "Feed that shows only selected notification types",
-    defaultType: "widget",
+    defaultType: "app",
     defaultConfig: { refresh: "5s", theme: "warning", sizePreset: "md" },
     params: [
       {
@@ -150,7 +150,7 @@ export const FEATURE_TEMPLATES: FeatureTemplate[] = [
     name_en: "CLI Cost Summary",
     desc_ko: "오늘 또는 이번 주 CLI 사용 비용을 요약해서 표시",
     desc_en: "Summarize today's or this week's CLI usage cost",
-    defaultType: "widget",
+    defaultType: "app",
     defaultConfig: { refresh: "1m", theme: "accent", sizePreset: "sm" },
     params: [
       {
@@ -174,7 +174,7 @@ export const FEATURE_TEMPLATES: FeatureTemplate[] = [
     name_en: "Team Memo Board",
     desc_ko: "마크다운 형식의 공지 또는 메모를 위젯으로 고정",
     desc_en: "Pin a Markdown note or announcement as a widget",
-    defaultType: "widget",
+    defaultType: "app",
     defaultConfig: { refresh: "manual", theme: "default", sizePreset: "md" },
     params: [
       {

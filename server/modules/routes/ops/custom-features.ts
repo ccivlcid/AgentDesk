@@ -1,7 +1,11 @@
 import { randomUUID } from "node:crypto";
+import { mkdirSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 import type { DatabaseSync } from "node:sqlite";
 import type { Express } from "express";
-import { runAiGeneration, runGithubImport, runGithubRepoImport } from "./custom-features-ai.ts";
+import { runAiGeneration, runGithubImport, runGithubRepoImport, compileFeature } from "./custom-features-ai.ts";
+
+const TEMPLATE_DIR = join(process.cwd(), "feature", "template");
 
 interface Deps {
   app: Express;
@@ -59,7 +63,7 @@ export function registerCustomFeatureRoutes({ app, db, nowMs }: Deps): void {
       const { name, type, source, template_id, config } = req.body ?? {};
       const trimmedName = String(name ?? "").trim().slice(0, 40);
       if (!trimmedName) return res.status(400).json({ ok: false, error: "name required" });
-      if (!["widget", "app"].includes(type)) return res.status(400).json({ ok: false, error: "type must be widget or app" });
+      if (type !== "app") return res.status(400).json({ ok: false, error: "type must be app" });
       if (!["template", "ai"].includes(source)) return res.status(400).json({ ok: false, error: "source must be template or ai" });
 
       const id = randomUUID();
@@ -71,6 +75,18 @@ export function registerCustomFeatureRoutes({ app, db, nowMs }: Deps): void {
         `INSERT INTO custom_features (id, name, type, source, template_id, config, status, created_at, updated_at)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       ).run(id, trimmedName, type, source, template_id ?? null, configStr, status, now, now);
+
+      // 템플릿인 경우 feature/template/<id>.json 에 설정 저장
+      if (source === "template") {
+        try {
+          mkdirSync(TEMPLATE_DIR, { recursive: true });
+          writeFileSync(
+            join(TEMPLATE_DIR, `${id}.json`),
+            JSON.stringify({ id, name: trimmedName, type, template_id: template_id ?? null, config: config ?? {} }, null, 2),
+            "utf-8",
+          );
+        } catch { /* ignore */ }
+      }
 
       res.json({ ok: true, id });
     } catch {
@@ -143,55 +159,97 @@ export function registerCustomFeatureRoutes({ app, db, nowMs }: Deps): void {
     }
   });
 
-  // GET /api/custom-features/:id/render — AI 위젯 iframe 렌더 페이지
+  // GET /api/custom-features/:id/render — AI 앱 iframe 렌더 페이지
   app.get("/api/custom-features/:id/render", (req, res) => {
     try {
       const row = db
-        .prepare("SELECT id, config, status FROM custom_features WHERE id = ?")
-        .get(req.params.id) as { id: string; config: string; status: string } | undefined;
+        .prepare("SELECT id, name, config, status, bundle, error_msg FROM custom_features WHERE id = ?")
+        .get(req.params.id) as { id: string; name: string; config: string; status: string; bundle: string | null; error_msg: string | null } | undefined;
       if (!row) return res.status(404).send("<h1>Not found</h1>");
 
+      const CSS_VARS = `
+:root{--th-bg-primary:#0f1117;--th-bg-elevated:#1a1d27;--th-bg-panel:#13161e;--th-border:rgba(255,255,255,0.08);--th-text-primary:#e2e4eb;--th-text-muted:#6b7280;--th-text-heading:#f3f4f6;--th-accent:#f59e0b;--th-attr-elite:#22c55e;--th-danger-text:#f87171;--th-danger-bg:rgba(239,68,68,0.1);--th-danger-border:rgba(239,68,68,0.3);--th-font-mono:'JetBrains Mono','Fira Code',monospace;}
+*{box-sizing:border-box;margin:0;padding:0;}html,body{width:100%;height:100%;background:var(--th-bg-elevated);color:var(--th-text-primary);font-family:var(--th-font-mono);overflow:hidden;}#root{width:100%;height:100%;}`;
+
+      // bundle이 없으면 자동 설치 페이지 (pending_install / draft)
+      if (!row.bundle) {
+        const safeId = row.id.replace(/[^a-zA-Z0-9-]/g, "");
+        // pending_install이지만 error_msg 있으면 이전 컴파일 실패
+        const isError = row.status === "error" || (row.status === "pending_install" && !!row.error_msg);
+        const errorMsg = (row.error_msg ?? "알 수 없는 오류").replace(/</g, "&lt;");
+        const html = `<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><style>${CSS_VARS}
+.wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:14px;padding:24px;}
+.icon{font-size:36px;}
+.title{font-size:13px;font-weight:700;color:var(--th-text-heading);}
+.msg{font-size:11px;color:var(--th-text-muted);text-align:center;}
+.err{font-size:10px;color:var(--th-danger-text);background:var(--th-danger-bg);border:1px solid var(--th-danger-border);border-radius:4px;padding:8px 12px;max-width:320px;word-break:break-all;}
+.btn{font-size:11px;font-family:var(--th-font-mono);padding:6px 16px;border:1px solid var(--th-accent);border-radius:4px;background:rgba(245,158,11,0.15);color:var(--th-accent);cursor:pointer;}
+.spin{display:inline-block;animation:sp 1s linear infinite;}
+@keyframes sp{to{transform:rotate(360deg);}}
+</style></head><body>
+<div class="wrap" id="wrap">
+${isError
+  ? `<div class="icon">✗</div>
+     <div class="title">설치 실패</div>
+     <div class="err">${errorMsg}</div>
+     <button class="btn" onclick="doInstall()">↺ 재시도</button>`
+  : `<div class="icon"><span class="spin">⟳</span></div>
+     <div class="title" id="title">설치 준비 중...</div>
+     <div class="msg" id="msg">잠시만 기다려 주세요</div>`}
+</div>
+<script>
+(function(){
+  var id="${safeId}";
+  function doInstall(){
+    document.getElementById("title") && (document.getElementById("title").textContent="설치 중...");
+    document.getElementById("msg") && (document.getElementById("msg").textContent="번들 컴파일 중...");
+    fetch("/api/custom-features/"+id+"/compile",{method:"POST"})
+      .catch(function(){});
+    var t=setInterval(function(){
+      fetch("/api/custom-features/"+id)
+        .then(function(r){return r.json();})
+        .then(function(j){
+          var f=j.feature||j;
+          if(f.status==="active"){clearInterval(t);window.location.reload();}
+          else if(f.status==="error"){
+            clearInterval(t);
+            document.getElementById("wrap").innerHTML='<div class="icon">\u2717</div><div class="title">\uc124\uce58 \uc2e4\ud328</div><div class="err">'+(f.error_msg||"\uc54c \uc218 \uc5c6\ub294 \uc624\ub958")+'</div><button class="btn" onclick="location.reload()">\u21ba \uc7ac\uc2dc\ub3c4</button>';
+          }
+        }).catch(function(){});
+    },2000);
+  }
+  ${isError ? "" : "doInstall();"}
+  window.doInstall=doInstall;
+})();
+</script></body></html>`;
+        return res.type("text/html").send(html);
+      }
+
+      // 정상 렌더
       let config: Record<string, unknown> = {};
       try { config = JSON.parse(row.config); } catch { /* ignore */ }
-
       const configJson = JSON.stringify(config).replace(/<\/script>/gi, "<\\/script>");
-      const html = `<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<style>
-:root {
-  --th-bg-primary: #0f1117;
-  --th-bg-elevated: #1a1d27;
-  --th-bg-panel: #13161e;
-  --th-border: rgba(255,255,255,0.08);
-  --th-border-strong: rgba(255,255,255,0.15);
-  --th-border-accent: rgba(245,158,11,0.4);
-  --th-text-primary: #e2e4eb;
-  --th-text-muted: #6b7280;
-  --th-text-heading: #f3f4f6;
-  --th-accent: #f59e0b;
-  --th-attr-elite: #22c55e;
-  --th-danger-text: #f87171;
-  --th-danger-bg: rgba(239,68,68,0.1);
-  --th-danger-border: rgba(239,68,68,0.3);
-  --th-font-mono: 'JetBrains Mono','Fira Code',monospace;
-}
-*{box-sizing:border-box;margin:0;padding:0;}
-html,body{width:100%;height:100%;background:var(--th-bg-elevated);color:var(--th-text-primary);font-family:var(--th-font-mono);overflow:hidden;}
-#root{width:100%;height:100%;}
-</style>
-</head>
-<body>
-<div id="root"></div>
-<script>window.__agdConfig = ${configJson};</script>
-<script src="/api/custom-features/${row.id}/bundle.js"></script>
-</body>
-</html>`;
+      const html = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${CSS_VARS}</style></head><body><div id="root"></div><script>window.__agdConfig=${configJson};</script><script src="/api/custom-features/${row.id}/bundle.js"></script></body></html>`;
       res.type("text/html").send(html);
     } catch {
       res.status(500).send("<h1>Internal error</h1>");
+    }
+  });
+
+  // POST /api/custom-features/:id/compile — pending_install 앱 컴파일 (앱 첫 실행 시)
+  app.post("/api/custom-features/:id/compile", (req, res) => {
+    try {
+      const row = db
+        .prepare("SELECT status FROM custom_features WHERE id = ?")
+        .get(req.params.id) as { status: string } | undefined;
+      if (!row) return res.status(404).json({ ok: false, error: "Not found" });
+      // 이미 컴파일됐으면 즉시 반환
+      if (row.status === "active") return res.json({ ok: true, cached: true });
+      // 백그라운드 컴파일 (fire-and-forget)
+      void compileFeature(db, req.params.id, nowMs);
+      res.json({ ok: true, compiling: true });
+    } catch {
+      res.status(500).json({ ok: false, error: "Failed to start compile" });
     }
   });
 
@@ -227,7 +285,7 @@ html,body{width:100%;height:100%;background:var(--th-bg-elevated);color:var(--th
       const { prompt, type, name, config } = req.body ?? {};
       const trimmedPrompt = String(prompt ?? "").trim();
       if (!trimmedPrompt) return res.status(400).json({ ok: false, error: "prompt required" });
-      const featureType = ["widget", "app"].includes(type) ? type : "widget";
+      const featureType = "app";
       const trimmedName = String(name ?? "").trim().slice(0, 40) || "AI 생성 기능";
 
       const id = randomUUID();
@@ -262,7 +320,7 @@ html,body{width:100%;height:100%;background:var(--th-bg-elevated);color:var(--th
 
       db.prepare(
         `INSERT INTO custom_features (id, name, type, source, config, status, created_at, updated_at)
-         VALUES (?, ?, 'widget', 'ai', '{}', 'draft', ?, ?)`,
+         VALUES (?, ?, 'app', 'ai', '{}', 'draft', ?, ?)`,
       ).run(id, trimmedName, now, now);
 
       // 백그라운드 실행

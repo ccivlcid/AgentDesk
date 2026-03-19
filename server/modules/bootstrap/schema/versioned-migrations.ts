@@ -772,6 +772,47 @@ export const MIGRATIONS: Migration[] = [
     },
   },
   {
+    id: "2026-03-24-003-custom-features-pending-install-status",
+    up: (db) => {
+      // SQLite does not support ALTER TABLE MODIFY COLUMN.
+      // Recreate custom_features with updated CHECK constraint to include 'pending_install'.
+      try {
+        db.exec(`
+          CREATE TABLE IF NOT EXISTS custom_features_v2 (
+            id           TEXT    PRIMARY KEY,
+            name         TEXT    NOT NULL,
+            type         TEXT    NOT NULL DEFAULT 'app'
+                           CHECK(type IN ('widget','app')),
+            source       TEXT    NOT NULL DEFAULT 'template'
+                           CHECK(source IN ('template','ai')),
+            template_id  TEXT,
+            config       TEXT    NOT NULL DEFAULT '{}',
+            bundle       TEXT,
+            status       TEXT    NOT NULL DEFAULT 'active'
+                           CHECK(status IN ('active','draft','pending_install','error')),
+            error_msg    TEXT,
+            icon_svg     TEXT,
+            progress_log TEXT,
+            created_at   INTEGER NOT NULL DEFAULT (unixepoch()*1000),
+            updated_at   INTEGER NOT NULL DEFAULT (unixepoch()*1000)
+          )
+        `);
+        db.exec(`
+          INSERT OR IGNORE INTO custom_features_v2
+            (id, name, type, source, template_id, config, bundle, status, error_msg, icon_svg, progress_log, created_at, updated_at)
+          SELECT
+            id, name, type, source, template_id, config, bundle,
+            CASE WHEN status IN ('active','draft','pending_install','error') THEN status ELSE 'active' END,
+            error_msg, icon_svg, progress_log, created_at, updated_at
+          FROM custom_features
+        `);
+        db.exec("DROP TABLE custom_features");
+        db.exec("ALTER TABLE custom_features_v2 RENAME TO custom_features");
+        db.exec("CREATE INDEX IF NOT EXISTS idx_custom_features_type_updated ON custom_features(type, updated_at DESC)");
+      } catch { /* already migrated */ }
+    },
+  },
+  {
     id: "2026-03-23-002-memory-entries-project-scope",
     up: (db) => {
       // Add 'project' to memory_entries scope_type CHECK constraint.

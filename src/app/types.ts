@@ -24,7 +24,8 @@ export type WindowType =
   | "local-llm"
   | "feature-builder"
   | "flow-graph"
-  | "git-import";
+  | "git-import"
+  | "dashboard";
 
 
 export type View =

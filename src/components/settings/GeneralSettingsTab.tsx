@@ -141,10 +141,10 @@ export default function GeneralSettingsTab({ t, form, setForm, saved, onSave }: 
               <ToggleSettingCard
                 label={t({ ko: "자동 배정", en: "AUTO ASSIGN", ja: "自動割当", zh: "自动分配" })}
                 description={t({
-                  ko: "시작 시 미인증 에이전트의 CLI 프로바이더를 인증된 기본 프로바이더로 자동 교체합니다.",
-                  en: "On startup, reassigns unauthenticated agents to the default authenticated CLI provider.",
-                  ja: "起動時に未認証エージェントの CLI プロバイダーを認証済みのデフォルトに自動切替します。",
-                  zh: "启动时将未认证代理的 CLI 提供商自动替换为已认证的默认提供商。",
+                  ko: "태스크 생성 시 담당 에이전트 미지정이면 프로젝트 에이전트 중 자동 선택합니다.",
+                  en: "When a task is created without an agent, one is automatically picked from the project.",
+                  ja: "タスク作成時に担当未指定ならプロジェクトのエージェントを自動選択します。",
+                  zh: "创建任务时若未指定代理，自动从项目代理中选择。",
                 })}
                 checked={form.autoAssign}
                 onToggle={() => setForm({ ...form, autoAssign: !form.autoAssign })}

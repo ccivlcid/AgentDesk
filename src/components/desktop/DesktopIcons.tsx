@@ -359,6 +359,18 @@ export function IconImageStudio({ color }: IconProps) {
   );
 }
 
+export function IconDashboard({ color }: IconProps) {
+  // 2×2 그리드 = 현황판 은유
+  return (
+    <svg viewBox="0 0 28 28" fill="none" stroke={color} strokeWidth={S} strokeLinecap="round" strokeLinejoin="round" width={26} height={26}>
+      <rect x="3"  y="3"  width="10" height="10" rx="1.5" />
+      <rect x="15" y="3"  width="10" height="10" rx="1.5" />
+      <rect x="3"  y="15" width="10" height="10" rx="1.5" />
+      <rect x="15" y="15" width="10" height="10" rx="1.5" />
+    </svg>
+  );
+}
+
 export function IconAgentGraph({ color }: IconProps) {
   return (
     <svg viewBox="0 0 28 28" fill="none" stroke={color} strokeWidth={S} strokeLinecap="round" strokeLinejoin="round" width={26} height={26}>
@@ -373,6 +385,22 @@ export function IconAgentGraph({ color }: IconProps) {
       <circle cx="6" cy="14" r="2.5" fill={color} stroke="none" />
       <circle cx="22" cy="14" r="2.5" fill={color} stroke="none" />
       <circle cx="14" cy="23" r="2.5" fill={color} stroke="none" />
+    </svg>
+  );
+}
+
+export function IconTrash({ color }: IconProps) {
+  return (
+    <svg viewBox="0 0 28 28" fill="none" stroke={color} strokeWidth={S} strokeLinecap="round" strokeLinejoin="round" width={26} height={26}>
+      {/* 뚜껑 */}
+      <line x1="5" y1="9" x2="23" y2="9" />
+      {/* 손잡이 */}
+      <path d="M11 9V7a1 1 0 011-1h4a1 1 0 011 1v2" />
+      {/* 몸통 */}
+      <path d="M6 9l1.2 13A2 2 0 009.2 24h9.6a2 2 0 002-1.95L22 9" />
+      {/* 내부 선 */}
+      <line x1="11" y1="13" x2="11" y2="20" />
+      <line x1="17" y1="13" x2="17" y2="20" />
     </svg>
   );
 }

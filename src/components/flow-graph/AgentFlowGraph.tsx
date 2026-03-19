@@ -40,7 +40,7 @@ export default function AgentFlowGraph({
   const [ctxMenu, setCtxMenu] = useState<{ agentId: string; x: number; y: number } | null>(null);
   const ctxMenuRef = useRef<HTMLDivElement>(null);
 
-  const { nodes, edges, meetings } = useFlowLayout({
+  const { nodes, edges, meetings, deptGroups } = useFlowLayout({
     agents,
     departments,
     tasks,
@@ -64,15 +64,13 @@ export default function AgentFlowGraph({
     isPanning,
   } = useViewTransform();
 
-  // Fit to view on initial load and when nodes change
   useEffect(() => {
     if (nodes.length > 0) {
-      const timer = setTimeout(() => fitToView(nodes), 100);
+      const timer = setTimeout(() => fitToView(nodes), 120);
       return () => clearTimeout(timer);
     }
   }, [nodes, nodes.length, fitToView]);
 
-  // Esc key to deselect / close context menu
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") { setSelectedNodeId(null); setCtxMenu(null); }
@@ -81,7 +79,6 @@ export default function AgentFlowGraph({
     return () => window.removeEventListener("keydown", handler);
   }, []);
 
-  // Click outside to close context menu
   useEffect(() => {
     if (!ctxMenu) return;
     const handler = (e: globalThis.MouseEvent) => {
@@ -108,7 +105,6 @@ export default function AgentFlowGraph({
 
   const mono = "var(--th-font-mono)";
 
-  // Compute which nodes/edges to highlight/dim based on hover
   const connectedNodeIds = hoveredNodeId
     ? new Set([
         hoveredNodeId,
@@ -120,247 +116,330 @@ export default function AgentFlowGraph({
 
   const isEmpty = nodes.length === 0;
 
+  // Stats
+  const totalAgents = agents.length;
+  const workingCount = agents.filter((a) => a.status === "working").length;
+  const idleCount = agents.filter((a) => a.status === "idle").length;
+  const offlineCount = agents.filter((a) => a.status === "offline").length;
+  const inMeetingCount = meetingPresences.length;
+
+  const filterLabels: Record<FilterType, string> = {
+    all:     t({ ko: "전체", en: "All", ja: "全て", zh: "全部" }),
+    working: t({ ko: "작업중", en: "Working", ja: "作業中", zh: "工作中" }),
+    meeting: t({ ko: "미팅중", en: "Meeting", ja: "会議中", zh: "会议中" }),
+  };
+
   return (
-    <div style={{ position: "relative", width: "100%", height: "100%" }}>
-      {/* Controls overlay */}
+    <div style={{ position: "relative", width: "100%", height: "100%", display: "flex", flexDirection: "column" }}>
+
+      {/* ── 상단 통계 바 ─────────────────────────────────────────── */}
       <div style={{
-        position: "absolute",
-        top: 12,
-        left: 12,
-        zIndex: 10,
+        flexShrink: 0,
+        height: 38,
         display: "flex",
         alignItems: "center",
-        gap: 8,
+        gap: 0,
+        padding: "0 12px",
+        borderBottom: "1px solid var(--th-border)",
+        background: "var(--th-bg-panel)",
         fontFamily: mono,
         fontSize: 11,
       }}>
-        {/* Zoom controls */}
-        <div style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 2,
-          background: "var(--th-bg-panel)",
-          border: "1px solid var(--th-border)",
-          borderRadius: 6,
-          overflow: "hidden",
-        }}>
-          <button
-            onClick={zoomOut}
-            title={t({ ko: "축소", en: "zoom out", ja: "縮小", zh: "缩小" })}
-            style={{
-              padding: "4px 8px",
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              fontFamily: mono,
-              fontSize: 13,
-              color: "var(--th-text-muted)",
-              lineHeight: 1,
-            }}
-            className="hover:!text-[var(--th-text)] hover:bg-[var(--th-hover-bg)]"
-          >
-            −
-          </button>
-          <div style={{ width: 1, height: 16, background: "var(--th-border)" }} />
-          <button
-            onClick={zoomIn}
-            title={t({ ko: "확대", en: "zoom in", ja: "拡大", zh: "放大" })}
-            style={{
-              padding: "4px 8px",
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              fontFamily: mono,
-              fontSize: 13,
-              color: "var(--th-text-muted)",
-              lineHeight: 1,
-            }}
-            className="hover:!text-[var(--th-text)] hover:bg-[var(--th-hover-bg)]"
-          >
-            +
-          </button>
-          <div style={{ width: 1, height: 16, background: "var(--th-border)" }} />
-          <button
-            onClick={() => fitToView(nodes)}
-            title={t({ ko: "전체 보기", en: "fit to view", ja: "全体表示", zh: "适应视图" })}
-            style={{
-              padding: "4px 8px",
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              fontFamily: mono,
-              fontSize: 10,
-              color: "var(--th-text-muted)",
-            }}
-            className="hover:!text-[var(--th-text)] hover:bg-[var(--th-hover-bg)]"
-          >
-            ⟳ {t({ ko: "맞춤", en: "fit", ja: "合わせる", zh: "适应" })}
-          </button>
+        {/* 통계 */}
+        <div style={{ display: "flex", alignItems: "center", gap: 14, flex: 1 }}>
+          <span style={{ color: "var(--th-text-muted)", fontSize: 10 }}>
+            {t({ ko: "에이전트", en: "agents", ja: "エージェント", zh: "代理" })}
+            <span style={{ color: "var(--th-text-primary)", fontWeight: 700, marginLeft: 5 }}>{totalAgents}</span>
+          </span>
+          <span style={{ width: 1, height: 12, background: "var(--th-border)" }} />
+          {workingCount > 0 && (
+            <span style={{ display: "flex", alignItems: "center", gap: 4, color: "var(--th-accent)" }}>
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--th-accent)", display: "inline-block" }} />
+              {t({ ko: "작업중", en: "working", ja: "作業中", zh: "工作中" })}
+              <span style={{ fontWeight: 700 }}>{workingCount}</span>
+            </span>
+          )}
+          <span style={{ display: "flex", alignItems: "center", gap: 4, color: "var(--th-text-muted)" }}>
+            <span style={{ width: 6, height: 6, borderRadius: "50%", border: "1px solid var(--th-text-muted)", display: "inline-block" }} />
+            {t({ ko: "대기중", en: "idle", ja: "待機", zh: "空闲" })}
+            <span style={{ color: "var(--th-text-secondary)" }}>{idleCount}</span>
+          </span>
+          {inMeetingCount > 0 && (
+            <span style={{ display: "flex", alignItems: "center", gap: 4, color: "#a78bfa" }}>
+              <span style={{ fontSize: 9 }}>●</span>
+              {t({ ko: "미팅중", en: "in meeting", ja: "会議中", zh: "会议中" })}
+              <span style={{ fontWeight: 700 }}>{inMeetingCount}</span>
+            </span>
+          )}
+          {offlineCount > 0 && (
+            <span style={{ display: "flex", alignItems: "center", gap: 4, color: "var(--th-danger, #ef4444)", opacity: 0.7 }}>
+              <span style={{ fontSize: 9 }}>○</span>
+              {t({ ko: "오프라인", en: "offline", ja: "オフライン", zh: "离线" })}
+              <span style={{ fontWeight: 700 }}>{offlineCount}</span>
+            </span>
+          )}
         </div>
 
-        {/* Filter controls */}
-        <div style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 2,
-          background: "var(--th-bg-panel)",
-          border: "1px solid var(--th-border)",
-          borderRadius: 6,
-          overflow: "hidden",
-          padding: "2px 4px",
-        }}>
-          {(["all", "working", "meeting"] as FilterType[]).map((f) => (
+        {/* 필터 + 줌 컨트롤 */}
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          {/* 필터 */}
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            background: "var(--th-bg-elevated)",
+            border: "1px solid var(--th-border)",
+            borderRadius: 5,
+            overflow: "hidden",
+          }}>
+            {(["all", "working", "meeting"] as FilterType[]).map((f) => (
+              <button
+                key={f}
+                onClick={() => setFilter(f)}
+                style={{
+                  padding: "3px 10px",
+                  background: filter === f ? "var(--th-accent)" : "none",
+                  border: "none",
+                  cursor: "pointer",
+                  fontFamily: mono,
+                  fontSize: 10,
+                  color: filter === f ? "var(--th-accent-text, #000)" : "var(--th-text-muted)",
+                  fontWeight: filter === f ? 700 : 400,
+                }}
+              >
+                {filterLabels[f]}
+              </button>
+            ))}
+          </div>
+
+          {/* 줌 */}
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+            background: "var(--th-bg-elevated)",
+            border: "1px solid var(--th-border)",
+            borderRadius: 5,
+            overflow: "hidden",
+          }}>
             <button
-              key={f}
-              onClick={() => setFilter(f)}
-              style={{
-                padding: "3px 8px",
-                background: filter === f ? "var(--th-active-bg)" : "none",
-                border: "none",
-                cursor: "pointer",
-                fontFamily: mono,
-                fontSize: 10,
-                color: filter === f ? "var(--th-accent)" : "var(--th-text-muted)",
-                borderRadius: 4,
-              }}
-              className={filter !== f ? "hover:!text-[var(--th-text-secondary)]" : ""}
-            >
-              {f === "all"
-                ? t({ ko: "전체", en: "all", ja: "全て", zh: "全部" })
-                : f === "working"
-                ? t({ ko: "작업중", en: "working", ja: "作業中", zh: "工作中" })
-                : t({ ko: "미팅중", en: "in meeting", ja: "会議中", zh: "会议中" })}
-            </button>
-          ))}
-        </div>
-
-        {/* Scale indicator */}
-        <span style={{
-          fontFamily: mono,
-          fontSize: 10,
-          color: "var(--th-text-muted)",
-          background: "var(--th-bg-panel)",
-          border: "1px solid var(--th-border)",
-          borderRadius: 6,
-          padding: "4px 8px",
-        }}>
-          {Math.round(transform.scale * 100)}%
-        </span>
-      </div>
-
-      {/* SVG canvas */}
-      <svg
-        ref={svgRef}
-        width="100%"
-        height="100%"
-        style={{
-          background: "var(--th-bg-primary)",
-          cursor: isPanning ? "grabbing" : "grab",
-          display: "block",
-        }}
-        onWheel={handleWheel}
-        onMouseDown={handlePanStart}
-        onMouseMove={handlePanMove}
-        onMouseUp={handlePanEnd}
-        onMouseLeave={handlePanEnd}
-        onDoubleClick={handleSvgDoubleClick}
-      >
-        <defs>
-          {/* Dot grid pattern */}
-          <pattern id="dot-grid" x="0" y="0" width="24" height="24" patternUnits="userSpaceOnUse">
-            <circle cx="1" cy="1" r="1" fill="var(--th-border)" opacity="0.5" />
-          </pattern>
-
-          {/* Arrow markers */}
-          <marker id="arrow" viewBox="0 0 10 6" refX="9" refY="3" markerWidth="7" markerHeight="6" orient="auto-start-reverse">
-            <path d="M 0 0 L 10 3 L 0 6 z" fill="var(--th-text-muted)" />
-          </marker>
-          <marker id="arrow-accent" viewBox="0 0 10 6" refX="9" refY="3" markerWidth="7" markerHeight="6" orient="auto-start-reverse">
-            <path d="M 0 0 L 10 3 L 0 6 z" fill="var(--th-accent)" />
-          </marker>
-          <marker id="arrow-secondary" viewBox="0 0 10 6" refX="9" refY="3" markerWidth="7" markerHeight="6" orient="auto-start-reverse">
-            <path d="M 0 0 L 10 3 L 0 6 z" fill="var(--th-text-secondary)" />
-          </marker>
-        </defs>
-
-        {/* 배경 도트 그리드 */}
-        <rect
-          width="100%"
-          height="100%"
-          fill="url(#dot-grid)"
-          style={{ pointerEvents: "none" }}
-        />
-
-        <g transform={`translate(${transform.x}, ${transform.y}) scale(${transform.scale})`}>
-          {/* Layer 1: Meeting cluster backgrounds */}
-          {meetings.map((cluster) => (
-            <MeetingCluster key={cluster.id} cluster={cluster} />
-          ))}
-
-          {/* Layer 2: Edges */}
-          {edges.map((edge) => {
-            const isHighlighted = hoveredNodeId
-              ? edge.from.nodeId === hoveredNodeId || edge.to.nodeId === hoveredNodeId
-              : false;
-            const isDimmed = hoveredNodeId ? !isHighlighted : false;
-            return (
-              <FlowEdge
-                key={edge.id}
-                edge={edge}
-                highlighted={isHighlighted}
-                dimmed={isDimmed}
-              />
-            );
-          })}
-
-          {/* Layer 3: Agent nodes */}
-          {nodes.map((node) => {
-            const isHighlighted = connectedNodeIds ? connectedNodeIds.has(node.id) : false;
-            const isDimmed = connectedNodeIds ? !connectedNodeIds.has(node.id) : false;
-            return (
-              <AgentNode
-                key={node.id}
-                node={node}
-                tasks={tasks}
-                highlighted={isHighlighted}
-                dimmed={isDimmed}
-                selected={selectedNodeId === node.id}
-                onClick={handleNodeClick}
-                onMouseEnter={setHoveredNodeId}
-                onMouseLeave={() => setHoveredNodeId(null)}
-                onContextMenu={(agentId, x, y) => setCtxMenu({ agentId, x, y })}
-              />
-            );
-          })}
-        </g>
-      </svg>
-
-      {/* Empty state */}
-      {isEmpty && (
-        <div style={{
-          position: "absolute",
-          inset: 0,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 12,
-          fontFamily: mono,
-          pointerEvents: "none",
-        }}>
-          <span style={{ fontSize: 32, opacity: 0.3 }}>◎</span>
-          <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: 13, color: "var(--th-text-muted)", fontWeight: 600 }}>
-              {t({ ko: "에이전트 없음", en: "no agents", ja: "エージェントなし", zh: "无代理" })}
-            </div>
-            <div style={{ fontSize: 11, color: "var(--th-text-muted)", marginTop: 4 }}>
-              {filter === "all"
-                ? t({ ko: "프로젝트에 에이전트를 배정하세요", en: "assign agents to a project", ja: "プロジェクトにエージェントを配置してください", zh: "请将代理分配到项目" })
-                : t({ ko: "필터를 변경하세요", en: "change the filter", ja: "フィルタを変更してください", zh: "请更改过滤条件" })}
-            </div>
+              onClick={zoomOut}
+              style={{ padding: "3px 7px", background: "none", border: "none", cursor: "pointer", fontFamily: mono, fontSize: 13, color: "var(--th-text-muted)", lineHeight: 1 }}
+              className="hover:!text-[var(--th-text)]"
+            >−</button>
+            <span style={{ fontSize: 10, color: "var(--th-text-muted)", minWidth: 32, textAlign: "center", lineHeight: "24px" }}>
+              {Math.round(transform.scale * 100)}%
+            </span>
+            <button
+              onClick={zoomIn}
+              style={{ padding: "3px 7px", background: "none", border: "none", cursor: "pointer", fontFamily: mono, fontSize: 13, color: "var(--th-text-muted)", lineHeight: 1 }}
+              className="hover:!text-[var(--th-text)]"
+            >+</button>
+            <div style={{ width: 1, height: 14, background: "var(--th-border)" }} />
+            <button
+              onClick={() => fitToView(nodes)}
+              style={{ padding: "3px 7px", background: "none", border: "none", cursor: "pointer", fontFamily: mono, fontSize: 9, color: "var(--th-text-muted)", letterSpacing: "0.04em" }}
+              className="hover:!text-[var(--th-text)]"
+            >FIT</button>
           </div>
         </div>
-      )}
+      </div>
+
+      {/* ── SVG 캔버스 ──────────────────────────────────────────── */}
+      <div style={{ position: "relative", flex: 1, minHeight: 0 }}>
+        <svg
+          ref={svgRef}
+          width="100%"
+          height="100%"
+          style={{
+            background: "var(--th-bg-primary)",
+            cursor: isPanning ? "grabbing" : "grab",
+            display: "block",
+          }}
+          onWheel={handleWheel}
+          onMouseDown={handlePanStart}
+          onMouseMove={handlePanMove}
+          onMouseUp={handlePanEnd}
+          onMouseLeave={handlePanEnd}
+          onDoubleClick={handleSvgDoubleClick}
+        >
+          <defs>
+            <pattern id="dot-grid" x="0" y="0" width="28" height="28" patternUnits="userSpaceOnUse">
+              <circle cx="1" cy="1" r="0.8" fill="var(--th-border)" opacity="0.6" />
+            </pattern>
+            <marker id="arrow" viewBox="0 0 10 6" refX="9" refY="3" markerWidth="7" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 3 L 0 6 z" fill="var(--th-text-muted)" />
+            </marker>
+            <marker id="arrow-accent" viewBox="0 0 10 6" refX="9" refY="3" markerWidth="7" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 3 L 0 6 z" fill="var(--th-accent)" />
+            </marker>
+            <marker id="arrow-secondary" viewBox="0 0 10 6" refX="9" refY="3" markerWidth="7" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 3 L 0 6 z" fill="var(--th-text-secondary)" />
+            </marker>
+          </defs>
+
+          {/* 배경 도트 그리드 */}
+          <rect width="100%" height="100%" fill="url(#dot-grid)" style={{ pointerEvents: "none" }} />
+
+          <g transform={`translate(${transform.x}, ${transform.y}) scale(${transform.scale})`}>
+
+            {/* Layer 0: 부서 그룹 배경 */}
+            {deptGroups.map((group) => (
+              <g key={group.id}>
+                {/* 배경 rect */}
+                <rect
+                  x={group.x}
+                  y={group.y}
+                  width={group.width}
+                  height={group.height}
+                  rx={10}
+                  fill={group.color}
+                  fillOpacity={0.04}
+                  stroke={group.color}
+                  strokeOpacity={0.2}
+                  strokeWidth={1}
+                />
+                {/* 부서 헤더 */}
+                <foreignObject
+                  x={group.x}
+                  y={group.y}
+                  width={group.width}
+                  height={40}
+                >
+                  <div style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    padding: "8px 12px 0",
+                    fontFamily: mono,
+                    userSelect: "none",
+                  }}>
+                    <span style={{ fontSize: 13, lineHeight: 1 }}>{group.icon}</span>
+                    <span style={{
+                      fontSize: 10,
+                      fontWeight: 700,
+                      color: group.color,
+                      letterSpacing: "0.06em",
+                      flex: 1,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}>
+                      {group.label.toUpperCase()}
+                    </span>
+                    {group.workingCount > 0 && (
+                      <span style={{
+                        fontSize: 9,
+                        background: group.color + "33",
+                        color: group.color,
+                        borderRadius: 3,
+                        padding: "1px 5px",
+                        fontWeight: 700,
+                      }}>
+                        ● {group.workingCount}
+                      </span>
+                    )}
+                  </div>
+                </foreignObject>
+                {/* 헤더 하단 구분선 */}
+                <line
+                  x1={group.x + 12}
+                  y1={group.y + 38}
+                  x2={group.x + group.width - 12}
+                  y2={group.y + 38}
+                  stroke={group.color}
+                  strokeOpacity={0.2}
+                  strokeWidth={1}
+                />
+              </g>
+            ))}
+
+            {/* Layer 1: Meeting cluster backgrounds */}
+            {meetings.map((cluster) => (
+              <MeetingCluster key={cluster.id} cluster={cluster} />
+            ))}
+
+            {/* Layer 2: Edges */}
+            {edges.map((edge) => {
+              const isHighlighted = hoveredNodeId
+                ? edge.from.nodeId === hoveredNodeId || edge.to.nodeId === hoveredNodeId
+                : false;
+              const isDimmed = hoveredNodeId ? !isHighlighted : false;
+              return (
+                <FlowEdge
+                  key={edge.id}
+                  edge={edge}
+                  highlighted={isHighlighted}
+                  dimmed={isDimmed}
+                />
+              );
+            })}
+
+            {/* Layer 3: Agent nodes */}
+            {nodes.map((node) => {
+              const isHighlighted = connectedNodeIds ? connectedNodeIds.has(node.id) : false;
+              const isDimmed = connectedNodeIds ? !connectedNodeIds.has(node.id) : false;
+              return (
+                <AgentNode
+                  key={node.id}
+                  node={node}
+                  tasks={tasks}
+                  highlighted={isHighlighted}
+                  dimmed={isDimmed}
+                  selected={selectedNodeId === node.id}
+                  onClick={handleNodeClick}
+                  onMouseEnter={setHoveredNodeId}
+                  onMouseLeave={() => setHoveredNodeId(null)}
+                  onContextMenu={(agentId, x, y) => setCtxMenu({ agentId, x, y })}
+                />
+              );
+            })}
+          </g>
+        </svg>
+
+        {/* Empty state */}
+        {isEmpty && (
+          <div style={{
+            position: "absolute",
+            inset: 0,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 10,
+            fontFamily: mono,
+            pointerEvents: "none",
+          }}>
+            <span style={{ fontSize: 28, opacity: 0.2 }}>◎</span>
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontSize: 12, color: "var(--th-text-muted)", fontWeight: 600 }}>
+                {filter === "all"
+                  ? t({ ko: "에이전트 없음", en: "no agents", ja: "エージェントなし", zh: "无代理" })
+                  : t({ ko: "해당 에이전트 없음", en: "no agents match filter", ja: "該当なし", zh: "无匹配代理" })}
+              </div>
+              {filter !== "all" && (
+                <button
+                  type="button"
+                  onClick={() => setFilter("all")}
+                  style={{
+                    marginTop: 8,
+                    pointerEvents: "all",
+                    background: "none",
+                    border: "1px solid var(--th-border)",
+                    borderRadius: 4,
+                    color: "var(--th-text-muted)",
+                    fontFamily: mono,
+                    fontSize: 10,
+                    cursor: "pointer",
+                    padding: "3px 10px",
+                  }}
+                >
+                  {t({ ko: "전체 보기", en: "show all", ja: "全て表示", zh: "显示全部" })}
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Context menu */}
       {ctxMenu && createPortal(
@@ -407,44 +486,6 @@ export default function AgentFlowGraph({
         </div>,
         document.body,
       )}
-
-      {/* Legend */}
-      <div style={{
-        position: "absolute",
-        bottom: 12,
-        right: 12,
-        background: "var(--th-bg-panel)",
-        border: "1px solid var(--th-border)",
-        borderRadius: 7,
-        padding: "8px 12px",
-        fontFamily: mono,
-        fontSize: 10,
-        color: "var(--th-text-muted)",
-        display: "flex",
-        flexDirection: "column",
-        gap: 5,
-        backdropFilter: "blur(8px)",
-        WebkitBackdropFilter: "blur(8px)",
-      }}>
-        <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.08em", color: "var(--th-text-muted)", marginBottom: 2, opacity: 0.6 }}>
-          LEGEND
-        </div>
-        {[
-          { stroke: "var(--th-accent)", w: 2, dash: undefined, dot: true,  label: t({ ko: "위임", en: "delegation", ja: "委任", zh: "委派" }) },
-          { stroke: "var(--th-text-muted)", w: 1, dash: "3 3", dot: false, label: t({ ko: "서브에이전트", en: "sub-agent", ja: "サブエージェント", zh: "子代理" }) },
-          { stroke: "var(--th-text-secondary)", w: 2.5, dash: "8 4", dot: true, label: t({ ko: "부서간 전달", en: "cross-dept", ja: "部署間", zh: "跨部门" }) },
-          { stroke: "#a78bfa", w: 1, dash: "4 4", dot: false, label: t({ ko: "미팅", en: "meeting", ja: "ミーティング", zh: "会议" }) },
-          { stroke: "var(--th-text-muted)", w: 1, dash: "2 6", dot: false, label: t({ ko: "협업", en: "collab", ja: "コラボ", zh: "协作" }) },
-        ].map(({ stroke, w, dash, dot, label }) => (
-          <div key={label} style={{ display: "flex", alignItems: "center", gap: 7 }}>
-            <svg width="28" height="10" style={{ flexShrink: 0 }}>
-              <line x1="2" y1="5" x2="26" y2="5" stroke={stroke} strokeWidth={w} strokeDasharray={dash} strokeLinecap="round" />
-              {dot && <circle cx="14" cy="5" r="2.5" fill={stroke} opacity="0.9" />}
-            </svg>
-            <span>{label}</span>
-          </div>
-        ))}
-      </div>
     </div>
   );
 }

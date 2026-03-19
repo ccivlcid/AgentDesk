@@ -2,6 +2,12 @@ import { useMemo } from "react";
 import type { Agent, Department, Task, SubAgent, CrossDeptDelivery, MeetingPresence } from "../../types";
 import { NODE_WIDTH, NODE_HEIGHT, NODE_GAP, MEETING_RADIUS } from "./constants";
 
+const DEPT_COL_PAD_X = 20;
+const DEPT_COL_TOTAL_W = NODE_WIDTH + DEPT_COL_PAD_X * 2;
+const DEPT_COL_GAP = 24;
+const DEPT_HEADER_H = 44;
+const DEPT_PAD_BOTTOM = 20;
+
 export interface FlowNode {
   id: string;
   type: "agent" | "sub-agent";
@@ -12,6 +18,7 @@ export interface FlowNode {
   agent: Agent;
   deptLabel: string;
   deptColor: string;
+  deptIcon: string;
   inMeeting: boolean;
   parentId?: string;
 }
@@ -37,6 +44,19 @@ export interface MeetingClusterData {
   taskId: string | null;
 }
 
+export interface DeptGroupData {
+  id: string;
+  label: string;
+  color: string;
+  icon: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  agentCount: number;
+  workingCount: number;
+}
+
 interface UseFlowLayoutOptions {
   agents: Agent[];
   departments: Department[];
@@ -54,6 +74,15 @@ function bezierPath(from: { x: number; y: number }, to: { x: number; y: number }
   return `M ${from.x} ${from.y} C ${from.x} ${from.y + cp}, ${to.x} ${to.y - cp}, ${to.x} ${to.y}`;
 }
 
+function statusRank(status: string): number {
+  switch (status) {
+    case "working": return 0;
+    case "idle":    return 1;
+    case "break":   return 2;
+    default:        return 3;
+  }
+}
+
 export function useFlowLayout({
   agents,
   departments,
@@ -65,12 +94,12 @@ export function useFlowLayout({
   filter,
 }: UseFlowLayoutOptions) {
   return useMemo(() => {
-    // Filter to project agents
+    // 1. Project scope filter
     const projectAgents = projectAgentIds && projectAgentIds.size > 0
       ? agents.filter((a) => projectAgentIds.has(a.id))
       : agents;
 
-    // Apply view filter
+    // 2. View filter
     const inMeetingIds = new Set(meetingPresences.map((m) => m.agent_id));
     let filteredAgents = projectAgents;
     if (filter === "working") {
@@ -80,130 +109,152 @@ export function useFlowLayout({
     }
 
     if (filteredAgents.length === 0) {
-      return { nodes: [], edges: [], meetings: [] };
+      return { nodes: [], edges: [], meetings: [], deptGroups: [] };
     }
 
     const deptMap = new Map(departments.map((d) => [d.id, d]));
 
-    // Compute degree for layout ordering (more connections = closer to center)
-    const degreeMap = new Map<string, number>(filteredAgents.map((a) => [a.id, 0]));
-
-    for (const delivery of crossDeptDeliveries) {
-      if (degreeMap.has(delivery.fromAgentId)) degreeMap.set(delivery.fromAgentId, (degreeMap.get(delivery.fromAgentId) ?? 0) + 1);
-      if (degreeMap.has(delivery.toAgentId)) degreeMap.set(delivery.toAgentId, (degreeMap.get(delivery.toAgentId) ?? 0) + 1);
-    }
-    for (const sub of subAgents) {
-      if (degreeMap.has(sub.parentAgentId)) degreeMap.set(sub.parentAgentId, (degreeMap.get(sub.parentAgentId) ?? 0) + 1);
-    }
-
-    // Separate meeting agents from non-meeting agents
+    // 3. Separate meeting vs non-meeting agents
     const meetingAgentIds = new Set(meetingPresences.map((m) => m.agent_id));
     const nonMeetingAgents = filteredAgents.filter((a) => !meetingAgentIds.has(a.id));
-    const meetingAgents = filteredAgents.filter((a) => meetingAgentIds.has(a.id));
 
-    // Sort non-meeting agents by degree descending
-    const sorted = [...nonMeetingAgents].sort((a, b) => (degreeMap.get(b.id) ?? 0) - (degreeMap.get(a.id) ?? 0));
-
-    // Group into rows (dynamic columns based on agent count)
-    const COLS = (() => {
-      const n = sorted.length;
-      if (n <= 6) return Math.min(3, n);
-      if (n <= 20) return 4;
-      if (n <= 40) return 5;
-      return 6;
-    })();
-    const rows: Agent[][] = [];
-    for (let i = 0; i < sorted.length; i += COLS) {
-      rows.push(sorted.slice(i, i + COLS));
-    }
-
-    // Assign coordinates
-    const agentPositions = new Map<string, { x: number; y: number }>();
-    const startX = 0;
-    const startY = 0;
-
-    for (let rowIdx = 0; rowIdx < rows.length; rowIdx++) {
-      const row = rows[rowIdx];
-      const rowWidth = row.length * NODE_WIDTH + (row.length - 1) * NODE_GAP;
-      const rowStartX = startX - rowWidth / 2 + NODE_WIDTH / 2;
-      for (let colIdx = 0; colIdx < row.length; colIdx++) {
-        const agent = row[colIdx];
-        agentPositions.set(agent.id, {
-          x: rowStartX + colIdx * (NODE_WIDTH + NODE_GAP),
-          y: startY + rowIdx * (NODE_HEIGHT + NODE_GAP * 2),
-        });
-      }
-    }
-
-    // Sub-agents below their parents
+    // 4. Build sub-agent parent map
     const subAgentParentMap = new Map<string, SubAgent[]>();
     for (const sub of subAgents) {
-      if (agentPositions.has(sub.parentAgentId)) {
-        if (!subAgentParentMap.has(sub.parentAgentId)) subAgentParentMap.set(sub.parentAgentId, []);
-        subAgentParentMap.get(sub.parentAgentId)!.push(sub);
-      }
+      const parentExists = nonMeetingAgents.some((a) => a.id === sub.parentAgentId);
+      if (!parentExists) continue;
+      if (!subAgentParentMap.has(sub.parentAgentId)) subAgentParentMap.set(sub.parentAgentId, []);
+      subAgentParentMap.get(sub.parentAgentId)!.push(sub);
     }
 
-    // Build nodes for non-meeting agents
+    // 5. Group agents by department (dept column layout)
+    const sortedDepts = [...departments].sort((a, b) => (a.sort_order ?? 99) - (b.sort_order ?? 99));
+    const deptAgentsMap = new Map<string, Agent[]>();
+    for (const dept of sortedDepts) deptAgentsMap.set(dept.id, []);
+
+    const noDeptList: Agent[] = [];
+    for (const agent of nonMeetingAgents) {
+      if (agent.department_id && deptAgentsMap.has(agent.department_id)) {
+        deptAgentsMap.get(agent.department_id)!.push(agent);
+      } else {
+        noDeptList.push(agent);
+      }
+    }
+    if (noDeptList.length > 0) {
+      deptAgentsMap.set("__none__", noDeptList);
+    }
+
+    // Sort agents within each dept: working first, then idle, break, offline
+    for (const [, list] of deptAgentsMap) {
+      list.sort((a, b) => statusRank(a.status) - statusRank(b.status));
+    }
+
+    // 6. Layout: assign positions column by column
+    const agentPositions = new Map<string, { x: number; y: number }>();
     const nodes: FlowNode[] = [];
-    for (const agent of sorted) {
-      const pos = agentPositions.get(agent.id);
-      if (!pos) continue;
-      const dept = agent.department_id ? deptMap.get(agent.department_id) : undefined;
-      nodes.push({
-        id: agent.id,
-        type: "agent",
-        x: pos.x - NODE_WIDTH / 2,
-        y: pos.y - NODE_HEIGHT / 2,
-        width: NODE_WIDTH,
-        height: NODE_HEIGHT,
-        agent,
-        deptLabel: dept?.name ?? "",
-        deptColor: dept?.color ?? "var(--th-text-muted)",
-        inMeeting: false,
+    const deptGroups: DeptGroupData[] = [];
+
+    let colX = 0;
+    const deptOrder = [...sortedDepts.map((d) => d.id), ...(noDeptList.length > 0 ? ["__none__"] : [])];
+
+    for (const deptId of deptOrder) {
+      const agentsInDept = deptAgentsMap.get(deptId);
+      if (!agentsInDept || agentsInDept.length === 0) continue;
+
+      const dept = deptMap.get(deptId);
+      const deptColor = dept?.color ?? "#64748b";
+      const deptLabel = dept?.name ?? "Other";
+      const deptIcon = dept?.icon ?? "🏢";
+
+      let rowY = DEPT_HEADER_H;
+
+      for (const agent of agentsInDept) {
+        const nodeX = colX + DEPT_COL_PAD_X;
+        const nodeY = rowY;
+
+        // Center position (used by edges)
+        agentPositions.set(agent.id, {
+          x: nodeX + NODE_WIDTH / 2,
+          y: nodeY + NODE_HEIGHT / 2,
+        });
+
+        nodes.push({
+          id: agent.id,
+          type: "agent",
+          x: nodeX,
+          y: nodeY,
+          width: NODE_WIDTH,
+          height: NODE_HEIGHT,
+          agent,
+          deptLabel,
+          deptColor,
+          deptIcon,
+          inMeeting: false,
+        });
+
+        rowY += NODE_HEIGHT + NODE_GAP;
+
+        // Sub-agents below parent
+        const subs = subAgentParentMap.get(agent.id) ?? [];
+        const subW = Math.round(NODE_WIDTH * 0.72);
+        const subH = Math.round(NODE_HEIGHT * 0.72);
+        for (let si = 0; si < subs.length; si++) {
+          const sub = subs[si];
+          const subX = nodeX + si * (subW + 8);
+          const subY = rowY;
+          const subAgent: Agent = {
+            id: sub.id,
+            name: sub.task.slice(0, 24),
+            name_ko: sub.task.slice(0, 24),
+            department_id: agent.department_id,
+            role: "intern",
+            cli_provider: agent.cli_provider,
+            avatar_emoji: "🤖",
+            status: sub.status === "working" ? "working" : "idle",
+            current_task_id: null,
+            stats_tasks_done: 0,
+            stats_xp: 0,
+            created_at: 0,
+          };
+          nodes.push({
+            id: sub.id,
+            type: "sub-agent",
+            x: subX,
+            y: subY,
+            width: subW,
+            height: subH,
+            agent: subAgent,
+            deptLabel,
+            deptColor,
+            deptIcon,
+            inMeeting: false,
+            parentId: agent.id,
+          });
+          agentPositions.set(sub.id, { x: subX + subW / 2, y: subY + subH / 2 });
+        }
+        if (subs.length > 0) {
+          rowY += subH + NODE_GAP;
+        }
+      }
+
+      const groupH = rowY + DEPT_PAD_BOTTOM;
+      deptGroups.push({
+        id: deptId,
+        label: deptLabel,
+        color: deptColor,
+        icon: deptIcon,
+        x: colX,
+        y: 0,
+        width: DEPT_COL_TOTAL_W,
+        height: groupH,
+        agentCount: agentsInDept.length,
+        workingCount: agentsInDept.filter((a) => a.status === "working").length,
       });
 
-      // Sub-agents
-      const subs = subAgentParentMap.get(agent.id) ?? [];
-      const subW = Math.round(NODE_WIDTH * 0.7);
-      const subH = Math.round(NODE_HEIGHT * 0.7);
-      for (let si = 0; si < subs.length; si++) {
-        const sub = subs[si];
-        const subX = pos.x - NODE_WIDTH / 2 + si * (subW + 10);
-        const subY = pos.y + NODE_HEIGHT / 2 + 30;
-        // Create a synthetic agent for the sub-agent node
-        const subAgent: Agent = {
-          id: sub.id,
-          name: sub.task.slice(0, 20),
-          name_ko: sub.task.slice(0, 20),
-          department_id: agent.department_id,
-          role: "intern",
-          cli_provider: "claude",
-          avatar_emoji: "🤖",
-          status: sub.status === "working" ? "working" : "idle",
-          current_task_id: null,
-          stats_tasks_done: 0,
-          stats_xp: 0,
-          created_at: 0,
-        };
-        nodes.push({
-          id: sub.id,
-          type: "sub-agent",
-          x: subX,
-          y: subY,
-          width: subW,
-          height: subH,
-          agent: subAgent,
-          deptLabel: dept?.name ?? "",
-          deptColor: dept?.color ?? "var(--th-text-muted)",
-          inMeeting: false,
-          parentId: agent.id,
-        });
-        agentPositions.set(sub.id, { x: subX + subW / 2, y: subY + subH / 2 });
-      }
+      colX += DEPT_COL_TOTAL_W + DEPT_COL_GAP;
     }
 
-    // Meeting clusters
+    // 7. Meeting clusters (below main columns)
     const meetingGroups = new Map<string, MeetingPresence[]>();
     for (const mp of meetingPresences) {
       const key = `${mp.task_id ?? "none"}-${mp.phase}`;
@@ -211,23 +262,20 @@ export function useFlowLayout({
       meetingGroups.get(key)!.push(mp);
     }
 
+    const maxGroupH = deptGroups.reduce((m, g) => Math.max(m, g.height), 0);
+    const meetingBaseY = maxGroupH + 60;
     const meetings: MeetingClusterData[] = [];
     let meetingOffsetX = 0;
-    const meetingBaseY = rows.length > 0
-      ? rows.length * (NODE_HEIGHT + NODE_GAP * 2) + 80
-      : 0;
 
     for (const [key, members] of meetingGroups) {
       const firstMember = members[0];
       const cx = meetingOffsetX;
       const cy = meetingBaseY;
-      const radius = MEETING_RADIUS;
 
-      // Position meeting agents in a circle
       members.forEach((mp, idx) => {
         const angle = (idx / members.length) * 2 * Math.PI - Math.PI / 2;
-        const ax = cx + Math.cos(angle) * (radius * 0.6);
-        const ay = cy + Math.sin(angle) * (radius * 0.6);
+        const ax = cx + Math.cos(angle) * (MEETING_RADIUS * 0.6);
+        const ay = cy + Math.sin(angle) * (MEETING_RADIUS * 0.6);
         agentPositions.set(mp.agent_id, { x: ax, y: ay });
 
         const agent = agents.find((a) => a.id === mp.agent_id);
@@ -243,6 +291,7 @@ export function useFlowLayout({
             agent,
             deptLabel: dept?.name ?? "",
             deptColor: dept?.color ?? "var(--th-text-muted)",
+            deptIcon: dept?.icon ?? "🏢",
             inMeeting: true,
           });
         }
@@ -252,16 +301,16 @@ export function useFlowLayout({
         id: key,
         cx,
         cy,
-        radius,
+        radius: MEETING_RADIUS,
         agentIds: members.map((m) => m.agent_id),
         phase: firstMember.phase,
         taskId: firstMember.task_id,
       });
 
-      meetingOffsetX += radius * 2 + NODE_GAP * 2;
+      meetingOffsetX += MEETING_RADIUS * 2 + NODE_GAP * 2;
     }
 
-    // Build edges
+    // 8. Build edges
     const edges: FlowEdge[] = [];
 
     // Sub-agent edges
@@ -301,7 +350,7 @@ export function useFlowLayout({
       });
     }
 
-    // Meeting edges (connect meeting participants)
+    // Meeting edges
     for (const cluster of meetings) {
       const memberIds = cluster.agentIds;
       for (let i = 0; i < memberIds.length; i++) {
@@ -320,7 +369,7 @@ export function useFlowLayout({
       }
     }
 
-    // Delegation edges via task handoff (task.handoff_to_agent_id)
+    // Delegation edges
     const delegationEdgeSet = new Set<string>();
     for (const task of tasks) {
       if (!task.assigned_agent_id || !task.handoff_to_agent_id) continue;
@@ -343,7 +392,7 @@ export function useFlowLayout({
       });
     }
 
-    // Collaboration edges: agents with concurrent in_progress tasks in the same project
+    // Collaboration edges
     const collabEdgeSet = new Set<string>();
     const projectActiveAgents = new Map<string, string[]>();
     for (const task of tasks) {
@@ -361,7 +410,6 @@ export function useFlowLayout({
           const a = unique[i], b = unique[j];
           const edgeId = [a, b].sort().join("-collab-");
           if (collabEdgeSet.has(edgeId)) continue;
-          // Skip if already connected by delegation
           if (delegationEdgeSet.has(`delegation-${a}-${b}`) || delegationEdgeSet.has(`delegation-${b}-${a}`)) continue;
           collabEdgeSet.add(edgeId);
           const fromPos = agentPositions.get(a)!;
@@ -380,6 +428,6 @@ export function useFlowLayout({
       }
     }
 
-    return { nodes, edges, meetings };
+    return { nodes, edges, meetings, deptGroups };
   }, [agents, departments, tasks, subAgents, crossDeptDeliveries, meetingPresences, projectAgentIds, filter]);
 }

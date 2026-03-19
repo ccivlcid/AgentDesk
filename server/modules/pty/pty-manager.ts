@@ -46,7 +46,7 @@ export function createPtyManager(
       destroySession(opts.id);
     }
 
-    const ptyProcess = nodePty.spawn(shell, [], {
+    const spawnOpts: Record<string, unknown> = {
       name: "xterm-256color",
       cols,
       rows,
@@ -56,7 +56,13 @@ export function createPtyManager(
         TERM: "xterm-256color",
         COLORTERM: "truecolor",
       } as Record<string, string>,
-    });
+    };
+    // Windows: ConPTY uses AttachConsole which fails when the server has no console
+    // (e.g. run via npm/pnpm or from IDE). Use legacy WinPTY to avoid crash on PTY exit.
+    if (process.platform === "win32") {
+      spawnOpts.useConpty = false;
+    }
+    const ptyProcess = nodePty.spawn(shell, [], spawnOpts);
 
     const session: PtySession = { id: opts.id, pty: ptyProcess, ownerWs: ws, cwd, shell, taskId: opts.taskId };
     sessions.set(opts.id, session);
