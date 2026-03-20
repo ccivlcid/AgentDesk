@@ -18,6 +18,7 @@ export interface DesktopOverlaysProps {
   t: I18nContextValue["t"];
   sortByName: () => void;
   sortByDefault: () => void;
+  sortByLastUsed: () => void;
   snapToGrid: () => void;
   setShowWallpaperPicker: (v: boolean) => void;
   setNewFolderPos: (v: { x: number; y: number } | null) => void;
@@ -69,6 +70,7 @@ export function DesktopOverlays({
   t,
   sortByName,
   sortByDefault,
+  sortByLastUsed,
   snapToGrid,
   setShowWallpaperPicker,
   setNewFolderPos,
@@ -129,6 +131,11 @@ export function DesktopOverlays({
               onClick: sortByDefault,
             },
             {
+              label: t({ ko: "최근 사용 순서", en: "Sort by Last Used", ja: "最近使用順", zh: "按最近使用排序" }),
+              icon: "⊛",
+              onClick: sortByLastUsed,
+            },
+            {
               label: t({ ko: "격자에 맞추기", en: "Snap to Grid", ja: "グリッドに合わせる", zh: "对齐网格" }),
               icon: "⊞",
               onClick: snapToGrid,
@@ -157,6 +164,13 @@ export function DesktopOverlays({
               label: t({ ko: "아이콘 위치 초기화", en: "Reset Icon Positions", ja: "アイコン位置をリセット", zh: "重置图标位置" }),
               icon: "⌖",
               onClick: () => setDesktopIconLayout({}),
+            },
+            { type: "separator" },
+            { type: "section", label: t({ ko: "새로 만들기", en: "NEW", ja: "新規作成", zh: "新建" }) },
+            {
+              label: t({ ko: "새 프로젝트", en: "New Project", ja: "新規プロジェクト", zh: "新建项目" }),
+              icon: "📁",
+              onClick: () => { setNewFolderPreName(""); setNewFolderModalOpen(true); },
             },
           ]}
         />

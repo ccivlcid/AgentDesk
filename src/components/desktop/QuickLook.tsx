@@ -1,6 +1,8 @@
 import { useEffect } from "react";
 import type { Project } from "../../types";
 import { useI18n } from "../../i18n";
+import { useTaskStore } from "../../store/taskStore";
+import { useAgentStore } from "../../store/agentStore";
 
 const mono = "var(--th-font-mono)";
 
@@ -16,6 +18,8 @@ function fmt(ts: number | null): string {
 
 export default function QuickLook({ project, onClose }: QuickLookProps) {
   const { t } = useI18n();
+  const { tasks } = useTaskStore();
+  const { agents } = useAgentStore();
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -26,6 +30,9 @@ export default function QuickLook({ project, onClose }: QuickLookProps) {
   }, [onClose]);
 
   const agentIds = project.assigned_agent_ids ?? [];
+  const projectTasks = tasks.filter((tk) => tk.project_id === project.id);
+  const doneTasks = projectTasks.filter((tk) => tk.status === "done");
+  const completionPct = projectTasks.length > 0 ? Math.round((doneTasks.length / projectTasks.length) * 100) : null;
 
   return (
     <div
@@ -117,7 +124,18 @@ export default function QuickLook({ project, onClose }: QuickLookProps) {
             {project.core_goal && (
               <Row label={t({ ko: "목표", en: "Goal", ja: "目標", zh: "目标" })} value={project.core_goal} multiline />
             )}
-            <Row label={t({ ko: "태스크", en: "Tasks", ja: "タスク", zh: "任务" })} value={String(project.task_count ?? 0)} />
+            <Row label={t({ ko: "태스크", en: "Tasks", ja: "タスク", zh: "任务" })} value={projectTasks.length > 0 ? `${doneTasks.length}/${projectTasks.length}` : String(project.task_count ?? 0)} />
+            {completionPct !== null && (
+              <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                <span style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-muted)", minWidth: 72, flexShrink: 0 }}>
+                  {t({ ko: "완료율", en: "Progress", ja: "進捗率", zh: "进度" })}
+                </span>
+                <div style={{ flex: 1, height: 6, background: "var(--th-border)", borderRadius: 4, overflow: "hidden" }}>
+                  <div style={{ width: `${completionPct}%`, height: "100%", background: completionPct === 100 ? "#22c55e" : "var(--th-accent)", borderRadius: 4, transition: "width 0.4s ease" }} />
+                </div>
+                <span style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-muted)", minWidth: 32, textAlign: "right" }}>{completionPct}%</span>
+              </div>
+            )}
             <Row label={t({ ko: "마지막 사용", en: "Last used", ja: "最終使用", zh: "最近使用" })} value={fmt(project.last_used_at)} />
             <Row label={t({ ko: "생성일", en: "Created", ja: "作成日", zh: "创建日期" })} value={fmt(project.created_at)} />
             {project.github_repo && (
@@ -132,27 +150,32 @@ export default function QuickLook({ project, onClose }: QuickLookProps) {
                 {t({ ko: "배정된 에이전트", en: "Assigned agents", ja: "割り当てエージェント", zh: "分配的代理" })} ({agentIds.length})
               </div>
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-                {agentIds.map((id) => (
-                  <div
-                    key={id}
-                    title={id}
-                    style={{
-                      width: 28,
-                      height: 28,
-                      borderRadius: "50%",
-                      background: "var(--th-accent-glow)",
-                      border: "1px solid var(--th-border-accent)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontFamily: mono,
-                      fontSize: 9,
-                      color: "var(--th-accent)",
-                    }}
-                  >
-                    {id.slice(0, 2).toUpperCase()}
-                  </div>
-                ))}
+                {agentIds.map((id) => {
+                  const agent = agents.find((a) => a.id === id);
+                  const label = agent?.avatar_emoji ?? "👤";
+                  const name = agent?.name ?? id.slice(0, 6);
+                  return (
+                    <div
+                      key={id}
+                      title={name}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 4,
+                        padding: "2px 8px 2px 4px",
+                        borderRadius: 12,
+                        background: "var(--th-accent-glow)",
+                        border: "1px solid var(--th-border-accent)",
+                        fontFamily: mono,
+                        fontSize: 10,
+                        color: "var(--th-text-primary)",
+                      }}
+                    >
+                      <span style={{ fontSize: 12 }}>{label}</span>
+                      <span>{name}</span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}

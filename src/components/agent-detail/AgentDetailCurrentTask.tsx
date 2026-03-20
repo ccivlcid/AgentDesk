@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useI18n } from "../../i18n";
 import { useTaskStore } from "../../store/taskStore";
 import type { Task } from "../../types";
+import TaskExecutionStateBadge from "./TaskExecutionStateBadge";
 
 const mono = "var(--th-font-mono, monospace)";
 
@@ -88,11 +89,17 @@ export default function AgentDetailCurrentTask({ task, onOpenTerminal, isLight }
                 }}>
                   {task.title}
                 </div>
-                {task.started_at && (
-                  <div style={{ fontFamily: mono, fontSize: 10, color: taskTimeColor, marginTop: 2 }}>
-                    {t({ ko: "시작", en: "started", ja: "開始", zh: "开始" })} {relativeTime(task.started_at, t)}
-                  </div>
-                )}
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 4, flexWrap: "wrap" }}>
+                  <TaskExecutionStateBadge
+                    state={task.execution_state}
+                    attempt={task.execution_attempt}
+                  />
+                  {task.started_at && (
+                    <span style={{ fontFamily: mono, fontSize: 9, color: taskTimeColor }}>
+                      {t({ ko: "시작", en: "started", ja: "開始", zh: "开始" })} {relativeTime(task.started_at, t)}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
 

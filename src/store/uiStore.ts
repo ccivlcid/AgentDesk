@@ -10,6 +10,11 @@ import { detectRuntimeOs, isForceUpdateBannerEnabled, mergeSettingsWithDefaults 
 const DESKTOP_ICON_LAYOUT_KEY = "agentdesk_icon_layout";
 const DESKTOP_ICON_LABELS_KEY = "agentdesk_icon_labels";
 const WALLPAPER_KEY = "agentdesk_wallpaper";
+const SESSION_WINDOWS_KEY = "agentdesk_session_windows";
+const DOCK_AUTO_HIDE_KEY = "agentdesk_dock_autohide";
+const DND_KEY = "agentdesk_dnd";
+const AUTO_ASSIGN_KEY = "agentdesk_auto_assign";
+const AUTO_UPDATE_KEY = "agentdesk_auto_update";
 
 function loadWallpaper(): string {
   try { return window.localStorage.getItem(WALLPAPER_KEY) ?? "var(--th-bg-primary)"; } catch { return "var(--th-bg-primary)"; }
@@ -43,6 +48,23 @@ function saveDesktopIconLabels(labels: Record<string, string>) {
   try { window.localStorage.setItem(DESKTOP_ICON_LABELS_KEY, JSON.stringify(labels)); } catch { /* ignore */ }
 }
 
+function loadSessionWindows(): Set<WindowType> {
+  try {
+    const raw = window.localStorage.getItem(SESSION_WINDOWS_KEY);
+    if (raw) return new Set(JSON.parse(raw) as WindowType[]);
+  } catch { /* ignore */ }
+  return new Set<WindowType>();
+}
+function saveSessionWindows(w: Set<WindowType>) {
+  try { window.localStorage.setItem(SESSION_WINDOWS_KEY, JSON.stringify([...w])); } catch { /* ignore */ }
+}
+function loadBool(key: string, def = false): boolean {
+  try { const v = window.localStorage.getItem(key); return v !== null ? v === "1" : def; } catch { return def; }
+}
+function saveBool(key: string, v: boolean) {
+  try { window.localStorage.setItem(key, v ? "1" : "0"); } catch { /* ignore */ }
+}
+
 type SA<T> = T | ((prev: T) => T);
 const apply = <T>(prev: T, a: SA<T>): T => (typeof a === "function" ? (a as (p: T) => T)(prev) : a);
 
@@ -74,6 +96,14 @@ interface UiStore {
   removePendingDoc: (id: string) => void;
   jiggleMode: boolean;
   missionControlOpen: boolean;
+  dockAutoHide: boolean;
+  setDockAutoHide: (v: boolean) => void;
+  doNotDisturb: boolean;
+  setDoNotDisturb: (v: boolean) => void;
+  autoAssign: boolean;
+  setAutoAssign: (v: boolean) => void;
+  autoUpdate: boolean;
+  setAutoUpdate: (v: boolean) => void;
 
   // ── 휴지통 ────────────────────────────────────────────────────────
   trashedProjects: Array<{ id: string; name: string; project_path: string; core_goal: string; category_id: string | null; deletedAt: number }>;
@@ -108,13 +138,19 @@ interface UiStore {
   setAppSwitcherOpen: (v: boolean) => void;
   setAppSwitcherIndex: (v: number) => void;
 
-  // ── Snap (MX-04) ────────────────────────────────────────────────────
-  snapPreview: "left" | "right" | "full" | "top" | null;
+  // ── Snap (MX-04 / MX-08) ────────────────────────────────────────────
+  snapPreview: "left" | "right" | "full" | "top" | "tl" | "tr" | "bl" | "br" | null;
   snapDraggingWindow: WindowType | null;
   snapStates: Record<string, { snapped: boolean; snapZone: string; prevPos: { x: number; y: number }; prevSize: { w: number; h: number } }>;
-  setSnapPreview: (v: "left" | "right" | "full" | "top" | null) => void;
+  setSnapPreview: (v: "left" | "right" | "full" | "top" | "tl" | "tr" | "bl" | "br" | null) => void;
   setSnapDraggingWindow: (w: WindowType | null) => void;
   setSnapState: (windowType: string, state: { snapped: boolean; snapZone: string; prevPos: { x: number; y: number }; prevSize: { w: number; h: number } } | null) => void;
+
+  // ── Snap Fill Suggestion (MX-11) ─────────────────────────────────────
+  snapFillSuggestion: { oppZone: "left" | "right" | "tl" | "tr" | "bl" | "br"; forWindow: string } | null;
+  setSnapFillSuggestion: (v: { oppZone: "left" | "right" | "tl" | "tr" | "bl" | "br"; forWindow: string } | null) => void;
+  snapRequest: { windowType: string; zone: string } | null;
+  setSnapRequest: (v: { windowType: string; zone: string } | null) => void;
 
   // ── Fullscreen (MX-06) ───────────────────────────────────────────────
   fullscreenWindowId: string | null;
@@ -192,7 +228,7 @@ interface UiStore {
 
 export const useUiStore = create<UiStore>()((set) => ({
   // ── 데스크톱 OS 초기값 ────────────────────────────────────────────
-  openWindows: new Set<WindowType>(),
+  openWindows: loadSessionWindows(),
   settingsInitialTab: null,
   cliInitialAgentId: null,
   openSettings: (tab) => set((s) => ({
@@ -273,21 +309,26 @@ export const useUiStore = create<UiStore>()((set) => ({
       next.delete(w);
       focusOrder = focusOrder.filter((x) => x !== w);
       const minimized = new Set(s.minimizedWindows); minimized.delete(w);
+      saveSessionWindows(next);
       return { openWindows: next, windowFocusOrder: focusOrder, minimizedWindows: minimized };
     } else {
       next.add(w);
       focusOrder = [...focusOrder.filter((x) => x !== w), w];
+      saveSessionWindows(next);
       return { openWindows: next, windowFocusOrder: focusOrder };
     }
   }),
   openWindow: (w) => set((s) => {
     const focusOrder = [...s.windowFocusOrder.filter((x) => x !== w), w];
-    return { openWindows: new Set([...s.openWindows, w]), windowFocusOrder: focusOrder };
+    const next = new Set([...s.openWindows, w]);
+    saveSessionWindows(next);
+    return { openWindows: next, windowFocusOrder: focusOrder };
   }),
   closeWindow: (w) => set((s) => {
     const next = new Set(s.openWindows);
     next.delete(w);
     const minimized = new Set(s.minimizedWindows); minimized.delete(w);
+    saveSessionWindows(next);
     return { openWindows: next, minimizedWindows: minimized, windowFocusOrder: s.windowFocusOrder.filter((x) => x !== w) };
   }),
   // ── Project Folders ────────────────────────────────────────────────
@@ -312,6 +353,14 @@ export const useUiStore = create<UiStore>()((set) => ({
 
   jiggleMode: false,
   missionControlOpen: false,
+  dockAutoHide: loadBool(DOCK_AUTO_HIDE_KEY, false),
+  setDockAutoHide: (v) => { saveBool(DOCK_AUTO_HIDE_KEY, v); set({ dockAutoHide: v }); },
+  doNotDisturb: loadBool(DND_KEY, false),
+  setDoNotDisturb: (v) => { saveBool(DND_KEY, v); set({ doNotDisturb: v }); },
+  autoAssign: loadBool(AUTO_ASSIGN_KEY, false),
+  setAutoAssign: (v) => { saveBool(AUTO_ASSIGN_KEY, v); set({ autoAssign: v }); },
+  autoUpdate: loadBool(AUTO_UPDATE_KEY, false),
+  setAutoUpdate: (v) => { saveBool(AUTO_UPDATE_KEY, v); set({ autoUpdate: v }); },
   windowFocusOrder: [],
   minimizedWindows: new Set<WindowType>(),
 
@@ -360,6 +409,11 @@ export const useUiStore = create<UiStore>()((set) => ({
     else delete next[windowType];
     return { snapStates: next };
   }),
+
+  snapFillSuggestion: null,
+  setSnapFillSuggestion: (v) => set({ snapFillSuggestion: v }),
+  snapRequest: null,
+  setSnapRequest: (v) => set({ snapRequest: v }),
 
   fullscreenWindowId: null,
   setFullscreenWindowId: (id) => set({ fullscreenWindowId: id }),

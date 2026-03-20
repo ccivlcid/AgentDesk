@@ -1,6 +1,7 @@
 import { useI18n, localeName } from "../../../i18n";
 import type { FlowNode } from "../useFlowLayout";
 import type { Task } from "../../../types";
+import type { LiveEvent } from "../useFlowLiveUpdates";
 
 interface AgentNodeProps {
   node: FlowNode;
@@ -8,6 +9,7 @@ interface AgentNodeProps {
   highlighted?: boolean;
   dimmed?: boolean;
   selected?: boolean;
+  liveEvent?: LiveEvent;
   onClick?: (agentId: string) => void;
   onMouseEnter?: (agentId: string) => void;
   onMouseLeave?: () => void;
@@ -20,6 +22,7 @@ export default function AgentNode({
   highlighted,
   dimmed,
   selected,
+  liveEvent,
   onClick,
   onMouseEnter,
   onMouseLeave,
@@ -266,6 +269,41 @@ export default function AgentNode({
           onContextMenu?.(agent.id, e.clientX, e.clientY);
         }}
       />
+
+      {/* 실시간 이벤트 플래시 링 */}
+      {liveEvent && (() => {
+        const flashColor =
+          liveEvent.type === "done"  ? "#22c55e" :
+          liveEvent.type === "error" ? "#ef4444" :
+          deptColor || "var(--th-accent)";
+        return (
+          <rect
+            x={-3} y={-3}
+            width={width + 6} height={height + 6}
+            rx={13} ry={13}
+            fill="none"
+            stroke={flashColor}
+            strokeWidth={2}
+            opacity={0}
+            style={{ pointerEvents: "none" }}
+          >
+            <animate
+              attributeName="opacity"
+              values="0;0.85;0"
+              dur="1s"
+              repeatCount="3"
+              key={liveEvent.ts}
+            />
+            <animate
+              attributeName="stroke-width"
+              values="2;4;2"
+              dur="1s"
+              repeatCount="3"
+              key={`sw-${liveEvent.ts}`}
+            />
+          </rect>
+        );
+      })()}
     </g>
   );
 }

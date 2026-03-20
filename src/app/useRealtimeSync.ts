@@ -109,6 +109,15 @@ export function useRealtimeSync({
       on("task_update", (payload: unknown) => {
         const taskPatch = payload as Task | null;
         if (taskPatch && typeof taskPatch.id === "string") {
+          // lifecycle broadcast는 SELECT * FROM tasks (JOIN 없음) → agent_name 누락될 수 있음.
+          // assigned_agent_id가 있으면 agentsRef에서 이름을 보완한다.
+          if (taskPatch.assigned_agent_id && !taskPatch.agent_name) {
+            const a = agentsRef.current.find((ag) => ag.id === taskPatch.assigned_agent_id);
+            if (a) {
+              taskPatch.agent_name = a.name;
+              taskPatch.agent_avatar = a.avatar_emoji ?? undefined;
+            }
+          }
           setTasks((prev) => {
             const idx = prev.findIndex((t) => t.id === taskPatch.id);
             if (idx < 0) {
@@ -116,7 +125,13 @@ export function useRealtimeSync({
               scheduleLiveSync(200);
               return [...prev, taskPatch];
             }
-            const merged = { ...prev[idx], ...taskPatch };
+            // 기존 태스크에서 agent_name이 있었으면 유지 (JOIN 없는 patch가 덮어쓰지 않도록)
+            const merged = {
+              ...prev[idx],
+              ...taskPatch,
+              agent_name: taskPatch.agent_name ?? prev[idx].agent_name,
+              agent_avatar: taskPatch.agent_avatar ?? prev[idx].agent_avatar,
+            };
             if (JSON.stringify(prev[idx]) === JSON.stringify(merged)) return prev;
             const prevStatus = prev[idx].status;
             const prevExecState = prev[idx].execution_state;

@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState, type ReactNode, type FC } from "react";
 import type { WindowType } from "../../app/types";
 import { useUiStore } from "../../store/uiStore";
-import TrafficLights from "../desktop/TrafficLights";
+import TrafficLights, { type TileZone } from "../desktop/TrafficLights";
 
 const WIN_OPEN_ANIM = `
 @keyframes winOpen {
-  from { opacity: 0; transform: scale(0.96) translateY(-6px); }
-  to   { opacity: 1; transform: scale(1)    translateY(0);    }
+  0%   { opacity: 0; transform: scale(0.84) translateY(-16px); }
+  60%  { opacity: 1; transform: scale(1.02) translateY(2px); }
+  100% { opacity: 1; transform: scale(1)    translateY(0); }
 }
 `;
 
@@ -52,6 +53,9 @@ interface AppWindowProps {
 
 type ResizeDir = "n" | "s" | "e" | "w" | "ne" | "nw" | "se" | "sw";
 
+// MX-08: all snap zones including corners
+type SnapZone = "left" | "right" | "full" | "top" | "tl" | "tr" | "bl" | "br";
+
 interface ResizeState {
   dir: ResizeDir;
   mx: number;
@@ -68,8 +72,6 @@ const MENUBAR_H = 44;   // top menu bar height
 const DOCK_CLEARANCE = 88; // dock height + bottom margin
 
 // ── macOS-style cascade positioning ─────────────────────────────────────────
-// Each unseen window opens 28px right+down from the previous one, wrapping
-// after 9 steps (exactly like macOS Finder).
 let _cascadeStep = 0;
 const CASCADE_STEP = 28;
 const CASCADE_WRAP = 9;
@@ -125,6 +127,10 @@ const CURSOR: Record<ResizeDir, string> = {
 const EDGE = 6;   // edge handle thickness
 const CORN = 14;  // corner handle size
 
+// MX-08: corner detection thresholds
+const CORNER_THRESHOLD = 40;
+const EDGE_THRESHOLD = 20;
+
 export default function AppWindow({
   windowType,
   title,
@@ -150,6 +156,9 @@ export default function AppWindow({
     setSnapPreview,
     setSnapDraggingWindow,
     setSnapState,
+    setSnapFillSuggestion,
+    snapRequest,
+    setSnapRequest,
   } = useUiStore();
   const handleClose = onClose ?? (() => closeWindow(windowType));
   const handleMinimize = () => minimizeWindow(windowType);
@@ -157,6 +166,7 @@ export default function AppWindow({
   const isFullscreen = fullscreenWindowId === windowType;
   const focusIdx = windowFocusOrder.indexOf(windowType);
   const zIndex = isFullscreen ? 999 : 200 + Math.max(0, focusIdx) * 2;
+  const isFrontmost = focusIdx === windowFocusOrder.length - 1;
   const [activeTab, setActiveTab] = useState(tabs?.[0]?.id ?? "");
 
   // ── Viewport-proportional sizes (never exceed 90% of available space) ──────
@@ -165,31 +175,24 @@ export default function AppWindow({
   const safeH = Math.max(MIN_H, Math.min(defaultHeight, Math.floor(availH * 0.90)));
 
   // ── Cascade or center position ───────────────────────────────────────────
-  // If the window has never been opened: cascade (macOS-style diagonal offset).
-  // If it has been opened before: use saved position (user may have moved it).
-  // If an explicit defaultX/Y is provided: honor it.
   let fallbackX: number;
   let fallbackY: number;
   if (defaultX !== undefined) {
     fallbackX = defaultX;
     fallbackY = defaultY ?? Math.max(MENUBAR_H, (window.innerHeight - safeH) / 3);
   } else if (hasSavedState(windowType)) {
-    // Saved state will be loaded below; these are only used as the fallback
     fallbackX = Math.max(40, (window.innerWidth - safeW) / 2);
     fallbackY = Math.max(MENUBAR_H, (window.innerHeight - safeH) / 3);
   } else {
-    // First-ever open → cascade from top-left area
     const step = takeCascadeStep();
     const cx = 80 + step * CASCADE_STEP;
     const cy = MENUBAR_H + 20 + step * CASCADE_STEP;
-    // Clamp so window stays fully on screen
     fallbackX = Math.max(20, Math.min(cx, window.innerWidth - safeW - 20));
     fallbackY = Math.max(MENUBAR_H, Math.min(cy, window.innerHeight - DOCK_CLEARANCE - safeH - 20));
   }
 
   const raw = loadWinState(windowType, { x: fallbackX, y: fallbackY, w: safeW, h: safeH });
 
-  // ── Sanitize saved state: clamp to current viewport in case screen changed ─
   const clampedX = Math.max(0, Math.min(raw.x, window.innerWidth - MIN_W));
   const clampedY = Math.max(MENUBAR_H, Math.min(raw.y, window.innerHeight - DOCK_CLEARANCE - MIN_H));
   const clampedW = Math.max(MIN_W, Math.min(raw.w, window.innerWidth));
@@ -199,6 +202,65 @@ export default function AppWindow({
   const [size, setSize] = useState({ w: saved.w, h: saved.h });
   const preMaxRef = useRef<{ x: number; y: number; w: number; h: number } | null>(null);
 
+  // ── Compute snap zone rect ────────────────────────────────────────────────
+  function getZoneRect(zone: SnapZone | "center"): { x: number; y: number; w: number; h: number } {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const totalH = vh - MENUBAR_H - DOCK_CLEARANCE;
+    const halfH = Math.floor(totalH / 2);
+    const halfW = Math.floor(vw / 2);
+    switch (zone) {
+      case "left":   return { x: 0,      y: MENUBAR_H,          w: halfW, h: totalH };
+      case "right":  return { x: halfW,  y: MENUBAR_H,          w: halfW, h: totalH };
+      case "tl":     return { x: 0,      y: MENUBAR_H,          w: halfW, h: halfH };
+      case "tr":     return { x: halfW,  y: MENUBAR_H,          w: halfW, h: halfH };
+      case "bl":     return { x: 0,      y: MENUBAR_H + halfH,  w: halfW, h: halfH };
+      case "br":     return { x: halfW,  y: MENUBAR_H + halfH,  w: halfW, h: halfH };
+      case "center": {
+        const cw = Math.min(defaultWidth, vw * 0.7);
+        const ch = Math.min(defaultHeight, totalH * 0.7);
+        return { x: (vw - cw) / 2, y: MENUBAR_H + (totalH - ch) / 3, w: cw, h: ch };
+      }
+      default: // full / top
+        return { x: 0, y: MENUBAR_H, w: vw, h: totalH };
+    }
+  }
+
+  // ── Apply snap zone (used by drag, keyboard, tile menu) ──────────────────
+  function applySnapZone(zone: SnapZone | "center", prevX: number, prevY: number) {
+    if (zone === "center") {
+      const rect = getZoneRect("center");
+      setPos({ x: rect.x, y: rect.y });
+      setSize({ w: rect.w, h: rect.h });
+      setSnapState(windowType, null);
+      saveWinState(windowType, { x: rect.x, y: rect.y, w: rect.w, h: rect.h });
+      return;
+    }
+    const rect = getZoneRect(zone);
+    setPos({ x: rect.x, y: rect.y });
+    setSize({ w: rect.w, h: rect.h });
+    setSnapState(windowType, {
+      snapped: true,
+      snapZone: zone,
+      prevPos: { x: prevX, y: prevY },
+      prevSize: { w: size.w, h: size.h },
+    });
+    saveWinState(windowType, { x: rect.x, y: rect.y, w: rect.w, h: rect.h });
+
+    // MX-11: suggest fill for left/right snaps
+    const opp: Record<string, "left" | "right" | "tl" | "tr" | "bl" | "br"> = {
+      left: "right", right: "left",
+      tl: "tr", tr: "tl",
+      bl: "br", br: "bl",
+    };
+    if (opp[zone]) {
+      setSnapFillSuggestion({ oppZone: opp[zone], forWindow: windowType });
+    } else {
+      setSnapFillSuggestion(null);
+    }
+  }
+
+  // ── Fullscreen toggle ──────────────────────────────────────────────────────
   function handleMaximize() {
     if (!isFullscreen) {
       preMaxRef.current = { x: pos.x, y: pos.y, w: size.w, h: size.h };
@@ -211,6 +273,15 @@ export default function AppWindow({
       setSize({ w: prev.w, h: prev.h });
       setFullscreenWindowId(null);
     }
+  }
+
+  // MX-09: tile menu snap handler
+  function handleSnapTo(zone: TileZone) {
+    if (zone === "full") {
+      handleMaximize();
+      return;
+    }
+    applySnapZone(zone as SnapZone | "center", pos.x, pos.y);
   }
 
   useEffect(() => {
@@ -226,25 +297,73 @@ export default function AppWindow({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [isFullscreen, setFullscreenWindowId, windowType, fallbackX, fallbackY, defaultWidth, defaultHeight]);
+
+  // MX-11: respond to external snap requests
+  useEffect(() => {
+    if (!snapRequest || snapRequest.windowType !== windowType) return;
+    applySnapZone(snapRequest.zone as SnapZone | "center", pos.x, pos.y);
+    setSnapRequest(null);
+    bringWindowToFront(windowType);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [snapRequest]);
+
+  // MX-10: tile keyboard shortcuts (only when this window is frontmost)
+  useEffect(() => {
+    if (!isFrontmost || isMinimized) return;
+    function onKey(e: KeyboardEvent) {
+      if (!e.ctrlKey && !e.metaKey) return;
+      const snapMap: Record<string, SnapZone | "center"> = {
+        ArrowLeft: "left",
+        ArrowRight: "right",
+        ArrowUp: "full",
+        ArrowDown: "center",
+      };
+      const zone = snapMap[e.key];
+      if (zone) {
+        e.preventDefault();
+        // Ctrl+Shift+← / → = full snap, not half
+        if (e.shiftKey && (e.key === "ArrowLeft" || e.key === "ArrowRight")) {
+          applySnapZone(e.key === "ArrowLeft" ? "left" : "right", pos.x, pos.y);
+        } else {
+          applySnapZone(zone, pos.x, pos.y);
+        }
+        return;
+      }
+      // Ctrl+M = center
+      if (e.key === "m" || e.key === "M") {
+        e.preventDefault();
+        applySnapZone("center", pos.x, pos.y);
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isFrontmost, isMinimized, pos.x, pos.y, size.w, size.h]);
+
   const dragStart = useRef<{ mx: number; my: number; ox: number; oy: number } | null>(null);
   const resizeState = useRef<ResizeState | null>(null);
-  const snapZoneRef = useRef<"left" | "right" | "full" | "top" | null>(null);
+  const snapZoneRef = useRef<SnapZone | null>(null);
 
-  function getSnapZone(clientX: number, clientY: number): "left" | "right" | "full" | "top" | null {
-    const vw = window.innerWidth;
-    if (clientY < 40) return "full";
-    if (clientX < 20) return "left";
-    if (clientX > vw - 20) return "right";
-    return null;
-  }
-
-  function getZoneRect(zone: "left" | "right" | "full" | "top") {
+  // MX-08: detect corner snap zones first, then edges
+  function getSnapZone(clientX: number, clientY: number): SnapZone | null {
     const vw = window.innerWidth;
     const vh = window.innerHeight;
-    const h = vh - MENUBAR_H - DOCK_CLEARANCE;
-    if (zone === "left") return { x: 0, y: MENUBAR_H, w: vw / 2, h };
-    if (zone === "right") return { x: vw / 2, y: MENUBAR_H, w: vw / 2, h };
-    return { x: 0, y: MENUBAR_H, w: vw, h };
+    const nearLeft  = clientX < CORNER_THRESHOLD;
+    const nearRight = clientX > vw - CORNER_THRESHOLD;
+    const nearTop   = clientY < MENUBAR_H + CORNER_THRESHOLD;
+    const nearBot   = clientY > vh - DOCK_CLEARANCE - CORNER_THRESHOLD;
+
+    // Corners first (higher priority)
+    if (nearLeft && nearTop) return "tl";
+    if (nearRight && nearTop) return "tr";
+    if (nearLeft && nearBot) return "bl";
+    if (nearRight && nearBot) return "br";
+
+    // Then edges
+    if (clientY < MENUBAR_H + 4) return "full";
+    if (clientX < EDGE_THRESHOLD) return "left";
+    if (clientX > vw - EDGE_THRESHOLD) return "right";
+    return null;
   }
 
   function onTitlebarMouseDown(e: React.MouseEvent) {
@@ -282,13 +401,10 @@ export default function AppWindow({
       const nx = Math.max(0, dragStart.current.ox + ev.clientX - dragStart.current.mx);
       const ny = Math.min(maxY, Math.max(MENUBAR_H, dragStart.current.oy + ev.clientY - dragStart.current.my));
       if (zone) {
-        const rect = getZoneRect(zone);
-        setPos({ x: rect.x, y: rect.y });
-        setSize({ w: rect.w, h: rect.h });
-        setSnapState(windowType, { snapped: true, snapZone: zone, prevPos: { x: nx, y: ny }, prevSize: { w: size.w, h: size.h } });
-        saveWinState(windowType, { x: rect.x, y: rect.y, w: rect.w, h: rect.h });
+        applySnapZone(zone, nx, ny);
       } else {
         setPos({ x: nx, y: ny });
+        setSnapFillSuggestion(null);
         saveWinState(windowType, { x: nx, y: ny, w: size.w, h: size.h });
       }
       dragStart.current = null;
@@ -339,6 +455,10 @@ export default function AppWindow({
 
   const activeContent = tabs?.find((t) => t.id === activeTab)?.content ?? children;
 
+  // ── Minimize animation: slide to dock (bottom-center) ────────────────────
+  const minimizeTX = window.innerWidth / 2 - (pos.x + size.w / 2);
+  const minimizeTY = window.innerHeight - 50 - (pos.y + size.h / 2);
+
   // Shared style for resize handles
   const edgeStyle = (dir: ResizeDir, style: React.CSSProperties): React.CSSProperties => ({
     position: "absolute",
@@ -369,9 +489,11 @@ export default function AppWindow({
         zIndex,
         boxShadow: "0 20px 60px var(--th-glass-shadow), 0 0 0 0.5px var(--th-glass-border) inset",
         opacity: isMinimized ? 0 : 1,
-        transform: isMinimized ? "scale(0.88) translateY(12px)" : "scale(1)",
+        transform: isMinimized
+          ? `translateX(${minimizeTX}px) translateY(${minimizeTY}px) scale(0.08)`
+          : "scale(1)",
         pointerEvents: isMinimized ? "none" : "all",
-        transition: "opacity 0.2s ease, transform 0.2s ease",
+        transition: "opacity 0.28s ease, transform 0.28s cubic-bezier(0.4, 0, 0.6, 1)",
         animation: "winOpen 0.18s ease",
       }}
     >
@@ -394,7 +516,12 @@ export default function AppWindow({
       >
         {/* Traffic lights — absolute left */}
         <div style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", zIndex: 2 }}>
-          <TrafficLights onClose={handleClose} onMinimize={handleMinimize} onMaximize={handleMaximize} />
+          <TrafficLights
+            onClose={handleClose}
+            onMinimize={handleMinimize}
+            onMaximize={handleMaximize}
+            onSnapTo={handleSnapTo}
+          />
         </div>
 
         {/* Title — centered (drag area) */}

@@ -19,6 +19,7 @@ import QuickLook from "./QuickLook";
 import ProjectFolderWindow from "./ProjectFolderWindow";
 import MissionControl from "./MissionControl";
 import DashboardWindow from "../windows/DashboardWindow";
+import WidgetBoardWindow from "../widget-board/WidgetBoardWindow";
 import TaskBoardWindow from "../windows/TaskBoardWindow";
 import SynapseWindow from "../windows/SynapseWindow";
 import ImageStudioWindow from "../windows/ImageStudioWindow";
@@ -146,6 +147,7 @@ export function DesktopWindowStack({
   return (
     <>
       {openWindows.has("dashboard") && <DashboardWindow />}
+      {openWindows.has("widget-board") && <WidgetBoardWindow />}
       {openWindows.has("tasks") && <TaskBoardWindow />}
       {openWindows.has("synapse") && <SynapseWindow />}
       {openWindows.has("image-studio") && <ImageStudioWindow />}

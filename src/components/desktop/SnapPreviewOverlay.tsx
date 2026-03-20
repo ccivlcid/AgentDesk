@@ -9,6 +9,8 @@ export default function SnapPreviewOverlay() {
 
   const vw = typeof window !== "undefined" ? window.innerWidth : 800;
   const zoneH = typeof window !== "undefined" ? window.innerHeight - MENUBAR_H - DOCK_H : 600;
+  const halfH = Math.floor(zoneH / 2);
+  const halfW = Math.floor(vw / 2);
 
   const style: React.CSSProperties = {
     position: "fixed",
@@ -19,44 +21,16 @@ export default function SnapPreviewOverlay() {
     transition: "opacity 0.15s",
   };
 
-  if (snapPreview === "left") {
-    return (
-      <div
-        style={{
-          ...style,
-          left: 0,
-          top: MENUBAR_H,
-          width: vw / 2,
-          height: zoneH,
-        }}
-      />
-    );
-  }
-  if (snapPreview === "right") {
-    return (
-      <div
-        style={{
-          ...style,
-          left: vw / 2,
-          top: MENUBAR_H,
-          width: vw / 2,
-          height: zoneH,
-        }}
-      />
-    );
-  }
-  if (snapPreview === "full" || snapPreview === "top") {
-    return (
-      <div
-        style={{
-          ...style,
-          left: 0,
-          top: MENUBAR_H,
-          width: vw,
-          height: zoneH,
-        }}
-      />
-    );
-  }
-  return null;
+  const zones: Record<typeof snapPreview, React.CSSProperties> = {
+    left:  { left: 0,      top: MENUBAR_H, width: halfW,  height: zoneH },
+    right: { left: halfW,  top: MENUBAR_H, width: halfW,  height: zoneH },
+    full:  { left: 0,      top: MENUBAR_H, width: vw,     height: zoneH },
+    top:   { left: 0,      top: MENUBAR_H, width: vw,     height: zoneH },
+    tl:    { left: 0,      top: MENUBAR_H, width: halfW,  height: halfH },
+    tr:    { left: halfW,  top: MENUBAR_H, width: halfW,  height: halfH },
+    bl:    { left: 0,      top: MENUBAR_H + halfH, width: halfW, height: halfH },
+    br:    { left: halfW,  top: MENUBAR_H + halfH, width: halfW, height: halfH },
+  };
+
+  return <div style={{ ...style, ...zones[snapPreview] }} />;
 }

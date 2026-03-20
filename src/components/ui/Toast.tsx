@@ -17,10 +17,12 @@ interface ToastItem {
   id: string;
   message: string;
   variant: ToastVariant;
+  group?: string;   // MX-12: group key for collapsing
+  count: number;    // MX-12: how many have been grouped
 }
 
 interface ToastContextValue {
-  showToast: (message: string, variant?: ToastVariant) => void;
+  showToast: (message: string, variant?: ToastVariant, group?: string) => void;
 }
 
 // ── Context ───────────────────────────────────────────────────────────────────
@@ -35,7 +37,6 @@ export function useToast(): ToastContextValue {
 
 // ── Config ────────────────────────────────────────────────────────────────────
 
-/** Left accent bar + text color per variant */
 const VARIANT_CONFIG: Record<ToastVariant, {
   sigil: string;
   sigilColor: string;
@@ -94,7 +95,7 @@ function Toast({ item, onRemove }: { item: ToastItem; onRemove: (id: string) => 
     if (dismissMs === null) return;
     timerRef.current = setTimeout(() => onRemove(item.id), dismissMs);
     return () => { if (timerRef.current) clearTimeout(timerRef.current); };
-  }, [item.id, dismissMs, onRemove]);
+  }, [item.id, item.count, dismissMs, onRemove]); // restart timer on count change
 
   return (
     <div
@@ -112,6 +113,7 @@ function Toast({ item, onRemove }: { item: ToastItem; onRemove: (id: string) => 
         minWidth: "260px",
         maxWidth: "400px",
         fontFamily: mono,
+        position: "relative",
       }}
     >
       {/* Sigil */}
@@ -135,6 +137,23 @@ function Toast({ item, onRemove }: { item: ToastItem; onRemove: (id: string) => 
       }}>
         {item.message}
       </span>
+
+      {/* MX-12: group count badge */}
+      {item.count > 1 && (
+        <span style={{
+          fontSize: 9,
+          fontFamily: mono,
+          fontWeight: 700,
+          background: cfg.accentBar,
+          color: "#fff",
+          borderRadius: 10,
+          padding: "1px 5px",
+          flexShrink: 0,
+          alignSelf: "center",
+        }}>
+          ×{item.count}
+        </span>
+      )}
 
       {/* [×] dismiss */}
       <button
@@ -166,10 +185,19 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<ToastItem[]>([]);
   const counterRef = useRef(0);
 
-  const showToast = useCallback((message: string, variant: ToastVariant = "info") => {
+  const showToast = useCallback((message: string, variant: ToastVariant = "info", group?: string) => {
     const id = `toast-${++counterRef.current}`;
     setToasts((prev) => {
-      const next = [...prev, { id, message, variant }];
+      // MX-12: if group is set, collapse into existing grouped toast
+      if (group) {
+        const idx = prev.findIndex((t) => t.group === group);
+        if (idx >= 0) {
+          const updated = [...prev];
+          updated[idx] = { ...updated[idx], message, count: updated[idx].count + 1 };
+          return updated;
+        }
+      }
+      const next = [...prev, { id, message, variant, group, count: 1 }];
       return next.length > MAX_TOASTS ? next.slice(next.length - MAX_TOASTS) : next;
     });
   }, []);

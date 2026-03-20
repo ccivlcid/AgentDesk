@@ -5,6 +5,7 @@ import { useUiStore } from "../../store/uiStore";
 import { useI18n } from "../../i18n";
 import { useTheme } from "../../ThemeContext";
 import ProjectSelector from "../project-selector/ProjectSelector";
+import ControlCenter from "./ControlCenter";
 
 const mono = "var(--th-font-mono)";
 
@@ -48,6 +49,7 @@ export default function MenuBar({
   const [now, setNow] = useState(() => new Date());
   const [appMenuOpen, setAppMenuOpen] = useState(false);
   const [clockOpen, setClockOpen] = useState(false);
+  const { dockAutoHide, setDockAutoHide, doNotDisturb, setDoNotDisturb } = useUiStore();
   const [calMonth, setCalMonth] = useState(() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1); });
   const menuRef = useRef<HTMLDivElement>(null);
   const clockRef = useRef<HTMLDivElement>(null);
@@ -265,6 +267,30 @@ export default function MenuBar({
               <span>{t({ ko: "미션 컨트롤", en: "Mission Control", ja: "ミッションコントロール", zh: "调度中心" })}</span>
               <span style={{ fontSize: 10, color: "var(--th-text-muted)" }}>Ctrl ↑</span>
             </button>
+
+            <div style={menuSepStyle} />
+
+            {/* Dock Auto-hide */}
+            <button
+              style={menuItemStyle}
+              onClick={() => setDockAutoHide(!dockAutoHide)}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--th-accent-glow)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "none"; }}
+            >
+              <span>{t({ ko: "Dock 자동 숨기기", en: "Auto-hide Dock", ja: "Dockを自動的に隠す", zh: "自动隐藏Dock" })}</span>
+              <span style={{ fontSize: 11 }}>{dockAutoHide ? "✓" : ""}</span>
+            </button>
+
+            {/* Do Not Disturb */}
+            <button
+              style={menuItemStyle}
+              onClick={() => setDoNotDisturb(!doNotDisturb)}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--th-accent-glow)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "none"; }}
+            >
+              <span>🌙 {t({ ko: "방해 금지 모드", en: "Do Not Disturb", ja: "おやすみモード", zh: "勿扰模式" })}</span>
+              <span style={{ fontSize: 11 }}>{doNotDisturb ? "✓" : ""}</span>
+            </button>
           </div>
         )}
       </div>
@@ -298,33 +324,6 @@ export default function MenuBar({
         </span>
       )}
 
-      {/* 자율 진행(Yolo) 모드 표시 + 토글 */}
-      {onToggleYoloMode !== undefined && (
-        <button
-          type="button"
-          onClick={onToggleYoloMode}
-          title={yoloMode
-            ? t({ ko: "자율 진행 켜짐 — 클릭하여 끄기", en: "Autonomous mode ON — click to disable", ja: "自律実行 ON — クリックで無効化", zh: "自主模式开启 — 点击关闭" })
-            : t({ ko: "자율 진행 꺼짐 — 클릭하여 켜기", en: "Autonomous mode OFF — click to enable", ja: "自律実行 OFF — クリックで有効化", zh: "自主模式关闭 — 点击开启" })
-          }
-          style={{
-            background: yoloMode ? "rgba(245,158,11,0.15)" : "transparent",
-            border: `1px solid ${yoloMode ? "var(--th-accent)" : "var(--th-border)"}`,
-            borderRadius: 5,
-            color: yoloMode ? "var(--th-accent)" : "var(--th-text-muted)",
-            fontFamily: mono,
-            fontSize: 10,
-            fontWeight: yoloMode ? 700 : 400,
-            cursor: "pointer",
-            padding: "2px 7px",
-            letterSpacing: yoloMode ? "0.08em" : "0.04em",
-            flexShrink: 0,
-            transition: "all 0.15s",
-          }}
-        >
-          {yoloMode ? "AUTO" : "AUTO"}
-        </button>
-      )}
 
       {/* 검색 트리거 */}
       <button
@@ -382,6 +381,14 @@ export default function MenuBar({
 
       {/* 알림 */}
       {notificationSlot}
+
+      {/* Control Center */}
+      <ControlCenter
+        connected={connected}
+        runningAgentCount={runningAgentCount}
+        yoloMode={yoloMode}
+        onToggleYoloMode={onToggleYoloMode}
+      />
 
       {/* 시각 — 클릭하면 달력 패널 */}
       <button

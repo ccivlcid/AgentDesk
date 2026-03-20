@@ -47,7 +47,7 @@ function ToastIcon({ type }: { type: string }) {
 }
 
 export default function ToastContainer() {
-  const { toasts, dismissToast } = useUiStore();
+  const { toasts, dismissToast, doNotDisturb } = useUiStore();
   const timersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
   const prevIdsRef = useRef<Set<string>>(new Set());
 
@@ -95,7 +95,7 @@ export default function ToastContainer() {
     >
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       <AnimatePresence initial={false}>
-        {toasts.map((toast) => (
+        {!doNotDisturb && toasts.map((toast) => (
           <motion.div
             key={toast.id}
             initial={{ opacity: 0, x: 336 }}
@@ -154,6 +154,31 @@ export default function ToastContainer() {
             </div>
           </motion.div>
         ))}
+        {doNotDisturb && toasts.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, x: 336 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 336 }}
+            transition={{ duration: 0.3 }}
+            style={{
+              pointerEvents: "auto",
+              background: "var(--th-bg-surface)",
+              border: "1px solid var(--th-border)",
+              borderRadius: 10,
+              boxShadow: "0 4px 16px rgba(0,0,0,0.25)",
+              padding: "8px 12px",
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              fontFamily: mono,
+              fontSize: 11,
+              color: "var(--th-text-muted)",
+            }}
+          >
+            <span>🌙</span>
+            <span>{toasts.length} notification{toasts.length > 1 ? "s" : ""} suppressed</span>
+          </motion.div>
+        )}
       </AnimatePresence>
     </div>
   );

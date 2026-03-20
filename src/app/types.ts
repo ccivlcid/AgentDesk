@@ -25,7 +25,8 @@ export type WindowType =
   | "feature-builder"
   | "flow-graph"
   | "git-import"
-  | "dashboard";
+  | "dashboard"
+  | "widget-board";
 
 
 export type View =

@@ -271,6 +271,17 @@ export function IconDockSynapse({ color }: IconProps) {
   );
 }
 
+export function IconDockWidgetBoard({ color }: IconProps) {
+  return (
+    <svg viewBox="0 0 28 28" fill="none" stroke={color} strokeWidth={S} strokeLinecap="round" strokeLinejoin="round" width={26} height={26}>
+      <rect x="3" y="4" width="10" height="10" rx="2" />
+      <rect x="15" y="4" width="10" height="10" rx="2" />
+      <rect x="3" y="16" width="10" height="8" rx="2" />
+      <rect x="15" y="16" width="10" height="8" rx="2" />
+    </svg>
+  );
+}
+
 // ── Project category icons ────────────────────────────────────────────────────
 
 /** cat_software_dev — 코드 brackets */

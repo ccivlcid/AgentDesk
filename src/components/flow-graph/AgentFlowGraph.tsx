@@ -8,6 +8,7 @@ import AgentNode from "./nodes/AgentNode";
 import MeetingCluster from "./nodes/MeetingCluster";
 import FlowEdge from "./edges/FlowEdge";
 import { useUiStore } from "../../store/uiStore";
+import { useFlowLiveUpdates } from "./useFlowLiveUpdates";
 
 interface AgentFlowGraphProps {
   agents: Agent[];
@@ -34,6 +35,7 @@ export default function AgentFlowGraph({
 }: AgentFlowGraphProps) {
   const { t } = useI18n();
   const { openCli } = useUiStore();
+  const liveEvents = useFlowLiveUpdates();
   const [filter, setFilter] = useState<FilterType>("all");
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
@@ -147,6 +149,18 @@ export default function AgentFlowGraph({
       }}>
         {/* 통계 */}
         <div style={{ display: "flex", alignItems: "center", gap: 14, flex: 1 }}>
+          {/* LIVE indicator */}
+          <span style={{ display: "flex", alignItems: "center", gap: 4, fontFamily: mono, fontSize: 9, letterSpacing: "0.1em", color: liveEvents.size > 0 ? "#30d158" : "var(--th-text-muted)", fontWeight: 700 }}>
+            <span style={{
+              width: 5, height: 5, borderRadius: "50%",
+              background: liveEvents.size > 0 ? "#30d158" : "var(--th-border)",
+              display: "inline-block",
+              boxShadow: liveEvents.size > 0 ? "0 0 5px #30d158" : "none",
+              animation: liveEvents.size > 0 ? "pulse 1.5s infinite" : "none",
+            }} />
+            LIVE
+          </span>
+
           <span style={{ color: "var(--th-text-muted)", fontSize: 10 }}>
             {t({ ko: "에이전트", en: "agents", ja: "エージェント", zh: "代理" })}
             <span style={{ color: "var(--th-text-primary)", fontWeight: 700, marginLeft: 5 }}>{totalAgents}</span>
@@ -386,6 +400,7 @@ export default function AgentFlowGraph({
                   highlighted={isHighlighted}
                   dimmed={isDimmed}
                   selected={selectedNodeId === node.id}
+                  liveEvent={liveEvents.get(node.agent.id)}
                   onClick={handleNodeClick}
                   onMouseEnter={setHoveredNodeId}
                   onMouseLeave={() => setHoveredNodeId(null)}

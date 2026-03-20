@@ -11,6 +11,7 @@ import AgentDetailCurrentTask from "./AgentDetailCurrentTask";
 import AgentDetailSections from "./AgentDetailSections";
 import AgentChatTab from "./AgentChatTab";
 import AgentTimeline from "./AgentTimeline";
+import AgentLogsTab from "./AgentLogsTab";
 
 export interface AgentDetailData {
   skills: Array<{ id: string; name: string; description?: string }>;
@@ -20,13 +21,14 @@ export interface AgentDetailData {
   cost: { thisMonthUsd: number; thisMonthTokens: number; totalTokens: number } | null;
 }
 
-type TabKey = "overview" | "tasks" | "chat" | "timeline";
+type TabKey = "overview" | "tasks" | "chat" | "timeline" | "logs";
 
 const TABS: { key: TabKey; ko: string; en: string; ja: string; zh: string }[] = [
-  { key: "overview", ko: "개요",    en: "Overview",  ja: "概要",     zh: "概览"   },
-  { key: "tasks",    ko: "업무",    en: "Tasks",     ja: "タスク",   zh: "任务"   },
-  { key: "chat",     ko: "채팅",    en: "Chat",      ja: "チャット", zh: "聊天"   },
+  { key: "overview", ko: "개요",    en: "Overview",  ja: "概要",         zh: "概览"   },
+  { key: "tasks",    ko: "업무",    en: "Tasks",     ja: "タスク",       zh: "任务"   },
+  { key: "chat",     ko: "채팅",    en: "Chat",      ja: "チャット",     zh: "聊天"   },
   { key: "timeline", ko: "타임라인", en: "Timeline",  ja: "タイムライン", zh: "时间线" },
+  { key: "logs",     ko: "로그",    en: "Logs",      ja: "ログ",         zh: "日志"   },
 ];
 
 export default function AgentDetailPanel() {
@@ -443,6 +445,13 @@ export default function AgentDetailPanel() {
                 <div style={{ padding: "4px 0" }}>
                   <AgentTimeline agentId={agent.id} t={t} />
                 </div>
+              ) : activeTab === "logs" ? (
+                <AgentLogsTab
+                  agentId={agent.id}
+                  taskId={currentTask?.id ?? null}
+                  t={t}
+                  isLight={isLight}
+                />
               ) : null}
             </div>
           </motion.div>

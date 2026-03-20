@@ -5,6 +5,8 @@ import Dock from "./Dock";
 import ToastContainer from "./ToastContainer";
 import AppSwitcher from "./AppSwitcher";
 import SnapPreviewOverlay from "./SnapPreviewOverlay";
+import SnapFillSuggestion from "./SnapFillSuggestion";
+import RightShelf from "./RightShelf";
 
 export interface DesktopChromeProps {
   wallpaper: string;
@@ -56,8 +58,10 @@ export function DesktopChrome({
       <ToastContainer />
       <AppSwitcher />
       <SnapPreviewOverlay />
+      <SnapFillSuggestion />
       <DesktopIconArea {...iconAreaProps} />
       <Dock {...dockProps} />
+      <RightShelf />
       {children}
     </div>
   );

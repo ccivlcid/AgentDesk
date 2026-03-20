@@ -174,7 +174,7 @@ export default function Desktop({
     addFeatureToTrash,
     setCustomFeatures,
   });
-  const { sortByName, sortByDefault, snapToGrid } = useDesktopSortSnap(icons, projects);
+  const { sortByName, sortByDefault, snapToGrid, sortByLastUsed } = useDesktopSortSnap(icons, projects);
   const { onDesktopMouseDown, onDesktopMouseMove, onDesktopMouseUp, onDesktopClick } = useDesktopJiggle({
     jiggleMode,
     setJiggleMode,
@@ -213,12 +213,12 @@ export default function Desktop({
       openProjectWindowIds, setOpenProjectWindowIds, setCurrentProjectId, setSelectedProjectId, addProjectToFolder, setFolders,
       openCustomApp, closeCustomApp, addFeatureToTrash, setCustomFeatures,
       newFolderPos, setNewFolderPos, newFolderName, setNewFolderName, newFolderInputRef,
-      showCommandPalette, setShowCommandPalette, sortByName, sortByDefault, snapToGrid, setDesktopIconLayout, createProject,
+      showCommandPalette, setShowCommandPalette, sortByName, sortByDefault, sortByLastUsed, snapToGrid, setDesktopIconLayout, createProject,
       showTrash, setShowTrash, folders, customFeatures,
       onSaveSettings, onRefreshCli, oauthResult, onOauthResultClear, onAgentsChange, onSendMessage, onSendAnnouncement, onSendDirective, onClearMessages, onCreateTask,
     }),
     // overlay block deps (stable refs/setters omitted)
-    [runProjectInfo, projectCtxMenu, cfCtxMenu, ctxMenu, agentManagerCreateCount, showQuickCreateAgent, newFolderModalOpen, newFolderPreName, newFolderCreating, createProjectFolder, showWallpaperPicker, showExportModal, showMarkdownEditor, quickLookProjectId, missionControlOpen, handleDeleteProject, openProjectWindowIds, addProjectToFolder, setFolders, openCustomApp, closeCustomApp, addFeatureToTrash, setCustomFeatures, newFolderPos, newFolderName, newFolderInputRef, showCommandPalette, sortByName, sortByDefault, snapToGrid, setDesktopIconLayout, createProject, showTrash, folders, customFeatures, onSaveSettings, onRefreshCli, oauthResult, onOauthResultClear, onAgentsChange, onSendMessage, onSendAnnouncement, onSendDirective, onClearMessages, onCreateTask],
+    [runProjectInfo, projectCtxMenu, cfCtxMenu, ctxMenu, agentManagerCreateCount, showQuickCreateAgent, newFolderModalOpen, newFolderPreName, newFolderCreating, createProjectFolder, showWallpaperPicker, showExportModal, showMarkdownEditor, quickLookProjectId, missionControlOpen, handleDeleteProject, openProjectWindowIds, addProjectToFolder, setFolders, openCustomApp, closeCustomApp, addFeatureToTrash, setCustomFeatures, newFolderPos, newFolderName, newFolderInputRef, showCommandPalette, sortByName, sortByDefault, sortByLastUsed, snapToGrid, setDesktopIconLayout, createProject, showTrash, folders, customFeatures, onSaveSettings, onRefreshCli, oauthResult, onOauthResultClear, onAgentsChange, onSendMessage, onSendAnnouncement, onSendDirective, onClearMessages, onCreateTask],
   );
   const overlayBlockProps = useDesktopOverlayBlockProps(overlayBridge);
   return (

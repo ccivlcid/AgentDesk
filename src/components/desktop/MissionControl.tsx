@@ -46,6 +46,7 @@ export default function MissionControl({ openWindows, onClose, onFocusWindow }: 
     "flow-graph":        { emoji: "🕸️", label: t({ ko: "에이전트 그래프",  en: "Agent Graph",    ja: "エージェントグラフ",        zh: "代理图" }) },
     "git-import":        { emoji: "⬆️", label: t({ ko: "Git 가져오기",     en: "Git Import",     ja: "Gitインポート",              zh: "Git导入" }) },
     "dashboard":         { emoji: "◈",  label: t({ ko: "대시보드",          en: "Dashboard",      ja: "ダッシュボード",              zh: "控制台" }) },
+    "widget-board":      { emoji: "⊞",  label: t({ ko: "위젯 보드",         en: "Widget Board",   ja: "ウィジェットボード",            zh: "小组件板" }) },
   };
 
   useEffect(() => {
@@ -158,31 +159,49 @@ function Card({ emoji, label, onClick }: { emoji: string; label: string; onClick
     <button
       onClick={onClick}
       style={{
-        width: 110,
-        height: 90,
-        background: "rgba(255,255,255,0.08)",
+        width: 128,
+        height: 104,
+        background: "rgba(255,255,255,0.07)",
         border: "1px solid rgba(255,255,255,0.12)",
-        borderRadius: 12,
+        borderRadius: 14,
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        gap: 8,
+        gap: 10,
         cursor: "pointer",
-        transition: "background 0.15s, transform 0.1s",
+        transition: "background 0.15s, transform 0.12s, box-shadow 0.15s",
         fontFamily: mono,
+        boxShadow: "0 2px 12px rgba(0,0,0,0.2)",
       }}
       onMouseEnter={(e) => {
-        (e.currentTarget as HTMLButtonElement).style.background = "rgba(245,158,11,0.22)";
-        (e.currentTarget as HTMLButtonElement).style.transform = "scale(1.05)";
+        const el = e.currentTarget as HTMLButtonElement;
+        el.style.background = "rgba(245,158,11,0.2)";
+        el.style.borderColor = "rgba(245,158,11,0.4)";
+        el.style.transform = "scale(1.06) translateY(-2px)";
+        el.style.boxShadow = "0 8px 24px rgba(245,158,11,0.25)";
       }}
       onMouseLeave={(e) => {
-        (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.08)";
-        (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)";
+        const el = e.currentTarget as HTMLButtonElement;
+        el.style.background = "rgba(255,255,255,0.07)";
+        el.style.borderColor = "rgba(255,255,255,0.12)";
+        el.style.transform = "scale(1) translateY(0)";
+        el.style.boxShadow = "0 2px 12px rgba(0,0,0,0.2)";
       }}
     >
-      <span style={{ fontSize: 24 }}>{emoji}</span>
-      <span style={{ fontSize: 10, color: "rgba(255,255,255,0.75)" }}>{label}</span>
+      <div style={{
+        width: 44,
+        height: 44,
+        borderRadius: 10,
+        background: "rgba(255,255,255,0.08)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontSize: 22,
+      }}>
+        {emoji}
+      </div>
+      <span style={{ fontSize: 10, color: "rgba(255,255,255,0.8)", letterSpacing: "0.04em", maxWidth: 108, textAlign: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{label}</span>
     </button>
   );
 }

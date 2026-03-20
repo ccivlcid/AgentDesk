@@ -25,8 +25,8 @@ export function useDesktopJiggle(params: UseDesktopJiggleParams) {
 
   const onDesktopMouseDown = useCallback(
     (e: React.MouseEvent) => {
-      if ((e.target as HTMLElement).closest("[data-no-ctx]") || (e.target as HTMLElement) !== e.currentTarget) return;
       if (e.button !== 0) return;
+      if ((e.target as HTMLElement).closest("[data-no-ctx]")) return;
       longPressMoved.current = false;
       longPressStartPos.current = { x: e.clientX, y: e.clientY };
       if (longPressTimer.current) clearTimeout(longPressTimer.current);
@@ -55,7 +55,7 @@ export function useDesktopJiggle(params: UseDesktopJiggleParams) {
       setCtxMenu(null);
       setProjectCtxMenu(null);
       setCfCtxMenu(null);
-      if (jiggleMode && e.target === e.currentTarget) {
+      if (jiggleMode && !(e.target as HTMLElement).closest("[data-no-ctx]")) {
         setJiggleMode(false);
       }
     },

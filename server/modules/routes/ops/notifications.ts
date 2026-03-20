@@ -18,8 +18,19 @@ export function registerNotificationRoutes(ctx: RuntimeContext): void {
   app.get("/api/notifications", (req, res) => {
     const limit = Math.min(Number(req.query.limit) || 50, 200);
     const unreadOnly = req.query.unread === "1";
+    const filterType = typeof req.query.type === "string" ? req.query.type : null;
+    const filterAgentId = typeof req.query.agent_id === "string" ? req.query.agent_id : null;
 
-    const whereClause = unreadOnly ? "WHERE n.read = 0" : "";
+    const conditions: string[] = [];
+    if (unreadOnly) conditions.push("n.read = 0");
+    if (filterType) conditions.push("n.type = ?");
+    if (filterAgentId) conditions.push("n.agent_id = ?");
+    const whereClause = conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
+    const params: (string | number)[] = [];
+    if (filterType) params.push(filterType);
+    if (filterAgentId) params.push(filterAgentId);
+    params.push(limit);
+
     const rows = db
       .prepare(
         `
@@ -34,7 +45,7 @@ export function registerNotificationRoutes(ctx: RuntimeContext): void {
         LIMIT ?
       `,
       )
-      .all(limit) as Array<NotificationRow & { agent_name: string; agent_name_ko: string; agent_avatar: string }>;
+      .all(...params) as Array<NotificationRow & { agent_name: string; agent_name_ko: string; agent_avatar: string }>;
 
     const unreadCount = (
       db.prepare("SELECT COUNT(*) as cnt FROM notifications WHERE read = 0").get() as { cnt: number }

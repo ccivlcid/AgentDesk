@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useProjectStore } from "../../store/projectStore";
 import { useI18n } from "../../i18n";
+import AnomalySection from "./AnomalySection";
 
 interface AgentStat {
   agent_id: string;
@@ -269,6 +270,9 @@ export default function AgentPerformanceDashboard() {
           ))}
         </div>
       )}
+
+      {/* Anomaly panel */}
+      <AnomalySection />
 
       {/* Grid */}
       <div style={{ flex: 1, overflowY: "auto", padding: 16 }}>

@@ -1,22 +1,104 @@
 # AgentDesk — 개발 진행 현황
 
-> 마지막 업데이트: 2026-03-20 (macOS UX Improvements 스펙 문서화)
+> 마지막 업데이트: 2026-03-20 (Widget Board + Real-time Flow Graph 구현 완료)
 
 ---
 
-## 🔜 macOS UX Improvements — 7개 기능 (2026-03-20 스펙 완료)
+## ✅ Widget Board + Real-time Flow Graph — 완료 (2026-03-20)
 
-> 상세 스펙: [`docs/design/MACOS-UX-IMPROVEMENTS.md`](design/MACOS-UX-IMPROVEMENTS.md)
+### 구현 항목
 
-| 코드 | 기능 | 우선순위 | 상태 |
-|------|------|----------|------|
-| MX-01 | 창 엣지 리사이즈 (right·bottom·corner·left·top) | 🔴 P1 | 🔜 대기 |
-| MX-02 | 알림 배너 Toast (우상단 슬라이드인, 4종 타입) | 🔴 P1 | 🔜 대기 |
-| MX-03 | Cmd+Tab 앱 전환기 | 🟡 P2 | 🔜 대기 |
-| MX-04 | 창 스냅 / 반반 타일링 (엣지 드래그 미리보기) | 🟡 P2 | 🔜 대기 |
-| MX-05 | Dock 배지 (실행 중·미읽은 알림·실패 수) | 🟡 P2 | 🔜 대기 |
-| MX-06 | 초록 버튼 전체화면 토글 | 🔵 P3 | 🔜 대기 |
-| MX-07 | 컨텍스트 메뉴 polish (키보드·위치보정·스타일) | 🔵 P3 | 🔜 대기 |
+| 기능 | 상태 |
+|------|------|
+| Widget Board 윈도우 (Dock 아이콘, 그리드 레이아웃, 드래그 정렬, span 조절, localStorage 저장) | ✅ 완료 |
+| Real-time Flow Graph 애니메이션 (LIVE 인디케이터, 노드 플래시 링, agent_status/task_update WS 구독) | ✅ 완료 |
+
+### 변경 파일
+
+| 파일 | 내용 |
+|------|------|
+| `src/components/widget-board/useWidgetBoard.ts` | 신규: 위젯 레이아웃 상태 (localStorage 영속), addWidget/removeWidget/moveCell/changeSpan |
+| `src/components/widget-board/WidgetGrid.tsx` | 신규: 3-column CSS grid + HTML5 DnD 드래그 정렬 |
+| `src/components/widget-board/WidgetGridCell.tsx` | 신규: 위젯 셀 (drag handle, span 1/2/3 토글, ×삭제) |
+| `src/components/widget-board/WidgetBoardWindow.tsx` | 신규: AppWindow 컨테이너 + AddWidget 피커 드롭다운 |
+| `src/components/flow-graph/useFlowLiveUpdates.ts` | 신규: WS agent_status / task_update 구독 → Map<agentId, LiveEvent> (3s TTL) |
+| `src/components/flow-graph/nodes/AgentNode.tsx` | liveEvent prop 추가 → SVG 플래시 링 애니메이션 (activated/done/error 색상) |
+| `src/components/flow-graph/AgentFlowGraph.tsx` | useFlowLiveUpdates 통합, LIVE 펄스 인디케이터, liveEvent 전달 |
+| `src/components/desktop/DesktopIcons.tsx` | IconDockWidgetBoard 추가 |
+| `src/components/desktop/Dock.tsx` | widget-board 항목 추가 |
+| `src/components/desktop/DesktopWindowStack.tsx` | WidgetBoardWindow 렌더 추가 |
+| `src/app/types.ts` | WindowType에 "widget-board" 추가 |
+| `src/components/desktop/AppSwitcher.tsx` | "widget-board" 레이블 추가 |
+| `src/components/desktop/MissionControl.tsx` | "widget-board" 레이블/이모지 추가 |
+
+---
+
+## ✅ AI Agent Feature Enhancements — Step 1~3 완료 (2026-03-20)
+
+### 구현 항목
+
+| Step | 기능 | 상태 |
+|------|------|------|
+| 1 | AgentDetailPanel Logs 탭 — 실시간 CLI 출력 스트리밍 | ✅ 완료 |
+| 2 | Task Execution State Badge — 13개 상태 + retry 배지 | ✅ 완료 |
+| 3 | Anomaly Detection UI — Performance 탭 이상 감지 섹션 | ✅ 완료 |
+
+### 변경 파일
+
+| 파일 | 내용 |
+|------|------|
+| `src/components/agent-detail/AgentLogsTab.tsx` | 신규: WebSocket cli_output 스트리밍, ANSI 제거, 자동 스크롤 |
+| `src/components/agent-detail/AgentDetailPanel.tsx` | Logs 탭 추가 (TabKey, TABS, render branch) |
+| `src/components/agent-detail/TaskExecutionStateBadge.tsx` | 신규: 13-state 배지, pulse 애니메이션, retry #N |
+| `src/components/agent-detail/AgentDetailCurrentTask.tsx` | TaskExecutionStateBadge + started_at 통합 |
+| `src/components/performance/AnomalySection.tsx` | 신규: agent_anomaly 알림 목록, collapse, dismiss, dismiss-all |
+| `src/components/performance/AgentPerformanceDashboard.tsx` | AnomalySection import + 렌더 |
+| `server/modules/routes/ops/notifications.ts` | GET `/api/notifications` — `?type=` & `?agent_id=` 필터 추가 |
+
+---
+
+## ✅ macOS UX Improvements — MX-01~12 전체 완료 (2026-03-20)
+
+> 스펙 문서: [`docs/design/MACOS-UX-IMPROVEMENTS.md`](design/MACOS-UX-IMPROVEMENTS.md)
+
+### MX-01~07 (원본 7개 기능)
+
+| 코드 | 기능 | 상태 |
+|------|------|------|
+| MX-01 | 창 8방향 엣지/코너 리사이즈 | ✅ 완료 |
+| MX-02 | 알림 배너 Toast (4종, ToastProvider) | ✅ 완료 |
+| MX-03 | Ctrl+Tab 앱 전환기 (AppSwitcher) | ✅ 완료 |
+| MX-04 | 창 스냅/타일링 (좌·우·전체, amber 미리보기) | ✅ 완료 |
+| MX-05 | Dock 배지 (태스크 수·실패·채팅 미읽음) | ✅ 완료 |
+| MX-06 | 초록 버튼 전체화면 토글 + Esc 복원 | ✅ 완료 |
+| MX-07 | 컨텍스트 메뉴 polish (공유 ContextMenu, 키보드 ↑↓Enter Esc) | ✅ 완료 |
+
+### MX-08~12 (macOS Sequoia 신규 기능 반영)
+
+| 코드 | 기능 | 상태 |
+|------|------|------|
+| MX-08 | 코너 스냅 4분면 (tl/tr/bl/br, 40px 감지) | ✅ 완료 |
+| MX-09 | 녹색 버튼 hover → 타일 메뉴 팝업 (8가지 레이아웃) | ✅ 완료 |
+| MX-10 | 타일 키보드 단축키 (Ctrl+←→↑↓/M, frontmost 창만) | ✅ 완료 |
+| MX-11 | 스냅 후 나머지 채우기 제안 (oppZone → window 선택 팝업, 6초 auto-dismiss) | ✅ 완료 |
+| MX-12 | 토스트 그룹 배지 (같은 group key → ×N 배지로 collapse) | ✅ 완료 |
+
+### 변경 파일
+
+| 파일 | 내용 |
+|------|------|
+| `src/components/windows/AppWindow.tsx` | 8방향 리사이즈, 스냅(MX-04/08), 전체화면(MX-06), 타일메뉴(MX-09), 키보드(MX-10), fill suggestion(MX-11) |
+| `src/components/desktop/TrafficLights.tsx` | 녹색 버튼 hover → MOVE & RESIZE 타일 메뉴 팝업 |
+| `src/components/desktop/SnapPreviewOverlay.tsx` | 8존 amber 미리보기 (left/right/full/top/tl/tr/bl/br) |
+| `src/components/desktop/SnapFillSuggestion.tsx` | [신규] 스냅 후 반대 존 채우기 제안 오버레이 |
+| `src/components/desktop/AppSwitcher.tsx` | [신규] Ctrl+Tab 앱 전환기 |
+| `src/components/desktop/DockBadge.tsx` | [신규] Dock 배지 컴포넌트 |
+| `src/components/desktop/DesktopChrome.tsx` | SnapFillSuggestion 등록 |
+| `src/components/desktop/DesktopProjectCtxMenu.tsx` | 공유 ContextMenu로 교체 |
+| `src/components/desktop/DesktopFeatureCtxMenu.tsx` | 공유 ContextMenu로 교체 |
+| `src/components/ui/ContextMenu.tsx` | [신규] 공유 ContextMenu (키보드 ↑↓Enter Esc + viewport clamping) |
+| `src/components/ui/Toast.tsx` | group 파라미터 + ×N 배지 |
+| `src/store/uiStore.ts` | snapPreview 8존 타입 확장, snapFillSuggestion, snapRequest 추가 |
 
 ---
 

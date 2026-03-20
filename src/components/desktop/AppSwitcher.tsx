@@ -53,6 +53,7 @@ export default function AppSwitcher() {
     "flow-graph": t({ ko: "에이전트 그래프", en: "Agent Graph", ja: "エージェントグラフ", zh: "代理图" }),
     "git-import": t({ ko: "Git 가져오기", en: "Git Import", ja: "Gitインポート", zh: "Git导入" }),
     dashboard: t({ ko: "대시보드", en: "Dashboard", ja: "ダッシュボード", zh: "控制台" }),
+    "widget-board": t({ ko: "위젯 보드", en: "Widget Board", ja: "ウィジェットボード", zh: "小组件板" }),
   };
 
   const ordered = [...windowFocusOrder].filter((w) => openWindows.has(w)).reverse();

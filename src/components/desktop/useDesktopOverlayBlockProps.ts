@@ -60,6 +60,7 @@ export interface DesktopOverlayBlockBridge {
   setShowCommandPalette: (v: boolean) => void;
   sortByName: () => void;
   sortByDefault: () => void;
+  sortByLastUsed: () => void;
   snapToGrid: () => void;
   setDesktopIconLayout: (v: Record<string, { x: number; y: number }>) => void;
   createProject: (params: { name: string; project_path: string; core_goal: string; create_path_if_missing: boolean }) => Promise<import("../../types").Project>;
@@ -154,6 +155,7 @@ export function useDesktopOverlayBlockProps(bridge: DesktopOverlayBlockBridge): 
       setShowCommandPalette,
       sortByName,
       sortByDefault,
+      sortByLastUsed,
       snapToGrid,
       createProject,
       showTrash,
@@ -284,6 +286,7 @@ export function useDesktopOverlayBlockProps(bridge: DesktopOverlayBlockBridge): 
       t,
       sortByName,
       sortByDefault,
+      sortByLastUsed,
       snapToGrid,
       setShowWallpaperPicker,
       setNewFolderPos,

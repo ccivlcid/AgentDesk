@@ -9,51 +9,6 @@ interface GeneralSettingsTabProps {
   onSave: () => void;
 }
 
-interface ToggleSettingCardProps {
-  label: string;
-  description?: string;
-  checked: boolean;
-  onToggle: () => void;
-}
-
-function ToggleSettingCard({ label, description, checked, onToggle }: ToggleSettingCardProps) {
-  return (
-    <div
-      className="flex items-start justify-between gap-3 px-3 py-2.5"
-      style={{ border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", borderRadius: 6 }}
-    >
-      <div className="flex flex-col gap-0.5 min-w-0">
-        <span className="text-xs font-mono" style={{ color: "var(--th-text-secondary)" }}>
-          {label}
-        </span>
-        {description && (
-          <span className="text-[10px] font-mono leading-snug" style={{ color: "var(--th-text-muted)" }}>
-            {description}
-          </span>
-        )}
-      </div>
-      <button
-        type="button"
-        aria-pressed={checked}
-        aria-label={label}
-        onClick={onToggle}
-        className="flex-shrink-0 font-mono text-[11px] transition-colors mt-0.5"
-        style={{
-          borderRadius: 6,
-          border: `1px solid ${checked ? "var(--th-accent)" : "var(--th-border)"}`,
-          background: checked ? "rgba(245,158,11,0.12)" : "var(--th-bg-surface)",
-          color: checked ? "var(--th-accent)" : "var(--th-text-muted)",
-          padding: "2px 8px",
-          minWidth: "3rem",
-          textAlign: "center",
-          cursor: "pointer",
-        }}
-      >
-        {checked ? "ON" : "OFF"}
-      </button>
-    </div>
-  );
-}
 
 const fieldLabel = (text: string): React.ReactNode => (
   <div style={{ fontFamily: "var(--th-font-mono)", fontSize: "9px", color: "var(--th-text-muted)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "6px" }}>
@@ -135,44 +90,6 @@ export default function GeneralSettingsTab({ t, form, setForm, saved, onSave }: 
             </select>
           </div>
 
-          <div>
-            {fieldLabel(t({ ko: "동작 설정", en: "TOGGLES", ja: "動作設定", zh: "功能开关" }))}
-            <div className="grid grid-cols-1 gap-1.5 md:grid-cols-2">
-              <ToggleSettingCard
-                label={t({ ko: "자동 배정", en: "AUTO ASSIGN", ja: "自動割当", zh: "自动分配" })}
-                description={t({
-                  ko: "태스크 생성 시 담당 에이전트 미지정이면 프로젝트 에이전트 중 자동 선택합니다.",
-                  en: "When a task is created without an agent, one is automatically picked from the project.",
-                  ja: "タスク作成時に担当未指定ならプロジェクトのエージェントを自動選択します。",
-                  zh: "创建任务时若未指定代理，自动从项目代理中选择。",
-                })}
-                checked={form.autoAssign}
-                onToggle={() => setForm({ ...form, autoAssign: !form.autoAssign })}
-              />
-              <ToggleSettingCard
-                label={t({ ko: "자율 진행", en: "AUTONOMOUS", ja: "自律実行", zh: "自主推进" })}
-                description={t({
-                  ko: "에이전트가 중간 결정을 사람 확인 없이 자동으로 처리합니다.",
-                  en: "Agents auto-approve decision steps without waiting for human input.",
-                  ja: "エージェントが意思決定を人の確認なしに自動処理します。",
-                  zh: "代理自动处理决策步骤，无需人工确认。",
-                })}
-                checked={form.yoloMode === true}
-                onToggle={() => setForm({ ...form, yoloMode: !(form.yoloMode === true) })}
-              />
-              <ToggleSettingCard
-                label={t({ ko: "자동 업데이트", en: "AUTO UPDATE", ja: "自動更新", zh: "自动更新" })}
-                description={t({
-                  ko: "AgentDesk 서버가 새 버전을 감지하면 자동으로 업데이트합니다.",
-                  en: "Server automatically updates when a new version is detected.",
-                  ja: "新しいバージョンを検出するとサーバーが自動更新します。",
-                  zh: "检测到新版本时服务器自动更新。",
-                })}
-                checked={form.autoUpdateEnabled}
-                onToggle={() => setForm({ ...form, autoUpdateEnabled: !form.autoUpdateEnabled })}
-              />
-            </div>
-          </div>
         </div>
       </div>
 

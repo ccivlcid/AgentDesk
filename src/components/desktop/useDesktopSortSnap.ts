@@ -51,5 +51,13 @@ export function useDesktopSortSnap(icons: DesktopIconDef[], projects: Project[])
     setDesktopIconLayout({ ...current, ...snapped });
   }, [setDesktopIconLayout]);
 
-  return { sortByName, sortByDefault, snapToGrid };
+  const sortByLastUsed = useCallback(() => {
+    const sortedSystem = [...icons].map((d) => d.id);
+    const sortedProjects = [...projects]
+      .sort((a, b) => ((b as any).updated_at ?? 0) - ((a as any).updated_at ?? 0))
+      .map((p) => `project-${p.id}`);
+    arrangeIcons(sortedSystem, sortedProjects);
+  }, [icons, projects, arrangeIcons]);
+
+  return { sortByName, sortByDefault, snapToGrid, sortByLastUsed };
 }

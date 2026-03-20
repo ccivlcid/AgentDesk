@@ -5,8 +5,26 @@ import { useAgentStore } from "../../store/agentStore";
 import { useTaskStore } from "../../store/taskStore";
 import { useTheme } from "../../ThemeContext";
 import { useI18n } from "../../i18n";
-import { IconDockWorkflow, IconDockLibrary, IconDockSettings, IconDockChat, IconDockTasks } from "./DesktopIcons";
+import {
+  IconDockWorkflow, IconDockLibrary, IconDockSettings, IconDockChat, IconDockTasks, IconDockWidgetBoard,
+  IconDockSynapse, IconAgents, IconReports, IconImageStudio, IconAgentGraph, IconLocalLlm,
+  IconAlerts, IconFileTree, IconRepl, IconDashboard, IconFlowGraph,
+} from "./DesktopIcons";
 import DockBadge from "./DockBadge";
+
+/** Dock에 없지만 최소화될 수 있는 창들의 아이콘/레이블 */
+const EXTRA_WIN_META: Partial<Record<WindowType, { icon: (c: string) => React.ReactNode; label: string; accent: string }>> = {
+  "agent-manager": { icon: (c) => <IconAgents color={c} />,      label: "Agents",      accent: "#a78bfa" },
+  cli:             { icon: (c) => <IconRepl color={c} />,         label: "CLI",         accent: "#34d399" },
+  reports:         { icon: (c) => <IconReports color={c} />,      label: "Reports",     accent: "#60a5fa" },
+  synapse:         { icon: (c) => <IconDockSynapse color={c} />,  label: "Synapse",     accent: "#f472b6" },
+  "image-studio":  { icon: (c) => <IconImageStudio color={c} />,  label: "Images",      accent: "#fb923c" },
+  "local-llm":     { icon: (c) => <IconLocalLlm color={c} />,     label: "Local LLM",  accent: "#818cf8" },
+  alerts:          { icon: (c) => <IconAlerts color={c} />,       label: "Alerts",      accent: "#f87171" },
+  "file-tree":     { icon: (c) => <IconFileTree color={c} />,     label: "Files",       accent: "#4ade80" },
+  "flow-graph":    { icon: (c) => <IconFlowGraph color={c} />,    label: "Graph",       accent: "#38bdf8" },
+  dashboard:       { icon: (c) => <IconDashboard color={c} />,    label: "Dashboard",   accent: "#facc15" },
+};
 
 const mono = "var(--th-font-mono)";
 
@@ -18,7 +36,8 @@ interface DockProps {
 }
 
 export default function Dock({ onCreateTask, onCreateProject, onCreateAgent, onCreateFeature }: DockProps) {
-  const { openWindows, toggleWindow, minimizedWindows, restoreWindow } = useUiStore();
+  const { openWindows, toggleWindow, minimizedWindows, restoreWindow, dockAutoHide } = useUiStore();
+  const [dockHovered, setDockHovered] = useState(false);
   const { agents, unreadAgentIds } = useAgentStore();
   const { tasks } = useTaskStore();
   const { theme } = useTheme();
@@ -74,6 +93,13 @@ export default function Dock({ onCreateTask, onCreateProject, onCreateAgent, onC
       badge: chatUnreadCount || undefined,
       badgeType: "blue",
     },
+    {
+      id: "widget-board" as WindowType,
+      icon: (c) => <IconDockWidgetBoard color={c} />,
+      label: t({ ko: "위젯 보드", en: "Widgets", ja: "ウィジェット", zh: "小组件" }),
+      accentColor: "#34c759",
+      gradient: "linear-gradient(145deg, #4cd964 0%, #34c759 60%, #28a745 100%)",
+    },
   ];
 
   const CREATE_ITEMS = [
@@ -126,13 +152,34 @@ export default function Dock({ onCreateTask, onCreateProject, onCreateAgent, onC
     },
   ];
 
+  const dockHidden = dockAutoHide && !dockHovered;
+
   return (
+    <>
+      {/* 하단 트리거 스트립 — auto-hide 시 dock을 드러내기 위한 invisible hover zone */}
+      {dockAutoHide && (
+        <div
+          onMouseEnter={() => setDockHovered(true)}
+          onMouseLeave={() => setDockHovered(false)}
+          style={{
+            position: "fixed",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: 6,
+            zIndex: 999,
+          }}
+        />
+      )}
     <div
+      onMouseEnter={() => setDockHovered(true)}
+      onMouseLeave={() => setDockHovered(false)}
       style={{
         position: "fixed",
         bottom: 10,
         left: "50%",
-        transform: "translateX(-50%)",
+        transform: dockHidden ? "translateX(-50%) translateY(calc(100% + 10px))" : "translateX(-50%)",
+        transition: "transform 0.32s cubic-bezier(0.32, 0, 0.67, 0)",
         zIndex: 1000,
         display: "flex",
         alignItems: "flex-end",
@@ -172,6 +219,34 @@ export default function Dock({ onCreateTask, onCreateProject, onCreateAgent, onC
           />
         );
       })}
+
+      {/* 최소화된 비-dock 창 */}
+      {(() => {
+        const dockIds = new Set(DOCK_ITEMS.map((i) => i.id));
+        const extraMin = Array.from(minimizedWindows).filter((id) => !dockIds.has(id) && EXTRA_WIN_META[id]);
+        if (extraMin.length === 0) return null;
+        return (
+          <>
+            <div style={{ width: 1, height: 36, background: isLight ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.14)", alignSelf: "center", margin: "0 4px", flexShrink: 0 }} />
+            {extraMin.map((id) => {
+              const meta = EXTRA_WIN_META[id]!;
+              return (
+                <DockButton
+                  key={id}
+                  label={meta.label}
+                  isOpen={false}
+                  isMinimized={true}
+                  accentColor={meta.accent}
+                  gradient={`linear-gradient(145deg, ${meta.accent}cc, ${meta.accent})`}
+                  icon={meta.icon}
+                  isLight={isLight}
+                  onClick={() => restoreWindow(id)}
+                />
+              );
+            })}
+          </>
+        );
+      })()}
 
       {/* 구분선 */}
       <div style={{
@@ -282,6 +357,7 @@ export default function Dock({ onCreateTask, onCreateProject, onCreateAgent, onC
         )}
       </div>
     </div>
+    </>
   );
 }
 
