@@ -1,0 +1,18 @@
+/**
+ * UserGuidePanel 스타일/공통 상수
+ */
+import type { CSSProperties } from "react";
+
+export const MONO_FONT = "var(--th-font-mono)";
+
+export const KBD_STYLE: CSSProperties = {
+  fontFamily: MONO_FONT,
+  fontSize: 10,
+  color: "var(--th-text-secondary)",
+  background: "var(--th-bg-elevated)",
+  border: "1px solid var(--th-border)",
+  borderRadius: 4,
+  padding: "2px 6px",
+  boxShadow: "0 1px 0 var(--th-border)",
+  display: "inline-block",
+};

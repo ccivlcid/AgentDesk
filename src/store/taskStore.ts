@@ -2,6 +2,7 @@ import { create } from "zustand";
 import type { Task, Message, CliStatusMap, SubTask, MeetingPresence, CrossDeptDelivery, ClientOfficeCall } from "../types";
 import type { TaskReportDetail } from "../api";
 import type { TaskPanelTab } from "../app/types";
+import type { DecisionInboxItem } from "../components/chat/decision-inbox";
 
 // SA<T>: setter가 값 직접 전달과 함수형 업데이트(prev => next) 둘 다 받을 수 있게 하는 유니온 타입.
 // React의 useState setter와 동일한 패턴으로, WebSocket 이벤트 핸들러에서
@@ -19,7 +20,7 @@ interface TaskStore {
   crossDeptDeliveries: CrossDeptDelivery[];  // 부서 간 산출물 전달 목록
   clientOfficeCalls: ClientOfficeCall[];     // 클라이언트 오피스 통화 기록
   meetingPresence: MeetingPresence[];        // 미팅 참여자 현황 (실시간 싱크)
-  decisionInboxItems: import("../components/chat/decision-inbox").DecisionInboxItem[]; // 결재 inbox
+  decisionInboxItems: DecisionInboxItem[]; // 결재 inbox
 
   setTasks: (a: SA<Task[]>) => void;
   setMessages: (a: SA<Message[]>) => void;
@@ -30,7 +31,7 @@ interface TaskStore {
   setCrossDeptDeliveries: (a: SA<CrossDeptDelivery[]>) => void;
   setClientOfficeCalls: (a: SA<ClientOfficeCall[]>) => void;
   setMeetingPresence: (a: SA<MeetingPresence[]>) => void;
-  setDecisionInboxItems: (a: SA<import("../components/chat/decision-inbox").DecisionInboxItem[]>) => void;
+  setDecisionInboxItems: (a: SA<DecisionInboxItem[]>) => void;
 }
 
 export const useTaskStore = create<TaskStore>()((set) => ({

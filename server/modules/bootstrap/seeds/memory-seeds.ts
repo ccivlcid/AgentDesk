@@ -51,7 +51,8 @@ const DEFAULT_MEMORIES: MemorySeed[] = [
     title_ja: "DBマイグレーションパターン",
     title_zh: "数据库迁移模式",
     content:
-      "All schema changes go in server/modules/bootstrap/schema/versioned-migrations.ts. " +
+      "All schema changes go in server/modules/bootstrap/schema/versioned-migrations.ts " +
+      "(array built from versioned-migrations/*.ts chunks; append new migrations at the end of the chronological chain). " +
       "Append-only: never modify existing entries. ID format: YYYY-MM-DD-NNN-description. " +
       "Wrap each DDL in try/catch for idempotency.",
     category: "context",

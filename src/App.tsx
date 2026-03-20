@@ -21,6 +21,8 @@ import { useAgentStore } from "./store/agentStore";
 import { useTaskStore } from "./store/taskStore";
 import { useProjectStore } from "./store/projectStore";
 import { useUiStore } from "./store/uiStore";
+import { useI18n } from "./i18n";
+import type { Project } from "./types";
 
 export type { OAuthCallbackResult } from "./app/types";
 
@@ -63,7 +65,9 @@ export default function App() {
     setShowReportHistory, setShowAgentStatus, setShowGroupChat, setGroupChatInitialAgentIds,
     setShowDecisionInbox, setDecisionInboxLoading, setDecisionReplyBusyKey,
     setMobileNavOpen, setMobileHeaderMenuOpen, setUpdateStatus, setDismissedUpdateVersion,
+    addToast,
   } = useUiStore();
+  const { t } = useI18n();
 
   // ── Derived values ───────────────────────────────────────────────────────
   const currentProject = projects.find((p) => p.id === currentProjectId) ?? null;
@@ -134,6 +138,25 @@ export default function App() {
   // URL 쿼리(?oauth=...) 파싱, CLI 상태 변화에 따른 뷰 전환 등 부수효과 처리
   useAppViewEffects({ view, cliStatus, setView, setOauthResult, setCliStatus, setMobileNavOpen });
 
+  const onTaskDone = useCallback(
+    (task: { title?: string }) => {
+      addToast({
+        type: "success",
+        title: t({ ko: `태스크 완료: ${task.title ?? ""}`, en: `Task complete: ${task.title ?? ""}`, ja: `タスク完了: ${task.title ?? ""}`, zh: `任务完成: ${task.title ?? ""}` }),
+      });
+    },
+    [addToast, t],
+  );
+  const onTaskFailed = useCallback(
+    (task: { title?: string }) => {
+      addToast({
+        type: "error",
+        title: t({ ko: `태스크 실패: ${task.title ?? ""}`, en: `Task failed: ${task.title ?? ""}`, ja: `タスク失敗: ${task.title ?? ""}`, zh: `任务失败: ${task.title ?? ""}` }),
+      });
+    },
+    [addToast, t],
+  );
+
   // WebSocket 이벤트 → 스토어 실시간 반영 (task/agent/message/cli_output 등)
   useRealtimeSync({
     on, connected, scheduleLiveSync,
@@ -142,6 +165,7 @@ export default function App() {
     setTasks, setAgents, setMessages, setUnreadAgentIds, setTaskReport,
     setCrossDeptDeliveries, setClientOfficeCalls, setMeetingPresence,
     setSubtasks, setSubAgents, setStreamingMessage,
+    onTaskDone, onTaskFailed,
   });
 
   // 사용자 액션 핸들러 모음 (태스크 생성/실행/삭제, 채팅 전송, 설정 저장 등)
@@ -238,7 +262,7 @@ export default function App() {
             setProjectCreateBusy(true);
             const cat = categories.find((c) => c.id === categoryId);
             const resolvedGoal = core_goal || (cat ? `${cat.name_ko ?? cat.name} 프로젝트` : name.trim());
-            (api.createProject as (input: Record<string, unknown>) => Promise<import("./types").Project>)({
+            (api.createProject as (input: Record<string, unknown>) => Promise<Project>)({
               name: name.trim(),
               project_path: project_path ?? "",
               core_goal: resolvedGoal,

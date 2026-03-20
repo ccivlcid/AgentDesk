@@ -1,5 +1,7 @@
 import { lazy, Suspense, useEffect } from "react";
 import AppWindow from "./AppWindow";
+import type { CompanySettings } from "../../types";
+import type { OAuthCallbackResult } from "../../app/types";
 import { useUiStore } from "../../store/uiStore";
 import { useAgentStore } from "../../store/agentStore";
 import { useTaskStore } from "../../store/taskStore";
@@ -22,9 +24,9 @@ function Loading() {
 }
 
 interface SettingsWindowProps {
-  onSaveSettings: (settings: import("../../types").CompanySettings) => Promise<void>;
+  onSaveSettings: (settings: CompanySettings) => Promise<void>;
   onRefreshCli: () => Promise<void>;
-  oauthResult: import("../../app/types").OAuthCallbackResult | null;
+  oauthResult: OAuthCallbackResult | null;
   onOauthResultClear: () => void;
 }
 

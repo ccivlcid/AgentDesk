@@ -1,0 +1,82 @@
+import { useCallback, useEffect, useState } from "react";
+import * as api from "../../../api";
+import { useI18n } from "../../../i18n";
+import { useToast } from "../../ui";
+import type { FormData } from "../types";
+import type { ApiProviderOption } from "./types";
+
+export type LocalModelOption = {
+  id: string;
+  label: string;
+  group: string;
+  backend: string;
+  model: string;
+};
+
+export function useAgentFormModalResources(
+  form: FormData,
+  setForm: (f: FormData) => void,
+  isKo: boolean,
+) {
+  const { t } = useI18n();
+  const { showToast } = useToast();
+  const [generatingPersona, setGeneratingPersona] = useState(false);
+  const [showPersonaCatalog, setShowPersonaCatalog] = useState(false);
+  const [apiProviders, setApiProviders] = useState<ApiProviderOption[]>([]);
+  const [localModels, setLocalModels] = useState<LocalModelOption[]>([]);
+  const [connectingLocal, setConnectingLocal] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/api-providers")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.ok) setApiProviders(data.providers);
+      })
+      .catch(() => {});
+    fetch("/api/local-llm/providers")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.ok) setLocalModels(data.providers);
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleGeneratePersona = useCallback(async () => {
+    if (!form.name.trim() || generatingPersona) return;
+    setGeneratingPersona(true);
+    try {
+      const personality = await api.generatePersona({
+        name: form.name.trim(),
+        role: form.role,
+        department_id: form.department_id || null,
+        lang: isKo ? "ko" : "en",
+      });
+      if (personality) setForm({ ...form, personality });
+    } catch (err) {
+      console.error("Persona generation failed:", err);
+      showToast(
+        t({
+          ko: "페르소나 생성에 실패했습니다.",
+          en: "Failed to generate persona.",
+          ja: "ペルソナ生成に失敗しました。",
+          zh: "人物角色生成失败。",
+        }),
+        "error",
+      );
+    } finally {
+      setGeneratingPersona(false);
+    }
+  }, [form, isKo, generatingPersona, setForm, showToast, t]);
+
+  return {
+    generatingPersona,
+    showPersonaCatalog,
+    setShowPersonaCatalog,
+    apiProviders,
+    setApiProviders,
+    localModels,
+    connectingLocal,
+    setConnectingLocal,
+    handleGeneratePersona,
+  };
+}

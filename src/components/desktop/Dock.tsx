@@ -6,6 +6,7 @@ import { useTaskStore } from "../../store/taskStore";
 import { useTheme } from "../../ThemeContext";
 import { useI18n } from "../../i18n";
 import { IconDockWorkflow, IconDockLibrary, IconDockSettings, IconDockChat, IconDockTasks } from "./DesktopIcons";
+import DockBadge from "./DockBadge";
 
 const mono = "var(--th-font-mono)";
 
@@ -18,7 +19,7 @@ interface DockProps {
 
 export default function Dock({ onCreateTask, onCreateProject, onCreateAgent, onCreateFeature }: DockProps) {
   const { openWindows, toggleWindow, minimizedWindows, restoreWindow } = useUiStore();
-  const { agents } = useAgentStore();
+  const { agents, unreadAgentIds } = useAgentStore();
   const { tasks } = useTaskStore();
   const { theme } = useTheme();
   const { t } = useI18n();
@@ -28,15 +29,20 @@ export default function Dock({ onCreateTask, onCreateProject, onCreateAgent, onC
 
   const workingAgentCount = agents.filter((a) => a.status === "working").length;
   const activeTaskCount = tasks.filter((t) => ["in_progress", "collaborating", "review"].includes(t.status)).length;
+  const failedTaskCount = tasks.filter((t) => t.execution_state === "failed").length;
+  const tasksBadgeCount = failedTaskCount > 0 ? failedTaskCount : activeTaskCount;
+  const tasksBadgeType = failedTaskCount > 0 ? "red" as const : "amber" as const;
+  const chatUnreadCount = unreadAgentIds.size;
 
-  const DOCK_ITEMS: Array<{ id: WindowType; icon: (c: string) => React.ReactNode; label: string; accentColor: string; gradient: string; badge?: number }> = [
+  const DOCK_ITEMS: Array<{ id: WindowType; icon: (c: string) => React.ReactNode; label: string; accentColor: string; gradient: string; badge?: number; badgeType?: "amber" | "red" | "blue" }> = [
     {
       id: "tasks",
       icon: (c) => <IconDockTasks color={c} />,
       label: t({ ko: "업무보드", en: "Board", ja: "タスクボード", zh: "工作看板" }),
       accentColor: "#ff9f0a",
       gradient: "linear-gradient(145deg, #ffb340 0%, #ff9f0a 60%, #e8820a 100%)",
-      badge: activeTaskCount || undefined,
+      badge: tasksBadgeCount || undefined,
+      badgeType: tasksBadgeType,
     },
     {
       id: "workflow",
@@ -65,6 +71,8 @@ export default function Dock({ onCreateTask, onCreateProject, onCreateAgent, onC
       label: t({ ko: "채팅", en: "Chat", ja: "チャット", zh: "聊天" }),
       accentColor: "#5e5ce6",
       gradient: "linear-gradient(145deg, #7d7aff 0%, #5e5ce6 60%, #4a48c2 100%)",
+      badge: chatUnreadCount || undefined,
+      badgeType: "blue",
     },
   ];
 
@@ -156,6 +164,7 @@ export default function Dock({ onCreateTask, onCreateProject, onCreateAgent, onC
             icon={item.icon}
             isLight={isLight}
             badge={item.badge}
+            badgeType={item.badgeType}
             onClick={() => {
               if (isMinimized) restoreWindow(item.id);
               else toggleWindow(item.id);
@@ -285,6 +294,7 @@ function DockButton({
   icon,
   isLight,
   badge,
+  badgeType = "red",
   onClick,
 }: {
   label: string;
@@ -295,6 +305,7 @@ function DockButton({
   icon: (color: string) => React.ReactNode;
   isLight: boolean;
   badge?: number;
+  badgeType?: "amber" | "red" | "blue";
   onClick?: () => void;
 }) {
   const [hovered, setHovered] = useState(false);
@@ -374,29 +385,7 @@ function DockButton({
           }}
         />
         {icon("rgba(255,255,255,0.95)")}
-        {badge != null && badge > 0 && (
-          <div style={{
-            position: "absolute",
-            top: -4,
-            right: -4,
-            minWidth: 16,
-            height: 16,
-            borderRadius: 8,
-            background: "#ff453a",
-            color: "#fff",
-            fontSize: 9,
-            fontFamily: "var(--th-font-mono)",
-            fontWeight: 700,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "0 3px",
-            border: "1.5px solid rgba(0,0,0,0.25)",
-            pointerEvents: "none",
-          }}>
-            {badge > 99 ? "99+" : badge}
-          </div>
-        )}
+        <DockBadge count={badge} type={badgeType} show={badge != null && badge > 0} />
       </button>
 
       {/* 실행중/최소화 표시 점 */}

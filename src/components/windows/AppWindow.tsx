@@ -1,4 +1,4 @@
-import { useRef, useState, type ReactNode, type FC } from "react";
+import { useEffect, useRef, useState, type ReactNode, type FC } from "react";
 import type { WindowType } from "../../app/types";
 import { useUiStore } from "../../store/uiStore";
 import TrafficLights from "../desktop/TrafficLights";
@@ -138,12 +138,25 @@ export default function AppWindow({
   onClose,
   headerActions,
 }: AppWindowProps) {
-  const { closeWindow, windowFocusOrder, bringWindowToFront, minimizedWindows, minimizeWindow } = useUiStore();
+  const {
+    closeWindow,
+    windowFocusOrder,
+    bringWindowToFront,
+    minimizedWindows,
+    minimizeWindow,
+    fullscreenWindowId,
+    setFullscreenWindowId,
+    snapStates,
+    setSnapPreview,
+    setSnapDraggingWindow,
+    setSnapState,
+  } = useUiStore();
   const handleClose = onClose ?? (() => closeWindow(windowType));
   const handleMinimize = () => minimizeWindow(windowType);
   const isMinimized = minimizedWindows.has(windowType);
+  const isFullscreen = fullscreenWindowId === windowType;
   const focusIdx = windowFocusOrder.indexOf(windowType);
-  const zIndex = 200 + Math.max(0, focusIdx) * 2;
+  const zIndex = isFullscreen ? 999 : 200 + Math.max(0, focusIdx) * 2;
   const [activeTab, setActiveTab] = useState(tabs?.[0]?.id ?? "");
 
   // ── Viewport-proportional sizes (never exceed 90% of available space) ──────
@@ -184,32 +197,76 @@ export default function AppWindow({
   const saved = { x: clampedX, y: clampedY, w: clampedW, h: clampedH };
   const [pos, setPos] = useState({ x: saved.x, y: saved.y });
   const [size, setSize] = useState({ w: saved.w, h: saved.h });
-  const [maximized, setMaximized] = useState(false);
   const preMaxRef = useRef<{ x: number; y: number; w: number; h: number } | null>(null);
 
   function handleMaximize() {
-    if (!maximized) {
+    if (!isFullscreen) {
       preMaxRef.current = { x: pos.x, y: pos.y, w: size.w, h: size.h };
       setPos({ x: 0, y: MENUBAR_H });
       setSize({ w: window.innerWidth, h: window.innerHeight - MENUBAR_H - DOCK_CLEARANCE });
-      setMaximized(true);
+      setFullscreenWindowId(windowType);
     } else {
       const prev = preMaxRef.current ?? { x: fallbackX, y: fallbackY, w: defaultWidth, h: defaultHeight };
       setPos({ x: prev.x, y: prev.y });
       setSize({ w: prev.w, h: prev.h });
-      setMaximized(false);
+      setFullscreenWindowId(null);
     }
   }
+
+  useEffect(() => {
+    if (!isFullscreen) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        const prev = preMaxRef.current ?? { x: fallbackX, y: fallbackY, w: defaultWidth, h: defaultHeight };
+        setPos({ x: prev.x, y: prev.y });
+        setSize({ w: prev.w, h: prev.h });
+        setFullscreenWindowId(null);
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [isFullscreen, setFullscreenWindowId, windowType, fallbackX, fallbackY, defaultWidth, defaultHeight]);
   const dragStart = useRef<{ mx: number; my: number; ox: number; oy: number } | null>(null);
   const resizeState = useRef<ResizeState | null>(null);
+  const snapZoneRef = useRef<"left" | "right" | "full" | "top" | null>(null);
+
+  function getSnapZone(clientX: number, clientY: number): "left" | "right" | "full" | "top" | null {
+    const vw = window.innerWidth;
+    if (clientY < 40) return "full";
+    if (clientX < 20) return "left";
+    if (clientX > vw - 20) return "right";
+    return null;
+  }
+
+  function getZoneRect(zone: "left" | "right" | "full" | "top") {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const h = vh - MENUBAR_H - DOCK_CLEARANCE;
+    if (zone === "left") return { x: 0, y: MENUBAR_H, w: vw / 2, h };
+    if (zone === "right") return { x: vw / 2, y: MENUBAR_H, w: vw / 2, h };
+    return { x: 0, y: MENUBAR_H, w: vw, h };
+  }
 
   function onTitlebarMouseDown(e: React.MouseEvent) {
     if (e.button !== 0) return;
     e.preventDefault();
+    const snap = snapStates[windowType];
+    if (snap?.snapped) {
+      setPos(snap.prevPos);
+      setSize(snap.prevSize);
+      setSnapState(windowType, null);
+    }
     dragStart.current = { mx: e.clientX, my: e.clientY, ox: pos.x, oy: pos.y };
+    snapZoneRef.current = null;
 
     function onMove(ev: MouseEvent) {
       if (!dragStart.current) return;
+      const zone = getSnapZone(ev.clientX, ev.clientY);
+      if (zone !== snapZoneRef.current) {
+        snapZoneRef.current = zone;
+        setSnapPreview(zone);
+        setSnapDraggingWindow(windowType);
+      }
       const maxY = window.innerHeight - DOCK_CLEARANCE - 40;
       setPos({
         x: Math.max(0, dragStart.current.ox + ev.clientX - dragStart.current.mx),
@@ -218,12 +275,24 @@ export default function AppWindow({
     }
     function onUp(ev: MouseEvent) {
       if (!dragStart.current) return;
+      const zone = snapZoneRef.current;
+      setSnapPreview(null);
+      setSnapDraggingWindow(null);
       const maxY = window.innerHeight - DOCK_CLEARANCE - 40;
       const nx = Math.max(0, dragStart.current.ox + ev.clientX - dragStart.current.mx);
       const ny = Math.min(maxY, Math.max(MENUBAR_H, dragStart.current.oy + ev.clientY - dragStart.current.my));
-      setPos({ x: nx, y: ny });
-      saveWinState(windowType, { x: nx, y: ny, w: size.w, h: size.h });
+      if (zone) {
+        const rect = getZoneRect(zone);
+        setPos({ x: rect.x, y: rect.y });
+        setSize({ w: rect.w, h: rect.h });
+        setSnapState(windowType, { snapped: true, snapZone: zone, prevPos: { x: nx, y: ny }, prevSize: { w: size.w, h: size.h } });
+        saveWinState(windowType, { x: rect.x, y: rect.y, w: rect.w, h: rect.h });
+      } else {
+        setPos({ x: nx, y: ny });
+        saveWinState(windowType, { x: nx, y: ny, w: size.w, h: size.h });
+      }
       dragStart.current = null;
+      snapZoneRef.current = null;
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("mouseup", onUp);
     }

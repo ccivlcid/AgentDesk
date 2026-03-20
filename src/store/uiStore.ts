@@ -97,6 +97,33 @@ interface UiStore {
   setJiggleMode: (v: boolean) => void;
   setMissionControlOpen: (v: boolean) => void;
 
+  // ── Toast (MX-02) ───────────────────────────────────────────────────
+  toasts: Array<{ id: string; type: "success" | "error" | "info" | "progress"; title: string; body?: string; duration?: number; onClick?: () => void }>;
+  addToast: (toast: Omit<{ id: string; type: "success" | "error" | "info" | "progress"; title: string; body?: string; duration?: number; onClick?: () => void }, "id">) => string;
+  dismissToast: (id: string) => void;
+
+  // ── App Switcher (MX-03) ────────────────────────────────────────────
+  appSwitcherOpen: boolean;
+  appSwitcherIndex: number;
+  setAppSwitcherOpen: (v: boolean) => void;
+  setAppSwitcherIndex: (v: number) => void;
+
+  // ── Snap (MX-04) ────────────────────────────────────────────────────
+  snapPreview: "left" | "right" | "full" | "top" | null;
+  snapDraggingWindow: WindowType | null;
+  snapStates: Record<string, { snapped: boolean; snapZone: string; prevPos: { x: number; y: number }; prevSize: { w: number; h: number } }>;
+  setSnapPreview: (v: "left" | "right" | "full" | "top" | null) => void;
+  setSnapDraggingWindow: (w: WindowType | null) => void;
+  setSnapState: (windowType: string, state: { snapped: boolean; snapZone: string; prevPos: { x: number; y: number }; prevSize: { w: number; h: number } } | null) => void;
+
+  // ── Fullscreen (MX-06) ───────────────────────────────────────────────
+  fullscreenWindowId: string | null;
+  setFullscreenWindowId: (id: string | null) => void;
+
+  // ── Notification unread (MX-05 Dock badge) ──────────────────────────
+  notificationUnreadCount: number;
+  setNotificationUnreadCount: (n: number) => void;
+
   // ── Agent CLI ─────────────────────────────────────────────────────
   cliInitialAgentId: string | null;
   openCli: (agentId?: string) => void;
@@ -306,6 +333,40 @@ export const useUiStore = create<UiStore>()((set) => ({
   setWallpaper: (css) => { saveWallpaper(css); set({ wallpaper: css }); },
   setJiggleMode: (v) => set({ jiggleMode: v }),
   setMissionControlOpen: (v) => set({ missionControlOpen: v }),
+
+  toasts: [],
+  addToast: (toast) => {
+    const id = crypto.randomUUID();
+    set((s) => ({
+      toasts: [...s.toasts.slice(-2), { ...toast, id }].slice(-3),
+    }));
+    return id;
+  },
+  dismissToast: (id) => set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })),
+
+  appSwitcherOpen: false,
+  appSwitcherIndex: 0,
+  setAppSwitcherOpen: (v) => set({ appSwitcherOpen: v }),
+  setAppSwitcherIndex: (v) => set((s) => ({ appSwitcherIndex: v })),
+
+  snapPreview: null,
+  snapDraggingWindow: null,
+  snapStates: {},
+  setSnapPreview: (v) => set({ snapPreview: v }),
+  setSnapDraggingWindow: (w) => set({ snapDraggingWindow: w }),
+  setSnapState: (windowType, state) => set((s) => {
+    const next = { ...s.snapStates };
+    if (state) next[windowType] = state;
+    else delete next[windowType];
+    return { snapStates: next };
+  }),
+
+  fullscreenWindowId: null,
+  setFullscreenWindowId: (id) => set({ fullscreenWindowId: id }),
+
+  notificationUnreadCount: 0,
+  setNotificationUnreadCount: (n) => set({ notificationUnreadCount: n }),
+
   bringWindowToFront: (w) => set((s) => ({
     windowFocusOrder: [...s.windowFocusOrder.filter((x) => x !== w), w],
   })),

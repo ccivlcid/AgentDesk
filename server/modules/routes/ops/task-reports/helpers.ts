@@ -415,3 +415,5 @@ export function createTaskReportHelpers(deps: HelperDeps) {
     buildTaskSection,
   };
 }
+
+export type TaskReportRouteHelpers = ReturnType<typeof createTaskReportHelpers>;

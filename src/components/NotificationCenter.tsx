@@ -9,6 +9,7 @@ import {
 } from "../api/notifications";
 import type { WSEventType } from "../types";
 import TrafficLights from "./desktop/TrafficLights";
+import { useUiStore } from "../store/uiStore";
 
 type SocketOn = (event: WSEventType, handler: (payload: unknown) => void) => () => void;
 type NotifType = NotificationItem["type"] | "all";
@@ -299,6 +300,7 @@ function NotifRow({
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function NotificationCenter({ on, onNavigateTask, onOpenDecisionInbox }: Props) {
+  const setNotificationUnreadCount = useUiStore((s) => s.setNotificationUnreadCount);
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<NotificationItem[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -315,11 +317,16 @@ export default function NotificationCenter({ on, onNavigateTask, onOpenDecisionI
       .then((res) => {
         setItems(res.notifications);
         setUnreadCount(res.unread_count);
+        setNotificationUnreadCount(res.unread_count);
       })
       .catch(() => {});
-  }, []);
+  }, [setNotificationUnreadCount]);
 
   useEffect(() => { load(); }, [load]);
+
+  useEffect(() => {
+    setNotificationUnreadCount(unreadCount);
+  }, [unreadCount, setNotificationUnreadCount]);
 
   useEffect(() => {
     return on("notification", (payload) => {
@@ -346,7 +353,7 @@ export default function NotificationCenter({ on, onNavigateTask, onOpenDecisionI
 
   const handleMarkAllRead = () => {
     markAllNotificationsRead()
-      .then(() => { setItems((prev) => prev.map((i) => ({ ...i, read: 1 }))); setUnreadCount(0); })
+      .then(() => { setItems((prev) => prev.map((i) => ({ ...i, read: 1 }))); setUnreadCount(0); setNotificationUnreadCount(0); })
       .catch(() => {});
   };
 

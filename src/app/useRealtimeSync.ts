@@ -67,6 +67,10 @@ interface UseRealtimeSyncParams {
       content: string;
     } | null>
   >;
+  /** MX-02: called when a task transitions to done (for Toast) */
+  onTaskDone?: (task: Task) => void;
+  /** MX-02: called when a task transitions to failed_exec (for Toast) */
+  onTaskFailed?: (task: Task) => void;
 }
 
 export function useRealtimeSync({
@@ -92,6 +96,8 @@ export function useRealtimeSync({
   setSubtasks,
   setSubAgents,
   setStreamingMessage,
+  onTaskDone,
+  onTaskFailed,
 }: UseRealtimeSyncParams): void {
   const incUnreadReportCount = useUiStore((s) => s.incUnreadReportCount);
   const openCliWindow = useUiStore((s) => s.openCliWindow);
@@ -112,6 +118,10 @@ export function useRealtimeSync({
             }
             const merged = { ...prev[idx], ...taskPatch };
             if (JSON.stringify(prev[idx]) === JSON.stringify(merged)) return prev;
+            const prevStatus = prev[idx].status;
+            const prevExecState = prev[idx].execution_state;
+            if (merged.status === "done" && prevStatus !== "done" && onTaskDone) onTaskDone(merged);
+            if (merged.execution_state === "failed" && prevExecState !== "failed" && onTaskFailed) onTaskFailed(merged);
             const next = [...prev];
             next[idx] = merged;
             return next;

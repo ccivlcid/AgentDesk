@@ -1,4 +1,4 @@
-import type { Agent, Department } from "../../types";
+import type { Agent, AgentRole, CliProvider, Department } from "../../types";
 import type { KbSourceRef } from "../../api/synapse";
 
 export type Translator = (ko: string, en: string, ja?: string, zh?: string) => string;
@@ -18,8 +18,8 @@ export interface FormData {
   name_ja: string;
   name_zh: string;
   department_id: string;
-  role: import("../../types").AgentRole;
-  cli_provider: import("../../types").CliProvider;
+  role: AgentRole;
+  cli_provider: CliProvider;
   api_provider_id: string | null;
   api_model: string | null;
   avatar_emoji: string;

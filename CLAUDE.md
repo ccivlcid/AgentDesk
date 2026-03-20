@@ -255,7 +255,7 @@ Current shortcuts:
 
 Use this checklist every time you add a DB column or table:
 
-1. **APPEND only** to `server/modules/bootstrap/schema/versioned-migrations.ts`
+1. **APPEND only** — add a new `{ id, up }` entry at the **end** of the `MIGRATIONS` chain (typically append to the last chunk under `server/modules/bootstrap/schema/versioned-migrations/`, e.g. `migrations-e-recent.ts`, or add a new chunk and spread it from `versioned-migrations.ts`). Never edit applied migration bodies.
 2. **ID format**: `YYYY-MM-DD-NNN-short-description` (zero-padded, chronological)
 3. **Last known ID**: `2026-03-22-002-projects-folder-id` → next: `2026-03-22-003-*` or `2026-03-23-001-*`
 4. Wrap each DDL in `try { ... } catch { /* already exists */ }` for idempotency
@@ -320,3 +320,4 @@ When adding a new field to the task creation form, follow this full chain:
 | [`docs/specs/api.md`](docs/specs/api.md) | REST API full specification (v1.6.0) |
 | [`docs/strategy/bigger-ide-vision.md`](docs/strategy/bigger-ide-vision.md) | "Bigger IDE" strategy (Phase 1–3 complete) |
 | [`docs/progress.md`](docs/progress.md) | Development progress log |
+| [`docs/maintenance/LARGE-SOURCE-FILES.md`](docs/maintenance/LARGE-SOURCE-FILES.md) | Large source file inventory (300-line rule refactor priority) |

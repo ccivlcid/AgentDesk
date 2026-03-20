@@ -1,6 +1,6 @@
 import { useCallback, type Dispatch, type SetStateAction } from "react";
 import { checkProjectPath, createProject, isApiRequestError, updateProject } from "../../api";
-import type { AssignmentMode } from "../../types";
+import type { AssignmentMode, WorkflowPackKey } from "../../types";
 import type { ManualAssignmentWarning, ProjectI18nTranslate } from "./types";
 import type { ProjectManagerPathTools } from "./useProjectManagerPathTools";
 
@@ -124,7 +124,7 @@ export function useProjectSaveHandler({
             project_path: savePath,
             core_goal: coreGoal.trim(),
             figma_url: figmaUrl.trim() || null,
-            default_pack_key: defaultPackKey as import("../../types").WorkflowPackKey,
+            default_pack_key: defaultPackKey as WorkflowPackKey,
             create_path_if_missing: createPathIfMissing,
             assignment_mode: assignmentMode,
             agent_ids: assignmentMode === "manual" ? Array.from(selectedAgentIds) : [],
@@ -136,7 +136,7 @@ export function useProjectSaveHandler({
             project_path: savePath,
             core_goal: coreGoal.trim(),
             figma_url: figmaUrl.trim() || null,
-            default_pack_key: defaultPackKey as import("../../types").WorkflowPackKey,
+            default_pack_key: defaultPackKey as WorkflowPackKey,
             create_path_if_missing: createPathIfMissing,
             assignment_mode: assignmentMode,
             agent_ids: assignmentMode === "manual" ? Array.from(selectedAgentIds) : [],

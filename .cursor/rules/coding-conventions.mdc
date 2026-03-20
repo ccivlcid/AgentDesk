@@ -9,12 +9,18 @@ alwaysApply: true
 
 - **단일 파일은 300줄 이하를 원칙으로 한다.**
 - 300줄을 넘기면 로직·UI·훅·타입을 역할별로 나누어 별도 파일로 분리한다.
+- **금지:** 한 파일에 여러 도메인·역할이 혼재된 대형 파일 유지. 새로 추가하는 코드는 기존 300줄 초과 파일에 덧붙이지 말고, 훅/섹션/타입으로 분리한 뒤 import 한다.
 
 ### 분리 권장 패턴
 
 - 컴포넌트가 커지면: 훅 → `useXxx.ts` / `useXxx.tsx`, 하위 UI → `XxxSection.tsx`, 타입/상수 → `types.ts` / `constants.ts`
 - 한 파일에 여러 책임이 몰리지 않도록 단일 책임 단위로 쪼갠다.
 - 이미 `office-view/`, `gateway-settings/` 처럼 폴더로 도메인을 나눈 구조는 유지하고, 그 안에서 300줄 이하 파일로 세분화한다.
+
+### 기존 초과 파일
+
+- 300줄을 이미 넘긴 파일은 기술 부채로 간주하고, 수정·기능 추가 시 분리 기회를 활용한다.
+- 리팩터 시 우선 분리 대상: 훅, 모달/서브 UI, 상수·타입 블록.
 
 ---
 
@@ -35,7 +41,9 @@ alwaysApply: true
 ## Type imports
 
 - **타입만 사용하는 import는 상단에서 `import type`으로 선언한다.**
-- 인라인 타입 참조 `import("...path").TypeName`은 사용하지 않는다.
+- **금지:** 인라인 타입 참조. 아래 패턴은 사용하지 않는다.
+  - `import("...path").TypeName`
+  - `ReturnType<typeof import("...path").someExport>` (타입은 해당 모듈에서 export된 타입으로 import)
 
 ### 올바른 예
 
@@ -46,13 +54,33 @@ function handleSelect(agent: Agent) {}
 const [selected, setSelected] = useState<Department | null>(null);
 ```
 
+- 다른 모듈의 훅 반환 타입을 쓸 때는, 해당 모듈이 **타입을 export**하도록 하고 `import type`으로 가져온다.
+
+```ts
+// i18n이 export type { I18nContextValue } 를 제공하는 경우
+import type { I18nContextValue } from "../../i18n";
+
+function MyModal({ t }: { t: I18nContextValue["t"] }) {}
+```
+
 ### 피할 것
 
 ```ts
 // 인라인 타입 참조 — 사용 금지
 const handleSelect = useCallback((agent: import("../types").Agent) => {}, []);
 const [selected, setSelected] = useState<import("../types").Department | null>(null);
+// 훅 반환 타입을 인라인으로 참조 — 사용 금지. 모듈에서 타입 export 후 import type 사용
+function Bad({ t }: { t: ReturnType<typeof import("../../i18n").useI18n>["t"] }) {}
 ```
 
 - 여러 곳에서 쓰는 타입은 파일 상단에 `import type { A, B } from "..."` 로 한 번만 가져와서 사용한다.
 - ESLint `@typescript-eslint/consistent-type-imports` 설정과 맞춰 유지한다.
+
+---
+
+## 검증
+
+- 규칙 위반 여부는 다음으로 확인한다.
+  - **타입:** `tsc -b` 또는 `tsc --noEmit` 통과
+  - **린트:** `pnpm lint` (필요 시 `@typescript-eslint/consistent-type-imports` 등 규칙 활성화)
+- PR 전 위 항목 통과를 원칙으로 한다.
