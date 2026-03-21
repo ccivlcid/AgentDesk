@@ -285,7 +285,7 @@ export default function App() {
               create_path_if_missing: true,
               assignment_mode: "manual",
               agent_ids: agentIds,
-              role_assignments: { pm: roleAssignments.pm ?? undefined, pl: roleAssignments.pl ?? undefined, dev: roleAssignments.dev ?? undefined },
+              role_assignments: roleAssignments,
             })
               .then(async (newProject) => {
                 setProjects((prev) => [...prev, newProject]);

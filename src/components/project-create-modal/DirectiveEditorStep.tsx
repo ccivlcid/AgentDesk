@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { DirectiveTemplateItem } from "../../api/organization-projects";
 import type { I18nContextValue } from "../../i18n";
 
@@ -40,6 +40,26 @@ export default function DirectiveEditorStep({
   t,
 }: DirectiveEditorStepProps) {
   const [showTemplateMenu, setShowTemplateMenu] = useState(false);
+  const [fileError, setFileError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.name.endsWith(".md") && !file.name.endsWith(".txt")) {
+      setFileError(t({ ko: ".md 또는 .txt 파일만 지원합니다.", en: "Only .md or .txt files are supported.", ja: ".mdまたは.txtのみ対応", zh: "仅支持 .md 或 .txt 文件" }));
+      return;
+    }
+    setFileError(null);
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const text = ev.target?.result;
+      if (typeof text === "string") onDirectiveChange(text);
+    };
+    reader.readAsText(file, "utf-8");
+    // reset so same file can be re-uploaded
+    e.target.value = "";
+  };
 
   const currentTemplate = templates.find((tpl) => tpl.slug === directiveTypeSlug);
 
@@ -66,8 +86,37 @@ export default function DirectiveEditorStep({
           </p>
         </div>
 
-        {/* Template loader */}
-        <div className="relative flex-shrink-0">
+        {/* File import + Template loader */}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {/* MD file attach */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".md,.txt"
+            style={{ display: "none" }}
+            onChange={handleFileUpload}
+          />
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="flex items-center gap-1 px-2 py-1 text-[10px] font-mono transition-colors"
+            style={{
+              border: "1px solid var(--th-border)",
+              background: "var(--th-bg-surface)",
+              color: "var(--th-text-muted)",
+              cursor: "pointer",
+            }}
+            title={t({ ko: ".md 파일 불러오기", en: "Import .md file", ja: ".mdファイルを読み込む", zh: "导入 .md 文件" })}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+            {t({ ko: ".md 파일", en: ".md file", ja: ".mdファイル", zh: ".md 文件" })}
+          </button>
+
+        <div className="relative">
           <button
             type="button"
             onClick={() => setShowTemplateMenu(!showTemplateMenu)}
@@ -131,6 +180,7 @@ export default function DirectiveEditorStep({
             </div>
           )}
         </div>
+        </div>
       </div>
 
       {/* Current type badge */}
@@ -179,7 +229,9 @@ export default function DirectiveEditorStep({
       {/* Char count + hint */}
       <div className="flex items-center justify-between">
         <span className="text-[9px] font-mono" style={{ color: "var(--th-text-muted)" }}>
-          {t({
+          {fileError ? (
+            <span style={{ color: "#fb7185" }}>{fileError}</span>
+          ) : t({
             ko: "비워두면 디렉티브 없이 진행됩니다",
             en: "Leave empty to skip directive",
             ja: "空のままでディレクティブなしで進行",

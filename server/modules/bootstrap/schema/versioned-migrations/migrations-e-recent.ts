@@ -313,4 +313,12 @@ export const VERSIONED_MIGRATIONS_E_RECENT: Migration[] = [
       } catch { /* already exists */ }
     },
   },
+  {
+    id: "2026-03-26-001-project-agents-role-label",
+    up: (db) => {
+      try {
+        db.exec(`ALTER TABLE project_agents ADD COLUMN project_role_label TEXT`);
+      } catch { /* already exists */ }
+    },
+  },
 ];

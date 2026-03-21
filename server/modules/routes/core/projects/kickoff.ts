@@ -33,13 +33,13 @@ export function registerProjectKickoffRoutes({ app, db, broadcast, appendTaskLog
 
     // 프로젝트에 배정된 에이전트 목록 (부서·역할·프로젝트역할 포함, 멀티 에이전트 배분용)
     const assignedAgents = db.prepare(`
-      SELECT a.id, a.name, a.role, a.department_id, d.name as dept_name, pa.project_role
+      SELECT a.id, a.name, a.role, a.department_id, d.name as dept_name, pa.project_role, pa.project_role_label
       FROM agents a
       JOIN project_agents pa ON a.id = pa.agent_id
       LEFT JOIN departments d ON a.department_id = d.id
       WHERE pa.project_id = ?
       LIMIT 20
-    `).all(projectId) as { id: string; name: string; role: string | null; department_id: string | null; dept_name: string | null; project_role: string | null }[];
+    `).all(projectId) as { id: string; name: string; role: string | null; department_id: string | null; dept_name: string | null; project_role: string | null; project_role_label: string | null }[];
 
     // 프롬프트 구성
     const parts: string[] = [
@@ -48,12 +48,14 @@ export function registerProjectKickoffRoutes({ app, db, broadcast, appendTaskLog
     ];
     if (project.directive) parts.push(`Directive:\n${project.directive}`);
     if (assignedAgents.length > 0) {
-      const PROJECT_ROLE_LABEL: Record<string, string> = { pm: "PROJECT MANAGER", pl: "PROJECT LEAD", dev: "DEVELOPER" };
+      const STANDARD_ROLE_LABEL: Record<string, string> = { pm: "PROJECT MANAGER", pl: "PROJECT LEAD", dev: "DEVELOPER" };
       const agentList = assignedAgents
         .map((a) => {
           const dept = a.dept_name ? `, dept: ${a.dept_name}` : "";
           const role = a.role ? `, seniority: ${a.role}` : "";
-          const projectRole = a.project_role ? ` [${PROJECT_ROLE_LABEL[a.project_role] ?? a.project_role.toUpperCase()}]` : "";
+          const displayRole = a.project_role_label
+            ?? (a.project_role ? STANDARD_ROLE_LABEL[a.project_role] : null);
+          const projectRole = displayRole ? ` [${displayRole.toUpperCase()}]` : "";
           return `- ${a.name}${projectRole}${dept}${role}`;
         })
         .join("\n");

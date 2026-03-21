@@ -94,15 +94,24 @@ export function registerCrudRoutes(deps: ProjectRoutesDeps): void {
       ).run(id, name, projectPath, coreGoal, defaultPackKey, assignmentMode, categoryId, directive, directiveTypeSlug, t, t, t, githubRepo, figmaUrl);
 
       if (assignmentMode === "manual" && agentIds.length > 0) {
-        const roleAssignments = (body.role_assignments ?? {}) as Record<string, string>;
-        // Build agentId → project_role map
-        const roleByAgentId = new Map<string, string>();
-        for (const [role, agentId] of Object.entries(roleAssignments)) {
-          if (agentId && ["pm", "pl", "dev"].includes(role)) roleByAgentId.set(agentId, role);
+        // role_assignments: Array<{ agentId: string; role: string }>
+        const roleAssignmentsArr = Array.isArray(body.role_assignments)
+          ? (body.role_assignments as Array<{ agentId?: unknown; role?: unknown }>)
+          : [];
+        const STANDARD_ROLES = new Set(["pm", "pl", "dev"]);
+        const roleLabelByAgentId = new Map<string, string>();
+        for (const entry of roleAssignmentsArr) {
+          const aId = typeof entry.agentId === "string" ? entry.agentId : null;
+          const roleLabel = typeof entry.role === "string" ? entry.role.trim() : null;
+          if (aId && roleLabel) roleLabelByAgentId.set(aId, roleLabel);
         }
-        const insertPA = db.prepare("INSERT OR IGNORE INTO project_agents (project_id, agent_id, project_role, created_at) VALUES (?, ?, ?, ?)");
+        const insertPA = db.prepare(
+          "INSERT OR IGNORE INTO project_agents (project_id, agent_id, project_role, project_role_label, created_at) VALUES (?, ?, ?, ?, ?)",
+        );
         for (const agentId of agentIds) {
-          insertPA.run(id, agentId, roleByAgentId.get(agentId) ?? null, t);
+          const roleLabel = roleLabelByAgentId.get(agentId) ?? null;
+          const projectRole = roleLabel && STANDARD_ROLES.has(roleLabel.toLowerCase()) ? roleLabel.toLowerCase() : null;
+          insertPA.run(id, agentId, projectRole, roleLabel, t);
         }
       }
     });

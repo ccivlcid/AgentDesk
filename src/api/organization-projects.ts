@@ -479,7 +479,7 @@ export async function createProject(input: {
   github_repo?: string;
   assignment_mode?: "auto" | "manual";
   agent_ids?: string[];
-  role_assignments?: { pm?: string; pl?: string; dev?: string };
+  role_assignments?: Array<{ agentId: string; role: string }>;
   directive?: string | null;
   directive_type_slug?: string | null;
 }): Promise<Project> {

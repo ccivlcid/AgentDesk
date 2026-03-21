@@ -11,7 +11,11 @@ import { getFigmaInfo } from "../../api/synapse";
 import { fetchDirectiveTemplates, type DirectiveTemplateItem } from "../../api/organization-projects";
 import { useUiStore } from "../../store/uiStore";
 
-export type ProjectRoleAssignments = { pm: string | null; pl: string | null; dev: string | null };
+export type ProjectRoleAssignment = { role: string; agentId: string };
+export type ProjectRoleAssignments = ProjectRoleAssignment[];
+
+/** Internal state type — agentId can be null until assigned */
+type RoleSlot = { role: string; agentId: string | null };
 
 interface ProjectCreateModalProps {
   categories: Category[];
@@ -43,8 +47,12 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onGi
   const [projectName, setProjectName] = useState("");
   const [projectPath, setProjectPath] = useState("");
   const [coreGoal, setCoreGoal] = useState("");
-  const [roleAssignments, setRoleAssignments] = useState<ProjectRoleAssignments>({ pm: null, pl: null, dev: null });
-  const [selectedRoleSlot, setSelectedRoleSlot] = useState<"pm" | "pl" | "dev" | null>(null);
+  const [roleSlots, setRoleSlots] = useState<RoleSlot[]>([
+    { role: "PM", agentId: null },
+    { role: "PL", agentId: null },
+    { role: "Dev", agentId: null },
+  ]);
+  const [openSlotIdx, setOpenSlotIdx] = useState<number | null>(null);
   const [figmaUrl, setFigmaUrl] = useState("");
   const [figmaConnected, setFigmaConnected] = useState<boolean | null>(null);
   const [submitted, setSubmitted] = useState(false);
@@ -108,13 +116,16 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onGi
 
   const selectedCategory = categories.find((c) => c.id === selectedCategoryId) ?? null;
   const canConfirmInfo = projectName.trim().length > 0 && projectPath.trim().length > 0;
-  const canConfirmAgent = !!roleAssignments.pm && !!roleAssignments.pl && !!roleAssignments.dev;
+  const canConfirmAgent = roleSlots.some(s => s.agentId && s.role.trim().length > 0);
 
   const handleConfirm = () => {
     setSubmitted(true);
     if (!canConfirmInfo || !canConfirmAgent) return;
     setBusy(true);
-    const agentIds = Array.from(new Set([roleAssignments.pm, roleAssignments.pl, roleAssignments.dev].filter(Boolean) as string[]));
+    const roleAssignments: ProjectRoleAssignment[] = roleSlots
+      .filter((s): s is ProjectRoleAssignment => s.agentId !== null && s.role.trim().length > 0)
+      .map(s => ({ role: s.role.trim(), agentId: s.agentId }));
+    const agentIds = Array.from(new Set(roleAssignments.map(r => r.agentId)));
     onConfirm({
       name: projectName.trim(),
       categoryId: selectedCategoryId,
@@ -377,16 +388,45 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onGi
 
           {/* ── STEP 4: 역할 배정 ── */}
           {step === "agent" && (() => {
-            const ROLE_DEFS: { key: "pm" | "pl" | "dev"; badge: string; label: string; desc: string }[] = [
-              { key: "pm", badge: "PM", label: t({ ko: "Project Manager", en: "Project Manager", ja: "プロジェクトマネージャー", zh: "项目经理" }), desc: t({ ko: "전체 일정·예산·리스크 관리", en: "Schedule, budget & risk management", ja: "スケジュール・予算・リスク管理", zh: "进度、预算和风险管理" }) },
-              { key: "pl", badge: "PL", label: t({ ko: "Project Lead", en: "Project Lead", ja: "プロジェクトリード", zh: "项目负责人" }), desc: t({ ko: "기술 방향·아키텍처 결정", en: "Tech direction & architecture", ja: "技術方向・アーキテクチャ", zh: "技术方向和架构决策" }) },
-              { key: "dev", badge: "Dev", label: t({ ko: "Developer", en: "Developer", ja: "デベロッパー", zh: "开发者" }), desc: t({ ko: "기능 구현·코드 작성", en: "Feature implementation & coding", ja: "機能実装・コーディング", zh: "功能实现和代码编写" }) },
-            ];
+            const handleAutoAssign = () => {
+              setRoleSlots(prev => prev.map((slot, idx) => ({
+                ...slot,
+                agentId: cliAgents[idx]?.id ?? null,
+              })));
+            };
+            const handleAddSlot = () => {
+              setRoleSlots(prev => [...prev, { role: "", agentId: null }]);
+              setOpenSlotIdx(roleSlots.length);
+            };
+            const handleRemoveSlot = (idx: number) => {
+              setRoleSlots(prev => prev.filter((_, i) => i !== idx));
+              if (openSlotIdx === idx) setOpenSlotIdx(null);
+              else if (openSlotIdx !== null && openSlotIdx > idx) setOpenSlotIdx(openSlotIdx - 1);
+            };
+
             return (
               <div className="space-y-3">
-                <p style={{ ...mono, fontSize: "11px", color: "var(--th-text-secondary)" }}>
-                  {t({ ko: "PM · PL · Dev 3명을 필수로 배정해주세요.", en: "Assign PM · PL · Dev — all three are required.", ja: "PM · PL · Dev の3名を必ず配置してください。", zh: "请分配 PM · PL · Dev，三者均为必填。" })}
-                </p>
+                {/* Header + auto-assign */}
+                <div className="flex items-center justify-between gap-2">
+                  <p style={{ ...mono, fontSize: "11px", color: "var(--th-text-secondary)" }}>
+                    {t({ ko: "역할명을 자유롭게 지정하고 에이전트를 배정하세요.", en: "Define roles freely and assign agents.", ja: "役割名を自由に設定してエージェントを割り当てます。", zh: "自由定义角色并分配代理。" })}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleAutoAssign}
+                    disabled={cliAgents.length === 0}
+                    style={{
+                      ...mono, fontSize: "10px", padding: "4px 10px", flexShrink: 0,
+                      border: "1px solid var(--th-accent)",
+                      background: "rgba(245,158,11,0.08)",
+                      color: "var(--th-accent)",
+                      cursor: cliAgents.length === 0 ? "not-allowed" : "pointer",
+                      opacity: cliAgents.length === 0 ? 0.4 : 1,
+                    }}
+                  >
+                    {t({ ko: "자동 배정", en: "Auto-assign", ja: "自動配置", zh: "自动分配" })}
+                  </button>
+                </div>
 
                 {cliAgents.length === 0 ? (
                   <div className="py-8 text-center" style={{ border: "1px dashed var(--th-border)", ...mono, fontSize: "11px", color: "var(--th-text-muted)" }}>
@@ -397,159 +437,194 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onGi
                     </p>
                   </div>
                 ) : (
-                  ROLE_DEFS.map(({ key, badge, label, desc }) => {
-                    const assignedId = roleAssignments[key];
-                    const assignedAgent = cliAgents.find((a) => a.id === assignedId);
-                    const isOpen = selectedRoleSlot === key;
-                    const missing = submitted && !assignedId;
-                    return (
-                      <div key={key}>
-                        {/* Role slot row */}
-                        <div
-                          className="flex items-center gap-3 px-3 py-2.5"
-                          style={{
-                            border: `1px solid ${missing ? "rgba(251,113,133,0.5)" : assignedId ? "var(--th-accent)" : "var(--th-border)"}`,
-                            background: assignedId ? "rgba(245,158,11,0.06)" : "var(--th-bg-surface)",
-                            borderBottom: isOpen ? "none" : undefined,
-                          }}
-                        >
-                          {/* Badge */}
-                          <span style={{
-                            ...mono, fontSize: "9px", fontWeight: 700, padding: "2px 7px", flexShrink: 0,
-                            background: assignedId ? "var(--th-accent)" : missing ? "rgba(251,113,133,0.15)" : "var(--th-bg-elevated)",
-                            color: assignedId ? "var(--th-accent-text)" : missing ? "#fb7185" : "var(--th-text-muted)",
-                            border: `1px solid ${assignedId ? "var(--th-accent)" : missing ? "rgba(251,113,133,0.4)" : "var(--th-border)"}`,
-                          }}>
-                            {badge}
-                          </span>
-                          {/* Content */}
-                          <div className="flex-1 min-w-0">
-                            {assignedAgent ? (
-                              <div className="flex items-center gap-2 flex-wrap">
-                                {/* Agent avatar: SVG bot icon */}
-                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, color: "var(--th-accent)" }}>
-                                  <rect x="3" y="5" width="10" height="8" rx="2" stroke="currentColor" strokeWidth="1.4"/>
-                                  <circle cx="6" cy="9" r="1" fill="currentColor"/>
-                                  <circle cx="10" cy="9" r="1" fill="currentColor"/>
-                                  <path d="M6 4V3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
-                                  <path d="M10 4V3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
-                                  <path d="M6 13v1M10 13v1" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
-                                </svg>
-                                <span style={{ ...mono, fontSize: "12px", fontWeight: 600, color: "var(--th-accent)" }}>
-                                  {assignedAgent.name_ko || assignedAgent.name}
-                                </span>
-                                {assignedAgent.department && (
-                                  <span style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)" }}>
-                                    {assignedAgent.department.name_ko ?? assignedAgent.department.name}
-                                  </span>
-                                )}
-                                <span style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", opacity: 0.6 }}>
-                                  {PROVIDER_LABEL[assignedAgent.cli_provider] ?? assignedAgent.cli_provider}
-                                </span>
-                              </div>
-                            ) : (
-                              <div>
-                                <span style={{ ...mono, fontSize: "11px", fontWeight: 600, color: missing ? "#fb7185" : "var(--th-text-secondary)" }}>{label}</span>
-                                <span style={{ ...mono, fontSize: "10px", color: "var(--th-text-muted)", marginLeft: 6 }}>{desc}</span>
-                              </div>
-                            )}
-                          </div>
-                          {/* Toggle button */}
-                          <button
-                            type="button"
-                            onClick={() => setSelectedRoleSlot(isOpen ? null : key)}
-                            className="flex items-center gap-1"
+                  <div className="space-y-2">
+                    {roleSlots.map((slot, idx) => {
+                      const assignedAgent = cliAgents.find(a => a.id === slot.agentId);
+                      const isOpen = openSlotIdx === idx;
+                      const missing = submitted && !slot.agentId;
+                      return (
+                        <div key={idx}>
+                          {/* Slot row */}
+                          <div
+                            className="flex items-center gap-2"
                             style={{
-                              ...mono, fontSize: "9px", padding: "3px 8px", flexShrink: 0,
-                              border: `1px solid ${isOpen ? "var(--th-accent)" : "var(--th-border)"}`,
-                              background: isOpen ? "rgba(245,158,11,0.1)" : "transparent",
-                              color: isOpen ? "var(--th-accent)" : "var(--th-text-muted)",
-                              cursor: "pointer",
+                              border: `1px solid ${missing ? "rgba(251,113,133,0.5)" : slot.agentId ? "var(--th-accent)" : "var(--th-border)"}`,
+                              background: slot.agentId ? "rgba(245,158,11,0.04)" : "var(--th-bg-surface)",
+                              borderBottom: isOpen ? "none" : undefined,
+                              padding: "6px 8px",
                             }}
                           >
-                            {assignedId
-                              ? t({ ko: "변경", en: "Change", ja: "変更", zh: "更改" })
-                              : t({ ko: "선택", en: "Select", ja: "選択", zh: "选择" })}
-                            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style={{ transform: isOpen ? "rotate(180deg)" : "none", transition: "transform 0.15s" }}>
-                              <path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-                            </svg>
-                          </button>
-                        </div>
-                        {/* Inline agent picker */}
-                        {isOpen && (
-                          <div style={{ border: "1px solid var(--th-accent)", borderTop: "none", maxHeight: "200px", overflowY: "auto", background: "var(--th-bg-elevated)" }}>
-                            {cliAgents.map((agent) => {
-                              const isCurrent = agent.id === assignedId;
-                              return (
-                                <button
-                                  key={agent.id}
-                                  type="button"
-                                  onClick={() => {
-                                    setRoleAssignments((prev) => ({ ...prev, [key]: agent.id }));
-                                    setSelectedRoleSlot(null);
-                                  }}
-                                  className="w-full flex items-center gap-3 px-3 py-2"
-                                  style={{
-                                    borderBottom: "1px solid var(--th-border)",
-                                    background: isCurrent ? "rgba(245,158,11,0.1)" : "transparent",
-                                    cursor: "pointer",
-                                    textAlign: "left",
-                                  }}
-                                >
-                                  {/* Agent avatar SVG */}
-                                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, color: isCurrent ? "var(--th-accent)" : "var(--th-text-muted)" }}>
+                            {/* Editable role label */}
+                            <input
+                              value={slot.role}
+                              onChange={e => setRoleSlots(prev => prev.map((s, i) => i === idx ? { ...s, role: e.target.value } : s))}
+                              placeholder={t({ ko: "역할명", en: "Role", ja: "役割名", zh: "角色" })}
+                              style={{
+                                ...mono, fontSize: "10px", fontWeight: 700,
+                                width: "64px", flexShrink: 0,
+                                padding: "2px 6px",
+                                background: slot.agentId ? "var(--th-accent)" : "var(--th-bg-elevated)",
+                                color: slot.agentId ? "var(--th-accent-text)" : "var(--th-text-muted)",
+                                border: `1px solid ${slot.agentId ? "var(--th-accent)" : "var(--th-border)"}`,
+                                outline: "none",
+                              }}
+                            />
+                            {/* Agent info or placeholder */}
+                            <div className="flex-1 min-w-0">
+                              {assignedAgent ? (
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, color: "var(--th-accent)" }}>
                                     <rect x="3" y="5" width="10" height="8" rx="2" stroke="currentColor" strokeWidth="1.4"/>
                                     <circle cx="6" cy="9" r="1" fill="currentColor"/>
                                     <circle cx="10" cy="9" r="1" fill="currentColor"/>
                                     <path d="M6 4V3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
                                     <path d="M10 4V3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
-                                    <path d="M6 13v1M10 13v1" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
                                   </svg>
-                                  <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2 flex-wrap">
-                                      <span style={{ ...mono, fontSize: "12px", fontWeight: 600, color: isCurrent ? "var(--th-accent)" : "var(--th-text-heading)" }}>
-                                        {agent.name_ko || agent.name}
-                                      </span>
-                                      <span style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)" }}>
-                                        {PROVIDER_LABEL[agent.cli_provider] ?? agent.cli_provider}
-                                      </span>
-                                      {agent.role && (
-                                        <span style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", opacity: 0.6 }}>
-                                          {agent.role.replace("_", " ").toUpperCase()}
+                                  <span style={{ ...mono, fontSize: "12px", fontWeight: 600, color: "var(--th-accent)" }}>
+                                    {assignedAgent.name_ko || assignedAgent.name}
+                                  </span>
+                                  {assignedAgent.department && (
+                                    <span style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)" }}>
+                                      {assignedAgent.department.name_ko ?? assignedAgent.department.name}
+                                    </span>
+                                  )}
+                                  <span style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", opacity: 0.6 }}>
+                                    {PROVIDER_LABEL[assignedAgent.cli_provider] ?? assignedAgent.cli_provider}
+                                  </span>
+                                </div>
+                              ) : (
+                                <span style={{ ...mono, fontSize: "11px", color: missing ? "#fb7185" : "var(--th-text-muted)" }}>
+                                  {t({ ko: "에이전트 선택", en: "Select agent", ja: "エージェント選択", zh: "选择代理" })}
+                                </span>
+                              )}
+                            </div>
+                            {/* Select/Change toggle */}
+                            <button
+                              type="button"
+                              onClick={() => setOpenSlotIdx(isOpen ? null : idx)}
+                              className="flex items-center gap-1"
+                              style={{
+                                ...mono, fontSize: "9px", padding: "3px 7px", flexShrink: 0,
+                                border: `1px solid ${isOpen ? "var(--th-accent)" : "var(--th-border)"}`,
+                                background: isOpen ? "rgba(245,158,11,0.1)" : "transparent",
+                                color: isOpen ? "var(--th-accent)" : "var(--th-text-muted)",
+                                cursor: "pointer",
+                              }}
+                            >
+                              {slot.agentId
+                                ? t({ ko: "변경", en: "Change", ja: "変更", zh: "更改" })
+                                : t({ ko: "선택", en: "Select", ja: "選択", zh: "选择" })}
+                              <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style={{ transform: isOpen ? "rotate(180deg)" : "none", transition: "transform 0.15s" }}>
+                                <path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                              </svg>
+                            </button>
+                            {/* Remove slot */}
+                            {roleSlots.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveSlot(idx)}
+                                style={{
+                                  flexShrink: 0, padding: "3px 5px", cursor: "pointer",
+                                  border: "1px solid var(--th-border)", background: "transparent",
+                                  color: "var(--th-text-muted)",
+                                }}
+                              >
+                                <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                                  <path d="M2 2L8 8M8 2L2 8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+                                </svg>
+                              </button>
+                            )}
+                          </div>
+                          {/* Agent picker dropdown */}
+                          {isOpen && (
+                            <div style={{ border: "1px solid var(--th-accent)", borderTop: "none", maxHeight: "180px", overflowY: "auto", background: "var(--th-bg-elevated)" }}>
+                              {cliAgents.map(agent => {
+                                const isCurrent = agent.id === slot.agentId;
+                                return (
+                                  <button
+                                    key={agent.id}
+                                    type="button"
+                                    onClick={() => {
+                                      setRoleSlots(prev => prev.map((s, i) => i === idx ? { ...s, agentId: agent.id } : s));
+                                      setOpenSlotIdx(null);
+                                    }}
+                                    className="w-full flex items-center gap-3 px-3 py-2"
+                                    style={{
+                                      borderBottom: "1px solid var(--th-border)",
+                                      background: isCurrent ? "rgba(245,158,11,0.1)" : "transparent",
+                                      cursor: "pointer", textAlign: "left",
+                                    }}
+                                  >
+                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, color: isCurrent ? "var(--th-accent)" : "var(--th-text-muted)" }}>
+                                      <rect x="3" y="5" width="10" height="8" rx="2" stroke="currentColor" strokeWidth="1.4"/>
+                                      <circle cx="6" cy="9" r="1" fill="currentColor"/>
+                                      <circle cx="10" cy="9" r="1" fill="currentColor"/>
+                                      <path d="M6 4V3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+                                      <path d="M10 4V3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+                                    </svg>
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-center gap-2 flex-wrap">
+                                        <span style={{ ...mono, fontSize: "12px", fontWeight: 600, color: isCurrent ? "var(--th-accent)" : "var(--th-text-heading)" }}>
+                                          {agent.name_ko || agent.name}
+                                        </span>
+                                        <span style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)" }}>
+                                          {PROVIDER_LABEL[agent.cli_provider] ?? agent.cli_provider}
+                                        </span>
+                                        {agent.role && (
+                                          <span style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", opacity: 0.6 }}>
+                                            {agent.role.replace("_", " ").toUpperCase()}
+                                          </span>
+                                        )}
+                                      </div>
+                                      {agent.department && (
+                                        <span style={{ ...mono, fontSize: "10px", color: "var(--th-text-muted)" }}>
+                                          {agent.department.name_ko ?? agent.department.name}
                                         </span>
                                       )}
                                     </div>
-                                    {agent.department && (
-                                      <span style={{ ...mono, fontSize: "10px", color: "var(--th-text-muted)" }}>
-                                        {agent.department.name_ko ?? agent.department.name}
-                                      </span>
+                                    {isCurrent && (
+                                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, color: "var(--th-accent)" }}>
+                                        <path d="M2.5 7L5.5 10L11.5 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+                                      </svg>
                                     )}
-                                  </div>
-                                  {/* Checkmark SVG for current selection */}
-                                  {isCurrent && (
-                                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, color: "var(--th-accent)" }}>
-                                      <path d="M2.5 7L5.5 10L11.5 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-                                    </svg>
-                                  )}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+
+                    {/* Add role slot button */}
+                    <button
+                      type="button"
+                      onClick={handleAddSlot}
+                      className="w-full flex items-center justify-center gap-2"
+                      style={{
+                        ...mono, fontSize: "10px", padding: "6px",
+                        border: "1px dashed var(--th-border)",
+                        background: "transparent",
+                        color: "var(--th-text-muted)",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                        <path d="M6 2v8M2 6h8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+                      </svg>
+                      {t({ ko: "역할 추가", en: "Add role", ja: "役割追加", zh: "添加角色" })}
+                    </button>
+                  </div>
                 )}
 
                 {submitted && !canConfirmAgent && (
                   <div className="flex items-center gap-2" style={{ ...mono, fontSize: "10px", color: "#fb7185", border: "1px solid rgba(251,113,133,0.4)", padding: "6px 10px", background: "rgba(251,113,133,0.08)" }}>
-                    {/* Warning SVG */}
                     <svg width="13" height="13" viewBox="0 0 13 13" fill="none" style={{ flexShrink: 0 }}>
                       <path d="M6.5 1L12 11.5H1L6.5 1Z" stroke="#fb7185" strokeWidth="1.3" strokeLinejoin="round"/>
                       <path d="M6.5 5v3" stroke="#fb7185" strokeWidth="1.4" strokeLinecap="round"/>
                       <circle cx="6.5" cy="9.5" r="0.6" fill="#fb7185"/>
                     </svg>
-                    {t({ ko: "PM · PL · Dev 역할을 모두 배정해야 프로젝트를 시작할 수 있습니다.", en: "Assign PM, PL, and Dev roles to start the project.", ja: "PM · PL · Dev の全役割を配置してください。", zh: "必须配置 PM、PL 和 Dev 角色才能创建项目。" })}
+                    {t({ ko: "최소 1개 역할에 에이전트를 배정해야 합니다.", en: "Assign at least one agent to a role.", ja: "最低1つの役割にエージェントを配置してください。", zh: "请至少为一个角色分配代理。" })}
                   </div>
                 )}
               </div>
