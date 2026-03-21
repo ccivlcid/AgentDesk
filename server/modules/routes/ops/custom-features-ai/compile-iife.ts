@@ -47,17 +47,43 @@ root.render(React.createElement(CustomFeatureWidget, {
   } catch (err) {
     const { details, unresolved } = extractBuildErrors(err);
 
-    // Retry: remove unresolvable import lines anywhere in wrapper + inject empty stubs
+    // Retry: remove unresolvable import lines anywhere in wrapper + inject per-binding stubs
     if (unresolved.length > 0) {
       let wrapperWithStubs = wrapper;
       for (const pkg of unresolved) {
-        // Remove: import Foo from 'pkg'  /  import { Foo } from 'pkg'  /  import 'pkg'
         const escaped = pkg.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-        wrapperWithStubs = wrapperWithStubs.replace(
-          new RegExp(`^import\\s[^;]*?from\\s+['"]${escaped}['"];?\\s*$`, "gm"),
-          `// [stub] import from '${pkg}' removed`,
+        // Match the full import statement (skip `import type …` — no runtime effect)
+        const importRe = new RegExp(
+          `^import\\s+(?!type\\s+)(.*?)\\s+from\\s+['"]${escaped}['"];?\\s*$`,
+          "gm",
         );
-        // Also stub the identifier so runtime doesn't crash
+        wrapperWithStubs = wrapperWithStubs.replace(importRe, (_match, clause: string) => {
+          const stubs: string[] = [`// [stub] import '${pkg}' removed`];
+
+          // Named imports: { A, B as C, ... }
+          const namedM = clause.match(/\{([^}]+)\}/);
+          if (namedM) {
+            const names = (namedM[1] as string)
+              .split(",")
+              .map((n) => {
+                const parts = n.trim().split(/\s+as\s+/);
+                return (parts[parts.length - 1] ?? "").trim();
+              })
+              .filter((n) => /^[a-zA-Z_$][a-zA-Z0-9_$]*$/.test(n));
+            if (names.length > 0) stubs.push(`var { ${names.join(", ")} } = {};`);
+          }
+
+          // Default import: import Foo from 'pkg'  (not: import { } or import *)
+          const defaultM = clause.match(/^([a-zA-Z_$][a-zA-Z0-9_$]*)\s*$/);
+          if (defaultM) stubs.push(`var ${defaultM[1]} = {};`);
+
+          // Namespace import: * as Foo
+          const nsM = clause.match(/\*\s+as\s+([a-zA-Z_$][a-zA-Z0-9_$]*)/);
+          if (nsM) stubs.push(`var ${nsM[1]} = new Proxy({}, { get: () => () => null });`);
+
+          return stubs.join("\n");
+        });
+        // Also stub the bare package variable (for side-effect imports or missed cases)
         const stubName = pkg.replace(/[^a-zA-Z0-9_$]/g, "_");
         wrapperWithStubs += `\nif(typeof ${stubName}==="undefined"){var ${stubName}=new Proxy({},{get:()=>()=>null});}\n`;
       }

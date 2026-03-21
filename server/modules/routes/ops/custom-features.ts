@@ -371,6 +371,71 @@ body{height:100vh;display:flex;flex-direction:column;background:var(--th-bg-prim
         return res.type("text/html").send(html);
       }
 
+      // cli-usage 타입: README에서 추출한 설치 명령어 + 사용 예시 표시
+      if (!row.bundle && cfgParsed.type === "cli-usage") {
+        type CmdEntry = { cmd: string; desc?: string };
+        const npmName   = String(cfgParsed.npm_name   ?? "").replace(/</g, "&lt;");
+        const installCmd = String(cfgParsed.install_cmd ?? "").replace(/</g, "&lt;");
+        const description = String(cfgParsed.description ?? "").replace(/</g, "&lt;");
+        const commands: CmdEntry[] = Array.isArray(cfgParsed.commands)
+          ? (cfgParsed.commands as CmdEntry[]).slice(0, 8)
+          : [];
+
+        const cmdRows = commands.map((c) => {
+          const cmd  = String(c.cmd  ?? "").replace(/</g, "&lt;");
+          const desc = String(c.desc ?? "").replace(/</g, "&lt;");
+          return `<div class="cmd-row">
+  <code class="cmd-code" onclick="copyText(this,'${cmd.replace(/'/g, "\\'")}')">
+    <span>${cmd}</span>
+    <span class="copy-hint">copy</span>
+  </code>
+  ${desc ? `<span class="cmd-desc">${desc}</span>` : ""}
+</div>`;
+        }).join("");
+
+        const html = `<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><style>${CSS_VARS}
+body{padding:20px 24px;overflow-y:auto;}
+.name{font-size:13px;font-weight:700;color:var(--th-text-heading);margin-bottom:4px;}
+.desc{font-size:11px;color:var(--th-text-muted);margin-bottom:16px;line-height:1.5;}
+.section{margin-bottom:16px;}
+.label{font-size:10px;font-weight:700;color:var(--th-text-muted);letter-spacing:.08em;margin-bottom:6px;}
+.install-box{display:flex;align-items:center;gap:8px;background:var(--th-bg-panel);border:1px solid var(--th-border);border-radius:4px;padding:8px 12px;}
+.install-code{font-size:11px;color:var(--th-accent);flex:1;}
+.copy-btn{font-size:10px;padding:3px 8px;border:1px solid var(--th-border);border-radius:3px;background:transparent;color:var(--th-text-muted);cursor:pointer;font-family:var(--th-font-mono);}
+.copy-btn:hover{border-color:var(--th-accent);color:var(--th-accent);}
+.cmd-row{margin-bottom:6px;}
+.cmd-code{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:10.5px;background:var(--th-bg-panel);border:1px solid var(--th-border);border-radius:4px;padding:6px 10px;cursor:pointer;color:var(--th-text-primary);}
+.cmd-code:hover{border-color:var(--th-accent);color:var(--th-accent);}
+.copy-hint{font-size:9px;color:var(--th-text-muted);flex-shrink:0;}
+.cmd-desc{display:block;font-size:10px;color:var(--th-text-muted);margin-top:3px;padding-left:10px;line-height:1.4;}
+.note{font-size:10px;color:var(--th-text-muted);border-top:1px solid var(--th-border);padding-top:12px;line-height:1.5;}
+</style></head><body>
+<div class="name">${npmName || "라이브러리 / CLI 도구"}</div>
+${description ? `<div class="desc">${description}</div>` : ""}
+${installCmd ? `<div class="section">
+  <div class="label">INSTALL</div>
+  <div class="install-box">
+    <span class="install-code">${installCmd}</span>
+    <button class="copy-btn" onclick="copyText(null,'${installCmd.replace(/'/g, "\\'")}',this)">Copy</button>
+  </div>
+</div>` : ""}
+${commands.length > 0 ? `<div class="section">
+  <div class="label">COMMANDS</div>
+  ${cmdRows}
+</div>` : ""}
+<div class="note">터미널에서 위 명령어를 실행하세요. 클릭하면 클립보드에 복사됩니다.</div>
+<script>
+function copyText(el,text,btn){
+  navigator.clipboard.writeText(text).then(function(){
+    if(btn){btn.textContent="Copied!";setTimeout(function(){btn.textContent="Copy";},1500);}
+    else if(el){el.style.borderColor="var(--th-attr-elite)";setTimeout(function(){el.style.borderColor="";},1500);}
+  }).catch(function(){});
+}
+</script>
+</body></html>`;
+        return res.type("text/html").send(html);
+      }
+
       // bundle이 없으면 자동 설치 페이지 (pending_install / draft)
       if (!row.bundle) {
         const safeId = row.id.replace(/[^a-zA-Z0-9-]/g, "");

@@ -1,283 +1,170 @@
+<div align="center">
+
 # AgentDesk
 
-> **A Developer OS for managing, monitoring, and controlling multiple AI agents simultaneously.**
+**Project OS for AI Agent Teams**
 
-AgentDesk brings a macOS-style desktop metaphor to AI agent orchestration — menubar, desktop icons, draggable widgets, Dock, and floating app windows, all in one dark terminal-inspired interface.
+Run, monitor, and collaborate with AI agents simultaneously — from a single macOS-style desktop interface.
 
-> 🇰🇷 [한국어](README_ko.md) · 🇯🇵 [日本語](README_jp.md) · 🇨🇳 [中文](README_zh.md)
+[한국어](README_ko.md) · [Overview](#overview) · [Features](#key-features) · [Quick Start](#getting-started)
 
----
-
-## 🎬 Project Introduction Materials
-
-| Format | File | Description |
-|--------|------|-------------|
-| 🎥 Video | [`docs/reports/AgentDesk-Introduction.mp4`](docs/reports/AgentDesk-Introduction.mp4) | 96-second intro video (1920×1080, H.264) — 10-scene walkthrough rendered with Remotion |
-| 📊 Presentation | [`docs/reports/AgentDesk-Introduction.pptx`](docs/reports/AgentDesk-Introduction.pptx) | 10-slide PowerPoint deck — architecture, features, status |
-| 🌐 HTML Slides | [`docs/reports/AgentDesk-Introduction.html`](docs/reports/AgentDesk-Introduction.html) | Interactive slide deck (KO/EN toggle) — open in browser |
-
-> **Tip:** Open the HTML file directly in any browser for an interactive slide presentation with keyboard navigation (← →) and KO/EN language toggle.
+</div>
 
 ---
 
-## Screenshots
+## Overview
 
-<table>
-  <tr>
-    <td><img src="docs/screen/01-desktop.png" width="420" alt="Desktop"/><br/><sub>Desktop</sub></td>
-    <td><img src="docs/screen/28-agent-manager.png" width="420" alt="Agent Manager"/><br/><sub>Agent Manager</sub></td>
-  </tr>
-  <tr>
-    <td><img src="docs/screen/37-agent-create.png" width="420" alt="Hire Agent"/><br/><sub>Hire Agent</sub></td>
-    <td><img src="docs/screen/37-agent-create.png" width="420" alt="Add Department"/><br/><sub>Add Department</sub></td>
-  </tr>
-  <tr>
-    <td><img src="docs/screen/23-workflow-builder.png" width="420" alt="Workflow Builder"/><br/><sub>Workflow Builder</sub></td>
-    <td><img src="docs/screen/25-workflow-composition.png" width="420" alt="Agent Composition"/><br/><sub>Agent Composition</sub></td>
-  </tr>
-  <tr>
-    <td><img src="docs/screen/26-chat-direct.png" width="420" alt="Direct Chat"/><br/><sub>Direct Chat</sub></td>
-    <td><img src="docs/screen/27-chat-group.png" width="420" alt="Group Chat"/><br/><sub>Group Broadcast Chat</sub></td>
-  </tr>
-  <tr>
-    <td><img src="docs/screen/31-widget-dashboard.png" width="420" alt="Agents Widget"/><br/><sub>Agents Widget</sub></td>
-    <td><img src="docs/screen/31-widget-dashboard.png" width="420" alt="Alerts Widget"/><br/><sub>Alerts Widget</sub></td>
-  </tr>
-  <tr>
-    <td><img src="docs/screen/12-settings-general.png" width="420" alt="Settings"/><br/><sub>Settings</sub></td>
-    <td><img src="docs/screen/18-library-skills.png" width="420" alt="Library — Skills"/><br/><sub>Library — Skills</sub></td>
-  </tr>
-  <tr>
-    <td><img src="docs/screen/30-mission-control.png" width="420" alt="Mission Control"/><br/><sub>Mission Control (Ctrl+↑)</sub></td>
-    <td><img src="docs/screen/11-command-palette.png" width="420" alt="Command Palette"/><br/><sub>Command Palette (Ctrl+Shift+K)</sub></td>
-  </tr>
-</table>
+AgentDesk is an open-source, self-hosted operating system for AI agent teams. Agents are runtime processes, the project is the OS they work within, and the UI is the control panel for that OS.
 
----
+## Core Philosophy
 
-## 🌍 Multi-Language Support
-
-AgentDesk supports **Korean · English · Japanese · Chinese** — all UI text adapts to the selected language. See [README_ko.md](README_ko.md) for the full Korean version with language comparison screenshots.
-
----
-
-## What is AgentDesk?
-
-AgentDesk is a **project operating system** for AI agent teams. It runs as a local web app and lets you:
-
-- **Create & manage AI agents** — define personas, roles, departments, CLI providers, and API models
-- **Orchestrate workflows** — visual builder, cron-scheduled runs, multi-agent composition pipelines
-- **Monitor in real-time** — heartbeat widgets, task boards, alert feeds, flow graphs, CLI cost tracking
-- **Chat with your agents** — direct messages, group broadcast, Telegram/Discord/Slack gateway
-- **Build a shared knowledge base** — Skills, Rules, Memory, Hooks, Deliverables, and Templates library
-- **Analyze & export** — agent performance dashboard, data export (CSV/JSON), cost summaries
-- **Control everything** — macOS-style desktop with Spotlight search, Mission Control, Quick Look
+AgentDesk is built on the principle that developers should see exactly what their AI agents are doing, in real time — which task is running, which rules are applied, where something failed — all from one screen, with no black boxes. Rather than delegating execution to external CLIs, AgentDesk owns the full loop: LLM calls, tool use, result storage, and streaming output.
 
 ---
 
 ## Key Features
 
-### 🖥️ macOS-Inspired Desktop OS
-- Menubar + desktop icons + Dock + floating windows
-- Drag & drop icon placement with Jiggle Mode (600ms long-press)
-- Quick Look (Space) for project previews
-- Mission Control overview (Ctrl+↑)
-- Spotlight-style command palette (Ctrl+Shift+K) — searches tasks, deliverables, hooks, and workflows
-- 10 animated wallpaper themes
+<table>
+<tr>
+<td valign="top" width="50%">
 
-### 👤 Agent & Department Management
-- Hire agents with custom avatars, personas, and role levels (Team Leader / Senior / Junior / Intern)
-- Organize into departments with shared system prompts
-- Assign CLI providers (Claude, OpenAI, Gemini, etc.) or API models
-- Real-time heartbeat monitoring
+### 🚀 Agent-Driven Kickoff
+- LLM auto-plans 3–7 tasks from goal + directive
+- Role names freely definable — PM, QA, Backend, anything
+- Auto-assign fills all slots in one click
+- Asks one clarifying question if info is missing
+- First task executes automatically after planning
 
-### ⚡ Workflow Automation
-- Visual drag-and-drop workflow builder with node edit panel
-- **Cron-based scheduler** — set per-workflow schedules (⏰ button, presets included)
-- Multi-agent composition pipelines with custom node types
-- 7 built-in workflow packs (development, research, novel, report, video, roleplay, asset management)
-- Auto-save + dirty-flag indicator + confirm-before-discard
+</td>
+<td valign="top" width="50%">
 
-### 🧩 Custom Widget Platform
-- **Widget Builder** — create custom dashboard widgets from 7 built-in templates
-- **AI generation** — describe a widget in plain text, get a working TSX widget via esbuild + sandbox iframe
-- Parameter types: text, number, toggle (visual), select, agent picker
-- Save, manage, and dock custom widgets alongside built-in ones
+### 📄 Project Directives
+- Markdown doc injected into every agent prompt
+- 10 built-in templates: MVP · Full-Stack · Mobile · API/Backend · Frontend · AI/ML · Open-Source · DevOps · Enterprise · Research
+- Edit freely, load a template, or import a `.md` file directly
 
-### 💬 Multi-Agent Chat
-- Direct messaging to individual agents
-- Group broadcast channel to all agents
-- Telegram / Discord / Slack gateway integration
-- `$` directive and `!` task flows via messenger
+</td>
+</tr>
+<tr>
+<td valign="top" width="50%">
+
+### ⚡ Agent Runtime Engine
+- Built-in LLM execution via Anthropic Claude API
+- Turn-based tool-use loop with filesystem access
+- Real-time token streaming to CLI Window over WebSocket
+- Per-run execution history, token counts, cost tracking
+- `My keys, my models` — no data proxying
+
+</td>
+<td valign="top" width="50%">
+
+### 🖥️ Real-Time Monitoring
+- Task Board: Kanban · Gantt · DAG views
+- Flow Graph: live agent↔task connection diagram
+- Agent Detail: state · running task · rules · memory · hooks
+- Notification Center: grouped alerts with quick actions
+
+</td>
+</tr>
+<tr>
+<td valign="top" width="50%">
 
 ### 📚 Knowledge Library
-- **Skills** — reusable task templates
-- **Rules** — behavior constraints and guidelines
-- **Memory** — persistent agent context
-- **Hooks** — event-driven automation scripts (Global / Project / Agent / Department scopes)
-- **Deliverables** — output artifact tracking with search, sort, upload
-- **Templates** — project templates (4 built-in + custom) and task template library
-- **Performance** — per-agent success rate, avg completion time, trend sparklines
+- Skills · Rules · Memory · Hooks
+- Scoped globally, per department, agent, or project
+- Priority: project > agent > department > global
+- `/learn` auto-extracts from completed tasks
 
-### Project Directives
-- 10 built-in project type templates: MVP, Full-Stack, Mobile, API/Backend, Frontend, AI/ML, Open-Source, DevOps, Enterprise, Research
-- Each type pre-fills agent work principles, task decomposition strategy, quality criteria, review intensity
-- Fully editable Markdown — templates are a starting point, you own the rules
-- Directives are injected into agent prompts and structurally affect review rounds and subtask seeding
+</td>
+<td valign="top" width="50%">
 
-### 🚀 Agent-Driven Project Kickoff
-- Create a project → agent automatically plans 3–7 tasks based on goal + directive
-- **PM · PL · Dev role assignment** — required 3-person team: Project Manager, Project Lead, Developer
-- **Multi-agent distribution** — LLM assigns each task to the best-fit agent by project role
-- **Auto-executes** the first task immediately after planning
-- If information is missing, agent asks a single clarifying question via in-app modal
-- `⚡ Kickoff` button in Task Board toolbar for manual re-trigger
+### ⚙️ Workflow Automation
+- Visual drag-and-drop pipeline builder
+- Cron-based scheduler for recurring runs
+- 7 built-in packs: development · research · novel · report · video · roleplay · asset management
 
-### Agent Runtime Engine
-- Built-in LLM execution engine (Anthropic Claude API)
-- Turn-based Tool Use loop with file system access
-- Real-time streaming to CLI Window via WebSocket
-- Token tracking, cost accounting, and execution history
+</td>
+</tr>
+<tr>
+<td valign="top" width="50%">
 
-### 📊 Analytics & Export
-- **Agent Performance Dashboard** — success rate badges, status stack bars, daily sparklines; filter by project/period, sort by total/done/rate/speed
-- **Data Export** — tasks / deliverables / agents / costs → CSV (UTF-8 BOM, Excel-compatible) or JSON; filter by project, status, date range; one-click from "AgentDesk" menu
-- **Project cost summary** — total cost, this month, breakdown by agent and workflow
+### 💬 Multi-Agent Chat
+- Direct messages + broadcast channel
+- Telegram · Discord · Slack gateway
+- `$` prefix → directive · `!` prefix → task
+- Decision Inbox for mid-task agent requests
 
-### 🗂 Project Dashboard
-- Objectives with circular SVG progress indicator + status (Active/Completed/Cancelled)
-- Review gates with status (Pending/In Progress/Passed/Failed) + criteria + due date
-- Inline create/edit/delete for both sections
-- Project templates with pre-filled objectives and gates
+</td>
+<td valign="top" width="50%">
 
-### 📊 Real-Time Dashboard Widgets
-| Widget | Description |
-|--------|-------------|
-| 💓 Agents | Live agent status list (working / idle / offline) |
-| 📋 Tasks | Active task board |
-| 🔔 Alerts | Anomaly & error notifications |
-| 💰 CLI Cost | Token usage & rate limit tracking |
-| 🔀 Flow Graph | Agent communication flow graph |
-| 🗂 File Tree | Project directory browser |
-| 🧩 Custom | AI-generated or template-based custom widgets |
+### 🧩 Custom Widgets & Analytics
+- Describe a widget → AI generates TypeScript (esbuild + iframe)
+- 7 built-in widget templates
+- Performance dashboard: success rate · completion time · sparklines
+- Export to CSV / JSON
 
-### 🔔 Notification Center
-- Slide-in panel (320px right) with macOS traffic lights
-- Date groups (Today / Yesterday / Older) with unread counts per section
-- Hover quick-actions: mark read ✓ + delete per notification
-- Filter by type (Done / Error / Decision / Alert / Info) with per-type badges
-- Clear all read, browser push toggle
+</td>
+</tr>
+</table>
+
+---
+
+## Technical Philosophy
+
+| | |
+|---|---|
+| **Transparency** | Every token, tool call, and result is visible in real time — no black boxes |
+| **Self-hosted** | SQLite-based, no external cloud services required |
+| **My keys, my models** | Direct API key connection — data never passes through a proxy |
+| **Local-first** | Optional Electron build packages the app as a native desktop application |
+| **Open by default** | Apache 2.0, single local process, no vendor lock-in |
+
+---
+
+## Getting Started
+
+```bash
+git clone <repo-url> && cd AgentDesk
+pnpm install
+cp .env.example .env   # set SESSION_SECRET
+pnpm setup
+pnpm dev
+```
+
+Open **http://localhost:8800** — requires Node.js 22+, pnpm 10+.
+
+```
+1. Settings → API        Add an API provider (Claude / OpenAI / Gemini)
+2. Agent Manager         Create a department → hire agents
+3. New Project           Select type → edit directive → assign agents
+4. Kickoff               Tasks planned automatically → first task starts
+5. Monitor               Task Board · CLI Window · Flow Graph
+```
 
 ---
 
 ## Tech Stack
 
 | Layer | Technology |
-|-------|-----------|
-| Frontend | React 19 + TypeScript + Vite + Tailwind CSS |
-| State | Zustand |
-| Flow diagrams | `@xyflow/react` v12 |
-| Backend | Node.js + Express + tsx |
-| Database | SQLite (`better-sqlite3`) + versioned migrations |
+|---|---|
+| Frontend | React 19 · TypeScript · Vite · Tailwind CSS · Zustand |
+| Backend | Node.js · Express · tsx |
+| Database | SQLite (`better-sqlite3`) · versioned migrations |
 | Real-time | WebSocket |
-| Logging | pino |
-| Testing | Vitest (unit + integration) + Playwright (E2E) |
-| Package manager | pnpm |
-| Desktop (optional) | Electron |
+| Flow diagrams | `@xyflow/react` |
+| Testing | Vitest · Playwright |
+| Desktop | Electron (optional) |
 
 ---
 
-## Quick Start
+## Use Cases
 
-**Requirements:** Node.js ≥ 22, pnpm ≥ 10
-
-```bash
-git clone <repo-url> && cd AgentDesk
-pnpm install
-cp .env.example .env      # Set SESSION_SECRET (required)
-pnpm setup                # Initialize DB + run migrations
-pnpm dev                  # Frontend (8800) + API (8790)
-```
-
-Open **http://localhost:8800** in your browser.
-
-### First Agent Setup
-
-```
-1. Settings → API → Add API Provider (Claude / OpenAI / Gemini)
-2. Agent Manager → Add Department → Hire Agent
-3. Desktop → 📁 New Project → select type → edit directive → assign agents
-4. Agent automatically plans tasks (kickoff) → first task starts running
-5. If agent needs clarification, it asks you via a modal → reply → continues
-6. Monitor progress in Task Board, CLI Window, and Flow Graph
-```
-
-### Key Commands
-
-| Command | Description |
-|---------|-------------|
-| `pnpm dev` | Start dev server (frontend + API) |
-| `pnpm build` | Production build |
-| `pnpm test` | Full test suite (frontend + server) |
-| `pnpm run test:web` | Frontend tests only (Vitest) |
-| `pnpm run test:api` | Server tests only (Vitest) |
-| `pnpm lint` | Lint check |
-| `pnpm lint:fix` | Auto-fix lint issues |
-| `pnpm setup` | Re-run DB migrations |
-
-### Keyboard Shortcuts
-
-| Shortcut | Action |
-|----------|--------|
-| `Ctrl+Shift+K` / `Cmd+K` | Command Palette (global search) |
-| `Ctrl+↑` | Mission Control |
-| `g w` | Toggle Workflow window |
-| `g l` | Toggle Library window |
-| `g s` | Toggle Settings window |
-| `g c` | Toggle Chat window |
-| `g a` | Toggle Agent Manager |
-| `g e` | Toggle REPL |
-| `Space` | Quick Look (when icon selected) |
-| `?` | Keyboard shortcuts guide |
+Ideal for developers who want to run multiple AI agents in parallel and track the full picture from one screen, teams that need to observe agent reasoning and tool use in real time, organizations looking to enforce consistent behavior through shared rules and memory, and anyone who wants to self-host their entire AI agent infrastructure with full control over keys and models.
 
 ---
 
-## Documentation
+<div align="center">
 
-| Document | Description |
-|----------|-------------|
-| [`docs/OVERVIEW.md`](docs/OVERVIEW.md) | Architecture overview + completed feature list |
-| [`docs/architecture/ARCHITECTURE-AUDIT-2026-Q1.md`](docs/architecture/ARCHITECTURE-AUDIT-2026-Q1.md) | Architecture & backend audit report |
-| [`docs/design/UI-SCREENS.md`](docs/design/UI-SCREENS.md) | Full screen & modal specifications |
-| [`docs/design/DESIGN.md`](docs/design/DESIGN.md) | CSS variables + component style rules |
-| [`docs/specs/api.md`](docs/specs/api.md) | REST API specification (v1.6.0) |
-| [`docs/progress.md`](docs/progress.md) | Development progress log |
-| [`docs/reports/AgentDesk-Introduction.pptx`](docs/reports/AgentDesk-Introduction.pptx) | Project introduction deck (10 slides) |
-| [`docs/reports/AgentDesk-Introduction.mp4`](docs/reports/AgentDesk-Introduction.mp4) | Project introduction video (96 sec) |
+Apache 2.0 · Self-hosted · [한국어](README_ko.md)
 
----
-
-## Roadmap
-
-| Phase | Focus | Status |
-|-------|-------|--------|
-| **Phase 1–20** | Local Agent OS — desktop UI, workflow builder, agent runtime engine, project directives, multi-agent kickoff | ✅ Complete |
-| **Phase 21** | Platform — PostgreSQL, queue/worker, plugin system, remote agent execution | Planned |
-| **Phase 22** | Team & Cloud — workspaces, cloud execution, enterprise auth (SSO/RBAC) | Future |
-
----
-
-## Contributing
-
-We welcome contributions! See [`CONTRIBUTING.md`](CONTRIBUTING.md) for guidelines.
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/my-feature`)
-3. Make your changes and run tests (`pnpm test`)
-4. Submit a pull request
-
----
-
-## License
-
-Apache 2.0
+</div>

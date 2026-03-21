@@ -1,8 +1,9 @@
 import { randomUUID } from "node:crypto";
 import type { DatabaseSync } from "node:sqlite";
 import type { Express } from "express";
-import { resolveAnthropicKey } from "../../../agent-runtime/llm-client.ts";
 import { startExecutionLoop } from "../../../agent-runtime/execution-loop.ts";
+import { findApiProvider, resolveModel } from "../../ops/custom-features-ai/provider-helpers.ts";
+import { callProvider } from "../../ops/custom-features-ai/llm-providers.ts";
 
 interface KickoffDeps {
   app: Express;
@@ -77,32 +78,18 @@ If critical information is missing (e.g., no goal at all), respond:
 Ask at most one question.`;
 
     try {
-      const apiKey = resolveAnthropicKey(db);
-
-      const body = JSON.stringify({
-        model: "claude-sonnet-4-6",
-        max_tokens: 1024,
-        system: systemPrompt,
-        messages: [{ role: "user", content: parts.join("\n\n") }],
-      });
-
-      const resp = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: {
-          "x-api-key": apiKey,
-          "anthropic-version": "2023-06-01",
-          "content-type": "application/json",
-        },
-        body,
-      });
-
-      if (!resp.ok) {
-        const errText = await resp.text().catch(() => "");
-        return res.status(502).json({ error: "llm_error", detail: errText.slice(0, 200) });
+      // 가용한 API 프로바이더 자동 탐색 (Anthropic → OpenAI → Google 등 순)
+      const provider = findApiProvider(db, "api");
+      if (!provider) {
+        return res.status(400).json({
+          error: "no_api_provider",
+          detail: "API 프로바이더가 없습니다. Settings → API Providers에서 API 키를 추가해주세요.",
+        });
       }
+      const model = resolveModel(provider);
+      const signal = AbortSignal.timeout(30_000);
 
-      const data = await resp.json() as { content: { type: string; text?: string }[] };
-      const rawText = data.content.find((c) => c.type === "text")?.text ?? "";
+      const rawText = await callProvider(provider, model, systemPrompt, parts.join("\n\n"), signal);
 
       // JSON 추출 (마크다운 펜스가 있어도 처리)
       const jsonMatch = rawText.match(/\{[\s\S]*\}/);

@@ -8,6 +8,7 @@ import Desktop from "./components/desktop/Desktop";
 import AppOverlays from "./app/AppOverlays";
 import ProjectCreateModal from "./components/project-create-modal/ProjectCreateModal";
 import { kickoffProject, replyClarification } from "./api/project-kickoff";
+import { isApiRequestError } from "./api/core";
 import { useAppActions } from "./app/useAppActions";
 import { useActiveMeetingTaskId } from "./app/useActiveMeetingTaskId";
 import { useUpdateStatusPolling } from "./app/useUpdateStatusPolling";
@@ -299,8 +300,16 @@ export default function App() {
                       addToast({ type: "success", title: t({ ko: "에이전트가 태스크를 계획했습니다", en: "Agent planned tasks", ja: "エージェントがタスクを計画しました", zh: "代理已规划任务" }) });
                     }
                   })
-                  .catch(() => {
-                    addToast({ type: "error", title: t({ ko: "태스크 계획 실패. 직접 추가해주세요.", en: "Planning failed. Please add tasks manually.", ja: "計画失敗", zh: "计划失败" }) });
+                  .catch((err) => {
+                    const detail = isApiRequestError(err)
+                      ? ((err.details as { detail?: string } | null)?.detail ?? null)
+                      : null;
+                    addToast({
+                      type: "error",
+                      title: detail
+                        ? detail
+                        : t({ ko: "태스크 계획 실패. 직접 추가해주세요.", en: "Planning failed. Please add tasks manually.", ja: "計画失敗", zh: "计划失败" }),
+                    });
                   })
                   .finally(() => setKickoffBusy(false));
               })
