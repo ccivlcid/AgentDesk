@@ -29,13 +29,12 @@ const EXTRA_WIN_META: Partial<Record<WindowType, { icon: (c: string) => React.Re
 const mono = "var(--th-font-mono)";
 
 interface DockProps {
-  onCreateTask?: () => void;
   onCreateProject?: () => void;
   onCreateAgent?: () => void;
   onCreateFeature?: () => void;
 }
 
-export default function Dock({ onCreateTask, onCreateProject, onCreateAgent, onCreateFeature }: DockProps) {
+export default function Dock({ onCreateProject, onCreateAgent, onCreateFeature }: DockProps) {
   const { openWindows, toggleWindow, minimizedWindows, restoreWindow, dockAutoHide } = useUiStore();
   const [dockHovered, setDockHovered] = useState(false);
   const { agents, unreadAgentIds } = useAgentStore();
@@ -103,18 +102,6 @@ export default function Dock({ onCreateTask, onCreateProject, onCreateAgent, onC
   ];
 
   const CREATE_ITEMS = [
-    {
-      label: t({ ko: "새 업무", en: "New Task", ja: "新規タスク", zh: "新任务" }),
-      accentColor: "#ff9f0a",
-      icon: (
-        <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" width={16} height={16}>
-          <rect x="2" y="4" width="14" height="11" rx="2" />
-          <line x1="9" y1="8" x2="9" y2="14" />
-          <line x1="6" y1="11" x2="12" y2="11" />
-        </svg>
-      ),
-      onClick: () => { setMenuOpen(false); onCreateTask?.(); },
-    },
     {
       label: t({ ko: "새 프로젝트", en: "New Project", ja: "新規プロジェクト", zh: "新建项目" }),
       accentColor: "#30d158",

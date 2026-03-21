@@ -22,7 +22,6 @@ export default function CommandPalette({
   projects = [],
   currentProject,
   onNavigate,
-  onCreateTask,
   onSelectProject,
   onOpenShortcutsGuide,
 }: CommandPaletteProps) {
@@ -82,12 +81,7 @@ export default function CommandPalette({
   const executeItem = useCallback((item: PaletteItem) => {
     if (item.kind === "action") {
       saveHistory(item.action);
-      if (item.action === "new-task") {
-        onCreateTask?.();
-        onNavigate("tasks-board");
-      } else {
-        onNavigate(item.action);
-      }
+      onNavigate(item.action);
     } else if (item.kind === "agent") {
       saveHistory(`agent:${item.agent.id}`);
       onNavigate("agents");
@@ -108,7 +102,7 @@ export default function CommandPalette({
       onNavigate("workflow");
     }
     onClose();
-  }, [onClose, onCreateTask, onNavigate, onSelectProject]);
+  }, [onClose, onNavigate, onSelectProject]);
 
   const handleKeyDown = useCallback((e: ReactKeyboardEvent<Element>) => {
     if (e.key === "Escape") { e.preventDefault(); onClose(); return; }

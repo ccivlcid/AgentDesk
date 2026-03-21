@@ -5,11 +5,13 @@ import DecisionInboxModal from "../components/DecisionInboxModal";
 import TerminalPanel from "../components/TerminalPanel";
 import TaskReportPopup from "../components/TaskReportPopup";
 import AgentStatusPanel from "../components/AgentStatusPanel";
+import DirectiveEditModal from "../components/project-create-modal/DirectiveEditModal";
 import type { DecisionInboxItem } from "../components/chat/decision-inbox";
 import type { Agent, Message, Task } from "../types";
 import type { UiLanguage } from "../i18n";
 import type { ProjectMetaPayload, TaskPanelTab } from "./types";
 import { useAgentStore } from "../store/agentStore";
+import { useProjectStore } from "../store/projectStore";
 
 interface AppOverlaysProps {
   showChat: boolean;
@@ -99,9 +101,12 @@ export default function AppOverlays({
   onOpenGroupChatWithAgents,
 }: AppOverlaysProps) {
   const { departments } = useAgentStore();
+  const { editDirectiveProjectId } = useProjectStore();
 
   return (
     <>
+      {editDirectiveProjectId && <DirectiveEditModal />}
+
       {showGroupChat && (
         <GroupChatPanel
           agents={groupChatAgents}

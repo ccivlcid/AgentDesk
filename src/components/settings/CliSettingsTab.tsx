@@ -68,10 +68,8 @@ export default function CliSettingsTab({
               const info = CLI_INFO[provider];
               const isReady = status.installed && status.authenticated;
               const showModelSection = isReady || (provider === "cursor" && status.installed);
-              const hasSubModel = provider === "claude" || provider === "codex";
               const modelList = cliModels?.[provider] ?? [];
               const currentModel = form.providerModelConfig?.[provider]?.model || "";
-              const currentSubModel = form.providerModelConfig?.[provider]?.subModel || "";
               const currentReasoningLevel = form.providerModelConfig?.[provider]?.reasoningLevel || "";
 
               const selectedModel = modelList.find((m) => m.slug === currentModel);
@@ -177,9 +175,7 @@ export default function CliSettingsTab({
                     <div className="space-y-1.5 pl-0 sm:pl-8">
                       <div className="flex min-w-0 flex-col items-stretch gap-1.5 sm:flex-row sm:items-center sm:gap-2">
                         <span className="w-auto shrink-0 text-xs font-mono sm:w-20" style={{ color: "var(--th-text-muted)" }}>
-                          {hasSubModel
-                            ? t({ ko: "메인 모델:", en: "Main model:", ja: "メインモデル:", zh: "主模型:" })
-                            : t({ ko: "모델:", en: "Model:", ja: "モデル:", zh: "模型:" })}
+                          {t({ ko: "모델:", en: "Model:", ja: "モデル:", zh: "模型:" })}
                         </span>
                         {cliModelsLoading ? (
                           <span className="text-xs font-mono animate-pulse" style={{ color: "var(--th-text-muted)" }}>
@@ -250,96 +246,6 @@ export default function CliSettingsTab({
                         </div>
                       )}
 
-                      {hasSubModel && (
-                        <>
-                          <div className="flex min-w-0 flex-col items-stretch gap-1.5 sm:flex-row sm:items-center sm:gap-2">
-                            <span className="w-auto shrink-0 text-xs font-mono sm:w-20" style={{ color: "var(--th-text-muted)" }}>
-                              {t({
-                                ko: "알바생 모델:",
-                                en: "Sub-agent model:",
-                                ja: "サブモデル:",
-                                zh: "子代理模型:",
-                              })}
-                            </span>
-                            {cliModelsLoading ? (
-                              <span className="text-xs font-mono animate-pulse" style={{ color: "var(--th-text-muted)" }}>
-                                {t({ ko: "로딩 중...", en: "Loading...", ja: "読み込み中...", zh: "加载中..." })}
-                              </span>
-                            ) : modelList.length > 0 ? (
-                              <select
-                                value={currentSubModel}
-                                onChange={(e) => {
-                                  const newSlug = e.target.value;
-                                  const newSubModel = modelList.find((m) => m.slug === newSlug);
-                                  const prev = form.providerModelConfig?.[provider] || { model: "" };
-                                  const newConfig = {
-                                    ...form.providerModelConfig,
-                                    [provider]: {
-                                      ...prev,
-                                      subModel: newSlug,
-                                      subModelReasoningLevel: newSubModel?.defaultReasoningLevel || undefined,
-                                    },
-                                  };
-                                  const newForm = { ...form, providerModelConfig: newConfig };
-                                  setForm(newForm);
-                                  persistSettings(newForm);
-                                }}
-                                className="w-full min-w-0 px-2 py-1 text-xs font-mono focus:outline-none sm:flex-1"
-                          style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
-                              >
-                                <option value="">
-                                  {t({ ko: "기본값", en: "Default", ja: "デフォルト", zh: "默认" })}
-                                </option>
-                                {modelList.map((m) => (
-                                  <option key={m.slug} value={m.slug}>
-                                    {m.displayName || m.slug}
-                                  </option>
-                                ))}
-                              </select>
-                            ) : (
-                              <span className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
-                                {t({ ko: "모델 목록 없음", en: "No models", ja: "モデル一覧なし", zh: "无模型列表" })}
-                              </span>
-                            )}
-                          </div>
-
-                          {(() => {
-                            const subSelected = modelList.find((m) => m.slug === currentSubModel);
-                            const subLevels = subSelected?.reasoningLevels;
-                            const subDefault = subSelected?.defaultReasoningLevel || "";
-                            const currentSubRL = form.providerModelConfig?.[provider]?.subModelReasoningLevel || "";
-                            if (provider !== "codex" || !subLevels || subLevels.length === 0) return null;
-                            return (
-                              <div className="flex min-w-0 flex-col items-stretch gap-1.5 sm:flex-row sm:items-center sm:gap-2">
-                                <span className="w-auto shrink-0 text-xs font-mono sm:w-20" style={{ color: "var(--th-text-muted)" }}>
-                                  {t({ ko: "알바 추론:", en: "Sub reasoning:", ja: "サブ推論:", zh: "子推理:" })}
-                                </span>
-                                <select
-                                  value={currentSubRL || subDefault}
-                                  onChange={(e) => {
-                                    const prev = form.providerModelConfig?.[provider] || { model: "" };
-                                    const newConfig = {
-                                      ...form.providerModelConfig,
-                                      [provider]: { ...prev, subModelReasoningLevel: e.target.value },
-                                    };
-                                    const newForm = { ...form, providerModelConfig: newConfig };
-                                    setForm(newForm);
-                                    persistSettings(newForm);
-                                  }}
-                                  className="w-full min-w-0 px-2 py-1 text-xs font-mono focus:outline-none sm:flex-1"
-                          style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
-                                >
-                                  {subLevels.map((rl) => (
-                                    <option key={rl.effort} value={rl.effort}>
-                                      {rl.effort} ({rl.description})
-                                    </option>
-                                  ))}
-                                </select>
-                              </div>
-                            );
-                          })()}
-                        </>
-                      )}
                     </div>
                   )}
                 </div>

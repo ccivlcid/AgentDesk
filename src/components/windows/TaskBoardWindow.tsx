@@ -1,8 +1,9 @@
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { useTaskStore } from "../../store/taskStore";
 import { useAgentStore } from "../../store/agentStore";
 import { useProjectStore } from "../../store/projectStore";
 import { useUiStore } from "../../store/uiStore";
+import { kickoffProject } from "../../api/project-kickoff";
 import {
   updateTask,
   deleteTask,
@@ -85,6 +86,17 @@ export default function TaskBoardWindow() {
     setTaskPanel({ taskId, tab: "minutes" });
   }, [setTaskPanel]);
 
+  const [kickoffBusy, setKickoffBusy] = useState(false);
+  const handleKickoff = useCallback(async () => {
+    if (!currentProjectId || kickoffBusy) return;
+    setKickoffBusy(true);
+    try {
+      await kickoffProject(currentProjectId);
+    } finally {
+      setKickoffBusy(false);
+    }
+  }, [currentProjectId, kickoffBusy]);
+
   const boardIcon = (
     <svg viewBox="0 0 18 18" fill="none" stroke="var(--th-text-heading)" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" width={16} height={16}>
       <rect x="1.5" y="2" width="15" height="14" rx="2" />
@@ -124,6 +136,8 @@ export default function TaskBoardWindow() {
         onDiscardTask={handleDiscardTask}
         onOpenTerminal={handleOpenTerminal}
         onOpenMeetingMinutes={handleOpenMeetingMinutes}
+        onKickoff={handleKickoff}
+        kickoffBusy={kickoffBusy}
       />
     </AppWindow>
   );

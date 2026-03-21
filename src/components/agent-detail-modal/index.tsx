@@ -71,7 +71,6 @@ export default function AgentDetailModal({
           setTab={setTab}
           t={t}
           agentTasksLength={agentTasks.length}
-          agentSubAgentsLength={agentSubAgents.length}
         />
 
         <div className="p-4 overflow-y-auto max-h-[40vh]">

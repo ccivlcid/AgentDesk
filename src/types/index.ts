@@ -320,6 +320,8 @@ export interface Project {
   required_gates?: string | null;
   deliverable_schema?: string | null;
   folder_id?: string | null;
+  directive?: string | null;
+  directive_type_slug?: string | null;
 }
 
 export interface ProjectSource {
@@ -532,7 +534,9 @@ export type WSEventType =
   | "pty_output"
   | "pty_exit"
   | "auto_open_cli"
-  | "close_cli";
+  | "close_cli"
+  | "runtime_status"
+  | "clarification_request";
 
 export interface WSEvent {
   type: WSEventType;

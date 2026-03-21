@@ -32,7 +32,6 @@ export interface CommandPaletteProps {
   projects?: Project[];
   currentProject?: Project | null;
   onNavigate: (view: string) => void;
-  onCreateTask?: () => void;
   onSelectProject?: (project: Project) => void;
   onOpenShortcutsGuide?: () => void;
 }

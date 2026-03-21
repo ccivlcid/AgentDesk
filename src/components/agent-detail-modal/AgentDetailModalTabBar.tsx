@@ -6,7 +6,6 @@ interface AgentDetailModalTabBarProps {
   setTab: (k: AgentDetailTabKey) => void;
   t: I18nContextValue["t"];
   agentTasksLength: number;
-  agentSubAgentsLength: number;
 }
 
 export function AgentDetailModalTabBar({
@@ -14,17 +13,12 @@ export function AgentDetailModalTabBar({
   setTab,
   t,
   agentTasksLength,
-  agentSubAgentsLength,
 }: AgentDetailModalTabBarProps) {
   const items: { key: AgentDetailTabKey; label: string }[] = [
     { key: "info", label: t({ ko: "정보", en: "Info", ja: "情報", zh: "信息" }) },
     {
       key: "tasks",
       label: `${t({ ko: "업무", en: "Tasks", ja: "タスク", zh: "任务" })} (${agentTasksLength})`,
-    },
-    {
-      key: "alba",
-      label: `${t({ ko: "알바생", en: "Sub-agents", ja: "サブエージェント", zh: "子代理" })} (${agentSubAgentsLength})`,
     },
     {
       key: "performance",

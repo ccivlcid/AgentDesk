@@ -14,6 +14,7 @@ export interface DesktopProjectCtxMenuProps {
   onSwitchProject: (projectId: string) => void;
   onDelete: (projectId: string) => void;
   onMoveToFolder: (projectId: string, folderId: string) => Promise<void>;
+  onEditDirective?: (projectId: string) => void;
 }
 
 export function DesktopProjectCtxMenu({
@@ -27,6 +28,7 @@ export function DesktopProjectCtxMenu({
   onSwitchProject,
   onDelete,
   onMoveToFolder,
+  onEditDirective,
 }: DesktopProjectCtxMenuProps) {
   const entries: ContextMenuEntry[] = [
     {
@@ -52,7 +54,13 @@ export function DesktopProjectCtxMenu({
     },
     { type: "separator" },
     {
-      label: t({ ko: "프로젝트 삭제", en: "Delete Project", ja: "プロジェクト削除", zh: "删除项目" }),
+      label: t({ ko: "디렉티브 편집", en: "Edit Directive", ja: "ディレクティブ編集", zh: "编辑指令" }),
+      icon: "📝",
+      onClick: () => onEditDirective?.(projectCtxMenu.projectId),
+    },
+    { type: "separator" },
+    {
+      label: t({ ko: "프로젝트 삭제", en: "Delete Project", ja: "プロジェクト削除", zh: "删除項目" }),
       icon: "🗑",
       danger: true,
       onClick: () => onDelete(projectCtxMenu.projectId),

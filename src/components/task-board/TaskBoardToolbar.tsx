@@ -18,6 +18,8 @@ export function TaskBoardToolbar({ state }: TaskBoardToolbarProps) {
     batchMode,
     toggleBatchMode,
     setShowBulkHideModal,
+    onKickoff,
+    kickoffBusy,
   } = state;
 
   return (
@@ -49,6 +51,31 @@ export function TaskBoardToolbar({ state }: TaskBoardToolbarProps) {
       </div>
 
       <div className="flex items-center gap-1.5 flex-shrink-0">
+        {/* 킥오프 버튼 — 프로젝트가 선택된 경우에만 표시 */}
+        {currentProject && onKickoff && (
+          <button
+            type="button"
+            onClick={onKickoff}
+            disabled={kickoffBusy}
+            title={t({ ko: "에이전트가 태스크를 자동 계획·실행합니다", en: "Agent plans and runs tasks automatically", ja: "エージェントがタスクを自動計画・実行", zh: "代理自动规划执行任务" })}
+            style={{
+              ...mono, fontSize: "10px", fontWeight: 700,
+              padding: "3px 10px",
+              border: "1px solid rgba(245,158,11,0.5)",
+              borderRadius: 6,
+              background: kickoffBusy ? "rgba(245,158,11,0.06)" : "rgba(245,158,11,0.1)",
+              color: kickoffBusy ? "var(--th-text-muted)" : "var(--th-accent)",
+              cursor: kickoffBusy ? "not-allowed" : "pointer",
+              display: "flex", alignItems: "center", gap: 4,
+              transition: "all 0.12s",
+            }}
+          >
+            <span style={{ fontSize: 11 }}>{kickoffBusy ? "⟳" : "⚡"}</span>
+            {kickoffBusy
+              ? t({ ko: "계획 중...", en: "Planning...", ja: "計画中...", zh: "计划中..." })
+              : t({ ko: "킥오프", en: "Kickoff", ja: "キックオフ", zh: "启动" })}
+          </button>
+        )}
         <div className="flex" style={{ border: "1px solid var(--th-border)", borderRadius: 6, overflow: "hidden" }}>
           {(["board", "gantt", "dag"] as const).map((mode, i) => (
             <button

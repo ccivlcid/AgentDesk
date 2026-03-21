@@ -7,8 +7,7 @@ import AppLoadingScreen from "./app/AppLoadingScreen";
 import Desktop from "./components/desktop/Desktop";
 import AppOverlays from "./app/AppOverlays";
 import ProjectCreateModal from "./components/project-create-modal/ProjectCreateModal";
-import CreateTaskModal from "./components/taskboard/CreateTaskModal";
-import AppWindow from "./components/windows/AppWindow";
+import { kickoffProject, replyClarification } from "./api/project-kickoff";
 import { useAppActions } from "./app/useAppActions";
 import { useActiveMeetingTaskId } from "./app/useActiveMeetingTaskId";
 import { useUpdateStatusPolling } from "./app/useUpdateStatusPolling";
@@ -48,10 +47,9 @@ export default function App() {
   // ── Project store ────────────────────────────────────────────────────────
   const {
     categories, projects, currentProjectId, projectAgentIds, projectAgentsLoaded,
-    showProjectCreate, projectCreateBusy, showCreateTaskAfterCreate,
+    showProjectCreate, projectCreateBusy,
     setCategories, setProjects, setCurrentProjectId, setProjectAgentIds,
     setProjectAgentsLoaded, setShowProjectCreate, setProjectCreateBusy,
-    setShowCreateTaskAfterCreate,
   } = useProjectStore();
 
   // ── UI store ─────────────────────────────────────────────────────────────
@@ -185,7 +183,22 @@ export default function App() {
     view, settings, theme, runtimeOs, forceUpdateBanner, updateStatus, dismissedUpdateVersion,
   });
 
-  const [showCreateTask, setShowCreateTask] = useState(false);
+  const [clarificationRequest, setClarificationRequest] = useState<{
+    projectId: string;
+    clarificationId: string;
+    question: string;
+  } | null>(null);
+  const [clarificationAnswer, setClarificationAnswer] = useState("");
+  const [clarificationBusy, setClarificationBusy] = useState(false);
+  const [kickoffBusy, setKickoffBusy] = useState(false);
+
+  // clarification_request WS 이벤트 처리
+  useEffect(() => {
+    return on("clarification_request", (payload) => {
+      const p = payload as { projectId: string; clarificationId: string; question: string };
+      setClarificationRequest(p);
+    });
+  }, [on]);
 
   // OAuth 콜백 시 settings 창 자동 열기
   const { openWindow } = useUiStore();
@@ -214,7 +227,6 @@ export default function App() {
       onSendDirective={actions.handleSendDirective}
       onClearMessages={actions.handleClearMessages}
       onProjectCreate={() => setShowProjectCreate(true)}
-      onCreateTask={() => setShowCreateTask(true)}
       onOpenDecisionInbox={() => { setShowDecisionInbox(true); void actions.loadDecisionInbox(); }}
       onOpenReportHistory={() => { /* handled by openWindows["reports"] */ }}
     >
@@ -257,7 +269,7 @@ export default function App() {
         <ProjectCreateModal
           categories={categories}
           agents={agents}
-          onConfirm={({ name, categoryId, project_path, core_goal, agentIds, figma_url }) => {
+          onConfirm={({ name, categoryId, project_path, core_goal, agentIds, roleAssignments, figma_url, directive, directive_type_slug }) => {
             if (projectCreateBusy) return;
             setProjectCreateBusy(true);
             const cat = categories.find((c) => c.id === categoryId);
@@ -268,17 +280,29 @@ export default function App() {
               core_goal: resolvedGoal,
               category_id: categoryId ?? undefined,
               figma_url: figma_url ?? undefined,
+              directive: directive ?? undefined,
+              directive_type_slug: directive_type_slug ?? undefined,
               create_path_if_missing: true,
+              assignment_mode: "manual",
+              agent_ids: agentIds,
+              role_assignments: { pm: roleAssignments.pm ?? undefined, pl: roleAssignments.pl ?? undefined, dev: roleAssignments.dev ?? undefined },
             })
               .then(async (newProject) => {
-                if (agentIds.length > 0) {
-                  const { addProjectAgent } = await import("./api/categories-dashboard");
-                  await Promise.all(agentIds.map((id) => addProjectAgent(newProject.id, id).catch(() => {})));
-                }
                 setProjects((prev) => [...prev, newProject]);
                 setCurrentProjectId(newProject.id);
                 setShowProjectCreate(false);
-                setShowCreateTaskAfterCreate(true);
+                // 프로젝트 생성 후 에이전트가 자동으로 태스크 계획 수립
+                setKickoffBusy(true);
+                kickoffProject(newProject.id)
+                  .then((result) => {
+                    if (result.status !== "clarification_needed") {
+                      addToast({ type: "success", title: t({ ko: "에이전트가 태스크를 계획했습니다", en: "Agent planned tasks", ja: "エージェントがタスクを計画しました", zh: "代理已规划任务" }) });
+                    }
+                  })
+                  .catch(() => {
+                    addToast({ type: "error", title: t({ ko: "태스크 계획 실패. 직접 추가해주세요.", en: "Planning failed. Please add tasks manually.", ja: "計画失敗", zh: "计划失败" }) });
+                  })
+                  .finally(() => setKickoffBusy(false));
               })
               .catch((err) => console.error("Project create failed:", err))
               .finally(() => setProjectCreateBusy(false));
@@ -297,57 +321,93 @@ export default function App() {
           onClose={() => setShowProjectCreate(false)}
         />
       )}
-      {showCreateTaskAfterCreate && currentProject && (
-        <AppWindow
-          windowType="create-task"
-          title="새 업무"
-          emoji="✚"
-          defaultWidth={520}
-          defaultHeight={660}
-          onClose={() => setShowCreateTaskAfterCreate(false)}
-        >
-          <CreateTaskModal
-            agents={projectAgents}
-            departments={departments}
-            categories={categories}
-            onClose={() => setShowCreateTaskAfterCreate(false)}
-            onCreate={(input) => {
-              void actions.handleCreateTask({
-                ...input,
-                project_id: currentProject.id,
-                project_path: currentProject.project_path ?? undefined,
-              });
-            }}
-            onAssign={async (taskId, agentId) => { await actions.handleAssignTask(taskId, agentId); }}
-            defaultProjectId={currentProject.id}
-          />
-        </AppWindow>
+      {/* 에이전트 킥오프 중 로딩 인디케이터 */}
+      {kickoffBusy && (
+        <div style={{
+          position: "fixed", bottom: 80, left: "50%", transform: "translateX(-50%)",
+          background: "var(--th-bg-surface)", border: "1px solid var(--th-border)",
+          borderRadius: 10, padding: "10px 18px", zIndex: 9999,
+          fontFamily: "var(--th-font-mono)", fontSize: 11, color: "var(--th-text-secondary)",
+          display: "flex", alignItems: "center", gap: 8, boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
+        }}>
+          <span style={{ animation: "spin 1s linear infinite", display: "inline-block" }}>⟳</span>
+          {t({ ko: "에이전트가 태스크를 계획하는 중...", en: "Agent is planning tasks...", ja: "エージェントがタスクを計画中...", zh: "代理正在规划任务..." })}
+        </div>
       )}
-      {showCreateTask && (
-        <AppWindow
-          windowType="create-task"
-          title="새 업무"
-          emoji="✚"
-          defaultWidth={520}
-          defaultHeight={660}
-          onClose={() => setShowCreateTask(false)}
-        >
-          <CreateTaskModal
-            agents={projectAgents}
-            departments={departments}
-            categories={categories}
-            onClose={() => setShowCreateTask(false)}
-            onCreate={(input) => {
-              void actions.handleCreateTask({
-                ...input,
-                project_id: currentProject?.id,
-                project_path: currentProject?.project_path ?? undefined,
-              });
-            }}
-            onAssign={async (taskId, agentId) => { await actions.handleAssignTask(taskId, agentId); }}
-            defaultProjectId={currentProject?.id}
-          />
-        </AppWindow>
+      {/* 에이전트 clarification 요청 모달 */}
+      {clarificationRequest && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 10000, display: "flex",
+          alignItems: "center", justifyContent: "center",
+          background: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)",
+        }}>
+          <div style={{
+            background: "var(--th-bg-surface)", border: "1px solid var(--th-border)",
+            borderRadius: 12, padding: 24, width: 460, maxWidth: "90vw",
+            boxShadow: "0 8px 40px rgba(0,0,0,0.4)",
+          }}>
+            <div style={{ fontFamily: "var(--th-font-mono)", fontSize: 11, color: "var(--th-text-muted)", marginBottom: 8 }}>
+              🤖 {t({ ko: "에이전트 확인 요청", en: "Agent needs clarification", ja: "エージェントの確認", zh: "代理需要确认" })}
+            </div>
+            <div style={{ fontFamily: "var(--th-font-mono)", fontSize: 14, fontWeight: 600, color: "var(--th-text-heading)", marginBottom: 16, lineHeight: 1.5 }}>
+              {clarificationRequest.question}
+            </div>
+            <textarea
+              autoFocus
+              value={clarificationAnswer}
+              onChange={(e) => setClarificationAnswer(e.target.value)}
+              placeholder={t({ ko: "답변을 입력하세요...", en: "Enter your answer...", ja: "回答を入力...", zh: "输入您的回答..." })}
+              rows={3}
+              style={{
+                width: "100%", boxSizing: "border-box",
+                fontFamily: "var(--th-font-mono)", fontSize: 12,
+                padding: "10px 12px", borderRadius: 8,
+                border: "1px solid var(--th-border)",
+                background: "var(--th-bg-elevated)", color: "var(--th-text-primary)",
+                outline: "none", resize: "none", marginBottom: 12,
+              }}
+            />
+            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+              <button
+                type="button"
+                onClick={() => { setClarificationRequest(null); setClarificationAnswer(""); }}
+                style={{ fontFamily: "var(--th-font-mono)", fontSize: 12, padding: "7px 16px", borderRadius: 7, border: "1px solid var(--th-border)", background: "transparent", color: "var(--th-text-muted)", cursor: "pointer" }}
+              >
+                {t({ ko: "나중에", en: "Later", ja: "後で", zh: "稍后" })}
+              </button>
+              <button
+                type="button"
+                disabled={!clarificationAnswer.trim() || clarificationBusy}
+                onClick={async () => {
+                  if (!clarificationAnswer.trim()) return;
+                  setClarificationBusy(true);
+                  try {
+                    await replyClarification(clarificationRequest.projectId, clarificationRequest.clarificationId, clarificationAnswer.trim());
+                    const result = await kickoffProject(clarificationRequest.projectId, clarificationAnswer.trim());
+                    if (result.status === "ok") {
+                      addToast({ type: "success", title: t({ ko: "태스크가 생성되었습니다", en: "Tasks created", ja: "タスクが作成されました", zh: "任务已创建" }) });
+                    }
+                    setClarificationRequest(null);
+                    setClarificationAnswer("");
+                  } finally {
+                    setClarificationBusy(false);
+                  }
+                }}
+                style={{
+                  fontFamily: "var(--th-font-mono)", fontSize: 12, fontWeight: 700,
+                  padding: "7px 22px", borderRadius: 7, border: "none",
+                  background: clarificationAnswer.trim() ? "var(--th-accent)" : "var(--th-bg-elevated)",
+                  color: clarificationAnswer.trim() ? "var(--th-bg-primary)" : "var(--th-text-muted)",
+                  cursor: clarificationAnswer.trim() ? "pointer" : "not-allowed",
+                }}
+              >
+                {clarificationBusy
+                  ? t({ ko: "처리 중...", en: "Processing...", ja: "処理中...", zh: "处理中..." })
+                  : t({ ko: "답변하기", en: "Reply", ja: "回答する", zh: "回复" })}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </Desktop>
   );

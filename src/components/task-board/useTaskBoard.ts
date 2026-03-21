@@ -36,6 +36,8 @@ export function useTaskBoard({
   onOpenMeetingMinutes,
   onMergeTask,
   onDiscardTask,
+  onKickoff,
+  kickoffBusy,
 }: TaskBoardProps) {
   const { t } = useI18n();
   const { confirm } = useConfirm();
@@ -328,6 +330,8 @@ export function useTaskBoard({
     onOpenMeetingMinutes,
     onMergeTask,
     onDiscardTask,
+    onKickoff,
+    kickoffBusy,
     mono: MONO_STYLE,
     btnBase: BTN_BASE_STYLE,
   };

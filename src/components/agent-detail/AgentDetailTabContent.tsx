@@ -227,7 +227,7 @@ export default function AgentDetailTabContent({
               {agentSubAgents.filter((subAgent) => subAgent.status === "working").length}
             </div>
             <div className="text-[10px]" style={{ color: "var(--th-text-muted)" }}>
-              {t({ ko: "알바생", en: "Sub-agents", ja: "サブエージェント", zh: "子代理" })}
+              {t({ ko: "서브에이전트", en: "Sub-agents", ja: "サブエージェント", zh: "子代理" })}
             </div>
           </div>
         </div>
@@ -393,7 +393,7 @@ export default function AgentDetailTabContent({
         <div className="terminal-empty-state py-8">
           <p className="terminal-empty-state-cmd">$ ls sub-agents/ --status=working</p>
           <p className="terminal-empty-state-result">(empty)</p>
-          <p className="terminal-empty-state-hint">{t({ ko: "병렬 처리 시 자동으로 알바생이 소환됩니다", en: "Sub-agents are spawned automatically during parallel work.", ja: "並列処理時にサブエージェントが自動で生成されます。", zh: "并行处理时会自动生成子代理。" })}</p>
+          <p className="terminal-empty-state-hint">{t({ ko: "병렬 처리 시 서브에이전트가 자동으로 생성됩니다", en: "Sub-agents are spawned automatically during parallel work.", ja: "並列処理時にサブエージェントが自動で生成されます。", zh: "并行处理时会自动生成子代理。" })}</p>
         </div>
       ) : (
         agentSubAgents.map((subAgent) => (
@@ -411,7 +411,7 @@ export default function AgentDetailTabContent({
             <div className="flex-1 min-w-0">
               <div className="text-sm truncate flex items-center gap-1.5" style={{ color: "var(--th-text-primary)" }}>
                 <span className="text-[10px] px-1 py-0.5 bg-amber-500/20 text-amber-400 font-mono" style={{ borderRadius: 0 }}>
-                  {t({ ko: "알바", en: "Sub", ja: "サブ", zh: "子任务" })}
+                  {t({ ko: "서브", en: "Sub", ja: "サブ", zh: "子任务" })}
                 </span>
                 {subAgent.task}
               </div>

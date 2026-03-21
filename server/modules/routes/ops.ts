@@ -33,6 +33,7 @@ import { registerSynapseRoutes } from "./ops/synapse.ts";
 import { registerImageStudioRoutes } from "./ops/image-studio.ts";
 import { registerProjectFolderRoutes } from "./ops/project-folders.ts";
 import { registerCliInstallRoutes } from "./ops/cli-install.ts";
+import { registerAgentRuntimeRoutes } from "../agent-runtime/routes.ts";
 
 export function registerRoutesPartC(ctx: RuntimeContext): RouteOpsExports {
   const __ctx: RuntimeContext = ctx;
@@ -194,6 +195,15 @@ export function registerRoutesPartC(ctx: RuntimeContext): RouteOpsExports {
   const createDirectAgentTaskAndRun = __ctx.createDirectAgentTaskAndRun;
   const scheduleAgentReply = __ctx.scheduleAgentReply;
   const getQueueStatus = __ctx.getQueueStatus;
+
+  registerAgentRuntimeRoutes({
+    app,
+    db,
+    broadcast,
+    appendTaskLog,
+    resolveProjectPath,
+    nowMs,
+  });
 
   Object.assign(__ctx, registerOpsMessageRoutes(__ctx));
 

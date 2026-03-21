@@ -55,6 +55,8 @@ interface CreateTaskModalViewProps {
   onHandoffConditionChange?: (condition: "always" | "on_success" | "on_fail") => void;
   kbSection?: ReactNode;
   figmaSection?: ReactNode;
+  useRuntime?: boolean;
+  onToggleRuntime?: () => void;
 }
 
 const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };
@@ -106,6 +108,8 @@ export default function CreateTaskModalView({
   onHandoffConditionChange,
   kbSection,
   figmaSection,
+  useRuntime = false,
+  onToggleRuntime,
 }: CreateTaskModalViewProps) {
   void createNewProjectMode;
 
@@ -408,6 +412,34 @@ export default function CreateTaskModalView({
             >
               {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}
             </button>
+
+            {/* Runtime 모드 토글 */}
+            {onToggleRuntime && (
+              <button
+                type="button"
+                onClick={onToggleRuntime}
+                title={t({ ko: "AgentDesk Runtime으로 실행 (LLM 직접 호출 + 파일 도구)", en: "Run with AgentDesk Runtime (direct LLM + file tools)", ja: "Runtimeで実行", zh: "使用Runtime运行" })}
+                style={{
+                  ...mono,
+                  fontSize: 11,
+                  fontWeight: 600,
+                  padding: "7px 14px",
+                  borderRadius: 7,
+                  border: useRuntime ? "1px solid rgba(99,102,241,0.7)" : "1px solid var(--th-border)",
+                  background: useRuntime ? "rgba(99,102,241,0.15)" : "transparent",
+                  color: useRuntime ? "#818cf8" : "var(--th-text-muted)",
+                  cursor: "pointer",
+                  transition: "all 0.15s",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 5,
+                }}
+              >
+                <span style={{ fontSize: 13 }}>⚡</span>
+                {t({ ko: "Runtime", en: "Runtime", ja: "Runtime", zh: "Runtime" })}
+              </button>
+            )}
+
             <button
               type="submit"
               disabled={!title.trim() || submitBusy}

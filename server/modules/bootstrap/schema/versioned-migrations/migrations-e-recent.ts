@@ -1,3 +1,4 @@
+import { DIRECTIVE_TEMPLATES } from "../../../directive-templates.ts";
 import type { Migration } from "./types.ts";
 
 export const VERSIONED_MIGRATIONS_E_RECENT: Migration[] = [
@@ -203,6 +204,113 @@ export const VERSIONED_MIGRATIONS_E_RECENT: Migration[] = [
         db.exec(`CREATE INDEX IF NOT EXISTS idx_memory_entries_enabled ON memory_entries(enabled, priority DESC)`);
         db.exec(`CREATE INDEX IF NOT EXISTS idx_memory_entries_enabled_scope ON memory_entries(enabled, scope_type, scope_id, priority DESC)`);
       } catch { /* already updated or table absent */ }
+    },
+  },
+  {
+    id: "2026-03-25-001-agent-runtime-tables",
+    up: (db) => {
+      try {
+        db.exec(`
+          CREATE TABLE IF NOT EXISTS agent_runtime_runs (
+            id               TEXT PRIMARY KEY,
+            task_id          TEXT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+            agent_id         TEXT NOT NULL REFERENCES agents(id) ON DELETE CASCADE,
+            project_id       TEXT REFERENCES projects(id) ON DELETE SET NULL,
+            status           TEXT NOT NULL DEFAULT 'pending'
+                               CHECK(status IN ('pending','running','completed','failed','cancelled')),
+            model            TEXT,
+            provider         TEXT,
+            input_tokens     INTEGER NOT NULL DEFAULT 0,
+            output_tokens    INTEGER NOT NULL DEFAULT 0,
+            tool_calls_count INTEGER NOT NULL DEFAULT 0,
+            error_message    TEXT,
+            started_at       INTEGER,
+            completed_at     INTEGER,
+            created_at       INTEGER NOT NULL DEFAULT (unixepoch()*1000)
+          )
+        `);
+        db.exec(`CREATE INDEX IF NOT EXISTS idx_runtime_runs_task ON agent_runtime_runs(task_id)`);
+        db.exec(`CREATE INDEX IF NOT EXISTS idx_runtime_runs_agent ON agent_runtime_runs(agent_id)`);
+        db.exec(`CREATE INDEX IF NOT EXISTS idx_runtime_runs_status ON agent_runtime_runs(status)`);
+      } catch { /* already exists */ }
+      try {
+        db.exec(`
+          CREATE TABLE IF NOT EXISTS agent_runtime_events (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            run_id      TEXT NOT NULL REFERENCES agent_runtime_runs(id) ON DELETE CASCADE,
+            seq         INTEGER NOT NULL,
+            event_type  TEXT NOT NULL
+                          CHECK(event_type IN ('text','tool_call','tool_result','error','status')),
+            content     TEXT,
+            token_count INTEGER NOT NULL DEFAULT 0,
+            created_at  INTEGER NOT NULL DEFAULT (unixepoch()*1000)
+          )
+        `);
+        db.exec(`CREATE INDEX IF NOT EXISTS idx_runtime_events_run ON agent_runtime_events(run_id, seq)`);
+      } catch { /* already exists */ }
+    },
+  },
+  {
+    id: "2026-03-25-002-projects-directive",
+    up: (db) => {
+      try {
+        db.exec(`ALTER TABLE projects ADD COLUMN directive TEXT`);
+      } catch { /* already exists */ }
+      try {
+        db.exec(`ALTER TABLE projects ADD COLUMN directive_type_slug TEXT`);
+      } catch { /* already exists */ }
+    },
+  },
+  {
+    id: "2026-03-25-003-categories-upsert-directive-types",
+    up: (db) => {
+      // Upsert 10 new project type categories from directive templates
+      const upsert = db.prepare(`
+        INSERT INTO categories (id, name, name_ko, slug, description, icon, color, pack_key,
+          kpi_schema, risk_schema, gate_schema, deliverable_schema, is_template, owner_scope)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, '[]', '[]', '[]', '[]', 1, 'global')
+        ON CONFLICT(id) DO UPDATE SET
+          name = excluded.name,
+          name_ko = excluded.name_ko,
+          slug = excluded.slug,
+          description = excluded.description,
+          icon = excluded.icon,
+          color = excluded.color,
+          pack_key = excluded.pack_key
+      `);
+      for (const dt of DIRECTIVE_TEMPLATES) {
+        try {
+          const id = `cat_${dt.slug.replace(/-/g, "_")}`;
+          upsert.run(id, dt.name, dt.name_ko, dt.slug, dt.description_ko, dt.icon, dt.color, dt.pack_key);
+        } catch { /* ignore */ }
+      }
+    },
+  },
+  {
+    id: "2026-03-25-005-project-agents-role",
+    up: (db) => {
+      try {
+        db.exec(`ALTER TABLE project_agents ADD COLUMN project_role TEXT CHECK(project_role IN ('pm','pl','dev'))`);
+      } catch { /* already exists */ }
+    },
+  },
+  {
+    id: "2026-03-25-004-project-clarifications",
+    up: (db) => {
+      try {
+        db.exec(`
+          CREATE TABLE IF NOT EXISTS project_clarifications (
+            id          TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(8)))),
+            project_id  TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+            question    TEXT NOT NULL,
+            answer      TEXT,
+            status      TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','answered')),
+            created_at  INTEGER DEFAULT (unixepoch()*1000),
+            answered_at INTEGER
+          )
+        `);
+        db.exec(`CREATE INDEX IF NOT EXISTS idx_project_clarifications_project ON project_clarifications(project_id)`);
+      } catch { /* already exists */ }
     },
   },
 ];

@@ -479,6 +479,9 @@ export async function createProject(input: {
   github_repo?: string;
   assignment_mode?: "auto" | "manual";
   agent_ids?: string[];
+  role_assignments?: { pm?: string; pl?: string; dev?: string };
+  directive?: string | null;
+  directive_type_slug?: string | null;
 }): Promise<Project> {
   const j = (await post("/api/projects", input)) as { ok: boolean; project: Project };
   return j.project;
@@ -492,10 +495,29 @@ export async function updateProject(
     github_repo?: string | null;
     assignment_mode?: "auto" | "manual";
     agent_ids?: string[];
+    directive?: string | null;
+    directive_type_slug?: string | null;
   },
 ): Promise<Project> {
   const j = (await patch(`/api/projects/${id}`, patchData)) as { ok: boolean; project: Project };
   return j.project;
+}
+
+export interface DirectiveTemplateItem {
+  slug: string;
+  name: string;
+  name_ko: string;
+  icon: string;
+  color: string;
+  description: string;
+  description_ko: string;
+  departments: string[];
+  template: string;
+}
+
+export async function fetchDirectiveTemplates(): Promise<DirectiveTemplateItem[]> {
+  const data = await request<{ templates: DirectiveTemplateItem[] }>("/api/directive-templates");
+  return data.templates;
 }
 
 export interface ProjectPathCheckResult {

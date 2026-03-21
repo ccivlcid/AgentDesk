@@ -19,6 +19,7 @@ interface ProjectStore {
   showProjectCreate: boolean;
   projectCreateBusy: boolean;
   showCreateTaskAfterCreate: boolean;
+  editDirectiveProjectId: string | null;
 
   setCategories: (a: SA<Category[]>) => void;
   setProjects: (a: SA<Project[]>) => void;
@@ -28,6 +29,7 @@ interface ProjectStore {
   setShowProjectCreate: (a: SA<boolean>) => void;
   setProjectCreateBusy: (a: SA<boolean>) => void;
   setShowCreateTaskAfterCreate: (a: SA<boolean>) => void;
+  setEditDirectiveProjectId: (id: string | null) => void;
 }
 
 export const useProjectStore = create<ProjectStore>()((set) => ({
@@ -39,6 +41,7 @@ export const useProjectStore = create<ProjectStore>()((set) => ({
   showProjectCreate: false,
   projectCreateBusy: false,
   showCreateTaskAfterCreate: false,
+  editDirectiveProjectId: null,
 
   setCategories: (a) => set((s) => ({ categories: apply(s.categories, a) })),
   setProjects: (a) => set((s) => ({ projects: apply(s.projects, a) })),
@@ -51,4 +54,5 @@ export const useProjectStore = create<ProjectStore>()((set) => ({
   setShowProjectCreate: (a) => set((s) => ({ showProjectCreate: apply(s.showProjectCreate, a) })),
   setProjectCreateBusy: (a) => set((s) => ({ projectCreateBusy: apply(s.projectCreateBusy, a) })),
   setShowCreateTaskAfterCreate: (a) => set((s) => ({ showCreateTaskAfterCreate: apply(s.showCreateTaskAfterCreate, a) })),
+  setEditDirectiveProjectId: (id) => set({ editDirectiveProjectId: id }),
 }));

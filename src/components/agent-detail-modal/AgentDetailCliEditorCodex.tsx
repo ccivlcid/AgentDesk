@@ -121,14 +121,6 @@ export function AgentDetailCliEditorCodex({ t, cli }: Props) {
         )}
       </div>
       <div className="flex flex-wrap items-center gap-1">
-        <span className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
-          {t({
-            ko: "알바생 모델은 설정창 값을 따릅니다",
-            en: "Sub-agent model follows Settings",
-            ja: "サブエージェントモデルは設定値を使用",
-            zh: "子代理模型沿用设置值",
-          })}
-        </span>
         <button
           type="button"
           disabled={savingCli || !canSaveCli}

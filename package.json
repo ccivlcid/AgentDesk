@@ -5,6 +5,8 @@
   "type": "module",
   "main": "electron/main.cjs",
   "scripts": {
+    "db:reset": "node scripts/db-reset.mjs",
+    "db:reset:force": "node scripts/db-reset.mjs --force",
     "migrate:v1.0.5": "node scripts/auto-apply-v1.0.5.mjs",
     "migrate:custom-skills": "node scripts/migrate-custom-skills-canonical.mjs",
     "predev": "node scripts/auto-apply-v1.0.5.mjs && node scripts/kill-port.mjs",

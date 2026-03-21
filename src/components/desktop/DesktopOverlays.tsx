@@ -38,7 +38,6 @@ export interface DesktopOverlaysProps {
   projects: Project[];
   currentProject: Project | null;
   openWindow: (w: WindowType) => void;
-  onCreateTask: () => void;
   setCurrentProjectId: (id: string | null) => void;
   toggleWindow: (w: WindowType) => void;
   openWindows: Set<WindowType>;
@@ -90,7 +89,6 @@ export function DesktopOverlays({
   projects,
   currentProject,
   openWindow,
-  onCreateTask,
   setCurrentProjectId,
   toggleWindow,
   openWindows,
@@ -270,10 +268,6 @@ export function DesktopOverlays({
             agents: () => openWindow("agent-manager"),
           };
           viewWindowMap[view]?.();
-        }}
-        onCreateTask={() => {
-          setShowCommandPalette(false);
-          onCreateTask();
         }}
         onSelectProject={(p) => {
           setShowCommandPalette(false);

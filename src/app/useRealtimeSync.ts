@@ -479,6 +479,13 @@ export function useRealtimeSync({
         // Trigger a live sync so any open meeting minutes panel refreshes immediately
         scheduleLiveSync(100);
       }),
+      on("runtime_status", (payload: unknown) => {
+        const p = payload as { taskId?: string; agentId?: string; status?: string };
+        if (p.status === "running" && p.agentId) {
+          openCliWindow(p.agentId);
+        }
+        scheduleLiveSync(200);
+      }),
       on("auto_open_cli", (payload: unknown) => {
         const p = payload as { agent_id?: string; from_planning?: boolean };
         if (p.agent_id) {

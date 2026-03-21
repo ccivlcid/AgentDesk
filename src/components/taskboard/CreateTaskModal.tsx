@@ -37,6 +37,7 @@ interface CreateModalProps {
     handoff_to_agent_id?: string | null;
     handoff_condition?: "always" | "on_success" | "on_fail" | null;
     kb_context_sources?: string | null;
+    use_runtime?: boolean;
   }) => void;
   onAssign: (taskId: string, agentId: string) => void;
   defaultProjectId?: string;
@@ -59,6 +60,7 @@ function CreateModal({ agents, departments, categories = [], onClose, onCreate, 
   const [handoffCondition, setHandoffCondition] = useState<"always" | "on_success" | "on_fail">("on_success");
   const [kbSources, setKbSources] = useState<KbSourceRef[]>([]);
   const [figmaUrl, setFigmaUrl] = useState("");
+  const [useRuntime, setUseRuntime] = useState(false);
   const [submitBusy, setSubmitBusy] = useState(false);
   const [submitWithoutProjectPromptOpen, setSubmitWithoutProjectPromptOpen] = useState(false);
   const [embeddedNewProjectOpen, setEmbeddedNewProjectOpen] = useState(false);
@@ -195,11 +197,12 @@ function CreateModal({ agents, departments, categories = [], onClose, onCreate, 
         : { handoff_to_agent_id: null, handoff_condition: null };
       const kbField = kbSources.length > 0 ? { kb_context_sources: JSON.stringify(kbSources) } : {};
       const figmaField = figmaUrl.trim() ? { figma_url: figmaUrl.trim() } : {};
+      const runtimeField = useRuntime ? { use_runtime: true } : {};
       return Object.keys(nonEmptyMeta).length > 0
-        ? onCreate({ ...input, workflow_meta_json: JSON.stringify(nonEmptyMeta), ...handoffFields, ...kbField, ...figmaField })
-        : onCreate({ ...input, ...handoffFields, ...kbField, ...figmaField });
+        ? onCreate({ ...input, workflow_meta_json: JSON.stringify(nonEmptyMeta), ...handoffFields, ...kbField, ...figmaField, ...runtimeField })
+        : onCreate({ ...input, ...handoffFields, ...kbField, ...figmaField, ...runtimeField });
     },
-    [onCreate, packMeta, handoffEnabled, handoffAgentId, handoffCondition, kbSources, figmaUrl],
+    [onCreate, packMeta, handoffEnabled, handoffAgentId, handoffCondition, kbSources, figmaUrl, useRuntime],
   );
 
   async function submitTask(options?: { allowCreateMissingPath?: boolean; allowWithoutProject?: boolean }) {
@@ -446,6 +449,8 @@ function CreateModal({ agents, departments, categories = [], onClose, onCreate, 
       onHandoffConditionChange={setHandoffCondition}
       figmaSection={<FigmaUrlSection figmaUrl={figmaUrl} onChange={setFigmaUrl} t={t} />}
       kbSection={<KbTaskSourcesSection sources={kbSources} onChange={setKbSources} t={t} />}
+      useRuntime={useRuntime}
+      onToggleRuntime={() => setUseRuntime((r) => !r)}
     />
     </>
   );

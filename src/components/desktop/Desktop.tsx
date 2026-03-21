@@ -35,7 +35,6 @@ export default function Desktop({
   onSendAnnouncement,
   onSendDirective,
   onClearMessages,
-  onCreateTask,
   onProjectCreate,
   onOpenDecisionInbox,
   onOpenReportHistory,
@@ -215,10 +214,10 @@ export default function Desktop({
       newFolderPos, setNewFolderPos, newFolderName, setNewFolderName, newFolderInputRef,
       showCommandPalette, setShowCommandPalette, sortByName, sortByDefault, sortByLastUsed, snapToGrid, setDesktopIconLayout, createProject,
       showTrash, setShowTrash, folders, customFeatures,
-      onSaveSettings, onRefreshCli, oauthResult, onOauthResultClear, onAgentsChange, onSendMessage, onSendAnnouncement, onSendDirective, onClearMessages, onCreateTask,
+      onSaveSettings, onRefreshCli, oauthResult, onOauthResultClear, onAgentsChange, onSendMessage, onSendAnnouncement, onSendDirective, onClearMessages,
     }),
     // overlay block deps (stable refs/setters omitted)
-    [runProjectInfo, projectCtxMenu, cfCtxMenu, ctxMenu, agentManagerCreateCount, showQuickCreateAgent, newFolderModalOpen, newFolderPreName, newFolderCreating, createProjectFolder, showWallpaperPicker, showExportModal, showMarkdownEditor, quickLookProjectId, missionControlOpen, handleDeleteProject, openProjectWindowIds, addProjectToFolder, setFolders, openCustomApp, closeCustomApp, addFeatureToTrash, setCustomFeatures, newFolderPos, newFolderName, newFolderInputRef, showCommandPalette, sortByName, sortByDefault, sortByLastUsed, snapToGrid, setDesktopIconLayout, createProject, showTrash, folders, customFeatures, onSaveSettings, onRefreshCli, oauthResult, onOauthResultClear, onAgentsChange, onSendMessage, onSendAnnouncement, onSendDirective, onClearMessages, onCreateTask],
+    [runProjectInfo, projectCtxMenu, cfCtxMenu, ctxMenu, agentManagerCreateCount, showQuickCreateAgent, newFolderModalOpen, newFolderPreName, newFolderCreating, createProjectFolder, showWallpaperPicker, showExportModal, showMarkdownEditor, quickLookProjectId, missionControlOpen, handleDeleteProject, openProjectWindowIds, addProjectToFolder, setFolders, openCustomApp, closeCustomApp, addFeatureToTrash, setCustomFeatures, newFolderPos, newFolderName, newFolderInputRef, showCommandPalette, sortByName, sortByDefault, sortByLastUsed, snapToGrid, setDesktopIconLayout, createProject, showTrash, folders, customFeatures, onSaveSettings, onRefreshCli, oauthResult, onOauthResultClear, onAgentsChange, onSendMessage, onSendAnnouncement, onSendDirective, onClearMessages],
   );
   const overlayBlockProps = useDesktopOverlayBlockProps(overlayBridge);
   return (
@@ -280,7 +279,6 @@ export default function Desktop({
         setShowTrash,
       }}
       dockProps={{
-        onCreateTask,
         onCreateProject: onProjectCreate,
         onCreateAgent: () => setShowQuickCreateAgent(true),
         onCreateFeature: () => openWindow("feature-builder"),

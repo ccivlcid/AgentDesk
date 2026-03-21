@@ -5,6 +5,89 @@
 
 ---
 
+## 0. Coding Rules (Strict — Must Follow)
+
+> These rules are non-negotiable. Every AI agent and contributor must follow them exactly.
+
+### 0-1. No Emoji in UI Components
+
+**NEVER** use emoji characters in JSX/TSX UI code. All icons must be inline SVG.
+
+```tsx
+// ❌ WRONG
+<span>🤖</span>
+<button>Load ▾</button>
+<span>✓</span>
+<p>⚠ 에러</p>
+
+// ✅ CORRECT
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">...</svg>
+```
+
+**Allowed exceptions:**
+- Data values stored in the DB (e.g. `agent.avatar_emoji`, `category.icon`) — but these **must** be rendered through a SVG map with emoji→SVG lookup; raw emoji text is the fallback of last resort only.
+- User-visible plain text content (e.g. document titles, chat messages).
+
+### 0-2. SVG Icon Conventions
+
+All inline SVG icons must follow this standard:
+
+```tsx
+<svg
+  width="16"        // always explicit px size
+  height="16"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"  // use CSS color inheritance
+  strokeWidth="2"
+  strokeLinecap="round"
+  strokeLinejoin="round"
+>
+  ...
+</svg>
+```
+
+- Size: 16×16 (or 14×14 for tight spaces, 18×18 for larger contexts). Never use `1rem`/`1em` sizes.
+- Color: always `stroke="currentColor"` so parent color applies. Use `fill="currentColor"` only for filled shapes.
+- No hardcoded hex colors inside SVG — use `currentColor` + parent `style={{ color: "..." }}`.
+- No emoji unicode inside SVG `<text>` elements.
+
+### 0-3. TypeScript — Zero Tolerance
+
+- Run `npx tsc -b --noEmit` after every code change. **Zero errors required** before task is complete.
+- Never use `any` unless wrapping a third-party boundary that has no types. Document with a comment.
+- Never use type assertions (`as Foo`) to silence errors — fix the root type instead.
+- Unused imports must be removed immediately.
+
+### 0-4. No New Files Without Clear Justification
+
+- Prefer editing existing files over creating new ones.
+- New component files require: > 80 lines OR reused in 2+ places OR clearly separate concern.
+- Do NOT create `utils.ts`, `helpers.ts`, or `constants.ts` barrel files for one-off functions.
+
+### 0-5. DB Migrations — Append Only
+
+- **NEVER** edit or delete an existing migration entry.
+- Always append at the end of `migrations-e-recent.ts`.
+- ID format: `YYYY-MM-DD-NNN-short-description` (chronological, zero-padded).
+- **Last applied ID**: `2026-03-25-005-project-agents-role`
+- Every DDL must be wrapped in `try { ... } catch { /* already exists */ }`.
+
+### 0-6. Component State Rules
+
+- No `useState` for data that belongs in a Zustand store (tasks, agents, projects, UI open-state).
+- `useCallback`/`useMemo` only when the dependency is genuinely expensive or causes referential instability. Don't wrap every function.
+- Modal/overlay state (open/close) lives in `uiStore` if it needs to be triggered from multiple places.
+
+### 0-7. API + Server Rules
+
+- All new Express routes go in the relevant sub-router under `server/modules/routes/`. Never add routes directly in `server/index.ts`.
+- Every new endpoint must be documented in `docs/specs/api.md` (bump the patch version).
+- Server responses: always `res.json({ ok: true, ... })` for success, `res.status(4xx).json({ error: "snake_case_code" })` for errors.
+- No `console.log` in server code — use the pino logger.
+
+---
+
 ## 1. Project Summary
 
 **AgentDesk** = A developer OS for running, monitoring, and controlling multiple AI agents simultaneously.
@@ -257,7 +340,7 @@ Use this checklist every time you add a DB column or table:
 
 1. **APPEND only** — add a new `{ id, up }` entry at the **end** of the `MIGRATIONS` chain (typically append to the last chunk under `server/modules/bootstrap/schema/versioned-migrations/`, e.g. `migrations-e-recent.ts`, or add a new chunk and spread it from `versioned-migrations.ts`). Never edit applied migration bodies.
 2. **ID format**: `YYYY-MM-DD-NNN-short-description` (zero-padded, chronological)
-3. **Last known ID**: `2026-03-22-002-projects-folder-id` → next: `2026-03-22-003-*` or `2026-03-23-001-*`
+3. **Last known ID**: `2026-03-25-005-project-agents-role` → next: `2026-03-25-006-*` or `2026-03-26-001-*`
 4. Wrap each DDL in `try { ... } catch { /* already exists */ }` for idempotency
 5. NEVER change or remove existing entries
 
@@ -313,11 +396,11 @@ When adding a new field to the task creation form, follow this full chain:
 
 | Document | Description |
 |----------|-------------|
-| [`docs/OVERVIEW.md`](docs/OVERVIEW.md) | Full architecture overview + completed milestones |
-| [`docs/architecture/ARCHITECTURE-AUDIT-2026-Q1.md`](docs/architecture/ARCHITECTURE-AUDIT-2026-Q1.md) | Architecture & backend audit report |
-| [`docs/design/UI-SCREENS.md`](docs/design/UI-SCREENS.md) | Full screen & modal specifications (macOS desktop OS structure) |
+| [`docs/OVERVIEW.md`](docs/OVERVIEW.md) | Project OS concept, agent execution, monitoring |
+| [`docs/progress.md`](docs/progress.md) | Development progress — current + completed phases |
+| [`docs/specs/api.md`](docs/specs/api.md) | REST API specification (v1.6.1) |
+| [`docs/architecture/schema-erd.md`](docs/architecture/schema-erd.md) | DB schema ER diagram + state machines |
 | [`docs/design/DESIGN.md`](docs/design/DESIGN.md) | CSS variables + component style rules |
-| [`docs/specs/api.md`](docs/specs/api.md) | REST API full specification (v1.6.0) |
-| [`docs/strategy/bigger-ide-vision.md`](docs/strategy/bigger-ide-vision.md) | "Bigger IDE" strategy (Phase 1–3 complete) |
-| [`docs/progress.md`](docs/progress.md) | Development progress log |
-| [`docs/maintenance/LARGE-SOURCE-FILES.md`](docs/maintenance/LARGE-SOURCE-FILES.md) | Large source file inventory (300-line rule refactor priority) |
+| [`docs/design/UI-SCREENS.md`](docs/design/UI-SCREENS.md) | Screen & modal specifications (macOS desktop OS) |
+| [`docs/strategy/AGENT-RUNTIME-SPEC.md`](docs/strategy/AGENT-RUNTIME-SPEC.md) | **Agent Runtime Engine spec (Phase 19)** |
+| [`docs/strategy/AgentDesk_OpenSource_Product_Strategy.md`](docs/strategy/AgentDesk_OpenSource_Product_Strategy.md) | Open source product strategy |

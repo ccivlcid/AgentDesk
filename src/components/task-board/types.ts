@@ -19,4 +19,6 @@ export interface TaskBoardProps {
   onMergeTask?: (id: string) => void;
   onDiscardTask?: (id: string) => void;
   onProjectCreate?: () => void;
+  onKickoff?: () => void;
+  kickoffBusy?: boolean;
 }

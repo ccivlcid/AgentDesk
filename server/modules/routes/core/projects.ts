@@ -7,6 +7,7 @@ import { registerFileRoutes } from "./projects/register-file-routes.ts";
 import { registerCrudRoutes } from "./projects/register-crud-routes.ts";
 import { registerProjectDetailRoute } from "./projects/register-project-detail-route.ts";
 import { registerFeatureRoutes } from "./projects/register-feature-routes.ts";
+import { registerProjectKickoffRoutes } from "./projects/kickoff.ts";
 
 type FirstQueryValue = (value: unknown) => string | undefined;
 type NormalizeTextField = (value: unknown) => string | null;
@@ -19,6 +20,9 @@ export interface RegisterProjectRoutesOptions {
   normalizeTextField: NormalizeTextField;
   runInTransaction: RunInTransaction;
   nowMs: () => number;
+  broadcast: (type: string, payload: unknown) => void;
+  appendTaskLog: (taskId: string | null, kind: string, message: string) => void;
+  resolveProjectPath: (projectId: string) => string;
 }
 
 export function registerProjectRoutes({
@@ -28,6 +32,9 @@ export function registerProjectRoutes({
   normalizeTextField,
   runInTransaction,
   nowMs,
+  broadcast,
+  appendTaskLog,
+  resolveProjectPath,
 }: RegisterProjectRoutesOptions): void {
   const helpers = createProjectRouteHelpers({ db, normalizeTextField });
   const deps: ProjectRoutesDeps = {
@@ -45,4 +52,5 @@ export function registerProjectRoutes({
   registerCrudRoutes(deps);
   registerProjectDetailRoute(deps);
   registerFeatureRoutes(deps);
+  registerProjectKickoffRoutes({ app, db, broadcast, appendTaskLog, resolveProjectPath, nowMs });
 }

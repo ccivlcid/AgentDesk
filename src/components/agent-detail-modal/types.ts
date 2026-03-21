@@ -3,7 +3,6 @@ import type { Agent, Department, SubAgent, SubTask, Task } from "../../types";
 export type AgentDetailTabKey =
   | "info"
   | "tasks"
-  | "alba"
   | "performance"
   | "chat"
   | "timeline";

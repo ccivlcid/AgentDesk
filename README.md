@@ -119,6 +119,26 @@ AgentDesk is a **project operating system** for AI agent teams. It runs as a loc
 - **Templates** — project templates (4 built-in + custom) and task template library
 - **Performance** — per-agent success rate, avg completion time, trend sparklines
 
+### Project Directives
+- 10 built-in project type templates: MVP, Full-Stack, Mobile, API/Backend, Frontend, AI/ML, Open-Source, DevOps, Enterprise, Research
+- Each type pre-fills agent work principles, task decomposition strategy, quality criteria, review intensity
+- Fully editable Markdown — templates are a starting point, you own the rules
+- Directives are injected into agent prompts and structurally affect review rounds and subtask seeding
+
+### 🚀 Agent-Driven Project Kickoff
+- Create a project → agent automatically plans 3–7 tasks based on goal + directive
+- **PM · PL · Dev role assignment** — required 3-person team: Project Manager, Project Lead, Developer
+- **Multi-agent distribution** — LLM assigns each task to the best-fit agent by project role
+- **Auto-executes** the first task immediately after planning
+- If information is missing, agent asks a single clarifying question via in-app modal
+- `⚡ Kickoff` button in Task Board toolbar for manual re-trigger
+
+### Agent Runtime Engine
+- Built-in LLM execution engine (Anthropic Claude API)
+- Turn-based Tool Use loop with file system access
+- Real-time streaming to CLI Window via WebSocket
+- Token tracking, cost accounting, and execution history
+
 ### 📊 Analytics & Export
 - **Agent Performance Dashboard** — success rate badges, status stack bars, daily sparklines; filter by project/period, sort by total/done/rate/speed
 - **Data Export** — tasks / deliverables / agents / costs → CSV (UTF-8 BOM, Excel-compatible) or JSON; filter by project, status, date range; one-click from "AgentDesk" menu
@@ -186,9 +206,10 @@ Open **http://localhost:8800** in your browser.
 ```
 1. Settings → API → Add API Provider (Claude / OpenAI / Gemini)
 2. Agent Manager → Add Department → Hire Agent
-3. Desktop → 📁 New Project → assign agents
-4. Library → configure Rules / Memory / Hooks (optional)
-5. Desktop → ▶ Run Task → monitor via terminal panel
+3. Desktop → 📁 New Project → select type → edit directive → assign agents
+4. Agent automatically plans tasks (kickoff) → first task starts running
+5. If agent needs clarification, it asks you via a modal → reply → continues
+6. Monitor progress in Task Board, CLI Window, and Flow Graph
 ```
 
 ### Key Commands
@@ -233,6 +254,27 @@ Open **http://localhost:8800** in your browser.
 | [`docs/progress.md`](docs/progress.md) | Development progress log |
 | [`docs/reports/AgentDesk-Introduction.pptx`](docs/reports/AgentDesk-Introduction.pptx) | Project introduction deck (10 slides) |
 | [`docs/reports/AgentDesk-Introduction.mp4`](docs/reports/AgentDesk-Introduction.mp4) | Project introduction video (96 sec) |
+
+---
+
+## Roadmap
+
+| Phase | Focus | Status |
+|-------|-------|--------|
+| **Phase 1–20** | Local Agent OS — desktop UI, workflow builder, agent runtime engine, project directives, multi-agent kickoff | ✅ Complete |
+| **Phase 21** | Platform — PostgreSQL, queue/worker, plugin system, remote agent execution | Planned |
+| **Phase 22** | Team & Cloud — workspaces, cloud execution, enterprise auth (SSO/RBAC) | Future |
+
+---
+
+## Contributing
+
+We welcome contributions! See [`CONTRIBUTING.md`](CONTRIBUTING.md) for guidelines.
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/my-feature`)
+3. Make your changes and run tests (`pnpm test`)
+4. Submit a pull request
 
 ---
 

@@ -1,4 +1,5 @@
 import type { Lang } from "../../../../types/lang.ts";
+import { getDirectiveReviewMaxRounds } from "../../../directive-templates.ts";
 import { processReviewConsensusOutcome } from "./review-consensus-outcome.ts";
 
 type ReviewConsensusDeps = any;
@@ -87,27 +88,33 @@ export function createReviewConsensusTools(deps: ReviewConsensusDeps) {
         const resumeMeeting = latestMeeting?.status === "in_progress";
         const round = resumeMeeting ? (latestMeeting?.round ?? 1) : (latestMeeting?.round ?? 0) + 1;
         reviewRoundState.set(taskId, round);
-        if (!resumeMeeting && round > REVIEW_MAX_ROUNDS) {
+        // Per-project review rounds based on directive type
+        const taskRow = db.prepare("SELECT project_id FROM tasks WHERE id = ?").get(taskId) as { project_id: string | null } | undefined;
+        const projRow = taskRow?.project_id
+          ? (db.prepare("SELECT directive_type_slug FROM projects WHERE id = ?").get(taskRow.project_id) as { directive_type_slug: string | null } | undefined)
+          : undefined;
+        const effectiveMaxRounds = getDirectiveReviewMaxRounds(projRow?.directive_type_slug, REVIEW_MAX_ROUNDS);
+        if (!resumeMeeting && round > effectiveMaxRounds) {
           const cappedLang = resolveLang(taskTitle);
           appendTaskLog(
             taskId,
             "system",
-            `Review round ${round} exceeds max_rounds=${REVIEW_MAX_ROUNDS}; forcing final decision`,
+            `Review round ${round} exceeds max_rounds=${effectiveMaxRounds} (directive: ${projRow?.directive_type_slug ?? "global"}); forcing final decision`,
           );
           notifyClient(
             pickL(
               l(
                 [
-                  `[Client OFFICE] '${taskTitle}' 리뷰 라운드가 최대치(${REVIEW_MAX_ROUNDS})를 초과해 추가 보완은 중단하고 최종 승인 판단으로 전환합니다.`,
+                  `[Client OFFICE] '${taskTitle}' 리뷰 라운드가 최대치(${effectiveMaxRounds})를 초과해 추가 보완은 중단하고 최종 승인 판단으로 전환합니다.`,
                 ],
                 [
-                  `[Client OFFICE] '${taskTitle}' exceeded max review rounds (${REVIEW_MAX_ROUNDS}). Additional revision rounds are closed and we are moving to final approval decision.`,
+                  `[Client OFFICE] '${taskTitle}' exceeded max review rounds (${effectiveMaxRounds}). Additional revision rounds are closed and we are moving to final approval decision.`,
                 ],
                 [
-                  `[Client OFFICE] '${taskTitle}' はレビュー上限(${REVIEW_MAX_ROUNDS}回)を超えたため、追加補完を停止して最終承認判断へ移行します。`,
+                  `[Client OFFICE] '${taskTitle}' はレビュー上限(${effectiveMaxRounds}回)を超えたため、追加補完を停止して最終承認判断へ移行します。`,
                 ],
                 [
-                  `[Client OFFICE] '${taskTitle}' 的评审轮次已超过上限（${REVIEW_MAX_ROUNDS}）。现停止追加整改并转入最终审批判断。`,
+                  `[Client OFFICE] '${taskTitle}' 的评审轮次已超过上限（${effectiveMaxRounds}）。现停止追加整改并转入最终审批判断。`,
                 ],
               ),
               cappedLang,

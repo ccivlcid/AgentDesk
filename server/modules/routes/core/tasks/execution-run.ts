@@ -517,6 +517,17 @@ Whenever you complete a subtask, report it in this format:
       // non-fatal: proceed without source context
     }
 
+    // Project directive: user-defined agent behavior rules for this project
+    let directiveBlock = "";
+    if (task.project_id) {
+      const projRow = db.prepare("SELECT directive FROM projects WHERE id = ?").get(task.project_id) as
+        | { directive: string | null }
+        | undefined;
+      if (projRow?.directive?.trim()) {
+        directiveBlock = `[Project Directive]\n${projRow.directive.trim()}\n[/Project Directive]`;
+      }
+    }
+
     // Execute pre-task hooks (parallel, async)
     await executeHooks(db as any, "pre-task", {
       projectId: task.project_id ?? null,
@@ -536,6 +547,7 @@ Whenever you complete a subtask, report it in this format:
           )(provider, task.project_id),
           `[Task Session] id=${executionSession.sessionId} owner=${executionSession.agentId} provider=${executionSession.provider}`,
           "This session is task-scoped. Keep continuity for this task only and do not cross-contaminate context from other projects.",
+          directiveBlock,
           projectStructureBlock,
           recentChanges ? `[Recent Changes]\n${recentChanges}` : "",
           `[Task] ${task.title}`,

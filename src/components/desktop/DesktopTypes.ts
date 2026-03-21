@@ -20,7 +20,6 @@ export interface DesktopProps {
   onSendAnnouncement: (content: string) => Promise<void>;
   onSendDirective: (content: string, projectMeta?: ProjectMetaPayload) => Promise<void>;
   onClearMessages: (agentId?: string) => Promise<void>;
-  onCreateTask: () => void;
   onProjectCreate: () => void;
   onOpenDecisionInbox: () => void;
   onOpenReportHistory: () => void;

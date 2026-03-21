@@ -3,7 +3,6 @@ import type { QuickActionRow } from "./types";
 
 export function getQuickActions(t: I18nContextValue["t"]): QuickActionRow[] {
   return [
-    { label: t({ ko: "새 태스크 만들기", en: "New Task", ja: "新しいタスク", zh: "新建任务" }), icon: "＋", bg: "#0a84ff", action: "new-task" },
     { label: t({ ko: "대시보드", en: "Dashboard", ja: "ダッシュボード", zh: "仪表板" }), icon: "▦", bg: "#636366", action: "dashboard" },
     { label: t({ ko: "태스크 보드", en: "Task Board", ja: "タスクボード", zh: "任务板" }), icon: "≡", bg: "#30d158", action: "tasks-board" },
     { label: t({ ko: "에이전트 관리", en: "Agents", ja: "エージェント", zh: "代理管理" }), icon: "◎", bg: "#ff9f0a", action: "agents" },

@@ -77,7 +77,6 @@ export interface DesktopOverlayBlockBridge {
   onSendAnnouncement: (content: string) => Promise<void>;
   onSendDirective: (content: string, projectMeta?: import("../../app/types").ProjectMetaPayload) => Promise<void>;
   onClearMessages: (agentId?: string) => Promise<void>;
-  onCreateTask: () => void;
 }
 
 export function useDesktopOverlayBlockProps(bridge: DesktopOverlayBlockBridge): Omit<DesktopOverlayBlockProps, "children"> {
@@ -99,7 +98,7 @@ export function useDesktopOverlayBlockProps(bridge: DesktopOverlayBlockBridge): 
     removeFeatureFromTrash,
     setDesktopIconLayout,
   } = useUiStore();
-  const { projects, categories, currentProjectId, setCurrentProjectId, setProjects } = useProjectStore();
+  const { projects, categories, currentProjectId, setCurrentProjectId, setProjects, setEditDirectiveProjectId } = useProjectStore();
   const currentProject = projects.find((p) => p.id === currentProjectId) ?? null;
   const { agents } = useAgentStore();
   const { tasks } = useTaskStore();
@@ -171,7 +170,6 @@ export function useDesktopOverlayBlockProps(bridge: DesktopOverlayBlockBridge): 
       onSendAnnouncement,
       onSendDirective,
       onClearMessages,
-      onCreateTask,
     } = bridge;
 
     const windowStackProps = {
@@ -244,6 +242,10 @@ export function useDesktopOverlayBlockProps(bridge: DesktopOverlayBlockBridge): 
       },
       onSwitchProject: setCurrentProjectId,
       onDelete: handleDeleteProject,
+      onEditDirective: (projectId: string) => {
+        setEditDirectiveProjectId(projectId);
+        setProjectCtxMenu(null);
+      },
       onMoveToFolder: async (projectId: string, folderId: string) => {
         const result = await addProjectToFolder(folderId, projectId);
         const proj = projects.find((p: Project) => p.id === projectId);
@@ -306,7 +308,6 @@ export function useDesktopOverlayBlockProps(bridge: DesktopOverlayBlockBridge): 
       projects,
       currentProject,
       openWindow,
-      onCreateTask,
       setCurrentProjectId,
       toggleWindow,
       openWindows,

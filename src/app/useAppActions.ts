@@ -131,12 +131,21 @@ export function useAppActions({
       handoff_to_agent_id?: string | null;
       handoff_condition?: "always" | "on_success" | "on_fail" | null;
       kb_context_sources?: string | null;
+      use_runtime?: boolean;
     }) => {
       try {
         const taskId = await api.createTask(input as Parameters<typeof api.createTask>[0]);
-        // 에이전트가 지정된 경우 즉시 실행 (수신함 행 방지)
         if (input.assigned_agent_id) {
-          await api.runTask(taskId);
+          if (input.use_runtime) {
+            // Runtime 엔진으로 직접 실행
+            await api.runWithRuntime({
+              agentId: input.assigned_agent_id,
+              taskId,
+              projectId: input.project_id ?? null,
+            });
+          } else {
+            await api.runTask(taskId);
+          }
         }
         const tks = await api.getTasks();
         setTasks(tks);

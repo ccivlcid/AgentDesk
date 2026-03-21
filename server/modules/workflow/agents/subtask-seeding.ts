@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { Lang } from "../../../types/lang.ts";
+import { getDirectiveDecompositionHint } from "../../directive-templates.ts";
 import { resolveConstrainedAgentScopeForTask } from "../../routes/core/tasks/execution-run-auto-assign.ts";
 
 type SubtaskSeedingDeps = {
@@ -117,6 +118,16 @@ export function createSubtaskSeedingTools(deps: SubtaskSeedingDeps) {
     const baseDeptId = ownerDeptId ?? task.department_id;
     const lang = resolveLang(task.description ?? task.title);
     const effectivePackKey = task.context_hint ?? task.workflow_pack_key;
+
+    // Directive decomposition hint: per-project task breakdown strategy
+    let decompositionHint = "";
+    if (task.project_id) {
+      const projRow = db.prepare("SELECT directive_type_slug FROM projects WHERE id = ?").get(task.project_id) as
+        | { directive_type_slug: string | null }
+        | undefined;
+      const hint = getDirectiveDecompositionHint(projRow?.directive_type_slug);
+      if (hint) decompositionHint = ` [분해 전략] ${hint}`;
+    }
     const constrainedAgentIds = resolveConstrainedAgentScopeForTask(db as any, {
       project_id: task.project_id,
       workflow_pack_key: effectivePackKey,
@@ -157,10 +168,10 @@ export function createSubtaskSeedingTools(deps: SubtaskSeedingDeps) {
         ),
         description: pickL(
           l(
-            [`Planned 회의 기준으로 상세 작업 순서/산출물 기준을 확정합니다. (${task.title})`],
-            [`Finalize detailed task sequence and deliverable criteria from the planned meeting. (${task.title})`],
-            [`Planned会議を基準に、詳細な作業順序と成果物基準を確定します。(${task.title})`],
-            [`基于 Planned 会议，确定详细任务顺序与交付物标准。（${task.title}）`],
+            [`Planned 회의 기준으로 상세 작업 순서/산출물 기준을 확정합니다. (${task.title})${decompositionHint}`],
+            [`Finalize detailed task sequence and deliverable criteria from the planned meeting. (${task.title})${decompositionHint}`],
+            [`Planned会議を基準に、詳細な作業順序と成果物基準を確定します。(${task.title})${decompositionHint}`],
+            [`基于 Planned 会议，确定详细任务顺序与交付物标准。（${task.title}）${decompositionHint}`],
           ),
           lang,
         ),
