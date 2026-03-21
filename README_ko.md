@@ -6,9 +6,14 @@
 
 여러 AI 에이전트를 동시에 실행·모니터링·제어 — macOS 스타일 데스크톱 하나로.
 
-[English](README.md) · [개요](#overview) · [기능](#key-features) · [시작하기](#getting-started)
+[English](README.md) · [개요](#overview) · [기능](#key-features) · [스크린샷](#스크린샷) · [시작하기](#getting-started)
 
 </div>
+
+<p align="center">
+  <img src="docs/screen/desktop-01.png" alt="AgentDesk — macOS 스타일 데스크톱" width="920" />
+</p>
+<p align="center"><sub><strong>한 화면에서</strong> 에이전트 실행·출력 스트리밍·작업 제어까지.</sub></p>
 
 ---
 
@@ -106,6 +111,62 @@ AgentDesk는 "AI 에이전트가 실제로 일하는 장면을 개발자가 실�
 </td>
 </tr>
 </table>
+
+---
+
+## 스크린샷
+
+<p align="center"><sub>이미지를 클릭하면 저장소에서 원본 파일을 열 수 있습니다.</sub></p>
+
+<table>
+<tr>
+<td width="50%" valign="top" align="center"><strong>데스크톱 &amp; 작업 공간</strong><br/><a href="docs/screen/desktop-02.png"><img src="docs/screen/desktop-02.png" width="100%" alt="데스크톱"/></a></td>
+<td width="50%" valign="top" align="center"><strong>멀티 윈도우</strong><br/><a href="docs/screen/desktop-03.png"><img src="docs/screen/desktop-03.png" width="100%" alt="여러 창"/></a></td>
+</tr>
+<tr>
+<td width="50%" valign="top" align="center"><strong>프로젝트 킥오프</strong><br/><a href="docs/screen/project-create-01.png"><img src="docs/screen/project-create-01.png" width="100%" alt="프로젝트 생성"/></a></td>
+<td width="50%" valign="top" align="center"><strong>디렉티브 &amp; 계획</strong><br/><a href="docs/screen/project-create-02.png"><img src="docs/screen/project-create-02.png" width="100%" alt="디렉티브"/></a></td>
+</tr>
+<tr>
+<td width="50%" valign="top" align="center"><strong>CLI 실시간</strong><br/><a href="docs/screen/cli-window-01.png"><img src="docs/screen/cli-window-01.png" width="100%" alt="CLI"/></a></td>
+<td width="50%" valign="top" align="center"><strong>CLI 세션</strong><br/><a href="docs/screen/cli-window-02.png"><img src="docs/screen/cli-window-02.png" width="100%" alt="CLI 실행"/></a></td>
+</tr>
+<tr>
+<td width="50%" valign="top" align="center"><strong>라이브러리</strong><br/><a href="docs/screen/library-01.png"><img src="docs/screen/library-01.png" width="100%" alt="스킬·규칙·메모리·훅"/></a></td>
+<td width="50%" valign="top" align="center"><strong>지식 범위</strong><br/><a href="docs/screen/knowledge-01.png"><img src="docs/screen/knowledge-01.png" width="100%" alt="지식"/></a></td>
+</tr>
+<tr>
+<td width="50%" valign="top" align="center"><strong>위젯</strong><br/><a href="docs/screen/widget-01.png"><img src="docs/screen/widget-01.png" width="100%" alt="위젯"/></a></td>
+<td width="50%" valign="top" align="center"><strong>커맨드 팔레트</strong><br/><a href="docs/screen/command-palette.png"><img src="docs/screen/command-palette.png" width="100%" alt="검색"/></a></td>
+</tr>
+<tr>
+<td width="50%" valign="top" align="center"><strong>워크플로 빌더</strong><br/><a href="docs/screen/workflow-builder.png"><img src="docs/screen/workflow-builder.png" width="100%" alt="워크플로"/></a></td>
+<td width="50%" valign="top" align="center"><strong>로컬 LLM</strong><br/><a href="docs/screen/local-llm.png"><img src="docs/screen/local-llm.png" width="100%" alt="로컬 LLM"/></a></td>
+</tr>
+</table>
+
+<details>
+<summary><strong>추가</strong> — 데스크톱·프로젝트 단계·이미지 스튜디오·참고 JPG</summary>
+
+<br/>
+
+| | |
+|:---:|:---:|
+| <a href="docs/screen/widget-02.png"><img src="docs/screen/widget-02.png" width="380" alt="위젯 2"/></a> | <a href="docs/screen/widget-03.png"><img src="docs/screen/widget-03.png" width="380" alt="위젯 3"/></a> |
+| <a href="docs/screen/desktop-04.png"><img src="docs/screen/desktop-04.png" width="380" alt="데스크톱 4"/></a> | <a href="docs/screen/desktop-05.png"><img src="docs/screen/desktop-05.png" width="380" alt="데스크톱 5"/></a> |
+| <a href="docs/screen/desktop-06.png"><img src="docs/screen/desktop-06.png" width="380" alt="데스크톱 6"/></a> | <a href="docs/screen/project-create-03.png"><img src="docs/screen/project-create-03.png" width="380" alt="프로젝트 3단계"/></a> |
+
+<p align="center"><a href="docs/screen/image-studio.png"><img src="docs/screen/image-studio.png" width="560" alt="이미지 스튜디오"/></a><br/><sub><strong>이미지 스튜디오</strong></sub></p>
+
+| | |
+|:---:|:---:|
+| <a href="docs/screen/cli-setup.jpg"><img src="docs/screen/cli-setup.jpg" width="380" alt="CLI 설치"/></a> | <a href="docs/screen/cli-session-01.jpg"><img src="docs/screen/cli-session-01.jpg" width="380" alt="CLI 세션 1"/></a> |
+| <a href="docs/screen/cli-session-02.jpg"><img src="docs/screen/cli-session-02.jpg" width="380" alt="CLI 세션 2"/></a> | <a href="docs/screen/agent-persona.jpg"><img src="docs/screen/agent-persona.jpg" width="380" alt="페르소나"/></a> |
+| <a href="docs/screen/wallpaper-change.jpg"><img src="docs/screen/wallpaper-change.jpg" width="380" alt="배경"/></a> | <a href="docs/screen/flow-routing.jpg"><img src="docs/screen/flow-routing.jpg" width="380" alt="플로우"/></a> |
+
+<p align="center"><a href="docs/screen/desktop-snapshot-2026-03-19.jpg"><img src="docs/screen/desktop-snapshot-2026-03-19.jpg" width="560" alt="스냅샷"/></a><br/><sub><strong>데스크톱 스냅샷</strong> (2026-03-19)</sub></p>
+
+</details>
 
 ---
 
