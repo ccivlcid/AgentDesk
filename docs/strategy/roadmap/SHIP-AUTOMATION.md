@@ -1,8 +1,8 @@
 # Ship Automation — 버전 관리 + 변경 이력 + PR 생성
 
-> Status: **설계 완료 — 구현 대기**
-> Priority: Phase 40 후보
-> Estimated: 30~45h (human) / 2~3h (CC)
+> Status: **구현 완료 (Phase 41)**
+> Date: 2026-03-28
+> Remaining: PR 자동 생성 (Step 4) — `gh pr create` 연동은 미구현
 
 ---
 

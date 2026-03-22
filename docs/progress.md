@@ -4,6 +4,90 @@
 
 ---
 
+## ✅ Phase 43: PM Activity 슬라이드 패널 + 트리거 라인 — Complete
+
+> **Date:** 2026-03-28
+
+### What was built
+
+| Feature | Description |
+|---------|-------------|
+| **PM Activity 트리거 라인** | 오른쪽 가장자리에 오렌지 빛나는 라인 + 화살표 힌트. 위아래 화면 끝까지 연장, 3초 주기 펄스 애니메이션 |
+| **슬라이드 패널** | 마우스 호버 시 PM Activity 패널이 오른쪽에서 슬라이드-인, 벗어나면 슬라이드-아웃 |
+| **macOS Notification Center 패턴** | Dock auto-hide와 동일한 UX — 트리거 존 + 자동 열기/닫기 |
+
+### Modified Files
+
+- `src/components/desktop/RightShelf.tsx` — 트리거 스트립 14px, 펄스 애니메이션, 오렌지 그라데이션 라인, 중앙 chevron
+
+---
+
+## ✅ Phase 42: 전문 분야 12개 확장 + 에이전트 29명 — Complete
+
+> **Date:** 2026-03-28
+
+### What was built
+
+| Feature | Description |
+|---------|-------------|
+| **전문 분야 12개** | 기존 6개(기획/개발/디자인/QA/인프라보안/운영) + 신규 6개(리서치/투자전문/영상전문/데이터분석/마케팅/콘텐츠) |
+| **에이전트 29명** | 기존 17명 + 신규 12명 (각 신규 분야별 팀장+주니어). 전 분야 팀장 배치 완료 |
+| **부서 → 전문 분야** | UI 라벨 전체 변경 (20+ 파일), CLAUDE.md 용어 매핑 문서화, DB 구조 유지 |
+| **시드 데이터 정비** | "~팀" → "~분야" 명칭, 에이전트 페르소나 텍스트 수정, FK 에러 방어 |
+| **마이그레이션** | 006(부서→전문분야 리네임+12개 INSERT), 007(specialty 태그 매핑), 008(신규 분야 팀장 승격) |
+
+### New Agents
+
+| 전문 분야 | 팀장 | 주니어 |
+|----------|------|-------|
+| 리서치 | Albert Einstein | Richard Feynman |
+| 투자전문 | Warren Buffett | Benjamin Graham |
+| 영상전문 | Alfred Hitchcock | Hayao Miyazaki |
+| 데이터분석 | Florence Nightingale | John Tukey |
+| 마케팅 | David Ogilvy | Coco Chanel |
+| 콘텐츠 | Ernest Hemingway | Sei Shonagon |
+
+### Modified Files
+
+- `server/modules/bootstrap/schema/seeds.ts` — 12개 전문 분야 시드, 29명 에이전트 시드, insertDeptIfMissing 12개 전부
+- `server/modules/bootstrap/schema/versioned-migrations/migrations-e-recent.ts` — 마이그레이션 006~008
+- `CLAUDE.md` — 섹션 1-1 용어 매핑 테이블, 섹션 1-2 아키텍처 철학
+- `src/components/` 20+ 파일 — "부서" → "전문 분야" UI 라벨 (ko/en/ja/zh)
+
+---
+
+## ✅ Phase 41: 에이전트/부서 설정 + 프로젝트 유형 + Ship 자동화 — Complete
+
+> **Date:** 2026-03-28
+
+### What was built
+
+| Feature | Description |
+|---------|-------------|
+| **에이전트 설정 개선** | 역할 선택기 3열 (PM/Senior/Junior, 인턴 제거), PM 배너, 자율도 설정, 전문 분야 태그 제거 (department_id와 중복), API 공급자 UI 제거, CLI 도구 PM도 선택 가능 |
+| **부서 설정 개선** | "부서 등록" → "전문 분야 등록", 섹션 구분 (IDENTITY/MISSION), 4개국어 완전 지원 |
+| **프로젝트 유형 템플릿** | `project_type_templates` 테이블, 기본 5종 시드, CRUD API, 설정 → PROJECT TYPES 탭 |
+| **Ship 자동화** | 태스크 완료 시 자동 버전 범프 + CHANGELOG 생성 + 파일 동기화 (VERSION, package.json, CHANGELOG.md) |
+| **프로젝트 폴더 UI** | 버전 배지 + Changelog 탭 |
+
+### DB Migrations
+
+- `2026-03-28-003-ship-automation` — projects.current_version, auto_create_pr, project_changelog_entries
+- `2026-03-28-004-project-type-templates` — project_type_templates + 5종 시드
+- `2026-03-28-005-agent-enhancements` — agents.specialty, autonomy_level, max_concurrent_tasks
+
+### Modified Files
+
+- `server/modules/workflow/orchestration/review-finalize-tools/ship-automation.ts` (신규)
+- `server/modules/routes/core/project-type-templates.ts` (신규)
+- `src/components/settings/ProjectTypeTemplatesTab.tsx` (신규)
+- `src/components/agent-manager/agent-form-modal/` — BasicSection, AdvancedSection, PmSection
+- `src/components/agent-manager/DepartmentFormModal.tsx`
+- `src/components/windows/FolderWindow.tsx` — Changelog 탭
+- 기타 다수
+
+---
+
 ## ✅ Phase 40: Agent PM Orchestration UI — Specialty, Autonomy, Concurrent Tasks — Complete
 
 > **Date:** 2026-03-28
@@ -69,19 +153,17 @@ gstack(Garry Tan의 오픈소스 소프트웨어 팩토리)에서 AgentDesk에 �
 
 ### What was built
 
-킥오프 흐름을 PM 오케스트레이터 중심으로 전면 재설계.
+킥오프 흐름을 PM 오케스트레이터 중심으로 구현.
 
-**이전 흐름:** 킥오프 LLM → 태스크+에이전트 동시 생성 → 회의와 실행 동시 시작 (회의 무의미)
-**새 흐름:** 킥오프 → 태스크만 생성 → 킥오프 회의 → PM이 에이전트 배정 → 업무 실행
+**킥오프 흐름:** 킥오프 → 킥오프 회의 → 태스크 생성 (LLM) → PM이 에이전트 배정 → 업무 실행
 
 | Feature | Description |
 |---------|-------------|
-| **태스크만 생성** | 킥오프 LLM 프롬프트에서 `agent_name` 제거. 태스크는 `assigned_agent_id = NULL`로 생성 |
+| **킥오프 회의 선행** | 프로젝트 목표 공유 + 에이전트 역량 보고 후 태스크 생성 |
 | **PM 오케스트레이터 배정** | 회의 완료 콜백에서 PM이 라운드 로빈으로 비-PM 에이전트에게 배정 |
-| **회의 선행** | 태스크 실행 코드를 회의 완료 콜백 안으로 이동. 회의 실패 시에도 안전장치 실행 |
-| **킥오프 회의 톤 변경** | "팀장 의견" → PM이 업무 배정·확인, 에이전트가 수행 계획 보고 |
-| **킥오프 스테이지 오버레이** | 4단계 진행 표시 (계획→회의→배정→실행), WebSocket 이벤트, Framer Motion 애니메이션 |
-| **PM은 실행 안 함** | PM 에이전트에게 태스크 배정 방지 (fallback도 비-PM 에이전트로) |
+| **킥오프 스테이지 오버레이** | 4단계 진행 표시 (회의→태스크 생성→배정→실행), 화면 중앙, Framer Motion |
+| **PM은 실행 안 함** | PM 에이전트에게 태스크 배정 방지. 배정 로그는 `pm_oversight` |
+| **4개국어 회의 스크립트** | DB settings.language 기반 회의 대사 자동 전환 (ko/en/ja/zh) |
 
 ### Modified Files
 

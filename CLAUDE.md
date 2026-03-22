@@ -70,7 +70,7 @@ All inline SVG icons must follow this standard:
 - **NEVER** edit or delete an existing migration entry.
 - Always append at the end of `migrations-e-recent.ts`.
 - ID format: `YYYY-MM-DD-NNN-short-description` (chronological, zero-padded).
-- **Last applied ID**: `2026-03-27-005-agent-task-fitness`
+- **Last applied ID**: `2026-03-28-008-promote-specialty-leaders`
 - Every DDL must be wrapped in `try { ... } catch { /* already exists */ }`.
 
 ### 0-6. Component State Rules
@@ -113,10 +113,54 @@ Electron + React(Vite) frontend + Express/tsx backend + SQLite(better-sqlite3).
 ### 1-2. Architecture Philosophy
 
 - **PM Orchestrator** — PM agent plans, assigns, and reviews. Never executes tasks directly.
-- **Kickoff flow:** Kickoff → Meeting → Task Creation (LLM) → PM assigns agents → Execution
 - **Evidence-based execution** — Agents must cite file/line, no speculation. 3-strike escalation on failure.
 - **Review checklist** — PM reviews with structured 4-point checklist (scope match, errors, minimal scope, completeness).
 - **Ship automation** — Task done → version bump → changelog entry → file sync.
+
+### 1-3. Kickoff Pipeline (킥오프 → 업무 실행 흐름)
+
+> **IMPORTANT:** This is the canonical execution flow. All kickoff-related code must follow this order.
+
+```
+[1] 킥오프 시작 (POST /api/projects/:id/kickoff)
+     │
+     ▼
+[2] 킥오프 회의 (runKickoffMeeting)                    ← stage: "meeting"
+     │  PM이 프로젝트 목표 공유
+     │  각 에이전트가 역량 보고
+     │  PM이 태스크 생성·배정 예고
+     │
+     ▼
+[3] 태스크 생성 (LLM 호출)                              ← stage: "planning"
+     │  callProvider() 또는 callViaCliProvider()
+     │  JSON 파싱 → tasks INSERT (assigned_agent_id = NULL)
+     │
+     ▼
+[4] PM 에이전트 배정                                    ← stage: "assigning"
+     │  비-PM 에이전트 라운드 로빈 배정
+     │  appendTaskLog("pm_oversight", "PM assigned → {agent}")
+     │
+     ▼
+[5] 업무 실행                                           ← stage: "executing"
+     │  startTaskExecutionForAgent() 또는 startExecutionLoop()
+     │  에이전트별 첫 번째 planned 태스크만 시작
+     │
+     ▼
+[6] 완료                                                ← stage: "done"
+```
+
+**Key files:**
+- `server/modules/routes/core/projects/kickoff.ts` — 전체 파이프라인
+- `src/components/desktop/Desktop.tsx` — `KickoffStageOverlay` (4-step UI)
+- `src/store/uiStore.ts` — `kickoffStage` state
+- `src/app/useRealtimeSync.ts` — `kickoff_stage` WebSocket listener
+
+**Rules:**
+- 회의가 **반드시 먼저**. 태스크 생성은 회의 완료 콜백(`postMeetingCreateAndRun`) 안에서 실행.
+- PM 에이전트에게 태스크 배정 금지. `project_role !== "pm"` 필터 적용.
+- 회의록은 `meeting_minutes` 테이블에 `project_id` 포함하여 저장. `task_id`는 NULL 허용.
+- 킥오프 실패 시에도 `postMeetingCreateAndRun()` 실행 (안전장치).
+- 킥오프 프롬프트(`prompts/system/project-kickoff.md`)에서 `agent_name` 필드 없음 — 배정은 PM이 함.
 
 ---
 
@@ -364,7 +408,7 @@ Use this checklist every time you add a DB column or table:
 
 1. **APPEND only** — add a new `{ id, up }` entry at the **end** of the `MIGRATIONS` chain (typically append to the last chunk under `server/modules/bootstrap/schema/versioned-migrations/`, e.g. `migrations-e-recent.ts`, or add a new chunk and spread it from `versioned-migrations.ts`). Never edit applied migration bodies.
 2. **ID format**: `YYYY-MM-DD-NNN-short-description` (zero-padded, chronological)
-3. **Last known ID**: `2026-03-27-002-pm-oversight-persistence` → next: `2026-03-27-003-*` or `2026-03-28-001-*`
+3. **Last known ID**: `2026-03-28-008-promote-specialty-leaders` → next: `2026-03-28-009-*` or `2026-03-29-001-*`
 4. Wrap each DDL in `try { ... } catch { /* already exists */ }` for idempotency
 5. NEVER change or remove existing entries
 
