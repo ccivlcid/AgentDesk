@@ -11,7 +11,7 @@ import { useWebSocket } from "../../hooks/useWebSocket";
 
 const mono = "var(--th-font-mono)";
 const PANEL_W = 340;
-const STRIP_W = 6;
+const STRIP_W = 14;
 
 // ── SVG Icons ──
 const IconPm = () => (
@@ -402,34 +402,13 @@ export default function RightShelf() {
         transition: "transform 0.26s cubic-bezier(0.32, 0, 0.67, 0)",
         zIndex: 990,
         display: "flex",
+        flexDirection: "row",
         pointerEvents: pmActivityExpanded ? "auto" : "none",
       }}
       onMouseEnter={() => { cancelClose(); if (!pmActivityExpanded) togglePmActivityExpanded(); }}
       onMouseLeave={() => { if (pmActivityExpanded) scheduleClose(); }}
     >
-      {/* Trigger strip */}
-      <div
-        style={{
-          width: STRIP_W,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          cursor: "pointer",
-          pointerEvents: "auto",
-        }}
-        onClick={() => togglePmActivityExpanded()}
-      >
-        <div style={{
-          width: 3,
-          height: pmActivityExpanded ? 0 : 52,
-          background: "var(--th-text-muted)",
-          borderRadius: 2,
-          transition: "height 0.2s ease, opacity 0.2s",
-          opacity: pmActivityExpanded ? 0 : 0.3,
-        }} />
-      </div>
-
-      {/* Panel */}
+      {/* Panel (left side) */}
       <div style={{
         flex: 1,
         background: "var(--th-panel-bg)",
@@ -441,6 +420,7 @@ export default function RightShelf() {
         overflow: "hidden",
         borderTopLeftRadius: 10,
         borderBottomLeftRadius: 10,
+        order: 2,
       }}>
         {/* Header */}
         <div style={{
@@ -632,6 +612,68 @@ export default function RightShelf() {
         }}>
           {data?.pmAgent ? `PM: ${data.pmAgent.nameKo || data.pmAgent.name}` : "PM 미할당"} · {counts.total}건
         </div>
+      </div>
+
+      {/* Trigger strip — macOS-style glowing edge */}
+      <style>{`
+        @keyframes pm-glow-pulse {
+          0%, 100% { opacity: 0.5; box-shadow: 0 0 6px rgba(245,158,11,0.3); }
+          50% { opacity: 0.9; box-shadow: 0 0 14px rgba(245,158,11,0.6), 0 0 28px rgba(245,158,11,0.15); }
+        }
+      `}</style>
+      <div
+        style={{
+          width: STRIP_W,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          cursor: "pointer",
+          pointerEvents: "auto",
+          position: "relative",
+          order: 1,
+          transition: "background 0.3s",
+          background: pmActivityExpanded ? "transparent" : "linear-gradient(270deg, transparent, rgba(245,158,11,0.04))",
+        }}
+        onClick={() => togglePmActivityExpanded()}
+      >
+        {!pmActivityExpanded && (
+          <div style={{
+            position: "absolute",
+            top: 0,
+            bottom: 0,
+            left: 0,
+            right: 0,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            transition: "opacity 0.3s",
+          }}>
+            {/* Top glowing line — full height to center */}
+            <div style={{
+              width: 2.5,
+              flex: 1,
+              background: "linear-gradient(180deg, transparent 0%, rgba(245,158,11,0.15) 30%, rgba(245,158,11,0.4) 100%)",
+              borderRadius: 3,
+              animation: "pm-glow-pulse 3s ease-in-out infinite",
+            }} />
+            {/* Chevron — center */}
+            <svg
+              width="10" height="16" viewBox="0 0 10 16" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+              style={{ flexShrink: 0, margin: "6px 0", filter: "drop-shadow(0 0 5px rgba(245,158,11,0.7))" }}
+            >
+              <polyline points="8 2 2 8 8 14" />
+            </svg>
+            {/* Bottom glowing line — full height to center */}
+            <div style={{
+              width: 2.5,
+              flex: 1,
+              background: "linear-gradient(180deg, rgba(245,158,11,0.4) 0%, rgba(245,158,11,0.15) 70%, transparent 100%)",
+              borderRadius: 3,
+              animation: "pm-glow-pulse 3s ease-in-out infinite",
+              animationDelay: "1.5s",
+            }} />
+          </div>
+        )}
       </div>
     </div>
   );
