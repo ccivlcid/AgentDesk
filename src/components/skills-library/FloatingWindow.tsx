@@ -95,9 +95,9 @@ export default function FloatingWindow({
         <div className="w-3 h-3 rounded-full shrink-0" style={{ background: "#28c840", opacity: 0.4 }} />
 
         <div className="flex-1 min-w-0 ml-1">
-          <div className="text-[13px] font-semibold font-mono truncate" style={{ color: "var(--th-text-heading)" }}>
+          <h3 className="text-[13px] font-semibold font-mono truncate" style={{ color: "var(--th-text-heading)", margin: 0 }}>
             {title}
-          </div>
+          </h3>
           {subtitle && (
             <div className="text-[11px] font-mono truncate" style={{ color: "var(--th-text-muted)" }}>
               {subtitle}

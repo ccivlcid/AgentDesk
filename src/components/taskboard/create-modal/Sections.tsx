@@ -83,10 +83,10 @@ export function AssigneeSection({
       {departmentId && agents.length === 0 && (
         <p className="mt-1 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
           {t({
-            ko: "해당 부서에 에이전트가 없습니다.",
-            en: "No agents are available in this department.",
-            ja: "この部署にはエージェントがいません。",
-            zh: "该部门暂无可用代理。",
+            ko: "해당 전문 분야에 에이전트가 없습니다.",
+            en: "No agents are available in this specialty.",
+            ja: "この専門分野にはエージェントがいません。",
+            zh: "该专业领域暂无可用代理。",
           })}
         </p>
       )}

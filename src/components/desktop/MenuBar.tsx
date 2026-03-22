@@ -2,12 +2,166 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { Project, Category } from "../../types";
 import { useUiStore } from "../../store/uiStore";
+import { useTaskStore } from "../../store/taskStore";
+import { useProjectStore } from "../../store/projectStore";
 import { useI18n } from "../../i18n";
 import { useTheme } from "../../ThemeContext";
 import ProjectSelector from "../project-selector/ProjectSelector";
 import ControlCenter from "./ControlCenter";
 
 const mono = "var(--th-font-mono)";
+
+function KickoffIndicator() {
+  const busy = useUiStore((s) => s.kickoffBusy);
+  const kickoffStage = useUiStore((s) => s.kickoffStage);
+  const { t } = useI18n();
+  // Hide when the detailed KickoffStageOverlay is active
+  if (kickoffStage !== "idle") return null;
+  if (!busy) return null;
+  return (
+    <div style={{
+      display: "flex", alignItems: "center", gap: 6,
+      padding: "3px 14px",
+      background: "var(--th-accent-glow, rgba(245,158,11,0.08))",
+      border: "1px solid rgba(245,158,11,0.18)",
+      borderRadius: 8,
+    }}>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--th-accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ animation: "spin 1s linear infinite", flexShrink: 0 }}>
+        <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+      </svg>
+      <span style={{ fontFamily: mono, fontSize: 11, fontWeight: 600, color: "var(--th-accent)", whiteSpace: "nowrap" }}>
+        {t({ ko: "업무 계획 중...", en: "Planning...", ja: "計画中...", zh: "计划中..." })}
+      </span>
+    </div>
+  );
+}
+
+function ProjectProgressIndicator() {
+  const kickoffBusy = useUiStore((s) => s.kickoffBusy);
+  const currentProjectId = useProjectStore((s) => s.currentProjectId);
+  const tasks = useTaskStore((s) => s.tasks);
+  const [allDoneVisible, setAllDoneVisible] = useState(true);
+  const [fadingOut, setFadingOut] = useState(false);
+  const prevAllDoneRef = useRef(false);
+
+  // Filter tasks for current project
+  const projectTasks = currentProjectId
+    ? tasks.filter((t) => t.project_id === currentProjectId)
+    : [];
+  const total = projectTasks.length;
+  const doneCount = projectTasks.filter((t) => t.status === "done").length;
+  const runningCount = projectTasks.filter((t) => t.status === "in_progress").length;
+  const pct = total > 0 ? Math.round((doneCount / total) * 100) : 0;
+  const allDone = total > 0 && doneCount === total;
+
+  // When all tasks become done, show checkmark briefly then fade out
+  useEffect(() => {
+    if (allDone && !prevAllDoneRef.current) {
+      setAllDoneVisible(true);
+      setFadingOut(false);
+      const fadeTimer = setTimeout(() => setFadingOut(true), 2000);
+      const hideTimer = setTimeout(() => setAllDoneVisible(false), 2800);
+      return () => { clearTimeout(fadeTimer); clearTimeout(hideTimer); };
+    }
+    if (!allDone) {
+      setAllDoneVisible(true);
+      setFadingOut(false);
+    }
+    prevAllDoneRef.current = allDone;
+  }, [allDone]);
+
+  // Don't render when kickoff is busy (KickoffIndicator takes priority)
+  if (kickoffBusy) return null;
+  // No project or no tasks
+  if (!currentProjectId || total === 0) return null;
+  // All done and fade finished
+  if (allDone && !allDoneVisible) return null;
+
+  // All done state: checkmark
+  if (allDone) {
+    return (
+      <div style={{
+        display: "flex", alignItems: "center", gap: 6,
+        padding: "3px 14px",
+        background: "rgba(34,197,94,0.08)",
+        border: "1px solid rgba(34,197,94,0.18)",
+        borderRadius: 8,
+        opacity: fadingOut ? 0 : 1,
+        transition: "opacity 0.8s ease-out",
+      }}>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--th-success, #22c55e)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="20 6 9 17 4 12" />
+        </svg>
+        <span style={{
+          fontFamily: mono, fontSize: 11, fontWeight: 600,
+          color: "var(--th-success, #22c55e)", whiteSpace: "nowrap",
+        }}>
+          {doneCount}/{total} done
+        </span>
+      </div>
+    );
+  }
+
+  // Normal progress state
+  return (
+    <div style={{
+      display: "flex", alignItems: "center", gap: 8,
+      padding: "3px 14px",
+      background: "var(--th-hover-overlay-subtle, rgba(255,255,255,0.03))",
+      border: "1px solid var(--th-border)",
+      borderRadius: 8,
+    }}>
+      {/* Running dot + count */}
+      {runningCount > 0 && (
+        <span style={{
+          fontFamily: mono, fontSize: 11, fontWeight: 600,
+          color: "var(--th-success, #22c55e)", whiteSpace: "nowrap",
+        }}>
+          <span className="menubar-pulse" style={{ letterSpacing: 1 }}>
+            {"\u25CF"}
+          </span>
+          {" "}{runningCount} running
+        </span>
+      )}
+      {runningCount > 0 && (
+        <span style={{ color: "var(--th-text-muted)", fontSize: 10 }}>
+          {"\u00B7"}
+        </span>
+      )}
+      {/* Done fraction */}
+      <span style={{
+        fontFamily: mono, fontSize: 11, fontWeight: 500,
+        color: "var(--th-text-secondary)", whiteSpace: "nowrap",
+      }}>
+        {doneCount}/{total} done
+      </span>
+      {/* Progress bar */}
+      <div style={{
+        width: 60, height: 3,
+        background: "var(--th-border, rgba(255,255,255,0.1))",
+        borderRadius: 2,
+        overflow: "hidden",
+        flexShrink: 0,
+      }}>
+        <div style={{
+          width: `${pct}%`,
+          height: "100%",
+          background: "var(--th-accent)",
+          borderRadius: 2,
+          transition: "width 0.3s ease",
+        }} />
+      </div>
+      {/* Percentage */}
+      <span style={{
+        fontFamily: mono, fontSize: 10, fontWeight: 600,
+        color: "var(--th-text-muted)", whiteSpace: "nowrap",
+        minWidth: 24, textAlign: "right",
+      }}>
+        {pct}%
+      </span>
+    </div>
+  );
+}
 
 interface MenuBarProps {
   projects: Project[];
@@ -177,17 +331,25 @@ export default function MenuBar({
           style={{
             background: appMenuOpen ? "var(--th-hover-overlay)" : "none",
             border: "none",
-            color: "var(--th-accent)",
+            color: "var(--th-text-primary)",
             fontFamily: mono,
             fontSize: 13,
             fontWeight: 700,
             cursor: "pointer",
             padding: "2px 8px",
             borderRadius: 6,
-            letterSpacing: 1,
+            letterSpacing: 0.5,
+            display: "flex",
+            alignItems: "center",
+            gap: 7,
           }}
         >
-          AgentDesk
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="22" height="22" rx="5" fill="#3B82F6" />
+            <rect x="0.5" y="0.5" width="21" height="21" rx="4.5" stroke="rgba(255,255,255,0.15)" />
+            <text x="11" y="15.5" textAnchor="middle" fontFamily="system-ui, -apple-system, sans-serif" fontSize="13" fontWeight="700" fill="white">A</text>
+          </svg>
+          <span>AgentDesk</span>
         </button>
 
         {appMenuOpen && (
@@ -209,7 +371,7 @@ export default function MenuBar({
           >
             {/* About */}
             <div style={{ padding: "7px 14px 4px", fontFamily: mono, fontSize: 11, color: "var(--th-text-muted)" }}>
-              AgentDesk v0.9
+              AgentDesk v1.0
             </div>
             <div style={menuSepStyle} />
 
@@ -313,18 +475,12 @@ export default function MenuBar({
         />
       </div>
 
+      {/* 킥오프 진행 중 인디케이터 — 메뉴바 중앙 */}
+      <KickoffIndicator />
+      <ProjectProgressIndicator />
+
       <div style={{ flex: 1 }} />
 
-      {/* 에이전트 활동 펄스 */}
-      {runningAgentCount > 0 && (
-        <span
-          className="menubar-pulse"
-          style={{ fontSize: 10, color: "var(--th-success, #22c55e)", letterSpacing: 1 }}
-          title={`${runningAgentCount} agent(s) running`}
-        >
-          ● {runningAgentCount}
-        </span>
-      )}
 
 
       {/* 검색 트리거 */}

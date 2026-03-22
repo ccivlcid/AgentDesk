@@ -4,6 +4,7 @@ import { appendTaskExecutionMetaUpdate, recordTaskExecutionEvent } from "../../c
 import { autoSaveTaskReport, autoCheckProjectDeliverables } from "../run-complete-handler/auto-completions.ts";
 import { recordArtifactsFromDirectoryScan, recordMergedArtifacts } from "./review-artifact-recorders.ts";
 import { eventBus } from "../../../../lib/event-bus.ts";
+import { shipAutomation } from "./ship-automation.ts";
 import type { CreateReviewFinalizeToolsDeps } from "./types.ts";
 import type { FinishReviewFn } from "./reconcile-delegated-subtasks.ts";
 
@@ -14,6 +15,7 @@ type CurrentTaskRow = {
   project_id: string | null;
   workflow_pack_key: string | null;
   project_path: string | null;
+  task_type?: string;
   description?: unknown;
   assigned_agent_id?: unknown;
   started_at?: unknown;
@@ -208,6 +210,21 @@ export function createFinalizeApprovedReview(params: {
       title: taskTitle,
       task_id: taskId,
     });
+
+    // ── Ship automation: version bump + CHANGELOG entry ──
+    if (currentTask.project_id) {
+      shipAutomation({
+        db,
+        projectId: currentTask.project_id,
+        taskId,
+        taskTitle,
+        taskType: (currentTask as { task_type?: string }).task_type,
+        projectPath: currentTask.project_path,
+        nowMs: t,
+        appendTaskLog,
+        broadcast,
+      });
+    }
 
     trySendTaskDeliverablesToMessenger({
       db,

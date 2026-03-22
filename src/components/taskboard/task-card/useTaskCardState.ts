@@ -118,6 +118,7 @@ export function useTaskCardState(props: TaskCardProps) {
   const typeBadge = getTaskTypeBadge(task.task_type, t);
   const executionBadge = task.execution_state ? EXECUTION_STATE_BADGES[task.execution_state] : null;
 
+  const runtimeStatus = useUiStore((s) => s.runtimeStatuses.get(task.id));
   const isInProgress = task.status === "in_progress";
   const canRun = task.status === "planned" || task.status === "inbox";
   const canStop = isInProgress;
@@ -178,6 +179,7 @@ export function useTaskCardState(props: TaskCardProps) {
     department,
     typeBadge,
     executionBadge,
+    runtimeStatus,
     isInProgress,
     canRun,
     canStop,

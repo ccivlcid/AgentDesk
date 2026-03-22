@@ -53,7 +53,7 @@ export function getChapters(t: I18nT): Chapter[] {
         {
           heading: t({ ko: "데스크톱 아이콘", en: "Desktop Icons", ja: "アイコン", zh: "桌面图标" }),
           features: [
-            { icon: "👤", label: t({ ko: "에이전트", en: "Agents", ja: "エージェント", zh: "代理" }), desc: t({ ko: "에이전트·부서 관리", en: "Manage agents & departments", ja: "エージェント管理", zh: "管理代理和部门" }) },
+            { icon: "👤", label: t({ ko: "에이전트", en: "Agents", ja: "エージェント", zh: "代理" }), desc: t({ ko: "에이전트·전문 분야 관리", en: "Manage agents & specialties", ja: "エージェント管理", zh: "管理代理和专业领域" }) },
             { icon: "📁", label: t({ ko: "프로젝트 생성", en: "New Project", ja: "新規プロジェクト", zh: "新建项目" }), desc: t({ ko: "프로젝트 마법사", en: "Project wizard", ja: "プロジェクトウィザード", zh: "项目向导" }) },
             { icon: "▶", label: t({ ko: "태스크 실행", en: "Run Task", ja: "タスク実行", zh: "运行任务" }), desc: t({ ko: "즉시 태스크 생성", en: "Create task instantly", ja: "即時タスク作成", zh: "立即创建任务" }) },
             { icon: "⚡", label: t({ ko: "워크플로", en: "Workflow", ja: "ワークフロー", zh: "工作流" }), desc: t({ ko: "파이프라인 빌더", en: "Pipeline builder", ja: "パイプライン編集", zh: "流水线构建" }) },
@@ -101,10 +101,10 @@ export function getChapters(t: I18nT): Chapter[] {
         {
           heading: t({ ko: "에이전트 만들기", en: "Creating an Agent", ja: "エージェントの作成", zh: "创建代理" }),
           body: t({
-            ko: "1. 바탕화면 👤 아이콘 클릭 → Agent Manager 창 열림\n2. 'Hire Agent' 버튼 클릭\n3. 이름·역할(Role)·AI 모델 설정\n4. 부서(Department)에 배치\n\n에이전트별로 시스템 프롬프트, 사용 가능한 Skills, Memory 설정이 가능합니다.",
-            en: "1. Click the 👤 icon on the desktop → opens Agent Manager\n2. Click 'Hire Agent'\n3. Set name, role, and AI model\n4. Assign to a department\n\nEach agent supports custom system prompt, Skills, and Memory configuration.",
-            ja: "1. 👤アイコンをクリック\n2. 「Hire Agent」をクリック\n3. 名前・役割・モデルを設定\n4. 部署に配置",
-            zh: "1. 点击👤图标 → 打开代理管理器\n2. 点击「招聘代理」\n3. 设置名称、角色和模型\n4. 分配到部门",
+            ko: "1. 바탕화면 👤 아이콘 클릭 → Agent Manager 창 열림\n2. 'Hire Agent' 버튼 클릭\n3. 이름·역할(Role)·AI 모델 설정\n4. 전문 분야(Specialty)에 배치\n\n에이전트별로 시스템 프롬프트, 사용 가능한 Skills, Memory 설정이 가능합니다.",
+            en: "1. Click the 👤 icon on the desktop → opens Agent Manager\n2. Click 'Hire Agent'\n3. Set name, role, and AI model\n4. Assign to a specialty\n\nEach agent supports custom system prompt, Skills, and Memory configuration.",
+            ja: "1. 👤アイコンをクリック\n2. 「Hire Agent」をクリック\n3. 名前・役割・モデルを設定\n4. 専門分野に配置",
+            zh: "1. 点击👤图标 → 打开代理管理器\n2. 点击「招聘代理」\n3. 设置名称、角色和模型\n4. 分配到专业领域",
           }),
         },
         {
@@ -323,7 +323,7 @@ export function getChapters(t: I18nT): Chapter[] {
         {
           heading: t({ ko: "사용 가능한 위젯", en: "Available Widgets", ja: "利用可能なウィジェット", zh: "可用小组件" }),
           features: [
-            { icon: "🤖", label: t({ ko: "Agents", en: "Agents", ja: "Agents", zh: "代理" }), desc: t({ ko: "에이전트 실시간 상태·부서 현황", en: "Live agent status & departments", ja: "エージェントのリアルタイム状態", zh: "实时代理状态" }) },
+            { icon: "🤖", label: t({ ko: "Agents", en: "Agents", ja: "Agents", zh: "代理" }), desc: t({ ko: "에이전트 실시간 상태·전문 분야 현황", en: "Live agent status & specialties", ja: "エージェントのリアルタイム状態", zh: "实时代理状态" }) },
             { icon: "📋", label: t({ ko: "Tasks", en: "Tasks", ja: "Tasks", zh: "任务" }), desc: t({ ko: "진행 중인 태스크 목록", en: "Active task list", ja: "進行中のタスク一覧", zh: "活动任务列表" }) },
             { icon: "🔔", label: t({ ko: "Alerts", en: "Alerts", ja: "Alerts", zh: "警报" }), desc: t({ ko: "이상 감지 알림 및 시스템 경고", en: "Anomaly alerts & system warnings", ja: "異常検知アラート", zh: "异常警报和系统警告" }) },
             { icon: "💰", label: t({ ko: "CLI Cost", en: "CLI Cost", ja: "CLI Cost", zh: "CLI成本" }), desc: t({ ko: "오늘의 AI API 사용 비용 요약", en: "Today's AI API usage cost", ja: "今日のAIコスト概要", zh: "今日AI API使用费用" }) },

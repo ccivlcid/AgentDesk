@@ -144,7 +144,7 @@ textarea,
 .text-slate-500 { color: var(--th-text-muted) !important; }
 .text-slate-600 { color: var(--th-text-muted) !important; }
 
-/* ─── Primary CTA: blue → amber (FM2024 accent color) ──────────────────
+/* ─── Primary CTA: blue → amber (accent color) ──────────────────
    bg-blue-600/500/700 used in save/submit/confirm buttons → amber.
    Hover variants follow. text-white on amber → text-black for contrast.
    NOTE: blue is intentionally preserved for informational badges/links. */

@@ -90,14 +90,41 @@ export const SKIP_DIRS = new Set([
   "logs",
 ]);
 
+/** Dirs to skip only when scanning AgentDesk's own cwd — not external project paths */
+export const CWD_ONLY_SKIP_DIRS = new Set([
+  "public",
+  "src",
+  "server",
+  "electron",
+  "scripts",
+  "sprites",
+  "Sample_Img",
+  "Sample_Slides",
+  "templates",
+  "slides",
+  "logs",
+]);
+
 export function createArtifactPathHelpers(db: PrepareDb) {
   function resolveTaskProjectPath(taskId: string): string | null {
+    // 1) tasks.project_path 직접 확인
     const row = db
-      .prepare("SELECT project_path FROM tasks WHERE id = ?")
-      .get(taskId) as { project_path: string | null } | undefined;
+      .prepare("SELECT project_path, project_id FROM tasks WHERE id = ?")
+      .get(taskId) as { project_path: string | null; project_id: string | null } | undefined;
     const pp = row?.project_path?.trim() || null;
     if (pp) return pp;
 
+    // 2) tasks.project_id → projects.project_path 참조
+    const projectId = row?.project_id?.trim() || null;
+    if (projectId) {
+      const projRow = db
+        .prepare("SELECT project_path FROM projects WHERE id = ?")
+        .get(projectId) as { project_path: string | null } | undefined;
+      const projPath = projRow?.project_path?.trim() || null;
+      if (projPath) return projPath;
+    }
+
+    // 3) worktree fallback
     const worktreesRoot = path.join(process.cwd(), ".agentdesk-worktrees");
     if (fs.existsSync(worktreesRoot)) {
       const prefix = taskId.substring(0, 8);
@@ -120,6 +147,7 @@ export function createArtifactPathHelpers(db: PrepareDb) {
     maxDepth: number,
     results: Map<string, { abs: string; rel: string }>,
     depth = 0,
+    externalProject = false,
   ): void {
     if (depth > maxDepth) return;
     let entries: fs.Dirent[];
@@ -132,8 +160,8 @@ export function createArtifactPathHelpers(db: PrepareDb) {
       if (entry.name.startsWith(".") && depth === 0 && entry.isDirectory()) continue;
       const fullPath = path.join(dirPath, entry.name);
       if (entry.isDirectory()) {
-        if (SKIP_DIRS.has(entry.name)) continue;
-        scanDirForDeliverables(fullPath, projectRoot, maxDepth, results, depth + 1);
+        if (SKIP_DIRS.has(entry.name) && !(externalProject && CWD_ONLY_SKIP_DIRS.has(entry.name))) continue;
+        scanDirForDeliverables(fullPath, projectRoot, maxDepth, results, depth + 1, externalProject);
       } else if (entry.isFile()) {
         const ext = path.extname(entry.name).toLowerCase();
         if (!DELIVERABLE_EXTS.has(ext)) continue;

@@ -10,10 +10,11 @@
 import type { DatabaseSync } from "node:sqlite";
 import { eventBus, type TaskStatusEvent } from "../../../lib/event-bus.ts";
 import { loadPrompt } from "../../../lib/prompt-loader.ts";
-import { analyzeTaskFailure } from "./run-complete-handler/error-analysis.ts";
+import { analyzeTaskFailure, matchErrorPattern, sanitizeErrorMessage } from "./run-complete-handler/error-analysis.ts";
 import { runAutoLearning, generateProjectRetrospective, updateAgentFitness } from "./auto-learning.ts";
 import { findApiProvider, resolveModel } from "../../routes/ops/custom-features-ai/provider-helpers.ts";
 import { callProvider } from "../../routes/ops/custom-features-ai/llm-providers.ts";
+import { readYoloModeEnabled } from "../../routes/ops/messages/decision-inbox/yolo-mode.ts";
 import logger from "../../../lib/logger.ts";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- wide deps from orchestration context
@@ -109,6 +110,18 @@ export function startPmOrchestrator(deps: PmOrchestratorDeps): void {
       // 하위 협업 태스크는 PM 리뷰 스킵
       if (task.source_task_id) return;
 
+      // YOLO mode: 자율모드가 활성화되면 LLM 리뷰 없이 즉시 승인
+      if (readYoloModeEnabled(db)) {
+        logger.info({ taskId }, "[pm-orchestrator] YOLO mode enabled — auto-approving task review");
+        appendTaskLog(taskId, "pm_oversight", "YOLO mode: auto-approved (skipped PM LLM review)");
+        finishReview(taskId, task.title, { bypassProjectDecisionGate: true, trigger: "yolo_auto_approve" });
+        broadcast("pm_activity", {
+          projectId, taskId, action: "approved",
+          agentName: "YOLO Autopilot", summary: `YOLO auto-approved '${task.title}'`, timestamp: nowMs(),
+        });
+        return;
+      }
+
       const pm = findProjectPm(db, projectId);
       if (!pm) {
         // PM 없으면 자동 승인 fallback
@@ -120,6 +133,15 @@ export function startPmOrchestrator(deps: PmOrchestratorDeps): void {
       let resultTail = event.resultTail ?? "";
       if (!resultTail && task.result) {
         resultTail = task.result.length > 2000 ? "..." + task.result.slice(-2000) : task.result;
+      }
+
+      // Scope drift pre-check: count distinct file paths mentioned in the result
+      const fullResult = task.result ?? resultTail;
+      const filePathMatches = fullResult.match(/(?:^|\s)[\w./-]+\.\w{1,10}(?=\s|$|[,;:)])/gm);
+      const uniqueFiles = new Set(filePathMatches ?? []);
+      const fileTouchCount = uniqueFiles.size;
+      if (fileTouchCount >= 10) {
+        logger.warn({ taskId, fileTouchCount }, "[pm-orchestrator] high file-touch count detected in task result");
       }
 
       const prompt = loadPrompt("pm/review-task", {
@@ -153,20 +175,49 @@ export function startPmOrchestrator(deps: PmOrchestratorDeps): void {
       const text = response.text ?? "";
       const isApprove = /^APPROVE[:\s]/im.test(text) || /승인|합격|통과|lgtm|approve/i.test(text);
 
+      // Parse structured checklist signals from PM response
+      const hasScopeDrift = /scope\s*(match|drift).*FAIL/i.test(text) || /scope drift/i.test(text);
+      const hasErrors = /obvious\s*errors.*FAIL/i.test(text) || /clear\s*error/i.test(text);
+      const isIncomplete = /completeness.*FAIL/i.test(text) || /partial|incomplete|stub/i.test(text);
+      const excessiveScope = /minimal\s*scope.*FAIL/i.test(text) || /excessive\s*scope/i.test(text);
+      const hasEvidence = /evidence:/i.test(text);
+
+      const reviewFlags = {
+        scopeDrift: hasScopeDrift,
+        errorsDetected: hasErrors,
+        incomplete: isIncomplete,
+        excessiveScope: excessiveScope || fileTouchCount >= 10,
+        evidenceCited: hasEvidence,
+        fileTouchCount,
+      };
+
+      logger.info({ taskId, decision: isApprove ? "approve" : "revise", reviewFlags }, "[pm-orchestrator] structured review completed");
+
       if (isApprove) {
-        appendTaskLog(taskId, "pm_oversight", `PM approved: ${text.slice(0, 200)}`);
+        const flagSummary = hasScopeDrift || excessiveScope
+          ? ` [WARN: ${hasScopeDrift ? "scope-drift" : ""}${excessiveScope ? " excessive-scope" : ""}]`
+          : "";
+        appendTaskLog(taskId, "pm_oversight", `PM approved${flagSummary}: ${text.slice(0, 200)}`);
         finishReview(taskId, task.title, { bypassProjectDecisionGate: true, trigger: "pm_agent" });
         sendAgentMessage({ id: pm.id as string }, text, "report", "all", null, taskId);
         broadcast("pm_activity", {
           projectId, taskId, action: "approved",
-          agentName: pm.name, summary: `PM approved '${task.title}'`, timestamp: nowMs(),
+          agentName: pm.name, summary: `PM approved '${task.title}'${flagSummary}`, timestamp: nowMs(),
+          reviewFlags,
         });
       } else {
         // 수정 요청: 상태 재확인 후 변경
         const recheck = db.prepare("SELECT status FROM tasks WHERE id = ?").get(taskId) as { status: string } | undefined;
         if (recheck?.status !== "review") return;
 
-        appendTaskLog(taskId, "pm_oversight", `PM requested revision: ${text.slice(0, 200)}`);
+        const failedChecks: string[] = [];
+        if (hasScopeDrift) failedChecks.push("scope-drift");
+        if (hasErrors) failedChecks.push("errors");
+        if (isIncomplete) failedChecks.push("incomplete");
+        if (excessiveScope) failedChecks.push("excessive-scope");
+        const checksLabel = failedChecks.length > 0 ? ` [FAILED: ${failedChecks.join(", ")}]` : "";
+
+        appendTaskLog(taskId, "pm_oversight", `PM requested revision${checksLabel}: ${text.slice(0, 200)}`);
         db.prepare("UPDATE tasks SET status = 'planned', updated_at = ? WHERE id = ? AND status = 'review'").run(nowMs(), taskId);
         broadcast("task_update", db.prepare("SELECT * FROM tasks WHERE id = ?").get(taskId));
 
@@ -180,11 +231,10 @@ export function startPmOrchestrator(deps: PmOrchestratorDeps): void {
         }
         broadcast("pm_activity", {
           projectId, taskId, action: "revision_requested",
-          agentName: pm.name, summary: `PM requested revision for '${task.title}'`, timestamp: nowMs(),
+          agentName: pm.name, summary: `PM requested revision for '${task.title}'${checksLabel}`, timestamp: nowMs(),
+          reviewFlags,
         });
       }
-
-      logger.info({ taskId, decision: isApprove ? "approve" : "revise" }, "[pm-orchestrator] review");
     } catch (err) {
       logger.error({ err, taskId }, "[pm-orchestrator] review failed, auto-approving as fallback");
       try {
@@ -198,7 +248,7 @@ export function startPmOrchestrator(deps: PmOrchestratorDeps): void {
     }
   }
 
-  // ── PM: 실패 태스크 처리 ──
+  // ── PM: 실패 태스크 처리 (3-strike escalation + pattern-based debugging) ──
   async function pmHandleFailure(event: TaskStatusEvent): Promise<void> {
     const { taskId, projectId } = event;
     if (!projectId) return;
@@ -212,6 +262,21 @@ export function startPmOrchestrator(deps: PmOrchestratorDeps): void {
       ).get(taskId) as { id: string; title: string; assigned_agent_id: string | null; retry_count: number; max_retries: number; last_error_summary: string | null; project_id: string | null; status: string } | undefined;
       if (!task) return;
 
+      // Sanitize the error summary before any further processing/logging
+      const rawError = task.last_error_summary ?? "Unknown error";
+      const sanitizedError = sanitizeErrorMessage(rawError);
+
+      // Pattern-based error classification — log detected pattern as pm_oversight
+      const patternMatch = matchErrorPattern(rawError);
+      if (patternMatch) {
+        appendTaskLog(taskId, "pm_oversight",
+          `Error pattern detected: [${patternMatch.category}] ${patternMatch.cause} — ${patternMatch.suggestion}`);
+        logger.info(
+          { taskId, category: patternMatch.category, cause: patternMatch.cause },
+          "[pm-orchestrator] error pattern matched",
+        );
+      }
+
       // 에러 분석 (best effort — API 키 있을 때만)
       void analyzeTaskFailure(taskId, task.title, event.exitCode ?? 1, {
         db, logsDir: deps.logsDir, findApiProvider, resolveModel, callProvider,
@@ -224,17 +289,47 @@ export function startPmOrchestrator(deps: PmOrchestratorDeps): void {
       const retryCount = task.retry_count ?? 0;
       const maxRetries = task.max_retries ?? 2;
 
+      // ── 3-strike rule: hard escalation after max retries ──
+      // After 3 failed attempts (retryCount >= 3, or >= maxRetries whichever is lower),
+      // do NOT auto-retry — mark as failed and escalate to user immediately.
+      const strikeLimit = Math.min(maxRetries, 3);
+      if (retryCount >= strikeLimit) {
+        const escalationMsg = `PM: max retries (${strikeLimit}) reached for '${task.title}' — escalating to user. Last error: ${sanitizedError.slice(0, 200)}`;
+        appendTaskLog(taskId, "pm_oversight", escalationMsg);
+        logger.warn({ taskId, retryCount, strikeLimit }, "[pm-orchestrator] 3-strike escalation — no more retries");
+
+        // Force status to 'failed' (not 'inbox' or 'planned')
+        db.prepare("UPDATE tasks SET status = 'failed', updated_at = ? WHERE id = ?")
+          .run(nowMs(), taskId);
+        broadcast("task_update", db.prepare("SELECT * FROM tasks WHERE id = ?").get(taskId));
+
+        insertNotification({
+          type: "agent_error",
+          title: `${task.title} — escalated (${strikeLimit} strikes)`,
+          body: sanitizedError.slice(0, 300),
+          task_id: taskId,
+          agent_id: task.assigned_agent_id,
+        });
+
+        broadcast("pm_activity", {
+          projectId, taskId, action: "escalated",
+          agentName: "PM Orchestrator",
+          summary: `3-strike escalation: '${task.title}' failed ${strikeLimit} times`,
+          timestamp: nowMs(),
+          errorCategory: patternMatch?.category ?? null,
+        });
+        return;
+      }
+
       const pm = findProjectPm(db, projectId);
       if (!pm) {
-        // PM 없으면 자동 재시도 fallback
-        if (retryCount < maxRetries) {
-          db.prepare("UPDATE tasks SET status = 'planned', retry_count = ?, updated_at = ? WHERE id = ?")
-            .run(retryCount + 1, nowMs(), taskId);
-          appendTaskLog(taskId, "pm_oversight", `Auto-retry ${retryCount + 1}/${maxRetries} (no PM)`);
-          broadcast("task_update", db.prepare("SELECT * FROM tasks WHERE id = ?").get(taskId));
-          if (task.assigned_agent_id) {
-            startTaskExecutionForAgent(taskId, task.assigned_agent_id);
-          }
+        // PM 없으면 자동 재시도 fallback (still respects strike limit above)
+        db.prepare("UPDATE tasks SET status = 'planned', retry_count = ?, updated_at = ? WHERE id = ?")
+          .run(retryCount + 1, nowMs(), taskId);
+        appendTaskLog(taskId, "pm_oversight", `Auto-retry ${retryCount + 1}/${strikeLimit} (no PM)`);
+        broadcast("task_update", db.prepare("SELECT * FROM tasks WHERE id = ?").get(taskId));
+        if (task.assigned_agent_id) {
+          startTaskExecutionForAgent(taskId, task.assigned_agent_id);
         }
         return;
       }
@@ -242,14 +337,15 @@ export function startPmOrchestrator(deps: PmOrchestratorDeps): void {
       const lang = getPreferredLanguage();
       const prompt = loadPrompt("pm/handle-failure", {
         taskTitle: task.title,
-        errorSummary: task.last_error_summary ?? "Unknown error",
+        errorSummary: sanitizedError,
         retryCount: String(retryCount),
-        maxRetries: String(maxRetries),
+        maxRetries: String(strikeLimit),
         lang,
+        errorCategory: patternMatch?.category ?? "unknown",
       });
 
       if (!prompt) {
-        if (retryCount < maxRetries && task.assigned_agent_id) {
+        if (task.assigned_agent_id) {
           db.prepare("UPDATE tasks SET status = 'planned', retry_count = ?, updated_at = ? WHERE id = ?")
             .run(retryCount + 1, nowMs(), taskId);
           startTaskExecutionForAgent(taskId, task.assigned_agent_id);
@@ -288,35 +384,24 @@ export function startPmOrchestrator(deps: PmOrchestratorDeps): void {
         insertNotification({
           type: "agent_error",
           title: `PM: ${task.title}`,
-          body: text.slice(0, 300),
+          body: sanitizeErrorMessage(text.slice(0, 300)),
           task_id: taskId,
           agent_id: pm.id as string,
         });
         sendAgentMessage({ id: pm.id as string }, text, "report", "all", null, taskId);
       } else {
-        // RETRY (default)
-        if (retryCount < maxRetries) {
-          appendTaskLog(taskId, "pm_oversight", `PM retry (${retryCount + 1}/${maxRetries}): ${text.slice(0, 200)}`);
-          db.prepare("UPDATE tasks SET status = 'planned', retry_count = ?, updated_at = ? WHERE id = ?")
-            .run(retryCount + 1, nowMs(), taskId);
-          broadcast("task_update", db.prepare("SELECT * FROM tasks WHERE id = ?").get(taskId));
-          if (task.assigned_agent_id) {
-            startTaskExecutionForAgent(taskId, task.assigned_agent_id);
-          }
-        } else {
-          appendTaskLog(taskId, "pm_oversight", `PM: max retries exceeded: ${text.slice(0, 200)}`);
-          insertNotification({
-            type: "agent_error",
-            title: `${task.title} — max retries`,
-            body: text.slice(0, 300),
-            task_id: taskId,
-            agent_id: pm.id as string,
-          });
+        // RETRY (default) — retryCount < strikeLimit already guaranteed by check above
+        appendTaskLog(taskId, "pm_oversight", `PM retry (${retryCount + 1}/${strikeLimit}): ${text.slice(0, 200)}`);
+        db.prepare("UPDATE tasks SET status = 'planned', retry_count = ?, updated_at = ? WHERE id = ?")
+          .run(retryCount + 1, nowMs(), taskId);
+        broadcast("task_update", db.prepare("SELECT * FROM tasks WHERE id = ?").get(taskId));
+        if (task.assigned_agent_id) {
+          startTaskExecutionForAgent(taskId, task.assigned_agent_id);
         }
         sendAgentMessage({ id: pm.id as string }, text, "report", "all", null, taskId);
       }
 
-      logger.info({ taskId, decision: text.slice(0, 50) }, "[pm-orchestrator] failure decision");
+      logger.info({ taskId, retryCount: retryCount + 1, strikeLimit, decision: text.slice(0, 50) }, "[pm-orchestrator] failure decision");
     } catch (err) {
       logger.error({ err, taskId }, "[pm-orchestrator] failure handler error");
     } finally {

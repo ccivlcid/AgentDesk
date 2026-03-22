@@ -58,23 +58,27 @@ export function registerPmActivityRoutes(app: Express, db: DatabaseSync): void {
       const taskLogs = db
         .prepare(
           `SELECT tl.rowid AS row_id, tl.task_id, tl.kind, tl.message, tl.created_at,
-                  t.title AS task_title, t.assigned_agent_id,
+                  COALESCE(t.title, '') AS task_title, t.assigned_agent_id,
                   COALESCE(a.name, '') AS agent_name
            FROM task_logs tl
-           JOIN tasks t ON t.id = tl.task_id
+           LEFT JOIN tasks t ON t.id = tl.task_id
            LEFT JOIN agents a ON a.id = t.assigned_agent_id
-           WHERE t.project_id = ?
+           WHERE (t.project_id = ? OR tl.project_id = ?)
              AND tl.kind IN ('system', 'pm_oversight')
              AND tl.created_at > ?
              AND (tl.message LIKE 'Status →%' OR tl.message LIKE 'PM %' OR tl.message LIKE 'RUN %'
                   OR tl.message LIKE 'Review 대기%' OR tl.message LIKE 'Decision inbox%'
+                  OR tl.message LIKE 'Task created%' OR tl.message LIKE 'Task assigned%'
+                  OR tl.message LIKE 'Task started%' OR tl.message LIKE 'Task failed%'
+                  OR tl.message LIKE 'Task done%' OR tl.message LIKE 'YOLO%'
+                  OR tl.message LIKE 'Execution timed out%'
                   OR tl.kind = 'pm_oversight')
            ORDER BY tl.created_at DESC
            LIMIT ?`,
         )
-        .all(projectId, since, limit) as unknown as Array<{
+        .all(projectId, projectId, since, limit) as unknown as Array<{
         row_id: number;
-        task_id: string;
+        task_id: string | null;
         kind: string;
         message: string;
         created_at: number;
@@ -111,11 +115,11 @@ export function registerPmActivityRoutes(app: Express, db: DatabaseSync): void {
              WHERE m.created_at > ?
                AND ((m.sender_id = ? AND m.sender_type = 'agent')
                     OR (m.receiver_id = ? AND m.receiver_type = 'agent'))
-               AND m.task_id IN (SELECT id FROM tasks WHERE project_id = ?)
+               AND (m.task_id IN (SELECT id FROM tasks WHERE project_id = ?) OR m.project_id = ?)
              ORDER BY m.created_at DESC
              LIMIT ?`,
           )
-          .all(since, pmRow.id, pmRow.id, projectId, limit) as unknown as Array<{
+          .all(since, pmRow.id, pmRow.id, projectId, projectId, limit) as unknown as Array<{
           id: string;
           content: string;
           message_type: string;
@@ -205,17 +209,18 @@ export function registerPmActivityRoutes(app: Express, db: DatabaseSync): void {
         });
       }
 
-      // 4. Meeting minutes
+      // 4. Meeting minutes (includes orphaned minutes where task was deleted but project_id preserved)
       const meetings = db
         .prepare(
           `SELECT mm.id, mm.title, mm.meeting_type, mm.status, mm.started_at, mm.completed_at
            FROM meeting_minutes mm
-           JOIN tasks t ON t.id = mm.task_id
-           WHERE t.project_id = ? AND mm.started_at > ?
+           LEFT JOIN tasks t ON t.id = mm.task_id
+           WHERE (t.project_id = ? OR mm.project_id = ?)
+             AND mm.started_at > ?
            ORDER BY mm.started_at DESC
            LIMIT ?`,
         )
-        .all(projectId, since, limit) as unknown as Array<{
+        .all(projectId, projectId, since, limit) as unknown as Array<{
         id: string;
         title: string;
         meeting_type: string;

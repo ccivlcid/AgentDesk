@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useI18n } from "../../i18n";
 import { useTaskStore } from "../../store/taskStore";
+import { useUiStore } from "../../store/uiStore";
 import type { Task } from "../../types";
 import TaskExecutionStateBadge from "./TaskExecutionStateBadge";
 
@@ -27,6 +28,7 @@ interface Props {
 export default function AgentDetailCurrentTask({ task, onOpenTerminal, isLight }: Props) {
   const { t } = useI18n();
   const { setTaskPanel } = useTaskStore();
+  const runtimeStatus = useUiStore((s) => task ? s.runtimeStatuses.get(task.id) : undefined);
   const [showInject, setShowInject] = useState(false);
   const [injectText, setInjectText] = useState("");
 
@@ -97,6 +99,16 @@ export default function AgentDetailCurrentTask({ task, onOpenTerminal, isLight }
                   {task.started_at && (
                     <span style={{ fontFamily: mono, fontSize: 9, color: taskTimeColor }}>
                       {t({ ko: "시작", en: "started", ja: "開始", zh: "开始" })} {relativeTime(task.started_at, t)}
+                    </span>
+                  )}
+                  {runtimeStatus?.inputTokens != null && (
+                    <span style={{
+                      fontFamily: mono, fontSize: 9, color: "#5ac8fa",
+                      background: "rgba(90,200,250,0.08)", border: "1px solid rgba(90,200,250,0.2)",
+                      borderRadius: 3, padding: "1px 5px",
+                    }}>
+                      {runtimeStatus.inputTokens.toLocaleString()}in / {(runtimeStatus.outputTokens ?? 0).toLocaleString()}out
+                      {runtimeStatus.toolCalls ? ` / ${runtimeStatus.toolCalls} tools` : ""}
                     </span>
                   )}
                 </div>

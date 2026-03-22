@@ -1,5 +1,5 @@
 /**
- * 데스크톱 빈 영역 롱프레스 → Jiggle 모드 진입 및 클릭 시 메뉴 정리·해제.
+ * 데스크톱 아이콘 롱프레스 → Jiggle 모드 진입 및 빈 영역 클릭 시 메뉴 정리·해제.
  */
 
 import type React from "react";
@@ -26,7 +26,12 @@ export function useDesktopJiggle(params: UseDesktopJiggleParams) {
   const onDesktopMouseDown = useCallback(
     (e: React.MouseEvent) => {
       if (e.button !== 0) return;
-      if ((e.target as HTMLElement).closest("[data-no-ctx]")) return;
+      const target = e.target as HTMLElement;
+      // Only trigger jiggle when long-pressing on a desktop icon (data-no-ctx marker)
+      const iconEl = target.closest("[data-no-ctx]");
+      if (!iconEl) return;
+      // Skip buttons/inputs inside the icon
+      if (target.closest("input, textarea")) return;
       longPressMoved.current = false;
       longPressStartPos.current = { x: e.clientX, y: e.clientY };
       if (longPressTimer.current) clearTimeout(longPressTimer.current);

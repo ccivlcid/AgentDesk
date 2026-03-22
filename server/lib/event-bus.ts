@@ -19,33 +19,11 @@ export interface TaskStatusEvent {
   resultTail?: string | null;
 }
 
-export interface DecisionItemEvent {
-  type: "decision_item_created";
-  decisionId: string;
-  kind: string;
-  projectId: string | null;
-  summary?: string;
-}
-
-export interface ProcessExitEvent {
-  type: "process_exit";
-  taskId: string;
-  exitCode: number;
-}
-
-export type AgentDeskEvent = TaskStatusEvent | DecisionItemEvent | ProcessExitEvent;
+export type AgentDeskEvent = TaskStatusEvent;
 
 class AgentDeskEventBus extends EventEmitter {
   emitTaskStatus(event: TaskStatusEvent): void {
     this.emit("task_status_changed", event);
-  }
-
-  emitDecisionItem(event: DecisionItemEvent): void {
-    this.emit("decision_item_created", event);
-  }
-
-  emitProcessExit(event: ProcessExitEvent): void {
-    this.emit("process_exit", event);
   }
 }
 

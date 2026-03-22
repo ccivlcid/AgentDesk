@@ -204,11 +204,11 @@ export default function CreateTaskModalView({
 
           <Divider />
 
-          {/* ── 부서 ── */}
+          {/* ── 전문 분야 ── */}
           {departments.length > 0 && (
             <>
               <Section>
-                <Label>{t({ ko: "부서", en: "Department", ja: "部門", zh: "部门" })}</Label>
+                <Label>{t({ ko: "전문 분야", en: "Specialty", ja: "専門分野", zh: "专业领域" })}</Label>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
                   <PillBtn active={!departmentId} onClick={() => onDepartmentChange("")}>
                     {t({ ko: "전체", en: "All", ja: "全部", zh: "全部" })}

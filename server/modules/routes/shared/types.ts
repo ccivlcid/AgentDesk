@@ -32,7 +32,8 @@ export type MeetingReviewDecision = "reviewing" | "approved" | "hold";
 
 export interface MeetingMinutesRow {
   id: string;
-  task_id: string;
+  task_id: string | null;
+  project_id?: string | null;
   meeting_type: string;
   round: number;
   status: string;

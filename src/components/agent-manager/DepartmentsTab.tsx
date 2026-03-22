@@ -176,7 +176,7 @@ export default function DepartmentsTab({
 
       {deptOrder.length === 0 && (
         <div className="text-center py-16 text-sm" style={{ color: "var(--th-text-muted)" }}>
-          {tr("등록된 부서가 없습니다.", "No departments found.")}
+          {tr("등록된 전문 분야가 없습니다.", "No specialties found.")}
         </div>
       )}
     </div>

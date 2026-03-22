@@ -179,8 +179,8 @@ export function registerPathRoutes(deps: ProjectRoutesDeps): void {
   });
 
   app.get("/api/projects/path-tree", (req, res) => {
-    const MAX_DEPTH = 3;
-    const MAX_NODES = 200;
+    const MAX_DEPTH = 6;
+    const MAX_NODES = 800;
     const SKIP_DIRS = new Set([
       "node_modules",
       ".git",

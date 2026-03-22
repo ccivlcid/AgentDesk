@@ -90,9 +90,33 @@ All inline SVG icons must follow this standard:
 
 ## 1. Project Summary
 
-**AgentDesk** = A developer OS for running, monitoring, and controlling multiple AI agents simultaneously.
+**AgentDesk** = AI Agent OS — running, monitoring, and controlling multiple AI agents simultaneously.
 macOS desktop metaphor — menu bar + desktop icons + Dock + app windows.
 Electron + React(Vite) frontend + Express/tsx backend + SQLite(better-sqlite3).
+
+### 1-1. Terminology Mapping (DB ↔ UI)
+
+> **IMPORTANT:** The DB schema uses legacy names that differ from what users see in the UI.
+> When modifying code, always use the **DB name** in code but the **UI name** in user-facing text.
+
+| DB / Code Name | UI Display Name (ko) | UI Display Name (en) | Notes |
+|---------------|---------------------|---------------------|-------|
+| `departments` table | 전문 분야 | Specialty Area | NOT "부서". Agents are grouped by expertise, not org structure |
+| `department_id` column | 전문 분야 | Specialty Area | Same — label only, schema unchanged |
+| `agents.role` = `team_leader` | PM | PM | Project Manager — orchestrates, doesn't code |
+| `agents.role` = `senior` | 시니어 | Senior | Independent execution |
+| `agents.role` = `junior` | 주니어 | Junior | Guided execution |
+| `agents.role` = `intern` | *(removed)* | *(removed)* | No longer used in UI |
+
+**Why not rename the DB?** The `departments` table is deeply referenced across 50+ files. Renaming would require a massive migration with high risk and zero user benefit. Instead, we keep the DB name and map to the correct UI label everywhere via `t()`.
+
+### 1-2. Architecture Philosophy
+
+- **PM Orchestrator** — PM agent plans, assigns, and reviews. Never executes tasks directly.
+- **Kickoff flow:** Kickoff → Meeting → Task Creation (LLM) → PM assigns agents → Execution
+- **Evidence-based execution** — Agents must cite file/line, no speculation. 3-strike escalation on failure.
+- **Review checklist** — PM reviews with structured 4-point checklist (scope match, errors, minimal scope, completeness).
+- **Ship automation** — Task done → version bump → changelog entry → file sync.
 
 ---
 

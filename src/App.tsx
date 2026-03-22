@@ -7,6 +7,7 @@ import AppLoadingScreen from "./app/AppLoadingScreen";
 import Desktop from "./components/desktop/Desktop";
 import AppOverlays from "./app/AppOverlays";
 import ProjectCreateModal from "./components/project-create-modal/ProjectCreateModal";
+import AppWindow from "./components/windows/AppWindow";
 import { kickoffProject } from "./api/project-kickoff";
 import { isApiRequestError } from "./api/core";
 import { useAppActions } from "./app/useAppActions";
@@ -68,6 +69,31 @@ export default function App() {
   } = useUiStore();
   const { t } = useI18n();
 
+  // ── Onboarding: check API provider on first load ──────────────────────
+  const onboardingCheckedRef = useRef(false);
+  useEffect(() => {
+    if (loading || onboardingCheckedRef.current) return;
+    onboardingCheckedRef.current = true;
+    import("./api/providers-reports-github").then(({ getApiProviders }) =>
+      getApiProviders().then((providers) => {
+        if (providers.length === 0) {
+          addToast({
+            type: "info",
+            title: t({ ko: "API 프로바이더를 설정하세요", en: "Set up an API provider", ja: "APIプロバイダを設定してください", zh: "请设置API提供商" }),
+            body: t({
+              ko: "Settings → API 탭에서 OpenAI, Anthropic 등 API 키를 등록하거나, Local LLM을 연결하세요.",
+              en: "Go to Settings → API tab to add an OpenAI/Anthropic key, or connect a Local LLM.",
+              ja: "Settings → APIタブでAPIキーを登録するか、ローカルLLMを接続してください。",
+              zh: "前往设置→API标签添加API密钥，或连接本地LLM。",
+            }),
+            duration: 12000,
+            onClick: () => openWindow("settings"),
+          });
+        }
+      }).catch(() => { /* ignore */ }),
+    );
+  }, [loading, addToast, t, openWindow]);
+
   // ── Derived values ───────────────────────────────────────────────────────
   const currentProject = projects.find((p) => p.id === currentProjectId) ?? null;
 
@@ -113,9 +139,17 @@ export default function App() {
   const codexThreadBindingTsRef = useRef<Map<string, number>>(new Map());
   // subAgent 스트림 마지막 청크 (중복 tail 제거용)
   const subAgentStreamTailRef = useRef<Map<string, string>>(new Map());
-  // 채팅 오버레이 열림 여부 + 현재 채팅 대상 (알림 뱃지 제어에 사용)
-  const activeChatRef = useRef({ showChat, agentId: chatAgent?.id ?? null });
-  activeChatRef.current = { showChat, agentId: chatAgent?.id ?? null };
+  // 채팅 오버레이/윈도우 열림 여부 + 현재 채팅 대상 (알림 뱃지 제어에 사용)
+  const chatWindowOpen = useUiStore((s) => s.openWindows.has("chat"));
+  const activeChatRef = useRef({ showChat: showChat || chatWindowOpen, agentId: chatAgent?.id ?? null });
+  activeChatRef.current = { showChat: showChat || chatWindowOpen, agentId: chatAgent?.id ?? null };
+
+  // 채팅 윈도우가 열리면 모든 unread 배지 제거
+  useEffect(() => {
+    if (chatWindowOpen) {
+      setUnreadAgentIds((prev) => (prev.size === 0 ? prev : new Set()));
+    }
+  }, [chatWindowOpen, setUnreadAgentIds]);
 
   // ── Hooks ────────────────────────────────────────────────────────────────
   const { connected, on } = useWebSocket();
@@ -192,7 +226,7 @@ export default function App() {
   } | null>(null);
   const [clarificationAnswer, setClarificationAnswer] = useState("");
   const [clarificationBusy, setClarificationBusy] = useState(false);
-  const [kickoffBusy, setKickoffBusy] = useState(false);
+  const { kickoffBusy, setKickoffBusy } = useUiStore();
 
   // clarification_request WS 이벤트 처리
   useEffect(() => {
@@ -328,35 +362,18 @@ export default function App() {
           onClose={() => setShowProjectCreate(false)}
         />
       )}
-      {/* 에이전트 킥오프 중 로딩 인디케이터 */}
-      {kickoffBusy && (
-        <div style={{
-          position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)",
-          background: "var(--th-bg-surface)", border: "1px solid var(--th-border)",
-          borderRadius: 10, padding: "10px 18px", zIndex: 9999,
-          fontFamily: "var(--th-font-mono)", fontSize: 11, color: "var(--th-text-secondary)",
-          display: "flex", alignItems: "center", gap: 8, boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
-        }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: "spin 1s linear infinite", flexShrink: 0 }}><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
-          {t({ ko: "에이전트가 태스크를 계획하는 중...", en: "Agent is planning tasks...", ja: "エージェントがタスクを計画中...", zh: "代理正在规划任务..." })}
-        </div>
-      )}
-      {/* 에이전트 clarification 요청 모달 */}
+      {/* 에이전트 clarification 요청 — 일반 AppWindow */}
       {clarificationRequest && (
-        <div style={{
-          position: "fixed", inset: 0, zIndex: 10000, display: "flex",
-          alignItems: "center", justifyContent: "center",
-          background: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)",
-        }}>
-          <div style={{
-            background: "var(--th-bg-surface)", border: "1px solid var(--th-border)",
-            borderRadius: 12, padding: 24, width: 460, maxWidth: "90vw",
-            boxShadow: "0 8px 40px rgba(0,0,0,0.4)",
-          }}>
-            <div style={{ fontFamily: "var(--th-font-mono)", fontSize: 11, color: "var(--th-text-muted)", marginBottom: 8 }}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: "inline-block", verticalAlign: "middle", marginRight: 4 }}><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="8" cy="16" r="1" fill="currentColor" stroke="none"/><circle cx="16" cy="16" r="1" fill="currentColor" stroke="none"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>{t({ ko: "에이전트 확인 요청", en: "Agent needs clarification", ja: "エージェントの確認", zh: "代理需要确认" })}
-            </div>
-            <div style={{ fontFamily: "var(--th-font-mono)", fontSize: 14, fontWeight: 600, color: "var(--th-text-heading)", marginBottom: 16, lineHeight: 1.5 }}>
+        <AppWindow
+          windowType="decision-inbox"
+          title={t({ ko: "에이전트 확인 요청", en: "Agent Clarification", ja: "エージェントの確認", zh: "代理确认" })}
+          emoji={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>}
+          defaultWidth={480}
+          defaultHeight={320}
+          onClose={() => { setClarificationRequest(null); setClarificationAnswer(""); }}
+        >
+          <div style={{ padding: "16px 20px", display: "flex", flexDirection: "column", gap: 12, height: "100%" }}>
+            <div style={{ fontFamily: "var(--th-font-mono)", fontSize: 14, fontWeight: 600, color: "var(--th-text-heading)", lineHeight: 1.5 }}>
               {clarificationRequest.question}
             </div>
             <textarea
@@ -366,15 +383,15 @@ export default function App() {
               placeholder={t({ ko: "답변을 입력하세요...", en: "Enter your answer...", ja: "回答を入力...", zh: "输入您的回答..." })}
               rows={3}
               style={{
-                width: "100%", boxSizing: "border-box",
+                width: "100%", boxSizing: "border-box", flex: 1,
                 fontFamily: "var(--th-font-mono)", fontSize: 12,
                 padding: "10px 12px", borderRadius: 8,
                 border: "1px solid var(--th-border)",
                 background: "var(--th-bg-elevated)", color: "var(--th-text-primary)",
-                outline: "none", resize: "none", marginBottom: 12,
+                outline: "none", resize: "none",
               }}
             />
-            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+            <div style={{ display: "flex", gap: 8, justifyContent: "flex-end", flexShrink: 0 }}>
               <button
                 type="button"
                 onClick={() => { setClarificationRequest(null); setClarificationAnswer(""); }}
@@ -385,24 +402,28 @@ export default function App() {
               <button
                 type="button"
                 disabled={!clarificationAnswer.trim() || clarificationBusy}
-                onClick={async () => {
+                onClick={() => {
                   if (!clarificationAnswer.trim()) return;
+                  const answer = clarificationAnswer.trim();
+                  const req = clarificationRequest;
+                  // Close window immediately — kickoff runs in background
+                  setClarificationRequest(null);
+                  setClarificationAnswer("");
                   setClarificationBusy(true);
-                  try {
-                    const result = await kickoffProject(
-                      clarificationRequest.projectId,
-                      clarificationAnswer.trim(),
-                      undefined,
-                      clarificationRequest.clarificationId,
-                    );
-                    if (result.status === "ok") {
-                      addToast({ type: "success", title: t({ ko: "태스크가 생성되었습니다", en: "Tasks created", ja: "タスクが作成されました", zh: "任务已创建" }) });
-                    }
-                    setClarificationRequest(null);
-                    setClarificationAnswer("");
-                  } finally {
-                    setClarificationBusy(false);
-                  }
+                  setKickoffBusy(true);
+                  kickoffProject(req.projectId, answer, undefined, req.clarificationId)
+                    .then((result) => {
+                      if (result.status === "ok") {
+                        addToast({ type: "success", title: t({ ko: "태스크가 생성되었습니다", en: "Tasks created", ja: "タスクが作成されました", zh: "任务已创建" }) });
+                      }
+                    })
+                    .catch((err) => {
+                      const detail = isApiRequestError(err)
+                        ? ((err.details as { detail?: string } | null)?.detail ?? null)
+                        : null;
+                      addToast({ type: "error", title: detail ?? t({ ko: "태스크 계획 실패", en: "Planning failed", ja: "計画失敗", zh: "计划失败" }) });
+                    })
+                    .finally(() => { setClarificationBusy(false); setKickoffBusy(false); });
                 }}
                 style={{
                   fontFamily: "var(--th-font-mono)", fontSize: 12, fontWeight: 700,
@@ -412,13 +433,11 @@ export default function App() {
                   cursor: clarificationAnswer.trim() ? "pointer" : "not-allowed",
                 }}
               >
-                {clarificationBusy
-                  ? t({ ko: "처리 중...", en: "Processing...", ja: "処理中...", zh: "处理中..." })
-                  : t({ ko: "답변하기", en: "Reply", ja: "回答する", zh: "回复" })}
+                {t({ ko: "답변하기", en: "Reply", ja: "回答する", zh: "回复" })}
               </button>
             </div>
           </div>
-        </div>
+        </AppWindow>
       )}
     </Desktop>
   );

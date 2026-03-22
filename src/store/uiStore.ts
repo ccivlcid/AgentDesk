@@ -201,6 +201,17 @@ interface UiStore {
   lastGroupAgentIds: string[];
   decisionInboxLoading: boolean;
   decisionReplyBusyKey: string | null;
+  // ── Agent Runtime 상태 ──────────────────────────────────────────
+  runtimeStatuses: Map<string, { status: string; runId?: string; agentId?: string; inputTokens?: number; outputTokens?: number; toolCalls?: number }>;
+  setRuntimeStatus: (taskId: string, status: string, runId?: string, agentId?: string, tokenUsage?: { inputTokens?: number; outputTokens?: number; toolCalls?: number }) => void;
+  clearRuntimeStatus: (taskId: string) => void;
+
+  // ── Kickoff 진행 상태 (메뉴바 인디케이터) ──────────────────────
+  kickoffBusy: boolean;
+  setKickoffBusy: (v: boolean) => void;
+  kickoffStage: "idle" | "planning" | "meeting" | "assigning" | "executing" | "done";
+  setKickoffStage: (stage: "idle" | "planning" | "meeting" | "assigning" | "executing" | "done") => void;
+
   pmActivityProjectId: string | null;
   pmActivityExpanded: boolean;
   mobileNavOpen: boolean;
@@ -252,7 +263,11 @@ export const useUiStore = create<UiStore>()((set) => ({
   openCliWindow: (agentId, initialPrompt) => set((s) => {
     const prompts = new Map(s.cliInitialPrompts);
     if (initialPrompt) prompts.set(agentId, initialPrompt);
-    return { openCliAgentIds: new Set([...s.openCliAgentIds, agentId]), cliInitialPrompts: prompts };
+    return {
+      openCliAgentIds: new Set([...s.openCliAgentIds, agentId]),
+      cliInitialPrompts: prompts,
+      windowFocusOrder: [...s.windowFocusOrder.filter((x) => x !== "cli"), "cli"],
+    };
   }),
   closeCliWindow: (agentId) => set((s) => {
     const next = new Set(s.openCliAgentIds);
@@ -451,6 +466,23 @@ export const useUiStore = create<UiStore>()((set) => ({
   lastGroupAgentIds: [],
   decisionInboxLoading: false,
   decisionReplyBusyKey: null,
+  runtimeStatuses: new Map<string, { status: string; runId?: string; agentId?: string; inputTokens?: number; outputTokens?: number; toolCalls?: number }>(),
+  setRuntimeStatus: (taskId, status, runId, agentId, tokenUsage) => set((s) => {
+    const m = new Map(s.runtimeStatuses);
+    m.set(taskId, { status, runId, agentId, ...tokenUsage });
+    return { runtimeStatuses: m };
+  }),
+  clearRuntimeStatus: (taskId) => set((s) => {
+    const m = new Map(s.runtimeStatuses);
+    m.delete(taskId);
+    return { runtimeStatuses: m };
+  }),
+
+  kickoffBusy: false,
+  setKickoffBusy: (v) => set({ kickoffBusy: v }),
+  kickoffStage: "idle",
+  setKickoffStage: (stage) => set({ kickoffStage: stage, kickoffBusy: stage !== "idle" && stage !== "done" }),
+
   pmActivityProjectId: null,
   pmActivityExpanded: false,
   mobileNavOpen: false,

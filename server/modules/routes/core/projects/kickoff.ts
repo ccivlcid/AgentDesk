@@ -25,79 +25,96 @@ interface KickoffMeetingAgent {
  * meeting_minutes + meeting_minute_entries DB 저장 + client_office_call WS 브로드캐스트.
  * 백그라운드 비동기 실행 (킥오프 응답을 블록하지 않음).
  */
+type Lang = "ko" | "en" | "ja" | "zh";
+function readLang(db: DatabaseSync): Lang {
+  const row = db.prepare("SELECT value FROM settings WHERE key = 'language'").get() as { value: string } | undefined;
+  if (!row) return "en";
+  try { const v = JSON.parse(row.value); return (typeof v === "string" && ["ko", "en", "ja", "zh"].includes(v)) ? v as Lang : "en"; }
+  catch { return "en"; }
+}
+function t(lang: Lang, texts: Record<Lang, string>): string { return texts[lang] ?? texts.en; }
+
 async function runKickoffMeeting(
   projectName: string,
   projectGoal: string,
-  firstTaskId: string,
+  meetingTaskId: string | null,
+  projectId: string,
   agents: KickoffMeetingAgent[],
   db: DatabaseSync,
   broadcast: (type: string, payload: unknown) => void,
   nowMs: () => number,
-  /** 회의 완료 후 호출 — planned 태스크 자동 실행 트리거 */
+  /** 회의 완료 후 호출 — 태스크 생성 + 배정 + 실행 트리거 */
   onComplete?: () => void,
 ): Promise<void> {
   if (agents.length === 0) return;
 
+  const lang = readLang(db);
   const meetingId = randomUUID();
   const startTs = nowMs();
 
-  // 1. meeting_minutes 레코드 생성
+  const meetingTitle = t(lang, {
+    ko: `[킥오프] ${projectName}`,
+    en: `[Kickoff] ${projectName}`,
+    ja: `[キックオフ] ${projectName}`,
+    zh: `[启动] ${projectName}`,
+  });
+
+  // 1. meeting_minutes 레코드 생성 (task_id는 아직 없을 수 있음, project_id로 조회)
   db.prepare(`
-    INSERT INTO meeting_minutes (id, task_id, meeting_type, round, title, status, started_at, created_at)
-    VALUES (?, ?, 'planned', 1, ?, 'in_progress', ?, ?)
-  `).run(meetingId, firstTaskId, `[킥오프] ${projectName}`, startTs, startTs);
+    INSERT INTO meeting_minutes (id, task_id, project_id, meeting_type, round, title, status, started_at, created_at)
+    VALUES (?, ?, ?, 'planned', 1, ?, 'in_progress', ?, ?)
+  `).run(meetingId, meetingTaskId, projectId, meetingTitle, startTs, startTs);
 
-  broadcast("meeting_minutes_update", { task_id: firstTaskId, meeting_id: meetingId, phase: "started" });
+  broadcast("meeting_minutes_update", { task_id: meetingTaskId, meeting_id: meetingId, phase: "started" });
 
-  // 2. 회의 스크립트 생성 (에이전트별 발언 라인)
+  // 2. 회의 스크립트 생성 — 프로젝트 목표 논의 + 에이전트 역량 공유
   const lines: { agentIdx: number; content: string; messageType: string }[] = [];
 
-  // PM 역할 에이전트를 사회자로 지정 (없으면 첫 번째)
   const pmIdx = agents.findIndex((a) => a.projectRole === "pm");
   const facilitatorIdx = pmIdx >= 0 ? pmIdx : 0;
-  const facilitator = agents[facilitatorIdx];
   const ROLE_LABEL: Record<string, string> = { pm: "PM", pl: "PL", dev: "Dev" };
+  const goalSnippet = projectGoal.slice(0, 200);
 
-  // 오프닝 (PM이 진행)
+  // 오프닝 — PM이 프로젝트 목표 공유, 역할 확인 요청
   lines.push({
     agentIdx: facilitatorIdx,
-    content: `안녕하세요. «${projectName}» 프로젝트 킥오프 회의를 시작하겠습니다.\n목표: ${projectGoal.slice(0, 200)}`,
+    content: t(lang, {
+      ko: `«${projectName}» 프로젝트 킥오프 회의를 시작합니다.\n목표: ${goalSnippet}\n지금부터 각자 역량과 담당 가능한 영역을 보고해주세요. 보고 내용을 바탕으로 제가 태스크를 생성하고 배정하겠습니다.`,
+      en: `Starting kickoff meeting for «${projectName}».\nGoal: ${goalSnippet}\nPlease report your capabilities and areas of expertise. I will create tasks and assign them based on your reports.`,
+      ja: `«${projectName}» プロジェクトのキックオフ会議を開始します。\n目標: ${goalSnippet}\n各自の能力と担当可能な領域を報告してください。報告をもとにタスクを作成し配属します。`,
+      zh: `«${projectName}» 项目启动会议开始。\n目标: ${goalSnippet}\n请报告各自的能力和可负责的领域。我将根据报告创建任务并分配。`,
+    }),
     messageType: "opening",
   });
 
-  // 각 에이전트가 자신의 역할 + 태스크 발표 (PM 포함 전원)
+  // 각 에이전트가 자기소개 + 역량 보고
   agents.forEach((a, i) => {
+    if (i === facilitatorIdx) return; // PM은 사회자
     const roleTag = a.projectRoleLabel ?? (a.projectRole ? ROLE_LABEL[a.projectRole] : null);
     const rolePrefix = roleTag ? `[${roleTag}] ` : "";
-
-    if (a.taskTitles.length === 0) {
-      // 태스크 미배정 에이전트 — 지원 대기 발언
-      lines.push({
-        agentIdx: i,
-        content: `${rolePrefix}배정된 태스크는 아직 없지만, 필요 시 지원하겠습니다.`,
-        messageType: "support_standby",
-      });
-    } else if (a.taskTitles.length === 1) {
-      lines.push({
-        agentIdx: i,
-        content: `${rolePrefix}담당 업무 확인 — «${a.taskTitles[0]}». 착수하겠습니다.`,
-        messageType: "task_confirm",
-      });
-    } else {
-      const taskList = a.taskTitles.map((t, j) => `${j + 1}. ${t}`).join(", ");
-      lines.push({
-        agentIdx: i,
-        content: `${rolePrefix}담당 업무 ${a.taskTitles.length}건 확인 — ${taskList}. 순서대로 진행하겠습니다.`,
-        messageType: "task_confirm",
-      });
-    }
+    const dept = a.dept_name ?? "";
+    lines.push({
+      agentIdx: i,
+      content: t(lang, {
+        ko: `${rolePrefix}${dept ? `${dept} 소속, ` : ""}${a.name}입니다. 프로젝트 목표를 확인했습니다. 업무 배정 대기하겠습니다.`,
+        en: `${rolePrefix}${dept ? `${dept}, ` : ""}${a.name} reporting. Project goal confirmed. Standing by for task assignment.`,
+        ja: `${rolePrefix}${dept ? `${dept}所属、` : ""}${a.name}です。プロジェクト目標を確認しました。タスク配属をお待ちします。`,
+        zh: `${rolePrefix}${dept ? `${dept}、` : ""}${a.name}。已确认项目目标。等待任务分配。`,
+      }),
+      messageType: "role_report",
+    });
   });
 
-  // 마무리 (PM이 클로징)
-  const totalTasks = agents.reduce((sum, a) => sum + a.taskTitles.length, 0);
+  const execCount = agents.length - 1;
+  // 마무리 — PM이 태스크 생성 및 배정 예고
   lines.push({
     agentIdx: facilitatorIdx,
-    content: `전원 확인 완료. 총 ${totalTasks}건 태스크, ${agents.length}명 투입. 각자 담당 업무를 시작해주세요.`,
+    content: t(lang, {
+      ko: `전원 역량 확인 완료. ${execCount}명 실행 인원 투입 가능.\n지금부터 태스크를 생성하고 각자에게 배정하겠습니다. 배정 완료 후 즉시 업무를 시작해주세요.`,
+      en: `All capabilities confirmed. ${execCount} execution members available.\nI will now create tasks and assign them. Please start immediately once assigned.`,
+      ja: `全員の能力確認完了。${execCount}名の実行メンバーが投入可能。\nこれからタスクを作成し配属します。配属後、直ちに業務を開始してください。`,
+      zh: `全员能力确认完毕。${execCount}名执行人员可投入。\n现在创建任务并分配。分配完成后请立即开始工作。`,
+    }),
     messageType: "closing",
   });
 
@@ -108,7 +125,7 @@ async function runKickoffMeeting(
       seat_index: i,
       phase: "kickoff",
       action: "arrive",
-      task_id: firstTaskId,
+      task_id: meetingTaskId,
       hold_until: startTs + 90_000,
     });
     await delay(300);
@@ -141,10 +158,10 @@ async function runKickoffMeeting(
       phase: "kickoff",
       action: "speak",
       line: line.content,
-      task_id: firstTaskId,
+      task_id: meetingTaskId,
       hold_until: entryTs + 90_000,
     });
-    broadcast("meeting_minutes_update", { task_id: firstTaskId, meeting_id: meetingId, phase: "entry" });
+    broadcast("meeting_minutes_update", { task_id: meetingTaskId, meeting_id: meetingId, phase: "entry" });
 
     await delay(600);
   }
@@ -152,7 +169,7 @@ async function runKickoffMeeting(
   // 5. 회의 완료
   db.prepare("UPDATE meeting_minutes SET status = 'completed', completed_at = ? WHERE id = ?")
     .run(nowMs(), meetingId);
-  broadcast("meeting_minutes_update", { task_id: firstTaskId, meeting_id: meetingId, phase: "completed", status: "completed" });
+  broadcast("meeting_minutes_update", { task_id: meetingTaskId, meeting_id: meetingId, phase: "completed", status: "completed" });
 
   // 6. 에이전트 퇴장
   for (let i = 0; i < agents.length; i++) {
@@ -162,7 +179,7 @@ async function runKickoffMeeting(
       seat_index: i,
       phase: "kickoff",
       action: "dismiss",
-      task_id: firstTaskId,
+      task_id: meetingTaskId,
     });
   }
 
@@ -203,8 +220,8 @@ async function callViaCliProvider(cliProvider: string, fullPrompt: string): Prom
     });
     const timeoutId = setTimeout(() => {
       try { child.kill(); } catch { /* ignore */ }
-      reject(new Error(`CLI provider '${cliProvider}' timed out after 30s`));
-    }, 30_000);
+      reject(new Error(`CLI provider '${cliProvider}' timed out after 120s`));
+    }, 120_000);
     let output = "";
     child.stdout?.on("data", (chunk: Buffer) => { output += chunk.toString("utf8"); });
     child.stderr?.on("data", (chunk: Buffer) => { output += chunk.toString("utf8"); });
@@ -213,203 +230,6 @@ async function callViaCliProvider(cliProvider: string, fullPrompt: string): Prom
     child.stdin?.write(fullPrompt);
     child.stdin?.end();
   });
-}
-
-// ── PM Oversight — PM이 프로젝트를 지속적으로 관리 ─────────────────────────
-
-interface PmOversightEntry {
-  projectId: string;
-  projectName: string;
-  pmAgentId: string | null;
-  pmAgentName: string;
-  startedAt: number;
-}
-
-/** 활성 PM 관리 대상 프로젝트 */
-const pmOversightProjects = new Map<string, PmOversightEntry>();
-
-/** 이미 큐에 enqueue된 taskId — 중복 시작 방지 */
-const enqueuedTaskIds = new Set<string>();
-
-/** PM 관리 sweep 주기 (ms) */
-const PM_SWEEP_INTERVAL = 15_000;
-
-/** 최대 관리 시간 (1시간) */
-const PM_OVERSIGHT_TTL = 3_600_000;
-
-let pmSweepTimer: ReturnType<typeof setInterval> | null = null;
-let _pmSweepFn: (() => void) | null = null;
-
-function startPmOversightSweep(deps: {
-  db: DatabaseSync;
-  broadcast: (type: string, payload: unknown) => void;
-  appendTaskLog: (taskId: string | null, kind: string, message: string) => void;
-  nowMs: () => number;
-  resolveProjectPath: (projectId: string) => string;
-  startTaskExecutionForAgent?: (taskId: string, agentId: string) => void;
-}): void {
-  if (pmSweepTimer) return; // 이미 실행 중
-  const { db, broadcast, appendTaskLog, nowMs, resolveProjectPath, startTaskExecutionForAgent } = deps;
-
-  // Sweep 로직을 별도 함수로 — triggerImmediatePmSweep에서도 호출
-  _pmSweepFn = () => {
-    for (const [projectId, entry] of pmOversightProjects) {
-      // TTL 초과 시 관리 종료
-      if (Date.now() - entry.startedAt > PM_OVERSIGHT_TTL) {
-        pmOversightProjects.delete(projectId);
-        logger.info({ projectId }, "[pm-oversight] TTL expired, stopping oversight");
-        continue;
-      }
-
-      try {
-        // 프로젝트의 태스크 상태 집계
-        const counts = db.prepare(`
-          SELECT status, COUNT(*) as cnt FROM tasks
-          WHERE project_id = ?
-          GROUP BY status
-        `).all(projectId) as { status: string; cnt: number }[];
-
-        const statusMap = new Map(counts.map((c) => [c.status, c.cnt]));
-        const planned = statusMap.get("planned") ?? 0;
-        const inProgress = statusMap.get("in_progress") ?? 0;
-        const done = statusMap.get("done") ?? 0;
-        const failed = statusMap.get("error") ?? 0;
-        const total = counts.reduce((s, c) => s + c.cnt, 0);
-
-        // 모든 태스크 완료/실패 → PM 관리 종료
-        if (planned === 0 && inProgress === 0 && total > 0) {
-          pmOversightProjects.delete(projectId);
-          // 해당 프로젝트 태스크 추적 정리
-          const projectTaskIds = (db.prepare("SELECT id FROM tasks WHERE project_id = ?").all(projectId) as { id: string }[]);
-          for (const t of projectTaskIds) enqueuedTaskIds.delete(t.id);
-
-          const msg = `프로젝트 «${entry.projectName}» 전체 완료. 완료 ${done}건, 실패 ${failed}건.`;
-          appendTaskLog(null, "pm_oversight", msg);
-          // PM이 퇴장하면서 최종 보고 (기존 client_office_call UI에 표시)
-          if (entry.pmAgentId) {
-            broadcast("client_office_call", {
-              from_agent_id: entry.pmAgentId,
-              seat_index: 0,
-              phase: "kickoff",
-              action: "speak",
-              line: msg,
-            });
-            setTimeout(() => {
-              broadcast("client_office_call", {
-                from_agent_id: entry.pmAgentId,
-                seat_index: 0,
-                phase: "kickoff",
-                action: "dismiss",
-              });
-            }, 3000);
-          }
-          logger.info({ projectId, done, failed }, "[pm-oversight] project completed");
-          continue;
-        }
-
-        // planned 태스크가 있고 실행 중이 아닌 에이전트 → 다음 태스크 시작
-        if (planned > 0) {
-          const plannedTasks = db.prepare(`
-            SELECT t.id, t.title, t.assigned_agent_id
-            FROM tasks t
-            WHERE t.project_id = ? AND t.status = 'planned' AND t.assigned_agent_id IS NOT NULL
-            ORDER BY t.created_at ASC
-          `).all(projectId) as { id: string; title: string; assigned_agent_id: string }[];
-
-          // 현재 실행 중/검토 중인 에이전트 ID 세트
-          const busyAgents = new Set(
-            (db.prepare(`
-              SELECT DISTINCT assigned_agent_id FROM tasks
-              WHERE project_id = ? AND status IN ('in_progress', 'review') AND assigned_agent_id IS NOT NULL
-            `).all(projectId) as { assigned_agent_id: string }[]).map((r) => r.assigned_agent_id),
-          );
-
-          // 이미 완료/실행 중인 태스크는 enqueuedTaskIds에서 정리
-          for (const tid of enqueuedTaskIds) {
-            const st = db.prepare("SELECT status FROM tasks WHERE id = ?").get(tid) as { status: string } | undefined;
-            if (st && st.status !== "planned") enqueuedTaskIds.delete(tid);
-          }
-
-          // 유휴 에이전트의 planned 태스크를 시작
-          const started: string[] = [];
-          const seenAgents = new Set<string>();
-          for (const task of plannedTasks) {
-            if (busyAgents.has(task.assigned_agent_id)) continue;
-            if (seenAgents.has(task.assigned_agent_id)) continue;
-            if (enqueuedTaskIds.has(task.id)) continue; // 이미 큐에 있으면 스킵
-            seenAgents.add(task.assigned_agent_id);
-
-            try {
-              enqueuedTaskIds.add(task.id);
-              if (startTaskExecutionForAgent) {
-                startTaskExecutionForAgent(task.id, task.assigned_agent_id);
-              } else {
-                let pp = "";
-                try { pp = resolveProjectPath(projectId); } catch { /* optional */ }
-                const ac = new AbortController();
-                void startExecutionLoop(
-                  { db, broadcast, appendTaskLog, nowMs, resolveProjectPath, abortControllers: kickoffRuns },
-                  { agentId: task.assigned_agent_id, taskId: task.id, projectId, projectPath: pp, chainExecution: true },
-                  task.title,
-                  ac,
-                ).then((runId) => { kickoffRuns.set(runId, ac); }).catch((e) => {
-                  enqueuedTaskIds.delete(task.id);
-                  logger.error({ err: e, taskId: task.id }, "[pm-oversight] execution-loop failed");
-                });
-              }
-              started.push(task.title);
-              logger.info({ taskId: task.id, agentId: task.assigned_agent_id }, "[pm-oversight] started planned task");
-            } catch (err) {
-              enqueuedTaskIds.delete(task.id);
-              logger.error({ err, taskId: task.id }, "[pm-oversight] failed to start task");
-            }
-          }
-
-          if (started.length > 0 && entry.pmAgentId) {
-            const msg = `${started.length}건 태스크 착수 지시: ${started.join(", ")}`;
-            broadcast("client_office_call", {
-              from_agent_id: entry.pmAgentId,
-              seat_index: 0,
-              phase: "kickoff",
-              action: "speak",
-              line: msg,
-            });
-          }
-        }
-
-        // 진행 상황 로그 (60초마다 — 4회 sweep 당 1회)
-        if (inProgress > 0 && entry.pmAgentId && Math.floor((Date.now() - entry.startedAt) / PM_SWEEP_INTERVAL) % 4 === 0) {
-          broadcast("client_office_call", {
-            from_agent_id: entry.pmAgentId,
-            seat_index: 0,
-            phase: "kickoff",
-            action: "speak",
-            line: `진행 현황: 실행중 ${inProgress}, 대기 ${planned}, 완료 ${done}/${total}`,
-            hold_until: Date.now() + 10_000,
-          });
-        }
-      } catch (err) {
-        logger.error({ err, projectId }, "[pm-oversight] sweep error");
-      }
-    }
-
-    // 모든 프로젝트가 완료되면 타이머 정리
-    if (pmOversightProjects.size === 0 && pmSweepTimer) {
-      clearInterval(pmSweepTimer);
-      pmSweepTimer = null;
-      _pmSweepFn = null;
-      logger.info("[pm-oversight] all projects complete, sweep stopped");
-    }
-  };
-
-  pmSweepTimer = setInterval(_pmSweepFn, PM_SWEEP_INTERVAL);
-}
-
-/** Immediately run PM oversight sweep for a specific project (skip 15s wait). */
-export function triggerImmediatePmSweep(projectId?: string): void {
-  if (!_pmSweepFn) return;
-  logger.info({ projectId }, "[pm-oversight] immediate sweep triggered");
-  _pmSweepFn();
 }
 
 interface KickoffDeps {
@@ -476,6 +296,26 @@ export function registerProjectKickoffRoutes({ app, db, broadcast, appendTaskLog
     if (project.directive) parts.push(`Directive:\n${project.directive}`);
     if (assignedAgents.length > 0) {
       const STANDARD_ROLE_LABEL: Record<string, string> = { pm: "PROJECT MANAGER", pl: "PROJECT LEAD", dev: "DEVELOPER" };
+
+      // Load fitness data for each agent
+      const fitnessRows = db.prepare(`
+        SELECT agent_id, task_type, success_count, failure_count, avg_duration_ms
+        FROM agent_task_fitness
+        WHERE agent_id IN (${assignedAgents.map(() => "?").join(",")})
+        ORDER BY agent_id, success_count DESC
+      `).all(...assignedAgents.map((a) => a.id)) as { agent_id: string; task_type: string; success_count: number; failure_count: number; avg_duration_ms: number }[];
+
+      const fitnessByAgent = new Map<string, string[]>();
+      for (const r of fitnessRows) {
+        const total = r.success_count + r.failure_count;
+        if (total === 0) continue;
+        const rate = Math.round((r.success_count / total) * 100);
+        const avgMin = Math.round(r.avg_duration_ms / 60_000);
+        const list = fitnessByAgent.get(r.agent_id) ?? [];
+        list.push(`${r.task_type}: ${rate}% success (${total} tasks, avg ${avgMin}m)`);
+        fitnessByAgent.set(r.agent_id, list);
+      }
+
       const agentList = assignedAgents
         .map((a) => {
           const dept = a.dept_name ? `, dept: ${a.dept_name}` : "";
@@ -483,7 +323,9 @@ export function registerProjectKickoffRoutes({ app, db, broadcast, appendTaskLog
           const displayRole = a.project_role_label
             ?? (a.project_role ? STANDARD_ROLE_LABEL[a.project_role] : null);
           const projectRole = displayRole ? ` [${displayRole.toUpperCase()}]` : "";
-          return `- ${a.name}${projectRole}${dept}${role}`;
+          const fitness = fitnessByAgent.get(a.id);
+          const fitnessInfo = fitness ? ` | track record: ${fitness.join("; ")}` : "";
+          return `- ${a.name}${projectRole}${dept}${role}${fitnessInfo}`;
         })
         .join("\n");
       parts.push(`Available agents (assign tasks to the best fit):\n${agentList}`);
@@ -495,111 +337,123 @@ export function registerProjectKickoffRoutes({ app, db, broadcast, appendTaskLog
     const systemPrompt = loadPrompt("system/project-kickoff");
 
     try {
-      // 가용한 API 프로바이더 자동 탐색 (Anthropic → OpenAI → Google 등 순)
-      const provider = findApiProvider(db, "api");
+      // ── Stage 1: kickoff_stage: meeting ──
+      // 회의를 먼저 진행 — 프로젝트 목표 공유 + 에이전트 역량 확인
+      broadcast("kickoff_stage", { projectId, stage: "meeting" });
 
-      let rawText: string;
-      if (provider) {
-        // HTTP API 키 기반 호출
-        const model = resolveModel(provider);
-        const signal = AbortSignal.timeout(30_000);
-        rawText = await callProvider(provider, model, systemPrompt, parts.join("\n\n"), signal);
-      } else {
-        // API 키 없음 → Settings → CLI에 설정된 프로바이더로 fallback
-        const cliProvider = readDefaultProvider(db);
-        const fullPrompt = `${systemPrompt}\n\n${parts.join("\n\n")}`;
-        rawText = await callViaCliProvider(cliProvider, fullPrompt);
-      }
+      const meetingAgents: KickoffMeetingAgent[] = assignedAgents.map((ag) => ({
+        id: ag.id,
+        name: ag.name,
+        role: ag.role,
+        dept_name: ag.dept_name,
+        projectRole: ag.project_role,
+        projectRoleLabel: ag.project_role_label,
+        taskTitles: [], // 아직 태스크 없음
+      }));
 
-      // JSON 추출 (마크다운 펜스가 있어도 처리)
-      const jsonMatch = rawText.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) return res.status(500).json({ error: "invalid_llm_response" });
+      // 회의 완료 후: LLM으로 태스크 생성 → PM 배정 → 실행
+      const postMeetingCreateAndRun = async () => {
+        try {
+          // ── Stage 2: kickoff_stage: planning ──
+          broadcast("kickoff_stage", { projectId, stage: "planning" });
 
-      let parsed: {
-        tasks?: { title: string; description?: string; agent_name?: string | null }[];
-        needs_clarification?: boolean;
-        question?: string;
-      };
-      try {
-        parsed = JSON.parse(jsonMatch[0]) as typeof parsed;
-      } catch {
-        return res.status(500).json({ error: "json_parse_failed" });
-      }
+          const provider = findApiProvider(db, "api");
+          let rawText: string;
+          if (provider) {
+            const model = resolveModel(provider);
+            const signal = AbortSignal.timeout(120_000);
+            rawText = await callProvider(provider, model, systemPrompt, parts.join("\n\n"), signal);
+          } else {
+            const cliProvider = readDefaultProvider(db);
+            const fullPrompt = `${systemPrompt}\n\n${parts.join("\n\n")}`;
+            rawText = await callViaCliProvider(cliProvider, fullPrompt);
+          }
 
-      // 추가 정보 필요한 경우
-      if (parsed.needs_clarification && parsed.question) {
-        const clarificationId = randomUUID();
-        db.prepare(
-          "INSERT INTO project_clarifications (id, project_id, question, status, created_at) VALUES (?, ?, ?, 'pending', ?)",
-        ).run(clarificationId, projectId, parsed.question, nowMs());
+          const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+          if (!jsonMatch) {
+            logger.error({ projectId }, "[kickoff] invalid LLM response after meeting");
+            broadcast("kickoff_stage", { projectId, stage: "done" });
+            return;
+          }
 
-        broadcast("clarification_request", { projectId, clarificationId, question: parsed.question });
-        return res.json({ status: "clarification_needed", clarificationId, question: parsed.question });
-      }
+          let parsed: {
+            tasks?: { title: string; description?: string }[];
+            needs_clarification?: boolean;
+            question?: string;
+          };
+          try {
+            parsed = JSON.parse(jsonMatch[0]) as typeof parsed;
+          } catch {
+            logger.error({ projectId }, "[kickoff] JSON parse failed after meeting");
+            broadcast("kickoff_stage", { projectId, stage: "done" });
+            return;
+          }
 
-      // ── 태스크 생성 + 에이전트 분배 ───────────────────────────────────────
-      const tasks = parsed.tasks ?? [];
-      const created: { id: string; title: string; assigned_agent_id: string | null }[] = [];
+          if (parsed.needs_clarification && parsed.question) {
+            const clarificationId = randomUUID();
+            db.prepare(
+              "INSERT INTO project_clarifications (id, project_id, question, status, created_at) VALUES (?, ?, ?, 'pending', ?)",
+            ).run(clarificationId, projectId, parsed.question, nowMs());
+            broadcast("clarification_request", { projectId, clarificationId, question: parsed.question });
+            broadcast("kickoff_stage", { projectId, stage: "done" });
+            return;
+          }
 
-      // agent_name → id 매핑
-      const agentByName = new Map(assignedAgents.map((a) => [a.name.toLowerCase(), a.id]));
-      const fallbackAgentId = assignedAgents[0]?.id ?? null;
+          // 태스크 생성
+          const tasks = parsed.tasks ?? [];
+          for (const task of tasks) {
+            if (!task.title?.trim()) continue;
+            const taskId = randomUUID();
+            const now = nowMs();
+            db.prepare(`
+              INSERT INTO tasks (id, title, description, project_id, assigned_agent_id, status, priority, task_type, created_at, updated_at)
+              VALUES (?, ?, ?, ?, NULL, 'planned', 3, 'general', ?, ?)
+            `).run(taskId, task.title.trim(), task.description ?? "", projectId, now, now);
+            broadcast("task_update", db.prepare("SELECT * FROM tasks WHERE id = ?").get(taskId));
+            appendTaskLog(taskId, "system", `Task created: ${task.title.trim()}`);
+          }
 
-      for (const task of tasks) {
-        if (!task.title?.trim()) continue;
-        const taskId = randomUUID();
-        const now = nowMs();
+          // ── Stage 3: kickoff_stage: assigning ──
+          broadcast("kickoff_stage", { projectId, stage: "assigning" });
 
-        // LLM이 제안한 에이전트명으로 매핑, 없으면 첫 번째 에이전트
-        const suggestedId = task.agent_name
-          ? (agentByName.get(task.agent_name.toLowerCase()) ?? fallbackAgentId)
-          : fallbackAgentId;
+          const execAgents = assignedAgents.filter((a) => a.project_role !== "pm");
+          if (execAgents.length === 0) {
+            logger.warn({ projectId }, "[kickoff] no non-PM agents available");
+            broadcast("kickoff_stage", { projectId, stage: "done" });
+            return;
+          }
 
-        db.prepare(`
-          INSERT INTO tasks (id, title, description, project_id, assigned_agent_id, status, priority, task_type, created_at, updated_at)
-          VALUES (?, ?, ?, ?, ?, 'planned', 3, 'general', ?, ?)
-        `).run(taskId, task.title.trim(), task.description ?? "", projectId, suggestedId, now, now);
+          const unassignedTasks = db.prepare(`
+            SELECT id, title FROM tasks
+            WHERE project_id = ? AND status = 'planned' AND assigned_agent_id IS NULL
+            ORDER BY created_at ASC
+          `).all(projectId) as { id: string; title: string }[];
 
-        const row = db.prepare("SELECT * FROM tasks WHERE id = ?").get(taskId) as { id: string; title: string; assigned_agent_id: string | null };
-        broadcast("task_update", row);
-        created.push(row);
-      }
+          for (let i = 0; i < unassignedTasks.length; i++) {
+            const task = unassignedTasks[i];
+            const agent = execAgents[i % execAgents.length];
+            db.prepare("UPDATE tasks SET assigned_agent_id = ?, updated_at = ? WHERE id = ?")
+              .run(agent.id, nowMs(), task.id);
+            appendTaskLog(task.id, "pm_oversight", `PM assigned → ${agent.name}`);
+            broadcast("task_update", db.prepare("SELECT * FROM tasks WHERE id = ?").get(task.id));
+            logger.info({ taskId: task.id, agentId: agent.id }, "[kickoff] PM assigned agent");
+          }
 
-      // ── 킥오프 회의 (백그라운드) ──────────────────────────────────────
-      const firstTask = created[0];
-      if (firstTask) {
-        // project_agents 전원 참석 (태스크 배정 여부 무관)
-        // 각 에이전트별 배정된 태스크 목록도 함께 매핑
-        const tasksByAgent = new Map<string, string[]>();
-        for (const t of created) {
-          if (!t.assigned_agent_id) continue;
-          const list = tasksByAgent.get(t.assigned_agent_id) ?? [];
-          list.push(t.title);
-          tasksByAgent.set(t.assigned_agent_id, list);
-        }
-
-        const meetingAgents: KickoffMeetingAgent[] = assignedAgents.map((ag) => ({
-          id: ag.id,
-          name: ag.name,
-          role: ag.role,
-          dept_name: ag.dept_name,
-          projectRole: ag.project_role,
-          projectRoleLabel: ag.project_role_label,
-          taskTitles: tasksByAgent.get(ag.id) ?? [],
-        }));
-
-        // 회의 완료 후 아직 planned 상태인 태스크를 자동 시작하는 안전망
-        const postMeetingResume = () => {
+          // ── Stage 4: kickoff_stage: executing ──
           const plannedTasks = db.prepare(`
             SELECT id, title, assigned_agent_id FROM tasks
             WHERE project_id = ? AND status = 'planned' AND assigned_agent_id IS NOT NULL
             ORDER BY created_at ASC
           `).all(projectId) as { id: string; title: string; assigned_agent_id: string }[];
 
-          if (plannedTasks.length === 0) return;
-          logger.info({ projectId, count: plannedTasks.length }, "[kickoff] post-meeting: resuming planned tasks");
+          if (plannedTasks.length === 0) {
+            broadcast("kickoff_stage", { projectId, stage: "done" });
+            return;
+          }
 
-          // 에이전트별 첫 번째 planned 태스크만 시작
+          broadcast("kickoff_stage", { projectId, stage: "executing" });
+          logger.info({ projectId, count: plannedTasks.length }, "[kickoff] starting assigned tasks");
+
           const seen = new Set<string>();
           for (const task of plannedTasks) {
             if (seen.has(task.assigned_agent_id)) continue;
@@ -613,110 +467,75 @@ export function registerProjectKickoffRoutes({ app, db, broadcast, appendTaskLog
                 const ac = new AbortController();
                 void startExecutionLoop(
                   { db, broadcast, appendTaskLog, nowMs, resolveProjectPath, abortControllers: kickoffRuns },
-                  { agentId: task.assigned_agent_id, taskId: task.id, projectId, projectPath: pp, chainExecution: true },
+                  { agentId: task.assigned_agent_id, taskId: task.id, projectId, projectPath: pp },
                   task.title,
                   ac,
                 ).then((runId) => { kickoffRuns.set(runId, ac); }).catch((e) => {
-                  logger.error({ err: e, taskId: task.id }, "[kickoff] post-meeting execution-loop failed");
+                  logger.error({ err: e, taskId: task.id }, "[kickoff] execution-loop failed");
                 });
               }
-              logger.info({ taskId: task.id, agentId: task.assigned_agent_id }, "[kickoff] post-meeting: task started");
+              logger.info({ taskId: task.id, agentId: task.assigned_agent_id }, "[kickoff] task started");
             } catch (err) {
-              logger.error({ err, taskId: task.id }, "[kickoff] post-meeting: task start failed");
+              logger.error({ err, taskId: task.id }, "[kickoff] task start failed");
             }
           }
-        };
 
+          broadcast("kickoff_stage", { projectId, stage: "done" });
+        } catch (err) {
+          logger.error({ err, projectId }, "[kickoff] post-meeting pipeline failed");
+          broadcast("kickoff_stage", { projectId, stage: "done" });
+        }
+      };
+
+      if (assignedAgents.length > 0) {
         void runKickoffMeeting(
           project.name,
           project.core_goal,
-          firstTask.id,
+          null, // 아직 태스크 없음
+          projectId,
           meetingAgents,
           db,
           broadcast,
           nowMs,
-          postMeetingResume,
+          () => { void postMeetingCreateAndRun(); },
         ).catch((err) => {
-          logger.warn({ err, projectId }, "[kickoff] meeting failed (non-fatal)");
+          logger.warn({ err, projectId }, "[kickoff] meeting failed — running pipeline directly");
+          void postMeetingCreateAndRun();
         });
+      } else {
+        void postMeetingCreateAndRun();
       }
-
-      // ── 에이전트별 병렬 실행 ─────────────────────────────────────────
-      // 각 에이전트에 배정된 첫 번째 태스크를 동시에 시작 (서로 다른 에이전트는 병렬).
-
-      // 에이전트별 첫 번째 태스크만 추출
-      const firstByAgent = created.reduce<Map<string, { id: string; title: string }>>(
-        (map, t) => {
-          if (t.assigned_agent_id && !map.has(t.assigned_agent_id)) {
-            map.set(t.assigned_agent_id, { id: t.id, title: t.title });
-          }
-          return map;
-        },
-        new Map(),
-      );
 
       const autoRunIds: string[] = [];
 
-      if (startTaskExecutionForAgent) {
-        // ── Full AgentOffice 엔진 사용 (spawnCliAgent + review + report) ──
-        for (const [agentId, task] of firstByAgent) {
-          try {
-            startTaskExecutionForAgent(task.id, agentId);
-            autoRunIds.push(task.id);
-            logger.info({ agentId, taskId: task.id }, "[kickoff] agent started via full engine");
-          } catch (runErr) {
-            logger.error({ err: runErr, agentId, projectId }, "[kickoff] full engine start failed");
-          }
-        }
-      } else {
-        // ── Fallback: execution-loop (API/CLI 심플 모드) ──
-        let projectPath = "";
-        try { projectPath = resolveProjectPath(projectId); } catch { /* optional */ }
-
-        for (const [agentId, task] of firstByAgent) {
-          try {
-            const abortController = new AbortController();
-            const runId = await startExecutionLoop(
-              { db, broadcast, appendTaskLog, nowMs, resolveProjectPath, abortControllers: kickoffRuns },
-              { agentId, taskId: task.id, projectId, projectPath, chainExecution: true },
-              task.title,
-              abortController,
-            );
-            kickoffRuns.set(runId, abortController);
-            autoRunIds.push(runId);
-            logger.info({ runId, agentId, taskId: task.id }, "[kickoff] agent started via execution-loop");
-          } catch (runErr) {
-            logger.error({ err: runErr, agentId, projectId }, "[kickoff] auto-run failed");
-          }
-        }
-      }
-
-      // ── PM 관리 등록 — PM이 프로젝트를 지속적으로 관리 ──
+      // ── PM 관리 등록 — PM Orchestrator (이벤트 기반) ──
       const pmAgent = assignedAgents.find((a) => a.project_role === "pm");
-      pmOversightProjects.set(projectId, {
-        projectId,
-        projectName: project.name,
-        pmAgentId: pmAgent?.id ?? null,
-        pmAgentName: pmAgent?.name ?? "PM",
-        startedAt: Date.now(),
-      });
-      // PM Orchestrator용 DB persist (서버 재시작 시 복원)
       try {
         db.prepare(
           "INSERT OR REPLACE INTO pm_oversight_state (project_id, pm_agent_id, started_at) VALUES (?, ?, ?)",
         ).run(projectId, pmAgent?.id ?? null, Date.now());
       } catch { /* table may not exist yet */ }
-      // PM Orchestrator가 이벤트 기반으로 오케스트레이션 — 폴링 sweep 불필요
       logger.info({ projectId, pmAgentId: pmAgent?.id }, "[kickoff] PM orchestrator active for project");
 
-      // 킥오프 알림
+      // 킥오프 알림 (회의 시작됨 — 태스크는 회의 후 비동기 생성)
+      const kickoffLang = readLang(db);
       insertNotification?.({
         type: "kickoff",
-        title: `${project.name} 킥오프 완료`,
-        body: `${created.length}건 태스크 생성, ${autoRunIds.length}건 자동 실행 시작`,
+        title: t(kickoffLang, {
+          ko: `${project.name} 킥오프 시작`,
+          en: `${project.name} kickoff started`,
+          ja: `${project.name} キックオフ開始`,
+          zh: `${project.name} 启动开始`,
+        }),
+        body: t(kickoffLang, {
+          ko: `${assignedAgents.length}명 에이전트 참여, 회의 후 태스크 생성 예정`,
+          en: `${assignedAgents.length} agents joined, tasks will be created after meeting`,
+          ja: `${assignedAgents.length}名のエージェント参加、会議後にタスク作成予定`,
+          zh: `${assignedAgents.length}名代理参与，会议后将创建任务`,
+        }),
       });
 
-      return res.json({ status: "ok", tasks: created, autoRunIds });
+      return res.json({ status: "ok", tasks: [], autoRunIds });
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       return res.status(500).json({ error: "kickoff_failed", detail: msg.slice(0, 200) });
@@ -763,7 +582,6 @@ export function registerProjectKickoffRoutes({ app, db, broadcast, appendTaskLog
           taskId: nextTask.id,
           projectId,
           projectPath,
-          chainExecution: true,
         },
         nextTask.title,
         abortController,

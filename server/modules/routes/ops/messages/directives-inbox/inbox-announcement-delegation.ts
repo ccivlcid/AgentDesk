@@ -63,7 +63,7 @@ export function respondInboxAnnouncementWithDelegation(p: AnnouncementDelegation
 
   broadcast("announcement", msg);
 
-  scheduleAnnouncementReplies(content);
+  scheduleAnnouncementReplies(content, inboxProjectId ?? null);
   const directivePolicy = isDirective ? analyzeDirectivePolicy(content) : null;
   const inboxExplicitSkip = body.skipPlannedMeeting === true;
   const shouldDelegateDirective =

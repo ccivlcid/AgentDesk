@@ -194,6 +194,9 @@ export function prepareAgentPatchBody(
     "acts_as_planning_leader",
     "enable_planning_phase",
     "kb_default_sources",
+    "specialty",
+    "autonomy_level",
+    "max_concurrent_tasks",
   ];
   const forcePlanningLeadOverride =
     body.force_planning_leader_override === true ||

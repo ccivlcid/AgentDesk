@@ -100,7 +100,7 @@ export default function ManualAssignmentSelector({
                     className="px-2 py-1 text-[11px] font-mono outline-none"
                     style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-secondary)" }}
                   >
-                    <option value="all">{t({ ko: "전체 부서", en: "All Depts", ja: "全部署", zh: "所有部门" })}</option>
+                    <option value="all">{t({ ko: "전체 전문 분야", en: "All Specialties", ja: "全専門分野", zh: "全专业领域" })}</option>
                     {departments.map((dept) => (
                       <option key={dept.id} value={dept.id}>
                         {dept.icon} {language === "ko" ? dept.name_ko || dept.name : dept.name}

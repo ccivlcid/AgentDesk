@@ -139,11 +139,13 @@ export async function sendGroupMessage(input: {
   return j;
 }
 
-export async function sendAnnouncement(content: string): Promise<string> {
+export async function sendAnnouncement(content: string, projectId?: string | null): Promise<string> {
   const idempotencyKey = makeIdempotencyKey("client-announcement");
+  const payload: Record<string, unknown> = { content };
+  if (projectId) payload.project_id = projectId;
   const j = await postWithIdempotency<{ id?: string; message?: { id?: string } }>(
     "/api/announcements",
-    { content },
+    payload,
     idempotencyKey,
   );
   return extractMessageId(j);
@@ -230,8 +232,9 @@ export async function getTerminal(
   return request(`/api/tasks/${id}/terminal${q ? "?" + q : ""}`);
 }
 
-export async function getTaskMeetingMinutes(id: string): Promise<MeetingMinute[]> {
-  const j = await request<{ meetings: MeetingMinute[] }>(`/api/tasks/${id}/meeting-minutes`);
+export async function getTaskMeetingMinutes(id: string, projectId?: string): Promise<MeetingMinute[]> {
+  const qs = projectId ? `?project_id=${encodeURIComponent(projectId)}` : "";
+  const j = await request<{ meetings: MeetingMinute[] }>(`/api/tasks/${id}/meeting-minutes${qs}`);
   return j.meetings;
 }
 

@@ -53,6 +53,17 @@ export const TOOL_DEFINITIONS: ToolDefinition[] = [
       required: ["pattern"],
     },
   },
+  {
+    name: "run_command",
+    description: "Execute a shell command in the project directory. Use for build, test, lint, git status, etc. Commands run with a 30-second timeout.",
+    input_schema: {
+      type: "object",
+      properties: {
+        command: { type: "string", description: "The shell command to execute (e.g. 'npm test', 'git status', 'ls -la')." },
+      },
+      required: ["command"],
+    },
+  },
 ];
 
 const MAX_FILE_SIZE = 200_000; // 200KB
@@ -122,6 +133,38 @@ function writeFile(projectPath: string, filePath: string, content: string): stri
   return `Written: ${filePath} (${content.length} chars)`;
 }
 
+const RUN_COMMAND_TIMEOUT = 30_000;
+const MAX_OUTPUT_LENGTH = 10_000;
+
+function runCommand(projectPath: string, command: string): string {
+  if (!command.trim()) throw new Error("command is required");
+
+  const cwd = path.resolve(projectPath);
+  try {
+    const result = execSync(command, {
+      cwd,
+      timeout: RUN_COMMAND_TIMEOUT,
+      encoding: "utf8",
+      stdio: ["pipe", "pipe", "pipe"],
+      shell: process.platform === "win32" ? "cmd.exe" : "/bin/sh",
+      env: { ...process.env, NO_COLOR: "1", FORCE_COLOR: "0" },
+      maxBuffer: 1024 * 1024, // 1MB
+    });
+    const output = result.trim();
+    if (output.length > MAX_OUTPUT_LENGTH) {
+      return output.slice(0, MAX_OUTPUT_LENGTH) + `\n... (truncated, ${output.length} chars total)`;
+    }
+    return output || "(no output)";
+  } catch (err: unknown) {
+    const e = err as { status?: number; stdout?: string; stderr?: string; killed?: boolean };
+    if (e.killed) return `Command timed out after ${RUN_COMMAND_TIMEOUT / 1000}s`;
+    const stdout = (e.stdout ?? "").trim();
+    const stderr = (e.stderr ?? "").trim();
+    const combined = [stdout, stderr].filter(Boolean).join("\n").slice(0, MAX_OUTPUT_LENGTH);
+    return `Exit code ${e.status ?? 1}\n${combined || "(no output)"}`;
+  }
+}
+
 function searchFiles(projectPath: string, pattern: string, dir: string, fileGlob: string): string {
   const base = resolveSafe(projectPath, dir);
   try {
@@ -164,6 +207,9 @@ export function executeTool(call: ToolCall, projectPath: string): ToolResult {
       const glob = String(call.input.file_glob ?? "");
       if (!pat) throw new Error("pattern is required");
       content = searchFiles(projectPath, pat, dir, glob);
+    } else if (call.name === "run_command") {
+      const command = String(call.input.command ?? "");
+      content = runCommand(projectPath, command);
     } else {
       throw new Error(`Unknown tool: ${call.name}`);
     }

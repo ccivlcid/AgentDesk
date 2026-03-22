@@ -324,7 +324,7 @@ export default function TaskReportPopup({ report, agents, departments, uiLanguag
 
         <div>
           <p className="mb-2 text-xs font-mono uppercase tracking-wider" style={{ color: "var(--th-text-muted)" }}>
-            {t({ ko: "팀 문서", en: "Team Documents", ja: "チーム文書", zh: "团队文档" })}
+            {t({ ko: "프로젝트팀 문서", en: "Project Team Documents", ja: "プロジェクトチーム文書", zh: "项目团队文档" })}
           </p>
           {renderDocuments(team.documents ?? [], `team:${team.id}`)}
         </div>
@@ -632,8 +632,8 @@ export default function TaskReportPopup({ report, agents, departments, uiLanguag
             {teamReports.map((team) => {
               const label =
                 uiLanguage === "ko"
-                  ? team.department_name_ko || team.department_name || team.department_id || "팀"
-                  : team.department_name || team.department_id || "Team";
+                  ? team.department_name_ko || team.department_name || team.department_id || "프로젝트팀"
+                  : team.department_name || team.department_id || "Project Team";
               return (
                 <button
                   key={team.id}
@@ -676,10 +676,10 @@ export default function TaskReportPopup({ report, agents, departments, uiLanguag
           <div className="flex items-center justify-between">
             <span className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
               {t({
-                ko: `팀 보고서 ${teamReports.length}개`,
-                en: `${teamReports.length} team reports`,
-                ja: `チームレポート ${teamReports.length}件`,
-                zh: `${teamReports.length} 个团队报告`,
+                ko: `프로젝트팀 리포트 ${teamReports.length}개`,
+                en: `${teamReports.length} Project Team Reports`,
+                ja: `プロジェクトチームレポート ${teamReports.length}件`,
+                zh: `${teamReports.length} 个项目团队报告`,
               })}
             </span>
             {inline ? (

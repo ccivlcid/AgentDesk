@@ -129,7 +129,7 @@ export default function AgentCard({
         </div>
       </div>
 
-      {/* FM2024 Attribute bar */}
+      {/* Attribute bar */}
       <div
         className="px-3 pb-2.5"
         style={{ borderTop: "1px solid var(--th-border)", paddingTop: "0.5rem" }}

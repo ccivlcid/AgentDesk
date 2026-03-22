@@ -9,6 +9,7 @@ import { registerProjectDetailRoute } from "./projects/register-project-detail-r
 import { registerFeatureRoutes } from "./projects/register-feature-routes.ts";
 import { registerProjectKickoffRoutes } from "./projects/kickoff.ts";
 import { registerPmActivityRoutes } from "./projects/pm-activity.ts";
+import { registerChangelogRoutes } from "./projects/register-changelog-routes.ts";
 import { findApiProvider, readDefaultProvider, resolveModel } from "../ops/custom-features-ai/provider-helpers.ts";
 import { callProvider } from "../ops/custom-features-ai/llm-providers.ts";
 import logger from "../../../lib/logger.ts";
@@ -65,6 +66,7 @@ export function registerProjectRoutes({
   registerFeatureRoutes(deps);
   registerProjectKickoffRoutes({ app, db, broadcast, appendTaskLog, resolveProjectPath, nowMs, startTaskExecutionForAgent, insertNotification });
   registerPmActivityRoutes(app, db);
+  registerChangelogRoutes(deps);
 
   // ── AI auto-assign agents ─────────────────────────────────────────────────
   app.post("/api/projects/auto-assign-agents", async (req, res) => {

@@ -15,17 +15,13 @@ import {
   IconCliCost,
   IconFileTree,
   IconLocalLlm,
-  IconAgentGraph,
   IconDashboard,
 } from "./DesktopIcons";
 import type { DesktopIconDef } from "./DesktopIcon";
 import type { CustomFeature } from "../../types";
 import type { I18nContextValue } from "../../i18n";
 import type { WindowType } from "../../app/types";
-import { ICON_GRID_X, ICON_GRID_Y } from "./snapToFreeCell";
-
-const ICONS_PER_ROW = 6;
-const CF_START_ROW = 3;
+import { ICON_GRID_X, ICON_GRID_Y, GRID_ORIGIN_X, GRID_ORIGIN_Y, getIconsPerColumn } from "./snapToFreeCell";
 
 function getCustomFeatureIcon(templateId: string | null | undefined, color: string): React.ReactNode {
   const S = 1.5;
@@ -149,8 +145,7 @@ export function useDesktopIcons(params: UseDesktopIconsParams) {
     { id: "image-studio", icon: (c) => <IconImageStudio color={c} />, label: t({ ko: "이미지 스튜디오", en: "Image Studio", ja: "イメージスタジオ", zh: "图像工作室" }), onClick: () => openWindow("image-studio"), accentColor: "#ec4899" },
     { id: "decision-inbox", icon: (c) => <IconDecisions color={c} />, label: t({ ko: "의사결정", en: "Decisions", ja: "意思決定", zh: "决策" }), onClick: onOpenDecisionInbox, accentColor: "#ff453a", badge: decisionInboxItems.length || undefined },
     { id: "report-history", icon: (c) => <IconReports color={c} />, label: t({ ko: "보고서", en: "Reports", ja: "レポート", zh: "报告" }), onClick: () => { clearUnreadReportCount(); toggleWindow("reports"); }, accentColor: "#64d2ff", badge: unreadReportCount || undefined },
-    { id: "flow-graph-app", icon: (c) => <IconAgentGraph color={c} />, label: t({ ko: "에이전트 그래프", en: "Agent Graph", ja: "エージェントグラフ", zh: "代理图" }), onClick: () => openWindow("flow-graph"), accentColor: "#06b6d4" },
-    { id: "synapse-app", icon: (c) => <IconHeartbeat color={c} />, label: t({ ko: "시냅스", en: "Synapse", ja: "シナプス", zh: "知识库" }), onClick: () => openWindow("synapse"), accentColor: "#bf5af2" },
+{ id: "synapse-app", icon: (c) => <IconHeartbeat color={c} />, label: t({ ko: "시냅스", en: "Synapse", ja: "シナプス", zh: "知识库" }), onClick: () => openWindow("synapse"), accentColor: "#bf5af2" },
     { id: "file-tree-app", icon: (c) => <IconFileTree color={c} />, label: t({ ko: "파일 탐색기", en: "File Explorer", ja: "ファイルエクスプローラー", zh: "文件管理" }), onClick: () => openWindow("file-tree"), accentColor: "#f59e0b" },
     { id: "alerts-app", icon: (c) => <IconAlerts color={c} />, label: t({ ko: "알림", en: "Alerts", ja: "アラート", zh: "警报" }), onClick: () => openWindow("alerts"), accentColor: "#ff453a" },
     { id: "cli-cost-app", icon: (c) => <IconCliCost color={c} />, label: t({ ko: "CLI 비용", en: "CLI Cost", ja: "CLIコスト", zh: "CLI成本" }), onClick: () => openWindow("cli-usage"), accentColor: "#32ade6" },
@@ -204,16 +199,22 @@ export function useDesktopIcons(params: UseDesktopIconsParams) {
 
   const allIcons = [...icons, ...customFeatureIcons];
 
+  // Arrange icons top-to-bottom, then left-to-right (macOS desktop style)
+  const perCol = getIconsPerColumn();
+
   const DEFAULT_ICON_POSITIONS: Record<string, { x: number; y: number }> = {};
   icons.forEach((def, i) => {
-    const col = i % ICONS_PER_ROW;
-    const row = Math.floor(i / ICONS_PER_ROW);
-    DEFAULT_ICON_POSITIONS[def.id] = { x: 24 + col * ICON_GRID_X, y: 60 + row * ICON_GRID_Y };
+    const col = Math.floor(i / perCol);
+    const row = i % perCol;
+    DEFAULT_ICON_POSITIONS[def.id] = { x: GRID_ORIGIN_X + col * ICON_GRID_X, y: GRID_ORIGIN_Y + row * ICON_GRID_Y };
   });
+  // Custom feature icons continue after system icons in the same column-first flow
+  const cfOffset = icons.length;
   customFeatureIcons.forEach((def, i) => {
-    const col = i % ICONS_PER_ROW;
-    const row = Math.floor(i / ICONS_PER_ROW);
-    DEFAULT_ICON_POSITIONS[def.id] = { x: 24 + col * ICON_GRID_X, y: 60 + (CF_START_ROW + row) * ICON_GRID_Y };
+    const gi = cfOffset + i;
+    const col = Math.floor(gi / perCol);
+    const row = gi % perCol;
+    DEFAULT_ICON_POSITIONS[def.id] = { x: GRID_ORIGIN_X + col * ICON_GRID_X, y: GRID_ORIGIN_Y + row * ICON_GRID_Y };
   });
 
   return { icons, customFeatureIcons, allIcons, DEFAULT_ICON_POSITIONS };

@@ -629,6 +629,7 @@ export function registerTaskCrudRoutes(deps: TaskCrudRouteDeps): void {
     const existing = db.prepare("SELECT * FROM tasks WHERE id = ?").get(id) as
       | {
           assigned_agent_id: string | null;
+          project_id: string | null;
         }
       | undefined;
     if (!existing) return res.status(404).json({ error: "not_found" });
@@ -654,8 +655,16 @@ export function registerTaskCrudRoutes(deps: TaskCrudRouteDeps): void {
       );
     }
 
-    db.prepare("DELETE FROM task_logs WHERE task_id = ?").run(id);
-    db.prepare("DELETE FROM messages WHERE task_id = ?").run(id);
+    // Preserve project association before orphaning logs/messages/meeting_minutes
+    if (existing.project_id) {
+      db.prepare("UPDATE task_logs SET project_id = ? WHERE task_id = ? AND project_id IS NULL").run(existing.project_id, id);
+      db.prepare("UPDATE messages SET project_id = ? WHERE task_id = ? AND project_id IS NULL").run(existing.project_id, id);
+      db.prepare("UPDATE meeting_minutes SET project_id = ? WHERE task_id = ? AND project_id IS NULL").run(existing.project_id, id);
+    }
+    db.prepare("UPDATE task_logs SET task_id = NULL WHERE task_id = ?").run(id);
+    db.prepare("UPDATE messages SET task_id = NULL WHERE task_id = ?").run(id);
+    // Detach meeting_minutes from task so CASCADE doesn't delete them
+    db.prepare("UPDATE meeting_minutes SET task_id = NULL WHERE task_id = ?").run(id);
     db.prepare("DELETE FROM tasks WHERE id = ?").run(id);
 
     for (const suffix of [".log", ".prompt.txt"]) {
@@ -676,33 +685,53 @@ export function registerTaskCrudRoutes(deps: TaskCrudRouteDeps): void {
   // ---------------------------------------------------------------------------
   app.get("/api/tasks/:id/meeting-minutes", (req, res) => {
     const { id } = req.params as { id: string };
+    const { project_id } = req.query as { project_id?: string };
     try {
-      // source_task_id 포함: 서브태스크에서 부모 태스크 회의록도 조회
-      const task = db.prepare("SELECT source_task_id FROM tasks WHERE id = ?").get(id) as
-        | { source_task_id: string | null }
-        | undefined;
-      const taskIds = [id];
-      if (task?.source_task_id) taskIds.push(task.source_task_id);
+      // project_id가 있으면 프로젝트의 모든 태스크 회의록 조회 (킥오프 회의록 포함)
+      let taskIds: string[];
+      if (project_id) {
+        const projectTaskRows = db.prepare("SELECT id FROM tasks WHERE project_id = ?").all(project_id) as { id: string }[];
+        taskIds = projectTaskRows.map((r) => r.id);
+        if (taskIds.length === 0) taskIds = [id];
+      } else {
+        // source_task_id 포함: 서브태스크에서 부모 태스크 회의록도 조회
+        const task = db.prepare("SELECT source_task_id FROM tasks WHERE id = ?").get(id) as
+          | { source_task_id: string | null }
+          | undefined;
+        taskIds = [id];
+        if (task?.source_task_id) taskIds.push(task.source_task_id);
+      }
 
       const inClause = taskIds.map(() => "?").join(",");
+
+      // Include orphaned meeting minutes (task deleted but project_id preserved)
+      const orphanProjectCondition = project_id
+        ? ` OR (mm.task_id IS NULL AND mm.project_id = ?)`
+        : "";
+      const minutesParams: string[] = [...taskIds];
+      if (project_id) minutesParams.push(project_id);
 
       const minutes = db
         .prepare(
           `SELECT id, task_id, meeting_type, round, title, status, started_at, completed_at, created_at
-           FROM meeting_minutes WHERE task_id IN (${inClause}) ORDER BY round ASC, started_at ASC`,
+           FROM meeting_minutes mm WHERE (mm.task_id IN (${inClause})${orphanProjectCondition}) ORDER BY round ASC, started_at ASC`,
         )
-        .all(...taskIds) as MeetingMinutesRow[];
+        .all(...minutesParams) as MeetingMinutesRow[];
 
-      const entries = db
-        .prepare(
-          `SELECT e.id, e.meeting_id, e.seq, e.speaker_agent_id, e.speaker_name,
-                  e.department_name, e.role_label, e.message_type, e.content, e.created_at
-           FROM meeting_minute_entries e
-           INNER JOIN meeting_minutes m ON e.meeting_id = m.id
-           WHERE m.task_id IN (${inClause})
-           ORDER BY m.round ASC, m.started_at ASC, e.seq ASC`,
-        )
-        .all(...taskIds) as MeetingMinuteEntryRow[];
+      const meetingIds = minutes.map((m) => m.id);
+      let entries: MeetingMinuteEntryRow[] = [];
+      if (meetingIds.length > 0) {
+        const meetingInClause = meetingIds.map(() => "?").join(",");
+        entries = db
+          .prepare(
+            `SELECT e.id, e.meeting_id, e.seq, e.speaker_agent_id, e.speaker_name,
+                    e.department_name, e.role_label, e.message_type, e.content, e.created_at
+             FROM meeting_minute_entries e
+             WHERE e.meeting_id IN (${meetingInClause})
+             ORDER BY e.seq ASC`,
+          )
+          .all(...meetingIds) as MeetingMinuteEntryRow[];
+      }
 
       const entriesByMeeting = new Map<string, MeetingMinuteEntryRow[]>();
       for (const entry of entries) {

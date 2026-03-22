@@ -16,7 +16,7 @@ interface Props {
 const PLACEHOLDER_KO = `원하는 기능을 자세히 설명해주세요.
 
 좋은 프롬프트 예시:
-• 현재 working 중인 에이전트 카드를 부서 색상으로 표시하고, 담당 태스크명도 보여줘
+• 현재 working 중인 에이전트 카드를 전문 분야 색상으로 표시하고, 담당 태스크명도 보여줘
 • 오늘 완료된 태스크를 에이전트별로 집계해서 막대 그래프로 보여줘
 • 우선순위가 critical/high인 태스크만 필터링해서 테이블로 표시하고 30초마다 갱신해줘
 • 에이전트 성능 데이터를 가져와서 완료 태스크 수 TOP 3를 시각화해줘`;
@@ -24,7 +24,7 @@ const PLACEHOLDER_KO = `원하는 기능을 자세히 설명해주세요.
 const PLACEHOLDER_EN = `Describe the feature you want in detail.
 
 Good prompt examples:
-• Show currently working agents as cards colored by department, with their task name
+• Show currently working agents as cards colored by specialty, with their task name
 • Aggregate today's completed tasks per agent and show as a bar chart
 • Filter critical/high priority tasks into a table, auto-refresh every 30s
 • Fetch agent performance data and visualize the top 3 by tasks completed`;
@@ -32,20 +32,20 @@ Good prompt examples:
 const DOTS = ["⣾", "⣽", "⣻", "⢿", "⡿", "⣟", "⣯", "⣷"];
 
 const QUICK_PROMPTS_KO = [
-  "현재 working 중인 에이전트 카드 목록 (부서 컬러, 담당 태스크 표시)",
+  "현재 working 중인 에이전트 카드 목록 (전문 분야 컬러, 담당 태스크 표시)",
   "에이전트별 완료 태스크 수 집계 + 순위 리스트",
   "우선순위 critical/high 태스크만 테이블로 필터링, 30초 갱신",
   "에이전트 성능 TOP 3 시각화 (완료수·성공률)",
-  "부서별 에이전트 수 + 현재 가동률 카드",
+  "전문 분야별 에이전트 수 + 현재 가동률 카드",
   "최근 오류 알림 5개를 빨간 배경으로 표시",
 ];
 
 const QUICK_PROMPTS_EN = [
-  "Working agents card list (dept color, task name shown)",
+  "Working agents card list (specialty color, task name shown)",
   "Completed task count per agent + ranking list",
   "Filter critical/high priority tasks into a table, auto-refresh 30s",
   "Agent performance TOP 3 visualization (count · success rate)",
-  "Per-department agent count + current utilization cards",
+  "Per-specialty agent count + current utilization cards",
   "Last 5 error notifications with red background",
 ];
 

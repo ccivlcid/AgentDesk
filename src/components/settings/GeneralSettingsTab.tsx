@@ -42,16 +42,6 @@ export default function GeneralSettingsTab({ t, form, setForm, saved, onSave }: 
 
         <div className="space-y-4 p-4">
           <div>
-            {fieldLabel(t({ ko: "company name", en: "company name", ja: "company name", zh: "company name" }))}
-            <input
-              type="text"
-              value={form.companyName}
-              onChange={(e) => setForm({ ...form, companyName: e.target.value })}
-              style={inputStyle}
-            />
-          </div>
-
-          <div>
             {fieldLabel(t({ ko: "client name", en: "client name", ja: "client name", zh: "client name" }))}
             <input
               type="text"

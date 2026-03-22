@@ -1340,11 +1340,10 @@
 }
 
 /* ═══════════════════════════════════════════════════════════
-   AgentDesk — FM2024 Management Sim × Retro Terminal
-   Design System Components
+   AgentDesk — Design System Components
    ═══════════════════════════════════════════════════════════ */
 
-/* ─── FM2024 Agent Card ─── */
+/* ─── Agent Card ─── */
 .fm-agent-card:hover {
   background: var(--th-bg-surface-hover) !important;
   border-color: var(--th-border-strong) !important;
@@ -1353,7 +1352,7 @@
   border-left-color: #22c55e !important;
 }
 
-/* ─── FM2024 Panel ─── */
+/* ─── Panel ─── */
 .fm-panel {
   background: var(--th-panel-bg);
   border: 1px solid var(--th-panel-border);
@@ -1379,7 +1378,7 @@
   padding: 12px 14px;
 }
 
-/* ─── FM2024 Section header ─── */
+/* ─── Section header ─── */
 .fm-section-label {
   font-family: var(--th-font-mono);
   font-size: 0.6rem;
@@ -1390,7 +1389,7 @@
   padding: 10px 0 4px;
 }
 
-/* ─── FM2024 Data Table ─── */
+/* ─── Data Table ─── */
 .fm-table {
   width: 100%;
   border-collapse: collapse;
@@ -1426,7 +1425,7 @@
   color: var(--th-text-primary);
 }
 
-/* ─── FM2024 Attribute Bar ─── */
+/* ─── Attribute Bar ─── */
 .fm-attr-bar {
   display: flex;
   align-items: center;
@@ -1464,7 +1463,7 @@
   flex-shrink: 0;
 }
 
-/* ─── FM2024 Tabs ─── */
+/* ─── Tabs ─── */
 .fm-tabs {
   display: flex;
   border-bottom: 1px solid var(--th-border);
@@ -1488,7 +1487,7 @@
   border-bottom-color: var(--th-accent, #f59e0b);
 }
 
-/* ─── FM2024 Activity Feed (인박스 스타일) ─── */
+/* ─── Activity Feed ─── */
 .fm-feed-item {
   display: flex;
   align-items: flex-start;

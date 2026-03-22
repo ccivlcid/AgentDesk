@@ -1,21 +1,14 @@
 import type { FormData } from "../types";
 import { AgentFormModalCliBlock } from "./AgentFormModalCliBlock";
 import { AgentFormModalPersonaBlock } from "./AgentFormModalPersonaBlock";
-import { AgentFormModalProviderBlocks } from "./AgentFormModalProviderBlocks";
+import { AgentFormModalPmSection } from "./AgentFormModalPmSection";
 import { agentFormSectionLabelStyle } from "./sectionStyles";
-import type { ApiProviderOption } from "./types";
-import type { LocalModelOption } from "./useAgentFormModalResources";
 
 export function AgentFormModalAdvancedSection({
   tr,
   form,
   setForm,
   isKo,
-  apiProviders,
-  setApiProviders,
-  localModels,
-  connectingLocal,
-  setConnectingLocal,
   generatingPersona,
   handleGeneratePersona,
   showPersonaCatalog,
@@ -25,11 +18,6 @@ export function AgentFormModalAdvancedSection({
   form: FormData;
   setForm: (f: FormData) => void;
   isKo: boolean;
-  apiProviders: ApiProviderOption[];
-  setApiProviders: (p: ApiProviderOption[]) => void;
-  localModels: LocalModelOption[];
-  connectingLocal: boolean;
-  setConnectingLocal: (v: boolean) => void;
   generatingPersona: boolean;
   handleGeneratePersona: () => void;
   showPersonaCatalog: boolean;
@@ -37,21 +25,15 @@ export function AgentFormModalAdvancedSection({
 }) {
   return (
     <div>
+      {/* PM Orchestration section - always shown */}
+      <AgentFormModalPmSection tr={tr} form={form} setForm={setForm} />
+
+      {/* CLI settings */}
       <div className="mb-3 pb-1" style={{ borderBottom: "1px solid var(--th-border)" }}>
         <span style={agentFormSectionLabelStyle}>ADVANCED</span>
       </div>
 
       <AgentFormModalCliBlock tr={tr} form={form} setForm={setForm} />
-
-      <AgentFormModalProviderBlocks
-        form={form}
-        setForm={setForm}
-        apiProviders={apiProviders}
-        setApiProviders={setApiProviders}
-        localModels={localModels}
-        connectingLocal={connectingLocal}
-        setConnectingLocal={setConnectingLocal}
-      />
 
       <AgentFormModalPersonaBlock
         tr={tr}

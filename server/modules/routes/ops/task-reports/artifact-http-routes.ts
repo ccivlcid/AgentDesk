@@ -66,23 +66,23 @@ export function registerTaskReportArtifactRoutes(app: Express, db: PrepareDb): v
       const foundFiles = new Map<string, { abs: string; rel: string }>();
       const isScanRootCwd = path.resolve(scanRoot) === path.resolve(cwdRoot);
 
-      const outputDirs = isScanRootCwd
-        ? ["video_output", "out", "output", "reports"]
-        : ["video_output", "out", "output", "reports", "dist", "build", "docs"];
-      for (const dir of outputDirs) {
-        const absDir = path.join(scanRoot, dir);
-        if (fs.existsSync(absDir)) {
-          scanDirForDeliverables(absDir, scanRoot, 3, foundFiles);
-        }
-      }
       if (isScanRootCwd) {
+        // Scanning AgentDesk's own cwd — only check specific output dirs
+        const outputDirs = ["video_output", "out", "output", "reports"];
+        for (const dir of outputDirs) {
+          const absDir = path.join(scanRoot, dir);
+          if (fs.existsSync(absDir)) {
+            scanDirForDeliverables(absDir, scanRoot, 3, foundFiles);
+          }
+        }
         const docsReports = path.join(scanRoot, "docs", "reports");
         if (fs.existsSync(docsReports)) {
           scanDirForDeliverables(docsReports, scanRoot, 2, foundFiles);
         }
-      }
-      if (!isScanRootCwd) {
-        scanDirForDeliverables(scanRoot, scanRoot, 1, foundFiles);
+      } else {
+        // External project path — broad recursive scan so we find files
+        // in subdirectories like project/chatbot/src/..., project/app/...
+        scanDirForDeliverables(scanRoot, scanRoot, 5, foundFiles, 0, true);
       }
 
       const artifacts: Array<{

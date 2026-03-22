@@ -5,7 +5,7 @@
 import { useEffect } from "react";
 import type { Project, ProjectFolder } from "../../types";
 import type { DesktopIconDef } from "./DesktopIcon";
-import { ICON_GRID_X, ICON_GRID_Y } from "./snapToFreeCell";
+import { ICON_GRID_X, ICON_GRID_Y, GRID_ORIGIN_X, GRID_ORIGIN_Y } from "./snapToFreeCell";
 
 export function useDesktopIconPositionsSync(
   iconPositionsRef: React.MutableRefObject<Map<string, { x: number; y: number }>>,
@@ -19,18 +19,18 @@ export function useDesktopIconPositionsSync(
   useEffect(() => {
     const map = new Map<string, { x: number; y: number }>();
     allIcons.forEach((def, i) => {
-      map.set(def.id, DEFAULT_ICON_POSITIONS[def.id] ?? { x: 24 + i * ICON_GRID_X, y: 60 });
+      map.set(def.id, DEFAULT_ICON_POSITIONS[def.id] ?? { x: GRID_ORIGIN_X + i * ICON_GRID_X, y: GRID_ORIGIN_Y });
     });
     pendingDocs.forEach((doc, i) => {
-      map.set(`doc-${doc.id}`, { x: 24 + i * ICON_GRID_X, y: 60 + ICON_GRID_Y * 3 + ICON_GRID_Y });
+      map.set(`doc-${doc.id}`, { x: GRID_ORIGIN_X + i * ICON_GRID_X, y: GRID_ORIGIN_Y + ICON_GRID_Y * 3 + ICON_GRID_Y });
     });
     folders.forEach((folder, i) => {
-      map.set(`folder-${folder.id}`, { x: 24 + i * ICON_GRID_X, y: 60 + ICON_GRID_Y * 2 });
+      map.set(`folder-${folder.id}`, { x: GRID_ORIGIN_X + i * ICON_GRID_X, y: GRID_ORIGIN_Y + ICON_GRID_Y * 2 });
     });
     projects.filter((p) => !p.folder_id).forEach((project, i) => {
       const col = i % 9;
       const row = Math.floor(i / 9);
-      map.set(`project-${project.id}`, { x: 24 + col * ICON_GRID_X, y: 60 + ICON_GRID_Y + row * ICON_GRID_Y });
+      map.set(`project-${project.id}`, { x: GRID_ORIGIN_X + col * ICON_GRID_X, y: GRID_ORIGIN_Y + ICON_GRID_Y + row * ICON_GRID_Y });
     });
     iconPositionsRef.current = map;
     // eslint-disable-next-line react-hooks/exhaustive-deps

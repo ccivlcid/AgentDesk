@@ -1,23 +1,70 @@
 #!/usr/bin/env node
 /**
  * db:reset — AgentDesk DB 초기화 스크립트
- * agentdesk.sqlite (및 WAL/SHM 파일) 삭제 후 서버 기동 시 마이그레이션이 자동 재실행됩니다.
+ * 1. 포트 8790에서 실행 중인 서버를 자동 종료
+ * 2. agentdesk.sqlite (및 WAL/SHM 파일) 삭제
+ * 3. 다음 pnpm dev 실행 시 마이그레이션 자동 재실행
  */
 
 import fs from "node:fs";
 import path from "node:path";
 import readline from "node:readline";
+import { execSync } from "node:child_process";
 
 const DB_PATH = process.env.DB_PATH ?? path.join(process.cwd(), "agentdesk.sqlite");
 const targets = [DB_PATH, `${DB_PATH}-wal`, `${DB_PATH}-shm`];
+const PORT = 8790;
+
+async function killServer() {
+  try {
+    if (process.platform === "win32") {
+      // Windows: netstat로 PID 찾고 taskkill
+      const out = execSync(`netstat -ano | findstr ":${PORT}.*LISTENING"`, { encoding: "utf8", timeout: 5000 }).trim();
+      const lines = out.split("\n").filter(Boolean);
+      const pids = new Set();
+      for (const line of lines) {
+        const parts = line.trim().split(/\s+/);
+        const pid = parts[parts.length - 1];
+        if (pid && pid !== "0") pids.add(pid);
+      }
+      for (const pid of pids) {
+        try {
+          execSync(`taskkill /F /PID ${pid}`, { timeout: 5000 });
+          console.log(`  서버 프로세스 종료 (PID: ${pid})`);
+        } catch { /* already dead */ }
+      }
+      if (pids.size > 0) {
+        // 파일 잠금 해제 대기
+        await new Promise((r) => setTimeout(r, 1500));
+      }
+    } else {
+      // Unix: lsof로 PID 찾고 kill
+      const out = execSync(`lsof -ti :${PORT}`, { encoding: "utf8", timeout: 5000 }).trim();
+      if (out) {
+        for (const pid of out.split("\n").filter(Boolean)) {
+          try {
+            execSync(`kill -9 ${pid}`, { timeout: 5000 });
+            console.log(`  서버 프로세스 종료 (PID: ${pid})`);
+          } catch { /* already dead */ }
+        }
+      }
+    }
+  } catch {
+    // 서버가 실행 중이 아님 — 정상
+  }
+}
 
 function deleteFiles() {
   let deleted = 0;
   for (const f of targets) {
     if (fs.existsSync(f)) {
-      fs.rmSync(f, { force: true });
-      console.log(`  deleted: ${f}`);
-      deleted++;
+      try {
+        fs.rmSync(f, { force: true });
+        console.log(`  deleted: ${f}`);
+        deleted++;
+      } catch (err) {
+        console.error(`  삭제 실패: ${f} — ${err.message}`);
+      }
     }
   }
   if (deleted === 0) {
@@ -28,24 +75,32 @@ function deleteFiles() {
   }
 }
 
-// --force 플래그가 있으면 확인 없이 즉시 삭제
-if (process.argv.includes("--force") || process.argv.includes("-f")) {
-  console.log("DB 초기화 중...");
-  deleteFiles();
-  process.exit(0);
+async function run() {
+  // --force 플래그가 있으면 확인 없이 즉시 실행
+  if (process.argv.includes("--force") || process.argv.includes("-f")) {
+    console.log("서버 종료 중...");
+    await killServer();
+    console.log("DB 초기화 중...");
+    deleteFiles();
+    process.exit(0);
+  }
+
+  // 대화형 확인
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+  console.log(`\n⚠️  AgentDesk DB를 초기화합니다.`);
+  console.log(`   경로: ${DB_PATH}`);
+  console.log("   실행 중인 서버를 자동 종료하고 모든 데이터를 삭제합니다.\n");
+  rl.question("계속하시겠습니까? (y/N) ", async (answer) => {
+    rl.close();
+    if (answer.trim().toLowerCase() === "y") {
+      console.log("\n서버 종료 중...");
+      await killServer();
+      deleteFiles();
+    } else {
+      console.log("취소되었습니다.");
+    }
+    process.exit(0);
+  });
 }
 
-// 대화형 확인
-const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-console.log(`\n⚠️  AgentDesk DB를 초기화합니다.`);
-console.log(`   경로: ${DB_PATH}`);
-console.log("   모든 에이전트·태스크·설정 데이터가 삭제됩니다.\n");
-rl.question("계속하시겠습니까? (y/N) ", (answer) => {
-  rl.close();
-  if (answer.trim().toLowerCase() === "y") {
-    deleteFiles();
-  } else {
-    console.log("취소되었습니다.");
-  }
-  process.exit(0);
-});
+run();

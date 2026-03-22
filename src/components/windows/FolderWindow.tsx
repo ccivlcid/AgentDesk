@@ -9,7 +9,12 @@ import {
   fsBrowse,
   type FsEntry,
 } from "../../api/project-folders";
-import { createProject, addProjectSource } from "../../api/organization-projects";
+import {
+  createProject,
+  addProjectSource,
+  getProjectChangelog,
+  type ChangelogEntry,
+} from "../../api/organization-projects";
 import type { ProjectFolder, Project } from "../../types";
 
 interface FolderWindowProps {
@@ -382,11 +387,127 @@ function MergeTab({ folder, onProjectCreated }: {
   );
 }
 
+// ─── ChangelogTab ─────────────────────────────────────────────────────────────
+
+function ChangelogTab({ folder }: { folder: ProjectFolder }) {
+  const { t } = useI18n();
+  const [entries, setEntries] = useState<ChangelogEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    const projectIds = folder.projects.map((p) => p.id);
+    if (projectIds.length === 0) {
+      setEntries([]);
+      setLoading(false);
+      return;
+    }
+    Promise.all(projectIds.map((id) => getProjectChangelog(id, { limit: 50 }).catch(() => ({ entries: [] as ChangelogEntry[], total: 0 }))))
+      .then((results) => {
+        const all = results.flatMap((r) => r.entries);
+        all.sort((a, b) => b.created_at - a.created_at);
+        setEntries(all.slice(0, 100));
+      })
+      .finally(() => setLoading(false));
+  }, [folder.projects]);
+
+  const entryTypeLabel = (type: string) => {
+    const map: Record<string, { ko: string; en: string; ja: string; zh: string }> = {
+      feature: { ko: "FEATURE", en: "FEATURE", ja: "FEATURE", zh: "FEATURE" },
+      fix: { ko: "FIX", en: "FIX", ja: "FIX", zh: "FIX" },
+      refactor: { ko: "REFACTOR", en: "REFACTOR", ja: "REFACTOR", zh: "REFACTOR" },
+      docs: { ko: "DOCS", en: "DOCS", ja: "DOCS", zh: "DOCS" },
+    };
+    return map[type] || map.feature;
+  };
+
+  const entryTypeColor = (type: string) => {
+    switch (type) {
+      case "fix": return "#ef4444";
+      case "refactor": return "#8b5cf6";
+      case "docs": return "#3b82f6";
+      default: return "#22c55e";
+    }
+  };
+
+  if (loading) return (
+    <div style={{ padding: 24, textAlign: "center", fontSize: 11, color: "var(--th-text-muted)", fontFamily: "var(--th-font-mono)" }}>
+      {t({ ko: "로딩 중...", en: "Loading...", ja: "読み込み中...", zh: "加载中..." })}
+    </div>
+  );
+
+  if (entries.length === 0) return (
+    <div style={{ padding: 32, textAlign: "center", fontSize: 11, color: "var(--th-text-muted)", fontFamily: "var(--th-font-mono)" }}>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: "block", margin: "0 auto 10px" }}>
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+        <polyline points="14 2 14 8 20 8" />
+        <line x1="16" y1="13" x2="8" y2="13" />
+        <line x1="16" y1="17" x2="8" y2="17" />
+      </svg>
+      {t({ ko: "변경 이력이 없습니다.", en: "No changelog entries yet.", ja: "変更履歴がありません。", zh: "暂无变更记录。" })}
+    </div>
+  );
+
+  // Group by version
+  const grouped = new Map<string, ChangelogEntry[]>();
+  for (const entry of entries) {
+    const key = `v${entry.version}`;
+    if (!grouped.has(key)) grouped.set(key, []);
+    grouped.get(key)!.push(entry);
+  }
+
+  return (
+    <div style={{ flex: 1, overflowY: "auto", padding: "10px 14px", fontFamily: "var(--th-font-mono)" }}>
+      {[...grouped.entries()].map(([versionKey, items]) => (
+        <div key={versionKey} style={{ marginBottom: 16 }}>
+          <div style={{
+            display: "flex", alignItems: "center", gap: 8, marginBottom: 6,
+            borderBottom: "1px solid var(--th-border)", paddingBottom: 4,
+          }}>
+            <span style={{
+              fontSize: 12, fontWeight: 700, color: "var(--th-accent)",
+            }}>
+              {versionKey}
+            </span>
+            <span style={{ fontSize: 9, color: "var(--th-text-muted)" }}>
+              {new Date(items[0].created_at).toLocaleDateString()}
+            </span>
+          </div>
+          {items.map((entry) => (
+            <div key={entry.id} style={{
+              display: "flex", alignItems: "flex-start", gap: 8,
+              padding: "4px 0 4px 8px",
+            }}>
+              <span style={{
+                fontSize: 8, padding: "1px 4px",
+                background: `${entryTypeColor(entry.entry_type)}20`,
+                color: entryTypeColor(entry.entry_type),
+                border: `1px solid ${entryTypeColor(entry.entry_type)}40`,
+                flexShrink: 0, marginTop: 1,
+              }}>
+                {t(entryTypeLabel(entry.entry_type))}
+              </span>
+              <span style={{ fontSize: 10, color: "var(--th-text-primary)", flex: 1 }}>
+                {entry.summary}
+              </span>
+              {entry.task_id && (
+                <span style={{ fontSize: 8, color: "var(--th-text-muted)", flexShrink: 0 }}>
+                  #{entry.task_id.slice(0, 8)}
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // ─── FolderWindow ─────────────────────────────────────────────────────────────
 
 const WIN_W = 680;
 const WIN_H = 520;
-type Tab = "projects" | "tree" | "merge";
+type Tab = "projects" | "tree" | "merge" | "changelog";
 
 function folderWindowDefaults() {
   return {
@@ -411,6 +532,25 @@ export default function FolderWindow({
   const [busyProjectId, setBusyProjectId] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>("projects");
   const [ejectMsg, setEjectMsg] = useState<string | null>(null);
+  const [versionMap, setVersionMap] = useState<Record<string, string>>({});
+
+  // Fetch versions for all projects in folder
+  useEffect(() => {
+    const ids = folder.projects.map((p) => p.id);
+    if (ids.length === 0) return;
+    Promise.all(
+      ids.map((id) =>
+        import("../../api/organization-projects")
+          .then((mod) => mod.getProjectVersion(id))
+          .then((v) => [id, v] as const)
+          .catch(() => [id, "0.1.0"] as const),
+      ),
+    ).then((pairs) => {
+      const map: Record<string, string> = {};
+      for (const [id, v] of pairs) map[id] = v;
+      setVersionMap(map);
+    });
+  }, [folder.projects]);
 
   const handleHeaderMouseDown = useCallback((e: React.MouseEvent) => {
     setDragging(true);
@@ -459,9 +599,10 @@ export default function FolderWindow({
   }, [folder, allProjects, onFolderUpdate, onProjectPathChanged, onProjectAdded]);
 
   const TABS: { id: Tab; icon: string; label: { ko: string; en: string; ja: string; zh: string } }[] = [
-    { id: "projects", icon: "🗂", label: { ko: "프로젝트",  en: "Projects",   ja: "プロジェクト", zh: "项目" } },
-    { id: "tree",     icon: "📂", label: { ko: "파일 탐색기", en: "File Tree", ja: "ファイル",     zh: "文件树" } },
-    { id: "merge",    icon: "⊕",  label: { ko: "통합",       en: "Merge",      ja: "統合",         zh: "合并" } },
+    { id: "projects",  icon: "🗂", label: { ko: "프로젝트",   en: "Projects",   ja: "プロジェクト", zh: "项目" } },
+    { id: "changelog", icon: "v",  label: { ko: "변경 이력",  en: "Changelog",  ja: "変更履歴",     zh: "变更记录" } },
+    { id: "tree",      icon: "📂", label: { ko: "파일 탐색기", en: "File Tree",  ja: "ファイル",     zh: "文件树" } },
+    { id: "merge",     icon: "⊕",  label: { ko: "통합",       en: "Merge",      ja: "統合",         zh: "合并" } },
   ];
 
   return (
@@ -554,6 +695,15 @@ export default function FolderWindow({
                     }}>
                       {p.name}
                     </div>
+                    {versionMap[p.id] && (
+                      <span style={{
+                        fontSize: 9, fontFamily: "var(--th-font-mono)", fontWeight: 600,
+                        color: "var(--th-accent)", background: "rgba(245,158,11,0.1)",
+                        padding: "1px 6px", border: "1px solid rgba(245,158,11,0.25)",
+                      }}>
+                        v{versionMap[p.id]}
+                      </span>
+                    )}
                     <div style={{
                       fontSize: 9, color: "var(--th-text-muted)", width: "100%",
                       overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textAlign: "center",
@@ -598,6 +748,13 @@ export default function FolderWindow({
                 <ProjectPickerDropdown folder={folder} allProjects={allProjects} onAdd={handleAdd} onClose={() => setPickerOpen(false)} />
               )}
             </div>
+          </div>
+        )}
+
+        {/* Tab: Changelog */}
+        {tab === "changelog" && (
+          <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+            <ChangelogTab folder={folder} />
           </div>
         )}
 

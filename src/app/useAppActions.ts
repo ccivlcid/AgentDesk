@@ -1,5 +1,6 @@
 import { useCallback, useRef } from "react";
 import type { Dispatch, SetStateAction } from "react";
+import { useProjectStore } from "../store/projectStore";
 import { useUiStore } from "../store/uiStore";
 import * as api from "../api";
 import { isApiRequestError } from "../api/core";
@@ -98,7 +99,8 @@ export function useAppActions({
 
   const handleSendAnnouncement = useCallback(async (content: string) => {
     try {
-      await api.sendAnnouncement(content);
+      const projectId = useProjectStore.getState().currentProjectId;
+      await api.sendAnnouncement(content, projectId);
     } catch (error) {
       handleApiError(error, showToast, { context: "Announcement failed" });
     }

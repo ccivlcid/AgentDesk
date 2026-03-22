@@ -84,9 +84,9 @@ export default function FilterBar({
         aria-label={t({ ko: "업무 검색", en: "Search tasks", ja: "タスク検索", zh: "搜索任务" })}
       />
 
-      {/* 부서 */}
+      {/* 전문 분야 */}
       <select value={filterDept} onChange={(e) => onFilterDept(e.target.value)} style={selectStyle}>
-        <option value="">{t({ ko: "전체 부서", en: "ALL DEPT", ja: "全部署", zh: "全部门" })}</option>
+        <option value="">{t({ ko: "전체 전문 분야", en: "ALL SPECIALTIES", ja: "全専門分野", zh: "全专业领域" })}</option>
         {departments.map((d) => (
           <option key={d.id} value={d.id}>
             {d.icon} {locale === "ko" ? d.name_ko : d.name}

@@ -452,7 +452,7 @@ function bulletRow(icon, text, color = TXT) {
   const phases = [
     ["Phase 1–10  (Core OS)",       100, ACC3],
     ["Phase 11–12 (Agent CLI)",      100, ACC3],
-    ["Phase 13   (FM2024 CSS)",      100, ACC3],
+    ["Phase 13   (CSS Overhaul)",    100, ACC3],
     ["Phase 14   (MED Features)",    100, ACC3],
     ["Phase 15   (Image Studio)",    100, ACC3],
     ["Phase 16   (Synapse KB)",      100, ACC3],

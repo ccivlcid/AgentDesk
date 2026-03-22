@@ -150,22 +150,6 @@ export function IconCliCost({ color }: IconProps) {
   );
 }
 
-export function IconFlowGraph({ color }: IconProps) {
-  return (
-    <svg viewBox="0 0 28 28" fill="none" stroke={color} strokeWidth={S} strokeLinecap="round" strokeLinejoin="round" width={26} height={26}>
-      <circle cx="14" cy="14" r="3" />
-      <circle cx="5" cy="7" r="2.5" />
-      <circle cx="23" cy="7" r="2.5" />
-      <circle cx="5" cy="21" r="2.5" />
-      <circle cx="23" cy="21" r="2.5" />
-      <line x1="7" y1="8.5" x2="11.8" y2="12.2" />
-      <line x1="21" y1="8.5" x2="16.2" y2="12.2" />
-      <line x1="7" y1="19.5" x2="11.8" y2="15.8" />
-      <line x1="21" y1="19.5" x2="16.2" y2="15.8" />
-    </svg>
-  );
-}
-
 export function IconFileTree({ color }: IconProps) {
   return (
     <svg viewBox="0 0 28 28" fill="none" stroke={color} strokeWidth={S} strokeLinecap="round" strokeLinejoin="round" width={26} height={26}>
@@ -378,24 +362,6 @@ export function IconDashboard({ color }: IconProps) {
       <rect x="15" y="3"  width="10" height="10" rx="1.5" />
       <rect x="3"  y="15" width="10" height="10" rx="1.5" />
       <rect x="15" y="15" width="10" height="10" rx="1.5" />
-    </svg>
-  );
-}
-
-export function IconAgentGraph({ color }: IconProps) {
-  return (
-    <svg viewBox="0 0 28 28" fill="none" stroke={color} strokeWidth={S} strokeLinecap="round" strokeLinejoin="round" width={26} height={26}>
-      {/* 엣지 */}
-      <line x1="14" y1="5" x2="6" y2="14" />
-      <line x1="14" y1="5" x2="22" y2="14" />
-      <line x1="6" y1="14" x2="14" y2="23" />
-      <line x1="22" y1="14" x2="14" y2="23" />
-      <line x1="6" y1="14" x2="22" y2="14" />
-      {/* 노드 */}
-      <circle cx="14" cy="5" r="2.5" fill={color} stroke="none" />
-      <circle cx="6" cy="14" r="2.5" fill={color} stroke="none" />
-      <circle cx="22" cy="14" r="2.5" fill={color} stroke="none" />
-      <circle cx="14" cy="23" r="2.5" fill={color} stroke="none" />
     </svg>
   );
 }

@@ -44,6 +44,7 @@ import { registerTaskSubtaskRoutes } from "./core/tasks/subtasks.ts";
 import { registerUpdateAutoRoutes } from "./core/update-auto/register.ts";
 import { registerOfficePackRoutes } from "./core/office-packs.ts";
 import { registerCategoryRoutes } from "./core/categories.ts";
+import { registerProjectTypeTemplateRoutes } from "./core/project-type-templates.ts";
 import { registerProjectDashboardRoutes } from "./core/project-dashboard.ts";
 import { registerPersonaRoutes } from "./core/personas.ts";
 import { registerCompositionTemplateRoutes } from "./ops/composition-templates.ts";
@@ -423,6 +424,7 @@ export function registerRoutesPartA(ctx: RuntimeContext): Record<string, never> 
   registerWebhookRoutes({ app, db, nowMs });
   registerPipelineGateRoutes({ app, db, nowMs });
   registerCategoryRoutes({ app, db, nowMs });
+  registerProjectTypeTemplateRoutes({ app, db, nowMs });
   registerProjectDashboardRoutes({ app, db, nowMs });
   registerPersonaRoutes({ app });
   registerCompositionTemplateRoutes({ app, db, nowMs });

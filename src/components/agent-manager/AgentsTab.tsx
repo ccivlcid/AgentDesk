@@ -117,7 +117,7 @@ export default function AgentsTab({
               type="button"
               onClick={() => setDeptTab(department.id)}
               onDoubleClick={(e) => { e.preventDefault(); onEditDepartment(department); }}
-              title={tr("더블클릭: 부서 편집", "Double-click: edit dept")}
+              title={tr("더블클릭: 전문 분야 편집", "Double-click: edit specialty")}
               className="flex items-center gap-1 px-3 py-2 border-b-2 transition-colors"
               style={{
                 fontFamily: "var(--th-font-mono)",
@@ -150,7 +150,7 @@ export default function AgentsTab({
                 className="flex items-center gap-2 px-2 py-1.5 cursor-pointer"
                 style={{ borderBottom: "1px solid var(--th-border)", borderLeft: "2px solid var(--th-border)" }}
                 onDoubleClick={() => dept && onEditDepartment(dept)}
-                title={dept ? tr("더블클릭: 부서 편집", "Double-click: edit dept") : undefined}
+                title={dept ? tr("더블클릭: 전문 분야 편집", "Double-click: edit specialty") : undefined}
               >
                 <span style={{ fontFamily: "var(--th-font-mono)", fontSize: "10px", fontWeight: 700, letterSpacing: "0.08em", color: "var(--th-text-muted)", textTransform: "uppercase" }}>
                   {dept ? localeName(locale, dept) : tr("미배정", "Unassigned", "未割当", "未分配")}

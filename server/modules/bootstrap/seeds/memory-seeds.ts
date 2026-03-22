@@ -100,7 +100,7 @@ const DEFAULT_MEMORIES: MemorySeed[] = [
     content:
       "All design tokens use the --th-* prefix (e.g. --th-bg-primary, --th-accent, --th-text-muted). " +
       "Never use hardcoded color values in component styles. " +
-      "The FM2024 dark navy palette: --th-bg-primary: #0f1117, --th-accent: #f59e0b.",
+      "The dark navy palette: --th-bg-primary: #0f1117, --th-accent: #f59e0b.",
     category: "convention",
     scope_type: "global",
     priority: 75,

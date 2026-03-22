@@ -88,15 +88,15 @@ const guides: Record<View, ScreenGuideEntry> = {
     ],
   },
   agents: {
-    title: { ko: "에이전트 & 부서", en: "Agents & Depts", ja: "エージェント & 部署", zh: "代理与部门" },
+    title: { ko: "에이전트 & 전문 분야", en: "Agents & Specialties", ja: "エージェント & 専門分野", zh: "代理与专业领域" },
     description: {
-      ko: "부서와 에이전트를 추가·수정합니다. 에이전트에 CLI 프로바이더와 역할을 지정할 수 있습니다.",
-      en: "Add or edit departments and agents. Assign CLI provider and role to each agent.",
-      ja: "部門とエージェントを追加・編集。エージェントにCLIプロバイダーと役割を指定できます。",
-      zh: "添加或编辑部门与代理。可为每个代理指定 CLI 提供商与角色。",
+      ko: "전문 분야와 에이전트를 추가·수정합니다. 에이전트에 CLI 프로바이더와 역할을 지정할 수 있습니다.",
+      en: "Add or edit specialties and agents. Assign CLI provider and role to each agent.",
+      ja: "専門分野とエージェントを追加・編集。エージェントにCLIプロバイダーと役割を指定できます。",
+      zh: "添加或编辑专业领域与代理。可为每个代理指定 CLI 提供商与角色。",
     },
     tips: [
-      { ko: "부서 생성 후 에이전트 추가", en: "Create a department, then add agents", ja: "部門を作成してからエージェントを追加", zh: "先创建部门再添加代理" },
+      { ko: "전문 분야 생성 후 에이전트 추가", en: "Create a specialty, then add agents", ja: "専門分野を作成してからエージェントを追加", zh: "先创建专业领域再添加代理" },
       { ko: "Claude Code, Codex, Gemini 등 프로바이더 선택", en: "Choose provider (Claude Code, Codex, Gemini, etc.)", ja: "Claude Code、Codex、Geminiなどのプロバイダーを選択", zh: "选择提供商（Claude Code、Codex、Gemini 等）" },
       { ko: "프로젝트 팀에 에이전트 배정은 프로젝트/대시보드에서", en: "Assign agents to project team from project/dashboard", ja: "プロジェクトチームへの割り当てはプロジェクト/ダッシュボードで", zh: "在项目/仪表盘中将代理加入项目团队" },
     ],
@@ -112,20 +112,6 @@ const guides: Record<View, ScreenGuideEntry> = {
     tips: [
       { ko: "작업 중·대기·오류 등 상태 표시", en: "Status indicators: working, idle, error, etc.", ja: "作業中・待機・エラーなどの状態表示", zh: "状态指示：工作中、空闲、错误等" },
       { ko: "실행 중인 태스크 클릭 시 터미널로 이동", en: "Click a running task to open terminal", ja: "実行中タスクをクリックでターミナルへ", zh: "点击运行中任务可打开终端" },
-    ],
-  },
-  "flow-graph": {
-    title: { ko: "플로우 그래프", en: "Flow Graph", ja: "フローグラフ", zh: "流程图" },
-    description: {
-      ko: "에이전트 간 실시간 관계를 SVG 그래프로 시각화합니다. 위임·서브에이전트·크로스부서 전달·미팅 흐름을 한눈에 확인할 수 있습니다.",
-      en: "Visualize real-time relationships between agents as an SVG graph. See delegations, sub-agents, cross-dept deliveries, and meetings at a glance.",
-      ja: "エージェント間のリアルタイム関係をSVGグラフで可視化します。委任・サブエージェント・部署間配送・ミーティングの流れを一覧できます。",
-      zh: "以 SVG 图表可视化代理间的实时关系。一览委派、子代理、跨部门传递与会议流程。",
-    },
-    tips: [
-      { ko: "마우스 휠로 줌, 드래그로 팬, 더블클릭으로 전체 보기", en: "Scroll to zoom, drag to pan, double-click to fit view", ja: "スクロールでズーム、ドラッグでパン、ダブルクリックで全体表示", zh: "滚轮缩放，拖拽平移，双击适应视图" },
-      { ko: "노드 클릭 시 에이전트 상세 패널 열기", en: "Click a node to open agent detail panel", ja: "ノードをクリックでエージェント詳細パネルを開く", zh: "点击节点可打开代理详情面板" },
-      { ko: "필터로 전체·작업중·미팅중 에이전트만 표시", en: "Use filters to show all, working, or in-meeting agents", ja: "フィルターで全体・作業中・会議中のエージェントを表示", zh: "使用过滤器显示全部、工作中或会议中的代理" },
     ],
   },
   skills: {
@@ -150,7 +136,7 @@ const guides: Record<View, ScreenGuideEntry> = {
       zh: "管理代理运行时应用的规则（指示）。可按范围与类别设置。",
     },
     tips: [
-      { ko: "글로벌·부서·에이전트별 규칙 추가", en: "Add rules globally, per department, or per agent", ja: "グローバル・部門・エージェントごとにルールを追加", zh: "按全局、部门或代理添加规则" },
+      { ko: "글로벌·전문 분야·에이전트별 규칙 추가", en: "Add rules globally, per specialty, or per agent", ja: "グローバル・専門分野・エージェントごとにルールを追加", zh: "按全局、专业领域或代理添加规则" },
       { ko: "학습(Learn)으로 규칙 자동 추천", en: "Use Learn to get rule suggestions", ja: "学習でルールの自動提案", zh: "使用学习功能获取规则建议" },
     ],
   },
@@ -163,7 +149,7 @@ const guides: Record<View, ScreenGuideEntry> = {
       zh: "管理代理引用的记忆（键值）。",
     },
     tips: [
-      { ko: "범위(글로벌·부서·에이전트)별 메모리", en: "Memory by scope: global, department, or agent", ja: "範囲（グローバル・部門・エージェント）別メモリ", zh: "按范围（全局、部门、代理）管理记忆" },
+      { ko: "범위(글로벌·전문 분야·에이전트)별 메모리", en: "Memory by scope: global, specialty, or agent", ja: "範囲（グローバル・専門分野・エージェント）別メモリ", zh: "按范围（全局、专业领域、代理）管理记忆" },
       { ko: "학습으로 메모리 자동 추천", en: "Use Learn for memory suggestions", ja: "学習でメモリの自動提案", zh: "使用学习功能获取记忆建议" },
     ],
   },
@@ -245,8 +231,8 @@ const guides: Record<View, ScreenGuideEntry> = {
     },
     tips: [
       { ko: "【스킬】에이전트에게 코드 리뷰·개발·분석 등 스킬 추가 및 학습(Learn) 가능", en: "【Skills】Add or learn skills (code review, development, analysis, etc.) for agents", ja: "【スキル】コードレビュー・開発・分析などのスキルをエージェントに追加・学習", zh: "【技能】为代理添加或学习代码审查、开发、分析等技能" },
-      { ko: "【규칙】글로벌·부서·에이전트별 행동 지침 설정 — 에이전트 실행 시 프롬프트에 자동 주입", en: "【Rules】Set behavior instructions globally, per dept, or per agent — auto-injected at runtime", ja: "【ルール】グローバル・部門・エージェントごとに行動指針を設定 — 実行時に自動注入", zh: "【规则】按全局、部门或代理设置行为指导——运行时自动注入" },
-      { ko: "【메모리】에이전트가 참조할 키-값 정보 저장 (범위별 관리)", en: "【Memory】Store key-value info agents can reference, scoped by global / dept / agent", ja: "【メモリ】エージェントが参照するキー・値情報を保存（範囲別管理）", zh: "【记忆】存储代理可引用的键值信息，按全局/部门/代理分范围管理" },
+      { ko: "【규칙】글로벌·전문 분야·에이전트별 행동 지침 설정 — 에이전트 실행 시 프롬프트에 자동 주입", en: "【Rules】Set behavior instructions globally, per specialty, or per agent — auto-injected at runtime", ja: "【ルール】グローバル・専門分野・エージェントごとに行動指針を設定 — 実行時に自動注入", zh: "【规则】按全局、专业领域或代理设置行为指导——运行时自动注入" },
+      { ko: "【메모리】에이전트가 참조할 키-값 정보 저장 (범위별 관리)", en: "【Memory】Store key-value info agents can reference, scoped by global / specialty / agent", ja: "【メモリ】エージェントが参照するキー・値情報を保存（範囲別管理）", zh: "【记忆】存储代理可引用的键值信息，按全局/专业领域/代理分范围管理" },
       { ko: "【훅】태스크 시작·완료 등 이벤트에 URL 호출 등 자동 동작 등록", en: "【Hooks】Register automatic actions (URL calls, etc.) triggered by task start, completion, etc.", ja: "【フック】タスク開始・完了などのイベントにURL呼び出しなどの自動動作を登録", zh: "【钩子】为任务开始、完成等事件注册自动动作（如 URL 调用）" },
       { ko: "【산출물】완료된 태스크의 결과물·파일 확인 및 ZIP 다운로드", en: "【Deliverables】View results and files from completed tasks, download as ZIP", ja: "【成果物】完了タスクの結果・ファイルを確認、ZIP一括ダウンロード", zh: "【产出物】查看已完成任务的结果与文件，支持 ZIP 批量下载" },
       { ko: "【템플릿】프로젝트·태스크 재사용 틀 저장 및 관리 (빌트인 + 커스텀)", en: "【Templates】Save and manage reusable project/task templates (built-in + custom)", ja: "【テンプレート】プロジェクト・タスクの再利用テンプレートを保存・管理（組み込み＋カスタム）", zh: "【模板】保存并管理可复用的项目/任务模板（内置 + 自定义）" },

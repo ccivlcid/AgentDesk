@@ -67,13 +67,22 @@ export function registerAgentWriteRoutes(
         typeof body.sprite_number === "number" && body.sprite_number > 0 ? body.sprite_number : null;
       const personaText = typeof body.personality === "string" ? body.personality.trim() : "";
       const persona_id = typeof body.persona_id === "string" ? body.persona_id.trim() || null : null;
+      const specialty = typeof body.specialty === "string" ? body.specialty.trim() || null : null;
+      const autonomy_level =
+        typeof body.autonomy_level === "string" && ["autonomous", "balanced", "supervised"].includes(body.autonomy_level)
+          ? body.autonomy_level
+          : "balanced";
+      const max_concurrent_tasks =
+        typeof body.max_concurrent_tasks === "number" && body.max_concurrent_tasks >= 1
+          ? Math.min(Math.floor(body.max_concurrent_tasks), 10)
+          : 1;
 
       const id = randomUUID();
       try {
         if (hasAgentWorkflowPackColumn) {
           db.prepare(
-            `INSERT INTO agents (id, name, name_ko, name_ja, name_zh, department_id, workflow_pack_key, role, cli_provider, avatar_emoji, sprite_number, persona_id)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            `INSERT INTO agents (id, name, name_ko, name_ja, name_zh, department_id, workflow_pack_key, role, cli_provider, avatar_emoji, sprite_number, persona_id, specialty, autonomy_level, max_concurrent_tasks)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           ).run(
             id,
             name,
@@ -87,11 +96,14 @@ export function registerAgentWriteRoutes(
             avatar_emoji,
             sprite_number,
             persona_id,
+            specialty,
+            autonomy_level,
+            max_concurrent_tasks,
           );
         } else {
           db.prepare(
-            `INSERT INTO agents (id, name, name_ko, name_ja, name_zh, department_id, role, cli_provider, avatar_emoji, sprite_number, persona_id)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            `INSERT INTO agents (id, name, name_ko, name_ja, name_zh, department_id, role, cli_provider, avatar_emoji, sprite_number, persona_id, specialty, autonomy_level, max_concurrent_tasks)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           ).run(
             id,
             name,
@@ -104,6 +116,9 @@ export function registerAgentWriteRoutes(
             avatar_emoji,
             sprite_number,
             persona_id,
+            specialty,
+            autonomy_level,
+            max_concurrent_tasks,
           );
         }
       } catch (err: unknown) {

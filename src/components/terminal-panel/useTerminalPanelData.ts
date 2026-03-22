@@ -132,12 +132,12 @@ export function useTerminalPanelData({
 
   const fetchMeetingMinutes = useCallback(async () => {
     try {
-      const rows = await api.getTaskMeetingMinutes(taskId);
+      const rows = await api.getTaskMeetingMinutes(taskId, task?.project_id ?? undefined);
       setMeetingMinutes(rows);
     } catch {
       // ignore
     }
-  }, [taskId]);
+  }, [taskId, task?.project_id]);
 
   const fetchExecution = useCallback(async () => {
     try {

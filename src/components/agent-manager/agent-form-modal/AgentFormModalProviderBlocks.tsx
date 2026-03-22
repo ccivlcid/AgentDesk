@@ -2,7 +2,14 @@ import { useI18n } from "../../../i18n";
 import { Input, useToast } from "../../ui";
 import type { FormData } from "../types";
 import type { ApiProviderOption } from "./types";
-import type { LocalModelOption } from "./useAgentFormModalResources";
+
+type LocalModelOption = {
+  id: string;
+  label: string;
+  group: string;
+  backend: string;
+  model: string;
+};
 
 export function AgentFormModalProviderBlocks({
   form,

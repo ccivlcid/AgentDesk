@@ -41,6 +41,9 @@ export interface Agent {
   cli_model?: string | null;
   cli_reasoning_level?: string | null;
   enable_planning_phase?: number | null;
+  specialty?: string | null;
+  autonomy_level?: string | null;
+  max_concurrent_tasks?: number | null;
   avatar_emoji: string;
   avatar_url?: string | null;
   sprite_number?: number | null;
@@ -327,6 +330,8 @@ export interface Project {
   folder_id?: string | null;
   directive?: string | null;
   directive_type_slug?: string | null;
+  current_version?: string | null;
+  auto_create_pr?: number | null;
 }
 
 export interface ProjectSource {
@@ -543,7 +548,8 @@ export type WSEventType =
   | "auto_open_cli"
   | "close_cli"
   | "runtime_status"
-  | "clarification_request";
+  | "clarification_request"
+  | "kickoff_stage";
 
 export interface WSEvent {
   type: WSEventType;

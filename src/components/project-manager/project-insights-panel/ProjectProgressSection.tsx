@@ -126,7 +126,7 @@ export function ProjectProgressSection({ t, groupedTaskCards }: ProjectProgressS
       {stats.topDepts.length > 0 && (
         <div>
           <p className="mb-2 text-[11px] font-medium font-mono" style={{ color: "var(--th-text-muted)" }}>
-            {t({ ko: "부서별 기여도", en: "Department Contribution", ja: "部署別貢献度", zh: "部门贡献度" })}
+            {t({ ko: "전문 분야별 기여도", en: "Specialty Contribution", ja: "専門分野別貢献度", zh: "专业领域贡献度" })}
           </p>
           <div className="space-y-1.5">
             {stats.topDepts.map((dept) => {

@@ -11,8 +11,22 @@ export const ICON_GRID_Y = 92;
 const MIN_Y = 48;
 
 /** Grid origin — all cells are multiples of the grid size from this point */
-const GRID_ORIGIN_X = 24;
-const GRID_ORIGIN_Y = 60;
+export const GRID_ORIGIN_X = 8;
+export const GRID_ORIGIN_Y = 60;
+
+/** Menu-bar height + dock height used to compute usable desktop area */
+const MENU_BAR_H = 44;
+const DOCK_H = 80;
+
+/**
+ * How many icon rows fit in the current viewport.
+ * Used by default-position logic to arrange icons top-to-bottom, then left-to-right (macOS style).
+ */
+export function getIconsPerColumn(): number {
+  const viewportH = typeof window !== "undefined" ? window.innerHeight : 900;
+  const usable = viewportH - MENU_BAR_H - DOCK_H - GRID_ORIGIN_Y;
+  return Math.max(1, Math.floor(usable / ICON_GRID_Y));
+}
 
 /** Collision radius — icons closer than this (in each axis) are considered overlapping */
 const COLLISION_W = ICON_GRID_X - 8;

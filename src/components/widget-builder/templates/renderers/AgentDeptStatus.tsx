@@ -28,7 +28,7 @@ export default function AgentDeptStatus({ config }: { config: CustomFeatureConfi
   if (byDept.length === 0) {
     return (
       <div className="flex items-center justify-center h-full" style={{ ...mono, fontSize: 11, color: "var(--th-text-muted)" }}>
-        부서 없음
+        전문 분야 없음
       </div>
     );
   }

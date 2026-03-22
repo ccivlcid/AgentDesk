@@ -54,8 +54,8 @@ AgentDesk is built on the principle that developers should see exactly what thei
 <td valign="top" width="50%">
 
 ### ⚡ Agent Runtime Engine
-- Built-in LLM execution via Anthropic Claude API
-- Turn-based tool-use loop with filesystem access
+- Built-in LLM execution — Anthropic, OpenAI, Ollama, Groq, Together, OpenRouter, Cerebras, Gemini
+- Turn-based tool-use loop: `list_files`, `read_file`, `write_file`, `search_files`, `run_command`
 - Real-time token streaming to CLI Window over WebSocket
 - Per-run execution history, token counts, cost tracking
 - `My keys, my models` — no data proxying
@@ -102,11 +102,12 @@ AgentDesk is built on the principle that developers should see exactly what thei
 </td>
 <td valign="top" width="50%">
 
-### 🧩 Custom Widgets & Analytics
-- Describe a widget → AI generates TypeScript (esbuild + iframe)
-- 7 built-in widget templates
-- Performance dashboard: success rate · completion time · sparklines
-- Export to CSV / JSON
+### 🧩 PM Orchestrator & Analytics
+- Event-driven PM agent: auto-review, failure retry/reassign/escalate
+- Auto-learning: rules & memory extracted from completed tasks
+- Agent fitness tracking: success rate per task type feeds back into assignment
+- Reports dashboard: token usage, provider breakdown, 30-day trend
+- Project retrospective generated on completion
 
 </td>
 </tr>
@@ -195,11 +196,37 @@ pnpm dev
 Open **http://localhost:8800** — requires Node.js 22+, pnpm 10+.
 
 ```
-1. Settings → API        Add an API provider (Claude / OpenAI / Gemini)
-2. Agent Manager         Create a department → hire agents
-3. New Project           Select type → edit directive → assign agents
-4. Kickoff               Tasks planned automatically → first task starts
-5. Monitor               Task Board · CLI Window · Flow Graph
+1. Settings → API        Add a provider — OpenAI, Anthropic, Ollama, Groq, or any OpenAI-compatible endpoint
+2. Agent Manager         Create a department → hire agents → assign provider & model per agent
+3. New Project           Select type → edit directive → assign agents with PM/PL/Dev roles
+4. Kickoff               PM auto-plans tasks → assigns agents by fitness → executes in parallel
+5. Monitor               Task Board · CLI Window · Flow Graph · Reports Dashboard
+```
+
+> **No API key?** Connect a local LLM instead: Settings → Local LLM → start Ollama → select a model in Agent Manager.
+
+---
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Frontend (React + Vite)                                    │
+│  Desktop · Dock · Task Board · CLI Window · Flow Graph      │
+│  Agent Detail · Reports Dashboard · Library · Settings      │
+└───────────────────────┬─────────────────────────────────────┘
+                        │ WebSocket + REST
+┌───────────────────────┴─────────────────────────────────────┐
+│  Backend (Express + tsx)                                    │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │
+│  │ Agent Runtime │  │ PM Orchestr. │  │ Workflow     │      │
+│  │ LLM ↔ Tools  │  │ Event-driven │  │ Cron sched.  │      │
+│  │ Multi-provider│  │ Review/Learn │  │ Flow builder │      │
+│  └──────────────┘  └──────────────┘  └──────────────┘      │
+│  ┌──────────────────────────────────────────────────┐      │
+│  │ SQLite (better-sqlite3) · Versioned migrations   │      │
+│  └──────────────────────────────────────────────────┘      │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -220,7 +247,11 @@ Open **http://localhost:8800** — requires Node.js 22+, pnpm 10+.
 
 ## Use Cases
 
-Ideal for developers who want to run multiple AI agents in parallel and track the full picture from one screen, teams that need to observe agent reasoning and tool use in real time, organizations looking to enforce consistent behavior through shared rules and memory, and anyone who wants to self-host their entire AI agent infrastructure with full control over keys and models.
+- **Solo developers** running multiple AI agents in parallel and tracking everything from one screen
+- **Teams** that need to observe agent reasoning, tool use, and output in real time
+- **Organizations** enforcing consistent behavior through shared rules, memory, and project directives
+- **Self-hosters** who want full control over keys, models, and data with zero cloud dependency
+- **Local LLM users** running Ollama/LM Studio models with the same orchestration capabilities
 
 ---
 

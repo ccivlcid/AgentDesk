@@ -1,6 +1,7 @@
 import { createPortal } from "react-dom";
 import AppWindow from "../../windows/AppWindow";
 import { Modal, ModalBody, ModalFooter, ModalHeader } from "../../ui";
+import { useI18n } from "../../../i18n";
 import { AgentFormModalAdvancedSection } from "./AgentFormModalAdvancedSection";
 import { AgentFormModalBasicSection } from "./AgentFormModalBasicSection";
 import { AgentFormModalFooter } from "./AgentFormModalFooter";
@@ -21,19 +22,17 @@ export default function AgentFormModal({
   onClose,
   asWindow = false,
 }: AgentFormModalProps) {
+  const { t } = useI18n();
   const {
     generatingPersona,
     showPersonaCatalog,
     setShowPersonaCatalog,
-    apiProviders,
-    setApiProviders,
-    localModels,
-    connectingLocal,
-    setConnectingLocal,
     handleGeneratePersona,
   } = useAgentFormModalResources(form, setForm, isKo);
 
-  const title = isEdit ? tr("직원 정보 수정", "Edit Agent") : tr("신규 직원 채용", "Hire New Agent");
+  const title = isEdit
+    ? t({ ko: "에이전트 설정", en: "Agent Settings", ja: "エージェント設定", zh: "代理设置" })
+    : t({ ko: "새 에이전트 등록", en: "Register New Agent", ja: "新規エージェント登録", zh: "注册新代理" });
 
   const formFields = (
     <div className="space-y-5">
@@ -43,11 +42,6 @@ export default function AgentFormModal({
         form={form}
         setForm={setForm}
         isKo={isKo}
-        apiProviders={apiProviders}
-        setApiProviders={setApiProviders}
-        localModels={localModels}
-        connectingLocal={connectingLocal}
-        setConnectingLocal={setConnectingLocal}
         generatingPersona={generatingPersona}
         handleGeneratePersona={handleGeneratePersona}
         showPersonaCatalog={showPersonaCatalog}
@@ -73,7 +67,7 @@ export default function AgentFormModal({
       <AppWindow
         windowType="create-agent"
         title={title}
-        emoji="👤"
+        emoji={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>}
         defaultWidth={720}
         defaultHeight={680}
         defaultX={Math.max(0, Math.round((window.innerWidth - 720) / 2))}

@@ -1,17 +1,8 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import * as api from "../../../api";
 import { useI18n } from "../../../i18n";
 import { useToast } from "../../ui";
 import type { FormData } from "../types";
-import type { ApiProviderOption } from "./types";
-
-export type LocalModelOption = {
-  id: string;
-  label: string;
-  group: string;
-  backend: string;
-  model: string;
-};
 
 export function useAgentFormModalResources(
   form: FormData,
@@ -22,24 +13,6 @@ export function useAgentFormModalResources(
   const { showToast } = useToast();
   const [generatingPersona, setGeneratingPersona] = useState(false);
   const [showPersonaCatalog, setShowPersonaCatalog] = useState(false);
-  const [apiProviders, setApiProviders] = useState<ApiProviderOption[]>([]);
-  const [localModels, setLocalModels] = useState<LocalModelOption[]>([]);
-  const [connectingLocal, setConnectingLocal] = useState(false);
-
-  useEffect(() => {
-    fetch("/api/api-providers")
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.ok) setApiProviders(data.providers);
-      })
-      .catch(() => {});
-    fetch("/api/local-llm/providers")
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.ok) setLocalModels(data.providers);
-      })
-      .catch(() => {});
-  }, []);
 
   const handleGeneratePersona = useCallback(async () => {
     if (!form.name.trim() || generatingPersona) return;
@@ -72,11 +45,6 @@ export function useAgentFormModalResources(
     generatingPersona,
     showPersonaCatalog,
     setShowPersonaCatalog,
-    apiProviders,
-    setApiProviders,
-    localModels,
-    connectingLocal,
-    setConnectingLocal,
     handleGeneratePersona,
   };
 }

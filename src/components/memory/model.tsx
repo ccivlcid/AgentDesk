@@ -63,7 +63,7 @@ export function scopeLabel(scope: string, t: TFunction): string {
   const labels: Record<string, Record<Locale, string>> = {
     All: { ko: "\uC804\uCCB4", en: "All", ja: "\u3059\u3079\u3066", zh: "\u5168\u90E8" },
     global: { ko: "\uAE00\uB85C\uBC8C", en: "Global", ja: "\u30B0\u30ED\u30FC\u30D0\u30EB", zh: "\u5168\u5C40" },
-    department: { ko: "\uBD80\uC11C\uBCC4", en: "Department", ja: "\u90E8\u7F72\u5225", zh: "\u90E8\u95E8" },
+    department: { ko: "\uC804\uBB38 \uBD84\uC57C\uBCC4", en: "Specialty", ja: "\u5C02\u9580\u5206\u91CE\u5225", zh: "\u4E13\u4E1A\u9886\u57DF" },
     agent: { ko: "\uC5D0\uC774\uC804\uD2B8\uBCC4", en: "Agent", ja: "\u30A8\u30FC\u30B8\u30A7\u30F3\u30C8\u5225", zh: "\u4EE3\u7406" },
     workflow_pack: { ko: "\uC6CC\uD06C\uD50C\uB85C\uC6B0\uBCC4", en: "Workflow", ja: "\u30EF\u30FC\u30AF\u30D5\u30ED\u30FC\u5225", zh: "\u5DE5\u4F5C\u6D41" },
   };

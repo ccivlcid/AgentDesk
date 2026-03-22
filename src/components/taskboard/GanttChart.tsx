@@ -182,7 +182,7 @@ export default function GanttChart({ tasks, agents, departments }: Props) {
             className="px-2 py-1 text-xs font-mono outline-none"
             style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
           >
-            <option value="all">{tr("전체 부서", "All Depts")}</option>
+            <option value="all">{tr("전체 전문 분야", "All Specialties")}</option>
             {departments.map((d) => (
               <option key={d.id} value={d.id}>
                 {d.icon} {locale === "ko" ? d.name_ko : d.name}

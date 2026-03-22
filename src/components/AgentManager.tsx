@@ -132,6 +132,9 @@ export default function AgentManager({
           } catch { return undefined; }
         })(),
         enable_planning_phase: agent.enable_planning_phase ?? 1,
+        specialty: agent.specialty ?? "",
+        autonomy_level: agent.autonomy_level ?? "balanced",
+        max_concurrent_tasks: agent.max_concurrent_tasks ?? 1,
       });
       setShowModal(true);
     },
@@ -166,6 +169,9 @@ export default function AgentManager({
           ? JSON.stringify(form.kb_default_sources)
           : null,
         enable_planning_phase: form.enable_planning_phase ?? 1,
+        specialty: form.specialty?.trim() || null,
+        autonomy_level: form.autonomy_level || "balanced",
+        max_concurrent_tasks: form.max_concurrent_tasks ?? 1,
       };
       let savedAgentId: string | undefined = modalAgent?.id;
       if (modalAgent) {
@@ -448,7 +454,7 @@ export default function AgentManager({
       <div style={{ borderBottom: "1px solid var(--th-border)", display: "flex", alignItems: "stretch", background: "var(--th-bg-primary)", padding: "6px 12px 0" }}>
         {([
           { key: "agents" as const, label: tr("직원", "AGENTS", "エージェント", "代理") },
-          { key: "departments" as const, label: tr("부서", "DEPARTMENTS", "部署", "部门") },
+          { key: "departments" as const, label: tr("전문 분야", "SPECIALTIES", "専門分野", "专业领域") },
         ] as const).map((tab, idx) => (
           <button
             key={tab.key}
@@ -491,7 +497,7 @@ export default function AgentManager({
             onMouseEnter={(e) => { e.currentTarget.style.color = "var(--th-accent)"; e.currentTarget.style.background = "rgba(245,158,11,0.06)"; }}
             onMouseLeave={(e) => { e.currentTarget.style.color = "var(--th-text-muted)"; e.currentTarget.style.background = "none"; }}
           >
-            + {tr("부서 추가", "ADD DEPT", "部署追加", "添加部门")}
+            + {tr("전문 분야 추가", "ADD SPECIALTY", "専門分野追加", "专业领域追加")}
           </button>
           <button
             type="button"

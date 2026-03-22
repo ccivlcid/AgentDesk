@@ -134,6 +134,9 @@ export async function updateAgent(
       | "cli_model"
       | "cli_reasoning_level"
       | "enable_planning_phase"
+      | "specialty"
+      | "autonomy_level"
+      | "max_concurrent_tasks"
       | "avatar_emoji"
       | "sprite_number"
       | "personality"
@@ -158,6 +161,9 @@ export async function createAgent(data: {
   avatar_emoji: string;
   sprite_number?: number | null;
   personality: string | null;
+  specialty?: string | null;
+  autonomy_level?: string | null;
+  max_concurrent_tasks?: number | null;
   workflow_pack_key?: WorkflowPackKey;
 }): Promise<Agent> {
   const j = (await post("/api/agents", data)) as { ok: boolean; agent: Agent };
@@ -752,4 +758,38 @@ export async function updateProjectDeliverable(
     checked_at: number | null;
     note: string | null;
   }>;
+}
+
+// ── Ship Automation: Changelog + Version ──
+
+export interface ChangelogEntry {
+  id: string;
+  project_id: string;
+  version: string;
+  task_id: string | null;
+  entry_type: string;
+  summary: string;
+  detail: string | null;
+  created_at: number;
+}
+
+export async function getProjectChangelog(
+  projectId: string,
+  opts?: { limit?: number; offset?: number },
+): Promise<{ entries: ChangelogEntry[]; total: number }> {
+  const sp = new URLSearchParams();
+  if (opts?.limit) sp.set("limit", String(opts.limit));
+  if (opts?.offset) sp.set("offset", String(opts.offset));
+  const qs = sp.toString();
+  const res = await request<{ ok: boolean; entries: ChangelogEntry[]; total: number }>(
+    `/api/projects/${projectId}/changelog${qs ? `?${qs}` : ""}`,
+  );
+  return { entries: res.entries ?? [], total: res.total ?? 0 };
+}
+
+export async function getProjectVersion(projectId: string): Promise<string> {
+  const res = await request<{ ok: boolean; version: string }>(
+    `/api/projects/${projectId}/version`,
+  );
+  return res.version ?? "0.1.0";
 }

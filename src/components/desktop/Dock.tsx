@@ -8,8 +8,8 @@ import { useTheme } from "../../ThemeContext";
 import { useI18n } from "../../i18n";
 import {
   IconDockWorkflow, IconDockLibrary, IconDockSettings, IconDockChat, IconDockTasks, IconDockWidgetBoard,
-  IconDockSynapse, IconAgents, IconReports, IconImageStudio, IconAgentGraph, IconLocalLlm,
-  IconAlerts, IconFileTree, IconRepl, IconDashboard, IconFlowGraph,
+  IconDockSynapse, IconAgents, IconReports, IconImageStudio, IconLocalLlm,
+  IconAlerts, IconFileTree, IconRepl, IconDashboard,
 } from "./DesktopIcons";
 import DockBadge from "./DockBadge";
 
@@ -23,7 +23,6 @@ const EXTRA_WIN_META: Partial<Record<WindowType, { icon: (c: string) => React.Re
   "local-llm":      { icon: (c) => <IconLocalLlm color={c} />,      label: "Local LLM",   accent: "#818cf8" },
   alerts:           { icon: (c) => <IconAlerts color={c} />,        label: "Alerts",       accent: "#f87171" },
   "file-tree":      { icon: (c) => <IconFileTree color={c} />,      label: "Files",        accent: "#4ade80" },
-  "flow-graph":     { icon: (c) => <IconFlowGraph color={c} />,     label: "Graph",        accent: "#38bdf8" },
   dashboard:        { icon: (c) => <IconDashboard color={c} />,     label: "Dashboard",    accent: "#facc15" },
   "decision-inbox": { icon: (c) => <IconDecisions color={c} />,     label: "Decisions",    accent: "#ff453a" },
 };

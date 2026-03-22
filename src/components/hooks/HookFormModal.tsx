@@ -273,7 +273,7 @@ export default function HookFormModal({
                   { value: "global",        icon: "🌐", label: { ko: "글로벌",   en: "Global",   ja: "グローバル", zh: "全局"   } },
                   { value: "project",       icon: "📋", label: { ko: "프로젝트", en: "Project",   ja: "プロジェクト", zh: "项目" } },
                   { value: "agent",         icon: "🤖", label: { ko: "에이전트", en: "Agent",     ja: "エージェント", zh: "代理" } },
-                  { value: "department",    icon: "🏢", label: { ko: "부서",     en: "Department", ja: "部署",       zh: "部门" } },
+                  { value: "department",    icon: "🏢", label: { ko: "전문 분야",     en: "Specialty", ja: "専門分野",       zh: "专业领域" } },
                   { value: "workflow_pack", icon: "📦", label: { ko: "워크플로", en: "Workflow",  ja: "ワークフロー", zh: "工作流" } },
                 ] as const).map((opt) => (
                   <button
@@ -304,7 +304,7 @@ export default function HookFormModal({
                   placeholder={
                     scopeType === "project" ? t({ ko: "프로젝트 ID", en: "Project ID", ja: "プロジェクトID", zh: "项目ID" }) :
                     scopeType === "agent" ? t({ ko: "에이전트 ID", en: "Agent ID", ja: "エージェントID", zh: "代理ID" }) :
-                    scopeType === "department" ? t({ ko: "부서 ID", en: "Department ID", ja: "部署ID", zh: "部门ID" }) :
+                    scopeType === "department" ? t({ ko: "전문 분야 ID", en: "Specialty ID", ja: "専門分野ID", zh: "专业领域ID" }) :
                     t({ ko: "워크플로 팩 키", en: "Workflow Pack Key", ja: "ワークフローパックキー", zh: "工作流包键" })
                   }
                   className="w-full px-3 py-2 text-sm focus:outline-none font-mono"

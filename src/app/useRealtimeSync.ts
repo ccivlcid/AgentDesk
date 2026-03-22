@@ -187,8 +187,8 @@ export function useRealtimeSync({
           return appendCapped(prev, msg, MAX_LIVE_MESSAGES);
         });
         if (msg.sender_type === "agent" && msg.sender_id) {
-          const { showChat: chatOpen, agentId: activeId } = activeChatRef.current;
-          if (chatOpen && activeId === msg.sender_id) return;
+          const { showChat: chatOpen } = activeChatRef.current;
+          if (chatOpen) return;
           setUnreadAgentIds((prev) => {
             if (prev.has(msg.sender_id!)) return prev;
             const next = new Set(prev);
@@ -204,8 +204,8 @@ export function useRealtimeSync({
           return appendCapped(prev, msg, MAX_LIVE_MESSAGES);
         });
         if (msg.sender_type === "agent" && msg.sender_id) {
-          const { showChat: chatOpen, agentId: activeId } = activeChatRef.current;
-          if (chatOpen && activeId === msg.sender_id) return;
+          const { showChat: chatOpen } = activeChatRef.current;
+          if (chatOpen) return;
           setUnreadAgentIds((prev) => {
             if (prev.has(msg.sender_id!)) return prev;
             const next = new Set(prev);
@@ -486,9 +486,18 @@ export function useRealtimeSync({
         scheduleLiveSync(100);
       }),
       on("runtime_status", (payload: unknown) => {
-        const p = payload as { taskId?: string; agentId?: string; status?: string };
+        const p = payload as { taskId?: string; agentId?: string; status?: string; runId?: string; inputTokens?: number; outputTokens?: number; toolCalls?: number };
         if (p.status === "running" && p.agentId) {
           openCliWindow(p.agentId);
+        }
+        if (p.taskId && p.status) {
+          const tokenUsage = (p.inputTokens != null || p.outputTokens != null)
+            ? { inputTokens: p.inputTokens, outputTokens: p.outputTokens, toolCalls: p.toolCalls }
+            : undefined;
+          useUiStore.getState().setRuntimeStatus(p.taskId, p.status, p.runId, p.agentId, tokenUsage);
+          if (p.status === "complete" || p.status === "error") {
+            setTimeout(() => useUiStore.getState().clearRuntimeStatus(p.taskId!), 10_000);
+          }
         }
         scheduleLiveSync(200);
       }),
@@ -502,6 +511,18 @@ export function useRealtimeSync({
       on("close_cli", (payload: unknown) => {
         const p = payload as { agent_id?: string };
         if (p.agent_id) closeCliWindow(p.agent_id);
+      }),
+      on("kickoff_stage", (payload: unknown) => {
+        const p = payload as { stage?: string };
+        const validStages = ["idle", "planning", "meeting", "assigning", "executing", "done"] as const;
+        type KickoffStage = typeof validStages[number];
+        const stage = p.stage as KickoffStage | undefined;
+        if (stage && validStages.includes(stage)) {
+          useUiStore.getState().setKickoffStage(stage);
+          if (stage === "done") {
+            setTimeout(() => useUiStore.getState().setKickoffStage("idle"), 2000);
+          }
+        }
       }),
       on("chat_stream", (payload: unknown) => {
         const p = payload as {

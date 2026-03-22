@@ -630,7 +630,7 @@
 .header-sleek {
   box-shadow: 0 1px 0 var(--th-border);
 }
-/* FM2024: amber prompt prefix on view title */
+/* amber prompt prefix on view title */
 .header-sleek-title::before {
   content: "> ";
   color: #f59e0b;
@@ -656,7 +656,7 @@
 }
 .header-sleek-tabs {
   gap: 0;
-  /* FM2024: flat tab bar, no pill */
+  /* flat tab bar, no pill */
   background: transparent !important;
   border: none !important;
   border-bottom: 2px solid var(--th-border) !important;

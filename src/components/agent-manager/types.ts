@@ -30,6 +30,9 @@ export interface FormData {
   persona_id?: string;
   kb_default_sources?: KbSourceRef[];
   enable_planning_phase?: number;
+  specialty?: string;
+  autonomy_level?: string;
+  max_concurrent_tasks?: number;
 }
 
 export interface DeptForm {

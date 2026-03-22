@@ -31,7 +31,6 @@ export function registerAgentRuntimeRoutes(deps: RegisterAgentRuntimeRoutesDeps)
       model?: string;
       maxTurns?: number;
       apiProviderId?: string;
-      chainExecution?: boolean;
     };
 
     if (!body.agentId || !body.taskId) {
@@ -77,7 +76,6 @@ export function registerAgentRuntimeRoutes(deps: RegisterAgentRuntimeRoutesDeps)
       model: body.model,
       maxTurns: body.maxTurns,
       apiProviderId: body.apiProviderId,
-      chainExecution: body.chainExecution ?? false,
     };
 
     const abortController = new AbortController();
@@ -150,5 +148,68 @@ export function registerAgentRuntimeRoutes(deps: RegisterAgentRuntimeRoutesDeps)
     const taskId = String(req.params["taskId"] ?? "");
     const runs = getRunsByTaskId(db, taskId);
     res.json(runs);
+  });
+
+  /**
+   * GET /api/agent-runtime/stats
+   * Aggregate runtime statistics for the dashboard.
+   */
+  app.get("/api/agent-runtime/stats", (_req: Request, res: Response) => {
+    try {
+      // Total runs & token usage
+      const totals = db.prepare(`
+        SELECT
+          COUNT(*) as total_runs,
+          SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed,
+          SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) as failed,
+          SUM(input_tokens) as total_input_tokens,
+          SUM(output_tokens) as total_output_tokens,
+          SUM(tool_calls_count) as total_tool_calls
+        FROM agent_runtime_runs
+      `).get() as { total_runs: number; completed: number; failed: number; total_input_tokens: number; total_output_tokens: number; total_tool_calls: number };
+
+      // Per-provider breakdown
+      const byProvider = db.prepare(`
+        SELECT
+          provider,
+          COUNT(*) as runs,
+          SUM(input_tokens) as input_tokens,
+          SUM(output_tokens) as output_tokens
+        FROM agent_runtime_runs
+        GROUP BY provider
+        ORDER BY runs DESC
+      `).all() as { provider: string; runs: number; input_tokens: number; output_tokens: number }[];
+
+      // Per-model breakdown (top 10)
+      const byModel = db.prepare(`
+        SELECT
+          model,
+          COUNT(*) as runs,
+          SUM(input_tokens) as input_tokens,
+          SUM(output_tokens) as output_tokens
+        FROM agent_runtime_runs
+        WHERE model IS NOT NULL
+        GROUP BY model
+        ORDER BY runs DESC
+        LIMIT 10
+      `).all() as { model: string; runs: number; input_tokens: number; output_tokens: number }[];
+
+      // Daily runs (last 30 days)
+      const sinceMs = Date.now() - 30 * 24 * 60 * 60 * 1000;
+      const daily = db.prepare(`
+        SELECT
+          date(created_at / 1000, 'unixepoch') as day,
+          COUNT(*) as runs,
+          SUM(input_tokens + output_tokens) as tokens
+        FROM agent_runtime_runs
+        WHERE created_at > ?
+        GROUP BY day
+        ORDER BY day ASC
+      `).all(sinceMs) as { day: string; runs: number; tokens: number }[];
+
+      res.json({ ok: true, totals, byProvider, byModel, daily });
+    } catch (err) {
+      res.status(500).json({ error: String(err) });
+    }
   });
 }

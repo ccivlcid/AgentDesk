@@ -1,14 +1,115 @@
 import type { DatabaseSync } from "node:sqlite";
 import { spawn } from "node:child_process";
 import logger from "../../lib/logger.ts";
+import { eventBus } from "../../lib/event-bus.ts";
 import { TOOL_DEFINITIONS, executeTool } from "./tools.ts";
-import { callAnthropicStream, resolveAnthropicKey } from "./llm-client.ts";
+import { callAnthropicStream, callOpenAICompatibleStream, resolveProvider, getDefaultModel } from "./llm-client.ts";
 import { createRun, updateRunStatus, updateRunUsage, appendEvent, getRun } from "./store.ts";
 import type { LlmMessage, LlmContent, StartRunOptions } from "./types.ts";
 
 const DEFAULT_MODEL = "claude-sonnet-4-6";
 const DEFAULT_MAX_TURNS = 20;
 const DEFAULT_MAX_TOKENS = 8192;
+
+/**
+ * Parse a chunk of codex CLI JSON output into human-readable text.
+ * Codex with --json outputs newline-delimited JSON objects like:
+ *   {"type":"text","content":"Hello..."}
+ *   {"type":"message","content":"..."}
+ *   {"type":"tool_call","name":"write_file",...}
+ *   {"type":"result","content":"Done"}
+ *   {"type":"item.started","item":{...}}
+ *   {"type":"item.completed","item":{...}}
+ *
+ * Returns readable text lines. If a line isn't JSON, returns it as-is.
+ * Exported so cli-runtime.ts can reuse.
+ */
+export function parseCodexJsonChunk(chunk: string): string {
+  const lines = chunk.split("\n");
+  const parts: string[] = [];
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) {
+      parts.push("");
+      continue;
+    }
+
+    // Only attempt JSON parse if it looks like a JSON object
+    if (!trimmed.startsWith("{")) {
+      parts.push(line);
+      continue;
+    }
+
+    let parsed: Record<string, unknown>;
+    try {
+      parsed = JSON.parse(trimmed);
+    } catch {
+      parts.push(line);
+      continue;
+    }
+
+    const type = parsed.type as string | undefined;
+
+    // Extract readable content based on event type
+    if (type === "text" || type === "message" || type === "result") {
+      const content = (parsed.content as string) ?? "";
+      if (content) parts.push(content);
+      continue;
+    }
+
+    if (type === "tool_call" || type === "function_call") {
+      const name = (parsed.name as string) ?? (parsed.tool as string) ?? "tool";
+      const args = parsed.arguments ?? parsed.input ?? parsed.params;
+      const argStr = args ? ` ${typeof args === "string" ? args : JSON.stringify(args)}` : "";
+      parts.push(`[tool] ${name}${argStr}`);
+      continue;
+    }
+
+    if (type === "tool_result" || type === "function_call_output") {
+      const output = (parsed.output as string) ?? (parsed.content as string) ?? "";
+      if (output) parts.push(`[result] ${output.slice(0, 500)}${output.length > 500 ? "..." : ""}`);
+      continue;
+    }
+
+    if (type === "error") {
+      const msg = (parsed.message as string) ?? (parsed.content as string) ?? JSON.stringify(parsed);
+      parts.push(`[error] ${msg}`);
+      continue;
+    }
+
+    // item.started / item.completed — extract sub-agent or tool info
+    if (type === "item.started" || type === "item.completed") {
+      const item = parsed.item as Record<string, unknown> | undefined;
+      if (item) {
+        const tool = (item.tool as string) ?? (item.type as string) ?? "";
+        const prompt = (item.prompt as string) ?? "";
+        const status = type === "item.completed" ? "completed" : "started";
+        const label = tool ? `[${tool} ${status}]` : `[${status}]`;
+        parts.push(prompt ? `${label} ${prompt.split("\n")[0].slice(0, 100)}` : label);
+        continue;
+      }
+    }
+
+    // status / thinking / unknown types with content
+    if (parsed.content && typeof parsed.content === "string") {
+      parts.push(parsed.content as string);
+      continue;
+    }
+
+    // Fallback: skip purely structural JSON events (no content to show)
+    // This prevents "{ } raw" style output for empty/metadata-only events
+    if (type) {
+      // Known metadata types we can safely skip
+      continue;
+    }
+
+    // Truly unknown structure — pass through as-is
+    parts.push(line);
+  }
+
+  return parts.join("\n");
+}
 
 interface ExecutionLoopDeps {
   db: DatabaseSync;
@@ -59,7 +160,14 @@ function buildSystemPrompt(db: DatabaseSync, agentId: string, projectId?: string
 
   let prompt = `You are ${agentName}, a ${agentRole}. You work autonomously to complete tasks using the tools available to you.
 
-Always use tools to inspect the project before responding. Be thorough and accurate.`;
+Always use tools to inspect the project before responding. Be thorough and accurate.
+
+## Evidence-Based Execution Rules
+- Never say "probably" or "I think" — cite the specific file, line, or error.
+- Before recommending a pattern or library, verify it exists and is current best practice.
+- If you attempt a fix 3 times without success, stop and report the issue with all evidence gathered.
+- Keep changes minimal — only modify files directly related to the task.
+- Every bug fix must include evidence of the root cause (stack trace, reproduction steps, or failing test).`;
 
   if (rules.length > 0) {
     prompt += `\n\n## Rules\n${rules.join("\n")}`;
@@ -92,8 +200,9 @@ function broadcastStatus(
   agentId: string,
   status: string,
   runId: string,
+  tokenUsage?: { inputTokens: number; outputTokens: number; toolCalls: number },
 ) {
-  broadcast("runtime_status", { taskId, agentId, status, runId });
+  broadcast("runtime_status", { taskId, agentId, status, runId, ...tokenUsage && { inputTokens: tokenUsage.inputTokens, outputTokens: tokenUsage.outputTokens, toolCalls: tokenUsage.toolCalls } });
 }
 
 /** Run task via CLI provider (claude/codex/gemini) — spawns subprocess with real-time streaming */
@@ -158,7 +267,12 @@ async function runViaCli(
     child.stdout?.on("data", (chunk: Buffer) => {
       const text = chunk.toString("utf8");
       output += text;
-      onChunk?.(text);
+      if (cliProvider === "codex") {
+        const parsed = parseCodexJsonChunk(text);
+        if (parsed.trim()) onChunk?.(parsed);
+      } else {
+        onChunk?.(text);
+      }
     });
     child.stderr?.on("data", (chunk: Buffer) => {
       const text = chunk.toString("utf8");
@@ -196,57 +310,6 @@ async function runViaCli(
   });
 }
 
-/** Chain next task helper — shared between API and CLI paths */
-async function chainNextTask(
-  deps: ExecutionLoopDeps,
-  options: StartRunOptions,
-  currentTaskId: string,
-  projectId: string,
-  projectPath: string,
-  broadcast: (type: string, payload: unknown) => void,
-  appendTaskLog: (taskId: string | null, kind: string, message: string) => void,
-) {
-  const { db } = deps;
-  // Only chain tasks assigned to the same agent — prevents cross-agent task stealing in parallel runs
-  const nextTask = db.prepare(`
-    SELECT id, title, assigned_agent_id FROM tasks
-    WHERE project_id = ? AND assigned_agent_id = ? AND status = 'planned'
-    ORDER BY created_at ASC
-    LIMIT 1
-  `).get(projectId, options.agentId) as { id: string; title: string; assigned_agent_id: string } | undefined;
-
-  if (nextTask) {
-    const nextAgent = db.prepare("SELECT name FROM agents WHERE id = ?").get(nextTask.assigned_agent_id) as { name: string } | undefined;
-    const nextAgentLabel = nextAgent?.name ?? nextTask.assigned_agent_id;
-    const chainMsg = `\n[chain] Next task: "${nextTask.title}" → ${nextAgentLabel}\n`;
-    broadcastText(broadcast, appendTaskLog, currentTaskId, chainMsg);
-    broadcast("chain_next", { projectId, taskId: nextTask.id, agentId: nextTask.assigned_agent_id });
-
-    let nextProjectPath = projectPath;
-    if (!nextProjectPath && deps.resolveProjectPath) {
-      try { nextProjectPath = deps.resolveProjectPath(projectId); } catch { /* optional */ }
-    }
-
-    const nextAbort = new AbortController();
-    try {
-      const nextRunId = await startExecutionLoop(
-        deps,
-        { agentId: nextTask.assigned_agent_id, taskId: nextTask.id, projectId, projectPath: nextProjectPath, chainExecution: true },
-        nextTask.title,
-        nextAbort,
-      );
-      deps.abortControllers?.set(nextRunId, nextAbort);
-      logger.info({ nextRunId, nextTaskId: nextTask.id, projectId }, "[runtime] chained next task");
-    } catch (chainErr) {
-      logger.error({ err: chainErr, nextTaskId: nextTask.id }, "[runtime] chain execution failed");
-    }
-  } else {
-    const doneMsg = `\n[chain] All tasks in project completed.\n`;
-    broadcastText(broadcast, appendTaskLog, currentTaskId, doneMsg);
-    broadcast("chain_complete", { projectId });
-  }
-}
-
 /**
  * Main execution loop: LLM ↔ Tool ↔ LLM until end_turn or max turns.
  * Runs async, returns the runId.
@@ -264,15 +327,27 @@ export async function startExecutionLoop(
   const agentRow = db.prepare("SELECT api_model, api_provider_id, cli_provider FROM agents WHERE id = ?").get(agentId) as
     | { api_model: string | null; api_provider_id: string | null; cli_provider: string | null }
     | undefined;
-  const model = options.model ?? agentRow?.api_model ?? DEFAULT_MODEL;
   const resolvedProviderId = apiProviderId ?? agentRow?.api_provider_id ?? undefined;
   const cliProvider = agentRow?.cli_provider ?? null;
 
   // Determine execution mode: CLI-first if agent has cli_provider, API if api_provider_id
   const useCliMode = !!cliProvider && !resolvedProviderId;
 
+  // Resolve provider + model for API mode
+  let providerLabel = useCliMode ? (cliProvider ?? "cli") : "api";
+  let resolvedModel = options.model ?? agentRow?.api_model ?? DEFAULT_MODEL;
+  if (!useCliMode) {
+    try {
+      const prov = resolveProvider(db, resolvedProviderId);
+      providerLabel = prov.providerType;
+      if (!options.model && !agentRow?.api_model) {
+        resolvedModel = getDefaultModel(prov.providerType);
+      }
+    } catch { /* will fail again in API mode with proper error */ }
+  }
+
   // Create run record
-  const run = createRun(db, { taskId, agentId, projectId, model, provider: useCliMode ? cliProvider! : "anthropic" }, nowMs);
+  const run = createRun(db, { taskId, agentId, projectId, model: resolvedModel, provider: providerLabel }, nowMs);
   const runId = run.id;
 
   // Update task status to in_progress / running
@@ -307,21 +382,30 @@ export async function startExecutionLoop(
 
         const doneAt = nowMs();
         updateRunStatus(db, runId, "completed", { completed_at: doneAt });
-        db.prepare("UPDATE tasks SET status = 'done', execution_state = 'succeeded', result = ?, completed_at = ? WHERE id = ?")
+        // Set status to 'review' so PM orchestrator can review before marking done
+        db.prepare("UPDATE tasks SET status = 'review', execution_state = 'succeeded', result = ?, updated_at = ? WHERE id = ?")
           .run(cliOutput.slice(-4000), doneAt, taskId);
-        broadcast("task_update", { id: taskId, status: "done" });
-        broadcast("task_report", { task: { id: taskId } });
+        broadcast("task_update", { id: taskId, status: "review" });
         broadcastStatus(broadcast, taskId, agentId, "complete", runId);
-        logger.info({ runId, taskId, cliProvider }, "[runtime] CLI execution complete");
+        appendTaskLog(taskId, "system", "Status → review (CLI execution complete)");
+        logger.info({ runId, taskId, cliProvider }, "[runtime] CLI execution complete → review");
 
-        if (options.chainExecution && projectId) {
-          await chainNextTask(deps, options, taskId, projectId, projectPath, broadcast, appendTaskLog);
-        }
+        // Emit event for PM orchestrator
+        eventBus.emitTaskStatus({
+          type: "task_status_changed",
+          taskId,
+          projectId: projectId ?? null,
+          fromStatus: "in_progress",
+          toStatus: "review",
+          agentId,
+          resultTail: cliOutput.length > 2000 ? "…" + cliOutput.slice(-2000) : cliOutput,
+        });
         return;
       }
 
-      // ── API Mode: agent has api_provider_id ──
-      const apiKey = resolveAnthropicKey(db, resolvedProviderId);
+      // ── API Mode: resolve provider and call LLM ──
+      const provider = resolveProvider(db, resolvedProviderId);
+      const model = resolvedModel;
       const messages: LlmMessage[] = [{ role: "user", content: taskTitle }];
 
       let turn = 0;
@@ -331,7 +415,8 @@ export async function startExecutionLoop(
       let accumulatedText = ""; // for saving as task result
 
       // Header line to CLI Window
-      const header = `[runtime] Model: ${model} | Task: ${taskTitle}\n${"─".repeat(60)}\n`;
+      const providerTag = provider.providerType !== "anthropic" ? ` (${provider.providerType})` : "";
+      const header = `[runtime] Model: ${model}${providerTag} | Task: ${taskTitle}\n${"─".repeat(60)}\n`;
       broadcastText(broadcast, appendTaskLog, taskId, header);
       appendEvent(db, runId, "status", header, 0, nowMs);
 
@@ -345,35 +430,50 @@ export async function startExecutionLoop(
         let turnInputTokens = 0;
         let turnOutputTokens = 0;
 
-        const { stopReason, assistantContent } = await callAnthropicStream({
-          apiKey,
-          model,
-          systemPrompt,
-          messages,
-          tools: TOOL_DEFINITIONS,
-          maxTokens: DEFAULT_MAX_TOKENS,
-          signal: abortController.signal,
-          callbacks: {
-            onText: (text) => {
-              broadcastText(broadcast, appendTaskLog, taskId, text);
-              appendEvent(db, runId, "text", text, 0, nowMs);
-              accumulatedText += text;
-            },
-            onToolCall: (call) => {
-              pendingToolCalls.push(call);
-              const line = `\n[tool] ${call.name}(${JSON.stringify(call.input)})\n`;
-              broadcastText(broadcast, appendTaskLog, taskId, line);
-              appendEvent(db, runId, "tool_call", JSON.stringify({ name: call.name, input: call.input }), 0, nowMs);
-            },
-            onDone: (usage) => {
-              turnInputTokens = usage.inputTokens;
-              turnOutputTokens = usage.outputTokens;
-            },
-            onError: (err) => {
-              logger.error({ err, runId }, "[runtime] stream error");
-            },
+        const streamCallbacks = {
+          onText: (text: string) => {
+            broadcastText(broadcast, appendTaskLog, taskId, text);
+            appendEvent(db, runId, "text", text, 0, nowMs);
+            accumulatedText += text;
           },
-        });
+          onToolCall: (call: import("./types.ts").ToolCall) => {
+            pendingToolCalls.push(call);
+            const line = `\n[tool] ${call.name}(${JSON.stringify(call.input)})\n`;
+            broadcastText(broadcast, appendTaskLog, taskId, line);
+            appendEvent(db, runId, "tool_call", JSON.stringify({ name: call.name, input: call.input }), 0, nowMs);
+          },
+          onDone: (usage: { inputTokens: number; outputTokens: number }) => {
+            turnInputTokens = usage.inputTokens;
+            turnOutputTokens = usage.outputTokens;
+          },
+          onError: (err: Error) => {
+            logger.error({ err, runId }, "[runtime] stream error");
+          },
+        };
+
+        // Call appropriate provider
+        const { stopReason, assistantContent } = provider.type === "anthropic"
+          ? await callAnthropicStream({
+              apiKey: provider.apiKey,
+              model,
+              systemPrompt,
+              messages,
+              tools: TOOL_DEFINITIONS,
+              maxTokens: DEFAULT_MAX_TOKENS,
+              signal: abortController.signal,
+              callbacks: streamCallbacks,
+            })
+          : await callOpenAICompatibleStream({
+              apiKey: provider.apiKey,
+              baseUrl: provider.baseUrl,
+              model,
+              systemPrompt,
+              messages,
+              tools: TOOL_DEFINITIONS,
+              maxTokens: DEFAULT_MAX_TOKENS,
+              signal: abortController.signal,
+              callbacks: streamCallbacks,
+            });
 
         totalInputTokens += turnInputTokens;
         totalOutputTokens += turnOutputTokens;
@@ -409,34 +509,54 @@ export async function startExecutionLoop(
         break;
       }
 
-      // Done
+      // Done — send to PM review
       const summary = `\n${"─".repeat(60)}\n[runtime] Completed in ${turn} turn(s) | Tokens: ${totalInputTokens} in / ${totalOutputTokens} out | Tools used: ${totalToolCalls}\n`;
       broadcastText(broadcast, appendTaskLog, taskId, summary);
 
       const apiDoneAt = nowMs();
       const resultText = accumulatedText.slice(-4000) || summary;
       updateRunStatus(db, runId, "completed", { completed_at: apiDoneAt });
-      db.prepare("UPDATE tasks SET status = 'done', execution_state = 'succeeded', result = ?, completed_at = ? WHERE id = ?")
+      // Set status to 'review' so PM orchestrator can review before marking done
+      db.prepare("UPDATE tasks SET status = 'review', execution_state = 'succeeded', result = ?, updated_at = ? WHERE id = ?")
         .run(resultText, apiDoneAt, taskId);
-      broadcast("task_update", { id: taskId, status: "done" });
-      broadcast("task_report", { task: { id: taskId } });
-      broadcastStatus(broadcast, taskId, agentId, "complete", runId);
+      broadcast("task_update", { id: taskId, status: "review" });
+      broadcastStatus(broadcast, taskId, agentId, "complete", runId, { inputTokens: totalInputTokens, outputTokens: totalOutputTokens, toolCalls: totalToolCalls });
+      appendTaskLog(taskId, "system", `Status → review (API execution complete, ${turn} turns)`);
 
-      logger.info({ runId, taskId, turns: turn, totalInputTokens, totalOutputTokens }, "[runtime] execution complete");
+      logger.info({ runId, taskId, turns: turn, totalInputTokens, totalOutputTokens }, "[runtime] execution complete → review");
 
-      // ── Chain execution: auto-start next planned task in same project ──
-      if (options.chainExecution && projectId) {
-        await chainNextTask(deps, options, taskId, projectId, projectPath, broadcast, appendTaskLog);
-      }
+      // Emit event for PM orchestrator
+      eventBus.emitTaskStatus({
+        type: "task_status_changed",
+        taskId,
+        projectId: projectId ?? null,
+        fromStatus: "in_progress",
+        toStatus: "review",
+        agentId,
+        resultTail: resultText.length > 2000 ? "…" + resultText.slice(-2000) : resultText,
+      });
     } catch (err) {
       const msg = String(err);
       logger.error({ err, runId, taskId }, "[runtime] execution error");
       appendEvent(db, runId, "error", msg, 0, nowMs);
       updateRunStatus(db, runId, "failed", { error_message: msg, completed_at: nowMs() });
-      db.prepare("UPDATE tasks SET status = 'planned', execution_state = 'failed' WHERE id = ?").run(taskId);
-      broadcast("task_update", { id: taskId, status: "planned" });
+      db.prepare("UPDATE tasks SET status = 'failed', execution_state = 'failed', last_error_summary = ?, updated_at = ? WHERE id = ?")
+        .run(msg.slice(0, 500), nowMs(), taskId);
+      broadcast("task_update", { id: taskId, status: "failed" });
       broadcastStatus(broadcast, taskId, agentId, "error", runId);
+      appendTaskLog(taskId, "system", `Task failed: ${msg.slice(0, 200)}`);
       broadcastText(broadcast, appendTaskLog, taskId, `\n[runtime] ERROR: ${msg}\n`);
+
+      // Emit event for PM orchestrator (failure handling)
+      eventBus.emitTaskStatus({
+        type: "task_status_changed",
+        taskId,
+        projectId: projectId ?? null,
+        fromStatus: "in_progress",
+        toStatus: "failed",
+        agentId,
+        exitCode: 1,
+      });
     }
   })();
 

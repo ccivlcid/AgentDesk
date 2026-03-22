@@ -23,7 +23,6 @@ export type WindowType =
   | "cli-usage"
   | "local-llm"
   | "feature-builder"
-  | "flow-graph"
   | "git-import"
   | "dashboard"
   | "widget-board"
@@ -36,7 +35,6 @@ export type WindowType =
 export type View =
   | "agents"
   | "heartbeat"
-  | "flow-graph"
   | "workflow-builder"
   | "agent-repl"
   | "dashboard"

@@ -7,7 +7,7 @@ const MIN_SPLIT = 25;
 const MAX_SPLIT = 75;
 
 // Views allowed in secondary pane (monitoring/overview views)
-export const SECONDARY_VIEWS: View[] = ["flow-graph", "heartbeat", "dashboard", "cli-usage"];
+export const SECONDARY_VIEWS: View[] = ["heartbeat", "dashboard", "cli-usage"];
 
 interface SplitPaneState {
   enabled: boolean;
@@ -30,7 +30,7 @@ function writeToStorage(state: SplitPaneState) {
 export function useSplitPane() {
   const saved = readFromStorage();
   const [enabled, setEnabled] = useState(saved.enabled ?? false);
-  const [secondaryView, setSecondaryView] = useState<View>(saved.secondaryView ?? "flow-graph");
+  const [secondaryView, setSecondaryView] = useState<View>(saved.secondaryView ?? "heartbeat");
   const [splitPct, setSplitPct] = useState(saved.splitPct ?? DEFAULT_SPLIT);
   const draggingRef = useRef(false);
   const containerRef = useRef<HTMLDivElement | null>(null);

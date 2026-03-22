@@ -35,6 +35,7 @@ export function registerAnnouncementRoutes(ctx: AnnouncementRouteCtx, deps: Anno
     const body = (req.body ?? {}) as Record<string, unknown>;
     const idempotencyKey = resolveMessageIdempotencyKey(req, body, "api.announcements");
     const content = body.content;
+    const projectId = typeof body.project_id === "string" && body.project_id ? body.project_id : null;
     if (!content || typeof content !== "string") {
       if (
         !recordMessageIngressAuditOr503(res, {
@@ -136,7 +137,8 @@ export function registerAnnouncementRoutes(ctx: AnnouncementRouteCtx, deps: Anno
     broadcast("announcement", msg);
 
     // Team leaders respond to announcements with staggered delays
-    scheduleAnnouncementReplies(content);
+    // Only agents assigned to the current project respond
+    scheduleAnnouncementReplies(content, projectId);
 
     // Check for @mentions in announcements — trigger delegation
     const mentions = detectMentions(content);

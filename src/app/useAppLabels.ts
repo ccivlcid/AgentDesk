@@ -73,13 +73,6 @@ export function useAppLabels({
           ja: "社員の様子",
           zh: "员工动态",
         });
-      case "flow-graph":
-        return pickLang(uiLanguage, {
-          ko: "플로우 그래프",
-          en: "Flow Graph",
-          ja: "フローグラフ",
-          zh: "流程图",
-        });
       case "skills":
         return pickLang(uiLanguage, {
           ko: "스킬스",

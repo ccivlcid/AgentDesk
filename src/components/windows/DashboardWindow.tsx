@@ -393,8 +393,16 @@ function ProjectHealthCard() {
 function AgentStatusCard({ onSwitchTab }: { onSwitchTab?: (id: string) => void }) {
   const { t } = useI18n();
   const c = useColors();
-  const { agents } = useAgentStore();
+  const { agents: allAgents } = useAgentStore();
+  const { currentProjectId, projectAgentIds, projectAgentsLoaded } = useProjectStore();
   const { setSelectedAgentId } = useUiStore();
+
+  const agents = useMemo(
+    () => currentProjectId && projectAgentsLoaded && projectAgentIds.size > 0
+      ? allAgents.filter((a) => projectAgentIds.has(a.id))
+      : allAgents,
+    [allAgents, currentProjectId, projectAgentIds, projectAgentsLoaded],
+  );
 
   const working = agents.filter((a) => a.status === "working").length;
   const idle    = agents.filter((a) => a.status === "idle").length;
@@ -708,9 +716,17 @@ function ExecutionPipelineTab() {
 function AgentActivityTab() {
   const { t } = useI18n();
   const c = useColors();
-  const { agents } = useAgentStore();
+  const { agents: allAgents } = useAgentStore();
   const { tasks } = useTaskStore();
+  const { currentProjectId, projectAgentIds, projectAgentsLoaded } = useProjectStore();
   const { setSelectedAgentId } = useUiStore();
+
+  const agents = useMemo(
+    () => currentProjectId && projectAgentsLoaded && projectAgentIds.size > 0
+      ? allAgents.filter((a) => projectAgentIds.has(a.id))
+      : allAgents,
+    [allAgents, currentProjectId, projectAgentIds, projectAgentsLoaded],
+  );
 
   const activity = useMemo(() => {
     return agents.map((agent) => {

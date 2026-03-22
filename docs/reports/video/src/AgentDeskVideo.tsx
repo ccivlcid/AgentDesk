@@ -525,7 +525,7 @@ function Slide9() {
         <div style={{ flex: 1 }}>
           <ProgressBar label="Phase 1–10 (Core OS)" pct={100} delay={6} />
           <ProgressBar label="Phase 11–12 (Agent CLI)" pct={100} delay={12} />
-          <ProgressBar label="Phase 13 (FM2024 CSS)" pct={100} delay={18} />
+          <ProgressBar label="Phase 13 (CSS Overhaul)" pct={100} delay={18} />
           <ProgressBar label="Phase 14 (MED Features)" pct={100} delay={24} />
           <ProgressBar label="Phase 15 (Image Studio)" pct={100} delay={30} />
           <ProgressBar label="Phase 16 (Synapse KB)" pct={100} delay={36} />

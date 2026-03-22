@@ -11,6 +11,7 @@ import { useI18n } from "../../i18n";
 import { getFigmaInfo } from "../../api/synapse";
 import { fetchDirectiveTemplates, type DirectiveTemplateItem } from "../../api/organization-projects";
 import { autoAssignAgents } from "../../api/project-kickoff";
+import { fetchProjectTypeTemplates, type ProjectTypeTemplate } from "../../api/project-type-templates";
 import { useUiStore } from "../../store/uiStore";
 
 export type ProjectRoleAssignment = { role: string; agentId: string };
@@ -88,14 +89,37 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onGi
   const [directive, setDirective] = useState("");
   const [directiveTypeSlug, setDirectiveTypeSlug] = useState<string | null>(null);
   const [directiveTemplates, setDirectiveTemplates] = useState<DirectiveTemplateItem[]>([]);
+  const [customTypes, setCustomTypes] = useState<ProjectTypeTemplate[]>([]);
   const autoAdvanceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     fetchDirectiveTemplates().then(setDirectiveTemplates).catch(() => {});
+    fetchProjectTypeTemplates().then(setCustomTypes).catch(() => {});
   }, []);
 
   const { t, language } = useI18n();
   const { openWindow } = useUiStore();
+
+  /* ── 기존 categories + 커스텀 유형 합치기 ── */
+  const customAsCategories: Category[] = customTypes.map((ct) => ({
+    id: `custom_${ct.id}`,
+    name: ct.name,
+    name_ko: ct.name_ko,
+    slug: `custom-${ct.id}`,
+    description: ct.description,
+    icon: "custom",
+    color: "#6366f1",
+    kpi_schema: "{}",
+    risk_schema: "{}",
+    gate_schema: "{}",
+    deliverable_schema: "{}",
+    is_template: 0,
+    version: 1,
+    owner_scope: "org" as const,
+    created_at: ct.created_at,
+    updated_at: ct.updated_at,
+  }));
+  const allCategories = [...categories, ...customAsCategories];
 
   const pathTools = useProjectManagerPathTools({
     t,
@@ -111,6 +135,21 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onGi
 
   const handleCategorySelect = (id: string) => {
     setSelectedCategoryId(id);
+
+    /* 커스텀 유형 선택 */
+    if (id.startsWith("custom_")) {
+      const ctId = id.replace("custom_", "");
+      const ct = customTypes.find((c) => c.id === ctId);
+      if (ct?.default_directive) {
+        setDirective(ct.default_directive);
+        setDirectiveTypeSlug(null);
+      }
+      if (autoAdvanceTimer.current) clearTimeout(autoAdvanceTimer.current);
+      autoAdvanceTimer.current = setTimeout(() => setStep("directive"), 300);
+      return;
+    }
+
+    /* 기존 카테고리 선택 */
     const cat = categories.find((c) => c.id === id);
     if (cat?.slug === "design") {
       setFigmaConnected(null);
@@ -138,7 +177,7 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onGi
     pathTools.setManualPathPickerOpen(false);
   }, [pathTools]);
 
-  const selectedCategory = categories.find((c) => c.id === selectedCategoryId) ?? null;
+  const selectedCategory = allCategories.find((c) => c.id === selectedCategoryId) ?? null;
   const canConfirmInfo = projectName.trim().length > 0 && projectPath.trim().length > 0;
   const canConfirmAgent = roleSlots.some(s => s.agentId && s.role.trim().length > 0);
 
@@ -150,9 +189,11 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onGi
       .filter((s): s is ProjectRoleAssignment => s.agentId !== null && s.role.trim().length > 0)
       .map(s => ({ role: s.role.trim(), agentId: s.agentId }));
     const agentIds = Array.from(new Set(roleAssignments.map(r => r.agentId)));
+    /* 커스텀 유형은 categories 테이블에 없으므로 categoryId를 null로 전달 */
+    const realCategoryId = selectedCategoryId?.startsWith("custom_") ? null : selectedCategoryId;
     onConfirm({
       name: projectName.trim(),
-      categoryId: selectedCategoryId,
+      categoryId: realCategoryId,
       project_path: projectPath.trim(),
       core_goal: coreGoal.trim() || (selectedCategory ? `${selectedCategory.name_ko ?? selectedCategory.name} 프로젝트` : undefined),
       agentIds,
@@ -272,7 +313,7 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onGi
             {step === "category" && (
               <div className="space-y-5">
                 <CategorySelectStep
-                  categories={categories}
+                  categories={allCategories}
                   selectedId={selectedCategoryId}
                   onSelect={handleCategorySelect}
                 />

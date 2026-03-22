@@ -6,7 +6,7 @@ import FolderDesktopIcon from "./FolderDesktopIcon";
 import { TrashIcon } from "./DesktopTrash";
 import { IconMarkdownDoc, IconFolder } from "./DesktopIcons";
 import { getCategoryIcon } from "./getCategoryIcon";
-import { ICON_GRID_X, ICON_GRID_Y } from "./snapToFreeCell";
+import { ICON_GRID_X, ICON_GRID_Y, GRID_ORIGIN_X, GRID_ORIGIN_Y, getIconsPerColumn } from "./snapToFreeCell";
 
 export interface DesktopIconAreaProps {
   selectionRect: { x: number; y: number; w: number; h: number } | null;
@@ -40,6 +40,7 @@ export interface DesktopIconAreaProps {
   setProjectCtxMenu: (v: { x: number; y: number; projectId: string; projectName: string } | null) => void;
   trashedCount: number;
   setShowTrash: (v: boolean) => void;
+  onEmptyTrash?: () => void;
 }
 
 export function DesktopIconArea({
@@ -74,9 +75,11 @@ export function DesktopIconArea({
   setProjectCtxMenu,
   trashedCount,
   setShowTrash,
+  onEmptyTrash,
 }: DesktopIconAreaProps) {
   return (
     <div
+      data-desktop-bg=""
       onMouseDown={onContentMouseDown}
       onClick={onContentClick}
       style={{
@@ -117,6 +120,12 @@ export function DesktopIconArea({
         );
       })}
       {pendingDocs.map((doc, i) => {
+        const perCol = getIconsPerColumn();
+        // Place pending docs after a gap from last app icon column
+        const baseCol = Math.floor(allIcons.length / perCol) + 1;
+        const gi = baseCol * perCol + i;
+        const col = Math.floor(gi / perCol);
+        const row = gi % perCol;
         const def: DesktopIconDef = {
           id: `doc-${doc.id}`,
           icon: (c) => <IconMarkdownDoc color={c} />,
@@ -131,18 +140,25 @@ export function DesktopIconArea({
           <DesktopIcon
             key={def.id}
             def={def}
-            defaultX={24 + i * ICON_GRID_X}
-            defaultY={60 + ICON_GRID_Y * 3 + ICON_GRID_Y}
+            defaultX={GRID_ORIGIN_X + col * ICON_GRID_X}
+            defaultY={GRID_ORIGIN_Y + row * ICON_GRID_Y}
             isSelected={selectedIconIds.has(def.id)}
           />
         );
       })}
-      {folders.map((folder, i) => (
+      {folders.map((folder, i) => {
+        const perCol = getIconsPerColumn();
+        // Place folders after app icons, continuing column-first
+        const baseCol = Math.floor(allIcons.length / perCol) + 1;
+        const gi = baseCol * perCol + pendingDocs.length + i;
+        const col = Math.floor(gi / perCol);
+        const row = gi % perCol;
+        return (
         <FolderDesktopIcon
           key={folder.id}
           folder={folder}
-          defaultX={24 + i * ICON_GRID_X}
-          defaultY={60 + ICON_GRID_Y * 2}
+          defaultX={GRID_ORIGIN_X + col * ICON_GRID_X}
+          defaultY={GRID_ORIGIN_Y + row * ICON_GRID_Y}
           isSelected={selectedIconIds.has(`folder-${folder.id}`)}
           onSelect={() => setSelectedIconIds(new Set([`folder-${folder.id}`]))}
           isDragOver={dragOverFolderId === folder.id}
@@ -209,13 +225,19 @@ export function DesktopIconArea({
             }
           }}
         />
-      ))}
-      <TrashIcon t={t} count={trashedCount} onClick={() => setShowTrash(true)} />
+      );
+      })}
+      <TrashIcon t={t} count={trashedCount} onClick={() => setShowTrash(true)} onEmptyTrash={onEmptyTrash} />
       {projects
         .filter((p) => !p.folder_id)
         .map((project, i) => {
-          const col = i % 9;
-          const row = Math.floor(i / 9);
+          const perCol = getIconsPerColumn();
+          // Projects go in a new column group after app icons, docs, and folders
+          const baseCol = Math.floor(allIcons.length / perCol) + 1;
+          const extraBefore = pendingDocs.length + folders.length;
+          const gi = baseCol * perCol + extraBefore + i;
+          const col = Math.floor(gi / perCol);
+          const row = gi % perCol;
           const isActive = project.id === currentProjectId;
           const category = categories.find((c) => c.id === project.category_id);
           const catColor = category?.color ?? "#4a5568";
@@ -241,8 +263,8 @@ export function DesktopIconArea({
             <DesktopIcon
               key={def.id}
               def={def}
-              defaultX={24 + col * ICON_GRID_X}
-              defaultY={60 + ICON_GRID_Y + row * ICON_GRID_Y}
+              defaultX={GRID_ORIGIN_X + col * ICON_GRID_X}
+              defaultY={GRID_ORIGIN_Y + row * ICON_GRID_Y}
               isSelected={selectedIconIds.has(`project-${project.id}`)}
             />
           );

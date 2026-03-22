@@ -22,14 +22,82 @@ export interface LlmClientDeps {
   signal: AbortSignal;
 }
 
+/** Resolved provider info for runtime execution */
+export interface ResolvedProvider {
+  type: "anthropic" | "openai-compatible";
+  apiKey: string;
+  baseUrl: string;
+  providerType: string; // raw type from DB (openai, anthropic, ollama, etc.)
+}
+
+/** Default models per provider type */
+const DEFAULT_MODELS: Record<string, string> = {
+  anthropic: "claude-sonnet-4-6",
+  openai: "gpt-4o",
+  google: "gemini-2.0-flash",
+  ollama: "llama3.2",
+  openrouter: "anthropic/claude-sonnet-4-6",
+  together: "meta-llama/Llama-3-70b-chat-hf",
+  groq: "llama-3.3-70b-versatile",
+  cerebras: "llama-3.3-70b",
+  custom: "gpt-4o",
+};
+
+/**
+ * Resolve provider info from api_providers table.
+ * Returns type (anthropic vs openai-compatible), apiKey, baseUrl.
+ */
+export function resolveProvider(db: DatabaseSync, apiProviderId?: string): ResolvedProvider {
+  let row: ApiProviderRow | undefined;
+
+  if (apiProviderId) {
+    row = db.prepare("SELECT id, name, type, base_url, api_key_enc FROM api_providers WHERE id = ? AND enabled = 1").get(apiProviderId) as ApiProviderRow | undefined;
+  }
+
+  // Fallback: any enabled provider
+  if (!row) {
+    row = db.prepare("SELECT id, name, type, base_url, api_key_enc FROM api_providers WHERE enabled = 1 ORDER BY created_at ASC LIMIT 1").get() as ApiProviderRow | undefined;
+  }
+
+  if (row) {
+    const apiKey = row.api_key_enc ? decryptSecret(row.api_key_enc) : "";
+    const isAnthropic = row.type === "anthropic";
+    return {
+      type: isAnthropic ? "anthropic" : "openai-compatible",
+      apiKey,
+      baseUrl: row.base_url,
+      providerType: row.type,
+    };
+  }
+
+  // Env fallback — Anthropic
+  const envKey = process.env["ANTHROPIC_API_KEY"];
+  if (envKey) {
+    return { type: "anthropic", apiKey: envKey, baseUrl: "https://api.anthropic.com/v1", providerType: "anthropic" };
+  }
+
+  // Env fallback — OpenAI
+  const openaiKey = process.env["OPENAI_API_KEY"];
+  if (openaiKey) {
+    return { type: "openai-compatible", apiKey: openaiKey, baseUrl: "https://api.openai.com/v1", providerType: "openai" };
+  }
+
+  throw new Error("No API provider found. Add a provider in Settings → API Providers, or set ANTHROPIC_API_KEY / OPENAI_API_KEY env.");
+}
+
+/** Get default model for a provider type */
+export function getDefaultModel(providerType: string): string {
+  return DEFAULT_MODELS[providerType] ?? "gpt-4o";
+}
+
 /** Resolve Anthropic API key — from api_providers table by provider id, or ANTHROPIC_API_KEY env. */
 export function resolveAnthropicKey(db: DatabaseSync, apiProviderId?: string): string {
   if (apiProviderId) {
-    const row = db.prepare("SELECT * FROM api_providers WHERE id = ? AND enabled = 1").get(apiProviderId) as ApiProviderRow | undefined;
+    const row = db.prepare("SELECT id, name, type, base_url, api_key_enc FROM api_providers WHERE id = ? AND enabled = 1").get(apiProviderId) as ApiProviderRow | undefined;
     if (row?.api_key_enc) return decryptSecret(row.api_key_enc);
   }
   // Fall back to any enabled Anthropic provider
-  const row = db.prepare("SELECT * FROM api_providers WHERE type = 'anthropic' AND enabled = 1 LIMIT 1").get() as ApiProviderRow | undefined;
+  const row = db.prepare("SELECT id, name, type, base_url, api_key_enc FROM api_providers WHERE type = 'anthropic' AND enabled = 1 LIMIT 1").get() as ApiProviderRow | undefined;
   if (row?.api_key_enc) return decryptSecret(row.api_key_enc);
   // Env fallback
   const envKey = process.env["ANTHROPIC_API_KEY"];
@@ -172,4 +240,225 @@ export async function callAnthropicStream(params: {
   }
 
   return { stopReason, assistantContent };
+}
+
+// ── OpenAI-compatible Chat Completions streaming ──────────────────────────
+
+/** Convert Anthropic-format tools to OpenAI function-calling format */
+function toOpenAITools(tools: ToolDefinition[]): { type: "function"; function: { name: string; description: string; parameters: ToolDefinition["input_schema"] } }[] {
+  return tools.map((t) => ({
+    type: "function" as const,
+    function: { name: t.name, description: t.description, parameters: t.input_schema },
+  }));
+}
+
+/** Convert Anthropic-format messages to OpenAI chat messages */
+function toOpenAIMessages(systemPrompt: string, messages: LlmMessage[]): { role: string; content?: string; tool_calls?: { id: string; type: "function"; function: { name: string; arguments: string } }[]; tool_call_id?: string }[] {
+  const result: { role: string; content?: string; tool_calls?: { id: string; type: "function"; function: { name: string; arguments: string } }[]; tool_call_id?: string }[] = [];
+
+  // System message
+  result.push({ role: "system", content: systemPrompt });
+
+  for (const msg of messages) {
+    if (msg.role === "user") {
+      if (typeof msg.content === "string") {
+        result.push({ role: "user", content: msg.content });
+      } else {
+        // Content array — may contain tool_result blocks
+        const textParts: string[] = [];
+        for (const block of msg.content) {
+          if (block.type === "text") {
+            textParts.push(block.text);
+          } else if (block.type === "tool_result") {
+            result.push({
+              role: "tool",
+              content: block.content,
+              tool_call_id: block.tool_use_id,
+            });
+          }
+        }
+        if (textParts.length > 0) {
+          result.push({ role: "user", content: textParts.join("\n") });
+        }
+      }
+    } else if (msg.role === "assistant") {
+      if (typeof msg.content === "string") {
+        result.push({ role: "assistant", content: msg.content });
+      } else {
+        // Content array — may contain text + tool_use blocks
+        let text = "";
+        const toolCalls: { id: string; type: "function"; function: { name: string; arguments: string } }[] = [];
+        for (const block of msg.content) {
+          if (block.type === "text") {
+            text += block.text;
+          } else if (block.type === "tool_use") {
+            toolCalls.push({
+              id: block.id,
+              type: "function",
+              function: { name: block.name, arguments: JSON.stringify(block.input) },
+            });
+          }
+        }
+        const entry: { role: string; content?: string; tool_calls?: typeof toolCalls } = { role: "assistant" };
+        if (text) entry.content = text;
+        if (toolCalls.length > 0) entry.tool_calls = toolCalls;
+        result.push(entry);
+      }
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Call OpenAI-compatible Chat Completions API with streaming and tool use.
+ * Works with: OpenAI, Ollama, LM Studio, Groq, Together, OpenRouter, Cerebras, Gemini (compat mode).
+ */
+export async function callOpenAICompatibleStream(params: {
+  apiKey: string;
+  baseUrl: string;
+  model: string;
+  systemPrompt: string;
+  messages: LlmMessage[];
+  tools: ToolDefinition[];
+  maxTokens: number;
+  signal: AbortSignal;
+  callbacks: LlmStreamCallbacks;
+}): Promise<{ stopReason: string; assistantContent: LlmContent[] }> {
+  const { apiKey, baseUrl, model, systemPrompt, messages, tools, maxTokens, signal, callbacks } = params;
+
+  const openaiMessages = toOpenAIMessages(systemPrompt, messages);
+  const openaiTools = tools.length > 0 ? toOpenAITools(tools) : undefined;
+
+  const reqBody: Record<string, unknown> = {
+    model,
+    messages: openaiMessages,
+    max_tokens: maxTokens,
+    stream: true,
+    stream_options: { include_usage: true },
+  };
+  if (openaiTools) {
+    reqBody.tools = openaiTools;
+    reqBody.tool_choice = "auto";
+  }
+
+  // Normalize base URL
+  const url = baseUrl.replace(/\/+$/, "") + "/chat/completions";
+
+  const headers: Record<string, string> = { "content-type": "application/json" };
+  if (apiKey) headers["authorization"] = `Bearer ${apiKey}`;
+
+  const resp = await fetch(url, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(reqBody),
+    signal,
+  });
+
+  if (!resp.ok || !resp.body) {
+    const errText = await resp.text().catch(() => "");
+    throw new Error(`OpenAI-compatible API error ${resp.status} (${baseUrl}): ${errText}`);
+  }
+
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let inputTokens = 0;
+  let outputTokens = 0;
+  let stopReason = "stop";
+
+  // Accumulate assistant content in Anthropic format (for conversation history)
+  const assistantContent: LlmContent[] = [];
+  // Track tool calls by index
+  const pendingToolCalls = new Map<number, { id: string; name: string; args: string }>();
+
+  const processLine = (line: string) => {
+    const trimmed = line.trim();
+    if (!trimmed || !trimmed.startsWith("data: ")) return;
+    const payload = trimmed.slice(6);
+    if (payload === "[DONE]") return;
+
+    try {
+      const data = JSON.parse(payload) as {
+        choices?: { delta?: { content?: string | null; tool_calls?: { index: number; id?: string; function?: { name?: string; arguments?: string } }[]; }; finish_reason?: string | null }[];
+        usage?: { prompt_tokens?: number; completion_tokens?: number };
+      };
+
+      // Usage (from stream_options or final chunk)
+      if (data.usage) {
+        inputTokens = data.usage.prompt_tokens ?? inputTokens;
+        outputTokens = data.usage.completion_tokens ?? outputTokens;
+      }
+
+      const choice = data.choices?.[0];
+      if (!choice) return;
+
+      // Finish reason
+      if (choice.finish_reason) {
+        stopReason = choice.finish_reason; // "stop", "tool_calls", "length"
+      }
+
+      const delta = choice.delta;
+      if (!delta) return;
+
+      // Text content
+      if (delta.content) {
+        callbacks.onText(delta.content);
+        const last = assistantContent[assistantContent.length - 1];
+        if (last?.type === "text") {
+          last.text += delta.content;
+        } else {
+          assistantContent.push({ type: "text", text: delta.content });
+        }
+      }
+
+      // Tool calls (streamed incrementally)
+      if (delta.tool_calls) {
+        for (const tc of delta.tool_calls) {
+          const idx = tc.index;
+          if (tc.id) {
+            // New tool call start
+            pendingToolCalls.set(idx, { id: tc.id, name: tc.function?.name ?? "", args: tc.function?.arguments ?? "" });
+          } else {
+            // Continuation (append arguments)
+            const existing = pendingToolCalls.get(idx);
+            if (existing) {
+              if (tc.function?.name) existing.name = tc.function.name;
+              if (tc.function?.arguments) existing.args += tc.function.arguments;
+            }
+          }
+        }
+      }
+    } catch {
+      /* ignore parse errors */
+    }
+  };
+
+  try {
+    for await (const chunk of resp.body as AsyncIterable<Uint8Array>) {
+      if (signal.aborted) break;
+      buffer += decoder.decode(chunk, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() ?? "";
+      for (const line of lines) processLine(line);
+    }
+    if (buffer.trim()) processLine(buffer.trim());
+  } catch (err) {
+    if (!signal.aborted) callbacks.onError(err as Error);
+  }
+
+  // Finalize pending tool calls
+  for (const [, tc] of pendingToolCalls) {
+    let input: Record<string, unknown> = {};
+    try { input = JSON.parse(tc.args) as Record<string, unknown>; } catch { /* ignore */ }
+    const call: ToolCall = { id: tc.id, name: tc.name, input };
+    assistantContent.push({ type: "tool_use", id: tc.id, name: tc.name, input });
+    callbacks.onToolCall(call);
+  }
+
+  callbacks.onDone({ inputTokens, outputTokens });
+
+  // Normalize stop reason to match Anthropic conventions
+  const normalizedStopReason = stopReason === "tool_calls" ? "tool_use" : stopReason === "stop" ? "end_turn" : stopReason;
+
+  return { stopReason: normalizedStopReason, assistantContent };
 }

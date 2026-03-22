@@ -496,4 +496,285 @@ export const VERSIONED_MIGRATIONS_E_RECENT: Migration[] = [
       } catch { /* already exists */ }
     },
   },
+  {
+    id: "2026-03-28-001-task-logs-messages-project-id",
+    up: (db) => {
+      try { db.exec("ALTER TABLE task_logs ADD COLUMN project_id TEXT"); } catch { /* already exists */ }
+      try { db.exec("ALTER TABLE messages ADD COLUMN project_id TEXT"); } catch { /* already exists */ }
+      try { db.exec("CREATE INDEX IF NOT EXISTS idx_task_logs_project ON task_logs(project_id, created_at DESC)"); } catch { /* */ }
+      try { db.exec("CREATE INDEX IF NOT EXISTS idx_messages_project ON messages(project_id, created_at DESC)"); } catch { /* */ }
+      // Backfill project_id from tasks where task_id is still set
+      try {
+        db.exec(`
+          UPDATE task_logs SET project_id = (
+            SELECT t.project_id FROM tasks t WHERE t.id = task_logs.task_id
+          ) WHERE task_id IS NOT NULL AND project_id IS NULL
+        `);
+        db.exec(`
+          UPDATE messages SET project_id = (
+            SELECT t.project_id FROM tasks t WHERE t.id = messages.task_id
+          ) WHERE task_id IS NOT NULL AND project_id IS NULL
+        `);
+      } catch { /* best effort backfill */ }
+    },
+  },
+  {
+    id: "2026-03-28-003-ship-automation",
+    up: (db) => {
+      try { db.exec("ALTER TABLE projects ADD COLUMN current_version TEXT DEFAULT '0.1.0'"); } catch { /* already exists */ }
+      try { db.exec("ALTER TABLE projects ADD COLUMN auto_create_pr INTEGER DEFAULT 0"); } catch { /* already exists */ }
+      try {
+        db.exec(`
+          CREATE TABLE IF NOT EXISTS project_changelog_entries (
+            id TEXT PRIMARY KEY,
+            project_id TEXT NOT NULL REFERENCES projects(id),
+            version TEXT NOT NULL,
+            task_id TEXT,
+            entry_type TEXT NOT NULL DEFAULT 'feature',
+            summary TEXT NOT NULL,
+            detail TEXT,
+            created_at INTEGER NOT NULL
+          )
+        `);
+      } catch { /* already exists */ }
+      try {
+        db.exec("CREATE INDEX IF NOT EXISTS idx_changelog_project ON project_changelog_entries(project_id, created_at DESC)");
+      } catch { /* already exists */ }
+    },
+  },
+  {
+    id: "2026-03-28-004-project-type-templates",
+    up: (db) => {
+      try {
+        db.exec(`
+          CREATE TABLE IF NOT EXISTS project_type_templates (
+            id                      TEXT PRIMARY KEY,
+            name                    TEXT NOT NULL,
+            name_ko                 TEXT,
+            name_ja                 TEXT,
+            name_zh                 TEXT,
+            description             TEXT,
+            icon_svg                TEXT,
+            default_directive       TEXT,
+            placeholder_goal        TEXT,
+            recommended_agent_count INTEGER DEFAULT 3,
+            tags                    TEXT,
+            is_default              INTEGER NOT NULL DEFAULT 0,
+            created_at              INTEGER NOT NULL,
+            updated_at              INTEGER NOT NULL
+          )
+        `);
+      } catch { /* already exists */ }
+
+      // Seed 5 default types
+      const now = Date.now();
+      const seeds: Array<{
+        id: string; name: string; name_ko: string; name_ja: string; name_zh: string;
+        description: string; default_directive: string; placeholder_goal: string;
+        recommended_agent_count: number; tags: string;
+      }> = [
+        {
+          id: "ptt-web-app",
+          name: "Web App",
+          name_ko: "웹앱",
+          name_ja: "ウェブアプリ",
+          name_zh: "网页应用",
+          description: "Full-stack web application with frontend and backend",
+          default_directive: "Build a production-ready web application. Focus on clean architecture, responsive UI, and robust API design.",
+          placeholder_goal: "e.g. Build an e-commerce platform with user auth, product catalog, and checkout",
+          recommended_agent_count: 4,
+          tags: "frontend,backend,fullstack,web",
+        },
+        {
+          id: "ptt-api-server",
+          name: "API Server",
+          name_ko: "API 서버",
+          name_ja: "APIサーバー",
+          name_zh: "API服务器",
+          description: "Backend API service with endpoints and data models",
+          default_directive: "Design and implement a RESTful API server. Prioritize clear endpoint design, validation, error handling, and documentation.",
+          placeholder_goal: "e.g. Build a REST API for managing inventory with CRUD operations and auth",
+          recommended_agent_count: 3,
+          tags: "backend,api,server,rest",
+        },
+        {
+          id: "ptt-chatbot",
+          name: "Chatbot",
+          name_ko: "챗봇",
+          name_ja: "チャットボット",
+          name_zh: "聊天机器人",
+          description: "Conversational AI agent or chat interface",
+          default_directive: "Build an intelligent chatbot. Focus on natural conversation flow, context retention, and helpful responses.",
+          placeholder_goal: "e.g. Create a customer support chatbot that handles FAQs and ticket creation",
+          recommended_agent_count: 2,
+          tags: "chatbot,ai,conversation,nlp",
+        },
+        {
+          id: "ptt-data-pipeline",
+          name: "Data Pipeline",
+          name_ko: "데이터 파이프라인",
+          name_ja: "データパイプライン",
+          name_zh: "数据管道",
+          description: "ETL, data processing, and analytics pipeline",
+          default_directive: "Build a reliable data pipeline. Focus on data quality, error handling, idempotency, and monitoring.",
+          placeholder_goal: "e.g. Build an ETL pipeline that ingests CSV files, transforms data, and loads into PostgreSQL",
+          recommended_agent_count: 3,
+          tags: "data,etl,pipeline,analytics",
+        },
+        {
+          id: "ptt-custom",
+          name: "Custom",
+          name_ko: "커스텀",
+          name_ja: "カスタム",
+          name_zh: "自定义",
+          description: "Start from scratch with a blank template",
+          default_directive: "",
+          placeholder_goal: "Describe what you want to build",
+          recommended_agent_count: 3,
+          tags: "custom,general",
+        },
+      ];
+
+      const insert = db.prepare(
+        `INSERT OR IGNORE INTO project_type_templates
+          (id, name, name_ko, name_ja, name_zh, description, default_directive, placeholder_goal, recommended_agent_count, tags, is_default, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)`
+      );
+      for (const s of seeds) {
+        insert.run(
+          s.id, s.name, s.name_ko, s.name_ja, s.name_zh,
+          s.description, s.default_directive, s.placeholder_goal,
+          s.recommended_agent_count, s.tags, now, now,
+        );
+      }
+    },
+  },
+  {
+    id: "2026-03-28-005-agent-enhancements",
+    up: (db) => {
+      try { db.exec("ALTER TABLE agents ADD COLUMN specialty TEXT"); } catch { /* already exists */ }
+      try { db.exec("ALTER TABLE agents ADD COLUMN autonomy_level TEXT DEFAULT 'balanced'"); } catch { /* already exists */ }
+      try { db.exec("ALTER TABLE agents ADD COLUMN max_concurrent_tasks INTEGER DEFAULT 1"); } catch { /* already exists */ }
+    },
+  },
+  {
+    id: "2026-03-28-002-meeting-minutes-nullable-task-id",
+    up: (db) => {
+      // Rebuild meeting_minutes to make task_id nullable and remove ON DELETE CASCADE.
+      // This prevents cascade-deletion of meeting minutes when a task is deleted.
+      // Also add project_id so orphaned minutes can be queried by project.
+      try {
+        const row = db
+          .prepare("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'meeting_minutes'")
+          .get() as { sql?: string } | undefined;
+        const ddl = (row?.sql ?? "").toLowerCase();
+        // If project_id already exists, skip migration
+        if (ddl.includes("project_id")) return;
+
+        const oldTable = "meeting_minutes_cascade_fix_old";
+        db.exec(`ALTER TABLE meeting_minutes RENAME TO ${oldTable}`);
+        db.exec(`
+          CREATE TABLE meeting_minutes (
+            id TEXT PRIMARY KEY,
+            task_id TEXT REFERENCES tasks(id) ON DELETE SET NULL,
+            project_id TEXT,
+            meeting_type TEXT NOT NULL CHECK(meeting_type IN ('planned','review')),
+            round INTEGER NOT NULL,
+            title TEXT NOT NULL,
+            status TEXT NOT NULL DEFAULT 'in_progress' CHECK(status IN ('in_progress','completed','revision_requested','failed')),
+            started_at INTEGER NOT NULL,
+            completed_at INTEGER,
+            created_at INTEGER DEFAULT (unixepoch()*1000)
+          )
+        `);
+        db.exec(`
+          INSERT INTO meeting_minutes (id, task_id, project_id, meeting_type, round, title, status, started_at, completed_at, created_at)
+          SELECT mm.id, mm.task_id,
+                 (SELECT t.project_id FROM tasks t WHERE t.id = mm.task_id),
+                 mm.meeting_type, mm.round, mm.title, mm.status, mm.started_at, mm.completed_at, mm.created_at
+          FROM ${oldTable} mm
+        `);
+        db.exec(`DROP TABLE ${oldTable}`);
+        db.exec("CREATE INDEX IF NOT EXISTS idx_meeting_minutes_task ON meeting_minutes(task_id, started_at DESC)");
+        db.exec("CREATE INDEX IF NOT EXISTS idx_meeting_minutes_project ON meeting_minutes(project_id, started_at DESC)");
+      } catch { /* already migrated */ }
+    },
+  },
+  {
+    id: "2026-03-28-006-rename-dept-to-specialty",
+    up: (db) => {
+      // Rename existing departments to specialty area names + add new specialty areas
+      const updates: [string, string, string, string, string][] = [
+        ["planning", "Planning", "기획", "企画", "企划"],
+        ["dev", "Development", "개발", "開発", "开发"],
+        ["design", "Design", "디자인", "デザイン", "设计"],
+        ["qa", "QA/QC", "품질관리", "品質管理", "质量管理"],
+        ["devsecops", "DevSecOps", "인프라보안", "インフラセキュリティ", "基础安全"],
+        ["operations", "Operations", "운영", "運営", "运营"],
+      ];
+      const updateStmt = db.prepare(
+        "UPDATE departments SET name = ?, name_ko = ?, name_ja = ?, name_zh = ? WHERE id = ?",
+      );
+      for (const [id, name, ko, ja, zh] of updates) {
+        try { updateStmt.run(name, ko, ja, zh, id); } catch { /* ignore */ }
+      }
+
+      // Ensure all 12 specialty areas exist (INSERT OR IGNORE for idempotency)
+      const insertStmt = db.prepare(
+        "INSERT OR IGNORE INTO departments (id, name, name_ko, name_ja, name_zh, icon, color, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      );
+      const allAreas: [string, string, string, string, string, string, string, number][] = [
+        ["planning",   "Planning",       "기획",       "企画",             "企划",     "📊", "#f59e0b",  1],
+        ["dev",        "Development",    "개발",       "開発",             "开发",     "💻", "#3b82f6",  2],
+        ["design",     "Design",         "디자인",     "デザイン",          "设计",     "🎨", "#8b5cf6",  3],
+        ["qa",         "QA/QC",          "품질관리",   "品質管理",          "质量管理", "🔍", "#ef4444",  4],
+        ["devsecops",  "DevSecOps",      "인프라보안", "インフラセキュリティ", "基础安全", "🛡️", "#f97316",  5],
+        ["operations", "Operations",     "운영",       "運営",             "运营",     "⚙️", "#10b981",  6],
+        ["research",   "Research",       "리서치",     "リサーチ",          "研究",     "🔬", "#06b6d4",  7],
+        ["investment", "Investment",     "투자전문",   "投資専門",          "投资专业", "📈", "#14b8a6",  8],
+        ["video",      "Video/Media",    "영상전문",   "映像専門",          "视频专业", "🎬", "#e879f9",  9],
+        ["data",       "Data/Analytics", "데이터분석", "データ分析",         "数据分析", "📉", "#6366f1", 10],
+        ["marketing",  "Marketing",      "마케팅",     "マーケティング",     "营销",     "📢", "#f43f5e", 11],
+        ["content",    "Content",        "콘텐츠",     "コンテンツ",         "内容",     "✏️", "#84cc16", 12],
+      ];
+      for (const [id, name, ko, ja, zh, icon, color, order] of allAreas) {
+        try { insertStmt.run(id, name, ko, ja, zh, icon, color, order); } catch { /* ignore */ }
+      }
+    },
+  },
+  {
+    id: "2026-03-28-007-migrate-specialty-tags",
+    up: (db) => {
+      // Migrate old specialty tags (frontend, backend, etc.) to new department-based IDs
+      const mapping: Record<string, string> = {
+        frontend: "dev",
+        backend: "dev",
+        devops: "devsecops",
+        design: "design",
+        qa: "qa",
+        data: "data",
+        docs: "content",
+        infra: "devsecops",
+      };
+      const rows = db.prepare("SELECT id, specialty FROM agents WHERE specialty IS NOT NULL AND specialty != ''").all() as { id: string; specialty: string }[];
+      const stmt = db.prepare("UPDATE agents SET specialty = ? WHERE id = ?");
+      for (const row of rows) {
+        const oldTags = row.specialty.split(",").map((s: string) => s.trim()).filter(Boolean);
+        const newTags = [...new Set(oldTags.map((t: string) => mapping[t] ?? t))];
+        try { stmt.run(newTags.join(","), row.id); } catch { /* ignore */ }
+      }
+    },
+  },
+  {
+    id: "2026-03-28-008-promote-specialty-leaders",
+    up: (db) => {
+      try {
+        db.exec(`
+          UPDATE agents SET role = 'team_leader'
+          WHERE name IN ('Albert Einstein', 'Warren Buffett', 'Alfred Hitchcock', 'Florence Nightingale', 'David Ogilvy', 'Ernest Hemingway')
+          AND role = 'senior'
+        `);
+      } catch { /* already applied */ }
+    },
+  },
 ];

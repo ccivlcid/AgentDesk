@@ -9,7 +9,7 @@ export type ToastVariant = "success" | "error" | "warning" | "info";
 const ERROR_CODE_MESSAGES: Record<string, string> = {
   task_not_found: "Task not found",
   agent_not_found: "Agent not found",
-  department_not_found: "Department not found",
+  department_not_found: "Specialty not found",
   webhook_not_found: "Webhook not found",
   dependency_not_found: "Dependency not found",
   dependency_task_not_found: "Dependency task not found",

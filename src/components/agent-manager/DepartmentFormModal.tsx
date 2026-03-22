@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import AppWindow from "../windows/AppWindow";
 import type { Department } from "../../types";
@@ -147,16 +147,17 @@ export default function DepartmentFormModal({
       }
       onSave();
       onClose();
-    } catch (e: any) {
-      console.error("Dept save failed:", e);
+    } catch (e: unknown) {
       if (api.isApiRequestError(e) && e.code === "department_id_exists") {
-        showToast(tr("이미 존재하는 부서 ID입니다.", "Department ID already exists."), "error");
+        showToast(t({ ko: "이미 존재하는 전문 분야 ID입니다.", en: "Specialty ID already exists.", ja: "専門分野IDが既に存在します。", zh: "专业领域ID已存在。" }), "error");
       } else if (api.isApiRequestError(e) && e.code === "sort_order_conflict") {
         showToast(
-          tr(
-            "부서 정렬 순서가 충돌합니다. 잠시 후 다시 시도해주세요.",
-            "Department sort order conflict. Please retry.",
-          ),
+          t({
+            ko: "전문 분야 정렬 순서가 충돌합니다. 잠시 후 다시 시도해주세요.",
+            en: "Specialty sort order conflict. Please retry.",
+            ja: "専門分野の並び順が競合しています。再試行してください。",
+            zh: "专业领域排序冲突，请重试。",
+          }),
           "error",
         );
       }
@@ -175,14 +176,13 @@ export default function DepartmentFormModal({
       }
       onSave();
       onClose();
-    } catch (e: any) {
-      console.error("Dept delete failed:", e);
+    } catch (e: unknown) {
       if (api.isApiRequestError(e) && e.code === "department_has_agents") {
-        showToast(tr("소속 직원이 있어 삭제할 수 없습니다.", "Cannot delete: department has agents."), "error");
+        showToast(t({ ko: "소속 직원이 있어 삭제할 수 없습니다.", en: "Cannot delete: specialty has agents.", ja: "所属エージェントがあるため削除できません。", zh: "无法删除：专业领域有代理。" }), "error");
       } else if (api.isApiRequestError(e) && e.code === "department_has_tasks") {
-        showToast(tr("연결된 업무(Task)가 있어 삭제할 수 없습니다.", "Cannot delete: department has tasks."), "error");
+        showToast(t({ ko: "연결된 업무(Task)가 있어 삭제할 수 없습니다.", en: "Cannot delete: specialty has tasks.", ja: "関連タスクがあるため削除できません。", zh: "无法删除：专业领域有任务。" }), "error");
       } else if (api.isApiRequestError(e) && e.code === "department_protected") {
-        showToast(tr("기본 시스템 부서는 삭제할 수 없습니다.", "Cannot delete: protected system department."), "error");
+        showToast(t({ ko: "기본 시스템 전문 분야는 삭제할 수 없습니다.", en: "Cannot delete: protected system specialty.", ja: "保護されたシステム専門分野は削除できません。", zh: "无法删除：受保护的系统专业领域。" }), "error");
       }
     } finally {
       setSaving(false);
@@ -197,151 +197,198 @@ export default function DepartmentFormModal({
     color: "var(--th-text-primary)",
   };
 
-  const title = isEdit ? tr("부서 정보 수정", "Edit Department") : tr("신규 부서 추가", "Add Department");
+  const sectionLabelStyle = {
+    fontFamily: "var(--th-font-mono)" as const,
+    fontSize: "9px",
+    fontWeight: 700 as const,
+    letterSpacing: "0.1em",
+    textTransform: "uppercase" as const,
+    color: "var(--th-text-muted)",
+  };
+
+  const title = isEdit
+    ? t({ ko: "전문 분야 설정", en: "Specialty Settings", ja: "専門分野設定", zh: "专业领域设置" })
+    : t({ ko: "전문 분야 등록", en: "Register Specialty", ja: "専門分野登録", zh: "注册专业领域" });
 
   return createPortal(
     <AppWindow
       windowType="create-department"
       title={title}
-      emoji="🏢"
+      emoji={<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /></svg>}
       defaultWidth={520}
-      defaultHeight={620}
+      defaultHeight={640}
       defaultX={Math.max(0, Math.round((window.innerWidth - 520) / 2))}
-      defaultY={Math.max(44, Math.round((window.innerHeight - 620) / 2))}
+      defaultY={Math.max(44, Math.round((window.innerHeight - 640) / 2))}
       onClose={onClose}
     >
       <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
-        <div className="flex-1 overflow-y-auto p-6 space-y-4" style={{ fontFamily: "var(--th-font-mono)" }}>
-          {/* 아이콘 + 영문이름 */}
-          <div className="flex items-start gap-3">
-            <div>
-              <label className="block text-xs mb-1.5 font-medium" style={{ color: "var(--th-text-secondary)" }}>
-                {tr("아이콘", "Icon")}
-              </label>
-              <EmojiPicker value={form.icon} onChange={(emoji) => setForm({ ...form, icon: emoji })} />
-            </div>
-            <div className="flex-1">
-              <label className="block text-xs mb-1.5 font-medium" style={{ color: "var(--th-text-secondary)" }}>
-                {tr("영문 이름", "Name")} <span className="text-red-400">*</span>
-              </label>
-              <input
-                type="text"
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                placeholder="Development"
-                className={inputCls}
-                style={inputStyle}
-              />
-            </div>
-          </div>
+        <div className="flex-1 overflow-y-auto p-6 space-y-5" style={{ fontFamily: "var(--th-font-mono)" }}>
 
-          {/* 색상 선택 */}
+          {/* ── IDENTITY ── */}
           <div>
-            <label className="block text-xs mb-1.5 font-medium" style={{ color: "var(--th-text-secondary)" }}>
-              {tr("테마 색상", "Theme Color")}
-            </label>
-            <div className="flex gap-2">
-              {DEPT_COLORS.map((c) => (
-                <button
-                  key={c}
-                  type="button"
-                  onClick={() => setForm({ ...form, color: c })}
-                  className="w-7 h-7 transition-all hover:scale-110"
-                  style={{
-                    borderRadius: "50%",
-                    background: c,
-                    outline: form.color === c ? `2px solid ${c}` : "2px solid transparent",
-                    outlineOffset: "3px",
-                  }}
+            <div className="mb-3 pb-1" style={{ borderBottom: "1px solid var(--th-border)" }}>
+              <span style={sectionLabelStyle}>
+                {t({ ko: "전문 분야 정보", en: "IDENTITY", ja: "専門分野情報", zh: "专业领域信息" })}
+              </span>
+            </div>
+
+            {/* Icon + Name */}
+            <div className="flex items-start gap-3 mb-3">
+              <div>
+                <label className="block text-xs mb-1.5 font-medium" style={{ color: "var(--th-text-secondary)" }}>
+                  {t({ ko: "아이콘", en: "Icon", ja: "アイコン", zh: "图标" })}
+                </label>
+                <EmojiPicker value={form.icon} onChange={(emoji) => setForm({ ...form, icon: emoji })} />
+              </div>
+              <div className="flex-1">
+                <label className="block text-xs mb-1.5 font-medium" style={{ color: "var(--th-text-secondary)" }}>
+                  {t({ ko: "영문 이름", en: "Name (English)", ja: "英語名", zh: "英文名" })} <span className="text-red-400">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  placeholder="Development"
+                  className={inputCls}
+                  style={inputStyle}
                 />
-              ))}
+              </div>
             </div>
+
+            {/* Theme color */}
+            <div className="mb-3">
+              <label className="block text-xs mb-1.5 font-medium" style={{ color: "var(--th-text-secondary)" }}>
+                {t({ ko: "테마 색상", en: "Theme Color", ja: "テーマカラー", zh: "主题色" })}
+              </label>
+              <div className="flex gap-2">
+                {DEPT_COLORS.map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => setForm({ ...form, color: c })}
+                    className="w-7 h-7 transition-all hover:scale-110"
+                    style={{
+                      borderRadius: "50%",
+                      background: c,
+                      outline: form.color === c ? `2px solid ${c}` : "2px solid transparent",
+                      outlineOffset: "3px",
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Locale names */}
+            {locale.startsWith("ko") && (
+              <div className="mb-3">
+                <label className="block text-xs mb-1.5 font-medium" style={{ color: "var(--th-text-secondary)" }}>
+                  {t({ ko: "한글 이름", en: "Korean Name", ja: "韓国語名", zh: "韩语名" })}
+                </label>
+                <input
+                  type="text"
+                  value={form.name_ko}
+                  onChange={(e) => setForm({ ...form, name_ko: e.target.value })}
+                  placeholder="개발팀"
+                  className={inputCls}
+                  style={inputStyle}
+                />
+              </div>
+            )}
+            {locale.startsWith("ja") && (
+              <div className="mb-3">
+                <label className="block text-xs mb-1.5 font-medium" style={{ color: "var(--th-text-secondary)" }}>
+                  {t({ ko: "일본어 이름", en: "Japanese Name", ja: "日本語名", zh: "日语名" })}
+                </label>
+                <input
+                  type="text"
+                  value={form.name_ja}
+                  onChange={(e) => setForm({ ...form, name_ja: e.target.value })}
+                  placeholder="開発チーム"
+                  className={inputCls}
+                  style={inputStyle}
+                />
+              </div>
+            )}
+            {locale.startsWith("zh") && (
+              <div className="mb-3">
+                <label className="block text-xs mb-1.5 font-medium" style={{ color: "var(--th-text-secondary)" }}>
+                  {t({ ko: "중국어 이름", en: "Chinese Name", ja: "中国語名", zh: "中文名" })}
+                </label>
+                <input
+                  type="text"
+                  value={form.name_zh}
+                  onChange={(e) => setForm({ ...form, name_zh: e.target.value })}
+                  placeholder="开发部"
+                  className={inputCls}
+                  style={inputStyle}
+                />
+              </div>
+            )}
           </div>
 
-          {/* 로캘 이름 */}
-          {locale.startsWith("ko") && (
-            <div>
-              <label className="block text-xs mb-1.5 font-medium" style={{ color: "var(--th-text-secondary)" }}>
-                {tr("한글 이름", "Korean Name")}
-              </label>
-              <input
-                type="text"
-                value={form.name_ko}
-                onChange={(e) => setForm({ ...form, name_ko: e.target.value })}
-                placeholder="개발팀"
-                className={inputCls}
-                style={inputStyle}
-              />
-            </div>
-          )}
-          {locale.startsWith("ja") && (
-            <div>
-              <label className="block text-xs mb-1.5 font-medium" style={{ color: "var(--th-text-secondary)" }}>
-                {t({ ko: "일본어 이름", en: "Japanese Name", ja: "日本語名", zh: "日语名" })}
-              </label>
-              <input
-                type="text"
-                value={form.name_ja}
-                onChange={(e) => setForm({ ...form, name_ja: e.target.value })}
-                placeholder="開発チーム"
-                className={inputCls}
-                style={inputStyle}
-              />
-            </div>
-          )}
-          {locale.startsWith("zh") && (
-            <div>
-              <label className="block text-xs mb-1.5 font-medium" style={{ color: "var(--th-text-secondary)" }}>
-                {t({ ko: "중국어 이름", en: "Chinese Name", ja: "中国語名", zh: "中文名" })}
-              </label>
-              <input
-                type="text"
-                value={form.name_zh}
-                onChange={(e) => setForm({ ...form, name_zh: e.target.value })}
-                placeholder="开发部"
-                className={inputCls}
-                style={inputStyle}
-              />
-            </div>
-          )}
-
-          {/* 설명 */}
+          {/* ── MISSION & INSTRUCTIONS ── */}
           <div>
-            <label className="block text-xs mb-1.5 font-medium" style={{ color: "var(--th-text-secondary)" }}>
-              {tr("부서 설명", "Description")}
-            </label>
-            <input
-              type="text"
-              value={form.description}
-              onChange={(e) => setForm({ ...form, description: e.target.value })}
-              placeholder={tr("부서의 역할 간단 설명", "Brief description of the department")}
-              className={inputCls}
-              style={inputStyle}
-            />
-          </div>
+            <div className="mb-3 pb-1" style={{ borderBottom: "1px solid var(--th-border)" }}>
+              <span style={sectionLabelStyle}>
+                {t({ ko: "미션 & 지시", en: "MISSION & INSTRUCTIONS", ja: "ミッション＆指示", zh: "使命与指示" })}
+              </span>
+            </div>
 
-          {/* 프롬프트 */}
-          <div>
-            <label className="block text-xs mb-1.5 font-medium" style={{ color: "var(--th-text-secondary)" }}>
-              {tr("부서 프롬프트", "Department Prompt")}
-            </label>
-            <textarea
-              value={form.prompt}
-              onChange={(e) => setForm({ ...form, prompt: e.target.value })}
-              rows={4}
-              placeholder={tr(
-                "이 부서 소속 에이전트의 공통 시스템 프롬프트...",
-                "Shared system prompt for agents in this department...",
-              )}
-              className={`${inputCls} resize-none`}
-              style={inputStyle}
-            />
-            <p className="text-[10px] mt-1" style={{ color: "var(--th-text-muted)" }}>
-              {tr(
-                "소속 에이전트의 작업 실행 시 공통으로 적용되는 시스템 프롬프트",
-                "Applied as shared system prompt when agents in this department execute tasks",
-              )}
-            </p>
+            {/* Department mission (description) */}
+            <div className="mb-4">
+              <label className="block text-xs mb-1.5 font-medium" style={{ color: "var(--th-text-secondary)" }}>
+                {t({ ko: "전문 분야 미션", en: "Specialty Mission", ja: "専門分野ミッション", zh: "专业领域使命" })}
+              </label>
+              <input
+                type="text"
+                value={form.description}
+                onChange={(e) => setForm({ ...form, description: e.target.value })}
+                placeholder={t({
+                  ko: "이 전문 분야가 담당하는 영역과 목표",
+                  en: "What this specialty area covers and its goals",
+                  ja: "この専門分野が担当する領域と目標",
+                  zh: "该专业领域的覆盖范围和目标",
+                })}
+                className={inputCls}
+                style={inputStyle}
+              />
+              <p className="text-[10px] mt-1" style={{ color: "var(--th-text-muted)" }}>
+                {t({
+                  ko: "PM이 태스크 배정 시 전문 분야 미션을 참고합니다",
+                  en: "PM references this when assigning tasks to agents",
+                  ja: "PMがタスク割り当て時に専門分野ミッションを参照します",
+                  zh: "PM在分配任务时参考专业领域使命",
+                })}
+              </p>
+            </div>
+
+            {/* Department prompt */}
+            <div>
+              <label className="block text-xs mb-1.5 font-medium" style={{ color: "var(--th-text-secondary)" }}>
+                {t({ ko: "기본 지시사항", en: "Default Instructions", ja: "デフォルト指示", zh: "默认指示" })}
+              </label>
+              <textarea
+                value={form.prompt}
+                onChange={(e) => setForm({ ...form, prompt: e.target.value })}
+                rows={4}
+                placeholder={t({
+                  ko: "이 전문 분야 에이전트에게 적용되는 기본 지시사항...",
+                  en: "Default instructions applied to agents in this specialty...",
+                  ja: "この専門分野のエージェントに適用されるデフォルト指示...",
+                  zh: "应用于该专业领域代理的默认指示...",
+                })}
+                className={`${inputCls} resize-none`}
+                style={inputStyle}
+              />
+              <p className="text-[10px] mt-1" style={{ color: "var(--th-text-muted)" }}>
+                {t({
+                  ko: "소속 에이전트의 작업 실행 시 공통으로 적용되는 시스템 프롬프트",
+                  en: "Applied as shared system prompt when agents in this specialty execute tasks",
+                  ja: "この専門分野のエージェントがタスク実行時に共通適用されるシステムプロンプト",
+                  zh: "该专业领域代理执行任务时共同适用的系统提示",
+                })}
+              </p>
+            </div>
           </div>
         </div>
 
@@ -354,10 +401,10 @@ export default function DepartmentFormModal({
             style={{ borderRadius: 0, background: "var(--th-accent)", color: "var(--th-accent-text)" }}
           >
             {saving
-              ? tr("처리 중...", "Saving...")
+              ? t({ ko: "처리 중...", en: "Saving...", ja: "処理中...", zh: "处理中..." })
               : isEdit
-                ? tr("변경사항 저장", "Save Changes")
-                : tr("부서 추가", "Add Department")}
+                ? t({ ko: "변경사항 저장", en: "Save Changes", ja: "変更を保存", zh: "保存更改" })
+                : t({ ko: "전문 분야 등록", en: "Register Specialty", ja: "専門分野登録", zh: "注册专业领域" })}
           </button>
           {isEdit &&
             (confirmDelete ? (
@@ -368,14 +415,14 @@ export default function DepartmentFormModal({
                   className="px-3 py-2.5 text-xs font-medium font-mono disabled:opacity-40 transition-colors"
                   style={{ borderRadius: 0, background: "rgba(244,63,94,0.15)", color: "rgb(253,164,175)", border: "1px solid rgba(244,63,94,0.35)" }}
                 >
-                  {tr("삭제 확인", "Confirm")}
+                  {t({ ko: "삭제 확인", en: "Confirm", ja: "削除確認", zh: "确认删除" })}
                 </button>
                 <button
                   onClick={() => setConfirmDelete(false)}
                   className="px-2 py-2.5 text-xs font-mono transition-colors"
                   style={{ borderRadius: 0, color: "var(--th-text-muted)" }}
                 >
-                  {tr("취소", "No")}
+                  {t({ ko: "취소", en: "No", ja: "いいえ", zh: "取消" })}
                 </button>
               </div>
             ) : (
@@ -384,7 +431,7 @@ export default function DepartmentFormModal({
                 className="px-3 py-2.5 text-sm font-medium font-mono transition-all"
                 style={{ borderRadius: 0, border: "1px solid rgba(244,63,94,0.3)", color: "rgb(253,164,175)" }}
               >
-                {tr("삭제", "Delete")}
+                {t({ ko: "삭제", en: "Delete", ja: "削除", zh: "删除" })}
               </button>
             ))}
           <button
@@ -392,7 +439,7 @@ export default function DepartmentFormModal({
             className="px-4 py-2.5 text-sm font-medium font-mono transition-all hover:bg-[var(--th-bg-surface-hover)]"
             style={{ borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)" }}
           >
-            {tr("취소", "Cancel")}
+            {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}
           </button>
         </div>
       </div>

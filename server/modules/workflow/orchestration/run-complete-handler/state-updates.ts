@@ -6,6 +6,7 @@ import { appendTaskExecutionMetaUpdate, recordTaskExecutionEvent } from "../../c
 import { runCompleteNotify } from "./notifications.ts";
 import type { RunCompleteNotifyDeps } from "./notifications.ts";
 import { eventBus } from "../../../../lib/event-bus.ts";
+import { sanitizeErrorMessage } from "./error-analysis.ts";
 
 export type StateUpdatesDeps = RunCompleteNotifyDeps & {
   db: unknown;
@@ -127,10 +128,11 @@ export function applyFailureStateUpdate(
   deps: StateUpdatesDeps,
 ): void {
   const { db, broadcast, reconcileDelegatedSubtasksAfterRun, taskWorktrees, cleanupWorktree, appendTaskLog } = deps;
-  // last_error_summary 기록 — PM 오케스트레이터가 읽음
+  // last_error_summary 기록 — PM 오케스트레이터가 읽음 (sanitized to strip sensitive paths/tokens)
   try {
+    const rawSummary = `Exit code ${finalExitCode}${result ? ": " + (result.length > 300 ? result.slice(-300) : result) : ""}`;
     dbRun(db, "UPDATE tasks SET last_error_summary = ? WHERE id = ?",
-      `Exit code ${finalExitCode}${result ? ": " + (result.length > 300 ? result.slice(-300) : result) : ""}`, taskId);
+      sanitizeErrorMessage(rawSummary), taskId);
   } catch { /* column may not exist yet */ }
   const updates = ["status = 'inbox'", "updated_at = ?"];
   const params: unknown[] = [t];

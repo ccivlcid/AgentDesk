@@ -158,7 +158,7 @@ export function registerApiDirectivesRoute(
       return;
     broadcast("announcement", msg);
 
-    scheduleAnnouncementReplies(content);
+    scheduleAnnouncementReplies(content, explicitProjectId ?? null);
     const directivePolicy = analyzeDirectivePolicy(content);
     const explicitSkip = body.skipPlannedMeeting === true;
     const shouldDelegate = shouldExecuteDirectiveDelegation(directivePolicy, explicitSkip);

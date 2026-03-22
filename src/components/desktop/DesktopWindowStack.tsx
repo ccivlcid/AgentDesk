@@ -12,7 +12,6 @@ import NewFolderModal from "./NewFolderModal";
 import WallpaperPicker from "./WallpaperPicker";
 import ExportModal from "../export/ExportModal";
 import FeatureBuilderWindow from "../windows/FeatureBuilderWindow";
-import FlowGraphWindow from "../windows/FlowGraphWindow";
 import GitImportWindow from "../windows/GitImportWindow";
 import MarkdownEditorModal from "./MarkdownEditorModal";
 import QuickLook from "./QuickLook";
@@ -254,7 +253,6 @@ export function DesktopWindowStack({
       {showWallpaperPicker && <WallpaperPicker onClose={() => setShowWallpaperPicker(false)} />}
       {showExportModal && <ExportModal onClose={() => setShowExportModal(false)} />}
       {openWindows.has("feature-builder") && <FeatureBuilderWindow />}
-      {openWindows.has("flow-graph") && <FlowGraphWindow />}
       {openWindows.has("git-import") && <GitImportWindow />}
 
       {showMarkdownEditor && (

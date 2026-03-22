@@ -67,7 +67,7 @@ export function scopeLabel(scope: string, t: TFunction): string {
   const labels: Record<string, Record<Locale, string>> = {
     All: { ko: "전체", en: "All", ja: "すべて", zh: "全部" },
     global: { ko: "글로벌", en: "Global", ja: "グローバル", zh: "全局" },
-    department: { ko: "부서별", en: "Department", ja: "部署別", zh: "部门" },
+    department: { ko: "전문 분야별", en: "Specialty", ja: "専門分野別", zh: "专业领域" },
     agent: { ko: "에이전트별", en: "Agent", ja: "エージェント別", zh: "代理" },
     workflow_pack: { ko: "워크플로우별", en: "Workflow", ja: "ワークフロー別", zh: "工作流" },
   };

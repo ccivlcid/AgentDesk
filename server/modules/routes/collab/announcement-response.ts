@@ -23,7 +23,7 @@ type AnnouncementReplyDeps = {
 
 export function createAnnouncementReplyScheduler(deps: AnnouncementReplyDeps): {
   generateAnnouncementReply: (agent: AgentRow, announcement: string, lang: Lang) => string;
-  scheduleAnnouncementReplies: (announcement: string) => void;
+  scheduleAnnouncementReplies: (announcement: string, projectId?: string | null) => void;
 } {
   const { db, resolveLang, getDeptName, getRoleLabel, l, pickL, sendAgentMessage } = deps;
 
@@ -128,19 +128,27 @@ export function createAnnouncementReplyScheduler(deps: AnnouncementReplyDeps): {
     );
   }
 
-  function scheduleAnnouncementReplies(announcement: string): void {
+  function scheduleAnnouncementReplies(announcement: string, projectId?: string | null): void {
     const lang = typeof (deps as any).getPreferredLanguage === "function"
       ? (deps as any).getPreferredLanguage()
       : resolveLang(announcement);
 
-    // 활성 프로젝트에 할당된 에이전트만 응답 (미할당 에이전트 차단)
-    const projectAgentIds = (db
-      .prepare(
-        `SELECT DISTINCT pa.agent_id FROM project_agents pa
-         JOIN projects p ON p.id = pa.project_id
-         WHERE p.archived = 0 OR p.archived IS NULL`,
-      )
-      .all() as unknown as Array<{ agent_id: string }>).map((r) => r.agent_id);
+    // 특정 프로젝트가 지정되면 해당 프로젝트에 할당된 에이전트만 응답,
+    // 미지정이면 활성 프로젝트에 할당된 에이전트만 응답 (미할당 에이전트 차단)
+    const projectAgentIds = projectId
+      ? (db
+          .prepare(
+            `SELECT DISTINCT pa.agent_id FROM project_agents pa
+             WHERE pa.project_id = ?`,
+          )
+          .all(projectId) as unknown as Array<{ agent_id: string }>).map((r) => r.agent_id)
+      : (db
+          .prepare(
+            `SELECT DISTINCT pa.agent_id FROM project_agents pa
+             JOIN projects p ON p.id = pa.project_id
+             WHERE p.archived = 0 OR p.archived IS NULL`,
+          )
+          .all() as unknown as Array<{ agent_id: string }>).map((r) => r.agent_id);
 
     const teamLeaders = (db
       .prepare("SELECT * FROM agents WHERE role = 'team_leader' AND status != 'offline'")

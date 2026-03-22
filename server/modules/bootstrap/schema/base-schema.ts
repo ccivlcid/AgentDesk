@@ -186,7 +186,8 @@ CREATE TABLE IF NOT EXISTS task_interrupt_injections (
 
 CREATE TABLE IF NOT EXISTS meeting_minutes (
   id TEXT PRIMARY KEY,
-  task_id TEXT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+  task_id TEXT REFERENCES tasks(id) ON DELETE SET NULL,
+  project_id TEXT,
   meeting_type TEXT NOT NULL CHECK(meeting_type IN ('planned','review')),
   round INTEGER NOT NULL,
   title TEXT NOT NULL,

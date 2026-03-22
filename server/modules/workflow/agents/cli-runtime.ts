@@ -3,6 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import { spawn, type ChildProcess } from "node:child_process";
 import logger from "../../../lib/logger";
+import { parseCodexJsonChunk } from "../../agent-runtime/execution-loop.ts";
 
 type CliRuntimeDeps = {
   db: any;
@@ -338,7 +339,12 @@ export function createCliRuntimeTools(deps: CliRuntimeDeps) {
       if (!text) return;
       if (shouldSkipDuplicateCliOutput(taskId, "stdout", text)) return;
       safeWrite(text);
-      broadcast("cli_output", { task_id: taskId, stream: "stdout", data: text });
+      // For codex provider, parse JSON output into readable text before broadcasting
+      const displayText = provider === "codex" ? parseCodexJsonChunk(text) : text;
+      if (displayText.trim()) {
+        broadcast("cli_output", { task_id: taskId, stream: "stdout", data: displayText });
+      }
+      // Always parse raw text for subtask detection (needs original JSON)
       parseAndCreateSubtasks(taskId, text);
     };
     stderrListener = (chunk: Buffer) => {

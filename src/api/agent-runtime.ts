@@ -44,3 +44,22 @@ export async function getRuntimeRun(runId: string): Promise<RuntimeRun> {
 export async function getTaskRuntimeRuns(taskId: string): Promise<RuntimeRun[]> {
   return request(`/api/agent-runtime/task/${taskId}`) as Promise<RuntimeRun[]>;
 }
+
+export interface RuntimeStats {
+  totals: {
+    total_runs: number;
+    completed: number;
+    failed: number;
+    total_input_tokens: number;
+    total_output_tokens: number;
+    total_tool_calls: number;
+  };
+  byProvider: { provider: string; runs: number; input_tokens: number; output_tokens: number }[];
+  byModel: { model: string; runs: number; input_tokens: number; output_tokens: number }[];
+  daily: { day: string; runs: number; tokens: number }[];
+}
+
+export async function getRuntimeStats(): Promise<RuntimeStats> {
+  const res = await request("/api/agent-runtime/stats") as { ok: boolean } & RuntimeStats;
+  return res;
+}

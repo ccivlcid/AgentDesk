@@ -1,7 +1,7 @@
 import type { AgentRole, CliProvider } from "../../types";
 import type { DeptForm, FormData } from "./types";
 
-export const ROLES: AgentRole[] = ["team_leader", "senior", "junior", "intern"];
+export const ROLES: AgentRole[] = ["team_leader", "senior", "junior"];
 export const CLI_PROVIDERS: CliProvider[] = ["claude", "codex", "gemini", "opencode", "copilot", "antigravity", "cursor", "api", "ollama"];
 
 export const ROLE_LABEL: Record<string, { ko: string; en: string; ja: string; zh: string }> = {
@@ -70,6 +70,41 @@ export const BLANK: FormData = {
   sprite_number: null,
   personality: "",
   enable_planning_phase: 1,
+  specialty: "",
+  autonomy_level: "balanced",
+  max_concurrent_tasks: 1,
+};
+
+
+export const AUTONOMY_LEVELS = ["autonomous", "balanced", "supervised"] as const;
+
+export type AutonomyLevel = (typeof AUTONOMY_LEVELS)[number];
+
+export const AUTONOMY_LABEL: Record<string, { ko: string; en: string; ja: string; zh: string; desc_ko: string; desc_en: string }> = {
+  autonomous: {
+    ko: "자율",
+    en: "Autonomous",
+    ja: "自律",
+    zh: "自主",
+    desc_ko: "PM에게 최소 보고",
+    desc_en: "Minimal reporting to PM",
+  },
+  balanced: {
+    ko: "중간",
+    en: "Balanced",
+    ja: "バランス",
+    zh: "平衡",
+    desc_ko: "주요 단계마다 보고",
+    desc_en: "Reports at key milestones",
+  },
+  supervised: {
+    ko: "밀착",
+    en: "Supervised",
+    ja: "密着",
+    zh: "紧密",
+    desc_ko: "매 작업마다 PM 확인",
+    desc_en: "PM reviews every step",
+  },
 };
 
 export const DEPT_COLORS = [
