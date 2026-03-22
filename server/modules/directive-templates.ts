@@ -30,7 +30,13 @@ export const DIRECTIVE_TEMPLATES: DirectiveTemplate[] = [
     description_ko: "최소 기능, 빠른 배포, 가설 검증 후 피벗",
     pack_key: "development",
     departments: ["dev", "planning"],
-    template: `## 작업 원칙
+    template: `## 기술스택
+- 언어: (예: TypeScript, Python, Go 등)
+- 프레임워크: (예: Next.js, FastAPI, Express 등)
+- DB: (예: PostgreSQL, SQLite, MongoDB 등)
+- 기타: (예: Docker, Redis, S3 등)
+
+## 작업 원칙
 - 최소 동작 가능한 버전을 만든다
 - 엣지케이스는 무시한다. 하드코딩 허용
 - 외부 라이브러리를 적극 활용해 시간을 절약한다
@@ -65,7 +71,14 @@ export const DIRECTIVE_TEMPLATES: DirectiveTemplate[] = [
     description_ko: "프론트 + 백 + DB + 인증, 프로덕션 수준 코드",
     pack_key: "development",
     departments: ["dev", "qa", "design", "operations", "devsecops", "planning"],
-    template: `## 작업 원칙
+    template: `## 기술스택
+- 프론트엔드: (예: React, Vue, Svelte 등)
+- 백엔드: (예: Node.js/Express, Django, Spring 등)
+- DB: (예: PostgreSQL, MySQL, MongoDB 등)
+- 인프라: (예: Docker, AWS, Vercel 등)
+- 패키지 매니저: (예: pnpm, npm, yarn 등)
+
+## 작업 원칙
 - 프로덕션 수준의 코드를 작성한다
 - 테스트, 에러 핸들링, 로깅을 필수로 포함한다
 - 아키텍처 결정에는 이유를 주석이나 문서로 남긴다
@@ -100,7 +113,13 @@ export const DIRECTIVE_TEMPLATES: DirectiveTemplate[] = [
     description_ko: "터치 UX 중심, 오프라인 대비, 플랫폼 가이드라인 준수",
     pack_key: "development",
     departments: ["dev", "design", "qa"],
-    template: `## 작업 원칙
+    template: `## 기술스택
+- 프레임워크: (예: React Native, Flutter, Swift, Kotlin 등)
+- 상태관리: (예: Zustand, Redux, Riverpod 등)
+- 네비게이션: (예: React Navigation, Go Router 등)
+- 백엔드: (예: Firebase, Supabase, 자체 API 등)
+
+## 작업 원칙
 - 터치 UX를 최우선으로 고려한다
 - 네트워크 불안정 상황에 대비한다 (오프라인 모드)
 - 60fps 유지를 목표로 한다
@@ -136,7 +155,14 @@ export const DIRECTIVE_TEMPLATES: DirectiveTemplate[] = [
     description_ko: "스키마 퍼스트, 보안 우선, 계약 기반 개발",
     pack_key: "development",
     departments: ["dev", "qa", "devsecops"],
-    template: `## 작업 원칙
+    template: `## 기술스택
+- 언어/런타임: (예: Node.js, Python, Go, Java 등)
+- 프레임워크: (예: Express, FastAPI, Gin, Spring Boot 등)
+- DB: (예: PostgreSQL, MongoDB, Redis 등)
+- API 스타일: (예: REST, GraphQL, gRPC 등)
+- 인증: (예: JWT, OAuth2, API Key 등)
+
+## 작업 원칙
 - 스키마 퍼스트: OpenAPI 또는 GraphQL 스키마를 먼저 정의한 후 구현한다
 - 모든 응답에 일관된 에러 포맷을 사용한다
 - 인증과 인가를 모든 라우트에 적용한다
@@ -170,7 +196,14 @@ export const DIRECTIVE_TEMPLATES: DirectiveTemplate[] = [
     description_ko: "컴포넌트 기반, 접근성, 반응형 레이아웃",
     pack_key: "development",
     departments: ["dev", "design", "qa"],
-    template: `## 작업 원칙
+    template: `## 기술스택
+- 프레임워크: (예: React, Vue, Svelte, Angular 등)
+- 스타일링: (예: Tailwind CSS, CSS Modules, styled-components 등)
+- 상태관리: (예: Zustand, Redux, Pinia 등)
+- 빌드: (예: Vite, Webpack, Turbopack 등)
+- 테스트: (예: Vitest, Jest, Playwright 등)
+
+## 작업 원칙
 - 컴포넌트 기반으로 설계한다
 - 접근성(a11y)을 기본으로 고려한다
 - 반응형 레이아웃을 지원한다
@@ -204,7 +237,14 @@ export const DIRECTIVE_TEMPLATES: DirectiveTemplate[] = [
     description_ko: "재현 가능성 최우선, 실험 추적, 데이터 버전 관리",
     pack_key: "development",
     departments: ["dev", "planning", "qa"],
-    template: `## 작업 원칙
+    template: `## 기술스택
+- 언어: (예: Python, R, Julia 등)
+- ML 프레임워크: (예: PyTorch, TensorFlow, scikit-learn 등)
+- 데이터: (예: Pandas, Polars, DuckDB 등)
+- 실험 추적: (예: MLflow, Weights & Biases, Neptune 등)
+- 서빙: (예: FastAPI, TorchServe, Triton 등)
+
+## 작업 원칙
 - 재현 가능성이 최우선이다
 - 모든 실험에 파라미터와 결과를 기록한다
 - 랜덤 시드를 고정한다
@@ -239,7 +279,14 @@ export const DIRECTIVE_TEMPLATES: DirectiveTemplate[] = [
     description_ko: "API 표면적 최소화, 문서 필수, DX 최우선",
     pack_key: "development",
     departments: ["dev", "qa", "planning"],
-    template: `## 작업 원칙
+    template: `## 기술스택
+- 언어: (예: TypeScript, Python, Rust, Go 등)
+- 빌드/번들러: (예: tsup, rollup, setuptools, cargo 등)
+- 테스트: (예: Vitest, pytest, cargo test 등)
+- 패키지 레지스트리: (예: npm, PyPI, crates.io 등)
+- 문서: (예: TypeDoc, Sphinx, mdBook 등)
+
+## 작업 원칙
 - 공개 API 표면적을 최소화한다
 - 모든 public 함수에 JSDoc/docstring을 작성한다
 - README, CHANGELOG, 사용 예제를 필수로 포함한다
@@ -273,7 +320,14 @@ export const DIRECTIVE_TEMPLATES: DirectiveTemplate[] = [
     description_ko: "멱등성 필수, 실패 시 롤백, 로깅과 알림",
     pack_key: "development",
     departments: ["dev", "operations", "devsecops"],
-    template: `## 작업 원칙
+    template: `## 기술스택
+- IaC: (예: Terraform, Pulumi, CDK 등)
+- CI/CD: (예: GitHub Actions, GitLab CI, Jenkins 등)
+- 컨테이너: (예: Docker, Podman, Kubernetes 등)
+- 클라우드: (예: AWS, GCP, Azure 등)
+- 스크립트: (예: Bash, Python, Makefile 등)
+
+## 작업 원칙
 - 멱등성을 필수로 보장한다
 - 실패 시 롤백 가능해야 한다
 - 모든 단계에 로깅과 알림을 포함한다
@@ -307,7 +361,13 @@ export const DIRECTIVE_TEMPLATES: DirectiveTemplate[] = [
     description_ko: "기존 시스템 호환, 변경 최소화, 점진적 마이그레이션",
     pack_key: "development",
     departments: ["dev", "qa", "planning", "operations", "devsecops"],
-    template: `## 작업 원칙
+    template: `## 기술스택
+- 기존 시스템: (예: Java/Spring, .NET, PHP 등)
+- 마이그레이션 대상: (예: Node.js, Go, 클라우드 네이티브 등)
+- DB: (예: Oracle, SQL Server, PostgreSQL 등)
+- 인프라: (예: 온프레미스, 하이브리드 클라우드, AWS 등)
+
+## 작업 원칙
 - 기존 시스템 호환성을 최우선으로 한다
 - 변경 범위를 최소화한다
 - 점진적 마이그레이션 전략을 따른다
@@ -343,7 +403,12 @@ export const DIRECTIVE_TEMPLATES: DirectiveTemplate[] = [
     description_ko: "결론보다 과정 기록, 실패도 문서화, 빠른 실험 루프",
     pack_key: "web_research_report",
     departments: ["planning", "dev"],
-    template: `## 작업 원칙
+    template: `## 기술스택
+- 언어/도구: (예: Python, Jupyter, Node.js 등)
+- 주요 라이브러리: (예: requests, BeautifulSoup, LangChain 등)
+- 문서화: (예: Markdown, Notion, Obsidian 등)
+
+## 작업 원칙
 - 결론보다 과정을 기록한다
 - 실패한 접근법도 문서화한다
 - 코드 품질보다 발견(finding)의 질이 중요하다

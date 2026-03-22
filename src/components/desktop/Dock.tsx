@@ -3,6 +3,7 @@ import type { WindowType } from "../../app/types";
 import { useUiStore } from "../../store/uiStore";
 import { useAgentStore } from "../../store/agentStore";
 import { useTaskStore } from "../../store/taskStore";
+import { IconDecisions } from "./DesktopIcons";
 import { useTheme } from "../../ThemeContext";
 import { useI18n } from "../../i18n";
 import {
@@ -14,16 +15,17 @@ import DockBadge from "./DockBadge";
 
 /** Dock에 없지만 최소화될 수 있는 창들의 아이콘/레이블 */
 const EXTRA_WIN_META: Partial<Record<WindowType, { icon: (c: string) => React.ReactNode; label: string; accent: string }>> = {
-  "agent-manager": { icon: (c) => <IconAgents color={c} />,      label: "Agents",      accent: "#a78bfa" },
-  cli:             { icon: (c) => <IconRepl color={c} />,         label: "CLI",         accent: "#34d399" },
-  reports:         { icon: (c) => <IconReports color={c} />,      label: "Reports",     accent: "#60a5fa" },
-  synapse:         { icon: (c) => <IconDockSynapse color={c} />,  label: "Synapse",     accent: "#f472b6" },
-  "image-studio":  { icon: (c) => <IconImageStudio color={c} />,  label: "Images",      accent: "#fb923c" },
-  "local-llm":     { icon: (c) => <IconLocalLlm color={c} />,     label: "Local LLM",  accent: "#818cf8" },
-  alerts:          { icon: (c) => <IconAlerts color={c} />,       label: "Alerts",      accent: "#f87171" },
-  "file-tree":     { icon: (c) => <IconFileTree color={c} />,     label: "Files",       accent: "#4ade80" },
-  "flow-graph":    { icon: (c) => <IconFlowGraph color={c} />,    label: "Graph",       accent: "#38bdf8" },
-  dashboard:       { icon: (c) => <IconDashboard color={c} />,    label: "Dashboard",   accent: "#facc15" },
+  "agent-manager":  { icon: (c) => <IconAgents color={c} />,       label: "Agents",       accent: "#a78bfa" },
+  cli:              { icon: (c) => <IconRepl color={c} />,          label: "CLI",          accent: "#34d399" },
+  reports:          { icon: (c) => <IconReports color={c} />,       label: "Reports",      accent: "#60a5fa" },
+  synapse:          { icon: (c) => <IconDockSynapse color={c} />,   label: "Synapse",      accent: "#f472b6" },
+  "image-studio":   { icon: (c) => <IconImageStudio color={c} />,   label: "Images",       accent: "#fb923c" },
+  "local-llm":      { icon: (c) => <IconLocalLlm color={c} />,      label: "Local LLM",   accent: "#818cf8" },
+  alerts:           { icon: (c) => <IconAlerts color={c} />,        label: "Alerts",       accent: "#f87171" },
+  "file-tree":      { icon: (c) => <IconFileTree color={c} />,      label: "Files",        accent: "#4ade80" },
+  "flow-graph":     { icon: (c) => <IconFlowGraph color={c} />,     label: "Graph",        accent: "#38bdf8" },
+  dashboard:        { icon: (c) => <IconDashboard color={c} />,     label: "Dashboard",    accent: "#facc15" },
+  "decision-inbox": { icon: (c) => <IconDecisions color={c} />,     label: "Decisions",    accent: "#ff453a" },
 };
 
 const mono = "var(--th-font-mono)";
@@ -38,7 +40,7 @@ export default function Dock({ onCreateProject, onCreateAgent, onCreateFeature }
   const { openWindows, toggleWindow, minimizedWindows, restoreWindow, dockAutoHide } = useUiStore();
   const [dockHovered, setDockHovered] = useState(false);
   const { agents, unreadAgentIds } = useAgentStore();
-  const { tasks } = useTaskStore();
+  const { tasks, decisionInboxItems } = useTaskStore();
   const { theme } = useTheme();
   const { t } = useI18n();
   const isLight = theme === "light";
@@ -93,11 +95,11 @@ export default function Dock({ onCreateProject, onCreateAgent, onCreateFeature }
       badgeType: "blue",
     },
     {
-      id: "widget-board" as WindowType,
-      icon: (c) => <IconDockWidgetBoard color={c} />,
-      label: t({ ko: "위젯 보드", en: "Widgets", ja: "ウィジェット", zh: "小组件" }),
-      accentColor: "#34c759",
-      gradient: "linear-gradient(145deg, #4cd964 0%, #34c759 60%, #28a745 100%)",
+      id: "dashboard" as WindowType,
+      icon: (c) => <IconDashboard color={c} />,
+      label: t({ ko: "대시보드", en: "Dashboard", ja: "ダッシュボード", zh: "控制台" }),
+      accentColor: "#facc15",
+      gradient: "linear-gradient(145deg, #fde047 0%, #facc15 60%, #eab308 100%)",
     },
   ];
 
@@ -217,6 +219,7 @@ export default function Dock({ onCreateProject, onCreateAgent, onCreateFeature }
             <div style={{ width: 1, height: 36, background: isLight ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.14)", alignSelf: "center", margin: "0 4px", flexShrink: 0 }} />
             {extraMin.map((id) => {
               const meta = EXTRA_WIN_META[id]!;
+              const badge = id === "decision-inbox" ? (decisionInboxItems.length || undefined) : undefined;
               return (
                 <DockButton
                   key={id}
@@ -227,6 +230,8 @@ export default function Dock({ onCreateProject, onCreateAgent, onCreateFeature }
                   gradient={`linear-gradient(145deg, ${meta.accent}cc, ${meta.accent})`}
                   icon={meta.icon}
                   isLight={isLight}
+                  badge={badge}
+                  badgeType="red"
                   onClick={() => restoreWindow(id)}
                 />
               );

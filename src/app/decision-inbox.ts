@@ -16,7 +16,7 @@ function baseWorkflowDecisionItem(item: DecisionInboxRouteItem): Omit<DecisionIn
       item.agent_name_ko ||
       item.agent_name ||
       (item.kind === "project_review_ready"
-        ? item.project_name || item.project_id || "기획팀장"
+        ? item.project_name || item.project_id || "PM"
         : item.task_title || item.task_id || "작업"),
     agentAvatar:
       item.agent_avatar ?? (item.kind === "project_review_ready" || item.kind === "review_round_pick" ? "🧑‍💼" : null),
@@ -37,10 +37,10 @@ function localizedOptionLabel(
   if (kind === "project_review_ready") {
     if (action === "start_project_review") {
       return pickLang(language, {
-        ko: "팀장 회의 진행",
-        en: "Start Team-Lead Meeting",
-        ja: "チームリーダー会議を進行",
-        zh: "启动组长评审会议",
+        ko: "PM 미팅 진행",
+        en: "Start PM Meeting",
+        ja: "PMミーティングを進行",
+        zh: "启动PM评审会议",
       });
     }
     if (action === "keep_waiting") {
@@ -75,6 +75,32 @@ function localizedOptionLabel(
         en: "Keep in Inbox",
         ja: "Inboxで保留",
         zh: "保留在 Inbox",
+      });
+    }
+  }
+  if (kind === "task_review_ready") {
+    if (action.startsWith("approve_task_review:")) {
+      return pickLang(language, {
+        ko: "승인 + 병합",
+        en: "Approve & Merge",
+        ja: "承認 + マージ",
+        zh: "批准 + 合并",
+      });
+    }
+    if (action.startsWith("request_revision:")) {
+      return pickLang(language, {
+        ko: "수정 요청",
+        en: "Request Revision",
+        ja: "修正要請",
+        zh: "要求修改",
+      });
+    }
+    if (action === "keep_waiting") {
+      return pickLang(language, {
+        ko: "보류",
+        en: "Hold",
+        ja: "保留",
+        zh: "暂缓",
       });
     }
   }

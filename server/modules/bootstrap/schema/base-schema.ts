@@ -566,7 +566,7 @@ CREATE INDEX IF NOT EXISTS idx_hook_learning_history_hook_lookup
 
 CREATE TABLE IF NOT EXISTS notifications (
   id TEXT PRIMARY KEY,
-  type TEXT NOT NULL CHECK(type IN ('task_complete','task_error','decision_created','agent_error','system','cost_alert','agent_anomaly','heartbeat')),
+  type TEXT NOT NULL CHECK(type IN ('task_complete','task_error','task_started','decision_created','agent_error','system','cost_alert','agent_anomaly','heartbeat','kickoff')),
   title TEXT NOT NULL,
   body TEXT,
   task_id TEXT REFERENCES tasks(id) ON DELETE CASCADE,

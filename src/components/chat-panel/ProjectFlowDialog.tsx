@@ -1,4 +1,5 @@
 import type { Project } from "../../types";
+import { IconX } from "../ui/SvgIcons";
 
 type ProjectFlowStep = "choose" | "existing" | "new" | "confirm";
 
@@ -75,10 +76,11 @@ export default function ProjectFlowDialog({
           <button
             type="button"
             onClick={onClose}
-            className="px-2 py-1 text-xs font-mono transition"
+            className="flex items-center justify-center px-2 py-1 text-xs font-mono transition"
             style={{ borderRadius: 0, color: "var(--th-text-muted)" }}
+            aria-label={tr("닫기", "Close")}
           >
-            ✕
+            <IconX size={16} />
           </button>
         </div>
 

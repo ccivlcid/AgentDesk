@@ -7,7 +7,7 @@ import AppLoadingScreen from "./app/AppLoadingScreen";
 import Desktop from "./components/desktop/Desktop";
 import AppOverlays from "./app/AppOverlays";
 import ProjectCreateModal from "./components/project-create-modal/ProjectCreateModal";
-import { kickoffProject, replyClarification } from "./api/project-kickoff";
+import { kickoffProject } from "./api/project-kickoff";
 import { isApiRequestError } from "./api/core";
 import { useAppActions } from "./app/useAppActions";
 import { useActiveMeetingTaskId } from "./app/useActiveMeetingTaskId";
@@ -57,12 +57,12 @@ export default function App() {
   const {
     view, loading, settings, oauthResult,
     showReportHistory, showAgentStatus, showGroupChat, groupChatInitialAgentIds,
-    showDecisionInbox, decisionInboxLoading, decisionReplyBusyKey,
+    decisionInboxLoading, decisionReplyBusyKey,
     mobileNavOpen, mobileHeaderMenuOpen, runtimeOs, forceUpdateBanner,
     updateStatus, dismissedUpdateVersion,
     setView, setLoading, setSettings, setOauthResult,
     setShowReportHistory, setShowAgentStatus, setShowGroupChat, setGroupChatInitialAgentIds,
-    setShowDecisionInbox, setDecisionInboxLoading, setDecisionReplyBusyKey,
+    setDecisionInboxLoading, setDecisionReplyBusyKey, openWindow,
     setMobileNavOpen, setMobileHeaderMenuOpen, setUpdateStatus, setDismissedUpdateVersion,
     addToast,
   } = useUiStore();
@@ -88,9 +88,10 @@ export default function App() {
     );
   }, [currentProjectId, setProjectAgentIds, setProjectAgentsLoaded]);
 
+  /** 전사 공지·단톡 등: 현재 선택 프로젝트에 배정된 에이전트만 (미선택·로딩 중·배정 0명은 빈 배열) */
   const projectAgents = useMemo(() => {
-    if (!currentProjectId) return agents;
-    if (!projectAgentsLoaded) return agents;
+    if (!currentProjectId) return [];
+    if (!projectAgentsLoaded) return [];
     return agents.filter((a) => projectAgentIds.has(a.id));
   }, [agents, projectAgentIds, projectAgentsLoaded, currentProjectId]);
 
@@ -172,7 +173,7 @@ export default function App() {
     agents, settings, scheduleLiveSync,
     setSettings, setAgents, setLibraryAgents, setDepartments, setTasks, setStats,
     setMessages, setChatAgent, setShowChat, setUnreadAgentIds,
-    setShowDecisionInbox, setDecisionInboxLoading, setDecisionInboxItems,
+    setDecisionInboxLoading, setDecisionInboxItems,
     setDecisionReplyBusyKey, setCliStatus,
   });
 
@@ -202,7 +203,6 @@ export default function App() {
   }, [on]);
 
   // OAuth 콜백 시 settings 창 자동 열기
-  const { openWindow } = useUiStore();
   useEffect(() => {
     if (oauthResult) openWindow("settings");
   }, [oauthResult, openWindow]);
@@ -228,7 +228,7 @@ export default function App() {
       onSendDirective={actions.handleSendDirective}
       onClearMessages={actions.handleClearMessages}
       onProjectCreate={() => setShowProjectCreate(true)}
-      onOpenDecisionInbox={() => { setShowDecisionInbox(true); void actions.loadDecisionInbox(); }}
+      onOpenDecisionInbox={() => { openWindow("decision-inbox"); void actions.loadDecisionInbox(); }}
       onOpenReportHistory={() => { /* handled by openWindows["reports"] */ }}
     >
       <AppOverlays
@@ -243,12 +243,10 @@ export default function App() {
         onSendDirective={actions.handleSendDirective}
         onClearMessages={actions.handleClearMessages}
         onCloseChat={() => setShowChat(false)}
-        showDecisionInbox={showDecisionInbox}
         decisionInboxLoading={decisionInboxLoading}
         decisionInboxItems={decisionInboxItems}
         decisionReplyBusyKey={decisionReplyBusyKey}
         uiLanguage={labels.uiLanguage}
-        onCloseDecisionInbox={() => setShowDecisionInbox(false)}
         onRefreshDecisionInbox={() => { void actions.loadDecisionInbox(); }}
         onReplyDecisionOption={actions.handleReplyDecisionOption}
         onOpenDecisionChat={actions.handleOpenDecisionChat}
@@ -333,13 +331,13 @@ export default function App() {
       {/* 에이전트 킥오프 중 로딩 인디케이터 */}
       {kickoffBusy && (
         <div style={{
-          position: "fixed", bottom: 80, left: "50%", transform: "translateX(-50%)",
+          position: "fixed", top: "50%", left: "50%", transform: "translate(-50%, -50%)",
           background: "var(--th-bg-surface)", border: "1px solid var(--th-border)",
           borderRadius: 10, padding: "10px 18px", zIndex: 9999,
           fontFamily: "var(--th-font-mono)", fontSize: 11, color: "var(--th-text-secondary)",
           display: "flex", alignItems: "center", gap: 8, boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
         }}>
-          <span style={{ animation: "spin 1s linear infinite", display: "inline-block" }}>⟳</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: "spin 1s linear infinite", flexShrink: 0 }}><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
           {t({ ko: "에이전트가 태스크를 계획하는 중...", en: "Agent is planning tasks...", ja: "エージェントがタスクを計画中...", zh: "代理正在规划任务..." })}
         </div>
       )}
@@ -356,7 +354,7 @@ export default function App() {
             boxShadow: "0 8px 40px rgba(0,0,0,0.4)",
           }}>
             <div style={{ fontFamily: "var(--th-font-mono)", fontSize: 11, color: "var(--th-text-muted)", marginBottom: 8 }}>
-              🤖 {t({ ko: "에이전트 확인 요청", en: "Agent needs clarification", ja: "エージェントの確認", zh: "代理需要确认" })}
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: "inline-block", verticalAlign: "middle", marginRight: 4 }}><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="8" cy="16" r="1" fill="currentColor" stroke="none"/><circle cx="16" cy="16" r="1" fill="currentColor" stroke="none"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>{t({ ko: "에이전트 확인 요청", en: "Agent needs clarification", ja: "エージェントの確認", zh: "代理需要确认" })}
             </div>
             <div style={{ fontFamily: "var(--th-font-mono)", fontSize: 14, fontWeight: 600, color: "var(--th-text-heading)", marginBottom: 16, lineHeight: 1.5 }}>
               {clarificationRequest.question}
@@ -391,8 +389,12 @@ export default function App() {
                   if (!clarificationAnswer.trim()) return;
                   setClarificationBusy(true);
                   try {
-                    await replyClarification(clarificationRequest.projectId, clarificationRequest.clarificationId, clarificationAnswer.trim());
-                    const result = await kickoffProject(clarificationRequest.projectId, clarificationAnswer.trim());
+                    const result = await kickoffProject(
+                      clarificationRequest.projectId,
+                      clarificationAnswer.trim(),
+                      undefined,
+                      clarificationRequest.clarificationId,
+                    );
                     if (result.status === "ok") {
                       addToast({ type: "success", title: t({ ko: "태스크가 생성되었습니다", en: "Tasks created", ja: "タスクが作成されました", zh: "任务已创建" }) });
                     }

@@ -44,6 +44,7 @@ export function buildStateUpdatesDeps(deps: Record<string, unknown>): StateUpdat
     crossDeptNextCallbacks: deps.crossDeptNextCallbacks as Map<string, () => void>,
     recoverCrossDeptQueueAfterMissingCallback: deps.recoverCrossDeptQueueAfterMissingCallback as (id: string) => void,
     subtaskDelegationCallbacks: deps.subtaskDelegationCallbacks as Map<string, () => void>,
+    findProjectPm: deps.findProjectPm as ((projectId: string | null) => { id: string } | undefined) | undefined,
   } as StateUpdatesDeps;
 }
 
@@ -53,6 +54,7 @@ type TaskForState = {
   source_task_id: string | null;
   department_id: string | null;
   assigned_agent_id: string | null;
+  project_id?: string | null;
 };
 
 function dbRun(db: unknown, sql: string, ...params: unknown[]): void {

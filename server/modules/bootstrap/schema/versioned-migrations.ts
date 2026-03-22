@@ -50,14 +50,18 @@ export function runVersionedMigrations(db: DbLike): void {
 
   for (const migration of MIGRATIONS) {
     if (applied.has(migration.id)) continue;
-    db.exec("BEGIN");
+    // Use SAVEPOINT instead of BEGIN/COMMIT — works both outside and inside an existing transaction
+    // (node:sqlite can leave implicit transactions open after DDL; SAVEPOINT is always safe)
+    const sp = `sp_mig_${migration.id.replace(/[^a-z0-9]/gi, "_")}`;
+    db.exec(`SAVEPOINT ${sp}`);
     try {
       migration.up(db);
       insert.run(migration.id);
-      db.exec("COMMIT");
+      db.exec(`RELEASE SAVEPOINT ${sp}`);
       logger.info(`[db-migration] ✓ ${migration.id}`);
     } catch (err) {
-      db.exec("ROLLBACK");
+      try { db.exec(`ROLLBACK TO SAVEPOINT ${sp}`); } catch { /* ignore */ }
+      try { db.exec(`RELEASE SAVEPOINT ${sp}`); } catch { /* ignore */ }
       throw new Error(`[db-migration] FAILED: ${migration.id} — ${String(err)}`);
     }
   }

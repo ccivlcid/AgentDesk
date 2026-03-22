@@ -239,6 +239,7 @@ export function createMessengerFormatAndSend(ctx: FormatSendCtx) {
     receiverType: string = "agent",
     receiverId: string | null = null,
     taskId: string | null = null,
+    roomId: string | null = null,
   ): void {
     const id = randomUUID();
     const t = nowMs();
@@ -259,20 +260,20 @@ export function createMessengerFormatAndSend(ctx: FormatSendCtx) {
     try {
       db.prepare(
         `
-      INSERT INTO messages (id, sender_type, sender_id, receiver_type, receiver_id, content, message_type, task_id, created_at)
-      VALUES (?, 'agent', ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO messages (id, sender_type, sender_id, receiver_type, receiver_id, content, message_type, task_id, room_id, created_at)
+      VALUES (?, 'agent', ?, ?, ?, ?, ?, ?, ?, ?)
     `,
-      ).run(id, agent.id, receiverType, receiverId, content, messageType, persistedTaskId, t);
+      ).run(id, agent.id, receiverType, receiverId, content, messageType, persistedTaskId, roomId, t);
     } catch (err) {
       if (persistedTaskId && isForeignKeyError(err)) {
         try {
           persistedTaskId = null;
           db.prepare(
             `
-          INSERT INTO messages (id, sender_type, sender_id, receiver_type, receiver_id, content, message_type, task_id, created_at)
-          VALUES (?, 'agent', ?, ?, ?, ?, ?, ?, ?)
+          INSERT INTO messages (id, sender_type, sender_id, receiver_type, receiver_id, content, message_type, task_id, room_id, created_at)
+          VALUES (?, 'agent', ?, ?, ?, ?, ?, ?, ?, ?)
         `,
-          ).run(id, agent.id, receiverType, receiverId, content, messageType, null, t);
+          ).run(id, agent.id, receiverType, receiverId, content, messageType, null, roomId, t);
         } catch (fallbackErr) {
           logger.warn(`[sendAgentMessage] drop message after FK fallback failure: ${String(fallbackErr)}`);
           return;
@@ -292,6 +293,7 @@ export function createMessengerFormatAndSend(ctx: FormatSendCtx) {
       content,
       message_type: messageType,
       task_id: persistedTaskId,
+      room_id: roomId,
       created_at: t,
       sender_name: agent.name,
       sender_avatar: agent.avatar_emoji ?? "🤖",

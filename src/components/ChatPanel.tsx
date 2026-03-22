@@ -27,7 +27,10 @@ import ProjectFlowDialog from "./chat-panel/ProjectFlowDialog";
 interface ChatPanelProps {
   selectedAgent: Agent | null;
   messages: Message[];
+  /** DM 등 메시지 발신자 표시용 (전체 또는 넓은 범위) */
   agents: Agent[];
+  /** 전사 공지 모드에서만 사용. 미전달 시 `agents`와 동일하게 동작 */
+  broadcastAgents?: Agent[];
   streamingMessage?: StreamingMessage | null;
   onSendMessage: (
     content: string,
@@ -58,6 +61,7 @@ export function ChatPanel({
   selectedAgent,
   messages,
   agents,
+  broadcastAgents,
   streamingMessage,
   onSendMessage,
   onSendAnnouncement,
@@ -86,6 +90,8 @@ export function ChatPanel({
   const isKorean = locale.startsWith("ko");
 
   const tr = useCallback((ko: string, en: string, ja = en, zh = en) => t({ ko, en, ja, zh }), [t]);
+
+  const agentsForBroadcast = broadcastAgents ?? agents;
 
   const getAgentName = (agent: Agent | null | undefined) => {
     if (!agent) return "";
@@ -121,9 +127,9 @@ export function ChatPanel({
   // 스트리밍 중인 메시지가 현재 에이전트 것인지 판별
   const isStreamingForAgent = streamingMessage && selectedAgent && streamingMessage.agent_id === selectedAgent.id;
 
-  // Auto-scroll to bottom on new messages or streaming delta
+  // Auto-scroll: 스트리밍/신규 메시지는 즉시 따라가도록 (부드러운 스크롤은 체감 지연 유발)
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    messagesEndRef.current?.scrollIntoView({ behavior: "auto", block: "end" });
   }, [messages, streamingMessage?.content]);
 
   // Switch mode when agent selection changes
@@ -502,7 +508,7 @@ export function ChatPanel({
     return (
       <AnnouncementCliPanel
         messages={displayMessages}
-        agents={agents}
+        agents={agentsForBroadcast}
         locale={locale}
         input={input}
         attachments={attachments}

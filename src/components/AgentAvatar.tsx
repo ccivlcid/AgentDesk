@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import type { Agent } from "../types";
+import { IconRobot } from "./ui/SvgIcons";
 
 interface AgentAvatarProps {
   agent: Agent | undefined;
@@ -51,12 +52,18 @@ export default function AgentAvatar({
     );
   }
 
+  const emoji = agent?.avatar_emoji?.trim();
+
   return (
     <div
       className={`${roundedClass} bg-[var(--th-bg-elevated)] flex items-center justify-center flex-shrink-0 ${className}`}
       style={{ width: size, height: size, fontSize: size * 0.6 }}
     >
-      {agent?.avatar_emoji ?? "🤖"}
+      {emoji ? (
+        <span>{emoji}</span>
+      ) : (
+        <IconRobot size={Math.max(14, Math.round(size * 0.55))} style={{ color: "var(--th-text-muted)" }} />
+      )}
     </div>
   );
 }

@@ -3,10 +3,10 @@ import type { Project } from "../../../types";
 import { useI18n } from "../../../i18n";
 import { timeAgo } from "./utils";
 
-function StatPill({ icon, value, color }: { icon: string; value: string; color: string }) {
+function StatPill({ icon, value, color }: { icon: React.ReactNode; value: string; color: string }) {
   return (
     <span style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 10, color, fontFamily: "var(--th-font-mono)", whiteSpace: "nowrap" }}>
-      <span style={{ fontSize: 10 }}>{icon}</span>{value}
+      <span style={{ fontSize: 10, display: "flex", alignItems: "center" }}>{icon}</span>{value}
     </span>
   );
 }

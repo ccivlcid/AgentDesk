@@ -49,6 +49,10 @@ interface AppWindowProps {
   onClose?: () => void;
   /** Extra actions rendered in the title bar right side (e.g. ? help button) */
   headerActions?: ReactNode;
+  /** Controlled active tab id — when set, external code drives the active tab */
+  activeTabId?: string;
+  /** Called when user clicks a tab (or external code switches tabs) */
+  onTabChange?: (tabId: string) => void;
 }
 
 type ResizeDir = "n" | "s" | "e" | "w" | "ne" | "nw" | "se" | "sw";
@@ -143,6 +147,8 @@ export default function AppWindow({
   defaultY,
   onClose,
   headerActions,
+  activeTabId: controlledTabId,
+  onTabChange,
 }: AppWindowProps) {
   const {
     closeWindow,
@@ -167,7 +173,9 @@ export default function AppWindow({
   const focusIdx = windowFocusOrder.indexOf(windowType);
   const zIndex = isFullscreen ? 999 : 200 + Math.max(0, focusIdx) * 2;
   const isFrontmost = focusIdx === windowFocusOrder.length - 1;
-  const [activeTab, setActiveTab] = useState(tabs?.[0]?.id ?? "");
+  const [localTab, setLocalTab] = useState(tabs?.[0]?.id ?? "");
+  const activeTab = controlledTabId ?? localTab;
+  const setActiveTab = (id: string) => { setLocalTab(id); onTabChange?.(id); };
 
   // ── Viewport-proportional sizes (never exceed 90% of available space) ──────
   const availH = window.innerHeight - MENUBAR_H - DOCK_CLEARANCE;
@@ -343,6 +351,9 @@ export default function AppWindow({
   const dragStart = useRef<{ mx: number; my: number; ox: number; oy: number } | null>(null);
   const resizeState = useRef<ResizeState | null>(null);
   const snapZoneRef = useRef<SnapZone | null>(null);
+  const isDragging = useRef(false);
+  const isResizing = useRef(false);
+  const rafId = useRef(0);
 
   // MX-08: detect corner snap zones first, then edges
   function getSnapZone(clientX: number, clientY: number): SnapZone | null {
@@ -377,6 +388,10 @@ export default function AppWindow({
     }
     dragStart.current = { mx: e.clientX, my: e.clientY, ox: pos.x, oy: pos.y };
     snapZoneRef.current = null;
+    isDragging.current = true;
+
+    let pendingX = pos.x;
+    let pendingY = pos.y;
 
     function onMove(ev: MouseEvent) {
       if (!dragStart.current) return;
@@ -387,13 +402,20 @@ export default function AppWindow({
         setSnapDraggingWindow(windowType);
       }
       const maxY = window.innerHeight - DOCK_CLEARANCE - 40;
-      setPos({
-        x: Math.max(0, dragStart.current.ox + ev.clientX - dragStart.current.mx),
-        y: Math.min(maxY, Math.max(MENUBAR_H, dragStart.current.oy + ev.clientY - dragStart.current.my)),
-      });
+      pendingX = Math.max(0, dragStart.current.ox + ev.clientX - dragStart.current.mx);
+      pendingY = Math.min(maxY, Math.max(MENUBAR_H, dragStart.current.oy + ev.clientY - dragStart.current.my));
+      if (!rafId.current) {
+        rafId.current = requestAnimationFrame(() => {
+          rafId.current = 0;
+          setPos({ x: pendingX, y: pendingY });
+        });
+      }
     }
     function onUp(ev: MouseEvent) {
       if (!dragStart.current) return;
+      cancelAnimationFrame(rafId.current);
+      rafId.current = 0;
+      isDragging.current = false;
       const zone = snapZoneRef.current;
       setSnapPreview(null);
       setSnapDraggingWindow(null);
@@ -421,6 +443,7 @@ export default function AppWindow({
       if (e.button !== 0) return;
       e.preventDefault();
       e.stopPropagation();
+      isResizing.current = true;
       resizeState.current = {
         dir,
         mx: e.clientX, my: e.clientY,
@@ -428,18 +451,28 @@ export default function AppWindow({
         ow: size.w, oh: size.h,
       };
 
+      let pendingR = { x: pos.x, y: pos.y, w: size.w, h: size.h };
+
       function clampResize(r: { x: number; y: number; w: number; h: number }) {
         const maxH = window.innerHeight - DOCK_CLEARANCE - r.y;
         return { ...r, h: Math.min(r.h, maxH) };
       }
       function onMove(ev: MouseEvent) {
         if (!resizeState.current) return;
-        const r = clampResize(computeResize(ev, resizeState.current));
-        setPos({ x: r.x, y: r.y });
-        setSize({ w: r.w, h: r.h });
+        pendingR = clampResize(computeResize(ev, resizeState.current));
+        if (!rafId.current) {
+          rafId.current = requestAnimationFrame(() => {
+            rafId.current = 0;
+            setPos({ x: pendingR.x, y: pendingR.y });
+            setSize({ w: pendingR.w, h: pendingR.h });
+          });
+        }
       }
       function onUp(ev: MouseEvent) {
         if (!resizeState.current) return;
+        cancelAnimationFrame(rafId.current);
+        rafId.current = 0;
+        isResizing.current = false;
         const r = clampResize(computeResize(ev, resizeState.current));
         setPos({ x: r.x, y: r.y });
         setSize({ w: r.w, h: r.h });
@@ -493,7 +526,7 @@ export default function AppWindow({
           ? `translateX(${minimizeTX}px) translateY(${minimizeTY}px) scale(0.08)`
           : "scale(1)",
         pointerEvents: isMinimized ? "none" : "all",
-        transition: "opacity 0.28s ease, transform 0.28s cubic-bezier(0.4, 0, 0.6, 1)",
+        transition: (isDragging.current || isResizing.current) ? "none" : "opacity 0.28s ease, transform 0.28s cubic-bezier(0.4, 0, 0.6, 1)",
         animation: "winOpen 0.18s ease",
       }}
     >

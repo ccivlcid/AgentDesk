@@ -79,11 +79,12 @@ export default function Desktop({
     removeFeatureFromTrash,
   } = useUiStore();
 
-  const { projects, categories, currentProjectId, setCurrentProjectId } = useProjectStore();
+  const { projects, categories, currentProjectId, projectAgentIds, setCurrentProjectId } = useProjectStore();
   const currentProject = projects.find((p) => p.id === currentProjectId) ?? null;
   const { agents } = useAgentStore();
   const { tasks, decisionInboxItems } = useTaskStore();
   const runningAgentCount = agents.filter((a) => a.status === "working").length;
+  const projectAgentCount = projectAgentIds.size;
   const handleToggleYoloMode = useCallback(() => {
     const next = !(settings.yoloMode === true);
     const updated = { ...settings, yoloMode: next };
@@ -242,6 +243,7 @@ export default function Desktop({
         onOpenCommandPalette: () => setShowCommandPalette(true),
         onOpenExportModal: () => setShowExportModal(true),
         runningAgentCount,
+        projectAgentCount,
         yoloMode: settings.yoloMode === true,
         onToggleYoloMode: handleToggleYoloMode,
       }}

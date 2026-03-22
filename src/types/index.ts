@@ -417,7 +417,7 @@ export interface MeetingMinute {
 
 // Messages
 export type SenderType = "client" | "agent" | "system";
-export type ReceiverType = "agent" | "department" | "all";
+export type ReceiverType = "agent" | "department" | "all" | "room";
 export type MessageType = "chat" | "task_assign" | "announcement" | "directive" | "report" | "status_update";
 
 export interface MessageAttachment {
@@ -440,6 +440,7 @@ export interface Message {
   content: string;
   message_type: MessageType;
   task_id: string | null;
+  room_id?: string | null;
   attachments?: MessageAttachment[];
   created_at: number;
 }
@@ -526,6 +527,7 @@ export type WSEventType =
   | "task_report"
   | "notification"
   | "queue_status"
+  | "pm_activity"
   | "connected"
   | "skill_learn_job_update"
   | "memory_learn_job_update"

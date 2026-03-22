@@ -1,6 +1,8 @@
 import type { RefObject } from "react";
 import type { Agent, Message } from "../../../types";
 import MessageContent from "../../MessageContent";
+import { IconChatBubble } from "../../ui/SvgIcons";
+import { KAKAO_MSG } from "../messenger-kakao-theme";
 import { CliLine } from "./CliLine";
 import type { Tr } from "./types";
 
@@ -55,8 +57,9 @@ export function AnnouncementCliPanelMessageList({
               width: 56,
               height: 56,
               borderRadius: 14,
-              background: "var(--th-accent-glow)",
-              border: "1px solid var(--th-accent-border)",
+              background: KAKAO_MSG.surface,
+              border: `1px solid ${KAKAO_MSG.borderLight}`,
+              boxShadow: KAKAO_MSG.bubbleShadow,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -80,13 +83,13 @@ export function AnnouncementCliPanelMessageList({
             </svg>
           </div>
           <div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "var(--th-text-secondary)", marginBottom: 6 }}>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "#191919", marginBottom: 6 }}>
               {searchQuery.trim()
                 ? tr("검색 결과 없음", "No matches found", "一致なし", "无匹配结果")
                 : tr("공지 내역이 없습니다", "No broadcasts yet", "告知履歴なし", "暂无广播")}
             </div>
             {!searchQuery.trim() && (
-              <div style={{ fontSize: 11, color: "var(--th-text-muted)", lineHeight: 1.6 }}>
+              <div style={{ fontSize: 11, color: KAKAO_MSG.meta, lineHeight: 1.6 }}>
                 {tr(
                   "아래 입력창에서 전사 공지를 작성하세요.\n전체 에이전트에게 즉시 전달됩니다.",
                   "Write a broadcast below.\nAll agents will receive it immediately.",
@@ -107,22 +110,37 @@ export function AnnouncementCliPanelMessageList({
             <div
               style={{
                 display: "flex",
-                borderBottom: "1px solid var(--th-border)",
-                background: "var(--th-green-glow)",
+                alignItems: "flex-end",
+                gap: 8,
+                padding: "8px 14px 12px",
+                borderTop: `1px solid ${KAKAO_MSG.borderHairline}`,
+                background: "transparent",
               }}
             >
-              <div style={{ width: 3, flexShrink: 0, background: "var(--th-success, #22c55e)", opacity: 0.8 }} />
-              <div style={{ flex: 1, padding: "10px 14px", fontFamily: "var(--th-font-mono)", fontSize: 12 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+              <div
+                style={{
+                  width: 38,
+                  height: 38,
+                  borderRadius: 14,
+                  background: KAKAO_MSG.surface,
+                  border: `1px solid ${KAKAO_MSG.borderLight}`,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: KAKAO_MSG.meta,
+                  flexShrink: 0,
+                  boxShadow: KAKAO_MSG.bubbleShadow,
+                }}
+              >
+                <IconChatBubble size={20} />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
                   <span
                     style={{
-                      fontSize: 10,
+                      fontSize: 11,
                       fontWeight: 700,
-                      padding: "1px 6px",
-                      borderRadius: 4,
-                      background: "var(--th-green-glow)",
-                      color: "var(--th-success, #4ade80)",
-                      letterSpacing: "0.06em",
+                      color: KAKAO_MSG.meta,
                     }}
                   >
                     {streamingMessage.agent_name}
@@ -130,20 +148,28 @@ export function AnnouncementCliPanelMessageList({
                   <span
                     style={{
                       fontSize: 9,
-                      padding: "1px 5px",
-                      borderRadius: 3,
-                      background: "var(--th-green-glow)",
-                      color: "var(--th-success, #4ade80)",
-                      letterSpacing: "0.1em",
+                      padding: "2px 6px",
+                      borderRadius: 10,
+                      background: "#E8F5E9",
+                      color: "#2E7D32",
+                      letterSpacing: "0.06em",
+                      fontWeight: 600,
                     }}
                   >
-                    ●&nbsp;{tr("응답 중", "responding", "応答中", "回复中")}
+                    ● {tr("응답 중", "responding", "応答中", "回复中")}
                   </span>
                 </div>
                 <div
                   style={{
-                    color: "var(--th-text-primary)",
-                    lineHeight: 1.6,
+                    padding: "10px 14px",
+                    borderRadius: KAKAO_MSG.radiusBubble,
+                    borderTopLeftRadius: 4,
+                    background: KAKAO_MSG.bubbleOther,
+                    color: KAKAO_MSG.bubbleOtherText,
+                    boxShadow: KAKAO_MSG.bubbleShadow,
+                    border: `1px solid ${KAKAO_MSG.borderHairline}`,
+                    fontSize: 13,
+                    lineHeight: 1.55,
                     wordBreak: "break-word",
                     overflowWrap: "anywhere",
                     whiteSpace: "pre-wrap",
@@ -155,7 +181,7 @@ export function AnnouncementCliPanelMessageList({
                       display: "inline-block",
                       width: 6,
                       height: 12,
-                      background: "var(--th-accent)",
+                      background: "#43A047",
                       verticalAlign: "text-bottom",
                       marginLeft: 2,
                       animation: "pulse 1s infinite",

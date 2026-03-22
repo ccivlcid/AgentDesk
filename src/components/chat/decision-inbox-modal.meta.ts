@@ -3,7 +3,6 @@ import type { Agent } from "../../types";
 import type { DecisionInboxItem } from "./decision-inbox";
 
 export interface DecisionInboxModalProps {
-  open: boolean;
   loading: boolean;
   items: DecisionInboxItem[];
   agents: Agent[];

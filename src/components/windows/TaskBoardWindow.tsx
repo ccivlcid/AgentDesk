@@ -3,7 +3,7 @@ import { useTaskStore } from "../../store/taskStore";
 import { useAgentStore } from "../../store/agentStore";
 import { useProjectStore } from "../../store/projectStore";
 import { useUiStore } from "../../store/uiStore";
-import { kickoffProject } from "../../api/project-kickoff";
+import { kickoffProject, resumeProject } from "../../api/project-kickoff";
 import {
   updateTask,
   deleteTask,
@@ -83,7 +83,7 @@ export default function TaskBoardWindow() {
   }, [setTaskPanel]);
 
   const handleOpenMeetingMinutes = useCallback((taskId: string) => {
-    setTaskPanel({ taskId, tab: "minutes" });
+    setTaskPanel({ taskId, tab: "terminal" });
   }, [setTaskPanel]);
 
   const [kickoffBusy, setKickoffBusy] = useState(false);
@@ -96,6 +96,17 @@ export default function TaskBoardWindow() {
       setKickoffBusy(false);
     }
   }, [currentProjectId, kickoffBusy]);
+
+  const [resumeBusy, setResumeBusy] = useState(false);
+  const handleResume = useCallback(async () => {
+    if (!currentProjectId || resumeBusy) return;
+    setResumeBusy(true);
+    try {
+      await resumeProject(currentProjectId);
+    } finally {
+      setResumeBusy(false);
+    }
+  }, [currentProjectId, resumeBusy]);
 
   const boardIcon = (
     <svg viewBox="0 0 18 18" fill="none" stroke="var(--th-text-heading)" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" width={16} height={16}>
@@ -138,6 +149,8 @@ export default function TaskBoardWindow() {
         onOpenMeetingMinutes={handleOpenMeetingMinutes}
         onKickoff={handleKickoff}
         kickoffBusy={kickoffBusy}
+        onResume={handleResume}
+        resumeBusy={resumeBusy}
       />
     </AppWindow>
   );

@@ -237,10 +237,10 @@ export default function TaskReportPopup({ report, agents, departments, uiLanguag
         <div className="mb-1 flex items-center justify-between gap-2">
           <p className="text-xs font-semibold font-mono" style={{ color: "var(--th-attr-elite)" }}>
             {t({
-              ko: "기획팀장 최종 취합본",
-              en: "Planning Lead Consolidated Summary",
-              ja: "企画リード統合サマリー",
-              zh: "规划负责人汇总摘要",
+              ko: "PM 최종 취합본",
+              en: "PM Consolidated Summary",
+              ja: "PM統合サマリー",
+              zh: "PM汇总摘要",
             })}
           </p>
           <div className="flex items-center gap-2">
@@ -612,7 +612,7 @@ export default function TaskReportPopup({ report, agents, departments, uiLanguag
                 color: activeTab === "planning" ? "var(--th-attr-elite)" : "var(--th-text-secondary)",
               }}
             >
-              {t({ ko: "기획팀장 취합본", en: "Planning Summary", ja: "企画サマリー", zh: "规划汇总" })}
+              {t({ ko: "PM 취합본", en: "PM Summary", ja: "PMサマリー", zh: "PM汇总" })}
             </button>
             <button
               onClick={() => setActiveTab("artifacts")}

@@ -144,7 +144,6 @@ export function useDesktopIcons(params: UseDesktopIconsParams) {
   } = params;
 
   const icons: DesktopIconDef[] = [
-    { id: "dashboard-app", icon: (c) => <IconDashboard color={c} />, label: t({ ko: "대시보드", en: "Dashboard", ja: "ダッシュボード", zh: "控制台" }), onClick: () => openWindow("dashboard"), accentColor: "#06b6d4" },
     { id: "agent-manager", icon: (c) => <IconAgents color={c} />, label: t({ ko: "에이전트 설정", en: "Agents", ja: "エージェント設定", zh: "代理设置" }), onClick: () => openWindow("agent-manager"), accentColor: "#5e5ce6" },
     { id: "cli", icon: (c) => <IconRepl color={c} />, label: t({ ko: "에이전트 CLI", en: "Agent CLI", ja: "エージェントCLI", zh: "代理CLI" }), onClick: openCli, accentColor: "#32ade6" },
     { id: "image-studio", icon: (c) => <IconImageStudio color={c} />, label: t({ ko: "이미지 스튜디오", en: "Image Studio", ja: "イメージスタジオ", zh: "图像工作室" }), onClick: () => openWindow("image-studio"), accentColor: "#ec4899" },

@@ -33,6 +33,7 @@ import { registerAgentRoutes } from "./core/agents/index.ts";
 import { registerDepartmentRoutes } from "./core/departments.ts";
 import { registerGitHubRoutes } from "./core/github-routes.ts";
 import { registerProjectRoutes } from "./core/projects.ts";
+import { createNotificationHelper } from "./ops/notifications.ts";
 import { registerTaskCrudRoutes } from "./core/tasks/crud.ts";
 import { registerTaskTemplateRoutes } from "./core/task-templates.ts";
 import { registerTaskDependencyRoutes } from "./core/task-dependencies.ts";
@@ -365,6 +366,7 @@ export function registerRoutesPartA(ctx: RuntimeContext): Record<string, never> 
   // ---------------------------------------------------------------------------
   // Projects
   // ---------------------------------------------------------------------------
+  const { insertNotification } = createNotificationHelper({ db, nowMs, broadcast });
   registerProjectRoutes({
     app,
     db,
@@ -375,6 +377,15 @@ export function registerRoutesPartA(ctx: RuntimeContext): Record<string, never> 
     broadcast,
     appendTaskLog,
     resolveProjectPath,
+    startTaskExecutionForAgent: (taskId: string, agentId: string) => {
+      const agent = db.prepare("SELECT * FROM agents WHERE id = ?").get(agentId) as Record<string, unknown> | undefined;
+      if (!agent) return;
+      const deptRow = agent.department_id
+        ? (db.prepare("SELECT id, name FROM departments WHERE id = ?").get(agent.department_id as string) as { id: string; name: string } | null)
+        : null;
+      startTaskExecutionForAgent(taskId, agent, deptRow?.id ?? null, deptRow?.name ?? "");
+    },
+    insertNotification,
   });
 
   // ---------------------------------------------------------------------------

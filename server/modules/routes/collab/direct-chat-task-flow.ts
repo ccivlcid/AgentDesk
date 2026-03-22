@@ -159,7 +159,31 @@ export function createDirectTaskFlow(deps: TaskFlowDeps) {
     setTimeout(
       () => {
         if (deps.isTaskWorkflowInterrupted(taskId)) return;
-        deps.startTaskExecutionForAgent(taskId, agent, deptId, deptName);
+        const roomId = options.roomId ?? null;
+        deps.startTaskExecutionForAgent(taskId, agent, deptId, deptName, {
+          onMainTaskDone: roomId
+            ? () => {
+                const completionFallback = deps.pickL(
+                  deps.l(
+                    [`작업 완료 — ${taskTitle}`],
+                    [`Task done — ${taskTitle}`],
+                    [`タスク完了 — ${taskTitle}`],
+                    [`任务完成 — ${taskTitle}`],
+                  ),
+                  lang,
+                );
+                deps.sendInCharacterAutoMessage({
+                  agent,
+                  lang,
+                  scenario: `You just finished the task: "${taskTitle}". Send a brief completion summary to the group.`,
+                  fallback: completionFallback,
+                  options,
+                  messageType: "status_update",
+                  taskId,
+                });
+              }
+            : undefined,
+        });
       },
       deps.randomDelay(900, 1600),
     );

@@ -7,7 +7,7 @@ import AgentAvatar from "./AgentAvatar";
 import MessageContent from "./MessageContent";
 import type { DecisionInboxItem } from "./chat/decision-inbox";
 import { formatDecisionInboxTime as formatTime, type DecisionInboxModalProps } from "./chat/decision-inbox-modal.meta";
-import HeaderModalChrome from "./ui/HeaderModalChrome";
+import AppWindow from "./windows/AppWindow";
 
 const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };
 
@@ -16,13 +16,30 @@ const KIND_META: Record<
   { label: { ko: string; en: string }; color: string; badge: string }
 > = {
   project_review_ready: { label: { ko: "프로젝트 검토", en: "Project Review" }, color: "#818cf8", badge: "REVIEW" },
+  task_review_ready:    { label: { ko: "태스크 검토",   en: "Task Review"   }, color: "#60a5fa", badge: "TASK" },
   task_timeout_resume:  { label: { ko: "타임아웃 재개", en: "Timeout Resume" }, color: "#fb923c", badge: "TIMEOUT" },
   review_round_pick:    { label: { ko: "리뷰 라운드",   en: "Review Round"  }, color: "#34d399", badge: "ROUND" },
 };
 const defaultKind = { label: { ko: "에이전트 요청", en: "Agent Request" }, color: "#94a3b8", badge: "REQUEST" };
 
+// SVG icon for the window title
+const DecisionIcon = (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="3" width="18" height="18" rx="2" />
+    <path d="M9 9h6M9 12h6M9 15h4" />
+  </svg>
+);
+
+// SVG fallback for missing agent avatar
+const AgentIconSvg = (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="11" width="18" height="11" rx="2" />
+    <path d="M9 11V7a3 3 0 0 1 6 0v4" />
+    <circle cx="12" cy="16" r="1" fill="currentColor" />
+  </svg>
+);
+
 export default function DecisionInboxModal({
-  open,
   loading,
   items,
   agents,
@@ -49,17 +66,10 @@ export default function DecisionInboxModal({
   const [reviewPickDrafts, setReviewPickDrafts] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    if (!open) {
-      setFollowupTarget(null);
-      setFollowupDraft("");
-      setReviewPickSelections({});
-      setReviewPickDrafts({});
-      return;
-    }
     if (!followupTarget) return;
     const stillExists = items.some((entry) => entry.id === followupTarget.itemId);
     if (!stillExists) { setFollowupTarget(null); setFollowupDraft(""); }
-  }, [open, followupTarget, items]);
+  }, [followupTarget, items]);
 
   useEffect(() => {
     setReviewPickSelections((prev) => {
@@ -161,66 +171,51 @@ export default function DecisionInboxModal({
     onReplyOption(item, skipOption.number);
   }
 
-  if (!open) return null;
-
   return (
-    <div
-      className="fixed inset-0 flex items-center justify-center"
-      style={{ background: "var(--th-modal-overlay)", backdropFilter: "blur(3px)", zIndex: 1100 }}
-      onClick={onClose}
+    <AppWindow
+      windowType="decision-inbox"
+      title={t({ ko: "의사결정", en: "Decision Inbox", ja: "意思決定", zh: "决策收件箱" })}
+      emoji={DecisionIcon}
+      defaultWidth={640}
+      defaultHeight={560}
+      onClose={onClose}
+      headerActions={
+        <>
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onRefresh(); }}
+            style={{
+              ...mono,
+              fontSize: "10px",
+              fontWeight: 600,
+              padding: "3px 8px",
+              border: "1px solid var(--th-border)",
+              background: "transparent",
+              color: "var(--th-text-muted)",
+              cursor: "pointer",
+              letterSpacing: "0.04em",
+            }}
+            className="hover:!text-[var(--th-text)] hover:!border-[var(--th-border-strong)]"
+          >
+            ↺ {t({ ko: "새로고침", en: "REFRESH", ja: "更新", zh: "刷新" })}
+          </button>
+          <span
+            style={{
+              ...mono,
+              fontSize: "10px",
+              fontWeight: 700,
+              padding: "2px 6px",
+              border: "1px solid var(--th-border)",
+              background: items.length > 0 ? "var(--th-accent-glow)" : "var(--th-bg-surface)",
+              color: items.length > 0 ? "var(--th-accent)" : "var(--th-text-muted)",
+            }}
+          >
+            {items.length}
+          </span>
+        </>
+      }
     >
-      <div
-        className="relative mx-4 w-full max-w-2xl flex flex-col overflow-hidden"
-        style={{
-          borderRadius: 10,
-          border: "1px solid var(--th-border)",
-          background: "var(--th-bg-elevated)",
-          maxHeight: "85vh",
-          fontFamily: "var(--th-font-mono)",
-          boxShadow: "0 20px 50px var(--th-glass-shadow, rgba(0,0,0,0.25))",
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <HeaderModalChrome
-          title={t({ ko: "의사결정", en: "Decision Inbox", ja: "意思決定", zh: "决策收件箱" })}
-          rightSlot={
-            <>
-              <button
-                type="button"
-                onClick={(e) => { e.stopPropagation(); onRefresh(); }}
-                style={{
-                  ...mono,
-                  fontSize: "10px",
-                  fontWeight: 600,
-                  padding: "3px 8px",
-                  border: "1px solid var(--th-border)",
-                  background: "transparent",
-                  color: "var(--th-text-muted)",
-                  cursor: "pointer",
-                  letterSpacing: "0.04em",
-                }}
-                className="hover:!text-[var(--th-text)] hover:!border-[var(--th-border-strong)]"
-              >
-                ↺ {t({ ko: "새로고침", en: "REFRESH", ja: "更新", zh: "刷新" })}
-              </button>
-              <span
-                style={{
-                  ...mono,
-                  fontSize: "10px",
-                  fontWeight: 700,
-                  padding: "2px 6px",
-                  border: "1px solid var(--th-border)",
-                  background: items.length > 0 ? "var(--th-accent-glow)" : "var(--th-bg-surface)",
-                  color: items.length > 0 ? "var(--th-accent)" : "var(--th-text-muted)",
-                }}
-              >
-                {items.length}
-              </span>
-            </>
-          }
-          onClose={onClose}
-        />
-
+      <div className="flex flex-col h-full overflow-hidden">
         {/* ── 목록 ── */}
         <div className="flex-1 overflow-y-auto">
           {loading ? (
@@ -230,8 +225,12 @@ export default function DecisionInboxModal({
             </div>
           ) : items.length === 0 ? (
             <div className="px-5 py-10 text-center">
-              <p style={{ ...mono, fontSize: "28px", opacity: 0.2 }}>✓</p>
-              <p style={{ ...mono, fontSize: "11px", color: "var(--th-text-muted)", marginTop: 8 }}>
+              <div className="flex justify-center mb-2" style={{ opacity: 0.2 }}>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </div>
+              <p style={{ ...mono, fontSize: "11px", color: "var(--th-text-muted)", marginTop: 4 }}>
                 {t({ ko: "미결 의사결정 없음", en: "No pending decisions", ja: "未決の意思決定なし", zh: "无待处理决策" })}
               </p>
             </div>
@@ -264,10 +263,10 @@ export default function DecisionInboxModal({
                           <AgentAvatar agent={agent} size={28} />
                         ) : (
                           <span
-                            className="flex items-center justify-center text-base"
-                            style={{ width: 28, height: 28, background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)", flexShrink: 0 }}
+                            className="flex items-center justify-center"
+                            style={{ width: 28, height: 28, background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)", flexShrink: 0, color: "var(--th-text-muted)" }}
                           >
-                            {item.agentAvatar || "🤖"}
+                            {AgentIconSvg}
                           </span>
                         )}
                         {/* 이름 + 타입 */}
@@ -354,7 +353,7 @@ export default function DecisionInboxModal({
                           if (item.options.length === 0) {
                             return (
                               <p style={{ ...mono, fontSize: "10px", color: "var(--th-text-muted)", padding: "6px 0" }}>
-                                · {t({ ko: "기획팀장 의견 취합중...", en: "Planning lead is consolidating opinions...", ja: "企画リードが意見集約中...", zh: "规划负责人汇总意见中..." })}
+                                · {t({ ko: "PM 의견 취합중...", en: "Planning lead is consolidating opinions...", ja: "企画リードが意見集約中...", zh: "规划负责人汇总意见中..." })}
                               </p>
                             );
                           }
@@ -434,7 +433,6 @@ export default function DecisionInboxModal({
                           {item.options.map((option, oIdx) => {
                             const key = `${item.id}:${option.number}`;
                             const isBusy = busyKey === key;
-                            // 첫 번째 옵션은 주요 액션으로 강조
                             const isPrimary = oIdx === 0;
                             return (
                               <button
@@ -465,7 +463,7 @@ export default function DecisionInboxModal({
                       ) : (
                         <p style={{ ...mono, fontSize: "10px", color: "var(--th-text-muted)", padding: "4px 0" }}>
                           · {item.kind === "project_review_ready"
-                            ? t({ ko: "기획팀장 의견 취합중...", en: "Planning lead is consolidating...", ja: "企画リードが集約中...", zh: "规划负责人汇总中..." })
+                            ? t({ ko: "PM 의견 취합중...", en: "Planning lead is consolidating...", ja: "企画リードが集約中...", zh: "规划负责人汇总中..." })
                             : t({ ko: "선택지 준비 중...", en: "Options being prepared...", ja: "選択肢準備中...", zh: "正在准备选项..." })}
                         </p>
                       )}
@@ -528,6 +526,6 @@ export default function DecisionInboxModal({
           </div>
         )}
       </div>
-    </div>
+    </AppWindow>
   );
 }

@@ -558,8 +558,21 @@ export function registerTaskCrudRoutes(deps: TaskCrudRouteDeps): void {
 
     appendTaskLog(id, "system", `Task updated: ${Object.keys(body as object).join(", ")}`);
 
-    const updated = db.prepare("SELECT * FROM tasks WHERE id = ?").get(id);
+    const updated = db.prepare("SELECT * FROM tasks WHERE id = ?").get(id) as Record<string, unknown> | undefined;
     broadcast("task_update", updated);
+
+    // planned/review 상태 전환 시 PM에게 알림
+    if (nextStatus === "planned" || nextStatus === "review") {
+      const projectId = updated?.project_id as string | null;
+      broadcast("pm_activity", {
+        projectId,
+        taskId: id,
+        action: nextStatus === "planned" ? "task_planned" : "task_review",
+        summary: `Task '${updated?.title ?? id}' moved to ${nextStatus}`,
+        timestamp: nowMs(),
+      });
+    }
+
     res.json({ ok: true, task: updated });
   });
 

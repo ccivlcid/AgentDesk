@@ -1,5 +1,4 @@
 import type { TaskCardState } from "./useTaskCardState";
-import { priorityIcon, priorityLabel } from "../constants";
 
 interface TaskCardHeaderProps {
   state: TaskCardState;
@@ -50,12 +49,6 @@ export function TaskCardHeader({ state }: TaskCardHeaderProps) {
           </button>
         )}
       </div>
-      <span
-        className="flex-shrink-0 text-base"
-        title={`${t({ ko: "우선순위", en: "Priority", ja: "優先度", zh: "优先级" })}: ${priorityLabel(task.priority, t)}`}
-      >
-        {priorityIcon(task.priority)}
-      </span>
     </div>
   );
 }

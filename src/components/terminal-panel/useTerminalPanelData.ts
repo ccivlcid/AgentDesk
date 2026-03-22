@@ -13,7 +13,7 @@ import {
 export interface UseTerminalPanelDataParams {
   taskId: string;
   task: Task | undefined;
-  initialTab?: "terminal" | "minutes";
+  initialTab?: "terminal";
   onClose: () => void;
 }
 
@@ -41,7 +41,7 @@ export function useTerminalPanelData({
   const [logPath, setLogPath] = useState("");
   const [follow, setFollow] = useState(true);
   const [opsDetailsOpen, setOpsDetailsOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<"terminal" | "minutes">(initialTab);
+  const [activeTab, setActiveTab] = useState<"terminal">(initialTab);
   const [logSearch, setLogSearch] = useState("");
   const [logKindFilter, setLogKindFilter] = useState<"all" | "system" | "error">("all");
   const [showSearchBar, setShowSearchBar] = useState(false);

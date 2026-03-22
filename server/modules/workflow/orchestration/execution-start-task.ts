@@ -1,4 +1,5 @@
 import path from "node:path";
+import { loadPromptSection } from "../../../lib/prompt-loader.ts";
 import type { RuntimeContext } from "../../../types/runtime-context.ts";
 import { getDepartmentPromptForPack } from "../packs/department-scope.ts";
 import { ensureVideoPreprodRemotionBestPracticesSkill } from "../core/video-skill-bootstrap.ts";
@@ -22,6 +23,7 @@ type CreateExecutionStartTaskToolsDeps = {
   broadcast: RuntimeContext["broadcast"];
   ensureTaskExecutionSession: RuntimeContext["ensureTaskExecutionSession"];
   resolveLang: RuntimeContext["resolveLang"];
+  getPreferredLanguage?: () => string;
   notifyTaskStatus: (...args: any[]) => any;
   resolveProjectPath: RuntimeContext["resolveProjectPath"];
   createWorktree: RuntimeContext["createWorktree"];
@@ -44,6 +46,9 @@ type CreateExecutionStartTaskToolsDeps = {
   handleTaskRunComplete: RuntimeContext["handleTaskRunComplete"];
   notifyClient: RuntimeContext["notifyClient"];
   startProgressTimer: RuntimeContext["startProgressTimer"];
+  /** Called when the function returns early without spawning a process,
+   *  so the agent queue can release the running slot. */
+  onEarlyReturn?: (taskId: string) => void;
 };
 
 export function createExecutionStartTaskTools(deps: CreateExecutionStartTaskToolsDeps) {
@@ -77,6 +82,8 @@ export function createExecutionStartTaskTools(deps: CreateExecutionStartTaskTool
     handleTaskRunComplete,
     notifyClient,
     startProgressTimer,
+    onEarlyReturn,
+    getPreferredLanguage,
   } = deps;
 
   function buildOutputLanguageGuidance(
@@ -84,35 +91,7 @@ export function createExecutionStartTaskTools(deps: CreateExecutionStartTaskTool
     _pickL: typeof pickL,
     _l: typeof l,
   ): string {
-    const rules: Record<string, string> = {
-      ko: [
-        "[Output Language & Quality Rules]",
-        "- 모든 산출물(PPT, 문서, 영상 자막, 보고서)은 반드시 한글로 작성하세요.",
-        "- 슬라이드 제목, 본문, 설명 텍스트 모두 한글이어야 합니다. 영문 전용 고유명사(브랜드명, 기술명)만 예외입니다.",
-        "- PPT 슬라이드의 HTML에 폰트가 깨지지 않도록 Pretendard 또는 Noto Sans KR 폰트를 사용하세요.",
-        "- 최종 산출물 생성 후 반드시 검증하세요: 파일 존재 여부, 파일 크기, 내용이 깨지지 않았는지 확인.",
-        "- PPT 생성 시 html2pptx 변환 후 에러가 없는지 확인하고, 에러 발생 시 HTML을 수정하여 재생성하세요.",
-      ].join("\n"),
-      en: [
-        "[Output Language & Quality Rules]",
-        "- All deliverables (PPT, docs, video subtitles, reports) must be written in English.",
-        "- Verify final artifacts after generation: check file existence, file size, and content integrity.",
-        "- When generating PPT via html2pptx, verify no conversion errors. Fix HTML and regenerate if errors occur.",
-      ].join("\n"),
-      ja: [
-        "[Output Language & Quality Rules]",
-        "- すべての成果物（PPT、ドキュメント、動画字幕、レポート）は日本語で作成してください。",
-        "- 最終成果物生成後、必ず検証してください：ファイルの存在、サイズ、内容の整合性を確認。",
-        "- html2pptxでPPT生成時、変換エラーがないか確認し、エラー発生時はHTMLを修正して再生成してください。",
-      ].join("\n"),
-      zh: [
-        "[Output Language & Quality Rules]",
-        "- 所有交付物（PPT、文档、视频字幕、报告）必须用中文撰写。",
-        "- 生成最终产物后必须验证：检查文件是否存在、文件大小、内容是否完整。",
-        "- 通过html2pptx生成PPT时，确认无转换错误。如有错误，修复HTML后重新生成。",
-      ].join("\n"),
-    };
-    return rules[taskLang] || rules.en;
+    return loadPromptSection("execution/output-language-guidance", taskLang) || "";
   }
 
   async function buildExecutionPayload(params: {
@@ -188,6 +167,7 @@ export function createExecutionStartTaskTools(deps: CreateExecutionStartTaskTool
         taskId,
       );
       broadcast("task_update", db.prepare("SELECT * FROM tasks WHERE id = ?").get(taskId));
+      onEarlyReturn?.(taskId);
       return;
     }
 
@@ -203,7 +183,10 @@ export function createExecutionStartTaskTools(deps: CreateExecutionStartTaskTool
     broadcast("agent_status", db.prepare("SELECT * FROM agents WHERE id = ?").get(execAgent.id));
 
     const provider = execAgent.cli_provider || "claude";
-    if (!["claude", "codex", "gemini", "opencode", "copilot", "antigravity", "api", "ollama"].includes(provider)) return;
+    if (!["claude", "codex", "gemini", "opencode", "copilot", "antigravity", "api", "ollama"].includes(provider)) {
+      onEarlyReturn?.(taskId);
+      return;
+    }
     const executionSession = ensureTaskExecutionSession(taskId, execAgent.id, provider);
 
     const taskData = db.prepare("SELECT * FROM tasks WHERE id = ?").get(taskId) as
@@ -217,7 +200,10 @@ export function createExecutionStartTaskTools(deps: CreateExecutionStartTaskTool
           workflow_pack_key: string | null;
         }
       | undefined;
-    if (!taskData) return;
+    if (!taskData) {
+      onEarlyReturn?.(taskId);
+      return;
+    }
     ensureVideoPreprodRemotionBestPracticesSkill({
       db: db as any,
       nowMs,
@@ -226,7 +212,7 @@ export function createExecutionStartTaskTools(deps: CreateExecutionStartTaskTool
       taskId,
       appendTaskLog,
     });
-    const taskLang = resolveLang(taskData.description ?? taskData.title);
+    const taskLang = typeof getPreferredLanguage === "function" ? getPreferredLanguage() : resolveLang(taskData.description ?? taskData.title);
     const videoArtifactSpec =
       taskData.workflow_pack_key === "video_preprod"
         ? resolveVideoArtifactSpecForTask(db as any, {
@@ -280,6 +266,7 @@ export function createExecutionStartTaskTools(deps: CreateExecutionStartTaskTool
         ),
         taskId,
       );
+      onEarlyReturn?.(taskId);
       return;
     }
     const agentCwd = worktreePath;
@@ -457,43 +444,11 @@ export function createExecutionStartTaskTools(deps: CreateExecutionStartTaskTool
           ? execAgent.cli_reasoning_level || modelConfig[provider]?.reasoningLevel || undefined
           : modelConfig[provider]?.reasoningLevel || undefined;
 
-      const CLI_INTERACTIVE_PROVIDERS = new Set(["claude", "cursor", "codex", "gemini"]);
-      const planningEnabled = execAgent.enable_planning_phase !== 0; // default 1 (enabled)
-      if (CLI_INTERACTIVE_PROVIDERS.has(provider) && planningEnabled) {
-        // Phase E: Run a headless planning agent first to build a step-by-step plan,
-        // then open the CLI window for the user to execute interactively.
-        // handleTaskRunComplete is NOT called here — completion comes via
-        // POST /api/tasks/:id/cli-complete or the "완료" button in CliWindow.
-        const planningPrompt = buildTaskExecutionPrompt([
-          "[Planning Mode — DO NOT execute code changes yet]",
-          `Task: ${taskData.title}`,
-          taskData.description ? `Description:\n${taskData.description}` : "",
-          "",
-          "Analyze this task carefully and create a concrete step-by-step implementation plan.",
-          "Append your plan as a \"## Plan\" section to the file .agentdesk-task.md in the current directory.",
-          "Format each step as a checkbox: - [ ] step description",
-          "After writing the plan to .agentdesk-task.md, exit immediately without making any other code changes.",
-        ]);
-        appendTaskLog(taskId, "system", `Phase E: starting planning agent (provider=${provider})`);
-        const planningChild = spawnCliAgent(
-          taskId,
-          provider,
-          planningPrompt,
-          agentCwd,
-          logFilePath,
-          modelForProvider,
-          reasoningLevel,
-        );
-        planningChild.on("close", () => {
-          appendTaskLog(taskId, "system", "Phase E: planning complete — opening CLI window");
-          broadcast("auto_open_cli", { agent_id: execAgent.id, task_id: taskId, from_planning: true });
-        });
-      } else if (CLI_INTERACTIVE_PROVIDERS.has(provider)) {
-        // planning 비활성화 — 바로 CLI 창 오픈
-        appendTaskLog(taskId, "system", `RUN cli-interactive (planning disabled, provider=${provider})`);
-        broadcast("auto_open_cli", { agent_id: execAgent.id, task_id: taskId });
-      } else {
-        // Headless CLI providers (opencode, etc.)
+      // All CLI providers run headless — agent executes autonomously,
+      // handleTaskRunComplete fires on process exit (no manual "완료" button needed).
+      // Client sees only the final result after PM reviews in decision inbox.
+      {
+        appendTaskLog(taskId, "system", `RUN headless (provider=${provider})`);
         const child = spawnCliAgent(
           taskId,
           provider,

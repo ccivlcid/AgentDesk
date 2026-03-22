@@ -16,15 +16,31 @@ import type {
 export async function getMessages(params: {
   receiver_type?: ReceiverType;
   receiver_id?: string;
+  room_id?: string;
   limit?: number;
 }): Promise<Message[]> {
   const sp = new URLSearchParams();
   if (params.receiver_type) sp.set("receiver_type", params.receiver_type);
   if (params.receiver_id) sp.set("receiver_id", params.receiver_id);
+  if (params.room_id) sp.set("room_id", params.room_id);
   if (params.limit) sp.set("limit", String(params.limit));
   const q = sp.toString();
   const j = await request<{ messages: Message[] }>(`/api/messages${q ? "?" + q : ""}`);
   return j.messages;
+}
+
+// Group chat rooms
+export interface GroupChatRoom {
+  room_id: string;
+  last_ts: number;
+  msg_count: number;
+  last_content: string | null;
+  agent_ids: string[];
+}
+
+export async function getGroupChatRooms(): Promise<GroupChatRoom[]> {
+  const j = await request<{ rooms: GroupChatRoom[] }>("/api/group-chat-rooms");
+  return j.rooms;
 }
 
 export type DecisionInboxRouteOption = {
@@ -35,7 +51,7 @@ export type DecisionInboxRouteOption = {
 
 export type DecisionInboxRouteItem = {
   id: string;
-  kind: "project_review_ready" | "task_timeout_resume" | "review_round_pick";
+  kind: "project_review_ready" | "task_review_ready" | "task_timeout_resume" | "review_round_pick";
   created_at: number;
   summary: string;
   agent_id?: string | null;
@@ -55,7 +71,7 @@ export type DecisionInboxRouteItem = {
 export type DecisionInboxReplyResult = {
   ok: boolean;
   resolved: boolean;
-  kind: "project_review_ready" | "task_timeout_resume" | "review_round_pick";
+  kind: "project_review_ready" | "task_review_ready" | "task_timeout_resume" | "review_round_pick";
   action: string;
   started_task_ids?: string[];
   task_id?: string;
@@ -108,6 +124,19 @@ export async function sendMessage(input: {
     idempotencyKey,
   );
   return extractMessageId(j);
+}
+
+export async function sendGroupMessage(input: {
+  agent_ids: string[];
+  content: string;
+  message_type?: string;
+  room_id?: string;
+  project_id?: string;
+  project_path?: string;
+  project_context?: string;
+}): Promise<{ room_id: string; message_id: string }> {
+  const j = await post<{ room_id: string; message_id: string }>("/api/group-chat", input);
+  return j;
 }
 
 export async function sendAnnouncement(content: string): Promise<string> {

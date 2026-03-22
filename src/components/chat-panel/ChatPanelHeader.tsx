@@ -1,3 +1,4 @@
+import { IconMegaphone, IconX } from "../ui/SvgIcons";
 import AgentAvatar from "../AgentAvatar";
 import type { Agent } from "../../types";
 import { useConfirm } from "../ui/ConfirmDialog";
@@ -169,8 +170,8 @@ export default function ChatPanelHeader({
 
       {showAnnouncementBanner && (
         <div className="flex flex-shrink-0 items-center gap-2 border-b border-yellow-500/30 bg-yellow-500/10 px-4 py-2">
-          <span className="text-sm font-medium text-yellow-400">
-            📢{" "}
+          <span className="flex items-center gap-2 text-sm font-medium text-yellow-400">
+            <IconMegaphone size={16} className="flex-shrink-0" />
             {tr(
               "전사 공지 모드 - 모든 에이전트에게 전달됩니다",
               "Announcement mode - sent to all agents",
@@ -203,12 +204,13 @@ export default function ChatPanelHeader({
           )}
           {searchQuery && (
             <button
+              type="button"
               onClick={() => onSearchChange("")}
-              className="flex-shrink-0 text-[10px] font-mono"
+              className="flex h-6 w-6 flex-shrink-0 items-center justify-center font-mono"
               style={{ color: "var(--th-text-muted)" }}
               aria-label={tr("검색어 지우기", "Clear search", "検索をクリア", "清除搜索")}
             >
-              ✕
+              <IconX size={14} />
             </button>
           )}
         </div>

@@ -99,13 +99,13 @@ export function handleProjectReviewDecisionReply(input: ProjectReviewReplyInput)
     appendTaskLog(
       targetTask.id,
       "system",
-      `${PROJECT_REVIEW_TASK_SELECTED_LOG_PREFIX} (project_id=${projectId}, option=${optionNumber})`,
+      `Decision inbox: PM approved review for '${targetTask.title}'`,
     );
     recordProjectReviewDecisionEvent({
       project_id: projectId,
       snapshot_hash: decisionSnapshotHash,
       event_type: "representative_pick",
-      summary: `대표 선택: ${targetTask.title}`,
+      summary: `PM 승인: ${targetTask.title}`,
       selected_options_json: JSON.stringify([
         {
           number: optionNumber,
@@ -116,16 +116,16 @@ export function handleProjectReviewDecisionReply(input: ProjectReviewReplyInput)
       ]),
       task_id: targetTask.id,
     });
-    const remaining = getProjectReviewTaskChoices(projectId).filter(
-      (task: ProjectReviewTaskChoice) => !task.selected,
-    ).length;
+
+    // PM 승인 → 즉시 finishReview (merge + 완료 처리)
+    finishReview(targetTask.id, targetTask.title);
+
     res.json({
       ok: true,
-      resolved: false,
+      resolved: true,
       kind: "project_review_ready",
       action: "approve_task_review",
       task_id: targetTask.id,
-      pending_task_choices: remaining,
     });
     return true;
   }
@@ -392,7 +392,7 @@ export function handleProjectReviewDecisionReply(input: ProjectReviewReplyInput)
         processSubtaskDelegations?.(taskRow.id, { includeRender: true });
       }
 
-      const blockedSummary = `팀장 회의 시작 보류 (${blockedTasks.length}건): ${blockedTasks.map((task) => task.title).join(", ")}`;
+      const blockedSummary = `PM 미팅 시작 보류 (${blockedTasks.length}건): ${blockedTasks.map((task) => task.title).join(", ")}`;
       recordProjectReviewDecisionEvent({
         project_id: projectId,
         snapshot_hash: decisionSnapshotHash,
@@ -424,7 +424,7 @@ export function handleProjectReviewDecisionReply(input: ProjectReviewReplyInput)
       project_id: projectId,
       snapshot_hash: decisionSnapshotHash,
       event_type: "start_review_meeting",
-      summary: selectedOption.label || "팀장 회의 진행",
+      summary: selectedOption.label || "PM 미팅 진행",
       selected_options_json: JSON.stringify([
         {
           number: optionNumber,

@@ -116,6 +116,7 @@ export function initializeWorkflowMeetingTools(ctx: RuntimeContext): any {
     scheduleNextReviewRound,
     resolveProjectPath,
     resolveLang,
+    getPreferredLanguage: __ctx.getPreferredLanguage,
     runAgentOneShot,
     chooseSafeReply,
     appendTaskLog,

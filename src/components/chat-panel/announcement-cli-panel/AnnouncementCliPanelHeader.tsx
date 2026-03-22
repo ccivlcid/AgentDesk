@@ -1,5 +1,7 @@
 import type { Message } from "../../../types";
 import TrafficLights from "../../desktop/TrafficLights";
+import { IconX } from "../../ui/SvgIcons";
+import { KAKAO_MSG } from "../messenger-kakao-theme";
 import type { Tr } from "./types";
 
 export interface AnnouncementCliPanelHeaderProps {
@@ -35,8 +37,9 @@ export function AnnouncementCliPanelHeader({
     <div
       style={{
         flexShrink: 0,
-        borderBottom: "1px solid var(--th-border)",
-        background: "var(--th-bg-surface)",
+        borderBottom: `1px solid ${KAKAO_MSG.borderLight}`,
+        background: KAKAO_MSG.surface,
+        fontFamily: KAKAO_MSG.fontSans,
       }}
     >
       <div
@@ -45,7 +48,7 @@ export function AnnouncementCliPanelHeader({
           alignItems: "center",
           gap: 12,
           padding: "10px 16px 10px",
-          borderLeft: "3px solid var(--th-accent)",
+          borderLeft: `3px solid #F2C200`,
         }}
       >
         {!embedded && <TrafficLights onClose={onClose} />}
@@ -60,7 +63,7 @@ export function AnnouncementCliPanelHeader({
             strokeLinejoin="round"
             width={18}
             height={18}
-            style={{ color: "var(--th-accent)", flexShrink: 0 }}
+            style={{ color: "#C9A000", flexShrink: 0 }}
           >
             <path d="M3 7v6h3l5 4V3L6 7H3z" />
             <path d="M15.5 7.5a4 4 0 010 5" />
@@ -71,7 +74,7 @@ export function AnnouncementCliPanelHeader({
               style={{
                 fontSize: 13,
                 fontWeight: 700,
-                color: "var(--th-text-heading)",
+                color: "#191919",
                 letterSpacing: "0.03em",
                 lineHeight: 1.2,
               }}
@@ -81,7 +84,7 @@ export function AnnouncementCliPanelHeader({
             <div
               style={{
                 fontSize: 10,
-                color: "var(--th-text-muted)",
+                color: KAKAO_MSG.meta,
                 marginTop: 2,
                 letterSpacing: "0.04em",
               }}
@@ -105,10 +108,10 @@ export function AnnouncementCliPanelHeader({
               width: 30,
               height: 30,
               border: "1px solid",
-              borderColor: searchOpen ? "var(--th-accent)" : "var(--th-border)",
+              borderColor: searchOpen ? "#E6D000" : KAKAO_MSG.borderLight,
               borderRadius: 6,
-              background: searchOpen ? "var(--th-accent-glow)" : "transparent",
-              color: searchOpen ? "var(--th-accent)" : "var(--th-text-muted)",
+              background: searchOpen ? KAKAO_MSG.rowSelected : "transparent",
+              color: searchOpen ? "#8D6F00" : KAKAO_MSG.meta,
               cursor: "pointer",
               transition: "all 0.15s",
             }}
@@ -130,10 +133,10 @@ export function AnnouncementCliPanelHeader({
                 justifyContent: "center",
                 width: 30,
                 height: 30,
-                border: "1px solid var(--th-border)",
+                border: `1px solid ${KAKAO_MSG.borderLight}`,
                 borderRadius: 6,
                 background: "transparent",
-                color: "var(--th-text-muted)",
+                color: KAKAO_MSG.meta,
                 cursor: "pointer",
                 transition: "all 0.15s",
               }}
@@ -142,8 +145,8 @@ export function AnnouncementCliPanelHeader({
                 (e.currentTarget as HTMLButtonElement).style.color = "var(--th-danger, #ef4444)";
               }}
               onMouseLeave={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--th-border)";
-                (e.currentTarget as HTMLButtonElement).style.color = "var(--th-text-muted)";
+                (e.currentTarget as HTMLButtonElement).style.borderColor = KAKAO_MSG.borderLight;
+                (e.currentTarget as HTMLButtonElement).style.color = KAKAO_MSG.meta;
               }}
             >
               <svg
@@ -171,8 +174,8 @@ export function AnnouncementCliPanelHeader({
             alignItems: "center",
             gap: 8,
             padding: "8px 16px",
-            borderTop: "1px solid var(--th-border)",
-            background: "var(--th-bg-elevated)",
+            borderTop: `1px solid ${KAKAO_MSG.borderLight}`,
+            background: KAKAO_MSG.surfaceMuted,
           }}
         >
           <svg
@@ -180,7 +183,7 @@ export function AnnouncementCliPanelHeader({
             fill="none"
             stroke="currentColor"
             strokeWidth="2"
-            style={{ width: 11, height: 11, color: "var(--th-accent)", flexShrink: 0 }}
+            style={{ width: 11, height: 11, color: "#C9A000", flexShrink: 0 }}
           >
             <circle cx="6.5" cy="6.5" r="4" />
             <path d="M10 10l3.5 3.5" strokeLinecap="round" />
@@ -197,13 +200,13 @@ export function AnnouncementCliPanelHeader({
               border: "none",
               outline: "none",
               fontSize: 12,
-              color: "var(--th-text-primary)",
-              caretColor: "var(--th-accent)",
-              fontFamily: "var(--th-font-mono)",
+              color: "#191919",
+              caretColor: "#191919",
+              fontFamily: KAKAO_MSG.fontSans,
             }}
           />
           {searchQuery.trim() && (
-            <span style={{ fontSize: 10, color: "var(--th-accent)", flexShrink: 0 }}>
+            <span style={{ fontSize: 10, color: "#C9A000", flexShrink: 0 }}>
               {searchResultCount} {tr("건", "hits")}
             </span>
           )}
@@ -211,9 +214,10 @@ export function AnnouncementCliPanelHeader({
             <button
               type="button"
               onClick={() => onSearchChange("")}
-              style={{ background: "none", border: "none", cursor: "pointer", fontSize: 10, color: "var(--th-text-muted)" }}
+              style={{ background: "none", border: "none", cursor: "pointer", color: KAKAO_MSG.meta, display: "flex", alignItems: "center", padding: 2 }}
+              aria-label={tr("검색어 지우기", "Clear search", "検索をクリア", "清除搜索")}
             >
-              ✕
+              <IconX size={12} />
             </button>
           )}
         </div>

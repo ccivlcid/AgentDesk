@@ -69,15 +69,15 @@ export function createReplyCoreTools(deps: CreateReplyCoreToolsDeps) {
 
   function localeInstruction(lang: string): string {
     switch (lang) {
-      case "ja":
-        return "Respond in Japanese.";
-      case "zh":
-        return "Respond in Chinese.";
-      case "en":
-        return "Respond in English.";
       case "ko":
+        return "IMPORTANT: You MUST respond entirely in Korean (한국어). Do not use English.";
+      case "ja":
+        return "IMPORTANT: You MUST respond entirely in Japanese (日本語). Do not use English.";
+      case "zh":
+        return "IMPORTANT: You MUST respond entirely in Chinese (中文). Do not use English.";
+      case "en":
       default:
-        return "Respond in Korean.";
+        return "Respond in English.";
     }
   }
 

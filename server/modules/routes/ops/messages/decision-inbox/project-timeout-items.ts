@@ -259,8 +259,8 @@ export function createProjectAndTimeoutDecisionItems(
       if (!decisionState || (decisionState.status !== "ready" && !useCollectingFallback)) {
         queueProjectReviewPlanningConsolidation(row.project_id, projectName, row.project_path, snapshotHash, lang);
         const collectingSummary = t(
-          `프로젝트 '${projectName}'의 활성 항목 ${activeTotal}건이 모두 Review 상태입니다.\n기획팀장 의견 취합중...\n취합 완료 후 대표 선택지와 회의 진행 선택지가 나타납니다.`,
-          `Project '${projectName}' has all ${activeTotal} active items in Review.\nPlanning lead is consolidating opinions...\nRepresentative options and meeting action will appear after consolidation.`,
+          `프로젝트 '${projectName}'의 활성 항목 ${activeTotal}건이 모두 Review 상태입니다.\nPM 의견 취합중...\n취합 완료 후 대표 선택지와 미팅 진행 선택지가 나타납니다.`,
+          `Project '${projectName}' has all ${activeTotal} active items in Review.\nPM is consolidating opinions...\nRepresentative options and meeting action will appear after consolidation.`,
           `プロジェクト'${projectName}'のアクティブ項目${activeTotal}件はすべてReview状態です。\n企画リードが意見を集約中...\n集約完了後に代表選択肢と会議進行選択肢が表示されます。`,
           `项目'${projectName}'的 ${activeTotal} 个活跃项已全部进入 Review。\n规划负责人正在汇总意见...\n汇总完成后将显示代表选择项与会议启动选项。`,
         );
@@ -285,13 +285,13 @@ export function createProjectAndTimeoutDecisionItems(
 
       const plannerHeader = useCollectingFallback
         ? t(
-            "기획팀장 취합 지연 - 기본 선택지로 진행",
+            "PM 취합 지연 - 기본 선택지로 진행",
             "Planning consolidation delayed - proceeding with baseline options",
             "企画リード集約遅延 - 基本選択肢で進行",
             "规划汇总延迟 - 以基础选项继续",
           )
         : t(
-            "기획팀장 의견 취합 완료",
+            "PM 의견 취합 완료",
             "Planning consolidation complete",
             "企画リード意見集約完了",
             "规划负责人意见汇总完成",

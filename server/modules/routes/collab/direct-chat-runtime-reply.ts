@@ -26,12 +26,21 @@ type DirectReplyRuntimeDeps = Pick<
   | "resolveProjectPath"
   | "detectProjectPath"
   | "buildDirectReplyPrompt"
+  | "buildCliFailureMessage"
   | "chooseSafeReply"
   | "runAgentOneShot"
   | "executeApiProviderAgent"
   | "executeCopilotAgent"
   | "executeAntigravityAgent"
+  | "onRoomReplyComplete"
 >;
+
+/** Keep user-facing CLI error strings short (spawn paths, stack noise). */
+function clipCliErrorForUser(message: string, max = 200): string {
+  const oneLine = message.replace(/\s+/g, " ").trim();
+  if (oneLine.length <= max) return oneLine;
+  return `${oneLine.slice(0, max - 1).trimEnd()}…`;
+}
 
 function getMessengerChunkLimit(channel: MessengerChannel): number {
   if (channel === "discord") return 1900;
@@ -225,28 +234,68 @@ export function createDirectReplyRuntime(deps: DirectReplyRuntimeDeps) {
     } = params;
     void (async () => {
       const content = strictFallback ? fallback : await composeInCharacterAutoMessage(agent, lang, scenario, fallback);
-      deps.sendAgentMessage(agent, content, messageType, "agent", null, taskId);
+      deps.sendAgentMessage(agent, content, messageType, "agent", null, taskId, options.roomId ?? null);
       await relayReplyToMessenger(options, agent, content);
     })().catch((err) => {
       logger.warn(`[persona-auto-reply] send failed for ${agent.name}: ${String(err)}`);
     });
   }
 
-  function insertStreamingMessage(msgId: string, agent: AgentRow, content: string): void {
+  function buildRoomContextBlock(roomId: string, currentAgent: AgentRow, lang: Lang): string {
+    type RoomMsgRow = { sender_type: string; content: string; created_at: number; name: string | null };
+    const rows = deps.db
+      .prepare(
+        `SELECT m.sender_type, m.content, m.created_at, a.name
+         FROM messages m
+         LEFT JOIN agents a ON m.sender_type = 'agent' AND m.sender_id = a.id
+         WHERE m.room_id = ?
+         ORDER BY m.created_at DESC
+         LIMIT 20`,
+      )
+      .all(roomId) as RoomMsgRow[];
+
+    if (rows.length === 0) return "";
+
+    const lines = rows
+      .slice()
+      .reverse()
+      .map((r) => {
+        const who = r.sender_type === "client" ? "User" : r.name || "Agent";
+        const ts = new Date(r.created_at).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" });
+        const snippet = r.content.length > 300 ? r.content.slice(0, 300) + "…" : r.content;
+        return `[${ts}] ${who}: ${snippet}`;
+      });
+
+    return [
+      "=== GROUP CHAT ROOM (그룹 채팅방 대화 기록) ===",
+      ...lines,
+      "=== END OF ROOM CONTEXT ===",
+      "",
+      `You (${currentAgent.name}) are participating in a shared group chat room with multiple AI agents.`,
+      "Read the conversation above and respond naturally as part of the group.",
+      "If another agent already addressed the point well, you can add your unique expertise or acknowledge briefly.",
+      "Keep your reply concise and relevant to your role.",
+      `IMPORTANT: Always respond in the configured language (${localeInstructionForDirect(lang)}). Ignore the language used by other agents in the conversation above.`,
+      "",
+    ].join("\n");
+  }
+
+  function insertStreamingMessage(msgId: string, agent: AgentRow, content: string, roomId: string | null = null): void {
     const endedAt = deps.nowMs();
     deps.db
       .prepare(
         `
-          INSERT INTO messages (id, sender_type, sender_id, receiver_type, receiver_id, content, message_type, task_id, created_at)
-          VALUES (?, 'agent', ?, 'agent', NULL, ?, 'chat', NULL, ?)
+          INSERT INTO messages (id, sender_type, sender_id, receiver_type, receiver_id, content, message_type, task_id, room_id, created_at)
+          VALUES (?, 'agent', ?, 'agent', NULL, ?, 'chat', NULL, ?, ?)
         `,
       )
-      .run(msgId, agent.id, content, endedAt);
+      .run(msgId, agent.id, content, roomId, endedAt);
     deps.broadcast("chat_stream", {
       phase: "end",
       message_id: msgId,
       agent_id: agent.id,
       content,
+      room_id: roomId,
       created_at: endedAt,
     });
   }
@@ -277,10 +326,24 @@ export function createDirectReplyRuntime(deps: DirectReplyRuntimeDeps) {
           const projectPath = detectedPath || (activeTask ? deps.resolveProjectPath(activeTask) : process.cwd());
 
           const built = deps.buildDirectReplyPrompt(agent, ceoMessage, messageType);
+          const roomId = options.roomId ?? null;
+          const roomCtxPrefix = roomId ? buildRoomContextBlock(roomId, agent, built.lang as Lang) : "";
+          const promptToUse = roomCtxPrefix ? roomCtxPrefix + built.prompt : built.prompt;
 
           logger.info(
-            `[scheduleAgentReply] agent=${agent.name}, cli_provider=${agent.cli_provider}, api_provider_id=${agent.api_provider_id}, api_model=${agent.api_model}`,
+            `[scheduleAgentReply] agent=${agent.name}, cli_provider=${agent.cli_provider}, api_provider_id=${agent.api_provider_id}, api_model=${agent.api_model}${roomId ? ", roomId=" + roomId : ""}`,
           );
+
+          // Misconfiguration guard: cli_provider="api" but no api_provider_id set
+          if (agent.cli_provider === "api" && !agent.api_provider_id) {
+            const name = agent.name || "Agent";
+            const errReply =
+              built.lang === "ko"
+                ? `${name}: API 프로바이더가 설정되지 않았습니다. 에이전트 설정 → CLI 탭에서 API Provider를 선택해주세요.`
+                : `${name}: No API provider configured. Please set an API Provider in Agent settings → CLI tab.`;
+            deps.sendAgentMessage(agent, errReply, "chat", "agent", null, null, roomId);
+            return;
+          }
 
           if (agent.cli_provider === "api" && agent.api_provider_id) {
             const msgId = randomUUID();
@@ -290,6 +353,7 @@ export function createDirectReplyRuntime(deps: DirectReplyRuntimeDeps) {
               agent_id: agent.id,
               agent_name: agent.name,
               agent_avatar: agent.avatar_emoji ?? "🤖",
+              room_id: roomId,
             });
 
             let fullText = "";
@@ -302,7 +366,7 @@ export function createDirectReplyRuntime(deps: DirectReplyRuntimeDeps) {
               const timeout = setTimeout(() => controller.abort(), 180_000);
               try {
                 await deps.executeApiProviderAgent(
-                  built.prompt,
+                  promptToUse,
                   projectPath,
                   logStream,
                   controller.signal,
@@ -345,7 +409,7 @@ export function createDirectReplyRuntime(deps: DirectReplyRuntimeDeps) {
             }
             finalReply = normalizeAgentReply(finalReply);
 
-            insertStreamingMessage(msgId, agent, finalReply);
+            insertStreamingMessage(msgId, agent, finalReply, roomId);
             void relayReplyToMessenger(options, agent, finalReply).catch((err) => {
               logger.warn(`[messenger-reply] failed to relay API reply from ${agent.name}: ${String(err)}`);
             });
@@ -360,6 +424,7 @@ export function createDirectReplyRuntime(deps: DirectReplyRuntimeDeps) {
               agent_id: agent.id,
               agent_name: agent.name,
               agent_avatar: agent.avatar_emoji ?? "🤖",
+              room_id: roomId,
             });
 
             let fullText = "";
@@ -384,7 +449,7 @@ export function createDirectReplyRuntime(deps: DirectReplyRuntimeDeps) {
               try {
                 if (agent.cli_provider === "copilot") {
                   await deps.executeCopilotAgent(
-                    built.prompt,
+                    promptToUse,
                     projectPath,
                     logStream,
                     controller.signal,
@@ -394,7 +459,7 @@ export function createDirectReplyRuntime(deps: DirectReplyRuntimeDeps) {
                   );
                 } else {
                   await deps.executeAntigravityAgent(
-                    built.prompt,
+                    promptToUse,
                     logStream,
                     controller.signal,
                     undefined,
@@ -427,21 +492,36 @@ export function createDirectReplyRuntime(deps: DirectReplyRuntimeDeps) {
             }
             finalReply = normalizeAgentReply(finalReply);
 
-            insertStreamingMessage(msgId, agent, finalReply);
+            insertStreamingMessage(msgId, agent, finalReply, roomId);
             void relayReplyToMessenger(options, agent, finalReply).catch((err) => {
               logger.warn(`[messenger-reply] failed to relay OAuth reply from ${agent.name}: ${String(err)}`);
             });
             return;
           }
 
-          const run = await deps.runAgentOneShot(agent, built.prompt, { projectPath, rawOutput: true });
+          let run: Awaited<ReturnType<DirectReplyRuntimeDeps["runAgentOneShot"]>>;
+          try {
+            run = await deps.runAgentOneShot(agent, promptToUse, { projectPath, rawOutput: true });
+          } catch (cliErr: unknown) {
+            const msg = cliErr instanceof Error ? cliErr.message : String(cliErr);
+            logger.error(`[scheduleAgentReply:CLI] Error for ${agent.name}: %s`, msg);
+            const userMsg = deps.buildCliFailureMessage(agent, built.lang, clipCliErrorForUser(msg));
+            deps.sendAgentMessage(agent, normalizeAgentReply(userMsg), "chat", "agent", null, null, roomId);
+            void relayReplyToMessenger(options, agent, userMsg).catch((relayErr) => {
+              logger.warn(`[messenger-reply] failed to relay CLI failure from ${agent.name}: ${String(relayErr)}`);
+            });
+            return;
+          }
           const reply = normalizeAgentReply(deps.chooseSafeReply(run, built.lang, "direct", agent));
-          deps.sendAgentMessage(agent, reply);
+          deps.sendAgentMessage(agent, reply, "chat", "agent", null, null, roomId);
           void relayReplyToMessenger(options, agent, reply).catch((err) => {
             logger.warn(`[messenger-reply] failed to relay direct reply from ${agent.name}: ${String(err)}`);
           });
         } finally {
           stopTyping();
+          // Advance the room lane queue: next agent starts after this one completes.
+          const _roomId = options.roomId ?? null;
+          if (_roomId) deps.onRoomReplyComplete?.(_roomId);
         }
       })().catch((err) => {
         logger.warn(`[scheduleAgentReply] async generation failed for ${agent.name}: ${String(err)}`);

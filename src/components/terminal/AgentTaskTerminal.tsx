@@ -168,8 +168,9 @@ export default function AgentTaskTerminal({ agents, currentProject, initialAgent
   // ── cli_output → terminal ────────────────────────────────────────────────
   useEffect(() => {
     return on("cli_output", (payload) => {
-      const p = payload as { task_id?: string; data?: string; text?: string; line?: string };
-      if (!p.task_id || p.task_id !== runningTaskIdRef.current) return;
+      const p = payload as { task_id?: string; taskId?: string; data?: string; text?: string; line?: string };
+      const rxId = p.task_id ?? p.taskId;
+      if (!rxId || rxId !== runningTaskIdRef.current) return;
       const raw = p.data ?? p.text ?? p.line ?? "";
       if (!raw) return;
       termRef.current?.write(raw);
@@ -179,11 +180,12 @@ export default function AgentTaskTerminal({ agents, currentProject, initialAgent
   // ── task_update: 완료/오류 ───────────────────────────────────────────────
   useEffect(() => {
     return on("task_update", (payload) => {
-      const p = payload as { id?: string; status?: string };
-      if (!p.id || p.id !== runningTaskIdRef.current) return;
+      const p = payload as { id?: string; taskId?: string; status?: string };
+      const rxId = p.id ?? p.taskId;
+      if (!rxId || rxId !== runningTaskIdRef.current) return;
       if (!["done", "cancelled", "error"].includes(p.status ?? "")) return;
 
-      send({ type: "unsubscribe_task", taskId: p.id });
+      send({ type: "unsubscribe_task", taskId: rxId });
       runningTaskIdRef.current = null;
       busyRef.current = false;
 
@@ -198,21 +200,22 @@ export default function AgentTaskTerminal({ agents, currentProject, initialAgent
   // ── 외부 태스크 자동 구독 ───────────────────────────────────────────────
   useEffect(() => {
     return on("task_update", (payload) => {
-      const p = payload as { id?: string; status?: string; project_id?: string; assigned_agent_id?: string };
-      if (!p.id || p.id === runningTaskIdRef.current) return;
+      const p = payload as { id?: string; taskId?: string; status?: string; project_id?: string; assigned_agent_id?: string };
+      const incomingId = p.id ?? p.taskId;
+      if (!incomingId || incomingId === runningTaskIdRef.current) return;
       if (currentProjectRef.current && p.project_id && p.project_id !== currentProjectRef.current.id) return;
-      if (p.status !== "working" || busyRef.current) return;
+      if (!["working", "in_progress"].includes(p.status ?? "") || busyRef.current) return;
 
       const term = termRef.current;
       const agent = agentsRef.current.find(a => a.id === p.assigned_agent_id);
       const label = agent ? `${agent.avatar_emoji} ${agent.name}` : "Agent";
       if (term) {
         clearLine(term);
-        term.writeln(`${C.cyan}[${label}] 태스크 시작 → ${p.id}${C.reset}`);
+        term.writeln(`${C.cyan}[${label}] 태스크 시작 → ${incomingId}${C.reset}`);
       }
       busyRef.current = true;
-      runningTaskIdRef.current = p.id;
-      send({ type: "subscribe_task", taskId: p.id });
+      runningTaskIdRef.current = incomingId;
+      send({ type: "subscribe_task", taskId: incomingId });
     });
   }, [on, send]);
 

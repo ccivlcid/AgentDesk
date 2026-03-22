@@ -1,3 +1,4 @@
+import { KAKAO_MSG } from "../messenger-kakao-theme";
 import { GroupChatAgentSidebar } from "./GroupChatAgentSidebar";
 import { GroupChatComposer } from "./GroupChatComposer";
 import { GroupChatMessageList } from "./GroupChatMessageList";
@@ -15,8 +16,8 @@ export default function GroupChatPanel(props: GroupChatPanelProps) {
         height: "100%",
         flexDirection: "column",
         overflow: "hidden",
-        fontFamily: "var(--th-font-mono)",
-        background: "var(--th-bg-surface)",
+        fontFamily: KAKAO_MSG.fontSans,
+        background: KAKAO_MSG.surfaceMuted,
       }}
     >
       <GroupChatToBar
@@ -39,6 +40,10 @@ export default function GroupChatPanel(props: GroupChatPanelProps) {
           loadingIds={vm.loadingIds}
           toggleAgent={vm.toggleAgent}
           getAgentName={vm.getAgentName}
+          roomHistory={vm.roomHistory}
+          loadRoom={vm.loadRoom}
+          currentRoomId={vm.currentRoomId}
+          agentById={vm.agentById}
         />
 
         <div
@@ -47,7 +52,7 @@ export default function GroupChatPanel(props: GroupChatPanelProps) {
             display: "flex",
             flexDirection: "column",
             overflow: "hidden",
-            background: "var(--th-bg-surface)",
+            background: KAKAO_MSG.roomBgGradient,
           }}
         >
           <GroupChatMessageList
@@ -64,15 +69,7 @@ export default function GroupChatPanel(props: GroupChatPanelProps) {
 
           <GroupChatComposer
             tr={vm.tr}
-            t={vm.t}
-            isKo={vm.isKo}
             selectedIds={vm.selectedIds}
-            chatMode={vm.chatMode}
-            setChatMode={vm.setChatMode}
-            deadline={vm.deadline}
-            setDeadline={vm.setDeadline}
-            priority={vm.priority}
-            setPriority={vm.setPriority}
             fileInputRef={vm.fileInputRef}
             textareaRef={vm.textareaRef}
             input={vm.input}

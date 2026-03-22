@@ -197,9 +197,12 @@ interface UiStore {
   showAgentStatus: boolean;
   showGroupChat: boolean;
   groupChatInitialAgentIds: string[];
-  showDecisionInbox: boolean;
+  lastGroupRoomId: string | null;
+  lastGroupAgentIds: string[];
   decisionInboxLoading: boolean;
   decisionReplyBusyKey: string | null;
+  pmActivityProjectId: string | null;
+  pmActivityExpanded: boolean;
   mobileNavOpen: boolean;
   mobileHeaderMenuOpen: boolean;
   runtimeOs: RuntimeOs;
@@ -217,9 +220,11 @@ interface UiStore {
   setShowAgentStatus: (a: SA<boolean>) => void;
   setShowGroupChat: (a: SA<boolean>) => void;
   setGroupChatInitialAgentIds: (a: SA<string[]>) => void;
-  setShowDecisionInbox: (a: SA<boolean>) => void;
+  setLastGroupRoom: (roomId: string | null, agentIds: string[]) => void;
   setDecisionInboxLoading: (a: SA<boolean>) => void;
   setDecisionReplyBusyKey: (a: SA<string | null>) => void;
+  setPmActivityProjectId: (a: SA<string | null>) => void;
+  togglePmActivityExpanded: () => void;
   setMobileNavOpen: (a: SA<boolean>) => void;
   setMobileHeaderMenuOpen: (a: SA<boolean>) => void;
   setUpdateStatus: (a: SA<UpdateStatus | null>) => void;
@@ -442,9 +447,12 @@ export const useUiStore = create<UiStore>()((set) => ({
   showAgentStatus: false,
   showGroupChat: false,
   groupChatInitialAgentIds: [],
-  showDecisionInbox: false,
+  lastGroupRoomId: null,
+  lastGroupAgentIds: [],
   decisionInboxLoading: false,
   decisionReplyBusyKey: null,
+  pmActivityProjectId: null,
+  pmActivityExpanded: false,
   mobileNavOpen: false,
   mobileHeaderMenuOpen: false,
   runtimeOs: detectRuntimeOs(),
@@ -462,9 +470,11 @@ export const useUiStore = create<UiStore>()((set) => ({
   setShowAgentStatus: (a) => set((s) => ({ showAgentStatus: apply(s.showAgentStatus, a) })),
   setShowGroupChat: (a) => set((s) => ({ showGroupChat: apply(s.showGroupChat, a) })),
   setGroupChatInitialAgentIds: (a) => set((s) => ({ groupChatInitialAgentIds: apply(s.groupChatInitialAgentIds, a) })),
-  setShowDecisionInbox: (a) => set((s) => ({ showDecisionInbox: apply(s.showDecisionInbox, a) })),
+  setLastGroupRoom: (roomId: string | null, agentIds: string[]) => set({ lastGroupRoomId: roomId, lastGroupAgentIds: agentIds }),
   setDecisionInboxLoading: (a) => set((s) => ({ decisionInboxLoading: apply(s.decisionInboxLoading, a) })),
   setDecisionReplyBusyKey: (a) => set((s) => ({ decisionReplyBusyKey: apply(s.decisionReplyBusyKey, a) })),
+  setPmActivityProjectId: (a) => set((s) => ({ pmActivityProjectId: apply(s.pmActivityProjectId, a) })),
+  togglePmActivityExpanded: () => set((s) => ({ pmActivityExpanded: !s.pmActivityExpanded })),
   setMobileNavOpen: (a) => set((s) => ({ mobileNavOpen: apply(s.mobileNavOpen, a) })),
   setMobileHeaderMenuOpen: (a) => set((s) => ({ mobileHeaderMenuOpen: apply(s.mobileHeaderMenuOpen, a) })),
   setUpdateStatus: (a) => set((s) => ({ updateStatus: apply(s.updateStatus, a) })),

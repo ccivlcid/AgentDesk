@@ -1,5 +1,5 @@
 import { useState } from "react";
-import Modal, { ModalHeader, ModalBody, ModalFooter } from "../ui/Modal";
+import AppWindow from "../windows/AppWindow";
 import { FEATURE_TEMPLATES, TEMPLATE_CATEGORY_LABELS, type FeatureTemplate } from "./templates";
 import type { CustomFeature, CustomFeatureConfig } from "../../types";
 import { createCustomFeature, getCustomFeature } from "../../api/custom-features";
@@ -129,16 +129,21 @@ export default function WidgetBuilderModal({ open, onClose, onCreated }: Props) 
   const filtered = activeCategory === "all" ? FEATURE_TEMPLATES : FEATURE_TEMPLATES.filter((t) => t.category === activeCategory);
 
   return (
-    <Modal open={open} onClose={handleClose} width="lg">
-      <ModalHeader onClose={handleClose}>
-        {step === "method" && (isKo ? "✦ 새 기능 만들기" : "✦ Create New Feature")}
-        {step === "template-select" && (isKo ? "템플릿 선택" : "Select Template")}
-        {step === "params" && (isKo ? "옵션 설정" : "Configure Options")}
-        {step === "ai-generate" && (isKo ? "✦ AI로 생성" : "✦ Generate with AI")}
-        {step === "preview" && (isKo ? "미리보기 & 등록" : "Preview & Register")}
-      </ModalHeader>
-
-      <ModalBody className="flex flex-col gap-4 min-h-[360px]">
+    <AppWindow
+      windowType="feature-builder"
+      title={
+        step === "method" ? (isKo ? "새 기능 만들기" : "Create New Feature")
+        : step === "template-select" ? (isKo ? "템플릿 선택" : "Select Template")
+        : step === "params" ? (isKo ? "옵션 설정" : "Configure Options")
+        : step === "ai-generate" ? (isKo ? "AI로 생성" : "Generate with AI")
+        : (isKo ? "미리보기 & 등록" : "Preview & Register")
+      }
+      emoji={<svg viewBox="0 0 18 18" fill="none" stroke="var(--th-accent)" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" width={16} height={16}><polygon points="9 1.5 11.5 6.5 17 7.5 13 11.5 14 17 9 14.5 4 17 5 11.5 1 7.5 6.5 6.5"/></svg>}
+      defaultWidth={720}
+      defaultHeight={560}
+      onClose={handleClose}
+    >
+      <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-4" style={{ minHeight: 360, fontFamily: "var(--th-font-mono)" }}>
 
         {/* ── Step 1: 방법 선택 ── */}
         {step === "method" && (
@@ -428,9 +433,9 @@ export default function WidgetBuilderModal({ open, onClose, onCreated }: Props) 
           </div>
         )}
 
-      </ModalBody>
+      </div>
 
-      <ModalFooter>
+      <div className="flex items-center gap-2 px-5 py-3 flex-shrink-0" style={{ borderTop: "1px solid var(--th-border)", fontFamily: "var(--th-font-mono)" }}>
         {step !== "method" && (
           <button
             onClick={() => {
@@ -466,7 +471,7 @@ export default function WidgetBuilderModal({ open, onClose, onCreated }: Props) 
             {saving ? (isKo ? "등록 중..." : "Saving...") : (isKo ? "✓ 등록하기" : "✓ Register")}
           </button>
         )}
-      </ModalFooter>
-    </Modal>
+      </div>
+    </AppWindow>
   );
 }

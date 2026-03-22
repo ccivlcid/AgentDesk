@@ -1,6 +1,15 @@
 import { useRef, useState, useCallback, useEffect, type KeyboardEvent, type RefObject, type DragEvent } from "react";
 import type { Agent } from "../../types";
 import type { KbSourceRef } from "../../api/synapse";
+import {
+  FileTypeIcon,
+  IconAlertTriangle,
+  IconBookOpen,
+  IconChartBar,
+  IconClipboard,
+  IconMegaphone,
+  IconNotebook,
+} from "../ui/SvgIcons";
 import ChatModeHint from "./ChatModeHint";
 import KbMentionDropdown from "./KbMentionDropdown";
 
@@ -15,20 +24,6 @@ function formatFileSize(bytes: number): string {
   if (bytes < 1024) return bytes + " B";
   if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
   return (bytes / (1024 * 1024)).toFixed(1) + " MB";
-}
-
-function getFileIcon(name: string): string {
-  const ext = name.split(".").pop()?.toLowerCase() ?? "";
-  if (["png", "jpg", "gif"].includes(ext)) return "\uD83D\uDDBC\uFE0F";
-  if (["pdf"].includes(ext)) return "\uD83D\uDCC4";
-  if (["docx", "doc"].includes(ext)) return "\uD83D\uDCC3";
-  if (["xlsx", "xls", "csv"].includes(ext)) return "\uD83D\uDCCA";
-  if (["pptx", "ppt"].includes(ext)) return "\uD83D\uDCCA";
-  if (["mp4"].includes(ext)) return "\uD83C\uDFA5";
-  if (["zip"].includes(ext)) return "\uD83D\uDCE6";
-  if (["json"].includes(ext)) return "\uD83D\uDD27";
-  if (["md", "txt"].includes(ext)) return "\uD83D\uDCDD";
-  return "\uD83D\uDCCE";
 }
 
 interface ChatComposerProps {
@@ -186,7 +181,7 @@ export default function ChatComposer({
             ? { borderRadius: 0, border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.15)", color: "var(--th-accent)" }
             : { borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
         >
-          <span>📋</span>
+          <IconClipboard size={14} className="flex-shrink-0" />
           <span>{tr("업무 지시", "Task", "タスク指示", "任务指示")}</span>
         </button>
 
@@ -209,7 +204,7 @@ export default function ChatComposer({
             ? { borderRadius: 0, border: "1px solid rgba(52,211,153,0.5)", background: "rgba(52,211,153,0.15)", color: "rgb(167,243,208)" }
             : { borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
         >
-          <span>📊</span>
+          <IconChartBar size={14} className="flex-shrink-0" />
           <span>{tr("보고 요청", "Report", "レポート依頼", "报告请求")}</span>
         </button>
       </div>
@@ -225,7 +220,11 @@ export default function ChatComposer({
               className="flex items-center gap-1 px-2 py-1 text-xs font-mono"
               style={{ borderRadius: 0, border: "1px solid var(--th-accent)", background: "rgba(245,158,11,0.08)", color: "var(--th-accent)" }}
             >
-              <span>{src.type === "notion_page" ? "📘" : "📓"}</span>
+              {src.type === "notion_page" ? (
+                <IconBookOpen size={14} className="flex-shrink-0" style={{ opacity: 0.9 }} />
+              ) : (
+                <IconNotebook size={14} className="flex-shrink-0" style={{ opacity: 0.9 }} />
+              )}
               <span className="max-w-[120px] truncate">{src.label ?? src.id}</span>
               <button
                 onClick={() => removeKbSource(src.id)}
@@ -251,7 +250,7 @@ export default function ChatComposer({
               className="flex items-center gap-1.5 px-2 py-1 text-xs font-mono"
               style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
             >
-              <span>{getFileIcon(file.name)}</span>
+              <FileTypeIcon fileName={file.name} size={14} className="flex-shrink-0 opacity-80" style={{ color: "var(--th-text-secondary)" }} />
               <span className="max-w-[120px] truncate">{file.name}</span>
               <span style={{ color: "var(--th-text-muted)" }}>({formatFileSize(file.size)})</span>
               <button
@@ -271,8 +270,9 @@ export default function ChatComposer({
 
       {rejectionMsg && (
         <div className="flex-shrink-0 px-4 pb-1">
-          <span className="text-xs font-mono" style={{ color: "#f87171" }}>
-            ⚠ {rejectionMsg}
+          <span className="inline-flex items-center gap-1 text-xs font-mono" style={{ color: "#f87171" }}>
+            <IconAlertTriangle size={14} className="flex-shrink-0" />
+            {rejectionMsg}
           </span>
         </div>
       )}

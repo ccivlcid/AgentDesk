@@ -1,6 +1,8 @@
+import { IconCheck } from "../../ui/SvgIcons";
 import KbMentionDropdown from "../KbMentionDropdown";
+import { KAKAO_MSG } from "../messenger-kakao-theme";
 import { MAX_FILES } from "./constants";
-import type { ChatMode, GroupChatPanelVm } from "./types";
+import type { GroupChatPanelVm } from "./types";
 
 type Props = Pick<
   GroupChatPanelVm,
@@ -9,7 +11,6 @@ type Props = Pick<
   | "mentionQuery"
   | "handleKbSelect"
   | "closeMention"
-  | "chatMode"
   | "fileInputRef"
   | "textareaRef"
   | "input"
@@ -31,7 +32,6 @@ export function GroupChatComposerInputBlock({
   mentionQuery,
   handleKbSelect,
   closeMention,
-  chatMode,
   fileInputRef,
   textareaRef,
   input,
@@ -64,9 +64,9 @@ export function GroupChatComposerInputBlock({
           display: "flex",
           alignItems: "flex-end",
           gap: 8,
-          background: "var(--th-bg-surface)",
-          border: `1px solid ${borderForComposer(chatMode)}`,
-          borderRadius: 22,
+          background: KAKAO_MSG.surfaceMuted,
+          border: `1px solid ${KAKAO_MSG.borderLight}`,
+          borderRadius: KAKAO_MSG.radiusInput,
           padding: "4px 6px 4px 14px",
           transition: "border-color 0.2s",
         }}
@@ -80,9 +80,9 @@ export function GroupChatComposerInputBlock({
             width: 28,
             height: 28,
             borderRadius: "50%",
-            background: "var(--th-bg-elevated)",
-            border: "1px solid var(--th-border)",
-            color: "var(--th-text-muted)",
+            background: KAKAO_MSG.surface,
+            border: `1px solid ${KAKAO_MSG.borderLight}`,
+            color: KAKAO_MSG.meta,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -118,8 +118,8 @@ export function GroupChatComposerInputBlock({
             selectedIds.size === 0
               ? tr("에이전트를 선택하세요", "Select agents first")
               : tr(
-                  `${selectedIds.size}명에게 메시지... (Ctrl+Enter)`,
-                  `Message ${selectedIds.size}... (Ctrl+Enter)`,
+                  `${selectedIds.size}명에게 메시지… (Enter) · 업무 플로우는 맨 앞에 !`,
+                  `Message ${selectedIds.size}… (Enter) · Prefix ! to force work/task flow`,
                 )
           }
           style={{
@@ -128,10 +128,10 @@ export function GroupChatComposerInputBlock({
             border: "none",
             outline: "none",
             resize: "none",
-            fontSize: 12,
-            fontFamily: "var(--th-font-mono)",
-            color: "var(--th-text-primary)",
-            caretColor: "var(--th-accent)",
+            fontSize: 13,
+            fontFamily: KAKAO_MSG.fontSans,
+            color: KAKAO_MSG.bubbleMineText,
+            caretColor: "#191919",
             lineHeight: 1.5,
             padding: "6px 0",
             maxHeight: 96,
@@ -148,20 +148,20 @@ export function GroupChatComposerInputBlock({
             sending ||
             selectedIds.size === 0
           }
-          title={tr("전송 (Ctrl+Enter)", "Send (Ctrl+Enter)")}
+          title={tr("전송 (Enter)", "Send (Enter)")}
           style={{
             width: 32,
             height: 32,
             borderRadius: "50%",
             background:
               (input.trim() || attachments.length > 0) && selectedIds.size > 0
-                ? "var(--th-accent)"
-                : "var(--th-bg-elevated)",
+                ? KAKAO_MSG.sendActive
+                : KAKAO_MSG.sendDisabled,
             border: "none",
             color:
               (input.trim() || attachments.length > 0) && selectedIds.size > 0
-                ? "#fff"
-                : "var(--th-text-muted)",
+                ? KAKAO_MSG.sendActiveIcon
+                : KAKAO_MSG.meta,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -190,7 +190,7 @@ export function GroupChatComposerInputBlock({
           justifyContent: "space-between",
           marginTop: 6,
           fontSize: 10,
-          color: "var(--th-text-muted)",
+          color: KAKAO_MSG.meta,
         }}
       >
         <span>
@@ -198,26 +198,21 @@ export function GroupChatComposerInputBlock({
             <span style={{ color: "var(--th-danger, #ef4444)" }}>{sendError}</span>
           )}
           {uploading && (
-            <span style={{ color: "var(--th-accent)" }}>
+            <span style={{ color: "#C9A000" }}>
               {tr("파일 업로드 중...", "Uploading...")}
             </span>
           )}
           {sentOk && (
-            <span style={{ color: "var(--th-success, #22c55e)" }}>
-              ✓ {tr(`${selectedIds.size}명 전송 완료`, `Sent to ${selectedIds.size}`)}
+            <span className="inline-flex items-center gap-1" style={{ color: "var(--th-success, #22c55e)" }}>
+              <IconCheck size={12} className="flex-shrink-0" />
+              {tr(`${selectedIds.size}명 전송 완료`, `Sent to ${selectedIds.size}`)}
             </span>
           )}
         </span>
         <span>
-          Ctrl+Enter {tr("전송", "send")}
+          Enter {tr("전송", "send")} · Shift+Enter {tr("줄바꿈", "newline")}
         </span>
       </div>
     </>
   );
-}
-
-function borderForComposer(chatMode: ChatMode): string {
-  if (chatMode === "urgent") return "var(--th-danger)";
-  if (chatMode === "task") return "var(--th-accent-border)";
-  return "var(--th-border)";
 }

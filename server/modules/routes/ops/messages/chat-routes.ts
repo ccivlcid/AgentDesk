@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+import { initRoomQueue } from "../../collab/room-lane-queue.ts";
 import type { SQLInputValue } from "node:sqlite";
 import type { RuntimeContext } from "../../../../types/runtime-context.ts";
 import type { AgentRow, StoredMessage } from "../../shared/types.ts";
@@ -38,16 +40,70 @@ export function registerChatMessageRoutes(ctx: ChatMessageRouteCtx, deps: ChatMe
     handleMentionDelegation,
   } = deps;
 
+  // ── 단톡방 목록 ─────────────────────────────────────────────────────────
+  app.get("/api/group-chat-rooms", (_req, res) => {
+    const rows = db
+      .prepare(
+        `
+        SELECT
+          m.room_id,
+          MAX(m.created_at) AS last_ts,
+          COUNT(*)           AS msg_count,
+          (SELECT content FROM messages m2
+           WHERE m2.room_id = m.room_id ORDER BY m2.created_at DESC LIMIT 1
+          ) AS last_content,
+          (SELECT GROUP_CONCAT(DISTINCT m3.receiver_id)
+           FROM messages m3
+           WHERE m3.room_id = m.room_id AND m3.receiver_type = 'room'
+                 AND m3.sender_type = 'client'
+           LIMIT 1
+          ) AS agent_ids_csv
+        FROM messages m
+        WHERE m.room_id IS NOT NULL AND m.room_id != ''
+        GROUP BY m.room_id
+        ORDER BY last_ts DESC
+        LIMIT 30
+        `,
+      )
+      .all() as { room_id: string; last_ts: number; msg_count: number; last_content: string | null; agent_ids_csv: string | null }[];
+
+    // agent_ids를 실제 배열로 변환하되, CSV가 receiver에는 room_id 자체가 들어가므로
+    // 별도로 참여 에이전트 목록을 sender_id에서 추출
+    const rooms = rows.map((r) => {
+      // 방에서 응답한 에이전트 목록
+      const agentRows = db
+        .prepare(
+          `SELECT DISTINCT sender_id FROM messages
+           WHERE room_id = ? AND sender_type = 'agent' AND sender_id IS NOT NULL`,
+        )
+        .all(r.room_id) as { sender_id: string }[];
+      return {
+        room_id: r.room_id,
+        last_ts: r.last_ts,
+        msg_count: r.msg_count,
+        last_content: r.last_content,
+        agent_ids: agentRows.map((a) => a.sender_id),
+      };
+    });
+
+    res.json({ ok: true, rooms });
+  });
+
   app.get("/api/messages", (req, res) => {
     const receiverType = firstQueryValue(req.query.receiver_type);
     const receiverId = firstQueryValue(req.query.receiver_id);
+    const roomId = firstQueryValue(req.query.room_id);
     const limitRaw = firstQueryValue(req.query.limit);
     const limit = Math.min(Math.max(Number(limitRaw) || 50, 1), 500);
 
     const conditions: string[] = [];
     const params: unknown[] = [];
 
-    if (receiverType && receiverId) {
+    if (roomId) {
+      // Group chat room: return all messages tagged with this room_id
+      conditions.push("room_id = ?");
+      params.push(roomId);
+    } else if (receiverType && receiverId) {
       // Conversation with a specific agent: show messages TO and FROM that agent
       conditions.push(
         "((receiver_type = ? AND receiver_id = ?) OR (sender_type = 'agent' AND sender_id = ?) OR receiver_type = 'all')",
@@ -246,6 +302,69 @@ export function registerChatMessageRoutes(ctx: ChatMessageRouteCtx, deps: ChatMe
     }
 
     res.json({ ok: true, message: msg });
+  });
+
+  // Group chat room: send one message to a shared room and schedule replies from all agents
+  app.post("/api/group-chat", (req, res) => {
+    const body = (req.body ?? {}) as Record<string, unknown>;
+    const content = body.content;
+    if (!content || typeof content !== "string" || !content.trim()) {
+      return res.status(400).json({ error: "content_required" });
+    }
+
+    const agentIds = (Array.isArray(body.agent_ids) ? body.agent_ids : []).filter(
+      (id): id is string => typeof id === "string" && id.length > 0,
+    );
+    if (agentIds.length === 0) {
+      return res.status(400).json({ error: "agent_ids_required" });
+    }
+
+    const rawRoomId = body.room_id;
+    const roomId =
+      typeof rawRoomId === "string" && rawRoomId.trim() ? rawRoomId.trim() : randomUUID();
+
+    const msgId = randomUUID();
+    const now = Date.now();
+    const trimmedContent = content.trim();
+    const messageType = typeof body.message_type === "string" ? body.message_type : "chat";
+    const projectId = normalizeTextField(body.project_id);
+    const projectPath = normalizeTextField(body.project_path);
+    const projectContext = normalizeTextField(body.project_context);
+
+    db.prepare(
+      `INSERT INTO messages (id, sender_type, sender_id, receiver_type, receiver_id, content, message_type, room_id, created_at)
+       VALUES (?, 'client', NULL, 'room', NULL, ?, ?, ?, ?)`,
+    ).run(msgId, trimmedContent, messageType, roomId, now);
+
+    broadcast("new_message", {
+      id: msgId,
+      sender_type: "client",
+      sender_id: null,
+      receiver_type: "room",
+      receiver_id: null,
+      content: trimmedContent,
+      message_type: messageType,
+      room_id: roomId,
+      created_at: now,
+    });
+
+    // Lane queue: fire only the first agent; each subsequent agent starts after
+    // the previous one completes (so it can read prior responses in the room).
+    const firstAgentId = initRoomQueue(roomId, agentIds, trimmedContent, messageType, {
+      projectId,
+      projectPath,
+      projectContext,
+    });
+    if (firstAgentId) {
+      scheduleAgentReply(firstAgentId, trimmedContent, messageType, {
+        projectId,
+        projectPath,
+        projectContext,
+        roomId,
+      });
+    }
+
+    return res.json({ ok: true, room_id: roomId, message_id: msgId });
   });
 
   // Delete conversation messages

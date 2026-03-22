@@ -31,6 +31,7 @@ export function registerAgentRuntimeRoutes(deps: RegisterAgentRuntimeRoutesDeps)
       model?: string;
       maxTurns?: number;
       apiProviderId?: string;
+      chainExecution?: boolean;
     };
 
     if (!body.agentId || !body.taskId) {
@@ -46,7 +47,7 @@ export function registerAgentRuntimeRoutes(deps: RegisterAgentRuntimeRoutesDeps)
       res.status(404).json({ error: "Task not found" });
       return;
     }
-    if (task.status === "running") {
+    if (task.status === "in_progress") {
       res.status(409).json({ error: "Task is already running" });
       return;
     }
@@ -76,13 +77,14 @@ export function registerAgentRuntimeRoutes(deps: RegisterAgentRuntimeRoutesDeps)
       model: body.model,
       maxTurns: body.maxTurns,
       apiProviderId: body.apiProviderId,
+      chainExecution: body.chainExecution ?? false,
     };
 
     const abortController = new AbortController();
 
     try {
       const runId = await startExecutionLoop(
-        { db, broadcast, appendTaskLog, nowMs },
+        { db, broadcast, appendTaskLog, nowMs, resolveProjectPath, abortControllers: activeRuns },
         options,
         task.title,
         abortController,

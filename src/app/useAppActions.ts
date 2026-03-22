@@ -1,5 +1,6 @@
 import { useCallback, useRef } from "react";
 import type { Dispatch, SetStateAction } from "react";
+import { useUiStore } from "../store/uiStore";
 import * as api from "../api";
 import { isApiRequestError } from "../api/core";
 import { handleApiError } from "../api/handleApiError";
@@ -34,7 +35,6 @@ interface UseAppActionsParams {
   setChatAgent: Dispatch<SetStateAction<Agent | null>>;
   setShowChat: Dispatch<SetStateAction<boolean>>;
   setUnreadAgentIds: Dispatch<SetStateAction<Set<string>>>;
-  setShowDecisionInbox: Dispatch<SetStateAction<boolean>>;
   setDecisionInboxLoading: Dispatch<SetStateAction<boolean>>;
   setDecisionInboxItems: Dispatch<SetStateAction<DecisionInboxItem[]>>;
   setDecisionReplyBusyKey: Dispatch<SetStateAction<string | null>>;
@@ -55,12 +55,12 @@ export function useAppActions({
   setChatAgent,
   setShowChat,
   setUnreadAgentIds,
-  setShowDecisionInbox,
   setDecisionInboxLoading,
   setDecisionInboxItems,
   setDecisionReplyBusyKey,
   setCliStatus,
 }: UseAppActionsParams) {
+  const { openWindow, closeWindow } = useUiStore();
   const { showToast } = useToast();
   const settingsRef = useRef(settings);
   settingsRef.current = settings;
@@ -84,8 +84,11 @@ export function useAppActions({
           project_path: projectMeta?.project_path,
           project_context: projectMeta?.project_context,
         });
-        const msgs = await api.getMessages({ receiver_type: receiverType, receiver_id: receiverId, limit: 50 });
-        setMessages(msgs);
+        // 서버가 즉시 `new_message` WS로 브로드캐스트하므로, 전체 재조회는 백그라운드로만 동기화 (응답 체감 지연 방지)
+        void api
+          .getMessages({ receiver_type: receiverType, receiver_id: receiverId, limit: 50 })
+          .then(setMessages)
+          .catch(() => {});
       } catch (error) {
         handleApiError(error, showToast, { context: "Send message failed" });
       }
@@ -376,9 +379,9 @@ export function useAppActions({
   }, [agents, settings.language, setDecisionInboxLoading, setDecisionInboxItems, showToast]);
 
   const handleOpenDecisionInbox = useCallback(() => {
-    setShowDecisionInbox(true);
+    openWindow("decision-inbox");
     void loadDecisionInbox();
-  }, [loadDecisionInbox, setShowDecisionInbox]);
+  }, [loadDecisionInbox, openWindow]);
 
   const handleOpenDecisionChat = useCallback(
     (agentId: string) => {
@@ -395,10 +398,10 @@ export function useAppActions({
         );
         return;
       }
-      setShowDecisionInbox(false);
+      closeWindow("decision-inbox");
       handleOpenChat(matchedAgent);
     },
-    [agents, settings.language, setShowDecisionInbox, handleOpenChat, showToast],
+    [agents, settings.language, closeWindow, handleOpenChat, showToast],
   );
 
   const handleReplyDecisionOption = useCallback(
@@ -471,10 +474,10 @@ export function useAppActions({
                   });
             showToast(
               pickLang(locale, {
-                ko: "팀장 회의 시작이 보류되었습니다. 필요한 게이트를 먼저 해소해 주세요.",
-                en: "Team-lead meeting start is on hold. Resolve required gates first.",
-                ja: "チームリーダー会議の開始は保留です。先に必要なゲートを解消してください。",
-                zh: "组长评审会议暂缓启动。请先解决必要门禁。",
+                ko: "PM 미팅 시작이 보류되었습니다. 필요한 게이트를 먼저 해소해 주세요.",
+                en: "PM meeting start is on hold. Resolve required gates first.",
+                ja: "PMミーティングの開始は保留です。先に必要なゲートを解消してください。",
+                zh: "PM评审会议暂缓启动。请先解决必要门禁。",
               }),
               "warning",
             );
@@ -482,8 +485,11 @@ export function useAppActions({
           if (replyResult.resolved) {
             setDecisionInboxItems((prev) => prev.filter((entry) => entry.id !== item.id));
             scheduleLiveSync(40);
+            // 서버 상태 반영 대기 후 갱신 (즉시 호출하면 아직 처리 중인 항목이 다시 나타남)
+            setTimeout(() => { void loadDecisionInbox(); }, 1500);
+          } else {
+            await loadDecisionInbox();
           }
-          await loadDecisionInbox();
         }
       } catch (error) {
         handleApiError(error, showToast, { context: "Decision reply failed" });

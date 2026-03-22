@@ -17,6 +17,8 @@ import { createDecisionStateHelpers } from "./decision-inbox/state-helpers.ts";
 import { createProjectReviewPlanningHelpers } from "./decision-inbox/project-review-planning.ts";
 import { createReviewRoundPlanningHelpers } from "./decision-inbox/review-round-planning.ts";
 import { readYoloModeEnabled, runYoloDecisionAutopilot } from "./decision-inbox/yolo-mode.ts";
+import { createTaskReviewDecisionItems } from "./decision-inbox/task-review-items.ts";
+import { handleTaskReviewDecisionReply } from "./decision-inbox/task-review-reply.ts";
 
 export type { DecisionReplyBridgeInput, DecisionReplyBridgeResult };
 
@@ -123,6 +125,14 @@ export function registerDecisionInboxRoutes(ctx: RuntimeContext): DecisionInboxR
       queueReviewRoundPlanningConsolidation,
     });
 
+  const { buildTaskReviewDecisionItems } = createTaskReviewDecisionItems({
+    db,
+    nowMs,
+    getPreferredLanguage,
+    pickL,
+    l,
+  });
+
   function openSupplementRound(
     taskId: string,
     assignedAgentId: string | null,
@@ -177,6 +187,7 @@ export function registerDecisionInboxRoutes(ctx: RuntimeContext): DecisionInboxR
 
   function getDecisionInboxItems(): DecisionInboxRouteItem[] {
     const items = [
+      ...buildTaskReviewDecisionItems(),
       ...buildProjectReviewDecisionItems(),
       ...buildReviewRoundDecisionItems(),
       ...buildTimeoutResumeDecisionItems(),
@@ -231,6 +242,26 @@ export function registerDecisionInboxRoutes(ctx: RuntimeContext): DecisionInboxR
         return this;
       },
     } as any;
+
+    if (
+      handleTaskReviewDecisionReply({
+        res,
+        currentItem,
+        selectedOption,
+        deps: {
+          db,
+          appendTaskLog,
+          nowMs,
+          broadcast,
+          finishReview,
+          openSupplementRound,
+          normalizeTextField,
+          startTaskExecutionForAgent,
+        },
+      })
+    ) {
+      return { status, payload };
+    }
 
     if (
       handleProjectReviewDecisionReply({

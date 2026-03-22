@@ -24,6 +24,7 @@ interface MenuBarProps {
   onOpenCommandPalette?: () => void;
   onOpenExportModal?: () => void;
   runningAgentCount?: number;
+  projectAgentCount?: number;
   yoloMode?: boolean;
   onToggleYoloMode?: () => void;
 }
@@ -43,6 +44,7 @@ export default function MenuBar({
   onOpenCommandPalette,
   onOpenExportModal,
   runningAgentCount = 0,
+  projectAgentCount = 0,
   yoloMode,
   onToggleYoloMode,
 }: MenuBarProps) {
@@ -386,6 +388,7 @@ export default function MenuBar({
       <ControlCenter
         connected={connected}
         runningAgentCount={runningAgentCount}
+        projectAgentCount={projectAgentCount}
         yoloMode={yoloMode}
         onToggleYoloMode={onToggleYoloMode}
       />

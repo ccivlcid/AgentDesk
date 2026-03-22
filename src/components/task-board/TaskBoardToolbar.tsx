@@ -20,7 +20,12 @@ export function TaskBoardToolbar({ state }: TaskBoardToolbarProps) {
     setShowBulkHideModal,
     onKickoff,
     kickoffBusy,
+    onResume,
+    resumeBusy,
   } = state;
+
+  const hasRunningTask = filteredTasks.some((tk) => tk.status === "in_progress");
+  const hasPlannedTask = filteredTasks.some((tk) => tk.status === "planned");
 
   return (
     <div
@@ -51,8 +56,8 @@ export function TaskBoardToolbar({ state }: TaskBoardToolbarProps) {
       </div>
 
       <div className="flex items-center gap-1.5 flex-shrink-0">
-        {/* 킥오프 버튼 — 프로젝트가 선택된 경우에만 표시 */}
-        {currentProject && onKickoff && (
+        {/* 킥오프 버튼 — 프로젝트 선택 + 진행·계획 중 태스크 없을 때 */}
+        {currentProject && onKickoff && !hasRunningTask && !hasPlannedTask && (
           <button
             type="button"
             onClick={onKickoff}
@@ -74,6 +79,33 @@ export function TaskBoardToolbar({ state }: TaskBoardToolbarProps) {
             {kickoffBusy
               ? t({ ko: "계획 중...", en: "Planning...", ja: "計画中...", zh: "计划中..." })
               : t({ ko: "킥오프", en: "Kickoff", ja: "キックオフ", zh: "启动" })}
+          </button>
+        )}
+        {/* Resume 버튼 — planned 태스크가 있고 실행 중이 아닐 때 */}
+        {currentProject && onResume && hasPlannedTask && !hasRunningTask && (
+          <button
+            type="button"
+            onClick={onResume}
+            disabled={resumeBusy}
+            title={t({ ko: "중단된 연쇄 실행을 재개합니다", en: "Resume chained task execution", ja: "中断された連鎖実行を再開", zh: "恢复链式任务执行" })}
+            style={{
+              ...mono, fontSize: "10px", fontWeight: 700,
+              padding: "3px 10px",
+              border: "1px solid rgba(34,197,94,0.5)",
+              borderRadius: 6,
+              background: resumeBusy ? "rgba(34,197,94,0.06)" : "rgba(34,197,94,0.1)",
+              color: resumeBusy ? "var(--th-text-muted)" : "rgb(34,197,94)",
+              cursor: resumeBusy ? "not-allowed" : "pointer",
+              display: "flex", alignItems: "center", gap: 4,
+              transition: "all 0.12s",
+            }}
+          >
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="5 3 19 12 5 21 5 3"/>
+            </svg>
+            {resumeBusy
+              ? t({ ko: "재개 중...", en: "Resuming...", ja: "再開中...", zh: "恢复中..." })
+              : t({ ko: "재개", en: "Resume", ja: "再開", zh: "恢复" })}
           </button>
         )}
         <div className="flex" style={{ border: "1px solid var(--th-border)", borderRadius: 6, overflow: "hidden" }}>

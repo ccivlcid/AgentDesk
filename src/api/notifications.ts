@@ -2,7 +2,7 @@ import { del, post, request } from "./core";
 
 export interface NotificationItem {
   id: string;
-  type: "task_complete" | "task_error" | "decision_created" | "agent_error" | "system" | "cost_alert" | "agent_anomaly" | "heartbeat";
+  type: "task_complete" | "task_error" | "task_started" | "kickoff" | "decision_created" | "agent_error" | "system" | "cost_alert" | "agent_anomaly" | "heartbeat";
   title: string;
   body: string | null;
   task_id: string | null;

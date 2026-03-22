@@ -1,6 +1,8 @@
+import { FileTypeIcon, IconBookOpen, IconNotebook, IconX } from "../../ui/SvgIcons";
+import { KAKAO_MSG } from "../messenger-kakao-theme";
 import { ACCEPTED_TYPES } from "./constants";
 import type { GroupChatPanelVm } from "./types";
-import { formatFileSize, getFileIcon } from "./utils";
+import { formatFileSize } from "./utils";
 
 type Props = Pick<
   GroupChatPanelVm,
@@ -41,12 +43,12 @@ export function GroupChatComposerAttachmentsBlock({
                 alignItems: "center",
                 gap: 4,
                 padding: "2px 8px",
-                background: "rgba(245,158,11,0.08)",
-                border: "1px solid var(--th-accent)",
+                background: KAKAO_MSG.rowSelected,
+                border: `1px solid rgba(201, 160, 0, 0.35)`,
                 borderRadius: 12,
                 fontSize: 10,
-                color: "var(--th-accent)",
-                fontFamily: "var(--th-font-mono)",
+                color: "#8D6F00",
+                fontFamily: KAKAO_MSG.fontSans,
               }}
             >
               <span>{src.type === "notion_page" ? "📘" : "📓"}</span>
@@ -64,7 +66,7 @@ export function GroupChatComposerAttachmentsBlock({
                 type="button"
                 onClick={() => removeKbSource(src.id)}
                 style={{
-                  color: "var(--th-accent)",
+                  color: "#8D6F00",
                   background: "none",
                   border: "none",
                   cursor: "pointer",
@@ -73,7 +75,7 @@ export function GroupChatComposerAttachmentsBlock({
                   opacity: 0.7,
                 }}
               >
-                ✕
+                <IconX size={12} />
               </button>
             </div>
           ))}
@@ -90,14 +92,15 @@ export function GroupChatComposerAttachmentsBlock({
                 alignItems: "center",
                 gap: 4,
                 padding: "2px 8px",
-                background: "var(--th-bg-surface)",
-                border: "1px solid var(--th-border)",
+                background: KAKAO_MSG.surfaceMuted,
+                border: `1px solid ${KAKAO_MSG.borderLight}`,
                 borderRadius: 12,
                 fontSize: 10,
-                color: "var(--th-text-secondary)",
+                color: KAKAO_MSG.bubbleMineText,
+                fontFamily: KAKAO_MSG.fontSans,
               }}
             >
-              <span>{getFileIcon(file.name)}</span>
+              <FileTypeIcon fileName={file.name} size={12} style={{ color: KAKAO_MSG.meta, flexShrink: 0 }} />
               <span
                 style={{
                   maxWidth: 100,
@@ -108,14 +111,14 @@ export function GroupChatComposerAttachmentsBlock({
               >
                 {file.name}
               </span>
-              <span style={{ color: "var(--th-text-muted)" }}>
+              <span style={{ color: KAKAO_MSG.meta }}>
                 ({formatFileSize(file.size)})
               </span>
               <button
                 type="button"
                 onClick={() => removeAttachment(idx)}
                 style={{
-                  color: "var(--th-text-muted)",
+                  color: KAKAO_MSG.meta,
                   background: "none",
                   border: "none",
                   cursor: "pointer",
@@ -123,7 +126,7 @@ export function GroupChatComposerAttachmentsBlock({
                   padding: 0,
                 }}
               >
-                ✕
+                <IconX size={12} />
               </button>
             </div>
           ))}

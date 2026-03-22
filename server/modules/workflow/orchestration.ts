@@ -471,6 +471,7 @@ export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrat
     broadcast,
     ensureTaskExecutionSession,
     resolveLang,
+    getPreferredLanguage,
     notifyTaskStatus,
     resolveProjectPath,
     createWorktree,
@@ -493,13 +494,29 @@ export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrat
     handleTaskRunComplete,
     notifyClient,
     startProgressTimer,
+    onEarlyReturn: (taskId: string) => {
+      agentQueue.onComplete(taskId);
+      broadcastQueueStatus();
+    },
   });
 
   // Wrap raw function with FIFO queue to enforce MAX_CONCURRENT_AGENTS limit (P2-3)
   function startTaskExecutionForAgent(taskId: string, execAgent: any, deptId: string | null, deptName: string): void {
-    agentQueue.enqueue(() => {
+    agentQueue.enqueue(taskId, () => {
       broadcastQueueStatus();
-      _rawStartTaskExecutionForAgent(taskId, execAgent, deptId, deptName);
+      const taskRow = db.prepare("SELECT title FROM tasks WHERE id = ?").get(taskId) as { title: string } | undefined;
+      insertNotification({
+        type: "task_started",
+        title: taskRow?.title ?? taskId,
+        body: `${execAgent.name_ko || execAgent.name} 작업 시작`,
+        task_id: taskId,
+        agent_id: execAgent.id,
+      });
+      _rawStartTaskExecutionForAgent(taskId, execAgent, deptId, deptName).catch((err) => {
+        logger.error({ err, taskId }, "[orchestration] startTaskExecution failed — releasing queue slot");
+        agentQueue.onComplete(taskId);
+        broadcastQueueStatus();
+      });
     });
     broadcastQueueStatus();
   }
@@ -659,6 +676,14 @@ export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrat
     taskWorktrees,
     cleanupWorktree,
     findTeamLeader,
+    findProjectPm: (projectId: string | null) => {
+      if (!projectId) return undefined;
+      const row = db.prepare(
+        `SELECT a.id FROM project_agents pa JOIN agents a ON a.id = pa.agent_id
+         WHERE pa.project_id = ? AND pa.project_role = 'pm' AND a.status != 'offline' LIMIT 1`,
+      ).get(projectId) as { id: string } | undefined;
+      return row;
+    },
     getAgentDisplayName,
     pickL,
     l,
@@ -696,7 +721,7 @@ export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrat
   });
 
   function handleTaskRunComplete(taskId: string, exitCode: number): void {
-    agentQueue.onComplete();
+    agentQueue.onComplete(taskId);
     broadcastQueueStatus();
     runCompleteHandler.handleTaskRunComplete(taskId, exitCode);
   }
@@ -736,6 +761,21 @@ export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrat
     startReviewConsensusMeeting,
     processSubtaskDelegations,
     insertNotification,
+    startTaskExecutionForAgent: (taskId: string, agentId: string) => {
+      const agent = db.prepare("SELECT * FROM agents WHERE id = ?").get(agentId) as { department_id?: string | null } | null;
+      if (!agent) return;
+      const deptRow = agent.department_id
+        ? (db.prepare("SELECT id, name FROM departments WHERE id = ?").get(agent.department_id) as { id: string; name: string } | null)
+        : null;
+      startTaskExecutionForAgent(taskId, agent, deptRow?.id ?? null, deptRow?.name ?? "");
+    },
+    readYoloModeEnabled: () => {
+      try {
+        const row = db.prepare("SELECT value FROM settings WHERE key = 'yoloMode' LIMIT 1").get() as { value?: unknown } | undefined;
+        const v = String(row?.value ?? "").trim().toLowerCase();
+        return v === "true" || v === "1" || v === "yes";
+      } catch { return false; }
+    },
   });
 
   function reconcileDelegatedSubtasksAfterRun(taskId: string, exitCode: number): void {
@@ -771,11 +811,13 @@ export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrat
     db,
     nowMs,
     broadcast,
-    insertNotification: (params: { type: string; title: string; message: string; metadata_json?: string }) => {
+    insertNotification: (params: { type: string; title: string; body?: string | null; task_id?: string | null; agent_id?: string | null }) => {
       insertNotification({
         type: params.type as Parameters<typeof insertNotification>[0]["type"],
         title: params.title,
-        body: params.message,
+        body: params.body,
+        task_id: params.task_id,
+        agent_id: params.agent_id,
       });
     },
     startTaskExecutionForAgent: (agentId: string, taskId: string) => {

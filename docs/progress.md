@@ -4,6 +4,38 @@
 
 ---
 
+## ✅ Phase 20-C: 킥오프 회의 개선 + 추가 업무 지시 패널 — Complete
+
+> **Date:** 2026-03-26
+
+### What was built
+
+| Feature | Description |
+|---------|-------------|
+| **킥오프 회의 전원 참석** | project_agents 전원 회의 참석 (태스크 배정 무관), 태스크 미배정 에이전트도 "지원 대기" 발언 |
+| **PM 사회자** | project_role='pm' 에이전트가 사회자(오프닝+클로징), PM 없으면 첫 번째 에이전트 fallback |
+| **회의록 역할 표시** | meeting_minute_entries.role_label에 프로젝트 역할(PM/PL/Dev) 우선 저장, 없으면 직급 저장 |
+| **에이전트별 태스크 발표** | 복수 태스크 배정 시 "담당 업무 N건" 으로 일괄 발표 |
+| **NewRoundPanel** | 프로젝트 폴더 창 하단 고정 패널 — 추가 업무 지시 → 킥오프 재실행 |
+| **additional_directive** | kickoff API에 `additional_directive` 파라미터 추가 (라운드 한정 업무 지시) |
+| **5가지 모드** | collapsed / idle / loading / clarification / disabled + error |
+| **폴더 탐색 → 일반 창** | ManualPathPickerDialog 모달 → AppWindow 일반 창 전환 |
+| **마이그레이션 수정** | `2026-03-26-004` PRAGMA → DDL 문자열 방식으로 변경 (node:sqlite SAVEPOINT 충돌 해결) |
+
+### Modified Files
+
+- `kickoff.ts` — meetingAgents 전원 참석, PM 사회자, additional_directive 파라미터
+- `project-kickoff.ts` — kickoffProject 시그니처에 additionalDirective 추가
+- `project-folder-window/index.tsx` — NewRoundPanel 렌더링 + 킥오프 완료 시 Tasks 탭 전환
+- `project-folder-window/NewRoundPanel.tsx` — 신규: 추가 업무 지시 패널
+- `ManualPathPickerDialog.tsx` — 모달 → AppWindow 전환
+- `App.tsx` — 킥오프 로딩 인디케이터 화면 중앙 배치
+- `types.ts` — WindowType에 "folder-browser" 추가
+- `AppSwitcher.tsx`, `MissionControl.tsx` — folder-browser 항목 추가
+- `migrations-e-recent.ts` — 2026-03-26-004 마이그레이션 수정
+
+---
+
 ## ✅ Phase 20-B: PM/PL/Dev 역할 기반 프로젝트 팀 구성 — Complete
 
 > **Date:** 2026-03-26

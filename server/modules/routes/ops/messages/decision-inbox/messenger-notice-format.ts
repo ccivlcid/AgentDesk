@@ -157,7 +157,7 @@ export function createDecisionNoticeFormatter(deps: NoticeFormatterDeps) {
       return normalizeTextField(item.agent_name) || normalizeTextField(item.agent_name_ko) || "企画リード";
     if (lang === "zh")
       return normalizeTextField(item.agent_name) || normalizeTextField(item.agent_name_ko) || "企划组长";
-    return normalizeTextField(item.agent_name_ko) || normalizeTextField(item.agent_name) || "기획팀장";
+    return normalizeTextField(item.agent_name_ko) || normalizeTextField(item.agent_name) || "PM";
   }
 
   function resolveRecommendedOptions(item: DecisionInboxRouteItem): Array<{ number: number; title: string }> {
@@ -239,13 +239,13 @@ export function createDecisionNoticeFormatter(deps: NoticeFormatterDeps) {
       ...(taskLabel
         ? [`${pickDecisionL10n("태스크", "Task", "タスク", "任务")}: ${truncateLine(taskLabel, 140)}`]
         : []),
-      `${pickDecisionL10n("기획팀장 요약", "Planning lead summary", "企画リード要約", "企划组长摘要")}:`,
+      `${pickDecisionL10n("PM 요약", "PM summary", "企画リード要約", "企划组长摘要")}:`,
       ...plannerSummaryLines.map((line) => `- ${line}`),
       ...(options.length > 0 ? [pickDecisionL10n("선택지", "Options", "選択肢", "选项") + ":", ...options] : []),
       replyGuide,
       ...(recommendedOptions.length > 0
         ? [
-            `${pickDecisionL10n("기획팀장", "Planning lead", "企画リード", "企划组长")} ${planningLeadName}: ${pickDecisionL10n(
+            `${pickDecisionL10n("PM", "PM", "企画リード", "企划组长")} ${planningLeadName}: ${pickDecisionL10n(
               `제 소견은 이렇습니다. (${recommendedNumbers}번 추천)`,
               `My recommendation is this. (Recommend ${recommendedNumbers})`,
               `私の所見はこうです。（${recommendedNumbers}を推奨）`,

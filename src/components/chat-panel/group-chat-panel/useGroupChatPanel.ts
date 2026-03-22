@@ -9,11 +9,13 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
 } from "react";
 import type { Agent, Message } from "../../../types";
-import { getMessages } from "../../../api";
+import { getMessages, getGroupChatRooms } from "../../../api";
 import { useI18n } from "../../../i18n";
+import { useWebSocket } from "../../../hooks/useWebSocket";
+import { useUiStore } from "../../../store/uiStore";
 import type { KbSourceRef } from "../../../api/synapse";
 import { MAX_CONTENT, MAX_FILE_SIZE, MAX_FILES } from "./constants";
-import type { ChatMode, GroupChatPanelProps, GroupChatPanelVm, Priority } from "./types";
+import type { GroupChatPanelProps, GroupChatPanelVm, RoomSummary } from "./types";
 import { useGroupChatSend } from "./useGroupChatSend";
 
 export function useGroupChatPanel({
@@ -24,14 +26,14 @@ export function useGroupChatPanel({
   const { t, locale } = useI18n();
   const isKo = locale.startsWith("ko");
   const tr = useCallback((ko: string, en: string) => t({ ko, en, ja: en, zh: en }), [t]);
+  const { on } = useWebSocket();
 
   const [search, setSearch] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(
     () => new Set(initialAgentIds ?? []),
   );
-  const [messagesByAgent, setMessagesByAgent] = useState<Map<string, Message[]>>(
-    new Map(),
-  );
+  const [currentRoomId, setCurrentRoomId] = useState<string | null>(null);
+  const [roomMessages, setRoomMessages] = useState<Message[]>([]);
   const [loadingIds, setLoadingIds] = useState<Set<string>>(new Set());
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
@@ -39,47 +41,39 @@ export function useGroupChatPanel({
   const [sentOk, setSentOk] = useState(false);
   const [attachments, setAttachments] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
-  const [chatMode, setChatMode] = useState<ChatMode>("chat");
   const [kbSources, setKbSources] = useState<KbSourceRef[]>([]);
   const [mentionTarget, setMentionTarget] = useState<"notion" | "obsidian" | null>(
     null,
   );
   const [mentionQuery, setMentionQuery] = useState("");
-  const [deadline, setDeadline] = useState("");
-  const [priority, setPriority] = useState<Priority>("normal");
+  const [roomHistory, setRoomHistory] = useState<RoomSummary[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { lastGroupRoomId, lastGroupAgentIds, setLastGroupRoom } = useUiStore();
 
   const getAgentName = useCallback(
     (a: Agent) => (isKo ? a.name_ko || a.name : a.name || a.name_ko),
     [isKo],
   );
 
-  const fetchForAgent = useCallback(async (agentId: string) => {
-    setLoadingIds((prev) => {
-      const s = new Set(prev);
-      s.add(agentId);
-      return s;
-    });
+  const fetchForRoom = useCallback(async (roomId: string) => {
+    setLoadingIds((prev) => new Set([...prev, roomId]));
     try {
-      const msgs = await getMessages({
-        receiver_type: "agent",
-        receiver_id: agentId,
-        limit: 40,
-      });
-      setMessagesByAgent((prev) => new Map(prev).set(agentId, msgs));
+      const msgs = await getMessages({ room_id: roomId, limit: 60 });
+      setRoomMessages(msgs);
     } catch {
       /* ignore */
     } finally {
       setLoadingIds((prev) => {
         const s = new Set(prev);
-        s.delete(agentId);
+        s.delete(roomId);
         return s;
       });
     }
   }, []);
 
+  // Reset room when selected agents change (new conversation)
   const toggleAgent = useCallback(
     (agentId: string) => {
       setSelectedIds((prev) => {
@@ -88,36 +82,72 @@ export function useGroupChatPanel({
           next.delete(agentId);
         } else {
           next.add(agentId);
-          if (!messagesByAgent.has(agentId)) void fetchForAgent(agentId);
         }
         return next;
       });
+      setCurrentRoomId(null);
+      setRoomMessages([]);
     },
-    [messagesByAgent, fetchForAgent],
+    [],
   );
 
-  const mergedMessages = useMemo(() => {
-    const all: Array<Message & { _forAgentId: string }> = [];
-    for (const id of selectedIds) {
-      for (const m of messagesByAgent.get(id) ?? []) {
-        all.push({ ...m, _forAgentId: id });
-      }
-    }
-    const seen = new Set<string>();
-    return all
-      .filter((m) => {
-        if (seen.has(m.id)) return false;
-        seen.add(m.id);
-        return true;
-      })
-      .sort((a, b) => a.created_at - b.created_at);
-  }, [selectedIds, messagesByAgent]);
+  const mergedMessages = useMemo(
+    () =>
+      roomMessages
+        .slice()
+        .sort((a, b) => a.created_at - b.created_at)
+        .map((m) => ({
+          ...m,
+          _forAgentId: m.sender_type === "agent" ? (m.sender_id ?? "") : "",
+        })),
+    [roomMessages],
+  );
 
+  // ── 마운트 시: 방 목록 로드 + 마지막 방 복원 ────────────────────────────────
+  const restoredRef = useRef(false);
   useEffect(() => {
-    if (!initialAgentIds?.length) return;
-    for (const id of initialAgentIds) void fetchForAgent(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // 방 목록 로드
+    getGroupChatRooms().then((rooms) => setRoomHistory(rooms)).catch(() => {});
+
+    // 마지막 방 복원 (initialAgentIds가 없을 때만)
+    if (!restoredRef.current && lastGroupRoomId && !initialAgentIds?.length) {
+      restoredRef.current = true;
+      setCurrentRoomId(lastGroupRoomId);
+      if (lastGroupAgentIds.length > 0) {
+        setSelectedIds(new Set(lastGroupAgentIds));
+      }
+      void fetchForRoom(lastGroupRoomId);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // ── room 변경 시 uiStore에 저장 ──────────────────────────────────────────
+  useEffect(() => {
+    if (currentRoomId) {
+      setLastGroupRoom(currentRoomId, [...selectedIds]);
+    }
+  }, [currentRoomId, selectedIds, setLastGroupRoom]);
+
+  // ── 방 전환 핸들러 ──────────────────────────────────────────────────────
+  const loadRoom = useCallback((room: RoomSummary) => {
+    setCurrentRoomId(room.room_id);
+    // 방에 참여한 에이전트 선택
+    const validIds = new Set(agents.map((a) => a.id));
+    const agentIds = room.agent_ids.filter((id) => validIds.has(id));
+    setSelectedIds(new Set(agentIds));
+    setRoomMessages([]);
+    void fetchForRoom(room.room_id);
+  }, [agents, fetchForRoom]);
+
+  /** 프로젝트·에이전트 목록이 바뀌면, 현재 프로젝트에 없는 수신자 선택은 제거 */
+  useEffect(() => {
+    const valid = new Set(agents.map((a) => a.id));
+    setSelectedIds((prev) => {
+      const next = new Set([...prev].filter((id) => valid.has(id)));
+      if (next.size === prev.size && [...prev].every((id) => next.has(id))) return prev;
+      return next;
+    });
+  }, [agents]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -126,6 +156,36 @@ export function useGroupChatPanel({
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [onClose]);
+
+  // Real-time: when a new message or stream end arrives for the current room, refresh
+  const currentRoomIdRef = useRef<string | null>(null);
+  currentRoomIdRef.current = currentRoomId;
+
+  const refreshRoomHistory = useCallback(() => {
+    getGroupChatRooms().then((rooms) => setRoomHistory(rooms)).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    const unsub1 = on("new_message", (payload) => {
+      const msg = payload as { room_id?: string | null };
+      if (msg.room_id) {
+        if (msg.room_id === currentRoomIdRef.current) {
+          void fetchForRoom(msg.room_id).catch(() => {});
+        }
+        refreshRoomHistory();
+      }
+    });
+    const unsub2 = on("chat_stream", (payload) => {
+      const p = payload as { phase?: string; room_id?: string | null };
+      if (p.phase === "end" && p.room_id && p.room_id === currentRoomIdRef.current) {
+        void fetchForRoom(p.room_id).catch(() => {});
+      }
+    });
+    return () => {
+      unsub1();
+      unsub2();
+    };
+  }, [on, fetchForRoom]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -154,10 +214,9 @@ export function useGroupChatPanel({
     kbSources,
     sending,
     selectedIds,
-    chatMode,
-    deadline,
-    priority,
-    fetchForAgent,
+    currentRoomId,
+    fetchForRoom,
+    setCurrentRoomId,
     tr,
     setSending,
     setSendError,
@@ -166,8 +225,6 @@ export function useGroupChatPanel({
     setAttachments,
     setKbSources,
     setInput,
-    setDeadline,
-    setPriority,
     textareaRef,
   );
 
@@ -184,6 +241,8 @@ export function useGroupChatPanel({
 
   const clearAllRecipients = useCallback(() => {
     setSelectedIds(new Set());
+    setCurrentRoomId(null);
+    setRoomMessages([]);
   }, []);
 
   const removeAttachment = useCallback((idx: number) => {
@@ -238,7 +297,7 @@ export function useGroupChatPanel({
 
   const onTextareaKeyDown = useCallback(
     (e: ReactKeyboardEvent<HTMLTextAreaElement>) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === "Enter" && !sending && selectedIds.size > 0) {
+      if (e.key === "Enter" && !e.shiftKey && !sending && selectedIds.size > 0) {
         e.preventDefault();
         void handleSend();
       }
@@ -280,8 +339,6 @@ export function useGroupChatPanel({
     attachments,
     addFiles,
     removeAttachment,
-    chatMode,
-    setChatMode,
     kbSources,
     removeKbSource,
     mentionTarget,
@@ -289,13 +346,12 @@ export function useGroupChatPanel({
     handleInputChange,
     handleKbSelect,
     closeMention,
-    deadline,
-    setDeadline,
-    priority,
-    setPriority,
     handleSend,
     onFileInputChange,
     onTextareaKeyDown,
     onTextareaInput,
+    roomHistory,
+    loadRoom,
+    currentRoomId,
   };
 }

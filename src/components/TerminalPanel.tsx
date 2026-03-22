@@ -1,4 +1,4 @@
-import { motion, AnimatePresence } from "framer-motion";
+import { useCallback, useRef, useState } from "react";
 import { useI18n } from "../i18n";
 import { useTheme } from "../ThemeContext";
 import AgentAvatar from "./AgentAvatar";
@@ -94,56 +94,66 @@ export default function TerminalPanel({
   const isInterventionTarget = task?.status === "in_progress" || task?.status === "pending";
   const canInjectPrompt = task?.status === "pending";
 
-  const backdropColor = isLight ? "rgba(0,0,0,0.18)" : "rgba(0,0,0,0.55)";
+  // ── 드래그 ────────────────────────────────────────────────────────────────
+  const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
+  const dragRef = useRef<{ sx: number; sy: number; px: number; py: number } | null>(null);
+  const posRef = useRef(pos);
+  posRef.current = pos;
+
+  const defaultPos = useCallback(() => ({
+    x: Math.max(20, Math.round((window.innerWidth  - 860) / 2)),
+    y: Math.max(52, Math.round((window.innerHeight - 700) / 2)),
+  }), []);
+
+  const onHeaderMouseDown = useCallback((e: React.MouseEvent) => {
+    if ((e.target as Element).closest("button,input,textarea,select,a")) return;
+    e.preventDefault();
+    const p = posRef.current ?? defaultPos();
+    dragRef.current = { sx: e.clientX, sy: e.clientY, px: p.x, py: p.y };
+    const onMove = (me: MouseEvent) => {
+      if (!dragRef.current) return;
+      setPos({
+        x: dragRef.current.px + me.clientX - dragRef.current.sx,
+        y: Math.max(44, dragRef.current.py + me.clientY - dragRef.current.sy),
+      });
+    };
+    const onUp = () => {
+      dragRef.current = null;
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup", onUp);
+    };
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onUp);
+  }, [defaultPos]);
+
+  const { x: panelX, y: panelY } = pos ?? defaultPos();
+  const panelW = Math.min(860, window.innerWidth  - 40);
+  const panelH = Math.min(820, window.innerHeight - 100);
 
   return (
-    <AnimatePresence>
-      <>
-        {/* ── 백드롭 ── */}
-        <motion.div
-          key="tp-backdrop"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2, ease: "linear" }}
-          onClick={onClose}
-          style={{
-            position: "fixed", inset: 0, zIndex: 1099,
-            background: backdropColor,
-            backdropFilter: "blur(3px)",
-            WebkitBackdropFilter: "blur(3px)",
-          }}
-        />
-
-        {/* ── 패널 (중앙) ── */}
-        {/* 중앙 정렬 래퍼 — Framer Motion transform과 분리 */}
-        <div style={{
-          position: "fixed", inset: 0, zIndex: 1100,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          pointerEvents: "none",
-        }}>
-        <motion.div
-          key="tp-panel"
-          className="terminal-panel-shell flex flex-col"
-          initial={{ opacity: 0, y: 20, scale: 0.97 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 16, scale: 0.97 }}
-          transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-          style={{
-            width: "min(860px, 94vw)",
-            height: "min(88vh, 820px)",
-            background: "var(--th-bg-elevated)",
-            border: `1px solid ${isLight ? "rgba(0,0,0,0.12)" : "var(--th-border)"}`,
-            borderRadius: 14,
-            overflow: "hidden",
-            pointerEvents: "auto",
-            boxShadow: isLight
-              ? "0 32px 80px rgba(0,0,0,0.18), 0 8px 24px rgba(0,0,0,0.10)"
-              : "0 32px 80px rgba(0,0,0,0.6), 0 8px 24px rgba(0,0,0,0.3)",
-          }}
-        >
-          {/* ── 헤더 ── */}
+    <>
+      <style>{`@keyframes tpOpen{from{opacity:0;transform:scale(0.97) translateY(12px)}to{opacity:1;transform:scale(1) translateY(0)}}`}</style>
+      <div
+        className="terminal-panel-shell flex flex-col"
+        style={{
+          position: "fixed",
+          left: panelX, top: panelY,
+          width: panelW, height: panelH,
+          zIndex: 1100,
+          background: "var(--th-bg-elevated)",
+          border: `1px solid ${isLight ? "rgba(0,0,0,0.12)" : "var(--th-border)"}`,
+          borderRadius: 14,
+          overflow: "hidden",
+          display: "flex", flexDirection: "column",
+          boxShadow: isLight
+            ? "0 24px 60px rgba(0,0,0,0.14), 0 4px 16px rgba(0,0,0,0.08)"
+            : "0 24px 60px rgba(0,0,0,0.55), 0 4px 16px rgba(0,0,0,0.25)",
+          animation: "tpOpen 0.2s cubic-bezier(0.16,1,0.3,1)",
+        }}
+      >
+          {/* ── 헤더 (드래그 핸들) ── */}
           <div
+            onMouseDown={onHeaderMouseDown}
             style={{
               borderBottom: `1px solid var(--th-border)`,
               background: isLight ? "rgba(255,255,255,0.85)" : "var(--th-bg-panel)",
@@ -152,6 +162,8 @@ export default function TerminalPanel({
               backdropFilter: "blur(16px)",
               WebkitBackdropFilter: "blur(16px)",
               flexShrink: 0,
+              cursor: "default",
+              userSelect: "none",
             }}
           >
             {/* 상단 행: 트래픽라이트 + 아바타 + 제목 + 뱃지 + 액션버튼 */}
@@ -294,18 +306,6 @@ export default function TerminalPanel({
             />
           )}
 
-          {/* ── 회의록 탭 ── */}
-          {activeTab === "minutes" && (
-            <MinutesTabContent
-              meetingMinutes={meetingMinutes}
-              task={task}
-              tr={tr}
-              meetingTypeLabel={meetingTypeLabel}
-              meetingStatusLabel={meetingStatusLabel}
-              locale={locale}
-            />
-          )}
-
           {/* ── 진행 힌트 스트립 ── */}
           {activeTab === "terminal" && shouldShowProgressHints && progressHints && (
             <ProgressHintsStrip
@@ -351,9 +351,7 @@ export default function TerminalPanel({
               {task?.status === "cancelled" && tr("취소됨", "Cancelled", "キャンセル済", "已取消")}
             </span>
           </div>
-        </motion.div>
-        </div>
-      </>
-    </AnimatePresence>
+      </div>
+    </>
   );
 }

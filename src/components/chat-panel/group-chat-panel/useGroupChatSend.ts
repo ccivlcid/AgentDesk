@@ -1,9 +1,7 @@
 import { useCallback, type Dispatch, type RefObject, type SetStateAction } from "react";
-import { sendMessage } from "../../../api";
-import { uploadChatFiles } from "../../../api/messaging-runtime-oauth";
+import { sendGroupMessage, uploadChatFiles } from "../../../api/messaging-runtime-oauth";
 import type { KbSourceRef } from "../../../api/synapse";
 import { fetchSynapseContext } from "../../../api/synapse";
-import type { ChatMode, Priority } from "./types";
 import { formatFileSize } from "./utils";
 
 export function useGroupChatSend(
@@ -12,10 +10,9 @@ export function useGroupChatSend(
   kbSources: KbSourceRef[],
   sending: boolean,
   selectedIds: Set<string>,
-  chatMode: ChatMode,
-  deadline: string,
-  priority: Priority,
-  fetchForAgent: (agentId: string) => Promise<void>,
+  currentRoomId: string | null,
+  fetchForRoom: (roomId: string) => Promise<void>,
+  setCurrentRoomId: (id: string) => void,
   tr: (ko: string, en: string) => string,
   setSending: (v: boolean) => void,
   setSendError: (v: string | null) => void,
@@ -24,8 +21,6 @@ export function useGroupChatSend(
   setAttachments: Dispatch<SetStateAction<File[]>>,
   setKbSources: Dispatch<SetStateAction<KbSourceRef[]>>,
   setInput: (v: string) => void,
-  setDeadline: (v: string) => void,
-  setPriority: (p: Priority) => void,
   textareaRef: RefObject<HTMLTextAreaElement | null>,
 ): () => Promise<void> {
   return useCallback(async () => {
@@ -41,7 +36,7 @@ export function useGroupChatSend(
         try {
           const uploaded = await uploadChatFiles(attachments);
           prefix =
-            uploaded.map((a) => `[📎 ${a.fileName} (${formatFileSize(a.size)})]`).join(" ") +
+            uploaded.map((a) => `[첨부] ${a.fileName} (${formatFileSize(a.size)})`).join(" ") +
             "\n";
         } catch {
           /* continue */
@@ -59,8 +54,8 @@ export function useGroupChatSend(
             const labels = kbSources
               .map((s) =>
                 s.type === "notion_page"
-                  ? `📘 ${s.label ?? s.id}`
-                  : `📓 ${s.label ?? s.id}`,
+                  ? `[Notion] ${s.label ?? s.id}`
+                  : `[Obsidian] ${s.label ?? s.id}`,
               )
               .join(", ");
             kbPrefix = `[첨부 지식 베이스: ${labels}]\n\n${kbContent}\n\n---\n`;
@@ -71,34 +66,21 @@ export function useGroupChatSend(
         setKbSources([]);
       }
 
-      let modePrefix = "";
-      if (chatMode === "task") {
-        modePrefix = `[TASK:${deadline}:${priority}]\n`;
-      } else if (chatMode === "urgent") {
-        modePrefix = "[URGENT]\n";
-      }
-
-      const content = modePrefix + kbPrefix + prefix + trimmed;
+      const content = kbPrefix + prefix + trimmed;
       if (!content.trim()) return;
-      for (const agentId of selectedIds) {
-        await sendMessage({
-          receiver_type: "agent",
-          receiver_id: agentId,
-          content,
-          message_type:
-            chatMode === "task"
-              ? "task_assign"
-              : chatMode === "urgent"
-                ? "directive"
-                : "chat",
-        });
-      }
+
+      const result = await sendGroupMessage({
+        agent_ids: [...selectedIds],
+        content,
+        message_type: "chat",
+        room_id: currentRoomId ?? undefined,
+      });
+
+      setCurrentRoomId(result.room_id);
       setSentOk(true);
       setInput("");
-      setDeadline("");
-      setPriority("normal");
       textareaRef.current?.focus();
-      await Promise.all(Array.from(selectedIds).map((id) => fetchForAgent(id)));
+      void fetchForRoom(result.room_id).catch(() => {});
     } catch (err) {
       setSendError(
         err instanceof Error ? err.message.slice(0, 80) : tr("전송 실패", "Send failed"),
@@ -113,11 +95,10 @@ export function useGroupChatSend(
     kbSources,
     sending,
     selectedIds,
-    fetchForAgent,
+    currentRoomId,
+    fetchForRoom,
+    setCurrentRoomId,
     tr,
-    chatMode,
-    deadline,
-    priority,
     setSending,
     setSendError,
     setSentOk,
@@ -125,8 +106,6 @@ export function useGroupChatSend(
     setAttachments,
     setKbSources,
     setInput,
-    setDeadline,
-    setPriority,
     textareaRef,
   ]);
 }

@@ -3,6 +3,7 @@ import type { RefObject } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import type { Agent, Message, MessageAttachment } from "../../types";
 import type { DecisionOption } from "../chat/decision-request";
+import { FileTypeIcon, IconChatBubble, IconPin, IconSearch } from "../ui/SvgIcons";
 import AgentAvatar from "../AgentAvatar";
 import MessageContent from "../MessageContent";
 
@@ -10,20 +11,6 @@ function formatFileSize(bytes: number): string {
   if (bytes < 1024) return bytes + " B";
   if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
   return (bytes / (1024 * 1024)).toFixed(1) + " MB";
-}
-
-function getAttachmentIcon(fileName: string): string {
-  const ext = fileName.split(".").pop()?.toLowerCase() ?? "";
-  if (["png", "jpg", "gif"].includes(ext)) return "\uD83D\uDDBC\uFE0F";
-  if (["pdf"].includes(ext)) return "\uD83D\uDCC4";
-  if (["docx", "doc"].includes(ext)) return "\uD83D\uDCC3";
-  if (["xlsx", "xls", "csv"].includes(ext)) return "\uD83D\uDCCA";
-  if (["pptx", "ppt"].includes(ext)) return "\uD83D\uDCCA";
-  if (["mp4"].includes(ext)) return "\uD83C\uDFA5";
-  if (["zip"].includes(ext)) return "\uD83D\uDCE6";
-  if (["json"].includes(ext)) return "\uD83D\uDD27";
-  if (["md", "txt"].includes(ext)) return "\uD83D\uDCDD";
-  return "\uD83D\uDCCE";
 }
 
 function isImageFile(fileName: string): boolean {
@@ -57,7 +44,7 @@ function AttachmentChips({ attachments }: { attachments: MessageAttachment[] }) 
               className="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-mono transition"
               style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
             >
-              <span>{getAttachmentIcon(att.fileName)}</span>
+              <FileTypeIcon fileName={att.fileName} size={12} className="flex-shrink-0 opacity-80" style={{ color: "var(--th-text-muted)" }} />
               <span className="max-w-[140px] truncate">{att.fileName}</span>
               <span style={{ color: "var(--th-text-muted)" }}>({formatFileSize(att.size)})</span>
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3" style={{ color: "var(--th-text-muted)" }}>
@@ -125,7 +112,7 @@ function normalizeMessageSenderName(msg: Message): string {
 
 function normalizeMessageSenderAvatar(msg: Message): string {
   const avatar = typeof msg.sender_avatar === "string" ? msg.sender_avatar.trim() : "";
-  return avatar || "🤖";
+  return avatar;
 }
 
 function buildFallbackSenderAgent(msg: Message): Agent | undefined {
@@ -351,7 +338,7 @@ export default function ChatMessageList({
         title={isPinned ? tr("고정 해제", "Unpin", "ピン解除", "取消固定") : tr("고정", "Pin", "ピン留め", "固定")}
         style={{ color: isPinned ? "var(--th-accent)" : "var(--th-text-muted)" }}
       >
-        📌
+        <IconPin size={14} />
       </button>
     );
   }
@@ -362,7 +349,9 @@ export default function ChatMessageList({
         <div className="flex h-full flex-col items-center justify-center gap-4 text-center">
           {searchQuery?.trim() ? (
             <>
-              <div className="text-4xl">🔍</div>
+              <div className="flex justify-center" style={{ color: "var(--th-text-muted)" }}>
+                <IconSearch size={48} />
+              </div>
               <div>
                 <p className="font-medium font-mono" style={{ color: "var(--th-text-secondary)" }}>
                   {tr("검색 결과 없음", "No results found", "検索結果なし", "无搜索结果")}
@@ -374,10 +363,12 @@ export default function ChatMessageList({
             </>
           ) : (
             <>
-              <div className="text-6xl">💬</div>
+              <div className="flex justify-center" style={{ color: "var(--th-text-muted)" }}>
+                <IconChatBubble size={56} />
+              </div>
               <div>
                 <p className="font-medium font-mono" style={{ color: "var(--th-text-secondary)" }}>
-                  {tr("대화를 시작해보세요! 👋", "Start a conversation! 👋", "会話を始めましょう! 👋", "开始对话吧! 👋")}
+                  {tr("대화를 시작해보세요!", "Start a conversation!", "会話を始めましょう!", "开始对话吧!")}
                 </p>
                 <p className="mt-1 text-sm font-mono" style={{ color: "var(--th-text-muted)" }}>
                   {selectedAgent

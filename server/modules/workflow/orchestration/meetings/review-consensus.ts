@@ -150,7 +150,8 @@ export function createReviewConsensusTools(deps: ReviewConsensusDeps) {
           description: taskDescription,
           project_path: taskCtx?.project_path ?? null,
         });
-        const lang = resolveLang(taskDescription ?? taskTitle);
+        const lang = (typeof deps.getPreferredLanguage === "function" ? deps.getPreferredLanguage() : null)
+          || resolveLang(taskDescription ?? taskTitle);
         const transcript: any[] = [];
         const oneShotTimeoutMs = Math.max(5_000, Number(reviewMeetingOneShotTimeoutMs ?? 65_000));
         const oneShotOptions = { projectPath, timeoutMs: oneShotTimeoutMs, noTools: true };
@@ -302,7 +303,7 @@ export function createReviewConsensusTools(deps: ReviewConsensusDeps) {
                 ],
               )
             : l(
-                [`[Client OFFICE] '${taskTitle}' 리뷰 라운드 ${round} 시작. 팀장 의견 수집 및 상호 승인 진행합니다.`],
+                [`[Client OFFICE] '${taskTitle}' 리뷰 라운드 ${round} 시작. PM 의견 수집 및 상호 승인 진행합니다.`],
                 [
                   `[Client OFFICE] '${taskTitle}' review round ${round} started. Collecting team-lead feedback and mutual approvals.`,
                 ],

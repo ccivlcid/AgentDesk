@@ -47,7 +47,7 @@ export default function DirectiveEditorStep({
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.name.endsWith(".md") && !file.name.endsWith(".txt")) {
-      setFileError(t({ ko: ".md 또는 .txt 파일만 지원합니다.", en: "Only .md or .txt files are supported.", ja: ".mdまたは.txtのみ対応", zh: "仅支持 .md 或 .txt 文件" }));
+      setFileError(t({ ko: ".md 또는 .txt 파일만 지원", en: "Only .md or .txt files", ja: ".mdまたは.txtのみ", zh: "仅支持 .md 或 .txt" }));
       return;
     }
     setFileError(null);
@@ -57,89 +57,88 @@ export default function DirectiveEditorStep({
       if (typeof text === "string") onDirectiveChange(text);
     };
     reader.readAsText(file, "utf-8");
-    // reset so same file can be re-uploaded
     e.target.value = "";
   };
 
   const currentTemplate = templates.find((tpl) => tpl.slug === directiveTypeSlug);
+  const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };
 
   return (
-    <div className="space-y-3">
-      {/* Header */}
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <p className="text-xs" style={{ color: "var(--th-text-secondary)", fontFamily: "var(--th-font-mono)" }}>
-            {t({
-              ko: "에이전트가 이 프로젝트에서 어떻게 일할지 정의하세요.",
-              en: "Define how agents should work on this project.",
-              ja: "このプロジェクトでエージェントがどう動くかを定義します。",
-              zh: "定义代理在此项目中的工作方式。",
-            })}
-          </p>
-          <p className="text-[10px] mt-0.5" style={{ color: "var(--th-text-muted)", fontFamily: "var(--th-font-mono)" }}>
-            {t({
-              ko: "자유롭게 수정하세요. 이 내용이 에이전트 프롬프트에 주입됩니다.",
-              en: "Edit freely. This will be injected into agent prompts.",
-              ja: "自由に編集してください。エージェントプロンプトに注入されます。",
-              zh: "自由编辑。此内容将注入到代理提示中。",
-            })}
-          </p>
-        </div>
-
-        {/* File import + Template loader */}
-        <div className="flex items-center gap-2 flex-shrink-0">
-          {/* MD file attach */}
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".md,.txt"
-            style={{ display: "none" }}
-            onChange={handleFileUpload}
-          />
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="flex items-center gap-1 px-2 py-1 text-[10px] font-mono transition-colors"
+    <div className="space-y-4">
+      {/* Toolbar row */}
+      <div className="flex items-center gap-2">
+        {/* Current template badge */}
+        {currentTemplate && (
+          <div
+            className="flex items-center gap-2 flex-1 min-w-0"
             style={{
-              border: "1px solid var(--th-border)",
-              background: "var(--th-bg-surface)",
-              color: "var(--th-text-muted)",
-              cursor: "pointer",
+              padding: "6px 12px",
+              borderLeft: `3px solid ${currentTemplate.color}`,
+              background: `${currentTemplate.color}08`,
             }}
-            title={t({ ko: ".md 파일 불러오기", en: "Import .md file", ja: ".mdファイルを読み込む", zh: "导入 .md 文件" })}
           >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-              <polyline points="17 8 12 3 7 8"/>
-              <line x1="12" y1="3" x2="12" y2="15"/>
-            </svg>
-            {t({ ko: ".md 파일", en: ".md file", ja: ".mdファイル", zh: ".md 文件" })}
-          </button>
+            <DirectiveIcon icon={currentTemplate.icon} size={14} />
+            <span style={{ ...mono, fontSize: "11px", fontWeight: 600, color: currentTemplate.color }}>
+              {currentTemplate.name_ko}
+            </span>
+          </div>
+        )}
+        {!currentTemplate && <div className="flex-1" />}
 
+        {/* File import */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".md,.txt"
+          style={{ display: "none" }}
+          onChange={handleFileUpload}
+        />
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          className="flex items-center gap-1 transition-colors"
+          style={{
+            ...mono, fontSize: "10px", padding: "5px 10px",
+            border: "1px solid var(--th-border)",
+            background: "transparent",
+            color: "var(--th-text-muted)",
+            cursor: "pointer",
+          }}
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+          .md
+        </button>
+
+        {/* Template loader */}
         <div className="relative">
           <button
             type="button"
             onClick={() => setShowTemplateMenu(!showTemplateMenu)}
-            className="flex items-center gap-1 px-2 py-1 text-[10px] font-mono transition-colors"
+            className="flex items-center gap-1 transition-colors"
             style={{
-              border: "1px solid var(--th-border)",
-              background: "var(--th-bg-surface)",
-              color: "var(--th-text-muted)",
+              ...mono, fontSize: "10px", padding: "5px 10px",
+              border: `1px solid ${showTemplateMenu ? "var(--th-accent)" : "var(--th-border)"}`,
+              background: "transparent",
+              color: showTemplateMenu ? "var(--th-accent)" : "var(--th-text-muted)",
               cursor: "pointer",
             }}
           >
-            {t({ ko: "템플릿 불러오기", en: "Load template", ja: "テンプレート読込", zh: "加载模板" })}
-            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style={{ transform: showTemplateMenu ? "rotate(180deg)" : "none", transition: "transform 0.15s" }}>
+            {t({ ko: "템플릿", en: "Templates", ja: "テンプレート", zh: "模板" })}
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style={{ transform: showTemplateMenu ? "rotate(180deg)" : "none", transition: "transform 0.2s" }}>
               <path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </button>
           {showTemplateMenu && (
             <div
-              className="absolute right-0 top-full mt-1 z-50 w-56"
+              className="absolute right-0 top-full mt-1 z-50 w-60"
               style={{
                 border: "1px solid var(--th-border)",
                 background: "var(--th-bg-elevated)",
-                boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+                boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
                 maxHeight: 280,
                 overflowY: "auto",
               }}
@@ -152,21 +151,22 @@ export default function DirectiveEditorStep({
                     onTemplateLoad(tpl);
                     setShowTemplateMenu(false);
                   }}
-                  className="w-full text-left px-3 py-2 transition-colors flex items-center gap-2"
+                  className="w-full text-left flex items-center gap-3 transition-colors"
                   style={{
+                    padding: "10px 14px",
                     borderBottom: "1px solid var(--th-border)",
-                    background: tpl.slug === directiveTypeSlug ? "rgba(245,158,11,0.08)" : "transparent",
+                    background: tpl.slug === directiveTypeSlug ? "rgba(245,158,11,0.06)" : "transparent",
                     cursor: "pointer",
                   }}
                   onMouseEnter={(e) => { e.currentTarget.style.background = "var(--th-hover-overlay-subtle)"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = tpl.slug === directiveTypeSlug ? "rgba(245,158,11,0.08)" : "transparent"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = tpl.slug === directiveTypeSlug ? "rgba(245,158,11,0.06)" : "transparent"; }}
                 >
                   <DirectiveIcon icon={tpl.icon} />
                   <div className="flex-1 min-w-0">
-                    <div className="text-[11px] font-mono truncate" style={{ color: tpl.slug === directiveTypeSlug ? "var(--th-accent)" : "var(--th-text-primary)" }}>
+                    <div style={{ ...mono, fontSize: "11px", color: tpl.slug === directiveTypeSlug ? "var(--th-accent)" : "var(--th-text-primary)" }}>
                       {tpl.name_ko}
                     </div>
-                    <div className="text-[9px] font-mono truncate" style={{ color: "var(--th-text-muted)" }}>
+                    <div className="truncate" style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", marginTop: 1 }}>
                       {tpl.description_ko}
                     </div>
                   </div>
@@ -180,65 +180,44 @@ export default function DirectiveEditorStep({
             </div>
           )}
         </div>
-        </div>
       </div>
 
-      {/* Current type badge */}
-      {currentTemplate && (
-        <div
-          className="flex items-center gap-2 px-3 py-1.5 text-[11px] font-mono"
-          style={{
-            border: `1px solid ${currentTemplate.color}44`,
-            background: `${currentTemplate.color}11`,
-            color: currentTemplate.color,
-          }}
-        >
-          <DirectiveIcon icon={currentTemplate.icon} size={14} />
-          <span className="font-bold">{currentTemplate.name_ko}</span>
-          <span style={{ color: "var(--th-text-muted)", marginLeft: "auto", fontSize: "9px" }}>
-            {t({ ko: "기반 템플릿", en: "based on template", ja: "テンプレートベース", zh: "基于模板" })}
-          </span>
-        </div>
-      )}
-
-      {/* Textarea editor */}
+      {/* Editor */}
       <textarea
         value={directive}
         onChange={(e) => onDirectiveChange(e.target.value)}
         placeholder={t({
-          ko: "## 작업 원칙\n- 이 프로젝트에서 에이전트가 지켜야 할 규칙을 작성하세요\n\n## 태스크 분해\n- 큰 목표를 어떻게 쪼갤지\n\n## 품질 기준\n- 어디까지가 '완료'인지\n\n## 리뷰\n- 리뷰 방식과 관점\n\n## 우선순위\n- 트레이드오프 시 무엇을 택할지",
-          en: "## Work Principles\n- Rules agents should follow\n\n## Task Decomposition\n- How to break down goals\n\n## Quality Criteria\n- Definition of done\n\n## Review\n- Review process and focus\n\n## Priority\n- Trade-off decisions",
-          ja: "## 作業原則\n- エージェントが守るべきルール\n\n## タスク分解\n- 目標の分割方法\n\n## 品質基準\n- 完了の定義\n\n## レビュー\n- レビュープロセスと観点\n\n## 優先順位\n- トレードオフの判断",
-          zh: "## 工作原则\n- 代理应遵循的规则\n\n## 任务分解\n- 如何拆解目标\n\n## 质量标准\n- 完成的定义\n\n## 审查\n- 审查流程和重点\n\n## 优先级\n- 权衡取舍",
+          ko: "## 기술스택\n- 언어: TypeScript\n- 프레임워크: React + Express\n- DB: PostgreSQL\n\n## 작업 원칙\n- 이 프로젝트에서 에이전트가 지켜야 할 규칙\n\n## 태스크 분해\n- 큰 목표를 어떻게 쪼갤지\n\n## 품질 기준\n- 어디까지가 '완료'인지",
+          en: "## Tech Stack\n- Language: TypeScript\n- Framework: React + Express\n- DB: PostgreSQL\n\n## Work Principles\n- Rules agents should follow\n\n## Task Decomposition\n- How to break down goals\n\n## Quality Criteria\n- Definition of done",
+          ja: "## 技術スタック\n- 言語: TypeScript\n- フレームワーク: React + Express\n- DB: PostgreSQL\n\n## 作業原則\n- エージェントが守るべきルール\n\n## タスク分解\n- 目標の分割方法\n\n## 品質基準\n- 完了の定義",
+          zh: "## 技术栈\n- 语言: TypeScript\n- 框架: React + Express\n- 数据库: PostgreSQL\n\n## 工作原则\n- 代理应遵循的规则\n\n## 任务分解\n- 如何拆解目标\n\n## 质量标准\n- 完成的定义",
         })}
         spellCheck={false}
         className="w-full resize-none focus:outline-none"
         style={{
-          fontFamily: "var(--th-font-mono)",
+          ...mono,
           fontSize: "11px",
-          lineHeight: "1.6",
-          padding: "12px",
+          lineHeight: "1.7",
+          padding: "16px",
           border: "1px solid var(--th-border)",
           background: "var(--th-bg-elevated)",
           color: "var(--th-text-primary)",
-          minHeight: "320px",
+          minHeight: "300px",
           maxHeight: "400px",
         }}
       />
 
-      {/* Char count + hint */}
+      {/* Status bar */}
       <div className="flex items-center justify-between">
-        <span className="text-[9px] font-mono" style={{ color: "var(--th-text-muted)" }}>
-          {fileError ? (
-            <span style={{ color: "#fb7185" }}>{fileError}</span>
-          ) : t({
-            ko: "비워두면 디렉티브 없이 진행됩니다",
-            en: "Leave empty to skip directive",
-            ja: "空のままでディレクティブなしで進行",
-            zh: "留空则不使用指令",
+        <span style={{ ...mono, fontSize: "10px", color: fileError ? "#fb7185" : "var(--th-text-muted)" }}>
+          {fileError ?? t({
+            ko: "비워두면 디렉티브 없이 진행",
+            en: "Leave empty to skip",
+            ja: "空のままで進行",
+            zh: "留空则跳过",
           })}
         </span>
-        <span className="text-[9px] font-mono" style={{ color: "var(--th-text-muted)" }}>
+        <span style={{ ...mono, fontSize: "10px", color: "var(--th-text-muted)" }}>
           {directive.length.toLocaleString()} chars
         </span>
       </div>

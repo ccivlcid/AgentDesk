@@ -321,4 +321,118 @@ export const VERSIONED_MIGRATIONS_E_RECENT: Migration[] = [
       } catch { /* already exists */ }
     },
   },
+  {
+    id: "2026-03-26-003-messages-room-id",
+    up: (db) => {
+      try {
+        db.exec(`ALTER TABLE messages ADD COLUMN room_id TEXT`);
+      } catch { /* already exists */ }
+      try {
+        db.exec(`CREATE INDEX IF NOT EXISTS idx_messages_room_id ON messages(room_id)`);
+      } catch { /* already exists */ }
+    },
+  },
+  {
+    id: "2026-03-26-004-messages-receiver-type-room",
+    up: (db) => {
+      // SQLite does not support ALTER COLUMN, so we must recreate the table
+      // to add 'room' to the receiver_type CHECK constraint.
+      const row = db
+        .prepare(`SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'messages'`)
+        .get() as { sql?: string } | undefined;
+      const ddl = (row?.sql ?? "").toLowerCase();
+      if (ddl.includes("'room'")) return; // already migrated
+
+      // Determine column presence from the DDL string *before* renaming the table.
+      // Avoids PRAGMA inside a SAVEPOINT which triggers "cannot start a transaction
+      // within a transaction" in node:sqlite.
+      const hasIdempotencyKey = ddl.includes("idempotency_key");
+      const hasRoomId = ddl.includes("room_id");
+      const idempotencyExpr = hasIdempotencyKey ? "idempotency_key" : "NULL";
+      const roomIdExpr = hasRoomId ? "room_id" : "NULL";
+
+      const oldTable = "messages_room_type_migration_old";
+      db.exec(`ALTER TABLE messages RENAME TO ${oldTable}`);
+      db.exec(`
+        CREATE TABLE messages (
+          id TEXT PRIMARY KEY,
+          sender_type TEXT NOT NULL CHECK(sender_type IN ('client','agent','system')),
+          sender_id TEXT,
+          receiver_type TEXT NOT NULL CHECK(receiver_type IN ('agent','department','all','room')),
+          receiver_id TEXT,
+          content TEXT NOT NULL,
+          message_type TEXT DEFAULT 'chat' CHECK(message_type IN ('chat','task_assign','announcement','directive','report','status_update')),
+          task_id TEXT REFERENCES tasks(id),
+          idempotency_key TEXT,
+          room_id TEXT,
+          created_at INTEGER DEFAULT (unixepoch()*1000)
+        )
+      `);
+      db.exec(`
+        INSERT INTO messages (id, sender_type, sender_id, receiver_type, receiver_id, content, message_type, task_id, idempotency_key, room_id, created_at)
+        SELECT id, sender_type, sender_id, receiver_type, receiver_id, content, message_type, task_id, ${idempotencyExpr}, ${roomIdExpr}, created_at
+        FROM ${oldTable}
+      `);
+      db.exec(`DROP TABLE ${oldTable}`);
+      db.exec(`CREATE INDEX IF NOT EXISTS idx_messages_receiver ON messages(receiver_type, receiver_id, created_at DESC)`);
+      db.exec(`CREATE INDEX IF NOT EXISTS idx_messages_room_id ON messages(room_id)`);
+    },
+  },
+  {
+    id: "2026-03-26-002-rule-entries",
+    up: (db) => {
+      try {
+        db.exec(`
+          CREATE TABLE IF NOT EXISTS rule_entries (
+            id          TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(8)))),
+            title       TEXT NOT NULL DEFAULT '',
+            content     TEXT NOT NULL,
+            category    TEXT NOT NULL DEFAULT 'general',
+            scope_type  TEXT NOT NULL DEFAULT 'global'
+              CHECK(scope_type IN ('global','department','agent','workflow_pack','project')),
+            scope_id    TEXT,
+            priority    INTEGER NOT NULL DEFAULT 50,
+            enabled     INTEGER NOT NULL DEFAULT 1,
+            created_at  INTEGER DEFAULT (unixepoch()*1000),
+            updated_at  INTEGER DEFAULT (unixepoch()*1000)
+          )
+        `);
+        db.exec(`CREATE INDEX IF NOT EXISTS idx_rule_entries_scope ON rule_entries(scope_type, scope_id)`);
+        db.exec(`CREATE INDEX IF NOT EXISTS idx_rule_entries_enabled ON rule_entries(enabled, priority DESC)`);
+        db.exec(`CREATE INDEX IF NOT EXISTS idx_rule_entries_enabled_scope ON rule_entries(enabled, scope_type, scope_id, priority DESC)`);
+      } catch { /* already exists */ }
+    },
+  },
+  {
+    id: "2026-03-26-003-notifications-type-expand",
+    up: (db) => {
+      try {
+        db.exec(`
+          CREATE TABLE IF NOT EXISTS notifications_new (
+            id TEXT PRIMARY KEY,
+            type TEXT NOT NULL CHECK(type IN ('task_complete','task_error','task_started','decision_created','agent_error','system','cost_alert','agent_anomaly','heartbeat','kickoff')),
+            title TEXT NOT NULL,
+            body TEXT,
+            task_id TEXT REFERENCES tasks(id) ON DELETE CASCADE,
+            agent_id TEXT REFERENCES agents(id) ON DELETE SET NULL,
+            read INTEGER NOT NULL DEFAULT 0,
+            created_at INTEGER DEFAULT (unixepoch()*1000)
+          )
+        `);
+        db.exec(`INSERT OR IGNORE INTO notifications_new SELECT * FROM notifications`);
+        db.exec(`DROP TABLE notifications`);
+        db.exec(`ALTER TABLE notifications_new RENAME TO notifications`);
+        db.exec(`CREATE INDEX IF NOT EXISTS idx_notifications_unread ON notifications(read, created_at DESC)`);
+        db.exec(`CREATE INDEX IF NOT EXISTS idx_notifications_created ON notifications(created_at DESC)`);
+      } catch { /* already migrated */ }
+    },
+  },
+  {
+    id: "2026-03-26-004-yolo-mode-default-on",
+    up: (db) => {
+      try {
+        db.exec("UPDATE settings SET value = 'true' WHERE key = 'yoloMode' AND value = 'false'");
+      } catch { /* ignore */ }
+    },
+  },
 ];

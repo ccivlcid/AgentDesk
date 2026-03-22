@@ -316,8 +316,14 @@ export function useRealtimeSync({
         scheduleLiveSync(160);
       }),
       on("cli_output", (payload: unknown) => {
-        const p = payload as { task_id?: string; stream?: string; data?: string };
-        if (typeof p.task_id !== "string" || typeof p.data !== "string") return;
+        const p = payload as { task_id?: string; taskId?: string; stream?: string; data?: string; line?: string; text?: string };
+        const rxTaskId = p.task_id ?? p.taskId;
+        const rxData = p.data ?? p.line ?? p.text;
+        if (typeof rxTaskId !== "string" || typeof rxData !== "string") return;
+        // alias for downstream code
+        p.task_id = rxTaskId;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (p as any).data = rxData;
         const threadMap = codexThreadToSubAgentIdRef.current;
         const threadTsMap = codexThreadBindingTsRef.current;
         const pruneCodexThreadBindings = (now: number) => {

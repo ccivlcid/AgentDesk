@@ -381,7 +381,7 @@ export function createSubtaskRoutingTools(deps: SubtaskRoutingDeps) {
           pickL(
             l(
               [
-                `'${task.title}' 서브태스크 분배를 기획팀장이 재판정하여 ${updated}건을 재배치했습니다. (${summaryText})`,
+                `'${task.title}' 서브태스크 분배를 PM이 재판정하여 ${updated}건을 재배치했습니다. (${summaryText})`,
               ],
               [`Planning leader rerouted ${updated} subtasks for '${task.title}'. (${summaryText})`],
               [

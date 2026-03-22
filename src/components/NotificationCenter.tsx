@@ -92,9 +92,25 @@ const IconTrash = () => (
 
 // ─── Type config ──────────────────────────────────────────────────────────────
 
+const IconRocket = ({ size = SZ }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" />
+    <path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" />
+    <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0" />
+    <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" />
+  </svg>
+);
+const IconPlay = ({ size = SZ }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polygon points="5 3 19 12 5 21 5 3" />
+  </svg>
+);
+
 const TYPE_ICONS: Record<string, ReactNode> = {
   task_complete:    <IconCheck />,
   task_error:       <IconX />,
+  task_started:     <IconPlay />,
+  kickoff:          <IconRocket />,
   decision_created: <IconInbox />,
   agent_error:      <IconAlert />,
   system:           <IconInfo />,
@@ -105,6 +121,8 @@ const TYPE_ICONS: Record<string, ReactNode> = {
 const TYPE_COLORS: Record<string, string> = {
   task_complete:    "#30d158",
   task_error:       "#ff453a",
+  task_started:     "#0a84ff",
+  kickoff:          "#bf5af2",
   agent_error:      "#ff9f0a",
   cost_alert:       "#ff9f0a",
   agent_anomaly:    "#ff9f0a",
@@ -115,6 +133,8 @@ const TYPE_COLORS: Record<string, string> = {
 const TYPE_BG: Record<string, string> = {
   task_complete:    "rgba(48,209,88,0.08)",
   task_error:       "rgba(255,69,58,0.08)",
+  task_started:     "rgba(10,132,255,0.08)",
+  kickoff:          "rgba(191,90,242,0.08)",
   agent_error:      "rgba(255,159,10,0.08)",
   cost_alert:       "rgba(255,159,10,0.08)",
   agent_anomaly:    "rgba(255,159,10,0.08)",

@@ -9,6 +9,7 @@ import { BLANK } from "./agent-manager/constants";
 import DepartmentFormModal from "./agent-manager/DepartmentFormModal";
 import DepartmentsTab from "./agent-manager/DepartmentsTab";
 import type { AgentManagerProps, FormData } from "./agent-manager/types";
+import { IconSearch } from "./ui/SvgIcons";
 
 export default function AgentManager({
   agents,
@@ -63,13 +64,15 @@ export default function AgentManager({
     () =>
       agents.filter((agent) => {
         if (deptTab !== "all" && agent.department_id !== deptTab) return false;
-        if (!search) return true;
-        const query = search.toLowerCase();
+        if (!search.trim()) return true;
+        const query = search.toLowerCase().trim();
         return (
           agent.name.toLowerCase().includes(query) ||
           agent.name_ko.toLowerCase().includes(query) ||
           (agent.name_ja || "").toLowerCase().includes(query) ||
-          (agent.name_zh || "").toLowerCase().includes(query)
+          (agent.name_zh || "").toLowerCase().includes(query) ||
+          (agent.role || "").toLowerCase().includes(query) ||
+          (agent.cli_provider || "").toLowerCase().includes(query)
         );
       }),
     [agents, deptTab, search],
@@ -387,6 +390,60 @@ export default function AgentManager({
         </span>
       </div>
 
+      {/* ── 검색 (에이전트 창 상단 · 직원 탭 목록 필터) ── */}
+      <div
+        style={{
+          padding: "10px 14px",
+          borderBottom: "1px solid var(--th-border)",
+          background: "var(--th-bg-primary)",
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+        }}
+      >
+        <span style={{ flexShrink: 0, display: "flex", color: "var(--th-text-muted)", opacity: 0.85 }} aria-hidden>
+          <IconSearch size={18} />
+        </span>
+        <input
+          type="search"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder={tr("이름·역할 검색…", "Search name or role…", "名前・役割で検索…", "按名称或角色搜索…")}
+          autoComplete="off"
+          style={{
+            flex: 1,
+            minWidth: 0,
+            background: "var(--th-bg-surface)",
+            border: "1px solid var(--th-border)",
+            borderRadius: 8,
+            color: "var(--th-text-primary)",
+            fontFamily: "var(--th-font-mono)",
+            fontSize: 12,
+            padding: "8px 12px",
+            outline: "none",
+          }}
+        />
+        {search.trim() ? (
+          <button
+            type="button"
+            onClick={() => setSearch("")}
+            style={{
+              fontSize: 10,
+              fontWeight: 600,
+              padding: "6px 10px",
+              border: "1px solid var(--th-border)",
+              borderRadius: 6,
+              background: "transparent",
+              color: "var(--th-text-muted)",
+              cursor: "pointer",
+              flexShrink: 0,
+            }}
+          >
+            {tr("지우기", "Clear", "クリア", "清除")}
+          </button>
+        ) : null}
+      </div>
+
       {/* ── 서브탭 + 액션 버튼 ── */}
       <div style={{ borderBottom: "1px solid var(--th-border)", display: "flex", alignItems: "stretch", background: "var(--th-bg-primary)", padding: "6px 12px 0" }}>
         {([
@@ -472,8 +529,6 @@ export default function AgentManager({
           projectAgentIds={projectAgentIds}
           deptTab={deptTab}
           setDeptTab={setDeptTab}
-          search={search}
-          setSearch={setSearch}
           sortedAgents={sortedAgents}
           confirmDeleteId={confirmDeleteId}
           setConfirmDeleteId={setConfirmDeleteId}

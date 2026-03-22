@@ -12,6 +12,7 @@ import type { UiLanguage } from "../i18n";
 import type { ProjectMetaPayload, TaskPanelTab } from "./types";
 import { useAgentStore } from "../store/agentStore";
 import { useProjectStore } from "../store/projectStore";
+import { useUiStore } from "../store/uiStore";
 
 interface AppOverlaysProps {
   showChat: boolean;
@@ -37,12 +38,10 @@ interface AppOverlaysProps {
   onSendDirective: (content: string, projectMeta?: ProjectMetaPayload) => Promise<void>;
   onClearMessages: (agentId?: string) => Promise<void>;
   onCloseChat: () => void;
-  showDecisionInbox: boolean;
   decisionInboxLoading: boolean;
   decisionInboxItems: DecisionInboxItem[];
   decisionReplyBusyKey: string | null;
   uiLanguage: UiLanguage;
-  onCloseDecisionInbox: () => void;
   onRefreshDecisionInbox: () => void;
   onReplyDecisionOption: (
     item: DecisionInboxItem,
@@ -77,12 +76,10 @@ export default function AppOverlays({
   onSendDirective,
   onClearMessages,
   onCloseChat,
-  showDecisionInbox,
   decisionInboxLoading,
   decisionInboxItems,
   decisionReplyBusyKey,
   uiLanguage,
-  onCloseDecisionInbox,
   onRefreshDecisionInbox,
   onReplyDecisionOption,
   onOpenDecisionChat,
@@ -102,6 +99,7 @@ export default function AppOverlays({
 }: AppOverlaysProps) {
   const { departments } = useAgentStore();
   const { editDirectiveProjectId } = useProjectStore();
+  const { openWindows, closeWindow } = useUiStore();
 
   return (
     <>
@@ -120,6 +118,7 @@ export default function AppOverlays({
           selectedAgent={chatAgent}
           messages={messages}
           agents={agents}
+          broadcastAgents={groupChatAgents}
           streamingMessage={streamingMessage}
           onSendMessage={onSendMessage}
           onSendAnnouncement={onSendAnnouncement}
@@ -129,15 +128,14 @@ export default function AppOverlays({
         />
       )}
 
-      {showDecisionInbox && (
+      {openWindows.has("decision-inbox") && (
         <DecisionInboxModal
-          open={showDecisionInbox}
           loading={decisionInboxLoading}
           items={decisionInboxItems}
           agents={agents}
           busyKey={decisionReplyBusyKey}
           uiLanguage={uiLanguage}
-          onClose={onCloseDecisionInbox}
+          onClose={() => closeWindow("decision-inbox")}
           onRefresh={onRefreshDecisionInbox}
           onReplyOption={onReplyDecisionOption}
           onOpenChat={onOpenDecisionChat}
@@ -170,7 +168,7 @@ export default function AppOverlays({
         />
       )}
 
-      {showAgentStatus && <AgentStatusPanel agents={groupChatAgents} uiLanguage={uiLanguage} onClose={onCloseAgentStatus} />}
+      {showAgentStatus && <AgentStatusPanel agents={agents} uiLanguage={uiLanguage} onClose={onCloseAgentStatus} />}
     </>
   );
 }

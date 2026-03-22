@@ -1,20 +1,12 @@
+import { KAKAO_MSG } from "../messenger-kakao-theme";
 import { GroupChatComposerAttachmentsBlock } from "./GroupChatComposerAttachmentsBlock";
 import { GroupChatComposerInputBlock } from "./GroupChatComposerInputBlock";
-import { GroupChatComposerModes } from "./GroupChatComposerModes";
 import type { GroupChatPanelVm } from "./types";
 
 type Props = Pick<
   GroupChatPanelVm,
   | "tr"
-  | "t"
-  | "isKo"
   | "selectedIds"
-  | "chatMode"
-  | "setChatMode"
-  | "deadline"
-  | "setDeadline"
-  | "priority"
-  | "setPriority"
   | "fileInputRef"
   | "textareaRef"
   | "input"
@@ -40,15 +32,7 @@ type Props = Pick<
 export function GroupChatComposer(props: Props) {
   const {
     tr,
-    t,
-    isKo,
     selectedIds,
-    chatMode,
-    setChatMode,
-    deadline,
-    setDeadline,
-    priority,
-    setPriority,
     fileInputRef,
     textareaRef,
     input,
@@ -75,23 +59,13 @@ export function GroupChatComposer(props: Props) {
     <div
       style={{
         flexShrink: 0,
-        borderTop: `1px solid ${chatMode === "urgent" ? "var(--th-danger)" : "var(--th-border)"}`,
-        background: "var(--th-bg-elevated)",
+        borderTop: `1px solid ${KAKAO_MSG.borderLight}`,
+        background: KAKAO_MSG.surface,
         padding: "10px 14px",
         transition: "border-color 0.2s",
+        fontFamily: KAKAO_MSG.fontSans,
       }}
     >
-      <GroupChatComposerModes
-        t={t}
-        isKo={isKo}
-        chatMode={chatMode}
-        setChatMode={setChatMode}
-        deadline={deadline}
-        setDeadline={setDeadline}
-        priority={priority}
-        setPriority={setPriority}
-      />
-
       <GroupChatComposerAttachmentsBlock
         fileInputRef={fileInputRef}
         onFileInputChange={onFileInputChange}
@@ -107,7 +81,6 @@ export function GroupChatComposer(props: Props) {
         mentionQuery={mentionQuery}
         handleKbSelect={handleKbSelect}
         closeMention={closeMention}
-        chatMode={chatMode}
         fileInputRef={fileInputRef}
         textareaRef={textareaRef}
         input={input}

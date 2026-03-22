@@ -26,6 +26,7 @@
 
 | Document | Description |
 |----------|-------------|
+| [AGENT-CONFIGURATION-AND-EXECUTION.md](architecture/AGENT-CONFIGURATION-AND-EXECUTION.md) | **에이전트 설정·실행** — DB 필드, 태스크/채팅/runtime 분기, CLI·API·페르소나 (현행 구현) |
 | [schema-erd.md](architecture/schema-erd.md) | DB schema ER diagram + state machines |
 
 ### strategy/

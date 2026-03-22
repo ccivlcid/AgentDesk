@@ -1,395 +1,466 @@
 /**
- * RightShelf — 오른쪽 끝 호버 슬라이드 패널.
- * 유저가 앱 목록을 직접 추가/제거 가능. 편집 모드에서 흔들림 + × 배지.
+ * RightShelf — PM Activity Log 패널.
+ * 프로젝트의 PM 활동을 타임라인으로 표시: 업무 지시, 검토, 상태 변경.
+ * 검토 대기 태스크에 [승인] [수정요청] 버튼 포함.
+ * 라이트모드/다크모드 모두 지원 (var(--th-*) CSS 변수 사용).
  */
-import { useState, useRef } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useUiStore } from "../../store/uiStore";
-import { useI18n } from "../../i18n";
-import type { WindowType } from "../../app/types";
-import { useRightShelfConfig } from "./useRightShelfConfig";
-import {
-  IconDockTasks,
-  IconDockWorkflow,
-  IconDockLibrary,
-  IconDockSettings,
-  IconDockChat,
-  IconDockWidgetBoard,
-  IconDockSynapse,
-  IconAgents,
-  IconReports,
-  IconImageStudio,
-  IconAgentGraph,
-  IconLocalLlm,
-  IconAlerts,
-  IconFileTree,
-  IconRepl,
-  IconDashboard,
-} from "./DesktopIcons";
+import { useProjectStore } from "../../store/projectStore";
+import { fetchPmActivity, type PmActivityItem, type PmActivityResponse, type MeetingEntry } from "../../api/pm-activity";
+import { replyDecisionInbox } from "../../api/messaging-runtime-oauth";
+import { useWebSocket } from "../../hooks/useWebSocket";
 
 const mono = "var(--th-font-mono)";
-const PANEL_W = 80;
+const PANEL_W = 340;
 const STRIP_W = 6;
 
-export interface AppMeta {
-  id: WindowType;
-  icon: (color: string) => React.ReactNode;
-  label: { ko: string; en: string; ja: string; zh: string };
-  accent: string;
-}
+// ── SVG Icons ──
+const IconPm = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
+  </svg>
+);
+const IconCheck = () => (
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M20 6 9 17l-5-5" />
+  </svg>
+);
+const IconEdit = () => (
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+  </svg>
+);
+const IconPlay = () => (
+  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polygon points="5 3 19 12 5 21 5 3" />
+  </svg>
+);
 
-export const ALL_SHELF_APPS: AppMeta[] = [
-  { id: "tasks",         icon: (c) => <IconDockTasks color={c} />,      label: { ko: "업무보드",       en: "Board",        ja: "タスク",          zh: "任务板" },    accent: "#ff9f0a" },
-  { id: "workflow",      icon: (c) => <IconDockWorkflow color={c} />,   label: { ko: "워크플로",       en: "Workflow",      ja: "ワークフロー",    zh: "工作流" },    accent: "#007aff" },
-  { id: "chat",          icon: (c) => <IconDockChat color={c} />,       label: { ko: "채팅",           en: "Chat",          ja: "チャット",        zh: "聊天" },      accent: "#5e5ce6" },
-  { id: "widget-board",  icon: (c) => <IconDockWidgetBoard color={c} />,label: { ko: "위젯 보드",      en: "Widgets",       ja: "ウィジェット",    zh: "小组件" },    accent: "#34c759" },
-  { id: "library",       icon: (c) => <IconDockLibrary color={c} />,    label: { ko: "라이브러리",     en: "Library",       ja: "ライブラリ",      zh: "库" },        accent: "#30d158" },
-  { id: "settings",      icon: (c) => <IconDockSettings color={c} />,   label: { ko: "설정",           en: "Settings",      ja: "設定",            zh: "设置" },      accent: "#8e8e93" },
-  { id: "agent-manager", icon: (c) => <IconAgents color={c} />,         label: { ko: "에이전트",       en: "Agents",        ja: "エージェント",    zh: "代理" },      accent: "#ff6b35" },
-  { id: "synapse",       icon: (c) => <IconDockSynapse color={c} />,    label: { ko: "시냅스",         en: "Synapse",       ja: "シナプス",        zh: "知识库" },    accent: "#a78bfa" },
-  { id: "dashboard",     icon: (c) => <IconDashboard color={c} />,      label: { ko: "대시보드",       en: "Dashboard",     ja: "ダッシュボード",  zh: "控制台" },    accent: "#f97316" },
-  { id: "reports",       icon: (c) => <IconReports color={c} />,        label: { ko: "보고서",         en: "Reports",       ja: "レポート",        zh: "报告" },      accent: "#06b6d4" },
-  { id: "image-studio",  icon: (c) => <IconImageStudio color={c} />,    label: { ko: "이미지 스튜디오",en: "Image Studio",  ja: "イメスタ",        zh: "图像工作室" },accent: "#ec4899" },
-  { id: "flow-graph",    icon: (c) => <IconAgentGraph color={c} />,     label: { ko: "에이전트 그래프",en: "Agent Graph",   ja: "グラフ",          zh: "代理图" },    accent: "#14b8a6" },
-  { id: "local-llm",     icon: (c) => <IconLocalLlm color={c} />,       label: { ko: "로컬 LLM",       en: "Local LLM",     ja: "ローカルLLM",    zh: "本地LLM" },   accent: "#8b5cf6" },
-  { id: "alerts",        icon: (c) => <IconAlerts color={c} />,         label: { ko: "알림",           en: "Alerts",        ja: "アラート",        zh: "警报" },      accent: "#f59e0b" },
-  { id: "file-tree",     icon: (c) => <IconFileTree color={c} />,       label: { ko: "파일 탐색기",    en: "File Explorer", ja: "ファイル",        zh: "文件管理" },  accent: "#64748b" },
-  { id: "cli",           icon: (c) => <IconRepl color={c} />,           label: { ko: "CLI",            en: "CLI",           ja: "CLI",             zh: "CLI" },       accent: "#22d3ee" },
+type FilterKey = "all" | "meeting" | "oversight" | "task_status" | "pm_message" | "decision";
+const FILTERS: Array<{ key: FilterKey; label: string }> = [
+  { key: "all", label: "전체" },
+  { key: "meeting", label: "회의록" },
+  { key: "oversight", label: "지시" },
+  { key: "task_status", label: "상태" },
+  { key: "decision", label: "검토" },
+  { key: "pm_message", label: "보고" },
 ];
 
-// ── 추가 피커 ─────────────────────────────────────────────────────────
-function AddPicker({ current, onAdd, onClose, t }: {
-  current: WindowType[];
-  onAdd: (id: WindowType) => void;
-  onClose: () => void;
-  t: ReturnType<typeof useI18n>["t"];
-}) {
-  const available = ALL_SHELF_APPS.filter((a) => !current.includes(a.id));
-
-  return (
-    <div
-      data-no-ctx="true"
-      style={{
-        position: "absolute",
-        right: PANEL_W + STRIP_W + 6,
-        bottom: 0,
-        width: 200,
-        background: "rgba(18,18,24,0.97)",
-        backdropFilter: "blur(24px)",
-        border: "1px solid rgba(255,255,255,0.12)",
-        borderRadius: 12,
-        boxShadow: "0 12px 40px rgba(0,0,0,0.6)",
-        padding: "6px 0",
-        zIndex: 100,
-        maxHeight: 340,
-        overflowY: "auto",
-      }}
-    >
-      <div style={{ padding: "6px 12px 4px", fontFamily: mono, fontSize: 10, color: "rgba(255,255,255,0.3)", letterSpacing: "0.1em", textTransform: "uppercase" }}>
-        {t({ ko: "앱 추가", en: "Add App", ja: "アプリ追加", zh: "添加应用" })}
-      </div>
-      {available.length === 0 ? (
-        <div style={{ padding: "10px 14px", fontFamily: mono, fontSize: 11, color: "rgba(255,255,255,0.3)", textAlign: "center" }}>
-          {t({ ko: "추가할 앱 없음", en: "Nothing to add", ja: "追加するアプリなし", zh: "无可添加" })}
-        </div>
-      ) : available.map((app) => (
-        <button
-          key={app.id}
-          type="button"
-          onClick={() => { onAdd(app.id); onClose(); }}
-          style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "7px 14px", background: "none", border: "none", cursor: "pointer", textAlign: "left", fontFamily: mono, color: "rgba(255,255,255,0.75)", fontSize: 12 }}
-          onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.07)"; }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "none"; }}
-        >
-          <span style={{ color: app.accent, flexShrink: 0, display: "flex", alignItems: "center" }}>
-            {app.icon(app.accent)}
-          </span>
-          <span>{t(app.label)}</span>
-        </button>
-      ))}
-    </div>
-  );
+function timeAgo(ts: number): string {
+  const diff = Date.now() - ts;
+  if (diff < 60_000) return "방금";
+  if (diff < 3_600_000) return `${Math.floor(diff / 60_000)}분 전`;
+  if (diff < 86_400_000) return `${Math.floor(diff / 3_600_000)}시간 전`;
+  return new Date(ts).toLocaleDateString("ko-KR", { month: "short", day: "numeric" });
 }
 
-// ── 메인 ─────────────────────────────────────────────────────────────
-export default function RightShelf() {
-  const { openWindows, toggleWindow } = useUiStore();
-  const { t } = useI18n();
-  const { items, addItem, removeItem } = useRightShelfConfig();
+const IconMeeting = () => (
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" />
+  </svg>
+);
 
-  const [open, setOpen] = useState(false);
-  const [editMode, setEditMode] = useState(false);
-  const [showPicker, setShowPicker] = useState(false);
+function typeIcon(type: PmActivityItem["type"]) {
+  switch (type) {
+    case "meeting": return <IconMeeting />;
+    case "oversight": return <IconPlay />;
+    case "task_status": return <IconCheck />;
+    case "decision": return <IconEdit />;
+    default: return <IconPm />;
+  }
+}
+function typeColor(type: PmActivityItem["type"]): string {
+  switch (type) {
+    case "meeting": return "#06b6d4";
+    case "oversight": return "#f59e0b";
+    case "task_status": return "#30d158";
+    case "decision": return "#bf5af2";
+    case "pm_message": return "#0a84ff";
+    default: return "#8e8e93";
+  }
+}
+
+export default function RightShelf() {
+  const { on } = useWebSocket();
+  const { pmActivityProjectId, pmActivityExpanded, togglePmActivityExpanded, setPmActivityProjectId } = useUiStore();
+  const { projects } = useProjectStore();
+
+  const [data, setData] = useState<PmActivityResponse | null>(null);
+  const [filter, setFilter] = useState<FilterKey>("all");
+  const [busyTaskId, setBusyTaskId] = useState<string | null>(null);
+  const [approvedTaskIds, setApprovedTaskIds] = useState<Set<string>>(new Set());
+  const [expandedMeetings, setExpandedMeetings] = useState<Set<string>>(new Set());
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const activeProjectId = pmActivityProjectId || projects[0]?.id || null;
+
+  const loadActivity = useCallback(() => {
+    if (!activeProjectId) return;
+    fetchPmActivity(activeProjectId, { limit: 80 }).then(setData).catch(() => {});
+  }, [activeProjectId]);
+
+  useEffect(() => { loadActivity(); }, [loadActivity]);
+  useEffect(() => on("pm_activity", () => { loadActivity(); }), [on, loadActivity]);
+  useEffect(() => on("task_update", () => { loadActivity(); }), [on, loadActivity]);
+
+  const items = data?.items ?? [];
+  const counts = data?.counts ?? { planned: 0, in_progress: 0, review: 0, done: 0, total: 0 };
+  const deduped = items.reduce<PmActivityItem[]>((acc, item) => {
+    const key = `${item.taskId ?? ""}:${item.type}`;
+    if (!acc.some((a) => `${a.taskId ?? ""}:${a.type}` === key)) acc.push(item);
+    return acc;
+  }, []);
+  const filtered = filter === "all" ? deduped : deduped.filter((i) => i.type === filter);
+
+  async function handleApprove(taskId: string) {
+    setBusyTaskId(taskId);
+    try {
+      await replyDecisionInbox(`task-review:${taskId}`, 1);
+      setApprovedTaskIds((prev) => new Set([...prev, taskId]));
+      setTimeout(loadActivity, 1500);
+    } catch (err) {
+      console.error("[PM Activity] approve failed:", err);
+    } finally {
+      setBusyTaskId(null);
+    }
+  }
+
+  async function handleRevision(taskId: string) {
+    setBusyTaskId(taskId);
+    try {
+      await replyDecisionInbox(`task-review:${taskId}`, 2);
+      setApprovedTaskIds((prev) => new Set([...prev, taskId]));
+      setTimeout(loadActivity, 1500);
+    } catch (err) {
+      console.error("[PM Activity] revision failed:", err);
+    } finally {
+      setBusyTaskId(null);
+    }
+  }
+
   function scheduleClose() {
-    closeTimerRef.current = setTimeout(() => {
-      setOpen(false);
-      setEditMode(false);
-      setShowPicker(false);
-    }, 220);
+    closeTimerRef.current = setTimeout(() => togglePmActivityExpanded(), 300);
   }
   function cancelClose() {
     if (closeTimerRef.current) { clearTimeout(closeTimerRef.current); closeTimerRef.current = null; }
   }
 
-  const translateX = open ? 0 : PANEL_W;
-  const isEmpty = items.length === 0;
-
-  return (
-    <>
-      {editMode && (
-        <style>{`
-          @keyframes shelfWiggle {
-            0%,100% { transform: rotate(-3deg); }
-            50%      { transform: rotate(3deg); }
-          }
-        `}</style>
-      )}
-
-      <div
-        data-no-ctx="true"
-        style={{
-          position: "fixed",
-          right: 0,
-          top: "50%",
-          transform: `translateY(-50%) translateX(${translateX}px)`,
-          transition: "transform 0.28s cubic-bezier(0.32, 0, 0.67, 0)",
-          zIndex: 990,
-          display: "flex",
-          alignItems: "stretch",
-        }}
-        onMouseEnter={() => { cancelClose(); setOpen(true); }}
-        onMouseLeave={scheduleClose}
-      >
-        {/* 트리거 스트립 */}
-        <div style={{ width: STRIP_W, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-          <div style={{
-            width: 3,
-            height: open ? 0 : 52,
-            background: "rgba(255,255,255,0.2)",
-            borderRadius: 2,
-            transition: "height 0.2s ease, opacity 0.2s",
-            opacity: open ? 0 : 1,
-          }} />
-        </div>
-
-        {/* 패널 */}
-        <div style={{
-          width: PANEL_W,
-          paddingTop: 10,
-          paddingBottom: 12,
-          background: "rgba(16,16,22,0.88)",
-          backdropFilter: "blur(28px) saturate(180%)",
-          WebkitBackdropFilter: "blur(28px) saturate(180%)",
-          border: "1px solid rgba(255,255,255,0.1)",
-          borderRight: "none",
-          borderRadius: "14px 0 0 14px",
-          boxShadow: "-8px 0 32px rgba(0,0,0,0.45), inset 1px 0 0 rgba(255,255,255,0.05)",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          gap: 2,
-          position: "relative",
-        }}>
-          {/* 헤더 핸들 + 편집 버튼 */}
-          <div style={{ display: "flex", alignItems: "center", width: "100%", padding: "0 10px", justifyContent: "space-between", marginBottom: 4 }}>
-            <div style={{ flex: 1 }} />
-            <div style={{ width: 22, height: 3, borderRadius: 2, background: "rgba(255,255,255,0.12)" }} />
-            <div style={{ flex: 1, display: "flex", justifyContent: "flex-end" }}>
-              <button
-                type="button"
-                onClick={() => { setEditMode((v) => !v); setShowPicker(false); }}
-                title={editMode
-                  ? t({ ko: "완료", en: "Done", ja: "完了", zh: "完成" })
-                  : t({ ko: "편집", en: "Edit", ja: "編集", zh: "编辑" })}
-                style={{
-                  background: editMode ? "rgba(245,158,11,0.2)" : "none",
-                  border: "none",
-                  borderRadius: 4,
-                  color: editMode ? "#f59e0b" : "rgba(255,255,255,0.3)",
-                  fontSize: editMode ? 10 : 12,
-                  cursor: "pointer",
-                  padding: "2px 4px",
-                  fontFamily: mono,
-                  lineHeight: 1,
-                  transition: "color 0.15s",
-                }}
-                onMouseEnter={(e) => { if (!editMode) (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.7)"; }}
-                onMouseLeave={(e) => { if (!editMode) (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.3)"; }}
-              >
-                {editMode ? t({ ko: "완료", en: "Done", ja: "完了", zh: "完成" }) : (
-                  <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-                    <path d="M11 2l3 3-9 9H2v-3L11 2z" />
-                  </svg>
-                )}
-              </button>
-            </div>
-          </div>
-
-          {/* 빈 상태 안내 */}
-          {isEmpty && (
-            <div style={{ fontFamily: mono, fontSize: 10, color: "rgba(255,255,255,0.22)", textAlign: "center", padding: "8px 6px 4px", lineHeight: 1.7 }}>
-              <div>{t({ ko: "+ 로", en: "Tap +", ja: "＋で", zh: "点+" })}</div>
-              <div>{t({ ko: "앱 추가", en: "to add", ja: "追加", zh: "添加" })}</div>
-            </div>
-          )}
-
-          {/* 앱 버튼 목록 */}
-          {items.map((id) => {
-            const meta = ALL_SHELF_APPS.find((a) => a.id === id);
-            if (!meta) return null;
-            return (
-              <ShelfButton
-                key={id}
-                label={t(meta.label)}
-                icon={meta.icon}
-                isOpen={openWindows.has(id)}
-                accent={meta.accent}
-                editMode={editMode}
-                onLaunch={() => { if (!editMode) toggleWindow(id); }}
-                onRemove={() => removeItem(id)}
-              />
-            );
-          })}
-
-          {/* + 추가 버튼 */}
-          <div style={{ marginTop: isEmpty ? 4 : 8, position: "relative" }}>
-            <button
-              type="button"
-              onClick={() => setShowPicker((v) => !v)}
-              title={t({ ko: "앱 추가", en: "Add App", ja: "アプリ追加", zh: "添加应用" })}
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: 10,
-                border: `1px dashed ${showPicker ? "rgba(255,255,255,0.4)" : "rgba(255,255,255,0.18)"}`,
-                background: showPicker ? "rgba(255,255,255,0.1)" : "none",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "rgba(255,255,255,0.4)",
-                transition: "all 0.15s",
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.85)";
-                (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.5)";
-              }}
-              onMouseLeave={(e) => {
-                if (!showPicker) {
-                  (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.4)";
-                  (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,255,255,0.18)";
-                }
-              }}
-            >
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-                <line x1="7" y1="1" x2="7" y2="13" />
-                <line x1="1" y1="7" x2="13" y2="7" />
-              </svg>
-            </button>
-
-            {showPicker && (
-              <AddPicker current={items} onAdd={addItem} onClose={() => setShowPicker(false)} t={t} />
-            )}
-          </div>
-        </div>
-      </div>
-    </>
-  );
-}
-
-// ── 개별 버튼 ────────────────────────────────────────────────────────
-function ShelfButton({ label, icon, isOpen, accent, editMode, onLaunch, onRemove }: {
-  label: string;
-  icon: (color: string) => React.ReactNode;
-  isOpen: boolean;
-  accent: string;
-  editMode: boolean;
-  onLaunch: () => void;
-  onRemove: () => void;
-}) {
-  const [hovered, setHovered] = useState(false);
-  const iconColor = (hovered && !editMode) ? accent : isOpen ? accent : "rgba(255,255,255,0.7)";
+  const translateX = pmActivityExpanded ? 0 : PANEL_W;
 
   return (
     <div
-      style={{ position: "relative", width: 54, height: 54, flexShrink: 0 }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      data-no-ctx="true"
+      style={{
+        position: "fixed",
+        right: 0,
+        top: 44,
+        bottom: 56,
+        width: PANEL_W + STRIP_W,
+        transform: `translateX(${translateX}px)`,
+        transition: "transform 0.26s cubic-bezier(0.32, 0, 0.67, 0)",
+        zIndex: 990,
+        display: "flex",
+        pointerEvents: pmActivityExpanded ? "auto" : "none",
+      }}
+      onMouseEnter={() => { cancelClose(); if (!pmActivityExpanded) togglePmActivityExpanded(); }}
+      onMouseLeave={() => { if (pmActivityExpanded) scheduleClose(); }}
     >
-      <button
-        type="button"
-        onClick={onLaunch}
-        title={label}
+      {/* Trigger strip */}
+      <div
         style={{
-          width: "100%",
-          height: "100%",
-          borderRadius: 13,
-          border: isOpen ? `1px solid ${accent}50` : "1px solid transparent",
-          background: (hovered && !editMode)
-            ? `${accent}22`
-            : isOpen ? "rgba(255,255,255,0.09)" : "rgba(255,255,255,0.04)",
-          cursor: editMode ? "default" : "pointer",
+          width: STRIP_W,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          transition: "background 0.15s",
-          animation: editMode ? "shelfWiggle 0.45s ease-in-out infinite" : "none",
-          transformOrigin: "center",
+          cursor: "pointer",
+          pointerEvents: "auto",
         }}
+        onClick={() => togglePmActivityExpanded()}
       >
-        <div style={{ width: 24, height: 24, display: "flex", alignItems: "center", justifyContent: "center", color: iconColor }}>
-          {icon(iconColor)}
-        </div>
-      </button>
-
-      {/* 열린 창 인디케이터 */}
-      {isOpen && !editMode && (
         <div style={{
-          position: "absolute",
-          bottom: 2,
-          left: "50%",
-          transform: "translateX(-50%)",
-          width: 4,
-          height: 4,
-          borderRadius: "50%",
-          background: accent,
-          pointerEvents: "none",
+          width: 3,
+          height: pmActivityExpanded ? 0 : 52,
+          background: "var(--th-text-muted)",
+          borderRadius: 2,
+          transition: "height 0.2s ease, opacity 0.2s",
+          opacity: pmActivityExpanded ? 0 : 0.3,
         }} />
-      )}
+      </div>
 
-      {/* 편집 모드 × 배지 */}
-      {editMode && (
-        <button
-          type="button"
-          onClick={(e) => { e.stopPropagation(); onRemove(); }}
-          style={{
-            position: "absolute",
-            top: -5,
-            left: -5,
-            width: 18,
-            height: 18,
-            borderRadius: "50%",
-            background: "#1c1c22",
-            border: "1.5px solid rgba(255,255,255,0.3)",
-            color: "rgba(255,255,255,0.85)",
-            fontSize: 8,
-            fontFamily: mono,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            cursor: "pointer",
-            padding: 0,
-            zIndex: 10,
-            boxShadow: "0 1px 4px rgba(0,0,0,0.5)",
-          }}
-        >
-          <svg width="7" height="7" viewBox="0 0 8 8" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-            <line x1="1" y1="1" x2="7" y2="7" />
-            <line x1="7" y1="1" x2="1" y2="7" />
-          </svg>
-        </button>
-      )}
+      {/* Panel */}
+      <div style={{
+        flex: 1,
+        background: "var(--th-bg-panel)",
+        backdropFilter: "blur(28px) saturate(180%)",
+        WebkitBackdropFilter: "blur(28px) saturate(180%)",
+        borderLeft: "1px solid var(--th-border)",
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden",
+      }}>
+        {/* Header */}
+        <div style={{
+          padding: "10px 14px 8px",
+          borderBottom: "1px solid var(--th-border)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, color: "var(--th-text-heading)" }}>
+            <IconPm />
+            <span style={{ fontFamily: mono, fontSize: 11, fontWeight: 700, letterSpacing: "0.04em" }}>
+              PM Activity
+            </span>
+          </div>
+          {projects.length > 1 && (
+            <select
+              value={activeProjectId || ""}
+              onChange={(e) => setPmActivityProjectId(e.target.value || null)}
+              style={{
+                fontFamily: mono,
+                fontSize: 10,
+                background: "var(--th-bg-surface)",
+                border: "1px solid var(--th-border)",
+                color: "var(--th-text-secondary)",
+                borderRadius: 4,
+                padding: "2px 4px",
+                outline: "none",
+              }}
+            >
+              {projects.map((p) => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+            </select>
+          )}
+        </div>
+
+        {/* Status counts */}
+        <div style={{
+          display: "flex",
+          padding: "6px 14px",
+          gap: 2,
+          borderBottom: "1px solid var(--th-border)",
+        }}>
+          {([
+            { label: "계획", count: counts.planned, color: "var(--th-text-muted)" },
+            { label: "진행", count: counts.in_progress, color: "#0a84ff" },
+            { label: "검토", count: counts.review, color: "#f59e0b" },
+            { label: "완료", count: counts.done, color: "#30d158" },
+          ] as const).map((s) => (
+            <div key={s.label} style={{
+              flex: 1,
+              textAlign: "center",
+              fontFamily: mono,
+              fontSize: 9,
+              color: s.count > 0 ? s.color : "var(--th-text-disabled, var(--th-text-muted))",
+              opacity: s.count > 0 ? 1 : 0.4,
+            }}>
+              <div style={{ fontSize: 14, fontWeight: 700 }}>{s.count}</div>
+              <div>{s.label}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Filter chips */}
+        <div style={{
+          display: "flex",
+          padding: "6px 14px",
+          gap: 4,
+          borderBottom: "1px solid var(--th-border)",
+        }}>
+          {FILTERS.map((f) => (
+            <button
+              key={f.key}
+              type="button"
+              onClick={() => setFilter(f.key)}
+              style={{
+                fontFamily: mono,
+                fontSize: 9,
+                fontWeight: filter === f.key ? 700 : 400,
+                padding: "2px 8px",
+                border: filter === f.key ? "1px solid var(--th-border-strong, var(--th-border))" : "1px solid transparent",
+                borderRadius: 10,
+                background: filter === f.key ? "var(--th-hover-overlay)" : "transparent",
+                color: filter === f.key ? "var(--th-text-heading)" : "var(--th-text-muted)",
+                cursor: "pointer",
+              }}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Timeline */}
+        <div style={{ flex: 1, overflowY: "auto", padding: "4px 0" }}>
+          {!activeProjectId ? (
+            <div style={{ fontFamily: mono, fontSize: 11, color: "var(--th-text-muted)", textAlign: "center", padding: "24px 14px" }}>
+              활성 프로젝트 없음
+            </div>
+          ) : filtered.length === 0 ? (
+            <div style={{ fontFamily: mono, fontSize: 11, color: "var(--th-text-muted)", textAlign: "center", padding: "24px 14px" }}>
+              PM 활동 없음
+            </div>
+          ) : filtered.map((item) => {
+            const color = typeColor(item.type);
+            const isReviewItem = item.taskId
+              && (item.summary.includes("review") || item.summary.includes("Review") || item.summary.includes("검토"))
+              && !approvedTaskIds.has(item.taskId);
+
+            return (
+              <div
+                key={item.id}
+                style={{
+                  padding: "8px 14px",
+                  borderBottom: "1px solid var(--th-border)",
+                  display: "flex",
+                  gap: 10,
+                  alignItems: "flex-start",
+                }}
+              >
+                {/* Icon */}
+                <div style={{
+                  width: 22,
+                  height: 22,
+                  borderRadius: 6,
+                  background: `${color}18`,
+                  border: `1px solid ${color}30`,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color,
+                  flexShrink: 0,
+                  marginTop: 1,
+                }}>
+                  {typeIcon(item.type)}
+                </div>
+
+                {/* Content */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  {/* Summary — meetings are clickable to expand */}
+                  <div
+                    style={{
+                      fontFamily: mono,
+                      fontSize: 11,
+                      color: "var(--th-text-primary)",
+                      lineHeight: 1.5,
+                      wordBreak: "break-word",
+                      cursor: item.type === "meeting" ? "pointer" : "default",
+                    }}
+                    onClick={() => {
+                      if (item.type === "meeting") {
+                        setExpandedMeetings((prev) => {
+                          const next = new Set(prev);
+                          next.has(item.id) ? next.delete(item.id) : next.add(item.id);
+                          return next;
+                        });
+                      }
+                    }}
+                  >
+                    {item.type === "meeting" && (
+                      <span style={{ fontSize: 9, marginRight: 4, opacity: 0.5 }}>
+                        {expandedMeetings.has(item.id) ? "▾" : "▸"}
+                      </span>
+                    )}
+                    {item.summary.length > 120 ? item.summary.slice(0, 120) + "..." : item.summary}
+                  </div>
+
+                  {/* Meeting entries (expandable) */}
+                  {item.type === "meeting" && expandedMeetings.has(item.id) && item.meetingEntries && (
+                    <div style={{
+                      marginTop: 6,
+                      padding: "6px 8px",
+                      background: "var(--th-bg-surface)",
+                      border: "1px solid var(--th-border)",
+                      borderRadius: 4,
+                      maxHeight: 200,
+                      overflowY: "auto",
+                    }}>
+                      {item.meetingEntries.map((entry, idx) => (
+                        <div key={idx} style={{ marginBottom: idx < item.meetingEntries!.length - 1 ? 6 : 0 }}>
+                          <span style={{ fontFamily: mono, fontSize: 9, fontWeight: 700, color: "var(--th-accent)" }}>
+                            {entry.speaker}
+                          </span>
+                          <div style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-secondary)", lineHeight: 1.4, marginTop: 1 }}>
+                            {entry.content}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 3 }}>
+                    {item.agentName && (
+                      <span style={{ fontFamily: mono, fontSize: 9, color: "var(--th-text-muted)" }}>
+                        {item.agentName}
+                      </span>
+                    )}
+                    <span style={{ fontFamily: mono, fontSize: 9, color: "var(--th-text-muted)", opacity: 0.6 }}>
+                      {timeAgo(item.timestamp)}
+                    </span>
+                  </div>
+
+                  {/* Review actions */}
+                  {isReviewItem && item.taskId && (
+                    <div style={{ display: "flex", gap: 4, marginTop: 6 }}>
+                      <button
+                        type="button"
+                        onClick={() => handleApprove(item.taskId!)}
+                        disabled={busyTaskId === item.taskId}
+                        style={{
+                          fontFamily: mono,
+                          fontSize: 9,
+                          fontWeight: 700,
+                          padding: "3px 10px",
+                          border: "1px solid #30d158",
+                          background: "rgba(48,209,88,0.12)",
+                          color: "#30d158",
+                          borderRadius: 4,
+                          cursor: busyTaskId === item.taskId ? "not-allowed" : "pointer",
+                          opacity: busyTaskId === item.taskId ? 0.5 : 1,
+                        }}
+                      >
+                        {busyTaskId === item.taskId ? "..." : "승인"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleRevision(item.taskId!)}
+                        disabled={busyTaskId === item.taskId}
+                        style={{
+                          fontFamily: mono,
+                          fontSize: 9,
+                          fontWeight: 700,
+                          padding: "3px 10px",
+                          border: "1px solid var(--th-border)",
+                          background: "transparent",
+                          color: "var(--th-text-muted)",
+                          borderRadius: 4,
+                          cursor: busyTaskId === item.taskId ? "not-allowed" : "pointer",
+                          opacity: busyTaskId === item.taskId ? 0.5 : 1,
+                        }}
+                      >
+                        수정요청
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Footer */}
+        <div style={{
+          padding: "6px 14px",
+          borderTop: "1px solid var(--th-border)",
+          fontFamily: mono,
+          fontSize: 9,
+          color: "var(--th-text-muted)",
+          textAlign: "center",
+        }}>
+          {data?.pmAgent ? `PM: ${data.pmAgent.nameKo || data.pmAgent.name}` : "PM 미할당"} · {counts.total}건
+        </div>
+      </div>
     </div>
   );
 }

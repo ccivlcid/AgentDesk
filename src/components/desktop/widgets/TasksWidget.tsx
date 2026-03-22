@@ -107,27 +107,7 @@ export default function TasksWidget() {
               <span style={{ fontFamily: mono, fontSize: 10, color: STATUS_COLOR[task.status] ?? "var(--th-text-muted)", flexShrink: 0 }}>
                 {STATUS_TEXT[task.status] ?? task.status}
               </span>
-              <button
-                onClick={(e) => { e.stopPropagation(); setTaskPanel({ taskId: task.id, tab: "minutes" }); }}
-                title={t({ ko: "회의록 보기", en: "View meeting minutes", ja: "会議録", zh: "会议纪要" })}
-                className="min-btn"
-                style={{
-                  flexShrink: 0,
-                  background: "none",
-                  border: "1px solid var(--th-border)",
-                  borderRadius: 4,
-                  padding: "2px 6px",
-                  cursor: "pointer",
-                  fontFamily: mono,
-                  fontSize: 10,
-                  color: "var(--th-text-muted)",
-                  lineHeight: 1.4,
-                  opacity: 0,
-                  transition: "opacity 0.15s",
-                }}
-              >
-                {t({ ko: "회의록", en: "min", ja: "議事録", zh: "纪要" })}
-              </button>
+              {/* 회의록 버튼 제거 — PM Activity 패널에서 확인 */}
             </div>
           ))
         )}

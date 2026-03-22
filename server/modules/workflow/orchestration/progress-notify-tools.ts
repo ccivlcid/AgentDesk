@@ -1,7 +1,7 @@
 type CreateProgressNotifyToolsDeps = Record<string, any>;
 
 export function createProgressNotifyTools(deps: CreateProgressNotifyToolsDeps) {
-  const { db, progressTimers, findTeamLeader, resolveLang, sendAgentMessage, pickL, l, randomUUID, nowMs, broadcast } =
+  const { db, progressTimers, findTeamLeader, resolveLang, getPreferredLanguage, sendAgentMessage, pickL, l, randomUUID, nowMs, broadcast } =
     deps;
 
   function startProgressTimer(taskId: string, taskTitle: string, departmentId: string | null): void {
@@ -17,7 +17,7 @@ export function createProgressNotifyTools(deps: CreateProgressNotifyToolsDeps) {
       }
       const leader = findTeamLeader(departmentId);
       if (leader) {
-        const lang = resolveLang(taskTitle);
+        const lang = typeof getPreferredLanguage === "function" ? getPreferredLanguage() : resolveLang(taskTitle);
         sendAgentMessage(
           leader,
           pickL(

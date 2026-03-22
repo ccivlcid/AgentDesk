@@ -85,16 +85,7 @@ export function TaskCardActions({ state }: TaskCardActionsProps) {
             &#128421;
           </button>
         )}
-        {(task.status === "planned" || task.status === "collaborating" || task.status === "in_progress" || task.status === "review" || task.status === "done" || task.status === "pending") && onOpenMeetingMinutes && (
-          <button
-            onClick={() => onOpenMeetingMinutes(task.id)}
-            title={t({ ko: "회의록 보기", en: "View meeting minutes", ja: "会議録を見る", zh: "查看会议纪要" })}
-            className="flex items-center justify-center"
-            style={{ background: "rgba(8,145,178,0.12)", color: "rgb(103,232,249)", borderRadius: 7, padding: "4px 7px", border: "1px solid rgba(8,145,178,0.25)", fontSize: "0.8rem", transition: "background 0.1s" }}
-          >
-            📝
-          </button>
-        )}
+        {/* 회의록 버튼 제거 — PM Activity 패널에서 확인 */}
         {task.status === "review" && (
           <button
             onClick={() => setShowDiff(true)}

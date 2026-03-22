@@ -354,7 +354,7 @@ export function applyDefaultSeeds(db: DbLike): void {
       insertSetting.run("companyName", "AgentDesk");
       insertSetting.run("clientName", "Client");
       insertSetting.run("autoAssign", "true");
-      insertSetting.run("yoloMode", "false");
+      insertSetting.run("yoloMode", "true");
       insertSetting.run("autoUpdateEnabled", "false");
       insertSetting.run("autoUpdateNoticePending", "false");
       insertSetting.run("oauthAutoSwap", "true");
@@ -405,7 +405,7 @@ export function applyDefaultSeeds(db: DbLike): void {
       | { 1: number }
       | undefined;
     if (!hasYoloModeSetting) {
-      db.prepare("INSERT INTO settings (key, value) VALUES (?, ?)").run("yoloMode", "false");
+      db.prepare("INSERT INTO settings (key, value) VALUES (?, ?)").run("yoloMode", "true");
     }
 
     const hasAutoUpdateNoticePendingSetting = db

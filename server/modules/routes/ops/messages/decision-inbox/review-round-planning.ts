@@ -50,7 +50,7 @@ export function createReviewRoundPlanningHelpers(deps: ReviewRoundPlanningDeps):
     return pickL(
       l(
         [
-          `라운드 ${reviewRound} 의견을 기획팀장이 우선 취합했습니다.\n작업: '${taskTitle}'\n${projectName ? `프로젝트: '${projectName}'\n` : ""}아래 번호 중 우선순위가 높은 보완 항목을 먼저 선택하고, 필요 시 추가 의견을 함께 넣어 보완 라운드를 여세요.\n\n검토 선택지:\n${optionBlock}`,
+          `라운드 ${reviewRound} 의견을 PM이 우선 취합했습니다.\n작업: '${taskTitle}'\n${projectName ? `프로젝트: '${projectName}'\n` : ""}아래 번호 중 우선순위가 높은 보완 항목을 먼저 선택하고, 필요 시 추가 의견을 함께 넣어 보완 라운드를 여세요.\n\n검토 선택지:\n${optionBlock}`,
         ],
         [
           `Planning lead pre-consolidated round ${reviewRound} opinions.\nTask: '${taskTitle}'\n${projectName ? `Project: '${projectName}'\n` : ""}Pick the highest-priority remediation options first, and add an extra note only when needed.\n\nCandidate options:\n${optionBlock}`,
@@ -176,7 +176,7 @@ export function createReviewRoundPlanningHelpers(deps: ReviewRoundPlanningDeps):
             event_type: "planning_summary",
             summary: pickL(
               l(
-                [`라운드 ${input.reviewRound} 기획팀장 취합\n${plannerSummary}`],
+                [`라운드 ${input.reviewRound} PM 취합\n${plannerSummary}`],
                 [`Round ${input.reviewRound} planning consolidation\n${plannerSummary}`],
                 [`ラウンド${input.reviewRound} 企画リード集約\n${plannerSummary}`],
                 [`第 ${input.reviewRound} 轮规划负责人汇总\n${plannerSummary}`],
@@ -190,7 +190,7 @@ export function createReviewRoundPlanningHelpers(deps: ReviewRoundPlanningDeps):
       } catch {
         const failMsg = pickL(
           l(
-            ["리뷰 라운드 기획팀장 취합이 일시 지연되었습니다. 자동 재시도 중입니다."],
+            ["리뷰 라운드 PM 취합이 일시 지연되었습니다. 자동 재시도 중입니다."],
             ["Review-round planning consolidation is temporarily delayed. Auto retry in progress."],
             ["レビューラウンド企画リード集約が一時遅延しました。自動再試行中です。"],
             ["评审轮次规划汇总暂时延迟，正在自动重试。"],

@@ -1,4 +1,6 @@
 import type { Message } from "../../../types";
+import { IconRobot } from "../../ui/SvgIcons";
+import { KAKAO_MSG } from "../messenger-kakao-theme";
 import { PRIORITY_COLOR, PRIORITY_LABEL } from "./constants";
 import { IconTask, IconUrgent } from "./ModeIcons";
 import { parseModePrefix } from "./utils";
@@ -29,7 +31,7 @@ export function GroupChatMessageList({
   bottomRef,
 }: Props) {
   return (
-    <div style={{ flex: 1, overflowY: "auto", padding: "12px 0" }}>
+    <div style={{ flex: 1, overflowY: "auto", padding: "12px 0", fontFamily: KAKAO_MSG.fontSans }}>
       {selectedIds.size === 0 ? (
         <div
           style={{
@@ -39,7 +41,7 @@ export function GroupChatMessageList({
             alignItems: "center",
             justifyContent: "center",
             gap: 10,
-            color: "var(--th-text-muted)",
+            color: KAKAO_MSG.meta,
           }}
         >
           <svg
@@ -65,7 +67,7 @@ export function GroupChatMessageList({
             alignItems: "center",
             justifyContent: "center",
             fontSize: 12,
-            color: "var(--th-text-muted)",
+            color: KAKAO_MSG.meta,
           }}
         >
           {tr("대화 내역이 없습니다", "No messages yet")}
@@ -74,12 +76,10 @@ export function GroupChatMessageList({
         mergedMessages.map((msg: Message & { _forAgentId: string }) => {
           const isCeo = msg.sender_type === "client";
           const forAgent = agentById.get(msg._forAgentId);
-          const forName = forAgent ? getAgentName(forAgent) : msg._forAgentId.slice(0, 8);
-          const senderName = isCeo
-            ? "Me"
-            : msg.sender_agent
+          const senderName =
+            msg.sender_agent
               ? getAgentName(msg.sender_agent)
-              : forName;
+              : msg.sender_name?.trim() || (forAgent ? getAgentName(forAgent) : "");
           const timeStr = new Date(msg.created_at).toLocaleTimeString(locale, {
             hour: "2-digit",
             minute: "2-digit",
@@ -89,6 +89,29 @@ export function GroupChatMessageList({
           const isUrgent = parsed.mode === "urgent";
           const isTask = parsed.mode === "task";
 
+          const mineBg = isCeo
+            ? isUrgent
+              ? "#FFF9C4"
+              : isTask
+                ? KAKAO_MSG.bubbleMine
+                : KAKAO_MSG.bubbleMine
+            : KAKAO_MSG.bubbleOther;
+          const mineText = isCeo
+            ? isUrgent
+              ? "#B71C1C"
+              : KAKAO_MSG.bubbleMineText
+            : KAKAO_MSG.bubbleOtherText;
+
+          // In open chat mode: resolve sender agent from sender_id (not _forAgentId)
+          const senderAgent =
+            !isCeo && msg.sender_id ? agentById.get(msg.sender_id) : undefined;
+          const displayAgent = senderAgent ?? forAgent;
+          const displayName = isCeo
+            ? (isKo ? "나" : "Me")
+            : senderAgent
+              ? getAgentName(senderAgent)
+              : senderName;
+
           return (
             <div
               key={`${msg.id}:${msg._forAgentId}`}
@@ -97,38 +120,30 @@ export function GroupChatMessageList({
                 flexDirection: isCeo ? "row-reverse" : "row",
                 alignItems: "flex-end",
                 gap: 8,
-                padding: "4px 14px",
+                padding: "6px 14px",
               }}
             >
               {!isCeo && (
                 <div
                   style={{
-                    width: 28,
-                    height: 28,
-                    borderRadius: "50%",
-                    background: "var(--th-bg-elevated)",
-                    border: "1px solid var(--th-border)",
+                    width: 36,
+                    height: 36,
+                    borderRadius: 14,
+                    background: KAKAO_MSG.surface,
+                    border: `1px solid ${KAKAO_MSG.borderLight}`,
+                    boxShadow: KAKAO_MSG.bubbleShadow,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    fontSize: 15,
+                    fontSize: 18,
                     flexShrink: 0,
                     marginBottom: 2,
                   }}
                 >
-                  {forAgent?.avatar_emoji ?? (
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      style={{ width: 14, height: 14, opacity: 0.5 }}
-                    >
-                      <circle cx="12" cy="8" r="4" />
-                      <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
-                    </svg>
+                  {displayAgent?.avatar_emoji?.trim() ? (
+                    <span style={{ fontSize: 18, lineHeight: 1 }}>{displayAgent.avatar_emoji}</span>
+                  ) : (
+                    <IconRobot size={20} style={{ color: KAKAO_MSG.meta }} />
                   )}
                 </div>
               )}
@@ -143,10 +158,14 @@ export function GroupChatMessageList({
                 }}
               >
                 {!isCeo && (
-                  <span
-                    style={{ fontSize: 10, color: "var(--th-text-muted)", paddingLeft: 4 }}
-                  >
-                    {senderName} → {forName}
+                  <span style={{ fontSize: 10, color: KAKAO_MSG.meta, paddingLeft: 4, fontWeight: 600 }}>
+                    {displayName}
+                  </span>
+                )}
+
+                {isCeo && (
+                  <span style={{ fontSize: 10, fontWeight: 600, color: KAKAO_MSG.meta, paddingRight: 4 }}>
+                    {displayName}
                   </span>
                 )}
 
@@ -212,21 +231,29 @@ export function GroupChatMessageList({
 
                 <div
                   style={{
-                    padding: "8px 12px",
-                    borderRadius: isCeo ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
-                    background: isCeo
-                      ? isUrgent
-                        ? "var(--th-danger)"
-                        : "var(--th-accent)"
-                      : "var(--th-bg-elevated)",
-                    color: isCeo ? "#fff" : "var(--th-text-primary)",
-                    fontSize: 12,
-                    lineHeight: 1.5,
+                    padding: "10px 14px",
+                    borderRadius: isCeo ? 18 : 18,
+                    borderTopRightRadius: isCeo ? 4 : 18,
+                    borderTopLeftRadius: isCeo ? 18 : 4,
+                    borderBottomRightRadius: isCeo ? 18 : 4,
+                    borderBottomLeftRadius: isCeo ? 4 : 18,
+                    background: mineBg,
+                    color: mineText,
+                    fontSize: 13,
+                    lineHeight: 1.55,
                     whiteSpace: "pre-wrap",
                     wordBreak: "break-word",
-                    border: isCeo ? "none" : `1px solid ${isUrgent ? "var(--th-danger)" : "var(--th-border)"}`,
-                    borderLeft:
-                      !isCeo && isUrgent ? "3px solid var(--th-danger)" : undefined,
+                    boxShadow: KAKAO_MSG.bubbleShadow,
+                    border: isCeo
+                      ? isUrgent
+                        ? "2px solid #E53935"
+                        : isTask
+                          ? `1px solid rgba(30, 136, 229, 0.35)`
+                          : "1px solid rgba(0,0,0,0.06)"
+                      : isUrgent
+                        ? "1px solid #FFCDD2"
+                        : `1px solid ${KAKAO_MSG.borderHairline}`,
+                    borderLeft: !isCeo && isUrgent ? "3px solid #E53935" : undefined,
                   }}
                 >
                   {parsed.body || msg.content}
@@ -234,7 +261,7 @@ export function GroupChatMessageList({
                 <span
                   style={{
                     fontSize: 10,
-                    color: "var(--th-text-muted)",
+                    color: KAKAO_MSG.meta,
                     paddingLeft: isCeo ? 0 : 4,
                     paddingRight: isCeo ? 4 : 0,
                   }}

@@ -38,6 +38,8 @@ export function useTaskBoard({
   onDiscardTask,
   onKickoff,
   kickoffBusy,
+  onResume,
+  resumeBusy,
 }: TaskBoardProps) {
   const { t } = useI18n();
   const { confirm } = useConfirm();
@@ -332,6 +334,8 @@ export function useTaskBoard({
     onDiscardTask,
     onKickoff,
     kickoffBusy,
+    onResume,
+    resumeBusy,
     mono: MONO_STYLE,
     btnBase: BTN_BASE_STYLE,
   };

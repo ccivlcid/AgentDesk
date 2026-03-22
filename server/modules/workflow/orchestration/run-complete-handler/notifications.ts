@@ -25,6 +25,7 @@ export type RunCompleteNotifyDeps = {
   }) => void;
   notifyTaskStatus: (taskId: string, title: string, status: string, lang: string) => void;
   findTeamLeader: (departmentId: string | null) => { id: string } | undefined;
+  findProjectPm?: (projectId: string | null) => { id: string } | undefined;
   getAgentDisplayName: (agent: { id: string }, lang: string) => string;
   pickL: (pool: unknown, lang: string) => string;
   l: (ko: string[], en: string[], ja?: string[], zh?: string[]) => unknown;
@@ -49,6 +50,7 @@ export type TaskForNotify = {
   department_id: string | null;
   source_task_id: string | null;
   assigned_agent_id: string | null;
+  project_id?: string | null;
 };
 
 /**
@@ -88,6 +90,21 @@ export function runCompleteNotify(
   if (finalExitCode === 0) {
     const lang = resolveLang(task.description ?? task.title);
     notifyTaskStatus(taskId, task.title, "review", lang);
+    insertNotification({
+      type: "task_complete",
+      title: task.title,
+      body: pickL(
+        l(
+          ["작업이 완료되어 검토 대기 중입니다."],
+          ["Task completed, awaiting review."],
+          ["タスクが完了し、レビュー待ちです。"],
+          ["任务已完成，等待审核。"],
+        ),
+        lang,
+      ),
+      task_id: taskId,
+      agent_id: task.assigned_agent_id,
+    });
 
     if (task.source_task_id) {
       const sourceLang = resolveLang(task.description ?? task.title);
@@ -119,143 +136,151 @@ export function runCompleteNotify(
       return;
     }
 
-    const leader = findTeamLeader(task.department_id);
-    const leaderName = leader
-      ? getAgentDisplayName(leader, lang)
-      : pickL(l(["팀장"], ["Team Lead"], ["チームリーダー"], ["组长"]), lang);
+    // PM에게 즉시 완료 보고 — setTimeout 없이 이벤트 기반 처리.
+    // finishReview는 decision inbox의 approve_task_review에서만 호출됨.
+    const findProjectPm = deps.findProjectPm;
+    const leader2 = (findProjectPm ? findProjectPm(task.project_id ?? null) : undefined)
+      ?? findTeamLeader(task.department_id);
+    const leaderName = leader2
+      ? getAgentDisplayName(leader2, lang)
+      : pickL(l(["PM"], ["PM"], ["PM"], ["PM"]), lang);
+
+    let reportBody = "";
+    try {
+      const logFile = path.join(logsDir, `${taskId}.log`);
+      if (fs.existsSync(logFile)) {
+        const raw = fs.readFileSync(logFile, "utf8");
+        const pretty = prettyStreamJson(raw);
+        reportBody = pretty.length > 500 ? "..." + pretty.slice(-500) : pretty;
+      }
+    } catch {
+      /* ignore */
+    }
+    const wtInfo = taskWorktrees.get(taskId);
+    let diffSummary = "";
+    if (wtInfo) {
+      diffSummary = getWorktreeDiffSummary(wtInfo.projectPath!, taskId);
+      if (hasVisibleDiffSummary(diffSummary)) {
+        appendTaskLog(taskId, "system", `Worktree diff summary:\n${diffSummary}`);
+      }
+    }
+    let reportContent = reportBody
+      ? pickL(
+          l(
+            [`'${task.title}' 완료.\n\n📋 결과:\n${reportBody}`],
+            [`'${task.title}' completed.\n\n📋 Result:\n${reportBody}`],
+            [`'${task.title}' 完了。\n\n📋 結果:\n${reportBody}`],
+            [`'${task.title}' 完成。\n\n📋 结果:\n${reportBody}`],
+          ),
+          lang,
+        )
+      : pickL(
+          l(
+            [`'${task.title}' 완료.`],
+            [`'${task.title}' completed.`],
+            [`'${task.title}' 完了。`],
+            [`'${task.title}' 完成。`],
+          ),
+          lang,
+        );
+    const subtaskProgress = formatTaskSubtaskProgressSummary(taskId, lang);
+    if (subtaskProgress) {
+      reportContent += `\n\n${subtaskProgress}`;
+    }
+    if (hasVisibleDiffSummary(diffSummary) && wtInfo) {
+      reportContent += pickL(
+        l(
+          [`\n\n📝 변경사항 (branch: ${wtInfo?.branchName}):\n${diffSummary}`],
+          [`\n\n📝 Changes (branch: ${wtInfo?.branchName}):\n${diffSummary}`],
+          [`\n\n📝 変更点 (branch: ${wtInfo?.branchName}):\n${diffSummary}`],
+          [`\n\n📝 变更内容 (branch: ${wtInfo?.branchName}):\n${diffSummary}`],
+        ),
+        lang,
+      );
+    }
+    if (leader2) {
+      sendAgentMessage(leader2 as { id: string }, reportContent, "report", "all", null, taskId);
+    }
     notifyClient(
       pickL(
         l(
-          [`${leaderName}이(가) '${task.title}' 결과를 검토 중입니다.`],
-          [`${leaderName} is reviewing the result for '${task.title}'.`],
-          [`${leaderName}가 '${task.title}' の成果をレビュー中です。`],
-          [`${leaderName} 正在审核 '${task.title}' 的结果。`],
+          [`'${task.title}' 완료 — ${leaderName} 검토 대기 중`],
+          [`'${task.title}' done — awaiting ${leaderName} review`],
+          [`'${task.title}' 完了 — ${leaderName}のレビュー待ち`],
+          [`'${task.title}' 完成 — 等待${leaderName}审核`],
         ),
         lang,
       ),
       taskId,
     );
+    appendTaskLog(taskId, "system", "Review 대기: decision inbox 승인 대기");
+  } else {
+    // 실패 — 즉시 보고 (setTimeout 제거)
+    const failLang = resolveLang(task.description ?? task.title);
+    let errorBody = "";
+    try {
+      const logFile = path.join(logsDir, `${taskId}.log`);
+      if (fs.existsSync(logFile)) {
+        const raw = fs.readFileSync(logFile, "utf8");
+        const pretty = prettyStreamJson(raw);
+        errorBody = pretty.length > 300 ? "..." + pretty.slice(-300) : pretty;
+      }
+    } catch {
+      /* ignore */
+    }
 
-    setTimeout(() => {
-      const leader2 = findTeamLeader(task.department_id);
-      if (!leader2) {
-        finishReview(taskId, task.title);
-        return;
-      }
-      let reportBody = "";
-      try {
-        const logFile = path.join(logsDir, `${taskId}.log`);
-        if (fs.existsSync(logFile)) {
-          const raw = fs.readFileSync(logFile, "utf8");
-          const pretty = prettyStreamJson(raw);
-          reportBody = pretty.length > 500 ? "..." + pretty.slice(-500) : pretty;
-        }
-      } catch {
-        /* ignore */
-      }
-      const wtInfo = taskWorktrees.get(taskId);
-      let diffSummary = "";
-      if (wtInfo) {
-        diffSummary = getWorktreeDiffSummary(wtInfo.projectPath!, taskId);
-        if (hasVisibleDiffSummary(diffSummary)) {
-          appendTaskLog(taskId, "system", `Worktree diff summary:\n${diffSummary}`);
-        }
-      }
-      const reportLang = resolveLang(task.description ?? task.title);
-      let reportContent = reportBody
+    const leader = findTeamLeader(task.department_id);
+    if (leader) {
+      const failContent = errorBody
         ? pickL(
             l(
-              [`클라이언트님, '${task.title}' 업무 완료 보고드립니다.\n\n📋 결과:\n${reportBody}`],
-              [`Client, reporting completion for '${task.title}'.\n\n📋 Result:\n${reportBody}`],
-              [`クライアント、'${task.title}' の完了をご報告します。\n\n📋 結果:\n${reportBody}`],
-              [`客户端，汇报 '${task.title}' 已完成。\n\n📋 结果:\n${reportBody}`],
+              [`'${task.title}' 실패 (종료코드: ${finalExitCode}).\n\n${errorBody}`],
+              [`'${task.title}' failed (exit code: ${finalExitCode}).\n\n${errorBody}`],
+              [`'${task.title}' 失敗 (終了コード: ${finalExitCode})。\n\n${errorBody}`],
+              [`'${task.title}' 失败（退出码: ${finalExitCode}）。\n\n${errorBody}`],
             ),
-            reportLang,
+            failLang,
           )
         : pickL(
             l(
-              [`클라이언트님, '${task.title}' 업무 완료 보고드립니다. 작업이 성공적으로 마무리되었습니다.`],
-              [`Client, reporting completion for '${task.title}'. The work has been finished successfully.`],
-              [`クライアント、'${task.title}' の完了をご報告します。作業は正常に完了しました。`],
-              [`客户端，汇报 '${task.title}' 已完成。任务已成功结束。`],
+              [`'${task.title}' 실패 (종료코드: ${finalExitCode}).`],
+              [`'${task.title}' failed (exit code: ${finalExitCode}).`],
+              [`'${task.title}' 失敗 (終了コード: ${finalExitCode})。`],
+              [`'${task.title}' 失败（退出码: ${finalExitCode}）。`],
             ),
-            reportLang,
+            failLang,
           );
-      const subtaskProgressLabel = pickL(
-        l(
-          ["📌 보완/협업 진행 요약"],
-          ["📌 Remediation/Collaboration Progress"],
-          ["📌 補完/協業 進捗サマリー"],
-          ["📌 整改/协作进度摘要"],
-        ),
-        reportLang,
-      );
-      const subtaskProgress = formatTaskSubtaskProgressSummary(taskId, reportLang);
-      if (subtaskProgress) {
-        reportContent += `\n\n${subtaskProgressLabel}\n${subtaskProgress}`;
-      }
-      if (hasVisibleDiffSummary(diffSummary) && wtInfo) {
-        reportContent += pickL(
-          l(
-            [`\n\n📝 변경사항 (branch: ${wtInfo?.branchName}):\n${diffSummary}`],
-            [`\n\n📝 Changes (branch: ${wtInfo?.branchName}):\n${diffSummary}`],
-            [`\n\n📝 変更点 (branch: ${wtInfo?.branchName}):\n${diffSummary}`],
-            [`\n\n📝 变更内容 (branch: ${wtInfo?.branchName}):\n${diffSummary}`],
+      sendAgentMessage(leader as { id: string }, failContent, "report", "all", null, taskId);
+
+      // CEO 에스컬레이션
+      const ceo = findTeamLeader("planning");
+      if (ceo && ceo.id !== leader.id) {
+        sendAgentMessage(
+          ceo as { id: string },
+          pickL(
+            l(
+              [`[에스컬레이션] '${task.title}' 실패 (종료코드: ${finalExitCode}).`],
+              [`[Escalation] '${task.title}' failed (exit code: ${finalExitCode}).`],
+              [`[エスカレーション] '${task.title}' 失敗 (終了コード: ${finalExitCode})。`],
+              [`[升级] '${task.title}' 失败（退出码: ${finalExitCode}）。`],
+            ),
+            failLang,
           ),
-          reportLang,
+          "report",
+          "all",
+          null,
+          taskId,
         );
       }
-      sendAgentMessage(leader2 as { id: string }, reportContent, "report", "all", null, taskId);
-      setTimeout(() => {
-        finishReview(taskId, task.title);
-      }, 2500);
-    }, 2500);
-  } else {
-    const leader = findTeamLeader(task.department_id);
-    if (leader) {
-      setTimeout(() => {
-        let errorBody = "";
-        try {
-          const logFile = path.join(logsDir, `${taskId}.log`);
-          if (fs.existsSync(logFile)) {
-            const raw = fs.readFileSync(logFile, "utf8");
-            const pretty = prettyStreamJson(raw);
-            errorBody = pretty.length > 300 ? "..." + pretty.slice(-300) : pretty;
-          }
-        } catch {
-          /* ignore */
-        }
-        const failLang = resolveLang(task.description ?? task.title);
-        const failContent = errorBody
-          ? pickL(
-              l(
-                [`클라이언트님, '${task.title}' 작업에 문제가 발생했습니다 (종료코드: ${finalExitCode}).\n\n❌ 오류 내용:\n${errorBody}\n\n재배정하거나 업무 내용을 수정한 후 다시 시도해주세요.`],
-                [`Client, '${task.title}' failed with an issue (exit code: ${finalExitCode}).\n\n❌ Error:\n${errorBody}\n\nPlease reassign the agent or revise the task, then try again.`],
-                [`クライアント、'${task.title}' の処理中に問題が発生しました (終了コード: ${finalExitCode})。\n\n❌ エラー内容:\n${errorBody}\n\n担当再割り当てまたはタスク内容を修正して再試行してください。`],
-                [`客户端，'${task.title}' 执行时发生问题（退出码：${finalExitCode}）。\n\n❌ 错误内容:\n${errorBody}\n\n请重新分配代理或修改任务后重试。`],
-              ),
-              failLang,
-            )
-          : pickL(
-              l(
-                [`클라이언트님, '${task.title}' 작업에 문제가 발생했습니다 (종료코드: ${finalExitCode}). 에이전트를 재배정하거나 업무 내용을 수정한 후 다시 시도해주세요.`],
-                [`Client, '${task.title}' failed with an issue (exit code: ${finalExitCode}). Please reassign the agent or revise the task, then try again.`],
-                [`クライアント、'${task.title}' の処理中に問題が発生しました (終了コード: ${finalExitCode})。担当再割り当てまたはタスク内容を修正して再試行してください。`],
-                [`客户端，'${task.title}' 执行时发生问题（退出码：${finalExitCode}）。请重新分配代理或修改任务后重试。`],
-              ),
-              failLang,
-            );
-        sendAgentMessage(leader as { id: string }, failContent, "report", "all", null, taskId);
-      }, 1500);
     }
-    const failLang = resolveLang(task.description ?? task.title);
+
     notifyClient(
       pickL(
         l(
-          [`'${task.title}' 작업 실패 (exit code: ${finalExitCode}).`],
-          [`Task '${task.title}' failed (exit code: ${finalExitCode}).`],
-          [`'${task.title}' のタスクが失敗しました (exit code: ${finalExitCode})。`],
-          [`任务 '${task.title}' 失败（exit code: ${finalExitCode}）。`],
+          [`'${task.title}' 실패 (exit code: ${finalExitCode}).`],
+          [`'${task.title}' failed (exit code: ${finalExitCode}).`],
+          [`'${task.title}' 失敗 (exit code: ${finalExitCode})。`],
+          [`'${task.title}' 失败（exit code: ${finalExitCode}）。`],
         ),
         failLang,
       ),
@@ -272,12 +297,12 @@ export function runCompleteNotify(
     const nextCallback = crossDeptNextCallbacks.get(taskId);
     if (nextCallback) {
       crossDeptNextCallbacks.delete(taskId);
-      setTimeout(nextCallback, 3000);
+      nextCallback();
     }
     const subtaskNext = subtaskDelegationCallbacks.get(taskId);
     if (subtaskNext) {
       subtaskDelegationCallbacks.delete(taskId);
-      setTimeout(subtaskNext, 3000);
+      subtaskNext();
     }
   }
 }

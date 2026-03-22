@@ -16,19 +16,6 @@ export function getAgentDisplayName(
     : msg.sender_id || "Unknown";
 }
 
-export function getFileIcon(name: string): string {
-  const ext = name.split(".").pop()?.toLowerCase() ?? "";
-  if (["png", "jpg", "gif", "webp", "svg"].includes(ext)) return "🖼️";
-  if (ext === "pdf") return "📄";
-  if (["docx", "doc"].includes(ext)) return "📃";
-  if (["xlsx", "xls", "csv"].includes(ext)) return "📊";
-  if (["pptx", "ppt"].includes(ext)) return "📊";
-  if (ext === "mp4") return "🎬";
-  if (ext === "zip") return "📦";
-  if (["md", "txt"].includes(ext)) return "📝";
-  return "📎";
-}
-
 export function formatSize(bytes: number): string {
   if (bytes < 1024) return bytes + " B";
   if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";

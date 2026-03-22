@@ -72,4 +72,6 @@ export interface StartRunOptions {
   model?: string;
   maxTurns?: number;
   apiProviderId?: string;
+  /** When true, automatically start next 'todo' task in the same project after completion */
+  chainExecution?: boolean;
 }

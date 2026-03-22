@@ -144,10 +144,10 @@ export function createProjectReviewPlanningHelpers(deps: ProjectReviewPlanningDe
     return pickL(
       l(
         [
-          `프로젝트 '${projectName}' 검토 항목을 기획팀장 기준으로 취합했습니다.\n- 주요 검토 포인트를 기준으로 대표 항목을 선택한 뒤 팀장 회의를 시작하세요.\n- 필요 시 추가요청 입력으로 보완 작업을 먼저 열 수 있습니다.\n\n검토 대상:\n${taskBlock}\n\n최근 리뷰 라운드 의사결정:\n${roundDecisionBlock}`,
+          `프로젝트 '${projectName}' 검토 항목을 PM 기준으로 취합했습니다.\n- 주요 검토 포인트를 기준으로 대표 항목을 선택한 뒤 PM 미팅을 시작하세요.\n- 필요 시 추가요청 입력으로 보완 작업을 먼저 열 수 있습니다.\n\n검토 대상:\n${taskBlock}\n\n최근 리뷰 라운드 의사결정:\n${roundDecisionBlock}`,
         ],
         [
-          `Planning-lead consolidation is complete for project '${projectName}'.\n- Choose representative review item(s) from key checkpoints, then start the team-lead meeting.\n- If needed, open remediation first with Add Follow-up Request.\n\nReview targets:\n${taskBlock}\n\nRecent review-round decisions:\n${roundDecisionBlock}`,
+          `PM consolidation is complete for project '${projectName}'.\n- Choose representative review item(s) from key checkpoints, then start the PM meeting.\n- If needed, open remediation first with Add Follow-up Request.\n\nReview targets:\n${taskBlock}\n\nRecent review-round decisions:\n${roundDecisionBlock}`,
         ],
         [
           `プロジェクト'${projectName}'のレビュー項目を企画リード基準で集約しました。\n- 主要チェックポイントを基準に代表項目を選択してからチームリーダー会議を開始してください。\n- 必要に応じて追加要請入力で先に補完作業を開けます。\n\nレビュー対象:\n${taskBlock}\n\n最近のレビューラウンド判断:\n${roundDecisionBlock}`,
@@ -203,7 +203,7 @@ export function createProjectReviewPlanningHelpers(deps: ProjectReviewPlanningDe
           | undefined)
       : undefined;
     const picked = stateAgent ?? fallbackLead;
-    const defaultName = pickL(l(["기획팀장"], ["Planning Lead"], ["企画リード"], ["规划负责人"]), lang);
+    const defaultName = pickL(l(["PM"], ["PM"], ["PM"], ["PM"]), lang);
     const normalizePlanningLeadAvatar = (rawAvatar: string | null | undefined): string => {
       const avatar = String(rawAvatar ?? "").trim();
       if (!avatar || avatar === "🧠") return "🧑‍💼";
@@ -212,7 +212,7 @@ export function createProjectReviewPlanningHelpers(deps: ProjectReviewPlanningDe
     return {
       agent_id: picked?.id ?? null,
       agent_name: (picked?.name || decisionState?.planner_agent_name || defaultName).trim(),
-      agent_name_ko: (picked?.name_ko || decisionState?.planner_agent_name || "기획팀장").trim(),
+      agent_name_ko: (picked?.name_ko || decisionState?.planner_agent_name || "PM").trim(),
       agent_avatar: normalizePlanningLeadAvatar(picked?.avatar_emoji),
     };
   }
@@ -366,8 +366,8 @@ export function createProjectReviewPlanningHelpers(deps: ProjectReviewPlanningDe
       } catch {
         const failMsg = pickL(
           l(
-            ["기획팀장 의견 취합이 일시 지연되었습니다. 자동 재시도 중입니다."],
-            ["Planning-lead consolidation is temporarily delayed. Auto retry in progress."],
+            ["PM 의견 취합이 일시 지연되었습니다. 자동 재시도 중입니다."],
+            ["PM consolidation is temporarily delayed. Auto retry in progress."],
             ["企画リード意見の集約が一時遅延しました。自動再試行中です。"],
             ["规划负责人意见汇总暂时延迟，正在自动重试。"],
           ),

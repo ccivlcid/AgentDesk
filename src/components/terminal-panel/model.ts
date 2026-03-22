@@ -6,7 +6,7 @@ export interface TerminalPanelProps {
   task: Task | undefined;
   agent: Agent | undefined;
   agents: Agent[];
-  initialTab?: "terminal" | "minutes";
+  initialTab?: "terminal";
   onClose: () => void;
 }
 

@@ -1,6 +1,8 @@
 import type { DragEvent, KeyboardEvent, RefObject } from "react";
+import { FileTypeIcon, IconX } from "../../ui/SvgIcons";
+import { KAKAO_MSG } from "../messenger-kakao-theme";
 import { ACCEPTED_TYPES, MAX_FILES } from "./constants";
-import { formatSize, getFileIcon } from "./helpers";
+import { formatSize } from "./helpers";
 import type { Tr } from "./types";
 
 export interface AnnouncementCliPanelComposerProps {
@@ -46,8 +48,9 @@ export function AnnouncementCliPanelComposer({
             flexWrap: "wrap",
             gap: 6,
             padding: "8px 16px",
-            borderTop: "1px solid var(--th-border)",
-            background: "var(--th-bg-surface)",
+            borderTop: `1px solid ${KAKAO_MSG.borderLight}`,
+            background: KAKAO_MSG.surfaceMuted,
+            fontFamily: KAKAO_MSG.fontSans,
           }}
         >
           {attachments.map((f, i) => (
@@ -59,22 +62,22 @@ export function AnnouncementCliPanelComposer({
                 gap: 5,
                 padding: "3px 8px",
                 fontSize: 10,
-                fontFamily: "var(--th-font-mono)",
-                border: "1px solid var(--th-border)",
-                background: "var(--th-bg-elevated)",
-                color: "var(--th-text-secondary)",
+                fontFamily: KAKAO_MSG.fontSans,
+                border: `1px solid ${KAKAO_MSG.borderLight}`,
+                background: KAKAO_MSG.surface,
+                color: KAKAO_MSG.bubbleMineText,
                 borderRadius: 6,
               }}
             >
-              <span>{getFileIcon(f.name)}</span>
+              <FileTypeIcon fileName={f.name} size={12} style={{ color: KAKAO_MSG.meta, flexShrink: 0 }} />
               <span style={{ maxWidth: 100, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{f.name}</span>
-              <span style={{ color: "var(--th-text-muted)" }}>({formatSize(f.size)})</span>
+              <span style={{ color: KAKAO_MSG.meta }}>({formatSize(f.size)})</span>
               <button
                 type="button"
                 onClick={() => onAttachmentsChange(attachments.filter((_, j) => j !== i))}
-                style={{ background: "none", border: "none", cursor: "pointer", color: "var(--th-text-muted)", padding: 0, marginLeft: 2 }}
+                style={{ background: "none", border: "none", cursor: "pointer", color: KAKAO_MSG.meta, padding: 0, marginLeft: 2, display: "flex" }}
               >
-                ✕
+                <IconX size={12} />
               </button>
             </div>
           ))}
@@ -85,8 +88,9 @@ export function AnnouncementCliPanelComposer({
         style={{
           flexShrink: 0,
           padding: "12px 16px 16px",
-          borderTop: "1px solid var(--th-border)",
-          background: "var(--th-bg-surface)",
+          borderTop: `1px solid ${KAKAO_MSG.borderLight}`,
+          background: KAKAO_MSG.surface,
+          fontFamily: KAKAO_MSG.fontSans,
         }}
       >
         <input
@@ -108,9 +112,9 @@ export function AnnouncementCliPanelComposer({
             display: "flex",
             alignItems: "flex-end",
             gap: 8,
-            border: "1px solid var(--th-border)",
-            borderRadius: 10,
-            background: "var(--th-bg-elevated)",
+            border: `1px solid ${KAKAO_MSG.borderLight}`,
+            borderRadius: KAKAO_MSG.radiusInput,
+            background: KAKAO_MSG.surfaceMuted,
             padding: "8px 10px 8px 14px",
             transition: "border-color 0.15s",
           }}
@@ -141,11 +145,11 @@ export function AnnouncementCliPanelComposer({
               minHeight: 36,
               maxHeight: 120,
               overflowY: "auto",
-              fontSize: 12,
+              fontSize: 13,
               lineHeight: 1.6,
-              color: "var(--th-text-primary)",
-              caretColor: "var(--th-accent)",
-              fontFamily: "var(--th-font-mono)",
+              color: KAKAO_MSG.bubbleMineText,
+              caretColor: "#191919",
+              fontFamily: KAKAO_MSG.fontSans,
               paddingTop: 4,
               scrollbarWidth: "none",
             }}
@@ -167,20 +171,20 @@ export function AnnouncementCliPanelComposer({
               justifyContent: "center",
               width: 30,
               height: 30,
-              border: "1px solid var(--th-border)",
-              borderRadius: 6,
-              background: "transparent",
-              color: "var(--th-text-muted)",
+              border: `1px solid ${KAKAO_MSG.borderLight}`,
+              borderRadius: "50%",
+              background: KAKAO_MSG.surface,
+              color: KAKAO_MSG.meta,
               cursor: "pointer",
               flexShrink: 0,
               opacity: attachments.length >= MAX_FILES ? 0.3 : 1,
               transition: "all 0.15s",
             }}
             onMouseEnter={(e) => {
-              if (attachments.length < MAX_FILES) (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--th-accent)";
+              if (attachments.length < MAX_FILES) (e.currentTarget as HTMLButtonElement).style.borderColor = "#E6D000";
             }}
             onMouseLeave={(e) => {
-              (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--th-border)";
+              (e.currentTarget as HTMLButtonElement).style.borderColor = KAKAO_MSG.borderLight;
             }}
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 12, height: 12 }}>
@@ -199,10 +203,12 @@ export function AnnouncementCliPanelComposer({
               justifyContent: "center",
               width: 32,
               height: 32,
-              borderRadius: 8,
+              borderRadius: "50%",
               border: "none",
-              background: input.trim() || attachments.length > 0 ? "var(--th-accent)" : "var(--th-bg-surface)",
-              color: input.trim() || attachments.length > 0 ? "var(--th-accent-text)" : "var(--th-text-muted)",
+              background:
+                input.trim() || attachments.length > 0 ? KAKAO_MSG.sendActive : KAKAO_MSG.sendDisabled,
+              color:
+                input.trim() || attachments.length > 0 ? KAKAO_MSG.sendActiveIcon : KAKAO_MSG.meta,
               cursor: input.trim() || attachments.length > 0 ? "pointer" : "not-allowed",
               flexShrink: 0,
               transition: "all 0.15s",
@@ -215,7 +221,7 @@ export function AnnouncementCliPanelComposer({
           </button>
         </div>
 
-        <p style={{ marginTop: 8, fontSize: 10, color: "var(--th-text-muted)", fontFamily: "var(--th-font-mono)" }}>
+        <p style={{ marginTop: 8, fontSize: 10, color: KAKAO_MSG.meta, fontFamily: KAKAO_MSG.fontSans }}>
           {tr(
             "Enter 전송 · Shift+Enter 줄바꿈 · 파일 드래그 가능",
             "Enter to send · Shift+Enter newline · drag to attach",

@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { spawn } from "node:child_process";
+import logger from "../../../../lib/logger.ts";
 import type { ProjectRoutesDeps } from "./types.ts";
 
 export function registerFileRoutes(deps: ProjectRoutesDeps): void {
@@ -138,7 +139,7 @@ export function registerFileRoutes(deps: ProjectRoutesDeps): void {
       }
       return res.json({ ok: true });
     } catch (err) {
-      console.warn("[open-terminal] failed to spawn terminal", err);
+      logger.warn({ err }, "[open-terminal] failed to spawn terminal");
       return res.status(500).json({ error: "spawn_failed" });
     }
   });

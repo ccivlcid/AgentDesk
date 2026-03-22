@@ -1,4 +1,4 @@
-import type { ChatMode, Priority } from "./types";
+import type { ParsedMessageMode, Priority } from "./types";
 
 export function formatFileSize(bytes: number): string {
   if (bytes < 1024) return bytes + " B";
@@ -6,21 +6,9 @@ export function formatFileSize(bytes: number): string {
   return (bytes / (1024 * 1024)).toFixed(1) + " MB";
 }
 
-export function getFileIcon(name: string): string {
-  const ext = name.split(".").pop()?.toLowerCase() ?? "";
-  if (["png", "jpg", "gif", "webp"].includes(ext)) return "🖼️";
-  if (ext === "pdf") return "📄";
-  if (["docx", "doc"].includes(ext)) return "📃";
-  if (["xlsx", "xls", "csv"].includes(ext)) return "📊";
-  if (ext === "zip") return "📦";
-  if (ext === "json") return "🔧";
-  if (["md", "txt"].includes(ext)) return "📝";
-  return "📎";
-}
-
-/** 포맷: [TASK:<deadline>:<priority>]\n 또는 [URGENT]\n */
+/** 포맷: [TASK:<deadline>:<priority>]\n 또는 [URGENT]\n (레거시) */
 export function parseModePrefix(content: string): {
-  mode: ChatMode;
+  mode: ParsedMessageMode;
   deadline?: string;
   priority?: Priority;
   body: string;

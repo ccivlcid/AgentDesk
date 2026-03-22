@@ -11,6 +11,7 @@ const mono = "var(--th-font-mono)";
 interface ControlCenterProps {
   connected: boolean;
   runningAgentCount?: number;
+  projectAgentCount?: number;
   yoloMode?: boolean;
   onToggleYoloMode?: () => void;
 }
@@ -141,6 +142,7 @@ function Tile({
 export default function ControlCenter({
   connected,
   runningAgentCount = 0,
+  projectAgentCount = 0,
   yoloMode,
   onToggleYoloMode,
 }: ControlCenterProps) {
@@ -304,15 +306,27 @@ export default function ControlCenter({
               <span style={{
                 fontSize: 11,
                 fontWeight: 600,
-                color: runningAgentCount > 0 ? "#22c55e" : "rgba(255,255,255,0.3)",
                 display: "flex",
                 alignItems: "center",
                 gap: 4,
               }}>
-                {runningAgentCount > 0 && <span style={{ fontSize: 7 }}>●</span>}
-                {runningAgentCount > 0
-                  ? `${runningAgentCount} ${t({ ko: "실행 중", en: "running", ja: "実行中", zh: "运行中" })}`
-                  : t({ ko: "없음", en: "Idle", ja: "待機中", zh: "空闲" })}
+                {projectAgentCount > 0 && (
+                  <span style={{ color: "rgba(255,255,255,0.55)" }}>
+                    {projectAgentCount}{t({ ko: "명 배정", en: " assigned", ja: "名配置", zh: "已分配" })}
+                  </span>
+                )}
+                {projectAgentCount > 0 && <span style={{ color: "rgba(255,255,255,0.2)" }}>·</span>}
+                <span style={{
+                  color: runningAgentCount > 0 ? "#22c55e" : "rgba(255,255,255,0.3)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 4,
+                }}>
+                  {runningAgentCount > 0 && <span style={{ fontSize: 7 }}>●</span>}
+                  {runningAgentCount > 0
+                    ? `${runningAgentCount} ${t({ ko: "실행 중", en: "running", ja: "実行中", zh: "运行中" })}`
+                    : t({ ko: "대기 중", en: "Idle", ja: "待機中", zh: "空闲" })}
+                </span>
               </span>
             </div>
           </div>

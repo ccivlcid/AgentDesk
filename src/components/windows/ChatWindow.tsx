@@ -48,10 +48,11 @@ export default function ChatWindow({
   const { currentProjectId, projectAgentIds, projectAgentsLoaded } = useProjectStore();
   const { t } = useI18n();
 
-  // 현재 프로젝트에 배정된 에이전트만 필터링 (프로젝트 미선택 또는 로딩 전이면 전체)
-  const projectAgents = currentProjectId && projectAgentsLoaded && projectAgentIds.size > 0
-    ? agents.filter((a) => projectAgentIds.has(a.id))
-    : agents;
+  /** 전사 공지·단톡: 선택 프로젝트에 배정된 에이전트만 (미선택·로딩 중은 빈 목록) */
+  const projectAgents =
+    currentProjectId && projectAgentsLoaded
+      ? agents.filter((a) => projectAgentIds.has(a.id))
+      : [];
 
   return (
     <AppWindow
@@ -78,7 +79,8 @@ export default function ChatWindow({
               <ChatPanel
                 selectedAgent={chatAgent}
                 messages={messages}
-                agents={projectAgents}
+                agents={agents}
+                broadcastAgents={projectAgents}
                 streamingMessage={streamingMessage}
                 onSendMessage={onSendMessage}
                 onSendAnnouncement={onSendAnnouncement}

@@ -14,8 +14,6 @@ interface AgentsTabProps {
   projectAgentIds?: Set<string>;
   deptTab: string;
   setDeptTab: (deptId: string) => void;
-  search: string;
-  setSearch: (next: string) => void;
   sortedAgents: Agent[];
   confirmDeleteId: string | null;
   setConfirmDeleteId: (id: string | null) => void;
@@ -51,8 +49,6 @@ export default function AgentsTab({
   projectAgentIds,
   deptTab,
   setDeptTab,
-  search,
-  setSearch,
   sortedAgents,
   confirmDeleteId,
   setConfirmDeleteId,
@@ -136,25 +132,6 @@ export default function AgentsTab({
             </button>
           );
         })}
-        <div className="ml-auto pb-1">
-          <input
-            type="text"
-            placeholder={`${tr("검색", "Search")}...`}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            style={{
-              background: "var(--th-bg-surface)",
-              border: "1px solid var(--th-border)",
-              borderRadius: 6,
-              color: "var(--th-text-primary)",
-              fontFamily: "var(--th-font-mono)",
-              fontSize: "0.75rem",
-              padding: "0.25rem 0.625rem",
-              outline: "none",
-              width: "9rem",
-            }}
-          />
-        </div>
       </div>
 
       {/* Agent list — dept-grouped */}

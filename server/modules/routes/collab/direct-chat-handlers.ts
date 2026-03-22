@@ -1,5 +1,6 @@
 import logger from "../../../lib/logger.ts";
 import type { DelegationOptions } from "./project-resolution.ts";
+import { advanceRoomQueue } from "./room-lane-queue.ts";
 import {
   detectProjectKindChoice,
   isCancelReply,
@@ -41,9 +42,21 @@ export function createDirectChatHandlers(deps: DirectChatDeps) {
   } = deps;
 
   const pendingProjectBindingByAgent = new Map<string, PendingProjectBinding>();
-  const replyRuntime = createDirectReplyRuntime(deps);
-  const taskFlow = createDirectTaskFlow({
+
+  // Wire up room lane queue: after each agent replies, fire the next one.
+  // Uses a forward reference so the callback can call scheduleAgentReply (defined below).
+  const enhancedDeps: DirectChatDeps = {
     ...deps,
+    onRoomReplyComplete: (roomId: string) => {
+      advanceRoomQueue(roomId, (agentId, message, messageType, opts) => {
+        scheduleAgentReply(agentId, message, messageType, opts);
+      });
+    },
+  };
+
+  const replyRuntime = createDirectReplyRuntime(enhancedDeps);
+  const taskFlow = createDirectTaskFlow({
+    ...enhancedDeps,
     sendInCharacterAutoMessage: replyRuntime.sendInCharacterAutoMessage,
   });
 
@@ -445,42 +458,79 @@ export function createDirectChatHandlers(deps: DirectChatDeps) {
       useTaskFlow = shouldTreatDirectChatAsTask(ceoMessage, messageType);
     }
     if (!useTaskFlow) {
-      const recentRows = db
-        .prepare(
-          `
-          SELECT content, message_type, created_at
-          FROM messages
-          WHERE sender_type = 'client'
-            AND receiver_type = 'agent'
-            AND receiver_id = ?
-            AND created_at >= ?
-          ORDER BY created_at DESC
-          LIMIT 12
-        `,
-        )
-        .all(agent.id, now - 30 * 60 * 1000) as Array<{
-        content: string;
-        message_type: string | null;
-        created_at: number;
-      }>;
-      const recentAgentRows = db
-        .prepare(
-          `
-          SELECT content, created_at
-          FROM messages
-          WHERE sender_type = 'agent'
-            AND sender_id = ?
-            AND receiver_type = 'agent'
-            AND (receiver_id IS NULL OR receiver_id = '')
-            AND created_at >= ?
-          ORDER BY created_at DESC
-          LIMIT 12
-        `,
-        )
-        .all(agent.id, now - 30 * 60 * 1000) as Array<{
-        content: string;
-        created_at: number;
-      }>;
+      // In room mode, fetch from room context; otherwise per-agent 1:1 history
+      const recentRows = options.roomId
+        ? (db
+            .prepare(
+              `
+              SELECT content, message_type, created_at
+              FROM messages
+              WHERE sender_type = 'client'
+                AND room_id = ?
+                AND created_at >= ?
+              ORDER BY created_at DESC
+              LIMIT 12
+            `,
+            )
+            .all(options.roomId, now - 30 * 60 * 1000) as Array<{
+              content: string;
+              message_type: string | null;
+              created_at: number;
+            }>)
+        : (db
+            .prepare(
+              `
+              SELECT content, message_type, created_at
+              FROM messages
+              WHERE sender_type = 'client'
+                AND receiver_type = 'agent'
+                AND receiver_id = ?
+                AND created_at >= ?
+              ORDER BY created_at DESC
+              LIMIT 12
+            `,
+            )
+            .all(agent.id, now - 30 * 60 * 1000) as Array<{
+              content: string;
+              message_type: string | null;
+              created_at: number;
+            }>);
+      const recentAgentRows = options.roomId
+        ? (db
+            .prepare(
+              `
+              SELECT content, created_at
+              FROM messages
+              WHERE sender_type = 'agent'
+                AND sender_id = ?
+                AND room_id = ?
+                AND created_at >= ?
+              ORDER BY created_at DESC
+              LIMIT 12
+            `,
+            )
+            .all(agent.id, options.roomId, now - 30 * 60 * 1000) as Array<{
+              content: string;
+              created_at: number;
+            }>)
+        : (db
+            .prepare(
+              `
+              SELECT content, created_at
+              FROM messages
+              WHERE sender_type = 'agent'
+                AND sender_id = ?
+                AND receiver_type = 'agent'
+                AND (receiver_id IS NULL OR receiver_id = '')
+                AND created_at >= ?
+              ORDER BY created_at DESC
+              LIMIT 12
+            `,
+            )
+            .all(agent.id, now - 30 * 60 * 1000) as Array<{
+              content: string;
+              created_at: number;
+            }>);
 
       const contextualTaskMessage = resolveContextualTaskMessage(
         ceoMessage,
@@ -514,6 +564,46 @@ export function createDirectChatHandlers(deps: DirectChatDeps) {
           options,
         )
       ) {
+        // 그룹 채팅 방(room)에서는 프로젝트 바인딩 질문 생략 → 자동 해결
+        if (options.roomId) {
+          const autoBinding = resolveProjectBindingFromText(
+            { db, detectProjectPath, normalizeTextField },
+            taskMessage,
+          );
+          if (autoBinding) {
+            taskFlow.runTaskFlowWithResolvedProject(
+              agent,
+              taskMessage,
+              { ...options, ...autoBinding },
+              resolveLang(ceoMessage),
+            );
+          } else {
+            // 가장 최근 프로젝트 자동 선택, 없으면 CWD로 실행
+            const latestProject = db
+              .prepare(
+                `SELECT id, project_path, core_goal FROM projects
+                 WHERE status != 'archived'
+                 ORDER BY updated_at DESC LIMIT 1`,
+              )
+              .get() as { id: string; project_path: string | null; core_goal: string | null } | undefined;
+            const autoOptions: DelegationOptions = latestProject
+              ? {
+                  ...options,
+                  projectId: latestProject.id,
+                  projectPath: latestProject.project_path,
+                  projectContext: latestProject.core_goal,
+                }
+              : options;
+            taskFlow.runTaskFlowWithResolvedProject(
+              agent,
+              taskMessage,
+              autoOptions,
+              resolveLang(ceoMessage),
+            );
+          }
+          return;
+        }
+
         pendingProjectBindingByAgent.set(agent.id, {
           taskMessage,
           options: {

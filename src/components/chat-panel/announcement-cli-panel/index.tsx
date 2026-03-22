@@ -1,4 +1,5 @@
 import { useEffect, useRef, type DragEvent } from "react";
+import { KAKAO_MSG } from "../messenger-kakao-theme";
 import { MAX_FILE_SIZE, MAX_FILES } from "./constants";
 import { AnnouncementCliPanelComposer } from "./AnnouncementCliPanelComposer";
 import { AnnouncementCliPanelHeader } from "./AnnouncementCliPanelHeader";
@@ -72,10 +73,10 @@ export default function AnnouncementCliPanel({
     <div
       className={embedded ? "flex h-full w-full flex-col" : "relative flex h-full w-full flex-col sm:w-[600px]"}
       style={{
-        background: "var(--th-bg-primary)",
-        borderLeft: embedded ? "none" : "1px solid var(--th-border)",
-        fontFamily: "var(--th-font-mono)",
-        boxShadow: embedded ? "none" : "-8px 0 40px rgba(0,0,0,0.4)",
+        background: KAKAO_MSG.surface,
+        borderLeft: embedded ? "none" : `1px solid ${KAKAO_MSG.borderLight}`,
+        fontFamily: KAKAO_MSG.fontSans,
+        boxShadow: embedded ? "none" : "-8px 0 40px rgba(0,0,0,0.25)",
       }}
     >
       <AnnouncementCliPanelHeader

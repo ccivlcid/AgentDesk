@@ -100,6 +100,13 @@ export function buildYoloDecisionReplyPayload(item: DecisionInboxRouteItem): Yol
     return null;
   }
 
+  if (item.kind === "task_review_ready") {
+    // 자율모드: 개별 태스크 리뷰 자동 승인
+    const approve = item.options.find((option) => option.action.startsWith("approve_task_review:"));
+    if (approve) return { option_number: approve.number };
+    return item.options[0] ? { option_number: item.options[0].number } : null;
+  }
+
   if (item.kind === "review_round_pick") {
     const pickOptions = item.options.filter((option) => option.action === "apply_review_pick");
     if (pickOptions.length > 0) {

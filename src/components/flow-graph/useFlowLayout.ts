@@ -27,7 +27,7 @@ export interface FlowEdge {
   id: string;
   from: { nodeId: string; x: number; y: number };
   to: { nodeId: string; x: number; y: number };
-  type: "delegation" | "sub-agent" | "cross_dept" | "meeting" | "collab";
+  type: "delegation" | "sub-agent" | "cross_dept" | "meeting" | "collab" | "task_pipeline";
   label?: string;
   animated?: boolean;
   path: string;
@@ -425,6 +425,45 @@ export function useFlowLayout({
             path: bezierPath(from, to),
           });
         }
+      }
+    }
+
+    // ── Task pipeline edges: show execution order between agents in current project ──
+    if (projectAgentIds && projectAgentIds.size > 0) {
+      const projectTasks = tasks
+        .filter((tk) => tk.project_id && tk.assigned_agent_id && agentPositions.has(tk.assigned_agent_id))
+        .sort((a, b) => (a.created_at ?? 0) - (b.created_at ?? 0));
+
+      const pipelineEdgeSet = new Set<string>();
+      for (let i = 0; i < projectTasks.length - 1; i++) {
+        const curr = projectTasks[i];
+        const next = projectTasks[i + 1];
+        if (!curr.assigned_agent_id || !next.assigned_agent_id) continue;
+        if (curr.assigned_agent_id === next.assigned_agent_id) continue;
+        const edgeId = `pipeline-${curr.id}-${next.id}`;
+        const reverseKey = `${next.assigned_agent_id}-${curr.assigned_agent_id}`;
+        const forwardKey = `${curr.assigned_agent_id}-${next.assigned_agent_id}`;
+        if (pipelineEdgeSet.has(forwardKey) || pipelineEdgeSet.has(reverseKey)) continue;
+        pipelineEdgeSet.add(forwardKey);
+
+        const fromPos = agentPositions.get(curr.assigned_agent_id)!;
+        const toPos = agentPositions.get(next.assigned_agent_id)!;
+        const from = { x: fromPos.x + NODE_WIDTH, y: fromPos.y + NODE_HEIGHT / 2 };
+        const to = { x: toPos.x, y: toPos.y + NODE_HEIGHT / 2 };
+
+        const isDone = curr.status === "done";
+        const isRunning = curr.status === "in_progress" || next.status === "in_progress";
+
+        edges.push({
+          id: edgeId,
+          from: { nodeId: curr.assigned_agent_id, x: from.x, y: from.y },
+          to: { nodeId: next.assigned_agent_id, x: to.x, y: to.y },
+          type: "task_pipeline",
+          label: `${i + 1} → ${i + 2}`,
+          animated: isRunning,
+          path: bezierPath(from, to),
+          deptColor: isDone ? "#22c55e" : isRunning ? "#f59e0b" : undefined,
+        });
       }
     }
 

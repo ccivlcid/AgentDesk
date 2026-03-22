@@ -30,10 +30,10 @@ export function useAppLabels({
     zh: "AgentDesk 加载中...",
   });
   const loadingSubtitle = pickLang(uiLanguage, {
-    ko: "AI 에이전트 제국을 준비하고 있습니다",
-    en: "Preparing your AI agents",
-    ja: "AIエージェント帝国を準備しています",
-    zh: "正在准备你的 AI 代理帝国",
+    ko: "워크스페이스를 준비하고 있습니다",
+    en: "Preparing workspace",
+    ja: "ワークスペースを準備しています",
+    zh: "正在准备工作区",
   });
   const viewTitle = (() => {
     switch (view) {

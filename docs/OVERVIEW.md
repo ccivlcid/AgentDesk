@@ -370,6 +370,7 @@ Flow Graph, Image Studio, Synapse (Notion/Obsidian), Local LLM Manager, Custom F
 | [`progress.md`](./progress.md) | Development progress log — all phases |
 | [`specs/api.md`](./specs/api.md) | REST API specification (v1.6.1) |
 | [`architecture/schema-erd.md`](./architecture/schema-erd.md) | DB schema ER diagram + state machines |
+| [`architecture/AGENT-CONFIGURATION-AND-EXECUTION.md`](./architecture/AGENT-CONFIGURATION-AND-EXECUTION.md) | Agent DB fields, task vs chat vs runtime execution paths (as-built) |
 | [`design/DESIGN.md`](./design/DESIGN.md) | CSS variables + component style rules |
 | [`design/UI-SCREENS.md`](./design/UI-SCREENS.md) | Screen & modal specifications |
 | [`strategy/AGENT-RUNTIME-SPEC.md`](./strategy/AGENT-RUNTIME-SPEC.md) | Agent Runtime Engine spec |

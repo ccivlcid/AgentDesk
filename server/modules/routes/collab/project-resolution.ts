@@ -12,6 +12,7 @@ export type DelegationOptions = {
   messengerChannel?: MessengerChannel;
   messengerTargetId?: string | null;
   messengerSessionKey?: string | null;
+  roomId?: string | null;
 };
 
 type ProjectLookupRow = {

@@ -61,6 +61,7 @@ export type DirectChatDeps = {
     receiverType?: string,
     receiverId?: string | null,
     taskId?: string | null,
+    roomId?: string | null,
   ) => void;
   registerTaskMessengerRoute: (taskId: string, options?: DelegationOptions) => void;
   chooseSafeReply: (run: DirectReplyPayload, lang: Lang, context: "direct", agent: AgentRow) => string;
@@ -91,6 +92,11 @@ export type DirectChatDeps = {
     mentionContext: string,
     options?: DelegationOptions,
   ) => void;
+  /**
+   * Called after an agent finishes replying in a room (any provider path).
+   * Triggers the next pending agent in the room lane queue.
+   */
+  onRoomReplyComplete?: (roomId: string) => void;
 };
 
 export type PendingProjectBindingState = "ask_kind" | "ask_existing" | "ask_new_name" | "ask_new_path";

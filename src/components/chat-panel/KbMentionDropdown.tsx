@@ -10,6 +10,7 @@ import { useEffect, useRef, useState } from "react";
 import type { KbSourceRef, NotionPage, ObsidianNote } from "../../api/synapse";
 import { searchNotionPages, searchObsidianFiles, getNotionInfo, getObsidianInfo } from "../../api/synapse";
 import { useI18n } from "../../i18n";
+import { IconBookOpen, IconNotebook, IconX } from "../ui/SvgIcons";
 
 interface KbMentionDropdownProps {
   mentionTarget: "notion" | "obsidian" | null;
@@ -88,7 +89,6 @@ export default function KbMentionDropdown({ mentionTarget, query, onSelect, onCl
 
   if (!mentionTarget) return null;
 
-  const icon = mentionTarget === "notion" ? "📘" : "📓";
   const label = mentionTarget === "notion" ? "Notion" : "Obsidian";
 
   return (
@@ -122,14 +122,18 @@ export default function KbMentionDropdown({ mentionTarget, query, onSelect, onCl
         textTransform: "uppercase",
         background: "var(--th-bg-surface)",
       }}>
-        <span>{icon}</span>
+        <span style={{ display: "flex", color: "var(--th-accent)" }}>
+          {mentionTarget === "notion" ? <IconBookOpen size={12} /> : <IconNotebook size={12} />}
+        </span>
         <span>{label} {t({ ko: "검색", en: "Search", ja: "検索", zh: "搜索" })}</span>
         {query && <span style={{ color: "var(--th-accent)" }}>"{query}"</span>}
         <button
+          type="button"
           onMouseDown={(e) => { e.preventDefault(); onClose(); }}
-          style={{ marginLeft: "auto", background: "none", border: "none", color: "var(--th-text-muted)", cursor: "pointer", fontSize: 11, lineHeight: 1 }}
+          style={{ marginLeft: "auto", background: "none", border: "none", color: "var(--th-text-muted)", cursor: "pointer", display: "flex", alignItems: "center", padding: 2 }}
+          aria-label="Close"
         >
-          ✕
+          <IconX size={12} />
         </button>
       </div>
 
@@ -168,7 +172,9 @@ export default function KbMentionDropdown({ mentionTarget, query, onSelect, onCl
             }}
             onMouseEnter={() => setActiveIdx(idx)}
           >
-            <span style={{ marginRight: 6 }}>{icon}</span>
+            <span style={{ marginRight: 6, display: "inline-flex", verticalAlign: "middle", color: "var(--th-accent)" }}>
+              {item.type === "notion_page" ? <IconBookOpen size={12} /> : <IconNotebook size={12} />}
+            </span>
             <span style={{ fontWeight: idx === activeIdx ? 600 : 400 }}>{item.label}</span>
           </button>
         ))

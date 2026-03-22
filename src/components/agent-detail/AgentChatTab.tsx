@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { Agent, Message } from "../../types";
 import { getMessages, sendMessage } from "../../api";
 import { useI18n } from "../../i18n";
+import { useWebSocket } from "../../hooks/useWebSocket";
 
 const MSG_LIMIT = 60;
 const MAX_CONTENT = 2000;
@@ -50,6 +51,18 @@ export default function AgentChatTab({ agent }: AgentChatTabProps) {
     setMessages([]);
     void fetchMessages();
   }, [fetchMessages]);
+
+  // Auto-refresh when a new message arrives for this agent
+  const { on } = useWebSocket();
+  useEffect(() => {
+    return on("new_message", (payload) => {
+      const msg = payload as { sender_id?: string; receiver_id?: string; sender_type?: string; receiver_type?: string };
+      const isForThisAgent =
+        (msg.receiver_type === "agent" && msg.receiver_id === agent.id) ||
+        (msg.sender_type === "agent" && msg.sender_id === agent.id);
+      if (isForThisAgent) void fetchMessages();
+    });
+  }, [on, agent.id, fetchMessages]);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {

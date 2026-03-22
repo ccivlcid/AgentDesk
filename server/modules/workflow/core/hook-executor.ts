@@ -106,8 +106,12 @@ export async function executeHooks(
       const cwd = hook.working_directory || workingDirectory || process.cwd();
       const timeout = Math.min(Math.max(hook.timeout_ms || 30000, 1000), 300000);
 
+      const isWin = process.platform === "win32";
+      const shellCmd = isWin ? process.env.COMSPEC || "cmd.exe" : "/bin/sh";
+      const shellArgs = isWin ? ["/d", "/s", "/c", hook.command] : ["-c", hook.command];
+
       try {
-        await execFileAsync("/bin/sh", ["-c", hook.command], {
+        await execFileAsync(shellCmd, shellArgs, {
           cwd,
           timeout,
           env: { ...env, AGENTDESK_HOOK_ID: hook.id },

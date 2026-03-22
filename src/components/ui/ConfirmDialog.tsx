@@ -2,6 +2,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useRef,
   useState,
   type ReactNode,
@@ -50,6 +51,50 @@ function Dialog({ state, onClose }: { state: DialogState; onClose: (result: bool
   const confirmLabel = options.confirmLabel ?? "confirm";
   const cancelLabel  = options.cancelLabel  ?? "cancel";
 
+  // ── Draggable ──
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
+  const dragRef = useRef<{ startX: number; startY: number; origX: number; origY: number } | null>(null);
+
+  useEffect(() => {
+    // Center on mount
+    const el = dialogRef.current;
+    if (el) {
+      const rect = el.getBoundingClientRect();
+      setPos({ x: Math.round((window.innerWidth - rect.width) / 2), y: Math.round((window.innerHeight - rect.height) / 2) });
+    }
+  }, []);
+
+  const handleDragStart = useCallback((e: React.MouseEvent) => {
+    if ((e.target as HTMLElement).tagName === "BUTTON") return;
+    e.preventDefault();
+    const p = pos ?? { x: 0, y: 0 };
+    dragRef.current = { startX: e.clientX, startY: e.clientY, origX: p.x, origY: p.y };
+
+    const onMove = (ev: MouseEvent) => {
+      if (!dragRef.current) return;
+      const dx = ev.clientX - dragRef.current.startX;
+      const dy = ev.clientY - dragRef.current.startY;
+      setPos({ x: dragRef.current.origX + dx, y: dragRef.current.origY + dy });
+    };
+    const onUp = () => {
+      dragRef.current = null;
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+  }, [pos]);
+
+  // Escape key
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose(false);
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [onClose]);
+
   const confirmStyle: React.CSSProperties =
     variant === "danger"
       ? { background: "transparent", border: "1px solid rgba(248,81,73,0.4)", color: "#f85149" }
@@ -59,123 +104,123 @@ function Dialog({ state, onClose }: { state: DialogState; onClose: (result: bool
 
   return createPortal(
     <div
-      role="presentation"
+      ref={dialogRef}
+      role="alertdialog"
+      aria-modal="true"
+      aria-labelledby="confirm-title"
+      aria-describedby={options.message ? "confirm-message" : undefined}
       style={{
         position: "fixed",
-        inset: 0,
+        left: pos?.x ?? "50%",
+        top: pos?.y ?? "50%",
+        transform: pos ? undefined : "translate(-50%, -50%)",
         zIndex: 10000,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "var(--th-modal-overlay)",
+        background: "var(--th-bg-elevated)",
+        border: "1px solid var(--th-border-strong)",
+        borderRadius: 10,
+        padding: 0,
+        width: "min(420px, 92vw)",
         fontFamily: mono,
+        overflow: "hidden",
+        boxShadow: "0 12px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04)",
       }}
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(false); }}
     >
+      {/* ── Title bar — draggable ── */}
       <div
-        role="alertdialog"
-        aria-modal="true"
-        aria-labelledby="confirm-title"
-        aria-describedby={options.message ? "confirm-message" : undefined}
         style={{
-          background: "var(--th-bg-elevated)",
-          border: "1px solid var(--th-border-strong)",
-          borderRadius: 10,
-          padding: 0,
-          width: "min(400px, 92vw)",
-          fontFamily: mono,
-          overflow: "hidden",
-          boxShadow: "0 20px 50px rgba(0,0,0,0.4)",
-        }}
-      >
-        <div style={{
           display: "flex",
           alignItems: "center",
-          gap: "12px",
+          gap: 12,
           padding: "10px 16px",
           borderBottom: "1px solid var(--th-border)",
           background: "var(--th-bg-panel)",
           borderTopLeftRadius: 10,
           borderTopRightRadius: 10,
-        }}>
-          <div className="flex flex-shrink-0 items-center gap-1.5">
-            <button
-              type="button"
-              onClick={() => onClose(false)}
-              aria-label="Close"
-              className="h-3 w-3 flex-shrink-0 rounded-full border-0 transition-opacity hover:opacity-90"
-              style={{ background: "#ff5f57" }}
-            />
-            <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#ffbd2e" }} />
-            <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#27c93f" }} />
-          </div>
-          <span id="confirm-title" style={{ fontSize: "12px", fontWeight: 600, color: "var(--th-text-heading)", fontFamily: mono }}>{options.title}</span>
-        </div>
-        {options.message && (
-          <div style={{ padding: "12px 16px", borderBottom: "1px solid var(--th-border)" }}>
-            <p
-              id="confirm-message"
-              style={{
-                fontFamily: mono,
-                fontSize: "12px",
-                color: "var(--th-text-secondary)",
-                lineHeight: 1.6,
-                margin: 0,
-              }}
-            >
-              {options.message}
-            </p>
-          </div>
-        )}
-
-        {/* Actions */}
-        <div style={{
-          display: "flex",
-          gap: "8px",
-          justifyContent: "flex-end",
-          padding: "10px 16px",
-          borderTop: "1px solid var(--th-border)",
-        }}>
+          cursor: "grab",
+          userSelect: "none",
+        }}
+        onMouseDown={handleDragStart}
+      >
+        <div className="flex flex-shrink-0 items-center gap-1.5">
           <button
+            type="button"
             onClick={() => onClose(false)}
-            style={{
-              background: "transparent",
-              border: "1px solid var(--th-border-strong)",
-              borderRadius: 0,
-              padding: "4px 14px",
-              fontFamily: mono,
-              fontSize: "11px",
-              fontWeight: 500,
-              letterSpacing: "0.04em",
-              textTransform: "uppercase",
-              color: "var(--th-text-secondary)",
-              cursor: "pointer",
-              transition: "color 0.1s",
-            }}
-            className="hover:!text-[var(--th-text)] hover:!border-[var(--th-border-strong)]"
-          >
-            {cancelLabel}
-          </button>
-          <button
-            autoFocus
-            onClick={() => onClose(true)}
-            style={{
-              ...confirmStyle,
-              borderRadius: 0,
-              padding: "4px 14px",
-              fontFamily: mono,
-              fontSize: "11px",
-              fontWeight: 600,
-              letterSpacing: "0.04em",
-              textTransform: "uppercase",
-              cursor: "pointer",
-              transition: "opacity 0.1s",
-            }}
-            className="hover:opacity-80"
-          >
-            {confirmLabel}
-          </button>
+            aria-label="Close"
+            className="h-3 w-3 flex-shrink-0 rounded-full border-0 transition-opacity hover:opacity-90"
+            style={{ background: "#ff5f57", cursor: "pointer" }}
+          />
+          <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#ffbd2e" }} />
+          <div className="h-3 w-3 flex-shrink-0 rounded-full" style={{ background: "#27c93f" }} />
         </div>
+        <span id="confirm-title" style={{ fontSize: "12px", fontWeight: 600, color: "var(--th-text-heading)", fontFamily: mono }}>
+          {options.title}
+        </span>
+      </div>
+
+      {options.message && (
+        <div style={{ padding: "14px 18px" }}>
+          <p
+            id="confirm-message"
+            style={{
+              fontFamily: mono,
+              fontSize: "12px",
+              color: "var(--th-text-secondary)",
+              lineHeight: 1.6,
+              margin: 0,
+            }}
+          >
+            {options.message}
+          </p>
+        </div>
+      )}
+
+      {/* Actions */}
+      <div style={{
+        display: "flex",
+        gap: 8,
+        justifyContent: "flex-end",
+        padding: "10px 16px",
+        borderTop: "1px solid var(--th-border)",
+      }}>
+        <button
+          onClick={() => onClose(false)}
+          style={{
+            background: "transparent",
+            border: "1px solid var(--th-border-strong)",
+            borderRadius: 0,
+            padding: "4px 14px",
+            fontFamily: mono,
+            fontSize: "11px",
+            fontWeight: 500,
+            letterSpacing: "0.04em",
+            textTransform: "uppercase",
+            color: "var(--th-text-secondary)",
+            cursor: "pointer",
+            transition: "color 0.1s",
+          }}
+          className="hover:!text-[var(--th-text)] hover:!border-[var(--th-border-strong)]"
+        >
+          {cancelLabel}
+        </button>
+        <button
+          autoFocus
+          onClick={() => onClose(true)}
+          style={{
+            ...confirmStyle,
+            borderRadius: 0,
+            padding: "4px 14px",
+            fontFamily: mono,
+            fontSize: "11px",
+            fontWeight: 600,
+            letterSpacing: "0.04em",
+            textTransform: "uppercase",
+            cursor: "pointer",
+            transition: "opacity 0.1s",
+          }}
+          className="hover:opacity-80"
+        >
+          {confirmLabel}
+        </button>
       </div>
     </div>,
     document.body,

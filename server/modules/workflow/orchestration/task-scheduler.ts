@@ -201,8 +201,9 @@ interface TaskSchedulerDeps {
   insertNotification: (params: {
     type: string;
     title: string;
-    message: string;
-    metadata_json?: string;
+    body?: string | null;
+    task_id?: string | null;
+    agent_id?: string | null;
   }) => void;
   startTaskExecutionForAgent?: (agentId: string, taskId: string) => void;
 }
@@ -342,8 +343,8 @@ export function startTaskScheduler(deps: TaskSchedulerDeps): { stop: () => void 
     insertNotification({
       type: "system",
       title: `Scheduled task created: ${fullTitle}`,
-      message: `Schedule "${schedule.name}" created a new task.`,
-      metadata_json: JSON.stringify({ task_id: taskId, schedule_id: schedule.id }),
+      body: `Schedule "${schedule.name}" created a new task.`,
+      task_id: taskId,
     });
 
     // Auto-run if configured

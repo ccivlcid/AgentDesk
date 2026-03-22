@@ -21,4 +21,6 @@ export interface TaskBoardProps {
   onProjectCreate?: () => void;
   onKickoff?: () => void;
   kickoffBusy?: boolean;
+  onResume?: () => void;
+  resumeBusy?: boolean;
 }

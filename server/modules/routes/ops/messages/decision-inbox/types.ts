@@ -10,7 +10,7 @@ export type DecisionOption = {
 
 export interface DecisionInboxRouteItem {
   id: string;
-  kind: "project_review_ready" | "task_timeout_resume" | "review_round_pick";
+  kind: "project_review_ready" | "task_review_ready" | "task_timeout_resume" | "review_round_pick";
   created_at: number;
   summary: string;
   agent_id?: string | null;

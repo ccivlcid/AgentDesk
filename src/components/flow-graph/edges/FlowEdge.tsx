@@ -48,14 +48,21 @@ const EDGE_STYLES: Record<FlowEdgeData["type"], {
     markerEnd: undefined,
     animated: false,
   },
+  task_pipeline: {
+    stroke: "var(--th-accent)",
+    strokeWidth: 2.5,
+    strokeDasharray: undefined,
+    markerEnd: "url(#arrow-accent)",
+    animated: true,
+  },
 };
 
 export default function FlowEdge({ edge, highlighted, dimmed }: FlowEdgeProps) {
   const opacity = dimmed ? 0.15 : highlighted ? 1 : 0.7;
   const style = EDGE_STYLES[edge.type];
 
-  // cross_dept는 부서 컬러 사용
-  const stroke = edge.type === "cross_dept" && edge.deptColor
+  // cross_dept / task_pipeline은 동적 컬러 사용
+  const stroke = (edge.type === "cross_dept" || edge.type === "task_pipeline") && edge.deptColor
     ? edge.deptColor
     : style.stroke;
 
@@ -77,16 +84,32 @@ export default function FlowEdge({ edge, highlighted, dimmed }: FlowEdgeProps) {
       {/* 흐름 애니메이션 도트 */}
       {showAnimated && (
         <circle
-          r={edge.type === "delegation" ? 3.5 : 2.5}
+          r={edge.type === "delegation" || edge.type === "task_pipeline" ? 3.5 : 2.5}
           fill={stroke}
           opacity={0.9}
         >
           <animateMotion
-            dur={edge.type === "delegation" ? "1.8s" : "2.4s"}
+            dur={edge.type === "delegation" ? "1.8s" : edge.type === "task_pipeline" ? "2s" : "2.4s"}
             repeatCount="indefinite"
             path={edge.path}
           />
         </circle>
+      )}
+
+      {/* 파이프라인 엣지 라벨 */}
+      {edge.type === "task_pipeline" && edge.label && (
+        <text
+          x={(edge.from.x + edge.to.x) / 2}
+          y={(edge.from.y + edge.to.y) / 2 - 8}
+          textAnchor="middle"
+          fontSize={9}
+          fontFamily="var(--th-font-mono)"
+          fontWeight={700}
+          fill={stroke}
+          opacity={0.8}
+        >
+          {edge.label}
+        </text>
       )}
     </g>
   );

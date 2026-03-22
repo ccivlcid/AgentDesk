@@ -1,21 +1,5 @@
 const iconStyle = { width: 12, height: 12 } as const;
 
-export function IconChat() {
-  return (
-    <svg
-      viewBox="0 0 20 20"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.6"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      style={iconStyle}
-    >
-      <path d="M2 5a2 2 0 012-2h12a2 2 0 012 2v7a2 2 0 01-2 2H7l-4 3V5z" />
-    </svg>
-  );
-}
-
 export function IconTask() {
   return (
     <svg

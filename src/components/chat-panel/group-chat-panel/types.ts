@@ -8,13 +8,22 @@ import type { Agent, Message } from "../../../types";
 import type { I18nContextValue } from "../../../i18n";
 import type { KbSourceRef } from "../../../api/synapse";
 
-export type ChatMode = "chat" | "task" | "urgent";
+/** 저장된 메시지 본문 prefix 파싱 — 레거시 `[URGENT]`·`[TASK:…]` 표시용 */
+export type ParsedMessageMode = "chat" | "task" | "urgent";
 export type Priority = "high" | "normal" | "low";
 
 export interface GroupChatPanelProps {
   agents: Agent[];
   initialAgentIds?: string[];
   onClose: () => void;
+}
+
+export interface RoomSummary {
+  room_id: string;
+  last_ts: number;
+  msg_count: number;
+  last_content: string | null;
+  agent_ids: string[];
 }
 
 export interface GroupChatPanelVm {
@@ -45,8 +54,6 @@ export interface GroupChatPanelVm {
   attachments: File[];
   addFiles: (incoming: FileList | File[]) => void;
   removeAttachment: (idx: number) => void;
-  chatMode: ChatMode;
-  setChatMode: (m: ChatMode) => void;
   kbSources: KbSourceRef[];
   removeKbSource: (id: string) => void;
   mentionTarget: "notion" | "obsidian" | null;
@@ -54,12 +61,11 @@ export interface GroupChatPanelVm {
   handleInputChange: (val: string) => void;
   handleKbSelect: (ref: KbSourceRef) => void;
   closeMention: () => void;
-  deadline: string;
-  setDeadline: (v: string) => void;
-  priority: Priority;
-  setPriority: (p: Priority) => void;
   handleSend: () => Promise<void>;
   onFileInputChange: (e: ChangeEvent<HTMLInputElement>) => void;
   onTextareaKeyDown: (e: KeyboardEvent<HTMLTextAreaElement>) => void;
   onTextareaInput: (e: FormEvent<HTMLTextAreaElement>) => void;
+  roomHistory: RoomSummary[];
+  loadRoom: (room: RoomSummary) => void;
+  currentRoomId: string | null;
 }

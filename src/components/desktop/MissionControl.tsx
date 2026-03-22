@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, type ReactNode } from "react";
 import type { WindowType } from "../../app/types";
 import { useI18n } from "../../i18n";
 
@@ -20,33 +20,38 @@ interface MissionControlProps {
 export default function MissionControl({ openWindows, onClose, onFocusWindow }: MissionControlProps) {
   const { t } = useI18n();
 
-  const WINDOW_META: Record<WindowType, { emoji: string; label: string }> = {
-    workflow:        { emoji: "⚡",  label: t({ ko: "워크플로",        en: "Workflow",       ja: "ワークフロー",     zh: "工作流" }) },
-    library:         { emoji: "📚",  label: t({ ko: "라이브러리",      en: "Library",        ja: "ライブラリ",       zh: "库" }) },
-    settings:        { emoji: "⚙️", label: t({ ko: "설정",            en: "Settings",       ja: "設定",            zh: "设置" }) },
-    chat:            { emoji: "💬",  label: t({ ko: "채팅",            en: "Chat",           ja: "チャット",         zh: "聊天" }) },
-    "agent-manager": { emoji: "👤",  label: t({ ko: "에이전트 설정",   en: "Agent Manager",  ja: "エージェント設定", zh: "代理设置" }) },
-    cli:             { emoji: ">_", label: t({ ko: "Agent CLI",       en: "CLI",            ja: "Agent CLI",       zh: "Agent CLI" }) },
-    reports:         { emoji: "📊",  label: t({ ko: "보고서",          en: "Reports",        ja: "レポート",         zh: "报告" }) },
-    tasks:           { emoji: "▦",  label: t({ ko: "태스크 보드",     en: "Board",          ja: "タスクボード",     zh: "任务板" }) },
-    "create-task":   { emoji: "✚",  label: t({ ko: "새 태스크",       en: "New Task",       ja: "新しいタスク",     zh: "新任务" }) },
-    "llm-guide":     { emoji: "📖",  label: t({ ko: "LLM 가이드",     en: "LLM Guide",      ja: "LLMガイド",        zh: "LLM指南" }) },
-    synapse:         { emoji: "⇄",  label: t({ ko: "시냅스",          en: "Synapse",        ja: "シナプス",         zh: "知识库" }) },
-    "image-studio":  { emoji: "🖼",  label: t({ ko: "이미지 스튜디오", en: "Image Studio",   ja: "イメージスタジオ", zh: "图像工作室" }) },
-    folder:          { emoji: "📁",  label: t({ ko: "폴더",            en: "Folder",         ja: "フォルダ",         zh: "文件夹" }) },
-    "create-agent":      { emoji: "👤", label: t({ ko: "신규 직원 채용",    en: "Hire Agent",     ja: "エージェント採用", zh: "招聘员工" }) },
-    "create-department": { emoji: "🏢", label: t({ ko: "신규 부서 추가",    en: "Add Department", ja: "部署追加",         zh: "添加部门" }) },
-    "library-guide":     { emoji: "📚", label: t({ ko: "라이브러리 가이드", en: "Library Guide",  ja: "ライブラリガイド", zh: "库指南" }) },
-    "user-guide":        { emoji: "📖", label: t({ ko: "사용자 가이드",     en: "User Guide",     ja: "ユーザーガイド",   zh: "用户指南" }) },
-    "file-tree":         { emoji: "📁", label: t({ ko: "파일 탐색기",       en: "File Explorer",  ja: "ファイルエクスプローラー", zh: "文件管理" }) },
-    "alerts":            { emoji: "🔔", label: t({ ko: "알림",             en: "Alerts",         ja: "アラート",              zh: "警报" }) },
-    "cli-usage":         { emoji: "💰", label: t({ ko: "CLI 비용",         en: "CLI Cost",       ja: "CLIコスト",             zh: "CLI成本" }) },
-    "local-llm":         { emoji: "🧠", label: t({ ko: "로컬 LLM",         en: "Local LLM",      ja: "ローカルLLM",            zh: "本地LLM" }) },
-    "feature-builder":   { emoji: "✦",  label: t({ ko: "새 기능 만들기",   en: "New Feature",    ja: "新機能作成",              zh: "新建功能" }) },
-    "flow-graph":        { emoji: "🕸️", label: t({ ko: "에이전트 그래프",  en: "Agent Graph",    ja: "エージェントグラフ",        zh: "代理图" }) },
-    "git-import":        { emoji: "⬆️", label: t({ ko: "Git 가져오기",     en: "Git Import",     ja: "Gitインポート",              zh: "Git导入" }) },
-    "dashboard":         { emoji: "◈",  label: t({ ko: "대시보드",          en: "Dashboard",      ja: "ダッシュボード",              zh: "控制台" }) },
-    "widget-board":      { emoji: "⊞",  label: t({ ko: "위젯 보드",         en: "Widget Board",   ja: "ウィジェットボード",            zh: "小组件板" }) },
+  const S = { w: 22, h: 22, v: "0 0 24 24", fill: "none" as const, stroke: "currentColor" as const, strokeWidth: 1.6, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
+  const WINDOW_META: Record<WindowType, { icon: ReactNode; label: string }> = {
+    workflow:        { icon: <svg {...S}><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>, label: t({ ko: "워크플로",        en: "Workflow",       ja: "ワークフロー",     zh: "工作流" }) },
+    library:         { icon: <svg {...S}><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>, label: t({ ko: "라이브러리",      en: "Library",        ja: "ライブラリ",       zh: "库" }) },
+    settings:        { icon: <svg {...S}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>, label: t({ ko: "설정",            en: "Settings",       ja: "設定",            zh: "设置" }) },
+    chat:            { icon: <svg {...S}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>, label: t({ ko: "채팅",            en: "Chat",           ja: "チャット",         zh: "聊天" }) },
+    "agent-manager": { icon: <svg {...S}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>, label: t({ ko: "에이전트 설정",   en: "Agent Manager",  ja: "エージェント設定", zh: "代理设置" }) },
+    cli:             { icon: <svg {...S}><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>, label: t({ ko: "Agent CLI",       en: "CLI",            ja: "Agent CLI",       zh: "Agent CLI" }) },
+    reports:         { icon: <svg {...S}><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>, label: t({ ko: "보고서",          en: "Reports",        ja: "レポート",         zh: "报告" }) },
+    tasks:           { icon: <svg {...S}><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>, label: t({ ko: "태스크 보드",     en: "Board",          ja: "タスクボード",     zh: "任务板" }) },
+    "create-task":   { icon: <svg {...S}><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>, label: t({ ko: "새 태스크",       en: "New Task",       ja: "新しいタスク",     zh: "新任务" }) },
+    "llm-guide":     { icon: <svg {...S}><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>, label: t({ ko: "LLM 가이드",     en: "LLM Guide",      ja: "LLMガイド",        zh: "LLM指南" }) },
+    synapse:         { icon: <svg {...S}><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>, label: t({ ko: "시냅스",          en: "Synapse",        ja: "シナプス",         zh: "知识库" }) },
+    "image-studio":  { icon: <svg {...S}><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>, label: t({ ko: "이미지 스튜디오", en: "Image Studio",   ja: "イメージスタジオ", zh: "图像工作室" }) },
+    folder:          { icon: <svg {...S}><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>, label: t({ ko: "폴더",            en: "Folder",         ja: "フォルダ",         zh: "文件夹" }) },
+    "create-agent":      { icon: <svg {...S}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>, label: t({ ko: "신규 직원 채용",    en: "Hire Agent",     ja: "エージェント採用", zh: "招聘员工" }) },
+    "create-department": { icon: <svg {...S}><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>, label: t({ ko: "신규 부서 추가",    en: "Add Department", ja: "部署追加",         zh: "添加部门" }) },
+    "library-guide":     { icon: <svg {...S}><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>, label: t({ ko: "라이브러리 가이드", en: "Library Guide",  ja: "ライブラリガイド", zh: "库指南" }) },
+    "user-guide":        { icon: <svg {...S}><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>, label: t({ ko: "사용자 가이드",     en: "User Guide",     ja: "ユーザーガイド",   zh: "用户指南" }) },
+    "file-tree":         { icon: <svg {...S}><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>, label: t({ ko: "파일 탐색기",       en: "File Explorer",  ja: "ファイルエクスプローラー", zh: "文件管理" }) },
+    "alerts":            { icon: <svg {...S}><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>, label: t({ ko: "알림",             en: "Alerts",         ja: "アラート",              zh: "警报" }) },
+    "cli-usage":         { icon: <svg {...S}><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>, label: t({ ko: "CLI 비용",         en: "CLI Cost",       ja: "CLIコスト",             zh: "CLI成本" }) },
+    "local-llm":         { icon: <svg {...S}><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/><line x1="20" y1="9" x2="23" y2="9"/><line x1="20" y1="14" x2="23" y2="14"/><line x1="1" y1="9" x2="4" y2="9"/><line x1="1" y1="14" x2="4" y2="14"/></svg>, label: t({ ko: "로컬 LLM",         en: "Local LLM",      ja: "ローカルLLM",            zh: "本地LLM" }) },
+    "feature-builder":   { icon: <svg {...S}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>, label: t({ ko: "새 기능 만들기",   en: "New Feature",    ja: "新機能作成",              zh: "新建功能" }) },
+    "flow-graph":        { icon: <svg {...S}><circle cx="5" cy="5" r="2"/><circle cx="19" cy="5" r="2"/><circle cx="12" cy="19" r="2"/><line x1="7" y1="5" x2="17" y2="5"/><line x1="6.3" y1="6.5" x2="10.8" y2="17.2"/><line x1="17.7" y1="6.5" x2="13.2" y2="17.2"/></svg>, label: t({ ko: "에이전트 그래프",  en: "Agent Graph",    ja: "エージェントグラフ",        zh: "代理图" }) },
+    "git-import":        { icon: <svg {...S}><circle cx="12" cy="12" r="10"/><polyline points="16 12 12 8 8 12"/><line x1="12" y1="16" x2="12" y2="8"/></svg>, label: t({ ko: "Git 가져오기",     en: "Git Import",     ja: "Gitインポート",              zh: "Git导入" }) },
+    "dashboard":         { icon: <svg {...S}><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>, label: t({ ko: "대시보드",          en: "Dashboard",      ja: "ダッシュボード",              zh: "控制台" }) },
+    "widget-board":      { icon: <svg {...S}><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>, label: t({ ko: "위젯 보드",         en: "Widget Board",   ja: "ウィジェットボード",            zh: "小组件板" }) },
+    "project-create":    { icon: <svg {...S}><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>, label: t({ ko: "프로젝트 생성",     en: "New Project",    ja: "新規プロジェクト",               zh: "新建项目" }) },
+    "decision-inbox":    { icon: <svg {...S}><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>, label: t({ ko: "의사결정",           en: "Decision Inbox", ja: "意思決定",                        zh: "决策收件箱" }) },
+    "folder-browser":    { icon: <svg {...S}><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>,                        label: t({ ko: "폴더 탐색",           en: "Folder Browser",  ja: "フォルダ閲覧",                    zh: "文件夹浏览" }) },
+    "pm-activity":       { icon: <svg {...S}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>, label: t({ ko: "PM 활동", en: "PM Activity", ja: "PMアクティビティ", zh: "PM活动" }) },
   };
 
   useEffect(() => {
@@ -103,7 +108,7 @@ export default function MissionControl({ openWindows, onClose, onFocusWindow }: 
                 return (
                   <Card
                     key={w}
-                    emoji={meta.emoji}
+                    icon={meta.icon}
                     label={meta.label}
                     onClick={() => { onFocusWindow(w); onClose(); }}
                   />
@@ -154,7 +159,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-function Card({ emoji, label, onClick }: { emoji: string; label: string; onClick: () => void }) {
+function Card({ icon, label, onClick }: { icon: ReactNode; label: string; onClick: () => void }) {
   return (
     <button
       onClick={onClick}
@@ -197,9 +202,9 @@ function Card({ emoji, label, onClick }: { emoji: string; label: string; onClick
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        fontSize: 22,
+        color: "rgba(255,255,255,0.75)",
       }}>
-        {emoji}
+        {icon}
       </div>
       <span style={{ fontSize: 10, color: "rgba(255,255,255,0.8)", letterSpacing: "0.04em", maxWidth: 108, textAlign: "center", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{label}</span>
     </button>

@@ -26,7 +26,11 @@ export type WindowType =
   | "flow-graph"
   | "git-import"
   | "dashboard"
-  | "widget-board";
+  | "widget-board"
+  | "project-create"
+  | "decision-inbox"
+  | "folder-browser"
+  | "pm-activity";
 
 
 export type View =
@@ -48,7 +52,7 @@ export type View =
   | "hooks"
   | "settings"
   | "library";
-export type TaskPanelTab = "terminal" | "minutes";
+export type TaskPanelTab = "terminal";
 export type RuntimeOs = "windows" | "mac" | "linux" | "unknown";
 
 export interface OAuthCallbackResult {
