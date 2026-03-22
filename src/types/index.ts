@@ -98,6 +98,7 @@ export type TaskStatus =
   | "review"
   | "done"
   | "pending"
+  | "failed"
   | "cancelled";
 export type TaskExecutionState =
   | "queued"
@@ -167,6 +168,10 @@ export interface Task {
   category_id?: string | null;
   handoff_to_agent_id?: string | null;
   handoff_condition?: "always" | "on_success" | "on_fail" | null;
+  retry_count?: number;
+  max_retries?: number;
+  last_error_summary?: string | null;
+  error_analysis?: string | null;
 }
 
 export interface TaskExecutionSummary {

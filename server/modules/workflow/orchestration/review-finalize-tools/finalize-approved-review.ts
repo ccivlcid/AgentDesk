@@ -3,6 +3,7 @@ import { triggerWebhooks } from "../../../routes/core/webhooks.ts";
 import { appendTaskExecutionMetaUpdate, recordTaskExecutionEvent } from "../../core/task-execution-meta.ts";
 import { autoSaveTaskReport, autoCheckProjectDeliverables } from "../run-complete-handler/auto-completions.ts";
 import { recordArtifactsFromDirectoryScan, recordMergedArtifacts } from "./review-artifact-recorders.ts";
+import { eventBus } from "../../../../lib/event-bus.ts";
 import type { CreateReviewFinalizeToolsDeps } from "./types.ts";
 import type { FinishReviewFn } from "./reconcile-delegated-subtasks.ts";
 
@@ -320,37 +321,14 @@ export function createFinalizeApprovedReview(params: {
       subtaskNext();
     }
 
-    // ── 자율모드: 태스크 완료 후 같은 프로젝트의 다음 planned 태스크 자동 시작 ──
-    if (currentTask.project_id && !currentTask.source_task_id) {
-      const startTaskExec = deps.startTaskExecutionForAgent as
-        | ((taskId: string, agentId: string) => void)
-        | undefined;
-      const readYolo = deps.readYoloModeEnabled as (() => boolean) | undefined;
-      const isYolo = readYolo ? readYolo() : false;
-      if (isYolo && startTaskExec) {
-        setTimeout(() => {
-          try {
-            const busyAgents = new Set(
-              (db.prepare(
-                "SELECT DISTINCT assigned_agent_id FROM tasks WHERE project_id = ? AND status IN ('in_progress', 'review') AND assigned_agent_id IS NOT NULL",
-              ).all(currentTask.project_id!) as { assigned_agent_id: string }[]).map((r) => r.assigned_agent_id),
-            );
-            const nextTasks = db.prepare(
-              "SELECT id, title, assigned_agent_id FROM tasks WHERE project_id = ? AND status = 'planned' AND assigned_agent_id IS NOT NULL ORDER BY created_at ASC",
-            ).all(currentTask.project_id!) as { id: string; title: string; assigned_agent_id: string }[];
-            const started = new Set<string>();
-            for (const nt of nextTasks) {
-              if (busyAgents.has(nt.assigned_agent_id)) continue;
-              if (started.has(nt.assigned_agent_id)) continue;
-              started.add(nt.assigned_agent_id);
-              startTaskExec(nt.id, nt.assigned_agent_id);
-              appendTaskLog(nt.id, "pm_oversight", `Auto-started by PM (YOLO) after '${taskTitle}' completed`);
-            }
-          } catch {
-            /* best effort */
-          }
-        }, 2000);
-      }
-    }
+    // ── PM 오케스트레이터에 done 이벤트 발행 → PM이 다음 태스크 결정 ──
+    eventBus.emitTaskStatus({
+      type: "task_status_changed",
+      taskId,
+      projectId: currentTask.project_id,
+      fromStatus: "review",
+      toStatus: "done",
+      agentId: null,
+    });
   };
 }

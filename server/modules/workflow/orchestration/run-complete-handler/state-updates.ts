@@ -5,6 +5,7 @@
 import { appendTaskExecutionMetaUpdate, recordTaskExecutionEvent } from "../../core/task-execution-meta.ts";
 import { runCompleteNotify } from "./notifications.ts";
 import type { RunCompleteNotifyDeps } from "./notifications.ts";
+import { eventBus } from "../../../../lib/event-bus.ts";
 
 export type StateUpdatesDeps = RunCompleteNotifyDeps & {
   db: unknown;
@@ -74,6 +75,7 @@ export function applySuccessStateUpdate(
   deps: StateUpdatesDeps,
 ): void {
   const { db, appendTaskLog, broadcast, reconcileDelegatedSubtasksAfterRun, notifyTaskStatus, resolveLang } = deps;
+
   const updates = ["status = 'review'", "updated_at = ?"];
   const params: unknown[] = [t];
   appendTaskExecutionMetaUpdate(db as Parameters<typeof appendTaskExecutionMetaUpdate>[0], updates, params, {
@@ -103,6 +105,17 @@ export function applySuccessStateUpdate(
     appendTaskLog(taskId, "system", "Status → review (delegated collaboration task waiting for parent consolidation)");
   }
   runCompleteNotify(taskId, task, finalExitCode, result, deps);
+
+  // PM 오케스트레이터에 이벤트 발행
+  eventBus.emitTaskStatus({
+    type: "task_status_changed",
+    taskId,
+    projectId: task?.project_id ?? null,
+    fromStatus: "in_progress",
+    toStatus: "review",
+    agentId: task?.assigned_agent_id ?? null,
+    resultTail: typeof result === "string" ? (result.length > 2000 ? "..." + result.slice(-2000) : result) : null,
+  });
 }
 
 export function applyFailureStateUpdate(
@@ -114,6 +127,11 @@ export function applyFailureStateUpdate(
   deps: StateUpdatesDeps,
 ): void {
   const { db, broadcast, reconcileDelegatedSubtasksAfterRun, taskWorktrees, cleanupWorktree, appendTaskLog } = deps;
+  // last_error_summary 기록 — PM 오케스트레이터가 읽음
+  try {
+    dbRun(db, "UPDATE tasks SET last_error_summary = ? WHERE id = ?",
+      `Exit code ${finalExitCode}${result ? ": " + (result.length > 300 ? result.slice(-300) : result) : ""}`, taskId);
+  } catch { /* column may not exist yet */ }
   const updates = ["status = 'inbox'", "updated_at = ?"];
   const params: unknown[] = [t];
   appendTaskExecutionMetaUpdate(db as Parameters<typeof appendTaskExecutionMetaUpdate>[0], updates, params, {
@@ -144,4 +162,15 @@ export function applyFailureStateUpdate(
     appendTaskLog(taskId, "system", "Worktree cleaned up (task failed)");
   }
   if (task) runCompleteNotify(taskId, task, finalExitCode, result, deps);
+
+  // PM 오케스트레이터에 실패 이벤트 발행
+  eventBus.emitTaskStatus({
+    type: "task_status_changed",
+    taskId,
+    projectId: task?.project_id ?? null,
+    fromStatus: "in_progress",
+    toStatus: "failed",
+    agentId: task?.assigned_agent_id ?? null,
+    exitCode: finalExitCode,
+  });
 }

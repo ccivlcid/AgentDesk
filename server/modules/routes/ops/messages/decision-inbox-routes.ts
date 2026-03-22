@@ -402,9 +402,8 @@ export function registerDecisionInboxRoutes(ctx: RuntimeContext): DecisionInboxR
       yoloAutopilotInFlight = false;
     }
   };
-  const yoloTimer = setInterval(runYoloAutopilot, 2500);
-  (yoloTimer as NodeJS.Timeout).unref?.();
-  setTimeout(runYoloAutopilot, 1200);
+  // PM Orchestrator가 이벤트 기반으로 의사결정 처리 — YOLO 타이머 완전 제거
+  // YOLO autopilot은 GET /api/decision-inbox 호출 시에만 실행 (UI 안전망)
 
   // ---------------------------------------------------------------------------
   // Messages / Chat

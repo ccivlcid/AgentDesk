@@ -254,6 +254,61 @@ LLM uses this to assign each generated task to the best-fit agent.
 
 ---
 
+## 6-B. PM Agent Orchestration (Phase 21)
+
+The PM agent is the **real orchestrator** — not system timers or polling loops.
+
+### Event-Driven Architecture
+
+```
+Task completes (exit=0)
+  → EventBus: task_status_changed (review)
+  → PM LLM: reads output, decides APPROVE or REVISE
+    → APPROVE → finishReview → consensus meeting → done
+    → REVISE  → sends feedback to agent → re-executes
+
+Task fails (exit≠0)
+  → EventBus: task_status_changed (failed)
+  → AI Error Analysis: log analysis → cause + suggestion
+  → PM LLM: decides RETRY / REASSIGN / ESCALATE
+    → RETRY    → planned + re-execute (exponential backoff)
+    → REASSIGN → assigns to different agent
+    → ESCALATE → notifies user
+
+Task done
+  → EventBus: task_status_changed (done)
+  → PM Auto-Learning: extracts Rules/Memory from output
+  → PM Agent Fitness: records success rate per task type
+  → PM starts next planned task (idle agents only)
+  → If all tasks done → PM generates retrospective report
+```
+
+### Key Design Principles
+
+- **Zero timers in task workflow**: No `setInterval` or `setTimeout` for orchestration
+- **PM decides, system executes**: PM calls LLM, system provides tools (DB, process management)
+- **Prompts in .md files**: All PM decision prompts in `prompts/pm/` directory
+- **Graceful fallback**: If PM agent is missing, system auto-approves/retries
+
+### Module Files
+
+```
+server/lib/event-bus.ts                          ← Event hub (TaskStatusEvent)
+server/modules/workflow/orchestration/
+├── pm-orchestrator.ts                           ← PM decision engine
+├── auto-learning.ts                             ← Rules/Memory extraction + retrospective
+├── run-complete-handler/error-analysis.ts       ← AI error analysis
+prompts/pm/
+├── review-task.md                               ← PM review prompt
+├── handle-failure.md                            ← PM failure handling prompt
+├── auto-learn.md                                ← Knowledge extraction prompt
+├── project-retrospective.md                     ← Retrospective prompt
+├── decide-inbox.md                              ← Decision inbox prompt
+└── start-next.md                                ← Next task selection prompt
+```
+
+---
+
 ## 7. Library — Agent Behavior Building Blocks
 
 | Element | Role | Scope |
@@ -351,14 +406,20 @@ Phase 19-B  Project Directive System                             █████
 Phase 19-C  Auto-execute first task after kickoff               ████████████ 100%
 Phase 20    Agent-Driven Kickoff + Multi-agent Distribution      ████████████ 100%
 Phase 20-B  PM/PL/Dev Role-Based Team System                    ████████████ 100%
+Phase 20-C  Kickoff Meeting + New Round Panel                   ████████████ 100%
+Phase 21    PM Agent Orchestration (event-driven)                ████████████ 100%
+Phase 22    Debug Experience (AI error analysis)                 ████████████ 100%
+Phase 23    Optimize Learning Loop (auto-learn + retrospective)  ████████████ 100%
+Phase 24    Stability (indexes, shutdown, flood prevention)      ████████████ 100%
+Phase 25    Feature Extension (prompt UI, agent fitness)         ████████████ 100%
 ─────────────────────────────────────────────────────────────────
-Phase 21    Platform (PostgreSQL · queue · plugin system)        ░░░░░░░░░░░░ Planned
-Phase 22    Team & Cloud (workspaces · SSO/RBAC)                 ░░░░░░░░░░░░ Future
+Phase 26    Platform (queue · plugin system)                     ░░░░░░░░░░░░ Planned
+Phase 27    Team & Cloud (workspaces · SSO/RBAC)                 ░░░░░░░░░░░░ Future
 ```
 
-**Phase 1–18 highlights**: Agent CRUD, Task Board, Workflow Builder (cron), CLI Window (PTY),
-Flow Graph, Image Studio, Synapse (Notion/Obsidian), Local LLM Manager, Custom Features
-(plugin system), Project Folders, macOS UX complete (MX-01~12), 229 tests passing.
+**Phase 21–25 highlights**: PM agent as orchestrator (event-driven, zero timers in task flow),
+AI error analysis + auto-retry/reassign/escalate, prompt history UI, auto-learning (Rules/Memory extraction),
+project retrospective, agent-task fitness tracking, graceful shutdown recovery, DB performance indexes.
 
 ---
 

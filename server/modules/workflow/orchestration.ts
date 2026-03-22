@@ -39,6 +39,7 @@ import { createReportWorkflowTools } from "./orchestration/report-workflow-tools
 import { createSessionReviewTools } from "./orchestration/session-review-tools.ts";
 import { startAgentAnomalyMonitor } from "./orchestration/agent-anomaly-monitor.ts";
 import { startHeartbeatEngine } from "./orchestration/heartbeat.ts";
+import { startPmOrchestrator } from "./orchestration/pm-orchestrator.ts";
 import { startTaskScheduler } from "./orchestration/task-scheduler.ts";
 import {
   extractReportDesignParentTaskId,
@@ -761,21 +762,6 @@ export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrat
     startReviewConsensusMeeting,
     processSubtaskDelegations,
     insertNotification,
-    startTaskExecutionForAgent: (taskId: string, agentId: string) => {
-      const agent = db.prepare("SELECT * FROM agents WHERE id = ?").get(agentId) as { department_id?: string | null } | null;
-      if (!agent) return;
-      const deptRow = agent.department_id
-        ? (db.prepare("SELECT id, name FROM departments WHERE id = ?").get(agent.department_id) as { id: string; name: string } | null)
-        : null;
-      startTaskExecutionForAgent(taskId, agent, deptRow?.id ?? null, deptRow?.name ?? "");
-    },
-    readYoloModeEnabled: () => {
-      try {
-        const row = db.prepare("SELECT value FROM settings WHERE key = 'yoloMode' LIMIT 1").get() as { value?: unknown } | undefined;
-        const v = String(row?.value ?? "").trim().toLowerCase();
-        return v === "true" || v === "1" || v === "yes";
-      } catch { return false; }
-    },
   });
 
   function reconcileDelegatedSubtasksAfterRun(taskId: string, exitCode: number): void {
@@ -830,6 +816,39 @@ export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrat
         : null;
       const deptName = deptRow?.name ?? "";
       startTaskExecutionForAgent(taskId, agent, deptId, deptName);
+    },
+  });
+
+  // ── PM Orchestrator: PM 에이전트가 이벤트 기반으로 오케스트레이션 ──
+  startPmOrchestrator({
+    db,
+    nowMs,
+    logsDir,
+    runAgentOneShot,
+    startTaskExecutionForAgent: (taskId: string, agentId: string) => {
+      const agent = db.prepare("SELECT * FROM agents WHERE id = ?").get(agentId) as { department_id?: string | null } | null;
+      if (!agent) return;
+      const deptRow = agent.department_id
+        ? (db.prepare("SELECT id, name FROM departments WHERE id = ?").get(agent.department_id) as { id: string; name: string } | null)
+        : null;
+      startTaskExecutionForAgent(taskId, agent, deptRow?.id ?? null, deptRow?.name ?? "");
+    },
+    finishReview,
+    appendTaskLog,
+    broadcast,
+    sendAgentMessage,
+    getPreferredLanguage,
+    resolveProjectPath: (projectId: string) => {
+      try { return resolveProjectPath({ project_id: projectId } as any); } catch { return ""; }
+    },
+    insertNotification: (params) => {
+      insertNotification({
+        type: params.type as Parameters<typeof insertNotification>[0]["type"],
+        title: params.title,
+        body: params.body,
+        task_id: params.task_id,
+        agent_id: params.agent_id,
+      });
     },
   });
 

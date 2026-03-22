@@ -83,6 +83,24 @@ export default function TaskCard(props: TaskCardProps) {
         {!cardCollapsed && (
           <>
             <TaskCardBody state={state} />
+            {/* 에러 분석 요약 (failed 태스크) */}
+            {task.status === "failed" && task.error_analysis && (() => {
+              try {
+                const analysis = JSON.parse(task.error_analysis) as { summary?: string; cause?: string; suggestion?: string };
+                return (
+                  <div className="mt-2 px-2.5 py-2" style={{ background: "rgba(244,63,94,0.06)", border: "1px solid rgba(244,63,94,0.15)", borderRadius: 8, fontSize: "10px", fontFamily: "var(--th-font-mono)" }}>
+                    <div style={{ color: "var(--th-status-error)", fontWeight: 700, marginBottom: 2 }}>
+                      {analysis.summary}
+                    </div>
+                    {analysis.suggestion && (
+                      <div style={{ color: "var(--th-text-muted)", marginTop: 2 }}>
+                        {analysis.suggestion}
+                      </div>
+                    )}
+                  </div>
+                );
+              } catch { return null; }
+            })()}
             <TaskCardActions state={state} />
           </>
         )}

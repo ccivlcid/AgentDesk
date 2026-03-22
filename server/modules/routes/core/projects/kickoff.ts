@@ -700,8 +700,14 @@ export function registerProjectKickoffRoutes({ app, db, broadcast, appendTaskLog
         pmAgentName: pmAgent?.name ?? "PM",
         startedAt: Date.now(),
       });
-      startPmOversightSweep({ db, broadcast, appendTaskLog, nowMs, resolveProjectPath, startTaskExecutionForAgent });
-      logger.info({ projectId, pmAgentId: pmAgent?.id }, "[kickoff] PM oversight started");
+      // PM Orchestrator용 DB persist (서버 재시작 시 복원)
+      try {
+        db.prepare(
+          "INSERT OR REPLACE INTO pm_oversight_state (project_id, pm_agent_id, started_at) VALUES (?, ?, ?)",
+        ).run(projectId, pmAgent?.id ?? null, Date.now());
+      } catch { /* table may not exist yet */ }
+      // PM Orchestrator가 이벤트 기반으로 오케스트레이션 — 폴링 sweep 불필요
+      logger.info({ projectId, pmAgentId: pmAgent?.id }, "[kickoff] PM orchestrator active for project");
 
       // 킥오프 알림
       insertNotification?.({

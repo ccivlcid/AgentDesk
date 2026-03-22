@@ -258,6 +258,7 @@ export function useTaskBoard({
       review: { code: t({ ko: "검토", en: "REV", ja: "レビュー", zh: "审核" }), color: "var(--th-status-purple)" },
       done: { code: t({ ko: "완료", en: "DONE", ja: "完了", zh: "完成" }), color: "var(--th-status-muted)" },
       pending: { code: t({ ko: "보류", en: "HOLD", ja: "保留", zh: "待处理" }), color: "var(--th-status-warning)" },
+      failed: { code: t({ ko: "실패", en: "ERR", ja: "失敗", zh: "失败" }), color: "var(--th-status-error)" },
       cancelled: { code: t({ ko: "취소", en: "VOID", ja: "中止", zh: "取消" }), color: "var(--th-status-muted)" },
     }),
     [t],

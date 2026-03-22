@@ -2,7 +2,8 @@
 
 This document defines a contributor-facing API baseline for AgentDesk.
 It is intentionally compact and focused on frequently used endpoints.
-Current baseline target: `v1.6.1` (local snapshot, 2026-03-19).
+Current baseline target: `v1.6.3` (local snapshot, 2026-03-27).
+> **v1.6.2 changes:** Added `POST /api/projects/auto-assign-agents` (AI agent staffing), `POST /api/projects/:id/kickoff`, `GET /api/projects/:id/pm-activity`, `POST /api/projects/:id/clarification-reply`. Notifications CHECK constraint expanded with `task_started`, `kickoff`.
 > **v1.6.1 changes:** `hook_entries.scope_type` now accepts `'project'` (migration `2026-03-23-001`). `/api/hooks` accepts `scope_type=project&scope_id=<project_id>` filter.
 
 ## Base
@@ -149,6 +150,8 @@ or
 | POST | `/api/tasks/:id/run` | Start task |
 | POST | `/api/tasks/:id/stop` | Cancel or pause task |
 | POST | `/api/tasks/:id/resume` | Resume paused task |
+| POST | `/api/tasks/:id/retry` | Retry failed task (reset to planned, PM orchestrator restarts) |
+| GET | `/api/tasks/:id/prompt` | Get task execution prompt text (from .prompt.txt log file) |
 | POST | `/api/tasks/:id/inject` | Queue sanitized interrupt prompt (paused session) |
 | GET | `/api/tasks/:id/terminal` | Task terminal logs |
 | GET | `/api/tasks/:id/meeting-minutes` | Meeting minutes |
@@ -210,6 +213,11 @@ or
 | POST | `/api/project-templates` | Create project template |
 | DELETE | `/api/project-templates/:templateId` | Delete project template |
 | POST | `/api/projects/:id/apply-template/:templateId` | Apply a template to a project |
+| POST | `/api/projects/:id/kickoff` | Kickoff project (LLM task generation) |
+| POST | `/api/projects/:id/resume` | Resume next planned task |
+| POST | `/api/projects/:id/clarification-reply` | Reply to kickoff clarification |
+| GET | `/api/projects/:id/pm-activity` | PM activity timeline |
+| POST | `/api/projects/auto-assign-agents` | AI auto-assign agents to project roles |
 | GET | `/api/github/status` | GitHub integration status |
 | GET | `/api/github/repos` | Repositories |
 | POST | `/api/github/clone` | Clone repository |

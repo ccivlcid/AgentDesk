@@ -1,4 +1,4 @@
-import { post } from "./core";
+import { post, request } from "./core";
 
 export interface KickoffResult {
   status: "ok" | "clarification_needed";
@@ -55,4 +55,15 @@ export async function replyClarification(
     clarification_id: clarificationId,
     answer,
   });
+}
+
+// ── Task Debug APIs ──
+
+export async function fetchTaskPrompt(taskId: string): Promise<string | null> {
+  const result = await request<{ ok: boolean; prompt: string | null }>(`/api/tasks/${taskId}/prompt`);
+  return result.prompt;
+}
+
+export async function retryTask(taskId: string): Promise<void> {
+  await post(`/api/tasks/${taskId}/retry`);
 }

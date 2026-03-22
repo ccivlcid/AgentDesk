@@ -356,6 +356,7 @@ export function createCliRuntimeTools(deps: CliRuntimeDeps) {
       finished = true;
       clearRunTimers();
       detachOutputListeners();
+      activeProcesses.delete(taskId);
       safeEnd();
       try {
         fs.unlinkSync(promptPath);

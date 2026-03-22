@@ -8,6 +8,7 @@ export const STATUS_COLORS: Record<TaskStatus, string> = {
   review:        "var(--th-accent, #f59e0b)",
   done:          "var(--th-text-muted)",
   pending:       "var(--th-text-secondary)",
+  failed:        "var(--th-danger, #ef4444)",
   cancelled:     "var(--th-danger, #ef4444)",
 };
 
@@ -19,6 +20,7 @@ export const STATUS_LABEL: Record<TaskStatus, string> = {
   review:        "Review",
   done:          "Done",
   pending:       "Pending",
+  failed:        "Failed",
   cancelled:     "Cancelled",
 };
 

@@ -589,6 +589,41 @@ export function registerTaskCrudRoutes(deps: TaskCrudRouteDeps): void {
     res.json({ ok: true, affected: result.changes });
   });
 
+  // ── GET /api/tasks/:id/prompt — 프롬프트 히스토리 ──
+  app.get("/api/tasks/:id/prompt", (req, res) => {
+    const taskId = String(req.params.id);
+    const promptFile = path.join(logsDir, `${taskId}.prompt.txt`);
+    try {
+      if (fs.existsSync(promptFile)) {
+        const content = fs.readFileSync(promptFile, "utf8");
+        return res.json({ ok: true, prompt: content });
+      }
+    } catch { /* ignore */ }
+    res.json({ ok: true, prompt: null });
+  });
+
+  // ── POST /api/tasks/:id/retry — 원클릭 재실행 ──
+  app.post("/api/tasks/:id/retry", (req, res) => {
+    const taskId = String(req.params.id);
+    const task = db.prepare("SELECT id, title, status, assigned_agent_id FROM tasks WHERE id = ?").get(taskId) as
+      | { id: string; title: string; status: string; assigned_agent_id: string | null }
+      | undefined;
+    if (!task) return res.status(404).json({ error: "not_found" });
+    if (task.status !== "failed" && task.status !== "inbox") {
+      return res.status(400).json({ error: "task_not_failed" });
+    }
+
+    db.prepare(
+      "UPDATE tasks SET status = 'planned', retry_count = 0, error_analysis = NULL, updated_at = ? WHERE id = ?",
+    ).run(nowMs(), taskId);
+
+    appendTaskLog(taskId, "system", "Manual retry requested by user");
+    const updated = db.prepare("SELECT * FROM tasks WHERE id = ?").get(taskId);
+    broadcast("task_update", updated);
+
+    res.json({ ok: true, task: updated });
+  });
+
   app.delete("/api/tasks/:id", (req, res) => {
     const id = String(req.params.id);
     const existing = db.prepare("SELECT * FROM tasks WHERE id = ?").get(id) as

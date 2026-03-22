@@ -1,6 +1,171 @@
 # AgentDesk — Development Progress
 
-> Last updated: 2026-03-26
+> Last updated: 2026-03-27
+
+---
+
+## ✅ Phase 25: 기능 확장 — Complete
+
+> **Date:** 2026-03-27
+
+### What was built
+
+| Feature | Description |
+|---------|-------------|
+| **프롬프트 히스토리 UI** | 터미널 패널에 "프롬프트" 탭 추가 — 에이전트에게 전달된 전체 프롬프트 확인 + 복사 버튼 |
+| **에이전트 적합도 추적** | `agent_task_fitness` 테이블 — 에이전트별 태스크 유형 성공/실패/평균 소요시간 기록 |
+| **적합도 자동 업데이트** | done 이벤트 → 성공 기록, failed 이벤트 → 실패 기록 (PM 오케스트레이터에서 호출) |
+
+### Modified/Created Files
+
+- `src/components/terminal-panel/TerminalPanelTabs.tsx` — 단일 탭 → 2탭 (터미널 + 프롬프트)
+- `src/components/TerminalPanel.tsx` — PromptTabContent 컴포넌트 추가
+- `src/components/terminal-panel/useTerminalPanelData.ts` — 탭 타입 확장
+- `server/modules/workflow/orchestration/auto-learning.ts` — updateAgentFitness 추가
+- `server/modules/workflow/orchestration/pm-orchestrator.ts` — done/failed에서 fitness 업데이트
+- `migrations-e-recent.ts` — agent_task_fitness 테이블
+
+---
+
+## ✅ Phase 24: 안정성 수정 — Complete
+
+> **Date:** 2026-03-27
+
+### What was built
+
+| Feature | Description |
+|---------|-------------|
+| **Graceful Shutdown 개선** | in_progress → planned 복원 (cancelled 대신) → PM 오케스트레이터가 서버 재시작 후 복원 |
+| **DB 인덱스 7개** | tasks(project_id, status), tasks(status, assigned_agent_id), subtasks(task_id, status), subtasks(delegated_task_id), subtasks(target_department_id), messages(sender_id, sender_type), task_logs(task_id, kind) |
+| **알림 flood 방지** | 같은 task_id+type 조합 5초 내 중복 차단 |
+| **DB 트랜잭션** | 태스크 상태 업데이트 (in_progress→review) 원자성 보장 (BEGIN/COMMIT/ROLLBACK) |
+
+### Modified Files
+
+- `server/modules/lifecycle/register-graceful-shutdown.ts` — cancelled → planned
+- `server/modules/routes/ops/notifications.ts` — flood dedupe 로직
+- `server/modules/workflow/orchestration/run-complete-handler/state-updates.ts` — 트랜잭션 래핑
+- `server/modules/bootstrap/schema/versioned-migrations/migrations-e-recent.ts` — 인덱스 7개
+
+---
+
+## ✅ Phase 23: Optimize 학습 루프 — Complete
+
+> **Date:** 2026-03-27
+
+### What was built
+
+| Feature | Description |
+|---------|-------------|
+| **자동 학습** | 태스크 done 시 PM LLM이 Rules/Memory 자동 추출 → rule_entries/skill_learning_history 저장 |
+| **프로젝트 회고** | 모든 태스크 완료 시 PM이 회고 보고서 자동 생성 → 프로젝트 directive에 append |
+| **PM 프롬프트** | `prompts/pm/auto-learn.md` (학습 추출), `prompts/pm/project-retrospective.md` (회고) |
+| **이벤트 기반** | done 이벤트 → 학습, 프로젝트 완료 → 회고. 타이머 0건 |
+
+### PM 오케스트레이션 전체 흐름 (Phase 21-23)
+
+```
+킥오프 → 태스크 생성 → PM oversight state DB 저장
+  ↓
+에이전트 실행 → 완료 (exit=0) → review 이벤트
+  → PM LLM 검토: APPROVE → finishReview → 리뷰 회의 → done
+                  REVISE → 에이전트에게 피드백 + 재실행
+  ↓
+done 이벤트 →
+  1. PM 자동 학습 (Rules/Memory 추출)
+  2. PM 다음 태스크 시작 (idle 에이전트에게 배정)
+  3. 프로젝트 완료 시 → PM 회고 보고서 생성
+  ↓
+에이전트 실행 → 실패 (exit≠0) → failed 이벤트
+  → 에러 분석 AI (로그 분석 → error_analysis 저장)
+  → PM LLM 판단: RETRY → 재시도
+                  REASSIGN → 다른 에이전트
+                  ESCALATE → 사용자 알림
+```
+
+### Modified/Created Files
+
+- **신규** `server/modules/workflow/orchestration/auto-learning.ts`
+- **신규** `prompts/pm/auto-learn.md`
+- **신규** `prompts/pm/project-retrospective.md`
+- `server/modules/workflow/orchestration/pm-orchestrator.ts` — 학습 + 회고 연결
+
+---
+
+## ✅ Phase 22: Debug 경험 — Complete
+
+> **Date:** 2026-03-27
+
+### What was built
+
+| Feature | Description |
+|---------|-------------|
+| **에러 분석 AI** | 태스크 실패 시 LLM이 로그 분석 → `error_analysis` JSON 저장 (summary, cause, suggestion) |
+| **에러 분석 프롬프트** | `prompts/system/error-analysis.md` — 8가지 에러 유형 분류 |
+| **프롬프트 히스토리 API** | `GET /api/tasks/:id/prompt` — 에이전트에게 전달된 프롬프트 조회 |
+| **원클릭 재실행 API** | `POST /api/tasks/:id/retry` — failed 태스크를 planned로 리셋 |
+| **재실행 버튼 UI** | ERR 카드에 재실행 버튼 + 로딩 상태 |
+| **에러 요약 UI** | ERR 카드에 AI 분석 결과 인라인 표시 (요약 + 해결 제안) |
+| **TaskStatus 타입 확장** | `"failed"` 추가 + 관련 상수/컬러맵 업데이트 |
+
+### Modified/Created Files
+
+- **신규** `server/modules/workflow/orchestration/run-complete-handler/error-analysis.ts`
+- **신규** `prompts/system/error-analysis.md`
+- `server/modules/routes/core/tasks/crud.ts` — prompt/retry 엔드포인트
+- `server/modules/workflow/orchestration/pm-orchestrator.ts` — 실패 시 에러 분석 호출
+- `src/api/project-kickoff.ts` — fetchTaskPrompt, retryTask API
+- `src/components/taskboard/task-card/TaskCardActions.tsx` — 재실행 버튼
+- `src/components/taskboard/task-card/index.tsx` — 에러 분석 요약 표시
+- `src/types/index.ts` — TaskStatus에 "failed" + Task에 error_analysis 필드
+- `src/components/desktop/project-folder-window/constants.ts` — failed 상태 색상/라벨
+- `src/components/task-board/useTaskBoard.ts` — statusCodeMap에 failed 추가
+- `migrations-e-recent.ts` — error_analysis 컬럼
+
+---
+
+## ✅ Phase 21: PM 에이전트 오케스트레이션 — Complete
+
+> **Date:** 2026-03-27
+
+### What was built
+
+| Feature | Description |
+|---------|-------------|
+| **EventBus** | `server/lib/event-bus.ts` — 태스크 상태 변경 이벤트 허브. 타이머 폴링 대체 |
+| **PM Orchestrator** | `server/modules/workflow/orchestration/pm-orchestrator.ts` — PM LLM이 태스크 검토, 실패 처리, 다음 태스크 시작 판단 |
+| **PM 프롬프트** | `prompts/pm/` — review-task, handle-failure, decide-inbox, start-next 4개 프롬프트 |
+| **이벤트 기반 전환** | PM oversight sweep (15s) + YOLO autopilot (2.5s) 폴링 비활성화 → 이벤트 드리븐 |
+| **태스크 재시도** | tasks.retry_count, max_retries 컬럼 + PM이 retry/reassign/escalate 판단 |
+| **서버 상태 복원** | pm_oversight_state 테이블 + 서버 시작 시 미완료 프로젝트 자동 복원 |
+| **메모리 누수 수정** | activeProcesses Map close 이벤트에서 삭제 |
+| **에러 요약 기록** | 실패 태스크의 last_error_summary 자동 저장 → PM이 원인 분석에 활용 |
+
+### PM 오케스트레이션 흐름
+
+```
+태스크 완료 (exit=0) → review 이벤트 → PM LLM 호출
+  → "APPROVE" → finishReview → 리뷰 회의 → done → 다음 태스크 시작
+  → "REVISE" → 에이전트에게 피드백 → 재실행
+
+태스크 실패 (exit≠0) → failed 이벤트 → PM LLM 호출
+  → "RETRY" → planned 전환 + 재실행
+  → "REASSIGN" → 다른 에이전트에게 이관
+  → "ESCALATE" → 사용자에게 알림
+```
+
+### Modified/Created Files
+
+- **신규** `server/lib/event-bus.ts`
+- **신규** `server/modules/workflow/orchestration/pm-orchestrator.ts`
+- **신규** `prompts/pm/review-task.md`, `handle-failure.md`, `decide-inbox.md`, `start-next.md`
+- `server/modules/workflow/orchestration.ts` — PM 오케스트레이터 초기화
+- `server/modules/workflow/orchestration/run-complete-handler/state-updates.ts` — 이벤트 발행 + 에러 요약
+- `server/modules/workflow/orchestration/review-finalize-tools/finalize-approved-review.ts` — done 이벤트 발행, 자동 체이닝 제거
+- `server/modules/routes/core/projects/kickoff.ts` — pm_oversight_state persist, sweep 비활성화
+- `server/modules/routes/ops/messages/decision-inbox-routes.ts` — YOLO 타이머 비활성화
+- `server/modules/workflow/agents/cli-runtime.ts` — activeProcesses 메모리 누수 수정
+- `server/modules/bootstrap/schema/versioned-migrations/migrations-e-recent.ts` — retry_count + pm_oversight_state
 
 ---
 

@@ -120,18 +120,17 @@ export function runCompleteNotify(
         ),
         taskId,
       );
-      const nextDelay = 800 + Math.random() * 600;
       const nextCallback = crossDeptNextCallbacks.get(taskId);
       if (nextCallback) {
         crossDeptNextCallbacks.delete(taskId);
-        setTimeout(nextCallback, nextDelay);
+        nextCallback();
       } else {
         recoverCrossDeptQueueAfterMissingCallback(taskId);
       }
       const subtaskNext = subtaskDelegationCallbacks.get(taskId);
       if (subtaskNext) {
         subtaskDelegationCallbacks.delete(taskId);
-        setTimeout(subtaskNext, nextDelay);
+        subtaskNext();
       }
       return;
     }

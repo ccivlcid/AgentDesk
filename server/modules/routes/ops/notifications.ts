@@ -75,6 +75,10 @@ export function registerNotificationRoutes(ctx: RuntimeContext): void {
 export function createNotificationHelper(ctx: { db: any; nowMs: () => number; broadcast: (event: string, data: any) => void }) {
   const { db, nowMs, broadcast } = ctx;
 
+  // Flood 방지: 같은 task_id+type 조합 5초 내 중복 차단
+  const recentNotifications = new Map<string, number>();
+  const DEDUPE_WINDOW_MS = 5_000;
+
   function insertNotification(params: {
     type: "task_complete" | "task_error" | "task_started" | "kickoff" | "decision_created" | "agent_error" | "system" | "cost_alert" | "agent_anomaly" | "heartbeat";
     title: string;
@@ -82,8 +86,23 @@ export function createNotificationHelper(ctx: { db: any; nowMs: () => number; br
     task_id?: string | null;
     agent_id?: string | null;
   }): string {
-    const id = randomUUID();
     const now = nowMs();
+
+    // Flood 방지 체크
+    const dedupeKey = `${params.type}:${params.task_id ?? "global"}`;
+    const lastSent = recentNotifications.get(dedupeKey);
+    if (lastSent && now - lastSent < DEDUPE_WINDOW_MS) {
+      return ""; // 5초 내 중복 → 무시
+    }
+    recentNotifications.set(dedupeKey, now);
+    // 오래된 항목 정리 (100개 초과 시)
+    if (recentNotifications.size > 100) {
+      for (const [key, ts] of recentNotifications) {
+        if (now - ts > DEDUPE_WINDOW_MS * 2) recentNotifications.delete(key);
+      }
+    }
+
+    const id = randomUUID();
     db.prepare(
       "INSERT INTO notifications (id, type, title, body, task_id, agent_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
     ).run(id, params.type, params.title, params.body ?? null, params.task_id ?? null, params.agent_id ?? null, now);

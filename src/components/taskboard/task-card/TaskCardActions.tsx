@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { retryTask } from "../../../api/project-kickoff";
 import type { TaskCardState } from "./useTaskCardState";
 
 interface TaskCardActionsProps {
@@ -5,6 +7,7 @@ interface TaskCardActionsProps {
 }
 
 export function TaskCardActions({ state }: TaskCardActionsProps) {
+  const [retrying, setRetrying] = useState(false);
   const {
     t,
     task,
@@ -40,7 +43,29 @@ export function TaskCardActions({ state }: TaskCardActionsProps) {
           className="flex flex-1 items-center justify-center gap-1 text-xs font-medium font-mono text-white"
           style={{ background: "rgba(34,197,94,0.85)", borderRadius: 8, padding: "5px 10px", border: "1px solid rgba(34,197,94,0.4)", transition: "background 0.12s" }}
         >
-          ▶ {t({ ko: "실행", en: "Run", ja: "実行", zh: "运行" })}
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="5,3 19,12 5,21" /></svg>
+          {t({ ko: "실행", en: "Run", ja: "実行", zh: "运行" })}
+        </button>
+      )}
+      {task.status === "failed" && (
+        <button
+          onClick={async () => {
+            setRetrying(true);
+            try { await retryTask(task.id); } catch { /* ignore */ }
+            finally { setRetrying(false); }
+          }}
+          disabled={retrying}
+          title={t({ ko: "재실행", en: "Retry", ja: "再実行", zh: "重试" })}
+          className="flex flex-1 items-center justify-center gap-1 text-xs font-medium font-mono text-white"
+          style={{ background: "rgba(245,158,11,0.85)", borderRadius: 8, padding: "5px 10px", border: "1px solid rgba(245,158,11,0.4)", opacity: retrying ? 0.6 : 1 }}
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M1 4v6h6M23 20v-6h-6" />
+            <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" />
+          </svg>
+          {retrying
+            ? t({ ko: "재실행 중...", en: "Retrying...", ja: "再実行中...", zh: "重试中..." })
+            : t({ ko: "재실행", en: "Retry", ja: "再実行", zh: "重试" })}
         </button>
       )}
       {canPause && onPauseTask && (
@@ -50,7 +75,8 @@ export function TaskCardActions({ state }: TaskCardActionsProps) {
           className="flex flex-1 items-center justify-center gap-1 text-xs font-medium font-mono text-white"
           style={{ background: "rgba(234,88,12,0.8)", borderRadius: 8, padding: "5px 10px", border: "1px solid rgba(234,88,12,0.35)", transition: "background 0.12s" }}
         >
-          ⏸ {t({ ko: "일시중지", en: "Pause", ja: "一時停止", zh: "暂停" })}
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="5" y="3" width="4" height="18" rx="1" /><rect x="15" y="3" width="4" height="18" rx="1" /></svg>
+          {t({ ko: "일시중지", en: "Pause", ja: "一時停止", zh: "暂停" })}
         </button>
       )}
       {canStop && (
@@ -60,7 +86,8 @@ export function TaskCardActions({ state }: TaskCardActionsProps) {
           className="flex items-center justify-center gap-1 text-xs font-medium font-mono"
           style={{ background: "rgba(185,28,28,0.7)", color: "white", borderRadius: 8, padding: "5px 10px", border: "1px solid rgba(185,28,28,0.35)", transition: "background 0.12s" }}
         >
-          ⏹ {t({ ko: "중지", en: "Stop", ja: "停止", zh: "停止" })}
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="4" y="4" width="16" height="16" rx="2" /></svg>
+          {t({ ko: "중지", en: "Stop", ja: "停止", zh: "停止" })}
         </button>
       )}
       {canResume && onResumeTask && (
@@ -70,7 +97,8 @@ export function TaskCardActions({ state }: TaskCardActionsProps) {
           className="flex flex-1 items-center justify-center gap-1 text-xs font-medium font-mono"
           style={{ borderRadius: 8, padding: "5px 10px", background: "var(--th-accent-glow)", color: "var(--th-text-accent)", border: "1px solid var(--th-border-accent)", transition: "opacity 0.12s" }}
         >
-          ↩ {t({ ko: "재개", en: "Resume", ja: "再開", zh: "恢复" })}
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1 4 1 10 7 10" /><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" /></svg>
+          {t({ ko: "재개", en: "Resume", ja: "再開", zh: "恢复" })}
         </button>
       )}
 
@@ -82,7 +110,7 @@ export function TaskCardActions({ state }: TaskCardActionsProps) {
             className="flex items-center justify-center"
             style={{ background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)", borderRadius: 7, padding: "4px 7px", border: "1px solid var(--th-border)", fontSize: "0.8rem", transition: "background 0.1s" }}
           >
-            &#128421;
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="4 17 10 11 4 5" /><line x1="12" y1="19" x2="20" y2="19" /></svg>
           </button>
         )}
         {/* 회의록 버튼 제거 — PM Activity 패널에서 확인 */}
@@ -123,7 +151,7 @@ export function TaskCardActions({ state }: TaskCardActionsProps) {
             className="flex items-center justify-center"
             style={{ background: "rgba(127,29,29,0.4)", color: "rgb(252,165,165)", borderRadius: 7, padding: "4px 7px", border: "1px solid rgba(127,29,29,0.35)", fontSize: "0.8rem", transition: "background 0.1s" }}
           >
-            🗑
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
           </button>
         )}
       </div>

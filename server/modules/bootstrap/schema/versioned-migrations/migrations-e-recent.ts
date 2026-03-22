@@ -435,4 +435,65 @@ export const VERSIONED_MIGRATIONS_E_RECENT: Migration[] = [
       } catch { /* ignore */ }
     },
   },
+  {
+    id: "2026-03-27-001-task-retry-support",
+    up: (db) => {
+      try { db.exec("ALTER TABLE tasks ADD COLUMN retry_count INTEGER NOT NULL DEFAULT 0"); } catch { /* already exists */ }
+      try { db.exec("ALTER TABLE tasks ADD COLUMN max_retries INTEGER NOT NULL DEFAULT 2"); } catch { /* already exists */ }
+      try { db.exec("ALTER TABLE tasks ADD COLUMN last_error_summary TEXT"); } catch { /* already exists */ }
+    },
+  },
+  {
+    id: "2026-03-27-002-pm-oversight-persistence",
+    up: (db) => {
+      try {
+        db.exec(`
+          CREATE TABLE IF NOT EXISTS pm_oversight_state (
+            project_id TEXT PRIMARY KEY REFERENCES projects(id) ON DELETE CASCADE,
+            pm_agent_id TEXT,
+            started_at INTEGER NOT NULL,
+            created_at INTEGER DEFAULT (unixepoch()*1000)
+          )
+        `);
+      } catch { /* already exists */ }
+    },
+  },
+  {
+    id: "2026-03-27-003-task-error-analysis",
+    up: (db) => {
+      try { db.exec("ALTER TABLE tasks ADD COLUMN error_analysis TEXT"); } catch { /* already exists */ }
+    },
+  },
+  {
+    id: "2026-03-27-004-performance-indexes",
+    up: (db) => {
+      try { db.exec("CREATE INDEX IF NOT EXISTS idx_tasks_project_status ON tasks(project_id, status)"); } catch { /* */ }
+      try { db.exec("CREATE INDEX IF NOT EXISTS idx_tasks_status_agent ON tasks(status, assigned_agent_id)"); } catch { /* */ }
+      try { db.exec("CREATE INDEX IF NOT EXISTS idx_subtasks_task_status ON subtasks(task_id, status)"); } catch { /* */ }
+      try { db.exec("CREATE INDEX IF NOT EXISTS idx_subtasks_delegated ON subtasks(delegated_task_id)"); } catch { /* */ }
+      try { db.exec("CREATE INDEX IF NOT EXISTS idx_subtasks_target_dept ON subtasks(target_department_id)"); } catch { /* */ }
+      try { db.exec("CREATE INDEX IF NOT EXISTS idx_messages_sender_type ON messages(sender_id, sender_type, created_at DESC)"); } catch { /* */ }
+      try { db.exec("CREATE INDEX IF NOT EXISTS idx_task_logs_task_kind ON task_logs(task_id, kind, created_at DESC)"); } catch { /* */ }
+    },
+  },
+  {
+    id: "2026-03-27-005-agent-task-fitness",
+    up: (db) => {
+      try {
+        db.exec(`
+          CREATE TABLE IF NOT EXISTS agent_task_fitness (
+            id TEXT PRIMARY KEY DEFAULT (lower(hex(randomblob(8)))),
+            agent_id TEXT NOT NULL REFERENCES agents(id) ON DELETE CASCADE,
+            task_type TEXT NOT NULL,
+            success_count INTEGER NOT NULL DEFAULT 0,
+            failure_count INTEGER NOT NULL DEFAULT 0,
+            avg_duration_ms INTEGER NOT NULL DEFAULT 0,
+            last_updated INTEGER DEFAULT (unixepoch()*1000),
+            UNIQUE(agent_id, task_type)
+          )
+        `);
+        db.exec("CREATE INDEX IF NOT EXISTS idx_agent_fitness ON agent_task_fitness(agent_id, task_type)");
+      } catch { /* already exists */ }
+    },
+  },
 ];

@@ -59,7 +59,8 @@ export function registerGracefulShutdownHandlers({
           task.assigned_agent_id,
         );
       }
-      db.prepare("UPDATE tasks SET status = 'cancelled', updated_at = ? WHERE id = ? AND status = 'in_progress'").run(
+      // PM Orchestrator가 서버 재시작 후 복원 → planned로 설정 (cancelled 대신)
+      db.prepare("UPDATE tasks SET status = 'planned', updated_at = ? WHERE id = ? AND status = 'in_progress'").run(
         nowMs(),
         taskId,
       );

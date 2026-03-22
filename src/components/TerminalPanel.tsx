@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useI18n } from "../i18n";
 import { useTheme } from "../ThemeContext";
 import AgentAvatar from "./AgentAvatar";
@@ -12,6 +12,7 @@ import { InterventionSection } from "./terminal-panel/InterventionSection";
 import { OpsDetailsSection } from "./terminal-panel/OpsDetailsSection";
 import { ProgressHintsStrip } from "./terminal-panel/ProgressHintsStrip";
 import { TerminalPanelHeaderActions } from "./terminal-panel/TerminalPanelHeaderActions";
+import { fetchTaskPrompt } from "../api/project-kickoff";
 
 const mono = "var(--th-font-mono)";
 
@@ -281,6 +282,9 @@ export default function TerminalPanel({
             />
           )}
 
+          {/* ── 프롬프트 탭 ── */}
+          {activeTab === "prompt" && <PromptTabContent taskId={taskId} tr={tr} />}
+
           {/* ── 터미널 탭 ── */}
           {activeTab === "terminal" && (
             <TerminalTabContent
@@ -353,5 +357,64 @@ export default function TerminalPanel({
           </div>
       </div>
     </>
+  );
+}
+
+/** 프롬프트 탭 — 에이전트에게 전달된 프롬프트 전문 */
+function PromptTabContent({ taskId, tr }: { taskId: string; tr: (ko: string, en: string, ja?: string, zh?: string) => string }) {
+  const [prompt, setPrompt] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    fetchTaskPrompt(taskId)
+      .then((p) => setPrompt(p))
+      .catch(() => setPrompt(null))
+      .finally(() => setLoading(false));
+  }, [taskId]);
+
+  if (loading) {
+    return (
+      <div style={{ padding: 20, fontFamily: "var(--th-font-mono)", fontSize: 11, color: "var(--th-text-muted)" }}>
+        {tr("로딩 중...", "Loading...", "読み込み中...", "加载中...")}
+      </div>
+    );
+  }
+
+  if (!prompt) {
+    return (
+      <div style={{ padding: 20, fontFamily: "var(--th-font-mono)", fontSize: 11, color: "var(--th-text-muted)", textAlign: "center" }}>
+        {tr("프롬프트 없음", "No prompt available", "プロンプトなし", "无提示词")}
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ flex: 1, overflow: "auto", padding: 12 }}>
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
+        <button
+          type="button"
+          onClick={() => navigator.clipboard.writeText(prompt)}
+          style={{
+            fontFamily: "var(--th-font-mono)", fontSize: 10, padding: "3px 10px",
+            border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)",
+            color: "var(--th-text-muted)", cursor: "pointer", borderRadius: 4,
+          }}
+        >
+          {tr("복사", "Copy", "コピー", "复制")}
+        </button>
+      </div>
+      <pre style={{
+        whiteSpace: "pre-wrap",
+        wordBreak: "break-word",
+        fontFamily: "var(--th-font-mono)",
+        fontSize: 11,
+        lineHeight: 1.5,
+        color: "var(--th-text-primary)",
+        margin: 0,
+      }}>
+        {prompt}
+      </pre>
+    </div>
   );
 }

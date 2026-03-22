@@ -1,4 +1,4 @@
-import { readYoloModeEnabled } from "../../../routes/ops/messages/decision-inbox/yolo-mode.ts";
+// PM Orchestrator가 이벤트 기반으로 처리 — readYoloModeEnabled 불필요
 import type { CountRow } from "../../../routes/shared/types.ts";
 import type { CreateReviewFinalizeToolsDeps } from "./types.ts";
 
@@ -61,16 +61,11 @@ export function createReconcileDelegatedSubtasksAfterRun(
             "system",
             "All delegated subtasks completed after resume; retrying review completion",
           );
-          const yolo = readYoloModeEnabled(db);
           const finishReview = getFinishReview();
-          setTimeout(
-            () =>
-              finishReview(parentTaskId, parent.title, {
-                bypassProjectDecisionGate: yolo,
-                trigger: "delegated_subtask_completion",
-              }),
-            1200,
-          );
+          finishReview(parentTaskId, parent.title, {
+            bypassProjectDecisionGate: true,
+            trigger: "delegated_subtask_completion",
+          });
         }
       }
       return;
