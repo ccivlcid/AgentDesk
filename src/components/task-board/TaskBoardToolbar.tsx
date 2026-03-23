@@ -1,3 +1,4 @@
+import { useCallback, useState, useRef, useEffect } from "react";
 import type { TaskBoardState } from "./useTaskBoard";
 
 interface TaskBoardToolbarProps {
@@ -22,16 +23,68 @@ export function TaskBoardToolbar({ state }: TaskBoardToolbarProps) {
     kickoffBusy,
     onResume,
     resumeBusy,
+    onAddTasks,
+    addTasksBusy,
   } = state;
 
   const hasRunningTask = filteredTasks.some((tk) => tk.status === "in_progress");
   const hasPlannedTask = filteredTasks.some((tk) => tk.status === "planned");
+  const hasDoneTask = filteredTasks.some((tk) => tk.status === "done");
+  const totalTasks = filteredTasks.length;
+
+  // "Add Tasks" — show when all done (or have some done), no running/planned tasks, and there are tasks
+  const showAddTasks = currentProject && onAddTasks && !hasRunningTask && !hasPlannedTask && totalTasks > 0 && hasDoneTask;
+  // "Kickoff" — show only when there are NO tasks at all for the project
+  const showKickoff = currentProject && onKickoff && !hasRunningTask && !hasPlannedTask && totalTasks === 0;
+
+  const [addTasksInputOpen, setAddTasksInputOpen] = useState(false);
+  const [addTasksDirective, setAddTasksDirective] = useState("");
+  const [addTasksFile, setAddTasksFile] = useState<{ name: string; content: string } | null>(null);
+  const addTasksInputRef = useRef<HTMLInputElement>(null);
+  const addTasksFileRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (addTasksInputOpen) addTasksInputRef.current?.focus();
+  }, [addTasksInputOpen]);
+
+  const handleAddTasksClick = useCallback(() => {
+    setAddTasksInputOpen(true);
+    setAddTasksDirective("");
+    setAddTasksFile(null);
+  }, []);
+
+  const handleAddTasksSubmit = useCallback(() => {
+    if (!onAddTasks || (!addTasksDirective.trim() && !addTasksFile)) return;
+    const directive = addTasksDirective.trim() + (addTasksFile ? `\n\n--- Reference: ${addTasksFile.name} ---\n${addTasksFile.content}` : "");
+    onAddTasks(directive, addTasksFile ?? undefined);
+    setAddTasksInputOpen(false);
+    setAddTasksDirective("");
+    setAddTasksFile(null);
+  }, [onAddTasks, addTasksDirective, addTasksFile]);
+
+  const handleAddTasksCancel = useCallback(() => {
+    setAddTasksInputOpen(false);
+    setAddTasksDirective("");
+    setAddTasksFile(null);
+  }, []);
+
+  const handleAddTasksFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      setAddTasksFile({ name: file.name, content: reader.result as string });
+    };
+    reader.readAsText(file);
+    e.target.value = "";
+  }, []);
 
   return (
+    <div className="flex-shrink-0" style={{ borderTopLeftRadius: 10, borderTopRightRadius: 10 }}>
     <div
-      className="flex-shrink-0 flex items-center justify-between"
+      className="flex items-center justify-between"
       style={{
-        borderBottom: "1px solid var(--th-border)",
+        borderBottom: addTasksInputOpen ? "none" : "1px solid var(--th-border)",
         padding: "12px 18px",
         background: "var(--th-bg-panel)",
         borderTopLeftRadius: 10,
@@ -56,8 +109,8 @@ export function TaskBoardToolbar({ state }: TaskBoardToolbarProps) {
       </div>
 
       <div className="flex items-center gap-1.5 flex-shrink-0">
-        {/* 킥오프 버튼 — 프로젝트 선택 + 진행·계획 중 태스크 없을 때 */}
-        {currentProject && onKickoff && !hasRunningTask && !hasPlannedTask && (
+        {/* 킥오프 버튼 — 프로젝트에 태스크가 하나도 없을 때만 */}
+        {showKickoff && (
           <button
             type="button"
             onClick={onKickoff}
@@ -75,10 +128,40 @@ export function TaskBoardToolbar({ state }: TaskBoardToolbarProps) {
               transition: "all 0.12s",
             }}
           >
-            <span style={{ fontSize: 11 }}>{kickoffBusy ? "⟳" : "⚡"}</span>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
             {kickoffBusy
               ? t({ ko: "계획 중...", en: "Planning...", ja: "計画中...", zh: "计划中..." })
               : t({ ko: "킥오프", en: "Kickoff", ja: "キックオフ", zh: "启动" })}
+          </button>
+        )}
+        {/* 추가 업무 버튼 — 완료된 태스크가 있고 진행·계획 중인 태스크가 없을 때 */}
+        {showAddTasks && (
+          <button
+            type="button"
+            onClick={handleAddTasksClick}
+            disabled={addTasksBusy}
+            title={t({ ko: "기존 프로젝트에 추가 업무를 생성합니다", en: "Create additional tasks for this project", ja: "既存プロジェクトに追加タスクを作成", zh: "为该项目创建追加任务" })}
+            style={{
+              ...mono, fontSize: "10px", fontWeight: 700,
+              padding: "3px 10px",
+              border: "1px solid rgba(59,130,246,0.5)",
+              borderRadius: 6,
+              background: addTasksBusy ? "rgba(59,130,246,0.06)" : "rgba(59,130,246,0.1)",
+              color: addTasksBusy ? "var(--th-text-muted)" : "rgb(59,130,246)",
+              cursor: addTasksBusy ? "not-allowed" : "pointer",
+              display: "flex", alignItems: "center", gap: 4,
+              transition: "all 0.12s",
+            }}
+          >
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            {addTasksBusy
+              ? t({ ko: "생성 중...", en: "Creating...", ja: "作成中...", zh: "创建中..." })
+              : t({ ko: "추가 업무", en: "Add Tasks", ja: "追加タスク", zh: "追加任务" })}
           </button>
         )}
         {/* Resume 버튼 — planned 태스크가 있고 실행 중이 아닐 때 */}
@@ -139,6 +222,103 @@ export function TaskBoardToolbar({ state }: TaskBoardToolbarProps) {
           {t({ ko: "숨김", en: "HIDE", ja: "非表示", zh: "隐藏" })}
         </button>
       </div>
+    </div>
+    {/* Inline add-tasks input bar */}
+    {addTasksInputOpen && (
+      <div
+        style={{
+          display: "flex", alignItems: "center", gap: 6,
+          padding: "8px 18px",
+          borderBottom: "1px solid var(--th-border)",
+          background: "rgba(59,130,246,0.04)",
+        }}
+      >
+        <input
+          ref={addTasksFileRef}
+          type="file"
+          accept=".md,.txt,.markdown"
+          style={{ display: "none" }}
+          onChange={handleAddTasksFileChange}
+        />
+        <button
+          type="button"
+          onClick={() => addTasksFileRef.current?.click()}
+          title={t({ ko: "MD 파일 첨부", en: "Attach MD file", ja: "MDファイル添付", zh: "附加MD文件" })}
+          style={{
+            background: addTasksFile ? "rgba(59,130,246,0.12)" : "transparent",
+            border: addTasksFile ? "1px solid rgba(59,130,246,0.4)" : "1px solid var(--th-border)",
+            borderRadius: 4, padding: "3px 6px", cursor: "pointer",
+            display: "flex", alignItems: "center", gap: 3, flexShrink: 0,
+            color: addTasksFile ? "rgb(59,130,246)" : "var(--th-text-muted)",
+          }}
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+          </svg>
+          {addTasksFile && (
+            <span style={{ fontFamily: "var(--th-font-mono)", fontSize: 9, maxWidth: 80, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {addTasksFile.name}
+            </span>
+          )}
+        </button>
+        <input
+          ref={addTasksInputRef}
+          type="text"
+          value={addTasksDirective}
+          onChange={(e) => setAddTasksDirective(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") handleAddTasksSubmit();
+            if (e.key === "Escape") handleAddTasksCancel();
+          }}
+          placeholder={t({
+            ko: "추가할 업무를 설명해주세요...",
+            en: "Describe the additional tasks to add...",
+            ja: "追加するタスクを説明してください...",
+            zh: "请描述要添加的任务...",
+          })}
+          style={{
+            flex: 1, background: "var(--th-input-bg)", border: "1px solid rgba(59,130,246,0.3)",
+            color: "var(--th-text-primary)", fontFamily: "var(--th-font-mono)", fontSize: 11,
+            padding: "5px 8px", outline: "none", borderRadius: 4,
+          }}
+          onFocus={(e) => (e.currentTarget.style.borderColor = "rgba(59,130,246,0.6)")}
+          onBlur={(e) => (e.currentTarget.style.borderColor = "rgba(59,130,246,0.3)")}
+          disabled={addTasksBusy}
+        />
+        <button
+          type="button"
+          onClick={handleAddTasksSubmit}
+          disabled={addTasksBusy || (!addTasksDirective.trim() && !addTasksFile)}
+          style={{
+            ...mono, fontSize: "10px", fontWeight: 700,
+            padding: "4px 10px", borderRadius: 4,
+            border: "1px solid rgba(59,130,246,0.5)",
+            background: (addTasksBusy || (!addTasksDirective.trim() && !addTasksFile)) ? "transparent" : "rgba(59,130,246,0.12)",
+            color: (addTasksBusy || (!addTasksDirective.trim() && !addTasksFile)) ? "var(--th-text-muted)" : "rgb(59,130,246)",
+            cursor: (addTasksBusy || (!addTasksDirective.trim() && !addTasksFile)) ? "not-allowed" : "pointer",
+          }}
+        >
+          {addTasksBusy
+            ? t({ ko: "생성 중...", en: "Creating...", ja: "作成中...", zh: "创建中..." })
+            : t({ ko: "실행", en: "Submit", ja: "実行", zh: "执行" })}
+        </button>
+        <button
+          type="button"
+          onClick={handleAddTasksCancel}
+          disabled={addTasksBusy}
+          style={{
+            ...mono, fontSize: "10px", fontWeight: 700,
+            padding: "4px 8px", borderRadius: 4,
+            border: "1px solid var(--th-border)",
+            background: "transparent",
+            color: "var(--th-text-muted)",
+            cursor: addTasksBusy ? "not-allowed" : "pointer",
+          }}
+        >
+          {t({ ko: "취소", en: "Cancel", ja: "取消", zh: "取消" })}
+        </button>
+      </div>
+    )}
     </div>
   );
 }

@@ -1,6 +1,83 @@
 # AgentDesk — Development Progress
 
-> Last updated: 2026-03-28
+> Last updated: 2026-03-23
+
+---
+
+## ✅ Phase 47: 라이브러리 빈 화면 제거 + 라이브러리 개선안 문서화 — Complete
+
+> **Date:** 2026-03-23
+
+### What was built
+
+| Feature | Description |
+|---------|-------------|
+| **프로젝트 미선택 빈 화면 제거** | 스킬/규칙/메모리/훅 4개 탭 모두 프로젝트 미선택 시에도 전체 데이터 표시 |
+| **라이브러리 개선안 문서화** | `docs/strategy/roadmap/LIBRARY-IMPROVEMENT.md` — 규칙+메모리+훅 통합안 설계 |
+
+---
+
+## ✅ Phase 46: 자율모드 의사결정 비활성화 + 추가 업무 회의 — Complete
+
+> **Date:** 2026-03-23
+
+### What was built
+
+| Feature | Description |
+|---------|-------------|
+| **자율모드 의사결정 비활성화** | YOLO 모드 시 Decision Inbox 빈 배열 반환, 모달에 "자율 모드" 메시지, PM Activity 승인/수정 버튼 숨김 |
+| **추가 업무 킥오프 회의** | `runAddTasksMeeting()` — 추가 업무 시에도 짧은 회의 진행 (PM 추가 지시 공유, 에이전트 확인) |
+| **MD 파일 첨부** | 추가 업무 시 .md 파일 첨부 → 프로젝트 docs/ 저장 + LLM 프롬프트에 포함 |
+| **PM Activity 항목 클릭 확장** | 모든 항목 클릭 → 상세 패널 (타임스탬프, 태스크명, 에이전트, 전체 내용) |
+| **progress.md 자동 업데이트** | 태스크 완료 시 프로젝트 docs/progress.md 최상단에 엔트리 자동 추가 |
+
+---
+
+## ✅ Phase 45: PM Activity 3차 수정 + 추가 업무 + 산출물 전체 파일 — Complete
+
+> **Date:** 2026-03-23
+
+### PM Activity 데이터 보존 (근본 해결)
+
+**원인 3개:**
+1. `appendTaskLog`/메시지 INSERT 시 `project_id` 미설정 → 태스크 삭제 후 조회 불가
+2. 프론트 중복 제거가 `taskId:type`으로 같은 태스크 이벤트 대부분 삭제
+3. `pruneDuplicateReviewMeetings`가 NULL task_id 회의록 그룹화 → 손실
+
+**수정:**
+- 모든 INSERT 경로에 `project_id` 스탬프 (4개 파일)
+- SQLite AFTER INSERT 트리거로 `project_id` 자동 채움 (마이그레이션 010)
+- 프론트 중복 제거를 `item.id` 기준으로 변경
+- 정리 쿼리에 `task_id IS NOT NULL` 조건
+
+### 기능 추가
+
+| Feature | Description |
+|---------|-------------|
+| **추가 업무** | `POST /api/projects/:id/add-tasks` — 기존 done 태스크 컨텍스트, PM 배정, 스테이지 오버레이 |
+| **킥오프 버튼 분리** | 태스크 0개 → "킥오프", 전부 done → "추가 업무" |
+| **산출물 전체 파일** | 외부 프로젝트: DELIVERABLE_EXTS 필터 해제, 모든 파일 포함 (depth 5) |
+
+---
+
+## ✅ Phase 44: 에이전트/부서 데이터 정비 + DB 안정화 — Complete
+
+> **Date:** 2026-03-23
+
+### What was built
+
+| Feature | Description |
+|---------|-------------|
+| **전문 분야 12개** | 기존 6개 + 신규 6개 (리서치/투자/영상/데이터/마케팅/콘텐츠) |
+| **에이전트 29명** | 신규 12명 (분야별 팀장+주니어). 전 분야 팀장 배치 |
+| **DB FK 에러 해결** | `insertDeptIfMissing`에 12개 전부, 에이전트 시드 try/catch 방어 |
+| **db:reset 자동 서버 종료** | 포트 8790 프로세스 자동 탐지+종료 |
+| **base-schema meeting_minutes** | `task_id` nullable + `ON DELETE SET NULL` + `project_id` 컬럼 |
+| **라이브러리 탭 제거** | 산출물/템플릿/성과 3개 탭 제거, 스킬/규칙/메모리/훅만 유지 |
+| **킥오프 스테이지 화면 중앙** | flexbox 정중앙 배치 |
+| **헤더 진행률 항상 표시** | 페이드 아웃 제거, 전부 완료 시에도 유지 |
+| **"유형 없이 진행" 제거** | 커스텀 유형 목록 맨 위로 이동 |
+| **프로젝트 폴더 추가 업무 제거** | NewRoundPanel 제거, 업무보드에서만 가능 |
 
 ---
 

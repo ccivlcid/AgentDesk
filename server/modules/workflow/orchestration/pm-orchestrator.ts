@@ -15,6 +15,7 @@ import { runAutoLearning, generateProjectRetrospective, updateAgentFitness } fro
 import { findApiProvider, resolveModel } from "../../routes/ops/custom-features-ai/provider-helpers.ts";
 import { callProvider } from "../../routes/ops/custom-features-ai/llm-providers.ts";
 import { readYoloModeEnabled } from "../../routes/ops/messages/decision-inbox/yolo-mode.ts";
+import { recordTaskExecutionEvent } from "../core/task-execution-meta.ts";
 import logger from "../../../lib/logger.ts";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- wide deps from orchestration context
@@ -32,7 +33,7 @@ interface PmOrchestratorDeps {
   sendAgentMessage: (agent: { id: string }, content: string, kind: string, scope: string, meta: unknown, taskId: string | null) => void;
   getPreferredLanguage: () => string;
   resolveProjectPath: (projectId: string) => string;
-  insertNotification: (params: { type: string; title: string; body?: string | null; task_id?: string | null; agent_id?: string | null }) => void;
+  insertNotification: (params: { type: string; title: string; body?: string | null; task_id?: string | null; agent_id?: string | null }) => string | void;
 }
 
 /** In-flight guard: prevent concurrent PM calls for the same key */
@@ -115,6 +116,14 @@ export function startPmOrchestrator(deps: PmOrchestratorDeps): void {
         logger.info({ taskId }, "[pm-orchestrator] YOLO mode enabled — auto-approving task review");
         appendTaskLog(taskId, "pm_oversight", "YOLO mode: auto-approved (skipped PM LLM review)");
         finishReview(taskId, task.title, { bypassProjectDecisionGate: true, trigger: "yolo_auto_approve" });
+        recordTaskExecutionEvent(db as Parameters<typeof recordTaskExecutionEvent>[0], {
+          taskId,
+          eventType: "pm_approved",
+          fromState: "review",
+          toState: "done",
+          summary: "PM auto-approved (YOLO mode)",
+          createdAt: nowMs(),
+        });
         broadcast("pm_activity", {
           projectId, taskId, action: "approved",
           agentName: "YOLO Autopilot", summary: `YOLO auto-approved '${task.title}'`, timestamp: nowMs(),
@@ -199,11 +208,26 @@ export function startPmOrchestrator(deps: PmOrchestratorDeps): void {
           : "";
         appendTaskLog(taskId, "pm_oversight", `PM approved${flagSummary}: ${text.slice(0, 200)}`);
         finishReview(taskId, task.title, { bypassProjectDecisionGate: true, trigger: "pm_agent" });
+        recordTaskExecutionEvent(db as Parameters<typeof recordTaskExecutionEvent>[0], {
+          taskId,
+          eventType: "pm_approved",
+          fromState: "review",
+          toState: "done",
+          summary: `PM approved${flagSummary}: ${text.slice(0, 200)}`,
+          createdAt: nowMs(),
+        });
         sendAgentMessage({ id: pm.id as string }, text, "report", "all", null, taskId);
         broadcast("pm_activity", {
           projectId, taskId, action: "approved",
           agentName: pm.name, summary: `PM approved '${task.title}'${flagSummary}`, timestamp: nowMs(),
           reviewFlags,
+        });
+        insertNotification({
+          type: "pm_approved",
+          title: `PM approved: ${task.title}`,
+          body: flagSummary ? `Flags: ${flagSummary.trim()}` : null,
+          task_id: taskId,
+          agent_id: pm.id as string,
         });
       } else {
         // 수정 요청: 상태 재확인 후 변경
@@ -218,6 +242,14 @@ export function startPmOrchestrator(deps: PmOrchestratorDeps): void {
         const checksLabel = failedChecks.length > 0 ? ` [FAILED: ${failedChecks.join(", ")}]` : "";
 
         appendTaskLog(taskId, "pm_oversight", `PM requested revision${checksLabel}: ${text.slice(0, 200)}`);
+        recordTaskExecutionEvent(db as Parameters<typeof recordTaskExecutionEvent>[0], {
+          taskId,
+          eventType: "pm_revision_requested",
+          fromState: "review",
+          toState: "planned",
+          summary: `PM requested revision${checksLabel}: ${text.slice(0, 200)}`,
+          createdAt: nowMs(),
+        });
         db.prepare("UPDATE tasks SET status = 'planned', updated_at = ? WHERE id = ? AND status = 'review'").run(nowMs(), taskId);
         broadcast("task_update", db.prepare("SELECT * FROM tasks WHERE id = ?").get(taskId));
 
@@ -233,6 +265,13 @@ export function startPmOrchestrator(deps: PmOrchestratorDeps): void {
           projectId, taskId, action: "revision_requested",
           agentName: pm.name, summary: `PM requested revision for '${task.title}'${checksLabel}`, timestamp: nowMs(),
           reviewFlags,
+        });
+        insertNotification({
+          type: "pm_revision",
+          title: `PM revision: ${task.title}`,
+          body: checksLabel ? `Failed checks: ${checksLabel.trim()}` : text.slice(0, 200),
+          task_id: taskId,
+          agent_id: pm.id as string,
         });
       }
     } catch (err) {
@@ -297,6 +336,14 @@ export function startPmOrchestrator(deps: PmOrchestratorDeps): void {
         const escalationMsg = `PM: max retries (${strikeLimit}) reached for '${task.title}' — escalating to user. Last error: ${sanitizedError.slice(0, 200)}`;
         appendTaskLog(taskId, "pm_oversight", escalationMsg);
         logger.warn({ taskId, retryCount, strikeLimit }, "[pm-orchestrator] 3-strike escalation — no more retries");
+        recordTaskExecutionEvent(db as Parameters<typeof recordTaskExecutionEvent>[0], {
+          taskId,
+          eventType: "pm_escalated",
+          fromState: "failed",
+          toState: "failed",
+          summary: `PM escalated after ${strikeLimit} strikes: ${sanitizedError.slice(0, 200)}`,
+          createdAt: nowMs(),
+        });
 
         // Force status to 'failed' (not 'inbox' or 'planned')
         db.prepare("UPDATE tasks SET status = 'failed', updated_at = ? WHERE id = ?")
@@ -378,9 +425,25 @@ export function startPmOrchestrator(deps: PmOrchestratorDeps): void {
           broadcast("task_update", db.prepare("SELECT * FROM tasks WHERE id = ?").get(taskId));
           startTaskExecutionForAgent(taskId, otherAgent.id);
         }
+        recordTaskExecutionEvent(db as Parameters<typeof recordTaskExecutionEvent>[0], {
+          taskId,
+          eventType: "pm_reassigned",
+          fromState: "failed",
+          toState: "planned",
+          summary: `PM reassigned task to another agent: ${text.slice(0, 200)}`,
+          createdAt: nowMs(),
+        });
         sendAgentMessage({ id: pm.id as string }, text, "report", "all", null, taskId);
       } else if (/^ESCALATE[:\s]/im.test(text) || /에스컬|escalat/i.test(text)) {
         appendTaskLog(taskId, "pm_oversight", `PM escalated: ${text.slice(0, 200)}`);
+        recordTaskExecutionEvent(db as Parameters<typeof recordTaskExecutionEvent>[0], {
+          taskId,
+          eventType: "pm_escalated",
+          fromState: "failed",
+          toState: "failed",
+          summary: `PM escalated to user: ${text.slice(0, 200)}`,
+          createdAt: nowMs(),
+        });
         insertNotification({
           type: "agent_error",
           title: `PM: ${task.title}`,
@@ -392,6 +455,14 @@ export function startPmOrchestrator(deps: PmOrchestratorDeps): void {
       } else {
         // RETRY (default) — retryCount < strikeLimit already guaranteed by check above
         appendTaskLog(taskId, "pm_oversight", `PM retry (${retryCount + 1}/${strikeLimit}): ${text.slice(0, 200)}`);
+        recordTaskExecutionEvent(db as Parameters<typeof recordTaskExecutionEvent>[0], {
+          taskId,
+          eventType: "pm_retry",
+          fromState: "failed",
+          toState: "planned",
+          summary: `PM retry ${retryCount + 1}/${strikeLimit}: ${text.slice(0, 200)}`,
+          createdAt: nowMs(),
+        });
         db.prepare("UPDATE tasks SET status = 'planned', retry_count = ?, updated_at = ? WHERE id = ?")
           .run(retryCount + 1, nowMs(), taskId);
         broadcast("task_update", db.prepare("SELECT * FROM tasks WHERE id = ?").get(taskId));

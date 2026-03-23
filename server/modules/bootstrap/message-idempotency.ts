@@ -195,14 +195,20 @@ export function createMessageIdempotencyTools(deps: MessageIdempotencyDeps) {
 
     const id = randomUUID();
     const createdAt = nowMs();
+    // Resolve project_id so pm-activity survives even after the task is deleted.
+    let projectId: string | null = null;
+    if (taskId) {
+      const row = db.prepare("SELECT project_id FROM tasks WHERE id = ?").get(taskId) as { project_id: string | null } | undefined;
+      projectId = row?.project_id ?? null;
+    }
     try {
       db.prepare(
         `
       INSERT INTO messages (
         id, sender_type, sender_id, receiver_type, receiver_id,
-        content, message_type, task_id, idempotency_key, created_at
+        content, message_type, task_id, idempotency_key, created_at, project_id
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `,
       ).run(
         id,
@@ -215,6 +221,7 @@ export function createMessageIdempotencyTools(deps: MessageIdempotencyDeps) {
         taskId,
         idempotencyKey,
         createdAt,
+        projectId,
       );
     } catch (err) {
       if (idempotencyKey && isIdempotencyUniqueViolation(err)) {

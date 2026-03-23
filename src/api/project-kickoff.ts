@@ -32,6 +32,22 @@ export async function resumeProject(projectId: string): Promise<ResumeResult> {
   return post(`/api/projects/${projectId}/resume`) as Promise<ResumeResult>;
 }
 
+export interface AddTasksResult {
+  status: "ok";
+  taskCount: number;
+}
+
+export async function addProjectTasks(
+  projectId: string,
+  directive: string,
+  attachedFile?: { name: string; content: string },
+): Promise<AddTasksResult> {
+  return post(`/api/projects/${projectId}/add-tasks`, {
+    additional_directive: directive,
+    attached_file: attachedFile ?? undefined,
+  }) as Promise<AddTasksResult>;
+}
+
 export interface AutoAssignResult {
   ok: boolean;
   assignments: { role: string; agent_id: string }[];

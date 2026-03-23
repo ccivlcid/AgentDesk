@@ -8,6 +8,7 @@ import MessageContent from "./MessageContent";
 import type { DecisionInboxItem } from "./chat/decision-inbox";
 import { formatDecisionInboxTime as formatTime, type DecisionInboxModalProps } from "./chat/decision-inbox-modal.meta";
 import AppWindow from "./windows/AppWindow";
+import { useUiStore } from "../store/uiStore";
 
 const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };
 
@@ -54,6 +55,8 @@ export default function DecisionInboxModal({
   const t = (text: { ko: string; en: string; ja?: string; zh?: string }) => pickLang(uiLanguage, text);
   const { showToast } = useToast();
   const isKorean = uiLanguage.startsWith("ko");
+  const { settings } = useUiStore();
+  const isYoloMode = settings.yoloMode === true;
   const agentById = useMemo(() => {
     const map = new Map<string, Agent>();
     for (const agent of agents) map.set(agent.id, agent);
@@ -218,7 +221,31 @@ export default function DecisionInboxModal({
       <div className="flex flex-col h-full overflow-hidden">
         {/* ── 목록 ── */}
         <div className="flex-1 overflow-y-auto">
-          {loading ? (
+          {isYoloMode ? (
+            <div className="px-5 py-10 text-center">
+              <div className="flex justify-center mb-3" style={{ opacity: 0.25 }}>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                </svg>
+              </div>
+              <p style={{ ...mono, fontSize: "12px", fontWeight: 700, color: "var(--th-accent)", marginBottom: 6 }}>
+                {t({
+                  ko: "자율 모드",
+                  en: "Autonomous Mode",
+                  ja: "自律モード",
+                  zh: "自主模式",
+                })}
+              </p>
+              <p style={{ ...mono, fontSize: "11px", color: "var(--th-text-muted)", lineHeight: 1.6 }}>
+                {t({
+                  ko: "PM 오케스트레이터가 자동으로 처리합니다",
+                  en: "PM orchestrator handles all decisions automatically",
+                  ja: "PMオーケストレーターが自動処理します",
+                  zh: "PM编排器自动处理所有决策",
+                })}
+              </p>
+            </div>
+          ) : loading ? (
             <div className="flex items-center gap-2 px-5 py-8" style={{ ...mono, fontSize: "12px", color: "var(--th-text-muted)" }}>
               <span className="animate-pulse">▌</span>
               {t({ ko: "불러오는 중...", en: "Loading...", ja: "読み込み中...", zh: "加载中..." })}

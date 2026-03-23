@@ -410,6 +410,12 @@ export function registerDecisionInboxRoutes(ctx: RuntimeContext): DecisionInboxR
   // ---------------------------------------------------------------------------
   app.get("/api/decision-inbox", (req, res) => {
     runYoloAutopilot();
+
+    if (readYoloModeEnabled(db)) {
+      res.json({ items: [], yoloMode: true });
+      return;
+    }
+
     const forceRaw = String((req.query as Record<string, unknown>)?.force ?? "")
       .trim()
       .toLowerCase();

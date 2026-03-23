@@ -11,7 +11,6 @@ import { AgentsTab } from "./AgentsTab";
 import { DetailsTab } from "./DetailsTab";
 import { TerminalTab } from "./TerminalTab";
 import { GitTab } from "./GitTab";
-import NewRoundPanel from "./NewRoundPanel";
 
 export default function ProjectFolderWindow({
   project,
@@ -174,12 +173,6 @@ export default function ProjectFolderWindow({
         {tab === "git"      && <GitTab project={project} />}
       </div>
 
-      <NewRoundPanel
-        projectId={project.id}
-        hasRunningTask={activeTasks.length > 0}
-        onKickoffDone={handleKickoffDone}
-        t={t}
-      />
 
       <div onMouseDown={onResizeMouseDown} style={{ position: "absolute", bottom: 0, right: 0, width: 16, height: 16, cursor: "nwse-resize", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--th-border)", fontSize: 10, userSelect: "none" }}>
         ⌟

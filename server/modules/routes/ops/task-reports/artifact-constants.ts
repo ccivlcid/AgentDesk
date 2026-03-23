@@ -36,6 +36,24 @@ export const ARTIFACT_EXTENSIONS: Record<string, string> = {
   ".webp": "image/webp",
   ".zip": "application/zip",
   ".log": "text/plain",
+  ".py": "text/plain",
+  ".go": "text/plain",
+  ".rs": "text/plain",
+  ".java": "text/plain",
+  ".rb": "text/plain",
+  ".php": "text/plain",
+  ".vue": "text/plain",
+  ".svelte": "text/plain",
+  ".scss": "text/css",
+  ".less": "text/css",
+  ".sql": "text/plain",
+  ".sh": "text/plain",
+  ".bat": "text/plain",
+  ".toml": "text/plain",
+  ".env": "text/plain",
+  ".gitignore": "text/plain",
+  ".dockerfile": "text/plain",
+  ".prisma": "text/plain",
 };
 
 export const DELIVERABLE_EXTS = new Set([
@@ -164,7 +182,7 @@ export function createArtifactPathHelpers(db: PrepareDb) {
         scanDirForDeliverables(fullPath, projectRoot, maxDepth, results, depth + 1, externalProject);
       } else if (entry.isFile()) {
         const ext = path.extname(entry.name).toLowerCase();
-        if (!DELIVERABLE_EXTS.has(ext)) continue;
+        if (!externalProject && !DELIVERABLE_EXTS.has(ext)) continue;
         try {
           const stat = fs.statSync(fullPath);
           if (stat.size === 0) continue;

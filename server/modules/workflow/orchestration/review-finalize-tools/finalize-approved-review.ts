@@ -211,18 +211,28 @@ export function createFinalizeApprovedReview(params: {
       task_id: taskId,
     });
 
-    // ── Ship automation: version bump + CHANGELOG entry ──
+    // ── Ship automation: version bump + CHANGELOG + progress.md entry ──
     if (currentTask.project_id) {
+      const assignedAgentId = (currentTask as { assigned_agent_id?: unknown }).assigned_agent_id;
+      const agentRow = assignedAgentId
+        ? (db.prepare("SELECT name FROM agents WHERE id = ?").get(String(assignedAgentId)) as { name: string } | undefined)
+        : undefined;
+      const taskDesc = (currentTask as { description?: unknown }).description;
+      const taskRes = (currentTask as { result?: unknown }).result;
       shipAutomation({
         db,
         projectId: currentTask.project_id,
         taskId,
         taskTitle,
         taskType: (currentTask as { task_type?: string }).task_type,
+        taskDescription: typeof taskDesc === "string" ? taskDesc : null,
+        taskResult: typeof taskRes === "string" ? taskRes : null,
+        agentName: agentRow?.name ?? null,
         projectPath: currentTask.project_path,
         nowMs: t,
         appendTaskLog,
         broadcast,
+        insertNotification,
       });
     }
 

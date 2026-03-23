@@ -5,6 +5,7 @@ import { eventBus } from "../../lib/event-bus.ts";
 import { TOOL_DEFINITIONS, executeTool } from "./tools.ts";
 import { callAnthropicStream, callOpenAICompatibleStream, resolveProvider, getDefaultModel } from "./llm-client.ts";
 import { createRun, updateRunStatus, updateRunUsage, appendEvent, getRun } from "./store.ts";
+import { recordTaskExecutionEvent } from "../workflow/core/task-execution-meta.ts";
 import type { LlmMessage, LlmContent, StartRunOptions } from "./types.ts";
 
 const DEFAULT_MODEL = "claude-sonnet-4-6";
@@ -12,16 +13,144 @@ const DEFAULT_MAX_TURNS = 20;
 const DEFAULT_MAX_TOKENS = 8192;
 
 /**
- * Parse a chunk of codex CLI JSON output into human-readable text.
- * Codex with --json outputs newline-delimited JSON objects like:
+ * Line buffer for codex NDJSON streams.
+ * stdout chunks may split a JSON line across two Buffer boundaries.
+ * Call `push(chunk)` to feed data and get back complete lines.
+ * Exported so cli-runtime.ts can create its own buffer instance.
+ */
+export class CodexLineBuffer {
+  private remainder = "";
+  push(chunk: string): string[] {
+    const data = this.remainder + chunk;
+    const lines = data.split("\n");
+    // Last element is either "" (if chunk ended with \n) or a partial line
+    this.remainder = lines.pop() ?? "";
+    return lines;
+  }
+  /** Flush any remaining partial line (call on stream end). */
+  flush(): string | null {
+    if (!this.remainder) return null;
+    const line = this.remainder;
+    this.remainder = "";
+    return line;
+  }
+}
+
+/**
+ * Parse a single line of codex CLI JSON output into human-readable text.
+ * Codex `exec --json` outputs newline-delimited JSON objects.
+ *
+ * Known event types:
+ *   {"type":"message.delta","delta":"Hello..."}
+ *   {"type":"message.completed","message":{...}}
  *   {"type":"text","content":"Hello..."}
  *   {"type":"message","content":"..."}
  *   {"type":"tool_call","name":"write_file",...}
  *   {"type":"result","content":"Done"}
+ *   {"type":"response.completed","response":{...}}
  *   {"type":"item.started","item":{...}}
  *   {"type":"item.completed","item":{...}}
+ *   {"type":"error","message":"..."}
  *
- * Returns readable text lines. If a line isn't JSON, returns it as-is.
+ * Returns readable text or null if the event should be silently skipped.
+ */
+export function parseCodexJsonLine(line: string): string | null {
+  const trimmed = line.trim();
+  if (!trimmed) return null;
+
+  // Only attempt JSON parse if it looks like a JSON object
+  if (!trimmed.startsWith("{")) return trimmed;
+
+  let parsed: Record<string, unknown>;
+  try {
+    parsed = JSON.parse(trimmed);
+  } catch {
+    // Incomplete or non-JSON — pass through as-is
+    return trimmed;
+  }
+
+  const type = parsed.type as string | undefined;
+
+  // Streaming text delta (primary codex streaming event)
+  if (type === "message.delta") {
+    const delta = (parsed.delta as string) ?? "";
+    return delta || null;
+  }
+
+  // Completed message — extract final text
+  if (type === "message.completed") {
+    const msg = parsed.message as Record<string, unknown> | undefined;
+    const content = (msg?.content as string) ?? (parsed.content as string) ?? "";
+    return content || null;
+  }
+
+  // Simple text / message / result events
+  if (type === "text" || type === "message" || type === "result") {
+    const content = (parsed.content as string) ?? "";
+    return content || null;
+  }
+
+  // Response completion — extract summary if present
+  if (type === "response.completed") {
+    const resp = parsed.response as Record<string, unknown> | undefined;
+    const output = (resp?.output_text as string) ?? (resp?.content as string) ?? "";
+    return output || null;
+  }
+
+  // Tool calls
+  if (type === "tool_call" || type === "function_call") {
+    const name = (parsed.name as string) ?? (parsed.tool as string) ?? "tool";
+    const args = parsed.arguments ?? parsed.input ?? parsed.params;
+    const argStr = args ? ` ${typeof args === "string" ? args : JSON.stringify(args)}` : "";
+    return `[tool] ${name}${argStr}`;
+  }
+
+  // Tool results
+  if (type === "tool_result" || type === "function_call_output") {
+    const output = (parsed.output as string) ?? (parsed.content as string) ?? "";
+    if (output) return `[result] ${output.slice(0, 500)}${output.length > 500 ? "..." : ""}`;
+    return null;
+  }
+
+  // Errors
+  if (type === "error") {
+    const msg = (parsed.message as string) ?? (parsed.content as string) ?? JSON.stringify(parsed);
+    return `[error] ${msg}`;
+  }
+
+  // item.started / item.completed — extract sub-agent or tool info
+  if (type === "item.started" || type === "item.completed") {
+    const item = parsed.item as Record<string, unknown> | undefined;
+    if (item) {
+      const tool = (item.tool as string) ?? (item.type as string) ?? "";
+      const prompt = (item.prompt as string) ?? "";
+      const status = type === "item.completed" ? "completed" : "started";
+      const label = tool ? `[${tool} ${status}]` : `[${status}]`;
+      return prompt ? `${label} ${prompt.split("\n")[0].slice(0, 100)}` : label;
+    }
+  }
+
+  // Generic content fallback (status / thinking / etc.)
+  if (parsed.content && typeof parsed.content === "string") {
+    return parsed.content as string;
+  }
+
+  // Known metadata-only event type — skip silently
+  if (type) return null;
+
+  // Truly unknown structure — pass through as-is
+  return trimmed;
+}
+
+/**
+ * Parse a chunk of codex CLI JSON output into human-readable text.
+ * Handles multiple newline-delimited JSON lines within a single chunk.
+ * Non-JSON lines are passed through as-is.
+ *
+ * NOTE: This is a stateless convenience wrapper. For proper handling of
+ * partial lines split across Buffer boundaries, use CodexLineBuffer +
+ * parseCodexJsonLine instead.
+ *
  * Exported so cli-runtime.ts can reuse.
  */
 export function parseCodexJsonChunk(chunk: string): string {
@@ -29,83 +158,8 @@ export function parseCodexJsonChunk(chunk: string): string {
   const parts: string[] = [];
 
   for (const line of lines) {
-    const trimmed = line.trim();
-    if (!trimmed) {
-      parts.push("");
-      continue;
-    }
-
-    // Only attempt JSON parse if it looks like a JSON object
-    if (!trimmed.startsWith("{")) {
-      parts.push(line);
-      continue;
-    }
-
-    let parsed: Record<string, unknown>;
-    try {
-      parsed = JSON.parse(trimmed);
-    } catch {
-      parts.push(line);
-      continue;
-    }
-
-    const type = parsed.type as string | undefined;
-
-    // Extract readable content based on event type
-    if (type === "text" || type === "message" || type === "result") {
-      const content = (parsed.content as string) ?? "";
-      if (content) parts.push(content);
-      continue;
-    }
-
-    if (type === "tool_call" || type === "function_call") {
-      const name = (parsed.name as string) ?? (parsed.tool as string) ?? "tool";
-      const args = parsed.arguments ?? parsed.input ?? parsed.params;
-      const argStr = args ? ` ${typeof args === "string" ? args : JSON.stringify(args)}` : "";
-      parts.push(`[tool] ${name}${argStr}`);
-      continue;
-    }
-
-    if (type === "tool_result" || type === "function_call_output") {
-      const output = (parsed.output as string) ?? (parsed.content as string) ?? "";
-      if (output) parts.push(`[result] ${output.slice(0, 500)}${output.length > 500 ? "..." : ""}`);
-      continue;
-    }
-
-    if (type === "error") {
-      const msg = (parsed.message as string) ?? (parsed.content as string) ?? JSON.stringify(parsed);
-      parts.push(`[error] ${msg}`);
-      continue;
-    }
-
-    // item.started / item.completed — extract sub-agent or tool info
-    if (type === "item.started" || type === "item.completed") {
-      const item = parsed.item as Record<string, unknown> | undefined;
-      if (item) {
-        const tool = (item.tool as string) ?? (item.type as string) ?? "";
-        const prompt = (item.prompt as string) ?? "";
-        const status = type === "item.completed" ? "completed" : "started";
-        const label = tool ? `[${tool} ${status}]` : `[${status}]`;
-        parts.push(prompt ? `${label} ${prompt.split("\n")[0].slice(0, 100)}` : label);
-        continue;
-      }
-    }
-
-    // status / thinking / unknown types with content
-    if (parsed.content && typeof parsed.content === "string") {
-      parts.push(parsed.content as string);
-      continue;
-    }
-
-    // Fallback: skip purely structural JSON events (no content to show)
-    // This prevents "{ } raw" style output for empty/metadata-only events
-    if (type) {
-      // Known metadata types we can safely skip
-      continue;
-    }
-
-    // Truly unknown structure — pass through as-is
-    parts.push(line);
+    const result = parseCodexJsonLine(line);
+    if (result !== null) parts.push(result);
   }
 
   return parts.join("\n");
@@ -264,12 +318,20 @@ async function runViaCli(
     ];
 
     let output = "";
+    // Use line buffer for codex to handle partial JSON lines across chunks
+    const codexBuf = cliProvider === "codex" ? new CodexLineBuffer() : null;
     child.stdout?.on("data", (chunk: Buffer) => {
       const text = chunk.toString("utf8");
       output += text;
-      if (cliProvider === "codex") {
-        const parsed = parseCodexJsonChunk(text);
-        if (parsed.trim()) onChunk?.(parsed);
+      if (codexBuf) {
+        const completeLines = codexBuf.push(text);
+        const parts: string[] = [];
+        for (const line of completeLines) {
+          const parsed = parseCodexJsonLine(line);
+          if (parsed !== null) parts.push(parsed);
+        }
+        const combined = parts.join("\n");
+        if (combined.trim()) onChunk?.(combined);
       } else {
         onChunk?.(text);
       }
@@ -287,6 +349,15 @@ async function runViaCli(
     child.on("close", (code) => {
       clearTimeout(timeoutId);
       signal.removeEventListener("abort", abortHandler);
+
+      // Flush any remaining buffered codex output
+      if (codexBuf) {
+        const remaining = codexBuf.flush();
+        if (remaining) {
+          const parsed = parseCodexJsonLine(remaining);
+          if (parsed) onChunk?.(parsed);
+        }
+      }
 
       // Detect auth/credential errors from CLI output
       const lower = output.toLowerCase();
@@ -355,6 +426,16 @@ export async function startExecutionLoop(
   broadcast("task_update", { id: taskId, status: "in_progress" });
   broadcastStatus(broadcast, taskId, agentId, "thinking", runId);
 
+  // Record task_start event for timeline
+  recordTaskExecutionEvent(db as Parameters<typeof recordTaskExecutionEvent>[0], {
+    taskId,
+    eventType: "task_started",
+    fromState: "planned",
+    toState: "in_progress",
+    summary: `Task execution started (${useCliMode ? `CLI: ${cliProvider}` : `API: ${resolvedModel}`})`,
+    createdAt: nowMs(),
+  });
+
   // Async execution — fire and forget, errors are caught and stored
   void (async () => {
     try {
@@ -389,6 +470,16 @@ export async function startExecutionLoop(
         broadcastStatus(broadcast, taskId, agentId, "complete", runId);
         appendTaskLog(taskId, "system", "Status → review (CLI execution complete)");
         logger.info({ runId, taskId, cliProvider }, "[runtime] CLI execution complete → review");
+
+        // Record task_complete event for timeline
+        recordTaskExecutionEvent(db as Parameters<typeof recordTaskExecutionEvent>[0], {
+          taskId,
+          eventType: "task_complete",
+          fromState: "in_progress",
+          toState: "review",
+          summary: `Task completed via CLI (${cliProvider}) — awaiting review`,
+          createdAt: doneAt,
+        });
 
         // Emit event for PM orchestrator
         eventBus.emitTaskStatus({
@@ -523,6 +614,16 @@ export async function startExecutionLoop(
       broadcastStatus(broadcast, taskId, agentId, "complete", runId, { inputTokens: totalInputTokens, outputTokens: totalOutputTokens, toolCalls: totalToolCalls });
       appendTaskLog(taskId, "system", `Status → review (API execution complete, ${turn} turns)`);
 
+      // Record task_complete event for timeline
+      recordTaskExecutionEvent(db as Parameters<typeof recordTaskExecutionEvent>[0], {
+        taskId,
+        eventType: "task_complete",
+        fromState: "in_progress",
+        toState: "review",
+        summary: `Task completed via API (${model}, ${turn} turns, ${totalInputTokens}+${totalOutputTokens} tokens) — awaiting review`,
+        createdAt: apiDoneAt,
+      });
+
       logger.info({ runId, taskId, turns: turn, totalInputTokens, totalOutputTokens }, "[runtime] execution complete → review");
 
       // Emit event for PM orchestrator
@@ -546,6 +647,16 @@ export async function startExecutionLoop(
       broadcastStatus(broadcast, taskId, agentId, "error", runId);
       appendTaskLog(taskId, "system", `Task failed: ${msg.slice(0, 200)}`);
       broadcastText(broadcast, appendTaskLog, taskId, `\n[runtime] ERROR: ${msg}\n`);
+
+      // Record task_failed event for timeline
+      recordTaskExecutionEvent(db as Parameters<typeof recordTaskExecutionEvent>[0], {
+        taskId,
+        eventType: "task_failed",
+        fromState: "in_progress",
+        toState: "failed",
+        summary: `Task execution failed: ${msg.slice(0, 300)}`,
+        createdAt: nowMs(),
+      });
 
       // Emit event for PM orchestrator (failure handling)
       eventBus.emitTaskStatus({

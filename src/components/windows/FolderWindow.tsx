@@ -533,7 +533,6 @@ export default function FolderWindow({
   const [tab, setTab] = useState<Tab>("projects");
   const [ejectMsg, setEjectMsg] = useState<string | null>(null);
   const [versionMap, setVersionMap] = useState<Record<string, string>>({});
-
   // Fetch versions for all projects in folder
   useEffect(() => {
     const ids = folder.projects.map((p) => p.id);
@@ -710,24 +709,23 @@ export default function FolderWindow({
                     }}>
                       {p.project_path}
                     </div>
-                    <div style={{ fontSize: 8, color: "var(--th-text-muted)", marginTop: "auto" }}>
-                      {t({ ko: "클릭으로 선택", en: "click to select", ja: "クリックで選択", zh: "点击选择" })}
+                    <div style={{ display: "flex", gap: 4, marginTop: "auto" }}>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); void handleRemove(p.id); }}
+                        disabled={busyProjectId === p.id}
+                        style={{
+                          background: "transparent", border: "1px solid var(--th-danger-border)",
+                          color: "var(--th-danger-text)", fontFamily: "var(--th-font-mono)",
+                          fontSize: 9, padding: "3px 6px", cursor: "pointer",
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.background = "var(--th-danger-border)")}
+                        onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                      >
+                        {busyProjectId === p.id
+                          ? t({ ko: "이동 중...", en: "Moving...", ja: "移動中...", zh: "移动中..." })
+                          : t({ ko: "꺼내기", en: "Eject", ja: "取り出す", zh: "移出" })}
+                      </button>
                     </div>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); void handleRemove(p.id); }}
-                      disabled={busyProjectId === p.id}
-                      style={{
-                        background: "transparent", border: "1px solid var(--th-danger-border)",
-                        color: "var(--th-danger-text)", fontFamily: "var(--th-font-mono)",
-                        fontSize: 9, padding: "3px 8px", cursor: "pointer",
-                      }}
-                      onMouseEnter={(e) => (e.currentTarget.style.background = "var(--th-danger-border)")}
-                      onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-                    >
-                      {busyProjectId === p.id
-                        ? t({ ko: "이동 중...", en: "Moving...", ja: "移動中...", zh: "移动中..." })
-                        : t({ ko: "꺼내기", en: "Eject", ja: "取り出す", zh: "移出" })}
-                    </button>
                   </div>
                 ))}
               </div>

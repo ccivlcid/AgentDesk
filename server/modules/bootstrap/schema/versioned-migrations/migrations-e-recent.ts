@@ -777,4 +777,153 @@ export const VERSIONED_MIGRATIONS_E_RECENT: Migration[] = [
       } catch { /* already applied */ }
     },
   },
+  {
+    id: "2026-03-28-009-preserve-pm-activity-on-cascade",
+    up: (db) => {
+      // 1. Rebuild project_review_decision_events: project_id nullable + ON DELETE SET NULL
+      //    so decision events survive project deletion.
+      try {
+        const row = db
+          .prepare("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'project_review_decision_events'")
+          .get() as { sql?: string } | undefined;
+        const ddl = (row?.sql ?? "").toLowerCase();
+        if (ddl.includes("on delete set null") && ddl.includes("project_id text references projects")) {
+          // Already migrated (SET NULL on project_id FK)
+        } else if (ddl.includes("project_review_decision_events")) {
+          const oldTable = "project_review_decision_events_cascade_fix_old";
+          db.exec("PRAGMA foreign_keys = OFF");
+          try {
+            db.exec("BEGIN");
+            db.exec(`ALTER TABLE project_review_decision_events RENAME TO ${oldTable}`);
+            db.exec(`
+              CREATE TABLE project_review_decision_events (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                project_id TEXT REFERENCES projects(id) ON DELETE SET NULL,
+                snapshot_hash TEXT,
+                event_type TEXT NOT NULL
+                  CHECK(event_type IN ('planning_summary','representative_pick','followup_request','start_review_meeting')),
+                summary TEXT NOT NULL,
+                selected_options_json TEXT,
+                note TEXT,
+                task_id TEXT REFERENCES tasks(id) ON DELETE SET NULL,
+                meeting_id TEXT REFERENCES meeting_minutes(id) ON DELETE SET NULL,
+                created_at INTEGER DEFAULT (unixepoch()*1000)
+              )
+            `);
+            db.exec(`
+              INSERT INTO project_review_decision_events
+                (id, project_id, snapshot_hash, event_type, summary, selected_options_json, note, task_id, meeting_id, created_at)
+              SELECT id, project_id, snapshot_hash, event_type, summary, selected_options_json, note, task_id, meeting_id, created_at
+              FROM ${oldTable}
+            `);
+            db.exec(`DROP TABLE ${oldTable}`);
+            db.exec(
+              "CREATE INDEX IF NOT EXISTS idx_project_review_decision_events_project ON project_review_decision_events(project_id, created_at DESC)",
+            );
+            db.exec("COMMIT");
+          } catch (err) {
+            db.exec("ROLLBACK");
+            throw err;
+          } finally {
+            db.exec("PRAGMA foreign_keys = ON");
+          }
+        }
+      } catch { /* already migrated or table doesn't exist */ }
+
+      // 2. Rebuild task_execution_events: task_id ON DELETE SET NULL (was CASCADE)
+      //    so execution event history survives task deletion.
+      try {
+        const row = db
+          .prepare("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'task_execution_events'")
+          .get() as { sql?: string } | undefined;
+        const ddl = (row?.sql ?? "").toLowerCase();
+        if (ddl.includes("on delete cascade")) {
+          const oldTable = "task_execution_events_cascade_fix_old";
+          db.exec("PRAGMA foreign_keys = OFF");
+          try {
+            db.exec("BEGIN");
+            db.exec(`ALTER TABLE task_execution_events RENAME TO ${oldTable}`);
+            db.exec(`
+              CREATE TABLE task_execution_events (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                task_id TEXT REFERENCES tasks(id) ON DELETE SET NULL,
+                event_type TEXT NOT NULL,
+                from_state TEXT,
+                to_state TEXT,
+                summary TEXT,
+                metadata_json TEXT,
+                created_at INTEGER DEFAULT (unixepoch()*1000)
+              )
+            `);
+            db.exec(`
+              INSERT INTO task_execution_events (id, task_id, event_type, from_state, to_state, summary, metadata_json, created_at)
+              SELECT id, task_id, event_type, from_state, to_state, summary, metadata_json, created_at
+              FROM ${oldTable}
+            `);
+            db.exec(`DROP TABLE ${oldTable}`);
+            db.exec("CREATE INDEX IF NOT EXISTS idx_task_execution_events_task ON task_execution_events(task_id, created_at DESC)");
+            db.exec("COMMIT");
+          } catch (err) {
+            db.exec("ROLLBACK");
+            throw err;
+          } finally {
+            db.exec("PRAGMA foreign_keys = ON");
+          }
+        }
+      } catch { /* already migrated or table doesn't exist */ }
+    },
+  },
+  // ---------------------------------------------------------------------------
+  // Auto-fill project_id on task_logs and messages INSERT so PM Activity
+  // survives even after the parent task is deleted.
+  // ---------------------------------------------------------------------------
+  {
+    id: "2026-03-28-010-pm-activity-project-id-triggers",
+    up: (db) => {
+      // Trigger: when a task_log row is inserted with a task_id but no project_id,
+      // look up the task's project_id and fill it in.
+      try {
+        db.exec(`
+          CREATE TRIGGER IF NOT EXISTS trg_task_logs_fill_project_id
+          AFTER INSERT ON task_logs
+          FOR EACH ROW
+          WHEN NEW.task_id IS NOT NULL AND NEW.project_id IS NULL
+          BEGIN
+            UPDATE task_logs
+              SET project_id = (SELECT project_id FROM tasks WHERE id = NEW.task_id)
+            WHERE rowid = NEW.rowid;
+          END
+        `);
+      } catch { /* already exists */ }
+
+      // Trigger: same for messages table.
+      try {
+        db.exec(`
+          CREATE TRIGGER IF NOT EXISTS trg_messages_fill_project_id
+          AFTER INSERT ON messages
+          FOR EACH ROW
+          WHEN NEW.task_id IS NOT NULL AND NEW.project_id IS NULL
+          BEGIN
+            UPDATE messages
+              SET project_id = (SELECT project_id FROM tasks WHERE id = NEW.task_id)
+            WHERE id = NEW.id;
+          END
+        `);
+      } catch { /* already exists */ }
+
+      // Re-backfill any rows that were inserted since the last migration without project_id.
+      try {
+        db.exec(`
+          UPDATE task_logs SET project_id = (
+            SELECT t.project_id FROM tasks t WHERE t.id = task_logs.task_id
+          ) WHERE task_id IS NOT NULL AND project_id IS NULL
+        `);
+        db.exec(`
+          UPDATE messages SET project_id = (
+            SELECT t.project_id FROM tasks t WHERE t.id = messages.task_id
+          ) WHERE task_id IS NOT NULL AND project_id IS NULL
+        `);
+      } catch { /* best effort */ }
+    },
+  },
 ];

@@ -372,9 +372,14 @@ export function registerChatMessageRoutes(ctx: ChatMessageRouteCtx, deps: ChatMe
     const agentId = firstQueryValue(req.query.agent_id);
     const scope = firstQueryValue(req.query.scope) || "conversation"; // "conversation" or "all"
 
+    // Preserve PM-activity messages (report, status_update) from deletion.
+    // These feed the project PM Activity timeline and must not be wiped
+    // by chat-clearing actions.
+    const PM_ACTIVITY_GUARD = "AND message_type NOT IN ('report', 'status_update')";
+
     if (scope === "all") {
-      // Delete all messages (announcements + conversations)
-      const result = db.prepare("DELETE FROM messages").run();
+      // Delete all conversation/announcement messages, but keep report/status_update
+      const result = db.prepare(`DELETE FROM messages WHERE 1=1 ${PM_ACTIVITY_GUARD}`).run();
       broadcast("messages_cleared", { scope: "all" });
       return res.json({ ok: true, deleted: result.changes });
     }
@@ -384,19 +389,22 @@ export function registerChatMessageRoutes(ctx: ChatMessageRouteCtx, deps: ChatMe
       const result = db
         .prepare(
           `DELETE FROM messages WHERE
-        (sender_type = 'client' AND receiver_type = 'agent' AND receiver_id = ?)
+        ((sender_type = 'client' AND receiver_type = 'agent' AND receiver_id = ?)
         OR (sender_type = 'agent' AND sender_id = ?)
         OR receiver_type = 'all'
-        OR message_type = 'announcement'`,
+        OR message_type = 'announcement')
+        ${PM_ACTIVITY_GUARD}`,
         )
         .run(agentId, agentId);
       broadcast("messages_cleared", { scope: "agent", agent_id: agentId });
       return res.json({ ok: true, deleted: result.changes });
     }
 
-    // Delete only announcements/broadcasts
+    // Delete only announcements/broadcasts (not report/status_update)
     const result = db
-      .prepare("DELETE FROM messages WHERE receiver_type = 'all' OR message_type = 'announcement'")
+      .prepare(
+        `DELETE FROM messages WHERE (receiver_type = 'all' OR message_type = 'announcement') ${PM_ACTIVITY_GUARD}`,
+      )
       .run();
     broadcast("messages_cleared", { scope: "announcements" });
     res.json({ ok: true, deleted: result.changes });

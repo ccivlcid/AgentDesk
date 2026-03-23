@@ -80,7 +80,7 @@ export function createNotificationHelper(ctx: { db: any; nowMs: () => number; br
   const DEDUPE_WINDOW_MS = 5_000;
 
   function insertNotification(params: {
-    type: "task_complete" | "task_error" | "task_started" | "kickoff" | "decision_created" | "agent_error" | "system" | "cost_alert" | "agent_anomaly" | "heartbeat";
+    type: string;
     title: string;
     body?: string | null;
     task_id?: string | null;

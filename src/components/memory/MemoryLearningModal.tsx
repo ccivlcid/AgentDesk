@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { MemoryHistoryProvider, MemoryLearnProvider } from "../../api/memory";
 import type { Agent, MemoryEntry } from "../../types";
 import AgentAvatar from "../AgentAvatar";
+import AppWindow from "../windows/AppWindow";
 import {
   memoryProviderLabel,
   roleLabel,
@@ -113,35 +114,27 @@ export default function MemoryLearningModal({
   if (!learningEntry) return null;
 
   return (
-    <div className="skills-learn-modal fixed inset-0 z-[80] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.75)" }}>
-      <div className="skills-learn-modal-card w-full max-w-3xl max-h-[90vh] overflow-hidden shadow-2xl" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
-        <div className="flex items-start justify-between gap-4 px-5 py-4" style={{ borderBottom: "1px solid var(--th-border)" }}>
-          <div>
-            <h3 className="text-base font-semibold font-mono" style={{ color: "var(--th-text-heading)" }}>
-              {t({
-                ko: "\uBA54\uBAA8\uB9AC \uD559\uC2B5 \uC2A4\uCFFC\uB4DC",
-                en: "Memory Learning Squad",
-                ja: "\u30E1\u30E2\u30EA\u5B66\u7FD2\u30B9\u30AF\u30EF\u30C3\u30C9",
-                zh: "\u8BB0\u5FC6\u5B66\u4E60\u5C0F\u961F",
-              })}
-            </h3>
-            <div className="mt-1 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
-              {learningEntry.title} &middot; {categoryLabel(learningEntry.category, t)}
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            disabled={learnInProgress}
-            className={`px-2.5 py-1 text-xs font-mono transition-all ${learnInProgress ? "cursor-not-allowed opacity-40" : ""}`}
-            style={{ borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
-          >
-            {learnInProgress
-              ? t({ ko: "\uD559\uC2B5\uC911", en: "Running", ja: "\u5B9F\u884C\u4E2D", zh: "\u8FDB\u884C\u4E2D" })
-              : t({ ko: "\uB2EB\uAE30", en: "Close", ja: "\u9589\u3058\u308B", zh: "\u5173\u95ED" })}
-          </button>
+    <AppWindow
+      windowType="learn-memory"
+      title={t({
+        ko: "\uBA54\uBAA8\uB9AC \uD559\uC2B5 \uC2A4\uCFFC\uB4DC",
+        en: "Memory Learning Squad",
+        ja: "\u30E1\u30E2\u30EA\u5B66\u7FD2\u30B9\u30AF\u30EF\u30C3\u30C9",
+        zh: "\u8BB0\u5FC6\u5B66\u4E60\u5C0F\u961F",
+      })}
+      emoji={
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z" /><line x1="9" y1="21" x2="15" y2="21" />
+        </svg>
+      }
+      defaultWidth={760}
+      defaultHeight={560}
+      onClose={learnInProgress ? () => {} : onClose}
+    >
+      <div className="space-y-4 overflow-y-auto px-5 py-4">
+        <div className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
+          {learningEntry.title} &middot; {categoryLabel(learningEntry.category, t)}
         </div>
-
-        <div className="space-y-4 overflow-y-auto px-5 py-4 max-h-[calc(90vh-72px)]">
           {/* Memory content preview */}
           <div className="px-3 py-2" style={{ borderRadius: 0, border: "1px solid rgba(52,211,153,0.25)", background: "var(--th-terminal-bg)" }}>
             <div className="text-[11px] text-emerald-200">
@@ -524,7 +517,6 @@ export default function MemoryLearningModal({
             </button>
           </div>
         </div>
-      </div>
-    </div>
+    </AppWindow>
   );
 }

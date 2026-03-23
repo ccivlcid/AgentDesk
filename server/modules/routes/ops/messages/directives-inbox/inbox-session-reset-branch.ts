@@ -48,8 +48,9 @@ export async function tryRespondInboxSessionReset(p: SessionResetParams): Promis
         `
           DELETE FROM messages
           WHERE
-            (sender_type = 'client' AND receiver_type = 'agent' AND receiver_id = ?)
-            OR (sender_type = 'agent' AND sender_id = ?)
+            ((sender_type = 'client' AND receiver_type = 'agent' AND receiver_id = ?)
+            OR (sender_type = 'agent' AND sender_id = ?))
+            AND message_type NOT IN ('report', 'status_update')
         `,
       )
       .run(sessionRoute.agentId, sessionRoute.agentId);

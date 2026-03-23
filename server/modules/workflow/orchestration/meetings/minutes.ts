@@ -65,12 +65,18 @@ export function createMeetingMinutesTools(deps: MeetingMinutesDeps) {
   ): string {
     const meetingId = randomUUID();
     const t = nowMs();
+    // Resolve project_id so pm-activity survives even after the task is deleted.
+    let projectId: string | null = null;
+    if (taskId) {
+      const row = db.prepare("SELECT project_id FROM tasks WHERE id = ?").get(taskId) as { project_id: string | null } | undefined;
+      projectId = row?.project_id ?? null;
+    }
     db.prepare(
       `
-    INSERT INTO meeting_minutes (id, task_id, meeting_type, round, title, status, started_at, created_at)
-    VALUES (?, ?, ?, ?, ?, 'in_progress', ?, ?)
+    INSERT INTO meeting_minutes (id, task_id, project_id, meeting_type, round, title, status, started_at, created_at)
+    VALUES (?, ?, ?, ?, ?, ?, 'in_progress', ?, ?)
   `,
-    ).run(meetingId, taskId, meetingType, round, title, t, t);
+    ).run(meetingId, taskId, projectId, meetingType, round, title, t, t);
     broadcast("meeting_minutes_update", { task_id: taskId, meeting_id: meetingId, phase: "started" });
     return meetingId;
   }

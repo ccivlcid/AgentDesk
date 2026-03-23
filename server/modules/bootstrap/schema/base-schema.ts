@@ -164,7 +164,7 @@ CREATE TABLE IF NOT EXISTS task_logs (
 
 CREATE TABLE IF NOT EXISTS task_execution_events (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  task_id TEXT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+  task_id TEXT REFERENCES tasks(id) ON DELETE SET NULL,
   event_type TEXT NOT NULL,
   from_state TEXT,
   to_state TEXT,
@@ -316,7 +316,7 @@ CREATE TABLE IF NOT EXISTS project_review_decision_states (
 
 CREATE TABLE IF NOT EXISTS project_review_decision_events (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+  project_id TEXT REFERENCES projects(id) ON DELETE SET NULL,
   snapshot_hash TEXT,
   event_type TEXT NOT NULL
     CHECK(event_type IN ('planning_summary','representative_pick','followup_request','start_review_meeting')),

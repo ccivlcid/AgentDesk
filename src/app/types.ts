@@ -29,7 +29,11 @@ export type WindowType =
   | "project-create"
   | "decision-inbox"
   | "folder-browser"
-  | "pm-activity";
+  | "pm-activity"
+  | "learn-skill"
+  | "learn-rule"
+  | "learn-memory"
+  | "learn-hook";
 
 
 export type View =

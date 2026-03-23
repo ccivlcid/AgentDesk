@@ -3,6 +3,7 @@ import { execFileSync } from "node:child_process";
 type DbLike = {
   prepare: (sql: string) => {
     run: (...args: any[]) => unknown;
+    get: (...args: any[]) => unknown;
   };
 };
 
@@ -100,11 +101,18 @@ export function createProcessTools(deps: CreateProcessToolsDeps) {
 
   function appendTaskLog(taskId: string, kind: string, message: string): void {
     const t = nowMs();
-    db.prepare("INSERT INTO task_logs (task_id, kind, message, created_at) VALUES (?, ?, ?, ?)").run(
+    // Resolve project_id so pm-activity survives even after the task is deleted.
+    let projectId: string | null = null;
+    if (taskId) {
+      const row = db.prepare("SELECT project_id FROM tasks WHERE id = ?").get(taskId) as { project_id: string | null } | undefined;
+      projectId = row?.project_id ?? null;
+    }
+    db.prepare("INSERT INTO task_logs (task_id, kind, message, created_at, project_id) VALUES (?, ?, ?, ?, ?)").run(
       taskId,
       kind,
       message,
       t,
+      projectId,
     );
   }
 

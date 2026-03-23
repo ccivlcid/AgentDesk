@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { RuleHistoryProvider, RuleLearnProvider } from "../../api/agent-rules";
 import type { Agent, AgentRule } from "../../types";
 import AgentAvatar from "../AgentAvatar";
+import AppWindow from "../windows/AppWindow";
 import {
   ruleProviderLabel,
   roleLabel,
@@ -113,37 +114,27 @@ export default function RuleLearningModal({
   if (!learningRule) return null;
 
   return (
-    <div className="skills-learn-modal fixed inset-0 z-[80] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.75)" }}>
-      <div className="skills-learn-modal-card w-full max-w-3xl max-h-[90vh] overflow-hidden shadow-2xl" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
-        <div className="flex items-start justify-between gap-4 px-5 py-4" style={{ borderBottom: "1px solid var(--th-border)" }}>
-          <div>
-            <h3 className="text-base font-semibold font-mono" style={{ color: "var(--th-text-heading)" }}>
-              {t({
-                ko: "룰 학습 스쿼드",
-                en: "Rule Learning Squad",
-                ja: "ルール学習スクワッド",
-                zh: "规则学习小队",
-              })}
-            </h3>
-            <div className="mt-1 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
-              {learningRule.title} &middot; {categoryLabel(learningRule.category, t)}
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            disabled={learnInProgress}
-            className={`px-2.5 py-1 text-xs font-mono transition-all ${
-              learnInProgress ? "cursor-not-allowed opacity-40" : ""
-            }`}
-            style={{ borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
-          >
-            {learnInProgress
-              ? t({ ko: "학습중", en: "Running", ja: "実行中", zh: "进行中" })
-              : t({ ko: "닫기", en: "Close", ja: "閉じる", zh: "关闭" })}
-          </button>
+    <AppWindow
+      windowType="learn-rule"
+      title={t({
+        ko: "룰 학습 스쿼드",
+        en: "Rule Learning Squad",
+        ja: "ルール学習スクワッド",
+        zh: "规则学习小队",
+      })}
+      emoji={
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" />
+        </svg>
+      }
+      defaultWidth={760}
+      defaultHeight={560}
+      onClose={learnInProgress ? () => {} : onClose}
+    >
+      <div className="space-y-4 overflow-y-auto px-5 py-4">
+        <div className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
+          {learningRule.title} &middot; {categoryLabel(learningRule.category, t)}
         </div>
-
-        <div className="space-y-4 overflow-y-auto px-5 py-4 max-h-[calc(90vh-72px)]">
           {/* Rule content preview — terminal style */}
           <div className="px-3 py-2" style={{ borderRadius: 0, border: "1px solid rgba(52,211,153,0.25)", background: "var(--th-terminal-bg)" }}>
             <div className="text-[11px] text-emerald-200">
@@ -530,7 +521,6 @@ export default function RuleLearningModal({
             </button>
           </div>
         </div>
-      </div>
-    </div>
+    </AppWindow>
   );
 }

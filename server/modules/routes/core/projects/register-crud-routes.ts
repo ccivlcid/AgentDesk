@@ -281,8 +281,21 @@ export function registerCrudRoutes(deps: ProjectRoutesDeps): void {
     const existing = db.prepare("SELECT id FROM projects WHERE id = ?").get(id);
     if (!existing) return res.status(404).json({ error: "not_found" });
 
-    db.prepare("UPDATE tasks SET project_id = NULL WHERE project_id = ?").run(id);
-    db.prepare("DELETE FROM projects WHERE id = ?").run(id);
+    runInTransaction(() => {
+      // Stamp project_id onto PM-activity records before orphaning tasks,
+      // so they remain queryable after the project row is gone.
+      db.prepare("UPDATE task_logs SET project_id = ? WHERE task_id IN (SELECT id FROM tasks WHERE project_id = ?) AND project_id IS NULL").run(id, id);
+      db.prepare("UPDATE messages SET project_id = ? WHERE task_id IN (SELECT id FROM tasks WHERE project_id = ?) AND project_id IS NULL").run(id, id);
+      db.prepare("UPDATE meeting_minutes SET project_id = ? WHERE task_id IN (SELECT id FROM tasks WHERE project_id = ?) AND project_id IS NULL").run(id, id);
+
+      // Note: project_review_decision_events has ON DELETE CASCADE on project_id (NOT NULL).
+      // A migration (2026-03-28-009) rebuilds the table to use ON DELETE SET NULL so
+      // decision events survive project deletion. Until that migration runs on a given DB,
+      // the CASCADE will still delete them — this is a known limitation for un-migrated DBs.
+
+      db.prepare("UPDATE tasks SET project_id = NULL WHERE project_id = ?").run(id);
+      db.prepare("DELETE FROM projects WHERE id = ?").run(id);
+    });
     res.json({ ok: true });
   });
 }

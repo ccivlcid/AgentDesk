@@ -18,10 +18,8 @@ interface HooksLibraryProps {
 export default function HooksLibrary({ agents, departments, currentProject }: HooksLibraryProps) {
   const { t, locale: localeTag } = useI18n();
 
-  const filters = useMemo(
-    () => currentProject ? { scope_type: "project" as const, scope_id: currentProject.id } : undefined,
-    [currentProject?.id],
-  );
+  // Don't filter by project scope — always show all hooks (global + project)
+  const filters = undefined;
 
   const vm = useHooksState({
     agents,
@@ -30,22 +28,6 @@ export default function HooksLibrary({ agents, departments, currentProject }: Ho
     filters,
   });
 
-  // 프로젝트 미선택
-  if (!currentProject) {
-    return (
-      <div className="flex items-center justify-center py-24">
-        <div className="text-center font-mono">
-          <div className="text-3xl mb-3" style={{ opacity: 0.4 }}>🪝</div>
-          <p className="text-sm font-medium mb-1" style={{ color: "var(--th-text-secondary)" }}>
-            {t({ ko: "프로젝트를 선택하세요", en: "Select a project", ja: "プロジェクトを選択してください", zh: "请选择项目" })}
-          </p>
-          <p className="text-xs" style={{ color: "var(--th-text-muted)" }}>
-            {t({ ko: "헤더에서 프로젝트를 선택하면 해당 프로젝트의 훅을 관리할 수 있습니다.", en: "Select a project in the header to manage its hooks.", ja: "ヘッダーでプロジェクトを選択して、フックを管理できます。", zh: "在标题栏选择项目以管理其钩子。" })}
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   if (vm.loading) {
     return (
@@ -126,14 +108,16 @@ export default function HooksLibrary({ agents, departments, currentProject }: Ho
           emptyMessage={t({ ko: "아직 훅이 없습니다", en: "No hooks yet", ja: "フックがありません", zh: "暂无钩子" })}
         />
 
-        <div className="text-center text-xs font-mono py-4" style={{ color: "var(--th-text-muted)" }}>
-          {t({
-            ko: `'${currentProject.name}' 프로젝트 전용 훅`,
-            en: `Hooks for '${currentProject.name}' project`,
-            ja: `'${currentProject.name}' プロジェクト専用フック`,
-            zh: `'${currentProject.name}' 项目专用钩子`,
-          })}
-        </div>
+        {currentProject && (
+          <div className="text-center text-xs font-mono py-4" style={{ color: "var(--th-text-muted)" }}>
+            {t({
+              ko: `'${currentProject.name}' 프로젝트 전용 훅`,
+              en: `Hooks for '${currentProject.name}' project`,
+              ja: `'${currentProject.name}' プロジェクト専用フック`,
+              zh: `'${currentProject.name}' 项目专用钩子`,
+            })}
+          </div>
+        )}
       </div>
 
       <HookFormModal
@@ -145,7 +129,7 @@ export default function HooksLibrary({ agents, departments, currentProject }: Ho
         submitting={vm.formSubmitting}
         error={vm.formError}
         onClose={vm.closeFormModal}
-        defaultProjectId={currentProject.id}
+        defaultProjectId={currentProject?.id}
         onCreate={(input) => { void vm.handleCreateHook(input); }}
         onUpdate={(id, input) => { void vm.handleUpdateHook(id, input); }}
       />

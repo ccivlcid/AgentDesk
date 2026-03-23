@@ -37,14 +37,10 @@ function KickoffIndicator() {
 }
 
 function ProjectProgressIndicator() {
-  const kickoffBusy = useUiStore((s) => s.kickoffBusy);
+  const kickoffStage = useUiStore((s) => s.kickoffStage);
   const currentProjectId = useProjectStore((s) => s.currentProjectId);
   const tasks = useTaskStore((s) => s.tasks);
-  const [allDoneVisible, setAllDoneVisible] = useState(true);
-  const [fadingOut, setFadingOut] = useState(false);
-  const prevAllDoneRef = useRef(false);
 
-  // Filter tasks for current project
   const projectTasks = currentProjectId
     ? tasks.filter((t) => t.project_id === currentProjectId)
     : [];
@@ -54,30 +50,12 @@ function ProjectProgressIndicator() {
   const pct = total > 0 ? Math.round((doneCount / total) * 100) : 0;
   const allDone = total > 0 && doneCount === total;
 
-  // When all tasks become done, show checkmark briefly then fade out
-  useEffect(() => {
-    if (allDone && !prevAllDoneRef.current) {
-      setAllDoneVisible(true);
-      setFadingOut(false);
-      const fadeTimer = setTimeout(() => setFadingOut(true), 2000);
-      const hideTimer = setTimeout(() => setAllDoneVisible(false), 2800);
-      return () => { clearTimeout(fadeTimer); clearTimeout(hideTimer); };
-    }
-    if (!allDone) {
-      setAllDoneVisible(true);
-      setFadingOut(false);
-    }
-    prevAllDoneRef.current = allDone;
-  }, [allDone]);
-
-  // Don't render when kickoff is busy (KickoffIndicator takes priority)
-  if (kickoffBusy) return null;
+  // Hide when kickoff stage overlay is active
+  if (kickoffStage !== "idle" && kickoffStage !== "done") return null;
   // No project or no tasks
   if (!currentProjectId || total === 0) return null;
-  // All done and fade finished
-  if (allDone && !allDoneVisible) return null;
 
-  // All done state: checkmark
+  // All done state: checkmark (always visible)
   if (allDone) {
     return (
       <div style={{
@@ -86,8 +64,6 @@ function ProjectProgressIndicator() {
         background: "rgba(34,197,94,0.08)",
         border: "1px solid rgba(34,197,94,0.18)",
         borderRadius: 8,
-        opacity: fadingOut ? 0 : 1,
-        transition: "opacity 0.8s ease-out",
       }}>
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--th-success, #22c55e)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
           <polyline points="20 6 9 17 4 12" />

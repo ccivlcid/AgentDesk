@@ -70,7 +70,7 @@ All inline SVG icons must follow this standard:
 - **NEVER** edit or delete an existing migration entry.
 - Always append at the end of `migrations-e-recent.ts`.
 - ID format: `YYYY-MM-DD-NNN-short-description` (chronological, zero-padded).
-- **Last applied ID**: `2026-03-28-008-promote-specialty-leaders`
+- **Last applied ID**: `2026-03-28-010-pm-activity-project-id-triggers`
 - Every DDL must be wrapped in `try { ... } catch { /* already exists */ }`.
 
 ### 0-6. Component State Rules
@@ -161,6 +161,32 @@ Electron + React(Vite) frontend + Express/tsx backend + SQLite(better-sqlite3).
 - 회의록은 `meeting_minutes` 테이블에 `project_id` 포함하여 저장. `task_id`는 NULL 허용.
 - 킥오프 실패 시에도 `postMeetingCreateAndRun()` 실행 (안전장치).
 - 킥오프 프롬프트(`prompts/system/project-kickoff.md`)에서 `agent_name` 필드 없음 — 배정은 PM이 함.
+- task_logs/messages INSERT 시 `project_id` 자동 스탬프 (SQLite AFTER INSERT 트리거).
+- YOLO(자율) 모드: PM 오케스트레이터가 자동 승인. 의사결정 창 비활성화. 유저는 승인/보류/취소 불가.
+
+### 1-4. Add Tasks Pipeline (추가 업무 흐름)
+
+> 기존 프로젝트에 추가 태스크를 넣는 흐름. 킥오프와 유사하되 짧은 회의.
+
+```
+[1] 추가 업무 요청 (POST /api/projects/:id/add-tasks)
+     │  additional_directive + attached_file (optional .md)
+     │
+     ▼
+[2] 추가 업무 회의 (runAddTasksMeeting)              ← stage: "meeting"
+     │  PM이 추가 지시 공유, 에이전트 확인 (짧은 회의)
+     │  첨부 파일 → {project_path}/docs/ 저장
+     │
+     ▼
+[3] 태스크 생성 (LLM) + 기존 done 태스크 컨텍스트    ← stage: "planning"
+     │
+     ▼
+[4] PM 배정 + 실행                                   ← stage: "assigning" → "executing" → "done"
+```
+
+**UI:**
+- 업무보드: 태스크 전부 done → "추가 업무" 버튼 (인라인 입력 + .md 첨부)
+- 킥오프 버튼: 태스크 0개일 때만 표시
 
 ---
 
@@ -408,7 +434,7 @@ Use this checklist every time you add a DB column or table:
 
 1. **APPEND only** — add a new `{ id, up }` entry at the **end** of the `MIGRATIONS` chain (typically append to the last chunk under `server/modules/bootstrap/schema/versioned-migrations/`, e.g. `migrations-e-recent.ts`, or add a new chunk and spread it from `versioned-migrations.ts`). Never edit applied migration bodies.
 2. **ID format**: `YYYY-MM-DD-NNN-short-description` (zero-padded, chronological)
-3. **Last known ID**: `2026-03-28-008-promote-specialty-leaders` → next: `2026-03-28-009-*` or `2026-03-29-001-*`
+3. **Last known ID**: `2026-03-28-010-pm-activity-project-id-triggers` → next: `2026-03-28-011-*` or `2026-03-29-001-*`
 4. Wrap each DDL in `try { ... } catch { /* already exists */ }` for idempotency
 5. NEVER change or remove existing entries
 

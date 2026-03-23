@@ -115,29 +115,64 @@ function ensureScrollStyle() {
   document.head.appendChild(style);
 }
 
+/** Format a timestamp as YYYY-MM-DD HH:mm */
+function formatFullTime(ts: number): string {
+  const d = new Date(ts);
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mi = String(d.getMinutes()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd} ${hh}:${mi}`;
+}
+
 /* Hover state helper for activity items */
 function ActivityItem({
   item,
   expandedMeetings,
   setExpandedMeetings,
+  expandedItems,
+  setExpandedItems,
   approvedTaskIds,
   busyTaskId,
   handleApprove,
   handleRevision,
+  hideReviewActions,
 }: {
   item: PmActivityItem;
   expandedMeetings: Set<string>;
   setExpandedMeetings: React.Dispatch<React.SetStateAction<Set<string>>>;
+  expandedItems: Set<string>;
+  setExpandedItems: React.Dispatch<React.SetStateAction<Set<string>>>;
   approvedTaskIds: Set<string>;
   busyTaskId: string | null;
   handleApprove: (id: string) => void;
   handleRevision: (id: string) => void;
+  hideReviewActions?: boolean;
 }) {
   const [hovered, setHovered] = useState(false);
   const color = typeColor(item.type);
-  const isReviewItem = item.taskId
+  const isReviewItem = !hideReviewActions
+    && item.taskId
     && (item.summary.includes("review") || item.summary.includes("Review") || item.summary.includes("검토"))
     && !approvedTaskIds.has(item.taskId);
+  const isExpanded = expandedItems.has(item.id);
+
+  const toggleExpand = () => {
+    setExpandedItems((prev) => {
+      const next = new Set(prev);
+      next.has(item.id) ? next.delete(item.id) : next.add(item.id);
+      return next;
+    });
+    // Also toggle meeting entries when expanding a meeting item
+    if (item.type === "meeting") {
+      setExpandedMeetings((prev) => {
+        const next = new Set(prev);
+        next.has(item.id) ? next.delete(item.id) : next.add(item.id);
+        return next;
+      });
+    }
+  };
 
   return (
     <div
@@ -154,8 +189,9 @@ function ActivityItem({
         borderRadius: 6,
         background: hovered ? "var(--th-hover-overlay-subtle)" : "transparent",
         transition: "background 0.15s ease",
-        cursor: "default",
+        cursor: "pointer",
       }}
+      onClick={toggleExpand}
     >
       {/* Left accent bar */}
       <div style={{
@@ -218,56 +254,103 @@ function ActivityItem({
             color: "var(--th-text-primary)",
             lineHeight: 1.5,
             wordBreak: "break-word",
-            cursor: item.type === "meeting" ? "pointer" : "default",
-          }}
-          onClick={() => {
-            if (item.type === "meeting") {
-              setExpandedMeetings((prev) => {
-                const next = new Set(prev);
-                next.has(item.id) ? next.delete(item.id) : next.add(item.id);
-                return next;
-              });
-            }
           }}
         >
-          {item.type === "meeting" && (
-            <span style={{ marginRight: 4, opacity: 0.5, display: "inline-flex", verticalAlign: "middle" }}>
-              {expandedMeetings.has(item.id) ? <IconChevronDown /> : <IconChevronRight />}
-            </span>
-          )}
-          {item.summary.length > 120 ? item.summary.slice(0, 120) + "..." : item.summary}
+          <span style={{ marginRight: 4, opacity: 0.5, display: "inline-flex", verticalAlign: "middle" }}>
+            {isExpanded ? <IconChevronDown /> : <IconChevronRight />}
+          </span>
+          {isExpanded ? item.summary : (item.summary.length > 120 ? item.summary.slice(0, 120) + "..." : item.summary)}
         </div>
 
-        {/* Meeting entries (expandable) */}
-        {item.type === "meeting" && expandedMeetings.has(item.id) && item.meetingEntries && (
-          <div style={{
-            marginTop: 6,
-            padding: "6px 8px",
-            background: "var(--th-hover-overlay-subtle)",
-            border: "1px solid var(--th-border)",
-            borderRadius: 6,
-            maxHeight: 200,
-            overflowY: "auto",
-          }}>
-            {item.meetingEntries.map((entry: MeetingEntry, idx: number) => (
-              <div key={idx} style={{ marginBottom: idx < item.meetingEntries!.length - 1 ? 6 : 0 }}>
-                <span style={{ fontFamily: mono, fontSize: 9, fontWeight: 700, color: "var(--th-accent)" }}>
-                  {entry.speaker}
-                </span>
-                <div style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-secondary)", lineHeight: 1.4, marginTop: 1 }}>
-                  {entry.content}
-                </div>
+        {/* Expanded detail panel */}
+        <div style={{
+          maxHeight: isExpanded ? 600 : 0,
+          overflow: "hidden",
+          transition: "max-height 0.25s ease-in-out",
+        }}>
+          {isExpanded && (
+            <div style={{
+              marginTop: 6,
+              padding: "8px 10px",
+              background: "var(--th-hover-overlay-subtle)",
+              border: "1px solid var(--th-border)",
+              borderRadius: 6,
+            }}>
+              {/* Full timestamp */}
+              <div style={{ fontFamily: mono, fontSize: 9, color: "var(--th-text-muted)", marginBottom: 4 }}>
+                {formatFullTime(item.timestamp)}
               </div>
-            ))}
-          </div>
-        )}
+
+              {/* Task title */}
+              {item.taskTitle && (
+                <div style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-secondary)", marginBottom: 4 }}>
+                  <span style={{ color: "var(--th-text-muted)", marginRight: 4 }}>Task:</span>
+                  {item.taskTitle}
+                </div>
+              )}
+
+              {/* Agent name */}
+              {item.agentName && (
+                <div style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-secondary)", marginBottom: 4 }}>
+                  <span style={{ color: "var(--th-text-muted)", marginRight: 4 }}>Agent:</span>
+                  {item.agentName}
+                </div>
+              )}
+
+              {/* Type-specific expanded content */}
+              {item.type === "task_status" && (
+                <div style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-primary)", lineHeight: 1.5, marginTop: 4 }}>
+                  {item.detail || item.summary}
+                </div>
+              )}
+
+              {item.type === "oversight" && (
+                <div style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-primary)", lineHeight: 1.5, marginTop: 4, whiteSpace: "pre-wrap" }}>
+                  {item.detail || item.summary}
+                </div>
+              )}
+
+              {item.type === "pm_message" && (
+                <div style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-primary)", lineHeight: 1.5, marginTop: 4, whiteSpace: "pre-wrap" }}>
+                  {item.detail || item.summary}
+                </div>
+              )}
+
+              {item.type === "decision" && (
+                <div style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-primary)", lineHeight: 1.5, marginTop: 4, whiteSpace: "pre-wrap" }}>
+                  {item.detail || item.summary}
+                </div>
+              )}
+
+              {/* Meeting entries */}
+              {item.type === "meeting" && item.meetingEntries && (
+                <div style={{
+                  marginTop: 4,
+                  maxHeight: 200,
+                  overflowY: "auto",
+                }}>
+                  {item.meetingEntries.map((entry: MeetingEntry, idx: number) => (
+                    <div key={idx} style={{ marginBottom: idx < item.meetingEntries!.length - 1 ? 6 : 0 }}>
+                      <span style={{ fontFamily: mono, fontSize: 9, fontWeight: 700, color: "var(--th-accent)" }}>
+                        {entry.speaker}
+                      </span>
+                      <div style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-secondary)", lineHeight: 1.4, marginTop: 1 }}>
+                        {entry.content}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
 
         {/* Review actions */}
         {isReviewItem && item.taskId && (
           <div style={{ display: "flex", gap: 4, marginTop: 6 }}>
             <button
               type="button"
-              onClick={() => handleApprove(item.taskId!)}
+              onClick={(e) => { e.stopPropagation(); handleApprove(item.taskId!); }}
               disabled={busyTaskId === item.taskId}
               style={{
                 fontFamily: mono,
@@ -287,7 +370,7 @@ function ActivityItem({
             </button>
             <button
               type="button"
-              onClick={() => handleRevision(item.taskId!)}
+              onClick={(e) => { e.stopPropagation(); handleRevision(item.taskId!); }}
               disabled={busyTaskId === item.taskId}
               style={{
                 fontFamily: mono,
@@ -314,7 +397,7 @@ function ActivityItem({
 
 export default function RightShelf() {
   const { on } = useWebSocket();
-  const { pmActivityProjectId, pmActivityExpanded, togglePmActivityExpanded, setPmActivityProjectId } = useUiStore();
+  const { pmActivityProjectId, pmActivityExpanded, togglePmActivityExpanded, setPmActivityProjectId, settings } = useUiStore();
   const { projects } = useProjectStore();
 
   const [data, setData] = useState<PmActivityResponse | null>(null);
@@ -322,6 +405,7 @@ export default function RightShelf() {
   const [busyTaskId, setBusyTaskId] = useState<string | null>(null);
   const [approvedTaskIds, setApprovedTaskIds] = useState<Set<string>>(new Set());
   const [expandedMeetings, setExpandedMeetings] = useState<Set<string>>(new Set());
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const activeProjectId = pmActivityProjectId || projects[0]?.id || null;
@@ -339,9 +423,10 @@ export default function RightShelf() {
 
   const items = data?.items ?? [];
   const counts = data?.counts ?? { planned: 0, in_progress: 0, review: 0, done: 0, total: 0 };
+  // Deduplicate by unique item id (server-side id) to prevent exact duplicates
+  // from overlapping queries, but preserve all distinct events per task.
   const deduped = items.reduce<PmActivityItem[]>((acc, item) => {
-    const key = `${item.taskId ?? ""}:${item.type}`;
-    if (!acc.some((a) => `${a.taskId ?? ""}:${a.type}` === key)) acc.push(item);
+    if (!acc.some((a) => a.id === item.id)) acc.push(item);
     return acc;
   }, []);
   const filtered = filter === "all" ? deduped : deduped.filter((i) => i.type === filter);
@@ -592,10 +677,13 @@ export default function RightShelf() {
               item={item}
               expandedMeetings={expandedMeetings}
               setExpandedMeetings={setExpandedMeetings}
+              expandedItems={expandedItems}
+              setExpandedItems={setExpandedItems}
               approvedTaskIds={approvedTaskIds}
               busyTaskId={busyTaskId}
               handleApprove={handleApprove}
               handleRevision={handleRevision}
+              hideReviewActions={settings.yoloMode === true}
             />
           ))}
         </div>

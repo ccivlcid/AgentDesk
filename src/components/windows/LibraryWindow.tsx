@@ -9,9 +9,6 @@ const SkillsLibrary     = lazy(() => import("../SkillsLibrary"));
 const AgentRulesLibrary = lazy(() => import("../AgentRulesLibrary"));
 const MemoryLibrary     = lazy(() => import("../MemoryLibrary"));
 const HooksLibrary      = lazy(() => import("../HooksLibrary"));
-const Deliverables      = lazy(() => import("../deliverables/Deliverables"));
-const TemplatesLibrary         = lazy(() => import("../templates-library/TemplatesLibrary"));
-const AgentPerformanceDashboard = lazy(() => import("../performance/AgentPerformanceDashboard"));
 
 function Loading() {
   const { t } = useI18n();
@@ -119,33 +116,6 @@ export default function LibraryWindow() {
           content: (
             <Suspense fallback={<Loading />}>
               <HooksLibrary agents={libAgents} departments={departments} currentProject={currentProject} />
-            </Suspense>
-          ),
-        },
-        {
-          id: "deliverables",
-          label: t({ ko: "산출물", en: "Deliverables", ja: "成果物", zh: "交付物" }),
-          content: (
-            <Suspense fallback={<Loading />}>
-              <Deliverables agents={libAgents} currentProject={currentProject} />
-            </Suspense>
-          ),
-        },
-        {
-          id: "templates",
-          label: t({ ko: "템플릿", en: "Templates", ja: "テンプレート", zh: "模板" }),
-          content: (
-            <Suspense fallback={<Loading />}>
-              <TemplatesLibrary />
-            </Suspense>
-          ),
-        },
-        {
-          id: "performance",
-          label: t({ ko: "성과", en: "Performance", ja: "パフォーマンス", zh: "性能" }),
-          content: (
-            <Suspense fallback={<Loading />}>
-              <AgentPerformanceDashboard />
             </Suspense>
           ),
         },

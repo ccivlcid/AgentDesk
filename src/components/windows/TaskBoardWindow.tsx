@@ -3,7 +3,7 @@ import { useTaskStore } from "../../store/taskStore";
 import { useAgentStore } from "../../store/agentStore";
 import { useProjectStore } from "../../store/projectStore";
 import { useUiStore } from "../../store/uiStore";
-import { kickoffProject, resumeProject } from "../../api/project-kickoff";
+import { kickoffProject, resumeProject, addProjectTasks } from "../../api/project-kickoff";
 import {
   updateTask,
   deleteTask,
@@ -108,6 +108,17 @@ export default function TaskBoardWindow() {
     }
   }, [currentProjectId, resumeBusy]);
 
+  const [addTasksBusy, setAddTasksBusy] = useState(false);
+  const handleAddTasks = useCallback(async (directive: string, attachedFile?: { name: string; content: string }) => {
+    if (!currentProjectId || addTasksBusy) return;
+    setAddTasksBusy(true);
+    try {
+      await addProjectTasks(currentProjectId, directive, attachedFile);
+    } finally {
+      setAddTasksBusy(false);
+    }
+  }, [currentProjectId, addTasksBusy]);
+
   const boardIcon = (
     <svg viewBox="0 0 18 18" fill="none" stroke="var(--th-text-heading)" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" width={16} height={16}>
       <rect x="1.5" y="2" width="15" height="14" rx="2" />
@@ -151,6 +162,8 @@ export default function TaskBoardWindow() {
         kickoffBusy={kickoffBusy}
         onResume={handleResume}
         resumeBusy={resumeBusy}
+        onAddTasks={handleAddTasks}
+        addTasksBusy={addTasksBusy}
       />
     </AppWindow>
   );

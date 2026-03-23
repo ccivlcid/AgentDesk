@@ -61,6 +61,38 @@
 
 ---
 
+## 추가 업무 흐름 (POST /api/projects/:id/add-tasks)
+
+```
+[1] 추가 업무 요청
+     │  additional_directive + attached_file (optional .md → docs/ 저장)
+     │
+     ▼
+[2] 추가 업무 회의 (runAddTasksMeeting)              ← stage: "meeting"
+     │  PM이 추가 지시 공유 (짧은 회의)
+     │  에이전트 확인
+     │
+     ▼
+[3] 태스크 생성 (LLM)                                ← stage: "planning"
+     │  기존 done 태스크를 컨텍스트로 포함 (중복 방지)
+     │
+     ▼
+[4] PM 배정 → 실행                                   ← stage: "assigning" → "executing" → "done"
+```
+
+**UI:** 업무보드에서 전부 done 시 "추가 업무" 버튼 (인라인 입력 + .md 첨부 가능)
+
+---
+
+## 자율 모드 (YOLO)
+
+- PM 오케스트레이터가 모든 의사결정 자동 처리
+- Decision Inbox: 빈 배열 반환, "자율 모드" 메시지 표시
+- PM Activity: 승인/수정 버튼 숨김
+- 유저는 승인/보류/취소 불가 — PM이 전권
+
+---
+
 ## 핵심 파일
 
 | 파일 | 역할 |

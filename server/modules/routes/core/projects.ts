@@ -32,7 +32,7 @@ export interface RegisterProjectRoutesOptions {
   /** Full AgentOffice execution engine — if provided, kickoff uses it instead of execution-loop */
   startTaskExecutionForAgent?: (taskId: string, agentId: string) => void;
   /** Insert & broadcast a notification */
-  insertNotification?: (params: { type: "task_complete" | "task_error" | "task_started" | "kickoff" | "decision_created" | "agent_error" | "system" | "cost_alert" | "agent_anomaly" | "heartbeat"; title: string; body?: string | null; task_id?: string | null; agent_id?: string | null }) => string;
+  insertNotification?: (params: { type: string; title: string; body?: string | null; task_id?: string | null; agent_id?: string | null }) => string;
 }
 
 export function registerProjectRoutes({

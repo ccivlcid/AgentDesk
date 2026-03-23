@@ -17,6 +17,7 @@ export function pruneDuplicateReviewMeetings({ db, runInTransaction }: PruneDeps
       FROM meeting_minutes
       WHERE meeting_type = 'review'
         AND status IN ('in_progress', 'failed')
+        AND task_id IS NOT NULL
     )
     SELECT id
     FROM ranked

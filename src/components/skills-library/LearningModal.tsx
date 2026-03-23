@@ -1,7 +1,7 @@
 import type { SkillHistoryProvider, SkillLearnProvider } from "../../api";
 import type { Agent } from "../../types";
 import AgentAvatar from "../AgentAvatar";
-import FloatingWindow from "./FloatingWindow";
+import AppWindow from "../windows/AppWindow";
 import {
   learningStatusLabel,
   providerLabel,
@@ -64,15 +64,22 @@ export default function LearningModal({
   if (!learningSkill) return null;
 
   return (
-    <FloatingWindow
+    <AppWindow
+      windowType="learn-skill"
       title={t({ ko: "스킬 학습 스쿼드", en: "Skill Learning Squad", ja: "スキル学習スクワッド", zh: "技能学习小队" })}
-      subtitle={`${learningSkill.name} · ${learningSkill.repo}`}
-      onClose={onClose}
-      disableClose={learnInProgress}
-      closeBtnLabel={learnInProgress ? t({ ko: "학습중", en: "Running", ja: "実行中", zh: "进行中" }) : undefined}
+      emoji={
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+        </svg>
+      }
       defaultWidth={760}
+      defaultHeight={560}
+      onClose={learnInProgress ? () => {} : onClose}
     >
       <div className="space-y-4 px-5 py-4">
+        <div className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
+          {learningSkill.name} · {learningSkill.repo}
+        </div>
         <div className="px-3 py-2" style={{ borderRadius: 0, border: "1px solid rgba(52,211,153,0.25)", background: "var(--th-terminal-bg)" }}>
           <div className="text-[11px] font-mono" style={{ color: "rgb(167,243,208)" }}>
             {t({ ko: "실행 명령", en: "Install command", ja: "実行コマンド", zh: "执行命令" })}
@@ -302,6 +309,6 @@ export default function LearningModal({
           </button>
         </div>
       </div>
-    </FloatingWindow>
+    </AppWindow>
   );
 }

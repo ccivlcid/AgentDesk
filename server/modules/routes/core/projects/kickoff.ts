@@ -45,6 +45,7 @@ async function runKickoffMeeting(
   nowMs: () => number,
   /** 회의 완료 후 호출 — 태스크 생성 + 배정 + 실행 트리거 */
   onComplete?: () => void,
+  insertNotification?: (params: { type: string; title: string; body?: string | null; task_id?: string | null; agent_id?: string | null }) => string | void,
 ): Promise<void> {
   if (agents.length === 0) return;
 
@@ -185,10 +186,181 @@ async function runKickoffMeeting(
 
   logger.info({ meetingId, projectName, agentCount: agents.length }, "[kickoff] meeting completed");
 
+  // 6b. 킥오프 회의 완료 알림
+  const meetLang = readLang(db);
+  insertNotification?.({
+    type: "kickoff",
+    title: t(meetLang, {
+      ko: `${projectName} 킥오프 회의 완료`,
+      en: `${projectName} kickoff meeting completed`,
+      ja: `${projectName} キックオフ会議完了`,
+      zh: `${projectName} 启动会议完成`,
+    }),
+    body: t(meetLang, {
+      ko: `${agents.length}명 에이전트 참여, 태스크 생성 중`,
+      en: `${agents.length} agents participated, creating tasks`,
+      ja: `${agents.length}名のエージェント参加、タスク作成中`,
+      zh: `${agents.length}名代理参与，正在创建任务`,
+    }),
+  });
+
   // 7. 회의 완료 후 planned 태스크 자동 실행 (안전망)
   if (onComplete) {
     try { onComplete(); } catch (err) {
       logger.warn({ err, meetingId }, "[kickoff] post-meeting onComplete failed");
+    }
+  }
+}
+
+/**
+ * 추가 업무 회의 — 킥오프보다 짧은 버전.
+ * PM이 추가 업무 배경을 공유하고, 에이전트들이 간단히 확인 후 바로 종료.
+ */
+async function runAddTasksMeeting(
+  projectName: string,
+  additionalDirective: string,
+  projectId: string,
+  agents: KickoffMeetingAgent[],
+  db: DatabaseSync,
+  broadcast: (type: string, payload: unknown) => void,
+  nowMs: () => number,
+  onComplete?: () => void,
+): Promise<void> {
+  if (agents.length === 0) { onComplete?.(); return; }
+
+  const lang = readLang(db);
+  const meetingId = randomUUID();
+  const startTs = nowMs();
+
+  const meetingTitle = t(lang, {
+    ko: `[추가 업무 회의] ${projectName}`,
+    en: `[Additional Tasks] ${projectName}`,
+    ja: `[追加タスク会議] ${projectName}`,
+    zh: `[追加任务会议] ${projectName}`,
+  });
+
+  db.prepare(`
+    INSERT INTO meeting_minutes (id, task_id, project_id, meeting_type, round, title, status, started_at, created_at)
+    VALUES (?, ?, ?, 'planned', 1, ?, 'in_progress', ?, ?)
+  `).run(meetingId, null, projectId, meetingTitle, startTs, startTs);
+
+  broadcast("meeting_minutes_update", { task_id: null, meeting_id: meetingId, phase: "started" });
+
+  const lines: { agentIdx: number; content: string; messageType: string }[] = [];
+
+  const pmIdx = agents.findIndex((a) => a.projectRole === "pm");
+  const facilitatorIdx = pmIdx >= 0 ? pmIdx : 0;
+  const directiveSnippet = additionalDirective.slice(0, 200);
+
+  // PM: 추가 업무 배경 공유
+  lines.push({
+    agentIdx: facilitatorIdx,
+    content: t(lang, {
+      ko: `«${projectName}» 프로젝트 추가 업무 회의를 시작합니다.\n추가 요청 사항: ${directiveSnippet}\n추가 태스크를 생성하고 배정하겠습니다. 확인 후 즉시 업무를 시작해주세요.`,
+      en: `Starting additional tasks meeting for «${projectName}».\nNew directive: ${directiveSnippet}\nI will create and assign additional tasks. Please begin immediately once assigned.`,
+      ja: `«${projectName}» 追加タスク会議を開始します。\n追加要請: ${directiveSnippet}\n追加タスクを作成し配属します。配属後、直ちに業務を開始してください。`,
+      zh: `«${projectName}» 追加任务会议开始。\n追加要求: ${directiveSnippet}\n将创建并分配追加任务。分配后请立即开始工作。`,
+    }),
+    messageType: "opening",
+  });
+
+  // 에이전트들 간단히 확인 (역량 보고 생략)
+  const execCount = agents.length - 1;
+  agents.forEach((a, i) => {
+    if (i === facilitatorIdx) return;
+    lines.push({
+      agentIdx: i,
+      content: t(lang, {
+        ko: `${a.name}, 추가 업무 확인했습니다. 배정 대기합니다.`,
+        en: `${a.name}, acknowledged. Standing by for assignment.`,
+        ja: `${a.name}、追加タスクを確認しました。配属をお待ちします。`,
+        zh: `${a.name}，已确认追加任务。等待分配。`,
+      }),
+      messageType: "acknowledge",
+    });
+  });
+
+  // PM 마무리
+  lines.push({
+    agentIdx: facilitatorIdx,
+    content: t(lang, {
+      ko: `확인 완료. ${execCount}명 추가 투입 가능. 지금부터 태스크를 생성하고 배정하겠습니다.`,
+      en: `Confirmed. ${execCount} members available. Creating and assigning tasks now.`,
+      ja: `確認完了。${execCount}名投入可能。タスクを作成し配属します。`,
+      zh: `确认完毕。${execCount}名可投入。现在创建并分配任务。`,
+    }),
+    messageType: "closing",
+  });
+
+  // 에이전트 입장
+  for (let i = 0; i < agents.length; i++) {
+    broadcast("client_office_call", {
+      from_agent_id: agents[i].id,
+      seat_index: i,
+      phase: "add_tasks",
+      action: "arrive",
+      task_id: null,
+      hold_until: startTs + 60_000,
+    });
+    await delay(200);
+  }
+
+  // 발언 + DB 저장
+  let seq = 0;
+  for (const line of lines) {
+    const agent = agents[line.agentIdx];
+    const entryTs = nowMs();
+    const roleLabel = agent.projectRoleLabel
+      ?? (agent.projectRole ? { pm: "PM", pl: "PL", dev: "Dev" }[agent.projectRole] ?? agent.role : agent.role);
+    db.prepare(`
+      INSERT INTO meeting_minute_entries
+        (meeting_id, seq, speaker_agent_id, speaker_name, department_name, role_label, message_type, content, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      meetingId, seq++,
+      agent.id, agent.name,
+      agent.dept_name ?? null,
+      roleLabel ?? null,
+      line.messageType, line.content,
+      entryTs,
+    );
+
+    broadcast("client_office_call", {
+      from_agent_id: agent.id,
+      seat_index: line.agentIdx,
+      phase: "add_tasks",
+      action: "speak",
+      line: line.content,
+      task_id: null,
+      hold_until: entryTs + 60_000,
+    });
+    broadcast("meeting_minutes_update", { task_id: null, meeting_id: meetingId, phase: "entry" });
+
+    await delay(400);
+  }
+
+  // 회의 완료
+  db.prepare("UPDATE meeting_minutes SET status = 'completed', completed_at = ? WHERE id = ?")
+    .run(nowMs(), meetingId);
+  broadcast("meeting_minutes_update", { task_id: null, meeting_id: meetingId, phase: "completed", status: "completed" });
+
+  // 에이전트 퇴장
+  for (let i = 0; i < agents.length; i++) {
+    await delay(150);
+    broadcast("client_office_call", {
+      from_agent_id: agents[i].id,
+      seat_index: i,
+      phase: "add_tasks",
+      action: "dismiss",
+      task_id: null,
+    });
+  }
+
+  logger.info({ meetingId, projectName, agentCount: agents.length }, "[add-tasks] meeting completed");
+
+  if (onComplete) {
+    try { onComplete(); } catch (err) {
+      logger.warn({ err, meetingId }, "[add-tasks] post-meeting onComplete failed");
     }
   }
 }
@@ -242,7 +414,7 @@ interface KickoffDeps {
   /** Full AgentOffice execution engine (injected from RuntimeContext) */
   startTaskExecutionForAgent?: (taskId: string, agentId: string) => void;
   /** Insert & broadcast a notification (optional — kickoff/task start events) */
-  insertNotification?: (params: { type: "task_complete" | "task_error" | "task_started" | "kickoff" | "decision_created" | "agent_error" | "system" | "cost_alert" | "agent_anomaly" | "heartbeat"; title: string; body?: string | null; task_id?: string | null; agent_id?: string | null }) => string;
+  insertNotification?: (params: { type: string; title: string; body?: string | null; task_id?: string | null; agent_id?: string | null }) => string;
 }
 
 // In-memory map of kickoff-triggered runs → AbortControllers (fallback용)
@@ -498,6 +670,7 @@ export function registerProjectKickoffRoutes({ app, db, broadcast, appendTaskLog
           broadcast,
           nowMs,
           () => { void postMeetingCreateAndRun(); },
+          insertNotification,
         ).catch((err) => {
           logger.warn({ err, projectId }, "[kickoff] meeting failed — running pipeline directly");
           void postMeetingCreateAndRun();
@@ -539,6 +712,267 @@ export function registerProjectKickoffRoutes({ app, db, broadcast, appendTaskLog
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       return res.status(500).json({ error: "kickoff_failed", detail: msg.slice(0, 200) });
+    }
+  });
+
+  // POST /api/projects/:id/add-tasks
+  // 완료된 프로젝트에 추가 업무 생성 — 킥오프 회의 없이 태스크 생성 + PM 배정 + 실행.
+  app.post("/api/projects/:id/add-tasks", async (req, res) => {
+    const projectId = req.params.id;
+    const { additional_directive, attached_file } = (req.body ?? {}) as {
+      additional_directive?: string;
+      attached_file?: { name: string; content: string };
+    };
+
+    if (!additional_directive?.trim() && !attached_file) {
+      return res.status(400).json({ error: "missing_directive" });
+    }
+
+    const project = db.prepare(
+      "SELECT id, name, core_goal, directive, project_path FROM projects WHERE id = ?",
+    ).get(projectId) as { id: string; name: string; core_goal: string; directive: string | null; project_path: string | null } | undefined;
+    if (!project) return res.status(404).json({ error: "project_not_found" });
+
+    // 첨부된 MD 파일을 프로젝트 폴더 docs/에 저장
+    if (attached_file?.name && attached_file?.content && project.project_path) {
+      try {
+        const fs = await import("node:fs");
+        const path = await import("node:path");
+        const docsDir = path.join(project.project_path, "docs");
+        fs.mkdirSync(docsDir, { recursive: true });
+        const filePath = path.join(docsDir, attached_file.name);
+        fs.writeFileSync(filePath, attached_file.content, "utf-8");
+        logger.info({ projectId, filePath }, "[add-tasks] saved attached file to project docs");
+      } catch (err) {
+        logger.warn({ err, projectId }, "[add-tasks] failed to save attached file");
+      }
+    }
+
+    // 이미 실행 중인 태스크가 있으면 거부
+    const runningTask = db.prepare(
+      "SELECT id FROM tasks WHERE project_id = ? AND status = 'in_progress' LIMIT 1",
+    ).get(projectId) as { id: string } | undefined;
+    if (runningTask) {
+      return res.status(409).json({ error: "task_already_running", taskId: runningTask.id });
+    }
+
+    // 프로젝트에 배정된 에이전트 목록
+    const assignedAgents = db.prepare(`
+      SELECT a.id, a.name, a.role, a.department_id, d.name as dept_name, pa.project_role, pa.project_role_label
+      FROM agents a
+      JOIN project_agents pa ON a.id = pa.agent_id
+      LEFT JOIN departments d ON a.department_id = d.id
+      WHERE pa.project_id = ?
+      LIMIT 20
+    `).all(projectId) as { id: string; name: string; role: string | null; department_id: string | null; dept_name: string | null; project_role: string | null; project_role_label: string | null }[];
+
+    // 기존 완료된 태스크 목록 (컨텍스트로 LLM에 전달)
+    const doneTasks = db.prepare(`
+      SELECT title FROM tasks
+      WHERE project_id = ? AND status = 'done'
+      ORDER BY created_at ASC
+    `).all(projectId) as { title: string }[];
+
+    // 프롬프트 구성
+    const promptParts: string[] = [
+      `Project Name: ${project.name}`,
+      `Goal: ${project.core_goal}`,
+    ];
+    if (project.directive) promptParts.push(`Directive:\n${project.directive}`);
+    if (doneTasks.length > 0) {
+      promptParts.push(`Already completed tasks (do NOT recreate these):\n${doneTasks.map((t_) => `- ${t_.title}`).join("\n")}`);
+    }
+    if (assignedAgents.length > 0) {
+      const STANDARD_ROLE_LABEL: Record<string, string> = { pm: "PROJECT MANAGER", pl: "PROJECT LEAD", dev: "DEVELOPER" };
+      const agentList = assignedAgents
+        .map((a) => {
+          const dept = a.dept_name ? `, dept: ${a.dept_name}` : "";
+          const role = a.role ? `, seniority: ${a.role}` : "";
+          const displayRole = a.project_role_label
+            ?? (a.project_role ? STANDARD_ROLE_LABEL[a.project_role] : null);
+          const projectRole = displayRole ? ` [${displayRole.toUpperCase()}]` : "";
+          return `- ${a.name}${projectRole}${dept}${role}`;
+        })
+        .join("\n");
+      promptParts.push(`Available agents (assign tasks to the best fit):\n${agentList}`);
+    }
+    promptParts.push(`Additional tasks requested:\n${(additional_directive ?? "").trim()}`);
+
+    const systemPrompt = loadPrompt("system/project-kickoff");
+
+    try {
+      // ── Stage 1: meeting ──
+      broadcast("kickoff_stage", { projectId, stage: "meeting" });
+
+      const meetingAgents: KickoffMeetingAgent[] = assignedAgents.map((ag) => ({
+        id: ag.id,
+        name: ag.name,
+        role: ag.role,
+        dept_name: ag.dept_name,
+        projectRole: ag.project_role,
+        projectRoleLabel: ag.project_role_label,
+        taskTitles: [],
+      }));
+
+      // 회의 완료 후: LLM 태스크 생성 → PM 배정 → 실행
+      const postMeetingPipeline = async () => {
+        try {
+          // ── Stage 2: planning ──
+          broadcast("kickoff_stage", { projectId, stage: "planning" });
+
+          const provider = findApiProvider(db, "api");
+          let rawText: string;
+          if (provider) {
+            const model = resolveModel(provider);
+            const signal = AbortSignal.timeout(120_000);
+            rawText = await callProvider(provider, model, systemPrompt, promptParts.join("\n\n"), signal);
+          } else {
+            const cliProvider = readDefaultProvider(db);
+            const fullPrompt = `${systemPrompt}\n\n${promptParts.join("\n\n")}`;
+            rawText = await callViaCliProvider(cliProvider, fullPrompt);
+          }
+
+          const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+          if (!jsonMatch) {
+            logger.error({ projectId }, "[add-tasks] invalid LLM response after meeting");
+            broadcast("kickoff_stage", { projectId, stage: "done" });
+            return;
+          }
+
+          let parsed: { tasks?: { title: string; description?: string }[] };
+          try {
+            parsed = JSON.parse(jsonMatch[0]) as typeof parsed;
+          } catch {
+            logger.error({ projectId }, "[add-tasks] JSON parse failed after meeting");
+            broadcast("kickoff_stage", { projectId, stage: "done" });
+            return;
+          }
+
+          const newTasks = parsed.tasks ?? [];
+          for (const task of newTasks) {
+            if (!task.title?.trim()) continue;
+            const taskId = randomUUID();
+            const now = nowMs();
+            db.prepare(`
+              INSERT INTO tasks (id, title, description, project_id, assigned_agent_id, status, priority, task_type, created_at, updated_at)
+              VALUES (?, ?, ?, ?, NULL, 'planned', 3, 'general', ?, ?)
+            `).run(taskId, task.title.trim(), task.description ?? "", projectId, now, now);
+            broadcast("task_update", db.prepare("SELECT * FROM tasks WHERE id = ?").get(taskId));
+            appendTaskLog(taskId, "system", `Task created (add-tasks): ${task.title.trim()}`);
+          }
+
+          // ── Stage 3: assigning ──
+          broadcast("kickoff_stage", { projectId, stage: "assigning" });
+
+          const execAgents = assignedAgents.filter((a) => a.project_role !== "pm");
+          if (execAgents.length === 0) {
+            logger.warn({ projectId }, "[add-tasks] no non-PM agents available");
+            broadcast("kickoff_stage", { projectId, stage: "done" });
+            return;
+          }
+
+          const unassignedTasks = db.prepare(`
+            SELECT id, title FROM tasks
+            WHERE project_id = ? AND status = 'planned' AND assigned_agent_id IS NULL
+            ORDER BY created_at ASC
+          `).all(projectId) as { id: string; title: string }[];
+
+          for (let i = 0; i < unassignedTasks.length; i++) {
+            const task = unassignedTasks[i];
+            const agent = execAgents[i % execAgents.length];
+            db.prepare("UPDATE tasks SET assigned_agent_id = ?, updated_at = ? WHERE id = ?")
+              .run(agent.id, nowMs(), task.id);
+            appendTaskLog(task.id, "pm_oversight", `PM assigned → ${agent.name}`);
+            broadcast("task_update", db.prepare("SELECT * FROM tasks WHERE id = ?").get(task.id));
+            logger.info({ taskId: task.id, agentId: agent.id }, "[add-tasks] PM assigned agent");
+          }
+
+          // ── Stage 4: executing ──
+          const plannedTasks = db.prepare(`
+            SELECT id, title, assigned_agent_id FROM tasks
+            WHERE project_id = ? AND status = 'planned' AND assigned_agent_id IS NOT NULL
+            ORDER BY created_at ASC
+          `).all(projectId) as { id: string; title: string; assigned_agent_id: string }[];
+
+          if (plannedTasks.length > 0) {
+            broadcast("kickoff_stage", { projectId, stage: "executing" });
+            logger.info({ projectId, count: plannedTasks.length }, "[add-tasks] starting assigned tasks");
+
+            const seen = new Set<string>();
+            for (const task of plannedTasks) {
+              if (seen.has(task.assigned_agent_id)) continue;
+              seen.add(task.assigned_agent_id);
+              try {
+                if (startTaskExecutionForAgent) {
+                  startTaskExecutionForAgent(task.id, task.assigned_agent_id);
+                } else {
+                  let pp = "";
+                  try { pp = resolveProjectPath(projectId); } catch { /* optional */ }
+                  const ac = new AbortController();
+                  void startExecutionLoop(
+                    { db, broadcast, appendTaskLog, nowMs, resolveProjectPath, abortControllers: kickoffRuns },
+                    { agentId: task.assigned_agent_id, taskId: task.id, projectId, projectPath: pp },
+                    task.title,
+                    ac,
+                  ).then((runId) => { kickoffRuns.set(runId, ac); }).catch((e) => {
+                    logger.error({ err: e, taskId: task.id }, "[add-tasks] execution-loop failed");
+                  });
+                }
+                logger.info({ taskId: task.id, agentId: task.assigned_agent_id }, "[add-tasks] task started");
+              } catch (err) {
+                logger.error({ err, taskId: task.id }, "[add-tasks] task start failed");
+              }
+            }
+          }
+
+          broadcast("kickoff_stage", { projectId, stage: "done" });
+
+          // 알림
+          const addLang = readLang(db);
+          insertNotification?.({
+            type: "kickoff",
+            title: t(addLang, {
+              ko: `${project.name} 추가 업무 생성`,
+              en: `${project.name} additional tasks created`,
+              ja: `${project.name} 追加タスク作成`,
+              zh: `${project.name} 追加任务已创建`,
+            }),
+            body: t(addLang, {
+              ko: `${newTasks.length}개 태스크 추가 생성 완료`,
+              en: `${newTasks.length} new tasks created and assigned`,
+              ja: `${newTasks.length}件の追加タスクを作成完了`,
+              zh: `已创建 ${newTasks.length} 个新任务`,
+            }),
+          });
+        } catch (err) {
+          logger.error({ err, projectId }, "[add-tasks] post-meeting pipeline failed");
+          broadcast("kickoff_stage", { projectId, stage: "done" });
+        }
+      };
+
+      if (assignedAgents.length > 0) {
+        void runAddTasksMeeting(
+          project.name,
+          (additional_directive ?? "").trim(),
+          projectId,
+          meetingAgents,
+          db,
+          broadcast,
+          nowMs,
+          () => { void postMeetingPipeline(); },
+        ).catch((err) => {
+          logger.warn({ err, projectId }, "[add-tasks] meeting failed — running pipeline directly");
+          void postMeetingPipeline();
+        });
+      } else {
+        void postMeetingPipeline();
+      }
+
+      return res.json({ status: "ok", taskCount: 0 });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      broadcast("kickoff_stage", { projectId, stage: "done" });
+      return res.status(500).json({ error: "add_tasks_failed", detail: msg.slice(0, 200) });
     }
   });
 

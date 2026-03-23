@@ -119,7 +119,7 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onGi
     created_at: ct.created_at,
     updated_at: ct.updated_at,
   }));
-  const allCategories = [...categories, ...customAsCategories];
+  const allCategories = [...customAsCategories, ...categories];
 
   const pathTools = useProjectManagerPathTools({
     t,
@@ -768,14 +768,6 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onGi
               style={{ ...mono, fontSize: "11px", color: "var(--th-text-muted)", background: "none", border: "none", cursor: "pointer" }}
             >
               {t({ ko: "← 일반 생성", en: "← Normal create", ja: "← 通常作成", zh: "← 普通创建" })}
-            </button>
-          ) : step === "category" ? (
-            <button
-              type="button"
-              onClick={() => { setSelectedCategoryId(null); setDirective(""); setDirectiveTypeSlug(null); setStep("directive"); }}
-              style={{ ...mono, fontSize: "11px", color: "var(--th-text-muted)", background: "none", border: "none", cursor: "pointer" }}
-            >
-              {t({ ko: "유형 없이 진행", en: "Skip type", ja: "タイプなしで進行", zh: "跳过类型" })}
             </button>
           ) : (
             <Button variant="ghost" size="sm" onClick={goBack}>

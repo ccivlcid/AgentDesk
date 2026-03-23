@@ -51,6 +51,10 @@ export default function MissionControl({ openWindows, onClose, onFocusWindow }: 
     "decision-inbox":    { icon: <svg {...S}><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>, label: t({ ko: "의사결정",           en: "Decision Inbox", ja: "意思決定",                        zh: "决策收件箱" }) },
     "folder-browser":    { icon: <svg {...S}><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>,                        label: t({ ko: "폴더 탐색",           en: "Folder Browser",  ja: "フォルダ閲覧",                    zh: "文件夹浏览" }) },
     "pm-activity":       { icon: <svg {...S}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>, label: t({ ko: "PM 활동", en: "PM Activity", ja: "PMアクティビティ", zh: "PM活动" }) },
+    "learn-skill":       { icon: <svg {...S}><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>, label: t({ ko: "스킬 학습", en: "Skill Learning", ja: "スキル学習", zh: "技能学习" }) },
+    "learn-rule":        { icon: <svg {...S}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>, label: t({ ko: "룰 학습", en: "Rule Learning", ja: "ルール学習", zh: "规则学习" }) },
+    "learn-memory":      { icon: <svg {...S}><path d="M12 2a7 7 0 0 1 7 7c0 2.38-1.19 4.47-3 5.74V17a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1v-2.26C6.19 13.47 5 11.38 5 9a7 7 0 0 1 7-7z"/><line x1="9" y1="21" x2="15" y2="21"/></svg>, label: t({ ko: "메모리 학습", en: "Memory Learning", ja: "メモリ学習", zh: "记忆学习" }) },
+    "learn-hook":        { icon: <svg {...S}><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>, label: t({ ko: "훅 학습", en: "Hook Learning", ja: "フック学習", zh: "钩子学习" }) },
   };
 
   useEffect(() => {

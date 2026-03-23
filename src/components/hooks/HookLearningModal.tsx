@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { HookHistoryProvider, HookLearnProvider } from "../../api/hooks";
 import type { Agent, HookEntry } from "../../types";
 import AgentAvatar from "../AgentAvatar";
-import FloatingWindow from "../skills-library/FloatingWindow";
+import AppWindow from "../windows/AppWindow";
 import {
   hookProviderLabel,
   roleLabel,
@@ -114,15 +114,22 @@ export default function HookLearningModal({
   if (!learningHook) return null;
 
   return (
-    <FloatingWindow
+    <AppWindow
+      windowType="learn-hook"
       title={t({ ko: "훅 학습 스쿼드", en: "Hook Learning Squad", ja: "フック学習スクワッド", zh: "钩子学习小队" })}
-      subtitle={`${learningHook.title} · ${eventTypeLabel(learningHook.event_type, t)}`}
-      onClose={onClose}
-      disableClose={learnInProgress}
-      closeBtnLabel={learnInProgress ? t({ ko: "학습중", en: "Running", ja: "実行中", zh: "进行中" }) : undefined}
+      emoji={
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+        </svg>
+      }
       defaultWidth={760}
+      defaultHeight={560}
+      onClose={learnInProgress ? () => {} : onClose}
     >
-        <div className="space-y-4 overflow-y-auto px-5 py-4">
+      <div className="space-y-4 overflow-y-auto px-5 py-4">
+        <div className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
+          {learningHook.title} · {eventTypeLabel(learningHook.event_type, t)}
+        </div>
           {/* Hook command preview — terminal style */}
           <div className="px-3 py-2" style={{ borderRadius: 0, border: "1px solid rgba(52,211,153,0.25)", background: "var(--th-terminal-bg)" }}>
             <div className="text-[11px] text-emerald-200">
@@ -505,6 +512,6 @@ export default function HookLearningModal({
             </button>
           </div>
         </div>
-    </FloatingWindow>
+    </AppWindow>
   );
 }

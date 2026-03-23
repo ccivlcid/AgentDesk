@@ -57,6 +57,10 @@ export default function AppSwitcher() {
     "decision-inbox": t({ ko: "의사결정", en: "Decision Inbox", ja: "意思決定", zh: "决策收件箱" }),
     "folder-browser": t({ ko: "폴더 탐색", en: "Folder Browser", ja: "フォルダ閲覧", zh: "文件夹浏览" }),
     "pm-activity": t({ ko: "PM 활동", en: "PM Activity", ja: "PMアクティビティ", zh: "PM活动" }),
+    "learn-skill": t({ ko: "스킬 학습", en: "Skill Learning", ja: "スキル学習", zh: "技能学习" }),
+    "learn-rule": t({ ko: "룰 학습", en: "Rule Learning", ja: "ルール学習", zh: "规则学习" }),
+    "learn-memory": t({ ko: "메모리 학습", en: "Memory Learning", ja: "メモリ学習", zh: "记忆学习" }),
+    "learn-hook": t({ ko: "훅 학습", en: "Hook Learning", ja: "フック学習", zh: "钩子学习" }),
   };
 
   const ordered = [...windowFocusOrder].filter((w) => openWindows.has(w)).reverse();

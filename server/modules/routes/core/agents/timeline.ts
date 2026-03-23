@@ -7,6 +7,11 @@ export interface TimelineEvent {
     | "task_start"
     | "task_done"
     | "task_fail"
+    | "task_retry"
+    | "pm_approved"
+    | "pm_revision"
+    | "pm_reassigned"
+    | "pm_escalated"
     | "skill_learn"
     | "memory_save"
     | "hook_run"
@@ -25,10 +30,17 @@ const EVENT_TYPE_MAP: Record<string, TimelineEvent["type"]> = {
   task_complete: "task_done",
   completed: "task_done",
   done: "task_done",
+  review_approved: "task_done",
   task_fail: "task_fail",
   task_failed: "task_fail",
   failed: "task_fail",
   error: "task_fail",
+  task_retry: "task_retry",
+  pm_retry: "task_retry",
+  pm_approved: "pm_approved",
+  pm_revision_requested: "pm_revision",
+  pm_reassigned: "pm_reassigned",
+  pm_escalated: "pm_escalated",
   skill_learn: "skill_learn",
   skill_learned: "skill_learn",
   memory_save: "memory_save",

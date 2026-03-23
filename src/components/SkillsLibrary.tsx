@@ -19,23 +19,6 @@ export default function SkillsLibrary({ agents, currentProject }: SkillsLibraryP
   const { t, locale: localeTag } = useI18n();
   const vm = useSkillsLibraryState({ agents, localeTag, t });
 
-  // 프로젝트 미선택
-  if (!currentProject) {
-    return (
-      <div className="flex items-center justify-center py-24">
-        <div className="text-center font-mono">
-          <div className="text-3xl mb-3" style={{ opacity: 0.4 }}>&#x1F4E6;</div>
-          <p className="text-sm font-medium mb-1" style={{ color: "var(--th-text-secondary)" }}>
-            {t({ ko: "프로젝트를 선택하세요", en: "Select a project", ja: "プロジェクトを選択してください", zh: "请选择项目" })}
-          </p>
-          <p className="text-xs" style={{ color: "var(--th-text-muted)" }}>
-            {t({ ko: "헤더에서 프로젝트를 선택하면 해당 프로젝트의 스킬을 관리할 수 있습니다.", en: "Select a project in the header to manage its skills.", ja: "ヘッダーでプロジェクトを選択して、スキルを管理できます。", zh: "在标题栏选择项目以管理其技能。" })}
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   if (vm.loading) {
     return (
       <div className="flex items-center justify-center py-24">
@@ -191,12 +174,15 @@ export default function SkillsLibrary({ agents, currentProject }: SkillsLibraryP
       />
 
       <div className="text-center text-xs font-mono py-4" style={{ color: "var(--th-text-muted)" }}>
-        {t({
-          ko: `'${currentProject.name}' 프로젝트 · 데이터 출처: skills.sh · 설치: npx skills add <owner/repo>`,
-          en: `'${currentProject.name}' project · Source: skills.sh · Install: npx skills add <owner/repo>`,
-          ja: `'${currentProject.name}' プロジェクト · データソース: skills.sh · インストール: npx skills add <owner/repo>`,
-          zh: `'${currentProject.name}' 项目 · 数据来源: skills.sh · 安装: npx skills add <owner/repo>`,
-        })}
+        {currentProject
+          ? t({
+              ko: `'${currentProject.name}' 프로젝트 · 데이터 출처: skills.sh`,
+              en: `'${currentProject.name}' project · Source: skills.sh`,
+              ja: `'${currentProject.name}' プロジェクト · データソース: skills.sh`,
+              zh: `'${currentProject.name}' 项目 · 数据来源: skills.sh`,
+            })
+          : t({ ko: "데이터 출처: skills.sh", en: "Source: skills.sh", ja: "データソース: skills.sh", zh: "数据来源: skills.sh" })
+        }
       </div>
       </div>
     </div>

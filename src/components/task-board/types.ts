@@ -23,4 +23,6 @@ export interface TaskBoardProps {
   kickoffBusy?: boolean;
   onResume?: () => void;
   resumeBusy?: boolean;
+  onAddTasks?: (directive: string, attachedFile?: { name: string; content: string }) => void;
+  addTasksBusy?: boolean;
 }

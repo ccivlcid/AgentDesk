@@ -92,6 +92,23 @@ const IconTrash = () => (
 
 // ─── Type config ──────────────────────────────────────────────────────────────
 
+const IconShield = ({ size = SZ }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+  </svg>
+);
+const IconRefresh = ({ size = SZ }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M23 4v6h-6" /><path d="M1 20v-6h6" />
+    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+  </svg>
+);
+const IconTag = ({ size = SZ }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
+    <line x1="7" y1="7" x2="7.01" y2="7" />
+  </svg>
+);
 const IconRocket = ({ size = SZ }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" />
@@ -116,6 +133,9 @@ const TYPE_ICONS: Record<string, ReactNode> = {
   system:           <IconInfo />,
   cost_alert:       <IconAlert />,
   agent_anomaly:    <IconAlert />,
+  pm_approved:      <IconShield />,
+  pm_revision:      <IconRefresh />,
+  version_released: <IconTag />,
 };
 
 const TYPE_COLORS: Record<string, string> = {
@@ -128,6 +148,9 @@ const TYPE_COLORS: Record<string, string> = {
   agent_anomaly:    "#ff9f0a",
   decision_created: "#0a84ff",
   system:           "var(--th-text-muted)",
+  pm_approved:      "#30d158",
+  pm_revision:      "#ff9f0a",
+  version_released: "#5e5ce6",
 };
 
 const TYPE_BG: Record<string, string> = {
@@ -140,12 +163,25 @@ const TYPE_BG: Record<string, string> = {
   agent_anomaly:    "rgba(255,159,10,0.08)",
   decision_created: "rgba(10,132,255,0.08)",
   system:           "rgba(120,120,128,0.06)",
+  pm_approved:      "rgba(48,209,88,0.08)",
+  pm_revision:      "rgba(255,159,10,0.08)",
+  version_released: "rgba(94,92,230,0.08)",
 };
+
+/** Filter groups: some filters map to multiple notification types */
+const PM_TYPES = new Set<string>(["pm_approved", "pm_revision", "version_released"]);
+
+function matchesFilter(type: string, filter: NotifType): boolean {
+  if (filter === "all") return true;
+  if (filter === "pm_approved") return PM_TYPES.has(type);
+  return type === filter;
+}
 
 const TYPE_FILTERS: Array<{ key: NotifType; label: string; icon: ReactNode | null }> = [
   { key: "all",              label: "전체",    icon: null },
   { key: "task_complete",    label: "완료",    icon: <IconCheck size={11} /> },
   { key: "task_error",       label: "오류",    icon: <IconX size={11} /> },
+  { key: "pm_approved",      label: "PM",      icon: <IconShield size={11} /> },
   { key: "decision_created", label: "결정",    icon: <IconInbox size={11} /> },
   { key: "agent_error",      label: "경고",    icon: <IconAlert size={11} /> },
   { key: "system",           label: "정보",    icon: <IconInfo size={11} /> },
@@ -410,7 +446,7 @@ export default function NotificationCenter({ on, onNavigateTask, onOpenDecisionI
     if (!item.read) setUnreadCount((c) => Math.max(0, c - 1));
   };
 
-  const filtered = (typeFilter === "all" ? items : items.filter((i) => i.type === typeFilter))
+  const filtered = items.filter((i) => matchesFilter(i.type, typeFilter))
     .filter((i) => !hideRead || !i.read);
 
   const groups: Array<{ bucket: "today" | "yesterday" | "older"; items: NotificationItem[] }> = [];
@@ -561,7 +597,7 @@ export default function NotificationCenter({ on, onNavigateTask, onOpenDecisionI
             const active = typeFilter === f.key;
             const count = f.key === "all"
               ? items.filter((i) => !i.read).length
-              : items.filter((i) => i.type === f.key && !i.read).length;
+              : items.filter((i) => matchesFilter(i.type, f.key) && !i.read).length;
             return (
               <button
                 key={f.key}

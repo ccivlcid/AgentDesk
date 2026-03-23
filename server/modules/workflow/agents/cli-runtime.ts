@@ -3,7 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import { spawn, type ChildProcess } from "node:child_process";
 import logger from "../../../lib/logger";
-import { parseCodexJsonChunk } from "../../agent-runtime/execution-loop.ts";
+import { CodexLineBuffer, parseCodexJsonLine } from "../../agent-runtime/execution-loop.ts";
 
 type CliRuntimeDeps = {
   db: any;
@@ -333,16 +333,30 @@ export function createCliRuntimeTools(deps: CliRuntimeDeps) {
     child.stdin?.end();
 
     // Pipe agent output to log file AND broadcast via WebSocket
+    // Use line buffer for codex to handle partial JSON lines across chunks
+    const codexBuf = provider === "codex" ? new CodexLineBuffer() : null;
     stdoutListener = (chunk: Buffer) => {
       touchIdleTimer();
       const text = normalizeStreamChunk(chunk, { dropCliNoise: true });
       if (!text) return;
       if (shouldSkipDuplicateCliOutput(taskId, "stdout", text)) return;
       safeWrite(text);
-      // For codex provider, parse JSON output into readable text before broadcasting
-      const displayText = provider === "codex" ? parseCodexJsonChunk(text) : text;
-      if (displayText.trim()) {
-        broadcast("cli_output", { task_id: taskId, stream: "stdout", data: displayText });
+      if (codexBuf) {
+        // Buffer lines to avoid splitting JSON across chunks
+        const completeLines = codexBuf.push(text);
+        const parts: string[] = [];
+        for (const line of completeLines) {
+          const parsed = parseCodexJsonLine(line);
+          if (parsed !== null) parts.push(parsed);
+        }
+        const displayText = parts.join("\n");
+        if (displayText.trim()) {
+          broadcast("cli_output", { task_id: taskId, stream: "stdout", data: displayText });
+        }
+      } else {
+        if (text.trim()) {
+          broadcast("cli_output", { task_id: taskId, stream: "stdout", data: text });
+        }
       }
       // Always parse raw text for subtask detection (needs original JSON)
       parseAndCreateSubtasks(taskId, text);
@@ -363,6 +377,17 @@ export function createCliRuntimeTools(deps: CliRuntimeDeps) {
       clearRunTimers();
       detachOutputListeners();
       activeProcesses.delete(taskId);
+      // Flush any remaining buffered codex output
+      if (codexBuf) {
+        const remaining = codexBuf.flush();
+        if (remaining) {
+          const parsed = parseCodexJsonLine(remaining);
+          if (parsed) {
+            safeWrite(parsed);
+            broadcast("cli_output", { task_id: taskId, stream: "stdout", data: parsed });
+          }
+        }
+      }
       safeEnd();
       try {
         fs.unlinkSync(promptPath);

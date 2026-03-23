@@ -106,7 +106,8 @@ export function repairLegacyTaskForeignKeys(db: DbLike): void {
       db.exec(`
         CREATE TABLE meeting_minutes (
           id TEXT PRIMARY KEY,
-          task_id TEXT NOT NULL REFERENCES tasks(id) ON DELETE CASCADE,
+          task_id TEXT REFERENCES tasks(id) ON DELETE SET NULL,
+          project_id TEXT,
           meeting_type TEXT NOT NULL CHECK(meeting_type IN ('planned','review')),
           round INTEGER NOT NULL,
           title TEXT NOT NULL,
@@ -118,11 +119,13 @@ export function repairLegacyTaskForeignKeys(db: DbLike): void {
       `);
       db.exec(`
         INSERT INTO meeting_minutes (
-          id, task_id, meeting_type, round, title, status, started_at, completed_at, created_at
+          id, task_id, project_id, meeting_type, round, title, status, started_at, completed_at, created_at
         )
         SELECT
-          id, task_id, meeting_type, round, title, status, started_at, completed_at, created_at
-        FROM ${meetingMinutesOld};
+          mm.id, mm.task_id,
+          (SELECT t.project_id FROM tasks t WHERE t.id = mm.task_id),
+          mm.meeting_type, mm.round, mm.title, mm.status, mm.started_at, mm.completed_at, mm.created_at
+        FROM ${meetingMinutesOld} mm;
       `);
 
       db.exec(`

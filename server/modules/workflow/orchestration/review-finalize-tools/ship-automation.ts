@@ -8,10 +8,12 @@
  */
 
 import { randomUUID } from "node:crypto";
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { DatabaseSync } from "node:sqlite";
 import logger from "../../../../lib/logger.ts";
+
+type Lang = "ko" | "en" | "ja" | "zh";
 
 interface ShipAutomationParams {
   db: DatabaseSync;
@@ -19,10 +21,14 @@ interface ShipAutomationParams {
   taskId: string;
   taskTitle: string;
   taskType?: string;
+  taskDescription?: string | null;
+  taskResult?: string | null;
+  agentName?: string | null;
   projectPath: string | null;
   nowMs: number;
   appendTaskLog: (taskId: string, kind: string, message: string) => void;
   broadcast: (type: string, payload: unknown) => void;
+  insertNotification?: (params: { type: string; title: string; body?: string | null; task_id?: string | null; agent_id?: string | null }) => string | void;
 }
 
 /** Bump semver patch: "0.1.2" -> "0.1.3" */
@@ -60,8 +66,17 @@ const ENTRY_TYPE_HEADING: Record<string, string> = {
   docs: "Documentation",
 };
 
+function readLang(db: DatabaseSync): Lang {
+  const row = db.prepare("SELECT value FROM settings WHERE key = 'language'").get() as { value: string } | undefined;
+  if (!row) return "en";
+  try {
+    const v = JSON.parse(row.value);
+    return (typeof v === "string" && ["ko", "en", "ja", "zh"].includes(v)) ? v as Lang : "en";
+  } catch { return "en"; }
+}
+
 export function shipAutomation(params: ShipAutomationParams): void {
-  const { db, projectId, taskId, taskTitle, taskType, projectPath, nowMs, appendTaskLog, broadcast } = params;
+  const { db, projectId, taskId, taskTitle, taskType, taskDescription, taskResult, agentName, projectPath, nowMs, appendTaskLog, broadcast, insertNotification } = params;
 
   try {
     // 1. Read current version
@@ -97,9 +112,19 @@ export function shipAutomation(params: ShipAutomationParams): void {
       timestamp: nowMs,
     });
 
+    // 5b. Notification for version bump
+    insertNotification?.({
+      type: "version_released",
+      title: `v${newVersion} — ${taskTitle}`,
+      body: `${resolveEntryType(taskType)} version bump`,
+      task_id: taskId,
+    });
+
     // 6. Sync to files if project has a path
     if (resolvedProjectPath) {
       syncVersionFiles(resolvedProjectPath, newVersion, entryType, taskTitle, taskId, nowMs);
+      const lang = readLang(db);
+      syncProgressMd(resolvedProjectPath, newVersion, taskTitle, taskDescription ?? null, taskResult ?? null, agentName ?? null, nowMs, lang);
     }
 
     logger.info({ projectId, taskId, version: newVersion }, "[ship-automation] version bumped");
@@ -160,4 +185,78 @@ function syncVersionFiles(
   } catch {
     /* best effort */
   }
+}
+
+const PROGRESS_LABELS: Record<Lang, { completed: string; agent: string; status: string; result: string }> = {
+  ko: { completed: "완료", agent: "에이전트", status: "상태", result: "결과" },
+  en: { completed: "Completed", agent: "Agent", status: "Status", result: "Result" },
+  ja: { completed: "完了", agent: "エージェント", status: "ステータス", result: "結果" },
+  zh: { completed: "完成", agent: "代理", status: "状态", result: "结果" },
+};
+
+function syncProgressMd(
+  projectPath: string,
+  version: string,
+  taskTitle: string,
+  taskDescription: string | null,
+  taskResult: string | null,
+  agentName: string | null,
+  nowMs: number,
+  lang: Lang,
+): void {
+  try {
+    const progressDir = join(projectPath, "docs");
+    const progressPath = join(progressDir, "progress.md");
+    const labels = PROGRESS_LABELS[lang] || PROGRESS_LABELS.en;
+    const dateStr = formatDateTime(nowMs);
+    const truncatedResult = taskResult ? taskResult.slice(-500) : "";
+
+    const newEntry = [
+      `\n## v${version} — ${taskTitle}`,
+      "",
+      `> ${labels.completed}: ${dateStr}`,
+      agentName ? `> ${labels.agent}: ${agentName}` : null,
+      `> ${labels.status}: Done`,
+      "",
+      taskDescription || "",
+      "",
+      `### ${labels.result}`,
+      truncatedResult,
+      "",
+      "---",
+      "",
+    ].filter((line) => line !== null).join("\n");
+
+    if (existsSync(progressPath)) {
+      const existing = readFileSync(progressPath, "utf-8");
+      // Insert after the first line (title) so newest is at the top
+      const titleEnd = existing.indexOf("\n");
+      if (titleEnd > 0) {
+        const updated = existing.slice(0, titleEnd + 1) + newEntry + existing.slice(titleEnd + 1);
+        writeFileSync(progressPath, updated, "utf-8");
+      } else {
+        writeFileSync(progressPath, existing + "\n" + newEntry, "utf-8");
+      }
+    } else {
+      // Create docs/ directory if it doesn't exist
+      if (!existsSync(progressDir)) {
+        mkdirSync(progressDir, { recursive: true });
+      }
+      writeFileSync(progressPath, `# Progress\n${newEntry}`, "utf-8");
+    }
+
+    logger.info({ projectPath, version }, "[ship-automation] progress.md updated");
+  } catch (err) {
+    logger.warn({ err, projectPath }, "[ship-automation] progress.md update failed — continuing");
+  }
+}
+
+function formatDateTime(ms: number): string {
+  const d = new Date(ms);
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mi = String(d.getMinutes()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd} ${hh}:${mi}`;
 }
