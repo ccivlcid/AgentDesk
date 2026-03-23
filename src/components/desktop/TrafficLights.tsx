@@ -10,20 +10,20 @@ interface TrafficLightsProps {
 }
 
 const DOTS = [
-  { key: "close",    color: "#ff5f57", shadow: "#c0392b", icon: "✕" },
-  { key: "minimize", color: "#febc2e", shadow: "#d4a017", icon: "−" },
-  { key: "maximize", color: "#28c840", shadow: "#1e9e30", icon: "⤢" },
+  { key: "close",    color: "#FF5F56", shadow: "#E0443E", icon: "✕" },
+  { key: "minimize", color: "#FFBD2E", shadow: "#DEA123", icon: "−" },
+  { key: "maximize", color: "#27C93F", shadow: "#1AAB29", icon: "＋" },
 ] as const;
 
-const TILE_OPTIONS: Array<{ zone: TileZone; label: string }> = [
-  { zone: "left",   label: "← Left Half" },
-  { zone: "right",  label: "Right Half →" },
-  { zone: "full",   label: "⤢  Full Screen" },
-  { zone: "center", label: "◎ Center" },
-  { zone: "tl",     label: "↖ Top Left" },
-  { zone: "tr",     label: "↗ Top Right" },
-  { zone: "bl",     label: "↙ Bottom Left" },
-  { zone: "br",     label: "↘ Bottom Right" },
+const TILE_OPTIONS: Array<{ zone: TileZone; label: string; icon: string }> = [
+  { zone: "left",   label: "Left Half", icon: "⇠" },
+  { zone: "right",  label: "Right Half", icon: "⇢" },
+  { zone: "full",   label: "Full Screen", icon: "⤢" },
+  { zone: "center", label: "Center", icon: "◎" },
+  { zone: "tl",     label: "Top Left", icon: "↖" },
+  { zone: "tr",     label: "Top Right", icon: "↗" },
+  { zone: "bl",     label: "Bottom Left", icon: "↙" },
+  { zone: "br",     label: "Bottom Right", icon: "↘" },
 ];
 
 export default function TrafficLights({ onClose, onMinimize, onMaximize, onSnapTo }: TrafficLightsProps) {
@@ -67,27 +67,20 @@ export default function TrafficLights({ onClose, onMinimize, onMaximize, onSnapT
             onClick={active ? handlers[key] : undefined}
             onMouseEnter={isMax && onSnapTo ? openTileMenu : undefined}
             style={{
-              width: 13,
-              height: 13,
+              width: 12,
+              height: 12,
               borderRadius: "50%",
-              background: active
-                ? `radial-gradient(circle at 38% 35%, ${color}ff 0%, ${color}dd 55%, ${shadow}bb 100%)`
-                : "rgba(128,128,128,0.25)",
-              border: active
-                ? `0.5px solid ${shadow}88`
-                : "0.5px solid rgba(0,0,0,0.18)",
+              background: active ? color : "#E5E7EB",
+              border: `0.5px solid rgba(0, 0, 0, 0.1)`,
               cursor: active ? "pointer" : "default",
               padding: 0,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               flexShrink: 0,
-              transition: "opacity 0.1s, transform 0.1s",
+              transition: "all 0.1s",
               opacity: active ? 1 : 0.3,
               position: "relative",
-              boxShadow: active
-                ? `0 1px 3px ${shadow}66, inset 0 1px 0 rgba(255,255,255,0.35)`
-                : "none",
             }}
           >
             {groupHover && active && (
@@ -98,9 +91,9 @@ export default function TrafficLights({ onClose, onMinimize, onMaximize, onSnapT
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontSize: key === "maximize" ? 8 : 9,
+                  fontSize: key === "maximize" ? 7 : 9,
                   fontWeight: 900,
-                  color: "rgba(0,0,0,0.55)",
+                  color: "rgba(0,0,0,0.65)", // Slightly darker icons for better contrast
                   lineHeight: 1,
                   pointerEvents: "none",
                   userSelect: "none",
@@ -122,49 +115,63 @@ export default function TrafficLights({ onClose, onMinimize, onMaximize, onSnapT
             position: "absolute",
             top: 20,
             left: 0,
-            background: "var(--th-panel-bg)",
+            background: "rgba(255, 255, 255, 0.98)",
             backdropFilter: "blur(20px)",
-            border: "1px solid var(--th-border)",
-            borderRadius: 8,
-            padding: "4px 0",
-            minWidth: 160,
-            boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
+            border: "1px solid rgba(0, 0, 0, 0.08)",
+            borderRadius: 12,
+            padding: "6px",
+            minWidth: 180,
+            boxShadow: "0 10px 30px -10px rgba(0, 0, 0, 0.15)",
             zIndex: 9000,
           }}
         >
           <div style={{
-            padding: "4px 12px 4px",
+            padding: "6px 12px",
             fontSize: 9,
-            color: "var(--th-text-muted)",
+            fontWeight: 900,
+            color: "#94A3B8",
             fontFamily: "var(--th-font-mono)",
-            letterSpacing: "0.08em",
-            borderBottom: "1px solid var(--th-border)",
-            marginBottom: 2,
+            letterSpacing: "0.1em",
+            textTransform: "uppercase",
+            borderBottom: "1px solid rgba(0, 0, 0, 0.04)",
+            marginBottom: 4,
           }}>
-            MOVE & RESIZE
+            Move & Resize
           </div>
-          {TILE_OPTIONS.map(({ zone, label }) => (
+          {TILE_OPTIONS.map(({ zone, label, icon }) => (
             <button
               key={zone}
               type="button"
               onMouseDown={(e) => e.stopPropagation()}
               onClick={() => { onSnapTo(zone); setTileMenuOpen(false); }}
               style={{
-                display: "block",
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
                 width: "100%",
-                padding: "5px 12px",
-                background: "none",
+                padding: "6px 12px",
+                background: "transparent",
                 border: "none",
+                borderRadius: 8,
                 cursor: "pointer",
                 fontFamily: "var(--th-font-mono)",
-                fontSize: 11,
-                color: "var(--th-text-primary)",
+                fontSize: 12,
+                fontWeight: 600,
+                color: "#4B5563",
                 textAlign: "left",
+                transition: "all 0.15s ease",
               }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--th-accent-glow)"; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "none"; }}
+              onMouseEnter={(e) => { 
+                e.currentTarget.style.background = "rgba(59, 130, 246, 0.08)"; 
+                e.currentTarget.style.color = "#2563EB";
+              }}
+              onMouseLeave={(e) => { 
+                e.currentTarget.style.background = "transparent"; 
+                e.currentTarget.style.color = "#4B5563";
+              }}
             >
-              {label}
+              <span style={{ fontSize: 14, opacity: 0.7 }}>{icon}</span>
+              <span style={{ flex: 1 }}>{label}</span>
             </button>
           ))}
         </div>

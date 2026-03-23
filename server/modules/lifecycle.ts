@@ -2,6 +2,7 @@ import type { RuntimeContext } from "../types/runtime-context.ts";
 import type { IncomingMessage } from "node:http";
 import type { WebSocket as WsSocket } from "ws";
 import path from "path";
+import { execSync } from "node:child_process";
 import { HOST, PKG_VERSION, PORT } from "../config/runtime.ts";
 import logger from "../lib/logger.ts";
 import { startDiscordReceiver } from "../messenger/discord-receiver.ts";
@@ -205,6 +206,42 @@ export function startLifecycle(ctx: RuntimeContext): void {
 
   const obsidianWatcher = startObsidianWatcher(db, broadcast);
   const notionPoller = startNotionPoller(db, broadcast);
+
+  // In dev mode, kill any stale process occupying our port before binding.
+  // This prevents cascading "Port already in use" → "database is locked" errors
+  // that occur when tsx/HMR restarts without fully tearing down the prior process.
+  if (!isProduction) {
+    try {
+      if (process.platform === "win32") {
+        const out = execSync(`netstat -ano | findstr ":${PORT}"`, { encoding: "utf8", timeout: 3_000 }).trim();
+        const pids = new Set<number>();
+        for (const line of out.split("\n")) {
+          if (line.includes("LISTENING")) {
+            const parts = line.trim().split(/\s+/);
+            const pid = Number(parts[parts.length - 1]);
+            if (pid && pid !== process.pid) pids.add(pid);
+          }
+        }
+        for (const pid of pids) {
+          try {
+            execSync(`taskkill /F /PID ${pid}`, { encoding: "utf8", timeout: 3_000 });
+            logger.info(`[AgentDesk] Killed stale process PID ${pid} on port ${PORT}`);
+          } catch { /* already dead */ }
+        }
+      } else {
+        const out = execSync(`lsof -ti :${PORT}`, { encoding: "utf8", timeout: 3_000 }).trim();
+        for (const pidStr of out.split("\n")) {
+          const pid = Number(pidStr);
+          if (pid && pid !== process.pid) {
+            try {
+              execSync(`kill -9 ${pid}`, { encoding: "utf8", timeout: 3_000 });
+              logger.info(`[AgentDesk] Killed stale process PID ${pid} on port ${PORT}`);
+            } catch { /* already dead */ }
+          }
+        }
+      }
+    } catch { /* no stale process found — this is the normal case */ }
+  }
 
   const server = app.listen(PORT, HOST, () => {
     logger.info(`[AgentDesk] v${PKG_VERSION} listening on http://${HOST}:${PORT} (db: ${dbPath})`);

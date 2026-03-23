@@ -4,6 +4,67 @@
 
 ---
 
+## ✅ Phase 49: PM 검토 플로우 + Repo Store 앱 러너 + YOLO 모드 수정 — Complete
+
+> **Date:** 2026-03-23
+
+### What was built
+
+| Feature | Description |
+|---------|-------------|
+| **PM 검토 → progress.md 플로우** | 모든 업무 완료 시 PM 에이전트가 LLM으로 검증 + progress.md 작성. 수동 "done"도 PM 검토를 거침 (review → PM 승인 → done) |
+| **PM progress.md 프롬프트** | `prompts/pm/write-progress.md` 생성 (ko/en/ja/zh 4개국어). 검증 항목(목표 달성, 산출물 품질, 누락 사항) + 보고서 구조 포함 |
+| **YOLO 모드 수정** | YOLO = PM에게 모든 통제권 위임. PM이 LLM 리뷰를 **수행**하되 사용자 승인 대기 없이 자동 결정. 기존의 "리뷰 스킵" 동작 제거 |
+| **Repo Store 탭 정리** | GitImportWindow에서 GitHub/GitLab 탭 제거, Trending만 유지 |
+| **앱 아이콘 구분** | project_type='app' 프로젝트에 IconAppRunner (재생 아이콘) 표시 |
+| **업무보드 앱 필터** | project_type='app' 프로젝트를 업무보드 프로젝트 드롭다운에서 제외 |
+| **App Runner 수정** | resolveHomePath 경로 확장 (/Projects 지원), 포트 충돌 체크, 분석/실행 에러 표시, 자동 분석 후 실행 |
+| **ship-automation.ts 경로 수정** | resolveHomePath를 helpers.ts와 동일하게 수정 (Windows 호환) |
+| **crud.ts done 이벤트** | 수동 done → PM이 있으면 review로 전환 → PM 오케스트레이터가 검토 |
+
+### Architecture change
+
+```
+업무 완료 → "review" → PM LLM 검토 → 승인 → progress.md 작성 → done → ship automation → 다음 태스크
+                                     → 수정 → "planned" → 에이전트 재실행
+```
+
+### DB migrations
+
+- (없음 — 기존 컬럼 활용)
+
+### Files
+
+**생성:** `prompts/pm/write-progress.md`
+
+**수정:** `pm-orchestrator.ts` (PM progress 작성 + YOLO 수정), `ship-automation.ts` (progress.md 기계적 작성 제거 + 경로 수정), `crud.ts` (done → review 전환 + eventBus), `GitImportWindow.tsx` (탭 제거), `DesktopIconArea.tsx` (앱 아이콘), `DesktopIcons.tsx` (IconAppRunner), `useTaskBoard.ts` (앱 필터), `AppRunnerWindow.tsx` (에러 표시 + 자동 분석), `app-runner.ts` (포트 체크 + 경로 수정), `CLAUDE.md` (§1-2-1, §1-2-2 추가)
+
+---
+
+## ✅ Phase 48: 위젯 제거 + Repo Store + 디렉티브 개선 — Complete
+
+> **Date:** 2026-03-23
+
+### What was built
+
+| Feature | Description |
+|---------|-------------|
+| **디렉티브 md 분리** | 10개 유형별 디렉티브를 `prompts/directives/*.md`로 분리, 유형별 내용 전면 재작성 (목표·원칙·태스크분해·품질기준·리뷰·우선순위) |
+| **커스텀 유형 → 생성 모달 연결** | Settings에서 제거, 프로젝트 생성 모달 카테고리 선택에 커스텀 유형 표시 + default_directive 자동 채움 |
+| **위젯/커스텀 피처 전체 제거** | widget-builder, widget-board, desktop/widgets 디렉토리 삭제. CustomFeature 타입, API, 라우트, Store 상태 전부 제거. CLAUDE.md 문서 정리 |
+| **Repo Store 설계 + 구현** | GitHub Trending 스크래핑 API (`GET /api/github-trending`, 5분 캐시, cheerio). 앱스토어 스타일 카드 그리드 UI. 필터(기간/언어). URL 직접 입력. 카드별 다운로드 + 프로그레스바 + 프로젝트 자동 등록 |
+| **Repo Store 바탕화면 아이콘** | 바탕화면 시스템 앱 아이콘 추가, Dock 메뉴 "Repo Store" 항목 |
+| **Shallow clone** | GitHub/GitLab 클론에 `--depth 1` 적용 (대형 레포 빠른 다운로드) |
+| **WindowType 정리** | `feature-builder`, `widget-board` 제거. `git-import` → `repo-store` 리네이밍 |
+
+### Files
+
+**생성:** `prompts/directives/*.md` (10개), `server/modules/routes/ops/github-trending.ts`, `src/api/github-trending.ts`, `docs/strategy/REPO-STORE.md`
+
+**삭제:** `src/components/widget-builder/`, `widget-board/`, `desktop/widgets/`, `server/.../custom-features-ai/`, `CustomFeatureWindow.tsx`, `FeatureBuilderWindow.tsx`, `DesktopFeatureCtxMenu.tsx`, `api/custom-features.ts`, `ops/custom-features.ts`
+
+---
+
 ## ✅ Phase 47: 라이브러리 빈 화면 제거 + 라이브러리 개선안 문서화 — Complete
 
 > **Date:** 2026-03-23

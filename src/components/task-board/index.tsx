@@ -5,6 +5,7 @@ import FilterBar from "../taskboard/FilterBar";
 import DependencyGraph from "../taskboard/DependencyGraph";
 import GanttChart from "../taskboard/GanttChart";
 import { TaskBoardKanban } from "./TaskBoardKanban";
+import { TaskBoardBento } from "./TaskBoardBento";
 import { TaskBoardStatusBar } from "./TaskBoardStatusBar";
 import { TaskBoardToolbar } from "./TaskBoardToolbar";
 import type { TaskBoardProps } from "./types";
@@ -48,11 +49,11 @@ export function TaskBoard(props: TaskBoardProps) {
       className="taskboard-shell flex h-full min-h-0 flex-col"
       style={{
         gap: 0,
-        borderRadius: 10,
+        borderRadius: 24,
         overflow: "hidden",
-        background: "var(--th-bg-elevated)",
-        border: "1px solid var(--th-border)",
-        boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
+        background: "#F3F4F6",
+        border: "1px solid rgba(0, 0, 0, 0.05)",
+        boxShadow: "0 10px 30px -10px rgba(0, 0, 0, 0.05)",
       }}
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
@@ -86,6 +87,8 @@ export function TaskBoard(props: TaskBoardProps) {
         <div className="flex-1 overflow-auto pb-2">
           <GanttChart tasks={filteredTasks} agents={agents} departments={departments} />
         </div>
+      ) : viewMode === "board" ? (
+        <TaskBoardKanban state={state} />
       ) : filteredTasks.length === 0 && filterProject ? (
         <div className="flex-1 flex flex-col items-center justify-center text-center px-6">
           <p style={{ ...mono, fontSize: "10px", color: "var(--th-text-muted)", marginBottom: 4 }}>
@@ -96,7 +99,7 @@ export function TaskBoard(props: TaskBoardProps) {
           </p>
         </div>
       ) : (
-        <TaskBoardKanban state={state} />
+        <TaskBoardBento state={state} />
       )}
 
       {showProjectManager && (

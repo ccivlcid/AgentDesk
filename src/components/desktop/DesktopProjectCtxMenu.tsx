@@ -15,6 +15,7 @@ export interface DesktopProjectCtxMenuProps {
   onDelete: (projectId: string) => void;
   onMoveToFolder: (projectId: string, folderId: string) => Promise<void>;
   onEditDirective?: (projectId: string) => void;
+  onCreateTask?: (projectId: string) => void;
 }
 
 export function DesktopProjectCtxMenu({
@@ -29,6 +30,7 @@ export function DesktopProjectCtxMenu({
   onDelete,
   onMoveToFolder,
   onEditDirective,
+  onCreateTask,
 }: DesktopProjectCtxMenuProps) {
   const entries: ContextMenuEntry[] = [
     {
@@ -40,6 +42,11 @@ export function DesktopProjectCtxMenu({
       label: t({ ko: "열기", en: "Open", ja: "開く", zh: "打开" }),
       icon: "📂",
       onClick: () => onOpen(projectCtxMenu.projectId),
+    },
+    {
+      label: t({ ko: "새 업무 만들기", en: "Create Task", ja: "新しいタスク", zh: "新建任务" }),
+      icon: "➕",
+      onClick: () => onCreateTask?.(projectCtxMenu.projectId),
     },
     {
       label: t({ ko: "빠른 미리보기", en: "Quick Look", ja: "クイックルック", zh: "快速预览" }),

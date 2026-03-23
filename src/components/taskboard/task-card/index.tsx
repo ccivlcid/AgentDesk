@@ -36,19 +36,23 @@ export default function TaskCard(props: TaskCardProps) {
   return (
     <>
       <div
-        className={`group task-card-hover overflow-hidden transition-all duration-200 ${cardCollapsed ? "p-2.5 px-3" : "p-3.5"}`}
+        className={`group task-card-hover overflow-hidden transition-all duration-300 ${cardCollapsed ? "p-3 px-4" : "p-4.5"}`}
         style={{
-          background: "var(--th-bg-surface)",
-          border: executionAlert ? "1px solid rgba(244,63,94,0.22)" : isInProgress ? "1px solid rgba(34,197,94,0.18)" : "1px solid var(--th-border)",
-          borderLeft: `3px solid ${executionAlert ? "var(--th-status-error)" : leftBorderColor}`,
-          borderRadius: 12,
-          opacity: isHiddenTask ? 0.7 : 1,
-          boxShadow: executionAlert
-            ? "inset 0 0 0 1px rgba(244,63,94,0.06), 0 1px 4px rgba(0,0,0,0.08), 0 4px 12px rgba(244,63,94,0.06)"
-            : isInProgress
-            ? "0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(34,197,94,0.08)"
-            : "0 1px 4px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04)",
-          transition: "box-shadow 0.15s, border-color 0.15s",
+          background: "#FFFFFF",
+          border: executionAlert ? "1px solid #FECACA" : isInProgress ? "1px solid #BFDBFE" : "1px solid #E5E7EB",
+          borderLeft: `4px solid ${executionAlert ? "#EF4444" : leftBorderColor}`,
+          borderRadius: 16,
+          opacity: isHiddenTask ? 0.6 : 1,
+          boxShadow: "0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.03)",
+          transition: "all 0.2s cubic-bezier(0.23, 1, 0.32, 1)",
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.boxShadow = "0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04)";
+          e.currentTarget.style.transform = "translateY(-2px)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.boxShadow = "0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.03)";
+          e.currentTarget.style.transform = "translateY(0)";
         }}
         onContextMenu={handleContextMenu}
       >

@@ -37,8 +37,9 @@ interface PmActivityResponse {
 export function registerPmActivityRoutes(app: Express, db: DatabaseSync): void {
   app.get("/api/projects/:id/pm-activity", (req, res) => {
     const projectId = req.params.id;
-    const limit = Math.min(Number(req.query.limit) || 50, 200);
+    const limit = Math.min(Number(req.query.limit) || 100, 500);
     const since = Number(req.query.since) || 0;
+    const before = Number(req.query.before) || Infinity;
 
     try {
       // PM agent for this project
@@ -65,7 +66,7 @@ export function registerPmActivityRoutes(app: Express, db: DatabaseSync): void {
            LEFT JOIN agents a ON a.id = t.assigned_agent_id
            WHERE (t.project_id = ? OR tl.project_id = ?)
              AND tl.kind IN ('system', 'pm_oversight')
-             AND tl.created_at > ?
+             AND tl.created_at > ? AND tl.created_at < ?
              AND (tl.message LIKE 'Status →%' OR tl.message LIKE 'PM %' OR tl.message LIKE 'RUN %'
                   OR tl.message LIKE 'Review 대기%' OR tl.message LIKE 'Decision inbox%'
                   OR tl.message LIKE 'Task created%' OR tl.message LIKE 'Task assigned%'
@@ -76,7 +77,7 @@ export function registerPmActivityRoutes(app: Express, db: DatabaseSync): void {
            ORDER BY tl.created_at DESC
            LIMIT ?`,
         )
-        .all(projectId, projectId, since, limit) as unknown as Array<{
+        .all(projectId, projectId, since, before, limit) as unknown as Array<{
         row_id: number;
         task_id: string | null;
         kind: string;
@@ -112,14 +113,14 @@ export function registerPmActivityRoutes(app: Express, db: DatabaseSync): void {
              FROM messages m
              LEFT JOIN agents a ON a.id = m.sender_id
              LEFT JOIN tasks t ON t.id = m.task_id
-             WHERE m.created_at > ?
+             WHERE m.created_at > ? AND m.created_at < ?
                AND ((m.sender_id = ? AND m.sender_type = 'agent')
                     OR (m.receiver_id = ? AND m.receiver_type = 'agent'))
                AND (m.task_id IN (SELECT id FROM tasks WHERE project_id = ?) OR m.project_id = ?)
              ORDER BY m.created_at DESC
              LIMIT ?`,
           )
-          .all(since, pmRow.id, pmRow.id, projectId, projectId, limit) as unknown as Array<{
+          .all(since, before, pmRow.id, pmRow.id, projectId, projectId, limit) as unknown as Array<{
           id: string;
           content: string;
           message_type: string;
@@ -141,7 +142,7 @@ export function registerPmActivityRoutes(app: Express, db: DatabaseSync): void {
              FROM messages m
              LEFT JOIN agents a ON a.id = m.sender_id
              LEFT JOIN tasks t ON t.id = m.task_id
-             WHERE m.created_at > ?
+             WHERE m.created_at > ? AND m.created_at < ?
                AND m.sender_type = 'agent'
                AND m.receiver_type = 'all'
                AND m.message_type IN ('report', 'status_update')
@@ -149,7 +150,7 @@ export function registerPmActivityRoutes(app: Express, db: DatabaseSync): void {
              ORDER BY m.created_at DESC
              LIMIT ?`,
           )
-          .all(since, projectId, limit) as unknown as Array<{
+          .all(since, before, projectId, limit) as unknown as Array<{
           id: string;
           content: string;
           message_type: string;
@@ -184,11 +185,11 @@ export function registerPmActivityRoutes(app: Express, db: DatabaseSync): void {
         .prepare(
           `SELECT id, event_type, summary, created_at, task_id
            FROM project_review_decision_events
-           WHERE project_id = ? AND created_at > ?
+           WHERE project_id = ? AND created_at > ? AND created_at < ?
            ORDER BY created_at DESC
            LIMIT ?`,
         )
-        .all(projectId, since, limit) as unknown as Array<{
+        .all(projectId, since, before, limit) as unknown as Array<{
         id: string;
         event_type: string;
         summary: string;
@@ -216,11 +217,11 @@ export function registerPmActivityRoutes(app: Express, db: DatabaseSync): void {
            FROM meeting_minutes mm
            LEFT JOIN tasks t ON t.id = mm.task_id
            WHERE (t.project_id = ? OR mm.project_id = ?)
-             AND mm.started_at > ?
+             AND mm.started_at > ? AND mm.started_at < ?
            ORDER BY mm.started_at DESC
            LIMIT ?`,
         )
-        .all(projectId, projectId, since, limit) as unknown as Array<{
+        .all(projectId, projectId, since, before, limit) as unknown as Array<{
         id: string;
         title: string;
         meeting_type: string;

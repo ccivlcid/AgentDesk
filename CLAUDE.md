@@ -70,7 +70,7 @@ All inline SVG icons must follow this standard:
 - **NEVER** edit or delete an existing migration entry.
 - Always append at the end of `migrations-e-recent.ts`.
 - ID format: `YYYY-MM-DD-NNN-short-description` (chronological, zero-padded).
-- **Last applied ID**: `2026-03-28-010-pm-activity-project-id-triggers`
+- **Last applied ID**: `2026-03-28-013-project-app-type`
 - Every DDL must be wrapped in `try { ... } catch { /* already exists */ }`.
 
 ### 0-6. Component State Rules
@@ -112,10 +112,64 @@ Electron + React(Vite) frontend + Express/tsx backend + SQLite(better-sqlite3).
 
 ### 1-2. Architecture Philosophy
 
-- **PM Orchestrator** — PM agent plans, assigns, and reviews. Never executes tasks directly.
+- **PM Orchestrator** — PM agent plans, assigns, and reviews. Never executes tasks directly. PM은 프로젝트 책임자.
 - **Evidence-based execution** — Agents must cite file/line, no speculation. 3-strike escalation on failure.
 - **Review checklist** — PM reviews with structured 4-point checklist (scope match, errors, minimal scope, completeness).
 - **Ship automation** — Task done → version bump → changelog entry → file sync.
+
+### 1-2-1. PM 검토 → 완료 플로우 (중요)
+
+> **모든 업무는 PM 에이전트의 LLM 검토를 거쳐야 완료됩니다.**
+> 수동으로 "done"을 설정해도 PM이 있는 프로젝트에서는 자동으로 "review"로 전환됩니다.
+
+```
+업무 실행 완료 → status: "review"
+    │
+    ▼
+PM 에이전트가 LLM으로 검토 (prompts/pm/review-task.md)
+    │  4-point checklist: scope match, errors, minimal scope, completeness
+    │
+    ├── 승인 (APPROVE) ──────────────────────────────┐
+    │                                                  ▼
+    │                              1. finishReview → status: "done"
+    │                              2. PM이 LLM으로 검증 + progress.md 작성
+    │                                 (prompts/pm/write-progress.md)
+    │                              3. shipAutomation: 버전 범프 + CHANGELOG
+    │                              4. 다음 태스크 시작 (pmStartNextTask)
+    │
+    └── 수정 요청 (REVISE) ──────────────────────────┐
+                                                      ▼
+                                   1. status: "planned" 으로 되돌림
+                                   2. 에이전트에게 PM 피드백 전달
+                                   3. 에이전트 재실행
+```
+
+**progress.md 작성 구조** (PM이 LLM으로 생성):
+- 검증 결과: 달성/부분달성/미달성 + 사유
+- 담당 에이전트명
+- 핵심 변경 사항
+- PM 소견 (품질 평가, 누락 사항, 후속 작업 필요 여부)
+
+**Key files:**
+- `server/modules/workflow/orchestration/pm-orchestrator.ts` — PM 검토/승인/progress 작성
+- `server/modules/workflow/orchestration/review-finalize-tools/ship-automation.ts` — 버전 범프/CHANGELOG
+- `prompts/pm/review-task.md` — PM 검토 프롬프트
+- `prompts/pm/write-progress.md` — PM progress.md 작성 프롬프트 (ko/en/ja/zh)
+
+### 1-2-2. YOLO(자율) 모드
+
+> **YOLO 모드 = PM 에이전트에게 모든 통제권을 위임하는 모드.**
+> PM이 LLM 리뷰를 스킵하는 것이 **아님**. PM이 리뷰하고, 승인/수정을 자동으로 결정한다.
+
+| 항목 | 일반 모드 | YOLO 모드 |
+|------|-----------|-----------|
+| PM LLM 리뷰 | 수행 | **수행 (동일)** |
+| PM 승인/수정 결정 | PM이 결정 | **PM이 결정 (동일)** |
+| 사용자 의사결정 창 | 활성화 (승인/보류/취소) | **비활성화** |
+| `bypassProjectDecisionGate` | `false` | `true` |
+| progress.md 작성 | PM이 LLM으로 작성 | **PM이 LLM으로 작성 (동일)** |
+
+**핵심 차이**: YOLO 모드에서는 사용자가 승인/보류/취소를 할 수 없다. PM이 알아서 결정한다.
 
 ### 1-3. Kickoff Pipeline (킥오프 → 업무 실행 흐름)
 
@@ -162,7 +216,7 @@ Electron + React(Vite) frontend + Express/tsx backend + SQLite(better-sqlite3).
 - 킥오프 실패 시에도 `postMeetingCreateAndRun()` 실행 (안전장치).
 - 킥오프 프롬프트(`prompts/system/project-kickoff.md`)에서 `agent_name` 필드 없음 — 배정은 PM이 함.
 - task_logs/messages INSERT 시 `project_id` 자동 스탬프 (SQLite AFTER INSERT 트리거).
-- YOLO(자율) 모드: PM 오케스트레이터가 자동 승인. 의사결정 창 비활성화. 유저는 승인/보류/취소 불가.
+- YOLO(자율) 모드: PM에게 모든 통제권 위임. PM이 LLM으로 리뷰 + 자동 결정. 의사결정 창 비활성화. (상세: §1-2-2)
 
 ### 1-4. Add Tasks Pipeline (추가 업무 흐름)
 
@@ -236,7 +290,6 @@ src/
 │   │                               AgentManagerWindow, TaskBoardWindow, SynapseWindow,
 │   │                               ImageStudioWindow, FolderWindow, CliWindow (Agent CLI)
 │   ├── agent-detail/            ← AgentDetailPanel (right-slide inspector · 4 tabs)
-│   ├── flow-graph/              ← AgentFlowGraph (reused in FlowGraphWidget)
 │   ├── workflow-builder/        ← WorkflowBuilder (@xyflow/react) + WbScheduleModal (cron)
 │   ├── agent-composition/       ← AgentCompositionBuilder + AgentCompositionRunModal + nodes/CompAgentNode
 │   ├── image-studio/            ← GenerateTab, GalleryTab, MaskCanvas, ProviderSelector
@@ -339,53 +392,6 @@ To pass data: use `Zustand store → uiStore.openWindows` chain.
 
 ## 6. Common Mistakes & Gotchas
 
-### Custom Features — GitHub 레포 임포트 2단계 흐름
-
-**Phase 1 (다운로드)** — `runGithubRepoImport`
-- git clone → AI SVG 아이콘 생성 → `status = 'pending_install'`, `config.repo_dir` 저장
-- 창 자동 닫힘, 바탕화면 아이콘 즉시 생성
-
-**Phase 2 (첫 클릭 설치)** — `compileFromRepo`
-- `config.repo_dir` 확인 → README 읽기 → npm 패키지 설치 → AI 위젯 tsx 생성 → esbuild 컴파일 → `status = 'active'`
-
-**npm 패키지 설치**: `npm install --no-save pkg` 는 pnpm 프로젝트에서 실패함.
-대신 `npm install --prefix feature --no-save pkg` 사용 → `feature/node_modules/` 에 격리 설치.
-esbuild `resolveDir = FEATURE_DIR` 로 설정 → `feature/node_modules/` 우선, 상위 `node_modules/` (react 등) 폴백.
-
-**파일 경로 규칙**:
-- 클론 위치: `feature/github/<user>-<repo>/`
-- AI 생성 tsx: `feature/ai/<featureId>.tsx`
-- 패키지 설치 위치: `feature/node_modules/`
-
-**앱 분류 (`compileFromRepo`)**:
-- `"web-app"`: `run-dev` 엔드포인트로 실제 dev 서버 실행 → iframe 포트 포워딩
-- `"library"` / `"cli"`: AI가 위젯 tsx 직접 생성 → esbuild 번들 → iframe 렌더링
-
-**dev 서버 실행 (`run-dev` / `custom-features-ai.ts`)**:
-- `j.running` vs `j.ready`: 프로세스 spawn 직후 `running=true`지만 `ready`는 Vite가 localhost URL 출력할 때만 `true`. 폴링 UI는 반드시 `j.ready && j.port` 조건 사용.
-- ANSI 코드 제거: Vite 출력에 `\x1B[32m...\x1B[0m` 이스케이프 코드가 포함됨. 포트 감지 전 `line.replace(/\x1B\[[0-9;]*m/g, "")` 먼저 적용.
-- pnpm regex: `pnpm run dev` 에서 script 이름 추출은 `/(?:(?:pnpm|yarn)(?:\s+run)?|npm(?:\s+run)?)\s+(\S+)/` 사용. `npm run` regex는 "run"을 캡처해서 틀림.
-- Windows 프로세스 트리 종료: `child.kill()` 은 cmd.exe 셸만 종료하고 자식 vite 프로세스는 남김. 반드시 `taskkill /F /T /PID <pid>` (win32만) 사용.
-
-**IIFE 전역 스코프**:
-iframe에 주입하는 HTML에서 `onclick="startDev()"` 같은 속성은 전역 스코프를 사용.
-함수가 `(function(){...})()` IIFE 안에 있으면 onclick에서 접근 불가.
-IIFE 끝에 `window.startDev = startDev;` 명시적 노출 필요.
-
-**iframe sandbox allow-popups**:
-`sandbox="allow-scripts allow-same-origin"` 만 있으면 iframe 내부에서 `target="_blank"` 링크가 완전히 차단됨.
-외부 링크가 필요한 앱에는 `allow-popups allow-popups-to-escape-sandbox` 추가 필수.
-
-**Custom Features 삭제 → 휴지통 → 파일 정리**:
-- 아이콘 우클릭 삭제: DB는 유지하고 `addFeatureToTrash()` (localStorage) → 바탕화면에서만 숨김 (복원 가능)
-- 휴지통 비우기: `DELETE /api/custom-features/:id` 호출 → DB 삭제 + 파일 정리
-  - `config.repo_dir` → `rmSync` (recursive, force)
-  - `feature/ai/<id>.tsx` → `unlinkSync`
-  - `feature/github/<id>-*` 파일 → `readdirSync` + 접두사 필터 후 `unlinkSync`
-- `POST /api/custom-features/stop-all-dev`: 서버 종료 전 또는 즉시 호출 → 모든 dev 서버 포트 종료
-
----
-
 ### logger import path depth
 When importing `server/lib/logger.ts`, the number of `../` varies by file depth:
 
@@ -434,7 +440,7 @@ Use this checklist every time you add a DB column or table:
 
 1. **APPEND only** — add a new `{ id, up }` entry at the **end** of the `MIGRATIONS` chain (typically append to the last chunk under `server/modules/bootstrap/schema/versioned-migrations/`, e.g. `migrations-e-recent.ts`, or add a new chunk and spread it from `versioned-migrations.ts`). Never edit applied migration bodies.
 2. **ID format**: `YYYY-MM-DD-NNN-short-description` (zero-padded, chronological)
-3. **Last known ID**: `2026-03-28-010-pm-activity-project-id-triggers` → next: `2026-03-28-011-*` or `2026-03-29-001-*`
+3. **Last known ID**: `2026-03-28-013-project-app-type` → next: `2026-03-28-011-*` or `2026-03-29-001-*`
 4. Wrap each DDL in `try { ... } catch { /* already exists */ }` for idempotency
 5. NEVER change or remove existing entries
 

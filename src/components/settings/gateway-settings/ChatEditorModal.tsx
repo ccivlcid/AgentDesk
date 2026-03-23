@@ -1,6 +1,7 @@
 import { type Dispatch, type SetStateAction } from "react";
+import { createPortal } from "react-dom";
 import AgentSelect from "../../AgentSelect";
-import HeaderModalChrome from "../../ui/HeaderModalChrome";
+import AppWindow from "../../windows/AppWindow";
 import type { Agent, MessengerChannelType, MessengerChannelsConfig } from "../../../types";
 import type { ChannelSettingsTabProps } from "../types";
 import { CHANNEL_META, channelTargetHint } from "./constants";
@@ -51,19 +52,31 @@ export default function ChatEditorModal({
       ? t({ ko: "새 채팅 추가", en: "Add Chat", ja: "チャット追加", zh: "新增聊天" })
       : t({ ko: "채팅 편집", en: "Edit Chat", ja: "チャット編集", zh: "编辑聊天" });
 
-  return (
-    <div className="fixed inset-0 z-[2200] flex items-center justify-center px-4" style={{ background: "var(--th-modal-overlay)" }} onClick={(e) => e.target === e.currentTarget && closeEditorModal()}>
-      <div
-        className="relative w-full max-w-lg flex flex-col overflow-hidden"
-        style={{ borderRadius: 10, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", boxShadow: "0 20px 50px rgba(0,0,0,0.4)" }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <HeaderModalChrome macOSStyle={false} title={title} onClose={closeEditorModal} />
-        <div className="p-4 space-y-3 overflow-y-auto flex-1 min-h-0">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+  const mono = "var(--th-font-mono)";
+  const lightInputStyle: React.CSSProperties = { 
+    borderRadius: 12, 
+    padding: "10px 14px", 
+    background: "#F9FAFB", 
+    border: "1px solid #E5E7EB",
+    color: "#111827",
+    fontSize: "13px",
+    transition: "all 0.2s"
+  };
+
+  const modalContent = (
+    <AppWindow
+      windowType="settings" // Use settings window context
+      title={title}
+      emoji={editor.channel === "telegram" ? "✈" : editor.channel === "discord" ? "🎮" : "💬"}
+      defaultWidth={520}
+      defaultHeight={640}
+      onClose={closeEditorModal}
+    >
+      <div className="p-6 space-y-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs mb-1 font-mono" style={{ color: "var(--th-text-secondary)" }}>
-              {t({ ko: "메신저", en: "Messenger", ja: "メッセンジャー", zh: "消息渠道" })}
+            <label className="block text-[10px] font-black uppercase tracking-widest mb-1.5 text-gray-400" style={{ fontFamily: mono }}>
+              {t({ ko: "메신저", en: "Messenger", ja: "메ッセンジャー", zh: "消息渠道" })}
             </label>
             <select
               value={editor.channel}
@@ -76,8 +89,10 @@ export default function ChatEditorModal({
                   receiveEnabled: channelsConfig[nextChannel].receiveEnabled !== false,
                 }));
               }}
-              className="w-full px-3 py-2 text-sm focus:outline-none"
-              style={{ borderRadius: 0, background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)" }}
+              className="w-full focus:outline-none cursor-pointer"
+              style={lightInputStyle}
+              onFocus={(e) => (e.currentTarget.style.borderColor = "#3B82F6")}
+              onBlur={(e) => (e.currentTarget.style.borderColor = "#E5E7EB")}
             >
               {MESSENGER_CHANNELS.map((channel) => (
                 <option key={channel} value={channel}>
@@ -88,26 +103,35 @@ export default function ChatEditorModal({
           </div>
 
           <div>
-            <label className="block text-xs mb-1 font-mono" style={{ color: "var(--th-text-secondary)" }}>
+            <label className="block text-[10px] font-black uppercase tracking-widest mb-1.5 text-gray-400" style={{ fontFamily: mono }}>
               {t({ ko: "활성 여부", en: "Enabled", ja: "有効", zh: "启用" })}
             </label>
-            <label className="inline-flex items-center gap-2 text-xs h-[38px] font-mono" style={{ color: "var(--th-text-secondary)" }}>
-              <input
-                type="checkbox"
-                checked={editor.enabled}
-                onChange={(e) => setEditor((prev) => ({ ...prev, enabled: e.target.checked }))}
-                style={{ accentColor: "var(--th-accent)" }}
-              />
-              {editor.enabled
-                ? t({ ko: "활성", en: "Enabled", ja: "有効", zh: "启用" })
-                : t({ ko: "비활성", en: "Disabled", ja: "無効", zh: "禁用" })}
-            </label>
+            <div className="flex items-center h-[42px]">
+              <button
+                type="button"
+                onClick={() => setEditor((prev) => ({ ...prev, enabled: !prev.enabled }))}
+                className="flex items-center gap-2 px-4 py-2 transition-all"
+                style={{ 
+                  borderRadius: 12, 
+                  background: editor.enabled ? "#ECFDF5" : "#F9FAFB",
+                  border: `1px solid ${editor.enabled ? "#A7F3D0" : "#E5E7EB"}`,
+                  color: editor.enabled ? "#059669" : "#6B7280",
+                  fontSize: "12px",
+                  fontWeight: 800
+                }}
+              >
+                <span className={`w-2 h-2 rounded-full ${editor.enabled ? "bg-emerald-500 animate-pulse" : "bg-gray-300"}`} />
+                {editor.enabled
+                  ? t({ ko: "활성", en: "ACTIVE", ja: "有効", zh: "启用" })
+                  : t({ ko: "비활성", en: "DISABLED", ja: "無効", zh: "禁用" })}
+              </button>
+            </div>
           </div>
         </div>
 
         <div>
-          <label className="block text-xs mb-1 font-mono" style={{ color: "var(--th-text-secondary)" }}>
-            {t({ ko: "토큰", en: "Token", ja: "トークン", zh: "令牌" })}
+          <label className="block text-[10px] font-black uppercase tracking-widest mb-1.5 text-gray-400" style={{ fontFamily: mono }}>
+            {t({ ko: "인증 토큰", en: "Auth Token", ja: "トークン", zh: "令牌" })}
           </label>
           <input
             type="password"
@@ -119,14 +143,16 @@ export default function ChatEditorModal({
               ja: `${CHANNEL_META[editor.channel].label} トークンを入力`,
               zh: `输入 ${CHANNEL_META[editor.channel].label} 令牌`,
             })}
-            className="w-full px-3 py-2 text-sm focus:outline-none"
-            style={{ borderRadius: 0, background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)" }}
+            className="w-full focus:outline-none font-mono"
+            style={lightInputStyle}
+            onFocus={(e) => (e.currentTarget.style.borderColor = "#3B82F6")}
+            onBlur={(e) => (e.currentTarget.style.borderColor = "#E5E7EB")}
           />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs mb-1 font-mono" style={{ color: "var(--th-text-secondary)" }}>
+            <label className="block text-[10px] font-black uppercase tracking-widest mb-1.5 text-gray-400" style={{ fontFamily: mono }}>
               {t({ ko: "채팅 이름", en: "Chat Name", ja: "チャット名", zh: "聊天名称" })}
             </label>
             <input
@@ -138,14 +164,16 @@ export default function ChatEditorModal({
                 ja: "例: デザイン通知",
                 zh: "例如：设计组通知",
               })}
-              className="w-full px-3 py-2 text-sm focus:outline-none"
-              style={{ borderRadius: 0, background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)" }}
+              className="w-full focus:outline-none"
+              style={lightInputStyle}
+              onFocus={(e) => (e.currentTarget.style.borderColor = "#3B82F6")}
+              onBlur={(e) => (e.currentTarget.style.borderColor = "#E5E7EB")}
             />
           </div>
 
           <div>
-            <label className="block text-xs mb-1 font-mono" style={{ color: "var(--th-text-secondary)" }}>
-              {t({ ko: "채널/대상 ID", en: "Channel/Target ID", ja: "チャンネル/対象 ID", zh: "频道/目标 ID" })}
+            <label className="block text-[10px] font-black uppercase tracking-widest mb-1.5 text-gray-400" style={{ fontFamily: mono }}>
+              {t({ ko: "채널/대상 ID", en: "Target ID", ja: "対象 ID", zh: "目标 ID" })}
             </label>
             {editor.channel === "discord" && discordChannels.length > 0 && (
               <select
@@ -161,20 +189,13 @@ export default function ChatEditorModal({
                     };
                   });
                 }}
-                className="mb-2 w-full px-3 py-2 text-xs focus:outline-none"
-                style={{ borderRadius: 0, background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)" }}
+                className="mb-2 w-full focus:outline-none text-xs"
+                style={lightInputStyle}
               >
-                <option value="">
-                  {t({
-                    ko: "조회된 Discord 채널 선택 (선택 사항)",
-                    en: "Choose detected Discord channel (optional)",
-                    ja: "検出されたDiscordチャネルを選択（任意）",
-                    zh: "选择检测到的 Discord 频道（可选）",
-                  })}
-                </option>
+                <option value="">{t({ ko: "Discord 채널 선택 (선택)", en: "Select Channel (Optional)", ja: "채널 선택", zh: "选择频道" })}</option>
                 {discordChannels.map((entry) => (
                   <option key={entry.id} value={entry.id}>
-                    {entry.guildName} / #{entry.name} ({entry.id})
+                    {entry.guildName} / #{entry.name}
                   </option>
                 ))}
               </select>
@@ -184,10 +205,7 @@ export default function ChatEditorModal({
               onChange={(e) => {
                 const nextTargetId = e.target.value;
                 setEditor((prev) => {
-                  const matched =
-                    prev.channel === "discord"
-                      ? discordChannels.find((entry) => entry.id === nextTargetId.trim())
-                      : undefined;
+                  const matched = prev.channel === "discord" ? discordChannels.find((entry) => entry.id === nextTargetId.trim()) : undefined;
                   return {
                     ...prev,
                     targetId: nextTargetId,
@@ -196,170 +214,103 @@ export default function ChatEditorModal({
                 });
               }}
               placeholder={channelTargetHint(editor.channel)}
-              className="w-full px-3 py-2 text-sm font-mono focus:outline-none"
-              style={{ borderRadius: 0, background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)" }}
+              className="w-full focus:outline-none font-mono"
+              style={lightInputStyle}
+              onFocus={(e) => (e.currentTarget.style.borderColor = "#3B82F6")}
+              onBlur={(e) => (e.currentTarget.style.borderColor = "#E5E7EB")}
             />
-            {editor.channel === "discord" && (
-              <div className="mt-1 space-y-1">
-                {discordChannelsLoading && (
-                  <div className="text-[11px] font-mono" style={{ color: "var(--th-accent)" }}>
-                    {t({
-                      ko: "Discord 채널 목록 조회 중...",
-                      en: "Loading Discord channels...",
-                      ja: "Discordチャネルを読み込み中...",
-                      zh: "正在加载 Discord 频道...",
-                    })}
-                  </div>
-                )}
-                {!discordChannelsLoading && !discordChannelsError && editor.token.trim() && (
-                  <div className="text-[11px] font-mono" style={{ color: "var(--th-text-secondary)" }}>
-                    {discordChannels.length > 0
-                      ? t({
-                          ko: `${discordChannels.length}개 채널을 자동으로 불러왔습니다.`,
-                          en: `Loaded ${discordChannels.length} channels automatically.`,
-                          ja: `${discordChannels.length} 件のチャネルを自動取得しました。`,
-                          zh: `已自动加载 ${discordChannels.length} 个频道。`,
-                        })
-                      : t({
-                          ko: "조회된 Discord 채널이 없습니다. Bot 권한/서버 참여 상태를 확인하세요.",
-                          en: "No Discord channels found. Check bot permissions and server membership.",
-                          ja: "取得できるDiscordチャネルがありません。Bot権限とサーバー参加状態を確認してください。",
-                          zh: "未找到可用 Discord 频道。请检查 Bot 权限和服务器加入状态。",
-                        })}
-                  </div>
-                )}
-                {discordChannelsError && <div className="text-[11px] text-red-400">{discordChannelsError}</div>}
-              </div>
-            )}
           </div>
         </div>
 
         {(editor.channel === "slack" || editor.channel === "discord") && (
-          <div className="space-y-3 p-3" style={{ border: "1px solid var(--th-border)", borderRadius: 0, background: "var(--th-bg-elevated)" }}>
-            <h4 className="text-[10px] font-mono uppercase tracking-wider font-bold" style={{ color: "var(--th-accent)" }}>
-              {t({ ko: "태스크 알림 웹훅 (선택)", en: "Task notification webhook (optional)", ja: "タスク通知ウェブフック（任意）", zh: "任务通知 Webhook（可选）" })}
-            </h4>
-            <p className="text-[10px] font-mono" style={{ color: "var(--th-text-secondary)" }}>
-              {t({
-                ko: "태스크 완료 시 이 채널로 알림을 보낼 웹훅 URL을 입력하세요.",
-                en: "Enter webhook URL to send task notifications to this channel.",
-                ja: "タスク完了時にこのチャネルへ通知するウェブフックURLを入力してください。",
-                zh: "输入用于向该频道发送任务通知的 Webhook URL。",
-              })}
-            </p>
-            <div className="space-y-2">
+          <div className="space-y-4 p-5" style={{ borderRadius: 20, border: "1px solid #BFDBFE", background: "#F0F7FF" }}>
+            <div className="flex items-center gap-2">
+              <div style={{ padding: 5, background: "#FFFFFF", borderRadius: 8, color: "#3B82F6" }}>
+                <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+              </div>
+              <h4 className="text-[11px] font-black uppercase tracking-wider text-blue-700">
+                {t({ ko: "태스크 알림 웹훅 (선택)", en: "Task Webhook (Optional)", ja: "通知ウェブフック", zh: "任务 Webhook" })}
+              </h4>
+            </div>
+            
+            <div className="space-y-3">
               <div>
-                <label className="block text-[10px] font-mono uppercase mb-0.5" style={{ color: "var(--th-text-secondary)" }}>URL</label>
                 <input
                   type="url"
                   value={editor.webhookUrl}
                   onChange={(e) => setEditor((prev) => ({ ...prev, webhookUrl: e.target.value }))}
-                  placeholder={editor.channel === "slack" ? "https://hooks.slack.com/services/..." : "https://discord.com/api/webhooks/..."}
-                  className="w-full px-3 py-2 text-xs font-mono focus:outline-none"
-                  style={{ borderRadius: 0, background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)" }}
+                  placeholder="https://hooks.slack.com/services/..."
+                  className="w-full focus:outline-none text-xs font-mono"
+                  style={{ ...lightInputStyle, background: "#FFFFFF" }}
                 />
               </div>
-              <div>
-                <label className="block text-[10px] font-mono uppercase mb-0.5" style={{ color: "var(--th-text-secondary)" }}>
-                  {t({ ko: "웹훅 이름 (선택)", en: "Webhook name (optional)", ja: "ウェブフック名（任意）", zh: "Webhook 名称（可选）" })}
-                </label>
-                <input
-                  type="text"
-                  value={editor.webhookName}
-                  onChange={(e) => setEditor((prev) => ({ ...prev, webhookName: e.target.value }))}
-                  placeholder={editor.name.trim() || (editor.channel === "slack" ? "Slack 알림" : "Discord 알림")}
-                  className="w-full px-3 py-2 text-xs font-mono focus:outline-none"
-                  style={{ borderRadius: 0, background: "var(--th-input-bg)", border: "1px solid var(--th-border)", color: "var(--th-text-primary)" }}
-                />
-              </div>
-              <div>
-                <label className="block text-[10px] font-mono uppercase mb-1" style={{ color: "var(--th-text-secondary)" }}>
-                  {t({ ko: "이벤트", en: "Events", ja: "イベント", zh: "事件" })}
-                </label>
-                <div className="flex flex-wrap gap-1.5">
-                  {WEBHOOK_EVENTS.map((ev) => (
-                    <button
-                      key={ev.value}
-                      type="button"
-                      onClick={() =>
-                        setEditor((prev) => ({
-                          ...prev,
-                          webhookEvents: prev.webhookEvents.includes(ev.value)
-                            ? prev.webhookEvents.filter((e) => e !== ev.value)
-                            : [...prev.webhookEvents, ev.value],
-                        }))
-                      }
-                      className="px-2 py-1 text-[10px] font-mono transition"
-                      style={
-                        editor.webhookEvents.includes(ev.value)
-                          ? { border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.12)", color: "var(--th-accent)", borderRadius: 0 }
-                          : { border: "1px solid var(--th-border)", background: "var(--th-bg-primary)", color: "var(--th-text-secondary)", borderRadius: 0 }
-                      }
-                    >
-                      {ev.label}
-                    </button>
-                  ))}
-                </div>
+              <div className="flex flex-wrap gap-2">
+                {WEBHOOK_EVENTS.map((ev) => (
+                  <button
+                    key={ev.value}
+                    type="button"
+                    onClick={() =>
+                      setEditor((prev) => ({
+                        ...prev,
+                        webhookEvents: prev.webhookEvents.includes(ev.value)
+                          ? prev.webhookEvents.filter((e) => e !== ev.value)
+                          : [...prev.webhookEvents, ev.value],
+                      }))
+                    }
+                    className="px-3 py-1.5 text-[10px] font-bold transition-all"
+                    style={{
+                      borderRadius: 8,
+                      border: "1px solid",
+                      borderColor: editor.webhookEvents.includes(ev.value) ? "#3B82F6" : "#E5E7EB",
+                      background: editor.webhookEvents.includes(ev.value) ? "#3B82F6" : "#FFFFFF",
+                      color: editor.webhookEvents.includes(ev.value) ? "#FFFFFF" : "#64748B",
+                    }}
+                  >
+                    {ev.label}
+                  </button>
+                ))}
               </div>
             </div>
           </div>
         )}
 
         <div>
-          <label className="block text-xs mb-1 font-mono" style={{ color: "var(--th-text-secondary)" }}>
-            {t({ ko: "대화 Agent", en: "Conversation Agent", ja: "担当Agent", zh: "对话 Agent" })}
+          <label className="block text-[10px] font-black uppercase tracking-widest mb-1.5 text-gray-400" style={{ fontFamily: mono }}>
+            {t({ ko: "담당 에이전트", en: "Assigned Agent", ja: "担当Agent", zh: "对话 Agent" })}
           </label>
           <AgentSelect
             agents={agents}
             value={editor.agentId}
             onChange={(agentId) => setEditor((prev) => ({ ...prev, agentId: agentId || "" }))}
-            placeholder={t({
-              ko: "대화 Agent 선택",
-              en: "Select Agent",
-              ja: "担当エージェント選択",
-              zh: "选择对话 Agent",
-            })}
+            placeholder={t({ ko: "에이전트 선택", en: "Select Agent", ja: "Agent選択", zh: "选择 Agent" })}
             className={agentsLoading ? "pointer-events-none opacity-60" : ""}
           />
         </div>
 
-        {editor.channel === "telegram" && (
-          <label className="flex items-center gap-2 text-xs font-mono" style={{ color: "var(--th-text-secondary)" }}>
-            <input
-              type="checkbox"
-              checked={editor.receiveEnabled}
-              onChange={(e) => setEditor((prev) => ({ ...prev, receiveEnabled: e.target.checked }))}
-              style={{ accentColor: "var(--th-accent)" }}
-            />
-            {t({
-              ko: "텔레그램 직접 수신 활성화",
-              en: "Enable direct Telegram receive",
-              ja: "Telegram 直接受信を有効化",
-              zh: "启用 Telegram 直接接收",
-            })}
-          </label>
+        {editorError && (
+          <div className="p-3 text-xs font-bold font-mono rounded-xl bg-red-50 border border-red-100 text-red-600">
+            ✗ {editorError}
+          </div>
         )}
 
-        {editorError && <div className="text-xs text-red-400">{editorError}</div>}
-
-        <div className="flex justify-end gap-2 pt-1">
+        <div className="flex justify-end gap-3 pt-4 border-t border-gray-50">
           <button
             onClick={closeEditorModal}
-            className="px-3 py-1.5 text-xs font-mono transition-colors"
-            style={{ borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
+            className="px-5 py-2 text-xs font-bold text-gray-500 hover:bg-gray-100 transition-all rounded-xl"
           >
             {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}
           </button>
           <button
             onClick={handleSaveEditor}
-            className="px-3 py-1.5 text-xs font-mono uppercase tracking-wide transition-colors"
-            style={{ borderRadius: 0, background: "var(--th-accent)", color: "var(--th-accent-text)" }}
+            className="px-6 py-2 text-xs font-black uppercase tracking-widest transition-all hover:brightness-110 active:scale-95 shadow-lg shadow-blue-500/20"
+            style={{ borderRadius: 12, background: "#3B82F6", color: "#FFFFFF" }}
           >
-            {t({ ko: "확인", en: "Confirm", ja: "確認", zh: "确认" })}
+            {t({ ko: "저장 ↵", en: "SAVE ↵", ja: "保存 ↵", zh: "保存 ↵" })}
           </button>
         </div>
-        </div>
       </div>
-    </div>
+    </AppWindow>
   );
+
+  return createPortal(modalContent, document.body);
 }

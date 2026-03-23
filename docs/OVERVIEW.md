@@ -377,18 +377,6 @@ consensus triggers task progression.
 | Synapse | — | Notion · Obsidian integration |
 | Local LLM | — | Ollama · LM Studio · llama.cpp |
 
-### Real-Time Dashboard Widgets
-
-| Widget | Description |
-|--------|-------------|
-| Agents | Live agent status (working / idle / offline) |
-| Tasks | Active task board |
-| Alerts | Anomaly + error notifications |
-| CLI Cost | Token usage + rate limit tracking |
-| Flow Graph | Agent communication flow |
-| File Tree | Project directory browser |
-| Custom | AI-generated or template widgets |
-
 ### Analytics & Export
 
 - **Agent Performance** — success rate, avg completion time, trend sparklines; filter by project/period

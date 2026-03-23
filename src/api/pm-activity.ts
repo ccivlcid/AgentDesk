@@ -27,11 +27,12 @@ export interface PmActivityResponse {
 
 export function fetchPmActivity(
   projectId: string,
-  opts?: { limit?: number; since?: number },
+  opts?: { limit?: number; since?: number; before?: number },
 ): Promise<PmActivityResponse> {
   const params = new URLSearchParams();
   if (opts?.limit) params.set("limit", String(opts.limit));
   if (opts?.since) params.set("since", String(opts.since));
+  if (opts?.before) params.set("before", String(opts.before));
   const qs = params.toString();
   return request<PmActivityResponse>(`/api/projects/${encodeURIComponent(projectId)}/pm-activity${qs ? `?${qs}` : ""}`);
 }

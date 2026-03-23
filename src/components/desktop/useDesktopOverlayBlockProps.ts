@@ -17,8 +17,6 @@ export interface DesktopOverlayBlockBridge {
   setRunProjectInfo: (v: { projectId: string; projectName: string; projectPath: string } | null) => void;
   projectCtxMenu: { x: number; y: number; projectId: string; projectName: string } | null;
   setProjectCtxMenu: (v: { x: number; y: number; projectId: string; projectName: string } | null) => void;
-  cfCtxMenu: { x: number; y: number; featureId: string; featureName: string } | null;
-  setCfCtxMenu: (v: { x: number; y: number; featureId: string; featureName: string } | null) => void;
   ctxMenu: { x: number; y: number } | null;
   setCtxMenu: (v: { x: number; y: number } | null) => void;
   agentManagerCreateCount: number;
@@ -47,10 +45,6 @@ export interface DesktopOverlayBlockBridge {
   setSelectedProjectId: (id: string | null) => void;
   addProjectToFolder: (folderId: string, projectId: string) => Promise<{ new_path: string }>;
   setFolders: (v: import("../../types").ProjectFolder[] | ((prev: import("../../types").ProjectFolder[]) => import("../../types").ProjectFolder[])) => void;
-  openCustomApp: (id: string) => void;
-  closeCustomApp: (id: string) => void;
-  addFeatureToTrash: (v: { id: string; name: string; icon_svg: string | null }) => void;
-  setCustomFeatures: (v: import("../../types").CustomFeature[] | ((prev: import("../../types").CustomFeature[]) => import("../../types").CustomFeature[])) => void;
   newFolderPos: { x: number; y: number } | null;
   setNewFolderPos: (v: { x: number; y: number } | null) => void;
   newFolderName: string;
@@ -67,7 +61,6 @@ export interface DesktopOverlayBlockBridge {
   showTrash: boolean;
   setShowTrash: (v: boolean) => void;
   folders: import("../../types").ProjectFolder[];
-  customFeatures: import("../../types").CustomFeature[];
   onSaveSettings: (settings: import("../../types").CompanySettings) => Promise<void>;
   onRefreshCli: () => Promise<void>;
   oauthResult: import("../../app/types").OAuthCallbackResult | null;
@@ -86,16 +79,12 @@ export function useDesktopOverlayBlockProps(bridge: DesktopOverlayBlockBridge): 
     toggleWindow,
     openCliAgentIds,
     closeCliWindow,
-    openCustomApps,
-    closeCustomApp,
     openFolders,
     closeFolder,
     openCliWindow,
     trashedProjects,
-    trashedFeatures,
     removeFromTrash,
     emptyTrash,
-    removeFeatureFromTrash,
     setDesktopIconLayout,
   } = useUiStore();
   const { projects, categories, currentProjectId, setCurrentProjectId, setProjects, setEditDirectiveProjectId } = useProjectStore();
@@ -111,8 +100,6 @@ export function useDesktopOverlayBlockProps(bridge: DesktopOverlayBlockBridge): 
       setRunProjectInfo,
       projectCtxMenu,
       setProjectCtxMenu,
-      cfCtxMenu,
-      setCfCtxMenu,
       ctxMenu,
       setCtxMenu,
       agentManagerCreateCount,
@@ -141,10 +128,6 @@ export function useDesktopOverlayBlockProps(bridge: DesktopOverlayBlockBridge): 
       setSelectedProjectId,
       addProjectToFolder,
       setFolders,
-      openCustomApp,
-      closeCustomApp,
-      addFeatureToTrash,
-      setCustomFeatures,
       newFolderPos,
       setNewFolderPos,
       newFolderName,
@@ -160,7 +143,6 @@ export function useDesktopOverlayBlockProps(bridge: DesktopOverlayBlockBridge): 
       showTrash,
       setShowTrash,
       folders,
-      customFeatures,
       onSaveSettings,
       onRefreshCli,
       oauthResult,
@@ -177,9 +159,6 @@ export function useDesktopOverlayBlockProps(bridge: DesktopOverlayBlockBridge): 
       openWindow,
       openCliAgentIds,
       closeCliWindow,
-      openCustomApps,
-      customFeatures,
-      closeCustomApp,
       folders,
       openFolders,
       closeFolder,
@@ -246,6 +225,12 @@ export function useDesktopOverlayBlockProps(bridge: DesktopOverlayBlockBridge): 
         setEditDirectiveProjectId(projectId);
         setProjectCtxMenu(null);
       },
+      onCreateTask: (projectId: string) => {
+        setCurrentProjectId(projectId);
+        openWindow("tasks");
+        openWindow("create-task");
+        setProjectCtxMenu(null);
+      },
       onMoveToFolder: async (projectId: string, folderId: string) => {
         const result = await addProjectToFolder(folderId, projectId);
         const proj = projects.find((p: Project) => p.id === projectId);
@@ -267,18 +252,6 @@ export function useDesktopOverlayBlockProps(bridge: DesktopOverlayBlockBridge): 
         setProjects((prev: Project[]) =>
           prev.map((p: Project) => (p.id === projectId ? { ...p, folder_id: folderId, project_path: result.new_path } : p)),
         );
-      },
-    };
-
-    const cfCtxMenuProps = {
-      customFeatures,
-      t,
-      onClose: () => setCfCtxMenu(null),
-      onOpen: openCustomApp,
-      onDelete: (featureId: string, featureName: string, iconSvg: string | null) => {
-        closeCustomApp(featureId);
-        addFeatureToTrash({ id: featureId, name: featureName, icon_svg: iconSvg });
-        setCustomFeatures((prev) => prev.filter((cf) => cf.id !== featureId));
       },
     };
 
@@ -315,15 +288,12 @@ export function useDesktopOverlayBlockProps(bridge: DesktopOverlayBlockBridge): 
       setRunProjectInfo,
       openCliWindow,
       trashedProjects,
-      trashedFeatures,
       showTrash,
       setShowTrash,
       removeFromTrash,
       createProject,
       setProjects,
       showToast,
-      setCustomFeatures,
-      removeFeatureFromTrash,
       emptyTrash,
     };
 
@@ -331,8 +301,6 @@ export function useDesktopOverlayBlockProps(bridge: DesktopOverlayBlockBridge): 
       windowStackProps,
       projectCtxMenu,
       projectCtxMenuProps,
-      cfCtxMenu,
-      cfCtxMenuProps,
       overlayProps,
     };
   }, [
@@ -341,9 +309,6 @@ export function useDesktopOverlayBlockProps(bridge: DesktopOverlayBlockBridge): 
     openWindow,
     openCliAgentIds,
     closeCliWindow,
-    openCustomApps,
-    bridge.customFeatures,
-    closeCustomApp,
     bridge.folders,
     openFolders,
     closeFolder,
@@ -354,11 +319,9 @@ export function useDesktopOverlayBlockProps(bridge: DesktopOverlayBlockBridge): 
     agents,
     currentProject,
     trashedProjects,
-    trashedFeatures,
     openCliWindow,
     removeFromTrash,
     emptyTrash,
-    removeFeatureFromTrash,
     setDesktopIconLayout,
   ]);
 }

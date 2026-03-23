@@ -111,31 +111,33 @@ export default function ContextMenu({ x, y, onClose, entries, "data-no-ctx": dat
         position: "fixed",
         ...style,
         zIndex: 2000,
-        background: "var(--th-bg-secondary)",
-        backdropFilter: "blur(16px)",
-        WebkitBackdropFilter: "blur(16px)",
-        border: "1px solid var(--th-border)",
-        borderRadius: 8,
-        padding: "4px 0",
-        minWidth: 180,
-        boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
+        background: "rgba(255, 255, 255, 0.98)",
+        backdropFilter: "blur(20px)",
+        WebkitBackdropFilter: "blur(20px)",
+        border: "1px solid rgba(0, 0, 0, 0.08)",
+        borderRadius: 16,
+        padding: "6px",
+        minWidth: 200,
+        boxShadow: "0 20px 40px -12px rgba(0, 0, 0, 0.15), 0 0 1px 0 rgba(0, 0, 0, 0.1)",
       }}
       onClick={(e) => e.stopPropagation()}
     >
       {entries.map((entry, i) => {
         if (isSeparator(entry)) {
-          return <div key={i} style={{ margin: "4px 0", borderTop: "1px solid var(--th-border)" }} />;
+          return <div key={i} style={{ height: 1, background: "rgba(0, 0, 0, 0.04)", margin: "6px 8px" }} />;
         }
         if (isSection(entry)) {
           return (
             <div
               key={i}
               style={{
-                padding: "3px 12px 2px",
+                padding: "8px 12px 4px",
                 fontSize: 10,
-                color: "var(--th-text-muted)",
+                fontWeight: 900,
+                color: "#94A3B8",
                 fontFamily: mono,
-                letterSpacing: "0.06em",
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
               }}
             >
               {entry.label}
@@ -156,22 +158,25 @@ export default function ContextMenu({ x, y, onClose, entries, "data-no-ctx": dat
               alignItems: "center",
               gap: 10,
               width: "100%",
-              height: 28,
+              height: 32,
               padding: "0 12px",
-              background: isFocused ? "var(--th-accent-glow)" : item.danger ? "transparent" : "none",
+              background: isFocused ? "rgba(59, 130, 246, 0.08)" : "transparent",
               border: "none",
+              borderRadius: 10,
               cursor: item.disabled ? "default" : "pointer",
               fontFamily: mono,
-              fontSize: 12,
-              color: item.danger ? "var(--th-danger-text)" : item.disabled ? "var(--th-text-muted)" : "var(--th-text-primary)",
+              fontSize: "12.5px",
+              fontWeight: 600,
+              color: item.danger ? "#EF4444" : isFocused ? "#2563EB" : item.disabled ? "#94A3B8" : "#4B5563",
               textAlign: "left",
               opacity: item.disabled ? 0.4 : 1,
               pointerEvents: item.disabled ? "none" : "auto",
+              transition: "all 0.15s ease",
             }}
           >
-            {item.icon != null && <span style={{ fontSize: 11, display: "flex" }}>{item.icon}</span>}
+            {item.icon != null && <span style={{ fontSize: 14, display: "flex", opacity: 0.7 }}>{item.icon}</span>}
             <span style={{ flex: 1 }}>{item.label}</span>
-            {item.shortcut && <span style={{ fontSize: 10, color: "var(--th-text-muted)" }}>{item.shortcut}</span>}
+            {item.shortcut && <span style={{ fontSize: 10, color: "#94A3B8", fontWeight: 500 }}>{item.shortcut}</span>}
           </button>
         );
       })}

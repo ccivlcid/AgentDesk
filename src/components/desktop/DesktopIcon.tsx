@@ -9,6 +9,12 @@ const JIGGLE_STYLE = `
   0%,100% { transform: rotate(-2.5deg) scale(1.02); }
   50%     { transform: rotate(2.5deg)  scale(1.02); }
 }
+@keyframes iconDrop {
+  0%   { opacity: 0; transform: translateY(-60px) scale(0.5); }
+  60%  { opacity: 1; transform: translateY(6px) scale(1.05); }
+  80%  { transform: translateY(-3px) scale(0.98); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
 `;
 
 export interface DesktopIconDef {
@@ -33,9 +39,22 @@ interface DesktopIconProps {
   defaultX: number;
   defaultY: number;
   isSelected?: boolean;
+  isNewlyInstalled?: boolean;
+  onDragStart?: (id: string, x: number, y: number) => void;
+  onDragMove?: (dx: number, dy: number) => void;
+  onDragEnd?: (id: string, x: number, y: number) => void;
 }
 
-export default function DesktopIcon({ def, defaultX, defaultY, isSelected = false }: DesktopIconProps) {
+export default function DesktopIcon({ 
+  def, 
+  defaultX, 
+  defaultY, 
+  isSelected = false, 
+  isNewlyInstalled = false,
+  onDragStart,
+  onDragMove,
+  onDragEnd
+}: DesktopIconProps) {
   const { desktopIconLayout, setDesktopIconLayout, desktopIconLabels, setDesktopIconLabel, jiggleMode, wallpaper } = useUiStore();
   const { theme } = useTheme();
   // light = 라이트 테마이거나 라이트 배경화면인 경우
@@ -83,29 +102,46 @@ export default function DesktopIcon({ def, defaultX, defaultY, isSelected = fals
 
   function onMouseDown(e: React.MouseEvent) {
     if (e.button !== 0) return;
-    // 문서 아이콘은 HTML5 drag를 사용 → 마우스 기반 repositioning 스킵
     if (def.docId) return;
     e.preventDefault();
+    e.stopPropagation();
+
+    // Bring desktop to front if needed
+    useUiStore.getState().bringWindowToFront("settings" as any); 
+
     moved.current = false;
     dragStart.current = { mx: e.clientX, my: e.clientY, ox: pos.x, oy: pos.y };
     setDragging(true);
+
+    if (onDragStart) onDragStart(def.id, pos.x, pos.y);
 
     function onMove(ev: MouseEvent) {
       if (!dragStart.current) return;
       const dx = ev.clientX - dragStart.current.mx;
       const dy = ev.clientY - dragStart.current.my;
-      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) moved.current = true;
+      if (Math.abs(dx) > 2 || Math.abs(dy) > 2) moved.current = true;
+      
       setPos({ x: dragStart.current.ox + dx, y: dragStart.current.oy + dy });
+      if (onDragMove) onDragMove(dx, dy);
     }
 
     function onUp(ev: MouseEvent) {
       if (!dragStart.current) return;
-      const rawX = dragStart.current.ox + (ev.clientX - dragStart.current.mx);
-      const rawY = dragStart.current.oy + (ev.clientY - dragStart.current.my);
-      const current = useUiStore.getState().desktopIconLayout;
-      const { x, y } = snapToFreeCell(rawX, rawY, def.id, current);
-      setPos({ x, y });
-      setDesktopIconLayout({ ...current, [def.id]: { x, y } });
+      
+      const dx = ev.clientX - dragStart.current.mx;
+      const dy = ev.clientY - dragStart.current.my;
+      const finalX = dragStart.current.ox + dx;
+      const finalY = dragStart.current.oy + dy;
+      
+      if (onDragEnd) {
+        onDragEnd(def.id, finalX, finalY);
+      } else {
+        const currentLayout = useUiStore.getState().desktopIconLayout;
+        const { x, y } = snapToFreeCell(finalX, finalY, def.id, currentLayout);
+        setPos({ x, y });
+        setDesktopIconLayout({ ...currentLayout, [def.id]: { x, y } });
+      }
+      
       dragStart.current = null;
       setDragging(false);
       window.removeEventListener("mousemove", onMove);
@@ -204,7 +240,11 @@ export default function DesktopIcon({ def, defaultX, defaultY, isSelected = fals
           cursor: dragging ? "grabbing" : "pointer",
           userSelect: "none",
           zIndex: dragging ? 100 : 10,
-          animation: jiggleMode ? "jiggle 0.18s ease-in-out infinite alternate" : "none",
+          animation: jiggleMode
+            ? "jiggle 0.18s ease-in-out infinite alternate"
+            : isNewlyInstalled
+              ? "iconDrop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards"
+              : "none",
         }}
       >
         {/* 삭제 배지 — jiggle 모드에서만 표시 (실수 삭제 방지) */}

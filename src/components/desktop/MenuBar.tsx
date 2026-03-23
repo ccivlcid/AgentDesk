@@ -289,15 +289,17 @@ export default function MenuBar({
         right: 0,
         height: 44,
         zIndex: 1000,
-        background: "var(--th-menubar-bg, rgba(12,12,12,0.92))",
-        backdropFilter: "blur(12px)",
-        borderBottom: "1px solid var(--th-border)",
+        background: "var(--th-glass-surface)",
+        backdropFilter: "var(--th-glass-blur) saturate(180%)",
+        WebkitBackdropFilter: "var(--th-glass-blur) saturate(180%)",
+        borderBottom: "1px solid var(--th-glass-border-subtle)",
         display: "flex",
         alignItems: "center",
-        padding: "0 16px",
+        padding: "0 20px",
         gap: 12,
-        fontFamily: mono,
+        fontFamily: "var(--th-font-body)",
         fontSize: 12,
+        boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
       }}
     >
       {/* 로고 — 앱 메뉴 트리거 */}
@@ -308,17 +310,20 @@ export default function MenuBar({
             background: appMenuOpen ? "var(--th-hover-overlay)" : "none",
             border: "none",
             color: "var(--th-text-primary)",
-            fontFamily: mono,
+            fontFamily: "var(--th-font-display)",
             fontSize: 13,
             fontWeight: 700,
             cursor: "pointer",
-            padding: "2px 8px",
-            borderRadius: 6,
-            letterSpacing: 0.5,
+            padding: "2px 10px",
+            borderRadius: 8,
+            letterSpacing: -0.2,
             display: "flex",
             alignItems: "center",
-            gap: 7,
+            gap: 8,
+            transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
           }}
+          onMouseEnter={e => { if (!appMenuOpen) (e.currentTarget as HTMLButtonElement).style.background = "var(--th-hover-overlay-subtle)"; }}
+          onMouseLeave={e => { if (!appMenuOpen) (e.currentTarget as HTMLButtonElement).style.background = "none"; }}
         >
           <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
             <rect width="22" height="22" rx="5" fill="#3B82F6" />
@@ -335,12 +340,12 @@ export default function MenuBar({
               top: "calc(100% + 6px)",
               left: 0,
               minWidth: 220,
-              background: "var(--th-panel-bg)",
-              backdropFilter: "blur(20px)",
-              WebkitBackdropFilter: "blur(20px)",
-              border: "1px solid var(--th-border)",
-              borderRadius: 10,
-              boxShadow: "0 16px 48px var(--th-glass-shadow)",
+              background: "var(--th-glass-surface-active)",
+              backdropFilter: "var(--th-glass-blur)",
+              WebkitBackdropFilter: "var(--th-glass-blur)",
+              border: "1px solid var(--th-glass-border-strong)",
+              borderRadius: 12,
+              boxShadow: "var(--th-glass-shadow-active)",
               padding: "4px 0",
               zIndex: 2000,
             }}

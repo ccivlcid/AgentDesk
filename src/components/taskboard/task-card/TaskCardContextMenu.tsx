@@ -54,12 +54,28 @@ export function TaskCardContextMenu({ state, x, y, onClose }: TaskCardContextMen
     };
   }, [onClose]);
 
-  // After render, clamp to actual measured size
+  // Intelligent positioning logic
   useLayoutEffect(() => {
     if (!ref.current) return;
     const { width, height } = ref.current.getBoundingClientRect();
-    const left = Math.max(8, Math.min(x, window.innerWidth - width - 8));
-    const top  = Math.max(8, Math.min(y, window.innerHeight - height - 8));
+    
+    let left = x + 2; // Slight offset from cursor
+    let top = y + 2;
+
+    // Flip horizontally if space is tight on the right
+    if (left + width > window.innerWidth - 10) {
+      left = x - width - 2;
+    }
+
+    // Flip vertically if space is tight at the bottom
+    if (top + height > window.innerHeight - 10) {
+      top = y - height - 2;
+    }
+
+    // Final safety clamp to window edges
+    left = Math.max(10, Math.min(left, window.innerWidth - width - 10));
+    top = Math.max(10, Math.min(top, window.innerHeight - height - 10));
+
     setPos({ left, top });
   }, [x, y]);
 
@@ -160,38 +176,51 @@ export function TaskCardContextMenu({ state, x, y, onClose }: TaskCardContextMen
         left: pos.left,
         top: pos.top,
         zIndex: 9999,
-        minWidth: 180,
-        background: "var(--th-bg-elevated)",
-        border: "1px solid var(--th-border-strong)",
-        borderRadius: 8,
-        boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
-        padding: "4px 0",
+        minWidth: 200,
+        background: "rgba(255, 255, 255, 0.98)",
+        backdropFilter: "blur(20px)",
+        border: "1px solid rgba(0, 0, 0, 0.08)",
+        borderRadius: 16,
+        boxShadow: "0 20px 40px -12px rgba(0, 0, 0, 0.15), 0 0 1px 0 rgba(0, 0, 0, 0.1)",
+        padding: "6px",
         ...mono,
-        fontSize: "12px",
+        fontSize: "12.5px",
+        fontWeight: 600,
       }}
     >
       {visibleItems.map((item, i) => {
         if (item.separator) {
-          return <div key={i} style={{ height: 1, background: "var(--th-border)", margin: "4px 8px" }} />;
+          return <div key={i} style={{ height: 1, background: "rgba(0, 0, 0, 0.04)", margin: "6px 8px" }} />;
         }
         return (
           <button
             key={i}
             type="button"
             onClick={item.onClick}
-            className="w-full flex items-center gap-3 text-left transition-colors"
+            className="w-full flex items-center gap-3 text-left transition-all duration-150 rounded-lg"
             style={{
-              padding: "7px 14px",
+              padding: "8px 12px",
               background: "transparent",
               border: "none",
               cursor: "pointer",
-              color: item.danger ? "var(--th-status-error)" : item.color ?? "var(--th-text-secondary)",
+              color: item.danger ? "#EF4444" : item.color ?? "#4B5563",
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = "var(--th-hover-overlay-subtle)"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+            onMouseEnter={(e) => { 
+              e.currentTarget.style.background = "rgba(0, 0, 0, 0.03)"; 
+              e.currentTarget.style.color = item.danger ? "#DC2626" : "#111827";
+            }}
+            onMouseLeave={(e) => { 
+              e.currentTarget.style.background = "transparent"; 
+              e.currentTarget.style.color = item.danger ? "#EF4444" : item.color ?? "#4B5563";
+            }}
           >
-            <span style={{ flexShrink: 0, display: "flex", alignItems: "center" }}>{item.icon}</span>
-            <span>{item.label}</span>
+            <span style={{ 
+              flexShrink: 0, 
+              display: "flex", 
+              alignItems: "center",
+              opacity: 0.7
+            }}>{item.icon}</span>
+            <span style={{ flex: 1 }}>{item.label}</span>
           </button>
         );
       })}

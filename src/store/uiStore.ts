@@ -94,6 +94,15 @@ interface UiStore {
   pendingDocs: Array<{ id: string; title: string; content: string }>;
   addPendingDoc: (doc: { title: string; content: string }) => void;
   removePendingDoc: (id: string) => void;
+
+  // ── 새로 설치된 프로젝트 (바탕화면 drop 애니메이션) ─────────────
+  newlyInstalledProjectId: string | null;
+  setNewlyInstalledProjectId: (id: string | null) => void;
+
+  // ── App Runner ──────────────────────────────────────────────────
+  appRunnerProjectId: string | null;
+  openAppRunner: (projectId: string) => void;
+
   jiggleMode: boolean;
   missionControlOpen: boolean;
   dockAutoHide: boolean;
@@ -110,10 +119,6 @@ interface UiStore {
   addToTrash: (project: { id: string; name: string; project_path: string; core_goal: string; category_id: string | null }) => void;
   removeFromTrash: (id: string) => void;
   emptyTrash: () => void;
-  trashedFeatures: Array<{ id: string; name: string; icon_svg: string | null; deletedAt: number }>;
-  addFeatureToTrash: (f: { id: string; name: string; icon_svg: string | null }) => void;
-  removeFeatureFromTrash: (id: string) => void;
-
   // ── 창 포커스 / 최소화 ────────────────────────────────────────────
   windowFocusOrder: WindowType[];
   minimizedWindows: Set<WindowType>;
@@ -179,13 +184,6 @@ interface UiStore {
   openFolders: Set<string>;
   openFolder: (id: string) => void;
   closeFolder: (id: string) => void;
-
-  // ── Custom Feature Apps ───────────────────────────────────────────
-  openCustomApps: Set<string>;
-  openCustomApp: (id: string) => void;
-  closeCustomApp: (id: string) => void;
-  customFeaturesTick: number;
-  bumpCustomFeaturesTick: () => void;
 
   // ── 기존 상태 ─────────────────────────────────────────────────────
   view: View;
@@ -304,20 +302,8 @@ export const useUiStore = create<UiStore>()((set) => ({
   }),
   emptyTrash: () => {
     try { window.localStorage.setItem("agentdesk_trash", "[]"); } catch { /* ignore */ }
-    try { window.localStorage.setItem("agentdesk_trash_features", "[]"); } catch { /* ignore */ }
-    set({ trashedProjects: [], trashedFeatures: [] });
+    set({ trashedProjects: [] });
   },
-  trashedFeatures: (() => { try { return JSON.parse(window.localStorage.getItem("agentdesk_trash_features") ?? "[]"); } catch { return []; } })(),
-  addFeatureToTrash: (f) => set((s) => {
-    const next = [...s.trashedFeatures.filter((x) => x.id !== f.id), { ...f, deletedAt: Date.now() }];
-    try { window.localStorage.setItem("agentdesk_trash_features", JSON.stringify(next)); } catch { /* ignore */ }
-    return { trashedFeatures: next };
-  }),
-  removeFeatureFromTrash: (id) => set((s) => {
-    const next = s.trashedFeatures.filter((x) => x.id !== id);
-    try { window.localStorage.setItem("agentdesk_trash_features", JSON.stringify(next)); } catch { /* ignore */ }
-    return { trashedFeatures: next };
-  }),
   selectedAgentId: null,
   openTaskId: null,
   wallpaper: loadWallpaper(),
@@ -360,17 +346,6 @@ export const useUiStore = create<UiStore>()((set) => ({
     return { openFolders: next };
   }),
 
-  // ── Custom Feature Apps ────────────────────────────────────────────
-  openCustomApps: new Set<string>(),
-  openCustomApp: (id) => set((s) => ({ openCustomApps: new Set([...s.openCustomApps, id]) })),
-  closeCustomApp: (id) => set((s) => {
-    const next = new Set(s.openCustomApps);
-    next.delete(id);
-    return { openCustomApps: next };
-  }),
-  customFeaturesTick: 0,
-  bumpCustomFeaturesTick: () => set((s) => ({ customFeaturesTick: s.customFeaturesTick + 1 })),
-
   jiggleMode: false,
   missionControlOpen: false,
   dockAutoHide: loadBool(DOCK_AUTO_HIDE_KEY, false),
@@ -396,6 +371,16 @@ export const useUiStore = create<UiStore>()((set) => ({
     pendingDocs: [...s.pendingDocs, { id: crypto.randomUUID(), title, content }],
   })),
   removePendingDoc: (id) => set((s) => ({ pendingDocs: s.pendingDocs.filter((d) => d.id !== id) })),
+
+  newlyInstalledProjectId: null,
+  setNewlyInstalledProjectId: (id) => set({ newlyInstalledProjectId: id }),
+
+  appRunnerProjectId: null,
+  openAppRunner: (projectId) => set((s) => {
+    const next = new Set(s.openWindows);
+    next.add("app-runner");
+    return { appRunnerProjectId: projectId, openWindows: next };
+  }),
 
   setSelectedAgentId: (id) => set({ selectedAgentId: id }),
   setOpenTaskId: (id) => set({ openTaskId: id }),

@@ -212,8 +212,7 @@ export function registerGitHubRoutes(deps: GitHubRouteDeps): void {
     if (pat && (pat.length < 10 || pat.length > 256 || !/^[a-zA-Z0-9_]+$/.test(pat))) {
       return res.status(400).json({ error: "invalid_pat_format" });
     }
-    const token = pat || getGitHubAccessToken();
-    if (!token) return res.status(401).json({ error: "github_not_connected" });
+    const token = pat || getGitHubAccessToken() || null;
     const { owner, repo, branch, target_path } = req.body ?? {};
     if (!owner || !repo) return res.status(400).json({ error: "owner_and_repo_required" });
 
@@ -223,14 +222,8 @@ export function registerGitHubRoutes(deps: GitHubRouteDeps): void {
     if (targetPath === "~") targetPath = os.homedir();
     else if (targetPath.startsWith("~/")) targetPath = path.join(os.homedir(), targetPath.slice(2));
 
-    // Security: resolve and ensure target is within home directory
-    const normalizedTarget = path.resolve(targetPath);
-    const homeDir = path.resolve(os.homedir());
-    const relToHome = path.relative(homeDir, normalizedTarget);
-    if (relToHome.startsWith("..") || path.isAbsolute(relToHome)) {
-      return res.status(400).json({ error: "target_path_must_be_within_home" });
-    }
-    targetPath = normalizedTarget;
+    // Resolve path (allow any local path — user specified)
+    targetPath = path.resolve(targetPath);
 
     if (fs.existsSync(targetPath) && fs.existsSync(path.join(targetPath, ".git"))) {
       return res.json({ clone_id: null, already_exists: true, target_path: targetPath });
@@ -239,8 +232,10 @@ export function registerGitHubRoutes(deps: GitHubRouteDeps): void {
     const cloneId = randomUUID();
     activeClones.set(cloneId, { status: "cloning", progress: 0, targetPath, repoFullName });
 
-    const cloneUrl = `https://x-access-token:${token}@github.com/${owner}/${repo}.git`;
-    const args = ["clone", "--progress"];
+    const cloneUrl = token
+      ? `https://x-access-token:${token}@github.com/${owner}/${repo}.git`
+      : `https://github.com/${owner}/${repo}.git`;
+    const args = ["clone", "--progress", "--depth", "1"];
     if (branch) {
       args.push("--branch", branch, "--single-branch");
     }
@@ -341,7 +336,7 @@ export function registerGitHubRoutes(deps: GitHubRouteDeps): void {
     const cloneId = randomUUID();
     activeClones.set(cloneId, { status: "cloning", progress: 0, targetPath, repoFullName: repoName });
 
-    const args = ["clone", "--progress"];
+    const args = ["clone", "--progress", "--depth", "1"];
     if (branch) args.push("--branch", branch, "--single-branch");
     args.push(cloneUrl, targetPath);
 

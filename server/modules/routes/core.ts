@@ -52,6 +52,8 @@ import { registerWorkflowScheduleRoutes } from "./ops/workflow-schedules.ts";
 import { registerAgentPerformanceRoutes } from "./ops/agent-performance.ts";
 import { registerDataExportRoutes } from "./ops/data-export.ts";
 import { registerFilesystemRoutes } from "./ops/filesystem.ts";
+import { registerGithubTrendingRoutes } from "./ops/github-trending.ts";
+import { registerAppRunnerRoutes } from "./ops/app-runner.ts";
 import type { AgentRow, MeetingMinuteEntryRow, MeetingMinutesRow, MeetingReviewDecision } from "./shared/types.ts";
 import { getDiscordReceiverStatus } from "../../messenger/discord-receiver.ts";
 
@@ -432,6 +434,8 @@ export function registerRoutesPartA(ctx: RuntimeContext): Record<string, never> 
   registerAgentPerformanceRoutes({ app, db, nowMs });
   registerDataExportRoutes({ app, db });
   registerFilesystemRoutes({ app });
+  registerGithubTrendingRoutes({ app });
+  registerAppRunnerRoutes({ app, db, broadcast });
 
   // ---------------------------------------------------------------------------
   // SubTask endpoints

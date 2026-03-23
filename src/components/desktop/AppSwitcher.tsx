@@ -49,10 +49,9 @@ export default function AppSwitcher() {
     alerts: t({ ko: "알림", en: "Alerts", ja: "アラート", zh: "警报" }),
     "cli-usage": t({ ko: "CLI 비용", en: "CLI Cost", ja: "CLIコスト", zh: "CLI成本" }),
     "local-llm": t({ ko: "로컬 LLM", en: "Local LLM", ja: "ローカルLLM", zh: "本地LLM" }),
-    "feature-builder": t({ ko: "새 기능 만들기", en: "New Feature", ja: "新機能作成", zh: "新建功能" }),
-    "git-import": t({ ko: "Git 가져오기", en: "Git Import", ja: "Gitインポート", zh: "Git导入" }),
+    "repo-store": t({ ko: "Repo Store", en: "Repo Store", ja: "Repo Store", zh: "Repo Store" }),
+    "app-runner": t({ ko: "App Runner", en: "App Runner", ja: "App Runner", zh: "App Runner" }),
     dashboard: t({ ko: "대시보드", en: "Dashboard", ja: "ダッシュボード", zh: "控制台" }),
-    "widget-board": t({ ko: "위젯 보드", en: "Widget Board", ja: "ウィジェットボード", zh: "小组件板" }),
     "project-create": t({ ko: "프로젝트 생성", en: "New Project", ja: "新規プロジェクト", zh: "新建项目" }),
     "decision-inbox": t({ ko: "의사결정", en: "Decision Inbox", ja: "意思決定", zh: "决策收件箱" }),
     "folder-browser": t({ ko: "폴더 탐색", en: "Folder Browser", ja: "フォルダ閲覧", zh: "文件夹浏览" }),
@@ -61,6 +60,8 @@ export default function AppSwitcher() {
     "learn-rule": t({ ko: "룰 학습", en: "Rule Learning", ja: "ルール学習", zh: "规则学习" }),
     "learn-memory": t({ ko: "메모리 학습", en: "Memory Learning", ja: "メモリ学習", zh: "记忆学习" }),
     "learn-hook": t({ ko: "훅 학습", en: "Hook Learning", ja: "フック学習", zh: "钩子学习" }),
+    "chat-editor": t({ ko: "채팅 에디터", en: "Chat Editor", ja: "チャットエディタ", zh: "聊天编辑器" }),
+    "channel-guide": t({ ko: "채널 가이드", en: "Channel Guide", ja: "チャンネルガイド", zh: "频道指南" }),
   };
 
   const ordered = [...windowFocusOrder].filter((w) => openWindows.has(w)).reverse();

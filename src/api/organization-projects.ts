@@ -488,6 +488,7 @@ export async function createProject(input: {
   role_assignments?: Array<{ agentId: string; role: string }>;
   directive?: string | null;
   directive_type_slug?: string | null;
+  project_type?: "project" | "app";
 }): Promise<Project> {
   const j = (await post("/api/projects", input)) as { ok: boolean; project: Project };
   return j.project;

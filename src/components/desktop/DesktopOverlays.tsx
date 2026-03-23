@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
-import type { Project, Agent, Task, CustomFeature } from "../../types";
+import type { Project, Agent, Task } from "../../types";
 import type { WindowType } from "../../app/types";
 import type { I18nContextValue } from "../../i18n";
-import type { TrashedProject, TrashedFeature } from "./DesktopTypes";
+import type { TrashedProject } from "./DesktopTypes";
 import ContextMenu from "../ui/ContextMenu";
 import CommandPalette from "../CommandPalette";
 import UserGuidePanel from "./UserGuidePanel";
@@ -10,7 +10,6 @@ import AgentDetailPanel from "../agent-detail/AgentDetailPanel";
 import { RunProjectModal } from "./DesktopRunProjectModal";
 import { TrashModal } from "./DesktopTrash";
 import { buildRunPrompt } from "./DesktopRunProjectModal";
-import { listCustomFeatures, deleteCustomFeature } from "../../api/custom-features";
 
 export interface DesktopOverlaysProps {
   ctxMenu: { x: number; y: number } | null;
@@ -45,7 +44,6 @@ export interface DesktopOverlaysProps {
   setRunProjectInfo: (v: { projectId: string; projectName: string; projectPath: string } | null) => void;
   openCliWindow: (agentId: string, prompt: string) => void;
   trashedProjects: TrashedProject[];
-  trashedFeatures: TrashedFeature[];
   showTrash: boolean;
   setShowTrash: (v: boolean) => void;
   removeFromTrash: (id: string) => void;
@@ -57,8 +55,6 @@ export interface DesktopOverlaysProps {
   }) => Promise<Project>;
   setProjects: (v: Project[] | ((prev: Project[]) => Project[])) => void;
   showToast: (message: string, type: "success" | "error") => void;
-  setCustomFeatures: (v: CustomFeature[] | ((prev: CustomFeature[]) => CustomFeature[])) => void;
-  removeFeatureFromTrash: (id: string) => void;
   emptyTrash: () => void;
   children?: ReactNode;
 }
@@ -96,15 +92,12 @@ export function DesktopOverlays({
   setRunProjectInfo,
   openCliWindow,
   trashedProjects,
-  trashedFeatures,
   showTrash,
   setShowTrash,
   removeFromTrash,
   createProject,
   setProjects,
   showToast,
-  setCustomFeatures,
-  removeFeatureFromTrash,
   emptyTrash,
   children,
 }: DesktopOverlaysProps) {
@@ -300,7 +293,7 @@ export function DesktopOverlays({
         <TrashModal
           t={t}
           items={trashedProjects}
-          features={trashedFeatures}
+          features={[]}
           onClose={() => setShowTrash(false)}
           onRestore={async (item) => {
             removeFromTrash(item.id);
@@ -329,24 +322,9 @@ export function DesktopOverlays({
             }
           }}
           onDelete={(item) => removeFromTrash(item.id)}
-          onRestoreFeature={(f) => {
-            removeFeatureFromTrash(f.id);
-            listCustomFeatures()
-              .then((list) =>
-                setCustomFeatures(
-                  list.filter((cf) => cf.status === "active" || cf.status === "pending_install"),
-                ),
-              )
-              .catch(() => {});
-          }}
-          onDeleteFeature={async (f) => {
-            removeFeatureFromTrash(f.id);
-            await deleteCustomFeature(f.id).catch(() => {});
-          }}
+          onRestoreFeature={() => {}}
+          onDeleteFeature={async () => {}}
           onEmpty={async () => {
-            for (const f of trashedFeatures) {
-              await deleteCustomFeature(f.id).catch(() => {});
-            }
             emptyTrash();
           }}
         />

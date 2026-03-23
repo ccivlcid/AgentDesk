@@ -27,7 +27,6 @@ import { registerAgentUsageRoutes } from "./ops/agent-usage.ts";
 import { registerHeartbeatRoutes } from "./ops/heartbeat.ts";
 import { registerScheduledTaskRoutes } from "./ops/scheduled-tasks.ts";
 import { registerVideoRenderRoutes } from "./ops/video-render.ts";
-import { registerCustomFeatureRoutes } from "./ops/custom-features.ts";
 import { registerLocalLlmRoutes } from "./ops/local-llm.ts";
 import { registerSynapseRoutes } from "./ops/synapse.ts";
 import { registerImageStudioRoutes } from "./ops/image-studio.ts";
@@ -281,7 +280,6 @@ export function registerRoutesPartC(ctx: RuntimeContext): RouteOpsExports {
   registerScheduledTaskRoutes({ app, db, nowMs });
   registerVideoRenderRoutes({ app, broadcast, appendTaskLog });
   const { recordAgentUsage } = registerAgentUsageRoutes(__ctx);
-  registerCustomFeatureRoutes({ app, db, nowMs });
   registerLocalLlmRoutes({ app, db, broadcast });
   registerSynapseRoutes({ app, db });
   registerImageStudioRoutes({ app, db, broadcast });

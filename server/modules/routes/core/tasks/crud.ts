@@ -9,6 +9,7 @@ import { isWorkflowPackKey } from "../../../workflow/packs/definitions.ts";
 import { resolveWorkflowPackKeyForTask } from "../../../workflow/packs/task-pack-resolver.ts";
 import { selectAutoAssignableAgentForTask } from "./execution-run-auto-assign.ts";
 import { recordTaskExecutionEvent, taskExecutionEventsTableExists } from "../../../workflow/core/task-execution-meta.ts";
+import { eventBus } from "../../../../lib/event-bus.ts";
 
 export type TaskCrudRouteDeps = Pick<
   RuntimeContext,
@@ -571,6 +572,41 @@ export function registerTaskCrudRoutes(deps: TaskCrudRouteDeps): void {
         summary: `Task '${updated?.title ?? id}' moved to ${nextStatus}`,
         timestamp: nowMs(),
       });
+    }
+
+    // done 전환 시 PM 오케스트레이터에 이벤트 발행
+    if (nextStatus === "done" && updated?.project_id) {
+      // PM이 있는 프로젝트면 review → PM 검토 → done 플로우를 탄다
+      // PM이 없으면 바로 done 처리
+      const hasPm = db.prepare(
+        `SELECT 1 FROM project_agents pa JOIN agents a ON a.id = pa.agent_id
+         WHERE pa.project_id = ? AND pa.project_role = 'pm' AND a.status != 'offline' LIMIT 1`,
+      ).get(updated.project_id as string);
+
+      if (hasPm) {
+        // review 상태로 전환 → PM 오케스트레이터가 검토 후 approve → done
+        db.prepare("UPDATE tasks SET status = 'review', updated_at = ? WHERE id = ?").run(nowMs(), id);
+        const reviewTask = db.prepare("SELECT * FROM tasks WHERE id = ?").get(id);
+        broadcast("task_update", reviewTask);
+        appendTaskLog(id, "pm_oversight", "Manual done → routed to PM review first");
+        eventBus.emitTaskStatus({
+          type: "task_status_changed",
+          taskId: id,
+          projectId: updated.project_id as string,
+          fromStatus: "in_progress",
+          toStatus: "review",
+          agentId: (updated.assigned_agent_id as string) ?? null,
+        });
+      } else {
+        eventBus.emitTaskStatus({
+          type: "task_status_changed",
+          taskId: id,
+          projectId: updated.project_id as string,
+          fromStatus: "unknown",
+          toStatus: "done",
+          agentId: (updated.assigned_agent_id as string) ?? null,
+        });
+      }
     }
 
     res.json({ ok: true, task: updated });

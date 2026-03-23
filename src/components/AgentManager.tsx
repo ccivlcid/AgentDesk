@@ -1,4 +1,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type DragEvent } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { 
+  Search, 
+  UserPlus, 
+  Briefcase, 
+  Users, 
+  Filter, 
+  X,
+  ChevronRight,
+  Terminal,
+  Activity,
+  Plus
+} from "lucide-react";
 import type { Agent, Department, Persona } from "../types";
 import { useI18n } from "../i18n";
 import * as api from "../api";
@@ -9,7 +22,6 @@ import { BLANK } from "./agent-manager/constants";
 import DepartmentFormModal from "./agent-manager/DepartmentFormModal";
 import DepartmentsTab from "./agent-manager/DepartmentsTab";
 import type { AgentManagerProps, FormData } from "./agent-manager/types";
-import { IconSearch } from "./ui/SvgIcons";
 
 export default function AgentManager({
   agents,
@@ -91,7 +103,6 @@ export default function AgentManager({
     setShowModal(true);
   }, [deptTab, departments]);
 
-  // Dock "새 에이전트" 버튼: createTrigger가 마운트 시점보다 증가할 때만 채용 모달 열기
   const prevTriggerRef = useRef(createTrigger ?? 0);
   useEffect(() => {
     if (createTrigger && createTrigger > prevTriggerRef.current) {
@@ -103,7 +114,6 @@ export default function AgentManager({
   const openEdit = useCallback(
     async (agent: Agent) => {
       setModalAgent(agent);
-      // Load persona from .md file
       let personaText = "";
       try {
         personaText = await api.getAgentPersona(agent.id);
@@ -187,7 +197,6 @@ export default function AgentManager({
         savedAgentId = createdAgent.id;
       }
       onAgentsChange();
-      // Avatar upload/delete (after agent is saved so we have an ID)
       const agentId = savedAgentId;
       if (agentId) {
         if (form.pendingAvatarDataUrl) {
@@ -195,13 +204,11 @@ export default function AgentManager({
             console.error("Avatar upload failed:", e),
           );
         } else if (form.avatar_url === null && modalAgent?.avatar_url) {
-          // User explicitly removed the avatar
           await api.deleteAgentAvatar(agentId).catch((e) =>
             console.error("Avatar delete failed:", e),
           );
         }
       }
-
       closeModal();
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -210,12 +217,7 @@ export default function AgentManager({
     } finally {
       setSaving(false);
     }
-  }, [
-    closeModal,
-    form,
-    modalAgent,
-    onAgentsChange,
-  ]);
+  }, [closeModal, form, modalAgent, onAgentsChange]);
 
   const handleDelete = useCallback(
     async (id: string) => {
@@ -225,17 +227,9 @@ export default function AgentManager({
         onAgentsChange();
         setConfirmDeleteId(null);
         if (modalAgent?.id === id) closeModal();
-      } catch (err) {
-        console.error("Delete failed:", err);
-      } finally {
-        setSaving(false);
-      }
+      } catch (err) { console.error("Delete failed:", err); } finally { setSaving(false); }
     },
-    [
-      closeModal,
-      modalAgent,
-      onAgentsChange,
-    ],
+    [closeModal, modalAgent, onAgentsChange],
   );
 
   const openCreateDept = useCallback(() => {
@@ -282,14 +276,12 @@ export default function AgentManager({
       const fromIndex = deptOrder.findIndex((department) => department.id === dragDeptId);
       const targetIndex = deptOrder.findIndex((department) => department.id === targetDeptId);
       if (fromIndex < 0 || targetIndex < 0) return;
-
       const nextOrder = [...deptOrder];
       const [dragged] = nextOrder.splice(fromIndex, 1);
       let insertIndex = targetIndex + (position === "after" ? 1 : 0);
       if (fromIndex < insertIndex) insertIndex -= 1;
       insertIndex = Math.max(0, Math.min(insertIndex, nextOrder.length));
       nextOrder.splice(insertIndex, 0, dragged);
-
       const changed = nextOrder.some((department, i) => department.id !== deptOrder[i]?.id);
       if (!changed) return;
       setDeptOrder(nextOrder);
@@ -301,19 +293,11 @@ export default function AgentManager({
   const saveDeptOrder = useCallback(async () => {
     setReorderSaving(true);
     try {
-      const nextDepartments = deptOrder.map((department, index) => ({
-        ...department,
-        sort_order: index + 1,
-      }));
-      const orders = nextDepartments.map((department) => ({ id: department.id, sort_order: department.sort_order }));
+      const orders = deptOrder.map((department, index) => ({ id: department.id, sort_order: index + 1 }));
       await api.reorderDepartments(orders);
       onAgentsChange();
       setDeptOrderDirty(false);
-    } catch (err) {
-      console.error("Reorder failed:", err);
-    } finally {
-      setReorderSaving(false);
-    }
+    } catch (err) { console.error("Reorder failed:", err); } finally { setReorderSaving(false); }
   }, [deptOrder, onAgentsChange]);
 
   const resetDeptOrder = useCallback(() => {
@@ -323,8 +307,6 @@ export default function AgentManager({
 
   const handleDeptDragStart = useCallback((deptId: string, event: DragEvent<HTMLDivElement>) => {
     setDraggingDeptId(deptId);
-    setDragOverDeptId(null);
-    setDragOverPosition(null);
     event.dataTransfer.effectAllowed = "move";
     event.dataTransfer.setData("text/plain", deptId);
   }, []);
@@ -347,255 +329,175 @@ export default function AgentManager({
     (deptId: string, event: DragEvent<HTMLDivElement>) => {
       event.preventDefault();
       const droppedId = event.dataTransfer.getData("text/plain") || draggingDeptId;
-      if (droppedId && droppedId !== deptId) {
-        moveDeptByDrag(droppedId, deptId, getDropPosition(event));
-      }
+      if (droppedId && droppedId !== deptId) moveDeptByDrag(droppedId, deptId, getDropPosition(event));
       clearDeptDragState();
     },
     [clearDeptDragState, draggingDeptId, getDropPosition, moveDeptByDrag],
   );
 
-  const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };
-
   return (
     <div
-      className="min-h-0 flex-1 flex flex-col w-full"
       style={{
-        ...mono,
+        height: "100%",
         display: "flex",
         flexDirection: "column",
-        gap: 0,
-        borderRadius: 10,
-        overflow: "hidden",
-        background: "var(--th-bg-elevated)",
-        border: "1px solid var(--th-border)",
-        boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
+        background: "transparent",
+        fontFamily: "var(--th-font-body)",
       }}
     >
-      {/* ── 터미널 헤더 (macOS) ── */}
-      <div
-        style={{
-          borderBottom: "1px solid var(--th-border)",
-          padding: "12px 18px",
-          background: "var(--th-bg-panel)",
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-          borderTopLeftRadius: 10,
-          borderTopRightRadius: 10,
-          backdropFilter: "blur(12px)",
-          WebkitBackdropFilter: "blur(12px)",
-        }}
-      >
-        <span style={{ color: "var(--th-accent)", fontWeight: 700, fontSize: "11px" }}>$</span>
-        <span style={{ fontSize: "11px", color: "var(--th-text-muted)" }}>
-          ls agents/ --all{deptTab !== "all" ? ` --dept="${deptTab}"` : ""}
-        </span>
-        <span style={{ marginLeft: "auto", fontSize: "9px", color: "var(--th-text-muted)", opacity: 0.6 }}>
-          {agents.length} agents · {departments.length} depts
-        </span>
-      </div>
+      {/* ── Header: Activity Stats + Actions ── */}
+      <div style={{ 
+        padding: "24px 28px", 
+        display: "flex", 
+        alignItems: "center", 
+        justifyContent: "space-between",
+        borderBottom: "1px solid var(--th-glass-border-subtle)",
+        background: "rgba(255,255,255,0.01)"
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          <div style={{ padding: 10, background: "var(--th-accent)", borderRadius: 14, color: "black" }}>
+            <Users size={20} />
+          </div>
+          <div>
+            <div style={{ fontSize: 18, fontWeight: 800, color: "var(--th-text-heading)", letterSpacing: "-0.02em" }}>
+              {tr("인재 관리", "Talent Management", "タレント管理", "人才管理")}
+            </div>
+            <div style={{ fontSize: 11, color: "var(--th-text-muted)", fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{ color: "var(--th-success)" }}>●</span>
+              {agents.length} Agents · {departments.length} Specialties
+            </div>
+          </div>
+        </div>
 
-      {/* ── 검색 (에이전트 창 상단 · 직원 탭 목록 필터) ── */}
-      <div
-        style={{
-          padding: "10px 14px",
-          borderBottom: "1px solid var(--th-border)",
-          background: "var(--th-bg-primary)",
-          display: "flex",
-          alignItems: "center",
-          gap: 10,
-        }}
-      >
-        <span style={{ flexShrink: 0, display: "flex", color: "var(--th-text-muted)", opacity: 0.85 }} aria-hidden>
-          <IconSearch size={18} />
-        </span>
-        <input
-          type="search"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder={tr("이름·역할 검색…", "Search name or role…", "名前・役割で検索…", "按名称或角色搜索…")}
-          autoComplete="off"
-          style={{
-            flex: 1,
-            minWidth: 0,
-            background: "var(--th-bg-surface)",
-            border: "1px solid var(--th-border)",
-            borderRadius: 8,
-            color: "var(--th-text-primary)",
-            fontFamily: "var(--th-font-mono)",
-            fontSize: 12,
-            padding: "8px 12px",
-            outline: "none",
-          }}
-        />
-        {search.trim() ? (
+        <div style={{ display: "flex", gap: 10 }}>
           <button
-            type="button"
-            onClick={() => setSearch("")}
-            style={{
-              fontSize: 10,
-              fontWeight: 600,
-              padding: "6px 10px",
-              border: "1px solid var(--th-border)",
-              borderRadius: 6,
-              background: "transparent",
-              color: "var(--th-text-muted)",
-              cursor: "pointer",
-              flexShrink: 0,
-            }}
-          >
-            {tr("지우기", "Clear", "クリア", "清除")}
-          </button>
-        ) : null}
-      </div>
-
-      {/* ── 서브탭 + 액션 버튼 ── */}
-      <div style={{ borderBottom: "1px solid var(--th-border)", display: "flex", alignItems: "stretch", background: "var(--th-bg-primary)", padding: "6px 12px 0" }}>
-        {([
-          { key: "agents" as const, label: tr("직원", "AGENTS", "エージェント", "代理") },
-          { key: "departments" as const, label: tr("전문 분야", "SPECIALTIES", "専門分野", "专业领域") },
-        ] as const).map((tab, idx) => (
-          <button
-            key={tab.key}
-            type="button"
-            onClick={() => setSubTab(tab.key)}
-            style={{
-              ...mono,
-              fontSize: "9px",
-              fontWeight: 700,
-              letterSpacing: "0.08em",
-              padding: "8px 20px",
-              border: "none",
-              borderRight: idx === 0 ? "1px solid var(--th-border)" : "none",
-              borderBottom: subTab === tab.key ? "2px solid var(--th-accent)" : "2px solid transparent",
-              background: subTab === tab.key ? "var(--th-bg-elevated)" : "transparent",
-              color: subTab === tab.key ? "var(--th-accent)" : "var(--th-text-muted)",
-              cursor: "pointer",
-              borderRadius: "6px 6px 0 0",
-            }}
-          >
-            {tab.label}
-          </button>
-        ))}
-        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 6, paddingLeft: 8 }}>
-          <button
-            type="button"
             onClick={openCreateDept}
             style={{
-              ...mono,
-              fontSize: "9px",
-              fontWeight: 700,
-              padding: "6px 12px",
-              border: "1px solid var(--th-border)",
-              borderRadius: 6,
-              background: "none",
-              color: "var(--th-text-muted)",
-              cursor: "pointer",
-              letterSpacing: "0.05em",
+              padding: "8px 16px", borderRadius: 12, border: "1px solid var(--th-glass-border-strong)",
+              background: "rgba(255,255,255,0.03)", color: "var(--th-text-primary)", 
+              fontSize: 12, fontWeight: 700, cursor: "pointer", transition: "all 0.2s",
+              display: "flex", alignItems: "center", gap: 8
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.color = "var(--th-accent)"; e.currentTarget.style.background = "rgba(245,158,11,0.06)"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.color = "var(--th-text-muted)"; e.currentTarget.style.background = "none"; }}
+            onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.06)")}
+            onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.03)")}
           >
-            + {tr("전문 분야 추가", "ADD SPECIALTY", "専門分野追加", "专业领域追加")}
+            <Plus size={14} /> {tr("전문 분야", "Add Specialty", "専門分野", "专业领域")}
           </button>
           <button
-            type="button"
             onClick={openCreate}
             style={{
-              ...mono,
-              fontSize: "9px",
-              fontWeight: 700,
-              padding: "6px 14px",
-              border: "none",
-              borderRadius: 6,
-              background: "rgba(245,158,11,0.08)",
-              color: "var(--th-accent)",
-              cursor: "pointer",
-              letterSpacing: "0.05em",
+              padding: "8px 18px", borderRadius: 12, border: "none",
+              background: "var(--th-accent)", color: "black", 
+              fontSize: 12, fontWeight: 800, cursor: "pointer", transition: "all 0.2s",
+              display: "flex", alignItems: "center", gap: 8,
+              boxShadow: "0 4px 12px rgba(245,158,11,0.3)"
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(245,158,11,0.15)"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(245,158,11,0.08)"; }}
+            onMouseEnter={e => (e.currentTarget.style.transform = "translateY(-1px)")}
+            onMouseLeave={e => (e.currentTarget.style.transform = "translateY(0)")}
           >
-            + {tr("신규 채용", "HIRE", "採用", "招聘")}
+            <UserPlus size={14} /> {tr("신규 채용", "Hire Agent", "採用", "招聘")}
           </button>
         </div>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto">
-      {subTab === "agents" && (
-        <AgentsTab
-          tr={tr}
-          locale={locale}
-          isKo={isKo}
-          agents={agents}
-          departments={departments}
-          personas={personas}
-          personasLoading={personasLoading}
-          projectAgentIds={projectAgentIds}
-          deptTab={deptTab}
-          setDeptTab={setDeptTab}
-          sortedAgents={sortedAgents}
-          confirmDeleteId={confirmDeleteId}
-          setConfirmDeleteId={setConfirmDeleteId}
-          onEditAgent={openEdit}
-          onEditDepartment={openEditDept}
-          onDeleteAgent={handleDelete}
-          saving={saving}
-        />
-      )}
+      {/* ── Search & Filter Bar ── */}
+      <div style={{ padding: "16px 28px", display: "flex", alignItems: "center", gap: 16 }}>
+        <div style={{ 
+          flex: 1, display: "flex", alignItems: "center", gap: 12, 
+          background: "var(--th-glass-surface)", border: "1px solid var(--th-glass-border-strong)",
+          borderRadius: 14, padding: "0 16px", height: 42
+        }}>
+          <Search size={16} className="text-muted opacity-50" />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder={tr("이름, 역할, 기술 검색...", "Search by name, role, or skills...", "検索...", "搜索...")}
+            style={{ flex: 1, background: "none", border: "none", outline: "none", color: "var(--th-text-primary)", fontSize: 13 }}
+          />
+          {search && <X size={14} className="cursor-pointer opacity-50 hover:opacity-100" onClick={() => setSearch("")} />}
+        </div>
 
-      {subTab === "departments" && (
-        <DepartmentsTab
-          tr={tr}
-          locale={locale}
-          agents={agents}
-          departments={departments}
-          deptOrder={deptOrder}
-          deptOrderDirty={deptOrderDirty}
-          reorderSaving={reorderSaving}
-          draggingDeptId={draggingDeptId}
-          dragOverDeptId={dragOverDeptId}
-          dragOverPosition={dragOverPosition}
-          onSaveOrder={saveDeptOrder}
-          onCancelOrder={resetDeptOrder}
-          onMoveDept={moveDept}
-          onEditDept={openEditDept}
-          onDragStart={handleDeptDragStart}
-          onDragOver={handleDeptDragOver}
-          onDrop={handleDeptDrop}
-          onDragEnd={clearDeptDragState}
-        />
-      )}
+        {/* Sub-Tab Toggle */}
+        <div style={{ 
+          display: "flex", background: "rgba(255,255,255,0.03)", 
+          padding: 2, borderRadius: 12, border: "1px solid var(--th-glass-border-subtle)" 
+        }}>
+          <button
+            onClick={() => setSubTab("agents")}
+            style={{
+              padding: "8px 16px", border: "none", borderRadius: 10, fontSize: 11, fontWeight: 700,
+              cursor: "pointer", transition: "all 0.2s",
+              background: subTab === "agents" ? "rgba(255,255,255,0.08)" : "transparent",
+              color: subTab === "agents" ? "var(--th-text-primary)" : "var(--th-text-muted)",
+            }}
+          >
+            {tr("직원 목록", "Agents", "エージェント", "代理")}
+          </button>
+          <button
+            onClick={() => setSubTab("departments")}
+            style={{
+              padding: "8px 16px", border: "none", borderRadius: 10, fontSize: 11, fontWeight: 700,
+              cursor: "pointer", transition: "all 0.2s",
+              background: subTab === "departments" ? "rgba(255,255,255,0.08)" : "transparent",
+              color: subTab === "departments" ? "var(--th-text-primary)" : "var(--th-text-muted)",
+            }}
+          >
+            {tr("전문 분야", "Specialties", "専門分野", "专业领域")}
+          </button>
+        </div>
+      </div>
+
+      <div className="min-h-0 flex-1 overflow-y-auto" style={{ padding: "0 28px 28px" }}>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={subTab}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+          >
+            {subTab === "agents" && (
+              <AgentsTab
+                tr={tr} locale={locale} isKo={isKo}
+                agents={agents} departments={departments} personas={personas}
+                personasLoading={personasLoading} projectAgentIds={projectAgentIds}
+                deptTab={deptTab} setDeptTab={setDeptTab}
+                sortedAgents={sortedAgents} confirmDeleteId={confirmDeleteId}
+                setConfirmDeleteId={setConfirmDeleteId}
+                onEditAgent={openEdit} onEditDepartment={openEditDept}
+                onDeleteAgent={handleDelete} saving={saving}
+              />
+            )}
+
+            {subTab === "departments" && (
+              <DepartmentsTab
+                tr={tr} locale={locale} agents={agents} departments={departments}
+                deptOrder={deptOrder} deptOrderDirty={deptOrderDirty}
+                reorderSaving={reorderSaving} draggingDeptId={draggingDeptId}
+                dragOverDeptId={dragOverDeptId} dragOverPosition={dragOverPosition}
+                onSaveOrder={saveDeptOrder} onCancelOrder={resetDeptOrder}
+                onMoveDept={moveDept} onEditDept={openEditDept}
+                onDragStart={handleDeptDragStart} onDragOver={handleDeptDragOver}
+                onDrop={handleDeptDrop} onDragEnd={clearDeptDragState}
+              />
+            )}
+          </motion.div>
+        </AnimatePresence>
       </div>
 
       {showModal && (
         <AgentFormModal
-          isKo={isKo}
-          locale={locale}
-          tr={tr}
-          form={form}
-          setForm={setForm}
-          departments={departments}
-          isEdit={!!modalAgent}
-          saving={saving}
-          saveError={saveError}
-          onSave={handleSave}
-          onClose={closeModal}
+          isKo={isKo} locale={locale} tr={tr} form={form} setForm={setForm}
+          departments={departments} isEdit={!!modalAgent}
+          saving={saving} saveError={saveError} onSave={handleSave} onClose={closeModal}
           asWindow={true}
         />
       )}
 
       {showDeptModal && (
         <DepartmentFormModal
-          locale={locale}
-          tr={tr}
-          department={editDept}
-          departments={departments}
-          onSave={() => {
-            onAgentsChange();
-          }}
-          onClose={closeDeptModal}
+          locale={locale} tr={tr} department={editDept} departments={departments}
+          onSave={onAgentsChange} onClose={closeDeptModal}
         />
       )}
     </div>

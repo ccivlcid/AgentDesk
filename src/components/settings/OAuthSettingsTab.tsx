@@ -48,64 +48,75 @@ export default function OAuthSettingsTab({
   deviceError,
   onStartDeviceCodeFlow,
 }: OAuthSettingsTabProps) {
+  const mono = "var(--th-font-mono)";
+
   return (
-    <section
-      className="space-y-4 p-4 sm:p-5"
-      style={{ background: "var(--th-bg-surface)", borderColor: "var(--th-border)" }}
-    >
-      <div className="flex items-center justify-between">
-        <div style={{ fontFamily: "var(--th-font-mono)", fontSize: "10px", color: "var(--th-accent)", letterSpacing: "0.08em", textTransform: "uppercase", borderLeft: "3px solid var(--th-accent)", paddingLeft: "8px" }}>
-          // oauth status
+    <section className="space-y-6">
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-3">
+          <div style={{ padding: 6, background: "#EBF5FF", borderRadius: 10 }}>
+            <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="#3B82F6" strokeWidth={2.5}>
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
+          </div>
+          <h3 style={{ fontSize: 11, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.15em", color: "#374151" }}>
+            {t({ ko: "OAuth 인증 관리", en: "OAuth Authentication", ja: "OAuth認証管理", zh: "OAuth认证管理" })}
+          </h3>
         </div>
         <button
           type="button"
           onClick={onRefresh}
-          className="transition-colors hover:opacity-80"
-          style={{ fontFamily: "var(--th-font-mono)", fontSize: "10px", color: "var(--th-text-muted)", border: "1px solid var(--th-border)", padding: "2px 6px", borderRadius: 0, background: "var(--th-bg-elevated)" }}
+          className="p-2 transition-all hover:bg-gray-100 rounded-lg text-gray-400 hover:text-gray-600"
+          title={t({ ko: "새로고침", en: "Refresh", ja: "更新", zh: "刷新" })}
         >
-          [↺]
+          <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+            <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+          </svg>
         </button>
       </div>
 
       {oauthResult && (
         <div
-          className="flex items-center justify-between px-3 py-2 text-sm font-mono"
+          className="flex items-center justify-between px-4 py-3 text-xs font-bold font-mono"
           style={oauthResult.error
-            ? { borderRadius: 0, background: "rgba(244,63,94,0.08)", border: "1px solid rgba(244,63,94,0.35)", color: "rgb(253,164,175)" }
-            : { borderRadius: 0, background: "rgba(52,211,153,0.1)", border: "1px solid rgba(52,211,153,0.3)", color: "rgb(167,243,208)" }}
+            ? { borderRadius: 16, background: "#FEF2F2", border: "1px solid #FECACA", color: "#DC2626" }
+            : { borderRadius: 16, background: "#ECFDF5", border: "1px solid #A7F3D0", color: "#059669" }}
         >
-          <span>
-            {oauthResult.error
-              ? `${t({ ko: "OAuth 연결 실패", en: "OAuth connection failed", ja: "OAuth 接続失敗", zh: "OAuth 连接失败" })}: ${oauthResult.error}`
-              : `${OAUTH_INFO[oauthResult.provider || ""]?.label || oauthResult.provider} ${t({ ko: "연결 완료!", en: "connected!", ja: "接続完了!", zh: "连接成功!" })}`}
-          </span>
-          <button onClick={() => onOauthResultClear?.()} className="text-xs opacity-60 hover:opacity-100 ml-2">
-            ✕
+          <div className="flex items-center gap-2">
+            <span>{oauthResult.error ? "✗" : "✓"}</span>
+            <span>
+              {oauthResult.error
+                ? `${t({ ko: "연결 실패", en: "Connection failed", ja: "接続失敗", zh: "连接失败" })}: ${oauthResult.error}`
+                : `${OAUTH_INFO[oauthResult.provider || ""]?.label || oauthResult.provider} ${t({ ko: "연결 완료!", en: "connected!", ja: "接続完了!", zh: "连接成功!" })}`}
+            </span>
+          </div>
+          <button onClick={() => onOauthResultClear?.()} className="p-1 hover:bg-black/5 rounded-full transition-colors">
+            <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}><path d="M18 6L6 18M6 6l12 12"/></svg>
           </button>
         </div>
       )}
 
       {oauthStatus && (
         <div
-          className="flex items-center gap-2 px-3 py-2 text-xs font-mono"
+          className="flex items-center gap-3 px-4 py-3 text-[11px] font-bold font-mono"
           style={oauthStatus.storageReady
-            ? { borderRadius: 0, background: "rgba(52,211,153,0.1)", border: "1px solid rgba(52,211,153,0.3)", color: "rgb(167,243,208)" }
-            : { borderRadius: 0, background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.3)", color: "var(--th-accent)" }}
+            ? { borderRadius: 16, background: "#F0FDF4", border: "1px solid #DCFCE7", color: "#166534" }
+            : { borderRadius: 16, background: "#FFFBEB", border: "1px solid #FEF3C7", color: "#92400E" }}
         >
-          <span>{oauthStatus.storageReady ? "▣" : "▲"}</span>
-          <span>
+          <span className="text-base">{oauthStatus.storageReady ? "🛡️" : "⚠️"}</span>
+          <span className="leading-relaxed">
             {oauthStatus.storageReady
               ? t({
-                  ko: "OAuth 저장소 활성화됨 (암호화 키 설정됨)",
-                  en: "OAuth storage is active (encryption key configured)",
-                  ja: "OAuth ストレージ有効（暗号化キー設定済み）",
-                  zh: "OAuth 存储已启用（已配置加密密钥）",
+                  ko: "OAuth 저장소 암호화 활성화됨 (보안 연결 중)",
+                  en: "OAuth storage is encrypted and active",
+                  ja: "OAuth ストレージ有効（暗号化済み）",
+                  zh: "OAuth 存储加密已启用",
                 })
               : t({
-                  ko: "OAUTH_ENCRYPTION_SECRET 환경변수가 설정되지 않았습니다",
-                  en: "OAUTH_ENCRYPTION_SECRET environment variable is not set",
-                  ja: "OAUTH_ENCRYPTION_SECRET 環境変数が設定されていません",
-                  zh: "未设置 OAUTH_ENCRYPTION_SECRET 环境变量",
+                  ko: "OAUTH_ENCRYPTION_SECRET 환경변수 설정이 필요합니다",
+                  en: "OAUTH_ENCRYPTION_SECRET environment variable required",
+                  ja: "OAUTH_ENCRYPTION_SECRET 環境変数が必要です",
+                  zh: "需要设置 OAUTH_ENCRYPTION_SECRET 环境变量",
                 })}
           </span>
         </div>
@@ -113,55 +124,56 @@ export default function OAuthSettingsTab({
 
       {/* OAuth 자동 전환 토글 */}
       <div
-        className="flex items-center justify-between gap-3 px-3 py-2"
-        style={{ border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", borderRadius: 6 }}
+        className="flex items-center justify-between gap-4 px-5 py-4 transition-all hover:bg-gray-50"
+        style={{ border: "1px solid #E5E7EB", background: "#FFFFFF", borderRadius: 20 }}
       >
-        <span
-          className="text-xs font-mono"
-          style={{ color: "var(--th-text-secondary)" }}
-          title={t({
-            ko: "실패/한도 시 다음 OAuth 계정으로 자동 전환",
-            en: "Auto-switch to next OAuth account on failures/limits",
-            ja: "失敗/上限時に次の OAuth アカウントへ自動切替",
-            zh: "失败/额度限制时自动切换到下一个 OAuth 账号",
-          })}
-        >
-          {t({ ko: "OAuth 자동 전환", en: "OAUTH AUTO SWAP", ja: "OAuth 自動切替", zh: "OAuth 自动切换" })}
-        </span>
+        <div className="flex items-center gap-3">
+          <div style={{ padding: 8, background: "#F3F4F6", borderRadius: 12 }}>
+            <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth={2.5}>
+              <path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l5 5M4 4l5 5" />
+            </svg>
+          </div>
+          <div>
+            <div className="text-[11px] font-black uppercase tracking-wider text-gray-900">
+              {t({ ko: "OAuth 자동 전환", en: "OAUTH AUTO SWAP", ja: "OAuth 自動切替", zh: "OAuth 自动切换" })}
+            </div>
+            <div className="text-[10px] text-gray-500 font-medium mt-0.5">
+              {t({
+                ko: "실패/한도 시 다음 계정으로 자동 전환합니다.",
+                en: "Switch to next account on failure or limit.",
+                ja: "失敗/上限時に次のアカウントへ自動切替.",
+                zh: "失败/额度限制时自动切换账号.",
+              })}
+            </div>
+          </div>
+        </div>
         <button
           type="button"
-          aria-pressed={form.oauthAutoSwap !== false}
           onClick={() => {
             const next = { ...form, oauthAutoSwap: !(form.oauthAutoSwap !== false) };
             setForm(next);
             persistSettings(next);
           }}
-          className="flex-shrink-0 font-mono text-[11px] transition-colors"
-          style={{
-            borderRadius: 6,
-            border: `1px solid ${form.oauthAutoSwap !== false ? "var(--th-accent)" : "var(--th-border)"}`,
-            background: form.oauthAutoSwap !== false ? "rgba(245,158,11,0.12)" : "var(--th-bg-surface)",
-            color: form.oauthAutoSwap !== false ? "var(--th-accent)" : "var(--th-text-muted)",
-            padding: "2px 8px",
-            minWidth: "3rem",
-            textAlign: "center",
-            cursor: "pointer",
-          }}
+          className="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
+          style={{ background: form.oauthAutoSwap !== false ? "#3B82F6" : "#D1D5DB" }}
         >
-          {form.oauthAutoSwap !== false ? "ON" : "OFF"}
+          <span
+            className="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+            style={{ transform: form.oauthAutoSwap !== false ? "translateX(20px)" : "translateX(0)" }}
+          />
         </button>
       </div>
 
       {oauthLoading ? (
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, padding: "32px 0", fontFamily: "var(--th-font-mono)", fontSize: 11, color: "var(--th-text-muted)" }}>
-          <svg className="animate-spin" width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-            <circle cx="12" cy="12" r="10" strokeOpacity={0.2} />
+        <div className="py-12 flex flex-col items-center justify-center gap-4 bg-white rounded-3xl border border-dashed border-gray-200">
+          <svg className="animate-spin text-blue-500" width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3}>
+            <circle cx="12" cy="12" r="10" strokeOpacity={0.1} />
             <path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" />
           </svg>
-          {t({ ko: "로딩 중...", en: "Loading...", ja: "読み込み中...", zh: "加载中..." })}
+          <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">{t({ ko: "연결 정보 로딩 중...", en: "Loading connections...", ja: "読み込み中...", zh: "加载中..." })}</span>
         </div>
       ) : oauthStatus ? (
-        <>
+        <div className="space-y-8">
           <OAuthConnectedProvidersSection
             t={t}
             localeTag={localeTag}
@@ -196,7 +208,7 @@ export default function OAuthSettingsTab({
           />
 
           <GitHubOAuthAppConfig t={t} />
-        </>
+        </div>
       ) : null}
     </section>
   );

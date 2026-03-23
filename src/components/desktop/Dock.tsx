@@ -7,7 +7,7 @@ import { IconDecisions } from "./DesktopIcons";
 import { useTheme } from "../../ThemeContext";
 import { useI18n } from "../../i18n";
 import {
-  IconDockWorkflow, IconDockLibrary, IconDockSettings, IconDockChat, IconDockTasks, IconDockWidgetBoard,
+  IconDockWorkflow, IconDockLibrary, IconDockSettings, IconDockChat, IconDockTasks, IconRepoStore,
   IconDockSynapse, IconAgents, IconReports, IconImageStudio, IconLocalLlm,
   IconAlerts, IconFileTree, IconRepl, IconDashboard,
 } from "./DesktopIcons";
@@ -32,10 +32,10 @@ const mono = "var(--th-font-mono)";
 interface DockProps {
   onCreateProject?: () => void;
   onCreateAgent?: () => void;
-  onCreateFeature?: () => void;
+  onImportRepo?: () => void;
 }
 
-export default function Dock({ onCreateProject, onCreateAgent, onCreateFeature }: DockProps) {
+export default function Dock({ onCreateProject, onCreateAgent, onImportRepo }: DockProps) {
   const { openWindows, toggleWindow, minimizedWindows, restoreWindow, dockAutoHide } = useUiStore();
   const [dockHovered, setDockHovered] = useState(false);
   const { agents, unreadAgentIds } = useAgentStore();
@@ -129,14 +129,14 @@ export default function Dock({ onCreateProject, onCreateAgent, onCreateFeature }
       onClick: () => { setMenuOpen(false); onCreateAgent?.(); },
     },
     {
-      label: t({ ko: "새 기능", en: "New Feature", ja: "新規機能", zh: "新功能" }),
+      label: "Repo Store",
       accentColor: "#30d158",
       icon: (
         <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" width={16} height={16}>
-          <path d="M9 2l1.8 3.6L15 6.3l-3 2.9.7 4.1L9 11.4l-3.7 1.9.7-4.1-3-2.9 4.2-.7z" />
+          <path d="M9 13V3" /><path d="M5 7l4-4 4 4" /><path d="M3 15h12" />
         </svg>
       ),
-      onClick: () => { setMenuOpen(false); onCreateFeature?.(); },
+      onClick: () => { setMenuOpen(false); onImportRepo?.(); },
     },
   ];
 
@@ -164,27 +164,36 @@ export default function Dock({ onCreateProject, onCreateAgent, onCreateFeature }
       onMouseLeave={() => setDockHovered(false)}
       style={{
         position: "fixed",
-        bottom: 10,
+        bottom: 20,
         left: "50%",
-        transform: dockHidden ? "translateX(-50%) translateY(calc(100% + 10px))" : "translateX(-50%)",
-        transition: "transform 0.32s cubic-bezier(0.32, 0, 0.67, 0)",
+        transform: dockHidden ? "translateX(-50%) translateY(calc(100% + 20px))" : "translateX(-50%)",
+        transition: "transform 0.4s cubic-bezier(0.19, 1, 0.22, 1)",
         zIndex: 1000,
         display: "flex",
         alignItems: "flex-end",
-        gap: 8,
-        background: isLight
-          ? "rgba(255,255,255,0.72)"
-          : "rgba(30,30,36,0.72)",
-        backdropFilter: "blur(32px) saturate(200%)",
-        WebkitBackdropFilter: "blur(32px) saturate(200%)",
-        border: isLight
-          ? "1px solid rgba(255,255,255,0.9)"
-          : "1px solid rgba(255,255,255,0.12)",
-        borderRadius: 22,
-        padding: "10px 16px 8px",
-        boxShadow: "0 8px 40px rgba(0,0,0,0.35), 0 1px 0 rgba(255,255,255,0.06) inset",
+        gap: 12,
+        background: "var(--th-glass-surface-active)",
+        backdropFilter: "var(--th-glass-blur) saturate(200%)",
+        WebkitBackdropFilter: "var(--th-glass-blur) saturate(200%)",
+        border: "1px solid var(--th-glass-border-strong)",
+        borderRadius: 28,
+        padding: "12px 20px 10px",
+        boxShadow: "0 20px 50px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08), 0 0 0 1px rgba(255,255,255,0.02)",
       }}
     >
+      {/* Floor Reflection */}
+      <div style={{
+        position: "absolute",
+        bottom: -15,
+        left: "10%",
+        right: "10%",
+        height: 20,
+        background: "var(--th-accent)",
+        filter: "blur(30px)",
+        opacity: 0.08,
+        pointerEvents: "none",
+        zIndex: -1,
+      }} />
       {DOCK_ITEMS.map((item) => {
         const isOpen = openWindows.has(item.id);
         const isMinimized = minimizedWindows.has(item.id);
@@ -280,13 +289,13 @@ export default function Dock({ onCreateProject, onCreateAgent, onCreateFeature }
               left: "50%",
               transform: "translateX(-50%)",
               zIndex: 1001,
-              background: isLight ? "rgba(255,255,255,0.85)" : "rgba(30,30,36,0.88)",
-              backdropFilter: "blur(24px) saturate(180%)",
-              WebkitBackdropFilter: "blur(24px) saturate(180%)",
-              border: isLight ? "1px solid rgba(0,0,0,0.1)" : "1px solid rgba(255,255,255,0.12)",
+              background: "var(--th-glass-surface-active)",
+              backdropFilter: "var(--th-glass-blur)",
+              WebkitBackdropFilter: "var(--th-glass-blur)",
+              border: "1px solid var(--th-glass-border-strong)",
               borderRadius: 14,
               padding: "6px",
-              boxShadow: "0 12px 40px rgba(0,0,0,0.3)",
+              boxShadow: "var(--th-glass-shadow-active)",
               display: "flex",
               flexDirection: "column",
               gap: 2,
@@ -300,8 +309,8 @@ export default function Dock({ onCreateProject, onCreateAgent, onCreateFeature }
                 transform: "translateX(-50%) rotate(45deg)",
                 width: 10,
                 height: 10,
-                background: isLight ? "rgba(255,255,255,0.85)" : "rgba(30,30,36,0.88)",
-                border: isLight ? "1px solid rgba(0,0,0,0.1)" : "1px solid rgba(255,255,255,0.12)",
+                background: "var(--th-glass-surface-active)",
+                border: "1px solid var(--th-glass-border-strong)",
                 borderTop: "none",
                 borderLeft: "none",
               }} />

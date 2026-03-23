@@ -9,9 +9,27 @@
 
 import { randomUUID } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
+import { join, isAbsolute, normalize, resolve } from "node:path";
+import { homedir } from "node:os";
 import type { DatabaseSync } from "node:sqlite";
 import logger from "../../../../lib/logger.ts";
+
+function resolveHomePath(p: string): string {
+  let candidate = p;
+  if (candidate === "~") {
+    candidate = homedir();
+  } else if (candidate.startsWith("~/")) {
+    candidate = join(homedir(), candidate.slice(2));
+  } else if (candidate === "/Projects" || candidate.startsWith("/Projects/")) {
+    const suffix = candidate.slice("/Projects".length).replace(/^\/+/, "");
+    candidate = suffix ? join(homedir(), "Projects", suffix) : join(homedir(), "Projects");
+  } else if (candidate === "/projects" || candidate.startsWith("/projects/")) {
+    const suffix = candidate.slice("/projects".length).replace(/^\/+/, "");
+    candidate = suffix ? join(homedir(), "projects", suffix) : join(homedir(), "projects");
+  }
+  const absolute = isAbsolute(candidate) ? candidate : resolve(process.cwd(), candidate);
+  return normalize(absolute);
+}
 
 type Lang = "ko" | "en" | "ja" | "zh";
 
@@ -86,7 +104,8 @@ export function shipAutomation(params: ShipAutomationParams): void {
 
     const currentVersion = projectRow?.current_version || "0.1.0";
     const newVersion = bumpPatch(currentVersion);
-    const resolvedProjectPath = projectPath || projectRow?.project_path || null;
+    const rawPath = projectPath || projectRow?.project_path || null;
+    const resolvedProjectPath = rawPath ? resolveHomePath(rawPath) : null;
 
     // 2. Update projects.current_version
     db.prepare("UPDATE projects SET current_version = ?, updated_at = ? WHERE id = ?").run(newVersion, nowMs, projectId);
@@ -120,11 +139,11 @@ export function shipAutomation(params: ShipAutomationParams): void {
       task_id: taskId,
     });
 
-    // 6. Sync to files if project has a path
-    if (resolvedProjectPath) {
+    // 6. Sync version files if project has a path (progress.md는 PM 에이전트가 LLM으로 작성)
+    if (resolvedProjectPath && existsSync(resolvedProjectPath)) {
       syncVersionFiles(resolvedProjectPath, newVersion, entryType, taskTitle, taskId, nowMs);
-      const lang = readLang(db);
-      syncProgressMd(resolvedProjectPath, newVersion, taskTitle, taskDescription ?? null, taskResult ?? null, agentName ?? null, nowMs, lang);
+    } else {
+      logger.warn({ projectId, resolvedProjectPath }, "[ship-automation] project_path missing or not found — skipped file sync");
     }
 
     logger.info({ projectId, taskId, version: newVersion }, "[ship-automation] version bumped");

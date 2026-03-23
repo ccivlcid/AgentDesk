@@ -25,12 +25,12 @@ const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };
 export default function SettingsTabNav({ tab, setTab, t }: SettingsTabNavProps) {
   return (
     <div
-      className="flex flex-wrap gap-1"
+      className="flex flex-wrap gap-2"
       style={{
         ...mono,
-        borderBottom: "1px solid var(--th-border)",
-        background: "var(--th-bg-primary)",
-        padding: "6px 12px 0",
+        borderBottom: "1px solid rgba(0, 0, 0, 0.05)",
+        background: "#FFFFFF",
+        padding: "12px 16px 8px",
       }}
     >
       {TAB_ITEMS.map((item) => {
@@ -44,34 +44,34 @@ export default function SettingsTabNav({ tab, setTab, t }: SettingsTabNavProps) 
               ...mono,
               display: "flex",
               alignItems: "center",
-              gap: 5,
-              padding: "8px 14px",
-              fontSize: "10px",
-              fontWeight: isActive ? 700 : 400,
-              letterSpacing: "0.06em",
-              background: isActive ? "var(--th-bg-surface)" : "transparent",
-              color: isActive ? "var(--th-accent)" : "var(--th-text-muted)",
-              border: "none",
-              borderBottom: isActive ? "2px solid var(--th-accent)" : "2px solid transparent",
+              gap: 8,
+              padding: "8px 16px",
+              fontSize: "10.5px",
+              fontWeight: isActive ? 800 : 600,
+              letterSpacing: "0.1em",
+              background: isActive ? "#F3F4F6" : "transparent",
+              color: isActive ? "#111827" : "#6B7280",
+              border: "1px solid",
+              borderColor: isActive ? "rgba(0, 0, 0, 0.05)" : "transparent",
               cursor: "pointer",
-              transition: "color 0.1s, background 0.1s",
-              borderRadius: "6px 6px 0 0",
+              transition: "all 0.2s cubic-bezier(0.23, 1, 0.32, 1)",
+              borderRadius: "12px",
             }}
             onMouseEnter={(e) => {
               if (!isActive) {
-                e.currentTarget.style.color = "var(--th-text-secondary)";
-                e.currentTarget.style.background = "var(--th-hover-overlay-subtle)";
+                e.currentTarget.style.color = "#374151";
+                e.currentTarget.style.background = "#F9FAFB";
               }
             }}
             onMouseLeave={(e) => {
               if (!isActive) {
-                e.currentTarget.style.color = "var(--th-text-muted)";
+                e.currentTarget.style.color = "#6B7280";
                 e.currentTarget.style.background = "transparent";
               }
             }}
           >
-            <span style={{ opacity: isActive ? 1 : 0.5, fontSize: "11px" }}>{item.sigil}</span>
-            <span>{item.label(t)}</span>
+            <span style={{ opacity: isActive ? 1 : 0.6, fontSize: "12px" }}>{item.sigil}</span>
+            <span style={{ textTransform: "uppercase" }}>{item.label(t)}</span>
           </button>
         );
       })}

@@ -19,10 +19,8 @@ import { DesktopOverlayBlock } from "./DesktopOverlayBlock";
 import { useDesktopOverlayBlockProps } from "./useDesktopOverlayBlockProps";
 import { useDesktopIconPositionsSync } from "./useDesktopIconPositionsSync";
 import { useDesktopData } from "./useDesktopData";
-import type { CustomFeature } from "../../types";
 import AppSwitcher, { useAppSwitcherKeyboard } from "./AppSwitcher";
 import { deleteProject, createProject } from "../../api/organization-projects";
-import { deleteCustomFeature } from "../../api/custom-features";
 import { createProjectFolder, addProjectToFolder, deleteProjectFolder, updateProjectFolder } from "../../api/project-folders";
 import NotificationCenter from "../NotificationCenter";
 // ── Kickoff Stage Overlay ────────────────────────────────────────────────────
@@ -191,6 +189,7 @@ export default function Desktop({
   const {
     openWindows,
     openWindow,
+    openSettings,
     toggleWindow,
     wallpaper,
     jiggleMode,
@@ -200,10 +199,6 @@ export default function Desktop({
     setDesktopIconLayout,
     unreadReportCount,
     clearUnreadReportCount,
-    openCustomApps,
-    openCustomApp,
-    closeCustomApp,
-    customFeaturesTick,
     pendingDocs,
     removePendingDoc,
     selectedAgentId,
@@ -222,9 +217,6 @@ export default function Desktop({
     addToTrash,
     removeFromTrash,
     emptyTrash,
-    trashedFeatures,
-    addFeatureToTrash,
-    removeFeatureFromTrash,
   } = useUiStore();
 
   const { projects, categories, currentProjectId, projectAgentIds, setCurrentProjectId } = useProjectStore();
@@ -242,11 +234,8 @@ export default function Desktop({
 
   const [showTrash, setShowTrash] = useState(false);
   const handleEmptyTrash = useCallback(async () => {
-    for (const f of trashedFeatures) {
-      await deleteCustomFeature(f.id).catch(() => {});
-    }
     emptyTrash();
-  }, [trashedFeatures, emptyTrash]);
+  }, [emptyTrash]);
   const [runProjectInfo, setRunProjectInfo] = useState<{ projectId: string; projectName: string; projectPath: string } | null>(null);
   const [agentManagerCreateCount, setAgentManagerCreateCount] = useState(0);
   const [showQuickCreateAgent, setShowQuickCreateAgent] = useState(false);
@@ -257,7 +246,6 @@ export default function Desktop({
   const [showMarkdownEditor, setShowMarkdownEditor] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const [projectCtxMenu, setProjectCtxMenu] = useState<{ x: number; y: number; projectId: string; projectName: string } | null>(null);
-  const [cfCtxMenu, setCfCtxMenu] = useState<{ x: number; y: number; featureId: string; featureName: string } | null>(null);
   const [quickLookProjectId, setQuickLookProjectId] = useState<string | null>(null);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [openProjectWindowIds, setOpenProjectWindowIds] = useState<Set<string>>(new Set());
@@ -275,7 +263,6 @@ export default function Desktop({
   const newFolderCreating = useRef(false);
   const newFolderInputRef = useRef<HTMLInputElement>(null);
   const [folders, setFolders] = useState<ProjectFolder[]>([]);
-  const [customFeatures, setCustomFeatures] = useState<CustomFeature[]>([]);
   const [newFolderModalOpen, setNewFolderModalOpen] = useState(false);
   const [newFolderPreName, setNewFolderPreName] = useState("");
   const [dragOverFolderId, setDragOverFolderId] = useState<string | null>(null);
@@ -285,9 +272,8 @@ export default function Desktop({
   const { showToast } = useToast();
   useAppSwitcherKeyboard();
   useDesktopData(
-    { openWindows, clearUnreadReportCount, customFeaturesTick },
+    { openWindows, clearUnreadReportCount },
     setFolders,
-    setCustomFeatures,
     newFolderPos,
     newFolderInputRef,
     newFolderCreating,
@@ -315,18 +301,13 @@ export default function Desktop({
   const { icons, allIcons, DEFAULT_ICON_POSITIONS } = useDesktopIcons({
     t,
     openWindow,
+    openSettings,
     openCli,
     clearUnreadReportCount,
     toggleWindow,
     unreadReportCount,
     onOpenDecisionInbox,
     decisionInboxItems,
-    customFeatures,
-    openCustomApp,
-    setCfCtxMenu,
-    closeCustomApp,
-    addFeatureToTrash,
-    setCustomFeatures,
   });
   const { sortByName, sortByDefault, snapToGrid, sortByLastUsed } = useDesktopSortSnap(icons, projects);
   const { onDesktopMouseDown, onDesktopMouseMove, onDesktopMouseUp, onDesktopClick } = useDesktopJiggle({
@@ -334,7 +315,6 @@ export default function Desktop({
     setJiggleMode,
     setCtxMenu,
     setProjectCtxMenu,
-    setCfCtxMenu,
   });
   useDesktopKeyboard({
     jiggleMode,
@@ -359,20 +339,19 @@ export default function Desktop({
   useDesktopIconPositionsSync(iconPositionsRef, allIcons, DEFAULT_ICON_POSITIONS, pendingDocs, folders, projects, desktopIconLayout);
   const overlayBridge = useMemo(
     () => ({
-      runProjectInfo, setRunProjectInfo, projectCtxMenu, setProjectCtxMenu, cfCtxMenu, setCfCtxMenu, ctxMenu, setCtxMenu,
+      runProjectInfo, setRunProjectInfo, projectCtxMenu, setProjectCtxMenu, ctxMenu, setCtxMenu,
       agentManagerCreateCount, showQuickCreateAgent, setShowQuickCreateAgent, newFolderModalOpen, newFolderPreName,
       setNewFolderModalOpen, newFolderCreatingRef: newFolderCreating, createProjectFolder, setNewFolderPreName,
       showWallpaperPicker, setShowWallpaperPicker, showExportModal, setShowExportModal, showMarkdownEditor, setShowMarkdownEditor,
       quickLookProjectId, setQuickLookProjectId, missionControlOpen, setMissionControlOpen, handleDeleteProject,
       openProjectWindowIds, setOpenProjectWindowIds, setCurrentProjectId, setSelectedProjectId, addProjectToFolder, setFolders,
-      openCustomApp, closeCustomApp, addFeatureToTrash, setCustomFeatures,
       newFolderPos, setNewFolderPos, newFolderName, setNewFolderName, newFolderInputRef,
       showCommandPalette, setShowCommandPalette, sortByName, sortByDefault, sortByLastUsed, snapToGrid, setDesktopIconLayout, createProject,
-      showTrash, setShowTrash, folders, customFeatures,
+      showTrash, setShowTrash, folders,
       onSaveSettings, onRefreshCli, oauthResult, onOauthResultClear, onAgentsChange, onSendMessage, onSendAnnouncement, onSendDirective, onClearMessages,
     }),
     // overlay block deps (stable refs/setters omitted)
-    [runProjectInfo, projectCtxMenu, cfCtxMenu, ctxMenu, agentManagerCreateCount, showQuickCreateAgent, newFolderModalOpen, newFolderPreName, newFolderCreating, createProjectFolder, showWallpaperPicker, showExportModal, showMarkdownEditor, quickLookProjectId, missionControlOpen, handleDeleteProject, openProjectWindowIds, addProjectToFolder, setFolders, openCustomApp, closeCustomApp, addFeatureToTrash, setCustomFeatures, newFolderPos, newFolderName, newFolderInputRef, showCommandPalette, sortByName, sortByDefault, sortByLastUsed, snapToGrid, setDesktopIconLayout, createProject, showTrash, folders, customFeatures, onSaveSettings, onRefreshCli, oauthResult, onOauthResultClear, onAgentsChange, onSendMessage, onSendAnnouncement, onSendDirective, onClearMessages],
+    [runProjectInfo, projectCtxMenu, ctxMenu, agentManagerCreateCount, showQuickCreateAgent, newFolderModalOpen, newFolderPreName, newFolderCreating, createProjectFolder, showWallpaperPicker, showExportModal, showMarkdownEditor, quickLookProjectId, missionControlOpen, handleDeleteProject, openProjectWindowIds, addProjectToFolder, setFolders, newFolderPos, newFolderName, newFolderInputRef, showCommandPalette, sortByName, sortByDefault, sortByLastUsed, snapToGrid, setDesktopIconLayout, createProject, showTrash, folders, onSaveSettings, onRefreshCli, oauthResult, onOauthResultClear, onAgentsChange, onSendMessage, onSendAnnouncement, onSendDirective, onClearMessages],
   );
   const overlayBlockProps = useDesktopOverlayBlockProps(overlayBridge);
   return (
@@ -431,14 +410,14 @@ export default function Desktop({
         handleDeleteProject,
         handleDropDocToProject,
         setProjectCtxMenu,
-        trashedCount: trashedProjects.length + trashedFeatures.length,
+        trashedCount: trashedProjects.length,
         setShowTrash,
         onEmptyTrash: handleEmptyTrash,
       }}
       dockProps={{
         onCreateProject: onProjectCreate,
         onCreateAgent: () => setShowQuickCreateAgent(true),
-        onCreateFeature: () => openWindow("feature-builder"),
+        onImportRepo: () => openWindow("repo-store"),
       }}
     >
       <KickoffStageOverlay />

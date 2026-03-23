@@ -80,32 +80,41 @@ export function TaskBoardToolbar({ state }: TaskBoardToolbarProps) {
   }, []);
 
   return (
-    <div className="flex-shrink-0" style={{ borderTopLeftRadius: 10, borderTopRightRadius: 10 }}>
+    <div className="flex-shrink-0" style={{ borderTopLeftRadius: 24, borderTopRightRadius: 24 }}>
     <div
       className="flex items-center justify-between"
       style={{
-        borderBottom: addTasksInputOpen ? "none" : "1px solid var(--th-border)",
-        padding: "12px 18px",
-        background: "var(--th-bg-panel)",
-        borderTopLeftRadius: 10,
-        borderTopRightRadius: 10,
-        backdropFilter: "blur(12px)",
-        WebkitBackdropFilter: "blur(12px)",
+        borderBottom: addTasksInputOpen ? "none" : "1px solid rgba(0, 0, 0, 0.05)",
+        padding: "16px 24px",
+        background: "transparent",
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
       }}
     >
-      <div className="flex items-center gap-3 min-w-0">
-        <span style={{ ...mono, fontSize: "11px", color: "var(--th-accent)", fontWeight: 700 }}>$</span>
-        <span style={{ ...mono, fontSize: "11px", color: "var(--th-text-secondary)", whiteSpace: "nowrap" }}>
-          task-queue list
-          {currentProject && (
-            <span style={{ color: "var(--th-accent)" }}> --project=<span style={{ color: "var(--th-status-info)" }}>{currentProject.name}</span></span>
-          )}
-          {!showAllTasks && <span style={{ color: "var(--th-text-muted)" }}> --active</span>}
-          {activeFilterCount > 0 && <span style={{ color: "var(--th-status-warning)" }}> --filter={activeFilterCount}</span>}
-        </span>
-        <span style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", padding: "1px 5px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface)", borderRadius: 6 }}>
-          {filteredTasks.length} {t({ ko: "건", en: "tasks", ja: "件", zh: "项" })}
-        </span>
+      <div className="flex items-center gap-4 min-w-0">
+        <div style={{ padding: 8, background: "#EBF5FF", borderRadius: 12, color: "#3B82F6" }}>
+          <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+          </svg>
+        </div>
+        <div className="flex flex-col">
+          <div className="flex items-center gap-2">
+            <span style={{ fontSize: 13, fontWeight: 800, color: "#111827" }}>
+              {currentProject?.name || t({ ko: "전체 프로젝트", en: "All Projects", ja: "全プロジェクト", zh: "所有项目" })}
+            </span>
+            {activeFilterCount > 0 && (
+              <span className="px-1.5 py-0.5 text-[9px] font-black bg-amber-100 text-amber-700 rounded-md uppercase tracking-tighter">
+                FILTERED: {activeFilterCount}
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2 mt-0.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span style={{ fontSize: 10, fontWeight: 600, color: "#6B7280", textTransform: "uppercase", letterSpacing: "0.02em" }}>
+              {filteredTasks.length} {t({ ko: "개의 업무가 활성화됨", en: "ACTIVE TASKS", ja: "件のタスクが有効", zh: "项任务已激活" })}
+            </span>
+          </div>
+        </div>
       </div>
 
       <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -191,36 +200,69 @@ export function TaskBoardToolbar({ state }: TaskBoardToolbarProps) {
               : t({ ko: "재개", en: "Resume", ja: "再開", zh: "恢复" })}
           </button>
         )}
-        <div className="flex" style={{ border: "1px solid var(--th-border)", borderRadius: 6, overflow: "hidden" }}>
-          {(["board", "gantt", "dag"] as const).map((mode, i) => (
+        <div className="flex p-1 bg-gray-100/50 rounded-xl" style={{ border: "1px solid rgba(0, 0, 0, 0.05)" }}>
+          {(["bento", "board", "gantt", "dag"] as const).map((mode) => (
             <button
               key={mode}
               type="button"
               onClick={() => setViewMode(mode)}
               style={{
-                ...mono, fontSize: "10px", fontWeight: 700,
-                padding: "3px 8px",
-                background: viewMode === mode ? "var(--th-accent)" : "transparent",
-                color: viewMode === mode ? "var(--th-accent-text)" : "var(--th-text-muted)",
-                borderRight: i < 2 ? "1px solid var(--th-border)" : "none",
+                ...mono, fontSize: "9px", fontWeight: 800,
+                padding: "6px 12px",
+                background: viewMode === mode ? "#FFFFFF" : "transparent",
+                color: viewMode === mode ? "#2563EB" : "#64748B",
+                border: "none",
                 cursor: "pointer",
-                letterSpacing: "0.04em",
-                borderRadius: 0,
+                letterSpacing: "0.05em",
+                borderRadius: 8,
+                transition: "all 0.2s cubic-bezier(0.23, 1, 0.32, 1)",
+                boxShadow: viewMode === mode ? "0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)" : "none",
               }}
             >
-              {mode === "board" ? t({ ko: "보드", en: "BOARD", ja: "ボード", zh: "看板" })
-                : mode === "gantt" ? t({ ko: "간트", en: "GANTT", ja: "ガント", zh: "甘特" })
+              {mode === "bento" ? t({ ko: "요약", en: "SUMMARY", ja: "要約", zh: "摘要" })
+                : mode === "board" ? t({ ko: "보드", en: "BOARD", ja: "ボード", zh: "看板" })
+                : mode === "gantt" ? t({ ko: "간트", en: "TIMELINE", ja: "ガント", zh: "甘特" })
                 : "DAG"}
             </button>
           ))}
         </div>
 
-        <button type="button" onClick={toggleBatchMode} style={{ ...btnBase, ...(batchMode ? { borderColor: "rgba(245,158,11,0.4)", color: "var(--th-accent)", background: "rgba(245,158,11,0.06)" } : {}) }}>
-          {batchMode ? t({ ko: "취소", en: "CANCEL", ja: "取消", zh: "取消" }) : t({ ko: "일괄", en: "SELECT", ja: "一括", zh: "批量" })}
-        </button>
-        <button type="button" onClick={() => setShowBulkHideModal(true)} style={btnBase}>
-          {t({ ko: "숨김", en: "HIDE", ja: "非表示", zh: "隐藏" })}
-        </button>
+        <div className="flex gap-1.5 ml-2">
+          <button 
+            type="button" 
+            onClick={toggleBatchMode} 
+            style={{ 
+              ...btnBase, 
+              background: batchMode ? "#FFFBEB" : "#FFFFFF", 
+              borderColor: batchMode ? "#FCD34D" : "#E5E7EB",
+              color: batchMode ? "#D97706" : "#6B7280",
+              fontWeight: 800,
+              borderRadius: 8,
+              fontSize: "10px",
+              padding: "4px 10px",
+              transition: "all 0.2s"
+            }}
+          >
+            {batchMode ? t({ ko: "취소", en: "CANCEL", ja: "取消", zh: "取消" }) : t({ ko: "일괄", en: "SELECT", ja: "一括", zh: "批量" })}
+          </button>
+          <button 
+            type="button" 
+            onClick={() => setShowBulkHideModal(true)} 
+            style={{ 
+              ...btnBase, 
+              background: "#FFFFFF", 
+              borderColor: "#E5E7EB",
+              color: "#6B7280",
+              fontWeight: 800,
+              borderRadius: 8,
+              fontSize: "10px",
+              padding: "4px 10px",
+              transition: "all 0.2s"
+            }}
+          >
+            {t({ ko: "숨김", en: "HIDE", ja: "非表示", zh: "隐藏" })}
+          </button>
+        </div>
       </div>
     </div>
     {/* Inline add-tasks input bar */}

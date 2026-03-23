@@ -136,8 +136,8 @@ export default function TaskBoardWindow() {
       windowType="tasks"
       title={t({ ko: "보드", en: "Board", ja: "ボード", zh: "看板" })}
       emoji={boardIcon}
-      defaultWidth={1100}
-      defaultHeight={700}
+      defaultWidth={1080}
+      defaultHeight={720}
       onClose={() => closeWindow("tasks")}
     >
       <TaskBoard

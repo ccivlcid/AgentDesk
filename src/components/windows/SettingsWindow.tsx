@@ -50,10 +50,11 @@ export default function SettingsWindow({
   return (
     <AppWindow
       windowType="settings"
-      title={t({ ko: "설정", en: "Settings", ja: "設定", zh: "设置" })}
+      title={t({ ko: "시스템 설정", en: "System Settings", ja: "設定", zh: "设置" })}
       emoji="⚙"
-      defaultWidth={820}
+      defaultWidth={860}
       defaultHeight={600}
+
     >
       <div style={{ height: "100%", overflow: "hidden", display: "flex", flexDirection: "column" }}>
         <Suspense fallback={<Loading />}>

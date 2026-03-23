@@ -1,12 +1,14 @@
 import type React from "react";
+import { useEffect, useState } from "react";
 import type { Project, Category, ProjectFolder } from "../../types";
 import type { I18nContextValue } from "../../i18n";
 import DesktopIcon, { type DesktopIconDef } from "./DesktopIcon";
 import FolderDesktopIcon from "./FolderDesktopIcon";
 import { TrashIcon } from "./DesktopTrash";
-import { IconMarkdownDoc, IconFolder } from "./DesktopIcons";
+import { IconMarkdownDoc, IconFolder, IconRepoStore, IconAppRunner } from "./DesktopIcons";
 import { getCategoryIcon } from "./getCategoryIcon";
-import { ICON_GRID_X, ICON_GRID_Y, GRID_ORIGIN_X, GRID_ORIGIN_Y, getIconsPerColumn } from "./snapToFreeCell";
+import { useUiStore } from "../../store/uiStore";
+import { ICON_GRID_X, ICON_GRID_Y, GRID_ORIGIN_X, GRID_ORIGIN_Y, getIconsPerColumn, snapToFreeCell } from "./snapToFreeCell";
 
 export interface DesktopIconAreaProps {
   selectionRect: { x: number; y: number; w: number; h: number } | null;
@@ -77,6 +79,69 @@ export function DesktopIconArea({
   setShowTrash,
   onEmptyTrash,
 }: DesktopIconAreaProps) {
+  const { newlyInstalledProjectId, setNewlyInstalledProjectId, openAppRunner, desktopIconLayout, setDesktopIconLayout, openWindow } = useUiStore();
+
+  const [groupDragInitialPositions, setGroupDragInitialPositions] = useState<Record<string, { x: number; y: number }> | null>(null);
+
+  const handleGroupDragStart = (draggedId: string) => {
+    // If the dragged icon is part of current selection, start group drag
+    if (selectedIconIds.has(draggedId)) {
+      const initial: Record<string, { x: number; y: number }> = {};
+      selectedIconIds.forEach(id => {
+        const entry = desktopIconLayout[id];
+        if (entry) initial[id] = { ...entry };
+        else {
+          // If not in layout, it might be using defaultX/Y. We need to find its current pos.
+          // This is a bit tricky, but for now we focus on items already in desktopIconLayout
+        }
+      });
+      setGroupDragInitialPositions(initial);
+    } else {
+      setGroupDragInitialPositions(null);
+      setSelectedIconIds(new Set([draggedId]));
+    }
+  };
+
+  const handleGroupDragMove = (dx: number, dy: number) => {
+    if (!groupDragInitialPositions) return;
+    
+    const nextLayout = { ...desktopIconLayout };
+    Object.keys(groupDragInitialPositions).forEach(id => {
+      const startPos = groupDragInitialPositions[id];
+      nextLayout[id] = { x: startPos.x + dx, y: startPos.y + dy };
+    });
+    setDesktopIconLayout(nextLayout);
+  };
+
+  const handleGroupDragEnd = (draggedId: string, finalX: number, finalY: number) => {
+    const current = { ...useUiStore.getState().desktopIconLayout };
+    
+    if (groupDragInitialPositions) {
+      // Final snap for all icons in the group
+      let nextLayout = { ...current };
+      Object.keys(groupDragInitialPositions).forEach(id => {
+        const currentPos = nextLayout[id];
+        if (currentPos) {
+          const snapped = snapToFreeCell(currentPos.x, currentPos.y, id, nextLayout);
+          nextLayout[id] = snapped;
+        }
+      });
+      setDesktopIconLayout(nextLayout);
+      setGroupDragInitialPositions(null);
+    } else {
+      // Single icon snap
+      const snapped = snapToFreeCell(finalX, finalY, draggedId, current);
+      setDesktopIconLayout({ ...current, [draggedId]: snapped });
+    }
+  };
+
+  // 애니메이션 후 자동 클리어 (0.6초)
+  useEffect(() => {
+    if (!newlyInstalledProjectId) return;
+    const timer = setTimeout(() => setNewlyInstalledProjectId(null), 600);
+    return () => clearTimeout(timer);
+  }, [newlyInstalledProjectId, setNewlyInstalledProjectId]);
+
   return (
     <div
       data-desktop-bg=""
@@ -116,6 +181,9 @@ export function DesktopIconArea({
             defaultX={defaultPos.x}
             defaultY={defaultPos.y}
             isSelected={selectedIconIds.has(def.id)}
+            onDragStart={handleGroupDragStart}
+            onDragMove={handleGroupDragMove}
+            onDragEnd={handleGroupDragEnd}
           />
         );
       })}
@@ -143,6 +211,9 @@ export function DesktopIconArea({
             defaultX={GRID_ORIGIN_X + col * ICON_GRID_X}
             defaultY={GRID_ORIGIN_Y + row * ICON_GRID_Y}
             isSelected={selectedIconIds.has(def.id)}
+            onDragStart={handleGroupDragStart}
+            onDragMove={handleGroupDragMove}
+            onDragEnd={handleGroupDragEnd}
           />
         );
       })}
@@ -161,6 +232,9 @@ export function DesktopIconArea({
           defaultY={GRID_ORIGIN_Y + row * ICON_GRID_Y}
           isSelected={selectedIconIds.has(`folder-${folder.id}`)}
           onSelect={() => setSelectedIconIds(new Set([`folder-${folder.id}`]))}
+          onDragStart={handleGroupDragStart}
+          onDragMove={handleGroupDragMove}
+          onDragEnd={handleGroupDragEnd}
           isDragOver={dragOverFolderId === folder.id}
           onDragOver={(e) => {
             e.preventDefault();
@@ -232,30 +306,43 @@ export function DesktopIconArea({
         .filter((p) => !p.folder_id)
         .map((project, i) => {
           const perCol = getIconsPerColumn();
-          // Projects go in a new column group after app icons, docs, and folders
+          // Projects go after app icons + 1 (trash) + docs + folders
           const baseCol = Math.floor(allIcons.length / perCol) + 1;
-          const extraBefore = pendingDocs.length + folders.length;
+          const extraBefore = pendingDocs.length + folders.length + 1; /* +1 for trash */
           const gi = baseCol * perCol + extraBefore + i;
           const col = Math.floor(gi / perCol);
           const row = gi % perCol;
           const isActive = project.id === currentProjectId;
+          const isApp = project.project_type === "app";
+          const isGitHubRepo = !!project.github_repo;
           const category = categories.find((c) => c.id === project.category_id);
-          const catColor = category?.color ?? "#4a5568";
-          const accentColor = isActive ? catColor : catColor + "99";
+          const catColor = isApp ? "#30d158" : isGitHubRepo ? "#30d158" : (category?.color ?? "#4a5568");
+          const accentColor = isActive ? catColor : catColor;
           const ProjectIcon = getCategoryIcon(project.category_id);
+          const iconFn = isApp
+            ? (c: string) => <IconAppRunner color={c} />
+            : isGitHubRepo && !ProjectIcon
+              ? (c: string) => <IconRepoStore color={c} />
+              : ProjectIcon
+                ? (c: string) => <ProjectIcon color={c} />
+                : (c: string) => <IconFolder color={c} open={isActive} />;
           const def: DesktopIconDef = {
             id: `project-${project.id}`,
-            icon: (c) => (ProjectIcon ? <ProjectIcon color={c} /> : <IconFolder color={c} open={isActive} />),
+            icon: iconFn,
             label: project.name,
             deletable: true,
             accentColor,
             onDelete: () => handleDeleteProject(project.id),
             onDropDoc: (docId) => handleDropDocToProject(docId, project),
             onClick: () => {
-              setCurrentProjectId(project.id);
-              setSelectedProjectId(project.id);
-              setSelectedIconIds(new Set([`project-${project.id}`]));
-              setOpenProjectWindowIds((prev) => new Set([...prev, project.id]));
+              if (project.project_type === "app") {
+                openAppRunner(project.id);
+              } else {
+                setCurrentProjectId(project.id);
+                setSelectedProjectId(project.id);
+                setSelectedIconIds(new Set([`project-${project.id}`]));
+                setOpenProjectWindowIds((prev) => new Set([...prev, project.id]));
+              }
             },
             onContextMenu: (e) => setProjectCtxMenu({ x: e.clientX, y: e.clientY, projectId: project.id, projectName: project.name }),
           };
@@ -266,6 +353,10 @@ export function DesktopIconArea({
               defaultX={GRID_ORIGIN_X + col * ICON_GRID_X}
               defaultY={GRID_ORIGIN_Y + row * ICON_GRID_Y}
               isSelected={selectedIconIds.has(`project-${project.id}`)}
+              isNewlyInstalled={project.id === newlyInstalledProjectId}
+              onDragStart={handleGroupDragStart}
+              onDragMove={handleGroupDragMove}
+              onDragEnd={handleGroupDragEnd}
             />
           );
         })}

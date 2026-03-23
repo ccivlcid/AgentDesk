@@ -7,18 +7,16 @@ import { useRef, useCallback } from "react";
 
 type SetCtxMenu = (v: { x: number; y: number } | null) => void;
 type SetProjectCtxMenu = (v: { x: number; y: number; projectId: string; projectName: string } | null) => void;
-type SetCfCtxMenu = (v: { x: number; y: number; featureId: string; featureName: string } | null) => void;
 
 export interface UseDesktopJiggleParams {
   jiggleMode: boolean;
   setJiggleMode: (v: boolean) => void;
   setCtxMenu: SetCtxMenu;
   setProjectCtxMenu: SetProjectCtxMenu;
-  setCfCtxMenu: SetCfCtxMenu;
 }
 
 export function useDesktopJiggle(params: UseDesktopJiggleParams) {
-  const { jiggleMode, setJiggleMode, setCtxMenu, setProjectCtxMenu, setCfCtxMenu } = params;
+  const { jiggleMode, setJiggleMode, setCtxMenu, setProjectCtxMenu } = params;
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const longPressMoved = useRef(false);
   const longPressStartPos = useRef({ x: 0, y: 0 });
@@ -59,12 +57,11 @@ export function useDesktopJiggle(params: UseDesktopJiggleParams) {
     (e: React.MouseEvent) => {
       setCtxMenu(null);
       setProjectCtxMenu(null);
-      setCfCtxMenu(null);
       if (jiggleMode && !(e.target as HTMLElement).closest("[data-no-ctx]")) {
         setJiggleMode(false);
       }
     },
-    [jiggleMode, setJiggleMode, setCtxMenu, setProjectCtxMenu, setCfCtxMenu],
+    [jiggleMode, setJiggleMode, setCtxMenu, setProjectCtxMenu],
   );
 
   return { onDesktopMouseDown, onDesktopMouseMove, onDesktopMouseUp, onDesktopClick };

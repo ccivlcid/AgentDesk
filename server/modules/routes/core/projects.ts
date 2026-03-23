@@ -10,10 +10,36 @@ import { registerFeatureRoutes } from "./projects/register-feature-routes.ts";
 import { registerProjectKickoffRoutes } from "./projects/kickoff.ts";
 import { registerPmActivityRoutes } from "./projects/pm-activity.ts";
 import { registerChangelogRoutes } from "./projects/register-changelog-routes.ts";
-import { findApiProvider, readDefaultProvider, resolveModel } from "../ops/custom-features-ai/provider-helpers.ts";
-import { callProvider } from "../ops/custom-features-ai/llm-providers.ts";
+import { resolveProvider, getDefaultModel } from "../../agent-runtime/llm-client.ts";
 import logger from "../../../lib/logger.ts";
 import { loadPrompt } from "../../../lib/prompt-loader.ts";
+
+/** Simple one-shot LLM call (non-streaming) using resolveProvider. */
+async function callLlmOneShot(db: import("node:sqlite").DatabaseSync, systemPrompt: string, userPrompt: string, signal: AbortSignal): Promise<string> {
+  const resolved = resolveProvider(db);
+  const model = getDefaultModel(resolved.providerType);
+  if (resolved.type === "anthropic") {
+    const resp = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "x-api-key": resolved.apiKey, "anthropic-version": "2023-06-01", "content-type": "application/json" },
+      body: JSON.stringify({ model, max_tokens: 2048, system: systemPrompt, messages: [{ role: "user", content: userPrompt }] }),
+      signal,
+    });
+    if (!resp.ok) throw new Error(`Anthropic API ${resp.status}`);
+    const data = await resp.json() as { content?: Array<{ type: string; text?: string }> };
+    return data.content?.filter((b) => b.type === "text").map((b) => b.text ?? "").join("") ?? "";
+  }
+  // OpenAI-compatible
+  const resp = await fetch(`${resolved.baseUrl}/chat/completions`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${resolved.apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ model, max_tokens: 2048, messages: [{ role: "system", content: systemPrompt }, { role: "user", content: userPrompt }] }),
+    signal,
+  });
+  if (!resp.ok) throw new Error(`LLM API ${resp.status}`);
+  const data = await resp.json() as { choices?: Array<{ message?: { content?: string } }> };
+  return data.choices?.[0]?.message?.content ?? "";
+}
 
 type FirstQueryValue = (value: unknown) => string | undefined;
 type NormalizeTextField = (value: unknown) => string | null;
@@ -103,25 +129,8 @@ export function registerProjectRoutes({
     const systemPrompt = loadPrompt("system/project-auto-assign", { agentList });
 
     try {
-      const provider = findApiProvider(db, "api");
-      let rawText: string;
-      if (provider) {
-        const model = resolveModel(provider);
-        const signal = AbortSignal.timeout(20_000);
-        rawText = await callProvider(provider, model, systemPrompt, parts.join("\n\n"), signal);
-      } else {
-        // fallback: role-based heuristic (no AI available)
-        const sorted = [...cliAgents].sort((a, b) => {
-          const order: Record<string, number> = { team_leader: 0, senior: 1, junior: 2, intern: 3 };
-          return (order[a.role] ?? 4) - (order[b.role] ?? 4);
-        });
-        const assignments = [
-          { role: "PM", agent_id: sorted[0]?.id },
-          { role: "PL", agent_id: sorted[Math.min(1, sorted.length - 1)]?.id },
-          { role: "Dev", agent_id: sorted[Math.min(2, sorted.length - 1)]?.id },
-        ].filter((a) => a.agent_id);
-        return res.json({ ok: true, assignments });
-      }
+      const signal = AbortSignal.timeout(20_000);
+      const rawText = await callLlmOneShot(db, systemPrompt, parts.join("\n\n"), signal);
 
       const jsonMatch = rawText.match(/\[[\s\S]*\]/);
       if (!jsonMatch) {

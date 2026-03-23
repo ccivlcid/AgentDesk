@@ -170,6 +170,9 @@ CREATE TABLE IF NOT EXISTS task_execution_events (
   to_state TEXT,
   summary TEXT,
   metadata_json TEXT,
+  tokens_in INTEGER DEFAULT 0,
+  tokens_out INTEGER DEFAULT 0,
+  cost_usd REAL DEFAULT 0,
   created_at INTEGER DEFAULT (unixepoch()*1000)
 );
 

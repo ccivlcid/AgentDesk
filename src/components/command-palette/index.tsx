@@ -137,8 +137,8 @@ export default function CommandPalette({
         inset: 0,
         zIndex: 10100,
         background: "var(--th-modal-overlay)",
-        backdropFilter: "blur(8px)",
-        WebkitBackdropFilter: "blur(8px)",
+        backdropFilter: "blur(12px)",
+        WebkitBackdropFilter: "blur(12px)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -152,12 +152,12 @@ export default function CommandPalette({
         tabIndex={-1}
         style={{
           width: "min(680px, 92vw)",
-          background: "var(--th-bg-elevated)",
-          backdropFilter: "blur(48px) saturate(200%)",
-          WebkitBackdropFilter: "blur(48px) saturate(200%)",
-          border: "1px solid var(--th-border-strong)",
-          borderRadius: 18,
-          boxShadow: "0 40px 120px rgba(0,0,0,0.5), var(--th-glass-shadow)",
+          background: "var(--th-glass-surface-active)",
+          backdropFilter: "var(--th-glass-blur) saturate(180%)",
+          WebkitBackdropFilter: "var(--th-glass-blur) saturate(180%)",
+          border: "1px solid var(--th-glass-border-strong)",
+          borderRadius: 22,
+          boxShadow: "var(--th-glass-shadow-active)",
           overflow: "hidden",
         }}
         onKeyDown={handleKeyDown}

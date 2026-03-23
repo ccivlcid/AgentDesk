@@ -237,6 +237,14 @@ export function installSecurityMiddleware(app: Express): void {
 
   app.use(express.json({ limit: "12mb" }));
 
+  // Catch malformed JSON bodies — return 400 instead of letting Express crash
+  app.use((err: Error, _req: Request, res: Response, next: NextFunction) => {
+    if (err instanceof SyntaxError && "body" in err) {
+      return res.status(400).json({ error: "invalid_json" });
+    }
+    next(err);
+  });
+
   app.get("/api/auth/session", (req, res) => {
     const bearer = bearerToken(req);
     const hasBearerAuth = bearer === SESSION_AUTH_TOKEN;

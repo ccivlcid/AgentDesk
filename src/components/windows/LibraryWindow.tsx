@@ -77,10 +77,11 @@ export default function LibraryWindow() {
     <>
     <AppWindow
       windowType="library"
-      title={t({ ko: "라이브러리", en: "Library", ja: "ライブラリ", zh: "库" })}
+      title={t({ ko: "라이브러리", en: "Knowledge Library", ja: "ライブラリ", zh: "知识库" })}
       emoji="📚"
       defaultWidth={860}
       defaultHeight={600}
+
       headerActions={helpButton}
       tabs={[
         {

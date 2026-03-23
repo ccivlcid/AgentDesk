@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { Agent } from "../../types";
 import type { I18nContextValue } from "../../i18n";
+import { useProjectStore } from "../../store/projectStore";
 
 export function buildRunPrompt(projectName: string, projectPath: string): string {
   return `아래 GitHub 프로젝트를 설치하고 실행해주세요.
@@ -37,8 +38,18 @@ export function RunProjectModal({
   onRun: (agentId: string) => void;
 }) {
   const mono = { fontFamily: "var(--th-font-mono)" };
-  const [selectedAgentId, setSelectedAgentId] = useState(agents[0]?.id ?? "");
-  const availableAgents = agents.filter((a) => a.status !== "working");
+  const { projectAgentIds } = useProjectStore();
+
+  // Filter to only project-assigned agents, exclude PM, exclude working
+  const projectAgents = agents.filter((a) =>
+    projectAgentIds.has(a.id) && a.role !== "team_leader" && a.status !== "working"
+  );
+  const availableAgents = projectAgents.length > 0 ? projectAgents : agents.filter((a) => a.status !== "working");
+  const [selectedAgentId, setSelectedAgentId] = useState(availableAgents[0]?.id ?? "");
+
+  useEffect(() => {
+    if (!selectedAgentId && availableAgents.length > 0) setSelectedAgentId(availableAgents[0].id);
+  }, [availableAgents.length]);
 
   return (
     <div

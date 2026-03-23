@@ -474,15 +474,28 @@ export default function SettingsPanel({
         gap: 0,
         width: "100%",
         overflow: "hidden",
-        background: "var(--th-bg-surface)",
+        background: "#F9FAFB",
+        color: "#1F2937",
       }}
     >
       <SettingsTabNav tab={tab} setTab={setTab} t={t} />
 
       <div
-        className="min-h-0 flex-1 overflow-y-auto space-y-5 sm:space-y-6"
-        style={{ padding: "20px 18px 24px", background: "var(--th-bg-primary)" }}
+        className="min-h-0 flex-1 overflow-y-auto"
+        style={{ padding: "32px 24px 40px", background: "#F3F4F6" }}
       >
+        <div 
+          className="max-w-4xl mx-auto"
+          style={{
+            background: "rgba(255, 255, 255, 0.95)",
+            backdropFilter: "blur(20px)",
+            border: "1px solid rgba(0, 0, 0, 0.08)",
+            borderRadius: 24,
+            padding: "40px 32px",
+            boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.04), 0 8px 10px -6px rgba(0, 0, 0, 0.04)",
+          }}
+        >
+          <div className="space-y-12">
       {tab === "general" && (
         <GeneralSettingsTab t={t} form={form} setForm={setForm} saved={saved} onSave={handleSave} />
       )}
@@ -550,6 +563,8 @@ export default function SettingsPanel({
       {tab === "data" && <DataSettingsTab t={t} />}
 
       {tab === "local-llm" && <LocalLlmSettingsTab />}
+          </div>
+        </div>
       </div>
     </div>
   );

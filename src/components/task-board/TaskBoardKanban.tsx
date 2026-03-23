@@ -61,7 +61,13 @@ export function TaskBoardKanban({ state }: TaskBoardKanbanProps) {
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}
     >
-      <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto pb-4 pt-1 sm:flex-row sm:overflow-x-auto sm:overflow-y-hidden sm:gap-6 sm:pb-4 sm:px-1">
+      <div 
+        className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto pb-6 pt-1 sm:flex-row sm:overflow-x-auto sm:overflow-y-hidden sm:gap-6 sm:px-2 custom-scrollbar"
+        style={{
+          scrollBehavior: "smooth",
+          WebkitOverflowScrolling: "touch",
+        }}
+      >
         {COLUMNS.map((column) => {
           const columnTasks = tasksByStatus[column.status] ?? [];
           const isCollapsed = collapsedColumns.has(column.status);
@@ -71,22 +77,22 @@ export function TaskBoardKanban({ state }: TaskBoardKanbanProps) {
             <div
               key={column.status}
               className={`taskboard-column flex flex-col transition-all duration-200 sm:min-h-0 ${
-                isCollapsed ? "w-full sm:w-12 sm:flex-shrink-0" : "w-full sm:w-72 sm:flex-shrink-0"
+                isCollapsed ? "w-full sm:w-12 sm:flex-shrink-0" : "w-full sm:w-80 sm:flex-shrink-0"
               }`}
               style={{
-                border: isDragOver ? `1px solid ${sc?.color ?? "var(--th-border)"}` : "1px solid var(--th-border)",
-                borderRadius: 10,
+                border: "1px solid #E5E7EB",
+                borderRadius: 20,
                 overflow: "hidden",
-                background: isDragOver ? "var(--th-hover-overlay-subtle)" : "var(--th-bg-surface)",
-                outline: isDragOver ? `1px solid ${sc?.color ?? "transparent"}` : "none",
-                boxShadow: isDragOver ? "0 8px 24px rgba(0,0,0,0.12)" : "0 2px 12px rgba(0,0,0,0.06)",
+                background: isDragOver ? "#EBF5FF" : "#FFFFFF",
+                boxShadow: isDragOver ? "0 8px 24px rgba(59, 130, 246, 0.08)" : "0 2px 8px rgba(0,0,0,0.03)",
+                margin: "4px 0",
               }}
             >
               <button
                 type="button"
                 onClick={() => toggleColumn(column.status)}
-                className={`flex flex-nowrap items-center gap-1.5 px-3 py-2.5 w-full text-left ${isCollapsed ? "sm:flex-col sm:justify-center sm:gap-1 sm:px-1" : ""}`}
-                style={{ borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", borderTopLeftRadius: 10, borderTopRightRadius: 10 }}
+                className={`flex flex-nowrap items-center gap-2 px-4 py-3.5 w-full text-left ${isCollapsed ? "sm:flex-col sm:justify-center sm:gap-2 sm:px-1" : ""}`}
+                style={{ borderBottom: "1px solid #F3F4F6", background: "#F9FAFB" }}
               >
                 <span
                   style={{

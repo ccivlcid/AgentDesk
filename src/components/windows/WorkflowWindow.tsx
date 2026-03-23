@@ -34,10 +34,11 @@ export default function WorkflowWindow() {
   return (
     <AppWindow
       windowType="workflow"
-      title={t({ ko: "워크플로", en: "Workflow", ja: "ワークフロー", zh: "工作流" })}
+      title={t({ ko: "워크플로 빌더", en: "Workflow Builder", ja: "ワークフロー", zh: "工作流" })}
       emoji="⚡"
-      defaultWidth={900}
-      defaultHeight={620}
+      defaultWidth={1080}
+      defaultHeight={720}
+
       tabs={[
         {
           id: "live",

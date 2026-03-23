@@ -10,8 +10,8 @@ export const ICON_GRID_Y = 92;
 /** Minimum y so icons don't slide under the menu bar */
 const MIN_Y = 48;
 
-/** Grid origin — all cells are multiples of the grid size from this point */
-export const GRID_ORIGIN_X = 8;
+/** Grid origin — set to 0 to allow icons to be placed at the very left edge */
+export const GRID_ORIGIN_X = 0;
 export const GRID_ORIGIN_Y = 60;
 
 /** Menu-bar height + dock height used to compute usable desktop area */
@@ -28,9 +28,9 @@ export function getIconsPerColumn(): number {
   return Math.max(1, Math.floor(usable / ICON_GRID_Y));
 }
 
-/** Collision radius — icons closer than this (in each axis) are considered overlapping */
-const COLLISION_W = ICON_GRID_X - 8;
-const COLLISION_H = ICON_GRID_Y - 8;
+/** Collision radius — reduce slightly so icons can be placed closer without jumping */
+const COLLISION_W = ICON_GRID_X - 24;
+const COLLISION_H = ICON_GRID_Y - 24;
 
 /** Snap a raw coordinate to the nearest grid cell */
 function snapX(x: number): number {
@@ -60,7 +60,7 @@ export function snapToFreeCell(
   layout: Record<string, { x: number; y: number }>,
 ): { x: number; y: number } {
   // Snap drop position to nearest grid cell first
-  const x0 = Math.max(GRID_ORIGIN_X, snapX(dropX));
+  const x0 = Math.max(0, snapX(dropX));
   const y0 = Math.max(MIN_Y, snapY(dropY));
 
   // If snapped cell is free, place there

@@ -332,6 +332,12 @@ export interface Project {
   directive_type_slug?: string | null;
   current_version?: string | null;
   auto_create_pr?: number | null;
+  // Repo Store app fields
+  project_type?: "project" | "app";
+  app_status?: "downloaded" | "analyzing" | "analyzed" | "installing" | "installed" | "running" | "stopped" | null;
+  app_analysis?: string | null;
+  app_port?: number | null;
+  app_pid?: number | null;
 }
 
 export interface ProjectSource {
@@ -549,7 +555,8 @@ export type WSEventType =
   | "close_cli"
   | "runtime_status"
   | "clarification_request"
-  | "kickoff_stage";
+  | "kickoff_stage"
+  | "project_app_output";
 
 export interface WSEvent {
   type: WSEventType;
@@ -700,36 +707,6 @@ export interface HookEntry {
   enabled: boolean;
   execution_count: number;
   last_executed_at: number | null;
-  created_at: number;
-  updated_at: number;
-}
-
-// ── Custom Feature Platform ───────────────────────────────────────────────────
-export type CustomFeatureType = "app";
-export type CustomFeatureSource = "template" | "ai";
-export type CustomFeatureStatus = "active" | "draft" | "pending_install" | "error";
-export type CustomFeatureTheme = "default" | "accent" | "success" | "warning";
-export type CustomFeatureRefresh = "manual" | "5s" | "30s" | "1m" | "5m";
-export type CustomFeatureSizePreset = "sm" | "md" | "lg";
-
-export interface CustomFeatureConfig {
-  refresh: CustomFeatureRefresh;
-  theme: CustomFeatureTheme;
-  sizePreset: CustomFeatureSizePreset;
-  params?: Record<string, unknown>;
-}
-
-export interface CustomFeature {
-  id: string;
-  name: string;
-  type: CustomFeatureType;
-  source: CustomFeatureSource;
-  template_id: string | null;
-  config: CustomFeatureConfig;
-  status: CustomFeatureStatus;
-  error_msg: string | null;
-  icon_svg?: string | null;
-  progress_log?: string | null;
   created_at: number;
   updated_at: number;
 }

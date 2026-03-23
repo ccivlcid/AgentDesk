@@ -19,21 +19,20 @@ export function ChatSessionsSection({ state }: ChatSessionsSectionProps) {
   } = state;
 
   return (
-    <div className="p-3 space-y-3" style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
+    <div className="p-4 space-y-4" style={{ borderRadius: 20, border: "1px solid rgba(59, 130, 246, 0.1)", background: "#F0F7FF" }}>
       <div className="flex items-center justify-between">
-        <div className="text-sm font-semibold font-mono" style={{ color: "var(--th-text-heading)" }}>
-          {t({ ko: "채팅 세션", en: "Chat Sessions", ja: "チャットセッション", zh: "聊天会话" })}
+        <div className="text-xs font-black font-mono uppercase tracking-widest" style={{ color: "#4B5563" }}>
+          {t({ ko: "채팅 세션 리스트", en: "Active Chat Sessions", ja: "チャットセッション", zh: "活动聊天会话" })}
         </div>
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={() => setGuideOpen(true)}
-            className="flex items-center justify-center w-7 h-7 transition-colors"
-            style={{ borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-muted)", background: "var(--th-bg-elevated)" }}
+            className="flex items-center justify-center w-8 h-8 transition-all hover:bg-white hover:shadow-sm"
+            style={{ borderRadius: 10, border: "1px solid #E5E7EB", color: "#6B7280", background: "rgba(255,255,255,0.5)" }}
             title={t({ ko: "설정 가이드", en: "Setup Guide", ja: "設定ガイド", zh: "设置指南" })}
-            aria-label={t({ ko: "설정 가이드", en: "Setup Guide", ja: "設定ガイド", zh: "设置指南" })}
           >
-            <svg className="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="10" />
               <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
               <path d="M12 17h.01" />
@@ -41,8 +40,8 @@ export function ChatSessionsSection({ state }: ChatSessionsSectionProps) {
           </button>
           <button
             onClick={openCreateModal}
-            className="text-xs px-3 py-1 font-mono transition-colors"
-            style={{ borderRadius: 0, background: "var(--th-accent)", color: "var(--th-accent-text)" }}
+            className="text-[11px] px-4 py-1.5 font-bold font-mono transition-all hover:brightness-110 active:scale-95"
+            style={{ borderRadius: 12, background: "#3B82F6", color: "#FFFFFF", boxShadow: "0 4px 12px rgba(59, 130, 246, 0.2)" }}
           >
             + {t({ ko: "새 채팅 추가", en: "Add Chat", ja: "チャット追加", zh: "新增聊天" })}
           </button>
@@ -50,16 +49,16 @@ export function ChatSessionsSection({ state }: ChatSessionsSectionProps) {
       </div>
 
       {chatRows.length === 0 ? (
-        <div className="text-xs font-mono py-2" style={{ color: "var(--th-text-muted)" }}>
-          {t({
-            ko: "등록된 채팅이 없습니다. '새 채팅 추가'로 메신저/토큰/채널을 등록하세요.",
-            en: "No chats yet. Use 'Add Chat' to register messenger/token/channel.",
-            ja: "チャットがありません。'チャット追加'でメッセンジャー/トークン/チャネルを登録してください。",
-            zh: "暂无聊天。请通过“新增聊天”注册消息渠道/令牌/频道。",
-          })}
+        <div className="text-xs font-mono py-6 text-center opacity-50" style={{ color: "#6B7280" }}>
+          — {t({
+            ko: "등록된 채팅 세션이 없습니다.",
+            en: "No active chat sessions.",
+            ja: "등록된 채트 세션이 없습니다.",
+            zh: "暂无活动聊天会话。",
+          })} —
         </div>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-3">
           {chatRows.map((row) => {
             const meta = CHANNEL_META[row.channel];
             const assignedAgent = row.session.agentId ? agentById.get(row.session.agentId) : undefined;
@@ -68,58 +67,65 @@ export function ChatSessionsSection({ state }: ChatSessionsSectionProps) {
             const workflowPackLabel = defaultWorkflowPackLabel(t, workflowPackKey);
             const tokenReady = row.token.trim().length > 0;
             return (
-              <div key={row.key} className="px-3 py-2" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-semibold font-mono" style={{ color: "var(--th-text-primary)" }}>{row.session.name}</span>
-                      <span className="text-[10px] px-1.5 py-0.5 font-mono uppercase" style={{ borderRadius: 0, background: "var(--th-bg-surface-hover)", color: "var(--th-text-secondary)" }}>
+              <div key={row.key} className="px-4 py-3.5 transition-all hover:bg-white hover:shadow-sm" style={{ borderRadius: 16, border: "1px solid #E5E7EB", background: "#FFFFFF" }}>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2 mb-2">
+                      <span className="text-sm font-bold" style={{ color: "#111827" }}>{row.session.name}</span>
+                      <span className="text-[9px] px-1.5 py-0.5 font-black uppercase tracking-tighter" style={{ borderRadius: 6, background: "#F3F4F6", color: "#6B7280" }}>
                         {meta.label}
                       </span>
                       <span
-                        className="text-[10px] px-1.5 py-0.5 font-mono"
-                        style={{ borderRadius: 0, background: meta.transportReady ? "rgba(16,185,129,0.15)" : "rgba(245,158,11,0.15)", color: meta.transportReady ? "#34d399" : "#fbbf24" }}
+                        className="text-[9px] px-1.5 py-0.5 font-black uppercase tracking-tighter"
+                        style={{ borderRadius: 6, background: meta.transportReady ? "#ECFDF5" : "#FFFBEB", color: meta.transportReady ? "#059669" : "#D97706" }}
                       >
                         {meta.transportReady
-                          ? t({ ko: "직접연동", en: "Native", ja: "直接連携", zh: "直连" })
-                          : t({ ko: "호환설정", en: "Compat", ja: "互換設定", zh: "兼容配置" })}
+                          ? t({ ko: "NATIVE", en: "Native", ja: "直接連携", zh: "直连" })
+                          : t({ ko: "COMPAT", en: "Compat", ja: "互換設定", zh: "兼容" })}
                       </span>
-                      <span className="text-[10px] px-1.5 py-0.5 font-mono text-indigo-300" style={{ borderRadius: 0, background: "rgba(99,102,241,0.15)" }}>
+                      <span className="text-[9px] px-1.5 py-0.5 font-black uppercase tracking-tighter text-indigo-600" style={{ borderRadius: 6, background: "#EEF2FF" }}>
                         {workflowPackLabel}
                       </span>
                       {!tokenReady && (
-                        <span className="text-[10px] px-1.5 py-0.5 font-mono text-red-300" style={{ borderRadius: 0, background: "rgba(239,68,68,0.15)" }}>
-                          {t({ ko: "토큰 없음", en: "No token", ja: "トークンなし", zh: "无令牌" })}
+                        <span className="text-[9px] px-1.5 py-0.5 font-black uppercase tracking-tighter text-red-600" style={{ borderRadius: 6, background: "#FEF2F2" }}>
+                          {t({ ko: "NO TOKEN", en: "No token", ja: "토큰 없음", zh: "无令牌" })}
                         </span>
                       )}
                     </div>
-                    <div className="mt-1 text-[11px] font-mono break-all" style={{ color: "var(--th-text-muted)" }}>{row.session.targetId}</div>
-                    <div className="mt-1 text-[11px] font-mono flex items-center gap-1.5" style={{ color: "var(--th-text-muted)" }}>
+                    <div className="text-[11px] font-mono opacity-60 mb-2 truncate" style={{ color: "#4B5563" }}>{row.session.targetId}</div>
+                    <div className="flex items-center gap-2">
                       {assignedAgentName ? (
-                        <>
-                          <span>{t({ ko: "대화 Agent", en: "Agent", ja: "担当Agent", zh: "对话 Agent" })}:</span>
-                          {assignedAgent && <AgentAvatar agent={assignedAgent} size={14} rounded="xl" />}
-                          <span className="truncate">{assignedAgentName}</span>
-                        </>
+                        <div className="flex items-center gap-1.5 px-2 py-1" style={{ borderRadius: 10, background: "#F9FAFB", border: "1px solid #E5E7EB" }}>
+                          {assignedAgent && <AgentAvatar agent={assignedAgent} size={14} rounded="full" />}
+                          <span className="text-[11px] font-bold" style={{ color: "#374151" }}>{assignedAgentName}</span>
+                        </div>
                       ) : (
-                        <span>{t({ ko: "대화 Agent 미지정", en: "No agent assigned", ja: "Agent未指定", zh: "未指定 Agent" })}</span>
+                        <span className="text-[10px] opacity-40 italic">{t({ ko: "Agent 미지정", en: "No agent assigned", ja: "Agent未指定", zh: "未指定 Agent" })}</span>
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center gap-1 shrink-0">
+                  <div className="flex items-center gap-2 shrink-0 self-center">
                     <button
                       onClick={() => openEditModal(row)}
-                      className="px-2 py-1 text-[11px] font-mono transition-colors"
-                      style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
+                      className="p-2 transition-all hover:bg-gray-50"
+                      style={{ borderRadius: 10, border: "1px solid #E5E7EB", color: "#6B7280", background: "white" }}
+                      title={t({ ko: "편집", en: "Edit", ja: "편집", zh: "编辑" })}
                     >
-                      {t({ ko: "편집", en: "Edit", ja: "編集", zh: "编辑" })}
+                      <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                      </svg>
                     </button>
                     <button
                       onClick={() => removeChat(row)}
-                      className="px-2 py-1 text-[11px] font-mono text-red-300 transition-colors"
-                      style={{ borderRadius: 0, background: "rgba(239,68,68,0.12)", border: "1px solid rgba(239,68,68,0.3)" }}
+                      className="p-2 transition-all hover:bg-red-50"
+                      style={{ borderRadius: 10, border: "1px solid #FCA5A5", color: "#DC2626", background: "white" }}
+                      title={t({ ko: "삭제", en: "Delete", ja: "삭제", zh: "删除" })}
                     >
-                      {t({ ko: "삭제", en: "Delete", ja: "削除", zh: "删除" })}
+                      <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+                        <polyline points="3 6 5 6 21 6" />
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                      </svg>
                     </button>
                   </div>
                 </div>
@@ -129,12 +135,12 @@ export function ChatSessionsSection({ state }: ChatSessionsSectionProps) {
         </div>
       )}
 
-      <div className="text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>
+      <div className="text-[11px] font-mono opacity-60 pt-2 border-t border-gray-200" style={{ color: "#6B7280" }}>
         {t({
-          ko: "$ 전사 공지, ! 업무(태스크), 일반 메시지는 선택된 Agent 1:1 대화.",
-          en: "$ company directive, ! work (task), normal messages go 1:1 to the selected agent.",
-          ja: "$ 全社通知、! 業務（タスク）、通常は選択 Agent に 1:1。",
-          zh: "$ 全员公告，! 工作（任务），普通消息为所选 Agent 1:1 对话。",
+          ko: "• $ 전사 공지, ! 업무(태스크), 일반 메시지는 선택된 Agent 1:1 대화.",
+          en: "• $ company directive, ! work (task), normal messages go 1:1 to the selected agent.",
+          ja: "• $ 全社通知, ! 業務(태스크), 보통은 선택된 Agent 1:1 대화.",
+          zh: "• $ 全员公告，! 工作（任务），普通消息为所选 Agent 1:1 对话。",
         })}
       </div>
     </div>

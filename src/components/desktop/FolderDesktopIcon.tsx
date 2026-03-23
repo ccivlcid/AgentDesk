@@ -17,6 +17,9 @@ interface FolderDesktopIconProps {
   defaultY: number;
   isSelected?: boolean;
   onSelect?: () => void;
+  onDragStart?: (id: string, x: number, y: number) => void;
+  onDragMove?: (dx: number, dy: number) => void;
+  onDragEnd?: (id: string, x: number, y: number) => void;
 }
 
 function FolderStackIcon({ color, size = 64 }: { color: string; size?: number }) {
@@ -45,6 +48,9 @@ export default function FolderDesktopIcon({
   defaultY,
   isSelected = false,
   onSelect,
+  onDragStart,
+  onDragMove,
+  onDragEnd
 }: FolderDesktopIconProps) {
   const { openFolder, desktopIconLayout, setDesktopIconLayout } = useUiStore();
   const { t } = useI18n();
@@ -71,27 +77,42 @@ export default function FolderDesktopIcon({
   function onMouseDown(e: React.MouseEvent) {
     if (e.button !== 0) return;
     e.preventDefault();
+    e.stopPropagation();
+
     moved.current = false;
     dragStart.current = { mx: e.clientX, my: e.clientY, ox: pos.x, oy: pos.y };
     setDragging(true);
-    onSelect?.();
+    
+    if (onSelect) onSelect();
+    if (onDragStart) onDragStart(iconId, pos.x, pos.y);
 
     function onMove(ev: MouseEvent) {
       if (!dragStart.current) return;
       const dx = ev.clientX - dragStart.current.mx;
       const dy = ev.clientY - dragStart.current.my;
-      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) moved.current = true;
+      if (Math.abs(dx) > 2 || Math.abs(dy) > 2) moved.current = true;
+      
       setPos({ x: dragStart.current.ox + dx, y: dragStart.current.oy + dy });
+      if (onDragMove) onDragMove(dx, dy);
     }
 
     function onUp(ev: MouseEvent) {
       if (!dragStart.current) return;
-      const rawX = dragStart.current.ox + (ev.clientX - dragStart.current.mx);
-      const rawY = dragStart.current.oy + (ev.clientY - dragStart.current.my);
-      const current = useUiStore.getState().desktopIconLayout;
-      const { x, y } = snapToFreeCell(rawX, rawY, iconId, current);
-      setPos({ x, y });
-      setDesktopIconLayout({ ...current, [iconId]: { x, y } });
+      
+      const dx = ev.clientX - dragStart.current.mx;
+      const dy = ev.clientY - dragStart.current.my;
+      const finalX = dragStart.current.ox + dx;
+      const finalY = dragStart.current.oy + dy;
+      
+      if (onDragEnd) {
+        onDragEnd(iconId, finalX, finalY);
+      } else {
+        const currentLayout = useUiStore.getState().desktopIconLayout;
+        const { x, y } = snapToFreeCell(finalX, finalY, iconId, currentLayout);
+        setPos({ x, y });
+        setDesktopIconLayout({ ...currentLayout, [iconId]: { x, y } });
+      }
+      
       dragStart.current = null;
       setDragging(false);
       window.removeEventListener("mousemove", onMove);

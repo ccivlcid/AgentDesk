@@ -67,6 +67,23 @@ function deleteFiles() {
       }
     }
   }
+
+  // prompts/agents/ 디렉토리 정리 (고아 페르소나 파일 제거)
+  const agentsDir = path.join(process.cwd(), "prompts", "agents");
+  if (fs.existsSync(agentsDir)) {
+    try {
+      const files = fs.readdirSync(agentsDir).filter((f) => f.endsWith(".md"));
+      if (files.length > 0) {
+        for (const f of files) {
+          fs.rmSync(path.join(agentsDir, f), { force: true });
+        }
+        console.log(`  cleaned: prompts/agents/ (${files.length}개 페르소나 파일)`);
+      }
+    } catch (err) {
+      console.error(`  prompts/agents 정리 실패: ${err.message}`);
+    }
+  }
+
   if (deleted === 0) {
     console.log("  DB 파일이 존재하지 않습니다 — 이미 초기화된 상태입니다.");
   } else {

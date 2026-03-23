@@ -64,6 +64,7 @@ export function registerCrudRoutes(deps: ProjectRoutesDeps): void {
     const categoryId = typeof body.category_id === "string" ? body.category_id.trim() || null : null;
     const directive = typeof body.directive === "string" ? body.directive || null : null;
     const directiveTypeSlug = typeof body.directive_type_slug === "string" ? body.directive_type_slug.trim() || null : null;
+    const projectType = body.project_type === "app" ? "app" : "project";
     const assignmentMode = body.assignment_mode === "manual" ? "manual" : "auto";
     const requestedDefaultPackKey = normalizeTextField(body.default_pack_key);
     if (requestedDefaultPackKey && !isWorkflowPackKey(requestedDefaultPackKey)) {
@@ -87,11 +88,11 @@ export function registerCrudRoutes(deps: ProjectRoutesDeps): void {
       INSERT INTO projects (
         id, name, project_path, core_goal, default_pack_key, assignment_mode, category_id,
         directive, directive_type_slug,
-        last_used_at, created_at, updated_at, github_repo, figma_url
+        last_used_at, created_at, updated_at, github_repo, figma_url, project_type, app_status
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `,
-      ).run(id, name, projectPath, coreGoal, defaultPackKey, assignmentMode, categoryId, directive, directiveTypeSlug, t, t, t, githubRepo, figmaUrl);
+      ).run(id, name, projectPath, coreGoal, defaultPackKey, assignmentMode, categoryId, directive, directiveTypeSlug, t, t, t, githubRepo, figmaUrl, projectType, projectType === "app" ? "downloaded" : null);
 
       if (assignmentMode === "manual" && agentIds.length > 0) {
         // role_assignments: Array<{ agentId: string; role: string }>

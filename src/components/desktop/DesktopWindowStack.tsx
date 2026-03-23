@@ -6,19 +6,17 @@ import AgentManagerWindow from "../windows/AgentManagerWindow";
 import QuickCreateAgentModal from "../agent-manager/QuickCreateAgentModal";
 import CliWindow from "../windows/CliWindow";
 import ReportWindow from "../windows/ReportWindow";
-import CustomFeatureWindow from "../windows/CustomFeatureWindow";
+import AppRunnerWindow from "../windows/AppRunnerWindow";
 import FolderWindow from "../windows/FolderWindow";
 import NewFolderModal from "./NewFolderModal";
 import WallpaperPicker from "./WallpaperPicker";
 import ExportModal from "../export/ExportModal";
-import FeatureBuilderWindow from "../windows/FeatureBuilderWindow";
 import GitImportWindow from "../windows/GitImportWindow";
 import MarkdownEditorModal from "./MarkdownEditorModal";
 import QuickLook from "./QuickLook";
 import ProjectFolderWindow from "./ProjectFolderWindow";
 import MissionControl from "./MissionControl";
 import DashboardWindow from "../windows/DashboardWindow";
-import WidgetBoardWindow from "../widget-board/WidgetBoardWindow";
 import TaskBoardWindow from "../windows/TaskBoardWindow";
 import SynapseWindow from "../windows/SynapseWindow";
 import ImageStudioWindow from "../windows/ImageStudioWindow";
@@ -29,7 +27,8 @@ import LocalLlmWindow from "../windows/LocalLlmWindow";
 import WorkflowWindow from "../windows/WorkflowWindow";
 import LibraryWindow from "../windows/LibraryWindow";
 import LibraryGuideWindow from "../windows/LibraryGuideWindow";
-import type { CustomFeature } from "../../types";
+import ChatEditorModal from "../settings/gateway-settings/ChatEditorModal";
+import ChannelGuideModal from "../settings/gateway-settings/ChannelGuideModal";
 
 const ChatWindow = lazy(() => import("../windows/ChatWindow").then((m) => ({ default: m.default })));
 
@@ -38,9 +37,6 @@ export interface DesktopWindowStackProps {
   openWindow: (w: WindowType) => void;
   openCliAgentIds: Set<string>;
   closeCliWindow: (agentId: string) => void;
-  openCustomApps: Set<string>;
-  customFeatures: CustomFeature[];
-  closeCustomApp: (id: string) => void;
   folders: ProjectFolder[];
   openFolders: Set<string>;
   closeFolder: (id: string) => void;
@@ -95,9 +91,6 @@ export function DesktopWindowStack({
   openWindow,
   openCliAgentIds,
   closeCliWindow,
-  openCustomApps,
-  customFeatures,
-  closeCustomApp,
   folders,
   openFolders,
   closeFolder,
@@ -146,7 +139,6 @@ export function DesktopWindowStack({
   return (
     <>
       {openWindows.has("dashboard") && <DashboardWindow />}
-      {openWindows.has("widget-board") && <WidgetBoardWindow />}
       {openWindows.has("tasks") && <TaskBoardWindow />}
       {openWindows.has("synapse") && <SynapseWindow />}
       {openWindows.has("image-studio") && <ImageStudioWindow />}
@@ -183,14 +175,6 @@ export function DesktopWindowStack({
         />
       ))}
       {openWindows.has("reports") && <ReportWindow />}
-      {[...openCustomApps].map((id) => (
-        <CustomFeatureWindow
-          key={id}
-          featureId={id}
-          initialFeature={customFeatures.find((f) => f.id === id)}
-          onClose={() => closeCustomApp(id)}
-        />
-      ))}
       {openWindows.has("chat") && (
         <Suspense fallback={null}>
           <ChatWindow
@@ -252,8 +236,8 @@ export function DesktopWindowStack({
 
       {showWallpaperPicker && <WallpaperPicker onClose={() => setShowWallpaperPicker(false)} />}
       {showExportModal && <ExportModal onClose={() => setShowExportModal(false)} />}
-      {openWindows.has("feature-builder") && <FeatureBuilderWindow />}
-      {openWindows.has("git-import") && <GitImportWindow />}
+      {openWindows.has("repo-store") && <GitImportWindow />}
+      {openWindows.has("app-runner") && <AppRunnerWindow />}
 
       {showMarkdownEditor && (
         <MarkdownEditorModal

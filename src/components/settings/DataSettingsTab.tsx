@@ -8,13 +8,13 @@ interface DataSettingsTabProps {
 }
 
 const SigilBackup = () => (
-  <span style={{ fontFamily: "var(--th-font-mono)", fontSize: "16px", color: "var(--th-text-secondary)", lineHeight: 1 }}>↓</span>
+  <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
 );
 const SigilRestore = () => (
-  <span style={{ fontFamily: "var(--th-font-mono)", fontSize: "16px", color: "var(--th-text-secondary)", lineHeight: 1 }}>↑</span>
+  <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
 );
 const SigilExport = () => (
-  <span style={{ fontFamily: "var(--th-font-mono)", fontSize: "16px", color: "var(--th-text-secondary)", lineHeight: 1 }}>→</span>
+  <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}><path d="M21 12H3M15 18l6-6-6-6"/></svg>
 );
 
 export default function DataSettingsTab({ t }: DataSettingsTabProps) {
@@ -25,6 +25,8 @@ export default function DataSettingsTab({ t }: DataSettingsTabProps) {
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
+  const mono = "var(--th-font-mono)";
+
   const handleBackup = useCallback(async () => {
     setBackupBusy(true);
     setFeedback(null);
@@ -32,23 +34,10 @@ export default function DataSettingsTab({ t }: DataSettingsTabProps) {
       await downloadBackup();
       setFeedback({
         type: "success",
-        message: t({
-          ko: "백업 파일이 다운로드되었습니다.",
-          en: "Backup file downloaded.",
-          ja: "バックアップファイルがダウンロードされました。",
-          zh: "备份文件已下载。",
-        }),
+        message: t({ ko: "백업 파일이 다운로드되었습니다.", en: "Backup file downloaded.", ja: "バックアップファイルがダウンロードされました。", zh: "备份文件已下载。" }),
       });
     } catch {
-      setFeedback({
-        type: "error",
-        message: t({
-          ko: "백업 다운로드에 실패했습니다.",
-          en: "Backup download failed.",
-          ja: "バックアップのダウンロードに失敗しました。",
-          zh: "备份下载失败。",
-        }),
-      });
+      setFeedback({ type: "error", message: t({ ko: "백업 다운로드에 실패했습니다.", en: "Backup download failed.", ja: "バックアップのダウンロードに失敗しました。", zh: "备份下载失败。" }) });
     } finally {
       setBackupBusy(false);
     }
@@ -90,15 +79,7 @@ export default function DataSettingsTab({ t }: DataSettingsTabProps) {
         setFeedback({ type: "error", message: result.message || "Restore failed" });
       }
     } catch {
-      setFeedback({
-        type: "error",
-        message: t({
-          ko: "복원에 실패했습니다.",
-          en: "Restore failed.",
-          ja: "復元に失敗しました。",
-          zh: "恢复失败。",
-        }),
-      });
+      setFeedback({ type: "error", message: t({ ko: "복원에 실패했습니다.", en: "Restore failed.", ja: "復元に失敗しました。", zh: "恢复失败。" }) });
     } finally {
       setRestoreBusy(false);
       if (fileRef.current) fileRef.current.value = "";
@@ -110,10 +91,7 @@ export default function DataSettingsTab({ t }: DataSettingsTabProps) {
     try {
       await exportTasksCsv();
     } catch {
-      setFeedback({
-        type: "error",
-        message: t({ ko: "내보내기 실패", en: "Export failed", ja: "エクスポート失敗", zh: "导出失败" }),
-      });
+      setFeedback({ type: "error", message: t({ ko: "내보내기 실패", en: "Export failed", ja: "エクスポート失敗", zh: "导出失败" }) });
     } finally {
       setExportBusy(false);
     }
@@ -124,10 +102,7 @@ export default function DataSettingsTab({ t }: DataSettingsTabProps) {
     try {
       await exportTasksJson();
     } catch {
-      setFeedback({
-        type: "error",
-        message: t({ ko: "내보내기 실패", en: "Export failed", ja: "エクスポート失敗", zh: "导出失败" }),
-      });
+      setFeedback({ type: "error", message: t({ ko: "내보내기 실패", en: "Export failed", ja: "エクスポート失敗", zh: "导出失败" }) });
     } finally {
       setExportBusy(false);
     }
@@ -135,157 +110,96 @@ export default function DataSettingsTab({ t }: DataSettingsTabProps) {
 
   const triggerFileInput = () => fileRef.current?.click();
 
+  const sectionStyle: React.CSSProperties = {
+    borderRadius: 24,
+    padding: "24px",
+    background: "#FFFFFF",
+    border: "1px solid #E5E7EB",
+    transition: "all 0.2s",
+  };
+
+  const btnStyle = (variant: "primary" | "secondary" | "danger"): React.CSSProperties => ({
+    borderRadius: 12,
+    padding: "10px 20px",
+    fontSize: "12px",
+    fontWeight: 800,
+    fontFamily: mono,
+    textTransform: "uppercase",
+    letterSpacing: "0.05em",
+    transition: "all 0.2s",
+    cursor: "pointer",
+    border: variant === "secondary" ? "1px solid #E5E7EB" : "none",
+    background: variant === "primary" ? "#3B82F6" : variant === "danger" ? "#EF4444" : "#FFFFFF",
+    color: variant === "secondary" ? "#4B5563" : "#FFFFFF",
+    boxShadow: variant === "secondary" ? "none" : "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+  });
+
   return (
     <div className="data-settings-tab space-y-6">
-      {/* Page intro */}
-      <div className="p-4" style={{ borderRadius: 8, border: "1px solid var(--th-border)", borderLeft: "3px solid var(--th-accent)", background: "var(--th-bg-surface)" }}>
-        <div style={{ fontFamily: "var(--th-font-mono)", fontSize: "10px", color: "var(--th-accent)", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "6px" }}>
-          // data management
+      {/* Intro */}
+      <div className="p-5 flex items-center gap-4" style={{ borderRadius: 24, background: "#F0F7FF", border: "1px solid rgba(59, 130, 246, 0.1)" }}>
+        <div style={{ padding: 10, background: "#FFFFFF", borderRadius: 14, color: "#3B82F6", boxShadow: "0 2px 4px rgba(59, 130, 246, 0.1)" }}>
+          <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}><path d="M21 12V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h7M16 19h6M19 16l3 3-3 3"/></svg>
         </div>
-        <p className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
-          {t({
-            ko: "데이터베이스 백업·복원과 태스크 내보내기를 한 곳에서 할 수 있습니다.",
-            en: "Backup, restore the database, and export tasks from one place.",
-            ja: "データベースのバックアップ・復元とタスクのエクスポートを一括で行えます。",
-            zh: "在此备份/恢复数据库并导出任务。",
-          })}
-        </p>
+        <div>
+          <h3 style={{ fontSize: 11, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.1em", color: "#1E40AF" }}>{t({ ko: "데이터 관리", en: "Data Management", ja: "データ管理", zh: "数据管理" })}</h3>
+          <p className="text-xs text-blue-600/70 font-medium mt-0.5">{t({ ko: "데이터베이스 백업, 복원 및 태스크 내보내기", en: "Backup, restore, and export tasks", ja: "バックアップ、復元、エクスポート", zh: "备份、恢复和导出任务" })}</p>
+        </div>
       </div>
 
       {/* Backup */}
-      <div className="p-5 transition-colors" style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
-        <div className="mb-3 flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center" style={{ borderRadius: 0, background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}>
-            <SigilBackup />
-          </span>
+      <div style={sectionStyle} className="hover:shadow-sm">
+        <div className="flex items-center gap-4 mb-6">
+          <div style={{ padding: 10, background: "#F9FAFB", borderRadius: 12, color: "#6B7280" }}><SigilBackup /></div>
           <div>
-            <div style={{ fontFamily: "var(--th-font-mono)", fontSize: "9px", color: "var(--th-accent)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "4px", borderLeft: "3px solid var(--th-accent)", paddingLeft: "6px" }}>
-              // backup
-            </div>
-            <p className="text-xs" style={{ color: "var(--th-text-muted)" }}>
-              {t({
-                ko: "전체 SQLite 데이터베이스를 파일로 다운로드합니다.",
-                en: "Download the entire SQLite database as a file.",
-                ja: "SQLiteデータベース全体をファイルとしてダウンロードします。",
-                zh: "将整个SQLite数据库下载为文件。",
-              })}
-            </p>
+            <div style={{ fontSize: 13, fontWeight: 800, color: "#111827" }}>{t({ ko: "시스템 백업", en: "System Backup", ja: "システムバックアップ", zh: "系统备份" })}</div>
+            <p className="text-xs text-gray-500 mt-0.5">{t({ ko: "전체 SQLite 데이터베이스를 파일로 다운로드합니다.", en: "Download the entire SQLite database file.", ja: "SQLiteデータベース全体をダウンロード.", zh: "下载整个SQLite数据库文件." })}</p>
           </div>
         </div>
-        <button
-          onClick={handleBackup}
-          disabled={backupBusy}
-          className="data-settings-btn data-settings-btn-primary px-4 py-2.5 text-sm font-medium transition disabled:opacity-50"
-          style={{ borderRadius: 0 }}
-        >
-          {backupBusy
-            ? t({ ko: "다운로드 중...", en: "Downloading...", ja: "ダウンロード中...", zh: "下载中..." })
-            : t({ ko: "백업 다운로드", en: "Download Backup", ja: "バックアップをダウンロード", zh: "下载备份" })}
+        <button onClick={handleBackup} disabled={backupBusy} style={btnStyle("primary")}>
+          {backupBusy ? "..." : t({ ko: "백업 다운로드 ↵", en: "Download Backup ↵", ja: "バックアップをダウンロード ↵", zh: "下载备份 ↵" })}
         </button>
       </div>
 
       {/* Restore */}
-      <div className="p-5 transition-colors" style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
-        <div className="mb-3 flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center" style={{ borderRadius: 0, background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}>
-            <SigilRestore />
-          </span>
+      <div style={sectionStyle} className="hover:shadow-sm">
+        <div className="flex items-center gap-4 mb-6">
+          <div style={{ padding: 10, background: "#F9FAFB", borderRadius: 12, color: "#6B7280" }}><SigilRestore /></div>
           <div>
-            <div style={{ fontFamily: "var(--th-font-mono)", fontSize: "9px", color: "var(--th-accent)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "4px", borderLeft: "3px solid var(--th-accent)", paddingLeft: "6px" }}>
-              // restore
-            </div>
-            <p className="text-xs" style={{ color: "var(--th-text-muted)" }}>
-              {t({
-                ko: "이전에 백업한 SQLite 파일을 업로드하여 복원합니다. 복원 후 서버 재시작이 필요합니다.",
-                en: "Upload a previously backed-up SQLite file to restore. Server restart required after restore.",
-                ja: "以前バックアップしたSQLiteファイルをアップロードして復元します。復元後にサーバーの再起動が必要です。",
-                zh: "上传之前备份的SQLite文件进行恢复。恢复后需要重启服务器。",
-              })}
-            </p>
+            <div style={{ fontSize: 13, fontWeight: 800, color: "#111827" }}>{t({ ko: "데이터 복원", en: "Data Restore", ja: "データ復元", zh: "数据恢复" })}</div>
+            <p className="text-xs text-gray-500 mt-0.5">{t({ ko: "백업된 SQLite 파일을 업로드하여 복원합니다. (서버 재시작 필요)", en: "Upload SQLite file to restore. (Restart required)", ja: "SQLiteファイルをアップロードして復元. (再起動が必要)", zh: "上传SQLite文件以恢复. (需要重启)" })}</p>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <input
-            ref={fileRef}
-            type="file"
-            accept=".sqlite,.db"
-            className="hidden"
-            aria-hidden
-          />
-          <button
-            type="button"
-            onClick={triggerFileInput}
-            disabled={restoreBusy}
-            className="data-settings-btn data-settings-btn-secondary px-4 py-2.5 text-sm font-medium transition disabled:opacity-50"
-            style={{ borderRadius: 0 }}
-          >
+          <input ref={fileRef} type="file" accept=".sqlite,.db" className="hidden" aria-hidden />
+          <button type="button" onClick={triggerFileInput} disabled={restoreBusy} style={btnStyle("secondary")}>
             {t({ ko: "파일 선택", en: "Choose File", ja: "ファイルを選択", zh: "选择文件" })}
           </button>
-          <button
-            onClick={handleRestore}
-            disabled={restoreBusy}
-            className="data-settings-btn data-settings-btn-danger px-4 py-2.5 text-sm font-medium transition disabled:opacity-50"
-            style={{ borderRadius: 0 }}
-          >
-            {restoreBusy
-              ? t({ ko: "복원 중...", en: "Restoring...", ja: "復元中...", zh: "恢复中..." })
-              : t({ ko: "복원", en: "Restore", ja: "復元", zh: "恢复" })}
+          <button onClick={handleRestore} disabled={restoreBusy} style={btnStyle("danger")}>
+            {restoreBusy ? "..." : t({ ko: "복원 ↵", en: "Restore ↵", ja: "復元 ↵", zh: "恢复 ↵" })}
           </button>
         </div>
       </div>
 
       {/* Export */}
-      <div className="p-5 transition-colors" style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-surface)" }}>
-        <div className="mb-3 flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center" style={{ borderRadius: 0, background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}>
-            <SigilExport />
-          </span>
+      <div style={sectionStyle} className="hover:shadow-sm">
+        <div className="flex items-center gap-4 mb-6">
+          <div style={{ padding: 10, background: "#F9FAFB", borderRadius: 12, color: "#6B7280" }}><SigilExport /></div>
           <div>
-            <div style={{ fontFamily: "var(--th-font-mono)", fontSize: "9px", color: "var(--th-accent)", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "4px", borderLeft: "3px solid var(--th-accent)", paddingLeft: "6px" }}>
-              // export tasks
-            </div>
-            <p className="text-xs" style={{ color: "var(--th-text-muted)" }}>
-              {t({
-                ko: "모든 태스크를 CSV 또는 JSON 형식으로 내보냅니다.",
-                en: "Export all tasks in CSV or JSON format.",
-                ja: "すべてのタスクをCSVまたはJSON形式でエクスポートします。",
-                zh: "将所有任务导出为CSV或JSON格式。",
-              })}
-            </p>
+            <div style={{ fontSize: 13, fontWeight: 800, color: "#111827" }}>{t({ ko: "태스크 내보내기", en: "Export Tasks", ja: "タスクエクスポート", zh: "导出任务" })}</div>
+            <p className="text-xs text-gray-500 mt-0.5">{t({ ko: "모든 태스크를 CSV 또는 JSON 형식으로 내보냅니다.", en: "Export all tasks in CSV or JSON format.", ja: "すべてのタスクをCSVまたはJSONでエクスポート.", zh: "将所有任务导出为CSV或JSON." })}</p>
           </div>
         </div>
         <div className="flex flex-wrap gap-3">
-          <button
-            onClick={handleExportCsv}
-            disabled={exportBusy}
-            className="data-settings-btn data-settings-btn-secondary px-4 py-2.5 text-sm font-medium transition disabled:opacity-50"
-            style={{ borderRadius: 0 }}
-          >
-            {t({ ko: "CSV 내보내기", en: "Export CSV", ja: "CSVエクスポート", zh: "导出CSV" })}
-          </button>
-          <button
-            onClick={handleExportJson}
-            disabled={exportBusy}
-            className="data-settings-btn data-settings-btn-secondary px-4 py-2.5 text-sm font-medium transition disabled:opacity-50"
-            style={{ borderRadius: 0 }}
-          >
-            {t({ ko: "JSON 내보내기", en: "Export JSON", ja: "JSONエクスポート", zh: "导出JSON" })}
-          </button>
+          <button onClick={handleExportCsv} disabled={exportBusy} style={btnStyle("secondary")}>CSV 내보내기</button>
+          <button onClick={handleExportJson} disabled={exportBusy} style={btnStyle("secondary")}>JSON 내보내기</button>
         </div>
       </div>
 
       {/* Feedback */}
       {feedback && (
-        <div
-          role="alert"
-          className="data-settings-feedback px-4 py-3 text-sm font-mono"
-          style={{
-            borderRadius: 0,
-            border: feedback.type === "success" ? "1px solid rgba(16,185,129,0.3)" : "1px solid rgba(239,68,68,0.3)",
-            background: feedback.type === "success" ? "rgba(16,185,129,0.08)" : "rgba(239,68,68,0.08)",
-            color: feedback.type === "success" ? "#34d399" : "#f87171",
-          }}
-        >
+        <div role="alert" className="px-5 py-4 text-xs font-bold font-mono" style={{ borderRadius: 16, border: feedback.type === "success" ? "1px solid #A7F3D0" : "1px solid #FECACA", background: feedback.type === "success" ? "#ECFDF5" : "#FEF2F2", color: feedback.type === "success" ? "#059669" : "#DC2626", boxShadow: "0 2px 4px rgba(0,0,0,0.02)" }}>
+          <span className="mr-2">{feedback.type === "success" ? "✓" : "✗"}</span>
           {feedback.message}
         </div>
       )}

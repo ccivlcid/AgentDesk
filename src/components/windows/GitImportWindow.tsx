@@ -1,31 +1,246 @@
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import AppWindow from "./AppWindow";
 import { useI18n } from "../../i18n";
-import GitHubImportPanel from "../GitHubImportPanel";
-import GitLabImportPanel from "../gitlab-import/GitLabImportPanel";
+import ManualPathPickerDialog from "../project-manager/ManualPathPickerDialog";
+import { useProjectManagerPathTools } from "../project-manager/useProjectManagerPathTools";
 import { useProjectStore } from "../../store/projectStore";
 import { useUiStore } from "../../store/uiStore";
-import { getProjectDetail } from "../../api/organization-projects";
+import { getProjectDetail, createProject } from "../../api/organization-projects";
+import { getGithubTrending, type TrendingRepo } from "../../api/github-trending";
+import { cloneGitHubRepo, getCloneStatus } from "../../api/providers-reports-github";
+import type { I18nContextValue } from "../../i18n";
 
 const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };
 
-type Provider = "github" | "gitlab";
+type Since = "daily" | "weekly" | "monthly";
+type CloneState = { status: "idle" | "cloning" | "done" | "error"; progress: number; error?: string };
+type T = I18nContextValue["t"];
 
-function GitIcon() {
+const LANG_OPTIONS = [
+  { value: "", ko: "전체", en: "All", ja: "すべて", zh: "全部" },
+  { value: "python", ko: "Python", en: "Python", ja: "Python", zh: "Python" },
+  { value: "typescript", ko: "TypeScript", en: "TypeScript", ja: "TypeScript", zh: "TypeScript" },
+  { value: "javascript", ko: "JavaScript", en: "JavaScript", ja: "JavaScript", zh: "JavaScript" },
+  { value: "go", ko: "Go", en: "Go", ja: "Go", zh: "Go" },
+  { value: "rust", ko: "Rust", en: "Rust", ja: "Rust", zh: "Rust" },
+  { value: "java", ko: "Java", en: "Java", ja: "Java", zh: "Java" },
+  { value: "c++", ko: "C++", en: "C++", ja: "C++", zh: "C++" },
+  { value: "c#", ko: "C#", en: "C#", ja: "C#", zh: "C#" },
+  { value: "swift", ko: "Swift", en: "Swift", ja: "Swift", zh: "Swift" },
+  { value: "kotlin", ko: "Kotlin", en: "Kotlin", ja: "Kotlin", zh: "Kotlin" },
+];
+
+function sinceOptions(t: T): Array<{ value: Since; label: string }> {
+  return [
+    { value: "daily", label: t({ ko: "오늘", en: "Today", ja: "今日", zh: "今天" }) },
+    { value: "weekly", label: t({ ko: "이번 주", en: "This Week", ja: "今週", zh: "本周" }) },
+    { value: "monthly", label: t({ ko: "이번 달", en: "This Month", ja: "今月", zh: "本月" }) },
+  ];
+}
+
+/* ── Icons ─────────────────────────────────────────────── */
+
+function StarIcon({ size = 14 }: { size?: number }) {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="4"/>
-      <line x1="1.05" y1="12" x2="7" y2="12"/>
-      <line x1="17.01" y1="12" x2="22.96" y2="12"/>
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" stroke="none">
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
     </svg>
   );
 }
 
+function DownloadIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="7 10 12 15 17 10" />
+      <line x1="12" y1="15" x2="12" y2="3" />
+    </svg>
+  );
+}
+
+function SearchIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="11" cy="11" r="8" />
+      <line x1="21" y1="21" x2="16.65" y2="16.65" />
+    </svg>
+  );
+}
+
+function TrendUpIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+      <polyline points="17 6 23 6 23 12" />
+    </svg>
+  );
+}
+
+function formatNum(n: number): string {
+  if (n >= 1000) return `${(n / 1000).toFixed(1).replace(/\.0$/, "")}k`;
+  return String(n);
+}
+
+/* ── Trending Card ─────────────────────────────────────── */
+
+function TrendingCard({
+  repo,
+  cloneState,
+  onDownload,
+  t,
+}: {
+  repo: TrendingRepo;
+  cloneState: CloneState;
+  onDownload: () => void;
+  t: T;
+}) {
+  const isCloning = cloneState.status === "cloning";
+  const isDone = cloneState.status === "done";
+
+  return (
+    <div
+      style={{
+        border: "1px solid var(--th-border)",
+        borderRadius: 8,
+        padding: "14px 16px",
+        background: "var(--th-bg-surface)",
+        display: "flex",
+        flexDirection: "column",
+        gap: 8,
+        transition: "border-color 0.15s",
+      }}
+      onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--th-border-strong)"; }}
+      onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--th-border)"; }}
+    >
+      {/* top row: stars + trend */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11 }}>
+        <span style={{ display: "flex", alignItems: "center", gap: 3, color: "var(--th-accent)" }}>
+          <StarIcon size={12} /> {formatNum(repo.stars)}
+        </span>
+        {repo.stars_today > 0 && (
+          <span style={{ display: "flex", alignItems: "center", gap: 3, color: "#30d158", fontSize: 10, fontWeight: 600 }}>
+            <TrendUpIcon /> +{formatNum(repo.stars_today)}
+          </span>
+        )}
+        {repo.language && (
+          <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 4, color: "var(--th-text-muted)", fontSize: 10 }}>
+            <span style={{ width: 8, height: 8, borderRadius: "50%", background: repo.language_color ?? "var(--th-text-muted)", flexShrink: 0 }} />
+            {repo.language}
+          </span>
+        )}
+      </div>
+
+      {/* name */}
+      <div>
+        <div style={{ ...mono, fontSize: 13, fontWeight: 700, color: "var(--th-text-heading)", lineHeight: 1.2 }}>
+          {repo.name}
+        </div>
+        <div style={{ ...mono, fontSize: 10, color: "var(--th-text-muted)", marginTop: 1 }}>
+          {repo.owner}
+        </div>
+      </div>
+
+      {/* description */}
+      {repo.description && (
+        <div
+          style={{
+            ...mono,
+            fontSize: 11,
+            color: "var(--th-text-secondary)",
+            lineHeight: 1.4,
+            display: "-webkit-box",
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: "vertical",
+            overflow: "hidden",
+            flex: 1,
+          }}
+        >
+          {repo.description}
+        </div>
+      )}
+
+      {/* download button */}
+      <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "auto" }}>
+        {isDone ? (
+          <span style={{ ...mono, fontSize: 10, fontWeight: 600, color: "#30d158", display: "flex", alignItems: "center", gap: 4 }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+            {t({ ko: "완료", en: "Done", ja: "完了", zh: "完成" })}
+          </span>
+        ) : isCloning ? (
+          <div style={{ display: "flex", alignItems: "center", gap: 6, width: "100%" }}>
+            <div style={{ flex: 1, height: 4, borderRadius: 2, background: "var(--th-border)", overflow: "hidden" }}>
+              <div style={{ height: "100%", width: `${cloneState.progress}%`, background: "var(--th-accent)", transition: "width 0.3s", borderRadius: 2 }} />
+            </div>
+            <span style={{ ...mono, fontSize: 9, color: "var(--th-text-muted)", flexShrink: 0 }}>{cloneState.progress}%</span>
+          </div>
+        ) : cloneState.status === "error" ? (
+          <button
+            type="button"
+            onClick={onDownload}
+            style={{
+              ...mono, fontSize: 10, fontWeight: 600, padding: "4px 10px", borderRadius: 4,
+              border: "1px solid rgba(255,69,58,0.4)", background: "rgba(255,69,58,0.1)", color: "#ff453a",
+              cursor: "pointer", display: "flex", alignItems: "center", gap: 4,
+            }}
+          >
+            {t({ ko: "재시도", en: "Retry", ja: "再試行", zh: "重试" })}
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={onDownload}
+            style={{
+              ...mono, fontSize: 10, fontWeight: 700, padding: "5px 12px", borderRadius: 4,
+              border: "none", background: "var(--th-accent)", color: "#000",
+              cursor: "pointer", display: "flex", alignItems: "center", gap: 4,
+              transition: "opacity 0.12s",
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.85"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.opacity = "1"; }}
+          >
+            <DownloadIcon /> {t({ ko: "다운로드", en: "Download", ja: "ダウンロード", zh: "下载" })}
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ── Main Window ───────────────────────────────────────── */
+
 export default function GitImportWindow() {
   const { t } = useI18n();
-  const [provider, setProvider] = useState<Provider>("github");
   const { setProjects } = useProjectStore();
-  const { closeWindow } = useUiStore();
+  const { closeWindow, setNewlyInstalledProjectId } = useUiStore();
+
+  // trending state
+  const [repos, setRepos] = useState<TrendingRepo[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [since, setSince] = useState<Since>("daily");
+  const [language, setLanguage] = useState("");
+  const [directUrl, setDirectUrl] = useState("");
+  const [downloadPath, setDownloadPath] = useState("~/Projects");
+  const [cloneStates, setCloneStates] = useState<Record<string, CloneState>>({});
+  const pathTools = useProjectManagerPathTools({ t, projectPath: downloadPath, pathToolsVisible: true });
+  const pollRefs = useRef<Record<string, ReturnType<typeof setInterval>>>({});
+
+  // fetch trending
+  useEffect(() => {
+    setLoading(true);
+    getGithubTrending({ since, language: language || undefined })
+      .then((r) => setRepos(r.repos))
+      .catch(() => setRepos([]))
+      .finally(() => setLoading(false));
+  }, [since, language]);
+
+  // cleanup polls
+  useEffect(() => {
+    return () => {
+      Object.values(pollRefs.current).forEach(clearInterval);
+    };
+  }, []);
 
   async function handleComplete(projectId: string) {
     try {
@@ -34,140 +249,220 @@ export default function GitImportWindow() {
         const exists = prev.some((p) => p.id === projectId);
         return exists ? prev.map((p) => p.id === projectId ? detail.project : p) : [...prev, detail.project];
       });
-      // 자동으로 현재 프로젝트로 전환하지 않음 (실행 방지)
-    } catch { /* 무시 */ }
-    closeWindow("git-import");
+      setNewlyInstalledProjectId(projectId);
+      closeWindow("repo-store");
+    } catch { /* ignore */ }
   }
 
-  const PROVIDERS: Array<{ key: Provider; label: string; desc: string; color: string; activeBg: string; activeBorder: string; icon: React.ReactNode }> = [
-    {
-      key: "github",
-      label: "GitHub",
-      desc: t({ ko: "OAuth · PAT 지원", en: "OAuth · PAT support", ja: "OAuth · PAT 対応", zh: "支持 OAuth · PAT" }),
-      color: "var(--th-text-heading)",
-      activeBg: "var(--th-hover-overlay-subtle)",
-      activeBorder: "var(--th-border-strong)",
-      icon: (
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.6.11.793-.26.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/>
-        </svg>
-      ),
-    },
-    {
-      key: "gitlab",
-      label: "GitLab",
-      desc: t({ ko: "PAT 지원 (read_repository)", en: "PAT support (read_repository)", ja: "PAT 対応", zh: "支持 PAT" }),
-      color: "#fc6d26",
-      activeBg: "rgba(252,109,38,0.1)",
-      activeBorder: "rgba(252,109,38,0.4)",
-      icon: (
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M22.65 14.39L12 22.13 1.35 14.39a.84.84 0 01-.3-.94l1.22-3.78 2.44-7.51A.42.42 0 014.82 2a.43.43 0 01.58 0 .42.42 0 01.11.18l2.44 7.49h8.1l2.44-7.51A.42.42 0 0118.6 2a.43.43 0 01.58 0 .42.42 0 01.11.18l2.44 7.51L23 13.45a.84.84 0 01-.35.94z"/>
-        </svg>
-      ),
-    },
-  ];
+  const startDownload = useCallback(async (repo: TrendingRepo) => {
+    const key = repo.full_name;
+    setCloneStates((s) => ({ ...s, [key]: { status: "cloning", progress: 0 } }));
+
+    try {
+      const targetPath = `${downloadPath}/${repo.name}`;
+      const result = await cloneGitHubRepo({ owner: repo.owner, repo: repo.name, target_path: targetPath });
+
+      if (result.already_exists) {
+        const project = await createProject({
+          name: repo.name,
+          project_path: result.target_path,
+          core_goal: repo.description ?? `GitHub: ${repo.full_name}`,
+          github_repo: repo.full_name,
+          create_path_if_missing: false,
+          project_type: "app",
+        });
+        setCloneStates((s) => ({ ...s, [key]: { status: "done", progress: 100 } }));
+        await handleComplete(project.id);
+        return;
+      }
+
+      if (result.clone_id) {
+        pollRefs.current[key] = setInterval(async () => {
+          try {
+            const status = await getCloneStatus(result.clone_id!);
+            setCloneStates((s) => ({ ...s, [key]: { status: "cloning", progress: status.progress } }));
+
+            if (status.status === "done") {
+              clearInterval(pollRefs.current[key]);
+              delete pollRefs.current[key];
+              const project = await createProject({
+                name: repo.name,
+                project_path: result.target_path,
+                core_goal: repo.description ?? `GitHub: ${repo.full_name}`,
+                github_repo: repo.full_name,
+                create_path_if_missing: false,
+                project_type: "app",
+              });
+              setCloneStates((s) => ({ ...s, [key]: { status: "done", progress: 100 } }));
+              await handleComplete(project.id);
+            } else if (status.status === "error") {
+              clearInterval(pollRefs.current[key]);
+              delete pollRefs.current[key];
+              setCloneStates((s) => ({ ...s, [key]: { status: "error", progress: 0, error: status.error ?? "Clone failed" } }));
+            }
+          } catch { /* continue polling */ }
+        }, 1500);
+      }
+    } catch (err) {
+      setCloneStates((s) => ({ ...s, [key]: { status: "error", progress: 0, error: err instanceof Error ? err.message : String(err) } }));
+    }
+  }, [setProjects]);
+
+  const handleDirectDownload = useCallback(() => {
+    const input = directUrl.trim();
+    if (!input) return;
+    const match = input.match(/(?:(?:https?:\/\/)?github\.com\/)?([^/\s]+)\/([^/\s#?]+)/);
+    if (!match) return;
+    const [, owner, rawRepo] = match;
+    const repoName = rawRepo.replace(/\.git$/, "");
+    startDownload({
+      rank: 0, owner, name: repoName, full_name: `${owner}/${repoName}`,
+      url: `https://github.com/${owner}/${repoName}`, description: null,
+      language: null, language_color: null, stars: 0, forks: 0, stars_today: 0, since_label: "",
+    });
+    setDirectUrl("");
+  }, [directUrl, startDownload]);
+
+  const selectStyle: React.CSSProperties = {
+    ...mono, fontSize: 10, padding: "4px 6px", borderRadius: 4,
+    border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)",
+    color: "var(--th-text-primary)", outline: "none", cursor: "pointer",
+  };
+
+  const sinceOpts = sinceOptions(t);
 
   return (
     <AppWindow
-      windowType="git-import"
-      title={t({ ko: "Git 저장소 가져오기", en: "Import Git Repository", ja: "Git リポジトリのインポート", zh: "导入 Git 仓库" })}
-      emoji={<GitIcon />}
-      defaultWidth={640}
-      defaultHeight={520}
+      windowType="repo-store"
+      title="Repo Store"
+      emoji={<DownloadIcon />}
+      defaultWidth={820}
+      defaultHeight={620}
     >
-      <div style={{ display: "flex", height: "100%", overflow: "hidden" }}>
-        {/* 왼쪽 사이드바 */}
+      <div style={{ display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
+        {/* URL input bar */}
         <div style={{
-          width: 150,
-          flexShrink: 0,
-          borderRight: "1px solid var(--th-border)",
-          display: "flex",
-          flexDirection: "column",
-          padding: "12px 8px",
-          gap: 4,
-          background: "var(--th-bg-sidebar, rgba(0,0,0,0.15))",
+          padding: "10px 16px", borderBottom: "1px solid var(--th-border)",
+          display: "flex", gap: 8, alignItems: "center", flexShrink: 0,
         }}>
-          <div style={{ ...mono, fontSize: 9, fontWeight: 700, letterSpacing: "0.1em", color: "var(--th-text-muted)", padding: "0 8px 8px", textTransform: "uppercase" }}>
-            {t({ ko: "플랫폼 선택", en: "Platform", ja: "プラットフォーム", zh: "平台" })}
-          </div>
-          {PROVIDERS.map((p) => {
-            const active = provider === p.key;
-            return (
-              <button
-                key={p.key}
-                type="button"
-                onClick={() => setProvider(p.key)}
-                style={{
-                  ...mono,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 9,
-                  padding: "8px 10px",
-                  borderRadius: 7,
-                  border: "none",
-                  background: active ? p.activeBg : "transparent",
-                  color: active ? p.color : "var(--th-text-secondary)",
-                  cursor: "pointer",
-                  textAlign: "left",
-                  transition: "background 0.12s, color 0.12s",
-                  width: "100%",
-                  borderLeft: `3px solid ${active ? p.activeBorder : "transparent"}`,
-                }}
-                onMouseEnter={(e) => { if (!active) { e.currentTarget.style.background = "var(--th-hover-overlay)"; } }}
-                onMouseLeave={(e) => { if (!active) { e.currentTarget.style.background = "transparent"; } }}
-              >
-                <span style={{ opacity: active ? 1 : 0.6, flexShrink: 0, color: active ? p.color : "inherit" }}>{p.icon}</span>
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: 12, fontWeight: active ? 700 : 500, lineHeight: 1.2 }}>{p.label}</div>
-                  <div style={{ fontSize: 9, color: "var(--th-text-muted)", marginTop: 1, opacity: 0.8, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.desc}</div>
-                </div>
-              </button>
-            );
-          })}
+          <span style={{ color: "var(--th-text-muted)", flexShrink: 0 }}><SearchIcon /></span>
+          <input
+            value={directUrl}
+            onChange={(e) => setDirectUrl(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") handleDirectDownload(); }}
+            placeholder={t({ ko: "owner/repo 또는 GitHub URL 입력...", en: "owner/repo or GitHub URL...", ja: "owner/repo または GitHub URL...", zh: "owner/repo 或 GitHub URL..." })}
+            style={{
+              ...mono, flex: 1, fontSize: 12, padding: "7px 10px", borderRadius: 6,
+              border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)",
+              color: "var(--th-text-primary)", outline: "none",
+            }}
+          />
+          <button
+            type="button"
+            onClick={handleDirectDownload}
+            disabled={!directUrl.trim()}
+            style={{
+              ...mono, fontSize: 11, fontWeight: 700, padding: "7px 16px", borderRadius: 6,
+              border: "none", background: directUrl.trim() ? "var(--th-accent)" : "rgba(245,158,11,0.2)",
+              color: directUrl.trim() ? "#000" : "var(--th-text-muted)",
+              cursor: directUrl.trim() ? "pointer" : "not-allowed",
+              display: "flex", alignItems: "center", gap: 5,
+            }}
+          >
+            <DownloadIcon /> {t({ ko: "다운로드", en: "Download", ja: "ダウンロード", zh: "下载" })}
+          </button>
         </div>
 
-        {/* 오른쪽 콘텐츠 */}
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, overflow: "hidden" }}>
-          {/* 헤더 */}
-          <div style={{
-            padding: "12px 18px 11px",
-            borderBottom: "1px solid var(--th-border)",
-            flexShrink: 0,
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-          }}>
-            <span style={{ color: PROVIDERS.find((p) => p.key === provider)?.color }}>
-              {PROVIDERS.find((p) => p.key === provider)?.icon}
-            </span>
-            <div>
-              <div style={{ ...mono, fontSize: 13, fontWeight: 700, color: "var(--th-text-heading)", lineHeight: 1 }}>
-                {provider === "github" ? "GitHub" : "GitLab"}
+        {/* Content */}
+        <div style={{ flex: 1, overflow: "auto" }}>
+            <div style={{ padding: 16 }}>
+              {/* Download path + Filters */}
+              <div style={{ display: "flex", gap: 8, marginBottom: 10, alignItems: "center" }}>
+                <span style={{ ...mono, fontSize: 9, fontWeight: 700, color: "var(--th-text-muted)", flexShrink: 0, letterSpacing: "0.06em" }}>
+                  {t({ ko: "저장 위치", en: "PATH", ja: "保存先", zh: "路径" })}
+                </span>
+                <input
+                  value={downloadPath}
+                  onChange={(e) => setDownloadPath(e.target.value)}
+                  style={{
+                    ...mono, flex: 1, fontSize: 11, padding: "4px 8px", borderRadius: 4,
+                    border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)",
+                    color: "var(--th-text-primary)", outline: "none",
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={async () => {
+                    pathTools.setManualPathPickerOpen(true);
+                    await pathTools.loadManualPathEntries(downloadPath || undefined);
+                  }}
+                  style={{
+                    ...mono, fontSize: 10, fontWeight: 600, padding: "4px 10px", borderRadius: 4,
+                    border: "1px solid var(--th-border)", background: "var(--th-bg-surface)",
+                    color: "var(--th-text-primary)", cursor: "pointer", flexShrink: 0,
+                    display: "flex", alignItems: "center", gap: 4,
+                  }}
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+                  </svg>
+                  {t({ ko: "탐색", en: "Browse", ja: "参照", zh: "浏览" })}
+                </button>
               </div>
-              <div style={{ ...mono, fontSize: 10, color: "var(--th-text-muted)", marginTop: 2 }}>
-                {PROVIDERS.find((p) => p.key === provider)?.desc}
+              <div style={{ display: "flex", gap: 8, marginBottom: 14, alignItems: "center" }}>
+                <select value={since} onChange={(e) => setSince(e.target.value as Since)} style={selectStyle}>
+                  {sinceOpts.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+                <select value={language} onChange={(e) => setLanguage(e.target.value)} style={selectStyle}>
+                  {LANG_OPTIONS.map((o) => <option key={o.value} value={o.value}>{t({ ko: o.ko, en: o.en, ja: o.ja, zh: o.zh })}</option>)}
+                </select>
+                {loading && (
+                  <span style={{ ...mono, fontSize: 10, color: "var(--th-text-muted)", marginLeft: "auto" }}>
+                    {t({ ko: "로딩 중...", en: "Loading...", ja: "読み込み中...", zh: "加载中..." })}
+                  </span>
+                )}
+              </div>
+
+              {/* Card grid */}
+              {repos.length === 0 && !loading && (
+                <div style={{ ...mono, fontSize: 12, color: "var(--th-text-muted)", textAlign: "center", padding: "40px 0" }}>
+                  {t({ ko: "트렌딩 데이터를 불러올 수 없습니다", en: "Could not load trending data", ja: "トレンドデータを読み込めません", zh: "无法加载趋势数据" })}
+                </div>
+              )}
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 12 }}>
+                {repos.map((repo) => (
+                  <TrendingCard
+                    key={repo.full_name}
+                    repo={repo}
+                    cloneState={cloneStates[repo.full_name] ?? { status: "idle", progress: 0 }}
+                    onDownload={() => startDownload(repo)}
+                    t={t}
+                  />
+                ))}
               </div>
             </div>
-          </div>
-
-          {/* 패널 콘텐츠 */}
-          <div style={{ flex: 1, overflow: "auto", padding: "16px 18px" }}>
-            {provider === "github" && (
-              <GitHubImportPanel
-                onComplete={({ projectId }) => { void handleComplete(projectId); }}
-                onCancel={() => closeWindow("git-import")}
-              />
-            )}
-            {provider === "gitlab" && (
-              <GitLabImportPanel
-                onComplete={({ projectId }) => { void handleComplete(projectId); }}
-                onCancel={() => closeWindow("git-import")}
-              />
-            )}
-          </div>
         </div>
       </div>
+
+      {/* Path Picker Dialog */}
+      {pathTools.manualPathPickerOpen && (
+        <ManualPathPickerDialog
+          open
+          t={t}
+          manualPathCurrent={pathTools.manualPathCurrent}
+          manualPathParent={pathTools.manualPathParent}
+          manualPathEntries={pathTools.manualPathEntries}
+          manualPathLoading={pathTools.manualPathLoading}
+          manualPathError={pathTools.manualPathError}
+          manualPathTruncated={pathTools.manualPathTruncated}
+          onClose={() => pathTools.setManualPathPickerOpen(false)}
+          onLoadEntries={pathTools.loadManualPathEntries}
+          onSelectCurrent={() => {
+            if (pathTools.manualPathCurrent) setDownloadPath(pathTools.manualPathCurrent);
+            pathTools.setManualPathPickerOpen(false);
+          }}
+        />
+      )}
     </AppWindow>
   );
 }

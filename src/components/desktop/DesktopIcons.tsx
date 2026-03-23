@@ -255,13 +255,23 @@ export function IconDockSynapse({ color }: IconProps) {
   );
 }
 
-export function IconDockWidgetBoard({ color }: IconProps) {
+export function IconAppRunner({ color }: IconProps) {
+  // Play triangle inside rounded-rect "app" frame
   return (
     <svg viewBox="0 0 28 28" fill="none" stroke={color} strokeWidth={S} strokeLinecap="round" strokeLinejoin="round" width={26} height={26}>
-      <rect x="3" y="4" width="10" height="10" rx="2" />
-      <rect x="15" y="4" width="10" height="10" rx="2" />
-      <rect x="3" y="16" width="10" height="8" rx="2" />
-      <rect x="15" y="16" width="10" height="8" rx="2" />
+      <rect x="4" y="4" width="20" height="20" rx="5" />
+      <polygon points="11,9 21,14 11,19" fill={color} stroke="none" />
+    </svg>
+  );
+}
+
+export function IconRepoStore({ color }: IconProps) {
+  return (
+    <svg viewBox="0 0 28 28" fill="none" stroke={color} strokeWidth={S} strokeLinecap="round" strokeLinejoin="round" width={26} height={26}>
+      <path d="M21 15v4a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2v-4" />
+      <polyline points="10 10 14 14 18 10" />
+      <line x1="14" y1="14" x2="14" y2="4" />
+      <line x1="4" y1="23" x2="24" y2="23" />
     </svg>
   );
 }

@@ -9,17 +9,61 @@
 
 import type { DatabaseSync } from "node:sqlite";
 import { eventBus, type TaskStatusEvent } from "../../../lib/event-bus.ts";
-import { loadPrompt } from "../../../lib/prompt-loader.ts";
+import { loadPrompt, loadPromptSection } from "../../../lib/prompt-loader.ts";
 import { analyzeTaskFailure, matchErrorPattern, sanitizeErrorMessage } from "./run-complete-handler/error-analysis.ts";
 import { runAutoLearning, generateProjectRetrospective, updateAgentFitness } from "./auto-learning.ts";
-import { findApiProvider, resolveModel } from "../../routes/ops/custom-features-ai/provider-helpers.ts";
-import { callProvider } from "../../routes/ops/custom-features-ai/llm-providers.ts";
+import { shipAutomation } from "./review-finalize-tools/ship-automation.ts";
+import { resolveProvider, getDefaultModel } from "../../agent-runtime/llm-client.ts";
 import { readYoloModeEnabled } from "../../routes/ops/messages/decision-inbox/yolo-mode.ts";
 import { recordTaskExecutionEvent } from "../core/task-execution-meta.ts";
 import logger from "../../../lib/logger.ts";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- wide deps from orchestration context
 type AgentRow = Record<string, any>;
+
+/** Adapter: findApiProvider compatible with error-analysis deps interface */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- matches legacy interface
+function findApiProviderCompat(db: any, _scope: string): any {
+  try {
+    return resolveProvider(db as import("node:sqlite").DatabaseSync);
+  } catch {
+    return null;
+  }
+}
+
+/** Adapter: resolveModel compatible with error-analysis deps interface */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- matches legacy interface
+function resolveModelCompat(provider: any): string {
+  return getDefaultModel(provider?.providerType ?? "anthropic");
+}
+
+/** Adapter: callProvider compatible with error-analysis deps interface */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- matches legacy interface
+async function callProviderCompat(provider: any, model: string, systemPrompt: string, userPrompt: string, signal: AbortSignal): Promise<string> {
+  const resolved = provider as import("../../agent-runtime/llm-client.ts").ResolvedProvider;
+  if (!resolved) throw new Error("No provider");
+  if (resolved.type === "anthropic") {
+    const resp = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "x-api-key": resolved.apiKey, "anthropic-version": "2023-06-01", "content-type": "application/json" },
+      body: JSON.stringify({ model, max_tokens: 2048, system: systemPrompt, messages: [{ role: "user", content: userPrompt }] }),
+      signal,
+    });
+    if (!resp.ok) throw new Error(`Anthropic API ${resp.status}`);
+    const data = await resp.json() as { content?: Array<{ type: string; text?: string }> };
+    return data.content?.filter((b) => b.type === "text").map((b) => b.text ?? "").join("") ?? "";
+  }
+  // OpenAI-compatible
+  const resp = await fetch(`${resolved.baseUrl}/chat/completions`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${resolved.apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ model, max_tokens: 2048, messages: [{ role: "system", content: systemPrompt }, { role: "user", content: userPrompt }] }),
+    signal,
+  });
+  if (!resp.ok) throw new Error(`LLM API ${resp.status}`);
+  const data = await resp.json() as { choices?: Array<{ message?: { content?: string } }> };
+  return data.choices?.[0]?.message?.content ?? "";
+}
 
 interface PmOrchestratorDeps {
   db: DatabaseSync;
@@ -77,16 +121,45 @@ export function startPmOrchestrator(deps: PmOrchestratorDeps): void {
       }
       void pmHandleFailure(event);
     } else if (event.toStatus === "done") {
-      // 적합도 추적 + 자동 학습
+      // 적합도 추적 + 자동 학습 + ship automation + PM progress.md 작성
       if (event.taskId) {
-        const doneTask = db.prepare("SELECT assigned_agent_id, task_type, started_at, completed_at FROM tasks WHERE id = ?")
-          .get(event.taskId) as { assigned_agent_id: string | null; task_type: string; started_at: number | null; completed_at: number | null } | undefined;
+        const doneTask = db.prepare(
+          "SELECT id, title, description, result, assigned_agent_id, task_type, started_at, completed_at, project_id, project_path FROM tasks WHERE id = ?",
+        ).get(event.taskId) as {
+          id: string; title: string; description: string | null; result: string | null;
+          assigned_agent_id: string | null; task_type: string; started_at: number | null;
+          completed_at: number | null; project_id: string | null; project_path: string | null;
+        } | undefined;
         if (doneTask?.assigned_agent_id) {
           const dur = (doneTask.completed_at ?? nowMs()) - (doneTask.started_at ?? nowMs());
           updateAgentFitness(db, doneTask.assigned_agent_id, doneTask.task_type ?? "general", true, Math.max(0, dur));
         }
         const pm = findProjectPm(db, event.projectId!);
-        if (pm) void runAutoLearning(pm, event.taskId, event.projectId!, learnDeps);
+        if (pm) {
+          void runAutoLearning(pm, event.taskId, event.projectId!, learnDeps);
+          // progress.md는 review 승인 시 작성 (pmReviewTask → isApprove → pmWriteProgress)
+        }
+        // Ship automation (version bump + CHANGELOG + 기계적 파일 동기화)
+        if (doneTask) {
+          const agentRow = doneTask.assigned_agent_id
+            ? (db.prepare("SELECT name FROM agents WHERE id = ?").get(doneTask.assigned_agent_id) as { name: string } | undefined)
+            : undefined;
+          shipAutomation({
+            db,
+            projectId: event.projectId!,
+            taskId: event.taskId,
+            taskTitle: doneTask.title,
+            taskType: doneTask.task_type,
+            taskDescription: doneTask.description,
+            taskResult: doneTask.result,
+            agentName: agentRow?.name ?? null,
+            projectPath: doneTask.project_path,
+            nowMs: nowMs(),
+            appendTaskLog,
+            broadcast,
+            insertNotification,
+          });
+        }
       }
       void pmStartNextTask(event);
     }
@@ -103,33 +176,16 @@ export function startPmOrchestrator(deps: PmOrchestratorDeps): void {
     try {
       // 상태 재확인 — 이벤트 발행 후 상태 변경 가능
       const task = db.prepare(
-        "SELECT id, title, description, result, assigned_agent_id, project_id, source_task_id, status FROM tasks WHERE id = ?",
-      ).get(taskId) as { id: string; title: string; description: string | null; result: string | null; assigned_agent_id: string | null; project_id: string | null; source_task_id: string | null; status: string } | undefined;
+        "SELECT id, title, description, result, assigned_agent_id, project_id, source_task_id, status, task_type FROM tasks WHERE id = ?",
+      ).get(taskId) as { id: string; title: string; description: string | null; result: string | null; assigned_agent_id: string | null; project_id: string | null; source_task_id: string | null; status: string; task_type: string | null } | undefined;
 
       if (!task || task.status !== "review" || !task.project_id) return;
 
       // 하위 협업 태스크는 PM 리뷰 스킵
       if (task.source_task_id) return;
 
-      // YOLO mode: 자율모드가 활성화되면 LLM 리뷰 없이 즉시 승인
-      if (readYoloModeEnabled(db)) {
-        logger.info({ taskId }, "[pm-orchestrator] YOLO mode enabled — auto-approving task review");
-        appendTaskLog(taskId, "pm_oversight", "YOLO mode: auto-approved (skipped PM LLM review)");
-        finishReview(taskId, task.title, { bypassProjectDecisionGate: true, trigger: "yolo_auto_approve" });
-        recordTaskExecutionEvent(db as Parameters<typeof recordTaskExecutionEvent>[0], {
-          taskId,
-          eventType: "pm_approved",
-          fromState: "review",
-          toState: "done",
-          summary: "PM auto-approved (YOLO mode)",
-          createdAt: nowMs(),
-        });
-        broadcast("pm_activity", {
-          projectId, taskId, action: "approved",
-          agentName: "YOLO Autopilot", summary: `YOLO auto-approved '${task.title}'`, timestamp: nowMs(),
-        });
-        return;
-      }
+      // YOLO mode: PM에게 모든 통제권 — PM이 LLM으로 리뷰하되 사용자 승인 대기 없이 자동 결정
+      const isYolo = readYoloModeEnabled(db);
 
       const pm = findProjectPm(db, projectId);
       if (!pm) {
@@ -200,14 +256,14 @@ export function startPmOrchestrator(deps: PmOrchestratorDeps): void {
         fileTouchCount,
       };
 
-      logger.info({ taskId, decision: isApprove ? "approve" : "revise", reviewFlags }, "[pm-orchestrator] structured review completed");
+      logger.info({ taskId, decision: isApprove ? "approve" : "revise", reviewFlags, yolo: isYolo }, "[pm-orchestrator] structured review completed");
 
       if (isApprove) {
         const flagSummary = hasScopeDrift || excessiveScope
           ? ` [WARN: ${hasScopeDrift ? "scope-drift" : ""}${excessiveScope ? " excessive-scope" : ""}]`
           : "";
-        appendTaskLog(taskId, "pm_oversight", `PM approved${flagSummary}: ${text.slice(0, 200)}`);
-        finishReview(taskId, task.title, { bypassProjectDecisionGate: true, trigger: "pm_agent" });
+        appendTaskLog(taskId, "pm_oversight", `PM approved${isYolo ? " (YOLO)" : ""}${flagSummary}: ${text.slice(0, 200)}`);
+        finishReview(taskId, task.title, { bypassProjectDecisionGate: true, trigger: isYolo ? "pm_yolo" : "pm_agent" });
         recordTaskExecutionEvent(db as Parameters<typeof recordTaskExecutionEvent>[0], {
           taskId,
           eventType: "pm_approved",
@@ -228,6 +284,15 @@ export function startPmOrchestrator(deps: PmOrchestratorDeps): void {
           body: flagSummary ? `Flags: ${flagSummary.trim()}` : null,
           task_id: taskId,
           agent_id: pm.id as string,
+        });
+
+        // PM 검토 승인 직후 → progress.md 작성
+        void pmWriteProgress(pm, taskId, projectId, {
+          title: task.title,
+          description: task.description,
+          result: task.result,
+          task_type: task.task_type ?? "general",
+          assigned_agent_id: task.assigned_agent_id,
         });
       } else {
         // 수정 요청: 상태 재확인 후 변경
@@ -318,7 +383,7 @@ export function startPmOrchestrator(deps: PmOrchestratorDeps): void {
 
       // 에러 분석 (best effort — API 키 있을 때만)
       void analyzeTaskFailure(taskId, task.title, event.exitCode ?? 1, {
-        db, logsDir: deps.logsDir, findApiProvider, resolveModel, callProvider,
+        db, logsDir: deps.logsDir, findApiProvider: findApiProviderCompat, resolveModel: resolveModelCompat, callProvider: callProviderCompat,
         getPreferredLanguage, appendTaskLog,
       });
 
@@ -475,6 +540,79 @@ export function startPmOrchestrator(deps: PmOrchestratorDeps): void {
       logger.info({ taskId, retryCount: retryCount + 1, strikeLimit, decision: text.slice(0, 50) }, "[pm-orchestrator] failure decision");
     } catch (err) {
       logger.error({ err, taskId }, "[pm-orchestrator] failure handler error");
+    } finally {
+      pmInFlight.delete(guardKey);
+    }
+  }
+
+  // ── PM: progress.md 작성 (LLM) ──
+  async function pmWriteProgress(
+    pm: AgentRow,
+    taskId: string,
+    projectId: string,
+    task: { title: string; description: string | null; result: string | null; task_type: string; assigned_agent_id: string | null } | undefined,
+  ): Promise<void> {
+    if (!task) return;
+    const guardKey = `progress:${taskId}`;
+    if (pmInFlight.has(guardKey)) return;
+    pmInFlight.add(guardKey);
+
+    try {
+      let projectPath = "";
+      try { projectPath = resolveProjectPath(projectId); } catch { return; /* no path → skip */ }
+      if (!projectPath) return;
+
+      const lang = getPreferredLanguage();
+      const agentRow = task.assigned_agent_id
+        ? (db.prepare("SELECT name FROM agents WHERE id = ?").get(task.assigned_agent_id) as { name: string } | undefined)
+        : undefined;
+      const resultTail = task.result ? (task.result.length > 1500 ? "..." + task.result.slice(-1500) : task.result) : "(no output)";
+
+      const projectRow = db.prepare("SELECT name FROM projects WHERE id = ?").get(projectId) as { name: string } | undefined;
+      const prompt = loadPromptSection("pm/write-progress", lang, {
+        projectName: projectRow?.name ?? projectId,
+        taskTitle: task.title,
+        taskDescription: task.description ?? "(none)",
+        agentName: agentRow?.name ?? "(unassigned)",
+        taskType: task.task_type ?? "general",
+        taskResult: resultTail,
+      });
+      if (!prompt) return;
+
+      const response = await runAgentOneShot(pm, prompt, {
+        projectPath,
+        timeoutMs: 20_000,
+        noTools: true,
+      });
+
+      const text = response.text?.trim();
+      if (!text) return;
+
+      // docs/progress.md에 기록
+      const { existsSync, mkdirSync, readFileSync, writeFileSync } = await import("node:fs");
+      const { join } = await import("node:path");
+      const docsDir = join(projectPath, "docs");
+      const progressPath = join(docsDir, "progress.md");
+      const dateLine = `> ${new Date().toISOString().slice(0, 16).replace("T", " ")}`;
+      const entry = `\n${text}\n\n${dateLine}\n\n---\n`;
+
+      if (existsSync(progressPath)) {
+        const existing = readFileSync(progressPath, "utf-8");
+        const titleEnd = existing.indexOf("\n");
+        if (titleEnd > 0) {
+          writeFileSync(progressPath, existing.slice(0, titleEnd + 1) + entry + existing.slice(titleEnd + 1), "utf-8");
+        } else {
+          writeFileSync(progressPath, existing + "\n" + entry, "utf-8");
+        }
+      } else {
+        if (!existsSync(docsDir)) mkdirSync(docsDir, { recursive: true });
+        writeFileSync(progressPath, `# Progress\n${entry}`, "utf-8");
+      }
+
+      appendTaskLog(taskId, "pm_oversight", `PM wrote progress.md entry for '${task.title}'`);
+      logger.info({ taskId, projectId }, "[pm-orchestrator] PM wrote progress.md via LLM");
+    } catch (err) {
+      logger.warn({ err, taskId }, "[pm-orchestrator] progress.md write failed — continuing");
     } finally {
       pmInFlight.delete(guardKey);
     }

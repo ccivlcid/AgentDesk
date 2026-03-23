@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode, type FC } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import type { WindowType } from "../../app/types";
 import { useUiStore } from "../../store/uiStore";
 import TrafficLights, { type TileZone } from "../desktop/TrafficLights";
@@ -182,21 +183,24 @@ export default function AppWindow({
   const safeW = Math.max(MIN_W, Math.min(defaultWidth, Math.floor(window.innerWidth * 0.90)));
   const safeH = Math.max(MIN_H, Math.min(defaultHeight, Math.floor(availH * 0.90)));
 
-  // ── Cascade or center position ───────────────────────────────────────────
+  // ── Center position calculation ───────────────────────────────────────────
+  const centerX = Math.max(0, (window.innerWidth - safeW) / 2);
+  const centerY = Math.max(MENUBAR_H, (window.innerHeight - safeH - DOCK_CLEARANCE) / 2 + MENUBAR_H / 2);
+
   let fallbackX: number;
   let fallbackY: number;
+
   if (defaultX !== undefined) {
     fallbackX = defaultX;
-    fallbackY = defaultY ?? Math.max(MENUBAR_H, (window.innerHeight - safeH) / 3);
+    fallbackY = defaultY ?? centerY;
   } else if (hasSavedState(windowType)) {
-    fallbackX = Math.max(40, (window.innerWidth - safeW) / 2);
-    fallbackY = Math.max(MENUBAR_H, (window.innerHeight - safeH) / 3);
+    const saved = loadWinState(windowType, { x: centerX, y: centerY, w: safeW, h: safeH });
+    fallbackX = saved.x;
+    fallbackY = saved.y;
   } else {
-    const step = takeCascadeStep();
-    const cx = 80 + step * CASCADE_STEP;
-    const cy = MENUBAR_H + 20 + step * CASCADE_STEP;
-    fallbackX = Math.max(20, Math.min(cx, window.innerWidth - safeW - 20));
-    fallbackY = Math.max(MENUBAR_H, Math.min(cy, window.innerHeight - DOCK_CLEARANCE - safeH - 20));
+    // If it's the first time opening, always center perfectly
+    fallbackX = centerX;
+    fallbackY = centerY;
   }
 
   const raw = loadWinState(windowType, { x: fallbackX, y: fallbackY, w: safeW, h: safeH });
@@ -501,33 +505,40 @@ export default function AppWindow({
   });
 
   return (
-    <>
-      <style>{WIN_OPEN_ANIM}</style>
-    <div
+    <motion.div
       onMouseDown={() => bringWindowToFront(windowType)}
+      initial={{ opacity: 0, scale: 0.9, y: 20 }}
+      animate={{
+        opacity: isMinimized ? 0 : 1,
+        scale: isMinimized ? 0.08 : 1,
+        x: isMinimized ? minimizeTX : pos.x,
+        y: isMinimized ? minimizeTY : pos.y,
+        transition: {
+          type: "spring",
+          stiffness: 300,
+          damping: 28,
+          mass: 1,
+        }
+      }}
       style={{
         position: "fixed",
-        left: pos.x,
-        top: pos.y,
+        left: 0,
+        top: 0,
         width: size.w,
         height: size.h,
-        background: "var(--th-bg-surface)",
-        backdropFilter: "blur(24px)",
-        WebkitBackdropFilter: "blur(24px)",
-        border: "1px solid var(--th-border-strong)",
-        borderRadius: 12,
+        background: isFrontmost ? "#FFFFFF" : "rgba(250, 250, 250, 0.98)",
+        backdropFilter: "blur(20px)",
+        WebkitBackdropFilter: "blur(20px)",
+        border: isFrontmost ? "1px solid rgba(0, 0, 0, 0.15)" : "1px solid rgba(0, 0, 0, 0.08)",
+        borderRadius: 14,
         display: "flex",
         flexDirection: "column",
         overflow: "hidden",
         zIndex,
-        boxShadow: "0 20px 60px var(--th-glass-shadow), 0 0 0 0.5px var(--th-glass-border) inset",
-        opacity: isMinimized ? 0 : 1,
-        transform: isMinimized
-          ? `translateX(${minimizeTX}px) translateY(${minimizeTY}px) scale(0.08)`
-          : "scale(1)",
+        boxShadow: isFrontmost 
+          ? `0 20px 50px -12px rgba(0, 0, 0, 0.15), 0 0 1px 0 rgba(0, 0, 0, 0.1)` 
+          : `0 10px 30px -10px rgba(0, 0, 0, 0.1)`,
         pointerEvents: isMinimized ? "none" : "all",
-        transition: (isDragging.current || isResizing.current) ? "none" : "opacity 0.28s ease, transform 0.28s cubic-bezier(0.4, 0, 0.6, 1)",
-        animation: "winOpen 0.18s ease",
       }}
     >
       {/* ── macOS unified titlebar ── */}
@@ -540,8 +551,8 @@ export default function AppWindow({
           alignItems: "center",
           height: 44,
           padding: "0 14px",
-          background: "var(--th-glass-bg)",
-          borderBottom: "1px solid var(--th-border)",
+          background: "rgba(0, 0, 0, 0.02)",
+          borderBottom: "1px solid rgba(0, 0, 0, 0.05)",
           cursor: "default",
           flexShrink: 0,
           userSelect: "none",
@@ -560,7 +571,7 @@ export default function AppWindow({
         {/* Title — centered (drag area) */}
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, pointerEvents: "none", cursor: "grab" }}>
           <span style={{ display: "flex", alignItems: "center", fontSize: 13 }}>{emoji}</span>
-          <span style={{ fontFamily: mono, fontSize: 12, fontWeight: 600, color: "var(--th-text-heading)", letterSpacing: "0.01em" }}>
+          <span style={{ fontFamily: mono, fontSize: 12, fontWeight: 700, color: "#111827", letterSpacing: "0.01em" }}>
             {title}
           </span>
         </div>
@@ -581,9 +592,9 @@ export default function AppWindow({
             alignItems: "center",
             gap: 2,
             padding: "0 14px",
-            height: 36,
-            background: "var(--th-glass-bg)",
-            borderBottom: "1px solid var(--th-border)",
+            height: 38,
+            background: "rgba(0, 0, 0, 0.03)",
+            borderBottom: "1px solid rgba(0, 0, 0, 0.05)",
             flexShrink: 0,
             overflowX: "auto",
           }}
@@ -595,19 +606,22 @@ export default function AppWindow({
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 style={{
-                  padding: "4px 12px",
-                  fontSize: 11,
+                  padding: "5px 14px",
+                  fontSize: "10.5px",
                   fontFamily: mono,
-                  fontWeight: active ? 600 : 400,
-                  background: active ? "var(--th-accent)" : "transparent",
-                  color: active ? "var(--th-accent-text)" : "var(--th-text-muted)",
-                  border: "none",
-                  borderRadius: 6,
+                  fontWeight: active ? 800 : 600,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                  background: active ? "#FFFFFF" : "transparent",
+                  color: active ? "#111827" : "#6B7280",
+                  border: active ? "1px solid rgba(0, 0, 0, 0.05)" : "none",
+                  borderRadius: 8,
                   cursor: "pointer",
-                  transition: "background 0.15s, color 0.15s",
+                  transition: "all 0.15s ease-out",
                   lineHeight: 1.4,
                   whiteSpace: "nowrap",
                   flexShrink: 0,
+                  boxShadow: active ? "0 2px 4px rgba(0,0,0,0.05)" : "none",
                 }}
               >
                 {tab.label}
@@ -642,7 +656,6 @@ export default function AppWindow({
       <div onMouseDown={onResizeMouseDown("s")} style={edgeStyle("s", { bottom: 0, left: CORN, right: CORN, height: EDGE })} />
       <div onMouseDown={onResizeMouseDown("w")} style={edgeStyle("w", { top: CORN, bottom: CORN, left: 0, width: EDGE })} />
       <div onMouseDown={onResizeMouseDown("e")} style={edgeStyle("e", { top: CORN, bottom: CORN, right: 0, width: EDGE })} />
-    </div>
-    </>
+    </motion.div>
   );
 }

@@ -12,7 +12,7 @@ export interface ProjectFolderWindowProps {
   initialY?: number;
 }
 
-export type Tab = "files" | "tasks" | "agents" | "details" | "git" | "terminal";
+export type Tab = "files" | "tasks" | "agents" | "analysis" | "details" | "git" | "terminal";
 
 /** 파일 트리 노드 (Files 탭) */
 export interface FileTreeNode {

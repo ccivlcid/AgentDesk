@@ -22,10 +22,9 @@ export type WindowType =
   | "alerts"
   | "cli-usage"
   | "local-llm"
-  | "feature-builder"
-  | "git-import"
+  | "repo-store"
+  | "app-runner"
   | "dashboard"
-  | "widget-board"
   | "project-create"
   | "decision-inbox"
   | "folder-browser"
@@ -33,7 +32,9 @@ export type WindowType =
   | "learn-skill"
   | "learn-rule"
   | "learn-memory"
-  | "learn-hook";
+  | "learn-hook"
+  | "chat-editor"
+  | "channel-guide";
 
 
 export type View =

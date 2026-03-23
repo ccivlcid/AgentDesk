@@ -17,8 +17,8 @@ export default function AgentManagerWindow({ onAgentsChange, createTrigger }: Ag
       windowType="agent-manager"
       title={t({ ko: "에이전트 설정", en: "Agent Manager", ja: "エージェント設定", zh: "代理管理" })}
       emoji="◉"
-      defaultWidth={860}
-      defaultHeight={600}
+      defaultWidth={1080}
+      defaultHeight={720}
     >
       <div style={{ height: "100%", overflow: "auto" }}>
         <AgentManager

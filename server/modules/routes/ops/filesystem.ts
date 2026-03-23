@@ -153,4 +153,28 @@ export function registerFilesystemRoutes({ app }: { app: Express }): void {
       return res.status(403).json({ ok: false, error: "access_denied" });
     }
   });
+
+  /**
+   * GET /api/fs/read
+   * Query: path (file path)
+   * Returns text content of a file (max 500KB).
+   */
+  app.get("/api/fs/read", (req: Request, res: Response) => {
+    const rawPath = (req.query.path as string | undefined) ?? "";
+    if (!rawPath.trim()) return res.status(400).json({ ok: false, error: "path_required" });
+
+    const filePath = path.normalize(rawPath.trim());
+    if (!fs.existsSync(filePath)) return res.status(404).json({ ok: false, error: "file_not_found" });
+
+    try {
+      const stat = fs.statSync(filePath);
+      if (stat.isDirectory()) return res.status(400).json({ ok: false, error: "not_a_file" });
+      if (stat.size > 512 * 1024) return res.status(413).json({ ok: false, error: "file_too_large" });
+      const content = fs.readFileSync(filePath, "utf-8");
+      return res.json({ ok: true, content, size: stat.size });
+    } catch (err) {
+      logger.warn({ err, filePath }, "[fs-read] failed");
+      return res.status(403).json({ ok: false, error: "access_denied" });
+    }
+  });
 }

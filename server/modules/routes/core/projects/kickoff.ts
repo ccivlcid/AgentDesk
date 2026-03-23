@@ -5,8 +5,43 @@ import type { Express } from "express";
 import logger from "../../../../lib/logger.ts";
 import { loadPrompt } from "../../../../lib/prompt-loader.ts";
 import { startExecutionLoop } from "../../../agent-runtime/execution-loop.ts";
-import { findApiProvider, readDefaultProvider, resolveModel } from "../../ops/custom-features-ai/provider-helpers.ts";
-import { callProvider } from "../../ops/custom-features-ai/llm-providers.ts";
+import { resolveProvider, getDefaultModel } from "../../../agent-runtime/llm-client.ts";
+
+/** Simple one-shot LLM call using resolveProvider. Returns empty string if no provider. */
+async function callLlmOneShot(db: import("node:sqlite").DatabaseSync, systemPrompt: string, userPrompt: string, signal: AbortSignal): Promise<string> {
+  const resolved = resolveProvider(db);
+  const model = getDefaultModel(resolved.providerType);
+  if (resolved.type === "anthropic") {
+    const resp = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "x-api-key": resolved.apiKey, "anthropic-version": "2023-06-01", "content-type": "application/json" },
+      body: JSON.stringify({ model, max_tokens: 4096, system: systemPrompt, messages: [{ role: "user", content: userPrompt }] }),
+      signal,
+    });
+    if (!resp.ok) throw new Error(`Anthropic API ${resp.status}`);
+    const data = await resp.json() as { content?: Array<{ type: string; text?: string }> };
+    return data.content?.filter((b) => b.type === "text").map((b) => b.text ?? "").join("") ?? "";
+  }
+  // OpenAI-compatible
+  const resp = await fetch(`${resolved.baseUrl}/chat/completions`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${resolved.apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ model, max_tokens: 4096, messages: [{ role: "system", content: systemPrompt }, { role: "user", content: userPrompt }] }),
+    signal,
+  });
+  if (!resp.ok) throw new Error(`LLM API ${resp.status}`);
+  const data = await resp.json() as { choices?: Array<{ message?: { content?: string } }> };
+  return data.choices?.[0]?.message?.content ?? "";
+}
+
+function readDefaultCliProvider(db: import("node:sqlite").DatabaseSync): string {
+  const row = db.prepare("SELECT value FROM settings WHERE key = 'settings'").get() as { value: string } | undefined;
+  if (!row) return "claude";
+  try {
+    const parsed = JSON.parse(row.value) as { defaultProvider?: string };
+    return parsed.defaultProvider ?? "claude";
+  } catch { return "claude"; }
+}
 
 // ── Kickoff Meeting ─────────────────────────────────────────────────────────
 
@@ -529,14 +564,12 @@ export function registerProjectKickoffRoutes({ app, db, broadcast, appendTaskLog
           // ── Stage 2: kickoff_stage: planning ──
           broadcast("kickoff_stage", { projectId, stage: "planning" });
 
-          const provider = findApiProvider(db, "api");
           let rawText: string;
-          if (provider) {
-            const model = resolveModel(provider);
+          try {
             const signal = AbortSignal.timeout(120_000);
-            rawText = await callProvider(provider, model, systemPrompt, parts.join("\n\n"), signal);
-          } else {
-            const cliProvider = readDefaultProvider(db);
+            rawText = await callLlmOneShot(db, systemPrompt, parts.join("\n\n"), signal);
+          } catch {
+            const cliProvider = readDefaultCliProvider(db);
             const fullPrompt = `${systemPrompt}\n\n${parts.join("\n\n")}`;
             rawText = await callViaCliProvider(cliProvider, fullPrompt);
           }
@@ -820,14 +853,12 @@ export function registerProjectKickoffRoutes({ app, db, broadcast, appendTaskLog
           // ── Stage 2: planning ──
           broadcast("kickoff_stage", { projectId, stage: "planning" });
 
-          const provider = findApiProvider(db, "api");
           let rawText: string;
-          if (provider) {
-            const model = resolveModel(provider);
+          try {
             const signal = AbortSignal.timeout(120_000);
-            rawText = await callProvider(provider, model, systemPrompt, promptParts.join("\n\n"), signal);
-          } else {
-            const cliProvider = readDefaultProvider(db);
+            rawText = await callLlmOneShot(db, systemPrompt, promptParts.join("\n\n"), signal);
+          } catch {
+            const cliProvider = readDefaultCliProvider(db);
             const fullPrompt = `${systemPrompt}\n\n${promptParts.join("\n\n")}`;
             rawText = await callViaCliProvider(cliProvider, fullPrompt);
           }

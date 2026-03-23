@@ -926,4 +926,40 @@ export const VERSIONED_MIGRATIONS_E_RECENT: Migration[] = [
       } catch { /* best effort */ }
     },
   },
+  // ---------------------------------------------------------------------------
+  // Fix: migration 009 rebuilt task_execution_events but dropped the
+  // tokens_in / tokens_out / cost_usd columns added by migration 005.
+  // Re-add them here.
+  // ---------------------------------------------------------------------------
+  {
+    id: "2026-03-28-011-restore-token-cost-columns",
+    up: (db) => {
+      try { db.exec("ALTER TABLE task_execution_events ADD COLUMN tokens_in INTEGER DEFAULT 0"); } catch { /* already exists */ }
+      try { db.exec("ALTER TABLE task_execution_events ADD COLUMN tokens_out INTEGER DEFAULT 0"); } catch { /* already exists */ }
+      try { db.exec("ALTER TABLE task_execution_events ADD COLUMN cost_usd REAL DEFAULT 0"); } catch { /* already exists */ }
+    },
+  },
+  // ---------------------------------------------------------------------------
+  // Cleanup: drop leftover temporary tables from partial migration runs.
+  // When migration 002 or 009 crashed mid-way (e.g. due to concurrent
+  // processes), the renamed *_old tables may remain. Drop them safely.
+  // ---------------------------------------------------------------------------
+  {
+    id: "2026-03-28-012-drop-stale-cascade-fix-tables",
+    up: (db) => {
+      try { db.exec("DROP TABLE IF EXISTS meeting_minutes_cascade_fix_old"); } catch { /* ok */ }
+      try { db.exec("DROP TABLE IF EXISTS project_review_decision_events_cascade_fix_old"); } catch { /* ok */ }
+      try { db.exec("DROP TABLE IF EXISTS task_execution_events_cascade_fix_old"); } catch { /* ok */ }
+    },
+  },
+  {
+    id: "2026-03-28-013-project-app-type",
+    up: (db) => {
+      try { db.exec("ALTER TABLE projects ADD COLUMN project_type TEXT DEFAULT 'project'"); } catch { /* already exists */ }
+      try { db.exec("ALTER TABLE projects ADD COLUMN app_status TEXT DEFAULT NULL"); } catch { /* already exists */ }
+      try { db.exec("ALTER TABLE projects ADD COLUMN app_analysis TEXT DEFAULT NULL"); } catch { /* already exists */ }
+      try { db.exec("ALTER TABLE projects ADD COLUMN app_port INTEGER DEFAULT NULL"); } catch { /* already exists */ }
+      try { db.exec("ALTER TABLE projects ADD COLUMN app_pid INTEGER DEFAULT NULL"); } catch { /* already exists */ }
+    },
+  },
 ];
