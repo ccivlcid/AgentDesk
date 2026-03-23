@@ -82,6 +82,7 @@ export function useDesktopOverlayBlockProps(bridge: DesktopOverlayBlockBridge): 
     openFolders,
     closeFolder,
     openCliWindow,
+    openAppRunner,
     trashedProjects,
     removeFromTrash,
     emptyTrash,
@@ -208,10 +209,11 @@ export function useDesktopOverlayBlockProps(bridge: DesktopOverlayBlockBridge): 
       t,
       onClose: () => setProjectCtxMenu(null),
       onRunApp: (projectId: string) => {
-        const proj = projects.find((p) => p.id === projectId);
-        if (proj) setRunProjectInfo({ projectId: proj.id, projectName: proj.name, projectPath: proj.project_path });
+        openAppRunner(projectId, true);
       },
       onOpen: (projectId: string) => {
+        const proj = projects.find((p) => p.id === projectId);
+        if (proj?.project_type === "app") { openAppRunner(projectId); return; }
         setOpenProjectWindowIds((prev) => new Set([...prev, projectId]));
         setCurrentProjectId(projectId);
       },

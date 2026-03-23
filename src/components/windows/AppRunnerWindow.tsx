@@ -93,7 +93,7 @@ function AnalysisPanel({ analysis, t }: { analysis: AppAnalysis; t: ReturnType<t
 
 export default function AppRunnerWindow() {
   const { t } = useI18n();
-  const { appRunnerProjectId } = useUiStore();
+  const { appRunnerProjectId, appRunnerAutoRun, clearAppRunnerAutoRun } = useUiStore();
   const { projects } = useProjectStore();
 
   const project = projects.find((p) => p.id === appRunnerProjectId) ?? null;
@@ -102,21 +102,90 @@ export default function AppRunnerWindow() {
   const [analyzing, setAnalyzing] = useState(false);
   const [analyzeError, setAnalyzeError] = useState<string | null>(null);
   const [port, setPort] = useState<number | null>(null);
+  const [running, setRunning] = useState(false);
+  const [runUrl, setRunUrl] = useState<string | null>(null);
+  const [runError, setRunError] = useState<string | null>(null);
   const [logs, setLogs] = useState<AppLogEntry[]>([]);
   const logPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const logEndRef = useRef<HTMLDivElement>(null);
+  // Keep a stable ref of appRunnerProjectId for polling closures
+  const projectIdRef = useRef(appRunnerProjectId);
+  projectIdRef.current = appRunnerProjectId;
 
-  // Load status on mount
+  function stopLogPoll() {
+    if (logPollRef.current) { clearInterval(logPollRef.current); logPollRef.current = null; }
+  }
+
+  // Load status on mount / project change
   useEffect(() => {
     if (!appRunnerProjectId) return;
+    stopLogPoll();
+    setLogs([]);
+    setAnalysis(null);
+    setAnalyzeError(null);
     getAppStatus(appRunnerProjectId).then((r) => {
       setStatus(r.status);
       setAnalysis(r.analysis);
       setPort(r.port);
       if (r.status === "installing" || r.status === "running") startLogPoll();
-    }).catch(() => {});
-    return () => { if (logPollRef.current) clearInterval(logPollRef.current); };
+      statusLoadedRef.current = true;
+    }).catch(() => {
+      setStatus("downloaded");
+      statusLoadedRef.current = true;
+    });
+    return stopLogPoll;
   }, [appRunnerProjectId]);
+
+  // AutoRun pipeline: analyze → install → run
+  // Waits for initial status load, then auto-runs if status is "downloaded" (fresh project).
+  // Skips if project is already analyzed/running/stopped.
+  const autoRunTriggered = useRef(false);
+  const statusLoadedRef = useRef(false);
+
+  useEffect(() => {
+    if (!appRunnerAutoRun || !appRunnerProjectId || autoRunTriggered.current || !statusLoadedRef.current) return;
+    // Skip autoRun if already beyond downloaded state
+    if (status !== "downloaded") {
+      clearAppRunnerAutoRun();
+      return;
+    }
+    autoRunTriggered.current = true;
+    clearAppRunnerAutoRun();
+
+    (async () => {
+      try {
+        // Step 1: Analyze
+        setAnalyzing(true);
+        setAnalyzeError(null);
+        setStatus("analyzing");
+        const aRes = await analyzeApp(appRunnerProjectId);
+        setAnalysis(aRes.analysis);
+        setStatus("analyzed");
+        if (aRes.analysis.default_port) setPort(aRes.analysis.default_port);
+        setAnalyzing(false);
+
+        // Step 2: Install & Run
+        setRunning(true);
+        setRunError(null);
+        setLogs([]);
+        setStatus("installing");
+        const rRes = await runApp(appRunnerProjectId, aRes.analysis.default_port ?? undefined);
+        setPort(rRes.port);
+        setRunUrl(`http://localhost:${rRes.port}`);
+        startLogPoll();
+        setRunning(false);
+      } catch (err) {
+        setAnalyzing(false);
+        setRunning(false);
+        setStatus("downloaded");
+        setRunError(err instanceof Error ? err.message : String(err));
+        // Fallback to manual mode — buttons will be re-enabled
+      }
+    })();
+  }, [appRunnerAutoRun, appRunnerProjectId, status]);
+
+  // Reset autoRun ref when project changes
+  useEffect(() => { autoRunTriggered.current = false; statusLoadedRef.current = false; }, [appRunnerProjectId]);
 
   // Auto-scroll logs
   useEffect(() => { logEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [logs]);
@@ -125,20 +194,18 @@ export default function AppRunnerWindow() {
     if (logPollRef.current) return;
     let lastTs = 0;
     logPollRef.current = setInterval(async () => {
-      if (!appRunnerProjectId) return;
+      const pid = projectIdRef.current;
+      if (!pid) { stopLogPoll(); return; }
       try {
-        const r = await getAppLogs(appRunnerProjectId, lastTs);
+        const r = await getAppLogs(pid, lastTs);
         if (r.logs.length > 0) {
           lastTs = r.logs[r.logs.length - 1].ts;
           setLogs((prev) => [...prev, ...r.logs]);
         }
-        // Refresh status
-        const st = await getAppStatus(appRunnerProjectId);
+        const st = await getAppStatus(pid);
         setStatus(st.status);
         if (st.port) setPort(st.port);
-        if (st.status !== "installing" && st.status !== "running") {
-          if (logPollRef.current) { clearInterval(logPollRef.current); logPollRef.current = null; }
-        }
+        if (st.status !== "installing" && st.status !== "running") stopLogPoll();
       } catch { /* ignore */ }
     }, 1500);
   }
@@ -160,10 +227,6 @@ export default function AppRunnerWindow() {
       setAnalyzing(false);
     }
   }, [appRunnerProjectId, analyzing]);
-
-  const [running, setRunning] = useState(false);
-  const [runUrl, setRunUrl] = useState<string | null>(null);
-  const [runError, setRunError] = useState<string | null>(null);
 
   const handleRun = useCallback(async () => {
     if (!appRunnerProjectId || running) return;

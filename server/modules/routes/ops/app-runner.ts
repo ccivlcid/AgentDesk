@@ -56,7 +56,8 @@ async function findFreePort(start: number, maxAttempts = 10): Promise<number> {
     const p = start + i;
     if (await checkPortFree(p)) return p;
   }
-  return start; // fallback
+  logger.warn({ start, maxAttempts }, "[app-runner] no free port found in range — falling back to requested");
+  return start;
 }
 
 function analyzeProject(projectPath: string): AnalysisResult {
@@ -366,6 +367,7 @@ export function registerAppRunnerRoutes({ app, db, broadcast }: { app: Express; 
         .run(analysisJson, "analyzed", analysis.default_port, projectId);
       res.json({ ok: true, analysis });
     } catch (err) {
+      db.prepare("UPDATE projects SET app_status = 'downloaded' WHERE id = ? AND app_status = 'analyzing'").run(projectId);
       logger.warn({ err, projectId }, "app analysis failed");
       res.status(500).json({ error: "analysis_failed" });
     }
@@ -529,7 +531,11 @@ export function registerAppRunnerRoutes({ app, db, broadcast }: { app: Express; 
         db.prepare("UPDATE projects SET app_status = 'analyzed' WHERE id = ?").run(projectId);
       });
 
-      const timeout = setTimeout(() => { installChild.kill(); appendLog(projectId, "install", "Install timeout (120s)"); }, 120_000);
+      const timeout = setTimeout(() => {
+        installChild.kill();
+        appendLog(projectId, "install", "Install timeout (120s)");
+        db.prepare("UPDATE projects SET app_status = 'analyzed' WHERE id = ?").run(projectId);
+      }, 120_000);
       installChild.on("close", () => clearTimeout(timeout));
     } else {
       // No install needed, run directly

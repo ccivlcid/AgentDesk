@@ -101,7 +101,9 @@ interface UiStore {
 
   // ── App Runner ──────────────────────────────────────────────────
   appRunnerProjectId: string | null;
-  openAppRunner: (projectId: string) => void;
+  appRunnerAutoRun: boolean;
+  openAppRunner: (projectId: string, autoRun?: boolean) => void;
+  clearAppRunnerAutoRun: () => void;
 
   jiggleMode: boolean;
   missionControlOpen: boolean;
@@ -376,11 +378,13 @@ export const useUiStore = create<UiStore>()((set) => ({
   setNewlyInstalledProjectId: (id) => set({ newlyInstalledProjectId: id }),
 
   appRunnerProjectId: null,
-  openAppRunner: (projectId) => set((s) => {
+  appRunnerAutoRun: false,
+  openAppRunner: (projectId, autoRun) => set((s) => {
     const next = new Set(s.openWindows);
     next.add("app-runner");
-    return { appRunnerProjectId: projectId, openWindows: next };
+    return { appRunnerProjectId: projectId, appRunnerAutoRun: autoRun ?? false, openWindows: next };
   }),
+  clearAppRunnerAutoRun: () => set({ appRunnerAutoRun: false }),
 
   setSelectedAgentId: (id) => set({ selectedAgentId: id }),
   setOpenTaskId: (id) => set({ openTaskId: id }),

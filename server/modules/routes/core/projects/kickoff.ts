@@ -473,9 +473,10 @@ export function registerProjectKickoffRoutes({ app, db, broadcast, appendTaskLog
     }
 
     const project = db.prepare(
-      "SELECT id, name, core_goal, directive FROM projects WHERE id = ?",
-    ).get(projectId) as { id: string; name: string; core_goal: string; directive: string | null } | undefined;
+      "SELECT id, name, core_goal, directive, project_type FROM projects WHERE id = ?",
+    ).get(projectId) as { id: string; name: string; core_goal: string; directive: string | null; project_type: string | null } | undefined;
     if (!project) return res.status(404).json({ error: "project_not_found" });
+    if (project.project_type === "app") return res.status(400).json({ error: "app_cannot_kickoff" });
 
     // 이미 실행 중인 태스크가 있으면 킥오프 거부
     const runningTask = db.prepare(
@@ -762,9 +763,10 @@ export function registerProjectKickoffRoutes({ app, db, broadcast, appendTaskLog
     }
 
     const project = db.prepare(
-      "SELECT id, name, core_goal, directive, project_path FROM projects WHERE id = ?",
-    ).get(projectId) as { id: string; name: string; core_goal: string; directive: string | null; project_path: string | null } | undefined;
+      "SELECT id, name, core_goal, directive, project_path, project_type FROM projects WHERE id = ?",
+    ).get(projectId) as { id: string; name: string; core_goal: string; directive: string | null; project_path: string | null; project_type: string | null } | undefined;
     if (!project) return res.status(404).json({ error: "project_not_found" });
+    if (project.project_type === "app") return res.status(400).json({ error: "app_cannot_add_tasks" });
 
     // 첨부된 MD 파일을 프로젝트 폴더 docs/에 저장
     if (attached_file?.name && attached_file?.content && project.project_path) {

@@ -276,8 +276,12 @@ export default function GitImportWindow() {
         return;
       }
 
-      if (result.clone_id) {
-        pollRefs.current[key] = setInterval(async () => {
+      if (!result.clone_id) {
+        setCloneStates((s) => ({ ...s, [key]: { status: "error", progress: 0, error: "Clone initialization failed" } }));
+        return;
+      }
+
+      pollRefs.current[key] = setInterval(async () => {
           try {
             const status = await getCloneStatus(result.clone_id!);
             setCloneStates((s) => ({ ...s, [key]: { status: "cloning", progress: status.progress } }));
@@ -302,7 +306,6 @@ export default function GitImportWindow() {
             }
           } catch { /* continue polling */ }
         }, 1500);
-      }
     } catch (err) {
       setCloneStates((s) => ({ ...s, [key]: { status: "error", progress: 0, error: err instanceof Error ? err.message : String(err) } }));
     }

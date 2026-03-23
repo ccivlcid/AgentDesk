@@ -335,14 +335,10 @@ export function DesktopIconArea({
             onDelete: () => handleDeleteProject(project.id),
             onDropDoc: (docId) => handleDropDocToProject(docId, project),
             onClick: () => {
-              if (project.project_type === "app") {
-                openAppRunner(project.id);
-              } else {
-                setCurrentProjectId(project.id);
-                setSelectedProjectId(project.id);
-                setSelectedIconIds(new Set([`project-${project.id}`]));
-                setOpenProjectWindowIds((prev) => new Set([...prev, project.id]));
-              }
+              setCurrentProjectId(project.id);
+              setSelectedProjectId(project.id);
+              setSelectedIconIds(new Set([`project-${project.id}`]));
+              setOpenProjectWindowIds((prev) => new Set([...prev, project.id]));
             },
             onContextMenu: (e) => setProjectCtxMenu({ x: e.clientX, y: e.clientY, projectId: project.id, projectName: project.name }),
           };
