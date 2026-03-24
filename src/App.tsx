@@ -1,4 +1,5 @@
-import { useRef, useCallback, useEffect, useMemo, useState } from "react";
+import { Component, useRef, useCallback, useEffect, useMemo, useState } from "react";
+import type { ReactNode, ErrorInfo } from "react";
 import { useWebSocket } from "./hooks/useWebSocket";
 import * as api from "./api";
 import { useTheme } from "./ThemeContext";
@@ -8,6 +9,38 @@ import Desktop from "./components/desktop/Desktop";
 import AppOverlays from "./app/AppOverlays";
 import ProjectCreateModal from "./components/project-create-modal/ProjectCreateModal";
 import AppWindow from "./components/windows/AppWindow";
+
+/** Root-level error boundary — prevents full app crash from component errors */
+class AppErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean; error: Error | null }> {
+  state = { hasError: false, error: null as Error | null };
+  static getDerivedStateFromError(error: Error) { return { hasError: true, error }; }
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    // eslint-disable-next-line no-console
+    console.error("[AgentDesk] Uncaught UI error:", error, info.componentStack);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", background: "#0d1117", color: "#c9d1d9", fontFamily: "monospace", flexDirection: "column", gap: 16 }}>
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+            <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
+          </svg>
+          <div style={{ fontSize: 16, fontWeight: 700 }}>Something went wrong</div>
+          <div style={{ fontSize: 12, color: "#8b949e", maxWidth: 400, textAlign: "center" }}>{this.state.error?.message}</div>
+          <button
+            type="button"
+            onClick={() => { this.setState({ hasError: false, error: null }); }}
+            style={{ marginTop: 8, padding: "8px 24px", borderRadius: 6, border: "1px solid #30363d", background: "#21262d", color: "#c9d1d9", cursor: "pointer", fontSize: 13 }}
+          >
+            Reload
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 import { kickoffProject } from "./api/project-kickoff";
 import { isApiRequestError } from "./api/core";
 import { useAppActions } from "./app/useAppActions";
@@ -244,6 +277,7 @@ export default function App() {
   }
 
   return (
+    <AppErrorBoundary>
     <Desktop
       connected={connected}
       on={on}
@@ -435,5 +469,6 @@ export default function App() {
         </AppWindow>
       )}
     </Desktop>
+    </AppErrorBoundary>
   );
 }

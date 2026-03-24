@@ -10,7 +10,7 @@ import { TasksTab } from "./TasksTab";
 import { AgentsTab } from "./AgentsTab";
 import { DetailsTab } from "./DetailsTab";
 import { TerminalTab } from "./TerminalTab";
-import { AnalysisTab } from "./AnalysisTab";
+// AnalysisTab removed — app analysis runs via separate AppRunnerWindow (right-click "Run App")
 import { GitTab } from "./GitTab";
 
 export default function ProjectFolderWindow({
@@ -49,7 +49,6 @@ export default function ProjectFolderWindow({
     { id: "files",    label: t({ ko: "파일",    en: "Files",    ja: "ファイル",       zh: "文件" }) },
     { id: "tasks",    label: t({ ko: "태스크",  en: "Tasks",    ja: "タスク",         zh: "任务" }), count: projectTasks.length },
     { id: "agents",   label: t({ ko: "에이전트", en: "Agents",  ja: "エージェント",   zh: "代理" }), count: projectAgents.length },
-    { id: "analysis", label: t({ ko: "AI 분석", en: "AI Analysis", ja: "AI分析",       zh: "AI分析" }) },
     { id: "terminal", label: t({ ko: "터미널",  en: "Terminal", ja: "ターミナル",     zh: "终端" }) },
     { id: "details",  label: t({ ko: "상세",    en: "Details",  ja: "詳細",           zh: "详情" }) },
     { id: "git",      label: t({ ko: "Git",     en: "Git",      ja: "Git",            zh: "Git" }) },
@@ -120,7 +119,7 @@ export default function ProjectFolderWindow({
       </div>
 
       <div style={{ display: "flex", alignItems: "center", gap: 0, height: 30, borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-primary)", flexShrink: 0, padding: "0 16px" }}>
-        <StatPill icon="▦" value={`${activeTasks.length} ${t({ ko: "실행중", en: "running", ja: "実行中", zh: "运行中" })}`} color={activeTasks.length > 0 ? "var(--th-success, #22c55e)" : "var(--th-text-muted)"} />
+        <StatPill icon={<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>} value={`${activeTasks.length} ${t({ ko: "실행중", en: "running", ja: "実行中", zh: "运行中" })}`} color={activeTasks.length > 0 ? "var(--th-success, #22c55e)" : "var(--th-text-muted)"} />
         <Divider />
         <StatPill
           icon={(
@@ -181,7 +180,6 @@ export default function ProjectFolderWindow({
         {tab === "files"    && <FilesTab projectPath={project.project_path} projectName={project.name} />}
         {tab === "tasks"    && <TasksTab tasks={projectTasks} statusCounts={statusCounts} allAgents={agents} />}
         {tab === "agents"   && <AgentsTab agents={projectAgents} projectTasks={projectTasks} />}
-        {tab === "analysis" && <AnalysisTab projectId={project.id} projectPath={project.project_path} />}
         {tab === "terminal" && <TerminalTab projectId={project.id} projectPath={project.project_path} projectName={project.name} />}
         {tab === "details"  && <DetailsTab project={project} taskCount={projectTasks.length} agentCount={projectAgents.length} onDelete={() => { onDeleteProject(project.id); onClose(); }} />}
         {tab === "git"      && <GitTab project={project} />}

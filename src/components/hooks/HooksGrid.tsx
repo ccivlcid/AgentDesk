@@ -45,13 +45,31 @@ function formatRelativeTime(timestampMs: number, t: TFunction): string {
   return t({ ko: "\uBC29\uAE08", en: "just now", ja: "\u305F\u3063\u305F\u4ECA", zh: "\u521A\u521A" });
 }
 
-const SCOPE_BADGES: Record<string, { icon: string; color: string }> = {
-  global:        { icon: "🌐", color: "#3b82f6" },
-  project:       { icon: "📋", color: "#8b5cf6" },
-  agent:         { icon: "🤖", color: "#f59e0b" },
-  department:    { icon: "🏢", color: "#10b981" },
-  workflow_pack: { icon: "📦", color: "#6366f1" },
+const SCOPE_BADGE_COLORS: Record<string, string> = {
+  global:        "#3b82f6",
+  project:       "#8b5cf6",
+  agent:         "#f59e0b",
+  department:    "#10b981",
+  workflow_pack: "#6366f1",
 };
+
+function ScopeBadgeIcon({ scope }: { scope: string }) {
+  const props = { width: 12, height: 12, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
+  switch (scope) {
+    case "global":
+      return <svg {...props}><circle cx="12" cy="12" r="10" /><line x1="2" y1="12" x2="22" y2="12" /><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10A15.3 15.3 0 0 1 12 2z" /></svg>;
+    case "project":
+      return <svg {...props}><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" /><rect x="8" y="2" width="8" height="4" rx="1" ry="1" /></svg>;
+    case "agent":
+      return <svg {...props}><rect x="3" y="11" width="18" height="10" rx="2" /><circle cx="12" cy="5" r="3" /><path d="M7 11V8a5 5 0 0 1 10 0v3" /></svg>;
+    case "department":
+      return <svg {...props}><rect x="4" y="2" width="16" height="20" rx="2" /><line x1="9" y1="6" x2="15" y2="6" /><line x1="9" y1="10" x2="15" y2="10" /><line x1="9" y1="14" x2="15" y2="14" /><line x1="9" y1="18" x2="15" y2="18" /></svg>;
+    case "workflow_pack":
+      return <svg {...props}><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /><polyline points="3.27 6.96 12 12.01 20.73 6.96" /><line x1="12" y1="22.08" x2="12" y2="12" /></svg>;
+    default:
+      return null;
+  }
+}
 
 export default function HooksGrid({
   t,
@@ -89,7 +107,9 @@ export default function HooksGrid({
             (e.currentTarget as HTMLButtonElement).style.background = "transparent";
           }}
         >
-          <span className="text-2xl transition-transform group-hover:scale-110" style={{ opacity: 0.35 }}>🪝</span>
+          <span className="text-2xl transition-transform group-hover:scale-110" style={{ opacity: 0.35 }}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 1-6 6H4" /><path d="M18 2v6" /><path d="M4 14v4a2 2 0 0 0 2 2h0a2 2 0 0 0 2-2v-4" /></svg>
+          </span>
           <span className="text-xs font-mono font-medium" style={{ color: "var(--th-text-muted)" }}>
             {emptyMessage ?? t({ ko: "등록된 훅이 없습니다", en: "No hooks registered", ja: "登録済みのフックがありません", zh: "暂无已注册的钩子" })}
           </span>
@@ -165,10 +185,10 @@ export default function HooksGrid({
               <div className="flex items-center gap-1.5 flex-wrap min-w-0">
                 {/* Scope badge */}
                 {hook.scope_type && hook.scope_type !== "global" && (() => {
-                  const sb = SCOPE_BADGES[hook.scope_type];
-                  return sb ? (
-                    <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-mono border" style={{ borderRadius: 0, background: `${sb.color}18`, color: sb.color, borderColor: `${sb.color}44` }}>
-                      {sb.icon} {hook.scope_type}
+                  const sbColor = SCOPE_BADGE_COLORS[hook.scope_type];
+                  return sbColor ? (
+                    <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-mono border" style={{ borderRadius: 0, background: `${sbColor}18`, color: sbColor, borderColor: `${sbColor}44` }}>
+                      <ScopeBadgeIcon scope={hook.scope_type} /> {hook.scope_type}
                     </span>
                   ) : null;
                 })()}

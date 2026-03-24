@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { execSync } from "node:child_process";
+import { execSync, execFileSync } from "node:child_process";
 import type { ToolDefinition, ToolCall, ToolResult } from "./types.ts";
 
 // Tool definitions sent to the LLM
@@ -168,9 +168,11 @@ function runCommand(projectPath: string, command: string): string {
 function searchFiles(projectPath: string, pattern: string, dir: string, fileGlob: string): string {
   const base = resolveSafe(projectPath, dir);
   try {
-    const globArg = fileGlob ? `--include="${fileGlob}"` : "";
-    const cmd = `grep -r -n --max-count=20 ${globArg} "${pattern.replace(/"/g, '\\"')}" "${base}"`;
-    const result = execSync(cmd, { timeout: 10_000, encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] });
+    // Use execFileSync with array args to prevent shell injection
+    const args = ["-r", "-n", "--max-count=20"];
+    if (fileGlob) args.push(`--include=${fileGlob}`);
+    args.push(pattern, base);
+    const result = execFileSync("grep", args, { timeout: 10_000, encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] });
     // Make paths relative
     return result
       .split("\n")

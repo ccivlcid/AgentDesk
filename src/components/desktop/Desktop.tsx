@@ -317,12 +317,14 @@ export default function Desktop({
     const doc = useUiStore.getState().pendingDocs.find((d) => d.id === docId);
     if (!doc) return;
     const filename = `${doc.title.replace(/[/\\:*?"<>|]/g, "_")}.md`;
-    const res = await fetch("/api/projects/save-file", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ project_path: project.project_path, filename, content: doc.content }),
-    });
-    if ((await res.json()).ok) removePendingDoc(docId);
+    try {
+      const res = await fetch("/api/projects/save-file", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ project_path: project.project_path, filename, content: doc.content }),
+      });
+      if (res.ok && (await res.json()).ok) removePendingDoc(docId);
+    } catch { /* network error — doc stays in pendingDocs for retry */ }
   }, [removePendingDoc]);
   const handleDeleteProject = useCallback(async (projectId: string) => {
     setProjectCtxMenu(null);

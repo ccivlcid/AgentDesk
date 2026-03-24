@@ -200,7 +200,7 @@ export default function DecisionInboxModal({
             }}
             className="hover:!text-[var(--th-text)] hover:!border-[var(--th-border-strong)]"
           >
-            ↺ {t({ ko: "새로고침", en: "REFRESH", ja: "更新", zh: "刷新" })}
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: "inline-block", verticalAlign: "middle" }}><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>{" "}{t({ ko: "새로고침", en: "REFRESH", ja: "更新", zh: "刷新" })}
           </button>
           <span
             style={{

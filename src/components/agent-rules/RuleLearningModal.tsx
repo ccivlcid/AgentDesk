@@ -212,7 +212,9 @@ export default function RuleLearningModal({
                           className="learn-book-drop"
                           style={{ left: `${8 + idx * 15}%`, animationDelay: `${idx * 0.15}s` }}
                         >
-                          {idx % 2 === 0 ? "📘" : "📙"}
+                          {idx % 2 === 0
+                            ? <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" /></svg>
+                            : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" /></svg>}
                         </span>
                       ))}
                     </div>
@@ -223,9 +225,9 @@ export default function RuleLearningModal({
                       className={`relative ${isAnimating ? "learn-avatar-reading" : ""} ${isHitAnimating ? "unlearn-avatar-hit" : ""}`}
                     >
                       <AgentAvatar agent={row.agent ?? undefined} agents={agents} size={50} rounded="xl" />
-                      {isAnimating && <span className="learn-reading-book">📖</span>}
-                      {unlearnEffect === "pot" && <span className="unlearn-pot-drop">🪴</span>}
-                      {unlearnEffect === "hammer" && <span className="unlearn-hammer-swing">🔨</span>}
+                      {isAnimating && <span className="learn-reading-book"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></svg></span>}
+                      {unlearnEffect === "pot" && <span className="unlearn-pot-drop"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 21h10" /><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M12 3v4" /><path d="M8 5l2 2" /><path d="M16 5l-2 2" /></svg></span>}
+                      {unlearnEffect === "hammer" && <span className="unlearn-hammer-swing"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 12l-8.5 8.5c-.83.83-2.17.83-3 0 0 0 0 0 0 0a2.12 2.12 0 0 1 0-3L12 9" /><path d="M17.64 15L22 10.64" /><path d="M20.91 11.7l-1.25-1.25c-.6-.6-.93-1.4-.93-2.25V6l-3-3H12l3.29 3.29" /><path d="M14.5 12.5L18 9" /></svg></span>}
                       {isHitAnimating && (
                         <span className="unlearn-hit-text">
                           {t({ ko: "깡~", en: "Bonk!", ja: "ゴン!", zh: "咣~" })}
@@ -317,7 +319,9 @@ export default function RuleLearningModal({
                             className="learn-book-drop"
                             style={{ left: `${8 + idx * 15}%`, animationDelay: `${idx * 0.15}s` }}
                           >
-                            {idx % 2 === 0 ? "📘" : "📙"}
+                            {idx % 2 === 0
+                              ? <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" /></svg>
+                              : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" /><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" /></svg>}
                           </span>
                         ))}
                       </div>
@@ -326,7 +330,7 @@ export default function RuleLearningModal({
                     <div className="relative z-10 flex items-center gap-3">
                       <div className={`relative ${isAnimating ? "learn-avatar-reading" : ""}`}>
                         <AgentAvatar agent={agent} agents={agents} size={50} rounded="xl" />
-                        {isAnimating && <span className="learn-reading-book">📖</span>}
+                        {isAnimating && <span className="learn-reading-book"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></svg></span>}
                       </div>
 
                       <div className="min-w-0 flex-1">

@@ -208,11 +208,10 @@ export function useDesktopOverlayBlockProps(bridge: DesktopOverlayBlockBridge): 
       t,
       onClose: () => setProjectCtxMenu(null),
       onRunApp: (projectId: string) => {
+        // Open AppRunnerWindow with autoRun — AI auto-analyze → install → run
         openAppRunner(projectId, true);
       },
       onOpen: (projectId: string) => {
-        const proj = projects.find((p) => p.id === projectId);
-        if (proj?.project_type === "app") { openAppRunner(projectId); return; }
         setOpenProjectWindowIds((prev) => new Set([...prev, projectId]));
         setCurrentProjectId(projectId);
       },

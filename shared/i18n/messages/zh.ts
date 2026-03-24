@@ -47,6 +47,18 @@ const zhMessages = {
   "task.status.done": "完成",
   "gateway.deliverable.prefix": "交付物",
   "gateway.decisionInbox.waiting": "{count}项决策等待您审批。",
+  "cli.title": "CLI 使用量",
+  "cli.connected": "已连接",
+  "cli.refresh": "刷新",
+  "cli.noConnected": "没有已连接的CLI",
+  "cli.noUsage": "无使用数据",
+  "cli.notSignedIn": "未登录",
+  "cli.noApi": "无API密钥",
+  "cli.unavailable": "不可用",
+  "cli.loading": "加载中…",
+  "cli.resets": "重置:",
+  "cli.noData": "无数据",
+  "cli.noDataHint": "连接CLI以跟踪使用量",
 } satisfies Record<MessageKey, string>;
 
 export default zhMessages;

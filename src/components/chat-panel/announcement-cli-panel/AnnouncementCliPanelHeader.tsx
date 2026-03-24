@@ -184,7 +184,9 @@ export function AnnouncementCliPanelHeader({
             fill="none"
             stroke="currentColor"
             strokeWidth="2"
-            style={{ width: 11, height: 11, color: "#C9A000", flexShrink: 0 }}
+            width="11"
+            height="11"
+            style={{ color: "#C9A000", flexShrink: 0 }}
           >
             <circle cx="6.5" cy="6.5" r="4" />
             <path d="M10 10l3.5 3.5" strokeLinecap="round" />

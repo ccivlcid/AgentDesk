@@ -374,7 +374,7 @@ export function ChatPanel({
       try {
         const kbContent = await fetchSynapseContext(kbSources);
         if (kbContent) {
-          const labels = kbSources.map((s) => (s.type === "notion_page" ? `📘 ${s.label ?? s.id}` : `📓 ${s.label ?? s.id}`)).join(", ");
+          const labels = kbSources.map((s) => (s.type === "notion_page" ? `[Notion] ${s.label ?? s.id}` : `[Obsidian] ${s.label ?? s.id}`)).join(", ");
           kbPrefix = `[첨부 지식 베이스: ${labels}]\n\n${kbContent}\n\n---\n`;
         }
       } catch { /* non-fatal */ }

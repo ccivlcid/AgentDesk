@@ -106,7 +106,7 @@ export function CliWindowBottomBar({
           whiteSpace: "nowrap",
         }}
       >
-        {t({ ko: "▶ 새 창", en: "▶ New Window", ja: "▶ 新窓", zh: "▶ 新窗" })}
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="5,3 19,12 5,21"/></svg>{" "}{t({ ko: "새 창", en: "New Window", ja: "新窓", zh: "新窗" })}
       </button>
 
       {activeTask && (

@@ -1,7 +1,7 @@
 # Agent Configuration and Execution Architecture (Based on Current Implementation)
 
 > **Purpose:** Consolidate in one place **how agents are stored in the DB and UI**, and **under what conditions which execution engine (CLI / HTTP API / OAuth / built-in runtime)** is selected, **based on actual code**.
-> **Related documents:** For strategy/roadmap content, refer to [`../strategy/AGENT-RUNTIME-SPEC.md`](../strategy/AGENT-RUNTIME-SPEC.md). This document focuses on **already-implemented behavior**.
+> **Purpose:** Consolidate how agents are stored in the DB/UI, and which execution engine is selected. This document focuses on **already-implemented behavior**.
 
 ---
 
@@ -98,6 +98,29 @@ File: `server/modules/agent-runtime/execution-loop.ts` (`startExecutionLoop`)
   - Auto-execution of first task after project kickoff — `server/modules/routes/core/projects/kickoff.ts`
 
 **This is a separate code path from the main task run (`execution-run`)**, so it is NOT the case that "everything always uses CLI" or "everything always uses agent-runtime".
+
+### 3.4 Agent Assignment Logic
+
+**Kickoff / Add-Tasks** (`kickoff.ts`):
+- Agents are selected from `project_agents` table (only agents assigned to the project)
+- PM agents (`project_role = 'pm'`) are excluded from task assignment
+- **Fitness-based scoring**: queries `agent_task_fitness` table for success rate per `task_type`
+- Score = `successRate - (currentLoad * 0.1)` — balances quality and workload
+- Falls back to **round-robin** when no fitness data exists for a task type
+- LLM generates `task_type` during kickoff (development/design/analysis/documentation/general)
+
+**Auto-Assignment on Run** (`execution-run.ts`):
+- If task has no `assigned_agent_id`, `selectAutoAssignableAgentForTask()` picks one
+- Respects `project_agents` constraint
+
+### 3.5 Project-Level PM Review
+
+After all tasks in a project reach "done" status:
+1. `pmProjectLevelReview()` in `pm-orchestrator.ts` evaluates entire project against original goal
+2. **SATISFIED** → retrospective report + project complete
+3. **GAPS_FOUND** → PM's gap analysis fed to `runInternalAddTasksPipeline()` as `additionalDirective`
+4. New tasks created, assigned (fitness-based), and executed
+5. Cycle repeats until SATISFIED or max **3 rounds** (`pm_oversight_state.project_review_round`)
 
 ---
 
@@ -208,6 +231,8 @@ Representative types (throughout the code):
 | One-shot | `server/modules/workflow/core/one-shot-runner.ts` |
 | API Provider HTTP | `server/modules/workflow/agents/providers/api-provider-tools.ts` |
 | Built-in runtime | `server/modules/agent-runtime/execution-loop.ts`, `routes.ts` |
+| Runtime prompt | `prompts/system/agent-runtime.md` (system prompt with evidence-based rules) |
+| App analysis | `prompts/system/project-analysis.md` + `prompts/system/app-analysis-system.md` |
 | Persona | `server/modules/workflow/core/character-persona.ts`, `prompts/agents/`, `prompts/personas/` |
 | Direct prompt text | `server/modules/workflow/core/meeting-prompt-tools.ts` (`buildDirectReplyPrompt`) |
 | Safe reply processing | `server/modules/workflow/core/reply-core-tools.ts` (`chooseSafeReply`) |

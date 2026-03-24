@@ -79,7 +79,7 @@ export function DesktopIconArea({
   setShowTrash,
   onEmptyTrash,
 }: DesktopIconAreaProps) {
-  const { newlyInstalledProjectId, setNewlyInstalledProjectId, openAppRunner, desktopIconLayout, setDesktopIconLayout, openWindow } = useUiStore();
+  const { newlyInstalledProjectId, setNewlyInstalledProjectId, desktopIconLayout, setDesktopIconLayout, openWindow } = useUiStore();
 
   const [groupDragInitialPositions, setGroupDragInitialPositions] = useState<Record<string, { x: number; y: number }> | null>(null);
 

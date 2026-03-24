@@ -281,13 +281,20 @@ export async function bootstrapSession(options?: {
   return sessionBootstrapPromise;
 }
 
+const DEFAULT_REQUEST_TIMEOUT = 30_000;
+
 export async function request<T>(url: string, init?: RequestInit, canRetryAuth = true): Promise<T> {
   const headers = withAuthHeaders(init?.headers, init?.method);
   const requestUrl = `${base}${url}`;
+  // Add timeout if caller didn't provide an AbortSignal
+  const controller = init?.signal ? undefined : new AbortController();
+  const timeoutId = controller ? setTimeout(() => controller.abort(), DEFAULT_REQUEST_TIMEOUT) : undefined;
+  try {
   const r = await fetch(requestUrl, {
     credentials: "same-origin",
     ...init,
     headers,
+    signal: init?.signal ?? controller?.signal,
   });
   if (r.status === 401 && canRetryAuth && url !== SESSION_BOOTSTRAP_PATH) {
     await bootstrapSession({ force: true });
@@ -304,6 +311,9 @@ export async function request<T>(url: string, init?: RequestInit, canRetryAuth =
     });
   }
   return r.json();
+  } finally {
+    if (timeoutId !== undefined) clearTimeout(timeoutId);
+  }
 }
 
 export function post<T = unknown>(url: string, body?: unknown): Promise<T> {

@@ -60,12 +60,28 @@ erDiagram
         TEXT department_id FK
         TEXT assigned_agent_id FK
         TEXT category_id FK
+        TEXT task_type "general|development|design|analysis|presentation|documentation"
         TEXT status "inbox|planned|in_progress|review|done|..."
         TEXT execution_state "queued|running|succeeded|failed|..."
         TEXT handoff_to_agent_id FK
         TEXT handoff_condition
         INTEGER priority
         INTEGER last_heartbeat_at
+    }
+
+    agent_task_fitness {
+        TEXT id PK
+        TEXT agent_id FK
+        TEXT task_type
+        INTEGER success_count
+        INTEGER failure_count
+        INTEGER avg_duration_ms
+        INTEGER last_updated
+    }
+
+    pm_oversight_state {
+        TEXT project_id FK
+        INTEGER project_review_round
     }
 
     subtasks {
@@ -181,6 +197,8 @@ erDiagram
     pipeline_gates ||--o{ task_gate_results : "applied"
     tasks ||--|| task_report_archives : "report"
     workflow_packs ||--o{ workflow_schedules : "scheduled"
+    agents ||--o{ agent_task_fitness : "fitness scores"
+    projects ||--o| pm_oversight_state : "PM oversight"
 ```
 
 ---
@@ -220,6 +238,12 @@ erDiagram
 |-------|------|
 | `pipeline_gates` | Quality gate definitions per workflow |
 | `task_gate_results` | Gate pass/fail results per task |
+
+### PM Orchestration
+| Table | Role |
+|-------|------|
+| `pm_oversight_state` | Active PM oversight per project (review round counter) |
+| `agent_task_fitness` | Per-agent per-task-type success/failure rates for fitness-based assignment |
 
 ### Workflow Scheduling (v1.3.0)
 | Table | Role |

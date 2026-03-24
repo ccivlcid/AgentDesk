@@ -22,7 +22,7 @@ export function CliPlanBanner({ visible, t, onDismiss }: CliPlanBannerProps) {
       color: "var(--th-accent)",
       flexShrink: 0,
     }}>
-      <span>📋</span>
+      <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg></span>
       <span>{t({ ko: "기획 완료 — .agentdesk-task.md에 실행 계획이 준비됐습니다.", en: "Planning complete — execution plan is ready in .agentdesk-task.md", ja: "計画完了 — .agentdesk-task.md に実行プランが用意されました", zh: "规划完成 — 执行计划已写入 .agentdesk-task.md" })}</span>
       <button
         type="button"

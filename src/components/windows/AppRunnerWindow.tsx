@@ -101,6 +101,8 @@ export default function AppRunnerWindow() {
   const [status, setStatus] = useState<string>("downloaded");
   const [analyzing, setAnalyzing] = useState(false);
   const [analyzeError, setAnalyzeError] = useState<string | null>(null);
+  const [prompt, setPrompt] = useState("");
+  const [promptBusy, setPromptBusy] = useState(false);
   const [port, setPort] = useState<number | null>(null);
   const [running, setRunning] = useState(false);
   const [runUrl, setRunUrl] = useState<string | null>(null);
@@ -337,71 +339,90 @@ export default function AppRunnerWindow() {
             </>
           )}
 
-          {/* Action buttons */}
-          <div style={{ display: "flex", gap: 12, marginTop: "auto", paddingTop: 8 }}>
-            {(status === "downloaded" || status === "analyzed") && (
-              <button
-                type="button"
-                disabled={analyzing}
-                onClick={handleAnalyze}
-                style={{
-                  ...btnBase,
-                  border: "1px solid var(--th-border)", background: "var(--th-bg-surface)",
-                  color: "var(--th-text-primary)", opacity: analyzing ? 0.5 : 1,
+          {/* Prompt input — always visible */}
+          <div style={{ marginTop: "auto", paddingTop: 8 }}>
+              {(analyzeError || runError) && (
+                <div style={{
+                  ...mono, fontSize: 11, color: "#ff9f0a", padding: "8px 12px", marginBottom: 8,
+                  background: "rgba(255,159,10,0.08)", borderRadius: 6, border: "1px solid rgba(255,159,10,0.2)",
+                  lineHeight: 1.5, whiteSpace: "pre-wrap",
+                }}>
+                  {analyzeError ?? runError}
+                </div>
+              )}
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  if (promptBusy || !appRunnerProjectId) return;
+                  setPromptBusy(true);
+                  setAnalyzeError(null);
+                  setRunError(null);
+                  try {
+                    // Step 1: Analyze
+                    setStatus("analyzing");
+                    setAnalyzing(true);
+                    const aRes = await analyzeApp(appRunnerProjectId);
+                    setAnalysis(aRes.analysis);
+                    setStatus("analyzed");
+                    if (aRes.analysis.default_port) setPort(aRes.analysis.default_port);
+                    setAnalyzing(false);
+                    // Step 2: Install & Run
+                    setRunning(true);
+                    setLogs([]);
+                    setStatus("installing");
+                    const rRes = await runApp(appRunnerProjectId, aRes.analysis.default_port ?? undefined);
+                    setPort(rRes.port);
+                    setRunUrl(`http://localhost:${rRes.port}`);
+                    startLogPoll();
+                    setRunning(false);
+                    setPrompt("");
+                  } catch (err) {
+                    setAnalyzing(false);
+                    setRunning(false);
+                    setStatus("downloaded");
+                    setRunError(err instanceof Error ? err.message : String(err));
+                  } finally {
+                    setPromptBusy(false);
+                  }
                 }}
-                onMouseEnter={(e) => { if (!analyzing) e.currentTarget.style.background = "var(--th-bg-elevated)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = "var(--th-bg-surface)"; }}
+                style={{ display: "flex", gap: 8, alignItems: "center" }}
               >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
-                </svg>
-                <span>{analyzing ? t({ ko: "분석 중...", en: "Analyzing...", ja: "分析中...", zh: "分析中..." }) : t({ ko: "분석", en: "Analyze", ja: "分析", zh: "分析" })}</span>
-                <span style={{ fontSize: 9, color: "var(--th-text-muted)", fontWeight: 400 }}>
-                  {t({ ko: "코드 구조와 실행 방법을 파악합니다", en: "Detect code structure and how to run", ja: "コード構造と実行方法を検出", zh: "检测代码结构和运行方法" })}
-                </span>
-              </button>
-            )}
-
-            {status !== "running" && (
-              <button
-                type="button"
-                disabled={running}
-                onClick={handleRun}
-                style={{
-                  ...btnBase,
-                  border: "none", background: "var(--th-accent)", color: "#000",
-                  opacity: running ? 0.5 : 1,
-                }}
-                onMouseEnter={(e) => { if (!running) e.currentTarget.style.opacity = "0.85"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.opacity = "1"; }}
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <polygon points="5 3 19 12 5 21 5 3" />
-                </svg>
-                <span>
-                  {running
-                    ? t({ ko: "설치 중...", en: "Installing...", ja: "インストール中...", zh: "安装中..." })
-                    : (status === "installed" || status === "stopped")
-                      ? t({ ko: "실행", en: "Run", ja: "実行", zh: "运行" })
-                      : t({ ko: "설치 & 실행", en: "Install & Run", ja: "インストール & 実行", zh: "安装 & 运行" })}
-                </span>
-                <span style={{ fontSize: 9, color: "rgba(0,0,0,0.5)", fontWeight: 400 }}>
-                  {t({ ko: "의존성 설치 후 자동으로 실행합니다", en: "Installs dependencies and runs automatically", ja: "依存関係をインストールして自動実行", zh: "安装依赖后自动运行" })}
-                </span>
-              </button>
-            )}
-          </div>
-
-          {/* Analyze error */}
-          {analyzeError && (
-            <div style={{
-              ...mono, fontSize: 11, color: "#ff9f0a", padding: "10px 12px", marginTop: 8,
-              background: "rgba(255,159,10,0.08)", borderRadius: 6, border: "1px solid rgba(255,159,10,0.2)",
-              lineHeight: 1.5, whiteSpace: "pre-wrap",
-            }}>
-              {t({ ko: "분석 실패: ", en: "Analysis failed: ", ja: "分析失敗: ", zh: "分析失败: " })}{analyzeError}
+                <input
+                  type="text"
+                  value={prompt}
+                  onChange={(e) => setPrompt(e.target.value)}
+                  placeholder={
+                    promptBusy
+                      ? t({ ko: "AI가 작업 중...", en: "AI is working...", ja: "AI作業中...", zh: "AI工作中..." })
+                      : analyzeError || runError
+                        ? t({ ko: "수정 지시를 입력하거나 Enter로 재시도", en: "Enter fix instructions or press Enter to retry", ja: "修正指示を入力またはEnterでリトライ", zh: "输入修复指示或按Enter重试" })
+                        : status === "running"
+                          ? t({ ko: "지시 입력 (예: 포트 변경, 재시작...)", en: "Enter instructions (e.g. change port, restart...)", ja: "指示入力（例：ポート変更、再起動...）", zh: "输入指示（例：更改端口、重启...）" })
+                          : t({ ko: "Enter를 눌러 AI 분석 & 실행", en: "Press Enter to AI analyze & run", ja: "Enterで AI分析 & 実行", zh: "按Enter进行AI分析和运行" })
+                  }
+                  disabled={promptBusy}
+                  style={{
+                    ...mono, flex: 1, fontSize: 12, padding: "10px 14px", borderRadius: 8,
+                    border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)",
+                    color: "var(--th-text-primary)", outline: "none",
+                    opacity: promptBusy ? 0.5 : 1,
+                  }}
+                />
+                <button
+                  type="submit"
+                  disabled={promptBusy}
+                  style={{
+                    ...mono, fontSize: 12, fontWeight: 700, padding: "10px 20px", borderRadius: 8,
+                    border: "none", background: "var(--th-accent)", color: "#000",
+                    cursor: promptBusy ? "wait" : "pointer", opacity: promptBusy ? 0.5 : 1, flexShrink: 0,
+                  }}
+                >
+                  {promptBusy
+                    ? t({ ko: "실행 중...", en: "Running...", ja: "実行中...", zh: "运行中..." })
+                    : t({ ko: "실행", en: "Run", ja: "実行", zh: "运行" })}
+                </button>
+              </form>
             </div>
-          )}
 
           {/* Terminal logs */}
           {logs.length > 0 && (
@@ -421,16 +442,6 @@ export default function AppRunnerWindow() {
             </div>
           )}
 
-          {/* Error message */}
-          {runError && (
-            <div style={{
-              ...mono, fontSize: 11, color: "#ff453a", padding: "10px 12px", marginTop: 8,
-              background: "rgba(255,69,58,0.08)", borderRadius: 6, border: "1px solid rgba(255,69,58,0.2)",
-              lineHeight: 1.5, whiteSpace: "pre-wrap",
-            }}>
-              {runError}
-            </div>
-          )}
 
           {/* Running state */}
           {status === "running" && (

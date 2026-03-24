@@ -47,6 +47,18 @@ const jaMessages = {
   "task.status.done": "完了",
   "gateway.deliverable.prefix": "成果物",
   "gateway.decisionInbox.waiting": "{count}件の意思決定が待機中です。",
+  "cli.title": "CLI使用量",
+  "cli.connected": "接続中",
+  "cli.refresh": "更新",
+  "cli.noConnected": "CLIが接続されていません",
+  "cli.noUsage": "使用量なし",
+  "cli.notSignedIn": "サインイン必要",
+  "cli.noApi": "APIキーなし",
+  "cli.unavailable": "利用不可",
+  "cli.loading": "読込中…",
+  "cli.resets": "リセット:",
+  "cli.noData": "データなし",
+  "cli.noDataHint": "CLIを接続して使用量を追跡してください",
 } satisfies Record<MessageKey, string>;
 
 export default jaMessages;

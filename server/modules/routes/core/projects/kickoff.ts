@@ -5,33 +5,13 @@ import type { Express } from "express";
 import logger from "../../../../lib/logger.ts";
 import { loadPrompt } from "../../../../lib/prompt-loader.ts";
 import { startExecutionLoop } from "../../../agent-runtime/execution-loop.ts";
-import { resolveProvider, getDefaultModel } from "../../../agent-runtime/llm-client.ts";
+import { resolveProvider, getDefaultModel, callLlmOneShot as callLlmOneShotShared } from "../../../agent-runtime/llm-client.ts";
 
 /** Simple one-shot LLM call using resolveProvider. Returns empty string if no provider. */
 async function callLlmOneShot(db: import("node:sqlite").DatabaseSync, systemPrompt: string, userPrompt: string, signal: AbortSignal): Promise<string> {
   const resolved = resolveProvider(db);
   const model = getDefaultModel(resolved.providerType);
-  if (resolved.type === "anthropic") {
-    const resp = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: { "x-api-key": resolved.apiKey, "anthropic-version": "2023-06-01", "content-type": "application/json" },
-      body: JSON.stringify({ model, max_tokens: 4096, system: systemPrompt, messages: [{ role: "user", content: userPrompt }] }),
-      signal,
-    });
-    if (!resp.ok) throw new Error(`Anthropic API ${resp.status}`);
-    const data = await resp.json() as { content?: Array<{ type: string; text?: string }> };
-    return data.content?.filter((b) => b.type === "text").map((b) => b.text ?? "").join("") ?? "";
-  }
-  // OpenAI-compatible
-  const resp = await fetch(`${resolved.baseUrl}/chat/completions`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${resolved.apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ model, max_tokens: 4096, messages: [{ role: "system", content: systemPrompt }, { role: "user", content: userPrompt }] }),
-    signal,
-  });
-  if (!resp.ok) throw new Error(`LLM API ${resp.status}`);
-  const data = await resp.json() as { choices?: Array<{ message?: { content?: string } }> };
-  return data.choices?.[0]?.message?.content ?? "";
+  return callLlmOneShotShared({ provider: resolved, model, systemPrompt, userPrompt, maxTokens: 4096, signal });
 }
 
 function readDefaultCliProvider(db: import("node:sqlite").DatabaseSync): string {
@@ -582,8 +562,10 @@ export function registerProjectKickoffRoutes({ app, db, broadcast, appendTaskLog
             return;
           }
 
+          const VALID_TASK_TYPES = new Set(["general", "development", "design", "analysis", "presentation", "documentation"]);
+
           let parsed: {
-            tasks?: { title: string; description?: string }[];
+            tasks?: { title: string; description?: string; task_type?: string }[];
             needs_clarification?: boolean;
             question?: string;
           };
@@ -611,10 +593,11 @@ export function registerProjectKickoffRoutes({ app, db, broadcast, appendTaskLog
             if (!task.title?.trim()) continue;
             const taskId = randomUUID();
             const now = nowMs();
+            const taskType = task.task_type && VALID_TASK_TYPES.has(task.task_type) ? task.task_type : "general";
             db.prepare(`
               INSERT INTO tasks (id, title, description, project_id, assigned_agent_id, status, priority, task_type, created_at, updated_at)
-              VALUES (?, ?, ?, ?, NULL, 'planned', 3, 'general', ?, ?)
-            `).run(taskId, task.title.trim(), task.description ?? "", projectId, now, now);
+              VALUES (?, ?, ?, ?, NULL, 'planned', 3, ?, ?, ?)
+            `).run(taskId, task.title.trim(), task.description ?? "", projectId, taskType, now, now);
             broadcast("task_update", db.prepare("SELECT * FROM tasks WHERE id = ?").get(taskId));
             appendTaskLog(taskId, "system", `Task created: ${task.title.trim()}`);
           }
@@ -630,19 +613,65 @@ export function registerProjectKickoffRoutes({ app, db, broadcast, appendTaskLog
           }
 
           const unassignedTasks = db.prepare(`
-            SELECT id, title FROM tasks
+            SELECT id, title, task_type FROM tasks
             WHERE project_id = ? AND status = 'planned' AND assigned_agent_id IS NULL
             ORDER BY created_at ASC
-          `).all(projectId) as { id: string; title: string }[];
+          `).all(projectId) as { id: string; title: string; task_type: string | null }[];
+
+          // ── Fitness-based assignment (fallback: round-robin) ──
+          // Load fitness scores per agent per task_type
+          const fitnessMap = new Map<string, { successRate: number; avgDuration: number }>();
+          try {
+            const fitnessRows = db.prepare(`
+              SELECT agent_id, task_type, success_count, failure_count, avg_duration_ms
+              FROM agent_task_fitness
+              WHERE agent_id IN (${execAgents.map(() => "?").join(",")})
+            `).all(...execAgents.map((a) => a.id)) as {
+              agent_id: string; task_type: string; success_count: number;
+              failure_count: number; avg_duration_ms: number;
+            }[];
+            for (const r of fitnessRows) {
+              const total = r.success_count + r.failure_count;
+              if (total === 0) continue;
+              fitnessMap.set(`${r.agent_id}:${r.task_type}`, {
+                successRate: r.success_count / total,
+                avgDuration: r.avg_duration_ms,
+              });
+            }
+          } catch { /* table may not exist yet — fall through to round-robin */ }
+
+          // Track per-agent load to balance assignments
+          const agentLoad = new Map<string, number>();
+          for (const a of execAgents) agentLoad.set(a.id, 0);
 
           for (let i = 0; i < unassignedTasks.length; i++) {
             const task = unassignedTasks[i];
-            const agent = execAgents[i % execAgents.length];
+            const taskType = task.task_type ?? "general";
+
+            let bestAgent = execAgents[i % execAgents.length]; // round-robin default
+            let bestScore = -1;
+            let usedFitness = false;
+
+            for (const agent of execAgents) {
+              const fit = fitnessMap.get(`${agent.id}:${taskType}`);
+              if (!fit) continue;
+              // Score = success rate (0-1) with load penalty (fewer tasks = better)
+              const load = agentLoad.get(agent.id) ?? 0;
+              const score = fit.successRate - load * 0.1;
+              if (score > bestScore) {
+                bestScore = score;
+                bestAgent = agent;
+                usedFitness = true;
+              }
+            }
+
+            agentLoad.set(bestAgent.id, (agentLoad.get(bestAgent.id) ?? 0) + 1);
             db.prepare("UPDATE tasks SET assigned_agent_id = ?, updated_at = ? WHERE id = ?")
-              .run(agent.id, nowMs(), task.id);
-            appendTaskLog(task.id, "pm_oversight", `PM assigned → ${agent.name}`);
+              .run(bestAgent.id, nowMs(), task.id);
+            const method = usedFitness ? `fitness(${Math.round(bestScore * 100)}%)` : "round-robin";
+            appendTaskLog(task.id, "pm_oversight", `PM assigned → ${bestAgent.name} [${method}]`);
             broadcast("task_update", db.prepare("SELECT * FROM tasks WHERE id = ?").get(task.id));
-            logger.info({ taskId: task.id, agentId: agent.id }, "[kickoff] PM assigned agent");
+            logger.info({ taskId: task.id, agentId: bestAgent.id, method, taskType }, "[kickoff] PM assigned agent");
           }
 
           // ── Stage 4: kickoff_stage: executing ──
@@ -872,7 +901,7 @@ export function registerProjectKickoffRoutes({ app, db, broadcast, appendTaskLog
             return;
           }
 
-          let parsed: { tasks?: { title: string; description?: string }[] };
+          let parsed: { tasks?: { title: string; description?: string; task_type?: string }[] };
           try {
             parsed = JSON.parse(jsonMatch[0]) as typeof parsed;
           } catch {
@@ -881,15 +910,17 @@ export function registerProjectKickoffRoutes({ app, db, broadcast, appendTaskLog
             return;
           }
 
+          const addValidTypes = new Set(["general", "development", "design", "analysis", "presentation", "documentation"]);
           const newTasks = parsed.tasks ?? [];
           for (const task of newTasks) {
             if (!task.title?.trim()) continue;
             const taskId = randomUUID();
             const now = nowMs();
+            const taskType = task.task_type && addValidTypes.has(task.task_type) ? task.task_type : "general";
             db.prepare(`
               INSERT INTO tasks (id, title, description, project_id, assigned_agent_id, status, priority, task_type, created_at, updated_at)
-              VALUES (?, ?, ?, ?, NULL, 'planned', 3, 'general', ?, ?)
-            `).run(taskId, task.title.trim(), task.description ?? "", projectId, now, now);
+              VALUES (?, ?, ?, ?, NULL, 'planned', 3, ?, ?, ?)
+            `).run(taskId, task.title.trim(), task.description ?? "", projectId, taskType, now, now);
             broadcast("task_update", db.prepare("SELECT * FROM tasks WHERE id = ?").get(taskId));
             appendTaskLog(taskId, "system", `Task created (add-tasks): ${task.title.trim()}`);
           }
@@ -905,19 +936,53 @@ export function registerProjectKickoffRoutes({ app, db, broadcast, appendTaskLog
           }
 
           const unassignedTasks = db.prepare(`
-            SELECT id, title FROM tasks
+            SELECT id, title, task_type FROM tasks
             WHERE project_id = ? AND status = 'planned' AND assigned_agent_id IS NULL
             ORDER BY created_at ASC
-          `).all(projectId) as { id: string; title: string }[];
+          `).all(projectId) as { id: string; title: string; task_type: string | null }[];
+
+          // ── Fitness-based assignment (same as kickoff) ──
+          const addFitnessMap = new Map<string, { successRate: number }>();
+          try {
+            const rows = db.prepare(`
+              SELECT agent_id, task_type, success_count, failure_count
+              FROM agent_task_fitness
+              WHERE agent_id IN (${execAgents.map(() => "?").join(",")})
+            `).all(...execAgents.map((a) => a.id)) as {
+              agent_id: string; task_type: string; success_count: number; failure_count: number;
+            }[];
+            for (const r of rows) {
+              const total = r.success_count + r.failure_count;
+              if (total === 0) continue;
+              addFitnessMap.set(`${r.agent_id}:${r.task_type}`, { successRate: r.success_count / total });
+            }
+          } catch { /* fall through to round-robin */ }
+
+          const addLoad = new Map<string, number>();
+          for (const a of execAgents) addLoad.set(a.id, 0);
 
           for (let i = 0; i < unassignedTasks.length; i++) {
             const task = unassignedTasks[i];
-            const agent = execAgents[i % execAgents.length];
+            const taskType = task.task_type ?? "general";
+            let bestAgent = execAgents[i % execAgents.length];
+            let bestScore = -1;
+            let usedFitness = false;
+
+            for (const agent of execAgents) {
+              const fit = addFitnessMap.get(`${agent.id}:${taskType}`);
+              if (!fit) continue;
+              const load = addLoad.get(agent.id) ?? 0;
+              const score = fit.successRate - load * 0.1;
+              if (score > bestScore) { bestScore = score; bestAgent = agent; usedFitness = true; }
+            }
+
+            addLoad.set(bestAgent.id, (addLoad.get(bestAgent.id) ?? 0) + 1);
             db.prepare("UPDATE tasks SET assigned_agent_id = ?, updated_at = ? WHERE id = ?")
-              .run(agent.id, nowMs(), task.id);
-            appendTaskLog(task.id, "pm_oversight", `PM assigned → ${agent.name}`);
+              .run(bestAgent.id, nowMs(), task.id);
+            const method = usedFitness ? `fitness(${Math.round(bestScore * 100)}%)` : "round-robin";
+            appendTaskLog(task.id, "pm_oversight", `PM assigned → ${bestAgent.name} [${method}]`);
             broadcast("task_update", db.prepare("SELECT * FROM tasks WHERE id = ?").get(task.id));
-            logger.info({ taskId: task.id, agentId: agent.id }, "[add-tasks] PM assigned agent");
+            logger.info({ taskId: task.id, agentId: bestAgent.id, method }, "[add-tasks] PM assigned agent");
           }
 
           // ── Stage 4: executing ──
@@ -1079,4 +1144,161 @@ export function registerProjectKickoffRoutes({ app, db, broadcast, appendTaskLog
 
     return res.json({ status: "ok" });
   });
+}
+
+// ── Exported for PM orchestrator project-level review ─────────────────────────
+
+export interface InternalAddTasksDeps {
+  projectId: string;
+  additionalDirective: string;
+  db: import("node:sqlite").DatabaseSync;
+  broadcast: (type: string, payload: unknown) => void;
+  appendTaskLog: (taskId: string, kind: string, message: string) => void;
+  nowMs: () => number;
+  resolveProjectPath: (projectId: string) => string;
+  startTaskExecutionForAgent?: (taskId: string, agentId: string) => void;
+  insertNotification?: (params: { type: string; title: string; body?: string | null; task_id?: string | null; agent_id?: string | null }) => string | void;
+}
+
+/**
+ * Create tasks via LLM, assign agents (fitness-based), and start execution.
+ * Reusable by both the add-tasks API route and PM orchestrator's project-level review.
+ * Does NOT run a meeting — caller provides the directive directly.
+ */
+export async function runInternalAddTasksPipeline(deps: InternalAddTasksDeps): Promise<{ taskCount: number }> {
+  const { projectId, additionalDirective, db, broadcast, appendTaskLog, nowMs, resolveProjectPath, startTaskExecutionForAgent, insertNotification } = deps;
+
+  const project = db.prepare("SELECT name, core_goal, directive FROM projects WHERE id = ?").get(projectId) as
+    | { name: string; core_goal: string; directive: string | null } | undefined;
+  if (!project) return { taskCount: 0 };
+
+  const assignedAgents = db.prepare(`
+    SELECT a.id, a.name, a.role, a.department_id, d.name as dept_name, pa.project_role, pa.project_role_label
+    FROM agents a JOIN project_agents pa ON a.id = pa.agent_id
+    LEFT JOIN departments d ON a.department_id = d.id
+    WHERE pa.project_id = ?
+  `).all(projectId) as { id: string; name: string; role: string; dept_name: string | null; department_id: string | null; project_role: string; project_role_label: string | null }[];
+
+  const doneTasks = db.prepare("SELECT title FROM tasks WHERE project_id = ? AND status = 'done'").all(projectId) as { title: string }[];
+
+  const promptParts: string[] = [
+    `Project Name: ${project.name}`,
+    `Goal: ${project.core_goal}`,
+  ];
+  if (project.directive) promptParts.push(`Directive:\n${project.directive}`);
+  if (doneTasks.length > 0) {
+    promptParts.push(`Already completed tasks (do NOT recreate these):\n${doneTasks.map((t_) => `- ${t_.title}`).join("\n")}`);
+  }
+  promptParts.push(`Additional tasks requested:\n${additionalDirective}`);
+
+  const systemPrompt = loadPrompt("system/project-kickoff");
+
+  broadcast("kickoff_stage", { projectId, stage: "planning" });
+
+  let rawText: string;
+  try {
+    const signal = AbortSignal.timeout(120_000);
+    rawText = await callLlmOneShot(db, systemPrompt, promptParts.join("\n\n"), signal);
+  } catch {
+    const cliProvider = readDefaultCliProvider(db);
+    rawText = await callViaCliProvider(cliProvider, `${systemPrompt}\n\n${promptParts.join("\n\n")}`);
+  }
+
+  const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) {
+    logger.error({ projectId }, "[internal-add-tasks] invalid LLM response");
+    broadcast("kickoff_stage", { projectId, stage: "done" });
+    return { taskCount: 0 };
+  }
+
+  let parsed: { tasks?: { title: string; description?: string; task_type?: string }[] };
+  try { parsed = JSON.parse(jsonMatch[0]) as typeof parsed; } catch {
+    logger.error({ projectId }, "[internal-add-tasks] JSON parse failed");
+    broadcast("kickoff_stage", { projectId, stage: "done" });
+    return { taskCount: 0 };
+  }
+
+  const validTypes = new Set(["general", "development", "design", "analysis", "presentation", "documentation"]);
+  const newTasks = parsed.tasks ?? [];
+  for (const task of newTasks) {
+    if (!task.title?.trim()) continue;
+    const taskId = randomUUID();
+    const now = nowMs();
+    const taskType = task.task_type && validTypes.has(task.task_type) ? task.task_type : "general";
+    db.prepare(`
+      INSERT INTO tasks (id, title, description, project_id, assigned_agent_id, status, priority, task_type, created_at, updated_at)
+      VALUES (?, ?, ?, ?, NULL, 'planned', 3, ?, ?, ?)
+    `).run(taskId, task.title.trim(), task.description ?? "", projectId, taskType, now, now);
+    broadcast("task_update", db.prepare("SELECT * FROM tasks WHERE id = ?").get(taskId));
+    appendTaskLog(taskId, "system", `Task created (project-review follow-up): ${task.title.trim()}`);
+  }
+
+  // Fitness-based assignment
+  broadcast("kickoff_stage", { projectId, stage: "assigning" });
+  const execAgents = assignedAgents.filter((a) => a.project_role !== "pm");
+  if (execAgents.length === 0) {
+    broadcast("kickoff_stage", { projectId, stage: "done" });
+    return { taskCount: newTasks.length };
+  }
+
+  const unassigned = db.prepare(`
+    SELECT id, title, task_type FROM tasks
+    WHERE project_id = ? AND status = 'planned' AND assigned_agent_id IS NULL ORDER BY created_at ASC
+  `).all(projectId) as { id: string; title: string; task_type: string | null }[];
+
+  const fitMap = new Map<string, { successRate: number }>();
+  try {
+    const rows = db.prepare(`
+      SELECT agent_id, task_type, success_count, failure_count FROM agent_task_fitness
+      WHERE agent_id IN (${execAgents.map(() => "?").join(",")})
+    `).all(...execAgents.map((a) => a.id)) as { agent_id: string; task_type: string; success_count: number; failure_count: number }[];
+    for (const r of rows) {
+      const total = r.success_count + r.failure_count;
+      if (total > 0) fitMap.set(`${r.agent_id}:${r.task_type}`, { successRate: r.success_count / total });
+    }
+  } catch { /* fallback round-robin */ }
+
+  const load = new Map<string, number>();
+  for (const a of execAgents) load.set(a.id, 0);
+
+  for (let i = 0; i < unassigned.length; i++) {
+    const task = unassigned[i];
+    const tt = task.task_type ?? "general";
+    let best = execAgents[i % execAgents.length];
+    let bestScore = -1;
+    for (const agent of execAgents) {
+      const fit = fitMap.get(`${agent.id}:${tt}`);
+      if (!fit) continue;
+      const score = fit.successRate - (load.get(agent.id) ?? 0) * 0.1;
+      if (score > bestScore) { bestScore = score; best = agent; }
+    }
+    load.set(best.id, (load.get(best.id) ?? 0) + 1);
+    db.prepare("UPDATE tasks SET assigned_agent_id = ?, updated_at = ? WHERE id = ?").run(best.id, nowMs(), task.id);
+    appendTaskLog(task.id, "pm_oversight", `PM assigned → ${best.name}`);
+    broadcast("task_update", db.prepare("SELECT * FROM tasks WHERE id = ?").get(task.id));
+  }
+
+  // Start execution
+  broadcast("kickoff_stage", { projectId, stage: "executing" });
+  const planned = db.prepare(`
+    SELECT id, title, assigned_agent_id FROM tasks
+    WHERE project_id = ? AND status = 'planned' AND assigned_agent_id IS NOT NULL ORDER BY created_at ASC
+  `).all(projectId) as { id: string; title: string; assigned_agent_id: string }[];
+
+  const seen = new Set<string>();
+  for (const task of planned) {
+    if (seen.has(task.assigned_agent_id)) continue;
+    seen.add(task.assigned_agent_id);
+    try {
+      if (startTaskExecutionForAgent) {
+        startTaskExecutionForAgent(task.id, task.assigned_agent_id);
+      }
+    } catch (err) {
+      logger.error({ err, taskId: task.id }, "[internal-add-tasks] task start failed");
+    }
+  }
+
+  broadcast("kickoff_stage", { projectId, stage: "done" });
+  logger.info({ projectId, taskCount: newTasks.length }, "[internal-add-tasks] pipeline complete");
+  return { taskCount: newTasks.length };
 }

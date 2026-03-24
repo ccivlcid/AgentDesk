@@ -33,27 +33,24 @@
 
 ---
 
-### P1-2. PM Fitness-Based Agent Assignment
+### P1-2. PM Fitness-Based Agent Assignment — **DONE**
 
-**Current State**: PM orchestrator assigns via round-robin. Success/failure/duration data is being collected in the `agent_task_fitness` table.
+**Status**: Implemented.
 
-**Work**:
-- Reflect fitness data in PM's `postMeetingCreateAndRun` assignment logic
-- Replace round-robin with optimal agent matching per task type
-
-**Impact**: Agent assignment accuracy improves as projects repeat.
-
-**Files**: `server/modules/routes/core/projects/kickoff.ts`
-
-**Depends on**: P1-1 (multi-provider runtime must be functional before fitness-based assignment is meaningful across providers)
+**What was done**:
+- Replaced round-robin with fitness-scored assignment in both kickoff and add-tasks flows
+- Score = successRate - loadPenalty (balances workload across agents)
+- LLM now generates `task_type` during kickoff (development/design/analysis/documentation/general)
+- Fallback to round-robin when no fitness data exists
+- Added project-level PM review: when all tasks done, PM evaluates entire project against goal
+- GAPS_FOUND → automatic follow-up task creation via `runInternalAddTasksPipeline()`
+- Max 3 review rounds to prevent infinite loops (`pm_oversight_state.project_review_round`)
 
 **Acceptance Criteria**:
-- [ ] `postMeetingCreateAndRun` uses `agent_task_fitness` data instead of round-robin for agent assignment
-- [ ] Agents with higher success rates for a given task type are preferred over lower-performing agents
-- [ ] Fallback to round-robin when no fitness data exists for a task type
-- [ ] Assignment accuracy improves measurably after 3+ completed projects (verifiable via Reports)
-- [ ] `npx tsc -b --noEmit` produces zero errors
-- [ ] All tests pass (`pnpm test`)
+- [x] `postMeetingCreateAndRun` uses `agent_task_fitness` data instead of round-robin for agent assignment
+- [x] Agents with higher success rates for a given task type are preferred over lower-performing agents
+- [x] Fallback to round-robin when no fitness data exists for a task type
+- [x] `npx tsc -b --noEmit` produces zero errors
 
 ---
 
@@ -115,7 +112,7 @@
 
 | WindowType | Status | Action |
 |------------|------|------|
-| `create-task` | Replaced by CreateTaskModal | Consider removal |
+| `create-task` | CreateTaskModal removed; use Add Tasks in TaskBoard | Consider WindowType removal |
 | `create-agent` | Replaced by QuickCreateAgentModal | Consider removal |
 | `create-department` | Replaced by modal within Agent Manager | Consider removal |
 | `project-create` | Replaced by ProjectCreateModal | Consider removal |

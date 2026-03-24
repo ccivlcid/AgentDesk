@@ -125,7 +125,7 @@ export function HeartbeatBody({
           </div>
         ) : (
           <div style={{ ...mono, fontSize: "10px", color: "var(--th-text-muted)", display: "flex", alignItems: "center", gap: 6 }}>
-            <span style={{ color: "#4ade80" }}>✓</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
             {isKo ? "이 팩의 모든 직원이 살펴보기 대상입니다." : "All staff in this pack are monitored."}
           </div>
         )}
@@ -347,7 +347,7 @@ export function HeartbeatBody({
           {visibleLogs.slice(0, 20).map((log) => {
             let findings: HeartbeatFinding[] = [];
             try { if (log.findings_json) findings = JSON.parse(log.findings_json); } catch { /* ignore */ }
-            const { sym, color } = statusSymbol(log.status);
+            const { svgPath, color } = statusSymbol(log.status);
             const isExpanded = expandedLogId === log.id;
             return (
               <div key={log.id} style={{ borderBottom: "1px solid var(--th-border)" }}>
@@ -366,9 +366,9 @@ export function HeartbeatBody({
                     onClick={() => setExpandedLogId((id) => id === log.id ? null : log.id)}
                     style={{ background: "none", border: "none", cursor: "pointer", padding: 0, fontSize: "9px", color: "var(--th-text-muted)", flexShrink: 0, width: 10 }}
                   >
-                    {isExpanded ? "▾" : "▸"}
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points={isExpanded ? "6 9 12 15 18 9" : "9 6 15 12 9 18"} /></svg>
                   </button>
-                  <span style={{ fontSize: "11px", color, flexShrink: 0, width: 12 }}>{sym}</span>
+                  <span style={{ flexShrink: 0, width: 12, display: "inline-flex", color }}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d={svgPath} /></svg></span>
                   <span style={{ fontSize: "12px", flexShrink: 0 }}>{log.agent_avatar ?? "👤"}</span>
                   <span style={{ fontSize: "10px", fontWeight: 600, color: "var(--th-text-secondary)", flexShrink: 0, width: 100, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {(isKo && log.agent_name_ko) ? log.agent_name_ko : log.agent_name ?? log.agent_id}
@@ -396,7 +396,7 @@ export function HeartbeatBody({
                     }}
                     style={{ ...mono, fontSize: "9px", padding: "1px 5px", background: "transparent", border: "1px solid var(--th-border)", color: "var(--th-text-muted)", cursor: "pointer", borderRadius: 0, opacity: deletingLogId === log.id ? 0.5 : 1, flexShrink: 0 }}
                   >
-                    ×
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
                   </button>
                 </div>
                 {isExpanded && (
@@ -415,7 +415,7 @@ export function HeartbeatBody({
                       </>
                     ) : (
                       <div>
-                        <span style={{ color: "#4ade80" }}>✓ </span>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: "inline", verticalAlign: "middle", marginRight: 4 }}><polyline points="20 6 9 17 4 12" /></svg>
                         {(log.summary === "normal" || log.summary === "HEARTBEAT_OK" || !log.summary)
                           ? (isKo ? "정상입니다. 이상 없음." : "OK. No issues detected.")
                           : log.summary}
@@ -436,7 +436,7 @@ export function HeartbeatBody({
           onClick={() => setGuideExpanded((v) => !v)}
           style={{ ...mono, display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "6px 14px", background: "transparent", border: "none", cursor: "pointer" }}
         >
-          <span style={{ fontSize: "9px", color: "var(--th-text-muted)" }}>{guideExpanded ? "▾" : "▸"}</span>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "var(--th-text-muted)" }}><polyline points={guideExpanded ? "6 9 12 15 18 9" : "9 6 15 12 9 18"} /></svg>
           <span style={{ fontSize: "9px", color: "var(--th-text-muted)", letterSpacing: "0.06em" }}>
             {isKo ? "직원 살펴보기 사용 방법" : "How Heartbeat works"}
           </span>

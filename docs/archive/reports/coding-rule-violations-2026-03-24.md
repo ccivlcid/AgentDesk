@@ -18,6 +18,12 @@
 
 ## Task 1: Rule 0-1 — Replace Emoji/Unicode Symbols with SVG in UI Components (60+ cases)
 
+> **Progress**: ~40+ fixed across 14 files. Remaining ~20 files listed below.
+> **Fixed files** (skip these): `TrafficLights.tsx`, `CalloutBox.tsx`, `GenerateTab.tsx`, `GalleryTab.tsx`,
+> `constants.tsx`, `TaskBoardKanban.tsx`, `HeartbeatBody.tsx`, `utils.ts`, `LlmGuideModal.tsx`,
+> `HeartbeatGuideModal.tsx`, `CommandPaletteResults.tsx`, `CliUsagePanel.tsx`, `MemoryMemorySection.tsx`,
+> `TeamPageView.tsx`, `ScreenGuidePanel.tsx`, `ExportModal.tsx`, `SkillsLibrary.tsx`, `AnomalySection.tsx`
+
 Replace all emoji/unicode symbols with inline SVG.
 
 ### Replacement Mapping Table

@@ -70,7 +70,7 @@ All inline SVG icons must follow this standard:
 - **NEVER** edit or delete an existing migration entry.
 - Always append at the end of `migrations-e-recent.ts`.
 - ID format: `YYYY-MM-DD-NNN-short-description` (chronological, zero-padded).
-- **Last applied ID**: `2026-03-28-013-project-app-type`
+- **Last applied ID**: `2026-03-28-014-pm-oversight-review-round`
 - Every DDL must be wrapped in `try { ... } catch { /* already exists */ }`.
 
 ### 0-6. Component State Rules
@@ -122,6 +122,8 @@ Electron + React(Vite) frontend + Express/tsx backend + SQLite(better-sqlite3).
 > **모든 업무는 PM 에이전트의 LLM 검토를 거쳐야 완료됩니다.**
 > 수동으로 "done"을 설정해도 PM이 있는 프로젝트에서는 자동으로 "review"로 전환됩니다.
 
+#### 개별 태스크 검토
+
 ```
 업무 실행 완료 → status: "review"
     │
@@ -144,6 +146,38 @@ PM 에이전트가 LLM으로 검토 (prompts/pm/review-task.md)
                                    3. 에이전트 재실행
 ```
 
+#### 프로젝트 레벨 리뷰 (모든 태스크 완료 후)
+
+> **모든 태스크가 done이 되면, PM이 프로젝트 전체를 목표 대비 평가합니다.**
+> 부족한 부분이 있으면 추가 태스크를 자동 생성하여 다시 실행합니다. (최대 3라운드)
+
+```
+모든 태스크 done → pmProjectLevelReview()
+    │
+    ▼
+PM이 LLM으로 프로젝트 전체 평가 (prompts/pm/project-review.md)
+    │  평가 기준: Goal Coverage, Critical Gaps, Integration
+    │  라운드 N / 최대 3라운드 표시
+    │
+    ├── SATISFIED ───────────────────────────────────┐
+    │                                                 ▼
+    │                              1. 회고 보고서(retrospective) 생성
+    │                              2. pm_oversight_state 삭제 → 프로젝트 완료
+    │                              3. 알림: "Project completed"
+    │
+    └── GAPS_FOUND ─────────────────────────────────┐
+                                                     ▼
+                                  1. PM의 gap 분석 → additionalDirective
+                                  2. runInternalAddTasksPipeline() 호출
+                                     → LLM 태스크 생성 (task_type 포함)
+                                     → fitness 기반 에이전트 배정
+                                     → 실행 시작
+                                  3. 새 태스크 완료 → 다시 프로젝트 리뷰
+                                  4. 최대 3라운드 → 초과 시 자동 완료
+```
+
+**무한 루프 방지**: `pm_oversight_state.project_review_round` 카운터 (DB 저장, 최대 3).
+
 **progress.md 작성 구조** (PM이 LLM으로 생성):
 - 검증 결과: 달성/부분달성/미달성 + 사유
 - 담당 에이전트명
@@ -151,9 +185,17 @@ PM 에이전트가 LLM으로 검토 (prompts/pm/review-task.md)
 - PM 소견 (품질 평가, 누락 사항, 후속 작업 필요 여부)
 
 **Key files:**
-- `server/modules/workflow/orchestration/pm-orchestrator.ts` — PM 검토/승인/progress 작성
+- `server/modules/workflow/orchestration/pm-orchestrator.ts` — PM 검토/승인/progress 작성 + 프로젝트 레벨 리뷰
 - `server/modules/workflow/orchestration/review-finalize-tools/ship-automation.ts` — 버전 범프/CHANGELOG
-- `prompts/pm/review-task.md` — PM 검토 프롬프트
+- `server/modules/routes/core/projects/kickoff.ts` — `runInternalAddTasksPipeline()` (프로젝트 리뷰 후 추가 태스크)
+- `prompts/system/agent-runtime.md` — 에이전트 런타임 시스템 프롬프트 ({{agentName}}, {{agentRole}} + evidence-based rules)
+- `prompts/system/project-kickoff.md` — 킥오프 태스크 생성 프롬프트 (task_type 포함)
+- `prompts/system/project-analysis.md` — 앱 분석 사용자 프롬프트 (---JSON--- separator)
+- `prompts/system/app-analysis-system.md` — 앱 분석 시스템 프롬프트
+- `prompts/pm/review-task.md` — 개별 태스크 검토 프롬프트
+- `prompts/pm/project-review.md` — 프로젝트 레벨 리뷰 프롬프트 (SATISFIED/GAPS_FOUND)
+- `prompts/pm/handle-failure.md` — 실패 처리 프롬프트
+- `prompts/pm/auto-learn.md` — 자동 학습 프롬프트
 - `prompts/pm/write-progress.md` — PM progress.md 작성 프롬프트 (ko/en/ja/zh)
 
 ### 1-2-2. YOLO(자율) 모드
@@ -186,13 +228,15 @@ PM 에이전트가 LLM으로 검토 (prompts/pm/review-task.md)
      │
      ▼
 [3] 태스크 생성 (LLM 호출)                              ← stage: "planning"
-     │  callProvider() 또는 callViaCliProvider()
-     │  JSON 파싱 → tasks INSERT (assigned_agent_id = NULL)
+     │  callLlmOneShot() 또는 callViaCliProvider()
+     │  JSON 파싱 → tasks INSERT (assigned_agent_id = NULL, task_type = LLM 지정)
      │
      ▼
 [4] PM 에이전트 배정                                    ← stage: "assigning"
-     │  비-PM 에이전트 라운드 로빈 배정
-     │  appendTaskLog("pm_oversight", "PM assigned → {agent}")
+     │  fitness 기반 배정 (agent_task_fitness 테이블 조회)
+     │  fitness 데이터 없으면 round-robin fallback
+     │  PM 에이전트는 배정 대상에서 제외
+     │  appendTaskLog("pm_oversight", "PM assigned → {agent} [fitness/round-robin]")
      │
      ▼
 [5] 업무 실행                                           ← stage: "executing"
@@ -200,11 +244,19 @@ PM 에이전트가 LLM으로 검토 (prompts/pm/review-task.md)
      │  에이전트별 첫 번째 planned 태스크만 시작
      │
      ▼
-[6] 완료                                                ← stage: "done"
+[6] 개별 태스크 실행 → PM 리뷰 → done    (§1-2-1 참조)
+     │
+     ▼
+[7] 모든 태스크 done → PM 프로젝트 리뷰  (§1-2-1 참조)
+     │  SATISFIED → 프로젝트 완료
+     │  GAPS_FOUND → 추가 태스크 생성 → [4]로 돌아감 (최대 3라운드)
+     │
+     ▼
+[8] 완료                                                ← stage: "done"
 ```
 
 **Key files:**
-- `server/modules/routes/core/projects/kickoff.ts` — 전체 파이프라인
+- `server/modules/routes/core/projects/kickoff.ts` — 전체 파이프라인 + `runInternalAddTasksPipeline()`
 - `src/components/desktop/Desktop.tsx` — `KickoffStageOverlay` (4-step UI)
 - `src/store/uiStore.ts` — `kickoffStage` state
 - `src/app/useRealtimeSync.ts` — `kickoff_stage` WebSocket listener
@@ -214,9 +266,11 @@ PM 에이전트가 LLM으로 검토 (prompts/pm/review-task.md)
 - PM 에이전트에게 태스크 배정 금지. `project_role !== "pm"` 필터 적용.
 - 회의록은 `meeting_minutes` 테이블에 `project_id` 포함하여 저장. `task_id`는 NULL 허용.
 - 킥오프 실패 시에도 `postMeetingCreateAndRun()` 실행 (안전장치).
-- 킥오프 프롬프트(`prompts/system/project-kickoff.md`)에서 `agent_name` 필드 없음 — 배정은 PM이 함.
+- 킥오프 프롬프트(`prompts/system/project-kickoff.md`)에서 `agent_name` 필드 없음 — 배정은 PM이 함. `task_type` 필드는 LLM이 지정.
 - task_logs/messages INSERT 시 `project_id` 자동 스탬프 (SQLite AFTER INSERT 트리거).
 - YOLO(자율) 모드: PM에게 모든 통제권 위임. PM이 LLM으로 리뷰 + 자동 결정. 의사결정 창 비활성화. (상세: §1-2-2)
+- 프로젝트 레벨 리뷰: 모든 태스크 done → PM이 전체 목표 대비 평가 → 부족하면 추가 태스크 생성 (최대 3라운드). (상세: §1-2-1)
+- Fitness 기반 배정: `agent_task_fitness` 테이블의 성공률로 최적 에이전트 선택. 데이터 없으면 round-robin fallback.
 
 ### 1-4. Add Tasks Pipeline (추가 업무 흐름)
 
@@ -288,7 +342,8 @@ src/
 │   ├── windows/                 ← App windows:
 │   │                               WorkflowWindow, LibraryWindow, SettingsWindow, ChatWindow,
 │   │                               AgentManagerWindow, TaskBoardWindow, SynapseWindow,
-│   │                               ImageStudioWindow, FolderWindow, CliWindow (Agent CLI)
+│   │                               ImageStudioWindow, FolderWindow, CliWindow (Agent CLI),
+│   │                               AppRunnerWindow (right-click "Run App" → AI auto-analyze/run)
 │   ├── agent-detail/            ← AgentDetailPanel (right-slide inspector · 4 tabs)
 │   ├── workflow-builder/        ← WorkflowBuilder (@xyflow/react) + WbScheduleModal (cron)
 │   ├── agent-composition/       ← AgentCompositionBuilder + AgentCompositionRunModal + nodes/CompAgentNode
@@ -440,7 +495,7 @@ Use this checklist every time you add a DB column or table:
 
 1. **APPEND only** — add a new `{ id, up }` entry at the **end** of the `MIGRATIONS` chain (typically append to the last chunk under `server/modules/bootstrap/schema/versioned-migrations/`, e.g. `migrations-e-recent.ts`, or add a new chunk and spread it from `versioned-migrations.ts`). Never edit applied migration bodies.
 2. **ID format**: `YYYY-MM-DD-NNN-short-description` (zero-padded, chronological)
-3. **Last known ID**: `2026-03-28-013-project-app-type` → next: `2026-03-28-014-*` or `2026-03-29-001-*`
+3. **Last known ID**: `2026-03-28-014-pm-oversight-review-round` → next: `2026-03-28-015-*` or `2026-03-29-001-*`
 4. Wrap each DDL in `try { ... } catch { /* already exists */ }` for idempotency
 5. NEVER change or remove existing entries
 
@@ -458,21 +513,20 @@ Use this checklist every time you add a DB column or table:
 
 ---
 
-## 6-C. CreateTaskModal Extension Guide
+## 6-C. Task Creation Guide
 
-When adding a new field to the task creation form, follow this full chain:
+> **Note:** `CreateTaskModal` has been removed (dead code — never imported). Task creation in the UI is handled by the **Add Tasks** inline input in `TaskBoardToolbar.tsx`.
+
+**New task flow:** Add Tasks button → `POST /api/projects/:id/add-tasks` → LLM generates tasks (with `task_type`) → fitness-based agent assignment → execution.
+
+When adding a new field to the task schema:
 
 | # | File | Change |
 |---|------|--------|
-| 1 | `src/components/taskboard/constants.ts` | Add field to `CreateTaskDraft` type |
-| 2 | `src/components/taskboard/CreateTaskModal.tsx` | Add `useState`, pass to `onCreate` |
-| 3 | `src/components/taskboard/create-modal/CreateTaskModalView.tsx` | Add UI input element |
-| 4 | `src/components/taskboard/create-modal/useDraftState.ts` | Include field in draft save/restore |
-| 5 | `server/modules/routes/core/tasks/crud.ts` | Read field in create/update handler |
-| 6 | `server/modules/bootstrap/schema/versioned-migrations.ts` | Add DB column migration |
-| 7 | `src/api/tasks.ts` | Include field in API request type |
-
-**Reference**: `kb_context_sources` field (Synapse integration) is the canonical example of this pattern.
+| 1 | `server/modules/routes/core/tasks/crud.ts` | Read field in create/update handler |
+| 2 | `server/modules/bootstrap/schema/versioned-migrations/migrations-e-recent.ts` | Add DB column migration |
+| 3 | `src/api/organization-projects.ts` | Include field in `createTask()` / `updateTask()` API types |
+| 4 | `src/types/index.ts` | Add field to `Task` type |
 
 ---
 
@@ -494,13 +548,16 @@ When adding a new field to the task creation form, follow this full chain:
 
 ## 8. Documentation
 
+> Full index: [`docs/README.md`](docs/README.md). Archived specs: `docs/archive/`.
+
 | Document | Description |
 |----------|-------------|
-| [`docs/OVERVIEW.md`](docs/OVERVIEW.md) | Project OS concept, agent execution, monitoring |
+| [`docs/GLOSSARY.md`](docs/GLOSSARY.md) | System terminology — DB/UI mapping, domain concepts |
 | [`docs/progress.md`](docs/progress.md) | Development progress — current + completed phases |
 | [`docs/specs/api.md`](docs/specs/api.md) | REST API specification (v1.6.4) |
 | [`docs/architecture/schema-erd.md`](docs/architecture/schema-erd.md) | DB schema ER diagram + state machines |
+| [`docs/architecture/llm-call-patterns.md`](docs/architecture/llm-call-patterns.md) | LLM call patterns — all prompts in .md |
+| [`docs/architecture/AGENT-CONFIGURATION-AND-EXECUTION.md`](docs/architecture/AGENT-CONFIGURATION-AND-EXECUTION.md) | Agent execution branching |
+| [`docs/strategy/PM-WORKFLOW-SPEC.md`](docs/strategy/PM-WORKFLOW-SPEC.md) | PM orchestration — kickoff, review, project-level review |
 | [`docs/design/DESIGN.md`](docs/design/DESIGN.md) | CSS variables + component style rules |
 | [`docs/design/UI-SCREENS.md`](docs/design/UI-SCREENS.md) | Screen & modal specifications (macOS desktop OS) |
-| [`docs/strategy/AGENT-RUNTIME-SPEC.md`](docs/strategy/AGENT-RUNTIME-SPEC.md) | **Agent Runtime Engine spec (Phase 19)** |
-| [`docs/strategy/AgentDesk_OpenSource_Product_Strategy.md`](docs/strategy/AgentDesk_OpenSource_Product_Strategy.md) | Open source product strategy |

@@ -75,7 +75,13 @@ ALTER TABLE projects ADD COLUMN app_pid INTEGER DEFAULT NULL;
 
 ## 3. App Runner Window (AppRunnerWindow)
 
-The window that opens when double-clicking an app icon on the desktop.
+> **Updated**: AppRunnerWindow now uses a prompt-based UI instead of manual buttons.
+> - Double-clicking an app icon opens **ProjectFolderWindow** (same as regular projects)
+> - Right-click → "Run App" opens **AppRunnerWindow** with autoRun (AI auto-analyze → install → run)
+> - Prompt input is always visible — user can type instructions at any time
+> - On failure, error is shown and prompt is ready for retry/fix instructions
+
+The window that opens via right-click "Run App" on an app project icon.
 
 ### 3-1. First Launch (downloaded state)
 

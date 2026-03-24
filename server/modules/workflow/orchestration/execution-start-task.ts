@@ -231,15 +231,26 @@ export function createExecutionStartTaskTools(deps: CreateExecutionStartTaskTool
     const worktreePath = createWorktree(projPath, taskId, execAgent.name, taskData.base_branch ?? undefined);
     if (!worktreePath) {
       const rollbackAt = nowMs();
+      // Check retry count — fail permanently after 3 attempts to prevent infinite loop
+      const retryRow = db.prepare("SELECT worktree_retry_count FROM tasks WHERE id = ?").get(taskId) as { worktree_retry_count?: number } | undefined;
+      const retryCount = (retryRow?.worktree_retry_count ?? 0) + 1;
+      const maxRetries = 3;
+      const finalStatus = retryCount >= maxRetries ? "failed" : "pending";
       appendTaskLog(
         taskId,
         "error",
-        `Execution blocked: isolated worktree creation failed for project path '${projPath}'`,
+        `Execution blocked: isolated worktree creation failed for project path '${projPath}' (attempt ${retryCount}/${maxRetries})`,
       );
-      db.prepare("UPDATE tasks SET status = 'pending', started_at = NULL, updated_at = ? WHERE id = ?").run(
-        rollbackAt,
-        taskId,
-      );
+      try {
+        db.prepare("UPDATE tasks SET status = ?, started_at = NULL, worktree_retry_count = ?, updated_at = ? WHERE id = ?").run(
+          finalStatus, retryCount, rollbackAt, taskId,
+        );
+      } catch {
+        // worktree_retry_count column may not exist yet — fall back without it
+        db.prepare("UPDATE tasks SET status = ?, started_at = NULL, updated_at = ? WHERE id = ?").run(
+          finalStatus, rollbackAt, taskId,
+        );
+      }
       db.prepare(
         "UPDATE agents SET status = 'idle', current_task_id = CASE WHEN current_task_id = ? THEN NULL ELSE current_task_id END WHERE id = ?",
       ).run(taskId, execAgent.id);

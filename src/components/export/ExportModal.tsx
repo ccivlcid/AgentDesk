@@ -12,10 +12,10 @@ type ExportFormat = "csv" | "json";
 const mono = "var(--th-font-mono)";
 
 const EXPORT_TYPES: { id: ExportType; icon: string; labelKo: string; labelEn: string; desc: string }[] = [
-  { id: "tasks",        icon: "📋", labelKo: "태스크",      labelEn: "Tasks",        desc: "All tasks with status, agent, duration" },
-  { id: "deliverables", icon: "📦", labelKo: "결과물",      labelEn: "Deliverables", desc: "Completed tasks with output" },
-  { id: "agents",       icon: "🤖", labelKo: "에이전트",    labelEn: "Agents",       desc: "Agent list with performance stats" },
-  { id: "costs",        icon: "💰", labelKo: "비용",        labelEn: "Costs",        desc: "CLI usage cost records" },
+  { id: "tasks",        icon: "T", labelKo: "태스크",      labelEn: "Tasks",        desc: "All tasks with status, agent, duration" },
+  { id: "deliverables", icon: "D", labelKo: "결과물",      labelEn: "Deliverables", desc: "Completed tasks with output" },
+  { id: "agents",       icon: "A", labelKo: "에이전트",    labelEn: "Agents",       desc: "Agent list with performance stats" },
+  { id: "costs",        icon: "$", labelKo: "비용",        labelEn: "Costs",        desc: "CLI usage cost records" },
 ];
 
 const TASK_STATUSES = ["inbox","planned","in_progress","review","done","cancelled","pending","collaborating"];
@@ -81,9 +81,9 @@ export default function ExportModal({ onClose }: Props) {
         {/* Header */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 18px", borderBottom: "1px solid var(--th-border)", flexShrink: 0 }}>
           <div style={{ fontFamily: mono, fontSize: 13, fontWeight: 700, color: "var(--th-text-heading)" }}>
-            ↓ {t({ ko: "데이터 내보내기", en: "Export Data", ja: "データエクスポート", zh: "数据导出" })}
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: "inline", verticalAlign: "middle", marginRight: 4 }}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg> {t({ ko: "데이터 내보내기", en: "Export Data", ja: "データエクスポート", zh: "数据导出" })}
           </div>
-          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--th-text-muted)", fontSize: 18, lineHeight: 1, padding: 4 }}>×</button>
+          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--th-text-muted)", padding: 4, display: "flex" }}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg></button>
         </div>
 
         <div style={{ flex: 1, overflowY: "auto", padding: "16px 18px", display: "flex", flexDirection: "column", gap: 16 }}>
@@ -197,7 +197,7 @@ export default function ExportModal({ onClose }: Props) {
             >
               {downloading
                 ? t({ ko: "다운로드 중...", en: "Downloading...", ja: "ダウンロード中...", zh: "下载中..." })
-                : `↓ ${t({ ko: "내보내기", en: "Export", ja: "エクスポート", zh: "导出" })}`}
+                : t({ ko: "내보내기", en: "Export", ja: "エクスポート", zh: "导出" })}
             </button>
           </div>
         </div>

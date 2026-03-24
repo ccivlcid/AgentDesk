@@ -9,7 +9,7 @@ import { join, isAbsolute, normalize, resolve } from "path";
 import { homedir } from "os";
 import { createServer } from "net";
 import logger from "../../../lib/logger.ts";
-import { resolveProvider, getDefaultModel } from "../../agent-runtime/llm-client.ts";
+import { resolveProvider, getDefaultModel, callLlmOneShot } from "../../agent-runtime/llm-client.ts";
 import { loadPrompt } from "../../../lib/prompt-loader.ts";
 
 interface AnalysisResult {
@@ -276,7 +276,6 @@ export function registerAppRunnerRoutes({ app, db, broadcast }: { app: Express; 
         if (contextParts.length > 0) {
           const provider = resolveProvider(db);
           const model = getDefaultModel(provider.providerType);
-          const isAnthropic = provider.type === "anthropic";
 
           // Read language setting
           const langRow = db.prepare("SELECT value FROM settings WHERE key = 'language'").get() as { value: string } | undefined;
@@ -293,68 +292,51 @@ export function registerAppRunnerRoutes({ app, db, broadcast }: { app: Express; 
             lang: langLabel[lang] ?? "English",
           });
 
-          const url = isAnthropic ? `${provider.baseUrl}/messages` : `${provider.baseUrl}/chat/completions`;
-          const headers: Record<string, string> = { "Content-Type": "application/json" };
-          if (isAnthropic) {
-            headers["x-api-key"] = provider.apiKey;
-            headers["anthropic-version"] = "2023-06-01";
-          } else {
-            headers["Authorization"] = `Bearer ${provider.apiKey}`;
-          }
+          const rawText = await callLlmOneShot({
+            provider,
+            model,
+            systemPrompt: loadPrompt("system/app-analysis-system") ?? "You are a project analysis expert.",
+            userPrompt: prompt,
+            maxTokens: 1200,
+            signal: AbortSignal.timeout(30_000),
+          });
 
-          const body = isAnthropic
-            ? JSON.stringify({ model, max_tokens: 1200, messages: [{ role: "user", content: prompt }] })
-            : JSON.stringify({ model, max_tokens: 1200, messages: [{ role: "user", content: prompt }] });
-
-          const llmRes = await fetch(url, { method: "POST", headers, body, signal: AbortSignal.timeout(30_000) });
-          if (llmRes.ok) {
-            const llmJson = await llmRes.json() as Record<string, unknown>;
-            let rawText: string | null = null;
-            if (isAnthropic) {
-              const content = llmJson.content as Array<{ text: string }> | undefined;
-              rawText = content?.[0]?.text?.trim() ?? null;
-            } else {
-              const choices = llmJson.choices as Array<{ message: { content: string } }> | undefined;
-              rawText = choices?.[0]?.message?.content?.trim() ?? null;
-            }
-
-            if (rawText) {
-              // Split markdown and JSON parts by ---JSON--- separator
-              const jsonSep = rawText.indexOf("---JSON---");
-              if (jsonSep >= 0) {
-                analysis.ai_description = rawText.slice(0, jsonSep).trim();
-                const jsonPart = rawText.slice(jsonSep + 10);
-                // Extract JSON from code block or raw
-                const jsonMatch = jsonPart.match(/\{[\s\S]*\}/);
-                if (jsonMatch) {
-                  try {
-                    const cmds = JSON.parse(jsonMatch[0]) as {
-                      install_command?: string;
-                      run_command?: string;
-                      default_port?: number;
-                      env_vars?: string[];
-                      prerequisites?: string[];
-                    };
-                    // Override static analysis with LLM suggestions
-                    if (cmds.install_command) analysis.install_command = cmds.install_command;
-                    if (cmds.run_command) analysis.run_command = cmds.run_command;
-                    if (cmds.default_port) analysis.default_port = cmds.default_port;
-                    if (cmds.env_vars?.length) {
-                      for (const e of cmds.env_vars) {
-                        if (!analysis.warnings.includes(e)) analysis.warnings.push(e);
-                      }
+          if (rawText) {
+            // Split markdown and JSON parts by ---JSON--- separator
+            const jsonSep = rawText.indexOf("---JSON---");
+            if (jsonSep >= 0) {
+              analysis.ai_description = rawText.slice(0, jsonSep).trim();
+              const jsonPart = rawText.slice(jsonSep + 10);
+              // Extract JSON from code block or raw
+              const jsonMatch = jsonPart.match(/\{[\s\S]*\}/);
+              if (jsonMatch) {
+                try {
+                  const cmds = JSON.parse(jsonMatch[0]) as {
+                    install_command?: string;
+                    run_command?: string;
+                    default_port?: number;
+                    env_vars?: string[];
+                    prerequisites?: string[];
+                  };
+                  // Override static analysis with LLM suggestions
+                  if (cmds.install_command) analysis.install_command = cmds.install_command;
+                  if (cmds.run_command) analysis.run_command = cmds.run_command;
+                  if (cmds.default_port) analysis.default_port = cmds.default_port;
+                  if (cmds.env_vars?.length) {
+                    for (const e of cmds.env_vars) {
+                      if (!analysis.warnings.includes(e)) analysis.warnings.push(e);
                     }
-                    if (cmds.prerequisites?.length) {
-                      for (const p of cmds.prerequisites) {
-                        if (!analysis.warnings.includes(p)) analysis.warnings.push(`Requires: ${p}`);
-                      }
+                  }
+                  if (cmds.prerequisites?.length) {
+                    for (const p of cmds.prerequisites) {
+                      if (!analysis.warnings.includes(p)) analysis.warnings.push(`Requires: ${p}`);
                     }
-                    logger.info({ projectId, install: cmds.install_command, run: cmds.run_command }, "[app-runner] LLM provided commands");
-                  } catch { /* JSON parse failed — use static analysis */ }
-                }
-              } else {
-                analysis.ai_description = rawText;
+                  }
+                  logger.info({ projectId, install: cmds.install_command, run: cmds.run_command }, "[app-runner] LLM provided commands");
+                } catch { /* JSON parse failed — use static analysis */ }
               }
+            } else {
+              analysis.ai_description = rawText;
             }
           }
         }
@@ -494,6 +476,15 @@ export function registerAppRunnerRoutes({ app, db, broadcast }: { app: Express; 
         } catch { /* ignore */ }
       };
       runningProcesses.set(projectId, { pid, kill: killFn });
+
+      child.on("error", (err) => {
+        runningProcesses.delete(projectId);
+        appendLog(projectId, "run", `Run error: ${err.message}`);
+        db.prepare("UPDATE projects SET app_status = 'stopped', app_pid = NULL WHERE id = ?").run(projectId);
+        if (broadcast) {
+          broadcast("project_app_output", { projectId, data: `Run error: ${err.message}`, phase: "run_error", ts: Date.now(), status: "stopped" });
+        }
+      });
 
       child.on("close", (code) => {
         runningProcesses.delete(projectId);
@@ -644,6 +635,14 @@ export function registerAppRunnerRoutes({ app, db, broadcast }: { app: Express; 
     };
     runningProcesses.set(projectId, { pid, kill: killFn });
 
+    child.on("error", (err) => {
+      runningProcesses.delete(projectId);
+      appendLog(projectId, "run", `Run error: ${err.message}`);
+      if (broadcast) {
+        broadcast("project_app_output", { projectId, data: `Run error: ${err.message}`, phase: "run_error", ts: Date.now(), status: "stopped" });
+      }
+    });
+
     child.on("close", (code) => {
       runningProcesses.delete(projectId);
       appendLog(projectId, "run", `Process exited (code ${code})`);
@@ -711,7 +710,21 @@ export function registerAppRunnerRoutes({ app, db, broadcast }: { app: Express; 
     const shell = isWin ? "cmd.exe" : "/bin/sh";
     const shellFlag = isWin ? "/c" : "-c";
 
-    const child = spawnChild(shell, [shellFlag, installCmd], { cwd: projectPath, stdio: "pipe" });
+    let child;
+    try {
+      child = spawnChild(shell, [shellFlag, installCmd], { cwd: projectPath, stdio: "pipe" });
+    } catch (spawnErr) {
+      const msg = spawnErr instanceof Error ? spawnErr.message : String(spawnErr);
+      appendLog(projectId, "install", `Spawn error: ${msg}`);
+      if (broadcast) {
+        broadcast("project_app_output", { projectId, data: `Spawn error: ${msg}`, phase: "install_error", ts: Date.now(), status: "install_error" });
+      }
+      return res.status(500).json({ error: "spawn_failed", message: msg });
+    }
+
+    // Track install process so it can be stopped
+    const installPid = child.pid ?? 0;
+    runningProcesses.set(projectId, { pid: installPid, kill: () => { try { child!.kill(); } catch { /* ignore */ } } });
 
     child.stdout?.on("data", (d: Buffer) => {
       for (const line of d.toString().split("\n").filter(Boolean)) appendLog(projectId, "install", line);
@@ -721,6 +734,7 @@ export function registerAppRunnerRoutes({ app, db, broadcast }: { app: Express; 
     });
 
     child.on("close", (code) => {
+      runningProcesses.delete(projectId);
       if (code === 0) {
         appendLog(projectId, "install", "Install completed successfully");
         if (broadcast) {
@@ -735,6 +749,7 @@ export function registerAppRunnerRoutes({ app, db, broadcast }: { app: Express; 
     });
 
     child.on("error", (err) => {
+      runningProcesses.delete(projectId);
       appendLog(projectId, "install", `Install error: ${err.message}`);
       if (broadcast) {
         broadcast("project_app_output", { projectId, data: `Install error: ${err.message}`, phase: "install_error", ts: Date.now(), status: "install_error" });
@@ -742,7 +757,7 @@ export function registerAppRunnerRoutes({ app, db, broadcast }: { app: Express; 
     });
 
     // Timeout after 180s
-    const timeout = setTimeout(() => { child.kill(); appendLog(projectId, "install", "Install timeout (180s)"); }, 180_000);
+    const timeout = setTimeout(() => { child!.kill(); appendLog(projectId, "install", "Install timeout (180s)"); }, 180_000);
     child.on("close", () => clearTimeout(timeout));
 
     logger.info({ projectId, installCmd }, "[app-runner] install started via install-app");

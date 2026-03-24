@@ -1,31 +1,23 @@
 # App Runner Autonomous Execution (AutoRun) Design
 
+> **Status**: Implemented
 > **Goal**: When right-clicking "Run App", proceed automatically through **analysis → install → run** without user intervention.
-> The user only needs to watch the logs.
 
 ---
 
-## 1. Current vs. Changed
-
-### Current (Manual)
+## 1. Current Implementation
 
 ```
-Right-click "Run App"
-  → AppRunnerWindow opens
-  → User clicks [Analyze] → wait
-  → User clicks [Install & Run] → wait
-  → Complete
-```
+Click app icon → ProjectFolderWindow (same as regular projects: Files, Tasks, Agents, Terminal, Details, Git)
 
-### Changed (Autonomous)
-
-```
 Right-click "Run App"
   → AppRunnerWindow opens (autoRun mode)
-  → Analysis starts automatically (LLM)
+  → AI analysis starts automatically (LLM)
   → Analysis complete → Install & Run starts automatically
-  → User only monitors logs
-  → On completion, "Open in Browser" button is displayed
+  → User monitors logs via prompt-based UI
+  → On completion, "Open in Browser" + "Stop" buttons displayed
+  → Prompt input always visible — user can type instructions at any time
+  → On failure, error shown + prompt ready for retry/fix instructions
 ```
 
 ---

@@ -46,6 +46,11 @@ export function useWebSocket() {
 
       ws.onopen = () => {
         if (alive) setConnected(true);
+        // Flush messages queued during reconnection
+        const pending = pendingRef.current.splice(0);
+        for (const msg of pending) {
+          try { ws.send(msg); } catch { /* drop on error */ }
+        }
       };
       ws.onclose = (event) => {
         if (!alive) return;
@@ -88,10 +93,16 @@ export function useWebSocket() {
     };
   }, []);
 
+  const pendingRef = useRef<string[]>([]);
+
   const send = useCallback((data: unknown): void => {
     const ws = wsRef.current;
+    const msg = JSON.stringify(data);
     if (ws && ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify(data));
+      ws.send(msg);
+    } else {
+      // Queue messages during reconnection (max 50 to prevent memory bloat)
+      if (pendingRef.current.length < 50) pendingRef.current.push(msg);
     }
   }, []);
 

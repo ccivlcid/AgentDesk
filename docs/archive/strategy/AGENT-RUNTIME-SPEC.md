@@ -252,7 +252,7 @@ CREATE INDEX idx_runtime_events_run ON agent_runtime_events(run_id, seq);
 | **CLI Window** | Receive `runtime_stream` WS events → render text/tool calls in real time |
 | **Task Board** | Receive `runtime_status` → auto-update status badges |
 | **Agent Detail** | Show token usage, elapsed time, current step in the running tab |
-| **CreateTaskModal** | Add "Run with AgentDesk Runtime" option (vs existing CLI mode) |
+| **TaskBoardToolbar (Add Tasks)** | Runtime mode is selected per-agent via `cli_provider` / `api_provider_id` settings |
 | **Flow Graph** | Connect `runtime_status` → node flash animation |
 
 ### 8.2 No New UI
@@ -311,7 +311,7 @@ Both modes coexist. Users can choose when creating a Task. Runtime mode becomes 
 
 ### Step 4 — Integration + Demo (Day 4)
 
-- [ ] Runtime/CLI mode selection UI in CreateTaskModal
+- [x] Runtime/CLI mode selection via agent `cli_provider` / `api_provider_id` settings
 - [ ] Flow Graph runtime_status integration
 - [ ] Default agent preset ("Project Analyst") seed
 - [ ] End-to-end demo scenario verification

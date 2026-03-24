@@ -106,7 +106,7 @@ export function CliAgentPicker({
 
       {currentProject && (
         <div style={{ fontSize: 10, fontFamily: "var(--th-font-mono)", color: "var(--th-text-muted)", letterSpacing: "0.04em", opacity: 0.5 }}>
-          📁 {currentProject.name}
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: "inline-block", verticalAlign: "middle" }}><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg> {currentProject.name}
         </div>
       )}
     </div>

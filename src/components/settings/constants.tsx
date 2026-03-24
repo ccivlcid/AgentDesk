@@ -5,10 +5,10 @@ export const CLI_INFO: Record<string, { label: string; icon: React.ReactNode }> 
   claude: { label: "Claude Code", icon: <CliClaudeLogo /> },
   codex: { label: "Codex CLI", icon: <CliChatGPTLogo /> },
   gemini: { label: "Gemini CLI", icon: <CliGeminiLogo /> },
-  opencode: { label: "OpenCode", icon: "○" },
+  opencode: { label: "OpenCode", icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /></svg> },
   cursor: { label: "Cursor", icon: <CliCursorLogo /> },
-  copilot: { label: "GitHub Copilot", icon: "▶" },
-  antigravity: { label: "Antigravity", icon: "∞" },
+  copilot: { label: "GitHub Copilot", icon: <GitHubCopilotLogo /> },
+  antigravity: { label: "Antigravity", icon: <AntigravityLogo /> },
 };
 
 export const OAUTH_INFO: Record<string, { label: string }> = {

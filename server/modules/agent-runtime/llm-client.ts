@@ -90,6 +90,71 @@ export function getDefaultModel(providerType: string): string {
   return DEFAULT_MODELS[providerType] ?? "gpt-4o";
 }
 
+/**
+ * One-shot (non-streaming) LLM call. Works with both Anthropic and OpenAI-compatible providers.
+ * Properly separates system and user prompts for both provider types.
+ */
+export async function callLlmOneShot(params: {
+  provider: ResolvedProvider;
+  model: string;
+  systemPrompt: string;
+  userPrompt: string;
+  maxTokens?: number;
+  signal?: AbortSignal;
+}): Promise<string> {
+  const { provider, model, systemPrompt, userPrompt, maxTokens = 2048, signal } = params;
+
+  if (provider.type === "anthropic") {
+    const url = provider.baseUrl.replace(/\/+$/, "") + "/messages";
+    const resp = await fetch(url, {
+      method: "POST",
+      headers: {
+        "x-api-key": provider.apiKey,
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        model,
+        max_tokens: maxTokens,
+        system: systemPrompt,
+        messages: [{ role: "user", content: userPrompt }],
+      }),
+      signal,
+    });
+    if (!resp.ok) {
+      const errText = await resp.text().catch(() => "");
+      throw new Error(`Anthropic API ${resp.status}: ${errText}`);
+    }
+    const data = await resp.json() as { content?: Array<{ type: string; text?: string }> };
+    return data.content?.filter((b) => b.type === "text").map((b) => b.text ?? "").join("") ?? "";
+  }
+
+  // OpenAI-compatible
+  const url = provider.baseUrl.replace(/\/+$/, "") + "/chat/completions";
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (provider.apiKey) headers["Authorization"] = `Bearer ${provider.apiKey}`;
+
+  const resp = await fetch(url, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      model,
+      max_tokens: maxTokens,
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt },
+      ],
+    }),
+    signal,
+  });
+  if (!resp.ok) {
+    const errText = await resp.text().catch(() => "");
+    throw new Error(`LLM API ${resp.status} (${provider.baseUrl}): ${errText}`);
+  }
+  const data = await resp.json() as { choices?: Array<{ message?: { content?: string } }> };
+  return data.choices?.[0]?.message?.content ?? "";
+}
+
 /** Resolve Anthropic API key — from api_providers table by provider id, or ANTHROPIC_API_KEY env. */
 export function resolveAnthropicKey(db: DatabaseSync, apiProviderId?: string): string {
   if (apiProviderId) {

@@ -31,6 +31,11 @@ export function updateRunStatus(
   if (fields.completed_at !== undefined) { sets.push("completed_at = ?"); vals.push(fields.completed_at); }
   vals.push(runId);
   db.prepare(`UPDATE agent_runtime_runs SET ${sets.join(", ")} WHERE id = ?`).run(...vals);
+
+  // Clean up in-memory seq counter when run is terminal
+  if (status === "completed" || status === "failed" || status === "cancelled") {
+    seqCounter.delete(runId);
+  }
 }
 
 export function updateRunUsage(

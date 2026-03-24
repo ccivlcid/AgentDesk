@@ -962,4 +962,10 @@ export const VERSIONED_MIGRATIONS_E_RECENT: Migration[] = [
       try { db.exec("ALTER TABLE projects ADD COLUMN app_pid INTEGER DEFAULT NULL"); } catch { /* already exists */ }
     },
   },
+  {
+    id: "2026-03-28-014-pm-oversight-review-round",
+    up: (db) => {
+      try { db.exec("ALTER TABLE pm_oversight_state ADD COLUMN project_review_round INTEGER NOT NULL DEFAULT 0"); } catch { /* already exists */ }
+    },
+  },
 ];

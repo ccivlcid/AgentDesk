@@ -13,8 +13,9 @@ import { loadPrompt, loadPromptSection } from "../../../lib/prompt-loader.ts";
 import { analyzeTaskFailure, matchErrorPattern, sanitizeErrorMessage } from "./run-complete-handler/error-analysis.ts";
 import { runAutoLearning, generateProjectRetrospective, updateAgentFitness } from "./auto-learning.ts";
 import { shipAutomation } from "./review-finalize-tools/ship-automation.ts";
-import { resolveProvider, getDefaultModel, type ResolvedProvider } from "../../agent-runtime/llm-client.ts";
+import { resolveProvider, getDefaultModel, callLlmOneShot, type ResolvedProvider } from "../../agent-runtime/llm-client.ts";
 import { readYoloModeEnabled } from "../../routes/ops/messages/decision-inbox/yolo-mode.ts";
+import { runInternalAddTasksPipeline } from "../../routes/core/projects/kickoff.ts";
 import { recordTaskExecutionEvent } from "../core/task-execution-meta.ts";
 import logger from "../../../lib/logger.ts";
 import type { AgentRow } from "../core/conversation-types.ts";
@@ -41,29 +42,8 @@ async function callProviderCompat(
   userPrompt: string,
   signal: AbortSignal,
 ): Promise<string> {
-  const resolved = provider;
-  if (!resolved) throw new Error("No provider");
-  if (resolved.type === "anthropic") {
-    const resp = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: { "x-api-key": resolved.apiKey, "anthropic-version": "2023-06-01", "content-type": "application/json" },
-      body: JSON.stringify({ model, max_tokens: 2048, system: systemPrompt, messages: [{ role: "user", content: userPrompt }] }),
-      signal,
-    });
-    if (!resp.ok) throw new Error(`Anthropic API ${resp.status}`);
-    const data = await resp.json() as { content?: Array<{ type: string; text?: string }> };
-    return data.content?.filter((b) => b.type === "text").map((b) => b.text ?? "").join("") ?? "";
-  }
-  // OpenAI-compatible
-  const resp = await fetch(`${resolved.baseUrl}/chat/completions`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${resolved.apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ model, max_tokens: 2048, messages: [{ role: "system", content: systemPrompt }, { role: "user", content: userPrompt }] }),
-    signal,
-  });
-  if (!resp.ok) throw new Error(`LLM API ${resp.status}`);
-  const data = await resp.json() as { choices?: Array<{ message?: { content?: string } }> };
-  return data.choices?.[0]?.message?.content ?? "";
+  if (!provider) throw new Error("No provider");
+  return callLlmOneShot({ provider, model, systemPrompt, userPrompt, signal });
 }
 
 interface PmOrchestratorDeps {
@@ -619,6 +599,125 @@ export function startPmOrchestrator(deps: PmOrchestratorDeps): void {
     }
   }
 
+  // ── PM: 프로젝트 레벨 리뷰 (모든 태스크 완료 후) ──
+  const MAX_PROJECT_REVIEW_ROUNDS = 3;
+
+  async function pmProjectLevelReview(projectId: string): Promise<void> {
+    const guardKey = `project-review:${projectId}`;
+    if (pmInFlight.has(guardKey)) return;
+    pmInFlight.add(guardKey);
+
+    try {
+      // 1. Read current review round
+      const state = db.prepare("SELECT project_review_round FROM pm_oversight_state WHERE project_id = ?")
+        .get(projectId) as { project_review_round?: number } | undefined;
+      const currentRound = ((state?.project_review_round ?? 0) as number) + 1;
+
+      // 2. Max rounds exceeded → complete normally
+      if (currentRound > MAX_PROJECT_REVIEW_ROUNDS) {
+        const pm = findProjectPm(db, projectId);
+        if (pm) {
+          void generateProjectRetrospective(pm, projectId, learnDeps);
+          const proj = db.prepare("SELECT name FROM projects WHERE id = ?").get(projectId) as { name: string } | undefined;
+          sendAgentMessage({ id: pm.id as string },
+            `Project '${proj?.name ?? projectId}' completed after ${currentRound - 1} review rounds. Generating retrospective.`,
+            "report", "all", null, null);
+        }
+        db.prepare("DELETE FROM pm_oversight_state WHERE project_id = ?").run(projectId);
+        logger.info({ projectId, rounds: currentRound - 1 }, "[pm-orchestrator] project review max rounds, completing");
+        return;
+      }
+
+      // 3. Update round counter
+      try {
+        db.prepare("UPDATE pm_oversight_state SET project_review_round = ? WHERE project_id = ?")
+          .run(currentRound, projectId);
+      } catch { /* column may not exist yet */ }
+
+      // 4. Find PM
+      const pm = findProjectPm(db, projectId);
+      if (!pm) {
+        db.prepare("DELETE FROM pm_oversight_state WHERE project_id = ?").run(projectId);
+        return;
+      }
+
+      // 5. Gather project context
+      const project = db.prepare("SELECT name, core_goal, directive FROM projects WHERE id = ?")
+        .get(projectId) as { name: string; core_goal: string; directive: string | null } | undefined;
+      if (!project) return;
+
+      const allTasks = db.prepare(
+        "SELECT title, description, result, status FROM tasks WHERE project_id = ? ORDER BY created_at ASC",
+      ).all(projectId) as { title: string; description: string | null; result: string | null; status: string }[];
+
+      const taskSummaries = allTasks.map((t, i) => {
+        const tail = t.result ? (t.result.length > 500 ? "..." + t.result.slice(-500) : t.result) : "(no output)";
+        return `${i + 1}. **${t.title}** [${t.status}]\n   ${t.description ?? ""}\n   Result: ${tail}`;
+      }).join("\n\n");
+
+      // 6. LLM call
+      const lang = getPreferredLanguage();
+      const prompt = loadPrompt("pm/project-review", {
+        projectName: project.name,
+        coreGoal: project.core_goal ?? "",
+        directive: project.directive ?? "(none)",
+        taskSummaries: taskSummaries.slice(0, 8000),
+        totalTasks: String(allTasks.length),
+        currentRound: String(currentRound),
+        maxRounds: String(MAX_PROJECT_REVIEW_ROUNDS),
+        lang,
+      });
+
+      if (!prompt) {
+        db.prepare("DELETE FROM pm_oversight_state WHERE project_id = ?").run(projectId);
+        return;
+      }
+
+      let projectPath = "";
+      try { projectPath = resolveProjectPath(projectId); } catch { /* optional */ }
+
+      const response = await runAgentOneShot(pm, prompt, { projectPath, timeoutMs: 30_000, noTools: true });
+      const text = response.text ?? "";
+      const isSatisfied = /^SATISFIED[:\s]/im.test(text);
+
+      logger.info({ projectId, round: currentRound, decision: isSatisfied ? "satisfied" : "gaps_found" },
+        "[pm-orchestrator] project-level review result");
+
+      if (isSatisfied) {
+        // Project complete
+        appendTaskLog("", "pm_oversight", `PM project review (round ${currentRound}/${MAX_PROJECT_REVIEW_ROUNDS}): SATISFIED — ${text.slice(0, 200)}`);
+        void generateProjectRetrospective(pm, projectId, learnDeps);
+        db.prepare("DELETE FROM pm_oversight_state WHERE project_id = ?").run(projectId);
+        sendAgentMessage({ id: pm.id as string }, text, "report", "all", null, null);
+        broadcast("pm_activity", { projectId, action: "project_review_satisfied", round: currentRound, summary: text.slice(0, 200), timestamp: nowMs() });
+        insertNotification({ type: "project_complete", title: `Project '${project.name}' completed`, body: text.slice(0, 200) });
+      } else {
+        // Gaps found → create follow-up tasks
+        const gapText = text.replace(/^GAPS_FOUND[:\s]*/im, "").trim();
+        appendTaskLog("", "pm_oversight", `PM project review (round ${currentRound}/${MAX_PROJECT_REVIEW_ROUNDS}): GAPS_FOUND — ${gapText.slice(0, 200)}`);
+        sendAgentMessage({ id: pm.id as string }, text, "report", "all", null, null);
+        broadcast("pm_activity", { projectId, action: "project_review_gaps", round: currentRound, summary: gapText.slice(0, 200), timestamp: nowMs() });
+        insertNotification({ type: "pm_project_review", title: `PM found gaps in '${project.name}' (round ${currentRound})`, body: gapText.slice(0, 200) });
+
+        // Trigger add-tasks pipeline with PM's gap analysis
+        await runInternalAddTasksPipeline({
+          projectId,
+          additionalDirective: gapText,
+          db, broadcast, appendTaskLog, nowMs, resolveProjectPath,
+          startTaskExecutionForAgent: (taskId: string, agentId: string) => startTaskExecutionForAgent(taskId, agentId),
+          insertNotification,
+        });
+      }
+    } catch (err) {
+      logger.error({ err, projectId }, "[pm-orchestrator] project review failed, completing normally");
+      const pm = findProjectPm(db, projectId);
+      if (pm) void generateProjectRetrospective(pm, projectId, learnDeps);
+      db.prepare("DELETE FROM pm_oversight_state WHERE project_id = ?").run(projectId);
+    } finally {
+      pmInFlight.delete(guardKey);
+    }
+  }
+
   // ── PM: 다음 태스크 시작 (즉시 — 타이머 없음) ──
   async function pmStartNextTask(event: TaskStatusEvent): Promise<void> {
     const { projectId } = event;
@@ -643,19 +742,8 @@ export function startPmOrchestrator(deps: PmOrchestratorDeps): void {
         ).get(projectId);
 
         if (!active) {
-          const pm = findProjectPm(db, projectId);
-          if (pm) {
-            // 프로젝트 완료 → 회고 보고서 생성
-            void generateProjectRetrospective(pm, projectId, learnDeps);
-            const project = db.prepare("SELECT name FROM projects WHERE id = ?").get(projectId) as { name: string } | undefined;
-            const lang = getPreferredLanguage();
-            const msg = lang.startsWith("ko")
-              ? `프로젝트 '${project?.name ?? projectId}' 전체 완료. 회고 보고서를 작성하겠습니다.`
-              : `Project '${project?.name ?? projectId}' completed. Generating retrospective.`;
-            sendAgentMessage({ id: pm.id as string }, msg, "report", "all", null, null);
-          }
-          db.prepare("DELETE FROM pm_oversight_state WHERE project_id = ?").run(projectId);
-          logger.info({ projectId }, "[pm-orchestrator] project completed");
+          // All tasks done → project-level review instead of immediate completion
+          void pmProjectLevelReview(projectId);
         }
         return;
       }

@@ -103,7 +103,7 @@ export function ToolCard({
               transform: open ? "rotate(90deg)" : "rotate(0deg)",
             }}
           >
-            ▶
+            <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="6,3 20,12 6,21"/></svg>
           </span>
           <span
             style={{

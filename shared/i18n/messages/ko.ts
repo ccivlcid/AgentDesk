@@ -48,6 +48,18 @@ const koMessages = {
   "task.status.done": "완료",
   "gateway.deliverable.prefix": "최종 결과물",
   "gateway.decisionInbox.waiting": "의사결정 {count}건이 대기 중입니다.",
+  "cli.title": "CLI 사용량",
+  "cli.connected": "연결됨",
+  "cli.refresh": "새로고침",
+  "cli.noConnected": "연결된 CLI 없음",
+  "cli.noUsage": "사용량 없음",
+  "cli.notSignedIn": "로그인 필요",
+  "cli.noApi": "API 없음",
+  "cli.unavailable": "사용 불가",
+  "cli.loading": "로딩 중…",
+  "cli.resets": "리셋:",
+  "cli.noData": "데이터 없음",
+  "cli.noDataHint": "CLI를 연결하여 사용량을 추적하세요",
 } satisfies Record<MessageKey, string>;
 
 export default koMessages;
