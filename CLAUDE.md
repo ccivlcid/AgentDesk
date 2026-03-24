@@ -548,13 +548,16 @@ When adding a new field to the task schema:
 
 ## 8. Documentation
 
+> Full index: [`docs/README.md`](docs/README.md). Archived specs: `docs/archive/`.
+
 | Document | Description |
 |----------|-------------|
-| [`docs/OVERVIEW.md`](docs/OVERVIEW.md) | Project OS concept, agent execution, monitoring |
+| [`docs/GLOSSARY.md`](docs/GLOSSARY.md) | System terminology — DB/UI mapping, domain concepts |
 | [`docs/progress.md`](docs/progress.md) | Development progress — current + completed phases |
 | [`docs/specs/api.md`](docs/specs/api.md) | REST API specification (v1.6.4) |
 | [`docs/architecture/schema-erd.md`](docs/architecture/schema-erd.md) | DB schema ER diagram + state machines |
+| [`docs/architecture/llm-call-patterns.md`](docs/architecture/llm-call-patterns.md) | LLM call patterns — all prompts in .md |
+| [`docs/architecture/AGENT-CONFIGURATION-AND-EXECUTION.md`](docs/architecture/AGENT-CONFIGURATION-AND-EXECUTION.md) | Agent execution branching |
+| [`docs/strategy/PM-WORKFLOW-SPEC.md`](docs/strategy/PM-WORKFLOW-SPEC.md) | PM orchestration — kickoff, review, project-level review |
 | [`docs/design/DESIGN.md`](docs/design/DESIGN.md) | CSS variables + component style rules |
 | [`docs/design/UI-SCREENS.md`](docs/design/UI-SCREENS.md) | Screen & modal specifications (macOS desktop OS) |
-| [`docs/strategy/AGENT-RUNTIME-SPEC.md`](docs/strategy/AGENT-RUNTIME-SPEC.md) | **Agent Runtime Engine spec (Phase 19)** |
-| [`docs/strategy/AgentDesk_OpenSource_Product_Strategy.md`](docs/strategy/AgentDesk_OpenSource_Product_Strategy.md) | Open source product strategy |

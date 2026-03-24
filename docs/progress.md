@@ -72,19 +72,15 @@
 - Translated all 23 Korean docs to English for AI agent readability
 - Removed obsolete docs: `VISION-VS-REALITY.md`, `error/log.md`
 - Removed orphaned `error/` directory
-- Translated `strategy/roadmap/README.md` to English
-- `roadmap/README.md` is now the single source of truth for phase status
+- Translated docs to English for AI agent readability
+- Archived completed specs to `docs/archive/`
 
 ### Coding Rule Audit (2026-03-24)
 
-- Full audit against CLAUDE.md Section 0 rules
-- Generated `docs/reports/coding-rule-violations-2026-03-24.md`
-- Findings:
-  - Rule 0-1 (no emoji in UI): 60+ violations across 25+ files → **~40+ fixed** (14 files)
-  - Rule 0-2 (SVG conventions): 35+ violations across 15+ files
-  - Rule 0-3 (`any` types): ~1,500+ cases across 488 files
-  - Rule 0-3 (`as Foo` assertions): 81+ cases (40+ double-casts)
-  - Rule 0-7 (no `console.log`): 0 violations — passed
+- Rule 0-1 (emoji): **All fixed** — 60+ violations resolved across 25+ files
+- Rule 0-2 (SVG conventions): **Fixed** — hex→currentColor, size style→attr
+- Rule 0-3 (`any` types): ~1,200 remaining (Phase 1-2 done)
+- Rule 0-7 (no `console.log`): 0 violations — passed
 
 ### Skills Installation (2026-03-24)
 
@@ -100,7 +96,7 @@
 
 ## Completed Phases
 
-> Phase specs are in `docs/strategy/roadmap/`. See [roadmap/README.md](strategy/roadmap/README.md) for details.
+> Phase specs archived in `docs/archive/roadmap/`.
 
 | Phase | Goal | Status |
 |-------|------|--------|
@@ -115,15 +111,17 @@
 
 ## Pending Work
 
-> See [roadmap/BACKLOG.md](strategy/roadmap/BACKLOG.md) for full backlog with priorities.
+| Priority | Item | Status |
+|----------|------|--------|
+| P2 | i18n full migration (2,454 strings, 235 files) | Not Started — see `strategy/I18N-AGENT-WORKPACK.md` |
+| P2 | `any` types / double-casts cleanup | Phase 1-2 done, remaining ~1,200 cases |
 
-| Priority | Item | Reference | Status |
-|----------|------|-----------|--------|
-| P0 | Fix emoji → SVG violations (remaining ~20 files) | `docs/reports/coding-rule-violations-2026-03-24.md` | In Progress |
-| P0 | Fix SVG convention violations (35+ cases) | Same report, Task 2 | Not Started |
-| P0 | Fix `any` types / double-casts | Same report, Task 3-4 | Phase 1-2 done |
-| ~~P1~~ | ~~Multi-provider agent runtime~~ | ~~`roadmap/BACKLOG.md`~~ | **Done** (confirmed working) |
-| ~~P1~~ | ~~`run_command` tool implementation~~ | ~~`roadmap/BACKLOG.md`~~ | **Done** (already in tools.ts) |
-| ~~P1~~ | ~~PM fitness-based agent assignment~~ | ~~`roadmap/BACKLOG.md`~~ | **Done** |
-| P2 | i18n full migration (Phase 1 done, hardcoded strings remain) | `strategy/I18N-AGENT-WORKPACK.md` | Not Started |
-| P2 | System stability issues | `SYSTEM-ISSUES.md` | Not Started |
+### Completed (this session)
+- Multi-provider agent runtime (Anthropic + OpenAI-compatible)
+- `run_command` tool
+- PM fitness-based agent assignment
+- Project-level PM review (SATISFIED/GAPS_FOUND, max 3 rounds)
+- Emoji → SVG violations (all files)
+- SVG convention fixes
+- Shell injection + memory leak fixes
+- App Runner prompt UI + AnalysisTab separation

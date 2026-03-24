@@ -1,7 +1,7 @@
 # Agent Configuration and Execution Architecture (Based on Current Implementation)
 
 > **Purpose:** Consolidate in one place **how agents are stored in the DB and UI**, and **under what conditions which execution engine (CLI / HTTP API / OAuth / built-in runtime)** is selected, **based on actual code**.
-> **Related documents:** For strategy/roadmap content, refer to [`../strategy/AGENT-RUNTIME-SPEC.md`](../strategy/AGENT-RUNTIME-SPEC.md). This document focuses on **already-implemented behavior**.
+> **Purpose:** Consolidate how agents are stored in the DB/UI, and which execution engine is selected. This document focuses on **already-implemented behavior**.
 
 ---
 
