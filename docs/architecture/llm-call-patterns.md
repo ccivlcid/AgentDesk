@@ -69,8 +69,8 @@ agent.cli_provider exists AND no api_provider_id
 
 **Files:**
 - `server/modules/routes/core/projects.ts` → `callLlmOneShot()`
-- `server/modules/routes/core/projects/kickoff.ts` → `callLlmOneShot()`
-- `server/modules/workflow/orchestration/pm-orchestrator.ts` → `callProviderCompat()`
+- `server/modules/routes/core/projects/kickoff.ts` → `callLlmOneShot()` + `runInternalAddTasksPipeline()`
+- `server/modules/workflow/orchestration/pm-orchestrator.ts` → `callProviderCompat()` + `pmProjectLevelReview()`
 
 ```
 resolveProvider(db)

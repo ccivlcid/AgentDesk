@@ -99,6 +99,29 @@ File: `server/modules/agent-runtime/execution-loop.ts` (`startExecutionLoop`)
 
 **This is a separate code path from the main task run (`execution-run`)**, so it is NOT the case that "everything always uses CLI" or "everything always uses agent-runtime".
 
+### 3.4 Agent Assignment Logic
+
+**Kickoff / Add-Tasks** (`kickoff.ts`):
+- Agents are selected from `project_agents` table (only agents assigned to the project)
+- PM agents (`project_role = 'pm'`) are excluded from task assignment
+- **Fitness-based scoring**: queries `agent_task_fitness` table for success rate per `task_type`
+- Score = `successRate - (currentLoad * 0.1)` — balances quality and workload
+- Falls back to **round-robin** when no fitness data exists for a task type
+- LLM generates `task_type` during kickoff (development/design/analysis/documentation/general)
+
+**Auto-Assignment on Run** (`execution-run.ts`):
+- If task has no `assigned_agent_id`, `selectAutoAssignableAgentForTask()` picks one
+- Respects `project_agents` constraint
+
+### 3.5 Project-Level PM Review
+
+After all tasks in a project reach "done" status:
+1. `pmProjectLevelReview()` in `pm-orchestrator.ts` evaluates entire project against original goal
+2. **SATISFIED** → retrospective report + project complete
+3. **GAPS_FOUND** → PM's gap analysis fed to `runInternalAddTasksPipeline()` as `additionalDirective`
+4. New tasks created, assigned (fitness-based), and executed
+5. Cycle repeats until SATISFIED or max **3 rounds** (`pm_oversight_state.project_review_round`)
+
 ---
 
 ## 4. Task Execution Pipeline (Detailed)
