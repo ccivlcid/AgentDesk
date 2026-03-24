@@ -1,14 +1,9 @@
-import type { SQLInputValue } from "node:sqlite";
+import type { DatabaseSync, SQLInputValue } from "node:sqlite";
 import type { AgentCrudHelpers } from "./crud-helpers.ts";
 import type { WorkflowPackKey } from "../../../workflow/packs/definitions.ts";
 import { getDepartmentForPack } from "../../../workflow/packs/department-scope.ts";
 
-type DbLike = {
-  prepare: (sql: string) => {
-    get: (...args: SQLInputValue[]) => unknown;
-    run: (...args: SQLInputValue[]) => unknown;
-  };
-};
+type DbLike = Pick<DatabaseSync, "prepare">;
 
 export type PatchBodySuccess = {
   ok: true;
@@ -160,7 +155,7 @@ export function prepareAgentPatchBody(
       if (!normalizedDepartmentId) {
         body.department_id = null;
       } else {
-        const deptExists = getDepartmentForPack(db as any, normalizedDepartmentId);
+        const deptExists = getDepartmentForPack(db, normalizedDepartmentId);
         if (!deptExists) return { ok: false, status: 400, error: { error: "department_not_found" } };
         body.department_id = normalizedDepartmentId;
       }
