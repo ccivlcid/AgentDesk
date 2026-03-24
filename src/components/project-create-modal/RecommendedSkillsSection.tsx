@@ -100,7 +100,10 @@ export default function RecommendedSkillsSection({ categoryId }: Props) {
         <div className="grid grid-cols-2 gap-2 px-3 pb-3">
           {recommended.map((skill) => {
             const colorClass = CATEGORY_COLORS[skill.category] || CATEGORY_COLORS.Other;
-            const icon = CATEGORY_ICONS[skill.category] || "📦";
+            const iconText = CATEGORY_ICONS[skill.category];
+            const iconNode = iconText
+              ? iconText
+              : <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>;
             return (
               <div
                 key={skill.name}
@@ -134,7 +137,7 @@ export default function RecommendedSkillsSection({ categoryId }: Props) {
                       className={`inline-flex items-center gap-0.5 px-1 py-px text-[9px] border ${colorClass}`}
                       style={{ borderRadius: 0 }}
                     >
-                      {icon}
+                      {iconNode}
                     </span>
                     <span className="text-[9px] font-mono" style={{ color: "var(--th-text-muted)" }}>
                       {formatInstalls(skill.installs, "ko-KR")}

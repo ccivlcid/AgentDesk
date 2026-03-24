@@ -106,7 +106,7 @@ export function AgentFormModalPersonaBlock({
               transition: "transform 0.1s linear",
             }}
           >
-            ▶
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="6,3 20,12 6,21"/></svg>
           </span>
         </button>
         {showPersonaCatalog && (

@@ -8,7 +8,7 @@ import type { Agent, Task, Project } from "../../types";
 const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };
 
 const STATUS_CFG = {
-  working:      { color: "#22c55e", dot: "▶", label: "작업중" },
+  working:      { color: "#22c55e", dot: "\u25B6", label: "작업중" },
   idle:         { color: "var(--th-text-muted)", dot: "·",  label: "대기" },
   offline:      { color: "#475569",              dot: "○",  label: "오프" },
   break:        { color: "#f59e0b",              dot: "—",  label: "휴식" },
