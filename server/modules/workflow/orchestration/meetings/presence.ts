@@ -20,7 +20,7 @@ interface AgentRow {
 import type { DatabaseSync } from "node:sqlite";
 
 type PresenceDeps = {
-  db: Pick<DatabaseSync, "prepare">;
+  db: DatabaseSync;
   nowMs: () => number;
   broadcast: (event: string, payload: unknown) => void;
   meetingPresenceUntil: Map<string, number>;

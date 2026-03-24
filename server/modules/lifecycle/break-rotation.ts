@@ -1,7 +1,7 @@
 import type { DatabaseSync } from "node:sqlite";
 
 type BreakRotationDeps = {
-  db: Pick<DatabaseSync, "prepare">;
+  db: DatabaseSync;
   broadcast: (event: string, payload?: unknown) => void;
   isAgentInMeeting: (agentId: string) => boolean;
 };

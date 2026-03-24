@@ -20,7 +20,7 @@ export type VideoArtifactSyncResult = {
 };
 
 export type VideoArtifactSyncDeps = {
-  db: Pick<DatabaseSync, "prepare">;
+  db: DatabaseSync;
   taskWorktrees: Map<string, { worktreePath?: string; projectPath?: string }>;
   appendTaskLog: (taskId: string, kind: string, message: string) => void;
 };

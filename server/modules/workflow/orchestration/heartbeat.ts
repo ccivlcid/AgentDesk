@@ -43,7 +43,7 @@ interface Finding {
 import type { DatabaseSync } from "node:sqlite";
 
 interface HeartbeatDeps {
-  db: Pick<DatabaseSync, "prepare">;
+  db: DatabaseSync;
   nowMs: () => number;
   activeProcesses: Map<string, ChildProcess>;
   broadcast: (type: string, payload: unknown) => void;

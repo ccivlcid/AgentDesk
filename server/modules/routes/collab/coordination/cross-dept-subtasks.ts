@@ -1,7 +1,7 @@
 import type { DatabaseSync } from "node:sqlite";
 
 type CrossDeptSubtaskDeps = {
-  db: Pick<DatabaseSync, "prepare">;
+  db: DatabaseSync;
   nowMs: () => number;
   broadcast: (event: string, payload: unknown) => void;
   delegatedTaskToSubtask: Map<string, string>;

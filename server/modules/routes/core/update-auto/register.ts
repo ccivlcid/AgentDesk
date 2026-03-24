@@ -161,7 +161,7 @@ export function registerUpdateAutoRoutes(ctx: RuntimeContext): void {
     }
   }
 
-  function parseUpdateBooleanFlag(body: any, key: string): boolean {
+  function parseUpdateBooleanFlag(body: Record<string, unknown> | null | undefined, key: string): boolean {
     const raw = body?.[key];
     if (raw === true || raw === false) return raw;
 
@@ -530,7 +530,7 @@ export function registerUpdateAutoRoutes(ctx: RuntimeContext): void {
           releaseAutoUpdateLock();
         });
       inFlight = autoUpdateInFlight as Promise<UpdateApplyResult>;
-    } catch (err: any) {
+    } catch {
       autoUpdateState.running = false;
       autoUpdateInFlight = null;
       updateStatusCachedAt = 0;
@@ -551,7 +551,7 @@ export function registerUpdateAutoRoutes(ctx: RuntimeContext): void {
       }
       const code = result.status === "failed" ? 500 : 200;
       return res.status(code).json({ ok: result.status !== "failed", result });
-    } catch (err: any) {
+    } catch {
       return res.status(500).json({ ok: false, error: "update_failed" });
     }
   });

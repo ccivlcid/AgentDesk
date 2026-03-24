@@ -12,7 +12,7 @@ export type DirectivePolicy = {
 import type { DatabaseSync } from "node:sqlite";
 
 interface LanguagePolicyDeps {
-  db: Pick<DatabaseSync, "prepare">;
+  db: DatabaseSync;
 }
 
 const ROLE_LABEL: Record<string, string> = {

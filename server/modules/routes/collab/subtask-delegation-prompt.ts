@@ -8,7 +8,7 @@ import type { SubtaskRow } from "./subtask-summary.ts";
 import type { ParentTaskRow } from "../shared/types.ts";
 
 interface PromptDeps {
-  db: any;
+  db: Pick<import("node:sqlite").DatabaseSync, "prepare">;
   l: (ko: string[], en: string[], ja?: string[], zh?: string[]) => L10n;
   pickL: (pool: L10n, lang: Lang) => string;
   resolveLang: (text?: string, fallback?: Lang) => Lang;
@@ -169,7 +169,7 @@ export function createSubtaskDelegationPromptBuilder(deps: PromptDeps) {
       { team_leader: "Team Leader", senior: "Senior", junior: "Junior", intern: "Intern" }[execAgent.role] ||
       execAgent.role;
     const deptConstraint = getDeptRoleConstraint(targetDeptId, targetDeptName);
-    const deptPromptRaw = getDepartmentPromptForPack(db as any, targetDeptId);
+    const deptPromptRaw = getDepartmentPromptForPack(db as Parameters<typeof getDepartmentPromptForPack>[0], targetDeptId);
     const deptPrompt = typeof deptPromptRaw === "string" ? deptPromptRaw.trim() : "";
     const deptPromptBlock = deptPrompt ? `[Department Shared Prompt]\n${deptPrompt}` : "";
     const videoRuntimeRuleBlock =

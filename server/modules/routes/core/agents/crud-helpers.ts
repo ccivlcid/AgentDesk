@@ -56,7 +56,7 @@ export type AgentCrudHelpers = {
   }) => void;
 };
 
-type DbLike = Pick<DatabaseSync, "prepare">;
+type DbLike = DatabaseSync;
 
 export function createAgentCrudHelpers(db: DbLike): AgentCrudHelpers {
   const hasAgentWorkflowPackColumn = (() => {

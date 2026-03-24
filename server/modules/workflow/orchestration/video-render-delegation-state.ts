@@ -7,7 +7,7 @@ export type VideoRenderPendingSubtask = {
 import type { DatabaseSync } from "node:sqlite";
 
 type ReconcileVideoRenderDelegationDeps = {
-  db: Pick<DatabaseSync, "prepare">;
+  db: DatabaseSync;
   nowMs: () => number;
   broadcast: (event: string, payload: unknown) => void;
 };

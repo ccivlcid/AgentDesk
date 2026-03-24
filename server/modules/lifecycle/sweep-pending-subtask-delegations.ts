@@ -1,7 +1,7 @@
 import type { DatabaseSync } from "node:sqlite";
 
 type SweepDeps = {
-  db: Pick<DatabaseSync, "prepare">;
+  db: DatabaseSync;
   processSubtaskDelegations: (parentTaskId: string) => void;
 };
 

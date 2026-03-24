@@ -1,9 +1,10 @@
 import fs from "node:fs";
+import type { SQLInputValue } from "node:sqlite";
 import path from "path";
 import { appendTaskExecutionMetaUpdate } from "../workflow/core/task-execution-meta.ts";
 
 type HeartbeatDeps = {
-  db: any;
+  db: import("node:sqlite").DatabaseSync;
   nowMs: () => number;
   logsDir: string;
   activeProcesses: Map<string, unknown>;
@@ -40,12 +41,12 @@ export function updateRunningTaskHeartbeats({
 
     const updates = ["updated_at = updated_at"];
     const params: unknown[] = [];
-    appendTaskExecutionMetaUpdate(db as any, updates, params, {
+    appendTaskExecutionMetaUpdate(db, updates, params, {
       last_heartbeat_at: now,
       last_output_at: lastOutputAt ?? now,
     });
     params.push(taskId);
-    db.prepare(`UPDATE tasks SET ${updates.join(", ")} WHERE id = ?`).run(...(params as any[]));
+    db.prepare(`UPDATE tasks SET ${updates.join(", ")} WHERE id = ?`).run(...(params as SQLInputValue[]));
 
     const session = taskExecutionSessions.get(taskId);
     if (session) {

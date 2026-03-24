@@ -4,7 +4,7 @@ import type { Lang } from "../../../types/lang.ts";
 type L10n = Record<Lang, string[]>;
 
 interface CreateProgressNotifyToolsDeps {
-  db: Pick<DatabaseSync, "prepare">;
+  db: DatabaseSync;
   progressTimers: Map<string, ReturnType<typeof setInterval>>;
   findTeamLeader: (departmentId: string | null) => { id: string } | null;
   resolveLang: (text: string) => string;

@@ -1,3 +1,6 @@
+// Type for JSON.parse results that need deep property access without `any`.
+// Each property access returns the same union, allowing chaining and string comparison.
+type JsonParsed = string | number | boolean | null | undefined | JsonParsed[] | { [key: string]: JsonParsed };
 export type ThinkingBlock = {
   text: string;
   truncated: boolean;
@@ -24,7 +27,7 @@ export function extractThinkingBlocks(raw: string): ThinkingBlock[] {
     if (!t || !t.startsWith("{")) continue;
 
     try {
-      const j: any = JSON.parse(t);
+      const j = JSON.parse(t) as { [key: string]: JsonParsed };
 
       // Claude stream_event: thinking_delta accumulates text within one block
       if (j.type === "stream_event") {

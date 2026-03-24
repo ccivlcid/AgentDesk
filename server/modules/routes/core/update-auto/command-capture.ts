@@ -47,12 +47,13 @@ export function createCommandCaptureTools(deps: { killPidTree: (pid: number) => 
         maxBuffer: 1024 * 1024 * 8,
       }) as string;
       return { ok: true, code: 0, stdout: String(stdout ?? ""), stderr: "" };
-    } catch (err: any) {
-      const stdout = err?.stdout ? String(err.stdout) : "";
-      const stderr = err?.stderr ? String(err.stderr) : err?.message ? String(err.message) : "";
+    } catch (err: unknown) {
+      const errObj = err as { stdout?: string; stderr?: string; message?: string; status?: number } | null;
+      const stdout = errObj?.stdout ? String(errObj.stdout) : "";
+      const stderr = errObj?.stderr ? String(errObj.stderr) : errObj?.message ? String(errObj.message) : "";
       return {
         ok: false,
-        code: Number.isFinite(err?.status) ? Number(err.status) : 1,
+        code: Number.isFinite(errObj?.status) ? Number(errObj!.status) : 1,
         stdout,
         stderr,
       };
@@ -77,12 +78,12 @@ export function createCommandCaptureTools(deps: { killPidTree: (pid: number) => 
           cwd: process.cwd(),
           stdio: ["ignore", "pipe", "pipe"],
         });
-      } catch (err: any) {
+      } catch (err: unknown) {
         finalize({
           ok: false,
           code: 1,
           stdout,
-          stderr: err?.message ? String(err.message) : "spawn_failed",
+          stderr: err instanceof Error ? err.message : "spawn_failed",
         });
         return;
       }

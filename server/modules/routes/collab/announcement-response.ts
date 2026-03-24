@@ -130,8 +130,8 @@ export function createAnnouncementReplyScheduler(deps: AnnouncementReplyDeps): {
   }
 
   function scheduleAnnouncementReplies(announcement: string, projectId?: string | null): void {
-    const lang = typeof (deps as any).getPreferredLanguage === "function"
-      ? (deps as any).getPreferredLanguage()
+    const lang = typeof (deps as AnnouncementReplyDeps & { getPreferredLanguage?: () => Lang }).getPreferredLanguage === "function"
+      ? (deps as AnnouncementReplyDeps & { getPreferredLanguage: () => Lang }).getPreferredLanguage()
       : resolveLang(announcement);
 
     // 특정 프로젝트가 지정되면 해당 프로젝트에 할당된 에이전트만 응답,

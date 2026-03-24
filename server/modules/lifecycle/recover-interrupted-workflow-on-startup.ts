@@ -6,7 +6,7 @@ import { recoverOrphanInProgressTasks } from "./recover-orphan-in-progress-tasks
 import type { DatabaseSync } from "node:sqlite";
 
 type StartupDeps = {
-  db: Pick<DatabaseSync, "prepare">;
+  db: DatabaseSync;
   runInTransaction: (fn: () => void) => void;
   reconcileCrossDeptSubtasks: () => void;
   recoverOrphan: (reason: InProgressRecoveryReason) => void;

@@ -10,7 +10,7 @@ interface AgentLike {
 }
 
 interface CreatePlanningArchiveToolsDeps {
-  db: Pick<DatabaseSync, "prepare">;
+  db: DatabaseSync;
   nowMs: () => number;
   randomUUID: () => string;
   appendTaskLog: (taskId: string, kind: string, message: string) => void;

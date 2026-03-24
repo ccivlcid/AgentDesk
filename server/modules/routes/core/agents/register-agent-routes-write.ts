@@ -6,7 +6,7 @@ import { getDepartmentForPack } from "../../../workflow/packs/department-scope.t
 import { writeAgentPersonaFile, type AgentCrudHelpers } from "./crud-helpers.ts";
 
 type WriteRoutesCtx = {
-  db: Pick<DatabaseSync, "prepare">;
+  db: DatabaseSync;
   broadcast: (event: string, payload: unknown) => void;
   runInTransaction: (fn: () => void) => void;
 };

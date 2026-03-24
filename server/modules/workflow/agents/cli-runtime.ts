@@ -6,7 +6,7 @@ import logger from "../../../lib/logger";
 import { CodexLineBuffer, parseCodexJsonLine } from "../../agent-runtime/execution-loop.ts";
 
 type CliRuntimeDeps = {
-  db: any;
+  db: import("node:sqlite").DatabaseSync;
   logsDir: string;
   buildAgentArgs: (provider: string, model?: string, reasoningLevel?: string) => string[];
   clearCliOutputDedup: (taskId: string) => void;
@@ -156,7 +156,7 @@ export function createCliRuntimeTools(deps: CliRuntimeDeps) {
   const dbPrepareOpenSubtaskToolUseIdByTitle = () =>
     db.prepare("SELECT cli_tool_use_id FROM subtasks WHERE task_id = ? AND title = ? AND status != 'done' LIMIT 1");
 
-  function createSafeLogStreamOps(logStream: any): {
+  function createSafeLogStreamOps(logStream: fs.WriteStream): {
     safeWrite: (text: string) => boolean;
     safeEnd: (onDone?: () => void) => void;
     isClosed: () => boolean;

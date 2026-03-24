@@ -27,13 +27,13 @@ export type MeetingTranscriptEntry = {
 };
 
 type MeetingMinutesDeps = {
-  db: any;
+  db: import("node:sqlite").DatabaseSync;
   nowMs: () => number;
   getDeptName: (departmentId: string, workflowPackKey?: string | null) => string;
   getRoleLabel: (role: string, lang: Lang) => string;
   getAgentDisplayName: (agent: AgentRow, lang: string) => string;
-  pickL: (choices: any, lang: string) => string;
-  l: (ko: string[], en: string[], ja: string[], zh: string[]) => any;
+  pickL: (choices: unknown, lang: string) => string;
+  l: (ko: string[], en: string[], ja: string[], zh: string[]) => unknown;
   summarizeForMeetingBubble: (text: string, maxChars: number, lang?: Lang) => string;
   appendTaskLog: (taskId: string | null, kind: string, message: string) => void;
   broadcast: (event: string, payload: unknown) => void;

@@ -1,3 +1,6 @@
+// Type for JSON.parse results that need deep property access without `any`.
+// Each property access returns the same union, allowing chaining and string comparison.
+type JsonParsed = string | number | boolean | null | undefined | JsonParsed[] | { [key: string]: JsonParsed };
 export function prettyStreamJson(raw: string, opts: { includeReasoning?: boolean } = {}): string {
   const chunks: string[] = [];
   let sawJson = false;
@@ -24,7 +27,7 @@ export function prettyStreamJson(raw: string, opts: { includeReasoning?: boolean
     if (!t.startsWith("{")) continue;
 
     try {
-      const j: any = JSON.parse(t);
+      const j = JSON.parse(t) as { [key: string]: JsonParsed };
       sawJson = true;
 
       if (j.type === "stream_event") {

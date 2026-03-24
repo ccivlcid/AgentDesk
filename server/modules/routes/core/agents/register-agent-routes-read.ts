@@ -5,7 +5,7 @@ import type { AgentCrudHelpers } from "./crud-helpers.ts";
 import type { DatabaseSync } from "node:sqlite";
 
 type ReadRoutesCtx = {
-  db: Pick<DatabaseSync, "prepare">;
+  db: DatabaseSync;
   nowMs: () => number;
   meetingPresenceUntil: Map<string, number>;
   meetingSeatIndexByAgent: Map<string, number>;
