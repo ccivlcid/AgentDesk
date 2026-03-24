@@ -3,8 +3,10 @@ import type { InProgressRecoveryReason } from "./recover-orphan-in-progress-task
 import { pruneDuplicateReviewMeetings } from "./prune-duplicate-review-meetings.ts";
 import { recoverOrphanInProgressTasks } from "./recover-orphan-in-progress-tasks.ts";
 
+import type { DatabaseSync } from "node:sqlite";
+
 type StartupDeps = {
-  db: any;
+  db: Pick<DatabaseSync, "prepare">;
   runInTransaction: (fn: () => void) => void;
   reconcileCrossDeptSubtasks: () => void;
   recoverOrphan: (reason: InProgressRecoveryReason) => void;

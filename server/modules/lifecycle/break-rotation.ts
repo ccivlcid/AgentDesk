@@ -1,5 +1,7 @@
+import type { DatabaseSync } from "node:sqlite";
+
 type BreakRotationDeps = {
-  db: any;
+  db: Pick<DatabaseSync, "prepare">;
   broadcast: (event: string, payload?: unknown) => void;
   isAgentInMeeting: (agentId: string) => boolean;
 };

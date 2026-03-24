@@ -87,7 +87,7 @@ export function respondInboxAnnouncementWithDelegation(p: AnnouncementDelegation
     if (!directiveLeaderScopeByDept.has(normalizedDeptId)) {
       directiveLeaderScopeByDept.set(
         normalizedDeptId,
-        resolveDirectiveLeaderCandidateScope(db as any, inboxProjectId ?? null, normalizedDeptId),
+        resolveDirectiveLeaderCandidateScope(db, inboxProjectId ?? null, normalizedDeptId),
       );
     }
     return directiveLeaderScopeByDept.get(normalizedDeptId) ?? null;

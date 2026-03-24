@@ -190,7 +190,7 @@ export function registerApiDirectivesRoute(
       if (!directiveLeaderScopeByDept.has(normalizedDeptId)) {
         directiveLeaderScopeByDept.set(
           normalizedDeptId,
-          resolveDirectiveLeaderCandidateScope(db as any, explicitProjectId ?? null, normalizedDeptId),
+          resolveDirectiveLeaderCandidateScope(db, explicitProjectId ?? null, normalizedDeptId),
         );
       }
       return directiveLeaderScopeByDept.get(normalizedDeptId) ?? null;

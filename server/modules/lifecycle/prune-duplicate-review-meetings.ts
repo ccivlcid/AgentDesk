@@ -1,5 +1,7 @@
+import type { DatabaseSync } from "node:sqlite";
+
 type PruneDeps = {
-  db: any;
+  db: Pick<DatabaseSync, "prepare">;
   runInTransaction: (fn: () => void) => void;
 };
 

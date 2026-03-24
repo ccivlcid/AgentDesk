@@ -1,17 +1,12 @@
 import { randomUUID } from "node:crypto";
-import type { SQLInputValue } from "node:sqlite";
+import type { DatabaseSync } from "node:sqlite";
 import type { Express } from "express";
 import logger from "../../../../lib/logger.ts";
 import { getDepartmentForPack } from "../../../workflow/packs/department-scope.ts";
 import { writeAgentPersonaFile, type AgentCrudHelpers } from "./crud-helpers.ts";
 
 type WriteRoutesCtx = {
-  db: {
-    prepare: (sql: string) => {
-      run: (...args: SQLInputValue[]) => unknown;
-      get: (...args: SQLInputValue[]) => unknown;
-    };
-  };
+  db: Pick<DatabaseSync, "prepare">;
   broadcast: (event: string, payload: unknown) => void;
   runInTransaction: (fn: () => void) => void;
 };

@@ -40,8 +40,10 @@ interface Finding {
   details?: Record<string, unknown>;
 }
 
+import type { DatabaseSync } from "node:sqlite";
+
 interface HeartbeatDeps {
-  db: { prepare: (sql: string) => { get: (...args: unknown[]) => unknown; all: (...args: unknown[]) => unknown; run: (...args: unknown[]) => unknown } };
+  db: Pick<DatabaseSync, "prepare">;
   nowMs: () => number;
   activeProcesses: Map<string, ChildProcess>;
   broadcast: (type: string, payload: unknown) => void;
@@ -76,7 +78,7 @@ export function startHeartbeatEngine(deps: HeartbeatDeps): {
          JOIN agents a ON a.id = hc.agent_id
          WHERE hc.enabled = 1`,
       )
-      .all() as Array<HeartbeatConfig & { agent_name: string; agent_name_ko: string }>;
+      .all() as unknown as Array<HeartbeatConfig & { agent_name: string; agent_name_ko: string }>;
   }
 
   function parseCheckItems(json: string): HeartbeatCheckItem[] {

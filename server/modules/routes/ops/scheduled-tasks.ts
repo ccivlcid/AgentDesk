@@ -1,5 +1,6 @@
 import type { Express, Request, Response } from "express";
 import { randomUUID } from "node:crypto";
+import type { DatabaseSync } from "node:sqlite";
 import {
   isValidCronExpression,
   getNextCronTime,
@@ -8,7 +9,7 @@ import {
 
 interface ScheduledTaskRouteDeps {
   app: Express;
-  db: { prepare: (sql: string) => { get: (...args: unknown[]) => unknown; all: (...args: unknown[]) => unknown; run: (...args: unknown[]) => unknown } };
+  db: Pick<DatabaseSync, "prepare">;
   nowMs: () => number;
 }
 

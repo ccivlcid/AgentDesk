@@ -228,7 +228,7 @@ export function createPartBDeptHelpers(deps: {
 
   function getDeptName(deptId: string, workflowPackKey?: string | null): string {
     const lang = getPreferredLanguage();
-    const scoped = getDepartmentForPack(db as any, deptId);
+    const scoped = getDepartmentForPack(db, deptId);
     if (!scoped) return deptId;
     if (lang === "ko") return scoped.name_ko || scoped.name || deptId;
     if (lang === "ja") return scoped.name_ja || scoped.name || scoped.name_ko || deptId;

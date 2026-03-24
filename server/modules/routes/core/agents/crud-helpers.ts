@@ -1,6 +1,6 @@
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import type { SQLInputValue } from "node:sqlite";
+import type { DatabaseSync, SQLInputValue } from "node:sqlite";
 import { mkdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
 import {
   DEFAULT_WORKFLOW_PACK_KEY,
@@ -56,13 +56,7 @@ export type AgentCrudHelpers = {
   }) => void;
 };
 
-type DbLike = {
-  prepare: (sql: string) => {
-    run: (...args: SQLInputValue[]) => unknown;
-    get: (...args: SQLInputValue[]) => unknown;
-    all: (...args: SQLInputValue[]) => unknown;
-  };
-};
+type DbLike = Pick<DatabaseSync, "prepare">;
 
 export function createAgentCrudHelpers(db: DbLike): AgentCrudHelpers {
   const hasAgentWorkflowPackColumn = (() => {
@@ -131,7 +125,7 @@ export function createAgentCrudHelpers(db: DbLike): AgentCrudHelpers {
   }
 
   function resolvePlanningLeaderScopeAgentIds(packKey: WorkflowPackKey): string[] {
-    const constrained = resolveConstrainedAgentScopeForTask(db as any, {
+    const constrained = resolveConstrainedAgentScopeForTask(db, {
       workflow_pack_key: packKey,
       department_id: "planning",
       project_id: null,
