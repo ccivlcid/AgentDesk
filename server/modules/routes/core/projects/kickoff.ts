@@ -610,19 +610,65 @@ export function registerProjectKickoffRoutes({ app, db, broadcast, appendTaskLog
           }
 
           const unassignedTasks = db.prepare(`
-            SELECT id, title FROM tasks
+            SELECT id, title, task_type FROM tasks
             WHERE project_id = ? AND status = 'planned' AND assigned_agent_id IS NULL
             ORDER BY created_at ASC
-          `).all(projectId) as { id: string; title: string }[];
+          `).all(projectId) as { id: string; title: string; task_type: string | null }[];
+
+          // ── Fitness-based assignment (fallback: round-robin) ──
+          // Load fitness scores per agent per task_type
+          const fitnessMap = new Map<string, { successRate: number; avgDuration: number }>();
+          try {
+            const fitnessRows = db.prepare(`
+              SELECT agent_id, task_type, success_count, failure_count, avg_duration_ms
+              FROM agent_task_fitness
+              WHERE agent_id IN (${execAgents.map(() => "?").join(",")})
+            `).all(...execAgents.map((a) => a.id)) as {
+              agent_id: string; task_type: string; success_count: number;
+              failure_count: number; avg_duration_ms: number;
+            }[];
+            for (const r of fitnessRows) {
+              const total = r.success_count + r.failure_count;
+              if (total === 0) continue;
+              fitnessMap.set(`${r.agent_id}:${r.task_type}`, {
+                successRate: r.success_count / total,
+                avgDuration: r.avg_duration_ms,
+              });
+            }
+          } catch { /* table may not exist yet — fall through to round-robin */ }
+
+          // Track per-agent load to balance assignments
+          const agentLoad = new Map<string, number>();
+          for (const a of execAgents) agentLoad.set(a.id, 0);
 
           for (let i = 0; i < unassignedTasks.length; i++) {
             const task = unassignedTasks[i];
-            const agent = execAgents[i % execAgents.length];
+            const taskType = task.task_type ?? "general";
+
+            let bestAgent = execAgents[i % execAgents.length]; // round-robin default
+            let bestScore = -1;
+            let usedFitness = false;
+
+            for (const agent of execAgents) {
+              const fit = fitnessMap.get(`${agent.id}:${taskType}`);
+              if (!fit) continue;
+              // Score = success rate (0-1) with load penalty (fewer tasks = better)
+              const load = agentLoad.get(agent.id) ?? 0;
+              const score = fit.successRate - load * 0.1;
+              if (score > bestScore) {
+                bestScore = score;
+                bestAgent = agent;
+                usedFitness = true;
+              }
+            }
+
+            agentLoad.set(bestAgent.id, (agentLoad.get(bestAgent.id) ?? 0) + 1);
             db.prepare("UPDATE tasks SET assigned_agent_id = ?, updated_at = ? WHERE id = ?")
-              .run(agent.id, nowMs(), task.id);
-            appendTaskLog(task.id, "pm_oversight", `PM assigned → ${agent.name}`);
+              .run(bestAgent.id, nowMs(), task.id);
+            const method = usedFitness ? `fitness(${Math.round(bestScore * 100)}%)` : "round-robin";
+            appendTaskLog(task.id, "pm_oversight", `PM assigned → ${bestAgent.name} [${method}]`);
             broadcast("task_update", db.prepare("SELECT * FROM tasks WHERE id = ?").get(task.id));
-            logger.info({ taskId: task.id, agentId: agent.id }, "[kickoff] PM assigned agent");
+            logger.info({ taskId: task.id, agentId: bestAgent.id, method, taskType }, "[kickoff] PM assigned agent");
           }
 
           // ── Stage 4: kickoff_stage: executing ──
@@ -885,19 +931,53 @@ export function registerProjectKickoffRoutes({ app, db, broadcast, appendTaskLog
           }
 
           const unassignedTasks = db.prepare(`
-            SELECT id, title FROM tasks
+            SELECT id, title, task_type FROM tasks
             WHERE project_id = ? AND status = 'planned' AND assigned_agent_id IS NULL
             ORDER BY created_at ASC
-          `).all(projectId) as { id: string; title: string }[];
+          `).all(projectId) as { id: string; title: string; task_type: string | null }[];
+
+          // ── Fitness-based assignment (same as kickoff) ──
+          const addFitnessMap = new Map<string, { successRate: number }>();
+          try {
+            const rows = db.prepare(`
+              SELECT agent_id, task_type, success_count, failure_count
+              FROM agent_task_fitness
+              WHERE agent_id IN (${execAgents.map(() => "?").join(",")})
+            `).all(...execAgents.map((a) => a.id)) as {
+              agent_id: string; task_type: string; success_count: number; failure_count: number;
+            }[];
+            for (const r of rows) {
+              const total = r.success_count + r.failure_count;
+              if (total === 0) continue;
+              addFitnessMap.set(`${r.agent_id}:${r.task_type}`, { successRate: r.success_count / total });
+            }
+          } catch { /* fall through to round-robin */ }
+
+          const addLoad = new Map<string, number>();
+          for (const a of execAgents) addLoad.set(a.id, 0);
 
           for (let i = 0; i < unassignedTasks.length; i++) {
             const task = unassignedTasks[i];
-            const agent = execAgents[i % execAgents.length];
+            const taskType = task.task_type ?? "general";
+            let bestAgent = execAgents[i % execAgents.length];
+            let bestScore = -1;
+            let usedFitness = false;
+
+            for (const agent of execAgents) {
+              const fit = addFitnessMap.get(`${agent.id}:${taskType}`);
+              if (!fit) continue;
+              const load = addLoad.get(agent.id) ?? 0;
+              const score = fit.successRate - load * 0.1;
+              if (score > bestScore) { bestScore = score; bestAgent = agent; usedFitness = true; }
+            }
+
+            addLoad.set(bestAgent.id, (addLoad.get(bestAgent.id) ?? 0) + 1);
             db.prepare("UPDATE tasks SET assigned_agent_id = ?, updated_at = ? WHERE id = ?")
-              .run(agent.id, nowMs(), task.id);
-            appendTaskLog(task.id, "pm_oversight", `PM assigned → ${agent.name}`);
+              .run(bestAgent.id, nowMs(), task.id);
+            const method = usedFitness ? `fitness(${Math.round(bestScore * 100)}%)` : "round-robin";
+            appendTaskLog(task.id, "pm_oversight", `PM assigned → ${bestAgent.name} [${method}]`);
             broadcast("task_update", db.prepare("SELECT * FROM tasks WHERE id = ?").get(task.id));
-            logger.info({ taskId: task.id, agentId: agent.id }, "[add-tasks] PM assigned agent");
+            logger.info({ taskId: task.id, agentId: bestAgent.id, method }, "[add-tasks] PM assigned agent");
           }
 
           // ── Stage 4: executing ──
