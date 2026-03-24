@@ -128,8 +128,8 @@ export default function OAuthSettingsTab({
         style={{ border: "1px solid #E5E7EB", background: "#FFFFFF", borderRadius: 20 }}
       >
         <div className="flex items-center gap-3">
-          <div style={{ padding: 8, background: "#F3F4F6", borderRadius: 12 }}>
-            <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="#6B7280" strokeWidth={2.5}>
+          <div style={{ padding: 8, background: "#F3F4F6", borderRadius: 12, color: "#6B7280" }}>
+            <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
               <path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l5 5M4 4l5 5" />
             </svg>
           </div>
