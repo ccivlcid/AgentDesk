@@ -177,7 +177,7 @@ export function createFinalizeApprovedReview(params: {
     {
       const updates = ["status = 'done'", "completed_at = ?", "updated_at = ?"];
       const params: unknown[] = [t, t];
-      appendTaskExecutionMetaUpdate(db as any, updates, params, {
+      appendTaskExecutionMetaUpdate(db as Parameters<typeof appendTaskExecutionMetaUpdate>[0], updates, params, {
         execution_state: "succeeded",
         last_heartbeat_at: t,
         last_output_at: t,
@@ -188,7 +188,7 @@ export function createFinalizeApprovedReview(params: {
       params.push(taskId);
       db.prepare(`UPDATE tasks SET ${updates.join(", ")} WHERE id = ?`).run(...params);
     }
-    recordTaskExecutionEvent(db as any, {
+    recordTaskExecutionEvent(db as Parameters<typeof recordTaskExecutionEvent>[0], {
       taskId,
       eventType: "review_approved",
       fromState: "awaiting_review",

@@ -10,11 +10,7 @@ import {
   readWorktreeStatusShort,
 } from "./shared.ts";
 
-type DbLike = {
-  prepare: (sql: string) => {
-    get: (...args: any[]) => unknown;
-  };
-};
+type DbLike = Pick<import("node:sqlite").DatabaseSync, "prepare">;
 
 type CreateWorktreeMergeToolsDeps = {
   db: DbLike;
@@ -22,8 +18,8 @@ type CreateWorktreeMergeToolsDeps = {
   appendTaskLog: (taskId: string, kind: string, message: string) => void;
   cleanupWorktree: (projectPath: string, taskId: string) => void;
   resolveLang: (text: string) => string;
-  l: (...args: any[]) => any;
-  pickL: (...args: any[]) => string;
+  l: (ko: string[], en: string[], ja: string[], zh: string[]) => unknown;
+  pickL: (choices: unknown, lang: string) => string;
 };
 
 export function createWorktreeMergeTools(deps: CreateWorktreeMergeToolsDeps) {

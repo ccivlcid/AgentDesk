@@ -2,8 +2,8 @@ import type { Lang } from "../../../types/lang.ts";
 
 type DbLike = {
   prepare: (sql: string) => {
-    get: (...args: any[]) => unknown;
-    all: (...args: any[]) => unknown;
+    get: (...args: unknown[]) => unknown;
+    all: (...args: unknown[]) => unknown;
   };
 };
 

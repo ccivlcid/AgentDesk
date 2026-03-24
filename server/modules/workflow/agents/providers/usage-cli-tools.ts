@@ -249,7 +249,7 @@ export function createUsageCliTools(deps: CreateUsageCliToolsDeps) {
 
   function execWithTimeout(cmd: string, args: string[], timeoutMs: number): Promise<string> {
     return new Promise((resolve, reject) => {
-      const opts: any = { timeout: timeoutMs };
+      const opts: { timeout: number; shell?: boolean } = { timeout: timeoutMs };
       if (process.platform === "win32") opts.shell = true;
       const child = execFile(cmd, args, opts, (err, stdout) => {
         if (err) return reject(err);
@@ -266,7 +266,7 @@ export function createUsageCliTools(deps: CreateUsageCliToolsDeps) {
     timeoutMs: number,
   ): Promise<{ stdout: string; stderr: string; code: number }> {
     return new Promise((resolve) => {
-      const opts: any = { timeout: timeoutMs };
+      const opts: { timeout: number; shell?: boolean } = { timeout: timeoutMs };
       if (process.platform === "win32") opts.shell = true;
       const child = execFile(cmd, args, opts, (err, stdout, stderr) => {
         const raw = err && (err as NodeJS.ErrnoException).code;

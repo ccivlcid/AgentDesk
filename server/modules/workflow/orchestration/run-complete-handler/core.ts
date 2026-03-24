@@ -212,8 +212,8 @@ export function createRunCompleteHandler(deps: RunCompleteHandlerDeps) {
         taskId,
       };
       Promise.all([
-        executeHooks(db as any, hookEventType, hookContext),
-        executeHooks(db as any, "on-complete", hookContext),
+        executeHooks(db as Parameters<typeof executeHooks>[0], hookEventType, hookContext),
+        executeHooks(db as Parameters<typeof executeHooks>[0], "on-complete", hookContext),
       ]).catch(() => {/* hook failures must not block completion */});
     }
 
