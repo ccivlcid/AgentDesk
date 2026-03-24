@@ -100,7 +100,7 @@ export default function ScreenGuidePanel({ open, view, hasProject = true, onClos
           }}
           className="hover:!text-[var(--th-text-secondary)] hover:!border-[var(--th-border-strong)] hover:!bg-[var(--th-bg-surface-hover)] focus-visible:!outline focus-visible:!outline-2 focus-visible:!outline-offset-1 focus-visible:!outline-[var(--th-accent)]"
         >
-          ✕
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
         </button>
       </div>
 

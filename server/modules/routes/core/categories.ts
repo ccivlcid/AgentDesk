@@ -20,7 +20,7 @@ export function registerCategoryRoutes({ app, db, nowMs }: RegisterCategoryRoute
       const rows = db
         .prepare(`SELECT ${CATEGORY_COLS} FROM categories ORDER BY owner_scope DESC, name ASC`)
         .all();
-      res.json({ categories: rows });
+      res.json({ ok: true, categories: rows });
     } catch (err) {
       logger.error({ err }, "[AgentDesk] GET /api/categories error:");
       res.status(500).json({ error: "Failed to fetch categories" });
@@ -63,7 +63,7 @@ export function registerCategoryRoutes({ app, db, nowMs }: RegisterCategoryRoute
       );
 
       const row = db.prepare(`SELECT ${CATEGORY_COLS} FROM categories WHERE id = ?`).get(id);
-      res.status(201).json(row);
+      res.status(201).json({ ok: true, category: row });
     } catch (err) {
       logger.error({ err }, "[AgentDesk] POST /api/categories error:");
       res.status(500).json({ error: "Failed to create category" });
@@ -95,7 +95,7 @@ export function registerCategoryRoutes({ app, db, nowMs }: RegisterCategoryRoute
 
       db.prepare(`UPDATE categories SET ${sets.join(", ")} WHERE id = ?`).run(...vals);
       const row = db.prepare(`SELECT ${CATEGORY_COLS} FROM categories WHERE id = ?`).get(id);
-      res.json(row);
+      res.json({ ok: true, category: row });
     } catch (err) {
       logger.error({ err }, "[AgentDesk] PATCH /api/categories/:id error:");
       res.status(500).json({ error: "Failed to update category" });
@@ -131,7 +131,7 @@ export function registerCategoryRoutes({ app, db, nowMs }: RegisterCategoryRoute
            FROM category_versions WHERE category_id = ? ORDER BY created_at DESC`,
         )
         .all(id);
-      res.json({ versions: rows });
+      res.json({ ok: true, versions: rows });
     } catch (err) {
       logger.error({ err }, "[AgentDesk] GET /api/categories/:id/versions error:");
       res.status(500).json({ error: "Failed to fetch versions" });
@@ -169,7 +169,7 @@ export function registerCategoryRoutes({ app, db, nowMs }: RegisterCategoryRoute
       );
 
       const row = db.prepare(`SELECT ${CATEGORY_COLS} FROM categories WHERE id = ?`).get(newId);
-      res.status(201).json(row);
+      res.status(201).json({ ok: true, category: row });
     } catch (err) {
       logger.error({ err }, "[AgentDesk] POST /api/categories/:id/clone error:");
       res.status(500).json({ error: "Failed to clone category" });

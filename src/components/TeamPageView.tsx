@@ -14,11 +14,11 @@ interface TeamPageViewProps {
 
 const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };
 
-const STATUS_DOT: Record<Agent["status"], { dot: string; color: string; label: string }> = {
-  working: { dot: "●", color: "#f59e0b", label: "WORKING" },
-  idle:    { dot: "○", color: "#4ade80", label: "IDLE" },
-  break:   { dot: "◐", color: "#8b5cf6", label: "BREAK" },
-  offline: { dot: "○", color: "#374151", label: "OFFLINE" },
+const STATUS_DOT: Record<Agent["status"], { svgPath: string; color: string; label: string; filled?: boolean }> = {
+  working: { svgPath: "M12 12m-10 0a10 10 0 1 0 20 0a10 10 0 1 0-20 0", color: "#f59e0b", label: "WORKING", filled: true },
+  idle:    { svgPath: "M12 12m-10 0a10 10 0 1 0 20 0a10 10 0 1 0-20 0", color: "#4ade80", label: "IDLE" },
+  break:   { svgPath: "M12 12m-10 0a10 10 0 1 0 20 0a10 10 0 1 0-20 0", color: "#8b5cf6", label: "BREAK" },
+  offline: { svgPath: "M12 12m-10 0a10 10 0 1 0 20 0a10 10 0 1 0-20 0", color: "#374151", label: "OFFLINE" },
 };
 
 export default function TeamPageView({
@@ -191,7 +191,7 @@ export default function TeamPageView({
                 letterSpacing: "0.05em",
               }}
             >
-              {showPicker ? "✕ CLOSE" : "+ ADD MEMBER"}
+              {showPicker ? <><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: "inline", verticalAlign: "middle", marginRight: 4 }}><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>CLOSE</> : "+ ADD MEMBER"}
             </button>
           </div>
 
@@ -230,7 +230,7 @@ export default function TeamPageView({
                         onMouseEnter={(e) => { e.currentTarget.style.borderColor = "rgba(245,158,11,0.5)"; e.currentTarget.style.color = "var(--th-accent)"; }}
                         onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--th-border)"; e.currentTarget.style.color = "var(--th-text-secondary)"; }}
                       >
-                        <span style={{ color: st.color, fontSize: "8px" }}>{st.dot}</span>
+                        <span style={{ color: st.color, fontSize: "8px" }}><svg width="8" height="8" viewBox="0 0 24 24" fill={st.filled ? st.color : "none"} stroke={st.color} strokeWidth="2"><circle cx="12" cy="12" r="10" /></svg></span>
                         {agent.name_ko || agent.name}
                       </button>
                     );
@@ -293,7 +293,7 @@ export default function TeamPageView({
 
                     {/* 상태 */}
                     <span style={{ fontSize: "8px", fontWeight: 700, width: 58, flexShrink: 0, color: st.color, letterSpacing: "0.06em" }}>
-                      {st.dot} {st.label}
+                      <svg width="8" height="8" viewBox="0 0 24 24" fill={st.filled ? st.color : "none"} stroke={st.color} strokeWidth="2"><circle cx="12" cy="12" r="10" /></svg> {st.label}
                     </span>
 
                     {/* 이름 */}
@@ -305,7 +305,7 @@ export default function TeamPageView({
                     <span style={{ fontSize: "8px", color: "var(--th-text-muted)", width: 100, flexShrink: 0 }}>
                       {roleLabel}
                       {agent.status === "working" && (
-                        <span style={{ marginLeft: 6, color: "#f59e0b" }}>▶ running</span>
+                        <span style={{ marginLeft: 6, color: "#f59e0b", display: "inline-flex", alignItems: "center", gap: 3 }}><svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3" /></svg> running</span>
                       )}
                     </span>
 
