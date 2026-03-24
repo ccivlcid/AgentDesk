@@ -272,13 +272,12 @@ export function registerTaskRunRoute(deps: TaskRunRouteDeps): void {
       | undefined;
     if (!agent) return res.status(400).json({ error: "agent_not_found" });
 
-    const agentBusy = activeProcesses.has(
-      (
-        db.prepare("SELECT current_task_id FROM agents WHERE id = ? AND status = 'working'").get(agentId) as
-          | { current_task_id: string | null }
-          | undefined
-      )?.current_task_id ?? "",
-    );
+    const currentTaskId = (
+      db.prepare("SELECT current_task_id FROM agents WHERE id = ? AND status = 'working'").get(agentId) as
+        | { current_task_id: string | null }
+        | undefined
+    )?.current_task_id;
+    const agentBusy = !!currentTaskId && activeProcesses.has(currentTaskId);
     if (agentBusy) {
       return res
         .status(400)

@@ -146,7 +146,8 @@ export default function MetricsPanel() {
     loadHistory();
 
     // Subscribe to real-time WS metrics
-    const ws = new WebSocket(`ws://${window.location.host}`);
+    const wsProto = location.protocol === "https:" ? "wss:" : "ws:";
+    const ws = new WebSocket(`${wsProto}//${window.location.host}`);
     wsRef.current = ws;
     ws.onmessage = (ev) => {
       try {
