@@ -24,6 +24,8 @@
 | [llm-call-patterns.md](architecture/llm-call-patterns.md) | LLM call patterns — all prompts must be .md files |
 | [PM-WORKFLOW-SPEC.md](strategy/PM-WORKFLOW-SPEC.md) | PM orchestration — kickoff, review, project-level review, fitness |
 | [websocket-protocol.md](specs/websocket-protocol.md) | WebSocket event types and payloads |
+| [kova-comparison.md](architecture/kova-comparison.md) | Kova vs AgentDesk — strengths, weaknesses, integration points |
+| [any-type-removal-guide.md](architecture/any-type-removal-guide.md) | `any` type removal — 589 occurrences, 4-phase execution plan |
 
 ## Design
 
