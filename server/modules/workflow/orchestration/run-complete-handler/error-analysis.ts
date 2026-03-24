@@ -16,13 +16,12 @@ import type { DatabaseSync } from "node:sqlite";
 import { loadPrompt } from "../../../../lib/prompt-loader.ts";
 import logger from "../../../../lib/logger.ts";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- provider types vary across modules
 interface ErrorAnalysisDeps {
   db: DatabaseSync;
   logsDir: string;
-  findApiProvider: (db: any, scope: string) => any;
-  resolveModel: (provider: any) => string;
-  callProvider: (provider: any, model: string, system: string, user: string, signal: AbortSignal) => Promise<string>;
+  findApiProvider: (db: DatabaseSync, scope: string) => unknown;
+  resolveModel: (provider: unknown) => string;
+  callProvider: (provider: unknown, model: string, system: string, user: string, signal: AbortSignal) => Promise<string>;
   getPreferredLanguage: () => string;
   appendTaskLog: (taskId: string, kind: string, message: string) => void;
 }

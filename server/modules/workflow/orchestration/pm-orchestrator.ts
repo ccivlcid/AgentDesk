@@ -30,20 +30,22 @@ function findApiProviderCompat(db: DatabaseSync, _scope: string): ResolvedProvid
 }
 
 /** Adapter: resolveModel compatible with error-analysis deps interface */
-function resolveModelCompat(provider: ResolvedProvider | null): string {
-  return getDefaultModel(provider?.providerType ?? "anthropic");
+function resolveModelCompat(provider: unknown): string {
+  const p = provider as ResolvedProvider | null;
+  return getDefaultModel(p?.providerType ?? "anthropic");
 }
 
 /** Adapter: callProvider compatible with error-analysis deps interface */
 async function callProviderCompat(
-  provider: ResolvedProvider | null,
+  provider: unknown,
   model: string,
   systemPrompt: string,
   userPrompt: string,
   signal: AbortSignal,
 ): Promise<string> {
-  if (!provider) throw new Error("No provider");
-  return callLlmOneShot({ provider, model, systemPrompt, userPrompt, signal });
+  const p = provider as ResolvedProvider | null;
+  if (!p) throw new Error("No provider");
+  return callLlmOneShot({ provider: p, model, systemPrompt, userPrompt, signal });
 }
 
 interface PmOrchestratorDeps {

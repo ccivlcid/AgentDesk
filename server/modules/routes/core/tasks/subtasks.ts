@@ -64,8 +64,8 @@ export function registerTaskSubtaskRoutes(deps: TaskSubtaskRouteDeps): void {
     const task = db.prepare("SELECT id FROM tasks WHERE id = ?").get(taskId);
     if (!task) return res.status(404).json({ error: "task_not_found" });
 
-    const body = req.body ?? {};
-    if (!(body as any).title || typeof (body as any).title !== "string") {
+    const body = (req.body ?? {}) as Record<string, unknown>;
+    if (!body.title || typeof body.title !== "string") {
       return res.status(400).json({ error: "title_required" });
     }
 
@@ -78,16 +78,16 @@ export function registerTaskSubtaskRoutes(deps: TaskSubtaskRouteDeps): void {
     ).run(
       id,
       taskId,
-      (body as any).title,
-      (body as any).description ?? null,
-      (body as any).assigned_agent_id ?? null,
+      body.title,
+      (body.description as string | null) ?? null,
+      (body.assigned_agent_id as string | null) ?? null,
       nowMs(),
     );
 
     const parentTaskDept = db.prepare("SELECT department_id FROM tasks WHERE id = ?").get(taskId) as
       | { department_id: string | null }
       | undefined;
-    const targetDeptId = analyzeSubtaskDepartment((body as any).title, parentTaskDept?.department_id ?? null);
+    const targetDeptId = analyzeSubtaskDepartment(body.title, parentTaskDept?.department_id ?? null);
     if (targetDeptId) {
       const targetDeptName = getDeptName(targetDeptId);
       db.prepare(
@@ -105,7 +105,7 @@ export function registerTaskSubtaskRoutes(deps: TaskSubtaskRouteDeps): void {
     const existing = db.prepare("SELECT * FROM subtasks WHERE id = ?").get(id) as Record<string, unknown> | undefined;
     if (!existing) return res.status(404).json({ error: "not_found" });
 
-    const body = req.body ?? {};
+    const body = (req.body ?? {}) as Record<string, unknown>;
     const allowedFields = [
       "title",
       "description",
@@ -119,13 +119,13 @@ export function registerTaskSubtaskRoutes(deps: TaskSubtaskRouteDeps): void {
     const params: unknown[] = [];
 
     for (const field of allowedFields) {
-      if (field in (body as any)) {
+      if (field in body) {
         updates.push(`${field} = ?`);
-        params.push((body as any)[field]);
+        params.push(body[field]);
       }
     }
 
-    if ((body as any).status === "done" && existing.status !== "done") {
+    if (body.status === "done" && existing.status !== "done") {
       updates.push("completed_at = ?");
       params.push(nowMs());
     }
@@ -151,7 +151,7 @@ export function registerTaskSubtaskRoutes(deps: TaskSubtaskRouteDeps): void {
       | undefined;
     if (!task) return res.status(404).json({ error: "not_found" });
 
-    const agentId = (req.body as any)?.agent_id;
+    const agentId = (req.body as Record<string, unknown> | undefined)?.agent_id;
     if (!agentId || typeof agentId !== "string") {
       return res.status(400).json({ error: "agent_id_required" });
     }
