@@ -5,7 +5,7 @@
 ---
 
 ## Current State
-- **Last applied migration**: `2026-03-28-013-project-app-type`
+- **Last applied migration**: `2026-03-28-014-pm-oversight-review-round`
 - **Latest completed phase**: Phase 25
 - **Next work**: See Pending Work below
 
@@ -43,6 +43,20 @@
 - Queries `agent_task_fitness` table for success rates per task type
 - Score = successRate - loadPenalty (balances workload across agents)
 - Fallback to round-robin when no fitness data exists
+- Both kickoff and add-tasks pipelines updated
+
+**Project-Level PM Review (신규):**
+- 모든 태스크 done → PM이 프로젝트 전체를 원래 목표 대비 평가
+- SATISFIED → 회고 보고서 + 프로젝트 완료
+- GAPS_FOUND → PM gap 분석 → 추가 태스크 자동 생성 (runInternalAddTasksPipeline)
+- 최대 3라운드 (pm_oversight_state.project_review_round)
+- 프롬프트: `prompts/pm/project-review.md`
+- DB 마이그레이션: `2026-03-28-014-pm-oversight-review-round`
+
+**Task Type from LLM:**
+- 킥오프 시 LLM이 task_type 지정 (development/design/analysis/documentation/general)
+- 프롬프트 업데이트: `prompts/system/project-kickoff.md`
+- fitness 사이클 완성: LLM이 타입 지정 → 타입별 fitness 배정 → 완료 시 타입별 기록
 - Both `postMeetingCreateAndRun` and add-tasks pipelines updated
 
 ### Documentation Overhaul (2026-03-24)

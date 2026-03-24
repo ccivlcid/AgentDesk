@@ -39,7 +39,7 @@ Overall  ████████░░  79%
 | # | Item | Key Change |
 |---|------|------------|
 | 21-1 | PM orchestration engine | pm-orchestrator.ts — PM receives events → LLM reasoning → action |
-| 21-2 | PM prompt files | prompts/pm/review-task.md, handle-failure.md |
+| 21-2 | PM prompt files | prompts/pm/review-task.md, handle-failure.md, project-review.md |
 | 21-3 | Event bus | event-bus.ts — task state change events |
 | 21-4 | Remove legacy polling | Remove PM oversight setInterval, YOLO regex auto-click |
 | 21-5 | Failure retry (PM decision) | PM decides retry/reassign/escalate |
