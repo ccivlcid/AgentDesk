@@ -110,41 +110,38 @@ resolveProvider(db)
 
 ---
 
-## 3. Bug / Issue: App Runner Anthropic Call Missing `system` Field
+## 3. Fixed Bug: App Runner Anthropic Call Missing `system` Field
 
-**Location:** `server/modules/routes/ops/app-runner.ts` lines 305-307
+> **Status: FIXED** (commit f2bb161)
+
+**Previous issue in** `server/modules/routes/ops/app-runner.ts`:
 
 ```typescript
-// CURRENT CODE (lines 305-307):
+// OLD CODE — both branches identical, no system prompt separation:
 const body = isAnthropic
   ? JSON.stringify({ model, max_tokens: 1200, messages: [{ role: "user", content: prompt }] })
   : JSON.stringify({ model, max_tokens: 1200, messages: [{ role: "user", content: prompt }] });
 ```
 
-**Issues found:**
+**Problems fixed:**
+1. Anthropic call lacked `system` field — prompt was in user message only
+2. Both branches were identical — ternary was meaningless
+3. No system/user prompt separation for any provider
 
-1. **Anthropic call lacks `system` field** — The prompt is sent as a `user` message instead of using the `system` parameter. This works but is suboptimal (system prompts get better instruction-following). Compare with Pattern C which correctly uses `system: systemPrompt`.
-
-2. **Both branches are identical** — The ternary is meaningless; `isAnthropic` and `else` produce the same JSON body. The OpenAI-compatible branch should use `messages: [{ role: "system", content: prompt }]` or `[{ role: "system", content: "" }, { role: "user", content: prompt }]`.
-
-3. **No `system` prompt separation** — Unlike Pattern C (`callLlmOneShot`) which separates system/user prompts, Pattern D puts everything in one user message. The project-analysis prompt would benefit from system/user separation.
-
-**Impact:** AI analysis may produce lower-quality results because the entire prompt is crammed into the user message. For OpenAI-compatible providers, there's no system message at all.
+**Fix:** Replaced with shared `callLlmOneShot()` which properly separates system/user prompts for both Anthropic (via `system` field) and OpenAI-compatible (via `role: "system"` message).
 
 ---
 
-## 4. Code Duplication Map
+## 4. Code Duplication — Resolved
 
-The same "one-shot LLM call" pattern is independently implemented in **4 places**:
+> **Status: FIXED** — All 4 callers now use shared `callLlmOneShot()` from `llm-client.ts`.
 
-| # | File | Function | max_tokens | system param |
-|---|------|----------|-----------|--------------|
-| 1 | `routes/core/projects.ts` | `callLlmOneShot()` | 2048 | Yes (separate) |
-| 2 | `routes/core/projects/kickoff.ts` | `callLlmOneShot()` | 4096 | Yes (separate) |
-| 3 | `workflow/orchestration/pm-orchestrator.ts` | `callProviderCompat()` | 2048 | Yes (separate) |
-| 4 | `routes/ops/app-runner.ts` | inline in `/analyze` | 1200 | **No (combined)** |
-
-**Recommendation:** Extract a shared `callLlmOneShot()` into `llm-client.ts` with configurable `maxTokens` and proper system/user separation. All 4 callers should use it.
+| # | File | Wrapper Function | maxTokens | Status |
+|---|------|-----------------|-----------|--------|
+| 1 | `routes/core/projects.ts` | `callLlmOneShot()` → shared | 2048 (default) | Refactored |
+| 2 | `routes/core/projects/kickoff.ts` | `callLlmOneShot()` → shared | 4096 | Refactored |
+| 3 | `workflow/orchestration/pm-orchestrator.ts` | `callProviderCompat()` → shared | 2048 (default) | Refactored |
+| 4 | `routes/ops/app-runner.ts` | direct call to shared | 1200 | Refactored + bug fixed |
 
 ---
 
@@ -188,19 +185,19 @@ The same "one-shot LLM call" pattern is independently implemented in **4 places*
 
 ## 6. Provider Support Matrix
 
-| Provider | API Streaming (Pattern A) | CLI Mode (Pattern B) | One-Shot (Pattern C) | App Analysis (Pattern D) |
-|----------|--------------------------|---------------------|---------------------|-------------------------|
-| Anthropic | callAnthropicStream | claude CLI | callLlmOneShot | inline fetch |
-| OpenAI | callOpenAICompatibleStream | codex CLI | callLlmOneShot | inline fetch |
-| Gemini | — (no compat) | gemini CLI | — | — |
-| Ollama | callOpenAICompatibleStream | — | callLlmOneShot | inline fetch |
-| Groq | callOpenAICompatibleStream | — | callLlmOneShot | inline fetch |
-| Together | callOpenAICompatibleStream | — | callLlmOneShot | inline fetch |
-| OpenRouter | callOpenAICompatibleStream | — | callLlmOneShot | inline fetch |
-| Cerebras | callOpenAICompatibleStream | — | callLlmOneShot | inline fetch |
-| Cursor | — | cursor CLI | — | — |
-| Copilot | — | HTTP agent | — | — |
-| Antigravity | — | HTTP agent | — | — |
+| Provider | API Streaming (Pattern A) | CLI Mode (Pattern B) | One-Shot (Pattern C+D) |
+|----------|--------------------------|---------------------|----------------------|
+| Anthropic | callAnthropicStream | claude CLI | callLlmOneShot (shared) |
+| OpenAI | callOpenAICompatibleStream | codex CLI | callLlmOneShot (shared) |
+| Gemini | — (no compat) | gemini CLI | — |
+| Ollama | callOpenAICompatibleStream | — | callLlmOneShot (shared) |
+| Groq | callOpenAICompatibleStream | — | callLlmOneShot (shared) |
+| Together | callOpenAICompatibleStream | — | callLlmOneShot (shared) |
+| OpenRouter | callOpenAICompatibleStream | — | callLlmOneShot (shared) |
+| Cerebras | callOpenAICompatibleStream | — | callLlmOneShot (shared) |
+| Cursor | — | cursor CLI | — |
+| Copilot | — | HTTP agent | — |
+| Antigravity | — | HTTP agent | — |
 
 ---
 
@@ -226,8 +223,8 @@ const DEFAULT_MODELS: Record<string, string> = {
 
 ## 8. Action Items
 
-| Priority | Item | Details |
-|----------|------|---------|
-| **P0** | Fix app-runner Anthropic body | Add `system` field to Anthropic call, add `system` message to OpenAI call |
-| **P1** | Extract shared `callLlmOneShot()` | Move to `llm-client.ts`, replace 4 duplicate implementations |
-| **P2** | Add Google AI (Gemini) API support | Currently only CLI mode; no direct API streaming |
+| Priority | Item | Status |
+|----------|------|--------|
+| ~~P0~~ | ~~Fix app-runner Anthropic body~~ | **Done** — system/user prompts now properly separated |
+| ~~P1~~ | ~~Extract shared `callLlmOneShot()`~~ | **Done** — single implementation in `llm-client.ts`, 4 callers refactored |
+| **P2** | Add Google AI (Gemini) API support | Pending — currently only CLI mode; no direct API streaming |
