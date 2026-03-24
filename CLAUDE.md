@@ -70,7 +70,7 @@ All inline SVG icons must follow this standard:
 - **NEVER** edit or delete an existing migration entry.
 - Always append at the end of `migrations-e-recent.ts`.
 - ID format: `YYYY-MM-DD-NNN-short-description` (chronological, zero-padded).
-- **Last applied ID**: `2026-03-28-013-project-app-type`
+- **Last applied ID**: `2026-03-28-014-pm-oversight-review-round`
 - Every DDL must be wrapped in `try { ... } catch { /* already exists */ }`.
 
 ### 0-6. Component State Rules
