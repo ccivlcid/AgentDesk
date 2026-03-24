@@ -59,105 +59,11 @@ export const PACK_DISPLAY_NAMES: Record<string, { ko: string; en: string; ja: st
   asset_management: { ko: "자산운용", en: "Asset Management", ja: "資産運用", zh: "资产管理" },
 };
 
-const TASK_CREATE_DRAFTS_STORAGE_KEY = "agentdesk.taskCreateDrafts";
-
 export const HIDEABLE_STATUSES = ["done", "pending", "cancelled"] as const;
 export type HideableStatus = (typeof HIDEABLE_STATUSES)[number];
 
-export type CreateTaskDraft = {
-  id: string;
-  title: string;
-  description: string;
-  departmentId: string;
-  taskType: TaskType;
-  priority: number;
-  assignAgentId: string;
-  projectId: string;
-  projectQuery: string;
-  createNewProjectMode: boolean;
-  newProjectPath: string;
-  figmaUrl: string;
-  updatedAt: number;
-};
-
-export type MissingPathPrompt = {
-  normalizedPath: string;
-  canCreate: boolean;
-  nearestExistingParent: string | null;
-};
-
-export type FormFeedback = {
-  tone: "error" | "info";
-  message: string;
-};
-
-export type ManualPathEntry = {
-  name: string;
-  path: string;
-};
-
 export function isHideableStatus(status: TaskStatus): status is HideableStatus {
   return (HIDEABLE_STATUSES as readonly TaskStatus[]).includes(status);
-}
-
-export function createDraftId(): string {
-  if (typeof globalThis !== "undefined" && typeof globalThis.crypto?.randomUUID === "function") {
-    return globalThis.crypto.randomUUID();
-  }
-  return `draft-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
-}
-
-export function normalizeTaskType(value: unknown): TaskType {
-  if (
-    value === "general" ||
-    value === "development" ||
-    value === "design" ||
-    value === "analysis" ||
-    value === "presentation" ||
-    value === "documentation"
-  ) {
-    return value;
-  }
-  return "general";
-}
-
-export function loadCreateTaskDrafts(): CreateTaskDraft[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = window.localStorage.getItem(TASK_CREATE_DRAFTS_STORAGE_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [];
-    return parsed
-      .filter((row) => typeof row === "object" && row !== null)
-      .map((row) => {
-        const r = row as Record<string, unknown>;
-        return {
-          id: typeof r.id === "string" && r.id ? r.id : createDraftId(),
-          title: typeof r.title === "string" ? r.title : "",
-          description: typeof r.description === "string" ? r.description : "",
-          departmentId: typeof r.departmentId === "string" ? r.departmentId : "",
-          taskType: normalizeTaskType(r.taskType),
-          priority: typeof r.priority === "number" ? Math.min(Math.max(Math.trunc(r.priority), 1), 5) : 3,
-          assignAgentId: typeof r.assignAgentId === "string" ? r.assignAgentId : "",
-          projectId: typeof r.projectId === "string" ? r.projectId : "",
-          projectQuery: typeof r.projectQuery === "string" ? r.projectQuery : "",
-          createNewProjectMode: Boolean(r.createNewProjectMode),
-          newProjectPath: typeof r.newProjectPath === "string" ? r.newProjectPath : "",
-          figmaUrl: typeof r.figmaUrl === "string" ? r.figmaUrl : "",
-          updatedAt: typeof r.updatedAt === "number" ? r.updatedAt : Date.now(),
-        } satisfies CreateTaskDraft;
-      })
-      .sort((a, b) => b.updatedAt - a.updatedAt)
-      .slice(0, 20);
-  } catch {
-    return [];
-  }
-}
-
-export function saveCreateTaskDrafts(drafts: CreateTaskDraft[]): void {
-  if (typeof window === "undefined") return;
-  window.localStorage.setItem(TASK_CREATE_DRAFTS_STORAGE_KEY, JSON.stringify(drafts.slice(0, 20)));
 }
 
 export const COLUMNS: {
