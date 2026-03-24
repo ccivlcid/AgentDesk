@@ -10,6 +10,24 @@ import {
   type TFunction,
 } from "./model";
 
+function ScopeIconInline({ scope }: { scope: string }) {
+  const props = { width: 14, height: 14, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
+  switch (scope) {
+    case "global":
+      return <svg {...props}><circle cx="12" cy="12" r="10" /><line x1="2" y1="12" x2="22" y2="12" /><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10A15.3 15.3 0 0 1 12 2z" /></svg>;
+    case "project":
+      return <svg {...props}><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" /><rect x="8" y="2" width="8" height="4" rx="1" ry="1" /></svg>;
+    case "agent":
+      return <svg {...props}><rect x="3" y="11" width="18" height="10" rx="2" /><circle cx="12" cy="5" r="3" /><path d="M7 11V8a5 5 0 0 1 10 0v3" /></svg>;
+    case "department":
+      return <svg {...props}><rect x="4" y="2" width="16" height="20" rx="2" /><line x1="9" y1="6" x2="15" y2="6" /><line x1="9" y1="10" x2="15" y2="10" /><line x1="9" y1="14" x2="15" y2="14" /><line x1="9" y1="18" x2="15" y2="18" /></svg>;
+    case "workflow_pack":
+      return <svg {...props}><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /><polyline points="3.27 6.96 12 12.01 20.73 6.96" /><line x1="12" y1="22.08" x2="12" y2="12" /></svg>;
+    default:
+      return null;
+  }
+}
+
 interface HookFormModalProps {
   t: TFunction;
   show: boolean;
@@ -258,7 +276,7 @@ export default function HookFormModal({
           {/* Scope Type */}
           {defaultProjectId ? (
             <div className="flex items-center gap-2 px-3 py-2 text-xs font-mono" style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.25)", borderRadius: 0 }}>
-              <span>📋</span>
+              <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" /><rect x="8" y="2" width="8" height="4" rx="1" ry="1" /></svg></span>
               <span style={{ color: "var(--th-accent)" }}>
                 {t({ ko: "프로젝트 훅 (범위 고정)", en: "Project hook (scope locked)", ja: "プロジェクトフック（スコープ固定）", zh: "项目钩子（范围锁定）" })}
               </span>
@@ -270,11 +288,11 @@ export default function HookFormModal({
               </label>
               <div className="flex flex-wrap gap-2 mb-2">
                 {([
-                  { value: "global",        icon: "🌐", label: { ko: "글로벌",   en: "Global",   ja: "グローバル", zh: "全局"   } },
-                  { value: "project",       icon: "📋", label: { ko: "프로젝트", en: "Project",   ja: "プロジェクト", zh: "项目" } },
-                  { value: "agent",         icon: "🤖", label: { ko: "에이전트", en: "Agent",     ja: "エージェント", zh: "代理" } },
-                  { value: "department",    icon: "🏢", label: { ko: "전문 분야",     en: "Specialty", ja: "専門分野",       zh: "专业领域" } },
-                  { value: "workflow_pack", icon: "📦", label: { ko: "워크플로", en: "Workflow",  ja: "ワークフロー", zh: "工作流" } },
+                  { value: "global",        icon: "global", label: { ko: "글로벌",   en: "Global",   ja: "グローバル", zh: "全局"   } },
+                  { value: "project",       icon: "project", label: { ko: "프로젝트", en: "Project",   ja: "プロジェクト", zh: "项目" } },
+                  { value: "agent",         icon: "agent", label: { ko: "에이전트", en: "Agent",     ja: "エージェント", zh: "代理" } },
+                  { value: "department",    icon: "department", label: { ko: "전문 분야",     en: "Specialty", ja: "専門分野",       zh: "专业领域" } },
+                  { value: "workflow_pack", icon: "workflow_pack", label: { ko: "워크플로", en: "Workflow",  ja: "ワークフロー", zh: "工作流" } },
                 ] as const).map((opt) => (
                   <button
                     key={opt.value}
@@ -291,7 +309,7 @@ export default function HookFormModal({
                       border: scopeType === opt.value ? "1px solid rgba(245,158,11,0.4)" : "1px solid var(--th-border)",
                     }}
                   >
-                    {opt.icon} {t(opt.label)}
+                    <ScopeIconInline scope={opt.icon} /> {t(opt.label)}
                   </button>
                 ))}
               </div>
