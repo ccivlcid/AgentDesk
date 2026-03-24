@@ -5,7 +5,7 @@ export type VideoRenderPendingSubtask = {
 };
 
 type ReconcileVideoRenderDelegationDeps = {
-  db: any;
+  db: { prepare: (sql: string) => { get: (...args: unknown[]) => unknown; all: (...args: unknown[]) => unknown; run: (...args: unknown[]) => unknown } };
   nowMs: () => number;
   broadcast: (event: string, payload: unknown) => void;
 };

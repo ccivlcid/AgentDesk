@@ -41,7 +41,7 @@ interface Finding {
 }
 
 interface HeartbeatDeps {
-  db: any;
+  db: { prepare: (sql: string) => { get: (...args: unknown[]) => unknown; all: (...args: unknown[]) => unknown; run: (...args: unknown[]) => unknown } };
   nowMs: () => number;
   activeProcesses: Map<string, ChildProcess>;
   broadcast: (type: string, payload: unknown) => void;

@@ -18,7 +18,7 @@ interface AgentRow {
 }
 
 type PresenceDeps = {
-  db: any;
+  db: { prepare: (sql: string) => { get: (...args: unknown[]) => unknown; all: (...args: unknown[]) => unknown; run: (...args: unknown[]) => unknown } };
   nowMs: () => number;
   broadcast: (event: string, payload: unknown) => void;
   meetingPresenceUntil: Map<string, number>;

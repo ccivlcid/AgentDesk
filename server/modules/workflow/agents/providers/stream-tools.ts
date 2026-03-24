@@ -1,6 +1,6 @@
 type DbLike = {
   prepare: (sql: string) => {
-    get: (...args: any[]) => unknown;
+    get: (...args: unknown[]) => unknown;
   };
 };
 
@@ -58,7 +58,7 @@ export function createStreamTools(deps: CreateStreamToolsDeps) {
     }
   }
 
-  function createSafeLogStreamOps(logStream: any): {
+  function createSafeLogStreamOps(logStream: { write: (text: string) => void; end: (cb?: () => void) => void; destroyed?: boolean; writableEnded?: boolean; closed?: boolean }): {
     safeWrite: (text: string) => boolean;
     safeEnd: (onDone?: () => void) => void;
     isClosed: () => boolean;

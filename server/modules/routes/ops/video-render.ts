@@ -10,7 +10,7 @@ import {
 } from "../../workflow/orchestration/video-render-manager.ts";
 
 interface VideoRenderRouteDeps {
-  app: any;
+  app: { get: (path: string, handler: (req: import("express").Request, res: import("express").Response) => void) => void; post: (path: string, handler: (req: import("express").Request, res: import("express").Response) => void) => void; delete: (path: string, handler: (req: import("express").Request, res: import("express").Response) => void) => void };
   broadcast: (event: string, data: unknown) => void;
   appendTaskLog: (taskId: string, kind: string, message: string) => void;
 }

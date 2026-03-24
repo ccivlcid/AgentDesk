@@ -2,8 +2,8 @@ import { execFileSync } from "node:child_process";
 
 type DbLike = {
   prepare: (sql: string) => {
-    run: (...args: any[]) => unknown;
-    get: (...args: any[]) => unknown;
+    run: (...args: unknown[]) => unknown;
+    get: (...args: unknown[]) => unknown;
   };
 };
 

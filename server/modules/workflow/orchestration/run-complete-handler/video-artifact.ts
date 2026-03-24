@@ -41,7 +41,7 @@ export function handleVideoArtifactSync(
   deps: VideoArtifactSyncDeps,
 ): VideoArtifactSyncResult {
   const { db, taskWorktrees, appendTaskLog } = deps;
-  const videoArtifactSpec = resolveVideoArtifactSpecForTask(db as any, {
+  const videoArtifactSpec = resolveVideoArtifactSpecForTask(db, {
     project_id: task.project_id,
     project_path: task.project_path,
     department_id: task.department_id,

@@ -1,6 +1,6 @@
 import logger from "../../../lib/logger";
 
-type CreatePlanningArchiveToolsDeps = Record<string, any>;
+type CreatePlanningArchiveToolsDeps = Record<string, unknown>;
 
 export function createPlanningArchiveTools(deps: CreatePlanningArchiveToolsDeps) {
   const {

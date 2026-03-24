@@ -35,7 +35,7 @@ export function shouldAbortFinishReviewForVideoPreprodPack(params: {
     | { worktreePath?: string; projectPath?: string; branchName?: string }
     | undefined;
   const outputRoot = currentTask.project_path || wtInfo?.projectPath || process.cwd();
-  const videoArtifactSpec = resolveVideoArtifactSpecForTask(db as any, {
+  const videoArtifactSpec = resolveVideoArtifactSpecForTask(db, {
     project_id: currentTask.project_id,
     project_path: currentTask.project_path,
     department_id: currentTask.department_id,

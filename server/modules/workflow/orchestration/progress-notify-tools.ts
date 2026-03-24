@@ -1,4 +1,4 @@
-type CreateProgressNotifyToolsDeps = Record<string, any>;
+type CreateProgressNotifyToolsDeps = Record<string, unknown>;
 
 export function createProgressNotifyTools(deps: CreateProgressNotifyToolsDeps) {
   const { db, progressTimers, findTeamLeader, resolveLang, getPreferredLanguage, sendAgentMessage, pickL, l, randomUUID, nowMs, broadcast } =

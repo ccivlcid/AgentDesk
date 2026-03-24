@@ -8,7 +8,7 @@ import {
 
 interface ScheduledTaskRouteDeps {
   app: Express;
-  db: any;
+  db: { prepare: (sql: string) => { get: (...args: unknown[]) => unknown; all: (...args: unknown[]) => unknown; run: (...args: unknown[]) => unknown } };
   nowMs: () => number;
 }
 
