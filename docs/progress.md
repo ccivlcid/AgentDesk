@@ -13,6 +13,31 @@
 
 ## Active Work
 
+### Bug Fixes & Code Quality (2026-03-24)
+
+**Security & Stability Fixes:**
+- Shell injection fix in `agent-runtime/tools.ts` — `searchFiles()` used `execSync` with unescaped shell args; replaced with `execFileSync` array args
+- Memory leak fix in `agent-runtime/store.ts` — `seqCounter` Map entries now cleaned up when runs reach terminal state
+- App Runner error handlers added — `startRun()`, `/run-app`, `/install-app` all had missing `child.on("error")` handlers causing silent failures
+- Install process tracking added — install processes now registered in `runningProcesses` for proper stop/cleanup
+
+**LLM Client Refactoring:**
+- Extracted shared `callLlmOneShot()` into `llm-client.ts` with proper system/user prompt separation
+- Replaced 4 duplicate one-shot LLM implementations (`projects.ts`, `kickoff.ts`, `pm-orchestrator.ts`, `app-runner.ts`)
+- Fixed app-runner AI analysis bug — Anthropic calls were missing `system` field, OpenAI calls had no system message
+- Added architecture doc: `docs/architecture/llm-call-patterns.md`
+
+**Emoji → SVG Fixes (Rule 0-1):**
+- Fixed 14 files, ~40+ violations replaced with inline SVG:
+  - `settings/constants.tsx`, `TaskBoardKanban.tsx`, `HeartbeatBody.tsx`, `utils.ts`
+  - `LlmGuideModal.tsx`, `HeartbeatGuideModal.tsx`, `CommandPaletteResults.tsx`, `CliUsagePanel.tsx`
+  - `MemoryMemorySection.tsx`, `TeamPageView.tsx`, `ScreenGuidePanel.tsx`, `ExportModal.tsx`
+  - `SkillsLibrary.tsx`, `AnomalySection.tsx`
+- Previously fixed by other sessions: `TrafficLights.tsx`, `CalloutBox.tsx`, `GenerateTab.tsx`, `GalleryTab.tsx`
+
+**API Response Format Fix (Rule 0-7):**
+- `categories.ts` — all endpoints now return `{ ok: true, ... }` format
+
 ### Documentation Overhaul (2026-03-24)
 
 - Rebuilt `docs/README.md` as complete index (26 files)
@@ -27,7 +52,7 @@
 - Full audit against CLAUDE.md Section 0 rules
 - Generated `docs/reports/coding-rule-violations-2026-03-24.md`
 - Findings:
-  - Rule 0-1 (no emoji in UI): 60+ violations across 25+ files
+  - Rule 0-1 (no emoji in UI): 60+ violations across 25+ files → **~40+ fixed** (14 files)
   - Rule 0-2 (SVG conventions): 35+ violations across 15+ files
   - Rule 0-3 (`any` types): ~1,500+ cases across 488 files
   - Rule 0-3 (`as Foo` assertions): 81+ cases (40+ double-casts)
@@ -64,11 +89,13 @@
 
 > See [roadmap/BACKLOG.md](strategy/roadmap/BACKLOG.md) for full backlog with priorities.
 
-| Priority | Item | Reference |
-|----------|------|-----------|
-| P0 | Fix coding rule violations (emoji, SVG, `any`, double-casts) | `docs/reports/coding-rule-violations-2026-03-24.md` |
-| P1 | Multi-provider agent runtime (currently Anthropic-only) | `roadmap/BACKLOG.md` |
-| P1 | PM fitness-based agent assignment | `roadmap/BACKLOG.md` |
-| P1 | `run_command` tool implementation | `roadmap/BACKLOG.md` |
-| P2 | i18n full migration (Phase 1 done, hardcoded strings remain) | `strategy/I18N-AGENT-WORKPACK.md` |
-| P2 | System stability issues | `SYSTEM-ISSUES.md` |
+| Priority | Item | Reference | Status |
+|----------|------|-----------|--------|
+| P0 | Fix emoji → SVG violations (remaining ~20 files) | `docs/reports/coding-rule-violations-2026-03-24.md` | In Progress |
+| P0 | Fix SVG convention violations (35+ cases) | Same report, Task 2 | Not Started |
+| P0 | Fix `any` types / double-casts | Same report, Task 3-4 | Phase 1-2 done |
+| ~~P1~~ | ~~Multi-provider agent runtime~~ | ~~`roadmap/BACKLOG.md`~~ | **Done** (confirmed working) |
+| ~~P1~~ | ~~`run_command` tool implementation~~ | ~~`roadmap/BACKLOG.md`~~ | **Done** (already in tools.ts) |
+| P1 | PM fitness-based agent assignment | `roadmap/BACKLOG.md` | Not Started |
+| P2 | i18n full migration (Phase 1 done, hardcoded strings remain) | `strategy/I18N-AGENT-WORKPACK.md` | Not Started |
+| P2 | System stability issues | `SYSTEM-ISSUES.md` | Not Started |
