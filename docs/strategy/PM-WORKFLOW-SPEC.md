@@ -115,8 +115,13 @@
 | `server/modules/agent-runtime/execution-loop.ts` | CLI/API mode agent execution |
 | `server/modules/routes/core/projects/pm-activity.ts` | PM Activity API |
 | `prompts/system/project-kickoff.md` | Kickoff LLM prompt (no agent_name, includes task_type) |
+| `prompts/system/agent-runtime.md` | Agent runtime system prompt (evidence-based rules) |
+| `prompts/system/app-analysis-system.md` | App analysis system prompt |
+| `prompts/system/project-analysis.md` | App analysis user prompt (---JSON--- separator) |
 | `prompts/pm/review-task.md` | PM individual task review checklist prompt |
 | `prompts/pm/project-review.md` | PM project-level review prompt (SATISFIED/GAPS_FOUND) |
+| `prompts/pm/handle-failure.md` | PM failure handling (3-strike escalation) |
+| `prompts/pm/auto-learn.md` | PM auto-learning (rules/memory extraction) |
 
 ---
 

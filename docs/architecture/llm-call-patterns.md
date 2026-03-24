@@ -2,6 +2,9 @@
 
 > Last updated: 2026-03-24
 > Purpose: Document all LLM invocation patterns across the codebase to prevent inconsistency bugs.
+>
+> **Rule: All LLM prompts must be in `.md` files under `prompts/`.** No hardcoded prompt strings in server code.
+> Use `loadPrompt("path/name", { vars })` from `server/lib/prompt-loader.ts`.
 
 ---
 

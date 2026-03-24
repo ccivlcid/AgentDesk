@@ -231,6 +231,8 @@ Representative types (throughout the code):
 | One-shot | `server/modules/workflow/core/one-shot-runner.ts` |
 | API Provider HTTP | `server/modules/workflow/agents/providers/api-provider-tools.ts` |
 | Built-in runtime | `server/modules/agent-runtime/execution-loop.ts`, `routes.ts` |
+| Runtime prompt | `prompts/system/agent-runtime.md` (system prompt with evidence-based rules) |
+| App analysis | `prompts/system/project-analysis.md` + `prompts/system/app-analysis-system.md` |
 | Persona | `server/modules/workflow/core/character-persona.ts`, `prompts/agents/`, `prompts/personas/` |
 | Direct prompt text | `server/modules/workflow/core/meeting-prompt-tools.ts` (`buildDirectReplyPrompt`) |
 | Safe reply processing | `server/modules/workflow/core/reply-core-tools.ts` (`chooseSafeReply`) |

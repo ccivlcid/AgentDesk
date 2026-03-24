@@ -188,8 +188,14 @@ PM이 LLM으로 프로젝트 전체 평가 (prompts/pm/project-review.md)
 - `server/modules/workflow/orchestration/pm-orchestrator.ts` — PM 검토/승인/progress 작성 + 프로젝트 레벨 리뷰
 - `server/modules/workflow/orchestration/review-finalize-tools/ship-automation.ts` — 버전 범프/CHANGELOG
 - `server/modules/routes/core/projects/kickoff.ts` — `runInternalAddTasksPipeline()` (프로젝트 리뷰 후 추가 태스크)
+- `prompts/system/agent-runtime.md` — 에이전트 런타임 시스템 프롬프트 ({{agentName}}, {{agentRole}} + evidence-based rules)
+- `prompts/system/project-kickoff.md` — 킥오프 태스크 생성 프롬프트 (task_type 포함)
+- `prompts/system/project-analysis.md` — 앱 분석 사용자 프롬프트 (---JSON--- separator)
+- `prompts/system/app-analysis-system.md` — 앱 분석 시스템 프롬프트
 - `prompts/pm/review-task.md` — 개별 태스크 검토 프롬프트
-- `prompts/pm/project-review.md` — 프로젝트 레벨 리뷰 프롬프트
+- `prompts/pm/project-review.md` — 프로젝트 레벨 리뷰 프롬프트 (SATISFIED/GAPS_FOUND)
+- `prompts/pm/handle-failure.md` — 실패 처리 프롬프트
+- `prompts/pm/auto-learn.md` — 자동 학습 프롬프트
 - `prompts/pm/write-progress.md` — PM progress.md 작성 프롬프트 (ko/en/ja/zh)
 
 ### 1-2-2. YOLO(자율) 모드
