@@ -82,7 +82,6 @@ export function useDesktopOverlayBlockProps(bridge: DesktopOverlayBlockBridge): 
     openFolders,
     closeFolder,
     openCliWindow,
-    openAppRunner,
     trashedProjects,
     removeFromTrash,
     setDesktopIconLayout,
@@ -208,7 +207,8 @@ export function useDesktopOverlayBlockProps(bridge: DesktopOverlayBlockBridge): 
       t,
       onClose: () => setProjectCtxMenu(null),
       onRunApp: (projectId: string) => {
-        openAppRunner(projectId, true);
+        setOpenProjectWindowIds((prev) => new Set([...prev, projectId]));
+        setCurrentProjectId(projectId);
       },
       onOpen: (projectId: string) => {
         setOpenProjectWindowIds((prev) => new Set([...prev, projectId]));
