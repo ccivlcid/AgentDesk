@@ -13,7 +13,7 @@ import { loadPrompt, loadPromptSection } from "../../../lib/prompt-loader.ts";
 import { analyzeTaskFailure, matchErrorPattern, sanitizeErrorMessage } from "./run-complete-handler/error-analysis.ts";
 import { runAutoLearning, generateProjectRetrospective, updateAgentFitness } from "./auto-learning.ts";
 import { shipAutomation } from "./review-finalize-tools/ship-automation.ts";
-import { resolveProvider, getDefaultModel, type ResolvedProvider } from "../../agent-runtime/llm-client.ts";
+import { resolveProvider, getDefaultModel, callLlmOneShot, type ResolvedProvider } from "../../agent-runtime/llm-client.ts";
 import { readYoloModeEnabled } from "../../routes/ops/messages/decision-inbox/yolo-mode.ts";
 import { recordTaskExecutionEvent } from "../core/task-execution-meta.ts";
 import logger from "../../../lib/logger.ts";
@@ -41,29 +41,8 @@ async function callProviderCompat(
   userPrompt: string,
   signal: AbortSignal,
 ): Promise<string> {
-  const resolved = provider;
-  if (!resolved) throw new Error("No provider");
-  if (resolved.type === "anthropic") {
-    const resp = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: { "x-api-key": resolved.apiKey, "anthropic-version": "2023-06-01", "content-type": "application/json" },
-      body: JSON.stringify({ model, max_tokens: 2048, system: systemPrompt, messages: [{ role: "user", content: userPrompt }] }),
-      signal,
-    });
-    if (!resp.ok) throw new Error(`Anthropic API ${resp.status}`);
-    const data = await resp.json() as { content?: Array<{ type: string; text?: string }> };
-    return data.content?.filter((b) => b.type === "text").map((b) => b.text ?? "").join("") ?? "";
-  }
-  // OpenAI-compatible
-  const resp = await fetch(`${resolved.baseUrl}/chat/completions`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${resolved.apiKey}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ model, max_tokens: 2048, messages: [{ role: "system", content: systemPrompt }, { role: "user", content: userPrompt }] }),
-    signal,
-  });
-  if (!resp.ok) throw new Error(`LLM API ${resp.status}`);
-  const data = await resp.json() as { choices?: Array<{ message?: { content?: string } }> };
-  return data.choices?.[0]?.message?.content ?? "";
+  if (!provider) throw new Error("No provider");
+  return callLlmOneShot({ provider, model, systemPrompt, userPrompt, signal });
 }
 
 interface PmOrchestratorDeps {
