@@ -477,6 +477,15 @@ export function registerAppRunnerRoutes({ app, db, broadcast }: { app: Express; 
       };
       runningProcesses.set(projectId, { pid, kill: killFn });
 
+      child.on("error", (err) => {
+        runningProcesses.delete(projectId);
+        appendLog(projectId, "run", `Run error: ${err.message}`);
+        db.prepare("UPDATE projects SET app_status = 'stopped', app_pid = NULL WHERE id = ?").run(projectId);
+        if (broadcast) {
+          broadcast("project_app_output", { projectId, data: `Run error: ${err.message}`, phase: "run_error", ts: Date.now(), status: "stopped" });
+        }
+      });
+
       child.on("close", (code) => {
         runningProcesses.delete(projectId);
         appendLog(projectId, "run", `Process exited (code ${code})`);
@@ -626,6 +635,14 @@ export function registerAppRunnerRoutes({ app, db, broadcast }: { app: Express; 
     };
     runningProcesses.set(projectId, { pid, kill: killFn });
 
+    child.on("error", (err) => {
+      runningProcesses.delete(projectId);
+      appendLog(projectId, "run", `Run error: ${err.message}`);
+      if (broadcast) {
+        broadcast("project_app_output", { projectId, data: `Run error: ${err.message}`, phase: "run_error", ts: Date.now(), status: "stopped" });
+      }
+    });
+
     child.on("close", (code) => {
       runningProcesses.delete(projectId);
       appendLog(projectId, "run", `Process exited (code ${code})`);
@@ -693,7 +710,21 @@ export function registerAppRunnerRoutes({ app, db, broadcast }: { app: Express; 
     const shell = isWin ? "cmd.exe" : "/bin/sh";
     const shellFlag = isWin ? "/c" : "-c";
 
-    const child = spawnChild(shell, [shellFlag, installCmd], { cwd: projectPath, stdio: "pipe" });
+    let child;
+    try {
+      child = spawnChild(shell, [shellFlag, installCmd], { cwd: projectPath, stdio: "pipe" });
+    } catch (spawnErr) {
+      const msg = spawnErr instanceof Error ? spawnErr.message : String(spawnErr);
+      appendLog(projectId, "install", `Spawn error: ${msg}`);
+      if (broadcast) {
+        broadcast("project_app_output", { projectId, data: `Spawn error: ${msg}`, phase: "install_error", ts: Date.now(), status: "install_error" });
+      }
+      return res.status(500).json({ error: "spawn_failed", message: msg });
+    }
+
+    // Track install process so it can be stopped
+    const installPid = child.pid ?? 0;
+    runningProcesses.set(projectId, { pid: installPid, kill: () => { try { child!.kill(); } catch { /* ignore */ } } });
 
     child.stdout?.on("data", (d: Buffer) => {
       for (const line of d.toString().split("\n").filter(Boolean)) appendLog(projectId, "install", line);
@@ -703,6 +734,7 @@ export function registerAppRunnerRoutes({ app, db, broadcast }: { app: Express; 
     });
 
     child.on("close", (code) => {
+      runningProcesses.delete(projectId);
       if (code === 0) {
         appendLog(projectId, "install", "Install completed successfully");
         if (broadcast) {
@@ -717,6 +749,7 @@ export function registerAppRunnerRoutes({ app, db, broadcast }: { app: Express; 
     });
 
     child.on("error", (err) => {
+      runningProcesses.delete(projectId);
       appendLog(projectId, "install", `Install error: ${err.message}`);
       if (broadcast) {
         broadcast("project_app_output", { projectId, data: `Install error: ${err.message}`, phase: "install_error", ts: Date.now(), status: "install_error" });
@@ -724,7 +757,7 @@ export function registerAppRunnerRoutes({ app, db, broadcast }: { app: Express; 
     });
 
     // Timeout after 180s
-    const timeout = setTimeout(() => { child.kill(); appendLog(projectId, "install", "Install timeout (180s)"); }, 180_000);
+    const timeout = setTimeout(() => { child!.kill(); appendLog(projectId, "install", "Install timeout (180s)"); }, 180_000);
     child.on("close", () => clearTimeout(timeout));
 
     logger.info({ projectId, installCmd }, "[app-runner] install started via install-app");
