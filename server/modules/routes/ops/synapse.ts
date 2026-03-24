@@ -19,6 +19,7 @@ interface SynapseRuleRow {
   updated_at: number;
 }
 import logger from "../../../lib/logger.ts";
+import { castSqliteRow, castSqliteRows } from "../../../lib/sqlite-row-cast.ts";
 import {
   getNotionWorkspaceInfo,
   searchNotionPages,
@@ -46,7 +47,9 @@ interface SynapseConnection {
 }
 
 function getConnection(db: DatabaseSync, platform: string): SynapseConnection | null {
-  const row = db.prepare("SELECT * FROM synapse_connections WHERE platform = ?").get(platform) as unknown as SynapseConnection | undefined;
+  const row = castSqliteRow<SynapseConnection>(
+    db.prepare("SELECT * FROM synapse_connections WHERE platform = ?").get(platform),
+  );
   return row ?? null;
 }
 
@@ -65,7 +68,9 @@ export function registerSynapseRoutes({ app, db }: Deps): void {
   /** GET /api/synapse/connections */
   app.get("/api/synapse/connections", (_req: Request, res: Response) => {
     try {
-      const rows = db.prepare("SELECT platform, status, config_json FROM synapse_connections").all() as unknown as SynapseConnection[];
+      const rows = castSqliteRows<SynapseConnection>(
+        db.prepare("SELECT platform, status, config_json FROM synapse_connections").all(),
+      );
       const result: Record<string, { status: string; config: unknown }> = {};
       for (const row of rows) {
         const cfg = row.config_json ? (JSON.parse(row.config_json) as unknown) : null;
@@ -359,7 +364,7 @@ export function registerSynapseRoutes({ app, db }: Deps): void {
   /** GET /api/synapse/notebooklm/snapshots */
   app.get("/api/synapse/notebooklm/snapshots", (_req: Request, res: Response) => {
     try {
-      const rows = db.prepare("SELECT id, name, source, created_at FROM synapse_snapshots ORDER BY created_at DESC").all() as unknown as Array<{
+      const rows = db.prepare("SELECT id, name, source, created_at FROM synapse_snapshots ORDER BY created_at DESC").all() as Array<{
         id: string; name: string; source: string | null; created_at: number;
       }>;
       res.json({ ok: true, snapshots: rows });
@@ -410,7 +415,7 @@ export function registerSynapseRoutes({ app, db }: Deps): void {
   /** GET /api/synapse/rules */
   app.get("/api/synapse/rules", (_req: Request, res: Response) => {
     try {
-      const rows = db.prepare("SELECT * FROM synapse_rules ORDER BY created_at DESC").all() as unknown as SynapseRuleRow[];
+      const rows = castSqliteRows<SynapseRuleRow>(db.prepare("SELECT * FROM synapse_rules ORDER BY created_at DESC").all());
       const rules = rows.map((r) => ({
         id: r.id,
         name: r.name,
@@ -457,7 +462,10 @@ export function registerSynapseRoutes({ app, db }: Deps): void {
         JSON.stringify(action),
         now, now,
       );
-      const rule = db.prepare("SELECT * FROM synapse_rules WHERE id = ?").get(id) as unknown as SynapseRuleRow;
+      const rule = castSqliteRow<SynapseRuleRow>(db.prepare("SELECT * FROM synapse_rules WHERE id = ?").get(id));
+      if (!rule) {
+        return res.status(500).json({ ok: false, error: "create_fetch_failed" });
+      }
       res.json({ ok: true, rule: { ...rule, trigger: JSON.parse(rule.trigger_json), condition: JSON.parse(rule.condition_json), action: JSON.parse(rule.action_json), enabled: rule.enabled === 1 } });
     } catch (err) {
       logger.error({ err }, "[synapse] create rule error");
@@ -490,7 +498,10 @@ export function registerSynapseRoutes({ app, db }: Deps): void {
       if (enabled !== undefined) { fields.push("enabled = ?"); params.push(enabled ? 1 : 0); }
       params.push(id);
       db.prepare(`UPDATE synapse_rules SET ${fields.join(", ")} WHERE id = ?`).run(...(params as never[]));
-      const rule = db.prepare("SELECT * FROM synapse_rules WHERE id = ?").get(id) as unknown as SynapseRuleRow;
+      const rule = castSqliteRow<SynapseRuleRow>(db.prepare("SELECT * FROM synapse_rules WHERE id = ?").get(id));
+      if (!rule) {
+        return res.status(500).json({ ok: false, error: "update_fetch_failed" });
+      }
       res.json({ ok: true, rule: { ...rule, trigger: JSON.parse(rule.trigger_json), condition: JSON.parse(rule.condition_json), action: JSON.parse(rule.action_json), enabled: rule.enabled === 1 } });
     } catch (err) {
       logger.error({ err }, "[synapse] update rule error");

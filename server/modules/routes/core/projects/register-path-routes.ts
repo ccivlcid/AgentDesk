@@ -1,6 +1,8 @@
 import type { SQLInputValue } from "node:sqlite";
 import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
+import logger from "../../../../lib/logger.ts";
 import { getAssignedAgentIdsByProjectIds } from "../../shared/project-assignments.ts";
 import type { ProjectRoutesDeps } from "./types.ts";
 
@@ -176,6 +178,48 @@ export function registerPathRoutes(deps: ProjectRoutesDeps): void {
       entries: entries.slice(0, MAX_ENTRIES),
       truncated,
     });
+  });
+
+  /**
+   * Permanently delete a project directory from disk (trash empty / erase).
+   * Does not touch DB — caller must have removed the project row already.
+   */
+  app.post("/api/projects/delete-directory", (req, res) => {
+    const raw = typeof (req.body as { project_path?: unknown })?.project_path === "string"
+      ? (req.body as { project_path: string }).project_path
+      : null;
+    const normalized = normalizeProjectPathInput(raw);
+    if (!normalized) return res.status(400).json({ error: "project_path_required" });
+    if (!isPathInsideAllowedRoots(normalized)) {
+      return res.status(403).json({
+        error: "project_path_outside_allowed_roots",
+        allowed_roots: PROJECT_PATH_ALLOWED_ROOTS,
+      });
+    }
+    const home = path.normalize(os.homedir());
+    if (path.normalize(normalized) === home) {
+      return res.status(400).json({ error: "cannot_delete_home_directory" });
+    }
+    const inUse = db
+      .prepare("SELECT id FROM projects WHERE LOWER(project_path) = LOWER(?) LIMIT 1")
+      .get(normalized) as { id: string } | undefined;
+    if (inUse) {
+      return res.status(409).json({ error: "project_path_in_use", project_id: inUse.id });
+    }
+    try {
+      if (!fs.existsSync(normalized)) {
+        return res.json({ ok: true, deleted: false });
+      }
+      const st = fs.statSync(normalized);
+      if (!st.isDirectory()) {
+        return res.status(400).json({ error: "not_a_directory" });
+      }
+      fs.rmSync(normalized, { recursive: true, force: true });
+      return res.json({ ok: true, deleted: true });
+    } catch (err) {
+      logger.warn({ err, normalized }, "[delete-directory] failed");
+      return res.status(500).json({ error: "delete_failed" });
+    }
   });
 
   app.get("/api/projects/path-tree", (req, res) => {

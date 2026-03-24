@@ -12,7 +12,7 @@ export function getAssignedAgentIdsByProjectIds(db: DatabaseSync, projectIds: st
        WHERE project_id IN (${placeholders})
        ORDER BY project_id, created_at`,
     )
-    .all(...projectIds) as unknown as Array<{ project_id: string; agent_id: string }>;
+    .all(...projectIds) as Array<{ project_id: string; agent_id: string }>;
 
   for (const row of rows) {
     const current = assignedByProject.get(row.project_id);

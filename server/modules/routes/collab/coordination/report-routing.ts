@@ -112,7 +112,7 @@ export function createReportRoutingTools(deps: ReportRoutingDeps) {
 
   function fetchAgentById(agentId: string | null): AgentRow | null {
     if (!agentId) return null;
-    return db.prepare("SELECT * FROM agents WHERE id = ?").get(agentId) as unknown as AgentRow | null;
+    return db.prepare("SELECT * FROM agents WHERE id = ?").get(agentId) as AgentRow | null;
   }
 
   function fetchClaudePriorityCandidates(): AgentRow[] {
@@ -127,7 +127,7 @@ export function createReportRoutingTools(deps: ReportRoutingDeps) {
         AND department_id IN (${placeholders})
     `,
         )
-        .all(...REPORT_CLAUDE_PRIORITY_DEPTS) as unknown as AgentRow[],
+        .all(...REPORT_CLAUDE_PRIORITY_DEPTS) as AgentRow[],
     );
   }
 
@@ -140,7 +140,7 @@ export function createReportRoutingTools(deps: ReportRoutingDeps) {
       WHERE status != 'offline'
     `,
         )
-        .all() as unknown as AgentRow[],
+        .all() as AgentRow[],
     );
   }
 

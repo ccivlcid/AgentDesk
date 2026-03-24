@@ -112,7 +112,7 @@ export function createApiProviderTools(deps: CreateApiProviderToolsDeps) {
 
   function getApiProviderById(providerId: string): ApiProviderRow | null {
     return (
-      (db.prepare("SELECT * FROM api_providers WHERE id = ?").get(providerId) as unknown as ApiProviderRow) ?? null
+      (db.prepare("SELECT * FROM api_providers WHERE id = ?").get(providerId) as ApiProviderRow) ?? null
     );
   }
 
@@ -333,7 +333,7 @@ export function createApiProviderTools(deps: CreateApiProviderToolsDeps) {
         controller.abort();
         return true;
       },
-    } as unknown as ChildProcess;
+    } as ChildProcess;
     activeProcesses.set(taskId, mockProc);
 
     const runTask = (async () => {

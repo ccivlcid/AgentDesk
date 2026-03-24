@@ -45,7 +45,7 @@ export function createCommandCaptureTools(deps: { killPidTree: (pid: number) => 
         stdio: ["ignore", "pipe", "pipe"],
         timeout: timeoutMs,
         maxBuffer: 1024 * 1024 * 8,
-      }) as unknown as string;
+      }) as string;
       return { ok: true, code: 0, stdout: String(stdout ?? ""), stderr: "" };
     } catch (err: any) {
       const stdout = err?.stdout ? String(err.stdout) : "";

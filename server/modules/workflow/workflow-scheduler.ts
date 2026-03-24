@@ -8,6 +8,7 @@
 import { randomUUID } from "node:crypto";
 import type { DatabaseSync } from "node:sqlite";
 import logger from "../../lib/logger.ts";
+import { castSqliteRows } from "../../lib/sqlite-row-cast.ts";
 import { nextCronRunAfter } from "./cron-utils.ts";
 
 interface ScheduleRow {
@@ -42,11 +43,13 @@ export function startWorkflowScheduler(db: DatabaseSync, nowMs: () => number): (
     const now = nowMs();
     let due: ScheduleRow[];
     try {
-      due = db
-        .prepare(
-          "SELECT id, template_id, cron_expr, next_run_at FROM workflow_schedules WHERE enabled = 1 AND next_run_at IS NOT NULL AND next_run_at <= ?",
-        )
-        .all(now) as unknown as ScheduleRow[];
+      due = castSqliteRows<ScheduleRow>(
+        db
+          .prepare(
+            "SELECT id, template_id, cron_expr, next_run_at FROM workflow_schedules WHERE enabled = 1 AND next_run_at IS NOT NULL AND next_run_at <= ?",
+          )
+          .all(now),
+      );
     } catch {
       return; // table may not exist yet during first boot
     }

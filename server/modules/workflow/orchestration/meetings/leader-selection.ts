@@ -57,7 +57,7 @@ export function createMeetingLeaderSelectionTools(deps: LeaderSelectionDeps) {
     ORDER BY d.sort_order ASC, a.name ASC
   `,
       )
-      .all(...(scopedIds ?? [])) as unknown as AgentRow[];
+      .all(...(scopedIds ?? [])) as AgentRow[];
   }
 
   function getTaskRelatedDepartmentIds(

@@ -20,7 +20,7 @@ import { useDesktopOverlayBlockProps } from "./useDesktopOverlayBlockProps";
 import { useDesktopIconPositionsSync } from "./useDesktopIconPositionsSync";
 import { useDesktopData } from "./useDesktopData";
 import AppSwitcher, { useAppSwitcherKeyboard } from "./AppSwitcher";
-import { deleteProject, createProject } from "../../api/organization-projects";
+import { deleteProject, createProject, deleteTrashedProjectDirectories } from "../../api/organization-projects";
 import { createProjectFolder, addProjectToFolder, deleteProjectFolder, updateProjectFolder } from "../../api/project-folders";
 import NotificationCenter from "../NotificationCenter";
 // ── Kickoff Stage Overlay ────────────────────────────────────────────────────
@@ -115,8 +115,9 @@ function KickoffStageOverlay() {
                       background: "var(--th-success, #22c55e)",
                       display: "flex", alignItems: "center", justifyContent: "center",
                       flexShrink: 0,
+                      color: "#fff",
                     }}>
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                         <polyline points="20 6 9 17 4 12" />
                       </svg>
                     </div>
@@ -129,8 +130,9 @@ function KickoffStageOverlay() {
                       flexShrink: 0,
                       boxShadow: "0 0 8px var(--th-accent, #f59e0b)",
                       animation: "kickoff-pulse 1.5s ease-in-out infinite",
+                      color: "#fff",
                     }}>
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ animation: "spin 1s linear infinite" }}>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ animation: "spin 1s linear infinite" }}>
                         <path d="M21 12a9 9 0 1 1-6.219-8.56" />
                       </svg>
                     </div>
@@ -216,7 +218,6 @@ export default function Desktop({
     trashedProjects,
     addToTrash,
     removeFromTrash,
-    emptyTrash,
   } = useUiStore();
 
   const { projects, categories, currentProjectId, projectAgentIds, setCurrentProjectId } = useProjectStore();
@@ -233,9 +234,6 @@ export default function Desktop({
   }, [settings, setSettings, onSaveSettings]);
 
   const [showTrash, setShowTrash] = useState(false);
-  const handleEmptyTrash = useCallback(async () => {
-    emptyTrash();
-  }, [emptyTrash]);
   const [runProjectInfo, setRunProjectInfo] = useState<{ projectId: string; projectName: string; projectPath: string } | null>(null);
   const [agentManagerCreateCount, setAgentManagerCreateCount] = useState(0);
   const [showQuickCreateAgent, setShowQuickCreateAgent] = useState(false);
@@ -270,6 +268,43 @@ export default function Desktop({
   const { setProjects } = useProjectStore();
   const { t, language } = useI18n();
   const { showToast } = useToast();
+  const handleEmptyTrash = useCallback(async () => {
+    const items = [...useUiStore.getState().trashedProjects];
+    if (items.length === 0) return;
+    const { removedIds, failedCount } = await deleteTrashedProjectDirectories(items);
+    for (const id of removedIds) removeFromTrash(id);
+    if (failedCount === 0) {
+      showToast(
+        t({
+          ko: "휴지통 항목의 폴더를 삭제했습니다",
+          en: "Deleted project folders from disk",
+          ja: "ゴミ箱のプロジェクトフォルダを削除しました",
+          zh: "已删除垃圾桶中项目的文件夹",
+        }),
+        "success",
+      );
+    } else if (removedIds.length > 0) {
+      showToast(
+        t({
+          ko: `일부 폴더만 삭제됨 (${failedCount}개 실패)`,
+          en: `Some folders could not be deleted (${failedCount} failed)`,
+          ja: `一部のフォルダを削除できませんでした（失敗 ${failedCount}）`,
+          zh: `部分文件夹未删除（${failedCount} 个失败）`,
+        }),
+        "error",
+      );
+    } else {
+      showToast(
+        t({
+          ko: "폴더 삭제에 실패했습니다",
+          en: "Could not delete folders on disk",
+          ja: "フォルダを削除できませんでした",
+          zh: "无法删除磁盘上的文件夹",
+        }),
+        "error",
+      );
+    }
+  }, [removeFromTrash, showToast, t]);
   useAppSwitcherKeyboard();
   useDesktopData(
     { openWindows, clearUnreadReportCount },

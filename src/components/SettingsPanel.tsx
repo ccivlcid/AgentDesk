@@ -71,7 +71,7 @@ export default function SettingsPanel({
 
   const persistSettings = useCallback(
     (next: LocalSettings) => {
-      onSave(next as unknown as CompanySettings);
+      onSave(next as CompanySettings);
     },
     [onSave],
   );

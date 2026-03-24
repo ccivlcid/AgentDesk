@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { DatabaseSync } from "node:sqlite";
+import { castSqliteRow, castSqliteRows } from "../../lib/sqlite-row-cast.ts";
 import type { RuntimeRun, RuntimeRunStatus, RuntimeEventType } from "./types.ts";
 
 export function createRun(
@@ -67,13 +68,17 @@ export function appendEvent(
 }
 
 export function getRun(db: DatabaseSync, runId: string): RuntimeRun | null {
-  return (db.prepare("SELECT * FROM agent_runtime_runs WHERE id = ?").get(runId) as RuntimeRun | undefined) ?? null;
+  return castSqliteRow<RuntimeRun>(db.prepare("SELECT * FROM agent_runtime_runs WHERE id = ?").get(runId)) ?? null;
 }
 
 export function getRunsByTaskId(db: DatabaseSync, taskId: string): RuntimeRun[] {
-  return db.prepare("SELECT * FROM agent_runtime_runs WHERE task_id = ? ORDER BY created_at DESC").all(taskId) as unknown as RuntimeRun[];
+  return castSqliteRows<RuntimeRun>(
+    db.prepare("SELECT * FROM agent_runtime_runs WHERE task_id = ? ORDER BY created_at DESC").all(taskId),
+  );
 }
 
 export function getRunEvents(db: DatabaseSync, runId: string): import("./types.ts").RuntimeEvent[] {
-  return db.prepare("SELECT * FROM agent_runtime_events WHERE run_id = ? ORDER BY seq ASC").all(runId) as unknown as import("./types.ts").RuntimeEvent[];
+  return castSqliteRows<import("./types.ts").RuntimeEvent>(
+    db.prepare("SELECT * FROM agent_runtime_events WHERE run_id = ? ORDER BY seq ASC").all(runId),
+  );
 }

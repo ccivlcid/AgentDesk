@@ -176,7 +176,7 @@ export function createSubtaskDelegationBatch(deps: BatchDeps) {
          CASE status WHEN 'idle' THEN 0 WHEN 'break' THEN 1 WHEN 'working' THEN 2 ELSE 3 END,
          CASE role WHEN 'senior' THEN 0 WHEN 'junior' THEN 1 WHEN 'intern' THEN 2 WHEN 'team_leader' THEN 3 ELSE 4 END`,
       )
-      .all(...params) as unknown as AgentRow[];
+      .all(...params) as AgentRow[];
     return agents[0] ?? null;
   }
 

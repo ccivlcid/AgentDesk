@@ -1,27 +1,27 @@
-# Phase 23: Optimize 학습 루프 — 구현 스펙
+# Phase 23: Optimize Learning Loop — Implementation Spec
 
-> **목표**: 완료된 태스크에서 자동으로 패턴을 학습하고, 다음 프로젝트에 적용하는 피드백 루프 구축
+> **Goal**: Build a feedback loop that automatically learns patterns from completed tasks and applies them to future projects
 >
-> **핵심 원칙**: 학습도 이벤트 기반으로 자동 실행. 태스크 완료 이벤트가 학습을 트리거.
+> **Core Principle**: Learning is also event-driven and automatic. Task completion events trigger learning.
 >
-> **예상 작업량**: 대규모 (파일 12~18개 수정/생성)
+> **Estimated Effort**: Large (12~18 files modified/created)
 >
-> **선행 조건**: Phase 21 (Run 안정성), Phase 22 (Debug 경험) 완료
+> **Prerequisites**: Phase 21 (Run Stability), Phase 22 (Debug Experience) completed
 >
-> **이벤트 연동**: Phase 21의 EventBus 활용
-> - `task_status_changed` (toStatus: "done") → 자동으로 `runAutoLearning()` 트리거
-> - 프로젝트 내 모든 태스크 done → 자동으로 `generateProjectRetrospective()` 트리거
+> **Event Integration**: Uses Phase 21's EventBus
+> - `task_status_changed` (toStatus: "done") → automatically triggers `runAutoLearning()`
+> - All tasks in project done → automatically triggers `generateProjectRetrospective()`
 
 ---
 
-## 23-1. 태스크 완료 후 자동 학습
+## 23-1. Automatic Learning After Task Completion
 
-### 목적
-태스크가 done 상태가 되면 LLM이 결과를 분석하여 Rules/Memory를 자동 생성.
+### Purpose
+When a task reaches done status, LLM analyzes the result and automatically generates Rules/Memory.
 
-### 서버 변경
+### Server Changes
 
-**새 파일**: `server/modules/workflow/orchestration/run-complete-handler/auto-learning.ts`
+**New file**: `server/modules/workflow/orchestration/run-complete-handler/auto-learning.ts`
 
 ```typescript
 export async function runAutoLearning(deps: {
@@ -36,19 +36,19 @@ export async function runAutoLearning(deps: {
   resolveModel: Function;
   appendTaskLog: Function;
 }): Promise<void> {
-  // 1. 태스크 로그 + 프롬프트 읽기
-  // 2. LLM에게 "이 태스크에서 배울 점" 분석 요청
-  // 3. 결과를 rules/memory에 자동 저장
+  // 1. Read task log + prompt
+  // 2. Request LLM to analyze "lessons learned from this task"
+  // 3. Automatically save results to rules/memory
 
   const systemPrompt = loadPrompt("system/auto-learning");
-  // ... LLM 호출 ...
-  // 응답: { rules: [...], memories: [...] }
-  // rules → rule_entries 테이블 (scope: project)
-  // memories → skill_learning_history 테이블
+  // ... LLM call ...
+  // Response: { rules: [...], memories: [...] }
+  // rules → rule_entries table (scope: project)
+  // memories → skill_learning_history table
 }
 ```
 
-**새 프롬프트 파일**: `prompts/system/auto-learning.md`
+**New prompt file**: `prompts/system/auto-learning.md`
 
 ```markdown
 You are a learning extraction agent. Given a completed task's prompt and output log,
@@ -67,38 +67,38 @@ Respond with JSON:
 Rules:
 - Only extract knowledge that would be useful for FUTURE similar tasks
 - Do NOT extract task-specific details (file names, variable names)
-- Focus on patterns: "이 프로젝트에서 React 컴포넌트는 항상 Tailwind CSS를 사용한다"
-- Focus on pitfalls: "npm install --save-dev 대신 pnpm add -D를 사용해야 한다"
+- Focus on patterns: "In this project, React components always use Tailwind CSS"
+- Focus on pitfalls: "Must use pnpm add -D instead of npm install --save-dev"
 - Max 3 rules, max 3 memories per task
 - If nothing useful, return empty arrays
 ```
 
-### 호출 위치
+### Call Site
 
-**파일**: `server/modules/workflow/orchestration/review-finalize-tools/finalize-approved-review.ts`
+**File**: `server/modules/workflow/orchestration/review-finalize-tools/finalize-approved-review.ts`
 
 ```typescript
-// 태스크 done 마킹 후:
+// After marking task as done:
 void runAutoLearning({ taskId, taskTitle, projectId, agentId, ... });
 ```
 
-### 프론트엔드 변경
+### Frontend Changes
 
-**파일**: `src/components/TaskReportPopup.tsx`
+**File**: `src/components/TaskReportPopup.tsx`
 
-보고서에 "자동 학습 결과" 섹션 추가:
-- 추출된 Rules 목록
-- 추출된 Memory 목록
-- "삭제" 버튼 (잘못 추출된 것 제거)
+Add "Auto-Learning Results" section to report:
+- List of extracted Rules
+- List of extracted Memories
+- "Delete" button (to remove incorrectly extracted items)
 
 ---
 
-## 23-2. 에이전트-태스크 적합도 추적
+## 23-2. Agent-Task Fitness Tracking
 
-### 목적
-어떤 에이전트가 어떤 유형의 태스크에서 성공률이 높은지 추적.
+### Purpose
+Track which agents have higher success rates on which types of tasks.
 
-### DB 변경
+### DB Changes
 
 ```sql
 -- migration: 2026-03-29-001-agent-task-fitness
@@ -114,12 +114,12 @@ CREATE TABLE IF NOT EXISTS agent_task_fitness (
 CREATE INDEX IF NOT EXISTS idx_agent_fitness ON agent_task_fitness(agent_id, task_type);
 ```
 
-### 서버 변경
+### Server Changes
 
-태스크 완료/실패 시 fitness 테이블 업데이트:
+Update fitness table on task completion/failure:
 
 ```typescript
-// finalize-approved-review.ts 또는 state-updates.ts:
+// finalize-approved-review.ts or state-updates.ts:
 function updateAgentFitness(agentId: string, taskType: string, success: boolean, durationMs: number) {
   const existing = db.prepare(
     "SELECT * FROM agent_task_fitness WHERE agent_id = ? AND task_type = ?"
@@ -140,11 +140,11 @@ function updateAgentFitness(agentId: string, taskType: string, success: boolean,
 }
 ```
 
-### 킥오프 태스크 배정 시 활용
+### Using Fitness Data During Kickoff Task Assignment
 
-**파일**: `prompts/system/project-kickoff.md`
+**File**: `prompts/system/project-kickoff.md`
 
-프롬프트에 에이전트별 적합도 정보 추가:
+Add per-agent fitness information to the prompt:
 ```
 Available agents (with fitness scores):
 - Alice [PM] — frontend: 95% (12/12), backend: 80% (8/10)
@@ -153,12 +153,12 @@ Available agents (with fitness scores):
 
 ---
 
-## 23-3. 프롬프트 버전 관리
+## 23-3. Prompt Version Management
 
-### 목적
-프롬프트 변경 이력 추적. 어떤 프롬프트 버전이 성공률이 높은지 비교.
+### Purpose
+Track prompt change history. Compare which prompt versions have higher success rates.
 
-### DB 변경
+### DB Changes
 
 ```sql
 -- migration: 2026-03-29-002-prompt-versions
@@ -174,77 +174,77 @@ CREATE TABLE IF NOT EXISTS prompt_versions (
 );
 ```
 
-### 서버 변경
+### Server Changes
 
-**파일**: `server/lib/prompt-loader.ts`
+**File**: `server/lib/prompt-loader.ts`
 
-프롬프트 로드 시 자동으로 버전 기록:
+Automatically record version when loading prompt:
 
 ```typescript
 export function loadPromptWithVersion(name: string, vars?: Record<string, string>): { content: string; versionId: string } {
   const content = loadPrompt(name, vars);
   const hash = crypto.createHash("md5").update(content).digest("hex").slice(0, 16);
-  // DB에 버전 기록 (없으면 생성)
-  // 반환: content + versionId
+  // Record version in DB (create if not exists)
+  // Return: content + versionId
 }
 ```
 
-태스크 완료/실패 시 해당 프롬프트 버전의 success/failure count 업데이트.
+Update success/failure count for the corresponding prompt version on task completion/failure.
 
-### 프론트엔드 변경
+### Frontend Changes
 
-Settings → "프롬프트 성과" 탭:
-- 프롬프트별 성공률 표시
-- 버전 히스토리 (언제 변경됐는지)
-- 성공률이 떨어진 프롬프트 경고
+Settings → "Prompt Performance" tab:
+- Display success rate per prompt
+- Version history (when changes occurred)
+- Warning for prompts with declining success rate
 
 ---
 
-## 23-4. 프로젝트 완료 후 회고 보고서
+## 23-4. Project Retrospective Report on Completion
 
-### 목적
-프로젝트의 모든 태스크가 완료되면 자동으로 회고 보고서 생성.
+### Purpose
+Automatically generate a retrospective report when all tasks in a project are completed.
 
-### 서버 변경
+### Server Changes
 
-PM Oversight sweep에서 프로젝트 완료 감지 시:
+When project completion is detected during PM Oversight sweep:
 
 ```typescript
-// kickoff.ts - 프로젝트 완료 시 (planned=0, in_progress=0):
+// kickoff.ts - When project completes (planned=0, in_progress=0):
 void generateProjectRetrospective(projectId);
 ```
 
-**새 함수**: `generateProjectRetrospective()`
+**New function**: `generateProjectRetrospective()`
 
 ```typescript
 async function generateProjectRetrospective(projectId: string) {
-  // 1. 프로젝트 정보 + 모든 태스크 요약 수집
-  // 2. LLM에게 회고 분석 요청
-  // 3. 결과를 project에 저장
+  // 1. Collect project info + all task summaries
+  // 2. Request retrospective analysis from LLM
+  // 3. Save results to project
 
   const systemPrompt = loadPrompt("system/project-retrospective");
-  // 응답: { summary, what_went_well, what_to_improve, recommendations }
-  // DB에 저장 → 프로젝트 폴더 창에 표시
+  // Response: { summary, what_went_well, what_to_improve, recommendations }
+  // Save to DB → display in project folder window
 }
 ```
 
-**새 프롬프트 파일**: `prompts/system/project-retrospective.md`
+**New prompt file**: `prompts/system/project-retrospective.md`
 
 ---
 
-## 구현 순서
+## Implementation Order
 
 ```
-23-1 자동 학습          (1.5시간, LLM + DB + UI)
-23-2 적합도 추적        (1시간, DB + 킥오프 연동)
-23-4 회고 보고서        (1시간, LLM + 프로젝트 뷰)
-23-3 프롬프트 버전 관리 (2시간, 복잡도 높음)
+23-1 Auto-learning             (1.5 hours, LLM + DB + UI)
+23-2 Fitness tracking          (1 hour, DB + kickoff integration)
+23-4 Retrospective report      (1 hour, LLM + project view)
+23-3 Prompt version management (2 hours, high complexity)
 ```
 
-### 검증 기준
+### Verification Criteria
 
-- [ ] 태스크 완료 → 자동으로 Rules 1~3개 생성 → Library에서 확인 가능
-- [ ] 10개 태스크 완료 → 에이전트별 적합도 표 생성
-- [ ] 킥오프 시 적합도 점수 기반 에이전트 추천
-- [ ] 프로젝트 전체 완료 → 회고 보고서 자동 생성
-- [ ] 프롬프트 파일 수정 → 새 버전 자동 기록 → 성공률 비교 가능
+- [ ] Task completion → automatically generates 1~3 Rules → viewable in Library
+- [ ] 10 tasks completed → agent fitness table generated per agent
+- [ ] During kickoff, agent recommendation based on fitness scores
+- [ ] All project tasks complete → retrospective report auto-generated
+- [ ] Prompt file modified → new version auto-recorded → success rate comparison available

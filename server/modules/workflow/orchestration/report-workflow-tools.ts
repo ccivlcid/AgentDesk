@@ -119,7 +119,7 @@ export function createReportWorkflowTools(deps: CreateReportWorkflowToolsDeps) {
     id ASC
 `,
       )
-      .all() as unknown as any[];
+      .all() as any[];
     return candidates[0] ?? null;
   }
 

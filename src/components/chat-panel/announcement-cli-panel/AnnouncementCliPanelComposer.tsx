@@ -187,7 +187,7 @@ export function AnnouncementCliPanelComposer({
               (e.currentTarget as HTMLButtonElement).style.borderColor = KAKAO_MSG.borderLight;
             }}
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 12, height: 12 }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" />
             </svg>
           </button>
@@ -215,7 +215,7 @@ export function AnnouncementCliPanelComposer({
               opacity: !input.trim() && attachments.length === 0 ? 0.4 : 1,
             }}
           >
-            <svg viewBox="0 0 24 24" fill="currentColor" style={{ width: 13, height: 13 }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
               <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
             </svg>
           </button>

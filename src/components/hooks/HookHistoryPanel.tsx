@@ -324,7 +324,17 @@ export default function HookHistoryPanel({
             }}
           >
             <span className="flex-1 text-left truncate">{filterLabel}</span>
-            <span style={{ fontSize: 9, opacity: 0.6 }}>{filterDropdownOpen ? "▴" : "▾"}</span>
+            <span style={{ fontSize: 9, opacity: 0.6, display: "inline-flex", color: "inherit" }}>
+              {filterDropdownOpen ? (
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                  <polyline points="6 15 12 9 18 15" />
+                </svg>
+              ) : (
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              )}
+            </span>
           </button>
 
           {filterDropdownOpen && (
@@ -348,7 +358,11 @@ export default function HookHistoryPanel({
                 }}
               >
                 <span className="w-3 h-3 inline-flex items-center justify-center text-[9px]">
-                  {agentFilters.size === 0 ? "✓" : ""}
+                  {agentFilters.size === 0 ? (
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  ) : null}
                 </span>
                 {t({ ko: "전체 에이전트", en: "All agents", ja: "全エージェント", zh: "所有代理" })}
               </button>
@@ -364,7 +378,11 @@ export default function HookHistoryPanel({
                   }}
                 >
                   <span className="w-3 h-3 inline-flex items-center justify-center text-[9px]">
-                    {agentFilters.has(agent.id) ? "✓" : ""}
+                    {agentFilters.has(agent.id) ? (
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    ) : null}
                   </span>
                   <span className="h-4 w-4 overflow-hidden shrink-0" style={{ borderRadius: 0 }}>
                     <AgentAvatar agent={agent} agents={agents} size={16} rounded="xl" />

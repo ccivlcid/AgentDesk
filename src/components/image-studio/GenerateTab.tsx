@@ -49,6 +49,118 @@ const selectStyle: React.CSSProperties = {
   cursor: "pointer", outline: "none",
 };
 
+function IconPlay({ size = 12 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <polygon points="5 3 19 12 5 21 5 3" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+function IconDownload({ size = 14 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="7 10 12 15 17 10" />
+      <line x1="12" y1="15" x2="12" y2="3" />
+    </svg>
+  );
+}
+
+function IconX({ size = 14 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <line x1="18" y1="6" x2="6" y2="18" />
+      <line x1="6" y1="6" x2="18" y2="18" />
+    </svg>
+  );
+}
+
+function IconChevronDown({ size = 8 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <polyline points="6 9 12 15 18 9" />
+    </svg>
+  );
+}
+
+function IconChevronUp({ size = 8 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <polyline points="6 15 12 9 18 15" />
+    </svg>
+  );
+}
+
+function IconSettings({ size = 14 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+}
+
 function fileToB64(file: File): Promise<string> {
   return new Promise((resolve) => {
     const reader = new FileReader();
@@ -311,7 +423,9 @@ export default function GenerateTab({ onGenerated, onGoGallery }: Props) {
                     alignItems: "center", justifyContent: "center", lineHeight: 1,
                   }}
                 >
-                  ✕
+                  <span style={{ display: "inline-flex", color: "#fff" }}>
+                    <IconX size={12} />
+                  </span>
                 </button>
               </div>
             ) : (
@@ -370,9 +484,21 @@ export default function GenerateTab({ onGenerated, onGoGallery }: Props) {
               transition: "all 0.15s",
             }}
           >
-            {generating
-              ? t({ ko: "▶ 생성 중…", en: "▶ Generating…", ja: "▶ 生成中…", zh: "▶ 生成中…" })
-              : t({ ko: "▶ 생성", en: "▶ Generate", ja: "▶ 生成", zh: "▶ 生成" })}
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 6,
+                width: "100%",
+                color: "inherit",
+              }}
+            >
+              <IconPlay size={11} />
+              {generating
+                ? t({ ko: "생성 중…", en: "Generating…", ja: "生成中…", zh: "生成中…" })
+                : t({ ko: "생성", en: "Generate", ja: "生成", zh: "生成" })}
+            </span>
           </button>
         </div>
 
@@ -383,9 +509,17 @@ export default function GenerateTab({ onGenerated, onGoGallery }: Props) {
         >
           <span>
             {t({ ko: "태스크 연동", en: "Link to Task", ja: "タスク連携", zh: "关联任务" })}
-            {linkedTaskId && <span style={{ color: "var(--th-accent)", marginLeft: 6 }}>●</span>}
+            {linkedTaskId && (
+              <span style={{ marginLeft: 6, display: "inline-flex", verticalAlign: "middle", color: "var(--th-accent)" }} aria-hidden>
+                <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                  <circle cx="12" cy="12" r="6" />
+                </svg>
+              </span>
+            )}
           </span>
-          <span style={{ fontSize: 8 }}>{taskLinkOpen ? "▲" : "▼"}</span>
+          <span style={{ fontSize: 8, display: "inline-flex", color: "var(--th-text-muted)" }}>
+            {taskLinkOpen ? <IconChevronUp size={10} /> : <IconChevronDown size={10} />}
+          </span>
         </div>
         {taskLinkOpen && (
           <div style={{ padding: "4px 14px 10px" }}>
@@ -427,7 +561,10 @@ export default function GenerateTab({ onGenerated, onGoGallery }: Props) {
                 transition: "background 0.12s",
               }}
             >
-              {t({ ko: "⚙ API 설정 열기", en: "⚙ Open API Settings", ja: "⚙ API設定を開く", zh: "⚙ 打开API设置" })}
+              <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                <IconSettings size={14} />
+                {t({ ko: "API 설정 열기", en: "Open API Settings", ja: "API設定を開く", zh: "打开API设置" })}
+              </span>
             </button>
           </div>
         ) : (
@@ -506,7 +643,18 @@ export default function GenerateTab({ onGenerated, onGoGallery }: Props) {
                   color: "#0a84ff", cursor: "pointer", letterSpacing: "0.04em",
                 }}
               >
-                ↓ {t({ ko: "이미지 저장", en: "Save Image", ja: "画像を保存", zh: "保存图像" })}
+                <span
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 6,
+                    color: "#0a84ff",
+                  }}
+                >
+                  <IconDownload size={14} />
+                  {t({ ko: "이미지 저장", en: "Save Image", ja: "画像を保存", zh: "保存图像" })}
+                </span>
               </button>
               <button
                 type="button"
@@ -552,8 +700,12 @@ export default function GenerateTab({ onGenerated, onGoGallery }: Props) {
                   <span style={{ fontFamily: mono, fontSize: 12, color: "var(--th-text-primary)", letterSpacing: "0.04em" }}>
                     {t({ ko: "생성 중…", en: "Generating…", ja: "生成中…", zh: "生成中…" })}
                   </span>
-                  <span style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-muted)" }}>
-                    {model} · {sizeLabel}
+                  <span style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-muted)", display: "inline-flex", alignItems: "center", gap: 6 }}>
+                    <span>{model}</span>
+                    <svg width="4" height="4" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                      <circle cx="12" cy="12" r="2" />
+                    </svg>
+                    <span>{sizeLabel}</span>
                   </span>
                 </div>
               </motion.div>
@@ -569,8 +721,24 @@ export default function GenerateTab({ onGenerated, onGoGallery }: Props) {
                   borderRadius: 8,
                 }}
               >
-                <div style={{ fontFamily: mono, fontSize: 11, fontWeight: 700, color: "#ef4444", marginBottom: 10, letterSpacing: "0.04em" }}>
-                  ✕ {t({ ko: "생성 실패", en: "Generation Failed", ja: "生成失敗", zh: "生成失败" })}
+                <div
+                  style={{
+                    fontFamily: mono,
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: "#ef4444",
+                    marginBottom: 10,
+                    letterSpacing: "0.04em",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: 6,
+                  }}
+                >
+                  <span style={{ display: "inline-flex", color: "#ef4444" }}>
+                    <IconX size={14} />
+                  </span>
+                  {t({ ko: "생성 실패", en: "Generation Failed", ja: "生成失敗", zh: "生成失败" })}
                 </div>
                 <div style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-muted)", lineHeight: 1.7 }}>{error}</div>
               </motion.div>
@@ -602,9 +770,14 @@ export default function GenerateTab({ onGenerated, onGoGallery }: Props) {
                     border: "1px solid rgba(255,255,255,0.2)", borderRadius: 4,
                     fontFamily: mono, fontSize: 11, color: "#fff", cursor: "pointer",
                     backdropFilter: "blur(8px)", letterSpacing: "0.02em",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
                   }}
                 >
-                  ↓
+                  <span style={{ display: "inline-flex", color: "#fff" }}>
+                    <IconDownload size={16} />
+                  </span>
                 </button>
               </motion.div>
             )}

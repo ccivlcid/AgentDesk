@@ -402,8 +402,8 @@ export default function AgentDetailTabContent({
             className={`border rounded p-3 flex items-center gap-3 ${subAgent.status === "working" ? "animate-alba-spawn" : ""}`}
             style={{ background: "var(--th-bg-surface)", borderColor: "var(--th-border)" }}
           >
-            <div className="w-8 h-8 bg-amber-500/20 flex items-center justify-center" style={{ borderRadius: 0 }}>
-              <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="#f59e0b" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <div className="w-8 h-8 bg-amber-500/20 flex items-center justify-center" style={{ borderRadius: 0, color: "#f59e0b" }}>
+              <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="10" cy="7" r="3" />
                 <path d="M4 18v-1a6 6 0 0112 0v1" />
               </svg>
@@ -415,10 +415,22 @@ export default function AgentDetailTabContent({
                 </span>
                 {subAgent.task}
               </div>
-              <div className="text-xs mt-0.5 font-mono" style={{ color: "var(--th-text-muted)" }}>
-                {subAgent.status === "working"
-                  ? `▶ ${t({ ko: "작업중...", en: "Working...", ja: "作業中...", zh: "工작中..." })}`
-                  : `✅ ${t({ ko: "완료", en: "Done", ja: "完了", zh: "완成" })}`}
+              <div className="text-xs mt-0.5 font-mono flex items-center gap-1" style={{ color: "var(--th-text-muted)" }}>
+                {subAgent.status === "working" ? (
+                  <>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" className="shrink-0" aria-hidden>
+                      <polygon points="5 3 19 12 5 21 5 3" />
+                    </svg>
+                    {t({ ko: "작업중...", en: "Working...", ja: "作業中...", zh: "工作中..." })}
+                  </>
+                ) : (
+                  <>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0" aria-hidden>
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    {t({ ko: "완료", en: "Done", ja: "完了", zh: "完成" })}
+                  </>
+                )}
               </div>
             </div>
             {subAgent.status === "working" && (

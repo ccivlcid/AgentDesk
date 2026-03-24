@@ -1,6 +1,7 @@
 import type { DecisionInboxRouteItem } from "../api";
-import { normalizeLanguage, pickLang, type UiLanguage } from "../i18n";
+import { normalizeLanguage, type UiLanguage } from "../i18n";
 import type { DecisionInboxItem } from "../components/chat/decision-inbox";
+import { translateMessage } from "../../shared/i18n/index.ts";
 
 function baseWorkflowDecisionItem(item: DecisionInboxRouteItem): Omit<DecisionInboxItem, "options"> {
   return {
@@ -33,83 +34,39 @@ function localizedOptionLabel(
   number: number,
   language: UiLanguage,
 ): string {
+  const tk = (key: Parameters<typeof translateMessage>[1]) => translateMessage(language, key);
   if (kind === "project_review_ready") {
     if (action === "start_project_review") {
-      return pickLang(language, {
-        ko: "PM 미팅 진행",
-        en: "Start PM Meeting",
-        ja: "PMミーティングを進行",
-        zh: "启动PM评审会议",
-      });
+      return tk("decision.projectReview.startMeeting");
     }
     if (action === "keep_waiting") {
-      return pickLang(language, {
-        ko: "대기 유지",
-        en: "Keep Waiting",
-        ja: "待機維持",
-        zh: "保持等待",
-      });
+      return tk("decision.projectReview.keepWaiting");
     }
     if (action === "add_followup_request") {
-      return pickLang(language, {
-        ko: "추가요청 입력",
-        en: "Add Follow-up Request",
-        ja: "追加要請を入力",
-        zh: "输入追加请求",
-      });
+      return tk("decision.projectReview.addFollowup");
     }
   }
   if (kind === "task_timeout_resume") {
     if (action === "resume_timeout_task") {
-      return pickLang(language, {
-        ko: "이어서 진행 (재개)",
-        en: "Resume Task",
-        ja: "続行する",
-        zh: "继续执行",
-      });
+      return tk("decision.timeout.resume");
     }
     if (action === "keep_inbox") {
-      return pickLang(language, {
-        ko: "Inbox 유지",
-        en: "Keep in Inbox",
-        ja: "Inboxで保留",
-        zh: "保留在 Inbox",
-      });
+      return tk("decision.timeout.keepInbox");
     }
   }
   if (kind === "task_review_ready") {
     if (action.startsWith("approve_task_review:")) {
-      return pickLang(language, {
-        ko: "승인 + 병합",
-        en: "Approve & Merge",
-        ja: "承認 + マージ",
-        zh: "批准 + 合并",
-      });
+      return tk("decision.taskReview.approveMerge");
     }
     if (action.startsWith("request_revision:")) {
-      return pickLang(language, {
-        ko: "수정 요청",
-        en: "Request Revision",
-        ja: "修正要請",
-        zh: "要求修改",
-      });
+      return tk("decision.taskReview.requestRevision");
     }
     if (action === "keep_waiting") {
-      return pickLang(language, {
-        ko: "보류",
-        en: "Hold",
-        ja: "保留",
-        zh: "暂缓",
-      });
+      return tk("decision.taskReview.hold");
     }
   }
   if (kind === "review_round_pick" && action === "skip_to_next_round") {
-    return pickLang(language, {
-      ko: "다음 라운드로 SKIP",
-      en: "Skip to Next Round",
-      ja: "次ラウンドへスキップ",
-      zh: "跳到下一轮",
-    });
+    return tk("decision.reviewRound.skipToNext");
   }
   return `${number}. ${action}`;
 }

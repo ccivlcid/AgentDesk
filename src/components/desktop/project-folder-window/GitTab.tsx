@@ -105,7 +105,12 @@ export function GitTab({ project }: { project: Project }) {
   if (step === "done") {
     return (
       <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", gap: 12 }}>
-        <svg width="44" height="44" viewBox="0 0 44 44" fill="none"><circle cx="22" cy="22" r="19" stroke="#30d158" strokeWidth="2" fill="none" opacity="0.2"/><path d="M13 22L19 28L31 16" stroke="#30d158" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        <span style={{ display: "inline-flex", color: "#30d158" }}>
+          <svg width="44" height="44" viewBox="0 0 44 44" fill="none" aria-hidden>
+            <circle cx="22" cy="22" r="19" stroke="currentColor" strokeWidth="2" fill="none" opacity="0.2" />
+            <path d="M13 22L19 28L31 16" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </span>
         <div style={{ ...s, fontSize: 13, fontWeight: 700, color: "var(--th-text-heading)" }}>
           {t({ ko: "완료!", en: "Done!", ja: "完了!", zh: "完成!" })}
         </div>

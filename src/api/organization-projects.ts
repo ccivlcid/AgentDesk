@@ -603,6 +603,30 @@ export async function deleteProject(id: string): Promise<void> {
   await del(`/api/projects/${id}`);
 }
 
+/** Remove a project folder from disk (e.g. after trash). Server enforces allowed roots and refuses if a project row still uses the path. */
+export async function deleteProjectDirectory(projectPath: string): Promise<{ ok: boolean; deleted: boolean }> {
+  return post("/api/projects/delete-directory", { project_path: projectPath }) as Promise<{ ok: boolean; deleted: boolean }>;
+}
+
+export type TrashedPathEntry = { id: string; project_path: string };
+
+/** Try to delete each trashed project's directory. Returns ids to remove from UI trash (successful API calls only). */
+export async function deleteTrashedProjectDirectories(
+  items: TrashedPathEntry[],
+): Promise<{ removedIds: string[]; failedCount: number }> {
+  const removedIds: string[] = [];
+  let failedCount = 0;
+  for (const item of items) {
+    try {
+      await deleteProjectDirectory(item.project_path);
+      removedIds.push(item.id);
+    } catch {
+      failedCount += 1;
+    }
+  }
+  return { removedIds, failedCount };
+}
+
 export async function getProjectDetail(id: string): Promise<ProjectDetailResponse> {
   return request(`/api/projects/${id}`);
 }

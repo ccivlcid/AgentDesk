@@ -82,11 +82,15 @@ export function KbSourcesSection({
           style={{
             color: "var(--th-text-muted)",
             transform: open ? "rotate(90deg)" : "rotate(0deg)",
-            display: "inline-block",
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
             transition: "transform 0.1s linear",
           }}
         >
-          ▶
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
         </span>
       </button>
 
@@ -120,8 +124,18 @@ export function KbSourcesSection({
                   }}
                   onClick={() => toggle(s)}
                 >
-                  {s.type === "notion_page" ? "📘" : s.type === "obsidian_file" ? "📓" : "🔬"}{" "}
-                  {s.label ?? s.id} ✕
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                    <span style={{ opacity: 0.85 }}>
+                      {s.type === "notion_page" ? "N" : s.type === "obsidian_file" ? "O" : "K"}
+                    </span>
+                    <span>
+                      {s.label ?? s.id}
+                    </span>
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 opacity-80" aria-hidden>
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  </span>
                 </span>
               ))}
             </div>

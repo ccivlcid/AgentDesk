@@ -85,7 +85,6 @@ export function useDesktopOverlayBlockProps(bridge: DesktopOverlayBlockBridge): 
     openAppRunner,
     trashedProjects,
     removeFromTrash,
-    emptyTrash,
     setDesktopIconLayout,
   } = useUiStore();
   const { projects, categories, currentProjectId, setCurrentProjectId, setProjects, setEditDirectiveProjectId } = useProjectStore();
@@ -296,7 +295,6 @@ export function useDesktopOverlayBlockProps(bridge: DesktopOverlayBlockBridge): 
       createProject,
       setProjects,
       showToast,
-      emptyTrash,
     };
 
     return {
@@ -323,7 +321,6 @@ export function useDesktopOverlayBlockProps(bridge: DesktopOverlayBlockBridge): 
     trashedProjects,
     openCliWindow,
     removeFromTrash,
-    emptyTrash,
     setDesktopIconLayout,
   ]);
 }

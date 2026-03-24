@@ -2,7 +2,8 @@
 
 This document defines a contributor-facing API baseline for AgentDesk.
 It is intentionally compact and focused on frequently used endpoints.
-Current baseline target: `v1.6.3` (local snapshot, 2026-03-27).
+Current baseline target: `v1.6.4` (local snapshot, 2026-03-24).
+> **v1.6.4 changes:** Added `POST /api/projects/delete-directory` — recursively delete a project directory on disk when allowed by `PROJECT_PATH_ALLOWED_ROOTS` and no `projects` row references the path (trash empty / permanent erase).
 > **v1.6.2 changes:** Added `POST /api/projects/auto-assign-agents` (AI agent staffing), `POST /api/projects/:id/kickoff`, `GET /api/projects/:id/pm-activity`, `POST /api/projects/:id/clarification-reply`. Notifications CHECK constraint expanded with `task_started`, `kickoff`.
 > **v1.6.1 changes:** `hook_entries.scope_type` now accepts `'project'` (migration `2026-03-23-001`). `/api/hooks` accepts `scope_type=project&scope_id=<project_id>` filter.
 
@@ -206,6 +207,7 @@ or
 | GET | `/api/projects/path-check` | Validate project path |
 | GET | `/api/projects/path-suggestions` | Suggested paths |
 | POST | `/api/projects/path-native-picker` | Native path picker |
+| POST | `/api/projects/delete-directory` | Delete project folder on disk (body: `project_path`; rejects if path still used by a project row) |
 | GET | `/api/projects/:id/cost-summary` | Per-project cost aggregation |
 | GET | `/api/agents/:id/cost-summary` | Per-agent cost aggregation |
 | GET | `/api/cost-summary` | Company-wide cost aggregation |

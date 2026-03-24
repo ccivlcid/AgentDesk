@@ -2,6 +2,7 @@ import type { Express } from "express";
 import type { DatabaseSync } from "node:sqlite";
 import { randomUUID } from "node:crypto";
 import logger from "../../../lib/logger.ts";
+import { castSqliteRow, castSqliteRows } from "../../../lib/sqlite-row-cast.ts";
 
 interface RegisterProjectTypeTemplateRoutesOptions {
   app: Express;
@@ -38,9 +39,9 @@ export function registerProjectTypeTemplateRoutes({
   /* ── GET /api/project-type-templates ──────────────────────────────────── */
   app.get("/api/project-type-templates", (_req, res) => {
     try {
-      const rows = db
-        .prepare(`SELECT ${COLS} FROM project_type_templates ORDER BY is_default DESC, name ASC`)
-        .all() as unknown as ProjectTypeTemplateRow[];
+      const rows = castSqliteRows<ProjectTypeTemplateRow>(
+        db.prepare(`SELECT ${COLS} FROM project_type_templates ORDER BY is_default DESC, name ASC`).all(),
+      );
       res.json({ ok: true, templates: rows });
     } catch (err) {
       logger.error({ err }, "[AgentDesk] GET /api/project-type-templates error");
@@ -82,9 +83,12 @@ export function registerProjectTypeTemplateRoutes({
         now,
       );
 
-      const row = db
-        .prepare(`SELECT ${COLS} FROM project_type_templates WHERE id = ?`)
-        .get(id) as unknown as ProjectTypeTemplateRow;
+      const row = castSqliteRow<ProjectTypeTemplateRow>(
+        db.prepare(`SELECT ${COLS} FROM project_type_templates WHERE id = ?`).get(id),
+      );
+      if (!row) {
+        return res.status(500).json({ error: "create_fetch_failed" });
+      }
       res.status(201).json({ ok: true, template: row });
     } catch (err) {
       logger.error({ err }, "[AgentDesk] POST /api/project-type-templates error");
@@ -96,9 +100,9 @@ export function registerProjectTypeTemplateRoutes({
   app.put("/api/project-type-templates/:id", (req, res) => {
     try {
       const { id } = req.params;
-      const existing = db
-        .prepare("SELECT id, is_default FROM project_type_templates WHERE id = ?")
-        .get(id) as unknown as ProjectTypeTemplateRow | undefined;
+      const existing = castSqliteRow<{ id: string; is_default: number }>(
+        db.prepare("SELECT id, is_default FROM project_type_templates WHERE id = ?").get(id),
+      );
       if (!existing) {
         return res.status(404).json({ error: "not_found" });
       }
@@ -125,9 +129,12 @@ export function registerProjectTypeTemplateRoutes({
         `UPDATE project_type_templates SET ${sets.join(", ")} WHERE id = ?`,
       ).run(...vals);
 
-      const row = db
-        .prepare(`SELECT ${COLS} FROM project_type_templates WHERE id = ?`)
-        .get(id) as unknown as ProjectTypeTemplateRow;
+      const row = castSqliteRow<ProjectTypeTemplateRow>(
+        db.prepare(`SELECT ${COLS} FROM project_type_templates WHERE id = ?`).get(id),
+      );
+      if (!row) {
+        return res.status(500).json({ error: "update_fetch_failed" });
+      }
       res.json({ ok: true, template: row });
     } catch (err) {
       logger.error({ err }, "[AgentDesk] PUT /api/project-type-templates/:id error");
@@ -139,9 +146,9 @@ export function registerProjectTypeTemplateRoutes({
   app.delete("/api/project-type-templates/:id", (req, res) => {
     try {
       const { id } = req.params;
-      const existing = db
-        .prepare("SELECT id, is_default FROM project_type_templates WHERE id = ?")
-        .get(id) as unknown as ProjectTypeTemplateRow | undefined;
+      const existing = castSqliteRow<{ id: string; is_default: number }>(
+        db.prepare("SELECT id, is_default FROM project_type_templates WHERE id = ?").get(id),
+      );
       if (!existing) {
         return res.status(404).json({ error: "not_found" });
       }

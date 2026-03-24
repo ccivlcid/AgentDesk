@@ -8,9 +8,7 @@ import type { DatabaseSync } from "node:sqlite";
 import { randomUUID } from "node:crypto";
 import { loadPrompt } from "../../../lib/prompt-loader.ts";
 import logger from "../../../lib/logger.ts";
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- wide agent type
-type AgentRow = Record<string, any>;
+import type { AgentRow } from "../core/conversation-types.ts";
 
 interface AutoLearnDeps {
   db: DatabaseSync;

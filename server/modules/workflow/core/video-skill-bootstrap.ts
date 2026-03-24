@@ -1,12 +1,8 @@
 import { execFileSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
+import type { DatabaseSync } from "node:sqlite";
 
-type DbLike = {
-  prepare: (sql: string) => {
-    get: (...args: any[]) => unknown;
-    run: (...args: any[]) => { changes?: number } | void;
-  };
-};
+type DbLike = Pick<DatabaseSync, "prepare">;
 
 type InstallableProvider = "claude" | "codex" | "gemini" | "opencode" | "copilot" | "antigravity";
 

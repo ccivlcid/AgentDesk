@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import type { Express, NextFunction, Request, Response } from "express";
 import type { DatabaseSync } from "node:sqlite";
 import { ApiError } from "../../../errors/ApiError.ts";
+import { castSqliteRow, castSqliteRows } from "../../../lib/sqlite-row-cast.ts";
 
 interface WebhookRouteDeps {
   app: Express;
@@ -23,7 +24,7 @@ interface WebhookRow {
 export function registerWebhookRoutes({ app, db, nowMs }: WebhookRouteDeps): void {
   // GET /api/webhooks
   app.get("/api/webhooks", (_req: Request, res: Response) => {
-    const rows = db.prepare("SELECT * FROM webhooks ORDER BY created_at DESC").all() as unknown as WebhookRow[];
+    const rows = castSqliteRows<WebhookRow>(db.prepare("SELECT * FROM webhooks ORDER BY created_at DESC").all());
     res.json({ ok: true, webhooks: rows.map((r) => ({ ...r, events: JSON.parse(r.events) })) });
   });
 
@@ -51,7 +52,7 @@ export function registerWebhookRoutes({ app, db, nowMs }: WebhookRouteDeps): voi
     const { id } = req.params;
     const { name, url, events, enabled, secret } = req.body as Record<string, any>;
     const now = nowMs();
-    const existing = db.prepare("SELECT * FROM webhooks WHERE id = ?").get(id as string) as any as WebhookRow | undefined;
+    const existing = castSqliteRow<WebhookRow>(db.prepare("SELECT * FROM webhooks WHERE id = ?").get(id as string));
     if (!existing) { throw ApiError.notFound("webhook_not_found"); }
 
     const newName: string = name?.trim() ?? existing.name;
@@ -76,7 +77,7 @@ export function registerWebhookRoutes({ app, db, nowMs }: WebhookRouteDeps): voi
   // POST /api/webhooks/:id/test — 테스트 발송
   app.post("/api/webhooks/:id/test", async (req: Request, res: Response, next: NextFunction) => {
     try {
-    const row = db.prepare("SELECT * FROM webhooks WHERE id = ?").get(req.params.id as string) as any as WebhookRow | undefined;
+    const row = castSqliteRow<WebhookRow>(db.prepare("SELECT * FROM webhooks WHERE id = ?").get(req.params.id as string));
     if (!row) { throw ApiError.notFound("webhook_not_found"); }
     const result = await sendWebhook(row.url, row.secret, "test", {
       message: "AgentDesk webhook test",
@@ -117,7 +118,7 @@ export function triggerWebhooks(
 ): void {
   let rows: WebhookRow[];
   try {
-    rows = db.prepare("SELECT * FROM webhooks WHERE enabled = 1").all() as unknown as WebhookRow[];
+    rows = castSqliteRows<WebhookRow>(db.prepare("SELECT * FROM webhooks WHERE enabled = 1").all());
   } catch {
     return; // table may not exist yet
   }

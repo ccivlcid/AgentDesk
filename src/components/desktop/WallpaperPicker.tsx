@@ -277,8 +277,10 @@ export default function WallpaperPicker({ onClose }: Props) {
                 <div style={{ width: "100%", paddingTop: "62%", background: w.css, position: "relative" }}>
                   {isSelected && (
                     <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <div style={{ width: 16, height: 16, borderRadius: "50%", background: "var(--th-accent)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        <span style={{ fontSize: 9, color: "white" }}>✓</span>
+                      <div style={{ width: 16, height: 16, borderRadius: "50%", background: "var(--th-accent)", display: "flex", alignItems: "center", justifyContent: "center", color: "white" }}>
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
                       </div>
                     </div>
                   )}
@@ -407,8 +409,15 @@ export default function WallpaperPicker({ onClose }: Props) {
             )}
           </div>
           {sizeWarning && (
-            <div style={{ fontFamily: mono, fontSize: 9, color: "var(--th-warning, #f59e0b)", marginBottom: 8 }}>
-              ⚠ {sizeWarning}
+            <div style={{ fontFamily: mono, fontSize: 9, color: "var(--th-warning, #f59e0b)", marginBottom: 8, display: "flex", alignItems: "flex-start", gap: 6 }}>
+              <span style={{ display: "inline-flex", flexShrink: 0, marginTop: 1 }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                  <line x1="12" y1="9" x2="12" y2="13" />
+                  <line x1="12" y1="17" x2="12.01" y2="17" />
+                </svg>
+              </span>
+              <span>{sizeWarning}</span>
             </div>
           )}
 

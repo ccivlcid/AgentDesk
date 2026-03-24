@@ -18,7 +18,10 @@ export interface UseTerminalPanelDataParams {
 }
 
 export interface UseTerminalPanelDataRefs {
-  preRef: React.RefObject<HTMLElement | null>;
+  /** Parsed CLI line rows container (flex column) */
+  parsedOutputRef: React.RefObject<HTMLDivElement | null>;
+  /** Raw terminal text when not using parsed lines */
+  rawOutputPreRef: React.RefObject<HTMLPreElement | null>;
   containerRef: React.RefObject<HTMLDivElement | null>;
   searchInputRef: React.RefObject<HTMLInputElement | null>;
   promptInputRef: React.RefObject<HTMLTextAreaElement | null>;
@@ -57,7 +60,8 @@ export function useTerminalPanelData({
   } | null>(null);
 
   const searchInputRef = useRef<HTMLInputElement>(null);
-  const preRef = useRef<HTMLElement>(null);
+  const parsedOutputRef = useRef<HTMLDivElement | null>(null);
+  const rawOutputPreRef = useRef<HTMLPreElement | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const promptInputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -611,7 +615,8 @@ export function useTerminalPanelData({
 
   const refs: UseTerminalPanelDataRefs = useMemo(
     () => ({
-      preRef,
+      parsedOutputRef,
+      rawOutputPreRef,
       containerRef,
       searchInputRef,
       promptInputRef,

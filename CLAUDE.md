@@ -440,7 +440,7 @@ Use this checklist every time you add a DB column or table:
 
 1. **APPEND only** — add a new `{ id, up }` entry at the **end** of the `MIGRATIONS` chain (typically append to the last chunk under `server/modules/bootstrap/schema/versioned-migrations/`, e.g. `migrations-e-recent.ts`, or add a new chunk and spread it from `versioned-migrations.ts`). Never edit applied migration bodies.
 2. **ID format**: `YYYY-MM-DD-NNN-short-description` (zero-padded, chronological)
-3. **Last known ID**: `2026-03-28-013-project-app-type` → next: `2026-03-28-011-*` or `2026-03-29-001-*`
+3. **Last known ID**: `2026-03-28-013-project-app-type` → next: `2026-03-28-014-*` or `2026-03-29-001-*`
 4. Wrap each DDL in `try { ... } catch { /* already exists */ }` for idempotency
 5. NEVER change or remove existing entries
 
@@ -498,7 +498,7 @@ When adding a new field to the task creation form, follow this full chain:
 |----------|-------------|
 | [`docs/OVERVIEW.md`](docs/OVERVIEW.md) | Project OS concept, agent execution, monitoring |
 | [`docs/progress.md`](docs/progress.md) | Development progress — current + completed phases |
-| [`docs/specs/api.md`](docs/specs/api.md) | REST API specification (v1.6.1) |
+| [`docs/specs/api.md`](docs/specs/api.md) | REST API specification (v1.6.4) |
 | [`docs/architecture/schema-erd.md`](docs/architecture/schema-erd.md) | DB schema ER diagram + state machines |
 | [`docs/design/DESIGN.md`](docs/design/DESIGN.md) | CSS variables + component style rules |
 | [`docs/design/UI-SCREENS.md`](docs/design/UI-SCREENS.md) | Screen & modal specifications (macOS desktop OS) |

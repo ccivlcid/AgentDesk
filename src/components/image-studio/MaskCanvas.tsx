@@ -144,7 +144,20 @@ export default function MaskCanvas({ imageUrl, onMaskChange }: Props) {
           {t({ ko: "지우기", en: "Clear", ja: "クリア", zh: "清除" })}
         </button>
         {hasMask && (
-          <span style={{ fontFamily: mono, fontSize: 9, color: "#30d158" }}>✓</span>
+          <span style={{ display: "inline-flex", color: "#30d158" }} aria-hidden>
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </span>
         )}
       </div>
     </div>

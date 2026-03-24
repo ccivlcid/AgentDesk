@@ -77,7 +77,7 @@ export function registerPmActivityRoutes(app: Express, db: DatabaseSync): void {
            ORDER BY tl.created_at DESC
            LIMIT ?`,
         )
-        .all(projectId, projectId, since, before, limit) as unknown as Array<{
+        .all(projectId, projectId, since, before, limit) as Array<{
         row_id: number;
         task_id: string | null;
         kind: string;
@@ -120,7 +120,7 @@ export function registerPmActivityRoutes(app: Express, db: DatabaseSync): void {
              ORDER BY m.created_at DESC
              LIMIT ?`,
           )
-          .all(since, before, pmRow.id, pmRow.id, projectId, projectId, limit) as unknown as Array<{
+          .all(since, before, pmRow.id, pmRow.id, projectId, projectId, limit) as Array<{
           id: string;
           content: string;
           message_type: string;
@@ -150,7 +150,7 @@ export function registerPmActivityRoutes(app: Express, db: DatabaseSync): void {
              ORDER BY m.created_at DESC
              LIMIT ?`,
           )
-          .all(since, before, projectId, limit) as unknown as Array<{
+          .all(since, before, projectId, limit) as Array<{
           id: string;
           content: string;
           message_type: string;
@@ -189,7 +189,7 @@ export function registerPmActivityRoutes(app: Express, db: DatabaseSync): void {
            ORDER BY created_at DESC
            LIMIT ?`,
         )
-        .all(projectId, since, before, limit) as unknown as Array<{
+        .all(projectId, since, before, limit) as Array<{
         id: string;
         event_type: string;
         summary: string;
@@ -221,7 +221,7 @@ export function registerPmActivityRoutes(app: Express, db: DatabaseSync): void {
            ORDER BY mm.started_at DESC
            LIMIT ?`,
         )
-        .all(projectId, projectId, since, before, limit) as unknown as Array<{
+        .all(projectId, projectId, since, before, limit) as Array<{
         id: string;
         title: string;
         meeting_type: string;
@@ -236,7 +236,7 @@ export function registerPmActivityRoutes(app: Express, db: DatabaseSync): void {
             `SELECT speaker_name, content FROM meeting_minute_entries
              WHERE meeting_id = ? ORDER BY seq ASC LIMIT 20`,
           )
-          .all(mtg.id) as unknown as Array<{ speaker_name: string; content: string }>;
+          .all(mtg.id) as Array<{ speaker_name: string; content: string }>;
 
         items.push({
           id: `mtg:${mtg.id}`,
@@ -258,7 +258,7 @@ export function registerPmActivityRoutes(app: Express, db: DatabaseSync): void {
       const counts = { planned: 0, in_progress: 0, review: 0, done: 0, total: 0 };
       const statusRows = db
         .prepare("SELECT status, COUNT(*) AS cnt FROM tasks WHERE project_id = ? GROUP BY status")
-        .all(projectId) as unknown as Array<{ status: string; cnt: number }>;
+        .all(projectId) as Array<{ status: string; cnt: number }>;
       for (const row of statusRows) {
         counts.total += row.cnt;
         if (row.status === "planned") counts.planned = row.cnt;

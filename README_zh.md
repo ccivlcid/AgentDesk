@@ -246,10 +246,11 @@ pnpm dev                  # 前端(8800) + API服务器(8790)
 | 文档 | 内容 |
 |------|------|
 | [`docs/OVERVIEW.md`](docs/OVERVIEW.md) | 架构概述 + 已完成功能列表 |
-| [`docs/architecture/ARCHITECTURE-AUDIT-2026-Q1.md`](docs/architecture/ARCHITECTURE-AUDIT-2026-Q1.md) | 架构与后端审计报告 |
+| [`docs/architecture/AGENT-CONFIGURATION-AND-EXECUTION.md`](docs/architecture/AGENT-CONFIGURATION-AND-EXECUTION.md) | 代理配置与执行（数据库字段、分支、现行实现） |
+| [`docs/architecture/schema-erd.md`](docs/architecture/schema-erd.md) | 数据库 ER 图与状态机 |
 | [`docs/design/UI-SCREENS.md`](docs/design/UI-SCREENS.md) | 完整界面和模态框规范 |
 | [`docs/design/DESIGN.md`](docs/design/DESIGN.md) | CSS变量 + 组件样式规则 |
-| [`docs/specs/api.md`](docs/specs/api.md) | REST API完整规范 (v1.3.0) |
+| [`docs/specs/api.md`](docs/specs/api.md) | REST API 规范 (v1.6.4) |
 | [`docs/progress.md`](docs/progress.md) | 开发进度日志 |
 
 ---

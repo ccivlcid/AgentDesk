@@ -84,6 +84,24 @@ These rules are additive and do NOT delete existing orchestration rules below.
 5. Add review results to `tasks/todo.md`.
 6. Capture lessons in `tasks/lessons.md` after corrections.
 
+## Progress Documentation (MANDATORY)
+
+> **You MUST update `docs/progress.md` at the START and END of every task session.**
+
+### At Session Start
+- Read `docs/progress.md` to understand current state.
+- Note the "Current State" section for migration ID and phase info.
+
+### At Session End (Before Completion)
+- Add your work to the **Active Work** section with:
+  - Date (YYYY-MM-DD)
+  - Task title
+  - Bullet list of changes made
+  - Files modified
+- Move completed items from **Active Work** to **Completed Phases** if applicable.
+- Update **Pending Work** priorities if changed.
+- **DO NOT mark a task as complete without updating `docs/progress.md`.**
+
 ## Core Principles
 
 - Simplicity first: minimal change surface.

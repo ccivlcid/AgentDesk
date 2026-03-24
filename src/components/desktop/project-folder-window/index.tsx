@@ -108,9 +108,12 @@ export default function ProjectFolderWindow({
             <button
               type="button"
               onClick={() => { onSelectProject(project.id); setCurrentProjectId(project.id); }}
-              style={{ fontSize: 10, padding: "3px 10px", background: "var(--th-accent-glow)", border: "1px solid var(--th-accent-border)", borderRadius: 4, color: "var(--th-accent)", cursor: "pointer", fontFamily: "var(--th-font-mono)" }}
+              style={{ fontSize: 10, padding: "3px 10px", background: "var(--th-accent-glow)", border: "1px solid var(--th-accent-border)", borderRadius: 4, color: "var(--th-accent)", cursor: "pointer", fontFamily: "var(--th-font-mono)", display: "inline-flex", alignItems: "center", gap: 5 }}
             >
-              ▶ {t({ ko: "활성화", en: "Activate", ja: "起動", zh: "激活" })}
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                <polygon points="5 3 19 12 5 21 5 3" />
+              </svg>
+              {t({ ko: "활성화", en: "Activate", ja: "起動", zh: "激活" })}
             </button>
           )}
         </div>
@@ -119,7 +122,15 @@ export default function ProjectFolderWindow({
       <div style={{ display: "flex", alignItems: "center", gap: 0, height: 30, borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-primary)", flexShrink: 0, padding: "0 16px" }}>
         <StatPill icon="▦" value={`${activeTasks.length} ${t({ ko: "실행중", en: "running", ja: "実行中", zh: "运行中" })}`} color={activeTasks.length > 0 ? "var(--th-success, #22c55e)" : "var(--th-text-muted)"} />
         <Divider />
-        <StatPill icon="✓" value={`${doneTasks.length} ${t({ ko: "완료", en: "done", ja: "完了", zh: "完成" })}`} color="var(--th-text-muted)" />
+        <StatPill
+          icon={(
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          )}
+          value={`${doneTasks.length} ${t({ ko: "완료", en: "done", ja: "完了", zh: "完成" })}`}
+          color="var(--th-text-muted)"
+        />
         <Divider />
         <StatPill icon={<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>} value={`${projectAgents.length} ${t({ ko: "에이전트", en: "agents", ja: "エージェント", zh: "代理" })}`} color="var(--th-text-muted)" />
         <Divider />

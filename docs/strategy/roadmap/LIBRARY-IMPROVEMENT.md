@@ -1,42 +1,42 @@
-# 라이브러리 UI/UX 개선안
+# Library UI/UX Improvement Plan
 
-> Status: **설계 완료 — 구현 대기**
+> Status: **Design Complete — Awaiting Implementation**
 > Date: 2026-03-23
 
 ---
 
-## 현재 문제
+## Current Problems
 
-1. 규칙/메모리/훅이 거의 동일한 구조인데 각각 별도 탭 (코드 중복 ~7,500줄)
-2. 프로젝트 미선택 시 빈 화면 — 전역 데이터인데 프로젝트 필수
-3. 스킬만 외부 카탈로그 의존 — 나머지 3개와 패턴 상이
-4. 학습 시스템이 4개 각각 존재 — UX 혼란
+1. Rules/Memory/Hooks have nearly identical structure but each has a separate tab (code duplication ~7,500 lines)
+2. Empty screen when no project selected — data is global but project is required
+3. Only Skills depends on external catalog — pattern differs from the other 3
+4. Learning system exists separately for all 4 — UX confusion
 
-## 권장안: 통합 (방향 A)
+## Recommended Approach: Consolidation (Direction A)
 
 ```
-라이브러리
-├── 스킬 (외부 카탈로그 — 현재 유지)
-└── 에이전트 지식 (규칙+메모리+훅 통합)
-    ├── 타입 필터: [전체] [규칙] [메모리] [훅]
-    ├── 스코프 필터: [전역] [전문분야] [에이전트] [프로젝트]
-    ├── 카테고리 필터: 동적 (타입별)
-    └── 카드 리스트 (통합 뷰)
+Library
+├── Skills (external catalog — keep as-is)
+└── Agent Knowledge (consolidated Rules+Memory+Hooks)
+    ├── Type filter: [All] [Rules] [Memory] [Hooks]
+    ├── Scope filter: [Global] [Specialty Area] [Agent] [Project]
+    ├── Category filter: dynamic (per type)
+    └── Card list (unified view)
 ```
 
-### 장점
-- 코드량 ~7,500줄 → ~3,000줄 (60% 감소)
-- 사용자는 하나의 인터페이스에서 전체 에이전트 지식 관리
-- 생성 시 "타입" 선택으로 규칙/메모리/훅 구분
+### Benefits
+- Code volume ~7,500 lines → ~3,000 lines (60% reduction)
+- Users manage all agent knowledge in a single interface
+- Rules/Memory/Hooks distinguished by "Type" selection during creation
 
-### 구현 순서
-1. 통합 상태 훅 `useAgentKnowledgeState()` 생성
-2. 통합 Grid/Card 컴포넌트
-3. 통합 FormModal (타입 선택 포함)
-4. 기존 3개 탭 → 1개 "에이전트 지식" 탭으로 교체
-5. 프로젝트 미선택 빈 화면 제거 (전역 데이터 즉시 표시)
+### Implementation Order
+1. Create unified state hook `useAgentKnowledgeState()`
+2. Unified Grid/Card component
+3. Unified FormModal (including type selection)
+4. Replace existing 3 tabs → 1 "Agent Knowledge" tab
+5. Remove empty screen when no project selected (show global data immediately)
 
-### 즉시 적용 가능 (통합 전)
-- [ ] 프로젝트 미선택 빈 화면 제거
-- [ ] 훅에 스코프 바 추가
-- [ ] 스킬에서 프로젝트 필수 제거
+### Can Be Applied Immediately (Before Consolidation)
+- [ ] Remove empty screen when no project selected
+- [ ] Add scope bar to Hooks
+- [ ] Remove project requirement from Skills

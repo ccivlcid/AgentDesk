@@ -19,6 +19,28 @@ const ROLE_COLOR: Record<string, string> = {
   intern: "#6b7280",
 };
 
+export function IconRobot({ size = 20 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <rect x="3" y="11" width="18" height="10" rx="2" />
+      <circle cx="12" cy="5" r="2" />
+      <line x1="12" y1="7" x2="12" y2="11" />
+      <line x1="8" y1="16" x2="8" y2="16.01" />
+      <line x1="16" y1="16" x2="16" y2="16.01" />
+    </svg>
+  );
+}
+
 export default function CompAgentNode({ data, selected }: NodeProps) {
   const { t } = useI18n();
   const { agents } = useAgentStore();
@@ -67,7 +89,9 @@ export default function CompAgentNode({ data, selected }: NodeProps) {
       />
 
       <div style={{ display: "flex", alignItems: "center", gap: 7, padding: "7px 10px 5px" }}>
-        <span style={{ fontSize: 20, lineHeight: 1 }}>{d.emoji || "🤖"}</span>
+        <span style={{ fontSize: 20, lineHeight: 1, display: "inline-flex", color: "var(--th-text-primary)" }}>
+          {d.emoji ? <span>{d.emoji}</span> : <IconRobot size={20} />}
+        </span>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div
             style={{

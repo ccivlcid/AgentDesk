@@ -1,164 +1,242 @@
 # AgentDesk — Development Backlog & Priority
 
 > Last updated: 2026-03-28
-> Phase 31 완료 후 남은 작업 목록. P1~P3 전체 완료.
+> Remaining work items after Phase 25 completion. P1~P3 backlog items listed below.
 
 ---
 
-## Priority 1: Core Engine (Agent Runtime 완성)
+## Priority 1: Core Engine (Agent Runtime Completion)
 
-> 에이전트가 실제로 동작하는 엔진의 완성도. 오픈소스 공개 전 필수.
+> Completeness of the engine where agents actually operate. Required before open-source release.
 
-### P1-1. 멀티 프로바이더 Agent Runtime
+### P1-1. Multi-Provider Agent Runtime
 
-**현황**: `llm-client.ts`가 Anthropic API만 지원. Settings에서 OpenAI/Ollama/Groq 등을 등록해도 Agent Runtime에서 사용 불가.
+**Current State**: `llm-client.ts` only supports Anthropic API. Even when OpenAI/Ollama/Groq etc. are registered in Settings, they cannot be used in Agent Runtime.
 
-**작업**:
-- `llm-client.ts`에 OpenAI Chat Completions API 스트리밍 + tool use 추가
-- 프로바이더 타입에 따라 자동 분기 (Anthropic → Messages API, 나머지 → OpenAI 호환)
-- Ollama/LM Studio/Groq/Together/OpenRouter 자동 지원 (OpenAI 호환 API)
+**Work**:
+- Add OpenAI Chat Completions API streaming + tool use to `llm-client.ts`
+- Auto-branch based on provider type (Anthropic → Messages API, others → OpenAI-compatible)
+- Auto-support for Ollama/LM Studio/Groq/Together/OpenRouter (OpenAI-compatible API)
 
-**영향**: 에이전트별 모델 선택이 실제로 동작. "OpenAI 키만 있어도 사용 가능" → 진입 장벽 제거.
+**Impact**: Per-agent model selection actually works. "Usable with just an OpenAI key" → removes entry barrier.
 
-**파일**: `server/modules/agent-runtime/llm-client.ts`, `execution-loop.ts`
+**Files**: `server/modules/agent-runtime/llm-client.ts`, `execution-loop.ts`
 
----
-
-### P1-2. PM 적합도 기반 에이전트 배정
-
-**현황**: PM 오케스트레이터가 라운드 로빈으로 배정 중. `agent_task_fitness` 테이블에 성공/실패/소요시간 데이터 수집 중.
-
-**작업**:
-- PM의 `postMeetingCreateAndRun` 배정 로직에 fitness 데이터 반영
-- 라운드 로빈 대신 태스크 유형별 최적 에이전트 매칭
-
-**영향**: 프로젝트가 반복될수록 에이전트 배정 정확도 향상.
-
-**파일**: `server/modules/routes/core/projects/kickoff.ts`
+**Acceptance Criteria**:
+- [ ] OpenAI Chat Completions API streaming works end-to-end with tool use in `llm-client.ts`
+- [ ] Provider auto-branching correctly routes Anthropic calls to Messages API and all others to OpenAI-compatible API
+- [ ] Ollama, LM Studio, Groq, Together, and OpenRouter each complete a basic agent task successfully
+- [ ] Per-agent model selection in Settings UI reflects in actual runtime execution
+- [ ] No regressions in existing Anthropic API streaming and tool use
+- [ ] `npx tsc -b --noEmit` produces zero errors
+- [ ] All tests pass (`pnpm test`)
 
 ---
 
-### P1-3. run_command 도구 추가
+### P1-2. PM Fitness-Based Agent Assignment
 
-**현황**: Spec에 정의되어 있지만 `tools.ts`에 미구현. 현재 list_files/read_file/write_file/search_files 4개만 제공.
+**Current State**: PM orchestrator assigns via round-robin. Success/failure/duration data is being collected in the `agent_task_fitness` table.
 
-**작업**:
-- `run_command` 도구 추가 (셸 명령 실행, 타임아웃 30s)
-- 허용 목록 or 사용자 확인 기반 보안
+**Work**:
+- Reflect fitness data in PM's `postMeetingCreateAndRun` assignment logic
+- Replace round-robin with optimal agent matching per task type
 
-**영향**: 에이전트가 빌드/테스트/린트 등 실행 가능. "진짜 개발 자동화" 가능.
+**Impact**: Agent assignment accuracy improves as projects repeat.
 
-**파일**: `server/modules/agent-runtime/tools.ts`
+**Files**: `server/modules/routes/core/projects/kickoff.ts`
 
----
+**Depends on**: P1-1 (multi-provider runtime must be functional before fitness-based assignment is meaningful across providers)
 
-## Priority 2: UI/UX 완성
-
-> 기존 선언된 UI 컴포넌트 완성 + 대시보드.
-
-### P2-1. Reports 윈도우
-
-**현황**: WindowType `"reports"` 선언됨. 컴포넌트는 있지만 데이터 연결 미확인.
-
-**작업**:
-- 프로젝트별 진행률 (planned/in_progress/done/failed 비율)
-- 에이전트별 가동률 + 성공률 (agent_task_fitness 활용)
-- 토큰 소비량 / 비용 추정 (agent_runtime_runs 집계)
-- 기간별 트렌드 차트
-
-**파일**: `src/components/windows/ReportsWindow.tsx` (확인/생성 필요)
+**Acceptance Criteria**:
+- [ ] `postMeetingCreateAndRun` uses `agent_task_fitness` data instead of round-robin for agent assignment
+- [ ] Agents with higher success rates for a given task type are preferred over lower-performing agents
+- [ ] Fallback to round-robin when no fitness data exists for a task type
+- [ ] Assignment accuracy improves measurably after 3+ completed projects (verifiable via Reports)
+- [ ] `npx tsc -b --noEmit` produces zero errors
+- [ ] All tests pass (`pnpm test`)
 
 ---
 
-### P2-2. 미사용 WindowType 정리
+### P1-3. Add run_command Tool
 
-**현황**: 모달로 대체된 WindowType들이 타입 선언에 남아있음.
+**Current State**: Defined in spec but not implemented in `tools.ts`. Currently only 4 tools provided: list_files/read_file/write_file/search_files.
 
-| WindowType | 상태 | 조치 |
+**Work**:
+- Add `run_command` tool (shell command execution, 30s timeout)
+- Security via allowlist or user confirmation
+
+**Impact**: Agents can execute build/test/lint etc. Enables "real development automation."
+
+**Files**: `server/modules/agent-runtime/tools.ts`
+
+**Acceptance Criteria**:
+- [ ] `run_command` tool is registered in `tools.ts` and callable by agents during task execution
+- [ ] Command execution enforces a 30-second timeout and returns stderr/stdout to the agent
+- [ ] Security allowlist or user confirmation prompt prevents arbitrary dangerous commands
+- [ ] Agents can successfully run `npm test`, `tsc`, and `eslint` via the tool in an execution loop
+- [ ] Tool result is logged in `agent_runtime_runs` with command and exit code
+- [ ] `npx tsc -b --noEmit` produces zero errors
+- [ ] All tests pass (`pnpm test`)
+
+---
+
+## Priority 2: UI/UX Completion
+
+> Complete existing declared UI components + dashboard.
+
+### P2-1. Reports Window
+
+**Current State**: WindowType `"reports"` is declared. Component exists but data connection unconfirmed.
+
+**Work**:
+- Per-project progress (planned/in_progress/done/failed ratios)
+- Per-agent utilization + success rate (using agent_task_fitness)
+- Token consumption / cost estimation (agent_runtime_runs aggregation)
+- Trend charts by period
+
+**Files**: `src/components/windows/ReportsWindow.tsx` (verify/create as needed)
+
+**Depends on**: P1-1 (multi-provider support needed for meaningful token/cost aggregation across providers)
+
+**Acceptance Criteria**:
+- [ ] Reports window displays per-project task status breakdown (planned/in_progress/done/failed ratios)
+- [ ] Per-agent utilization and success rate charts render correctly using `agent_task_fitness` data
+- [ ] Token consumption and cost estimation are aggregated from `agent_runtime_runs` and displayed per project
+- [ ] Trend charts show data over configurable time periods (daily/weekly/monthly)
+- [ ] Reports window opens via Dock and keyboard shortcut without errors
+- [ ] `npx tsc -b --noEmit` produces zero errors
+- [ ] All tests pass (`pnpm test`)
+
+---
+
+### P2-2. Unused WindowType Cleanup
+
+**Current State**: WindowTypes replaced by modals remain in type declarations.
+
+| WindowType | Status | Action |
 |------------|------|------|
-| `create-task` | CreateTaskModal로 대체 | 제거 검토 |
-| `create-agent` | QuickCreateAgentModal로 대체 | 제거 검토 |
-| `create-department` | Agent Manager 내 모달로 대체 | 제거 검토 |
-| `project-create` | ProjectCreateModal로 대체 | 제거 검토 |
-| `llm-guide` | 미구현, 필요성 검토 | 제거 or 구현 |
-| `user-guide` | 미구현, KeyboardShortcutsGuide와 중복? | 제거 or 구현 |
+| `create-task` | Replaced by CreateTaskModal | Consider removal |
+| `create-agent` | Replaced by QuickCreateAgentModal | Consider removal |
+| `create-department` | Replaced by modal within Agent Manager | Consider removal |
+| `project-create` | Replaced by ProjectCreateModal | Consider removal |
+| `llm-guide` | Not implemented, review necessity | Remove or implement |
+| `user-guide` | Not implemented, overlaps with KeyboardShortcutsGuide? | Remove or implement |
+
+**Acceptance Criteria**:
+- [ ] Each WindowType in the table above is resolved: either removed from the `WindowType` union or implemented as a functional component
+- [ ] Removing a WindowType does not leave orphan references in `uiStore.ts`, `Dock.tsx`, or `Desktop.tsx`
+- [ ] No dead code paths remain that reference removed WindowTypes
+- [ ] If `llm-guide` or `user-guide` are kept, they render meaningful content and are accessible from the UI
+- [ ] `npx tsc -b --noEmit` produces zero errors
+- [ ] All tests pass (`pnpm test`)
 
 ---
 
-## Priority 3: 안정성 + 개발자 경험
+## Priority 3: Stability + Developer Experience
 
-> 오픈소스 공개 품질 기준.
+> Open-source release quality standards.
 
-### P3-1. 1분 설치 경험 검증
+### P3-1. 1-Minute Install Experience Verification
 
-**현황**: `git clone → pnpm install → pnpm dev`로 실행 가능하지만, 첫 사용 시 API 키 설정 가이드 부족.
+**Current State**: Runnable via `git clone → pnpm install → pnpm dev`, but lacks API key setup guidance for first-time users.
 
-**작업**:
-- 첫 실행 시 온보딩 플로우 (Settings → API 탭으로 안내)
-- API 키 없이도 Local LLM으로 바로 시작할 수 있는 경로
-- 에러 메시지 개선 ("No API key" → 구체적 안내)
+**Work**:
+- First-run onboarding flow (guide to Settings → API tab)
+- Path to start immediately with Local LLM without an API key
+- Improve error messages ("No API key" → specific guidance)
 
----
-
-### P3-2. README 리브랜딩
-
-**현황**: `AgentDesk_OpenSource_Product_Strategy.md`에 "Agent Operating System" 포지셔닝이 정리되어 있지만 GitHub README에 미반영.
-
-**작업**:
-- README에 데모 GIF/스크린샷
-- 기능 목록 + 아키텍처 다이어그램
-- "Agent Operating System for Developers" 포지셔닝
+**Acceptance Criteria**:
+- [ ] First-run experience detects missing API keys and displays a guided onboarding flow pointing to Settings > API tab
+- [ ] A user with only a local LLM backend (Ollama/LM Studio) can start and use AgentDesk without any API key
+- [ ] Error messages for missing API keys include actionable guidance (not generic errors)
+- [ ] `git clone && pnpm install && pnpm dev` works on a clean machine with Node >=22 and pnpm installed
+- [ ] `npx tsc -b --noEmit` produces zero errors
+- [ ] All tests pass (`pnpm test`)
 
 ---
 
-### P3-3. 테스트 커버리지 강화
+### P3-2. README Rebranding
 
-**현황**: vitest 테스트 존재하지만 Agent Runtime 관련 테스트 미확인.
+**Current State**: "Agent Operating System" positioning is documented in `AgentDesk_OpenSource_Product_Strategy.md` but not reflected in GitHub README.
 
-**작업**:
-- Agent Runtime execution-loop 단위 테스트
-- PM 오케스트레이터 이벤트 흐름 테스트
-- API 엔드포인트 통합 테스트
+**Work**:
+- Demo GIF/screenshots in README
+- Feature list + architecture diagram
+- "Agent Operating System for Developers" positioning
+
+**Depends on**: P3-1 (onboarding flow should be finalized before documenting it in README)
+
+**Acceptance Criteria**:
+- [ ] README includes a demo GIF or screenshot set showing the desktop OS interface
+- [ ] Feature list covers all major capabilities (agent runtime, PM orchestration, multi-provider, Synapse, Image Studio)
+- [ ] Architecture diagram is present and matches the current system structure
+- [ ] "Agent Operating System for Developers" positioning is clearly stated in the first section
+- [ ] Quick start instructions match the actual `git clone && pnpm install && pnpm dev` flow
+- [ ] `npx tsc -b --noEmit` produces zero errors
+- [ ] All tests pass (`pnpm test`)
 
 ---
 
-## Priority 4: 확장성 (Phase 2+)
+### P3-3. Test Coverage Enhancement
 
-> 오픈소스 공개 이후 로드맵.
+**Current State**: vitest tests exist but Agent Runtime-related tests unconfirmed.
 
-### P4-1. PostgreSQL 지원
+**Work**:
+- Agent Runtime execution-loop unit tests
+- PM orchestrator event flow tests
+- API endpoint integration tests
 
-**현황**: SQLite (better-sqlite3) 단일 사용자 전용.
+**Depends on**: P1-1, P1-2, P1-3 (runtime features must be implemented before they can be tested)
 
-**작업**: DB 추상화 레이어 + PostgreSQL 드라이버
+**Acceptance Criteria**:
+- [ ] Unit tests exist for `execution-loop.ts` covering start, tool invocation, completion, and error paths
+- [ ] PM orchestrator tests verify the full event flow: kickoff > meeting > planning > assigning > executing > review > done
+- [ ] API integration tests cover all critical endpoints in `server/modules/routes/core/`
+- [ ] Test coverage for agent-runtime modules reaches at least 70% line coverage
+- [ ] All new tests run successfully in both `pnpm run test:web` and `pnpm run test:api`
+- [ ] `npx tsc -b --noEmit` produces zero errors
+- [ ] All tests pass (`pnpm test`)
 
 ---
 
-### P4-2. Queue/Worker 아키텍처
+## Priority 4: Scalability (Phase 2+)
 
-**현황**: in-process 실행. 동시 에이전트 수 제한.
+> Roadmap after open-source release.
 
-**작업**: Redis/BullMQ 기반 작업 큐
+### P4-1. PostgreSQL Support
+
+**Current State**: SQLite (better-sqlite3) for single user only.
+
+**Work**: DB abstraction layer + PostgreSQL driver
+
+---
+
+### P4-2. Queue/Worker Architecture
+
+**Current State**: In-process execution. Limited concurrent agent count.
+
+**Work**: Redis/BullMQ-based job queue
 
 ---
 
 ### P4-3. Team Workspace
 
-**현황**: 로컬 단독 사용.
+**Current State**: Local single-user usage.
 
-**작업**: 멀티 유저, 권한 관리, 공유 프로젝트
+**Work**: Multi-user, permission management, shared projects
 
 ---
 
-## 완료 현황
+## Completion Status
 
 ```
-✅ P1-1  멀티 프로바이더 (Phase 27)
-✅ P1-2  PM 적합도 활용 (Phase 28-29)
-✅ P1-3  run_command 도구 (Phase 29)
-✅ P2-1  Reports 대시보드 (Phase 30)
-✅ P2-2  WindowType 검토 — 제거 불필요 확인
-✅ P3-1  온보딩 토스트 (Phase 31)
-✅ P3-2  README 리브랜딩 (Phase 32)
-⏭️ P4-*  확장성 (PostgreSQL, Queue, Team) — 공개 이후
+⬚ P1-1  Multi-provider agent runtime — not started
+⬚ P1-2  PM fitness-based assignment — not started
+⬚ P1-3  run_command tool — not started
+⬚ P2-1  Reports dashboard — not started
+⬚ P2-2  WindowType cleanup — not started
+⬚ P3-1  1-minute install experience — not started
+⬚ P3-2  README rebranding — not started
+⬚ P3-3  Test coverage enhancement — not started
+⏭️ P4-*  Scalability (PostgreSQL, Queue, Team) — after release
 ```

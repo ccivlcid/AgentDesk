@@ -1,86 +1,112 @@
 ---
-description: TypeScript/React 코딩 규칙 — 타입 import, 파일 길이, 네이밍
+description: AgentDesk coding rules — MUST READ before writing any code. SVG-only icons, strict TypeScript, append-only migrations, pino logger.
 alwaysApply: true
 ---
 
-# Coding Conventions (TypeScript / React)
+# AgentDesk Coding Rules — Pre-Flight Checklist
 
-## 파일 길이 (300줄 이하)
-
-- **단일 파일은 300줄 이하를 원칙으로 한다.**
-- 300줄을 넘기면 로직·UI·훅·타입을 역할별로 나누어 별도 파일로 분리한다.
-- **금지:** 한 파일에 여러 도메인·역할이 혼재된 대형 파일 유지. 새로 추가하는 코드는 기존 300줄 초과 파일에 덧붙이지 말고, 훅/섹션/타입으로 분리한 뒤 import 한다.
-
-### 분리 권장 패턴
-
-- 컴포넌트가 커지면: 훅 → `useXxx.ts` / `useXxx.tsx`, 하위 UI → `XxxSection.tsx`, 타입/상수 → `types.ts` / `constants.ts`
-- 한 파일에 여러 책임이 몰리지 않도록 단일 책임 단위로 쪼갠다.
-- 이미 `office-view/`, `gateway-settings/` 처럼 폴더로 도메인을 나눈 구조는 유지하고, 그 안에서 300줄 이하 파일로 세분화한다.
-
-### 기존 초과 파일
-
-- 300줄을 이미 넘긴 파일은 기술 부채로 간주하고, 수정·기능 추가 시 분리 기회를 활용한다.
-- 리팩터 시 우선 분리 대상: 훅, 모달/서브 UI, 상수·타입 블록.
+> **READ THIS BEFORE WRITING ANY CODE.**
+> Source of truth: `/CLAUDE.md` Section 0. This file is a compact summary for quick reference.
 
 ---
 
-## 네이밍
+## Rule 0-1: No Emoji in UI Components
 
-- **컴포넌트·파일**: PascalCase (예: `OfficeView.tsx`, `ChatEditorModal.tsx`)
-- **훅**: `use` 접두사 + camelCase (예: `useCliUsage`, `useOfficePixiRuntime`)
-- **함수·변수**: camelCase (예: `handleCanvasSelectDept`, `scrollToFloorY`)
-- **상수(고정값)**: UPPER_SNAKE_CASE (예: `MIN_OFFICE_W`, `FLOOR_TOTAL_H`, `MOBILE_MOVE_CODES`)
-- **타입·인터페이스**: PascalCase (예: `OfficeViewProps`, `RoomRect`, `Delivery`)
-- **이벤트 핸들러**: `handle` 접두사 권장 (예: `handleScrollToFloor`, `onOpenRoomManager`는 props이므로 그대로)
-- **boolean 상태/변수**: `is`·`has`·`show` 등 접두사로 의미 명확히 (예: `isOverviewMode`, `showVirtualPad`)
+- **NEVER** use emoji or unicode symbols in JSX/TSX.
+- All icons must be inline SVG.
+- Allowed exceptions: DB data values (`agent.avatar_emoji`), user-visible plain text content.
 
-파일명은 해당 파일의 기본 export(컴포넌트·훅·타입)와 맞추면 찾기 쉽다.
+```tsx
+// WRONG
+<span>✓</span>  <button>▶ Run</button>  <span>⚠ Error</span>
+
+// CORRECT
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <polyline points="20 6 9 17 4 12"/>
+</svg>
+```
+
+## Rule 0-2: SVG Icon Conventions
+
+```tsx
+<svg
+  width="16"                   // explicit px size (14/16/18)
+  height="16"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"       // inherit from parent CSS color
+  strokeWidth="2"
+  strokeLinecap="round"
+  strokeLinejoin="round"
+>
+```
+
+- No `1rem`/`1em` sizes — always px.
+- No hardcoded hex colors inside SVG — use `currentColor` + parent `style={{ color: "..." }}`.
+
+## Rule 0-3: TypeScript Zero Tolerance
+
+- Run `npx tsc -b --noEmit` after every change. **Zero errors required.**
+- **Never use `any`** unless wrapping a third-party boundary with no types. Must add justifying comment.
+- **Never use `as Foo`** to silence errors. Fix the root type instead.
+- Remove unused imports immediately.
+
+## Rule 0-4: No New Files Without Justification
+
+- Prefer editing existing files.
+- New files only when: > 80 lines OR reused in 2+ places OR clearly separate concern.
+- Do NOT create `utils.ts`, `helpers.ts`, or `constants.ts` barrel files for one-off functions.
+
+## Rule 0-5: DB Migrations — Append Only
+
+- **NEVER** edit or delete an existing migration entry.
+- Always append at the end of `migrations-e-recent.ts`.
+- ID format: `YYYY-MM-DD-NNN-short-description`
+- **Last applied ID**: `2026-03-28-013-project-app-type` → next: `2026-03-28-014-*`
+- Wrap DDL in `try { ... } catch { /* already exists */ }`.
+
+## Rule 0-6: Component State Rules
+
+- No `useState` for data that belongs in a Zustand store.
+- `useCallback`/`useMemo` only when genuinely expensive or referentially unstable.
+- Modal/overlay state in `uiStore` if triggered from multiple places.
+
+## Rule 0-7: API + Server Rules
+
+- All new routes go in sub-routers under `server/modules/routes/`.
+- Document every new endpoint in `docs/specs/api.md` (bump version).
+- Responses: `res.json({ ok: true, ... })` success / `res.status(4xx).json({ error: "snake_case" })` error.
+- **No `console.log`** in server code — use pino logger.
 
 ---
 
-## Type imports
+## File Length
 
-- **타입만 사용하는 import는 상단에서 `import type`으로 선언한다.**
-- **금지:** 인라인 타입 참조. 아래 패턴은 사용하지 않는다.
-  - `import("...path").TypeName`
-  - `ReturnType<typeof import("...path").someExport>` (타입은 해당 모듈에서 export된 타입으로 import)
+- Single file should be **300 lines or less**.
+- Over 300 lines → split by responsibility: hooks → `useXxx.ts`, sub-UI → `XxxSection.tsx`, types → `types.ts`.
 
-### 올바른 예
+## Naming
 
-```ts
-import type { Agent, Department } from "../types";
+| Target | Convention | Example |
+|--------|-----------|---------|
+| Components/files | PascalCase | `ChatEditorModal.tsx` |
+| Hooks | `use` + camelCase | `useCliUsage` |
+| Functions/variables | camelCase | `handleCanvasSelect` |
+| Constants | UPPER_SNAKE_CASE | `MIN_OFFICE_W` |
+| Types/interfaces | PascalCase | `OfficeViewProps` |
+| Boolean state | `is`/`has`/`show` prefix | `isOverviewMode` |
 
-function handleSelect(agent: Agent) {}
-const [selected, setSelected] = useState<Department | null>(null);
-```
+## Type Imports
 
-- 다른 모듈의 훅 반환 타입을 쓸 때는, 해당 모듈이 **타입을 export**하도록 하고 `import type`으로 가져온다.
-
-```ts
-// i18n이 export type { I18nContextValue } 를 제공하는 경우
-import type { I18nContextValue } from "../../i18n";
-
-function MyModal({ t }: { t: I18nContextValue["t"] }) {}
-```
-
-### 피할 것
-
-```ts
-// 인라인 타입 참조 — 사용 금지
-const handleSelect = useCallback((agent: import("../types").Agent) => {}, []);
-const [selected, setSelected] = useState<import("../types").Department | null>(null);
-// 훅 반환 타입을 인라인으로 참조 — 사용 금지. 모듈에서 타입 export 후 import type 사용
-function Bad({ t }: { t: ReturnType<typeof import("../../i18n").useI18n>["t"] }) {}
-```
-
-- 여러 곳에서 쓰는 타입은 파일 상단에 `import type { A, B } from "..."` 로 한 번만 가져와서 사용한다.
-- ESLint `@typescript-eslint/consistent-type-imports` 설정과 맞춰 유지한다.
+- Type-only imports must use `import type { ... }`.
+- **Never** use inline type references: `import("...").TypeName`.
 
 ---
 
-## 검증
+## Verification (Run Before Completing Any Task)
 
-- 규칙 위반 여부는 다음으로 확인한다.
-  - **타입:** `tsc -b` 또는 `tsc --noEmit` 통과
-  - **린트:** `pnpm lint` (필요 시 `@typescript-eslint/consistent-type-imports` 등 규칙 활성화)
-- PR 전 위 항목 통과를 원칙으로 한다.
+```bash
+npx tsc -b --noEmit    # zero errors required
+pnpm lint               # minimize warnings
+pnpm test               # all tests pass
+```

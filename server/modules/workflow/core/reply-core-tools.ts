@@ -63,8 +63,8 @@ export function createReplyCoreTools(deps: CreateReplyCoreToolsDeps) {
     return Math.floor(minMs + Math.random() * Math.max(0, maxMs - minMs));
   }
 
-  function getAgentDisplayName(agent: AgentRow, lang: string): string {
-    return lang === "ko" ? agent.name_ko || agent.name : agent.name;
+  function getAgentDisplayName(agent: Pick<AgentRow, "name"> & { name_ko?: string | null }, lang: string): string {
+    return lang === "ko" ? (agent.name_ko ?? "") || agent.name : agent.name;
   }
 
   function localeInstruction(lang: string): string {

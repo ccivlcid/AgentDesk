@@ -4,6 +4,7 @@
 import { randomUUID } from "node:crypto";
 import type { DatabaseSync } from "node:sqlite";
 import logger from "../../lib/logger.ts";
+import { castSqliteRows } from "../../lib/sqlite-row-cast.ts";
 
 export interface SynapseTrigger {
   type: "file_change" | "page_updated";
@@ -59,9 +60,9 @@ export function fireMatchingRules(
 ): void {
   let rows: SynapseRule[];
   try {
-    rows = db
-      .prepare("SELECT * FROM synapse_rules WHERE source = ? AND enabled = 1")
-      .all(event.source) as unknown as SynapseRule[];
+    rows = castSqliteRows<SynapseRule>(
+      db.prepare("SELECT * FROM synapse_rules WHERE source = ? AND enabled = 1").all(event.source),
+    );
   } catch (err) {
     logger.warn({ err }, "[synapse-rules] DB query failed");
     return;

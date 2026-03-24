@@ -8,6 +8,7 @@
  */
 
 import type { DatabaseSync } from "node:sqlite";
+import { castSqliteRows } from "../../../../../lib/sqlite-row-cast.ts";
 import type { DecisionInboxRouteItem, PickLocalizedText, LocalizedTextBuilder } from "./types.ts";
 
 interface TaskReviewItemDeps {
@@ -35,9 +36,10 @@ export function createTaskReviewDecisionItems(deps: TaskReviewItemDeps) {
 
   function buildTaskReviewDecisionItems(): DecisionInboxRouteItem[] {
     const lang = getPreferredLanguage();
-    const rows = db
-      .prepare(
-        `SELECT t.id, t.title, t.assigned_agent_id, t.project_id, t.updated_at,
+    const rows = castSqliteRows<ReviewTaskRow>(
+      db
+        .prepare(
+          `SELECT t.id, t.title, t.assigned_agent_id, t.project_id, t.updated_at,
                 COALESCE(a.name, '') AS agent_name,
                 COALESCE(a.name_ko, '') AS agent_name_ko,
                 COALESCE(a.avatar_emoji, '') AS agent_avatar,
@@ -49,8 +51,9 @@ export function createTaskReviewDecisionItems(deps: TaskReviewItemDeps) {
            AND t.source_task_id IS NULL
            AND t.project_id IS NOT NULL
          ORDER BY t.updated_at ASC`,
-      )
-      .all() as unknown as ReviewTaskRow[];
+        )
+        .all(),
+    );
 
     return rows.map((task) => {
       const agentLabel = lang.startsWith("ko") ? task.agent_name_ko || task.agent_name : task.agent_name;

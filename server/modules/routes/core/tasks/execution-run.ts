@@ -1,7 +1,7 @@
 import path from "node:path";
+import type { SQLInputValue } from "node:sqlite";
 import { notifyTaskStatus } from "../../../../gateway/client.ts";
 import type { RuntimeContext } from "../../../../types/runtime-context.ts";
-import type { AgentRow } from "../../shared/types.ts";
 import { resolveConstrainedAgentScopeForTask, selectAutoAssignableAgentForTask } from "./execution-run-auto-assign.ts";
 import { appendTaskExecutionMetaUpdate, recordTaskExecutionEvent } from "../../../workflow/core/task-execution-meta.ts";
 import { isWorkflowPackKey } from "../../../workflow/packs/definitions.ts";
@@ -58,7 +58,12 @@ export type TaskRunRouteDeps = Pick<
   | "handleTaskRunComplete"
   | "buildAvailableSkillsPromptBlock"
 > & {
-  checkCostBlockExecution?: (...args: any[]) => any;
+  checkCostBlockExecution?: () => {
+    blocked: boolean;
+    provider?: string;
+    pct?: number;
+    threshold?: number;
+  };
 };
 
 export function registerTaskRunRoute(deps: TaskRunRouteDeps): void {
@@ -163,15 +168,15 @@ export function registerTaskRunRoute(deps: TaskRunRouteDeps): void {
       {
         const updates = ["status = 'pending'", "updated_at = ?"];
         const params: unknown[] = [t];
-        appendTaskExecutionMetaUpdate(db as any, updates, params, {
+        appendTaskExecutionMetaUpdate(db, updates, params, {
           execution_state: "stalled",
           execution_error_code: "stale_in_progress",
           execution_error_summary: "Recovered stale in_progress task before re-run",
         });
         params.push(id);
-        db.prepare(`UPDATE tasks SET ${updates.join(", ")} WHERE id = ?`).run(...(params as any[]));
+        db.prepare(`UPDATE tasks SET ${updates.join(", ")} WHERE id = ?`).run(...(params as SQLInputValue[]));
       }
-      recordTaskExecutionEvent(db as any, {
+      recordTaskExecutionEvent(db, {
         taskId: id,
         eventType: "stale_run_recovered",
         fromState: "running",
@@ -190,10 +195,10 @@ export function registerTaskRunRoute(deps: TaskRunRouteDeps): void {
       });
     }
 
-    const effectivePackKey = (task as any).context_hint ?? (task as any).workflow_pack_key;
+    const effectivePackKey = task.context_hint ?? task.workflow_pack_key;
     let agentId = task.assigned_agent_id || (req.body?.agent_id as string | undefined);
     if (agentId) {
-      const constrainedAgentIds = resolveConstrainedAgentScopeForTask(db as any, {
+      const constrainedAgentIds = resolveConstrainedAgentScopeForTask(db, {
         workflow_pack_key: effectivePackKey,
         department_id: task.department_id,
         project_id: task.project_id,
@@ -212,7 +217,7 @@ export function registerTaskRunRoute(deps: TaskRunRouteDeps): void {
       }
     }
     if (!agentId) {
-      const autoSelected = selectAutoAssignableAgentForTask(db as any, {
+      const autoSelected = selectAutoAssignableAgentForTask(db, {
         workflow_pack_key: effectivePackKey,
         department_id: task.department_id,
         project_id: task.project_id,
@@ -287,7 +292,7 @@ export function registerTaskRunRoute(deps: TaskRunRouteDeps): void {
       return res.status(400).json({ error: "unsupported_provider", provider });
     }
     ensureVideoPreprodRemotionBestPracticesSkill({
-      db: db as any,
+      db,
       nowMs,
       workflowPackKey: effectivePackKey,
       provider,
@@ -311,7 +316,7 @@ export function registerTaskRunRoute(deps: TaskRunRouteDeps): void {
     }
 
     const executionSession = ensureTaskExecutionSession(id, agentId, provider);
-    const pendingInterruptPrompts = loadPendingInterruptPrompts(db as any, id, executionSession.sessionId);
+    const pendingInterruptPrompts = loadPendingInterruptPrompts(db, id, executionSession.sessionId);
     const interruptPromptBlock = buildInterruptPromptBlock(pendingInterruptPrompts);
     const agentCwd = worktreePath;
 
@@ -451,7 +456,7 @@ Whenever you complete a subtask, report it in this format:
     );
     const videoArtifactSpec =
       effectivePackKey === "video_preprod"
-        ? resolveVideoArtifactSpecForTask(db as any, {
+        ? resolveVideoArtifactSpecForTask(db, {
             project_id: task.project_id,
             project_path: task.project_path,
             department_id: task.department_id,
@@ -472,7 +477,7 @@ Whenever you complete a subtask, report it in this format:
     });
 
     const rulesBlock = buildRulesPromptBlock(
-      db as any,
+      db,
       {
         projectId: task.project_id ?? null,
         agentId: agentId ?? null,
@@ -496,7 +501,7 @@ Whenever you complete a subtask, report it in this format:
     // KB context block: fetch Notion/Obsidian/Snapshot content for this task+agent
     let kbContextBlock = "";
     try {
-      kbContextBlock = await buildKbContextBlock(db as any, id, agentId ?? null);
+      kbContextBlock = await buildKbContextBlock(db, id, agentId ?? null);
     } catch {
       // non-fatal: proceed without KB context
     }
@@ -504,7 +509,7 @@ Whenever you complete a subtask, report it in this format:
     // Figma design context block: fetch node metadata for tasks with figma_url
     let figmaContextBlock = "";
     try {
-      figmaContextBlock = await buildFigmaContextBlock(db as any, id);
+      figmaContextBlock = await buildFigmaContextBlock(db, id);
     } catch {
       // non-fatal: proceed without Figma context
     }
@@ -512,7 +517,7 @@ Whenever you complete a subtask, report it in this format:
     // Source project context block: inject completed deliverables from linked source projects
     let sourceContextBlock = "";
     try {
-      sourceContextBlock = (await buildSourceContextBlock(db as any, id)) ?? "";
+      sourceContextBlock = (await buildSourceContextBlock(db, id)) ?? "";
     } catch {
       // non-fatal: proceed without source context
     }
@@ -529,7 +534,7 @@ Whenever you complete a subtask, report it in this format:
     }
 
     // Execute pre-task hooks (parallel, async)
-    await executeHooks(db as any, "pre-task", {
+    await executeHooks(db, "pre-task", {
       projectId: task.project_id ?? null,
       agentId: agentId ?? null,
       departmentId: agent.department_id ?? null,
@@ -587,7 +592,7 @@ Whenever you complete a subtask, report it in this format:
 
     if (pendingInterruptPrompts.length > 0) {
       consumeInterruptPrompts(
-        db as any,
+        db,
         pendingInterruptPrompts.map((row) => row.id),
         nowMs(),
       );
@@ -608,7 +613,7 @@ Whenever you complete a subtask, report it in this format:
       {
         const updates = ["status = 'in_progress'", "assigned_agent_id = ?", "started_at = ?", "updated_at = ?"];
         const params: unknown[] = [agentId, t, t];
-        appendTaskExecutionMetaUpdate(db as any, updates, params, {
+        appendTaskExecutionMetaUpdate(db, updates, params, {
           execution_state: "running",
           claimed_by: agentId,
           claim_expires_at: null,
@@ -620,9 +625,9 @@ Whenever you complete a subtask, report it in this format:
           increment_execution_attempt: true,
         });
         params.push(id);
-        db.prepare(`UPDATE tasks SET ${updates.join(", ")} WHERE id = ?`).run(...(params as any[]));
+        db.prepare(`UPDATE tasks SET ${updates.join(", ")} WHERE id = ?`).run(...(params as SQLInputValue[]));
       }
-      recordTaskExecutionEvent(db as any, {
+      recordTaskExecutionEvent(db, {
         taskId: id,
         eventType: "run_started",
         fromState: "queued",
@@ -639,7 +644,7 @@ Whenever you complete a subtask, report it in this format:
       broadcast("agent_status", updatedAgent);
       notifyTaskStatus(id, task.title, "in_progress", taskLang);
 
-      const assigneeName = getAgentDisplayName(agent as unknown as AgentRow, taskLang);
+      const assigneeName = getAgentDisplayName(agent, taskLang);
       const worktreeNote = pickL(
         l(
           [` (격리 브랜치: agentdesk/${id.slice(0, 8)})`],
@@ -689,7 +694,7 @@ Whenever you complete a subtask, report it in this format:
       {
         const updates = ["status = 'in_progress'", "assigned_agent_id = ?", "started_at = ?", "updated_at = ?"];
         const params: unknown[] = [agentId, t, t];
-        appendTaskExecutionMetaUpdate(db as any, updates, params, {
+        appendTaskExecutionMetaUpdate(db, updates, params, {
           execution_state: "running",
           claimed_by: agentId,
           claim_expires_at: null,
@@ -701,9 +706,9 @@ Whenever you complete a subtask, report it in this format:
           increment_execution_attempt: true,
         });
         params.push(id);
-        db.prepare(`UPDATE tasks SET ${updates.join(", ")} WHERE id = ?`).run(...(params as any[]));
+        db.prepare(`UPDATE tasks SET ${updates.join(", ")} WHERE id = ?`).run(...(params as SQLInputValue[]));
       }
-      recordTaskExecutionEvent(db as any, {
+      recordTaskExecutionEvent(db, {
         taskId: id,
         eventType: "run_started",
         fromState: "queued",
@@ -720,7 +725,7 @@ Whenever you complete a subtask, report it in this format:
       broadcast("agent_status", updatedAgent);
       notifyTaskStatus(id, task.title, "in_progress", taskLang);
 
-      const assigneeName = getAgentDisplayName(agent as unknown as AgentRow, taskLang);
+      const assigneeName = getAgentDisplayName(agent, taskLang);
       const worktreeNote = pickL(
         l(
           [` (격리 브랜치: agentdesk/${id.slice(0, 8)})`],
@@ -757,7 +762,7 @@ Whenever you complete a subtask, report it in this format:
     {
       const updates = ["status = 'in_progress'", "assigned_agent_id = ?", "started_at = ?", "updated_at = ?"];
       const params: unknown[] = [agentId, t, t];
-      appendTaskExecutionMetaUpdate(db as any, updates, params, {
+      appendTaskExecutionMetaUpdate(db, updates, params, {
         execution_state: "running",
         claimed_by: agentId,
         claim_expires_at: null,
@@ -769,9 +774,9 @@ Whenever you complete a subtask, report it in this format:
         increment_execution_attempt: true,
       });
       params.push(id);
-      db.prepare(`UPDATE tasks SET ${updates.join(", ")} WHERE id = ?`).run(...(params as any[]));
+      db.prepare(`UPDATE tasks SET ${updates.join(", ")} WHERE id = ?`).run(...(params as SQLInputValue[]));
     }
-    recordTaskExecutionEvent(db as any, {
+    recordTaskExecutionEvent(db, {
       taskId: id,
       eventType: "run_started",
       fromState: "queued",
@@ -794,7 +799,7 @@ Whenever you complete a subtask, report it in this format:
     broadcast("agent_status", updatedAgent);
     notifyTaskStatus(id, task.title, "in_progress", taskLang);
 
-    const assigneeName = getAgentDisplayName(agent as unknown as AgentRow, taskLang);
+    const assigneeName = getAgentDisplayName(agent, taskLang);
     const worktreeNote = pickL(
       l(
         [` (격리 브랜치: agentdesk/${id.slice(0, 8)})`],

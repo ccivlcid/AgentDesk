@@ -241,7 +241,7 @@ export function createTaskDelegationHandler(deps: TaskDelegationDeps) {
       const mentionedDepts = [...new Set(detectTargetDepartments(ceoMessage).filter((d) => d !== leaderDeptId))];
       const isPlanningLead =
         leaderDeptId === "planning" ||
-        Number((teamLeader as unknown as { acts_as_planning_leader?: unknown }).acts_as_planning_leader ?? 0) === 1;
+        Number(teamLeader.acts_as_planning_leader ?? 0) === 1;
 
       if (isPlanningLead) {
         const relatedLabel =

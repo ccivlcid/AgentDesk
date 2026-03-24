@@ -11,6 +11,13 @@ import { selectAutoAssignableAgentForTask } from "./execution-run-auto-assign.ts
 import { recordTaskExecutionEvent, taskExecutionEventsTableExists } from "../../../workflow/core/task-execution-meta.ts";
 import { eventBus } from "../../../../lib/event-bus.ts";
 
+function asObjectRecord(value: unknown): Record<string, unknown> {
+  if (value !== null && typeof value === "object" && !Array.isArray(value)) {
+    return value as Record<string, unknown>;
+  }
+  return {};
+}
+
 export type TaskCrudRouteDeps = Pick<
   RuntimeContext,
   | "app"
@@ -168,18 +175,18 @@ export function registerTaskCrudRoutes(deps: TaskCrudRouteDeps): void {
   });
 
   app.post("/api/tasks", (req, res) => {
-    const body = req.body ?? {};
+    const body = asObjectRecord(req.body ?? {});
     const id = randomUUID();
     const t = nowMs();
 
-    const title = (body as any).title;
+    const title = body["title"];
     if (!title || typeof title !== "string") {
       return res.status(400).json({ error: "title_required" });
     }
 
-    const requestedProjectId = normalizeTextField((body as any).project_id);
+    const requestedProjectId = normalizeTextField(body["project_id"]);
     let resolvedProjectId: string | null = null;
-    let resolvedProjectPath = normalizeProjectPathInput((body as any).project_path);
+    let resolvedProjectPath = normalizeProjectPathInput(body["project_path"]);
     if (requestedProjectId) {
       const project = db.prepare("SELECT id, project_path FROM projects WHERE id = ?").get(requestedProjectId) as
         | {
@@ -202,33 +209,45 @@ export function registerTaskCrudRoutes(deps: TaskCrudRouteDeps): void {
       }
     }
 
-    const requestedCategoryId = normalizeTextField((body as any).category_id) || null;
+    const requestedCategoryId = normalizeTextField(body["category_id"]) || null;
     const resolvedCategoryId: string | null = requestedCategoryId
       ? ((db.prepare("SELECT id FROM categories WHERE id = ? LIMIT 1").get(requestedCategoryId) as { id: string } | undefined)?.id ?? null)
       : null;
 
-    const handoffToAgentId = typeof (body as any).handoff_to_agent_id === "string" && (body as any).handoff_to_agent_id
-      ? (body as any).handoff_to_agent_id
-      : null;
+    const handoffAgentRaw = body["handoff_to_agent_id"];
+    const handoffToAgentId =
+      typeof handoffAgentRaw === "string" && handoffAgentRaw ? handoffAgentRaw : null;
     const validHandoffConditions = ["always", "on_success", "on_fail"] as const;
-    const handoffCondition = validHandoffConditions.includes((body as any).handoff_condition)
-      ? (body as any).handoff_condition
-      : null;
+    const handoffCondRaw = body["handoff_condition"];
+    const handoffCondition =
+      typeof handoffCondRaw === "string" &&
+      (validHandoffConditions as readonly string[]).includes(handoffCondRaw)
+        ? (handoffCondRaw as (typeof validHandoffConditions)[number])
+        : null;
 
     const resolvedPackKey = resolveWorkflowPackKeyForTask({
-      db: db as any,
-      explicitPackKey: (body as any).workflow_pack_key ?? (body as any).context_hint,
+      db,
+      explicitPackKey: body["workflow_pack_key"] ?? body["context_hint"],
       categoryId: resolvedCategoryId,
       projectId: resolvedProjectId,
     });
-    const kbContextSources = (body as any).kb_context_sources
-      ? (typeof (body as any).kb_context_sources === "string"
-          ? (body as any).kb_context_sources
-          : JSON.stringify((body as any).kb_context_sources))
+    const kbRaw = body["kb_context_sources"];
+    const kbContextSources = kbRaw
+      ? typeof kbRaw === "string"
+        ? kbRaw
+        : JSON.stringify(kbRaw)
       : null;
-    const figmaUrl = typeof (body as any).figma_url === "string" && (body as any).figma_url
-      ? (body as any).figma_url
-      : null;
+    const figmaRaw = body["figma_url"];
+    const figmaUrl = typeof figmaRaw === "string" && figmaRaw ? figmaRaw : null;
+    const wmj = body["workflow_meta_json"];
+    const workflowMetaJson =
+      typeof wmj === "string"
+        ? wmj
+        : wmj != null && typeof wmj === "object"
+          ? JSON.stringify(wmj)
+          : null;
+    const outputFmt = body["output_format"];
+    const outputFormat = typeof outputFmt === "string" ? outputFmt : null;
 
     db.prepare(
       `
@@ -243,38 +262,34 @@ export function registerTaskCrudRoutes(deps: TaskCrudRouteDeps): void {
     ).run(
       id,
       title,
-      (body as any).description ?? null,
-      (body as any).department_id ?? null,
-      (body as any).assigned_agent_id ?? null,
+      (body["description"] ?? null) as SQLInputValue,
+      (body["department_id"] ?? null) as SQLInputValue,
+      (body["assigned_agent_id"] ?? null) as SQLInputValue,
       resolvedProjectId,
-      (body as any).status ?? "inbox",
-      (body as any).priority ?? 0,
-      (body as any).task_type ?? "general",
+      (body["status"] ?? "inbox") as SQLInputValue,
+      (body["priority"] ?? 0) as SQLInputValue,
+      (body["task_type"] ?? "general") as SQLInputValue,
       resolvedPackKey,
       resolvedPackKey,
-      typeof (body as any).workflow_meta_json === "string"
-        ? (body as any).workflow_meta_json
-        : (body as any).workflow_meta_json
-          ? JSON.stringify((body as any).workflow_meta_json)
-          : null,
-      typeof (body as any).output_format === "string" ? (body as any).output_format : null,
+      workflowMetaJson as SQLInputValue,
+      outputFormat as SQLInputValue,
       resolvedProjectPath,
-      (body as any).base_branch ?? null,
+      (body["base_branch"] ?? null) as SQLInputValue,
       resolvedCategoryId,
       handoffToAgentId,
       handoffCondition,
-      kbContextSources,
-      figmaUrl,
+      kbContextSources as SQLInputValue,
+      figmaUrl as SQLInputValue,
       t,
       t,
     );
     recordTaskCreationAudit({
       taskId: id,
       taskTitle: title,
-      taskStatus: String((body as any).status ?? "inbox"),
-      departmentId: typeof (body as any).department_id === "string" ? (body as any).department_id : null,
-      assignedAgentId: typeof (body as any).assigned_agent_id === "string" ? (body as any).assigned_agent_id : null,
-      taskType: typeof (body as any).task_type === "string" ? (body as any).task_type : "general",
+      taskStatus: String(body["status"] ?? "inbox"),
+      departmentId: typeof body["department_id"] === "string" ? body["department_id"] : null,
+      assignedAgentId: typeof body["assigned_agent_id"] === "string" ? body["assigned_agent_id"] : null,
+      taskType: typeof body["task_type"] === "string" ? body["task_type"] : "general",
       projectPath: resolvedProjectPath,
       trigger: "api.tasks.create",
       triggerDetail: "POST /api/tasks",
@@ -288,12 +303,12 @@ export function registerTaskCrudRoutes(deps: TaskCrudRouteDeps): void {
     }
 
     // 자동 배정: assigned_agent_id 없이 생성된 태스크에 프로젝트 에이전트 자동 선택
-    const requestedAgentId = normalizeTextField((body as any).assigned_agent_id);
+    const requestedAgentId = normalizeTextField(body["assigned_agent_id"]);
     if (!requestedAgentId && resolvedProjectId) {
       const autoAssignRow = db.prepare("SELECT value FROM settings WHERE key = 'autoAssign'").get() as
         | { value: string } | undefined;
       if (autoAssignRow && autoAssignRow.value !== "false") {
-        const result = selectAutoAssignableAgentForTask(db as any, {
+        const result = selectAutoAssignableAgentForTask(db, {
           workflow_pack_key: resolvedPackKey,
           project_id: resolvedProjectId,
         });
@@ -305,14 +320,14 @@ export function registerTaskCrudRoutes(deps: TaskCrudRouteDeps): void {
     }
 
     appendTaskLog(id, "system", `Task created: ${title}`);
-    recordTaskExecutionEvent(db as any, {
+    recordTaskExecutionEvent(db, {
       taskId: id,
       eventType: "task_created",
       toState: "queued",
       summary: `Task created: ${title}`,
       metadata: {
-        status: (body as any).status ?? "inbox",
-        assigned_agent_id: (body as any).assigned_agent_id ?? null,
+        status: body["status"] ?? "inbox",
+        assigned_agent_id: body["assigned_agent_id"] ?? null,
       },
       createdAt: t,
     });
@@ -398,7 +413,7 @@ export function registerTaskCrudRoutes(deps: TaskCrudRouteDeps): void {
     if (!task) return res.status(404).json({ error: "not_found" });
 
     const latestEvent =
-      taskExecutionEventsTableExists(db as any)
+      taskExecutionEventsTableExists(db)
         ? (db
             .prepare(
               "SELECT id, event_type, from_state, to_state, summary, metadata_json, created_at FROM task_execution_events WHERE task_id = ? ORDER BY created_at DESC, id DESC LIMIT 1",
@@ -417,7 +432,7 @@ export function registerTaskCrudRoutes(deps: TaskCrudRouteDeps): void {
     const task = db.prepare("SELECT id FROM tasks WHERE id = ?").get(id) as { id: string } | undefined;
     if (!task) return res.status(404).json({ error: "not_found" });
 
-    if (!taskExecutionEventsTableExists(db as any)) {
+    if (!taskExecutionEventsTableExists(db)) {
       return res.json({ events: [] });
     }
 
@@ -501,8 +516,8 @@ export function registerTaskCrudRoutes(deps: TaskCrudRouteDeps): void {
       }
     }
 
-    if ("project_id" in (body as any)) {
-      const requestedProjectId = normalizeTextField((body as any).project_id);
+    if ("project_id" in body) {
+      const requestedProjectId = normalizeTextField(body["project_id"]);
       if (!requestedProjectId) {
         updates.push("project_id = ?");
         params.push(null);
@@ -517,18 +532,18 @@ export function registerTaskCrudRoutes(deps: TaskCrudRouteDeps): void {
         updates.push("project_id = ?");
         params.push(project.id);
         touchedProjectId = project.id;
-        if (!("project_path" in (body as any))) {
+        if (!("project_path" in body)) {
           updates.push("project_path = ?");
           params.push(project.project_path);
         }
       }
     }
 
-    if ((body as any).status === "done" && !("completed_at" in (body as any))) {
+    if (body["status"] === "done" && !("completed_at" in body)) {
       updates.push("completed_at = ?");
       params.push(nowMs());
     }
-    if ((body as any).status === "in_progress" && !("started_at" in (body as any))) {
+    if (body["status"] === "in_progress" && !("started_at" in body)) {
       updates.push("started_at = ?");
       params.push(nowMs());
     }
@@ -543,7 +558,7 @@ export function registerTaskCrudRoutes(deps: TaskCrudRouteDeps): void {
       );
     }
 
-    const nextStatus = typeof (body as any).status === "string" ? (body as any).status : null;
+    const nextStatus = typeof body["status"] === "string" ? body["status"] : null;
     if (nextStatus) {
       setTaskCreationAuditCompletion(id, nextStatus === "done");
     }
@@ -782,8 +797,9 @@ export function registerTaskCrudRoutes(deps: TaskCrudRouteDeps): void {
       }));
 
       res.json({ ok: true, meetings });
-    } catch (err: any) {
-      res.status(500).json({ ok: false, error: err?.message || String(err) });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      res.status(500).json({ ok: false, error: msg });
     }
   });
 }

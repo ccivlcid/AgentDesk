@@ -13,34 +13,35 @@ import { loadPrompt, loadPromptSection } from "../../../lib/prompt-loader.ts";
 import { analyzeTaskFailure, matchErrorPattern, sanitizeErrorMessage } from "./run-complete-handler/error-analysis.ts";
 import { runAutoLearning, generateProjectRetrospective, updateAgentFitness } from "./auto-learning.ts";
 import { shipAutomation } from "./review-finalize-tools/ship-automation.ts";
-import { resolveProvider, getDefaultModel } from "../../agent-runtime/llm-client.ts";
+import { resolveProvider, getDefaultModel, type ResolvedProvider } from "../../agent-runtime/llm-client.ts";
 import { readYoloModeEnabled } from "../../routes/ops/messages/decision-inbox/yolo-mode.ts";
 import { recordTaskExecutionEvent } from "../core/task-execution-meta.ts";
 import logger from "../../../lib/logger.ts";
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- wide deps from orchestration context
-type AgentRow = Record<string, any>;
+import type { AgentRow } from "../core/conversation-types.ts";
 
 /** Adapter: findApiProvider compatible with error-analysis deps interface */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- matches legacy interface
-function findApiProviderCompat(db: any, _scope: string): any {
+function findApiProviderCompat(db: DatabaseSync, _scope: string): ResolvedProvider | null {
   try {
-    return resolveProvider(db as import("node:sqlite").DatabaseSync);
+    return resolveProvider(db);
   } catch {
     return null;
   }
 }
 
 /** Adapter: resolveModel compatible with error-analysis deps interface */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- matches legacy interface
-function resolveModelCompat(provider: any): string {
+function resolveModelCompat(provider: ResolvedProvider | null): string {
   return getDefaultModel(provider?.providerType ?? "anthropic");
 }
 
 /** Adapter: callProvider compatible with error-analysis deps interface */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- matches legacy interface
-async function callProviderCompat(provider: any, model: string, systemPrompt: string, userPrompt: string, signal: AbortSignal): Promise<string> {
-  const resolved = provider as import("../../agent-runtime/llm-client.ts").ResolvedProvider;
+async function callProviderCompat(
+  provider: ResolvedProvider | null,
+  model: string,
+  systemPrompt: string,
+  userPrompt: string,
+  signal: AbortSignal,
+): Promise<string> {
+  const resolved = provider;
   if (!resolved) throw new Error("No provider");
   if (resolved.type === "anthropic") {
     const resp = await fetch("https://api.anthropic.com/v1/messages", {

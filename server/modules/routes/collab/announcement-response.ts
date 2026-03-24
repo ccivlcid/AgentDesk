@@ -1,3 +1,4 @@
+import { castSqliteRows } from "../../../lib/sqlite-row-cast.ts";
 import type { RuntimeContext } from "../../../types/runtime-context.ts";
 import type { Lang } from "../../../types/lang.ts";
 import type { AgentRow } from "./direct-chat.ts";
@@ -141,19 +142,18 @@ export function createAnnouncementReplyScheduler(deps: AnnouncementReplyDeps): {
             `SELECT DISTINCT pa.agent_id FROM project_agents pa
              WHERE pa.project_id = ?`,
           )
-          .all(projectId) as unknown as Array<{ agent_id: string }>).map((r) => r.agent_id)
+          .all(projectId) as Array<{ agent_id: string }>).map((r) => r.agent_id)
       : (db
           .prepare(
             `SELECT DISTINCT pa.agent_id FROM project_agents pa
              JOIN projects p ON p.id = pa.project_id
              WHERE p.archived = 0 OR p.archived IS NULL`,
           )
-          .all() as unknown as Array<{ agent_id: string }>).map((r) => r.agent_id);
+          .all() as Array<{ agent_id: string }>).map((r) => r.agent_id);
 
-    const teamLeaders = (db
-      .prepare("SELECT * FROM agents WHERE role = 'team_leader' AND status != 'offline'")
-      .all() as unknown as AgentRow[])
-      .filter((a) => projectAgentIds.includes(a.id));
+    const teamLeaders = castSqliteRows<AgentRow>(
+      db.prepare("SELECT * FROM agents WHERE role = 'team_leader' AND status != 'offline'").all(),
+    ).filter((a) => projectAgentIds.includes(a.id));
 
     let delay = 1500;
     for (const leader of teamLeaders) {

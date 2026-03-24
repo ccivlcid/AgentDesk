@@ -1,233 +1,233 @@
-# 에이전트 설정·실행 아키텍처 (현행 구현 기준)
+# Agent Configuration and Execution Architecture (Based on Current Implementation)
 
-> **목적:** AgentDesk에서 **에이전트가 DB·UI에 어떻게 저장되고**, **어떤 조건으로 어떤 실행 엔진(CLI / HTTP API / OAuth / 내장 런타임)** 이 선택되는지 **코드 기준**으로 한곳에 정리한다.  
-> **관련 문서:** 전략·로드맵 성격은 [`../strategy/AGENT-RUNTIME-SPEC.md`](../strategy/AGENT-RUNTIME-SPEC.md)를 참고한다. 본 문서는 **이미 구현된 동작**에 초점을 둔다.
-
----
-
-## 1. 문서 범위
-
-| 포함 | 제외(또는 다른 문서) |
-|------|---------------------|
-| `agents` 테이블 필드와 런타임 분기 | REST 전체 스펙 → [`../specs/api.md`](../specs/api.md) |
-| 태스크 실행 `/api/tasks/:id/run` | UI 화면 상세 → [`../design/UI-SCREENS.md`](../design/UI-SCREENS.md) |
-| 직접 채팅 `scheduleAgentReply` | 제품 전략 → `strategy/` |
-| `agent-runtime` (`startExecutionLoop`) | ERD 전체 → [`schema-erd.md`](schema-erd.md) |
+> **Purpose:** Consolidate in one place **how agents are stored in the DB and UI**, and **under what conditions which execution engine (CLI / HTTP API / OAuth / built-in runtime)** is selected, **based on actual code**.
+> **Related documents:** For strategy/roadmap content, refer to [`../strategy/AGENT-RUNTIME-SPEC.md`](../strategy/AGENT-RUNTIME-SPEC.md). This document focuses on **already-implemented behavior**.
 
 ---
 
-## 2. 에이전트 데이터 모델
+## 1. Document Scope
 
-### 2.1 SQLite `agents` 테이블
+| Included | Excluded (or in other documents) |
+|----------|----------------------------------|
+| `agents` table fields and runtime branching | Full REST spec → [`../specs/api.md`](../specs/api.md) |
+| Task execution `/api/tasks/:id/run` | UI screen details → [`../design/UI-SCREENS.md`](../design/UI-SCREENS.md) |
+| Direct chat `scheduleAgentReply` | Product strategy → `strategy/` |
+| `agent-runtime` (`startExecutionLoop`) | Full ERD → [`schema-erd.md`](schema-erd.md) |
 
-정의: `server/modules/bootstrap/schema/base-schema.ts`
+---
 
-| 컬럼 | 의미 |
-|------|------|
-| `id`, `name`, `name_ko` / `name_ja` / `name_zh` | 식별·표시 이름 |
-| `department_id` | 소속 부서 (`departments.prompt` 등과 결합) |
-| `workflow_pack_key` | 워크플로 팩 (기본 `development` 등) |
+## 2. Agent Data Model
+
+### 2.1 SQLite `agents` Table
+
+Definition: `server/modules/bootstrap/schema/base-schema.ts`
+
+| Column | Meaning |
+|--------|---------|
+| `id`, `name`, `name_ko` / `name_ja` / `name_zh` | Identifier and display names |
+| `department_id` | Associated department (combined with `departments.prompt`, etc.) |
+| `workflow_pack_key` | Workflow pack (default `development`, etc.) |
 | `role` | `team_leader` \| `senior` \| `junior` \| `intern` |
-| `acts_as_planning_leader` | 기획 리더 역할 (0/1) |
-| `cli_provider` | 실행 백엔드 종류 (아래 표) |
-| `oauth_account_id` | Copilot / Antigravity 시 연결된 OAuth 행 |
-| `api_provider_id`, `api_model` | HTTP API 실행 시 Provider 행·모델 |
-| `cli_model`, `cli_reasoning_level` | CLI별 모델·추론 (제공자별 지원 다름) |
-| `persona_id` | `prompts/personas/{id}.md` 연동 |
-| `avatar_emoji`, `sprite_number` | UI 표현 |
+| `acts_as_planning_leader` | Planning leader role (0/1) |
+| `cli_provider` | Execution backend type (see table below) |
+| `oauth_account_id` | Linked OAuth row for Copilot / Antigravity |
+| `api_provider_id`, `api_model` | Provider row and model for HTTP API execution |
+| `cli_model`, `cli_reasoning_level` | Per-CLI model and reasoning (support varies by provider) |
+| `persona_id` | Links to `prompts/personas/{id}.md` |
+| `avatar_emoji`, `sprite_number` | UI representation |
 | `status` | `idle` \| `working` \| `break` \| `offline` |
-| `current_task_id` | 현재 붙은 태스크 (실행 중일 때) |
-| `stats_tasks_done`, `stats_xp` | 통계 |
+| `current_task_id` | Currently attached task (when executing) |
+| `stats_tasks_done`, `stats_xp` | Statistics |
 
-### 2.2 `cli_provider` 허용 값
+### 2.2 `cli_provider` Allowed Values
 
-스키마 CHECK와 프론트 `CliProvider` 타입 (`src/types/index.ts`)에 맞춤:
+Aligned with schema CHECK and frontend `CliProvider` type (`src/types/index.ts`):
 
 `claude` · `codex` · `gemini` · `opencode` · `copilot` · `antigravity` · `cursor` · `api` · `ollama`
 
-### 2.3 PATCH 시 정규화 (설정 변경 규칙)
+### 2.3 Normalization on PATCH (Configuration Change Rules)
 
-`server/modules/routes/core/agents/patch-body.ts` (`prepareAgentPatchBody`) 요지:
+Key points from `server/modules/routes/core/agents/patch-body.ts` (`prepareAgentPatchBody`):
 
-- `cli_provider` 변경 시 OAuth/API/CLI 모델 필드가 **제공자에 맞게 초기화·검증**됨.
-- `api`가 아니면 `api_provider_id` / `api_model`을 비울 수 있음.
-- `copilot` → `github`, `antigravity` → `google_antigravity` OAuth 계정만 허용.
+- When `cli_provider` changes, OAuth/API/CLI model fields are **initialized/validated to match the provider**.
+- If not `api`, `api_provider_id` / `api_model` may be cleared.
+- `copilot` → only `github` OAuth accounts allowed, `antigravity` → only `google_antigravity` OAuth accounts allowed.
 
 ---
 
-## 3. 실행 엔진 선택 로직 (핵심)
+## 3. Execution Engine Selection Logic (Core)
 
-에이전트는 **“한 명”이지만**, **진입점(태스크 vs 채팅 vs agent-runtime)** 에 따라 **다른 모듈**이 호출된다.
+An agent is **a single entity**, but **different modules** are invoked depending on the **entry point (task vs. chat vs. agent-runtime)**.
 
-### 3.1 태스크 실행: `POST /api/tasks/:id/run`
+### 3.1 Task Execution: `POST /api/tasks/:id/run`
 
-파일: `server/modules/routes/core/tasks/execution-run.ts`
+File: `server/modules/routes/core/tasks/execution-run.ts`
 
-**Provider 결정 (중요):**
+**Provider Determination (Important):**
 
 ```text
-api_provider_id 가 설정되어 있으면 → provider = "api"  (cli_provider 값과 무관)
-그렇지 않으면              → provider = cli_provider || "claude"
+If api_provider_id is set    → provider = "api"  (regardless of cli_provider value)
+Otherwise                    → provider = cli_provider || "claude"
 ```
 
-즉 **에이전트에 API Provider를 붙이면 태스크는 항상 HTTP API 경로**로 간다.
+In other words, **if an API Provider is attached to the agent, tasks always go through the HTTP API path**.
 
-지원 provider 문자열 (태스크): `claude`, `codex`, `gemini`, `opencode`, `copilot`, `antigravity`, `api`.
+Supported provider strings (task): `claude`, `codex`, `gemini`, `opencode`, `copilot`, `antigravity`, `api`.
 
-### 3.2 직접(1:1) 채팅: `scheduleAgentReply`
+### 3.2 Direct (1:1) Chat: `scheduleAgentReply`
 
-파일: `server/modules/routes/collab/direct-chat-handlers.ts` → `server/modules/routes/collab/direct-chat-runtime-reply.ts` (`runDirectReplyExecution`)
+File: `server/modules/routes/collab/direct-chat-handlers.ts` → `server/modules/routes/collab/direct-chat-runtime-reply.ts` (`runDirectReplyExecution`)
 
-분기 요약:
+Branching summary:
 
-| 조건 | 동작 |
-|------|------|
-| `cli_provider === "api"` 이고 `api_provider_id` 있음 | `executeApiProviderAgent` — 스트리밍, `chat_stream` 이벤트 |
-| `cli_provider` 가 `copilot` / `antigravity` | OAuth HTTP 에이전트, 스트리밍 |
-| 그 외 (예: `claude`) | `runAgentOneShot` — 로컬 CLI `spawn` |
+| Condition | Behavior |
+|-----------|----------|
+| `cli_provider === "api"` and `api_provider_id` exists | `executeApiProviderAgent` — streaming, `chat_stream` events |
+| `cli_provider` is `copilot` / `antigravity` | OAuth HTTP agent, streaming |
+| Otherwise (e.g., `claude`) | `runAgentOneShot` — local CLI `spawn` |
 
-**태스크와의 차이:** 채팅은 `api_provider_id`만 있고 `cli_provider`가 `api`가 아닌 경우, **CLI 경로로 갈 수 있음** (태스크의 “API 우선 강제”와 불일치할 수 있음).
+**Difference from tasks:** In chat, if only `api_provider_id` is set but `cli_provider` is not `api`, **it may take the CLI path** (which can be inconsistent with the task's "API-first enforcement").
 
-### 3.3 Agent Runtime (내장 LLM + Tool 루프)
+### 3.3 Agent Runtime (Built-in LLM + Tool Loop)
 
-파일: `server/modules/agent-runtime/execution-loop.ts` (`startExecutionLoop`)
+File: `server/modules/agent-runtime/execution-loop.ts` (`startExecutionLoop`)
 
-- Anthropic API 호출 + `server/modules/agent-runtime/tools.ts` 기반 **툴 루프**.
-- 진입 예:
+- Anthropic API calls + **tool loop** based on `server/modules/agent-runtime/tools.ts`.
+- Entry examples:
   - `POST /api/agent-runtime/run` — `server/modules/agent-runtime/routes.ts`
-  - 프로젝트 킥오프 후 첫 태스크 자동 실행 — `server/modules/routes/core/projects/kickoff.ts`
+  - Auto-execution of first task after project kickoff — `server/modules/routes/core/projects/kickoff.ts`
 
-**메인 태스크 런(`execution-run`)과 별도 코드 경로**이므로, “전체가 항상 CLI” 또는 “항상 agent-runtime”이 아니다.
+**This is a separate code path from the main task run (`execution-run`)**, so it is NOT the case that "everything always uses CLI" or "everything always uses agent-runtime".
 
 ---
 
-## 4. 태스크 실행 파이프라인 (상세)
+## 4. Task Execution Pipeline (Detailed)
 
-### 4.1 공통 전처리
+### 4.1 Common Preprocessing
 
-- 담당 에이전트 조회, `agent_busy` 검사 (`current_task_id` + `activeProcesses`).
-- **Worktree** 생성·격리 (`createWorktree`) — 실패 시 실행 차단.
-- 프롬프트 조립: 부서, 태스크 연속 컨텍스트, 스킬, 규칙, 메모리, **캐릭터 페르소나** 등 (`execution-start-task.ts` 등).
+- Look up assigned agent, check `agent_busy` (`current_task_id` + `activeProcesses`).
+- **Worktree** creation and isolation (`createWorktree`) — blocks execution on failure.
+- Prompt assembly: department, task continuation context, skills, rules, memory, **character persona**, etc. (`execution-start-task.ts`, etc.).
 
 ### 4.2 `provider === "api"`
 
 - `launchApiProviderAgent` → `server/modules/workflow/agents/providers/api-provider-tools.ts`
-- 요청 본문은 **텍스트 completion** 중심 (Anthropic `messages`, OpenAI 호환 `chat/completions` 등).
-- **별도의 `tools` 배열(웹 검색 등)은 이 경로에서 일반적으로 붙지 않음** (직접 채팅·태스크 공통).
+- Request body is **text completion** oriented (Anthropic `messages`, OpenAI-compatible `chat/completions`, etc.).
+- **A separate `tools` array (web search, etc.) is generally not attached in this path** (common to both direct chat and tasks).
 
-### 4.3 `provider === "claude"` 등 CLI
+### 4.3 `provider === "claude"` etc. (CLI)
 
-- `spawnCliAgent` + `server/modules/workflow/core/cli-tools.ts` 의 `buildAgentArgs`
-- Claude 예: `--print`, `--output-format=stream-json`, `--dangerously-skip-permissions` 등.
-- `noTools: true` 인 원샷(회의·간단 응답 등)에서는 `--tools=` 로 도구 비활성.
+- `spawnCliAgent` + `buildAgentArgs` from `server/modules/workflow/core/cli-tools.ts`
+- Claude example: `--print`, `--output-format=stream-json`, `--dangerously-skip-permissions`, etc.
+- For one-shot calls (`noTools: true`) such as meetings or simple responses, tools are disabled with `--tools=`.
 
 ### 4.4 `copilot` / `antigravity`
 
-- PTY가 아닌 **HTTP 기반** 실행 (`launchHttpAgent` 계열).
+- **HTTP-based** execution (`launchHttpAgent` family), not PTY.
 
-### 4.5 에이전트·태스크 상태
+### 4.5 Agent/Task State
 
-- 실행 시작 시 `agents.status = 'working'`, `current_task_id` 갱신, `task_update` / `agent_status` 브로드캐스트.
+- On execution start: `agents.status = 'working'`, `current_task_id` updated, `task_update` / `agent_status` broadcast.
 
 ---
 
-## 5. 직접 채팅 파이프라인 (상세)
+## 5. Direct Chat Pipeline (Detailed)
 
-### 5.1 트리거
+### 5.1 Trigger
 
-- 클라이언트 `POST /api/messages` 등으로 메시지 저장 후, 수신 에이전트에 대해 `scheduleAgentReply` 호출 (`chat-routes.ts` 등).
+- After the client saves a message via `POST /api/messages` etc., `scheduleAgentReply` is called for the receiving agent (`chat-routes.ts`, etc.).
 
-### 5.2 의도·분기 (상위)
+### 5.2 Intent/Branching (High Level)
 
 `direct-chat-handlers.ts`:
 
-- 오프라인 → 즉시 안내 메시지.
-- 프로젝트 바인딩 대기 중 → 후속 메시지로 상태 머신 처리.
-- 태스크로 분류되는 메시지 → `runTaskFlowWithResolvedProject`.
-- 그 외 → `runDirectReplyExecution`.
+- Offline → immediate informational message.
+- Waiting for project binding → state machine processing via follow-up message.
+- Message classified as a task → `runTaskFlowWithResolvedProject`.
+- Otherwise → `runDirectReplyExecution`.
 
-### 5.3 지연
+### 5.3 Delay
 
-`direct-chat-runtime-reply.ts`: `runDirectReplyExecution` 시작 시 **약 1~3초** `setTimeout` (의도적 지연).
+`direct-chat-runtime-reply.ts`: At the start of `runDirectReplyExecution`, an intentional **~1–3 second** `setTimeout` delay.
 
-### 5.4 CLI 실패 시
+### 5.4 On CLI Failure
 
-- `runAgentOneShot` **reject** 시 과거에는 사용자 메시지 없이 로그만 남을 수 있었음 → 현행은 try/catch로 `buildCliFailureMessage` 전달 등 개선 가능 (구현 시점 기준 코드 확인).
+- When `runAgentOneShot` **rejects**, in the past it could result in only a log with no user message → current implementation has improved with try/catch delivering `buildCliFailureMessage`, etc. (verify based on code at time of implementation).
 
 ---
 
-## 6. 페르소나·프롬프트 파일
+## 6. Persona/Prompt Files
 
 `server/modules/workflow/core/character-persona.ts`
 
-| 우선순위 | 소스 |
-|----------|------|
-| 1 (주) | `prompts/agents/{agentId}.md` |
-| 2 (베이스) | `prompts/personas/{personaId}.md` |
+| Priority | Source |
+|----------|--------|
+| 1 (Primary) | `prompts/agents/{agentId}.md` |
+| 2 (Base) | `prompts/personas/{personaId}.md` |
 
-에이전트 전용 `.md`가 있으면 그것이 본문, `persona_id` 파일은 `[Base Persona]`로 앞에 붙을 수 있음.
-
----
-
-## 7. 원샷 실행 `runAgentOneShot`
-
-파일: `server/modules/workflow/core/one-shot-runner.ts`
-
-- 회의 발언, 프로젝트 종류 추론, 페르소나 자동 멘트, **직접 채팅의 CLI 경로** 등에서 사용.
-- `provider === "api"` 이면 `executeApiProviderAgent` 호출.
-- 그 외는 `buildAgentArgs` + `child_process.spawn` (Windows에서는 `shell: true` 등 플랫폼 차이 있음).
+If an agent-specific `.md` exists, it becomes the main body; the `persona_id` file may be prepended as `[Base Persona]`.
 
 ---
 
-## 8. 프론트엔드 타입·표시
+## 7. One-Shot Execution `runAgentOneShot`
 
-- `src/types/index.ts` 의 `Agent` 인터페이스가 API 응답과 대응.
-- 단톡/그룹 채팅 메시지 헤더는 `sender_id` / `sender_name` / `sender_agent` 조합으로 발신자 표시 (`GroupChatMessageList.tsx` 등).
+File: `server/modules/workflow/core/one-shot-runner.ts`
 
----
-
-## 9. WebSocket 이벤트 (실행 관찰)
-
-대표 타입 (코드 전반):
-
-- `cli_output` — 태스크 구독 시 스트림 (직접 채팅 API 스트림은 `chat_stream` 등 별도).
-- `task_update`, `agent_status` — 보드·에이전트 상태.
-- `new_message` — 메시지 저장 후 브로드캐스트.
+- Used for meeting remarks, project type inference, persona auto-comments, **direct chat CLI path**, etc.
+- If `provider === "api"`, calls `executeApiProviderAgent`.
+- Otherwise, `buildAgentArgs` + `child_process.spawn` (platform differences on Windows such as `shell: true`).
 
 ---
 
-## 10. 관련 소스 파일 인덱스
+## 8. Frontend Types/Display
 
-| 영역 | 경로 |
+- The `Agent` interface in `src/types/index.ts` corresponds to API responses.
+- Group chat message headers display the sender using a combination of `sender_id` / `sender_name` / `sender_agent` (`GroupChatMessageList.tsx`, etc.).
+
+---
+
+## 9. WebSocket Events (Execution Observation)
+
+Representative types (throughout the code):
+
+- `cli_output` — Stream on task subscription (direct chat API stream uses separate `chat_stream`, etc.).
+- `task_update`, `agent_status` — Board and agent state.
+- `new_message` — Broadcast after message save.
+
+---
+
+## 10. Related Source File Index
+
+| Area | Path |
 |------|------|
-| 스키마 | `server/modules/bootstrap/schema/base-schema.ts` |
-| 에이전트 PATCH | `server/modules/routes/core/agents/patch-body.ts`, `register-agent-routes-*.ts` |
-| 태스크 실행 | `server/modules/routes/core/tasks/execution-run.ts`, `execution-start-task.ts` |
-| 직접 채팅 | `server/modules/routes/collab/direct-chat-handlers.ts`, `direct-chat-runtime-reply.ts` |
-| CLI 인자 | `server/modules/workflow/core/cli-tools.ts` |
-| 원샷 | `server/modules/workflow/core/one-shot-runner.ts` |
+| Schema | `server/modules/bootstrap/schema/base-schema.ts` |
+| Agent PATCH | `server/modules/routes/core/agents/patch-body.ts`, `register-agent-routes-*.ts` |
+| Task execution | `server/modules/routes/core/tasks/execution-run.ts`, `execution-start-task.ts` |
+| Direct chat | `server/modules/routes/collab/direct-chat-handlers.ts`, `direct-chat-runtime-reply.ts` |
+| CLI arguments | `server/modules/workflow/core/cli-tools.ts` |
+| One-shot | `server/modules/workflow/core/one-shot-runner.ts` |
 | API Provider HTTP | `server/modules/workflow/agents/providers/api-provider-tools.ts` |
-| 내장 런타임 | `server/modules/agent-runtime/execution-loop.ts`, `routes.ts` |
-| 페르소나 | `server/modules/workflow/core/character-persona.ts`, `prompts/agents/`, `prompts/personas/` |
-| 직접 프롬프트 문구 | `server/modules/workflow/core/meeting-prompt-tools.ts` (`buildDirectReplyPrompt`) |
-| 안전 응답 가공 | `server/modules/workflow/core/reply-core-tools.ts` (`chooseSafeReply`) |
+| Built-in runtime | `server/modules/agent-runtime/execution-loop.ts`, `routes.ts` |
+| Persona | `server/modules/workflow/core/character-persona.ts`, `prompts/agents/`, `prompts/personas/` |
+| Direct prompt text | `server/modules/workflow/core/meeting-prompt-tools.ts` (`buildDirectReplyPrompt`) |
+| Safe reply processing | `server/modules/workflow/core/reply-core-tools.ts` (`chooseSafeReply`) |
 
 ---
 
-## 11. 설계 시 주의할 불일치 포인트
+## 11. Design Inconsistency Points to Note
 
-1. **태스크는 `api_provider_id` 있으면 무조건 API** — 채팅은 `cli_provider`에 더 종속.
-2. **태스크 메인 런**과 **agent-runtime**은 서로 다른 스택(후자는 서버 내장 툴 루프).
-3. **API Provider 경로**는 범용 스트리밍 completion이라 **웹 검색 도구 자동 부착은 기본 없음** (제품 정책·API 스펙 확장 시 별도 구현).
-
----
-
-## 12. 변경 이력
-
-| 날짜 | 내용 |
-|------|------|
-| 2026-03-16 | 초안 작성 — 현행 코드 기준 통합 |
+1. **Tasks always use API if `api_provider_id` is set** — Chat is more dependent on `cli_provider`.
+2. **Main task run** and **agent-runtime** are different stacks (the latter is a server-side built-in tool loop).
+3. **The API Provider path** is a general-purpose streaming completion, so **web search tool auto-attachment is not included by default** (requires separate implementation when expanding product policy/API spec).
 
 ---
 
-*이 문서는 구현 변경 시 함께 갱신하는 것을 권장한다.*
+## 12. Change History
+
+| Date | Content |
+|------|---------|
+| 2026-03-16 | Initial draft — consolidated based on current code |
+
+---
+
+*It is recommended to update this document whenever the implementation changes.*

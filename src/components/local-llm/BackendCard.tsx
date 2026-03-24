@@ -192,11 +192,15 @@ export default function BackendCard({ backend, onStart, onStop, onRestart }: Bac
               </div>
             </div>
           ) : (
-            <div style={{ fontSize: 11, color: "#3fb950" }}>
-              {isJan
-                ? t({ ko: `✓ Jan 실행 중 — 모델 ${backend.model_count}개 로드됨`, en: `✓ Jan running — ${backend.model_count} model(s) loaded`, ja: `✓ Jan起動中 — ${backend.model_count}個のモデルロード済み`, zh: `✓ Jan运行中 — ${backend.model_count}个模型已加载` })
-                : t({ ko: `✓ LM Studio 실행 중 — 모델 ${backend.model_count}개 로드됨`, en: `✓ LM Studio running — ${backend.model_count} model(s) loaded`, ja: `✓ LM Studio起動中 — ${backend.model_count}個のモデルロード済み`, zh: `✓ LM Studio运行中 — ${backend.model_count}个模型已加载` })
-              }
+            <div style={{ fontSize: 11, color: "#3fb950", display: "flex", alignItems: "center", gap: 6 }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0" aria-hidden>
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              <span>
+                {isJan
+                  ? t({ ko: `Jan 실행 중 — 모델 ${backend.model_count}개 로드됨`, en: `Jan running — ${backend.model_count} model(s) loaded`, ja: `Jan起動中 — ${backend.model_count}個のモデルロード済み`, zh: `Jan运行中 — ${backend.model_count}个模型已加载` })
+                  : t({ ko: `LM Studio 실행 중 — 모델 ${backend.model_count}개 로드됨`, en: `LM Studio running — ${backend.model_count} model(s) loaded`, ja: `LM Studio起動中 — ${backend.model_count}個のモデルロード済み`, zh: `LM Studio运行中 — ${backend.model_count}个模型已加载` })}
+              </span>
             </div>
           )}
         </div>
@@ -204,8 +208,13 @@ export default function BackendCard({ backend, onStart, onStop, onRestart }: Bac
         /* llama.cpp — CLI tool, user must start manually */
         <div style={{ marginTop: 10 }}>
           {backend.running ? (
-            <div style={{ fontSize: 11, color: "#3fb950" }}>
-              {t({ ko: `✓ llama-server 실행 중 — 포트 ${backend.port}`, en: `✓ llama-server running on port ${backend.port}`, ja: `✓ llama-server起動中 — ポート${backend.port}`, zh: `✓ llama-server运行中 — 端口${backend.port}` })}
+            <div style={{ fontSize: 11, color: "#3fb950", display: "flex", alignItems: "center", gap: 6 }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0" aria-hidden>
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              <span>
+                {t({ ko: `llama-server 실행 중 — 포트 ${backend.port}`, en: `llama-server running on port ${backend.port}`, ja: `llama-server起動中 — ポート${backend.port}`, zh: `llama-server运行中 — 端口${backend.port}` })}
+              </span>
               {backend.model_count > 0 && (
                 <span style={{ color: "var(--th-text-secondary)", marginLeft: 8 }}>
                   {t({ ko: `모델 ${backend.model_count}개`, en: `${backend.model_count} model(s)`, ja: `${backend.model_count}モデル`, zh: `${backend.model_count}个模型` })}

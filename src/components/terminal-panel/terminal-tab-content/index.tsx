@@ -50,7 +50,7 @@ export function TerminalTabContent({
   handleScroll,
   isLight = false,
 }: TerminalTabContentProps) {
-  const { containerRef, preRef, searchInputRef } = refs;
+  const { containerRef, parsedOutputRef, rawOutputPreRef, searchInputRef } = refs;
   const [subTab, setSubTab] = useState<SubTab>("output");
 
   const isStructured = (() => {
@@ -220,7 +220,7 @@ export function TerminalTabContent({
               </div>
             ) : visibleParsedLines ? (
               <div
-                ref={preRef as unknown as React.RefObject<HTMLDivElement>}
+                ref={parsedOutputRef}
                 style={{ display: "flex", flexDirection: "column", gap: 3 }}
               >
                 {logSearch && visibleParsedLines.length === 0 && (
@@ -234,7 +234,7 @@ export function TerminalTabContent({
               </div>
             ) : (
               <pre
-                ref={preRef as unknown as React.RefObject<HTMLPreElement>}
+                ref={rawOutputPreRef}
                 style={{ fontFamily: mono, fontSize: 12, lineHeight: 1.65, whiteSpace: "pre-wrap", wordBreak: "break-word", margin: 0, color: "var(--th-text-primary)" }}
                 className="terminal-output-text"
               >

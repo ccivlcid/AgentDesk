@@ -1,14 +1,15 @@
 export const DEFERRED_RUNTIME_FN_TAG = Symbol.for("agentdesk.deferredRuntimeFnName");
 
-type RuntimeRecord = Record<string, any>;
-
-export function createDeferredRuntimeFunction(runtime: RuntimeRecord, name: string): (...args: any[]) => any {
-  const deferred = (...args: any[]) => {
-    const current = runtime[name];
+export function createDeferredRuntimeFunction(
+  runtime: object,
+  name: string,
+): (...args: unknown[]) => unknown {
+  const deferred = (...args: unknown[]) => {
+    const current = Reflect.get(runtime, name);
     if (typeof current !== "function" || current === deferred) {
       throw new Error(`${name}_not_initialized`);
     }
-    return current(...args);
+    return (current as (...args: unknown[]) => unknown)(...args);
   };
 
   Object.defineProperty(deferred, DEFERRED_RUNTIME_FN_TAG, {
@@ -21,17 +22,17 @@ export function createDeferredRuntimeFunction(runtime: RuntimeRecord, name: stri
   return deferred;
 }
 
-export function isDeferredRuntimeFunction(value: unknown): value is (...args: any[]) => any {
+export function isDeferredRuntimeFunction(value: unknown): value is (...args: unknown[]) => unknown {
   return typeof value === "function" && Object.prototype.hasOwnProperty.call(value, DEFERRED_RUNTIME_FN_TAG);
 }
 
 export function getDeferredRuntimeFunctionName(value: unknown): string | null {
   if (!isDeferredRuntimeFunction(value)) return null;
-  const name = (value as unknown as Record<PropertyKey, unknown>)[DEFERRED_RUNTIME_FN_TAG];
+  const name = Reflect.get(value as object, DEFERRED_RUNTIME_FN_TAG);
   return typeof name === "string" ? name : null;
 }
 
-export function createDeferredRuntimeProxy<T extends RuntimeRecord>(runtime: T): T {
+export function createDeferredRuntimeProxy<T extends object>(runtime: T): T {
   return new Proxy(runtime, {
     get(target, prop, receiver) {
       if (typeof prop !== "string") return Reflect.get(target, prop, receiver);
@@ -47,7 +48,7 @@ export function createDeferredRuntimeProxy<T extends RuntimeRecord>(runtime: T):
   }) as T;
 }
 
-export function collectUnresolvedDeferredRuntimeFunctions(runtime: RuntimeRecord): string[] {
+export function collectUnresolvedDeferredRuntimeFunctions(runtime: object): string[] {
   const unresolved = new Set<string>();
 
   for (const value of Object.values(runtime)) {
@@ -65,7 +66,7 @@ function normalizeIgnoredNames(ignoreNames?: Iterable<string>): Set<string> {
 }
 
 export function assertNoUnresolvedDeferredRuntimeFunctions(
-  runtime: RuntimeRecord,
+  runtime: object,
   label: string = "runtime helper wiring",
   options?: {
     ignoreNames?: Iterable<string>;
@@ -79,18 +80,20 @@ export function assertNoUnresolvedDeferredRuntimeFunctions(
 }
 
 export function assertRuntimeFunctionsPresent(
-  runtime: RuntimeRecord,
+  runtime: object,
   functionNames: Iterable<string>,
   label: string = "runtime helper wiring",
 ): void {
-  const missing = [...new Set(functionNames)].filter((name) => typeof runtime[name] !== "function").sort();
+  const missing = [...new Set(functionNames)]
+    .filter((name) => typeof Reflect.get(runtime, name) !== "function")
+    .sort();
   if (missing.length > 0) {
     throw new Error(`[AgentDesk] ${label} missing functions: ${missing.join(", ")}`);
   }
 }
 
 export function assertRuntimeFunctionsResolved(
-  runtime: RuntimeRecord,
+  runtime: object,
   functionNames: Iterable<string>,
   label: string = "runtime helper wiring",
 ): void {
@@ -99,7 +102,7 @@ export function assertRuntimeFunctionsResolved(
   const unresolved: string[] = [];
 
   for (const name of uniqueNames) {
-    const value = runtime[name];
+    const value = Reflect.get(runtime, name);
     if (typeof value !== "function") {
       missing.push(name);
       continue;

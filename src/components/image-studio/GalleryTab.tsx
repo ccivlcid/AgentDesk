@@ -5,6 +5,45 @@ import { getGallery, deleteImage, getImageUrl, type ImageGenerationItem } from "
 const mono = "var(--th-font-mono)";
 const panelBg = "rgba(0,0,0,0.25)";
 
+function IconDownload({ size = 14 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="7 10 12 15 17 10" />
+      <line x1="12" y1="15" x2="12" y2="3" />
+    </svg>
+  );
+}
+
+function IconX({ size = 14 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <line x1="18" y1="6" x2="6" y2="18" />
+      <line x1="6" y1="6" x2="18" y2="18" />
+    </svg>
+  );
+}
+
 interface Props {
   refreshTrigger?: number;
 }
@@ -152,7 +191,10 @@ export default function GalleryTab({ refreshTrigger }: Props) {
                 color: "#0a84ff", cursor: "pointer", letterSpacing: "0.04em",
               }}
             >
-              ↓ {t({ ko: "이미지 저장", en: "Save Image", ja: "画像を保存", zh: "保存图像" })}
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "#0a84ff" }}>
+                <IconDownload size={14} />
+                {t({ ko: "이미지 저장", en: "Save Image", ja: "画像を保存", zh: "保存图像" })}
+              </span>
             </button>
             <button
               type="button"
@@ -166,7 +208,14 @@ export default function GalleryTab({ refreshTrigger }: Props) {
                 opacity: deleting === selected.id ? 0.5 : 1,
               }}
             >
-              {deleting === selected.id ? "…" : `✕ ${t({ ko: "삭제", en: "Delete", ja: "削除", zh: "删除" })}`}
+              {deleting === selected.id ? (
+                "…"
+              ) : (
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                  <IconX size={14} />
+                  {t({ ko: "삭제", en: "Delete", ja: "削除", zh: "删除" })}
+                </span>
+              )}
             </button>
           </div>
         </div>
@@ -214,16 +263,30 @@ function GalleryItem({ item, isSelected, isDeleting, onClick, onDelete, onDownlo
             style={{
               padding: "4px 7px", background: "rgba(10,132,255,0.7)", border: "none",
               borderRadius: 3, color: "#fff", fontSize: 10, fontFamily: mono, cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
             }}
-          >↓</button>
+          >
+            <span style={{ display: "inline-flex", color: "#fff" }}>
+              <IconDownload size={14} />
+            </span>
+          </button>
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); onDelete(); }}
             style={{
               padding: "4px 7px", background: "rgba(239,68,68,0.7)", border: "none",
               borderRadius: 3, color: "#fff", fontSize: 10, fontFamily: mono, cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
             }}
-          >✕</button>
+          >
+            <span style={{ display: "inline-flex", color: "#fff" }}>
+              <IconX size={14} />
+            </span>
+          </button>
         </div>
       )}
     </div>

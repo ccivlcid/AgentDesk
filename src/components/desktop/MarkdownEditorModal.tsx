@@ -330,12 +330,22 @@ export default function MarkdownEditorModal({ onClose, defaultProjectName }: Mar
 
           {saved && (
             <span style={{ fontSize: 10, color: "var(--th-success, #22c55e)" }}>
-              ✓ {t({ ko: "저장됨", en: "Saved", ja: "保存済み", zh: "已保存" })}
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                {t({ ko: "저장됨", en: "Saved", ja: "保存済み", zh: "已保存" })}
+              </span>
             </span>
           )}
           {savedToDesktop && (
             <span style={{ fontSize: 10, color: "var(--th-accent)" }}>
-              ✓ {t({ ko: "바탕화면에 추가됨", en: "Added to desktop", ja: "デスクトップに追加", zh: "已添加到桌面" })}
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                {t({ ko: "바탕화면에 추가됨", en: "Added to desktop", ja: "デスクトップに追加", zh: "已添加到桌面" })}
+              </span>
             </span>
           )}
 
@@ -399,7 +409,14 @@ export default function MarkdownEditorModal({ onClose, defaultProjectName }: Mar
               opacity: content.trim() || title.trim() ? 1 : 0.5,
             }}
           >
-            ↓ {t({ ko: "다운로드", en: "Download", ja: "ダウンロード", zh: "下载" })} .md
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+              {t({ ko: "다운로드", en: "Download", ja: "ダウンロード", zh: "下载" })} .md
+            </span>
           </button>
         </div>
       </div>

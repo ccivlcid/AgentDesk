@@ -479,7 +479,11 @@ export default function DecisionInboxModal({
                                   display: "flex", alignItems: "center", gap: 8,
                                 }}
                               >
-                                <span style={{ fontSize: "8px", opacity: 0.5, flexShrink: 0 }}>▶</span>
+                                <span style={{ fontSize: "8px", opacity: 0.5, flexShrink: 0, display: "inline-flex", color: "inherit" }}>
+                                  <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                                    <polygon points="5 3 19 12 5 21 5 3" />
+                                  </svg>
+                                </span>
                                 {isBusy
                                   ? t({ ko: "전송 중...", en: "Sending...", ja: "送信中...", zh: "发送中..." })
                                   : `${option.number}. ${option.label}`}
@@ -488,10 +492,15 @@ export default function DecisionInboxModal({
                           })}
                         </div>
                       ) : (
-                        <p style={{ ...mono, fontSize: "10px", color: "var(--th-text-muted)", padding: "4px 0" }}>
-                          · {item.kind === "project_review_ready"
-                            ? t({ ko: "PM 의견 취합중...", en: "Planning lead is consolidating...", ja: "企画リードが集約中...", zh: "规划负责人汇总中..." })
-                            : t({ ko: "선택지 준비 중...", en: "Options being prepared...", ja: "選択肢準備中...", zh: "正在准备选项..." })}
+                        <p style={{ ...mono, fontSize: "10px", color: "var(--th-text-muted)", padding: "4px 0", display: "flex", alignItems: "center", gap: 6 }}>
+                          <svg width="6" height="6" viewBox="0 0 24 24" fill="currentColor" className="shrink-0 opacity-60" aria-hidden>
+                            <circle cx="12" cy="12" r="2" />
+                          </svg>
+                          <span>
+                            {item.kind === "project_review_ready"
+                              ? t({ ko: "PM 의견 취합중...", en: "Planning lead is consolidating...", ja: "企画リードが集約中...", zh: "规划负责人汇总中..." })
+                              : t({ ko: "선택지 준비 중...", en: "Options being prepared...", ja: "選択肢準備中...", zh: "正在准备选项..." })}
+                          </span>
                         </p>
                       )}
                     </div>

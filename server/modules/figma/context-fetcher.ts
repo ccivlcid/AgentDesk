@@ -1,5 +1,6 @@
 import type { DatabaseSync } from "node:sqlite";
 import logger from "../../lib/logger.ts";
+import { castSqliteRow } from "../../lib/sqlite-row-cast.ts";
 
 type DbLike = Pick<DatabaseSync, "prepare">;
 
@@ -58,12 +59,12 @@ function formatFigmaContext(fileKey: string, nodeId: string, data: unknown): str
  * Returns empty string if task has no figma_url, Figma is not connected, or API call fails (non-fatal).
  */
 export async function buildFigmaContextBlock(db: DbLike, taskId: string): Promise<string> {
-  const taskRow = db.prepare("SELECT figma_url FROM tasks WHERE id = ?").get(taskId) as unknown as FigmaTaskRow | null;
+  const taskRow = castSqliteRow<FigmaTaskRow>(db.prepare("SELECT figma_url FROM tasks WHERE id = ?").get(taskId));
   if (!taskRow?.figma_url) return "";
 
-  const connRow = db
-    .prepare("SELECT config_json FROM synapse_connections WHERE platform = 'figma' AND status = 'connected'")
-    .get() as unknown as FigmaConnectionRow | null;
+  const connRow = castSqliteRow<FigmaConnectionRow>(
+    db.prepare("SELECT config_json FROM synapse_connections WHERE platform = 'figma' AND status = 'connected'").get(),
+  );
   if (!connRow?.config_json) return "";
 
   let apiKey: string;

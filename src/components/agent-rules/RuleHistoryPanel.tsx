@@ -303,7 +303,17 @@ export default function RuleHistoryPanel({
             }}
           >
             <span className="flex-1 text-left truncate">{filterLabel}</span>
-            <span style={{ fontSize: 8, opacity: 0.6 }}>{filterDropdownOpen ? "▲" : "▼"}</span>
+            <span style={{ fontSize: 8, opacity: 0.6, display: "inline-flex", color: "inherit" }}>
+              {filterDropdownOpen ? (
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                  <polyline points="6 15 12 9 18 15" />
+                </svg>
+              ) : (
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              )}
+            </span>
           </button>
           {filterDropdownOpen && (
             <div
@@ -317,7 +327,11 @@ export default function RuleHistoryPanel({
                 style={{ background: agentFilters.size === 0 ? "rgba(251,191,36,0.1)" : "transparent", color: agentFilters.size === 0 ? "var(--th-accent)" : "var(--th-text-secondary)", border: "none" }}
               >
                 <span className="flex items-center justify-center shrink-0" style={{ width: 14, height: 14, borderRadius: 0, border: agentFilters.size === 0 ? "1px solid var(--th-accent)" : "1px solid var(--th-border-strong)", background: agentFilters.size === 0 ? "var(--th-accent)" : "transparent", fontSize: 9, color: "#000" }}>
-                  {agentFilters.size === 0 ? "✓" : ""}
+                  {agentFilters.size === 0 ? (
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  ) : null}
                 </span>
                 {t({ ko: "전체 에이전트", en: "All agents", ja: "全エージェント", zh: "全部代理" })}
               </button>
@@ -333,7 +347,11 @@ export default function RuleHistoryPanel({
                     style={{ background: checked ? "rgba(251,191,36,0.08)" : "transparent", color: checked ? "var(--th-accent)" : "var(--th-text-secondary)", border: "none" }}
                   >
                     <span className="flex items-center justify-center shrink-0" style={{ width: 14, height: 14, borderRadius: 0, border: checked ? "1px solid var(--th-accent)" : "1px solid var(--th-border-strong)", background: checked ? "var(--th-accent)" : "transparent", fontSize: 9, color: "#000" }}>
-                      {checked ? "✓" : ""}
+                      {checked ? (
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                      ) : null}
                     </span>
                     <AgentAvatar agent={agent} agents={agents} size={16} rounded="sm" />
                     <span className="truncate">{agentDisplayName(agent)}</span>
@@ -344,8 +362,12 @@ export default function RuleHistoryPanel({
           )}
         </div>
         {agentFilters.size > 0 && (
-          <button type="button" onClick={clearAgentFilters} className="px-1.5 py-0.5 text-[10px] font-mono" style={{ borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-muted)", background: "transparent" }}>
-            ✕ {t({ ko: "초기화", en: "clear", ja: "クリア", zh: "清除" })}
+          <button type="button" onClick={clearAgentFilters} className="px-1.5 py-0.5 text-[10px] font-mono inline-flex items-center gap-1" style={{ borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-muted)", background: "transparent" }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0" aria-hidden>
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+            {t({ ko: "초기화", en: "clear", ja: "クリア", zh: "清除" })}
           </button>
         )}
       </div>

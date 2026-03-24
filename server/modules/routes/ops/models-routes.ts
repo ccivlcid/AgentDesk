@@ -3,6 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
 import type { RuntimeContext } from "../../../types/runtime-context.ts";
+import type { DecryptedOAuthToken } from "../shared/types.ts";
 
 interface CliModelInfoServer {
   slug: string;
@@ -20,7 +21,7 @@ export function registerModelRoutes(ctx: RuntimeContext): void {
   async function fetchCopilotModelsFromAPI(): Promise<string[]> {
     try {
       const accounts = getPreferredOAuthAccounts("github");
-      const account = accounts.find((a: any) => Boolean(a.accessToken));
+      const account = accounts.find((a: DecryptedOAuthToken) => typeof a.accessToken === "string" && Boolean(a.accessToken));
       if (!account) return [];
 
       const { token, baseUrl } = await exchangeCopilotToken(account.accessToken);
@@ -246,17 +247,17 @@ export function registerModelRoutes(ctx: RuntimeContext): void {
     return CURSOR_MODELS_FALLBACK;
   }
 
-  function readModelCache(cacheKey: string): any | null {
+  function readModelCache(cacheKey: string): unknown {
     try {
-      const row = db.prepare("SELECT value FROM settings WHERE key = ?").get(cacheKey) as any;
-      if (row?.value) return JSON.parse(row.value);
+      const row = db.prepare("SELECT value FROM settings WHERE key = ?").get(cacheKey) as { value?: string } | undefined;
+      if (row?.value) return JSON.parse(row.value) as unknown;
     } catch {
       // ignore malformed cache
     }
     return null;
   }
 
-  function writeModelCache(cacheKey: string, data: any): void {
+  function writeModelCache(cacheKey: string, data: unknown): void {
     try {
       db.prepare(
         "INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value",
@@ -283,8 +284,8 @@ export function registerModelRoutes(ctx: RuntimeContext): void {
         return res.json({ models });
       }
       const dbCached = readModelCache("cli_models_cache");
-      if (dbCached) {
-        const models = await ensureCursorInModels(dbCached);
+      if (dbCached !== null && typeof dbCached === "object" && !Array.isArray(dbCached)) {
+        const models = await ensureCursorInModels(dbCached as Record<string, CliModelInfoServer[]>);
         cachedCliModels = { data: models, loadedAt: Date.now() };
         return res.json({ models });
       }
@@ -338,10 +339,11 @@ export function registerModelRoutes(ctx: RuntimeContext): void {
         return res.json({ models: cachedModels.data });
       }
       const dbCached = readModelCache("oauth_models_cache");
-      if (dbCached) {
-        cachedModels = { data: dbCached, loadedAt: Date.now() };
+      if (dbCached !== null && typeof dbCached === "object" && !Array.isArray(dbCached)) {
+        const oauthData = dbCached as Record<string, string[]>;
+        cachedModels = { data: oauthData, loadedAt: Date.now() };
         ctx.cachedModels = cachedModels;
-        return res.json({ models: dbCached });
+        return res.json({ models: oauthData });
       }
     }
 

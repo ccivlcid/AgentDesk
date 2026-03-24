@@ -200,11 +200,18 @@ function BackendSettingsCard({
           opacity: saving ? 0.6 : 1,
         }}
       >
-        {saving
-          ? t({ ko: "저장 중...", en: "SAVING...", ja: "保存中...", zh: "保存中..." })
-          : saved
-            ? t({ ko: "✓ 저장됨", en: "✓ SAVED", ja: "✓ 保存済み", zh: "✓ 已保存" })
-            : t({ ko: "저장", en: "SAVE", ja: "保存", zh: "保存" })}
+        {saving ? (
+          t({ ko: "저장 중...", en: "SAVING...", ja: "保存中...", zh: "保存中..." })
+        ) : saved ? (
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+            {t({ ko: "저장됨", en: "SAVED", ja: "保存済み", zh: "已保存" })}
+          </span>
+        ) : (
+          t({ ko: "저장", en: "SAVE", ja: "保存", zh: "保存" })
+        )}
       </button>
     </div>
   );

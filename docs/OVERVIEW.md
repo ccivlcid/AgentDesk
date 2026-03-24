@@ -333,8 +333,8 @@ surfaced via the Decision Inbox window and notification bell.
 
 ### Direct Chat
 Bi-directional messaging between users and agents:
-- `$` prefix — directive command
-- `!` prefix — task creation/assignment
+- `$` prefix — client directive (project-bound orchestration)
+- `#` prefix — task registration on the board (orchestrator flow)
 - Telegram / Discord / Slack gateway (messenger module)
 
 ### Subtask Delegation
@@ -361,12 +361,13 @@ consensus triggers task progression.
 | App Menu | "AgentDesk" text | `MenuBar.tsx` |
 | Control Center | Menu bar right | `ControlCenter.tsx` |
 | Right Shelf | Side panel | `RightShelf.tsx` |
+| Trash | Desktop icon | Deletes DB project on drop; **empty trash** removes listed folders on disk via `POST /api/projects/delete-directory` (allowed roots only) |
 
 ### App Windows (Dock)
 
 | Window | Shortcut | Purpose |
 |--------|---------|---------|
-| Task Board | `g t` | Kanban / Gantt / DAG |
+| Task Board | Dock icon | Kanban / Gantt / DAG |
 | Workflow Builder | `g w` | Visual workflow editor + cron scheduler |
 | Library | `g l` | Skills · Rules · Memory · Hooks · Templates |
 | Settings | `g s` | API providers · Categories · Data |
@@ -374,6 +375,8 @@ consensus triggers task progression.
 | Agent Manager | `g a` | Agent CRUD + department structure |
 | CLI Window | `g e` | PTY terminal + Runtime streaming |
 | Image Studio | `g i` | txt2img · inpaint · gallery |
+| Dashboard | `g d` | Overview / entry to task flows |
+| Repo Store | Dock **+** menu | GitHub Trending browse · clone · register project |
 | Synapse | — | Notion · Obsidian integration |
 | Local LLM | — | Ollama · LM Studio · llama.cpp |
 
@@ -417,7 +420,7 @@ project retrospective, agent-task fitness tracking, graceful shutdown recovery, 
 |----------|---------|
 | [`OVERVIEW.md`](./OVERVIEW.md) | **This document** — concept, architecture, feature surface |
 | [`progress.md`](./progress.md) | Development progress log — all phases |
-| [`specs/api.md`](./specs/api.md) | REST API specification (v1.6.1) |
+| [`specs/api.md`](./specs/api.md) | REST API specification (v1.6.4) |
 | [`architecture/schema-erd.md`](./architecture/schema-erd.md) | DB schema ER diagram + state machines |
 | [`architecture/AGENT-CONFIGURATION-AND-EXECUTION.md`](./architecture/AGENT-CONFIGURATION-AND-EXECUTION.md) | Agent DB fields, task vs chat vs runtime execution paths (as-built) |
 | [`design/DESIGN.md`](./design/DESIGN.md) | CSS variables + component style rules |

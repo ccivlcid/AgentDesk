@@ -1,35 +1,78 @@
+import type { DatabaseSync } from "node:sqlite";
+import type {
+  AgentRow,
+  MeetingPromptOptions,
+  MeetingTranscriptEntry,
+  OneShotRunOptions,
+  OneShotRunResult,
+  ReplyKind,
+} from "../core/conversation-types.ts";
+
 type CreatePlannedApprovalToolsDeps = {
   reviewInFlight: Set<string>;
   reviewRoundState: Map<string, number>;
-  db: any;
-  getTaskReviewLeaders: (...args: any[]) => any[];
-  resolveProjectPath: (...args: any[]) => any;
-  resolveLang: (...args: any[]) => any;
-  beginMeetingMinutes: (...args: any[]) => any;
-  isTaskWorkflowInterrupted: (...args: any[]) => any;
-  getTaskStatusById: (...args: any[]) => any;
-  finishMeetingMinutes: (...args: any[]) => any;
-  dismissLeadersFromClientOffice: (...args: any[]) => any;
-  clearTaskWorkflowState: (...args: any[]) => any;
-  getAgentDisplayName: (...args: any[]) => any;
-  getDeptName: (...args: any[]) => any;
-  getRoleLabel: (...args: any[]) => any;
-  sendAgentMessage: (...args: any[]) => any;
-  emitMeetingSpeech: (...args: any[]) => any;
-  appendMeetingMinuteEntry: (...args: any[]) => any;
-  callLeadersToClientOffice: (...args: any[]) => any;
-  notifyClient: (...args: any[]) => any;
-  pickL: (...args: any[]) => any;
-  l: (...args: any[]) => any;
-  buildMeetingPrompt: (...args: any[]) => any;
-  runAgentOneShot: (...args: any[]) => Promise<any>;
-  chooseSafeReply: (...args: any[]) => any;
-  sleepMs: (...args: any[]) => Promise<void>;
-  randomDelay: (...args: any[]) => any;
-  collectPlannedActionItems: (...args: any[]) => any[];
-  appendTaskProjectMemo: (...args: any[]) => any;
-  appendTaskLog: (...args: any[]) => any;
+  db: DatabaseSync;
   reviewMeetingOneShotTimeoutMs?: number;
+  getTaskReviewLeaders: (taskId: string, departmentId: string | null) => AgentRow[];
+  resolveProjectPath: (task: {
+    project_id?: string | null;
+    project_path?: string | null;
+    description?: string | null;
+    title?: string;
+  }) => string;
+  resolveLang: (text?: string | null) => string;
+  beginMeetingMinutes: (taskId: string, meetingType: "planned" | "review", round: number, title: string) => string;
+  isTaskWorkflowInterrupted: (taskId: string) => boolean;
+  getTaskStatusById: (taskId: string) => string | null;
+  finishMeetingMinutes: (meetingId: string, status: "completed" | "revision_requested" | "failed") => void;
+  dismissLeadersFromClientOffice: (taskId: string, leaders: AgentRow[]) => void;
+  clearTaskWorkflowState: (taskId: string) => void;
+  getAgentDisplayName: (agent: AgentRow, lang: string) => string;
+  getDeptName: (departmentId: string, workflowPackKey?: string | null) => string;
+  getRoleLabel: (role: string, lang: string) => string;
+  sendAgentMessage: (
+    agent: AgentRow,
+    content: string,
+    messageType?: string,
+    receiverType?: string,
+    receiverId?: string | null,
+    taskId?: string | null,
+  ) => void;
+  emitMeetingSpeech: (
+    agentId: string,
+    seatIndex: number,
+    phase: "kickoff" | "review",
+    taskId: string,
+    line: string,
+    lang?: string,
+  ) => void;
+  appendMeetingMinuteEntry: (
+    meetingId: string,
+    seq: number,
+    agent: AgentRow,
+    lang: string,
+    messageType: string,
+    content: string,
+    workflowPackKey?: string | null,
+  ) => void;
+  callLeadersToClientOffice: (taskId: string, leaders: AgentRow[], phase: "kickoff" | "review") => void;
+  notifyClient: (content: string, taskId?: string | null, messageType?: string) => void;
+  pickL: (pool: Record<string, string[]>, lang: string) => string;
+  l: (ko: string[], en: string[], ja?: string[], zh?: string[]) => Record<string, string[]>;
+  buildMeetingPrompt: (agent: AgentRow, options: MeetingPromptOptions) => string;
+  runAgentOneShot: (agent: AgentRow, prompt: string, options: OneShotRunOptions) => Promise<OneShotRunResult>;
+  chooseSafeReply: (run: OneShotRunResult, lang: string, kind: ReplyKind, agent?: AgentRow) => string;
+  sleepMs: (ms: number) => Promise<void>;
+  randomDelay: (minMs: number, maxMs: number) => number;
+  collectPlannedActionItems: (transcript: MeetingTranscriptEntry[], maxItems?: number) => string[];
+  appendTaskProjectMemo: (
+    taskId: string,
+    phase: "planned" | "review",
+    round: number,
+    notes: string[],
+    lang: string,
+  ) => void;
+  appendTaskLog: (taskId: string, kind: string, message: string) => void;
 };
 
 export function createPlannedApprovalTools(deps: CreatePlannedApprovalToolsDeps) {
@@ -91,10 +134,10 @@ export function createPlannedApprovalTools(deps: CreatePlannedApprovalToolsDeps)
         const round = (reviewRoundState.get(lockKey) ?? 0) + 1;
         reviewRoundState.set(lockKey, round);
 
-        const planningLeader = leaders.find((l: any) => l.department_id === "planning") ?? leaders[0];
-        const otherLeaders = leaders.filter((l: any) => l.id !== planningLeader.id);
+        const planningLeader = leaders.find((l) => l.department_id === "planning") ?? leaders[0];
+        const otherLeaders = leaders.filter((l) => l.id !== planningLeader.id);
         let hasSupplementSignals = false;
-        const seatIndexByAgent = new Map(leaders.slice(0, 6).map((leader: any, idx: number) => [leader.id, idx]));
+        const seatIndexByAgent = new Map(leaders.slice(0, 6).map((leader, idx: number) => [leader.id, idx]));
 
         const taskCtx = db
           .prepare("SELECT description, project_path, workflow_pack_key FROM tasks WHERE id = ?")
@@ -109,7 +152,7 @@ export function createPlannedApprovalTools(deps: CreatePlannedApprovalToolsDeps)
           project_path: taskCtx?.project_path ?? null,
         });
         const lang = resolveLang(taskDescription ?? taskTitle);
-        const transcript: any[] = [];
+        const transcript: MeetingTranscriptEntry[] = [];
         const oneShotTimeoutMs = Math.max(5_000, Number(reviewMeetingOneShotTimeoutMs ?? 65_000));
         const oneShotOptions = { projectPath, timeoutMs: oneShotTimeoutMs, noTools: true };
         const wantsRevision = (content: string): boolean =>
@@ -131,10 +174,10 @@ export function createPlannedApprovalTools(deps: CreatePlannedApprovalToolsDeps)
           return `${compacted}\n\n[retry] Previous attempt timed out. Respond concisely in short actionable points.`;
         };
         const runMeetingOneShotWithRetry = async (
-          agent: any,
+          agent: AgentRow,
           prompt: string,
           phase: "opening" | "feedback" | "summary" | "approval",
-        ): Promise<any> => {
+        ): Promise<OneShotRunResult> => {
           const first = await runAgentOneShot(agent, prompt, oneShotOptions);
           if (!isTimeoutRun(first)) return first;
           appendTaskLog(
@@ -163,7 +206,7 @@ export function createPlannedApprovalTools(deps: CreatePlannedApprovalToolsDeps)
           return true;
         };
 
-        const pushTranscript = (leader: any, content: string) => {
+        const pushTranscript = (leader: AgentRow, content: string) => {
           transcript.push({
             speaker_agent_id: leader.id,
             speaker: getAgentDisplayName(leader, lang),
@@ -173,7 +216,7 @@ export function createPlannedApprovalTools(deps: CreatePlannedApprovalToolsDeps)
           });
         };
         const speak = (
-          leader: any,
+          leader: AgentRow,
           messageType: string,
           receiverType: string,
           receiverId: string | null,
@@ -331,14 +374,14 @@ export function createPlannedApprovalTools(deps: CreatePlannedApprovalToolsDeps)
         reviewRoundState.delete(lockKey);
         reviewInFlight.delete(lockKey);
         onApproved(planItems);
-      } catch (err: any) {
+      } catch (err: unknown) {
         if (isTaskWorkflowInterrupted(taskId)) {
           if (meetingId) finishMeetingMinutes(meetingId, "failed");
           dismissLeadersFromClientOffice(taskId, leaders);
           clearTaskWorkflowState(taskId);
           return;
         }
-        const msg = err?.message ? String(err.message) : String(err);
+        const msg = err instanceof Error ? err.message : String(err);
         appendTaskLog(taskId, "error", `Planned meeting error: ${msg}`);
         const errLang = resolveLang(taskTitle);
         notifyClient(

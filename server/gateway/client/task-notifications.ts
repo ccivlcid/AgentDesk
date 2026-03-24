@@ -1,17 +1,15 @@
 import fs from "node:fs";
 
+import { translateMessage, type SharedLanguage } from "../../../shared/i18n/index.ts";
 import logger from "../../lib/logger.ts";
-import {
-  NATIVE_MESSENGER_CHANNELS,
-  type MessengerChannel,
-} from "../../messenger/channels.ts";
+import { NATIVE_MESSENGER_CHANNELS } from "../../messenger/channels.ts";
 import { loadMessengerConfig } from "./messenger-config.ts";
 import { sendByChannel } from "./messenger-low-level.ts";
 import { normalizeText } from "./normalize.ts";
 import { sendTelegramDocument } from "./channel-transports.ts";
 import { queueWake } from "./messenger-public.ts";
 
-type GatewayLang = "ko" | "en" | "ja" | "zh";
+type GatewayLang = SharedLanguage;
 
 function detectGatewayLang(text: string): GatewayLang {
   const ko = text.match(/[\uAC00-\uD7AF\u1100-\u11FF\u3130-\u318F]/g)?.length ?? 0;
@@ -32,22 +30,13 @@ function normalizeGatewayLang(lang: string | null | undefined, title: string): G
 
 function resolveStatusLabel(status: string, lang: GatewayLang): string {
   if (status === "in_progress") {
-    if (lang === "en") return "Started";
-    if (lang === "ja") return "開始";
-    if (lang === "zh") return "开始";
-    return "진행 시작";
+    return translateMessage(lang, "task.status.inProgress");
   }
   if (status === "review") {
-    if (lang === "en") return "In Review";
-    if (lang === "ja") return "レビュー中";
-    if (lang === "zh") return "审核中";
-    return "검토 중";
+    return translateMessage(lang, "task.status.review");
   }
   if (status === "done") {
-    if (lang === "en") return "Completed";
-    if (lang === "ja") return "完了";
-    if (lang === "zh") return "完成";
-    return "완료";
+    return translateMessage(lang, "task.status.done");
   }
   return status;
 }
@@ -78,13 +67,7 @@ export async function sendDeliverableFiles(
 ): Promise<void> {
   const config = loadMessengerConfig();
   const resolvedLang = normalizeGatewayLang(lang, taskTitle);
-  const captionPrefix: Record<string, string> = {
-    ko: "최종 결과물",
-    en: "Deliverable",
-    ja: "成果物",
-    zh: "交付物",
-  };
-  const prefix = captionPrefix[resolvedLang] || captionPrefix.en;
+  const prefix = translateMessage(resolvedLang, "gateway.deliverable.prefix");
 
   for (const channel of NATIVE_MESSENGER_CHANNELS) {
     const channelConfig = config[channel];
@@ -121,15 +104,9 @@ export async function sendDeliverableFiles(
 export function notifyDecisionInbox(count: number, lang?: string): void {
   if (count <= 0) return;
   const resolvedLang = normalizeGatewayLang(lang, "");
-  const label: Record<string, string> = {
-    ko: `\u{1F4EC} 의사결정 ${count}건이 대기 중입니다.`,
-    en: `\u{1F4EC} ${count} decision(s) awaiting your review.`,
-    ja: `\u{1F4EC} ${count}件の意思決定が待機中です。`,
-    zh: `\u{1F4EC} ${count}项决策等待您审批。`,
-  };
   queueWake({
     key: `decision-inbox:${count}`,
-    text: label[resolvedLang] || label.en,
+    text: `\u{1F4EC} ${translateMessage(resolvedLang, "gateway.decisionInbox.waiting", { count })}`,
     debounceMs: 30_000,
   });
 }

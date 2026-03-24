@@ -1,5 +1,6 @@
 import type { DatabaseSync } from "node:sqlite";
 import type { Express } from "express";
+import { castSqliteRows } from "../../../lib/sqlite-row-cast.ts";
 
 interface Deps {
   app: Express;
@@ -50,7 +51,8 @@ export function registerAgentPerformanceRoutes({ app, db }: Deps): void {
         : [sinceMs];
 
       // Aggregate per agent
-      const agentRows = db.prepare(`
+      const agentRows = castSqliteRows<AgentPerfRow>(
+        db.prepare(`
         SELECT
           a.id         AS agent_id,
           a.name       AS agent_name,
@@ -65,18 +67,22 @@ export function registerAgentPerformanceRoutes({ app, db }: Deps): void {
         LEFT JOIN tasks t ON t.assigned_agent_id = a.id ${projectFilter}
         GROUP BY a.id
         ORDER BY total DESC
-      `).all(...params) as unknown as AgentPerfRow[];
+      `).all(...params),
+      );
 
       // Status breakdown per agent
-      const statusRows = db.prepare(`
+      const statusRows = castSqliteRows<StatusRow>(
+        db.prepare(`
         SELECT t.assigned_agent_id AS agent_id, t.status, COUNT(*) AS cnt
         FROM tasks t
         WHERE t.assigned_agent_id IS NOT NULL ${project_id ? "AND t.project_id = ?" : ""}
         GROUP BY t.assigned_agent_id, t.status
-      `).all(...params) as unknown as StatusRow[];
+      `).all(...params),
+      );
 
       // Daily task creation trend for the last N days
-      const dailyRows = db.prepare(`
+      const dailyRows = castSqliteRows<DailyRow>(
+        db.prepare(`
         SELECT
           t.assigned_agent_id AS agent_id,
           date(t.created_at / 1000, 'unixepoch') AS day,
@@ -87,7 +93,8 @@ export function registerAgentPerformanceRoutes({ app, db }: Deps): void {
           ${project_id ? "AND t.project_id = ?" : ""}
         GROUP BY t.assigned_agent_id, day
         ORDER BY day ASC
-      `).all(...paramsWithSince) as unknown as DailyRow[];
+      `).all(...paramsWithSince),
+      );
 
       // Build lookup maps
       const statusMap: Record<string, Record<string, number>> = {};

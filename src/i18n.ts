@@ -1,5 +1,6 @@
 import { createContext, createElement, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
+import { translateMessage, type MessageKey, type TranslationVars } from "../shared/i18n/index.ts";
 
 export type UiLanguage = "ko" | "en" | "ja" | "zh";
 export const LANGUAGE_STORAGE_KEY = "agentdesk.language";
@@ -97,6 +98,7 @@ export interface I18nContextValue {
   language: UiLanguage;
   locale: string;
   t: (text: TranslationInput) => string;
+  tk: (key: MessageKey, vars?: TranslationVars) => string;
   __fromProvider?: boolean;
 }
 
@@ -104,6 +106,7 @@ const I18nContext = createContext<I18nContextValue>({
   language: "en",
   locale: "en-US",
   t: (text) => (typeof text === "string" ? text : text.en),
+  tk: (key, vars) => translateMessage("en", key, vars),
   __fromProvider: false,
 });
 
@@ -119,15 +122,17 @@ export function I18nProvider({ language, children }: I18nProviderProps) {
     (text: TranslationInput) => (typeof text === "string" ? text : pickLang(normalizedLanguage, text)),
     [normalizedLanguage],
   );
+  const tk = useCallback((key: MessageKey, vars?: TranslationVars) => translateMessage(normalizedLanguage, key, vars), [normalizedLanguage]);
 
   const value = useMemo(
     () => ({
       language: normalizedLanguage,
       locale,
       t,
+      tk,
       __fromProvider: true,
     }),
-    [normalizedLanguage, locale, t],
+    [normalizedLanguage, locale, t, tk],
   );
 
   return createElement(I18nContext.Provider, { value }, children);
@@ -161,14 +166,16 @@ export function useI18n(languageOverride?: string | null): I18nContextValue {
     (text: TranslationInput) => (typeof text === "string" ? text : pickLang(language, text)),
     [language],
   );
+  const tk = useCallback((key: MessageKey, vars?: TranslationVars) => translateMessage(language, key, vars), [language]);
 
   return useMemo(
     () => ({
       language,
       locale: localeFromLanguage(language),
       t,
+      tk,
       __fromProvider: context.__fromProvider,
     }),
-    [context.__fromProvider, language, t],
+    [context.__fromProvider, language, t, tk],
   );
 }

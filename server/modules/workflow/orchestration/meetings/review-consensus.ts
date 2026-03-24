@@ -1,8 +1,61 @@
 import type { Lang } from "../../../../types/lang.ts";
+import type { RuntimeContext } from "../../../../types/runtime-context.ts";
 import { getDirectiveReviewMaxRounds } from "../../../directive-templates.ts";
+import type { AgentRow, MeetingTranscriptEntry, OneShotRunResult } from "../../core/conversation-types.ts";
 import { processReviewConsensusOutcome } from "./review-consensus-outcome.ts";
 
-type ReviewConsensusDeps = any;
+type ReviewConsensusDeps = Pick<
+  RuntimeContext,
+  | "db"
+  | "getTaskReviewLeaders"
+  | "getTaskStatusById"
+  | "getReviewRoundMode"
+  | "scheduleNextReviewRound"
+  | "resolveProjectPath"
+  | "resolveLang"
+  | "getPreferredLanguage"
+  | "runAgentOneShot"
+  | "chooseSafeReply"
+  | "appendTaskLog"
+  | "notifyClient"
+  | "pickL"
+  | "l"
+  | "sendAgentMessage"
+  | "emitMeetingSpeech"
+  | "getAgentDisplayName"
+  | "getDeptName"
+  | "getRoleLabel"
+  | "appendMeetingMinuteEntry"
+  | "beginMeetingMinutes"
+  | "finishMeetingMinutes"
+  | "callLeadersToClientOffice"
+  | "dismissLeadersFromClientOffice"
+  | "wantsReviewRevision"
+  | "meetingReviewDecisionByAgent"
+  | "findLatestTranscriptContentByAgent"
+  | "isDeferrableReviewHold"
+  | "summarizeForMeetingBubble"
+  | "appendTaskProjectMemo"
+  | "appendTaskReviewFinalMemo"
+  | "collectRevisionMemoItems"
+  | "reserveReviewRevisionMemoItems"
+  | "loadRecentReviewRevisionMemoItems"
+  | "clearTaskWorkflowState"
+  | "isTaskWorkflowInterrupted"
+  | "randomDelay"
+  | "sleepMs"
+  | "buildMeetingPrompt"
+> & {
+  reviewInFlight: Set<string>;
+  reviewRoundState: Map<string, number>;
+  reviewMeetingOneShotTimeoutMs?: number;
+  REVIEW_MAX_ROUNDS: number;
+  REVIEW_MAX_MEMO_ITEMS_PER_ROUND: number;
+  REVIEW_MAX_MEMO_ITEMS_PER_DEPT: number;
+  REVIEW_MAX_REMEDIATION_REQUESTS: number;
+  REVIEW_MAX_REVISION_SIGNALS_PER_DEPT_PER_ROUND: number;
+  REVIEW_MAX_REVISION_SIGNALS_PER_ROUND: number;
+};
 
 export function createReviewConsensusTools(deps: ReviewConsensusDeps) {
   const {
@@ -66,7 +119,7 @@ export function createReviewConsensusTools(deps: ReviewConsensusDeps) {
 
     void (async () => {
       let meetingId: string | null = null;
-      const leaders = getTaskReviewLeaders(taskId, departmentId);
+      const leaders: AgentRow[] = getTaskReviewLeaders(taskId, departmentId) as AgentRow[];
       if (leaders.length === 0) {
         reviewInFlight.delete(taskId);
         onApproved();
@@ -132,11 +185,11 @@ export function createReviewConsensusTools(deps: ReviewConsensusDeps) {
         const isRound2Merge = roundMode === "merge_synthesis";
         const isFinalDecisionRound = roundMode === "final_decision";
 
-        const planningLeader = leaders.find((l: any) => l.department_id === "planning") ?? leaders[0];
-        const otherLeaders = leaders.filter((l: any) => l.id !== planningLeader.id);
+        const planningLeader = leaders.find((l) => l.department_id === "planning") ?? leaders[0];
+        const otherLeaders = leaders.filter((l) => l.id !== planningLeader.id);
         let needsRevision = false;
-        let reviseOwner: any = null;
-        const seatIndexByAgent = new Map(leaders.slice(0, 6).map((leader: any, idx: number) => [leader.id, idx]));
+        let reviseOwner: AgentRow | null = null;
+        const seatIndexByAgent = new Map(leaders.slice(0, 6).map((leader, idx: number) => [leader.id, idx]));
 
         const taskCtx = db
           .prepare("SELECT description, project_path, workflow_pack_key FROM tasks WHERE id = ?")
@@ -152,7 +205,7 @@ export function createReviewConsensusTools(deps: ReviewConsensusDeps) {
         });
         const lang = (typeof deps.getPreferredLanguage === "function" ? deps.getPreferredLanguage() : null)
           || resolveLang(taskDescription ?? taskTitle);
-        const transcript: any[] = [];
+        const transcript: MeetingTranscriptEntry[] = [];
         const oneShotTimeoutMs = Math.max(5_000, Number(reviewMeetingOneShotTimeoutMs ?? 65_000));
         const oneShotOptions = { projectPath, timeoutMs: oneShotTimeoutMs, noTools: true };
         const isTimeoutRun = (run: { text?: string; error?: string } | null | undefined): boolean => {
@@ -170,10 +223,10 @@ export function createReviewConsensusTools(deps: ReviewConsensusDeps) {
           return `${compacted}\n\n[retry] Previous attempt timed out. Respond concisely in short actionable points.`;
         };
         const runMeetingOneShotWithRetry = async (
-          agent: any,
+          agent: AgentRow,
           prompt: string,
           phase: "opening" | "feedback" | "summary" | "approval",
-        ): Promise<any> => {
+        ): Promise<OneShotRunResult> => {
           const first = await runAgentOneShot(agent, prompt, oneShotOptions);
           if (!isTimeoutRun(first)) return first;
           appendTaskLog(
@@ -210,7 +263,7 @@ export function createReviewConsensusTools(deps: ReviewConsensusDeps) {
           return true;
         };
 
-        const pushTranscript = (leader: any, content: string) => {
+        const pushTranscript = (leader: AgentRow, content: string) => {
           transcript.push({
             speaker_agent_id: leader.id,
             speaker: getAgentDisplayName(leader, lang),
@@ -220,7 +273,7 @@ export function createReviewConsensusTools(deps: ReviewConsensusDeps) {
           });
         };
         const speak = (
-          leader: any,
+          leader: AgentRow,
           messageType: string,
           receiverType: string,
           receiverId: string | null,
@@ -513,14 +566,14 @@ export function createReviewConsensusTools(deps: ReviewConsensusDeps) {
           scheduleNextReviewRound,
         });
         if (shouldReturn) return;
-      } catch (err: any) {
+      } catch (err: unknown) {
         if (isTaskWorkflowInterrupted(taskId)) {
           if (meetingId) finishMeetingMinutes(meetingId, "failed");
           dismissLeadersFromClientOffice(taskId, leaders);
           clearTaskWorkflowState(taskId);
           return;
         }
-        const msg = err?.message ? String(err.message) : String(err);
+        const msg = err instanceof Error ? err.message : String(err);
         appendTaskLog(taskId, "error", `Review consensus meeting error: ${msg}`);
         const errLang = resolveLang(taskTitle);
         notifyClient(

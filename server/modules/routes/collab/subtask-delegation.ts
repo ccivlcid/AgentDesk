@@ -252,7 +252,7 @@ export function initializeSubtaskDelegation(deps: SubtaskDelegationDeps) {
       .prepare(
         "SELECT * FROM subtasks WHERE task_id = ? AND target_department_id IS NOT NULL AND status NOT IN ('done', 'cancelled') AND (delegated_task_id IS NULL OR delegated_task_id = '') ORDER BY created_at",
       )
-      .all(taskId) as unknown as SubtaskRow[];
+      .all(taskId) as SubtaskRow[];
 
     // VIDEO_FINAL_RENDER must wait for other subtasks — exclude from initial batch
     const eligible = opts?.includeRender
@@ -356,7 +356,7 @@ export function initializeSubtaskDelegation(deps: SubtaskDelegationDeps) {
         .prepare(
           "SELECT * FROM subtasks WHERE task_id = ? AND status NOT IN ('done', 'cancelled') AND title LIKE '%[VIDEO_FINAL_RENDER]%'",
         )
-        .all(parentTaskId) as unknown as SubtaskRow[];
+        .all(parentTaskId) as SubtaskRow[];
 
       const nonRenderRemaining = remaining.cnt - pendingRender.length;
 
@@ -374,7 +374,7 @@ export function initializeSubtaskDelegation(deps: SubtaskDelegationDeps) {
           .prepare(
             "SELECT * FROM subtasks WHERE task_id = ? AND status NOT IN ('done', 'cancelled') AND title LIKE '%[VIDEO_FINAL_RENDER]%'",
           )
-          .all(parentTaskId) as unknown as SubtaskRow[];
+          .all(parentTaskId) as SubtaskRow[];
         const undelegated = refreshedPendingRender.filter((s) => !String(s.delegated_task_id ?? "").trim());
         if (undelegated.length > 0) {
           // Unblock render subtasks so delegation can proceed

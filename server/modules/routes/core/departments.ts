@@ -1,3 +1,4 @@
+import type { SQLInputValue } from "node:sqlite";
 import logger from "../../../lib/logger.ts";
 import type { RuntimeContext } from "../../../types/runtime-context.ts";
 import { DEFAULT_WORKFLOW_PACK_KEY } from "../../workflow/packs/definitions.ts";
@@ -7,6 +8,13 @@ export type DepartmentRouteDeps = Pick<
   RuntimeContext,
   "app" | "db" | "broadcast" | "normalizeTextField" | "runInTransaction"
 >;
+
+function workflowPackKeyFromBody(body: unknown): unknown {
+  if (body !== null && typeof body === "object" && !Array.isArray(body)) {
+    return (body as Record<string, unknown>)["workflow_pack_key"];
+  }
+  return undefined;
+}
 
 export function registerDepartmentRoutes(deps: DepartmentRouteDeps): void {
   const { app, db, broadcast, normalizeTextField, runInTransaction } = deps;
@@ -71,7 +79,7 @@ export function registerDepartmentRoutes(deps: DepartmentRouteDeps): void {
     const id = String(req.params.id);
     const includeSeed = parseIncludeSeedParam(req.query?.include_seed);
     const seedFilterClause = includeSeed ? "" : " AND id NOT LIKE '%-seed-%'";
-    const department = getDepartmentForPack(db as any, id);
+    const department = getDepartmentForPack(db, id);
     if (!department) return res.status(404).json({ error: "not_found" });
 
     const agents = db
@@ -84,16 +92,17 @@ export function registerDepartmentRoutes(deps: DepartmentRouteDeps): void {
 
   app.post("/api/departments", (req, res) => {
     try {
-      const resolved = resolvePackKey(req.query?.workflow_pack_key, (req.body as any)?.workflow_pack_key);
+      const resolved = resolvePackKey(req.query?.workflow_pack_key, workflowPackKeyFromBody(req.body));
       if (resolved.invalid) return res.status(400).json({ error: "invalid_workflow_pack_key" });
       const packKey = resolved.packKey;
       const body = req.body;
       if (!body || typeof body !== "object" || Array.isArray(body)) {
         return res.status(400).json({ error: "invalid_payload" });
       }
+      const b = body as Record<string, unknown>;
 
-      const id = normalizeTextField((body as any).id);
-      const name = normalizeTextField((body as any).name);
+      const id = normalizeTextField(b["id"]);
+      const name = normalizeTextField(b["name"]);
       if (!id || !name) return res.status(400).json({ error: "id_and_name_required" });
       if (!/^[a-z0-9][a-z0-9_-]{0,63}$/.test(id)) {
         return res.status(400).json({ error: "invalid_department_id" });
@@ -102,29 +111,30 @@ export function registerDepartmentRoutes(deps: DepartmentRouteDeps): void {
       const existing = db.prepare("SELECT id FROM departments WHERE id = ?").get(id);
       if (existing) return res.status(409).json({ error: "department_id_exists" });
 
-      const nameKo = normalizeTextField((body as any).name_ko) ?? "";
-      const nameJa = normalizeTextField((body as any).name_ja) ?? "";
-      const nameZh = normalizeTextField((body as any).name_zh) ?? "";
-      const icon = normalizeTextField((body as any).icon) ?? "📁";
-      const colorInput = normalizeTextField((body as any).color);
+      const nameKo = normalizeTextField(b["name_ko"]) ?? "";
+      const nameJa = normalizeTextField(b["name_ja"]) ?? "";
+      const nameZh = normalizeTextField(b["name_zh"]) ?? "";
+      const icon = normalizeTextField(b["icon"]) ?? "📁";
+      const colorInput = normalizeTextField(b["color"]);
       const color = colorInput && /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(colorInput) ? colorInput : "#6b7280";
-      const description = normalizeTextField((body as any).description);
-      const prompt = normalizeTextField((body as any).prompt);
+      const description = normalizeTextField(b["description"]);
+      const prompt = normalizeTextField(b["prompt"]);
 
-      const maxOrder = ((db.prepare("SELECT MAX(sort_order) AS m FROM departments").get() as any)?.m ?? 0);
+      const maxRow = db.prepare("SELECT MAX(sort_order) AS m FROM departments").get() as { m: number | null } | undefined;
+      const maxOrder = typeof maxRow?.m === "number" && Number.isFinite(maxRow.m) ? maxRow.m : 0;
       try {
         db.prepare(
           "INSERT INTO departments (id, name, name_ko, name_ja, name_zh, icon, color, description, prompt, sort_order) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         ).run(id, name, nameKo, nameJa, nameZh, icon, color, description || null, prompt || null, maxOrder + 1);
-      } catch (err: any) {
-        const msg = String(err?.message ?? err);
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
         if (msg.includes("idx_departments_sort_order") || msg.includes("departments.sort_order")) {
           return res.status(409).json({ error: "sort_order_conflict" });
         }
         throw err;
       }
 
-      const dept = getDepartmentForPack(db as any, id);
+      const dept = getDepartmentForPack(db, id);
       broadcast("departments_changed", { workflow_pack_key: packKey });
       res.status(201).json({ department: dept });
     } catch (err) {
@@ -135,7 +145,7 @@ export function registerDepartmentRoutes(deps: DepartmentRouteDeps): void {
 
   app.patch("/api/departments/:id", (req, res, next) => {
     try {
-      const resolved = resolvePackKey(req.query?.workflow_pack_key, (req.body as any)?.workflow_pack_key);
+      const resolved = resolvePackKey(req.query?.workflow_pack_key, workflowPackKeyFromBody(req.body));
       if (resolved.invalid) return res.status(400).json({ error: "invalid_workflow_pack_key" });
       const packKey = resolved.packKey;
       const id = String(req.params.id);
@@ -144,73 +154,76 @@ export function registerDepartmentRoutes(deps: DepartmentRouteDeps): void {
       if (!body || typeof body !== "object" || Array.isArray(body)) {
         return res.status(400).json({ error: "invalid_payload" });
       }
+      const b = body as Record<string, unknown>;
       const existing = db.prepare("SELECT * FROM departments WHERE id = ?").get(id);
       if (!existing) return res.status(404).json({ error: "not_found" });
 
       let nextSortOrder: number | undefined;
-      if ((body as any).sort_order !== undefined) {
-        const parsed = Number((body as any).sort_order);
+      if (b["sort_order"] !== undefined) {
+        const parsed = Number(b["sort_order"]);
         if (!Number.isInteger(parsed) || parsed < 0) {
           return res.status(400).json({ error: "invalid_sort_order" });
         }
         nextSortOrder = parsed;
-        const conflict = db.prepare("SELECT id FROM departments WHERE sort_order = ? AND id != ?").get(nextSortOrder, id);
+        const conflict = db
+          .prepare("SELECT id FROM departments WHERE sort_order = ? AND id != ?")
+          .get(nextSortOrder, id) as { id: string } | undefined;
         if (conflict) {
-          return res.status(409).json({ error: "sort_order_conflict", conflicting_id: (conflict as any).id });
+          return res.status(409).json({ error: "sort_order_conflict", conflicting_id: conflict.id });
         }
       }
 
       const sets: string[] = [];
-      const vals: any[] = [];
+      const vals: SQLInputValue[] = [];
 
-      if ((body as any).name !== undefined) {
-        const value = normalizeTextField((body as any).name);
+      if (b["name"] !== undefined) {
+        const value = normalizeTextField(b["name"]);
         if (!value) return res.status(400).json({ error: "invalid_name" });
         sets.push("name = ?");
         vals.push(value);
       }
-      if ((body as any).name_ko !== undefined) {
+      if (b["name_ko"] !== undefined) {
         sets.push("name_ko = ?");
-        vals.push(normalizeTextField((body as any).name_ko) ?? "");
+        vals.push(normalizeTextField(b["name_ko"]) ?? "");
       }
-      if ((body as any).name_ja !== undefined) {
+      if (b["name_ja"] !== undefined) {
         sets.push("name_ja = ?");
-        vals.push(normalizeTextField((body as any).name_ja) ?? "");
+        vals.push(normalizeTextField(b["name_ja"]) ?? "");
       }
-      if ((body as any).name_zh !== undefined) {
+      if (b["name_zh"] !== undefined) {
         sets.push("name_zh = ?");
-        vals.push(normalizeTextField((body as any).name_zh) ?? "");
+        vals.push(normalizeTextField(b["name_zh"]) ?? "");
       }
-      if ((body as any).icon !== undefined) {
-        const value = normalizeTextField((body as any).icon);
+      if (b["icon"] !== undefined) {
+        const value = normalizeTextField(b["icon"]);
         if (!value) return res.status(400).json({ error: "invalid_icon" });
         sets.push("icon = ?");
         vals.push(value);
       }
-      if ((body as any).color !== undefined) {
-        const value = normalizeTextField((body as any).color);
+      if (b["color"] !== undefined) {
+        const value = normalizeTextField(b["color"]);
         if (!value || !/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(value)) {
           return res.status(400).json({ error: "invalid_color" });
         }
         sets.push("color = ?");
         vals.push(value);
       }
-      if ((body as any).description !== undefined) {
-        if ((body as any).description === null) {
+      if (b["description"] !== undefined) {
+        if (b["description"] === null) {
           sets.push("description = ?");
           vals.push(null);
         } else {
           sets.push("description = ?");
-          vals.push(normalizeTextField((body as any).description) || null);
+          vals.push(normalizeTextField(b["description"]) || null);
         }
       }
-      if ((body as any).prompt !== undefined) {
-        if ((body as any).prompt === null) {
+      if (b["prompt"] !== undefined) {
+        if (b["prompt"] === null) {
           sets.push("prompt = ?");
           vals.push(null);
         } else {
           sets.push("prompt = ?");
-          vals.push(normalizeTextField((body as any).prompt) || null);
+          vals.push(normalizeTextField(b["prompt"]) || null);
         }
       }
       if (nextSortOrder !== undefined) {
@@ -222,15 +235,15 @@ export function registerDepartmentRoutes(deps: DepartmentRouteDeps): void {
       vals.push(id);
       try {
         db.prepare(`UPDATE departments SET ${sets.join(", ")} WHERE id = ?`).run(...vals);
-      } catch (err: any) {
-        const msg = String(err?.message ?? err);
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
         if (msg.includes("idx_departments_sort_order") || msg.includes("departments.sort_order")) {
           return res.status(409).json({ error: "sort_order_conflict" });
         }
         throw err;
       }
 
-      const dept = getDepartmentForPack(db as any, id);
+      const dept = getDepartmentForPack(db, id);
       broadcast("departments_changed", { workflow_pack_key: packKey });
       res.json({ department: dept });
     } catch (err) {
@@ -241,7 +254,7 @@ export function registerDepartmentRoutes(deps: DepartmentRouteDeps): void {
 
   app.delete("/api/departments/:id", (req, res) => {
     try {
-      const resolved = resolvePackKey(req.query?.workflow_pack_key, (req.body as any)?.workflow_pack_key);
+      const resolved = resolvePackKey(req.query?.workflow_pack_key, workflowPackKeyFromBody(req.body));
       if (resolved.invalid) return res.status(400).json({ error: "invalid_workflow_pack_key" });
       const packKey = resolved.packKey;
       const id = String(req.params.id);
@@ -251,21 +264,19 @@ export function registerDepartmentRoutes(deps: DepartmentRouteDeps): void {
         return res.status(403).json({ error: "department_protected" });
       }
 
-      const agentCount = ((
-        db
-          .prepare(
-            `SELECT COUNT(*) AS c FROM agents WHERE department_id = ?${hasAgentWorkflowPackColumn ? " AND COALESCE(workflow_pack_key, 'development') = 'development'" : ""}`,
-          )
-          .get(id) as any
-      )?.c ?? 0);
+      const agentRow = db
+        .prepare(
+          `SELECT COUNT(*) AS c FROM agents WHERE department_id = ?${hasAgentWorkflowPackColumn ? " AND COALESCE(workflow_pack_key, 'development') = 'development'" : ""}`,
+        )
+        .get(id) as { c: number } | undefined;
+      const agentCount = Number(agentRow?.c ?? 0);
       if (agentCount > 0) return res.status(409).json({ error: "department_has_agents", agent_count: agentCount });
-      const taskCount = ((
-        db
-          .prepare(
-            "SELECT COUNT(*) AS c FROM tasks WHERE department_id = ? AND COALESCE(workflow_pack_key, 'development') = 'development'",
-          )
-          .get(id) as any
-      )?.c ?? 0);
+      const taskRow = db
+        .prepare(
+          "SELECT COUNT(*) AS c FROM tasks WHERE department_id = ? AND COALESCE(workflow_pack_key, 'development') = 'development'",
+        )
+        .get(id) as { c: number } | undefined;
+      const taskCount = Number(taskRow?.c ?? 0);
       if (taskCount > 0) return res.status(409).json({ error: "department_has_tasks", task_count: taskCount });
 
       db.prepare("DELETE FROM departments WHERE id = ?").run(id);
@@ -279,7 +290,7 @@ export function registerDepartmentRoutes(deps: DepartmentRouteDeps): void {
 
   app.patch("/api/departments/reorder", (req, res) => {
     try {
-      const resolved = resolvePackKey(req.query?.workflow_pack_key, (req.body as any)?.workflow_pack_key);
+      const resolved = resolvePackKey(req.query?.workflow_pack_key, workflowPackKeyFromBody(req.body));
       if (resolved.invalid) return res.status(400).json({ error: "invalid_workflow_pack_key" });
       const packKey = resolved.packKey;
       const body = req.body;

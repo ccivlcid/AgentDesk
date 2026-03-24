@@ -20,7 +20,7 @@ import { useAgentStore } from "../../store/agentStore";
 import { useProjectStore } from "../../store/projectStore";
 import { useI18n } from "../../i18n";
 import AgentCompositionRunModal from "./AgentCompositionRunModal";
-import CompAgentNode, { type CompAgentNodeData } from "./nodes/CompAgentNode";
+import CompAgentNode, { IconRobot, type CompAgentNodeData } from "./nodes/CompAgentNode";
 import type { Agent, Department } from "../../types";
 
 const NODE_TYPES: NodeTypes = { comp_agent: CompAgentNode };
@@ -79,7 +79,7 @@ export default function AgentCompositionBuilder() {
     return {
       agentId: agent.id,
       name: agent.name,
-      emoji: agent.avatar_emoji ?? "🤖",
+      emoji: agent.avatar_emoji ?? "",
       role: agent.role ?? "junior",
       deptName: dept?.name ?? "",
       provider: agent.cli_provider ?? "",
@@ -318,9 +318,16 @@ export default function AgentCompositionBuilder() {
               fontWeight: 600,
             }}
           >
-            {saved
-              ? t({ ko: "저장됨 ✓", en: "Saved ✓", ja: "保存済み ✓", zh: "已保存 ✓" })
-              : t({ ko: "저장", en: "Save", ja: "保存", zh: "保存" })}
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+              {saved && (
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              )}
+              {saved
+                ? t({ ko: "저장됨", en: "Saved", ja: "保存済み", zh: "已保存" })
+                : t({ ko: "저장", en: "Save", ja: "保存", zh: "保存" })}
+            </span>
           </button>
           <div style={{ width: 1, height: 20, background: "var(--th-border)", alignSelf: "center" }} />
           <button
@@ -338,7 +345,12 @@ export default function AgentCompositionBuilder() {
               color: "#fff",
             }}
           >
-            ▶ {t({ ko: "실행", en: "Run", ja: "実行", zh: "运行" })}
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                <polygon points="5 3 19 12 5 21 5 3" />
+              </svg>
+              {t({ ko: "실행", en: "Run", ja: "実行", zh: "运行" })}
+            </span>
           </button>
         </div>
       </div>
@@ -397,7 +409,10 @@ export default function AgentCompositionBuilder() {
                   title={t({ ko: "삭제", en: "Delete", ja: "削除", zh: "删除" })}
                   className="hover:!text-red-400"
                 >
-                  ×
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
                 </button>
               </div>
             ))
@@ -486,8 +501,8 @@ export default function AgentCompositionBuilder() {
                         className="hover:bg-[var(--th-hover-bg)] hover:border-[var(--th-border)]"
                         title={t({ ko: "캔버스로 드래그", en: "Drag to canvas", ja: "キャンバスにドラッグ", zh: "拖到画布" })}
                       >
-                        <span style={{ fontSize: 16, lineHeight: 1, flexShrink: 0 }}>
-                          {agent.avatar_emoji ?? "🤖"}
+                        <span style={{ fontSize: 16, lineHeight: 1, flexShrink: 0, display: "inline-flex", color: "var(--th-text-primary)" }}>
+                          {agent.avatar_emoji ? <span>{agent.avatar_emoji}</span> : <IconRobot size={16} />}
                         </span>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div

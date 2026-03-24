@@ -254,32 +254,32 @@ export function registerRoutesPartA(ctx: RuntimeContext): Record<string, never> 
     try {
       const sessions = listMessengerSessions();
       res.json({ ok: true, sessions });
-    } catch (err: any) {
-      res.status(500).json({ ok: false, error: err?.message || String(err) });
+    } catch (err: unknown) {
+      res.status(500).json({ ok: false, error: err instanceof Error ? err.message : String(err) });
     }
   });
 
   app.get("/api/messenger/receiver/telegram", (_req, res) => {
     try {
       res.json({ ok: true, status: getTelegramReceiverStatus() });
-    } catch (err: any) {
-      res.status(500).json({ ok: false, error: err?.message || String(err) });
+    } catch (err: unknown) {
+      res.status(500).json({ ok: false, error: err instanceof Error ? err.message : String(err) });
     }
   });
 
   app.get("/api/messenger/receiver/discord", (_req, res) => {
     try {
       res.json({ ok: true, status: getDiscordReceiverStatus() });
-    } catch (err: any) {
-      res.status(500).json({ ok: false, error: err?.message || String(err) });
+    } catch (err: unknown) {
+      res.status(500).json({ ok: false, error: err instanceof Error ? err.message : String(err) });
     }
   });
 
   app.get("/api/messenger/receiver/slack", (_req, res) => {
     try {
       res.json({ ok: true, status: getSlackReceiverStatus() });
-    } catch (err: any) {
-      res.status(500).json({ ok: false, error: err?.message || String(err) });
+    } catch (err: unknown) {
+      res.status(500).json({ ok: false, error: err instanceof Error ? err.message : String(err) });
     }
   });
 
@@ -292,8 +292,8 @@ export function registerRoutesPartA(ctx: RuntimeContext): Record<string, never> 
       }
       const channels = await listDiscordChannelsByToken(token);
       return res.json({ ok: true, channels });
-    } catch (err: any) {
-      const message = err?.message || String(err);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
       const status = /discord api failed \((\d{3})\)/.exec(message)?.[1];
       if (status === "401" || status === "403") {
         return res.status(Number(status)).json({ ok: false, error: "discord_auth_failed" });
@@ -350,8 +350,8 @@ export function registerRoutesPartA(ctx: RuntimeContext): Record<string, never> 
         text,
       });
       return res.json({ ok: true });
-    } catch (err: any) {
-      res.status(500).json({ ok: false, error: err?.message || String(err) });
+    } catch (err: unknown) {
+      res.status(500).json({ ok: false, error: err instanceof Error ? err.message : String(err) });
     }
   });
 
@@ -491,7 +491,7 @@ export function registerRoutesPartA(ctx: RuntimeContext): Record<string, never> 
     spawnCliAgent,
     handleTaskRunComplete,
     buildAvailableSkillsPromptBlock,
-    checkCostBlockExecution: (...args: any[]) => (ctx as any).checkCostBlockExecution?.(...args),
+    checkCostBlockExecution: __ctx.checkCostBlockExecution,
     stopProgressTimer,
     rollbackTaskWorktree,
     clearTaskWorkflowState,

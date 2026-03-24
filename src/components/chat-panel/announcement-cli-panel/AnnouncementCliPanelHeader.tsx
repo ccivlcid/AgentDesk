@@ -116,7 +116,7 @@ export function AnnouncementCliPanelHeader({
               transition: "all 0.15s",
             }}
           >
-            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" style={{ width: 12, height: 12 }}>
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="6.5" cy="6.5" r="4" />
               <path d="M10 10l3.5 3.5" strokeLinecap="round" />
             </svg>
@@ -150,13 +150,14 @@ export function AnnouncementCliPanelHeader({
               }}
             >
               <svg
+                width="12"
+                height="12"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                style={{ width: 12, height: 12 }}
               >
                 <path d="M3 6h18" />
                 <path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2" />

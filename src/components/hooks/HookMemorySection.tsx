@@ -35,7 +35,11 @@ export default function HookMemorySection({
         onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "none"; }}
       >
         <div className="flex items-center gap-2">
-          <span style={{ fontSize: 9, color: "var(--th-text-muted)", transition: "transform 0.18s", display: "inline-block", transform: collapsed ? "rotate(-90deg)" : "rotate(0deg)" }}>▾</span>
+          <span style={{ fontSize: 9, color: "var(--th-text-muted)", transition: "transform 0.18s", display: "inline-flex", alignItems: "center", transform: collapsed ? "rotate(-90deg)" : "rotate(0deg)" }}>
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </span>
           <span className="text-sm font-semibold font-mono" style={{ color: "var(--th-text-heading)" }}>
             {t({ ko: "학습 메모리", en: "Learning Memory", ja: "学習メモリ", zh: "学习记忆" })}
           </span>

@@ -44,8 +44,16 @@ function CliSection({ label, open, onToggle, action, children }: {
         style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 14px", background: "var(--th-bg-elevated)", cursor: "pointer" }}
         onClick={onToggle}
       >
-        <span style={{ ...mono, fontSize: "9px", color: "var(--th-accent)", fontWeight: 700 }}>
-          {open ? "▾" : "▸"}
+        <span style={{ ...mono, fontSize: "9px", color: "var(--th-accent)", fontWeight: 700, display: "inline-flex" }}>
+          {open ? (
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          ) : (
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <polyline points="9 6 15 12 9 18" />
+            </svg>
+          )}
         </span>
         <span style={{ ...mono, fontSize: "9px", fontWeight: 700, letterSpacing: "0.08em", color: "var(--th-text-muted)", flex: 1 }}>
           {label}
@@ -131,8 +139,16 @@ export default function DeliverableCard({ report, artifacts, agent, agents, onAr
           onMouseLeave={(e) => { if (!expanded) (e.currentTarget as HTMLElement).style.background = "var(--th-bg-primary)"; }}
         >
           {/* 토글 아이콘 */}
-          <span style={{ fontSize: "9px", color: "var(--th-text-muted)", width: 10, flexShrink: 0 }}>
-            {expanded ? "▾" : "▸"}
+          <span style={{ fontSize: "9px", color: "var(--th-text-muted)", width: 10, flexShrink: 0, display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+            {expanded ? (
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
+            ) : (
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <polyline points="9 6 15 12 9 18" />
+              </svg>
+            )}
           </span>
 
           {/* 상태 배지 */}
@@ -242,7 +258,14 @@ export default function DeliverableCard({ report, artifacts, agent, agents, onAr
                         style={{ ...mono, fontSize: "9px", fontWeight: 700, padding: "2px 8px", border: "1px solid rgba(245,158,11,0.4)", background: "rgba(245,158,11,0.08)", color: "var(--th-accent)", textDecoration: "none", letterSpacing: "0.04em" }}
                         title={t({ ko: "전체 ZIP 다운로드", en: "Download all as ZIP", ja: "全てZIPでDL", zh: "全部下载ZIP" })}
                       >
-                        ↓ ZIP
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="7 10 12 15 17 10" />
+                            <line x1="12" y1="15" x2="12" y2="3" />
+                          </svg>
+                          ZIP
+                        </span>
                       </a>
                     )}
                   </div>

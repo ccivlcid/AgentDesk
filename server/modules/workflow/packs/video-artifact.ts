@@ -1,11 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
+import type { DatabaseSync } from "node:sqlite";
 
-type DbLike = {
-  prepare: (sql: string) => {
-    get: (...params: unknown[]) => Record<string, unknown> | undefined;
-  };
-};
+type DbLike = Pick<DatabaseSync, "prepare">;
 
 export type VideoArtifactSpec = {
   fileName: string;

@@ -1,6 +1,6 @@
 # AgentDesk — UI Screens & Interaction Specification
 
-> **Last updated:** 2026-03-23 (Terminal Window: 실제 PTY 터미널 + 에이전트 셀렉트 + CLI 자동 실행으로 전면 교체)
+> **Last updated:** 2026-03-23 (Terminal Window: fully replaced with real PTY terminal + agent selector + auto CLI execution)
 > Menu Bar + Desktop Icons + Dock + App Windows structure
 > **Design reference:** `DESIGN.md` (CSS variables)
 
@@ -234,16 +234,16 @@ Multiple windows can be open simultaneously. Managed via `uiStore.openWindows: S
 ### 5-6. Terminal Window (>_ icon)
 
 **File:** `src/components/windows/CliWindow.tsx`
-**Trigger:** Click desktop icon `>_`, Dock `>_` 버튼, `g e` 단축키
+**Trigger:** Click desktop icon `>_`, Dock `>_` button, or `g e` shortcut
 
-실제 PTY(node-pty) 기반 셸 터미널. 에이전트 선택 시 해당 CLI를 자동 실행.
+A real PTY (node-pty) based shell terminal. When an agent is selected, the corresponding CLI is automatically launched.
 
 ```
 ┌──────────────────────────────────────────────────────┐
 │ ◉ ◎ ◎  Terminal                          [─][×]    │
 │ ─────────────────────────────────────────────────── │
 │                                                      │
-│  Windows PowerShell / bash (실제 PTY 세션)           │
+│  Windows PowerShell / bash (real PTY session)        │
 │                                                      │
 │  C:\project\my-app> claude                          │
 │  ╔═══════════════════════════════════════╗           │
@@ -253,20 +253,20 @@ Multiple windows can be open simultaneously. Managed via `uiStore.openWindows: S
 │  >                                                   │
 │                                                      │
 │ ─────────────────────────────────────────────────── │
-│ ● [🤖 dev-01 · claude  ▾]  [▶ 실행]  📁 my-app · claude │
+│ ● [🤖 dev-01 · claude  ▾]  [▶ Run]  📁 my-app · claude │
 └──────────────────────────────────────────────────────┘
 ```
 
-**하단 에이전트 셀렉트 바:**
-- 상태 dot (초록=idle / 황=working / 회색=offline)
-- `<select>` 드롭다운 — `🤖 이름 · cli명령어` 형식
-- 에이전트 선택 시 자동 실행 순서:
-  1. `cd "<project_path>"` (프로젝트 설정 시)
-  2. `cli_provider` 매핑 명령어 실행
-- ▶ 재실행 버튼 — 동일 세션에서 CLI 재기동
-- api / ollama 타입은 버튼 비활성
+**Bottom Agent Select Bar:**
+- Status dot (green=idle / amber=working / gray=offline)
+- `<select>` dropdown — format: `🤖 name · cli_command`
+- When an agent is selected, auto-execution order:
+  1. `cd "<project_path>"` (when a project is configured)
+  2. Execute the mapped `cli_provider` command
+- ▶ Re-run button — restarts CLI in the same session
+- api / ollama types have the button disabled
 
-**cli_provider → 실행 명령어:**
+**cli_provider → execution command:**
 | provider | command |
 |----------|---------|
 | claude | `claude` |
@@ -276,9 +276,9 @@ Multiple windows can be open simultaneously. Managed via `uiStore.openWindows: S
 | copilot | `copilot` |
 | cursor | `cursor .` |
 | antigravity | `antigravity` |
-| api / ollama | (없음) |
+| api / ollama | (none) |
 
-**프로젝트 전환:** 새 PTY 세션 자동 생성 (`cwd` = 새 프로젝트 `project_path`)
+**Project switching:** A new PTY session is automatically created (`cwd` = new project's `project_path`)
 
 ---
 
@@ -287,24 +287,24 @@ Multiple windows can be open simultaneously. Managed via `uiStore.openWindows: S
 Opened as a layer on top of the desktop when clicking an item in an app window or desktop icon.
 
 ### 6-1. AgentDetail Slide Panel
-**File:** `src/components/agent-detail/AgentDetailPanel.tsx` _(구현 예정)_
+**File:** `src/components/agent-detail/AgentDetailPanel.tsx` _(implementation pending)_
 **Design doc:** `docs/features/agent-detail-panel.md`
 **Trigger:**
-- AgentManager 에이전트 카드 클릭
-- Flow Graph 에이전트 노드 클릭
+- Click an agent card in AgentManager
+- Click an agent node in Flow Graph
 
-**위치:** `position: fixed`, 우측 슬라이드, 메뉴바(28px) ~ Dock(48px), 너비 360px, `z-index: 300`
-**애니메이션:** `translateX(360px → 0)` 200ms ease-out / 닫기 160ms ease-in
-**상태:** `uiStore.selectedAgentId` (이미 존재) — 같은 에이전트 재클릭 시 토글 닫기, ESC 닫기
+**Position:** `position: fixed`, right slide, from menu bar (28px) to Dock (48px), width 360px, `z-index: 300`
+**Animation:** `translateX(360px → 0)` 200ms ease-out / close 160ms ease-in
+**State:** `uiStore.selectedAgentId` (already exists) — re-clicking the same agent toggles it closed, ESC closes
 
-**섹션 구성 (단일 스크롤, 탭 없음):**
-1. **헤더** — 아바타, 이름, 역할, 상태 뱃지, CLI 프로바이더, 부서
-2. **현재 태스크** — 제목, 경과 시간, 터미널 바로가기 (`current_task_id` 없으면 숨김)
-3. **스킬** — `/api/skills/available?agent_id=` (뱃지 3개 + 초과 시 +N)
-4. **규칙** — `/api/agent-rules?agent_id=&limit=5` (scope 뱃지)
-5. **메모리** — `/api/memory?agent_id=&limit=5`
-6. **최근 태스크** — `/api/tasks?agent_id=&limit=3` (✓/✗ 상태)
-7. **오늘 비용** — `/api/agents/:id/cost-summary` (토큰 수, USD, 성공률)
+**Section layout (single scroll, no tabs):**
+1. **Header** — Avatar, name, role, status badge, CLI provider, department
+2. **Current Task** — Title, elapsed time, terminal shortcut (hidden if no `current_task_id`)
+3. **Skills** — `/api/skills/available?agent_id=` (3 badges + overflow +N)
+4. **Rules** — `/api/agent-rules?agent_id=&limit=5` (scope badges)
+5. **Memory** — `/api/memory?agent_id=&limit=5`
+6. **Recent Tasks** — `/api/tasks?agent_id=&limit=3` (✓/✗ status)
+7. **Today's Cost** — `/api/agents/:id/cost-summary` (token count, USD, success rate)
 
 ### 6-2. TerminalPanel Drawer
 **File:** `src/components/TerminalPanel.tsx`
@@ -662,7 +662,7 @@ src/
 
 | Item | Value |
 |------|-------|
-| Trigger | AgentDesk app menu → "↓ 데이터 내보내기 / Export Data..." |
+| Trigger | AgentDesk app menu → "↓ Export Data..." |
 | Width | 640px centered modal |
 | Export types | 2×2 card grid: Tasks / Deliverables / Agents / Costs (icons + descriptions) |
 | Format toggle | CSV / JSON toggle buttons |

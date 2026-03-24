@@ -10,6 +10,8 @@
  */
 
 import { randomUUID } from "node:crypto";
+import type { DatabaseSync, SQLOutputValue } from "node:sqlite";
+import { castSqliteRows } from "../../../lib/sqlite-row-cast.ts";
 import logger from "../../../lib/logger";
 
 // ---------------------------------------------------------------------------
@@ -18,11 +20,12 @@ import logger from "../../../lib/logger";
 
 interface CronField {
   values: Set<number>;
-  any: boolean;
+  /** true when field is `*` (matches any value in range) */
+  isWildcard: boolean;
 }
 
 function parseCronField(field: string, min: number, max: number): CronField {
-  if (field === "*") return { values: new Set(), any: true };
+  if (field === "*") return { values: new Set(), isWildcard: true };
 
   const values = new Set<number>();
   for (const part of field.split(",")) {
@@ -46,7 +49,7 @@ function parseCronField(field: string, min: number, max: number): CronField {
       values.add(num);
     }
   }
-  return { values, any: false };
+  return { values, isWildcard: false };
 }
 
 interface ParsedCron {
@@ -70,7 +73,7 @@ export function parseCronExpression(expr: string): ParsedCron | null {
 }
 
 function fieldMatches(field: CronField, value: number): boolean {
-  return field.any || field.values.has(value);
+  return field.isWildcard || field.values.has(value);
 }
 
 function cronMatchesDate(cron: ParsedCron, date: Date): boolean {
@@ -124,23 +127,23 @@ export function describeCron(expr: string, lang: "en" | "ko" = "en"): string {
   const parts: string[] = [];
 
   // Day of week
-  if (!cron.dayOfWeek.any) {
+  if (!cron.dayOfWeek.isWildcard) {
     const names = lang === "ko" ? WEEKDAY_NAMES_KO : WEEKDAY_NAMES_EN;
     const days = [...cron.dayOfWeek.values].sort().map((d) => names[d]);
     parts.push(days.join(", "));
   }
 
   // Time
-  if (!cron.hour.any && !cron.minute.any) {
+  if (!cron.hour.isWildcard && !cron.minute.isWildcard) {
     const hours = [...cron.hour.values].sort();
     const mins = [...cron.minute.values].sort();
     if (hours.length === 1 && mins.length === 1) {
       parts.push(`${String(hours[0]).padStart(2, "0")}:${String(mins[0]).padStart(2, "0")}`);
     }
-  } else if (cron.hour.any && !cron.minute.any) {
+  } else if (cron.hour.isWildcard && !cron.minute.isWildcard) {
     const mins = [...cron.minute.values].sort();
     parts.push(lang === "ko" ? `매시 ${mins.join(",")}분` : `every hour at :${mins.map((m) => String(m).padStart(2, "0")).join(", :")}`);
-  } else if (!cron.hour.any && cron.minute.any) {
+  } else if (!cron.hour.isWildcard && cron.minute.isWildcard) {
     const hours = [...cron.hour.values].sort();
     parts.push(lang === "ko" ? `${hours.join(",")}시 매분` : `every minute at ${hours.join(", ")}h`);
   }
@@ -195,7 +198,7 @@ interface TemplateRow {
 }
 
 interface TaskSchedulerDeps {
-  db: any;
+  db: DatabaseSync;
   nowMs: () => number;
   broadcast: (type: string, payload: unknown) => void;
   insertNotification: (params: {
@@ -243,11 +246,13 @@ export function startTaskScheduler(deps: TaskSchedulerDeps): { stop: () => void 
     if (stopped) return;
     const now = nowMs();
 
-    const dueSchedules = db
-      .prepare(
-        "SELECT * FROM scheduled_tasks WHERE enabled = 1 AND next_run_at IS NOT NULL AND next_run_at <= ?",
-      )
-      .all(now) as ScheduledTaskRow[];
+    const dueSchedules = castSqliteRows<ScheduledTaskRow>(
+      db
+        .prepare(
+          "SELECT * FROM scheduled_tasks WHERE enabled = 1 AND next_run_at IS NOT NULL AND next_run_at <= ?",
+        )
+        .all(now) as Record<string, SQLOutputValue>[],
+    );
 
     for (const schedule of dueSchedules) {
       try {

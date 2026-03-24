@@ -58,8 +58,16 @@ export function SubtasksPane({ subtasks }: { subtasks: Array<{ id: string; title
     <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
       {subtasks.map((st) => (
         <div key={st.id} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 11, padding: "6px 0", borderBottom: "1px solid var(--th-border)" }}>
-          <span style={{ fontSize: 9, color: st.status === "done" ? "var(--th-success, #22c55e)" : "var(--th-text-muted)" }}>
-            {st.status === "done" ? "✓" : "○"}
+          <span style={{ fontSize: 9, color: st.status === "done" ? "var(--th-success, #22c55e)" : "var(--th-text-muted)", display: "inline-flex", alignItems: "center" }}>
+            {st.status === "done" ? (
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            ) : (
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
+                <circle cx="12" cy="12" r="10" />
+              </svg>
+            )}
           </span>
           <span style={{ flex: 1, color: st.status === "done" ? "var(--th-text-muted)" : "var(--th-text-primary)" }}>{st.title}</span>
           <span style={{ fontSize: 10, color: "var(--th-text-muted)" }}>{st.agent_name}</span>
@@ -212,8 +220,15 @@ export function PendingPreview({ task }: { task: Task }) {
         {task.context_hint && <MetaChip label="Hint" value={task.context_hint} />}
       </div>
       {task.execution_error_summary && (
-        <div style={{ padding: "10px 12px", borderRadius: 6, background: "var(--th-danger-bg, rgba(239,68,68,0.08))", border: "1px solid var(--th-danger-border, rgba(239,68,68,0.3))", fontSize: 11, color: "var(--th-danger-text, #f85149)", lineHeight: 1.5 }}>
-          ⚠ {task.execution_error_summary}
+        <div style={{ padding: "10px 12px", borderRadius: 6, background: "var(--th-danger-bg, rgba(239,68,68,0.08))", border: "1px solid var(--th-danger-border, rgba(239,68,68,0.3))", fontSize: 11, color: "var(--th-danger-text, #f85149)", lineHeight: 1.5, display: "flex", alignItems: "flex-start", gap: 8 }}>
+          <span style={{ display: "inline-flex", flexShrink: 0, marginTop: 1 }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+              <line x1="12" y1="9" x2="12" y2="13" />
+              <line x1="12" y1="17" x2="12.01" y2="17" />
+            </svg>
+          </span>
+          <span>{task.execution_error_summary}</span>
         </div>
       )}
     </div>

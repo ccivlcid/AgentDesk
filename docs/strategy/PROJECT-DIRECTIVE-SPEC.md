@@ -1,33 +1,33 @@
 # Project Directive System Spec
 
-> **Status**: Phase 19-B — 설계 확정, 구현 착수
-> **목적**: 프로젝트 유형 선택 시 에이전트 행동 전체를 제어하는 "디렉티브" 시스템
+> **Status**: Phase 19-B — Design finalized, implementation started
+> **Purpose**: A "directive" system that controls the entire agent behavior when a project type is selected
 
 ---
 
-## 1. 핵심 개념
+## 1. Core Concept
 
-**디렉티브(Directive)** = 프로젝트에 부여되는 마크다운 텍스트.
-에이전트가 태스크를 실행할 때 시스템 프롬프트에 주입되어 "이 프로젝트에서 어떻게 일해야 하는지"를 규정한다.
+**Directive** = Markdown text assigned to a project.
+When an agent executes a task, the directive is injected into the system prompt to define "how to work in this project."
 
 ```
-프로젝트 유형 선택 → 기본 템플릿 자동 채움 → 유저가 자유롭게 편집 → 저장
-                                                                    ↓
-태스크 실행 시: 시스템 프롬프트 = 기본 역할 + [프로젝트 디렉티브] + 태스크 지시
+Project type selection → Auto-fill default template → User freely edits → Save
+                                                                          ↓
+Task execution: system prompt = base role + [Project Directive] + task instructions
 ```
 
-**원칙**:
-- 우리는 **방향성 가이드(템플릿)** 만 제공한다
-- 유저가 100% 자유롭게 수정, 삭제, 추가할 수 있다
-- 마크다운 자유 텍스트 — 구조화된 JSON이 아님
-- CLAUDE.md의 프로젝트 단위 버전
+**Principles**:
+- We only provide **directional guides (templates)**
+- Users can freely modify, delete, or add content — 100% editable
+- Markdown free text — not structured JSON
+- A per-project version of CLAUDE.md
 
 ---
 
-## 2. 프로젝트 유형 목록
+## 2. Project Type List
 
-| slug | 아이콘 | 한국어 | 영어 | 자동 배정 부서 |
-|------|--------|--------|------|---------------|
+| slug | Icon | Korean | English | Auto-assigned Departments |
+|------|------|--------|---------|--------------------------|
 | `mvp` | 🚀 | MVP / 빠른 검증 | MVP / Rapid Validation | dev, planning |
 | `fullstack` | 🏗️ | 풀스택 프로덕트 | Full-Stack Product | dev, qa, design, operations, devsecops, planning |
 | `mobile` | 📱 | 모바일 앱 | Mobile App | dev, design, qa |
@@ -41,351 +41,351 @@
 
 ---
 
-## 3. 유형별 디렉티브 템플릿
+## 3. Directive Templates by Type
 
-각 템플릿은 5개 섹션으로 구성된다. 유저는 섹션을 자유롭게 수정/삭제/추가할 수 있다.
+Each template consists of 5 sections. Users can freely modify, delete, or add sections.
 
-### 3-1. 🚀 MVP / 빠른 검증
+### 3-1. 🚀 MVP / Rapid Validation
 
 ```markdown
-## 작업 원칙
-- 최소 동작 가능한 버전을 만든다
-- 엣지케이스는 무시한다. 하드코딩 허용
-- 외부 라이브러리를 적극 활용해 시간을 절약한다
-- TODO 주석을 남기고 넘어가도 된다
-- 리팩토링은 나중에 한다
+## Work Principles
+- Build the minimum viable version
+- Ignore edge cases. Hardcoding is allowed
+- Actively use external libraries to save time
+- It's okay to leave TODO comments and move on
+- Refactoring comes later
 
-## 태스크 분해
-- 기능 단위가 아닌 사용자 시나리오 단위로 쪼갠다
-- "가입 → 핵심 기능 사용 → 결과 확인" 하나의 flow = 하나의 태스크
-- 한 태스크가 end-to-end로 동작하는 것을 우선한다
+## Task Decomposition
+- Split by user scenario, not by feature unit
+- "Sign up → Use core feature → View result" — one flow = one task
+- Prioritize each task working end-to-end
 
-## 품질 기준
-- 돌아가면 통과
-- 테스트는 핵심 경로(happy path) 1개만
-- 코드 스타일, 린트 경고는 무시해도 된다
+## Quality Standards
+- If it runs, it passes
+- Only 1 test for the happy path
+- Code style and lint warnings can be ignored
 
-## 리뷰
-- 리뷰 1라운드 (또는 스킵 가능)
-- 코드 품질이 아닌 "이것이 핵심 가설을 검증하는가?" 관점으로만 본다
+## Review
+- 1 review round (or skippable)
+- Review only from the perspective of "Does this validate the core hypothesis?"
 
-## 우선순위
-- 속도 ≫ 품질 ≫ 확장성
-- 기술 부채를 허용한다
+## Priority
+- Speed ≫ Quality ≫ Scalability
+- Technical debt is acceptable
 ```
 
-### 3-2. 🏗️ 풀스택 프로덕트
+### 3-2. 🏗️ Full-Stack Product
 
 ```markdown
-## 작업 원칙
-- 프로덕션 수준의 코드를 작성한다
-- 테스트, 에러 핸들링, 로깅을 필수로 포함한다
-- 아키텍처 결정에는 이유를 주석이나 문서로 남긴다
-- DRY 원칙을 따르되, 과도한 추상화는 피한다
+## Work Principles
+- Write production-level code
+- Tests, error handling, and logging are mandatory
+- Document architecture decisions with comments or documentation
+- Follow the DRY principle, but avoid over-abstraction
 
-## 태스크 분해
-- 레이어별로 분리한다: DB 스키마 → API → 비즈니스 로직 → UI → 통합 테스트
-- 병렬 가능한 작업은 동시에 진행한다
-- API 계약을 먼저 확정한 후 프론트엔드를 착수한다
+## Task Decomposition
+- Separate by layer: DB schema → API → business logic → UI → integration tests
+- Run parallelizable tasks concurrently
+- Finalize the API contract before starting frontend work
 
-## 품질 기준
-- 비즈니스 로직에 단위 테스트 필수
-- API에 입력 검증과 에러 핸들링 필수
-- DB 마이그레이션은 반드시 리뷰를 거친다
+## Quality Standards
+- Unit tests are mandatory for business logic
+- Input validation and error handling are mandatory for APIs
+- DB migrations must go through review
 
-## 리뷰
-- 3라운드: dev → qa → devsecops
-- 각자의 관점에서 본다 (기능 정확성 / 안정성 / 보안)
-- 머지 전 테스트 통과 필수
+## Review
+- 3 rounds: dev → qa → devsecops
+- Each reviews from their own perspective (functional correctness / stability / security)
+- All tests must pass before merge
 
-## 우선순위
-- 품질 ≈ 확장성 > 속도
-- 기술 부채를 최소화한다
+## Priority
+- Quality ≈ Scalability > Speed
+- Minimize technical debt
 ```
 
-### 3-3. 📱 모바일 앱
+### 3-3. 📱 Mobile App
 
 ```markdown
-## 작업 원칙
-- 터치 UX를 최우선으로 고려한다
-- 네트워크 불안정 상황에 대비한다 (오프라인 모드)
-- 60fps 유지를 목표로 한다
-- 플랫폼 가이드라인(HIG/Material)을 준수한다
+## Work Principles
+- Prioritize touch UX above all else
+- Prepare for unstable network conditions (offline mode)
+- Target maintaining 60fps
+- Follow platform guidelines (HIG/Material)
 
-## 태스크 분해
-- 화면(Screen) 단위로 쪼갠다
-- 네비게이션 구조를 먼저 잡고, 화면별로 구현한 뒤 통합한다
-- 공통 컴포넌트(버튼, 입력, 카드)를 먼저 만든다
+## Task Decomposition
+- Split by screen unit
+- Establish navigation structure first, then implement per-screen and integrate
+- Build common components first (buttons, inputs, cards)
 
-## 품질 기준
-- 모든 터치 타겟 최소 44pt
-- 리스트는 가상화(FlatList/FlashList) 기본
-- 상태 관리: 로컬 캐시 + 서버 동기화 패턴
-- 앱 시작 시간 3초 이내
+## Quality Standards
+- All touch targets minimum 44pt
+- Lists use virtualization (FlatList/FlashList) by default
+- State management: local cache + server sync pattern
+- App startup time under 3 seconds
 
-## 리뷰
-- design 에이전트가 모든 UI 태스크에 참여
-- "시각적으로 맞는가 + 터치 영역 충분한가" 관점
-- 성능 프로파일링 리뷰 (스크롤, 앱 시작)
+## Review
+- Design agent participates in all UI tasks
+- Review from the perspective of "Is it visually correct + are touch areas sufficient?"
+- Performance profiling review (scrolling, app startup)
 
-## 우선순위
-- UX > 성능 > 기능 수
-- 적은 기능이라도 매끄럽게
+## Priority
+- UX > Performance > Feature count
+- Fewer features, but smooth
 ```
 
-### 3-4. 🔌 API / 백엔드
+### 3-4. 🔌 API / Backend
 
 ```markdown
-## 작업 원칙
-- 스키마 퍼스트: OpenAPI 또는 GraphQL 스키마를 먼저 정의한 후 구현한다
-- 모든 응답에 일관된 에러 포맷을 사용한다
-- 인증과 인가를 모든 라우트에 적용한다
-- Rate limiting을 고려한다
+## Work Principles
+- Schema first: define the OpenAPI or GraphQL schema before implementing
+- Use a consistent error format for all responses
+- Apply authentication and authorization to all routes
+- Consider rate limiting
 
-## 태스크 분해
-- API 스키마 정의 → 미들웨어/인증 → 각 엔드포인트 구현 → 통합 테스트 → 부하 테스트
-- 스키마 확정 전 구현 시작을 금지한다
+## Task Decomposition
+- API schema definition → middleware/auth → endpoint implementation → integration tests → load tests
+- No implementation before schema is finalized
 
-## 품질 기준
-- 모든 엔드포인트에 입력 검증
-- 에러 응답은 일관된 구조 (status, code, message)
-- API 계약 테스트(contract test) 통과 필수
-- SQL injection, XSS 등 OWASP Top 10 점검
+## Quality Standards
+- Input validation on all endpoints
+- Error responses follow a consistent structure (status, code, message)
+- API contract tests must pass
+- OWASP Top 10 checks (SQL injection, XSS, etc.)
 
-## 리뷰
-- devsecops가 모든 라우트를 리뷰한다
-- "인증 누락은 없는가? 인젝션 가능성은?" 관점
-- 스키마 변경 시 하위 호환성 확인
+## Review
+- devsecops reviews all routes
+- Review from the perspective of "Is there missing auth? Injection possibilities?"
+- Verify backward compatibility on schema changes
 
-## 우선순위
-- 보안 ≫ 안정성 > 성능 > 속도
+## Priority
+- Security ≫ Stability > Performance > Speed
 ```
 
-### 3-5. 🎨 프론트엔드
+### 3-5. 🎨 Frontend
 
 ```markdown
-## 작업 원칙
-- 컴포넌트 기반으로 설계한다
-- 접근성(a11y)을 기본으로 고려한다
-- 반응형 레이아웃을 지원한다
-- 디자인 시스템/토큰이 있다면 반드시 따른다
+## Work Principles
+- Design with a component-based approach
+- Consider accessibility (a11y) as a baseline
+- Support responsive layouts
+- If a design system/tokens exist, follow them strictly
 
-## 태스크 분해
-- 디자인 토큰/공통 컴포넌트 → 페이지 레이아웃 → 개별 기능 → 인터랙션/애니메이션
-- 상태 관리 구조를 먼저 잡는다
+## Task Decomposition
+- Design tokens/common components → page layouts → individual features → interactions/animations
+- Establish state management structure first
 
-## 품질 기준
-- 시맨틱 HTML 사용
-- 키보드 네비게이션 지원
-- Lighthouse 접근성 점수 90+
-- 주요 브라우저(Chrome, Firefox, Safari) 호환
+## Quality Standards
+- Use semantic HTML
+- Support keyboard navigation
+- Lighthouse accessibility score 90+
+- Compatible with major browsers (Chrome, Firefox, Safari)
 
-## 리뷰
-- design 에이전트가 시각적 일관성 리뷰
-- "디자인 시스템을 따르는가? 접근성은?" 관점
-- 반응형 레이아웃 크로스 브라우저 확인
+## Review
+- Design agent reviews for visual consistency
+- Review from the perspective of "Does it follow the design system? Is it accessible?"
+- Cross-browser responsive layout verification
 
-## 우선순위
-- UX ≈ 접근성 > 성능 > 기능 수
+## Priority
+- UX ≈ Accessibility > Performance > Feature count
 ```
 
-### 3-6. 🤖 AI / ML 파이프라인
+### 3-6. 🤖 AI / ML Pipeline
 
 ```markdown
-## 작업 원칙
-- 재현 가능성이 최우선이다
-- 모든 실험에 파라미터와 결과를 기록한다
-- 랜덤 시드를 고정한다
-- 노트북보다 스크립트를 우선한다
-- 데이터 전처리는 멱등성을 보장한다
+## Work Principles
+- Reproducibility is the top priority
+- Record parameters and results for all experiments
+- Fix random seeds
+- Prefer scripts over notebooks
+- Data preprocessing must be idempotent
 
-## 태스크 분해
-- 데이터 수집/전처리 → 베이스라인 모델 → 실험 루프 → 평가 → 서빙/배포
-- 파이프라인 단계별로 독립 실행 가능하게 구성한다
+## Task Decomposition
+- Data collection/preprocessing → baseline model → experiment loop → evaluation → serving/deployment
+- Configure each pipeline stage to be independently executable
 
-## 품질 기준
-- 데이터 품질 검증 후 모델 학습 착수
-- 평가 지표가 베이스라인 이상일 때만 배포 진행
-- 실험 로그: 하이퍼파라미터, 데이터 버전, 결과 메트릭 필수
+## Quality Standards
+- Validate data quality before starting model training
+- Only proceed with deployment when evaluation metrics exceed the baseline
+- Experiment logs must include: hyperparameters, data version, result metrics
 
-## 리뷰
-- 코드 리뷰보다 실험 설계 리뷰가 핵심
-- "이 실험 설계가 가설을 검증하는가?" 관점
-- 데이터 누수(data leakage) 점검
+## Review
+- Experiment design review is more important than code review
+- Review from the perspective of "Does this experiment design validate the hypothesis?"
+- Check for data leakage
 
-## 우선순위
-- 재현성 > 정확도 > 속도
-- 블랙박스 금지, 설명 가능해야 한다
+## Priority
+- Reproducibility > Accuracy > Speed
+- No black boxes — must be explainable
 ```
 
-### 3-7. 📦 오픈소스 라이브러리
+### 3-7. 📦 Open-Source Library
 
 ```markdown
-## 작업 원칙
-- 공개 API 표면적을 최소화한다
-- 모든 public 함수에 JSDoc/docstring을 작성한다
-- README, CHANGELOG, 사용 예제를 필수로 포함한다
-- 시맨틱 버저닝을 따른다
+## Work Principles
+- Minimize the public API surface area
+- Write JSDoc/docstring for all public functions
+- README, CHANGELOG, and usage examples are mandatory
+- Follow semantic versioning
 
-## 태스크 분해
-- API 설계 → 핵심 구현 → 테스트(커버리지 90%+) → 문서화 → 배포 설정
-- 문서 없는 기능은 완료로 간주하지 않는다
+## Task Decomposition
+- API design → core implementation → tests (90%+ coverage) → documentation → deployment setup
+- A feature without documentation is not considered complete
 
-## 품질 기준
-- 테스트 커버리지 90% 이상
-- 모든 exported 함수에 예제 코드 포함
-- 타입 정의 정확성 (TypeScript d.ts 또는 py.typed)
-- 브레이킹 체인지 시 마이그레이션 가이드 필수
+## Quality Standards
+- Test coverage 90% or higher
+- All exported functions include example code
+- Type definition accuracy (TypeScript d.ts or py.typed)
+- Migration guide is mandatory for breaking changes
 
-## 리뷰
-- "이걸 처음 보는 외부 개발자가 이해할 수 있는가?" 관점
-- public API 변경 시 반드시 전원 리뷰
-- 브레이킹 체인지는 별도 승인
+## Review
+- Review from the perspective of "Can an external developer seeing this for the first time understand it?"
+- All team members must review public API changes
+- Breaking changes require separate approval
 
-## 우선순위
-- DX(개발자 경험) > 기능 수 > 성능
+## Priority
+- DX (Developer Experience) > Feature count > Performance
 ```
 
-### 3-8. ⚙️ 자동화 / DevOps
+### 3-8. ⚙️ Automation / DevOps
 
 ```markdown
-## 작업 원칙
-- 멱등성을 필수로 보장한다
-- 실패 시 롤백 가능해야 한다
-- 모든 단계에 로깅과 알림을 포함한다
-- dry-run 모드를 기본 제공한다
+## Work Principles
+- Idempotency is mandatory
+- Must be rollback-capable on failure
+- Include logging and alerts at every step
+- Provide dry-run mode by default
 
-## 태스크 분해
-- 각 스크립트/파이프라인 스텝이 독립적으로 실행·실패 가능하게 구성
-- 인프라 변경과 애플리케이션 변경을 분리한다
+## Task Decomposition
+- Each script/pipeline step must be independently executable and fail-safe
+- Separate infrastructure changes from application changes
 
-## 품질 기준
-- dry-run 테스트 통과 필수
-- 프로덕션 적용 전 스테이징 검증
-- 실패 시 알림(Slack, 이메일 등) 동작 확인
-- 시크릿은 환경 변수 또는 시크릿 매니저로만 관리
+## Quality Standards
+- Dry-run test must pass
+- Staging verification before production deployment
+- Verify failure alerts (Slack, email, etc.) are working
+- Secrets managed only via environment variables or secret managers
 
-## 리뷰
-- "이게 새벽 3시에 실패하면 어떻게 되는가?" 관점
-- 에러 핸들링과 알림 중심 리뷰
-- 롤백 시나리오 검증
+## Review
+- Review from the perspective of "What happens if this fails at 3 AM?"
+- Focus review on error handling and alerts
+- Verify rollback scenarios
 
-## 우선순위
-- 신뢰성 ≫ 성능 > 편의성
+## Priority
+- Reliability ≫ Performance > Convenience
 ```
 
-### 3-9. 🏢 엔터프라이즈 / 레거시
+### 3-9. 🏢 Enterprise / Legacy
 
 ```markdown
-## 작업 원칙
-- 기존 시스템 호환성을 최우선으로 한다
-- 변경 범위를 최소화한다
-- 점진적 마이그레이션 전략을 따른다
-- 기존 코드를 깨뜨리지 않는다
+## Work Principles
+- Compatibility with existing systems is the top priority
+- Minimize the scope of changes
+- Follow an incremental migration strategy
+- Do not break existing code
 
-## 태스크 분해
-- 영향 분석 → 변경 계획 → 구현 → 회귀 테스트 → 롤백 계획
-- 매 태스크마다 이 사이클을 따른다
-- 한 번에 큰 변경보다 작은 변경을 여러 번 한다
+## Task Decomposition
+- Impact analysis → change plan → implementation → regression testing → rollback plan
+- Follow this cycle for every task
+- Prefer many small changes over one large change
 
-## 품질 기준
-- 영향 분석 문서 없이 구현 착수 금지
-- 회귀 테스트 전체 통과 필수
-- 하위 호환성 보장
-- 변경 로그 상세 기록
+## Quality Standards
+- No implementation without an impact analysis document
+- Full regression test suite must pass
+- Backward compatibility must be guaranteed
+- Detailed change log recording
 
-## 리뷰
-- 가장 깐깐한 리뷰. 전 부서 참여
-- "이 변경이 다른 팀의 코드를 깨뜨릴 수 있는가?" 관점
-- 롤백 계획 존재 여부 확인
+## Review
+- The strictest review. All departments participate
+- Review from the perspective of "Could this change break another team's code?"
+- Verify the existence of a rollback plan
 
-## 우선순위
-- 안정성 ≫ 보안 > 기능 > 속도
-- 새 기능보다 기존 기능 보호
+## Priority
+- Stability ≫ Security > Features > Speed
+- Protecting existing features over adding new ones
 ```
 
-### 3-10. 🔬 리서치 / PoC
+### 3-10. 🔬 Research / PoC
 
 ```markdown
-## 작업 원칙
-- 결론보다 과정을 기록한다
-- 실패한 접근법도 문서화한다
-- 코드 품질보다 발견(finding)의 질이 중요하다
-- 빠르게 시도하고, 배운 것을 기록한다
+## Work Principles
+- Document the process, not just the conclusion
+- Document failed approaches as well
+- The quality of findings matters more than code quality
+- Try quickly, and record what was learned
 
-## 태스크 분해
-- 가설 정의 → 실험 → 결과 기록 → 다음 가설
-- 선형 진행이 아닌 반복 루프
-- 각 실험은 독립적으로 실행 가능해야 한다
+## Task Decomposition
+- Define hypothesis → experiment → record results → next hypothesis
+- An iterative loop, not linear progression
+- Each experiment must be independently executable
 
-## 품질 기준
-- "이 실험으로 뭘 알게 됐는가?"에 답할 수 없으면 다음 단계 금지
-- 결과 문서에 시도한 것, 결과, 배운 것을 기록
-- 코드 품질은 읽을 수 있는 수준이면 충분
+## Quality Standards
+- Cannot proceed to next step if unable to answer "What did we learn from this experiment?"
+- Result documents must record what was tried, the results, and what was learned
+- Code quality only needs to be readable
 
-## 리뷰
-- 코드 리뷰 대신 결과 리뷰
-- "이 발견이 의미 있는가? 다음 가설은 뭔가?" 관점
-- planning 에이전트가 방향성 판단
+## Review
+- Results review instead of code review
+- Review from the perspective of "Is this finding meaningful? What's the next hypothesis?"
+- Planning agent determines direction
 
-## 우선순위
-- 학습 > 속도 > 품질
-- 빠르게 검증하되, 배운 것은 반드시 기록
+## Priority
+- Learning > Speed > Quality
+- Validate quickly, but always record what was learned
 ```
 
 ---
 
-## 4. DB 스키마 변경
+## 4. DB Schema Changes
 
-### 마이그레이션
+### Migration
 
 ```sql
 ALTER TABLE projects ADD COLUMN directive TEXT;
 ALTER TABLE projects ADD COLUMN directive_type_slug TEXT;
 ```
 
-- `directive` — 마크다운 텍스트 (nullable). 에이전트 프롬프트에 그대로 주입.
-- `directive_type_slug` — 어떤 템플릿에서 시작했는지 기록 (`mvp`, `fullstack`, ...). 나중에 "다른 유형 템플릿 불러오기"에 사용.
+- `directive` — Markdown text (nullable). Injected as-is into the agent prompt.
+- `directive_type_slug` — Records which template was used as the starting point (`mvp`, `fullstack`, ...). Used later for "Load a different type template."
 
 ---
 
-## 5. UX 흐름
+## 5. UX Flow
 
-### 5-1. 프로젝트 생성 모달
+### 5-1. Project Creation Modal
 
 ```
-Step 1: 유형 선택       ← 기존 CategorySelectStep 교체
-  └ 10개 유형 카드 (아이콘 + 이름 + 한줄 설명)
-  └ 선택 시 해당 유형의 디렉티브 템플릿을 state에 로드
+Step 1: Type Selection       ← Replaces existing CategorySelectStep
+  └ 10 type cards (icon + name + one-line description)
+  └ On selection, loads the corresponding directive template into state
 
-Step 2: 디렉티브 편집   ← 새로운 스텝
-  └ 큰 텍스트 영역 (모노스페이스, 마크다운)
-  └ 우측 상단: "다른 유형 템플릿 불러오기" 드롭다운
-  └ 자유 편집 가능 — 섹션 추가/삭제/수정
-  └ 비워두면 디렉티브 없이 진행 (기존과 동일 동작)
+Step 2: Directive Editing    ← New step
+  └ Large text area (monospace, markdown)
+  └ Top-right: "Load different type template" dropdown
+  └ Free editing — add/delete/modify sections
+  └ If left empty, proceeds without a directive (same as existing behavior)
 
-Step 3: 프로젝트 정보   ← 기존 info 스텝
-  └ 이름, 경로, 목표, Figma URL
+Step 3: Project Information  ← Existing info step
+  └ Name, path, goal, Figma URL
 
-Step 4: 에이전트 배정   ← 기존 agent 스텝
-  └ 유형에 따라 자동 선택된 에이전트 확인/수정
+Step 4: Agent Assignment     ← Existing agent step
+  └ Review/modify auto-selected agents based on type
 ```
 
-### 5-2. 프로젝트 생성 후 편집
+### 5-2. Editing After Project Creation
 
-- 프로젝트 폴더 우클릭 컨텍스트 메뉴 → "디렉티브 편집"
-- 프로젝트 설정 내 "디렉티브" 섹션
-- "다른 유형 템플릿 불러오기" → 현재 내용 덮어쓰기 (확인 팝업)
+- Right-click project folder context menu → "Edit Directive"
+- "Directive" section within project settings
+- "Load different type template" → Overwrites current content (with confirmation popup)
 
 ---
 
-## 6. 에이전트 실행 통합
+## 6. Agent Execution Integration
 
-### execution-run.ts 프롬프트 조립
+### Prompt assembly in execution-run.ts
 
 ```
-기존:
-  기본 역할 프롬프트
+Before:
+  Base role prompt
   + projectStructureBlock
   + taskInfo
   + workflowPackGuidance
@@ -394,9 +394,9 @@ Step 4: 에이전트 배정   ← 기존 agent 스텝
   + rulesBlock / memoryBlock
   + ...
 
-변경:
-  기본 역할 프롬프트
-  + [프로젝트 디렉티브]          ← 새로 추가
+After:
+  Base role prompt
+  + [Project Directive]          ← Newly added
   + projectStructureBlock
   + taskInfo
   + workflowPackGuidance
@@ -404,57 +404,57 @@ Step 4: 에이전트 배정   ← 기존 agent 스텝
   + ...
 ```
 
-디렉티브는 태스크 구체 지시보다 **앞**에 위치한다.
-에이전트에게 "프로젝트 전체 규칙 → 이번 태스크 지시" 순서로 컨텍스트를 제공.
+The directive is placed **before** the task-specific instructions.
+This provides context to the agent in the order: "Project-wide rules → This task's instructions."
 
-### 주입 형식
+### Injection Format
 
 ```
 [Project Directive]
-{directive 마크다운 텍스트 그대로}
+{directive markdown text as-is}
 [/Project Directive]
 ```
 
 ---
 
-## 7. API 변경
+## 7. API Changes
 
-### POST /api/projects (생성)
+### POST /api/projects (Create)
 
-요청 body에 추가:
+Added to request body:
 ```json
 {
-  "directive": "## 작업 원칙\n- ...",
+  "directive": "## Work Principles\n- ...",
   "directive_type_slug": "mvp"
 }
 ```
 
-### PATCH /api/projects/:id (수정)
+### PATCH /api/projects/:id (Update)
 
 ```json
 {
-  "directive": "수정된 디렉티브 텍스트"
+  "directive": "Modified directive text"
 }
 ```
 
 ### GET /api/projects/:id
 
-응답에 `directive`, `directive_type_slug` 포함.
+Response includes `directive` and `directive_type_slug`.
 
 ### GET /api/directive-templates
 
-디렉티브 템플릿 목록 반환 (프론트에서 "다른 유형 불러오기" 용).
+Returns the list of directive templates (for "Load different type" on the frontend).
 
 ```json
 {
   "templates": [
     {
       "slug": "mvp",
-      "name": "MVP / 빠른 검증",
+      "name": "MVP / Rapid Validation",
       "name_ko": "MVP / 빠른 검증",
       "icon": "🚀",
-      "description": "최소 기능, 빠른 배포, 피벗 가능",
-      "template": "## 작업 원칙\n- ..."
+      "description": "Minimum features, fast deployment, pivot-ready",
+      "template": "## Work Principles\n- ..."
     },
     ...
   ]
@@ -463,9 +463,9 @@ Step 4: 에이전트 배정   ← 기존 agent 스텝
 
 ---
 
-## 8. 향후 확장 가능성
+## 8. Future Expansion Possibilities
 
-- **디렉티브 버전 히스토리**: 변경 이력 추적 (프로젝트 전환 시점 기록)
-- **팀 공유 디렉티브**: 여러 프로젝트에서 재사용하는 디렉티브 라이브러리
-- **디렉티브 효과 분석**: 디렉티브 변경 전후 태스크 완료율/품질 비교
-- **AI 디렉티브 제안**: 프로젝트 진행 패턴을 분석해 디렉티브 개선 제안
+- **Directive Version History**: Track change history (record project transition points)
+- **Team-Shared Directives**: A directive library reusable across multiple projects
+- **Directive Effect Analysis**: Compare task completion rates and quality before/after directive changes
+- **AI Directive Suggestions**: Analyze project progress patterns to suggest directive improvements

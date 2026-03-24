@@ -3,6 +3,50 @@ import type { Agent } from "../../types";
 import type { I18nContextValue } from "../../i18n";
 import { useProjectStore } from "../../store/projectStore";
 
+function IconPlay({ size = 14 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <polygon points="5 3 19 12 5 21 5 3" />
+    </svg>
+  );
+}
+
+function IconCheck({ size = 14 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  );
+}
+
+function IconFolder({ size = 16 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+    </svg>
+  );
+}
+
 export function buildRunPrompt(projectName: string, projectPath: string): string {
   return `아래 GitHub 프로젝트를 설치하고 실행해주세요.
 
@@ -102,7 +146,9 @@ export function RunProjectModal({
             <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#ffbd2e" }} />
             <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#27c93f" }} />
           </div>
-          <span style={{ ...mono, fontSize: 12, fontWeight: 700, color: "#22c55e" }}>▶</span>
+          <span style={{ ...mono, fontSize: 12, fontWeight: 700, color: "#22c55e", display: "inline-flex" }}>
+            <IconPlay size={14} />
+          </span>
           <span style={{ ...mono, fontSize: 12, fontWeight: 600, color: "var(--th-text-heading)" }}>
             {t({ ko: "앱 실행", en: "Run App", ja: "アプリ実行", zh: "运行应用" })}
           </span>
@@ -117,8 +163,22 @@ export function RunProjectModal({
               border: "1px solid var(--th-border)",
             }}
           >
-            <div style={{ ...mono, fontSize: 13, fontWeight: 700, color: "var(--th-text-heading)", marginBottom: 4 }}>
-              📁 {info.projectName}
+            <div
+              style={{
+                ...mono,
+                fontSize: 13,
+                fontWeight: 700,
+                color: "var(--th-text-heading)",
+                marginBottom: 4,
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+              }}
+            >
+              <span style={{ display: "inline-flex", color: "var(--th-text-muted)" }}>
+                <IconFolder size={16} />
+              </span>
+              {info.projectName}
             </div>
             <div style={{ ...mono, fontSize: 10, color: "var(--th-text-secondary)", wordBreak: "break-all" }}>
               {info.projectPath}
@@ -184,7 +244,9 @@ export function RunProjectModal({
                       <div style={{ ...mono, fontSize: 9, color: "var(--th-text-muted)" }}>{a.role}</div>
                     </div>
                     {selectedAgentId === a.id && (
-                      <span style={{ color: "#22c55e", fontSize: 11 }}>✓</span>
+                      <span style={{ color: "#22c55e", fontSize: 11, display: "inline-flex" }}>
+                        <IconCheck size={14} />
+                      </span>
                     )}
                   </button>
                 ))}
@@ -226,7 +288,10 @@ export function RunProjectModal({
                 opacity: selectedAgentId ? 1 : 0.4,
               }}
             >
-              ▶ {t({ ko: "실행", en: "Run", ja: "実行", zh: "运行" })}
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                <IconPlay size={12} />
+                {t({ ko: "실행", en: "Run", ja: "実行", zh: "运行" })}
+              </span>
             </button>
           </div>
         </div>

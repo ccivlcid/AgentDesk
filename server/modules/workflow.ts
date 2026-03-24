@@ -102,7 +102,7 @@ export function initializeWorkflow(
     taskExecutionSessions: runtime.taskExecutionSessions,
     taskWorktrees: runtime.taskWorktrees,
     wsClients: runtime.wsClients,
-  } as unknown as WorkflowCoreExports & WorkflowAgentExports & WorkflowOrchestrationExports;
+  } as WorkflowCoreExports & WorkflowAgentExports & WorkflowOrchestrationExports;
 
   assertNoUnresolvedDeferredRuntimeFunctions(workflowExports, "workflow export wiring");
   return workflowExports;

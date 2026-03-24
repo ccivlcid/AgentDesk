@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import AppWindow from "./AppWindow";
 import { useI18n } from "../../i18n";
+import { useToast } from "../ui/Toast";
 import ManualPathPickerDialog from "../project-manager/ManualPathPickerDialog";
 import { useProjectManagerPathTools } from "../project-manager/useProjectManagerPathTools";
 import { useProjectStore } from "../../store/projectStore";
@@ -15,6 +16,15 @@ const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };
 type Since = "daily" | "weekly" | "monthly";
 type CloneState = { status: "idle" | "cloning" | "done" | "error"; progress: number; error?: string };
 type T = I18nContextValue["t"];
+
+function normalizeGithubRepoKey(fullName: string): string {
+  return fullName
+    .trim()
+    .split("/")
+    .filter(Boolean)
+    .map((p) => p.toLowerCase())
+    .join("/");
+}
 
 const LANG_OPTIONS = [
   { value: "", ko: "전체", en: "All", ja: "すべて", zh: "全部" },
@@ -87,15 +97,20 @@ function TrendingCard({
   repo,
   cloneState,
   onDownload,
+  installedProjectId,
+  onSelectInstalled,
   t,
 }: {
   repo: TrendingRepo;
   cloneState: CloneState;
   onDownload: () => void;
+  installedProjectId: string | null;
+  onSelectInstalled: () => void;
   t: T;
 }) {
   const isCloning = cloneState.status === "cloning";
   const isDone = cloneState.status === "done";
+  const isInstalled = Boolean(installedProjectId) && cloneState.status === "idle";
 
   return (
     <div
@@ -160,7 +175,7 @@ function TrendingCard({
       )}
 
       {/* download button */}
-      <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "auto" }}>
+      <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "auto", gap: 8 }}>
         {isDone ? (
           <span style={{ ...mono, fontSize: 10, fontWeight: 600, color: "#30d158", display: "flex", alignItems: "center", gap: 4 }}>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -168,6 +183,23 @@ function TrendingCard({
             </svg>
             {t({ ko: "완료", en: "Done", ja: "完了", zh: "完成" })}
           </span>
+        ) : isInstalled ? (
+          <div style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", justifyContent: "flex-end" }}>
+            <span style={{ ...mono, fontSize: 10, fontWeight: 600, color: "var(--th-text-muted)" }}>
+              {t({ ko: "설치됨", en: "Installed", ja: "インストール済み", zh: "已安装" })}
+            </span>
+            <button
+              type="button"
+              onClick={onSelectInstalled}
+              style={{
+                ...mono, fontSize: 10, fontWeight: 700, padding: "5px 12px", borderRadius: 4,
+                border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-primary)",
+                cursor: "pointer",
+              }}
+            >
+              {t({ ko: "프로젝트로 이동", en: "Open project", ja: "プロジェクトへ", zh: "打开项目" })}
+            </button>
+          </div>
         ) : isCloning ? (
           <div style={{ display: "flex", alignItems: "center", gap: 6, width: "100%" }}>
             <div style={{ flex: 1, height: 4, borderRadius: 2, background: "var(--th-border)", overflow: "hidden" }}>
@@ -212,8 +244,18 @@ function TrendingCard({
 
 export default function GitImportWindow() {
   const { t } = useI18n();
-  const { setProjects } = useProjectStore();
+  const { showToast } = useToast();
+  const { projects, setProjects, setCurrentProjectId } = useProjectStore();
   const { closeWindow, setNewlyInstalledProjectId } = useUiStore();
+
+  const installedGithubRepoToProjectId = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const p of projects) {
+      const gr = p.github_repo?.trim();
+      if (gr) m.set(normalizeGithubRepoKey(gr), p.id);
+    }
+    return m;
+  }, [projects]);
 
   // trending state
   const [repos, setRepos] = useState<TrendingRepo[]>([]);
@@ -242,7 +284,7 @@ export default function GitImportWindow() {
     };
   }, []);
 
-  async function handleComplete(projectId: string) {
+  const handleComplete = useCallback(async (projectId: string) => {
     try {
       const detail = await getProjectDetail(projectId);
       setProjects((prev) => {
@@ -252,9 +294,22 @@ export default function GitImportWindow() {
       setNewlyInstalledProjectId(projectId);
       closeWindow("repo-store");
     } catch { /* ignore */ }
-  }
+  }, [closeWindow, setNewlyInstalledProjectId, setProjects]);
 
   const startDownload = useCallback(async (repo: TrendingRepo) => {
+    const repoKey = normalizeGithubRepoKey(repo.full_name);
+    if (installedGithubRepoToProjectId.has(repoKey)) {
+      showToast(
+        t({
+          ko: "이미 프로젝트에 등록된 저장소입니다",
+          en: "This repository is already in your projects",
+          ja: "このリポジトリは既にプロジェクトに登録されています",
+          zh: "该仓库已在项目中",
+        }),
+        "info",
+      );
+      return;
+    }
     const key = repo.full_name;
     setCloneStates((s) => ({ ...s, [key]: { status: "cloning", progress: 0 } }));
 
@@ -309,7 +364,7 @@ export default function GitImportWindow() {
     } catch (err) {
       setCloneStates((s) => ({ ...s, [key]: { status: "error", progress: 0, error: err instanceof Error ? err.message : String(err) } }));
     }
-  }, [setProjects]);
+  }, [downloadPath, handleComplete, installedGithubRepoToProjectId, showToast, t]);
 
   const handleDirectDownload = useCallback(() => {
     const input = directUrl.trim();
@@ -433,15 +488,25 @@ export default function GitImportWindow() {
                 </div>
               )}
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 12 }}>
-                {repos.map((repo) => (
-                  <TrendingCard
-                    key={repo.full_name}
-                    repo={repo}
-                    cloneState={cloneStates[repo.full_name] ?? { status: "idle", progress: 0 }}
-                    onDownload={() => startDownload(repo)}
-                    t={t}
-                  />
-                ))}
+                {repos.map((repo) => {
+                  const pid = installedGithubRepoToProjectId.get(normalizeGithubRepoKey(repo.full_name)) ?? null;
+                  return (
+                    <TrendingCard
+                      key={repo.full_name}
+                      repo={repo}
+                      cloneState={cloneStates[repo.full_name] ?? { status: "idle", progress: 0 }}
+                      onDownload={() => startDownload(repo)}
+                      installedProjectId={pid}
+                      onSelectInstalled={() => {
+                        if (pid) {
+                          setCurrentProjectId(pid);
+                          closeWindow("repo-store");
+                        }
+                      }}
+                      t={t}
+                    />
+                  );
+                })}
               </div>
             </div>
         </div>

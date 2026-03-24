@@ -82,6 +82,7 @@ describe("i18n helpers", () => {
       language: "en",
       locale: "en-US",
       t: (text) => (typeof text === "string" ? text : text.en),
+      tk: (key) => key,
     };
     const Probe = ({ override }: { override?: string }) => {
       result = useI18n(override);
@@ -105,6 +106,7 @@ describe("i18n helpers", () => {
         zh: "你好",
       }),
     ).toBe("こんにちは");
+    expect(result.tk("task.status.done")).toBe("完了");
 
     rerender(
       createElement(I18nProvider, {
@@ -123,5 +125,6 @@ describe("i18n helpers", () => {
         zh: "你好",
       }),
     ).toBe("안녕하세요");
+    expect(result.tk("toast.task.complete", { title: "빌드" })).toBe("태스크 완료: 빌드");
   });
 });

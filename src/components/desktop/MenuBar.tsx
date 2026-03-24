@@ -399,7 +399,14 @@ export default function MenuBar({
               onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--th-accent-glow)"; }}
               onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "none"; }}
             >
-              <span>↓ {t({ ko: "데이터 내보내기...", en: "Export Data...", ja: "データエクスポート...", zh: "导出数据..." })}</span>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+                {t({ ko: "데이터 내보내기...", en: "Export Data...", ja: "データエクスポート...", zh: "导出数据..." })}
+              </span>
             </button>
 
             {/* Mission Control */}
@@ -423,7 +430,13 @@ export default function MenuBar({
               onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "none"; }}
             >
               <span>{t({ ko: "Dock 자동 숨기기", en: "Auto-hide Dock", ja: "Dockを自動的に隠す", zh: "自动隐藏Dock" })}</span>
-              <span style={{ fontSize: 11 }}>{dockAutoHide ? "✓" : ""}</span>
+              <span style={{ fontSize: 11, display: "inline-flex", alignItems: "center" }}>
+                {dockAutoHide ? (
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                ) : null}
+              </span>
             </button>
 
             {/* Do Not Disturb */}
@@ -434,7 +447,13 @@ export default function MenuBar({
               onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "none"; }}
             >
               <span>🌙 {t({ ko: "방해 금지 모드", en: "Do Not Disturb", ja: "おやすみモード", zh: "勿扰模式" })}</span>
-              <span style={{ fontSize: 11 }}>{doNotDisturb ? "✓" : ""}</span>
+              <span style={{ fontSize: 11, display: "inline-flex", alignItems: "center" }}>
+                {doNotDisturb ? (
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                ) : null}
+              </span>
             </button>
           </div>
         )}

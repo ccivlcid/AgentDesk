@@ -9,21 +9,228 @@ interface TrafficLightsProps {
   onSnapTo?: (zone: TileZone) => void;
 }
 
+function SvgClose({ size }: { size: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <line x1="18" y1="6" x2="6" y2="18" />
+      <line x1="6" y1="6" x2="18" y2="18" />
+    </svg>
+  );
+}
+
+function SvgMinus({ size }: { size: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <line x1="5" y1="12" x2="19" y2="12" />
+    </svg>
+  );
+}
+
+function SvgPlus({ size }: { size: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <line x1="12" y1="5" x2="12" y2="19" />
+      <line x1="5" y1="12" x2="19" y2="12" />
+    </svg>
+  );
+}
+
+function SvgSnapLeft({ size }: { size: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <polyline points="15 18 9 12 15 6" />
+      <line x1="9" y1="12" x2="21" y2="12" />
+    </svg>
+  );
+}
+
+function SvgSnapRight({ size }: { size: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <polyline points="9 18 15 12 9 6" />
+      <line x1="3" y1="12" x2="15" y2="12" />
+    </svg>
+  );
+}
+
+function SvgSnapFull({ size }: { size: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+    </svg>
+  );
+}
+
+function SvgSnapCenter({ size }: { size: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <circle cx="12" cy="12" r="10" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+}
+
+function SvgCornerNW({ size }: { size: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <polyline points="19 19 5 5" />
+      <polyline points="5 5 5 11 11 5" />
+    </svg>
+  );
+}
+
+function SvgCornerNE({ size }: { size: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <polyline points="5 19 19 5" />
+      <polyline points="19 5 13 5 19 11" />
+    </svg>
+  );
+}
+
+function SvgCornerSW({ size }: { size: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <polyline points="19 5 5 19" />
+      <polyline points="5 19 5 13 11 19" />
+    </svg>
+  );
+}
+
+function SvgCornerSE({ size }: { size: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <polyline points="5 5 19 19" />
+      <polyline points="19 19 19 13 13 19" />
+    </svg>
+  );
+}
+
 const DOTS = [
-  { key: "close",    color: "#FF5F56", shadow: "#E0443E", icon: "✕" },
-  { key: "minimize", color: "#FFBD2E", shadow: "#DEA123", icon: "−" },
-  { key: "maximize", color: "#27C93F", shadow: "#1AAB29", icon: "＋" },
+  { key: "close" as const, color: "#FF5F56", shadow: "#E0443E", Icon: SvgClose, dotSize: 9 },
+  { key: "minimize" as const, color: "#FFBD2E", shadow: "#DEA123", Icon: SvgMinus, dotSize: 9 },
+  { key: "maximize" as const, color: "#27C93F", shadow: "#1AAB29", Icon: SvgPlus, dotSize: 7 },
 ] as const;
 
-const TILE_OPTIONS: Array<{ zone: TileZone; label: string; icon: string }> = [
-  { zone: "left",   label: "Left Half", icon: "⇠" },
-  { zone: "right",  label: "Right Half", icon: "⇢" },
-  { zone: "full",   label: "Full Screen", icon: "⤢" },
-  { zone: "center", label: "Center", icon: "◎" },
-  { zone: "tl",     label: "Top Left", icon: "↖" },
-  { zone: "tr",     label: "Top Right", icon: "↗" },
-  { zone: "bl",     label: "Bottom Left", icon: "↙" },
-  { zone: "br",     label: "Bottom Right", icon: "↘" },
+const TILE_OPTIONS: Array<{ zone: TileZone; label: string; Icon: typeof SvgSnapLeft }> = [
+  { zone: "left", label: "Left Half", Icon: SvgSnapLeft },
+  { zone: "right", label: "Right Half", Icon: SvgSnapRight },
+  { zone: "full", label: "Full Screen", Icon: SvgSnapFull },
+  { zone: "center", label: "Center", Icon: SvgSnapCenter },
+  { zone: "tl", label: "Top Left", Icon: SvgCornerNW },
+  { zone: "tr", label: "Top Right", Icon: SvgCornerNE },
+  { zone: "bl", label: "Bottom Left", Icon: SvgCornerSW },
+  { zone: "br", label: "Bottom Right", Icon: SvgCornerSE },
 ];
 
 export default function TrafficLights({ onClose, onMinimize, onMaximize, onSnapTo }: TrafficLightsProps) {
@@ -32,7 +239,7 @@ export default function TrafficLights({ onClose, onMinimize, onMaximize, onSnapT
   const tileTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const handlers = {
-    close:    onClose,
+    close: onClose,
     minimize: onMinimize,
     maximize: onMaximize,
   };
@@ -54,9 +261,12 @@ export default function TrafficLights({ onClose, onMinimize, onMaximize, onSnapT
     <div
       style={{ display: "flex", gap: 8, alignItems: "center", flexShrink: 0, position: "relative" }}
       onMouseEnter={() => setGroupHover(true)}
-      onMouseLeave={() => { setGroupHover(false); closeTileMenu(); }}
+      onMouseLeave={() => {
+        setGroupHover(false);
+        closeTileMenu();
+      }}
     >
-      {DOTS.map(({ key, color, shadow, icon }) => {
+      {DOTS.map(({ key, color, shadow, Icon, dotSize }) => {
         const active = !!handlers[key];
         const isMax = key === "maximize";
         return (
@@ -91,15 +301,13 @@ export default function TrafficLights({ onClose, onMinimize, onMaximize, onSnapT
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontSize: key === "maximize" ? 7 : 9,
-                  fontWeight: 900,
-                  color: "rgba(0,0,0,0.65)", // Slightly darker icons for better contrast
+                  color: "rgba(0,0,0,0.65)",
                   lineHeight: 1,
                   pointerEvents: "none",
                   userSelect: "none",
                 }}
               >
-                {icon}
+                <Icon size={dotSize} />
               </span>
             )}
           </button>
@@ -125,25 +333,30 @@ export default function TrafficLights({ onClose, onMinimize, onMaximize, onSnapT
             zIndex: 9000,
           }}
         >
-          <div style={{
-            padding: "6px 12px",
-            fontSize: 9,
-            fontWeight: 900,
-            color: "#94A3B8",
-            fontFamily: "var(--th-font-mono)",
-            letterSpacing: "0.1em",
-            textTransform: "uppercase",
-            borderBottom: "1px solid rgba(0, 0, 0, 0.04)",
-            marginBottom: 4,
-          }}>
+          <div
+            style={{
+              padding: "6px 12px",
+              fontSize: 9,
+              fontWeight: 900,
+              color: "#94A3B8",
+              fontFamily: "var(--th-font-mono)",
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              borderBottom: "1px solid rgba(0, 0, 0, 0.04)",
+              marginBottom: 4,
+            }}
+          >
             Move & Resize
           </div>
-          {TILE_OPTIONS.map(({ zone, label, icon }) => (
+          {TILE_OPTIONS.map(({ zone, label, Icon }) => (
             <button
               key={zone}
               type="button"
               onMouseDown={(e) => e.stopPropagation()}
-              onClick={() => { onSnapTo(zone); setTileMenuOpen(false); }}
+              onClick={() => {
+                onSnapTo(zone);
+                setTileMenuOpen(false);
+              }}
               style={{
                 display: "flex",
                 alignItems: "center",
@@ -161,16 +374,18 @@ export default function TrafficLights({ onClose, onMinimize, onMaximize, onSnapT
                 textAlign: "left",
                 transition: "all 0.15s ease",
               }}
-              onMouseEnter={(e) => { 
-                e.currentTarget.style.background = "rgba(59, 130, 246, 0.08)"; 
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = "rgba(59, 130, 246, 0.08)";
                 e.currentTarget.style.color = "#2563EB";
               }}
-              onMouseLeave={(e) => { 
-                e.currentTarget.style.background = "transparent"; 
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = "transparent";
                 e.currentTarget.style.color = "#4B5563";
               }}
             >
-              <span style={{ fontSize: 14, opacity: 0.7 }}>{icon}</span>
+              <span style={{ display: "flex", opacity: 0.7, color: "inherit" }}>
+                <Icon size={14} />
+              </span>
               <span style={{ flex: 1 }}>{label}</span>
             </button>
           ))}

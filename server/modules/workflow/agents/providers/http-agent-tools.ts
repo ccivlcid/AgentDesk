@@ -2,13 +2,14 @@ import fs from "node:fs";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import type { ChildProcess } from "node:child_process";
+import type { SQLInputValue } from "node:sqlite";
 import logger from "../../../../lib/logger";
 import type { DecryptedOAuthToken } from "./types.ts";
 import { createStreamTools } from "./stream-tools.ts";
 
 type DbLike = {
   prepare: (sql: string) => {
-    get: (...args: any[]) => unknown;
+    get: (...args: SQLInputValue[]) => unknown;
   };
 };
 
@@ -176,9 +177,10 @@ export function createHttpAgentTools(deps: CreateHttpAgentToolsDeps) {
         safeWrite(`\n---\n[copilot] Done.\n`);
         if (taskId) broadcast("cli_output", { task_id: taskId, stream: "stderr", data: "\n---\n[copilot] Done.\n" });
         return;
-      } catch (err: any) {
-        if (signal.aborted || err?.name === "AbortError") throw err;
-        const msg = err?.message ? String(err.message) : String(err);
+      } catch (err: unknown) {
+        const errName = err instanceof Error ? err.name : undefined;
+        if (signal.aborted || errName === "AbortError") throw err;
+        const msg = err instanceof Error ? err.message : String(err);
         markOAuthAccountFailure(account.id!, msg);
         const failMsg = `[copilot] Account ${accountName} failed: ${msg}\n`;
         safeWrite(failMsg);
@@ -299,9 +301,10 @@ export function createHttpAgentTools(deps: CreateHttpAgentToolsDeps) {
         if (taskId)
           broadcast("cli_output", { task_id: taskId, stream: "stderr", data: "\n---\n[antigravity] Done.\n" });
         return;
-      } catch (err: any) {
-        if (signal.aborted || err?.name === "AbortError") throw err;
-        const msg = err?.message ? String(err.message) : String(err);
+      } catch (err: unknown) {
+        const errName = err instanceof Error ? err.name : undefined;
+        if (signal.aborted || errName === "AbortError") throw err;
+        const msg = err instanceof Error ? err.message : String(err);
         markOAuthAccountFailure(account.id!, msg);
         const failMsg = `[antigravity] Account ${accountName} failed: ${msg}\n`;
         safeWrite(failMsg);
@@ -343,7 +346,7 @@ export function createHttpAgentTools(deps: CreateHttpAgentToolsDeps) {
         controller.abort();
         return true;
       },
-    } as unknown as ChildProcess;
+    } as ChildProcess;
     activeProcesses.set(taskId, mockProc);
 
     const runTask = (async () => {
@@ -369,10 +372,12 @@ export function createHttpAgentTools(deps: CreateHttpAgentToolsDeps) {
             safeWrite,
           );
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         exitCode = 1;
-        if (err.name !== "AbortError") {
-          const msg = normalizeStreamChunk(`[${agent}] Error: ${err.message}\n`);
+        const isAbort = err instanceof Error && err.name === "AbortError";
+        if (!isAbort) {
+          const message = err instanceof Error ? err.message : String(err);
+          const msg = normalizeStreamChunk(`[${agent}] Error: ${message}\n`);
           safeWrite(msg);
           broadcast("cli_output", { task_id: taskId, stream: "stderr", data: msg });
           logger.error({ err }, `[AgentDesk] HTTP agent error (${agent}, task ${taskId})`);

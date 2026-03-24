@@ -1,4 +1,6 @@
 import type { RuntimeContext, WorkflowOrchestrationExports } from "../../types/runtime-context.ts";
+import { castSqliteRow } from "../../lib/sqlite-row-cast.ts";
+import type { AgentRow } from "./core/conversation-types.ts";
 import type { Lang } from "../../types/lang.ts";
 import fs from "node:fs";
 import os from "node:os";
@@ -52,23 +54,6 @@ import {
   readReportFlowValue,
   upsertReportFlowValue,
 } from "./orchestration/report-flow-helpers.ts";
-
-interface AgentRow {
-  id: string;
-  name: string;
-  name_ko: string;
-  role: string;
-  status: string;
-  department_id: string | null;
-  current_task_id: string | null;
-  avatar_emoji: string;
-  cli_provider: string | null;
-  oauth_account_id: string | null;
-  api_provider_id: string | null;
-  api_model: string | null;
-  cli_model: string | null;
-  cli_reasoning_level: string | null;
-}
 
 type MeetingTranscriptEntry = {
   speaker_agent_id: string;
@@ -229,24 +214,23 @@ export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrat
   const getGeminiProjectId = __ctx.getGeminiProjectId;
   const detectCliTool = __ctx.detectCliTool;
   const DEPT_KEYWORDS = __ctx.DEPT_KEYWORDS;
-  const detectLang = (...args: any[]) => __ctx.detectLang(...args);
-  const detectTargetDepartments = (...args: any[]) => __ctx.detectTargetDepartments(...args);
-  const findTeamLeader = (...args: any[]) => __ctx.findTeamLeader(...args);
-  const formatTaskSubtaskProgressSummary = (...args: any[]) => __ctx.formatTaskSubtaskProgressSummary(...args);
-  const getDeptName = (...args: any[]) => __ctx.getDeptName(...args);
-  const getDeptRoleConstraint = (...args: any[]) => __ctx.getDeptRoleConstraint(...args);
-  const getPreferredLanguage = (...args: any[]) => __ctx.getPreferredLanguage(...args);
-  const getRoleLabel = (...args: any[]) => __ctx.getRoleLabel(...args);
-  const l = (...args: any[]) => __ctx.l(...args);
-  const pickL = (...args: any[]) => __ctx.pickL(...args);
-  const prettyStreamJson = (...args: any[]) => __ctx.prettyStreamJson(...args);
-  const processSubtaskDelegations = (...args: any[]) => __ctx.processSubtaskDelegations(...args);
-  const recoverCrossDeptQueueAfterMissingCallback = (...args: any[]) =>
-    __ctx.recoverCrossDeptQueueAfterMissingCallback(...args);
-  const refreshCliUsageData = (...args: any[]) => __ctx.refreshCliUsageData(...args);
-  const resolveLang = (...args: any[]) => __ctx.resolveLang(...args);
-  const resolveProjectPath = (...args: any[]) => __ctx.resolveProjectPath(...args);
-  const sendAgentMessage = (...args: any[]) => __ctx.sendAgentMessage(...args);
+  const detectLang = __ctx.detectLang;
+  const detectTargetDepartments = __ctx.detectTargetDepartments;
+  const findTeamLeader = __ctx.findTeamLeader;
+  const formatTaskSubtaskProgressSummary = __ctx.formatTaskSubtaskProgressSummary;
+  const getDeptName = __ctx.getDeptName;
+  const getDeptRoleConstraint = __ctx.getDeptRoleConstraint;
+  const getPreferredLanguage = __ctx.getPreferredLanguage;
+  const getRoleLabel = __ctx.getRoleLabel;
+  const l = __ctx.l;
+  const pickL = __ctx.pickL;
+  const prettyStreamJson = __ctx.prettyStreamJson;
+  const processSubtaskDelegations = __ctx.processSubtaskDelegations;
+  const recoverCrossDeptQueueAfterMissingCallback = __ctx.recoverCrossDeptQueueAfterMissingCallback;
+  const refreshCliUsageData = __ctx.refreshCliUsageData;
+  const resolveLang = __ctx.resolveLang;
+  const resolveProjectPath = __ctx.resolveProjectPath;
+  const sendAgentMessage = __ctx.sendAgentMessage;
 
   // ---------------------------------------------------------------------------
   // Agent execution FIFO queue (P2-3): limits concurrent agent executions
@@ -502,7 +486,7 @@ export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrat
   });
 
   // Wrap raw function with FIFO queue to enforce MAX_CONCURRENT_AGENTS limit (P2-3)
-  function startTaskExecutionForAgent(taskId: string, execAgent: any, deptId: string | null, deptName: string): void {
+  function startTaskExecutionForAgent(taskId: string, execAgent: AgentRow, deptId: string | null, deptName: string): void {
     agentQueue.enqueue(taskId, () => {
       broadcastQueueStatus();
       const taskRow = db.prepare("SELECT title FROM tasks WHERE id = ?").get(taskId) as { title: string } | undefined;
@@ -618,9 +602,9 @@ export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrat
     pickL,
     l,
     db,
-    finishReview: (...args: any[]) => (finishReview as any)(...args),
+    finishReview,
     randomDelay,
-    startPlannedApprovalMeeting: (...args: any[]) => (startPlannedApprovalMeeting as any)(...args),
+    startPlannedApprovalMeeting,
   });
 
   const reportWorkflowTools = createReportWorkflowTools({
@@ -712,7 +696,7 @@ export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrat
     hasVisibleDiffSummary,
     insertNotification,
     startTaskExecutionForAgent: (taskId: string, agentId: string) => {
-      const agent = db.prepare("SELECT * FROM agents WHERE id = ?").get(agentId) as { department_id?: string | null } | null;
+      const agent = castSqliteRow<AgentRow>(db.prepare("SELECT * FROM agents WHERE id = ?").get(agentId));
       if (!agent) return;
       const deptRow = agent.department_id
         ? (db.prepare("SELECT id, name FROM departments WHERE id = ?").get(agent.department_id) as { id: string; name: string } | null)
@@ -790,7 +774,7 @@ export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrat
   });
 
   // Expose triggerHeartbeat on ctx for API route access
-  (__ctx as any).triggerHeartbeat = heartbeatEngine.triggerAgent;
+  Object.assign(__ctx as object, { triggerHeartbeat: heartbeatEngine.triggerAgent });
 
   // Start task scheduler (cron-based repeated task creation)
   startTaskScheduler({
@@ -808,7 +792,7 @@ export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrat
     },
     startTaskExecutionForAgent: (agentId: string, taskId: string) => {
       const task = db.prepare("SELECT * FROM tasks WHERE id = ?").get(taskId) as { department_id?: string | null } | undefined;
-      const agent = db.prepare("SELECT * FROM agents WHERE id = ?").get(agentId);
+      const agent = castSqliteRow<AgentRow>(db.prepare("SELECT * FROM agents WHERE id = ?").get(agentId));
       if (!task || !agent) return;
       const deptId = task.department_id ?? null;
       const deptRow = deptId
@@ -826,7 +810,7 @@ export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrat
     logsDir,
     runAgentOneShot,
     startTaskExecutionForAgent: (taskId: string, agentId: string) => {
-      const agent = db.prepare("SELECT * FROM agents WHERE id = ?").get(agentId) as { department_id?: string | null } | null;
+      const agent = castSqliteRow<AgentRow>(db.prepare("SELECT * FROM agents WHERE id = ?").get(agentId));
       if (!agent) return;
       const deptRow = agent.department_id
         ? (db.prepare("SELECT id, name FROM departments WHERE id = ?").get(agent.department_id) as { id: string; name: string } | null)
@@ -839,7 +823,11 @@ export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrat
     sendAgentMessage,
     getPreferredLanguage,
     resolveProjectPath: (projectId: string) => {
-      try { return resolveProjectPath({ project_id: projectId } as any); } catch { return ""; }
+      try {
+        return resolveProjectPath({ project_id: projectId });
+      } catch {
+        return "";
+      }
     },
     insertNotification: (params) => {
       insertNotification({

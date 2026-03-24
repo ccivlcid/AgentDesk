@@ -9,7 +9,18 @@
 import { randomUUID } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
+import type { SQLInputValue, SQLOutputValue } from "node:sqlite";
+import { castSqliteRows } from "../../../lib/sqlite-row-cast.ts";
 import { memoriesCache, scopeKey } from "../core/prompt-cache.ts";
+
+/** Minimal DB surface for memory queries (tests may pass narrow mocks). */
+export type MemoryDbLike = {
+  prepare: (sql: string) => {
+    get: (...args: SQLInputValue[]) => unknown;
+    all: (...args: SQLInputValue[]) => unknown;
+    run: (...args: SQLInputValue[]) => unknown;
+  };
+};
 
 interface MemoryEntry {
   id: string;
@@ -22,7 +33,7 @@ interface MemoryEntry {
 }
 
 interface AutonomousMemoryDeps {
-  db: any;
+  db: unknown;
   nowMs: () => number;
   logsDir: string;
   appendTaskLog: (taskId: string, kind: string, message: string) => void;
@@ -37,7 +48,7 @@ interface AutonomousMemoryDeps {
  * - Keyword match from task title/description
  */
 export function searchRelevantMemories(
-  deps: Pick<AutonomousMemoryDeps, "db">,
+  deps: { db: unknown },
   context: {
     agentId: string | null;
     departmentId: string | null;
@@ -47,7 +58,7 @@ export function searchRelevantMemories(
     taskDescription: string | null;
   },
 ): MemoryEntry[] {
-  const { db } = deps;
+  const db = deps.db as MemoryDbLike;
   const { agentId, departmentId, workflowPackKey, projectId, taskTitle, taskDescription } = context;
 
   // Get all enabled memories that match scope — cached by scope key (5-min TTL)
@@ -57,7 +68,7 @@ export function searchRelevantMemories(
     if (cached) return cached as MemoryEntry[];
 
     const scopeConditions: string[] = ["(scope_type = 'global')"];
-    const params: any[] = [];
+    const params: SQLInputValue[] = [];
 
     if (projectId) {
       scopeConditions.push("(scope_type = 'project' AND scope_id = ?)");
@@ -77,7 +88,7 @@ export function searchRelevantMemories(
     }
 
     const scopeWhere = scopeConditions.join(" OR ");
-    const rows = db
+    const rawRows = db
       .prepare(
         `SELECT id, title, content, category, scope_type, scope_id, priority
          FROM memory_entries
@@ -85,7 +96,8 @@ export function searchRelevantMemories(
          ORDER BY priority DESC, updated_at DESC
          LIMIT 50`,
       )
-      .all(...params) as MemoryEntry[];
+      .all(...params) as Record<string, SQLOutputValue>[];
+    const rows = castSqliteRows<MemoryEntry>(rawRows);
     memoriesCache.set(cacheKeyStr, rows);
     return rows;
   })();
@@ -172,7 +184,8 @@ export function extractAndSaveTaskLearnings(
     result: string | null;
   },
 ): number {
-  const { db, nowMs, logsDir, appendTaskLog } = deps;
+  const db = deps.db as MemoryDbLike;
+  const { nowMs, logsDir, appendTaskLog } = deps;
   const { taskId, taskTitle, agentId, departmentId, workflowPackKey, projectId, exitCode, result } = taskInfo;
 
   // Only extract from successful completions (or capture failure patterns)
@@ -273,7 +286,7 @@ export function extractAndSaveTaskLearnings(
   return savedCount;
 }
 
-function memoryTitleExists(db: any, title: string, agentId: string | null): boolean {
+function memoryTitleExists(db: MemoryDbLike, title: string, agentId: string | null): boolean {
   const scopeCondition = agentId
     ? "AND scope_type = 'agent' AND scope_id = ?"
     : "AND scope_type = 'global'";
@@ -285,7 +298,7 @@ function memoryTitleExists(db: any, title: string, agentId: string | null): bool
 }
 
 function insertAutoMemory(
-  db: any,
+  db: MemoryDbLike,
   params: {
     title: string;
     content: string;

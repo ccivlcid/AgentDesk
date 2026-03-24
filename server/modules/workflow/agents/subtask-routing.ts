@@ -1,5 +1,8 @@
+import type { DatabaseSync } from "node:sqlite";
 import type { Lang } from "../../../types/lang.ts";
+import type { L10n } from "../../routes/collab/language-policy.ts";
 import { resolveConstrainedAgentScopeForTask } from "../../routes/core/tasks/execution-run-auto-assign.ts";
+import type { AgentRow, OneShotRunOptions, OneShotRunResult } from "../core/conversation-types.ts";
 
 type PlannerSubtaskAssignment = {
   subtask_id: string;
@@ -9,16 +12,16 @@ type PlannerSubtaskAssignment = {
 };
 
 type SubtaskRoutingDeps = {
-  db: any;
+  db: DatabaseSync;
   DEPT_KEYWORDS: Record<string, string[]>;
   detectTargetDepartments: (text: string) => string[];
-  runAgentOneShot: (agent: any, prompt: string, options: any) => Promise<{ text: string }>;
+  runAgentOneShot: (agent: AgentRow, prompt: string, options?: OneShotRunOptions) => Promise<OneShotRunResult>;
   resolveProjectPath: (task: { title?: string; description?: string | null; project_path?: string | null }) => string;
   resolveLang: (text: string) => Lang;
-  findTeamLeader: (departmentId: string, candidateAgentIds?: string[] | null) => any;
+  findTeamLeader: (departmentId: string | null, candidateAgentIds?: string[] | null) => AgentRow | null;
   getDeptName: (departmentId: string) => string;
-  pickL: (choices: any, lang: string) => string;
-  l: (ko: string[], en: string[], ja: string[], zh: string[]) => any;
+  pickL: (choices: L10n, lang: Lang) => string;
+  l: (ko: string[], en: string[], ja?: string[], zh?: string[]) => L10n;
   broadcast: (event: string, payload: unknown) => void;
   appendTaskLog: (taskId: string | null, kind: string, message: string) => void;
   notifyClient: (message: string, taskId: string | null, messageType?: string) => void;
@@ -171,13 +174,17 @@ export function createSubtaskRoutingTools(deps: SubtaskRoutingDeps) {
     if (objectMatch?.[0]) candidates.push(objectMatch[0]);
 
     for (const candidate of candidates) {
-      let parsed: any;
+      let parsed: unknown;
       try {
         parsed = JSON.parse(candidate);
       } catch {
         continue;
       }
-      const rows = Array.isArray(parsed?.assignments) ? parsed.assignments : Array.isArray(parsed) ? parsed : [];
+      const rows = Array.isArray((parsed as { assignments?: unknown })?.assignments)
+        ? (parsed as { assignments: unknown[] }).assignments
+        : Array.isArray(parsed)
+          ? parsed
+          : [];
       if (!Array.isArray(rows) || rows.length === 0) continue;
 
       const normalized: PlannerSubtaskAssignment[] = [];
@@ -229,7 +236,7 @@ export function createSubtaskRoutingTools(deps: SubtaskRoutingDeps) {
           }
         | undefined;
       if (!task) return;
-      const constrainedAgentIds = resolveConstrainedAgentScopeForTask(db as any, {
+      const constrainedAgentIds = resolveConstrainedAgentScopeForTask(db, {
         project_id: task.project_id,
         workflow_pack_key: task.context_hint ?? task.workflow_pack_key,
         department_id: task.department_id ?? ownerDeptId,
@@ -394,12 +401,9 @@ export function createSubtaskRoutingTools(deps: SubtaskRoutingDeps) {
           taskId,
         );
       }
-    } catch (err: any) {
-      appendTaskLog(
-        taskId,
-        "system",
-        `Planning reroute failed (${phase}): ${err?.message ? String(err.message) : String(err)}`,
-      );
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      appendTaskLog(taskId, "system", `Planning reroute failed (${phase}): ${msg}`);
     } finally {
       plannerSubtaskRoutingInFlight.delete(lockKey);
     }

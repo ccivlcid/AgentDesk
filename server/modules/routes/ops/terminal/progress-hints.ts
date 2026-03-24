@@ -7,11 +7,77 @@ export interface TerminalProgressHintItem {
   file_path: string | null;
 }
 
+/** JSONL line from provider streams — optional fields vary by CLI */
+interface ProgressHintStreamEvent {
+  type?: unknown;
+  index?: unknown;
+  content_block?: {
+    type?: unknown;
+    id?: unknown;
+    name?: unknown;
+    input?: unknown;
+  };
+  delta?: {
+    type?: unknown;
+    partial_json?: unknown;
+  };
+}
+
+interface ProgressHintAssistantBlock {
+  type?: unknown;
+  id?: unknown;
+  name?: unknown;
+  input?: unknown;
+}
+
+interface ProgressHintUserBlock {
+  type?: unknown;
+  tool_use_id?: unknown;
+  content?: unknown;
+  is_error?: unknown;
+}
+
+interface ProgressHintJsonLine {
+  type?: unknown;
+  event?: ProgressHintStreamEvent;
+  message?: { content?: unknown[] };
+  item?: Record<string, unknown>;
+  part?: ProgressHintOpencodePart;
+  tool_name?: unknown;
+  tool_id?: unknown;
+  parameters?: unknown;
+  output?: unknown;
+  error?: unknown;
+  status?: unknown;
+  is_error?: unknown;
+}
+
+interface ProgressHintOpencodePart {
+  type?: unknown;
+  callID?: unknown;
+  callId?: unknown;
+  call_id?: unknown;
+  tool?: unknown;
+  state?: {
+    input?: unknown;
+    output?: unknown;
+    error?: unknown;
+    status?: unknown;
+  };
+}
+
 interface StreamToolUseState {
   tool_use_id: string;
   tool: string;
-  initial_input: any;
+  initial_input: Record<string, unknown>;
   input_json: string;
+}
+
+function asRecord(value: unknown): Record<string, unknown> | undefined {
+  if (value !== null && typeof value === "object" && !Array.isArray(value)) {
+    return value as Record<string, unknown>;
+  }
+  return undefined;
 }
 
 function clipHint(text: string, max = 160): string {
@@ -46,42 +112,44 @@ function normalizeShellCommand(command: string): string {
   return inner.trim() || trimmed;
 }
 
-function extractToolUseFilePath(toolName: string, input: any): string | null {
-  if (!input || typeof input !== "object") return null;
-  if (typeof input.file_path === "string" && input.file_path.trim()) {
-    return input.file_path.trim();
+function extractToolUseFilePath(toolName: string, input: unknown): string | null {
+  const o = asRecord(input);
+  if (!o) return null;
+  if (typeof o.file_path === "string" && o.file_path.trim()) {
+    return o.file_path.trim();
   }
-  if (typeof input.path === "string" && input.path.trim()) {
-    return input.path.trim();
+  if (typeof o.path === "string" && o.path.trim()) {
+    return o.path.trim();
   }
-  if (Array.isArray(input.paths)) {
-    const first = input.paths.find((v: unknown) => typeof v === "string" && v.trim());
+  if (Array.isArray(o.paths)) {
+    const first = o.paths.find((v: unknown) => typeof v === "string" && v.trim());
     if (typeof first === "string") return first.trim();
   }
-  if (toolName === "Bash" && typeof input.command === "string") {
-    const normalizedCommand = normalizeShellCommand(input.command);
-    return extractPathLikeToken(normalizedCommand) || extractPathLikeToken(input.command) || null;
+  if (toolName === "Bash" && typeof o.command === "string") {
+    const normalizedCommand = normalizeShellCommand(o.command);
+    return extractPathLikeToken(normalizedCommand) || extractPathLikeToken(o.command) || null;
   }
   return null;
 }
 
-function summarizeToolUse(toolName: string, input: any): string {
-  if (!input || typeof input !== "object") return toolName;
-  if (typeof input.description === "string" && input.description.trim()) {
-    return clipHint(input.description, 180);
+function summarizeToolUse(toolName: string, input: unknown): string {
+  const o = asRecord(input);
+  if (!o) return toolName;
+  if (typeof o.description === "string" && o.description.trim()) {
+    return clipHint(o.description, 180);
   }
-  if (typeof input.file_path === "string" && input.file_path.trim()) {
-    return clipHint(input.file_path, 180);
+  if (typeof o.file_path === "string" && o.file_path.trim()) {
+    return clipHint(o.file_path, 180);
   }
-  if (typeof input.path === "string" && input.path.trim()) {
-    return clipHint(input.path, 180);
+  if (typeof o.path === "string" && o.path.trim()) {
+    return clipHint(o.path, 180);
   }
-  if (typeof input.command === "string" && input.command.trim()) {
-    const normalizedCommand = normalizeShellCommand(input.command);
-    return clipHint(normalizedCommand || input.command, 180);
+  if (typeof o.command === "string" && o.command.trim()) {
+    const normalizedCommand = normalizeShellCommand(o.command);
+    return clipHint(normalizedCommand || o.command, 180);
   }
-  if (typeof input.prompt === "string" && input.prompt.trim()) {
-    return clipHint(input.prompt, 180);
+  if (typeof o.prompt === "string" && o.prompt.trim()) {
+    return clipHint(o.prompt, 180);
   }
   return toolName;
 }
@@ -96,7 +164,7 @@ function summarizeToolResult(content: unknown): string {
         return clipHint(pickFirstNonEmptyLine(item), 180);
       }
       if (item && typeof item === "object") {
-        const text = (item as any).text;
+        const text = asRecord(item)?.text;
         if (typeof text === "string" && text.trim()) {
           return clipHint(pickFirstNonEmptyLine(text), 180);
         }
@@ -115,12 +183,12 @@ function summarizeToolResult(content: unknown): string {
   return "";
 }
 
-function parseJsonObject(value: string): any | null {
+function parseJsonObject(value: string): Record<string, unknown> | null {
   const trimmed = value.trim();
   if (!trimmed) return null;
   try {
-    const parsed = JSON.parse(trimmed);
-    return parsed && typeof parsed === "object" ? parsed : null;
+    const parsed: unknown = JSON.parse(trimmed);
+    return asRecord(parsed) ?? null;
   } catch {
     return null;
   }
@@ -131,11 +199,12 @@ function capitalizeToolName(name: string): string {
   return name.charAt(0).toUpperCase() + name.slice(1);
 }
 
-function normalizeOpencodeInput(input: any): any {
-  if (!input || typeof input !== "object") return input;
-  const normalized: any = { ...input };
-  if (typeof input.filePath === "string" && !input.file_path) {
-    normalized.file_path = input.filePath;
+function normalizeOpencodeInput(input: unknown): Record<string, unknown> {
+  const o = asRecord(input);
+  if (!o) return {};
+  const normalized: Record<string, unknown> = { ...o };
+  if (typeof o.filePath === "string" && !o.file_path) {
+    normalized.file_path = o.filePath;
   }
   return normalized;
 }
@@ -158,7 +227,7 @@ export function buildTerminalProgressHints(
     const t = line.trim();
     if (!t || !t.startsWith("{")) continue;
     try {
-      const j: any = JSON.parse(t);
+      const j = JSON.parse(t) as ProgressHintJsonLine;
 
       if (j.type === "stream_event") {
         const ev = j.event;
@@ -168,8 +237,7 @@ export function buildTerminalProgressHints(
             streamToolUseByIndex.set(idx, {
               tool_use_id: String(ev.content_block.id || ""),
               tool: String(ev.content_block.name || "Tool"),
-              initial_input:
-                ev.content_block.input && typeof ev.content_block.input === "object" ? ev.content_block.input : {},
+              initial_input: asRecord(ev.content_block.input) ?? {},
               input_json: "",
             });
           }
@@ -191,10 +259,10 @@ export function buildTerminalProgressHints(
             const state = streamToolUseByIndex.get(idx);
             if (state) {
               const parsedInput = parseJsonObject(state.input_json);
-              const input =
-                parsedInput && typeof state.initial_input === "object"
+              const input: Record<string, unknown> =
+                parsedInput
                   ? { ...state.initial_input, ...parsedInput }
-                  : parsedInput || state.initial_input || {};
+                  : { ...state.initial_input };
               const summary = summarizeToolUse(state.tool, input);
               const filePath = extractToolUseFilePath(state.tool, input);
               if (state.tool_use_id && !emittedToolUseIds.has(state.tool_use_id)) {
@@ -215,7 +283,8 @@ export function buildTerminalProgressHints(
       }
 
       if (j.type === "assistant" && Array.isArray(j.message?.content)) {
-        for (const block of j.message.content) {
+        for (const blockRaw of j.message.content) {
+          const block = blockRaw as ProgressHintAssistantBlock;
           if (block?.type !== "tool_use") continue;
           const toolUseId = String(block.id || "");
           if (toolUseId && emittedToolUseIds.has(toolUseId)) continue;
@@ -237,7 +306,8 @@ export function buildTerminalProgressHints(
       }
 
       if (j.type === "user" && Array.isArray(j.message?.content)) {
-        for (const block of j.message.content) {
+        for (const blockRaw of j.message.content) {
+          const block = blockRaw as ProgressHintUserBlock;
           if (block?.type !== "tool_result") continue;
           const toolUseId = String(block.tool_use_id || "");
           const meta = toolUseMeta.get(toolUseId);
@@ -254,7 +324,7 @@ export function buildTerminalProgressHints(
       }
 
       if (j.type === "item.started" && j.item && typeof j.item === "object") {
-        const item = j.item as any;
+        const item = j.item;
         if (item.type === "command_execution" || item.type === "collab_tool_call") {
           const toolUseIdRaw = String(item.id || "");
           const toolUseId = toolUseIdRaw ? `codex:${toolUseIdRaw}` : "";
@@ -287,7 +357,7 @@ export function buildTerminalProgressHints(
       }
 
       if (j.type === "item.completed" && j.item && typeof j.item === "object") {
-        const item = j.item as any;
+        const item = j.item;
         if (item.type === "command_execution" || item.type === "collab_tool_call") {
           const toolUseIdRaw = String(item.id || "");
           const toolUseId = toolUseIdRaw ? `codex:${toolUseIdRaw}` : "";
@@ -324,7 +394,10 @@ export function buildTerminalProgressHints(
         }
         if (item.type === "file_change" && Array.isArray(item.changes)) {
           const changedPaths = item.changes
-            .map((row: any) => (typeof row?.path === "string" ? row.path.trim() : ""))
+            .map((row: unknown) => {
+              const r = asRecord(row);
+              return typeof r?.path === "string" ? r.path.trim() : "";
+            })
             .filter(Boolean);
           if (changedPaths.length > 0) {
             const phase: TerminalProgressHintPhase =
@@ -341,7 +414,7 @@ export function buildTerminalProgressHints(
       }
 
       if (j.type === "tool_use" && j.part?.type === "tool") {
-        const part = j.part as any;
+        const part = j.part;
         const rawCallId =
           typeof part.callID === "string"
             ? part.callID.trim()
@@ -399,7 +472,10 @@ export function buildTerminalProgressHints(
         const rawToolId = typeof j.tool_id === "string" ? j.tool_id.trim() : "";
         const toolUseId = rawToolId ? `gemini:${rawToolId}` : "";
         const tool = String(j.tool_name || "Tool");
-        const input = j.parameters && typeof j.parameters === "object" ? j.parameters : {};
+        const input: Record<string, unknown> =
+          j.parameters && typeof j.parameters === "object" && !Array.isArray(j.parameters)
+            ? (asRecord(j.parameters) ?? {})
+            : {};
         const summary = summarizeToolUse(tool, input);
         const filePath = extractToolUseFilePath(tool, input);
         if (toolUseId && emittedToolUseIds.has(toolUseId)) {

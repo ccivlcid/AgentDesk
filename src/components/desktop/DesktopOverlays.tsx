@@ -10,6 +10,7 @@ import AgentDetailPanel from "../agent-detail/AgentDetailPanel";
 import { RunProjectModal } from "./DesktopRunProjectModal";
 import { TrashModal } from "./DesktopTrash";
 import { buildRunPrompt } from "./DesktopRunProjectModal";
+import { deleteTrashedProjectDirectories } from "../../api/organization-projects";
 
 export interface DesktopOverlaysProps {
   ctxMenu: { x: number; y: number } | null;
@@ -55,7 +56,6 @@ export interface DesktopOverlaysProps {
   }) => Promise<Project>;
   setProjects: (v: Project[] | ((prev: Project[]) => Project[])) => void;
   showToast: (message: string, type: "success" | "error") => void;
-  emptyTrash: () => void;
   children?: ReactNode;
 }
 
@@ -98,7 +98,6 @@ export function DesktopOverlays({
   createProject,
   setProjects,
   showToast,
-  emptyTrash,
   children,
 }: DesktopOverlaysProps) {
   return (
@@ -321,11 +320,69 @@ export function DesktopOverlays({
               );
             }
           }}
-          onDelete={(item) => removeFromTrash(item.id)}
+          onDelete={async (item) => {
+            const { removedIds, failedCount } = await deleteTrashedProjectDirectories([item]);
+            if (removedIds.includes(item.id)) {
+              removeFromTrash(item.id);
+              showToast(
+                t({
+                  ko: "폴더를 삭제하고 휴지통에서 제거했습니다",
+                  en: "Folder removed from disk and trash",
+                  ja: "フォルダを削除しゴミ箱から外しました",
+                  zh: "已从磁盘删除并移出垃圾桶",
+                }),
+                "success",
+              );
+            } else if (failedCount > 0) {
+              showToast(
+                t({
+                  ko: "폴더 삭제에 실패했습니다",
+                  en: "Failed to delete folder on disk",
+                  ja: "フォルダの削除に失敗しました",
+                  zh: "删除文件夹失败",
+                }),
+                "error",
+              );
+            }
+          }}
           onRestoreFeature={() => {}}
           onDeleteFeature={async () => {}}
           onEmpty={async () => {
-            emptyTrash();
+            const items = [...trashedProjects];
+            if (items.length === 0) return;
+            const { removedIds, failedCount } = await deleteTrashedProjectDirectories(items);
+            for (const id of removedIds) removeFromTrash(id);
+            if (failedCount === 0) {
+              showToast(
+                t({
+                  ko: "휴지통 항목의 폴더를 삭제했습니다",
+                  en: "Deleted project folders from disk",
+                  ja: "ゴミ箱のプロジェクトフォルダを削除しました",
+                  zh: "已删除垃圾桶中项目的文件夹",
+                }),
+                "success",
+              );
+            } else if (removedIds.length > 0) {
+              showToast(
+                t({
+                  ko: `일부 폴더만 삭제됨 (${failedCount}개 실패)`,
+                  en: `Some folders could not be deleted (${failedCount} failed)`,
+                  ja: `一部のフォルダを削除できませんでした（失敗 ${failedCount}）`,
+                  zh: `部分文件夹未删除（${failedCount} 个失败）`,
+                }),
+                "error",
+              );
+            } else {
+              showToast(
+                t({
+                  ko: "폴더 삭제에 실패했습니다",
+                  en: "Could not delete folders on disk",
+                  ja: "フォルダを削除できませんでした",
+                  zh: "无法删除磁盘上的文件夹",
+                }),
+                "error",
+              );
+            }
           }}
         />
       )}

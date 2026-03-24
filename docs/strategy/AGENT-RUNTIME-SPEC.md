@@ -1,79 +1,79 @@
 # Agent Runtime Engine — Implementation Spec
 
-> **목표:** AgentDesk를 "예쁜 대시보드"에서 "실제로 에이전트가 자율 실행되는 OS"로 만드는 핵심 엔진.
-> **한 줄 정의:** LLM API를 호출해서 에이전트가 자율적으로 작업하고, 그 과정이 실시간으로 UI에 반영되는 시스템.
+> **Goal:** Transform AgentDesk from a "pretty dashboard" into an OS where agents actually execute autonomously — this is the core engine.
+> **One-line definition:** A system where agents autonomously work by calling LLM APIs, with the entire process reflected in the UI in real time.
 
 ---
 
-## 1. 현재 갭 분석
+## 1. Current Gap Analysis
 
-### 있는 것
+### What Exists
 
-| 영역 | 현재 상태 |
-|------|-----------|
-| Agent CRUD | ✅ 생성/수정/삭제/부서 배정 |
-| Task Board | ✅ Kanban, 상태 추적 (pending/running/done/failed) |
-| CLI Window | ✅ PTY 터미널, 에이전트별 세션, 자동 CLI 실행 |
-| WebSocket | ✅ 실시간 브로드캐스트 (cli_output, task_update, agent_status) |
-| Workflow Builder | ✅ 시각적 플로우, cron 스케줄링 |
-| Library | ✅ Skills/Rules/Memory/Hooks, 프로젝트 스코프 필터 |
-| Prompt Builder | ✅ persona + rules + memory + skills → 프롬프트 조합 |
+| Area | Current State |
+|------|---------------|
+| Agent CRUD | ✅ Create/edit/delete/department assignment |
+| Task Board | ✅ Kanban, status tracking (pending/running/done/failed) |
+| CLI Window | ✅ PTY terminal, per-agent sessions, auto CLI execution |
+| WebSocket | ✅ Real-time broadcast (cli_output, task_update, agent_status) |
+| Workflow Builder | ✅ Visual flows, cron scheduling |
+| Library | ✅ Skills/Rules/Memory/Hooks, project scope filtering |
+| Prompt Builder | ✅ persona + rules + memory + skills → prompt composition |
 
-### 없는 것 (= 만들어야 하는 것)
+### What's Missing (= What Needs to Be Built)
 
-| 영역 | 필요한 이유 |
-|------|-------------|
-| **LLM Direct Execution** | 현재는 외부 CLI(claude/codex)에 위임. AgentDesk 자체가 LLM API를 호출해서 에이전트를 실행해야 "Agent OS"다 |
-| **Streaming Runtime** | LLM 응답이 토큰 단위로 UI에 실시간 스트리밍되어야 "관찰 가능한 실행"이다 |
-| **Tool Use Loop** | 에이전트가 도구(파일 읽기, 코드 실행, 웹 검색 등)를 사용하는 자율 루프가 필요 |
-| **Execution History** | 각 실행의 전체 과정(프롬프트, 응답, 도구 호출, 결과)을 DB에 기록 |
+| Area | Why It's Needed |
+|------|-----------------|
+| **LLM Direct Execution** | Currently delegates to external CLIs (claude/codex). AgentDesk itself must call LLM APIs to execute agents to be a true "Agent OS" |
+| **Streaming Runtime** | LLM responses must stream to the UI token by token for "observable execution" |
+| **Tool Use Loop** | Agents need an autonomous loop for using tools (file reading, code execution, web search, etc.) |
+| **Execution History** | The entire process of each execution (prompts, responses, tool calls, results) must be recorded in the DB |
 
 ---
 
-## 2. 데모 시나리오 (MVP)
+## 2. Demo Scenario (MVP)
 
-이 시나리오가 동작하면 오픈소스 공개 준비 완료:
+When this scenario works, open source release preparation is complete:
 
 ```
-1. Library에서 에이전트 선택 (또는 "프로젝트 분석가" 에이전트 자동 생성)
-2. Task 생성: "이 프로젝트의 구조를 분석하고 README 개선안을 만들어줘"
-3. 에이전트가 자동 실행됨:
-   a. 프로젝트 폴더의 파일 구조 읽기 (tool_use: list_files)
-   b. 주요 파일 내용 읽기 (tool_use: read_file)
-   c. LLM이 분석 결과 생성
-   d. 결과를 마크다운으로 출력
-4. UI에서 실시간으로 보이는 것:
-   - CLI Window: 토큰 스트리밍 + 도구 호출 로그
-   - Task Board: pending → running → done 상태 전이
-   - Agent Detail: 현재 실행 중인 작업, 사용 토큰, 경과 시간
-   - Notification: 완료 알림
-5. Task Report에서 결과물 확인
+1. Select an agent from Library (or auto-create a "Project Analyst" agent)
+2. Create a Task: "Analyze this project's structure and create a README improvement proposal"
+3. Agent executes automatically:
+   a. Read the project folder's file structure (tool_use: list_files)
+   b. Read key file contents (tool_use: read_file)
+   c. LLM generates analysis results
+   d. Output results as markdown
+4. What's visible in the UI in real time:
+   - CLI Window: token streaming + tool call logs
+   - Task Board: pending → running → done state transition
+   - Agent Detail: currently running task, tokens used, elapsed time
+   - Notification: completion alert
+5. View deliverables in Task Report
 ```
 
 ---
 
-## 3. 아키텍처
+## 3. Architecture
 
-### 3.1 모듈 구조
+### 3.1 Module Structure
 
 ```
 server/modules/agent-runtime/
-├── index.ts                  ← 모듈 진입점 (런타임 매니저 export)
-├── runtime-manager.ts        ← 에이전트 실행 관리 (시작/중지/상태 조회)
-├── execution-loop.ts         ← LLM ↔ Tool 자율 실행 루프
-├── llm-client.ts             ← LLM API 추상화 (OpenAI/Anthropic/Local)
-├── tool-executor.ts          ← 내장 도구 실행기
-├── tools/                    ← 내장 도구 정의
-│   ├── list-files.ts         ← 프로젝트 파일 목록
-│   ├── read-file.ts          ← 파일 읽기
-│   ├── write-file.ts         ← 파일 쓰기
-│   ├── run-command.ts        ← 셸 명령 실행 (샌드박스)
-│   └── web-search.ts         ← 웹 검색 (선택)
-├── prompt-assembler.ts       ← 기존 prompt builder 통합 (persona + rules + memory + tools)
-└── execution-store.ts        ← 실행 이력 DB 저장/조회
+├── index.ts                  ← Module entry point (export runtime manager)
+├── runtime-manager.ts        ← Agent execution management (start/stop/status query)
+├── execution-loop.ts         ← LLM ↔ Tool autonomous execution loop
+├── llm-client.ts             ← LLM API abstraction (OpenAI/Anthropic/Local)
+├── tool-executor.ts          ← Built-in tool executor
+├── tools/                    ← Built-in tool definitions
+│   ├── list-files.ts         ← Project file listing
+│   ├── read-file.ts          ← File reading
+│   ├── write-file.ts         ← File writing
+│   ├── run-command.ts        ← Shell command execution (sandboxed)
+│   └── web-search.ts         ← Web search (optional)
+├── prompt-assembler.ts       ← Existing prompt builder integration (persona + rules + memory + tools)
+└── execution-store.ts        ← Execution history DB storage/retrieval
 ```
 
-### 3.2 실행 흐름
+### 3.2 Execution Flow
 
 ```
 POST /api/agent-runtime/run
@@ -82,42 +82,42 @@ POST /api/agent-runtime/run
         ▼
   ① prompt-assembler
      persona + rules + memory + skills + tool definitions
-     → system prompt + user message 조합
+     → system prompt + user message composition
         │
         ▼
   ② llm-client.stream()
-     OpenAI/Anthropic API 호출 (streaming)
-     → 토큰 단위 WebSocket 브로드캐스트
+     OpenAI/Anthropic API call (streaming)
+     → token-level WebSocket broadcast
         │
         ▼
-  ③ execution-loop (반복)
-     ┌─ LLM 응답 파싱
-     │  ├─ text → WebSocket 스트리밍 → CLI Window
-     │  ├─ tool_use → tool-executor 실행 → 결과를 LLM에 피드백
-     │  └─ stop → 루프 종료
+  ③ execution-loop (repeating)
+     ┌─ Parse LLM response
+     │  ├─ text → WebSocket streaming → CLI Window
+     │  ├─ tool_use → tool-executor execution → feed result back to LLM
+     │  └─ stop → end loop
      │
-     └─ 각 턴마다 execution-store에 기록
+     └─ Record each turn in execution-store
         │
         ▼
-  ④ 완료 처리
+  ④ Completion handling
      task.status = "done" | "failed"
      → WebSocket broadcast
      → auto post-processing (report, deliverable check)
 ```
 
-### 3.3 WebSocket 이벤트
+### 3.3 WebSocket Events
 
-| 이벤트 | 페이로드 | 소비자 |
-|--------|----------|--------|
+| Event | Payload | Consumer |
+|-------|---------|----------|
 | `runtime_stream` | `{ taskId, agentId, type: "text"/"tool_call"/"tool_result", content }` | CLI Window, Agent Detail |
 | `runtime_status` | `{ taskId, agentId, status: "thinking"/"tool_use"/"complete"/"error" }` | Task Board, Flow Graph |
 | `runtime_token_usage` | `{ taskId, agentId, input_tokens, output_tokens }` | Agent Detail (cost) |
 
 ---
 
-## 4. LLM Client 추상화
+## 4. LLM Client Abstraction
 
-### 4.1 인터페이스
+### 4.1 Interface
 
 ```typescript
 interface LlmClient {
@@ -137,40 +137,40 @@ type StreamEvent =
   | { type: "error"; error: string };
 ```
 
-### 4.2 지원 프로바이더
+### 4.2 Supported Providers
 
-| 프로바이더 | API | 우선순위 |
-|-----------|-----|----------|
-| **Anthropic** | Messages API (streaming) | 1순위 — 메인 지원 |
-| **OpenAI** | Chat Completions (streaming) | 2순위 |
-| **Local LLM** | 기존 `local-llm` 모듈 활용 (Ollama/LM Studio) | 3순위 |
+| Provider | API | Priority |
+|----------|-----|----------|
+| **Anthropic** | Messages API (streaming) | 1st — Primary support |
+| **OpenAI** | Chat Completions (streaming) | 2nd |
+| **Local LLM** | Uses existing `local-llm` module (Ollama/LM Studio) | 3rd |
 
-프로바이더 설정은 기존 `api_providers` 테이블 + Settings 화면 활용.
-
----
-
-## 5. 내장 도구 (Built-in Tools)
-
-MVP에서 제공할 최소 도구 세트:
-
-| 도구 | 설명 | 제한 |
-|------|------|------|
-| `list_files` | 프로젝트 디렉토리 파일/폴더 목록 | project_path 내부만 |
-| `read_file` | 파일 내용 읽기 | 10MB 제한, 바이너리 제외 |
-| `write_file` | 파일 생성/수정 | project_path 내부만, 확인 옵션 |
-| `run_command` | 셸 명령 실행 | 타임아웃 30s, 허용 목록 기반 |
-| `search_files` | 파일 내용 검색 (grep) | project_path 내부만 |
-
-**보안 원칙:**
-- 모든 파일 접근은 `project_path` 내부로 제한 (path traversal 방지)
-- `run_command`는 허용 목록 또는 사용자 확인 필요
-- `write_file`은 설정에 따라 자동/확인 모드 선택
+Provider settings use the existing `api_providers` table + Settings screen.
 
 ---
 
-## 6. DB 변경
+## 5. Built-in Tools
 
-### 6.1 새 테이블: `agent_runtime_runs`
+Minimum tool set to provide in MVP:
+
+| Tool | Description | Restrictions |
+|------|-------------|-------------|
+| `list_files` | List files/folders in project directory | Within project_path only |
+| `read_file` | Read file contents | 10MB limit, excludes binaries |
+| `write_file` | Create/modify files | Within project_path only, confirmation option |
+| `run_command` | Execute shell commands | 30s timeout, allowlist-based |
+| `search_files` | Search file contents (grep) | Within project_path only |
+
+**Security Principles:**
+- All file access is restricted to within `project_path` (path traversal prevention)
+- `run_command` requires an allowlist or user confirmation
+- `write_file` supports auto/confirmation mode based on settings
+
+---
+
+## 6. DB Changes
+
+### 6.1 New Table: `agent_runtime_runs`
 
 ```sql
 CREATE TABLE agent_runtime_runs (
@@ -191,15 +191,15 @@ CREATE TABLE agent_runtime_runs (
 );
 ```
 
-### 6.2 새 테이블: `agent_runtime_events`
+### 6.2 New Table: `agent_runtime_events`
 
 ```sql
 CREATE TABLE agent_runtime_events (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   run_id TEXT NOT NULL REFERENCES agent_runtime_runs(id),
-  seq INTEGER NOT NULL,          -- 이벤트 순번
+  seq INTEGER NOT NULL,          -- Event sequence number
   event_type TEXT NOT NULL,      -- text | tool_call | tool_result | error
-  content TEXT,                  -- 텍스트 또는 JSON
+  content TEXT,                  -- Text or JSON
   token_count INTEGER DEFAULT 0,
   created_at INTEGER NOT NULL DEFAULT (unixepoch() * 1000)
 );
@@ -208,15 +208,15 @@ CREATE INDEX idx_runtime_events_run ON agent_runtime_events(run_id, seq);
 
 ---
 
-## 7. API 엔드포인트
+## 7. API Endpoints
 
 | Method | Path | Description |
 |--------|------|-------------|
-| `POST` | `/api/agent-runtime/run` | 에이전트 런타임 실행 시작 |
-| `POST` | `/api/agent-runtime/:runId/stop` | 실행 중지 |
-| `GET` | `/api/agent-runtime/:runId` | 실행 상태 조회 |
-| `GET` | `/api/agent-runtime/:runId/events` | 실행 이벤트 목록 |
-| `GET` | `/api/agent-runtime/task/:taskId` | 태스크의 실행 이력 |
+| `POST` | `/api/agent-runtime/run` | Start agent runtime execution |
+| `POST` | `/api/agent-runtime/:runId/stop` | Stop execution |
+| `GET` | `/api/agent-runtime/:runId` | Query execution status |
+| `GET` | `/api/agent-runtime/:runId/events` | List execution events |
+| `GET` | `/api/agent-runtime/task/:taskId` | Execution history for a task |
 
 ### POST /api/agent-runtime/run
 
@@ -227,9 +227,9 @@ CREATE INDEX idx_runtime_events_run ON agent_runtime_events(run_id, seq);
   "taskId": "task-001",
   "projectId": "proj-001",
   "options": {
-    "model": "claude-sonnet-4-6",      // 선택, 기본값은 에이전트 설정
-    "maxTokens": 4096,                  // 선택
-    "maxTurns": 20,                     // 도구 사용 최대 턴 수
+    "model": "claude-sonnet-4-6",      // Optional, defaults to agent settings
+    "maxTokens": 4096,                  // Optional
+    "maxTurns": 20,                     // Maximum tool use turns
     "autoApproveTools": ["list_files", "read_file", "search_files"]
   }
 }
@@ -243,98 +243,98 @@ CREATE INDEX idx_runtime_events_run ON agent_runtime_events(run_id, seq);
 
 ---
 
-## 8. UI 변경
+## 8. UI Changes
 
-### 8.1 기존 컴포넌트 연결 (수정만, 신규 없음)
+### 8.1 Existing Component Integration (Modifications Only, No New Components)
 
-| 컴포넌트 | 변경 내용 |
-|----------|-----------|
-| **CLI Window** | `runtime_stream` WS 이벤트 수신 → 텍스트/도구호출 실시간 렌더링 |
-| **Task Board** | `runtime_status` 수신 → 상태 배지 자동 갱신 |
-| **Agent Detail** | 실행 중 탭에 토큰 사용량, 경과 시간, 현재 단계 표시 |
-| **CreateTaskModal** | "Run with AgentDesk Runtime" 옵션 추가 (vs 기존 CLI 모드) |
-| **Flow Graph** | `runtime_status` → 노드 flash 애니메이션 연동 |
+| Component | Changes |
+|-----------|---------|
+| **CLI Window** | Receive `runtime_stream` WS events → render text/tool calls in real time |
+| **Task Board** | Receive `runtime_status` → auto-update status badges |
+| **Agent Detail** | Show token usage, elapsed time, current step in the running tab |
+| **CreateTaskModal** | Add "Run with AgentDesk Runtime" option (vs existing CLI mode) |
+| **Flow Graph** | Connect `runtime_status` → node flash animation |
 
-### 8.2 신규 UI 없음
+### 8.2 No New UI
 
-기존 UI 인프라가 충분함. 새 화면을 만들지 않고 기존 컴포넌트에 런타임 데이터를 연결하는 것이 핵심.
+The existing UI infrastructure is sufficient. The key is connecting runtime data to existing components, not creating new screens.
 
 ---
 
-## 9. 기존 CLI 모드와의 관계
+## 9. Relationship with Existing CLI Mode
 
 ```
-실행 모드 2가지:
+Two execution modes:
 
-1. CLI 모드 (기존) — PTY 터미널에서 claude/codex/gemini 실행
-   → 외부 에이전트 CLI에 위임
-   → 사용자가 터미널에서 직접 관찰
+1. CLI Mode (existing) — Run claude/codex/gemini in a PTY terminal
+   → Delegates to external agent CLI
+   → User observes directly in the terminal
 
-2. Runtime 모드 (신규) — AgentDesk가 직접 LLM API 호출
-   → 내장 도구 사용, 자율 실행 루프
-   → 구조화된 실시간 스트리밍
-   → 실행 이력 완전 기록
+2. Runtime Mode (new) — AgentDesk directly calls LLM APIs
+   → Uses built-in tools, autonomous execution loop
+   → Structured real-time streaming
+   → Complete execution history recording
 ```
 
-두 모드는 공존. 사용자가 Task 생성 시 선택 가능. Runtime 모드가 기본값이 되되, CLI 모드도 유지.
+Both modes coexist. Users can choose when creating a Task. Runtime mode becomes the default, but CLI mode is maintained.
 
 ---
 
-## 10. 구현 순서
+## 10. Implementation Order
 
-### Step 1 — LLM Client + Streaming (1일차)
+### Step 1 — LLM Client + Streaming (Day 1)
 
-- [ ] `llm-client.ts` — Anthropic Messages API streaming 구현
-- [ ] `POST /api/agent-runtime/run` — 기본 엔드포인트
-- [ ] WebSocket `runtime_stream` 브로드캐스트
-- [ ] CLI Window에서 스트리밍 텍스트 표시
+- [ ] `llm-client.ts` — Implement Anthropic Messages API streaming
+- [ ] `POST /api/agent-runtime/run` — Basic endpoint
+- [ ] WebSocket `runtime_stream` broadcast
+- [ ] Display streaming text in CLI Window
 
-**검증:** Task 생성 → 에이전트 실행 → CLI Window에 LLM 응답이 토큰 단위로 표시
+**Verification:** Create Task → Execute agent → LLM response appears token by token in CLI Window
 
-### Step 2 — Tool Use Loop (2일차)
+### Step 2 — Tool Use Loop (Day 2)
 
-- [ ] `tools/` — list_files, read_file, write_file, search_files 구현
-- [ ] `tool-executor.ts` — 도구 실행 + 보안 검증
-- [ ] `execution-loop.ts` — LLM ↔ Tool 자율 반복
-- [ ] CLI Window에 도구 호출/결과 시각적 구분 표시
+- [ ] `tools/` — Implement list_files, read_file, write_file, search_files
+- [ ] `tool-executor.ts` — Tool execution + security validation
+- [ ] `execution-loop.ts` — LLM ↔ Tool autonomous loop
+- [ ] Visual differentiation of tool calls/results in CLI Window
 
-**검증:** "이 프로젝트의 파일 구조를 분석해줘" → 에이전트가 list_files + read_file 사용 → 분석 결과 출력
+**Verification:** "Analyze this project's file structure" → Agent uses list_files + read_file → Outputs analysis results
 
-### Step 3 — 실행 기록 + 완료 처리 (3일차)
+### Step 3 — Execution Records + Completion Handling (Day 3)
 
-- [ ] DB 마이그레이션 (agent_runtime_runs, agent_runtime_events)
-- [ ] `execution-store.ts` — 턴별 이벤트 기록
-- [ ] 완료 시 기존 post-processing 연동 (report, deliverable check)
-- [ ] Agent Detail에 토큰/비용/시간 표시
+- [ ] DB migration (agent_runtime_runs, agent_runtime_events)
+- [ ] `execution-store.ts` — Per-turn event recording
+- [ ] Connect existing post-processing on completion (report, deliverable check)
+- [ ] Display tokens/cost/time in Agent Detail
 
-**검증:** 실행 완료 후 → Task Report 자동 생성 → Agent Detail에서 이력 확인
+**Verification:** After execution completes → Task Report auto-generated → View history in Agent Detail
 
-### Step 4 — 통합 + 데모 (4일차)
+### Step 4 — Integration + Demo (Day 4)
 
-- [ ] CreateTaskModal에 Runtime/CLI 모드 선택 UI
-- [ ] Flow Graph runtime_status 연동
-- [ ] 기본 에이전트 프리셋 ("프로젝트 분석가") 시드
-- [ ] 데모 시나리오 end-to-end 검증
-
----
-
-## 11. 하지 않는 것 (스코프 밖)
-
-| 항목 | 이유 |
-|------|------|
-| 멀티 턴 대화 | MVP는 단일 태스크 실행. 대화는 기존 Chat Window 활용 |
-| 코드 실행 샌드박스 | `run_command` 기본 구현만. Docker/VM은 Phase 2 |
-| 에이전트 간 협업 | 기존 Workflow Builder로 대체. Runtime 내 멀티 에이전트는 Phase 2 |
-| 브라우저 도구 | 웹 스크래핑/브라우저 자동화는 Phase 2 |
-| 자동 Git 커밋 | write_file만 제공. Git 작업은 사용자 판단 |
+- [ ] Runtime/CLI mode selection UI in CreateTaskModal
+- [ ] Flow Graph runtime_status integration
+- [ ] Default agent preset ("Project Analyst") seed
+- [ ] End-to-end demo scenario verification
 
 ---
 
-## 12. 성공 기준
+## 11. Out of Scope
 
-이 스펙의 구현이 완료되면:
+| Item | Reason |
+|------|--------|
+| Multi-turn conversation | MVP is single-task execution. Conversations use existing Chat Window |
+| Code execution sandbox | Basic `run_command` implementation only. Docker/VM is Phase 2 |
+| Inter-agent collaboration | Replaced by existing Workflow Builder. Multi-agent within Runtime is Phase 2 |
+| Browser tools | Web scraping/browser automation is Phase 2 |
+| Auto Git commit | Only provide write_file. Git operations are at user's discretion |
 
-1. **데모 가능** — "에이전트가 프로젝트를 분석하고 결과를 보여주는" 30초 영상 제작 가능
-2. **차별화 증명** — Cursor/Dify/n8n에 없는 "Visual + Runtime 통합 Agent Control" 실체화
-3. **오픈소스 준비** — `git clone → pnpm install → pnpm dev → 에이전트 실행` 1분 경험 완성
-4. **확장 기반** — Tool 추가만으로 에이전트 능력 확장 가능한 플러그인 구조 확보
+---
+
+## 12. Success Criteria
+
+When this spec's implementation is complete:
+
+1. **Demo-ready** — A 30-second video showing "an agent analyzing a project and displaying results" can be produced
+2. **Differentiation proven** — "Visual + Runtime Integrated Agent Control" not found in Cursor/Dify/n8n is realized
+3. **Open source ready** — `git clone → pnpm install → pnpm dev → run agent` 1-minute experience is complete
+4. **Extension foundation** — A plugin architecture where agent capabilities can be extended by simply adding tools is secured

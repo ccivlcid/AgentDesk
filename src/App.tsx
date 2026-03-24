@@ -67,7 +67,7 @@ export default function App() {
     setMobileNavOpen, setMobileHeaderMenuOpen, setUpdateStatus, setDismissedUpdateVersion,
     addToast,
   } = useUiStore();
-  const { t } = useI18n();
+  const { tk, t } = useI18n();
 
   // ── Onboarding: check API provider on first load ──────────────────────
   const onboardingCheckedRef = useRef(false);
@@ -79,20 +79,15 @@ export default function App() {
         if (providers.length === 0) {
           addToast({
             type: "info",
-            title: t({ ko: "API 프로바이더를 설정하세요", en: "Set up an API provider", ja: "APIプロバイダを設定してください", zh: "请设置API提供商" }),
-            body: t({
-              ko: "Settings → API 탭에서 OpenAI, Anthropic 등 API 키를 등록하거나, Local LLM을 연결하세요.",
-              en: "Go to Settings → API tab to add an OpenAI/Anthropic key, or connect a Local LLM.",
-              ja: "Settings → APIタブでAPIキーを登録するか、ローカルLLMを接続してください。",
-              zh: "前往设置→API标签添加API密钥，或连接本地LLM。",
-            }),
+            title: tk("app.onboarding.apiProvider.title"),
+            body: tk("app.onboarding.apiProvider.body"),
             duration: 12000,
             onClick: () => openWindow("settings"),
           });
         }
       }).catch(() => { /* ignore */ }),
     );
-  }, [loading, addToast, t, openWindow]);
+  }, [loading, addToast, tk, openWindow]);
 
   // ── Derived values ───────────────────────────────────────────────────────
   const currentProject = projects.find((p) => p.id === currentProjectId) ?? null;
@@ -176,19 +171,19 @@ export default function App() {
     (task: { title?: string }) => {
       addToast({
         type: "success",
-        title: t({ ko: `태스크 완료: ${task.title ?? ""}`, en: `Task complete: ${task.title ?? ""}`, ja: `タスク完了: ${task.title ?? ""}`, zh: `任务完成: ${task.title ?? ""}` }),
+        title: tk("toast.task.complete", { title: task.title ?? "" }),
       });
     },
-    [addToast, t],
+    [addToast, tk],
   );
   const onTaskFailed = useCallback(
     (task: { title?: string }) => {
       addToast({
         type: "error",
-        title: t({ ko: `태스크 실패: ${task.title ?? ""}`, en: `Task failed: ${task.title ?? ""}`, ja: `タスク失敗: ${task.title ?? ""}`, zh: `任务失败: ${task.title ?? ""}` }),
+        title: tk("toast.task.failed", { title: task.title ?? "" }),
       });
     },
-    [addToast, t],
+    [addToast, tk],
   );
 
   // WebSocket 이벤트 → 스토어 실시간 반영 (task/agent/message/cli_output 등)

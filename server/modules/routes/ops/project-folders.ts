@@ -3,6 +3,7 @@ import type { DatabaseSync } from "node:sqlite";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import logger from "../../../lib/logger.ts";
+import { castSqliteRow, castSqliteRows } from "../../../lib/sqlite-row-cast.ts";
 
 interface RegisterProjectFolderRoutesOptions {
   app: Express;
@@ -29,13 +30,15 @@ interface ProjectRow {
 }
 
 function getFolderWithProjects(db: DatabaseSync, folderId: string) {
-  const folder = db
-    .prepare("SELECT id, name, base_path, color, icon, sort_order, created_at, updated_at FROM project_folders WHERE id = ?")
-    .get(folderId) as FolderRow | undefined;
+  const folder = castSqliteRow<FolderRow>(
+    db
+      .prepare("SELECT id, name, base_path, color, icon, sort_order, created_at, updated_at FROM project_folders WHERE id = ?")
+      .get(folderId),
+  );
   if (!folder) return null;
-  const projects = db
-    .prepare("SELECT id, name, project_path, category_id FROM projects WHERE folder_id = ? ORDER BY name ASC")
-    .all(folderId) as unknown as ProjectRow[];
+  const projects = castSqliteRows<ProjectRow>(
+    db.prepare("SELECT id, name, project_path, category_id FROM projects WHERE folder_id = ? ORDER BY name ASC").all(folderId),
+  );
   return { ...folder, projects };
 }
 
@@ -43,13 +46,15 @@ export function registerProjectFolderRoutes({ app, db, nowMs }: RegisterProjectF
   // GET /api/project-folders
   app.get("/api/project-folders", (_req, res) => {
     try {
-      const folders = db
-        .prepare("SELECT id, name, base_path, color, icon, sort_order, created_at, updated_at FROM project_folders ORDER BY sort_order ASC, created_at ASC")
-        .all() as unknown as FolderRow[];
+      const folders = castSqliteRows<FolderRow>(
+        db
+          .prepare("SELECT id, name, base_path, color, icon, sort_order, created_at, updated_at FROM project_folders ORDER BY sort_order ASC, created_at ASC")
+          .all(),
+      );
       const result = folders.map((f) => {
-        const projects = db
-          .prepare("SELECT id, name, project_path, category_id FROM projects WHERE folder_id = ? ORDER BY name ASC")
-          .all(f.id) as unknown as ProjectRow[];
+        const projects = castSqliteRows<ProjectRow>(
+          db.prepare("SELECT id, name, project_path, category_id FROM projects WHERE folder_id = ? ORDER BY name ASC").all(f.id),
+        );
         return { ...f, projects };
       });
       res.json({ folders: result });

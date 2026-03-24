@@ -35,7 +35,7 @@ export function initializeWorkflowPartA(ctx: RuntimeContext): WorkflowCoreExport
   const CLI_TOOLS = __ctx.CLI_TOOLS;
   const MODELS_CACHE_TTL = __ctx.MODELS_CACHE_TTL;
   const analyzeSubtaskDepartment = __ctx.analyzeSubtaskDepartment;
-  const appendTaskLog = (...args: any[]) => __ctx.appendTaskLog(...args);
+  const appendTaskLog = __ctx.appendTaskLog;
   const cachedCliStatus = __ctx.cachedCliStatus;
   const cachedModels = __ctx.cachedModels;
   const clearTaskWorkflowState = __ctx.clearTaskWorkflowState;
@@ -53,14 +53,14 @@ export function initializeWorkflowPartA(ctx: RuntimeContext): WorkflowCoreExport
   const getNextOAuthLabel = __ctx.getNextOAuthLabel;
   const getOAuthAccounts = __ctx.getOAuthAccounts;
   const getPreferredOAuthAccounts = __ctx.getPreferredOAuthAccounts;
-  const getProviderModelConfig = (...args: any[]) => __ctx.getProviderModelConfig(...args);
-  const handleTaskRunComplete = (...args: any[]) => __ctx.handleTaskRunComplete(...args);
+  const getProviderModelConfig = __ctx.getProviderModelConfig;
+  const handleTaskRunComplete = __ctx.handleTaskRunComplete;
   const httpAgentCounter = __ctx.httpAgentCounter;
   const interruptPidTree = __ctx.interruptPidTree;
   const isAgentInMeeting = __ctx.isAgentInMeeting;
   const isPidAlive = __ctx.isPidAlive;
   const isTaskWorkflowInterrupted = __ctx.isTaskWorkflowInterrupted;
-  const killPidTree = (...args: any[]) => __ctx.killPidTree(...args);
+  const killPidTree = __ctx.killPidTree;
   const launchHttpAgent = __ctx.launchHttpAgent;
   const meetingPhaseByAgent = __ctx.meetingPhaseByAgent;
   const meetingPresenceUntil = __ctx.meetingPresenceUntil;
@@ -68,7 +68,7 @@ export function initializeWorkflowPartA(ctx: RuntimeContext): WorkflowCoreExport
   const meetingSeatIndexByAgent = __ctx.meetingSeatIndexByAgent;
   const meetingTaskIdByAgent = __ctx.meetingTaskIdByAgent;
   const normalizeOAuthProvider = __ctx.normalizeOAuthProvider;
-  const notifyClient = (...args: any[]) => __ctx.notifyClient(...args);
+  const notifyClient = __ctx.notifyClient;
   const refreshGoogleToken = __ctx.refreshGoogleToken;
   const seedApprovedPlanSubtasks = __ctx.seedApprovedPlanSubtasks;
   const spawnCliAgent = __ctx.spawnCliAgent;
@@ -110,9 +110,9 @@ export function initializeWorkflowPartA(ctx: RuntimeContext): WorkflowCoreExport
   const parseGeminiSSEStream = __ctx.parseGeminiSSEStream;
   const resolveCopilotModel = __ctx.resolveCopilotModel;
   const resolveAntigravityModel = __ctx.resolveAntigravityModel;
-  const executeCopilotAgent = (...args: any[]) => __ctx.executeCopilotAgent(...args);
-  const executeAntigravityAgent = (...args: any[]) => __ctx.executeAntigravityAgent(...args);
-  const executeApiProviderAgent = (...args: any[]) => __ctx.executeApiProviderAgent(...args);
+  const executeCopilotAgent = __ctx.executeCopilotAgent;
+  const executeAntigravityAgent = __ctx.executeAntigravityAgent;
+  const executeApiProviderAgent = __ctx.executeApiProviderAgent;
   const jsonHasKey = __ctx.jsonHasKey;
   const fileExistsNonEmpty = __ctx.fileExistsNonEmpty;
   const readClaudeToken = __ctx.readClaudeToken;
@@ -160,24 +160,23 @@ export function initializeWorkflowPartA(ctx: RuntimeContext): WorkflowCoreExport
       },
     },
   );
-  const detectLang = (...args: any[]) => __ctx.detectLang(...args);
-  const detectTargetDepartments = (...args: any[]) => __ctx.detectTargetDepartments(...args);
-  const findTeamLeader = (...args: any[]) => __ctx.findTeamLeader(...args);
-  const formatTaskSubtaskProgressSummary = (...args: any[]) => __ctx.formatTaskSubtaskProgressSummary(...args);
-  const getDeptName = (...args: any[]) => __ctx.getDeptName(...args);
-  const getDeptRoleConstraint = (...args: any[]) => __ctx.getDeptRoleConstraint(...args);
-  const getPreferredLanguage = (...args: any[]) => __ctx.getPreferredLanguage(...args);
-  const getRoleLabel = (...args: any[]) => __ctx.getRoleLabel(...args);
-  const l = (...args: any[]) => __ctx.l(...args);
-  const pickL = (...args: any[]) => __ctx.pickL(...args);
-  const prettyStreamJson = (...args: any[]) => __ctx.prettyStreamJson(...args);
-  const processSubtaskDelegations = (...args: any[]) => __ctx.processSubtaskDelegations(...args);
-  const recoverCrossDeptQueueAfterMissingCallback = (...args: any[]) =>
-    __ctx.recoverCrossDeptQueueAfterMissingCallback(...args);
-  const refreshCliUsageData = (...args: any[]) => __ctx.refreshCliUsageData(...args);
-  const resolveLang = (...args: any[]) => __ctx.resolveLang(...args);
-  const resolveProjectPath = (...args: any[]) => __ctx.resolveProjectPath(...args);
-  const sendAgentMessage = (...args: any[]) => __ctx.sendAgentMessage(...args);
+  const detectLang = __ctx.detectLang;
+  const detectTargetDepartments = __ctx.detectTargetDepartments;
+  const findTeamLeader = __ctx.findTeamLeader;
+  const formatTaskSubtaskProgressSummary = __ctx.formatTaskSubtaskProgressSummary;
+  const getDeptName = __ctx.getDeptName;
+  const getDeptRoleConstraint = __ctx.getDeptRoleConstraint;
+  const getPreferredLanguage = __ctx.getPreferredLanguage;
+  const getRoleLabel = __ctx.getRoleLabel;
+  const l = __ctx.l;
+  const pickL = __ctx.pickL;
+  const prettyStreamJson = __ctx.prettyStreamJson;
+  const processSubtaskDelegations = __ctx.processSubtaskDelegations;
+  const recoverCrossDeptQueueAfterMissingCallback = __ctx.recoverCrossDeptQueueAfterMissingCallback;
+  const refreshCliUsageData = __ctx.refreshCliUsageData;
+  const resolveLang = __ctx.resolveLang;
+  const resolveProjectPath = __ctx.resolveProjectPath;
+  const sendAgentMessage = __ctx.sendAgentMessage;
 
   // ---------------------------------------------------------------------------
   // Track active child processes
@@ -205,7 +204,7 @@ export function initializeWorkflowPartA(ctx: RuntimeContext): WorkflowCoreExport
 
   const { mergeWorktree, mergeToDevAndCreatePR, rollbackTaskWorktree, getWorktreeDiffSummary, hasVisibleDiffSummary } =
     createWorktreeMergeTools({
-      db: db as any,
+      db,
       taskWorktrees,
       appendTaskLog,
       cleanupWorktree,
@@ -223,7 +222,7 @@ export function initializeWorkflowPartA(ctx: RuntimeContext): WorkflowCoreExport
     ensureClaudeMd,
     injectTaskContext,
   } = createProjectContextTools({
-    db: db as any,
+    db,
     isGitRepo,
     taskWorktrees,
   });
@@ -280,7 +279,7 @@ export function initializeWorkflowPartA(ctx: RuntimeContext): WorkflowCoreExport
 
   const { getRecentConversationContext, extractLatestProjectMemoBlock, getTaskContinuationContext } =
     createConversationContextTools({
-      db: db as any,
+      db,
       normalizeStreamChunk,
       summarizeForMeetingBubble,
     });

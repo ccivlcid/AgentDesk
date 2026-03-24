@@ -3,7 +3,7 @@ import type { Node, Edge } from "@xyflow/react";
 import { useProjectStore } from "../../store/projectStore";
 import { useTaskStore } from "../../store/taskStore";
 import { useI18n } from "../../i18n";
-import type { CompAgentNodeData } from "./nodes/CompAgentNode";
+import { IconRobot, type CompAgentNodeData } from "./nodes/CompAgentNode";
 
 type RunItem = {
   nodeId: string;
@@ -26,6 +26,81 @@ type Phase = "config" | "running" | "done" | "error";
 
 const mono = "var(--th-font-mono)";
 
+function IconPlaySmall({ size = 14 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <polygon points="5 3 19 12 5 21 5 3" />
+    </svg>
+  );
+}
+
+function IconLinkSmall({ size = 14 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+    </svg>
+  );
+}
+
+function StatusGlyph({ status }: { status: string }) {
+  const base = {
+    width: 12,
+    height: 12,
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 2,
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+  } as const;
+  if (status === "done") {
+    return (
+      <svg {...base} aria-hidden>
+        <polyline points="20 6 9 17 4 12" />
+      </svg>
+    );
+  }
+  if (status === "in_progress" || status === "collaborating") {
+    return (
+      <svg {...base} fill="currentColor" stroke="none" aria-hidden>
+        <polygon points="5 3 19 12 5 21 5 3" />
+      </svg>
+    );
+  }
+  if (status === "review") {
+    return (
+      <svg {...base} aria-hidden>
+        <circle cx="12" cy="12" r="10" />
+        <circle cx="12" cy="12" r="3" />
+      </svg>
+    );
+  }
+  if (status === "cancelled") {
+    return (
+      <svg {...base} aria-hidden>
+        <line x1="18" y1="6" x2="6" y2="18" />
+        <line x1="6" y1="6" x2="18" y2="18" />
+      </svg>
+    );
+  }
+  return (
+    <svg width={12} height={12} viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <circle cx="12" cy="12" r="2" />
+    </svg>
+  );
+}
+
 export default function AgentCompositionRunModal({ nodes, edges, templateName, onClose, onSuccess }: Props) {
   const { t } = useI18n();
   const { projects, currentProjectId } = useProjectStore();
@@ -40,7 +115,7 @@ export default function AgentCompositionRunModal({ nodes, edges, templateName, o
         nodeId: n.id,
         agentId: d.agentId,
         name: d.name,
-        emoji: d.emoji ?? "🤖",
+        emoji: d.emoji ?? "",
         role: d.role ?? "",
         taskTitle: `${d.name} — ${templateName}`,
       };
@@ -99,9 +174,9 @@ export default function AgentCompositionRunModal({ nodes, edges, templateName, o
         const { nodeId, taskId, name, emoji } = result.value;
         nodeTaskMap[nodeId] = taskId;
         taskIds.push(taskId);
-        addLog(`  ✓ ${emoji} ${name} → ${taskId.slice(0, 8)}`);
+        addLog(`  OK ${emoji} ${name} -> ${taskId.slice(0, 8)}`);
       } else {
-        addLog(`  ✗ ${t({ ko: "태스크 생성 실패", en: "failed to create task", ja: "タスク作成失敗", zh: "创建任务失败" })}`);
+        addLog(`  FAIL ${t({ ko: "태스크 생성 실패", en: "failed to create task", ja: "タスク作成失敗", zh: "创建任务失败" })}`);
         hasError = true;
       }
     }
@@ -119,7 +194,7 @@ export default function AgentCompositionRunModal({ nodes, edges, templateName, o
       const dependentTaskId = nodeTaskMap[edge.target];
       const prerequisiteTaskId = nodeTaskMap[edge.source];
       addLog(
-        `🔗 ${t({ ko: "의존 관계", en: "dependency", ja: "依存関係", zh: "依赖关系" })}: ${prerequisiteTaskId.slice(0, 8)} → ${dependentTaskId.slice(0, 8)}`,
+        `[link] ${t({ ko: "의존 관계", en: "dependency", ja: "依存関係", zh: "依赖关系" })}: ${prerequisiteTaskId.slice(0, 8)} -> ${dependentTaskId.slice(0, 8)}`,
       );
       try {
         await fetch(`/api/tasks/${dependentTaskId}/dependencies`, {
@@ -127,16 +202,16 @@ export default function AgentCompositionRunModal({ nodes, edges, templateName, o
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ depends_on_task_id: prerequisiteTaskId }),
         });
-        addLog(`  ✓`);
+        addLog("  OK");
       } catch {
-        addLog(`  ✗ ${t({ ko: "의존 관계 설정 실패", en: "dependency failed", ja: "依存関係失敗", zh: "依赖设置失败" })}`);
+        addLog(`  FAIL ${t({ ko: "의존 관계 설정 실패", en: "dependency failed", ja: "依存関係失敗", zh: "依赖设置失败" })}`);
         // non-fatal
       }
       setProgress(50 + Math.round(((i + 1) / edgesWithDeps.length) * 50));
     }
 
     addLog(
-      `\n✓ ${t({ ko: `${taskIds.length}개 태스크 생성 완료`, en: `${taskIds.length} tasks created`, ja: `${taskIds.length}件のタスクを作成`, zh: `已创建${taskIds.length}个任务` })}`,
+      `\nOK ${t({ ko: `${taskIds.length}개 태스크 생성 완료`, en: `${taskIds.length} tasks created`, ja: `${taskIds.length}件のタスクを作成`, zh: `已创建${taskIds.length}个任务` })}`,
     );
     setCreatedIds(taskIds);
     setPhase("done");
@@ -184,8 +259,10 @@ export default function AgentCompositionRunModal({ nodes, edges, templateName, o
           }}
         >
           <div>
-            <div style={{ fontFamily: mono, fontSize: 13, fontWeight: 700, color: "var(--th-text-heading)" }}>
-              ▶{" "}
+            <div style={{ fontFamily: mono, fontSize: 13, fontWeight: 700, color: "var(--th-text-heading)", display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ display: "inline-flex", color: "var(--th-text-heading)" }}>
+                <IconPlaySmall size={16} />
+              </span>
               {t({
                 ko: "조합 실행",
                 en: "Run Composition",
@@ -210,7 +287,10 @@ export default function AgentCompositionRunModal({ nodes, edges, templateName, o
                 padding: 4,
               }}
             >
-              ×
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
             </button>
           )}
         </div>
@@ -274,7 +354,9 @@ export default function AgentCompositionRunModal({ nodes, edges, templateName, o
                           padding: "7px 10px",
                         }}
                       >
-                        <span style={{ fontSize: 18, flexShrink: 0 }}>{item.emoji}</span>
+                        <span style={{ fontSize: 18, flexShrink: 0, display: "inline-flex", alignItems: "center", color: "var(--th-text-primary)" }}>
+                          {item.emoji ? <span>{item.emoji}</span> : <IconRobot size={18} />}
+                        </span>
                         <div style={{ flexShrink: 0, width: 70 }}>
                           <div style={{ fontFamily: mono, fontSize: 11, fontWeight: 600, color: "var(--th-text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                             {item.name}
@@ -307,9 +389,14 @@ export default function AgentCompositionRunModal({ nodes, edges, templateName, o
 
               {/* Edge summary */}
               {edges.length > 0 && (
-                <div style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-muted)", padding: "8px 10px", background: "var(--th-bg-elevated)", borderRadius: 5, border: "1px solid var(--th-border)" }}>
-                  🔗 {edges.length}{" "}
-                  {t({ ko: "개 의존 관계가 태스크에 연결됩니다", en: "dependencies will be linked between tasks", ja: "件の依存関係がリンクされます", zh: "个依赖关系将被链接" })}
+                <div style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-muted)", padding: "8px 10px", background: "var(--th-bg-elevated)", borderRadius: 5, border: "1px solid var(--th-border)", display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ display: "inline-flex", flexShrink: 0 }}>
+                    <IconLinkSmall size={14} />
+                  </span>
+                  <span>
+                    {edges.length}{" "}
+                    {t({ ko: "개 의존 관계가 태스크에 연결됩니다", en: "dependencies will be linked between tasks", ja: "件の依存関係がリンクされます", zh: "个依赖关系将被链接" })}
+                  </span>
                 </div>
               )}
             </>
@@ -363,10 +450,20 @@ export default function AgentCompositionRunModal({ nodes, edges, templateName, o
                       fontFamily: mono,
                       fontSize: 11,
                       color: "#10b981",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
                     }}
                   >
-                    ✓ {createdIds.length}{" "}
-                    {t({ ko: "개 태스크가 생성되었습니다", en: "tasks created successfully", ja: "件のタスクが作成されました", zh: "个任务已成功创建" })}
+                    <span style={{ display: "inline-flex" }}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    </span>
+                    <span>
+                      {createdIds.length}{" "}
+                      {t({ ko: "개 태스크가 생성되었습니다", en: "tasks created successfully", ja: "件のタスクが作成されました", zh: "个任务已成功创建" })}
+                    </span>
                   </div>
 
                   {/* Live execution monitor */}
@@ -384,12 +481,6 @@ export default function AgentCompositionRunModal({ nodes, edges, templateName, o
                           status === "review" ? "#8b5cf6" :
                           status === "cancelled" ? "var(--th-danger-border)" :
                           "var(--th-text-muted)";
-                        const statusDot =
-                          status === "done" ? "✓" :
-                          status === "in_progress" || status === "collaborating" ? "▶" :
-                          status === "review" ? "◎" :
-                          status === "cancelled" ? "✗" :
-                          "·";
                         return (
                           <div
                             key={item.nodeId}
@@ -403,12 +494,17 @@ export default function AgentCompositionRunModal({ nodes, edges, templateName, o
                               borderRadius: 5,
                             }}
                           >
-                            <span style={{ fontSize: 14, flexShrink: 0 }}>{item.emoji}</span>
+                            <span style={{ fontSize: 14, flexShrink: 0, display: "inline-flex", alignItems: "center", color: "var(--th-text-primary)" }}>
+                              {item.emoji ? <span>{item.emoji}</span> : <IconRobot size={14} />}
+                            </span>
                             <span style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text)", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                               {item.name}
                             </span>
-                            <span style={{ fontFamily: mono, fontSize: 10, color: statusColor, fontWeight: 600, flexShrink: 0 }}>
-                              {statusDot} {status}
+                            <span style={{ fontFamily: mono, fontSize: 10, color: statusColor, fontWeight: 600, flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 6 }}>
+                              <span style={{ display: "inline-flex" }}>
+                                <StatusGlyph status={status} />
+                              </span>
+                              {status}
                             </span>
                           </div>
                         );
@@ -431,7 +527,13 @@ export default function AgentCompositionRunModal({ nodes, edges, templateName, o
                     color: "#ef4444",
                   }}
                 >
-                  ✗ {t({ ko: "오류가 발생했습니다", en: "An error occurred", ja: "エラーが発生しました", zh: "发生错误" })}
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                    {t({ ko: "오류가 발생했습니다", en: "An error occurred", ja: "エラーが発生しました", zh: "发生错误" })}
+                  </span>
                 </div>
               )}
             </div>
@@ -482,7 +584,10 @@ export default function AgentCompositionRunModal({ nodes, edges, templateName, o
                   color: "#fff",
                 }}
               >
-                ▶ {t({ ko: "실행", en: "Run", ja: "実行", zh: "运行" })}
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                  <IconPlaySmall size={12} />
+                  {t({ ko: "실행", en: "Run", ja: "実行", zh: "运行" })}
+                </span>
               </button>
             </>
           )}

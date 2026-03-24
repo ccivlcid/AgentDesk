@@ -63,14 +63,16 @@ function areValuesEquivalent(a: unknown, b: unknown): boolean {
 }
 
 function areExtraFieldsEquivalent(
-  a: Record<string, unknown>,
-  b: Record<string, unknown>,
+  a: object,
+  b: object,
   comparedKeys: ReadonlySet<string>,
 ): boolean {
-  const keys = new Set<string>([...Object.keys(a), ...Object.keys(b)]);
+  const ra = a as Record<string, unknown>;
+  const rb = b as Record<string, unknown>;
+  const keys = new Set<string>([...Object.keys(ra), ...Object.keys(rb)]);
   for (const key of keys) {
     if (comparedKeys.has(key)) continue;
-    if (!areValuesEquivalent(a[key], b[key])) return false;
+    if (!areValuesEquivalent(ra[key], rb[key])) return false;
   }
   return true;
 }
@@ -137,11 +139,7 @@ export function areAgentsEquivalent(a: Agent, b: Agent): boolean {
     a.stats_xp === b.stats_xp &&
     a.created_at === b.created_at
   ) {
-    return areExtraFieldsEquivalent(
-      a as unknown as Record<string, unknown>,
-      b as unknown as Record<string, unknown>,
-      AGENT_EQ_KNOWN_KEYS,
-    );
+    return areExtraFieldsEquivalent(a, b, AGENT_EQ_KNOWN_KEYS);
   }
   return false;
 }
@@ -177,11 +175,7 @@ function areTasksEquivalent(a: Task, b: Task): boolean {
     (a.subtask_done ?? null) === (b.subtask_done ?? null) &&
     (a.hidden ?? 0) === (b.hidden ?? 0)
   ) {
-    return areExtraFieldsEquivalent(
-      a as unknown as Record<string, unknown>,
-      b as unknown as Record<string, unknown>,
-      TASK_EQ_KNOWN_KEYS,
-    );
+    return areExtraFieldsEquivalent(a, b, TASK_EQ_KNOWN_KEYS);
   }
   return false;
 }

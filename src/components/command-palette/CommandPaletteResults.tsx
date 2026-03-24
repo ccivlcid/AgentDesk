@@ -195,8 +195,16 @@ export function CommandPaletteResults({
             const isDone = d.status === "done";
             return (
               <PaletteRow key={d.id} item={{ kind: "deliverable", item: d }} idx={idx} safeIndex={safeIndex} onPick={onExecuteItem}>
-                <span style={{ width: 28, height: 28, borderRadius: 7, background: isDone ? "rgba(74,222,128,0.15)" : "rgba(245,158,11,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, flexShrink: 0, position: "relative", zIndex: 1 }}>
-                  {isDone ? "✓" : "·"}
+                <span style={{ width: 28, height: 28, borderRadius: 7, background: isDone ? "rgba(74,222,128,0.15)" : "rgba(245,158,11,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, flexShrink: 0, position: "relative", zIndex: 1, color: isDone ? "#4ade80" : "var(--th-accent)" }}>
+                  {isDone ? (
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  ) : (
+                    <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                      <circle cx="12" cy="12" r="2" />
+                    </svg>
+                  )}
                 </span>
                 <div style={{ flex: 1, textAlign: "left", overflow: "hidden", position: "relative", zIndex: 1 }}>
                   <div style={{ ...sf, fontSize: 14, color: isSel ? "var(--th-text-heading)" : "var(--th-text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.title}</div>
