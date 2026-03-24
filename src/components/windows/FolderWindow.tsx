@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, type ReactNode } from "react";
 import { useUiStore } from "../../store/uiStore";
 import { useProjectStore } from "../../store/projectStore";
 import { useI18n } from "../../i18n";
@@ -73,7 +73,7 @@ function ProjectPickerDropdown({
               onMouseEnter={(e) => (e.currentTarget.style.background = "var(--th-bg-surface)")}
               onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
             >
-              <div style={{ fontSize: 11, color: "var(--th-text-primary)" }}>🗂 {p.name}</div>
+              <div style={{ fontSize: 11, color: "var(--th-text-primary)", display: "flex", alignItems: "center", gap: 4 }}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" /><line x1="2" y1="10" x2="22" y2="10" /></svg> {p.name}</div>
               <div style={{ fontSize: 9, color: "var(--th-text-muted)", marginTop: 2 }}>{p.project_path}</div>
             </button>
           ))
@@ -132,8 +132,12 @@ function FsTreeNode({ entry, depth, folderProjects }: {
         <span style={{ fontSize: 10, color: "var(--th-text-muted)", width: 12, textAlign: "center", flexShrink: 0 }}>
           {entry.type === "dir" ? (open ? "▾" : "▸") : "·"}
         </span>
-        <span style={{ fontSize: 12 }}>
-          {entry.type === "dir" ? (open ? "📂" : "📁") : fileIcon(entry.ext)}
+        <span style={{ fontSize: 12, display: "inline-flex", alignItems: "center" }}>
+          {entry.type === "dir"
+            ? (open
+              ? <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" /></svg>
+              : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" /></svg>)
+            : <FileIcon ext={entry.ext} />}
         </span>
         <span style={{
           fontSize: 10, fontFamily: "var(--th-font-mono)",
@@ -166,14 +170,20 @@ function FsTreeNode({ entry, depth, folderProjects }: {
   );
 }
 
-function fileIcon(ext: string): string {
+function FileIcon({ ext }: { ext: string }) {
   const e = ext.toLowerCase();
-  if ([".ts", ".tsx", ".js", ".jsx"].includes(e)) return "📜";
-  if ([".md", ".txt"].includes(e)) return "📄";
-  if ([".json", ".yaml", ".yml"].includes(e)) return "⚙️";
-  if ([".png", ".jpg", ".svg", ".gif", ".webp"].includes(e)) return "🖼";
-  if ([".css", ".scss"].includes(e)) return "🎨";
-  return "·";
+  const props = { width: 14, height: 14, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
+  if ([".ts", ".tsx", ".js", ".jsx"].includes(e))
+    return <svg {...props}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /></svg>;
+  if ([".md", ".txt"].includes(e))
+    return <svg {...props}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /></svg>;
+  if ([".json", ".yaml", ".yml"].includes(e))
+    return <svg {...props}><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" /></svg>;
+  if ([".png", ".jpg", ".svg", ".gif", ".webp"].includes(e))
+    return <svg {...props}><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg>;
+  if ([".css", ".scss"].includes(e))
+    return <svg {...props}><circle cx="13.5" cy="6.5" r="2.5" /><path d="M17.5 10.5c0 3-5 7.5-5 7.5s-5-4.5-5-7.5a5 5 0 0 1 10 0z" /></svg>;
+  return <span>·</span>;
 }
 
 function formatSize(bytes: number): string {
@@ -320,7 +330,7 @@ function MergeTab({ folder, onProjectCreated }: {
       <div style={{ marginBottom: 16 }}>
         <div style={{ fontSize: 10, color: "var(--th-text-muted)", marginBottom: 8, display: "flex", justifyContent: "space-between" }}>
           <span>{t({ ko: "합칠 프로젝트 선택", en: "Select projects to merge", ja: "統合するプロジェクトを選択", zh: "选择要合并的项目" })}</span>
-          <span style={{ color: overLimit ? "var(--th-danger-text)" : "var(--th-text-muted)" }}>{selectedIds.size} / {MAX_SOURCES}{overLimit && " ⚠️"}</span>
+          <span style={{ color: overLimit ? "var(--th-danger-text)" : "var(--th-text-muted)" }}>{selectedIds.size} / {MAX_SOURCES}{overLimit && <> <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: "inline", verticalAlign: "middle" }}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg></>}</span>
         </div>
         {folder.projects.length === 0
           ? <div style={{ fontSize: 10, color: "var(--th-text-muted)" }}>{t({ ko: "폴더에 프로젝트가 없습니다.", en: "No projects in folder.", ja: "フォルダにプロジェクトがありません。", zh: "文件夹中没有项目。" })}</div>
@@ -336,7 +346,7 @@ function MergeTab({ folder, onProjectCreated }: {
                     <input type="checkbox" checked={checked} onChange={() => toggleProject(p.id)}
                       style={{ accentColor: "var(--th-accent)", width: 14, height: 14, cursor: "pointer" }} />
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 11, color: "var(--th-text-primary)", fontWeight: checked ? 600 : 400 }}>🗂 {p.name}</div>
+                      <div style={{ fontSize: 11, color: "var(--th-text-primary)", fontWeight: checked ? 600 : 400, display: "flex", alignItems: "center", gap: 4 }}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" /><line x1="2" y1="10" x2="22" y2="10" /></svg> {p.name}</div>
                       <div style={{ fontSize: 9, color: "var(--th-text-muted)", marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.project_path}</div>
                     </div>
                   </label>
@@ -570,7 +580,7 @@ export default function FolderWindow({
       onFolderUpdate({ ...folder, projects: folder.projects.filter((p) => p.id !== projectId) });
       onProjectEjected?.(projectId);
       if (result.moved_on_disk) {
-        setEjectMsg(t({ ko: `📂 ${result.new_path} 로 이동됨`, en: `📂 Moved to ${result.new_path}`, ja: `📂 ${result.new_path} へ移動しました`, zh: `📂 已移동到 ${result.new_path}` }));
+        setEjectMsg(t({ ko: `${result.new_path} 로 이동됨`, en: `Moved to ${result.new_path}`, ja: `${result.new_path} へ移動しました`, zh: `已移动到 ${result.new_path}` }));
         onProjectPathChanged?.(projectId, result.new_path);
       }
     } catch { /* ignore */ }
@@ -597,10 +607,11 @@ export default function FolderWindow({
     finally { setBusyProjectId(null); }
   }, [folder, allProjects, onFolderUpdate, onProjectPathChanged, onProjectAdded]);
 
-  const TABS: { id: Tab; icon: string; label: { ko: string; en: string; ja: string; zh: string } }[] = [
-    { id: "projects",  icon: "🗂", label: { ko: "프로젝트",   en: "Projects",   ja: "プロジェクト", zh: "项目" } },
-    { id: "changelog", icon: "v",  label: { ko: "변경 이력",  en: "Changelog",  ja: "変更履歴",     zh: "变更记录" } },
-    { id: "tree",      icon: "📂", label: { ko: "파일 탐색기", en: "File Tree",  ja: "ファイル",     zh: "文件树" } },
+  const tabIconProps = { width: 12, height: 12, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const, style: { display: "inline", verticalAlign: "middle" } };
+  const TABS: { id: Tab; icon: ReactNode; label: { ko: string; en: string; ja: string; zh: string } }[] = [
+    { id: "projects",  icon: <svg {...tabIconProps}><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" /><line x1="2" y1="10" x2="22" y2="10" /></svg>, label: { ko: "프로젝트",   en: "Projects",   ja: "プロジェクト", zh: "项目" } },
+    { id: "changelog", icon: "v",  label: { ko: "변경 이력",  en: "Changelog",  ja: "変更履歴",     zh: "변更记록" } },
+    { id: "tree",      icon: <svg {...tabIconProps}><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" /></svg>, label: { ko: "파일 탐색기", en: "File Tree",  ja: "ファイル",     zh: "文件树" } },
     { id: "merge",     icon: "⊕",  label: { ko: "통합",       en: "Merge",      ja: "統合",         zh: "合并" } },
   ];
 
@@ -686,7 +697,7 @@ export default function FolderWindow({
                       e.currentTarget.style.borderColor = "var(--th-border)";
                     }}
                   >
-                    <div style={{ fontSize: 28 }}>🗂</div>
+                    <div style={{ fontSize: 28, display: "flex", justifyContent: "center" }}><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" /><line x1="2" y1="10" x2="22" y2="10" /></svg></div>
                     <div style={{
                       fontSize: 11, color: "var(--th-text-primary)", textAlign: "center",
                       wordBreak: "break-word", display: "-webkit-box",
