@@ -25,8 +25,10 @@
      │
      ▼
 [4] PM Agent Assignment                                    ← stage: "assigning"
-     │  Round-robin assignment to non-PM agents
-     │  appendTaskLog("pm_oversight", "PM assigned → {agent}")
+     │  Fitness-based assignment (agent_task_fitness table)
+     │  Fallback to round-robin when no fitness data exists
+     │  PM agents excluded from assignment
+     │  appendTaskLog("pm_oversight", "PM assigned → {agent} [fitness/round-robin]")
      │
      ▼
 [5] Task Execution                                         ← stage: "executing"
@@ -56,7 +58,15 @@
      ▼
 [9] Start Next Task
      │  PM orchestrator auto-starts next planned task
-     │  Entire process displayed in real-time on PM Activity panel
+     │
+     ▼
+[10] All Tasks Done → Project-Level Review (pmProjectLevelReview)
+     │  PM evaluates entire project against original goal
+     │  SATISFIED → retrospective + project complete
+     │  GAPS_FOUND → create follow-up tasks via runInternalAddTasksPipeline()
+     │    → new tasks assigned (fitness-based) → execute → review → done
+     │    → triggers project-level review again (max 3 rounds)
+     │  Max 3 rounds enforced via pm_oversight_state.project_review_round
 ```
 
 ---
@@ -98,14 +108,15 @@
 | File | Role |
 |------|------|
 | `server/modules/routes/core/projects/kickoff.ts` | Entire kickoff pipeline |
-| `server/modules/workflow/orchestration/pm-orchestrator.ts` | PM review/assignment/escalation |
+| `server/modules/workflow/orchestration/pm-orchestrator.ts` | PM review/assignment/escalation/project-level review |
 | `server/modules/workflow/orchestration/review-finalize-tools/finalize-approved-review.ts` | Approval → merge → done |
 | `server/modules/workflow/orchestration/review-finalize-tools/ship-automation.ts` | Version bump + CHANGELOG |
 | `server/modules/workflow/orchestration/run-complete-handler/error-analysis.ts` | Error pattern matching + sanitization |
 | `server/modules/agent-runtime/execution-loop.ts` | CLI/API mode agent execution |
 | `server/modules/routes/core/projects/pm-activity.ts` | PM Activity API |
-| `prompts/system/project-kickoff.md` | Kickoff LLM prompt (no agent_name) |
-| `prompts/pm/review-task.md` | PM review checklist prompt |
+| `prompts/system/project-kickoff.md` | Kickoff LLM prompt (no agent_name, includes task_type) |
+| `prompts/pm/review-task.md` | PM individual task review checklist prompt |
+| `prompts/pm/project-review.md` | PM project-level review prompt (SATISFIED/GAPS_FOUND) |
 
 ---
 
@@ -163,5 +174,8 @@
 4. Even on kickoff failure, the task creation pipeline runs (safety net).
 5. No `agent_name` in kickoff prompt — assignment is done by the PM.
 6. Evidence-based rules injected into agent execution prompts ("no guessing", "stop after 3 failures").
-7. Review uses a 4-point checklist (scope match, errors, minimal scope, completeness).
+7. Individual review uses a 4-point checklist (scope match, errors, minimal scope, completeness).
 8. Automatic version bump + CHANGELOG on task done.
+9. **Project-level review**: When all tasks are done, PM evaluates the entire project against the original goal. GAPS_FOUND triggers follow-up task creation (max 3 rounds).
+10. **Fitness-based assignment**: Agents assigned by `agent_task_fitness` success rate per task type. Falls back to round-robin when no data exists. LLM generates `task_type` during kickoff.
+11. **Max review rounds**: `pm_oversight_state.project_review_round` counter prevents infinite loops (max 3).

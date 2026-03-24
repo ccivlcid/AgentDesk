@@ -122,6 +122,8 @@ Electron + React(Vite) frontend + Express/tsx backend + SQLite(better-sqlite3).
 > **모든 업무는 PM 에이전트의 LLM 검토를 거쳐야 완료됩니다.**
 > 수동으로 "done"을 설정해도 PM이 있는 프로젝트에서는 자동으로 "review"로 전환됩니다.
 
+#### 개별 태스크 검토
+
 ```
 업무 실행 완료 → status: "review"
     │
@@ -144,6 +146,38 @@ PM 에이전트가 LLM으로 검토 (prompts/pm/review-task.md)
                                    3. 에이전트 재실행
 ```
 
+#### 프로젝트 레벨 리뷰 (모든 태스크 완료 후)
+
+> **모든 태스크가 done이 되면, PM이 프로젝트 전체를 목표 대비 평가합니다.**
+> 부족한 부분이 있으면 추가 태스크를 자동 생성하여 다시 실행합니다. (최대 3라운드)
+
+```
+모든 태스크 done → pmProjectLevelReview()
+    │
+    ▼
+PM이 LLM으로 프로젝트 전체 평가 (prompts/pm/project-review.md)
+    │  평가 기준: Goal Coverage, Critical Gaps, Integration
+    │  라운드 N / 최대 3라운드 표시
+    │
+    ├── SATISFIED ───────────────────────────────────┐
+    │                                                 ▼
+    │                              1. 회고 보고서(retrospective) 생성
+    │                              2. pm_oversight_state 삭제 → 프로젝트 완료
+    │                              3. 알림: "Project completed"
+    │
+    └── GAPS_FOUND ─────────────────────────────────┐
+                                                     ▼
+                                  1. PM의 gap 분석 → additionalDirective
+                                  2. runInternalAddTasksPipeline() 호출
+                                     → LLM 태스크 생성 (task_type 포함)
+                                     → fitness 기반 에이전트 배정
+                                     → 실행 시작
+                                  3. 새 태스크 완료 → 다시 프로젝트 리뷰
+                                  4. 최대 3라운드 → 초과 시 자동 완료
+```
+
+**무한 루프 방지**: `pm_oversight_state.project_review_round` 카운터 (DB 저장, 최대 3).
+
 **progress.md 작성 구조** (PM이 LLM으로 생성):
 - 검증 결과: 달성/부분달성/미달성 + 사유
 - 담당 에이전트명
@@ -151,9 +185,11 @@ PM 에이전트가 LLM으로 검토 (prompts/pm/review-task.md)
 - PM 소견 (품질 평가, 누락 사항, 후속 작업 필요 여부)
 
 **Key files:**
-- `server/modules/workflow/orchestration/pm-orchestrator.ts` — PM 검토/승인/progress 작성
+- `server/modules/workflow/orchestration/pm-orchestrator.ts` — PM 검토/승인/progress 작성 + 프로젝트 레벨 리뷰
 - `server/modules/workflow/orchestration/review-finalize-tools/ship-automation.ts` — 버전 범프/CHANGELOG
-- `prompts/pm/review-task.md` — PM 검토 프롬프트
+- `server/modules/routes/core/projects/kickoff.ts` — `runInternalAddTasksPipeline()` (프로젝트 리뷰 후 추가 태스크)
+- `prompts/pm/review-task.md` — 개별 태스크 검토 프롬프트
+- `prompts/pm/project-review.md` — 프로젝트 레벨 리뷰 프롬프트
 - `prompts/pm/write-progress.md` — PM progress.md 작성 프롬프트 (ko/en/ja/zh)
 
 ### 1-2-2. YOLO(자율) 모드
@@ -186,13 +222,15 @@ PM 에이전트가 LLM으로 검토 (prompts/pm/review-task.md)
      │
      ▼
 [3] 태스크 생성 (LLM 호출)                              ← stage: "planning"
-     │  callProvider() 또는 callViaCliProvider()
-     │  JSON 파싱 → tasks INSERT (assigned_agent_id = NULL)
+     │  callLlmOneShot() 또는 callViaCliProvider()
+     │  JSON 파싱 → tasks INSERT (assigned_agent_id = NULL, task_type = LLM 지정)
      │
      ▼
 [4] PM 에이전트 배정                                    ← stage: "assigning"
-     │  비-PM 에이전트 라운드 로빈 배정
-     │  appendTaskLog("pm_oversight", "PM assigned → {agent}")
+     │  fitness 기반 배정 (agent_task_fitness 테이블 조회)
+     │  fitness 데이터 없으면 round-robin fallback
+     │  PM 에이전트는 배정 대상에서 제외
+     │  appendTaskLog("pm_oversight", "PM assigned → {agent} [fitness/round-robin]")
      │
      ▼
 [5] 업무 실행                                           ← stage: "executing"
@@ -200,11 +238,19 @@ PM 에이전트가 LLM으로 검토 (prompts/pm/review-task.md)
      │  에이전트별 첫 번째 planned 태스크만 시작
      │
      ▼
-[6] 완료                                                ← stage: "done"
+[6] 개별 태스크 실행 → PM 리뷰 → done    (§1-2-1 참조)
+     │
+     ▼
+[7] 모든 태스크 done → PM 프로젝트 리뷰  (§1-2-1 참조)
+     │  SATISFIED → 프로젝트 완료
+     │  GAPS_FOUND → 추가 태스크 생성 → [4]로 돌아감 (최대 3라운드)
+     │
+     ▼
+[8] 완료                                                ← stage: "done"
 ```
 
 **Key files:**
-- `server/modules/routes/core/projects/kickoff.ts` — 전체 파이프라인
+- `server/modules/routes/core/projects/kickoff.ts` — 전체 파이프라인 + `runInternalAddTasksPipeline()`
 - `src/components/desktop/Desktop.tsx` — `KickoffStageOverlay` (4-step UI)
 - `src/store/uiStore.ts` — `kickoffStage` state
 - `src/app/useRealtimeSync.ts` — `kickoff_stage` WebSocket listener
@@ -214,9 +260,11 @@ PM 에이전트가 LLM으로 검토 (prompts/pm/review-task.md)
 - PM 에이전트에게 태스크 배정 금지. `project_role !== "pm"` 필터 적용.
 - 회의록은 `meeting_minutes` 테이블에 `project_id` 포함하여 저장. `task_id`는 NULL 허용.
 - 킥오프 실패 시에도 `postMeetingCreateAndRun()` 실행 (안전장치).
-- 킥오프 프롬프트(`prompts/system/project-kickoff.md`)에서 `agent_name` 필드 없음 — 배정은 PM이 함.
+- 킥오프 프롬프트(`prompts/system/project-kickoff.md`)에서 `agent_name` 필드 없음 — 배정은 PM이 함. `task_type` 필드는 LLM이 지정.
 - task_logs/messages INSERT 시 `project_id` 자동 스탬프 (SQLite AFTER INSERT 트리거).
 - YOLO(자율) 모드: PM에게 모든 통제권 위임. PM이 LLM으로 리뷰 + 자동 결정. 의사결정 창 비활성화. (상세: §1-2-2)
+- 프로젝트 레벨 리뷰: 모든 태스크 done → PM이 전체 목표 대비 평가 → 부족하면 추가 태스크 생성 (최대 3라운드). (상세: §1-2-1)
+- Fitness 기반 배정: `agent_task_fitness` 테이블의 성공률로 최적 에이전트 선택. 데이터 없으면 round-robin fallback.
 
 ### 1-4. Add Tasks Pipeline (추가 업무 흐름)
 
