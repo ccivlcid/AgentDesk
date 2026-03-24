@@ -506,21 +506,20 @@ Use this checklist every time you add a DB column or table:
 
 ---
 
-## 6-C. CreateTaskModal Extension Guide
+## 6-C. Task Creation Guide
 
-When adding a new field to the task creation form, follow this full chain:
+> **Note:** `CreateTaskModal` has been removed (dead code — never imported). Task creation in the UI is handled by the **Add Tasks** inline input in `TaskBoardToolbar.tsx`.
+
+**New task flow:** Add Tasks button → `POST /api/projects/:id/add-tasks` → LLM generates tasks (with `task_type`) → fitness-based agent assignment → execution.
+
+When adding a new field to the task schema:
 
 | # | File | Change |
 |---|------|--------|
-| 1 | `src/components/taskboard/constants.ts` | Add field to `CreateTaskDraft` type |
-| 2 | `src/components/taskboard/CreateTaskModal.tsx` | Add `useState`, pass to `onCreate` |
-| 3 | `src/components/taskboard/create-modal/CreateTaskModalView.tsx` | Add UI input element |
-| 4 | `src/components/taskboard/create-modal/useDraftState.ts` | Include field in draft save/restore |
-| 5 | `server/modules/routes/core/tasks/crud.ts` | Read field in create/update handler |
-| 6 | `server/modules/bootstrap/schema/versioned-migrations.ts` | Add DB column migration |
-| 7 | `src/api/tasks.ts` | Include field in API request type |
-
-**Reference**: `kb_context_sources` field (Synapse integration) is the canonical example of this pattern.
+| 1 | `server/modules/routes/core/tasks/crud.ts` | Read field in create/update handler |
+| 2 | `server/modules/bootstrap/schema/versioned-migrations/migrations-e-recent.ts` | Add DB column migration |
+| 3 | `src/api/organization-projects.ts` | Include field in `createTask()` / `updateTask()` API types |
+| 4 | `src/types/index.ts` | Add field to `Task` type |
 
 ---
 

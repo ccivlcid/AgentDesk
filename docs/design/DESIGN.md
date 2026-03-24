@@ -301,7 +301,7 @@ slate/gray utilities are remapped to `--th-*` variables:
 |------|-------|-------|---------------|
 | 👤 | Agent Settings | AgentManagerWindow | `agents` |
 | 📁 | Create Project | ProjectCreateModal | — |
-| ▶ | Run Task | CreateTaskModal | — |
+| ▶ | Run Task | *(removed — use Add Tasks in TaskBoard)* | — |
 | ⚡ | Workflow Builder | WorkflowWindow (Builder tab) | `workflow-builder` |
 | 📋 | Library | LibraryWindow (Skills tab) | `skills` |
 | 💬 | Chat | ChatWindow | — |
@@ -332,7 +332,7 @@ slate/gray utilities are remapped to `--th-*` variables:
 ### Modals / Overlays (36)
 
 **Project:** ProjectCreateModal, ProjectManagerModal, MissingPathPromptDialog, ManualPathPickerDialog, ManualAssignmentWarningDialog
-**Task:** CreateTaskModal, DiffModal, BulkHideModal, TaskReportPopup, ReportHistory
+**Task:** DiffModal, BulkHideModal, TaskReportPopup, ReportHistory
 **Agent:** AgentFormModal, DepartmentFormModal, AgentDetail (slide panel), AgentStatusPanel
 **Terminal:** TerminalPanel (bottom drawer)
 **Chat:** ChatPanel, GroupChatPanel, DecisionInboxModal, ProjectFlowDialog

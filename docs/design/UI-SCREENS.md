@@ -85,7 +85,7 @@ Click ✕ to delete the project. Press Esc or click the desktop to exit.
 |------|-------|----------------|
 | 👤 | Agent Settings | AgentManager window |
 | 📁 | Create Project | ProjectCreateModal |
-| ▶ | Run Task | CreateTaskModal |
+| ▶ | Run Task | *(removed — use Add Tasks in TaskBoard)* |
 | ⚡ | Workflow Builder | Workflow window |
 | >_ | Terminal | PTY Terminal window |
 
@@ -339,7 +339,7 @@ Centrally rendered in `src/app/AppOverlays.tsx`. Can be triggered from any windo
 
 | # | Component | Trigger |
 |---|-----------|---------|
-| 7-7 | `CreateTaskModal` | Desktop icon ▶ / Task Board `[+ New Task]` |
+| 7-7 | *(removed)* | *(CreateTaskModal deleted — use Add Tasks in TaskBoardToolbar)* |
 | 7-8 | `BulkHideModal` | Task Board bulk hide |
 | 7-9 | `DiffModal` | On task change conflict detection |
 
@@ -491,7 +491,7 @@ src/
 │   ├── flow-graph/                  # AgentFlowGraph
 │   ├── workflow-builder/            # WorkflowBuilder (@xyflow/react)
 │   ├── scheduled-tasks/             # ScheduledTasksPanel
-│   ├── taskboard/                   # CreateTaskModal, BulkHideModal
+│   ├── taskboard/                   # constants, BulkHideModal
 │   ├── deliverables/                # Deliverables, TextPreviewModal
 │   ├── agent-manager/               # AgentFormModal, DepartmentFormModal
 │   ├── skills-library/              # Skills + learning modals

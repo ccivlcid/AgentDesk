@@ -112,7 +112,7 @@
 
 | WindowType | Status | Action |
 |------------|------|------|
-| `create-task` | Replaced by CreateTaskModal | Consider removal |
+| `create-task` | CreateTaskModal removed; use Add Tasks in TaskBoard | Consider WindowType removal |
 | `create-agent` | Replaced by QuickCreateAgentModal | Consider removal |
 | `create-department` | Replaced by modal within Agent Manager | Consider removal |
 | `project-create` | Replaced by ProjectCreateModal | Consider removal |
