@@ -6,6 +6,7 @@ import { TOOL_DEFINITIONS, executeTool } from "./tools.ts";
 import { callAnthropicStream, callOpenAICompatibleStream, resolveProvider, getDefaultModel } from "./llm-client.ts";
 import { createRun, updateRunStatus, updateRunUsage, appendEvent, getRun } from "./store.ts";
 import { recordTaskExecutionEvent } from "../workflow/core/task-execution-meta.ts";
+import { loadPrompt } from "../../lib/prompt-loader.ts";
 import type { LlmMessage, LlmContent, StartRunOptions } from "./types.ts";
 
 const DEFAULT_MODEL = "claude-sonnet-4-6";
@@ -212,16 +213,7 @@ function buildSystemPrompt(db: DatabaseSync, agentId: string, projectId?: string
   `).all(agentId, projectId ?? "") as { content: string }[];
   for (const m of memRows) memories.push(`- ${m.content}`);
 
-  let prompt = `You are ${agentName}, a ${agentRole}. You work autonomously to complete tasks using the tools available to you.
-
-Always use tools to inspect the project before responding. Be thorough and accurate.
-
-## Evidence-Based Execution Rules
-- Never say "probably" or "I think" — cite the specific file, line, or error.
-- Before recommending a pattern or library, verify it exists and is current best practice.
-- If you attempt a fix 3 times without success, stop and report the issue with all evidence gathered.
-- Keep changes minimal — only modify files directly related to the task.
-- Every bug fix must include evidence of the root cause (stack trace, reproduction steps, or failing test).`;
+  let prompt = loadPrompt("system/agent-runtime", { agentName, agentRole }) ?? `You are ${agentName}, a ${agentRole}. Complete tasks using available tools.`;
 
   if (rules.length > 0) {
     prompt += `\n\n## Rules\n${rules.join("\n")}`;
@@ -229,8 +221,6 @@ Always use tools to inspect the project before responding. Be thorough and accur
   if (memories.length > 0) {
     prompt += `\n\n## Context & Memory\n${memories.join("\n")}`;
   }
-
-  prompt += `\n\nWhen you finish a task, provide a clear summary of what you did and the results.`;
 
   return prompt;
 }

@@ -295,7 +295,7 @@ export function registerAppRunnerRoutes({ app, db, broadcast }: { app: Express; 
           const rawText = await callLlmOneShot({
             provider,
             model,
-            systemPrompt: "You are a project analysis expert. Respond precisely in the format requested.",
+            systemPrompt: loadPrompt("system/app-analysis-system") ?? "You are a project analysis expert.",
             userPrompt: prompt,
             maxTokens: 1200,
             signal: AbortSignal.timeout(30_000),
