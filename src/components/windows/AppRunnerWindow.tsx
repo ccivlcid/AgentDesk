@@ -339,9 +339,8 @@ export default function AppRunnerWindow() {
             </>
           )}
 
-          {/* Prompt input — shown when idle, error, or stopped (not while running/analyzing) */}
-          {status !== "running" && !analyzing && !running && (
-            <div style={{ marginTop: "auto", paddingTop: 8 }}>
+          {/* Prompt input — always visible */}
+          <div style={{ marginTop: "auto", paddingTop: 8 }}>
               {(analyzeError || runError) && (
                 <div style={{
                   ...mono, fontSize: 11, color: "#ff9f0a", padding: "8px 12px", marginBottom: 8,
@@ -392,9 +391,14 @@ export default function AppRunnerWindow() {
                   type="text"
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
-                  placeholder={analyzeError || runError
-                    ? t({ ko: "수정 지시를 입력하거나 Enter로 재시도", en: "Enter fix instructions or press Enter to retry", ja: "修正指示を入力またはEnterでリトライ", zh: "输入修复指示或按Enter重试" })
-                    : t({ ko: "Enter를 눌러 AI 분석 & 실행", en: "Press Enter to AI analyze & run", ja: "Enterで AI分析 & 実行", zh: "按Enter进行AI分析和运行" })
+                  placeholder={
+                    promptBusy
+                      ? t({ ko: "AI가 작업 중...", en: "AI is working...", ja: "AI作業中...", zh: "AI工作中..." })
+                      : analyzeError || runError
+                        ? t({ ko: "수정 지시를 입력하거나 Enter로 재시도", en: "Enter fix instructions or press Enter to retry", ja: "修正指示を入力またはEnterでリトライ", zh: "输入修复指示或按Enter重试" })
+                        : status === "running"
+                          ? t({ ko: "지시 입력 (예: 포트 변경, 재시작...)", en: "Enter instructions (e.g. change port, restart...)", ja: "指示入力（例：ポート変更、再起動...）", zh: "输入指示（例：更改端口、重启...）" })
+                          : t({ ko: "Enter를 눌러 AI 분석 & 실행", en: "Press Enter to AI analyze & run", ja: "Enterで AI分析 & 実行", zh: "按Enter进行AI分析和运行" })
                   }
                   disabled={promptBusy}
                   style={{
@@ -419,7 +423,6 @@ export default function AppRunnerWindow() {
                 </button>
               </form>
             </div>
-          )}
 
           {/* Terminal logs */}
           {logs.length > 0 && (
