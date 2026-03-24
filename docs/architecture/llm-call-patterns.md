@@ -91,7 +91,7 @@ resolveProvider(db)
 ### Pattern D — One-Shot Non-Streaming (App Runner AI Analysis)
 
 **File:** `server/modules/routes/ops/app-runner.ts` (lines 276-360)
-**Used by:** `POST /api/apps/:projectId/analyze` — AI project analysis tab
+**Used by:** `POST /api/apps/:projectId/analyze` — AppRunnerWindow AI analysis
 
 ```
 resolveProvider(db)
@@ -177,8 +177,8 @@ const body = isAnthropic
 
 | File | Component | Context |
 |------|-----------|---------|
-| `src/components/windows/AppRunnerWindow.tsx` | `AppRunnerWindow` | Standalone App Runner window (Analyze → Install → Run) |
-| `src/components/desktop/project-folder-window/AnalysisTab.tsx` | `AnalysisTab` | Folder window's "Analysis" tab (auto-analyzes on mount) |
+| `src/components/windows/AppRunnerWindow.tsx` | `AppRunnerWindow` | App Runner window with prompt input (AI analyze → install → run) |
+| ~~`AnalysisTab.tsx`~~ | ~~removed~~ | ~~Deleted — app analysis is now exclusively in AppRunnerWindow~~ |
 | `src/api/app-runner.ts` | `analyzeApp()`, `getAppStatus()`, `runApp()`, etc. | API client functions |
 
 ---

@@ -336,7 +336,8 @@ src/
 │   ├── windows/                 ← App windows:
 │   │                               WorkflowWindow, LibraryWindow, SettingsWindow, ChatWindow,
 │   │                               AgentManagerWindow, TaskBoardWindow, SynapseWindow,
-│   │                               ImageStudioWindow, FolderWindow, CliWindow (Agent CLI)
+│   │                               ImageStudioWindow, FolderWindow, CliWindow (Agent CLI),
+│   │                               AppRunnerWindow (right-click "Run App" → AI auto-analyze/run)
 │   ├── agent-detail/            ← AgentDetailPanel (right-slide inspector · 4 tabs)
 │   ├── workflow-builder/        ← WorkflowBuilder (@xyflow/react) + WbScheduleModal (cron)
 │   ├── agent-composition/       ← AgentCompositionBuilder + AgentCompositionRunModal + nodes/CompAgentNode

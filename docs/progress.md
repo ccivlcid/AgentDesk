@@ -59,6 +59,13 @@
 - fitness 사이클 완성: LLM이 타입 지정 → 타입별 fitness 배정 → 완료 시 타입별 기록
 - Both `postMeetingCreateAndRun` and add-tasks pipelines updated
 
+**App Runner UX Overhaul:**
+- ProjectFolderWindow에서 AI Analysis 탭 제거 (AnalysisTab.tsx 삭제, 430줄)
+- 앱/프로젝트 클릭 → 동일하게 ProjectFolderWindow (6탭: Files, Tasks, Agents, Terminal, Details, Git)
+- 우클릭 "앱 실행" → AppRunnerWindow (autoRun: AI 자동 분석→설치→실행)
+- AppRunnerWindow: 버튼 제거 → 프롬프트 입력 UI로 교체 (항상 표시)
+- CreateTaskModal 삭제 (12파일, 3,657줄 dead code 제거)
+
 ### Documentation Overhaul (2026-03-24)
 
 - Rebuilt `docs/README.md` as complete index (26 files)
