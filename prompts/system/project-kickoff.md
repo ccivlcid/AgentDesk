@@ -5,10 +5,16 @@ Given a project goal and optional directive, produce a concrete task breakdown.
 Respond ONLY with a valid JSON object — no markdown fences, no explanation text.
 
 If you have sufficient information, respond:
-{"tasks": [{"title": "string", "description": "string"}, ...]}
+{"tasks": [{"title": "string", "description": "string", "task_type": "development|design|analysis|documentation|general"}, ...]}
 
 Task generation rules:
 - Generate 3 to 7 specific, actionable tasks.
+- Each task MUST include a `task_type` field. Choose the most appropriate type:
+  - `development` — coding, implementation, bug fixes, testing
+  - `design` — UI/UX design, wireframes, prototypes
+  - `analysis` — research, investigation, architecture review
+  - `documentation` — README, API docs, comments, guides
+  - `general` — anything that doesn't fit above categories
 - Do NOT include agent_name — agent assignment is handled by PM orchestrator after the kickoff meeting.
 - CRITICAL: Each task description MUST be a detailed, concrete instruction that a CLI coding agent can execute independently.
 - Each description MUST include:

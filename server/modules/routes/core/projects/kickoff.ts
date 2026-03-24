@@ -562,8 +562,10 @@ export function registerProjectKickoffRoutes({ app, db, broadcast, appendTaskLog
             return;
           }
 
+          const VALID_TASK_TYPES = new Set(["general", "development", "design", "analysis", "presentation", "documentation"]);
+
           let parsed: {
-            tasks?: { title: string; description?: string }[];
+            tasks?: { title: string; description?: string; task_type?: string }[];
             needs_clarification?: boolean;
             question?: string;
           };
@@ -591,10 +593,11 @@ export function registerProjectKickoffRoutes({ app, db, broadcast, appendTaskLog
             if (!task.title?.trim()) continue;
             const taskId = randomUUID();
             const now = nowMs();
+            const taskType = task.task_type && VALID_TASK_TYPES.has(task.task_type) ? task.task_type : "general";
             db.prepare(`
               INSERT INTO tasks (id, title, description, project_id, assigned_agent_id, status, priority, task_type, created_at, updated_at)
-              VALUES (?, ?, ?, ?, NULL, 'planned', 3, 'general', ?, ?)
-            `).run(taskId, task.title.trim(), task.description ?? "", projectId, now, now);
+              VALUES (?, ?, ?, ?, NULL, 'planned', 3, ?, ?, ?)
+            `).run(taskId, task.title.trim(), task.description ?? "", projectId, taskType, now, now);
             broadcast("task_update", db.prepare("SELECT * FROM tasks WHERE id = ?").get(taskId));
             appendTaskLog(taskId, "system", `Task created: ${task.title.trim()}`);
           }
@@ -898,7 +901,7 @@ export function registerProjectKickoffRoutes({ app, db, broadcast, appendTaskLog
             return;
           }
 
-          let parsed: { tasks?: { title: string; description?: string }[] };
+          let parsed: { tasks?: { title: string; description?: string; task_type?: string }[] };
           try {
             parsed = JSON.parse(jsonMatch[0]) as typeof parsed;
           } catch {
@@ -907,15 +910,17 @@ export function registerProjectKickoffRoutes({ app, db, broadcast, appendTaskLog
             return;
           }
 
+          const addValidTypes = new Set(["general", "development", "design", "analysis", "presentation", "documentation"]);
           const newTasks = parsed.tasks ?? [];
           for (const task of newTasks) {
             if (!task.title?.trim()) continue;
             const taskId = randomUUID();
             const now = nowMs();
+            const taskType = task.task_type && addValidTypes.has(task.task_type) ? task.task_type : "general";
             db.prepare(`
               INSERT INTO tasks (id, title, description, project_id, assigned_agent_id, status, priority, task_type, created_at, updated_at)
-              VALUES (?, ?, ?, ?, NULL, 'planned', 3, 'general', ?, ?)
-            `).run(taskId, task.title.trim(), task.description ?? "", projectId, now, now);
+              VALUES (?, ?, ?, ?, NULL, 'planned', 3, ?, ?, ?)
+            `).run(taskId, task.title.trim(), task.description ?? "", projectId, taskType, now, now);
             broadcast("task_update", db.prepare("SELECT * FROM tasks WHERE id = ?").get(taskId));
             appendTaskLog(taskId, "system", `Task created (add-tasks): ${task.title.trim()}`);
           }
