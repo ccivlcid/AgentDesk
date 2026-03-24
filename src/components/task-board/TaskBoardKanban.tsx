@@ -122,7 +122,7 @@ export function TaskBoardKanban({ state }: TaskBoardKanbanProps) {
                   {columnTasks.length}
                 </span>
                 {!isCollapsed && (
-                  <span style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", flexShrink: 0 }}>{isCollapsed ? "▸" : "▾"}</span>
+                  <span style={{ flexShrink: 0, display: "inline-flex" }}><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points={isCollapsed ? "9 6 15 12 9 18" : "6 9 12 15 18 9"} /></svg></span>
                 )}
               </button>
 
@@ -183,7 +183,7 @@ export function TaskBoardKanban({ state }: TaskBoardKanbanProps) {
                                       className="h-4 w-4 flex items-center justify-center"
                                       style={{ borderRadius: 0, border: "1px solid rgba(251,191,36,0.7)", background: isSelected ? "var(--th-accent)" : "var(--th-bg-surface)" }}
                                     >
-                                      {isSelected && <span className="text-[9px] font-bold text-black">✓</span>}
+                                      {isSelected && <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>}
                                     </div>
                                   </div>
                                 </>
@@ -243,7 +243,7 @@ export function TaskBoardKanban({ state }: TaskBoardKanbanProps) {
           >
             {t({ ko: "전체선택", en: "all", ja: "全選", zh: "全选" })}({filteredTasks.length})
           </button>
-          <span style={{ color: "var(--th-border)", fontSize: "10px" }}>·</span>
+          <svg width="4" height="4" viewBox="0 0 6 6" style={{ flexShrink: 0 }}><circle cx="3" cy="3" r="2" fill="var(--th-border)" /></svg>
           <button
             type="button"
             onClick={() => setSelectedTaskIds(new Set())}

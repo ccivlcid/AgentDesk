@@ -393,7 +393,7 @@ function StepItem({ step, index, total, t }: {
             lineHeight: 1.6, whiteSpace: "pre-line",
             marginBottom: step.tip ? 7 : 0,
           }}>
-            ⚠ {t(step.warn)}
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: "inline", verticalAlign: "middle", marginRight: 4, flexShrink: 0 }}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg> {t(step.warn)}
           </div>
         )}
 
@@ -406,7 +406,7 @@ function StepItem({ step, index, total, t }: {
             fontSize: 10, color: "var(--th-text-secondary)",
             lineHeight: 1.6,
           }}>
-            💡 {t(step.tip)}
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: "inline", verticalAlign: "middle", marginRight: 4, flexShrink: 0 }}><line x1="9" y1="18" x2="15" y2="18" /><line x1="10" y1="22" x2="14" y2="22" /><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14" /></svg> {t(step.tip)}
           </div>
         )}
       </div>

@@ -122,7 +122,7 @@ export function CommandPaletteResults({
                     fontSize: 16, flexShrink: 0, position: "relative", zIndex: 1,
                   }}
                 >
-                  {agent.avatar_emoji ?? "🤖"}
+                  {agent.avatar_emoji ?? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="10" rx="2" /><circle cx="12" cy="5" r="2" /><line x1="12" y1="7" x2="12" y2="11" /><line x1="8" y1="16" x2="8" y2="16.01" /><line x1="16" y1="16" x2="16" y2="16.01" /></svg>}
                 </span>
                 <span style={{ ...sf, fontSize: 14, color: isSel ? "var(--th-text-heading)" : "var(--th-text-primary)", flex: 1, textAlign: "left", position: "relative", zIndex: 1 }}>
                   {agent.name}

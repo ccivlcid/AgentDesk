@@ -118,7 +118,7 @@ export default function HeartbeatGuideModal({ language, onClose }: HeartbeatGuid
           </div>
 
           <div className="mt-4 px-4 py-3 flex gap-2.5" style={{ borderRadius: 0, border: "1px solid rgba(251,191,36,0.2)", background: "rgba(251,191,36,0.05)" }}>
-            <span className="text-amber-400 text-sm flex-shrink-0 mt-px">💡</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-amber-400 flex-shrink-0 mt-px"><line x1="9" y1="18" x2="15" y2="18" /><line x1="10" y1="22" x2="14" y2="22" /><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14" /></svg>
             <p className="text-xs text-amber-200/90 leading-relaxed">{tip}</p>
           </div>
         </div>
