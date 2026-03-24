@@ -45,6 +45,18 @@ const enMessages = {
   "task.status.done": "Completed",
   "gateway.deliverable.prefix": "Deliverable",
   "gateway.decisionInbox.waiting": "{count} decision(s) awaiting your review.",
+  "cli.title": "CLI Usage",
+  "cli.connected": "connected",
+  "cli.refresh": "Refresh",
+  "cli.noConnected": "No CLI connected",
+  "cli.noUsage": "No usage data",
+  "cli.notSignedIn": "Not signed in",
+  "cli.noApi": "No API key",
+  "cli.unavailable": "Unavailable",
+  "cli.loading": "Loading…",
+  "cli.resets": "Resets:",
+  "cli.noData": "No data",
+  "cli.noDataHint": "Connect a CLI to track usage",
 } as const;
 
 export type MessageKey = keyof typeof enMessages;
