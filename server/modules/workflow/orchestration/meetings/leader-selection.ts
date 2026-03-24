@@ -18,7 +18,7 @@ interface AgentRow {
 }
 
 type LeaderSelectionDeps = {
-  db: any;
+  db: import("node:sqlite").DatabaseSync;
   findTeamLeader: (departmentId: string, candidateAgentIds?: string[] | null) => AgentRow | null;
   detectTargetDepartments: (text: string) => string[];
 };
@@ -57,7 +57,7 @@ export function createMeetingLeaderSelectionTools(deps: LeaderSelectionDeps) {
     ORDER BY d.sort_order ASC, a.name ASC
   `,
       )
-      .all(...(scopedIds ?? [])) as AgentRow[];
+      .all(...(scopedIds ?? [])) as unknown as AgentRow[];
   }
 
   function getTaskRelatedDepartmentIds(
@@ -111,12 +111,12 @@ export function createMeetingLeaderSelectionTools(deps: LeaderSelectionDeps) {
           description: string | null;
         }
       | undefined;
-    const constrainedAgentIds = resolveConstrainedAgentScopeForTask(db as any, {
+    const constrainedAgentIds = resolveConstrainedAgentScopeForTask(db, {
       project_id: taskMeta?.project_id ?? null,
       workflow_pack_key: taskMeta?.workflow_pack_key ?? null,
       department_id: taskMeta?.department_id ?? fallbackDeptId ?? null,
     });
-    const packScopedAgentIds = resolveConstrainedAgentScopeForTask(db as any, {
+    const packScopedAgentIds = resolveConstrainedAgentScopeForTask(db, {
       project_id: null,
       workflow_pack_key: taskMeta?.workflow_pack_key ?? null,
       department_id: taskMeta?.department_id ?? fallbackDeptId ?? null,

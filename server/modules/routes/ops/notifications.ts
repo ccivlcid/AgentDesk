@@ -72,7 +72,7 @@ export function registerNotificationRoutes(ctx: RuntimeContext): void {
   });
 }
 
-export function createNotificationHelper(ctx: { db: any; nowMs: () => number; broadcast: (event: string, data: any) => void }) {
+export function createNotificationHelper(ctx: { db: import("node:sqlite").DatabaseSync; nowMs: () => number; broadcast: (event: string, data: unknown) => void }) {
   const { db, nowMs, broadcast } = ctx;
 
   // Flood 방지: 같은 task_id+type 조합 5초 내 중복 차단

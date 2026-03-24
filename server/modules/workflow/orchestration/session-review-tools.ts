@@ -1,6 +1,37 @@
 import type { Lang } from "../../../types/lang.ts";
 
-type CreateSessionReviewToolsDeps = Record<string, any>;
+interface TaskExecutionSession {
+  sessionId: string;
+  taskId: string;
+  agentId: string;
+  provider: string;
+  openedAt: number;
+  lastTouchedAt: number;
+}
+
+interface CreateSessionReviewToolsDeps {
+  taskExecutionSessions: Map<string, TaskExecutionSession>;
+  nowMs: () => number;
+  randomUUID: () => string;
+  stopRequestedTasks: Set<string> | Map<string, unknown>;
+  stopRequestModeByTask: Map<string, unknown> | Set<string>;
+  clearCliOutputDedup: (taskId: string) => void;
+  crossDeptNextCallbacks: Map<string, unknown>;
+  subtaskDelegationCallbacks: Map<string, unknown>;
+  subtaskDelegationDispatchInFlight: { delete: (key: string) => unknown };
+  delegatedTaskToSubtask: Map<string, unknown>;
+  subtaskDelegationCompletionNoticeSent: { delete: (key: string) => unknown };
+  reviewRoundState: Map<string, unknown>;
+  reviewInFlight: { delete: (key: string) => unknown };
+  appendTaskLog: (taskId: string, kind: string, message: string) => void;
+  notifyClient: (content: string, taskId?: string | null) => void;
+  pickL: (choices: unknown, lang: string) => string;
+  l: (ko: string[], en: string[], ja: string[], zh: string[]) => unknown;
+  db: import("node:sqlite").DatabaseSync;
+  finishReview: (taskId: string, taskTitle: string, opts: { bypassProjectDecisionGate: boolean; trigger: string }) => void;
+  randomDelay: (min: number, max: number) => number;
+  startPlannedApprovalMeeting: (taskId: string, taskTitle: string, deptId: string | null, onApproved: (notes?: string[]) => void) => void;
+}
 
 export function createSessionReviewTools(deps: CreateSessionReviewToolsDeps) {
   const {
@@ -27,7 +58,7 @@ export function createSessionReviewTools(deps: CreateSessionReviewToolsDeps) {
     startPlannedApprovalMeeting,
   } = deps;
 
-  function ensureTaskExecutionSession(taskId: string, agentId: string, provider: string): any {
+  function ensureTaskExecutionSession(taskId: string, agentId: string, provider: string): TaskExecutionSession {
     const now = nowMs();
     const existing = taskExecutionSessions.get(taskId);
     if (existing && existing.agentId === agentId && existing.provider === provider) {
@@ -36,7 +67,7 @@ export function createSessionReviewTools(deps: CreateSessionReviewToolsDeps) {
       return existing;
     }
 
-    const nextSession: any = {
+    const nextSession: TaskExecutionSession = {
       sessionId: randomUUID(),
       taskId,
       agentId,

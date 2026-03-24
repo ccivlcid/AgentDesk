@@ -263,12 +263,12 @@ export function registerWorktreeAndUsageRoutes(ctx: RuntimeContext): {
       if (!threshold || threshold <= 0) continue;
 
       for (const win of entry.windows) {
-        const utilization = (win as any).utilization as number | undefined;
+        const utilization = win.utilization as number | undefined;
         if (utilization == null) continue;
         const pct = Math.round(utilization * 100);
         if (pct < threshold) continue;
 
-        const alertKey = `${provider}:${(win as any).label ?? "default"}`;
+        const alertKey = `${provider}:${(win.label as string | undefined) ?? "default"}`;
         if (sentAlerts.has(alertKey)) continue;
         sentAlerts.add(alertKey);
         // Reset alert key after 1 hour so it can fire again
@@ -277,7 +277,7 @@ export function registerWorktreeAndUsageRoutes(ctx: RuntimeContext): {
         // Create notification
         const id = randomUUID();
         const title = `${provider.charAt(0).toUpperCase() + provider.slice(1)} usage alert: ${pct}%`;
-        const body = `${(win as any).label ?? provider} utilization is at ${pct}%, exceeding the ${threshold}% threshold.`;
+        const body = `${(win.label as string | undefined) ?? provider} utilization is at ${pct}%, exceeding the ${threshold}% threshold.`;
 
         db.prepare(
           "INSERT INTO notifications (id, type, title, body, read, created_at) VALUES (?, ?, ?, ?, 0, ?)",
@@ -308,7 +308,7 @@ export function registerWorktreeAndUsageRoutes(ctx: RuntimeContext): {
       const blockThreshold = Math.min(alertThreshold + 15, 100);
 
       for (const win of entry.windows) {
-        const utilization = (win as any).utilization as number | undefined;
+        const utilization = win.utilization as number | undefined;
         if (utilization == null) continue;
         const pct = Math.round(utilization * 100);
         if (pct >= blockThreshold) {

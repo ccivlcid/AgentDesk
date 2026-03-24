@@ -1,11 +1,7 @@
+import type { DatabaseSync } from "node:sqlite";
 import type { Lang } from "../../../types/lang.ts";
 
-type DbLike = {
-  prepare: (sql: string) => {
-    get: (...args: any[]) => unknown;
-    all: (...args: any[]) => unknown;
-  };
-};
+type DbLike = Pick<DatabaseSync, "prepare">;
 
 type CreateConversationContextToolsDeps = {
   db: DbLike;

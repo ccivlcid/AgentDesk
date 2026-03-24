@@ -9,10 +9,13 @@
 import { randomUUID } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
+import type { DatabaseSync } from "node:sqlite";
 import { classifySkillCategory } from "../../../routes/ops/custom-skills.ts";
 
+type DbLike = Pick<DatabaseSync, "prepare">;
+
 interface ExtractSkillsDeps {
-  db: any;
+  db: DbLike;
   nowMs: () => number;
   logsDir: string;
   appendTaskLog: (taskId: string, kind: string, message: string) => void;
@@ -33,7 +36,7 @@ const VALID_PROVIDERS: ValidProvider[] = [
   "claude", "codex", "gemini", "opencode", "copilot", "antigravity", "cursor", "api", "ollama",
 ];
 
-function resolveProvider(db: any, agentId: string | null): ValidProvider {
+function resolveProvider(db: DbLike, agentId: string | null): ValidProvider {
   if (!agentId) return "claude";
   try {
     const row = db
@@ -46,7 +49,7 @@ function resolveProvider(db: any, agentId: string | null): ValidProvider {
   }
 }
 
-function skillAlreadyExists(db: any, jobId: string, provider: string): boolean {
+function skillAlreadyExists(db: DbLike, jobId: string, provider: string): boolean {
   try {
     const row = db
       .prepare("SELECT id FROM skill_learning_history WHERE job_id = ? AND provider = ? LIMIT 1")

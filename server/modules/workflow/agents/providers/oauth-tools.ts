@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import type { DatabaseSync } from "node:sqlite";
 import {
   BUILTIN_GOOGLE_CLIENT_ID,
   BUILTIN_GOOGLE_CLIENT_SECRET,
@@ -7,13 +8,7 @@ import {
 } from "../../../../oauth/helpers.ts";
 import type { DecryptedOAuthToken } from "./types.ts";
 
-type DbLike = {
-  prepare: (sql: string) => {
-    get: (...args: any[]) => unknown;
-    all: (...args: any[]) => unknown;
-    run: (...args: any[]) => unknown;
-  };
-};
+type DbLike = Pick<DatabaseSync, "prepare">;
 
 type CreateOAuthToolsDeps = {
   db: DbLike;
@@ -355,8 +350,13 @@ export function createOAuthTools(deps: CreateOAuthToolsDeps) {
           signal,
         });
         if (!resp.ok) continue;
-        const data = (await resp.json()) as any;
-        const proj = data?.cloudaicompanionProject?.id ?? data?.cloudaicompanionProject;
+        const data = (await resp.json()) as {
+          cloudaicompanionProject?: { id?: string } | string;
+        };
+        const proj =
+          (typeof data?.cloudaicompanionProject === "object"
+            ? data?.cloudaicompanionProject?.id
+            : data?.cloudaicompanionProject) ?? undefined;
         if (typeof proj === "string" && proj) {
           antigravityProjectCache = { projectId: proj, tokenHash };
           return proj;

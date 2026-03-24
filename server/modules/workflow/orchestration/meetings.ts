@@ -12,7 +12,7 @@ import { createMeetingMinutesTools } from "./meetings/minutes.ts";
 import { createMeetingPresenceTools } from "./meetings/presence.ts";
 import { createReviewConsensusTools } from "./meetings/review-consensus.ts";
 
-export function initializeWorkflowMeetingTools(ctx: RuntimeContext): any {
+export function initializeWorkflowMeetingTools(ctx: RuntimeContext): ReturnType<typeof createMeetingLeaderSelectionTools> & ReturnType<typeof createMeetingMinutesTools> & ReturnType<typeof createMeetingPresenceTools> & ReturnType<typeof createReviewConsensusTools> {
   const __ctx: RuntimeContext = ctx;
   const db = __ctx.db;
   const nowMs = __ctx.nowMs;
@@ -52,7 +52,7 @@ export function initializeWorkflowMeetingTools(ctx: RuntimeContext): any {
   const clearTaskWorkflowState = __ctx.clearTaskWorkflowState;
   const isTaskWorkflowInterrupted = __ctx.isTaskWorkflowInterrupted;
   const buildMeetingPrompt = __ctx.buildMeetingPrompt;
-  const reviewMeetingOneShotTimeoutMs = Number((__ctx as any).reviewMeetingOneShotTimeoutMs ?? 65_000);
+  const reviewMeetingOneShotTimeoutMs = Number((__ctx as RuntimeContext & { reviewMeetingOneShotTimeoutMs?: number }).reviewMeetingOneShotTimeoutMs ?? 65_000);
 
   const { getLeadersByDepartmentIds, getAllActiveTeamLeaders, getTaskRelatedDepartmentIds, getTaskReviewLeaders } =
     createMeetingLeaderSelectionTools({

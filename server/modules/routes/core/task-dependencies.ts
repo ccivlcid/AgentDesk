@@ -26,7 +26,16 @@ export function registerTaskDependencyRoutes({ app, db, nowMs }: TaskDepsRouteDe
          WHERE td.task_id = ?
          ORDER BY td.created_at ASC`,
       )
-      .all(taskId) as any[];
+      .all(taskId) as Array<{
+        id: string;
+        title: string;
+        status: string;
+        priority: number;
+        task_type: string;
+        assigned_agent_name: string;
+        assigned_agent_name_ko: string;
+        dep_created_at: number;
+      }>;
 
     // Dependents: tasks that depend on this task
     const dependents = db
@@ -41,7 +50,16 @@ export function registerTaskDependencyRoutes({ app, db, nowMs }: TaskDepsRouteDe
          WHERE td.depends_on_task_id = ?
          ORDER BY td.created_at ASC`,
       )
-      .all(taskId) as any[];
+      .all(taskId) as Array<{
+        id: string;
+        title: string;
+        status: string;
+        priority: number;
+        task_type: string;
+        assigned_agent_name: string;
+        assigned_agent_name_ko: string;
+        dep_created_at: number;
+      }>;
 
     res.json({ ok: true, predecessors, dependents });
   });
@@ -103,7 +121,7 @@ export function registerTaskDependencyRoutes({ app, db, nowMs }: TaskDepsRouteDe
         .prepare("DELETE FROM task_dependencies WHERE task_id = ? AND depends_on_task_id = ?")
         .run(taskId, depId);
 
-      if ((result as any).changes === 0) {
+      if ((result as { changes?: number }).changes === 0) {
         throw ApiError.notFound("dependency_not_found");
       }
 

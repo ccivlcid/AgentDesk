@@ -87,7 +87,7 @@ export function registerBackupRoutes(ctx: RuntimeContext): void {
          LEFT JOIN departments d ON d.id = t.department_id
          ORDER BY t.created_at DESC`,
       )
-      .all() as any[];
+      .all() as Array<Record<string, unknown>>;
 
     if (format === "json") {
       res.setHeader("Content-Type", "application/json");

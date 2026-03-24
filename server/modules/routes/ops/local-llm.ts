@@ -388,7 +388,7 @@ export function registerLocalLlmRoutes({ app, db, broadcast }: Deps): void {
     try {
       const rows = db.prepare("SELECT * FROM local_llm_backends").all();
       // Return defaults if table is empty
-      const backends = (rows as any[]).length > 0 ? rows : [
+      const backends = (rows as unknown[]).length > 0 ? rows : [
         { name: "ollama", installed: 0, host: "localhost", port: 11434, auto_start: 1 },
       ];
       res.json({ ok: true, backends });

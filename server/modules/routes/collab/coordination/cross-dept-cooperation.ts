@@ -7,6 +7,7 @@ import { buildDocumentGenerationGuidance } from "../../../workflow/core/document
 import { resolveWorkflowPackKeyForTask } from "../../../workflow/packs/task-pack-resolver.ts";
 import { resolveConstrainedAgentScopeForTask } from "../../core/tasks/execution-run-auto-assign.ts";
 import type { AgentRow } from "./types.ts";
+import type { TaskCreationAuditInput } from "../../../../types/runtime-context.ts";
 
 interface CrossDeptContext {
   teamLeader: AgentRow;
@@ -20,7 +21,40 @@ interface CrossDeptContext {
   projectId?: string | null;
   projectCandidateAgentIds?: string[] | null;
 }
-type CrossDeptCooperationDeps = any;
+interface CrossDeptCooperationDeps {
+  db: import("node:sqlite").DatabaseSync;
+  nowMs: () => number;
+  appendTaskLog: (taskId: string, source: string, message: string) => void;
+  broadcast: (event: string, payload: unknown) => void;
+  recordTaskCreationAudit: (payload: TaskCreationAuditInput) => void;
+  delegatedTaskToSubtask: Map<string, string>;
+  crossDeptNextCallbacks: Map<string, () => void>;
+  findTeamLeader: (departmentId: string, candidateAgentIds?: string[] | null) => AgentRow | null;
+  findBestSubordinate: (deptId: string, excludeId: string, candidateAgentIds?: string[] | null) => AgentRow | null;
+  resolveLang: (text: string) => Lang;
+  getDeptName: (deptId: string) => string;
+  getAgentDisplayName: (agent: AgentRow, lang: string) => string;
+  sendAgentMessage: (agent: AgentRow, content: string, messageType: string, receiverType: string, receiverId: string | null, taskId: string) => void;
+  notifyClient: (content: string, taskId?: string | null) => void;
+  l: (ko: string[], en: string[], ja: string[], zh: string[]) => unknown;
+  pickL: (choices: unknown, lang: string) => string;
+  startTaskExecutionForAgent: (taskId: string, agent: AgentRow, leaderDeptId: string, leaderDeptName: string) => void;
+  linkCrossDeptTaskToParentSubtask: (taskId: string, crossDeptId: string, crossTaskId: string) => string | null;
+  detectProjectPath: (text: string) => string | null;
+  resolveProjectPath: (task: { project_path: string | null; workflow_pack_key: string | null }) => string;
+  logsDir: string;
+  getDeptRoleConstraint: (deptId: string, deptName: string) => string;
+  getRecentConversationContext: (agentId: string) => string;
+  buildAvailableSkillsPromptBlock: (provider: string) => string;
+  buildTaskExecutionPrompt: (parts: Array<string | null | undefined>, opts?: { allowWarningFix?: boolean }) => string;
+  hasExplicitWarningFixRequest: (...textParts: Array<string | null | undefined>) => boolean;
+  ensureTaskExecutionSession: (taskId: string, agentId: string, provider: string) => { sessionId: string; agentId: string; provider: string };
+  getProviderModelConfig: () => Record<string, { model?: string; reasoningLevel?: string }>;
+  spawnCliAgent: (taskId: string, provider: string, prompt: string, projPath: string, logPath: string, model?: string, reasoningLevel?: string) => import("node:child_process").ChildProcess;
+  handleSubtaskDelegationComplete: (taskId: string, subtaskId: string, exitCode: number) => void;
+  handleTaskRunComplete: (taskId: string, exitCode: number) => void;
+  startProgressTimer: (taskId: string, title: string, deptId: string) => void;
+}
 
 export function createCrossDeptCooperationTools(deps: CrossDeptCooperationDeps) {
   const {
@@ -63,7 +97,7 @@ export function createCrossDeptCooperationTools(deps: CrossDeptCooperationDeps) 
     projectId: string | null | undefined,
     departmentId: string | null | undefined,
   ): string[] | null {
-    return resolveConstrainedAgentScopeForTask(db as any, {
+    return resolveConstrainedAgentScopeForTask(db, {
       workflow_pack_key: workflowPackKey ?? null,
       project_id: projectId ?? null,
       department_id: departmentId ?? null,
@@ -96,7 +130,7 @@ export function createCrossDeptCooperationTools(deps: CrossDeptCooperationDeps) 
          CASE status WHEN 'idle' THEN 0 WHEN 'break' THEN 1 WHEN 'working' THEN 2 ELSE 3 END,
          CASE role WHEN 'senior' THEN 0 WHEN 'junior' THEN 1 WHEN 'intern' THEN 2 WHEN 'team_leader' THEN 3 ELSE 4 END`,
       )
-      .all(...params) as AgentRow[];
+      .all(...(params as import("node:sqlite").SQLInputValue[])) as unknown as AgentRow[];
     return agents[0] ?? null;
   }
 
@@ -215,7 +249,7 @@ export function createCrossDeptCooperationTools(deps: CrossDeptCooperationDeps) 
       );
       broadcast("task_update", db.prepare("SELECT * FROM tasks WHERE id = ?").get(parent.id));
       broadcast("agent_status", db.prepare("SELECT * FROM agents WHERE id = ?").get(assignee.id));
-      startTaskExecutionForAgent(parent.id, assignee, parent.department_id, deptName);
+      startTaskExecutionForAgent(parent.id, assignee, parent.department_id!, deptName);
     };
 
     if (nextIndex === -1) {
@@ -414,7 +448,7 @@ export function createCrossDeptCooperationTools(deps: CrossDeptCooperationDeps) 
         | undefined;
       const crossDetectedPath = parentTaskPath?.project_path ?? detectProjectPath(ceoMessage);
       const crossWorkflowPackKey = resolveWorkflowPackKeyForTask({
-        db: db as any,
+        db: db,
         sourceTaskPackKey: parentTaskPath?.workflow_pack_key,
         sourceTaskId: taskId,
         projectId: parentTaskPath?.project_id ?? null,
@@ -525,7 +559,7 @@ export function createCrossDeptCooperationTools(deps: CrossDeptCooperationDeps) 
           };
           const roleLabel = roleLabels[execAgent.role] ?? execAgent.role;
           const deptConstraint = getDeptRoleConstraint(crossDeptId, crossDeptName);
-          const deptPromptRaw = getDepartmentPromptForPack(db as any, crossDeptId);
+          const deptPromptRaw = getDepartmentPromptForPack(db, crossDeptId);
           const deptPrompt = typeof deptPromptRaw === "string" ? deptPromptRaw.trim() : "";
           const deptPromptBlock = deptPrompt ? `[Department Shared Prompt]\n${deptPrompt}` : "";
           const crossConversationCtx = getRecentConversationContext(execAgent.id);

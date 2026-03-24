@@ -1,17 +1,13 @@
 import fs from "node:fs";
 import path from "node:path";
 import type { ChildProcess } from "node:child_process";
+import type { DatabaseSync } from "node:sqlite";
 import { decryptSecret } from "../../../../oauth/helpers.ts";
 import logger from "../../../../lib/logger";
 import type { ApiProviderRow } from "./types.ts";
 import type { InferenceLogEntry } from "../../../local-llm/inference-logger.ts";
 
-type DbLike = {
-  prepare: (sql: string) => {
-    get: (...args: any[]) => unknown;
-    run: (...args: any[]) => unknown;
-  };
-};
+type DbLike = Pick<DatabaseSync, "prepare">;
 
 type CreateApiProviderToolsDeps = {
   db: DbLike;
@@ -21,7 +17,7 @@ type CreateApiProviderToolsDeps = {
   normalizeStreamChunk: (raw: Buffer | string, opts?: { dropCliNoise?: boolean }) => string;
   handleTaskRunComplete: (taskId: string, exitCode: number) => void;
   nowMs: () => number;
-  createSafeLogStreamOps: (logStream: any) => {
+  createSafeLogStreamOps: (logStream: fs.WriteStream) => {
     safeWrite: (text: string) => boolean;
     safeEnd: (onDone?: () => void) => void;
     isClosed: () => boolean;
@@ -112,7 +108,7 @@ export function createApiProviderTools(deps: CreateApiProviderToolsDeps) {
 
   function getApiProviderById(providerId: string): ApiProviderRow | null {
     return (
-      (db.prepare("SELECT * FROM api_providers WHERE id = ?").get(providerId) as ApiProviderRow) ?? null
+      (db.prepare("SELECT * FROM api_providers WHERE id = ?").get(providerId) as unknown as ApiProviderRow | undefined) ?? null
     );
   }
 
@@ -350,10 +346,12 @@ export function createApiProviderTools(deps: CreateApiProviderToolsDeps) {
           safeWrite,
           agentId,
         );
-      } catch (err: any) {
+      } catch (err: unknown) {
         exitCode = 1;
-        if (err.name !== "AbortError") {
-          const msg = normalizeStreamChunk(`[api] Error: ${err.message}\n`);
+        const isAbort = err instanceof Error && err.name === "AbortError";
+        if (!isAbort) {
+          const errMsg = err instanceof Error ? err.message : String(err);
+          const msg = normalizeStreamChunk(`[api] Error: ${errMsg}\n`);
           safeWrite(msg);
           broadcast("cli_output", { task_id: taskId, stream: "stderr", data: msg });
           logger.error({ err }, `[AgentDesk] API provider agent error (task ${taskId})`);

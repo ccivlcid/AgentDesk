@@ -1,4 +1,21 @@
-type CreateProgressNotifyToolsDeps = Record<string, any>;
+import type { DatabaseSync } from "node:sqlite";
+import type { Lang } from "../../../types/lang.ts";
+
+type L10n = Record<Lang, string[]>;
+
+interface CreateProgressNotifyToolsDeps {
+  db: DatabaseSync;
+  progressTimers: Map<string, ReturnType<typeof setInterval>>;
+  findTeamLeader: (departmentId: string | null) => { id: string } | null;
+  resolveLang: (text: string) => string;
+  getPreferredLanguage?: () => string;
+  sendAgentMessage: (agent: { id: string }, content: string, messageType: string, scope: string, roomId: string | null, taskId: string | null) => void;
+  pickL: (l10n: L10n, lang: string) => string;
+  l: (...args: string[][]) => L10n;
+  randomUUID: () => string;
+  nowMs: () => number;
+  broadcast: (event: string, payload: unknown) => void;
+}
 
 export function createProgressNotifyTools(deps: CreateProgressNotifyToolsDeps) {
   const { db, progressTimers, findTeamLeader, resolveLang, getPreferredLanguage, sendAgentMessage, pickL, l, randomUUID, nowMs, broadcast } =

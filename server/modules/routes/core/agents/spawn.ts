@@ -95,7 +95,7 @@ export function registerAgentSpawnRoute(ctx: RuntimeContext): void {
     }
     const effectivePackKey = task.context_hint ?? task.workflow_pack_key;
     ensureVideoPreprodRemotionBestPracticesSkill({
-      db: db as any,
+      db: db as Parameters<typeof ensureVideoPreprodRemotionBestPracticesSkill>[0]["db"],
       nowMs,
       workflowPackKey: effectivePackKey,
       provider,
@@ -139,7 +139,7 @@ export function registerAgentSpawnRoute(ctx: RuntimeContext): void {
     const departmentPromptBlock = departmentPrompt ? `[Department Shared Prompt]\n${departmentPrompt}` : "";
     const videoArtifactSpec =
       effectivePackKey === "video_preprod"
-        ? resolveVideoArtifactSpecForTask(db as any, {
+        ? resolveVideoArtifactSpecForTask(db as Parameters<typeof resolveVideoArtifactSpecForTask>[0], {
             project_id: task.project_id,
             project_path: task.project_path,
             department_id: task.department_id,

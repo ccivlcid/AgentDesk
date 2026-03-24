@@ -200,12 +200,12 @@ export function registerChatUploadRoutes(ctx: RuntimeContext): void {
       }
 
       return res.json({ ok: true, files });
-    } catch (err: any) {
-      if (err?.message === "payload_too_large") {
+    } catch (err: unknown) {
+      if (err instanceof Error && err.message === "payload_too_large") {
         return res.status(413).json({ ok: false, error: "payload_too_large" });
       }
       logger.error({ err }, "[chat-upload] upload error:");
-      return res.status(500).json({ ok: false, error: err?.message || String(err) });
+      return res.status(500).json({ ok: false, error: err instanceof Error ? err.message : String(err) });
     }
   });
 
@@ -266,9 +266,9 @@ export function registerChatUploadRoutes(ctx: RuntimeContext): void {
 
       const stream = fs.createReadStream(realPath);
       stream.pipe(res);
-    } catch (err: any) {
+    } catch (err: unknown) {
       logger.error({ err }, "[chat-upload] download error:");
-      return res.status(500).json({ ok: false, error: err?.message || String(err) });
+      return res.status(500).json({ ok: false, error: err instanceof Error ? err.message : String(err) });
     }
   });
 }

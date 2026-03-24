@@ -1,11 +1,7 @@
 import { execFileSync } from "node:child_process";
+import type { DatabaseSync } from "node:sqlite";
 
-type DbLike = {
-  prepare: (sql: string) => {
-    run: (...args: any[]) => unknown;
-    get: (...args: any[]) => unknown;
-  };
-};
+type DbLike = Pick<DatabaseSync, "prepare">;
 
 type CreateProcessToolsDeps = {
   db: DbLike;

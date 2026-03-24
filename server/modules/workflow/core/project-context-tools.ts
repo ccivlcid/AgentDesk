@@ -4,15 +4,10 @@ import { execFileSync } from "node:child_process";
 import logger from "../../../lib/logger";
 import { createPromptSkillsHelper } from "./prompt-skills.ts";
 
-type DbLike = {
-  prepare: (sql: string) => {
-    get: (...args: any[]) => unknown;
-    all: (...args: any[]) => unknown;
-  };
-};
+import type { DatabaseSync } from "node:sqlite";
 
 type CreateProjectContextToolsDeps = {
-  db: DbLike;
+  db: DatabaseSync;
   isGitRepo: (dir: string) => boolean;
   taskWorktrees: Map<string, { worktreePath: string; branchName: string; projectPath: string }>;
 };
@@ -82,7 +77,7 @@ export function createProjectContextTools(deps: CreateProjectContextToolsDeps) {
       .join("\n");
   }
 
-  const { buildAvailableSkillsPromptBlock } = createPromptSkillsHelper(db as any);
+  const { buildAvailableSkillsPromptBlock } = createPromptSkillsHelper(db);
 
   const CONTEXT_IGNORE_DIRS = new Set([
     "node_modules",

@@ -1,8 +1,10 @@
 import fs from "node:fs";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
+import type { DatabaseSync } from "node:sqlite";
 
 import type { Lang } from "../../../types/lang.ts";
+import type { TaskCreationAuditInput } from "../../../types/runtime-context.ts";
 import { resolveWorkflowPackKeyForTask } from "../../workflow/packs/task-pack-resolver.ts";
 import { ensureVideoPreprodRemotionBestPracticesSkill } from "../../workflow/core/video-skill-bootstrap.ts";
 import { resolveConstrainedAgentScopeForTask } from "../core/tasks/execution-run-auto-assign.ts";
@@ -21,8 +23,10 @@ import {
   teamLeadFallbackLabel,
 } from "./subtask-delegation-batch-messages.ts";
 
+type DbLike = Pick<DatabaseSync, "prepare">;
+
 interface BatchDeps {
-  db: any;
+  db: DbLike;
   l: (ko: string[], en: string[], ja?: string[], zh?: string[]) => L10n;
   pickL: (pool: L10n, lang: Lang) => string;
   resolveLang: (text?: string, fallback?: Lang) => Lang;
@@ -42,7 +46,7 @@ interface BatchDeps {
     taskId?: string | null,
   ) => void;
   appendTaskLog: (taskId: string, source: string, message: string) => void;
-  recordTaskCreationAudit: (payload: any) => void;
+  recordTaskCreationAudit: (payload: TaskCreationAuditInput) => void;
   resolveProjectPath: (taskLike: {
     project_id?: string | null;
     project_path?: string | null;
@@ -143,7 +147,7 @@ export function createSubtaskDelegationBatch(deps: BatchDeps) {
   } = deps;
 
   function getConstrainedAgentIds(parentTask: ParentTaskRow, targetDeptId: string | null): string[] | null {
-    return resolveConstrainedAgentScopeForTask(db as any, {
+    return resolveConstrainedAgentScopeForTask(db, {
       workflow_pack_key: (parentTask.context_hint ?? parentTask.workflow_pack_key) ?? null,
       department_id: targetDeptId ?? parentTask.department_id ?? null,
       project_id: parentTask.project_id,
@@ -162,7 +166,7 @@ export function createSubtaskDelegationBatch(deps: BatchDeps) {
 
     const excludedIds = [...new Set(excludeIds.map((id) => String(id || "").trim()).filter((id) => id.length > 0))];
     const idPlaceholders = candidateIds.map(() => "?").join(",");
-    const params: unknown[] = [...candidateIds];
+    const params: string[] = [...candidateIds];
 
     const deptClause = preferredDeptId ? "AND department_id = ?" : "";
     if (preferredDeptId) params.push(preferredDeptId);
@@ -176,7 +180,7 @@ export function createSubtaskDelegationBatch(deps: BatchDeps) {
          CASE status WHEN 'idle' THEN 0 WHEN 'break' THEN 1 WHEN 'working' THEN 2 ELSE 3 END,
          CASE role WHEN 'senior' THEN 0 WHEN 'junior' THEN 1 WHEN 'intern' THEN 2 WHEN 'team_leader' THEN 3 ELSE 4 END`,
       )
-      .all(...params) as AgentRow[];
+      .all(...params) as unknown as AgentRow[];
     return agents[0] ?? null;
   }
 
@@ -341,7 +345,7 @@ export function createSubtaskDelegationBatch(deps: BatchDeps) {
         delegatedChecklist,
       });
       const delegatedWorkflowPackKey = resolveWorkflowPackKeyForTask({
-        db: db as any,
+        db,
         sourceTaskPackKey: parentTask.context_hint ?? parentTask.workflow_pack_key,
         sourceTaskId: parentTask.id,
         projectId: parentTask.project_id,
@@ -469,7 +473,7 @@ export function createSubtaskDelegationBatch(deps: BatchDeps) {
           }
           const logFilePath = path.join(logsDir, `${delegatedTaskId}.log`);
           ensureVideoPreprodRemotionBestPracticesSkill({
-            db: db as any,
+            db,
             nowMs,
             workflowPackKey: (parentTask.context_hint ?? parentTask.workflow_pack_key) ?? null,
             provider: execProvider,

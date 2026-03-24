@@ -9,8 +9,10 @@ export type DirectivePolicy = {
   skipPlanSubtasks: boolean;
 };
 
+import type { DatabaseSync } from "node:sqlite";
+
 interface LanguagePolicyDeps {
-  db: any;
+  db: DatabaseSync;
 }
 
 const ROLE_LABEL: Record<string, string> = {

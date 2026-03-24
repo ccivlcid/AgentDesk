@@ -1,7 +1,73 @@
+import type { DatabaseSync } from "node:sqlite";
 import type { Lang } from "../../../../types/lang.ts";
-import type { MeetingTranscriptEntry } from "./minutes.ts";
+import type { MeetingTranscriptEntry } from "../../core/conversation-types.ts";
 
-type OutcomeContext = any;
+interface LeaderRow {
+  id: string;
+  name: string;
+  department_id: string | null;
+}
+
+type L10n = Record<Lang, string[]>;
+
+interface OutcomeContext {
+  taskId: string;
+  taskTitle: string;
+  round: number;
+  roundMode: string;
+  isRound1Remediation: boolean;
+  isRound2Merge: boolean;
+  isFinalDecisionRound: boolean;
+  leaders: LeaderRow[];
+  transcript: MeetingTranscriptEntry[];
+  lang: Lang;
+  workflowPackKey: string | null;
+  meetingId: string | null;
+  onApproved: () => void;
+  abortIfInactive: () => boolean;
+  meetingReviewDecisionByAgent: Map<string, string>;
+  findLatestTranscriptContentByAgent: (transcript: MeetingTranscriptEntry[], agentId: string) => string;
+  isDeferrableReviewHold: (text: string) => boolean;
+  summarizeForMeetingBubble: (text: string, maxLen: number, lang: Lang) => string;
+  getDeptName: (deptId: string, workflowPackKey?: string | null) => string;
+  getAgentDisplayName: (agent: LeaderRow, lang: Lang | string) => string;
+  appendTaskLog: (taskId: string, kind: string, message: string) => void;
+  REVIEW_MAX_REVISION_SIGNALS_PER_ROUND: number;
+  REVIEW_MAX_REVISION_SIGNALS_PER_DEPT_PER_ROUND: number;
+  appendTaskProjectMemo: (taskId: string, type: string, round: number, items: string[], lang: Lang | string) => void;
+  sleepMs: (ms: number) => Promise<void>;
+  randomDelay: (min: number, max: number) => number;
+  collectRevisionMemoItems: (
+    transcript: MeetingTranscriptEntry[],
+    maxItems: number,
+    maxPerDept: number,
+  ) => string[];
+  REVIEW_MAX_MEMO_ITEMS_PER_ROUND: number;
+  REVIEW_MAX_MEMO_ITEMS_PER_DEPT: number;
+  reserveReviewRevisionMemoItems: (
+    taskId: string,
+    round: number,
+    items: string[],
+  ) => { freshItems: string[]; duplicateCount: number };
+  loadRecentReviewRevisionMemoItems: (taskId: string, limit: number) => string[];
+  pickL: (choices: L10n, lang: Lang | string) => string;
+  l: (ko: string[], en: string[], ja: string[], zh: string[]) => L10n;
+  db: Pick<DatabaseSync, "prepare">;
+  REVIEW_MAX_REMEDIATION_REQUESTS: number;
+  notifyClient: (message: string, taskId: string | null, messageType?: string) => void;
+  finishMeetingMinutes: (meetingId: string, status: string) => void;
+  dismissLeadersFromClientOffice: (taskId: string, leaders: LeaderRow[]) => void;
+  reviewRoundState: Map<string, unknown>;
+  reviewInFlight: Map<string, unknown> | Set<string>;
+  appendTaskReviewFinalMemo: (
+    taskId: string,
+    round: number,
+    transcript: MeetingTranscriptEntry[],
+    lang: Lang | string,
+    hasResidualRisk: boolean,
+  ) => void;
+  scheduleNextReviewRound: (taskId: string, taskTitle: string, round: number, lang: Lang | string) => void;
+}
 
 const REVIEW_DECISION_PENDING_LOG_PREFIX = "Decision inbox: review decision pending";
 
@@ -53,15 +119,15 @@ export async function processReviewConsensusOutcome(ctx: OutcomeContext): Promis
 
   // Final review result should follow each leader's last approval statement,
   // not stale "needs revision" flags from earlier feedback turns.
-  const finalHoldLeaders: any[] = [];
-  const deferredMonitoringLeaders: any[] = [];
+  const finalHoldLeaders: LeaderRow[] = [];
+  const deferredMonitoringLeaders: LeaderRow[] = [];
   const deferredMonitoringNotes: string[] = [];
   const finalHoldDeptCount = new Map<string, number>();
-  for (const leader of leaders as any[]) {
+  for (const leader of leaders) {
     if (meetingReviewDecisionByAgent.get(leader.id) !== "hold") continue;
-    const latestDecisionLine = findLatestTranscriptContentByAgent(transcript as MeetingTranscriptEntry[], leader.id);
+    const latestDecisionLine = findLatestTranscriptContentByAgent(transcript, leader.id);
     if (isDeferrableReviewHold(latestDecisionLine)) {
-      const clipped = summarizeForMeetingBubble(latestDecisionLine, 160, lang as Lang);
+      const clipped = summarizeForMeetingBubble(latestDecisionLine, 160, lang);
       deferredMonitoringLeaders.push(leader);
       deferredMonitoringNotes.push(
         `${getDeptName(leader.department_id ?? "", workflowPackKey)} ${getAgentDisplayName(leader, lang)}: ${clipped}`,
@@ -109,7 +175,7 @@ export async function processReviewConsensusOutcome(ctx: OutcomeContext): Promis
 
   if (needsRevision) {
     const rawMemoItems = collectRevisionMemoItems(
-      transcript as MeetingTranscriptEntry[],
+      transcript,
       REVIEW_MAX_MEMO_ITEMS_PER_ROUND,
       REVIEW_MAX_MEMO_ITEMS_PER_DEPT,
     );
@@ -228,7 +294,7 @@ export async function processReviewConsensusOutcome(ctx: OutcomeContext): Promis
       `Review consensus round ${round}: forcing finalization with documented residual risk (${forceReason})`,
     );
 
-    appendTaskReviewFinalMemo(taskId, round, transcript as MeetingTranscriptEntry[], lang, true);
+    appendTaskReviewFinalMemo(taskId, round, transcript, lang, true);
     notifyClient(
       pickL(
         l(
@@ -313,7 +379,7 @@ export async function processReviewConsensusOutcome(ctx: OutcomeContext): Promis
     appendTaskReviewFinalMemo(
       taskId,
       round,
-      transcript as MeetingTranscriptEntry[],
+      transcript,
       lang,
       deferredMonitoringLeaders.length > 0,
     );

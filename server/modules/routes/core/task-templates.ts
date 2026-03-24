@@ -13,7 +13,7 @@ export function registerTaskTemplateRoutes({ app, db, nowMs }: TaskTemplateRoute
   app.get("/api/task-templates", (_req: Request, res: Response) => {
     const rows = db
       .prepare("SELECT * FROM task_templates ORDER BY updated_at DESC")
-      .all() as any[];
+      .all() as Array<Record<string, unknown>>;
     res.json({ ok: true, templates: rows });
   });
 
@@ -28,7 +28,7 @@ export function registerTaskTemplateRoutes({ app, db, nowMs }: TaskTemplateRoute
       priority,
       workflow_pack_key,
       workflow_meta_json,
-    } = req.body as Record<string, any>;
+    } = req.body as Record<string, unknown>;
 
     if (!name || typeof name !== "string" || !name.trim()) {
       res.status(400).json({ error: "name is required" });
@@ -55,7 +55,7 @@ export function registerTaskTemplateRoutes({ app, db, nowMs }: TaskTemplateRoute
       now,
     );
 
-    const row = db.prepare("SELECT * FROM task_templates WHERE id = ?").get(id) as any;
+    const row = db.prepare("SELECT * FROM task_templates WHERE id = ?").get(id) as Record<string, unknown> | undefined;
     res.status(201).json({ ok: true, template: row });
   });
 

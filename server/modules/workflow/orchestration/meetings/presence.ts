@@ -17,8 +17,10 @@ interface AgentRow {
   cli_reasoning_level: string | null;
 }
 
+import type { DatabaseSync } from "node:sqlite";
+
 type PresenceDeps = {
-  db: any;
+  db: DatabaseSync;
   nowMs: () => number;
   broadcast: (event: string, payload: unknown) => void;
   meetingPresenceUntil: Map<string, number>;

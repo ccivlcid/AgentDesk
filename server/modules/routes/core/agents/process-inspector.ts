@@ -49,7 +49,7 @@ function runExecFileText(cmd: string, args: string[], timeoutMs = 15000): Promis
       { encoding: "utf8", timeout: timeoutMs, maxBuffer: 16 * 1024 * 1024 },
       (err, stdout, stderr) => {
         if (err) {
-          (err as any).stderr = stderr;
+          (err as NodeJS.ErrnoException & { stderr?: string }).stderr = stderr;
           reject(err);
           return;
         }
@@ -83,13 +83,13 @@ function parseUnixProcessTable(raw: string): SystemProcessInfo[] {
 }
 
 function parseWindowsProcessJson(raw: string): SystemProcessInfo[] {
-  let parsed: any;
+  let parsed: unknown;
   try {
     parsed = JSON.parse(raw);
   } catch {
     return [];
   }
-  const items = Array.isArray(parsed) ? parsed : parsed ? [parsed] : [];
+  const items: Array<Record<string, unknown>> = (Array.isArray(parsed) ? parsed : parsed ? [parsed] : []) as Array<Record<string, unknown>>;
   const rows: SystemProcessInfo[] = [];
   for (const item of items) {
     const pid = Number(item?.ProcessId ?? item?.processid ?? item?.pid);

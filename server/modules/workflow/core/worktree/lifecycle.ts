@@ -3,6 +3,18 @@ import path from "node:path";
 import { execFileSync } from "node:child_process";
 import logger from "../../../../lib/logger";
 
+/** Error shape thrown by execFileSync — includes stderr/stdout buffers */
+interface ExecFileSyncError extends Error {
+  stderr?: Buffer | string;
+  stdout?: Buffer | string;
+  status?: number | null;
+}
+
+function getStderrString(err: unknown): string {
+  const e = err as ExecFileSyncError;
+  return e?.stderr ? e.stderr.toString().trim() : "";
+}
+
 export type WorktreeInfo = {
   worktreePath: string;
   branchName: string;
@@ -174,7 +186,7 @@ export function createWorktreeLifecycleTools(deps: CreateWorktreeLifecycleToolsD
       return true;
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
-      const stderr = (err as any)?.stderr ? (err as any).stderr.toString().trim() : "";
+      const stderr = getStderrString(err);
       const detail = stderr ? `${msg} | stderr: ${stderr}` : msg;
       appendTaskLog(taskId, "error", `Git bootstrap failed: ${detail}`);
       logger.error(`[AgentDesk] Failed git bootstrap for task ${shortId}: ${detail}`);
@@ -295,7 +307,7 @@ export function createWorktreeLifecycleTools(deps: CreateWorktreeLifecycleToolsD
           created = true;
           break;
         } catch (err: unknown) {
-          const stderr = (err as any)?.stderr ? (err as any).stderr.toString().trim() : "";
+          const stderr = getStderrString(err);
           logger.error(
             `[AgentDesk] git worktree add failed for branch ${candidateBranch}: ${err instanceof Error ? err.message : String(err)}${stderr ? ` | stderr: ${stderr}` : ""}`,
           );
@@ -305,7 +317,7 @@ export function createWorktreeLifecycleTools(deps: CreateWorktreeLifecycleToolsD
 
       if (!created) {
         const errMsg = lastError instanceof Error ? lastError.message : String(lastError ?? "worktree_add_failed");
-        const stderr = (lastError as any)?.stderr ? (lastError as any).stderr.toString().trim() : "";
+        const stderr = getStderrString(lastError);
         const detail = stderr ? `${errMsg} | stderr: ${stderr}` : errMsg;
         appendTaskLog(taskId, "error", `Failed to create git worktree at '${worktreePath}': ${detail}`);
         throw new Error(detail);
@@ -333,7 +345,7 @@ export function createWorktreeLifecycleTools(deps: CreateWorktreeLifecycleToolsD
       return selectedWorktreePath;
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
-      const stderr = (err as any)?.stderr ? (err as any).stderr.toString().trim() : "";
+      const stderr = getStderrString(err);
       const detail = stderr ? `${msg} | stderr: ${stderr}` : msg;
       appendTaskLog(
         taskId,

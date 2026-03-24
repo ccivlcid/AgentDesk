@@ -4,8 +4,10 @@ export type VideoRenderPendingSubtask = {
   delegated_task_id: string | null;
 };
 
+import type { DatabaseSync } from "node:sqlite";
+
 type ReconcileVideoRenderDelegationDeps = {
-  db: any;
+  db: DatabaseSync;
   nowMs: () => number;
   broadcast: (event: string, payload: unknown) => void;
 };

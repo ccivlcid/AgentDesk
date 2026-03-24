@@ -117,7 +117,7 @@ export function initializeOAuthRuntime(deps: OAuthRuntimeDeps): OAuthRuntimeHelp
   // 기존 DB의 cli_provider CHECK 제약 확장 (SQLite는 ALTER CHECK 미지원이므로 새 행만 해당)
   try {
     const hasApiCheck = (
-      db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='agents'").get() as any
+      db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='agents'").get() as { sql?: string } | undefined
     )?.sql?.includes("'api'");
     if (!hasApiCheck) {
       db.exec(`
@@ -167,7 +167,7 @@ export function initializeOAuthRuntime(deps: OAuthRuntimeDeps): OAuthRuntimeHelp
   // api_providers CHECK 제약 확장: cerebras 추가
   try {
     const apiProvSql =
-      (db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='api_providers'").get() as any)?.sql ?? "";
+      (db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='api_providers'").get() as { sql?: string } | undefined)?.sql ?? "";
     if (apiProvSql && !apiProvSql.includes("'cerebras'")) {
       db.exec(`
       CREATE TABLE IF NOT EXISTS api_providers_new (

@@ -1,12 +1,61 @@
 import fs from "node:fs";
 import path from "node:path";
+import type { DatabaseSync, SQLInputValue } from "node:sqlite";
 import logger from "../../../lib/logger";
 import { sendDeliverableFiles } from "../../../gateway/client.ts";
 import { resolveWorkflowPackKeyForTask } from "../packs/task-pack-resolver.ts";
 import { triggerWebhooks } from "../../routes/core/webhooks.ts";
 import { appendTaskExecutionMetaUpdate, recordTaskExecutionEvent } from "../core/task-execution-meta.ts";
+import type { AgentRow } from "../core/conversation-types.ts";
+import type { TaskCreationAuditInput } from "../../../types/runtime-context.ts";
 
-type CreateReportWorkflowToolsDeps = Record<string, any>;
+interface CreateReportWorkflowToolsDeps {
+  db: DatabaseSync;
+  broadcast: (type: string, payload: unknown) => void;
+  appendTaskLog: (taskId: string, kind: string, message: string) => void;
+  nowMs: () => number;
+  resolveLang: (text: string) => string;
+  pickL: (variants: string[], lang: string) => string;
+  l: (ko: string[], en: string[], ja: string[], zh: string[]) => string[];
+  sendAgentMessage: (
+    agent: AgentRow,
+    content: string,
+    messageType: string,
+    receiverType: string,
+    receiverId: string | null,
+    taskId: string | null,
+  ) => void;
+  findTeamLeader: (departmentId: string | null) => AgentRow | undefined;
+  getAgentDisplayName: (agent: AgentRow, lang: string) => string;
+  setTaskCreationAuditCompletion: (taskId: string, completed: boolean) => void;
+  reviewRoundState: Set<string> | Map<string, unknown>;
+  reviewInFlight: Set<string> | Map<string, unknown>;
+  endTaskExecutionSession: (taskId: string, reason: string) => void;
+  notifyTaskStatus: (taskId: string, title: string, status: string, lang: string) => void;
+  refreshCliUsageData: () => Promise<unknown>;
+  archivePlanningConsolidatedReport: (rootTaskId: string) => Promise<void>;
+  crossDeptNextCallbacks: Map<string, () => void>;
+  recoverCrossDeptQueueAfterMissingCallback: (taskId: string) => void;
+  subtaskDelegationCallbacks: Map<string, () => void>;
+  randomUUID: () => string;
+  REPORT_DESIGN_TASK_PREFIX: string;
+  REPORT_FLOW_PREFIX: string;
+  extractReportPathByLabel: (description: string | null | undefined, label: string) => string | null;
+  upsertReportFlowValue: (description: string | null | undefined, key: string, value: string) => string | null;
+  readReportFlowValue: (description: string | null | undefined, key: string) => string | null;
+  recordTaskCreationAudit: (input: TaskCreationAuditInput) => void;
+  startTaskExecutionForAgent: (taskId: string, agent: AgentRow, deptId: string | null, deptName: string) => void;
+  getDeptName: (deptId: string) => string;
+  randomDelay: (min: number, max: number) => number;
+  notifyClient: (content: string, taskId: string | null) => void;
+  insertNotification: (input: {
+    type: string;
+    title: string;
+    body: string;
+    task_id: string;
+    agent_id: string | null;
+  }) => void;
+}
 
 export function createReportWorkflowTools(deps: CreateReportWorkflowToolsDeps) {
   const {
@@ -93,7 +142,7 @@ export function createReportWorkflowTools(deps: CreateReportWorkflowToolsDeps) {
     } catch { /* ignore */ }
   }
 
-  function pickDesignCheckpointAgent(): any | null {
+  function pickDesignCheckpointAgent(): AgentRow | null {
     const candidates = db
       .prepare(
         `
@@ -119,7 +168,7 @@ export function createReportWorkflowTools(deps: CreateReportWorkflowToolsDeps) {
     id ASC
 `,
       )
-      .all() as any[];
+      .all() as unknown as AgentRow[];
     return candidates[0] ?? null;
   }
 
@@ -211,7 +260,7 @@ export function createReportWorkflowTools(deps: CreateReportWorkflowToolsDeps) {
     {
       const updates = ["status = 'done'", "completed_at = ?", "updated_at = ?"];
       const params: unknown[] = [t, t];
-      appendTaskExecutionMetaUpdate(db as any, updates, params, {
+      appendTaskExecutionMetaUpdate(db, updates, params, {
         execution_state: "succeeded",
         last_heartbeat_at: t,
         last_output_at: t,
@@ -220,9 +269,9 @@ export function createReportWorkflowTools(deps: CreateReportWorkflowToolsDeps) {
         execution_error_summary: null,
       });
       params.push(task.id);
-      db.prepare(`UPDATE tasks SET ${updates.join(", ")} WHERE id = ?`).run(...params);
+      db.prepare(`UPDATE tasks SET ${updates.join(", ")} WHERE id = ?`).run(...(params as SQLInputValue[]));
     }
-    recordTaskExecutionEvent(db as any, {
+    recordTaskExecutionEvent(db, {
       taskId: task.id,
       eventType: "review_skipped_done",
       fromState: "awaiting_review",
@@ -293,7 +342,7 @@ export function createReportWorkflowTools(deps: CreateReportWorkflowToolsDeps) {
     }
 
     const reporter = task.assigned_agent_id
-      ? (db.prepare("SELECT * FROM agents WHERE id = ?").get(task.assigned_agent_id) as any | undefined)
+      ? (db.prepare("SELECT * FROM agents WHERE id = ?").get(task.assigned_agent_id) as AgentRow | undefined)
       : undefined;
     if (reporter) {
       sendAgentMessage(
@@ -386,8 +435,8 @@ export function createReportWorkflowTools(deps: CreateReportWorkflowToolsDeps) {
     const childTaskId = randomUUID();
     const t = nowMs();
     const designWorkflowPackKey = resolveWorkflowPackKeyForTask({
-      db: db as any,
-      sourceTaskPackKey: (task as any).context_hint ?? task.workflow_pack_key,
+      db,
+      sourceTaskPackKey: task.workflow_pack_key,
       sourceTaskId: task.id,
       projectId: task.project_id ?? null,
       fallbackPackKey: "report",
@@ -529,7 +578,7 @@ export function createReportWorkflowTools(deps: CreateReportWorkflowToolsDeps) {
     if (!parent.assigned_agent_id) return;
     if (!["pending", "planned", "collaborating", "review"].includes(parent.status)) return;
 
-    const assignee = db.prepare("SELECT * FROM agents WHERE id = ?").get(parent.assigned_agent_id) as any | undefined;
+    const assignee = db.prepare("SELECT * FROM agents WHERE id = ?").get(parent.assigned_agent_id) as AgentRow | undefined;
     if (!assignee) return;
     if (assignee.status === "working" && assignee.current_task_id && assignee.current_task_id !== parent.id) {
       appendTaskLog(

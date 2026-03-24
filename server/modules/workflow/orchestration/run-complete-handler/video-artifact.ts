@@ -10,6 +10,7 @@ import {
   resolveVideoArtifactRelativeCandidates,
   resolveVideoArtifactSpecForTask,
 } from "../../packs/video-artifact.ts";
+import type { DatabaseSync } from "node:sqlite";
 import type { VideoArtifactSpec } from "../../packs/video-artifact.ts";
 
 export type VideoArtifactSyncResult = {
@@ -19,7 +20,7 @@ export type VideoArtifactSyncResult = {
 };
 
 export type VideoArtifactSyncDeps = {
-  db: { prepare: (sql: string) => { get: (...args: unknown[]) => unknown } };
+  db: DatabaseSync;
   taskWorktrees: Map<string, { worktreePath?: string; projectPath?: string }>;
   appendTaskLog: (taskId: string, kind: string, message: string) => void;
 };
@@ -41,7 +42,7 @@ export function handleVideoArtifactSync(
   deps: VideoArtifactSyncDeps,
 ): VideoArtifactSyncResult {
   const { db, taskWorktrees, appendTaskLog } = deps;
-  const videoArtifactSpec = resolveVideoArtifactSpecForTask(db as any, {
+  const videoArtifactSpec = resolveVideoArtifactSpecForTask(db, {
     project_id: task.project_id,
     project_path: task.project_path,
     department_id: task.department_id,

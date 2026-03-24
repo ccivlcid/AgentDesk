@@ -9,8 +9,10 @@ import {
   cleanupOldRenderJobs,
 } from "../../workflow/orchestration/video-render-manager.ts";
 
+import type { Express } from "express";
+
 interface VideoRenderRouteDeps {
-  app: any;
+  app: Express;
   broadcast: (event: string, data: unknown) => void;
   appendTaskLog: (taskId: string, kind: string, message: string) => void;
 }

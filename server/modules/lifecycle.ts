@@ -64,7 +64,7 @@ export function startLifecycle(ctx: RuntimeContext): void {
     taskExecutionSessions,
     wsClients,
     logsDir,
-  } = ctx as any;
+  } = ctx as RuntimeContext & Record<string, unknown>;
 
   const TASK_HEARTBEAT_SWEEP_MS = 30_000;
 

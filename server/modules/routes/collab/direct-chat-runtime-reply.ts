@@ -389,8 +389,8 @@ export function createDirectReplyRuntime(deps: DirectReplyRuntimeDeps) {
                 clearTimeout(timeout);
                 logStream.end();
               }
-            } catch (err: any) {
-              apiError = err?.message || String(err);
+            } catch (err: unknown) {
+              apiError = err instanceof Error ? err.message : String(err);
               logger.error(`[scheduleAgentReply:API] Error for ${agent.name}: %s`, apiError);
             }
 
@@ -471,8 +471,8 @@ export function createDirectReplyRuntime(deps: DirectReplyRuntimeDeps) {
                 clearTimeout(timeout);
                 logStream.end();
               }
-            } catch (err: any) {
-              oauthError = err?.message || String(err);
+            } catch (err: unknown) {
+              oauthError = err instanceof Error ? err.message : String(err);
               logger.error(`[scheduleAgentReply:OAuth] Error for ${agent.name}: %s`, oauthError);
             }
 

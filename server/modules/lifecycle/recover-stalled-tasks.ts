@@ -1,9 +1,10 @@
+import type { DatabaseSync, SQLInputValue } from "node:sqlite";
 import { appendTaskExecutionMetaUpdate, recordTaskExecutionEvent } from "../workflow/core/task-execution-meta.ts";
 import { notifyTaskStatus } from "../../gateway/client.ts";
 import { TASK_STALLED_RECOVERY_THRESHOLD_MS } from "../../db/runtime.ts";
 
 type RecoverStalledDeps = {
-  db: any;
+  db: DatabaseSync;
   nowMs: () => number;
   broadcast: (event: string, payload?: unknown) => void;
   appendTaskLog: (taskId: string, kind: string, message: string) => void;
@@ -50,11 +51,12 @@ export function recoverStalledTasks(deps: RecoverStalledDeps): void {
   const t = nowMs();
 
   const recovered: typeof candidates = [];
-  const batchRecover = db.transaction(() => {
+  db.exec("BEGIN");
+  try {
     for (const row of candidates) {
       const updates = ["status = 'inbox'", "updated_at = ?"];
       const params: unknown[] = [t];
-      appendTaskExecutionMetaUpdate(db as any, updates, params, {
+      appendTaskExecutionMetaUpdate(db, updates, params, {
         execution_state: "failed",
         retry_after: null,
         execution_error_code: "stalled_auto_recovered",
@@ -63,10 +65,10 @@ export function recoverStalledTasks(deps: RecoverStalledDeps): void {
       params.push(row.id);
       const move = db
         .prepare(`UPDATE tasks SET ${updates.join(", ")} WHERE id = ? AND status = 'in_progress'`)
-        .run(...(params as any[])) as { changes?: number };
+        .run(...(params as SQLInputValue[])) as { changes?: number };
       if ((move.changes ?? 0) === 0) continue;
 
-      recordTaskExecutionEvent(db as any, {
+      recordTaskExecutionEvent(db, {
         taskId: row.id,
         eventType: "stalled_recovered",
         fromState: "stalled",
@@ -85,14 +87,17 @@ export function recoverStalledTasks(deps: RecoverStalledDeps): void {
 
       recovered.push(row);
     }
-  });
-  batchRecover();
+    db.exec("COMMIT");
+  } catch (e) {
+    db.exec("ROLLBACK");
+    throw e;
+  }
 
   for (const row of recovered) {
     stopProgressTimer(row.id);
     clearTaskWorkflowState(row.id);
     endTaskExecutionSession(row.id, "stalled_auto_recovery");
-    appendTaskLog(row.id, "system", "Auto-recovered from stalled state → inbox (no heartbeat)");
+    appendTaskLog(row.id, "system", "Auto-recovered from stalled state \u2192 inbox (no heartbeat)");
 
     if (row.assigned_agent_id) {
       const updatedAgent = db.prepare("SELECT * FROM agents WHERE id = ?").get(row.assigned_agent_id);
@@ -107,10 +112,10 @@ export function recoverStalledTasks(deps: RecoverStalledDeps): void {
       lang === "en"
         ? `[WATCHDOG] '${row.title}' stalled and was auto-recovered to inbox.`
         : lang === "ja"
-          ? `[WATCHDOG] '${row.title}' がストール状態のため inbox に自動復旧しました。`
+          ? `[WATCHDOG] '${row.title}' \u304C\u30B9\u30C8\u30FC\u30EB\u72B6\u614B\u306E\u305F\u3081 inbox \u306B\u81EA\u52D5\u5FA9\u65E7\u3057\u307E\u3057\u305F\u3002`
           : lang === "zh"
-            ? `[WATCHDOG] '${row.title}' 停滞，已自动恢复到 inbox。`
-            : `[WATCHDOG] '${row.title}' 작업이 정체(stalled) 상태로 자동 복구되어 inbox로 이동했습니다.`;
+            ? `[WATCHDOG] '${row.title}' \u505C\u6EDE\uFF0C\u5DF2\u81EA\u52A8\u6062\u590D\u5230 inbox\u3002`
+            : `[WATCHDOG] '${row.title}' \uC791\uC5C5\uC774 \uC815\uCCB4(stalled) \uC0C1\uD0DC\uB85C \uC790\uB3D9 \uBCF5\uAD6C\uB418\uC5B4 inbox\uB85C \uC774\uB3D9\uD588\uC2B5\uB2C8\uB2E4.`;
     notifyClient(msg, row.id);
   }
 }

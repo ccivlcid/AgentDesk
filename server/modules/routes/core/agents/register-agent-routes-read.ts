@@ -2,8 +2,10 @@ import type { Express } from "express";
 import type { MeetingReviewDecision } from "../../shared/types.ts";
 import type { AgentCrudHelpers } from "./crud-helpers.ts";
 
+import type { DatabaseSync } from "node:sqlite";
+
 type ReadRoutesCtx = {
-  db: any;
+  db: DatabaseSync;
   nowMs: () => number;
   meetingPresenceUntil: Map<string, number>;
   meetingSeatIndexByAgent: Map<string, number>;

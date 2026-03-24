@@ -1,8 +1,6 @@
-type DbLike = {
-  prepare: (sql: string) => {
-    get: (...args: any[]) => unknown;
-  };
-};
+import type { DatabaseSync } from "node:sqlite";
+
+type DbLike = Pick<DatabaseSync, "prepare">;
 
 type CreateStreamToolsDeps = {
   db: DbLike;
@@ -58,7 +56,7 @@ export function createStreamTools(deps: CreateStreamToolsDeps) {
     }
   }
 
-  function createSafeLogStreamOps(logStream: any): {
+  function createSafeLogStreamOps(logStream: { write: (text: string) => void; end: (cb?: () => void) => void; destroyed?: boolean; writableEnded?: boolean; closed?: boolean }): {
     safeWrite: (text: string) => boolean;
     safeEnd: (onDone?: () => void) => void;
     isClosed: () => boolean;

@@ -1,10 +1,21 @@
 import { randomUUID } from "node:crypto";
+import type { DatabaseSync } from "node:sqlite";
 import type { Lang } from "../../../types/lang.ts";
 import { getDirectiveDecompositionHint } from "../../directive-templates.ts";
 import { resolveConstrainedAgentScopeForTask } from "../../routes/core/tasks/execution-run-auto-assign.ts";
 
+type DbLike = Pick<DatabaseSync, "prepare">;
+
+interface LeaderRow {
+  id: string;
+  name: string;
+  department_id: string | null;
+}
+
+type L10n = Record<Lang, string[]>;
+
 type SubtaskSeedingDeps = {
-  db: any;
+  db: DbLike;
   nowMs: () => number;
   broadcast: (event: string, payload: unknown) => void;
   analyzeSubtaskDepartment: (title: string, parentDeptId: string | null) => string | null;
@@ -13,12 +24,12 @@ type SubtaskSeedingDeps = {
     ownerDeptId: string | null,
     phase: "planned" | "review",
   ) => Promise<void>;
-  findTeamLeader: (departmentId: string, candidateAgentIds?: string[] | null) => any;
+  findTeamLeader: (departmentId: string, candidateAgentIds?: string[] | null) => LeaderRow | null;
   getDeptName: (departmentId: string, workflowPackKey?: string | null) => string;
   getPreferredLanguage: () => Lang;
   resolveLang: (text: string) => Lang;
-  l: (ko: string[], en: string[], ja: string[], zh: string[]) => any;
-  pickL: (choices: any, lang: string) => string;
+  l: (ko: string[], en: string[], ja: string[], zh: string[]) => L10n;
+  pickL: (choices: L10n, lang: string) => string;
   appendTaskLog: (taskId: string | null, kind: string, message: string) => void;
   notifyClient: (message: string, taskId: string | null, messageType?: string) => void;
 };
@@ -128,7 +139,7 @@ export function createSubtaskSeedingTools(deps: SubtaskSeedingDeps) {
       const hint = getDirectiveDecompositionHint(projRow?.directive_type_slug);
       if (hint) decompositionHint = ` [분해 전략] ${hint}`;
     }
-    const constrainedAgentIds = resolveConstrainedAgentScopeForTask(db as any, {
+    const constrainedAgentIds = resolveConstrainedAgentScopeForTask(db, {
       project_id: task.project_id,
       workflow_pack_key: effectivePackKey,
       department_id: baseDeptId,
@@ -405,7 +416,7 @@ export function createSubtaskSeedingTools(deps: SubtaskSeedingDeps) {
     const baseAssignee = task.assigned_agent_id;
     const lang = resolveLang(task.description ?? task.title);
     const effectivePackKeyForRevision = task.context_hint ?? task.workflow_pack_key;
-    const constrainedAgentIds = resolveConstrainedAgentScopeForTask(db as any, {
+    const constrainedAgentIds = resolveConstrainedAgentScopeForTask(db, {
       project_id: task.project_id,
       workflow_pack_key: effectivePackKeyForRevision,
       department_id: baseDeptId,

@@ -1,8 +1,8 @@
 import type { Request, Response } from "express";
 
 interface PipelineGateRouteDeps {
-  app: any;
-  db: any;
+  app: import("express").Express;
+  db: import("node:sqlite").DatabaseSync;
   nowMs: () => number;
 }
 
@@ -184,7 +184,7 @@ export function registerPipelineGateRoutes({ app, db, nowMs }: PipelineGateRoute
  * Returns the list of gate results evaluated.
  */
 export function evaluateAutoGates(
-  db: any,
+  db: import("node:sqlite").DatabaseSync,
   taskId: string,
   packKey: string,
   taskOutput: string | null,

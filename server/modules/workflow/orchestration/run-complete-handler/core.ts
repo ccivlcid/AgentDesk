@@ -5,6 +5,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
+import type { DatabaseSync } from "node:sqlite";
 import { appendTaskExecutionMetaUpdate } from "../../core/task-execution-meta.ts";
 import { handleVideoArtifactSync } from "./video-artifact.ts";
 import { runAfterExitGates, applyVideoArtifactGateAfterSuccess } from "./gates.ts";
@@ -136,7 +137,7 @@ export function createRunCompleteHandler(deps: RunCompleteHandlerDeps) {
           projectCandidates: [],
         }
       : handleVideoArtifactSync(taskId, task, {
-          db: db as { prepare: (sql: string) => { get: (...args: unknown[]) => unknown } },
+          db: db as unknown as DatabaseSync,
           taskWorktrees: taskWorktrees as Map<string, { worktreePath?: string; projectPath?: string }>,
           appendTaskLog: appendTaskLog as (a: string, b: string, c: string) => void,
         });
@@ -193,7 +194,7 @@ export function createRunCompleteHandler(deps: RunCompleteHandlerDeps) {
 
     try {
       runExtractSkills(taskId, task, finalExitCode, result, {
-        db,
+        db: db as unknown as Pick<DatabaseSync, "prepare">,
         nowMs: nowMs as () => number,
         logsDir: logsDir as string,
         appendTaskLog: appendTaskLog as (a: string, b: string, c: string) => void,
@@ -212,8 +213,8 @@ export function createRunCompleteHandler(deps: RunCompleteHandlerDeps) {
         taskId,
       };
       Promise.all([
-        executeHooks(db as any, hookEventType, hookContext),
-        executeHooks(db as any, "on-complete", hookContext),
+        executeHooks(db as Parameters<typeof executeHooks>[0], hookEventType, hookContext),
+        executeHooks(db as Parameters<typeof executeHooks>[0], "on-complete", hookContext),
       ]).catch(() => {/* hook failures must not block completion */});
     }
 

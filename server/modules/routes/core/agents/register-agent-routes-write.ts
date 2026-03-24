@@ -1,17 +1,12 @@
 import { randomUUID } from "node:crypto";
-import type { SQLInputValue } from "node:sqlite";
+import type { DatabaseSync } from "node:sqlite";
 import type { Express } from "express";
 import logger from "../../../../lib/logger.ts";
 import { getDepartmentForPack } from "../../../workflow/packs/department-scope.ts";
 import { writeAgentPersonaFile, type AgentCrudHelpers } from "./crud-helpers.ts";
 
 type WriteRoutesCtx = {
-  db: {
-    prepare: (sql: string) => {
-      run: (...args: SQLInputValue[]) => unknown;
-      get: (...args: SQLInputValue[]) => unknown;
-    };
-  };
+  db: DatabaseSync;
   broadcast: (event: string, payload: unknown) => void;
   runInTransaction: (fn: () => void) => void;
 };
@@ -48,7 +43,7 @@ export function registerAgentWriteRoutes(
       }
       const department_id = typeof body.department_id === "string" ? body.department_id.trim() || null : null;
       if (department_id) {
-        const deptExists = getDepartmentForPack(db as any, department_id);
+        const deptExists = getDepartmentForPack(db, department_id);
         if (!deptExists) return res.status(400).json({ error: "department_not_found" });
       }
 

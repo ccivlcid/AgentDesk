@@ -1,10 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
+import type { DatabaseSync } from "node:sqlite";
 import { sendDeliverableFiles } from "../../../../gateway/client.ts";
 
-type DbLike = {
-  prepare: (sql: string) => { all: (...args: unknown[]) => unknown };
-};
+type DbLike = Pick<DatabaseSync, "prepare">;
 
 export function trySendTaskDeliverablesToMessenger(params: {
   db: DbLike;

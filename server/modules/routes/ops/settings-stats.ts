@@ -164,8 +164,8 @@ export function registerOpsSettingsStatsRoutes(ctx: RuntimeContext): void {
         // Only hydrate on first selection; already-hydrated packs are never re-injected.
         maybeHydratePackOnFirstSelection(selectedOfficePackInPayload, officePackProfilesInPayload);
       }
-    } catch (err: any) {
-      const detail = err?.message || String(err);
+    } catch (err: unknown) {
+      const detail = err instanceof Error ? err.message : String(err);
       return res.status(500).json({ ok: false, error: "settings_write_failed", detail });
     }
 
