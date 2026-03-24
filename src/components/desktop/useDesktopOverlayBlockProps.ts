@@ -82,6 +82,7 @@ export function useDesktopOverlayBlockProps(bridge: DesktopOverlayBlockBridge): 
     openFolders,
     closeFolder,
     openCliWindow,
+    openAppRunner,
     trashedProjects,
     removeFromTrash,
     setDesktopIconLayout,
@@ -207,18 +208,8 @@ export function useDesktopOverlayBlockProps(bridge: DesktopOverlayBlockBridge): 
       t,
       onClose: () => setProjectCtxMenu(null),
       onRunApp: (projectId: string) => {
-        // Open project window (so user can see logs) + auto AI analyze → install → run
-        setOpenProjectWindowIds((prev) => new Set([...prev, projectId]));
-        setCurrentProjectId(projectId);
-        void (async () => {
-          try {
-            const { analyzeApp, runApp } = await import("../../api/app-runner");
-            const analysis = await analyzeApp(projectId);
-            if (analysis.ok && analysis.analysis.run_command) {
-              await runApp(projectId, analysis.analysis.default_port ?? undefined);
-            }
-          } catch { /* best effort */ }
-        })();
+        // Open AppRunnerWindow with autoRun — AI auto-analyze → install → run
+        openAppRunner(projectId, true);
       },
       onOpen: (projectId: string) => {
         setOpenProjectWindowIds((prev) => new Set([...prev, projectId]));

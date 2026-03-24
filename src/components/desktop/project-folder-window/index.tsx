@@ -10,7 +10,7 @@ import { TasksTab } from "./TasksTab";
 import { AgentsTab } from "./AgentsTab";
 import { DetailsTab } from "./DetailsTab";
 import { TerminalTab } from "./TerminalTab";
-import { AnalysisTab } from "./AnalysisTab";
+// AnalysisTab removed — app analysis runs via separate AppRunnerWindow (right-click "Run App")
 import { GitTab } from "./GitTab";
 
 export default function ProjectFolderWindow({
@@ -49,7 +49,6 @@ export default function ProjectFolderWindow({
     { id: "files",    label: t({ ko: "파일",    en: "Files",    ja: "ファイル",       zh: "文件" }) },
     { id: "tasks",    label: t({ ko: "태스크",  en: "Tasks",    ja: "タスク",         zh: "任务" }), count: projectTasks.length },
     { id: "agents",   label: t({ ko: "에이전트", en: "Agents",  ja: "エージェント",   zh: "代理" }), count: projectAgents.length },
-    { id: "analysis", label: t({ ko: "AI 분석", en: "AI Analysis", ja: "AI分析",       zh: "AI分析" }) },
     { id: "terminal", label: t({ ko: "터미널",  en: "Terminal", ja: "ターミナル",     zh: "终端" }) },
     { id: "details",  label: t({ ko: "상세",    en: "Details",  ja: "詳細",           zh: "详情" }) },
     { id: "git",      label: t({ ko: "Git",     en: "Git",      ja: "Git",            zh: "Git" }) },
@@ -181,7 +180,6 @@ export default function ProjectFolderWindow({
         {tab === "files"    && <FilesTab projectPath={project.project_path} projectName={project.name} />}
         {tab === "tasks"    && <TasksTab tasks={projectTasks} statusCounts={statusCounts} allAgents={agents} />}
         {tab === "agents"   && <AgentsTab agents={projectAgents} projectTasks={projectTasks} />}
-        {tab === "analysis" && <AnalysisTab projectId={project.id} projectPath={project.project_path} />}
         {tab === "terminal" && <TerminalTab projectId={project.id} projectPath={project.project_path} projectName={project.name} />}
         {tab === "details"  && <DetailsTab project={project} taskCount={projectTasks.length} agentCount={projectAgents.length} onDelete={() => { onDeleteProject(project.id); onClose(); }} />}
         {tab === "git"      && <GitTab project={project} />}
