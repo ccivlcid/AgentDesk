@@ -461,7 +461,7 @@ export default function MenuBar({
 
       {/* 연결 끊김 표시 (연결됐을 땐 숨김) */}
       {!connected && (
-        <span style={{ color: "var(--th-danger, #ef4444)", fontSize: 10 }} title={t({ ko: "서버 연결 끊김", en: "Server disconnected", ja: "サーバー切断", zh: "服务器断开" })}>○</span>
+        <span style={{ color: "var(--th-danger, #ef4444)", fontSize: 10, display: "inline-flex", alignItems: "center" }} title={t({ ko: "서버 연결 끊김", en: "Server disconnected", ja: "サーバー切断", zh: "服务器断开" })}><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><circle cx="12" cy="12" r="10"/></svg></span>
       )}
 
       {/* 프로젝트 선택 */}
