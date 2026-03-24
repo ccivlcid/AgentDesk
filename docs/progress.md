@@ -38,6 +38,13 @@
 **API Response Format Fix (Rule 0-7):**
 - `categories.ts` — all endpoints now return `{ ok: true, ... }` format
 
+**PM Fitness-Based Agent Assignment (P1-2):**
+- Replaced round-robin with fitness-scored assignment in kickoff + add-tasks
+- Queries `agent_task_fitness` table for success rates per task type
+- Score = successRate - loadPenalty (balances workload across agents)
+- Fallback to round-robin when no fitness data exists
+- Both `postMeetingCreateAndRun` and add-tasks pipelines updated
+
 ### Documentation Overhaul (2026-03-24)
 
 - Rebuilt `docs/README.md` as complete index (26 files)
@@ -96,6 +103,6 @@
 | P0 | Fix `any` types / double-casts | Same report, Task 3-4 | Phase 1-2 done |
 | ~~P1~~ | ~~Multi-provider agent runtime~~ | ~~`roadmap/BACKLOG.md`~~ | **Done** (confirmed working) |
 | ~~P1~~ | ~~`run_command` tool implementation~~ | ~~`roadmap/BACKLOG.md`~~ | **Done** (already in tools.ts) |
-| P1 | PM fitness-based agent assignment | `roadmap/BACKLOG.md` | Not Started |
+| ~~P1~~ | ~~PM fitness-based agent assignment~~ | ~~`roadmap/BACKLOG.md`~~ | **Done** |
 | P2 | i18n full migration (Phase 1 done, hardcoded strings remain) | `strategy/I18N-AGENT-WORKPACK.md` | Not Started |
 | P2 | System stability issues | `SYSTEM-ISSUES.md` | Not Started |
