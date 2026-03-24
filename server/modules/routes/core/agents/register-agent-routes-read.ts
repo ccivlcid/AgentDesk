@@ -3,7 +3,7 @@ import type { MeetingReviewDecision } from "../../shared/types.ts";
 import type { AgentCrudHelpers } from "./crud-helpers.ts";
 
 type ReadRoutesCtx = {
-  db: any;
+  db: { prepare: (sql: string) => { get: (...args: unknown[]) => unknown; all: (...args: unknown[]) => unknown; run: (...args: unknown[]) => unknown } };
   nowMs: () => number;
   meetingPresenceUntil: Map<string, number>;
   meetingSeatIndexByAgent: Map<string, number>;

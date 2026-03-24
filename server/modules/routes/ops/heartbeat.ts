@@ -140,7 +140,7 @@ export function registerHeartbeatRoutes(ctx: RuntimeContext): void {
                         COALESCE(a.avatar_emoji, '') AS agent_avatar
                  FROM heartbeat_logs hl
                  JOIN agents a ON a.id = hl.agent_id`;
-    const params: any[] = [];
+    const params: (string | number)[] = [];
 
     if (statusFilter && ["ok", "alert", "error"].includes(statusFilter)) {
       query += " WHERE hl.status = ?";
@@ -195,7 +195,7 @@ export function registerHeartbeatRoutes(ctx: RuntimeContext): void {
     const agentId = String(req.params.agentId);
 
     // Access triggerAgent from ctx (set by orchestration)
-    const triggerFn = (ctx as any).triggerHeartbeat;
+    const triggerFn = (ctx as RuntimeContext & { triggerHeartbeat?: (agentId: string) => unknown[] }).triggerHeartbeat;
     if (!triggerFn) {
       return res.status(503).json({ ok: false, error: "heartbeat_engine_not_ready" });
     }

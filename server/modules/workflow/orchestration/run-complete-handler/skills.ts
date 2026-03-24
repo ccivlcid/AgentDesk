@@ -49,7 +49,7 @@ function resolveProvider(db: DbLike, agentId: string | null): ValidProvider {
   }
 }
 
-function skillAlreadyExists(db: any, jobId: string, provider: string): boolean {
+function skillAlreadyExists(db: DbLike, jobId: string, provider: string): boolean {
   try {
     const row = db
       .prepare("SELECT id FROM skill_learning_history WHERE job_id = ? AND provider = ? LIMIT 1")

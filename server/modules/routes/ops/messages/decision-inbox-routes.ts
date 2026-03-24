@@ -231,7 +231,7 @@ export function registerDecisionInboxRoutes(ctx: RuntimeContext): DecisionInboxR
 
     let status = 200;
     let payload: Record<string, unknown> = { ok: true };
-    const req = { body } as any;
+    const req = { body } as { body: Record<string, unknown> };
     const res = {
       status(code: number) {
         status = code;
@@ -241,7 +241,7 @@ export function registerDecisionInboxRoutes(ctx: RuntimeContext): DecisionInboxR
         payload = value;
         return this;
       },
-    } as any;
+    } as { status(code: number): typeof res; json(value: Record<string, unknown>): typeof res };
 
     if (
       handleTaskReviewDecisionReply({
