@@ -1,4 +1,4 @@
-import type { SQLInputValue } from "node:sqlite";
+import type { SQLInputValue, DatabaseSync } from "node:sqlite";
 import type { Express } from "express";
 import logger from "../../../../lib/logger.ts";
 import { invalidateAgentPersonaCache } from "../../../workflow/core/character-persona.ts";
@@ -10,12 +10,7 @@ import {
 import { prepareAgentPatchBody } from "./patch-body.ts";
 
 type PatchRoutesCtx = {
-  db: {
-    prepare: (sql: string) => {
-      get: (...args: SQLInputValue[]) => unknown;
-      run: (...args: SQLInputValue[]) => unknown;
-    };
-  };
+  db: Pick<DatabaseSync, "prepare">;
   broadcast: (event: string, payload: unknown) => void;
   runInTransaction: (fn: () => void) => void;
 };

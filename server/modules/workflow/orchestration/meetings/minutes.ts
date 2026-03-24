@@ -19,7 +19,7 @@ interface AgentRow {
 }
 
 export type MeetingTranscriptEntry = {
-  speaker_agent_id: string;
+  speaker_agent_id?: string;
   speaker: string;
   department: string;
   role: string;

@@ -2,16 +2,12 @@ import fs from "node:fs";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import type { ChildProcess } from "node:child_process";
-import type { SQLInputValue } from "node:sqlite";
+import type { DatabaseSync } from "node:sqlite";
 import logger from "../../../../lib/logger";
 import type { DecryptedOAuthToken } from "./types.ts";
 import { createStreamTools } from "./stream-tools.ts";
 
-type DbLike = {
-  prepare: (sql: string) => {
-    get: (...args: SQLInputValue[]) => unknown;
-  };
-};
+type DbLike = Pick<DatabaseSync, "prepare">;
 
 type CreateHttpAgentToolsDeps = {
   db: DbLike;

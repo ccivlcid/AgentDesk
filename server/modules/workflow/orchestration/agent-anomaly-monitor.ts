@@ -7,14 +7,10 @@
  * 3. Agents working for too long without any output (stale)
  */
 import type { ChildProcess } from "node:child_process";
+import type { DatabaseSync } from "node:sqlite";
 
 interface AnomalyMonitorDeps {
-  db: {
-    prepare: (sql: string) => {
-      get: (...args: unknown[]) => unknown;
-      all: (...args: unknown[]) => unknown[];
-    };
-  };
+  db: Pick<DatabaseSync, "prepare">;
   nowMs: () => number;
   activeProcesses: Map<string, ChildProcess>;
   broadcast: (type: string, payload: unknown) => void;

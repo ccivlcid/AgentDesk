@@ -5,6 +5,7 @@ import { autoSaveTaskReport, autoCheckProjectDeliverables } from "../run-complet
 import { recordArtifactsFromDirectoryScan, recordMergedArtifacts } from "./review-artifact-recorders.ts";
 import { eventBus } from "../../../../lib/event-bus.ts";
 import { shipAutomation } from "./ship-automation.ts";
+import type { SQLInputValue } from "node:sqlite";
 import type { CreateReviewFinalizeToolsDeps } from "./types.ts";
 import type { FinishReviewFn } from "./reconcile-delegated-subtasks.ts";
 
@@ -177,7 +178,7 @@ export function createFinalizeApprovedReview(params: {
     {
       const updates = ["status = 'done'", "completed_at = ?", "updated_at = ?"];
       const params: unknown[] = [t, t];
-      appendTaskExecutionMetaUpdate(db as Parameters<typeof appendTaskExecutionMetaUpdate>[0], updates, params, {
+      appendTaskExecutionMetaUpdate(db, updates, params, {
         execution_state: "succeeded",
         last_heartbeat_at: t,
         last_output_at: t,
@@ -186,9 +187,9 @@ export function createFinalizeApprovedReview(params: {
         execution_error_summary: null,
       });
       params.push(taskId);
-      db.prepare(`UPDATE tasks SET ${updates.join(", ")} WHERE id = ?`).run(...params);
+      db.prepare(`UPDATE tasks SET ${updates.join(", ")} WHERE id = ?`).run(...(params as SQLInputValue[]));
     }
-    recordTaskExecutionEvent(db as Parameters<typeof recordTaskExecutionEvent>[0], {
+    recordTaskExecutionEvent(db, {
       taskId,
       eventType: "review_approved",
       fromState: "awaiting_review",

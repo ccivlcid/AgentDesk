@@ -52,7 +52,7 @@ export function registerScheduledTaskRoutes({ app, db, nowMs }: ScheduledTaskRou
          LEFT JOIN projects p ON s.project_id = p.id
          ORDER BY s.created_at DESC`,
       )
-      .all() as (ScheduledTaskRow & { template_name?: string; agent_name?: string; agent_avatar?: string; project_name?: string })[];
+      .all() as unknown as (ScheduledTaskRow & { template_name?: string; agent_name?: string; agent_avatar?: string; project_name?: string })[];
 
     res.json({
       ok: true,
@@ -68,7 +68,7 @@ export function registerScheduledTaskRoutes({ app, db, nowMs }: ScheduledTaskRou
 
   // GET /api/scheduled-tasks/:id
   app.get("/api/scheduled-tasks/:id", (req: Request, res: Response) => {
-    const row = db.prepare("SELECT * FROM scheduled_tasks WHERE id = ?").get(req.params.id) as
+    const row = db.prepare("SELECT * FROM scheduled_tasks WHERE id = ?").get(req.params.id as string) as unknown as
       | ScheduledTaskRow
       | undefined;
     if (!row) return res.status(404).json({ error: "not_found" });
@@ -109,14 +109,14 @@ export function registerScheduledTaskRoutes({ app, db, nowMs }: ScheduledTaskRou
       now,
     );
 
-    const row = db.prepare("SELECT * FROM scheduled_tasks WHERE id = ?").get(id) as ScheduledTaskRow;
+    const row = db.prepare("SELECT * FROM scheduled_tasks WHERE id = ?").get(id) as unknown as ScheduledTaskRow;
     res.status(201).json({ ok: true, schedule: enrichRow(row) });
   });
 
   // PUT /api/scheduled-tasks/:id — update
   app.put("/api/scheduled-tasks/:id", (req: Request, res: Response) => {
-    const id = req.params.id;
-    const existing = db.prepare("SELECT * FROM scheduled_tasks WHERE id = ?").get(id) as
+    const id = req.params.id as string;
+    const existing = db.prepare("SELECT * FROM scheduled_tasks WHERE id = ?").get(id) as unknown as
       | ScheduledTaskRow
       | undefined;
     if (!existing) return res.status(404).json({ error: "not_found" });
@@ -161,20 +161,20 @@ export function registerScheduledTaskRoutes({ app, db, nowMs }: ScheduledTaskRou
       id,
     );
 
-    const row = db.prepare("SELECT * FROM scheduled_tasks WHERE id = ?").get(id) as ScheduledTaskRow;
+    const row = db.prepare("SELECT * FROM scheduled_tasks WHERE id = ?").get(id) as unknown as ScheduledTaskRow;
     res.json({ ok: true, schedule: enrichRow(row) });
   });
 
   // DELETE /api/scheduled-tasks/:id
   app.delete("/api/scheduled-tasks/:id", (req: Request, res: Response) => {
-    const result = db.prepare("DELETE FROM scheduled_tasks WHERE id = ?").run(req.params.id);
+    const result = db.prepare("DELETE FROM scheduled_tasks WHERE id = ?").run(req.params.id as string);
     if (result.changes === 0) return res.status(404).json({ error: "not_found" });
     res.json({ ok: true });
   });
 
   // POST /api/scheduled-tasks/:id/toggle — quick enable/disable
   app.post("/api/scheduled-tasks/:id/toggle", (req: Request, res: Response) => {
-    const existing = db.prepare("SELECT * FROM scheduled_tasks WHERE id = ?").get(req.params.id) as
+    const existing = db.prepare("SELECT * FROM scheduled_tasks WHERE id = ?").get(req.params.id as string) as unknown as
       | ScheduledTaskRow
       | undefined;
     if (!existing) return res.status(404).json({ error: "not_found" });
@@ -187,7 +187,7 @@ export function registerScheduledTaskRoutes({ app, db, nowMs }: ScheduledTaskRou
       newEnabled,
       nextRunAt,
       now,
-      req.params.id,
+      req.params.id as string,
     );
 
     res.json({ ok: true, enabled: Boolean(newEnabled) });

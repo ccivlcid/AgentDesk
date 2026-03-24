@@ -1,3 +1,4 @@
+import type { Request, Response } from "express";
 import logger from "../../../../lib/logger.ts";
 import type { RuntimeContext } from "../../../../types/runtime-context.ts";
 import { notifyDecisionInbox } from "../../../../gateway/client.ts";
@@ -231,7 +232,7 @@ export function registerDecisionInboxRoutes(ctx: RuntimeContext): DecisionInboxR
 
     let status = 200;
     let payload: Record<string, unknown> = { ok: true };
-    const req = { body } as { body: Record<string, unknown> };
+    const req = { body } as unknown as Request;
     const res = {
       status(code: number) {
         status = code;
@@ -241,7 +242,7 @@ export function registerDecisionInboxRoutes(ctx: RuntimeContext): DecisionInboxR
         payload = value;
         return this;
       },
-    } as { status(code: number): typeof res; json(value: Record<string, unknown>): typeof res };
+    } as unknown as Response;
 
     if (
       handleTaskReviewDecisionReply({

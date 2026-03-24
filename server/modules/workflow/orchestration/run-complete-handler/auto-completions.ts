@@ -9,14 +9,9 @@
 import fs from "node:fs";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
+import type { DatabaseSync } from "node:sqlite";
 
-type Db = {
-  prepare: (sql: string) => {
-    get: (...args: unknown[]) => unknown;
-    run: (...args: unknown[]) => void;
-    all: (...args: unknown[]) => unknown[];
-  };
-};
+type Db = Pick<DatabaseSync, "prepare">;
 
 type LangCode = "ko" | "en" | "ja" | "zh";
 

@@ -18,11 +18,11 @@ interface CreateSessionReviewToolsDeps {
   clearCliOutputDedup: (taskId: string) => void;
   crossDeptNextCallbacks: Map<string, unknown>;
   subtaskDelegationCallbacks: Map<string, unknown>;
-  subtaskDelegationDispatchInFlight: Map<string, unknown>;
+  subtaskDelegationDispatchInFlight: { delete: (key: string) => unknown };
   delegatedTaskToSubtask: Map<string, unknown>;
-  subtaskDelegationCompletionNoticeSent: Map<string, unknown>;
+  subtaskDelegationCompletionNoticeSent: { delete: (key: string) => unknown };
   reviewRoundState: Map<string, unknown>;
-  reviewInFlight: Map<string, unknown>;
+  reviewInFlight: { delete: (key: string) => unknown };
   appendTaskLog: (taskId: string, kind: string, message: string) => void;
   notifyClient: (content: string, taskId?: string | null) => void;
   pickL: (choices: unknown, lang: string) => string;

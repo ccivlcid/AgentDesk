@@ -3,6 +3,7 @@
  * Used by run-complete handler to adjust finalExitCode and append gate log messages.
  */
 
+import type { DatabaseSync } from "node:sqlite";
 import { evaluateRemotionOnlyGateFromLogFiles } from "../../packs/video-render-engine-gate.ts";
 import { evaluateAutoGates } from "../../../routes/core/pipeline-gates.ts";
 import type { VideoArtifactSyncResult } from "./video-artifact.ts";
@@ -129,7 +130,7 @@ export function runAfterExitGates(
   // Pipeline auto-gates
   if (finalExitCode === 0 && task.workflow_pack_key) {
     try {
-      const gateResults = evaluateAutoGates(db, taskId, task.workflow_pack_key, result, nowMs());
+      const gateResults = evaluateAutoGates(db as unknown as DatabaseSync, taskId, task.workflow_pack_key, result, nowMs());
       const failed = gateResults.filter((g) => g.status === "failed");
       if (failed.length > 0) {
         const failedNames = failed.map((g) => `${g.gate_key}: ${g.note}`).join("; ");

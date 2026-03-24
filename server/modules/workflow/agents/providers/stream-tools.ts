@@ -1,8 +1,6 @@
-type DbLike = {
-  prepare: (sql: string) => {
-    get: (...args: unknown[]) => unknown;
-  };
-};
+import type { DatabaseSync } from "node:sqlite";
+
+type DbLike = Pick<DatabaseSync, "prepare">;
 
 type CreateStreamToolsDeps = {
   db: DbLike;

@@ -1,15 +1,10 @@
-import type { SQLInputValue } from "node:sqlite";
+import type { DatabaseSync } from "node:sqlite";
 import type { Lang } from "../../../types/lang.ts";
 import type { L10n } from "./language-policy.ts";
 import { getDepartmentForPack } from "../../workflow/packs/department-scope.ts";
 import type { AgentRow } from "./direct-chat.ts";
 
-type DbLike = {
-  prepare: (sql: string) => {
-    get: (...args: SQLInputValue[]) => unknown;
-    all: (...args: SQLInputValue[]) => unknown;
-  };
-};
+type DbLike = Pick<DatabaseSync, "prepare">;
 
 export function createPartBDeptHelpers(deps: {
   db: DbLike;
@@ -117,7 +112,7 @@ export function createPartBDeptHelpers(deps: {
          CASE status WHEN 'idle' THEN 0 WHEN 'break' THEN 1 WHEN 'working' THEN 2 ELSE 3 END,
          CASE role WHEN 'senior' THEN 0 WHEN 'junior' THEN 1 WHEN 'intern' THEN 2 ELSE 3 END`,
         )
-        .all(...candidateAgentIds, deptId, excludeId) as AgentRow[];
+        .all(...candidateAgentIds, deptId, excludeId) as unknown as AgentRow[];
       return agents[0] ?? null;
     }
     const agents = db
@@ -126,7 +121,7 @@ export function createPartBDeptHelpers(deps: {
        CASE status WHEN 'idle' THEN 0 WHEN 'break' THEN 1 WHEN 'working' THEN 2 ELSE 3 END,
        CASE role WHEN 'senior' THEN 0 WHEN 'junior' THEN 1 WHEN 'intern' THEN 2 ELSE 3 END`,
       )
-      .all(deptId, excludeId) as AgentRow[];
+      .all(deptId, excludeId) as unknown as AgentRow[];
     return agents[0] ?? null;
   }
 

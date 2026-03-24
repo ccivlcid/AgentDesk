@@ -55,13 +55,7 @@ import {
   upsertReportFlowValue,
 } from "./orchestration/report-flow-helpers.ts";
 
-type MeetingTranscriptEntry = {
-  speaker_agent_id: string;
-  speaker: string;
-  department: string;
-  role: string;
-  content: string;
-};
+import type { MeetingTranscriptEntry } from "./core/conversation-types.ts";
 
 export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrationExports {
   const __ctx: RuntimeContext = ctx;
