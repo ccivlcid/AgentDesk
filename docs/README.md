@@ -27,6 +27,7 @@
 | [websocket-protocol.md](specs/websocket-protocol.md) | WebSocket event types and payloads |
 | [kova-comparison.md](architecture/kova-comparison.md) | Kova vs AgentDesk — strengths, weaknesses, integration points |
 | [any-type-removal-guide.md](architecture/any-type-removal-guide.md) | `any` type removal — 589 occurrences, 4-phase execution plan |
+| [execution-path-consistency.md](architecture/execution-path-consistency.md) | P1: 실행 경로 불일치 — 태스크 실행 vs PM 리뷰 경로 분석 + 오케스트레이션 화면 연동 수정 계획 |
 
 ## Design
 
