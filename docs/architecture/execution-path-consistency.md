@@ -275,6 +275,44 @@ PM은 유저가 선택한 어떤 LLM이든 될 수 있으므로(Claude, GPT, Gem
 
 ---
 
+### 2-8. 에이전트 간 소통 컨텍스트 손실 (HIGH)
+
+현재 PM↔에이전트 소통은 **DB 경유 + 하드 트렁케이션**으로 대부분의 컨텍스트가 소실된다.
+
+#### 잘림 지점 전수 조사
+
+| 위치 | 코드 | 잘림 |
+|------|------|------|
+| PM이 받는 태스크 결과 | `task.result.slice(-2000)` | 마지막 2000자만 (수만 자 결과 → 2000자) |
+| PM 리뷰 로그 기록 | `text.slice(0, 200)` | PM 판정 근거 200자만 저장 |
+| 프로젝트 리뷰 시 태스크 요약 | `result.slice(-500)` + 전체 8000자 제한 | 태스크당 500자, 전체 8000자 |
+| 에이전트 재실행 컨텍스트 | `result.slice(-900)` | 이전 실행 결과 900자만 |
+| 리뷰 노트 | `LIMIT 6` | 최근 6건만 |
+| 회의 하이라이트 | `summarizeForMeetingBubble(content, 140)` | 발언당 140자 |
+| 알림 본문 | `text.slice(0, 200~300)` | 200~300자 |
+
+#### 현재 소통 구조의 한계
+
+```
+PM 리뷰 결과 (수천 자)
+  → task_logs에 200자만 저장
+    → 에이전트 재실행 시 900자만 주입
+      → 에이전트는 PM이 왜 수정을 요청했는지 맥락 파악 불가
+```
+
+- **일방향**: PM→에이전트 피드백만 존재. 에이전트가 PM에게 의견/질문/블로커 보고 불가
+- **휘발성**: DB 레코드는 세션이 끝나면 묻힘. 프로젝트 이력으로 남지 않음
+- **팀 가시성 없음**: 에이전트 A의 작업이 에이전트 B에게 어떤 영향을 주는지 공유 안 됨
+
+#### 근본 원인
+
+DB 기반 소통은 **트랜잭션 기록용**으로 설계됨. 에이전트 간 풍부한 소통은 설계 목표가 아니었음.
+CLI 에이전트는 이미 파일 시스템에 자유롭게 접근할 수 있으므로, 파일 기반 소통이 자연스러운 확장.
+
+**수정:** §4-7 참조 — 공유 .md 기반 팀 소통
+
+---
+
 ## 3. 오케스트레이션 화면과의 관계
 
 ### 3-1. 데이터 부족 매핑
@@ -288,6 +326,7 @@ PM은 유저가 선택한 어떤 LLM이든 될 수 있으므로(Claude, GPT, Gem
 | **Agents: Fitness** | task_type별 성공률 | 가짜 계산 | DB에 실데이터 있으나 UI 미연동 |
 | **Room: Communication Feed** | PM 지시, 에이전트 상태, 블로커 | 태스크 제목만 나열 | PM 이벤트 구조가 빈약 |
 | **Room: Reasoning Tree** | 상태 아이콘 (✓/●/○) | 유니코드 문자 | CLAUDE.md Rule 0-1 위반 |
+| **Room: Team Communication** | PM 지시 전문 + 에이전트 의견/블로커 | DB 200자 잘림 | 소통이 DB 경유, 트렁케이션 (§2-8) |
 
 ### 3-2. 근본 원인 체인
 
@@ -297,6 +336,13 @@ PM 원샷 경로가 경량 설계
     → task_execution_events.metadata_json 미활용
       → 오케스트레이션 화면에 표시할 PM 데이터 부족
         → Logs/Room/Timeline Inspector 구현 불가
+
+에이전트 간 소통이 DB 경유
+  → 모든 컨텍스트가 200~2000자로 트렁케이션
+    → PM은 태스크 결과 전문을 볼 수 없음
+    → 에이전트는 PM 피드백 전문을 받을 수 없음
+    → 에이전트 간 의견 교환/블로커 보고 채널 없음
+      → Room 탭의 Team Communication이 빈약
 ```
 
 ---
@@ -714,6 +760,238 @@ if (resolved.mode === "cli") {
 
 ---
 
+### 4-7. Phase 7: 공유 .md 기반 팀 소통 (백엔드+프론트, 대규모)
+
+현재 PM↔에이전트 소통은 DB 경유로 200~2000자로 잘린다(§2-8).
+파일 시스템 기반 공유 .md로 전환하면 잘림 없이 팀 소통이 가능하다.
+
+#### 설계 원칙
+
+- **잘림 없음** — 파일이므로 크기 제한 없음
+- **양방향** — PM도, 에이전트도 자유롭게 읽기/쓰기
+- **잔존 가치** — 프로젝트 폴더에 남아 나중에도 참조 가능 (DB와 달리 묻히지 않음)
+- **CLI 에이전트 네이티브** — CLI 에이전트는 이미 파일 시스템 접근 가능, 추가 도구 불필요
+
+#### 디렉터리 구조
+
+```
+{project_path}/
+├── docs/
+│   ├── progress.md              ← (이미 있음) PM이 태스크 완료 시 작성
+│   ├── team-board.md            ← (신규) 팀 소통 보드
+│   └── tasks/
+│       ├── {task-id}-report.md  ← (신규) 태스크별 상세 보고서
+│       └── ...
+```
+
+#### team-board.md 구조
+
+PM과 모든 에이전트가 공유하는 팀 소통 보드. append-only로 운영.
+
+```markdown
+# Team Board — {project_name}
+
+---
+
+## [2026-03-25 14:30] PM → ALL | 킥오프 지시
+프로젝트 목표: ...
+우선순위: ...
+각 에이전트 배정:
+- Agent-A: task-001 (API 구현)
+- Agent-B: task-002 (UI 구현)
+
+---
+
+## [2026-03-25 15:10] Agent-A → PM | 블로커 보고
+task-001 진행 중 DB 스키마 이슈 발견.
+`users` 테이블에 `email` 컬럼이 없음.
+제안: migration 추가 후 진행?
+
+---
+
+## [2026-03-25 15:15] PM → Agent-A | 지시
+migration 추가 승인. task-001 스코프에 포함.
+
+---
+
+## [2026-03-25 16:00] Agent-B → PM | 의존성 알림
+task-002(UI)가 task-001(API)의 엔드포인트에 의존.
+Agent-A의 API 완료 후 진행하겠음.
+
+---
+
+## [2026-03-25 17:00] PM → ALL | 리뷰 결과
+task-001 리뷰 완료: APPROVE
+- scope match: ✔
+- errors: 없음
+- completeness: ✔
+전체 리뷰 내용은 docs/tasks/task-001-report.md 참조.
+```
+
+#### {task-id}-report.md 구조
+
+태스크별 전체 보고서. DB의 200자 잘림 없이 전문 저장.
+
+```markdown
+# Task Report: {task-title}
+
+## 기본 정보
+- Task ID: {task-id}
+- 담당: {agent-name}
+- 상태: done
+- task_type: {task_type}
+
+## 실행 결과
+{task.result 전문 — 잘림 없음}
+
+## PM 리뷰
+### 라운드 1
+- 판정: REVISE
+- 체크리스트: scope ✔ / errors ✘ (null check 누락) / minimal ✔ / completeness ✔
+- PM 피드백 전문:
+  {PM 리뷰 응답 전문 — 잘림 없음}
+
+### 라운드 2
+- 판정: APPROVE
+- 체크리스트: scope ✔ / errors ✔ / minimal ✔ / completeness ✔
+- PM 피드백 전문:
+  {PM 리뷰 응답 전문}
+
+## 변경 파일
+{git diff --stat 결과}
+```
+
+#### 구현: PM 측 (쓰기)
+
+```typescript
+// pm-orchestrator.ts — PM 리뷰 후 보고서 작성
+async function writeTaskReport(
+  projectPath: string, taskId: string, task: Task,
+  decision: string, reviewResponse: string, checklist: object, round: number,
+) {
+  const reportsDir = join(projectPath, "docs", "tasks");
+  mkdirSync(reportsDir, { recursive: true });
+
+  const reportPath = join(reportsDir, `${taskId}-report.md`);
+  const roundEntry = `
+### 라운드 ${round}
+- 판정: ${decision}
+- 체크리스트: ${formatChecklist(checklist)}
+- PM 피드백 전문:
+${reviewResponse}
+`;
+
+  if (existsSync(reportPath)) {
+    // append — 이전 라운드 기록 유지
+    appendFileSync(reportPath, roundEntry, "utf-8");
+  } else {
+    // 첫 생성
+    const header = `# Task Report: ${task.title}\n\n## 기본 정보\n- Task ID: ${taskId}\n- 담당: ${task.assigned_agent_name}\n- task_type: ${task.task_type}\n\n## PM 리뷰\n`;
+    writeFileSync(reportPath, header + roundEntry, "utf-8");
+  }
+}
+
+// team-board.md에 요약 append
+async function appendTeamBoard(
+  projectPath: string, sender: string, target: string, content: string,
+) {
+  const boardPath = join(projectPath, "docs", "team-board.md");
+  const timestamp = new Date().toISOString().slice(0, 16).replace("T", " ");
+  const entry = `\n---\n\n## [${timestamp}] ${sender} → ${target}\n${content}\n`;
+
+  if (existsSync(boardPath)) {
+    appendFileSync(boardPath, entry, "utf-8");
+  } else {
+    mkdirSync(join(projectPath, "docs"), { recursive: true });
+    writeFileSync(boardPath, `# Team Board\n${entry}`, "utf-8");
+  }
+}
+```
+
+#### 구현: 에이전트 측 (읽기 + 쓰기)
+
+CLI 에이전트는 이미 `read_file`, `write_file` 도구로 파일 시스템에 접근 가능.
+에이전트 시스템 프롬프트에 팀 보드 사용 규칙만 추가하면 된다.
+
+```markdown
+<!-- prompts/system/agent-runtime.md 에 추가 -->
+
+## Team Communication
+- 블로커, 질문, 의존성 이슈는 `docs/team-board.md`에 기록하세요.
+- 포맷: `## [YYYY-MM-DD HH:MM] {your-name} → PM | {제목}`
+- PM 지시사항은 같은 파일에서 확인하세요.
+- 태스크 상세 보고서는 `docs/tasks/{task-id}-report.md`에서 확인하세요.
+```
+
+#### 구현: PM 리뷰 시 팀 보드 참조
+
+```typescript
+// pm-orchestrator.ts — PM 리뷰 프롬프트에 팀 보드 컨텍스트 추가
+function buildReviewContext(projectPath: string, taskId: string): string {
+  const parts: string[] = [];
+
+  // 1. team-board.md에서 해당 태스크 관련 소통 추출
+  const boardPath = join(projectPath, "docs", "team-board.md");
+  if (existsSync(boardPath)) {
+    const board = readFileSync(boardPath, "utf-8");
+    // 최근 항목 or 태스크 관련 항목 필터 (전체를 넣으면 토큰 낭비)
+    const recentEntries = extractRecentEntries(board, 5);
+    if (recentEntries) parts.push("## Recent Team Communication\n" + recentEntries);
+  }
+
+  // 2. 이전 리뷰 라운드 (잘림 없는 전문)
+  const reportPath = join(projectPath, "docs", "tasks", `${taskId}-report.md`);
+  if (existsSync(reportPath)) {
+    const report = readFileSync(reportPath, "utf-8");
+    parts.push("## Previous Review Rounds\n" + report);
+  }
+
+  return parts.join("\n\n");
+}
+```
+
+#### DB vs 파일 역할 분리
+
+| 역할 | 저장소 | 이유 |
+|------|--------|------|
+| 상태 전이 (status, execution_state) | DB | 트랜잭션, 인덱싱, WebSocket 트리거 |
+| 구조화된 이벤트 (task_execution_events) | DB | 쿼리, 집계, 오케스트레이션 UI |
+| PM 판정 요약 (task_logs) | DB | 빠른 조회, 오케스트레이션 Logs 탭 |
+| **PM 리뷰 전문** | **파일** (.md) | 잘림 없음, 전체 맥락 보존 |
+| **에이전트 의견/블로커** | **파일** (.md) | 양방향, CLI 네이티브 |
+| **팀 소통 이력** | **파일** (.md) | 프로젝트 잔존 가치, git 추적 |
+| **태스크 실행 결과 전문** | **파일** (.md) | result 전체 보존 |
+
+**핵심:** DB는 "빠른 조회 + 상태 관리", 파일은 "전체 컨텍스트 + 팀 소통". 둘 다 유지하되 역할이 다름.
+DB의 task_logs 200자 기록은 오케스트레이션 UI 빠른 렌더링용으로 유지. 전문은 파일에 저장.
+
+#### 오케스트레이션 화면 연동
+
+| 탭 | 파일 데이터 활용 |
+|----|-----------------|
+| **Room** | `team-board.md` 파싱 → Communication Feed에 전체 소통 표시 |
+| **Logs** | `{task-id}-report.md` 파싱 → PM 리뷰 전문 + 체크리스트 |
+| **Timeline Inspector** | `{task-id}-report.md` → 변경 파일, 실행 결과 전문 |
+
+```typescript
+// 프론트엔드: API로 파일 내용 조회
+// GET /api/projects/:id/team-board → team-board.md 내용 반환
+// GET /api/projects/:id/tasks/:taskId/report → task report 내용 반환
+```
+
+#### 수정 파일
+
+| 파일 | 변경 |
+|------|------|
+| `server/modules/workflow/orchestration/pm-orchestrator.ts` | `writeTaskReport()`, `appendTeamBoard()` 호출 추가 |
+| `server/modules/routes/core/projects/` | 팀 보드/태스크 리포트 읽기 API 추가 |
+| `prompts/system/agent-runtime.md` | 팀 보드 사용 규칙 추가 |
+| `prompts/pm/review-task.md` | 팀 보드 + 이전 리뷰 전문 컨텍스트 |
+| `src/components/orchestration/tabs/RoomTab.tsx` | team-board.md 파싱 + Communication Feed |
+| `src/components/orchestration/tabs/LogsTab.tsx` | task report 전문 표시 |
+
+---
+
 ## 5. 수정 우선순위
 
 | 순서 | Phase | 작업량 | 백엔드 | 영향 탭 | 의존성 |
@@ -727,6 +1005,7 @@ if (resolved.mode === "cli") {
 | 7 | 3. PM 리뷰 로그 구조화 | 중 | O | Logs, Room | 없음 |
 | 8 | 4. PM 리뷰 컨텍스트 보강 | 중 | O | (간접) | Phase 3 |
 | 9 | 5. diff 저장 | 중 | O | Timeline Inspector | 없음 |
+| 10 | 7. 공유 .md 기반 팀 소통 | 대 | O | Room, Logs, Timeline Inspector | Phase 3 |
 
 ---
 
@@ -740,7 +1019,9 @@ if (resolved.mode === "cli") {
 | `server/modules/agent-runtime/llm-client.ts` | `resolveProviderForAgent()` + `callLlmOneShotForAgent()` 추가, CLI args 수정 | 2, 6 |
 | `server/modules/workflow/core/one-shot-runner.ts` | `runAgentOneShot()` 에이전트 기반 해석 옵션 | 2 |
 | `server/modules/workflow/orchestration/run-complete-handler/` | 태스크 완료 처리 | 5 |
-| `prompts/pm/review-task.md` | PM 리뷰 프롬프트 | 4 |
+| `prompts/pm/review-task.md` | PM 리뷰 프롬프트 | 4, 7 |
+| `prompts/system/agent-runtime.md` | 에이전트 런타임 프롬프트 (팀 보드 규칙 추가) | 7 |
+| `server/modules/routes/core/projects/` | 팀 보드/태스크 리포트 읽기 API | 7 |
 
 ### 프론트엔드 (수정 대상)
 
@@ -749,8 +1030,8 @@ if (resolved.mode === "cli") {
 | `src/components/orchestration/MetricsHeader.tsx` | TOKENS/BUDGET | 1-C |
 | `src/components/orchestration/tabs/TimelineTab.tsx` | 프로그레스 바, Task Inspector, 코드 정리 | 1-A, 1-D |
 | `src/components/orchestration/tabs/AgentsTab.tsx` | Fitness, 프로그레스 바, 코드 정리 | 1-A, 1-B, 1-D |
-| `src/components/orchestration/tabs/RoomTab.tsx` | 프로그레스 바, 유니코드→SVG, 이벤트 통합 | 1-A, 1-D |
-| `src/components/orchestration/tabs/LogsTab.tsx` | 로그 스트림 연동 | (Phase 6 이후) |
+| `src/components/orchestration/tabs/RoomTab.tsx` | 프로그레스 바, 유니코드→SVG, 이벤트 통합, team-board 표시 | 1-A, 1-D, 7 |
+| `src/components/orchestration/tabs/LogsTab.tsx` | 로그 스트림 연동, task report 전문 표시 | (Phase 6 이후), 7 |
 
 ### 백엔드 (참조만)
 
