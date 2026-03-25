@@ -28,8 +28,6 @@ export interface DesktopOverlayBlockBridge {
   newFolderCreatingRef: React.MutableRefObject<boolean>;
   createProjectFolder: (params: { name: string; base_path: string; color: string }) => Promise<import("../../types").ProjectFolder>;
   setNewFolderPreName: (v: string) => void;
-  showWallpaperPicker: boolean;
-  setShowWallpaperPicker: (v: boolean) => void;
   showExportModal: boolean;
   setShowExportModal: (v: boolean) => void;
   showMarkdownEditor: boolean;
@@ -66,10 +64,6 @@ export interface DesktopOverlayBlockBridge {
   oauthResult: import("../../app/types").OAuthCallbackResult | null;
   onOauthResultClear: () => void;
   onAgentsChange: () => void;
-  onSendMessage: (content: string, receiverType: "agent" | "department" | "all", receiverId?: string, messageType?: string, projectMeta?: import("../../app/types").ProjectMetaPayload) => Promise<void>;
-  onSendAnnouncement: (content: string) => Promise<void>;
-  onSendDirective: (content: string, projectMeta?: import("../../app/types").ProjectMetaPayload) => Promise<void>;
-  onClearMessages: (agentId?: string) => Promise<void>;
 }
 
 export function useDesktopOverlayBlockProps(bridge: DesktopOverlayBlockBridge): Omit<DesktopOverlayBlockProps, "children"> {
@@ -82,7 +76,6 @@ export function useDesktopOverlayBlockProps(bridge: DesktopOverlayBlockBridge): 
     openFolders,
     closeFolder,
     openCliWindow,
-    openAppRunner,
     trashedProjects,
     removeFromTrash,
     setDesktopIconLayout,
@@ -111,8 +104,6 @@ export function useDesktopOverlayBlockProps(bridge: DesktopOverlayBlockBridge): 
       newFolderCreatingRef,
       createProjectFolder,
       setNewFolderPreName,
-      showWallpaperPicker,
-      setShowWallpaperPicker,
       showExportModal,
       setShowExportModal,
       showMarkdownEditor,
@@ -148,10 +139,6 @@ export function useDesktopOverlayBlockProps(bridge: DesktopOverlayBlockBridge): 
       oauthResult,
       onOauthResultClear,
       onAgentsChange,
-      onSendMessage,
-      onSendAnnouncement,
-      onSendDirective,
-      onClearMessages,
     } = bridge;
 
     const windowStackProps = {
@@ -175,10 +162,6 @@ export function useDesktopOverlayBlockProps(bridge: DesktopOverlayBlockBridge): 
       oauthResult,
       onOauthResultClear,
       onAgentsChange,
-      onSendMessage,
-      onSendAnnouncement,
-      onSendDirective,
-      onClearMessages,
       agentManagerCreateCount,
       showQuickCreateAgent,
       setShowQuickCreateAgent,
@@ -188,8 +171,6 @@ export function useDesktopOverlayBlockProps(bridge: DesktopOverlayBlockBridge): 
       newFolderCreatingRef,
       createProjectFolder,
       setNewFolderPreName,
-      showWallpaperPicker,
-      setShowWallpaperPicker,
       showExportModal,
       setShowExportModal,
       showMarkdownEditor,
@@ -207,10 +188,6 @@ export function useDesktopOverlayBlockProps(bridge: DesktopOverlayBlockBridge): 
       folders,
       t,
       onClose: () => setProjectCtxMenu(null),
-      onRunApp: (projectId: string) => {
-        // Open AppRunnerWindow with autoRun — AI auto-analyze → install → run
-        openAppRunner(projectId, true);
-      },
       onOpen: (projectId: string) => {
         setOpenProjectWindowIds((prev) => new Set([...prev, projectId]));
         setCurrentProjectId(projectId);
@@ -223,12 +200,6 @@ export function useDesktopOverlayBlockProps(bridge: DesktopOverlayBlockBridge): 
       onDelete: handleDeleteProject,
       onEditDirective: (projectId: string) => {
         setEditDirectiveProjectId(projectId);
-        setProjectCtxMenu(null);
-      },
-      onCreateTask: (projectId: string) => {
-        setCurrentProjectId(projectId);
-        openWindow("tasks");
-        openWindow("create-task");
         setProjectCtxMenu(null);
       },
       onMoveToFolder: async (projectId: string, folderId: string) => {
@@ -263,7 +234,6 @@ export function useDesktopOverlayBlockProps(bridge: DesktopOverlayBlockBridge): 
       sortByDefault,
       sortByLastUsed,
       snapToGrid,
-      setShowWallpaperPicker,
       setNewFolderPos,
       setNewFolderName,
       setShowMarkdownEditor,

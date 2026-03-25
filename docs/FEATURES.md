@@ -1,7 +1,10 @@
 # AgentDesk — 전체 기능 목록
 
+> **개발자를 위한 멀티 LLM 오케스트레이터 OS**
 > Last updated: 2026-03-25
-> Purpose: 현재 시스템의 모든 기능을 코드 기반으로 정확하게 기록. 핵심 강화 vs 정리 대상 판단의 기준.
+> Purpose: 현재 시스템의 모든 기능을 코드 기반으로 정확하게 기록.
+
+AgentDesk는 여러 AI 에이전트(Claude, GPT, Gemini, Ollama 등)가 개발 태스크를 협업 수행하고, PM 오케스트레이션과 실시간 모니터링을 제공하는 데스크톱 OS 환경입니다. 핵심 차별점은 **9개 CLI 프로바이더 + API 프로바이더를 동시에 운용하는 멀티 프로바이더 에이전트 실행**입니다.
 
 ---
 
@@ -11,16 +14,14 @@
 |------|------|------|
 | **Desktop** | `Desktop.tsx` | 자유 배치 아이콘, 드래그 이동, jiggle 모드 (600ms 롱프레스 → 삭제 뱃지) |
 | **MenuBar** | `MenuBar.tsx` | 로고, 앱 메뉴, 프로젝트 셀렉터, 킥오프 인디케이터, 진행률 바, 비용, 알림, 시계 |
-| **Dock** | `Dock.tsx` | 하단 고정 7개 앱 (Tasks, Workflow, Library, Settings, Chat, Dashboard + 추가) + 실행 뱃지 |
-| **Mission Control** | `MissionControl.tsx` | `Ctrl+↑` 전체 윈도우 그리드 뷰 |
+| **Dock** | `Dock.tsx` | 하단 고정 앱 바 + 실행 뱃지 |
+| **Mission Control** | `MissionControl.tsx` | `Ctrl+Up` 전체 윈도우 그리드 뷰 |
 | **Command Palette** | `CommandPalette.tsx` | `Cmd+K` Spotlight 검색 (에이전트/태스크/프로젝트/뷰) |
 | **Quick Look** | `QuickLook.tsx` | `Space` 프로젝트 미리보기 (태스크, 에이전트, 통계) |
 | **Notification Center** | `NotificationCenter.tsx` | 벨 아이콘 → 320px 슬라이드 패널 (날짜 그룹, 필터) |
 | **App Switcher** | `AppSwitcher.tsx` | `Cmd+Tab` 윈도우 전환 |
-| **Wallpaper** | `WallpaperPicker.tsx` | 10개 그라디언트 프리셋 |
-| **PM Activity Shelf** | `RightShelf.tsx` | 우측 슬라이드 — PM 활동 타임라인 (회의, 리뷰, 승인, 메시지) |
 | **Desktop Icons** | `DesktopIcon.tsx`, `FolderDesktopIcon.tsx` | 시스템 앱 아이콘 + 프로젝트 폴더 아이콘, 우클릭 메뉴 |
-| **Keyboard Shortcuts** | `useDesktopKeyboard.ts` | `g w/l/s/c/a/e/i/d`, `Esc`, `?`, `Space` |
+| **Keyboard Shortcuts** | `useDesktopKeyboard.ts` | `g l/s/a/e`, `Esc`, `?`, `Space` |
 
 ---
 
@@ -28,34 +29,28 @@
 
 | 윈도우 | 파일 | 설명 |
 |--------|------|------|
-| **Tasks (칸반)** | `TaskBoardWindow.tsx` | 태스크 보드 — planned/in_progress/review/done 칸반 |
-| **Workflow** | `WorkflowWindow.tsx` | 워크플로우 빌더 + 스케줄 + 컴포지션 (3탭) |
-| **Library** | `LibraryWindow.tsx` | 스킬/룰/메모리/훅/산출물 (5탭) |
-| **Settings** | `SettingsWindow.tsx` | 일반/API/OAuth/CLI/게이트웨이/데이터/웹훅/로컬LLM (8탭) |
-| **Chat** | `ChatWindow.tsx` | 다이렉트/그룹/공지/디렉티브 (4탭) |
-| **Agent Manager** | `AgentManagerWindow.tsx` | 에이전트/부서 CRUD, 카드 그리드 |
+| **Orchestration Timeline** | `OrchestrationWindow.tsx` + `orchestration/` | Phase 1 구현 완료. 4탭 구성: Timeline (Agent Lanes + progress bars), Logs (Error-first log stream + command bar), Agents (Team table + fitness metrics), Room (Communication feed + Reasoning Tree). Dock 앰버 아이콘, 키보드 0-3 탭 전환, Stage Rail 파이프라인 표시 |
+| **Library** | `LibraryWindow.tsx` | 스킬/룰/메모리/훅 (4탭) — 운영 지식 베이스 |
+| **Settings** | `SettingsWindow.tsx` | 일반/API/OAuth/CLI/데이터 설정 |
+| **Agent Manager** | `AgentManagerWindow.tsx` | 에이전트/전문분야 CRUD, 카드 그리드 |
 | **CLI** | `CliWindow.tsx` | PTY 터미널, 에이전트 셀렉터, 자동 CLI 실행 |
 | **Project Folder** | `ProjectFolderWindow.tsx` | Files/Tasks/Agents/Terminal/Details/Git (6탭) |
-| **App Runner** | `AppRunnerWindow.tsx` | AI 분석 → 설치 → 실행 자동 파이프라인 |
-| **Image Studio** | `ImageStudioWindow.tsx` | 텍스트→이미지 생성 + 갤러리 |
-| **Synapse** | `SynapseWindow.tsx` | Notion/Obsidian/NotebookLM/Figma 연동 |
-| **Local LLM** | `LocalLlmWindow.tsx` | Ollama/LM Studio/llama.cpp/Jan 관리 |
 | **Repo Store** | `GitImportWindow.tsx` | GitHub 트렌딩 + 클론 + GitLab 임포트 |
-| **Dashboard** | `DashboardWindow.tsx` | KPI, 비용, 프로젝트 건강, 에이전트 메트릭 |
-| **Reports** | `ReportsWindow.tsx` | 태스크 리포트, 아카이브 |
-| **Decision Inbox** | `DecisionInboxModal.tsx` | 중간 의사결정 승인 (APPROVE/REVISE) |
+| **Decision Inbox** | `DecisionInboxModal.tsx` | 중간 의사결정 승인 (APPROVE/REVISE/CANCEL) |
 
 ---
 
-## 3. 에이전트 시스템
+## 3. 에이전트 시스템 (멀티 프로바이더)
+
+> AgentDesk의 핵심 차별점: 하나의 프로젝트에서 서로 다른 LLM 프로바이더를 사용하는 에이전트들이 동시에 협업합니다.
 
 ### 에이전트 속성
 
 | 속성 | DB 컬럼 | 설명 |
 |------|---------|------|
 | 이름 | `name`, `name_ko/ja/zh` | 다국어 이름 |
-| 역할 | `role` | `team_leader`(PM), `senior`, `junior`, `intern`(미사용) |
-| 부서 | `department_id` | 전문 분야 (dev, planning, design 등) |
+| 역할 | `role` | `team_leader`(PM), `senior`, `junior` |
+| 전문 분야 | `department_id` | dev, planning, design 등 12개 분야 |
 | CLI 도구 | `cli_provider` | claude, codex, gemini, cursor, opencode, copilot, antigravity, api, ollama |
 | API 프로바이더 | `api_provider_id` | api_providers 테이블 참조 (HTTP API 모드) |
 | 모델 | `api_model`, `cli_model` | 프로바이더별 모델 지정 |
@@ -63,27 +58,22 @@
 | 아바타 | `avatar_emoji`, `avatar_url`, `sprite_number` | UI 표현 |
 | 상태 | `status` | idle, working, break, offline |
 
-### 에이전트 실행 분기
+### 멀티 프로바이더 실행 분기
 
-```
-agent.cli_provider === "api" && api_provider_id
-  → HTTP API 스트리밍 (Anthropic/OpenAI-compatible)
+| 조건 | 실행 방식 |
+|------|-----------|
+| `cli_provider === "api"` + `api_provider_id` | HTTP API 스트리밍 (Anthropic/OpenAI-compatible) |
+| `cli_provider === "copilot"` 또는 `"antigravity"` | OAuth HTTP agent |
+| `cli_provider === "claude"/"codex"/"gemini"/"cursor"/"opencode"` | CLI subprocess spawn (PTY) |
+| `cli_provider === "ollama"` + `api_provider_id` | 로컬 Ollama HTTP API |
 
-agent.cli_provider === "copilot" | "antigravity"
-  → OAuth HTTP agent
-
-agent.cli_provider === "claude" | "codex" | "gemini" | "cursor" | "opencode"
-  → CLI subprocess spawn (PTY)
-
-agent.cli_provider === "ollama" && api_provider_id
-  → 로컬 Ollama HTTP API
-```
+> 하나의 프로젝트 내에서 Claude CLI 에이전트, GPT API 에이전트, Ollama 로컬 에이전트가 동시에 태스크를 수행할 수 있습니다.
 
 ### Fitness 기반 배정
 
-| 테이블 | 설명 |
-|--------|------|
-| `agent_task_fitness` | 에이전트별 task_type별 성공률 |
+| 항목 | 설명 |
+|------|------|
+| 테이블 | `agent_task_fitness` — 에이전트별 task_type별 성공률 |
 | 점수 | `successRate - (currentLoad * 0.1)` |
 | Fallback | fitness 데이터 없으면 round-robin |
 
@@ -95,9 +85,9 @@ agent.cli_provider === "ollama" && api_provider_id
 
 ```
 inbox → planned → collaborating / in_progress → review → done
-                                                  ↓
+                                                  |
                                              (PM REVISE)
-                                                  ↓
+                                                  |
                                               planned (재시도)
 ```
 
@@ -117,7 +107,6 @@ queued → claiming → workspace_preparing → ready → running
 
 | 기능 | 설명 |
 |------|------|
-| 칸반 보드 | 드래그 리오더, 상태별 컬럼 |
 | 서브태스크 | 에이전트가 다른 에이전트에게 위임 |
 | 핸드오프 | `handoff_to_agent_id` + `handoff_condition` (always/on_success/on_fail) |
 | 인터럽트 | `POST /api/tasks/:id/inject` — 실행 중 프롬프트 주입 |
@@ -134,7 +123,6 @@ queued → claiming → workspace_preparing → ready → running
 | `project_type` | 설명 |
 |----------------|------|
 | `"project"` (기본) | 킥오프 가능, 태스크 보드 있음 |
-| `"app"` | 킥오프 불가, 클릭 시 App Runner로 열림 |
 
 ### 프로젝트 폴더 윈도우 (6탭)
 
@@ -164,25 +152,25 @@ queued → claiming → workspace_preparing → ready → running
 
 ```
 [1] POST /api/projects/:id/kickoff
-     ▼
-[2] 회의 (runKickoffMeeting)              ← stage: "meeting"
-     │  PM이 목표 공유, 에이전트 역량 보고
-     ▼
-[3] 태스크 생성 (LLM)                     ← stage: "planning"
-     │  callLlmOneShotAuto() → JSON → INSERT tasks
-     │  task_type LLM이 지정
-     ▼
-[4] 에이전트 배정 (fitness 기반)           ← stage: "assigning"
-     │  PM 제외, round-robin fallback
-     ▼
-[5] 실행 시작                              ← stage: "executing"
-     │  에이전트별 첫 planned 태스크 시작
-     ▼
-[6] 개별 태스크 → PM 리뷰 → done
-     ▼
-[7] 모든 태스크 done → 프로젝트 리뷰 (최대 3라운드)
-     │  SATISFIED → 완료
-     │  GAPS_FOUND → 추가 태스크 생성 → [4]로
+     |
+[2] 회의 (runKickoffMeeting)              <- stage: "meeting"
+     |  PM이 목표 공유, 에이전트 역량 보고
+     |
+[3] 태스크 생성 (LLM)                     <- stage: "planning"
+     |  callLlmOneShotAuto() -> JSON -> INSERT tasks
+     |  task_type LLM이 지정
+     |
+[4] 에이전트 배정 (fitness 기반)           <- stage: "assigning"
+     |  PM 제외, round-robin fallback
+     |
+[5] 실행 시작                              <- stage: "executing"
+     |  에이전트별 첫 planned 태스크 시작
+     |
+[6] 개별 태스크 -> PM 리뷰 -> done
+     |
+[7] 모든 태스크 done -> 프로젝트 리뷰 (최대 3라운드)
+     |  SATISFIED -> 완료
+     |  GAPS_FOUND -> 추가 태스크 생성 -> [4]로
 ```
 
 ---
@@ -197,14 +185,14 @@ PM이 LLM으로 4-point 체크리스트 평가:
 3. Minimal scope (최소 범위)
 4. Completeness (완성도)
 
-→ **APPROVE**: done + progress.md + ship automation + 다음 태스크
-→ **REVISE**: planned으로 되돌림 + PM 피드백
+- **APPROVE**: done + progress.md 작성 + ship automation + 다음 태스크
+- **REVISE**: planned으로 되돌림 + PM 피드백
 
 ### 프로젝트 레벨 리뷰
 
 모든 태스크 done → PM이 프로젝트 전체를 목표 대비 평가
-→ **SATISFIED**: 회고 보고서 + 프로젝트 완료
-→ **GAPS_FOUND**: 추가 태스크 자동 생성 (최대 3라운드)
+- **SATISFIED**: 회고 보고서 + 프로젝트 완료
+- **GAPS_FOUND**: 추가 태스크 자동 생성 (최대 3라운드)
 
 ### YOLO 모드
 
@@ -216,26 +204,32 @@ PM이 자동 결정. 사용자 승인 창 비활성화. LLM 리뷰는 동일하�
 
 ---
 
-## 8. 채팅 시스템
+## 8. Orchestration Timeline
 
-| 탭 | 기능 |
-|----|------|
-| **Direct** | 1:1 에이전트 채팅 |
-| **Group** | 프로젝트 팀 그룹 채팅 |
-| **Announcement** | 전체 에이전트 브로드캐스트 |
+> TaskBoard를 대체하는 새로운 실시간 모니터링 뷰.
 
-### 메시지 프리픽스 (메신저 웹훅 전용)
-
-| 프리픽스 | 의미 |
-|---------|------|
-| `$` | 회사 전체 디렉티브 |
-| `!` | 업무 태스크 등록 |
-| `#` | 오케스트레이터 태스크 |
-| (없음) | 일반 채팅 |
+| 기능 | 설명 |
+|------|------|
+| 에이전트 레인 | 에이전트별 수평 레인에 태스크 타임라인 표시 |
+| 실시간 상태 | WebSocket 기반 실행 상태 실시간 반영 |
+| 상태 흐름 | planned → in_progress → review → done 시각화 |
+| PM 리뷰 추적 | 리뷰 요청/승인/수정 이벤트 타임라인 표시 |
 
 ---
 
-## 9. Library (지식 베이스)
+## 9. Decision Inbox
+
+| 기능 | 설명 |
+|------|------|
+| 의사결정 큐 | 에이전트 실행 중 의사결정 요청 대기열 |
+| 사용자 응답 | APPROVE / REVISE / CANCEL |
+| YOLO 모드 | PM이 자동 결정 (사용자 개입 불필요) |
+| 조회 API | `GET /api/decision-inbox` |
+| 응답 API | `POST /api/decision-inbox/:id/reply` |
+
+---
+
+## 10. Library (운영 지식 베이스)
 
 ### Skills — 학습된 능력
 
@@ -268,98 +262,7 @@ project > agent > department > workflow_pack > global
 
 ---
 
-## 10. 워크플로우 빌더
-
-| 탭 | 기능 |
-|----|------|
-| **Builder** | @xyflow/react 노드 에디터 (Agent, Condition, Merge, Trigger 노드) |
-| **Scheduled** | 크론 기반 워크플로우 스케줄 (5-field cron) |
-| **Composition** | 에이전트 조합 캔버스 (템플릿 저장/로드) |
-
-### 워크플로우 팩
-
-`development` | `novel` | `report` | `video_preprod` | `web_research_report` | `roleplay` | `asset_management`
-
----
-
-## 11. Image Studio
-
-| 탭 | 기능 |
-|----|------|
-| **Generate** | 텍스트→이미지 생성 (DALL-E 3, Flux, SD-XL 등) |
-| **Gallery** | 생성 이미지 갤러리 (검색, 삭제) |
-
-- 프로바이더: api_providers 테이블에서 이미지 지원 모델 자동 감지
-- 인페인팅: 마스크 캔버스 + 입력 이미지
-- 태스크 연동: `task_id`로 태스크에 이미지 링크
-
----
-
-## 12. Synapse (외부 지식 통합)
-
-| 플랫폼 | 기능 |
-|---------|------|
-| **Notion** | OAuth 연결 → 페이지 검색 → 마크다운 컨텍스트 |
-| **Obsidian** | 볼트 경로 연결 → 파일 워치 → 자동 싱크 |
-| **NotebookLM** | 스냅샷 저장/조회 |
-| **Figma** | PAT 연결 → 디자인 컨텍스트 |
-| **Rules** | 자동화 규칙 (소스 → 트리거 → 조건 → 액션) |
-
-- 에이전트 실행 시 컨텍스트 블록으로 프롬프트에 주입
-
----
-
-## 13. Local LLM 관리
-
-| 탭 | 기능 |
-|----|------|
-| **Backends** | Ollama, LM Studio, llama.cpp, Jan 상태 관리 (시작/중지) |
-| **Models** | 설치 모델 목록 + 갤러리 (20개 추천) + 풀/삭제 |
-| **Metrics** | GPU/RAM 사용량, 추론 속도, 토큰 처리량 (5초 간격 WS) |
-
-- `POST /api/local-llm/setup-provider` — Ollama/LM Studio를 api_providers로 자동 등록
-
----
-
-## 14. App Runner
-
-```
-우클릭 "앱 실행" → AppRunnerWindow (autoRun=true)
-  ▼
-[1] 정적 분석 (analyzeProject)
-    파일 존재 여부로 타입/언어/프레임워크/명령어 감지
-  ▼
-[2] AI 분석 (callLlmOneShotAuto)
-    README + package.json + 엔트리파일 → LLM → 설명 + 커맨드 오버라이드
-  ▼
-[3] 설치 (spawn install_command)
-    120초 타임아웃, WS 로그 스트리밍
-  ▼
-[4] 실행 (spawn run_command)
-    PORT 환경변수 주입, 포트 충돌 자동 해결
-```
-
----
-
-## 15. 메신저 통합
-
-| 채널 | 프로토콜 |
-|------|---------|
-| Telegram | 웹훅/폴링 |
-| Discord | 봇 토큰 폴링 |
-| Slack | 봇 토큰 폴링 |
-| WhatsApp | Cloud API |
-| Google Chat | 웹훅 |
-| Signal | RPC |
-| iMessage | macOS 런타임 |
-
-- 세션 바인딩: 채널 세션 → 특정 에이전트
-- 태스크 리포트 릴레이: 완료 시 원래 메신저로 전달
-- 타이핑 인디케이터: Telegram/Discord
-
----
-
-## 16. 설정 윈도우 (8탭)
+## 11. 설정 윈도우
 
 | 탭 | 내용 |
 |----|------|
@@ -367,19 +270,25 @@ project > agent > department > workflow_pack > global
 | API | API 프로바이더 CRUD (Anthropic, OpenAI, Ollama 등) |
 | OAuth | GitHub, Google 계정 연결 |
 | CLI | CLI 인증 상태, 모델, 사용량 |
-| Gateway | 메신저 채널 설정 (Telegram/Discord/Slack) |
 | Data | DB 백업/리셋 |
-| Webhooks | 웹훅 엔드포인트 관리 |
-| Local LLM | 로컬 추론 백엔드 설정 |
 
 ---
 
-## 17. 데이터 내보내기
+## 12. Repo Store
+
+| 기능 | 설명 |
+|------|------|
+| GitHub 트렌딩 | 언어별/기간별 트렌딩 저장소 탐색 |
+| 클론 | 선택한 저장소를 로컬에 클론 |
+| GitLab 임포트 | GitLab URL로 프로젝트 임포트 |
+
+---
+
+## 13. 데이터 내보내기
 
 | 타입 | 포맷 |
 |------|------|
 | Tasks | CSV / JSON |
-| Deliverables | CSV / JSON |
 | Agents | CSV / JSON |
 | Costs | CSV / JSON |
 
@@ -388,17 +297,7 @@ project > agent > department > workflow_pack > global
 
 ---
 
-## 18. Decision Inbox
-
-- 에이전트 실행 중 의사결정 요청 큐
-- 사용자가 APPROVE / REVISE / CANCEL 응답
-- YOLO 모드에서는 PM이 자동 결정
-- `GET /api/decision-inbox` — 대기 항목 조회
-- `POST /api/decision-inbox/:id/reply` — 응답
-
----
-
-## 19. 비용 추적
+## 14. 비용 추적
 
 | 항목 | 설명 |
 |------|------|
@@ -410,7 +309,7 @@ project > agent > department > workflow_pack > global
 
 ---
 
-## 20. 에이전트 퍼포먼스
+## 15. 에이전트 퍼포먼스
 
 `GET /api/agents/performance?project_id=&days=30`
 
@@ -423,22 +322,20 @@ project > agent > department > workflow_pack > global
 
 ---
 
-## 21. 실시간 통신 (WebSocket)
+## 16. 실시간 통신 (WebSocket)
 
-### 주요 이벤트 (30개)
+### 주요 이벤트
 
 | 이벤트 | 설명 |
 |--------|------|
 | `task_update` | 태스크 상태 변경 |
 | `agent_status` | 에이전트 상태 변경 |
 | `cli_output` | 터미널 출력 (구독 기반) |
-| `chat_stream` | 채팅 스트리밍 (start/delta/end) |
 | `kickoff_stage` | 킥오프 단계 변경 |
-| `pm_activity` | PM 활동 (승인/수정/에스컬레이션) |
+| `pm_activity` | PM 활동 (승인/수정/에스컬레이션) -- Orchestration Timeline Event Log에서 인라인 표시 |
 | `notification` | 시스템 알림 |
 | `subtask_update` | 서브태스크 변경 |
 | `runtime_status` | 런타임 실행 상태 (토큰, 실행 중) |
-| `project_app_output` | App Runner 프로세스 출력 |
 
 ### 배치
 
@@ -449,7 +346,17 @@ project > agent > department > workflow_pack > global
 
 ---
 
-## 22. i18n (국제화)
+## 17. Reports
+
+| 기능 | 설명 |
+|------|------|
+| 태스크 리포트 | 태스크 완료 후 자동 생성되는 실행 보고서 |
+| 아카이브 | `task_report_archives` 테이블에 요약 저장 |
+| 조회 | ReportsWindow에서 프로젝트별/기간별 필터 |
+
+---
+
+## 18. i18n (국제화)
 
 | 언어 | 코드 |
 |------|------|
@@ -460,11 +367,10 @@ project > agent > department > workflow_pack > global
 
 - 프론트엔드: `useI18n().t({ ko, en, ja, zh })` + `tk("key", vars)`
 - 서버: `translateMessage(lang, "key", vars)`
-- 미완료: 2,454개 하드코딩 문자열 남음 (`strategy/I18N-AGENT-WORKPACK.md`)
 
 ---
 
-## 23. 보안
+## 19. 보안
 
 | 항목 | 구현 |
 |------|------|

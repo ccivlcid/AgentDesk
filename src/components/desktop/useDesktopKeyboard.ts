@@ -158,14 +158,10 @@ export function useDesktopKeyboard(options: UseDesktopKeyboardOptions) {
         gPending.current = false;
         if (gTimer.current) clearTimeout(gTimer.current);
         const map: Record<string, () => void> = {
-          w: () => toggleWindow("workflow"),
           l: () => toggleWindow("library"),
           s: () => toggleWindow("settings"),
-          c: () => toggleWindow("chat"),
           a: () => toggleWindow("agent-manager"),
           e: () => openCli(),
-          i: () => toggleWindow("image-studio"),
-          d: () => toggleWindow("dashboard"),
         };
         map[e.key]?.();
       }

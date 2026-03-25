@@ -1,7 +1,8 @@
 import type { DatabaseSync } from "node:sqlite";
 import os from "node:os";
 import path from "node:path";
-import type { MessengerChannel } from "../../../messenger/channels.ts";
+/** MessengerChannel type stub — messenger system removed. */
+type MessengerChannel = string;
 
 export type DelegationOptions = {
   skipPlannedMeeting?: boolean;

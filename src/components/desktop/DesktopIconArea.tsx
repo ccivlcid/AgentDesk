@@ -5,7 +5,7 @@ import type { I18nContextValue } from "../../i18n";
 import DesktopIcon, { type DesktopIconDef } from "./DesktopIcon";
 import FolderDesktopIcon from "./FolderDesktopIcon";
 import { TrashIcon } from "./DesktopTrash";
-import { IconMarkdownDoc, IconFolder, IconRepoStore, IconAppRunner } from "./DesktopIcons";
+import { IconMarkdownDoc, IconFolder, IconRepoStore } from "./DesktopIcons";
 import { getCategoryIcon } from "./getCategoryIcon";
 import { useUiStore } from "../../store/uiStore";
 import { ICON_GRID_X, ICON_GRID_Y, GRID_ORIGIN_X, GRID_ORIGIN_Y, getIconsPerColumn, snapToFreeCell } from "./snapToFreeCell";
@@ -313,19 +313,16 @@ export function DesktopIconArea({
           const col = Math.floor(gi / perCol);
           const row = gi % perCol;
           const isActive = project.id === currentProjectId;
-          const isApp = project.project_type === "app";
           const isGitHubRepo = !!project.github_repo;
           const category = categories.find((c) => c.id === project.category_id);
-          const catColor = isApp ? "#30d158" : isGitHubRepo ? "#30d158" : (category?.color ?? "#4a5568");
+          const catColor = isGitHubRepo ? "#30d158" : (category?.color ?? "#4a5568");
           const accentColor = isActive ? catColor : catColor;
           const ProjectIcon = getCategoryIcon(project.category_id);
-          const iconFn = isApp
-            ? (c: string) => <IconAppRunner color={c} />
-            : isGitHubRepo && !ProjectIcon
-              ? (c: string) => <IconRepoStore color={c} />
-              : ProjectIcon
-                ? (c: string) => <ProjectIcon color={c} />
-                : (c: string) => <IconFolder color={c} open={isActive} />;
+          const iconFn = isGitHubRepo && !ProjectIcon
+            ? (c: string) => <IconRepoStore color={c} />
+            : ProjectIcon
+              ? (c: string) => <ProjectIcon color={c} />
+              : (c: string) => <IconFolder color={c} open={isActive} />;
           const def: DesktopIconDef = {
             id: `project-${project.id}`,
             icon: iconFn,

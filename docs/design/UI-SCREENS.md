@@ -32,19 +32,23 @@ AgentDesk is designed using the macOS desktop metaphor. There is no sidebar.
 │  AgentDesk  [▾ Project]                    $2.14  🔔  14:32     │  ← Menu Bar
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                  │
-│  ┌──────┐  ┌──────┐  ┌──────┐  ┌──────┐  ┌──────┐  ┌──────┐  ┌──────┐  │
-│  │  👤  │  │  📁  │  │  ▶   │  │  ⚡  │  │  📋  │  │  💬  │  │  >_  │  │  ← Desktop Icons
-│  └──────┘  └──────┘  └──────┘  └──────┘  └──────┘  └──────┘  └──────┘  │
-│  Agent     Create    Run       Workflow   Library    Chat       Agent    │
-│  Settings  Project   Task      Builder                          REPL     │
+│  ┌──────┐  ┌──────┐  ┌──────┐                                  │
+│  │  👤  │  │  📁  │  │  >_  │                                  │  ← Desktop Icons
+│  └──────┘  └──────┘  └──────┘                                  │
+│  Agent     Create    Terminal                                    │
+│  Settings  Project                                               │
+│                                                                  │
+│  + Project Folder Icons (per project)                            │
 │                                                                  │
 ├─────────────────────────────────────────────────────────────────┤
-│      ┌──────┐    ┌──────┐    ┌──────┐    ┌──────┐              │  ← Dock
-│      │  ⚡  │    │  📚  │    │  ⚙   │    │  💬  │              │
-│      └──────┘    └──────┘    └──────┘    └──────┘              │
-│     Workflow    Library    Settings     Chat                     │
+│              ┌──────┐    ┌──────┐                               │  ← Dock
+│              │  📚  │    │  ⚙   │                               │
+│              └──────┘    └──────┘                               │
+│             Library    Settings                                  │
 └─────────────────────────────────────────────────────────────────┘
 ```
+
+> **Note:** TaskBoard가 제거되고, Orchestration Timeline이 메인 뷰로 구현 완료 (Phase 1). WindowType `"tasks"` 사용.
 
 ---
 
@@ -56,7 +60,7 @@ Always pinned to the top. Acts as the macOS Menu Bar.
 
 | Area | Element | Role |
 |------|---------|------|
-| Left | **AgentDesk button** | **App menu dropdown** (wallpaper/shortcuts/Mission Control) |
+| Left | **AgentDesk button** | **App menu dropdown** (shortcuts/Mission Control/Export) |
 | Center | Project selector dropdown | Switch current project |
 | Right | CLI cost summary | Today / this month cost |
 | Right | Notification bell 🔔 | **Slide panel** (320px, enters/exits from the right) |
@@ -64,9 +68,9 @@ Always pinned to the top. Acts as the macOS Menu Bar.
 
 **App Menu Items:**
 - About AgentDesk (version)
-- Change Wallpaper... → Open WallpaperPicker
 - Keyboard Shortcuts → Open KeyboardShortcutsGuide
 - Mission Control (`Ctrl ↑`) → MissionControl overview
+- Export Data...
 
 ---
 
@@ -85,8 +89,6 @@ Click ✕ to delete the project. Press Esc or click the desktop to exit.
 |------|-------|----------------|
 | 👤 | Agent Settings | AgentManager window |
 | 📁 | Create Project | ProjectCreateModal |
-| ▶ | Run Task | *(removed — use Add Tasks in TaskBoard)* |
-| ⚡ | Workflow Builder | Workflow window |
 | >_ | Terminal | PTY Terminal window |
 
 **Project Folder Icons (deletable: true):**
@@ -104,14 +106,13 @@ Click ✕ to delete the project. Press Esc or click the desktop to exit.
 
 **File:** `src/components/desktop/Dock.tsx`
 
-Always pinned to the bottom. 4 app icons.
+Always pinned to the bottom. 3 app icons.
 
 | Icon | App | Window Tabs |
 |------|-----|-------------|
-| ⚡ | Workflow | Workflow Builder / Scheduled Tasks |
-| 📚 | Library | Skills / Agent Rules / Memory / Hooks / Deliverables |
-| ⚙ | Settings | General / API / OAuth / CLI / Gateway / Data / Project Types / Agents |
-| 💬 | Chat | Direct / Group / Announcement |
+| Orchestration (amber) | Orchestration Timeline | Timeline / Logs / Agents / Room (keyboard 0-3 switching) |
+| Library | Library | Skills / Agent Rules / Memory / Hooks / Deliverables |
+| Settings | Settings | General / API / OAuth / CLI / Data / Project Types / Agents |
 
 - Click to open the corresponding app window (if already open, brings it to the front)
 - Running apps display an amber dot below their icon
@@ -123,37 +124,7 @@ Always pinned to the bottom. 4 app icons.
 All windows use the **traffic lights + close button** style. Can be dragged to reposition.
 Multiple windows can be open simultaneously. Managed via `uiStore.openWindows: Set<WindowType>`.
 
-### 5-1. Workflow Window (⚡)
-
-**File:** `src/components/windows/WorkflowWindow.tsx`
-
-```
-[  Workflow Builder  |  Scheduled Tasks  |  Composition  ]
-```
-
-**Workflow Builder Tab**
-- **File:** `src/components/workflow-builder/WorkflowBuilder.tsx`
-- **Dependency:** `@xyflow/react` v12
-- Visual design of node-based agent pipelines
-- Node types: `trigger` / `agent` / `gate` / `condition`
-- Auto-saved to localStorage
-
-**Scheduled Tasks Tab**
-- **File:** `src/components/scheduled-tasks/ScheduledTasksPanel.tsx`
-- List of recurring and scheduled tasks
-- Displays next run time, frequency, and assigned agent
-
-**Composition Tab** _(added 2026-03-15)_
-- **File:** `src/components/agent-composition/AgentCompositionBuilder.tsx`
-- **Dependency:** `@xyflow/react` v12
-- Drag-and-drop composition builder based on agent roles
-- Node: `CompAgentNode` — top border color differentiated by role
-- Run: `AgentCompositionRunModal` — creates multiple tasks including dependencies
-- Save/load templates: `/api/composition-templates` CRUD
-
----
-
-### 5-2. Library Window (📚)
+### 5-1. Library Window (📚)
 
 **File:** `src/components/windows/LibraryWindow.tsx`
 **Project context:** Filtered by the selected `project_id`
@@ -184,12 +155,12 @@ Multiple windows can be open simultaneously. Managed via `uiStore.openWindows: S
 
 ---
 
-### 5-3. Settings Window (⚙)
+### 5-2. Settings Window (⚙)
 
 **File:** `src/components/windows/SettingsWindow.tsx`
 
 ```
-[  General  |  API  |  OAuth  |  CLI  |  Gateway  |  Data  |  Project Types  |  Agents  ]
+[  General  |  API  |  OAuth  |  CLI  |  Data  |  Project Types  |  Agents  ]
 ```
 
 | Tab | File | Content |
@@ -198,28 +169,13 @@ Multiple windows can be open simultaneously. Managed via `uiStore.openWindows: S
 | API | `settings/ApiTab.tsx` | Provider and model configuration |
 | OAuth | `settings/OAuthTab.tsx` | OAuth device flow account connection |
 | CLI | `settings/CliTab.tsx` | CLI status, path, usage details |
-| Gateway | `settings/gateway-settings/` | Telegram, Discord, Slack integration |
 | Data | `settings/DataTab.tsx` | DB backup and reset |
 | Project Types | `settings/CategoriesTab.tsx` | Project category management |
 | Agents | `TeamPageView.tsx` → `AgentManager` | Agent and department management |
 
 ---
 
-### 5-4. Chat Window (💬)
-
-**File:** `src/components/windows/ChatWindow.tsx`
-
-```
-[  Direct  |  Group  |  Announcement  ]
-```
-
-- **Direct:** 1:1 chat with a specific agent
-- **Group:** Group conversation with multiple agents (agent tags and mentions)
-- **Announcement:** Team-wide announcements
-
----
-
-### 5-5. AgentManager Window (👤 icon)
+### 5-3. AgentManager Window (👤 icon)
 
 **File:** `src/components/windows/AgentManagerWindow.tsx`
 **Trigger:** Click desktop icon 👤
@@ -231,7 +187,7 @@ Multiple windows can be open simultaneously. Managed via `uiStore.openWindows: S
 
 ---
 
-### 5-6. Terminal Window (>_ icon)
+### 5-4. Terminal Window (>_ icon)
 
 **File:** `src/components/windows/CliWindow.tsx`
 **Trigger:** Click desktop icon `>_`, Dock `>_` button, or `g e` shortcut
@@ -323,9 +279,7 @@ Centrally rendered in `src/app/AppOverlays.tsx`. Can be triggered from any windo
 
 | # | Component | Trigger |
 |---|-----------|---------|
-| 7-1 | `ChatPanel` | AgentDetail > Chat tab |
-| 7-2 | `GroupChatPanel` | Chat window > Group tab |
-| 7-3 | `DecisionInboxModal` | Notification bell / alerts |
+| 7-1 | `DecisionInboxModal` | Notification bell / alerts |
 
 ### Agent Management
 
@@ -339,16 +293,9 @@ Centrally rendered in `src/app/AppOverlays.tsx`. Can be triggered from any windo
 
 | # | Component | Trigger |
 |---|-----------|---------|
-| 7-7 | *(removed)* | *(CreateTaskModal deleted — use Add Tasks in TaskBoardToolbar)* |
-| 7-8 | `BulkHideModal` | Task Board bulk hide |
+| 7-7 | *(removed)* | *(CreateTaskModal deleted)* |
+| 7-8 | *(removed)* | *(BulkHideModal deleted — TaskBoard removed)* |
 | 7-9 | `DiffModal` | On task change conflict detection |
-
-### Reports
-
-| # | Component | Trigger |
-|---|-----------|---------|
-| 7-10 | `TaskReportPopup` | Click a completed task in the Task Board |
-| 7-11 | `ReportHistory` | `onOpenReportHistory` |
 
 ### Project Management
 
@@ -378,9 +325,7 @@ Centrally rendered in `src/app/AppOverlays.tsx`. Can be triggered from any windo
 | # | Modal | File | Access |
 |---|-------|------|--------|
 | 7-25 | CategoryFormModal | `category-editor/CategoryFormModal.tsx` | Settings > Project Types |
-| 7-26 | ChatEditorModal | `settings/gateway-settings/ChatEditorModal.tsx` | Settings > Gateway |
-| 7-27 | ChannelGuideModal | `settings/gateway-settings/ChannelGuideModal.tsx` | Settings > Gateway |
-| 7-28 | GitHubImportPanel | `GitHubImportPanel.tsx` | ProjectManagerModal |
+| 7-26 | GitHubImportPanel | `GitHubImportPanel.tsx` | ProjectManagerModal |
 | 7-29 | TextPreviewModal | `deliverables/TextPreviewModal.tsx` | Library > Deliverables |
 
 ### Global Utilities
@@ -398,14 +343,10 @@ Centrally rendered in `src/app/AppOverlays.tsx`. Can be triggered from any windo
 
 | Legacy Menu | New Location | How to Access |
 |-------------|-------------|---------------|
-| Dashboard | Desktop itself | Always visible |
 | Agents & Departments | Desktop icon 👤 | Click → AgentManager window |
 | Heartbeat Monitor | AgentManager window | Click 👤 desktop icon |
-| Flow Graph | Workflow window | Dock ⚡ → Workflow window |
-| Task Board | Task Board window | Dock → Tasks window |
-| Scheduled Tasks | Dock ⚡ Workflow window tab | Workflow window → Scheduled tab |
+| Task Board | Dock Orchestration Timeline | Dock Orchestration icon → OrchestrationWindow (4 tabs) |
 | Deliverables | Dock 📚 Library window tab | Library window → Deliverables tab |
-| Workflow Builder | Desktop icon ⚡ + Dock ⚡ | Both open the same window |
 | Skills | Dock 📚 Library window tab | Library window → Skills tab |
 | Agent Rules | Dock 📚 Library window tab | Library window → Rules tab |
 | Memory | Dock 📚 Library window tab | Library window → Memory tab |
@@ -427,11 +368,11 @@ App.tsx
         ├── DesktopIcons.tsx
         ├── Dock.tsx
         └── WindowLayer.tsx   ← App window overlay layer
-              ├── WorkflowWindow.tsx
+              ├── OrchestrationWindow.tsx  (orchestration/)
               ├── LibraryWindow.tsx
               ├── SettingsWindow.tsx
-              ├── ChatWindow.tsx
-              └── AgentManagerWindow.tsx
+              ├── AgentManagerWindow.tsx
+              └── CliWindow.tsx
   └── AppOverlays.tsx          ← Modal layer (highest z-index)
   └── SlidePanels.tsx          ← AgentDetail, TerminalPanel layer
 ```
@@ -440,7 +381,7 @@ App.tsx
 
 ```typescript
 // uiStore.ts
-openWindows: Set<"workflow"|"library"|"settings"|"chat"|"agent-manager"|"repl">
+openWindows: Set<"library"|"settings"|"agent-manager"|"cli"|"decision-inbox"|"folder"|"repo-store"|"tasks">  // "tasks" = Orchestration Timeline
 desktopIconLayout: IconConfig[] // icon positions
 selectedAgentId: string | null  // AgentDetail panel
 openTaskId: string | null       // TerminalPanel drawer
@@ -460,7 +401,7 @@ GET /api/agent-rules?project_id=<id>
 
 | Event | Updates |
 |-------|---------|
-| `agent_status` | AgentManager window, Flow Graph |
+| `agent_status` | AgentManager window |
 | `task_update` | Task Board window |
 | `cli_output` | TerminalPanel drawer |
 | `decision_request` | DecisionInboxModal |
@@ -481,17 +422,17 @@ src/
 │   │   ├── MenuBar.tsx              # Top menu bar
 │   │   ├── DesktopIcon.tsx          # Desktop icons
 │   │   └── Dock.tsx                 # Bottom Dock
+│   ├── orchestration/
+│   │   ├── OrchestrationWindow.tsx  # Dock app window (Orchestration Timeline)
+│   │   ├── MetricsHeader.tsx        # TOKENS/BUDGET/AGENTS metrics bar
+│   │   ├── StageRail.tsx            # Left sidebar pipeline stages
+│   │   ├── TabBar.tsx               # Bottom 4-tab bar (0-3 keys)
+│   │   └── tabs/                    # TimelineTab, LogsTab, AgentsTab, RoomTab
 │   ├── windows/
-│   │   ├── WorkflowWindow.tsx       # ⚡ Dock app window
-│   │   ├── LibraryWindow.tsx        # 📚 Dock app window
-│   │   ├── SettingsWindow.tsx       # ⚙ Dock app window
-│   │   ├── ChatWindow.tsx           # 💬 Dock app window
-│   │   ├── AgentManagerWindow.tsx   # 👤 icon app window
+│   │   ├── LibraryWindow.tsx        # Dock app window (Library)
+│   │   ├── SettingsWindow.tsx       # Dock app window (Settings)
+│   │   ├── AgentManagerWindow.tsx   # Desktop icon app window
 │   │   └── CliWindow.tsx            # >_ icon app window (Agent CLI)
-│   ├── flow-graph/                  # AgentFlowGraph
-│   ├── workflow-builder/            # WorkflowBuilder (@xyflow/react)
-│   ├── scheduled-tasks/             # ScheduledTasksPanel
-│   ├── taskboard/                   # constants, BulkHideModal
 │   ├── deliverables/                # Deliverables, TextPreviewModal
 │   ├── agent-manager/               # AgentFormModal, DepartmentFormModal
 │   ├── skills-library/              # Skills + learning modals
@@ -501,7 +442,7 @@ src/
 │   ├── settings/                    # Settings tabs
 │   └── ui/                          # Shared components (ConfirmDialog, etc.)
 └── store/
-    ├── uiStore.ts                   # openWindows, desktopIconLayout, wallpaper, jiggleMode, missionControlOpen
+    ├── uiStore.ts                   # openWindows, desktopIconLayout, jiggleMode, missionControlOpen
     ├── agentStore.ts
     ├── taskStore.ts
     └── projectStore.ts
@@ -596,7 +537,7 @@ src/
 | State | `appMenuOpen: boolean` (local state) |
 | Dropdown position | `position: absolute, top: calc(100% + 6px), left: 0` |
 | Style | `rgba(20,20,24,0.97)` + `blur(20px)`, `borderRadius: 10` |
-| Items | About (version) / Change Wallpaper / Keyboard Shortcuts / ↓ Export Data / Mission Control (Ctrl↑) |
+| Items | About (version) / Keyboard Shortcuts / ↓ Export Data / Mission Control (Ctrl↑) |
 | Close | Select an item or click outside |
 
 ---
@@ -610,10 +551,8 @@ src/
 | `Space` (after selecting a project) | Quick Look |
 | `Esc` | Exit Jiggle / Close Quick Look / Close Mission Control |
 | Long-press empty screen 600ms | Enter Jiggle Mode |
-| `g w` | Toggle Workflow window |
 | `g l` | Toggle Library window |
 | `g s` | Toggle Settings window |
-| `g c` | Toggle Chat window |
 | `g a` | Toggle Agent Manager |
 | `g e` | Toggle REPL |
 | `?` | Keyboard shortcuts guide |
@@ -621,23 +560,6 @@ src/
 ---
 
 ## New Modals / Panels (v1.3.0)
-
-### WbScheduleModal — Workflow Cron Scheduler
-
-**File:** `src/components/workflow-builder/WbScheduleModal.tsx`
-
-| Item | Value |
-|------|-------|
-| Trigger | ⏰ toolbar button in WorkflowBuilder (only when a template is loaded) |
-| Props | `templateId: string`, `workflowName: string`, `onClose: () => void` |
-| Width | 560px centered modal, `backdrop-blur(20px)` |
-| Preset chips | 6 cron presets: every 5 min / hourly / daily 9am / midnight / Mon 9am / weekdays 9am |
-| Custom input | Raw cron expression field with validation error display |
-| Schedule list | Shows `cron_expr` (amber monospace), enabled badge (green/gray), next/last run timestamps |
-| Row actions | Toggle (⏸/▶) to enable/disable, × to delete |
-| API calls | `GET/POST/PUT/DELETE /api/workflow-schedules` |
-
----
 
 ### AgentPerformanceDashboard — Library → Performance Tab
 

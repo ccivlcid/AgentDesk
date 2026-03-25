@@ -179,13 +179,8 @@ export default function Desktop({
   oauthResult,
   onOauthResultClear,
   onAgentsChange,
-  onSendMessage,
-  onSendAnnouncement,
-  onSendDirective,
-  onClearMessages,
   onProjectCreate,
   onOpenDecisionInbox,
-  onOpenReportHistory,
   children,
 }: DesktopProps) {
   const {
@@ -193,14 +188,11 @@ export default function Desktop({
     openWindow,
     openSettings,
     toggleWindow,
-    wallpaper,
     jiggleMode,
     setJiggleMode,
     missionControlOpen,
     setMissionControlOpen,
     setDesktopIconLayout,
-    unreadReportCount,
-    clearUnreadReportCount,
     pendingDocs,
     removePendingDoc,
     selectedAgentId,
@@ -239,7 +231,6 @@ export default function Desktop({
   const [showQuickCreateAgent, setShowQuickCreateAgent] = useState(false);
   const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [showShortcutsGuide, setShowShortcutsGuide] = useState(false);
-  const [showWallpaperPicker, setShowWallpaperPicker] = useState(false);
   const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number } | null>(null);
   const [showMarkdownEditor, setShowMarkdownEditor] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
@@ -307,7 +298,6 @@ export default function Desktop({
   }, [removeFromTrash, showToast, t]);
   useAppSwitcherKeyboard();
   useDesktopData(
-    { openWindows, clearUnreadReportCount },
     setFolders,
     newFolderPos,
     newFolderInputRef,
@@ -340,9 +330,7 @@ export default function Desktop({
     openWindow,
     openSettings,
     openCli,
-    clearUnreadReportCount,
     toggleWindow,
-    unreadReportCount,
     onOpenDecisionInbox,
     decisionInboxItems,
   });
@@ -379,21 +367,20 @@ export default function Desktop({
       runProjectInfo, setRunProjectInfo, projectCtxMenu, setProjectCtxMenu, ctxMenu, setCtxMenu,
       agentManagerCreateCount, showQuickCreateAgent, setShowQuickCreateAgent, newFolderModalOpen, newFolderPreName,
       setNewFolderModalOpen, newFolderCreatingRef: newFolderCreating, createProjectFolder, setNewFolderPreName,
-      showWallpaperPicker, setShowWallpaperPicker, showExportModal, setShowExportModal, showMarkdownEditor, setShowMarkdownEditor,
+      showExportModal, setShowExportModal, showMarkdownEditor, setShowMarkdownEditor,
       quickLookProjectId, setQuickLookProjectId, missionControlOpen, setMissionControlOpen, handleDeleteProject,
       openProjectWindowIds, setOpenProjectWindowIds, setCurrentProjectId, setSelectedProjectId, addProjectToFolder, setFolders,
       newFolderPos, setNewFolderPos, newFolderName, setNewFolderName, newFolderInputRef,
       showCommandPalette, setShowCommandPalette, sortByName, sortByDefault, sortByLastUsed, snapToGrid, setDesktopIconLayout, createProject,
       showTrash, setShowTrash, folders,
-      onSaveSettings, onRefreshCli, oauthResult, onOauthResultClear, onAgentsChange, onSendMessage, onSendAnnouncement, onSendDirective, onClearMessages,
+      onSaveSettings, onRefreshCli, oauthResult, onOauthResultClear, onAgentsChange,
     }),
     // overlay block deps (stable refs/setters omitted)
-    [runProjectInfo, projectCtxMenu, ctxMenu, agentManagerCreateCount, showQuickCreateAgent, newFolderModalOpen, newFolderPreName, newFolderCreating, createProjectFolder, showWallpaperPicker, showExportModal, showMarkdownEditor, quickLookProjectId, missionControlOpen, handleDeleteProject, openProjectWindowIds, addProjectToFolder, setFolders, newFolderPos, newFolderName, newFolderInputRef, showCommandPalette, sortByName, sortByDefault, sortByLastUsed, snapToGrid, setDesktopIconLayout, createProject, showTrash, folders, onSaveSettings, onRefreshCli, oauthResult, onOauthResultClear, onAgentsChange, onSendMessage, onSendAnnouncement, onSendDirective, onClearMessages],
+    [runProjectInfo, projectCtxMenu, ctxMenu, agentManagerCreateCount, showQuickCreateAgent, newFolderModalOpen, newFolderPreName, newFolderCreating, createProjectFolder, showExportModal, showMarkdownEditor, quickLookProjectId, missionControlOpen, handleDeleteProject, openProjectWindowIds, addProjectToFolder, setFolders, newFolderPos, newFolderName, newFolderInputRef, showCommandPalette, sortByName, sortByDefault, sortByLastUsed, snapToGrid, setDesktopIconLayout, createProject, showTrash, folders, onSaveSettings, onRefreshCli, oauthResult, onOauthResultClear, onAgentsChange],
   );
   const overlayBlockProps = useDesktopOverlayBlockProps(overlayBridge);
   return (
     <DesktopChrome
-      wallpaper={wallpaper}
       setCtxMenu={setCtxMenu}
       onDesktopClick={onDesktopClick}
       onDesktopMouseDown={onDesktopMouseDown}
@@ -407,7 +394,6 @@ export default function Desktop({
         onProjectCreate,
         connected,
         notificationSlot: <NotificationCenter on={on} onOpenDecisionInbox={onOpenDecisionInbox} />,
-        onOpenWallpaperPicker: () => setShowWallpaperPicker(true),
         onOpenMissionControl: () => setMissionControlOpen(true),
         onOpenUserGuide: () => toggleWindow("user-guide"),
         onOpenCommandPalette: () => setShowCommandPalette(true),

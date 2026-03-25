@@ -195,7 +195,7 @@ export function createMessageIdempotencyTools(deps: MessageIdempotencyDeps) {
 
     const id = randomUUID();
     const createdAt = nowMs();
-    // Resolve project_id so pm-activity survives even after the task is deleted.
+    // Resolve project_id so records survive even after the task is deleted.
     let projectId: string | null = null;
     if (taskId) {
       const row = db.prepare("SELECT project_id FROM tasks WHERE id = ?").get(taskId) as { project_id: string | null } | undefined;

@@ -1,6 +1,6 @@
 import type { Agent, Task, Project, HookEntry } from "../../types";
 import type { DeliverableItem } from "../../api/providers-reports-github";
-import type { PaletteItem, QuickActionRow, WfTemplate } from "./types";
+import type { PaletteItem, QuickActionRow } from "./types";
 
 export interface PaletteModel {
   q: string;
@@ -11,7 +11,6 @@ export interface PaletteModel {
   filteredProjects: Project[];
   filteredDeliverables: DeliverableItem[];
   filteredHooks: HookEntry[];
-  filteredWorkflows: WfTemplate[];
   items: PaletteItem[];
 }
 
@@ -25,7 +24,6 @@ export function buildPaletteModel(
   currentProject: Project | null | undefined,
   deliverables: DeliverableItem[],
   hooks: HookEntry[],
-  workflows: WfTemplate[],
 ): PaletteModel {
   const q = query.toLowerCase().trim();
 
@@ -68,10 +66,6 @@ export function buildPaletteModel(
       ).slice(0, 5)
     : [];
 
-  const filteredWorkflows = q
-    ? workflows.filter((w) => w.name.toLowerCase().includes(q)).slice(0, 4)
-    : workflows.slice(0, 3);
-
   const items: PaletteItem[] = [
     ...recentActions.map((a) => ({ kind: "action" as const, ...a })),
     ...filteredActions.map((a) => ({ kind: "action" as const, ...a })),
@@ -80,7 +74,6 @@ export function buildPaletteModel(
     ...filteredTasks.map((t) => ({ kind: "task" as const, task: t })),
     ...filteredDeliverables.map((d) => ({ kind: "deliverable" as const, item: d })),
     ...filteredHooks.map((h) => ({ kind: "hook" as const, hook: h })),
-    ...filteredWorkflows.map((w) => ({ kind: "workflow" as const, wf: w })),
   ];
 
   return {
@@ -92,7 +85,6 @@ export function buildPaletteModel(
     filteredProjects,
     filteredDeliverables,
     filteredHooks,
-    filteredWorkflows,
     items,
   };
 }

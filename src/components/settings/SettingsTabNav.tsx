@@ -15,9 +15,7 @@ const TAB_ITEMS: Array<{
   { key: "cli",     label: (t) => t({ ko: "CLI",    en: "CLI",     ja: "CLI",     zh: "CLI"    }), sigil: "$" },
   { key: "oauth",   label: (t) => t({ ko: "OAUTH",  en: "OAUTH",   ja: "OAUTH",   zh: "OAUTH"  }), sigil: "⇄" },
   { key: "api",     label: (t) => t({ ko: "API",    en: "API",     ja: "API",     zh: "API"    }), sigil: "⌁" },
-  { key: "gateway", label: (t) => t({ ko: "채널",   en: "CHANNEL", ja: "チャンネル", zh: "频道" }), sigil: "⌘" },
   { key: "data",    label: (t) => t({ ko: "데이터",    en: "DATA",      ja: "データ",    zh: "数据"    }), sigil: "▦" },
-  { key: "local-llm", label: (t) => t({ ko: "로컬 LLM", en: "LOCAL LLM", ja: "ローカルLLM", zh: "本地LLM" }), sigil: "⌬" },
 ];
 
 const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };

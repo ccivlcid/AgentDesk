@@ -30,8 +30,6 @@ export function useAppLabels({
   const loadingSubtitle = tk("app.loading.subtitle");
   const viewTitle = (() => {
     switch (view) {
-      case "dashboard":
-        return tk("app.view.dashboard");
       case "cli-usage":
         return tk("app.view.cliUsage");
       case "tasks":

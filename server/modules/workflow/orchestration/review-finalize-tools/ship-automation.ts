@@ -121,17 +121,7 @@ export function shipAutomation(params: ShipAutomationParams): void {
     // 4. Log to PM Activity
     appendTaskLog(taskId, "pm_oversight", `v${newVersion} released`);
 
-    // 5. Broadcast pm_activity event
-    broadcast("pm_activity", {
-      projectId,
-      type: "version_released",
-      version: newVersion,
-      taskId,
-      taskTitle,
-      timestamp: nowMs,
-    });
-
-    // 5b. Notification for version bump
+    // 5. Notification for version bump
     insertNotification?.({
       type: "version_released",
       title: `v${newVersion} — ${taskTitle}`,

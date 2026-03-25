@@ -26,7 +26,7 @@
 
 **Allowed exceptions:**
 - Data values stored in the DB (e.g. `agent.avatar_emoji`, `category.icon`) — but these **must** be rendered through a SVG map with emoji→SVG lookup; raw emoji text is the fallback of last resort only.
-- User-visible plain text content (e.g. document titles, chat messages).
+- User-visible plain text content (e.g. document titles).
 
 ### 0-2. SVG Icon Conventions
 
@@ -70,7 +70,7 @@ All inline SVG icons must follow this standard:
 - **NEVER** edit or delete an existing migration entry.
 - Always append at the end of `migrations-e-recent.ts`.
 - ID format: `YYYY-MM-DD-NNN-short-description` (chronological, zero-padded).
-- **Last applied ID**: `2026-03-28-014-pm-oversight-review-round`
+- **Last applied ID**: `2026-03-29-001-drop-removed-features`
 - Every DDL must be wrapped in `try { ... } catch { /* already exists */ }`.
 
 ### 0-6. Component State Rules
@@ -91,8 +91,8 @@ All inline SVG icons must follow this standard:
 
 ## 1. Project Summary
 
-**AgentDesk** = AI Agent OS — running, monitoring, and controlling multiple AI agents simultaneously.
-macOS desktop metaphor — menu bar + desktop icons + Dock + app windows.
+**AgentDesk** = Developer-focused multi-LLM orchestrator OS — running, monitoring, and controlling multiple AI agents simultaneously.
+UI uses a macOS desktop metaphor (menu bar + desktop icons + Dock + app windows), but the core purpose is developer-centric agent orchestration across multiple LLM providers.
 Electron + React(Vite) frontend + Express/tsx backend + SQLite(better-sqlite3).
 
 ### 1-1. Terminology Mapping (DB ↔ UI)
@@ -336,33 +336,31 @@ src/
 │   │   ├── MenuBar.tsx          ← Top menu bar (logo · app menu · project · cost · notifications · clock)
 │   │   ├── DesktopIcon.tsx      ← Desktop icons (drag · jiggle · ✕ delete badge · inline rename)
 │   │   ├── FolderDesktopIcon.tsx ← Project folder icons (drag · drop · context menu)
-│   │   ├── Dock.tsx             ← Bottom Dock (+ popup menu · Synapse · Tasks · Library · Settings · Chat)
+│   │   ├── Dock.tsx             ← Bottom Dock (+ popup menu · Orchestration · Library · Settings)
 │   │   ├── QuickLook.tsx        ← Project quick-preview panel (Space key)
-│   │   ├── MissionControl.tsx   ← All windows overview (Ctrl+↑)
-│   │   └── WallpaperPicker.tsx  ← Wallpaper selector (10 gradients)
+│   │   └── MissionControl.tsx   ← All windows overview (Ctrl+↑)
+│   ├── orchestration/           ← Orchestration Timeline (WindowType "tasks"):
+│   │   ├── OrchestrationWindow.tsx  ← Main window (AppWindow wrapper)
+│   │   ├── MetricsHeader.tsx        ← TOKENS/BUDGET/AGENTS metrics bar
+│   │   ├── StageRail.tsx            ← Left sidebar pipeline stages (Meeting→Review)
+│   │   ├── TabBar.tsx               ← Bottom 4-tab bar (keyboard 0-3 switching)
+│   │   └── tabs/                    ← TimelineTab, LogsTab, AgentsTab, RoomTab
 │   ├── windows/                 ← App windows:
-│   │                               WorkflowWindow, LibraryWindow, SettingsWindow, ChatWindow,
-│   │                               AgentManagerWindow, TaskBoardWindow, SynapseWindow,
-│   │                               ImageStudioWindow, FolderWindow, CliWindow (Agent CLI),
-│   │                               AppRunnerWindow (right-click "Run App" → AI auto-analyze/run)
+│   │                               LibraryWindow, SettingsWindow,
+│   │                               AgentManagerWindow, FolderWindow, CliWindow (Agent CLI)
 │   ├── agent-detail/            ← AgentDetailPanel (right-slide inspector · 4 tabs)
-│   ├── workflow-builder/        ← WorkflowBuilder (@xyflow/react) + WbScheduleModal (cron)
-│   ├── agent-composition/       ← AgentCompositionBuilder + AgentCompositionRunModal + nodes/CompAgentNode
-│   ├── image-studio/            ← GenerateTab, GalleryTab, MaskCanvas, ProviderSelector
-│   ├── synapse/                 ← SynapsePanel (Notion · Obsidian · rules)
-│   ├── local-llm/               ← BackendsPanel, ModelsPanel, MetricsPanel, AdvancedSettingsPanel
 │   ├── performance/             ← AgentPerformanceDashboard (Library → Performance tab)
 │   ├── export/                  ← ExportModal (triggered from AgentDesk app menu)
 │   └── settings/                ← Settings window tabs
 ├── app/
-│   ├── types.ts                 ← WindowType: "workflow"|"library"|"settings"|"chat"|"agent-manager"
-│   │                                           |"cli"|"tasks"|"synapse"|"image-studio"|"reports"
+│   ├── types.ts                 ← WindowType: "library"|"settings"|"agent-manager"
+│   │                                           |"cli"|"tasks"
 │   └── AppOverlays.tsx          ← Modal/overlay collection
 ├── store/
 │   ├── agentStore.ts            ← agents, departments
 │   ├── taskStore.ts             ← tasks, subtasks
 │   ├── projectStore.ts          ← projects, categories
-│   └── uiStore.ts               ← openWindows(Set), desktopIconLayout, wallpaper, jiggleMode, missionControlOpen
+│   └── uiStore.ts               ← openWindows(Set), desktopIconLayout, jiggleMode, missionControlOpen
 └── types/index.ts               ← Agent, Task, SubAgent and other domain types
 
 server/
@@ -370,26 +368,15 @@ server/
 ├── lib/logger.ts                ← pino logger (note: import path depth varies by file location)
 ├── db/runtime.ts                ← DB connection + env variable constants
 ├── modules/
-│   ├── lifecycle.ts             ← Service start/stop hooks (synapse watchers, LLM metrics, workflow scheduler)
+│   ├── lifecycle.ts             ← Service start/stop hooks
 │   ├── routes/core.ts           ← REST API route registration
-│   ├── routes/ops/composition-templates.ts ← CRUD /api/composition-templates
-│   ├── routes/ops/workflow-schedules.ts    ← CRUD /api/workflow-schedules (cron)
 │   ├── routes/ops/agent-performance.ts    ← GET /api/agents/performance
 │   ├── routes/ops/data-export.ts          ← GET /api/export (CSV/JSON download)
-│   ├── routes/ops/image-studio.ts         ← Image Studio API (generate · gallery · stream)
-│   ├── routes/ops/synapse.ts              ← Synapse API (connections · rules · context)
-│   ├── routes/ops/local-llm.ts            ← Local LLM API (backends · models · metrics)
 │   ├── routes/ops/filesystem.ts           ← Filesystem API (project file save)
-│   ├── image-studio/            ← image-service.ts · providers/openai.ts
-│   ├── synapse/                 ← context-fetcher, notion-client, obsidian-client, rule-engine,
-│   │                               notion-poller, obsidian-watcher
-│   ├── local-llm/               ← backend-manager, ollama-client, lmstudio-client,
-│   │                               llamacpp-client, jan-client, inference-logger, metrics-collector
 │   └── workflow/                ← Task execution engine
 │       ├── cron-utils.ts        ← 5-field cron parser (no external deps)
 │       └── workflow-scheduler.ts ← Cron scheduler daemon (60s tick)
-├── ws/hub.ts                    ← WebSocket broadcast hub
-└── messenger/                   ← Discord/Slack receivers
+└── ws/hub.ts                    ← WebSocket broadcast hub
 ```
 
 ---
@@ -434,7 +421,7 @@ To pass data: use `Zustand store → uiStore.openWindows` chain.
 | **Quick Look** | Select project + `Space` or right-click → Quick Preview | `QuickLook.tsx` |
 | **Mission Control** | `Ctrl+↑` or AgentDesk menu | `MissionControl.tsx` |
 | **Notification Slide Panel** | Bell icon click | `NotificationCenter.tsx` (320px right slide) |
-| **App Menu** | Click "AgentDesk" text | `MenuBar.tsx` (wallpaper / shortcuts / Mission Control) |
+| **App Menu** | Click "AgentDesk" text | `MenuBar.tsx` (shortcuts / Mission Control) |
 
 ---
 
@@ -476,14 +463,10 @@ Current shortcuts:
 |----------|--------|
 | `Ctrl+Shift+K` / `Cmd+K` | Command Palette (Spotlight) |
 | `Ctrl+↑` | Mission Control |
-| `g w` | Toggle Workflow window |
 | `g l` | Toggle Library window |
 | `g s` | Toggle Settings window |
-| `g c` | Toggle Chat window |
 | `g a` | Toggle Agent Manager |
 | `g e` | Toggle CLI (Agent CLI) |
-| `g i` | Toggle Image Studio |
-| `g d` | Toggle Dashboard |
 | `Space` (with icon selected) | Open Quick Look |
 | `Esc` | Exit Jiggle / Close Quick Look / Close Mission Control |
 | 600ms long-press on empty screen | Jiggle Mode ON |
@@ -497,7 +480,7 @@ Use this checklist every time you add a DB column or table:
 
 1. **APPEND only** — add a new `{ id, up }` entry at the **end** of the `MIGRATIONS` chain (typically append to the last chunk under `server/modules/bootstrap/schema/versioned-migrations/`, e.g. `migrations-e-recent.ts`, or add a new chunk and spread it from `versioned-migrations.ts`). Never edit applied migration bodies.
 2. **ID format**: `YYYY-MM-DD-NNN-short-description` (zero-padded, chronological)
-3. **Last known ID**: `2026-03-28-014-pm-oversight-review-round` → next: `2026-03-28-015-*` or `2026-03-29-001-*`
+3. **Last known ID**: `2026-03-29-001-drop-removed-features` → next: `2026-03-29-002-*`
 4. Wrap each DDL in `try { ... } catch { /* already exists */ }` for idempotency
 5. NEVER change or remove existing entries
 

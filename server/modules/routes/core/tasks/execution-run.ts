@@ -18,7 +18,8 @@ import {
 import { buildRulesPromptBlock } from "../../../workflow/core/project-scoped-rules.ts";
 import { buildMemoryPromptBlock } from "../../../workflow/orchestration/autonomous-memory.ts";
 import { executeHooks } from "../../../workflow/core/hook-executor.ts";
-import { buildKbContextBlock } from "../../../synapse/context-fetcher.ts";
+/** Stub -- Synapse KB context removed */
+const buildKbContextBlock = async (_db: unknown, _taskId: string, _agentId: string | null): Promise<string> => "";
 import { buildFigmaContextBlock } from "../../../figma/context-fetcher.ts";
 import { buildSourceContextBlock } from "../../../projects/source-context-fetcher.ts";
 

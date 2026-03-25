@@ -2,7 +2,6 @@ import type { Agent, Department, Project, AssignmentMode } from "../../types";
 import type {
   ProjectDecisionEventItem,
   ProjectDetailResponse,
-  ProjectReportHistoryItem,
   ProjectTaskHistoryItem,
 } from "../../api";
 
@@ -76,7 +75,6 @@ export interface ProjectRenderState {
   selectedAgentIds: Set<string>;
   agentFilterDept: string;
   groupedTaskCards: GroupedProjectTaskCard[];
-  sortedReports: ProjectReportHistoryItem[];
   sortedDecisionEvents: ProjectDecisionEventItem[];
   selectedProject: Project | null;
   viewedProject: Project | null;

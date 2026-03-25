@@ -157,7 +157,7 @@ A task row was created, updated, or deleted.
 | `deleted` | `boolean?` | `true` when the task has been deleted |
 | *(all columns)* | | Full `SELECT * FROM tasks` row when available |
 
-**Emitted by:** Task CRUD, kickoff pipeline, execution loop, PM orchestration, task delegation, recovery sweeps, subtask completion, Synapse rule engine, execution control (stop/pause/resume).
+**Emitted by:** Task CRUD, kickoff pipeline, execution loop, PM orchestration, task delegation, recovery sweeps, subtask completion, execution control (stop/pause/resume).
 
 ---
 
@@ -210,38 +210,6 @@ A department (specialty area) was created, updated, or deleted.
 | `workflow_pack_key` | `string?` | Workflow pack key of the affected department |
 
 **Emitted by:** Department CRUD routes.
-
----
-
-### new_message
-
-A new chat/report message was inserted.
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | `string` | Message ID |
-| `sender_type` | `string` | `"agent"` or `"user"` |
-| `sender_id` | `string?` | Sender agent/user ID |
-| `receiver_type` | `string` | Target type |
-| `receiver_id` | `string?` | Target ID |
-| `content` | `string` | Message body |
-| `message_type` | `string` | `"chat"`, `"report"`, etc. |
-| `task_id` | `string?` | Related task |
-| `created_at` | `number` | Timestamp (epoch ms) |
-
-**Emitted by:** Messenger format-send, directive inbox message insertion, subtask completion notifications, PM progress notifications.
-
----
-
-### announcement
-
-A broadcast announcement message (sent to all agents).
-
-| Field | Type | Description |
-|-------|------|-------------|
-| *(same as `new_message`)* | | Full message row |
-
-**Emitted by:** Directive inbox announcement delegation, API directive route.
 
 ---
 
@@ -322,25 +290,6 @@ An agent arrived at, spoke in, or left the client office (meeting room UI).
 
 ---
 
-### chat_stream
-
-Streaming chat response from an agent (token-by-token).
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `phase` | `string` | `"start"`, `"delta"`, or `"end"` |
-| `message_id` | `string` | Message ID |
-| `agent_id` | `string` | Responding agent ID |
-| `agent_name` | `string?` | Agent display name (on `start`) |
-| `agent_avatar` | `string?` | Agent avatar (on `start`) |
-| `text` | `string?` | Delta text chunk (on `delta`) |
-| `content` | `string?` | Full message content (on `end`) |
-| `created_at` | `number?` | Timestamp (on `end`) |
-
-**Emitted by:** Direct chat runtime reply handler.
-
----
-
 ### task_report
 
 A task report was generated (PM review completed).
@@ -387,6 +336,8 @@ Agent execution queue status changed.
 ---
 
 ### pm_activity
+
+> **Note:** PM Activity Panel (RightShelf)은 제거됨. 이 이벤트는 Orchestration Timeline의 Event Log에서 인라인으로 표시됩니다.
 
 PM agent performed an action (approve, revise, escalate).
 
@@ -570,18 +521,6 @@ Bulk task changes occurred (e.g., batch reorder). No specific payload; signals t
 
 ---
 
-### messages_cleared
-
-Messages were cleared for an agent session reset.
-
-| Field | Type | Description |
-|-------|------|-------------|
-| *(session reset metadata)* | | Details of the cleared session |
-
-**Emitted by:** Directive inbox session-reset branch.
-
----
-
 ### video_render_progress
 
 Video render job progress update.
@@ -623,46 +562,6 @@ Image generation completed.
 | `revisedPrompt` | `string?` | Provider-revised prompt |
 
 **Emitted by:** Image Studio route (`POST /api/image-studio/generate`).
-
----
-
-### local_llm_status
-
-Local LLM backend status changed.
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `backend` | `string` | Backend name (e.g., `"ollama"`) |
-| `running` | `boolean` | Whether the backend is running |
-
-**Emitted by:** Local LLM routes (start/stop/health check), lifecycle startup.
-
----
-
-### local_llm_pull_progress
-
-Local LLM model download progress.
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `model` | `string` | Model name |
-| `status` | `string` | Download status |
-| `progress` | `number?` | Progress percentage |
-| `error` | `string?` | Error message |
-
-**Emitted by:** Local LLM routes (`POST /api/local-llm/models/pull`).
-
----
-
-### local_llm_metrics
-
-Local LLM inference metrics snapshot.
-
-| Field | Type | Description |
-|-------|------|-------------|
-| *(metrics snapshot)* | | Object with inference timing, token throughput, etc. |
-
-**Emitted by:** Local LLM metrics collector (periodic broadcast).
 
 ---
 
@@ -715,14 +614,11 @@ export type WSEventType =
   | "agent_created"
   | "agent_deleted"
   | "departments_changed"
-  | "new_message"
-  | "announcement"
   | "cli_output"
   | "cli_usage_update"
   | "subtask_update"
   | "cross_dept_delivery"
   | "client_office_call"
-  | "chat_stream"
   | "task_report"
   | "notification"
   | "queue_status"
@@ -742,7 +638,7 @@ export type WSEventType =
   | "project_app_output";
 ```
 
-> **Note:** Some events (`clone_progress`, `task_interrupt`, `tasks_changed`, `messages_cleared`, `video_render_progress`, `video_render_complete`, `image_studio_done`, `local_llm_status`, `local_llm_pull_progress`, `local_llm_metrics`) are broadcast by the server but are not part of the `WSEventType` union. They are consumed by dedicated component-level WebSocket listeners (e.g., `ModelsPanel`, `MetricsPanel`) rather than the central `useRealtimeSync` hook.
+> **Note:** Some events (`clone_progress`, `task_interrupt`, `tasks_changed`, `video_render_progress`, `video_render_complete`) are broadcast by the server but are not part of the `WSEventType` union. They are consumed by dedicated component-level WebSocket listeners rather than the central `useRealtimeSync` hook.
 
 ---
 

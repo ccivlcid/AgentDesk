@@ -1,15 +1,31 @@
 import { useI18n } from "../../i18n";
-import { dashboardEmptyGuide } from "../../data/screen-guide";
+import type { ScreenGuideEntry } from "../../data/screen-guide";
 
 const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };
 
+const gettingStartedGuide: ScreenGuideEntry = {
+  title: { ko: "시작하기 가이드", en: "Getting Started", ja: "はじめに", zh: "入门指南" },
+  description: {
+    ko: "프로젝트가 없을 때는 먼저 프로젝트를 만든 뒤, 업무 보드에서 태스크를 추가하고 에이전트를 실행하면 됩니다.",
+    en: "When you have no project, create one first, then add tasks on the Task Board and run agents.",
+    ja: "プロジェクトがない場合は、まずプロジェクトを作成し、タスクボードでタスクを追加してエージェントを実行します。",
+    zh: "没有项目时，请先创建项目，然后在任务看板添加任务并运行代理。",
+  },
+  tips: [
+    { ko: "바탕화면 프로젝트 생성 아이콘으로 프로젝트 생성", en: "Create a project using the New Project icon on the desktop", ja: "デスクトップの新規プロジェクトアイコンからプロジェクトを作成", zh: "使用桌面上的新建项目图标创建项目" },
+    { ko: "상단 프로젝트 선택기에서 방금 만든 프로젝트 선택", en: "Select the new project in the header project selector", ja: "ヘッダーのプロジェクト選択で作成したプロジェクトを選択", zh: "在顶部项目选择器中选择刚创建的项目" },
+    { ko: "태스크 보드에서 태스크 추가 후 에이전트 배정", en: "Add tasks on the Task Board and assign agents", ja: "タスクボードでタスクを追加しエージェントを割り当て", zh: "在任务看板中添加任务并分配代理" },
+    { ko: "설정에서 API 키·OAuth·에이전트를 먼저 설정해 두면 편합니다", en: "Set up API keys, OAuth, and agents in Settings first for a smoother experience", ja: "設定でAPIキー・OAuth・エージェントを先に設定するとスムーズです", zh: "建议先在设置中配置 API 密钥、OAuth 与代理" },
+  ],
+};
+
 /**
- * 프로젝트 없을 때 대시보드에 표시하는 "시작하기" 가이드 패널.
- * 대시보드·프로젝트 유형과 동일한 macOS 카드(터미널 헤더 + 본문) 스타일로 통일.
+ * 프로젝트 없을 때 표시하는 "시작하기" 가이드 패널.
+ * macOS 카드(터미널 헤더 + 본문) 스타일.
  */
 export default function GettingStartedGuidePanel() {
   const { t } = useI18n();
-  const entry = dashboardEmptyGuide;
+  const entry = gettingStartedGuide;
   const stepsLabel = t({ ko: "단계", en: "Steps", ja: "手順", zh: "步骤" });
 
   return (

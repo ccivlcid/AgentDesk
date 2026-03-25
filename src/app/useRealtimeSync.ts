@@ -7,7 +7,6 @@ import type {
   CrossDeptDelivery,
   MeetingPresence,
   MeetingReviewDecision,
-  Message,
   SubAgent,
   SubTask,
   Task,
@@ -19,7 +18,6 @@ import {
   MAX_CLIENT_OFFICE_CALLS,
   MAX_CODEX_THREAD_BINDINGS,
   MAX_CROSS_DEPT_DELIVERIES,
-  MAX_LIVE_MESSAGES,
   MAX_LIVE_SUBAGENTS,
   MAX_LIVE_SUBTASKS,
   MAX_SUBAGENT_STREAM_TAIL_CHARS,
@@ -44,29 +42,17 @@ interface UseRealtimeSyncParams {
   tasksRef: MutableRefObject<Task[]>;
   subAgentsRef: MutableRefObject<SubAgent[]>;
   viewRef: MutableRefObject<View>;
-  activeChatRef: MutableRefObject<{ showChat: boolean; agentId: string | null }>;
   codexThreadToSubAgentIdRef: MutableRefObject<Map<string, string>>;
   codexThreadBindingTsRef: MutableRefObject<Map<string, number>>;
   subAgentStreamTailRef: MutableRefObject<Map<string, string>>;
   setTasks: Dispatch<SetStateAction<Task[]>>;
   setAgents: Dispatch<SetStateAction<Agent[]>>;
-  setMessages: Dispatch<SetStateAction<Message[]>>;
-  setUnreadAgentIds: Dispatch<SetStateAction<Set<string>>>;
   setTaskReport: Dispatch<SetStateAction<TaskReportDetail | null>>;
   setCrossDeptDeliveries: Dispatch<SetStateAction<CrossDeptDelivery[]>>;
   setClientOfficeCalls: Dispatch<SetStateAction<ClientOfficeCall[]>>;
   setMeetingPresence: Dispatch<SetStateAction<MeetingPresence[]>>;
   setSubtasks: Dispatch<SetStateAction<SubTask[]>>;
   setSubAgents: Dispatch<SetStateAction<SubAgent[]>>;
-  setStreamingMessage: Dispatch<
-    SetStateAction<{
-      message_id: string;
-      agent_id: string;
-      agent_name: string;
-      agent_avatar: string;
-      content: string;
-    } | null>
-  >;
   /** MX-02: called when a task transitions to done (for Toast) */
   onTaskDone?: (task: Task) => void;
   /** MX-02: called when a task transitions to failed_exec (for Toast) */
@@ -81,25 +67,20 @@ export function useRealtimeSync({
   tasksRef,
   subAgentsRef,
   viewRef,
-  activeChatRef,
   codexThreadToSubAgentIdRef,
   codexThreadBindingTsRef,
   subAgentStreamTailRef,
   setTasks,
   setAgents,
-  setMessages,
-  setUnreadAgentIds,
   setTaskReport,
   setCrossDeptDeliveries,
   setClientOfficeCalls,
   setMeetingPresence,
   setSubtasks,
   setSubAgents,
-  setStreamingMessage,
   onTaskDone,
   onTaskFailed,
 }: UseRealtimeSyncParams): void {
-  const incUnreadReportCount = useUiStore((s) => s.incUnreadReportCount);
   const openCliWindow = useUiStore((s) => s.openCliWindow);
   const closeCliWindow = useUiStore((s) => s.closeCliWindow);
   const setCliPlanReady = useUiStore((s) => s.setCliPlanReady);
@@ -180,47 +161,9 @@ export function useRealtimeSync({
       on("departments_changed", () => {
         scheduleLiveSync(60);
       }),
-      on("new_message", (payload: unknown) => {
-        const msg = payload as Message;
-        setMessages((prev) => {
-          if (prev.some((m) => m.id === msg.id)) return prev;
-          return appendCapped(prev, msg, MAX_LIVE_MESSAGES);
-        });
-        if (msg.sender_type === "agent" && msg.sender_id) {
-          const { showChat: chatOpen } = activeChatRef.current;
-          if (chatOpen) return;
-          setUnreadAgentIds((prev) => {
-            if (prev.has(msg.sender_id!)) return prev;
-            const next = new Set(prev);
-            next.add(msg.sender_id!);
-            return next;
-          });
-        }
-      }),
-      on("announcement", (payload: unknown) => {
-        const msg = payload as Message;
-        setMessages((prev) => {
-          if (prev.some((m) => m.id === msg.id)) return prev;
-          return appendCapped(prev, msg, MAX_LIVE_MESSAGES);
-        });
-        if (msg.sender_type === "agent" && msg.sender_id) {
-          const { showChat: chatOpen } = activeChatRef.current;
-          if (chatOpen) return;
-          setUnreadAgentIds((prev) => {
-            if (prev.has(msg.sender_id!)) return prev;
-            const next = new Set(prev);
-            next.add(msg.sender_id!);
-            return next;
-          });
-        }
-      }),
       on("task_report", (payload: unknown) => {
         const p = payload as { task?: { id?: string } } | null;
         const reportTaskId = typeof p?.task?.id === "string" ? p.task.id : null;
-        // Reports 창이 닫혀 있을 때만 뱃지 카운트 증가
-        if (!useUiStore.getState().openWindows.has("reports")) {
-          incUnreadReportCount();
-        }
         if (!reportTaskId) {
           setTaskReport(payload as TaskReportDetail);
           return;
@@ -521,51 +464,6 @@ export function useRealtimeSync({
           useUiStore.getState().setKickoffStage(stage);
           if (stage === "done") {
             setTimeout(() => useUiStore.getState().setKickoffStage("idle"), 2000);
-          }
-        }
-      }),
-      on("chat_stream", (payload: unknown) => {
-        const p = payload as {
-          phase: "start" | "delta" | "end";
-          message_id: string;
-          agent_id: string;
-          agent_name?: string;
-          agent_avatar?: string;
-          text?: string;
-          content?: string;
-          created_at?: number;
-        };
-        if (p.phase === "start") {
-          setStreamingMessage({
-            message_id: p.message_id,
-            agent_id: p.agent_id,
-            agent_name: p.agent_name ?? "",
-            agent_avatar: p.agent_avatar ?? "",
-            content: "",
-          });
-        } else if (p.phase === "delta") {
-          setStreamingMessage((prev) => {
-            if (!prev || prev.message_id !== p.message_id) return prev;
-            return { ...prev, content: prev.content + (p.text ?? "") };
-          });
-        } else if (p.phase === "end") {
-          setStreamingMessage(null);
-          if (p.content && p.message_id) {
-            const finalMsg: Message = {
-              id: p.message_id,
-              sender_type: "agent",
-              sender_id: p.agent_id,
-              receiver_type: "agent",
-              receiver_id: null,
-              content: p.content,
-              message_type: "chat",
-              task_id: null,
-              created_at: p.created_at ?? Date.now(),
-            };
-            setMessages((prev) => {
-              if (prev.some((m) => m.id === finalMsg.id)) return prev;
-              return appendCapped(prev, finalMsg, MAX_LIVE_MESSAGES);
-            });
           }
         }
       }),

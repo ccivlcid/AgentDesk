@@ -1,5 +1,6 @@
 import type { Agent, AgentRole, CliProvider, Department } from "../../types";
-import type { KbSourceRef } from "../../api/synapse";
+/** Stub type — Synapse API removed */
+type KbSourceRef = { type: "notion_page" | "obsidian_file"; id: string; label?: string };
 
 export type Translator = (ko: string, en: string, ja?: string, zh?: string) => string;
 

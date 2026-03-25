@@ -9,7 +9,6 @@ import ArtifactList from "./ArtifactList";
 import CollaboratorSection from "./CollaboratorSection";
 import GitSection from "./GitSection";
 import TextPreviewModal from "./TextPreviewModal";
-import SynapseExportModal from "../synapse/SynapseExportModal";
 
 interface DeliverableCardProps {
   report: DeliverableItem;
@@ -74,7 +73,6 @@ export default function DeliverableCard({ report, artifacts, agent, agents, onAr
   const [previewArtifact, setPreviewArtifact] = useState<TaskArtifact | null>(null);
   const [expanded, setExpanded] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [showSynapseExport, setShowSynapseExport] = useState(false);
   const uploadInputRef = useRef<HTMLInputElement>(null);
   const [sectionOpen, setSectionOpen] = useState<Record<string, boolean>>({
     result: false, collaborators: false, artifacts: false, git: false,
@@ -191,15 +189,6 @@ export default function DeliverableCard({ report, artifacts, agent, agents, onAr
                 <button type="button" onClick={expandAll}   style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", background: "none", border: "none", cursor: "pointer", padding: 0 }}>{t({ ko: "모두 펼치기", en: "expand all", ja: "すべて展開", zh: "展开全部" })}</button>
                 <span style={{ fontSize: "9px", color: "var(--th-border)" }}>|</span>
                 <button type="button" onClick={collapseAll} style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", background: "none", border: "none", cursor: "pointer", padding: 0 }}>{t({ ko: "모두 접기", en: "collapse all", ja: "すべて折りたたむ", zh: "折叠全部" })}</button>
-                <span style={{ fontSize: "9px", color: "var(--th-border)" }}>|</span>
-                <button
-                  type="button"
-                  onClick={() => setShowSynapseExport(true)}
-                  style={{ ...mono, fontSize: "9px", fontWeight: 700, color: "var(--th-accent)", background: "none", border: "none", cursor: "pointer", padding: 0, letterSpacing: "0.04em" }}
-                  title={t({ ko: "Notion / Obsidian으로 내보내기", en: "Export to Notion / Obsidian", ja: "Notion / Obsidianにエクスポート", zh: "导出到 Notion / Obsidian" })}
-                >
-                  ⇄ export
-                </button>
               </div>
             </div>
 
@@ -301,13 +290,6 @@ export default function DeliverableCard({ report, artifacts, agent, agents, onAr
         />
       )}
 
-      {showSynapseExport && (
-        <SynapseExportModal
-          title={report.title}
-          content={report.result ?? ""}
-          onClose={() => setShowSynapseExport(false)}
-        />
-      )}
     </>
   );
 }

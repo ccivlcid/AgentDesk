@@ -1,7 +1,7 @@
 # AgentDesk Glossary
 
 > Domain terminology reference for AI agents and developers.
-> Last updated: 2026-03-24
+> Last updated: 2026-03-25 (Phase 26 Developer OS 전환 — 제거 기능 반영)
 
 ---
 
@@ -174,11 +174,6 @@ project > agent > department > workflow_pack > global
 | Term                    | DB Name                   | Definition                                                                                                                    |
 | ----------------------- | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | **Decision Inbox**      | `decision_inbox_messages` | Queue of mid-task decisions agents request from users                                                                         |
-| **Direct Chat**         | `messages`                | Bi-directional user-agent messaging. Common prefixes: `$` (directive), `!` (direct agent task), `#` (task registration/orchestrator flow), none (chat) |
-| **Group Chat**          | —                         | Multi-agent group conversation panel (`GroupChatComposerInputBlock`)                                                          |
-| **Announcement**        | —                         | Broadcast message from one agent to all project members; rendered in `AnnouncementCliPanel`                                   |
-| **Message Types**       | `messages.type`           | `chat` | `task_assign` | `announcement` | `directive` | `report` | `status_update`                                            |
-| **Messenger Channels**  | —                         | External integrations: telegram, whatsapp, discord, googlechat, slack, signal, imessage                                       |
 | **Cross-Dept Delivery** | —                         | Task handoff between agents of different departments                                                                          |
 | **Client Office Call**  | —                         | Meeting room interaction during kickoff/review phases                                                                         |
 
@@ -190,12 +185,12 @@ project > agent > department > workflow_pack > global
 
 | Term           | `project_type`    | 생성 경로                              | 설명                                                                         |
 | -------------- | ----------------- | ---------------------------------- | -------------------------------------------------------------------------- |
-| **System App** | — (내장)            | 앱 시작 시 자동 생성                       | 바탕화면 고정 아이콘 (Agents, CLI, Synapse, Reports 등). `useDesktopIcons.tsx`에 하드코딩 |
+| **System App** | — (내장)            | 앱 시작 시 자동 생성                       | 바탕화면 고정 아이콘 (Agents, CLI, Decisions 등). `useDesktopIcons.tsx`에 하드코딩 |
 | **Project**    | `"project"` (기본값) | 프로젝트 생성 → 바탕화면 폴더 아이콘              | 킥오프 가능, 태스크 보드 있음                                                          |
-| **App**        | `"app"`           | Repo Store 클론 또는 Git Import 창에서 등록 | 킥오프 불가 (`app_cannot_kickoff`), 클릭 시 App Runner로 열림                         |
+| **App**        | `"app"`           | Repo Store 클론 또는 Git Import 창에서 등록 | 킥오프 불가 (`app_cannot_kickoff`), 클릭 시 프로젝트 폴더 창 열림                         |
 
 
-> 클릭 동작: `project_type === "app"` 이면 `openAppRunner()` 호출, `"project"`이면 프로젝트 폴더 창 열림.
+> 클릭 동작: `project_type === "app"` 이면 프로젝트 폴더 창 열림, `"project"`이면 동일하게 프로젝트 폴더 창 열림.
 
 ---
 
@@ -210,8 +205,7 @@ project > agent > department > workflow_pack > global
 | **Mission Control**     | `Ctrl+↑`                     | MissionControl.tsx     | All-windows overview grid                         |
 | **Notification Center** | Bell icon                    | NotificationCenter.tsx | 320px right-slide notification panel              |
 | **Dock**                | Always visible (bottom)      | Dock.tsx               | App launcher with popup menu                      |
-| **App Menu**            | Click "AgentDesk"            | MenuBar.tsx            | Wallpaper / Shortcuts / Mission Control           |
-| **Wallpaper**           | App Menu → Wallpaper         | WallpaperPicker.tsx    | 10 gradient presets                               |
+| **App Menu**            | Click "AgentDesk"            | MenuBar.tsx            | Shortcuts / Mission Control / Export              |
 | **Window Snap**         | Drag to edge                 | —                      | Snap positions: left, right, full, tl, tr, bl, br |
 
 
@@ -222,22 +216,13 @@ project > agent > department > workflow_pack > global
 
 | WindowType       | Description                                    |
 | ---------------- | ---------------------------------------------- |
-| `workflow`       | Workflow Builder (@xyflow/react flow editor)   |
 | `library`        | Library (agents, skills, rules, memory, hooks) |
-| `settings`       | Settings (API, general, OAuth, CLI, gateway)   |
-| `chat`           | Direct Chat with agents                        |
+| `settings`       | Settings (API, general, OAuth, CLI, data)       |
 | `agent-manager`  | Agent Manager (CRUD agents/departments)        |
 | `cli`            | Agent CLI terminal                             |
-| `tasks`          | Task Board (Kanban)                            |
-| `reports`        | Reports window                                 |
-| `image-studio`   | Image Studio (text-to-image, inpainting)       |
-| `synapse`        | Synapse (Notion/Obsidian integration)          |
-| `local-llm`      | Local LLM (Ollama, LM Studio, llama.cpp)       |
+| `tasks`          | Orchestration Timeline (reserved, not yet implemented) |
 | `repo-store`     | Repo Store (GitHub trending + clone)           |
-| `app-runner`     | App Runner (project auto-run)                  |
-| `dashboard`      | Dashboard (metrics overview)                   |
 | `decision-inbox` | Decision Inbox                                 |
-| `pm-activity`    | PM Activity panel                              |
 | `folder`         | Project Folder window                          |
 
 
@@ -248,16 +233,9 @@ project > agent > department > workflow_pack > global
 
 | Term                      | Definition                                                                                                             |
 | ------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| **Image Studio**          | Text-to-image generation + inpainting (OpenAI provider)                                                                |
-| **Synapse**               | External knowledge integration: Notion (poller), Obsidian (watcher), rule engine                                       |
-| **Local LLM**             | Local inference: Ollama, LM Studio, llama.cpp, Jan backends                                                            |
-| **Composition Builder**   | Visual multi-agent workflow editor                                                                                     |
-| **Workflow Builder**      | Flow diagram editor for task pipelines (@xyflow/react)                                                                 |
 | **Repo Store**            | GitHub trending browser, clone, and project registration                                                               |
-| **App Runner**            | Project app auto-install and run environment. Types: `project` | `app`                                                 |
 | **Performance Dashboard** | Agent success rate, completion time, activity metrics                                                                  |
 | **GitLab Import**         | Import existing GitLab repositories as AgentDesk projects (`GitLabImportWindow`)                                       |
-| **Video Skill**           | Specialized workflow pack for video pre-production tasks (`workflow/packs/video-artifact.ts`)                          |
 | **One-Shot Runner**       | Single-pass agent execution without iterative loop — used for fast, bounded tasks (`workflow/core/one-shot-runner.ts`) |
 
 
@@ -269,12 +247,11 @@ project > agent > department > workflow_pack > global
 | Term                   | Location                                        | Definition                                                                                            |
 | ---------------------- | ----------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
 | **Event Bus**          | `server/lib/event-bus.ts`                       | Central event publication for task status changes and PM notifications                                |
-| **WebSocket Hub**      | `server/ws/hub.ts`                              | Real-time broadcast: cli_output, task_update, agent_status, pm_activity, etc.                         |
+| **WebSocket Hub**      | `server/ws/hub.ts`                              | Real-time broadcast: cli_output, task_update, agent_status, etc.                                      |
 | **Pino Logger**        | `server/lib/logger.ts`                          | Structured logging (no console.log in server code)                                                    |
 | **Cron Parser**        | `server/modules/workflow/cron-utils.ts`         | 5-field cron expression parser (no external deps)                                                     |
 | **Workflow Scheduler** | `server/modules/workflow/workflow-scheduler.ts` | 60-second tick daemon for scheduled workflows                                                         |
 | **Pipeline Gates**     | `pipeline_gates`                                | Quality checkpoints: auto or manual approval                                                          |
-| **Gateway**            | `server/gateway/`                               | Server-side push channel for task notifications to connected clients (`client/task-notifications.ts`) |
 | **Deferred Runtime**   | `server/modules/deferred-runtime.ts`            | Lazy-initialized runtime modules loaded on first use (avoids startup cost)                            |
 
 
@@ -325,7 +302,7 @@ project > agent > department > workflow_pack > global
 
 | Term             | Definition                                                                                                     |
 | ---------------- | -------------------------------------------------------------------------------------------------------------- |
-| **Migration ID** | Format: `YYYY-MM-DD-NNN-short-description`. Last: `2026-03-28-014-pm-oversight-review-round` → next: `2026-03-28-015-`* or `2026-03-29-001-`* |
+| **Migration ID** | Format: `YYYY-MM-DD-NNN-short-description`. Last: `2026-03-29-001-drop-removed-features` → next: `2026-03-29-002-`* |
 | **Append-Only**  | Never edit/delete existing migrations. DDL wrapped in try/catch                                                |
 | **Version Bump** | Patch increment on task completion (0.1.2 → 0.1.3). Files: VERSION, package.json, CHANGELOG.md                 |
 
@@ -339,14 +316,10 @@ project > agent > department > workflow_pack > global
 | ------------------------ | ------------------------------- |
 | `Ctrl+Shift+K` / `Cmd+K` | Spotlight Search                |
 | `Ctrl+↑`                 | Mission Control                 |
-| `g w`                    | Toggle Workflow                 |
 | `g l`                    | Toggle Library                  |
 | `g s`                    | Toggle Settings                 |
-| `g c`                    | Toggle Chat                     |
 | `g a`                    | Toggle Agent Manager            |
 | `g e`                    | Toggle CLI                      |
-| `g i`                    | Toggle Image Studio             |
-| `g d`                    | Toggle Dashboard                |
 | `Space`                  | Quick Look (with icon selected) |
 | `Esc`                    | Exit overlay / close panel      |
 | `?`                      | Keyboard shortcuts guide        |

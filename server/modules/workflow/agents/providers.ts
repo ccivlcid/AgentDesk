@@ -5,7 +5,6 @@ import { createCredentialTools } from "./providers/credential-tools.ts";
 import { createUsageCliTools } from "./providers/usage-cli-tools.ts";
 import { createHttpAgentTools } from "./providers/http-agent-tools.ts";
 import { createApiProviderTools } from "./providers/api-provider-tools.ts";
-import { createInferenceLogger } from "../../local-llm/inference-logger.ts";
 
 export function initializeWorkflowAgentProviders(ctx: RuntimeContext): any {
   const __ctx: RuntimeContext = ctx;
@@ -125,8 +124,6 @@ export function initializeWorkflowAgentProviders(ctx: RuntimeContext): any {
     launchHttpAgent,
   } = httpAgentTools;
 
-  const inferenceLogger = createInferenceLogger(db as any);
-
   const apiProviderTools = createApiProviderTools({
     db,
     logsDir,
@@ -138,7 +135,6 @@ export function initializeWorkflowAgentProviders(ctx: RuntimeContext): any {
     createSafeLogStreamOps,
     parseSSEStream,
     parseGeminiSSEStream,
-    logInference: inferenceLogger.log,
   });
   const { executeApiProviderAgent, launchApiProviderAgent } = apiProviderTools;
 

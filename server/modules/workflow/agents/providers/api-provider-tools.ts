@@ -5,7 +5,6 @@ import type { DatabaseSync } from "node:sqlite";
 import { decryptSecret } from "../../../../oauth/helpers.ts";
 import logger from "../../../../lib/logger";
 import type { ApiProviderRow } from "./types.ts";
-import type { InferenceLogEntry } from "../../../local-llm/inference-logger.ts";
 
 type DbLike = Pick<DatabaseSync, "prepare">;
 
@@ -34,8 +33,6 @@ type CreateApiProviderToolsDeps = {
     safeWrite: (text: string) => boolean,
     taskId?: string,
   ) => Promise<void>;
-  /** Optional: called after each local LLM inference to record metrics */
-  logInference?: (entry: InferenceLogEntry) => void;
 };
 
 const COST_PER_INPUT_MTOK = parseFloat(process.env["COST_PER_INPUT_MTOK"] ?? "3");
@@ -53,7 +50,6 @@ export function createApiProviderTools(deps: CreateApiProviderToolsDeps) {
     createSafeLogStreamOps,
     parseSSEStream,
     parseGeminiSSEStream,
-    logInference,
   } = deps;
 
   async function parseAnthropicSSEStream(
@@ -279,24 +275,6 @@ export function createApiProviderTools(deps: CreateApiProviderToolsDeps) {
       } catch (err) {
         logger.warn({ err, taskId }, "[api-provider] Failed to record token cost event");
       }
-    }
-
-    // Record inference to local_llm_inference_log (for Monitor tab)
-    if (logInference && provider.type !== "anthropic" && provider.type !== "google") {
-      // Detect LM Studio by its default port (1234) since it's registered as type "openai"
-      const isLmStudio = provider.base_url.includes(":1234");
-      const backend = provider.type === "ollama" ? "ollama" : isLmStudio ? "lmstudio" : provider.type;
-      const tps = outputTokens > 0 && latencyMs > 0 ? (outputTokens / (latencyMs / 1000)) : null;
-      logInference({
-        backend,
-        model_name: model,
-        agent_id: agentId ?? null,
-        task_id: taskId ?? null,
-        prompt_tokens: inputTokens || null,
-        completion_tokens: outputTokens || null,
-        tokens_per_second: tps,
-        latency_ms: latencyMs,
-      });
     }
 
     safeWrite(`\n---\n[api:${provider.type}] Done.\n`);

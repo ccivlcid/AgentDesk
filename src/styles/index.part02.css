@@ -1,4 +1,4 @@
-/* ── Kanban column header overrides (TaskBoard -900 → light pastels) ── */
+/* ── Kanban column header overrides (-900 → light pastels) ── */
 [data-theme="light"] .bg-blue-900 {
   background-color: #dbeafe !important;
 }
@@ -94,7 +94,7 @@
   --tw-shadow-color: rgba(0, 0, 0, 0.08) !important;
 }
 
-/* ── bg-slate-950 (TaskBoard main, diff code blocks) ── */
+/* ── bg-slate-950 (diff code blocks) ── */
 [data-theme="light"] .bg-slate-950,
 [data-theme="light"] [class*="bg-slate-950"] {
   background-color: var(--th-bg-primary) !important;
@@ -158,7 +158,7 @@
   color: #fff !important;
 }
 
-/* ── TaskBoard action button text (already white via bg override) ── */
+/* ── Action button text overrides ── */
 [data-theme="light"] [class*="text-purple-200"] {
   color: #f5f3ff !important;
 }
@@ -175,7 +175,7 @@
   color: #dc2626 !important;
 }
 
-/* ── TaskBoard diff text colors for light mode readability ── */
+/* ── Diff text colors for light mode readability ── */
 [data-theme="light"] [class*="text-green-400"] {
   color: #16a34a !important;
 }
@@ -186,7 +186,7 @@
   color: #0891b2 !important;
 }
 
-/* ── TaskBoard type badge dark backgrounds → light tints ── */
+/* ── Type badge dark backgrounds → light tints ── */
 [data-theme="light"] [class*="bg-cyan-900"] {
   background-color: #cffafe !important;
 }

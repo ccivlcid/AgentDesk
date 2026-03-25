@@ -206,7 +206,7 @@ slate/gray utilities are remapped to `--th-*` variables:
 
 ### 4-7. Dock (`src/components/desktop/Dock.tsx`)
 
-- **Structure:** Bottom-fixed 4 app icons (⚡ Workflow / 📚 Library / ⚙ Settings / 💬 Chat).
+- **Structure:** Bottom-fixed 3 app icons (Orchestration / Library / Settings).
 - **Chrome:** `backdropFilter: blur(12px)` glassmorphism, macOS Dock feel.
 - **Icons:** Inactive `color: var(--th-text-secondary)`, hover `background: var(--th-hover-bg)`.
   Running (window open) icons show an amber dot below: `background: var(--th-accent)`.
@@ -268,7 +268,7 @@ slate/gray utilities are remapped to `--th-*` variables:
 - **Desktop:** `--th-bg-primary` background. `Desktop.tsx`
   - Desktop icon area.
 - **Dock:** `--th-bg-sidebar`, `backdropFilter: blur(12px)`, pinned to bottom. `Dock.tsx`
-  - 4 app icons (⚡📚⚙💬), amber dot for running apps.
+  - 3 app icons (Orchestration / Library / Settings), amber dot for running apps.
 - **App Windows:** `--th-bg-elevated`, `borderRadius: 10`, `boxShadow: 0 20px 60px rgba(0,0,0,0.9)`. `windows/*.tsx`
   - Window header: traffic lights + window title + tab bar.
 
@@ -295,28 +295,26 @@ slate/gray utilities are remapped to `--th-*` variables:
 
 ## 8. Complete Screen Inventory — macOS Desktop OS
 
-### Desktop Icons (7)
+### Desktop Icons
 
-| Icon | Label | Opens | Legacy View ID |
-|------|-------|-------|---------------|
-| 👤 | Agent Settings | AgentManagerWindow | `agents` |
-| 📁 | Create Project | ProjectCreateModal | — |
-| ▶ | Run Task | *(removed — use Add Tasks in TaskBoard)* | — |
-| ⚡ | Workflow Builder | WorkflowWindow (Builder tab) | `workflow-builder` |
-| 📋 | Library | LibraryWindow (Skills tab) | `skills` |
-| 💬 | Chat | ChatWindow | — |
-| >_ | Agent REPL | ReplWindow | (new) |
+| Label | Opens |
+|-------|-------|
+| Agent Settings | AgentManagerWindow |
+| Create Project | ProjectCreateModal |
+| Agent CLI | CliWindow |
+| Decision Inbox | DecisionInboxModal |
+| File Explorer | FileTreeWindow |
+| CLI Cost | CliCostWindow |
 
-### Dock App Windows (4)
+### Dock App Windows (3)
 
-| Dock | Window Component | Tabs | Legacy View ID |
-|------|-----------------|------|---------------|
-| ⚡ Workflow | `WorkflowWindow.tsx` | Workflow Builder / Scheduled Tasks | `workflow-builder`, `tasks-scheduled` |
-| 📚 Library | `LibraryWindow.tsx` | Skills / Agent Rules / Memory / Hooks / Deliverables | `skills`, `agent-rules`, `memory`, `hooks`, `tasks-deliverables` |
-| ⚙ Settings | `SettingsWindow.tsx` | General / API / OAuth / CLI / Gateway / Data / Project Types / Agents | `settings`, `project-types` |
-| 💬 Chat | `ChatWindow.tsx` | Direct / Group / Announcement | — |
+| Dock | Window Component | Tabs |
+|------|-----------------|------|
+| Orchestration | `orchestration/OrchestrationWindow.tsx` | Timeline / Logs / Agents / Room |
+| Library | `LibraryWindow.tsx` | Skills / Rules / Memory / Hooks |
+| Settings | `SettingsWindow.tsx` | General / API / OAuth / CLI / Data / Project Types / Agents |
 
-### Settings Window Tabs (8)
+### Settings Window Tabs (7)
 
 | Tab | Content |
 |-----|---------|
@@ -324,20 +322,19 @@ slate/gray utilities are remapped to `--th-*` variables:
 | API | API provider (Anthropic, OpenAI, etc.) configuration |
 | OAuth | OAuth account connection and management |
 | CLI | CLI auth, models, usage details |
-| Gateway | Messenger channel settings (Telegram/Discord/Slack) |
 | Data | Data export/import |
 | Project Types | Project type (template) management |
 | Agents | Agent and department management |
 
-### Modals / Overlays (36)
+### Modals / Overlays
 
 **Project:** ProjectCreateModal, ProjectManagerModal, MissingPathPromptDialog, ManualPathPickerDialog, ManualAssignmentWarningDialog
-**Task:** DiffModal, BulkHideModal, TaskReportPopup, ReportHistory
+**Task:** DiffModal, TaskReportPopup
 **Agent:** AgentFormModal, DepartmentFormModal, AgentDetail (slide panel), AgentStatusPanel
 **Terminal:** TerminalPanel (bottom drawer)
-**Chat:** ChatPanel, GroupChatPanel, DecisionInboxModal, ProjectFlowDialog
+**Decision:** DecisionInboxModal
 **Library:** CustomSkillModal, LearningModal (Skills), ClassroomOverlay, RuleFormModal, RuleLearningModal, RuleHistoryPanel, MemoryFormModal, MemoryLearningModal, HookFormModal, HookLearningModal, HookHistoryPanel
-**Settings:** ChannelGuideModal, ChatEditorModal, CategoryFormModal, GitHubImportPanel
+**Settings:** CategoryFormModal
 **Other:** CommandPalette, KeyboardShortcutsGuide, NotificationCenter, TextPreviewModal, ConfirmDialog
 
 ---

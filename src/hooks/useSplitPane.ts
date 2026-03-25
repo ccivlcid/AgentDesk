@@ -7,7 +7,7 @@ const MIN_SPLIT = 25;
 const MAX_SPLIT = 75;
 
 // Views allowed in secondary pane (monitoring/overview views)
-export const SECONDARY_VIEWS: View[] = ["heartbeat", "dashboard", "cli-usage"];
+export const SECONDARY_VIEWS: View[] = ["heartbeat", "cli-usage"];
 
 interface SplitPaneState {
   enabled: boolean;

@@ -70,7 +70,7 @@ export function createProgressNotifyTools(deps: CreateProgressNotifyToolsDeps) {
   function notifyClient(content: string, taskId: string | null = null, messageType: string = "status_update"): void {
     const msgId = randomUUID();
     const t = nowMs();
-    // Resolve project_id so pm-activity survives even after the task is deleted.
+    // Resolve project_id so records survive even after the task is deleted.
     let projectId: string | null = null;
     if (taskId) {
       const row = db.prepare("SELECT project_id FROM tasks WHERE id = ?").get(taskId) as { project_id: string | null } | undefined;

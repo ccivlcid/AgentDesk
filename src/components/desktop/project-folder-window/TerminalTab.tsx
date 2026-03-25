@@ -1,11 +1,9 @@
 import { useState, useEffect } from "react";
 import { useI18n } from "../../../i18n";
-import { useUiStore } from "../../../store/uiStore";
 import { detectProjectType } from "./detectProjectType";
 
-export function TerminalTab({ projectId, projectPath, projectName }: { projectId: string; projectPath: string | null; projectName: string }) {
+export function TerminalTab({ projectPath, projectName }: { projectPath: string | null; projectName: string }) {
   const { t } = useI18n();
-  const { openAppRunner } = useUiStore();
   const [runInfo, setRunInfo] = useState<ReturnType<typeof detectProjectType>>(null);
   const [loading, setLoading] = useState(false);
   const [opened, setOpened] = useState(false);
@@ -73,27 +71,6 @@ export function TerminalTab({ projectId, projectPath, projectName }: { projectId
               {projectPath}
             </div>
           </div>
-
-          {/* Run via App Runner */}
-          <button
-            type="button"
-            onClick={() => openAppRunner(projectId, true)}
-            style={{
-              display: "flex", alignItems: "center", gap: 6,
-              fontSize: 12, fontWeight: 700, padding: "7px 14px",
-              background: "rgba(34,197,94,0.12)",
-              border: "1px solid rgba(34,197,94,0.4)",
-              borderRadius: 6,
-              color: "#22c55e",
-              cursor: "pointer",
-              fontFamily: mono,
-              transition: "all 0.15s",
-              flexShrink: 0,
-            }}
-          >
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="5,3 19,12 5,21"/></svg>
-            {t({ ko: "AI 분석 & 실행", en: "AI Analyze & Run", ja: "AI分析 & 実行", zh: "AI分析 & 运行" })}
-          </button>
 
           {/* Open Terminal button */}
           <button
@@ -189,10 +166,10 @@ export function TerminalTab({ projectId, projectPath, projectName }: { projectId
           <div style={{ padding: "20px 0", display: "flex", flexDirection: "column", gap: 12 }}>
             <div style={{ fontSize: 11, color: "var(--th-text-secondary)", fontFamily: mono }}>
               {t({
-                ko: "프로젝트 타입을 자동으로 감지하지 못했습니다.\n터미널을 열고 직접 명령어를 입력하거나, 'AI 분석 & 실행'을 사용하세요.",
-                en: "Could not auto-detect project type.\nOpen a terminal manually, or use 'AI Analyze & Run'.",
-                ja: "プロジェクトタイプを自動検出できませんでした。\nターミナルを開くか、「AI分析 & 実行」を使用してください。",
-                zh: "无法自动检测项目类型。\n请打开终端或使用'AI分析 & 运行'。",
+                ko: "프로젝트 타입을 자동으로 감지하지 못했습니다.\n터미널을 열고 직접 명령어를 입력하세요.",
+                en: "Could not auto-detect project type.\nOpen a terminal and enter commands manually.",
+                ja: "プロジェクトタイプを自動検出できませんでした。\nターミナルを開いて手動でコマンドを入力してください。",
+                zh: "无法自动检测项目类型。\n请打开终端手动输入命令。",
               })}
             </div>
             <div style={{ fontSize: 10, color: "var(--th-text-muted)", fontFamily: mono, lineHeight: 1.8 }}>

@@ -88,11 +88,11 @@ export function registerCrudRoutes(deps: ProjectRoutesDeps): void {
       INSERT INTO projects (
         id, name, project_path, core_goal, default_pack_key, assignment_mode, category_id,
         directive, directive_type_slug,
-        last_used_at, created_at, updated_at, github_repo, figma_url, project_type, app_status
+        last_used_at, created_at, updated_at, github_repo, figma_url, project_type
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `,
-      ).run(id, name, projectPath, coreGoal, defaultPackKey, assignmentMode, categoryId, directive, directiveTypeSlug, t, t, t, githubRepo, figmaUrl, projectType, projectType === "app" ? "downloaded" : null);
+      ).run(id, name, projectPath, coreGoal, defaultPackKey, assignmentMode, categoryId, directive, directiveTypeSlug, t, t, t, githubRepo, figmaUrl, projectType);
 
       if (assignmentMode === "manual" && agentIds.length > 0) {
         // role_assignments: Array<{ agentId: string; role: string }>

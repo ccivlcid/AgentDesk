@@ -1,7 +1,6 @@
 import { useRef, useState, useCallback, useEffect } from "react";
 import { useUiStore } from "../../store/uiStore";
 import { useTheme } from "../../ThemeContext";
-import { isLightWallpaper } from "./WallpaperPicker";
 import { snapToFreeCell } from "./snapToFreeCell";
 
 const JIGGLE_STYLE = `
@@ -55,10 +54,10 @@ export default function DesktopIcon({
   onDragMove,
   onDragEnd
 }: DesktopIconProps) {
-  const { desktopIconLayout, setDesktopIconLayout, desktopIconLabels, setDesktopIconLabel, jiggleMode, wallpaper } = useUiStore();
+  const { desktopIconLayout, setDesktopIconLayout, desktopIconLabels, setDesktopIconLabel, jiggleMode } = useUiStore();
   const { theme } = useTheme();
-  // light = 라이트 테마이거나 라이트 배경화면인 경우
-  const light = theme === "light" || isLightWallpaper(wallpaper);
+  // light = 라이트 테마인 경우
+  const light = theme === "light";
 
   const saved = desktopIconLayout[def.id];
   const [pos, setPos] = useState({ x: saved?.x ?? defaultX, y: saved?.y ?? defaultY });

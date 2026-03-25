@@ -15,12 +15,10 @@ import type {
   CompanySettings,
   CompanyStats,
   Department,
-  Message,
   Task,
 } from "../types";
 import { mapWorkflowDecisionItemsLocalized } from "./decision-inbox";
 import { mergeSettingsWithDefaults, syncClientLanguage } from "./utils";
-import type { ProjectMetaPayload } from "./types";
 
 interface UseAppActionsParams {
   agents: Agent[];
@@ -32,10 +30,6 @@ interface UseAppActionsParams {
   setDepartments: Dispatch<SetStateAction<Department[]>>;
   setTasks: Dispatch<SetStateAction<Task[]>>;
   setStats: Dispatch<SetStateAction<CompanyStats | null>>;
-  setMessages: Dispatch<SetStateAction<Message[]>>;
-  setChatAgent: Dispatch<SetStateAction<Agent | null>>;
-  setShowChat: Dispatch<SetStateAction<boolean>>;
-  setUnreadAgentIds: Dispatch<SetStateAction<Set<string>>>;
   setDecisionInboxLoading: Dispatch<SetStateAction<boolean>>;
   setDecisionInboxItems: Dispatch<SetStateAction<DecisionInboxItem[]>>;
   setDecisionReplyBusyKey: Dispatch<SetStateAction<string | null>>;
@@ -52,10 +46,6 @@ export function useAppActions({
   setDepartments,
   setTasks,
   setStats,
-  setMessages,
-  setChatAgent,
-  setShowChat,
-  setUnreadAgentIds,
   setDecisionInboxLoading,
   setDecisionInboxItems,
   setDecisionReplyBusyKey,
@@ -66,62 +56,6 @@ export function useAppActions({
   const settingsRef = useRef(settings);
   settingsRef.current = settings;
   const settingsSaveRequestSeqRef = useRef(0);
-
-  const handleSendMessage = useCallback(
-    async (
-      content: string,
-      receiverType: "agent" | "department" | "all",
-      receiverId?: string,
-      messageType?: string,
-      projectMeta?: ProjectMetaPayload,
-    ) => {
-      try {
-        await api.sendMessage({
-          receiver_type: receiverType,
-          receiver_id: receiverId,
-          content,
-          message_type: (messageType as "chat" | "task_assign" | "report") || "chat",
-          project_id: projectMeta?.project_id,
-          project_path: projectMeta?.project_path,
-          project_context: projectMeta?.project_context,
-        });
-        // 서버가 즉시 `new_message` WS로 브로드캐스트하므로, 전체 재조회는 백그라운드로만 동기화 (응답 체감 지연 방지)
-        void api
-          .getMessages({ receiver_type: receiverType, receiver_id: receiverId, limit: 50 })
-          .then(setMessages)
-          .catch(() => {});
-      } catch (error) {
-        handleApiError(error, showToast, { context: "Send message failed" });
-      }
-    },
-    [setMessages, showToast],
-  );
-
-  const handleSendAnnouncement = useCallback(async (content: string) => {
-    try {
-      const projectId = useProjectStore.getState().currentProjectId;
-      await api.sendAnnouncement(content, projectId);
-    } catch (error) {
-      handleApiError(error, showToast, { context: "Announcement failed" });
-    }
-  }, [showToast]);
-
-  const handleSendDirective = useCallback(async (content: string, projectMeta?: ProjectMetaPayload) => {
-    try {
-      if (projectMeta?.project_id || projectMeta?.project_path || projectMeta?.project_context) {
-        await api.sendDirectiveWithProject({
-          content,
-          project_id: projectMeta.project_id,
-          project_path: projectMeta.project_path,
-          project_context: projectMeta.project_context,
-        });
-      } else {
-        await api.sendDirective(content);
-      }
-    } catch (error) {
-      handleApiError(error, showToast, { context: "Directive failed" });
-    }
-  }, [showToast]);
 
   const handleCreateTask = useCallback(
     async (input: {
@@ -342,24 +276,6 @@ export function useAppActions({
     }
   }, [settings.autoUpdateNoticePending, setSettings]);
 
-  const handleOpenChat = useCallback(
-    (agent: Agent) => {
-      setChatAgent(agent);
-      setShowChat(true);
-      setUnreadAgentIds((prev) => {
-        if (!prev.has(agent.id)) return prev;
-        const next = new Set(prev);
-        next.delete(agent.id);
-        return next;
-      });
-      api
-        .getMessages({ receiver_type: "agent", receiver_id: agent.id, limit: 50 })
-        .then(setMessages)
-        .catch(console.error);
-    },
-    [setChatAgent, setShowChat, setUnreadAgentIds, setMessages],
-  );
-
   const loadDecisionInbox = useCallback(async () => {
     setDecisionInboxLoading(true);
     try {
@@ -386,24 +302,10 @@ export function useAppActions({
   }, [loadDecisionInbox, openWindow]);
 
   const handleOpenDecisionChat = useCallback(
-    (agentId: string) => {
-      const matchedAgent = agents.find((agent) => agent.id === agentId);
-      if (!matchedAgent) {
-        showToast(
-          pickLang(normalizeLanguage(settings.language), {
-            ko: "요청 에이전트 정보를 찾지 못했습니다.",
-            en: "Could not find the requested agent.",
-            ja: "対象エージェント情報が見つかりません。",
-            zh: "未找到对应代理信息。",
-          }),
-          "error",
-        );
-        return;
-      }
+    (_agentId: string) => {
       closeWindow("decision-inbox");
-      handleOpenChat(matchedAgent);
     },
-    [agents, settings.language, closeWindow, handleOpenChat, showToast],
+    [closeWindow],
   );
 
   const handleReplyDecisionOption = useCallback(
@@ -523,28 +425,7 @@ export function useAppActions({
     setCliStatus(status);
   }, [setCliStatus]);
 
-  const handleOpenAnnouncement = useCallback(() => {
-    setChatAgent(null);
-    setShowChat(true);
-    api.getMessages({ receiver_type: "all", limit: 50 }).then(setMessages).catch(console.error);
-  }, [setChatAgent, setShowChat, setMessages]);
-
-  const handleClearMessages = useCallback(
-    async (agentId?: string) => {
-      try {
-        await api.clearMessages(agentId);
-        setMessages([]);
-      } catch (error) {
-        handleApiError(error, showToast, { context: "Clear messages failed" });
-      }
-    },
-    [setMessages, showToast],
-  );
-
   return {
-    handleSendMessage,
-    handleSendAnnouncement,
-    handleSendDirective,
     handleCreateTask,
     handleUpdateTask,
     handleDeleteTask,
@@ -555,14 +436,11 @@ export function useAppActions({
     handleResumeTask,
     handleSaveSettings,
     handleDismissAutoUpdateNotice,
-    handleOpenChat,
     loadDecisionInbox,
     handleOpenDecisionInbox,
     handleOpenDecisionChat,
     handleReplyDecisionOption,
     handleAgentsChange,
     handleRefreshCli,
-    handleOpenAnnouncement,
-    handleClearMessages,
   };
 }

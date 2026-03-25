@@ -1,4 +1,4 @@
-import { Component, useRef, useCallback, useEffect, useMemo, useState } from "react";
+import { Component, useRef, useCallback, useEffect, useState } from "react";
 import type { ReactNode, ErrorInfo } from "react";
 import { useWebSocket } from "./hooks/useWebSocket";
 import * as api from "./api";
@@ -66,16 +66,14 @@ export default function App() {
   // ── Agent store ──────────────────────────────────────────────────────────
   const {
     departments, agents, libraryAgents, subAgents, stats,
-    chatAgent, showChat, unreadAgentIds, streamingMessage,
     setDepartments, setAgents, setLibraryAgents, setSubAgents, setStats,
-    setChatAgent, setShowChat, setUnreadAgentIds, setStreamingMessage,
   } = useAgentStore();
 
   // ── Task store ───────────────────────────────────────────────────────────
   const {
-    tasks, messages, cliStatus, subtasks, taskPanel, taskReport,
+    tasks, cliStatus, subtasks, taskPanel,
     crossDeptDeliveries, clientOfficeCalls, meetingPresence, decisionInboxItems,
-    setTasks, setMessages, setCliStatus, setSubtasks, setTaskPanel, setTaskReport,
+    setTasks, setCliStatus, setSubtasks, setTaskPanel, setTaskReport,
     setCrossDeptDeliveries, setClientOfficeCalls, setMeetingPresence, setDecisionInboxItems,
   } = useTaskStore();
 
@@ -90,12 +88,12 @@ export default function App() {
   // ── UI store ─────────────────────────────────────────────────────────────
   const {
     view, loading, settings, oauthResult,
-    showReportHistory, showAgentStatus, showGroupChat, groupChatInitialAgentIds,
+    showAgentStatus,
     decisionInboxLoading, decisionReplyBusyKey,
     mobileNavOpen, mobileHeaderMenuOpen, runtimeOs, forceUpdateBanner,
     updateStatus, dismissedUpdateVersion,
     setView, setLoading, setSettings, setOauthResult,
-    setShowReportHistory, setShowAgentStatus, setShowGroupChat, setGroupChatInitialAgentIds,
+    setShowAgentStatus,
     setDecisionInboxLoading, setDecisionReplyBusyKey, openWindow,
     setMobileNavOpen, setMobileHeaderMenuOpen, setUpdateStatus, setDismissedUpdateVersion,
     addToast,
@@ -142,13 +140,6 @@ export default function App() {
     );
   }, [currentProjectId, setProjectAgentIds, setProjectAgentsLoaded]);
 
-  /** 전사 공지·단톡 등: 현재 선택 프로젝트에 배정된 에이전트만 (미선택·로딩 중·배정 0명은 빈 배열) */
-  const projectAgents = useMemo(() => {
-    if (!currentProjectId) return [];
-    if (!projectAgentsLoaded) return [];
-    return agents.filter((a) => projectAgentIds.has(a.id));
-  }, [agents, projectAgentIds, projectAgentsLoaded, currentProjectId]);
-
   // ── Refs for WebSocket callbacks ─────────────────────────────────────────
   // WebSocket 이벤트 핸들러는 마운트 시 한 번만 등록되므로, 최신 state를
   // 클로저로 캡처할 수 없다. ref를 매 렌더마다 동기화해서 핸들러가 항상
@@ -167,18 +158,6 @@ export default function App() {
   const codexThreadBindingTsRef = useRef<Map<string, number>>(new Map());
   // subAgent 스트림 마지막 청크 (중복 tail 제거용)
   const subAgentStreamTailRef = useRef<Map<string, string>>(new Map());
-  // 채팅 오버레이/윈도우 열림 여부 + 현재 채팅 대상 (알림 뱃지 제어에 사용)
-  const chatWindowOpen = useUiStore((s) => s.openWindows.has("chat"));
-  const activeChatRef = useRef({ showChat: showChat || chatWindowOpen, agentId: chatAgent?.id ?? null });
-  activeChatRef.current = { showChat: showChat || chatWindowOpen, agentId: chatAgent?.id ?? null };
-
-  // 채팅 윈도우가 열리면 모든 unread 배지 제거
-  useEffect(() => {
-    if (chatWindowOpen) {
-      setUnreadAgentIds((prev) => (prev.size === 0 ? prev : new Set()));
-    }
-  }, [chatWindowOpen, setUnreadAgentIds]);
-
   // ── Hooks ────────────────────────────────────────────────────────────────
   const { connected, on } = useWebSocket();
   const shouldIncludeSeedAgents = useCallback(() => false, []);
@@ -222,11 +201,11 @@ export default function App() {
   // WebSocket 이벤트 → 스토어 실시간 반영 (task/agent/message/cli_output 등)
   useRealtimeSync({
     on, connected, scheduleLiveSync,
-    agentsRef, tasksRef, subAgentsRef, viewRef, activeChatRef,
+    agentsRef, tasksRef, subAgentsRef, viewRef,
     codexThreadToSubAgentIdRef, codexThreadBindingTsRef, subAgentStreamTailRef,
-    setTasks, setAgents, setMessages, setUnreadAgentIds, setTaskReport,
+    setTasks, setAgents, setTaskReport,
     setCrossDeptDeliveries, setClientOfficeCalls, setMeetingPresence,
-    setSubtasks, setSubAgents, setStreamingMessage,
+    setSubtasks, setSubAgents,
     onTaskDone, onTaskFailed,
   });
 
@@ -234,7 +213,6 @@ export default function App() {
   const actions = useAppActions({
     agents, settings, scheduleLiveSync,
     setSettings, setAgents, setLibraryAgents, setDepartments, setTasks, setStats,
-    setMessages, setChatAgent, setShowChat, setUnreadAgentIds,
     setDecisionInboxLoading, setDecisionInboxItems,
     setDecisionReplyBusyKey, setCliStatus,
   });
@@ -286,26 +264,11 @@ export default function App() {
       oauthResult={oauthResult}
       onOauthResultClear={() => setOauthResult(null)}
       onAgentsChange={actions.handleAgentsChange}
-      onSendMessage={actions.handleSendMessage}
-      onSendAnnouncement={actions.handleSendAnnouncement}
-      onSendDirective={actions.handleSendDirective}
-      onClearMessages={actions.handleClearMessages}
       onProjectCreate={() => setShowProjectCreate(true)}
       onOpenDecisionInbox={() => { openWindow("decision-inbox"); void actions.loadDecisionInbox(); }}
-      onOpenReportHistory={() => { /* handled by openWindows["reports"] */ }}
     >
       <AppOverlays
-        showChat={showChat}
-        chatAgent={chatAgent}
-        messages={messages}
         agents={agents}
-        groupChatAgents={projectAgents}
-        streamingMessage={streamingMessage}
-        onSendMessage={actions.handleSendMessage}
-        onSendAnnouncement={actions.handleSendAnnouncement}
-        onSendDirective={actions.handleSendDirective}
-        onClearMessages={actions.handleClearMessages}
-        onCloseChat={() => setShowChat(false)}
         decisionInboxLoading={decisionInboxLoading}
         decisionInboxItems={decisionInboxItems}
         decisionReplyBusyKey={decisionReplyBusyKey}
@@ -316,16 +279,8 @@ export default function App() {
         taskPanel={taskPanel}
         tasks={tasks}
         onCloseTaskPanel={() => setTaskPanel(null)}
-        taskReport={taskReport}
-        onCloseTaskReport={() => setTaskReport(null)}
-        showReportHistory={false}
-        onCloseReportHistory={() => { /* no-op */ }}
         showAgentStatus={showAgentStatus}
         onCloseAgentStatus={() => setShowAgentStatus(false)}
-        showGroupChat={showGroupChat}
-        groupChatInitialAgentIds={groupChatInitialAgentIds}
-        onCloseGroupChat={() => { setShowGroupChat(false); setGroupChatInitialAgentIds([]); }}
-        onOpenGroupChatWithAgents={(agentIds) => { setGroupChatInitialAgentIds(agentIds); setShowGroupChat(true); }}
       />
       {showProjectCreate && (
         <ProjectCreateModal

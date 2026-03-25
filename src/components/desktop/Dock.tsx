@@ -1,15 +1,14 @@
 import { useRef, useState } from "react";
 import type { WindowType } from "../../app/types";
 import { useUiStore } from "../../store/uiStore";
-import { useAgentStore } from "../../store/agentStore";
 import { useTaskStore } from "../../store/taskStore";
 import { IconDecisions } from "./DesktopIcons";
 import { useTheme } from "../../ThemeContext";
 import { useI18n } from "../../i18n";
 import {
-  IconDockWorkflow, IconDockLibrary, IconDockSettings, IconDockChat, IconDockTasks, IconRepoStore,
-  IconDockSynapse, IconAgents, IconReports, IconImageStudio, IconLocalLlm,
-  IconAlerts, IconFileTree, IconRepl, IconDashboard,
+  IconDockLibrary, IconDockSettings, IconRepoStore,
+  IconAgents,
+  IconFileTree, IconRepl,
 } from "./DesktopIcons";
 import DockBadge from "./DockBadge";
 
@@ -17,13 +16,7 @@ import DockBadge from "./DockBadge";
 const EXTRA_WIN_META: Partial<Record<WindowType, { icon: (c: string) => React.ReactNode; label: string; accent: string }>> = {
   "agent-manager":  { icon: (c) => <IconAgents color={c} />,       label: "Agents",       accent: "#a78bfa" },
   cli:              { icon: (c) => <IconRepl color={c} />,          label: "CLI",          accent: "#34d399" },
-  reports:          { icon: (c) => <IconReports color={c} />,       label: "Reports",      accent: "#60a5fa" },
-  synapse:          { icon: (c) => <IconDockSynapse color={c} />,   label: "Synapse",      accent: "#f472b6" },
-  "image-studio":   { icon: (c) => <IconImageStudio color={c} />,   label: "Images",       accent: "#fb923c" },
-  "local-llm":      { icon: (c) => <IconLocalLlm color={c} />,      label: "Local LLM",   accent: "#818cf8" },
-  alerts:           { icon: (c) => <IconAlerts color={c} />,        label: "Alerts",       accent: "#f87171" },
   "file-tree":      { icon: (c) => <IconFileTree color={c} />,      label: "Files",        accent: "#4ade80" },
-  dashboard:        { icon: (c) => <IconDashboard color={c} />,     label: "Dashboard",    accent: "#facc15" },
   "decision-inbox": { icon: (c) => <IconDecisions color={c} />,     label: "Decisions",    accent: "#ff453a" },
 };
 
@@ -38,7 +31,6 @@ interface DockProps {
 export default function Dock({ onCreateProject, onCreateAgent, onImportRepo }: DockProps) {
   const { openWindows, toggleWindow, minimizedWindows, restoreWindow, dockAutoHide } = useUiStore();
   const [dockHovered, setDockHovered] = useState(false);
-  const { agents, unreadAgentIds } = useAgentStore();
   const { tasks, decisionInboxItems } = useTaskStore();
   const { theme } = useTheme();
   const { t } = useI18n();
@@ -46,29 +38,24 @@ export default function Dock({ onCreateProject, onCreateAgent, onImportRepo }: D
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  const workingAgentCount = agents.filter((a) => a.status === "working").length;
-  const activeTaskCount = tasks.filter((t) => ["in_progress", "collaborating", "review"].includes(t.status)).length;
-  const failedTaskCount = tasks.filter((t) => t.execution_state === "failed").length;
+  const activeTaskCount = tasks.filter((t: { status: string }) => ["in_progress", "collaborating", "review"].includes(t.status)).length;
+  const failedTaskCount = tasks.filter((t: { execution_state?: string }) => t.execution_state === "failed").length;
   const tasksBadgeCount = failedTaskCount > 0 ? failedTaskCount : activeTaskCount;
   const tasksBadgeType = failedTaskCount > 0 ? "red" as const : "amber" as const;
-  const chatUnreadCount = unreadAgentIds.size;
 
   const DOCK_ITEMS: Array<{ id: WindowType; icon: (c: string) => React.ReactNode; label: string; accentColor: string; gradient: string; badge?: number; badgeType?: "amber" | "red" | "blue" }> = [
     {
       id: "tasks",
-      icon: (c) => <IconDockTasks color={c} />,
-      label: t({ ko: "업무보드", en: "Board", ja: "タスクボード", zh: "工作看板" }),
+      icon: (c) => (
+        <svg viewBox="0 0 24 24" fill="none" stroke={c} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" width={24} height={24}>
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+        </svg>
+      ),
+      label: t({ ko: "Orchestration", en: "Orchestration", ja: "Orchestration", zh: "Orchestration" }),
       accentColor: "#ff9f0a",
       gradient: "linear-gradient(145deg, #ffb340 0%, #ff9f0a 60%, #e8820a 100%)",
       badge: tasksBadgeCount || undefined,
       badgeType: tasksBadgeType,
-    },
-    {
-      id: "workflow",
-      icon: (c) => <IconDockWorkflow color={c} />,
-      label: t({ ko: "워크플로", en: "Workflow", ja: "ワークフロー", zh: "工作流" }),
-      accentColor: "#007aff",
-      gradient: "linear-gradient(145deg, #409cff 0%, #007aff 60%, #0056cc 100%)",
     },
     {
       id: "library",
@@ -83,22 +70,6 @@ export default function Dock({ onCreateProject, onCreateAgent, onImportRepo }: D
       label: t({ ko: "설정", en: "Settings", ja: "設定", zh: "设置" }),
       accentColor: "#8e8e93",
       gradient: "linear-gradient(145deg, #aeaeb2 0%, #8e8e93 60%, #6c6c70 100%)",
-    },
-    {
-      id: "chat",
-      icon: (c) => <IconDockChat color={c} />,
-      label: t({ ko: "채팅", en: "Chat", ja: "チャット", zh: "聊天" }),
-      accentColor: "#5e5ce6",
-      gradient: "linear-gradient(145deg, #7d7aff 0%, #5e5ce6 60%, #4a48c2 100%)",
-      badge: chatUnreadCount || undefined,
-      badgeType: "blue",
-    },
-    {
-      id: "dashboard" as WindowType,
-      icon: (c) => <IconDashboard color={c} />,
-      label: t({ ko: "대시보드", en: "Dashboard", ja: "ダッシュボード", zh: "控制台" }),
-      accentColor: "#facc15",
-      gradient: "linear-gradient(145deg, #fde047 0%, #facc15 60%, #eab308 100%)",
     },
   ];
 

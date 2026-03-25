@@ -9,7 +9,7 @@ import { loadHistory, saveHistory } from "./historyStorage";
 import { SHORTCUT_MAP } from "./constants";
 import { getQuickActions } from "./getQuickActions";
 import { buildPaletteModel } from "./buildPaletteModel";
-import type { CommandPaletteProps, PaletteItem, WfTemplate } from "./types";
+import type { CommandPaletteProps, PaletteItem } from "./types";
 import { CommandPaletteSearchSection } from "./CommandPaletteSearchSection";
 import { CommandPaletteResults } from "./CommandPaletteResults";
 import { CommandPaletteFooter } from "./CommandPaletteFooter";
@@ -33,7 +33,6 @@ export default function CommandPalette({
 
   const [deliverables, setDeliverables] = useState<DeliverableItem[]>([]);
   const [hooks, setHooks] = useState<HookEntry[]>([]);
-  const [workflows, setWorkflows] = useState<WfTemplate[]>([]);
   const lazyLoaded = useRef(false);
 
   useEffect(() => {
@@ -46,10 +45,6 @@ export default function CommandPalette({
         lazyLoaded.current = true;
         getDeliverables().then(setDeliverables).catch(() => {});
         getHooks().then(setHooks).catch(() => {});
-        fetch("/api/composition-templates")
-          .then((r) => r.json())
-          .then((d: { templates?: WfTemplate[] }) => setWorkflows(d.templates ?? []))
-          .catch(() => {});
       }
     } else {
       lazyLoaded.current = false;
@@ -70,9 +65,8 @@ export default function CommandPalette({
         currentProject,
         deliverables,
         hooks,
-        workflows,
       ),
-    [query, quickActions, history, agents, tasks, projects, currentProject, deliverables, hooks, workflows],
+    [query, quickActions, history, agents, tasks, projects, currentProject, deliverables, hooks],
   );
 
   const { items } = model;
@@ -97,9 +91,6 @@ export default function CommandPalette({
     } else if (item.kind === "hook") {
       saveHistory(`hook:${item.hook.id}`);
       onNavigate("hooks");
-    } else if (item.kind === "workflow") {
-      saveHistory(`workflow:${item.wf.id}`);
-      onNavigate("workflow");
     }
     onClose();
   }, [onClose, onNavigate, onSelectProject]);

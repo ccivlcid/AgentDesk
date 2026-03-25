@@ -1,43 +1,16 @@
-import type { TaskReportDetail } from "../api";
-import { ChatPanel } from "../components/ChatPanel";
-import GroupChatPanel from "../components/chat-panel/GroupChatPanel";
 import DecisionInboxModal from "../components/DecisionInboxModal";
 import TerminalPanel from "../components/TerminalPanel";
-import TaskReportPopup from "../components/TaskReportPopup";
 import AgentStatusPanel from "../components/AgentStatusPanel";
 import DirectiveEditModal from "../components/project-create-modal/DirectiveEditModal";
 import type { DecisionInboxItem } from "../components/chat/decision-inbox";
-import type { Agent, Message, Task } from "../types";
+import type { Agent, Task } from "../types";
 import type { UiLanguage } from "../i18n";
-import type { ProjectMetaPayload, TaskPanelTab } from "./types";
-import { useAgentStore } from "../store/agentStore";
+import type { TaskPanelTab } from "./types";
 import { useProjectStore } from "../store/projectStore";
 import { useUiStore } from "../store/uiStore";
 
 interface AppOverlaysProps {
-  showChat: boolean;
-  chatAgent: Agent | null;
-  messages: Message[];
   agents: Agent[];
-  groupChatAgents: Agent[];
-  streamingMessage: {
-    message_id: string;
-    agent_id: string;
-    agent_name: string;
-    agent_avatar: string;
-    content: string;
-  } | null;
-  onSendMessage: (
-    content: string,
-    receiverType: "agent" | "department" | "all",
-    receiverId?: string,
-    messageType?: string,
-    projectMeta?: ProjectMetaPayload,
-  ) => Promise<void>;
-  onSendAnnouncement: (content: string) => Promise<void>;
-  onSendDirective: (content: string, projectMeta?: ProjectMetaPayload) => Promise<void>;
-  onClearMessages: (agentId?: string) => Promise<void>;
-  onCloseChat: () => void;
   decisionInboxLoading: boolean;
   decisionInboxItems: DecisionInboxItem[];
   decisionReplyBusyKey: string | null;
@@ -52,30 +25,12 @@ interface AppOverlaysProps {
   taskPanel: { taskId: string; tab: TaskPanelTab } | null;
   tasks: Task[];
   onCloseTaskPanel: () => void;
-  taskReport: TaskReportDetail | null;
-  onCloseTaskReport: () => void;
-  showReportHistory: boolean;
-  onCloseReportHistory: () => void;
   showAgentStatus: boolean;
   onCloseAgentStatus: () => void;
-  showGroupChat: boolean;
-  groupChatInitialAgentIds?: string[];
-  onCloseGroupChat: () => void;
-  onOpenGroupChatWithAgents?: (agentIds: string[]) => void;
 }
 
 export default function AppOverlays({
-  showChat,
-  chatAgent,
-  messages,
   agents,
-  groupChatAgents,
-  streamingMessage,
-  onSendMessage,
-  onSendAnnouncement,
-  onSendDirective,
-  onClearMessages,
-  onCloseChat,
   decisionInboxLoading,
   decisionInboxItems,
   decisionReplyBusyKey,
@@ -86,47 +41,15 @@ export default function AppOverlays({
   taskPanel,
   tasks,
   onCloseTaskPanel,
-  taskReport,
-  onCloseTaskReport,
-  showReportHistory: _showReportHistory,
-  onCloseReportHistory: _onCloseReportHistory,
   showAgentStatus,
   onCloseAgentStatus,
-  showGroupChat,
-  groupChatInitialAgentIds,
-  onCloseGroupChat,
-  onOpenGroupChatWithAgents,
 }: AppOverlaysProps) {
-  const { departments } = useAgentStore();
   const { editDirectiveProjectId } = useProjectStore();
   const { openWindows, closeWindow } = useUiStore();
 
   return (
     <>
       {editDirectiveProjectId && <DirectiveEditModal />}
-
-      {showGroupChat && (
-        <GroupChatPanel
-          agents={groupChatAgents}
-          initialAgentIds={groupChatInitialAgentIds}
-          onClose={onCloseGroupChat}
-        />
-      )}
-
-      {showChat && (
-        <ChatPanel
-          selectedAgent={chatAgent}
-          messages={messages}
-          agents={agents}
-          broadcastAgents={groupChatAgents}
-          streamingMessage={streamingMessage}
-          onSendMessage={onSendMessage}
-          onSendAnnouncement={onSendAnnouncement}
-          onSendDirective={onSendDirective}
-          onClearMessages={onClearMessages}
-          onClose={onCloseChat}
-        />
-      )}
 
       {openWindows.has("decision-inbox") && (
         <DecisionInboxModal
@@ -139,7 +62,6 @@ export default function AppOverlays({
           onRefresh={onRefreshDecisionInbox}
           onReplyOption={onReplyDecisionOption}
           onOpenChat={onOpenDecisionChat}
-          onOpenGroupChat={onOpenGroupChatWithAgents}
         />
       )}
 
@@ -155,16 +77,6 @@ export default function AppOverlays({
           )}
           agents={agents}
           onClose={onCloseTaskPanel}
-        />
-      )}
-
-      {taskReport && (
-        <TaskReportPopup
-          report={taskReport}
-          agents={agents}
-          departments={departments}
-          uiLanguage={uiLanguage}
-          onClose={onCloseTaskReport}
         />
       )}
 

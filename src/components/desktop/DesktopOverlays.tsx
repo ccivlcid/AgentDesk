@@ -20,7 +20,6 @@ export interface DesktopOverlaysProps {
   sortByDefault: () => void;
   sortByLastUsed: () => void;
   snapToGrid: () => void;
-  setShowWallpaperPicker: (v: boolean) => void;
   setNewFolderPos: (v: { x: number; y: number } | null) => void;
   setNewFolderName: (v: string) => void;
   setShowMarkdownEditor: (v: boolean) => void;
@@ -67,7 +66,6 @@ export function DesktopOverlays({
   sortByDefault,
   sortByLastUsed,
   snapToGrid,
-  setShowWallpaperPicker,
   setNewFolderPos,
   setNewFolderName,
   setShowMarkdownEditor,
@@ -132,11 +130,6 @@ export function DesktopOverlays({
             },
             { type: "separator" },
             { type: "section", label: t({ ko: "바탕화면", en: "DESKTOP", ja: "デスクトップ", zh: "桌面" }) },
-            {
-              label: t({ ko: "배경화면 변경", en: "Change Wallpaper", ja: "壁紙を変更", zh: "更换壁纸" }),
-              icon: "🖼",
-              onClick: () => setShowWallpaperPicker(true),
-            },
             {
               label: t({ ko: "새 폴더", en: "New Folder", ja: "新規フォルダ", zh: "新建文件夹" }),
               icon: "📁",
@@ -251,7 +244,6 @@ export function DesktopOverlays({
         onNavigate={(view) => {
           setShowCommandPalette(false);
           const viewWindowMap: Record<string, () => void> = {
-            "workflow-builder": () => openWindow("workflow"),
             skills: () => openWindow("library"),
             "agent-rules": () => openWindow("library"),
             memory: () => openWindow("library"),

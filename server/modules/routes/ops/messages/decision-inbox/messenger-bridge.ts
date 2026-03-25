@@ -406,9 +406,10 @@ export function createDecisionInboxMessengerBridge(deps: DecisionBridgeDeps) {
     if (!text) return { handled: false, status: 200, payload: {} };
 
     const body = (input.body ?? {}) as Record<string, unknown>;
+    const normalizedTarget = normalizeTextField(input.targetId);
     const explicitRoute =
-      isMessengerChannel(input.channel) && normalizeTextField(input.targetId)
-        ? { channel: input.channel, targetId: normalizeTextField(input.targetId)! }
+      input.channel && isMessengerChannel(input.channel) && normalizedTarget
+        ? { channel: input.channel, targetId: normalizedTarget }
         : null;
     const fallbackRoute = resolveSourceChatRoute({
       source: normalizeTextField(input.source),

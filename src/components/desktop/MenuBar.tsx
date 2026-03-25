@@ -148,7 +148,6 @@ interface MenuBarProps {
   connected: boolean;
   totalCostToday?: string;
   notificationSlot?: React.ReactNode;
-  onOpenWallpaperPicker?: () => void;
   onOpenMissionControl?: () => void;
   onOpenUserGuide?: () => void;
   onOpenCommandPalette?: () => void;
@@ -168,7 +167,6 @@ export default function MenuBar({
   connected,
   totalCostToday,
   notificationSlot,
-  onOpenWallpaperPicker,
   onOpenMissionControl,
   onOpenUserGuide,
   onOpenCommandPalette,
@@ -355,16 +353,6 @@ export default function MenuBar({
               AgentDesk v1.0
             </div>
             <div style={menuSepStyle} />
-
-            {/* 배경화면 */}
-            <button
-              style={menuItemStyle}
-              onClick={() => menuAction(onOpenWallpaperPicker)}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--th-accent-glow)"; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "none"; }}
-            >
-              <span>{t({ ko: "배경화면 변경...", en: "Change Wallpaper...", ja: "壁紙を変更...", zh: "更换壁纸..." })}</span>
-            </button>
 
             {/* 다크/라이트 모드 전환 */}
             <button

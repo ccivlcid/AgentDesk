@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useI18n } from "../../i18n";
 import { getTaskDiff, mergeTask, discardTask, type TaskDiffResult } from "../../api";
-import DiffModal from "../taskboard/DiffModal";
+import DiffModal from "./DiffModal";
 import { useConfirm } from "../ui/ConfirmDialog";
 
 interface GitSectionProps {

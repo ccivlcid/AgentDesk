@@ -98,7 +98,6 @@
 
 - PM orchestrator handles all decisions automatically
 - Decision Inbox: returns empty array, displays "Autonomous mode" message
-- PM Activity: hides approval/revision buttons
 - User cannot approve/hold/cancel — PM has full authority
 
 ---
@@ -113,7 +112,6 @@
 | `server/modules/workflow/orchestration/review-finalize-tools/ship-automation.ts` | Version bump + CHANGELOG |
 | `server/modules/workflow/orchestration/run-complete-handler/error-analysis.ts` | Error pattern matching + sanitization |
 | `server/modules/agent-runtime/execution-loop.ts` | CLI/API mode agent execution |
-| `server/modules/routes/core/projects/pm-activity.ts` | PM Activity API |
 | `prompts/system/project-kickoff.md` | Kickoff LLM prompt (no agent_name, includes task_type) |
 | `prompts/system/agent-runtime.md` | Agent runtime system prompt (evidence-based rules) |
 | `prompts/system/app-analysis-system.md` | App analysis system prompt |
@@ -122,24 +120,6 @@
 | `prompts/pm/project-review.md` | PM project-level review prompt (SATISFIED/GAPS_FOUND) |
 | `prompts/pm/handle-failure.md` | PM failure handling (3-strike escalation) |
 | `prompts/pm/auto-learn.md` | PM auto-learning (rules/memory extraction) |
-
----
-
-## PM Activity Panel
-
-**Location**: Right slide panel (`src/components/desktop/RightShelf.tsx`)
-
-**Trigger**: Glowing orange line on the right edge → slides in on mouse hover
-
-**Data Source** (`GET /api/projects/:id/pm-activity`):
-1. `task_logs` (system + pm_oversight) — task status changes, PM assignment/approval/rejection
-2. `messages` — PM report messages
-3. `project_review_decision_events` — review decision events
-4. `meeting_minutes` + `meeting_minute_entries` — kickoff/review meeting minutes
-
-**Filters**: All / Meeting Minutes / Instructions / Status / Review / Reports
-
-**Real-time refresh**: WebSocket `pm_activity` + `task_update` events
 
 ---
 

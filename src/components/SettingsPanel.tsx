@@ -6,11 +6,9 @@ import type { OAuthCallbackResult } from "../App";
 import { LANGUAGE_STORAGE_KEY, LANGUAGE_USER_SET_STORAGE_KEY, normalizeLanguage, useI18n } from "../i18n";
 import ApiSettingsTab from "./settings/ApiSettingsTab";
 import CliSettingsTab from "./settings/CliSettingsTab";
-import GatewaySettingsTab from "./settings/GatewaySettingsTab";
 import GeneralSettingsTab from "./settings/GeneralSettingsTab";
 import OAuthSettingsTab from "./settings/OAuthSettingsTab";
 import DataSettingsTab from "./settings/DataSettingsTab";
-import LocalLlmSettingsTab from "./local-llm/LocalLlmSettingsTab";
 import SettingsTabNav from "./settings/SettingsTabNav";
 import { useConfirm } from "./ui/ConfirmDialog";
 import type { AccountDraftMap, AccountDraftPatch, LocalSettings, SettingsTab } from "./settings/types";
@@ -550,19 +548,7 @@ export default function SettingsPanel({
 
       {tab === "api" && <ApiSettingsTab t={t} localeTag={localeTag} apiState={apiState} />}
 
-      {tab === "gateway" && (
-        <GatewaySettingsTab
-          t={t}
-          form={form}
-          setForm={setForm}
-          persistSettings={persistSettings}
-          managerAgents={managerAgents}
-        />
-      )}
-
       {tab === "data" && <DataSettingsTab t={t} />}
-
-      {tab === "local-llm" && <LocalLlmSettingsTab />}
           </div>
         </div>
       </div>

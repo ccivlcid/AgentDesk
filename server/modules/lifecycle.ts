@@ -5,15 +5,11 @@ import path from "path";
 import { execSync } from "node:child_process";
 import { HOST, PKG_VERSION, PORT } from "../config/runtime.ts";
 import logger from "../lib/logger.ts";
-import { startDiscordReceiver } from "../messenger/discord-receiver.ts";
-import { startTelegramReceiver } from "../messenger/telegram-receiver.ts";
-import { startSlackReceiver } from "../messenger/slack-receiver.ts";
+// messenger receivers removed (Chat/Messenger system deleted)
 import { registerGracefulShutdownHandlers } from "./lifecycle/register-graceful-shutdown.ts";
-import { startWorkflowScheduler } from "./workflow/workflow-scheduler.ts";
-import { startOllama, getOllamaRunning } from "./local-llm/backend-manager.ts";
-import { startMetricsPoller } from "./local-llm/metrics-collector.ts";
-import { startObsidianWatcher } from "./synapse/obsidian-watcher.ts";
-import { startNotionPoller } from "./synapse/notion-poller.ts";
+// workflow scheduler removed (workflow builder UI removed)
+// local-llm management removed (backend-manager, metrics-collector)
+// synapse watchers removed
 import { rotateBreaks } from "./lifecycle/break-rotation.ts";
 import { recoverOrphanInProgressTasks } from "./lifecycle/recover-orphan-in-progress-tasks.ts";
 import type { InProgressRecoveryReason } from "./lifecycle/recover-orphan-in-progress-tasks.ts";
@@ -163,49 +159,7 @@ export function startLifecycle(ctx: RuntimeContext): void {
   setInterval(() => recoverOrphanBound("interval"), IN_PROGRESS_ORPHAN_SWEEP_MS);
   setTimeout(sweepPendingSubtaskDelegationsBound, 4_000);
   setInterval(sweepPendingSubtaskDelegationsBound, SUBTASK_DELEGATION_SWEEP_MS);
-  const noopReceiver = { stop: () => {} };
-  let telegramReceiver = noopReceiver;
-  let discordReceiver = noopReceiver;
-  let slackReceiver = noopReceiver;
-  try {
-    telegramReceiver = startTelegramReceiver({ db });
-  } catch (err) {
-    logger.warn({ err }, "[messenger] Telegram receiver failed to start");
-  }
-  try {
-    discordReceiver = startDiscordReceiver({ db });
-  } catch (err) {
-    logger.warn({ err }, "[messenger] Discord receiver failed to start");
-  }
-  try {
-    slackReceiver = startSlackReceiver({ db });
-  } catch (err) {
-    logger.warn({ err }, "[messenger] Slack receiver failed to start");
-  }
-
-  setTimeout(async () => {
-    try {
-      const row = db.prepare("SELECT auto_start, port FROM local_llm_backends WHERE name='ollama'").get() as
-        | { auto_start: number; port: number }
-        | undefined;
-      const autoStart = row?.auto_start ?? 1;
-      const port = row?.port ?? 11434;
-      if (autoStart && !(await getOllamaRunning(port))) {
-        const result = await startOllama();
-        if (result.ok) {
-          logger.info("[local-llm] Ollama auto-started");
-          broadcast("local_llm_status", { backend: "ollama", running: true });
-        }
-      }
-    } catch (err) {
-      logger.debug({ err }, "[local-llm] auto-start check error");
-    }
-  }, 5_000);
-
-  startMetricsPoller(broadcast);
-
-  const obsidianWatcher = startObsidianWatcher(db, broadcast);
-  const notionPoller = startNotionPoller(db, broadcast);
+  // messenger receivers removed (Chat/Messenger system deleted)
 
   // In dev mode, kill any stale process occupying our port before binding.
   // This prevents cascading "Port already in use" → "database is locked" errors
@@ -323,8 +277,6 @@ export function startLifecycle(ctx: RuntimeContext): void {
     });
   });
 
-  const stopWorkflowScheduler = startWorkflowScheduler(db, nowMs);
-
   registerGracefulShutdownHandlers({
     activeProcesses,
     stopRequestedTasks,
@@ -337,12 +289,7 @@ export function startLifecycle(ctx: RuntimeContext): void {
     wss,
     server,
     onBeforeClose: () => {
-      stopWorkflowScheduler();
-      obsidianWatcher.stop();
-      notionPoller.stop();
-      telegramReceiver.stop();
-      discordReceiver.stop();
-      slackReceiver.stop();
+      // messenger receivers removed
     },
   });
 }

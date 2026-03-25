@@ -1,21 +1,18 @@
-export const MESSENGER_CHANNELS = [
-  "telegram",
-  "whatsapp",
-  "discord",
-  "googlechat",
-  "slack",
-  "signal",
-  "imessage",
-] as const;
+/**
+ * Stub — messenger/channels has been removed (Chat/Messenger system deleted).
+ * These no-op exports keep call sites compiling.
+ */
 
-export type MessengerChannel = (typeof MESSENGER_CHANNELS)[number];
+export type MessengerChannel = string;
 
-export const NATIVE_MESSENGER_CHANNELS = [...MESSENGER_CHANNELS] as const;
-
-export function isMessengerChannel(value: unknown): value is MessengerChannel {
-  return typeof value === "string" && (MESSENGER_CHANNELS as readonly string[]).includes(value);
+/** Always returns false — messenger removed. */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function isMessengerChannel(_ch: string): boolean {
+  return false;
 }
 
-export function isNativeMessengerChannel(value: unknown): value is (typeof NATIVE_MESSENGER_CHANNELS)[number] {
-  return typeof value === "string" && (NATIVE_MESSENGER_CHANNELS as readonly string[]).includes(value);
+/** Always returns false — messenger removed. */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function isNativeMessengerChannel(_ch: string): boolean {
+  return false;
 }

@@ -8,15 +8,13 @@ import type {
   CliStatusMap,
   CompanySettings,
   Department,
-  MessengerChannelType,
-  MessengerSessionConfig,
 } from "../../types";
 
 export type Locale = UiLanguage;
 export type TFunction = (messages: Record<Locale, string>) => string;
 
 export type LocalSettings = Omit<CompanySettings, "language"> & { language: Locale };
-export type SettingsTab = "general" | "cli" | "oauth" | "api" | "gateway" | "data" | "webhooks" | "local-llm";
+export type SettingsTab = "general" | "cli" | "oauth" | "api" | "data" | "webhooks";
 
 export type SetLocalSettings = Dispatch<SetStateAction<LocalSettings>>;
 
@@ -126,21 +124,3 @@ export interface ApiStateBundle {
   handleApiAssignToAgent: (agentId: string) => Promise<void>;
 }
 
-export interface ChannelSettingsTabProps {
-  t: TFunction;
-  form: LocalSettings;
-  setForm: SetLocalSettings;
-  persistSettings: (next: LocalSettings) => void;
-  /** 현재 워크플로 팩 직원만 표시할 때 전달 (메신저 채팅의 대화 직원 선택) */
-  managerAgents?: Agent[];
-}
-
-export type ChannelRuntimeSession = {
-  sessionKey: string;
-  channel: MessengerChannelType;
-  targetId: string;
-  enabled: boolean;
-  displayName: string;
-};
-
-export type ChannelDraftSession = MessengerSessionConfig;

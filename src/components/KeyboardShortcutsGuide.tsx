@@ -60,14 +60,10 @@ export default function KeyboardShortcutsGuide({ open, onClose }: KeyboardShortc
     {
       title: t({ ko: "앱 창 열기 (g + 키)", en: "Open Windows (g + key)", ja: "ウィンドウを開く (g + キー)", zh: "打开窗口 (g + 键)" }),
       rows: [
-        { keys: ["g", "w"], desc: "Workflow" },
         { keys: ["g", "l"], desc: "Library" },
         { keys: ["g", "s"], desc: "Settings" },
-        { keys: ["g", "c"], desc: "Chat" },
         { keys: ["g", "a"], desc: t({ ko: "에이전트 설정", en: "Agent Manager", ja: "エージェント設定", zh: "代理管理" }) },
         { keys: ["g", "e"], desc: "Agent CLI" },
-        { keys: ["g", "i"], desc: "Image Studio" },
-        { keys: ["g", "d"], desc: t({ ko: "대시보드", en: "Dashboard", ja: "ダッシュボード", zh: "控制台" }) },
       ],
     },
     {

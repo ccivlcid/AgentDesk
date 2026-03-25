@@ -20,20 +20,6 @@ const guides: Record<View, ScreenGuideEntry> = {
       { ko: "좌측에서 보드 / 스케줄 / 산출물 탭 선택", en: "Choose Board / Scheduler / Outputs tab on the left", ja: "左でボード・スケジュール・成果物タブを選択", zh: "在左侧选择看板 / 调度 / 产出物选项卡" },
     ],
   },
-  dashboard: {
-    title: { ko: "대시보드", en: "Dashboard", ja: "ダッシュボード", zh: "仪表板" },
-    description: {
-      ko: "현재 프로젝트의 요약과 팀·에이전트 활동을 한눈에 봅니다.",
-      en: "View a summary of the current project and team/agent activity at a glance.",
-      ja: "現在のプロジェクトの概要とチーム・エージェントの活動を一覧します。",
-      zh: "一览当前项目摘要与团队/代理活动。",
-    },
-    tips: [
-      { ko: "프로젝트 목표·팀 패널에서 진행 상황 확인", en: "Check progress in project goal and team panels", ja: "プロジェクト目標・チームパネルで進捗を確認", zh: "在项目目标与团队面板中查看进度" },
-      { ko: "에이전트 활동·작업 중인 태스크 확인", en: "See agent activity and tasks in progress", ja: "エージェントの活動・実行中タスクを確認", zh: "查看代理活动与进行中任务" },
-      { ko: "설정 탭에서 대시보드 위젯 표시 변경", en: "Change dashboard widget visibility in Settings tab", ja: "設定タブでダッシュボードウィジェットを変更", zh: "在设置选项卡中更改仪表盘小组件" },
-    ],
-  },
   "project-types": {
     title: { ko: "프로젝트 유형", en: "Project Types", ja: "プロジェクト種別", zh: "项目类型" },
     description: {
@@ -179,20 +165,6 @@ const guides: Record<View, ScreenGuideEntry> = {
       { ko: "새로고침으로 최신 집계 반영", en: "Refresh to get latest totals", ja: "更新で最新の集計を反映", zh: "刷新以获取最新统计" },
     ],
   },
-  "workflow-builder": {
-    title: { ko: "워크플로 빌더", en: "Workflow Builder", ja: "ワークフロービルダー", zh: "工作流构建器" },
-    description: {
-      ko: "노드 기반 UI로 에이전트 파이프라인을 시각적으로 설계합니다.",
-      en: "Visually design agent pipelines with a node-based UI.",
-      ja: "ノードベースUIでエージェントパイプラインを視覚的に設計します。",
-      zh: "使用节点式 UI 可视化设计代理流水线。",
-    },
-    tips: [
-      { ko: "왼쪽 팔레트에서 노드를 드래그하여 캔버스에 추가", en: "Drag nodes from the left palette onto the canvas", ja: "左パレットからノードをキャンバスにドラッグ", zh: "从左侧面板拖动节点到画布" },
-      { ko: "노드 핸들을 연결해 실행 흐름을 구성", en: "Connect node handles to define the execution flow", ja: "ノードハンドルを接続して実行フローを構成", zh: "连接节点端口定义执行流程" },
-      { ko: "워크플로 이름을 편집하고 저장하면 localStorage에 자동 보존", en: "Edit the workflow name and save — auto-persisted to localStorage", ja: "ワークフロー名を編集して保存するとlocalStorageに自動保存", zh: "编辑工作流名称并保存，自动持久化到 localStorage" },
-    ],
-  },
   "agent-repl": {
     title: { ko: "에이전트 REPL", en: "Agent REPL", ja: "エージェント REPL", zh: "代理 REPL" },
     description: {
@@ -241,31 +213,6 @@ const guides: Record<View, ScreenGuideEntry> = {
   },
 };
 
-/** 프로젝트 없을 때 대시보드용 "시작하기" 가이드 (전체 흐름 안내) */
-export const dashboardEmptyGuide: ScreenGuideEntry = {
-  title: { ko: "시작하기 가이드", en: "Getting Started", ja: "はじめに", zh: "入门指南" },
-  description: {
-    ko: "프로젝트가 없을 때는 먼저 프로젝트를 만든 뒤, 업무 보드에서 태스크를 추가하고 에이전트를 실행하면 됩니다.",
-    en: "When you have no project, create one first, then add tasks on the Task Board and run agents.",
-    ja: "プロジェクトがない場合は、まずプロジェクトを作成し、タスクボードでタスクを追加してエージェントを実行します。",
-    zh: "没有项目时，请先创建项目，然后在任务看板添加任务并运行代理。",
-  },
-  tips: [
-    { ko: "아래에서 «첫 번째 프로젝트 만들기» 또는 «템플릿으로 시작»으로 프로젝트 생성", en: "Create a project with «Create first project» or «Start from template» below", ja: "下の「最初のプロジェクトを作成」または「テンプレートで開始」でプロジェクトを作成", zh: "使用下方「创建第一个项目」或「从模板开始」创建项目" },
-    { ko: "상단 프로젝트 선택기에서 방금 만든 프로젝트 선택", en: "Select the new project in the header project selector", ja: "ヘッダーのプロジェクト選択で作成したプロジェクトを選択", zh: "在顶部项目选择器中选择刚创建的项目" },
-    { ko: "좌측에서 «업무» → «업무 보드»로 이동해 태스크 추가 (N 키 또는 새 태스크 버튼)", en: "Go to Tasks → Task Board in the sidebar, add a task (N key or New Task button)", ja: "サイドバーで「タスク」→「タスクボード」に移動し、タスクを追加（Nキーまたは新規タスクボタン）", zh: "在侧栏进入「任务」→「任务看板」，添加任务（N 键或新建任务按钮）" },
-    { ko: "태스크 카드에서 에이전트 배정 후 «실행»으로 CLI 에이전트 실행", en: "On the task card assign an agent, then click Run to execute the CLI agent", ja: "タスクカードでエージェントを割り当て、「実行」でCLIエージェントを実行", zh: "在任务卡片上分配代理，点击「运行」执行 CLI 代理" },
-    { ko: "설정에서 API 키·OAuth·에이전트를 먼저 설정해 두면 편합니다", en: "Set up API keys, OAuth, and agents in Settings first for a smoother experience", ja: "設定でAPIキー・OAuth・エージェントを先に設定するとスムーズです", zh: "建议先在设置中配置 API 密钥、OAuth 与代理" },
-  ],
-};
-
-export interface GetScreenGuideOptions {
-  /** 대시보드일 때만 사용. false면 "시작하기" 가이드 반환 */
-  hasProject?: boolean;
-}
-
-export function getScreenGuide(view: View, options?: GetScreenGuideOptions): ScreenGuideEntry {
-  const hasProject = options?.hasProject !== false;
-  if (view === "dashboard" && !hasProject) return dashboardEmptyGuide;
-  return guides[view] ?? guides.dashboard;
+export function getScreenGuide(view: View): ScreenGuideEntry {
+  return guides[view] ?? guides.tasks;
 }

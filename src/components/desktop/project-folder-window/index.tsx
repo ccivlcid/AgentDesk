@@ -10,7 +10,6 @@ import { TasksTab } from "./TasksTab";
 import { AgentsTab } from "./AgentsTab";
 import { DetailsTab } from "./DetailsTab";
 import { TerminalTab } from "./TerminalTab";
-// AnalysisTab removed — app analysis runs via separate AppRunnerWindow (right-click "Run App")
 import { GitTab } from "./GitTab";
 
 export default function ProjectFolderWindow({
@@ -180,7 +179,7 @@ export default function ProjectFolderWindow({
         {tab === "files"    && <FilesTab projectPath={project.project_path} projectName={project.name} />}
         {tab === "tasks"    && <TasksTab tasks={projectTasks} statusCounts={statusCounts} allAgents={agents} />}
         {tab === "agents"   && <AgentsTab agents={projectAgents} projectTasks={projectTasks} />}
-        {tab === "terminal" && <TerminalTab projectId={project.id} projectPath={project.project_path} projectName={project.name} />}
+        {tab === "terminal" && <TerminalTab projectPath={project.project_path} projectName={project.name} />}
         {tab === "details"  && <DetailsTab project={project} taskCount={projectTasks.length} agentCount={projectAgents.length} onDelete={() => { onDeleteProject(project.id); onClose(); }} />}
         {tab === "git"      && <GitTab project={project} />}
       </div>

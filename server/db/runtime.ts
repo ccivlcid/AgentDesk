@@ -4,8 +4,6 @@ import { DatabaseSync } from "node:sqlite";
 
 import { DEFAULT_DB_PATH, LEGACY_DB_PATH, WRITABLE_DATA_DIR } from "../config/runtime.ts";
 
-export const IMAGE_STUDIO_DIR = path.join(WRITABLE_DATA_DIR, "image-studio");
-export const IMAGE_STUDIO_THUMBS_DIR = path.join(IMAGE_STUDIO_DIR, "thumbs");
 import logger from "../lib/logger.ts";
 
 export function readNonNegativeIntEnv(name: string, fallback: number): number {

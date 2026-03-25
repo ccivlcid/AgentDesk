@@ -68,15 +68,6 @@ export function handleTaskReviewDecisionReply(input: TaskReviewReplyInput): bool
     appendTaskLog(taskId, "pm_oversight", `PM approved: ${task.title}`);
     finishReview(taskId, task.title, { bypassProjectDecisionGate: true, trigger: "per_task_review" });
 
-    broadcast("pm_activity", {
-      projectId: currentItem.project_id,
-      taskId,
-      action: "approved",
-      agentName: currentItem.agent_name,
-      summary: `PM approved '${task.title}'`,
-      timestamp: nowMs(),
-    });
-
     res.json({ ok: true, resolved: true, action: "approve_task_review", task_id: taskId });
     return true;
   }
@@ -87,15 +78,6 @@ export function handleTaskReviewDecisionReply(input: TaskReviewReplyInput): bool
 
     // Reopen as supplement round → re-execute
     const result = deps.openSupplementRound(taskId, task.assigned_agent_id, task.department_id, "PM revision");
-
-    broadcast("pm_activity", {
-      projectId: currentItem.project_id,
-      taskId,
-      action: "revision_requested",
-      agentName: currentItem.agent_name,
-      summary: `PM requested revision for '${task.title}'`,
-      timestamp: nowMs(),
-    });
 
     res.json({ ok: true, resolved: true, action: "request_revision", task_id: taskId, restarted: result.started });
     return true;

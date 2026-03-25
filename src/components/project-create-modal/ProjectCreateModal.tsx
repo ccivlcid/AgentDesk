@@ -8,7 +8,8 @@ import CategorySelectStep from "./CategorySelectStep";
 import DirectiveEditorStep from "./DirectiveEditorStep";
 import GitImportPanel from "../git-import/GitImportPanel";
 import { useI18n } from "../../i18n";
-import { getFigmaInfo } from "../../api/synapse";
+/** Stub — Synapse/Figma API removed; Figma integration is no longer available */
+const getFigmaInfo = (): Promise<{ connected: boolean }> => Promise.resolve({ connected: false });
 import { fetchDirectiveTemplates, type DirectiveTemplateItem } from "../../api/organization-projects";
 import { autoAssignAgents } from "../../api/project-kickoff";
 import { fetchProjectTypeTemplates, type ProjectTypeTemplate } from "../../api/project-type-templates";

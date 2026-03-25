@@ -290,7 +290,7 @@ export function TrashModal({
 
   const modalContent = (
     <AppWindow
-      windowType="alerts" // Trash uses general window frame
+      windowType="cli-usage" // Trash uses general window frame
       title={t({ ko: "휴지통", en: "Trash", ja: "ゴミ箱", zh: "垃圾桶" })}
       emoji="🗑️"
       defaultWidth={520}

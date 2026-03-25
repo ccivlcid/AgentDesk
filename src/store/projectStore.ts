@@ -18,7 +18,6 @@ interface ProjectStore {
   projectAgentsLoaded: boolean;
   showProjectCreate: boolean;
   projectCreateBusy: boolean;
-  showCreateTaskAfterCreate: boolean;
   editDirectiveProjectId: string | null;
 
   setCategories: (a: SA<Category[]>) => void;
@@ -28,7 +27,6 @@ interface ProjectStore {
   setProjectAgentsLoaded: (a: SA<boolean>) => void;
   setShowProjectCreate: (a: SA<boolean>) => void;
   setProjectCreateBusy: (a: SA<boolean>) => void;
-  setShowCreateTaskAfterCreate: (a: SA<boolean>) => void;
   setEditDirectiveProjectId: (id: string | null) => void;
 }
 
@@ -40,7 +38,6 @@ export const useProjectStore = create<ProjectStore>()((set) => ({
   projectAgentsLoaded: false,
   showProjectCreate: false,
   projectCreateBusy: false,
-  showCreateTaskAfterCreate: false,
   editDirectiveProjectId: null,
 
   setCategories: (a) => set((s) => ({ categories: apply(s.categories, a) })),
@@ -53,6 +50,5 @@ export const useProjectStore = create<ProjectStore>()((set) => ({
   setProjectAgentsLoaded: (a) => set((s) => ({ projectAgentsLoaded: apply(s.projectAgentsLoaded, a) })),
   setShowProjectCreate: (a) => set((s) => ({ showProjectCreate: apply(s.showProjectCreate, a) })),
   setProjectCreateBusy: (a) => set((s) => ({ projectCreateBusy: apply(s.projectCreateBusy, a) })),
-  setShowCreateTaskAfterCreate: (a) => set((s) => ({ showCreateTaskAfterCreate: apply(s.showCreateTaskAfterCreate, a) })),
   setEditDirectiveProjectId: (id) => set({ editDirectiveProjectId: id }),
 }));

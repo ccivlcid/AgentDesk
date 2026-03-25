@@ -10,14 +10,12 @@ const mono = "var(--th-font-mono)";
 interface ScreenGuidePanelProps {
   open: boolean;
   view: View;
-  /** 대시보드일 때 false면 "시작하기" 가이드 표시 */
-  hasProject?: boolean;
   onClose: () => void;
 }
 
-export default function ScreenGuidePanel({ open, view, hasProject = true, onClose }: ScreenGuidePanelProps) {
+export default function ScreenGuidePanel({ open, view, onClose }: ScreenGuidePanelProps) {
   const { t } = useI18n();
-  const entry = getScreenGuide(view, { hasProject });
+  const entry = getScreenGuide(view);
 
   useEffect(() => {
     if (!open) return;

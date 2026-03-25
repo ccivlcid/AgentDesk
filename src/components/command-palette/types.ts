@@ -1,13 +1,6 @@
 import type { Agent, Task, Project, HookEntry } from "../../types";
 import type { DeliverableItem } from "../../api/providers-reports-github";
 
-export interface WfTemplate {
-  id: string;
-  name: string;
-  nodes_json: string;
-  updated_at: number;
-}
-
 export interface QuickActionRow {
   label: string;
   icon: string;
@@ -21,8 +14,7 @@ export type PaletteItem =
   | { kind: "task"; task: Task }
   | { kind: "project"; project: Project }
   | { kind: "deliverable"; item: DeliverableItem }
-  | { kind: "hook"; hook: HookEntry }
-  | { kind: "workflow"; wf: WfTemplate };
+  | { kind: "hook"; hook: HookEntry };
 
 export interface CommandPaletteProps {
   open: boolean;

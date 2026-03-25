@@ -256,11 +256,6 @@ export function startPmOrchestrator(deps: PmOrchestratorDeps): void {
           createdAt: nowMs(),
         });
         sendAgentMessage({ id: pm.id as string }, text, "report", "all", null, taskId);
-        broadcast("pm_activity", {
-          projectId, taskId, action: "approved",
-          agentName: pm.name, summary: `PM approved '${task.title}'${flagSummary}`, timestamp: nowMs(),
-          reviewFlags,
-        });
         insertNotification({
           type: "pm_approved",
           title: `PM approved: ${task.title}`,
@@ -309,11 +304,6 @@ export function startPmOrchestrator(deps: PmOrchestratorDeps): void {
           );
           startTaskExecutionForAgent(taskId, task.assigned_agent_id);
         }
-        broadcast("pm_activity", {
-          projectId, taskId, action: "revision_requested",
-          agentName: pm.name, summary: `PM requested revision for '${task.title}'${checksLabel}`, timestamp: nowMs(),
-          reviewFlags,
-        });
         insertNotification({
           type: "pm_revision",
           title: `PM revision: ${task.title}`,
@@ -406,13 +396,6 @@ export function startPmOrchestrator(deps: PmOrchestratorDeps): void {
           agent_id: task.assigned_agent_id,
         });
 
-        broadcast("pm_activity", {
-          projectId, taskId, action: "escalated",
-          agentName: "PM Orchestrator",
-          summary: `3-strike escalation: '${task.title}' failed ${strikeLimit} times`,
-          timestamp: nowMs(),
-          errorCategory: patternMatch?.category ?? null,
-        });
         return;
       }
 
@@ -691,14 +674,12 @@ export function startPmOrchestrator(deps: PmOrchestratorDeps): void {
         void generateProjectRetrospective(pm, projectId, learnDeps);
         db.prepare("DELETE FROM pm_oversight_state WHERE project_id = ?").run(projectId);
         sendAgentMessage({ id: pm.id as string }, text, "report", "all", null, null);
-        broadcast("pm_activity", { projectId, action: "project_review_satisfied", round: currentRound, summary: text.slice(0, 200), timestamp: nowMs() });
         insertNotification({ type: "project_complete", title: `Project '${project.name}' completed`, body: text.slice(0, 200) });
       } else {
         // Gaps found → create follow-up tasks
         const gapText = text.replace(/^GAPS_FOUND[:\s]*/im, "").trim();
         appendTaskLog("", "pm_oversight", `PM project review (round ${currentRound}/${MAX_PROJECT_REVIEW_ROUNDS}): GAPS_FOUND — ${gapText.slice(0, 200)}`);
         sendAgentMessage({ id: pm.id as string }, text, "report", "all", null, null);
-        broadcast("pm_activity", { projectId, action: "project_review_gaps", round: currentRound, summary: gapText.slice(0, 200), timestamp: nowMs() });
         insertNotification({ type: "pm_project_review", title: `PM found gaps in '${project.name}' (round ${currentRound})`, body: gapText.slice(0, 200) });
 
         // Trigger add-tasks pipeline with PM's gap analysis

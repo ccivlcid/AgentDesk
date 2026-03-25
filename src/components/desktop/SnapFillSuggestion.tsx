@@ -6,14 +6,9 @@ const MENUBAR_H = 44;
 const DOCK_H = 88;
 
 const WINDOW_LABELS: Partial<Record<WindowType, { label: string; emoji: string }>> = {
-  workflow:      { label: "Workflow",       emoji: "⚡" },
   library:       { label: "Library",        emoji: "📚" },
   settings:      { label: "Settings",       emoji: "⚙️" },
-  chat:          { label: "Chat",           emoji: "💬" },
   "agent-manager": { label: "Agents",       emoji: "🤖" },
-  tasks:         { label: "Tasks",          emoji: "✅" },
-  synapse:       { label: "Synapse",        emoji: "🧠" },
-  "image-studio": { label: "Image Studio", emoji: "🎨" },
 };
 
 export default function SnapFillSuggestion() {

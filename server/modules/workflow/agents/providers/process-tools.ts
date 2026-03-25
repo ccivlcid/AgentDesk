@@ -97,7 +97,7 @@ export function createProcessTools(deps: CreateProcessToolsDeps) {
 
   function appendTaskLog(taskId: string | null, kind: string, message: string): void {
     const t = nowMs();
-    // Resolve project_id so pm-activity survives even after the task is deleted.
+    // Resolve project_id so records survive even after the task is deleted.
     let projectId: string | null = null;
     if (taskId) {
       const row = db.prepare("SELECT project_id FROM tasks WHERE id = ?").get(taskId) as { project_id: string | null } | undefined;

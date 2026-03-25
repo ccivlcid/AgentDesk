@@ -274,10 +274,10 @@ export function CliWindowBottomBar({
                   lineHeight: 1.6,
                 }}>
                   {t({
-                    ko: "새 업무로 실행하면 모두 활성화됩니다.",
-                    en: "Create a task in TaskBoard to enable all.",
-                    ja: "TaskBoardでタスクを作成すると全て有効になります。",
-                    zh: "在TaskBoard创建任务后可启用全部功能。",
+                    ko: "프로젝트에서 태스크를 생성하면 모두 활성화됩니다.",
+                    en: "Create a task in a project to enable all.",
+                    ja: "プロジェクトでタスクを作成すると全て有効になります。",
+                    zh: "在项目中创建任务后可启用全部功能。",
                   })}
                 </div>
               </div>

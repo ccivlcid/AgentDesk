@@ -1,5 +1,5 @@
 import type { Project } from "../../../types";
-import type { ProjectDecisionEventItem, ProjectReportHistoryItem } from "../../../api";
+import type { ProjectDecisionEventItem } from "../../../api";
 import type { GroupedProjectTaskCard, ProjectI18nTranslate } from "../types";
 import BurndownChart from "../BurndownChart";
 import { ProjectInfoSection } from "./ProjectInfoSection";
@@ -8,7 +8,6 @@ import { DeliverableChecklistSection } from "./DeliverableChecklistSection";
 import { ProjectProgressSection } from "./ProjectProgressSection";
 import { ProjectCostSection } from "./ProjectCostSection";
 import { TaskHistorySection } from "./TaskHistorySection";
-import { ReportsSection } from "./ReportsSection";
 import { DecisionEventsSection } from "./DecisionEventsSection";
 
 export interface ProjectInsightsPanelProps {
@@ -18,7 +17,6 @@ export interface ProjectInsightsPanelProps {
   loadingDetail: boolean;
   isCreating: boolean;
   groupedTaskCards: GroupedProjectTaskCard[];
-  sortedReports: ProjectReportHistoryItem[];
   sortedDecisionEvents: ProjectDecisionEventItem[];
   getDecisionEventLabel: (eventType: ProjectDecisionEventItem["event_type"]) => string;
   handleOpenTaskDetail: (taskId: string) => Promise<void>;
@@ -31,7 +29,6 @@ export default function ProjectInsightsPanel({
   loadingDetail,
   isCreating,
   groupedTaskCards,
-  sortedReports,
   sortedDecisionEvents,
   getDecisionEventLabel,
   handleOpenTaskDetail,
@@ -71,13 +68,6 @@ export default function ProjectInsightsPanel({
         t={t}
         selectedProject={selectedProject}
         groupedTaskCards={groupedTaskCards}
-        handleOpenTaskDetail={handleOpenTaskDetail}
-      />
-
-      <ReportsSection
-        t={t}
-        selectedProject={selectedProject}
-        sortedReports={sortedReports}
         handleOpenTaskDetail={handleOpenTaskDetail}
       />
 

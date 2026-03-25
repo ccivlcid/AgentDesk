@@ -116,12 +116,6 @@ export async function runAutoLearning(
     const total = rules.length + memories.length;
     if (total > 0) {
       appendTaskLog(taskId, "pm_oversight", `Auto-learned: ${rules.length} rules, ${memories.length} memories`);
-      broadcast("pm_activity", {
-        projectId, taskId,
-        action: "auto_learn",
-        summary: `PM learned ${total} item(s) from '${task.title}'`,
-        timestamp: t,
-      });
       logger.info({ taskId, rules: rules.length, memories: memories.length }, "[auto-learning] extracted");
     }
   } catch (err) {
@@ -189,13 +183,6 @@ export async function generateProjectRetrospective(
       db.prepare("UPDATE projects SET directive = directive || ? WHERE id = ?")
         .run(`\n\n---\n## Project Retrospective\n${retro}`, projectId);
     } catch { /* best effort */ }
-
-    broadcast("pm_activity", {
-      projectId,
-      action: "retrospective",
-      summary: `PM generated retrospective for '${project.name}'`,
-      timestamp: nowMs(),
-    });
 
     logger.info({ projectId }, "[auto-learning] retrospective generated");
   } catch (err) {

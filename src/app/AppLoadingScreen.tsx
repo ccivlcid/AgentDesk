@@ -1,17 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { I18nProvider } from "../i18n";
-import { WALLPAPERS, isLightWallpaper } from "../components/desktop/WallpaperPicker";
-
-const WALLPAPER_KEY = "agentdesk_wallpaper";
-
-function getSavedWallpaper(): string {
-  try {
-    return localStorage.getItem(WALLPAPER_KEY) ?? WALLPAPERS[0].css;
-  } catch {
-    return WALLPAPERS[0].css;
-  }
-}
 
 interface AppLoadingScreenProps {
   language: string;
@@ -42,9 +31,6 @@ const lineVariants = {
 
 export default function AppLoadingScreen({ language, title, subtitle }: AppLoadingScreenProps) {
   const [showSubtitle, setShowSubtitle] = useState(false);
-  const savedWallpaper = getSavedWallpaper();
-  const isLight = isLightWallpaper(savedWallpaper);
-  const isImage = savedWallpaper.startsWith('url("');
 
   useEffect(() => {
     const t = setTimeout(() => setShowSubtitle(true), BOOT_LINES.length * 130 + 200);
@@ -56,9 +42,7 @@ export default function AppLoadingScreen({ language, title, subtitle }: AppLoadi
       <div
         className="h-screen flex items-center justify-center"
         style={{
-          background: savedWallpaper,
-          backgroundSize: isImage ? "cover" : undefined,
-          backgroundPosition: isImage ? "center" : undefined,
+          background: "var(--th-bg-primary)",
         }}
       >
         <div
@@ -66,10 +50,10 @@ export default function AppLoadingScreen({ language, title, subtitle }: AppLoadi
             minWidth: 340,
             padding: "28px 32px",
             borderRadius: 14,
-            background: isLight ? "rgba(0,0,0,0.55)" : "rgba(0,0,0,0.62)",
+            background: "rgba(0,0,0,0.62)",
             backdropFilter: "blur(20px)",
             WebkitBackdropFilter: "blur(20px)",
-            border: isLight ? "1px solid rgba(0,0,0,0.12)" : "1px solid rgba(255,255,255,0.08)",
+            border: "1px solid rgba(255,255,255,0.08)",
             boxShadow: "0 16px 48px rgba(0,0,0,0.4)",
           }}
         >

@@ -162,13 +162,10 @@ Completion criteria:
 
 Goal:
 
-- Clean up task board, review, and PM Activity strings
+- Clean up task review strings
 
 Priority targets:
 
-- `src/components/task-board/**`
-- `src/components/desktop/RightShelf.tsx`
-- `src/components/chat/decision-inbox/**`
 - `src/app/useAppActions.ts`
 
 Key prefix:
@@ -270,8 +267,7 @@ Other agents should report in the following format upon task completion:
 - Workpack: D. Task / Review / PM Activity UI
 - Key prefixes added: `task.*`, `review.*`, `pm.*`
 - Updated files:
-  - src/components/task-board/...
-  - src/components/desktop/RightShelf.tsx
+  - (task-board and RightShelf removed in Phase 26)
 - Validation:
   - searched remaining inline multilingual objects in owned scope
   - verified no behavior change in owned scope

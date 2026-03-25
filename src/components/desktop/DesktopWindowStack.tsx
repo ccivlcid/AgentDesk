@@ -1,36 +1,22 @@
-import { lazy, Suspense } from "react";
 import type { Project, ProjectFolder, Task, Agent, CompanySettings } from "../../types";
-import type { OAuthCallbackResult, WindowType, ProjectMetaPayload } from "../../app/types";
+import type { OAuthCallbackResult, WindowType } from "../../app/types";
 import SettingsWindow from "../windows/SettingsWindow";
 import AgentManagerWindow from "../windows/AgentManagerWindow";
 import QuickCreateAgentModal from "../agent-manager/QuickCreateAgentModal";
 import CliWindow from "../windows/CliWindow";
-import ReportWindow from "../windows/ReportWindow";
-import AppRunnerWindow from "../windows/AppRunnerWindow";
 import FolderWindow from "../windows/FolderWindow";
 import NewFolderModal from "./NewFolderModal";
-import WallpaperPicker from "./WallpaperPicker";
 import ExportModal from "../export/ExportModal";
 import GitImportWindow from "../windows/GitImportWindow";
 import MarkdownEditorModal from "./MarkdownEditorModal";
 import QuickLook from "./QuickLook";
 import ProjectFolderWindow from "./ProjectFolderWindow";
 import MissionControl from "./MissionControl";
-import DashboardWindow from "../windows/DashboardWindow";
-import TaskBoardWindow from "../windows/TaskBoardWindow";
-import SynapseWindow from "../windows/SynapseWindow";
-import ImageStudioWindow from "../windows/ImageStudioWindow";
 import FileTreeWindow from "../windows/FileTreeWindow";
-import AlertsWindow from "../windows/AlertsWindow";
 import CliCostWindow from "../windows/CliCostWindow";
-import LocalLlmWindow from "../windows/LocalLlmWindow";
-import WorkflowWindow from "../windows/WorkflowWindow";
 import LibraryWindow from "../windows/LibraryWindow";
 import LibraryGuideWindow from "../windows/LibraryGuideWindow";
-import ChatEditorModal from "../settings/gateway-settings/ChatEditorModal";
-import ChannelGuideModal from "../settings/gateway-settings/ChannelGuideModal";
-
-const ChatWindow = lazy(() => import("../windows/ChatWindow").then((m) => ({ default: m.default })));
+import OrchestrationWindow from "../orchestration/OrchestrationWindow";
 
 export interface DesktopWindowStackProps {
   openWindows: Set<WindowType>;
@@ -53,16 +39,6 @@ export interface DesktopWindowStackProps {
   oauthResult: OAuthCallbackResult | null;
   onOauthResultClear: () => void;
   onAgentsChange: () => void;
-  onSendMessage: (
-    content: string,
-    receiverType: "agent" | "department" | "all",
-    receiverId?: string,
-    messageType?: string,
-    projectMeta?: ProjectMetaPayload,
-  ) => Promise<void>;
-  onSendAnnouncement: (content: string) => Promise<void>;
-  onSendDirective: (content: string, projectMeta?: ProjectMetaPayload) => Promise<void>;
-  onClearMessages: (agentId?: string) => Promise<void>;
   agentManagerCreateCount: number;
   showQuickCreateAgent: boolean;
   setShowQuickCreateAgent: (v: boolean) => void;
@@ -72,8 +48,6 @@ export interface DesktopWindowStackProps {
   newFolderCreatingRef: React.MutableRefObject<boolean>;
   createProjectFolder: (params: { name: string; base_path: string; color: string }) => Promise<ProjectFolder>;
   setNewFolderPreName: (v: string) => void;
-  showWallpaperPicker: boolean;
-  setShowWallpaperPicker: (v: boolean) => void;
   showExportModal: boolean;
   setShowExportModal: (v: boolean) => void;
   showMarkdownEditor: boolean;
@@ -107,10 +81,6 @@ export function DesktopWindowStack({
   oauthResult,
   onOauthResultClear,
   onAgentsChange,
-  onSendMessage,
-  onSendAnnouncement,
-  onSendDirective,
-  onClearMessages,
   agentManagerCreateCount,
   showQuickCreateAgent,
   setShowQuickCreateAgent,
@@ -120,8 +90,6 @@ export function DesktopWindowStack({
   newFolderCreatingRef,
   createProjectFolder,
   setNewFolderPreName,
-  showWallpaperPicker,
-  setShowWallpaperPicker,
   showExportModal,
   setShowExportModal,
   showMarkdownEditor,
@@ -138,15 +106,9 @@ export function DesktopWindowStack({
 
   return (
     <>
-      {openWindows.has("dashboard") && <DashboardWindow />}
-      {openWindows.has("tasks") && <TaskBoardWindow />}
-      {openWindows.has("synapse") && <SynapseWindow />}
-      {openWindows.has("image-studio") && <ImageStudioWindow />}
+      {openWindows.has("tasks") && <OrchestrationWindow />}
       {openWindows.has("file-tree") && <FileTreeWindow />}
-      {openWindows.has("alerts") && <AlertsWindow />}
       {openWindows.has("cli-usage") && <CliCostWindow />}
-      {openWindows.has("local-llm") && <LocalLlmWindow />}
-      {openWindows.has("workflow") && <WorkflowWindow />}
       {openWindows.has("library") && <LibraryWindow />}
       {openWindows.has("library-guide") && <LibraryGuideWindow />}
       {openWindows.has("settings") && (
@@ -174,18 +136,6 @@ export function DesktopWindowStack({
           onClose={() => closeCliWindow(agentId)}
         />
       ))}
-      {openWindows.has("reports") && <ReportWindow />}
-      {openWindows.has("chat") && (
-        <Suspense fallback={null}>
-          <ChatWindow
-            onSendMessage={onSendMessage}
-            onSendAnnouncement={onSendAnnouncement}
-            onSendDirective={onSendDirective}
-            onClearMessages={onClearMessages}
-          />
-        </Suspense>
-      )}
-
       {folders.filter((f) => openFolders.has(f.id)).map((folder) => (
         <FolderWindow
           key={folder.id}
@@ -234,11 +184,8 @@ export function DesktopWindowStack({
         />
       )}
 
-      {showWallpaperPicker && <WallpaperPicker onClose={() => setShowWallpaperPicker(false)} />}
       {showExportModal && <ExportModal onClose={() => setShowExportModal(false)} />}
       {openWindows.has("repo-store") && <GitImportWindow />}
-      {openWindows.has("app-runner") && <AppRunnerWindow />}
-
       {showMarkdownEditor && (
         <MarkdownEditorModal
           onClose={() => setShowMarkdownEditor(false)}

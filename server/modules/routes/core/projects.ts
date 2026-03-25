@@ -8,7 +8,7 @@ import { registerCrudRoutes } from "./projects/register-crud-routes.ts";
 import { registerProjectDetailRoute } from "./projects/register-project-detail-route.ts";
 import { registerFeatureRoutes } from "./projects/register-feature-routes.ts";
 import { registerProjectKickoffRoutes } from "./projects/kickoff.ts";
-import { registerPmActivityRoutes } from "./projects/pm-activity.ts";
+
 import { registerChangelogRoutes } from "./projects/register-changelog-routes.ts";
 import { callLlmOneShotAuto } from "../../agent-runtime/llm-client.ts";
 import logger from "../../../lib/logger.ts";
@@ -64,7 +64,6 @@ export function registerProjectRoutes({
   registerProjectDetailRoute(deps);
   registerFeatureRoutes(deps);
   registerProjectKickoffRoutes({ app, db, broadcast, appendTaskLog, resolveProjectPath, nowMs, startTaskExecutionForAgent, insertNotification });
-  registerPmActivityRoutes(app, db);
   registerChangelogRoutes(deps);
 
   // ── AI auto-assign agents ─────────────────────────────────────────────────

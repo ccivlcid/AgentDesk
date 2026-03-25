@@ -577,18 +577,6 @@ export function registerTaskCrudRoutes(deps: TaskCrudRouteDeps): void {
     const updated = db.prepare("SELECT * FROM tasks WHERE id = ?").get(id) as Record<string, unknown> | undefined;
     broadcast("task_update", updated);
 
-    // planned/review 상태 전환 시 PM에게 알림
-    if (nextStatus === "planned" || nextStatus === "review") {
-      const projectId = updated?.project_id as string | null;
-      broadcast("pm_activity", {
-        projectId,
-        taskId: id,
-        action: nextStatus === "planned" ? "task_planned" : "task_review",
-        summary: `Task '${updated?.title ?? id}' moved to ${nextStatus}`,
-        timestamp: nowMs(),
-      });
-    }
-
     // done 전환 시 PM 오케스트레이터에 이벤트 발행
     if (nextStatus === "done" && updated?.project_id) {
       // PM이 있는 프로젝트면 review → PM 검토 → done 플로우를 탄다

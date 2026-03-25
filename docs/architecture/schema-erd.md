@@ -289,7 +289,7 @@ execution_state (engine perspective):
 
 | Index | Purpose |
 |-------|---------|
-| `idx_tasks_status` | Kanban board query by status |
+| `idx_tasks_status` | Task query by status |
 | `idx_tasks_agent` | Query tasks by agent |
 | `idx_tasks_execution_state` | Execution engine queue polling |
 | `idx_tasks_watchdog` | `(status, execution_state, last_heartbeat_at DESC)` — anomaly detection (P3-5) |

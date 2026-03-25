@@ -968,4 +968,29 @@ export const VERSIONED_MIGRATIONS_E_RECENT: Migration[] = [
       try { db.exec("ALTER TABLE pm_oversight_state ADD COLUMN project_review_round INTEGER NOT NULL DEFAULT 0"); } catch { /* already exists */ }
     },
   },
+  {
+    id: "2026-03-29-001-drop-removed-features",
+    up: (db) => {
+      // Image Studio
+      try { db.exec("DROP TABLE IF EXISTS image_generations"); } catch { /* ok */ }
+      try { db.exec("DROP INDEX IF EXISTS idx_image_generations_created"); } catch { /* ok */ }
+      try { db.exec("DROP INDEX IF EXISTS idx_image_generations_task"); } catch { /* ok */ }
+
+      // Synapse (formerly harness)
+      try { db.exec("DROP TABLE IF EXISTS synapse_rules"); } catch { /* ok */ }
+      try { db.exec("DROP TABLE IF EXISTS synapse_snapshots"); } catch { /* ok */ }
+      try { db.exec("DROP TABLE IF EXISTS synapse_connections"); } catch { /* ok */ }
+      try { db.exec("DROP INDEX IF EXISTS idx_synapse_rules_source"); } catch { /* ok */ }
+
+      // App Runner columns on projects
+      try { db.exec("ALTER TABLE projects DROP COLUMN app_status"); } catch { /* ok */ }
+      try { db.exec("ALTER TABLE projects DROP COLUMN app_analysis"); } catch { /* ok */ }
+      try { db.exec("ALTER TABLE projects DROP COLUMN app_port"); } catch { /* ok */ }
+      try { db.exec("ALTER TABLE projects DROP COLUMN app_pid"); } catch { /* ok */ }
+
+      // Agent KB columns (synapse)
+      try { db.exec("ALTER TABLE agents DROP COLUMN kb_default_sources"); } catch { /* ok */ }
+      try { db.exec("ALTER TABLE tasks DROP COLUMN kb_context_sources"); } catch { /* ok */ }
+    },
+  },
 ];

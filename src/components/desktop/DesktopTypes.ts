@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import type { Agent, Project, Category, CompanySettings, WSEventType, ProjectFolder } from "../../types";
-import type { OAuthCallbackResult, ProjectMetaPayload } from "../../app/types";
+import type { CompanySettings, WSEventType } from "../../types";
+import type { OAuthCallbackResult } from "../../app/types";
 
 export interface DesktopProps {
   connected: boolean;
@@ -10,19 +10,8 @@ export interface DesktopProps {
   oauthResult: OAuthCallbackResult | null;
   onOauthResultClear: () => void;
   onAgentsChange: () => void;
-  onSendMessage: (
-    content: string,
-    receiverType: "agent" | "department" | "all",
-    receiverId?: string,
-    messageType?: string,
-    projectMeta?: ProjectMetaPayload,
-  ) => Promise<void>;
-  onSendAnnouncement: (content: string) => Promise<void>;
-  onSendDirective: (content: string, projectMeta?: ProjectMetaPayload) => Promise<void>;
-  onClearMessages: (agentId?: string) => Promise<void>;
   onProjectCreate: () => void;
   onOpenDecisionInbox: () => void;
-  onOpenReportHistory: () => void;
   children?: ReactNode;
 }
 

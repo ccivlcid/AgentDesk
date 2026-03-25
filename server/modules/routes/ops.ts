@@ -20,16 +20,13 @@ import { registerHookRoutes } from "./ops/hooks.ts";
 import { registerRuleLearningRoutes } from "./ops/rule-learning/routes.ts";
 import { registerMemoryLearningRoutes } from "./ops/memory-learning/routes.ts";
 import { registerHookLearningRoutes } from "./ops/hooks-learning/routes.ts";
-import { registerChatUploadRoutes } from "./ops/chat-upload.ts";
+// registerChatUploadRoutes removed (Chat/Messenger system deleted)
 import { registerNotificationRoutes } from "./ops/notifications.ts";
 import { registerBackupRoutes } from "./ops/backup.ts";
 import { registerAgentUsageRoutes } from "./ops/agent-usage.ts";
 import { registerHeartbeatRoutes } from "./ops/heartbeat.ts";
 import { registerScheduledTaskRoutes } from "./ops/scheduled-tasks.ts";
 import { registerVideoRenderRoutes } from "./ops/video-render.ts";
-import { registerLocalLlmRoutes } from "./ops/local-llm.ts";
-import { registerSynapseRoutes } from "./ops/synapse.ts";
-import { registerImageStudioRoutes } from "./ops/image-studio.ts";
 import { registerProjectFolderRoutes } from "./ops/project-folders.ts";
 import { registerCliInstallRoutes } from "./ops/cli-install.ts";
 import { registerAgentRuntimeRoutes } from "../agent-runtime/routes.ts";
@@ -273,16 +270,14 @@ export function registerRoutesPartC(ctx: RuntimeContext): RouteOpsExports {
   registerHookLearningRoutes(__ctx);
   registerHookRoutes({ app, db, nowMs });
 
-  registerChatUploadRoutes(__ctx);
+  // registerChatUploadRoutes call removed (Chat/Messenger system deleted)
   registerNotificationRoutes(__ctx);
   registerBackupRoutes(__ctx);
   registerHeartbeatRoutes(__ctx);
   registerScheduledTaskRoutes({ app, db, nowMs });
   registerVideoRenderRoutes({ app, broadcast, appendTaskLog });
   const { recordAgentUsage } = registerAgentUsageRoutes(__ctx);
-  registerLocalLlmRoutes({ app, db, broadcast });
-  registerSynapseRoutes({ app, db });
-  registerImageStudioRoutes({ app, db, broadcast });
+  // local-llm + synapse + image-studio routes removed
   registerProjectFolderRoutes({ app, db, nowMs });
   registerCliInstallRoutes({ app });
 

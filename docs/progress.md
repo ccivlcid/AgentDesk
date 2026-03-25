@@ -1,17 +1,49 @@
 # AgentDesk — Development Progress
 
-> Last updated: 2026-03-25
+> Last updated: 2026-03-25 (Phase 26 Developer OS 전환 반영)
 
 ---
 
 ## Current State
-- **Last applied migration**: `2026-03-28-014-pm-oversight-review-round`
-- **Latest completed phase**: Phase 25
+- **Last applied migration**: `2026-03-29-001-drop-removed-features`
+- **Latest completed phase**: Phase 26
 - **Next work**: See Pending Work below
 
 ---
 
 ## Active Work
+
+### Phase 26 — Developer OS 전환 (2026-03-25)
+
+> **방향 전환:** "AI Agent OS" → "Developer-focused multi-LLM orchestrator OS"
+> 핵심 운영 루프(프로젝트 -> 태스크 -> 실행 -> 리뷰)에 기여하지 않는 기능을 대규모 제거.
+
+**완료:**
+
+| # | Feature | Lines | Status |
+|---|---------|-------|--------|
+| 1 | Image Studio (텍스트-투-이미지, 인페인팅) | ~2,256 | 완전 제거 완료 |
+| 2 | Synapse (Notion/Obsidian 연동) | ~3,307 | 완전 제거 완료 |
+| 3 | App Runner (프로젝트 자동 실행) | ~1,248 | 완전 제거 완료 |
+| 4 | Wallpaper Picker (배경화면) | ~475 | 완전 제거 완료 |
+| 5 | Dashboard (메트릭 대시보드) | ~680 | 완전 제거 완료 |
+| 6 | Workflow Builder (@xyflow/react 플로우 에디터) | ~7,994 | 완전 제거 완료 |
+| 7 | Telegram Messenger | — | 완전 제거 완료 |
+| 8 | Chat 시스템 (Direct/Group/Announcement/Directive) | ~35,000 | 완전 제거 완료 |
+| 9 | Messenger 통합 (Discord/Slack/WhatsApp/Google Chat/Signal/iMessage) | ~34,000 | 완전 제거 완료 |
+
+**제거 총량:** ~85,000줄
+**DB 마이그레이션:** `2026-03-29-001-drop-removed-features`
+
+| 10 | PM Activity Panel (RightShelf) 제거 | 완전 제거 완료 -- PM 결정 데이터는 Orchestration Timeline Event Log에서 인라인 표시 |
+| 11 | Local LLM 관리 UI + 서버 모듈 제거 | 완전 제거 완료 -- 에이전트 cli_provider "ollama" 실행 경로는 유지 |
+
+| 12 | TaskBoard 코드 완전 제거 | 완전 제거 완료 -- TaskBoardWindow, task-board/, create-task 참조, Dock "tasks" 아이콘, CSS, 관련 아이콘/스토어/컨텍스트메뉴 정리. WindowType "tasks"는 Orchestration Timeline용으로 예약 |
+| 13 | Reports 윈도우 UI 완전 제거 | 완전 제거 완료 -- ReportWindow, ReportHistory, ReportsSection, 데스크톱 아이콘, Dock/AppSwitcher/MissionControl "reports" 항목, unreadReportCount/incUnreadReportCount 스토어 상태 제거. 서버 task-reports 라우트 및 TaskReportDetail 타입은 Orchestration Timeline용으로 유지 |
+
+| 14 | Orchestration Timeline Phase 1 구현 | 완료 -- OrchestrationWindow + MetricsHeader + StageRail + TabBar + 4탭 (Timeline/Logs/Agents/Room). Dock 앰버 아이콘 + task badge. WindowType "tasks" 사용 |
+
+---
 
 ### Phase 2 — `RuntimeContext` typing (`WorkflowCoreExports` batch 3) (2026-03-25)
 
@@ -51,7 +83,7 @@
 - **`github-routes.ts`:** GitHub REST response interfaces (`GitHubRepoJson`, `GitHubSearchRepositoriesJson`, `GitHubBranchJson`, `GitHubRepoDetailJson`) replace `any` on repo list + branches endpoints
 - **Verify:** `npx tsc -b --noEmit` OK
 
-### Bug Fix: App Runner ESM require() crash (2026-03-25)
+### Bug Fix: App Runner ESM require() crash (2026-03-25) [App Runner: Phase 26에서 제거됨]
 
 - **Root cause:** `app-runner.ts` used 5x `require("node:fs")` / `require("node:child_process")` inside function bodies — fails in ESM mode (`require is not defined`)
 - **Symptoms:** (1) `AI description generation failed — llmErr: {}` (directory listing `require` fails inside try-catch), (2) `Unhandled error: require is not defined` (spawn `require` fails outside try-catch)
@@ -120,11 +152,9 @@
 - fitness 사이클 완성: LLM이 타입 지정 → 타입별 fitness 배정 → 완료 시 타입별 기록
 - Both `postMeetingCreateAndRun` and add-tasks pipelines updated
 
-**App Runner UX Overhaul:**
+**App Runner UX Overhaul:** [App Runner: Phase 26에서 제거됨]
 - ProjectFolderWindow에서 AI Analysis 탭 제거 (AnalysisTab.tsx 삭제, 430줄)
 - 앱/프로젝트 클릭 → 동일하게 ProjectFolderWindow (6탭: Files, Tasks, Agents, Terminal, Details, Git)
-- 우클릭 "앱 실행" → AppRunnerWindow (autoRun: AI 자동 분석→설치→실행)
-- AppRunnerWindow: 버튼 제거 → 프롬프트 입력 UI로 교체 (항상 표시)
 - CreateTaskModal 삭제 (12파일, 3,657줄 dead code 제거)
 
 ### Documentation Overhaul (2026-03-24)
@@ -161,12 +191,15 @@
 
 | Phase | Goal | Status |
 |-------|------|--------|
-| 1-20 | Core platform (desktop OS, agents, tasks, workflow, CLI, image studio, synapse, local LLM) | Done |
+| 1-20 | Core platform (desktop OS, agents, tasks, workflow, CLI) | Done |
 | 21 | PM Agent Orchestration — event-driven, LLM-based review/approve/retry | Done |
 | 22 | Debug Experience — AI failure analysis, prompt history, one-click retry | Done |
 | 23 | Learning Loop — auto-learn rules/memory, agent fitness, prompt versioning | Done |
 | 24 | Stability — DB indexes, graceful shutdown, flood prevention | Done |
 | 25 | Feature Extension — prompt UI, agent fitness scoring, i18n foundation | Done |
+| 26 | Developer OS 전환 — Tier 3 기능 대규모 제거 (~85,000줄) | Done |
+
+> **Note (Phase 1-20):** Image Studio, Synapse, App Runner, Workflow Builder, Dashboard, Wallpaper, Local LLM 관리 UI는 Phase 26에서 제거됨. 코드 이력은 git history에 보존.
 
 ---
 
@@ -174,27 +207,30 @@
 
 | Priority | Item | Status |
 |----------|------|--------|
-| **P0** | **Tier 3 기능 제거 (코드 경량화)** | **계획 수립 완료** — 아래 상세 참조 |
+| **P0** | **Orchestration Timeline Phase 2-5** | Phase 1 완료. Phase 2: Timeline 실데이터 연동 (Agent Lanes + Task Inspector), Phase 3: Logs 실데이터 (에러 우선 모드 + 에이전트 필터), Phase 4: Agents 실데이터 (팀 테이블 + fitness), Phase 5: Room 실데이터 (Communication Feed + Reasoning Tree) |
 | P1 | Execution path consistency (task vs chat vs runtime) | Not Started — same agent behaves differently per entry point |
 | P1 | Document drift prevention | Not Started — migration IDs, API coverage already drifting across docs |
 | P2 | i18n full migration (2,454 strings, 235 files) | Not Started — see `strategy/I18N-AGENT-WORKPACK.md` |
 | P2 | `any` types / double-casts cleanup | Phase 1-2 done, remaining ~1,200 cases |
 
-### Tier 3 Feature Removal Plan (2026-03-25)
+### Tier 3 Feature Removal (2026-03-25) — 완료
 
 > 기능 우선순위 분석 (`docs/strategy/FEATURE-PRIORITIZATION-ko.md`) 기반.
-> 핵심 운영 루프(프로젝트→태스크→실행→리뷰)에 기여하지 않는 기능 제거.
+> 핵심 운영 루프(프로젝트 -> 태스크 -> 실행 -> 리뷰)에 기여하지 않는 기능 제거.
 
-| # | Feature | Lines | Action | Status |
-|---|---------|-------|--------|--------|
-| 1 | Wallpaper Picker | ~475 | 완전 제거 | Not Started |
-| 2 | Image Studio | ~2,256 | 완전 제거 | Not Started |
-| 3 | Repo Store | 0 (docs only) | 개념 폐기, 참조 정리 | Not Started |
-| 4 | App Runner | ~1,248 | 완전 제거 | Not Started |
-| 5 | Synapse | ~3,307 | 완전 제거 | Not Started |
-| 6 | Messenger 축소 | ~2,836 | Telegram/Slack 제거, Discord만 유지 | Not Started |
+| # | Feature | Lines | Status |
+|---|---------|-------|--------|
+| 1 | Wallpaper Picker | ~475 | 완료 |
+| 2 | Image Studio | ~2,256 | 완료 |
+| 3 | App Runner | ~1,248 | 완료 |
+| 4 | Synapse | ~3,307 | 완료 |
+| 5 | Dashboard | ~680 | 완료 |
+| 6 | Workflow Builder | ~7,994 | 완료 |
+| 7 | Telegram Messenger | — | 완료 |
+| 8 | Chat 시스템 (Direct/Group/Announcement/Directive) | ~35,000 | 완료 |
+| 9 | Messenger 통합 (Discord/Slack/WhatsApp/Google Chat/Signal/iMessage) | ~34,000 | 완료 |
 
-**예상 제거량:** ~8,500줄 · **DB 마이그레이션:** 건드리지 않음 (기존 테이블 방치)
+**제거 총량:** ~85,000줄 · **DB 마이그레이션:** `2026-03-29-001-drop-removed-features`
 
 ### System Analysis (2026-03-25)
 
@@ -213,4 +249,4 @@
 - Emoji → SVG violations (all files)
 - SVG convention fixes
 - Shell injection + memory leak fixes
-- App Runner prompt UI + AnalysisTab separation
+- Phase 26: Developer OS 전환 — Tier 3 기능 대규모 제거 (~85,000줄)

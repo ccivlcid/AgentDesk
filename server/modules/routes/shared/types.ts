@@ -1,4 +1,5 @@
-import type { MessengerChannel } from "../../../messenger/channels.ts";
+/** MessengerChannel type stub — messenger system removed. */
+type MessengerChannel = string;
 
 export interface AgentRow {
   id: string;
@@ -15,6 +16,8 @@ export interface AgentRow {
   api_model: string | null;
   cli_model: string | null;
   cli_reasoning_level: string | null;
+  persona_id: string | null;
+  acts_as_planning_leader: number | null;
 }
 
 export type DelegationOptions = {

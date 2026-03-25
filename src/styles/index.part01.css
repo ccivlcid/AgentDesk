@@ -493,17 +493,6 @@ pre,
   background: var(--th-bg-primary);
 }
 
-.taskboard-shell {
-  border: 1px solid var(--th-border);
-  border-radius: 4px;
-  background: var(--th-bg-primary);
-}
-
-.taskboard-column {
-  background: var(--th-panel-bg);
-  border-color: var(--th-panel-border);
-}
-
 [data-theme="dark"] .decision-inbox-option,
 [data-theme="dark"] .decision-inline-option,
 [data-theme]:not([data-theme="light"]) .decision-inbox-option,
@@ -622,35 +611,6 @@ pre,
 
 [data-theme="light"] .decision-round-skip:hover:not(:disabled) {
   background: rgba(203, 213, 225, 0.95) !important;
-}
-
-[data-theme="light"] .taskboard-column {
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
-}
-
-.taskboard-project-manage-btn {
-  border-color: rgba(52, 211, 153, 0.45);
-  background-color: rgba(6, 78, 59, 0.35);
-  color: #d1fae5;
-}
-
-.taskboard-project-manage-btn:hover {
-  border-color: rgba(110, 231, 183, 0.72);
-  background-color: rgba(6, 78, 59, 0.56);
-  color: #ecfdf5;
-}
-
-[data-theme="light"] .taskboard-project-manage-btn {
-  border-color: rgba(6, 95, 70, 0.72);
-  background-color: rgba(16, 185, 129, 0.2);
-  color: #065f46;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
-}
-
-[data-theme="light"] .taskboard-project-manage-btn:hover {
-  border-color: rgba(6, 78, 59, 0.85);
-  background-color: rgba(16, 185, 129, 0.3);
-  color: #064e3b;
 }
 
 .terminal-panel-shell {

@@ -29,7 +29,6 @@ export function CommandPaletteResults({
     filteredTasks,
     filteredDeliverables,
     filteredHooks,
-    filteredWorkflows,
     items,
   } = model;
 
@@ -235,27 +234,6 @@ export function CommandPaletteResults({
                 <span style={{ ...sf, fontSize: 10, color: "var(--th-text-muted)", background: "var(--th-bg-panel)", borderRadius: 5, padding: "2px 7px", flexShrink: 0, position: "relative", zIndex: 1 }}>
                   {h.event_type}
                 </span>
-              </PaletteRow>
-            );
-          })}
-        </div>
-      )}
-
-      {filteredWorkflows.length > 0 && (
-        <div>
-          <PaletteSectionHeader label={t({ ko: "저장된 워크플로", en: "Workflows", ja: "ワークフロー", zh: "工作流" })} />
-          {filteredWorkflows.map((wf) => {
-            const idx = flatIdx++;
-            const isSel = idx === safeIndex;
-            let nodeCount = 0;
-            try { nodeCount = (JSON.parse(wf.nodes_json) as unknown[]).length; } catch { /* ignore */ }
-            return (
-              <PaletteRow key={wf.id} item={{ kind: "workflow", wf }} idx={idx} safeIndex={safeIndex} onPick={onExecuteItem}>
-                <PaletteIconBox icon="⬡" bg="#8b5cf6" />
-                <div style={{ flex: 1, textAlign: "left", overflow: "hidden", position: "relative", zIndex: 1 }}>
-                  <div style={{ ...sf, fontSize: 14, color: isSel ? "var(--th-text-heading)" : "var(--th-text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{wf.name}</div>
-                  <div style={{ ...sf, fontSize: 11, color: "var(--th-text-muted)", marginTop: 1 }}>{nodeCount} nodes</div>
-                </div>
               </PaletteRow>
             );
           })}

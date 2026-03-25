@@ -1,6 +1,5 @@
 import type { RuntimeContext } from "../../../types/runtime-context.ts";
-import { registerAnnouncementRoutes } from "./messages/announcements-routes.ts";
-import { registerChatMessageRoutes } from "./messages/chat-routes.ts";
+// chat-routes and announcements-routes removed (Chat system deleted)
 import { registerDecisionInboxRoutes } from "./messages/decision-inbox-routes.ts";
 import { registerDirectiveAndInboxRoutes } from "./messages/directives-inbox-routes.ts";
 
@@ -13,7 +12,6 @@ export function registerOpsMessageRoutes(ctx: RuntimeContext): Record<string, ne
 
   const IdempotencyConflictError = __ctx.IdempotencyConflictError;
   const StorageBusyError = __ctx.StorageBusyError;
-  const firstQueryValue = __ctx.firstQueryValue;
 
   const resolveMessageIdempotencyKey = __ctx.resolveMessageIdempotencyKey;
   const recordMessageIngressAuditOr503 = __ctx.recordMessageIngressAuditOr503;
@@ -21,55 +19,18 @@ export function registerOpsMessageRoutes(ctx: RuntimeContext): Record<string, ne
   const recordAcceptedIngressAuditOrRollback = __ctx.recordAcceptedIngressAuditOrRollback;
 
   const normalizeTextField = __ctx.normalizeTextField;
-  const handleReportRequest = __ctx.handleReportRequest;
   const scheduleAgentReply = __ctx.scheduleAgentReply;
-  const detectMentions = __ctx.detectMentions;
-  const resolveLang = __ctx.resolveLang;
-  const handleMentionDelegation = __ctx.handleMentionDelegation;
-
   const scheduleAnnouncementReplies = __ctx.scheduleAnnouncementReplies;
   const analyzeDirectivePolicy = __ctx.analyzeDirectivePolicy;
   const shouldExecuteDirectiveDelegation = __ctx.shouldExecuteDirectiveDelegation;
   const findTeamLeader = __ctx.findTeamLeader;
   const handleTaskDelegation = __ctx.handleTaskDelegation;
   const resetDirectChatState = __ctx.resetDirectChatState;
+  const detectMentions = __ctx.detectMentions;
 
   const decisionInboxBridge = registerDecisionInboxRoutes(__ctx);
 
-  registerChatMessageRoutes(
-    { app, db, broadcast },
-    {
-      IdempotencyConflictError,
-      StorageBusyError,
-      firstQueryValue,
-      resolveMessageIdempotencyKey,
-      recordMessageIngressAuditOr503,
-      insertMessageWithIdempotency,
-      recordAcceptedIngressAuditOrRollback,
-      normalizeTextField,
-      handleReportRequest,
-      scheduleAgentReply,
-      detectMentions,
-      resolveLang,
-      handleMentionDelegation,
-    },
-  );
-
-  registerAnnouncementRoutes(
-    { app, db, broadcast },
-    {
-      IdempotencyConflictError,
-      StorageBusyError,
-      resolveMessageIdempotencyKey,
-      recordMessageIngressAuditOr503,
-      insertMessageWithIdempotency,
-      recordAcceptedIngressAuditOrRollback,
-      scheduleAnnouncementReplies,
-      detectMentions,
-      findTeamLeader,
-      handleTaskDelegation,
-    },
-  );
+  // chat-routes and announcements-routes registration removed (Chat system deleted)
 
   registerDirectiveAndInboxRoutes(
     { app, db, broadcast },

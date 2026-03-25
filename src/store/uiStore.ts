@@ -9,20 +9,11 @@ import { detectRuntimeOs, isForceUpdateBannerEnabled, mergeSettingsWithDefaults 
 
 const DESKTOP_ICON_LAYOUT_KEY = "agentdesk_icon_layout";
 const DESKTOP_ICON_LABELS_KEY = "agentdesk_icon_labels";
-const WALLPAPER_KEY = "agentdesk_wallpaper";
 const SESSION_WINDOWS_KEY = "agentdesk_session_windows";
 const DOCK_AUTO_HIDE_KEY = "agentdesk_dock_autohide";
 const DND_KEY = "agentdesk_dnd";
 const AUTO_ASSIGN_KEY = "agentdesk_auto_assign";
 const AUTO_UPDATE_KEY = "agentdesk_auto_update";
-
-function loadWallpaper(): string {
-  try { return window.localStorage.getItem(WALLPAPER_KEY) ?? "var(--th-bg-primary)"; } catch { return "var(--th-bg-primary)"; }
-}
-function saveWallpaper(css: string) {
-  try { window.localStorage.setItem(WALLPAPER_KEY, css); } catch { /* ignore */ }
-}
-
 
 function loadDesktopIconLayout(): Record<string, { x: number; y: number }> {
   try {
@@ -79,8 +70,6 @@ interface UiStore {
   desktopIconLayout: Record<string, { x: number; y: number }>;
   selectedAgentId: string | null;
   openTaskId: string | null;
-  wallpaper: string;
-
   settingsInitialTab: SettingsTab | null;
   openSettings: (tab?: SettingsTab) => void;
   toggleWindow: (w: WindowType) => void;
@@ -98,12 +87,6 @@ interface UiStore {
   // ── 새로 설치된 프로젝트 (바탕화면 drop 애니메이션) ─────────────
   newlyInstalledProjectId: string | null;
   setNewlyInstalledProjectId: (id: string | null) => void;
-
-  // ── App Runner ──────────────────────────────────────────────────
-  appRunnerProjectId: string | null;
-  appRunnerAutoRun: boolean;
-  openAppRunner: (projectId: string, autoRun?: boolean) => void;
-  clearAppRunnerAutoRun: () => void;
 
   jiggleMode: boolean;
   missionControlOpen: boolean;
@@ -130,7 +113,6 @@ interface UiStore {
 
   setSelectedAgentId: (id: string | null) => void;
   setOpenTaskId: (id: string | null) => void;
-  setWallpaper: (css: string) => void;
   setJiggleMode: (v: boolean) => void;
   setMissionControlOpen: (v: boolean) => void;
 
@@ -192,8 +174,6 @@ interface UiStore {
   loading: boolean;
   settings: CompanySettings;
   oauthResult: OAuthCallbackResult | null;
-  unreadReportCount: number;
-  showReportHistory: boolean;
   showAgentStatus: boolean;
   showGroupChat: boolean;
   groupChatInitialAgentIds: string[];
@@ -212,8 +192,6 @@ interface UiStore {
   kickoffStage: "idle" | "planning" | "meeting" | "assigning" | "executing" | "done";
   setKickoffStage: (stage: "idle" | "planning" | "meeting" | "assigning" | "executing" | "done") => void;
 
-  pmActivityProjectId: string | null;
-  pmActivityExpanded: boolean;
   mobileNavOpen: boolean;
   mobileHeaderMenuOpen: boolean;
   runtimeOs: RuntimeOs;
@@ -225,17 +203,12 @@ interface UiStore {
   setLoading: (a: SA<boolean>) => void;
   setSettings: (a: SA<CompanySettings>) => void;
   setOauthResult: (a: SA<OAuthCallbackResult | null>) => void;
-  incUnreadReportCount: () => void;
-  clearUnreadReportCount: () => void;
-  setShowReportHistory: (a: SA<boolean>) => void;
   setShowAgentStatus: (a: SA<boolean>) => void;
   setShowGroupChat: (a: SA<boolean>) => void;
   setGroupChatInitialAgentIds: (a: SA<string[]>) => void;
   setLastGroupRoom: (roomId: string | null, agentIds: string[]) => void;
   setDecisionInboxLoading: (a: SA<boolean>) => void;
   setDecisionReplyBusyKey: (a: SA<string | null>) => void;
-  setPmActivityProjectId: (a: SA<string | null>) => void;
-  togglePmActivityExpanded: () => void;
   setMobileNavOpen: (a: SA<boolean>) => void;
   setMobileHeaderMenuOpen: (a: SA<boolean>) => void;
   setUpdateStatus: (a: SA<UpdateStatus | null>) => void;
@@ -308,7 +281,6 @@ export const useUiStore = create<UiStore>()((set) => ({
   },
   selectedAgentId: null,
   openTaskId: null,
-  wallpaper: loadWallpaper(),
 
   toggleWindow: (w) => set((s) => {
     const next = new Set(s.openWindows);
@@ -377,18 +349,8 @@ export const useUiStore = create<UiStore>()((set) => ({
   newlyInstalledProjectId: null,
   setNewlyInstalledProjectId: (id) => set({ newlyInstalledProjectId: id }),
 
-  appRunnerProjectId: null,
-  appRunnerAutoRun: false,
-  openAppRunner: (projectId, autoRun) => set((s) => {
-    const next = new Set(s.openWindows);
-    next.add("app-runner");
-    return { appRunnerProjectId: projectId, appRunnerAutoRun: autoRun ?? false, openWindows: next };
-  }),
-  clearAppRunnerAutoRun: () => set({ appRunnerAutoRun: false }),
-
   setSelectedAgentId: (id) => set({ selectedAgentId: id }),
   setOpenTaskId: (id) => set({ openTaskId: id }),
-  setWallpaper: (css) => { saveWallpaper(css); set({ wallpaper: css }); },
   setJiggleMode: (v) => set({ jiggleMode: v }),
   setMissionControlOpen: (v) => set({ missionControlOpen: v }),
 
@@ -442,12 +404,10 @@ export const useUiStore = create<UiStore>()((set) => ({
   }),
 
   // ── 기존 초기값 ───────────────────────────────────────────────────
-  view: "dashboard",
+  view: "tasks",
   loading: true,
   settings: mergeSettingsWithDefaults({ language: detectBrowserLanguage() }),
   oauthResult: null,
-  unreadReportCount: 0,
-  showReportHistory: false,
   showAgentStatus: false,
   showGroupChat: false,
   groupChatInitialAgentIds: [],
@@ -472,8 +432,6 @@ export const useUiStore = create<UiStore>()((set) => ({
   kickoffStage: "idle",
   setKickoffStage: (stage) => set({ kickoffStage: stage, kickoffBusy: stage !== "idle" && stage !== "done" }),
 
-  pmActivityProjectId: null,
-  pmActivityExpanded: false,
   mobileNavOpen: false,
   mobileHeaderMenuOpen: false,
   runtimeOs: detectRuntimeOs(),
@@ -485,17 +443,12 @@ export const useUiStore = create<UiStore>()((set) => ({
   setLoading: (a) => set((s) => ({ loading: apply(s.loading, a) })),
   setSettings: (a) => set((s) => ({ settings: apply(s.settings, a) })),
   setOauthResult: (a) => set((s) => ({ oauthResult: apply(s.oauthResult, a) })),
-  incUnreadReportCount: () => set((s) => ({ unreadReportCount: s.unreadReportCount + 1 })),
-  clearUnreadReportCount: () => set({ unreadReportCount: 0 }),
-  setShowReportHistory: (a) => set((s) => ({ showReportHistory: apply(s.showReportHistory, a) })),
   setShowAgentStatus: (a) => set((s) => ({ showAgentStatus: apply(s.showAgentStatus, a) })),
   setShowGroupChat: (a) => set((s) => ({ showGroupChat: apply(s.showGroupChat, a) })),
   setGroupChatInitialAgentIds: (a) => set((s) => ({ groupChatInitialAgentIds: apply(s.groupChatInitialAgentIds, a) })),
   setLastGroupRoom: (roomId: string | null, agentIds: string[]) => set({ lastGroupRoomId: roomId, lastGroupAgentIds: agentIds }),
   setDecisionInboxLoading: (a) => set((s) => ({ decisionInboxLoading: apply(s.decisionInboxLoading, a) })),
   setDecisionReplyBusyKey: (a) => set((s) => ({ decisionReplyBusyKey: apply(s.decisionReplyBusyKey, a) })),
-  setPmActivityProjectId: (a) => set((s) => ({ pmActivityProjectId: apply(s.pmActivityProjectId, a) })),
-  togglePmActivityExpanded: () => set((s) => ({ pmActivityExpanded: !s.pmActivityExpanded })),
   setMobileNavOpen: (a) => set((s) => ({ mobileNavOpen: apply(s.mobileNavOpen, a) })),
   setMobileHeaderMenuOpen: (a) => set((s) => ({ mobileHeaderMenuOpen: apply(s.mobileHeaderMenuOpen, a) })),
   setUpdateStatus: (a) => set((s) => ({ updateStatus: apply(s.updateStatus, a) })),

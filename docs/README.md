@@ -34,16 +34,9 @@
 |----------|---------|
 | [DESIGN.md](design/DESIGN.md) | CSS variables, component style rules |
 | [UI-SCREENS.md](design/UI-SCREENS.md) | Screen & modal specs (macOS desktop metaphor) |
+| [ORCHESTRATION-TIMELINE.md](design/ORCHESTRATION-TIMELINE.md) | Orchestration Timeline UI — TaskBoard 대체, 개발자 중심 실시간 오케스트레이션 뷰 |
 
-## Strategy & Analysis
-
-| Document | Purpose |
-|----------|---------|
-| [SYSTEM-PROBLEMS-4-AXIS.md](strategy/SYSTEM-PROBLEMS-4-AXIS.md) | System problems — product, architecture, operations, UX (4-axis) |
-| [AGENTDESK-STRENGTHS-AND-WEAKNESSES-ko.md](strategy/AGENTDESK-STRENGTHS-AND-WEAKNESSES-ko.md) | Strengths & weaknesses analysis (Korean) |
-| [FEATURE-PRIORITIZATION-ko.md](strategy/FEATURE-PRIORITIZATION-ko.md) | Korean prioritization of core features to strengthen vs features to reduce or deprioritize |
-
-## Pending Work
+## Strategy
 
 | Document | Purpose |
 |----------|---------|

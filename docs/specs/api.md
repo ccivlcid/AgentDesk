@@ -4,7 +4,7 @@ This document defines a contributor-facing API baseline for AgentDesk.
 It is intentionally compact and focused on frequently used endpoints.
 Current baseline target: `v1.6.4` (local snapshot, 2026-03-24).
 > **v1.6.4 changes:** Added `POST /api/projects/delete-directory` — recursively delete a project directory on disk when allowed by `PROJECT_PATH_ALLOWED_ROOTS` and no `projects` row references the path (trash empty / permanent erase).
-> **v1.6.2 changes:** Added `POST /api/projects/auto-assign-agents` (AI agent staffing), `POST /api/projects/:id/kickoff`, `GET /api/projects/:id/pm-activity`, `POST /api/projects/:id/clarification-reply`. Notifications CHECK constraint expanded with `task_started`, `kickoff`.
+> **v1.6.2 changes:** Added `POST /api/projects/auto-assign-agents` (AI agent staffing), `POST /api/projects/:id/kickoff`, `POST /api/projects/:id/clarification-reply`. Notifications CHECK constraint expanded with `task_started`, `kickoff`.
 > **v1.6.1 changes:** `hook_entries.scope_type` now accepts `'project'` (migration `2026-03-23-001`). `/api/hooks` accepts `scope_type=project&scope_id=<project_id>` filter.
 
 ## Base
@@ -46,74 +46,7 @@ Error payloads can vary by route, but API clients should handle:
 
 The frontend client wraps non-2xx responses with `ApiRequestError` (`status`, `code`, `details`, `url`).
 
-## Messenger Session Contract (v1.2.3)
-
-Messenger channel settings are stored in `settings.key = "messengerChannels"` and can include:
-
-- `token`: channel token (encrypted at rest with AES-256-GCM using `OAUTH_ENCRYPTION_SECRET`, fallback: `SESSION_SECRET`)
-- `sessions[]`:
-  - `id`
-  - `name`
-  - `targetId`
-  - `enabled` (default true)
-  - `agentId` (optional, binds session to a specific agent for direct chat/task routing)
-
-Supported channel ids (AgentDesk parity):
-
-- `telegram`
-- `whatsapp`
-- `discord`
-- `googlechat`
-- `slack`
-- `signal`
-- `imessage`
-
-Runtime behavior highlights:
-
-- Task report relays are route-pinned to the task's originating messenger target (`[messenger-route]` audit marker in task logs).
-- Channel spread is prevented for route-pinned task reports.
-- Typing indicators are emitted during direct-chat generation for Telegram/Discord; other channels are no-op.
-- Native direct send runtime exists for all AgentDesk-parity channels (`telegram`, `whatsapp`, `discord`, `googlechat`, `slack`, `signal`, `imessage`).
-- Per-channel setup requirements differ (e.g., WhatsApp Cloud API token + phone number id, Google Chat webhook URL or `key|token`, Signal RPC base URL, macOS iMessage runtime).
-- New project creation path in direct-chat escalation is restricted by `PROJECT_PATH_ALLOWED_ROOTS`.
-
-**Direct chat / Messenger prefixes**
-
-- `$` — Company-wide directive (Client Directive). Messages starting with `$` via inbox webhook etc. are processed as company-wide instruction flows: planning team assembly, team lead meetings, task assignment, etc.
-- `!` — Explicit "work task" during general chat. Messages to an agent starting with `!` have the prefix stripped and are treated as work tasks (task flow); the agent will request project selection if needed. Example: `!Check Naver Finance` → processed as a task, `Check Naver Finance` → treated as an information request with a general reply.
-- `#` — Orchestrated task registration. Used by the AgentDesk client/orchestrator flow to register work on the task board first, then ask for or apply `project_path` before execution.
-
 ## Core Endpoint Groups
-
-### Messenger (Built-in Channels)
-
-| Method | Path | Purpose |
-| --- | --- | --- |
-| GET | `/api/messenger/sessions` | List runtime messenger sessions resolved from persisted settings |
-| GET | `/api/messenger/receiver/telegram` | Telegram webhook/poll receiver status |
-| GET | `/api/messenger/receiver/discord` | Discord polling receiver status |
-| GET | `/api/messenger/receiver/slack` | Slack polling receiver status (Bot Token `xoxb-...`) |
-| POST | `/api/messenger/discord/channels` | Discover accessible Discord text channels by Bot token |
-| POST | `/api/messenger/send` | Send message by `sessionKey` or (`channel` + `targetId`) |
-
-`POST /api/messenger/send` request body:
-
-```json
-{
-  "sessionKey": "telegram:my-session",
-  "text": "hello"
-}
-```
-
-or
-
-```json
-{
-  "channel": "discord",
-  "targetId": "123456789012345678",
-  "text": "hello"
-}
-```
 
 ### Workflow Pack Routing
 
@@ -220,7 +153,6 @@ or
 | POST | `/api/projects/:id/add-tasks` | Add tasks to an existing project via abbreviated PM planning flow |
 | POST | `/api/projects/:id/resume` | Resume next planned task |
 | POST | `/api/projects/:id/clarification-reply` | Reply to kickoff clarification |
-| GET | `/api/projects/:id/pm-activity` | PM activity timeline |
 | POST | `/api/projects/auto-assign-agents` | AI auto-assign agents to project roles |
 | GET | `/api/github/status` | GitHub integration status |
 | GET | `/api/github/repos` | Repositories |
@@ -554,110 +486,6 @@ The following endpoints are registered on the server but omitted from this basel
 - **Spec file:** `docs/specs/openapi.json`
 - **Serving:** The server reads this file and serves it at `GET /api/openapi.json`; Swagger UI is available at `/api/docs`.
 - **Load path:** Server code `server/modules/routes/ops/api-docs.ts` uses `docs/specs/openapi.json`.
-
-## Local LLM Manager API
-
-Base prefix: `/api/local-llm`
-
-### Backends
-
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/api/local-llm/backends` | List all backends with status (Ollama, LM Studio, llama.cpp, Jan) |
-| `POST` | `/api/local-llm/backends/:name/start` | Start backend (Ollama only; LM Studio returns `manual:true`) |
-| `POST` | `/api/local-llm/backends/:name/stop` | Stop backend (Ollama only) |
-| `POST` | `/api/local-llm/backends/:name/restart` | Restart backend (Ollama only) |
-
-**BackendInfo response shape:**
-```json
-{
-  "name": "ollama",
-  "label": "Ollama",
-  "installed": true,
-  "version": "0.3.4",
-  "running": true,
-  "port": 11434,
-  "base_url": "http://localhost:11434/v1",
-  "model_count": 3
-}
-```
-
-### Models
-
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/api/local-llm/models` | List installed models (from Ollama) |
-| `GET` | `/api/local-llm/models/gallery` | Gallery of 20 recommended models |
-| `POST` | `/api/local-llm/models/pull` | Pull (download) a model; progress broadcast via WS `local_llm_pull_progress` |
-| `DELETE` | `/api/local-llm/models/:name` | Delete an installed model |
-| `POST` | `/api/local-llm/sync` | Sync Ollama model list → `local_llm_models` DB table |
-
-**Pull request body:** `{ "model_name": "llama3.2:3b", "backend": "ollama" }`
-
-**WS broadcast `local_llm_pull_progress`:**
-```json
-{ "model": "llama3.2:3b", "status": "downloading|done|error", "percent": 42 }
-```
-
-### Providers (Agent Integration)
-
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/api/local-llm/providers` | List all local LLM models as provider options (Ollama + LM Studio) |
-| `POST` | `/api/local-llm/providers/test` | Ping a backend to check if it's running |
-| `POST` | `/api/local-llm/setup-provider` | Auto-register Ollama or LM Studio as an `api_providers` entry |
-
-`POST /api/local-llm/setup-provider` request body:
-```json
-{ "backend": "ollama" }
-```
-or
-```json
-{ "backend": "lmstudio" }
-```
-
-- Looks up an existing `api_providers` row by `base_url` (Ollama: `http://localhost:11434/v1`, LM Studio: `http://localhost:1234/v1`).
-- If none found, pings the backend; on success creates a new entry in `api_providers` with `type: "ollama"` or `type: "custom"` respectively.
-- Response: `{ "ok": true, "provider_id": "<uuid>" }`
-- On failure (backend not reachable): `{ "ok": false, "error": "backend_not_reachable" }`
-
-### Metrics & Monitoring
-
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/api/local-llm/metrics` | Current GPU/RAM/inference snapshot |
-| `GET` | `/api/local-llm/metrics/history?limit=50` | Recent inference log rows (joined with agent names) |
-| `GET` | `/api/local-llm/metrics/stats` | Per-model aggregates (total tokens, avg t/s, avg latency) |
-| `POST` | `/api/local-llm/log` | Record inference event (internal use) |
-
-**Metrics snapshot shape:**
-```json
-{
-  "gpu": { "name": "RTX 4090", "vram_total_bytes": ..., "vram_used_bytes": ..., "utilization_percent": 42 },
-  "ram": { "total_bytes": ..., "used_bytes": ..., "utilization_percent": 68 },
-  "inference": { "active_model": "llama3.2:3b", "tokens_per_second": 28.4 },
-  "collected_at": 1710000000000
-}
-```
-
-Metrics are also pushed via WebSocket every 5 seconds as `local_llm_metrics`.
-
-### Settings
-
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/api/local-llm/settings` | Get backend settings (host, port, auto_start) |
-| `PATCH` | `/api/local-llm/settings/:name` | Update settings for a backend (e.g. `ollama`) |
-
-### Inference Logging (Phase 20)
-
-When an agent executes a task via a local LLM provider (`api_provider_id` set, type = `ollama`/`lmstudio`/`openai`), completion stats are automatically recorded:
-- Token counts extracted from OpenAI-compatible SSE `usage` field
-- `latency_ms` measured from request start to stream end
-- `tokens_per_second` derived from completion tokens ÷ latency
-- Stored in `local_llm_inference_log` table, visible in Monitor tab
-
----
 
 ---
 

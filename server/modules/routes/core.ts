@@ -6,15 +6,7 @@ import path from "node:path";
 import { execFile } from "node:child_process";
 import { randomUUID, createHash } from "node:crypto";
 import { INBOX_WEBHOOK_SECRET, PKG_VERSION } from "../../config/runtime.ts";
-import {
-  listDiscordChannelsByToken,
-  listMessengerSessions,
-  sendMessengerMessage,
-  sendMessengerSessionMessage,
-} from "../../gateway/client.ts";
-import { isMessengerChannel, isNativeMessengerChannel } from "../../messenger/channels.ts";
-import { getTelegramReceiverStatus } from "../../messenger/telegram-receiver.ts";
-import { getSlackReceiverStatus } from "../../messenger/slack-receiver.ts";
+// messenger/gateway imports removed (Chat/Messenger system deleted)
 import {
   BUILTIN_GITHUB_CLIENT_ID,
   BUILTIN_GOOGLE_CLIENT_ID,
@@ -45,19 +37,16 @@ import { registerUpdateAutoRoutes } from "./core/update-auto/register.ts";
 import { registerOfficePackRoutes } from "./core/office-packs.ts";
 import { registerCategoryRoutes } from "./core/categories.ts";
 import { registerProjectTypeTemplateRoutes } from "./core/project-type-templates.ts";
-import { registerProjectDashboardRoutes } from "./core/project-dashboard.ts";
 import { registerPersonaRoutes } from "./core/personas.ts";
-import { registerCompositionTemplateRoutes } from "./ops/composition-templates.ts";
-import { registerWorkflowScheduleRoutes } from "./ops/workflow-schedules.ts";
 import { registerAgentPerformanceRoutes } from "./ops/agent-performance.ts";
 import { registerDataExportRoutes } from "./ops/data-export.ts";
 import { registerFilesystemRoutes } from "./ops/filesystem.ts";
 import { registerGithubTrendingRoutes } from "./ops/github-trending.ts";
-import { registerAppRunnerRoutes } from "./ops/app-runner.ts";
+// app-runner removed
 import type { AgentRow, MeetingMinuteEntryRow, MeetingMinutesRow, MeetingReviewDecision } from "./shared/types.ts";
 import type { AgentRow as WorkflowAgentRow } from "../workflow/core/conversation-types.ts";
 import { castSqliteRow } from "../../lib/sqlite-row-cast.ts";
-import { getDiscordReceiverStatus } from "../../messenger/discord-receiver.ts";
+// discord-receiver import removed (Chat/Messenger system deleted)
 
 export function registerRoutesPartA(ctx: RuntimeContext): Record<string, never> {
   const __ctx: RuntimeContext = ctx;
@@ -249,113 +238,7 @@ export function registerRoutesPartA(ctx: RuntimeContext): Record<string, never> 
   registerUpdateAutoRoutes(__ctx);
   registerOfficePackRoutes(__ctx);
 
-  // ---------------------------------------------------------------------------
-  // Direct messenger channels
-  // ---------------------------------------------------------------------------
-  app.get("/api/messenger/sessions", (_req, res) => {
-    try {
-      const sessions = listMessengerSessions();
-      res.json({ ok: true, sessions });
-    } catch (err: unknown) {
-      res.status(500).json({ ok: false, error: err instanceof Error ? err.message : String(err) });
-    }
-  });
-
-  app.get("/api/messenger/receiver/telegram", (_req, res) => {
-    try {
-      res.json({ ok: true, status: getTelegramReceiverStatus() });
-    } catch (err: unknown) {
-      res.status(500).json({ ok: false, error: err instanceof Error ? err.message : String(err) });
-    }
-  });
-
-  app.get("/api/messenger/receiver/discord", (_req, res) => {
-    try {
-      res.json({ ok: true, status: getDiscordReceiverStatus() });
-    } catch (err: unknown) {
-      res.status(500).json({ ok: false, error: err instanceof Error ? err.message : String(err) });
-    }
-  });
-
-  app.get("/api/messenger/receiver/slack", (_req, res) => {
-    try {
-      res.json({ ok: true, status: getSlackReceiverStatus() });
-    } catch (err: unknown) {
-      res.status(500).json({ ok: false, error: err instanceof Error ? err.message : String(err) });
-    }
-  });
-
-  app.post("/api/messenger/discord/channels", async (req, res) => {
-    try {
-      const body = (req.body ?? {}) as { token?: string };
-      const token = normalizeTextField(body.token);
-      if (!token) {
-        return res.status(400).json({ ok: false, error: "discord_token_required" });
-      }
-      const channels = await listDiscordChannelsByToken(token);
-      return res.json({ ok: true, channels });
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : String(err);
-      const status = /discord api failed \((\d{3})\)/.exec(message)?.[1];
-      if (status === "401" || status === "403") {
-        return res.status(Number(status)).json({ ok: false, error: "discord_auth_failed" });
-      }
-      if (status === "429") {
-        return res.status(429).json({ ok: false, error: "discord_rate_limited" });
-      }
-      return res.status(502).json({ ok: false, error: "discord_channel_lookup_failed" });
-    }
-  });
-
-  app.post("/api/messenger/send", async (req, res) => {
-    try {
-      const body = (req.body ?? {}) as {
-        sessionKey?: string;
-        channel?: string;
-        targetId?: string;
-        text?: string;
-      };
-      const text = normalizeTextField(body.text);
-      if (!text) {
-        return res.status(400).json({ ok: false, error: "text required" });
-      }
-
-      const sessionKey = normalizeTextField(body.sessionKey);
-      if (sessionKey) {
-        const sessionChannelHint = sessionKey.split(":", 1)[0]?.trim().toLowerCase() ?? "";
-        if (
-          sessionChannelHint &&
-          isMessengerChannel(sessionChannelHint) &&
-          !isNativeMessengerChannel(sessionChannelHint)
-        ) {
-          return res.status(400).json({ ok: false, error: `channel transport not implemented: ${sessionChannelHint}` });
-        }
-        await sendMessengerSessionMessage(sessionKey, text);
-        return res.json({ ok: true });
-      }
-
-      const channel = normalizeTextField(body.channel);
-      const targetId = normalizeTextField(body.targetId);
-      if (!channel || !targetId) {
-        return res.status(400).json({ ok: false, error: "sessionKey or channel/targetId required" });
-      }
-      if (!isMessengerChannel(channel)) {
-        return res.status(400).json({ ok: false, error: "unsupported channel" });
-      }
-      if (!isNativeMessengerChannel(channel)) {
-        return res.status(400).json({ ok: false, error: `channel transport not implemented: ${channel}` });
-      }
-
-      await sendMessengerMessage({
-        channel,
-        targetId,
-        text,
-      });
-      return res.json({ ok: true });
-    } catch (err: unknown) {
-      res.status(500).json({ ok: false, error: err instanceof Error ? err.message : String(err) });
-    }
-  });
+  // messenger routes removed (Chat/Messenger system deleted)
 
   // ---------------------------------------------------------------------------
   // Departments
@@ -429,15 +312,12 @@ export function registerRoutesPartA(ctx: RuntimeContext): Record<string, never> 
   registerPipelineGateRoutes({ app, db, nowMs });
   registerCategoryRoutes({ app, db, nowMs });
   registerProjectTypeTemplateRoutes({ app, db, nowMs });
-  registerProjectDashboardRoutes({ app, db, nowMs });
   registerPersonaRoutes({ app });
-  registerCompositionTemplateRoutes({ app, db, nowMs });
-  registerWorkflowScheduleRoutes({ app, db, nowMs });
   registerAgentPerformanceRoutes({ app, db, nowMs });
   registerDataExportRoutes({ app, db });
   registerFilesystemRoutes({ app });
   registerGithubTrendingRoutes({ app });
-  registerAppRunnerRoutes({ app, db, broadcast });
+  // app-runner routes removed
 
   // ---------------------------------------------------------------------------
   // SubTask endpoints

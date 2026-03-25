@@ -6,10 +6,8 @@ import ToastContainer from "./ToastContainer";
 import AppSwitcher from "./AppSwitcher";
 import SnapPreviewOverlay from "./SnapPreviewOverlay";
 import SnapFillSuggestion from "./SnapFillSuggestion";
-import RightShelf from "./RightShelf";
 
 export interface DesktopChromeProps {
-  wallpaper: string;
   setCtxMenu: (v: { x: number; y: number } | null) => void;
   onDesktopClick: (e: React.MouseEvent) => void;
   onDesktopMouseDown: (e: React.MouseEvent) => void;
@@ -22,7 +20,6 @@ export interface DesktopChromeProps {
 }
 
 export function DesktopChrome({
-  wallpaper,
   setCtxMenu,
   onDesktopClick,
   onDesktopMouseDown,
@@ -38,7 +35,7 @@ export function DesktopChrome({
       style={{
         position: "fixed",
         inset: 0,
-        background: wallpaper,
+        background: "var(--th-bg-primary)",
         overflow: "hidden",
         fontFamily: "var(--th-font-mono)",
         transition: "background 0.4s ease",
@@ -61,7 +58,6 @@ export function DesktopChrome({
       <SnapFillSuggestion />
       <DesktopIconArea {...iconAreaProps} />
       <Dock {...dockProps} />
-      <RightShelf />
       {children}
     </div>
   );

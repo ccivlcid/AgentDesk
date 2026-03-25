@@ -8,12 +8,12 @@ import {
   getTaskReportDetail,
   type ProjectDecisionEventItem,
   type ProjectDetailResponse,
-  type ProjectReportHistoryItem,
   type ProjectTaskHistoryItem,
   type TaskReportDetail,
 } from "../api";
 import { applyProjectTemplate, getProjectTemplates, getProjectSources, addProjectSource, removeProjectSource, type ProjectTemplate, type ProjectSource } from "../api/organization-projects";
-import { getFigmaInfo } from "../api/synapse";
+/** Stub -- Synapse/Figma API removed; Figma integration is no longer available */
+const getFigmaInfo = (): Promise<{ connected: boolean }> => Promise.resolve({ connected: false });
 import { useI18n } from "../i18n";
 import GitHubImportPanel from "./GitHubImportPanel";
 import TaskReportPopup from "./TaskReportPopup";
@@ -208,13 +208,6 @@ export default function ProjectManagerModal({ agents, departments = [], onClose,
         children: [...group.children].sort((a, b) => (b.created_at || 0) - (a.created_at || 0)),
       }))
       .sort((a, b) => b.latestAt - a.latestAt);
-  }, [detail]);
-
-  const sortedReports = useMemo<ProjectReportHistoryItem[]>(() => {
-    if (!detail) return [];
-    return [...detail.reports].sort(
-      (a, b) => (b.completed_at || b.created_at || 0) - (a.completed_at || a.created_at || 0),
-    );
   }, [detail]);
 
   const sortedDecisionEvents = useMemo<ProjectDecisionEventItem[]>(() => {
@@ -541,7 +534,6 @@ export default function ProjectManagerModal({ agents, departments = [], onClose,
                   loadingDetail={loadingDetail}
                   isCreating={isCreating}
                   groupedTaskCards={groupedTaskCards}
-                  sortedReports={sortedReports}
                   sortedDecisionEvents={sortedDecisionEvents}
                   getDecisionEventLabel={getDecisionEventLabel}
                   handleOpenTaskDetail={handleOpenTaskDetail}

@@ -332,12 +332,7 @@ export interface Project {
   directive_type_slug?: string | null;
   current_version?: string | null;
   auto_create_pr?: number | null;
-  // Repo Store app fields
   project_type?: "project" | "app";
-  app_status?: "downloaded" | "analyzing" | "analyzed" | "installing" | "installed" | "running" | "stopped" | null;
-  app_analysis?: string | null;
-  app_port?: number | null;
-  app_pid?: number | null;
 }
 
 export interface ProjectSource {
@@ -543,7 +538,6 @@ export type WSEventType =
   | "task_report"
   | "notification"
   | "queue_status"
-  | "pm_activity"
   | "connected"
   | "skill_learn_job_update"
   | "memory_learn_job_update"
