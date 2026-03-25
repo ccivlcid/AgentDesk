@@ -1,5 +1,5 @@
 import type { AgentRow, MeetingPromptOptions } from "./conversation-types.ts";
-import type { Lang } from "../../../types/lang.ts";
+import { isLang, type Lang } from "../../../types/lang.ts";
 import { buildCharacterPersonaBlock } from "./character-persona.ts";
 
 type CreateMeetingPromptToolsDeps = {
@@ -98,8 +98,9 @@ export function createMeetingPromptTools(deps: CreateMeetingPromptToolsDeps) {
     agent: AgentRow,
     ceoMessage: string,
     messageType: string,
-  ): { prompt: string; lang: string } {
-    const lang = resolveLang(ceoMessage);
+  ): { prompt: string; lang: Lang } {
+    const langRaw = resolveLang(ceoMessage);
+    const lang: Lang = isLang(langRaw) ? langRaw : "ko";
     const deptName = getDeptName(agent.department_id ?? "");
     const role = getRoleLabel(agent.role, lang);
     const deptConstraint = agent.department_id ? getDeptRoleConstraint(agent.department_id, deptName) : "";

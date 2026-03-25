@@ -18,7 +18,7 @@ export function initializeWorkflowAgentProviders(ctx: RuntimeContext): any {
   const normalizeStreamChunk = __ctx.normalizeStreamChunk;
   const createSubtaskFromCli = __ctx.createSubtaskFromCli;
   const completeSubtaskFromCli = __ctx.completeSubtaskFromCli;
-  const handleTaskRunComplete = (...args: any[]) => __ctx.handleTaskRunComplete(...args);
+  const handleTaskRunComplete = (taskId: string, exitCode: number) => __ctx.handleTaskRunComplete(taskId, exitCode);
   const ensureOAuthActiveAccount = __ctx.ensureOAuthActiveAccount;
   const getActiveOAuthAccountIds = __ctx.getActiveOAuthAccountIds;
   const setActiveOAuthAccount = __ctx.setActiveOAuthAccount;

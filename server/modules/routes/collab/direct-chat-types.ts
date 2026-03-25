@@ -1,6 +1,11 @@
 import type { RuntimeContext } from "../../../types/runtime-context.ts";
 import type { Lang } from "../../../types/lang.ts";
 import type { DelegationOptions } from "./project-resolution.ts";
+import type {
+  OneShotRunOptions,
+  OneShotRunResult,
+  ReplyKind,
+} from "../../workflow/core/conversation-types.ts";
 
 export interface AgentRow {
   id: string;
@@ -22,10 +27,6 @@ export interface AgentRow {
 }
 
 export type L10n = Record<Lang, string[]>;
-
-export type DirectReplyPayload = {
-  text?: string;
-};
 
 export type DirectReplyBuild = {
   prompt: string;
@@ -64,14 +65,14 @@ export type DirectChatDeps = {
     roomId?: string | null,
   ) => void;
   registerTaskMessengerRoute: (taskId: string, options?: DelegationOptions) => void;
-  chooseSafeReply: (run: DirectReplyPayload, lang: Lang, context: "direct", agent: AgentRow) => string;
+  chooseSafeReply: (run: OneShotRunResult, lang: Lang, context: ReplyKind, agent: AgentRow) => string;
   buildCliFailureMessage: (agent: AgentRow, lang: Lang, reason: string) => string;
   buildDirectReplyPrompt: (agent: AgentRow, ceoMessage: string, messageType: string) => DirectReplyBuild;
   runAgentOneShot: (
     agent: AgentRow,
     prompt: string,
-    opts: { projectPath: string; rawOutput: true; noTools?: boolean },
-  ) => Promise<DirectReplyPayload>;
+    opts: OneShotRunOptions & { projectPath: string; rawOutput: true; noTools?: boolean },
+  ) => Promise<OneShotRunResult>;
   executeApiProviderAgent: RuntimeContext["executeApiProviderAgent"];
   executeCopilotAgent: RuntimeContext["executeCopilotAgent"];
   executeAntigravityAgent: RuntimeContext["executeAntigravityAgent"];

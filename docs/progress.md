@@ -1,6 +1,6 @@
 # AgentDesk — Development Progress
 
-> Last updated: 2026-03-24
+> Last updated: 2026-03-25
 
 ---
 
@@ -12,6 +12,67 @@
 ---
 
 ## Active Work
+
+### Phase 2 — `RuntimeContext` typing (`WorkflowCoreExports` batch 3) (2026-03-25)
+
+- **`WorkflowCoreExports`:** Replaced worktree / project-context / CLI / meeting / one-shot `(...args: any[]) => any` stubs with concrete signatures (`createWorktree`, `mergeWorktree`, `mergeToDevAndCreatePR`, `buildTaskExecutionPrompt`, `injectTaskContext`, `runAgentOneShot`, etc.)
+- **Cross-module alignment:** `chooseSafeReply` / `getAgentDisplayName` widened at the context boundary (`kind: string`, `agent: unknown`) with safe handling in `reply-core-tools.ts`; `buildDirectReplyPrompt` returns `Lang` via `isLang` in `meeting-prompt-tools.ts`
+- **Consumers:** `planning-archive-tools` uses `AgentRow` from `conversation-types`; `PersonaRoutesCtx` uses typed `runAgentOneShot`; `direct-chat-types` uses `OneShotRunResult` / `OneShotRunOptions`; decision-inbox `AgentOneShotResult` aliases `OneShotRunResult`; `review-consensus-outcome` `getAgentDisplayName` accepts `unknown`
+- **Verify:** `./node_modules/.bin/tsc -b --noEmit` OK
+
+### Phase 1 — `any` removal: `execution-control.ts` (2026-03-25)
+
+- **Guide:** `docs/architecture/any-type-removal-guide.md` Phase 1 (quick wins)
+- **Changes:** Removed all `any` / `as any` in task inject/stop/resume routes — `Request`/`Response` for CSRF guard, `SQLInputValue[]` for dynamic `UPDATE` bind arrays, untyped `db` casts replaced (call sites match `DbLike` from interrupt + task-execution-meta modules)
+- **Types:** Exported `TaskExecutionSession` from `session-review-tools.ts`; `validateInterruptProof` / `buildInterruptProofPayload` use it (map values still `any` at `RuntimeContext` boundary — narrowed at read sites)
+- **Verify:** `npx tsc -p tsconfig.node.json --noEmit` OK. `vitest` not run here (rollup `@rollup/rollup-linux-x64-gnu` missing in this environment)
+
+### Phase 2 — `RuntimeContext` typing (batch 2) (2026-03-25)
+
+- **`WorkflowOrchestrationExports`:** Replaced remaining `any` stubs with concrete signatures — `ensureTaskExecutionSession`, `endTaskExecutionSession`, `isTaskWorkflowInterrupted`, `clearTaskWorkflowState`, progress timers, `scheduleNextReviewRound` (uses `Lang`), `notifyClient`, `archivePlanningConsolidatedReport` (async), `isAgentInMeeting`, `startTaskExecutionForAgent` (`AgentRow`), `startPlannedApprovalMeeting`, `handleTaskRunComplete`, `finishReview`
+- **Imports:** `AgentRow` from `conversation-types`, `Lang` from `lang.ts` in `runtime-context.ts`
+- **`agents/providers.ts`:** `handleTaskRunComplete` forwarder typed (no rest/`any`)
+- **`task-delegation.ts`:** `startPlannedApprovalMeeting` callback param `planningNotes` optional to match orchestration
+- **`routes/core.ts`:** Kickoff `startTaskExecutionForAgent` shim uses `castSqliteRow<WorkflowAgentRow>` like orchestration
+- **Verify:** `npx tsc -b --noEmit` OK
+
+### Phase 2 — `RuntimeContext` typing (batch 1) (2026-03-25)
+
+- **Guide:** `docs/architecture/any-type-removal-guide.md` Phase 2 (gradual context convergence)
+- **`appendTaskLog`:** `(taskId: string or null, kind, message) => void` on `WorkflowAgentExports` + `process-tools` implementation (matches auto-update `null` task id)
+- **`taskExecutionSessions`:** `Map<string, TaskExecutionSession>` — `runtime-context.ts` imports session type; `orchestration.ts` drops duplicate `TaskExecutionSessionState`; `execution-control` drops redundant casts; test harness builds full `TaskExecutionSession` rows
+- **`resolveProjectPath`:** exported `ResolveProjectPathInput` (`string` \| task-like object, `title` allows `null`); `coordination.ts` treats plain string as `project_id` (fixes kickoff `resolveProjectPath(projectId)` semantics); `collab.ts` forwarder typed
+- **Verify:** `npx tsc -b --noEmit` OK
+
+### Phase 1 — `any` removal: guide order #2–#13 scan + #4, #5 (2026-03-25)
+
+- **Skipped (already clean):** `report-workflow-tools.ts`, `subtasks.ts`, `subtask-seeding.ts`, `error-analysis.ts`, `worktrees-and-usage.ts`, `subtask-delegation-batch.ts`, `review-consensus-outcome.ts`, `worktree/lifecycle.ts`, `oauth-tools.ts`, `api-provider-tools.ts` — no `as any` / `: any` matches
+- **`execution-start-task.ts`:** `notifyTaskStatus` concrete signature; `execAgent: AgentRow` from `conversation-types.ts`; removed `db as any` for rules / interrupt / video / department / consume paths (DB matches module `DbLike` types)
+- **`github-routes.ts`:** GitHub REST response interfaces (`GitHubRepoJson`, `GitHubSearchRepositoriesJson`, `GitHubBranchJson`, `GitHubRepoDetailJson`) replace `any` on repo list + branches endpoints
+- **Verify:** `npx tsc -b --noEmit` OK
+
+### Bug Fix: App Runner ESM require() crash (2026-03-25)
+
+- **Root cause:** `app-runner.ts` used 5x `require("node:fs")` / `require("node:child_process")` inside function bodies — fails in ESM mode (`require is not defined`)
+- **Symptoms:** (1) `AI description generation failed — llmErr: {}` (directory listing `require` fails inside try-catch), (2) `Unhandled error: require is not defined` (spawn `require` fails outside try-catch)
+- **Fix:** Replaced all `require()` calls with top-level ESM `import` statements (`readdirSync` from `fs`, `spawn` from `child_process`)
+- **Fix 2:** AutoRun skipped when DB had `app_status='analyzed'` from previous attempt — changed condition to only skip when `running`/`installing`
+- **Fix 3:** LLM error logged as empty `{}` — pino only serializes `err` key, changed `llmErr` → `err` with message extraction
+- **Fix 4:** AI analysis had no CLI fallback — `resolveProvider()` only checks `api_providers` table, not CLI providers. Added `callViaCliProvider()` fallback matching kickoff.ts pattern
+- **Fix 5:** Unified all system-level LLM calls into `callLlmOneShotAuto()` in `llm-client.ts`
+  - Auto-detects provider from agent configs: api_provider_id → cli_provider → settings.defaultProvider → "claude"
+  - Removed 3x duplicate `callViaCliProvider` from projects.ts, kickoff.ts, app-runner.ts
+  - Added cursor + opencode CLI support
+  - Key: Agent-level calls (task/chat) were never affected — only system-level calls needed this fix
+- **Files changed:** `llm-client.ts`, `app-runner.ts`, `kickoff.ts`, `projects.ts`, `AppRunnerWindow.tsx`
+- **Docs rewritten:** `llm-call-patterns.md` (full rewrite), `AGENT-CONFIGURATION-AND-EXECUTION.md` §11, `CLAUDE.md` §0-7
+
+**Documentation Drift Prevention (12 automated checks):**
+- Added `scripts/verify-docs-sync.mjs` — 12 checks, 20 doc-vs-code assertions
+- Checks: Migration ID, API version, CLI providers, WSEventType, keyboard shortcuts (g-key), TaskStatus, TaskExecutionState, AgentRole, TaskType, WorkflowPackKey, Messenger channels, WindowType (core)
+- Integrated into `pnpm lint` (auto-runs after eslint) + standalone `pnpm lint:docs`
+- Fixed drift: stale migration ID in archive, missing `g d` shortcut in CLAUDE.md + GLOSSARY.md
+- All 20/20 assertions passing
 
 ### Bug Fixes & Code Quality (2026-03-24)
 
@@ -73,7 +134,7 @@
 - Removed obsolete docs: `VISION-VS-REALITY.md`, `error/log.md`
 - Removed orphaned `error/` directory
 - Translated docs to English for AI agent readability
-- Archived completed specs to `docs/archive/`
+- Archived completed specs (later deleted — code is source of truth, git history preserves)
 
 ### Coding Rule Audit (2026-03-24)
 
@@ -96,7 +157,7 @@
 
 ## Completed Phases
 
-> Phase specs archived in `docs/archive/roadmap/`.
+> Phase specs removed (code is source of truth; recoverable from git history).
 
 | Phase | Goal | Status |
 |-------|------|--------|
@@ -113,8 +174,36 @@
 
 | Priority | Item | Status |
 |----------|------|--------|
+| **P0** | **Tier 3 기능 제거 (코드 경량화)** | **계획 수립 완료** — 아래 상세 참조 |
+| P1 | Execution path consistency (task vs chat vs runtime) | Not Started — same agent behaves differently per entry point |
+| P1 | Document drift prevention | Not Started — migration IDs, API coverage already drifting across docs |
 | P2 | i18n full migration (2,454 strings, 235 files) | Not Started — see `strategy/I18N-AGENT-WORKPACK.md` |
 | P2 | `any` types / double-casts cleanup | Phase 1-2 done, remaining ~1,200 cases |
+
+### Tier 3 Feature Removal Plan (2026-03-25)
+
+> 기능 우선순위 분석 (`docs/strategy/FEATURE-PRIORITIZATION-ko.md`) 기반.
+> 핵심 운영 루프(프로젝트→태스크→실행→리뷰)에 기여하지 않는 기능 제거.
+
+| # | Feature | Lines | Action | Status |
+|---|---------|-------|--------|--------|
+| 1 | Wallpaper Picker | ~475 | 완전 제거 | Not Started |
+| 2 | Image Studio | ~2,256 | 완전 제거 | Not Started |
+| 3 | Repo Store | 0 (docs only) | 개념 폐기, 참조 정리 | Not Started |
+| 4 | App Runner | ~1,248 | 완전 제거 | Not Started |
+| 5 | Synapse | ~3,307 | 완전 제거 | Not Started |
+| 6 | Messenger 축소 | ~2,836 | Telegram/Slack 제거, Discord만 유지 | Not Started |
+
+**예상 제거량:** ~8,500줄 · **DB 마이그레이션:** 건드리지 않음 (기존 테이블 방치)
+
+### System Analysis (2026-03-25)
+
+4축 시스템 분석 (`docs/strategy/SYSTEM-PROBLEMS-4-AXIS.md`) 리뷰 결과:
+- **Product:** 타겟 유저(다중 AI 에이전트 운영자)는 명확하나, 기능 계층(tier-1/2) 미정립
+- **Architecture:** 실행 경로 다양성은 핵심 가치이나, 경로 간 동작 일관성이 부족 (task=API우선, chat=cli_provider 의존)
+- **Operations:** 문서 드리프트 실재 확인 (GLOSSARY migration ID 구식)
+- **UX:** 데스크톱 메타포 리스크는 단축키/CommandPalette로 상당 부분 해소됨, 과대평가
+- **결론:** 기능 추가보다 기존 시스템의 일관성·예측 가능성 강화가 우선
 
 ### Completed (this session)
 - Multi-provider agent runtime (Anthropic + OpenAI-compatible)

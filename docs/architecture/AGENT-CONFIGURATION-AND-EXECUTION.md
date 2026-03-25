@@ -239,19 +239,44 @@ Representative types (throughout the code):
 
 ---
 
-## 11. Design Inconsistency Points to Note
+## 11. System-Level vs Agent-Level LLM Calls
 
-1. **Tasks always use API if `api_provider_id` is set** — Chat is more dependent on `cli_provider`.
-2. **Main task run** and **agent-runtime** are different stacks (the latter is a server-side built-in tool loop).
-3. **The API Provider path** is a general-purpose streaming completion, so **web search tool auto-attachment is not included by default** (requires separate implementation when expanding product policy/API spec).
+> **IMPORTANT:** There are two distinct call types. Confusing them causes bugs.
+
+### Agent-Level (task execution, direct chat)
+
+Each agent's `cli_provider` + `api_provider_id` determines execution. No system-wide provider lookup needed. **Never fails due to missing `api_providers` table entries.**
+
+### System-Level (kickoff, auto-assign, app-runner AI analysis)
+
+Uses `callLlmOneShotAuto()` from `llm-client.ts`. Auto-detects best provider:
+
+1. Agent with `api_provider_id` → API HTTP call
+2. Agent with `cli_provider` (claude/codex/gemini/cursor/opencode) → CLI `--print`
+3. `settings.defaultProvider` → CLI fallback
+4. `"claude"` → ultimate fallback
+
+**Never call `resolveProvider(db)` directly for system-level tasks** — it throws when no API provider exists. Always use `callLlmOneShotAuto`.
+
+See `docs/architecture/llm-call-patterns.md` for full details.
 
 ---
 
-## 12. Change History
+## 12. Design Inconsistency Points to Note
+
+1. **Tasks always use API if `api_provider_id` is set** — Chat is more dependent on `cli_provider`.
+2. **Main task run** and **agent-runtime** are different stacks (the latter is a server-side built-in tool loop).
+3. **The API Provider path** is a general-purpose streaming completion, so **web search tool auto-attachment is not included by default**.
+4. **PM Orchestrator** uses `callProviderCompat()` (not yet migrated to `callLlmOneShotAuto`) — requires API provider or uses `runAgentOneShot` for agent-level calls.
+
+---
+
+## 13. Change History
 
 | Date | Content |
 |------|---------|
 | 2026-03-16 | Initial draft — consolidated based on current code |
+| 2026-03-25 | Added §11 System-Level vs Agent-Level distinction. Updated §12 inconsistency notes. |
 
 ---
 

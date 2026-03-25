@@ -1,7 +1,19 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { TaskExecutionSession } from "../../../workflow/orchestration/session-review-tools.ts";
 import type { TaskExecutionControlRouteDeps } from "./execution-control.ts";
 import { registerTaskExecutionControlRoutes } from "./execution-control.ts";
 import { buildTaskInterruptControlToken, getCsrfToken } from "../../../../security/auth.ts";
+
+function fakeTaskSession(partial: Partial<TaskExecutionSession> & Pick<TaskExecutionSession, "sessionId">): TaskExecutionSession {
+  return {
+    taskId: partial.taskId ?? "",
+    agentId: partial.agentId ?? "",
+    provider: partial.provider ?? "claude",
+    openedAt: partial.openedAt ?? 0,
+    lastTouchedAt: partial.lastTouchedAt ?? 0,
+    ...partial,
+  };
+}
 
 type TaskRow = {
   id: string;
@@ -287,14 +299,19 @@ function createDeps(seed?: {
 
   const stopRequestedTasks = new Set<string>();
   const stopRequestModeByTask = new Map<string, "pause" | "cancel">();
-  const taskExecutionSessions = new Map<string, { sessionId: string; agentId?: string; provider?: string }>();
+  const taskExecutionSessions = new Map<string, TaskExecutionSession>();
   if (seed?.sessionId) {
-    taskExecutionSessions.set(taskId, { sessionId: seed.sessionId });
+    taskExecutionSessions.set(taskId, fakeTaskSession({ sessionId: seed.sessionId, taskId }));
   }
   const ensureTaskExecutionSession = vi.fn((taskIdInput: string, agentIdInput: string, provider: string) => {
     const existing = taskExecutionSessions.get(taskIdInput);
     if (existing?.sessionId) return existing;
-    const created = { sessionId: `session-auto-${taskIdInput}`, agentId: agentIdInput, provider };
+    const created = fakeTaskSession({
+      sessionId: `session-auto-${taskIdInput}`,
+      taskId: taskIdInput,
+      agentId: agentIdInput,
+      provider,
+    });
     taskExecutionSessions.set(taskIdInput, created);
     return created;
   });

@@ -38,7 +38,7 @@ import { createProgressNotifyTools } from "./orchestration/progress-notify-tools
 import { createReviewFinalizeTools } from "./orchestration/review-finalize-tools.ts";
 import { createRunCompleteHandler } from "./orchestration/run-complete-handler.ts";
 import { createReportWorkflowTools } from "./orchestration/report-workflow-tools.ts";
-import { createSessionReviewTools } from "./orchestration/session-review-tools.ts";
+import { createSessionReviewTools, type TaskExecutionSession } from "./orchestration/session-review-tools.ts";
 import { startAgentAnomalyMonitor } from "./orchestration/agent-anomaly-monitor.ts";
 import { startHeartbeatEngine } from "./orchestration/heartbeat.ts";
 import { startPmOrchestrator } from "./orchestration/pm-orchestrator.ts";
@@ -283,20 +283,11 @@ export function initializeWorkflowPartC(ctx: RuntimeContext): WorkflowOrchestrat
     return Math.max(5_000, Math.round(interpreted));
   })();
 
-  interface TaskExecutionSessionState {
-    sessionId: string;
-    taskId: string;
-    agentId: string;
-    provider: string;
-    openedAt: number;
-    lastTouchedAt: number;
-  }
-
-  const taskExecutionSessions = new Map<string, TaskExecutionSessionState>();
+  const taskExecutionSessions = new Map<string, TaskExecutionSession>();
 
   type ReviewRoundMode = "parallel_remediation" | "merge_synthesis" | "final_decision";
 
-  function ensureTaskExecutionSession(taskId: string, agentId: string, provider: string): TaskExecutionSessionState {
+  function ensureTaskExecutionSession(taskId: string, agentId: string, provider: string): TaskExecutionSession {
     return sessionReviewTools.ensureTaskExecutionSession(taskId, agentId, provider);
   }
 

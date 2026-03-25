@@ -99,6 +99,7 @@ export default function AppRunnerWindow() {
   const project = projects.find((p) => p.id === appRunnerProjectId) ?? null;
   const [analysis, setAnalysis] = useState<AppAnalysis | null>(null);
   const [status, setStatus] = useState<string>("downloaded");
+  const [statusLoaded, setStatusLoaded] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [analyzeError, setAnalyzeError] = useState<string | null>(null);
   const [prompt, setPrompt] = useState("");
@@ -125,29 +126,27 @@ export default function AppRunnerWindow() {
     setLogs([]);
     setAnalysis(null);
     setAnalyzeError(null);
+    setStatusLoaded(false);
     getAppStatus(appRunnerProjectId).then((r) => {
       setStatus(r.status);
       setAnalysis(r.analysis);
       setPort(r.port);
       if (r.status === "installing" || r.status === "running") startLogPoll();
-      statusLoadedRef.current = true;
+      setStatusLoaded(true);
     }).catch(() => {
       setStatus("downloaded");
-      statusLoadedRef.current = true;
+      setStatusLoaded(true);
     });
     return stopLogPoll;
   }, [appRunnerProjectId]);
 
   // AutoRun pipeline: analyze → install → run
-  // Waits for initial status load, then auto-runs if status is "downloaded" (fresh project).
-  // Skips if project is already analyzed/running/stopped.
   const autoRunTriggered = useRef(false);
-  const statusLoadedRef = useRef(false);
 
   useEffect(() => {
-    if (!appRunnerAutoRun || !appRunnerProjectId || autoRunTriggered.current || !statusLoadedRef.current) return;
-    // Skip autoRun if already beyond downloaded state
-    if (status !== "downloaded") {
+    if (!appRunnerAutoRun || !appRunnerProjectId || autoRunTriggered.current || !statusLoaded) return;
+    // Skip autoRun only if already running or installing
+    if (status === "running" || status === "installing") {
       clearAppRunnerAutoRun();
       return;
     }
@@ -181,13 +180,12 @@ export default function AppRunnerWindow() {
         setRunning(false);
         setStatus("downloaded");
         setRunError(err instanceof Error ? err.message : String(err));
-        // Fallback to manual mode — buttons will be re-enabled
       }
     })();
-  }, [appRunnerAutoRun, appRunnerProjectId, status]);
+  }, [appRunnerAutoRun, appRunnerProjectId, statusLoaded, status]);
 
   // Reset autoRun ref when project changes
-  useEffect(() => { autoRunTriggered.current = false; statusLoadedRef.current = false; }, [appRunnerProjectId]);
+  useEffect(() => { autoRunTriggered.current = false; }, [appRunnerProjectId]);
 
   // Auto-scroll logs
   useEffect(() => { logEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [logs]);

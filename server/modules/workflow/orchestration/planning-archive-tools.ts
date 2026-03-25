@@ -1,29 +1,36 @@
 import type { DatabaseSync } from "node:sqlite";
 import type { Lang } from "../../../types/lang.ts";
 import logger from "../../../lib/logger";
+import type { AgentRow } from "../core/conversation-types.ts";
 
 type L10n = Record<Lang, string[]>;
-
-interface AgentLike {
-  id: string;
-  name: string;
-}
 
 interface CreatePlanningArchiveToolsDeps {
   db: DatabaseSync;
   nowMs: () => number;
   randomUUID: () => string;
   appendTaskLog: (taskId: string, kind: string, message: string) => void;
-  sendAgentMessage: (agent: AgentLike, content: string, messageType: string, scope: string, roomId: string | null, taskId: string | null) => void;
+  sendAgentMessage: (
+    agent: AgentRow,
+    content: string,
+    messageType: string,
+    scope: string,
+    roomId: string | null,
+    taskId: string | null,
+  ) => void;
   broadcast: (event: string, payload: unknown) => void;
   pickL: (l10n: L10n, lang: string) => string;
   l: (...args: string[][]) => L10n;
   resolveLang: (text: string) => string;
-  runAgentOneShot: (agent: AgentLike, prompt: string, options: { projectPath: string; timeoutMs: number; noTools: boolean }) => Promise<{ text: string }>;
+  runAgentOneShot: (
+    agent: AgentRow,
+    prompt: string,
+    options: { projectPath: string; timeoutMs: number; noTools: boolean },
+  ) => Promise<{ text: string }>;
   normalizeConversationReply: (text: string, maxLen: number, opts: { maxSentences: number }) => string;
-  findTeamLeader: (departmentId: string | null) => AgentLike | null;
+  findTeamLeader: (departmentId: string | null) => AgentRow | null;
   getDeptName: (deptId: string) => string;
-  getAgentDisplayName: (agent: AgentLike, lang: string) => string;
+  getAgentDisplayName: (agent: AgentRow, lang: string) => string;
 }
 
 export function createPlanningArchiveTools(deps: CreatePlanningArchiveToolsDeps) {

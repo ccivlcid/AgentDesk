@@ -14,10 +14,30 @@ import type { DatabaseSync } from "node:sqlite";
 import type { Express } from "express";
 import type { WebSocket } from "ws";
 import type { RuntimeContextAutoAugmented } from "./runtime-context-auto-augmented";
+import type {
+  AgentRow,
+  MeetingPromptOptions,
+  MeetingReviewDecision,
+  MeetingTranscriptEntry,
+  OneShotRunOptions,
+  OneShotRunResult,
+} from "../modules/workflow/core/conversation-types.ts";
+import type { Lang } from "./lang.ts";
+import type { TaskExecutionSession } from "../modules/workflow/orchestration/session-review-tools.ts";
 
 // ---------------------------------------------------------------------------
 // Helper types (mirrors of unexported types in server-main.ts)
 // ---------------------------------------------------------------------------
+
+/** Argument to `resolveProjectPath` — project id string or task-like row */
+export type ResolveProjectPathInput =
+  | string
+  | {
+      project_id?: string | null;
+      project_path?: string | null;
+      description?: string | null;
+      title?: string | null;
+    };
 
 export type MessageInsertInput = {
   senderType: string;
@@ -183,40 +203,71 @@ export interface WorkflowCoreExports {
   broadcast(type: string, payload: unknown): void;
   handleClientMessage: (ws: WebSocket, raw: string) => void;
   removeClient: (ws: WebSocket) => void;
-  createWorktree: (...args: any[]) => any;
-  mergeWorktree: (...args: any[]) => any;
-  mergeToDevAndCreatePR: (...args: any[]) => any;
-  cleanupWorktree: (...args: any[]) => any;
-  rollbackTaskWorktree: (...args: any[]) => any;
-  getWorktreeDiffSummary: (...args: any[]) => any;
-  hasExplicitWarningFixRequest: (...args: any[]) => any;
-  buildTaskExecutionPrompt: (...args: any[]) => any;
-  buildAvailableSkillsPromptBlock: (...args: any[]) => any;
-  generateProjectContext: (...args: any[]) => any;
-  getRecentChanges: (...args: any[]) => any;
-  ensureClaudeMd: (...args: any[]) => any;
-  injectTaskContext: (...args: any[]) => any;
-  buildAgentArgs: (...args: any[]) => any;
-  shouldSkipDuplicateCliOutput: (...args: any[]) => any;
-  clearCliOutputDedup: (...args: any[]) => any;
-  normalizeStreamChunk: (...args: any[]) => any;
-  hasStructuredJsonLines: (...args: any[]) => any;
-  getRecentConversationContext: (...args: any[]) => any;
-  getTaskContinuationContext: (...args: any[]) => any;
+  createWorktree: (projectPath: string, taskId: string, agentName: string, baseBranch?: string) => string | null;
+  mergeWorktree: (
+    projectPath: string,
+    taskId: string,
+  ) => { success: boolean; message: string; conflicts?: string[] };
+  mergeToDevAndCreatePR: (
+    projectPath: string,
+    taskId: string,
+    githubRepo: string,
+  ) => { success: boolean; message: string; conflicts?: string[]; prUrl?: string };
+  cleanupWorktree: (projectPath: string, taskId: string) => void;
+  rollbackTaskWorktree: (taskId: string, reason: string) => boolean;
+  getWorktreeDiffSummary: (projectPath: string, taskId: string) => string;
+  hasExplicitWarningFixRequest: (...textParts: Array<string | null | undefined>) => boolean;
+  buildTaskExecutionPrompt: (
+    parts: Array<string | null | undefined>,
+    opts?: { allowWarningFix?: boolean },
+  ) => string;
+  buildAvailableSkillsPromptBlock: (provider: string, projectId?: string | null) => string;
+  generateProjectContext: (projectPath: string) => string;
+  getRecentChanges: (projectPath: string, taskId: string) => string;
+  ensureClaudeMd: (projectPath: string, worktreePath: string) => void;
+  injectTaskContext: (params: {
+    worktreePath: string;
+    taskId: string;
+    taskTitle: string;
+    taskDescription: string | null;
+    personaBlock?: string;
+    apiPort?: number;
+  }) => void;
+  buildAgentArgs: (
+    provider: string,
+    model?: string,
+    reasoningLevel?: string,
+    opts?: { noTools?: boolean },
+  ) => string[];
+  shouldSkipDuplicateCliOutput: (taskId: string, stream: "stdout" | "stderr", text: string) => boolean;
+  clearCliOutputDedup: (taskId: string) => void;
+  normalizeStreamChunk: (raw: Buffer | string, opts?: { dropCliNoise?: boolean }) => string;
+  hasStructuredJsonLines: (raw: string) => boolean;
+  getRecentConversationContext: (agentId: string, limit?: number) => string;
+  getTaskContinuationContext: (taskId: string) => string;
   sleepMs(ms: number): Promise<void>;
-  randomDelay: (...args: any[]) => any;
-  getAgentDisplayName: (...args: any[]) => any;
-  chooseSafeReply: (...args: any[]) => any;
-  summarizeForMeetingBubble: (...args: any[]) => any;
-  hasVisibleDiffSummary: (...args: any[]) => any;
-  isDeferrableReviewHold: (...args: any[]) => any;
-  classifyMeetingReviewDecision: (...args: any[]) => any;
-  wantsReviewRevision: (...args: any[]) => any;
-  findLatestTranscriptContentByAgent: (...args: any[]) => any;
-  buildMeetingPrompt: (...args: any[]) => any;
-  buildDirectReplyPrompt: (...args: any[]) => any;
-  buildCliFailureMessage: (...args: any[]) => any;
-  runAgentOneShot: (...args: any[]) => any;
+  randomDelay: (minMs: number, maxMs: number) => number;
+  getAgentDisplayName: (agent: unknown, lang: string) => string;
+  chooseSafeReply: (
+    run: { text?: string; error?: string },
+    lang: string,
+    kind: string,
+    agent?: AgentRow,
+  ) => string;
+  summarizeForMeetingBubble: (text: string, maxChars?: number, lang?: Lang) => string;
+  hasVisibleDiffSummary: (summary: string) => boolean;
+  isDeferrableReviewHold: (text: string) => boolean;
+  classifyMeetingReviewDecision: (text: string) => MeetingReviewDecision;
+  wantsReviewRevision: (content: string) => boolean;
+  findLatestTranscriptContentByAgent: (transcript: MeetingTranscriptEntry[], agentId: string) => string;
+  buildMeetingPrompt: (agent: AgentRow, opts: MeetingPromptOptions) => string;
+  buildDirectReplyPrompt: (
+    agent: AgentRow,
+    ceoMessage: string,
+    messageType: string,
+  ) => { prompt: string; lang: Lang };
+  buildCliFailureMessage: (agent: AgentRow, lang: string, error?: string) => string;
+  runAgentOneShot: (agent: AgentRow, prompt: string, opts?: OneShotRunOptions) => Promise<OneShotRunResult>;
 }
 
 // ---------------------------------------------------------------------------
@@ -256,7 +307,7 @@ export interface WorkflowAgentExports {
   killPidTree: (...args: any[]) => any;
   isPidAlive: (...args: any[]) => any;
   interruptPidTree: (...args: any[]) => any;
-  appendTaskLog: (...args: any[]) => any;
+  appendTaskLog: (taskId: string | null, kind: string, message: string) => void;
   fetchClaudeUsage: (...args: any[]) => any;
   fetchCodexUsage: (...args: any[]) => any;
   fetchGeminiUsage: (...args: any[]) => any;
@@ -281,23 +332,32 @@ export interface WorkflowOrchestrationExports {
   meetingPhaseByAgent: Map<string, "kickoff" | "review">;
   meetingTaskIdByAgent: Map<string, string>;
   meetingReviewDecisionByAgent: Map<string, "reviewing" | "approved" | "hold">;
-  taskExecutionSessions: Map<string, any>;
+  taskExecutionSessions: Map<string, TaskExecutionSession>;
 
   // Functions
-  ensureTaskExecutionSession: (...args: any[]) => any;
-  endTaskExecutionSession: (...args: any[]) => any;
-  isTaskWorkflowInterrupted: (...args: any[]) => any;
-  clearTaskWorkflowState: (...args: any[]) => any;
-  startProgressTimer: (...args: any[]) => any;
-  stopProgressTimer: (...args: any[]) => any;
-  scheduleNextReviewRound: (...args: any[]) => any;
-  notifyClient: (...args: any[]) => any;
-  archivePlanningConsolidatedReport: (...args: any[]) => any;
-  isAgentInMeeting: (...args: any[]) => any;
-  startTaskExecutionForAgent: (...args: any[]) => any;
-  startPlannedApprovalMeeting: (...args: any[]) => any;
-  handleTaskRunComplete: (...args: any[]) => any;
-  finishReview: (...args: any[]) => any;
+  ensureTaskExecutionSession: (taskId: string, agentId: string, provider: string) => TaskExecutionSession;
+  endTaskExecutionSession: (taskId: string, reason: string) => void;
+  isTaskWorkflowInterrupted: (taskId: string) => boolean;
+  clearTaskWorkflowState: (taskId: string) => void;
+  startProgressTimer: (taskId: string, taskTitle: string, departmentId: string | null) => void;
+  stopProgressTimer: (taskId: string) => void;
+  scheduleNextReviewRound: (taskId: string, taskTitle: string, currentRound: number, lang: Lang) => void;
+  notifyClient: (content: string, taskId?: string | null, messageType?: string) => void;
+  archivePlanningConsolidatedReport: (rootTaskId: string) => Promise<void>;
+  isAgentInMeeting: (agentId: string) => boolean;
+  startTaskExecutionForAgent: (taskId: string, execAgent: AgentRow, deptId: string | null, deptName: string) => void;
+  startPlannedApprovalMeeting: (
+    taskId: string,
+    taskTitle: string,
+    departmentId: string | null,
+    onApproved: (planningNotes?: string[]) => void,
+  ) => void;
+  handleTaskRunComplete: (taskId: string, exitCode: number) => void;
+  finishReview: (
+    taskId: string,
+    taskTitle: string,
+    options?: { bypassProjectDecisionGate?: boolean; trigger?: string },
+  ) => void;
   getQueueStatus: () => { running: number; queued: number; maxConcurrent: number };
 }
 
@@ -329,7 +389,7 @@ export interface RouteCollabExports {
   processSubtaskDelegations: (...args: any[]) => any;
   reconcileCrossDeptSubtasks: (...args: any[]) => any;
   recoverCrossDeptQueueAfterMissingCallback: (...args: any[]) => any;
-  resolveProjectPath: (...args: any[]) => any;
+  resolveProjectPath: (input: ResolveProjectPathInput) => string;
   handleReportRequest: (...args: any[]) => any;
   handleTaskDelegation: (...args: any[]) => any;
   scheduleAgentReply: (...args: any[]) => any;

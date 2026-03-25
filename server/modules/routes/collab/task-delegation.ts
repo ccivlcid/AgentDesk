@@ -71,7 +71,7 @@ interface TaskDelegationDeps {
     taskId: string,
     taskTitle: string,
     leaderDeptId: string,
-    onApproved: (planningNotes: string[]) => void,
+    onApproved: (planningNotes?: string[]) => void,
   ) => void;
   sendAgentMessage: (
     agent: AgentRow,
@@ -392,7 +392,7 @@ export function createTaskDelegationHandler(deps: TaskDelegationDeps) {
           runCrossDeptBeforeDelegationIfNeeded(afterPlan);
           return;
         }
-        startPlannedApprovalMeeting(taskId, taskTitle, leaderDeptId, (planningNotes: string[]) => {
+        startPlannedApprovalMeeting(taskId, taskTitle, leaderDeptId, (planningNotes?: string[]) => {
           if (isTaskWorkflowInterrupted(taskId)) return;
           if (!skipPlanSubtasks) {
             seedApprovedPlanSubtasks(taskId, leaderDeptId, planningNotes ?? []);

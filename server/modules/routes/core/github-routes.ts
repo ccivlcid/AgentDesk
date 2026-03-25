@@ -7,6 +7,36 @@ import logger from "../../../lib/logger.ts";
 import { decryptSecret } from "../../../oauth/helpers.ts";
 import type { RuntimeContext } from "../../../types/runtime-context.ts";
 
+/** GitHub REST: GET /search/repositories */
+interface GitHubSearchRepositoriesJson {
+  items?: GitHubRepoJson[];
+}
+
+/** GitHub REST: repository object (search + user/repos list) */
+interface GitHubRepoJson {
+  id: number;
+  name: string;
+  full_name: string;
+  owner?: { login?: string };
+  private: boolean;
+  description: string | null;
+  default_branch: string | null;
+  updated_at: string | null;
+  html_url: string;
+  clone_url: string;
+}
+
+/** GitHub REST: branch object (list branches) */
+interface GitHubBranchJson {
+  name: string;
+  commit?: { sha?: string };
+}
+
+/** GitHub REST: GET /repos/{owner}/{repo} */
+interface GitHubRepoDetailJson {
+  default_branch?: string | null;
+}
+
 export type GitHubRouteDeps = Pick<RuntimeContext, "app" | "db" | "broadcast">;
 
 export function registerGitHubRoutes(deps: GitHubRouteDeps): void {
@@ -127,10 +157,14 @@ export function registerGitHubRoutes(deps: GitHubRouteDeps): void {
         const body = await resp.text().catch(() => "");
         return res.status(resp.status).json({ error: "github_api_error", status: resp.status, detail: body });
       }
-      const json = await resp.json();
-      const repos = q ? ((json as any).items ?? []) : json;
+      const json: unknown = await resp.json();
+      const repoList: GitHubRepoJson[] = q
+        ? (json as GitHubSearchRepositoriesJson).items ?? []
+        : Array.isArray(json)
+          ? (json as GitHubRepoJson[])
+          : [];
       res.json({
-        repos: (repos as any[]).map((r: any) => ({
+        repos: repoList.map((r) => ({
           id: r.id,
           name: r.name,
           full_name: r.full_name,
@@ -181,7 +215,7 @@ export function registerGitHubRoutes(deps: GitHubRouteDeps): void {
         }
         return res.status(resp.status).json({ error: "github_api_error", status: resp.status });
       }
-      const branches = (await resp.json()) as any[];
+      const branches = (await resp.json()) as GitHubBranchJson[];
       const repoResp = await fetch(
         `https://api.github.com/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`,
         {
@@ -193,9 +227,9 @@ export function registerGitHubRoutes(deps: GitHubRouteDeps): void {
           signal: AbortSignal.timeout(10000),
         },
       );
-      const repoData = repoResp.ok ? ((await repoResp.json()) as any) : null;
+      const repoData = repoResp.ok ? ((await repoResp.json()) as GitHubRepoDetailJson) : null;
       res.json({
-        remote_branches: branches.map((b: any) => ({
+        remote_branches: branches.map((b) => ({
           name: b.name,
           sha: b.commit?.sha,
           is_default: b.name === repoData?.default_branch,

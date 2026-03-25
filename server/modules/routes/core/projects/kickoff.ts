@@ -1,27 +1,10 @@
 import { randomUUID } from "node:crypto";
-import { spawn } from "node:child_process";
 import type { DatabaseSync } from "node:sqlite";
 import type { Express } from "express";
 import logger from "../../../../lib/logger.ts";
 import { loadPrompt } from "../../../../lib/prompt-loader.ts";
 import { startExecutionLoop } from "../../../agent-runtime/execution-loop.ts";
-import { resolveProvider, getDefaultModel, callLlmOneShot as callLlmOneShotShared } from "../../../agent-runtime/llm-client.ts";
-
-/** Simple one-shot LLM call using resolveProvider. Returns empty string if no provider. */
-async function callLlmOneShot(db: import("node:sqlite").DatabaseSync, systemPrompt: string, userPrompt: string, signal: AbortSignal): Promise<string> {
-  const resolved = resolveProvider(db);
-  const model = getDefaultModel(resolved.providerType);
-  return callLlmOneShotShared({ provider: resolved, model, systemPrompt, userPrompt, maxTokens: 4096, signal });
-}
-
-function readDefaultCliProvider(db: import("node:sqlite").DatabaseSync): string {
-  const row = db.prepare("SELECT value FROM settings WHERE key = 'settings'").get() as { value: string } | undefined;
-  if (!row) return "claude";
-  try {
-    const parsed = JSON.parse(row.value) as { defaultProvider?: string };
-    return parsed.defaultProvider ?? "claude";
-  } catch { return "claude"; }
-}
+import { callLlmOneShotAuto } from "../../../agent-runtime/llm-client.ts";
 
 // ── Kickoff Meeting ─────────────────────────────────────────────────────────
 
@@ -384,41 +367,6 @@ function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-/**
- * CLI 프로바이더(claude/codex/gemini 등)를 통해 단순 텍스트 생성 (API 키 없을 때 fallback).
- * --print 모드로 LLM에게 JSON 응답을 요청한다.
- */
-async function callViaCliProvider(cliProvider: string, fullPrompt: string): Promise<string> {
-  let args: string[];
-  if (cliProvider === "codex") {
-    args = ["codex", "exec", "--json"];
-  } else if (cliProvider === "gemini") {
-    args = ["gemini", "--yolo"];
-  } else {
-    // claude (default), cursor, windsurf 등
-    args = ["claude", "--dangerously-skip-permissions", "--print", "--max-turns", "1"];
-  }
-
-  return new Promise<string>((resolve, reject) => {
-    const child = spawn(args[0], args.slice(1), {
-      shell: process.platform === "win32",
-      stdio: ["pipe", "pipe", "pipe"],
-      env: { ...process.env, NO_COLOR: "1", FORCE_COLOR: "0", CI: "1" },
-    });
-    const timeoutId = setTimeout(() => {
-      try { child.kill(); } catch { /* ignore */ }
-      reject(new Error(`CLI provider '${cliProvider}' timed out after 120s`));
-    }, 120_000);
-    let output = "";
-    child.stdout?.on("data", (chunk: Buffer) => { output += chunk.toString("utf8"); });
-    child.stderr?.on("data", (chunk: Buffer) => { output += chunk.toString("utf8"); });
-    child.on("error", (err) => { clearTimeout(timeoutId); reject(err); });
-    child.on("close", () => { clearTimeout(timeoutId); resolve(output); });
-    child.stdin?.write(fullPrompt);
-    child.stdin?.end();
-  });
-}
-
 interface KickoffDeps {
   app: Express;
   db: DatabaseSync;
@@ -545,15 +493,7 @@ export function registerProjectKickoffRoutes({ app, db, broadcast, appendTaskLog
           // ── Stage 2: kickoff_stage: planning ──
           broadcast("kickoff_stage", { projectId, stage: "planning" });
 
-          let rawText: string;
-          try {
-            const signal = AbortSignal.timeout(120_000);
-            rawText = await callLlmOneShot(db, systemPrompt, parts.join("\n\n"), signal);
-          } catch {
-            const cliProvider = readDefaultCliProvider(db);
-            const fullPrompt = `${systemPrompt}\n\n${parts.join("\n\n")}`;
-            rawText = await callViaCliProvider(cliProvider, fullPrompt);
-          }
+          const rawText = await callLlmOneShotAuto({ db, systemPrompt, userPrompt: parts.join("\n\n"), maxTokens: 4096, timeoutMs: 120_000 });
 
           const jsonMatch = rawText.match(/\{[\s\S]*\}/);
           if (!jsonMatch) {
@@ -884,17 +824,10 @@ export function registerProjectKickoffRoutes({ app, db, broadcast, appendTaskLog
           // ── Stage 2: planning ──
           broadcast("kickoff_stage", { projectId, stage: "planning" });
 
-          let rawText: string;
-          try {
-            const signal = AbortSignal.timeout(120_000);
-            rawText = await callLlmOneShot(db, systemPrompt, promptParts.join("\n\n"), signal);
-          } catch {
-            const cliProvider = readDefaultCliProvider(db);
-            const fullPrompt = `${systemPrompt}\n\n${promptParts.join("\n\n")}`;
-            rawText = await callViaCliProvider(cliProvider, fullPrompt);
-          }
+          const rawText = await callLlmOneShotAuto({ db, systemPrompt, userPrompt: promptParts.join("\n\n"), maxTokens: 4096, timeoutMs: 120_000 });
 
           const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+
           if (!jsonMatch) {
             logger.error({ projectId }, "[add-tasks] invalid LLM response after meeting");
             broadcast("kickoff_stage", { projectId, stage: "done" });
@@ -1195,14 +1128,7 @@ export async function runInternalAddTasksPipeline(deps: InternalAddTasksDeps): P
 
   broadcast("kickoff_stage", { projectId, stage: "planning" });
 
-  let rawText: string;
-  try {
-    const signal = AbortSignal.timeout(120_000);
-    rawText = await callLlmOneShot(db, systemPrompt, promptParts.join("\n\n"), signal);
-  } catch {
-    const cliProvider = readDefaultCliProvider(db);
-    rawText = await callViaCliProvider(cliProvider, `${systemPrompt}\n\n${promptParts.join("\n\n")}`);
-  }
+  const rawText = await callLlmOneShotAuto({ db, systemPrompt, userPrompt: promptParts.join("\n\n"), maxTokens: 4096, timeoutMs: 120_000 });
 
   const jsonMatch = rawText.match(/\{[\s\S]*\}/);
   if (!jsonMatch) {

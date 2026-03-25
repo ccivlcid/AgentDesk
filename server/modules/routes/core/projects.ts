@@ -10,16 +10,9 @@ import { registerFeatureRoutes } from "./projects/register-feature-routes.ts";
 import { registerProjectKickoffRoutes } from "./projects/kickoff.ts";
 import { registerPmActivityRoutes } from "./projects/pm-activity.ts";
 import { registerChangelogRoutes } from "./projects/register-changelog-routes.ts";
-import { resolveProvider, getDefaultModel, callLlmOneShot as callLlmOneShotShared } from "../../agent-runtime/llm-client.ts";
+import { callLlmOneShotAuto } from "../../agent-runtime/llm-client.ts";
 import logger from "../../../lib/logger.ts";
 import { loadPrompt } from "../../../lib/prompt-loader.ts";
-
-/** Simple one-shot LLM call (non-streaming) using resolveProvider. */
-async function callLlmOneShot(db: import("node:sqlite").DatabaseSync, systemPrompt: string, userPrompt: string, signal: AbortSignal): Promise<string> {
-  const resolved = resolveProvider(db);
-  const model = getDefaultModel(resolved.providerType);
-  return callLlmOneShotShared({ provider: resolved, model, systemPrompt, userPrompt, signal });
-}
 
 type FirstQueryValue = (value: unknown) => string | undefined;
 type NormalizeTextField = (value: unknown) => string | null;
@@ -109,8 +102,7 @@ export function registerProjectRoutes({
     const systemPrompt = loadPrompt("system/project-auto-assign", { agentList });
 
     try {
-      const signal = AbortSignal.timeout(20_000);
-      const rawText = await callLlmOneShot(db, systemPrompt, parts.join("\n\n"), signal);
+      const rawText = await callLlmOneShotAuto({ db, systemPrompt, userPrompt: parts.join("\n\n"), timeoutMs: 30_000 });
 
       const jsonMatch = rawText.match(/\[[\s\S]*\]/);
       if (!jsonMatch) {

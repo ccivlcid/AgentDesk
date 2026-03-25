@@ -1,6 +1,7 @@
 import type { DatabaseSync } from "node:sqlite";
 import type { Request, Response } from "express";
 import type { AgentRow } from "../../../shared/types.ts";
+import type { OneShotRunResult } from "../../../../workflow/core/conversation-types.ts";
 
 export type DecisionOption = {
   number: number;
@@ -129,9 +130,7 @@ export type LocalizedTextBuilder = (ko: string[], en: string[], ja: string[], zh
 
 export type PickLocalizedText = (localized: unknown, lang: string) => string;
 
-export type AgentOneShotResult = {
-  text?: string | null;
-} & Record<string, unknown>;
+export type AgentOneShotResult = OneShotRunResult;
 
 export type FindTeamLeader = (departmentKey: string) => AgentRow | undefined;
 export type RunAgentOneShot = (

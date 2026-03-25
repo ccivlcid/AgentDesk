@@ -55,6 +55,8 @@ import { registerFilesystemRoutes } from "./ops/filesystem.ts";
 import { registerGithubTrendingRoutes } from "./ops/github-trending.ts";
 import { registerAppRunnerRoutes } from "./ops/app-runner.ts";
 import type { AgentRow, MeetingMinuteEntryRow, MeetingMinutesRow, MeetingReviewDecision } from "./shared/types.ts";
+import type { AgentRow as WorkflowAgentRow } from "../workflow/core/conversation-types.ts";
+import { castSqliteRow } from "../../lib/sqlite-row-cast.ts";
 import { getDiscordReceiverStatus } from "../../messenger/discord-receiver.ts";
 
 export function registerRoutesPartA(ctx: RuntimeContext): Record<string, never> {
@@ -381,10 +383,10 @@ export function registerRoutesPartA(ctx: RuntimeContext): Record<string, never> 
     appendTaskLog,
     resolveProjectPath,
     startTaskExecutionForAgent: (taskId: string, agentId: string) => {
-      const agent = db.prepare("SELECT * FROM agents WHERE id = ?").get(agentId) as Record<string, unknown> | undefined;
+      const agent = castSqliteRow<WorkflowAgentRow>(db.prepare("SELECT * FROM agents WHERE id = ?").get(agentId));
       if (!agent) return;
       const deptRow = agent.department_id
-        ? (db.prepare("SELECT id, name FROM departments WHERE id = ?").get(agent.department_id as string) as { id: string; name: string } | null)
+        ? (db.prepare("SELECT id, name FROM departments WHERE id = ?").get(agent.department_id) as { id: string; name: string } | null)
         : null;
       startTaskExecutionForAgent(taskId, agent, deptRow?.id ?? null, deptRow?.name ?? "");
     },

@@ -10,14 +10,15 @@ import {
   deleteAgentPersonaFile,
   type AgentCrudHelpers,
 } from "./crud-helpers.ts";
+import type { AgentRow, OneShotRunOptions, OneShotRunResult } from "../../../workflow/core/conversation-types.ts";
 
 type PersonaRoutesCtx = {
   db: { prepare: (sql: string) => { get: (...args: SQLInputValue[]) => unknown } };
   runAgentOneShot: (
-    agent: Record<string, unknown>,
+    agent: AgentRow,
     prompt: string,
-    opts: { projectPath: string; noTools: boolean; timeoutMs: number },
-  ) => Promise<{ text?: string } | undefined>;
+    opts: OneShotRunOptions & { projectPath: string; noTools: boolean; timeoutMs: number },
+  ) => Promise<OneShotRunResult>;
 };
 
 export function registerAgentPersonaRoutes(

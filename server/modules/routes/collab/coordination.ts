@@ -1,4 +1,4 @@
-import type { RuntimeContext } from "../../../types/runtime-context.ts";
+import type { ResolveProjectPathInput, RuntimeContext } from "../../../types/runtime-context.ts";
 import type { Lang } from "../../../types/lang.ts";
 import fs from "node:fs";
 import os from "node:os";
@@ -137,13 +137,14 @@ export function initializeCollabCoordination(ctx: RuntimeContext) {
    * 3) detect from description/title
    * 4) latest known project path from DB
    * 5) process.cwd() (unless it's a packaged app dir)
+   *
+   * When called with a plain string, it is treated as `project_id`.
    */
-  function resolveProjectPath(task: {
-    project_id?: string | null;
-    project_path?: string | null;
-    description?: string | null;
-    title?: string;
-  }): string {
+  function resolveProjectPath(taskOrId: ResolveProjectPathInput): string {
+    const task =
+      typeof taskOrId === "string"
+        ? { project_id: taskOrId }
+        : taskOrId;
     const projectId = String(task.project_id ?? "").trim();
     if (projectId) {
       const row = db

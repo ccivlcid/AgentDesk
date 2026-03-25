@@ -1,4 +1,4 @@
-import type { RuntimeContext, RouteCollabExports } from "../../types/runtime-context.ts";
+import type { ResolveProjectPathInput, RuntimeContext, RouteCollabExports } from "../../types/runtime-context.ts";
 import { createAnnouncementReplyScheduler } from "./collab/announcement-response.ts";
 import { createChatReplyGenerator } from "./collab/chat-response.ts";
 import { initializeCollabCoordination } from "./collab/coordination.ts";
@@ -54,7 +54,7 @@ export function registerRoutesPartB(ctx: RuntimeContext): RouteCollabExports {
   const subtaskDelegationCallbacks = __ctx.subtaskDelegationCallbacks;
   const subtaskDelegationCompletionNoticeSent = __ctx.subtaskDelegationCompletionNoticeSent;
   const subtaskDelegationDispatchInFlight = __ctx.subtaskDelegationDispatchInFlight;
-  const resolveProjectPathBase = (...args: unknown[]) => __ctx.resolveProjectPath(...args);
+  const resolveProjectPathBase = (input: ResolveProjectPathInput) => __ctx.resolveProjectPath(input);
 
   const { registerTaskMessengerRoute, resolveTaskMessengerRoute } = createTaskMessengerRouting({
     db,

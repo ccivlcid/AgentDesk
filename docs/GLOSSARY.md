@@ -174,7 +174,7 @@ project > agent > department > workflow_pack > global
 | Term                    | DB Name                   | Definition                                                                                                                    |
 | ----------------------- | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | **Decision Inbox**      | `decision_inbox_messages` | Queue of mid-task decisions agents request from users                                                                         |
-| **Direct Chat**         | `messages`                | Bi-directional user-agent messaging. Common prefixes: `$` (directive), `#` (task registration/orchestrator flow), none (chat) |
+| **Direct Chat**         | `messages`                | Bi-directional user-agent messaging. Common prefixes: `$` (directive), `!` (direct agent task), `#` (task registration/orchestrator flow), none (chat) |
 | **Group Chat**          | —                         | Multi-agent group conversation panel (`GroupChatComposerInputBlock`)                                                          |
 | **Announcement**        | —                         | Broadcast message from one agent to all project members; rendered in `AnnouncementCliPanel`                                   |
 | **Message Types**       | `messages.type`           | `chat` | `task_assign` | `announcement` | `directive` | `report` | `status_update`                                            |
@@ -325,7 +325,7 @@ project > agent > department > workflow_pack > global
 
 | Term             | Definition                                                                                                     |
 | ---------------- | -------------------------------------------------------------------------------------------------------------- |
-| **Migration ID** | Format: `YYYY-MM-DD-NNN-short-description`. Last: `2026-03-28-013-project-app-type` → next: `2026-03-28-014-`* |
+| **Migration ID** | Format: `YYYY-MM-DD-NNN-short-description`. Last: `2026-03-28-014-pm-oversight-review-round` → next: `2026-03-28-015-`* or `2026-03-29-001-`* |
 | **Append-Only**  | Never edit/delete existing migrations. DDL wrapped in try/catch                                                |
 | **Version Bump** | Patch increment on task completion (0.1.2 → 0.1.3). Files: VERSION, package.json, CHANGELOG.md                 |
 
@@ -346,8 +346,8 @@ project > agent > department > workflow_pack > global
 | `g a`                    | Toggle Agent Manager            |
 | `g e`                    | Toggle CLI                      |
 | `g i`                    | Toggle Image Studio             |
+| `g d`                    | Toggle Dashboard                |
 | `Space`                  | Quick Look (with icon selected) |
 | `Esc`                    | Exit overlay / close panel      |
 | `?`                      | Keyboard shortcuts guide        |
-
 

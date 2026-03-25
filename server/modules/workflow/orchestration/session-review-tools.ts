@@ -1,6 +1,6 @@
 import type { Lang } from "../../../types/lang.ts";
 
-interface TaskExecutionSession {
+export interface TaskExecutionSession {
   sessionId: string;
   taskId: string;
   agentId: string;

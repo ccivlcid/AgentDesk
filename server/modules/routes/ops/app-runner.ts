@@ -4,12 +4,13 @@
 
 import type { Express } from "express";
 import type { DatabaseSync } from "node:sqlite";
-import { existsSync, readFileSync } from "fs";
+import { existsSync, readFileSync, readdirSync } from "fs";
 import { join, isAbsolute, normalize, resolve } from "path";
 import { homedir } from "os";
 import { createServer } from "net";
+import { spawn } from "child_process";
 import logger from "../../../lib/logger.ts";
-import { resolveProvider, getDefaultModel, callLlmOneShot } from "../../agent-runtime/llm-client.ts";
+import { callLlmOneShotAuto } from "../../agent-runtime/llm-client.ts";
 import { loadPrompt } from "../../../lib/prompt-loader.ts";
 
 interface AnalysisResult {
@@ -191,7 +192,6 @@ function analyzeProject(projectPath: string): AnalysisResult {
   // If no run command found, try immediate subdirectories (1 level deep)
   if (!result.run_command && result.type === "unknown") {
     try {
-      const { readdirSync, statSync } = require("node:fs") as typeof import("node:fs");
       const entries = readdirSync(projectPath, { withFileTypes: true });
       for (const entry of entries) {
         if (!entry.isDirectory()) continue;
@@ -263,7 +263,6 @@ export function registerAppRunnerRoutes({ app, db, broadcast }: { app: Express; 
 
         // List top-level directory entries for folder structure context
         try {
-          const { readdirSync } = require("node:fs") as typeof import("node:fs");
           const entries = readdirSync(projectPath, { withFileTypes: true });
           const listing = entries
             .filter((e) => !e.name.startsWith(".") && e.name !== "node_modules" && e.name !== "__pycache__" && e.name !== ".git")
@@ -274,15 +273,13 @@ export function registerAppRunnerRoutes({ app, db, broadcast }: { app: Express; 
         } catch { /* ignore */ }
 
         if (contextParts.length > 0) {
-          const provider = resolveProvider(db);
-          const model = getDefaultModel(provider.providerType);
-
           // Read language setting
           const langRow = db.prepare("SELECT value FROM settings WHERE key = 'language'").get() as { value: string } | undefined;
           let lang = "en";
           try { const v = langRow ? JSON.parse(langRow.value) : "en"; if (typeof v === "string") lang = v; } catch { /* ignore */ }
           const langLabel: Record<string, string> = { ko: "Korean", en: "English", ja: "Japanese", zh: "Chinese" };
 
+          const systemPrompt = loadPrompt("system/app-analysis-system") || "You are a project analysis expert.";
           const prompt = loadPrompt("system/project-analysis", {
             projectName: project.name,
             language: analysis.language ?? "unknown",
@@ -292,14 +289,7 @@ export function registerAppRunnerRoutes({ app, db, broadcast }: { app: Express; 
             lang: langLabel[lang] ?? "English",
           });
 
-          const rawText = await callLlmOneShot({
-            provider,
-            model,
-            systemPrompt: loadPrompt("system/app-analysis-system") ?? "You are a project analysis expert.",
-            userPrompt: prompt,
-            maxTokens: 1200,
-            signal: AbortSignal.timeout(30_000),
-          });
+          const rawText = await callLlmOneShotAuto({ db, systemPrompt, userPrompt: prompt, maxTokens: 1200, timeoutMs: 60_000 });
 
           if (rawText) {
             // Split markdown and JSON parts by ---JSON--- separator
@@ -341,7 +331,8 @@ export function registerAppRunnerRoutes({ app, db, broadcast }: { app: Express; 
           }
         }
       } catch (llmErr) {
-        logger.warn({ llmErr, projectId }, "AI description generation failed — continuing with file analysis only");
+        const errMsg = llmErr instanceof Error ? llmErr.message : String(llmErr);
+        logger.warn({ err: errMsg, projectId }, "AI description generation failed — continuing with file analysis only");
       }
 
       const analysisJson = JSON.stringify(analysis);
@@ -446,7 +437,6 @@ export function registerAppRunnerRoutes({ app, db, broadcast }: { app: Express; 
     res.json({ ok: true, port, status: "installing", portChanged: port !== requestedPort });
 
     // Background: install then run
-    const { spawn } = require("node:child_process") as typeof import("node:child_process");
     const isWin = process.platform === "win32";
     const shell = isWin ? "cmd.exe" : "/bin/sh";
     const shellFlag = isWin ? "/c" : "-c";
@@ -603,7 +593,6 @@ export function registerAppRunnerRoutes({ app, db, broadcast }: { app: Express; 
     // Clear previous logs
     appLogs.delete(projectId);
 
-    const { spawn: spawnChild } = require("node:child_process") as typeof import("node:child_process");
     const isWin = process.platform === "win32";
     const shell = isWin ? "cmd.exe" : "/bin/sh";
     const shellFlag = isWin ? "/c" : "-c";
@@ -614,7 +603,7 @@ export function registerAppRunnerRoutes({ app, db, broadcast }: { app: Express; 
     }
 
     const portEnv = { ...process.env, PORT: String(analysis.default_port ?? 3000) };
-    const child = spawnChild(shell, [shellFlag, runCmd], { cwd: projectPath, stdio: "pipe", env: portEnv, detached: !isWin });
+    const child = spawn(shell, [shellFlag, runCmd], { cwd: projectPath, stdio: "pipe", env: portEnv, detached: !isWin });
     const pid = child.pid ?? 0;
 
     child.stdout?.on("data", (d: Buffer) => {
@@ -627,7 +616,7 @@ export function registerAppRunnerRoutes({ app, db, broadcast }: { app: Express; 
     const killFn = () => {
       try {
         if (isWin) {
-          spawnChild("taskkill", ["/F", "/T", "/PID", String(pid)], { stdio: "ignore" });
+          spawn("taskkill", ["/F", "/T", "/PID", String(pid)], { stdio: "ignore" });
         } else {
           process.kill(-pid, "SIGTERM");
         }
@@ -705,14 +694,13 @@ export function registerAppRunnerRoutes({ app, db, broadcast }: { app: Express; 
     appLogs.delete(projectId);
     appendLog(projectId, "install", `$ ${installCmd}`);
 
-    const { spawn: spawnChild } = require("node:child_process") as typeof import("node:child_process");
     const isWin = process.platform === "win32";
     const shell = isWin ? "cmd.exe" : "/bin/sh";
     const shellFlag = isWin ? "/c" : "-c";
 
     let child;
     try {
-      child = spawnChild(shell, [shellFlag, installCmd], { cwd: projectPath, stdio: "pipe" });
+      child = spawn(shell, [shellFlag, installCmd], { cwd: projectPath, stdio: "pipe" });
     } catch (spawnErr) {
       const msg = spawnErr instanceof Error ? spawnErr.message : String(spawnErr);
       appendLog(projectId, "install", `Spawn error: ${msg}`);

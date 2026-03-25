@@ -1,5 +1,8 @@
+import type { SQLInputValue } from "node:sqlite";
+import type { Request, Response } from "express";
 import type { RuntimeContext } from "../../../../types/runtime-context.ts";
 import type { AgentRow } from "../../shared/types.ts";
+import type { TaskExecutionSession } from "../../../workflow/orchestration/session-review-tools.ts";
 import { createHash } from "node:crypto";
 import {
   buildTaskInterruptControlToken,
@@ -82,17 +85,14 @@ export function registerTaskExecutionControlRoutes(deps: TaskExecutionControlRou
     handleTaskRunComplete,
   } = deps;
 
-  function requireCsrfGuard(req: { method?: string; header(name: string): string | undefined }, res: any): boolean {
-    if (!shouldRequireCsrf(req as any)) return true;
-    if (hasValidCsrfToken(req as any)) return true;
+  function requireCsrfGuard(req: Request, res: Response): boolean {
+    if (!shouldRequireCsrf(req)) return true;
+    if (hasValidCsrfToken(req)) return true;
     res.status(403).json({ error: "csrf_token_invalid" });
     return false;
   }
 
-  function readInterruptSessionProof(req: {
-    body?: Record<string, unknown>;
-    header(name: string): string | undefined;
-  }): { sessionId: string; controlToken: string } {
+  function readInterruptSessionProof(req: Request): { sessionId: string; controlToken: string } {
     const body = req.body ?? {};
     const sessionId = typeof body.session_id === "string" ? body.session_id.trim() : "";
     const fromHeader = req.header("x-task-interrupt-token");
@@ -105,7 +105,7 @@ export function registerTaskExecutionControlRoutes(deps: TaskExecutionControlRou
     taskId: string,
     sessionId: string,
     controlToken: string,
-  ): { ok: true; session: any } | { ok: false; status: number; error: string } {
+  ): { ok: true; session: TaskExecutionSession } | { ok: false; status: number; error: string } {
     const activeSession = taskExecutionSessions.get(taskId);
     if (!activeSession?.sessionId) return { ok: false, status: 409, error: "task_session_missing" };
     if (activeSession.sessionId !== sessionId) return { ok: false, status: 409, error: "task_session_mismatch" };
@@ -141,7 +141,7 @@ export function registerTaskExecutionControlRoutes(deps: TaskExecutionControlRou
 
   app.post("/api/tasks/:id/inject", (req, res) => {
     const id = String(req.params.id);
-    if (!requireCsrfGuard(req as any, res)) return;
+    if (!requireCsrfGuard(req, res)) return;
 
     const task = db.prepare("SELECT id, title, status FROM tasks WHERE id = ?").get(id) as
       | { id: string; title: string; status: string }
@@ -153,7 +153,7 @@ export function registerTaskExecutionControlRoutes(deps: TaskExecutionControlRou
         .json({ error: "invalid_status", message: `Cannot inject prompt while status is '${task.status}'` });
     }
 
-    const { sessionId, controlToken } = readInterruptSessionProof(req as any);
+    const { sessionId, controlToken } = readInterruptSessionProof(req);
     if (!sessionId || !controlToken) {
       return res.status(400).json({ error: "session_proof_required" });
     }
@@ -170,7 +170,7 @@ export function registerTaskExecutionControlRoutes(deps: TaskExecutionControlRou
 
     const promptHash = hashInterruptPrompt(sanitized.value);
     const controlTokenHash = createHash("sha256").update(controlToken, "utf8").digest("hex");
-    queueInterruptPrompt(db as any, {
+    queueInterruptPrompt(db, {
       taskId: id,
       sessionId,
       promptText: sanitized.value,
@@ -211,12 +211,12 @@ export function registerTaskExecutionControlRoutes(deps: TaskExecutionControlRou
 
   app.post("/api/tasks/:id/stop", (req, res) => {
     const id = String(req.params.id);
-    if (!requireCsrfGuard(req as any, res)) return;
+    if (!requireCsrfGuard(req, res)) return;
 
     const mode = String(req.body?.mode ?? req.query.mode ?? "cancel");
     const targetStatus = mode === "pause" ? "pending" : "cancelled";
     if (mode === "pause") {
-      const { sessionId, controlToken } = readInterruptSessionProof(req as any);
+      const { sessionId, controlToken } = readInterruptSessionProof(req);
       const hasAnyProof = Boolean(sessionId || controlToken);
       if (hasAnyProof) {
         if (!sessionId || !controlToken) {
@@ -310,16 +310,16 @@ export function registerTaskExecutionControlRoutes(deps: TaskExecutionControlRou
       {
         const t = nowMs();
         const updates = ["status = ?", "updated_at = ?"];
-        const params: unknown[] = [targetStatus, t];
-        appendTaskExecutionMetaUpdate(db as any, updates, params, {
+        const params: SQLInputValue[] = [targetStatus, t];
+        appendTaskExecutionMetaUpdate(db, updates, params, {
           execution_state: targetStatus === "pending" ? "blocked" : "cancelled",
           retry_after: null,
           execution_error_code: targetStatus === "pending" ? "paused" : "cancelled",
           execution_error_summary: targetStatus === "pending" ? "Execution paused by operator" : "Execution cancelled by operator",
         });
         params.push(id);
-        db.prepare(`UPDATE tasks SET ${updates.join(", ")} WHERE id = ?`).run(...(params as any[]));
-        recordTaskExecutionEvent(db as any, {
+        db.prepare(`UPDATE tasks SET ${updates.join(", ")} WHERE id = ?`).run(...params);
+        recordTaskExecutionEvent(db, {
           taskId: id,
           eventType: targetStatus === "pending" ? "run_paused" : "run_cancelled",
           fromState: "running",
@@ -423,17 +423,17 @@ export function registerTaskExecutionControlRoutes(deps: TaskExecutionControlRou
     const t = nowMs();
     {
       const updates = ["status = ?", "updated_at = ?"];
-      const params: unknown[] = [targetStatus, t];
-      appendTaskExecutionMetaUpdate(db as any, updates, params, {
+      const params: SQLInputValue[] = [targetStatus, t];
+      appendTaskExecutionMetaUpdate(db, updates, params, {
         execution_state: targetStatus === "pending" ? "blocked" : "cancelled",
         retry_after: null,
         execution_error_code: targetStatus === "pending" ? "paused" : "cancelled",
         execution_error_summary: targetStatus === "pending" ? "Execution paused by operator" : "Execution cancelled by operator",
       });
       params.push(id);
-      db.prepare(`UPDATE tasks SET ${updates.join(", ")} WHERE id = ?`).run(...(params as any[]));
+      db.prepare(`UPDATE tasks SET ${updates.join(", ")} WHERE id = ?`).run(...params);
     }
-    recordTaskExecutionEvent(db as any, {
+    recordTaskExecutionEvent(db, {
       taskId: id,
       eventType: targetStatus === "pending" ? "run_paused" : "run_cancelled",
       fromState: "running",
@@ -509,9 +509,9 @@ export function registerTaskExecutionControlRoutes(deps: TaskExecutionControlRou
 
   app.post("/api/tasks/:id/resume", (req, res) => {
     const id = String(req.params.id);
-    if (!requireCsrfGuard(req as any, res)) return;
+    if (!requireCsrfGuard(req, res)) return;
 
-    const { sessionId, controlToken } = readInterruptSessionProof(req as any);
+    const { sessionId, controlToken } = readInterruptSessionProof(req);
     const hasAnyProof = Boolean(sessionId || controlToken);
     if (hasAnyProof) {
       if (!sessionId || !controlToken) {
@@ -549,15 +549,15 @@ export function registerTaskExecutionControlRoutes(deps: TaskExecutionControlRou
     const t = nowMs();
     {
       const updates = ["status = ?", "updated_at = ?"];
-      const params: unknown[] = [targetStatus, t];
-      appendTaskExecutionMetaUpdate(db as any, updates, params, {
+      const params: SQLInputValue[] = [targetStatus, t];
+      appendTaskExecutionMetaUpdate(db, updates, params, {
         execution_state: "queued",
         retry_after: null,
         execution_error_code: null,
         execution_error_summary: null,
       });
       params.push(id);
-      db.prepare(`UPDATE tasks SET ${updates.join(", ")} WHERE id = ?`).run(...(params as any[]));
+      db.prepare(`UPDATE tasks SET ${updates.join(", ")} WHERE id = ?`).run(...params);
     }
     appendTaskLog(id, "system", `RESUME: ${task.status} → ${targetStatus}`);
 
@@ -582,7 +582,7 @@ export function registerTaskExecutionControlRoutes(deps: TaskExecutionControlRou
         );
       }
     }
-    recordTaskExecutionEvent(db as any, {
+    recordTaskExecutionEvent(db, {
       taskId: id,
       eventType: "run_resumed",
       fromState: wasPaused ? "blocked" : "cancelled",

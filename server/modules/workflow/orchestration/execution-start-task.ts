@@ -1,6 +1,7 @@
 import path from "node:path";
 import { loadPromptSection } from "../../../lib/prompt-loader.ts";
 import type { RuntimeContext } from "../../../types/runtime-context.ts";
+import type { AgentRow } from "../core/conversation-types.ts";
 import { getDepartmentPromptForPack } from "../packs/department-scope.ts";
 import { ensureVideoPreprodRemotionBestPracticesSkill } from "../core/video-skill-bootstrap.ts";
 import { buildWorkflowPackExecutionGuidance } from "../packs/execution-guidance.ts";
@@ -24,7 +25,7 @@ type CreateExecutionStartTaskToolsDeps = {
   ensureTaskExecutionSession: RuntimeContext["ensureTaskExecutionSession"];
   resolveLang: RuntimeContext["resolveLang"];
   getPreferredLanguage?: () => string;
-  notifyTaskStatus: (...args: any[]) => any;
+  notifyTaskStatus: (taskId: string, taskTitle: string, status: string, lang: string) => void;
   resolveProjectPath: RuntimeContext["resolveProjectPath"];
   createWorktree: RuntimeContext["createWorktree"];
   getDeptRoleConstraint: RuntimeContext["getDeptRoleConstraint"];
@@ -109,7 +110,7 @@ export function createExecutionStartTaskTools(deps: CreateExecutionStartTaskTool
     const [rulesBlock, memoryBlock, skillsBlock, interruptPrompts, convCtx, continuationCtx] = await Promise.all([
       Promise.resolve(
         buildRulesPromptBlock(
-          db as any,
+          db,
           {
             projectId: params.projectId,
             agentId: params.agentId,
@@ -133,14 +134,14 @@ export function createExecutionStartTaskTools(deps: CreateExecutionStartTaskTool
         ),
       ),
       Promise.resolve(buildAvailableSkillsPromptBlock(params.provider, params.projectId)),
-      Promise.resolve(loadPendingInterruptPrompts(db as any, params.taskId, params.sessionId)),
+      Promise.resolve(loadPendingInterruptPrompts(db, params.taskId, params.sessionId)),
       Promise.resolve(getRecentConversationContext(params.agentId)),
       Promise.resolve(getTaskContinuationContext(params.taskId)),
     ]);
     return { rulesBlock, memoryBlock, skillsBlock, interruptPrompts, convCtx, continuationCtx };
   }
 
-  async function startTaskExecutionForAgent(taskId: string, execAgent: any, deptId: string | null, deptName: string): Promise<void> {
+  async function startTaskExecutionForAgent(taskId: string, execAgent: AgentRow, deptId: string | null, deptName: string): Promise<void> {
     // Dependency blocking: check if all predecessor tasks are completed
     const incompletePredecessors = db
       .prepare(
@@ -205,7 +206,7 @@ export function createExecutionStartTaskTools(deps: CreateExecutionStartTaskTool
       return;
     }
     ensureVideoPreprodRemotionBestPracticesSkill({
-      db: db as any,
+      db,
       nowMs,
       workflowPackKey: taskData.workflow_pack_key,
       provider,
@@ -215,7 +216,7 @@ export function createExecutionStartTaskTools(deps: CreateExecutionStartTaskTool
     const taskLang = typeof getPreferredLanguage === "function" ? getPreferredLanguage() : resolveLang(taskData.description ?? taskData.title);
     const videoArtifactSpec =
       taskData.workflow_pack_key === "video_preprod"
-        ? resolveVideoArtifactSpecForTask(db as any, {
+        ? resolveVideoArtifactSpecForTask(db, {
             project_id: taskData.project_id,
             project_path: taskData.project_path,
             department_id: deptId ?? taskData.department_id ?? null,
@@ -296,7 +297,7 @@ export function createExecutionStartTaskTools(deps: CreateExecutionStartTaskTool
     };
     const roleLabel = roleLabels[execAgent.role] ?? execAgent.role;
     const deptConstraint = deptId ? getDeptRoleConstraint(deptId, deptName) : "";
-    const deptPromptRaw = deptId ? getDepartmentPromptForPack(db as any, deptId) : null;
+    const deptPromptRaw = deptId ? getDepartmentPromptForPack(db, deptId) : null;
     const deptPrompt = typeof deptPromptRaw === "string" ? deptPromptRaw.trim() : "";
     const deptPromptBlock = deptPrompt ? `[Department Shared Prompt]\n${deptPrompt}` : "";
 
@@ -395,7 +396,7 @@ export function createExecutionStartTaskTools(deps: CreateExecutionStartTaskTool
 
     if (pendingInterruptPrompts.length > 0) {
       consumeInterruptPrompts(
-        db as any,
+        db,
         pendingInterruptPrompts.map((row) => row.id),
         nowMs(),
       );

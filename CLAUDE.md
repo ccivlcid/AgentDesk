@@ -85,6 +85,7 @@ All inline SVG icons must follow this standard:
 - Every new endpoint must be documented in `docs/specs/api.md` (bump the patch version).
 - Server responses: always `res.json({ ok: true, ... })` for success, `res.status(4xx).json({ error: "snake_case_code" })` for errors.
 - No `console.log` in server code — use the pino logger.
+- **System-level LLM calls MUST use `callLlmOneShotAuto()`** from `llm-client.ts`. Never call `resolveProvider(db)` directly for system tasks (kickoff, auto-assign, app-runner) — it throws when no API provider exists. `callLlmOneShotAuto` auto-detects the best provider from agent configs (api_provider_id → CLI provider → settings.defaultProvider → claude). See `docs/architecture/llm-call-patterns.md`.
 
 ---
 
@@ -482,6 +483,7 @@ Current shortcuts:
 | `g a` | Toggle Agent Manager |
 | `g e` | Toggle CLI (Agent CLI) |
 | `g i` | Toggle Image Studio |
+| `g d` | Toggle Dashboard |
 | `Space` (with icon selected) | Open Quick Look |
 | `Esc` | Exit Jiggle / Close Quick Look / Close Mission Control |
 | 600ms long-press on empty screen | Jiggle Mode ON |
@@ -548,7 +550,7 @@ When adding a new field to the task schema:
 
 ## 8. Documentation
 
-> Full index: [`docs/README.md`](docs/README.md). Archived specs: `docs/archive/`.
+> Full index: [`docs/README.md`](docs/README.md). Drift check: `pnpm lint:docs`.
 
 | Document | Description |
 |----------|-------------|

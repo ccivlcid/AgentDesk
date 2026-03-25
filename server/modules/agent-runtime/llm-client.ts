@@ -1,5 +1,6 @@
 import { decryptSecret } from "../../oauth/helpers.ts";
 import type { DatabaseSync } from "node:sqlite";
+import { spawn } from "child_process";
 import type { LlmMessage, ToolDefinition, ToolCall, LlmContent } from "./types.ts";
 
 export interface LlmStreamCallbacks {
@@ -91,6 +92,49 @@ export function getDefaultModel(providerType: string): string {
 }
 
 /**
+ * Resolve the best available CLI provider for system-level one-shot calls.
+ * Priority:
+ *  1. Agent with api_provider_id set → returns that agent's api_provider_id (caller uses resolveProvider)
+ *  2. Agent with CLI provider (claude/codex/gemini/cursor/opencode) → returns cli_provider name
+ *  3. settings.defaultProvider → fallback
+ *  4. "claude" → ultimate fallback
+ */
+export function resolveCliProviderFromAgents(db: DatabaseSync): { mode: "api"; apiProviderId: string } | { mode: "cli"; cliProvider: string } {
+  // 1. Check if any agent has an api_provider_id
+  const apiAgent = db.prepare(
+    "SELECT api_provider_id FROM agents WHERE api_provider_id IS NOT NULL AND status != 'offline' LIMIT 1",
+  ).get() as { api_provider_id: string } | undefined;
+  if (apiAgent?.api_provider_id) {
+    return { mode: "api", apiProviderId: apiAgent.api_provider_id };
+  }
+
+  // 2. Check agents' cli_provider (prefer non-api, non-ollama for one-shot text)
+  const CLI_ONESHOT = new Set(["claude", "codex", "gemini", "cursor", "opencode"]);
+  const cliAgent = db.prepare(
+    "SELECT cli_provider FROM agents WHERE status != 'offline' ORDER BY created_at ASC",
+  ).all() as { cli_provider: string }[];
+  for (const a of cliAgent) {
+    if (CLI_ONESHOT.has(a.cli_provider)) {
+      return { mode: "cli", cliProvider: a.cli_provider };
+    }
+  }
+
+  // 3. settings.defaultProvider
+  const row = db.prepare("SELECT value FROM settings WHERE key = 'settings'").get() as { value: string } | undefined;
+  if (row) {
+    try {
+      const parsed = JSON.parse(row.value) as { defaultProvider?: string };
+      if (parsed.defaultProvider && CLI_ONESHOT.has(parsed.defaultProvider)) {
+        return { mode: "cli", cliProvider: parsed.defaultProvider };
+      }
+    } catch { /* ignore */ }
+  }
+
+  // 4. Ultimate fallback
+  return { mode: "cli", cliProvider: "claude" };
+}
+
+/**
  * One-shot (non-streaming) LLM call. Works with both Anthropic and OpenAI-compatible providers.
  * Properly separates system and user prompts for both provider types.
  */
@@ -153,6 +197,78 @@ export async function callLlmOneShot(params: {
   }
   const data = await resp.json() as { choices?: Array<{ message?: { content?: string } }> };
   return data.choices?.[0]?.message?.content ?? "";
+}
+
+// ─── CLI Provider One-Shot (stdin → stdout, --print mode) ───────────────────
+
+function buildCliArgs(cliProvider: string): string[] {
+  switch (cliProvider) {
+    case "codex": return ["codex", "exec", "--json"];
+    case "gemini": return ["gemini", "--yolo"];
+    case "cursor": return ["agent", "--print"];
+    case "opencode": return ["opencode", "run", "--format", "json"];
+    default: return ["claude", "--dangerously-skip-permissions", "--print", "--max-turns", "1"];
+  }
+}
+
+function callViaCliProviderInternal(cliProvider: string, fullPrompt: string, timeoutMs = 120_000): Promise<string> {
+  const args = buildCliArgs(cliProvider);
+  return new Promise<string>((resolve, reject) => {
+    const child = spawn(args[0], args.slice(1), {
+      shell: process.platform === "win32",
+      stdio: ["pipe", "pipe", "pipe"],
+      env: { ...process.env, NO_COLOR: "1", FORCE_COLOR: "0", CI: "1" },
+    });
+    const timeoutId = setTimeout(() => { try { child.kill(); } catch { /* */ } reject(new Error(`CLI '${cliProvider}' timed out (${timeoutMs / 1000}s)`)); }, timeoutMs);
+    let output = "";
+    child.stdout?.on("data", (chunk: Buffer) => { output += chunk.toString("utf8"); });
+    child.stderr?.on("data", (chunk: Buffer) => { output += chunk.toString("utf8"); });
+    child.on("error", (err) => { clearTimeout(timeoutId); reject(err); });
+    child.on("close", () => { clearTimeout(timeoutId); resolve(output); });
+    child.stdin?.write(fullPrompt);
+    child.stdin?.end();
+  });
+}
+
+/**
+ * Unified one-shot LLM call — auto-detects best provider from agent configs.
+ *
+ * Resolution order:
+ *  1. Agent with api_provider_id → API HTTP call
+ *  2. Agent with CLI provider (claude/codex/gemini/cursor/opencode) → CLI --print
+ *  3. settings.defaultProvider → CLI fallback
+ *  4. "claude" → ultimate fallback
+ *
+ * Caller only needs to pass db, prompts, and optional config. No try-catch needed.
+ */
+export async function callLlmOneShotAuto(params: {
+  db: DatabaseSync;
+  systemPrompt: string;
+  userPrompt: string;
+  maxTokens?: number;
+  timeoutMs?: number;
+}): Promise<string> {
+  const { db, systemPrompt, userPrompt, maxTokens = 2048, timeoutMs = 120_000 } = params;
+  const resolved = resolveCliProviderFromAgents(db);
+
+  if (resolved.mode === "api") {
+    try {
+      const provider = resolveProvider(db, resolved.apiProviderId);
+      const model = getDefaultModel(provider.providerType);
+      return await callLlmOneShot({
+        provider, model, systemPrompt, userPrompt, maxTokens,
+        signal: AbortSignal.timeout(timeoutMs),
+      });
+    } catch {
+      // API failed — fall through to CLI
+      const fallback = resolveCliProviderFromAgents(db);
+      const cli = fallback.mode === "cli" ? fallback.cliProvider : "claude";
+      return callViaCliProviderInternal(cli, `${systemPrompt}\n\n${userPrompt}`, timeoutMs);
+    }
+  }
+
+  // CLI mode
+  return callViaCliProviderInternal(resolved.cliProvider, `${systemPrompt}\n\n${userPrompt}`, timeoutMs);
 }
 
 /** Resolve Anthropic API key — from api_providers table by provider id, or ANTHROPIC_API_KEY env. */

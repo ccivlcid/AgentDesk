@@ -5,14 +5,7 @@ import {
   formatMeetingTranscriptForPrompt,
   type MeetingTranscriptLine,
 } from "../meeting-prompt-utils.ts";
-import type {
-  AgentRow,
-  MeetingReviewDecision,
-  MeetingTranscriptEntry,
-  OneShotRunResult,
-  ReplyKind,
-  RunFailureKind,
-} from "./conversation-types.ts";
+import type { AgentRow, MeetingReviewDecision, MeetingTranscriptEntry, RunFailureKind } from "./conversation-types.ts";
 
 type LocalizedLines = {
   ko: string[];
@@ -63,8 +56,12 @@ export function createReplyCoreTools(deps: CreateReplyCoreToolsDeps) {
     return Math.floor(minMs + Math.random() * Math.max(0, maxMs - minMs));
   }
 
-  function getAgentDisplayName(agent: Pick<AgentRow, "name"> & { name_ko?: string | null }, lang: string): string {
-    return lang === "ko" ? (agent.name_ko ?? "") || agent.name : agent.name;
+  function getAgentDisplayName(agent: unknown, lang: string): string {
+    if (!agent || typeof agent !== "object") return "";
+    const rec = agent as Record<string, unknown>;
+    const name = typeof rec.name === "string" ? rec.name : "";
+    const nameKo = typeof rec.name_ko === "string" ? rec.name_ko : "";
+    return lang === "ko" ? nameKo || name : name;
   }
 
   function localeInstruction(lang: string): string {
@@ -168,7 +165,7 @@ export function createReplyCoreTools(deps: CreateReplyCoreToolsDeps) {
     );
   }
 
-  function fallbackTurnReply(kind: ReplyKind, lang: string, agent?: AgentRow): string {
+  function fallbackTurnReply(kind: string, lang: string, agent?: AgentRow): string {
     const name = agent ? getAgentDisplayName(agent, lang) : "";
     switch (kind) {
       case "opening":
@@ -301,7 +298,12 @@ export function createReplyCoreTools(deps: CreateReplyCoreToolsDeps) {
     });
   }
 
-  function chooseSafeReply(run: OneShotRunResult, lang: string, kind: ReplyKind, agent?: AgentRow): string {
+  function chooseSafeReply(
+    run: { text?: string; error?: string },
+    lang: string,
+    kind: string,
+    agent?: AgentRow,
+  ): string {
     const maxReplyChars = kind === "direct" ? 12000 : 2000;
     const rawText = run.text || "";
     const failureKind = detectRunFailure(rawText, run.error);

@@ -11,7 +11,7 @@ Current baseline target: `v1.6.4` (local snapshot, 2026-03-24).
 
 - Base URL (local): `http://127.0.0.1:8790`
 - API prefix: `/api`
-- Health endpoint: `/healthz`
+- Health endpoints: `/healthz` (canonical) and `/api/health` (API-compatible alias)
 - Swagger UI: `/api/docs`
 - OpenAPI JSON: `/api/openapi.json`
 
@@ -81,6 +81,7 @@ Runtime behavior highlights:
 
 - `$` — Company-wide directive (Client Directive). Messages starting with `$` via inbox webhook etc. are processed as company-wide instruction flows: planning team assembly, team lead meetings, task assignment, etc.
 - `!` — Explicit "work task" during general chat. Messages to an agent starting with `!` have the prefix stripped and are treated as work tasks (task flow); the agent will request project selection if needed. Example: `!Check Naver Finance` → processed as a task, `Check Naver Finance` → treated as an information request with a general reply.
+- `#` — Orchestrated task registration. Used by the AgentDesk client/orchestrator flow to register work on the task board first, then ask for or apply `project_path` before execution.
 
 ## Core Endpoint Groups
 
@@ -216,6 +217,7 @@ or
 | DELETE | `/api/project-templates/:templateId` | Delete project template |
 | POST | `/api/projects/:id/apply-template/:templateId` | Apply a template to a project |
 | POST | `/api/projects/:id/kickoff` | Kickoff project (LLM task generation) |
+| POST | `/api/projects/:id/add-tasks` | Add tasks to an existing project via abbreviated PM planning flow |
 | POST | `/api/projects/:id/resume` | Resume next planned task |
 | POST | `/api/projects/:id/clarification-reply` | Reply to kickoff clarification |
 | GET | `/api/projects/:id/pm-activity` | PM activity timeline |

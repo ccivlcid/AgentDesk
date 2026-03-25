@@ -30,7 +30,7 @@ interface OutcomeContext {
   isDeferrableReviewHold: (text: string) => boolean;
   summarizeForMeetingBubble: (text: string, maxLen: number, lang: Lang) => string;
   getDeptName: (deptId: string, workflowPackKey?: string | null) => string;
-  getAgentDisplayName: (agent: LeaderRow, lang: Lang | string) => string;
+  getAgentDisplayName: (agent: unknown, lang: Lang | string) => string;
   appendTaskLog: (taskId: string, kind: string, message: string) => void;
   REVIEW_MAX_REVISION_SIGNALS_PER_ROUND: number;
   REVIEW_MAX_REVISION_SIGNALS_PER_DEPT_PER_ROUND: number;

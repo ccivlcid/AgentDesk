@@ -1,206 +1,206 @@
 # LLM Call Patterns — Architecture Reference
 
-> Last updated: 2026-03-24
-> Purpose: Document all LLM invocation patterns across the codebase to prevent inconsistency bugs.
+> Last updated: 2026-03-25
+> Purpose: Document all LLM invocation patterns to prevent inconsistency bugs.
 >
 > **Rule: All LLM prompts must be in `.md` files under `prompts/`.** No hardcoded prompt strings in server code.
 > Use `loadPrompt("path/name", { vars })` from `server/lib/prompt-loader.ts`.
 
 ---
 
-## 1. Overview
+## 1. Two Fundamentally Different Call Types
 
-AgentDesk calls LLMs in **4 distinct patterns** across the codebase.
-All paths ultimately use `resolveProvider()` from `llm-client.ts` to determine whether to call Anthropic Messages API or OpenAI-compatible Chat Completions API.
+AgentDesk has two distinct LLM call categories:
 
-```
-┌───────────────────────────────────────────────────────────────────────┐
-│                        resolveProvider(db)                           │
-│  1. DB api_providers (by id or first enabled)                       │
-│  2. env ANTHROPIC_API_KEY fallback                                  │
-│  3. env OPENAI_API_KEY fallback                                     │
-│  → returns { type: "anthropic" | "openai-compatible", apiKey, ... } │
-└───────────────────────────────────────────────────────────────────────┘
-         │                                    │
-         ▼                                    ▼
-  callAnthropicStream()             callOpenAICompatibleStream()
-  (Anthropic Messages API)          (OpenAI Chat Completions API)
-```
+| Type | Who decides provider? | Entry point | Example |
+|------|----------------------|-------------|---------|
+| **Agent-level** | Each agent's `cli_provider` + `api_provider_id` | Task execution, direct chat | Agent runs a task, agent replies in chat |
+| **System-level** | `callLlmOneShotAuto()` auto-detects from agent configs | Kickoff, auto-assign, app-runner analysis | System generates tasks, system assigns agents |
+
+**This distinction is critical.** Agent-level calls never had the "No API provider" problem because they read each agent's own config. System-level calls had the problem because they used `resolveProvider()` which only checks the `api_providers` table.
 
 ---
 
-## 2. The 4 Call Patterns
+## 2. Agent-Level Calls (Per-Agent Config)
 
-### Pattern A — Streaming + Tool Use (Agent Runtime)
+### How provider is selected
+
+Each agent has `cli_provider` and optionally `api_provider_id` in the `agents` table:
+
+```
+agent.cli_provider = "api" AND agent.api_provider_id exists
+  → HTTP API call (Anthropic or OpenAI-compatible)
+
+agent.cli_provider = "copilot" | "antigravity"
+  → OAuth HTTP agent (streaming)
+
+agent.cli_provider = "claude" | "codex" | "gemini" | "cursor" | "opencode"
+  → CLI subprocess spawn (stdin/stdout)
+
+agent.cli_provider = "ollama" AND agent.api_provider_id exists
+  → HTTP API call to local Ollama server
+```
+
+### 2.1 Task Execution
+
+**File:** `server/modules/routes/core/tasks/execution-run.ts`
+
+```
+If api_provider_id is set → provider = "api" (regardless of cli_provider)
+Otherwise                 → provider = cli_provider || "claude"
+```
+
+### 2.2 Direct Chat
+
+**File:** `server/modules/routes/collab/direct-chat-runtime-reply.ts`
+
+```
+runDirectReplyExecution(agent, message)
+  ├── agent.cli_provider === "api" && api_provider_id
+  │   → executeApiProviderAgent() (HTTP streaming + chat_stream WS events)
+  │
+  ├── agent.cli_provider === "copilot"
+  │   → executeCopilotAgent() (OAuth HTTP)
+  │
+  ├── agent.cli_provider === "antigravity"
+  │   → executeAntigravityAgent() (OAuth HTTP)
+  │
+  └── else (claude/codex/gemini/cursor/opencode)
+      → runAgentOneShot(agent, prompt) (CLI spawn)
+```
+
+### 2.3 Agent Runtime (Built-in LLM + Tool Loop)
 
 **File:** `server/modules/agent-runtime/execution-loop.ts`
-**Used by:** Agent task execution (the main runtime loop)
 
-```
-resolveProvider(db, apiProviderId)
-  → provider.type === "anthropic"
-    ? callAnthropicStream({ apiKey, model, systemPrompt, messages, tools, ... })
-    : callOpenAICompatibleStream({ apiKey, baseUrl, model, systemPrompt, messages, tools, ... })
-```
-
-- **Streaming:** Yes (SSE)
-- **Tool use:** Yes (TOOL_DEFINITIONS: list_files, read_file, write_file, search_files, run_command)
-- **Multi-turn:** Yes (up to maxTurns, default 20)
-- **Message format:** Anthropic-native internally, converted via `toOpenAIMessages()` for OpenAI-compat
-- **Both providers fully working:** Yes
-
-### Pattern B — CLI Subprocess (Agent Runtime)
-
-**File:** `server/modules/agent-runtime/execution-loop.ts` → `runViaCli()`
-**Used by:** Agents with `cli_provider` set (claude, codex, gemini, cursor, opencode)
-
-```
-agent.cli_provider exists AND no api_provider_id
-  → spawn("claude" | "codex" | "gemini", args)
-  → stdin: system prompt + task title
-  → stdout: real-time streaming to WebSocket
-```
-
-- **Streaming:** Yes (process stdout)
-- **Tool use:** Handled by CLI tool itself (not AgentDesk tools)
-- **Codex-specific:** NDJSON parsing via `CodexLineBuffer` + `parseCodexJsonLine()`
-- **Timeout:** 120s
-- **Auth error detection:** Pattern matching on stderr output
-- **Both providers fully working:** Yes (each CLI has its own auth)
-
-### Pattern C — One-Shot Non-Streaming (Kickoff / Projects / PM)
-
-**Files:**
-- `server/modules/routes/core/projects.ts` → `callLlmOneShot()`
-- `server/modules/routes/core/projects/kickoff.ts` → `callLlmOneShot()` + `runInternalAddTasksPipeline()`
-- `server/modules/workflow/orchestration/pm-orchestrator.ts` → `callProviderCompat()` + `pmProjectLevelReview()`
-
-```
-resolveProvider(db)
-  → if anthropic:
-      fetch("https://api.anthropic.com/v1/messages", { model, max_tokens, system, messages })
-      → parse response.content[].text
-  → else:
-      fetch(`${baseUrl}/chat/completions`, { model, max_tokens, messages: [system, user] })
-      → parse response.choices[0].message.content
-```
-
-- **Streaming:** No
-- **Tool use:** No
-- **Multi-turn:** No (single request-response)
-- **Both providers fully working:** Yes
-- **PROBLEM: Code is duplicated in 3 files** (identical logic copy-pasted)
-
-### Pattern D — One-Shot Non-Streaming (App Runner AI Analysis)
-
-**File:** `server/modules/routes/ops/app-runner.ts` (lines 276-360)
-**Used by:** `POST /api/apps/:projectId/analyze` — AppRunnerWindow AI analysis
-
-```
-resolveProvider(db)
-  → if anthropic:
-      fetch(`${provider.baseUrl}/messages`, { model, max_tokens: 1200, messages })
-      → parse response.content[0].text
-  → else:
-      fetch(`${provider.baseUrl}/chat/completions`, { model, max_tokens: 1200, messages })
-      → parse response.choices[0].message.content
-```
-
-- **Streaming:** No
-- **Tool use:** No
-- **Prompt:** `prompts/system/project-analysis.md` (expects `---JSON---` separator in response)
-- **Both providers working:** Yes — BUT with a subtle difference (see Bug section below)
+- Anthropic/OpenAI-compatible API streaming + tool loop
+- Tools: `list_files`, `read_file`, `write_file`, `search_files`, `run_command`
+- Up to 20 turns per execution
 
 ---
 
-## 3. Fixed Bug: App Runner Anthropic Call Missing `system` Field
+## 3. System-Level Calls (`callLlmOneShotAuto`)
 
-> **Status: FIXED** (commit f2bb161)
+### The problem that was solved
 
-**Previous issue in** `server/modules/routes/ops/app-runner.ts`:
+System-level calls (kickoff task creation, auto-assign, app-runner AI analysis) need to call an LLM but aren't tied to a specific agent. Previously these used `resolveProvider(db)` which only checked:
+1. `api_providers` table
+2. `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` env vars
 
-```typescript
-// OLD CODE — both branches identical, no system prompt separation:
-const body = isAnthropic
-  ? JSON.stringify({ model, max_tokens: 1200, messages: [{ role: "user", content: prompt }] })
-  : JSON.stringify({ model, max_tokens: 1200, messages: [{ role: "user", content: prompt }] });
+Users with only CLI providers (e.g., `claude` via `claude login`) had empty `api_providers` and no env keys → **all system LLM calls failed**.
+
+### The solution: `callLlmOneShotAuto()`
+
+**File:** `server/modules/agent-runtime/llm-client.ts`
+
+Single function that auto-detects the best available provider:
+
+```
+callLlmOneShotAuto({ db, systemPrompt, userPrompt, maxTokens?, timeoutMs? })
+  │
+  ▼
+resolveCliProviderFromAgents(db)
+  │
+  ├── 1. Any agent has api_provider_id? → API HTTP call
+  │     (uses that agent's api_provider_id to resolve provider)
+  │
+  ├── 2. Any agent has cli_provider = claude/codex/gemini/cursor/opencode?
+  │     → CLI --print mode (stdin → stdout, no tools)
+  │
+  ├── 3. settings.defaultProvider set?
+  │     → CLI --print mode with that provider
+  │
+  └── 4. Ultimate fallback → "claude" CLI
 ```
 
-**Problems fixed:**
-1. Anthropic call lacked `system` field — prompt was in user message only
-2. Both branches were identical — ternary was meaningless
-3. No system/user prompt separation for any provider
+**If API call fails (timeout, auth error), automatically falls back to CLI.**
 
-**Fix:** Replaced with shared `callLlmOneShot()` which properly separates system/user prompts for both Anthropic (via `system` field) and OpenAI-compatible (via `role: "system"` message).
+### CLI --print mode commands
+
+| CLI Provider | Command | stdin→stdout |
+|-------------|---------|:---:|
+| `claude` (default) | `claude --dangerously-skip-permissions --print --max-turns 1` | O |
+| `codex` | `codex exec --json` | O |
+| `gemini` | `gemini --yolo` | O |
+| `cursor` | `agent --print` | O |
+| `opencode` | `opencode run --format json` | O |
+| `copilot` / `antigravity` | *(HTTP agent — CLI fallback unavailable)* | X |
+| `ollama` (no api_provider_id) | *(no stdin mode — skipped, uses other agent's CLI)* | X |
+
+### Where `callLlmOneShotAuto` is used
+
+| Caller | File | Purpose | maxTokens | timeout |
+|--------|------|---------|-----------|---------|
+| Auto-assign | `routes/core/projects.ts` | AI agent role assignment | 2048 | 30s |
+| Kickoff task creation | `routes/core/projects/kickoff.ts` | LLM generates tasks from project goal | 4096 | 120s |
+| Add-tasks pipeline | `routes/core/projects/kickoff.ts` | Additional task generation | 4096 | 120s |
+| App Runner AI analysis | `routes/ops/app-runner.ts` | Project file scan + LLM description | 1200 | 60s |
+
+### PM Orchestrator (special case)
+
+**File:** `server/modules/workflow/orchestration/pm-orchestrator.ts`
+
+PM orchestrator uses `callProviderCompat()` → `callLlmOneShot()` (low-level), wrapped with `findApiProviderCompat()` which returns `null` if no API provider. It does NOT use `callLlmOneShotAuto` yet — PM review requires API providers or uses `runAgentOneShot` (agent-level).
 
 ---
 
-## 4. Code Duplication — Resolved
+## 4. Provider Resolution Summary
 
-> **Status: FIXED** — All 4 callers now use shared `callLlmOneShot()` from `llm-client.ts`.
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    AGENT-LEVEL CALLS                            │
+│  (task execution, direct chat)                                  │
+│                                                                 │
+│  Each agent's own config:                                       │
+│    agents.cli_provider + agents.api_provider_id                 │
+│    → No "No API provider" error possible                        │
+│    → Agent without api_provider_id uses its CLI directly        │
+└─────────────────────────────────────────────────────────────────┘
 
-| # | File | Wrapper Function | maxTokens | Status |
-|---|------|-----------------|-----------|--------|
-| 1 | `routes/core/projects.ts` | `callLlmOneShot()` → shared | 2048 (default) | Refactored |
-| 2 | `routes/core/projects/kickoff.ts` | `callLlmOneShot()` → shared | 4096 | Refactored |
-| 3 | `workflow/orchestration/pm-orchestrator.ts` | `callProviderCompat()` → shared | 2048 (default) | Refactored |
-| 4 | `routes/ops/app-runner.ts` | direct call to shared | 1200 | Refactored + bug fixed |
+┌─────────────────────────────────────────────────────────────────┐
+│                    SYSTEM-LEVEL CALLS                           │
+│  (kickoff, auto-assign, app-runner, add-tasks)                 │
+│                                                                 │
+│  callLlmOneShotAuto({ db, ... })                               │
+│    1. agent with api_provider_id → API call                    │
+│    2. agent with CLI provider → CLI --print                    │
+│    3. settings.defaultProvider → CLI --print                   │
+│    4. "claude" fallback                                        │
+│    → Never throws "No API provider" — always has a path        │
+└─────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
-## 5. Full File Reference
+## 5. Core LLM Infrastructure Files
 
-### Core LLM Infrastructure
-
-| File | Exports | Purpose |
-|------|---------|---------|
-| `server/modules/agent-runtime/llm-client.ts` | `resolveProvider`, `resolveAnthropicKey`, `getDefaultModel`, `callAnthropicStream`, `callOpenAICompatibleStream` | Central LLM client — provider resolution + streaming calls |
-| `server/modules/agent-runtime/execution-loop.ts` | `startExecutionLoop`, `cancelRun`, `CodexLineBuffer`, `parseCodexJsonLine`, `parseCodexJsonChunk` | Agent runtime execution (Pattern A + B) |
-| `server/modules/agent-runtime/types.ts` | `LlmMessage`, `LlmContent`, `ToolDefinition`, `ToolCall`, `ToolResult`, `StartRunOptions` | Type definitions |
-| `server/modules/agent-runtime/tools.ts` | `TOOL_DEFINITIONS`, `executeTool` | 5 tools: list_files, read_file, write_file, search_files, run_command |
-| `server/modules/agent-runtime/store.ts` | `createRun`, `updateRunStatus`, `appendEvent`, `getRun`, etc. | Runtime run/event DB persistence |
-| `server/modules/agent-runtime/routes.ts` | `registerAgentRuntimeRoutes` | REST API: `/api/agent-runtime/*` |
-
-### LLM Callers (Pattern C — One-Shot)
-
-| File | Function | Used For |
-|------|----------|----------|
-| `server/modules/routes/core/projects.ts` | `callLlmOneShot()` | Project-level LLM calls (feature generation, etc.) |
-| `server/modules/routes/core/projects/kickoff.ts` | `callLlmOneShot()` + `callViaCliProvider()` | Kickoff task creation (LLM + CLI fallback) |
-| `server/modules/workflow/orchestration/pm-orchestrator.ts` | `callProviderCompat()` | PM review, approval, progress.md generation |
-
-### LLM Caller (Pattern D — App Analysis)
-
-| File | Function | Used For |
-|------|----------|----------|
-| `server/modules/routes/ops/app-runner.ts` | inline in POST `/api/apps/:projectId/analyze` | AI project analysis (file scan + LLM description) |
-| `prompts/system/project-analysis.md` | — | Analysis prompt template (expects `---JSON---` separator) |
-
-### Frontend (Analysis UI)
-
-| File | Component | Context |
-|------|-----------|---------|
-| `src/components/windows/AppRunnerWindow.tsx` | `AppRunnerWindow` | App Runner window with prompt input (AI analyze → install → run) |
-| ~~`AnalysisTab.tsx`~~ | ~~removed~~ | ~~Deleted — app analysis is now exclusively in AppRunnerWindow~~ |
-| `src/api/app-runner.ts` | `analyzeApp()`, `getAppStatus()`, `runApp()`, etc. | API client functions |
+| File | Key Exports | Purpose |
+|------|-------------|---------|
+| `server/modules/agent-runtime/llm-client.ts` | `callLlmOneShotAuto`, `callLlmOneShot`, `resolveProvider`, `resolveCliProviderFromAgents`, `callAnthropicStream`, `callOpenAICompatibleStream` | Central LLM client |
+| `server/modules/agent-runtime/execution-loop.ts` | `startExecutionLoop`, `cancelRun` | Agent runtime (Pattern A + B) |
+| `server/modules/agent-runtime/tools.ts` | `TOOL_DEFINITIONS`, `executeTool` | 5 built-in tools |
+| `server/modules/agent-runtime/types.ts` | `LlmMessage`, `ToolDefinition`, etc. | Type definitions |
+| `server/modules/routes/collab/direct-chat-runtime-reply.ts` | `runDirectReplyExecution` | Chat provider branching |
+| `server/modules/routes/core/tasks/execution-run.ts` | task run handler | Task provider branching |
 
 ---
 
 ## 6. Provider Support Matrix
 
-| Provider | API Streaming (Pattern A) | CLI Mode (Pattern B) | One-Shot (Pattern C+D) |
-|----------|--------------------------|---------------------|----------------------|
-| Anthropic | callAnthropicStream | claude CLI | callLlmOneShot (shared) |
-| OpenAI | callOpenAICompatibleStream | codex CLI | callLlmOneShot (shared) |
-| Gemini | — (no compat) | gemini CLI | — |
-| Ollama | callOpenAICompatibleStream | — | callLlmOneShot (shared) |
-| Groq | callOpenAICompatibleStream | — | callLlmOneShot (shared) |
-| Together | callOpenAICompatibleStream | — | callLlmOneShot (shared) |
-| OpenRouter | callOpenAICompatibleStream | — | callLlmOneShot (shared) |
-| Cerebras | callOpenAICompatibleStream | — | callLlmOneShot (shared) |
-| Cursor | — | cursor CLI | — |
-| Copilot | — | HTTP agent | — |
-| Antigravity | — | HTTP agent | — |
+| Provider | Task/Chat (Agent-level) | System One-Shot API | System One-Shot CLI |
+|----------|------------------------|--------------------|--------------------|
+| Anthropic | API streaming + tools | callLlmOneShot | claude --print |
+| OpenAI | API streaming + tools | callLlmOneShot | codex exec --json |
+| Gemini | gemini CLI | — | gemini --yolo |
+| Ollama | API streaming (local) | callLlmOneShot | — |
+| Groq | API streaming | callLlmOneShot | — |
+| Together | API streaming | callLlmOneShot | — |
+| OpenRouter | API streaming | callLlmOneShot | — |
+| Cerebras | API streaming | callLlmOneShot | — |
+| Cursor | cursor CLI | — | agent --print |
+| OpenCode | opencode CLI | — | opencode run --format json |
+| Copilot | OAuth HTTP | — | — (HTTP only) |
+| Antigravity | OAuth HTTP | — | — (HTTP only) |
 
 ---
 
@@ -224,10 +224,10 @@ const DEFAULT_MODELS: Record<string, string> = {
 
 ---
 
-## 8. Action Items
+## 8. Rules for Future Development
 
-| Priority | Item | Status |
-|----------|------|--------|
-| ~~P0~~ | ~~Fix app-runner Anthropic body~~ | **Done** — system/user prompts now properly separated |
-| ~~P1~~ | ~~Extract shared `callLlmOneShot()`~~ | **Done** — single implementation in `llm-client.ts`, 4 callers refactored |
-| **P2** | Add Google AI (Gemini) API support | Pending — currently only CLI mode; no direct API streaming |
+1. **Agent-level calls:** Use the agent's `cli_provider` and `api_provider_id` directly. Never use `resolveProvider(db)` without a specific agent context.
+2. **System-level calls:** Always use `callLlmOneShotAuto({ db, ... })`. Never call `resolveProvider(db)` directly — it throws when no API provider exists.
+3. **CLI fallback is mandatory.** Any new system-level LLM call site must use `callLlmOneShotAuto` to ensure CLI-only environments work.
+4. **No duplicate `callViaCliProvider` implementations.** Use the centralized `callViaCliProviderInternal` in `llm-client.ts`.
+5. **Prompts in `.md` files only.** Use `loadPrompt("path/name", { vars })`.
