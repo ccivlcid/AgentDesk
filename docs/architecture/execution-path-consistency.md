@@ -114,9 +114,20 @@ AgentDesk에는 두 개의 독립적인 LLM 실행 경로가 존재한다:
 - PM 원샷: "경량 오케스트레이션 판단" → 최소 컨텍스트, 도구 없음, 싱글턴
 
 이 불일치로 인해:
-1. PM 리뷰 품질이 태스크 실행 대비 현저히 낮음
+1. PM이 자신의 프로바이더가 아닌 다른 에이전트의 프로바이더를 사용 (라우팅 버그)
 2. 오케스트레이션 화면에 표시할 PM 데이터가 빈약함
 3. 프로바이더/언어/타임아웃 등 기본 설정이 경로마다 다름
+
+### 원칙: 모델 선택은 유저의 판단
+
+> **어떤 LLM 모델을 PM으로 사용할지는 유저가 결정한다.**
+> 시스템이 "이 모델은 PM 역할에 부적합합니다"라고 막아서는 안 된다.
+> 유저가 Ollama + llama3.2로 PM을 돌리겠다면 그것은 유저의 선택이다.
+>
+> 우리가 할 일:
+> 1. **라우팅 정확히** — PM 에이전트가 설정한 프로바이더를 정확히 사용
+> 2. **파싱 견고하게** — 어떤 LLM 출력이든 최선을 다해 해석
+> 3. **실패 시 투명하게** — 시스템이 임의 결정하지 않고 유저에게 알림
 
 ---
 
@@ -245,13 +256,22 @@ resultTail = task.result.length > 2000
 
 ---
 
-### 2-7. 승인 판정 로직 (MEDIUM)
+### 2-7. 승인 판정 파싱의 견고성 (MEDIUM)
 
-PM 승인 판정은 정규식 패턴 매칭:
+PM 승인 판정은 정규식 패턴 매칭에 의존:
 ```typescript
 const isApprove = /^APPROVE[:\s]/im.test(text)
   || /승인|합격|통과|lgtm|approve/i.test(text);
 ```
+
+PM은 유저가 선택한 어떤 LLM이든 될 수 있으므로(Claude, GPT, Gemini, Llama 등),
+출력 포맷이 모델마다 다를 수 있다. 현재 정규식이 모든 모델의 출력을 안정적으로
+파싱하지 못할 위험이 있다.
+
+**수정 방향:** 모델을 제한하는 것이 아니라, **파싱을 방어적으로** 강화:
+- 다중 패턴 매칭 (더 많은 변형 커버)
+- 파싱 실패 시 시스템이 임의 결정하지 않고 유저에게 알림
+- §4-3 참조
 
 ---
 
@@ -489,9 +509,56 @@ PM 리뷰처럼 **특정 에이전트의 프로바이더를 사용해야 하는 
 
 ---
 
-### 4-3. Phase 3: PM 리뷰 로그 구조화 (백엔드, 중규모)
+### 4-3. Phase 3: PM 리뷰 로그 구조화 + 파싱 강건화 (백엔드, 중규모)
 
 PM 리뷰 결과를 구조화된 JSON으로 기록. 오케스트레이션 Logs/Room 탭에서 소비.
+PM은 유저가 선택한 어떤 LLM이든 될 수 있으므로, 파싱은 방어적으로 설계.
+
+#### 승인 판정 파싱 강건화
+
+```typescript
+// 현재: 단순 정규식 (특정 LLM 출력 포맷에 의존)
+const isApprove = /^APPROVE[:\s]/im.test(text)
+  || /승인|합격|통과|lgtm|approve/i.test(text);
+
+// 개선: 다중 패턴 + 파싱 실패 시 투명한 처리
+function parseReviewDecision(text: string): "APPROVE" | "REVISE" | "UNKNOWN" {
+  // 1. 명시적 승인 패턴 (다양한 LLM 출력 커버)
+  const approvePatterns = [
+    /^APPROVE[:\s]/im,
+    /\bAPPROVE[D]?\b/i,
+    /승인|합격|통과|lgtm/i,
+    /decision[:\s]*approve/i,
+    /verdict[:\s]*approve/i,
+  ];
+  // 2. 명시적 수정 요청 패턴
+  const revisePatterns = [
+    /^REVISE[:\s]/im,
+    /\bREVISE[D]?\b/i,
+    /\bREJECT/i,
+    /수정\s*요청|반려|재작업/i,
+    /decision[:\s]*revise/i,
+    /needs?\s*(more\s+)?work/i,
+  ];
+
+  if (approvePatterns.some(p => p.test(text))) return "APPROVE";
+  if (revisePatterns.some(p => p.test(text))) return "REVISE";
+
+  // 3. 파싱 실패 → 시스템이 임의 결정하지 않고 UNKNOWN 반환
+  return "UNKNOWN";
+}
+
+// UNKNOWN 처리: 유저에게 알림 (오케스트레이션 화면에 표시)
+if (decision === "UNKNOWN") {
+  appendTaskLog(db, taskId, "pm_oversight", JSON.stringify({
+    action: "PARSE_FAILED",
+    rawResponse: response.slice(0, 500),
+    provider: pmProvider,
+  }));
+  // → 태스크를 review 상태로 유지, 유저가 직접 판단
+  // → 오케스트레이션 Room/Logs 탭에 파싱 실패 이벤트 표시
+}
+```
 
 #### task_logs 구조화
 
@@ -502,7 +569,7 @@ appendTaskLog(db, taskId, "pm_oversight",
 
 // 개선:
 appendTaskLog(db, taskId, "pm_oversight", JSON.stringify({
-  action: "APPROVE" | "REVISE" | "REASSIGN" | "ESCALATE",
+  action: "APPROVE" | "REVISE" | "REASSIGN" | "ESCALATE" | "PARSE_FAILED",
   checklist: {
     scopeMatch: boolean,
     errorsDetected: boolean,
@@ -517,6 +584,7 @@ appendTaskLog(db, taskId, "pm_oversight", JSON.stringify({
   },
   reasoning: response.slice(0, 500),
   provider: pmProvider,
+  model: pmModel,         // ← 어떤 모델이 판정했는지 기록
   durationMs: number,
   resultTailLength: number,
 }));
@@ -623,13 +691,26 @@ db.prepare(`
 // 언어 일관성
 const lang = getPreferredLanguage() || resolveLang(task.description ?? task.title);
 
-// max-turns 조정 (PM 리뷰: 1 → 3)
-["claude", "--dangerously-skip-permissions", "--print", "--max-turns", "3"]
+// max-turns / max_tokens 조정 — PM의 프로바이더 모드에 따라 분기
+const resolved = resolveProviderForAgent(db, pmAgent);
+
+if (resolved.mode === "cli") {
+  // CLI 모드: --max-turns 조정 (1 → 3, 리뷰 재시도 여유)
+  ["claude", "--dangerously-skip-permissions", "--print", "--max-turns", "3"]
+} else {
+  // API 모드: maxTokens 파라미터로 제어 (원샷이므로 turns 개념 없음)
+  callLlmOneShotForAgent(db, pmAgent, {
+    systemPrompt, userPrompt,
+    maxTokens: 4096,  // 리뷰 결과 + 체크리스트 출력에 충분한 토큰
+  });
+}
 ```
 
+**핵심:** CLI 모드에서는 `--max-turns`로 멀티턴 횟수를 제어하지만, API 모드에서는 싱글턴이므로 `maxTokens`만 조정하면 된다. `callLlmOneShotForAgent()`(§4-2)가 이를 자동 처리.
+
 **수정 파일:**
-- `server/modules/workflow/orchestration/pm-orchestrator.ts` — 언어 감지
-- `server/modules/agent-runtime/llm-client.ts` — CLI args
+- `server/modules/workflow/orchestration/pm-orchestrator.ts` — 언어 감지 + 모드별 분기
+- `server/modules/agent-runtime/llm-client.ts` — `callLlmOneShotForAgent()` maxTokens 파라미터
 
 ---
 
@@ -642,7 +723,7 @@ const lang = getPreferredLanguage() || resolveLang(task.description ?? task.titl
 | 3 | 1-B. Fitness 실데이터 | 소 | 없음 | Agents | 없음 |
 | 4 | 1-C. TOKENS/BUDGET 연동 | 소 | 없음 | Header | 없음 |
 | 5 | 2. PM 프로바이더 일관성 (resolveProviderForAgent + 호출 교체) | 중 | O | (간접) | 없음 |
-| 6 | 6. 언어/max-turns 일관성 | 소 | O | (간접) | 없음 |
+| 6 | 6. 언어/max-turns(CLI)/maxTokens(API) 일관성 | 소 | O | (간접) | Phase 2 |
 | 7 | 3. PM 리뷰 로그 구조화 | 중 | O | Logs, Room | 없음 |
 | 8 | 4. PM 리뷰 컨텍스트 보강 | 중 | O | (간접) | Phase 3 |
 | 9 | 5. diff 저장 | 중 | O | Timeline Inspector | 없음 |
