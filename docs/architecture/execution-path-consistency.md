@@ -219,6 +219,8 @@ runAgentOneShot(pm, prompt, {
 - 코드 변경 확인, 테스트 실행, 파일 검증 불가
 - 증거 기반 실행 정책(evidence-based)과 모순
 
+**완화:** §4-7의 공유 .md 기반 소통으로 PM이 도구 없이도 에이전트가 작성한 보고서/블로커/변경 파일 목록을 파일 경유로 전문 참조 가능. 도구 접근 자체를 주는 것은 아니지만, 판단 근거는 대폭 보강됨.
+
 ---
 
 ### 2-4. CLI 인수 불일치 (MEDIUM)
@@ -253,6 +255,8 @@ resultTail = task.result.length > 2000
   ? "..." + task.result.slice(-2000)
   : task.result;
 ```
+
+**수정:** §4-4에서 즉시 개선 (2000→4000), §4-7에서 근본 해결 (파일 기반 전문 저장)
 
 ---
 
@@ -628,7 +632,8 @@ appendTaskLog(db, taskId, "pm_oversight", JSON.stringify({
     evidenceCited: boolean,
     fileTouchCount: number,
   },
-  reasoning: response.slice(0, 500),
+  reasoning: response.slice(0, 500),   // DB 요약용. 전문은 Phase 7의 {task-id}-report.md에 저장
+  reportPath: `docs/tasks/${taskId}-report.md`,  // ← Phase 7: 전문 파일 경로 참조
   provider: pmProvider,
   model: pmModel,         // ← 어떤 모델이 판정했는지 기록
   durationMs: number,
@@ -665,17 +670,22 @@ db.prepare(`INSERT INTO task_execution_events
 
 PM 리뷰 프롬프트에 추가 컨텍스트 포함.
 
+> **Phase 7과의 관계:**
+> Phase 4는 Phase 7(공유 .md) 이전에 적용 가능한 **즉시 개선**이다.
+> Phase 7 이후에는 파일 기반 전문이 주 컨텍스트가 되므로, Phase 4의 DB 쿼리는
+> **폴백/요약용**으로 유지된다 (파일 없을 때, 빠른 요약 필요 시).
+
 #### 추가할 항목
 
 ```typescript
-// 1. 태스크 로그 요약 (주요 이벤트)
+// 1. 태스크 로그 요약 (주요 이벤트) — DB에서 빠른 조회
 const recentLogs = db.prepare(`
   SELECT kind, message, created_at FROM task_logs
   WHERE task_id = ? AND kind IN ('system', 'error', 'pm_oversight')
   ORDER BY created_at DESC LIMIT 15
 `).all(taskId);
 
-// 2. 이전 리뷰 피드백 (연속성)
+// 2. 이전 리뷰 피드백 (연속성) — Phase 7 이전: DB 쿼리 / 이후: 파일 전문
 const previousRevisions = db.prepare(`
   SELECT message FROM task_logs
   WHERE task_id = ? AND kind = 'pm_oversight'
@@ -683,8 +693,9 @@ const previousRevisions = db.prepare(`
   ORDER BY created_at DESC LIMIT 3
 `).all(taskId);
 
-// 3. result tail 확대
+// 3. result tail 확대 (Phase 7 이전의 즉시 개선)
 const RESULT_TAIL_LENGTH = 4000; // 2000 → 4000
+// Phase 7 이후: task report 파일에서 전문 참조, DB tail은 폴백
 ```
 
 #### prompts/pm/review-task.md 수정
@@ -698,6 +709,9 @@ const RESULT_TAIL_LENGTH = 4000; // 2000 → 4000
 
 ## Previous Review Feedback (if any)
 {{previousRevisions}}
+
+## Team Communication (if available)
+{{teamBoardContext}}
 
 ## Review Checklist
 1. Scope Match ...
@@ -1015,7 +1029,7 @@ DB의 task_logs 200자 기록은 오케스트레이션 UI 빠른 렌더링용으
 
 | 파일 | 역할 | 수정 Phase |
 |------|------|-----------|
-| `server/modules/workflow/orchestration/pm-orchestrator.ts` | PM 리뷰/오케스트레이션 — `callLlmOneShotAuto` → `callLlmOneShotForAgent` 교체 | 2, 3, 4, 6 |
+| `server/modules/workflow/orchestration/pm-orchestrator.ts` | PM 리뷰/오케스트레이션 — `callLlmOneShotAuto` → `callLlmOneShotForAgent` 교체, `writeTaskReport()`, `appendTeamBoard()` | 2, 3, 4, 6, 7 |
 | `server/modules/agent-runtime/llm-client.ts` | `resolveProviderForAgent()` + `callLlmOneShotForAgent()` 추가, CLI args 수정 | 2, 6 |
 | `server/modules/workflow/core/one-shot-runner.ts` | `runAgentOneShot()` 에이전트 기반 해석 옵션 | 2 |
 | `server/modules/workflow/orchestration/run-complete-handler/` | 태스크 완료 처리 | 5 |
