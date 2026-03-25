@@ -1023,7 +1023,214 @@ DB의 task_logs 200자 기록은 오케스트레이션 UI 빠른 렌더링용으
 
 ---
 
-## 6. 관련 파일 전체 목록
+## 6. 구현 방향성
+
+### 6-1. 현재 → 목표: Before / After
+
+#### Before (현재)
+
+```
+[에이전트 태스크 실행]                    [PM 리뷰]
+ 풍부한 컨텍스트 (1000줄 프롬프트)         빈약한 컨텍스트 (50줄)
+ 에이전트 고유 프로바이더                   아무 에이전트 프로바이더 (버그)
+ 도구 30+개, 멀티턴                       도구 0개, 싱글턴
+ result 전문 보유                         result 마지막 2000자만
+
+        │                                      │
+        ▼                                      ▼
+ [DB: task_logs]                         [DB: task_logs]
+  실행 로그 전문                           PM 판정 200자 요약
+        │                                      │
+        ▼                                      ▼
+ [오케스트레이션 화면]
+  Timeline: 45% 하드코딩
+  Logs: 100% 플레이스홀더
+  Room: 태스크 제목만 나열
+  Agents: 가짜 Fitness
+
+에이전트 간 소통: 없음 (일방향 DB 200자)
+```
+
+#### After (목표)
+
+```
+[에이전트 태스크 실행]                    [PM 리뷰]
+ 풍부한 컨텍스트                           보강된 컨텍스트 (로그 요약 + 팀 보드)
+ 에이전트 고유 프로바이더                   PM 에이전트 고유 프로바이더 (정확한 라우팅)
+ 도구 30+개, 멀티턴                       도구 없음, 싱글턴 (but 파일 기반 전문 참조)
+ result 전문 보유                         result 전문 (파일 경유)
+
+        │                                      │
+        ▼                                      ▼
+ [파일: {task-id}-report.md]             [파일: {task-id}-report.md]
+  실행 결과 전문                           PM 리뷰 전문 (라운드별)
+  변경 파일 목록                           체크리스트 + 판정 근거
+        │                                      │
+        ├──────── [파일: team-board.md] ────────┤
+        │          양방향 팀 소통 보드           │
+        │          블로커/의견/지시 전문          │
+        ▼                                      ▼
+ [DB: task_logs — 요약]                  [DB: task_logs — 구조화 JSON]
+  빠른 조회용 요약                         action, checklist, flags, reportPath
+        │                                      │
+        ▼                                      ▼
+ [오케스트레이션 화면]
+  Timeline: execution_state 기반 실시간 진행률
+  Logs: 구조화된 PM 이벤트 + task report 전문 링크
+  Room: team-board.md 소통 피드 + PM 판정 전문
+  Agents: 실제 Fitness 데이터 + 프로바이더/모델 표시
+```
+
+### 6-2. 구현 로드맵
+
+3단계로 나눠서 점진적으로 전환한다. 각 단계는 독립적으로 배포 가능.
+
+#### Stage A: 즉시 개선 (Phase 1 + 2 + 6) — 기존 데이터 활용
+
+**목표:** 백엔드 로직 변경 없이 (Phase 1) 또는 최소 변경으로 (Phase 2, 6) 오케스트레이션 화면을 동작시킴.
+
+```
+Phase 1-D: 코드 정리 (유니코드→SVG, 미사용 props 제거)
+Phase 1-A: 프로그레스 바 → execution_state 매핑
+Phase 1-B: Fitness → agent_task_fitness API 연동
+Phase 1-C: TOKENS/BUDGET → cost-summary API 연동
+Phase 2:   PM 프로바이더 라우팅 수정 (resolveProviderForAgent)
+Phase 6:   언어/max-turns 일관성
+```
+
+**완료 기준:**
+- 오케스트레이션 화면 4탭이 모두 실데이터 표시 (하드코딩/플레이스홀더 0개)
+- PM 리뷰가 PM 에이전트의 설정된 프로바이더를 정확히 사용
+- `tsc -b --noEmit` 에러 0
+
+**검증:**
+- PM에 Claude 외 프로바이더(GPT, Gemini 등) 설정 → 리뷰 시 해당 프로바이더 호출 확인
+- 오케스트레이션 화면에서 진행률, Fitness, 토큰이 실시간 갱신 확인
+
+---
+
+#### Stage B: PM 데이터 보강 (Phase 3 + 4 + 5) — 구조화 + 컨텍스트
+
+**목표:** PM 리뷰 데이터를 구조화하고, PM이 더 풍부한 컨텍스트로 판단하게 함.
+
+```
+Phase 3:   task_logs JSON 구조화 + parseReviewDecision() 강건화
+Phase 4:   PM 리뷰 프롬프트에 로그 요약/이전 피드백 추가
+Phase 5:   태스크 완료 시 git diff 저장
+```
+
+**완료 기준:**
+- task_logs의 PM 이벤트가 JSON 파싱 가능 (action, checklist, flags, provider, model)
+- PM 리뷰 프롬프트에 실행 로그 요약 + 이전 리뷰 피드백 포함
+- PARSE_FAILED 시 유저에게 알림 (오케스트레이션 화면 표시)
+- Logs 탭에서 PM 이벤트 구조화 표시
+- Timeline Inspector에서 변경 파일 목록 표시
+
+**검증:**
+- 다양한 LLM(Claude, GPT, Llama)으로 PM 리뷰 → APPROVE/REVISE/UNKNOWN 정확 파싱
+- REVISE → 재실행 → 2차 리뷰에서 이전 피드백이 프롬프트에 포함 확인
+- Logs 탭에서 체크리스트 항목별 pass/fail 시각화 확인
+
+---
+
+#### Stage C: 팀 소통 전환 (Phase 7) — 파일 기반 소통
+
+**목표:** DB 트렁케이션에서 파일 기반 전문 소통으로 전환.
+
+```
+Phase 7:   team-board.md + {task-id}-report.md + 에이전트 프롬프트 규칙
+           + 오케스트레이션 Room/Logs 연동 API
+```
+
+**완료 기준:**
+- PM 리뷰 전문이 `docs/tasks/{task-id}-report.md`에 저장 (잘림 없음)
+- PM 지시/에이전트 블로커가 `docs/team-board.md`에 기록
+- 에이전트 재실행 시 task report 파일에서 이전 피드백 전문 참조
+- Room 탭에서 team-board.md 소통 피드 표시
+- Logs 탭에서 task report 전문 표시 (DB 200자 → 파일 전문)
+
+**검증:**
+- 프로젝트 킥오프 → 태스크 실행 → PM 리뷰 → REVISE → 재실행 전체 플로우에서:
+  - team-board.md에 PM 지시 + 에이전트 보고 기록 확인
+  - task report에 리뷰 라운드별 전문 기록 확인
+  - 에이전트가 team-board.md를 읽고 반응하는지 확인
+
+### 6-3. 데이터 흐름 전환 전략
+
+Phase 4에서 Phase 7로 넘어갈 때, DB→파일 전환은 **점진적 이중 기록**으로 진행:
+
+```
+Stage B (Phase 3-5):
+  PM 리뷰 → DB에 구조화 JSON 기록 (기존 대비 개선)
+  PM 리뷰 → result tail 4000자 (2000→4000 확대)
+
+Stage C (Phase 7) 초기:
+  PM 리뷰 → DB에 구조화 JSON 기록 (유지)
+  PM 리뷰 → 파일에 전문 기록 (추가)  ← 이중 기록
+  PM 프롬프트 ← 파일 전문 우선, DB 폴백
+
+Stage C 안정화 후:
+  PM 리뷰 → DB에 요약 JSON + reportPath (경량화)
+  PM 리뷰 → 파일에 전문 기록 (주 저장소)
+  PM 프롬프트 ← 파일 전문
+```
+
+**이중 기록 기간**에는 DB와 파일 모두에 쓰므로, 파일 시스템 문제 시 DB 폴백이 보장됨.
+
+### 6-4. 리스크 및 제약 사항
+
+| 리스크 | 영향 | 완화 방안 |
+|--------|------|-----------|
+| **team-board.md 비대화** | 장기 프로젝트 시 수백 KB → PM 프롬프트 토큰 초과 | `extractRecentEntries(board, N)` — 최근 N개만 프롬프트에 포함. 전체는 파일에 보존 |
+| **파일 동시 쓰기 충돌** | 여러 에이전트가 동시에 team-board.md에 append | append-only 구조 + `appendFileSync()` (Node.js 동기 쓰기) → OS 레벨 원자성. 최악의 경우 행 순서만 뒤바뀜, 데이터 손실 없음 |
+| **CLI 에이전트 외 API 모드 에이전트** | API 모드(cli_provider="api") 에이전트는 파일 시스템 접근 불가 | PM이 대신 team-board.md에 기록. API 에이전트는 프롬프트를 통해 팀 보드 내용을 수신 |
+| **프로젝트 경로 없는 경우** | project_path가 NULL인 프로젝트 | 파일 기반 소통 비활성화, DB 경유만 사용 (Stage B의 개선 유지) |
+| **parseReviewDecision UNKNOWN 빈발** | 특정 LLM이 기대 포맷을 따르지 않아 UNKNOWN 반복 | 유저에게 알림 + 프롬프트 힌트 강화 ("반드시 APPROVE 또는 REVISE로 시작하세요"). 시스템이 임의 결정하지 않는 원칙 유지 |
+
+### 6-5. Phase 완료 후 최종 아키텍처 요약
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    오케스트레이션 화면                      │
+│  Timeline │ Logs │ Agents │ Room                        │
+│  (실시간)  │(구조화)│(Fitness)│(team-board)               │
+└────┬──────┴──┬───┴───┬────┴────┬───────────────────────┘
+     │         │       │         │
+     ▼         ▼       ▼         ▼
+┌─────────┐ ┌──────┐ ┌───────┐ ┌──────────────────┐
+│ DB 요약  │ │DB JSON│ │DB API │ │파일: team-board.md│
+│task_logs │ │events │ │fitness│ │파일: task reports │
+│(200자)   │ │(구조화)│ │(실측) │ │(전문, 잘림 없음)  │
+└────┬─────┘ └──┬───┘ └──┬────┘ └────┬─────────────┘
+     │          │        │           │
+     ▼          ▼        ▼           ▼
+┌──────────────────────────────────────────────────────┐
+│              PM 에이전트 (유저가 선택한 LLM)            │
+│  프롬프트: 팀 보드 컨텍스트 + 이전 리뷰 전문 + 로그 요약  │
+│  프로바이더: resolveProviderForAgent(db, pm)           │
+│  파싱: parseReviewDecision() → APPROVE/REVISE/UNKNOWN │
+│  기록: DB 요약 + 파일 전문 (이중 기록)                   │
+└──────────────┬────────────────────────┬──────────────┘
+               │                        │
+               ▼                        ▼
+┌──────────────────────┐  ┌──────────────────────────┐
+│ 태스크 에이전트 A      │  │ 태스크 에이전트 B          │
+│ 프롬프트에 PM 피드백 전문│  │ team-board.md 읽기/쓰기   │
+│ task report 참조      │  │ 블로커/의존성 보고          │
+│ 고유 프로바이더 사용    │  │ 고유 프로바이더 사용        │
+└──────────────────────┘  └──────────────────────────┘
+```
+
+**핵심 변화:**
+1. **PM 라우팅 정확** — PM 에이전트 고유 프로바이더를 정확히 사용
+2. **잘림 없음** — 파일 기반으로 모든 컨텍스트 전문 보존
+3. **양방향 소통** — 에이전트가 PM에게 블로커/의견 보고 가능
+4. **투명한 실패** — UNKNOWN 시 유저에게 알림, 시스템 임의 결정 없음
+5. **오케스트레이션 실데이터** — 모든 탭이 실제 데이터로 동작
+
+---
+
+## 7. 관련 파일 전체 목록
 
 ### 백엔드 (수정 대상)
 
@@ -1094,7 +1301,7 @@ DB의 task_logs 200자 기록은 오케스트레이션 UI 빠른 렌더링용으
 
 ---
 
-## 7. 관련 문서
+## 8. 관련 문서
 
 - [ORCHESTRATION-TIMELINE.md](../design/ORCHESTRATION-TIMELINE.md) — 오케스트레이션 화면 UI 스펙
 - [PM-WORKFLOW-SPEC.md](../strategy/PM-WORKFLOW-SPEC.md) — PM 오케스트레이션 워크플로우
