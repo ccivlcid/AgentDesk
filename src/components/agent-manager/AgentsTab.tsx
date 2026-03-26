@@ -102,7 +102,7 @@ export default function AgentsTab({
             fontFamily: "var(--th-font-mono)",
             borderRadius: "6px 6px 0 0",
             fontSize: "0.75rem",
-            color: deptTab === "all" ? "#111827" : "var(--th-text-muted)",
+            color: deptTab === "all" ? "#111827" : "#9CA3AF",
             borderColor: deptTab === "all" ? "#3B82F6" : "transparent",
             transition: "color 0.1s linear, border-color 0.1s linear",
           }}
@@ -122,7 +122,7 @@ export default function AgentsTab({
               style={{
                 fontFamily: "var(--th-font-mono)",
                 fontSize: "0.75rem",
-                color: isActive ? "#111827" : "var(--th-text-muted)",
+                color: isActive ? "#111827" : "#9CA3AF",
                 borderColor: isActive ? "#3B82F6" : "transparent",
                 transition: "color 0.1s linear, border-color 0.1s linear",
                 borderRadius: "6px 6px 0 0",
@@ -196,7 +196,7 @@ export default function AgentsTab({
                         </span>
                       )}
                       {agent.persona_id && (personasLoading
-                        ? <span style={{ width: 40, height: 16, background: "rgba(255,255,255,0.06)", borderRadius: 2, display: "inline-block" }} />
+                        ? <span style={{ width: 40, height: 16, background: "#F3F4F6", borderRadius: 8, display: "inline-block" }} />
                         : personaMap.has(agent.persona_id) && <PersonaBadge persona={personaMap.get(agent.persona_id)!} size="sm" />
                       )}
                       <span className="flex-1" />
@@ -211,7 +211,7 @@ export default function AgentsTab({
                           type="button"
                           onClick={() => onEditAgent(agent)}
                           className="px-2 py-1 text-[10px] font-mono transition"
-                          style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "#FFFFFF", color: "#6B7280" }}
+                          style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "#FFFFFF", color: "#6B7280" }}
                         >
                           {tr("편집", "edit")}
                         </button>
@@ -222,7 +222,7 @@ export default function AgentsTab({
                               onClick={() => { onDeleteAgent(agent.id); setConfirmDeleteId(null); }}
                               disabled={saving}
                               className="px-2 py-1 text-[10px] font-mono"
-                              style={{ borderRadius: 0, border: "1px solid rgba(244,63,94,0.5)", background: "rgba(244,63,94,0.1)", color: "#fb7185" }}
+                              style={{ borderRadius: 8, border: "1px solid rgba(244,63,94,0.5)", background: "rgba(244,63,94,0.1)", color: "#fb7185" }}
                             >
                               {tr("확인", "confirm")}
                             </button>
@@ -230,7 +230,7 @@ export default function AgentsTab({
                               type="button"
                               onClick={() => setConfirmDeleteId(null)}
                               className="px-2 py-1 text-[10px] font-mono"
-                              style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "#FFFFFF", color: "#9CA3AF" }}
+                              style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "#FFFFFF", color: "#9CA3AF" }}
                             >
                               {tr("취소", "cancel")}
                             </button>
@@ -240,9 +240,9 @@ export default function AgentsTab({
                             type="button"
                             onClick={() => setConfirmDeleteId(agent.id)}
                             className="px-2 py-1 text-[10px] font-mono transition"
-                            style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "#FFFFFF", color: "#9CA3AF" }}
+                            style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "#FFFFFF", color: "#9CA3AF" }}
                           >
-                            ✕
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                           </button>
                         )}
                       </div>

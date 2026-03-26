@@ -4,13 +4,13 @@ import type { TimelineEvent } from "../../api/agent-timeline";
 import { getAgentTimeline } from "../../api/agent-timeline";
 
 const EVENT_COLOR: Record<TimelineEvent["type"], string> = {
-  task_start: "var(--th-accent)",
-  task_done: "var(--th-terminal-success)",
-  task_fail: "var(--th-danger-border)",
+  task_start: "#3B82F6",
+  task_done: "#30d158",
+  task_fail: "#DC2626",
   skill_learn: "#3fb950",
-  memory_save: "var(--th-text-secondary)",
-  hook_run: "var(--th-accent)",
-  api_completion: "var(--th-accent)",
+  memory_save: "#6B7280",
+  hook_run: "#3B82F6",
+  api_completion: "#3B82F6",
 };
 
 function formatTime(ts: number): string {
@@ -72,7 +72,7 @@ export default function AgentTimeline({ agentId, t }: AgentTimelineProps) {
     return (
       <div
         className="py-8 text-center text-xs"
-        style={{ fontFamily: "var(--th-font-mono)", color: "var(--th-danger-border)" }}
+        style={{ fontFamily: "var(--th-font-mono)", color: "#DC2626" }}
       >
         {error}
       </div>
@@ -103,13 +103,13 @@ export default function AgentTimeline({ agentId, t }: AgentTimelineProps) {
           key={ev.id}
           className="flex gap-3 py-2"
           style={{
-            borderBottom: idx < events.length - 1 ? "1px solid var(--th-border)" : "none",
+            borderBottom: idx < events.length - 1 ? "1px solid #E5E7EB" : "none",
           }}
         >
           {/* Time column */}
           <div
             className="w-20 text-[10px] shrink-0 pt-0.5"
-            style={{ color: "var(--th-text-muted)" }}
+            style={{ color: "#9CA3AF" }}
           >
             {formatTime(ev.created_at)}
           </div>
@@ -121,7 +121,7 @@ export default function AgentTimeline({ agentId, t }: AgentTimelineProps) {
                 width: 8,
                 height: 8,
                 borderRadius: "50%",
-                background: EVENT_COLOR[ev.type] ?? "var(--th-border)",
+                background: EVENT_COLOR[ev.type] ?? "#E5E7EB",
                 flexShrink: 0,
               }}
             />
@@ -131,7 +131,7 @@ export default function AgentTimeline({ agentId, t }: AgentTimelineProps) {
                   flex: 1,
                   width: 1,
                   minHeight: 12,
-                  background: "var(--th-border)",
+                  background: "#E5E7EB",
                 }}
               />
             )}
@@ -141,14 +141,14 @@ export default function AgentTimeline({ agentId, t }: AgentTimelineProps) {
           <div className="flex flex-col gap-0.5 min-w-0 flex-1">
             <span
               className="text-[11px] truncate"
-              style={{ color: "var(--th-text-secondary)" }}
+              style={{ color: "#6B7280" }}
             >
               {ev.message}
             </span>
             {ev.taskTitle && (
               <span
                 className="text-[10px] truncate"
-                style={{ color: "var(--th-text-muted)" }}
+                style={{ color: "#9CA3AF" }}
               >
                 // {ev.taskTitle}
               </span>

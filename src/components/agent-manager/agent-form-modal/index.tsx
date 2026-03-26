@@ -80,7 +80,7 @@ export default function AgentFormModal({
           </div>
           <div
             style={{
-              borderTop: "1px solid var(--th-border)",
+              borderTop: "1px solid #E5E7EB",
               padding: "10px 16px",
               display: "flex",
               alignItems: "center",
@@ -89,7 +89,7 @@ export default function AgentFormModal({
               gap: 8,
               flexShrink: 0,
               fontFamily: "var(--th-font-mono)",
-              background: "var(--th-bg-surface)",
+              background: "#F9FAFB",
             }}
           >
             {footerButtons}

@@ -192,9 +192,9 @@ export default function DepartmentFormModal({
   const inputCls =
     "w-full px-3 py-2 border text-sm focus:outline-none transition-colors";
   const inputStyle = {
-    background: "var(--th-input-bg)",
-    borderColor: "var(--th-input-border)",
-    color: "var(--th-text-primary)",
+    background: "#FFFFFF",
+    borderColor: "#E5E7EB",
+    color: "#111827",
   };
 
   const sectionLabelStyle = {
@@ -203,7 +203,7 @@ export default function DepartmentFormModal({
     fontWeight: 700 as const,
     letterSpacing: "0.1em",
     textTransform: "uppercase" as const,
-    color: "var(--th-text-muted)",
+    color: "#9CA3AF",
   };
 
   const title = isEdit
@@ -226,7 +226,7 @@ export default function DepartmentFormModal({
 
           {/* ── IDENTITY ── */}
           <div>
-            <div className="mb-3 pb-1" style={{ borderBottom: "1px solid var(--th-border)" }}>
+            <div className="mb-3 pb-1" style={{ borderBottom: "1px solid #E5E7EB" }}>
               <span style={sectionLabelStyle}>
                 {t({ ko: "전문 분야 정보", en: "IDENTITY", ja: "専門分野情報", zh: "专业领域信息" })}
               </span>
@@ -235,13 +235,13 @@ export default function DepartmentFormModal({
             {/* Icon + Name */}
             <div className="flex items-start gap-3 mb-3">
               <div>
-                <label className="block text-xs mb-1.5 font-medium" style={{ color: "var(--th-text-secondary)" }}>
+                <label className="block text-xs mb-1.5 font-medium" style={{ color: "#6B7280" }}>
                   {t({ ko: "아이콘", en: "Icon", ja: "アイコン", zh: "图标" })}
                 </label>
                 <EmojiPicker value={form.icon} onChange={(emoji) => setForm({ ...form, icon: emoji })} />
               </div>
               <div className="flex-1">
-                <label className="block text-xs mb-1.5 font-medium" style={{ color: "var(--th-text-secondary)" }}>
+                <label className="block text-xs mb-1.5 font-medium" style={{ color: "#6B7280" }}>
                   {t({ ko: "영문 이름", en: "Name (English)", ja: "英語名", zh: "英文名" })} <span className="text-red-400">*</span>
                 </label>
                 <input
@@ -257,7 +257,7 @@ export default function DepartmentFormModal({
 
             {/* Theme color */}
             <div className="mb-3">
-              <label className="block text-xs mb-1.5 font-medium" style={{ color: "var(--th-text-secondary)" }}>
+              <label className="block text-xs mb-1.5 font-medium" style={{ color: "#6B7280" }}>
                 {t({ ko: "테마 색상", en: "Theme Color", ja: "テーマカラー", zh: "主题色" })}
               </label>
               <div className="flex gap-2">
@@ -281,7 +281,7 @@ export default function DepartmentFormModal({
             {/* Locale names */}
             {locale.startsWith("ko") && (
               <div className="mb-3">
-                <label className="block text-xs mb-1.5 font-medium" style={{ color: "var(--th-text-secondary)" }}>
+                <label className="block text-xs mb-1.5 font-medium" style={{ color: "#6B7280" }}>
                   {t({ ko: "한글 이름", en: "Korean Name", ja: "韓国語名", zh: "韩语名" })}
                 </label>
                 <input
@@ -296,7 +296,7 @@ export default function DepartmentFormModal({
             )}
             {locale.startsWith("ja") && (
               <div className="mb-3">
-                <label className="block text-xs mb-1.5 font-medium" style={{ color: "var(--th-text-secondary)" }}>
+                <label className="block text-xs mb-1.5 font-medium" style={{ color: "#6B7280" }}>
                   {t({ ko: "일본어 이름", en: "Japanese Name", ja: "日本語名", zh: "日语名" })}
                 </label>
                 <input
@@ -311,7 +311,7 @@ export default function DepartmentFormModal({
             )}
             {locale.startsWith("zh") && (
               <div className="mb-3">
-                <label className="block text-xs mb-1.5 font-medium" style={{ color: "var(--th-text-secondary)" }}>
+                <label className="block text-xs mb-1.5 font-medium" style={{ color: "#6B7280" }}>
                   {t({ ko: "중국어 이름", en: "Chinese Name", ja: "中国語名", zh: "中文名" })}
                 </label>
                 <input
@@ -328,7 +328,7 @@ export default function DepartmentFormModal({
 
           {/* ── MISSION & INSTRUCTIONS ── */}
           <div>
-            <div className="mb-3 pb-1" style={{ borderBottom: "1px solid var(--th-border)" }}>
+            <div className="mb-3 pb-1" style={{ borderBottom: "1px solid #E5E7EB" }}>
               <span style={sectionLabelStyle}>
                 {t({ ko: "미션 & 지시", en: "MISSION & INSTRUCTIONS", ja: "ミッション＆指示", zh: "使命与指示" })}
               </span>
@@ -336,7 +336,7 @@ export default function DepartmentFormModal({
 
             {/* Department mission (description) */}
             <div className="mb-4">
-              <label className="block text-xs mb-1.5 font-medium" style={{ color: "var(--th-text-secondary)" }}>
+              <label className="block text-xs mb-1.5 font-medium" style={{ color: "#6B7280" }}>
                 {t({ ko: "전문 분야 미션", en: "Specialty Mission", ja: "専門分野ミッション", zh: "专业领域使命" })}
               </label>
               <input
@@ -352,7 +352,7 @@ export default function DepartmentFormModal({
                 className={inputCls}
                 style={inputStyle}
               />
-              <p className="text-[10px] mt-1" style={{ color: "var(--th-text-muted)" }}>
+              <p className="text-[10px] mt-1" style={{ color: "#9CA3AF" }}>
                 {t({
                   ko: "PM이 태스크 배정 시 전문 분야 미션을 참고합니다",
                   en: "PM references this when assigning tasks to agents",
@@ -364,7 +364,7 @@ export default function DepartmentFormModal({
 
             {/* Department prompt */}
             <div>
-              <label className="block text-xs mb-1.5 font-medium" style={{ color: "var(--th-text-secondary)" }}>
+              <label className="block text-xs mb-1.5 font-medium" style={{ color: "#6B7280" }}>
                 {t({ ko: "기본 지시사항", en: "Default Instructions", ja: "デフォルト指示", zh: "默认指示" })}
               </label>
               <textarea
@@ -380,7 +380,7 @@ export default function DepartmentFormModal({
                 className={`${inputCls} resize-none`}
                 style={inputStyle}
               />
-              <p className="text-[10px] mt-1" style={{ color: "var(--th-text-muted)" }}>
+              <p className="text-[10px] mt-1" style={{ color: "#9CA3AF" }}>
                 {t({
                   ko: "소속 에이전트의 작업 실행 시 공통으로 적용되는 시스템 프롬프트",
                   en: "Applied as shared system prompt when agents in this specialty execute tasks",
@@ -393,12 +393,12 @@ export default function DepartmentFormModal({
         </div>
 
         {/* Actions */}
-        <div className="flex flex-shrink-0 items-center gap-2 px-6 py-4" style={{ borderTop: "1px solid var(--th-border)" }}>
+        <div className="flex flex-shrink-0 items-center gap-2 px-6 py-4" style={{ borderTop: "1px solid #E5E7EB" }}>
           <button
             onClick={handleSave}
             disabled={saving || !form.name.trim()}
             className="flex-1 px-4 py-2.5 text-sm font-medium font-mono transition-all disabled:opacity-40"
-            style={{ borderRadius: 0, background: "var(--th-accent)", color: "var(--th-accent-text)" }}
+            style={{ borderRadius: 10, background: "#3B82F6", color: "white" }}
           >
             {saving
               ? t({ ko: "처리 중...", en: "Saving...", ja: "処理中...", zh: "处理中..." })
@@ -413,14 +413,14 @@ export default function DepartmentFormModal({
                   onClick={handleDelete}
                   disabled={saving}
                   className="px-3 py-2.5 text-xs font-medium font-mono disabled:opacity-40 transition-colors"
-                  style={{ borderRadius: 0, background: "rgba(244,63,94,0.15)", color: "rgb(253,164,175)", border: "1px solid rgba(244,63,94,0.35)" }}
+                  style={{ borderRadius: 8, background: "rgba(244,63,94,0.15)", color: "rgb(253,164,175)", border: "1px solid rgba(244,63,94,0.35)" }}
                 >
                   {t({ ko: "삭제 확인", en: "Confirm", ja: "削除確認", zh: "确认删除" })}
                 </button>
                 <button
                   onClick={() => setConfirmDelete(false)}
                   className="px-2 py-2.5 text-xs font-mono transition-colors"
-                  style={{ borderRadius: 0, color: "var(--th-text-muted)" }}
+                  style={{ borderRadius: 8, color: "#9CA3AF" }}
                 >
                   {t({ ko: "취소", en: "No", ja: "いいえ", zh: "取消" })}
                 </button>
@@ -429,7 +429,7 @@ export default function DepartmentFormModal({
               <button
                 onClick={() => setConfirmDelete(true)}
                 className="px-3 py-2.5 text-sm font-medium font-mono transition-all"
-                style={{ borderRadius: 0, border: "1px solid rgba(244,63,94,0.3)", color: "rgb(253,164,175)" }}
+                style={{ borderRadius: 8, border: "1px solid rgba(244,63,94,0.3)", color: "rgb(253,164,175)" }}
               >
                 {t({ ko: "삭제", en: "Delete", ja: "削除", zh: "删除" })}
               </button>
@@ -437,7 +437,7 @@ export default function DepartmentFormModal({
           <button
             onClick={onClose}
             className="px-4 py-2.5 text-sm font-medium font-mono transition-all hover:bg-[var(--th-bg-surface-hover)]"
-            style={{ borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)" }}
+            style={{ borderRadius: 10, border: "1px solid #E5E7EB", color: "#6B7280" }}
           >
             {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}
           </button>
