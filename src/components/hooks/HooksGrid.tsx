@@ -93,7 +93,7 @@ export default function HooksGrid({
           className="flex flex-col items-center justify-center gap-2 p-8 transition-all group"
           style={{
             borderRadius: 0,
-            border: "1px dashed var(--th-border)",
+            border: "1px dashed #E5E7EB",
             background: "transparent",
             cursor: "pointer",
             minHeight: 120,
@@ -103,19 +103,19 @@ export default function HooksGrid({
             (e.currentTarget as HTMLButtonElement).style.background = "rgba(245,158,11,0.04)";
           }}
           onMouseLeave={(e) => {
-            (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--th-border)";
+            (e.currentTarget as HTMLButtonElement).style.borderColor = "#E5E7EB";
             (e.currentTarget as HTMLButtonElement).style.background = "transparent";
           }}
         >
           <span className="text-2xl transition-transform group-hover:scale-110" style={{ opacity: 0.35 }}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8a6 6 0 0 1-6 6H4" /><path d="M18 2v6" /><path d="M4 14v4a2 2 0 0 0 2 2h0a2 2 0 0 0 2-2v-4" /></svg>
           </span>
-          <span className="text-xs font-mono font-medium" style={{ color: "var(--th-text-muted)" }}>
+          <span className="text-xs font-mono font-medium" style={{ color: "#9CA3AF" }}>
             {emptyMessage ?? t({ ko: "등록된 훅이 없습니다", en: "No hooks registered", ja: "登録済みのフックがありません", zh: "暂无已注册的钩子" })}
           </span>
           <span
             className="flex items-center gap-1 px-3 py-1 text-xs font-mono font-medium transition-all"
-            style={{ borderRadius: 6, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
+            style={{ borderRadius: 6, border: "1px solid #E5E7EB", background: "#FFFFFF", color: "#6B7280" }}
           >
             + {t({ ko: "Add Hook", en: "Add Hook", ja: "Add Hook", zh: "Add Hook" })}
           </span>
@@ -137,16 +137,16 @@ export default function HooksGrid({
             className={`relative p-4 transition-all group ${
               !hook.enabled ? "opacity-50" : ""
             } ${isDeleting ? "pointer-events-none opacity-30" : ""}`}
-            style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}
+            style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "#FFFFFF" }}
           >
             {/* Header: event type icon + title + learned avatars */}
             <div className="flex items-start justify-between gap-2 mb-2">
               <div className="flex items-start gap-2 min-w-0 flex-1">
                 <span className="text-lg shrink-0">{EVENT_TYPE_ICONS[hook.event_type] || "\u{1F517}"}</span>
                 <div className="min-w-0 flex-1">
-                  <h3 className="text-sm font-semibold font-mono truncate" style={{ color: "var(--th-text-primary)" }}>{hook.title}</h3>
+                  <h3 className="text-sm font-semibold font-mono truncate" style={{ color: "#111827" }}>{hook.title}</h3>
                   {hook.description && (
-                    <p className="text-xs mt-0.5 line-clamp-2 font-mono" style={{ color: "var(--th-text-muted)" }}>{hook.description}</p>
+                    <p className="text-xs mt-0.5 line-clamp-2 font-mono" style={{ color: "#9CA3AF" }}>{hook.description}</p>
                   )}
                 </div>
               </div>
@@ -165,7 +165,7 @@ export default function HooksGrid({
                         <span className="flex h-2.5 w-2.5 items-center justify-center">
                           {cliProviderIcon(provider)}
                         </span>
-                        <span className="h-2.5 w-2.5 overflow-hidden" style={{ borderRadius: "3px", background: "var(--th-bg-elevated)" }}>
+                        <span className="h-2.5 w-2.5 overflow-hidden" style={{ borderRadius: "3px", background: "#FFFFFF" }}>
                           <AgentAvatar agent={agent ?? undefined} agents={agents} size={10} rounded="xl" />
                         </span>
                       </span>
@@ -176,7 +176,7 @@ export default function HooksGrid({
             </div>
 
             {/* Command preview */}
-            <div className="mb-3 px-2 py-1.5 border" style={{ borderRadius: 0, background: "var(--th-terminal-bg)", borderColor: "var(--th-border)" }}>
+            <div className="mb-3 px-2 py-1.5 border" style={{ borderRadius: 0, background: "#1E1E2E", borderColor: "#E5E7EB" }}>
               <p className="text-xs text-green-300 line-clamp-2 font-mono">{hook.command}</p>
             </div>
 
@@ -197,16 +197,16 @@ export default function HooksGrid({
                   {eventTypeLabel(hook.event_type, t)}
                 </span>
                 {/* Priority badge */}
-                <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium font-mono border" style={{ borderRadius: 0, background: "var(--th-bg-surface-hover)", color: "var(--th-text-muted)", borderColor: "var(--th-border)" }}>
+                <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium font-mono border" style={{ borderRadius: 0, background: "#F3F4F6", color: "#9CA3AF", borderColor: "#E5E7EB" }}>
                   P{hook.priority}
                 </span>
                 {/* Execution count badge */}
-                <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium font-mono border" style={{ borderRadius: 0, background: "var(--th-bg-surface-hover)", color: "var(--th-text-muted)", borderColor: "var(--th-border)" }}>
+                <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium font-mono border" style={{ borderRadius: 0, background: "#F3F4F6", color: "#9CA3AF", borderColor: "#E5E7EB" }}>
                   {t({ ko: "\uC2E4\uD589", en: "Runs", ja: "\u5B9F\u884C", zh: "\u8FD0\u884C" })}: {hook.execution_count}
                 </span>
                 {/* Last executed relative time */}
                 {hook.last_executed_at && (
-                  <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium font-mono border" style={{ borderRadius: 0, background: "var(--th-bg-elevated)", color: "var(--th-text-muted)", borderColor: "var(--th-border)" }}>
+                  <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium font-mono border" style={{ borderRadius: 0, background: "#FFFFFF", color: "#9CA3AF", borderColor: "#E5E7EB" }}>
                     {formatRelativeTime(hook.last_executed_at, t)}
                   </span>
                 )}
@@ -265,7 +265,7 @@ export default function HooksGrid({
                   <button
                     onClick={() => onEdit(hook)}
                     className="px-2 py-1 text-[10px] font-medium font-mono transition-all"
-                    style={{ borderRadius: 0, background: "rgba(251,191,36,0.1)", color: "var(--th-accent)", border: "1px solid rgba(251,191,36,0.35)" }}
+                    style={{ borderRadius: 0, background: "rgba(251,191,36,0.1)", color: "#3B82F6", border: "1px solid rgba(251,191,36,0.35)" }}
                   >
                     {t({ ko: "\uC218\uC815", en: "Edit", ja: "\u7DE8\u96C6", zh: "\u7F16\u8F91" })}
                   </button>
@@ -289,7 +289,7 @@ export default function HooksGrid({
         className="flex flex-col items-center justify-center gap-2 p-6 transition-all group"
         style={{
           borderRadius: 0,
-          border: "1px dashed var(--th-border)",
+          border: "1px dashed #E5E7EB",
           background: "transparent",
           cursor: "pointer",
           minHeight: 80,
@@ -299,12 +299,12 @@ export default function HooksGrid({
           (e.currentTarget as HTMLButtonElement).style.background = "rgba(245,158,11,0.04)";
         }}
         onMouseLeave={(e) => {
-          (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--th-border)";
+          (e.currentTarget as HTMLButtonElement).style.borderColor = "#E5E7EB";
           (e.currentTarget as HTMLButtonElement).style.background = "transparent";
         }}
       >
         <span className="text-lg transition-transform group-hover:scale-110" style={{ opacity: 0.3 }}>＋</span>
-        <span className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
+        <span className="text-xs font-mono" style={{ color: "#9CA3AF" }}>
           {t({ ko: "새 훅 추가", en: "Add Hook", ja: "フック追加", zh: "添加钩子" })}
         </span>
       </button>

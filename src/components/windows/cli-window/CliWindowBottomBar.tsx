@@ -45,8 +45,8 @@ export function CliWindowBottomBar({
         alignItems: "center",
         gap: 10,
         padding: "5px 12px",
-        borderTop: "1px solid var(--th-border)",
-        background: "var(--th-bg-secondary)",
+        borderTop: "1px solid #E5E7EB",
+        background: "#F9FAFB",
         flexShrink: 0,
         minHeight: 38,
       }}
@@ -59,9 +59,9 @@ export function CliWindowBottomBar({
         value={dropdownAgentId}
         onChange={(e) => setDropdownAgentId(e.target.value)}
         style={{
-          background: "var(--th-bg-primary)",
-          color: "var(--th-text-primary)",
-          border: "1px solid var(--th-border)",
+          background: "#F3F4F6",
+          color: "#111827",
+          border: "1px solid #E5E7EB",
           borderRadius: 5,
           padding: "3px 8px",
           fontSize: 12,
@@ -96,9 +96,9 @@ export function CliWindowBottomBar({
           gap: 4,
           padding: "3px 10px",
           borderRadius: 5,
-          border: "1px solid var(--th-border)",
+          border: "1px solid #E5E7EB",
           background: "transparent",
-          color: dropdownAgent ? "var(--th-accent)" : "var(--th-text-muted)",
+          color: dropdownAgent ? "#3B82F6" : "#9CA3AF",
           fontSize: 12,
           fontFamily: "var(--th-font-mono)",
           cursor: dropdownAgent ? "pointer" : "default",
@@ -126,9 +126,9 @@ export function CliWindowBottomBar({
             gap: 4,
             padding: "3px 10px",
             borderRadius: 5,
-            border: "1px solid var(--th-accent)",
-            background: completeBusy ? "var(--th-bg-elevated)" : "rgba(245,158,11,0.1)",
-            color: "var(--th-accent)",
+            border: "1px solid #3B82F6",
+            background: completeBusy ? "#FFFFFF" : "rgba(245,158,11,0.1)",
+            color: "#3B82F6",
             fontSize: 12,
             fontFamily: "var(--th-font-mono)",
             cursor: completeBusy ? "default" : "pointer",
@@ -159,7 +159,7 @@ export function CliWindowBottomBar({
             <span style={{
               maxWidth: 200, overflow: "hidden",
               textOverflow: "ellipsis", whiteSpace: "nowrap",
-              color: "var(--th-text-secondary)",
+              color: "#6B7280",
               letterSpacing: "0.01em",
             }}>
               {activeTask.title}
@@ -174,7 +174,7 @@ export function CliWindowBottomBar({
             <div style={{
               display: "flex", alignItems: "center", gap: 5,
               fontFamily: "var(--th-font-mono)", fontSize: 11,
-              color: "var(--th-text-muted)",
+              color: "#9CA3AF",
               cursor: "default",
               userSelect: "none",
               opacity: 0.55,
@@ -192,7 +192,7 @@ export function CliWindowBottomBar({
               <div style={{
                 position: "absolute", bottom: "calc(100% + 10px)", right: 0,
                 width: 260, zIndex: 999,
-                background: "var(--th-bg-elevated)",
+                background: "#FFFFFF",
                 border: "1px solid rgba(255,255,255,0.07)",
                 borderRadius: 10,
                 boxShadow: "0 16px 40px rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.04) inset",
@@ -207,14 +207,14 @@ export function CliWindowBottomBar({
                   <div style={{
                     fontFamily: "var(--th-font-mono)", fontSize: 11,
                     fontWeight: 700, letterSpacing: "0.03em",
-                    color: "var(--th-text-primary)",
+                    color: "#111827",
                   }}>
                     {t({ ko: "자유 모드로 실행 중", en: "Running untracked", ja: "フリーモード", zh: "未追踪运行" })}
                   </div>
                   <div style={{
                     marginTop: 3, fontSize: 10,
                     fontFamily: "var(--th-font-mono)",
-                    color: "var(--th-text-muted)", lineHeight: 1.5,
+                    color: "#9CA3AF", lineHeight: 1.5,
                   }}>
                     {t({
                       ko: "보고서·로그가 생성되지 않습니다. 산출물만 확인 가능합니다.",
@@ -254,7 +254,7 @@ export function CliWindowBottomBar({
                       padding: "5px 16px",
                       fontFamily: "var(--th-font-mono)", fontSize: 10,
                     }}>
-                      <span style={{ color: "var(--th-text-muted)" }}>{row.label}</span>
+                      <span style={{ color: "#9CA3AF" }}>{row.label}</span>
                       <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
                         <span style={{ fontSize: 11, color: row.free ? "#4ade80" : "rgba(100,116,139,0.4)" }}>
                           {row.free ? "✓" : "—"}

@@ -24,9 +24,9 @@ export function OpsDetailsSection({
   tr,
 }: OpsDetailsSectionProps) {
   return (
-    <div className="border-b px-4 py-2.5 space-y-2" style={{ borderColor: "var(--th-border)" }}>
+    <div className="border-b px-4 py-2.5 space-y-2" style={{ borderColor: "#E5E7EB" }}>
       <div className="flex items-center justify-between gap-3 text-[10px] font-mono">
-        <div className="flex min-w-0 flex-wrap items-center gap-2" style={{ color: "var(--th-text-secondary)" }}>
+        <div className="flex min-w-0 flex-wrap items-center gap-2" style={{ color: "#6B7280" }}>
           <span>{`${tr("attempt", "attempt", "attempt", "attempt")}: ${effectiveExecution.execution_attempt ?? 0}`}</span>
           <span title={formatExecutionTime(effectiveExecution.last_output_at)}>
             {`${tr("output", "output", "output", "output")}: ${formatElapsed(effectiveExecution.last_output_at)}`}
@@ -41,8 +41,8 @@ export function OpsDetailsSection({
           className="shrink-0 px-1 py-0.5 text-[10px] font-mono transition"
           style={{
             borderRadius: 0,
-            border: `1px solid ${hasExecutionIssue ? "rgba(244,63,94,0.28)" : "var(--th-border)"}`,
-            color: hasExecutionIssue ? "#fda4af" : "var(--th-text-muted)",
+            border: `1px solid ${hasExecutionIssue ? "rgba(244,63,94,0.28)" : "#E5E7EB"}`,
+            color: hasExecutionIssue ? "#fda4af" : "#9CA3AF",
             background: hasExecutionIssue ? "rgba(244,63,94,0.08)" : "transparent",
           }}
         >
@@ -63,7 +63,7 @@ export function OpsDetailsSection({
         </div>
       )}
       {opsDetailsOpen && (
-        <div className="grid grid-cols-2 gap-2 text-[10px] font-mono" style={{ color: "var(--th-text-secondary)" }}>
+        <div className="grid grid-cols-2 gap-2 text-[10px] font-mono" style={{ color: "#6B7280" }}>
           <div>{`${tr("execution", "execution", "execution", "execution")}: ${effectiveExecution.execution_state ?? "-"}`}</div>
           <div title={formatExecutionTime(effectiveExecution.last_heartbeat_at)}>
             {`${tr("heartbeat", "heartbeat", "heartbeat", "heartbeat")}: ${formatElapsed(effectiveExecution.last_heartbeat_at)}`}
@@ -76,12 +76,12 @@ export function OpsDetailsSection({
       )}
       {opsDetailsOpen && executionEvents.length > 0 && (
         <div className="space-y-1">
-          <div className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
+          <div className="text-[10px] font-mono" style={{ color: "#9CA3AF" }}>
             {tr("최근 execution events", "Recent execution events", "最近 execution events", "最近 execution events")}
           </div>
           <div className="max-h-24 space-y-0.5 overflow-y-auto">
             {executionEvents.slice(0, 5).map((event) => (
-              <div key={event.id} className="text-[10px] font-mono" style={{ color: "var(--th-text-secondary)" }}>
+              <div key={event.id} className="text-[10px] font-mono" style={{ color: "#6B7280" }}>
                 [{taskLogTimeFormatter.format(new Date(event.created_at))}] {event.event_type}
                 {event.summary ? ` · ${event.summary}` : ""}
               </div>

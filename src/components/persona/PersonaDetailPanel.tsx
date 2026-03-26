@@ -43,7 +43,7 @@ export default function PersonaDetailPanel({ persona }: PersonaDetailPanelProps)
           </div>
           <div
             className="text-[10px] mt-0.5 uppercase tracking-widest"
-            style={{ color: "var(--th-text-muted)" }}
+            style={{ color: "#9CA3AF" }}
           >
             {categoryLabel?.en ?? persona.category}
           </div>
@@ -67,7 +67,7 @@ export default function PersonaDetailPanel({ persona }: PersonaDetailPanelProps)
       <div>
         <div
           className="text-[9px] uppercase font-bold tracking-widest mb-1.5"
-          style={{ color: "var(--th-text-muted)" }}
+          style={{ color: "#9CA3AF" }}
         >
           // STYLE KEYWORDS
         </div>
@@ -92,7 +92,7 @@ export default function PersonaDetailPanel({ persona }: PersonaDetailPanelProps)
       <div>
         <div
           className="text-[9px] uppercase font-bold tracking-widest mb-1.5"
-          style={{ color: "var(--th-text-muted)" }}
+          style={{ color: "#9CA3AF" }}
         >
           // BEST FOR
         </div>
@@ -102,9 +102,9 @@ export default function PersonaDetailPanel({ persona }: PersonaDetailPanelProps)
               key={tag}
               className="text-[10px] px-1.5 py-0.5 font-mono"
               style={{
-                background: "var(--th-bg-elevated)",
-                color: "var(--th-text-secondary)",
-                border: "1px solid var(--th-border)",
+                background: "#FFFFFF",
+                color: "#6B7280",
+                border: "1px solid #E5E7EB",
               }}
             >
               {tag}
@@ -117,13 +117,13 @@ export default function PersonaDetailPanel({ persona }: PersonaDetailPanelProps)
       <div>
         <div
           className="text-[9px] uppercase font-bold tracking-widest mb-1.5"
-          style={{ color: "var(--th-text-muted)" }}
+          style={{ color: "#9CA3AF" }}
         >
           // THINKING STYLE
         </div>
         <div
           className="text-[11px] leading-relaxed"
-          style={{ color: "var(--th-text-secondary)" }}
+          style={{ color: "#6B7280" }}
         >
           {persona.description_ko
             ? persona.description_ko

@@ -21,8 +21,8 @@ export function TerminalPanelTabs({ activeTab, setActiveTab, tr }: TerminalPanel
     <div style={{
       display: "inline-flex",
       borderRadius: 7,
-      border: "1px solid var(--th-border)",
-      background: "var(--th-bg-surface)",
+      border: "1px solid #E5E7EB",
+      background: "#F9FAFB",
       overflow: "hidden",
       flexShrink: 0,
     }}>
@@ -39,8 +39,8 @@ export function TerminalPanelTabs({ activeTab, setActiveTab, tr }: TerminalPanel
               fontWeight: 700,
               letterSpacing: "0.04em",
               padding: "3px 10px",
-              background: isActive ? "var(--th-accent)" : "transparent",
-              color: isActive ? "var(--th-accent-text, #000)" : "var(--th-text-muted)",
+              background: isActive ? "#3B82F6" : "transparent",
+              color: isActive ? "var(--th-accent-text, #000)" : "#9CA3AF",
               border: "none",
               borderRadius: isActive ? 6 : 0,
               cursor: "pointer",

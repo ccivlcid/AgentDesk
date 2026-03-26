@@ -13,7 +13,7 @@ const HooksLibrary      = lazy(() => import("../HooksLibrary"));
 function Loading() {
   const { t } = useI18n();
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", gap: 10, fontFamily: "var(--th-font-mono)", fontSize: 11, color: "var(--th-text-muted)" }}>
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", gap: 10, fontFamily: "var(--th-font-mono)", fontSize: 11, color: "#9CA3AF" }}>
       <svg className="animate-spin" width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
         <circle cx="12" cy="12" r="10" strokeOpacity={0.2} />
         <path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" />
@@ -47,10 +47,10 @@ export default function LibraryWindow() {
         justifyContent: "center",
         width: 22,
         height: 22,
-        border: "1px solid var(--th-border)",
+        border: "1px solid #E5E7EB",
         borderRadius: "50%",
         background: "transparent",
-        color: "var(--th-text-muted)",
+        color: "#9CA3AF",
         fontFamily: "var(--th-font-mono)",
         fontSize: 11,
         fontWeight: 700,
@@ -59,13 +59,13 @@ export default function LibraryWindow() {
         transition: "color 0.15s, border-color 0.15s, background 0.15s",
       }}
       onMouseEnter={(e) => {
-        (e.currentTarget as HTMLButtonElement).style.color = "var(--th-accent)";
-        (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--th-accent)";
-        (e.currentTarget as HTMLButtonElement).style.background = "var(--th-accent-glow)";
+        (e.currentTarget as HTMLButtonElement).style.color = "#3B82F6";
+        (e.currentTarget as HTMLButtonElement).style.borderColor = "#3B82F6";
+        (e.currentTarget as HTMLButtonElement).style.background = "#EBF5FF";
       }}
       onMouseLeave={(e) => {
-        (e.currentTarget as HTMLButtonElement).style.color = "var(--th-text-muted)";
-        (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--th-border)";
+        (e.currentTarget as HTMLButtonElement).style.color = "#9CA3AF";
+        (e.currentTarget as HTMLButtonElement).style.borderColor = "#E5E7EB";
         (e.currentTarget as HTMLButtonElement).style.background = "transparent";
       }}
     >

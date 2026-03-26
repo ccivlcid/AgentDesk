@@ -19,7 +19,7 @@ export function CliPlanBanner({ visible, t, onDismiss }: CliPlanBannerProps) {
       gap: 8,
       fontFamily: "var(--th-font-mono)",
       fontSize: 11,
-      color: "var(--th-accent)",
+      color: "#3B82F6",
       flexShrink: 0,
     }}>
       <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg></span>
@@ -27,7 +27,7 @@ export function CliPlanBanner({ visible, t, onDismiss }: CliPlanBannerProps) {
       <button
         type="button"
         onClick={onDismiss}
-        style={{ marginLeft: "auto", background: "none", border: "none", color: "var(--th-text-muted)", cursor: "pointer", fontSize: 12 }}
+        style={{ marginLeft: "auto", background: "none", border: "none", color: "#9CA3AF", cursor: "pointer", fontSize: 12 }}
       >✕</button>
     </div>
   );

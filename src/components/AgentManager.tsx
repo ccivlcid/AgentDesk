@@ -363,7 +363,7 @@ export default function AgentManager({
               {tr("인재 관리", "Talent Management", "タレント管理", "人才管理")}
             </div>
             <div style={{ fontSize: 11, color: "#9CA3AF", fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
-              <span style={{ color: "var(--th-success)" }}>●</span>
+              <span style={{ color: "#059669" }}>●</span>
               {agents.length} Agents · {departments.length} Specialties
             </div>
           </div>

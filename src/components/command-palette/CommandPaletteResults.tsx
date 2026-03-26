@@ -45,11 +45,11 @@ export function CommandPaletteResults({
             const isSel = idx === safeIndex;
             return (
               <PaletteRow key={`recent-${act.action}`} item={{ kind: "action", ...act }} idx={idx} safeIndex={safeIndex} onPick={onExecuteItem}>
-                <PaletteIconBox icon="↩" bg="var(--th-bg-panel)" />
-                <span style={{ ...sf, fontSize: 14, color: isSel ? "var(--th-text-heading)" : "var(--th-text-secondary)", flex: 1, textAlign: "left", position: "relative", zIndex: 1 }}>
+                <PaletteIconBox icon="↩" bg="#FFFFFF" />
+                <span style={{ ...sf, fontSize: 14, color: isSel ? "#111827" : "#6B7280", flex: 1, textAlign: "left", position: "relative", zIndex: 1 }}>
                   {act.label}
                 </span>
-                <span style={{ ...sf, fontSize: 10, color: "var(--th-text-muted)", position: "relative", zIndex: 1 }}>
+                <span style={{ ...sf, fontSize: 10, color: "#9CA3AF", position: "relative", zIndex: 1 }}>
                   {t({ ko: "최근", en: "recent", ja: "最近", zh: "最近" })}
                 </span>
               </PaletteRow>
@@ -70,7 +70,7 @@ export function CommandPaletteResults({
             return (
               <PaletteRow key={act.action} item={{ kind: "action", ...act }} idx={idx} safeIndex={safeIndex} onPick={onExecuteItem}>
                 <PaletteIconBox icon={act.icon} bg={act.bg} />
-                <span style={{ ...sf, fontSize: 14, color: isSel ? "var(--th-text-heading)" : "var(--th-text-primary)", flex: 1, textAlign: "left", position: "relative", zIndex: 1 }}>
+                <span style={{ ...sf, fontSize: 14, color: isSel ? "#111827" : "#111827", flex: 1, textAlign: "left", position: "relative", zIndex: 1 }}>
                   {act.label}
                 </span>
               </PaletteRow>
@@ -87,13 +87,13 @@ export function CommandPaletteResults({
             const isSel = idx === safeIndex;
             return (
               <PaletteRow key={project.id} item={{ kind: "project", project }} idx={idx} safeIndex={safeIndex} onPick={onExecuteItem}>
-                <PaletteIconBox icon="📁" bg="var(--th-bg-panel)" />
+                <PaletteIconBox icon="📁" bg="#FFFFFF" />
                 <div style={{ flex: 1, textAlign: "left", overflow: "hidden", position: "relative", zIndex: 1 }}>
-                  <div style={{ ...sf, fontSize: 14, color: isSel ? "var(--th-text-heading)" : "var(--th-text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  <div style={{ ...sf, fontSize: 14, color: isSel ? "#111827" : "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {project.name}
                   </div>
                   {project.project_path && (
-                    <div style={{ ...sf, fontSize: 11, color: "var(--th-text-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 1 }}>
+                    <div style={{ ...sf, fontSize: 11, color: "#9CA3AF", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 1 }}>
                       {project.project_path}
                     </div>
                   )}
@@ -116,14 +116,14 @@ export function CommandPaletteResults({
                 <span
                   style={{
                     width: 28, height: 28, borderRadius: 7,
-                    background: "var(--th-bg-panel)",
+                    background: "#FFFFFF",
                     display: "flex", alignItems: "center", justifyContent: "center",
                     fontSize: 16, flexShrink: 0, position: "relative", zIndex: 1,
                   }}
                 >
                   {agent.avatar_emoji ?? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="10" rx="2" /><circle cx="12" cy="5" r="2" /><line x1="12" y1="7" x2="12" y2="11" /><line x1="8" y1="16" x2="8" y2="16.01" /><line x1="16" y1="16" x2="16" y2="16.01" /></svg>}
                 </span>
-                <span style={{ ...sf, fontSize: 14, color: isSel ? "var(--th-text-heading)" : "var(--th-text-primary)", flex: 1, textAlign: "left", position: "relative", zIndex: 1 }}>
+                <span style={{ ...sf, fontSize: 14, color: isSel ? "#111827" : "#111827", flex: 1, textAlign: "left", position: "relative", zIndex: 1 }}>
                   {agent.name}
                 </span>
                 <span
@@ -133,7 +133,7 @@ export function CommandPaletteResults({
                   }}
                 >
                   <span style={{ width: 7, height: 7, borderRadius: "50%", background: dot.color, display: "inline-block" }} />
-                  <span style={{ ...sf, fontSize: 11, color: "var(--th-text-muted)", textTransform: "uppercase" }}>{dot.label}</span>
+                  <span style={{ ...sf, fontSize: 11, color: "#9CA3AF", textTransform: "uppercase" }}>{dot.label}</span>
                 </span>
               </PaletteRow>
             );
@@ -163,14 +163,14 @@ export function CommandPaletteResults({
                 >
                   #{task.id}
                 </span>
-                <span style={{ ...sf, fontSize: 14, color: isSel ? "var(--th-text-heading)" : "var(--th-text-primary)", flex: 1, textAlign: "left", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", position: "relative", zIndex: 1 }}>
+                <span style={{ ...sf, fontSize: 14, color: isSel ? "#111827" : "#111827", flex: 1, textAlign: "left", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", position: "relative", zIndex: 1 }}>
                   {task.title}
                 </span>
                 <span
                   style={{
                     ...sf, fontSize: 10,
-                    color: "var(--th-text-muted)",
-                    background: "var(--th-bg-panel)",
+                    color: "#9CA3AF",
+                    background: "#FFFFFF",
                     borderRadius: 5,
                     padding: "2px 7px",
                     flexShrink: 0,
@@ -194,7 +194,7 @@ export function CommandPaletteResults({
             const isDone = d.status === "done";
             return (
               <PaletteRow key={d.id} item={{ kind: "deliverable", item: d }} idx={idx} safeIndex={safeIndex} onPick={onExecuteItem}>
-                <span style={{ width: 28, height: 28, borderRadius: 7, background: isDone ? "rgba(74,222,128,0.15)" : "rgba(245,158,11,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, flexShrink: 0, position: "relative", zIndex: 1, color: isDone ? "#4ade80" : "var(--th-accent)" }}>
+                <span style={{ width: 28, height: 28, borderRadius: 7, background: isDone ? "rgba(74,222,128,0.15)" : "rgba(245,158,11,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, flexShrink: 0, position: "relative", zIndex: 1, color: isDone ? "#4ade80" : "#3B82F6" }}>
                   {isDone ? (
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                       <polyline points="20 6 9 17 4 12" />
@@ -206,10 +206,10 @@ export function CommandPaletteResults({
                   )}
                 </span>
                 <div style={{ flex: 1, textAlign: "left", overflow: "hidden", position: "relative", zIndex: 1 }}>
-                  <div style={{ ...sf, fontSize: 14, color: isSel ? "var(--th-text-heading)" : "var(--th-text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.title}</div>
-                  {d.agent_name && <div style={{ ...sf, fontSize: 11, color: "var(--th-text-muted)", marginTop: 1 }}>{d.agent_name}{d.project_name ? ` · ${d.project_name}` : ""}</div>}
+                  <div style={{ ...sf, fontSize: 14, color: isSel ? "#111827" : "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{d.title}</div>
+                  {d.agent_name && <div style={{ ...sf, fontSize: 11, color: "#9CA3AF", marginTop: 1 }}>{d.agent_name}{d.project_name ? ` · ${d.project_name}` : ""}</div>}
                 </div>
-                <span style={{ ...sf, fontSize: 10, color: isDone ? "#4ade80" : "var(--th-accent)", background: "var(--th-bg-panel)", borderRadius: 5, padding: "2px 7px", flexShrink: 0, position: "relative", zIndex: 1, textTransform: "uppercase" }}>
+                <span style={{ ...sf, fontSize: 10, color: isDone ? "#4ade80" : "#3B82F6", background: "#FFFFFF", borderRadius: 5, padding: "2px 7px", flexShrink: 0, position: "relative", zIndex: 1, textTransform: "uppercase" }}>
                   {d.status}
                 </span>
               </PaletteRow>
@@ -228,10 +228,10 @@ export function CommandPaletteResults({
               <PaletteRow key={h.id} item={{ kind: "hook", hook: h }} idx={idx} safeIndex={safeIndex} onPick={onExecuteItem}>
                 <PaletteIconBox icon="⤷" bg="#32ade6" />
                 <div style={{ flex: 1, textAlign: "left", overflow: "hidden", position: "relative", zIndex: 1 }}>
-                  <div style={{ ...sf, fontSize: 14, color: isSel ? "var(--th-text-heading)" : "var(--th-text-primary)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{h.title}</div>
-                  <div style={{ ...sf, fontSize: 11, color: "var(--th-text-muted)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 1, fontFamily: "var(--th-font-mono)" }}>{h.command}</div>
+                  <div style={{ ...sf, fontSize: 14, color: isSel ? "#111827" : "#111827", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{h.title}</div>
+                  <div style={{ ...sf, fontSize: 11, color: "#9CA3AF", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 1, fontFamily: "var(--th-font-mono)" }}>{h.command}</div>
                 </div>
-                <span style={{ ...sf, fontSize: 10, color: "var(--th-text-muted)", background: "var(--th-bg-panel)", borderRadius: 5, padding: "2px 7px", flexShrink: 0, position: "relative", zIndex: 1 }}>
+                <span style={{ ...sf, fontSize: 10, color: "#9CA3AF", background: "#FFFFFF", borderRadius: 5, padding: "2px 7px", flexShrink: 0, position: "relative", zIndex: 1 }}>
                   {h.event_type}
                 </span>
               </PaletteRow>
@@ -247,7 +247,7 @@ export function CommandPaletteResults({
             textAlign: "center",
             ...sf,
             fontSize: 14,
-            color: "var(--th-text-muted)",
+            color: "#9CA3AF",
           }}
         >
           {t({ ko: `"${query}"에 대한 결과 없음`, en: `No results for "${query}"`, ja: `"${query}"の結果なし`, zh: `"${query}"没有结果` })}

@@ -43,14 +43,14 @@ export function ToolInputBlock({ input, toolName, isLight = false }: { input: un
           </div>
           {oldStrStr !== null && (
             <div style={{ marginBottom: 4 }}>
-              <div style={{ fontFamily: mono, fontSize: 9, color: "var(--th-text-muted)", marginBottom: 2, opacity: 0.6 }}>old</div>
+              <div style={{ fontFamily: mono, fontSize: 9, color: "#9CA3AF", marginBottom: 2, opacity: 0.6 }}>old</div>
               <pre style={{ fontFamily: mono, fontSize: 10, color: c.oldStr, margin: 0, whiteSpace: "pre-wrap", wordBreak: "break-all", lineHeight: 1.55 }}>{oldStrStr}</pre>
             </div>
           )}
           {contentStr !== null && (
             <div>
-              <div style={{ fontFamily: mono, fontSize: 9, color: "var(--th-text-muted)", marginBottom: 2, opacity: 0.6 }}>content</div>
-              <pre style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-secondary)", margin: 0, whiteSpace: "pre-wrap", wordBreak: "break-all", lineHeight: 1.55 }}>{contentStr}</pre>
+              <div style={{ fontFamily: mono, fontSize: 9, color: "#9CA3AF", marginBottom: 2, opacity: 0.6 }}>content</div>
+              <pre style={{ fontFamily: mono, fontSize: 10, color: "#6B7280", margin: 0, whiteSpace: "pre-wrap", wordBreak: "break-all", lineHeight: 1.55 }}>{contentStr}</pre>
             </div>
           )}
         </div>
@@ -67,7 +67,7 @@ export function ToolInputBlock({ input, toolName, isLight = false }: { input: un
             <span style={{ opacity: 0.45, fontSize: 9, marginRight: 6 }}>pattern</span>{pattern}
           </pre>
           {searchPathStr !== null && (
-            <div style={{ fontFamily: mono, fontSize: 9, color: "var(--th-text-muted)", marginTop: 3, opacity: 0.7 }}>
+            <div style={{ fontFamily: mono, fontSize: 9, color: "#9CA3AF", marginTop: 3, opacity: 0.7 }}>
               in {searchPathStr}
             </div>
           )}
@@ -77,7 +77,7 @@ export function ToolInputBlock({ input, toolName, isLight = false }: { input: un
 
     const str = JSON.stringify(input, null, 2);
     return (
-      <pre style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-muted)", margin: 0, whiteSpace: "pre-wrap", wordBreak: "break-all", maxHeight: 160, overflowY: "auto", lineHeight: 1.55 }}>
+      <pre style={{ fontFamily: mono, fontSize: 10, color: "#9CA3AF", margin: 0, whiteSpace: "pre-wrap", wordBreak: "break-all", maxHeight: 160, overflowY: "auto", lineHeight: 1.55 }}>
         {str}
       </pre>
     );

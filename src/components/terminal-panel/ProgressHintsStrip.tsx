@@ -25,7 +25,7 @@ function toolColor(name: string): { bg: string; border: string; text: string } {
   if (n === "websearch")  return { bg: "rgba(251,146,60,0.12)",  border: "rgba(251,146,60,0.3)",  text: "#fb923c" };
   if (n === "webfetch")   return { bg: "rgba(251,146,60,0.12)",  border: "rgba(251,146,60,0.3)",  text: "#fb923c" };
   if (n === "agent")      return { bg: "rgba(232,121,249,0.12)", border: "rgba(232,121,249,0.3)", text: "#e879f9" };
-  return                         { bg: "rgba(245,158,11,0.12)",  border: "rgba(245,158,11,0.3)",  text: "var(--th-accent)" };
+  return                         { bg: "rgba(245,158,11,0.12)",  border: "rgba(245,158,11,0.3)",  text: "#3B82F6" };
 }
 
 /* ── 도구 아이콘 ──────────────────────────────────────────────────── */

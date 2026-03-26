@@ -147,7 +147,7 @@ const TYPE_COLORS: Record<string, string> = {
   cost_alert:       "#ff9f0a",
   agent_anomaly:    "#ff9f0a",
   decision_created: "#0a84ff",
-  system:           "var(--th-text-muted)",
+  system:           "#9CA3AF",
   pm_approved:      "#30d158",
   pm_revision:      "#ff9f0a",
   version_released: "#5e5ce6",
@@ -214,7 +214,7 @@ function NotifRow({
     setTimeout(() => onDelete(e), 200);
   };
 
-  const color = TYPE_COLORS[item.type] ?? "var(--th-text-muted)";
+  const color = TYPE_COLORS[item.type] ?? "#9CA3AF";
   const bg = TYPE_BG[item.type] ?? "transparent";
 
   return (
@@ -225,7 +225,7 @@ function NotifRow({
         margin: "3px 8px",
         borderRadius: 8,
         background: hovered
-          ? (item.read ? "var(--th-hover-overlay)" : bg)
+          ? (item.read ? "rgba(0,0,0,0.06)" : bg)
           : (item.read ? "transparent" : bg),
         border: `1px solid ${item.read ? "transparent" : `${color}22`}`,
         transform: exiting ? "translateX(340px) scale(0.95)" : isNew ? "scale(1.01)" : "none",
@@ -273,7 +273,7 @@ function NotifRow({
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{
             fontFamily: mono, fontSize: 11, fontWeight: item.read ? 400 : 600,
-            color: item.read ? "var(--th-text-secondary)" : "var(--th-text-primary)",
+            color: item.read ? "#6B7280" : "#111827",
             overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
             lineHeight: 1.4,
           }}>
@@ -282,7 +282,7 @@ function NotifRow({
           {item.body && (
             <div style={{
               fontFamily: mono, fontSize: 10,
-              color: "var(--th-text-muted)",
+              color: "#9CA3AF",
               marginTop: 2, lineHeight: 1.5,
               display: "-webkit-box", WebkitLineClamp: 2,
               WebkitBoxOrient: "vertical", overflow: "hidden",
@@ -291,11 +291,11 @@ function NotifRow({
             </div>
           )}
           <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 4 }}>
-            <span style={{ fontFamily: mono, fontSize: 9, color: "var(--th-text-muted)" }}>
+            <span style={{ fontFamily: mono, fontSize: 9, color: "#9CA3AF" }}>
               {timeAgo(item.created_at)}
             </span>
             {item.agent_name && (
-              <span style={{ fontFamily: mono, fontSize: 9, color: "var(--th-text-muted)" }}>
+              <span style={{ fontFamily: mono, fontSize: 9, color: "#9CA3AF" }}>
                 · {item.agent_avatar ?? ""} {item.agent_name}
               </span>
             )}
@@ -475,10 +475,10 @@ export default function NotificationCenter({ on, onNavigateTask, onOpenDecisionI
         style={{
           position: "fixed", top: 44, right: 0, width: 340, bottom: 48,
           zIndex: 950,
-          background: "var(--th-bg-surface)",
+          background: "#F9FAFB",
           backdropFilter: "blur(28px) saturate(160%)",
           WebkitBackdropFilter: "blur(28px) saturate(160%)",
-          borderLeft: "1px solid var(--th-border-strong)",
+          borderLeft: "1px solid #D1D5DB",
           borderTopLeftRadius: 12,
           display: "flex", flexDirection: "column",
           transform: open ? "translateX(0)" : "translateX(340px)",
@@ -492,8 +492,8 @@ export default function NotificationCenter({ on, onNavigateTask, onOpenDecisionI
           display: "flex", alignItems: "center",
           padding: "0 14px",
           height: 44,
-          background: "var(--th-glass-bg)",
-          borderBottom: "1px solid var(--th-border)",
+          background: "#FFFFFF",
+          borderBottom: "1px solid #E5E7EB",
           borderTopLeftRadius: 12,
           flexShrink: 0,
           gap: 10,
@@ -501,8 +501,8 @@ export default function NotificationCenter({ on, onNavigateTask, onOpenDecisionI
           <TrafficLights onClose={() => setOpen(false)} />
 
           <div style={{ display: "flex", alignItems: "center", gap: 6, flex: 1 }}>
-            <span style={{ color: "var(--th-text-muted)", display: "flex" }}><IconBell size={13} /></span>
-            <span style={{ fontFamily: mono, fontSize: 12, fontWeight: 600, color: "var(--th-text-heading)" }}>
+            <span style={{ color: "#9CA3AF", display: "flex" }}><IconBell size={13} /></span>
+            <span style={{ fontFamily: mono, fontSize: 12, fontWeight: 600, color: "#111827" }}>
               알림
             </span>
             {unreadCount > 0 && (
@@ -535,9 +535,9 @@ export default function NotificationCenter({ on, onNavigateTask, onOpenDecisionI
                 style={{
                   width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center",
                   borderRadius: 7,
-                  background: pushEnabled ? "rgba(48,209,88,0.12)" : "var(--th-hover-overlay)",
-                  border: `1px solid ${pushEnabled ? "rgba(48,209,88,0.3)" : "var(--th-border)"}`,
-                  color: pushEnabled ? "#30d158" : "var(--th-text-muted)",
+                  background: pushEnabled ? "rgba(48,209,88,0.12)" : "rgba(0,0,0,0.06)",
+                  border: `1px solid ${pushEnabled ? "rgba(48,209,88,0.3)" : "#E5E7EB"}`,
+                  color: pushEnabled ? "#30d158" : "#9CA3AF",
                   cursor: "pointer",
                   transition: "background 0.12s",
                 }}
@@ -590,7 +590,7 @@ export default function NotificationCenter({ on, onNavigateTask, onOpenDecisionI
         <div style={{
           display: "flex", alignItems: "center", gap: 5,
           padding: "8px 12px",
-          borderBottom: "1px solid var(--th-border)",
+          borderBottom: "1px solid #E5E7EB",
           flexShrink: 0, overflowX: "auto",
         }}>
           {TYPE_FILTERS.map((f) => {
@@ -607,10 +607,10 @@ export default function NotificationCenter({ on, onNavigateTask, onOpenDecisionI
                   display: "inline-flex", alignItems: "center", gap: 4,
                   padding: "4px 10px",
                   borderRadius: 20,
-                  background: active ? "var(--th-accent)" : "var(--th-hover-overlay)",
-                  border: `1px solid ${active ? "transparent" : "var(--th-border)"}`,
+                  background: active ? "#3B82F6" : "rgba(0,0,0,0.06)",
+                  border: `1px solid ${active ? "transparent" : "#E5E7EB"}`,
                   fontFamily: mono, fontSize: 10, fontWeight: active ? 600 : 400,
-                  color: active ? "#fff" : "var(--th-text-secondary)",
+                  color: active ? "#fff" : "#6B7280",
                   cursor: "pointer",
                   whiteSpace: "nowrap",
                   flexShrink: 0,
@@ -643,9 +643,9 @@ export default function NotificationCenter({ on, onNavigateTask, onOpenDecisionI
               height: 26, padding: "0 10px",
               borderRadius: 20,
               background: hideRead ? "rgba(245,158,11,0.12)" : "transparent",
-              border: `1px solid ${hideRead ? "rgba(245,158,11,0.3)" : "var(--th-border)"}`,
+              border: `1px solid ${hideRead ? "rgba(245,158,11,0.3)" : "#E5E7EB"}`,
               fontFamily: mono, fontSize: 10,
-              color: hideRead ? "var(--th-accent)" : "var(--th-text-muted)",
+              color: hideRead ? "#3B82F6" : "#9CA3AF",
               cursor: "pointer",
               flexShrink: 0,
               whiteSpace: "nowrap",
@@ -662,8 +662,8 @@ export default function NotificationCenter({ on, onNavigateTask, onOpenDecisionI
               display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
               height: 160, gap: 10,
             }}>
-              <span style={{ color: "var(--th-text-muted)", opacity: 0.4 }}><IconBell size={28} /></span>
-              <span style={{ fontFamily: mono, fontSize: 11, color: "var(--th-text-muted)" }}>
+              <span style={{ color: "#9CA3AF", opacity: 0.4 }}><IconBell size={28} /></span>
+              <span style={{ fontFamily: mono, fontSize: 11, color: "#9CA3AF" }}>
                 {hideRead ? "미읽은 알림 없음" : "알림 없음"}
               </span>
             </div>
@@ -675,17 +675,17 @@ export default function NotificationCenter({ on, onNavigateTask, onOpenDecisionI
               <div style={{
                 padding: "8px 16px 5px",
                 fontFamily: mono, fontSize: 9,
-                color: "var(--th-text-muted)",
+                color: "#9CA3AF",
                 textTransform: "uppercase",
                 letterSpacing: "0.08em",
                 position: "sticky", top: 0, zIndex: 1,
-                background: "var(--th-bg-surface)",
+                background: "#F9FAFB",
                 display: "flex", alignItems: "center", gap: 8,
               }}>
                 {BUCKET_LABELS[bucket]}
-                <div style={{ flex: 1, height: 1, background: "var(--th-border)" }} />
+                <div style={{ flex: 1, height: 1, background: "#E5E7EB" }} />
                 {groupItems.filter((i) => !i.read).length > 0 && (
-                  <span style={{ color: "var(--th-accent)", fontWeight: 600 }}>
+                  <span style={{ color: "#3B82F6", fontWeight: 600 }}>
                     {groupItems.filter((i) => !i.read).length}
                   </span>
                 )}
@@ -709,11 +709,11 @@ export default function NotificationCenter({ on, onNavigateTask, onOpenDecisionI
         {items.length > 0 && (
           <div style={{
             padding: "7px 14px",
-            borderTop: "1px solid var(--th-border)",
+            borderTop: "1px solid #E5E7EB",
             flexShrink: 0,
             display: "flex", alignItems: "center", justifyContent: "space-between",
           }}>
-            <span style={{ fontFamily: mono, fontSize: 10, color: "var(--th-text-muted)" }}>
+            <span style={{ fontFamily: mono, fontSize: 10, color: "#9CA3AF" }}>
               총 {items.length}개 · 미읽음 {unreadCount}개
             </span>
             {readCount > 0 && (
@@ -748,17 +748,17 @@ export default function NotificationCenter({ on, onNavigateTask, onOpenDecisionI
           position: "relative",
           display: "inline-flex", alignItems: "center", justifyContent: "center",
           height: 32, minWidth: 32, padding: "0 8px",
-          background: open ? "var(--th-hover-overlay)" : "transparent",
-          border: `1px solid ${open ? "var(--th-border)" : "transparent"}`,
+          background: open ? "rgba(0,0,0,0.06)" : "transparent",
+          border: `1px solid ${open ? "#E5E7EB" : "transparent"}`,
           borderRadius: 8,
-          color: unreadCount > 0 ? "var(--th-accent)" : "var(--th-text-secondary)",
+          color: unreadCount > 0 ? "#3B82F6" : "#6B7280",
           cursor: "pointer",
           transition: "background 0.12s, border-color 0.12s, color 0.12s",
         }}
         onMouseEnter={(e) => {
           if (!open) {
-            e.currentTarget.style.background = "var(--th-hover-overlay)";
-            e.currentTarget.style.borderColor = "var(--th-border)";
+            e.currentTarget.style.background = "rgba(0,0,0,0.06)";
+            e.currentTarget.style.borderColor = "#E5E7EB";
           }
         }}
         onMouseLeave={(e) => {
@@ -780,7 +780,7 @@ export default function NotificationCenter({ on, onNavigateTask, onOpenDecisionI
             fontSize: 9, fontWeight: 700, color: "#fff",
             fontFamily: mono,
             lineHeight: 1,
-            boxShadow: "0 0 0 2px var(--th-bg-primary)",
+            boxShadow: "0 0 0 2px #F3F4F6",
           }}>
             {unreadCount > 99 ? "99+" : unreadCount}
           </span>

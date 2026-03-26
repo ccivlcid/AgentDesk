@@ -49,28 +49,28 @@ const VARIANT_CONFIG: Record<ToastVariant, {
     sigilColor: "#3fb950",
     accentBar: "#3fb950",
     border: "rgba(63,185,80,0.25)",
-    bg: "var(--th-bg-elevated)",
+    bg: "#FFFFFF",
   },
   error: {
     sigil: "✗",
     sigilColor: "#f85149",
     accentBar: "#f85149",
     border: "rgba(248,81,73,0.25)",
-    bg: "var(--th-bg-elevated)",
+    bg: "#FFFFFF",
   },
   warning: {
     sigil: "~",
     sigilColor: "#f59e0b",
     accentBar: "#f59e0b",
     border: "rgba(245,158,11,0.25)",
-    bg: "var(--th-bg-elevated)",
+    bg: "#FFFFFF",
   },
   info: {
     sigil: "ℹ",
     sigilColor: "#58a6ff",
     accentBar: "#58a6ff",
     border: "rgba(88,166,255,0.25)",
-    bg: "var(--th-bg-elevated)",
+    bg: "#FFFFFF",
   },
 };
 
@@ -131,7 +131,7 @@ function Toast({ item, onRemove }: { item: ToastItem; onRemove: (id: string) => 
       <span style={{
         fontFamily: mono,
         fontSize: "12px",
-        color: "var(--th-text-primary)",
+        color: "#111827",
         flex: 1,
         lineHeight: 1.5,
       }}>
@@ -163,7 +163,7 @@ function Toast({ item, onRemove }: { item: ToastItem; onRemove: (id: string) => 
           background: "none",
           border: "none",
           cursor: "pointer",
-          color: "var(--th-text-muted)",
+          color: "#9CA3AF",
           padding: "0 2px",
           fontFamily: mono,
           fontSize: "11px",
@@ -171,7 +171,7 @@ function Toast({ item, onRemove }: { item: ToastItem; onRemove: (id: string) => 
           lineHeight: 1,
           transition: "color 0.1s",
         }}
-        className="hover:!text-[var(--th-text-secondary)]"
+        className="hover:!text-[#6B7280]"
       >
         [×]
       </button>

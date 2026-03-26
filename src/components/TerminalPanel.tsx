@@ -141,8 +141,8 @@ export default function TerminalPanel({
           left: panelX, top: panelY,
           width: panelW, height: panelH,
           zIndex: 1100,
-          background: "var(--th-bg-elevated)",
-          border: `1px solid ${isLight ? "rgba(0,0,0,0.12)" : "var(--th-border)"}`,
+          background: "#FFFFFF",
+          border: `1px solid ${isLight ? "rgba(0,0,0,0.12)" : "#E5E7EB"}`,
           borderRadius: 14,
           overflow: "hidden",
           display: "flex", flexDirection: "column",
@@ -156,8 +156,8 @@ export default function TerminalPanel({
           <div
             onMouseDown={onHeaderMouseDown}
             style={{
-              borderBottom: `1px solid var(--th-border)`,
-              background: isLight ? "rgba(255,255,255,0.85)" : "var(--th-bg-panel)",
+              borderBottom: `1px solid #E5E7EB`,
+              background: isLight ? "rgba(255,255,255,0.85)" : "#FFFFFF",
               borderTopLeftRadius: 14,
               borderTopRightRadius: 14,
               backdropFilter: "blur(16px)",
@@ -173,7 +173,7 @@ export default function TerminalPanel({
                 <TrafficLights onClose={onClose} />
               </div>
 
-              <div style={{ width: 1, height: 20, background: "var(--th-border)", flexShrink: 0 }} />
+              <div style={{ width: 1, height: 20, background: "#E5E7EB", flexShrink: 0 }} />
 
               {agent && (
                 <div style={{ flexShrink: 0 }}>
@@ -185,7 +185,7 @@ export default function TerminalPanel({
                 fontFamily: mono,
                 fontSize: 12,
                 fontWeight: 600,
-                color: "var(--th-text-heading)",
+                color: "#111827",
                 overflow: "hidden",
                 textOverflow: "ellipsis",
                 whiteSpace: "nowrap",
@@ -328,17 +328,17 @@ export default function TerminalPanel({
             style={{
               display: "flex", alignItems: "center", justifyContent: "space-between",
               padding: "5px 16px",
-              borderTop: "1px solid var(--th-border)",
-              background: isLight ? "rgba(255,255,255,0.7)" : "var(--th-bg-panel)",
+              borderTop: "1px solid #E5E7EB",
+              background: isLight ? "rgba(255,255,255,0.7)" : "#FFFFFF",
               flexShrink: 0,
             }}
           >
-            <span style={{ fontFamily: mono, fontSize: 9, color: "var(--th-text-muted)" }}>
+            <span style={{ fontFamily: mono, fontSize: 9, color: "#9CA3AF" }}>
               {agent
                 ? `${agentName}${agent.cli_provider ? ` · ${agent.cli_provider}` : ""}`
                 : tr("담당 에이전트 없음", "No assigned agent", "担当エージェントなし", "无负责代理")}
             </span>
-            <span style={{ fontFamily: mono, fontSize: 9, color: "var(--th-text-muted)", display: "flex", alignItems: "center", gap: 6 }}>
+            <span style={{ fontFamily: mono, fontSize: 9, color: "#9CA3AF", display: "flex", alignItems: "center", gap: 6 }}>
               {task?.status === "in_progress" && (
                 <>
                   <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#30d158", display: "inline-block", animation: "pulse 1.5s infinite" }} />
@@ -375,7 +375,7 @@ function PromptTabContent({ taskId, tr }: { taskId: string; tr: (ko: string, en:
 
   if (loading) {
     return (
-      <div style={{ padding: 20, fontFamily: "var(--th-font-mono)", fontSize: 11, color: "var(--th-text-muted)" }}>
+      <div style={{ padding: 20, fontFamily: "var(--th-font-mono)", fontSize: 11, color: "#9CA3AF" }}>
         {tr("로딩 중...", "Loading...", "読み込み中...", "加载中...")}
       </div>
     );
@@ -383,7 +383,7 @@ function PromptTabContent({ taskId, tr }: { taskId: string; tr: (ko: string, en:
 
   if (!prompt) {
     return (
-      <div style={{ padding: 20, fontFamily: "var(--th-font-mono)", fontSize: 11, color: "var(--th-text-muted)", textAlign: "center" }}>
+      <div style={{ padding: 20, fontFamily: "var(--th-font-mono)", fontSize: 11, color: "#9CA3AF", textAlign: "center" }}>
         {tr("프롬프트 없음", "No prompt available", "プロンプトなし", "无提示词")}
       </div>
     );
@@ -397,8 +397,8 @@ function PromptTabContent({ taskId, tr }: { taskId: string; tr: (ko: string, en:
           onClick={() => navigator.clipboard.writeText(prompt)}
           style={{
             fontFamily: "var(--th-font-mono)", fontSize: 10, padding: "3px 10px",
-            border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)",
-            color: "var(--th-text-muted)", cursor: "pointer", borderRadius: 4,
+            border: "1px solid #E5E7EB", background: "#FFFFFF",
+            color: "#9CA3AF", cursor: "pointer", borderRadius: 4,
           }}
         >
           {tr("복사", "Copy", "コピー", "复制")}
@@ -410,7 +410,7 @@ function PromptTabContent({ taskId, tr }: { taskId: string; tr: (ko: string, en:
         fontFamily: "var(--th-font-mono)",
         fontSize: 11,
         lineHeight: 1.5,
-        color: "var(--th-text-primary)",
+        color: "#111827",
         margin: 0,
       }}>
         {prompt}

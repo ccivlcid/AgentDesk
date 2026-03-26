@@ -86,7 +86,7 @@ export default function Modal({
   return createPortal(
     <div
       className="fixed inset-0 flex items-center justify-center"
-      style={{ background: "var(--th-modal-overlay)", backdropFilter: "blur(3px)", fontFamily: mono, zIndex: 1100 }}
+      style={{ background: "rgba(0,0,0,0.4)", backdropFilter: "blur(3px)", fontFamily: mono, zIndex: 1100 }}
       onClick={persistent ? undefined : (e) => { if (e.target === e.currentTarget) onClose(); }}
       role="presentation"
     >
@@ -99,8 +99,8 @@ export default function Modal({
         className={`${WIDTH_CLASS[width]} max-h-[90vh] flex flex-col overflow-hidden ${className}`}
         style={{
           borderRadius: 10,
-          border: "1px solid var(--th-border-strong)",
-          background: "var(--th-bg-elevated)",
+          border: "1px solid #D1D5DB",
+          background: "#FFFFFF",
           fontFamily: mono,
           boxShadow: "0 20px 50px rgba(0,0,0,0.4)",
         }}
@@ -127,8 +127,8 @@ export function ModalHeader({ children, subtitle, onClose, macOSStyle = true }: 
     <div
       className="flex flex-shrink-0 items-center gap-3 px-4 py-2.5"
       style={{
-        borderBottom: "1px solid var(--th-border)",
-        background: "var(--th-bg-panel)",
+        borderBottom: "1px solid #E5E7EB",
+        background: "#FFFFFF",
         fontFamily: mono,
         borderTopLeftRadius: 10,
         borderTopRightRadius: 10,
@@ -140,12 +140,12 @@ export function ModalHeader({ children, subtitle, onClose, macOSStyle = true }: 
       <div className="flex min-w-0 flex-1 flex-col">
         <h2
           className="truncate text-[12px] font-semibold"
-          style={{ color: "var(--th-text-heading)", fontFamily: mono }}
+          style={{ color: "#111827", fontFamily: mono }}
         >
           {children}
         </h2>
         {subtitle && (
-          <p className="mt-0.5 truncate text-[11px]" style={{ color: "var(--th-text-muted)", fontFamily: mono }}>
+          <p className="mt-0.5 truncate text-[11px]" style={{ color: "#9CA3AF", fontFamily: mono }}>
             {subtitle}
           </p>
         )}
@@ -157,15 +157,15 @@ export function ModalHeader({ children, subtitle, onClose, macOSStyle = true }: 
           style={{
             flexShrink: 0,
             background: "transparent",
-            border: "1px solid var(--th-border)",
+            border: "1px solid #E5E7EB",
             borderRadius: 0,
             padding: "2px 8px",
             fontFamily: mono,
             fontSize: "12px",
-            color: "var(--th-text-muted)",
+            color: "#9CA3AF",
             cursor: "pointer",
           }}
-          className="hover:!text-[var(--th-text)] hover:!border-[var(--th-border-strong)]"
+          className="hover:!text-[#111827] hover:!border-[#D1D5DB]"
         >
           ✕
         </button>
@@ -196,7 +196,7 @@ export function ModalFooter({ children, className = "" }: ModalFooterProps) {
   return (
     <div
       className={`flex items-center justify-end gap-2 px-4 py-3 flex-shrink-0 ${className}`}
-      style={{ borderTop: "1px solid var(--th-border)", fontFamily: mono }}
+      style={{ borderTop: "1px solid #E5E7EB", fontFamily: mono }}
     >
       {children}
     </div>

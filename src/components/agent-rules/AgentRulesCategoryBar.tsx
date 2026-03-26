@@ -29,19 +29,19 @@ export default function AgentRulesCategoryBar({
               className="px-3 py-1.5 text-xs font-medium font-mono border transition-all"
               style={{
                 borderRadius: 6,
-                background: isActive ? "var(--th-accent-glow)" : "var(--th-bg-elevated)",
-                borderColor: isActive ? "var(--th-accent-border)" : "var(--th-border)",
-                color: isActive ? "var(--th-accent)" : "var(--th-text-secondary)",
+                background: isActive ? "#EBF5FF" : "#FFFFFF",
+                borderColor: isActive ? "#BFDBFE" : "#E5E7EB",
+                color: isActive ? "#3B82F6" : "#6B7280",
               }}
             >
               {CATEGORY_ICONS[category]} {categoryLabel(category, t)}
-              <span className="ml-1" style={{ color: "var(--th-text-muted)" }}>{categoryCounts[category] || 0}</span>
+              <span className="ml-1" style={{ color: "#9CA3AF" }}>{categoryCounts[category] || 0}</span>
             </button>
           );
         })}
       </div>
 
-      <div className="text-xs px-1 font-mono" style={{ color: "var(--th-text-muted)" }}>
+      <div className="text-xs px-1 font-mono" style={{ color: "#9CA3AF" }}>
         {filteredLength}
         {t({ ko: "개 룰 표시중", en: " rules shown", ja: "件のルールを表示中", zh: " 条规则已显示" })}
         {search &&

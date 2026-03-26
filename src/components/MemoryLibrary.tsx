@@ -27,8 +27,8 @@ export default function MemoryLibrary({ agents, departments, currentProject }: M
     return (
       <div className="flex items-center justify-center py-24">
         <div className="text-center">
-          <div className="animate-spin w-8 h-8 border-2 border-t-transparent mx-auto mb-4" style={{ borderRadius: "50%", borderColor: "var(--th-accent)", borderTopColor: "transparent" }} />
-          <div className="text-sm font-mono" style={{ color: "var(--th-text-muted)" }}>
+          <div className="animate-spin w-8 h-8 border-2 border-t-transparent mx-auto mb-4" style={{ borderRadius: "50%", borderColor: "#3B82F6", borderTopColor: "transparent" }} />
+          <div className="text-sm font-mono" style={{ color: "#9CA3AF" }}>
             {t({ ko: "메모리 로딩중...", en: "Loading memory entries...", ja: "メモリを読み込み中...", zh: "正在加载内存条目..." })}
           </div>
         </div>
@@ -41,14 +41,14 @@ export default function MemoryLibrary({ agents, departments, currentProject }: M
       <div className="flex items-center justify-center py-24">
         <div className="text-center">
           <div className="text-4xl mb-3">&#x26A0;&#xFE0F;</div>
-          <div className="text-sm font-mono" style={{ color: "var(--th-text-muted)" }}>
+          <div className="text-sm font-mono" style={{ color: "#9CA3AF" }}>
             {t({ ko: "메모리 데이터를 불러올 수 없습니다", en: "Unable to load memory data", ja: "メモリデータを読み込めません", zh: "无法加载内存数据" })}
           </div>
-          <div className="text-xs font-mono mt-1" style={{ color: "var(--th-text-muted)" }}>{vm.error}</div>
+          <div className="text-xs font-mono mt-1" style={{ color: "#9CA3AF" }}>{vm.error}</div>
           <button
             onClick={vm.loadEntries}
             className="mt-4 px-4 py-2 text-sm font-mono transition-all"
-            style={{ borderRadius: 6, background: "rgba(251,191,36,0.1)", color: "var(--th-accent)", border: "1px solid rgba(251,191,36,0.35)" }}
+            style={{ borderRadius: 6, background: "rgba(251,191,36,0.1)", color: "#3B82F6", border: "1px solid rgba(251,191,36,0.35)" }}
           >
             {t({ ko: "다시 시도", en: "Retry", ja: "再試行", zh: "重试" })}
           </button>
@@ -58,7 +58,7 @@ export default function MemoryLibrary({ agents, departments, currentProject }: M
   }
 
   return (
-    <div style={{ background: "var(--th-bg-primary)" }}>
+    <div style={{ background: "#F3F4F6" }}>
       <div className="space-y-4">
         <MemoryHeader
           t={t}
@@ -141,7 +141,7 @@ export default function MemoryLibrary({ agents, departments, currentProject }: M
         />
 
         {currentProject && (
-          <div className="text-center text-xs font-mono py-4" style={{ color: "var(--th-text-muted)" }}>
+          <div className="text-center text-xs font-mono py-4" style={{ color: "#9CA3AF" }}>
             {t({
               ko: `'${currentProject.name}' 프로젝트 전용 메모리`,
               en: `Memory entries for '${currentProject.name}' project`,

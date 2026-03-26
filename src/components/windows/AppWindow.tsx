@@ -647,7 +647,7 @@ export default function AppWindow({
       <div onMouseDown={onResizeMouseDown("se")} style={edgeStyle("se", { bottom: 0, right: 0, width: CORN, height: CORN })}>
         {/* SE grip icon */}
         <svg width="9" height="9" viewBox="0 0 9 9" fill="none" style={{ position: "absolute", bottom: 3, right: 3 }}>
-          <path d="M2 9L9 2M5 9L9 5" stroke="var(--th-border-strong)" strokeWidth="1.5" />
+          <path d="M2 9L9 2M5 9L9 5" stroke="#D1D5DB" strokeWidth="1.5" />
         </svg>
       </div>
 

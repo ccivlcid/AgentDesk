@@ -147,11 +147,11 @@ function ProjectSourcesSection({
   return (
     <div className="space-y-1.5">
       <div className="flex items-center gap-2">
-        <span className="text-[9px] font-mono uppercase tracking-[0.1em]" style={{ color: "var(--th-text-muted)", letterSpacing: "0.1em" }}>
+        <span className="text-[9px] font-mono uppercase tracking-[0.1em]" style={{ color: "#9CA3AF", letterSpacing: "0.1em" }}>
           {t({ ko: "소스 프로젝트", en: "Sources", ja: "ソース", zh: "来源" })}
         </span>
         {sources.length > 0 && (
-          <span className="text-[9px] font-mono" style={{ color: "var(--th-accent)" }}>
+          <span className="text-[9px] font-mono" style={{ color: "#3B82F6" }}>
             {t({ ko: `${sources.length}개 연결됨`, en: `${sources.length} linked`, ja: `${sources.length}個接続中`, zh: `已连接${sources.length}个` })}
           </span>
         )}
@@ -160,11 +160,11 @@ function ProjectSourcesSection({
       {sourcesLoading ? (
         <div className="space-y-1">
           {[0, 1].map((i) => (
-            <div key={i} className="h-5 w-full" style={{ background: "var(--th-bg-elevated)", opacity: 0.3 }} />
+            <div key={i} className="h-5 w-full" style={{ background: "#FFFFFF", opacity: 0.3 }} />
           ))}
         </div>
       ) : sources.length === 0 ? (
-        <div className="px-3 py-3 text-[10px] font-mono" style={{ border: "1px dashed var(--th-border)", color: "var(--th-text-muted)" }}>
+        <div className="px-3 py-3 text-[10px] font-mono" style={{ border: "1px dashed #E5E7EB", color: "#9CA3AF" }}>
           <p>$ ls sources/</p>
           <p style={{ opacity: 0.6 }}>(empty)</p>
           <p className="mt-1.5">
@@ -177,25 +177,25 @@ function ProjectSourcesSection({
             <div
               key={src.id}
               className="flex items-center gap-2 px-2.5 py-1.5"
-              style={{ border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", borderRadius: 0 }}
+              style={{ border: "1px solid #E5E7EB", background: "#FFFFFF", borderRadius: 0 }}
             >
               {/* Category dot */}
               <span
                 className="shrink-0"
-                style={{ width: 8, height: 8, borderRadius: "50%", background: src.source_category_color ?? "var(--th-text-muted)" }}
+                style={{ width: 8, height: 8, borderRadius: "50%", background: src.source_category_color ?? "#9CA3AF" }}
               />
               {/* Category badge */}
               {src.source_category_name && (
-                <span className="shrink-0 text-[9px] font-mono" style={{ color: src.source_category_color ?? "var(--th-text-muted)" }}>
+                <span className="shrink-0 text-[9px] font-mono" style={{ color: src.source_category_color ?? "#9CA3AF" }}>
                   [{src.source_category_name}]
                 </span>
               )}
               {/* Name */}
-              <span className="flex-1 min-w-0 text-[11px] font-mono truncate" style={{ color: "var(--th-text-primary)" }}>
+              <span className="flex-1 min-w-0 text-[11px] font-mono truncate" style={{ color: "#111827" }}>
                 {src.source_project_name}
               </span>
               {/* Deliverable count */}
-              <span className="shrink-0 text-[9px] font-mono" style={{ color: src.checked_count > 0 ? "var(--th-accent)" : "var(--th-text-muted)" }}>
+              <span className="shrink-0 text-[9px] font-mono" style={{ color: src.checked_count > 0 ? "#3B82F6" : "#9CA3AF" }}>
                 {src.checked_count > 0
                   ? t({ ko: `결과물 ${src.checked_count} ✓`, en: `${src.checked_count} ✓`, ja: `成果物 ${src.checked_count} ✓`, zh: `${src.checked_count} ✓` })
                   : t({ ko: `결과물 0/${src.total_count}`, en: `0/${src.total_count}`, ja: `0/${src.total_count}`, zh: `0/${src.total_count}` })}
@@ -207,7 +207,7 @@ function ProjectSourcesSection({
                   disabled={removingId === src.id}
                   onClick={() => void handleRemove(src.id)}
                   className="shrink-0 text-[11px] font-mono px-1 transition"
-                  style={{ color: "var(--th-text-muted)", background: "transparent", border: "none", cursor: "pointer", borderRadius: 0 }}
+                  style={{ color: "#9CA3AF", background: "transparent", border: "none", cursor: "pointer", borderRadius: 0 }}
                   title={t({ ko: "소스 제거", en: "Remove source", ja: "ソース削除", zh: "移除来源" })}
                 >
                   ✕
@@ -228,9 +228,9 @@ function ProjectSourcesSection({
             className="w-full px-2.5 py-1.5 text-[11px] font-mono text-left transition"
             style={{
               borderRadius: 0,
-              border: "1px solid var(--th-border)",
+              border: "1px solid #E5E7EB",
               background: "transparent",
-              color: maxReached ? "var(--th-text-muted)" : "var(--th-text-secondary)",
+              color: maxReached ? "#9CA3AF" : "#6B7280",
               opacity: maxReached ? 0.4 : 1,
               cursor: maxReached ? "not-allowed" : "pointer",
             }}
@@ -242,9 +242,9 @@ function ProjectSourcesSection({
           {dropdownOpen && (
             <div
               className="absolute left-0 top-full z-50 w-full"
-              style={{ border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", maxHeight: 200, overflowY: "auto", borderRadius: 0 }}
+              style={{ border: "1px solid #E5E7EB", background: "#FFFFFF", maxHeight: 200, overflowY: "auto", borderRadius: 0 }}
             >
-              <div className="sticky top-0" style={{ background: "var(--th-bg-elevated)", borderBottom: "1px solid var(--th-border)" }}>
+              <div className="sticky top-0" style={{ background: "#FFFFFF", borderBottom: "1px solid #E5E7EB" }}>
                 <input
                   autoFocus
                   type="text"
@@ -252,11 +252,11 @@ function ProjectSourcesSection({
                   onChange={(e) => setSearchQ(e.target.value)}
                   placeholder={t({ ko: "프로젝트 검색...", en: "Search projects...", ja: "プロジェクト検索...", zh: "搜索项目..." })}
                   className="w-full px-2.5 py-1.5 text-[10px] font-mono outline-none"
-                  style={{ border: "none", background: "transparent", color: "var(--th-text-primary)" }}
+                  style={{ border: "none", background: "transparent", color: "#111827" }}
                 />
               </div>
               {filtered.length === 0 ? (
-                <p className="px-2.5 py-2 text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
+                <p className="px-2.5 py-2 text-[10px] font-mono" style={{ color: "#9CA3AF" }}>
                   {t({ ko: "추가 가능한 프로젝트 없음", en: "No projects available", ja: "追加可能なプロジェクトなし", zh: "没有可用项目" })}
                 </p>
               ) : (
@@ -267,7 +267,7 @@ function ProjectSourcesSection({
                     disabled={addingId === p.id}
                     onClick={() => void handleAdd(p.id)}
                     className="w-full px-2.5 py-1.5 text-left text-[11px] font-mono transition"
-                    style={{ borderBottom: "1px solid var(--th-border)", background: "transparent", color: "var(--th-text-primary)", cursor: "pointer" }}
+                    style={{ borderBottom: "1px solid #E5E7EB", background: "transparent", color: "#111827", cursor: "pointer" }}
                   >
                     {p.name}
                   </button>
@@ -353,10 +353,10 @@ export default function ProjectEditorPanel({
 }: ProjectEditorPanelProps) {
   const { openWindow } = useUiStore();
   return (
-    <div className="min-w-0 space-y-3 p-4" style={{ border: "1px solid var(--th-border)", borderRadius: 0, background: "var(--th-bg-surface)" }}>
+    <div className="min-w-0 space-y-3 p-4" style={{ border: "1px solid #E5E7EB", borderRadius: 0, background: "#F9FAFB" }}>
       {isCreating && templates.length > 0 && onApplyTemplate && (
         <div>
-          <p className="mb-1.5 text-[11px] font-mono uppercase" style={{ color: "var(--th-text-muted)" }}>
+          <p className="mb-1.5 text-[11px] font-mono uppercase" style={{ color: "#9CA3AF" }}>
             {t({ ko: "템플릿으로 시작", en: "Start from Template", ja: "テンプレートから開始", zh: "从模板开始" })}
           </p>
           <div className="flex flex-wrap gap-1.5">
@@ -367,7 +367,7 @@ export default function ProjectEditorPanel({
                 onClick={() => onApplyTemplate(tpl)}
                 title={tpl.description ?? tpl.name}
                 className="px-2.5 py-1 text-[11px] font-mono font-medium transition"
-                style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
+                style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "#FFFFFF", color: "#6B7280" }}
               >
                 {tpl.name}
               </button>
@@ -375,7 +375,7 @@ export default function ProjectEditorPanel({
           </div>
         </div>
       )}
-      <label className="block text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
+      <label className="block text-xs font-mono" style={{ color: "#9CA3AF" }}>
         {t({ ko: "프로젝트 이름", en: "Project Name", ja: "プロジェクト名", zh: "项目名称" })}
         <input
           type="text"
@@ -386,10 +386,10 @@ export default function ProjectEditorPanel({
           }}
           disabled={!isCreating && !editingProjectId}
           className="mt-1 w-full px-3 py-2 text-xs font-mono outline-none"
-          style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
+          style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "#FFFFFF", color: "#111827" }}
         />
       </label>
-      <label className="block text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
+      <label className="block text-xs font-mono" style={{ color: "#9CA3AF" }}>
         {t({ ko: "프로젝트 경로", en: "Project Path", ja: "プロジェクトパス", zh: "项目路径" })}
         <input
           type="text"
@@ -401,7 +401,7 @@ export default function ProjectEditorPanel({
           }}
           disabled={!isCreating && !editingProjectId}
           className="mt-1 w-full px-3 py-2 text-xs font-mono outline-none"
-          style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
+          style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "#FFFFFF", color: "#111827" }}
         />
       </label>
       {pathToolsVisible && (
@@ -416,7 +416,7 @@ export default function ProjectEditorPanel({
                 void loadManualPathEntries(projectPath.trim() || undefined);
               }}
               className="px-2.5 py-1 text-xs font-semibold font-mono transition disabled:cursor-not-allowed disabled:opacity-40"
-              style={{ borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
+              style={{ borderRadius: 0, border: "1px solid #E5E7EB", color: "#6B7280", background: "transparent" }}
             >
               {t({
                 ko: "앱 내 폴더 탐색",
@@ -433,7 +433,7 @@ export default function ProjectEditorPanel({
                 setPathSuggestionsOpen((prev) => !prev);
               }}
               className="px-2.5 py-1 text-xs font-semibold font-mono transition disabled:cursor-not-allowed disabled:opacity-40"
-              style={{ borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
+              style={{ borderRadius: 0, border: "1px solid #E5E7EB", color: "#6B7280", background: "transparent" }}
             >
               {pathSuggestionsOpen
                 ? t({ ko: "자동 경로찾기 닫기", en: "Close Auto Finder", ja: "自動候補を閉じる", zh: "关闭自动查找" })
@@ -481,7 +481,7 @@ export default function ProjectEditorPanel({
                 }
               }}
               className="px-2.5 py-1 text-xs font-semibold font-mono transition disabled:cursor-not-allowed disabled:opacity-40"
-              style={{ borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
+              style={{ borderRadius: 0, border: "1px solid #E5E7EB", color: "#6B7280", background: "transparent" }}
             >
               {nativePathPicking
                 ? t({
@@ -501,9 +501,9 @@ export default function ProjectEditorPanel({
             </button>
           </div>
           {pathSuggestionsOpen && (
-            <div className="max-h-40 overflow-y-auto" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
+            <div className="max-h-40 overflow-y-auto" style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "#FFFFFF" }}>
               {pathSuggestionsLoading ? (
-                <p className="px-3 py-2 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
+                <p className="px-3 py-2 text-xs font-mono" style={{ color: "#9CA3AF" }}>
                   {t({
                     ko: "경로 후보를 불러오는 중...",
                     en: "Loading path suggestions...",
@@ -512,7 +512,7 @@ export default function ProjectEditorPanel({
                   })}
                 </p>
               ) : pathSuggestions.length === 0 ? (
-                <p className="px-3 py-2 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
+                <p className="px-3 py-2 text-xs font-mono" style={{ color: "#9CA3AF" }}>
                   {t({
                     ko: "추천 경로가 없습니다. 직접 입력해주세요.",
                     en: "No suggested path. Enter one manually.",
@@ -532,7 +532,7 @@ export default function ProjectEditorPanel({
                       setFormFeedback(null);
                     }}
                     className="w-full px-3 py-2 text-left text-xs font-mono transition"
-                    style={{ color: "var(--th-text-primary)" }}
+                    style={{ color: "#111827" }}
                   >
                     {candidate}
                   </button>
@@ -565,7 +565,7 @@ export default function ProjectEditorPanel({
           {formFeedback.message}
         </div>
       )}
-      <label className="block text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
+      <label className="block text-xs font-mono" style={{ color: "#9CA3AF" }}>
         {t({ ko: "핵심 목표", en: "Core Goal", ja: "コア目標", zh: "核心目标" })}
         <textarea
           rows={5}
@@ -576,13 +576,13 @@ export default function ProjectEditorPanel({
           }}
           disabled={!isCreating && !editingProjectId}
           className="mt-1 w-full resize-none px-3 py-2 text-xs font-mono outline-none"
-          style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
+          style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "#FFFFFF", color: "#111827" }}
         />
       </label>
       {showFigmaField && (
         figmaConnected === false ? (
           <div className="flex items-center justify-between gap-3 px-3 py-2.5 text-xs font-mono" style={{ border: "1px solid rgba(242,78,30,0.4)", background: "rgba(242,78,30,0.06)", borderRadius: 0 }}>
-            <span style={{ color: "var(--th-text-secondary)" }}>
+            <span style={{ color: "#6B7280" }}>
               {t({ ko: "Figma가 연결되지 않았습니다.", en: "Figma is not connected.", ja: "Figmaが接続されていません。", zh: "Figma 未连接。" })}
             </span>
             <button
@@ -595,7 +595,7 @@ export default function ProjectEditorPanel({
             </button>
           </div>
         ) : figmaConnected === true ? (
-          <label className="block text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
+          <label className="block text-xs font-mono" style={{ color: "#9CA3AF" }}>
             <span className="flex items-center gap-1.5">
               <svg width="11" height="11" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                 <path d="M5.333 16A2.667 2.667 0 0 1 5.333 10.667H8V16H5.333Z" fill="#0ACF83"/>
@@ -605,7 +605,7 @@ export default function ProjectEditorPanel({
                 <path d="M13.333 8A2.667 2.667 0 1 1 8 8a2.667 2.667 0 0 1 5.333 0Z" fill="#1ABCFE"/>
               </svg>
               {t({ ko: "Figma 디자인 URL", en: "Figma Design URL", ja: "Figma デザイン URL", zh: "Figma 设计 URL" })}
-              <span style={{ color: "var(--th-text-disabled, var(--th-text-muted))", opacity: 0.6 }}>
+              <span style={{ color: "var(--th-text-disabled, #9CA3AF)", opacity: 0.6 }}>
                 {t({ ko: "(선택)", en: "(optional)", ja: "(任意)", zh: "(选填)" })}
               </span>
             </span>
@@ -616,9 +616,9 @@ export default function ProjectEditorPanel({
               disabled={!isCreating && !editingProjectId}
               placeholder="https://www.figma.com/design/..."
               className="mt-1 w-full px-3 py-2 text-xs font-mono outline-none"
-              style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
+              style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "#FFFFFF", color: "#111827" }}
             />
-            <span className="mt-0.5 block text-[10px]" style={{ color: "var(--th-text-muted)", opacity: 0.7 }}>
+            <span className="mt-0.5 block text-[10px]" style={{ color: "#9CA3AF", opacity: 0.7 }}>
               {t({
                 ko: "프로젝트 전체 기본값 — 태스크별 URL로 덮어쓰기 가능",
                 en: "Project-wide default — can be overridden per task",
@@ -628,7 +628,7 @@ export default function ProjectEditorPanel({
             </span>
           </label>
         ) : (
-          <div className="px-3 py-2 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
+          <div className="px-3 py-2 text-xs font-mono" style={{ color: "#9CA3AF" }}>
             {t({ ko: "Figma 연결 상태 확인 중…", en: "Checking Figma connection…", ja: "Figma接続確認中…", zh: "检查 Figma 连接中…" })}
           </div>
         )
@@ -676,7 +676,7 @@ export default function ProjectEditorPanel({
             }}
             disabled={!canSave || saving}
             className="px-3 py-1.5 text-xs font-bold font-mono uppercase tracking-wider disabled:opacity-40"
-            style={{ borderRadius: 0, background: "var(--th-accent)", color: "var(--th-accent-text)" }}
+            style={{ borderRadius: 0, background: "#3B82F6", color: "#FFFFFF" }}
           >
             {editingProjectId
               ? t({ ko: "수정 저장", en: "Save", ja: "保存", zh: "保存" })
@@ -688,7 +688,7 @@ export default function ProjectEditorPanel({
             type="button"
             onClick={onCancelEdit}
             className="px-3 py-1.5 text-xs font-mono"
-            style={{ borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
+            style={{ borderRadius: 0, border: "1px solid #E5E7EB", color: "#6B7280", background: "transparent" }}
           >
             {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}
           </button>
@@ -698,7 +698,7 @@ export default function ProjectEditorPanel({
           onClick={onStartEditSelected}
           disabled={!selectedProject || isCreating || !!editingProjectId}
           className="px-3 py-1.5 text-xs font-mono disabled:opacity-40"
-          style={{ borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
+          style={{ borderRadius: 0, border: "1px solid #E5E7EB", color: "#6B7280", background: "transparent" }}
         >
           {t({ ko: "선택 프로젝트 편집", en: "Edit Selected", ja: "選択編集", zh: "编辑选中项" })}
         </button>

@@ -22,8 +22,8 @@ export default function HeaderModalChrome({
     <div
       className="flex flex-shrink-0 items-center gap-3 py-2 pl-3 pr-4"
       style={{
-        borderBottom: "1px solid var(--th-border)",
-        background: "var(--th-glass-bg)",
+        borderBottom: "1px solid #E5E7EB",
+        background: "#FFFFFF",
         fontFamily: mono,
         borderTopLeftRadius: macOSStyle ? 10 : 0,
         borderTopRightRadius: macOSStyle ? 10 : 0,
@@ -33,14 +33,14 @@ export default function HeaderModalChrome({
       {macOSStyle ? (
         <TrafficLights onClose={onClose} />
       ) : (
-        <span style={{ color: "var(--th-accent)", fontWeight: 700, fontSize: "11px", flexShrink: 0 }}>
+        <span style={{ color: "#3B82F6", fontWeight: 700, fontSize: "11px", flexShrink: 0 }}>
           {sigil}
         </span>
       )}
 
       <span
         className="flex-1 truncate"
-        style={{ fontSize: "12px", fontWeight: 600, color: "var(--th-text-heading)", letterSpacing: "0.02em" }}
+        style={{ fontSize: "12px", fontWeight: 600, color: "#111827", letterSpacing: "0.02em" }}
       >
         {title}
       </span>
@@ -55,11 +55,11 @@ export default function HeaderModalChrome({
             style={{
               display: "inline-flex", alignItems: "center", justifyContent: "center",
               width: 28, height: 28,
-              border: "1px solid var(--th-border)", background: "transparent",
+              border: "1px solid #E5E7EB", background: "transparent",
               borderRadius: 0, fontFamily: mono, fontSize: "12px",
-              color: "var(--th-text-muted)", cursor: "pointer",
+              color: "#9CA3AF", cursor: "pointer",
             }}
-            className="hover:!text-[var(--th-text)] hover:!border-[var(--th-border-strong)] hover:!bg-[var(--th-hover-bg)]"
+            className="hover:!text-[#111827] hover:!border-[#D1D5DB] hover:!bg-[#F3F4F6]"
           >
             ✕
           </button>

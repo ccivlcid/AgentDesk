@@ -69,18 +69,18 @@ export default function SkillsGrid({
             <div
               key={`${skill.rank}-${detailId}`}
               className="relative p-4 transition-all group"
-              style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}
+              style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "#FFFFFF" }}
               onMouseEnter={() => onHoverEnter(skill)}
               onMouseLeave={onHoverLeave}
             >
               <div className="mb-3 flex items-start justify-between gap-2">
                 <div className="flex min-w-0 items-start gap-3">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center text-sm font-bold" style={{ borderRadius: 0, background: "var(--th-bg-primary)" }}>
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center text-sm font-bold" style={{ borderRadius: 0, background: "#F3F4F6" }}>
                     {badge.icon ? <span>{badge.icon}</span> : <span className={badge.color}>#{skill.rank}</span>}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm font-semibold font-mono" style={{ color: "var(--th-text-primary)" }}>{skill.name}</div>
-                    <div className="mt-0.5 truncate text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>{skill.repo}</div>
+                    <div className="truncate text-sm font-semibold font-mono" style={{ color: "#111827" }}>{skill.name}</div>
+                    <div className="mt-0.5 truncate text-xs font-mono" style={{ color: "#9CA3AF" }}>{skill.repo}</div>
                   </div>
                 </div>
 
@@ -103,7 +103,7 @@ export default function SkillsGrid({
                         </span>
                       ))}
                       {learnedAgents.length > 6 && (
-                        <span className="text-[8px] font-mono" style={{ color: "var(--th-text-muted)", lineHeight: "14px" }}>
+                        <span className="text-[8px] font-mono" style={{ color: "#9CA3AF", lineHeight: "14px" }}>
                           +{learnedAgents.length - 6}
                         </span>
                       )}
@@ -117,7 +117,7 @@ export default function SkillsGrid({
                   {CATEGORY_ICONS[skill.category]} {categoryLabel(skill.category, t)}
                 </span>
                 <div className="flex items-center gap-2 shrink-0">
-                  <span className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
+                  <span className="text-xs font-mono" style={{ color: "#9CA3AF" }}>
                     <span className="text-desk-green font-medium">{skill.installsDisplay}</span>{" "}
                     {t({ ko: "설치", en: "installs", ja: "インストール", zh: "安装" })}
                   </span>
@@ -153,7 +153,7 @@ export default function SkillsGrid({
                     <button
                       onClick={() => onCopy(skill)}
                       className="px-2 py-1 text-[10px] font-mono transition-all"
-                      style={{ borderRadius: 0, background: "rgba(251,191,36,0.1)", color: "var(--th-accent)", border: "1px solid rgba(251,191,36,0.3)" }}
+                      style={{ borderRadius: 0, background: "rgba(251,191,36,0.1)", color: "#3B82F6", border: "1px solid rgba(251,191,36,0.3)" }}
                       title={`npx skills add ${skill.repo}`}
                     >
                       {copiedSkill === skill.name
@@ -168,7 +168,7 @@ export default function SkillsGrid({
                 <div
                   ref={tooltipRef}
                   className="absolute z-50 left-0 right-0 top-full mt-2 p-4 shadow-2xl shadow-black/40 animate-in fade-in slide-in-from-top-1 duration-200"
-                  style={{ borderRadius: 0, border: "1px solid var(--th-border-strong)", background: "var(--th-bg-elevated)" }}
+                  style={{ borderRadius: 0, border: "1px solid #D1D5DB", background: "#FFFFFF" }}
                   onMouseEnter={() => {
                     if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
                     setHoveredSkill(detailKey);
@@ -176,8 +176,8 @@ export default function SkillsGrid({
                   onMouseLeave={onHoverLeave}
                 >
                   {detail === "loading" && (
-                    <div className="flex items-center gap-2 text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
-                      <div className="animate-spin w-3 h-3 border border-t-transparent" style={{ borderColor: "var(--th-accent)", borderTopColor: "transparent", borderRadius: "50%" }} />
+                    <div className="flex items-center gap-2 text-xs font-mono" style={{ color: "#9CA3AF" }}>
+                      <div className="animate-spin w-3 h-3 border border-t-transparent" style={{ borderColor: "#3B82F6", borderTopColor: "transparent", borderRadius: "50%" }} />
                       {t({
                         ko: "상세정보 로딩중...",
                         en: "Loading details...",
@@ -188,7 +188,7 @@ export default function SkillsGrid({
                   )}
 
                   {detail === "error" && (
-                    <div className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
+                    <div className="text-xs font-mono" style={{ color: "#9CA3AF" }}>
                       {t({
                         ko: "상세정보를 불러올 수 없습니다",
                         en: "Could not load details",
@@ -200,18 +200,18 @@ export default function SkillsGrid({
 
                   {detail && typeof detail === "object" && (
                     <div className="space-y-3">
-                      {detail.title && <div className="text-sm font-semibold font-mono" style={{ color: "var(--th-text-primary)" }}>{detail.title}</div>}
+                      {detail.title && <div className="text-sm font-semibold font-mono" style={{ color: "#111827" }}>{detail.title}</div>}
 
                       {detail.description && (
-                        <p className="text-xs leading-relaxed" style={{ color: "var(--th-text-secondary)" }}>{detail.description}</p>
+                        <p className="text-xs leading-relaxed" style={{ color: "#6B7280" }}>{detail.description}</p>
                       )}
 
                       {detail.whenToUse.length > 0 && (
                         <div className="space-y-1.5">
-                          <div className="text-[10px] uppercase tracking-wider font-mono" style={{ color: "var(--th-text-muted)" }}>
+                          <div className="text-[10px] uppercase tracking-wider font-mono" style={{ color: "#9CA3AF" }}>
                             {t({ ko: "사용 시점", en: "When to Use", ja: "使うタイミング", zh: "适用场景" })}
                           </div>
-                          <ul className="list-disc pl-4 space-y-1 text-[11px]" style={{ color: "var(--th-text-secondary)" }}>
+                          <ul className="list-disc pl-4 space-y-1 text-[11px]" style={{ color: "#6B7280" }}>
                             {detail.whenToUse.slice(0, 6).map((item, idx) => (
                               <li key={`${detailKey}-when-${idx}`}>{item}</li>
                             ))}
@@ -221,13 +221,13 @@ export default function SkillsGrid({
 
                       <div className="flex flex-wrap gap-3 text-[11px]">
                         {detail.weeklyInstalls && (
-                          <span className="font-mono" style={{ color: "var(--th-text-muted)" }}>
+                          <span className="font-mono" style={{ color: "#9CA3AF" }}>
                             <span className="text-desk-green font-medium">{detail.weeklyInstalls}</span>{" "}
                             {t({ ko: "주간 설치", en: "weekly", ja: "週間", zh: "周安装" })}
                           </span>
                         )}
                         {detail.firstSeen && (
-                          <span className="font-mono" style={{ color: "var(--th-text-muted)" }}>
+                          <span className="font-mono" style={{ color: "#9CA3AF" }}>
                             {t({ ko: "최초 등록", en: "First seen", ja: "初登録", zh: "首次发现" })}:{" "}
                             {formatFirstSeen(detail.firstSeen, localeTag)}
                           </span>
@@ -236,7 +236,7 @@ export default function SkillsGrid({
 
                       {detail.platforms.length > 0 && (
                         <div>
-                          <div className="text-[10px] mb-1.5 uppercase tracking-wider font-mono" style={{ color: "var(--th-text-muted)" }}>
+                          <div className="text-[10px] mb-1.5 uppercase tracking-wider font-mono" style={{ color: "#9CA3AF" }}>
                             {t({
                               ko: "플랫폼별 설치",
                               en: "Platform Installs",
@@ -249,7 +249,7 @@ export default function SkillsGrid({
                               <span
                                 key={platform.name}
                                 className="text-[10px] px-2 py-0.5 border font-mono"
-                                style={{ borderRadius: 0, background: "var(--th-bg-primary)", borderColor: "var(--th-border)", color: "var(--th-text-muted)" }}
+                                style={{ borderRadius: 0, background: "#F3F4F6", borderColor: "#E5E7EB", color: "#9CA3AF" }}
                               >
                                 {platform.name} <span style={{ color: "rgb(167,243,208)" }}>{platform.installs}</span>
                               </span>
@@ -278,7 +278,7 @@ export default function SkillsGrid({
                         </div>
                       )}
 
-                      <div className="text-[10px] font-mono px-2 py-1.5 truncate" style={{ color: "var(--th-text-muted)", background: "var(--th-terminal-bg)", borderRadius: 0 }}>
+                      <div className="text-[10px] font-mono px-2 py-1.5 truncate" style={{ color: "#9CA3AF", background: "#1E1E2E", borderRadius: 0 }}>
                         $ {detail.installCommand}
                       </div>
                     </div>
@@ -293,10 +293,10 @@ export default function SkillsGrid({
       {filtered.length === 0 && (
         <div className="text-center py-16">
           <div className="text-4xl mb-3">🔍</div>
-          <div className="text-sm font-mono" style={{ color: "var(--th-text-muted)" }}>
+          <div className="text-sm font-mono" style={{ color: "#9CA3AF" }}>
             {t({ ko: "검색 결과가 없습니다", en: "No search results", ja: "検索結果はありません", zh: "没有搜索结果" })}
           </div>
-          <div className="text-xs mt-1 font-mono" style={{ color: "var(--th-text-muted)" }}>
+          <div className="text-xs mt-1 font-mono" style={{ color: "#9CA3AF" }}>
             {t({
               ko: "다른 키워드로 검색해보세요",
               en: "Try a different keyword",

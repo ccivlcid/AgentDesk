@@ -94,8 +94,8 @@ export function TerminalTabContent({
         className="flex-shrink-0 flex items-center"
         style={{
           padding: "0 14px",
-          borderBottom: "1px solid var(--th-border)",
-          background: "var(--th-bg-panel)",
+          borderBottom: "1px solid #E5E7EB",
+          background: "#FFFFFF",
           height: 34,
           gap: 0,
         }}
@@ -116,9 +116,9 @@ export function TerminalTabContent({
                 padding: "0 12px",
                 height: 33,
                 border: "none",
-                borderBottom: isActive ? "2px solid var(--th-accent)" : "2px solid transparent",
+                borderBottom: isActive ? "2px solid #3B82F6" : "2px solid transparent",
                 background: "transparent",
-                color: isActive ? "var(--th-accent)" : isError ? "rgb(253,164,175)" : "var(--th-text-muted)",
+                color: isActive ? "#3B82F6" : isError ? "rgb(253,164,175)" : "#9CA3AF",
                 cursor: "pointer",
                 transition: "color 0.1s",
                 display: "flex",
@@ -136,9 +136,9 @@ export function TerminalTabContent({
                     fontWeight: 700,
                     padding: "1px 5px",
                     borderRadius: 10,
-                    background: isActive ? "rgba(245,158,11,0.18)" : isError ? "rgba(253,164,175,0.15)" : "var(--th-bg-surface)",
-                    border: `1px solid ${isActive ? "rgba(245,158,11,0.35)" : isError ? "rgba(253,164,175,0.3)" : "var(--th-border)"}`,
-                    color: isActive ? "var(--th-accent)" : isError ? "rgb(253,164,175)" : "var(--th-text-muted)",
+                    background: isActive ? "rgba(245,158,11,0.18)" : isError ? "rgba(253,164,175,0.15)" : "#F9FAFB",
+                    border: `1px solid ${isActive ? "rgba(245,158,11,0.35)" : isError ? "rgba(253,164,175,0.3)" : "#E5E7EB"}`,
+                    color: isActive ? "#3B82F6" : isError ? "rgb(253,164,175)" : "#9CA3AF",
                     lineHeight: 1,
                   }}
                 >
@@ -155,7 +155,7 @@ export function TerminalTabContent({
           {showSearchBar && (
             <div
               className="flex items-center gap-2 flex-shrink-0"
-              style={{ padding: "6px 14px", borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-panel)" }}
+              style={{ padding: "6px 14px", borderBottom: "1px solid #E5E7EB", background: "#FFFFFF" }}
             >
               <input
                 ref={searchInputRef}
@@ -172,14 +172,14 @@ export function TerminalTabContent({
                   fontSize: 11,
                   padding: "4px 8px",
                   borderRadius: 5,
-                  border: "1px solid var(--th-border)",
-                  background: "var(--th-bg-surface)",
-                  color: "var(--th-text-primary)",
+                  border: "1px solid #E5E7EB",
+                  background: "#F9FAFB",
+                  color: "#111827",
                   outline: "none",
                 }}
               />
               {logSearch && (
-                <span style={{ fontFamily: mono, fontSize: 9, color: "var(--th-text-muted)", whiteSpace: "nowrap" }}>
+                <span style={{ fontFamily: mono, fontSize: 9, color: "#9CA3AF", whiteSpace: "nowrap" }}>
                   {searchMatchCount} {tr("줄", "lines", "行", "行")}
                 </span>
               )}
@@ -191,9 +191,9 @@ export function TerminalTabContent({
                   fontSize: 10,
                   padding: "3px 6px",
                   borderRadius: 5,
-                  border: "1px solid var(--th-border)",
-                  background: "var(--th-bg-surface)",
-                  color: "var(--th-text-secondary)",
+                  border: "1px solid #E5E7EB",
+                  background: "#F9FAFB",
+                  color: "#6B7280",
                   outline: "none",
                 }}
               >
@@ -206,7 +206,7 @@ export function TerminalTabContent({
 
           <div ref={containerRef} className="flex-1 min-h-0 overflow-y-auto" style={{ padding: "12px 14px" }} onScroll={handleScroll}>
             {!text ? (
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", color: "var(--th-text-muted)" }}>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", color: "#9CA3AF" }}>
                 <div style={{ fontSize: 28, marginBottom: 10, opacity: 0.35 }}>
                   {task?.status === "in_progress" ? "⚙" : "⬜"}
                 </div>
@@ -224,7 +224,7 @@ export function TerminalTabContent({
                 style={{ display: "flex", flexDirection: "column", gap: 3 }}
               >
                 {logSearch && visibleParsedLines.length === 0 && (
-                  <div style={{ fontFamily: mono, fontSize: 11, color: "var(--th-text-muted)", padding: "8px 0" }}>
+                  <div style={{ fontFamily: mono, fontSize: 11, color: "#9CA3AF", padding: "8px 0" }}>
                     {tr(`"${logSearch}" 에 대한 결과 없음`, `No matches for "${logSearch}"`, `"${logSearch}" の一致なし`, `"${logSearch}" 无结果`)}
                   </div>
                 )}
@@ -235,7 +235,7 @@ export function TerminalTabContent({
             ) : (
               <pre
                 ref={rawOutputPreRef}
-                style={{ fontFamily: mono, fontSize: 12, lineHeight: 1.65, whiteSpace: "pre-wrap", wordBreak: "break-word", margin: 0, color: "var(--th-text-primary)" }}
+                style={{ fontFamily: mono, fontSize: 12, lineHeight: 1.65, whiteSpace: "pre-wrap", wordBreak: "break-word", margin: 0, color: "#111827" }}
                 className="terminal-output-text"
               >
                 {logSearch ? highlightSearchMatches(text, logSearch) : text}
@@ -248,7 +248,7 @@ export function TerminalTabContent({
       {subTab === "logs" && (
         <div className="flex-1 min-h-0 overflow-y-auto">
           {filteredTaskLogs.length === 0 ? (
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", color: "var(--th-text-muted)" }}>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", color: "#9CA3AF" }}>
               <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.2} style={{ marginBottom: 8, opacity: 0.3 }}>
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                 <polyline points="14 2 14 8 20 8" />
@@ -269,15 +269,15 @@ export function TerminalTabContent({
                     key={log.id}
                     style={{
                       borderRadius: 7,
-                      border: `1px solid ${isError ? "rgba(253,164,175,0.22)" : "var(--th-border)"}`,
-                      background: isError ? "rgba(253,164,175,0.05)" : "var(--th-bg-surface)",
+                      border: `1px solid ${isError ? "rgba(253,164,175,0.22)" : "#E5E7EB"}`,
+                      background: isError ? "rgba(253,164,175,0.05)" : "#F9FAFB",
                       padding: "5px 10px",
                       display: "flex",
                       gap: 8,
                       alignItems: "flex-start",
                     }}
                   >
-                    <span style={{ fontFamily: mono, fontSize: 9, color: "var(--th-text-muted)", flexShrink: 0, paddingTop: 2, minWidth: 58 }}>
+                    <span style={{ fontFamily: mono, fontSize: 9, color: "#9CA3AF", flexShrink: 0, paddingTop: 2, minWidth: 58 }}>
                       {time}
                     </span>
                     <span
@@ -289,14 +289,14 @@ export function TerminalTabContent({
                         padding: "1px 5px",
                         borderRadius: 4,
                         flexShrink: 0,
-                        background: isError ? "rgba(253,164,175,0.12)" : isSystem ? "rgba(245,158,11,0.12)" : "var(--th-bg-elevated)",
-                        border: `1px solid ${isError ? "rgba(253,164,175,0.3)" : isSystem ? "rgba(245,158,11,0.3)" : "var(--th-border)"}`,
-                        color: isError ? "rgb(253,164,175)" : isSystem ? "var(--th-accent)" : "var(--th-text-secondary)",
+                        background: isError ? "rgba(253,164,175,0.12)" : isSystem ? "rgba(245,158,11,0.12)" : "#FFFFFF",
+                        border: `1px solid ${isError ? "rgba(253,164,175,0.3)" : isSystem ? "rgba(245,158,11,0.3)" : "#E5E7EB"}`,
+                        color: isError ? "rgb(253,164,175)" : isSystem ? "#3B82F6" : "#6B7280",
                       }}
                     >
                       {log.kind}
                     </span>
-                    <span style={{ fontFamily: mono, fontSize: 11, color: isError ? "rgb(253,164,175)" : "var(--th-text-primary)", lineHeight: 1.5, wordBreak: "break-word" }}>
+                    <span style={{ fontFamily: mono, fontSize: 11, color: isError ? "rgb(253,164,175)" : "#111827", lineHeight: 1.5, wordBreak: "break-word" }}>
                       {log.message}
                     </span>
                   </div>
@@ -310,10 +310,10 @@ export function TerminalTabContent({
       {subTab === "thinking" && (
         <div
           className="flex-1 min-h-0 overflow-y-auto"
-          style={{ background: isLight ? "var(--th-bg-surface)" : "var(--th-bg-primary)" }}
+          style={{ background: isLight ? "#F9FAFB" : "#F3F4F6" }}
         >
           {thinkingBlocks.length === 0 ? (
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", color: "var(--th-text-muted)" }}>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%", color: "#9CA3AF" }}>
               <div style={{ fontFamily: mono, fontSize: 11 }}>
                 {tr("사고 블록 없음", "No thinking blocks", "思考ブロックなし", "无推理块")}
               </div>
@@ -340,16 +340,16 @@ export function TerminalTabContent({
                       background: isLight ? "rgba(180,83,9,0.06)" : "rgba(245,158,11,0.06)",
                     }}
                   >
-                    <span style={{ fontFamily: mono, fontSize: 9, fontWeight: 700, color: "var(--th-accent)", letterSpacing: "0.08em" }}>
+                    <span style={{ fontFamily: mono, fontSize: 9, fontWeight: 700, color: "#3B82F6", letterSpacing: "0.08em" }}>
                       ◆ REASONING #{idx + 1}
                     </span>
                     {idx === thinkingBlocks.length - 1 && (
-                      <span style={{ fontFamily: mono, fontSize: 9, padding: "1px 6px", borderRadius: 4, background: isLight ? "rgba(180,83,9,0.1)" : "rgba(245,158,11,0.15)", border: isLight ? "1px solid rgba(180,83,9,0.25)" : "1px solid rgba(245,158,11,0.3)", color: "var(--th-accent)", marginLeft: "auto" }}>
+                      <span style={{ fontFamily: mono, fontSize: 9, padding: "1px 6px", borderRadius: 4, background: isLight ? "rgba(180,83,9,0.1)" : "rgba(245,158,11,0.15)", border: isLight ? "1px solid rgba(180,83,9,0.25)" : "1px solid rgba(245,158,11,0.3)", color: "#3B82F6", marginLeft: "auto" }}>
                         {tr("최신", "latest", "最新", "最新")}
                       </span>
                     )}
                     {block.truncated && (
-                      <span style={{ fontFamily: mono, fontSize: 9, color: "var(--th-text-muted)", marginLeft: idx === thinkingBlocks.length - 1 ? 8 : "auto" }}>
+                      <span style={{ fontFamily: mono, fontSize: 9, color: "#9CA3AF", marginLeft: idx === thinkingBlocks.length - 1 ? 8 : "auto" }}>
                         (truncated)
                       </span>
                     )}

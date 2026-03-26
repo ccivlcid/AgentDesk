@@ -4,10 +4,10 @@ const mono = "var(--th-font-mono)";
 
 const INPUT_INLINE: React.CSSProperties = {
   padding: "6px 10px",
-  background: "var(--th-input-bg)",
-  border: "1px solid var(--th-input-border)",
+  background: "#FFFFFF",
+  border: "1px solid #E5E7EB",
   borderRadius: 0,
-  color: "var(--th-text-primary)",
+  color: "#111827",
   fontFamily: mono,
   fontSize: "12px",
   outline: "none",
@@ -29,15 +29,15 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         className={`block ${className}`}
         style={{
           ...INPUT_INLINE,
-          ...(error ? { borderColor: "var(--th-danger-border)" } : {}),
+          ...(error ? { borderColor: "#FECACA" } : {}),
           ...style,
         }}
         onFocus={(e) => {
-          e.currentTarget.style.borderColor = "var(--th-accent)";
+          e.currentTarget.style.borderColor = "#3B82F6";
           props.onFocus?.(e);
         }}
         onBlur={(e) => {
-          e.currentTarget.style.borderColor = error ? "var(--th-danger-border)" : "var(--th-input-border)";
+          e.currentTarget.style.borderColor = error ? "#FECACA" : "#E5E7EB";
           props.onBlur?.(e);
         }}
         {...props}
@@ -63,15 +63,15 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
         style={{
           ...INPUT_INLINE,
           lineHeight: 1.6,
-          ...(error ? { borderColor: "var(--th-danger-border)" } : {}),
+          ...(error ? { borderColor: "#FECACA" } : {}),
           ...style,
         }}
         onFocus={(e) => {
-          e.currentTarget.style.borderColor = "var(--th-accent)";
+          e.currentTarget.style.borderColor = "#3B82F6";
           props.onFocus?.(e);
         }}
         onBlur={(e) => {
-          e.currentTarget.style.borderColor = error ? "var(--th-danger-border)" : "var(--th-input-border)";
+          e.currentTarget.style.borderColor = error ? "#FECACA" : "#E5E7EB";
           props.onBlur?.(e);
         }}
         {...props}

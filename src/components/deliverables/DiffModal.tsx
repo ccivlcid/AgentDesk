@@ -107,16 +107,16 @@ function DiffModal({ taskId, onClose }: DiffModalProps) {
   return (
     <div
       className="fixed inset-0 flex items-center justify-center"
-      style={{ background: "var(--th-modal-overlay)", backdropFilter: "blur(3px)", zIndex: 1100 }}
+      style={{ background: "rgba(0,0,0,0.4)", backdropFilter: "blur(3px)", zIndex: 1100 }}
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="flex max-h-[85vh] w-full max-w-4xl flex-col overflow-hidden" style={{ borderRadius: 10, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", boxShadow: "0 20px 50px rgba(0,0,0,0.4)" }}>
+      <div className="flex max-h-[85vh] w-full max-w-4xl flex-col overflow-hidden" style={{ borderRadius: 10, border: "1px solid #E5E7EB", background: "#FFFFFF", boxShadow: "0 20px 50px rgba(0,0,0,0.4)" }}>
         {/* Header (macOS) */}
         <div
           className="flex items-center justify-between px-5 py-3"
           style={{
-            borderBottom: "1px solid var(--th-border)",
-            background: "var(--th-bg-panel)",
+            borderBottom: "1px solid #E5E7EB",
+            background: "#FFFFFF",
             borderTopLeftRadius: 10,
             borderTopRightRadius: 10,
             backdropFilter: "blur(12px)",
@@ -124,7 +124,7 @@ function DiffModal({ taskId, onClose }: DiffModalProps) {
           }}
         >
           <div className="flex items-center gap-2">
-            <span className="text-lg font-bold font-mono" style={{ color: "var(--th-text-heading)" }}>
+            <span className="text-lg font-bold font-mono" style={{ color: "#111827" }}>
               {t({ ko: "Git 변경사항", en: "Git Diff", ja: "Git 差分", zh: "Git 差异" })}
             </span>
             {diffData?.branchName && (
@@ -153,7 +153,7 @@ function DiffModal({ taskId, onClose }: DiffModalProps) {
             <button
               onClick={onClose}
               className="p-1.5 transition"
-              style={{ borderRadius: 6, color: "var(--th-text-muted)", background: "transparent" }}
+              style={{ borderRadius: 6, color: "#9CA3AF", background: "transparent" }}
               title={t({ ko: "닫기", en: "Close", ja: "閉じる", zh: "关闭" })}
             >
               X
@@ -163,13 +163,13 @@ function DiffModal({ taskId, onClose }: DiffModalProps) {
 
         {/* Action result */}
         {actionResult && (
-          <div className="px-5 py-2 text-sm font-mono" style={{ borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-accent)" }}>{actionResult}</div>
+          <div className="px-5 py-2 text-sm font-mono" style={{ borderBottom: "1px solid #E5E7EB", background: "#FFFFFF", color: "#3B82F6" }}>{actionResult}</div>
         )}
 
         {/* Content */}
         <div className="flex-1 overflow-auto p-5">
           {loading ? (
-            <div className="flex items-center justify-center py-12 font-mono" style={{ color: "var(--th-text-muted)" }}>
+            <div className="flex items-center justify-center py-12 font-mono" style={{ color: "#9CA3AF" }}>
               {t({
                 ko: "변경사항 불러오는 중...",
                 en: "Loading diff...",
@@ -182,7 +182,7 @@ function DiffModal({ taskId, onClose }: DiffModalProps) {
               {t({ ko: "오류", en: "Error", ja: "エラー", zh: "错误" })}: {error}
             </div>
           ) : !diffData?.hasWorktree ? (
-            <div className="flex items-center justify-center py-12 font-mono" style={{ color: "var(--th-text-muted)" }}>
+            <div className="flex items-center justify-center py-12 font-mono" style={{ color: "#9CA3AF" }}>
               {t({
                 ko: "이 작업의 워크트리를 찾을 수 없습니다. (Git 프로젝트 아님 또는 이미 병합됨)",
                 en: "No worktree found for this task (non-git project or already merged)",
@@ -195,10 +195,10 @@ function DiffModal({ taskId, onClose }: DiffModalProps) {
               {/* Stat summary */}
               {diffData.stat && (
                 <div>
-                  <h3 className="mb-1 text-sm font-semibold font-mono" style={{ color: "var(--th-text-secondary)" }}>
+                  <h3 className="mb-1 text-sm font-semibold font-mono" style={{ color: "#6B7280" }}>
                     {t({ ko: "요약", en: "Summary", ja: "概要", zh: "摘要" })}
                   </h3>
-                  <pre className="p-3 text-xs font-mono overflow-x-auto" style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}>
+                  <pre className="p-3 text-xs font-mono overflow-x-auto" style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "#FFFFFF", color: "#6B7280" }}>
                     {diffData.stat}
                   </pre>
                 </div>
@@ -206,10 +206,10 @@ function DiffModal({ taskId, onClose }: DiffModalProps) {
               {/* Full diff */}
               {diffData.diff && (
                 <div>
-                  <h3 className="mb-1 text-sm font-semibold font-mono" style={{ color: "var(--th-text-secondary)" }}>
+                  <h3 className="mb-1 text-sm font-semibold font-mono" style={{ color: "#6B7280" }}>
                     {t({ ko: "Diff", en: "Diff", ja: "差分", zh: "差异" })}
                   </h3>
-                  <pre className="max-h-[50vh] overflow-auto p-3 text-xs leading-relaxed" style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-terminal-bg)" }}>
+                  <pre className="max-h-[50vh] overflow-auto p-3 text-xs leading-relaxed" style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "#1E1E2E" }}>
                     {diffData.diff.split("\n").map((line, i) => {
                       let cls = "text-[#94a3b8]";
                       if (line.startsWith("+") && !line.startsWith("+++")) cls = "text-green-400";
@@ -227,7 +227,7 @@ function DiffModal({ taskId, onClose }: DiffModalProps) {
                 </div>
               )}
               {!diffData.stat && !diffData.diff && (
-                <div className="text-center font-mono py-8" style={{ color: "var(--th-text-muted)" }}>
+                <div className="text-center font-mono py-8" style={{ color: "#9CA3AF" }}>
                   {t({
                     ko: "변경사항이 없습니다",
                     en: "No changes detected",

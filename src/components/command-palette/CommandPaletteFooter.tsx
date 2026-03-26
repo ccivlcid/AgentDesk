@@ -13,12 +13,12 @@ export function CommandPaletteFooter({ t, onClose, onOpenShortcutsGuide }: Comma
   return (
     <div
       style={{
-        borderTop: "1px solid var(--th-border)",
+        borderTop: "1px solid #E5E7EB",
         padding: "7px 16px",
         display: "flex",
         alignItems: "center",
         justifyContent: "space-between",
-        background: "var(--th-bg-panel)",
+        background: "#FFFFFF",
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
@@ -27,15 +27,15 @@ export function CommandPaletteFooter({ t, onClose, onOpenShortcutsGuide }: Comma
           { key: "↵", label: t({ ko: "선택", en: "select", ja: "選択", zh: "选择" }) },
           { key: "Esc", label: t({ ko: "닫기", en: "close", ja: "閉じる", zh: "关闭" }) },
         ].map(({ key, label }) => (
-          <span key={key} style={{ ...sf, fontSize: 11, color: "var(--th-text-muted)", display: "flex", alignItems: "center", gap: 5 }}>
+          <span key={key} style={{ ...sf, fontSize: 11, color: "#9CA3AF", display: "flex", alignItems: "center", gap: 5 }}>
             <kbd
               style={{
-                background: "var(--th-bg-elevated)",
-                border: "1px solid var(--th-border)",
+                background: "#FFFFFF",
+                border: "1px solid #E5E7EB",
                 borderRadius: 4,
                 padding: "1px 5px",
                 fontSize: 10,
-                color: "var(--th-text-muted)",
+                color: "#9CA3AF",
                 fontFamily: "inherit",
               }}
             >
@@ -52,9 +52,9 @@ export function CommandPaletteFooter({ t, onClose, onOpenShortcutsGuide }: Comma
           style={{
             ...sf,
             fontSize: 11,
-            color: "var(--th-text-muted)",
-            background: "var(--th-bg-elevated)",
-            border: "1px solid var(--th-border)",
+            color: "#9CA3AF",
+            background: "#FFFFFF",
+            border: "1px solid #E5E7EB",
             borderRadius: 5,
             padding: "2px 9px",
             cursor: "pointer",

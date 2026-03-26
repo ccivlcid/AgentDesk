@@ -23,8 +23,8 @@ export default function SkillsLibrary({ agents, currentProject }: SkillsLibraryP
     return (
       <div className="flex items-center justify-center py-24">
         <div className="text-center">
-          <div className="animate-spin w-8 h-8 border-2 border-t-transparent mx-auto mb-4" style={{ borderRadius: "50%", borderColor: "var(--th-accent)", borderTopColor: "transparent" }} />
-          <div className="text-sm font-mono" style={{ color: "var(--th-text-muted)" }}>
+          <div className="animate-spin w-8 h-8 border-2 border-t-transparent mx-auto mb-4" style={{ borderRadius: "50%", borderColor: "#3B82F6", borderTopColor: "transparent" }} />
+          <div className="text-sm font-mono" style={{ color: "#9CA3AF" }}>
             {t({
               ko: "skills.sh 데이터 로딩중...",
               en: "Loading skills.sh data...",
@@ -42,7 +42,7 @@ export default function SkillsLibrary({ agents, currentProject }: SkillsLibraryP
       <div className="flex items-center justify-center py-24">
         <div className="text-center">
           <div className="mb-3"><svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: "#f59e0b" }}><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg></div>
-          <div className="text-sm font-mono" style={{ color: "var(--th-text-muted)" }}>
+          <div className="text-sm font-mono" style={{ color: "#9CA3AF" }}>
             {t({
               ko: "스킬 데이터를 불러올 수 없습니다",
               en: "Unable to load skills data",
@@ -50,11 +50,11 @@ export default function SkillsLibrary({ agents, currentProject }: SkillsLibraryP
               zh: "无法加载技能数据",
             })}
           </div>
-          <div className="text-xs font-mono mt-1" style={{ color: "var(--th-text-muted)" }}>{vm.error}</div>
+          <div className="text-xs font-mono mt-1" style={{ color: "#9CA3AF" }}>{vm.error}</div>
           <button
             onClick={vm.loadSkills}
             className="mt-4 px-4 py-2 text-sm font-mono transition-all"
-            style={{ borderRadius: 6, background: "rgba(251,191,36,0.1)", color: "var(--th-accent)", border: "1px solid rgba(251,191,36,0.35)" }}
+            style={{ borderRadius: 6, background: "rgba(251,191,36,0.1)", color: "#3B82F6", border: "1px solid rgba(251,191,36,0.35)" }}
           >
             {t({ ko: "다시 시도", en: "Retry", ja: "再試行", zh: "重试" })}
           </button>
@@ -64,7 +64,7 @@ export default function SkillsLibrary({ agents, currentProject }: SkillsLibraryP
   }
 
   return (
-    <div style={{ background: "var(--th-bg-primary)" }}>
+    <div style={{ background: "#F3F4F6" }}>
       <div className="space-y-4">
       <SkillsHeader
         t={t}
@@ -173,7 +173,7 @@ export default function SkillsLibrary({ agents, currentProject }: SkillsLibraryP
         }}
       />
 
-      <div className="text-center text-xs font-mono py-4" style={{ color: "var(--th-text-muted)" }}>
+      <div className="text-center text-xs font-mono py-4" style={{ color: "#9CA3AF" }}>
         {currentProject
           ? t({
               ko: `'${currentProject.name}' 프로젝트 · 데이터 출처: skills.sh`,

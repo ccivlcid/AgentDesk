@@ -32,8 +32,8 @@ export default function ProjectSelector({
         onClick={onCreateNew}
         title="프로젝트"
         className="w-8 h-8 flex items-center justify-center rounded
-                   bg-[var(--th-bg-surface)] hover:bg-[var(--th-bg-elevated)]
-                   border border-[var(--th-border)] transition-colors mx-auto"
+                   bg-[#F9FAFB] hover:bg-[#FFFFFF]
+                   border border-[#E5E7EB] transition-colors mx-auto"
       >
         <svg width="14" height="14" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5">
           <rect x="2" y="4" width="16" height="13" rx="1.5" />
@@ -48,19 +48,19 @@ export default function ProjectSelector({
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center gap-2 rounded-none border border-[var(--th-border)] bg-transparent
+        className="w-full flex items-center gap-2 rounded-none border border-[#E5E7EB] bg-transparent
                    px-2.5 py-1.5 text-left
-                   hover:border-[var(--th-border-strong)] hover:bg-[var(--th-hover-bg)]
-                   focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-[var(--th-accent)]"
+                   hover:border-[#D1D5DB] hover:bg-[#F3F4F6]
+                   focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-[#3B82F6]"
         style={{ transition: "border-color 0.15s, background 0.15s" }}
       >
         {/* 프로젝트 아이콘 — CLI 스타일 직각 */}
         <span
           className="flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-none"
           style={{
-            backgroundColor: currentCategory ? `${currentCategory.color}20` : "var(--th-bg-surface)",
-            border: `1px solid ${currentCategory ? `${currentCategory.color}50` : "var(--th-border)"}`,
-            color: currentCategory?.color ?? "var(--th-text-muted)",
+            backgroundColor: currentCategory ? `${currentCategory.color}20` : "#F9FAFB",
+            border: `1px solid ${currentCategory ? `${currentCategory.color}50` : "#E5E7EB"}`,
+            color: currentCategory?.color ?? "#9CA3AF",
           }}
         >
           <svg width="10" height="10" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -74,7 +74,7 @@ export default function ProjectSelector({
             <>
               <span
                 className="min-w-0 truncate text-[11px] font-semibold leading-tight"
-                style={{ color: "var(--th-text-heading)" }}
+                style={{ color: "#111827" }}
               >
                 {currentProject.name}
               </span>
@@ -88,7 +88,7 @@ export default function ProjectSelector({
               )}
             </>
           ) : (
-            <span className="text-[11px]" style={{ color: "var(--th-text-muted)" }}>
+            <span className="text-[11px]" style={{ color: "#9CA3AF" }}>
               프로젝트 선택
             </span>
           )}
@@ -103,7 +103,7 @@ export default function ProjectSelector({
           stroke="currentColor"
           strokeWidth="2"
           className={`flex-shrink-0 transition-transform duration-150 ${open ? "rotate-180" : ""}`}
-          style={{ color: "var(--th-text-muted)" }}
+          style={{ color: "#9CA3AF" }}
         >
           <path d="M6 8l4 4 4-4" />
         </svg>

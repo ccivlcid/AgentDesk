@@ -54,7 +54,7 @@ export function MinutesTabContent({
   // 빈 상태
   if (meetingMinutes.length === 0) {
     return (
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "var(--th-text-muted)" }}>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", color: "#9CA3AF" }}>
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.2} strokeLinecap="round" style={{ marginBottom: 10, opacity: 0.3 }}>
           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
           <polyline points="14 2 14 8 20 8" />
@@ -78,7 +78,7 @@ export function MinutesTabContent({
         <div style={{
           display: "flex", alignItems: "center", gap: 4,
           padding: "7px 16px",
-          borderBottom: "1px solid var(--th-border)",
+          borderBottom: "1px solid #E5E7EB",
           flexShrink: 0,
         }}>
           {rounds.map(([round, meetings]) => {
@@ -93,9 +93,9 @@ export function MinutesTabContent({
                   fontFamily: mono, fontSize: 10, fontWeight: isActive ? 700 : 500,
                   padding: "2px 10px",
                   borderRadius: 20,
-                  border: isActive ? "1px solid var(--th-border-accent)" : "1px solid var(--th-border)",
+                  border: isActive ? "1px solid #BFDBFE" : "1px solid #E5E7EB",
                   background: isActive ? "rgba(245,158,11,0.1)" : "transparent",
-                  color: isActive ? "var(--th-accent)" : "var(--th-text-muted)",
+                  color: isActive ? "#3B82F6" : "#9CA3AF",
                   cursor: "pointer",
                   display: "flex", alignItems: "center", gap: 5,
                   transition: "all 0.1s",
@@ -122,10 +122,10 @@ export function MinutesTabContent({
             <div key={meeting.id}>
               {/* 회의 헤더 — 얇은 선 + 메타 */}
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-                <span style={{ fontFamily: mono, fontSize: 10, fontWeight: 700, color: "var(--th-accent)" }}>
+                <span style={{ fontFamily: mono, fontSize: 10, fontWeight: 700, color: "#3B82F6" }}>
                   {meetingTypeLabel(meeting.meeting_type)}
                 </span>
-                <div style={{ flex: 1, height: 1, background: "var(--th-border)" }} />
+                <div style={{ flex: 1, height: 1, background: "#E5E7EB" }} />
                 {/* 상태 dot */}
                 <span style={{ display: "flex", alignItems: "center", gap: 4, fontFamily: mono, fontSize: 9, color: dot.color }}>
                   <span style={{
@@ -134,7 +134,7 @@ export function MinutesTabContent({
                   }} />
                   {dot.label}
                 </span>
-                <span style={{ fontFamily: mono, fontSize: 9, color: "var(--th-text-muted)" }}>{timeStr}</span>
+                <span style={{ fontFamily: mono, fontSize: 9, color: "#9CA3AF" }}>{timeStr}</span>
               </div>
 
               {/* 발언 목록 — 채팅 스타일 */}
@@ -149,7 +149,7 @@ export function MinutesTabContent({
                         display: "flex", gap: 12,
                         paddingBottom: isLast ? 0 : 12,
                         marginBottom: isLast ? 0 : 12,
-                        borderBottom: isLast ? "none" : "1px solid var(--th-border)",
+                        borderBottom: isLast ? "none" : "1px solid #E5E7EB",
                       }}
                     >
                       {/* 아바타 컬럼 */}
@@ -175,16 +175,16 @@ export function MinutesTabContent({
                             {entry.speaker_name}
                           </span>
                           {entry.department_name && (
-                            <span style={{ fontFamily: mono, fontSize: 9, color: "var(--th-text-muted)" }}>
+                            <span style={{ fontFamily: mono, fontSize: 9, color: "#9CA3AF" }}>
                               {entry.department_name}
                             </span>
                           )}
                           {entry.role_label && (
-                            <span style={{ fontFamily: mono, fontSize: 9, color: "var(--th-text-muted)" }}>
+                            <span style={{ fontFamily: mono, fontSize: 9, color: "#9CA3AF" }}>
                               · {entry.role_label}
                             </span>
                           )}
-                          <span style={{ fontFamily: mono, fontSize: 9, color: "var(--th-text-muted)", marginLeft: "auto" }}>
+                          <span style={{ fontFamily: mono, fontSize: 9, color: "#9CA3AF", marginLeft: "auto" }}>
                             #{entry.seq}
                           </span>
                         </div>
@@ -194,7 +194,7 @@ export function MinutesTabContent({
                           margin: 0,
                           fontSize: 12,
                           lineHeight: 1.65,
-                          color: "var(--th-text-secondary)",
+                          color: "#6B7280",
                           whiteSpace: "pre-wrap",
                           wordBreak: "break-word",
                         }}>
@@ -208,7 +208,7 @@ export function MinutesTabContent({
 
               {/* 회의 사이 구분 (마지막 제외) */}
               {mi < currentMeetings.length - 1 && (
-                <div style={{ marginTop: 20, borderTop: "1px dashed var(--th-border)" }} />
+                <div style={{ marginTop: 20, borderTop: "1px dashed #E5E7EB" }} />
               )}
             </div>
           );

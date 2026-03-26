@@ -225,7 +225,7 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onGi
   const mono: React.CSSProperties = { fontFamily: "var(--th-font-mono)" };
 
   const windowIcon = (
-    <svg viewBox="0 0 18 18" fill="none" stroke="var(--th-accent)" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" width={16} height={16}>
+    <svg viewBox="0 0 18 18" fill="none" stroke="#3B82F6" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" width={16} height={16}>
       <path d="M9 1.5v15M1.5 9h15" />
       <rect x="2" y="2" width="14" height="14" rx="3" />
     </svg>
@@ -248,7 +248,7 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onGi
             ...display,
             fontSize: "20px",
             fontWeight: 700,
-            color: "var(--th-text-heading)",
+            color: "#111827",
             lineHeight: 1.3,
             margin: 0,
           }}>
@@ -257,7 +257,7 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onGi
           {STEP_META[step].sub[language] && (
             <p style={{
               fontSize: "12px",
-              color: "var(--th-text-muted)",
+              color: "#9CA3AF",
               marginTop: 6,
               lineHeight: 1.5,
             }}>
@@ -280,7 +280,7 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onGi
                     width: i === stepIdx ? 24 : 8,
                     height: 8,
                     border: "none",
-                    background: i === stepIdx ? "var(--th-accent)" : i < stepIdx ? "var(--th-accent)" : "var(--th-border)",
+                    background: i === stepIdx ? "#3B82F6" : i < stepIdx ? "#3B82F6" : "#E5E7EB",
                     opacity: i <= stepIdx ? 1 : 0.4,
                     cursor: "pointer",
                     padding: 0,
@@ -291,7 +291,7 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onGi
               <span style={{
                 ...mono,
                 fontSize: "10px",
-                color: "var(--th-text-muted)",
+                color: "#9CA3AF",
                 marginLeft: 8,
               }}>
                 {stepIdx + 1}/{ORDERED_STEPS.length}
@@ -325,20 +325,20 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onGi
                   className="w-full flex items-center gap-4 transition-colors"
                   style={{
                     padding: "14px 16px",
-                    border: "1px dashed var(--th-border)",
+                    border: "1px dashed #E5E7EB",
                     background: "transparent",
-                    color: "var(--th-text-secondary)",
+                    color: "#6B7280",
                     cursor: "pointer",
                   }}
-                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--th-accent)"; e.currentTarget.style.color = "var(--th-accent)"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--th-border)"; e.currentTarget.style.color = "var(--th-text-secondary)"; }}
+                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#3B82F6"; e.currentTarget.style.color = "#3B82F6"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#E5E7EB"; e.currentTarget.style.color = "#6B7280"; }}
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M6 9v6M9 6h6a3 3 0 010 6h-6"/></svg>
                   <div style={{ textAlign: "left", flex: 1 }}>
                     <div style={{ ...display, fontWeight: 600, fontSize: "13px" }}>
                       {t({ ko: "Git 저장소 가져오기", en: "Import from Git", ja: "Gitリポジトリのインポート", zh: "从 Git 导入" })}
                     </div>
-                    <div style={{ fontSize: "11px", color: "var(--th-text-muted)", marginTop: 2 }}>
+                    <div style={{ fontSize: "11px", color: "#9CA3AF", marginTop: 2 }}>
                       {t({ ko: "GitHub / GitLab URL로 클론 후 자동 생성", en: "Clone by URL and auto-create project", ja: "URLでクローンして自動作成", zh: "通过 URL 克隆并自动创建" })}
                     </div>
                   </div>
@@ -378,7 +378,7 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onGi
                     </span>
                     <button onClick={() => setStep("category")} style={{
                       marginLeft: "auto", ...mono, fontSize: "10px",
-                      color: "var(--th-text-muted)", background: "none", border: "none", cursor: "pointer",
+                      color: "#9CA3AF", background: "none", border: "none", cursor: "pointer",
                       textDecoration: "underline",
                     }}>
                       {t({ ko: "변경", en: "Change", ja: "変更", zh: "更改" })}
@@ -419,22 +419,22 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onGi
                       <button
                         type="button"
                         onClick={() => void handleOpenBrowser()}
-                        style={{ padding: "0 12px", border: "1px solid var(--th-border)", background: "var(--th-bg-surface)", color: "var(--th-text-secondary)", ...mono, fontSize: "11px", cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}
+                        style={{ padding: "0 12px", border: "1px solid #E5E7EB", background: "#F9FAFB", color: "#6B7280", ...mono, fontSize: "11px", cursor: "pointer", whiteSpace: "nowrap", flexShrink: 0 }}
                       >
                         {t({ ko: "탐색", en: "Browse", ja: "参照", zh: "浏览" })}
                       </button>
                     )}
                   </div>
                   {pathAutoGenerated && projectPath && (
-                    <p className="mt-1" style={{ ...mono, fontSize: "10px", color: "var(--th-text-muted)" }}>
+                    <p className="mt-1" style={{ ...mono, fontSize: "10px", color: "#9CA3AF" }}>
                       {t({ ko: "자동 생성됨", en: "Auto-generated", ja: "自動生成済み", zh: "自动生成" })}
                     </p>
                   )}
                   {pathTools.pathApiUnsupported && (
-                    <p className="mt-1" style={{ ...mono, fontSize: "10px", color: "var(--th-text-muted)" }}>{pathTools.unsupportedPathApiMessage}</p>
+                    <p className="mt-1" style={{ ...mono, fontSize: "10px", color: "#9CA3AF" }}>{pathTools.unsupportedPathApiMessage}</p>
                   )}
                   {pathTools.formFeedback && (
-                    <p className="mt-1" style={{ ...mono, fontSize: "10px", color: pathTools.formFeedback.tone === "error" ? "var(--th-danger-text)" : "var(--th-text-muted)" }}>
+                    <p className="mt-1" style={{ ...mono, fontSize: "10px", color: pathTools.formFeedback.tone === "error" ? "#DC2626" : "#9CA3AF" }}>
                       {pathTools.formFeedback.message}
                     </p>
                   )}
@@ -458,7 +458,7 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onGi
                       padding: "12px 14px", borderLeft: "3px solid rgba(242,78,30,0.6)",
                       background: "rgba(242,78,30,0.04)", fontSize: "12px",
                     }}>
-                      <span style={{ color: "var(--th-text-secondary)" }}>
+                      <span style={{ color: "#6B7280" }}>
                         {t({ ko: "Figma 미연결", en: "Figma not connected", ja: "Figma未接続", zh: "Figma 未连接" })}
                       </span>
                       <button
@@ -481,7 +481,7 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onGi
                       />
                     </FormField>
                   ) : (
-                    <p style={{ ...mono, fontSize: "11px", color: "var(--th-text-muted)", padding: "8px 0" }}>
+                    <p style={{ ...mono, fontSize: "11px", color: "#9CA3AF", padding: "8px 0" }}>
                       {t({ ko: "Figma 연결 확인 중...", en: "Checking Figma...", ja: "Figma確認中...", zh: "检查 Figma..." })}
                     </p>
                   )
@@ -544,9 +544,9 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onGi
                         disabled={autoAssignBusy}
                         style={{
                           ...mono, fontSize: "11px", padding: "6px 14px",
-                          border: "1px solid var(--th-accent)",
+                          border: "1px solid #3B82F6",
                           background: "rgba(245,158,11,0.06)",
-                          color: "var(--th-accent)",
+                          color: "#3B82F6",
                           cursor: autoAssignBusy ? "wait" : "pointer",
                           opacity: autoAssignBusy ? 0.6 : 1,
                           display: "flex", alignItems: "center", gap: 6,
@@ -567,12 +567,12 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onGi
                   {cliAgents.length === 0 ? (
                     <div style={{
                       padding: "40px 20px", textAlign: "center",
-                      border: "1px dashed var(--th-border)",
+                      border: "1px dashed #E5E7EB",
                     }}>
-                      <p style={{ ...display, fontSize: "14px", color: "var(--th-text-muted)" }}>
+                      <p style={{ ...display, fontSize: "14px", color: "#9CA3AF" }}>
                         {t({ ko: "CLI 에이전트가 없습니다", en: "No CLI agents found", ja: "CLIエージェントがありません", zh: "没有 CLI 代理" })}
                       </p>
-                      <p style={{ ...mono, fontSize: "11px", color: "var(--th-text-muted)", marginTop: 8, opacity: 0.6 }}>
+                      <p style={{ ...mono, fontSize: "11px", color: "#9CA3AF", marginTop: 8, opacity: 0.6 }}>
                         {t({ ko: "에이전트 관리에서 CLI를 먼저 설정하세요", en: "Set up a CLI provider in Agent Manager first", ja: "先にエージェント管理でCLIを設定してください", zh: "请先在代理管理中设置 CLI" })}
                       </p>
                     </div>
@@ -588,8 +588,8 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onGi
                               className="flex items-center gap-3"
                               style={{
                                 padding: "10px 14px",
-                                border: `1.5px solid ${missing ? "rgba(251,113,133,0.5)" : slot.agentId ? "var(--th-accent)" : "var(--th-border)"}`,
-                                background: slot.agentId ? "rgba(245,158,11,0.03)" : "var(--th-bg-surface)",
+                                border: `1.5px solid ${missing ? "rgba(251,113,133,0.5)" : slot.agentId ? "#3B82F6" : "#E5E7EB"}`,
+                                background: slot.agentId ? "rgba(245,158,11,0.03)" : "#F9FAFB",
                                 borderBottom: isOpen ? "none" : undefined,
                                 transition: "border-color 0.2s, background 0.2s",
                               }}
@@ -604,8 +604,8 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onGi
                                   width: "60px", flexShrink: 0,
                                   padding: "4px 8px",
                                   textAlign: "center",
-                                  background: slot.agentId ? "var(--th-accent)" : "var(--th-bg-elevated)",
-                                  color: slot.agentId ? "var(--th-accent-text)" : "var(--th-text-muted)",
+                                  background: slot.agentId ? "#3B82F6" : "#FFFFFF",
+                                  color: slot.agentId ? "#FFFFFF" : "#9CA3AF",
                                   border: "none", outline: "none",
                                 }}
                               />
@@ -613,22 +613,22 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onGi
                               <div className="flex-1 min-w-0">
                                 {assignedAgent ? (
                                   <div className="flex items-center gap-2">
-                                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, color: "var(--th-accent)" }}>
+                                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, color: "#3B82F6" }}>
                                       <rect x="3" y="5" width="10" height="8" rx="2" stroke="currentColor" strokeWidth="1.4"/>
                                       <circle cx="6" cy="9" r="1" fill="currentColor"/>
                                       <circle cx="10" cy="9" r="1" fill="currentColor"/>
                                       <path d="M6 4V3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
                                       <path d="M10 4V3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
                                     </svg>
-                                    <span style={{ ...display, fontSize: "13px", fontWeight: 600, color: "var(--th-text-heading)" }}>
+                                    <span style={{ ...display, fontSize: "13px", fontWeight: 600, color: "#111827" }}>
                                       {assignedAgent.name_ko || assignedAgent.name}
                                     </span>
-                                    <span style={{ ...mono, fontSize: "10px", color: "var(--th-text-muted)" }}>
+                                    <span style={{ ...mono, fontSize: "10px", color: "#9CA3AF" }}>
                                       {PROVIDER_LABEL[assignedAgent.cli_provider] ?? assignedAgent.cli_provider}
                                     </span>
                                   </div>
                                 ) : (
-                                  <span style={{ fontSize: "12px", color: missing ? "#fb7185" : "var(--th-text-muted)" }}>
+                                  <span style={{ fontSize: "12px", color: missing ? "#fb7185" : "#9CA3AF" }}>
                                     {t({ ko: "에이전트를 선택하세요", en: "Select an agent", ja: "エージェントを選択", zh: "选择代理" })}
                                   </span>
                                 )}
@@ -639,9 +639,9 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onGi
                                 onClick={() => setOpenSlotIdx(isOpen ? null : idx)}
                                 style={{
                                   ...mono, fontSize: "10px", padding: "4px 10px", flexShrink: 0,
-                                  border: `1px solid ${isOpen ? "var(--th-accent)" : "var(--th-border)"}`,
+                                  border: `1px solid ${isOpen ? "#3B82F6" : "#E5E7EB"}`,
                                   background: "transparent",
-                                  color: isOpen ? "var(--th-accent)" : "var(--th-text-muted)",
+                                  color: isOpen ? "#3B82F6" : "#9CA3AF",
                                   cursor: "pointer",
                                   display: "flex", alignItems: "center", gap: 4,
                                 }}
@@ -659,7 +659,7 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onGi
                                   style={{
                                     flexShrink: 0, padding: "4px", cursor: "pointer",
                                     background: "none", border: "none",
-                                    color: "var(--th-text-muted)", opacity: 0.5,
+                                    color: "#9CA3AF", opacity: 0.5,
                                   }}
                                 >
                                   <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
@@ -670,7 +670,7 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onGi
                             </div>
                             {/* Dropdown */}
                             {isOpen && (
-                              <div style={{ border: "1.5px solid var(--th-accent)", borderTop: "none", maxHeight: 200, overflowY: "auto", background: "var(--th-bg-elevated)" }}>
+                              <div style={{ border: "1.5px solid #3B82F6", borderTop: "none", maxHeight: 200, overflowY: "auto", background: "#FFFFFF" }}>
                                 {cliAgents.map(agent => {
                                   const isCurrent = agent.id === slot.agentId;
                                   return (
@@ -684,12 +684,12 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onGi
                                       className="w-full flex items-center gap-3"
                                       style={{
                                         padding: "10px 14px",
-                                        borderBottom: "1px solid var(--th-border)",
+                                        borderBottom: "1px solid #E5E7EB",
                                         background: isCurrent ? "rgba(245,158,11,0.08)" : "transparent",
                                         cursor: "pointer", textAlign: "left",
                                       }}
                                     >
-                                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, color: isCurrent ? "var(--th-accent)" : "var(--th-text-muted)" }}>
+                                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, color: isCurrent ? "#3B82F6" : "#9CA3AF" }}>
                                         <rect x="3" y="5" width="10" height="8" rx="2" stroke="currentColor" strokeWidth="1.4"/>
                                         <circle cx="6" cy="9" r="1" fill="currentColor"/>
                                         <circle cx="10" cy="9" r="1" fill="currentColor"/>
@@ -698,21 +698,21 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onGi
                                       </svg>
                                       <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2">
-                                          <span style={{ ...display, fontSize: "13px", fontWeight: 600, color: isCurrent ? "var(--th-accent)" : "var(--th-text-heading)" }}>
+                                          <span style={{ ...display, fontSize: "13px", fontWeight: 600, color: isCurrent ? "#3B82F6" : "#111827" }}>
                                             {agent.name_ko || agent.name}
                                           </span>
-                                          <span style={{ ...mono, fontSize: "10px", color: "var(--th-text-muted)" }}>
+                                          <span style={{ ...mono, fontSize: "10px", color: "#9CA3AF" }}>
                                             {PROVIDER_LABEL[agent.cli_provider] ?? agent.cli_provider}
                                           </span>
                                         </div>
                                         {agent.department && (
-                                          <span style={{ ...mono, fontSize: "10px", color: "var(--th-text-muted)", opacity: 0.6 }}>
+                                          <span style={{ ...mono, fontSize: "10px", color: "#9CA3AF", opacity: 0.6 }}>
                                             {agent.department.name_ko ?? agent.department.name}
                                           </span>
                                         )}
                                       </div>
                                       {isCurrent && (
-                                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, color: "var(--th-accent)" }}>
+                                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, color: "#3B82F6" }}>
                                           <path d="M2.5 7L5.5 10L11.5 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
                                         </svg>
                                       )}
@@ -732,9 +732,9 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onGi
                         className="w-full flex items-center justify-center gap-2"
                         style={{
                           ...mono, fontSize: "11px", padding: "10px",
-                          border: "1px dashed var(--th-border)",
+                          border: "1px dashed #E5E7EB",
                           background: "transparent",
-                          color: "var(--th-text-muted)",
+                          color: "#9CA3AF",
                           cursor: "pointer",
                         }}
                       >
@@ -760,13 +760,13 @@ export default function ProjectCreateModal({ categories, agents, onConfirm, onGi
         {/* ── Footer: clean and focused ── */}
         <div
           className="flex items-center justify-between gap-2 px-5 py-3 flex-shrink-0"
-          style={{ borderTop: "1px solid var(--th-border)", fontFamily: "var(--th-font-mono)" }}
+          style={{ borderTop: "1px solid #E5E7EB", fontFamily: "var(--th-font-mono)" }}
         >
           {step === "github" ? (
             <button
               type="button"
               onClick={() => setStep("category")}
-              style={{ ...mono, fontSize: "11px", color: "var(--th-text-muted)", background: "none", border: "none", cursor: "pointer" }}
+              style={{ ...mono, fontSize: "11px", color: "#9CA3AF", background: "none", border: "none", cursor: "pointer" }}
             >
               {t({ ko: "← 일반 생성", en: "← Normal create", ja: "← 通常作成", zh: "← 普通创建" })}
             </button>

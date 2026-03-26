@@ -38,12 +38,12 @@ function CliSection({ label, open, onToggle, action, children }: {
   label: string; open: boolean; onToggle: () => void; action?: React.ReactNode; children: React.ReactNode;
 }) {
   return (
-    <div style={{ borderBottom: "1px solid var(--th-border)" }}>
+    <div style={{ borderBottom: "1px solid #E5E7EB" }}>
       <div
-        style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 14px", background: "var(--th-bg-elevated)", cursor: "pointer" }}
+        style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 14px", background: "#FFFFFF", cursor: "pointer" }}
         onClick={onToggle}
       >
-        <span style={{ ...mono, fontSize: "9px", color: "var(--th-accent)", fontWeight: 700, display: "inline-flex" }}>
+        <span style={{ ...mono, fontSize: "9px", color: "#3B82F6", fontWeight: 700, display: "inline-flex" }}>
           {open ? (
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
               <polyline points="6 9 12 15 18 9" />
@@ -54,13 +54,13 @@ function CliSection({ label, open, onToggle, action, children }: {
             </svg>
           )}
         </span>
-        <span style={{ ...mono, fontSize: "9px", fontWeight: 700, letterSpacing: "0.08em", color: "var(--th-text-muted)", flex: 1 }}>
+        <span style={{ ...mono, fontSize: "9px", fontWeight: 700, letterSpacing: "0.08em", color: "#9CA3AF", flex: 1 }}>
           {label}
         </span>
         {action && <div onClick={(e) => e.stopPropagation()}>{action}</div>}
       </div>
       {open && (
-        <div style={{ background: "var(--th-bg-primary)" }}>
+        <div style={{ background: "#F3F4F6" }}>
           {children}
         </div>
       )}
@@ -88,7 +88,7 @@ export default function DeliverableCard({ report, artifacts, agent, agents, onAr
   const deptName = preferKo ? report.dept_name_ko || report.dept_name : report.dept_name || report.dept_name_ko;
 
   const isDone = report.status === "done";
-  const statusColor = isDone ? "#4ade80" : "var(--th-accent)";
+  const statusColor = isDone ? "#4ade80" : "#3B82F6";
   const statusLabel = isDone
     ? t({ ko: "완료", en: "DONE",   ja: "完了",     zh: "完成" })
     : t({ ko: "리뷰", en: "REVIEW", ja: "レビュー", zh: "审核" });
@@ -114,7 +114,7 @@ export default function DeliverableCard({ report, artifacts, agent, agents, onAr
 
   return (
     <>
-      <div style={{ borderBottom: "1px solid var(--th-border)", borderLeft: `3px solid ${statusColor}` }}>
+      <div style={{ borderBottom: "1px solid #E5E7EB", borderLeft: `3px solid ${statusColor}` }}>
 
         {/* ── 행 헤더 (항상 표시) ── */}
         <button
@@ -127,17 +127,17 @@ export default function DeliverableCard({ report, artifacts, agent, agents, onAr
             alignItems: "center",
             gap: 8,
             padding: "10px 14px",
-            background: expanded ? "var(--th-bg-elevated)" : "var(--th-bg-primary)",
+            background: expanded ? "#FFFFFF" : "#F3F4F6",
             border: "none",
             cursor: "pointer",
             textAlign: "left",
             transition: "background 0.1s",
           }}
-          onMouseEnter={(e) => { if (!expanded) (e.currentTarget as HTMLElement).style.background = "var(--th-bg-elevated)"; }}
-          onMouseLeave={(e) => { if (!expanded) (e.currentTarget as HTMLElement).style.background = "var(--th-bg-primary)"; }}
+          onMouseEnter={(e) => { if (!expanded) (e.currentTarget as HTMLElement).style.background = "#FFFFFF"; }}
+          onMouseLeave={(e) => { if (!expanded) (e.currentTarget as HTMLElement).style.background = "#F3F4F6"; }}
         >
           {/* 토글 아이콘 */}
-          <span style={{ fontSize: "9px", color: "var(--th-text-muted)", width: 10, flexShrink: 0, display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
+          <span style={{ fontSize: "9px", color: "#9CA3AF", width: 10, flexShrink: 0, display: "inline-flex", alignItems: "center", justifyContent: "center" }}>
             {expanded ? (
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                 <polyline points="6 9 12 15 18 9" />
@@ -158,37 +158,37 @@ export default function DeliverableCard({ report, artifacts, agent, agents, onAr
           <AgentAvatar agent={agent ?? undefined} agents={agents} size={20} />
 
           {/* 제목 */}
-          <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--th-text-primary)", flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          <span style={{ fontSize: "11px", fontWeight: 700, color: "#111827", flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {report.title}
           </span>
 
           {/* 에이전트명 */}
-          <span style={{ fontSize: "9px", color: "var(--th-text-muted)", width: 130, flexShrink: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          <span style={{ fontSize: "9px", color: "#9CA3AF", width: 130, flexShrink: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {agentName}{deptName ? ` · ${deptName}` : ""}
           </span>
 
           {/* 완료일시 */}
-          <span style={{ fontSize: "9px", color: "var(--th-text-muted)", width: 120, flexShrink: 0 }}>
+          <span style={{ fontSize: "9px", color: "#9CA3AF", width: 120, flexShrink: 0 }}>
             {formatDate(report.completed_at)}
           </span>
 
           {/* 파일 수 */}
-          <span style={{ fontSize: "9px", color: hasArtifacts ? "var(--th-text-secondary)" : "var(--th-text-muted)", width: 80, flexShrink: 0, opacity: hasArtifacts ? 1 : 0.3 }}>
+          <span style={{ fontSize: "9px", color: hasArtifacts ? "#6B7280" : "#9CA3AF", width: 80, flexShrink: 0, opacity: hasArtifacts ? 1 : 0.3 }}>
             {artifacts === null ? "…" : hasArtifacts ? `${artifacts.length} file${artifacts.length !== 1 ? "s" : ""} (${formatSize(totalSize)})` : "—"}
           </span>
         </button>
 
         {/* ── 확장 바디 ── */}
         {expanded && (
-          <div style={{ borderTop: "1px solid var(--th-border)" }}>
+          <div style={{ borderTop: "1px solid #E5E7EB" }}>
             {/* expand/collapse all */}
-            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 14px", borderBottom: "1px solid var(--th-border)", background: "var(--th-bg-primary)" }}>
-              <span style={{ ...mono, fontSize: "9px", color: "var(--th-accent)", fontWeight: 700 }}>$</span>
-              <span style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)" }}>cat report/{report.id.slice(0, 8)}</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "5px 14px", borderBottom: "1px solid #E5E7EB", background: "#F3F4F6" }}>
+              <span style={{ ...mono, fontSize: "9px", color: "#3B82F6", fontWeight: 700 }}>$</span>
+              <span style={{ ...mono, fontSize: "9px", color: "#9CA3AF" }}>cat report/{report.id.slice(0, 8)}</span>
               <div style={{ marginLeft: "auto", display: "flex", gap: 8, alignItems: "center" }}>
-                <button type="button" onClick={expandAll}   style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", background: "none", border: "none", cursor: "pointer", padding: 0 }}>{t({ ko: "모두 펼치기", en: "expand all", ja: "すべて展開", zh: "展开全部" })}</button>
-                <span style={{ fontSize: "9px", color: "var(--th-border)" }}>|</span>
-                <button type="button" onClick={collapseAll} style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", background: "none", border: "none", cursor: "pointer", padding: 0 }}>{t({ ko: "모두 접기", en: "collapse all", ja: "すべて折りたたむ", zh: "折叠全部" })}</button>
+                <button type="button" onClick={expandAll}   style={{ ...mono, fontSize: "9px", color: "#9CA3AF", background: "none", border: "none", cursor: "pointer", padding: 0 }}>{t({ ko: "모두 펼치기", en: "expand all", ja: "すべて展開", zh: "展开全部" })}</button>
+                <span style={{ fontSize: "9px", color: "#E5E7EB" }}>|</span>
+                <button type="button" onClick={collapseAll} style={{ ...mono, fontSize: "9px", color: "#9CA3AF", background: "none", border: "none", cursor: "pointer", padding: 0 }}>{t({ ko: "모두 접기", en: "collapse all", ja: "すべて折りたたむ", zh: "折叠全部" })}</button>
               </div>
             </div>
 
@@ -200,7 +200,7 @@ export default function DeliverableCard({ report, artifacts, agent, agents, onAr
                 onToggle={() => toggleSection("result")}
               >
                 <div style={{ padding: "10px 14px", borderLeft: "2px solid #4ade8033" }}>
-                  <pre style={{ ...mono, fontSize: "10px", color: "var(--th-text-secondary)", whiteSpace: "pre-wrap", wordBreak: "break-word", margin: 0, maxHeight: 140, overflowY: "auto", lineHeight: 1.7 }}>
+                  <pre style={{ ...mono, fontSize: "10px", color: "#6B7280", whiteSpace: "pre-wrap", wordBreak: "break-word", margin: 0, maxHeight: 140, overflowY: "auto", lineHeight: 1.7 }}>
                     {report.result.length > 600 ? `${report.result.slice(0, 600)}…` : report.result}
                   </pre>
                 </div>
@@ -223,7 +223,7 @@ export default function DeliverableCard({ report, artifacts, agent, agents, onAr
                 open={!!sectionOpen.artifacts}
                 onToggle={() => toggleSection("artifacts")}
               >
-                <div style={{ ...mono, padding: "8px 14px", fontSize: "10px", color: "var(--th-text-muted)" }}>loading…</div>
+                <div style={{ ...mono, padding: "8px 14px", fontSize: "10px", color: "#9CA3AF" }}>loading…</div>
               </CliSection>
             ) : (
               <CliSection
@@ -235,7 +235,7 @@ export default function DeliverableCard({ report, artifacts, agent, agents, onAr
                     <button
                       onClick={() => uploadInputRef.current?.click()}
                       disabled={uploading}
-                      style={{ ...mono, fontSize: "9px", fontWeight: 700, padding: "2px 8px", border: "1px solid var(--th-border)", background: uploading ? "var(--th-bg-elevated)" : "transparent", color: uploading ? "var(--th-text-muted)" : "var(--th-text-secondary)", cursor: uploading ? "not-allowed" : "pointer", letterSpacing: "0.04em" }}
+                      style={{ ...mono, fontSize: "9px", fontWeight: 700, padding: "2px 8px", border: "1px solid #E5E7EB", background: uploading ? "#FFFFFF" : "transparent", color: uploading ? "#9CA3AF" : "#6B7280", cursor: uploading ? "not-allowed" : "pointer", letterSpacing: "0.04em" }}
                       title={t({ ko: "파일 업로드", en: "Upload files", ja: "ファイルアップロード", zh: "上传文件" })}
                     >
                       {uploading ? "…" : "↑ Upload"}
@@ -244,7 +244,7 @@ export default function DeliverableCard({ report, artifacts, agent, agents, onAr
                       <a
                         href={getTaskArtifactsZipUrl(report.id)}
                         download
-                        style={{ ...mono, fontSize: "9px", fontWeight: 700, padding: "2px 8px", border: "1px solid rgba(245,158,11,0.4)", background: "rgba(245,158,11,0.08)", color: "var(--th-accent)", textDecoration: "none", letterSpacing: "0.04em" }}
+                        style={{ ...mono, fontSize: "9px", fontWeight: 700, padding: "2px 8px", border: "1px solid rgba(245,158,11,0.4)", background: "rgba(245,158,11,0.08)", color: "#3B82F6", textDecoration: "none", letterSpacing: "0.04em" }}
                         title={t({ ko: "전체 ZIP 다운로드", en: "Download all as ZIP", ja: "全てZIPでDL", zh: "全部下载ZIP" })}
                       >
                         <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
@@ -261,7 +261,7 @@ export default function DeliverableCard({ report, artifacts, agent, agents, onAr
                 }
               >
                 {artifacts.length === 0 ? (
-                  <div style={{ ...mono, padding: "8px 14px", fontSize: "10px", color: "var(--th-text-muted)", opacity: 0.4 }}>
+                  <div style={{ ...mono, padding: "8px 14px", fontSize: "10px", color: "#9CA3AF", opacity: 0.4 }}>
                     {t({ ko: "파일 없음 — ↑ Upload로 추가하세요", en: "No files — click ↑ Upload to add", ja: "ファイルなし — ↑ Uploadで追加", zh: "无文件 — 点击 ↑ Upload 添加" })}
                   </div>
                 ) : (

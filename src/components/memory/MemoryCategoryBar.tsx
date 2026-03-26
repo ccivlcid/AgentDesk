@@ -29,19 +29,19 @@ export default function MemoryCategoryBar({
               className="px-3 py-1.5 text-xs font-medium font-mono border transition-all"
               style={{
                 borderRadius: 6,
-                background: isActive ? "rgba(251,191,36,0.1)" : "var(--th-bg-elevated)",
-                borderColor: isActive ? "rgba(251,191,36,0.5)" : "var(--th-border)",
-                color: isActive ? "var(--th-accent)" : "var(--th-text-secondary)",
+                background: isActive ? "rgba(251,191,36,0.1)" : "#FFFFFF",
+                borderColor: isActive ? "rgba(251,191,36,0.5)" : "#E5E7EB",
+                color: isActive ? "#3B82F6" : "#6B7280",
               }}
             >
               {CATEGORY_ICONS[category]} {categoryLabel(category, t)}
-              <span className="ml-1" style={{ color: "var(--th-text-muted)" }}>{categoryCounts[category] || 0}</span>
+              <span className="ml-1" style={{ color: "#9CA3AF" }}>{categoryCounts[category] || 0}</span>
             </button>
           );
         })}
       </div>
 
-      <div className="text-xs px-1 font-mono" style={{ color: "var(--th-text-muted)" }}>
+      <div className="text-xs px-1 font-mono" style={{ color: "#9CA3AF" }}>
         {filteredLength}
         {t({ ko: "개 메모리 표시중", en: " entries shown", ja: "件のメモリを表示中", zh: " 条条目已显示" })}
         {search &&

@@ -40,13 +40,13 @@ export default function ProjectDropdown({
     <div
       ref={ref}
       className="absolute left-0 right-0 top-full z-50 mt-1 overflow-hidden rounded-none
-                 border border-[var(--th-border-strong)] bg-[var(--th-bg-elevated)]"
+                 border border-[#D1D5DB] bg-[#FFFFFF]"
       style={{ fontFamily: "var(--th-font-mono)" }}
     >
       {/* 프로젝트 목록 */}
       <div className="max-h-48 overflow-y-auto">
         {projects.length === 0 ? (
-          <div className="px-3 py-3 text-xs text-[var(--th-text-muted)] text-center">
+          <div className="px-3 py-3 text-xs text-[#9CA3AF] text-center">
             프로젝트가 없어요
           </div>
         ) : (
@@ -60,8 +60,8 @@ export default function ProjectDropdown({
                 className={[
                   "w-full flex items-center gap-2 px-3 py-2 text-left text-xs transition-colors",
                   isActive
-                    ? "bg-[var(--th-active-bg)] text-[var(--th-text)]"
-                    : "hover:bg-[var(--th-bg-surface)] text-[var(--th-text)]",
+                    ? "bg-[#EBF5FF] text-[#111827]"
+                    : "hover:bg-[#F9FAFB] text-[#111827]",
                 ].join(" ")}
               >
                 <span className="flex-1 truncate font-medium">{project.name}</span>
@@ -69,7 +69,7 @@ export default function ProjectDropdown({
                   <CategoryBadge label={cat.name_ko ?? cat.name} color={cat.color} />
                 )}
                 {isActive && (
-                  <svg width="10" height="10" viewBox="0 0 20 20" fill="currentColor" className="flex-shrink-0 text-[var(--th-accent)]">
+                  <svg width="10" height="10" viewBox="0 0 20 20" fill="currentColor" className="flex-shrink-0 text-[#3B82F6]">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" />
                   </svg>
                 )}
@@ -80,11 +80,11 @@ export default function ProjectDropdown({
       </div>
 
       {/* 구분선 + 새 프로젝트 */}
-      <div className="border-t border-[var(--th-border)]">
+      <div className="border-t border-[#E5E7EB]">
         <button
           onClick={() => { onCreateNew(); onClose(); }}
-          className="w-full flex items-center gap-2 px-3 py-2 text-xs text-[var(--th-accent)]
-                     hover:bg-[var(--th-bg-surface)] transition-colors"
+          className="w-full flex items-center gap-2 px-3 py-2 text-xs text-[#3B82F6]
+                     hover:bg-[#F9FAFB] transition-colors"
         >
           <svg width="12" height="12" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M10 4v12M4 10h12" />

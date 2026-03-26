@@ -48,7 +48,7 @@ export default function MemoryGrid({
     return (
       <div className="text-center py-16">
         <div className="text-4xl mb-3">&#x1F50D;</div>
-        <div className="text-sm font-mono" style={{ color: "var(--th-text-muted)" }}>
+        <div className="text-sm font-mono" style={{ color: "#9CA3AF" }}>
           {t({
             ko: "\uAC80\uC0C9 \uACB0\uACFC\uAC00 \uC5C6\uC2B5\uB2C8\uB2E4",
             en: "No search results",
@@ -56,7 +56,7 @@ export default function MemoryGrid({
             zh: "\u6CA1\u6709\u641C\u7D22\u7ED3\u679C",
           })}
         </div>
-        <div className="text-xs mt-1 font-mono" style={{ color: "var(--th-text-muted)" }}>
+        <div className="text-xs mt-1 font-mono" style={{ color: "#9CA3AF" }}>
           {t({
             ko: "\uB2E4\uB978 \uD0A4\uC6CC\uB4DC\uB85C \uAC80\uC0C9\uD574\uBCF4\uC138\uC694",
             en: "Try a different keyword",
@@ -81,17 +81,17 @@ export default function MemoryGrid({
             className={`relative p-4 transition-all group ${
               !entry.enabled ? "opacity-50" : ""
             } ${isDeleting ? "pointer-events-none opacity-30" : ""}`}
-            style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}
+            style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "#FFFFFF" }}
           >
             {/* Top: icon + title/desc + learned avatars */}
             <div className="mb-3 flex items-start justify-between gap-2">
               <div className="flex min-w-0 items-start gap-3">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center text-sm font-bold" style={{ borderRadius: 0, background: "var(--th-bg-primary)" }}>
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center text-sm font-bold" style={{ borderRadius: 0, background: "#F3F4F6" }}>
                   {CATEGORY_ICONS[entry.category] || "\uD83D\uDCDD"}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-semibold font-mono" style={{ color: "var(--th-text-primary)" }}>{entry.title}</div>
-                  <div className="mt-0.5 truncate text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
+                  <div className="truncate text-sm font-semibold font-mono" style={{ color: "#111827" }}>{entry.title}</div>
+                  <div className="mt-0.5 truncate text-xs font-mono" style={{ color: "#9CA3AF" }}>
                     {entry.description || entry.content.slice(0, 60)}
                   </div>
                 </div>
@@ -127,8 +127,8 @@ export default function MemoryGrid({
                 {CATEGORY_ICONS[entry.category]} {categoryLabel(entry.category, t)}
               </span>
               <div className="flex items-center gap-2 shrink-0">
-                <span className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
-                  <span className="font-medium font-mono" style={{ color: "var(--th-accent)" }}>P{entry.priority}</span>
+                <span className="text-xs font-mono" style={{ color: "#9CA3AF" }}>
+                  <span className="font-medium font-mono" style={{ color: "#3B82F6" }}>P{entry.priority}</span>
                 </span>
                 <div className="flex flex-col gap-1">
                   <button
@@ -162,7 +162,7 @@ export default function MemoryGrid({
                   <button
                     onClick={() => handleCopy(entry)}
                     className="px-2 py-1 text-[10px] font-mono transition-all"
-                    style={{ borderRadius: 0, background: "rgba(251,191,36,0.1)", color: "var(--th-accent)", border: "1px solid rgba(251,191,36,0.35)" }}
+                    style={{ borderRadius: 0, background: "rgba(251,191,36,0.1)", color: "#3B82F6", border: "1px solid rgba(251,191,36,0.35)" }}
                     title={entry.content.slice(0, 80)}
                   >
                     {copiedEntryId === entry.id
@@ -182,7 +182,7 @@ export default function MemoryGrid({
                     ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/25"
                     : ""
                 }`}
-                style={entry.enabled ? { borderRadius: 0 } : { borderRadius: 0, background: "var(--th-bg-elevated)", color: "var(--th-text-muted)", border: "1px solid var(--th-border)" }}
+                style={entry.enabled ? { borderRadius: 0 } : { borderRadius: 0, background: "#FFFFFF", color: "#9CA3AF", border: "1px solid #E5E7EB" }}
                 title={entry.enabled
                   ? t({ ko: "\uBE44\uD65C\uC131\uD654", en: "Disable", ja: "\u7121\u52B9\u5316", zh: "\u7981\u7528" })
                   : t({ ko: "\uD65C\uC131\uD654", en: "Enable", ja: "\u6709\u52B9\u5316", zh: "\u542F\u7528" })}
@@ -194,7 +194,7 @@ export default function MemoryGrid({
               <button
                 onClick={() => onEdit(entry)}
                 className="px-1.5 py-0.5 text-[10px] font-mono transition-all"
-                style={{ borderRadius: 0, background: "rgba(251,191,36,0.1)", color: "var(--th-accent)", border: "1px solid rgba(251,191,36,0.35)" }}
+                style={{ borderRadius: 0, background: "rgba(251,191,36,0.1)", color: "#3B82F6", border: "1px solid rgba(251,191,36,0.35)" }}
               >
                 {t({ ko: "\uC218\uC815", en: "Edit", ja: "\u7DE8\u96C6", zh: "\u7F16\u8F91" })}
               </button>

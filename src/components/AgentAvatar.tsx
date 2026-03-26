@@ -56,14 +56,14 @@ export default function AgentAvatar({
       {agent?.avatar_emoji?.trim() ? (
         <span>{agent.avatar_emoji.trim()}</span>
       ) : (
-        <IconRobot size={Math.max(14, Math.round(size * 0.55))} style={{ color: "var(--th-text-muted)" }} />
+        <IconRobot size={Math.max(14, Math.round(size * 0.55))} style={{ color: "#9CA3AF" }} />
       )}
     </div>
   );
 
   return (
     <div
-      className={`${roundedClass} bg-[var(--th-bg-elevated)] flex-shrink-0 relative ${className}`}
+      className={`${roundedClass} bg-[#FFFFFF] flex-shrink-0 relative ${className}`}
       style={{ width: size, height: size, ...pulseStyle }}
     >
       <style>{`
@@ -78,11 +78,11 @@ export default function AgentAvatar({
       {/* 상태 인디케이터 도트 */}
       {agent?.status && (
         <div 
-          className="absolute bottom-0 right-0 w-[25%] h-[25%] rounded-full border border-[var(--th-bg-surface)]"
+          className="absolute bottom-0 right-0 w-[25%] h-[25%] rounded-full border border-[#F9FAFB]"
           style={{ 
-            background: agent.status === "working" ? "var(--th-success)" : 
-                        agent.status === "idle" ? "var(--th-accent)" : "var(--th-text-muted)",
-            boxShadow: agent.status === "working" ? "0 0 4px var(--th-success)" : "none"
+            background: agent.status === "working" ? "#059669" : 
+                        agent.status === "idle" ? "#3B82F6" : "#9CA3AF",
+            boxShadow: agent.status === "working" ? "0 0 4px #059669" : "none"
           }}
         />
       )}

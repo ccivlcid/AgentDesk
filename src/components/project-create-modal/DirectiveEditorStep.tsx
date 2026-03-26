@@ -99,9 +99,9 @@ export default function DirectiveEditorStep({
           className="flex items-center gap-1 transition-colors"
           style={{
             ...mono, fontSize: "10px", padding: "5px 10px",
-            border: "1px solid var(--th-border)",
+            border: "1px solid #E5E7EB",
             background: "transparent",
-            color: "var(--th-text-muted)",
+            color: "#9CA3AF",
             cursor: "pointer",
           }}
         >
@@ -121,9 +121,9 @@ export default function DirectiveEditorStep({
             className="flex items-center gap-1 transition-colors"
             style={{
               ...mono, fontSize: "10px", padding: "5px 10px",
-              border: `1px solid ${showTemplateMenu ? "var(--th-accent)" : "var(--th-border)"}`,
+              border: `1px solid ${showTemplateMenu ? "#3B82F6" : "#E5E7EB"}`,
               background: "transparent",
-              color: showTemplateMenu ? "var(--th-accent)" : "var(--th-text-muted)",
+              color: showTemplateMenu ? "#3B82F6" : "#9CA3AF",
               cursor: "pointer",
             }}
           >
@@ -136,8 +136,8 @@ export default function DirectiveEditorStep({
             <div
               className="absolute right-0 top-full mt-1 z-50 w-60"
               style={{
-                border: "1px solid var(--th-border)",
-                background: "var(--th-bg-elevated)",
+                border: "1px solid #E5E7EB",
+                background: "#FFFFFF",
                 boxShadow: "0 8px 24px rgba(0,0,0,0.4)",
                 maxHeight: 280,
                 overflowY: "auto",
@@ -154,24 +154,24 @@ export default function DirectiveEditorStep({
                   className="w-full text-left flex items-center gap-3 transition-colors"
                   style={{
                     padding: "10px 14px",
-                    borderBottom: "1px solid var(--th-border)",
+                    borderBottom: "1px solid #E5E7EB",
                     background: tpl.slug === directiveTypeSlug ? "rgba(245,158,11,0.06)" : "transparent",
                     cursor: "pointer",
                   }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = "var(--th-hover-overlay-subtle)"; }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(0,0,0,0.03)"; }}
                   onMouseLeave={(e) => { e.currentTarget.style.background = tpl.slug === directiveTypeSlug ? "rgba(245,158,11,0.06)" : "transparent"; }}
                 >
                   <DirectiveIcon icon={tpl.icon} />
                   <div className="flex-1 min-w-0">
-                    <div style={{ ...mono, fontSize: "11px", color: tpl.slug === directiveTypeSlug ? "var(--th-accent)" : "var(--th-text-primary)" }}>
+                    <div style={{ ...mono, fontSize: "11px", color: tpl.slug === directiveTypeSlug ? "#3B82F6" : "#111827" }}>
                       {tpl.name_ko}
                     </div>
-                    <div className="truncate" style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", marginTop: 1 }}>
+                    <div className="truncate" style={{ ...mono, fontSize: "9px", color: "#9CA3AF", marginTop: 1 }}>
                       {tpl.description_ko}
                     </div>
                   </div>
                   {tpl.slug === directiveTypeSlug && (
-                    <svg width="12" height="12" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, color: "var(--th-accent)" }}>
+                    <svg width="12" height="12" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, color: "#3B82F6" }}>
                       <path d="M2.5 7L5.5 10L11.5 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                   )}
@@ -199,9 +199,9 @@ export default function DirectiveEditorStep({
           fontSize: "11px",
           lineHeight: "1.7",
           padding: "16px",
-          border: "1px solid var(--th-border)",
-          background: "var(--th-bg-elevated)",
-          color: "var(--th-text-primary)",
+          border: "1px solid #E5E7EB",
+          background: "#FFFFFF",
+          color: "#111827",
           minHeight: "300px",
           maxHeight: "400px",
         }}
@@ -209,7 +209,7 @@ export default function DirectiveEditorStep({
 
       {/* Status bar */}
       <div className="flex items-center justify-between">
-        <span style={{ ...mono, fontSize: "10px", color: fileError ? "#fb7185" : "var(--th-text-muted)" }}>
+        <span style={{ ...mono, fontSize: "10px", color: fileError ? "#fb7185" : "#9CA3AF" }}>
           {fileError ?? t({
             ko: "비워두면 디렉티브 없이 진행",
             en: "Leave empty to skip",
@@ -217,7 +217,7 @@ export default function DirectiveEditorStep({
             zh: "留空则跳过",
           })}
         </span>
-        <span style={{ ...mono, fontSize: "10px", color: "var(--th-text-muted)" }}>
+        <span style={{ ...mono, fontSize: "10px", color: "#9CA3AF" }}>
           {directive.length.toLocaleString()} chars
         </span>
       </div>

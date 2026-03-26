@@ -113,31 +113,31 @@ export function ProjectDashboardSection({ t, projectId, isKo }: { t: ProjectI18n
   }
 
   const inputCls = "w-full px-2 py-1 text-xs font-mono outline-none";
-  const inputStyle = { borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" };
+  const inputStyle = { borderRadius: 0, border: "1px solid #E5E7EB", background: "#FFFFFF", color: "#111827" };
   const selectStyle = { ...inputStyle, cursor: "pointer" as const };
 
   return (
-    <div className="min-w-0 p-4 space-y-4" style={{ border: "1px solid var(--th-border)", borderRadius: 0, background: "var(--th-bg-surface)" }}>
-      <h4 className="text-xs font-bold uppercase tracking-widest" style={{ color: "var(--th-text-heading)", fontFamily: "var(--th-font-mono)" }}>
+    <div className="min-w-0 p-4 space-y-4" style={{ border: "1px solid #E5E7EB", borderRadius: 0, background: "#F9FAFB" }}>
+      <h4 className="text-xs font-bold uppercase tracking-widest" style={{ color: "#111827", fontFamily: "var(--th-font-mono)" }}>
         {t({ ko: "대시보드", en: "Dashboard", ja: "ダッシュボード", zh: "仪表板" })}
       </h4>
 
       {loading ? (
-        <p className="text-xs font-mono" style={{ color: "var(--th-text-muted)" }}>
+        <p className="text-xs font-mono" style={{ color: "#9CA3AF" }}>
           {t({ ko: "불러오는 중...", en: "Loading...", ja: "読み込み中...", zh: "加载中..." })}
         </p>
       ) : (
         <>
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[11px] font-bold font-mono uppercase tracking-wider" style={{ color: "var(--th-text-muted)" }}>
+              <span className="text-[11px] font-bold font-mono uppercase tracking-wider" style={{ color: "#9CA3AF" }}>
                 {t({ ko: `목표 (${objectives.length})`, en: `Objectives (${objectives.length})`, ja: `目標 (${objectives.length})`, zh: `目标 (${objectives.length})` })}
               </span>
               <button
                 type="button"
                 onClick={() => { setShowNewObj((v) => !v); setNewObjTitle(""); }}
                 className="text-[11px] font-mono px-2 py-0.5"
-                style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "transparent", color: "var(--th-text-muted)", cursor: "pointer" }}
+                style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "transparent", color: "#9CA3AF", cursor: "pointer" }}
               >
                 {showNewObj ? "✕" : "+ " + t({ ko: "추가", en: "Add", ja: "追加", zh: "添加" })}
               </button>
@@ -153,7 +153,7 @@ export function ProjectDashboardSection({ t, projectId, isKo }: { t: ProjectI18n
                   className={inputCls}
                   style={{ ...inputStyle, flex: 1 }}
                 />
-                <button type="submit" disabled={!newObjTitle.trim() || saving} className="px-2 py-1 text-[11px] font-mono font-bold" style={{ borderRadius: 0, background: "var(--th-accent)", color: "var(--th-accent-text)", border: "none", cursor: "pointer" }}>
+                <button type="submit" disabled={!newObjTitle.trim() || saving} className="px-2 py-1 text-[11px] font-mono font-bold" style={{ borderRadius: 0, background: "#3B82F6", color: "#FFFFFF", border: "none", cursor: "pointer" }}>
                   {t({ ko: "등록", en: "Add", ja: "登録", zh: "添加" })}
                 </button>
               </form>
@@ -161,7 +161,7 @@ export function ProjectDashboardSection({ t, projectId, isKo }: { t: ProjectI18n
 
             <div className="space-y-1.5">
               {objectives.length === 0 && !showNewObj && (
-                <p className="text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>
+                <p className="text-[11px] font-mono" style={{ color: "#9CA3AF" }}>
                   {t({ ko: "목표 없음", en: "No objectives", ja: "目標なし", zh: "无目标" })}
                 </p>
               )}
@@ -169,7 +169,7 @@ export function ProjectDashboardSection({ t, projectId, isKo }: { t: ProjectI18n
                 const meta = OBJ_STATUS_META[obj.status];
                 if (editObjId === obj.id) {
                   return (
-                    <div key={obj.id} className="p-2 space-y-1.5" style={{ border: "1px solid var(--th-accent)", background: "var(--th-bg-elevated)" }}>
+                    <div key={obj.id} className="p-2 space-y-1.5" style={{ border: "1px solid #3B82F6", background: "#FFFFFF" }}>
                       <input value={editObjTitle} onChange={(e) => setEditObjTitle(e.target.value)} className={inputCls} style={inputStyle} />
                       <div className="flex gap-2">
                         <select value={editObjStatus} onChange={(e) => setEditObjStatus(e.target.value as ProjectObjective["status"])} className="flex-1 px-2 py-1 text-[11px] font-mono outline-none" style={selectStyle}>
@@ -178,15 +178,15 @@ export function ProjectDashboardSection({ t, projectId, isKo }: { t: ProjectI18n
                           ))}
                         </select>
                         <div className="flex items-center gap-1 flex-1">
-                          <span className="text-[10px] font-mono shrink-0" style={{ color: "var(--th-text-muted)" }}>{editObjProgress}%</span>
+                          <span className="text-[10px] font-mono shrink-0" style={{ color: "#9CA3AF" }}>{editObjProgress}%</span>
                           <input type="range" min={0} max={100} step={5} value={editObjProgress} onChange={(e) => setEditObjProgress(Number(e.target.value))} className="flex-1" />
                         </div>
                       </div>
                       <div className="flex gap-1 justify-end">
-                        <button type="button" onClick={() => setEditObjId(null)} className="px-2 py-0.5 text-[11px] font-mono" style={{ border: "1px solid var(--th-border)", background: "transparent", color: "var(--th-text-muted)", cursor: "pointer", borderRadius: 0 }}>
+                        <button type="button" onClick={() => setEditObjId(null)} className="px-2 py-0.5 text-[11px] font-mono" style={{ border: "1px solid #E5E7EB", background: "transparent", color: "#9CA3AF", cursor: "pointer", borderRadius: 0 }}>
                           {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}
                         </button>
-                        <button type="button" onClick={() => void saveObj()} disabled={saving} className="px-2 py-0.5 text-[11px] font-mono font-bold" style={{ background: "var(--th-accent)", color: "var(--th-accent-text)", border: "none", cursor: "pointer", borderRadius: 0 }}>
+                        <button type="button" onClick={() => void saveObj()} disabled={saving} className="px-2 py-0.5 text-[11px] font-mono font-bold" style={{ background: "#3B82F6", color: "#FFFFFF", border: "none", cursor: "pointer", borderRadius: 0 }}>
                           {t({ ko: "저장", en: "Save", ja: "保存", zh: "保存" })}
                         </button>
                       </div>
@@ -194,21 +194,21 @@ export function ProjectDashboardSection({ t, projectId, isKo }: { t: ProjectI18n
                   );
                 }
                 return (
-                  <div key={obj.id} className="flex items-center gap-2 px-2 py-1.5 group" style={{ border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
+                  <div key={obj.id} className="flex items-center gap-2 px-2 py-1.5 group" style={{ border: "1px solid #E5E7EB", background: "#FFFFFF" }}>
                     <div className="shrink-0" style={{ width: 32, height: 32, position: "relative" }}>
                       <svg viewBox="0 0 32 32" style={{ transform: "rotate(-90deg)" }}>
-                        <circle cx="16" cy="16" r="12" fill="none" stroke="var(--th-border)" strokeWidth="3" />
+                        <circle cx="16" cy="16" r="12" fill="none" stroke="#E5E7EB" strokeWidth="3" />
                         <circle cx="16" cy="16" r="12" fill="none" stroke={meta.color} strokeWidth="3"
                           strokeDasharray={`${(obj.progress / 100) * 75.4} 75.4`} strokeLinecap="butt" />
                       </svg>
                       <span style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 7, fontFamily: "var(--th-font-mono)", color: meta.color }}>{obj.progress}%</span>
                     </div>
-                    <span className="flex-1 min-w-0 text-[11px] font-mono truncate" style={{ color: "var(--th-text-primary)" }}>{obj.title}</span>
+                    <span className="flex-1 min-w-0 text-[11px] font-mono truncate" style={{ color: "#111827" }}>{obj.title}</span>
                     <span className="text-[10px] font-mono px-1.5 py-0.5 shrink-0" style={{ background: meta.bg, color: meta.color, border: `1px solid ${meta.color}44` }}>
                       {isKo ? meta.label_ko : meta.label_en}
                     </span>
                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                      <button type="button" onClick={() => startEditObj(obj)} className="px-1.5 py-0.5 text-[10px] font-mono" style={{ border: "1px solid var(--th-border)", background: "transparent", color: "var(--th-text-muted)", cursor: "pointer", borderRadius: 0 }}>
+                      <button type="button" onClick={() => startEditObj(obj)} className="px-1.5 py-0.5 text-[10px] font-mono" style={{ border: "1px solid #E5E7EB", background: "transparent", color: "#9CA3AF", cursor: "pointer", borderRadius: 0 }}>
                         {t({ ko: "편집", en: "Edit", ja: "編集", zh: "编辑" })}
                       </button>
                       <button type="button" onClick={() => void deleteObj(obj.id)} className="px-1.5 py-0.5 text-[10px] font-mono" style={{ border: "1px solid rgba(239,68,68,0.4)", background: "transparent", color: "#f87171", cursor: "pointer", borderRadius: 0 }}>✕</button>
@@ -221,14 +221,14 @@ export function ProjectDashboardSection({ t, projectId, isKo }: { t: ProjectI18n
 
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[11px] font-bold font-mono uppercase tracking-wider" style={{ color: "var(--th-text-muted)" }}>
+              <span className="text-[11px] font-bold font-mono uppercase tracking-wider" style={{ color: "#9CA3AF" }}>
                 {t({ ko: `게이트 (${gates.length})`, en: `Gates (${gates.length})`, ja: `ゲート (${gates.length})`, zh: `关卡 (${gates.length})` })}
               </span>
               <button
                 type="button"
                 onClick={() => { setShowNewGate((v) => !v); setNewGateTitle(""); }}
                 className="text-[11px] font-mono px-2 py-0.5"
-                style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "transparent", color: "var(--th-text-muted)", cursor: "pointer" }}
+                style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "transparent", color: "#9CA3AF", cursor: "pointer" }}
               >
                 {showNewGate ? "✕" : "+ " + t({ ko: "추가", en: "Add", ja: "追加", zh: "添加" })}
               </button>
@@ -244,7 +244,7 @@ export function ProjectDashboardSection({ t, projectId, isKo }: { t: ProjectI18n
                   className={inputCls}
                   style={{ ...inputStyle, flex: 1 }}
                 />
-                <button type="submit" disabled={!newGateTitle.trim() || saving} className="px-2 py-1 text-[11px] font-mono font-bold" style={{ borderRadius: 0, background: "var(--th-accent)", color: "var(--th-accent-text)", border: "none", cursor: "pointer" }}>
+                <button type="submit" disabled={!newGateTitle.trim() || saving} className="px-2 py-1 text-[11px] font-mono font-bold" style={{ borderRadius: 0, background: "#3B82F6", color: "#FFFFFF", border: "none", cursor: "pointer" }}>
                   {t({ ko: "등록", en: "Add", ja: "登録", zh: "添加" })}
                 </button>
               </form>
@@ -252,7 +252,7 @@ export function ProjectDashboardSection({ t, projectId, isKo }: { t: ProjectI18n
 
             <div className="space-y-1.5">
               {gates.length === 0 && !showNewGate && (
-                <p className="text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>
+                <p className="text-[11px] font-mono" style={{ color: "#9CA3AF" }}>
                   {t({ ko: "게이트 없음", en: "No gates", ja: "ゲートなし", zh: "无关卡" })}
                 </p>
               )}
@@ -260,7 +260,7 @@ export function ProjectDashboardSection({ t, projectId, isKo }: { t: ProjectI18n
                 const meta = GATE_STATUS_META[gate.status];
                 if (editGateId === gate.id) {
                   return (
-                    <div key={gate.id} className="p-2 space-y-1.5" style={{ border: "1px solid var(--th-accent)", background: "var(--th-bg-elevated)" }}>
+                    <div key={gate.id} className="p-2 space-y-1.5" style={{ border: "1px solid #3B82F6", background: "#FFFFFF" }}>
                       <input value={editGateTitle} onChange={(e) => setEditGateTitle(e.target.value)} className={inputCls} style={inputStyle} />
                       <select value={editGateStatus} onChange={(e) => setEditGateStatus(e.target.value as ProjectGate["status"])} className="w-full px-2 py-1 text-[11px] font-mono outline-none" style={selectStyle}>
                         {(Object.keys(GATE_STATUS_META) as ProjectGate["status"][]).map((s) => (
@@ -269,10 +269,10 @@ export function ProjectDashboardSection({ t, projectId, isKo }: { t: ProjectI18n
                       </select>
                       <input value={editGateCriteria} onChange={(e) => setEditGateCriteria(e.target.value)} placeholder={t({ ko: "통과 기준 (선택)", en: "Pass criteria (optional)", ja: "通過基準（任意）", zh: "通过标准（可选）" })} className={inputCls} style={inputStyle} />
                       <div className="flex gap-1 justify-end">
-                        <button type="button" onClick={() => setEditGateId(null)} className="px-2 py-0.5 text-[11px] font-mono" style={{ border: "1px solid var(--th-border)", background: "transparent", color: "var(--th-text-muted)", cursor: "pointer", borderRadius: 0 }}>
+                        <button type="button" onClick={() => setEditGateId(null)} className="px-2 py-0.5 text-[11px] font-mono" style={{ border: "1px solid #E5E7EB", background: "transparent", color: "#9CA3AF", cursor: "pointer", borderRadius: 0 }}>
                           {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}
                         </button>
-                        <button type="button" onClick={() => void saveGate()} disabled={saving} className="px-2 py-0.5 text-[11px] font-mono font-bold" style={{ background: "var(--th-accent)", color: "var(--th-accent-text)", border: "none", cursor: "pointer", borderRadius: 0 }}>
+                        <button type="button" onClick={() => void saveGate()} disabled={saving} className="px-2 py-0.5 text-[11px] font-mono font-bold" style={{ background: "#3B82F6", color: "#FFFFFF", border: "none", cursor: "pointer", borderRadius: 0 }}>
                           {t({ ko: "저장", en: "Save", ja: "保存", zh: "保存" })}
                         </button>
                       </div>
@@ -280,21 +280,21 @@ export function ProjectDashboardSection({ t, projectId, isKo }: { t: ProjectI18n
                   );
                 }
                 return (
-                  <div key={gate.id} className="flex items-start gap-2 px-2 py-1.5 group" style={{ border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
+                  <div key={gate.id} className="flex items-start gap-2 px-2 py-1.5 group" style={{ border: "1px solid #E5E7EB", background: "#FFFFFF" }}>
                     <span className="text-[10px] font-mono px-1.5 py-0.5 shrink-0 mt-0.5" style={{ background: meta.bg, color: meta.color, border: `1px solid ${meta.color}44` }}>
                       {isKo ? meta.label_ko : meta.label_en}
                     </span>
                     <div className="flex-1 min-w-0">
-                      <span className="text-[11px] font-mono" style={{ color: "var(--th-text-primary)" }}>{gate.title}</span>
+                      <span className="text-[11px] font-mono" style={{ color: "#111827" }}>{gate.title}</span>
                       {gate.criteria && (
-                        <p className="text-[10px] font-mono mt-0.5 truncate" style={{ color: "var(--th-text-muted)" }}>{gate.criteria}</p>
+                        <p className="text-[10px] font-mono mt-0.5 truncate" style={{ color: "#9CA3AF" }}>{gate.criteria}</p>
                       )}
                       {gate.due_date && (
-                        <p className="text-[10px] font-mono mt-0.5" style={{ color: "var(--th-text-muted)" }}>due {fmtDueDate(gate.due_date)}</p>
+                        <p className="text-[10px] font-mono mt-0.5" style={{ color: "#9CA3AF" }}>due {fmtDueDate(gate.due_date)}</p>
                       )}
                     </div>
                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                      <button type="button" onClick={() => startEditGate(gate)} className="px-1.5 py-0.5 text-[10px] font-mono" style={{ border: "1px solid var(--th-border)", background: "transparent", color: "var(--th-text-muted)", cursor: "pointer", borderRadius: 0 }}>
+                      <button type="button" onClick={() => startEditGate(gate)} className="px-1.5 py-0.5 text-[10px] font-mono" style={{ border: "1px solid #E5E7EB", background: "transparent", color: "#9CA3AF", cursor: "pointer", borderRadius: 0 }}>
                         {t({ ko: "편집", en: "Edit", ja: "編集", zh: "编辑" })}
                       </button>
                       <button type="button" onClick={() => void deleteGate(gate.id)} className="px-1.5 py-0.5 text-[10px] font-mono" style={{ border: "1px solid rgba(239,68,68,0.4)", background: "transparent", color: "#f87171", cursor: "pointer", borderRadius: 0 }}>✕</button>

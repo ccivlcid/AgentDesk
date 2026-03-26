@@ -50,7 +50,7 @@ export default function CustomSkillModal({
     >
       <div className="space-y-4 px-5 py-4">
         <div>
-          <label className="block text-xs font-mono mb-1.5" style={{ color: "var(--th-text-muted)" }}>
+          <label className="block text-xs font-mono mb-1.5" style={{ color: "#9CA3AF" }}>
             {t({ ko: "스킬명", en: "Skill Name", ja: "スキル名", zh: "技能名称" })}
           </label>
           <input
@@ -64,9 +64,9 @@ export default function CustomSkillModal({
               zh: "例如: my-custom-skill",
             })}
             className="w-full px-3 py-2 text-sm font-mono focus:outline-none"
-            style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-input-bg)", color: "var(--th-text-primary)" }}
+            style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "#FFFFFF", color: "#111827" }}
           />
-          <div className="text-[10px] font-mono mt-1" style={{ color: "var(--th-text-muted)" }}>
+          <div className="text-[10px] font-mono mt-1" style={{ color: "#9CA3AF" }}>
             {t({
               ko: "영문, 숫자, 하이픈(-), 언더스코어(_)만 사용 가능",
               en: "Only alphanumeric, dash (-), underscore (_) allowed",
@@ -77,14 +77,14 @@ export default function CustomSkillModal({
         </div>
 
         <div>
-          <label className="block text-xs font-mono mb-1.5" style={{ color: "var(--th-text-muted)" }}>
+          <label className="block text-xs font-mono mb-1.5" style={{ color: "#9CA3AF" }}>
             {t({ ko: "skills.md 파일", en: "skills.md File", ja: "skills.md ファイル", zh: "skills.md 文件" })}
           </label>
           <div className="flex items-center gap-2">
             <button
               onClick={() => customFileInputRef.current?.click()}
               className="flex items-center gap-1.5 px-3 py-2 text-xs font-mono transition"
-              style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", color: "var(--th-text-secondary)" }}
+              style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "#FFFFFF", color: "#6B7280" }}
             >
               <span>📎</span>
               {t({ ko: "파일 선택", en: "Choose File", ja: "ファイル選択", zh: "选择文件" })}
@@ -97,12 +97,12 @@ export default function CustomSkillModal({
               className="hidden"
             />
             {customSkillFileName && (
-              <span className="text-xs font-mono truncate max-w-[200px]" style={{ color: "var(--th-text-primary)" }}>📄 {customSkillFileName}</span>
+              <span className="text-xs font-mono truncate max-w-[200px]" style={{ color: "#111827" }}>📄 {customSkillFileName}</span>
             )}
           </div>
           {customSkillContent && (
-            <div className="mt-2 p-2 max-h-32 overflow-y-auto" style={{ borderRadius: 0, border: "1px solid var(--th-border)", background: "var(--th-terminal-bg)" }}>
-              <pre className="text-[10px] font-mono whitespace-pre-wrap break-all" style={{ color: "var(--th-text-muted)" }}>
+            <div className="mt-2 p-2 max-h-32 overflow-y-auto" style={{ borderRadius: 0, border: "1px solid #E5E7EB", background: "#1E1E2E" }}>
+              <pre className="text-[10px] font-mono whitespace-pre-wrap break-all" style={{ color: "#9CA3AF" }}>
                 {customSkillContent.slice(0, 500)}
                 {customSkillContent.length > 500 && "..."}
               </pre>
@@ -121,7 +121,7 @@ export default function CustomSkillModal({
             onClick={onClose}
             disabled={customSkillSubmitting}
             className="px-3 py-1.5 text-xs font-mono transition"
-            style={{ borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-secondary)", background: "transparent" }}
+            style={{ borderRadius: 0, border: "1px solid #E5E7EB", color: "#6B7280", background: "transparent" }}
           >
             {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}
           </button>
@@ -130,12 +130,12 @@ export default function CustomSkillModal({
             disabled={!canSubmit || customSkillSubmitting}
             className="custom-skill-submit-btn px-4 py-1.5 text-xs font-mono border transition flex items-center gap-1.5"
             style={!canSubmit
-              ? { borderRadius: 0, border: "1px solid var(--th-border)", color: "var(--th-text-muted)", cursor: "not-allowed" }
-              : { borderRadius: 0, border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.15)", color: "var(--th-text-primary)" }}
+              ? { borderRadius: 0, border: "1px solid #E5E7EB", color: "#9CA3AF", cursor: "not-allowed" }
+              : { borderRadius: 0, border: "1px solid rgba(251,191,36,0.5)", background: "rgba(251,191,36,0.15)", color: "#111827" }}
           >
             {customSkillSubmitting ? (
               <>
-                <span className="animate-spin w-3 h-3 border border-t-transparent" style={{ borderRadius: "50%", borderColor: "var(--th-accent)", borderTopColor: "transparent" }} />
+                <span className="animate-spin w-3 h-3 border border-t-transparent" style={{ borderRadius: "50%", borderColor: "#3B82F6", borderTopColor: "transparent" }} />
                 {t({ ko: "등록중...", en: "Submitting...", ja: "登録中...", zh: "提交中..." })}
               </>
             ) : (

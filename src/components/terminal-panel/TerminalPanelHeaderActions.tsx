@@ -90,7 +90,7 @@ export function TerminalPanelHeaderActions({
       </IconBtn>
 
       {/* 구분선 */}
-      <div style={{ width: 1, height: 16, background: "var(--th-border)", margin: "0 2px" }} />
+      <div style={{ width: 1, height: 16, background: "#E5E7EB", margin: "0 2px" }} />
 
       {/* 닫기 (트래픽 라이트에 이미 있지만 우측 X도 제공) */}
       <button
@@ -132,8 +132,8 @@ function IconBtn({
           : "1px solid transparent",
         background: active && activeColor
           ? `${activeColor}18`
-          : hovered ? "var(--th-hover-overlay)" : "transparent",
-        color: color ?? (hovered ? "var(--th-text-primary)" : "var(--th-text-muted)"),
+          : hovered ? "rgba(0,0,0,0.06)" : "transparent",
+        color: color ?? (hovered ? "#111827" : "#9CA3AF"),
         cursor: "pointer",
         transition: "all 0.12s",
         fontFamily: mono,
@@ -161,11 +161,11 @@ function InterruptBtn({ active, label, onClick }: { active: boolean; label: stri
         borderRadius: 6,
         border: active
           ? "1px solid rgba(244,63,94,0.4)"
-          : `1px solid ${hovered ? "rgba(244,63,94,0.35)" : "var(--th-border)"}`,
+          : `1px solid ${hovered ? "rgba(244,63,94,0.35)" : "#E5E7EB"}`,
         background: active
           ? "rgba(244,63,94,0.12)"
           : hovered ? "rgba(244,63,94,0.07)" : "transparent",
-        color: active ? "#f43f5e" : hovered ? "#f43f5e" : "var(--th-text-secondary)",
+        color: active ? "#f43f5e" : hovered ? "#f43f5e" : "#6B7280",
         cursor: "pointer",
         transition: "all 0.12s",
         flexShrink: 0,

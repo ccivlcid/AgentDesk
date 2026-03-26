@@ -21,7 +21,7 @@ export default function MemoryMemorySection({
   const [collapsed, setCollapsed] = useState(false);
 
   return (
-    <div style={{ borderRadius: 8, border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)", overflow: "hidden" }}>
+    <div style={{ borderRadius: 8, border: "1px solid #E5E7EB", background: "#FFFFFF", overflow: "hidden" }}>
       {/* 헤더 — 클릭으로 접기/펴기 */}
       <button
         type="button"
@@ -30,18 +30,18 @@ export default function MemoryMemorySection({
         style={{
           background: "none",
           border: "none",
-          borderBottom: collapsed ? "none" : "1px solid var(--th-border)",
+          borderBottom: collapsed ? "none" : "1px solid #E5E7EB",
           cursor: "pointer",
           textAlign: "left",
         }}
-        onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--th-hover-overlay-subtle)"; }}
+        onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(0,0,0,0.03)"; }}
         onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "none"; }}
       >
         <div className="flex items-center gap-2">
           <span
             style={{
               fontSize: 9,
-              color: "var(--th-text-muted)",
+              color: "#9CA3AF",
               transition: "transform 0.18s",
               display: "inline-block",
               transform: collapsed ? "rotate(-90deg)" : "rotate(0deg)",
@@ -49,11 +49,11 @@ export default function MemoryMemorySection({
           >
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9" /></svg>
           </span>
-          <span className="text-sm font-semibold font-mono" style={{ color: "var(--th-text-heading)" }}>
+          <span className="text-sm font-semibold font-mono" style={{ color: "#111827" }}>
             {t({ ko: "학습 메모리", en: "Learning Memory", ja: "学習メモリ", zh: "学习记忆" })}
           </span>
         </div>
-        <span className="text-[11px] font-mono" style={{ color: "var(--th-text-muted)" }}>
+        <span className="text-[11px] font-mono" style={{ color: "#9CA3AF" }}>
           {collapsed
             ? t({ ko: "펼치기", en: "Expand", ja: "展開", zh: "展开" })
             : t({ ko: "CLI별 메모리 이력", en: "Per-CLI memory history", ja: "CLI別メモリ履歴", zh: "按 CLI 的记忆记录" })}

@@ -122,18 +122,18 @@ export default function AgentStatusPanel({ agents, uiLanguage, onClose }: AgentS
   return (
     <div
       className="fixed inset-0 flex items-center justify-center"
-      style={{ background: "var(--th-modal-overlay)", backdropFilter: "blur(3px)", zIndex: 1100 }}
+      style={{ background: "rgba(0,0,0,0.4)", backdropFilter: "blur(3px)", zIndex: 1100 }}
       onClick={onClose}
     >
       <div
         className={`relative mx-4 w-full flex flex-col overflow-hidden ${inspectorMode ? "max-w-3xl" : "max-w-xl"}`}
         style={{
           borderRadius: 10,
-          border: "1px solid var(--th-border)",
-          background: "var(--th-bg-elevated)",
+          border: "1px solid #E5E7EB",
+          background: "#FFFFFF",
           maxHeight: "85vh",
           fontFamily: "var(--th-font-mono)",
-          boxShadow: "var(--th-glass-shadow)",
+          boxShadow: "rgba(0,0,0,0.08)",
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -145,27 +145,27 @@ export default function AgentStatusPanel({ agents, uiLanguage, onClose }: AgentS
         {/* ── 상태 요약 헤더 (ps aux --agents): 다크=터미널 배경, 라이트=패널 배경 ── */}
         <div
           className="agent-status-bar px-4 py-3 flex-shrink-0"
-          style={{ borderBottom: "1px solid var(--th-border)" }}
+          style={{ borderBottom: "1px solid #E5E7EB" }}
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <span style={{ ...mono, fontSize: "12px", fontWeight: 700, color: "var(--th-accent)", letterSpacing: "0.06em" }}>
+              <span style={{ ...mono, fontSize: "12px", fontWeight: 700, color: "#3B82F6", letterSpacing: "0.06em" }}>
                 $ ps aux --agents
               </span>
               <span
                 style={{
                   ...mono, fontSize: "10px", fontWeight: 700,
                   padding: "1px 6px",
-                  border: "1px solid var(--th-border-accent)",
-                  background: "var(--th-amber-glow)",
-                  color: "var(--th-accent)",
+                  border: "1px solid #BFDBFE",
+                  background: "rgba(59,130,246,0.15)",
+                  color: "#3B82F6",
                 }}
               >
                 {activeAgents.length} RUNNING
               </span>
               {!loading && (
-                <span style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)" }}>
-                  <span className="inline-block w-1.5 h-1.5 rounded-full animate-pulse" style={{ marginRight: 4, verticalAlign: "middle", background: "var(--th-attr-elite)" }} />
+                <span style={{ ...mono, fontSize: "9px", color: "#9CA3AF" }}>
+                  <span className="inline-block w-1.5 h-1.5 rounded-full animate-pulse" style={{ marginRight: 4, verticalAlign: "middle", background: "#8B5CF6" }} />
                   live · 5s
                 </span>
               )}
@@ -182,9 +182,9 @@ export default function AgentStatusPanel({ agents, uiLanguage, onClose }: AgentS
                     border: "1px solid",
                     cursor: "pointer",
                     letterSpacing: "0.04em",
-                    background: inspectorMode === mode ? "var(--th-amber-glow)" : "transparent",
-                    borderColor: inspectorMode === mode ? "var(--th-border-accent)" : "var(--th-border)",
-                    color: inspectorMode === mode ? "var(--th-accent)" : "var(--th-text-muted)",
+                    background: inspectorMode === mode ? "rgba(59,130,246,0.15)" : "transparent",
+                    borderColor: inspectorMode === mode ? "#BFDBFE" : "#E5E7EB",
+                    color: inspectorMode === mode ? "#3B82F6" : "#9CA3AF",
                   }}
                 >
                   {mode === "idle_cli" ? "IDLE CLI" : "SCRIPT"}
@@ -192,7 +192,7 @@ export default function AgentStatusPanel({ agents, uiLanguage, onClose }: AgentS
               ))}
               <button
                 onClick={(e) => { e.stopPropagation(); refresh(); }}
-                style={{ ...mono, fontSize: "12px", color: "var(--th-text-muted)", background: "none", border: "none", cursor: "pointer", padding: "0 4px" }}
+                style={{ ...mono, fontSize: "12px", color: "#9CA3AF", background: "none", border: "none", cursor: "pointer", padding: "0 4px" }}
                 title="Refresh"
               >↺</button>
             </div>
@@ -202,7 +202,7 @@ export default function AgentStatusPanel({ agents, uiLanguage, onClose }: AgentS
           {!loading && activeAgents.length > 0 && (
             <div
               className="mt-2 grid gap-2"
-              style={{ ...mono, fontSize: "9px", fontWeight: 700, color: "var(--th-text-muted)", letterSpacing: "0.08em", textTransform: "uppercase", gridTemplateColumns: "32px 1fr 80px 60px 60px 60px" }}
+              style={{ ...mono, fontSize: "9px", fontWeight: 700, color: "#9CA3AF", letterSpacing: "0.08em", textTransform: "uppercase", gridTemplateColumns: "32px 1fr 80px 60px 60px 60px" }}
             >
               <span />
               <span>AGENT / TASK</span>
@@ -217,16 +217,16 @@ export default function AgentStatusPanel({ agents, uiLanguage, onClose }: AgentS
         {/* ── 에이전트 목록 ── */}
         <div className="flex-1 overflow-y-auto">
           {loading ? (
-            <div className="flex items-center gap-2 px-4 py-6" style={{ ...mono, fontSize: "12px", color: "var(--th-text-muted)" }}>
+            <div className="flex items-center gap-2 px-4 py-6" style={{ ...mono, fontSize: "12px", color: "#9CA3AF" }}>
               <span className="animate-pulse">▌</span>
               {t({ ko: "불러오는 중...", en: "Loading...", ja: "読み込み中...", zh: "加载中..." })}
             </div>
           ) : activeAgents.length === 0 ? (
             <div className="px-4 py-8 text-center">
-              <p style={{ ...mono, fontSize: "11px", color: "var(--th-text-muted)" }}>
+              <p style={{ ...mono, fontSize: "11px", color: "#9CA3AF" }}>
                 {t({ ko: "작업 중인 에이전트 없음", en: "No agents currently working", ja: "作業中のエージェントなし", zh: "当前没有工作中的代理" })}
               </p>
-              <p style={{ ...mono, fontSize: "10px", color: "var(--th-text-muted)", opacity: 0.5, marginTop: 4 }}>— 0 processes —</p>
+              <p style={{ ...mono, fontSize: "10px", color: "#9CA3AF", opacity: 0.5, marginTop: 4 }}>— 0 processes —</p>
             </div>
           ) : (
             activeAgents.filter((ag) => agents.some((a) => a.id === ag.id)).map((ag, idx) => {
@@ -243,8 +243,8 @@ export default function AgentStatusPanel({ agents, uiLanguage, onClose }: AgentS
                   className="grid gap-2 px-4 py-2.5 items-center group"
                   style={{
                     gridTemplateColumns: "32px 1fr 80px 60px 60px 60px",
-                    borderBottom: "1px solid var(--th-border)",
-                    background: idx % 2 === 0 ? "transparent" : "var(--th-glass-bg)",
+                    borderBottom: "1px solid #E5E7EB",
+                    background: idx % 2 === 0 ? "transparent" : "#FFFFFF",
                   }}
                 >
                   {/* 아바타 */}
@@ -255,38 +255,38 @@ export default function AgentStatusPanel({ agents, uiLanguage, onClose }: AgentS
                   {/* 이름 + 태스크 */}
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <span style={{ ...mono, fontSize: "11px", fontWeight: 700, color: "var(--th-text-heading)" }}>{agentName}</span>
-                      <span style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", padding: "0 4px", border: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
+                      <span style={{ ...mono, fontSize: "11px", fontWeight: 700, color: "#111827" }}>{agentName}</span>
+                      <span style={{ ...mono, fontSize: "9px", color: "#9CA3AF", padding: "0 4px", border: "1px solid #E5E7EB", background: "#FFFFFF" }}>
                         {deptName}
                       </span>
                     </div>
                     {ag.task_title && (
-                      <p className="truncate" style={{ ...mono, fontSize: "10px", color: "var(--th-text-muted)", marginTop: 2 }}>
+                      <p className="truncate" style={{ ...mono, fontSize: "10px", color: "#9CA3AF", marginTop: 2 }}>
                         ↳ {ag.task_title}
                       </p>
                     )}
                   </div>
 
                   {/* CLI Provider */}
-                  <span style={{ ...mono, fontSize: "10px", color: "var(--th-accent)", opacity: 0.8 }}>
+                  <span style={{ ...mono, fontSize: "10px", color: "#3B82F6", opacity: 0.8 }}>
                     {ag.cli_provider ?? "-"}
                   </span>
 
                   {/* 마지막 응답 */}
-                  <span style={{ ...mono, fontSize: "10px", color: "var(--th-text-muted)" }}>
+                  <span style={{ ...mono, fontSize: "10px", color: "#9CA3AF" }}>
                     {fmtTime(ag.last_activity_at)}
                   </span>
 
                   {/* Idle */}
-                  <span style={{ ...mono, fontSize: "10px", color: isIdle ? "var(--th-accent)" : "var(--th-text-muted)" }}>
+                  <span style={{ ...mono, fontSize: "10px", color: isIdle ? "#3B82F6" : "#9CA3AF" }}>
                     {ag.has_active_process ? (
                       <span className="flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full animate-pulse inline-block" style={{ background: "var(--th-attr-elite)" }} />
+                        <span className="w-1.5 h-1.5 rounded-full animate-pulse inline-block" style={{ background: "#8B5CF6" }} />
                         {idleText}
                       </span>
                     ) : (
                       <span className="flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: "var(--th-accent)" }} />
+                        <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: "#3B82F6" }} />
                         {idleText}
                       </span>
                     )}
@@ -301,11 +301,11 @@ export default function AgentStatusPanel({ agents, uiLanguage, onClose }: AgentS
                         ...mono, fontSize: "9px", fontWeight: 700,
                         padding: "2px 6px",
                         cursor: isKilling ? "not-allowed" : "pointer",
-                        border: "1px solid var(--th-danger-border)",
+                        border: "1px solid #FECACA",
                         letterSpacing: "0.04em",
                         opacity: isKilling ? 0.5 : 1,
-                        background: "var(--th-danger-bg)",
-                        color: "var(--th-danger-text)",
+                        background: "#FEF2F2",
+                        color: "#DC2626",
                       }}
                     >
                       {isKilling ? "…" : "KILL"}
@@ -318,29 +318,29 @@ export default function AgentStatusPanel({ agents, uiLanguage, onClose }: AgentS
 
           {/* ── CLI Inspector ── */}
           {inspectorMode && (
-            <div style={{ borderTop: "2px solid var(--th-border)", background: "var(--th-bg-elevated)" }}>
+            <div style={{ borderTop: "2px solid #E5E7EB", background: "#FFFFFF" }}>
               <div
                 className="flex items-center justify-between px-4 py-2"
-                style={{ borderBottom: "1px solid var(--th-border)" }}
+                style={{ borderBottom: "1px solid #E5E7EB" }}
               >
-                <span style={{ ...mono, fontSize: "9px", fontWeight: 700, color: "var(--th-text-muted)", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                <span style={{ ...mono, fontSize: "9px", fontWeight: 700, color: "#9CA3AF", letterSpacing: "0.1em", textTransform: "uppercase" }}>
                   {inspectorMode === "script" ? "SCRIPT PROCESSES" : "IDLE CLI PROCESSES"}
                   {" "}
-                  <span style={{ color: "var(--th-accent)" }}>({visibleCliProcesses.length})</span>
+                  <span style={{ color: "#3B82F6" }}>({visibleCliProcesses.length})</span>
                 </span>
                 <button
                   onClick={(e) => { e.stopPropagation(); refreshCli(); }}
-                  style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", background: "none", border: "1px solid var(--th-border)", cursor: "pointer", padding: "1px 6px" }}
+                  style={{ ...mono, fontSize: "9px", color: "#9CA3AF", background: "none", border: "1px solid #E5E7EB", cursor: "pointer", padding: "1px 6px" }}
                 >
                   ↺ {t({ ko: "새로고침", en: "Refresh", ja: "更新", zh: "刷新" })}
                 </button>
               </div>
               {cliLoading && visibleCliProcesses.length === 0 ? (
-                <div className="px-4 py-3" style={{ ...mono, fontSize: "11px", color: "var(--th-text-muted)" }}>
+                <div className="px-4 py-3" style={{ ...mono, fontSize: "11px", color: "#9CA3AF" }}>
                   <span className="animate-pulse">▌</span> loading…
                 </div>
               ) : visibleCliProcesses.length === 0 ? (
-                <div className="px-4 py-3" style={{ ...mono, fontSize: "11px", color: "var(--th-text-muted)" }}>
+                <div className="px-4 py-3" style={{ ...mono, fontSize: "11px", color: "#9CA3AF" }}>
                   — {t({ ko: "실행 중인 프로세스 없음", en: "No running processes", ja: "実行中プロセスなし", zh: "无运行进程" })} —
                 </div>
               ) : (
@@ -352,31 +352,31 @@ export default function AgentStatusPanel({ agents, uiLanguage, onClose }: AgentS
                     <div
                       key={proc.pid}
                       className="flex items-start gap-3 px-4 py-2.5"
-                      style={{ borderBottom: "1px solid var(--th-border)" }}
+                      style={{ borderBottom: "1px solid #E5E7EB" }}
                     >
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap mb-1">
-                          <span style={{ ...mono, fontSize: "10px", fontWeight: 700, color: "var(--th-accent)" }}>
+                          <span style={{ ...mono, fontSize: "10px", fontWeight: 700, color: "#3B82F6" }}>
                             {displayCliProvider(proc.provider)}
                           </span>
-                          <span style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)" }}>PID {proc.pid}</span>
+                          <span style={{ ...mono, fontSize: "9px", color: "#9CA3AF" }}>PID {proc.pid}</span>
                           <span
                             style={{
                               ...mono, fontSize: "9px", padding: "0 4px",
-                              border: proc.is_idle ? "1px solid var(--th-border-accent)" : "1px solid var(--th-border)",
-                              color: proc.is_idle ? "var(--th-accent)" : "var(--th-attr-elite)",
-                              background: proc.is_idle ? "var(--th-amber-glow)" : "var(--th-green-glow)",
+                              border: proc.is_idle ? "1px solid #BFDBFE" : "1px solid #E5E7EB",
+                              color: proc.is_idle ? "#3B82F6" : "#8B5CF6",
+                              background: proc.is_idle ? "rgba(59,130,246,0.15)" : "rgba(5,150,105,0.15)",
                             }}
                           >
                             {proc.is_idle ? "IDLE" : "ACTIVE"}
                           </span>
-                          <span style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)" }}>{agentName}</span>
+                          <span style={{ ...mono, fontSize: "9px", color: "#9CA3AF" }}>{agentName}</span>
                         </div>
-                        <p className="truncate" style={{ ...mono, fontSize: "10px", color: "var(--th-text-muted)" }} title={commandText}>
+                        <p className="truncate" style={{ ...mono, fontSize: "10px", color: "#9CA3AF" }} title={commandText}>
                           {commandText}
                         </p>
                         {proc.idle_seconds !== null && (
-                          <span style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", opacity: 0.6 }}>
+                          <span style={{ ...mono, fontSize: "9px", color: "#9CA3AF", opacity: 0.6 }}>
                             idle {fmtElapsed(proc.idle_seconds)}
                           </span>
                         )}
@@ -388,9 +388,9 @@ export default function AgentStatusPanel({ agents, uiLanguage, onClose }: AgentS
                           ...mono, fontSize: "9px", fontWeight: 700,
                           padding: "2px 7px", flexShrink: 0,
                           cursor: isKillingPid ? "not-allowed" : "pointer",
-                          border: "1px solid var(--th-danger-border)",
-                          background: "var(--th-danger-bg)",
-                          color: "var(--th-danger-text)",
+                          border: "1px solid #FECACA",
+                          background: "#FEF2F2",
+                          color: "#DC2626",
                           opacity: isKillingPid ? 0.5 : 1,
                         }}
                       >
@@ -407,9 +407,9 @@ export default function AgentStatusPanel({ agents, uiLanguage, onClose }: AgentS
         {/* ── 푸터 ── */}
         <div
           className="flex items-center justify-between px-4 py-2 flex-shrink-0"
-          style={{ borderTop: "1px solid var(--th-border)", background: "var(--th-bg-elevated)" }}
+          style={{ borderTop: "1px solid #E5E7EB", background: "#FFFFFF" }}
         >
-          <span style={{ ...mono, fontSize: "9px", color: "var(--th-text-muted)", letterSpacing: "0.04em" }}>
+          <span style={{ ...mono, fontSize: "9px", color: "#9CA3AF", letterSpacing: "0.04em" }}>
             AUTO-REFRESH 5s · {new Date().toLocaleTimeString()}
           </span>
           <button
@@ -417,9 +417,9 @@ export default function AgentStatusPanel({ agents, uiLanguage, onClose }: AgentS
             style={{
               ...mono, fontSize: "10px", fontWeight: 700,
               padding: "2px 12px",
-              border: "1px solid var(--th-border)",
-              background: "var(--th-bg-surface)",
-              color: "var(--th-text-secondary)",
+              border: "1px solid #E5E7EB",
+              background: "#F9FAFB",
+              color: "#6B7280",
               cursor: "pointer",
               letterSpacing: "0.04em",
             }}

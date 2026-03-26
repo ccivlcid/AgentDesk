@@ -18,36 +18,36 @@ const SIZE_PADDING: Record<ButtonSize, string> = {
 
 const VARIANT_STYLES: Record<ButtonVariant, React.CSSProperties> = {
   primary: {
-    background: "var(--th-accent-glow)",
-    border: "1px solid var(--th-accent-border)",
-    color: "var(--th-accent)",
+    background: "#EBF5FF",
+    border: "1px solid #BFDBFE",
+    color: "#3B82F6",
     fontWeight: 600,
   },
   secondary: {
     background: "transparent",
-    border: "1px solid var(--th-border-strong)",
-    color: "var(--th-text-secondary)",
+    border: "1px solid #D1D5DB",
+    color: "#6B7280",
     fontWeight: 500,
   },
   ghost: {
     background: "transparent",
     border: "1px solid transparent",
-    color: "var(--th-text-muted)",
+    color: "#9CA3AF",
     fontWeight: 400,
   },
   danger: {
     background: "transparent",
-    border: "1px solid var(--th-danger-border)",
-    color: "var(--th-danger-text)",
+    border: "1px solid #FECACA",
+    color: "#DC2626",
     fontWeight: 500,
   },
 };
 
 const HOVER_CLASS: Record<ButtonVariant, string> = {
-  primary: "hover:!bg-[var(--th-accent)] hover:!text-black hover:!border-[var(--th-accent)]",
-  secondary: "hover:!bg-[var(--th-hover-bg)] hover:!text-[var(--th-text)] hover:!border-[var(--th-border-strong)]",
-  ghost: "hover:!bg-[var(--th-hover-bg)] hover:!text-[var(--th-text-secondary)]",
-  danger: "hover:!bg-[var(--th-danger-bg)] hover:!border-[var(--th-danger-border)]",
+  primary: "hover:!bg-[#3B82F6] hover:!text-black hover:!border-[#3B82F6]",
+  secondary: "hover:!bg-[#F3F4F6] hover:!text-[#111827] hover:!border-[#D1D5DB]",
+  ghost: "hover:!bg-[#F3F4F6] hover:!text-[#6B7280]",
+  danger: "hover:!bg-[#FEF2F2] hover:!border-[#FECACA]",
 };
 
 /**

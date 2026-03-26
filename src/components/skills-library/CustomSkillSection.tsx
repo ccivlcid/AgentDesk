@@ -60,7 +60,7 @@ export default function CustomSkillSection({ t, customSkills, localeTag, onDelet
         <div className="text-sm font-semibold text-violet-200 flex items-center gap-2">
           <span>✏️</span>
           {t({ ko: "커스텀 스킬", en: "Custom Skills", ja: "カスタムスキル", zh: "自定义技能" })}
-          <span className="text-[11px] font-mono font-normal" style={{ color: "var(--th-text-muted)" }}>({customSkills.length})</span>
+          <span className="text-[11px] font-mono font-normal" style={{ color: "#9CA3AF" }}>({customSkills.length})</span>
         </div>
         <div className="flex items-center gap-1.5">
           <input
@@ -88,11 +88,11 @@ export default function CustomSkillSection({ t, customSkills, localeTag, onDelet
           <div
             key={skill.skillName}
             className="custom-skill-card flex items-center justify-between px-3 py-2"
-            style={{ borderRadius: 6, background: "var(--th-bg-elevated)", border: "1px solid var(--th-border)" }}
+            style={{ borderRadius: 6, background: "#FFFFFF", border: "1px solid #E5E7EB" }}
           >
             <div className="min-w-0 flex-1">
               <div className="text-xs font-medium text-white truncate">{skill.skillName}</div>
-              <div className="text-[10px] font-mono" style={{ color: "var(--th-text-muted)" }}>
+              <div className="text-[10px] font-mono" style={{ color: "#9CA3AF" }}>
                 {skill.providers.map((provider) => providerLabel(provider as SkillLearnProvider)).join(", ")}
                 {" · "}
                 {new Date(skill.createdAt).toLocaleDateString(localeTag)}
