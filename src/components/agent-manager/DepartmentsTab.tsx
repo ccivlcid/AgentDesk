@@ -99,13 +99,13 @@ export default function DepartmentsTab({
               {showDropBefore && (
                 <div
                   className="pointer-events-none absolute left-2 right-2 top-0 h-0.5"
-                  style={{ background: "var(--th-accent, #2563eb)" }}
+                  style={{ background: "#3B82F6" }}
                 />
               )}
               {showDropAfter && (
                 <div
                   className="pointer-events-none absolute left-2 right-2 bottom-0 h-0.5"
-                  style={{ background: "var(--th-accent, #2563eb)" }}
+                  style={{ background: "#3B82F6" }}
                 />
               )}
 

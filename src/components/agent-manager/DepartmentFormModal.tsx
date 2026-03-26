@@ -436,7 +436,7 @@ export default function DepartmentFormModal({
             ))}
           <button
             onClick={onClose}
-            className="px-4 py-2.5 text-sm font-medium font-mono transition-all hover:bg-[var(--th-bg-surface-hover)]"
+            className="px-4 py-2.5 text-sm font-medium font-mono transition-all hover:bg-gray-100"
             style={{ borderRadius: 10, border: "1px solid #E5E7EB", color: "#6B7280" }}
           >
             {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}

@@ -74,7 +74,7 @@ export function AgentDetailModalProfileHeader({
                   ? "bg-green-500"
                   : agent.status === "break"
                     ? "bg-yellow-500"
-                    : "bg-[var(--th-text-muted)]"
+                    : "bg-gray-400"
             }`}
             style={{ border: "2px solid #F3F4F6" }}
           />
