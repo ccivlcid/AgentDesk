@@ -4,7 +4,7 @@ import type { AgentDetailData } from "./AgentDetailPanel";
 const mono = "var(--th-font-mono)";
 
 const SCOPE_COLOR: Record<string, string> = {
-  project: "#f59e0b",
+  project: "#3B82F6",
   agent:   "#0ea5e9",
   global:  "#30d158",
 };
@@ -28,22 +28,22 @@ interface Props {
 export default function AgentDetailSections({ data, loading, isLight }: Props) {
   const { t } = useI18n();
 
-  const skeletonBg   = isLight ? "rgba(0,0,0,0.06)"   : "rgba(255,255,255,0.07)";
-  const dividerBdr   = isLight ? "rgba(0,0,0,0.07)"   : "rgba(255,255,255,0.06)";
-  const labelClr     = isLight ? "rgba(0,0,0,0.3)"    : "rgba(255,255,255,0.25)";
-  const skillBg      = isLight ? "rgba(0,0,0,0.05)"   : "rgba(255,255,255,0.06)";
-  const skillBorder  = isLight ? "rgba(0,0,0,0.09)"   : "rgba(255,255,255,0.09)";
-  const skillColor   = isLight ? "rgba(0,0,0,0.6)"    : "rgba(255,255,255,0.6)";
-  const moreColor    = isLight ? "rgba(0,0,0,0.3)"    : "rgba(255,255,255,0.3)";
-  const ruleColor    = isLight ? "rgba(0,0,0,0.55)"   : "rgba(255,255,255,0.65)";
-  const defaultScope = isLight ? "rgba(0,0,0,0.25)"   : "rgba(255,255,255,0.25)";
-  const memColor     = isLight ? "rgba(0,0,0,0.55)"   : "rgba(255,255,255,0.6)";
-  const dateColor    = isLight ? "rgba(0,0,0,0.25)"   : "rgba(255,255,255,0.2)";
-  const taskColor    = isLight ? "rgba(0,0,0,0.5)"    : "rgba(255,255,255,0.55)";
-  const costSubColor = isLight ? "rgba(0,0,0,0.3)"    : "rgba(255,255,255,0.25)";
-  const tokenColor   = isLight ? "rgba(0,0,0,0.65)"   : "rgba(255,255,255,0.7)";
-  const tokenTotalCl = isLight ? "rgba(0,0,0,0.35)"   : "rgba(255,255,255,0.4)";
-  const tokenTotalSb = isLight ? "rgba(0,0,0,0.25)"   : "rgba(255,255,255,0.2)";
+  const skeletonBg   = "#E5E7EB";
+  const dividerBdr   = "#E5E7EB";
+  const labelClr     = "#9CA3AF";
+  const skillBg      = "#F3F4F6";
+  const skillBorder  = "#E5E7EB";
+  const skillColor   = "#6B7280";
+  const moreColor    = "#9CA3AF";
+  const ruleColor    = "#6B7280";
+  const defaultScope = "#9CA3AF";
+  const memColor     = "#6B7280";
+  const dateColor    = "#9CA3AF";
+  const taskColor    = "#6B7280";
+  const costSubColor = "#9CA3AF";
+  const tokenColor   = "#111827";
+  const tokenTotalCl = "#6B7280";
+  const tokenTotalSb = "#9CA3AF";
 
   const dividerStyle = { borderBottom: `1px solid ${dividerBdr}` };
 
@@ -235,7 +235,7 @@ export default function AgentDetailSections({ data, loading, isLight }: Props) {
           ) : data.cost ? (
             <div style={{ display: "flex", gap: 20, alignItems: "baseline" }}>
               <div style={{ fontFamily: mono }}>
-                <div style={{ fontSize: 18, fontWeight: 700, color: "#f59e0b", letterSpacing: "-0.02em" }}>
+                <div style={{ fontSize: 18, fontWeight: 700, color: "#3B82F6", letterSpacing: "-0.02em" }}>
                   ${data.cost.thisMonthUsd.toFixed(4)}
                 </div>
                 <div style={{ fontSize: 9, color: costSubColor, marginTop: 2 }}>

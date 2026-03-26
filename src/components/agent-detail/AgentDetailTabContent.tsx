@@ -104,13 +104,13 @@ export default function AgentDetailTabContent({
     return (
       <div className="space-y-3">
         {/* ── 페르소나 섹션 ── */}
-        <div className="border rounded" style={{ background: "var(--th-bg-surface)", borderColor: "var(--th-border)", borderRadius: 10, overflow: "hidden" }}>
+        <div className="border rounded" style={{ background: "#F9FAFB", borderColor: "#E5E7EB", borderRadius: 14, overflow: "hidden" }}>
           {/* 섹션 헤더 + 탭 전환 */}
-          <div className="flex items-center justify-between px-3 py-2" style={{ borderBottom: "1px solid var(--th-border)" }}>
-            <div className="text-[10px] font-mono uppercase tracking-widest font-bold" style={{ color: "var(--th-text-muted)" }}>
+          <div className="flex items-center justify-between px-3 py-2" style={{ borderBottom: "1px solid #E5E7EB" }}>
+            <div className="text-[10px] font-mono uppercase tracking-widest font-bold" style={{ color: "#9CA3AF" }}>
               {t({ ko: "// 페르소나", en: "// PERSONA", ja: "// ペルソナ", zh: "// 人格" })}
               {savingPersonaId && (
-                <span className="ml-2 text-[9px]" style={{ color: "var(--th-accent)" }}>
+                <span className="ml-2 text-[9px]" style={{ color: "#3B82F6" }}>
                   {t({ ko: "저장중...", en: "saving...", ja: "保存中...", zh: "保存中..." })}
                 </span>
               )}
@@ -120,9 +120,10 @@ export default function AgentDetailTabContent({
                 onClick={() => setCatalogMode("catalog")}
                 className="text-[9px] px-2 py-0.5 font-mono"
                 style={{
-                  background: catalogMode === "catalog" ? "rgba(245,158,11,0.12)" : "transparent",
-                  border: `1px solid ${catalogMode === "catalog" ? "rgba(245,158,11,0.4)" : "var(--th-border)"}`,
-                  color: catalogMode === "catalog" ? "var(--th-accent)" : "var(--th-text-muted)",
+                  background: catalogMode === "catalog" ? "rgba(59,130,246,0.08)" : "transparent",
+                  border: `1px solid ${catalogMode === "catalog" ? "rgba(59,130,246,0.35)" : "#E5E7EB"}`,
+                  color: catalogMode === "catalog" ? "#3B82F6" : "#9CA3AF",
+                  borderRadius: 8,
                 }}
               >
                 {t({ ko: "카탈로그", en: "Catalog", ja: "カタログ", zh: "目录" })}
@@ -131,9 +132,10 @@ export default function AgentDetailTabContent({
                 onClick={() => setCatalogMode("raw")}
                 className="text-[9px] px-2 py-0.5 font-mono"
                 style={{
-                  background: catalogMode === "raw" ? "rgba(245,158,11,0.12)" : "transparent",
-                  border: `1px solid ${catalogMode === "raw" ? "rgba(245,158,11,0.4)" : "var(--th-border)"}`,
-                  color: catalogMode === "raw" ? "var(--th-accent)" : "var(--th-text-muted)",
+                  background: catalogMode === "raw" ? "rgba(59,130,246,0.08)" : "transparent",
+                  border: `1px solid ${catalogMode === "raw" ? "rgba(59,130,246,0.35)" : "#E5E7EB"}`,
+                  color: catalogMode === "raw" ? "#3B82F6" : "#9CA3AF",
+                  borderRadius: 8,
                 }}
               >
                 {t({ ko: "직접 편집", en: "Raw Edit", ja: "直接編集", zh: "直接编辑" })}
@@ -151,7 +153,7 @@ export default function AgentDetailTabContent({
                   onSelect={(id) => { void handlePersonaIdSelect(id); }}
                 />
               ) : (
-                <div className="text-[11px] text-center py-4" style={{ color: "var(--th-text-muted)" }}>
+                <div className="text-[11px] text-center py-4" style={{ color: "#9CA3AF" }}>
                   {t({ ko: "페르소나 로딩중...", en: "Loading personas...", ja: "ペルソナを読み込み中...", zh: "加载人格中..." })}
                 </div>
               )}
@@ -164,14 +166,14 @@ export default function AgentDetailTabContent({
             /* Raw text 편집 */
             <div className="p-3">
               <div className="flex items-center justify-between mb-2">
-                <div className="text-[10px]" style={{ color: "var(--th-text-muted)" }}>
+                <div className="text-[10px]" style={{ color: "#9CA3AF" }}>
                   {t({ ko: "페르소나 텍스트 (Markdown)", en: "Persona text (Markdown)", ja: "ペルソナテキスト (Markdown)", zh: "人格文本 (Markdown)" })}
                 </div>
                 {!isEditingPersona && (
                   <button
                     onClick={startEditPersona}
                     className="text-[10px] px-1.5 py-0.5 font-mono transition-colors"
-                    style={{ color: "var(--th-accent)", border: "1px solid rgba(6,182,212,0.3)", borderRadius: 4, background: "rgba(6,182,212,0.07)" }}
+                    style={{ color: "#3B82F6", border: "1px solid rgba(59,130,246,0.3)", borderRadius: 8, background: "rgba(59,130,246,0.07)" }}
                   >
                     {t({ ko: "편집", en: "Edit", ja: "編集", zh: "编辑" })}
                   </button>
@@ -185,14 +187,14 @@ export default function AgentDetailTabContent({
                     onChange={(e) => setEditDraft(e.target.value)}
                     rows={6}
                     className="w-full text-xs font-mono resize-y p-2 outline-none"
-                    style={{ background: "var(--th-bg-primary)", border: "1px solid var(--th-border)", borderRadius: 4, color: "var(--th-text-primary)" }}
+                    style={{ background: "#F3F4F6", border: "1px solid #E5E7EB", borderRadius: 8, color: "#111827" }}
                     placeholder={t({ ko: "페르소나를 입력하세요...", en: "Enter persona...", ja: "ペルソナを入力...", zh: "输入人格..." })}
                   />
                   <div className="flex gap-1.5 justify-end">
                     <button
                       onClick={cancelEditPersona}
                       className="text-[10px] px-2 py-1 font-mono"
-                      style={{ color: "var(--th-text-muted)", border: "1px solid var(--th-border)", borderRadius: 4 }}
+                      style={{ color: "#9CA3AF", border: "1px solid #E5E7EB", borderRadius: 8 }}
                     >
                       {t({ ko: "취소", en: "Cancel", ja: "キャンセル", zh: "取消" })}
                     </button>
@@ -200,15 +202,15 @@ export default function AgentDetailTabContent({
                       onClick={() => { void savePersona(); }}
                       disabled={savingPersona}
                       className="text-[10px] px-2 py-1 font-mono"
-                      style={{ background: "rgba(6,182,212,0.15)", border: "1px solid rgba(6,182,212,0.4)", borderRadius: 4, color: "#06b6d4", opacity: savingPersona ? 0.6 : 1 }}
+                      style={{ background: "rgba(59,130,246,0.1)", border: "1px solid rgba(59,130,246,0.35)", borderRadius: 8, color: "#3B82F6", opacity: savingPersona ? 0.6 : 1 }}
                     >
                       {savingPersona ? t({ ko: "저장중...", en: "Saving...", ja: "保存中...", zh: "保存中..." }) : t({ ko: "저장", en: "Save", ja: "保存", zh: "保存" })}
                     </button>
                   </div>
                 </div>
               ) : (
-                <div className="text-sm whitespace-pre-wrap" style={{ color: "var(--th-text-secondary)" }}>
-                  {personaText ?? <span style={{ color: "var(--th-text-muted)", fontStyle: "italic" }}>{t({ ko: "설정 없음", en: "Not set", ja: "未設定", zh: "未设置" })}</span>}
+                <div className="text-sm whitespace-pre-wrap" style={{ color: "#6B7280" }}>
+                  {personaText ?? <span style={{ color: "#9CA3AF", fontStyle: "italic" }}>{t({ ko: "설정 없음", en: "Not set", ja: "未設定", zh: "未设置" })}</span>}
                 </div>
               )}
             </div>

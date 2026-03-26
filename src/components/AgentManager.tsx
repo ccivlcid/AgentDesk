@@ -351,18 +351,18 @@ export default function AgentManager({
         display: "flex", 
         alignItems: "center", 
         justifyContent: "space-between",
-        borderBottom: "1px solid var(--th-glass-border-subtle)",
-        background: "rgba(255,255,255,0.01)"
+        borderBottom: "1px solid #E5E7EB",
+        background: "#F9FAFB"
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          <div style={{ padding: 10, background: "var(--th-accent)", borderRadius: 14, color: "black" }}>
+          <div style={{ padding: 10, background: "#3B82F6", borderRadius: 14, color: "white" }}>
             <Users size={20} />
           </div>
           <div>
-            <div style={{ fontSize: 18, fontWeight: 800, color: "var(--th-text-heading)", letterSpacing: "-0.02em" }}>
+            <div style={{ fontSize: 18, fontWeight: 800, color: "#111827", letterSpacing: "-0.02em" }}>
               {tr("인재 관리", "Talent Management", "タレント管理", "人才管理")}
             </div>
-            <div style={{ fontSize: 11, color: "var(--th-text-muted)", fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
+            <div style={{ fontSize: 11, color: "#9CA3AF", fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
               <span style={{ color: "var(--th-success)" }}>●</span>
               {agents.length} Agents · {departments.length} Specialties
             </div>
@@ -373,24 +373,24 @@ export default function AgentManager({
           <button
             onClick={openCreateDept}
             style={{
-              padding: "8px 16px", borderRadius: 12, border: "1px solid var(--th-glass-border-strong)",
-              background: "rgba(255,255,255,0.03)", color: "var(--th-text-primary)", 
+              padding: "8px 16px", borderRadius: 10, border: "1px solid #D1D5DB",
+              background: "#FFFFFF", color: "#111827",
               fontSize: 12, fontWeight: 700, cursor: "pointer", transition: "all 0.2s",
               display: "flex", alignItems: "center", gap: 8
             }}
-            onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.06)")}
-            onMouseLeave={e => (e.currentTarget.style.background = "rgba(255,255,255,0.03)")}
+            onMouseEnter={e => (e.currentTarget.style.background = "#F3F4F6")}
+            onMouseLeave={e => (e.currentTarget.style.background = "#FFFFFF")}
           >
             <Plus size={14} /> {tr("전문 분야", "Add Specialty", "専門分野", "专业领域")}
           </button>
           <button
             onClick={openCreate}
             style={{
-              padding: "8px 18px", borderRadius: 12, border: "none",
-              background: "var(--th-accent)", color: "black", 
+              padding: "8px 18px", borderRadius: 10, border: "none",
+              background: "#3B82F6", color: "white",
               fontSize: 12, fontWeight: 800, cursor: "pointer", transition: "all 0.2s",
               display: "flex", alignItems: "center", gap: 8,
-              boxShadow: "0 4px 12px rgba(245,158,11,0.3)"
+              boxShadow: "0 4px 12px rgba(59,130,246,0.3)"
             }}
             onMouseEnter={e => (e.currentTarget.style.transform = "translateY(-1px)")}
             onMouseLeave={e => (e.currentTarget.style.transform = "translateY(0)")}
@@ -403,8 +403,8 @@ export default function AgentManager({
       {/* ── Search & Filter Bar ── */}
       <div style={{ padding: "16px 28px", display: "flex", alignItems: "center", gap: 16 }}>
         <div style={{ 
-          flex: 1, display: "flex", alignItems: "center", gap: 12, 
-          background: "var(--th-glass-surface)", border: "1px solid var(--th-glass-border-strong)",
+          flex: 1, display: "flex", alignItems: "center", gap: 12,
+          background: "#FFFFFF", border: "1px solid #D1D5DB",
           borderRadius: 14, padding: "0 16px", height: 42
         }}>
           <Search size={16} className="text-muted opacity-50" />
@@ -412,23 +412,23 @@ export default function AgentManager({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={tr("이름, 역할, 기술 검색...", "Search by name, role, or skills...", "検索...", "搜索...")}
-            style={{ flex: 1, background: "none", border: "none", outline: "none", color: "var(--th-text-primary)", fontSize: 13 }}
+            style={{ flex: 1, background: "none", border: "none", outline: "none", color: "#111827", fontSize: 13 }}
           />
           {search && <X size={14} className="cursor-pointer opacity-50 hover:opacity-100" onClick={() => setSearch("")} />}
         </div>
 
         {/* Sub-Tab Toggle */}
         <div style={{ 
-          display: "flex", background: "rgba(255,255,255,0.03)", 
-          padding: 2, borderRadius: 12, border: "1px solid var(--th-glass-border-subtle)" 
+          display: "flex", background: "#F3F4F6",
+          padding: 2, borderRadius: 12, border: "1px solid #E5E7EB" 
         }}>
           <button
             onClick={() => setSubTab("agents")}
             style={{
               padding: "8px 16px", border: "none", borderRadius: 10, fontSize: 11, fontWeight: 700,
               cursor: "pointer", transition: "all 0.2s",
-              background: subTab === "agents" ? "rgba(255,255,255,0.08)" : "transparent",
-              color: subTab === "agents" ? "var(--th-text-primary)" : "var(--th-text-muted)",
+              background: subTab === "agents" ? "#FFFFFF" : "transparent",
+              color: subTab === "agents" ? "#111827" : "#9CA3AF",
             }}
           >
             {tr("직원 목록", "Agents", "エージェント", "代理")}
@@ -438,8 +438,8 @@ export default function AgentManager({
             style={{
               padding: "8px 16px", border: "none", borderRadius: 10, fontSize: 11, fontWeight: 700,
               cursor: "pointer", transition: "all 0.2s",
-              background: subTab === "departments" ? "rgba(255,255,255,0.08)" : "transparent",
-              color: subTab === "departments" ? "var(--th-text-primary)" : "var(--th-text-muted)",
+              background: subTab === "departments" ? "#FFFFFF" : "transparent",
+              color: subTab === "departments" ? "#111827" : "#9CA3AF",
             }}
           >
             {tr("전문 분야", "Specialties", "専門分野", "专业领域")}
