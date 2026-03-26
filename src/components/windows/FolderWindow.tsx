@@ -675,11 +675,11 @@ export default function FolderWindow({
                 display: "flex", justifyContent: "space-between", alignItems: "center",
               }}>
                 <span>{ejectMsg}</span>
-                <button onClick={() => setEjectMsg(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--th-text-muted)", fontSize: 11 }}>✕</button>
+                <button onClick={() => setEjectMsg(null)} style={{ background: "none", border: "none", cursor: "pointer", color: "#9CA3AF", fontSize: 11 }}>✕</button>
               </div>
             )}
             {folder.projects.length === 0 ? (
-              <div style={{ fontSize: 11, color: "var(--th-text-muted)", padding: "32px 0", textAlign: "center" }}>
+              <div style={{ fontSize: 11, color: "#9CA3AF", padding: "32px 0", textAlign: "center" }}>
                 {t({ ko: "폴더가 비어 있습니다", en: "Folder is empty", ja: "フォルダが空です", zh: "文件夹为空" })}
               </div>
             ) : (
@@ -687,25 +687,28 @@ export default function FolderWindow({
                 {folder.projects.map((p) => (
                   <div key={p.id}
                     style={{
-                      width: 150, minHeight: 130, background: "var(--th-bg-elevated)",
-                      border: "1px solid var(--th-border)", padding: "12px 8px",
+                      width: 150, minHeight: 130, background: "#FFFFFF",
+                      border: "1px solid #E5E7EB", borderRadius: 16, padding: "12px 8px",
+                      boxShadow: "0 1px 4px rgba(0,0,0,0.04)",
                       display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
-                      cursor: "pointer", transition: "background 0.1s, border-color 0.1s",
+                      cursor: "pointer", transition: "background 0.1s, border-color 0.1s, box-shadow 0.1s",
                     }}
                     onClick={() => setCurrentProjectId(p.id)}
                     onDoubleClick={() => setCurrentProjectId(p.id)}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.background = "var(--th-bg-surface)";
-                      e.currentTarget.style.borderColor = "rgba(245,158,11,0.4)";
+                      e.currentTarget.style.background = "#F9FAFB";
+                      e.currentTarget.style.borderColor = "rgba(59,130,246,0.4)";
+                      e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.08)";
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.background = "var(--th-bg-elevated)";
-                      e.currentTarget.style.borderColor = "var(--th-border)";
+                      e.currentTarget.style.background = "#FFFFFF";
+                      e.currentTarget.style.borderColor = "#E5E7EB";
+                      e.currentTarget.style.boxShadow = "0 1px 4px rgba(0,0,0,0.04)";
                     }}
                   >
                     <div style={{ fontSize: 28, display: "flex", justifyContent: "center" }}><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" /><line x1="2" y1="10" x2="22" y2="10" /></svg></div>
                     <div style={{
-                      fontSize: 11, color: "var(--th-text-primary)", textAlign: "center",
+                      fontSize: 11, color: "#111827", textAlign: "center",
                       wordBreak: "break-word", display: "-webkit-box",
                       WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", width: "100%",
                     }}>
@@ -714,14 +717,14 @@ export default function FolderWindow({
                     {versionMap[p.id] && (
                       <span style={{
                         fontSize: 9, fontFamily: "var(--th-font-mono)", fontWeight: 600,
-                        color: "var(--th-accent)", background: "rgba(245,158,11,0.1)",
-                        padding: "1px 6px", border: "1px solid rgba(245,158,11,0.25)",
+                        color: "#3B82F6", background: "rgba(59,130,246,0.1)",
+                        padding: "1px 6px", borderRadius: 6, border: "1px solid rgba(59,130,246,0.25)",
                       }}>
                         v{versionMap[p.id]}
                       </span>
                     )}
                     <div style={{
-                      fontSize: 9, color: "var(--th-text-muted)", width: "100%",
+                      fontSize: 9, color: "#9CA3AF", width: "100%",
                       overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", textAlign: "center",
                     }}>
                       {p.project_path}
@@ -731,12 +734,12 @@ export default function FolderWindow({
                         onClick={(e) => { e.stopPropagation(); void handleRemove(p.id); }}
                         disabled={busyProjectId === p.id}
                         style={{
-                          background: "transparent", border: "1px solid var(--th-danger-border)",
-                          color: "var(--th-danger-text)", fontFamily: "var(--th-font-mono)",
-                          fontSize: 9, padding: "3px 6px", cursor: "pointer",
+                          background: "#FEF2F2", border: "1px solid #FECACA",
+                          color: "#DC2626", fontFamily: "var(--th-font-mono)",
+                          fontSize: 9, padding: "3px 6px", borderRadius: 8, cursor: "pointer",
                         }}
-                        onMouseEnter={(e) => (e.currentTarget.style.background = "var(--th-danger-border)")}
-                        onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+                        onMouseEnter={(e) => (e.currentTarget.style.background = "#FECACA")}
+                        onMouseLeave={(e) => (e.currentTarget.style.background = "#FEF2F2")}
                       >
                         {busyProjectId === p.id
                           ? t({ ko: "이동 중...", en: "Moving...", ja: "移動中...", zh: "移动中..." })
@@ -751,11 +754,11 @@ export default function FolderWindow({
             <div style={{ position: "relative", marginTop: 16 }}>
               <button onClick={() => setPickerOpen((v) => !v)} style={{
                 width: "100%", height: 40, background: "transparent",
-                border: "1px dashed var(--th-border)", color: "var(--th-text-muted)",
+                border: "1px dashed #3B82F6", color: "#9CA3AF", borderRadius: 12,
                 fontFamily: "var(--th-font-mono)", fontSize: 11, cursor: "pointer",
               }}
-                onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--th-accent)"; e.currentTarget.style.color = "var(--th-accent)"; }}
-                onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--th-border)"; e.currentTarget.style.color = "var(--th-text-muted)"; }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#3B82F6"; e.currentTarget.style.color = "#3B82F6"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#3B82F6"; e.currentTarget.style.color = "#9CA3AF"; }}
               >
                 {t({ ko: "+ 프로젝트 추가", en: "+ Add Project", ja: "+ プロジェクト追加", zh: "+ 添加项目" })}
               </button>
