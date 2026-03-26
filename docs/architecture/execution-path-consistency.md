@@ -87,21 +87,66 @@ kickoff.ts, projects.ts 등 시스템성 호출에서 사용
 4. 폴백 → "claude"
 ```
 
-**현재 상태:** 경로 A와 B는 모두 **해당 에이전트**의 설정을 정확히 사용. 경로 C만 **아무 에이전트**의 설정을 사용하며, 이는 킥오프/자동 배정 등 특정 에이전트가 없는 시스템 호출에 한정된다.
+**현재 상태:**
+
+> **에이전트별 프로바이더는 이미 정확히 작동한다.**
+> Agent Form Modal / Settings → API Assign에서 에이전트에 프로바이더를 설정하면,
+> 태스크 실행(경로 A)과 PM 리뷰(경로 B) 모두 해당 에이전트의 프로바이더를 정확히 사용한다.
+>
+> 예: 에이전트 A를 Codex로, 에이전트 B를 Claude로 설정하면, 각각 자기 프로바이더로 실행된다.
+>
+> **문제는 경로 C(시스템 원샷)만 해당** — 킥오프/자동 배정 등 특정 에이전트 없이
+> 시스템이 자체적으로 LLM을 호출할 때, 아무 에이전트의 프로바이더를 비결정적으로 선택한다.
+
+```
+경로 A (태스크 실행):  에이전트 설정 화면에서 선택한 프로바이더 → 정확히 사용  ✅
+경로 B (PM 원샷):     PM 에이전트에 설정된 프로바이더 → 정확히 사용           ✅
+경로 C (시스템 원샷):  특정 에이전트 없음 → 아무 에이전트의 프로바이더 사용      ⚠️ Phase 2에서 해결
+```
 
 ### 0-4. 설정 화면에서의 등록 흐름
 
+에이전트 프로바이더는 두 곳에서 설정 가능:
+
 ```
-[Settings → API 탭]    API 프로바이더 CRUD → api_providers 테이블
-[Settings → CLI 탭]    CLI 도구 상태 확인 + 모델 선택 → settings.providerModelConfig
-[Settings → General]   defaultProvider 설정 → settings 테이블
-[Settings → API 탭]    "Assign" → 에이전트에 cli_provider="api" + api_provider_id + api_model 할당
 [Agent Form Modal]     AgentFormModalProviderBlocks → 에이전트별 프로바이더 직접 설정
+                       → PATCH /api/agents/:id → cli_provider, api_provider_id, api_model 등 DB 저장
+                       → 이후 태스크 실행/PM 리뷰에서 이 에이전트의 설정을 직접 읽어 사용
+
+[Settings → API 탭]    "Assign" 버튼 → ApiAssignModal
+                       → 에이전트에 cli_provider="api" + api_provider_id + api_model 일괄 할당
+```
+
+시스템 레벨 설정:
+
+```
+[Settings → API 탭]    API 프로바이더 CRUD → api_providers 테이블 (프로바이더 등록/삭제/활성화)
+[Settings → CLI 탭]    CLI 도구 상태 확인 + 모델 선택 → settings.providerModelConfig (글로벌 기본 모델)
+[Settings → General]   defaultProvider 설정 → settings 테이블 (경로 C의 폴백용)
+```
+
+#### 설정 → 실행 데이터 흐름
+
+```
+[Agent Form / API Assign]
+  │  PATCH /api/agents/:id
+  │  → patch-body.ts 검증 + 자동 정리
+  │  → DB 저장: agents.cli_provider, api_provider_id, api_model, cli_model, cli_reasoning_level
+  │
+  ▼
+[태스크 실행] execution-start-task.ts:186
+  agent.cli_provider 읽기 → 해당 에이전트 설정으로 실행  ✅
+
+[PM 리뷰] one-shot-runner.ts:113
+  agent.cli_provider 읽기 → PM 에이전트 설정으로 실행    ✅
+
+[시스템 호출] llm-client.ts:252 (callLlmOneShotAuto)
+  resolveCliProviderFromAgents() → 아무 에이전트 설정    ⚠️ Phase 2 통합 대상
 ```
 
 #### 에이전트 필드 자동 정리 (`patch-body.ts`)
 
-`cli_provider` 변경 시 관련 필드가 자동으로 cleared:
+`cli_provider` 변경 시 관련 필드가 자동으로 cleared — 불일치 상태 방지:
 
 | `cli_provider` 변경 시 | 자동 정리 |
 |------------------------|----------|
