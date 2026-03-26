@@ -1,4 +1,6 @@
+import { useState, useEffect } from "react";
 import type { Task, Agent, Project } from "../../types";
+import { getProjectCostSummary, type ProjectCostSummary } from "../../api/cost-summary";
 
 const mono = "var(--th-font-mono)";
 
@@ -9,6 +11,16 @@ interface MetricsHeaderProps {
 }
 
 export default function MetricsHeader({ tasks, agents, project }: MetricsHeaderProps) {
+  const [cost, setCost] = useState<ProjectCostSummary | null>(null);
+
+  useEffect(() => {
+    if (!project?.id) { setCost(null); return; }
+    getProjectCostSummary(project.id).then(setCost).catch(() => setCost(null));
+  }, [project?.id]);
+
+  const fmtTokens = (n: number) => n >= 1_000_000 ? `${(n / 1_000_000).toFixed(1)}M` : n >= 1_000 ? `${(n / 1_000).toFixed(1)}K` : String(n);
+  const fmtUsd = (n: number) => `$${n.toFixed(2)}`;
+
   const workingCount = agents.filter((a) => a.status === "working").length;
   const idleCount = agents.filter((a) => a.status !== "working").length;
   const inProgressCount = tasks.filter((t) => t.status === "in_progress").length;
@@ -31,8 +43,8 @@ export default function MetricsHeader({ tasks, agents, project }: MetricsHeaderP
         ORCHESTRATOR_OS
       </span>
 
-      <MetricBadge label="TOKENS" value="—" color="var(--th-text-secondary)" />
-      <MetricBadge label="BUDGET" value="—" color="var(--th-text-secondary)" />
+      <MetricBadge label="TOKENS" value={cost ? fmtTokens(cost.totalTokens) : "—"} color={cost ? "var(--th-text-code)" : "var(--th-text-secondary)"} />
+      <MetricBadge label="BUDGET" value={cost ? fmtUsd(cost.totalUsd) : "—"} color={cost ? "var(--th-accent)" : "var(--th-text-secondary)"} />
       <MetricBadge
         label="AGENTS"
         value={`${workingCount} Active / ${idleCount} Idle`}

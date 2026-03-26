@@ -230,6 +230,26 @@ export async function getAgentPerformance(id: string): Promise<AgentPerformanceD
   return request<AgentPerformanceData>(`/api/agents/${id}/performance`);
 }
 
+export interface AgentPerformanceEntry {
+  agent_id: string;
+  agent_name: string;
+  total: number;
+  done: number;
+  cancelled: number;
+  failed_exec: number;
+  in_progress: number;
+  review: number;
+  planned: number;
+  success_rate: number | null;
+  avg_duration_ms: number | null;
+}
+
+export async function getAgentsPerformance(projectId?: string): Promise<AgentPerformanceEntry[]> {
+  const qs = projectId ? `?project_id=${projectId}` : "";
+  const data = await request<{ agents: AgentPerformanceEntry[] }>(`/api/agents/performance${qs}`);
+  return data.agents;
+}
+
 export async function processSprite(imageBase64: string): Promise<{
   ok: boolean;
   previews: Record<string, string>;

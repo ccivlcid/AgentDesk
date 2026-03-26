@@ -1,4 +1,5 @@
 import type { Task, Agent, Project } from "../../../types";
+import { getTaskProgress } from "../task-progress";
 
 const mono = "var(--th-font-mono)";
 
@@ -66,7 +67,7 @@ export default function RoomTab({ tasks, agents, project }: RoomTabProps) {
                   {task.title}
                   {task.status === "in_progress" && (
                     <div style={{ height: 3, background: "var(--th-border)", width: "100%", marginTop: 8 }}>
-                      <div style={{ height: 3, background: "var(--th-accent)", width: "45%" }} />
+                      <div style={{ height: 3, background: "var(--th-accent)", width: `${getTaskProgress(task)}%` }} />
                     </div>
                   )}
                 </div>
@@ -150,11 +151,18 @@ export default function RoomTab({ tasks, agents, project }: RoomTabProps) {
             {tasks.slice(0, 6).map((task) => {
               const isDone = task.status === "done";
               const isRunning = task.status === "in_progress";
-              const icon = isDone ? "\u2713" : isRunning ? "\u25CF" : "\u25CB";
               const color = isDone ? "var(--th-text-code)" : isRunning ? "var(--th-accent)" : "var(--th-text-muted)";
               return (
                 <div key={task.id} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontFamily: mono, fontSize: 12, color, width: 14, textAlign: "center" }}>{icon}</span>
+                  <span style={{ color, width: 14, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    {isDone ? (
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12" /></svg>
+                    ) : isRunning ? (
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="12" cy="12" r="6" /></svg>
+                    ) : (
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="6" /></svg>
+                    )}
+                  </span>
                   <span style={{ fontFamily: mono, fontSize: 11, color: isDone ? "var(--th-text-secondary)" : "var(--th-text-primary)" }}>
                     {task.title.length > 30 ? task.title.substring(0, 30) + "..." : task.title}
                   </span>

@@ -1,4 +1,7 @@
+import { useState, useEffect } from "react";
 import type { Task, Agent, Department } from "../../../types";
+import { getTaskProgress } from "../task-progress";
+import { getAgentsPerformance, type AgentPerformanceEntry } from "../../../api/organization-projects";
 
 const mono = "var(--th-font-mono)";
 
@@ -6,9 +9,17 @@ interface AgentsTabProps {
   agents: Agent[];
   tasks: Task[];
   departments: Department[];
+  projectId?: string;
 }
 
-export default function AgentsTab({ agents, tasks, departments }: AgentsTabProps) {
+export default function AgentsTab({ agents, tasks, departments, projectId }: AgentsTabProps) {
+  const [perfMap, setPerfMap] = useState<Map<string, AgentPerformanceEntry>>(new Map());
+
+  useEffect(() => {
+    getAgentsPerformance(projectId)
+      .then((entries) => setPerfMap(new Map(entries.map((e) => [e.agent_id, e]))))
+      .catch(() => {});
+  }, [projectId]);
   const activeCount = agents.filter((a) => a.status === "working").length;
 
   return (
@@ -54,7 +65,6 @@ export default function AgentsTab({ agents, tasks, departments }: AgentsTabProps
       {agents.map((agent) => {
         const agentTasks = tasks.filter((t) => t.assigned_agent_id === agent.id);
         const currentTask = agentTasks.find((t) => t.status === "in_progress");
-        const dept = departments.find((d) => d.id === agent.department_id);
 
         const roleLabel = agent.role === "team_leader" ? "PROJECT MANAGER"
           : agent.role === "senior" ? "SENIOR ENG"
@@ -118,14 +128,17 @@ export default function AgentsTab({ agents, tasks, departments }: AgentsTabProps
               </div>
               {currentTask && (
                 <div style={{ height: 3, background: "var(--th-border)", width: "100%" }}>
-                  <div style={{ height: 3, background: "var(--th-accent)", width: "45%", transition: "width 0.3s" }} />
+                  <div style={{ height: 3, background: "var(--th-accent)", width: `${getTaskProgress(currentTask)}%`, transition: "width 0.3s" }} />
                 </div>
               )}
             </div>
 
             {/* Fitness */}
             <div style={{ fontSize: 10, color: "var(--th-text-code)" }}>
-              <div>DEV: {agent.stats_tasks_done > 0 ? `${Math.min(99, 70 + agent.stats_tasks_done * 3)}%` : "--"}</div>
+              {(() => {
+                const perf = perfMap.get(agent.id);
+                return <div>FITNESS: {perf?.success_rate != null ? `${Math.round(perf.success_rate)}%` : "--"}</div>;
+              })()}
             </div>
 
             {/* Action */}

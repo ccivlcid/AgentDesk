@@ -1,12 +1,11 @@
-import type { Task, Agent, SubTask, Department } from "../../../types";
+import type { Task, Agent } from "../../../types";
+import { getTaskProgress } from "../task-progress";
 
 const mono = "var(--th-font-mono)";
 
 interface TimelineTabProps {
   tasks: Task[];
   agents: Agent[];
-  subtasks: SubTask[];
-  departments: Department[];
 }
 
 export default function TimelineTab({ tasks, agents }: TimelineTabProps) {
@@ -23,6 +22,12 @@ export default function TimelineTab({ tasks, agents }: TimelineTabProps) {
     }
     agentLanes.get(agent.id)!.tasks.push(task);
   }
+
+  const clusterStatus = tasks.every((t) => t.status === "done") ? "ALL_COMPLETE"
+    : tasks.some((t) => t.execution_state === "failed" || t.status === "failed") ? "HAS_FAILURES"
+    : tasks.some((t) => t.status === "in_progress") ? "EXECUTING"
+    : tasks.every((t) => t.status === "planned" || t.status === "inbox") ? "READY"
+    : "CLUSTER_STABLE";
 
   if (agentLanes.size === 0) {
     return (
@@ -44,7 +49,7 @@ export default function TimelineTab({ tasks, agents }: TimelineTabProps) {
           ACTIVE AGENT LANES
         </span>
         <span style={{ fontFamily: mono, fontSize: 11, color: "var(--th-text-code)" }}>
-          CLUSTER_STABLE
+          {clusterStatus}
         </span>
       </div>
 
@@ -131,7 +136,7 @@ function AgentLane({ agent, tasks }: { agent: Agent; tasks: Task[] }) {
             <div style={{
               height: 3,
               background: "var(--th-accent)",
-              width: currentTask.status === "done" ? "100%" : currentTask.status === "in_progress" ? "45%" : "0%",
+              width: `${getTaskProgress(currentTask)}%`,
               transition: "width 0.3s",
             }} />
           </div>
@@ -146,7 +151,7 @@ function AgentLane({ agent, tasks }: { agent: Agent; tasks: Task[] }) {
           color: "var(--th-text-muted)",
           paddingLeft: 14,
         }}>
-          <span style={{ marginRight: 6 }}>{"↳"}</span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 6, flexShrink: 0 }}><polyline points="9 10 4 15 9 20" /><path d="M20 4v7a4 4 0 0 1-4 4H4" /></svg>
           NEXT: {nextTask.title}
         </div>
       )}
